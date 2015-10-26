@@ -389,7 +389,6 @@ gbjar.sources += [
     'IntentHelper.java',
     'javaaddons/JavaAddonManager.java',
     'javaaddons/JavaAddonManagerV1.java',
-    'LayoutInterceptor.java',
     'LocaleManager.java',
     'Locales.java',
     'lwt/LightweightTheme.java',
