@@ -4,22 +4,23 @@
 
 package org.mozilla.gecko.sync;
 
+import android.content.ComponentName;
+import android.content.Context;
+import android.content.Intent;
+import android.net.Uri;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.mozilla.gecko.background.common.log.Logger;
+import org.mozilla.gecko.db.BrowserContract;
+import org.mozilla.gecko.sync.repositories.NullCursorException;
+import org.mozilla.gecko.sync.repositories.android.ClientsDatabaseAccessor;
+import org.mozilla.gecko.sync.repositories.domain.ClientRecord;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
-
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
-import org.mozilla.gecko.background.common.log.Logger;
-import org.mozilla.gecko.sync.repositories.NullCursorException;
-import org.mozilla.gecko.sync.repositories.android.ClientsDatabaseAccessor;
-import org.mozilla.gecko.sync.repositories.domain.ClientRecord;
-
-import android.content.Context;
-import android.content.Intent;
-import android.net.Uri;
 
 /**
  * Process commands received from Sync clients.
@@ -235,7 +236,6 @@ public class CommandProcessor {
     }
   }
 
-  @SuppressWarnings("deprecation")
   public static void displayURI(final List<String> args, final Context context) {
     // We trust the client sender that these exist.
     final String uri = args.get(0);
@@ -252,9 +252,10 @@ public class CommandProcessor {
       title = args.get(2);
     }
 
-    final Intent sendTabNotificationIntent = new Intent(context, TabReceivedService.class);
+    final Intent sendTabNotificationIntent = new Intent();
+    sendTabNotificationIntent.setClassName(context, BrowserContract.TAB_RECEIVED_SERVICE_CLASS_NAME);
     sendTabNotificationIntent.setData(Uri.parse(uri));
-    sendTabNotificationIntent.putExtra(TabReceivedService.EXTRA_TITLE, title);
-    context.startService(sendTabNotificationIntent);
+    sendTabNotificationIntent.putExtra(Intent.EXTRA_TITLE, title);
+    final ComponentName componentName = context.startService(sendTabNotificationIntent);
   }
 }
