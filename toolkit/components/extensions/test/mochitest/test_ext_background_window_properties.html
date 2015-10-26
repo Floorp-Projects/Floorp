@@ -1,0 +1,52 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for simple WebExtension</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="application/javascript;version=1.8">
+
+add_task(function* testBackgroundWindowProperties() {
+  let extension = ExtensionTestUtils.loadExtension({
+    background: "(" + function() {
+      var expectedValues = {
+        screenX: 0,
+        screenY: 0,
+        outerWidth: 0,
+        outerHeight: 0
+      };
+
+      for (var k in window) {
+        try {
+          if (k in expectedValues) {
+            browser.test.assertEq(expectedValues[k], window[k],
+                                  `should return the expected value for window property: ${k}`)
+          } else {
+            window[k];
+          }
+        } catch(e) {
+          browser.test.assertEq(null, e, `unexpected exception accessing window property: ${k}`)
+        }
+      }
+
+      browser.test.notifyPass("background.testWindowProperties.done")
+    } + ")();"
+  });
+  info("load complete");
+  yield extension.startup();
+  info("startup complete");
+  yield extension.awaitFinish("background.testWindowProperties.done")
+  yield extension.unload();
+  info("extension unloaded successfully");
+});
+
+</script>
+
+</body>
+</html>
