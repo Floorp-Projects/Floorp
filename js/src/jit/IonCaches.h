@@ -571,6 +571,9 @@ class SetPropertyIC : public IonCache
 
     Register object_;
     Register temp_;
+    Register tempToUnboxIndex_;
+    FloatRegister tempDouble_;
+    FloatRegister tempFloat32_;
     ConstantOrRegister id_;
     ConstantOrRegister value_;
     bool strict_ : 1;
@@ -578,21 +581,27 @@ class SetPropertyIC : public IonCache
     bool guardHoles_ : 1;
 
     bool hasGenericProxyStub_ : 1;
+    bool hasDenseStub_ : 1;
 
     void emitIdGuard(MacroAssembler& masm, jsid id, Label* fail);
 
   public:
-    SetPropertyIC(LiveRegisterSet liveRegs, Register object, Register temp, ConstantOrRegister id,
+    SetPropertyIC(LiveRegisterSet liveRegs, Register object, Register temp, Register tempToUnboxIndex,
+                  FloatRegister tempDouble, FloatRegister tempFloat32, ConstantOrRegister id,
                   ConstantOrRegister value, bool strict, bool needsTypeBarrier, bool guardHoles)
       : liveRegs_(liveRegs),
         object_(object),
         temp_(temp),
+        tempToUnboxIndex_(tempToUnboxIndex),
+        tempDouble_(tempDouble),
+        tempFloat32_(tempFloat32),
         id_(id),
         value_(value),
         strict_(strict),
         needsTypeBarrier_(needsTypeBarrier),
         guardHoles_(guardHoles),
-        hasGenericProxyStub_(false)
+        hasGenericProxyStub_(false),
+        hasDenseStub_(false)
     {
     }
 
@@ -605,6 +614,15 @@ class SetPropertyIC : public IonCache
     }
     Register temp() const {
         return temp_;
+    }
+    Register tempToUnboxIndex() const {
+        return tempToUnboxIndex_;
+    }
+    FloatRegister tempDouble() const {
+        return tempDouble_;
+    }
+    FloatRegister tempFloat32() const {
+        return tempFloat32_;
     }
     ConstantOrRegister id() const {
         return id_;
@@ -623,6 +641,14 @@ class SetPropertyIC : public IonCache
     }
     bool hasGenericProxyStub() const {
         return hasGenericProxyStub_;
+    }
+
+    bool hasDenseStub() const {
+        return hasDenseStub_;
+    }
+    void setHasDenseStub() {
+        MOZ_ASSERT(!hasDenseStub());
+        hasDenseStub_ = true;
     }
 
     enum NativeSetPropCacheability {
@@ -668,12 +694,19 @@ class SetPropertyIC : public IonCache
                         HandleObject obj, HandleId id, bool* emitted);
 
     bool tryAttachStub(JSContext* cx, HandleScript outerScript, IonScript* ion,
-                       HandleObject obj, HandleValue idval, MutableHandleId id, bool* emitted,
-                       bool* tryNativeAddSlot);
+                       HandleObject obj, HandleValue idval, HandleValue value,
+                       MutableHandleId id, bool* emitted, bool* tryNativeAddSlot);
 
     bool tryAttachAddSlot(JSContext* cx, HandleScript outerScript, IonScript* ion,
                           HandleObject obj, HandleId id, HandleObjectGroup oldGroup,
                           HandleShape oldShape, bool tryNativeAddSlot, bool* emitted);
+
+    bool tryAttachDenseElement(JSContext* cx, HandleScript outerScript, IonScript* ion,
+                               HandleObject obj, const Value& idval, bool* emitted);
+
+    bool tryAttachTypedArrayElement(JSContext* cx, HandleScript outerScript, IonScript* ion,
+                                    HandleObject obj, HandleValue idval, HandleValue val,
+                                    bool* emitted);
 };
 
 class SetElementIC : public IonCache
@@ -689,8 +722,6 @@ class SetElementIC : public IonCache
     bool strict_;
     bool guardHoles_;
 
-    bool hasDenseStub_ : 1;
-
   public:
     SetElementIC(Register object, Register tempToUnboxIndex, Register temp,
                  FloatRegister tempDouble, FloatRegister tempFloat32,
@@ -704,8 +735,7 @@ class SetElementIC : public IonCache
         index_(index),
         value_(value),
         strict_(strict),
-        guardHoles_(guardHoles),
-        hasDenseStub_(false)
+        guardHoles_(guardHoles)
     {
     }
 
@@ -740,20 +770,6 @@ class SetElementIC : public IonCache
     bool guardHoles() const {
         return guardHoles_;
     }
-
-    bool hasDenseStub() const {
-        return hasDenseStub_;
-    }
-    void setHasDenseStub() {
-        MOZ_ASSERT(!hasDenseStub());
-        hasDenseStub_ = true;
-    }
-
-    bool attachDenseElement(JSContext* cx, HandleScript outerScript, IonScript* ion,
-                            HandleObject obj, const Value& idval);
-
-    bool attachTypedArrayElement(JSContext* cx, HandleScript outerScript, IonScript* ion,
-                                 HandleObject tarr);
 
     static bool
     update(JSContext* cx, HandleScript outerScript, size_t cacheIndex, HandleObject obj,
