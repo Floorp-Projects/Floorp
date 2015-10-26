@@ -126,7 +126,8 @@ public:
             ErrorResult& aRv,
             bool* aConnectionFailed);
 
-  void AsyncOpen(nsIPrincipal* aPrincipal, ErrorResult& aRv);
+  void AsyncOpen(nsIPrincipal* aPrincipal, uint64_t aInnerWindowID,
+                 ErrorResult& aRv);
 
   nsresult ParseURL(const nsAString& aURL);
   nsresult InitializeConnection(nsIPrincipal* aPrincipal);
@@ -1124,6 +1125,7 @@ protected:
   virtual bool InitWithWindow(nsPIDOMWindow* aWindow) override
   {
     AssertIsOnMainThread();
+    MOZ_ASSERT(aWindow);
 
     nsIDocument* doc = aWindow->GetExtantDoc();
     if (!doc) {
@@ -1137,7 +1139,19 @@ protected:
       return true;
     }
 
-    mImpl->AsyncOpen(principal, mRv);
+    uint64_t windowID = 0;
+    nsCOMPtr<nsIDOMWindow> topWindow;
+    aWindow->GetScriptableTop(getter_AddRefs(topWindow));
+    nsCOMPtr<nsPIDOMWindow> pTopWindow = do_QueryInterface(topWindow);
+    if (pTopWindow) {
+      pTopWindow = pTopWindow->GetCurrentInnerWindow();
+    }
+
+    if (pTopWindow) {
+      windowID = pTopWindow->WindowID();
+    }
+
+    mImpl->AsyncOpen(principal, windowID, mRv);
     return true;
   }
 
@@ -1146,7 +1160,7 @@ protected:
     MOZ_ASSERT(NS_IsMainThread());
     MOZ_ASSERT(aTopLevelWorkerPrivate && !aTopLevelWorkerPrivate->GetWindow());
 
-    mImpl->AsyncOpen(aTopLevelWorkerPrivate->GetPrincipal(), mRv);
+    mImpl->AsyncOpen(aTopLevelWorkerPrivate->GetPrincipal(), 0, mRv);
     return true;
   }
 
@@ -1308,7 +1322,20 @@ WebSocket::Constructor(const GlobalObject& aGlobal,
 
   if (NS_IsMainThread()) {
     MOZ_ASSERT(principal);
-    webSocket->mImpl->AsyncOpen(principal, aRv);
+
+    uint64_t windowID = 0;
+    nsCOMPtr<nsIDOMWindow> topWindow;
+    ownerWindow->GetScriptableTop(getter_AddRefs(topWindow));
+    nsCOMPtr<nsPIDOMWindow> pTopWindow = do_QueryInterface(topWindow);
+    if (pTopWindow) {
+      pTopWindow = pTopWindow->GetCurrentInnerWindow();
+    }
+
+    if (pTopWindow) {
+      windowID = pTopWindow->WindowID();
+    }
+
+    webSocket->mImpl->AsyncOpen(principal, windowID, aRv);
   } else {
     RefPtr<AsyncOpenRunnable> runnable =
       new AsyncOpenRunnable(webSocket->mImpl, aRv);
@@ -1604,7 +1631,8 @@ WebSocketImpl::Init(JSContext* aCx,
 }
 
 void
-WebSocketImpl::AsyncOpen(nsIPrincipal* aPrincipal, ErrorResult& aRv)
+WebSocketImpl::AsyncOpen(nsIPrincipal* aPrincipal, uint64_t aInnerWindowID,
+                         ErrorResult& aRv)
 {
   MOZ_ASSERT(NS_IsMainThread(), "Not running on main thread");
 
@@ -1620,7 +1648,7 @@ WebSocketImpl::AsyncOpen(nsIPrincipal* aPrincipal, ErrorResult& aRv)
   aRv = NS_NewURI(getter_AddRefs(uri), mURI);
   MOZ_ASSERT(!aRv.Failed());
 
-  aRv = mChannel->AsyncOpen(uri, asciiOrigin, this, nullptr);
+  aRv = mChannel->AsyncOpen(uri, asciiOrigin, aInnerWindowID, this, nullptr);
   if (NS_WARN_IF(aRv.Failed())) {
     return;
   }

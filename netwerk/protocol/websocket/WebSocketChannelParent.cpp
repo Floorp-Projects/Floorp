@@ -60,6 +60,7 @@ WebSocketChannelParent::RecvDeleteSelf()
 bool
 WebSocketChannelParent::RecvAsyncOpen(const URIParams& aURI,
                                       const nsCString& aOrigin,
+                                      const uint64_t& aInnerWindowID,
                                       const nsCString& aProtocol,
                                       const bool& aSecure,
                                       const uint32_t& aPingInterval,
@@ -128,7 +129,7 @@ WebSocketChannelParent::RecvAsyncOpen(const URIParams& aURI,
     mChannel->SetPingTimeout(aPingTimeout / 1000);
   }
 
-  rv = mChannel->AsyncOpen(uri, aOrigin, this, nullptr);
+  rv = mChannel->AsyncOpen(uri, aOrigin, aInnerWindowID, this, nullptr);
   if (NS_FAILED(rv))
     goto fail;
 
