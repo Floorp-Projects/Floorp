@@ -262,10 +262,8 @@ private:
   void
   Cleanup();
 
-  static PLDHashOperator
-  AddAllTopLevelWorkersToArray(const nsACString& aKey,
-                               WorkerDomainInfo* aData,
-                               void* aUserArg);
+  void
+  AddAllTopLevelWorkersToArray(nsTArray<WorkerPrivate*>& aWorkers);
 
   static PLDHashOperator
   RemoveSharedWorkerFromWindowMap(nsPIDOMWindow* aKey,
