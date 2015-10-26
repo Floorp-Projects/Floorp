@@ -42,14 +42,14 @@ class CompileDBBackend(CommonBackend):
             # Note that unified sources are never used for host sources.
             for f in obj.unified_source_mapping:
                 flags = self._get_dir_flags(obj.objdir)
-                self._build_db_line(obj, self.environment, f[0],
+                self._build_db_line(obj.objdir, self.environment, f[0],
                                     obj.canonical_suffix, flags, False)
         elif isinstance(obj, Sources) or isinstance(obj, HostSources) or \
              isinstance(obj, GeneratedSources):
             # For other sources, include each source file.
             for f in obj.files:
                 flags = self._get_dir_flags(obj.objdir)
-                self._build_db_line(obj, self.environment, f,
+                self._build_db_line(obj.objdir, self.environment, f,
                                     obj.canonical_suffix, flags,
                                     isinstance(obj, HostSources))
 
@@ -86,7 +86,7 @@ class CompileDBBackend(CommonBackend):
         self._flags[directory] = build_vars
         return self._flags[directory]
 
-    def _build_db_line(self, obj, cenv, filename, canonical_suffix, flags, ishost):
+    def _build_db_line(self, objdir, cenv, filename, canonical_suffix, flags, ishost):
         # Distinguish between host and target files.
         prefix = 'HOST_' if ishost else ''
         if canonical_suffix == '.c':
@@ -112,7 +112,7 @@ class CompileDBBackend(CommonBackend):
         ])
 
         self._db.append({
-            'directory': obj.objdir,
+            'directory': objdir,
             'command': cmd,
             'file': filename
         })
