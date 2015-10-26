@@ -530,7 +530,7 @@ global.AllWindowEvents = {
 
     let listeners = this._listeners.get(type);
     listeners.delete(listener);
-    if (listeners.length == 0) {
+    if (listeners.size == 0) {
       this._listeners.delete(type);
       if (this._listeners.size == 0) {
         WindowListManager.removeOpenListener(this.openListener);
