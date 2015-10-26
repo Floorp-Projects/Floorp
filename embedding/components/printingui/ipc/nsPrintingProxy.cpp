@@ -149,10 +149,12 @@ nsPrintingProxy::ShowProgress(nsIDOMWindow*            parent,
 
   SendPPrintProgressDialogConstructor(dialogChild);
 
-  bool success = false;
-
   mozilla::unused << SendShowProgress(pBrowser, dialogChild,
-                                      isForPrinting, notifyOnOpen, &success);
+                                      isForPrinting, notifyOnOpen, &rv);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
   NS_ADDREF(*webProgressListener = dialogChild);
   NS_ADDREF(*printProgressParams = dialogChild);
 

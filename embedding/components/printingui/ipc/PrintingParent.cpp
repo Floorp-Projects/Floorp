@@ -30,9 +30,9 @@ PrintingParent::RecvShowProgress(PBrowserParent* parent,
                                  PPrintProgressDialogParent* printProgressDialog,
                                  const bool& isForPrinting,
                                  bool* notifyOnOpen,
-                                 bool* success)
+                                 nsresult* result)
 {
-  *success = false;
+  *result = NS_ERROR_FAILURE;
 
   nsCOMPtr<nsIDOMWindow> parentWin = DOMWindowFromBrowserParent(parent);
   if (!parentWin) {
@@ -52,17 +52,16 @@ PrintingParent::RecvShowProgress(PBrowserParent* parent,
   nsCOMPtr<nsIWebProgressListener> printProgressListener;
   nsCOMPtr<nsIPrintProgressParams> printProgressParams;
 
-  nsresult rv = pps->ShowProgress(parentWin, nullptr, nullptr, observer,
-                                  isForPrinting,
-                                  getter_AddRefs(printProgressListener),
-                                  getter_AddRefs(printProgressParams),
-                                  notifyOnOpen);
-  NS_ENSURE_SUCCESS(rv, true);
+  *result = pps->ShowProgress(parentWin, nullptr, nullptr, observer,
+                              isForPrinting,
+                              getter_AddRefs(printProgressListener),
+                              getter_AddRefs(printProgressParams),
+                              notifyOnOpen);
+  NS_ENSURE_SUCCESS(*result, true);
 
   dialogParent->SetWebProgressListener(printProgressListener);
   dialogParent->SetPrintProgressParams(printProgressParams);
 
-  *success = true;
   return true;
 }
 
