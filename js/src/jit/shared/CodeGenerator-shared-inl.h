@@ -89,6 +89,14 @@ ToFloatRegister(const LDefinition* def)
     return ToFloatRegister(*def->output());
 }
 
+static inline FloatRegister
+ToTempFloatRegisterOrInvalid(const LDefinition* def)
+{
+    if (def->isBogusTemp())
+        return InvalidFloatReg;
+    return ToFloatRegister(def);
+}
+
 static inline AnyRegister
 ToAnyRegister(const LAllocation& a)
 {
