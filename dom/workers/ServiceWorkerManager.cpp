@@ -3325,44 +3325,6 @@ ServiceWorkerManager::SoftUpdate(const nsACString& aScopeKey,
 
 namespace {
 
-class MOZ_STACK_CLASS FilterRegistrationData
-{
-public:
-  FilterRegistrationData(nsTArray<ServiceWorkerClientInfo>& aDocuments,
-                         ServiceWorkerRegistrationInfo* aRegistration)
-  : mDocuments(aDocuments),
-    mRegistration(aRegistration)
-  {
-  }
-
-  nsTArray<ServiceWorkerClientInfo>& mDocuments;
-  RefPtr<ServiceWorkerRegistrationInfo> mRegistration;
-};
-
-static PLDHashOperator
-EnumControlledDocuments(nsISupports* aKey,
-                        ServiceWorkerRegistrationInfo* aRegistration,
-                        void* aData)
-{
-  FilterRegistrationData* data = static_cast<FilterRegistrationData*>(aData);
-  MOZ_ASSERT(data->mRegistration);
-  MOZ_ASSERT(aRegistration);
-  if (!data->mRegistration->mScope.Equals(aRegistration->mScope)) {
-    return PL_DHASH_NEXT;
-  }
-
-  nsCOMPtr<nsIDocument> document = do_QueryInterface(aKey);
-
-  if (!document || !document->GetWindow()) {
-    return PL_DHASH_NEXT;
-  }
-
-  ServiceWorkerClientInfo clientInfo(document);
-  data->mDocuments.AppendElement(clientInfo);
-
-  return PL_DHASH_NEXT;
-}
-
 static void
 FireControllerChangeOnDocument(nsIDocument* aDocument)
 {
@@ -3427,9 +3389,22 @@ ServiceWorkerManager::GetAllClients(nsIPrincipal* aPrincipal,
     return;
   }
 
-  FilterRegistrationData data(aControlledDocuments, registration);
+  for (auto iter = mControlledDocuments.Iter(); !iter.Done(); iter.Next()) {
+    ServiceWorkerRegistrationInfo* thisRegistration = iter.UserData();
+    MOZ_ASSERT(thisRegistration);
+    if (!registration->mScope.Equals(thisRegistration->mScope)) {
+      continue;
+    }
 
-  mControlledDocuments.EnumerateRead(EnumControlledDocuments, &data);
+    nsCOMPtr<nsIDocument> document = do_QueryInterface(iter.Key());
+
+    if (!document || !document->GetWindow()) {
+      continue;
+    }
+
+    ServiceWorkerClientInfo clientInfo(document);
+    aControlledDocuments.AppendElement(clientInfo);
+  }
 }
 
 void
@@ -3822,36 +3797,6 @@ UnregisterIfMatchesClearOriginParams(const nsACString& aKey,
   return PL_DHASH_NEXT;
 }
 
-PLDHashOperator
-GetAllRegistrationsEnumerator(const nsACString& aScope,
-                              ServiceWorkerRegistrationInfo* aReg,
-                              void* aData)
-{
-  nsIMutableArray* array = static_cast<nsIMutableArray*>(aData);
-  MOZ_ASSERT(aReg);
-
-  if (aReg->mPendingUninstall) {
-    return PL_DHASH_NEXT;
-  }
-
-  nsCOMPtr<nsIServiceWorkerInfo> info = ServiceWorkerDataInfo::Create(aReg);
-  if (NS_WARN_IF(!info)) {
-    return PL_DHASH_NEXT;
-  }
-
-  array->AppendElement(info, false);
-  return PL_DHASH_NEXT;
-}
-
-PLDHashOperator
-GetAllRegistrationsPerPrincipalEnumerator(const nsACString& aKey,
-                                          ServiceWorkerManager::RegistrationDataPerPrincipal* aData,
-                                          void* aUserData)
-{
-  aData->mInfos.EnumerateRead(GetAllRegistrationsEnumerator, aUserData);
-  return PL_DHASH_NEXT;
-}
-
 } // namespace
 
 NS_IMPL_ISUPPORTS(ServiceWorkerDataInfo, nsIServiceWorkerInfo)
@@ -3939,7 +3884,24 @@ ServiceWorkerManager::GetAllRegistrations(nsIArray** aResult)
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  mRegistrationInfos.EnumerateRead(GetAllRegistrationsPerPrincipalEnumerator, array);
+  for (auto it1 = mRegistrationInfos.Iter(); !it1.Done(); it1.Next()) {
+    for (auto it2 = it1.UserData()->mInfos.Iter(); !it2.Done(); it2.Next()) {
+      ServiceWorkerRegistrationInfo* reg = it2.UserData();
+      MOZ_ASSERT(reg);
+
+      if (reg->mPendingUninstall) {
+        continue;
+      }
+
+      nsCOMPtr<nsIServiceWorkerInfo> info = ServiceWorkerDataInfo::Create(reg);
+      if (NS_WARN_IF(!info)) {
+        continue;
+      }
+
+      array->AppendElement(info, false);
+    }
+  }
+
   array.forget(aResult);
   return NS_OK;
 }
