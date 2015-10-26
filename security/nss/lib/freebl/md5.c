@@ -259,7 +259,7 @@ MD5_Begin(MD5Context *cx)
 	(i32)
 #else
 #define lendian(i32) \
-	(tmp = i32 >> 16 | i32 << 16, (tmp & MASK) << 8 | tmp >> 8 & MASK)
+	(tmp = (i32 >> 16) | (i32 << 16), ((tmp & MASK) << 8) | ((tmp >> 8) & MASK))
 #endif
 
 #ifndef IS_LITTLE_ENDIAN

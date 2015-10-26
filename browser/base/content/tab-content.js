@@ -539,6 +539,9 @@ if (Services.prefs.getBoolPref("browser.translation.detectLanguage")) {
 
 function gKeywordURIFixup(fixupInfo) {
   fixupInfo.QueryInterface(Ci.nsIURIFixupInfo);
+  if (!fixupInfo.consumer) {
+    return;
+  }
 
   // Ignore info from other docshells
   let parent = fixupInfo.consumer.QueryInterface(Ci.nsIDocShellTreeItem).sameTypeRootTreeItem;

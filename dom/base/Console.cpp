@@ -1065,42 +1065,41 @@ Console::Method(JSContext* aCx, MethodName aMethodName,
 
       callData->mMonotonicTimer = performance->Now();
 
-      // 'time' and 'timeEnd' are displayed in the devtools timeline if active.
-      bool isTimelineRecording = false;
       nsDocShell* docShell = static_cast<nsDocShell*>(mWindow->GetDocShell());
-      if (docShell) {
-        docShell->GetRecordProfileTimelineMarkers(&isTimelineRecording);
-      }
+      RefPtr<TimelineConsumers> timelines = TimelineConsumers::Get();
+      bool isTimelineRecording = timelines && timelines->HasConsumer(docShell);
 
-      // 'timeStamp' recordings do not need an argument; use empty string
-      // if no arguments passed in
+      // The 'timeStamp' recordings do not need an argument; use empty string
+      // if no arguments passed in.
       if (isTimelineRecording && aMethodName == MethodTimeStamp) {
-        JS::Rooted<JS::Value> value(aCx, aData.Length() == 0 ?
-                                    JS_GetEmptyStringValue(aCx) : aData[0]);
+        JS::Rooted<JS::Value> value(aCx, aData.Length() == 0
+          ? JS_GetEmptyStringValue(aCx)
+          : aData[0]);
         JS::Rooted<JSString*> jsString(aCx, JS::ToString(aCx, value));
+
         nsAutoJSString key;
         if (jsString) {
           key.init(aCx, jsString);
         }
 
-        UniquePtr<TimelineMarker> marker = MakeUnique<TimestampTimelineMarker>(key);
-        TimelineConsumers::AddMarkerForDocShell(docShell, Move(marker));
+        timelines->AddMarkerForDocShell(docShell, Move(
+          MakeUnique<TimestampTimelineMarker>(key)));
       }
-      // For `console.time(foo)` and `console.timeEnd(foo)`
+      // For `console.time(foo)` and `console.timeEnd(foo)`.
       else if (isTimelineRecording && aData.Length() == 1) {
         JS::Rooted<JS::Value> value(aCx, aData[0]);
         JS::Rooted<JSString*> jsString(aCx, JS::ToString(aCx, value));
+
         if (jsString) {
           nsAutoJSString key;
           if (key.init(aCx, jsString)) {
-            UniquePtr<TimelineMarker> marker = MakeUnique<ConsoleTimelineMarker>(
-              key, aMethodName == MethodTime ? MarkerTracingType::START
-                                             : MarkerTracingType::END);
-            TimelineConsumers::AddMarkerForDocShell(docShell, Move(marker));
+            timelines->AddMarkerForDocShell(docShell, Move(
+              MakeUnique<ConsoleTimelineMarker>(
+                key, aMethodName == MethodTime ? MarkerTracingType::START
+                                               : MarkerTracingType::END)));
           }
         }
       }
-
     } else {
       WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
       MOZ_ASSERT(workerPrivate);

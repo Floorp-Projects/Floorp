@@ -439,6 +439,13 @@ const Formatters = {
       [L10N.getStr("marker.field.type")]: marker.name.replace(/nsCycleCollector::/g, "")
     };
   },
+
+  WorkerFields: function(marker) {
+    return {
+      [L10N.getStr("marker.field.type")]:
+        L10N.getStr(`marker.worker.${marker.workerOperation}`)
+    };
+  }
 };
 
 /**

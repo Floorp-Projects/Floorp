@@ -192,7 +192,7 @@ class FloatRegister : public FloatRegisterMIPSShared
     }
     Encoding encoding() const {
         MOZ_ASSERT(!isInvalid());
-        return Code(code_  | (kind_ << 5));
+        return Encoding(code_);
     }
     uint32_t id() const {
         return code_;

@@ -1290,7 +1290,6 @@ sec_pkcs7_verify_signature(SEC_PKCS7ContentInfo *cinfo,
     const SECItem *digest;
     SECItem **digests;
     SECItem **rawcerts;
-    CERTSignedCrl **crls;
     SEC_PKCS7SignerInfo **signerinfos, *signerinfo;
     CERTCertificate *cert, **certs;
     PRBool goodsig;
@@ -1340,7 +1339,6 @@ sec_pkcs7_verify_signature(SEC_PKCS7ContentInfo *cinfo,
 	    digestalgs = sdp->digestAlgorithms;
 	    digests = sdp->digests;
 	    rawcerts = sdp->rawCerts;
-	    crls = sdp->crls;
 	    signerinfos = sdp->signerInfos;
 	    content_type = &(sdp->contentInfo.contentType);
 	    sigkey = NULL;
@@ -1355,7 +1353,6 @@ sec_pkcs7_verify_signature(SEC_PKCS7ContentInfo *cinfo,
 	    digestalgs = saedp->digestAlgorithms;
 	    digests = saedp->digests;
 	    rawcerts = saedp->rawCerts;
-	    crls = saedp->crls;
 	    signerinfos = saedp->signerInfos;
 	    content_type = &(saedp->encContentInfo.contentType);
 	    sigkey = saedp->sigKey;

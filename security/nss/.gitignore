@@ -1,0 +1,5 @@
+*~
+*.swp
+*OPT.OBJ/
+*DBG.OBJ/
+*DBG.OBJD/

@@ -93,6 +93,7 @@ public abstract class CropImageView extends ThemedImageView {
 
         final float scale = Math.max(verticalScaleValue, horizontalScaleValue);
 
+        layoutNextMatrix.reset();
         layoutNextMatrix.setScale(scale, scale);
         setImageMatrix(layoutNextMatrix);
 

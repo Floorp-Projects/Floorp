@@ -1412,13 +1412,13 @@ setRevocationMethod(PKIX_RevocationChecker *revChecker,
 {
     PKIX_UInt32 methodFlags = 0;
     PKIX_Error *error = NULL;
-    int priority = 0;
+    PKIX_UInt32 priority = 0;
     
-    if (revTest->number_of_defined_methods <= certRevMethod) {
+    if (revTest->number_of_defined_methods <= (PRUint32)certRevMethod) {
         return NULL;
     }
     if (revTest->preferred_methods) {
-        int i = 0;
+        unsigned int i = 0;
         for (;i < revTest->number_of_preferred_methods;i++) {
             if (revTest->preferred_methods[i] == certRevMethod) 
                 break;
@@ -1454,7 +1454,6 @@ cert_pkixSetParam(PKIX_ProcessingParams *procParams,
     CERTCertListNode *node;
     PKIX_PL_Cert *certPkix = NULL;
     PKIX_TrustAnchor *trustAnchor = NULL;
-    PKIX_PL_Date *revDate = NULL;
     PKIX_RevocationChecker *revChecker = NULL;
     PKIX_PL_NssContext *nssContext = (PKIX_PL_NssContext *)plContext;
 
@@ -1663,9 +1662,6 @@ cert_pkixSetParam(PKIX_ProcessingParams *procParams,
 
     if (date != NULL) 
         PKIX_PL_Object_DecRef((PKIX_PL_Object *)date, plContext);
-
-    if (revDate != NULL) 
-        PKIX_PL_Object_DecRef((PKIX_PL_Object *)revDate, plContext);
 
     if (revChecker != NULL) 
         PKIX_PL_Object_DecRef((PKIX_PL_Object *)revChecker, plContext);

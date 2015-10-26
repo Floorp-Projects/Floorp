@@ -1179,22 +1179,13 @@ nsRefreshDriver::ObserverCount() const
   return sum;
 }
 
-/* static */ PLDHashOperator
-nsRefreshDriver::StartTableRequestCounter(const uint32_t& aKey,
-                                          ImageStartData* aEntry,
-                                          void* aUserArg)
-{
-  uint32_t *count = static_cast<uint32_t*>(aUserArg);
-  *count += aEntry->mEntries.Count();
-
-  return PL_DHASH_NEXT;
-}
-
 uint32_t
 nsRefreshDriver::ImageRequestCount() const
 {
   uint32_t count = 0;
-  mStartTable.EnumerateRead(nsRefreshDriver::StartTableRequestCounter, &count);
+  for (auto iter = mStartTable.ConstIter(); !iter.Done(); iter.Next()) {
+    count += iter.UserData()->mEntries.Count();
+  }
   return count + mRequests.Count();
 }
 
@@ -1266,13 +1257,20 @@ HasPendingAnimations(nsIPresShell* aShell)
 static void GetProfileTimelineSubDocShells(nsDocShell* aRootDocShell,
                                            nsTArray<nsDocShell*>& aShells)
 {
-  if (!aRootDocShell || TimelineConsumers::IsEmpty()) {
+  if (!aRootDocShell) {
+    return;
+  }
+
+  RefPtr<TimelineConsumers> timelines = TimelineConsumers::Get();
+  if (!timelines || timelines->IsEmpty()) {
     return;
   }
 
   nsCOMPtr<nsISimpleEnumerator> enumerator;
-  nsresult rv = aRootDocShell->GetDocShellEnumerator(nsIDocShellTreeItem::typeAll,
-    nsIDocShell::ENUMERATE_BACKWARDS, getter_AddRefs(enumerator));
+  nsresult rv = aRootDocShell->GetDocShellEnumerator(
+    nsIDocShellTreeItem::typeAll,
+    nsIDocShell::ENUMERATE_BACKWARDS,
+    getter_AddRefs(enumerator));
 
   if (NS_FAILED(rv)) {
     return;
@@ -1650,9 +1648,34 @@ nsRefreshDriver::Tick(int64_t aNowEpoch, TimeStamp aNowTime)
    * for refresh events.
    */
 
-  ImageRequestParameters parms = {aNowTime, previousRefresh, &mRequests};
+  for (auto iter = mStartTable.Iter(); !iter.Done(); iter.Next()) {
+    const uint32_t& delay = iter.Key();
+    ImageStartData* data = iter.UserData();
 
-  mStartTable.EnumerateRead(nsRefreshDriver::StartTableRefresh, &parms);
+    if (data->mStartTime) {
+      TimeStamp& start = *data->mStartTime;
+      TimeDuration prev = previousRefresh - start;
+      TimeDuration curr = aNowTime - start;
+      uint32_t prevMultiple = uint32_t(prev.ToMilliseconds()) / delay;
+
+      // We want to trigger images' refresh if we've just crossed over a
+      // multiple of the first image's start time. If so, set the animation
+      // start time to the nearest multiple of the delay and move all the
+      // images in this table to the main requests table.
+      if (prevMultiple != uint32_t(curr.ToMilliseconds()) / delay) {
+        mozilla::TimeStamp desired =
+          start + TimeDuration::FromMilliseconds(prevMultiple * delay);
+        BeginRefreshingImages(data->mEntries, desired);
+      }
+    } else {
+      // This is the very first time we've drawn images with this time delay.
+      // Set the animation start time to "now" and move all the images in this
+      // table to the main requests table.
+      mozilla::TimeStamp desired = aNowTime;
+      BeginRefreshingImages(data->mEntries, desired);
+      data->mStartTime.emplace(aNowTime);
+    }
+  }
 
   if (mRequests.Count()) {
     // RequestRefresh may run scripts, so it's not safe to directly call it
@@ -1682,13 +1705,18 @@ nsRefreshDriver::Tick(int64_t aNowEpoch, TimeStamp aNowTime)
   mPresShellsToInvalidateIfHidden.Clear();
 
   if (mViewManagerFlushIsPending) {
+    RefPtr<TimelineConsumers> timelines = TimelineConsumers::Get();
+
     nsTArray<nsDocShell*> profilingDocShells;
     GetProfileTimelineSubDocShells(GetDocShell(mPresContext), profilingDocShells);
     for (nsDocShell* docShell : profilingDocShells) {
       // For the sake of the profile timeline's simplicity, this is flagged as
       // paint even if it includes creating display lists
-      TimelineConsumers::AddMarkerForDocShell(docShell, "Paint",  MarkerTracingType::START);
+      MOZ_ASSERT(timelines);
+      MOZ_ASSERT(timelines->HasConsumer(docShell));
+      timelines->AddMarkerForDocShell(docShell, "Paint",  MarkerTracingType::START);
     }
+
 #ifdef MOZ_DUMP_PAINTING
     if (nsLayoutUtils::InvalidationDebuggingIsEnabled()) {
       printf_stderr("Starting ProcessPendingUpdates\n");
@@ -1698,13 +1726,17 @@ nsRefreshDriver::Tick(int64_t aNowEpoch, TimeStamp aNowTime)
     mViewManagerFlushIsPending = false;
     RefPtr<nsViewManager> vm = mPresContext->GetPresShell()->GetViewManager();
     vm->ProcessPendingUpdates();
+
 #ifdef MOZ_DUMP_PAINTING
     if (nsLayoutUtils::InvalidationDebuggingIsEnabled()) {
       printf_stderr("Ending ProcessPendingUpdates\n");
     }
 #endif
+
     for (nsDocShell* docShell : profilingDocShells) {
-      TimelineConsumers::AddMarkerForDocShell(docShell, "Paint",  MarkerTracingType::END);
+      MOZ_ASSERT(timelines);
+      MOZ_ASSERT(timelines->HasConsumer(docShell));
+      timelines->AddMarkerForDocShell(docShell, "Paint",  MarkerTracingType::END);
     }
 
     if (nsContentUtils::XPConnect()) {
@@ -1730,54 +1762,20 @@ nsRefreshDriver::Tick(int64_t aNowEpoch, TimeStamp aNowTime)
 
 void
 nsRefreshDriver::BeginRefreshingImages(RequestTable& aEntries,
-                                       ImageRequestParameters* aParms)
+                                       mozilla::TimeStamp aDesired)
 {
   for (auto iter = aEntries.Iter(); !iter.Done(); iter.Next()) {
     auto req = static_cast<imgIRequest*>(iter.Get()->GetKey());
     MOZ_ASSERT(req, "Unable to retrieve the image request");
 
-    aParms->mRequests->PutEntry(req);
+    mRequests.PutEntry(req);
 
     nsCOMPtr<imgIContainer> image;
     if (NS_SUCCEEDED(req->GetImage(getter_AddRefs(image)))) {
-      image->SetAnimationStartTime(aParms->mDesired);
+      image->SetAnimationStartTime(aDesired);
     }
   }
   aEntries.Clear();
-}
-
-/* static */ PLDHashOperator
-nsRefreshDriver::StartTableRefresh(const uint32_t& aDelay,
-                                   ImageStartData* aData,
-                                   void* aUserArg)
-{
-  ImageRequestParameters* parms =
-    static_cast<ImageRequestParameters*> (aUserArg);
-
-  if (aData->mStartTime) {
-    TimeStamp& start = *aData->mStartTime;
-    TimeDuration prev = parms->mPrevious - start;
-    TimeDuration curr = parms->mCurrent - start;
-    uint32_t prevMultiple = static_cast<uint32_t>(prev.ToMilliseconds()) / aDelay;
-
-    // We want to trigger images' refresh if we've just crossed over a multiple
-    // of the first image's start time. If so, set the animation start time to
-    // the nearest multiple of the delay and move all the images in this table
-    // to the main requests table.
-    if (prevMultiple != static_cast<uint32_t>(curr.ToMilliseconds()) / aDelay) {
-      parms->mDesired = start + TimeDuration::FromMilliseconds(prevMultiple * aDelay);
-      BeginRefreshingImages(aData->mEntries, parms);
-    }
-  } else {
-    // This is the very first time we've drawn images with this time delay.
-    // Set the animation start time to "now" and move all the images in this
-    // table to the main requests table.
-    parms->mDesired = parms->mCurrent;
-    BeginRefreshingImages(aData->mEntries, parms);
-    aData->mStartTime.emplace(parms->mCurrent);
-  }
-
-  return PL_DHASH_NEXT;
 }
 
 void

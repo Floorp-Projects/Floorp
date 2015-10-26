@@ -82,6 +82,8 @@ function goUpdateConsoleCommands() {
                 selection="network" selectionType="single"/>
       <menuitem id="menu_openInVarView" label="&openInVarViewCmd.label;"
         accesskey="&openInVarViewCmd.accesskey;" disabled="true"/>
+      <menuitem id="menu_storeAsGlobal" label="&storeAsGlobalVar.label;"
+        accesskey="&storeAsGlobalVar.accesskey;"/>
       <menuitem id="cMenu_copy"/>
       <menuitem id="cMenu_selectAll"/>
     </menupopup>

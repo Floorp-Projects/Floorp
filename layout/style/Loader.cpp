@@ -2612,23 +2612,16 @@ Loader::StartAlternateLoads()
   }
 }
 
-static PLDHashOperator
-TraverseSheet(URIPrincipalReferrerPolicyAndCORSModeHashKey*,
-              CSSStyleSheet* aSheet,
-              void* aClosure)
-{
-  nsCycleCollectionTraversalCallback* cb =
-    static_cast<nsCycleCollectionTraversalCallback*>(aClosure);
-  NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(*cb, "Sheet cache nsCSSLoader");
-  cb->NoteXPCOMChild(NS_ISUPPORTS_CAST(nsIStyleSheet*, aSheet));
-  return PL_DHASH_NEXT;
-}
-
 NS_IMPL_CYCLE_COLLECTION_CLASS(Loader)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(Loader)
   if (tmp->mSheets) {
-    tmp->mSheets->mCompleteSheets.EnumerateRead(TraverseSheet, &cb);
+    for (auto iter = tmp->mSheets->mCompleteSheets.Iter();
+         !iter.Done();
+         iter.Next()) {
+      NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "Sheet cache nsCSSLoader");
+      cb.NoteXPCOMChild(NS_ISUPPORTS_CAST(nsIStyleSheet*, iter.UserData()));
+    }
   }
   nsTObserverArray<nsCOMPtr<nsICSSLoaderObserver>>::ForwardIterator
     it(tmp->mObservers);

@@ -970,6 +970,7 @@ AddNameConstraints(void *extHandle)
 
     if (!arena || ! constraints) {
         SECU_PrintError(progName, "out of memory");
+        PORT_FreeArena(arena, PR_FALSE);
         return SECFailure;
     }
 
