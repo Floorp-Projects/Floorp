@@ -19,11 +19,19 @@ constants_jar.sources = [
     'annotation/RobocopTarget.java',
     'annotation/WebRTCJNITarget.java',
     'annotation/WrapForJNI.java',
+    'db/BrowserContract.java',
+    'LocaleManager.java',
+    'Locales.java',
     'SysInfo.java',
 ]
 constants_jar.generated_sources = [
     'preprocessed/org/mozilla/gecko/AdjustConstants.java',
     'preprocessed/org/mozilla/gecko/AppConstants.java',
+]
+constants_jar.extra_jars = [
+    CONFIG['ANDROID_SUPPORT_ANNOTATIONS_JAR_LIB'],
+    CONFIG['ANDROID_SUPPORT_V4_AAR_LIB'],
+    CONFIG['ANDROID_SUPPORT_V4_AAR_INTERNAL_LIB'],
 ]
 
 if CONFIG['MOZ_INSTALL_TRACKING']:
@@ -188,7 +196,6 @@ gbjar.sources += [
     'db/AbstractPerProfileDatabaseProvider.java',
     'db/AbstractTransactionalProvider.java',
     'db/BaseTable.java',
-    'db/BrowserContract.java',
     'db/BrowserDatabaseHelper.java',
     'db/BrowserDB.java',
     'db/BrowserProvider.java',
@@ -389,8 +396,6 @@ gbjar.sources += [
     'IntentHelper.java',
     'javaaddons/JavaAddonManager.java',
     'javaaddons/JavaAddonManagerV1.java',
-    'LocaleManager.java',
-    'Locales.java',
     'lwt/LightweightTheme.java',
     'lwt/LightweightThemeDrawable.java',
     'mdns/MulticastDNSManager.java',
