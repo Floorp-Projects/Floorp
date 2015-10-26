@@ -1,4 +1,4 @@
-const kTransitionalProcessing = true;
+const kTransitionalProcessing = false;
 
 // Four characters map differently under non-transitional processing:
 const labels = [
