@@ -2268,7 +2268,7 @@ HTMLMediaElement::PlayInternal(bool aCallerIsChrome)
   }
 
   if (Preferences::GetBool("media.block-play-until-visible", false) &&
-      !nsContentUtils::IsCallerChrome() &&
+      !aCallerIsChrome &&
       OwnerDoc()->Hidden()) {
     LOG(LogLevel::Debug, ("%p Blocked playback because owner hidden.", this));
     mPlayBlockedBecauseHidden = true;
