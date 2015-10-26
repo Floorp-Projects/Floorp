@@ -24,13 +24,10 @@ Cu.importGlobalProperties(["indexedDB"]);
 XPCOMUtils.defineLazyModuleGetter(this, 'Services',
   'resource://gre/modules/Services.jsm');
 
-this.IndexedDBHelper = function IndexedDBHelper() {}
+this.IndexedDBHelper = function IndexedDBHelper() {
+}
 
 IndexedDBHelper.prototype = {
-
-  // Cache the database
-  _db: null,
-
   // Close the database
   close: function close() {
     if (this._db) {
@@ -48,8 +45,22 @@ IndexedDBHelper.prototype = {
    * @param failureCb
    *        Error callback to call when an error is encountered.
    */
-  open: function open(aSuccessCb, aFailureCb) {
+  open: function open(aCallback) {
+    if (aCallback && !this._waitForOpenCallbacks.has(aCallback)) {
+      this._waitForOpenCallbacks.add(aCallback);
+      if (this._waitForOpenCallbacks.size !== 1) {
+        return;
+      }
+    }
+
     let self = this;
+    let invokeCallbacks = err => {
+      for (let callback of self._waitForOpenCallbacks) {
+        callback(err);
+      }
+      self._waitForOpenCallbacks.clear();
+    };
+
     if (DEBUG) debug("Try to open database:" + self.dbName + " " + self.dbVersion);
     let req = indexedDB.open(this.dbName, this.dbVersion);
     req.onsuccess = function (event) {
@@ -58,7 +69,7 @@ IndexedDBHelper.prototype = {
       self._db.onversionchange = function(event) {
         if (DEBUG) debug("WARNING: DB modified from a different window.");
       }
-      aSuccessCb && aSuccessCb();
+      invokeCallbacks();
     };
 
     req.onupgradeneeded = function (aEvent) {
@@ -72,7 +83,7 @@ IndexedDBHelper.prototype = {
     };
     req.onerror = function (aEvent) {
       if (DEBUG) debug("Failed to open database: " + self.dbName);
-      aFailureCb && aFailureCb(aEvent.target.error.name);
+      invokeCallbacks(aEvent.target.error.name);
     };
     req.onblocked = function (aEvent) {
       if (DEBUG) debug("Opening database request is blocked.");
@@ -96,7 +107,13 @@ IndexedDBHelper.prototype = {
       }
       return;
     }
-    this.open(aSuccessCb, aFailureCb);
+    this.open(aError => {
+      if (aError) {
+        aFailureCb && aFailureCb(aError);
+      } else {
+        aSuccessCb && aSuccessCb();
+      }
+    });
   },
 
   /**
@@ -169,5 +186,8 @@ IndexedDBHelper.prototype = {
     this.dbName = aDBName;
     this.dbVersion = aDBVersion;
     this.dbStoreNames = aDBStoreNames;
+    // Cache the database.
+    this._db = null;
+    this._waitForOpenCallbacks = new Set();
   }
 }
