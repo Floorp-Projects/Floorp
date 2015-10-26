@@ -4532,24 +4532,6 @@ SetPropertyIC::tryAttachTypedArrayElement(JSContext* cx, HandleScript outerScrip
 }
 
 bool
-SetElementIC::update(JSContext* cx, HandleScript outerScript, size_t cacheIndex, HandleObject obj,
-                     HandleValue idval, HandleValue value)
-{
-    IonScript* ion = outerScript->ionScript();
-    SetElementIC& cache = ion->getCache(cacheIndex).toSetElement();
-
-    if (!SetObjectElement(cx, obj, idval, value, cache.strict()))
-        return false;
-    return true;
-}
-
-void
-SetElementIC::reset(ReprotectCode reprotect)
-{
-    IonCache::reset(reprotect);
-}
-
-bool
 BindNameIC::attachGlobal(JSContext* cx, HandleScript outerScript, IonScript* ion,
                          HandleObject scopeChain)
 {

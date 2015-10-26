@@ -357,8 +357,6 @@ class CodeGenerator : public CodeGeneratorSpecific
 
     void visitGetPropertyCacheV(LGetPropertyCacheV* ins);
     void visitGetPropertyCacheT(LGetPropertyCacheT* ins);
-    void visitSetElementCacheV(LSetElementCacheV* ins);
-    void visitSetElementCacheT(LSetElementCacheT* ins);
     void visitBindNameCache(LBindNameCache* ins);
     void visitCallSetProperty(LInstruction* ins);
     void visitSetPropertyCache(LSetPropertyCache* ins);
@@ -366,7 +364,6 @@ class CodeGenerator : public CodeGeneratorSpecific
 
     void visitGetPropertyIC(OutOfLineUpdateCache* ool, DataPtr<GetPropertyIC>& ic);
     void visitSetPropertyIC(OutOfLineUpdateCache* ool, DataPtr<SetPropertyIC>& ic);
-    void visitSetElementIC(OutOfLineUpdateCache* ool, DataPtr<SetElementIC>& ic);
     void visitBindNameIC(OutOfLineUpdateCache* ool, DataPtr<BindNameIC>& ic);
     void visitNameIC(OutOfLineUpdateCache* ool, DataPtr<NameIC>& ic);
 
@@ -403,10 +400,6 @@ class CodeGenerator : public CodeGeneratorSpecific
                              FloatRegister tempF32, ConstantOrRegister id, ConstantOrRegister value,
                              bool strict, bool needsTypeBarrier, bool guardHoles,
                              jsbytecode* profilerLeavePc);
-    void addSetElementCache(LInstruction* ins, Register obj, Register unboxIndex, Register temp,
-                            FloatRegister tempDouble, FloatRegister tempFloat32,
-                            ValueOperand index, ConstantOrRegister value,
-                            bool strict, bool guardHoles, jsbytecode* profilerLeavePc);
 
     bool generateBranchV(const ValueOperand& value, Label* ifTrue, Label* ifFalse, FloatRegister fr);
 

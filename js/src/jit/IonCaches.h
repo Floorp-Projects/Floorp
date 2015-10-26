@@ -29,7 +29,6 @@ class LInstruction;
 #define IONCACHE_KIND_LIST(_)                                   \
     _(GetProperty)                                              \
     _(SetProperty)                                              \
-    _(SetElement)                                               \
     _(BindName)                                                 \
     _(Name)
 
@@ -707,73 +706,6 @@ class SetPropertyIC : public IonCache
     bool tryAttachTypedArrayElement(JSContext* cx, HandleScript outerScript, IonScript* ion,
                                     HandleObject obj, HandleValue idval, HandleValue val,
                                     bool* emitted);
-};
-
-class SetElementIC : public IonCache
-{
-  protected:
-    Register object_;
-    Register tempToUnboxIndex_;
-    Register temp_;
-    FloatRegister tempDouble_;
-    FloatRegister tempFloat32_;
-    ValueOperand index_;
-    ConstantOrRegister value_;
-    bool strict_;
-    bool guardHoles_;
-
-  public:
-    SetElementIC(Register object, Register tempToUnboxIndex, Register temp,
-                 FloatRegister tempDouble, FloatRegister tempFloat32,
-                 ValueOperand index, ConstantOrRegister value,
-                 bool strict, bool guardHoles)
-      : object_(object),
-        tempToUnboxIndex_(tempToUnboxIndex),
-        temp_(temp),
-        tempDouble_(tempDouble),
-        tempFloat32_(tempFloat32),
-        index_(index),
-        value_(value),
-        strict_(strict),
-        guardHoles_(guardHoles)
-    {
-    }
-
-    CACHE_HEADER(SetElement)
-
-    void reset(ReprotectCode reprotect);
-
-    Register object() const {
-        return object_;
-    }
-    Register tempToUnboxIndex() const {
-        return tempToUnboxIndex_;
-    }
-    Register temp() const {
-        return temp_;
-    }
-    FloatRegister tempDouble() const {
-        return tempDouble_;
-    }
-    FloatRegister tempFloat32() const {
-        return tempFloat32_;
-    }
-    ValueOperand index() const {
-        return index_;
-    }
-    ConstantOrRegister value() const {
-        return value_;
-    }
-    bool strict() const {
-        return strict_;
-    }
-    bool guardHoles() const {
-        return guardHoles_;
-    }
-
-    static bool
-    update(JSContext* cx, HandleScript outerScript, size_t cacheIndex, HandleObject obj,
-           HandleValue idval, HandleValue value);
 };
 
 class BindNameIC : public IonCache

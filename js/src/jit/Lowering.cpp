@@ -3534,36 +3534,6 @@ LIRGenerator::visitSetPropertyCache(MSetPropertyCache* ins)
 }
 
 void
-LIRGenerator::visitSetElementCache(MSetElementCache* ins)
-{
-    MOZ_ASSERT(ins->object()->type() == MIRType_Object);
-    MOZ_ASSERT(ins->index()->type() == MIRType_Value);
-
-    gen->setPerformsCall(); // See visitSetPropertyCache.
-
-    LInstruction* lir;
-    if (ins->value()->type() == MIRType_Value) {
-        LDefinition tempF32 = hasUnaliasedDouble() ? tempFloat32() : LDefinition::BogusTemp();
-        lir = new(alloc()) LSetElementCacheV(useRegister(ins->object()), tempToUnbox(),
-                                             temp(), tempDouble(), tempF32);
-
-        useBox(lir, LSetElementCacheV::Index, ins->index());
-        useBox(lir, LSetElementCacheV::Value, ins->value());
-    } else {
-        LDefinition tempF32 = hasUnaliasedDouble() ? tempFloat32() : LDefinition::BogusTemp();
-        lir = new(alloc()) LSetElementCacheT(useRegister(ins->object()),
-                                             useRegisterOrConstant(ins->value()),
-                                             tempToUnbox(), temp(), tempDouble(),
-                                             tempF32);
-
-        useBox(lir, LSetElementCacheT::Index, ins->index());
-    }
-
-    add(lir, ins);
-    assignSafepoint(lir, ins);
-}
-
-void
 LIRGenerator::visitCallSetElement(MCallSetElement* ins)
 {
     MOZ_ASSERT(ins->object()->type() == MIRType_Object);
