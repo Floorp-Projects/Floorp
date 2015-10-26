@@ -22,6 +22,7 @@ function* performTest() {
   testParseCssProperty(doc, parser);
   testParseCssVar(doc, parser);
   testParseURL(doc, parser);
+  testParseFilter(doc, parser);
 
   host.destroy();
 }
@@ -249,3 +250,13 @@ function testParseURL(doc, parser) {
     target.innerHTML = "";
   }
 }
+
+function testParseFilter(doc, parser) {
+  let frag = parser.parseCssProperty("filter", "something invalid", {
+    filterSwatchClass: "test-filterswatch"
+  });
+
+  let swatchCount = frag.querySelectorAll(".test-filterswatch").length;
+  is(swatchCount, 1, "filter swatch was created");
+}
+
