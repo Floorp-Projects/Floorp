@@ -122,6 +122,7 @@ private:
                           nsIContent* aContent) const;
   bool IsReflowLocked() const;
   bool IsSafeToNotifyIME() const;
+  bool IsEditorComposing() const;
 
   void PostFocusSetNotification();
   void MaybeNotifyIMEOfFocusSet();
@@ -129,7 +130,8 @@ private:
   void MaybeNotifyIMEOfTextChange(const TextChangeDataBase& aTextChangeData);
   void PostSelectionChangeNotification();
   void MaybeNotifyIMEOfSelectionChange(bool aCausedByComposition,
-                                       bool aCausedBySelectionEvent);
+                                       bool aCausedBySelectionEvent,
+                                       bool aOccurredDuringComposition);
   void PostPositionChangeNotification();
   void MaybeNotifyIMEOfPositionChange();
 
