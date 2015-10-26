@@ -160,13 +160,11 @@ nsXULCommandDispatcher::GetFocusedWindow(nsIDOMWindow** aWindow)
 
   // Make sure the caller can access this window. The caller can access this
   // window iff it can access the document.
-  nsCOMPtr<nsIDOMDocument> domdoc;
-  nsresult rv = window->GetDocument(getter_AddRefs(domdoc));
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIDocument> doc = window->GetDoc();
 
   // Note: If there is no document, then this window has been cleared and
   // there's nothing left to protect, so let the window pass through.
-  if (domdoc && !nsContentUtils::CanCallerAccess(domdoc))
+  if (doc && !nsContentUtils::CanCallerAccess(doc))
     return NS_ERROR_DOM_SECURITY_ERR;
 
   window.forget(aWindow);

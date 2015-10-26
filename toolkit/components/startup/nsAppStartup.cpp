@@ -433,11 +433,9 @@ nsAppStartup::Quit(uint32_t aMode)
             ferocity = eAttemptQuit;
             nsCOMPtr<nsISupports> window;
             windowEnumerator->GetNext(getter_AddRefs(window));
-            nsCOMPtr<nsIDOMWindow> domWindow = do_QueryInterface(window);
+            nsCOMPtr<nsPIDOMWindow> domWindow = do_QueryInterface(window);
             if (domWindow) {
-              bool closed = false;
-              domWindow->GetClosed(&closed);
-              if (!closed) {
+              if (!domWindow->Closed()) {
                 rv = NS_ERROR_FAILURE;
                 break;
               }

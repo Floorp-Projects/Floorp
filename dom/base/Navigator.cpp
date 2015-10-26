@@ -2645,12 +2645,8 @@ Navigator::HasPresentationSupport(JSContext* aCx, JSObject* aGlobal)
     return false;
   }
 
-  nsCOMPtr<nsIDOMWindow> top;
-  nsresult rv = win->GetTop(getter_AddRefs(top));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return false;
-  }
-
+  win = win->GetOuterWindow();
+  nsCOMPtr<nsPIDOMWindow> top = win->GetTop();
   nsCOMPtr<nsIScriptObjectPrincipal> sop = do_QueryInterface(win);
   nsCOMPtr<nsIScriptObjectPrincipal> topSop = do_QueryInterface(top);
   if (!sop || !topSop) {
@@ -2663,8 +2659,7 @@ Navigator::HasPresentationSupport(JSContext* aCx, JSObject* aGlobal)
     return false;
   }
 
-  nsCOMPtr<nsPIDOMWindow> piTop = do_QueryInterface(top);
-  if (!piTop || !(piTop = piTop->GetCurrentInnerWindow())) {
+  if (!(top = top->GetCurrentInnerWindow())) {
     return false;
   }
 
@@ -2675,7 +2670,7 @@ Navigator::HasPresentationSupport(JSContext* aCx, JSObject* aGlobal)
   }
 
   nsAutoString sessionId;
-  presentationService->GetExistentSessionIdAtLaunch(piTop->WindowID(), sessionId);
+  presentationService->GetExistentSessionIdAtLaunch(top->WindowID(), sessionId);
   return !sessionId.IsEmpty();
 }
 

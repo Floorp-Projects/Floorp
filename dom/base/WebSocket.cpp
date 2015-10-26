@@ -1139,16 +1139,20 @@ protected:
       return true;
     }
 
-    uint64_t windowID = 0;
-    nsCOMPtr<nsIDOMWindow> topWindow;
-    aWindow->GetScriptableTop(getter_AddRefs(topWindow));
-    nsCOMPtr<nsPIDOMWindow> pTopWindow = do_QueryInterface(topWindow);
-    if (pTopWindow) {
-      pTopWindow = pTopWindow->GetCurrentInnerWindow();
+    if (aWindow->IsOuterWindow()) {
+      aWindow = aWindow->GetCurrentInnerWindow();
     }
 
-    if (pTopWindow) {
-      windowID = pTopWindow->WindowID();
+    MOZ_ASSERT(aWindow);
+
+    uint64_t windowID = 0;
+    nsCOMPtr<nsPIDOMWindow> topWindow = aWindow->GetScriptableTop();
+    if (topWindow) {
+      topWindow = topWindow->GetCurrentInnerWindow();
+    }
+
+    if (topWindow) {
+      windowID = topWindow->WindowID();
     }
 
     mImpl->AsyncOpen(principal, windowID, mRv);
@@ -1209,6 +1213,8 @@ WebSocket::Constructor(const GlobalObject& aGlobal,
       return nullptr;
     }
   }
+
+  MOZ_ASSERT_IF(ownerWindow, ownerWindow->IsInnerWindow());
 
   nsTArray<nsString> protocolArray;
 
@@ -1323,16 +1329,16 @@ WebSocket::Constructor(const GlobalObject& aGlobal,
   if (NS_IsMainThread()) {
     MOZ_ASSERT(principal);
 
+    nsPIDOMWindow* outerWindow = ownerWindow->GetOuterWindow();
+
     uint64_t windowID = 0;
-    nsCOMPtr<nsIDOMWindow> topWindow;
-    ownerWindow->GetScriptableTop(getter_AddRefs(topWindow));
-    nsCOMPtr<nsPIDOMWindow> pTopWindow = do_QueryInterface(topWindow);
-    if (pTopWindow) {
-      pTopWindow = pTopWindow->GetCurrentInnerWindow();
+    nsCOMPtr<nsPIDOMWindow> topWindow = outerWindow->GetScriptableTop();
+    if (topWindow) {
+      topWindow = topWindow->GetCurrentInnerWindow();
     }
 
-    if (pTopWindow) {
-      windowID = pTopWindow->WindowID();
+    if (topWindow) {
+      windowID = topWindow->WindowID();
     }
 
     webSocket->mImpl->AsyncOpen(principal, windowID, aRv);
