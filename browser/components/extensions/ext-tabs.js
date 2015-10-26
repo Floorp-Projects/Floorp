@@ -199,6 +199,9 @@ extensions.registerAPI((extension, context) => {
           },
 
           onLocationChange(browser, webProgress, request, locationURI, flags) {
+            if (!webProgress.isTopLevel) {
+              return;
+            }
             let gBrowser = browser.ownerDocument.defaultView.gBrowser;
             let tab = gBrowser.getTabForBrowser(browser);
             let tabId = TabManager.getId(tab);
