@@ -387,3 +387,15 @@ fetch('fetchevent-extendable')
   my_ok(false, "A promise was rejected with " + err);
   finish();
 });
+
+expectAsyncResult();
+fetch('fetchevent-request')
+.then(function(res) {
+  return res.text();
+}).then(function(body) {
+  my_ok(body == "nullable", "FetchEvent.request must be nullable");
+  finish();
+}, function(err) {
+  my_ok(false, "A promise was rejected with " + err);
+  finish();
+});

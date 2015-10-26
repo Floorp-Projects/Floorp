@@ -11,7 +11,7 @@
  Func="mozilla::dom::workers::ServiceWorkerVisible",
  Exposed=(ServiceWorker)]
 interface FetchEvent : ExtendableEvent {
-  [SameObject] readonly attribute Request request;
+  [SameObject] readonly attribute Request? request;
   readonly attribute boolean isReload;
 
   [Throws]
