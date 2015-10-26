@@ -26,7 +26,7 @@ DIRS = \
 	libpkix \
 	certdb certhigh pk11wrap cryptohi nss \
 	$(ZLIB_SRCDIR) ssl \
-	pkcs12 pkcs7 smime \
+	pkcs7 pkcs12 smime \
 	crmf jar \
 	ckfw $(SYSINIT_SRCDIR) \
 	$(NULL)

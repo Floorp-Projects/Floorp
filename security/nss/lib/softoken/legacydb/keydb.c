@@ -1378,7 +1378,7 @@ nsslowkey_PutPWCheckEntry(NSSLOWKEYDBHandle *handle,NSSLOWKEYPasswordEntry *entr
     NSSLOWKEYDBKey *dbkey = NULL;
     SECItem   *item = NULL; 
     SECItem   salt; 
-    SECOidTag algid;
+    SECOidTag algid = SEC_OID_UNKNOWN;
     SECStatus rv = SECFailure;
     PLArenaPool *arena;
     int ret;
@@ -1476,7 +1476,9 @@ seckey_encrypt_private_key( PLArenaPool *permarena, NSSLOWKEYPrivateKey *pk,
     SECItem *cipherText = NULL;
     SECItem *dummy = NULL;
 #ifndef NSS_DISABLE_ECC
+#ifdef EC_DEBUG
     SECItem *fordebug = NULL;
+#endif
     int savelen;
 #endif
 
@@ -1589,9 +1591,11 @@ seckey_encrypt_private_key( PLArenaPool *permarena, NSSLOWKEYPrivateKey *pk,
 	    goto loser;
 	}
 	
+#ifdef EC_DEBUG
 	fordebug = &(pki->privateKey);
 	SEC_PRINT("seckey_encrypt_private_key()", "PrivateKey", 
 		  pk->keyType, fordebug);
+#endif
 
 	break;
 #endif /* NSS_DISABLE_ECC */
@@ -1704,7 +1708,7 @@ seckey_decrypt_private_key(SECItem*epki,
     SECStatus rv = SECFailure;
     PLArenaPool *temparena = NULL, *permarena = NULL;
     SECItem *dest = NULL;
-#ifndef NSS_DISABLE_ECC
+#ifdef EC_DEBUG
     SECItem *fordebug = NULL;
 #endif
 
@@ -1817,9 +1821,11 @@ seckey_decrypt_private_key(SECItem*epki,
 		pk->keyType = NSSLOWKEYECKey;
 		lg_prepare_low_ec_priv_key_for_asn1(pk);
 
+#ifdef EC_DEBUG
 		fordebug = &pki->privateKey;
 		SEC_PRINT("seckey_decrypt_private_key()", "PrivateKey", 
 			  pk->keyType, fordebug);
+#endif
                 if (SECSuccess != SECITEM_CopyItem(permarena, &newPrivateKey,
                     &pki->privateKey) ) break;
 		rv = SEC_QuickDERDecodeItem(permarena, pk,
@@ -1990,12 +1996,10 @@ encodePWCheckEntry(PLArenaPool *arena, SECItem *entry, SECOidTag alg,
 		   SECItem *encCheck)
 {
     SECOidData *oidData;
-    SECStatus rv;
     
     oidData = SECOID_FindOIDByTag(alg);
     if ( oidData == NULL ) {
-	rv = SECFailure;
-	goto loser;
+	return SECFailure;
     }
 
     entry->len = 1 + oidData->oid.len + encCheck->len;
@@ -2006,7 +2010,7 @@ encodePWCheckEntry(PLArenaPool *arena, SECItem *entry, SECOidTag alg,
     }
     
     if ( entry->data == NULL ) {
-	goto loser;
+	return SECFailure;
     }
 	
     /* first length of oid */
@@ -2017,10 +2021,7 @@ encodePWCheckEntry(PLArenaPool *arena, SECItem *entry, SECOidTag alg,
     PORT_Memcpy(&entry->data[1+oidData->oid.len], encCheck->data,
 		encCheck->len);
 
-    return(SECSuccess);
-
-loser:
-    return(SECFailure);
+    return SECSuccess;
 }
     
 
@@ -2032,7 +2033,6 @@ static SECStatus
 nsslowkey_ResetKeyDB(NSSLOWKEYDBHandle *handle)
 {
     SECStatus rv;
-    int ret;
     int errors = 0;
 
     if ( handle->db == NULL ) {
@@ -2080,7 +2080,7 @@ nsslowkey_ResetKeyDB(NSSLOWKEYDBHandle *handle)
 
 done:
     /* sync the database */
-    ret = keydb_Sync(handle, 0);
+    (void)keydb_Sync(handle, 0);
     db_InitComplete(handle->db);
 
     return (errors == 0 ? SECSuccess : SECFailure);
@@ -2089,7 +2089,6 @@ done:
 static int
 keydb_Get(NSSLOWKEYDBHandle *kdb, DBT *key, DBT *data, unsigned int flags)
 {
-    PRStatus prstat;
     int ret;
     PRLock *kdbLock = kdb->lock;
     DB *db = kdb->db;
@@ -2099,7 +2098,7 @@ keydb_Get(NSSLOWKEYDBHandle *kdb, DBT *key, DBT *data, unsigned int flags)
 
     ret = (* db->get)(db, key, data, flags);
 
-    prstat = PZ_Unlock(kdbLock);
+    (void)PZ_Unlock(kdbLock);
 
     return(ret);
 }
@@ -2107,7 +2106,6 @@ keydb_Get(NSSLOWKEYDBHandle *kdb, DBT *key, DBT *data, unsigned int flags)
 static int
 keydb_Put(NSSLOWKEYDBHandle *kdb, DBT *key, DBT *data, unsigned int flags)
 {
-    PRStatus prstat;
     int ret = 0;
     PRLock *kdbLock = kdb->lock;
     DB *db = kdb->db;
@@ -2117,7 +2115,7 @@ keydb_Put(NSSLOWKEYDBHandle *kdb, DBT *key, DBT *data, unsigned int flags)
 
     ret = (* db->put)(db, key, data, flags);
     
-    prstat = PZ_Unlock(kdbLock);
+    (void)PZ_Unlock(kdbLock);
 
     return(ret);
 }
@@ -2125,7 +2123,6 @@ keydb_Put(NSSLOWKEYDBHandle *kdb, DBT *key, DBT *data, unsigned int flags)
 static int
 keydb_Sync(NSSLOWKEYDBHandle *kdb, unsigned int flags)
 {
-    PRStatus prstat;
     int ret;
     PRLock *kdbLock = kdb->lock;
     DB *db = kdb->db;
@@ -2135,7 +2132,7 @@ keydb_Sync(NSSLOWKEYDBHandle *kdb, unsigned int flags)
 
     ret = (* db->sync)(db, flags);
     
-    prstat = PZ_Unlock(kdbLock);
+    (void)PZ_Unlock(kdbLock);
 
     return(ret);
 }
@@ -2143,7 +2140,6 @@ keydb_Sync(NSSLOWKEYDBHandle *kdb, unsigned int flags)
 static int
 keydb_Del(NSSLOWKEYDBHandle *kdb, DBT *key, unsigned int flags)
 {
-    PRStatus prstat;
     int ret;
     PRLock *kdbLock = kdb->lock;
     DB *db = kdb->db;
@@ -2153,7 +2149,7 @@ keydb_Del(NSSLOWKEYDBHandle *kdb, DBT *key, unsigned int flags)
 
     ret = (* db->del)(db, key, flags);
     
-    prstat = PZ_Unlock(kdbLock);
+    (void)PZ_Unlock(kdbLock);
 
     return(ret);
 }
@@ -2161,7 +2157,6 @@ keydb_Del(NSSLOWKEYDBHandle *kdb, DBT *key, unsigned int flags)
 static int
 keydb_Seq(NSSLOWKEYDBHandle *kdb, DBT *key, DBT *data, unsigned int flags)
 {
-    PRStatus prstat;
     int ret;
     PRLock *kdbLock = kdb->lock;
     DB *db = kdb->db;
@@ -2171,7 +2166,7 @@ keydb_Seq(NSSLOWKEYDBHandle *kdb, DBT *key, DBT *data, unsigned int flags)
     
     ret = (* db->seq)(db, key, data, flags);
 
-    prstat = PZ_Unlock(kdbLock);
+    (void)PZ_Unlock(kdbLock);
 
     return(ret);
 }
@@ -2179,7 +2174,6 @@ keydb_Seq(NSSLOWKEYDBHandle *kdb, DBT *key, DBT *data, unsigned int flags)
 static void
 keydb_Close(NSSLOWKEYDBHandle *kdb)
 {
-    PRStatus prstat;
     PRLock *kdbLock = kdb->lock;
     DB *db = kdb->db;
 
@@ -2188,7 +2182,7 @@ keydb_Close(NSSLOWKEYDBHandle *kdb)
 
     (* db->close)(db);
     
-    SKIP_AFTER_FORK(prstat = PZ_Unlock(kdbLock));
+    SKIP_AFTER_FORK(PZ_Unlock(kdbLock));
 
     return;
 }

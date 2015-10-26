@@ -1,2 +1,3 @@
-# Disabled because it causes assertions/crashes in later crashtests, see bug 918246
+# Disabled because they cause assertions/crashes in later crashtests, see bug 918246
+skip load 448064.xhtml
 skip load 471493.xul

@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <defs>
+    <g id="module">
+      <use xlink:href="#module" />
+      <use xlink:href="#module" />
+      <use xlink:href="#module" />
+      <use xlink:href="#module" />
+      <use xlink:href="#baseModule" />
+      <use xlink:href="#baseModule" />
+      <use xlink:href="#extendsModule" />
+      <use xlink:href="#extendsModule" />
+      <use xlink:href="#extendsModule" />
+      <use xlink:href="#extendsModule" />
+      <use xlink:href="#extendsModule" />
+      <use xlink:href="#extendsModule" />
+    </g>
+    <use id="baseModule" xlink:href="#module" />
+    <use id="extendsModule" xlink:href="#module" />
+  </defs>
+</svg>

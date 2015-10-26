@@ -265,7 +265,7 @@ pkix_pl_HttpDefaultClient_HdrCheckComplete(
              contentLength =                 /* Try to reserve 4K+ buffer */
                  client->filledupBytes + HTTP_DATA_BUFSIZE;
              if (client->maxResponseLen > 0 &&
-                 contentLength > client->maxResponseLen) {
+                 contentLength > (PKIX_Int32)client->maxResponseLen) {
                  if (client->filledupBytes < client->maxResponseLen) {
                      contentLength = client->maxResponseLen;
                  } else {
@@ -282,7 +282,7 @@ pkix_pl_HttpDefaultClient_HdrCheckComplete(
          default:
              client->rcv_http_data_len = contentLength;
              if (client->maxResponseLen > 0 &&
-                 client->maxResponseLen < contentLength) {
+                 (PKIX_Int32)client->maxResponseLen < contentLength) {
                  client->connectStatus = HTTP_ERROR;
                  goto cleanup;
              }
@@ -290,7 +290,7 @@ pkix_pl_HttpDefaultClient_HdrCheckComplete(
              /*
               * Do we have all of the message body, or do we need to read some more?
               */
-             if (client->filledupBytes < contentLength) {
+             if ((PKIX_Int32)client->filledupBytes < contentLength) {
                  client->connectStatus = HTTP_RECV_BODY;
                  *pKeepGoing = PKIX_TRUE;
              } else {
@@ -935,7 +935,7 @@ pkix_pl_HttpDefaultClient_RecvBody(
                  * plus remaining capacity, plus new expansion. */
                 int currBuffSize = client->capacity;
                 /* Try to increase the buffer by 4K */
-                int newLength = currBuffSize + HTTP_DATA_BUFSIZE;
+                unsigned int newLength = currBuffSize + HTTP_DATA_BUFSIZE;
                 if (client->maxResponseLen > 0 &&
                     newLength > client->maxResponseLen) {
                         newLength = client->maxResponseLen;
@@ -1480,8 +1480,6 @@ pkix_pl_HttpDefaultClient_Cancel(
         SEC_HTTP_REQUEST_SESSION request,
         void *plContext)
 {
-        PKIX_PL_HttpDefaultClient *client = NULL;
-
         PKIX_ENTER(HTTPDEFAULTCLIENT, "pkix_pl_HttpDefaultClient_Cancel");
         PKIX_NULLCHECK_ONE(request);
 
@@ -1490,8 +1488,6 @@ pkix_pl_HttpDefaultClient_Cancel(
                 PKIX_HTTPDEFAULTCLIENT_TYPE,
                 plContext),
                 PKIX_REQUESTNOTANHTTPDEFAULTCLIENT);
-
-        client = (PKIX_PL_HttpDefaultClient *)request;
 
         /* XXX Not implemented */
 

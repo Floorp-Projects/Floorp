@@ -1082,3 +1082,11 @@ SECKEY_BigIntegerBitLength;
 ;+    local:
 ;+       *;
 ;+};
+;+NSS_3.21 { 	# NSS 3.21 release
+;+    global:
+NSS_OptionGet;
+NSS_OptionSet;
+SECMOD_CreateModuleEx;
+;+    local:
+;+       *;
+;+};

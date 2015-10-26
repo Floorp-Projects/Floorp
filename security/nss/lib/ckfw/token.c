@@ -1258,7 +1258,7 @@ nssCKFWToken_GetUTCTime
   {
     /* Format is YYYYMMDDhhmmss00 */
     int i;
-    int Y, M, D, h, m, s, z;
+    int Y, M, D, h, m, s;
     static int dims[] = { 31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 };
 
     for( i = 0; i < 16; i++ ) {
@@ -1274,7 +1274,6 @@ nssCKFWToken_GetUTCTime
     h = ((utcTime[ 8] - '0') * 10) + (utcTime[ 9] - '0');
     m = ((utcTime[10] - '0') * 10) + (utcTime[11] - '0');
     s = ((utcTime[12] - '0') * 10) + (utcTime[13] - '0');
-    z = ((utcTime[14] - '0') * 10) + (utcTime[15] - '0');
 
     if( (Y < 1990) || (Y > 3000) ) goto badtime; /* Y3K problem.  heh heh heh */
     if( (M < 1) || (M > 12) ) goto badtime;

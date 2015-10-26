@@ -254,8 +254,10 @@ mp_err   MPI_ASM_DECL s_mpv_div_2dx1d(mp_digit Nhi, mp_digit Nlo,
                             mp_digit divisor, mp_digit *quot, mp_digit *rem);
 
 /* c += a * b * (MP_RADIX ** offset);  */
+/* Callers of this macro should be aware that the return type might vary;
+ * it should be treated as a void function. */
 #define s_mp_mul_d_add_offset(a, b, c, off) \
-(s_mpv_mul_d_add_prop(MP_DIGITS(a), MP_USED(a), b, MP_DIGITS(c) + off), MP_OKAY)
+  s_mpv_mul_d_add_prop(MP_DIGITS(a), MP_USED(a), b, MP_DIGITS(c) + off)
 
 typedef struct {
   mp_int       N;	/* modulus N */

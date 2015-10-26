@@ -73,6 +73,11 @@
       </varlistentry>
 
       <varlistentry>
+        <term>--rename </term>
+        <listitem><para>Change the database nickname of a certificate.</para></listitem>
+      </varlistentry>
+
+      <varlistentry>
         <term>-E </term>
         <listitem><para>Add an email certificate to the certificate database.</para></listitem>
       </varlistentry>
@@ -729,6 +734,11 @@ PKCS #11 key Operation Flags.
 Comma separated list of one or more of the following:
 {token | session} {public | private} {sensitive | insensitive} {modifiable | unmodifiable} {extractable | unextractable}
           </para></listitem>
+      </varlistentry>
+
+      <varlistentry>
+        <term>--new-n nickname</term>
+        <listitem><para>A new nickname, used when renaming a certificate.</para></listitem>
       </varlistentry>
 
       <varlistentry>

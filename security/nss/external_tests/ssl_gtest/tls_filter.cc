@@ -187,6 +187,18 @@ bool TlsInspectorRecordHandshakeMessage::FilterHandshake(
   return false;
 }
 
+
+bool TlsInspectorReplaceHandshakeMessage::FilterHandshake(
+    uint16_t version, uint8_t handshake_type,
+    const DataBuffer& input, DataBuffer* output) {
+  if (handshake_type == handshake_type_) {
+    *output = buffer_;
+    return true;
+  }
+
+  return false;
+}
+
 bool TlsAlertRecorder::FilterRecord(uint8_t content_type, uint16_t version,
                                     const DataBuffer& input, DataBuffer* output) {
   if (level_ == kTlsAlertFatal) { // already fatal

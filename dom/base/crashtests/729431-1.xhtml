@@ -1,0 +1,36 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<script>
+<![CDATA[
+
+function boom()
+{
+  var d = document.createElementNS("http://www.w3.org/1999/xhtml", "div");
+  d.setAttributeNS(null, "contenteditable", "true");
+  var s = document.createElementNS("http://www.w3.org/1999/xhtml", "span");
+  d.appendChild(s);
+  document.documentElement.appendChild(d);
+
+  var textarea = document.createElementNS("http://www.w3.org/1999/xhtml", "textarea");
+  var t1 = document.createTextNode("A");
+  textarea.appendChild(t1);
+  var t2 = document.createTextNode("B");
+  textarea.appendChild(t2);
+  document.documentElement.appendChild(textarea);
+
+  document.documentElement.offsetHeight;
+
+  d.removeChild(s);
+  textarea.removeChild(t2);
+  document.documentElement.appendChild(document.createTextNode(" C "));
+  document.documentElement.appendChild(t2);
+}
+
+window.addEventListener("load", boom, false);
+
+]]>
+</script>
+
+<!-- no body -->
+
+</html>

@@ -51,10 +51,6 @@ const SEC_ASN1Template NSSCMSMessageTemplate[] = {
     { 0 }
 };
 
-static const SEC_ASN1Template NSS_PointerToCMSMessageTemplate[] = {
-    { SEC_ASN1_POINTER, 0, NSSCMSMessageTemplate }
-};
-
 /* -----------------------------------------------------------------------------
  * ENCAPSULATED & ENCRYPTED CONTENTINFO
  * (both use a NSSCMSContentInfo)
