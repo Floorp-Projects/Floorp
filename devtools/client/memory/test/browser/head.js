@@ -10,6 +10,10 @@ Services.scriptloader.loadSubScript(
 
 Services.prefs.setBoolPref("devtools.memory.enabled", true);
 
+function dumpn(msg) {
+  dump("MEMORY: " + msg + "\n");
+}
+
 /**
  * Open the memory panel for the given tab.
  */
