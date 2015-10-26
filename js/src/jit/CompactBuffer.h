@@ -168,7 +168,7 @@ class CompactBufferWriter
     }
     void writeNativeEndianUint32_t(uint32_t value) {
         // Must be at 4-byte boundary
-        MOZ_ASSERT(length() % sizeof(uint32_t) == 0);
+        MOZ_ASSERT_IF(!oom(), length() % sizeof(uint32_t) == 0);
         writeFixedUint32_t(0);
         if (oom())
             return;
