@@ -45,9 +45,7 @@ using JS::ForOfIterator;
 
 using mozilla::ArrayLength;
 using mozilla::Maybe;
-#ifdef JS_MORE_DETERMINISTIC
 using mozilla::PodCopy;
-#endif
 using mozilla::PodZero;
 
 typedef Rooted<PropertyIteratorObject*> RootedPropertyIteratorObject;
@@ -138,6 +136,16 @@ Enumerate(JSContext* cx, HandleObject pobj, jsid id,
 }
 
 static bool
+SortComparatorIntegerIds(jsid a, jsid b, bool* lessOrEqualp)
+{
+    uint32_t indexA, indexB;
+    MOZ_ALWAYS_TRUE(IdIsIndex(a, &indexA));
+    MOZ_ALWAYS_TRUE(IdIsIndex(b, &indexB));
+    *lessOrEqualp = (indexA <= indexB);
+    return true;
+}
+
+static bool
 EnumerateNativeProperties(JSContext* cx, HandleNativeObject pobj, unsigned flags, Maybe<IdSet>& ht,
                           AutoIdVector* props)
 {
@@ -148,8 +156,11 @@ EnumerateNativeProperties(JSContext* cx, HandleNativeObject pobj, unsigned flags
         /* Collect any dense elements from this object. */
         size_t initlen = pobj->getDenseInitializedLength();
         const Value* vp = pobj->getDenseElements();
+        bool hasHoles = false;
         for (size_t i = 0; i < initlen; ++i, ++vp) {
-            if (!vp->isMagic(JS_ELEMENTS_HOLE)) {
+            if (vp->isMagic(JS_ELEMENTS_HOLE)) {
+                hasHoles = true;
+            } else {
                 /* Dense arrays never get so large that i would not fit into an integer id. */
                 if (!Enumerate(cx, pobj, INT_TO_JSID(i), /* enumerable = */ true, flags, ht, props))
                     return false;
@@ -165,6 +176,37 @@ EnumerateNativeProperties(JSContext* cx, HandleNativeObject pobj, unsigned flags
             }
         }
 
+        // Collect any sparse elements from this object.
+        bool isIndexed = pobj->isIndexed();
+        if (isIndexed) {
+            size_t numElements = props->length();
+
+            for (Shape::Range<NoGC> r(pobj->lastProperty()); !r.empty(); r.popFront()) {
+                Shape& shape = r.front();
+                jsid id = shape.propid();
+                uint32_t dummy;
+                if (IdIsIndex(id, &dummy)) {
+                    if (!Enumerate(cx, pobj, id, shape.enumerable(), flags, ht, props))
+                        return false;
+                }
+            }
+
+            // If the dense elements didn't have holes, we don't need to include
+            // them in the sort.
+            size_t startIndex = hasHoles ? 0 : numElements;
+
+            jsid* ids = props->begin() + startIndex;
+            size_t n = props->length() - startIndex;
+
+            AutoIdVector tmp(cx);
+            if (!tmp.resize(n))
+                return false;
+            PodCopy(tmp.begin(), ids, n);
+
+            if (!MergeSort(ids, n, tmp.begin(), SortComparatorIntegerIds))
+                return false;
+        }
+
         size_t initialLength = props->length();
 
         /* Collect all unique property names from this object's shape. */
@@ -178,6 +220,10 @@ EnumerateNativeProperties(JSContext* cx, HandleNativeObject pobj, unsigned flags
                 symbolsFound = true;
                 continue;
             }
+
+            uint32_t dummy;
+            if (isIndexed && IdIsIndex(id, &dummy))
+                continue;
 
             if (!Enumerate(cx, pobj, id, shape.enumerable(), flags, ht, props))
                 return false;

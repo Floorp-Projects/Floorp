@@ -349,7 +349,7 @@ PKIX_RevocationChecker_Check(
      *    first we are going to test all local(cached) info
      *    second, all remote info(fetching) */
     for (tries = 0;tries < 2;tries++) {
-        int methodNum = 0;
+        unsigned int methodNum = 0;
         for (;methodNum < revList->length;methodNum++) {
             PKIX_UInt32 methodFlags = 0;
 
@@ -372,7 +372,8 @@ PKIX_RevocationChecker_Check(
                                                methodFlags, 
                                                chainVerificationState,
                                                &revStatus,
-                                               pReasonCode, plContext),
+                                               (CERTCRLEntryReasonCode *)pReasonCode,
+                                               plContext),
                     PKIX_REVCHECKERCHECKFAILED);
                 methodStatus[methodNum] = revStatus;
                 if (revStatus == PKIX_RevStatus_Revoked) {
@@ -397,7 +398,8 @@ PKIX_RevocationChecker_Check(
                         (*method->externalRevChecker)(cert, issuer, date,
                                                       method,
                                                       procParams, methodFlags,
-                                                      &revStatus, pReasonCode,
+                                                      &revStatus,
+                                                      (CERTCRLEntryReasonCode *)pReasonCode,
                                                       &nbioContext, plContext),
                         PKIX_REVCHECKERCHECKFAILED);
                     methodStatus[methodNum] = revStatus;

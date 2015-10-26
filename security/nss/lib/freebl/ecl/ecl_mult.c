@@ -129,7 +129,7 @@ ec_pts_mul_simul_w2(const mp_int *k1, const mp_int *k2, const mp_int *px,
 	mp_err res = MP_OKAY;
 	mp_int precomp[4][4][2];
 	const mp_int *a, *b;
-	int i, j;
+        unsigned int i, j;
 	int ai, bi, d;
 
 	ARGCHK(group != NULL, MP_BADARG);
@@ -236,7 +236,7 @@ ec_pts_mul_simul_w2(const mp_int *k1, const mp_int *k2, const mp_int *px,
 	mp_zero(rx);
 	mp_zero(ry);
 
-	for (i = d - 1; i >= 0; i--) {
+        for (i = d; i-- > 0;) {
 		ai = MP_GET_BIT(a, 2 * i + 1);
 		ai <<= 1;
 		ai |= MP_GET_BIT(a, 2 * i);

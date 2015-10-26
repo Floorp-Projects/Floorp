@@ -91,7 +91,7 @@ NSSRWLock_New(PRUint32 lock_rank, const char *lock_name)
 	goto loser;
     }
     if (lock_name != NULL) {
-        rwlock->rw_name = (char*) PR_Malloc(strlen(lock_name) + 1);
+        rwlock->rw_name = (char*) PR_Malloc((PRUint32)strlen(lock_name) + 1);
         if (rwlock->rw_name == NULL) {
 	    goto loser;
         }

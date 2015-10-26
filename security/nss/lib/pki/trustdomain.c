@@ -991,7 +991,6 @@ NSSTrustDomain_TraverseCertificates (
   void *arg
 )
 {
-    PRStatus status = PR_FAILURE;
     NSSToken *token = NULL;
     NSSSlot **slots = NULL;
     NSSSlot **slotp;
@@ -1028,7 +1027,7 @@ NSSTrustDomain_TraverseCertificates (
 	    session = nssTrustDomain_GetSessionForToken(td, token);
 	    if (session) {
 		/* perform the traversal */
-		status = nssToken_TraverseCertificates(token,
+		(void)nssToken_TraverseCertificates(token,
 						       session,
 						       tokenOnly,
 						       collector,
@@ -1041,7 +1040,7 @@ NSSTrustDomain_TraverseCertificates (
     /* Traverse the collection */
     pkiCallback.func.cert = callback;
     pkiCallback.arg = arg;
-    status = nssPKIObjectCollection_Traverse(collection, &pkiCallback);
+    (void)nssPKIObjectCollection_Traverse(collection, &pkiCallback);
 loser:
     if (slots) {
 	nssSlotArray_Destroy(slots);

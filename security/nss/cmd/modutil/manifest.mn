@@ -24,7 +24,7 @@ PROGRAM =  modutil
 
 REQUIRES = seccmd nss dbm
 
-DEFINES = -DNSPR20
+DEFINES = -DNSPR20 -DYY_NO_UNPUT -DYY_NO_INPUT
 
 # sigh
 #INCLUDES += -I$(CORE_DEPTH)/nss/lib/pk11wrap

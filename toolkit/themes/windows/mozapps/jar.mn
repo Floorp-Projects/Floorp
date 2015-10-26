@@ -96,6 +96,8 @@ toolkit.jar:
 
 #if MOZ_BUILD_APP == browser
 [browser/extensions/{972ce4c6-7e08-4474-a285-3208198ce6fd}] chrome.jar:
+#elif MOZ_SEPARATE_MANIFEST_FOR_THEME_OVERRIDES
+[extensions/{972ce4c6-7e08-4474-a285-3208198ce6fd}] chrome.jar:
 #endif
 % override chrome://mozapps/skin/downloads/downloadButtons.png            chrome://mozapps/skin/downloads/downloadButtons-XP.png        osversion<6
 % override chrome://mozapps/skin/downloads/downloadIcon.png               chrome://mozapps/skin/downloads/downloadIcon-XP.png           osversion<6
@@ -117,6 +119,8 @@ toolkit.jar:
 
 #if MOZ_BUILD_APP == browser
 [browser/extensions/{972ce4c6-7e08-4474-a285-3208198ce6fd}] chrome.jar:
+#elif MOZ_SEPARATE_MANIFEST_FOR_THEME_OVERRIDES
+[extensions/{972ce4c6-7e08-4474-a285-3208198ce6fd}] chrome.jar:
 #endif
 % override chrome://mozapps/skin/extensions/category-dictionaries.png     chrome://mozapps/skin/extensions/dictionaryGeneric.png
 % override chrome://mozapps/skin/extensions/category-experiments.png      chrome://mozapps/skin/extensions/experimentGeneric.png

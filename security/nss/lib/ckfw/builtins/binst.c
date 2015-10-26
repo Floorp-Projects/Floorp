@@ -65,10 +65,8 @@ builtins_mdInstance_GetLibraryVersion
   NSSCKFWInstance *fwInstance
 )
 {
-  extern const char __nss_builtins_version[];
-  volatile char c; /* force a reference that won't get optimized away */
-
-  c = __nss_builtins_version[0];
+#define NSS_VERSION_VARIABLE __nss_builtins_version
+#include "verref.h"
   return nss_builtins_LibraryVersion;
 }
 

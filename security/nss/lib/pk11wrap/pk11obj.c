@@ -1577,7 +1577,7 @@ PK11_WriteRawAttribute(PK11ObjectType objType, void *objSpec,
 				CK_ATTRIBUTE_TYPE attrType, SECItem *item)
 {
     PK11SlotInfo *slot = NULL;
-    CK_OBJECT_HANDLE handle;
+    CK_OBJECT_HANDLE handle = 0;
     CK_ATTRIBUTE setTemplate;
     CK_RV crv;
     CK_SESSION_HANDLE rwsession;
@@ -1630,7 +1630,7 @@ PK11_ReadRawAttribute(PK11ObjectType objType, void *objSpec,
 				CK_ATTRIBUTE_TYPE attrType, SECItem *item)
 {
     PK11SlotInfo *slot = NULL;
-    CK_OBJECT_HANDLE handle;
+    CK_OBJECT_HANDLE handle = 0;
 
     switch (objType) {
     case PK11_TypeGeneric:
@@ -1781,7 +1781,6 @@ PK11_MatchItem(PK11SlotInfo *slot, CK_OBJECT_HANDLE searchID,
     int tsize = sizeof(theTemplate)/sizeof(theTemplate[0]);
     /* if you change the array, change the variable below as well */
     CK_OBJECT_HANDLE peerID;
-    CK_OBJECT_HANDLE parent;
     PLArenaPool *arena;
     CK_RV crv;
 
@@ -1810,7 +1809,6 @@ PK11_MatchItem(PK11SlotInfo *slot, CK_OBJECT_HANDLE searchID,
     /*
      * issue the find
      */
-    parent = *(CK_OBJECT_CLASS *)(keyclass->pValue);
     *(CK_OBJECT_CLASS *)(keyclass->pValue) = matchclass;
 
     peerID = pk11_FindObjectByTemplate(slot,theTemplate,tsize);

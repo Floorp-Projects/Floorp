@@ -7,6 +7,7 @@
 #define mozilla_layers_APZThreadUtils_h
 
 #include "base/message_loop.h"
+#include "mozilla/TimeStamp.h"  // for TimeDuration
 #include "nsITimer.h"
 
 class Task;
@@ -50,6 +51,12 @@ public:
    * run immediately without getting queued.
    */
   static void RunOnControllerThread(Task* aTask);
+
+  /**
+   * Runs the given task on the current thread after a delay of |aDelay|.
+   */
+  static void RunDelayedTaskOnCurrentThread(Task* aTask,
+                                            const TimeDuration& aDelay);
 };
 
 // A base class for GenericTimerCallback<Function>.

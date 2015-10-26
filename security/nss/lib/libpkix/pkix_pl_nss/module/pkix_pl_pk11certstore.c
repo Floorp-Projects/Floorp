@@ -379,14 +379,12 @@ NameCacheHasFetchedCrlInfo(PKIX_PL_Cert *pkixCert,
     PKIX_Boolean hasFetchedCrlInCache = PKIX_TRUE;
     PKIX_List *dpList = NULL;
     pkix_pl_CrlDp *dp = NULL;
-    CERTCertificate *cert;
     PKIX_UInt32 dpIndex = 0;
     SECStatus rv = SECSuccess;
     PRTime reloadDelay = 0, badCrlInvalDelay = 0;
 
     PKIX_ENTER(CERTSTORE, "ChechCacheHasFetchedCrl");
 
-    cert = pkixCert->nssCert;
     reloadDelay = 
         ((PKIX_PL_NssContext*)plContext)->crlReloadDelay *
                                                 PR_USEC_PER_SEC;
@@ -480,7 +478,7 @@ pkix_pl_Pk11CertStore_CheckRevByCrl(
         PKIX_PL_Cert *pkixIssuer,
         PKIX_PL_Date *date,
         PKIX_Boolean  crlDownloadDone,
-        PKIX_UInt32  *pReasonCode,
+        CERTCRLEntryReasonCode *pReasonCode,
         PKIX_RevocationStatus *pStatus,
         void *plContext)
 {
@@ -675,7 +673,7 @@ RemovePartitionedDpsFromList(PKIX_List *dpList, PKIX_PL_Date *date,
 {
     NamedCRLCache* nameCrlCache = NULL;
     pkix_pl_CrlDp *dp = NULL;
-    int dpIndex = 0;
+    unsigned int dpIndex = 0;
     PRTime time;
     PRTime reloadDelay = 0, badCrlInvalDelay = 0;
     SECStatus rv;
@@ -779,7 +777,6 @@ DownloadCrl(pkix_pl_CrlDp *dp, PKIX_PL_CRL **crl,
     SECItem *derCrlCopy = NULL;
     CERTSignedCrl *nssCrl = NULL;
     CERTGeneralName *genName = NULL;
-    PKIX_Int32 savedError = -1;
     SECItem **derGenNames = NULL;
     SECItem  *derGenName = NULL;
 
@@ -799,13 +796,11 @@ DownloadCrl(pkix_pl_CrlDp *dp, PKIX_PL_CRL **crl,
             if (!derGenName ||
                 !genName->name.other.data) {
                 /* get to next name if no data. */
-                savedError = PKIX_UNSUPPORTEDCRLDPTYPE;
                 break;
             }
             uri = &genName->name.other;
             location = (char*)PR_Malloc(1 + uri->len);
             if (!location) {
-                savedError = PKIX_ALLOCERROR;
                 break;
             }
             PORT_Memcpy(location, uri->data, uri->len);
@@ -813,7 +808,6 @@ DownloadCrl(pkix_pl_CrlDp *dp, PKIX_PL_CRL **crl,
             if (CERT_ParseURL(location, &hostname,
                               &port, &path) != SECSuccess) {
                 PORT_SetError(SEC_ERROR_BAD_CRL_DP_URL);
-                savedError = PKIX_URLPARSINGFAILED;
                 break;
             }
     
@@ -823,7 +817,6 @@ DownloadCrl(pkix_pl_CrlDp *dp, PKIX_PL_CRL **crl,
             if ((*hcv1->createSessionFcn)(hostname, port, 
                                           &pServerSession) != SECSuccess) {
                 PORT_SetError(SEC_ERROR_BAD_CRL_DP_URL);
-                savedError = PKIX_URLPARSINGFAILED;
                 break;
             }
 
@@ -835,7 +828,6 @@ DownloadCrl(pkix_pl_CrlDp *dp, PKIX_PL_CRL **crl,
                           PR_SecondsToInterval(
                               ((PKIX_PL_NssContext*)plContext)->timeoutSeconds),
                                    &pRequestSession) != SECSuccess) {
-                savedError = PKIX_HTTPSERVERERROR;
                 break;
             }
 
@@ -858,12 +850,10 @@ DownloadCrl(pkix_pl_CrlDp *dp, PKIX_PL_CRL **crl,
                     NULL,
                     &myHttpResponseData,
                     &myHttpResponseDataLen) != SECSuccess) {
-                savedError = PKIX_HTTPSERVERERROR;
                 break;
             }
 
             if (myHttpResponseCode != 200) {
-                savedError = PKIX_HTTPSERVERERROR;
                 break;
             }
         } while(0);

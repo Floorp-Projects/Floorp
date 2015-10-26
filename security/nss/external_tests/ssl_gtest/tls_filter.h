@@ -75,6 +75,21 @@ class TlsInspectorRecordHandshakeMessage : public TlsHandshakeFilter {
   DataBuffer buffer_;
 };
 
+// Replace all instances of a handshake message.
+class TlsInspectorReplaceHandshakeMessage : public TlsHandshakeFilter {
+ public:
+  TlsInspectorReplaceHandshakeMessage(uint8_t handshake_type,
+                                      const DataBuffer& replacement)
+      : handshake_type_(handshake_type), buffer_(replacement) {}
+
+  virtual bool FilterHandshake(uint16_t version, uint8_t handshake_type,
+                               const DataBuffer& input, DataBuffer* output);
+
+ private:
+  uint8_t handshake_type_;
+  DataBuffer buffer_;
+};
+
 // Records an alert.  If an alert has already been recorded, it won't save the
 // new alert unless the old alert is a warning and the new one is fatal.
 class TlsAlertRecorder : public TlsRecordFilter {

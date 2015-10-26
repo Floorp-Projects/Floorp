@@ -24,6 +24,7 @@ class TlsConnectTestBase : public ::testing::Test {
   static ::testing::internal::ParamGenerator<std::string> kTlsModesStream;
   static ::testing::internal::ParamGenerator<std::string> kTlsModesAll;
   static ::testing::internal::ParamGenerator<uint16_t> kTlsV10;
+  static ::testing::internal::ParamGenerator<uint16_t> kTlsV11;
   static ::testing::internal::ParamGenerator<uint16_t> kTlsV11V12;
   static ::testing::internal::ParamGenerator<uint16_t> kTlsV12Plus;
 
@@ -51,27 +52,40 @@ class TlsConnectTestBase : public ::testing::Test {
   void Handshake();
   // Connect and check that it works.
   void Connect();
+  // Check that the connection was successfully established.
+  void CheckConnected();
   // Connect and expect it to fail.
   void ConnectExpectFail();
 
-  void EnableSomeEcdheCiphers();
+  void SetExpectedVersion(uint16_t version);
+  // Expect resumption of a particular type.
+  void ExpectResumption(SessionResumptionMode expected);
+  void DisableDheAndEcdheCiphers();
   void DisableDheCiphers();
+  void DisableEcdheCiphers();
+  void EnableExtendedMasterSecret();
   void ConfigureSessionCache(SessionResumptionMode client,
                              SessionResumptionMode server);
-  void CheckResumption(SessionResumptionMode expected);
   void EnableAlpn();
   void EnableSrtp();
-  void CheckSrtp();
- protected:
+  void CheckSrtp() const;
+  void SendReceive();
+  void ExpectExtendedMasterSecret(bool expected);
 
+ protected:
   Mode mode_;
   TlsAgent* client_;
   TlsAgent* server_;
   uint16_t version_;
+  SessionResumptionMode expected_resumption_mode_;
   std::vector<std::vector<uint8_t>> session_ids_;
 
  private:
   void Reset(const std::string& server_name, SSLKEAType kea);
+  void CheckResumption(SessionResumptionMode expected);
+  void CheckExtendedMasterSecret();
+
+  bool expect_extended_master_secret_;
 };
 
 // A TLS-only test base.
@@ -96,6 +110,22 @@ class TlsConnectGeneric
     public ::testing::WithParamInterface<std::tuple<std::string, uint16_t>> {
  public:
   TlsConnectGeneric();
+};
+
+// A Pre TLS 1.2 generic test.
+class TlsConnectPre12
+  : public TlsConnectTestBase,
+    public ::testing::WithParamInterface<std::tuple<std::string, uint16_t>> {
+ public:
+  TlsConnectPre12();
+};
+
+// A TLS 1.2 only generic test.
+class TlsConnectTls12
+  : public TlsConnectTestBase,
+    public ::testing::WithParamInterface<std::string> {
+ public:
+  TlsConnectTls12();
 };
 
 } // namespace nss_test
