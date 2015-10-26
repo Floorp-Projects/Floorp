@@ -2534,6 +2534,25 @@ Widgets.JSObject.prototype = Heritage.extend(Widgets.BaseWidget.prototype,
     });
   },
 
+  storeObjectInWindow: function()
+  {
+    let evalString = `{ let i = 0;
+      while (this.hasOwnProperty("temp" + i) && i < 1000) {
+        i++;
+      }
+      this["temp" + i] = _self;
+      "temp" + i;
+    }`;
+    let options = {
+      selectedObjectActor: this.objectActor.actor,
+    };
+
+    this.output.owner.jsterm.requestEvaluation(evalString, options).then((res) => {
+      this.output.owner.jsterm.focus();
+      this.output.owner.jsterm.setInputValue(res.result);
+    });
+  },
+
   /**
    * The click event handler for objects shown inline.
    * @private
@@ -2549,6 +2568,7 @@ Widgets.JSObject.prototype = Heritage.extend(Widgets.BaseWidget.prototype,
     // https://github.com/firebug/firebug/blob/master/extension/content/firebug/chrome/menu.js
     let doc = ev.target.ownerDocument;
     let cmPopup = doc.getElementById("output-contextmenu");
+
     let openInVarViewCmd = doc.getElementById("menu_openInVarView");
     let openVarView = this.openObjectInVariablesView.bind(this);
     openInVarViewCmd.addEventListener("command", openVarView);
@@ -2558,6 +2578,22 @@ Widgets.JSObject.prototype = Heritage.extend(Widgets.BaseWidget.prototype,
       openInVarViewCmd.removeEventListener("command", openVarView);
       openInVarViewCmd.setAttribute("disabled", "true");
     });
+
+    // 'Store as global variable' command isn't supported on pre-44 servers,
+    // so remove it from the menu in that case.
+    let storeInGlobalCmd = doc.getElementById("menu_storeAsGlobal");
+    if (!this.output.webConsoleClient.traits.selectedObjectActor) {
+      storeInGlobalCmd.remove();
+    } else if (storeInGlobalCmd) {
+      let storeObjectInWindow = this.storeObjectInWindow.bind(this);
+      storeInGlobalCmd.addEventListener("command", storeObjectInWindow);
+      storeInGlobalCmd.removeAttribute("disabled");
+      cmPopup.addEventListener("popuphiding", function onPopupHiding() {
+        cmPopup.removeEventListener("popuphiding", onPopupHiding);
+        storeInGlobalCmd.removeEventListener("command", storeObjectInWindow);
+        storeInGlobalCmd.setAttribute("disabled", "true");
+      });
+    }
   },
 
   /**

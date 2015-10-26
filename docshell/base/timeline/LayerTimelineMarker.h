@@ -9,6 +9,7 @@
 
 #include "TimelineMarker.h"
 #include "mozilla/dom/ProfileTimelineMarkerBinding.h"
+#include "nsRegion.h"
 
 namespace mozilla {
 
@@ -18,9 +19,6 @@ public:
   explicit LayerTimelineMarker(const nsIntRegion& aRegion)
     : TimelineMarker("Layer", MarkerTracingType::HELPER_EVENT)
     , mRegion(aRegion)
-  {}
-
-  ~LayerTimelineMarker()
   {}
 
   void AddLayerRectangles(dom::Sequence<dom::ProfileTimelineLayerRect>& aRectangles)

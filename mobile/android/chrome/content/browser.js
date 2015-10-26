@@ -118,6 +118,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "GMPInstallManager",
 
 XPCOMUtils.defineLazyModuleGetter(this, "ReaderMode", "resource://gre/modules/ReaderMode.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "Snackbars", "resource://gre/modules/Snackbars.jsm");
+
 var lazilyLoadedBrowserScripts = [
   ["SelectHelper", "chrome://browser/content/SelectHelper.js"],
   ["InputWidgetHelper", "chrome://browser/content/InputWidgetHelper.js"],
@@ -1269,9 +1271,8 @@ var BrowserApp = {
         message = Strings.browser.GetStringFromName("undoCloseToast.messageDefault");
       }
 
-      NativeWindow.toast.show(message, "short", {
-        button: {
-          icon: "drawable://undo_button_icon",
+      Snackbars.show(message, Snackbars.LENGTH_SHORT, {
+        action: {
           label: Strings.browser.GetStringFromName("undoCloseToast.action2"),
           callback: function() {
             UITelemetry.addEvent("undo.1", "toast", null, "closetab");

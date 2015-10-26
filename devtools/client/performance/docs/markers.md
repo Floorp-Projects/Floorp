@@ -144,3 +144,29 @@ A marker generated via `console.timeStamp(label)`.
 ## Parse HTML
 
 ## Parse XML
+
+## Worker
+
+Emitted whenever there's an operation dealing with Workers (any kind of worker,
+Web Workers, Service Workers etc.). Currently there are 4 types of operations
+being tracked: serializing/deserializing data on the main thread, and also
+serializing/deserializing data off the main thread.
+
+* ProfileTimelineWorkerOperationType operationType - the type of operation
+  being done by the Worker or the main thread when dealing with workers.
+  Can be one of the following enums defined in ProfileTimelineMarker.webidl
+  * "serializeDataOffMainThread"
+  * "serializeDataOnMainThread"
+  * "deserializeDataOffMainThread"
+  * "deserializeDataOnMainThread"
+
+## Composite
+
+Composite markers trace the actual time an inner composite operation
+took on the compositor thread. Currently, these markers are only especially
+interesting for Gecko platform developers, and thus disabled by default.
+
+## CompositeForwardTransaction
+
+Markers generated when the IPC request was made to the compositor from
+the child process's main thread.

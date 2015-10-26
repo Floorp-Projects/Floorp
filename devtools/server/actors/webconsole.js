@@ -91,7 +91,8 @@ function WebConsoleActor(aConnection, aParentActor)
   this.traits = {
     customNetworkRequest: !this._parentIsContentActor,
     evaluateJSAsync: true,
-    transferredResponseSize: true
+    transferredResponseSize: true,
+    selectedObjectActor: true, // 44+
   };
 }
 
@@ -832,6 +833,7 @@ WebConsoleActor.prototype =
       frameActor: aRequest.frameActor,
       url: aRequest.url,
       selectedNodeActor: aRequest.selectedNodeActor,
+      selectedObjectActor: aRequest.selectedObjectActor,
     };
 
     let evalInfo = this.evalWithDebugger(input, evalOptions);
@@ -1095,6 +1097,8 @@ WebConsoleActor.prototype =
    *          |evalWithBindings()| will be called with one additional binding:
    *          |_self| which will point to the Debugger.Object of the given
    *          ObjectActor.
+   *        - selectedObjectActor: Like bindObjectActor, but executes with the
+   *          top level window as the global.
    *        - frameActor: the FrameActor ID to use for evaluation. The given
    *        debugger frame is used for evaluation, instead of the global window.
    *        - selectedNodeActor: the NodeActor ID of the currently selected node
@@ -1151,8 +1155,9 @@ WebConsoleActor.prototype =
     // If we have an object to bind to |_self|, create a Debugger.Object
     // referring to that object, belonging to dbg.
     let bindSelf = null;
-    if (aOptions.bindObjectActor) {
-      let objActor = this.getActorByID(aOptions.bindObjectActor);
+    if (aOptions.bindObjectActor || aOptions.selectedObjectActor) {
+      let objActor = this.getActorByID(aOptions.bindObjectActor ||
+                                       aOptions.selectedObjectActor);
       if (objActor) {
         let jsObj = objActor.obj.unsafeDereference();
         // If we use the makeDebuggeeValue method of jsObj's own global, then
@@ -1160,8 +1165,12 @@ WebConsoleActor.prototype =
         // that is, without wrappers. The evalWithBindings call will then wrap
         // jsObj appropriately for the evaluation compartment.
         let global = Cu.getGlobalForObject(jsObj);
-        dbgWindow = dbg.makeGlobalObjectReference(global);
+        let _dbgWindow = dbg.makeGlobalObjectReference(global);
         bindSelf = dbgWindow.makeDebuggeeValue(jsObj);
+
+        if (aOptions.bindObjectActor) {
+          dbgWindow = _dbgWindow;
+        }
       }
     }
 
