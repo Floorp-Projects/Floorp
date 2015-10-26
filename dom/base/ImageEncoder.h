@@ -11,6 +11,7 @@
 #include "nsError.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/HTMLCanvasElementBinding.h"
+#include "mozilla/UniquePtr.h"
 #include "nsLayoutUtils.h"
 #include "nsSize.h"
 
@@ -58,7 +59,7 @@ public:
   static nsresult ExtractDataAsync(nsAString& aType,
                                    const nsAString& aOptions,
                                    bool aUsingCustomOptions,
-                                   uint8_t* aImageBuffer,
+                                   UniquePtr<uint8_t[]> aImageBuffer,
                                    int32_t aFormat,
                                    const nsIntSize aSize,
                                    EncodeCompleteCallback* aEncodeCallback);

@@ -1052,25 +1052,25 @@ WebGLContext::LoseOldestWebGLContextIfLimitExceeded()
     }
 }
 
-void
-WebGLContext::GetImageBuffer(uint8_t** out_imageBuffer, int32_t* out_format)
+UniquePtr<uint8_t[]>
+WebGLContext::GetImageBuffer(int32_t* out_format)
 {
-    *out_imageBuffer = nullptr;
     *out_format = 0;
 
     // Use GetSurfaceSnapshot() to make sure that appropriate y-flip gets applied
     bool premult;
     RefPtr<SourceSurface> snapshot =
       GetSurfaceSnapshot(mOptions.premultipliedAlpha ? nullptr : &premult);
-    if (!snapshot)
-        return;
+    if (!snapshot) {
+        return nullptr;
+    }
 
     MOZ_ASSERT(mOptions.premultipliedAlpha || !premult, "We must get unpremult when we ask for it!");
 
     RefPtr<DataSourceSurface> dataSurface = snapshot->GetDataSurface();
 
     return gfxUtils::GetImageBuffer(dataSurface, mOptions.premultipliedAlpha,
-                                    out_imageBuffer, out_format);
+                                    out_format);
 }
 
 NS_IMETHODIMP

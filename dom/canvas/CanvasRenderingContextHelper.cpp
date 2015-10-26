@@ -7,6 +7,7 @@
 #include "ImageEncoder.h"
 #include "mozilla/dom/CanvasRenderingContext2D.h"
 #include "mozilla/Telemetry.h"
+#include "mozilla/UniquePtr.h"
 #include "nsContentUtils.h"
 #include "nsDOMJSUtils.h"
 #include "nsIScriptContext.h"
@@ -49,10 +50,10 @@ CanvasRenderingContextHelper::ToBlob(JSContext* aCx,
     }
   }
 
-  uint8_t* imageBuffer = nullptr;
+  UniquePtr<uint8_t[]> imageBuffer;
   int32_t format = 0;
   if (mCurrentContext) {
-    mCurrentContext->GetImageBuffer(&imageBuffer, &format);
+    imageBuffer = mCurrentContext->GetImageBuffer(&format);
   }
 
   // Encoder callback when encoding is complete.
@@ -99,7 +100,7 @@ CanvasRenderingContextHelper::ToBlob(JSContext* aCx,
   aRv = ImageEncoder::ExtractDataAsync(type,
                                        params,
                                        usingCustomParseOptions,
-                                       imageBuffer,
+                                       Move(imageBuffer),
                                        format,
                                        GetWidthHeight(),
                                        callback);

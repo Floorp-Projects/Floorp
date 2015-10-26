@@ -8,6 +8,8 @@
 
 #include "2D.h"
 
+#include "mozilla/UniquePtr.h"
+
 namespace mozilla {
 namespace gfx {
 
@@ -25,11 +27,9 @@ CopySurfaceDataToPackedArray(uint8_t* aSrc, uint8_t* aDst, IntSize aSrcSize,
                              int32_t aSrcStride, int32_t aBytesPerPixel);
 
 /**
- * Convert aSurface to a packed buffer in BGRA format. The pixel data is
- * returned in a buffer allocated with new uint8_t[]. The caller then has
- * ownership of the buffer and is responsible for delete[]'ing it.
+ * Convert aSurface to a packed buffer in BGRA format.
  */
-uint8_t*
+UniquePtr<uint8_t[]>
 SurfaceToPackedBGRA(DataSourceSurface *aSurface);
 
 /**
