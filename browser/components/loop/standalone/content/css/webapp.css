@@ -58,10 +58,11 @@ body,
 }
 
 .standalone-overlay-wrapper > .hello-logo {
-  width: 128px;
-  height: 21px;
+  width: 120px;
+  height: 19px;
   background-image: url("../shared/img/hello_logo.svg");
   background-size: contain;
+  background-repeat: no-repeat;
   position: absolute;
   left: 0;
   top: 0;
@@ -240,7 +241,7 @@ html[dir="rtl"] .standalone-overlay-wrapper > .standalone-moz-logo {
 /* Room Info area layout */
 
 .room-inner-info-area {
-  color: #fff;
+  color: #4a4a4a;
   margin: auto;
   padding: 0 5px;
 }
