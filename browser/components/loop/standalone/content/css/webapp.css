@@ -269,6 +269,9 @@ html[dir="rtl"] .standalone-overlay-wrapper > .standalone-moz-logo {
   display: flex;
   justify-content: space-between;
   margin: 3em auto 1em;
+  /* This should match the width set in the room-waiting-tile to ensure the edges
+     of the content aligns within the tile width. */
+  width: 290px;
 }
 
 .room-inner-info-area > .room-waiting-area > a >.room-waiting-help {
@@ -285,8 +288,9 @@ html[dir="rtl"] .standalone-overlay-wrapper > .standalone-moz-logo {
   border-radius: 5px;
   /* These sizes are the size of the tile image and title */
   height: 204px;
-  /* Override the default iframe 300px width with the inherited width */
-  width: 100%;
+  /* The tiles we are served are 290px wide. This width should also match that
+     for the .room-waiting-area. */
+  width: 290px;
 }
 
 /* Terms of Service */
