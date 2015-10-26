@@ -2941,17 +2941,15 @@ nsXMLHttpRequest::Send(nsIVariant* aVariant, const Nullable<RequestBody>& aBody)
     nsCOMPtr<nsIDocument> suspendedDoc;
     nsCOMPtr<nsIRunnable> resumeTimeoutRunnable;
     if (GetOwner()) {
-      nsCOMPtr<nsIDOMWindow> topWindow;
-      if (NS_SUCCEEDED(GetOwner()->GetTop(getter_AddRefs(topWindow)))) {
-        nsCOMPtr<nsPIDOMWindow> suspendedWindow(do_QueryInterface(topWindow));
-        if (suspendedWindow &&
-            (suspendedWindow = suspendedWindow->GetCurrentInnerWindow())) {
-          suspendedDoc = suspendedWindow->GetExtantDoc();
+      if (nsCOMPtr<nsPIDOMWindow> topWindow = GetOwner()->GetOuterWindow()->GetTop()) {
+        if (topWindow &&
+            (topWindow = topWindow->GetCurrentInnerWindow())) {
+          suspendedDoc = topWindow->GetExtantDoc();
           if (suspendedDoc) {
             suspendedDoc->SuppressEventHandling(nsIDocument::eEvents);
           }
-          suspendedWindow->SuspendTimeouts(1, false);
-          resumeTimeoutRunnable = new nsResumeTimeoutsEvent(suspendedWindow);
+          topWindow->SuspendTimeouts(1, false);
+          resumeTimeoutRunnable = new nsResumeTimeoutsEvent(topWindow);
         }
       }
     }

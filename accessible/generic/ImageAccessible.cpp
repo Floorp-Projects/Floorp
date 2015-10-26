@@ -133,13 +133,12 @@ ImageAccessible::DoAction(uint8_t aIndex)
 
   nsIDocument* document = mContent->OwnerDoc();
   nsCOMPtr<nsPIDOMWindow> piWindow = document->GetWindow();
-  nsCOMPtr<nsIDOMWindow> win = do_QueryInterface(piWindow);
-  if (!win)
+  if (!piWindow)
     return false;
 
-  nsCOMPtr<nsIDOMWindow> tmp;
-  return NS_SUCCEEDED(win->Open(spec, EmptyString(), EmptyString(),
-                                getter_AddRefs(tmp)));
+  nsCOMPtr<nsPIDOMWindow> tmp;
+  return NS_SUCCEEDED(piWindow->Open(spec, EmptyString(), EmptyString(),
+                                     getter_AddRefs(tmp)));
 }
 
 ////////////////////////////////////////////////////////////////////////////////

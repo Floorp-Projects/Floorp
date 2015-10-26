@@ -686,13 +686,10 @@ PeerConnectionImpl::Initialize(PeerConnectionObserver& aObserver,
 
 #if !defined(MOZILLA_EXTERNAL_LINKAGE)
   nsAutoCString locationCStr;
-  nsIDOMLocation* location;
-  res = mWindow->GetLocation(&location);
 
-  if (location && NS_SUCCEEDED(res)) {
+  if (nsCOMPtr<nsIDOMLocation> location = mWindow->GetLocation()) {
     nsAutoString locationAStr;
     location->ToString(locationAStr);
-    location->Release();
 
     CopyUTF16toUTF8(locationAStr, locationCStr);
 #define HELLO_CLICKER_URL_START "https://hello.firefox.com/"

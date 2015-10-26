@@ -217,15 +217,12 @@ nsDeviceSensors::Notify(const mozilla::hal::SensorData& aSensorData)
         continue;
     }
 
-    nsCOMPtr<nsIDOMDocument> domdoc;
-    windowListeners[i]->GetDocument(getter_AddRefs(domdoc));
-
-    if (domdoc) {
+    if (nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(pwindow->GetDoc())) {
       nsCOMPtr<mozilla::dom::EventTarget> target = do_QueryInterface(windowListeners[i]);
       if (type == nsIDeviceSensorData::TYPE_ACCELERATION ||
         type == nsIDeviceSensorData::TYPE_LINEAR_ACCELERATION ||
         type == nsIDeviceSensorData::TYPE_GYROSCOPE)
-        FireDOMMotionEvent(domdoc, target, type, x, y, z);
+        FireDOMMotionEvent(domDoc, target, type, x, y, z);
       else if (type == nsIDeviceSensorData::TYPE_ORIENTATION)
         FireDOMOrientationEvent(target, x, y, z);
       else if (type == nsIDeviceSensorData::TYPE_PROXIMITY)
