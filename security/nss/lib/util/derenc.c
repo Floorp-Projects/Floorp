@@ -279,7 +279,7 @@ der_encode(unsigned char *buf, DERTemplate *dtemplate, void *src)
     int header_len;
     PRUint32 contents_len;
     unsigned long encode_kind, under_kind;
-    PRBool explicit, optional, universal;
+    PRBool explicit, universal;
 
 
     /*
@@ -301,7 +301,6 @@ der_encode(unsigned char *buf, DERTemplate *dtemplate, void *src)
     encode_kind = dtemplate->kind;
 
     explicit = (encode_kind & DER_EXPLICIT) ? PR_TRUE : PR_FALSE;
-    optional = (encode_kind & DER_OPTIONAL) ? PR_TRUE : PR_FALSE;
     encode_kind &= ~DER_OPTIONAL;
     universal = ((encode_kind & DER_CLASS_MASK) == DER_UNIVERSAL)
 		? PR_TRUE : PR_FALSE;

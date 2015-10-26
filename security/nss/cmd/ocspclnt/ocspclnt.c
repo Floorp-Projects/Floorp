@@ -562,7 +562,7 @@ print_raw_certificates (FILE *out_file, SECItem **raw_certs, int level)
     while ((raw_cert = raw_certs[i++]) != NULL) {
 	sprintf (cert_label, "Certificate (%d)", i);
 	(void) SECU_PrintSignedData (out_file, raw_cert, cert_label, level + 1,
-				     SECU_PrintCertificate);
+				     (SECU_PPFunc)SECU_PrintCertificate);
     }
 }
 
@@ -964,7 +964,7 @@ main (int argc, char **argv)
     PLOptState	*optstate;
     SECStatus	 rv;
     CERTCertDBHandle *handle = NULL;
-    SECCertUsage cert_usage;
+    SECCertUsage cert_usage = certUsageSSLClient;
     PRTime	 verify_time;
     CERTCertificate *cert = NULL;
     PRBool ascii = PR_FALSE;

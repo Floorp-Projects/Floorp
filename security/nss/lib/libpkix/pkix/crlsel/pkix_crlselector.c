@@ -190,7 +190,7 @@ pkix_CRLSelector_Hashcode(
         PKIX_HASHCODE(crlSelector->context, &contextHash, plContext,
                 PKIX_OBJECTHASHCODEFAILED);
 
-        hash = 31 * ((PKIX_UInt32)crlSelector->matchCallback +
+        hash = 31 * ((PKIX_UInt32)((char *)crlSelector->matchCallback - (char *)NULL) +
                     (contextHash << 3)) + paramsHash;
 
         *pHashcode = hash;

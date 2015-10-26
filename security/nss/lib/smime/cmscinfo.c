@@ -227,7 +227,7 @@ NSS_CMSContentInfo_SetContent_EncryptedData(NSSCMSMessage *cmsg, NSSCMSContentIn
 void *
 NSS_CMSContentInfo_GetContent(NSSCMSContentInfo *cinfo)
 {
-    SECOidTag tag = (cinfo && cinfo->contentTypeTag) 
+    SECOidTag tag = cinfo->contentTypeTag 
 	                ? cinfo->contentTypeTag->offset 
 	                : SEC_OID_UNKNOWN;
     switch (tag) {

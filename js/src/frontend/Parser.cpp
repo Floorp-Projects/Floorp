@@ -1230,11 +1230,11 @@ Parser<ParseHandler>::functionBody(InHandling inHandling, YieldHandling yieldHan
     } else {
         MOZ_ASSERT(type == ExpressionBody);
 
-        Node kid = assignExpr(inHandling, yieldHandling);
+        Node kid = assignExpr(inHandling, yieldHandling, TripledotProhibited);
         if (!kid)
             return null();
 
-        pn = handler.newReturnStatement(kid, null(), handler.getPosition(kid));
+        pn = handler.newReturnStatement(kid, handler.getPosition(kid));
         if (!pn)
             return null();
     }
@@ -1273,14 +1273,6 @@ Parser<ParseHandler>::functionBody(InHandling inHandling, YieldHandling yieldHan
             return null();
         if (!pc->define(tokenStream, context->names().dotGenerator, generator, Definition::VAR))
             return null();
-
-        if (pc->isStarGenerator()) {
-            Node genrval = newName(context->names().dotGenRVal);
-            if (!genrval)
-                return null();
-            if (!pc->define(tokenStream, context->names().dotGenRVal, genrval, Definition::VAR))
-                return null();
-        }
 
         generator = newName(context->names().dotGenerator);
         if (!generator)
@@ -2430,7 +2422,7 @@ bool
 Parser<ParseHandler>::addExprAndGetNextTemplStrToken(YieldHandling yieldHandling, Node nodeList,
                                                      TokenKind* ttp)
 {
-    Node pn = expr(InAllowed, yieldHandling);
+    Node pn = expr(InAllowed, yieldHandling, TripledotProhibited);
     if (!pn)
         return false;
     handler.addList(nodeList, pn);
@@ -3978,7 +3970,7 @@ Parser<ParseHandler>::destructuringExpr(YieldHandling yieldHandling, BindData<Pa
     MOZ_ASSERT(tokenStream.isCurrentTokenType(tt));
 
     pc->inDeclDestructuring = true;
-    Node pn = primaryExpr(yieldHandling, tt);
+    Node pn = primaryExpr(yieldHandling, TripledotProhibited, tt);
     pc->inDeclDestructuring = false;
     if (!pn)
         return null();
@@ -4229,7 +4221,7 @@ Parser<ParseHandler>::variables(YieldHandling yieldHandling,
                     *psimple = false;
 
                 pc->inDeclDestructuring = true;
-                pn2 = primaryExpr(yieldHandling, tt);
+                pn2 = primaryExpr(yieldHandling, TripledotProhibited, tt);
                 pc->inDeclDestructuring = false;
                 if (!pn2)
                     return null();
@@ -4258,7 +4250,7 @@ Parser<ParseHandler>::variables(YieldHandling yieldHandling,
                 MUST_MATCH_TOKEN(TOK_ASSIGN, JSMSG_BAD_DESTRUCT_DECL);
 
                 Node init = assignExpr(location == InForInit ? InProhibited : InAllowed,
-                                       yieldHandling);
+                                       yieldHandling, TripledotProhibited);
                 if (!init)
                     return null();
 
@@ -4344,7 +4336,7 @@ Parser<ParseHandler>::variables(YieldHandling yieldHandling,
                     return null();
 
                 Node init = assignExpr(location == InForInit ? InProhibited : InAllowed,
-                                       yieldHandling);
+                                       yieldHandling, TripledotProhibited);
                 if (!init)
                     return null();
 
@@ -5055,7 +5047,7 @@ Parser<FullParseHandler>::exportDeclaration()
             binding = makeInitializedLexicalBinding(name, true, pos());
             if (!binding)
                 return null();
-            kid = assignExpr(InAllowed, YieldIsKeyword);
+            kid = assignExpr(InAllowed, YieldIsKeyword, TripledotProhibited);
             if (!kid)
                 return null();
             if (!MatchOrInsertSemicolonAfterExpression(tokenStream))
@@ -5094,7 +5086,7 @@ typename ParseHandler::Node
 Parser<ParseHandler>::expressionStatement(YieldHandling yieldHandling, InvokedPrediction invoked)
 {
     tokenStream.ungetToken();
-    Node pnexpr = expr(InAllowed, yieldHandling, invoked);
+    Node pnexpr = expr(InAllowed, yieldHandling, TripledotProhibited, invoked);
     if (!pnexpr)
         return null();
     if (!MatchOrInsertSemicolonAfterExpression(tokenStream))
@@ -5338,7 +5330,7 @@ Parser<FullParseHandler>::forStatement(YieldHandling yieldHandling)
                 // isn't parsed in a RelationalExpression as a binary operator.
                 // In this context, |in| is part of a for-in loop -- *not* part
                 // of a binary expression.
-                pn1 = expr(InProhibited, yieldHandling);
+                pn1 = expr(InProhibited, yieldHandling, TripledotProhibited);
             }
             if (!pn1)
                 return null();
@@ -5471,8 +5463,8 @@ Parser<FullParseHandler>::forStatement(YieldHandling yieldHandling)
         }
 
         pn3 = (headKind == PNK_FOROF)
-              ? assignExpr(InAllowed, yieldHandling)
-              : expr(InAllowed, yieldHandling);
+              ? assignExpr(InAllowed, yieldHandling, TripledotProhibited)
+              : expr(InAllowed, yieldHandling, TripledotProhibited);
         if (!pn3)
             return null();
         modifier = TokenStream::None;
@@ -5571,7 +5563,7 @@ Parser<FullParseHandler>::forStatement(YieldHandling yieldHandling)
             pn2 = nullptr;
             modifier = TokenStream::Operand;
         } else {
-            pn2 = expr(InAllowed, yieldHandling);
+            pn2 = expr(InAllowed, yieldHandling, TripledotProhibited);
             if (!pn2)
                 return null();
             modifier = TokenStream::None;
@@ -5585,7 +5577,7 @@ Parser<FullParseHandler>::forStatement(YieldHandling yieldHandling)
             pn3 = nullptr;
             modifier = TokenStream::Operand;
         } else {
-            pn3 = expr(InAllowed, yieldHandling);
+            pn3 = expr(InAllowed, yieldHandling, TripledotProhibited);
             if (!pn3)
                 return null();
             modifier = TokenStream::None;
@@ -5671,7 +5663,7 @@ Parser<SyntaxParseHandler>::forStatement(YieldHandling yieldHandling)
                 return null();
             }
             else {
-                lhsNode = expr(InProhibited, yieldHandling);
+                lhsNode = expr(InProhibited, yieldHandling, TripledotProhibited);
             }
             if (!lhsNode)
                 return null();
@@ -5707,8 +5699,12 @@ Parser<SyntaxParseHandler>::forStatement(YieldHandling yieldHandling)
         if (!isForDecl && !checkAndMarkAsAssignmentLhs(lhsNode, PlainAssignment))
             return null();
 
-        if (!(isForIn ? expr(InAllowed, yieldHandling) : assignExpr(InAllowed, yieldHandling)))
+        if (!(isForIn
+              ? expr(InAllowed, yieldHandling, TripledotProhibited)
+              : assignExpr(InAllowed, yieldHandling, TripledotProhibited)))
+        {
             return null();
+        }
         modifier = TokenStream::None;
     } else {
         /* Parse the loop condition or null. */
@@ -5718,7 +5714,7 @@ Parser<SyntaxParseHandler>::forStatement(YieldHandling yieldHandling)
             return null();
         modifier = TokenStream::Operand;
         if (tt != TOK_SEMI) {
-            if (!expr(InAllowed, yieldHandling))
+            if (!expr(InAllowed, yieldHandling, TripledotProhibited))
                 return null();
             modifier = TokenStream::None;
         }
@@ -5729,7 +5725,7 @@ Parser<SyntaxParseHandler>::forStatement(YieldHandling yieldHandling)
             return null();
         modifier = TokenStream::Operand;
         if (tt != TOK_RP) {
-            if (!expr(InAllowed, yieldHandling))
+            if (!expr(InAllowed, yieldHandling, TripledotProhibited))
                 return null();
             modifier = TokenStream::None;
         }
@@ -5792,7 +5788,7 @@ Parser<ParseHandler>::switchStatement(YieldHandling yieldHandling)
             break;
 
           case TOK_CASE:
-            caseExpr = expr(InAllowed, yieldHandling);
+            caseExpr = expr(InAllowed, yieldHandling, TripledotProhibited);
             if (!caseExpr)
                 return null();
             break;
@@ -5985,7 +5981,7 @@ Parser<ParseHandler>::returnStatement(YieldHandling yieldHandling)
         pc->funHasReturnVoid = true;
         break;
       default: {
-        exprNode = expr(InAllowed, yieldHandling);
+        exprNode = expr(InAllowed, yieldHandling, TripledotProhibited);
         if (!exprNode)
             return null();
         pc->funHasReturnExpr = true;
@@ -6000,18 +5996,7 @@ Parser<ParseHandler>::returnStatement(YieldHandling yieldHandling)
             return null();
     }
 
-    Node genrval = null();
-    if (pc->isStarGenerator()) {
-        genrval = newName(context->names().dotGenRVal);
-        if (!genrval)
-            return null();
-        if (!noteNameUse(context->names().dotGenRVal, genrval))
-            return null();
-        if (!checkAndMarkAsAssignmentLhs(genrval, PlainAssignment))
-            return null();
-    }
-
-    Node pn = handler.newReturnStatement(exprNode, genrval, TokenPos(begin, pos().end));
+    Node pn = handler.newReturnStatement(exprNode, TokenPos(begin, pos().end));
     if (!pn)
         return null();
 
@@ -6083,7 +6068,7 @@ Parser<ParseHandler>::yieldExpression(InHandling inHandling)
             tokenStream.consumeKnownToken(TOK_MUL, TokenStream::Operand);
             // Fall through.
           default:
-            exprNode = assignExpr(inHandling, YieldIsKeyword);
+            exprNode = assignExpr(inHandling, YieldIsKeyword, TripledotProhibited);
             if (!exprNode)
                 return null();
         }
@@ -6142,7 +6127,7 @@ Parser<ParseHandler>::yieldExpression(InHandling inHandling)
             tokenStream.addModifierException(TokenStream::NoneIsOperand);
             break;
           default:
-            exprNode = assignExpr(inHandling, YieldIsKeyword);
+            exprNode = assignExpr(inHandling, YieldIsKeyword, TripledotProhibited);
             if (!exprNode)
                 return null();
         }
@@ -6268,7 +6253,7 @@ Parser<ParseHandler>::throwStatement(YieldHandling yieldHandling)
         return null();
     }
 
-    Node throwExpr = expr(InAllowed, yieldHandling);
+    Node throwExpr = expr(InAllowed, yieldHandling, TripledotProhibited);
     if (!throwExpr)
         return null();
 
@@ -6413,7 +6398,7 @@ Parser<ParseHandler>::tryStatement(YieldHandling yieldHandling)
             if (!tokenStream.matchToken(&matched, TOK_IF))
                 return null();
             if (matched) {
-                catchGuard = expr(InAllowed, yieldHandling);
+                catchGuard = expr(InAllowed, yieldHandling, TripledotProhibited);
                 if (!catchGuard)
                     return null();
             }
@@ -6596,7 +6581,7 @@ Parser<FullParseHandler>::classDefinition(YieldHandling yieldHandling,
     if (hasHeritage) {
         if (!tokenStream.getToken(&tt))
             return null();
-        classHeritage = memberExpr(yieldHandling, tt, true);
+        classHeritage = memberExpr(yieldHandling, TripledotProhibited, tt, true);
         if (!classHeritage)
             return null();
     }
@@ -6919,9 +6904,9 @@ Parser<ParseHandler>::statement(YieldHandling yieldHandling, bool canHaveDirecti
 template <typename ParseHandler>
 typename ParseHandler::Node
 Parser<ParseHandler>::expr(InHandling inHandling, YieldHandling yieldHandling,
-                           InvokedPrediction invoked)
+                           TripledotHandling tripledotHandling, InvokedPrediction invoked)
 {
-    Node pn = assignExpr(inHandling, yieldHandling, invoked);
+    Node pn = assignExpr(inHandling, yieldHandling, tripledotHandling, invoked);
     if (!pn)
         return null();
 
@@ -6940,7 +6925,7 @@ Parser<ParseHandler>::expr(InHandling inHandling, YieldHandling yieldHandling,
             return null();
         }
 
-        pn = assignExpr(inHandling, yieldHandling);
+        pn = assignExpr(inHandling, yieldHandling, tripledotHandling);
         if (!pn)
             return null();
         handler.addList(seq, pn);
@@ -7040,7 +7025,7 @@ Precedence(ParseNodeKind pnk) {
 template <typename ParseHandler>
 MOZ_ALWAYS_INLINE typename ParseHandler::Node
 Parser<ParseHandler>::orExpr1(InHandling inHandling, YieldHandling yieldHandling,
-                              InvokedPrediction invoked)
+                              TripledotHandling tripledotHandling, InvokedPrediction invoked)
 {
     // Shift-reduce parser for the binary operator part of the JS expression
     // syntax.
@@ -7053,7 +7038,7 @@ Parser<ParseHandler>::orExpr1(InHandling inHandling, YieldHandling yieldHandling
 
     Node pn;
     for (;;) {
-        pn = unaryExpr(yieldHandling, invoked);
+        pn = unaryExpr(yieldHandling, tripledotHandling, invoked);
         if (!pn)
             return pn;
 
@@ -7103,19 +7088,19 @@ Parser<ParseHandler>::orExpr1(InHandling inHandling, YieldHandling yieldHandling
 template <typename ParseHandler>
 MOZ_ALWAYS_INLINE typename ParseHandler::Node
 Parser<ParseHandler>::condExpr1(InHandling inHandling, YieldHandling yieldHandling,
-                                InvokedPrediction invoked)
+                                TripledotHandling tripledotHandling, InvokedPrediction invoked)
 {
-    Node condition = orExpr1(inHandling, yieldHandling, invoked);
+    Node condition = orExpr1(inHandling, yieldHandling, tripledotHandling, invoked);
     if (!condition || !tokenStream.isCurrentTokenType(TOK_HOOK))
         return condition;
 
-    Node thenExpr = assignExpr(InAllowed, yieldHandling);
+    Node thenExpr = assignExpr(InAllowed, yieldHandling, TripledotProhibited);
     if (!thenExpr)
         return null();
 
     MUST_MATCH_TOKEN(TOK_COLON, JSMSG_COLON_IN_COND);
 
-    Node elseExpr = assignExpr(inHandling, yieldHandling);
+    Node elseExpr = assignExpr(inHandling, yieldHandling, TripledotProhibited);
     if (!elseExpr)
         return null();
 
@@ -7168,7 +7153,7 @@ Parser<ParseHandler>::checkAndMarkAsAssignmentLhs(Node target, AssignmentFlavor 
 template <typename ParseHandler>
 typename ParseHandler::Node
 Parser<ParseHandler>::assignExpr(InHandling inHandling, YieldHandling yieldHandling,
-                                 InvokedPrediction invoked)
+                                 TripledotHandling tripledotHandling, InvokedPrediction invoked)
 {
     JS_CHECK_RECURSION(context, return null());
 
@@ -7220,7 +7205,7 @@ Parser<ParseHandler>::assignExpr(InHandling inHandling, YieldHandling yieldHandl
     TokenStream::Position start(keepAtoms);
     tokenStream.tell(&start);
 
-    Node lhs = condExpr1(inHandling, yieldHandling, invoked);
+    Node lhs = condExpr1(inHandling, yieldHandling, tripledotHandling, invoked);
     if (!lhs)
         return null();
 
@@ -7319,7 +7304,7 @@ Parser<ParseHandler>::assignExpr(InHandling inHandling, YieldHandling yieldHandl
 
     bool saved = pc->inDeclDestructuring;
     pc->inDeclDestructuring = false;
-    Node rhs = assignExpr(inHandling, yieldHandling);
+    Node rhs = assignExpr(inHandling, yieldHandling, TripledotProhibited);
     pc->inDeclDestructuring = saved;
     if (!rhs)
         return null();
@@ -7452,7 +7437,7 @@ typename ParseHandler::Node
 Parser<ParseHandler>::unaryOpExpr(YieldHandling yieldHandling, ParseNodeKind kind, JSOp op,
                                   uint32_t begin)
 {
-    Node kid = unaryExpr(yieldHandling);
+    Node kid = unaryExpr(yieldHandling, TripledotProhibited);
     if (!kid)
         return null();
     return handler.newUnary(kind, op, begin, kid);
@@ -7460,7 +7445,8 @@ Parser<ParseHandler>::unaryOpExpr(YieldHandling yieldHandling, ParseNodeKind kin
 
 template <typename ParseHandler>
 typename ParseHandler::Node
-Parser<ParseHandler>::unaryExpr(YieldHandling yieldHandling, InvokedPrediction invoked)
+Parser<ParseHandler>::unaryExpr(YieldHandling yieldHandling, TripledotHandling tripledotHandling,
+                                InvokedPrediction invoked)
 {
     JS_CHECK_RECURSION(context, return null());
 
@@ -7492,7 +7478,7 @@ Parser<ParseHandler>::unaryExpr(YieldHandling yieldHandling, InvokedPrediction i
         //   // Evaluates expression, triggering a runtime ReferenceError for
         //   // the undefined name.
         //   typeof (1, nonExistentName);
-        Node kid = unaryExpr(yieldHandling);
+        Node kid = unaryExpr(yieldHandling, TripledotProhibited);
         if (!kid)
             return null();
 
@@ -7505,7 +7491,7 @@ Parser<ParseHandler>::unaryExpr(YieldHandling yieldHandling, InvokedPrediction i
         TokenKind tt2;
         if (!tokenStream.getToken(&tt2, TokenStream::Operand))
             return null();
-        Node pn2 = memberExpr(yieldHandling, tt2, true);
+        Node pn2 = memberExpr(yieldHandling, TripledotProhibited, tt2, true);
         if (!pn2)
             return null();
         AssignmentFlavor flavor = (tt == TOK_INC) ? IncrementAssignment : DecrementAssignment;
@@ -7518,7 +7504,7 @@ Parser<ParseHandler>::unaryExpr(YieldHandling yieldHandling, InvokedPrediction i
       }
 
       case TOK_DELETE: {
-        Node expr = unaryExpr(yieldHandling);
+        Node expr = unaryExpr(yieldHandling, TripledotProhibited);
         if (!expr)
             return null();
 
@@ -7534,7 +7520,8 @@ Parser<ParseHandler>::unaryExpr(YieldHandling yieldHandling, InvokedPrediction i
       }
 
       default: {
-        Node pn = memberExpr(yieldHandling, tt, /* allowCallSyntax = */ true, invoked);
+        Node pn = memberExpr(yieldHandling, tripledotHandling, tt, /* allowCallSyntax = */ true,
+                             invoked);
         if (!pn)
             return null();
 
@@ -7892,7 +7879,7 @@ Parser<FullParseHandler>::legacyComprehensionTail(ParseNode* bodyExpr, unsigned 
           case TOK_LB:
           case TOK_LC:
             pc->inDeclDestructuring = true;
-            pn3 = primaryExpr(YieldIsKeyword, tt);
+            pn3 = primaryExpr(YieldIsKeyword, TripledotProhibited, tt);
             pc->inDeclDestructuring = false;
             if (!pn3)
                 return null();
@@ -7936,7 +7923,7 @@ Parser<FullParseHandler>::legacyComprehensionTail(ParseNode* bodyExpr, unsigned 
             headKind = PNK_FOROF;
         }
 
-        ParseNode* pn4 = expr(InAllowed, YieldIsKeyword);
+        ParseNode* pn4 = expr(InAllowed, YieldIsKeyword, TripledotProhibited);
         if (!pn4)
             return null();
         MUST_MATCH_TOKEN(TOK_RP, JSMSG_PAREN_AFTER_FOR_CTRL);
@@ -8270,7 +8257,7 @@ Parser<ParseHandler>::comprehensionFor(GeneratorKind comprehensionKind)
         return null();
     }
 
-    Node rhs = assignExpr(InAllowed, YieldIsKeyword);
+    Node rhs = assignExpr(InAllowed, YieldIsKeyword, TripledotProhibited);
     if (!rhs)
         return null();
 
@@ -8324,7 +8311,7 @@ Parser<ParseHandler>::comprehensionIf(GeneratorKind comprehensionKind)
     uint32_t begin = pos().begin;
 
     MUST_MATCH_TOKEN(TOK_LP, JSMSG_PAREN_BEFORE_COND);
-    Node cond = assignExpr(InAllowed, YieldIsKeyword);
+    Node cond = assignExpr(InAllowed, YieldIsKeyword, TripledotProhibited);
     if (!cond)
         return null();
     MUST_MATCH_TOKEN(TOK_RP, JSMSG_PAREN_AFTER_COND);
@@ -8361,7 +8348,7 @@ Parser<ParseHandler>::comprehensionTail(GeneratorKind comprehensionKind)
 
     uint32_t begin = pos().begin;
 
-    Node bodyExpr = assignExpr(InAllowed, YieldIsKeyword);
+    Node bodyExpr = assignExpr(InAllowed, YieldIsKeyword, TripledotProhibited);
     if (!bodyExpr)
         return null();
 
@@ -8451,7 +8438,7 @@ typename ParseHandler::Node
 Parser<ParseHandler>::assignExprWithoutYield(YieldHandling yieldHandling, unsigned msg)
 {
     uint32_t startYieldOffset = pc->lastYieldOffset;
-    Node res = assignExpr(InAllowed, yieldHandling);
+    Node res = assignExpr(InAllowed, yieldHandling, TripledotProhibited);
     if (res && pc->lastYieldOffset != startYieldOffset) {
         reportWithOffset(ParseError, false, pc->lastYieldOffset,
                          msg, js_yield_str);
@@ -8486,7 +8473,7 @@ Parser<ParseHandler>::argumentList(YieldHandling yieldHandling, Node listNode, b
             *isSpread = true;
         }
 
-        Node argNode = assignExpr(InAllowed, yieldHandling);
+        Node argNode = assignExpr(InAllowed, yieldHandling, TripledotProhibited);
         if (!argNode)
             return false;
         if (spread) {
@@ -8565,8 +8552,8 @@ Parser<ParseHandler>::checkAndMarkSuperScope()
 
 template <typename ParseHandler>
 typename ParseHandler::Node
-Parser<ParseHandler>::memberExpr(YieldHandling yieldHandling, TokenKind tt, bool allowCallSyntax,
-                                 InvokedPrediction invoked)
+Parser<ParseHandler>::memberExpr(YieldHandling yieldHandling, TripledotHandling tripledotHandling,
+                                 TokenKind tt, bool allowCallSyntax, InvokedPrediction invoked)
 {
     MOZ_ASSERT(tokenStream.isCurrentTokenType(tt));
 
@@ -8590,7 +8577,7 @@ Parser<ParseHandler>::memberExpr(YieldHandling yieldHandling, TokenKind tt, bool
 
             // Gotten by tryNewTarget
             tt = tokenStream.currentToken().type;
-            Node ctorExpr = memberExpr(yieldHandling, tt, false, PredictInvoked);
+            Node ctorExpr = memberExpr(yieldHandling, TripledotProhibited, tt, false, PredictInvoked);
             if (!ctorExpr)
                 return null();
 
@@ -8612,7 +8599,7 @@ Parser<ParseHandler>::memberExpr(YieldHandling yieldHandling, TokenKind tt, bool
         if (!lhs)
             return null();
     } else {
-        lhs = primaryExpr(yieldHandling, tt, invoked);
+        lhs = primaryExpr(yieldHandling, tripledotHandling, tt, invoked);
         if (!lhs)
             return null();
     }
@@ -8643,7 +8630,7 @@ Parser<ParseHandler>::memberExpr(YieldHandling yieldHandling, TokenKind tt, bool
                 return null();
             }
         } else if (tt == TOK_LB) {
-            Node propExpr = expr(InAllowed, yieldHandling);
+            Node propExpr = expr(InAllowed, yieldHandling, TripledotProhibited);
             if (!propExpr)
                 return null();
 
@@ -8893,13 +8880,13 @@ Parser<ParseHandler>::arrayInitializer(YieldHandling yieldHandling)
                 spread = true;
                 tokenStream.consumeKnownToken(TOK_TRIPLEDOT, TokenStream::Operand);
                 uint32_t begin = pos().begin;
-                Node inner = assignExpr(InAllowed, yieldHandling);
+                Node inner = assignExpr(InAllowed, yieldHandling, TripledotProhibited);
                 if (!inner)
                     return null();
                 if (!handler.addSpreadElement(literal, begin, inner))
                     return null();
             } else {
-                Node element = assignExpr(InAllowed, yieldHandling);
+                Node element = assignExpr(InAllowed, yieldHandling, TripledotProhibited);
                 if (!element)
                     return null();
                 if (foldConstants && !FoldConstants(context, &element, this))
@@ -9167,7 +9154,7 @@ Parser<ParseHandler>::computedPropertyName(YieldHandling yieldHandling, Node lit
     // Parser<>::checkDestructuringPattern() for details.
     bool saved = pc->inDeclDestructuring;
     pc->inDeclDestructuring = false;
-    Node assignNode = assignExpr(InAllowed, yieldHandling);
+    Node assignNode = assignExpr(InAllowed, yieldHandling, TripledotProhibited);
     pc->inDeclDestructuring = saved;
     if (!assignNode)
         return null();
@@ -9207,7 +9194,7 @@ Parser<ParseHandler>::objectLiteral(YieldHandling yieldHandling)
             return null();
 
         if (propType == PropertyType::Normal) {
-            Node propExpr = assignExpr(InAllowed, yieldHandling);
+            Node propExpr = assignExpr(InAllowed, yieldHandling, TripledotProhibited);
             if (!propExpr)
                 return null();
 
@@ -9347,8 +9334,8 @@ Parser<ParseHandler>::tryNewTarget(Node &newTarget)
 
 template <typename ParseHandler>
 typename ParseHandler::Node
-Parser<ParseHandler>::primaryExpr(YieldHandling yieldHandling, TokenKind tt,
-                                  InvokedPrediction invoked)
+Parser<ParseHandler>::primaryExpr(YieldHandling yieldHandling, TripledotHandling tripledotHandling,
+                                  TokenKind tt, InvokedPrediction invoked)
 {
     MOZ_ASSERT(tokenStream.isCurrentTokenType(tt));
     JS_CHECK_RECURSION(context, return null());
@@ -9425,12 +9412,19 @@ Parser<ParseHandler>::primaryExpr(YieldHandling yieldHandling, TokenKind tt,
         return handler.newNullLiteral(pos());
 
       case TOK_TRIPLEDOT: {
-        TokenKind next;
-
         // This isn't valid expression syntax, but it's valid in an arrow
         // function as a trailing rest param: `(a, b, ...rest) => body`.  Check
-        // for a name, closing parenthesis, and arrow, and allow it only if all
-        // are present.
+        // if it's directly under
+        // CoverParenthesizedExpressionAndArrowParameterList, and check for a
+        // name, closing parenthesis, and arrow, and allow it only if all are
+        // present.
+        if (tripledotHandling != TripledotAllowed) {
+            report(ParseError, false, null(), JSMSG_UNEXPECTED_TOKEN,
+                   "expression", TokenKindToDesc(tt));
+            return null();
+        }
+
+        TokenKind next;
         if (!tokenStream.getToken(&next))
             return null();
         // FIXME: This fails to handle a rest parameter named |yield| correctly
@@ -9487,7 +9481,7 @@ Parser<ParseHandler>::parenExprOrGeneratorComprehension(YieldHandling yieldHandl
     if (matched)
         return generatorComprehension(begin);
 
-    Node pn = expr(InAllowed, yieldHandling, PredictInvoked);
+    Node pn = expr(InAllowed, yieldHandling, TripledotAllowed, PredictInvoked);
     if (!pn)
         return null();
 
@@ -9555,7 +9549,7 @@ Parser<ParseHandler>::exprInParens(InHandling inHandling, YieldHandling yieldHan
     uint32_t begin = pos().begin;
     uint32_t startYieldOffset = pc->lastYieldOffset;
 
-    Node pn = expr(inHandling, yieldHandling, PredictInvoked);
+    Node pn = expr(inHandling, yieldHandling, TripledotProhibited, PredictInvoked);
     if (!pn)
         return null();
 

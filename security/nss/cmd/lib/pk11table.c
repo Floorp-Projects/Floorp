@@ -577,7 +577,7 @@ const Constant _consts[] = {
 };
 
 const Constant *consts = &_consts[0];
-const int constCount = sizeof(_consts)/sizeof(_consts[0]);
+const unsigned int constCount = sizeof(_consts)/sizeof(_consts[0]);
 
 const Commands _commands[] = {
     {"C_Initialize", F_C_Initialize,
@@ -1389,7 +1389,7 @@ const int topicCount = sizeof(_topics) / sizeof(_topics[0]);
 const char *
 getName(CK_ULONG value, ConstType type)
 {
-    int i;
+    unsigned int i;
     
     for (i=0; i < constCount; i++) {
         if (consts[i].type == type && consts[i].value == value) {
@@ -1409,9 +1409,9 @@ getNameFromAttribute(CK_ATTRIBUTE_TYPE type)
     return getName(type, ConstAttribute);
 }
 
-int totalKnownType(ConstType type) {
-    int count = 0;
-    int i;
+unsigned int totalKnownType(ConstType type) {
+    unsigned int count = 0;
+    unsigned int i;
  
     for (i=0; i < constCount; i++) {
         if (consts[i].type == type) count++;

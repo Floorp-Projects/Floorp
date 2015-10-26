@@ -162,7 +162,7 @@ extern const int valueCount;
 extern const char **constTypeString;
 extern const int constTypeCount;
 extern const Constant *consts;
-extern const int constCount;
+extern const unsigned int constCount;
 extern const Commands *commands;
 extern const int commandCount;
 extern const Topics *topics;
@@ -174,7 +174,7 @@ getName(CK_ULONG value, ConstType type);
 extern const char *
 getNameFromAttribute(CK_ATTRIBUTE_TYPE type);
 
-extern int totalKnownType(ConstType type);
+extern unsigned int totalKnownType(ConstType type);
 
 #endif /* _PK11_TABLE_H_ */
 

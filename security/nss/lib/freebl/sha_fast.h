@@ -147,6 +147,7 @@ static __inline__ PRUint32 swap4b(PRUint32 value)
     SHA_STORE(3); \
     SHA_STORE(4); \
   } else { \
+    PRUint32 tmpbuf[5]; \
     tmpbuf[0] = SHA_HTONL(ctx->H[0]); \
     tmpbuf[1] = SHA_HTONL(ctx->H[1]); \
     tmpbuf[2] = SHA_HTONL(ctx->H[2]); \

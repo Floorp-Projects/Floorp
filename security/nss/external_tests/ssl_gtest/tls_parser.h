@@ -10,7 +10,11 @@
 #include <memory>
 #include <cstdint>
 #include <cstring>
+#if defined(WIN32) || defined(WIN64)
+#include <winsock2.h>
+#else
 #include <arpa/inet.h>
+#endif
 #include "databuffer.h"
 
 namespace nss_test {
@@ -23,11 +27,15 @@ const uint8_t kTlsHandshakeClientHello = 1;
 const uint8_t kTlsHandshakeServerHello = 2;
 const uint8_t kTlsHandshakeCertificate = 11;
 const uint8_t kTlsHandshakeServerKeyExchange = 12;
+const uint8_t kTlsHandshakeCertificateVerify = 15;
+const uint8_t kTlsHandshakeClientKeyExchange = 16;
+const uint8_t kTlsHandshakeFinished = 20;
 
 const uint8_t kTlsAlertWarning = 1;
 const uint8_t kTlsAlertFatal = 2;
 
 const uint8_t kTlsAlertUnexpectedMessage = 10;
+const uint8_t kTlsAlertBadRecordMac = 20;
 const uint8_t kTlsAlertHandshakeFailure = 40;
 const uint8_t kTlsAlertIllegalParameter = 47;
 const uint8_t kTlsAlertDecodeError = 50;

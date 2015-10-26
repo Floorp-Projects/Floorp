@@ -249,6 +249,9 @@ public:
   static bool
   InterceptionEnabled(JSContext* aCx, JSObject* aObj);
 
+  static bool
+  OpenWindowEnabled(JSContext* aCx, JSObject* aObj);
+
   void
   GetScope(nsString& aScope) const
   {

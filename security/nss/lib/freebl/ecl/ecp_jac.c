@@ -387,7 +387,7 @@ ec_GFp_pts_mul_jac(const mp_int *k1, const mp_int *k2, const mp_int *px,
 	mp_int precomp[4][4][2];
 	mp_int rz;
 	const mp_int *a, *b;
-	int i, j;
+	unsigned int i, j;
 	int ai, bi, d;
 
 	for (i = 0; i < 4; i++) {
@@ -494,7 +494,7 @@ ec_GFp_pts_mul_jac(const mp_int *k1, const mp_int *k2, const mp_int *px,
 	MP_CHECKOK(mp_init(&rz));
 	MP_CHECKOK(ec_GFp_pt_set_inf_jac(rx, ry, &rz));
 
-	for (i = d - 1; i >= 0; i--) {
+        for (i = d; i-- > 0;) {
 		ai = MP_GET_BIT(a, 2 * i + 1);
 		ai <<= 1;
 		ai |= MP_GET_BIT(a, 2 * i);

@@ -258,7 +258,7 @@ const  char  *mp_strerror(mp_err ec);
 
 /* Octet string conversion functions */
 mp_err mp_read_unsigned_octets(mp_int *mp, const unsigned char *str, mp_size len);
-int    mp_unsigned_octet_size(const mp_int *mp);
+unsigned int mp_unsigned_octet_size(const mp_int *mp);
 mp_err mp_to_unsigned_octets(const mp_int *mp, unsigned char *str, mp_size maxlen);
 mp_err mp_to_signed_octets(const mp_int *mp, unsigned char *str, mp_size maxlen);
 mp_err mp_to_fixlen_octets(const mp_int *mp, unsigned char *str, mp_size len);

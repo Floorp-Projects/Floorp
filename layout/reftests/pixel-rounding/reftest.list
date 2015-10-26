@@ -174,8 +174,8 @@ skip pref(image.downscale-during-decode.enabled,true) == image-high-quality-scal
 skip-if(B2G||Mulet) == background-image-tiling.html background-image-tiling-ref.html # bug 773482 # Initial mulet triage: parity with B2G/B2G Desktop
 
 != border-image-width-0.html border-image-width-10.html
-skip-if(B2G||Mulet) random-if(Android) == border-image-width-4.html border-image-width-0.html # bug 661996 # bug 773482 # Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(B2G||Mulet) random-if(Android) == border-image-width-9.html border-image-width-0.html # bug 661996 # bug 773482 # Initial mulet triage: parity with B2G/B2G Desktop
+== border-image-width-4.html border-image-width-0.html
+== border-image-width-9.html border-image-width-0.html
 
 == iframe-1.html iframe-1-ref.html
 

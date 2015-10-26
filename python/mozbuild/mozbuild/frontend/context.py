@@ -907,6 +907,9 @@ VARIABLES = {
           GENERATED_FILES += ['bar.c']
           bar = GENERATED_FILES['bar.c']
           bar.script = 'generate.py:make_bar'
+
+        The chosen script entry point may optionally return a set of strings,
+        indicating extra files the output depends on.
         """, 'export'),
 
     'DEFINES': (OrderedDict, dict,

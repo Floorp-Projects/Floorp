@@ -502,7 +502,7 @@ DSA_VerifyDigest(DSAPublicKey *key, const SECItem *signature,
     mp_int u1, u2, v, w; /* intermediate values used in verification */
     mp_int y;            /* public key */
     mp_err err;
-    int dsa_subprime_len, dsa_signature_len, offset;
+    unsigned int dsa_subprime_len, dsa_signature_len, offset;
     SECItem localDigest;
     unsigned char localDigestData[DSA_MAX_SUBPRIME_LEN];
     SECStatus verified = SECFailure;
