@@ -11,7 +11,9 @@
 
 const EventEmitter = require("devtools/shared/event-emitter");
 const { Cu } = require("chrome");
-const { ViewHelpers } = Cu.import("resource://devtools/client/shared/widgets/ViewHelpers.jsm", {});
+const { ViewHelpers } =
+      Cu.import("resource://devtools/client/shared/widgets/ViewHelpers.jsm",
+                {});
 const STRINGS_URI = "chrome://browser/locale/devtools/filterwidget.properties";
 const L10N = new ViewHelpers.L10N(STRINGS_URI);
 const {cssTokenizer} = require("devtools/client/shared/css-parsing-utils");
@@ -307,8 +309,11 @@ CSSFilterEditorWidget.prototype = {
       let value = startValue + direction * multiplier;
 
       const [min, max] = this._definition(filter.name).range;
-      value = value < min ? min :
-              value > max ? max : value;
+      if (value < min) {
+        value = min;
+      } else if (value > max) {
+        value = max;
+      }
 
       input.value = fixFloat(value);
 
@@ -323,8 +328,8 @@ CSSFilterEditorWidget.prototype = {
       let {start, end, value} = num;
 
       let split = input.value.split("");
-      let computed = fixFloat(value + direction * multiplier),
-          dotIndex = computed.indexOf(".0");
+      let computed = fixFloat(value + direction * multiplier);
+      let dotIndex = computed.indexOf(".0");
       if (dotIndex > -1) {
         computed = computed.slice(0, -2);
 
@@ -343,10 +348,10 @@ CSSFilterEditorWidget.prototype = {
   },
 
   _input: function(e) {
-    let filterEl = e.target.closest(".filter"),
-        index = this._getFilterElementIndex(filterEl),
-        filter = this.filters[index],
-        def = this._definition(filter.name);
+    let filterEl = e.target.closest(".filter");
+    let index = this._getFilterElementIndex(filterEl);
+    let filter = this.filters[index];
+    let def = this._definition(filter.name);
 
     if (def.type !== "string") {
       e.target.value = fixFloat(e.target.value);
@@ -366,9 +371,9 @@ CSSFilterEditorWidget.prototype = {
       this.el.classList.add("dragging");
     // label-dragging
     } else if (e.target.classList.contains("devtools-draglabel")) {
-      let label = e.target,
-          input = filterEl.querySelector("input"),
-          index = this._getFilterElementIndex(filterEl);
+      let label = e.target;
+      let input = filterEl.querySelector("input");
+      let index = this._getFilterElementIndex(filterEl);
 
       this._dragging = {
         index, label, input,
@@ -423,9 +428,9 @@ CSSFilterEditorWidget.prototype = {
   },
 
   _dragFilterElement: function(e) {
-    const rect = this.filtersList.getBoundingClientRect(),
-          top = e.pageY - LIST_PADDING,
-          bottom = e.pageY + LIST_PADDING;
+    const rect = this.filtersList.getBoundingClientRect();
+    let top = e.pageY - LIST_PADDING;
+    let bottom = e.pageY + LIST_PADDING;
     // don't allow dragging over top/bottom of list
     if (top < rect.top || bottom > rect.bottom) {
       return;
@@ -439,8 +444,11 @@ CSSFilterEditorWidget.prototype = {
     // change is the number of _steps_ taken from initial position
     // i.e. how many elements we have passed
     let change = delta / LIST_ITEM_HEIGHT;
-    change = change > 0 ? Math.floor(change) :
-             change < 0 ? Math.ceil(change) : change;
+    if (change > 0) {
+      change = Math.floor(change);
+    } else if (change < 0) {
+      change = Math.ceil(change);
+    }
 
     const children = this.filtersList.children;
     const index = [...children].indexOf(filterEl);
@@ -489,8 +497,11 @@ CSSFilterEditorWidget.prototype = {
 
     const filter = this.filters[dragging.index];
     const [min, max] = this._definition(filter.name).range;
-    value = value < min ? min :
-            value > max ? max : value;
+    if (value < min) {
+      value = min;
+    } else if (value > max) {
+      value = max;
+    }
 
     input.value = fixFloat(value);
 
@@ -551,8 +562,8 @@ CSSFilterEditorWidget.prototype = {
   _savePreset: function(e) {
     e.preventDefault();
 
-    let name = this.addPresetInput.value,
-        value = this.getCssValue();
+    let name = this.addPresetInput.value;
+    let value = this.getCssValue();
 
     if (!name || !value || value === "none") {
       this.emit("preset-save-error");
@@ -593,9 +604,9 @@ CSSFilterEditorWidget.prototype = {
 
       let el = base.cloneNode(true);
 
-      let [name, value] = el.children,
-          label = name.children[1],
-          [input, unitPreview] = value.children;
+      let [name, value] = el.children;
+      let label = name.children[1];
+      let [input, unitPreview] = value.children;
 
       let min, max;
       if (def.range) {
@@ -615,11 +626,11 @@ CSSFilterEditorWidget.prototype = {
             input.max = max;
           }
           input.step = "0.1";
-        break;
+          break;
         case "string":
           input.type = "text";
           input.placeholder = def.placeholder;
-        break;
+          break;
       }
 
       // use photoshop-style label-dragging
@@ -637,7 +648,8 @@ CSSFilterEditorWidget.prototype = {
       this.filtersList.appendChild(el);
     }
 
-    let lastInput = this.filtersList.querySelector(`.filter:last-of-type input`);
+    let lastInput =
+        this.filtersList.querySelector(`.filter:last-of-type input`);
     if (lastInput) {
       lastInput.focus();
       // move cursor to end of input
@@ -940,8 +952,8 @@ function getNeighbourNumber(string, index) {
     return null;
   }
 
-  let left = /-?[0-9.]*$/.exec(string.slice(0, index)),
-      right = /-?[0-9.]*/.exec(string.slice(index));
+  let left = /-?[0-9.]*$/.exec(string.slice(0, index));
+  let right = /-?[0-9.]*/.exec(string.slice(index));
 
   left = left ? left[0] : "";
   right = right ? right[0] : "";
