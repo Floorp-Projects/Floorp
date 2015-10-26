@@ -8,6 +8,7 @@
 #define mozilla_dom_PresentationSessionInfo_h
 
 #include "base/process.h"
+#include "mozilla/dom/nsIContentParent.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/PromiseNativeHandler.h"
 #include "mozilla/RefPtr.h"

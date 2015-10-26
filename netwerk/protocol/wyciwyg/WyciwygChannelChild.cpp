@@ -12,6 +12,7 @@
 #include "mozilla/dom/ContentChild.h"
 
 #include "nsCharsetSource.h"
+#include "nsContentUtils.h"
 #include "nsStringStream.h"
 #include "nsNetUtil.h"
 #include "nsISerializable.h"
