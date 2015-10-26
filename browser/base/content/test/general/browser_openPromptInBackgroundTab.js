@@ -19,8 +19,11 @@ add_task(function*() {
   let firstTab = gBrowser.selectedTab;
   // load page that opens prompt when page is hidden
   let openedTab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, pageWithAlert, true);
+  let openedTabGotAttentionPromise = BrowserTestUtils.waitForAttribute("attention", openedTab, "true");
   // switch away from that tab again - this triggers the alert.
   yield BrowserTestUtils.switchTab(gBrowser, firstTab);
+  // ... but that's async on e10s...
+  yield openedTabGotAttentionPromise;
   // check for attention attribute
   is(openedTab.getAttribute("attention"), "true", "Tab with alert should have 'attention' attribute.");
   ok(!openedTab.selected, "Tab with alert should not be selected");
@@ -43,8 +46,15 @@ add_task(function*() {
   let ps = Services.perms;
   is(ps.ALLOW_ACTION, ps.testPermission(makeURI(pageWithAlert), "focus-tab-by-prompt"),
      "Tab switching should now be allowed");
+
+  let openedTabSelectedPromise = BrowserTestUtils.waitForAttribute("selected", openedTab, "true");
   // switch to other tab again
   yield BrowserTestUtils.switchTab(gBrowser, firstTab);
+
+  // This is sync in non-e10s, but in e10s we need to wait for this, so yield anyway.
+  // Note that the switchTab promise doesn't actually guarantee anything about *which*
+  // tab ends up as selected when its event fires, so using that here wouldn't work.
+  yield openedTabSelectedPromise;
   // should be switched back
   ok(openedTab.selected, "Ta-dah, the other tab should now be selected again!");
 
