@@ -370,7 +370,7 @@ Measurement.prototype = Object.freeze({
   _serializeJSONSingular: function (data) {
     let result = {"_v": this.version};
 
-    for (let [field, data] of data) {
+    for (let [field, value] of data) {
       // There could be legacy fields in storage we no longer care about.
       if (!this.shouldIncludeField(field)) {
         continue;
@@ -381,7 +381,7 @@ Measurement.prototype = Object.freeze({
       switch (type) {
         case this.storage.FIELD_LAST_NUMERIC:
         case this.storage.FIELD_LAST_TEXT:
-          result[field] = data[1];
+          result[field] = value[1];
           break;
 
         case this.storage.FIELD_DAILY_COUNTER:
@@ -402,7 +402,7 @@ Measurement.prototype = Object.freeze({
   _serializeJSONDay: function (data) {
     let result = {"_v": this.version};
 
-    for (let [field, data] of data) {
+    for (let [field, value] of data) {
       if (!this.shouldIncludeField(field)) {
         continue;
       }
@@ -415,7 +415,7 @@ Measurement.prototype = Object.freeze({
         case this.storage.FIELD_DAILY_DISCRETE_TEXT:
         case this.storage.FIELD_DAILY_LAST_NUMERIC:
         case this.storage.FIELD_DAILY_LAST_TEXT:
-          result[field] = data;
+          result[field] = value;
           break;
 
         case this.storage.FIELD_LAST_NUMERIC:
