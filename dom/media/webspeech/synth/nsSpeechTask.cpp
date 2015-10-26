@@ -711,7 +711,7 @@ nsSpeechTask::WindowAudioCaptureChanged()
 void
 nsSpeechTask::SetAudioOutputVolume(float aVolume)
 {
-  if (mStream) {
+  if (mStream && !mStream->IsDestroyed()) {
     mStream->SetAudioOutputVolume(this, aVolume);
   }
   if (mIndirectAudio) {
