@@ -13,6 +13,9 @@ should be imported by head.js (as far as we can correctly resolve the path).
 ``mark-test-function-used`` simply marks test (the test method) as used. This
 avoids ESLint telling us that the function is never called.
 
+``var-only-at-top-level`` Marks all var declarations that are not at the top
+level invalid.
+
 +-------+-----------------------+
 | Possible values for all rules |
 +-------+-----------------------+
