@@ -57,7 +57,8 @@ public class AccountsHelper implements NativeEventListener {
                 "Accounts:Create",
                 "Accounts:DeleteFirefoxAccount",
                 "Accounts:Exist",
-                "Accounts:ProfileUpdated");
+                "Accounts:ProfileUpdated",
+                "Accounts:ShowSyncPreferences");
     }
 
     public synchronized void uninit() {
@@ -72,7 +73,8 @@ public class AccountsHelper implements NativeEventListener {
                 "Accounts:Create",
                 "Accounts:DeleteFirefoxAccount",
                 "Accounts:Exist",
-                "Accounts:ProfileUpdated");
+                "Accounts:ProfileUpdated",
+                "Accounts:ShowSyncPreferences");
     }
 
     @Override
@@ -270,6 +272,17 @@ public class AccountsHelper implements NativeEventListener {
             }
             final AndroidFxAccount androidFxAccount = new AndroidFxAccount(mContext, account);
             androidFxAccount.fetchProfileJSON();
+        } else if ("Accounts:ShowSyncPreferences".equals(event)) {
+            final Account account = FirefoxAccounts.getFirefoxAccount(mContext);
+            if (account == null) {
+                Log.w(LOGTAG, "Can't change show Sync preferences of non-existent Firefox Account!; ignored");
+                return;
+            }
+            // We don't necessarily have an Activity context here, so we always start in a new task.
+            final Intent intent = new Intent(FxAccountConstants.ACTION_FXA_STATUS);
+            intent.setFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            mContext.startActivity(intent);
         }
     }
 }
