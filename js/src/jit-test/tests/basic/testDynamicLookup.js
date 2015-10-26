@@ -39,18 +39,12 @@
 (function() { var [x] = [2]; (function() { eval('assertEq(x, 2)') })() })();
 (function() { for (var [x] = [2];;) { return (function() { return assertEq(x, 2); })() } })();
 (function() { for (var [x] = [2];;) { return (function() { return eval('assertEq(x, 2)'); })() } })();
-(function() { let ([x] = [2]) { eval('assertEq(x, 2)') } })();
-(function() { let ([x] = [2]) { (function() { assertEq(x, 2) })() } })();
-(function() { let ([x] = [2]) { (function() { eval('assertEq(x, 2)') })() } })();
 
 (function() { var {y:x} = {y:2}; eval('assertEq(x, 2)') })();
 (function() { var {y:x} = {y:2}; (function() { assertEq(x, 2) })() })();
 (function() { var {y:x} = {y:2}; (function() { eval('assertEq(x, 2)') })() })();
 (function() { for (var {y:x} = {y:2};;) { return (function() { return assertEq(x, 2); })() } })();
 (function() { for (var {y:x} = {y:2};;) { return (function() { return eval('assertEq(x, 2)'); })() } })();
-(function() { let ({y:x} = {y:2}) { eval('assertEq(x, 2)') } })();
-(function() { let ({y:x} = {y:2}) { (function() { assertEq(x, 2) })() } })();
-(function() { let ({y:x} = {y:2}) { (function() { eval('assertEq(x, 2)') })() } })();
 
 (function([x]) { eval('assertEq(x, 2)') })([2]);
 (function([x]) { (function() { assertEq(x, 2) })() })([2]);

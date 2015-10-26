@@ -4068,57 +4068,6 @@ Parser<SyntaxParseHandler>::pushLetScope(HandleStaticBlockObject blockObj, AutoP
     return SyntaxParseHandler::NodeFailure;
 }
 
-/*
- * Parse a let block statement.
- * In both cases, bindings are not hoisted to the top of the enclosing block
- * and thus must be carefully injected between variables() and the let body.
- */
-template <typename ParseHandler>
-typename ParseHandler::Node
-Parser<ParseHandler>::deprecatedLetBlock(YieldHandling yieldHandling)
-{
-    MOZ_ASSERT(tokenStream.isCurrentTokenType(TOK_LET));
-
-    RootedStaticBlockObject blockObj(context, StaticBlockObject::create(context));
-    if (!blockObj)
-        return null();
-    // Initialize the enclosing scope manually for the call to |variables|
-    // below.
-    blockObj->initEnclosingScopeFromParser(pc->innermostStaticScope());
-
-    uint32_t begin = pos().begin;
-
-    MUST_MATCH_TOKEN(TOK_LP, JSMSG_PAREN_BEFORE_LET);
-
-    Node vars = variables(yieldHandling, PNK_LET, NotInForInit, nullptr, blockObj, DontHoistVars);
-    if (!vars)
-        return null();
-
-    MUST_MATCH_TOKEN(TOK_RP, JSMSG_PAREN_AFTER_LET);
-
-    AutoPushStmtInfoPC stmtInfo(*this, StmtType::BLOCK);
-    Node block = pushLetScope(blockObj, stmtInfo);
-    if (!block)
-        return null();
-
-    MUST_MATCH_TOKEN(TOK_LC, JSMSG_CURLY_BEFORE_LET);
-
-    Node expr = statements(yieldHandling);
-    if (!expr)
-        return null();
-    MUST_MATCH_TOKEN_MOD(TOK_RC, TokenStream::Operand, JSMSG_CURLY_AFTER_LET);
-
-    addTelemetry(JSCompartment::DeprecatedLetBlock);
-    if (!report(ParseWarning, pc->sc->strict(), expr, JSMSG_DEPRECATED_LET_BLOCK))
-        return null();
-
-    handler.setLexicalScopeBody(block, expr);
-
-    TokenPos letPos(begin, pos().end);
-
-    return handler.newLetBlock(vars, block, letPos);
-}
-
 template <typename ParseHandler>
 typename ParseHandler::Node
 Parser<ParseHandler>::blockStatement(YieldHandling yieldHandling)
@@ -4527,45 +4476,6 @@ Parser<FullParseHandler>::lexicalDeclaration(YieldHandling yieldHandling, bool i
 template <>
 SyntaxParseHandler::Node
 Parser<SyntaxParseHandler>::lexicalDeclaration(YieldHandling, bool)
-{
-    JS_ALWAYS_FALSE(abortIfSyntaxParser());
-    return SyntaxParseHandler::NodeFailure;
-}
-
-template <>
-ParseNode*
-Parser<FullParseHandler>::letDeclarationOrBlock(YieldHandling yieldHandling)
-{
-    handler.disableSyntaxParser();
-
-    /* Check for a let statement. */
-    TokenKind tt;
-    if (!tokenStream.peekToken(&tt))
-        return null();
-    if (tt == TOK_LP) {
-        ParseNode* node = deprecatedLetBlock(yieldHandling);
-        if (!node)
-            return nullptr;
-
-        MOZ_ASSERT(node->isKind(PNK_LETBLOCK));
-        MOZ_ASSERT(node->isArity(PN_BINARY));
-        return node;
-    }
-
-    ParseNode* decl = lexicalDeclaration(yieldHandling, /* isConst = */ false);
-    if (!decl)
-        return nullptr;
-
-    // let-declarations at global scope are currently treated as plain old var.
-    // See bug 589199.
-    MOZ_ASSERT(decl->isKind(PNK_LET) || decl->isKind(PNK_VAR));
-    MOZ_ASSERT(decl->isArity(PN_LIST));
-    return decl;
-}
-
-template <>
-SyntaxParseHandler::Node
-Parser<SyntaxParseHandler>::letDeclarationOrBlock(YieldHandling yieldHandling)
 {
     JS_ALWAYS_FALSE(abortIfSyntaxParser());
     return SyntaxParseHandler::NodeFailure;
@@ -6871,13 +6781,12 @@ Parser<ParseHandler>::statement(YieldHandling yieldHandling, bool canHaveDirecti
 
       // LexicalDeclaration[In, ?Yield]
       case TOK_LET:
-        // [In] is the default behavior, because for-loops currently specially
-        // parse their heads to handle |in| in this situation.
-        return letDeclarationOrBlock(yieldHandling);
       case TOK_CONST:
         if (!abortIfSyntaxParser())
             return null();
-        return lexicalDeclaration(yieldHandling, /* isConst = */ true);
+        // [In] is the default behavior, because for-loops currently specially
+        // parse their heads to handle |in| in this situation.
+        return lexicalDeclaration(yieldHandling, /* isConst = */ tt == TOK_CONST);
 
       // ImportDeclaration (only inside modules)
       case TOK_IMPORT:
