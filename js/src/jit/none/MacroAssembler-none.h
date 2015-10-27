@@ -189,7 +189,6 @@ class MacroAssemblerNone : public Assembler
     void nopAlign(size_t) { MOZ_CRASH(); }
     void checkStackAlignment() { MOZ_CRASH(); }
     uint32_t currentOffset() { MOZ_CRASH(); }
-    uint32_t actualOffset(uint32_t) { MOZ_CRASH(); }
     uint32_t labelOffsetToPatchOffset(uint32_t) { MOZ_CRASH(); }
     CodeOffsetLabel labelForPatch() { MOZ_CRASH(); }
 

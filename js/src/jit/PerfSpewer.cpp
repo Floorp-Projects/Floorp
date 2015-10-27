@@ -223,11 +223,11 @@ PerfSpewer::writeProfile(JSScript* script,
 
         uint32_t thisFunctionIndex = nextFunctionIndex++;
         uintptr_t funcStart = uintptr_t(code->raw());
-        uintptr_t funcEndInlineCode = funcStart + masm.actualOffset(endInlineCode.offset());
+        uintptr_t funcEndInlineCode = funcStart + endInlineCode.offset();
         uintptr_t funcEnd = funcStart + code->instructionsSize();
 
         // function begins with the prologue, which is located before the first basic block
-        size_t prologueSize = masm.actualOffset(basicBlocks_[0].start.offset());
+        size_t prologueSize = basicBlocks_[0].start.offset();
 
         if (prologueSize > 0) {
             fprintf(PerfFilePtr, "%" PRIxSIZE " %" PRIxSIZE " %s:%" PRIuSIZE ": Func%02d-Prologue\n",
@@ -238,8 +238,8 @@ PerfSpewer::writeProfile(JSScript* script,
         for (uint32_t i = 0; i < basicBlocks_.length(); i++) {
             Record& r = basicBlocks_[i];
 
-            uintptr_t blockStart = funcStart + masm.actualOffset(r.start.offset());
-            uintptr_t blockEnd = funcStart + masm.actualOffset(r.end.offset());
+            uintptr_t blockStart = funcStart + r.start.offset();
+            uintptr_t blockEnd = funcStart + r.end.offset();
 
             MOZ_ASSERT(cur <= blockStart);
             if (cur < blockStart) {
