@@ -140,7 +140,8 @@ describe("loop.standaloneRoomViews", function() {
 
     it("should display a join room button if the state is not ROOM_JOINED", function() {
       activeRoomStore.setStoreState({
-        roomState: ROOM_STATES.READY
+        roomState: ROOM_STATES.READY,
+        roomName: "fakeName"
       });
 
       view = mountTestComponent();
@@ -151,7 +152,8 @@ describe("loop.standaloneRoomViews", function() {
 
     it("should dispatch a JoinRoom action when the join room button is clicked", function() {
       activeRoomStore.setStoreState({
-        roomState: ROOM_STATES.READY
+        roomState: ROOM_STATES.READY,
+        roomName: "fakeName"
       });
 
       view = mountTestComponent();
@@ -165,7 +167,8 @@ describe("loop.standaloneRoomViews", function() {
 
     it("should display a enjoy your conversation button if the state is ROOM_JOINED", function() {
       activeRoomStore.setStoreState({
-        roomState: ROOM_STATES.JOINED
+        roomState: ROOM_STATES.JOINED,
+        roomName: "fakeName"
       });
 
       view = mountTestComponent();
@@ -176,7 +179,8 @@ describe("loop.standaloneRoomViews", function() {
 
     it("should disable the enjoy your conversation button if the state is ROOM_JOINED", function() {
       activeRoomStore.setStoreState({
-        roomState: ROOM_STATES.JOINED
+        roomState: ROOM_STATES.JOINED,
+        roomName: "fakeName"
       });
 
       view = mountTestComponent();
@@ -187,7 +191,8 @@ describe("loop.standaloneRoomViews", function() {
 
     it("should not display a join button if there is a failure reason", function() {
       activeRoomStore.setStoreState({
-        failureReason: FAILURE_DETAILS.ROOM_ALREADY_OPEN
+        failureReason: FAILURE_DETAILS.ROOM_ALREADY_OPEN,
+        roomName: "fakeName"
       });
 
       view = mountTestComponent();
@@ -198,13 +203,67 @@ describe("loop.standaloneRoomViews", function() {
 
     it("should display a room already joined message if opening failed", function() {
       activeRoomStore.setStoreState({
-        failureReason: FAILURE_DETAILS.ROOM_ALREADY_OPEN
+        failureReason: FAILURE_DETAILS.ROOM_ALREADY_OPEN,
+        roomName: "fakeName"
       });
 
       view = mountTestComponent();
       var text = view.getDOMNode().querySelector(".failure");
 
       expect(text.textContent).eql("rooms_already_joined");
+    });
+
+    describe("Room name priority", function() {
+      it("should use room name", function() {
+        activeRoomStore.setStoreState({
+          roomState: ROOM_STATES.JOINED,
+          roomName: "fakeName"
+        });
+
+        view = mountTestComponent();
+        var text = view.getDOMNode().querySelector(".roomName");
+
+        expect(
+          text.textContent)
+        .eql("fakeName");
+      });
+
+      it("should use context title when there's no room title", function() {
+        activeRoomStore.setStoreState({
+          roomState: ROOM_STATES.JOINED,
+          roomContextUrls: [
+            {
+              description: "Website title",
+              location: "https://fakeurl.com"
+            }
+          ]
+        });
+
+        view = mountTestComponent();
+        var text = view.getDOMNode().querySelector(".roomName");
+
+        expect(
+          text.textContent)
+        .eql("Website title");
+      });
+
+      it("should use website url when there's no room title nor website", function() {
+        activeRoomStore.setStoreState({
+          roomState: ROOM_STATES.JOINED,
+          roomContextUrls: [
+            {
+              location: "https://fakeurl.com"
+            }
+          ]
+        });
+
+        view = mountTestComponent();
+        var text = view.getDOMNode().querySelector(".roomName");
+
+        expect(
+          text.textContent)
+        .eql("https://fakeurl.com");
+      });
     });
   });
 
@@ -241,7 +300,10 @@ describe("loop.standaloneRoomViews", function() {
     }
 
     beforeEach(function() {
-      activeRoomStore.setStoreState({ roomState: ROOM_STATES.FAILED });
+      activeRoomStore.setStoreState({
+        roomState: ROOM_STATES.FAILED,
+        roomName: "fakeName"
+      });
     });
 
     it("should display a status error message if not reason is supplied", function() {
@@ -365,20 +427,15 @@ describe("loop.standaloneRoomViews", function() {
     }
 
     describe("#componentWillUpdate", function() {
-      it("should set document.title to roomName and brand name when the READY state is dispatched", function() {
-        activeRoomStore.setStoreState({ roomName: "fakeName", roomState: ROOM_STATES.INIT });
-        view = mountTestComponent();
-        activeRoomStore.setStoreState({ roomState: ROOM_STATES.READY });
-
-        expect(fakeWindow.document.title).to.equal("fakeName — clientShortname2");
+      beforeEach(function() {
+        activeRoomStore.setStoreState({ roomName: "fakeName" });
       });
-
-      it("should set document.title brand name when there is no context available", function() {
+      it("should set document.title to roomName and brand name when the READY state is dispatched", function() {
         activeRoomStore.setStoreState({ roomState: ROOM_STATES.INIT });
         view = mountTestComponent();
         activeRoomStore.setStoreState({ roomState: ROOM_STATES.READY });
 
-        expect(fakeWindow.document.title).to.equal("clientShortname2");
+        expect(fakeWindow.document.title).to.equal("fakeName — clientShortname2");
       });
 
       it("should dispatch a `SetupStreamElements` action when the MEDIA_WAIT state " +
@@ -456,7 +513,7 @@ describe("loop.standaloneRoomViews", function() {
         view = mountTestComponent();
 
         // Pretend the user waited a little bit
-        activeRoomStore.setStoreState({ roomState: ROOM_STATES.JOINING });
+        activeRoomStore.setStoreState({ roomState: ROOM_STATES.JOINING, roomName: "fakeName" });
         clock.tick(loop.standaloneRoomViews.StandaloneRoomInfoArea.RENDER_WAITING_DELAY - 1);
       });
 
@@ -541,7 +598,7 @@ describe("loop.standaloneRoomViews", function() {
     describe("#render", function() {
       beforeEach(function() {
         view = mountTestComponent();
-        activeRoomStore.setStoreState({ roomState: ROOM_STATES.JOINING });
+        activeRoomStore.setStoreState({ roomState: ROOM_STATES.JOINING, roomName: "fakeName" });
       });
 
       describe("Empty room message", function() {
@@ -975,6 +1032,10 @@ describe("loop.standaloneRoomViews", function() {
         isFirefox: true
       }));
     }
+
+    beforeEach(function() {
+      activeRoomStore.setStoreState({ roomName: "fakeName" });
+    });
 
     it("should not display anything if it is not known if Firefox can handle the room", function() {
       activeRoomStore.setStoreState({

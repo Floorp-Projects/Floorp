@@ -421,13 +421,17 @@ loop.panel = (function(_, mozL10n) {
         "room-active": this._isActive()
       });
 
+      var roomTitle = this.props.room.decryptedContext.roomName ||
+        this.props.room.decryptedContext.urls[0].description ||
+        this.props.room.decryptedContext.urls[0].location;
+
       return (
         React.createElement("div", {className: roomClasses, 
           onClick: this.handleClickEntry, 
           onMouseLeave: this._handleMouseOut, 
           ref: "roomEntry"}, 
           React.createElement("h2", null, 
-            this.props.room.decryptedContext.roomName
+            roomTitle
           ), 
           React.createElement(RoomEntryContextItem, {
             mozLoop: this.props.mozLoop, 

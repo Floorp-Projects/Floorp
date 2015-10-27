@@ -421,13 +421,17 @@ loop.panel = (function(_, mozL10n) {
         "room-active": this._isActive()
       });
 
+      var roomTitle = this.props.room.decryptedContext.roomName ||
+        this.props.room.decryptedContext.urls[0].description ||
+        this.props.room.decryptedContext.urls[0].location;
+
       return (
         <div className={roomClasses}
           onClick={this.handleClickEntry}
           onMouseLeave={this._handleMouseOut}
           ref="roomEntry">
           <h2>
-            {this.props.room.decryptedContext.roomName}
+            {roomTitle}
           </h2>
           <RoomEntryContextItem
             mozLoop={this.props.mozLoop}
