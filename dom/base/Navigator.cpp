@@ -2851,11 +2851,97 @@ Navigator::GetUserAgent(nsPIDOMWindow* aWindow, nsIURI* aURI,
 }
 
 #ifdef MOZ_EME
+static nsCString
+ToCString(const nsString& aString)
+{
+  return NS_ConvertUTF16toUTF8(aString);
+}
+
+static nsCString
+ToCString(const MediaKeySystemMediaCapability& aValue)
+{
+  nsCString str;
+  str.AppendLiteral("{contentType='");
+  if (!aValue.mContentType.IsEmpty()) {
+    str.Append(ToCString(aValue.mContentType));
+  }
+  str.AppendLiteral("'}");
+  return str;
+}
+
+template<class Type>
+static nsCString
+ToCString(const Sequence<Type>& aSequence)
+{
+  nsCString s;
+  s.AppendLiteral("[");
+  for (size_t i = 0; i < aSequence.Length(); i++) {
+    if (i != 0) {
+      s.AppendLiteral(",");
+    }
+    s.Append(ToCString(aSequence[i]));
+  }
+  s.AppendLiteral("]");
+  return s;
+}
+
+static nsCString
+ToCString(const MediaKeySystemConfiguration& aConfig)
+{
+  nsCString str;
+  str.AppendLiteral("{");
+  str.AppendPrintf("label='%s'", NS_ConvertUTF16toUTF8(aConfig.mLabel).get());
+
+  if (aConfig.mInitDataTypes.WasPassed()) {
+    str.AppendLiteral(", initDataTypes=");
+    str.Append(ToCString(aConfig.mInitDataTypes.Value()));
+  }
+
+  if (aConfig.mAudioCapabilities.WasPassed()) {
+    str.AppendLiteral(", audioCapabilities=");
+    str.Append(ToCString(aConfig.mAudioCapabilities.Value()));
+  }
+  if (aConfig.mVideoCapabilities.WasPassed()) {
+    str.AppendLiteral(", videoCapabilities=");
+    str.Append(ToCString(aConfig.mVideoCapabilities.Value()));
+  }
+
+  if (!aConfig.mAudioType.IsEmpty()) {
+    str.AppendPrintf(", audioType='%s'",
+      NS_ConvertUTF16toUTF8(aConfig.mAudioType).get());
+  }
+  if (!aConfig.mInitDataType.IsEmpty()) {
+    str.AppendPrintf(", initDataType='%s'",
+      NS_ConvertUTF16toUTF8(aConfig.mInitDataType).get());
+  }
+  if (!aConfig.mVideoType.IsEmpty()) {
+    str.AppendPrintf(", videoType='%s'",
+      NS_ConvertUTF16toUTF8(aConfig.mVideoType).get());
+  }
+  str.AppendLiteral("}");
+
+  return str;
+}
+
+static nsCString
+RequestKeySystemAccessLogString(const nsAString& aKeySystem,
+                                const Sequence<MediaKeySystemConfiguration>& aConfigs)
+{
+  nsCString str;
+  str.AppendPrintf("Navigator::RequestMediaKeySystemAccess(keySystem='%s' options=",
+                   NS_ConvertUTF16toUTF8(aKeySystem).get());
+  str.Append(ToCString(aConfigs));
+  str.AppendLiteral(")");
+  return str;
+}
+
 already_AddRefed<Promise>
 Navigator::RequestMediaKeySystemAccess(const nsAString& aKeySystem,
                                        const Sequence<MediaKeySystemConfiguration>& aConfigs,
                                        ErrorResult& aRv)
 {
+  EME_LOG("%s", RequestKeySystemAccessLogString(aKeySystem, aConfigs).get());
+
   nsCOMPtr<nsIGlobalObject> go = do_QueryInterface(mWindow);
   RefPtr<DetailedPromise> promise =
     DetailedPromise::Create(go, aRv,
@@ -2873,7 +2959,6 @@ Navigator::RequestMediaKeySystemAccess(const nsAString& aKeySystem,
   mMediaKeySystemAccessManager->Request(promise, aKeySystem, aConfigs);
   return promise.forget();
 }
-
 #endif
 
 Presentation*
