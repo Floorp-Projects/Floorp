@@ -10,11 +10,16 @@ import static org.mozilla.gecko.tests.helpers.TextInputHelper.assertSelectionAt;
 import static org.mozilla.gecko.tests.helpers.TextInputHelper.assertText;
 import static org.mozilla.gecko.tests.helpers.TextInputHelper.assertTextAndSelection;
 import static org.mozilla.gecko.tests.helpers.TextInputHelper.assertTextAndSelectionAt;
+import static org.mozilla.gecko.tests.helpers.TextInputHelper.getText;
+import static org.mozilla.gecko.tests.helpers.WaitHelper.waitFor;
 
 import org.mozilla.gecko.tests.components.GeckoViewComponent.InputConnectionTest;
 import org.mozilla.gecko.tests.helpers.GeckoHelper;
 import org.mozilla.gecko.tests.helpers.NavigationHelper;
 
+import com.jayway.android.robotium.solo.Condition;
+
+import android.view.KeyEvent;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputConnection;
 
@@ -34,10 +39,14 @@ public class testInputConnection extends UITest {
 
         mGeckoView.mTextInput
             .waitForInputConnection()
-            .testInputConnection(new BasicInputConnectionTest());
+            // First run tests inside the normal input field.
+            .testInputConnection(new BasicInputConnectionTest())
+            // Then switch focus to the resetting input field, and run tests there.
+            .testInputConnection(new FocusNextInputFieldTest())
+            .testInputConnection(new ResettingInputConnectionTest());
     }
 
-    private class BasicInputConnectionTest implements InputConnectionTest {
+    private class BasicInputConnectionTest extends InputConnectionTest {
         @Override
         public void test(InputConnection ic, EditorInfo info) {
             // Test initial text provided by the hash in the test page URL
@@ -115,6 +124,82 @@ public class testInputConnection extends UITest {
             assertTextAndSelectionAt("Can commit ideographic space", ic, "\u3000", 1);
 
             ic.deleteSurroundingText(1, 0);
+            assertTextAndSelectionAt("Can clear text", ic, "", 0);
+        }
+    }
+
+    /**
+     * FocusNextInputFieldTest is used to switch focus from one input field to
+     * another on the test page by sending a tab key.
+     */
+    private class FocusNextInputFieldTest extends InputConnectionTest {
+        @Override
+        public void test(final InputConnection ic, EditorInfo info) {
+            // First clear all text.
+            ic.setSelection(0, 0);
+            assertSelectionAt("Can set selection to start", ic, 0);
+
+            ic.deleteSurroundingText(0, Integer.MAX_VALUE);
+            assertTextAndSelectionAt("Can clear all text", ic, "", 0);
+
+            // Set dummy text in currently focused input so we can check when we have switched focus.
+            final String dummyText = "dummy switch input text";
+            ic.commitText(dummyText, 1);
+            assertTextAndSelectionAt("Can commit text", ic, dummyText, dummyText.length());
+
+            final KeyEvent tabKey = new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_TAB);
+            ic.sendKeyEvent(tabKey);
+            ic.sendKeyEvent(KeyEvent.changeAction(tabKey, KeyEvent.ACTION_UP));
+        }
+    }
+
+    /**
+     * ResettingInputConnectionTest performs tests on the resetting input in
+     * robocop_input.html. Any test that uses the normal input should be put in
+     * BasicInputConnectionTest.
+     */
+    private class ResettingInputConnectionTest extends InputConnectionTest {
+        @Override
+        public void test(final InputConnection ic, EditorInfo info) {
+            waitFor("focus change", new Condition() {
+                @Override
+                public boolean isSatisfied() {
+                    return "".equals(getText(ic));
+                }
+            });
+
+            // Bug 1199658, duplication when page has JS that resets input field value.
+
+            ic.commitText("foo", 1);
+            assertTextAndSelectionAt("Can commit text (resetting)", ic, "foo", 3);
+
+            ic.setComposingRegion(0, 3);
+            // The bug appears after composition update events are processed. We only
+            // issue these events after some back-and-forth calls between the Gecko thread
+            // and the input connection thread. Therefore, to ensure these events are
+            // issued and to ensure the bug appears, we have to process all Gecko events,
+            // then all input connection events, and finally all Gecko events again.
+            processGeckoEvents(ic);
+            processInputConnectionEvents();
+            processGeckoEvents(ic);
+            assertTextAndSelectionAt("Can set composing region (resetting)", ic, "foo", 3);
+
+            ic.setComposingText("foobar", 1);
+            processGeckoEvents(ic);
+            processInputConnectionEvents();
+            processGeckoEvents(ic);
+            assertTextAndSelectionAt("Can change composing text (resetting)", ic, "foobar", 6);
+
+            ic.setComposingText("baz", 1);
+            processGeckoEvents(ic);
+            processInputConnectionEvents();
+            processGeckoEvents(ic);
+            assertTextAndSelectionAt("Can reset composing text (resetting)", ic, "baz", 3);
+
+            ic.finishComposingText();
+            assertTextAndSelectionAt("Can finish composing text (resetting)", ic, "baz", 3);
+
+            ic.deleteSurroundingText(3, 0);
             assertTextAndSelectionAt("Can clear text", ic, "", 0);
         }
     }

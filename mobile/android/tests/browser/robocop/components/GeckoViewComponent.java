@@ -6,6 +6,7 @@ package org.mozilla.gecko.tests.components;
 
 import static org.mozilla.gecko.tests.helpers.AssertionHelper.fAssertNotNull;
 import static org.mozilla.gecko.tests.helpers.AssertionHelper.fAssertNotSame;
+import static org.mozilla.gecko.tests.helpers.AssertionHelper.fAssertSame;
 import static org.mozilla.gecko.tests.helpers.AssertionHelper.fAssertTrue;
 
 import org.mozilla.gecko.R;
@@ -17,6 +18,8 @@ import android.content.Context;
 import android.content.ContextWrapper;
 import android.os.Handler;
 import android.os.Looper;
+import android.os.Message;
+import android.os.MessageQueue;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputConnection;
@@ -24,14 +27,13 @@ import android.view.inputmethod.InputMethodManager;
 
 import com.jayway.android.robotium.solo.Condition;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+
 /**
  * A class representing any interactions that take place on GeckoView.
  */
 public class GeckoViewComponent extends BaseComponent {
-
-    public interface InputConnectionTest {
-        public void test(InputConnection ic, EditorInfo info);
-    }
 
     public final TextInput mTextInput;
 
@@ -57,6 +59,71 @@ public class GeckoViewComponent extends BaseComponent {
                 FrameworkHelper.setViewContext(geckoView, newContext);
             }
         });
+    }
+
+    public static abstract class InputConnectionTest {
+        protected Handler inputConnectionHandler;
+
+        /**
+         * Processes pending events on the input connection thread before returning.
+         * Must be called on the input connection thread during a test.
+         */
+        protected void processInputConnectionEvents() {
+            fAssertSame("Should be called on input connection thread",
+                    Looper.myLooper(), inputConnectionHandler.getLooper());
+
+            // Adapted from GeckoThread.pumpMessageLoop.
+            MessageQueue queue = Looper.myQueue();
+            queue.addIdleHandler(new MessageQueue.IdleHandler() {
+                @Override
+                public boolean queueIdle() {
+                    final Message msg = Message.obtain(inputConnectionHandler);
+                    msg.obj = inputConnectionHandler;
+                    inputConnectionHandler.sendMessageAtFrontOfQueue(msg);
+                    return false; // Remove this idle handler.
+                }
+            });
+
+            final Method getNextMessage;
+            try {
+                getNextMessage = queue.getClass().getDeclaredMethod("next");
+            } catch (final NoSuchMethodException e) {
+                throw new UnsupportedOperationException(e);
+            }
+            getNextMessage.setAccessible(true);
+
+            while (true) {
+                final Message msg;
+                try {
+                    msg = (Message) getNextMessage.invoke(queue);
+                } catch (final IllegalAccessException | InvocationTargetException e) {
+                    throw new UnsupportedOperationException(e);
+                }
+                if (msg.obj == inputConnectionHandler &&
+                        msg.getTarget() == inputConnectionHandler) {
+                    // Our idle signal
+                    break;
+                } else if (msg.getTarget() == null) {
+                    Looper.myLooper().quit();
+                    break;
+                }
+                msg.getTarget().dispatchMessage(msg);
+            }
+        }
+
+        /**
+         * Processes pending events on the Gecko thread before returning.
+         * Must be called on the input connection thread during a test.
+         */
+        protected void processGeckoEvents(final InputConnection ic) {
+            fAssertSame("Should be called on input connection thread",
+                    Looper.myLooper(), inputConnectionHandler.getLooper());
+
+            fAssertTrue("Should be able to process Gecko events",
+                    ic.performPrivateCommand("process-gecko-events", null));
+        }
+
+        public abstract void test(InputConnection ic, EditorInfo info);
     }
 
     public class TextInput {
@@ -149,7 +216,7 @@ public class GeckoViewComponent extends BaseComponent {
                 }
             });
 
-            (new InputConnectionTestRunner(test)).runOnHandler(inputConnectionHandler);
+            (new InputConnectionTestRunner(test, inputConnectionHandler)).launch();
 
             setContext(oldGeckoViewContext);
             return this;
@@ -159,20 +226,22 @@ public class GeckoViewComponent extends BaseComponent {
             private final InputConnectionTest mTest;
             private boolean mDone;
 
-            public InputConnectionTestRunner(final InputConnectionTest test) {
+            public InputConnectionTestRunner(final InputConnectionTest test,
+                                             final Handler handler) {
+                test.inputConnectionHandler = handler;
                 mTest = test;
             }
 
-            public synchronized void runOnHandler(final Handler inputConnectionHandler) {
+            public synchronized void launch() {
                 // Below, we are blocking the instrumentation thread to wait on the
                 // InputConnection thread. Therefore, the InputConnection thread must not be
                 // the same as the instrumentation thread to avoid a deadlock. This should
                 // always be the case and we perform a sanity check to make sure.
                 fAssertNotSame("InputConnection should not be running on instrumentation thread",
-                    Looper.myLooper(), inputConnectionHandler.getLooper());
+                    Looper.myLooper(), mTest.inputConnectionHandler.getLooper());
 
                 mDone = false;
-                inputConnectionHandler.post(this);
+                mTest.inputConnectionHandler.post(this);
                 do {
                     try {
                         wait();
@@ -192,7 +261,7 @@ public class GeckoViewComponent extends BaseComponent {
                 ic.finishComposingText();
                 mTest.test(ic, info);
                 synchronized (this) {
-                    // Test finished; return from runOnHandler
+                    // Test finished; return from launch().
                     mDone = true;
                     notify();
                 }
