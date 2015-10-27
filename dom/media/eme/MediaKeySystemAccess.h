@@ -45,7 +45,7 @@ public:
   void GetKeySystem(nsString& aRetVal) const;
 
   void GetConfiguration(MediaKeySystemConfiguration& aConfig);
-  
+
   already_AddRefed<Promise> CreateMediaKeys(ErrorResult& aRv);
 
 
@@ -65,6 +65,10 @@ public:
   static bool IsGMPPresentOnDisk(const nsAString& aKeySystem,
                                  const nsACString& aVersion,
                                  nsACString& aOutMessage);
+
+  static bool GetSupportedConfig(const nsAString& aKeySystem,
+                                 const Sequence<MediaKeySystemConfiguration>& aConfigs,
+                                 MediaKeySystemConfiguration& aOutConfig);
 
 private:
   nsCOMPtr<nsPIDOMWindow> mParent;
