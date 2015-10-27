@@ -48,6 +48,8 @@ toolkit/library
   profile
   services
   startupcache
+  devtools/server
+  devtools/shared
 browser/app
   browser/base
   browser/components
@@ -60,7 +62,6 @@ browser/app
   toolkit/components/jsdownloads
   toolkit/content
   toolkit/crashreporter
-  devtools/shared
   toolkit/forgetaboutsite
   toolkit/identity
   toolkit/modules
