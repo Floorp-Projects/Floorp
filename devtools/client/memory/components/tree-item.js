@@ -22,7 +22,7 @@ const TreeItem = module.exports = createClass({
       dom.span({ className: "heap-tree-item-total-count" }, item.totalCount),
       dom.span({ className: "heap-tree-item-name", style: { marginLeft: depth * INDENT }},
         arrow,
-        this.toLabel(item.name)
+        item.name
       )
     );
   }
