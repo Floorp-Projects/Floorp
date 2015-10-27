@@ -972,13 +972,7 @@ private:
       principal = parentWorker->GetPrincipal();
     }
 
-    // We don't mute the main worker script becase we've already done
-    // same-origin checks on them so we should be able to see their errors.
-    // Note that for data: url, where we allow it through the same-origin check
-    // but then give it a different origin.
-    aLoadInfo.mMutedErrorFlag.emplace(IsMainWorkerScript()
-                                        ? false 
-                                        : !principal->Subsumes(channelPrincipal));
+    aLoadInfo.mMutedErrorFlag.emplace(!principal->Subsumes(channelPrincipal));
 
     // Make sure we're not seeing the result of a 404 or something by checking
     // the 'requestSucceeded' attribute on the http channel.
