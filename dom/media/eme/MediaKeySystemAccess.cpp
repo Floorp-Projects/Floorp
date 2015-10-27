@@ -52,10 +52,12 @@ NS_INTERFACE_MAP_END
 
 MediaKeySystemAccess::MediaKeySystemAccess(nsPIDOMWindow* aParent,
                                            const nsAString& aKeySystem,
-                                           const nsAString& aCDMVersion)
+                                           const nsAString& aCDMVersion,
+                                           const MediaKeySystemConfiguration& aConfig)
   : mParent(aParent)
   , mKeySystem(aKeySystem)
   , mCDMVersion(aCDMVersion)
+  , mConfig(aConfig)
 {
 }
 
@@ -79,6 +81,12 @@ void
 MediaKeySystemAccess::GetKeySystem(nsString& aOutKeySystem) const
 {
   ConstructKeySystem(mKeySystem, mCDMVersion, aOutKeySystem);
+}
+
+void
+MediaKeySystemAccess::GetConfiguration(MediaKeySystemConfiguration& aConfig)
+{
+  aConfig = mConfig;
 }
 
 already_AddRefed<Promise>
@@ -376,15 +384,11 @@ GMPDecryptsAndGeckoDecodesAAC(mozIGeckoMediaPluginService* aGMPService,
 static bool
 IsSupported(mozIGeckoMediaPluginService* aGMPService,
             const nsAString& aKeySystem,
-            const MediaKeySystemOptions& aConfig)
+            const MediaKeySystemConfiguration& aConfig)
 {
-  if (!aConfig.mInitDataType.EqualsLiteral("cenc")) {
-    return false;
-  }
-  if (!aConfig.mAudioCapability.IsEmpty() ||
-      !aConfig.mVideoCapability.IsEmpty()) {
-    // Don't support any capabilities until we know we have a CDM with
-    // capabilities...
+  // Backwards compatibility with legacy MediaKeySystemConfiguration method.
+  if (!aConfig.mInitDataType.IsEmpty() &&
+      !aConfig.mInitDataType.EqualsLiteral("cenc")) {
     return false;
   }
   if (!aConfig.mAudioType.IsEmpty() &&
@@ -405,7 +409,7 @@ IsSupported(mozIGeckoMediaPluginService* aGMPService,
 /* static */
 bool
 MediaKeySystemAccess::IsSupported(const nsAString& aKeySystem,
-                                  const Sequence<MediaKeySystemOptions>& aOptions)
+                                  const Sequence<MediaKeySystemConfiguration>& aConfigs)
 {
   nsCOMPtr<mozIGeckoMediaPluginService> mps =
     do_GetService("@mozilla.org/gecko-media-plugin-service;1");
@@ -419,7 +423,7 @@ MediaKeySystemAccess::IsSupported(const nsAString& aKeySystem,
     return false;
   }
 
-  for (const MediaKeySystemOptions& config : aOptions) {
+  for (const MediaKeySystemConfiguration& config : aConfigs) {
     if (mozilla::dom::IsSupported(mps, aKeySystem, config)) {
       return true;
     }

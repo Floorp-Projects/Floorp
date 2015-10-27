@@ -31,7 +31,8 @@ public:
 public:
   explicit MediaKeySystemAccess(nsPIDOMWindow* aParent,
                                 const nsAString& aKeySystem,
-                                const nsAString& aCDMVersion);
+                                const nsAString& aCDMVersion,
+                                const MediaKeySystemConfiguration& aConfig);
 
 protected:
   ~MediaKeySystemAccess();
@@ -43,6 +44,8 @@ public:
 
   void GetKeySystem(nsString& aRetVal) const;
 
+  void GetConfiguration(MediaKeySystemConfiguration& aConfig);
+  
   already_AddRefed<Promise> CreateMediaKeys(ErrorResult& aRv);
 
 
@@ -53,7 +56,7 @@ public:
                                                  nsACString& aOutCdmVersion);
 
   static bool IsSupported(const nsAString& aKeySystem,
-                          const Sequence<MediaKeySystemOptions>& aOptions);
+                          const Sequence<MediaKeySystemConfiguration>& aConfigs);
 
   static void NotifyObservers(nsIDOMWindow* aWindow,
                               const nsAString& aKeySystem,
@@ -67,6 +70,7 @@ private:
   nsCOMPtr<nsPIDOMWindow> mParent;
   const nsString mKeySystem;
   const nsString mCDMVersion;
+  const MediaKeySystemConfiguration mConfig;
 };
 
 } // namespace dom
