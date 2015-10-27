@@ -7,6 +7,7 @@ const { Preferences } = require("resource://gre/modules/Preferences.jsm");
 const CUSTOM_BREAKDOWN_PREF = "devtools.memory.custom-breakdowns";
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const { snapshotState: states, breakdowns } = require("./constants");
+const ERROR_SNAPSHOT_TEXT = "⚠ Error!";
 const SAVING_SNAPSHOT_TEXT = "Saving snapshot...";
 const READING_SNAPSHOT_TEXT = "Reading snapshot...";
 const SAVING_CENSUS_TEXT = "Taking heap census...";
@@ -94,6 +95,8 @@ exports.getSnapshotStatusText = function (snapshot) {
     `Snapshot must have expected state, found ${(snapshot || {}).state}.`);
 
   switch (snapshot.state) {
+    case states.ERROR:
+      return ERROR_SNAPSHOT_TEXT;
     case states.SAVING:
       return SAVING_SNAPSHOT_TEXT;
     case states.SAVED:
@@ -109,7 +112,7 @@ exports.getSnapshotStatusText = function (snapshot) {
       return "";
   }
 
-  DevToolsUtils.reportException(`Snapshot in unexpected state: ${snapshot.state}`);
+  assert(false, `Snapshot in unexpected state: ${snapshot.state}`);
   return "";
 }
 

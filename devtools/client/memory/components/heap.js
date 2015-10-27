@@ -2,6 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+const { safeErrorString } = require("devtools/shared/DevToolsUtils");
 const { DOM: dom, createClass, PropTypes, createFactory } = require("devtools/client/shared/vendor/react");
 const Tree = createFactory(require("./tree"));
 const TreeItem = createFactory(require("./tree-item"));
@@ -76,6 +77,11 @@ const Heap = module.exports = createClass({
         pane = dom.div({ className: "heap-view-panel", "data-state": "initial" },
           dom.button({ className: "take-snapshot", onClick: onSnapshotClick }, TAKE_SNAPSHOT_TEXT)
         );
+        break;
+      case states.ERROR:
+        pane = dom.div({ className: "heap-view-panel" },
+                       dom.h2({}, "There was an error processing this snapshot"),
+                       dom.pre({}, safeErrorString(snapshot.error)));
         break;
       case states.SAVING:
       case states.SAVED:
