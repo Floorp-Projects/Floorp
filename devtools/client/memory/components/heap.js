@@ -9,7 +9,9 @@ const { getSnapshotStatusText } = require("../utils");
 const { snapshotState: states } = require("../constants");
 const { snapshot: snapshotModel } = require("../models");
 const TAKE_SNAPSHOT_TEXT = "Take snapshot";
-const TREE_ROW_HEIGHT = 10;
+// If HEAP_TREE_ROW_HEIGHT changes, be sure to change `var(--heap-tree-row-height)`
+// in `devtools/client/themes/memory.css`
+const HEAP_TREE_ROW_HEIGHT = 14;
 
 /**
  * Creates a hash map mapping node IDs to its parent node.
@@ -45,7 +47,7 @@ function createTreeProperties (census) {
     renderItem: (item, depth, focused, arrow) => new TreeItem({ item, depth, focused, arrow }),
     getRoots: () => census.children,
     getKey: node => node.id,
-    itemHeight: TREE_ROW_HEIGHT,
+    itemHeight: HEAP_TREE_ROW_HEIGHT,
   };
 }
 
@@ -85,6 +87,13 @@ const Heap = module.exports = createClass({
         break;
       case states.SAVED_CENSUS:
         pane = dom.div({ className: "heap-view-panel", "data-state": "loaded" },
+          dom.div({ className: "header" },
+            dom.span({ className: "heap-tree-item-bytes" }, "Bytes"),
+            dom.span({ className: "heap-tree-item-count" }, "Count"),
+            dom.span({ className: "heap-tree-item-total-bytes" }, "Total Bytes"),
+            dom.span({ className: "heap-tree-item-total-count" }, "Total Count"),
+            dom.span({ className: "heap-tree-item-name" }, "Name")
+          ),
           Tree(createTreeProperties(snapshot.census))
         );
         break;
