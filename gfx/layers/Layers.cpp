@@ -1054,6 +1054,12 @@ Layer::GetVisibleRegionRelativeToRootLayer(nsIntRegion& aResult,
       nsIntRegion siblingVisibleRegion(sibling->GetEffectiveVisibleRegion());
       // Translate the siblings region to |layer|'s origin.
       siblingVisibleRegion.MoveBy(-siblingOffset.x, -siblingOffset.y);
+      // Apply the sibling's clip.
+      // Layer clip rects are not affected by the layer's transform.
+      Maybe<ParentLayerIntRect> clipRect = sibling->GetEffectiveClipRect();
+      if (clipRect) {
+        siblingVisibleRegion.AndWith(ParentLayerIntRect::ToUntyped(*clipRect));
+      }
       // Subtract the sibling visible region from the visible region of |this|.
       aResult.SubOut(siblingVisibleRegion);
     }
