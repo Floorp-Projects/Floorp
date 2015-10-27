@@ -1332,8 +1332,63 @@
     }
   });
 
+  var Failure = React.createClass({displayName: "Failure",
+    propTypes: {
+      errorDetected: React.PropTypes.bool.isRequired,
+      errorLine1: React.PropTypes.string,
+      errorLine2: React.PropTypes.string,
+      summary: React.PropTypes.string.isRequired
+    },
+
+    render: function() {
+      // if no errors, return blank
+      return !this.props.errorDetected ? null :
+      (React.createElement("li", {className: "test fail"}, 
+          React.createElement("h2", null, 
+            this.props.summary
+          ), 
+          React.createElement("pre", {className: "error"}, 
+            this.props.errorLine1 +
+             this.props.errorLine2 ? "\n" + this.props.errorLine2 : ""
+          )
+        )
+      );
+    }
+  });
+
+  var Result = React.createClass({displayName: "Result",
+    propTypes: {
+      error: React.PropTypes.object,
+      warnings: React.PropTypes.array
+    },
+
+    render: function() {
+      var warningsDetected = this.props.warnings.length !== 0;
+      var totalFailures = warningsDetected + !!this.props.error;
+
+      return (
+        React.createElement("div", {className: "error-summary"}, 
+          React.createElement("div", {className: "failures"}, 
+            React.createElement("a", null, "failures: "), 
+            React.createElement("em", null, totalFailures)
+          ), 
+          React.createElement("ul", null, 
+            React.createElement(Failure, {errorDetected: warningsDetected, 
+                     errorLine1: "Got: " + this.props.warnings.length, 
+                     summary: "Unexpected warnings detected rendering UI-Showcase"}), 
+            React.createElement(Failure, {errorDetected: !!this.props.error, 
+                     errorLine1: this.props.error, 
+                     errorLine2: this.props.error ? this.props.error.stack : null, 
+                     summary: "Errors rendering UI-Showcase"})
+          ), 
+          React.createElement("p", {id: "complete"}, "Completed")
+        )
+      );
+    }
+  });
+
   window.addEventListener("DOMContentLoaded", function() {
-    var uncaughtError;
+    var uncaughtError = null;
     var consoleWarn = console.warn;
     var caughtWarnings = [];
     console.warn = function() {
@@ -1362,54 +1417,9 @@
       // Put the title back, in case views changed it.
       document.title = "Loop UI Components Showcase";
 
-      // This simulates the mocha layout for errors which means we can run
-      // this alongside our other unit tests but use the same harness.
-      var expectedWarningsCount = 0;
-      var warningsMismatch = caughtWarnings.length !== expectedWarningsCount;
-      var resultsElement = document.querySelector("#results");
-      var divFailuresNode = document.createElement("div");
-      var pCompleteNode = document.createElement("p");
-      var emNode = document.createElement("em");
-
-      if (uncaughtError || warningsMismatch) {
-        var liTestFail = document.createElement("li");
-        var h2Node = document.createElement("h2");
-        var preErrorNode = document.createElement("pre");
-
-        divFailuresNode.className = "failures";
-        emNode.innerHTML = ((uncaughtError && warningsMismatch) ? 2 : 1).toString();
-        divFailuresNode.appendChild(emNode);
-        resultsElement.appendChild(divFailuresNode);
-
-        if (warningsMismatch) {
-          liTestFail.className = "test";
-          liTestFail.className += " fail";
-          h2Node.innerHTML = "Unexpected number of warnings detected in UI-Showcase";
-          preErrorNode.className = "error";
-          preErrorNode.innerHTML = "Got: " + caughtWarnings.length + "\n" + "Expected: " + expectedWarningsCount;
-          liTestFail.appendChild(h2Node);
-          liTestFail.appendChild(preErrorNode);
-          resultsElement.appendChild(liTestFail);
-        }
-        if (uncaughtError) {
-          liTestFail.className = "test";
-          liTestFail.className += " fail";
-          h2Node.innerHTML = "Errors rendering UI-Showcase";
-          preErrorNode.className = "error";
-          preErrorNode.innerHTML = uncaughtError + "\n" + uncaughtError.stack;
-          liTestFail.appendChild(h2Node);
-          liTestFail.appendChild(preErrorNode);
-          resultsElement.appendChild(liTestFail);
-        }
-      } else {
-        divFailuresNode.className = "failures";
-        emNode.innerHTML = "0";
-        divFailuresNode.appendChild(emNode);
-        resultsElement.appendChild(divFailuresNode);
-      }
-      pCompleteNode.id = "complete";
-      pCompleteNode.innerHTML = "Completed";
-      resultsElement.appendChild(pCompleteNode);
+      React.render(React.createElement(Result, {error: uncaughtError, 
+                           warnings: caughtWarnings}),
+                   document.querySelector("#results"));
     }, 1000);
   });
 
