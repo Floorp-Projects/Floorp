@@ -69,6 +69,21 @@ static const char* const gMediaSourceTypes[6] = {
   nullptr
 };
 
+// Returns true if we should enable MSE webm regardless of preferences.
+// 1. If MP4/H264 isn't supported:
+//   * Windows XP
+//   * Windows Vista and Server 2008 without the optional "Platform Update Supplement"
+//   * N/KN editions (Europe and Korea) of Windows 7/8/8.1/10 without the
+//     optional "Windows Media Feature Pack"
+
+static bool
+IsWebMForced()
+{
+  bool mp4supported =
+    DecoderTraits::IsMP4TypeAndEnabled(NS_LITERAL_CSTRING("video/mp4"));
+  return !mp4supported;
+}
+
 static nsresult
 IsTypeSupported(const nsAString& aType)
 {
@@ -88,7 +103,7 @@ IsTypeSupported(const nsAString& aType)
 
   for (uint32_t i = 0; gMediaSourceTypes[i]; ++i) {
     if (mimeType.EqualsASCII(gMediaSourceTypes[i])) {
-      if (DecoderTraits::IsMP4Type(mimeTypeUTF8)) {
+      if (DecoderTraits::IsMP4TypeAndEnabled(mimeTypeUTF8)) {
         if (!Preferences::GetBool("media.mediasource.mp4.enabled", false)) {
           return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
         }
@@ -98,8 +113,9 @@ IsTypeSupported(const nsAString& aType)
           return NS_ERROR_DOM_INVALID_STATE_ERR;
         }
         return NS_OK;
-      } else if (DecoderTraits::IsWebMType(mimeTypeUTF8)) {
-        if (!Preferences::GetBool("media.mediasource.webm.enabled", false)) {
+      } else if (DecoderTraits::IsWebMTypeAndEnabled(mimeTypeUTF8)) {
+        if (!(Preferences::GetBool("media.mediasource.webm.enabled", false) ||
+              IsWebMForced())) {
           return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
         }
         if (hasCodecs &&

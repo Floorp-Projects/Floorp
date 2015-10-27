@@ -329,9 +329,6 @@ nsPK11Token::GetAskPasswordTimeout(int32_t *rvAskTimeout)
     return NS_OK;
 }
 
-/* void setAskPasswordDefaults(in unsigned long askTimes,
- *                             in unsigned long timeout);
- */
 NS_IMETHODIMP 
 nsPK11Token::SetAskPasswordDefaults(const int32_t askTimes,
                                     const int32_t askTimeout)

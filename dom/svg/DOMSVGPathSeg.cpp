@@ -156,7 +156,6 @@ DOMSVGPathSeg::IndexIsValid()
 // Implementation of DOMSVGPathSeg sub-classes below this point
 
 #define IMPL_PROP_WITH_TYPE(segName, propName, index, type)                   \
-  /* attribute type propName; */                                              \
   type                                                                        \
   DOMSVGPathSeg##segName::propName()                                          \
   {                                                                           \

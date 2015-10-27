@@ -51,6 +51,8 @@
   --theme-graphs-orange: #d97e00;
   --theme-graphs-red: #e57180;
   --theme-graphs-grey: #cccccc;
+  --theme-graphs-full-red: #f00;
+  --theme-graphs-full-blue: #00f;
 }
 
 :root.theme-dark {
@@ -90,4 +92,6 @@
   --theme-graphs-orange: #d96629;
   --theme-graphs-red: #eb5368;
   --theme-graphs-grey: #757873;
+  --theme-graphs-full-red: #f00;
+  --theme-graphs-full-blue: #00f;
 }

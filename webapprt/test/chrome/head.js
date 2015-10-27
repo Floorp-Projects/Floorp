@@ -168,9 +168,9 @@ function waitDownloadListPopulation(aWin) {
     let disconnected = false;
 
     var observer = new MutationObserver(function(aMutations) {
-      for each (let mutation in aMutations) {
+      for (let mutation of aMutations) {
         if (mutation.addedNodes) {
-          for each (let node in mutation.addedNodes) {
+          for (let node of mutation.addedNodes) {
             if (node.id == "downloadView") {
               observer.disconnect();
               disconnected = true;

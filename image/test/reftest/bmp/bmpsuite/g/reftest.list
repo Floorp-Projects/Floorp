@@ -108,7 +108,5 @@ fuzzy(1,1516) == rgb16.bmp rgb16.png
 # "A 32-bit image with a BITFIELDS segment. As usual, there are 8 bits per color
 # channel, and 8 unused bits. But the color channels are in an unusual order,
 # so the viewer must read the BITFIELDS, and not just guess."
-# [XXX: we get this completely wrong because we don't handle BITFIELDS at all
-# in 32bpp BMPs. Chromium gets this right.]
-fails == rgb32bf.bmp rgb24.png
+== rgb32bf.bmp rgb24.png
 

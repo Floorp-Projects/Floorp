@@ -3194,8 +3194,6 @@ ConvertToMidasInternalCommand(const nsAString & inCommandID,
 }
 
 /* TODO: don't let this call do anything if the page is not done loading */
-/* boolean execCommand(in DOMString commandID, in boolean doShowUI,
-                                               in DOMString value); */
 NS_IMETHODIMP
 nsHTMLDocument::ExecCommand(const nsAString& commandID,
                             bool doShowUI,

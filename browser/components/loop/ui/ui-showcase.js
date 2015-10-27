@@ -898,7 +898,7 @@
           ), 
 
           React.createElement(Section, {name: "DesktopRoomConversationView"}, 
-            React.createElement(FramedExample, {height: 398, 
+            React.createElement(FramedExample, {height: 448, 
                            onContentsRendered: invitationRoomStore.activeRoomStore.forcedUpdate, 
                            summary: "Desktop room conversation (invitation, text-chat inclusion/scrollbars don't happen in real client)", 
                            width: 348}, 
@@ -932,7 +932,7 @@
             ), 
 
             React.createElement(FramedExample, {dashed: true, 
-                           height: 398, 
+                           height: 448, 
                            onContentsRendered: desktopRoomStoreLoading.activeRoomStore.forcedUpdate, 
                            summary: "Desktop room conversation (loading)", 
                            width: 348}, 
@@ -952,7 +952,7 @@
             ), 
 
             React.createElement(FramedExample, {dashed: true, 
-                           height: 398, 
+                           height: 448, 
                            onContentsRendered: roomStore.activeRoomStore.forcedUpdate, 
                            summary: "Desktop room conversation", 
                            width: 348}, 
@@ -1006,7 +1006,7 @@
             ), 
 
             React.createElement(FramedExample, {dashed: true, 
-                           height: 398, 
+                           height: 448, 
                            onContentsRendered: desktopLocalFaceMuteRoomStore.activeRoomStore.forcedUpdate, 
                            summary: "Desktop room conversation local face-mute", 
                            width: 348}, 
@@ -1022,7 +1022,7 @@
             ), 
 
             React.createElement(FramedExample, {dashed: true, 
-                           height: 398, 
+                           height: 448, 
                            onContentsRendered: desktopRemoteFaceMuteRoomStore.activeRoomStore.forcedUpdate, 
                            summary: "Desktop room conversation remote face-mute", 
                            width: 348}, 

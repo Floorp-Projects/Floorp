@@ -338,7 +338,6 @@ StumblerInfo::DumpStumblerInfo()
   target->Dispatch(event, NS_DISPATCH_NORMAL);
 }
 
-/* void notifyGetCellInfoList (in uint32_t count, [array, size_is (count)] in nsICellInfo result); */
 NS_IMETHODIMP
 StumblerInfo::NotifyGetCellInfoList(uint32_t count, nsICellInfo** aCellInfos)
 {
@@ -353,7 +352,6 @@ StumblerInfo::NotifyGetCellInfoList(uint32_t count, nsICellInfo** aCellInfos)
   return NS_OK;
 }
 
-/* void notifyGetCellInfoListFailed (in DOMString error); */
 NS_IMETHODIMP StumblerInfo::NotifyGetCellInfoListFailed(const nsAString& error)
 {
   MOZ_ASSERT(NS_IsMainThread());

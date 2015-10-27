@@ -397,18 +397,15 @@ ConvertOmxYUVFormatToRGB565(android::sp<GraphicBuffer>& aBuffer,
   return OK;
 }
 
-already_AddRefed<gfx::SourceSurface>
-GrallocImage::GetAsSourceSurface()
+already_AddRefed<gfx::DataSourceSurface>
+GetDataSourceSurfaceFrom(android::sp<android::GraphicBuffer>& aGraphicBuffer,
+                         gfx::IntSize aSize,
+                         const layers::PlanarYCbCrData& aYcbcrData)
 {
-  if (!mTextureClient) {
-    return nullptr;
-  }
-
-  android::sp<GraphicBuffer> graphicBuffer =
-    mTextureClient->GetGraphicBuffer();
+  MOZ_ASSERT(aGraphicBuffer.get());
 
   RefPtr<gfx::DataSourceSurface> surface =
-    gfx::Factory::CreateDataSourceSurface(GetSize(), gfx::SurfaceFormat::R5G6B5);
+    gfx::Factory::CreateDataSourceSurface(aSize, gfx::SurfaceFormat::R5G6B5);
   if (NS_WARN_IF(!surface)) {
     return nullptr;
   }
@@ -420,18 +417,34 @@ GrallocImage::GetAsSourceSurface()
   }
 
   int32_t rv;
-  rv = ConvertOmxYUVFormatToRGB565(graphicBuffer, surface, &mappedSurface, mData);
+  rv = ConvertOmxYUVFormatToRGB565(aGraphicBuffer, surface, &mappedSurface, aYcbcrData);
   if (rv == OK) {
     surface->Unmap();
     return surface.forget();
   }
 
-  rv = ConvertVendorYUVFormatToRGB565(graphicBuffer, surface, &mappedSurface);
+  rv = ConvertVendorYUVFormatToRGB565(aGraphicBuffer, surface, &mappedSurface);
   surface->Unmap();
   if (rv != OK) {
     NS_WARNING("Unknown color format");
     return nullptr;
   }
+
+  return surface.forget();
+}
+
+already_AddRefed<gfx::SourceSurface>
+GrallocImage::GetAsSourceSurface()
+{
+  if (!mTextureClient) {
+    return nullptr;
+  }
+
+  android::sp<GraphicBuffer> graphicBuffer =
+    mTextureClient->GetGraphicBuffer();
+
+  RefPtr<gfx::DataSourceSurface> surface =
+    GetDataSourceSurfaceFrom(graphicBuffer, mSize, mData);
 
   return surface.forget();
 }
