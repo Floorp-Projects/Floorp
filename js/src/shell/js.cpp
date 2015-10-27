@@ -5239,9 +5239,10 @@ PrintStackTrace(JSContext* cx, HandleValue exn)
     if (!exnObj->is<ErrorObject>())
         return true;
 
+    // Exceptions thrown while compiling top-level script have no stack.
     RootedObject stackObj(cx, exnObj->as<ErrorObject>().stack());
     if (!stackObj)
-        return false;
+        return true;
 
     RootedString stackStr(cx);
     if (!BuildStackString(cx, stackObj, &stackStr, 2))
