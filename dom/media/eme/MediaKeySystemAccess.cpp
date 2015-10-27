@@ -382,30 +382,109 @@ GMPDecryptsAndGeckoDecodesAAC(mozIGeckoMediaPluginService* aGMPService,
 }
 
 static bool
+IsSupportedAudio(mozIGeckoMediaPluginService* aGMPService,
+                 const nsAString& aKeySystem,
+                 const nsAString& aAudioType)
+{
+  return IsAACContentType(aAudioType) &&
+         (GMPDecryptsAndDecodesAAC(aGMPService, aKeySystem) ||
+          GMPDecryptsAndGeckoDecodesAAC(aGMPService, aKeySystem, aAudioType));
+}
+
+static bool
+IsSupportedVideo(mozIGeckoMediaPluginService* aGMPService,
+                 const nsAString& aKeySystem,
+                 const nsAString& aVideoType)
+{
+  return IsH264ContentType(aVideoType) &&
+         (GMPDecryptsAndDecodesH264(aGMPService, aKeySystem) ||
+          GMPDecryptsAndGeckoDecodesH264(aGMPService, aKeySystem, aVideoType));
+}
+
+static bool
 IsSupported(mozIGeckoMediaPluginService* aGMPService,
             const nsAString& aKeySystem,
             const MediaKeySystemConfiguration& aConfig)
 {
+  if (aConfig.mInitDataType.IsEmpty() &&
+      aConfig.mAudioType.IsEmpty() &&
+      aConfig.mVideoType.IsEmpty()) {
+    // Not an old-style request.
+    return false;
+  }
+
   // Backwards compatibility with legacy MediaKeySystemConfiguration method.
   if (!aConfig.mInitDataType.IsEmpty() &&
       !aConfig.mInitDataType.EqualsLiteral("cenc")) {
     return false;
   }
   if (!aConfig.mAudioType.IsEmpty() &&
-      (!IsAACContentType(aConfig.mAudioType) ||
-       (!GMPDecryptsAndDecodesAAC(aGMPService, aKeySystem) &&
-        !GMPDecryptsAndGeckoDecodesAAC(aGMPService, aKeySystem, aConfig.mAudioType)))) {
+      !IsSupportedAudio(aGMPService, aKeySystem, aConfig.mAudioType)) {
     return false;
   }
   if (!aConfig.mVideoType.IsEmpty() &&
-      (!IsH264ContentType(aConfig.mVideoType) ||
-       (!GMPDecryptsAndDecodesH264(aGMPService, aKeySystem) &&
-        !GMPDecryptsAndGeckoDecodesH264(aGMPService, aKeySystem, aConfig.mVideoType)))) {
+      !IsSupportedVideo(aGMPService, aKeySystem, aConfig.mVideoType)) {
     return false;
   }
+
   return true;
 }
 
+static bool
+GetSupportedConfig(mozIGeckoMediaPluginService* aGMPService,
+                   const nsAString& aKeySystem,
+                   const MediaKeySystemConfiguration& aCandidate,
+                   MediaKeySystemConfiguration& aOutConfig)
+{
+  MediaKeySystemConfiguration config;
+  config.mLabel = aCandidate.mLabel;
+  if (aCandidate.mInitDataTypes.WasPassed()) {
+    nsTArray<nsString> initDataTypes;
+    for (const nsString& candidate : aCandidate.mInitDataTypes.Value()) {
+      if (candidate.EqualsLiteral("cenc")) {
+        initDataTypes.AppendElement(candidate);
+      }
+    }
+    if (initDataTypes.IsEmpty()) {
+      return false;
+    }
+    config.mInitDataTypes.Construct();
+    config.mInitDataTypes.Value().Assign(initDataTypes);
+  }
+  if (aCandidate.mAudioCapabilities.WasPassed()) {
+    nsTArray<MediaKeySystemMediaCapability> caps;
+    for (const MediaKeySystemMediaCapability& cap : aCandidate.mAudioCapabilities.Value()) {
+      if (IsSupportedAudio(aGMPService, aKeySystem, cap.mContentType)) {
+        caps.AppendElement(cap);
+      }
+    }
+    if (caps.IsEmpty()) {
+      return false;
+    }
+    config.mAudioCapabilities.Construct();
+    config.mAudioCapabilities.Value().Assign(caps);
+  }
+  if (aCandidate.mVideoCapabilities.WasPassed()) {
+    nsTArray<MediaKeySystemMediaCapability> caps;
+    for (const MediaKeySystemMediaCapability& cap : aCandidate.mVideoCapabilities.Value()) {
+      if (IsSupportedVideo(aGMPService, aKeySystem, cap.mContentType)) {
+        caps.AppendElement(cap);
+      }
+    }
+    if (caps.IsEmpty()) {
+      return false;
+    }
+    config.mVideoCapabilities.Construct();
+    config.mVideoCapabilities.Value().Assign(caps);
+  }
+
+  aOutConfig = config;
+
+  return true;
+}
+
+// Backwards compatibility with legacy requestMediaKeySystemAccess with fields
+// from old MediaKeySystemOptions dictionary.
 /* static */
 bool
 MediaKeySystemAccess::IsSupported(const nsAString& aKeySystem,
@@ -430,6 +509,34 @@ MediaKeySystemAccess::IsSupported(const nsAString& aKeySystem,
   }
   return false;
 }
+
+/* static */
+bool
+MediaKeySystemAccess::GetSupportedConfig(const nsAString& aKeySystem,
+                                         const Sequence<MediaKeySystemConfiguration>& aConfigs,
+                                         MediaKeySystemConfiguration& aOutConfig)
+{
+  nsCOMPtr<mozIGeckoMediaPluginService> mps =
+    do_GetService("@mozilla.org/gecko-media-plugin-service;1");
+  if (NS_WARN_IF(!mps)) {
+    return false;
+  }
+
+  if (!HaveGMPFor(mps,
+                  NS_ConvertUTF16toUTF8(aKeySystem),
+                  NS_LITERAL_CSTRING(GMP_API_DECRYPTOR))) {
+    return false;
+  }
+
+  for (const MediaKeySystemConfiguration& config : aConfigs) {
+    if (mozilla::dom::GetSupportedConfig(mps, aKeySystem, config, aOutConfig)) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 
 /* static */
 void
