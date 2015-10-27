@@ -5109,6 +5109,14 @@ nsDocument::DispatchContentLoadedEvents()
                                        NS_LITERAL_STRING("DOMContentLoaded"),
                                        true, false);
 
+  RefPtr<TimelineConsumers> timelines = TimelineConsumers::Get();
+  nsIDocShell* docShell = this->GetDocShell();
+
+  if (timelines && timelines->HasConsumer(docShell)) {
+    timelines->AddMarkerForDocShell(
+      docShell, "document::DOMContentLoaded", MarkerTracingType::TIMESTAMP);
+  }
+
   if (mTiming) {
     mTiming->NotifyDOMContentLoadedEnd(nsIDocument::GetDocumentURI());
   }

@@ -77,7 +77,10 @@ OutputParser.prototype = {
       safeCssPropertySupportsType(name, DOMUtils.TYPE_COLOR) ||
       safeCssPropertySupportsType(name, DOMUtils.TYPE_GRADIENT);
 
-    if (this._cssPropertySupportsValue(name, value)) {
+    // The filter property is special in that we want to show the
+    // swatch even if the value is invalid, because this way the user
+    // can easily use the editor to fix it.
+    if (options.expectFilter || this._cssPropertySupportsValue(name, value)) {
       return this._parse(value, options);
     }
     this._appendTextNode(value);
