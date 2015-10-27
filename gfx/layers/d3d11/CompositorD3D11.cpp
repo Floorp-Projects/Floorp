@@ -480,6 +480,10 @@ CompositorD3D11::CreateRenderTarget(const gfx::IntRect& aRect,
   CD3D11_TEXTURE2D_DESC desc(DXGI_FORMAT_B8G8R8A8_UNORM, aRect.width, aRect.height, 1, 1,
                              D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET);
 
+  if (mDevice != gfxWindowsPlatform::GetPlatform()->GetD3D11Device()) {
+    gfxCriticalError() << "Out of sync D3D11 devices in CreateRenderTarget";
+  }
+
   RefPtr<ID3D11Texture2D> texture;
   HRESULT hr = mDevice->CreateTexture2D(&desc, nullptr, getter_AddRefs(texture));
   if (Failed(hr) || !texture) {
@@ -512,6 +516,10 @@ CompositorD3D11::CreateRenderTargetFromSource(const gfx::IntRect &aRect,
   CD3D11_TEXTURE2D_DESC desc(DXGI_FORMAT_B8G8R8A8_UNORM,
                              aRect.width, aRect.height, 1, 1,
                              D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET);
+
+  if (mDevice != gfxWindowsPlatform::GetPlatform()->GetD3D11Device()) {
+    gfxCriticalError() << "Out of sync D3D11 devices in CreateRenderTargetFromSource";
+  }
 
   RefPtr<ID3D11Texture2D> texture;
   HRESULT hr = mDevice->CreateTexture2D(&desc, nullptr, getter_AddRefs(texture));
@@ -1015,6 +1023,10 @@ CompositorD3D11::BeginFrame(const nsIntRegion& aInvalidRegion,
                             Rect* aClipRectOut,
                             Rect* aRenderBoundsOut)
 {
+  if (mDevice != gfxWindowsPlatform::GetPlatform()->GetD3D11Device()) {
+    gfxCriticalError() << "Out of sync D3D11 devices in BeginFrame";
+  }
+
   // Don't composite if we are minimised. Other than for the sake of efficency,
   // this is important because resizing our buffers when mimised will fail and
   // cause a crash when we're restored.
@@ -1025,10 +1037,9 @@ CompositorD3D11::BeginFrame(const nsIntRegion& aInvalidRegion,
   }
 
   IntSize oldSize = mSize;
-  UpdateRenderTarget();
 
   // Failed to create a render target or the view.
-  if (!mDefaultRT || !mDefaultRT->mRTView ||
+  if (!UpdateRenderTarget() || !mDefaultRT || !mDefaultRT->mRTView ||
       mSize.width <= 0 || mSize.height <= 0) {
     *aRenderBoundsOut = Rect();
     return;
@@ -1140,7 +1151,10 @@ CompositorD3D11::EndFrame()
       params.pDirtyRects = params.DirtyRectsCount ? rects.data() : nullptr;
       chain->Present1(presentInterval, mDisableSequenceForNextFrame ? DXGI_PRESENT_DO_NOT_SEQUENCE : 0, &params);
     } else {
-      mSwapChain->Present(presentInterval, mDisableSequenceForNextFrame ? DXGI_PRESENT_DO_NOT_SEQUENCE : 0);
+      hr = mSwapChain->Present(presentInterval, mDisableSequenceForNextFrame ? DXGI_PRESENT_DO_NOT_SEQUENCE : 0);
+      if (Failed(hr)) {
+        gfxCriticalNote << "D3D11 swap chain preset failed " << hexa(hr);
+      }
     }
     mDisableSequenceForNextFrame = false;
     if (mTarget) {
@@ -1224,26 +1238,33 @@ CompositorD3D11::VerifyBufferSize()
   hr = mSwapChain->ResizeBuffers(1, mSize.width, mSize.height,
                                  DXGI_FORMAT_B8G8R8A8_UNORM,
                                  0);
+  if (Failed(hr)) {
+    gfxCriticalNote << "D3D11 swap resize buffers failed " << hexa(hr) << " on " << mSize;
+  }
 
   return Succeeded(hr);
 }
 
-void
+bool
 CompositorD3D11::UpdateRenderTarget()
 {
+  if (mDevice != gfxWindowsPlatform::GetPlatform()->GetD3D11Device()) {
+    gfxCriticalError() << "Out of sync D3D11 devices in UpdateRenderTarget";
+  }
+
   EnsureSize();
   if (!VerifyBufferSize()) {
     gfxCriticalNote << "Failed VerifyBufferSize in UpdateRenderTarget " << mSize;
-    return;
+    return false;
   }
 
   if (mDefaultRT) {
-    return;
+    return true;
   }
 
   if (mSize.width <= 0 || mSize.height <= 0) {
     gfxCriticalNote << "Invalid size in UpdateRenderTarget " << mSize;
-    return;
+    return false;
   }
 
   HRESULT hr;
@@ -1255,16 +1276,18 @@ CompositorD3D11::UpdateRenderTarget()
     // This happens on some GPUs/drivers when there's a TDR.
     if (mDevice->GetDeviceRemovedReason() != S_OK) {
       gfxCriticalError() << "GetBuffer returned invalid call!";
-      return;
+      return false;
     }
   }
   if (Failed(hr)) {
     gfxCriticalNote << "Failed in UpdateRenderTarget " << hexa(hr);
-    return;
+    return false;
   }
 
   mDefaultRT = new CompositingRenderTargetD3D11(backBuf, IntPoint(0, 0));
   mDefaultRT->SetSize(mSize);
+
+  return true;
 }
 
 bool
@@ -1281,6 +1304,10 @@ DeviceAttachmentsD3D11::InitSyncObject()
                              D3D11_BIND_SHADER_RESOURCE |
                              D3D11_BIND_RENDER_TARGET);
   desc.MiscFlags = D3D11_RESOURCE_MISC_SHARED_KEYEDMUTEX;
+
+  if (mDevice != gfxWindowsPlatform::GetPlatform()->GetD3D11Device()) {
+    gfxCriticalError() << "Out of sync D3D11 devices in InitSyncObject";
+  }
 
   RefPtr<ID3D11Texture2D> texture;
   HRESULT hr = mDevice->CreateTexture2D(&desc, nullptr, getter_AddRefs(texture));
@@ -1410,6 +1437,10 @@ CompositorD3D11::PaintToTarget()
 
   RefPtr<ID3D11Texture2D> readTexture;
 
+  if (mDevice != gfxWindowsPlatform::GetPlatform()->GetD3D11Device()) {
+    gfxCriticalError() << "Out of sync D3D11 devices in PaintToTarget";
+  }
+
   hr = mDevice->CreateTexture2D(&softDesc, nullptr, getter_AddRefs(readTexture));
   if (Failed(hr)) {
     gfxCriticalErrorOnce(gfxCriticalError::DefaultOptions(false)) << "Failed in PaintToTarget 2";
@@ -1457,10 +1488,20 @@ CompositorD3D11::HandleError(HRESULT hr, Severity aSeverity)
     MOZ_CRASH("Unrecoverable D3D11 error");
   }
 
+  if (mDevice != gfxWindowsPlatform::GetPlatform()->GetD3D11Device()) {
+    gfxCriticalError() << "Out of sync D3D11 devices in HandleError";
+  }
+
+  HRESULT hrOnReset = S_OK;
   bool deviceRemoved = hr == DXGI_ERROR_DEVICE_REMOVED;
 
   if (deviceRemoved && mDevice) {
-    hr = mDevice->GetDeviceRemovedReason();
+    hrOnReset = mDevice->GetDeviceRemovedReason();
+  } else if (hr == DXGI_ERROR_INVALID_CALL && mDevice) {
+    hrOnReset = mDevice->GetDeviceRemovedReason();
+    if (hrOnReset != S_OK) {
+      deviceRemoved = true;
+    }
   }
 
   // Device reset may not be an error on our side, but can mess things up so
@@ -1468,11 +1509,11 @@ CompositorD3D11::HandleError(HRESULT hr, Severity aSeverity)
   gfxCriticalError(CriticalLog::DefaultOptions(!deviceRemoved))
     << (deviceRemoved ? "[CompositorD3D11] device removed with error code: "
                       : "[CompositorD3D11] error code: ")
-    << hexa(hr);
+    << hexa(hr) << ", " << hexa(hrOnReset);
 
-  // Always crash if we are making invalid calls
+  // Crash if we are making invalid calls outside of device removal
   if (hr == DXGI_ERROR_INVALID_CALL) {
-    MOZ_CRASH("Invalid D3D11 api call");
+    gfxCrash(deviceRemoved ? LogReason::D3D11InvalidCallDeviceRemoved : LogReason::D3D11InvalidCall) << "Invalid D3D11 api call";
   }
 
   if (aSeverity == Recoverable) {
