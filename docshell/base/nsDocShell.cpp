@@ -4656,7 +4656,10 @@ nsDocShell::LoadURIWithOptions(const char16_t* aURI,
   // what happens
 
   if (NS_ERROR_MALFORMED_URI == rv) {
-    DisplayLoadError(rv, uri, aURI, nullptr);
+    if (DisplayLoadError(rv, uri, aURI, nullptr) &&
+        (aLoadFlags & LOAD_FLAGS_ERROR_LOAD_CHANGES_RV) != 0) {
+      return NS_ERROR_LOAD_SHOWED_ERRORPAGE;
+    }
   }
 
   if (NS_FAILED(rv) || !uri) {
@@ -4721,8 +4724,10 @@ nsDocShell::LoadURIWithOptions(const char16_t* aURI,
 NS_IMETHODIMP
 nsDocShell::DisplayLoadError(nsresult aError, nsIURI* aURI,
                              const char16_t* aURL,
-                             nsIChannel* aFailedChannel)
+                             nsIChannel* aFailedChannel,
+                             bool* aDisplayedErrorPage)
 {
+  *aDisplayedErrorPage = false;
   // Get prompt and string bundle servcies
   nsCOMPtr<nsIPrompt> prompter;
   nsCOMPtr<nsIStringBundle> stringBundle;
@@ -5100,8 +5105,10 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI* aURI,
 
   if (UseErrorPages()) {
     // Display an error page
-    LoadErrorPage(aURI, aURL, errorPage.get(), error.get(),
-                  messageStr.get(), cssClass.get(), aFailedChannel);
+    nsresult loadedPage = LoadErrorPage(aURI, aURL, errorPage.get(),
+                                        error.get(), messageStr.get(),
+                                        cssClass.get(), aFailedChannel);
+    *aDisplayedErrorPage = NS_SUCCEEDED(loadedPage);
   } else {
     // The prompter reqires that our private window has a document (or it
     // asserts). Satisfy that assertion now since GetDoc will force
@@ -10276,7 +10283,10 @@ nsDocShell::InternalLoad(nsIURI* aURI,
 
   if (NS_FAILED(rv)) {
     nsCOMPtr<nsIChannel> chan(do_QueryInterface(req));
-    DisplayLoadError(rv, aURI, nullptr, chan);
+    if (DisplayLoadError(rv, aURI, nullptr, chan) &&
+        (aFlags & LOAD_FLAGS_ERROR_LOAD_CHANGES_RV) != 0) {
+      return NS_ERROR_LOAD_SHOWED_ERRORPAGE;
+    }
   }
 
   return rv;
