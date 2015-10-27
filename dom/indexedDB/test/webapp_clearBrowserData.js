@@ -117,11 +117,9 @@ function start()
   }
 
   SpecialPowers.addPermission("browser", true, document);
-  SpecialPowers.addPermission("browser", true, { manifestURL: manifestURL,
-                                                 isInBrowserElement: false });
+  SpecialPowers.addPermission("browser", true, { manifestURL: manifestURL });
   SpecialPowers.addPermission("embed-apps", true, document);
-  SpecialPowers.addPermission("indexedDB", true, { manifestURL: manifestURL,
-                                                   isInBrowserElement: false });
+  SpecialPowers.addPermission("indexedDB", true, { manifestURL: manifestURL });
 
   SpecialPowers.setAllAppsLaunchable(true);
 

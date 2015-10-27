@@ -1607,9 +1607,10 @@ Navigator::HasFeature(const nsAString& aName, ErrorResult& aRv)
     return nullptr;
   }
 
-  // Hardcoded web-extensions feature which is b2g specific.
+  // Hardcoded extensions features which are b2g specific.
 #ifdef MOZ_B2G
-  if (aName.EqualsLiteral("web-extensions")) {
+  if (aName.EqualsLiteral("web-extensions") ||
+      aName.EqualsLiteral("late-customization")) {
     p->MaybeResolve(true);
     return p.forget();
   }
@@ -1622,6 +1623,7 @@ Navigator::HasFeature(const nsAString& aName, ErrorResult& aRv)
 #ifdef MOZ_B2G
   , "manifest.chrome.navigation"
   , "manifest.precompile"
+  , "manifest.role.homescreen"
 #endif
   };
 
