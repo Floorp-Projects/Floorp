@@ -302,6 +302,8 @@ partial interface Window {
 
   /* The maximum offset that the window can be scrolled to
      (i.e., the document width/height minus the scrollport width/height) */
+  [ChromeOnly, Throws]  readonly attribute long   scrollMinX;
+  [ChromeOnly, Throws]  readonly attribute long   scrollMinY;
   [Replaceable, Throws] readonly attribute long   scrollMaxX;
   [Replaceable, Throws] readonly attribute long   scrollMaxY;
 
