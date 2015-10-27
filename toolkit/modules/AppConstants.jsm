@@ -205,6 +205,20 @@ this.AppConstants = Object.freeze({
   false,
 #endif
 
+  MOZ_PLACES:
+#ifdef MOZ_PLACES
+  true,
+#else
+  false,
+#endif
+
+  MOZ_ANDROID_HISTORY:
+#ifdef MOZ_ANDROID_HISTORY
+  true,
+#else
+  false,
+#endif
+
   DLL_PREFIX: "@DLL_PREFIX@",
   DLL_SUFFIX: "@DLL_SUFFIX@",
 

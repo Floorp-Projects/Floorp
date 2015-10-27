@@ -78,7 +78,6 @@
     locale/browser/devtools/connection-screen.properties (%chrome/browser/devtools/connection-screen.properties)
     locale/browser/devtools/font-inspector.dtd     (%chrome/browser/devtools/font-inspector.dtd)
     locale/browser/devtools/har.properties         (%chrome/browser/devtools/har.properties)
-    locale/browser/devtools/app-manager.dtd        (%chrome/browser/devtools/app-manager.dtd)
     locale/browser/devtools/app-manager.properties (%chrome/browser/devtools/app-manager.properties)
     locale/browser/devtools/webide.dtd             (%chrome/browser/devtools/webide.dtd)
     locale/browser/devtools/webide.properties      (%chrome/browser/devtools/webide.properties)

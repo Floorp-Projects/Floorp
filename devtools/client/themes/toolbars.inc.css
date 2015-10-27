@@ -380,6 +380,23 @@
   margin-right: 0;
 }
 
+/* Don't add 'double spacing' for inputs that are at beginning / end
+   of a toolbar (since the toolbar has it's own spacing). */
+.devtools-toolbar > .devtools-textinput:first-child,
+.devtools-toolbar > .devtools-searchinput:first-child {
+  -moz-margin-start: 0;
+}
+.devtools-toolbar > .devtools-textinput:last-child,
+.devtools-toolbar > .devtools-searchinput:last-child {
+  -moz-margin-end: 0;
+}
+.devtools-toolbar > .devtools-searchbox:first-child {
+  -moz-padding-start: 0;
+}
+.devtools-toolbar > .devtools-searchbox:last-child {
+  -moz-padding-end: 0;
+}
+
 .devtools-rule-searchbox {
   -moz-box-flex: 1;
   padding-right: 23px;
