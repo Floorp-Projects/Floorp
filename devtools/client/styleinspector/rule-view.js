@@ -759,10 +759,11 @@ Rule.prototype = {
       return;
     }
 
+    let oldName = property.name;
     property.name = name;
     let index = this.textProps.indexOf(property);
     this.applyProperties((modifications) => {
-      modifications.renameProperty(index, property.name, name);
+      modifications.renameProperty(index, oldName, name);
     });
   },
 
