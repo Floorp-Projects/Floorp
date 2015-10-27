@@ -16,7 +16,7 @@ var observedStatus = "nothing";
 
 var observer = function(subject, topic, data) {
   observedStatus = JSON.parse(data).status;
-  info("Observed: " + observedStatus);  
+  info("Observed: " + observedStatus);
 };
 SpecialPowers.Services.obs.addObserver(observer, "mediakeys-request", false);
 
@@ -36,7 +36,7 @@ function Test(test) {
   var name = "'" + test.keySystem + "'";
   return p.then(function() {
     return new Promise(function(resolve, reject) {
-      navigator.requestMediaKeySystemAccess(test.keySystem)
+      navigator.requestMediaKeySystemAccess(test.keySystem, [{initDataTypes:["cenc"]}])
       .then(
         function(keySystemAccess) {
           return keySystemAccess.createMediaKeys();
