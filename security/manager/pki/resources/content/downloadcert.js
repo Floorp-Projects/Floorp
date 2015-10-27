@@ -3,20 +3,16 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 const nsIDialogParamBlock = Components.interfaces.nsIDialogParamBlock;
-const nsIPKIParamBlock = Components.interfaces.nsIPKIParamBlock;
 const nsIX509Cert = Components.interfaces.nsIX509Cert;
 
-var pkiParams;
 var params;
 var caName;
 var cert;
 
 function onLoad()
 {
-  pkiParams = window.arguments[0].QueryInterface(nsIPKIParamBlock);
-  params = pkiParams.QueryInterface(nsIDialogParamBlock);
-  var isupport = pkiParams.getISupportAtIndex(1);
-  cert = isupport.QueryInterface(nsIX509Cert);
+  params = window.arguments[0].QueryInterface(nsIDialogParamBlock);
+  cert = params.objects.queryElementAt(0, nsIX509Cert);
 
   caName = cert.commonName; 
 

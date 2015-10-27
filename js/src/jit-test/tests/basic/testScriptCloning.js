@@ -3,10 +3,10 @@ var g = newGlobal();
 g.f = new Function('return function(x) { return x };');
 assertEq(g.eval("clone(f)()(9)"), 9);
 
-g.f = new Function('return function(x) { let(y = x+1) { return y } };');
+g.f = new Function('return function(x) { { let y = x+1; return y } };');
 assertEq(g.eval("clone(f)()(9)"), 10);
 
-g.f = new Function('return function(x) { let(y = x, z = 1) { return y+z } };');
+g.f = new Function('return function(x) { { let y = x, z = 1; return y+z } };');
 assertEq(g.eval("clone(f)()(9)"), 10);
 
 g.f = new Function('return function(x) { return x.search(/ponies/) };');

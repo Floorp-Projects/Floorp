@@ -340,9 +340,30 @@ BasePrincipal::GetCspJSON(nsAString& outCSPinJSON)
 }
 
 NS_IMETHODIMP
-BasePrincipal::GetIsNullPrincipal(bool* aIsNullPrincipal)
+BasePrincipal::GetIsNullPrincipal(bool* aResult)
 {
-  *aIsNullPrincipal = false;
+  *aResult = Kind() == eNullPrincipal;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+BasePrincipal::GetIsCodebasePrincipal(bool* aResult)
+{
+  *aResult = Kind() == eCodebasePrincipal;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+BasePrincipal::GetIsExpandedPrincipal(bool* aResult)
+{
+  *aResult = Kind() == eExpandedPrincipal;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+BasePrincipal::GetIsSystemPrincipal(bool* aResult)
+{
+  *aResult = Kind() == eSystemPrincipal;
   return NS_OK;
 }
 

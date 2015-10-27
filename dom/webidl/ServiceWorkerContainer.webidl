@@ -30,7 +30,6 @@ interface ServiceWorkerContainer : EventTarget {
   Promise<sequence<ServiceWorkerRegistration>> getRegistrations();
 
   attribute EventHandler oncontrollerchange;
-  attribute EventHandler onreloadpage;
   attribute EventHandler onerror;
   attribute EventHandler onmessage;
 };

@@ -1,7 +1,14 @@
 self.addEventListener("fetch", function(event) {
   var resource = event.request.url.split('/').pop();
-  if (event.client) {
-    event.client.postMessage({context: event.request.context,
-                              resource: resource});
-  }
+  event.waitUntil(
+    clients.matchAll()
+           .then(clients => {
+             clients.forEach(client => {
+               if (client.url.includes("plugins.html")) {
+                 client.postMessage({context: event.request.context,
+                                     resource: resource});
+               }
+             });
+           })
+  );
 });

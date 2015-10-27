@@ -495,8 +495,6 @@ class CodeOffsetLabel
     size_t offset() const {
         return offset_;
     }
-    void fixup(MacroAssembler* masm);
-
 };
 
 // Absolute location of a jump or a label in some generated JitCode block.

@@ -30,6 +30,6 @@ g.f();
 g.eval("with ({y: 3}) { debugger; }");
 
 // shadowing
-g.eval("let (x = 50, y = 3) { debugger; }");
+g.eval("{ let x = 50, y = 3; debugger; }");
 
 assertEq(hits, 6);

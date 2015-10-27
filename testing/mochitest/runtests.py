@@ -428,8 +428,8 @@ class MochitestServer(object):
         while i < timeout:
             if os.path.exists(aliveFile):
                 break
-            time.sleep(1)
-            i += 1
+            time.sleep(.05)
+            i += .05
         else:
             self._log.info(
                 "TEST-UNEXPECTED-FAIL | runtests.py | Timed out while waiting for server startup.")

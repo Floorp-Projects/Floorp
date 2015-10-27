@@ -12,37 +12,11 @@
 #include "jit/AtomicOp.h"
 #include "jit/IonCaches.h"
 #include "jit/JitFrames.h"
-#include "jit/mips32/Assembler-mips32.h"
+#include "jit/mips-shared/MacroAssembler-mips-shared.h"
 #include "jit/MoveResolver.h"
 
 namespace js {
 namespace jit {
-
-enum LoadStoreSize
-{
-    SizeByte = 8,
-    SizeHalfWord = 16,
-    SizeWord = 32,
-    SizeDouble = 64
-};
-
-enum LoadStoreExtension
-{
-    ZeroExtend = 0,
-    SignExtend = 1
-};
-
-enum JumpKind
-{
-    LongJump = 0,
-    ShortJump = 1
-};
-
-enum DelaySlotFill
-{
-    DontFillDelaySlot = 0,
-    FillDelaySlot = 1
-};
 
 struct ImmTag : public Imm32
 {
@@ -61,7 +35,6 @@ struct ImmType : public ImmTag
 static const ValueOperand JSReturnOperand = ValueOperand(JSReturnReg_Type, JSReturnReg_Data);
 static const ValueOperand softfpReturnOperand = ValueOperand(v1, v0);
 
-static Register CallReg = t9;
 static const int defaultShift = 3;
 static_assert(1 << defaultShift == sizeof(JS::Value), "The defaultShift is wrong");
 
@@ -69,107 +42,40 @@ static const uint32_t LOW_32_MASK = (1LL << 32) - 1;
 static const int32_t LOW_32_OFFSET = 0;
 static const int32_t HIGH_32_OFFSET = 4;
 
-class MacroAssemblerMIPS : public Assembler
+class MacroAssemblerMIPS : public MacroAssemblerMIPSShared
 {
-  protected:
-    // Perform a downcast. Should be removed by Bug 996602.
-    MacroAssembler& asMasm();
-    const MacroAssembler& asMasm() const;
-
-    void branchWithCode(InstImm code, Label* label, JumpKind jumpKind);
-    Condition ma_cmp(Register rd, Register lhs, Register rhs, Condition c);
-
-    void compareFloatingPoint(FloatFormat fmt, FloatRegister lhs, FloatRegister rhs,
-                              DoubleCondition c, FloatTestKind* testKind,
-                              FPConditionBit fcc = FCC0);
-
   public:
-    void ma_move(Register rd, Register rs);
-
-    void ma_li(Register dest, ImmGCPtr ptr);
+    using MacroAssemblerMIPSShared::ma_b;
+    using MacroAssemblerMIPSShared::ma_li;
+    using MacroAssemblerMIPSShared::ma_ss;
+    using MacroAssemblerMIPSShared::ma_sd;
+    using MacroAssemblerMIPSShared::ma_load;
+    using MacroAssemblerMIPSShared::ma_store;
+    using MacroAssemblerMIPSShared::ma_cmp_set;
+    using MacroAssemblerMIPSShared::ma_subTestOverflow;
 
     void ma_li(Register dest, AbsoluteLabel* label);
 
-    void ma_li(Register dest, Imm32 imm);
     void ma_liPatchable(Register dest, Imm32 imm);
     void ma_li(Register dest, ImmWord imm);
     void ma_liPatchable(Register dest, ImmPtr imm);
     void ma_liPatchable(Register dest, ImmWord imm);
 
-    // Shift operations
-    void ma_sll(Register rd, Register rt, Imm32 shift);
-    void ma_srl(Register rd, Register rt, Imm32 shift);
-    void ma_sra(Register rd, Register rt, Imm32 shift);
-    void ma_ror(Register rd, Register rt, Imm32 shift);
-    void ma_rol(Register rd, Register rt, Imm32 shift);
-
-    void ma_sll(Register rd, Register rt, Register shift);
-    void ma_srl(Register rd, Register rt, Register shift);
-    void ma_sra(Register rd, Register rt, Register shift);
-    void ma_ror(Register rd, Register rt, Register shift);
-    void ma_rol(Register rd, Register rt, Register shift);
-
-    // Negate
-    void ma_negu(Register rd, Register rs);
-
-    void ma_not(Register rd, Register rs);
-
-    // and
-    void ma_and(Register rd, Register rs);
-    void ma_and(Register rd, Imm32 imm);
-    void ma_and(Register rd, Register rs, Imm32 imm);
-
-    // or
-    void ma_or(Register rd, Register rs);
-    void ma_or(Register rd, Imm32 imm);
-    void ma_or(Register rd, Register rs, Imm32 imm);
-
-    // xor
-    void ma_xor(Register rd, Register rs);
-    void ma_xor(Register rd, Imm32 imm);
-    void ma_xor(Register rd, Register rs, Imm32 imm);
-
     // load
     void ma_load(Register dest, Address address, LoadStoreSize size = SizeWord,
-                 LoadStoreExtension extension = SignExtend);
-    void ma_load(Register dest, const BaseIndex& src, LoadStoreSize size = SizeWord,
                  LoadStoreExtension extension = SignExtend);
 
     // store
     void ma_store(Register data, Address address, LoadStoreSize size = SizeWord,
                   LoadStoreExtension extension = SignExtend);
-    void ma_store(Register data, const BaseIndex& dest, LoadStoreSize size = SizeWord,
-                  LoadStoreExtension extension = SignExtend);
-    void ma_store(Imm32 imm, const BaseIndex& dest, LoadStoreSize size = SizeWord,
-                  LoadStoreExtension extension = SignExtend);
 
     // arithmetic based ops
     // add
-    void ma_addu(Register rd, Register rs, Imm32 imm);
-    void ma_addu(Register rd, Register rs);
-    void ma_addu(Register rd, Imm32 imm);
     void ma_addTestOverflow(Register rd, Register rs, Register rt, Label* overflow);
     void ma_addTestOverflow(Register rd, Register rs, Imm32 imm, Label* overflow);
 
     // subtract
-    void ma_subu(Register rd, Register rs, Imm32 imm);
-    void ma_subu(Register rd, Imm32 imm);
     void ma_subTestOverflow(Register rd, Register rs, Register rt, Label* overflow);
-    void ma_subTestOverflow(Register rd, Register rs, Imm32 imm, Label* overflow);
-
-    // multiplies.  For now, there are only few that we care about.
-    void ma_mult(Register rs, Imm32 imm);
-    void ma_mul_branch_overflow(Register rd, Register rs, Register rt, Label* overflow);
-    void ma_mul_branch_overflow(Register rd, Register rs, Imm32 imm, Label* overflow);
-
-    // divisions
-    void ma_div_branch_overflow(Register rd, Register rs, Register rt, Label* overflow);
-    void ma_div_branch_overflow(Register rd, Register rs, Imm32 imm, Label* overflow);
-
-    // fast mod, uses scratch registers, and thus needs to be in the assembler
-    // implicitly assumes that we can overwrite dest at the beginning of the sequence
-    void ma_mod_mask(Register src, Register dest, Register hold, Register remain,
-                     int32_t shift, Label* negZero = nullptr);
 
     // memory
     // shortcut for when we know we're transferring 32 bits of data
@@ -182,17 +88,8 @@ class MacroAssemblerMIPS : public Assembler
     void ma_pop(Register r);
     void ma_push(Register r);
 
+    void branchWithCode(InstImm code, Label* label, JumpKind jumpKind);
     // branches when done from within mips-specific code
-    void ma_b(Register lhs, Register rhs, Label* l, Condition c, JumpKind jumpKind = LongJump);
-    void ma_b(Register lhs, Imm32 imm, Label* l, Condition c, JumpKind jumpKind = LongJump);
-    void ma_b(Register lhs, ImmPtr imm, Label* l, Condition c, JumpKind jumpKind = LongJump) {
-        ma_b(lhs, ImmWord(uintptr_t(imm.value)), l, c, jumpKind);
-    }
-    void ma_b(Register lhs, ImmGCPtr imm, Label* l, Condition c, JumpKind jumpKind = LongJump) {
-        MOZ_ASSERT(lhs != ScratchRegister);
-        ma_li(ScratchRegister, imm);
-        ma_b(lhs, ScratchRegister, l, c, jumpKind);
-    }
     void ma_b(Register lhs, ImmWord imm, Label* l, Condition c, JumpKind jumpKind = LongJump)
     {
         ma_b(lhs, Imm32(uint32_t(imm.value)), l, c, jumpKind);
@@ -211,13 +108,10 @@ class MacroAssemblerMIPS : public Assembler
         ma_b(ScratchRegister, rhs, l, c, jumpKind);
     }
 
-    void ma_b(Label* l, JumpKind jumpKind = LongJump);
     void ma_bal(Label* l, DelaySlotFill delaySlotFill = FillDelaySlot);
 
     // fp instructions
-    void ma_lis(FloatRegister dest, float value);
     void ma_lid(FloatRegister dest, double value);
-    void ma_liNegZero(FloatRegister dest);
 
     void ma_mv(FloatRegister src, ValueOperand dest);
     void ma_mv(ValueOperand src, FloatRegister dest);
@@ -225,25 +119,11 @@ class MacroAssemblerMIPS : public Assembler
     void ma_ls(FloatRegister fd, Address address);
     void ma_ld(FloatRegister fd, Address address);
     void ma_sd(FloatRegister fd, Address address);
-    void ma_sd(FloatRegister fd, BaseIndex address);
     void ma_ss(FloatRegister fd, Address address);
-    void ma_ss(FloatRegister fd, BaseIndex address);
 
     void ma_pop(FloatRegister fs);
     void ma_push(FloatRegister fs);
 
-    //FP branches
-    void ma_bc1s(FloatRegister lhs, FloatRegister rhs, Label* label, DoubleCondition c,
-                 JumpKind jumpKind = LongJump, FPConditionBit fcc = FCC0);
-    void ma_bc1d(FloatRegister lhs, FloatRegister rhs, Label* label, DoubleCondition c,
-                 JumpKind jumpKind = LongJump, FPConditionBit fcc = FCC0);
-
-    void ma_call(ImmPtr dest);
-
-    void ma_jump(ImmPtr dest);
-
-    void ma_cmp_set(Register dst, Register lhs, Register rhs, Condition c);
-    void ma_cmp_set(Register dst, Register lhs, Imm32 imm, Condition c);
     void ma_cmp_set(Register dst, Register lhs, ImmPtr imm, Condition c) {
         ma_cmp_set(dst, lhs, Imm32(uint32_t(imm.value)), c);
     }
@@ -254,8 +134,6 @@ class MacroAssemblerMIPS : public Assembler
         ma_li(SecondScratchReg, Imm32(uint32_t(imm.value)));
         ma_cmp_set(dst, ScratchRegister, SecondScratchReg, c);
     }
-    void ma_cmp_set_double(Register dst, FloatRegister lhs, FloatRegister rhs, DoubleCondition c);
-    void ma_cmp_set_float32(Register dst, FloatRegister lhs, FloatRegister rhs, DoubleCondition c);
 
     // These fuctions abstract the access to high part of the double precision
     // float register. It is intended to work on both 32 bit and 64 bit
@@ -266,20 +144,6 @@ class MacroAssemblerMIPS : public Assembler
     }
     void moveFromDoubleHi(FloatRegister src, Register dest) {
         as_mfc1(dest, getOddPair(src));
-    }
-
-    void moveToDoubleLo(Register src, FloatRegister dest) {
-        as_mtc1(src, dest);
-    }
-    void moveFromDoubleLo(FloatRegister src, Register dest) {
-        as_mfc1(dest, src);
-    }
-
-    void moveToFloat32(Register src, FloatRegister dest) {
-        as_mtc1(src, dest);
-    }
-    void moveFromFloat32(FloatRegister src, Register dest) {
-        as_mfc1(dest, src);
     }
 };
 

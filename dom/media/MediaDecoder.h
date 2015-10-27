@@ -209,6 +209,7 @@ destroying the MediaDecoder object.
 #include "MediaEventSource.h"
 #include "MediaMetadataManager.h"
 #include "MediaResource.h"
+#include "MediaResourceCallback.h"
 #include "MediaStatistics.h"
 #include "MediaStreamGraph.h"
 #include "TimeUnits.h"
@@ -272,7 +273,7 @@ struct SeekTarget {
   MediaDecoderEventVisibility mEventVisibility;
 };
 
-class MediaDecoder : public AbstractMediaDecoder
+class MediaDecoder : public AbstractMediaDecoder, public MediaResourceCallback
 {
 public:
   struct SeekResolveValue {
@@ -303,7 +304,7 @@ public:
 
   // Reset the decoder and notify the media element that
   // server connection is closed.
-  virtual void ResetConnectionState();
+  virtual void ResetConnectionState() override;
   // Create a new decoder of the same type as this one.
   // Subclasses must implement this.
   virtual MediaDecoder* Clone(MediaDecoderOwner* aOwner) = 0;
@@ -410,7 +411,7 @@ public:
   //
   // When the media stream ends, we can know the duration, thus the stream is
   // no longer considered to be infinite.
-  virtual void SetInfinite(bool aInfinite);
+  virtual void SetInfinite(bool aInfinite) override;
 
   // Return true if the stream is infinite (see SetInfinite).
   virtual bool IsInfinite();
@@ -419,11 +420,11 @@ public:
   // If MediaResource::IsSuspendedByCache returns true, then the decoder
   // should stop buffering or otherwise waiting for download progress and
   // start consuming data, if possible, because the cache is full.
-  virtual void NotifySuspendedStatusChanged();
+  virtual void NotifySuspendedStatusChanged() override;
 
   // Called by MediaResource when some data has been received.
   // Call on the main thread only.
-  virtual void NotifyBytesDownloaded();
+  virtual void NotifyBytesDownloaded() override;
 
   // Called by nsChannelToPipeListener or MediaResource when the
   // download has ended. Called on the main thread only. aStatus is
@@ -437,7 +438,7 @@ public:
 
   // Called by MediaResource when the principal of the resource has
   // changed. Called on main thread only.
-  virtual void NotifyPrincipalChanged();
+  virtual void NotifyPrincipalChanged() override;
 
   // Called by the MediaResource to keep track of the number of bytes read
   // from the resource. Called on the main by an event runner dispatched
@@ -509,7 +510,7 @@ public:
   void SetLoadInBackground(bool aLoadInBackground);
 
   // Returns a weak reference to the media decoder owner.
-  MediaDecoderOwner* GetMediaOwner() const;
+  MediaDecoderOwner* GetMediaOwner() const override;
 
   bool OnStateMachineTaskQueue() const override;
 
@@ -1054,6 +1055,13 @@ public:
   AbstractCanonical<bool>* CanonicalMediaSeekable() {
     return &mMediaSeekable;
   }
+
+private:
+  /* MediaResourceCallback functions */
+  virtual nsresult FinishDecoderSetup(MediaResource* aResource) override;
+  virtual void NotifyNetworkError() override;
+  virtual void NotifyDecodeError() override;
+  virtual void NotifyDataEnded(nsresult aStatus) override;
 };
 
 } // namespace mozilla

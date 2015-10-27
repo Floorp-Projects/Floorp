@@ -22,7 +22,7 @@ function test()
  
   expect = actual = 'No Crash';
 
-  let ([] = []) { }
+  { let [] = []; }
 
   reportCompare(expect, actual, summary);
 

@@ -2227,13 +2227,12 @@ nsHttpHandler::TickleWifi(nsIInterfaceRequestor *cb)
     // If B2G requires a similar mechanism nsINetworkManager, currently only avail
     // on B2G, contains the necessary information on wifi and gateway
 
-    nsCOMPtr<nsIDOMWindow> domWindow;
-    cb->GetInterface(NS_GET_IID(nsIDOMWindow), getter_AddRefs(domWindow));
-    if (!domWindow)
+    nsCOMPtr<nsIDOMWindow> domWindow = do_GetInterface(cb);
+    nsCOMPtr<nsPIDOMWindow> piWindow = do_QueryInterface(domWindow);
+    if (!piWindow)
         return;
 
-    nsCOMPtr<nsIDOMNavigator> domNavigator;
-    domWindow->GetNavigator(getter_AddRefs(domNavigator));
+    nsCOMPtr<nsIDOMNavigator> domNavigator = piWindow->GetNavigator();
     nsCOMPtr<nsIMozNavigatorNetwork> networkNavigator =
         do_QueryInterface(domNavigator);
     if (!networkNavigator)

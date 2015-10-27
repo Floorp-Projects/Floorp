@@ -7,13 +7,15 @@ onfetch = function(event) {
     return;
   }
 
-  if (!event.client) {
-    dump("ERROR: no client to post the message to!\n");
-    dump("request.url=" + event.request.url + "\n");
-    return;
-  }
-
-  event.client.postMessage({type: "fetch", state: state});
+  var currentState = state;
+  event.waitUntil(
+    clients.matchAll()
+           .then(clients => {
+             clients.forEach(client => {
+               client.postMessage({type: "fetch", state: currentState});
+             });
+           })
+  );
 
   if (event.request.url.indexOf("update") >= 0) {
     state = "update";

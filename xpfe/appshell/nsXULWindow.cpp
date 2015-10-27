@@ -1025,9 +1025,12 @@ void nsXULWindow::OnChromeLoaded()
         nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
         docShellAsItem->GetTreeOwner(getter_AddRefs(treeOwner));
         if (treeOwner) {
-          int32_t width, height;
-          cv->GetContentSize(&width, &height);
-          treeOwner->SizeShellTo(docShellAsItem, width, height);
+          // GetContentSize can fail, so initialise |width| and |height| to be
+          // on the safe side.
+          int32_t width = 0, height = 0;
+          if (NS_SUCCEEDED(cv->GetContentSize(&width, &height))) {
+            treeOwner->SizeShellTo(docShellAsItem, width, height);
+          }
         }
       }
     }
@@ -1179,9 +1182,8 @@ bool nsXULWindow::LoadSizeFromXUL()
     // constrain to screen size
     nsCOMPtr<nsIDOMWindow> domWindow;
     GetWindowDOMWindow(getter_AddRefs(domWindow));
-    if (domWindow) {
-      nsCOMPtr<nsIDOMScreen> screen;
-      domWindow->GetScreen(getter_AddRefs(screen));
+    if (nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(domWindow)) {
+      nsCOMPtr<nsIDOMScreen> screen = window->GetScreen();
       if (screen) {
         int32_t screenWidth;
         int32_t screenHeight;
@@ -1265,7 +1267,8 @@ bool nsXULWindow::LoadMiscPersistentAttributesFromXUL()
   if (sizeMode == nsSizeMode_Fullscreen) {
     nsCOMPtr<nsIDOMWindow> ourWindow;
     GetWindowDOMWindow(getter_AddRefs(ourWindow));
-    ourWindow->SetFullScreen(true);
+    nsCOMPtr<nsPIDOMWindow> piWindow = do_QueryInterface(ourWindow);
+    piWindow->SetFullScreen(true);
   } else {
     mWindow->SetSizeMode(sizeMode);
   }
@@ -1480,7 +1483,7 @@ NS_IMETHODIMP nsXULWindow::SavePersistentAttributes()
 
   bool isFullscreen = false;
   if (nsPIDOMWindow* domWindow = mDocShell->GetWindow()) {
-    domWindow->GetFullScreen(&isFullscreen);
+    isFullscreen = domWindow->GetFullScreen();
   }
 
   // get our size, position and mode to persist

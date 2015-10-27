@@ -40,7 +40,7 @@ partial interface WorkerGlobalScope {
 
 // https://slightlyoff.github.io/ServiceWorker/spec/service_worker/index.html#self-caches
 partial interface WorkerGlobalScope {
-[Throws, Func="mozilla::dom::cache::CacheStorage::PrefEnabled"]
+[Throws, Func="mozilla::dom::cache::CacheStorage::PrefEnabled", SameObject]
 readonly attribute CacheStorage caches;
 };
 

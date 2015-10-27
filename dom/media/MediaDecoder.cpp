@@ -716,6 +716,50 @@ MediaDecoder::FirstFrameLoaded(nsAutoPtr<MediaInfo> aInfo,
   NotifySuspendedStatusChanged();
 }
 
+nsresult
+MediaDecoder::FinishDecoderSetup(MediaResource* aResource)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  HTMLMediaElement* element = mOwner->GetMediaElement();
+  NS_ENSURE_TRUE(element, NS_ERROR_FAILURE);
+  element->FinishDecoderSetup(this, aResource);
+  return NS_OK;
+}
+
+void
+MediaDecoder::NotifyNetworkError()
+{
+  NetworkError();
+}
+
+void
+MediaDecoder::NotifyDecodeError()
+{
+  nsCOMPtr<nsIRunnable> r =
+    NS_NewRunnableMethod(this, &MediaDecoder::DecodeError);
+  AbstractThread::MainThread()->Dispatch(r.forget());
+}
+
+void
+MediaDecoder::NotifyDataEnded(nsresult aStatus)
+{
+  RefPtr<MediaDecoder> self = this;
+  nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction([=] () {
+    self->NotifyDownloadEnded(aStatus);
+    if (NS_SUCCEEDED(aStatus)) {
+      HTMLMediaElement* element = self->mOwner->GetMediaElement();
+      if (element) {
+        element->DownloadSuspended();
+      }
+      // NotifySuspendedStatusChanged will tell the element that download
+      // has been suspended "by the cache", which is true since we never
+      // download anything. The element can then transition to HAVE_ENOUGH_DATA.
+      self->NotifySuspendedStatusChanged();
+    }
+  });
+  AbstractThread::MainThread()->Dispatch(r.forget());
+}
+
 void
 MediaDecoder::ResetConnectionState()
 {
@@ -927,6 +971,13 @@ MediaDecoder::NotifyPrincipalChanged()
 void
 MediaDecoder::NotifyBytesConsumed(int64_t aBytes, int64_t aOffset)
 {
+  if (!NS_IsMainThread()) {
+    nsCOMPtr<nsIRunnable> r = NS_NewRunnableMethodWithArgs<int64_t, int64_t>(
+      this, &MediaDecoder::NotifyBytesConsumed, aBytes, aOffset);
+    AbstractThread::MainThread()->Dispatch(r.forget());
+    return;
+  }
+
   MOZ_ASSERT(NS_IsMainThread());
 
   if (mShuttingDown || mIgnoreProgressData) {

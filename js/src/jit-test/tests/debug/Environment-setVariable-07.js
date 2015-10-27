@@ -12,4 +12,3 @@ function test(code, val) {
 
 test("let a = 1; debugger; return a;", "xyzzy");
 test("{ let a = 1; debugger; return a; }", "plugh");
-test("let (a = 1) { debugger; return a; }", "wcgr");

@@ -43,7 +43,7 @@ class nsIPrincipal;
 
 namespace mozilla {
 
-class MediaDecoder;
+class MediaResourceCallback;
 class MediaChannelStatistics;
 
 /**
@@ -270,7 +270,7 @@ public:
   // Create a new stream of the same type that refers to the same URI
   // with a new channel. Any cached data associated with the original
   // stream should be accessible in the new stream too.
-  virtual already_AddRefed<MediaResource> CloneData(MediaDecoder* aDecoder) = 0;
+  virtual already_AddRefed<MediaResource> CloneData(MediaResourceCallback* aCallback) = 0;
   // Set statistics to be recorded to the object passed in.
   virtual void RecordStatisticsTo(MediaChannelStatistics *aStatistics) { }
 
@@ -387,7 +387,7 @@ public:
    * Create a resource, reading data from the channel. Call on main thread only.
    * The caller must follow up by calling resource->Open().
    */
-  static already_AddRefed<MediaResource> Create(MediaDecoder* aDecoder, nsIChannel* aChannel);
+  static already_AddRefed<MediaResource> Create(MediaResourceCallback* aCallback, nsIChannel* aChannel);
 
   /**
    * Open the stream. This creates a stream listener and returns it in
@@ -460,7 +460,7 @@ public:
     // - mChannel
     // - mURI (possibly owned, looks like just a ref from mChannel)
     // Not owned:
-    // - mDecoder
+    // - mCallback
     size_t size = MediaResource::SizeOfExcludingThis(aMallocSizeOf);
     size += mContentType.SizeOfExcludingThisIfUnshared(aMallocSizeOf);
 
@@ -480,11 +480,11 @@ public:
   }
 
 protected:
-  BaseMediaResource(MediaDecoder* aDecoder,
+  BaseMediaResource(MediaResourceCallback* aCallback,
                     nsIChannel* aChannel,
                     nsIURI* aURI,
                     const nsACString& aContentType) :
-    mDecoder(aDecoder),
+    mCallback(aCallback),
     mChannel(aChannel),
     mURI(aURI),
     mContentType(aContentType),
@@ -516,7 +516,7 @@ protected:
   // This is not an nsCOMPointer to prevent a circular reference
   // between the decoder to the media stream object. The stream never
   // outlives the lifetime of the decoder.
-  MediaDecoder* mDecoder;
+  MediaResourceCallback* mCallback;
 
   // Channel used to download the media data. Must be accessed
   // from the main thread only.
@@ -593,7 +593,7 @@ private:
 class ChannelMediaResource : public BaseMediaResource
 {
 public:
-  ChannelMediaResource(MediaDecoder* aDecoder,
+  ChannelMediaResource(MediaResourceCallback* aDecoder,
                        nsIChannel* aChannel,
                        nsIURI* aURI,
                        const nsACString& aContentType);
@@ -643,7 +643,7 @@ public:
   // Return true if the stream has been closed.
   bool IsClosed() const { return mCacheStream.IsClosed(); }
   virtual bool     CanClone() override;
-  virtual already_AddRefed<MediaResource> CloneData(MediaDecoder* aDecoder) override;
+  virtual already_AddRefed<MediaResource> CloneData(MediaResourceCallback* aDecoder) override;
   // Set statistics to be recorded to the object passed in. If not called,
   // |ChannelMediaResource| will create it's own statistics objects in |Open|.
   void RecordStatisticsTo(MediaChannelStatistics *aStatistics) override {

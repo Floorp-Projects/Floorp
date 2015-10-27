@@ -92,13 +92,16 @@ NS_IMETHODIMP nsPrintProgress::OpenProgressDialog(nsIDOMWindow *parent,
     nsCOMPtr<nsIDOMWindow> ownerWindow = do_GetInterface(ownerXULWindow);
     NS_ENSURE_STATE(ownerWindow);
 
+    nsCOMPtr<nsPIDOMWindow> piOwnerWindow = do_QueryInterface(ownerWindow);
+    MOZ_ASSERT(piOwnerWindow);
+
     // Open the dialog.
     nsCOMPtr<nsIDOMWindow> newWindow;
 
-    rv = ownerWindow->OpenDialog(NS_ConvertASCIItoUTF16(dialogURL),
-                                 NS_LITERAL_STRING("_blank"),
-                                 NS_LITERAL_STRING("chrome,titlebar,dependent,centerscreen"),
-                                 array, getter_AddRefs(newWindow));
+    rv = piOwnerWindow->OpenDialog(NS_ConvertASCIItoUTF16(dialogURL),
+                                   NS_LITERAL_STRING("_blank"),
+                                   NS_LITERAL_STRING("chrome,titlebar,dependent,centerscreen"),
+                                   array, getter_AddRefs(newWindow));
   }
 
   return rv;
@@ -117,8 +120,11 @@ NS_IMETHODIMP nsPrintProgress::GetPrompter(nsIPrompt **_retval)
   NS_ENSURE_ARG_POINTER(_retval);
   *_retval = nullptr;
 
-  if (! m_closeProgress && m_dialog)
-    return m_dialog->GetPrompter(_retval);
+  if (! m_closeProgress && m_dialog) {
+    nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(m_dialog);
+    MOZ_ASSERT(window);
+    return window->GetPrompter(_retval);
+  }
     
   return NS_ERROR_FAILURE;
 }
