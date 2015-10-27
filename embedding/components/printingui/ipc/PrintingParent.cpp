@@ -33,6 +33,7 @@ PrintingParent::RecvShowProgress(PBrowserParent* parent,
                                  nsresult* result)
 {
   *result = NS_ERROR_FAILURE;
+  *notifyOnOpen = false;
 
   nsCOMPtr<nsIDOMWindow> parentWin = DOMWindowFromBrowserParent(parent);
   if (!parentWin) {
