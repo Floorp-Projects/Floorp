@@ -1,0 +1,17 @@
+<html>
+  <body>
+    <h3>test iframe</h3>
+    <script>
+      window.onload = function() {
+        window.onhashchange = function() {
+          window.parent.postMessage("updated-iframe-url", "*");
+        }
+        // NOTE: without the this setTimeout the location change is not fired
+        // even without the "fire only for top level windows" fix
+        setTimeout(function() {
+          window.location.hash="updated-iframe-url";
+        }, 0);
+      }
+    </script>
+  </body>
+</html>

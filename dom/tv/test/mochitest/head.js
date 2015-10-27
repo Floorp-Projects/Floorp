@@ -22,8 +22,9 @@ function installApp(aTestToken, aTemplate) {
 
     var appId = gAppsService.getAppLocalIdByManifestURL(gApp.manifestURL);
     SpecialPowers.addPermission("tv", true, { url: gApp.origin,
-                                              appId: appId,
-                                              isInBrowserElement: false });
+                                              originAttributes: {
+                                                appId: appId
+                                              }});
 
     runTest();
   }

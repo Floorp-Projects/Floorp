@@ -141,6 +141,14 @@ A marker generated via `console.timeStamp(label)`.
 * DOMString causeName - the label passed into `console.timeStamp(label)`
   if passed in.
 
+## document::DOMContentLoaded
+
+A marker generated when the DOMContentLoaded event is fired.
+
+## document::Load
+
+A marker generated when the document's "load" event is fired.
+
 ## Parse HTML
 
 ## Parse XML
