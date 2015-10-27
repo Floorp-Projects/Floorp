@@ -1943,13 +1943,20 @@ void
 nsWindow::RemoveIMEComposition()
 {
     // Remove composition on Gecko side
-    if (!GetIMEComposition()) {
+    const RefPtr<mozilla::TextComposition> composition(GetIMEComposition());
+    if (!composition) {
         return;
     }
 
     RefPtr<nsWindow> kungFuDeathGrip(this);
-    WidgetCompositionEvent compositionCommitEvent(true, eCompositionCommitAsIs,
-                                                  this);
+
+    // We have to use eCompositionCommit instead of eCompositionCommitAsIs
+    // because TextComposition has a workaround for eCompositionCommitAsIs
+    // that prevents compositions containing a single ideographic space
+    // character from working (see bug 1209465)..
+    WidgetCompositionEvent compositionCommitEvent(
+            true, eCompositionCommit, this);
+    compositionCommitEvent.mData = composition->String();
     InitEvent(compositionCommitEvent, nullptr);
     DispatchEvent(&compositionCommitEvent);
 }
@@ -2390,11 +2397,8 @@ nsWindow::Natives::OnImeReplaceText(int32_t aStart, int32_t aEnd,
     }
 
     // Don't end composition when composing text or composition was destroyed.
-    if (!aComposing && window.GetIMEComposition()) {
-        WidgetCompositionEvent compositionCommitEvent(
-                true, eCompositionCommitAsIs, &window);
-        window.InitEvent(compositionCommitEvent, nullptr);
-        window.DispatchEvent(&compositionCommitEvent);
+    if (!aComposing) {
+        window.RemoveIMEComposition();
     }
 
     if (mInputContext.mMayBeIMEUnaware) {
