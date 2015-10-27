@@ -1,0 +1,58 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Media test: seek tests</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+var SEEK_TIME = 3.5;
+var seekStarted = false;
+var seekCompleted = false;
+var metadata = false;
+
+var v = document.createElement('video');
+document.body.appendChild(v);
+SimpleTest.registerCleanupFunction(function () {
+  v.remove();
+});
+
+try {
+  v.currentTime = SEEK_TIME;
+} catch (e) {
+  ok(false, "should not fire '" + e + "' event");
+}
+is(v.readyState, v.HAVE_NOTHING, "readyState is HAVE_NOTHING");
+ok(!v.seeking, "can't be seeking prior src defined");
+is(v.currentTime, SEEK_TIME, "currentTime is default playback start position");
+once(v, "seeking", function() {
+  seekStarted = true;
+});
+once(v, "seeked", function() {
+  seekCompleted = true;
+});
+once(v, "loadedmetadata", function() {
+  metadata = true;
+  ok(v.seeking, "element is seeking once readyState is HAVE_METADATA");
+});
+once(v, "ended", function() {
+  ok(seekStarted, "seek should have started");
+  ok(seekCompleted, "seek should have completed");
+  ok(metadata, "loadedmetadata fired");
+  ok(v.currentTime >= SEEK_TIME, "currentTime should be after seek time");
+  SimpleTest.finish();
+});
+
+v.src = "seek.webm";
+v.play();
+
+</script>
+</pre>
+</body>
+</html>
