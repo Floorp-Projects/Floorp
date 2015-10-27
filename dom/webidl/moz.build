@@ -75,6 +75,7 @@ WEBIDL_FILES = [
     'ChannelSplitterNode.webidl',
     'CharacterData.webidl',
     'ChildNode.webidl',
+    'ChromeNodeList.webidl',
     'ChromeNotifications.webidl',
     'ChromeUtils.webidl',
     'Client.webidl',
