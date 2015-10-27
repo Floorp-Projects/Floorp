@@ -33,6 +33,8 @@ let snapshotModel = exports.snapshot = PropTypes.shape({
   breakdown: breakdownModel,
   // Whether the currently cached census tree is inverted or not.
   inverted: PropTypes.bool,
+  // If an error was thrown while processing this snapshot, the `Error` instance is attached here.
+  error: PropTypes.object,
   // State the snapshot is in
   // @see ./constants.js
   state: function (props, propName) {
