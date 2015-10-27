@@ -273,15 +273,13 @@ private:
       , mLength(0)
     {
       MOZ_ASSERT(aCapacity > 0, "Creating zero-capacity chunk");
-      mData = new (fallible) char[mCapacity];
+      mData.reset(new (fallible) char[mCapacity]);
     }
-
-    ~Chunk() { delete[] mData; }
 
     Chunk(Chunk&& aOther)
       : mCapacity(aOther.mCapacity)
       , mLength(aOther.mLength)
-      , mData(aOther.mData)
+      , mData(Move(aOther.mData))
     {
       aOther.mCapacity = aOther.mLength = 0;
       aOther.mData = nullptr;
@@ -291,7 +289,7 @@ private:
     {
       mCapacity = aOther.mCapacity;
       mLength = aOther.mLength;
-      mData = aOther.mData;
+      mData = Move(aOther.mData);
       aOther.mCapacity = aOther.mLength = 0;
       aOther.mData = nullptr;
       return *this;
@@ -304,7 +302,7 @@ private:
     char* Data() const
     {
       MOZ_ASSERT(mData, "Allocation failed but nobody checked for it");
-      return mData;
+      return mData.get();
     }
 
     void AddLength(size_t aAdditionalLength)
@@ -319,7 +317,7 @@ private:
 
     size_t mCapacity;
     size_t mLength;
-    char* mData;
+    UniquePtr<char[]> mData;
   };
 
   nsresult AppendChunk(Maybe<Chunk>&& aChunk);
