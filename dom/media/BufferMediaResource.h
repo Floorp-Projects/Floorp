@@ -50,7 +50,7 @@ private:
     return principal.forget();
   }
   virtual bool CanClone() override { return false; }
-  virtual already_AddRefed<MediaResource> CloneData(MediaDecoder* aDecoder) override
+  virtual already_AddRefed<MediaResource> CloneData(MediaResourceCallback*) override
   {
     return nullptr;
   }
