@@ -103,7 +103,6 @@ class FetchEvent final : public ExtendableEvent
   nsMainThreadPtrHandle<nsIInterceptedChannel> mChannel;
   RefPtr<Request> mRequest;
   nsCString mScriptSpec;
-  RefPtr<Promise> mPromise;
   bool mIsReload;
   bool mWaitToRespond;
 protected:
@@ -149,13 +148,6 @@ public:
 
   void
   RespondWith(Promise& aArg, ErrorResult& aRv);
-
-  already_AddRefed<Promise>
-  GetPromise() const
-  {
-    RefPtr<Promise> p = mPromise;
-    return p.forget();
-  }
 
   already_AddRefed<Promise>
   ForwardTo(const nsAString& aUrl);
