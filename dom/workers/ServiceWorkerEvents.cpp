@@ -59,9 +59,9 @@ CancelChannelRunnable::Run()
 }
 
 FetchEvent::FetchEvent(EventTarget* aOwner)
-: ExtendableEvent(aOwner)
-, mIsReload(false)
-, mWaitToRespond(false)
+  : ExtendableEvent(aOwner)
+  , mIsReload(false)
+  , mWaitToRespond(false)
 {
 }
 
@@ -436,15 +436,6 @@ FetchEvent::RespondWith(Promise& aArg, ErrorResult& aRv)
     return;
   }
 
-  // 4.5.3.2 If the respond-with entered flag is set, then:
-  // Throw an "InvalidStateError" exception.
-  // Here we use |mPromise != nullptr| as respond-with enter flag
-  if (mPromise) {
-    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
-    return;
-  }
-  mPromise = &aArg;
-
   RefPtr<InternalRequest> ir = mRequest->GetInternalRequest();
   StopImmediatePropagation();
   mWaitToRespond = true;
@@ -452,6 +443,8 @@ FetchEvent::RespondWith(Promise& aArg, ErrorResult& aRv)
     new RespondWithHandler(mChannel, mRequest->Mode(), ir->IsClientRequest(),
                            ir->IsNavigationRequest(), mScriptSpec);
   aArg.AppendNativeHandler(handler);
+
+  WaitUntil(aArg, aRv);
 }
 
 NS_IMPL_ADDREF_INHERITED(FetchEvent, ExtendableEvent)
@@ -460,8 +453,7 @@ NS_IMPL_RELEASE_INHERITED(FetchEvent, ExtendableEvent)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(FetchEvent)
 NS_INTERFACE_MAP_END_INHERITING(ExtendableEvent)
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED(FetchEvent, ExtendableEvent,
-                                   mRequest, mPromise)
+NS_IMPL_CYCLE_COLLECTION_INHERITED(FetchEvent, ExtendableEvent, mRequest)
 
 ExtendableEvent::ExtendableEvent(EventTarget* aOwner)
   : Event(aOwner, nullptr, nullptr)
