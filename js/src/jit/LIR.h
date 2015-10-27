@@ -1595,9 +1595,6 @@ class LSafepoint : public TempObject
         MOZ_ASSERT(!osiCallPointOffset_);
         osiCallPointOffset_ = osiCallPointOffset;
     }
-    void fixupOffset(MacroAssembler* masm) {
-        osiCallPointOffset_ = masm->actualOffset(osiCallPointOffset_);
-    }
 };
 
 class LInstruction::InputIterator

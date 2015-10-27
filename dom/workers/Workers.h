@@ -197,21 +197,11 @@ struct JSSettings
 
 enum WorkerPreference
 {
-  WORKERPREF_DUMP = 0, // browser.dom.window.dump.enabled
-  WORKERPREF_DOM_CACHES, // dom.caches.enabled
-  WORKERPREF_SERVICEWORKERS, // dom.serviceWorkers.enabled
-  WORKERPREF_INTERCEPTION_ENABLED, // dom.serviceWorkers.interception.enabled
-  WORKERPREF_OPEN_WINDOW_ENABLED, // dom.serviceWorkers.openWindow.enabled
-  WORKERPREF_DOM_WORKERNOTIFICATION, // dom.webnotifications.workers.enabled
-  WORKERPREF_DOM_SERVICEWORKERNOTIFICATION, // dom.webnotifications.serviceworker.enabled
-  WORKERPREF_DOM_CACHES_TESTING, // dom.caches.testing.enabled
-  WORKERPREF_SERVICEWORKERS_TESTING, // dom.serviceWorkers.testing.enabled
-  WORKERPREF_INTERCEPTION_OPAQUE_ENABLED, // dom.serviceWorkers.interception.opaque.enabled
-  WORKERPREF_PERFORMANCE_LOGGING_ENABLED, // dom.performance.enable_user_timing_logging
-  WORKERPREF_PUSH, // dom.push.enabled
-  WORKERPREF_REQUESTCACHE, // dom.requestcache.enabled
-  WORKERPREF_REQUESTCONTEXT, // dom.requestcontext.enabled
-  WORKERPREF_OFFSCREENCANVAS, // gfx.offscreencanvas.enabled
+#define WORKER_SIMPLE_PREF(name, getter, NAME) WORKERPREF_ ## NAME,
+#define WORKER_PREF(name, callback)
+#include "mozilla/dom/WorkerPrefs.h"
+#undef WORKER_SIMPLE_PREF
+#undef WORKER_PREF
   WORKERPREF_COUNT
 };
 

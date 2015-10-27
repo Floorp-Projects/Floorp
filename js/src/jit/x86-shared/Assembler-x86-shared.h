@@ -3123,10 +3123,6 @@ class AssemblerX86Shared : public AssemblerShared
     }
 
     // Defined for compatibility with ARM's assembler
-    uint32_t actualOffset(uint32_t x) {
-        return x;
-    }
-
     uint32_t actualIndex(uint32_t x) {
         return x;
     }
