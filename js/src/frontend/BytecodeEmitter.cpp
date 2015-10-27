@@ -4984,6 +4984,15 @@ BytecodeEmitter::emitTry(ParseNode* pn)
         for (ParseNode* pn3 = catchList->pn_head; pn3; pn3 = pn3->pn_next) {
             MOZ_ASSERT(this->stackDepth == depth);
 
+            // Clear the frame's return value that might have been set by the
+            // try block:
+            //
+            //   eval("try { 1; throw 2 } catch(e) {}"); // undefined, not 1
+            if (!emit1(JSOP_UNDEFINED))
+                return false;
+            if (!emit1(JSOP_SETRVAL))
+                return false;
+
             // Emit the lexical scope and catch body.
             MOZ_ASSERT(pn3->isKind(PNK_LEXICALSCOPE));
             if (!emitTree(pn3))
@@ -5034,14 +5043,26 @@ BytecodeEmitter::emitTry(ParseNode* pn)
         stmtInfo.type = StmtType::SUBROUTINE;
         if (!updateSourceCoordNotes(pn->pn_kid3->pn_pos.begin))
             return false;
-        if (!emit1(JSOP_FINALLY) ||
-            !emit1(JSOP_GETRVAL) ||
-            !emitTree(pn->pn_kid3) ||
-            !emit1(JSOP_SETRVAL) ||
-            !emit1(JSOP_RETSUB))
-        {
+        if (!emit1(JSOP_FINALLY))
             return false;
-        }
+        if (!emit1(JSOP_GETRVAL))
+            return false;
+
+        // Clear the frame's return value to make break/continue return
+        // correct value even if there's no other statement before them:
+        //
+        //   eval("x: try { 1 } finally { break x; }");  // undefined, not 1
+        if (!emit1(JSOP_UNDEFINED))
+            return false;
+        if (!emit1(JSOP_SETRVAL))
+            return false;
+
+        if (!emitTree(pn->pn_kid3))
+            return false;
+        if (!emit1(JSOP_SETRVAL))
+            return false;
+        if (!emit1(JSOP_RETSUB))
+            return false;
         hasTryFinally = true;
         MOZ_ASSERT(this->stackDepth == depth);
     }
