@@ -22,7 +22,7 @@ public final class TextInputHelper {
         return extract;
     }
 
-    private static String getText(final InputConnection ic) {
+    public static String getText(final InputConnection ic) {
         return getExtractedText(ic).text.toString();
     }
 
