@@ -3984,7 +3984,7 @@ PrintProfilerEvents(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
-#if defined(JS_SIMULATOR_ARM)
+#if defined(JS_SIMULATOR_ARM) || defined(JS_SIMULATOR_MIPS64)
 typedef Vector<char16_t, 0, SystemAllocPolicy> StackChars;
 Vector<StackChars, 0, SystemAllocPolicy> stacks;
 
@@ -3999,10 +3999,15 @@ SingleStepCallback(void* arg, jit::Simulator* sim, void* pc)
 
     JS::ProfilingFrameIterator::RegisterState state;
     state.pc = pc;
+#if defined(JS_SIMULATOR_ARM)
     state.sp = (void*)sim->get_register(jit::Simulator::sp);
     state.lr = (void*)sim->get_register(jit::Simulator::lr);
+#elif defined(JS_SIMULATOR_MIPS64)
+    state.sp = (void*)sim->getRegister(jit::Simulator::sp);
+    state.lr = (void*)sim->getRegister(jit::Simulator::ra);
+#endif
 
-    DebugOnly<void*> lastStackAddress = nullptr;
+    mozilla::DebugOnly<void*> lastStackAddress = nullptr;
     StackChars stack;
     uint32_t frameNo = 0;
     for (JS::ProfilingFrameIterator i(rt, state); !i.done(); ++i) {
@@ -4032,7 +4037,7 @@ SingleStepCallback(void* arg, jit::Simulator* sim, void* pc)
 static bool
 EnableSingleStepProfiling(JSContext* cx, unsigned argc, Value* vp)
 {
-#if defined(JS_SIMULATOR_ARM)
+#if defined(JS_SIMULATOR_ARM) || defined(JS_SIMULATOR_MIPS64)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     jit::Simulator* sim = cx->runtime()->simulator();
@@ -4049,7 +4054,7 @@ EnableSingleStepProfiling(JSContext* cx, unsigned argc, Value* vp)
 static bool
 DisableSingleStepProfiling(JSContext* cx, unsigned argc, Value* vp)
 {
-#if defined(JS_SIMULATOR_ARM)
+#if defined(JS_SIMULATOR_ARM) || defined(JS_SIMULATOR_MIPS64)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     jit::Simulator* sim = cx->runtime()->simulator();
@@ -6208,7 +6213,7 @@ SetRuntimeOptions(JSRuntime* rt, const OptionParser& op)
     int32_t stopAt = op.getIntOption("arm-sim-stop-at");
     if (stopAt >= 0)
         jit::Simulator::StopSimAt = stopAt;
-#elif defined(JS_SIMULATOR_MIPS32)
+#elif defined(JS_SIMULATOR_MIPS32) || defined(JS_SIMULATOR_MIPS64)
     if (op.getBoolOption("mips-sim-icache-checks"))
         jit::Simulator::ICacheCheckingEnabled = true;
 
@@ -6510,7 +6515,7 @@ main(int argc, char** argv, char** envp)
                              "simulator.")
         || !op.addIntOption('\0', "arm-sim-stop-at", "NUMBER", "Stop the ARM simulator after the given "
                             "NUMBER of instructions.", -1)
-#elif defined(JS_SIMULATOR_MIPS32)
+#elif defined(JS_SIMULATOR_MIPS32) || defined(JS_SIMULATOR_MIPS64)
 	|| !op.addBoolOption('\0', "mips-sim-icache-checks", "Enable icache flush checks in the MIPS "
                              "simulator.")
         || !op.addIntOption('\0', "mips-sim-stop-at", "NUMBER", "Stop the MIPS simulator after the given "
