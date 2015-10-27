@@ -265,11 +265,6 @@ private:
   void
   AddAllTopLevelWorkersToArray(nsTArray<WorkerPrivate*>& aWorkers);
 
-  static PLDHashOperator
-  RemoveSharedWorkerFromWindowMap(nsPIDOMWindow* aKey,
-                                  nsAutoPtr<nsTArray<WorkerPrivate*> >& aData,
-                                  void* aUserArg);
-
   void
   GetWorkersForWindow(nsPIDOMWindow* aWindow,
                       nsTArray<WorkerPrivate*>& aWorkers);
