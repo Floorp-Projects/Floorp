@@ -1232,36 +1232,6 @@ nsZipReaderCache::GetFd(nsIFile* zipFile, PRFileDesc** aRetVal)
 #endif /* XP_WIN */
 }
 
-static PLDHashOperator
-FindOldestZip(const nsACString &aKey, nsJAR* aZip, void* aClosure)
-{
-  nsJAR** oldestPtr = static_cast<nsJAR**>(aClosure);
-  nsJAR* oldest = *oldestPtr;
-  nsJAR* current = aZip;
-  PRIntervalTime currentReleaseTime = current->GetReleaseTime();
-  if (currentReleaseTime != PR_INTERVAL_NO_TIMEOUT) {
-    if (oldest == nullptr ||
-        currentReleaseTime < oldest->GetReleaseTime()) {
-      *oldestPtr = current;
-    }
-  }
-  return PL_DHASH_NEXT;
-}
-
-struct ZipFindData {nsJAR* zip; bool found;};
-
-static PLDHashOperator
-FindZip(const nsACString &aKey, nsJAR* aZip, void* aClosure)
-{
-  ZipFindData* find_data = static_cast<ZipFindData*>(aClosure);
-
-  if (find_data->zip == aZip) {
-    find_data->found = true;
-    return PL_DHASH_STOP;
-  }
-  return PL_DHASH_NEXT;
-}
-
 nsresult
 nsZipReaderCache::ReleaseZip(nsJAR* zip)
 {
@@ -1283,9 +1253,15 @@ nsZipReaderCache::ReleaseZip(nsJAR* zip)
   // So, we are going to try safeguarding here by searching our hashtable while
   // locked here for the zip. We return fast if it is not found.
 
-  ZipFindData find_data = {zip, false};
-  mZips.EnumerateRead(FindZip, &find_data);
-  if (!find_data.found) {
+  bool found = false;
+  for (auto iter = mZips.Iter(); !iter.Done(); iter.Next()) {
+    if (zip == iter.UserData()) {
+      found = true;
+      break;
+    }
+  }
+
+  if (!found) {
 #ifdef ZIP_CACHE_HIT_RATE
     mZipSyncMisses++;
 #endif
@@ -1297,8 +1273,18 @@ nsZipReaderCache::ReleaseZip(nsJAR* zip)
   if (mZips.Count() <= mCacheSize)
     return NS_OK;
 
+  // Find the oldest zip.
   nsJAR* oldest = nullptr;
-  mZips.EnumerateRead(FindOldestZip, &oldest);
+  for (auto iter = mZips.Iter(); !iter.Done(); iter.Next()) {
+    nsJAR* current = iter.UserData();
+    PRIntervalTime currentReleaseTime = current->GetReleaseTime();
+    if (currentReleaseTime != PR_INTERVAL_NO_TIMEOUT) {
+      if (oldest == nullptr ||
+          currentReleaseTime < oldest->GetReleaseTime()) {
+        oldest = current;
+      }
+    }
+  }
 
   // Because of the craziness above it is possible that there is no zip that
   // needs removing.
