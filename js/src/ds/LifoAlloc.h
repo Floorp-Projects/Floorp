@@ -276,12 +276,24 @@ class LifoAlloc
     }
 
     MOZ_ALWAYS_INLINE
-    void* allocInfallible(size_t n) {
+    void* allocInfallibleOrAssert(size_t n) {
+        void* result = allocImpl(n);
+        MOZ_RELEASE_ASSERT(result, "[OOM] Is it really infallible?");
+        return result;
+    }
+
+    MOZ_ALWAYS_INLINE
+    void* allocInfallibleOrCrash(size_t n) {
         AutoEnterOOMUnsafeRegion oomUnsafe;
         if (void* result = allocImpl(n))
             return result;
         oomUnsafe.crash("LifoAlloc::allocInfallible");
         return nullptr;
+    }
+
+    MOZ_ALWAYS_INLINE
+    void* allocInfallible(size_t n) {
+        return allocInfallibleOrCrash(n);
     }
 
     // Ensures that enough space exists to satisfy N bytes worth of
