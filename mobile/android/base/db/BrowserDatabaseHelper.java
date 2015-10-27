@@ -39,7 +39,7 @@ import android.util.Log;
 final class BrowserDatabaseHelper extends SQLiteOpenHelper {
     private static final String LOGTAG = "GeckoBrowserDBHelper";
 
-    public static final int DATABASE_VERSION = 24;
+    public static final int DATABASE_VERSION = 25;
     public static final String DATABASE_NAME = "browser.db";
 
     final protected Context mContext;
@@ -197,12 +197,13 @@ final class BrowserDatabaseHelper extends SQLiteOpenHelper {
                 " ON " + TABLE_CLIENTS + "(" + BrowserContract.Clients.GUID + ")");
     }
 
-    private void createTabsTable(SQLiteDatabase db) {
+    private boolean didCreateTabsTable = false;
+    private void createTabsTable(SQLiteDatabase db, final String tableName) {
         debug("Creating tabs.db: " + db.getPath());
-        debug("Creating " + TABLE_TABS + " table");
+        debug("Creating " + tableName + " table");
 
         // Table for each tab on any client.
-        db.execSQL("CREATE TABLE " + TABLE_TABS + "(" +
+        db.execSQL("CREATE TABLE " + tableName + "(" +
                 BrowserContract.Tabs._ID + " INTEGER PRIMARY KEY AUTOINCREMENT," +
                 BrowserContract.Tabs.CLIENT_GUID + " TEXT," +
                 BrowserContract.Tabs.TITLE + " TEXT," +
@@ -210,14 +211,18 @@ final class BrowserDatabaseHelper extends SQLiteOpenHelper {
                 BrowserContract.Tabs.HISTORY + " TEXT," +
                 BrowserContract.Tabs.FAVICON + " TEXT," +
                 BrowserContract.Tabs.LAST_USED + " INTEGER," +
-                BrowserContract.Tabs.POSITION + " INTEGER" +
+                BrowserContract.Tabs.POSITION + " INTEGER, " +
+                "FOREIGN KEY (" + BrowserContract.Tabs.CLIENT_GUID + ") REFERENCES " +
+                TABLE_CLIENTS + "(" + BrowserContract.Clients.GUID + ") ON DELETE CASCADE" +
                 ");");
+    }
 
+    private void createTabsTableIndices(SQLiteDatabase db, final String tableName) {
         // Indices on CLIENT_GUID and POSITION.
         db.execSQL("CREATE INDEX " + TabsProvider.INDEX_TABS_GUID +
-                " ON " + TABLE_TABS + "(" + BrowserContract.Tabs.CLIENT_GUID + ")");
+                " ON " + tableName + "(" + BrowserContract.Tabs.CLIENT_GUID + ")");
         db.execSQL("CREATE INDEX " + TabsProvider.INDEX_TABS_POSITION +
-                " ON " + TABLE_TABS + "(" + BrowserContract.Tabs.POSITION + ")");
+                " ON " + tableName + "(" + BrowserContract.Tabs.POSITION + ")");
     }
 
     // Insert a client row for our local Fennec client.
@@ -341,9 +346,12 @@ final class BrowserDatabaseHelper extends SQLiteOpenHelper {
         createHistoryTable(db);
         createFaviconsTable(db);
         createThumbnailsTable(db);
-        createTabsTable(db);
         createClientsTable(db);
         createLocalClient(db);
+        createTabsTable(db, TABLE_TABS);
+        didCreateTabsTable = true;
+        createTabsTableIndices(db, TABLE_TABS);
+
 
         createBookmarksWithFaviconsView(db);
         createHistoryWithFaviconsView(db);
@@ -366,8 +374,10 @@ final class BrowserDatabaseHelper extends SQLiteOpenHelper {
      * @param destinationDB The destination database.
      */
     public void copyTabsDB(File tabsDBFile, SQLiteDatabase destinationDB) {
-        createTabsTable(destinationDB);
         createClientsTable(destinationDB);
+        createTabsTable(destinationDB, TABLE_TABS);
+        didCreateTabsTable = true;
+        createTabsTableIndices(destinationDB, TABLE_TABS);
 
         SQLiteDatabase oldTabsDB = null;
         try {
@@ -987,6 +997,41 @@ final class BrowserDatabaseHelper extends SQLiteOpenHelper {
         }
     }
 
+    private void upgradeDatabaseFrom24to25(SQLiteDatabase db) {
+        if (didCreateTabsTable) {
+            debug("No need to rev tabs schema; foreign key constraint exists.");
+            return;
+        }
+
+        debug("Rewriting tabs table.");
+        createTabsTable(db, "tmp_tabs");
+
+        // Remove indexes. We don't need them now, and we'll be throwing away the table.
+        db.execSQL("DROP INDEX IF EXISTS " + TabsProvider.INDEX_TABS_GUID);
+        db.execSQL("DROP INDEX IF EXISTS " + TabsProvider.INDEX_TABS_POSITION);
+
+        db.execSQL("INSERT INTO tmp_tabs (" +
+                        // Here are the columns we can preserve.
+                        BrowserContract.Tabs._ID + ", " +
+                        BrowserContract.Tabs.CLIENT_GUID + ", " +
+                        BrowserContract.Tabs.TITLE + ", " +
+                        BrowserContract.Tabs.URL + ", " +
+                        BrowserContract.Tabs.HISTORY + ", " +
+                        BrowserContract.Tabs.FAVICON + ", " +
+                        BrowserContract.Tabs.LAST_USED + ", " +
+                        BrowserContract.Tabs.POSITION +
+                        ") " +
+                        "SELECT " +
+                        "_id, client_guid, title, url, history, favicon, last_used, position" +
+                        " FROM " + TABLE_TABS);
+
+        // Now switch these tables over and recreate the indices.
+        db.execSQL("DROP TABLE " + TABLE_TABS);
+        db.execSQL("ALTER TABLE tmp_tabs RENAME TO " + TABLE_TABS);
+        createTabsTableIndices(db, TABLE_TABS);
+        didCreateTabsTable =true;
+    }
+
     private void createV19CombinedView(SQLiteDatabase db) {
         db.execSQL("DROP VIEW IF EXISTS " + VIEW_COMBINED);
         db.execSQL("DROP VIEW IF EXISTS " + VIEW_COMBINED_WITH_FAVICONS);
@@ -1061,6 +1106,10 @@ final class BrowserDatabaseHelper extends SQLiteOpenHelper {
 
                 case 24:
                     upgradeDatabaseFrom23to24(db);
+                    break;
+
+                case 25:
+                    upgradeDatabaseFrom24to25(db);
                     break;
             }
         }
