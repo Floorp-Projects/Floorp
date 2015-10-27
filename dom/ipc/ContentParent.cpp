@@ -2828,7 +2828,7 @@ ContentParent::RecvGetClipboard(nsTArray<nsCString>&& aTypes,
 
     clipboard->GetData(trans, aWhichClipboard);
     nsContentUtils::TransferableToIPCTransferable(trans, aDataTransfer,
-                                                  nullptr, this);
+                                                  true, nullptr, this);
     return true;
 }
 
@@ -5272,6 +5272,7 @@ ContentParent::MaybeInvokeDragSession(TabParent* aParent)
         transfer->GetTransferables(lc);
       nsContentUtils::TransferablesToIPCTransferables(transferables,
                                                       dataTransfers,
+                                                      false,
                                                       nullptr,
                                                       this);
       uint32_t action;
