@@ -777,12 +777,24 @@ public:
   {
     return nsPresContext::AppUnitsToIntCSSPixels(GetClientAreaRect().height);
   }
+  int32_t ScrollTopMin()
+  {
+    nsIScrollableFrame* sf = GetScrollFrame();
+    return sf ?
+           nsPresContext::AppUnitsToIntCSSPixels(sf->GetScrollRange().y) : 0;
+  }
   int32_t ScrollTopMax()
   {
     nsIScrollableFrame* sf = GetScrollFrame();
     return sf ?
            nsPresContext::AppUnitsToIntCSSPixels(sf->GetScrollRange().YMost()) :
            0;
+  }
+  int32_t ScrollLeftMin()
+  {
+    nsIScrollableFrame* sf = GetScrollFrame();
+    return sf ?
+           nsPresContext::AppUnitsToIntCSSPixels(sf->GetScrollRange().x) : 0;
   }
   int32_t ScrollLeftMax()
   {
