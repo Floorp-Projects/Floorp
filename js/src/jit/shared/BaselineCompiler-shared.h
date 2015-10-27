@@ -43,13 +43,6 @@ class BaselineCompilerShared
         // If set, insert a PCMappingIndexEntry before encoding the
         // current entry.
         bool addIndexEntry;
-
-        void fixupNativeOffset(MacroAssembler& masm) {
-            CodeOffsetLabel offset(nativeOffset);
-            offset.fixup(&masm);
-            MOZ_ASSERT(offset.offset() <= UINT32_MAX);
-            nativeOffset = (uint32_t) offset.offset();
-        }
     };
 
     js::Vector<PCMappingEntry, 16, SystemAllocPolicy> pcMappingEntries_;

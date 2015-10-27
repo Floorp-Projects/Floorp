@@ -732,7 +732,6 @@ class AssemblerMIPSShared : public AssemblerShared
         return m_buffer.getInst(bo);
     }
   public:
-    uint32_t actualOffset(uint32_t) const;
     uint32_t actualIndex(uint32_t) const;
     static uint8_t* PatchableJumpAddress(JitCode* code, uint32_t index);
   protected:
@@ -1043,9 +1042,7 @@ class AssemblerMIPSShared : public AssemblerShared
     void retarget(Label* label, Label* target);
 
     // See Bind
-    size_t labelOffsetToPatchOffset(size_t offset) {
-        return actualOffset(offset);
-    }
+    size_t labelOffsetToPatchOffset(size_t offset) { return offset; }
 
     void call(Label* label);
     void call(void* target);
