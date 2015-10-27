@@ -1505,7 +1505,7 @@ class MOZ_STACK_CLASS ModuleValidator
                 AsmJSModule::RelativeLink link(AsmJSModule::RelativeLink::RawPointer);
                 link.patchAtOffset = tableBaseOffset + elemIndex * sizeof(uint8_t*);
                 Label* entry = functionEntry(table.elem(elemIndex).funcIndex());
-                link.targetOffset = masm().actualOffset(entry->offset());
+                link.targetOffset = entry->offset();
                 if (!module_->addRelativeLink(link))
                     return false;
             }
