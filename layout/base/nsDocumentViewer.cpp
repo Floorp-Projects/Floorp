@@ -990,6 +990,14 @@ nsDocumentViewer::LoadComplete(nsresult aStatus)
                           "content-document-loaded",
                           nullptr);
 
+      // Notify any devtools about the load.
+      RefPtr<TimelineConsumers> timelines = TimelineConsumers::Get();
+
+      if (timelines && timelines->HasConsumer(docShell)) {
+        timelines->AddMarkerForDocShell(
+          docShell, "document::Load", MarkerTracingType::TIMESTAMP);
+      }
+
       EventDispatcher::Dispatch(window, mPresContext, &event, nullptr, &status);
       if (timing) {
         timing->NotifyLoadEventEnd();
