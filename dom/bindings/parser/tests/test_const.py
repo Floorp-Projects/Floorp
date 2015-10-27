@@ -15,6 +15,14 @@ expected = [
     ("::TestConsts::n", "n", "BooleanOrNull", None),
     ("::TestConsts::nt", "nt", "BooleanOrNull", True),
     ("::TestConsts::nf", "nf", "BooleanOrNull", False),
+    ("::TestConsts::fl", "fl", "Float", 0.2),
+    ("::TestConsts::db", "db", "Double", 0.2),
+    ("::TestConsts::ufl", "ufl", "UnrestrictedFloat", 0.2),
+    ("::TestConsts::udb", "udb", "UnrestrictedDouble", 0.2),
+    ("::TestConsts::fli", "fli", "Float", 2),
+    ("::TestConsts::dbi", "dbi", "Double", 2),
+    ("::TestConsts::ufli", "ufli", "UnrestrictedFloat", 2),
+    ("::TestConsts::udbi", "udbi", "UnrestrictedDouble", 2),
 ]
 
 def WebIDLTest(parser, harness):
@@ -34,6 +42,14 @@ def WebIDLTest(parser, harness):
           const boolean? n = null;
           const boolean? nt = true;
           const boolean? nf = false;
+          const float fl = 0.2;
+          const double db = 0.2;
+          const unrestricted float ufl = 0.2;
+          const unrestricted double udb = 0.2;
+          const float fli = 2;
+          const double dbi = 2;
+          const unrestricted float ufli = 2;
+          const unrestricted double udbi = 2;
         };
     """)
 
