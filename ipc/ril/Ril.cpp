@@ -89,7 +89,6 @@ RilConsumer::ConnectWorkerToRIL(JSContext* aCx)
 {
   // Set up the postRILMessage on the function for worker -> RIL thread
   // communication.
-  NS_ASSERTION(!JS_IsRunning(aCx), "Are we being called somehow?");
   Rooted<JSObject*> workerGlobal(aCx, CurrentGlobalOrNull(aCx));
 
   // Check whether |postRILMessage| has been defined.  No one but this class
