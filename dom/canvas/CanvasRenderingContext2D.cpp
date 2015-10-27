@@ -1414,7 +1414,7 @@ CanvasRenderingContext2D::EnsureTarget(RenderingMode aRenderingMode)
             mBufferProvider = new PersistentBufferProviderBasic(mTarget);
             mIsSkiaGL = true;
           } else {
-            printf_stderr("Failed to create a SkiaGL DrawTarget, falling back to software\n");
+            gfxCriticalNote << "Failed to create a SkiaGL DrawTarget, falling back to software\n";
             mode = RenderingMode::SoftwareBackendMode;
           }
         }
@@ -1470,6 +1470,10 @@ CanvasRenderingContext2D::EnsureTarget(RenderingMode aRenderingMode)
     mTarget = sErrorTarget;
   }
 
+  // Drop a note in the debug builds if we ever use accelerated Skia canvas.
+  if (mIsSkiaGL && mTarget && mTarget->GetType() == DrawTargetType::HARDWARE_RASTER) {
+    gfxWarningOnce() << "Using SkiaGL canvas.";
+  }
   return mode;
 }
 
@@ -5328,9 +5332,6 @@ CanvasRenderingContext2D::PutImageData(ImageData& imageData, double dx,
                                 JS::ToInt32(dirtyWidth),
                                 JS::ToInt32(dirtyHeight));
 }
-
-// void putImageData (in ImageData d, in float x, in float y);
-// void putImageData (in ImageData d, in double x, in double y, in double dirtyX, in double dirtyY, in double dirtyWidth, in double dirtyHeight);
 
 nsresult
 CanvasRenderingContext2D::PutImageData_explicit(int32_t x, int32_t y, uint32_t w, uint32_t h,

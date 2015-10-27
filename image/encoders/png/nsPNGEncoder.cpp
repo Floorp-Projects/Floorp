@@ -548,17 +548,12 @@ nsPNGEncoder::Available(uint64_t* _retval)
   return NS_OK;
 }
 
-/* [noscript] unsigned long read (in charPtr aBuf,
-                                  in unsigned long aCount); */
 NS_IMETHODIMP
 nsPNGEncoder::Read(char* aBuf, uint32_t aCount, uint32_t* _retval)
 {
   return ReadSegments(NS_CopySegmentToBuffer, aBuf, aCount, _retval);
 }
 
-/* [noscript] unsigned long readSegments (in nsWriteSegmentFun aWriter,
-                                          in voidPtr aClosure,
-                                          in unsigned long aCount); */
 NS_IMETHODIMP
 nsPNGEncoder::ReadSegments(nsWriteSegmentFun aWriter,
                            void* aClosure, uint32_t aCount,

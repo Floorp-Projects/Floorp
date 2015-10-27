@@ -18,6 +18,7 @@
 #include "nsIInputStream.h"
 #include "nsComponentManagerUtils.h"
 #include "nsIURL.h"
+#include "mozilla/BasePrincipal.h"
 
 static const short kResourceHashType = nsICryptoHash::SHA256;
 
@@ -74,14 +75,15 @@ NS_IMETHODIMP PackagedAppVerifier::Init(nsIPackagedAppVerifierListener* aListene
 
   mListener = aListener;
   mState = STATE_UNKNOWN;
-  mPackageOrigin = aPackageOrigin;
   mSignature = aSignature;
   mIsPackageSigned = false;
   mPackageCacheEntry = aPackageCacheEntry;
   mIsFirstResource = true;
   mManifest = EmptyCString();
 
-  mBypassVerification = (mPackageOrigin ==
+  nsAutoCString originNoSuffix;
+  OriginAttributes().PopulateFromOrigin(aPackageOrigin, originNoSuffix);
+  mBypassVerification = (originNoSuffix ==
       Preferences::GetCString("network.http.signed-packages.trusted-origin"));
 
   nsresult rv;

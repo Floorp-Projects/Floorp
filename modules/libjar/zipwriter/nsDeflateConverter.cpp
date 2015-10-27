@@ -60,8 +60,6 @@ nsresult nsDeflateConverter::Init()
     return NS_OK;
 }
 
-/* nsIInputStream convert (in nsIInputStream aFromStream, in string aFromType
- *                         in string aToType, in nsISupports aCtxt); */
 NS_IMETHODIMP nsDeflateConverter::Convert(nsIInputStream *aFromStream,
                                           const char *aFromType,
                                           const char *aToType,
@@ -71,9 +69,6 @@ NS_IMETHODIMP nsDeflateConverter::Convert(nsIInputStream *aFromStream,
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-/* void asyncConvertData (in string aFromType, in string aToType,
- *                        in nsIStreamListener aListener,
- *                        in nsISupports aCtxt); */
 NS_IMETHODIMP nsDeflateConverter::AsyncConvertData(const char *aFromType,
                                                    const char *aToType,
                                                    nsIStreamListener *aListener,
@@ -100,10 +95,6 @@ NS_IMETHODIMP nsDeflateConverter::AsyncConvertData(const char *aFromType,
     return rv;
 }
 
-/* void onDataAvailable (in nsIRequest aRequest, in nsISupports aContext,
- *                       in nsIInputStream aInputStream,
- *                       in unsigned long long aOffset,
- *                       in unsigned long aCount); */
 NS_IMETHODIMP nsDeflateConverter::OnDataAvailable(nsIRequest *aRequest,
                                                   nsISupports *aContext,
                                                   nsIInputStream *aInputStream,
@@ -148,8 +139,6 @@ NS_IMETHODIMP nsDeflateConverter::OnStartRequest(nsIRequest *aRequest,
     return mListener->OnStartRequest(aRequest, mContext);
 }
 
-/* void onStopRequest (in nsIRequest aRequest, in nsISupports aContext,
- *                     in nsresult aStatusCode); */
 NS_IMETHODIMP nsDeflateConverter::OnStopRequest(nsIRequest *aRequest,
                                                 nsISupports *aContext,
                                                 nsresult aStatusCode)

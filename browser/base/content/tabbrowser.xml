@@ -5136,11 +5136,10 @@
 
       <method name="_getDragTargetTab">
         <parameter name="event"/>
+        <parameter name="isLink"/>
         <body><![CDATA[
           let tab = event.target.localName == "tab" ? event.target : null;
-          if (tab &&
-              (event.type == "drop" || event.type == "dragover") &&
-              event.dataTransfer.dropEffect == "link") {
+          if (tab && isLink) {
             let boxObject = tab.boxObject;
             if (event.screenX < boxObject.screenX + boxObject.width * .25 ||
                 event.screenX > boxObject.screenX + boxObject.width * .75)
@@ -5152,9 +5151,10 @@
 
       <method name="_getDropIndex">
         <parameter name="event"/>
+        <parameter name="isLink"/>
         <body><![CDATA[
           var tabs = this.childNodes;
-          var tab = this._getDragTargetTab(event);
+          var tab = this._getDragTargetTab(event, isLink);
           if (window.getComputedStyle(this, null).direction == "ltr") {
             for (let i = tab ? tab._tPos : 0; i < tabs.length; i++)
               if (event.screenX < tabs[i].boxObject.screenX + tabs[i].boxObject.width / 2)
@@ -5168,13 +5168,13 @@
         ]]></body>
       </method>
 
-      <method name="_setEffectAllowedForDataTransfer">
+      <method name="_getDropEffectForTabDrag">
         <parameter name="event"/>
         <body><![CDATA[
           var dt = event.dataTransfer;
           // Disallow dropping multiple items
           if (dt.mozItemCount > 1)
-            return dt.effectAllowed = "none";
+            return "none";
 
           var types = dt.mozTypesAt(0);
           var sourceNode = null;
@@ -5190,22 +5190,20 @@
               // and vice versa.
               if (PrivateBrowsingUtils.isWindowPrivate(window) !=
                   PrivateBrowsingUtils.isWindowPrivate(sourceNode.ownerDocument.defaultView))
-                return dt.effectAllowed = "none";
+                return "none";
 
               if (window.gMultiProcessBrowser !=
                   sourceNode.ownerDocument.defaultView.gMultiProcessBrowser)
-                return dt.effectAllowed = "none";
+                return "none";
 
-              let copyModifier = this.tabbrowser.AppConstants.platform == "macosx" ? event.altKey : event.ctrlKey;
-              return dt.effectAllowed = copyModifier ? "copy" : "move";
+              return dt.dropEffect == "copy" ? "copy" : "move";
             }
           }
 
           if (browserDragAndDrop.canDropLink(event)) {
-            // Here we need to do this manually
-            return dt.effectAllowed = dt.dropEffect = "link";
+            return "link";
           }
-          return dt.effectAllowed = "none";
+          return "none";
         ]]></body>
       </method>
 
@@ -5482,7 +5480,7 @@
       ]]></handler>
 
       <handler event="dragstart"><![CDATA[
-        var tab = this._getDragTargetTab(event);
+        var tab = this._getDragTargetTab(event, false);
         if (!tab || this._isCustomizing)
           return;
 
@@ -5556,7 +5554,7 @@
       ]]></handler>
 
       <handler event="dragover"><![CDATA[
-        var effects = this._setEffectAllowedForDataTransfer(event);
+        var effects = this._getDropEffectForTabDrag(event);
 
         var ind = this._tabDropIndicator;
         if (effects == "" || effects == "none") {
@@ -5597,7 +5595,7 @@
         this._finishAnimateTabMove();
 
         if (effects == "link") {
-          let tab = this._getDragTargetTab(event);
+          let tab = this._getDragTargetTab(event, true);
           if (tab) {
             if (!this._dragTime)
               this._dragTime = Date.now();
@@ -5623,7 +5621,7 @@
           newMargin = (pixelsToScroll > 0) ? maxMargin : minMargin;
         }
         else {
-          let newIndex = this._getDropIndex(event);
+          let newIndex = this._getDropIndex(event, effects == "link");
           if (newIndex == this.childNodes.length) {
             let tabRect = this.childNodes[newIndex-1].getBoundingClientRect();
             if (ltr)
@@ -5654,7 +5652,7 @@
         var dt = event.dataTransfer;
         var dropEffect = dt.dropEffect;
         var draggedTab;
-        if (dropEffect != "link") { // copy or move
+        if (dt.mozTypesAt(0)[0] == TAB_DROP_TYPE) { // tab copy or move
           draggedTab = dt.mozGetDataAt(TAB_DROP_TYPE, 0);
           // not our drop then
           if (!draggedTab)
@@ -5665,7 +5663,7 @@
         event.stopPropagation();
         if (draggedTab && dropEffect == "copy") {
           // copy the dropped tab (wherever it's from)
-          let newIndex = this._getDropIndex(event);
+          let newIndex = this._getDropIndex(event, false);
           let newTab = this.tabbrowser.duplicateTab(draggedTab);
           this.tabbrowser.moveTabTo(newTab, newIndex);
           if (draggedTab.parentNode != this || event.shiftKey)
@@ -5684,7 +5682,7 @@
           // swap the dropped tab with a new one we create and then close
           // it in the other window (making it seem to have moved between
           // windows)
-          let newIndex = this._getDropIndex(event);
+          let newIndex = this._getDropIndex(event, false);
           let newTab = this.tabbrowser.addTab("about:blank");
           let newBrowser = this.tabbrowser.getBrowserForTab(newTab);
           let draggedBrowserURL = draggedTab.linkedBrowser.currentURI.spec;
@@ -5732,10 +5730,10 @@
           if (event.shiftKey)
             bgLoad = !bgLoad;
 
-          let tab = this._getDragTargetTab(event);
+          let tab = this._getDragTargetTab(event, true);
           if (!tab || dropEffect == "copy") {
             // We're adding a new tab.
-            let newIndex = this._getDropIndex(event);
+            let newIndex = this._getDropIndex(event, true);
             let newTab = this.tabbrowser.loadOneTab(url, {inBackground: bgLoad, allowThirdPartyFixup: true});
             this.tabbrowser.moveTabTo(newTab, newIndex);
           } else {

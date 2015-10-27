@@ -118,7 +118,7 @@ GrallocTextureHostOGL::GrallocTextureHostOGL(TextureFlags aFlags,
     mSize = gfx::IntSize(graphicBuffer->getWidth(), graphicBuffer->getHeight());
     mCropSize = mSize;
   } else {
-    printf_stderr("gralloc buffer is nullptr");
+    printf_stderr("gralloc buffer is nullptr\n");
   }
 }
 
@@ -419,7 +419,7 @@ GrallocTextureHostOGL::WaitAcquireFenceHandleSyncComplete()
   EGLint status = sEGLLibrary.fClientWaitSync(EGL_DISPLAY(),
                                               sync,
                                               0,
-                                              400000000 /*400 usec*/);
+                                              400000000 /*400 msec*/);
   if (status != LOCAL_EGL_CONDITION_SATISFIED) {
     NS_ERROR("failed to wait native fence sync");
   }

@@ -365,6 +365,10 @@ function checkPayload(payload, reason, successfulPings, savedPings) {
   Assert.ok(("mainThread" in payload.slowSQL) &&
                 ("otherThreads" in payload.slowSQL));
 
+  Assert.ok(("IceCandidatesStats" in payload.webrtc) &&
+                ("webrtc" in payload.webrtc.IceCandidatesStats) &&
+                ("loop" in payload.webrtc.IceCandidatesStats));
+
   // Check keyed histogram payload.
 
   Assert.ok("keyedHistograms" in payload);
@@ -1570,7 +1574,7 @@ add_task(function* test_schedulerNothingDue() {
 add_task(function* test_pingExtendedStats() {
   const EXTENDED_PAYLOAD_FIELDS = [
     "chromeHangs", "threadHangStats", "log", "slowSQL", "fileIOReports", "lateWrites",
-    "addonHistograms", "addonDetails", "UIMeasurements",
+    "addonHistograms", "addonDetails", "UIMeasurements", "webrtc"
   ];
 
   // Disable sending extended statistics.
