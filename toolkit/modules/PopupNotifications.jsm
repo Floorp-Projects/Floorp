@@ -7,6 +7,7 @@ this.EXPORTED_SYMBOLS = ["PopupNotifications"];
 var Cc = Components.classes, Ci = Components.interfaces, Cu = Components.utils;
 
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
 Cu.import("resource://gre/modules/Promise.jsm");
 
 const NOTIFICATION_EVENT_DISMISSED = "dismissed";
@@ -20,6 +21,21 @@ const ICON_ATTRIBUTE_SHOWING = "showing";
 const ICON_ANCHOR_ATTRIBUTE = "popupnotificationanchor";
 
 const PREF_SECURITY_DELAY = "security.notification_enable_delay";
+
+// Enumerated values for the POPUP_NOTIFICATION_STATS telemetry histogram.
+const TELEMETRY_STAT_OFFERED = 0;
+const TELEMETRY_STAT_ACTION_1 = 1;
+const TELEMETRY_STAT_ACTION_2 = 2;
+const TELEMETRY_STAT_ACTION_3 = 3;
+const TELEMETRY_STAT_ACTION_LAST = 4;
+const TELEMETRY_STAT_DISMISSAL_CLICK_ELSEWHERE = 5;
+const TELEMETRY_STAT_DISMISSAL_LEAVE_PAGE = 6;
+const TELEMETRY_STAT_DISMISSAL_CLOSE_BUTTON = 7;
+const TELEMETRY_STAT_DISMISSAL_NOT_NOW = 8;
+const TELEMETRY_STAT_OPEN_SUBMENU = 10;
+const TELEMETRY_STAT_LEARN_MORE = 11;
+
+const TELEMETRY_STAT_REOPENED_OFFSET = 20;
 
 var popupNotificationsMap = new WeakMap();
 var gNotificationParents = new WeakMap;
@@ -54,6 +70,13 @@ function Notification(id, message, anchorID, mainAction, secondaryActions,
   this.browser = browser;
   this.owner = owner;
   this.options = options || {};
+
+  this._dismissed = false;
+  this.wasDismissed = false;
+  this.recordedTelemetryStats = new Set();
+  this.isPrivate = PrivateBrowsingUtils.isWindowPrivate(
+                                        this.browser.ownerDocument.defaultView);
+  this.timeCreated = this.owner.window.performance.now();
 }
 
 Notification.prototype = {
@@ -67,6 +90,20 @@ Notification.prototype = {
   owner: null,
   options: null,
   timeShown: null,
+
+  /**
+   * Indicates whether the notification is currently dismissed.
+   */
+  set dismissed(value) {
+    this._dismissed = value;
+    if (value) {
+      // Keep the dismissal into account when recording telemetry.
+      this.wasDismissed = true;
+    }
+  },
+  get dismissed() {
+    return this._dismissed;
+  },
 
   /**
    * Removes the notification and updates the popup accordingly if needed.
@@ -95,7 +132,45 @@ Notification.prototype = {
 
   reshow: function() {
     this.owner._reshowNotifications(this.anchorElement, this.browser);
-  }
+  },
+
+  /**
+   * Adds a value to the specified histogram, that must be keyed by ID.
+   */
+  _recordTelemetry(histogramId, value) {
+    if (this.isPrivate) {
+      // The reason why we don't record telemetry in private windows is because
+      // the available actions can be different from regular mode. The main
+      // difference is that all of the persistent permission options like
+      // "Always remember" aren't there, so they really need to be handled
+      // separately to avoid skewing results. For notifications with the same
+      // choices, there would be no reason not to record in private windows as
+      // well, but it's just simpler to use the same check for everything.
+      return;
+    }
+    let histogram = Services.telemetry.getKeyedHistogramById(histogramId);
+    histogram.add("(all)", value);
+    histogram.add(this.id, value);
+  },
+
+  /**
+   * Adds an enumerated value to the POPUP_NOTIFICATION_STATS histogram,
+   * ensuring that it is recorded at most once for each distinct Notification.
+   *
+   * Statistics for reopened notifications are recorded in separate buckets.
+   *
+   * @param value
+   *        One of the TELEMETRY_STAT_ constants.
+   */
+  _recordTelemetryStat(value) {
+    if (this.wasDismissed) {
+      value += TELEMETRY_STAT_REOPENED_OFFSET;
+    }
+    if (!this.recordedTelemetryStats.has(value)) {
+      this.recordedTelemetryStats.add(value);
+      this._recordTelemetry("POPUP_NOTIFICATION_STATS", value);
+    }
+  },
 };
 
 /**
@@ -416,6 +491,12 @@ PopupNotifications.prototype = {
       case "activate":
       case "TabSelect":
         let self = this;
+        // This is where we could detect if the panel is dismissed if the page
+        // was switched. Unfortunately, the user usually has clicked elsewhere
+        // at this point so this value only gets recorded for programmatic
+        // reasons, like the "Learn More" link being clicked and resulting in a
+        // tab switch.
+        this.nextDismissReason = TELEMETRY_STAT_DISMISSAL_LEAVE_PAGE;
         // setTimeout(..., 0) needed, otherwise openPopup from "activate" event
         // handler results in the popup being hidden again for some reason...
         this.window.setTimeout(function () {
@@ -465,7 +546,11 @@ PopupNotifications.prototype = {
   /**
    * Dismisses the notification without removing it.
    */
-  _dismiss: function PopupNotifications_dismiss() {
+  _dismiss: function PopupNotifications_dismiss(telemetryReason) {
+    if (telemetryReason) {
+      this.nextDismissReason = telemetryReason;
+    }
+
     let browser = this.panel.firstChild &&
                   this.panel.firstChild.notification.browser;
     this.panel.hidePopup();
@@ -546,18 +631,22 @@ PopupNotifications.prototype = {
       popupnotification.setAttribute("label", n.message);
       popupnotification.setAttribute("id", popupnotificationID);
       popupnotification.setAttribute("popupid", n.id);
-      popupnotification.setAttribute("closebuttoncommand", "PopupNotifications._dismiss();");
+      popupnotification.setAttribute("closebuttoncommand", `PopupNotifications._dismiss(${TELEMETRY_STAT_DISMISSAL_CLOSE_BUTTON});`);
       popupnotification.setAttribute("noautofocus", "true");
       if (n.mainAction) {
         popupnotification.setAttribute("buttonlabel", n.mainAction.label);
         popupnotification.setAttribute("buttonaccesskey", n.mainAction.accessKey);
-        popupnotification.setAttribute("buttoncommand", "PopupNotifications._onButtonCommand(event);");
+        popupnotification.setAttribute("buttoncommand", "PopupNotifications._onButtonEvent(event, 'buttoncommand');");
+        popupnotification.setAttribute("buttonpopupshown", "PopupNotifications._onButtonEvent(event, 'buttonpopupshown');");
+        popupnotification.setAttribute("learnmoreclick", "PopupNotifications._onButtonEvent(event, 'learnmoreclick');");
         popupnotification.setAttribute("menucommand", "PopupNotifications._onMenuCommand(event);");
-        popupnotification.setAttribute("closeitemcommand", "PopupNotifications._dismiss();event.stopPropagation();");
+        popupnotification.setAttribute("closeitemcommand", `PopupNotifications._dismiss(${TELEMETRY_STAT_DISMISSAL_NOT_NOW});event.stopPropagation();`);
       } else {
         popupnotification.removeAttribute("buttonlabel");
         popupnotification.removeAttribute("buttonaccesskey");
         popupnotification.removeAttribute("buttoncommand");
+        popupnotification.removeAttribute("buttonpopupshown");
+        popupnotification.removeAttribute("learnmoreclick");
         popupnotification.removeAttribute("menucommand");
         popupnotification.removeAttribute("closeitemcommand");
       }
@@ -589,6 +678,8 @@ PopupNotifications.prototype = {
       popupnotification.notification = n;
 
       if (n.secondaryActions) {
+        let telemetryStatId = TELEMETRY_STAT_ACTION_2;
+
         n.secondaryActions.forEach(function (a) {
           let item = doc.createElementNS(XUL_NS, "menuitem");
           item.setAttribute("label", a.label);
@@ -597,6 +688,13 @@ PopupNotifications.prototype = {
           item.action = a;
 
           popupnotification.appendChild(item);
+
+          // We can only record a limited number of actions in telemetry. If
+          // there are more, the latest are all recorded in the last bucket.
+          item.action.telemetryStatId = telemetryStatId;
+          if (telemetryStatId < TELEMETRY_STAT_ACTION_LAST) {
+            telemetryStatId++;
+          }
         }, this);
 
         if (n.options.hideNotNow) {
@@ -659,9 +757,18 @@ PopupNotifications.prototype = {
       // click-to-play plugins, so copy the popupid and use css.
       this.panel.setAttribute("popupid", this.panel.firstChild.getAttribute("popupid"));
       notificationsToShow.forEach(function (n) {
+        // Record that the notification was actually displayed on screen.
+        // Notifications that were opened a second time or that were originally
+        // shown with "options.dismissed" will be recorded in a separate bucket.
+        n._recordTelemetryStat(TELEMETRY_STAT_OFFERED);
         // Remember the time the notification was shown for the security delay.
         n.timeShown = this.window.performance.now();
       }, this);
+
+      // Unless the panel closing is triggered by a specific known code path,
+      // the next reason will be that the user clicked elsewhere.
+      this.nextDismissReason = TELEMETRY_STAT_DISMISSAL_CLICK_ELSEWHERE;
+
       this.panel.openPopup(anchorElement, "bottomcenter topleft");
       notificationsToShow.forEach(function (n) {
         this._fireCallback(n, NOTIFICATION_EVENT_SHOWN);
@@ -973,6 +1080,16 @@ PopupNotifications.prototype = {
       if (notifications.indexOf(notificationObj) == -1)
         return;
 
+      // Record the time of the first notification dismissal if the main action
+      // was not triggered in the meantime.
+      let timeSinceShown = this.window.performance.now() - notificationObj.timeShown;
+      if (!notificationObj.wasDismissed &&
+          !notificationObj.recordedTelemetryMainAction) {
+        notificationObj._recordTelemetry("POPUP_NOTIFICATION_DISMISSAL_MS",
+                                         timeSinceShown);
+      }
+      notificationObj._recordTelemetryStat(this.nextDismissReason);
+
       // Do not mark the notification as dismissed or fire NOTIFICATION_EVENT_DISMISSED
       // if the notification is removed.
       if (notificationObj.options.removeOnDismissal) {
@@ -984,7 +1101,7 @@ PopupNotifications.prototype = {
     }, this);
   },
 
-  _onButtonCommand: function PopupNotifications_onButtonCommand(event) {
+  _onButtonEvent(event, type) {
     // Need to find the associated notification object, which is a bit tricky
     // since it isn't associated with the button directly - this is kind of
     // gross and very dependent on the structure of the popupnotification
@@ -996,27 +1113,42 @@ PopupNotifications.prototype = {
       notificationEl = parent;
 
     if (!notificationEl)
-      throw "PopupNotifications_onButtonCommand: couldn't find notification element";
+      throw "PopupNotifications._onButtonEvent: couldn't find notification element";
 
     if (!notificationEl.notification)
-      throw "PopupNotifications_onButtonCommand: couldn't find notification";
+      throw "PopupNotifications._onButtonEvent: couldn't find notification";
 
     let notification = notificationEl.notification;
-    let timeSinceShown = this.window.performance.now() - notification.timeShown;
 
-    // Only report the first time mainAction is triggered and remember that this occurred.
-    if (!notification.timeMainActionFirstTriggered) {
-      notification.timeMainActionFirstTriggered = timeSinceShown;
-      Services.telemetry.getHistogramById("POPUP_NOTIFICATION_MAINACTION_TRIGGERED_MS").
-                         add(timeSinceShown);
+    if (type == "buttonpopupshown") {
+      notification._recordTelemetryStat(TELEMETRY_STAT_OPEN_SUBMENU);
+      return;
     }
 
+    if (type == "learnmoreclick") {
+      notification._recordTelemetryStat(TELEMETRY_STAT_LEARN_MORE);
+      return;
+    }
+
+    // Record the total timing of the main action since the notification was
+    // created, even if the notification was dismissed in the meantime.
+    let timeSinceCreated = this.window.performance.now() - notification.timeCreated;
+    if (!notification.recordedTelemetryMainAction) {
+      notification.recordedTelemetryMainAction = true;
+      notification._recordTelemetry("POPUP_NOTIFICATION_MAIN_ACTION_MS",
+                                    timeSinceCreated);
+    }
+
+    let timeSinceShown = this.window.performance.now() - notification.timeShown;
     if (timeSinceShown < this.buttonDelay) {
-      Services.console.logStringMessage("PopupNotifications_onButtonCommand: " +
+      Services.console.logStringMessage("PopupNotifications._onButtonEvent: " +
                                         "Button click happened before the security delay: " +
                                         timeSinceShown + "ms");
       return;
     }
+
+    notification._recordTelemetryStat(TELEMETRY_STAT_ACTION_1);
+
     try {
       notification.mainAction.callback.call();
     } catch(error) {
@@ -1038,6 +1170,9 @@ PopupNotifications.prototype = {
       throw "menucommand target has no associated action/notification";
 
     event.stopPropagation();
+
+    target.notification._recordTelemetryStat(target.action.telemetryStatId);
+
     try {
       target.action.callback.call();
     } catch(error) {
