@@ -120,6 +120,7 @@ html, .theme-body, #app, #memory-tool, #memory-tool-container {
   border-bottom: 1px solid rgba(128,128,128,0.15);
   padding: 8px;
   cursor: pointer;
+  color: var(--theme-selection-color);
 }
 
 .list > li.selected {
@@ -206,8 +207,9 @@ html, .theme-body, #app, #memory-tool, #memory-tool-container {
   background-color: var(--row-hover-background-color);
 }
 
-.tree-node:focus {
+.tree-node:focus, .heap-tree-item.focused {
   background-color: var(--theme-selection-background);
+  color: var(--theme-selection-color);
 }
 
 .header {

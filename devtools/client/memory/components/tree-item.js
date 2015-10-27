@@ -19,7 +19,7 @@ const TreeItem = module.exports = createClass({
   render() {
     let { item, depth, arrow, focused } = this.props;
 
-    return dom.div({ className: "heap-tree-item" },
+    return dom.div({ className: `heap-tree-item ${focused ? "focused" :""}` },
       dom.span({ className: "heap-tree-item-bytes" }, item.bytes),
       dom.span({ className: "heap-tree-item-count" }, item.count),
       dom.span({ className: "heap-tree-item-total-bytes" }, item.totalBytes),
