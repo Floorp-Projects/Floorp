@@ -376,7 +376,13 @@ TrackBuffersManager::CompleteResetParserState()
     // to discard now.
     track->mQueuedSamples.Clear();
   }
-  // 6. Remove all bytes from the input buffer.
+
+  // 6. If the mode attribute equals "sequence", then set the group start timestamp to the group end timestamp
+  if (mSourceBufferAttributes->GetAppendMode() == SourceBufferAppendMode::Sequence) {
+    mGroupStartTimestamp = Some(mGroupEndTimestamp);
+  }
+
+  // 7. Remove all bytes from the input buffer.
   mIncomingBuffers.Clear();
   mInputBuffer = nullptr;
   if (mCurrentInputBuffer) {
@@ -401,7 +407,7 @@ TrackBuffersManager::CompleteResetParserState()
   }
   RecreateParser(true);
 
-  // 7. Set append state to WAITING_FOR_SEGMENT.
+  // 8. Set append state to WAITING_FOR_SEGMENT.
   SetAppendState(AppendState::WAITING_FOR_SEGMENT);
 
   // Reject our promise immediately.

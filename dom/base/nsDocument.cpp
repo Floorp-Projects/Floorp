@@ -5109,6 +5109,14 @@ nsDocument::DispatchContentLoadedEvents()
                                        NS_LITERAL_STRING("DOMContentLoaded"),
                                        true, false);
 
+  RefPtr<TimelineConsumers> timelines = TimelineConsumers::Get();
+  nsIDocShell* docShell = this->GetDocShell();
+
+  if (timelines && timelines->HasConsumer(docShell)) {
+    timelines->AddMarkerForDocShell(
+      docShell, "document::DOMContentLoaded", MarkerTracingType::TIMESTAMP);
+  }
+
   if (mTiming) {
     mTiming->NotifyDOMContentLoadedEnd(nsIDocument::GetDocumentURI());
   }
@@ -7598,7 +7606,6 @@ nsIDocument::GetDocumentURIObject() const
 }
 
 
-// readonly attribute DOMString compatMode;
 // Returns "BackCompat" if we are in quirks mode, "CSS1Compat" if we are
 // in almost standards or full standards mode. See bug 105640.  This was
 // implemented to match MSIE's compatMode property.

@@ -14,8 +14,11 @@
 #include "SharedSurface.h"
 
 #ifdef MOZ_WIDGET_GONK
+#include "mozilla/layers/GrallocTextureClient.h"
 #include "SharedSurfaceGralloc.h"
 #endif
+
+using namespace mozilla::gl;
 
 namespace mozilla {
 namespace layers {

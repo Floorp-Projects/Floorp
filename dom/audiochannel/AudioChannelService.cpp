@@ -323,12 +323,15 @@ AudioChannelService::GetState(nsPIDOMWindow* aWindow, uint32_t aAudioChannel,
   MOZ_ASSERT(aVolume && aMuted);
   MOZ_ASSERT(aAudioChannel < NUMBER_OF_AUDIO_CHANNELS);
 
-  *aVolume = 1.0;
-  *aMuted = false;
 
   if (!aWindow || !aWindow->IsOuterWindow()) {
+    *aVolume = 0.0;
+    *aMuted = true;
     return;
   }
+
+  *aVolume = 1.0;
+  *aMuted = false;
 
   AudioChannelWindow* winData = nullptr;
   nsCOMPtr<nsPIDOMWindow> window = aWindow;

@@ -43,7 +43,7 @@
   --in-content-help-button-background-active: #eaba00;
 }
 
-html|body,
+html|html,
 xul|page,
 xul|window {
   font: message-box;

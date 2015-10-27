@@ -1311,9 +1311,6 @@ nsCertTree::PerformActionOnRow(const char16_t *action, int32_t row)
   return NS_OK;
 }
 
-/* void performActionOnCell (in wstring action, in long row, 
- *                           in wstring colID); 
- */
 NS_IMETHODIMP 
 nsCertTree::PerformActionOnCell(const char16_t *action, int32_t row, 
                                 nsITreeColumn* col)

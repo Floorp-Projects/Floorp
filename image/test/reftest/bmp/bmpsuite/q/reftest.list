@@ -71,9 +71,7 @@ fuzzy(1,899) == pal8os2v2-16.bmp pal8.png
 # "A 16-bit image with an alpha channel. There are 4 bits for each color
 # channel, and 4 bits for the alpha channel. It’s not clear if this is valid,
 # but I can’t find anything that suggests it isn’t."
-# [XXX: we don't even try to do transparency for 16bpp. Chromium gets the
-# transparency right.]
-fails == rgba16-4444.bmp rgba16-4444.png
+== rgba16-4444.bmp rgba16-4444.png
 
 # BMP: bihsize=40, 127 x 64, bpp=24, compression=0, colors=300
 # "A 24-bit image, with a palette containing 300 colors. The fact that the
@@ -114,18 +112,14 @@ fails == rgba16-4444.bmp rgba16-4444.png
 # BMP: bihsize=40, 127 x 64, bpp=32, compression=3, colors=0
 # "A 32 bits/pixel image, with all 32 bits used: 11 each for red and green, and
 # 10 for blue. As far as I know, this is perfectly valid, but it is unusual."
-# [XXX: we get this completely wrong because we don't handle BITFIELDS at all
-# in 32bpp BMPs. Chromium gets this right.]
-fails == rgb32-111110.bmp rgb24.png
+fuzzy(1,1408) == rgb32-111110.bmp rgb24.png
 
 # BMP: bihsize=124, 127 x 64, bpp=32, compression=3, colors=0
 # "A BMP with an alpha channel. Transparency is barely documented, so it’s
 # possible that this file is not correctly formed. The color channels are in an
 # unusual order, to prevent viewers from passing this test by making a lucky
 # guess."
-# [XXX: we get this completely wrong because we don't handle BITFIELDS at all
-# in 32bpp BMPs, especially not with alpha. Chromium gets this right.]
-fails == rgba32.bmp rgba32.png
+== rgba32.bmp rgba32.png
 
 # BMP: bihsize=40, 127 x 64, bpp=32, compression=6, colors=0
 # "An image of type BI_ALPHABITFIELDS. Supposedly, this was used on Windows CE.

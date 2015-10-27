@@ -316,16 +316,16 @@ def cli(args=sys.argv[1:]):
     fxos.add_argument(
         '--adb-port',
         help='port running adb')
-    structured.commandline.add_logging_group(
+    mozlog.commandline.add_logging_group(
         parser,
-        include_formatters=structured.commandline.TEXT_FORMATTERS
+        include_formatters=mozlog.commandline.TEXT_FORMATTERS
     )
 
     args = parser.parse_args()
     dm_type = os.environ.get('DM_TRANS', 'adb')
     host = os.environ.get('TEST_DEVICE')
 
-    structured.commandline.setup_logging(
+    mozlog.commandline.setup_logging(
         'mozversion', args, {'mach': sys.stdout})
 
     get_version(binary=args.binary,

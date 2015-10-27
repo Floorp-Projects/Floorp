@@ -1410,16 +1410,16 @@ inline std::ostream& operator<<(std::ostream& os, SdpSetupAttribute::Role r)
   return os;
 }
 
-// Note: This ABNF is buggy since it does not include a ':' after "a=simulcast"
-// The authors have said this will be fixed in a subsequent version.
-// TODO(bug 1191986): Update this ABNF once the new version is out.
-// simulcast-attribute = "a=simulcast" 1*3( WSP sc-dir-list )
-// sc-dir-list         = sc-dir WSP sc-fmt-list *( ";" sc-fmt-list )
-// sc-dir              = "send" / "recv" / "sendrecv"
-// sc-fmt-list         = sc-fmt *( "," sc-fmt )
-// sc-fmt              = fmt
+// sc-attr     = "a=simulcast:" 1*2( WSP sc-str-list ) [WSP sc-pause-list]
+// sc-str-list = sc-dir WSP sc-id-type "=" sc-alt-list *( ";" sc-alt-list )
+// sc-pause-list = "paused=" sc-alt-list
+// sc-dir      = "send" / "recv"
+// sc-id-type  = "pt" / "rid" / token
+// sc-alt-list = sc-id *( "," sc-id )
+// sc-id       = fmt / rid-identifier / token
 // ; WSP defined in [RFC5234]
-// ; fmt defined in [RFC4566]
+// ; fmt, token defined in [RFC4566]
+// ; rid-identifier defined in [I-D.pthatcher-mmusic-rid]
 class SdpSimulcastAttribute : public SdpAttribute
 {
 public:
@@ -1437,15 +1437,20 @@ public:
         return !choices.empty();
       }
       bool Parse(std::istream& is, std::string* error);
-      void AppendAsStrings(std::vector<std::string>* formats) const;
-      void AddChoice(const std::string& pt);
+      bool GetChoicesAsFormats(std::vector<uint16_t>* formats) const;
 
-      std::vector<uint16_t> choices;
+      std::vector<std::string> choices;
   };
 
   class Versions : public std::vector<Version>
   {
     public:
+      enum Type {
+        kPt,
+        kRid
+      };
+
+      Versions() : type(kRid) {}
       void Serialize(std::ostream& os) const;
       bool IsSet() const
       {
@@ -1461,12 +1466,13 @@ public:
 
         return false;
       }
+
       bool Parse(std::istream& is, std::string* error);
+      Type type;
   };
 
   Versions sendVersions;
   Versions recvVersions;
-  Versions sendrecvVersions;
 };
 
 ///////////////////////////////////////////////////////////////////////////
