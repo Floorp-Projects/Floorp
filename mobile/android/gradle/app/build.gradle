@@ -128,6 +128,9 @@ spoon {
     if (gradle.startParameter.taskNames.contains('runBrowserTests')) {
         spoonPackageName = 'org.mozilla.tests.browser.junit3'
     }
+    if (gradle.startParameter.taskNames.contains('runBackgroundTests')) {
+        spoonPackageName = 'org.mozilla.gecko.background'
+    }
     if (project.hasProperty('spoonPackageName')) {
         // Command line overrides everything.
         spoonPackageName = project.spoonPackageName
@@ -145,6 +148,9 @@ afterEvaluate {
     // The task name itself is fished at runtime and the package name configured
     // in the spoon configuration.
     task runBrowserTests {
+        dependsOn tasks["spoonDebugAndroidTest"]
+    }
+    task runBackgroundTests {
         dependsOn tasks["spoonDebugAndroidTest"]
     }
 }
