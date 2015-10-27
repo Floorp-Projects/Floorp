@@ -381,7 +381,7 @@ LIRGenerator::visitReturnFromCtor(MReturnFromCtor* ins)
 void
 LIRGenerator::visitComputeThis(MComputeThis* ins)
 {
-    MOZ_ASSERT(ins->type() == MIRType_Object);
+    MOZ_ASSERT(ins->type() == MIRType_Value);
     MOZ_ASSERT(ins->input()->type() == MIRType_Value);
 
     LComputeThis* lir = new(alloc()) LComputeThis();
@@ -391,7 +391,7 @@ LIRGenerator::visitComputeThis(MComputeThis* ins)
     // they aren't clobbered.
     useBox(lir, LComputeThis::ValueIndex, ins->input());
 
-    define(lir, ins);
+    defineBox(lir, ins);
     assignSafepoint(lir, ins);
 }
 
