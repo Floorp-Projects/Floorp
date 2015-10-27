@@ -15,8 +15,10 @@
 #include "nsIPrincipal.h"
 
 nsresult
-txParseDocumentFromURI(const nsAString& aHref, const txXPathNode& aLoader,
-                       nsAString& aErrMsg, txXPathNode** aResult)
+txParseDocumentFromURI(const nsAString& aHref,
+                       const txXPathNode& aLoader,
+                       nsAString& aErrMsg,
+                       txXPathNode** aResult)
 {
     NS_ENSURE_ARG_POINTER(aResult);
     *aResult = nullptr;
@@ -36,7 +38,9 @@ txParseDocumentFromURI(const nsAString& aHref, const txXPathNode& aLoader,
     nsIDOMDocument* theDocument = nullptr;
     nsAutoSyncOperation sync(loaderDocument);
     rv = nsSyncLoadService::LoadDocument(documentURI,
+                                         nsIContentPolicy::TYPE_INTERNAL_XMLHTTPREQUEST,
                                          loaderDocument->NodePrincipal(),
+                                         nsILoadInfo::SEC_REQUIRE_CORS_DATA_INHERITS,
                                          loadGroup, true,
                                          loaderDocument->GetReferrerPolicy(),
                                          &theDocument);

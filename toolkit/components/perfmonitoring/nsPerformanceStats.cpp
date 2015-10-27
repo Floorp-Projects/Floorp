@@ -231,61 +231,51 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  /* readonly attribute AString name; */
   NS_IMETHOD GetName(nsAString& aName) override {
     aName.Assign(nsPerformanceGroupDetails::Name());
     return NS_OK;
   };
 
-  /* readonly attribute AString groupId; */
   NS_IMETHOD GetGroupId(nsAString& aGroupId) override {
     aGroupId.Assign(nsPerformanceGroupDetails::GroupId());
     return NS_OK;
   };
 
-  /* readonly attribute AString addonId; */
   NS_IMETHOD GetAddonId(nsAString& aAddonId) override {
     aAddonId.Assign(nsPerformanceGroupDetails::AddonId());
     return NS_OK;
   };
 
-  /* readonly attribute uint64_t windowId; */
   NS_IMETHOD GetWindowId(uint64_t *aWindowId) override {
     *aWindowId = nsPerformanceGroupDetails::WindowId();
     return NS_OK;
   }
 
-  /* readonly attribute bool isSystem; */
   NS_IMETHOD GetIsSystem(bool *_retval) override {
     *_retval = nsPerformanceGroupDetails::IsSystem();
     return NS_OK;
   }
 
-  /* readonly attribute unsigned long long totalUserTime; */
   NS_IMETHOD GetTotalUserTime(uint64_t *aTotalUserTime) override {
     *aTotalUserTime = mPerformanceData.mTotalUserTime;
     return NS_OK;
   };
 
-  /* readonly attribute unsigned long long totalSystemTime; */
   NS_IMETHOD GetTotalSystemTime(uint64_t *aTotalSystemTime) override {
     *aTotalSystemTime = mPerformanceData.mTotalSystemTime;
     return NS_OK;
   };
 
-  /* readonly attribute unsigned long long totalCPOWTime; */
   NS_IMETHOD GetTotalCPOWTime(uint64_t *aCpowTime) override {
     *aCpowTime = mPerformanceData.mTotalCPOWTime;
     return NS_OK;
   };
 
-  /* readonly attribute unsigned long long ticks; */
   NS_IMETHOD GetTicks(uint64_t *aTicks) override {
     *aTicks = mPerformanceData.mTicks;
     return NS_OK;
   };
 
-  /* void getDurations (out unsigned long aCount, [array, size_is (aCount), retval] out unsigned long long aNumberOfOccurrences); */
   NS_IMETHOD GetDurations(uint32_t *aCount, uint64_t **aNumberOfOccurrences) override {
     const size_t length = mozilla::ArrayLength(mPerformanceData.mDurations);
     if (aCount) {
@@ -298,9 +288,6 @@ public:
     return NS_OK;
   };
 
-  /*
-    readonly attribute unsigned long long processId;
-  */
   NS_IMETHODIMP GetProcessId(uint64_t* processId) override {
     *processId = nsPerformanceGroupDetails::ProcessId();
     return NS_OK;
@@ -357,7 +344,6 @@ private:
 NS_IMPL_ISUPPORTS(nsPerformanceSnapshot, nsIPerformanceSnapshot)
 
 
-/* nsIArray getComponentsData (); */
 NS_IMETHODIMP
 nsPerformanceSnapshot::GetComponentsData(nsIArray * *aComponents)
 {
@@ -372,7 +358,6 @@ nsPerformanceSnapshot::GetComponentsData(nsIArray * *aComponents)
   return NS_OK;
 }
 
-/* nsIPerformanceStats getProcessData (); */
 NS_IMETHODIMP
 nsPerformanceSnapshot::GetProcessData(nsIPerformanceStats * *aProcess)
 {
@@ -534,7 +519,6 @@ nsPerformanceStatsService::Observe(nsISupports *aSubject, const char *aTopic,
   return NS_OK;
 }
 
-/* [implicit_jscontext] attribute bool isMonitoringCPOW; */
 NS_IMETHODIMP
 nsPerformanceStatsService::GetIsMonitoringCPOW(JSContext* cx, bool *aIsStopwatchActive)
 {
@@ -552,7 +536,6 @@ nsPerformanceStatsService::SetIsMonitoringCPOW(JSContext* cx, bool aIsStopwatchA
   return NS_OK;
 }
 
-/* [implicit_jscontext] attribute bool isMonitoringJank; */
 NS_IMETHODIMP
 nsPerformanceStatsService::GetIsMonitoringJank(JSContext* cx, bool *aIsStopwatchActive)
 {
@@ -570,7 +553,6 @@ nsPerformanceStatsService::SetIsMonitoringJank(JSContext* cx, bool aIsStopwatchA
   return NS_OK;
 }
 
-/* [implicit_jscontext] attribute bool isMonitoringPerCompartment; */
 NS_IMETHODIMP
 nsPerformanceStatsService::GetIsMonitoringPerCompartment(JSContext*, bool *aIsMonitoringPerCompartment)
 {
@@ -639,7 +621,6 @@ nsPerformanceStatsService::GetStatsForGroup(const nsPerformanceGroup* group)
   return new nsPerformanceStats(*group, group->data);
 }
 
-/* [implicit_jscontext] nsIPerformanceSnapshot getSnapshot (); */
 NS_IMETHODIMP
 nsPerformanceStatsService::GetSnapshot(JSContext* cx, nsIPerformanceSnapshot * *aSnapshot)
 {

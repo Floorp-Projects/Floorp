@@ -194,13 +194,13 @@ ImageTestCase FirstFramePaddingGIFTestCase()
                        TEST_CASE_IS_TRANSPARENT);
 }
 
-ImageTestCase TransparentBMPWhenBMPAlphaEnabledTestCase()
+ImageTestCase TransparentIfWithinICOBMPTestCase(TestCaseFlags aFlags)
 {
-  // Note that we only decode this test case as transparent when the BMP decoder
-  // is set to use alpha data. (That's not the default, which is why it's not marked
-  // TEST_CASE_IS_TRANSPARENT; tests that want to treat this testcase as
-  // transparent need to handle this case manually.)
-  return ImageTestCase("transparent.bmp", "image/bmp", IntSize(32, 32));
+  // This is a BMP that is only transparent when decoded as if it is within an
+  // ICO file. (Note: aFlags needs to be set to TEST_CASE_DEFAULT_FLAGS or
+  // TEST_CASE_IS_TRANSPARENT accordingly.)
+  return ImageTestCase("transparent-if-within-ico.bmp", "image/bmp",
+                       IntSize(32, 32), aFlags);
 }
 
 ImageTestCase RLE4BMPTestCase()

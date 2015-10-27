@@ -1243,7 +1243,7 @@ var Impl = {
       try {
         return fn();
       } catch (ex) {
-        this.log.error("assemblePayloadWithMeasurements - caught exception", ex);
+        this._log.error("assemblePayloadWithMeasurements - caught exception", ex);
         return null;
       }
     };
@@ -1261,6 +1261,7 @@ var Impl = {
       payloadObj.chromeHangs = protect(() => Telemetry.chromeHangs);
       payloadObj.threadHangStats = protect(() => this.getThreadHangStats(Telemetry.threadHangStats));
       payloadObj.log = protect(() => TelemetryLog.entries());
+      payloadObj.webrtc = protect(() => Telemetry.webrtcStats);
     }
 
     if (Utils.isContentProcess) {

@@ -58,6 +58,8 @@ private:
                        uint32_t aWidth, uint32_t aHeight);
     void PowerOnDisplay(int aDpy);
 
+    int DoQueueBuffer(ANativeWindowBuffer* buf);
+
     hw_module_t const*        mModule;
     hw_module_t const*        mFBModule;
     hwc_composer_device_1_t*  mHwc;

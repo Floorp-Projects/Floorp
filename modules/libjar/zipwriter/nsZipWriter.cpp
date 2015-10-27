@@ -303,8 +303,6 @@ NS_IMETHODIMP nsZipWriter::HasEntry(const nsACString & aZipEntry,
     return NS_OK;
 }
 
-/* void addEntryDirectory (in AUTF8String aZipEntry, in PRTime aModTime,
- *                         in boolean aQueue); */
 NS_IMETHODIMP nsZipWriter::AddEntryDirectory(const nsACString & aZipEntry,
                                              PRTime aModTime, bool aQueue)
 {
@@ -327,8 +325,6 @@ NS_IMETHODIMP nsZipWriter::AddEntryDirectory(const nsACString & aZipEntry,
     return InternalAddEntryDirectory(aZipEntry, aModTime, PERMISSIONS_DIR);
 }
 
-/* void addEntryFile (in AUTF8String aZipEntry, in int32_t aCompression,
- *                    in nsIFile aFile, in boolean aQueue); */
 NS_IMETHODIMP nsZipWriter::AddEntryFile(const nsACString & aZipEntry,
                                         int32_t aCompression, nsIFile *aFile,
                                         bool aQueue)
@@ -390,9 +386,6 @@ NS_IMETHODIMP nsZipWriter::AddEntryFile(const nsACString & aZipEntry,
     return inputStream->Close();
 }
 
-/* void addEntryChannel (in AUTF8String aZipEntry, in PRTime aModTime,
- *                       in int32_t aCompression, in nsIChannel aChannel,
- *                       in boolean aQueue); */
 NS_IMETHODIMP nsZipWriter::AddEntryChannel(const nsACString & aZipEntry,
                                            PRTime aModTime,
                                            int32_t aCompression,
@@ -439,9 +432,6 @@ NS_IMETHODIMP nsZipWriter::AddEntryChannel(const nsACString & aZipEntry,
     return inputStream->Close();
 }
 
-/* void addEntryStream (in AUTF8String aZipEntry, in PRTime aModTime,
- *                      in int32_t aCompression, in nsIInputStream aStream,
- *                      in boolean aQueue); */
 NS_IMETHODIMP nsZipWriter::AddEntryStream(const nsACString & aZipEntry,
                                           PRTime aModTime,
                                           int32_t aCompression,
@@ -452,9 +442,6 @@ NS_IMETHODIMP nsZipWriter::AddEntryStream(const nsACString & aZipEntry,
                           PERMISSIONS_FILE);
 }
 
-/* void addEntryStream (in AUTF8String aZipEntry, in PRTime aModTime,
- *                      in int32_t aCompression, in nsIInputStream aStream,
- *                      in boolean aQueue, in unsigned long aPermissions); */
 nsresult nsZipWriter::AddEntryStream(const nsACString & aZipEntry,
                                      PRTime aModTime,
                                      int32_t aCompression,
@@ -605,8 +592,6 @@ NS_IMETHODIMP nsZipWriter::RemoveEntry(const nsACString & aZipEntry,
     return NS_ERROR_FILE_NOT_FOUND;
 }
 
-/* void processQueue (in nsIRequestObserver aObserver,
- *                    in nsISupports aContext); */
 NS_IMETHODIMP nsZipWriter::ProcessQueue(nsIRequestObserver *aObserver,
                                         nsISupports *aContext)
 {
@@ -710,8 +695,6 @@ NS_IMETHODIMP nsZipWriter::OnStartRequest(nsIRequest *aRequest,
     return NS_OK;
 }
 
-/* void onStopRequest (in nsIRequest aRequest, in nsISupports aContext,
- *                                             in nsresult aStatusCode); */
 NS_IMETHODIMP nsZipWriter::OnStopRequest(nsIRequest *aRequest,
                                          nsISupports *aContext,
                                          nsresult aStatusCode)
