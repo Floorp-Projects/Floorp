@@ -26,6 +26,7 @@
     // devtools coding style.
 
     // Rules from the mozilla plugin
+    "mozilla/balanced-listeners": 2,
     "mozilla/components-imports": 1,
     "mozilla/import-headjs-globals": 1,
     "mozilla/mark-test-function-used": 1,

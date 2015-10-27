@@ -4,6 +4,9 @@
 Mozilla ESLint Plugin
 =====================
 
+``balanced-listeners`` checks that every addEventListener has a
+removeEventListener (and does the same for on/off).
+
 ``components-imports`` adds the filename of imported files e.g.
 ``Cu.import("some/path/Blah.jsm")`` adds Blah to the global scope.
 
@@ -31,6 +34,7 @@ level invalid.
 Example configuration::
 
    "rules": {
+     "mozilla/balanced-listeners": 2,
      "mozilla/components-imports": 1,
      "mozilla/import-headjs-globals": 1,
      "mozilla/mark-test-function-used": 1,
@@ -40,6 +44,7 @@ Example configuration::
 .. toctree::
    :maxdepth: 1
 
+   balanced-listeners
    components-imports
    import-headjs-globals
    mark-test-function-used
