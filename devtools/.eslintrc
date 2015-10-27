@@ -29,6 +29,7 @@
     "mozilla/components-imports": 1,
     "mozilla/import-headjs-globals": 1,
     "mozilla/mark-test-function-used": 1,
+    "mozilla/var-only-at-top-level": 1,
 
     // Disallow using variables outside the blocks they are defined (especially
     // since only let and const are used, see "no-var").
@@ -270,8 +271,9 @@
     "no-unused-vars": 2,
     // Allow using variables before they are defined.
     "no-use-before-define": 0,
-    // Require let or const instead of var.
-    "no-var": 2,
+    // We use var-only-at-top-level instead of no-var as we allow top level
+    // vars.
+    "no-var": 0,
     // Allow using TODO/FIXME comments.
     "no-warning-comments": 0,
     // Disallow use of the with statement.

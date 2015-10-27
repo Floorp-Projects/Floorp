@@ -20,6 +20,53 @@
   border-bottom: 1px solid ThreeDShadow;
 }
 
+#alertBox[animate] {
+  animation-timing-function: cubic-bezier(.12,1.23,.48,1.09);
+}
+
+#alertBox[animate][clicked] {
+  animation-duration: .6s;
+  animation-name: alert-clicked-animation;
+}
+
+/* This is used if the close button is clicked
+   before the animation has finished. */
+#alertBox[animate][closing] {
+  animation-duration: .6s;
+  animation-name: alert-closing-animation;
+}
+
+@keyframes alert-animation {
+  from {
+    transform: translate(110%, 0) rotate(-20deg);
+  }
+  5% {
+    transform: none;
+  }
+  95% {
+    transform: none;
+    opacity: 1;
+  }
+  to {
+    transform: translate(0, 60px) rotate(15deg);
+    opacity: 0;
+  }
+}
+
+@keyframes alert-clicked-animation {
+  to {
+    transform: scale(1.5);
+    opacity: 0;
+  }
+}
+
+@keyframes alert-closing-animation {
+  to {
+    transform: translate(0, 60px) rotate(15deg);
+    opacity: 0;
+  }
+}
+
 #alertImage {
   margin: 8px 0;
   width: 64px;

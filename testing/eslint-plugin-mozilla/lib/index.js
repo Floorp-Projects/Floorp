@@ -15,11 +15,13 @@ module.exports = {
   rules: {
     "components-imports": require("../lib/rules/components-imports"),
     "import-headjs-globals": require("../lib/rules/import-headjs-globals"),
-    "mark-test-function-used": require("../lib/rules/mark-test-function-used")
+    "mark-test-function-used": require("../lib/rules/mark-test-function-used"),
+    "var-only-at-top-level": require("../lib/rules/var-only-at-top-level")
   },
   rulesConfig: {
     "components-imports": 0,
     "import-headjs-globals": 0,
-    "mark-test-function-used": 0
+    "mark-test-function-used": 0,
+    "var-only-at-top-level": 0
   }
 };
