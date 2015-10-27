@@ -634,20 +634,17 @@ Assembler::finish()
 
     for (unsigned int i = 0; i < tmpDataRelocations_.length(); i++) {
         size_t offset = tmpDataRelocations_[i].getOffset();
-        size_t real_offset = offset + m_buffer.poolSizeBefore(offset);
-        dataRelocations_.writeUnsigned(real_offset);
+        dataRelocations_.writeUnsigned(offset);
     }
 
     for (unsigned int i = 0; i < tmpJumpRelocations_.length(); i++) {
         size_t offset = tmpJumpRelocations_[i].getOffset();
-        size_t real_offset = offset + m_buffer.poolSizeBefore(offset);
-        jumpRelocations_.writeUnsigned(real_offset);
+        jumpRelocations_.writeUnsigned(offset);
     }
 
     for (unsigned int i = 0; i < tmpPreBarriers_.length(); i++) {
         size_t offset = tmpPreBarriers_[i].getOffset();
-        size_t real_offset = offset + m_buffer.poolSizeBefore(offset);
-        preBarriers_.writeUnsigned(real_offset);
+        preBarriers_.writeUnsigned(offset);
     }
 }
 
@@ -657,12 +654,6 @@ Assembler::executableCopy(uint8_t* buffer)
     MOZ_ASSERT(isFinished);
     m_buffer.executableCopy(buffer);
     AutoFlushICache::setRange(uintptr_t(buffer), m_buffer.size());
-}
-
-uint32_t
-Assembler::actualOffset(uint32_t off_) const
-{
-    return off_ + m_buffer.poolSizeBefore(off_);
 }
 
 uint32_t
@@ -676,12 +667,6 @@ uint8_t*
 Assembler::PatchableJumpAddress(JitCode* code, uint32_t pe_)
 {
     return code->raw() + pe_;
-}
-
-BufferOffset
-Assembler::actualOffset(BufferOffset off_) const
-{
-    return BufferOffset(off_.getOffset() + m_buffer.poolSizeBefore(off_.getOffset()));
 }
 
 class RelocationIterator

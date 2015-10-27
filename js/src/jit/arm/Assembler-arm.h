@@ -1251,10 +1251,9 @@ class Assembler : public AssemblerShared
 
   public:
     void resetCounter();
-    uint32_t actualOffset(uint32_t) const;
+    uint32_t actualOffset(uint32_t off) const { return off; }
     uint32_t actualIndex(uint32_t) const;
     static uint8_t* PatchableJumpAddress(JitCode* code, uint32_t index);
-    BufferOffset actualOffset(BufferOffset) const;
     static uint32_t NopFill;
     static uint32_t GetNopFill();
     static uint32_t AsmPoolMaxOffset;

@@ -599,11 +599,6 @@ struct AssemblerBufferWithConstantPools : public AssemblerBuffer<SliceSize, Inst
         MOZ_ASSERT(this->nextOffset().getOffset() - canNotPlacePoolStartOffset_ <= canNotPlacePoolMaxInst_ * InstSize);
     }
 
-    size_t poolSizeBefore(size_t offset) const {
-        // Pools are emitted inline, no adjustment required.
-        return 0;
-    }
-
     void align(unsigned alignment) {
         MOZ_ASSERT(IsPowerOfTwo(alignment));
 
