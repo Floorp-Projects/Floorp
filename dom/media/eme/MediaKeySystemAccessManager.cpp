@@ -173,7 +173,9 @@ MediaKeySystemAccessManager::Request(DetailedPromise* aPromise,
   }
 
   MediaKeySystemConfiguration config;
-  if (aConfigs.IsEmpty() ||
+  // TODO: Remove IsSupported() check here once we remove backwards
+  // compatibility with initial implementation...
+  if (MediaKeySystemAccess::GetSupportedConfig(keySystem, aConfigs, config) ||
       MediaKeySystemAccess::IsSupported(keySystem, aConfigs)) {
     RefPtr<MediaKeySystemAccess> access(
       new MediaKeySystemAccess(mWindow, keySystem, NS_ConvertUTF8toUTF16(cdmVersion), config));
