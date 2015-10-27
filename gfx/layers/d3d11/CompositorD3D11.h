@@ -167,7 +167,7 @@ private:
   // ensure mSize is up to date with respect to mWidget
   void EnsureSize();
   bool VerifyBufferSize();
-  void UpdateRenderTarget();
+  bool UpdateRenderTarget();
   bool UpdateConstantBuffers();
   void SetSamplerForFilter(gfx::Filter aFilter);
   void SetPSForEffect(Effect *aEffect, MaskType aMaskType, gfx::SurfaceFormat aFormat);
