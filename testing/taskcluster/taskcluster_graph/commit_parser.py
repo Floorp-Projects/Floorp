@@ -168,7 +168,9 @@ def parse_test_chunks(aliases, all_tests, tests):
                 test['only_chunks'] = seen_chunks[name]
                 results.append(test)
 
-    return results;
+    # uniquify the results over the test names
+    results = {test['test']: test for test in results}.values()
+    return results
 
 def extract_tests_from_platform(test_jobs, build_platform, build_task, tests):
     '''
