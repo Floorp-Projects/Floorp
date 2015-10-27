@@ -804,8 +804,6 @@ imgRequest::OnStartRequest(nsIRequest* aRequest, nsISupports* ctxt)
   return NS_OK;
 }
 
-/* void onStopRequest (in nsIRequest request, in nsISupports ctxt,
-                       nsresult status); */
 NS_IMETHODIMP
 imgRequest::OnStopRequest(nsIRequest* aRequest,
                           nsISupports* ctxt, nsresult status)
