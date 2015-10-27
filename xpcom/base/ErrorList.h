@@ -231,6 +231,8 @@
   /* The request failed because the user tried to access to a remote XUL
    * document from a website that is not in its white-list. */
   ERROR(NS_ERROR_REMOTE_XUL,           FAILURE(75)),
+  /* The request resulted in an error page being displayed. */
+  ERROR(NS_ERROR_LOAD_SHOWED_ERRORPAGE, FAILURE(77)),
 
 
   /* FTP specific error codes: */

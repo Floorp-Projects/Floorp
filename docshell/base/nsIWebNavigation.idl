@@ -16,7 +16,7 @@ interface nsIURI;
  * location, stop or restart an in process load, or determine where the object
  * has previously gone.
  */
-[scriptable, uuid(0e92d522-53a5-4af6-9a24-4eccdcbf4f91)]
+[scriptable, uuid(3ade79d4-8cb9-4952-b18d-4f9b63ca0d31)]
 interface nsIWebNavigation : nsISupports
 {
   /**
@@ -185,6 +185,12 @@ interface nsIWebNavigation : nsISupports
   const unsigned long LOAD_FLAGS_DISALLOW_INHERIT_OWNER = 0x40000;
 
   /**
+   * Overwrite the returned error code with a specific result code
+   * when an error page is displayed.
+   */
+  const unsigned long LOAD_FLAGS_ERROR_LOAD_CHANGES_RV = 0x80000;
+
+  /**
    * This flag specifies that the URI may be submitted to a third-party
    * server for correction. This should only be applied to non-sensitive
    * URIs entered by users.  This flag must not be passed to Reload.
@@ -195,8 +201,6 @@ interface nsIWebNavigation : nsISupports
    * This flag specifies that common scheme typos should be corrected.
    */
   const unsigned long LOAD_FLAGS_FIXUP_SCHEME_TYPOS = 0x200000;
-
-  /* Note that flag 0x80000 is available. */
 
   /**
    * Loads a given URI.  This will give priority to loading the requested URI
