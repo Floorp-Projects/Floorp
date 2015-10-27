@@ -359,7 +359,8 @@ const ContentPanningAPZDisabled = {
       node = node.parentNode;
     }
 
-    if (nodeContent.scrollMaxX || nodeContent.scrollMaxY) {
+    if (nodeContent.scrollMaxX != nodeContent.scrollMinX ||
+        nodeContent.scrollMaxY != nodeContent.scrollMinY) {
       return nodeContent;
     }
 

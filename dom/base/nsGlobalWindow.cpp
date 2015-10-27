@@ -5500,55 +5500,44 @@ nsGlobalWindow::CheckSecurityLeftAndTop(int32_t* aLeft, int32_t* aTop, bool aCal
   }
 }
 
-void
-nsGlobalWindow::GetScrollMaxXYOuter(int32_t* aScrollMaxX, int32_t* aScrollMaxY)
+int32_t
+nsGlobalWindow::GetScrollBoundaryOuter(Side aSide)
 {
   MOZ_RELEASE_ASSERT(IsOuterWindow());
 
   FlushPendingNotifications(Flush_Layout);
-  nsIScrollableFrame *sf = GetScrollFrame();
-  if (!sf) {
-    return;
+  if (nsIScrollableFrame *sf = GetScrollFrame()) {
+    return sf->GetScrollRange().Edge(aSide);
   }
-
-  nsRect scrollRange = sf->GetScrollRange();
-
-  if (aScrollMaxX) {
-    *aScrollMaxX = std::max(0,
-      (int32_t)floor(nsPresContext::AppUnitsToFloatCSSPixels(scrollRange.XMost())));
-  }
-  if (aScrollMaxY) {
-    *aScrollMaxY = std::max(0,
-      (int32_t)floor(nsPresContext::AppUnitsToFloatCSSPixels(scrollRange.YMost())));
-  }
+  return 0;
 }
 
-void
-nsGlobalWindow::GetScrollMaxXY(int32_t* aScrollMaxX, int32_t* aScrollMaxY,
-                               ErrorResult& aError)
+int32_t
+nsGlobalWindow::GetScrollMinX(ErrorResult& aError)
 {
-  FORWARD_TO_OUTER_OR_THROW(GetScrollMaxXYOuter, (aScrollMaxX, aScrollMaxY),
-                          aError, );
+  MOZ_ASSERT(IsInnerWindow());
+  FORWARD_TO_OUTER_OR_THROW(GetScrollBoundaryOuter, (eSideLeft), aError, 0);
+}
+
+int32_t
+nsGlobalWindow::GetScrollMinY(ErrorResult& aError)
+{
+  MOZ_ASSERT(IsInnerWindow());
+  FORWARD_TO_OUTER_OR_THROW(GetScrollBoundaryOuter, (eSideTop), aError, 0);
 }
 
 int32_t
 nsGlobalWindow::GetScrollMaxX(ErrorResult& aError)
 {
   MOZ_ASSERT(IsInnerWindow());
-
-  int32_t scrollMaxX = 0;
-  GetScrollMaxXY(&scrollMaxX, nullptr, aError);
-  return scrollMaxX;
+  FORWARD_TO_OUTER_OR_THROW(GetScrollBoundaryOuter, (eSideRight), aError, 0);
 }
 
 int32_t
 nsGlobalWindow::GetScrollMaxY(ErrorResult& aError)
 {
   MOZ_ASSERT(IsInnerWindow());
-
-  int32_t scrollMaxY = 0;
-  GetScrollMaxXY(nullptr, &scrollMaxY, aError);
-  return scrollMaxY;
+  FORWARD_TO_OUTER_OR_THROW(GetScrollBoundaryOuter, (eSideBottom), aError, 0);
 }
 
 CSSIntPoint
