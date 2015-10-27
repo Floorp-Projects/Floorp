@@ -18,6 +18,7 @@ public class TestTabsRecord extends TestFennecTabsStorage {
     final ContentProviderClient tabsClient = getTabsClient();
 
     deleteAllTestTabs(tabsClient);
+    insertTestClient(getClientsClient());
     insertSomeTestTabs(tabsClient);
 
     final String positionAscending = BrowserContract.Tabs.POSITION + " ASC";
