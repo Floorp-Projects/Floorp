@@ -22,7 +22,6 @@
 #include "nsIURI.h"
 
 #include "jsapi.h"
-#include "jsfriendapi.h"
 #include "nsError.h"
 #include "nsContentPolicyUtils.h"
 #include "nsContentUtils.h"
@@ -319,9 +318,6 @@ private:
                        WorkerPrivate* aWorkerPrivate,
                        bool aResult,
                        bool aMutedError);
-
-  void LogExceptionToConsole(JSContext* aCx,
-                             WorkerPrivate* WorkerPrivate);
 };
 
 class CacheScriptLoader;
@@ -1815,7 +1811,7 @@ ScriptExecutorRunnable::ShutdownScriptLoader(JSContext* aCx,
     // If this error has to be muted, we have to clear the pending exception,
     // if any, and use the ErrorResult object to throw a new exception.
     if (aMutedError && JS_IsExceptionPending(aCx)) {
-      LogExceptionToConsole(aCx, aWorkerPrivate);
+      JS_ClearPendingException(aCx);
       mScriptLoader.mRv.Throw(NS_ERROR_FAILURE);
     } else {
       mScriptLoader.mRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
@@ -1824,33 +1820,6 @@ ScriptExecutorRunnable::ShutdownScriptLoader(JSContext* aCx,
 
   aWorkerPrivate->RemoveFeature(aCx, &mScriptLoader);
   aWorkerPrivate->StopSyncLoop(mSyncLoopTarget, aResult);
-}
-
-void
-ScriptExecutorRunnable::LogExceptionToConsole(JSContext* aCx,
-                                              WorkerPrivate* aWorkerPrivate)
-{
-  aWorkerPrivate->AssertIsOnWorkerThread();
-
-  JS::Rooted<JS::Value> exn(aCx);
-  if (!JS_GetPendingException(aCx, &exn)) {
-    return;
-  }
-
-  JS_ClearPendingException(aCx);
-
-  js::ErrorReport report(aCx);
-  if (!report.init(aCx, exn)) {
-    JS_ClearPendingException(aCx);
-    return;
-  }
-
-  nsRefPtr<xpc::ErrorReport> xpcReport = new xpc::ErrorReport();
-  xpcReport->Init(report.report(), report.message(),
-                  aWorkerPrivate->IsChromeWorker(), aWorkerPrivate->WindowID());
-
-  nsRefPtr<AsyncErrorReporter> r = new AsyncErrorReporter(xpcReport);
-  NS_DispatchToMainThread(r);
 }
 
 void
