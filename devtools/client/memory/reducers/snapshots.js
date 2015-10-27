@@ -38,7 +38,6 @@ handlers[actions.TAKE_CENSUS_START] = function (snapshots, action) {
   snapshot.state = states.SAVING_CENSUS;
   snapshot.census = null;
   snapshot.breakdown = action.breakdown;
-  snapshot.inverted = action.inverted;
   return [...snapshots];
 };
 
@@ -47,7 +46,6 @@ handlers[actions.TAKE_CENSUS_END] = function (snapshots, action) {
   snapshot.state = states.SAVED_CENSUS;
   snapshot.census = action.census;
   snapshot.breakdown = action.breakdown;
-  snapshot.inverted = action.inverted;
   return [...snapshots];
 };
 
