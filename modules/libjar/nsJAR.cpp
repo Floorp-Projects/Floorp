@@ -1,4 +1,5 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -1076,16 +1077,11 @@ nsZipReaderCache::Init(uint32_t cacheSize)
   return NS_OK;
 }
 
-static PLDHashOperator
-DropZipReaderCache(const nsACString &aKey, nsJAR* aZip, void*)
-{
-  aZip->SetZipReaderCache(nullptr);
-  return PL_DHASH_NEXT;
-}
-
 nsZipReaderCache::~nsZipReaderCache()
 {
-  mZips.EnumerateRead(DropZipReaderCache, nullptr);
+  for (auto iter = mZips.Iter(); !iter.Done(); iter.Next()) {
+    iter.UserData()->SetZipReaderCache(nullptr);
+  }
 
 #ifdef ZIP_CACHE_HIT_RATE
   printf("nsZipReaderCache size=%d hits=%d lookups=%d rate=%f%% flushes=%d missed %d\n",
@@ -1362,7 +1358,9 @@ nsZipReaderCache::Observe(nsISupports *aSubject,
   }
   else if (strcmp(aTopic, "chrome-flush-caches") == 0) {
     MutexAutoLock lock(mLock);
-    mZips.EnumerateRead(DropZipReaderCache, nullptr);
+    for (auto iter = mZips.Iter(); !iter.Done(); iter.Next()) {
+      iter.UserData()->SetZipReaderCache(nullptr);
+    }
     mZips.Clear();
   }
   else if (strcmp(aTopic, "flush-cache-entry") == 0) {
