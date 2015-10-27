@@ -1021,63 +1021,52 @@ nsresult nsHTMLEditor::InsertObject(const char* aType, nsISupports* aObject, boo
 {
   nsresult rv;
 
-  const char* type = aType;
+  nsAutoCString type(aType);
 
   // Check to see if we can insert an image file
   bool insertAsImage = false;
-  nsCOMPtr<nsIURI> fileURI;
-  if (0 == nsCRT::strcmp(type, kFileMime))
+  nsCOMPtr<nsIFile> fileObj;
+  if (type.EqualsLiteral(kFileMime))
   {
-    nsCOMPtr<nsIFile> fileObj = do_QueryInterface(aObject);
+    fileObj = do_QueryInterface(aObject);
     if (fileObj)
     {
-      rv = NS_NewFileURI(getter_AddRefs(fileURI), fileObj);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      nsCOMPtr<nsIMIMEService> mime = do_GetService("@mozilla.org/mime;1");
-      NS_ENSURE_TRUE(mime, NS_ERROR_FAILURE);
-      nsAutoCString contentType;
-      rv = mime->GetTypeFromFile(fileObj, contentType);
-      NS_ENSURE_SUCCESS(rv, rv);
-
       // Accept any image type fed to us
-      if (StringBeginsWith(contentType, NS_LITERAL_CSTRING("image/"))) {
+      if (nsContentUtils::IsFileImage(fileObj, type))
+      {
         insertAsImage = true;
-        type = contentType.get();
+      }
+      else
+      {
+        // Reset type.
+        type.AssignLiteral(kFileMime);
       }
     }
   }
 
-  if (0 == nsCRT::strcmp(type, kJPEGImageMime) ||
-      0 == nsCRT::strcmp(type, kJPGImageMime) ||
-      0 == nsCRT::strcmp(type, kPNGImageMime) ||
-      0 == nsCRT::strcmp(type, kGIFImageMime) ||
+  if (type.EqualsLiteral(kJPEGImageMime) ||
+      type.EqualsLiteral(kJPGImageMime) ||
+      type.EqualsLiteral(kPNGImageMime) ||
+      type.EqualsLiteral(kGIFImageMime) ||
       insertAsImage)
   {
-    nsCOMPtr<nsIInputStream> imageStream;
-    if (insertAsImage) {
-      NS_ASSERTION(fileURI, "The file URI should be retrieved earlier");
-
-      nsCOMPtr<nsIChannel> channel;
-      rv = NS_NewChannel(getter_AddRefs(channel),
-                         fileURI,
-                         nsContentUtils::GetSystemPrincipal(),
-                         nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
-                         nsIContentPolicy::TYPE_OTHER);
-      NS_ENSURE_SUCCESS(rv, rv);
-      rv = channel->Open2(getter_AddRefs(imageStream));
-      NS_ENSURE_SUCCESS(rv, rv);
-    } else {
-      imageStream = do_QueryInterface(aObject);
-      NS_ENSURE_TRUE(imageStream, NS_ERROR_FAILURE);
-    }
-
     nsCString imageData;
-    rv = NS_ConsumeStream(imageStream, UINT32_MAX, imageData);
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (insertAsImage)
+    {
+      rv = nsContentUtils::SlurpFileToString(fileObj, imageData);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+    else
+    {
+      nsCOMPtr<nsIInputStream> imageStream = do_QueryInterface(aObject);
+      NS_ENSURE_TRUE(imageStream, NS_ERROR_FAILURE);
 
-    rv = imageStream->Close();
-    NS_ENSURE_SUCCESS(rv, rv);
+      rv = NS_ConsumeStream(imageStream, UINT32_MAX, imageData);
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      rv = imageStream->Close();
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
 
     nsAutoCString data64;
     rv = Base64Encode(imageData, data64);
