@@ -15,6 +15,7 @@ import org.mozilla.gecko.Tabs.TabEvents;
 import org.mozilla.gecko.animation.PropertyAnimator;
 import org.mozilla.gecko.animation.TransitionsTracker;
 import org.mozilla.gecko.animation.ViewHelper;
+import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.db.BrowserContract.Combined;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.db.SuggestedSites;
@@ -3567,6 +3568,7 @@ public class BrowserApp extends GeckoApp
                 // We only want to show the prompt if the browser has been opened from an external url
                 if (TabQueueHelper.TAB_QUEUE_ENABLED && mInitialized
                                                      && Intent.ACTION_VIEW.equals(intent.getAction())
+                                                     && !intent.getBooleanExtra(BrowserContract.SKIP_TAB_QUEUE_FLAG, false)
                                                      && TabQueueHelper.shouldShowTabQueuePrompt(BrowserApp.this)) {
                     Intent promptIntent = new Intent(BrowserApp.this, TabQueuePrompt.class);
                     startActivityForResult(promptIntent, ACTIVITY_REQUEST_TAB_QUEUE);
