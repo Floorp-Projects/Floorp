@@ -2,8 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-mobile-tests := mobile/android/tests/browser/robocop
-TESTPATH     := $(topsrcdir)/$(mobile-tests)
+TESTPATH     := $(topsrcdir)/mobile/android/tests/browser/robocop/src/androidTest/java/org/mozilla/gecko/tests
 
 ANDROID_EXTRA_JARS += \
   $(srcdir)/robotium-solo-4.3.1.jar \
