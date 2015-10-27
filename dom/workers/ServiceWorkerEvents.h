@@ -35,8 +35,6 @@ class ResponseOrPromise;
 
 BEGIN_WORKERS_NAMESPACE
 
-class ServiceWorkerClient;
-
 class CancelChannelRunnable final : public nsRunnable
 {
   nsMainThreadPtrHandle<nsIInterceptedChannel> mChannel;
@@ -46,78 +44,6 @@ public:
                         nsresult aStatus);
 
   NS_IMETHOD Run() override;
-};
-
-class FetchEvent final : public Event
-{
-  nsMainThreadPtrHandle<nsIInterceptedChannel> mChannel;
-  RefPtr<ServiceWorkerClient> mClient;
-  RefPtr<Request> mRequest;
-  nsCString mScriptSpec;
-  UniquePtr<ServiceWorkerClientInfo> mClientInfo;
-  RefPtr<Promise> mPromise;
-  bool mIsReload;
-  bool mWaitToRespond;
-protected:
-  explicit FetchEvent(EventTarget* aOwner);
-  ~FetchEvent();
-
-public:
-  NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(FetchEvent, Event)
-  NS_FORWARD_TO_EVENT
-
-  virtual JSObject* WrapObjectInternal(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override
-  {
-    return FetchEventBinding::Wrap(aCx, this, aGivenProto);
-  }
-
-  void PostInit(nsMainThreadPtrHandle<nsIInterceptedChannel>& aChannel,
-                const nsACString& aScriptSpec,
-                UniquePtr<ServiceWorkerClientInfo>&& aClientInfo);
-
-  static already_AddRefed<FetchEvent>
-  Constructor(const GlobalObject& aGlobal,
-              const nsAString& aType,
-              const FetchEventInit& aOptions,
-              ErrorResult& aRv);
-
-  bool
-  WaitToRespond() const
-  {
-    return mWaitToRespond;
-  }
-
-  Request*
-  Request_() const
-  {
-    return mRequest;
-  }
-
-  already_AddRefed<ServiceWorkerClient>
-  GetClient();
-
-  bool
-  IsReload() const
-  {
-    return mIsReload;
-  }
-
-  void
-  RespondWith(Promise& aArg, ErrorResult& aRv);
-
-  already_AddRefed<Promise>
-  GetPromise() const
-  {
-    RefPtr<Promise> p = mPromise;
-    return p.forget();
-  }
-
-  already_AddRefed<Promise>
-  ForwardTo(const nsAString& aUrl);
-
-  already_AddRefed<Promise>
-  Default();
 };
 
 class ExtendableEvent : public Event
@@ -170,6 +96,72 @@ public:
   {
     return this;
   }
+};
+
+class FetchEvent final : public ExtendableEvent
+{
+  nsMainThreadPtrHandle<nsIInterceptedChannel> mChannel;
+  RefPtr<Request> mRequest;
+  nsCString mScriptSpec;
+  RefPtr<Promise> mPromise;
+  bool mIsReload;
+  bool mWaitToRespond;
+protected:
+  explicit FetchEvent(EventTarget* aOwner);
+  ~FetchEvent();
+
+public:
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(FetchEvent, ExtendableEvent)
+  NS_FORWARD_TO_EVENT
+
+  virtual JSObject* WrapObjectInternal(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override
+  {
+    return FetchEventBinding::Wrap(aCx, this, aGivenProto);
+  }
+
+  void PostInit(nsMainThreadPtrHandle<nsIInterceptedChannel>& aChannel,
+                const nsACString& aScriptSpec);
+
+  static already_AddRefed<FetchEvent>
+  Constructor(const GlobalObject& aGlobal,
+              const nsAString& aType,
+              const FetchEventInit& aOptions,
+              ErrorResult& aRv);
+
+  bool
+  WaitToRespond() const
+  {
+    return mWaitToRespond;
+  }
+
+  Request*
+  GetRequest_() const
+  {
+    return mRequest;
+  }
+
+  bool
+  IsReload() const
+  {
+    return mIsReload;
+  }
+
+  void
+  RespondWith(Promise& aArg, ErrorResult& aRv);
+
+  already_AddRefed<Promise>
+  GetPromise() const
+  {
+    RefPtr<Promise> p = mPromise;
+    return p.forget();
+  }
+
+  already_AddRefed<Promise>
+  ForwardTo(const nsAString& aUrl);
+
+  already_AddRefed<Promise>
+  Default();
 };
 
 #ifndef MOZ_SIMPLEPUSH

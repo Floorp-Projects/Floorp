@@ -19,8 +19,8 @@ printStatus (summary);
 jit(true);
 
 var a = [];
-let(
-f = function() {
+{
+let f = function() {
     for (let x = 0; x < 4; ++x) {
         (function() {
             for (let y = 0; y < 2; ++y) {
@@ -28,7 +28,7 @@ f = function() {
             }
         })()
     }
-}) { (function() {})()
+}; (function() {})()
     f(99)
 }
 actual = '' + a;

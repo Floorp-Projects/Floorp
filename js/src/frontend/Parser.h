@@ -682,7 +682,6 @@ class Parser : private JS::AutoGCRooter, public StrictModeGetter
     Node debuggerStatement();
 
     Node lexicalDeclaration(YieldHandling yieldHandling, bool isConst);
-    Node letDeclarationOrBlock(YieldHandling yieldHandling);
     Node importDeclaration();
     Node exportDeclaration();
     Node expressionStatement(YieldHandling yieldHandling,
@@ -755,7 +754,6 @@ class Parser : private JS::AutoGCRooter, public StrictModeGetter
     Node generatorComprehension(uint32_t begin);
 
     bool argumentList(YieldHandling yieldHandling, Node listNode, bool* isSpread);
-    Node deprecatedLetBlock(YieldHandling yieldHandling);
     Node destructuringExpr(YieldHandling yieldHandling, BindData<ParseHandler>* data,
                            TokenKind tt);
     Node destructuringExprWithoutYield(YieldHandling yieldHandling, BindData<ParseHandler>* data,

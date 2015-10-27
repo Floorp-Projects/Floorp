@@ -64,9 +64,6 @@ add_task(function* test_expiration_history_observer() {
     makeWebSocket(uri) {
       return new MockWebSocket(uri, {
         onHello(request) {
-          deepEqual(request.channelIDs, [
-            '379c0668-8323-44d2-a315-4ee83f1a9ee9',
-          ], 'Should not include expired channel IDs');
           this.serverSendMsg(JSON.stringify({
             messageType: 'hello',
             status: 200,

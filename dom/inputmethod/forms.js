@@ -261,7 +261,7 @@ var FormVisibility = {
     // we also care about the window this is the more
     // common case where the content is larger then
     // the viewport/screen.
-    if (win.scrollMaxX || win.scrollMaxY) {
+    if (win.scrollMaxX != win.scrollMinX || win.scrollMaxY != win.scrollMinY) {
       return win;
     }
 

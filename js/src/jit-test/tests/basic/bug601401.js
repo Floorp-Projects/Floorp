@@ -1,5 +1,6 @@
-let(e) {
+{
+    let e;
     with({}) try {} catch (x) {} finally {
-        let(y) {}
+        { let y; }
     }
 }

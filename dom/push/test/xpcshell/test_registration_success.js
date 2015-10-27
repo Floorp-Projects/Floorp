@@ -51,11 +51,6 @@ add_task(function* test_registration_success() {
       return new MockWebSocket(uri, {
         onHello(request) {
           equal(request.uaid, userAgentID, 'Wrong device ID in handshake');
-          deepEqual(request.channelIDs.sort(), [
-            'b1cf38c9-6836-4d29-8a30-a3e98d59b728',
-            'bf001fe0-2684-42f2-bc4d-a3e14b11dd5b',
-            'f6edfbcd-79d6-49b8-9766-48b9dcfeff0f',
-          ], 'Wrong channel list in handshake');
           this.serverSendMsg(JSON.stringify({
             messageType: 'hello',
             status: 200,

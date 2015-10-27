@@ -7,7 +7,8 @@
 #ifndef nsNSSDialogHelper_h
 #define nsNSSDialogHelper_h
 
-#include "nsIDOMWindow.h"
+class nsIDOMWindow;
+class nsISupports;
 
 /**
  * Common class that uses the window watcher service to open a
@@ -18,13 +19,9 @@
 class nsNSSDialogHelper
 {
 public:
-  //The params is going to be either a nsIPKIParamBlock or
-  //nsIDialogParamBlock
-  static nsresult openDialog(
-                  nsIDOMWindow *window,
-                  const char *url,
-                  nsISupports *params,
-                  bool modal = true);
+  // params is a nsIDialogParamBlock or a nsIKeygenThread
+  static nsresult openDialog(nsIDOMWindow* window, const char* url,
+                             nsISupports* params, bool modal = true);
 };
 
 #endif

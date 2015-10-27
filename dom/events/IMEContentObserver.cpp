@@ -24,6 +24,7 @@
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMRange.h"
+#include "nsIEditorIMESupport.h"
 #include "nsIFrame.h"
 #include "nsINode.h"
 #include "nsIPresShell.h"
@@ -589,6 +590,25 @@ IMEContentObserver::IsEditorHandlingEventForComposition() const
   return composition->IsEditorHandlingEvent();
 }
 
+bool
+IMEContentObserver::IsEditorComposing() const
+{
+  // Note that don't use TextComposition here. The important thing is,
+  // whether the editor already started to handle composition because
+  // web contents can change selection, text content and/or something from
+  // compositionstart event listener which is run before nsEditor handles it.
+  nsCOMPtr<nsIEditorIMESupport> editorIMESupport = do_QueryInterface(mEditor);
+  if (NS_WARN_IF(!editorIMESupport)) {
+    return false;
+  }
+  bool isComposing = false;
+  nsresult rv = editorIMESupport->GetComposing(&isComposing);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return false;
+  }
+  return isComposing;
+}
+
 nsresult
 IMEContentObserver::GetSelectionAndRoot(nsISelection** aSelection,
                                         nsIContent** aRootContent) const
@@ -614,8 +634,10 @@ IMEContentObserver::NotifySelectionChanged(nsIDOMDocument* aDOMDocument,
   if (count > 0 && mWidget) {
     bool causedByComposition = IsEditorHandlingEventForComposition();
     bool causedBySelectionEvent = TextComposition::IsHandlingSelectionEvent();
+    bool duringComposition = IsEditorComposing();
     MaybeNotifyIMEOfSelectionChange(causedByComposition,
-                                    causedBySelectionEvent);
+                                    causedBySelectionEvent,
+                                    duringComposition);
   }
   return NS_OK;
 }
@@ -825,7 +847,8 @@ IMEContentObserver::CharacterDataChanged(nsIDocument* aDocument,
   uint32_t oldEnd = offset + static_cast<uint32_t>(removedLength);
   uint32_t newEnd = offset + newLength;
 
-  TextChangeData data(offset, oldEnd, newEnd, causedByComposition);
+  TextChangeData data(offset, oldEnd, newEnd, causedByComposition,
+                      IsEditorComposing());
   MaybeNotifyIMEOfTextChange(data);
 }
 
@@ -878,7 +901,7 @@ IMEContentObserver::NotifyContentAdded(nsINode* aContainer,
   }
 
   TextChangeData data(offset, offset, offset + addingLength,
-                      causedByComposition);
+                      causedByComposition, IsEditorComposing());
   MaybeNotifyIMEOfTextChange(data);
 }
 
@@ -955,7 +978,8 @@ IMEContentObserver::ContentRemoved(nsIDocument* aDocument,
     return;
   }
 
-  TextChangeData data(offset, offset + textLength, offset, causedByComposition);
+  TextChangeData data(offset, offset + textLength, offset,
+                      causedByComposition, IsEditorComposing());
   MaybeNotifyIMEOfTextChange(data);
 }
 
@@ -1017,7 +1041,8 @@ IMEContentObserver::AttributeChanged(nsIDocument* aDocument,
   NS_ENSURE_SUCCESS_VOID(rv);
 
   TextChangeData data(start, start + mPreAttrChangeLength,
-                      start + postAttrChangeLength, causedByComposition);
+                      start + postAttrChangeLength, causedByComposition,
+                      IsEditorComposing());
   MaybeNotifyIMEOfTextChange(data);
 }
 
@@ -1140,15 +1165,18 @@ IMEContentObserver::MaybeNotifyIMEOfTextChange(
 void
 IMEContentObserver::MaybeNotifyIMEOfSelectionChange(
                       bool aCausedByComposition,
-                      bool aCausedBySelectionEvent)
+                      bool aCausedBySelectionEvent,
+                      bool aOccurredDuringComposition)
 {
   MOZ_LOG(sIMECOLog, LogLevel::Debug,
     ("IMECO: 0x%p IMEContentObserver::MaybeNotifyIMEOfSelectionChange("
-     "aCausedByComposition=%s, aCausedBySelectionEvent=%s)",
+     "aCausedByComposition=%s, aCausedBySelectionEvent=%s, "
+     "aOccurredDuringComposition)",
      this, ToChar(aCausedByComposition), ToChar(aCausedBySelectionEvent)));
 
   mSelectionData.AssignReason(aCausedByComposition,
-                              aCausedBySelectionEvent);
+                              aCausedBySelectionEvent,
+                              aOccurredDuringComposition);
   PostSelectionChangeNotification();
   FlushMergeableNotifications();
 }

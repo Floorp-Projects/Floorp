@@ -13,7 +13,7 @@
 #include "jit/JitFrames.h"
 #include "jit/JitSpewer.h"
 #include "jit/Linker.h"
-#include "jit/mips-shared/Bailouts-mips-shared.h"
+#include "jit/mips32/Bailouts-mips32.h"
 #include "jit/mips32/SharedICHelpers-mips32.h"
 #ifdef JS_ION_PERF
 # include "jit/PerfSpewer.h"
@@ -557,10 +557,8 @@ JitRuntime::generateArgumentsRectifier(JSContext* cx, void** returnAddrOut)
     AutoFlushICache afc("ArgumentsRectifier");
     JitCode* code = linker.newCode<NoGC>(cx, OTHER_CODE);
 
-    CodeOffsetLabel returnLabel(returnOffset);
-    returnLabel.fixup(&masm);
     if (returnAddrOut)
-        *returnAddrOut = (void*) (code->raw() + returnLabel.offset());
+        *returnAddrOut = (void*) (code->raw() + returnOffset);
 
 #ifdef JS_ION_PERF
     writePerfSpewerJitCodeProfile(code, "ArgumentsRectifier");
