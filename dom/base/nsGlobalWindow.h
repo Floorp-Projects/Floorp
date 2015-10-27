@@ -1081,6 +1081,8 @@ public:
   float GetDevicePixelRatioOuter();
   float GetDevicePixelRatio(mozilla::ErrorResult& aError);
   nsresult GetDevicePixelRatio(float* aRatio) override;
+  int32_t GetScrollMinX(mozilla::ErrorResult& aError);
+  int32_t GetScrollMinY(mozilla::ErrorResult& aError);
   int32_t GetScrollMaxX(mozilla::ErrorResult& aError);
   int32_t GetScrollMaxY(mozilla::ErrorResult& aError);
   bool GetFullScreenOuter();
@@ -1506,9 +1508,7 @@ public:
   // Outer windows only.
   mozilla::CSSIntPoint GetScrollXY(bool aDoFlush);
 
-  void GetScrollMaxXYOuter(int32_t* aScrollMaxX, int32_t* aScrollMaxY);
-  void GetScrollMaxXY(int32_t* aScrollMaxX, int32_t* aScrollMaxY,
-                      mozilla::ErrorResult& aError);
+  int32_t GetScrollBoundaryOuter(mozilla::Side aSide);
 
   // Outer windows only.
   nsresult GetInnerSize(mozilla::CSSIntSize& aSize);
