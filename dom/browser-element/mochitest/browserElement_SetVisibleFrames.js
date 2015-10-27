@@ -18,11 +18,9 @@ var iframe;
 
 function runTest() {
   var principal = SpecialPowers.wrap(document).nodePrincipal;
-  SpecialPowers.addPermission("browser", true, {url: SpecialPowers.wrap(principal.URI).spec,
-                                                originAttributes: {
-                                                  appId: principal.appId,
-                                                  inBrowser: true
-                                                }});
+  SpecialPowers.addPermission("browser", true, { url: SpecialPowers.wrap(principal.URI).spec,
+                                                 appId: principal.appId,
+                                                 isInBrowserElement: true });
 
   iframe = document.createElement('iframe');
   iframe.setAttribute('mozbrowser', 'true');
@@ -77,11 +75,10 @@ function finish() {
   iframe.removeEventListener('mozbrowsershowmodalprompt', checkMessage);
 
   var principal = SpecialPowers.wrap(document).nodePrincipal;
-  SpecialPowers.removePermission("browser", {url: SpecialPowers.wrap(principal.URI).spec,
-                                             originAttributes: {
-                                               appId: principal.appId,
-                                               inBrowser: true
-                                             }});
+  SpecialPowers.removePermission("browser", { url: SpecialPowers.wrap(principal.URI).spec,
+                                              appId: principal.appId,
+                                              isInBrowserElement: true });
+
   SimpleTest.finish();
 }
 

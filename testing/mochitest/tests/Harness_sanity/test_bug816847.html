@@ -57,7 +57,8 @@ function starttest(){
   SpecialPowers.addPermission(perms[0], true, origin);
   SpecialPowers.addPermission(perms[1], true, {manifestURL: manifest});
   SpecialPowers.addPermission(perms[2], true, document);
-  SpecialPowers.addPermission(perms[3], true, {url: origin});
+  SpecialPowers.addPermission(perms[3], true, {url: origin,
+                                               appId: Ci.nsIScriptSecurityManager.NO_APP_ID});
 
   is(Services.perms.testPermissionFromPrincipal(noappPrincipal, perms[0]),
      allow, "Set permission by string");
@@ -73,7 +74,8 @@ function starttest(){
   SpecialPowers.removePermission(perms[0], origin);
   SpecialPowers.removePermission(perms[1], {manifestURL: manifest});
   SpecialPowers.removePermission(perms[2], document);
-  SpecialPowers.removePermission(perms[3], {url: origin});
+  SpecialPowers.removePermission(perms[3], {url: origin,
+                                            appId: Ci.nsIScriptSecurityManager.NO_APP_ID});
 
   is(Services.perms.testPermissionFromPrincipal(noappPrincipal, perms[0]),
      unknown, "Removed permission by string");

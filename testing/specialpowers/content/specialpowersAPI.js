@@ -786,7 +786,7 @@ SpecialPowersAPI.prototype = {
           originalValue = Ci.nsICookiePermission.ACCESS_LIMIT_THIRD_PARTY;
         }
 
-        let [principal, isSystem] = this._getInfoFromPermissionArg(context);
+        let [url, appId, isInBrowserElement, isSystem] = this._getInfoFromPermissionArg(context);
         if (isSystem) {
           continue;
         }
@@ -810,7 +810,9 @@ SpecialPowersAPI.prototype = {
                     'type': permission.type,
                     'permission': perm,
                     'value': perm,
-                    'principal': principal,
+                    'url': url,
+                    'appId': appId,
+                    'isInBrowserElement': isInBrowserElement,
                     'expireType': (typeof permission.expireType === "number") ?
                       permission.expireType : 0, // default: EXPIRE_NEVER
                     'expireTime': (typeof permission.expireTime === "number") ?
@@ -965,7 +967,7 @@ SpecialPowersAPI.prototype = {
           for (var j = 0; j < undos.length; j++) {
             var undo = undos[j];
             if (undo.op == this._obsDataMap[aData] &&
-                undo.principal.originAttributes.appId == permission.principal.originAttributes.appId &&
+                undo.appId == permission.principal.appId &&
                 undo.type == permission.type) {
               // Remove this undo item if it has been done by others(not
               // specialpowers itself.)
@@ -1819,43 +1821,55 @@ SpecialPowersAPI.prototype = {
   },
 
   _getInfoFromPermissionArg: function(arg) {
-    let principal;
+    let url = "";
+    let appId = Ci.nsIScriptSecurityManager.NO_APP_ID;
+    let isInBrowserElement = false;
     let isSystem = false;
-    let secMan = Services.scriptSecurityManager;
 
     if (typeof(arg) == "string") {
       // It's an URL.
-      let uri = Services.io.newURI(arg, null, null);
-      principal = secMan.createCodebasePrincipal(uri, {});
+      url = Cc["@mozilla.org/network/io-service;1"]
+              .getService(Ci.nsIIOService)
+              .newURI(arg, null, null)
+              .spec;
     } else if (arg.manifestURL) {
       // It's a thing representing an app.
       let appsSvc = Cc["@mozilla.org/AppsService;1"]
                       .getService(Ci.nsIAppsService)
       let app = appsSvc.getAppByManifestURL(arg.manifestURL);
+
       if (!app) {
         throw "No app for this manifest!";
       }
 
-      principal = app.principal;
+      appId = appsSvc.getAppLocalIdByManifestURL(arg.manifestURL);
+      url = app.origin;
+      isInBrowserElement = arg.isInBrowserElement || false;
     } else if (arg.nodePrincipal) {
       // It's a document.
       isSystem = (arg.nodePrincipal instanceof Ci.nsIPrincipal) &&
-                 Cc["@mozilla.org/scriptsecuritymanager;1"]
-                   .getService(Ci.nsIScriptSecurityManager)
-                   .isSystemPrincipal(arg.nodePrincipal);
-      // some tests the arg is a wrapped DOM element, so we unwrap it first.
-      principal = unwrapIfWrapped(arg).nodePrincipal;
+                 Cc["@mozilla.org/scriptsecuritymanager;1"].
+                 getService(Ci.nsIScriptSecurityManager).
+                 isSystemPrincipal(arg.nodePrincipal);
+      if (!isSystem) {
+        // System principals don't have a URL associated with them, and they
+        // don't really need any permissions to be registered with the
+        // permission manager anyway.
+        url = arg.nodePrincipal.URI.spec;
+        appId = arg.nodePrincipal.appId;
+        isInBrowserElement = arg.nodePrincipal.isInBrowserElement;
+      }
     } else {
-      let uri = Services.io.newURI(arg.url, null, null);
-      let attrs = arg.originAttributes || {};
-      principal = secMan.createCodebasePrincipal(uri, attrs);
+      url = arg.url;
+      appId = arg.appId;
+      isInBrowserElement = arg.isInBrowserElement;
     }
 
-    return [ principal, isSystem ];
+    return [ url, appId, isInBrowserElement, isSystem ];
   },
 
   addPermission: function(type, allow, arg, expireType, expireTime) {
-    let [principal, isSystem] = this._getInfoFromPermissionArg(arg);
+    let [url, appId, isInBrowserElement, isSystem] = this._getInfoFromPermissionArg(arg);
     if (isSystem) {
       return; // nothing to do
     }
@@ -1872,7 +1886,9 @@ SpecialPowersAPI.prototype = {
       'op': 'add',
       'type': type,
       'permission': permission,
-      'principal': principal,
+      'url': url,
+      'appId': appId,
+      'isInBrowserElement': isInBrowserElement,
       'expireType': (typeof expireType === "number") ? expireType : 0,
       'expireTime': (typeof expireTime === "number") ? expireTime : 0
     };
@@ -1881,7 +1897,7 @@ SpecialPowersAPI.prototype = {
   },
 
   removePermission: function(type, arg) {
-    let [principal, isSystem] = this._getInfoFromPermissionArg(arg);
+    let [url, appId, isInBrowserElement, isSystem] = this._getInfoFromPermissionArg(arg);
     if (isSystem) {
       return; // nothing to do
     }
@@ -1889,14 +1905,16 @@ SpecialPowersAPI.prototype = {
     var msg = {
       'op': 'remove',
       'type': type,
-      'principal': principal
+      'url': url,
+      'appId': appId,
+      'isInBrowserElement': isInBrowserElement
     };
 
     this._sendSyncMessage('SPPermissionManager', msg);
   },
 
   hasPermission: function (type, arg) {
-    let [principal, isSystem] = this._getInfoFromPermissionArg(arg);
+    let [url, appId, isInBrowserElement, isSystem] = this._getInfoFromPermissionArg(arg);
     if (isSystem) {
       return true; // system principals have all permissions
     }
@@ -1904,14 +1922,15 @@ SpecialPowersAPI.prototype = {
     var msg = {
       'op': 'has',
       'type': type,
-      'principal': principal
+      'url': url,
+      'appId': appId,
+      'isInBrowserElement': isInBrowserElement
     };
 
     return this._sendSyncMessage('SPPermissionManager', msg)[0];
   },
-
   testPermission: function (type, value, arg) {
-    let [principal, isSystem] = this._getInfoFromPermissionArg(arg);
+    let [url, appId, isInBrowserElement, isSystem] = this._getInfoFromPermissionArg(arg);
     if (isSystem) {
       return true; // system principals have all permissions
     }
@@ -1919,8 +1938,10 @@ SpecialPowersAPI.prototype = {
     var msg = {
       'op': 'test',
       'type': type,
-      'value': value,
-      'principal': principal
+      'value': value, 
+      'url': url,
+      'appId': appId,
+      'isInBrowserElement': isInBrowserElement
     };
     return this._sendSyncMessage('SPPermissionManager', msg)[0];
   },
@@ -1945,20 +1966,28 @@ SpecialPowersAPI.prototype = {
     this._sendSyncMessage('SPObserverService', msg);
   },
 
-  clearStorageForDoc: function(wrappedDocument, callback) {
-    this._quotaManagerRequest('clear', wrappedDocument, callback);
+  clearStorageForURI: function(uri, callback, appId, inBrowser) {
+    this._quotaManagerRequest('clear', uri, appId, inBrowser, callback);
   },
 
-  getStorageUsageForDoc: function(wrappedDocument, callback) {
-    this._quotaManagerRequest('getUsage', wrappedDocument, callback);
+  getStorageUsageForURI: function(uri, callback, appId, inBrowser) {
+    this._quotaManagerRequest('getUsage', uri, appId, inBrowser, callback);
   },
 
-  resetStorageForDoc: function(wrappedDocument, callback) {
-    this._quotaManagerRequest('reset', wrappedDocument, callback);
+  // Technically this restarts the QuotaManager for all URIs, but we need
+  // a specific one to perform the synchronized callback when the reset is
+  // complete.
+  resetStorageForURI: function(uri, callback, appId, inBrowser) {
+    this._quotaManagerRequest('reset', uri, appId, inBrowser, callback);
   },
 
-  _quotaManagerRequest: function(op, wrappedDocument, callback) {
+  _quotaManagerRequest: function(op, uri, appId, inBrowser, callback) {
     const messageTopic = "SPQuotaManager";
+
+    if (uri instanceof Ci.nsIURI) {
+      uri = uri.spec;
+    }
+
     const id = Cc["@mozilla.org/uuid-generator;1"]
                  .getService(Ci.nsIUUIDGenerator)
                  .generateUUID()
@@ -1995,8 +2024,7 @@ SpecialPowersAPI.prototype = {
       this._quotaManagerCallbackInfos = [ callbackInfo ];
     }
 
-    let principal = unwrapIfWrapped(wrappedDocument).nodePrincipal;
-    let msg = { op: op, principal: principal, id: id };
+    let msg = { op: op, uri: uri, appId: appId, inBrowser: inBrowser, id: id };
     this._sendAsyncMessage(messageTopic, msg);
   },
 

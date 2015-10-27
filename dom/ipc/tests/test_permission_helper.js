@@ -53,7 +53,8 @@ function test1() {
 
   if (!SpecialPowers.hasPermission( PERMISSION_TYPE,
                                     { url: APP_URL,
-                                      originAttributes: { appId: appId }})) {
+                                      appId: appId,
+                                      isInBrowserElement: false })) {
     errorHandler('[test 1] App should have permission: ' + PERMISSION_TYPE);
   }
 
@@ -81,7 +82,8 @@ function test2() {
 
   if (!SpecialPowers.hasPermission( PERMISSION_TYPE,
                                     { url: APP_URL,
-                                      originAttributes: { appId: appId }})) {
+                                      appId: appId,
+                                      isInBrowserElement: false })) {
     errorHandler('[test 2] App should have permission: ' + PERMISSION_TYPE);
   }
 
@@ -109,7 +111,8 @@ function test3() {
 
   if (!SpecialPowers.hasPermission(PERMISSION_TYPE,
                                    { url: APP_URL,
-                                     originAttributes: { appId: appId }})) {
+                                     appId: appId,
+                                     isInBrowserElement: false })) {
     errorHandler('[test 3] App should have permission: ' + PERMISSION_TYPE);
   }
 }
@@ -145,7 +148,8 @@ function test4() {
 
   if (!SpecialPowers.hasPermission(PERMISSION_TYPE,
                                    { url: APP_URL,
-                                     originAttributes: { appId: appId }})) {
+                                     appId: appId,
+                                     isInBrowserElement: false })) {
     errorHandler('[test 4] App should have permission: ' + PERMISSION_TYPE);
   }
 }
@@ -170,7 +174,8 @@ function test5() {
 
   if (!SpecialPowers.hasPermission( PERMISSION_TYPE,
                                     { url: APP_URL,
-                                      originAttributes: { appId: appId }})) {
+                                      appId: appId,
+                                      isInBrowserElement: false })) {
     errorHandler('[test 5] App should have permission: ' + PERMISSION_TYPE);
   }
 
@@ -285,7 +290,8 @@ function addPermissionToApp(appURL, manifestURL) {
         "expireType":permManager.EXPIRE_SESSION,
         "expireTime":now + SESSION_PERSIST_MINUTES*60*1000,
         "context": { url: appURL,
-                     originAttributes: { appId: appId } }
+                     appId: appId,
+                     isInBrowserElement:false }
       }
     ], function() {
       runTests();
@@ -297,7 +303,8 @@ function runNextIfAppHasPermission(round, expect, appURL, manifestURL) {
 
   var hasPerm = SpecialPowers.hasPermission(PERMISSION_TYPE,
                                             { url: appURL,
-                                              originAttributes: { appId: appId }});
+                                              appId: appId,
+                                              isInBrowserElement: false });
   var result = (expect==hasPerm);
   if (result) {
     runTests();
