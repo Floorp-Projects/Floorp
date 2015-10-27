@@ -1687,7 +1687,21 @@ RuntimeService::UnregisterWorker(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
     parent->RemoveChildWorker(aCx, aWorkerPrivate);
   }
   else if (aWorkerPrivate->IsSharedWorker()) {
-    mWindowMap.Enumerate(RemoveSharedWorkerFromWindowMap, aWorkerPrivate);
+    AssertIsOnMainThread();
+
+    for (auto iter = mWindowMap.Iter(); !iter.Done(); iter.Next()) {
+      nsAutoPtr<nsTArray<WorkerPrivate*>>& workers = iter.Data();
+      MOZ_ASSERT(workers.get());
+
+      if (workers->RemoveElement(aWorkerPrivate)) {
+        MOZ_ASSERT(!workers->Contains(aWorkerPrivate),
+                   "Added worker more than once!");
+
+        if (workers->IsEmpty()) {
+          iter.Remove();
+        }
+      }
+    }
   }
   else if (aWorkerPrivate->IsDedicatedWorker()) {
     // May be null.
@@ -2158,32 +2172,6 @@ RuntimeService::AddAllTopLevelWorkersToArray(nsTArray<WorkerPrivate*>& aWorkers)
       }
     }
   }
-}
-
-// static
-PLDHashOperator
-RuntimeService::RemoveSharedWorkerFromWindowMap(
-                                  nsPIDOMWindow* aKey,
-                                  nsAutoPtr<nsTArray<WorkerPrivate*> >& aData,
-                                  void* aUserArg)
-{
-  AssertIsOnMainThread();
-  MOZ_ASSERT(aData.get());
-  MOZ_ASSERT(aUserArg);
-
-  auto workerPrivate = static_cast<WorkerPrivate*>(aUserArg);
-
-  MOZ_ASSERT(workerPrivate->IsSharedWorker());
-
-  if (aData->RemoveElement(workerPrivate)) {
-    MOZ_ASSERT(!aData->Contains(workerPrivate), "Added worker more than once!");
-
-    if (aData->IsEmpty()) {
-      return PL_DHASH_REMOVE;
-    }
-  }
-
-  return PL_DHASH_NEXT;
 }
 
 void
