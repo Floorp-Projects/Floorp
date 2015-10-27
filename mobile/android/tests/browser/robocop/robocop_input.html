@@ -5,13 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
   </head>
   <body onload="fillInput()">
-    <input id="input">
+    <p><input id="input" type="text"></p>
+    <p><input id="resetting-input" type="text"></p>
     <script>
       function fillInput() {
         // fill the input with the URL hash if provided
         var input = document.getElementById("input");
         input.value = window.location.hash.slice(1); // remove leading #
         input.focus();
+
+        // An input that resets the editor on every input by resetting the value property.
+        var resetting_input = document.getElementById("resetting-input");
+        resetting_input.addEventListener('input', function () {
+            this.value = this.value;
+        });
       }
     </script>
   </body>
