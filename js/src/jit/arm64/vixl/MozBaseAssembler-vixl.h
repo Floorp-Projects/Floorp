@@ -188,9 +188,6 @@ class MozBaseAssembler : public js::jit::AssemblerShared {
   js::jit::CompactBufferWriter dataRelocations_;
   js::jit::CompactBufferWriter relocations_;
   js::jit::CompactBufferWriter preBarriers_;
-
-  // Literal pools.
-  mozilla::Array<js::jit::Pool, 4> pools_;
 };
 
 
