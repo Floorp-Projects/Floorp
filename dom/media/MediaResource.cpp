@@ -7,6 +7,7 @@
 #include "mozilla/DebugOnly.h"
 
 #include "MediaResource.h"
+#include "MediaResourceCallback.h"
 #include "RtspMediaResource.h"
 
 #include "mozilla/Mutex.h"
@@ -65,11 +66,11 @@ NS_IMPL_ADDREF(MediaResource)
 NS_IMPL_RELEASE_WITH_DESTROY(MediaResource, Destroy())
 NS_IMPL_QUERY_INTERFACE0(MediaResource)
 
-ChannelMediaResource::ChannelMediaResource(MediaDecoder* aDecoder,
+ChannelMediaResource::ChannelMediaResource(MediaResourceCallback* aCallback,
                                            nsIChannel* aChannel,
                                            nsIURI* aURI,
                                            const nsACString& aContentType)
-  : BaseMediaResource(aDecoder, aChannel, aURI, aContentType),
+  : BaseMediaResource(aCallback, aChannel, aURI, aContentType),
     mOffset(0),
     mReopenOnError(false),
     mIgnoreClose(false),
@@ -161,7 +162,7 @@ ChannelMediaResource::OnStartRequest(nsIRequest* aRequest)
 {
   NS_ASSERTION(mChannel.get() == aRequest, "Wrong channel!");
 
-  MediaDecoderOwner* owner = mDecoder->GetMediaOwner();
+  MediaDecoderOwner* owner = mCallback->GetMediaOwner();
   NS_ENSURE_TRUE(owner, NS_ERROR_FAILURE);
   dom::HTMLMediaElement* element = owner->GetMediaElement();
   NS_ENSURE_TRUE(element, NS_ERROR_FAILURE);
@@ -183,7 +184,7 @@ ChannelMediaResource::OnStartRequest(nsIRequest* aRequest)
     // If the request was cancelled by nsCORSListenerProxy due to failing
     // the CORS security check, send an error through to the media element.
     if (status == NS_ERROR_DOM_BAD_URI) {
-      mDecoder->NetworkError();
+      mCallback->NotifyNetworkError();
       return NS_ERROR_DOM_BAD_URI;
     }
   }
@@ -211,7 +212,7 @@ ChannelMediaResource::OnStartRequest(nsIRequest* aRequest)
         // work here.
         mCacheStream.NotifyDataEnded(status);
       } else {
-        mDecoder->NetworkError();
+        mCallback->NotifyNetworkError();
       }
 
       // This disconnects our listener so we don't get any more data. We
@@ -249,8 +250,8 @@ ChannelMediaResource::OnStartRequest(nsIRequest* aRequest)
         // Content-Range header text should be parse-able.
         CMLOG("Error processing \'Content-Range' for "
               "HTTP_PARTIAL_RESPONSE_CODE: rv[%x] channel[%p] decoder[%p]",
-              rv, hc.get(), mDecoder);
-        mDecoder->NetworkError();
+              rv, hc.get(), mCallback);
+        mCallback->NotifyNetworkError();
         CloseChannel();
         return NS_OK;
       }
@@ -307,7 +308,7 @@ ChannelMediaResource::OnStartRequest(nsIRequest* aRequest)
       dataIsBounded = true;
     }
 
-    mDecoder->SetInfinite(!dataIsBounded);
+    mCallback->SetInfinite(!dataIsBounded);
   }
   mCacheStream.SetTransportSeekable(seekable);
 
@@ -377,7 +378,7 @@ ChannelMediaResource::ParseContentRangeHeader(nsIHttpChannel * aHttpChan,
   }
 
   CMLOG("Received bytes [%lld] to [%lld] of [%lld] for decoder[%p]",
-        aRangeStart, aRangeEnd, aRangeTotal, mDecoder);
+        aRangeStart, aRangeEnd, aRangeTotal, mCallback);
 
   return NS_OK;
 }
@@ -455,14 +456,14 @@ ChannelMediaResource::CopySegmentToCache(nsIInputStream *aInStream,
 {
   CopySegmentClosure* closure = static_cast<CopySegmentClosure*>(aClosure);
 
-  closure->mResource->mDecoder->NotifyDataArrived(aCount, closure->mResource->mOffset,
+  closure->mResource->mCallback->NotifyDataArrived(aCount, closure->mResource->mOffset,
                                                   /* aThrottleUpdates = */ true);
 
   // Keep track of where we're up to.
   RESOURCE_LOG("%p [ChannelMediaResource]: CopySegmentToCache at mOffset [%lld] add "
                "[%d] bytes for decoder[%p]",
                closure->mResource, closure->mResource->mOffset, aCount,
-               closure->mResource->mDecoder);
+               closure->mResource->mCallback);
   closure->mResource->mOffset += aCount;
 
   closure->mResource->mCacheStream.NotifyDataReceived(aCount, aFromSegment,
@@ -569,7 +570,7 @@ nsresult ChannelMediaResource::OpenChannel(nsIStreamListener** aStreamListener)
     NS_ENSURE_SUCCESS(rv, rv);
 
     // Tell the media element that we are fetching data from a channel.
-    MediaDecoderOwner* owner = mDecoder->GetMediaOwner();
+    MediaDecoderOwner* owner = mCallback->GetMediaOwner();
     NS_ENSURE_TRUE(owner, NS_ERROR_FAILURE);
     dom::HTMLMediaElement* element = owner->GetMediaElement();
     element->DownloadResumed(true);
@@ -604,7 +605,7 @@ nsresult ChannelMediaResource::SetupChannelHeaders()
 
     // Send Accept header for video and audio types only (Bug 489071)
     NS_ASSERTION(NS_IsMainThread(), "Don't call on non-main thread");
-    MediaDecoderOwner* owner = mDecoder->GetMediaOwner();
+    MediaDecoderOwner* owner = mCallback->GetMediaOwner();
     NS_ENSURE_TRUE(owner, NS_ERROR_FAILURE);
     dom::HTMLMediaElement* element = owner->GetMediaElement();
     NS_ENSURE_TRUE(element, NS_ERROR_FAILURE);
@@ -638,13 +639,13 @@ bool ChannelMediaResource::CanClone()
   return mCacheStream.IsAvailableForSharing();
 }
 
-already_AddRefed<MediaResource> ChannelMediaResource::CloneData(MediaDecoder* aDecoder)
+already_AddRefed<MediaResource> ChannelMediaResource::CloneData(MediaResourceCallback* aCallback)
 {
   NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
   NS_ASSERTION(mCacheStream.IsAvailableForSharing(), "Stream can't be cloned");
 
   RefPtr<ChannelMediaResource> resource =
-    new ChannelMediaResource(aDecoder,
+    new ChannelMediaResource(aCallback,
                              nullptr,
                              mURI,
                              GetContentType());
@@ -753,7 +754,7 @@ void ChannelMediaResource::Suspend(bool aCloseImmediately)
 {
   NS_ASSERTION(NS_IsMainThread(), "Don't call on non-main thread");
 
-  MediaDecoderOwner* owner = mDecoder->GetMediaOwner();
+  MediaDecoderOwner* owner = mCallback->GetMediaOwner();
   if (!owner) {
     // Shutting down; do nothing.
     return;
@@ -786,7 +787,7 @@ void ChannelMediaResource::Resume()
 {
   NS_ASSERTION(NS_IsMainThread(), "Don't call on non-main thread");
 
-  MediaDecoderOwner* owner = mDecoder->GetMediaOwner();
+  MediaDecoderOwner* owner = mCallback->GetMediaOwner();
   if (!owner) {
     // Shutting down; do nothing.
     return;
@@ -835,7 +836,7 @@ ChannelMediaResource::RecreateChannel()
     nsICachingChannel::LOAD_BYPASS_LOCAL_CACHE_IF_BUSY |
     (mLoadInBackground ? nsIRequest::LOAD_BACKGROUND : 0);
 
-  MediaDecoderOwner* owner = mDecoder->GetMediaOwner();
+  MediaDecoderOwner* owner = mCallback->GetMediaOwner();
   if (!owner) {
     // The decoder is being shut down, so don't bother opening a new channel
     return NS_OK;
@@ -885,7 +886,7 @@ void
 ChannelMediaResource::DoNotifyDataReceived()
 {
   mDataReceivedEvent.Revoke();
-  mDecoder->NotifyBytesDownloaded();
+  mCallback->NotifyBytesDownloaded();
 }
 
 void
@@ -933,11 +934,7 @@ void
 ChannelMediaResource::CacheClientNotifyDataEnded(nsresult aStatus)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  // NOTE: this can be called with the media cache lock held, so don't
-  // block or do anything which might try to acquire a lock!
-
-  nsCOMPtr<nsIRunnable> event = new DataEnded(mDecoder, aStatus);
-  NS_DispatchToCurrentThread(event);
+  mCallback->NotifyDataEnded(aStatus);
 }
 
 void
@@ -945,14 +942,14 @@ ChannelMediaResource::CacheClientNotifyPrincipalChanged()
 {
   NS_ASSERTION(NS_IsMainThread(), "Don't call on non-main thread");
 
-  mDecoder->NotifyPrincipalChanged();
+  mCallback->NotifyPrincipalChanged();
 }
 
 void
 ChannelMediaResource::CacheClientNotifySuspendedStatusChanged()
 {
   NS_ASSERTION(NS_IsMainThread(), "Don't call on non-main thread");
-  mDecoder->NotifySuspendedStatusChanged();
+  mCallback->NotifySuspendedStatusChanged();
 }
 
 nsresult
@@ -961,7 +958,7 @@ ChannelMediaResource::CacheClientSeek(int64_t aOffset, bool aResume)
   NS_ASSERTION(NS_IsMainThread(), "Don't call on non-main thread");
 
   CMLOG("CacheClientSeek requested for aOffset [%lld] for decoder [%p]",
-        aOffset, mDecoder);
+        aOffset, mCallback);
 
   CloseChannel();
 
@@ -1171,11 +1168,11 @@ ChannelSuspendAgent::IsSuspended()
 class FileMediaResource : public BaseMediaResource
 {
 public:
-  FileMediaResource(MediaDecoder* aDecoder,
+  FileMediaResource(MediaResourceCallback* aCallback,
                     nsIChannel* aChannel,
                     nsIURI* aURI,
                     const nsACString& aContentType) :
-    BaseMediaResource(aDecoder, aChannel, aURI, aContentType),
+    BaseMediaResource(aCallback, aChannel, aURI, aContentType),
     mSize(-1),
     mLock("FileMediaResource.mLock"),
     mSizeInitialized(false)
@@ -1192,7 +1189,7 @@ public:
   virtual void     Resume() override {}
   virtual already_AddRefed<nsIPrincipal> GetCurrentPrincipal() override;
   virtual bool     CanClone() override;
-  virtual already_AddRefed<MediaResource> CloneData(MediaDecoder* aDecoder) override;
+  virtual already_AddRefed<MediaResource> CloneData(MediaResourceCallback* aCallback) override;
   virtual nsresult ReadFromCache(char* aBuffer, int64_t aOffset, uint32_t aCount) override;
 
   // These methods are called off the main thread.
@@ -1306,8 +1303,7 @@ void FileMediaResource::EnsureSizeInitialized()
   nsresult res = mInput->Available(&size);
   if (NS_SUCCEEDED(res) && size <= INT64_MAX) {
     mSize = (int64_t)size;
-    nsCOMPtr<nsIRunnable> event = new DataEnded(mDecoder, NS_OK);
-    NS_DispatchToMainThread(event);
+    mCallback->NotifyDataEnded(NS_OK);
   }
 }
 
@@ -1404,11 +1400,11 @@ bool FileMediaResource::CanClone()
   return true;
 }
 
-already_AddRefed<MediaResource> FileMediaResource::CloneData(MediaDecoder* aDecoder)
+already_AddRefed<MediaResource> FileMediaResource::CloneData(MediaResourceCallback* aCallback)
 {
   NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
 
-  MediaDecoderOwner* owner = mDecoder->GetMediaOwner();
+  MediaDecoderOwner* owner = mCallback->GetMediaOwner();
   if (!owner) {
     // The decoder is being shut down, so we can't clone
     return nullptr;
@@ -1441,7 +1437,7 @@ already_AddRefed<MediaResource> FileMediaResource::CloneData(MediaDecoder* aDeco
   if (NS_FAILED(rv))
     return nullptr;
 
-  RefPtr<MediaResource> resource(new FileMediaResource(aDecoder, channel, mURI, GetContentType()));
+  RefPtr<MediaResource> resource(new FileMediaResource(aCallback, channel, mURI, GetContentType()));
   return resource.forget();
 }
 
@@ -1562,7 +1558,7 @@ int64_t FileMediaResource::Tell()
 }
 
 already_AddRefed<MediaResource>
-MediaResource::Create(MediaDecoder* aDecoder, nsIChannel* aChannel)
+MediaResource::Create(MediaResourceCallback* aCallback, nsIChannel* aChannel)
 {
   NS_ASSERTION(NS_IsMainThread(),
                "MediaResource::Open called on non-main thread");
@@ -1580,11 +1576,11 @@ MediaResource::Create(MediaDecoder* aDecoder, nsIChannel* aChannel)
   nsCOMPtr<nsIFileChannel> fc = do_QueryInterface(aChannel);
   RefPtr<MediaResource> resource;
   if (fc || IsBlobURI(uri)) {
-    resource = new FileMediaResource(aDecoder, aChannel, uri, contentType);
+    resource = new FileMediaResource(aCallback, aChannel, uri, contentType);
   } else if (IsRtspURI(uri)) {
-    resource = new RtspMediaResource(aDecoder, aChannel, uri, contentType);
+    resource = new RtspMediaResource(aCallback, aChannel, uri, contentType);
   } else {
-    resource = new ChannelMediaResource(aDecoder, aChannel, uri, contentType);
+    resource = new ChannelMediaResource(aCallback, aChannel, uri, contentType);
   }
   return resource.forget();
 }
@@ -1599,7 +1595,7 @@ void BaseMediaResource::SetLoadInBackground(bool aLoadInBackground) {
     return;
   }
 
-  MediaDecoderOwner* owner = mDecoder->GetMediaOwner();
+  MediaDecoderOwner* owner = mCallback->GetMediaOwner();
   if (!owner) {
     NS_WARNING("Null owner in MediaResource::SetLoadInBackground()");
     return;
@@ -1689,8 +1685,7 @@ void BaseMediaResource::DispatchBytesConsumed(int64_t aNumBytes, int64_t aOffset
   if (aNumBytes <= 0) {
     return;
   }
-  RefPtr<nsIRunnable> event(new DispatchBytesConsumedEvent(mDecoder, aNumBytes, aOffset));
-  NS_DispatchToMainThread(event);
+  mCallback->NotifyBytesConsumed(aNumBytes, aOffset);
 }
 
 nsresult
