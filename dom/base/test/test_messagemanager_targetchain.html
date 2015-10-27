@@ -103,15 +103,17 @@
     addEventListener("load", function() {
       var principal = SpecialPowers.wrap(document).nodePrincipal;
       SpecialPowers.pushPermissions([
-        { "type": "browser", "allow": 1, "context": { "url": principal.URI.spec,
-                                                      "appId": principal.appId,
-                                                      "isInBrowserElement": false }},
-        { "type": "browser", "allow": 1, "context": { "url": principal.URI.spec,
-                                                      "appId": principal.appId,
-                                                      "isInBrowserElement": true }}
+        { type: "browser", allow: 1, context: { url: principal.URI.spec,
+                                                originAttributes: {
+                                                  appId: principal.appId
+                                                }}},
+        { type: "browser", allow: 1, context: { url: principal.URI.spec,
+                                                originAttributes: {
+                                                  appId: principal.appId,
+                                                  inBrowser: true }}}
       ], () => {
         SpecialPowers.pushPrefEnv({
-          "set": [
+          set: [
             ["dom.mozBrowserFramesEnabled", true],
             ["dom.ipc.browser_frames.oop_by_default", false],
           ]

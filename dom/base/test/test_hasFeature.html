@@ -65,11 +65,19 @@ function testExtensions() {
     return Promise.resolve();
   }
 
-  return navigator.hasFeature("web-extensions").then(function(value) {
-    is(value, true, "Resolve the Promise with " + value + " for web-extensions");
-  }, function() {
-    ok(false, "The Promise should not be rejected");
+  var builtInFeatures = [
+    {feature: "web-extensions", value: true},
+    {feature: "late-customization", value: true}
+  ];
+
+  builtInFeatures.forEach(function(x) {
+    navigator.hasFeature(x.feature).then(function(value) {
+      is(value, x.value, "Resolve the Promise with " + value + " for feature: " + x.feature);
+    }).catch(function(ex) {
+      ok(false, "The Promise should not be rejected");
+    });
   });
+  return Promise.resolve();
 }
 
 SpecialPowers.pushPermissions([

@@ -189,17 +189,7 @@ function grabFileUsageAndContinueHandler(usage, fileUsage)
 
 function getUsage(usageHandler)
 {
-  let principal = SpecialPowers.wrap(document).nodePrincipal;
-  let appId, inBrowser;
-  if (principal.appId != Components.interfaces.nsIPrincipal.UNKNOWN_APP_ID &&
-      principal.appId != Components.interfaces.nsIPrincipal.NO_APP_ID) {
-    appId = principal.appId;
-    inBrowser = principal.isInBrowserElement;
-  }
-  SpecialPowers.getStorageUsageForURI(window.document.documentURI,
-                                      usageHandler,
-                                      appId,
-                                      inBrowser);
+  SpecialPowers.getStorageUsageForDoc(SpecialPowers.wrap(document), usageHandler);
 }
 
 function getFileId(file)
