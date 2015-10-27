@@ -1197,6 +1197,8 @@ nsGlobalWindow::nsGlobalWindow(nsGlobalWindow *aOuterWindow)
 
       Preferences::AddStrongObserver(mObserver, "intl.accept_languages");
     }
+
+    InitializeShowFocusRings();
   } else {
     // |this| is an outer window. Outer windows start out frozen and
     // remain frozen until they get an inner window, so freeze this
@@ -9551,6 +9553,17 @@ nsGlobalWindow::GetFocusMethod()
   return mFocusMethod;
 }
 
+void
+nsGlobalWindow::InitializeShowFocusRings()
+{
+  nsPIDOMWindow* root = GetPrivateRoot();
+  if (root) {
+    bool showAccelerators, showFocusRings;
+    root->GetKeyboardIndicators(&showAccelerators, &showFocusRings);
+    mShowFocusRings = showFocusRings;
+  }
+}
+
 bool
 nsGlobalWindow::ShouldShowFocusRing()
 {
@@ -9654,15 +9667,6 @@ nsGlobalWindow::SetReadyForFocus()
 
   bool oldNeedsFocus = mNeedsFocus;
   mNeedsFocus = false;
-
-  // update whether focus rings need to be shown using the state from the
-  // root window
-  nsPIDOMWindow* root = GetPrivateRoot();
-  if (root) {
-    bool showAccelerators, showFocusRings;
-    root->GetKeyboardIndicators(&showAccelerators, &showFocusRings);
-    mShowFocusRings = showFocusRings;
-  }
 
   nsIFocusManager* fm = nsFocusManager::GetFocusManager();
   if (fm)
