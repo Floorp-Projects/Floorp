@@ -4199,6 +4199,7 @@ ScrollFrameHelper::FireScrollEvent()
 {
   mScrollEvent.Forget();
 
+  ActiveLayerTracker::SetCurrentScrollHandlerFrame(mOuter);
   WidgetGUIEvent event(true, eScroll, nullptr);
   nsEventStatus status = nsEventStatus_eIgnore;
   nsIContent* content = mOuter->GetContent();
@@ -4216,6 +4217,7 @@ ScrollFrameHelper::FireScrollEvent()
     event.mFlags.mBubbles = false;
     EventDispatcher::Dispatch(content, prescontext, &event, nullptr, &status);
   }
+  ActiveLayerTracker::SetCurrentScrollHandlerFrame(nullptr);
 }
 
 void
