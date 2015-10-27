@@ -18,7 +18,7 @@ function startTest()
 {
   removeEventListener("load", startTest);
 
-  attachConsole(["PageError"], onStartPageError, true);
+  attachConsoleToTab(["PageError"], onStartPageError);
 }
 
 function onStartPageError(aState, aResponse)
@@ -30,8 +30,8 @@ function onStartPageError(aState, aResponse)
   closeDebugger(aState, function() {
     top.console_ = top.console;
     top.console = { lolz: "foo" };
-    attachConsole(["PageError", "ConsoleAPI", "foo"],
-                  onStartPageErrorAndConsoleAPI, true);
+    attachConsoleToTab(["PageError", "ConsoleAPI", "foo"],
+                  onStartPageErrorAndConsoleAPI);
   });
 }
 
@@ -56,7 +56,7 @@ function onStopConsoleAPI(aState, aResponse)
   is(aResponse.stoppedListeners[0], "ConsoleAPI", "stoppedListeners: ConsoleAPI");
 
   closeDebugger(aState, function() {
-    attachConsole(["ConsoleAPI"], onStartConsoleAPI, true);
+    attachConsoleToTab(["ConsoleAPI"], onStartConsoleAPI);
   });
 }
 

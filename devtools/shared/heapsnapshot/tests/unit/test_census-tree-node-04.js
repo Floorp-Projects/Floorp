@@ -67,7 +67,9 @@ function run_test() {
                 totalBytes: 30,
                 count: 3,
                 totalCount: 3,
-                children: undefined
+                children: undefined,
+                id: 7,
+                parent: 5,
               },
               {
                 name: stack2,
@@ -75,9 +77,13 @@ function run_test() {
                 totalBytes: 20,
                 count: 2,
                 totalCount: 2,
-                children: undefined
+                children: undefined,
+                id: 6,
+                parent: 5,
               }
-            ]
+            ],
+            id: 5,
+            parent: 2,
           },
           {
             name: stack4,
@@ -85,7 +91,9 @@ function run_test() {
             totalBytes: 40,
             count: 4,
             totalCount: 4,
-            children: undefined
+            children: undefined,
+            id: 8,
+            parent: 2,
           },
           {
             name: stack1.parent,
@@ -100,11 +108,17 @@ function run_test() {
                 totalBytes: 10,
                 count: 1,
                 totalCount: 1,
-                children: undefined
+                children: undefined,
+                id: 4,
+                parent: 3,
               },
-            ]
+            ],
+            id: 3,
+            parent: 2,
           },
-        ]
+        ],
+        id: 2,
+        parent: 1,
       },
       {
         name: "noStack",
@@ -112,7 +126,9 @@ function run_test() {
         totalBytes: 60,
         count: 6,
         totalCount: 6,
-        children: undefined
+        children: undefined,
+        id: 10,
+        parent: 1,
       },
       {
         name: stack5,
@@ -120,9 +136,13 @@ function run_test() {
         totalBytes: 50,
         count: 5,
         totalCount: 5,
-        children: undefined
+        children: undefined,
+        id: 9,
+        parent: 1,
       },
-    ]
+    ],
+    id: 1,
+    parent: undefined,
   };
 
   compareCensusViewData(BREAKDOWN, REPORT, EXPECTED);
