@@ -492,7 +492,7 @@
         </xul:hbox>
         <children includes="popupnotificationcontent"/>
         <xul:label class="text-link popup-notification-learnmore-link"
-               xbl:inherits="href=learnmoreurl">&learnMore;</xul:label>
+               xbl:inherits="onclick=learnmoreclick,href=learnmoreurl">&learnMore;</xul:label>
         <xul:spacer flex="1"/>
         <xul:hbox class="popup-notification-button-container"
                   pack="end" align="center">
@@ -500,7 +500,7 @@
           <xul:button anonid="button"
                       class="popup-notification-menubutton"
                       type="menu-button"
-                      xbl:inherits="oncommand=buttoncommand,label=buttonlabel,accesskey=buttonaccesskey">
+                      xbl:inherits="oncommand=buttoncommand,onpopupshown=buttonpopupshown,label=buttonlabel,accesskey=buttonaccesskey">
             <xul:menupopup anonid="menupopup"
                            xbl:inherits="oncommand=menucommand">
               <children/>
