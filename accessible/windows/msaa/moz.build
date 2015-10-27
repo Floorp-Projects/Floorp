@@ -56,6 +56,7 @@ LOCAL_INCLUDES += [
     '/accessible/xpcom',
     '/accessible/xul',
     '/dom/base',
+    '/layout/style',
 ]
 
 include('/ipc/chromium/chromium-config.mozbuild')

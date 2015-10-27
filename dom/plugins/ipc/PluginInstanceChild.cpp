@@ -502,6 +502,7 @@ PluginInstanceChild::NPN_GetValue(NPNVariable aVar,
     case NPNVSupportsXEmbedBool:
     case NPNVSupportsWindowless:
         NS_NOTREACHED("NPNVariable should be handled in PluginModuleChild.");
+        MOZ_FALLTHROUGH;
 #endif
 
     default:
@@ -510,7 +511,6 @@ PluginInstanceChild::NPN_GetValue(NPNVariable aVar,
                 (int) aVar, NPNVariableToString(aVar)));
         return NPERR_GENERIC_ERROR;
     }
-
 }
 
 #ifdef MOZ_WIDGET_COCOA
@@ -2313,7 +2313,6 @@ PluginInstanceChild::EnumThreadWindowsCallback(HWND hWnd,
     return TRUE;
 }
 
-
 void
 PluginInstanceChild::SetupFlashMsgThrottle()
 {
@@ -2609,7 +2608,6 @@ StreamNotifyChild::ActorDestroy(ActorDestroyReason why)
         mBrowserStream = nullptr;
     }
 }
-
 
 void
 StreamNotifyChild::SetAssociatedStream(BrowserStreamChild* bs)

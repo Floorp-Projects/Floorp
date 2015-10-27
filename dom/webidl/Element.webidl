@@ -199,11 +199,13 @@ partial interface Element {
   readonly attribute long clientHeight;
 
   // Mozilla specific stuff
-  /* The maximum offset that the element can be scrolled to
+  /* The minimum/maximum offset that the element can be scrolled to
      (i.e., the value that scrollLeft/scrollTop would be clamped to if they were
      set to arbitrarily large values. */
-  readonly attribute long scrollTopMax;
-  readonly attribute long scrollLeftMax;
+  [ChromeOnly] readonly attribute long scrollTopMin;
+               readonly attribute long scrollTopMax;
+  [ChromeOnly] readonly attribute long scrollLeftMin;
+               readonly attribute long scrollLeftMax;
 };
 
 // http://dvcs.w3.org/hg/undomanager/raw-file/tip/undomanager.html

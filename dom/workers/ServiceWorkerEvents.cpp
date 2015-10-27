@@ -5,7 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "ServiceWorkerEvents.h"
-#include "ServiceWorkerClient.h"
 
 #include "nsIHttpChannelInternal.h"
 #include "nsINetworkInterceptController.h"
@@ -60,7 +59,7 @@ CancelChannelRunnable::Run()
 }
 
 FetchEvent::FetchEvent(EventTarget* aOwner)
-: Event(aOwner, nullptr, nullptr)
+: ExtendableEvent(aOwner)
 , mIsReload(false)
 , mWaitToRespond(false)
 {
@@ -72,12 +71,10 @@ FetchEvent::~FetchEvent()
 
 void
 FetchEvent::PostInit(nsMainThreadPtrHandle<nsIInterceptedChannel>& aChannel,
-                     const nsACString& aScriptSpec,
-                     UniquePtr<ServiceWorkerClientInfo>&& aClientInfo)
+                     const nsACString& aScriptSpec)
 {
   mChannel = aChannel;
   mScriptSpec.Assign(aScriptSpec);
-  mClientInfo = Move(aClientInfo);
 }
 
 /*static*/ already_AddRefed<FetchEvent>
@@ -94,10 +91,7 @@ FetchEvent::Constructor(const GlobalObject& aGlobal,
   e->SetTrusted(trusted);
   e->mRequest = aOptions.mRequest.WasPassed() ?
       &aOptions.mRequest.Value() : nullptr;
-  e->mIsReload = aOptions.mIsReload.WasPassed() ?
-      aOptions.mIsReload.Value() : false;
-  e->mClient = aOptions.mClient.WasPassed() ?
-      &aOptions.mClient.Value() : nullptr;
+  e->mIsReload = aOptions.mIsReload;
   return e.forget();
 }
 
@@ -460,32 +454,14 @@ FetchEvent::RespondWith(Promise& aArg, ErrorResult& aRv)
   aArg.AppendNativeHandler(handler);
 }
 
-already_AddRefed<ServiceWorkerClient>
-FetchEvent::GetClient()
-{
-  if (!mClient) {
-    if (!mClientInfo) {
-      return nullptr;
-    }
-
-    WorkerPrivate* worker = GetCurrentThreadWorkerPrivate();
-    MOZ_ASSERT(worker);
-    RefPtr<nsIGlobalObject> global = worker->GlobalScope();
-
-    mClient = new ServiceWorkerClient(global, *mClientInfo);
-  }
-  RefPtr<ServiceWorkerClient> client = mClient;
-  return client.forget();
-}
-
-NS_IMPL_ADDREF_INHERITED(FetchEvent, Event)
-NS_IMPL_RELEASE_INHERITED(FetchEvent, Event)
+NS_IMPL_ADDREF_INHERITED(FetchEvent, ExtendableEvent)
+NS_IMPL_RELEASE_INHERITED(FetchEvent, ExtendableEvent)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(FetchEvent)
-NS_INTERFACE_MAP_END_INHERITING(Event)
+NS_INTERFACE_MAP_END_INHERITING(ExtendableEvent)
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED(FetchEvent, Event, mRequest, mClient,
-                                   mPromise)
+NS_IMPL_CYCLE_COLLECTION_INHERITED(FetchEvent, ExtendableEvent,
+                                   mRequest, mPromise)
 
 ExtendableEvent::ExtendableEvent(EventTarget* aOwner)
   : Event(aOwner, nullptr, nullptr)

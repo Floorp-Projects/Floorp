@@ -353,6 +353,18 @@ struct BaseRect {
   T XMost() const { return x + width; }
   T YMost() const { return y + height; }
 
+  // Get the coordinate of the edge on the given side.
+  T Edge(mozilla::Side aSide) const
+  {
+    switch (aSide) {
+      case NS_SIDE_TOP: return Y();
+      case NS_SIDE_RIGHT: return XMost();
+      case NS_SIDE_BOTTOM: return YMost();
+      case NS_SIDE_LEFT: return X();
+    }
+    MOZ_CRASH("Incomplete switch");
+  }
+
   // Moves one edge of the rect without moving the opposite edge.
   void SetLeftEdge(T aX) {
     MOZ_ASSERT(aX <= XMost());

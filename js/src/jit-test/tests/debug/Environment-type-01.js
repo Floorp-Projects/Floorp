@@ -15,7 +15,7 @@ test("(function (s) { h(); })();", 'declarative');
 test("{let x = 1, y = 2; h();}", 'declarative');
 test("with({x: 1, y: 2}) h();", 'with');
 test("(function (s) { with ({x: 1, y: 2}) h(); })();", 'with');
-test("let (x = 1) { h(); }", 'declarative');
+test("{ let x = 1; h(); }", 'declarative');
 test("for (let x = 0; x < 1; x++) h();", 'declarative');
 test("for (let x in h()) ;", 'declarative');
 test("for (let x in {a:1}) h();", 'declarative');

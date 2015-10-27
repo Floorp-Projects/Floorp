@@ -63,7 +63,12 @@ var RemotePrompt = {
     });
 
     try {
-      PromptUtils.fireDialogEvent(window, "DOMWillOpenModalDialog", browser);
+      let eventDetail = {
+        tabPrompt: true,
+        promptPrincipal: args.promptPrincipal,
+        inPermitUnload: args.inPermitUnload,
+      };
+      PromptUtils.fireDialogEvent(window, "DOMWillOpenModalDialog", browser, eventDetail);
 
       args.promptActive = true;
 

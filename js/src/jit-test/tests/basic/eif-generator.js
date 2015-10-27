@@ -1,11 +1,13 @@
 load(libdir + "evalInFrame.js");
 
 function f() {
-    let (x = 1) {
+    {
+        let x = 1;
         while (true) {
             yield evalInFrame(0, "x");
             x++;
-            let (y = 1) {
+            {
+                let y = 1;
                 yield evalInFrame(0, "++y");
                 yield evalInFrame(0, "++y");
             }
@@ -32,7 +34,8 @@ gen = null;
 gc();
 
 function g() {
-    let (x = 1) {
+    {
+        let x = 1;
         while (true) {
             var inner = function (inc) { x += inc; return evalInFrame(0, "x") };
             assertEq(inner(0), x);

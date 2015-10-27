@@ -266,7 +266,7 @@ Window implements WindowModal;
 
 // https://slightlyoff.github.io/ServiceWorker/spec/service_worker/index.html#self-caches
 partial interface Window {
-[Throws, Func="mozilla::dom::cache::CacheStorage::PrefEnabled"]
+[Throws, Func="mozilla::dom::cache::CacheStorage::PrefEnabled", SameObject]
 readonly attribute CacheStorage caches;
 };
 
@@ -302,6 +302,8 @@ partial interface Window {
 
   /* The maximum offset that the window can be scrolled to
      (i.e., the document width/height minus the scrollport width/height) */
+  [ChromeOnly, Throws]  readonly attribute long   scrollMinX;
+  [ChromeOnly, Throws]  readonly attribute long   scrollMinY;
   [Replaceable, Throws] readonly attribute long   scrollMaxX;
   [Replaceable, Throws] readonly attribute long   scrollMaxY;
 

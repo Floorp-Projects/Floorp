@@ -5,14 +5,13 @@
  
 #include "nsXMLPrettyPrinter.h"
 #include "nsContentUtils.h"
-#include "nsIDOMCSSStyleDeclaration.h"
+#include "nsICSSDeclaration.h"
 #include "nsIDOMDocumentXBL.h"
 #include "nsIObserver.h"
 #include "nsIXSLTProcessor.h"
 #include "nsSyncLoadService.h"
 #include "nsPIDOMWindow.h"
 #include "nsIDOMElement.h"
-#include "nsIDOMDocument.h"
 #include "nsIServiceManager.h"
 #include "nsNetUtil.h"
 #include "mozilla/dom/Element.h"
@@ -55,22 +54,24 @@ nsXMLPrettyPrinter::PrettyPrint(nsIDocument* aDocument,
 
     // check if we're in an invisible iframe
     nsPIDOMWindow *internalWin = aDocument->GetWindow();
-    nsCOMPtr<nsIDOMElement> frameElem;
+    nsCOMPtr<Element> frameElem;
     if (internalWin) {
-        internalWin->GetFrameElement(getter_AddRefs(frameElem));
+        frameElem = internalWin->GetFrameElementInternal();
     }
 
     if (frameElem) {
-        nsCOMPtr<nsIDOMCSSStyleDeclaration> computedStyle;
-        nsCOMPtr<nsIDOMDocument> frameOwnerDoc;
-        frameElem->GetOwnerDocument(getter_AddRefs(frameOwnerDoc));
-        if (frameOwnerDoc) {
-            nsCOMPtr<nsIDOMWindow> window;
-            frameOwnerDoc->GetDefaultView(getter_AddRefs(window));
-            if (window) {
-                window->GetComputedStyle(frameElem,
-                                         EmptyString(),
-                                         getter_AddRefs(computedStyle));
+        nsCOMPtr<nsICSSDeclaration> computedStyle;
+        if (nsIDocument* frameOwnerDoc = frameElem->OwnerDoc()) {
+            nsCOMPtr<nsIDOMWindow> window = frameOwnerDoc->GetDefaultView();
+            nsCOMPtr<nsPIDOMWindow> piWindow = do_QueryInterface(window);
+            if (piWindow) {
+                piWindow = piWindow->GetCurrentInnerWindow();
+
+                ErrorResult dummy;
+                computedStyle = piWindow->GetComputedStyle(*frameElem,
+                                                           EmptyString(),
+                                                           dummy);
+                dummy.SuppressException();
             }
         }
 

@@ -33,7 +33,7 @@ function startTest()
 {
   removeEventListener("load", startTest);
 
-  attachConsole(["PageError"], onAttach, true);
+  attachConsoleToTab(["PageError"], onAttach);
 }
 
 function onAttach(aState, aResponse)

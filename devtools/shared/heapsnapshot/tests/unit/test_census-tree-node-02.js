@@ -48,7 +48,9 @@ const EXPECTED = {
           totalBytes: 40,
           count: 4,
           totalCount: 4,
-          children: undefined
+          children: undefined,
+          id: 9,
+          parent: 7,
         },
         {
           name: "js::Shape",
@@ -56,9 +58,13 @@ const EXPECTED = {
           totalBytes: 30,
           count: 3,
           totalCount: 3,
-          children: undefined
+          children: undefined,
+          id: 8,
+          parent: 7,
         },
-      ]
+      ],
+      id: 7,
+      parent: 1,
     },
     {
       name: "objects",
@@ -73,7 +79,9 @@ const EXPECTED = {
           totalBytes: 20,
           count: 2,
           totalCount: 2,
-          children: undefined
+          children: undefined,
+          id: 4,
+          parent: 2,
         },
         {
           name: "Function",
@@ -81,9 +89,13 @@ const EXPECTED = {
           totalBytes: 10,
           count: 1,
           totalCount: 1,
-          children: undefined
+          children: undefined,
+          id: 3,
+          parent: 2,
         },
-      ]
+      ],
+      id: 2,
+      parent: 1,
     },
     {
       name: "strings",
@@ -91,7 +103,9 @@ const EXPECTED = {
       totalCount: 1,
       bytes: 10,
       totalBytes: 10,
-      children: undefined
+      children: undefined,
+      id: 6,
+      parent: 1,
     },
     {
       name: "scripts",
@@ -99,9 +113,13 @@ const EXPECTED = {
       totalCount: 1,
       bytes: 1,
       totalBytes: 1,
-      children: undefined
+      children: undefined,
+      id: 5,
+      parent: 1,
     },
-  ]
+  ],
+  id: 1,
+  parent: undefined,
 };
 
 function run_test() {

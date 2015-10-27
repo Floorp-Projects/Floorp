@@ -10,11 +10,8 @@
 [Constructor(DOMString type, optional FetchEventInit eventInitDict),
  Func="mozilla::dom::workers::ServiceWorkerVisible",
  Exposed=(ServiceWorker)]
-interface FetchEvent : Event {
-  readonly attribute Request request;
-
-  // https://github.com/slightlyoff/ServiceWorker/issues/631
-  readonly attribute Client? client; // The window issuing the request.
+interface FetchEvent : ExtendableEvent {
+  [SameObject] readonly attribute Request? request;
   readonly attribute boolean isReload;
 
   [Throws]
@@ -23,6 +20,5 @@ interface FetchEvent : Event {
 
 dictionary FetchEventInit : EventInit {
   Request request;
-  Client client;
-  boolean isReload;
+  boolean isReload = false;
 };

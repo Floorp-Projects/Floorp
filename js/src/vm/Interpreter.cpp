@@ -4520,6 +4520,31 @@ js::SpreadCallOperation(JSContext* cx, HandleScript script, jsbytecode* pc, Hand
         return false;
     }
 
+    // Do our own checks for the callee being a function, as Invoke uses the
+    // expression decompiler to decompile the callee stack operand based on
+    // the number of arguments. Spread operations have the callee at sp - 3
+    // when not constructing, and sp - 4 when constructing.
+    if (callee.isPrimitive()) {
+        return ReportIsNotFunction(cx, callee, 2 + constructing,
+                                   constructing ? CONSTRUCT : NO_CONSTRUCT);
+    }
+
+    const Class* clasp = callee.toObject().getClass();
+    if (MOZ_UNLIKELY(clasp != &JSFunction::class_)) {
+#if JS_HAS_NO_SUCH_METHOD
+        if (MOZ_UNLIKELY(clasp != &js_NoSuchMethodClass)) {
+#endif
+
+            if (!callee.toObject().callHook()) {
+                return ReportIsNotFunction(cx, callee, 2 + constructing,
+                                           constructing ? CONSTRUCT : NO_CONSTRUCT);
+            }
+
+#if JS_HAS_NO_SUCH_METHOD
+        }
+#endif
+    }
+
 #ifdef DEBUG
     // The object must be an array with dense elements and no holes. Baseline's
     // optimized spread call stubs rely on this.

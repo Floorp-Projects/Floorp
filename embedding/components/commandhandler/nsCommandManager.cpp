@@ -248,10 +248,10 @@ nsCommandManager::GetControllerForCommand(const char* aCommand,
     }
   }
 
-  if (aTargetWindow) {
+  if (nsCOMPtr<nsPIDOMWindow> targetWindow = do_QueryInterface(aTargetWindow)) {
     // get the controller for this particular window
     nsCOMPtr<nsIControllers> controllers;
-    rv = aTargetWindow->GetControllers(getter_AddRefs(controllers));
+    rv = targetWindow->GetControllers(getter_AddRefs(controllers));
     if (NS_FAILED(rv)) {
       return rv;
     }

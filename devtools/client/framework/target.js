@@ -732,8 +732,14 @@ WorkerTarget.prototype = {
     return this._workerClient.url;
   },
 
+  get isWorkerTarget() {
+    return true;
+  },
+
   get form() {
-    return {};
+    return {
+      consoleActor: this._workerClient.consoleActor
+    };
   },
 
   get activeTab() {

@@ -22,7 +22,7 @@ function test()
  
   expect = actual = 'No Crash';
 
-  let ([] = []) { print(3) } print(4)
+  { let [] = []; print(3) } print(4)
 
 			       reportCompare(expect, actual, summary);
 

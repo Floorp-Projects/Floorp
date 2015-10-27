@@ -82,7 +82,8 @@ activateWindow( nsIDOMWindow *win ) {
         ::SetForegroundWindow( hwnd );
     } else {
         // Use internal method.
-        win->Focus();
+        nsCOMPtr<nsPIDOMWindow> piWin = do_QueryInterface(win);
+        piWin->Focus();
     }
 }
 
@@ -1021,8 +1022,7 @@ nsNativeAppSupportWin::HandleDDENotification( UINT uType,       // transaction t
                             break;
                         }
                         // Get location.
-                        nsCOMPtr<nsIDOMLocation> location;
-                        internalContent->GetLocation( getter_AddRefs( location ) );
+                        nsCOMPtr<nsIDOMLocation> location = internalContent->GetLocation();
                         if ( !location ) {
                             break;
                         }

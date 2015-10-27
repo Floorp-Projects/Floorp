@@ -53,7 +53,7 @@ function startTest()
 
   info("Test detection of HTTP Strict Transport Security.");
   removeEventListener("load", startTest);
-  attachConsole(["NetworkActivity"], onAttach, true);
+  attachConsoleToTab(["NetworkActivity"], onAttach);
 }
 
 function onAttach(aState, aResponse)

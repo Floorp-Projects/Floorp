@@ -191,6 +191,7 @@ IMContextWrapper::IMContextWrapper(nsWindow* aOwnerWindow)
     , mIsDeletingSurrounding(false)
     , mLayoutChanged(false)
     , mSetCursorPositionOnKeyEvent(true)
+    , mPendingResettingIMContext(false)
 {
     if (!gGtkIMLog) {
         gGtkIMLog = PR_NewLogModule("nsGtkIMModuleWidgets");
@@ -564,6 +565,7 @@ IMContextWrapper::ResetIME()
     RefPtr<IMContextWrapper> kungFuDeathGrip(this);
     RefPtr<nsWindow> lastFocusedWindow(mLastFocusedWindow);
 
+    mPendingResettingIMContext = false;
     gtk_im_context_reset(activeContext);
 
     // The last focused window might have been destroyed by a DOM event handler
@@ -895,7 +897,8 @@ IMContextWrapper::OnSelectionChange(nsWindow* aCaller,
     MOZ_LOG(gGtkIMLog, LogLevel::Info,
         ("GTKIM: %p OnSelectionChange(aCaller=0x%p, aIMENotification={ "
          "mSelectionChangeData={ mOffset=%u, Length()=%u, mReversed=%s, "
-         "mWritingMode=%s, mCausedByComposition=%s, mCausedBySelectionEvent=%s "
+         "mWritingMode=%s, mCausedByComposition=%s, "
+         "mCausedBySelectionEvent=%s, mOccurredDuringComposition=%s "
          "} }), mCompositionState=%s, mIsDeletingSurrounding=%s",
          this, aCaller, selectionChangeData.mOffset,
          selectionChangeData.Length(),
@@ -903,6 +906,7 @@ IMContextWrapper::OnSelectionChange(nsWindow* aCaller,
          GetWritingModeName(selectionChangeData.GetWritingMode()).get(),
          ToChar(selectionChangeData.mCausedByComposition),
          ToChar(selectionChangeData.mCausedBySelectionEvent),
+         ToChar(selectionChangeData.mOccurredDuringComposition),
          GetCompositionStateName(), ToChar(mIsDeletingSurrounding)));
 
     if (aCaller != mLastFocusedWindow) {
@@ -950,11 +954,18 @@ IMContextWrapper::OnSelectionChange(nsWindow* aCaller,
         return;
     }
 
-    // When the selection change is caused by dispatching composition event
-    // and/or selection set event, we shouldn't notify IME of that and commit
-    // existing composition.
+    bool occurredBeforeComposition =
+      IsComposing() && !selectionChangeData.mOccurredDuringComposition;
+    if (occurredBeforeComposition) {
+        mPendingResettingIMContext = true;
+    }
+
+    // When the selection change is caused by dispatching composition event,
+    // selection set event and/or occurred before starting current composition,
+    // we shouldn't notify IME of that and commit existing composition.
     if (!selectionChangeData.mCausedByComposition &&
-        !selectionChangeData.mCausedBySelectionEvent) {
+        !selectionChangeData.mCausedBySelectionEvent &&
+        !occurredBeforeComposition) {
         ResetIME();
     }
 }
@@ -1022,13 +1033,17 @@ IMContextWrapper::OnEndCompositionNative(GtkIMContext* aContext)
     g_object_unref(mComposingContext);
     mComposingContext = nullptr;
 
-    if (!IsComposing()) {
-        // If we already handled the commit event, we should do nothing here.
-        return;
+    // If we already handled the commit event, we should do nothing here.
+    if (IsComposing()) {
+        if (!DispatchCompositionCommitEvent(aContext)) {
+            // If the widget is destroyed, we should do nothing anymore.
+            return;
+        }
     }
 
-    // Be aware, widget can be gone
-    DispatchCompositionCommitEvent(aContext);
+    if (mPendingResettingIMContext) {
+        ResetIME();
+    }
 }
 
 /* static */

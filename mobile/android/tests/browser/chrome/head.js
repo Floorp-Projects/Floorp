@@ -32,3 +32,24 @@ function promiseNotification(topic) {
     info("Now waiting for " + topic + " notification from Gecko");
   });
 }
+
+function promiseLinkVisit(url) {
+  Cu.import("resource://gre/modules/Services.jsm");
+
+  var topic = "link-visited";
+  return new Promise((resolve, reject) => {
+    function observe(subject, topic, data) {
+      info("Received " + topic + " notification from Gecko");
+      var uri = subject.QueryInterface(Ci.nsIURI);
+      if (uri.spec != url) {
+        info("Visited URL " + uri.spec + " is not desired URL " + url + "; ignoring.");
+        return;
+      }
+      info("Visited URL " + uri.spec + " is desired URL " + url);
+      Services.obs.removeObserver(observe, topic);
+      resolve();
+    };
+    Services.obs.addObserver(observe, topic, false);
+    info("Now waiting for " + topic + " notification from Gecko with URL " + url);
+  });
+}

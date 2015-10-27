@@ -71,7 +71,7 @@ class RtspTrackBuffer;
 class RtspMediaResource : public BaseMediaResource
 {
 public:
-  RtspMediaResource(MediaDecoder* aDecoder, nsIChannel* aChannel, nsIURI* aURI,
+  RtspMediaResource(MediaResourceCallback* aCallback, nsIChannel* aChannel, nsIURI* aURI,
                     const nsACString& aContentType);
   virtual ~RtspMediaResource();
 
@@ -176,7 +176,7 @@ public:
   virtual bool     CanClone() override {
     return false;
   }
-  virtual already_AddRefed<MediaResource> CloneData(MediaDecoder* aDecoder)
+  virtual already_AddRefed<MediaResource> CloneData(MediaResourceCallback*)
   override {
     return nullptr;
   }

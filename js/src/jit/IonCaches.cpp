@@ -51,7 +51,7 @@ CodeLocationJump::repoint(JitCode* code, MacroAssembler* masm)
 #ifdef JS_CODEGEN_X64
         MOZ_ASSERT((uint64_t)raw_ <= UINT32_MAX);
 #endif
-        new_off = masm->actualOffset((uintptr_t)raw_);
+        new_off = (uintptr_t)raw_;
 #ifdef JS_SMALL_BRANCH
         jumpTableEntryOffset = masm->actualIndex(jumpTableEntryOffset);
 #endif
@@ -72,7 +72,7 @@ CodeLocationLabel::repoint(JitCode* code, MacroAssembler* masm)
 #ifdef JS_CODEGEN_X64
         MOZ_ASSERT((uint64_t)raw_ <= UINT32_MAX);
 #endif
-        new_off = masm->actualOffset((uintptr_t)raw_);
+        new_off = (uintptr_t)raw_;
      }
      MOZ_ASSERT(new_off < code->instructionsSize());
 
@@ -81,15 +81,8 @@ CodeLocationLabel::repoint(JitCode* code, MacroAssembler* masm)
 }
 
 void
-CodeOffsetLabel::fixup(MacroAssembler* masm)
-{
-     offset_ = masm->actualOffset(offset_);
-}
-
-void
 CodeOffsetJump::fixup(MacroAssembler* masm)
 {
-     offset_ = masm->actualOffset(offset_);
 #ifdef JS_SMALL_BRANCH
      jumpTableIndex_ = masm->actualIndex(jumpTableIndex_);
 #endif
@@ -251,10 +244,9 @@ class IonCache::StubAttacher
         PatchJump(rejoinJump, rejoinLabel_);
     }
 
-    void patchStubCodePointer(MacroAssembler& masm, JitCode* code) {
+    void patchStubCodePointer(JitCode* code) {
         if (hasStubCodePatchOffset_) {
             AutoWritableJitCode awjc(code);
-            stubCodePatchOffset_.fixup(&masm);
             Assembler::PatchDataWithValueCheck(CodeLocationLabel(code, stubCodePatchOffset_),
                                                ImmPtr(code), STUB_ADDR);
         }
@@ -305,7 +297,7 @@ IonCache::attachStub(MacroAssembler& masm, StubAttacher& attacher, Handle<JitCod
     // Replace the STUB_ADDR constant by the address of the generated stub, such
     // as it can be kept alive even if the cache is flushed (see
     // MarkJitExitFrame).
-    attacher.patchStubCodePointer(masm, code);
+    attacher.patchStubCodePointer(code);
 
     // Update the failure path.
     attacher.patchNextStubJump(masm, code);
@@ -350,6 +342,7 @@ IonCache::linkAndAttachStub(JSContext* cx, MacroAssembler& masm, StubAttacher& a
         JitcodeGlobalTable* globalTable = cx->runtime()->jitRuntime()->getJitcodeGlobalTable();
         if (!globalTable->addEntry(entry, cx->runtime())) {
             entry.destroy();
+            ReportOutOfMemory(cx);
             return false;
         }
 
@@ -363,11 +356,19 @@ IonCache::linkAndAttachStub(JSContext* cx, MacroAssembler& masm, StubAttacher& a
         JitcodeGlobalTable* globalTable = cx->runtime()->jitRuntime()->getJitcodeGlobalTable();
         if (!globalTable->addEntry(entry, cx->runtime())) {
             entry.destroy();
+            ReportOutOfMemory(cx);
             return false;
         }
 
         // Mark the jitcode as having a bytecode map.
         code->setHasBytecodeMap();
+    }
+
+    // Report masm OOM errors here, so all our callers can:
+    // return linkAndAttachStub(...);
+    if (masm.oom()) {
+        ReportOutOfMemory(cx);
+        return false;
     }
 
     return true;

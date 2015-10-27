@@ -68,17 +68,17 @@ GetPrivateWindow(JSContext* cx) {
     return nullptr;
   }
 
-  nsCOMPtr<nsIDOMWindow> top;
-  nsresult rv = win->GetTop(getter_AddRefs(top));
-  if (!top || NS_FAILED(rv)) {
+  win = win->GetOuterWindow();
+  if (!win) {
     return nullptr;
   }
 
-  nsCOMPtr<nsPIDOMWindow> ptop = do_QueryInterface(top);
-  if (!ptop) {
+  nsCOMPtr<nsPIDOMWindow> top = win->GetTop();
+  if (!top) {
     return nullptr;
   }
-  return ptop.forget();
+
+  return top.forget();
 }
 
 bool

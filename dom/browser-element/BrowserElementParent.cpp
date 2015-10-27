@@ -258,10 +258,8 @@ BrowserElementParent::OpenWindowInProcess(nsIDOMWindow* aOpenerWindow,
   // GetScriptableTop gets us the <iframe mozbrowser>'s window; we'll use its
   // frame element, rather than aOpenerWindow's frame element, as our "opener
   // frame element" below.
-  nsCOMPtr<nsIDOMWindow> topWindow;
-  aOpenerWindow->GetScriptableTop(getter_AddRefs(topWindow));
-
-  nsCOMPtr<nsPIDOMWindow> win = do_QueryInterface(topWindow);
+  nsCOMPtr<nsPIDOMWindow> openerWindow = do_QueryInterface(aOpenerWindow);
+  nsCOMPtr<nsPIDOMWindow> win = openerWindow->GetScriptableTop();
 
   nsCOMPtr<Element> openerFrameElement = win->GetFrameElementInternal();
   NS_ENSURE_TRUE(openerFrameElement, BrowserElementParent::OPEN_WINDOW_IGNORED);

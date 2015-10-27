@@ -1181,7 +1181,7 @@ PlacesToolbar.prototype = {
   },
 
   updateOverflowStatus: function() {
-    if (this._rootElt.scrollLeftMax > 0) {
+    if (this._rootElt.scrollLeftMin != this._rootElt.scrollLeftMax) {
       this._onOverflow();
     } else {
       this._onUnderflow();

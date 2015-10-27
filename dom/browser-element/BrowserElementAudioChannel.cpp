@@ -117,10 +117,7 @@ BrowserElementAudioChannel::Initialize()
       return NS_ERROR_FAILURE;
     }
 
-    nsCOMPtr<nsIDOMWindow> topWindow;
-    window->GetScriptableTop(getter_AddRefs(topWindow));
-
-    mFrameWindow = do_QueryInterface(topWindow);
+    mFrameWindow = window->GetScriptableTop();
     mFrameWindow = mFrameWindow->GetOuterWindow();
     return NS_OK;
   }
@@ -137,10 +134,7 @@ BrowserElementAudioChannel::Initialize()
       return NS_ERROR_FAILURE;
     }
 
-    nsCOMPtr<nsIDOMWindow> topWindow;
-    window->GetScriptableTop(getter_AddRefs(topWindow));
-
-    mFrameWindow = do_QueryInterface(topWindow);
+    mFrameWindow = window->GetScriptableTop();
     mFrameWindow = mFrameWindow->GetOuterWindow();
     return NS_OK;
   }

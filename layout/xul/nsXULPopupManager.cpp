@@ -830,10 +830,10 @@ CheckCaretDrawingState()
     if (!window)
       return;
 
-    nsCOMPtr<nsIDOMDocument> domDoc;
-    nsCOMPtr<nsIDocument> focusedDoc;
-    window->GetDocument(getter_AddRefs(domDoc));
-    focusedDoc = do_QueryInterface(domDoc);
+    nsCOMPtr<nsPIDOMWindow> piWindow = do_QueryInterface(window);
+    MOZ_ASSERT(piWindow);
+
+    nsCOMPtr<nsIDocument> focusedDoc = piWindow->GetDoc();
     if (!focusedDoc)
       return;
 

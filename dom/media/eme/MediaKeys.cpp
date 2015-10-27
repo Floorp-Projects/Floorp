@@ -312,9 +312,8 @@ MediaKeys::Init(ErrorResult& aRv)
                          NS_LITERAL_CSTRING("Couldn't get top-level window in MediaKeys::Init"));
     return promise.forget();
   }
-  nsCOMPtr<nsIDOMWindow> topWindow;
-  window->GetTop(getter_AddRefs(topWindow));
-  nsCOMPtr<nsPIDOMWindow> top = do_QueryInterface(topWindow);
+  window = window->GetOuterWindow();
+  nsCOMPtr<nsPIDOMWindow> top = window->GetTop();
   if (!top || !top->GetExtantDoc()) {
     promise->MaybeReject(NS_ERROR_DOM_INVALID_STATE_ERR,
                          NS_LITERAL_CSTRING("Couldn't get document in MediaKeys::Init"));

@@ -20,7 +20,7 @@ interface nsIContentSecurityPolicy;
 [ptr] native JSPrincipals(JSPrincipals);
 [ptr] native PrincipalArray(nsTArray<nsCOMPtr<nsIPrincipal> >);
 
-[scriptable, builtinclass, uuid(a083acd0-1ebf-4585-85ab-08cfdd9c96bd)]
+[scriptable, builtinclass, uuid(86e5fd29-dccb-4547-8918-f224005479a0)]
 interface nsIPrincipal : nsISerializable
 {
     /**
@@ -280,10 +280,25 @@ interface nsIPrincipal : nsISerializable
     [infallible] readonly attribute boolean unknownAppId;
 
     /**
-     * Returns true iff this principal is a null principal (corresponding to an
+     * Returns true iff this is a null principal (corresponding to an
      * unknown, hence assumed minimally privileged, security context).
      */
     [infallible] readonly attribute boolean isNullPrincipal;
+
+    /**
+     * Returns true iff this principal corresponds to a codebase origin.
+     */
+    [infallible] readonly attribute boolean isCodebasePrincipal;
+
+    /**
+     * Returns true iff this is an expanded principal.
+     */
+    [infallible] readonly attribute boolean isExpandedPrincipal;
+
+    /**
+     * Returns true iff this is the system principal.
+     */
+    [infallible] readonly attribute boolean isSystemPrincipal;
 
     /**
      * Returns true if this principal's origin is recognized as being on the

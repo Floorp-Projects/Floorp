@@ -1,5 +1,6 @@
 function foo() {
-    let (x=arguments) {
+    {
+      let x=arguments;
       return function() { return x; };
     }
 }

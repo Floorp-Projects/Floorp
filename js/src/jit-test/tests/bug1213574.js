@@ -2,7 +2,7 @@ if (helperThreadCount() === 0)
     quit(0);
 
 var lfGlobal = newGlobal();
-lfGlobal.offThreadCompileScript(`let (x) { throw 42; }`);
+lfGlobal.offThreadCompileScript(`{ let x; throw 42; }`);
 try {
     lfGlobal.runOffThreadScript();
 } catch (e) {

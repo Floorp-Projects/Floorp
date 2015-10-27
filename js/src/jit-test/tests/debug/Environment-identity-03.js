@@ -54,7 +54,7 @@ function test(sharedName, expectedHits, code) {
 test("q", 2, "let q = function (a) { h(); }; q(1); q(2);");
 test("a", 2, "q = function (a) { (function (b) { h(); a = b; })(2); h(); }; q(1);");
 test("a", 2, "q = function (a) { h(); return function (b) { h(); a = b; }; }; q(1)(2);");
-test("n", 3, "q = function (n) { for (var i = 0; i < n; i++) { let (j = i) { h(); } } }; q(3);");
+test("n", 3, "q = function (n) { for (var i = 0; i < n; i++) { { let j = i; h(); } } }; q(3);");
 
 // A function with long dynamic and static chains.
 var N = 80;

@@ -190,11 +190,11 @@ DocManager::OnStateChange(nsIWebProgress* aWebProgress,
   aWebProgress->GetDOMWindow(getter_AddRefs(DOMWindow));
   NS_ENSURE_STATE(DOMWindow);
 
-  nsCOMPtr<nsIDOMDocument> DOMDocument;
-  DOMWindow->GetDocument(getter_AddRefs(DOMDocument));
-  NS_ENSURE_STATE(DOMDocument);
+  nsCOMPtr<nsPIDOMWindow> piWindow = do_QueryInterface(DOMWindow);
+  MOZ_ASSERT(piWindow);
 
-  nsCOMPtr<nsIDocument> document(do_QueryInterface(DOMDocument));
+  nsCOMPtr<nsIDocument> document = piWindow->GetDoc();
+  NS_ENSURE_STATE(document);
 
   // Document was loaded.
   if (aStateFlags & STATE_STOP) {
