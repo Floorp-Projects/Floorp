@@ -4,10 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "jit/mips-shared/Bailouts-mips-shared.h"
-
-#include "jscntxt.h"
-#include "jscompartment.h"
+#include "jit/Bailouts.h"
 
 using namespace js;
 using namespace js::jit;
