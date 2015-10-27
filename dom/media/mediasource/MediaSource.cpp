@@ -88,7 +88,7 @@ IsTypeSupported(const nsAString& aType)
 
   for (uint32_t i = 0; gMediaSourceTypes[i]; ++i) {
     if (mimeType.EqualsASCII(gMediaSourceTypes[i])) {
-      if (DecoderTraits::IsMP4Type(mimeTypeUTF8)) {
+      if (DecoderTraits::IsMP4TypeAndEnabled(mimeTypeUTF8)) {
         if (!Preferences::GetBool("media.mediasource.mp4.enabled", false)) {
           return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
         }
@@ -98,7 +98,7 @@ IsTypeSupported(const nsAString& aType)
           return NS_ERROR_DOM_INVALID_STATE_ERR;
         }
         return NS_OK;
-      } else if (DecoderTraits::IsWebMType(mimeTypeUTF8)) {
+      } else if (DecoderTraits::IsWebMTypeAndEnabled(mimeTypeUTF8)) {
         if (!Preferences::GetBool("media.mediasource.webm.enabled", false)) {
           return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
         }
