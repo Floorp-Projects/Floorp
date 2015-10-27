@@ -307,13 +307,9 @@ struct AssemblerBufferWithConstantPools : public AssemblerBuffer<SliceSize, Inst
         {
         }
     };
-    // The number of times we've dumped a pool, and the number of Pool Info
-    // elements used in the poolInfo vector below.
-    unsigned numDumps_;
-    // The number of PoolInfo elements available in the poolInfo vector.
-    size_t poolInfoSize_;
-    // Pointer to a vector of PoolInfo structures. Grown as needed.
-    PoolInfo* poolInfo_;
+
+    // Info for each pool that has already been dumped. This does not include any entries in pool_.
+    Vector<PoolInfo, 8, LifoAllocPolicy<Fallible>> poolInfo_;
 
     // When true dumping pools is inhibited.
     bool canNotPlacePool_;
@@ -355,6 +351,9 @@ struct AssemblerBufferWithConstantPools : public AssemblerBuffer<SliceSize, Inst
     }
 
   public:
+    // Create an assembler buffer.
+    // Note that this constructor is not allowed to actually allocate memory from this->lifoAlloc_
+    // because the MacroAssembler constructor has not yet created an AutoJitContextAlloc.
     AssemblerBufferWithConstantPools(unsigned guardSize, unsigned headerSize,
                                      size_t instBufferAlign, size_t poolMaxOffset,
                                      unsigned pcBias, uint32_t alignFillInst, uint32_t nopFillInst,
@@ -366,9 +365,7 @@ struct AssemblerBufferWithConstantPools : public AssemblerBuffer<SliceSize, Inst
         pcBias_(pcBias),
         pool_(),
         instBufferAlign_(instBufferAlign),
-        numDumps_(0),
-        poolInfoSize_(8),
-        poolInfo_(nullptr),
+        poolInfo_(this->lifoAlloc_),  // OK: Vector() doesn't allocate, append() does.
         canNotPlacePool_(false),
 #ifdef DEBUG
         canNotPlacePoolStartOffset_(0),
@@ -384,11 +381,9 @@ struct AssemblerBufferWithConstantPools : public AssemblerBuffer<SliceSize, Inst
     // We need to wait until an AutoJitContextAlloc is created by the
     // MacroAssembler before allocating any space.
     void initWithAllocator() {
-        poolInfo_ = this->lifoAlloc_.template newArrayUninitialized<PoolInfo>(poolInfoSize_);
-        if (!poolInfo_) {
-            this->fail_oom();
-            return;
-        }
+        // We hand out references to lifoAlloc_ in the constructor.
+        // Check that no allocations were made then.
+        MOZ_ASSERT(this->lifoAlloc_.isEmpty(), "Illegal LIFO allocations before AutoJitContextAlloc");
 
         new (&pool_) Pool (poolMaxOffset_, pcBias_, this->lifoAlloc_);
         if (pool_.poolData() == nullptr)
@@ -396,17 +391,6 @@ struct AssemblerBufferWithConstantPools : public AssemblerBuffer<SliceSize, Inst
     }
 
   private:
-    const PoolInfo& getLastPoolInfo() const {
-        // Return the PoolInfo for the last pool dumped, or a zero PoolInfo
-        // structure if none have been dumped.
-        static const PoolInfo nil = {0, 0, 0, nullptr};
-
-        if (numDumps_ > 0)
-            return poolInfo_[numDumps_ - 1];
-
-        return nil;
-    }
-
     size_t sizeExcludingCurrentPool() const {
         // Return the actual size of the buffer, excluding the current pending
         // pool.
@@ -550,7 +534,7 @@ struct AssemblerBufferWithConstantPools : public AssemblerBuffer<SliceSize, Inst
   private:
     void finishPool() {
         JitSpew(JitSpew_Pools, "[%d] Attempting to finish pool %d with %d entries.", id,
-                numDumps_, pool_.numEntries());
+                poolInfo_.length(), pool_.numEntries());
 
         if (pool_.numEntries() == 0) {
             // If there is no data in the pool being dumped, don't dump anything.
@@ -602,21 +586,11 @@ struct AssemblerBufferWithConstantPools : public AssemblerBuffer<SliceSize, Inst
         }
 
         // Record the pool info.
-        if (numDumps_ >= poolInfoSize_) {
-            // Grow the poolInfo vector.
-            poolInfoSize_ *= 2;
-            PoolInfo* tmp = this->lifoAlloc_.template newArrayUninitialized<PoolInfo>(poolInfoSize_);
-            if (tmp == nullptr) {
-                this->fail_oom();
-                return;
-            }
-            mozilla::PodCopy(tmp, poolInfo_, numDumps_);
-            poolInfo_ = tmp;
-        }
         unsigned firstEntry = poolEntryCount - pool_.numEntries();
-        MOZ_ASSERT(numDumps_ < poolInfoSize_);
-        poolInfo_[numDumps_] = PoolInfo(firstEntry, data);
-        numDumps_++;
+        if (!poolInfo_.append(PoolInfo(firstEntry, data))) {
+            this->fail_oom();
+            return;
+        }
 
         // Reset everything to the state that it was in when we started.
         if (!pool_.reset(this->lifoAlloc_)) {
@@ -720,7 +694,7 @@ struct AssemblerBufferWithConstantPools : public AssemblerBuffer<SliceSize, Inst
                    "Invalid pool entry, or not flushed yet.");
         // Find the pool containing pe.index().
         // The array is sorted, so we can use a binary search.
-        auto b = poolInfo_, e = poolInfo_ + numDumps_;
+        auto b = poolInfo_.begin(), e = poolInfo_.end();
         // A note on asymmetric types in the upper_bound comparator:
         // http://permalink.gmane.org/gmane.comp.compilers.clang.devel/10101
         auto i = std::upper_bound(b, e, pe.index(), [](size_t value, const PoolInfo& entry) {
