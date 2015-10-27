@@ -15,13 +15,15 @@ const TreeItem = module.exports = createClass({
   render() {
     let { item, depth, arrow, focused } = this.props;
 
-    return dom.div({ className: "heap-tree-item", style: { marginLeft: depth * INDENT }},
-      arrow,
-      dom.span({ className: "heap-tree-item-name" }, item.name),
+    return dom.div({ className: "heap-tree-item" },
       dom.span({ className: "heap-tree-item-bytes" }, item.bytes),
       dom.span({ className: "heap-tree-item-count" }, item.count),
       dom.span({ className: "heap-tree-item-total-bytes" }, item.totalBytes),
-      dom.span({ className: "heap-tree-item-total-count" }, item.totalCount)
+      dom.span({ className: "heap-tree-item-total-count" }, item.totalCount),
+      dom.span({ className: "heap-tree-item-name", style: { marginLeft: depth * INDENT }},
+        arrow,
+        this.toLabel(item.name)
+      )
     );
   }
 });
