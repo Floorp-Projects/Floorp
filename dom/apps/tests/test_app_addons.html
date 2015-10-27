@@ -79,10 +79,12 @@ function installApp(manifestURL, expectedError) {
     apps.push(req.result);
     is(req.result.manifestURL, manifestURL, "app installed");
     if (req.result.installState == "installed") {
+      is(req.result.manifest.version, "1.0", "correct version");
       is(req.result.installState, "installed", "app downloaded");
       continueTest();
     } else {
       req.result.ondownloadapplied = function() {
+        is(req.result.manifest.version, "1.0", "correct version");
         is(req.result.installState, "installed", "app downloaded");
         continueTest();
       }
