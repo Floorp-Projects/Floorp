@@ -348,8 +348,10 @@ const ContentPanningAPZDisabled = {
       let isScrollableTextarea = (node.tagName == 'TEXTAREA' &&
           (node.scrollHeight > node.clientHeight ||
            node.scrollWidth > node.clientWidth ||
-           ('scrollLeftMax' in node && node.scrollLeftMax > 0) ||
-           ('scrollTopMax' in node && node.scrollTopMax > 0)));
+           ('scrollLeftMin' in node && 'scrollLeftMax' in node &&
+            node.scrollLeftMin != node.scrollLeftMax) ||
+           ('scrollTopMin' in node && 'scrollTopMax' in node &&
+            node.scrollTopMin != node.scrollTopMax)));
       if (isScroll || isAuto || isScrollableTextarea) {
         return node;
       }
