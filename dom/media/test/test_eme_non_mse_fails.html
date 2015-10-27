@@ -15,9 +15,9 @@ var manager = new MediaTestManager;
 function DoSetMediaKeys(v, test)
 {
   var options = [{
-    initDataType: "cenc",
-    audioType: test.audioType,
-    videoType: test.videoType,
+    initDataTypes: ["cenc"],
+    audioCapabilities: [{contentType: test.audioType}],
+    videoCapabilities: [{contentType: test.videoType}],
   }];
 
   return navigator.requestMediaKeySystemAccess("org.w3.clearkey", options)
