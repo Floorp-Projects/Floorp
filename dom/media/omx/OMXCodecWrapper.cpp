@@ -30,6 +30,7 @@ using namespace mozilla::layers;
 #define INPUT_BUFFER_TIMEOUT_US (5 * 1000ll)
 // AMR NB kbps
 #define AMRNB_BITRATE 12200
+#define EVRC_BITRATE 8755
 
 #define CODEC_ERROR(args...)                                                   \
   do {                                                                         \
@@ -37,6 +38,8 @@ using namespace mozilla::layers;
   } while (0)
 
 namespace android {
+
+const char *MEDIA_MIMETYPE_AUDIO_EVRC = "audio/evrc";
 
 enum BufferState
 {
@@ -85,6 +88,16 @@ OMXCodecWrapper::CreateAMRNBEncoder()
   return amr.forget();
 }
 
+OMXAudioEncoder*
+OMXCodecWrapper::CreateEVRCEncoder()
+{
+  nsAutoPtr<OMXAudioEncoder> evrc(new OMXAudioEncoder(CodecType::EVRC_ENC));
+  // Return the object only when media codec is valid.
+  NS_ENSURE_TRUE(evrc->IsValid(), nullptr);
+
+  return evrc.forget();
+}
+
 OMXVideoEncoder*
 OMXCodecWrapper::CreateAVCEncoder()
 {
@@ -99,6 +112,7 @@ OMXCodecWrapper::OMXCodecWrapper(CodecType aCodecType)
   : mCodecType(aCodecType)
   , mStarted(false)
   , mAMRCSDProvided(false)
+  , mEVRCCSDProvided(false)
 {
   ProcessState::self()->startThreadPool();
 
@@ -111,6 +125,8 @@ OMXCodecWrapper::OMXCodecWrapper(CodecType aCodecType)
     mCodec = MediaCodec::CreateByType(mLooper, MEDIA_MIMETYPE_AUDIO_AMR_NB, true);
   } else if (aCodecType == CodecType::AAC_ENC) {
     mCodec = MediaCodec::CreateByType(mLooper, MEDIA_MIMETYPE_AUDIO_AAC, true);
+  } else if (aCodecType == CodecType::EVRC_ENC) {
+    mCodec = MediaCodec::CreateByType(mLooper, MEDIA_MIMETYPE_AUDIO_EVRC, true);
   } else {
     NS_ERROR("Unknown codec type.");
   }
@@ -633,6 +649,10 @@ OMXAudioEncoder::Configure(int aChannels, int aInputSampleRate,
     format->setString("mime", MEDIA_MIMETYPE_AUDIO_AMR_NB);
     format->setInt32("bitrate", AMRNB_BITRATE);
     format->setInt32("sample-rate", aEncodedSampleRate);
+  } else if (mCodecType == EVRC_ENC) {
+    format->setString("mime", MEDIA_MIMETYPE_AUDIO_EVRC);
+    format->setInt32("bitrate", EVRC_BITRATE);
+    format->setInt32("sample-rate", aEncodedSampleRate);
   } else {
     MOZ_ASSERT(false, "Can't support this codec type!!");
   }
@@ -1070,6 +1090,18 @@ OMXCodecWrapper::GetNextEncodedFrame(nsTArray<uint8_t>* aOutputBuf,
       aOutputBuf->AppendElements(decConfig, sizeof(decConfig));
       outFlags |= MediaCodec::BUFFER_FLAG_CODECCONFIG;
       mAMRCSDProvided = true;
+    } else if ((mCodecType == EVRC_ENC) && !mEVRCCSDProvided){
+      // OMX EVRC codec won't provide csd data, need to generate a fake one.
+      RefPtr<EncodedFrame> audiodata = new EncodedFrame();
+      // Decoder config descriptor
+      const uint8_t decConfig[] = {
+        0x0, 0x0, 0x0, 0x0, // vendor: 4 bytes
+        0x0,                // decoder version
+        0x01,               // frames per sample
+      };
+      aOutputBuf->AppendElements(decConfig, sizeof(decConfig));
+      outFlags |= MediaCodec::BUFFER_FLAG_CODECCONFIG;
+      mEVRCCSDProvided = true;
     } else {
       AppendFrame(aOutputBuf, omxBuf->data(), omxBuf->size());
     }
