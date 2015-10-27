@@ -321,11 +321,7 @@ SpecialPowersObserverAPI.prototype = {
 
       case "SPPermissionManager": {
         let msg = aMessage.json;
-
-        let secMan = Services.scriptSecurityManager;
-        // TODO: Bug 1196665 - Add originAttributes into SpecialPowers
-        let attrs = {appId: msg.appId, inBrowser: msg.isInBrowserElement};
-        let principal = secMan.createCodebasePrincipal(this._getURI(msg.url), attrs);
+        let principal = msg.principal;
 
         switch (msg.op) {
           case "add":
@@ -336,17 +332,10 @@ SpecialPowersObserverAPI.prototype = {
             break;
           case "has":
             let hasPerm = Services.perms.testPermissionFromPrincipal(principal, msg.type);
-            if (hasPerm == Ci.nsIPermissionManager.ALLOW_ACTION) 
-              return true;
-            return false;
-            break;
+            return hasPerm == Ci.nsIPermissionManager.ALLOW_ACTION;
           case "test":
             let testPerm = Services.perms.testPermissionFromPrincipal(principal, msg.type, msg.value);
-            if (testPerm == msg.value)  {
-              return true;
-            }
-            return false;
-            break;
+            return testPerm == msg.value;
           default:
             throw new SpecialPowersError(
               "Invalid operation for SPPermissionManager");
@@ -510,17 +499,12 @@ SpecialPowersObserverAPI.prototype = {
                          .frameLoader
                          .messageManager;
         let msg = aMessage.data;
+        let principal = msg.principal;
         let op = msg.op;
 
         if (op != 'clear' && op != 'getUsage' && op != 'reset') {
           throw new SpecialPowersError('Invalid operation for SPQuotaManager');
         }
-
-        let secMan = Services.scriptSecurityManager;
-        let principal = secMan.createCodebasePrincipal(this._getURI(msg.uri), {
-          appId: msg.appId,
-          inBrowser: msg.inBrowser,
-        });
 
         if (op == 'clear') {
           qm.clearStoragesForPrincipal(principal);

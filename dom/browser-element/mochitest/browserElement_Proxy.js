@@ -14,16 +14,18 @@ function runTest() {
     allow: true,
     context: {
       url: frameUrl,
-      appId: SpecialPowers.Ci.nsIScriptSecurityManager.NO_APP_ID,
-      isInBrowserElement: true
+      originAttributes: {
+        inBrowser: true
+      }
     }
   },{
     type: 'browser',
     allow: true,
     context: {
       url: frameUrl,
-      appId: SpecialPowers.Ci.nsIScriptSecurityManager.NO_APP_ID,
-      isInBrowserElement: true
+      originAttributes: {
+        inBrowser: true
+      }
     }
   }], createFrame);
 }

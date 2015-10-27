@@ -12,9 +12,11 @@ browserElementTestHelpers.addPermission();
 
 function runTest() {
   var principal = SpecialPowers.wrap(document).nodePrincipal;
-  SpecialPowers.addPermission("browser", true, { url: SpecialPowers.wrap(principal.URI).spec,
-                                                 appId: principal.appId,
-                                                 isInBrowserElement: true });
+  SpecialPowers.addPermission("browser", true, {url: SpecialPowers.wrap(principal.URI).spec,
+                                                originAttributes: {
+                                                  appId: principal.appId,
+                                                  inBrowser: true
+                                                }});
 
   var iframe = document.createElement('iframe');
   iframe.setAttribute('mozbrowser', 'true');
@@ -56,9 +58,11 @@ function runTest() {
 
 function finish() {
   var principal = SpecialPowers.wrap(document).nodePrincipal;
-  SpecialPowers.removePermission("browser", { url: SpecialPowers.wrap(principal.URI).spec,
-                                              appId: principal.appId,
-                                              isInBrowserElement: true });
+  SpecialPowers.removePermission("browser", {url: SpecialPowers.wrap(principal.URI).spec,
+                                             originAttributes: {
+                                               appId: principal.appId,
+                                               inBrowser: true
+                                             }});
 
   SimpleTest.finish();
 }

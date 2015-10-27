@@ -126,6 +126,7 @@ SpecialPowers.pushPermissions([
     info("Adding B2G specific tests");
     tests.push(createManifestTest("manifest.chrome.navigation"));
     tests.push(createManifestTest("manifest.precompile"));
+    tests.push(createManifestTest("manifest.role.homescreen"));
   }
   runNextTest();
   ok(true, "Test DONE");

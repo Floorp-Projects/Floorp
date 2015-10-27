@@ -35,16 +35,7 @@ function runTests(testFile, order) {
   // adapted from dom/indexedDB/test/helpers.js
   function clearStorage() {
     return new Promise(function(resolve, reject) {
-      var principal = SpecialPowers.wrap(document).nodePrincipal;
-      var appId, inBrowser;
-      var nsIPrincipal = SpecialPowers.Components.interfaces.nsIPrincipal;
-      if (principal.appId != nsIPrincipal.UNKNOWN_APP_ID &&
-          principal.appId != nsIPrincipal.NO_APP_ID) {
-        appId = principal.appId;
-        inBrowser = principal.isInBrowserElement;
-      }
-      SpecialPowers.clearStorageForURI(document.documentURI, resolve, appId,
-                                       inBrowser);
+      SpecialPowers.clearStorageForDoc(SpecialPowers.wrap(document), resolve);
     });
   }
 
