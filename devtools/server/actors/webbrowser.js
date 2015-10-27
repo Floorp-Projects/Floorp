@@ -12,7 +12,7 @@ var promise = require("promise");
 var { ActorPool, createExtraActors, appendExtraActors } = require("devtools/server/actors/common");
 var { DebuggerServer } = require("devtools/server/main");
 var DevToolsUtils = require("devtools/shared/DevToolsUtils");
-var { dbg_assert } = DevToolsUtils;
+var { assert, dbg_assert } = DevToolsUtils;
 var { TabSources } = require("./utils/TabSources");
 var makeDebugger = require("./utils/make-debugger");
 
@@ -910,9 +910,9 @@ TabActor.prototype = {
   },
 
   form: function BTA_form() {
-    dbg_assert(!this.exited,
+    assert(!this.exited,
                "form() shouldn't be called on exited browser actor.");
-    dbg_assert(this.actorID,
+    assert(this.actorID,
                "tab should have an actorID.");
 
     let response = {
@@ -1029,7 +1029,7 @@ TabActor.prototype = {
     }
 
     // Create a pool for tab-lifetime actors.
-    dbg_assert(!this._tabPool, "Shouldn't have a tab pool if we weren't attached.");
+    assert(!this._tabPool, "Shouldn't have a tab pool if we weren't attached.");
     this._tabPool = new ActorPool(this.conn);
     this.conn.addActorPool(this._tabPool);
 
@@ -1278,7 +1278,7 @@ TabActor.prototype = {
    * up the content window for debugging.
    */
   _pushContext: function BTA_pushContext() {
-    dbg_assert(!this._contextPool, "Can't push multiple contexts");
+    assert(!this._contextPool, "Can't push multiple contexts");
 
     this._contextPool = new ActorPool(this.conn);
     this.conn.addActorPool(this._contextPool);
@@ -1292,7 +1292,7 @@ TabActor.prototype = {
    * The content window is no longer being debugged after this call.
    */
   _popContext: function BTA_popContext() {
-    dbg_assert(!!this._contextPool, "No context to pop.");
+    assert(!!this._contextPool, "No context to pop.");
 
     this.conn.removeActorPool(this._contextPool);
     this._contextPool = null;

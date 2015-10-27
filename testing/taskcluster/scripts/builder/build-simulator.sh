@@ -109,5 +109,5 @@ cp $SIM_DIR/icon.png $WORKDIR/
 cp $SIM_DIR/icon64.png $WORKDIR/
 
 mkdir -p artifacts
-(cd $WORKDIR && zip -r - .) > artifacts/$XPI_NAME
+(cd $WORKDIR && zip -r - .) > artifacts/fxos-simulator.xpi
 
