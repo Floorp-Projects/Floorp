@@ -854,34 +854,14 @@ final class GeckoEditable extends JNIObject
     }
 
     private void notifyCommitComposition() {
-        // Gecko already committed its composition, and
-        // we should remove the composition on our side as well.
-        boolean wasComposing = false;
-        final Object[] spans = mText.getSpans(0, mText.length(), Object.class);
-
-        for (Object span : spans) {
-            if ((mText.getSpanFlags(span) & Spanned.SPAN_COMPOSING) != 0) {
-                mText.removeSpan(span);
-                wasComposing = true;
-            }
-        }
-
-        if (!wasComposing) {
-            return;
-        }
-
-        // Generate a text change notification if we actually cleared the composition.
-        final CharSequence text = TextUtils.stringOrSpannedString(mText);
-        geckoPostToIc(new Runnable() {
-            @Override
-            public void run() {
-                mListener.onTextChange(text, 0, text.length(), text.length());
-            }
-        });
+        // Gecko already committed its composition. However, Android keyboards
+        // have trouble dealing with us removing the composition manually on
+        // the Java side. Therefore, we keep the composition intact on the Java
+        // side. The text content should still be in-sync on both sides.
     }
 
     private void notifyCancelComposition() {
-        // Composition should have been cancelled on our side
+        // Composition should have been canceled on our side
         // through text update notifications; verify that here.
         if (DEBUG) {
             final Object[] spans = mText.getSpans(0, mText.length(), Object.class);
