@@ -59,7 +59,7 @@ MediaDocumentStreamListener::OnStartRequest(nsIRequest* request, nsISupports *ct
     return mNextStream->OnStartRequest(request, ctxt);
   }
 
-  return NS_BINDING_ABORTED;
+  return NS_ERROR_PARSED_DATA_CACHED;
 }
 
 NS_IMETHODIMP
