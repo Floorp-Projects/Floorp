@@ -217,9 +217,11 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
 # has full system permissions there.
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
     EXPORTS.mozilla.layers += [
+        'basic/GrallocTextureHostBasic.h',
         'ipc/ShadowLayerUtilsGralloc.h',
     ]
     UNIFIED_SOURCES += [
+        'basic/GrallocTextureHostBasic.cpp',
         'GrallocImages.cpp',
         'opengl/EGLImageHelpers.cpp',
         'opengl/GrallocTextureClient.cpp',

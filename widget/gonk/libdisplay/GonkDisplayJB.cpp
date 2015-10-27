@@ -323,24 +323,41 @@ GonkDisplayJB::DequeueBuffer()
 bool
 GonkDisplayJB::QueueBuffer(ANativeWindowBuffer* buf)
 {
-    int error = 0;
     bool success = false;
+    int error = DoQueueBuffer(buf);
+    // Check for bootAnim or normal display flow.
+    if (!mBootAnimSTClient.get()) {
+        success = Post(mDispSurface->lastHandle, mDispSurface->GetPrevDispAcquireFd());
+    } else {
+        success = Post(mBootAnimDispSurface->lastHandle, mBootAnimDispSurface->GetPrevDispAcquireFd());
+    }
+    return error == 0 && success;
+}
+
+int
+GonkDisplayJB::DoQueueBuffer(ANativeWindowBuffer* buf)
+{
+    int error = 0;
     // Check for bootAnim or normal display flow.
     if (!mBootAnimSTClient.get()) {
         error = mSTClient->queueBuffer(mSTClient.get(), buf, -1);
-        success = Post(mDispSurface->lastHandle, mDispSurface->GetPrevDispAcquireFd());
     } else {
         error = mBootAnimSTClient->queueBuffer(mBootAnimSTClient.get(), buf, -1);
-        success = Post(mBootAnimDispSurface->lastHandle, mBootAnimDispSurface->GetPrevDispAcquireFd());
     }
-
-    return error == 0 && success;
+    return error;
 }
 
 void
 GonkDisplayJB::UpdateDispSurface(EGLDisplay dpy, EGLSurface sur)
 {
-    eglSwapBuffers(dpy, sur);
+    if (sur != EGL_NO_SURFACE) {
+      eglSwapBuffers(dpy, sur);
+    } else {
+      // When BasicCompositor is used as Compositor,
+      // EGLSurface does not exit.
+      ANativeWindowBuffer* buf = DequeueBuffer();
+      DoQueueBuffer(buf);
+    }
 }
 
 void
