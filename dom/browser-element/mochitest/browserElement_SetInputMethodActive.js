@@ -36,7 +36,8 @@ function runTest() {
     allow: true,
     context: {
       url: imeUrl,
-      originAttributes: {'inBrowser': true}
+      appId: SpecialPowers.Ci.nsIScriptSecurityManager.NO_APP_ID,
+      isInBrowserElement: true
     }
   }], SimpleTest.waitForFocus.bind(SimpleTest, createFrames));
 }

@@ -32,8 +32,8 @@ function setUp() {
 
   let appId = gAppsService.getAppLocalIdByManifestURL(APP_MANIFEST);
   SpecialPowers.addPermission("foobar", true, { url: APP_URL,
-                                                originAttributes: { appId: appId }
-                                              });
+                                                appId: appId,
+                                                isInBrowserElement: false });
   SpecialPowers.pushPrefEnv({"set":[['dom.mozBrowserFramesEnabled', true],
                                     ['dom.ipc.browser_frames.oop_by_default', true]]}, runNextTest);
 }

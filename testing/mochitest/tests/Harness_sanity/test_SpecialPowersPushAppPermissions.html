@@ -69,7 +69,8 @@ function installApp(aTestToken, aTemplate) {
 function pushPermissionsToApp() {
   var appId = gAppsService.getAppLocalIdByManifestURL(gApp.manifestURL);
   var context = { url: gApp.origin,
-                  originAttributes: {appId: appId}};
+                  appId: appId,
+                  isInBrowserElement: false };
   SpecialPowers.pushPermissions([
       { "type": "pAppPermission", "allow": true, "context": context }
     ], testPermissionsForApp);
@@ -78,7 +79,8 @@ function pushPermissionsToApp() {
 function testPermissionsForApp() {
   var appId = gAppsService.getAppLocalIdByManifestURL(gApp.manifestURL);
   var context = { url: gApp.origin,
-                  originAttributes: {appId: appId}};
+                  appId: appId,
+                  isInBrowserElement: false };
   ok(SpecialPowers.hasPermission('pAppPermission', context), 'pAppPermission should have permission');
   uninstallApp();
 }
@@ -93,10 +95,10 @@ function uninstallApp() {
 
 function testPermissionsForSelfAndApp() {
   var appId = gAppsService.getAppLocalIdByManifestURL(gApp.manifestURL);
-  is(appId, 0, "appId should become NO_APP_ID");
-  // since gApp is uninstalled, calling SpecialPowers.hasPermission with the
-  // app's properties (manifestURL, origin, principal, ... etc) will throw.
-  // So we don't need to test hasPermission for the app.
+  var context = { url: gApp.origin,
+                  appId: appId,
+                  isInBrowserElement: false };
+  ok(!SpecialPowers.hasPermission('pAppPermission', context), 'pAppPermission should not have permission');
 
   ok(SpecialPowers.hasPermission('pAppPermission', document), 'pAppPermission should have permission');
 

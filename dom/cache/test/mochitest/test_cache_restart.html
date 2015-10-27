@@ -23,7 +23,16 @@ function setupTestIframe() {
 
 function resetStorage() {
   return new Promise(function(resolve, reject) {
-    SpecialPowers.resetStorageForDoc(SpecialPowers.wrap(document), resolve);
+    var principal = SpecialPowers.wrap(document).nodePrincipal;
+    var appId, inBrowser;
+    var nsIPrincipal = SpecialPowers.Components.interfaces.nsIPrincipal;
+    if (principal.appId != nsIPrincipal.UNKNOWN_APP_ID &&
+        principal.appId != nsIPrincipal.NO_APP_ID) {
+      appId = principal.appId;
+      inBrowser = principal.isInBrowserElement;
+    }
+    SpecialPowers.resetStorageForURI(document.documentURI, resolve, appId,
+                                     inBrowser);
   });
 }
 
