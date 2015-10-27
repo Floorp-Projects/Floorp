@@ -2856,8 +2856,7 @@ nsObjectLoadingContent::ScriptRequestPluginInstance(JSContext* aCx,
                 aCx == nsContentUtils::GetCurrentJSContext());
   bool callerIsContentJS = (nsContentUtils::GetCurrentJSContext() &&
                             !nsContentUtils::IsCallerChrome() &&
-                            !nsContentUtils::IsCallerContentXBL() &&
-                            JS_IsRunning(aCx));
+                            !nsContentUtils::IsCallerContentXBL());
 
   nsCOMPtr<nsIContent> thisContent =
     do_QueryInterface(static_cast<nsIImageLoadingContent*>(this));
