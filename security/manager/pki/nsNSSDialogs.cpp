@@ -82,7 +82,6 @@ nsNSSDialogs::SetPassword(nsIInterfaceRequestor *ctx,
            do_CreateInstance(NS_DIALOGPARAMBLOCK_CONTRACTID);
   if (!block) return NS_ERROR_FAILURE;
 
-  // void ChangePassword(in wstring tokenName, out int status);
   rv = block->SetString(1, tokenName);
   if (NS_FAILED(rv)) return rv;
 

@@ -42,7 +42,7 @@
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
-      <PreprocessorDefinitions>USE_SSE2;WIN32;_DEBUG;_WINDOWS;%(PreprocessorDefinitions);GFX_LOG_DEBUG;GFX_LOG_WARNING;MFBT_STAND_ALONE;XP_WIN</PreprocessorDefinitions>
+      <PreprocessorDefinitions>USE_SSE2;WIN32;_DEBUG;_WINDOWS;%(PreprocessorDefinitions);MFBT_STAND_ALONE;XP_WIN</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
@@ -62,7 +62,7 @@
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
-      <PreprocessorDefinitions>USE_SSE2;WIN32;NDEBUG;_WINDOWS;%(PreprocessorDefinitions);GFX_LOG_WARNING</PreprocessorDefinitions>
+      <PreprocessorDefinitions>USE_SSE2;WIN32;NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>

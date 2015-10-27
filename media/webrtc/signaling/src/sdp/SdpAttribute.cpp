@@ -485,7 +485,6 @@ static std::string ParseToken(std::istream& is,
                               const std::string& delims,
                               std::string* error)
 {
-  is >> std::ws;
   std::string token;
   while (is) {
     unsigned char c = PeekChar(is, error);
@@ -846,6 +845,7 @@ SdpRidAttributeList::Constraints::Parse(std::istream& is, std::string* error)
   }
 
   do {
+    is >> std::ws;
     std::string key = ParseKey(is, error);
     if (key.empty()) {
       return false; // Illegal trailing cruft
@@ -984,6 +984,7 @@ SdpRidAttributeList::Rid::Parse(std::istream& is, std::string* error)
     return false;
   }
 
+  is >> std::ws;
   std::string directionToken = ParseToken(is, " ", error);
   if (directionToken == "send") {
     direction = sdp::kSend;
@@ -1119,8 +1120,8 @@ void
 SdpSimulcastAttribute::Version::Serialize(std::ostream& os) const
 {
   SkipFirstDelimiter comma(",");
-  for (uint16_t format : choices) {
-    os << comma << format;
+  for (const std::string& choice : choices) {
+    os << comma << choice;
   }
 }
 
@@ -1128,8 +1129,8 @@ bool
 SdpSimulcastAttribute::Version::Parse(std::istream& is, std::string* error)
 {
   do {
-    uint16_t value;
-    if (!GetUnsigned<uint16_t>(is, 0, UINT16_MAX, &value, error)) {
+    std::string value = ParseToken(is, ",; ", error);
+    if (value.empty()) {
       return false;
     }
     choices.push_back(value);
@@ -1138,32 +1139,33 @@ SdpSimulcastAttribute::Version::Parse(std::istream& is, std::string* error)
   return true;
 }
 
-void
-SdpSimulcastAttribute::Version::AppendAsStrings(
-    std::vector<std::string>* formats) const
+bool
+SdpSimulcastAttribute::Version::GetChoicesAsFormats(
+    std::vector<uint16_t>* formats) const
 {
-  for (uint16_t pt : choices) {
-    std::ostringstream os;
-    os << pt;
-    formats->push_back(os.str());
-  }
-}
-
-void
-SdpSimulcastAttribute::Version::AddChoice(const std::string& pt)
-{
-  uint16_t ptAsInt;
-  if (!SdpHelper::GetPtAsInt(pt, &ptAsInt)) {
-    MOZ_ASSERT(false);
-    return;
+  for (const std::string& choice : choices) {
+    uint16_t format;
+    if (!SdpHelper::GetPtAsInt(choice, &format) || (format > 127)) {
+      return false;
+    }
+    formats->push_back(format);
   }
 
-  choices.push_back(ptAsInt);
+  return true;
 }
 
 void
 SdpSimulcastAttribute::Versions::Serialize(std::ostream& os) const
 {
+  switch (type) {
+    case kRid:
+      os << "rid=";
+      break;
+    case kPt:
+      os << "pt=";
+      break;
+  }
+
   SkipFirstDelimiter semic(";");
   for (const Version& version : *this) {
     if (!version.IsSet()) {
@@ -1177,11 +1179,35 @@ SdpSimulcastAttribute::Versions::Serialize(std::ostream& os) const
 bool
 SdpSimulcastAttribute::Versions::Parse(std::istream& is, std::string* error)
 {
+  std::string rawType = ParseKey(is, error);
+  if (rawType.empty()) {
+    return false;
+  }
+
+  if (rawType == "pt") {
+    type = kPt;
+  } else if (rawType == "rid") {
+    type = kRid;
+  } else {
+    *error = "Unknown simulcast identification type ";
+    error->append(rawType);
+    return false;
+  }
+
   do {
     Version version;
     if (!version.Parse(is, error)) {
       return false;
     }
+
+    if (type == kPt) {
+      std::vector<uint16_t> formats;
+      if (!version.GetChoicesAsFormats(&formats)) {
+        *error = "Invalid payload type";
+        return false;
+      }
+    }
+
     push_back(version);
   } while(SkipChar(is, ';', error));
 
@@ -1191,9 +1217,7 @@ SdpSimulcastAttribute::Versions::Parse(std::istream& is, std::string* error)
 void
 SdpSimulcastAttribute::Serialize(std::ostream& os) const
 {
-  MOZ_ASSERT(sendVersions.IsSet() ||
-             recvVersions.IsSet() ||
-             sendrecvVersions.IsSet());
+  MOZ_ASSERT(sendVersions.IsSet() || recvVersions.IsSet());
 
   os << "a=" << mType << ":";
 
@@ -1207,11 +1231,6 @@ SdpSimulcastAttribute::Serialize(std::ostream& os) const
     recvVersions.Serialize(os);
   }
 
-  if (sendrecvVersions.IsSet()) {
-    os << " sendrecv ";
-    sendrecvVersions.Serialize(os);
-  }
-
   os << CRLF;
 }
 
@@ -1220,9 +1239,9 @@ SdpSimulcastAttribute::Parse(std::istream& is, std::string* error)
 {
   bool gotRecv = false;
   bool gotSend = false;
-  bool gotSendrecv = false;
 
   while (true) {
+    is >> std::ws;
     std::string token = ParseToken(is, " \t", error);
     if (token.empty()) {
       break;
@@ -1250,24 +1269,13 @@ SdpSimulcastAttribute::Parse(std::istream& is, std::string* error)
       if (!recvVersions.Parse(is, error)) {
         return false;
       }
-    } else if (token == "sendrecv") {
-      if (gotSendrecv) {
-        *error = "Already got a sendrecv list";
-        return false;
-      }
-      gotSendrecv = true;
-
-      is >> std::ws;
-      if (!sendrecvVersions.Parse(is, error)) {
-        return false;
-      }
     } else {
-      *error = "Type must be either 'send', 'recv', or 'sendrecv'";
+      *error = "Type must be either 'send' or 'recv'";
       return false;
     }
   }
 
-  if (!gotSend && !gotRecv && !gotSendrecv) {
+  if (!gotSend && !gotRecv) {
     *error = "Empty simulcast attribute";
     return false;
   }

@@ -138,6 +138,10 @@ this.UserCustomizations = {
       result.icons = aManifest.icons;
     }
 
+    if (aManifest.version) {
+      result.version = aManifest.version;
+    }
+
     // chrome extension manifests have a single 'author' property, that we
     // map to 'developer.name'.
     // Note that it has to match the one in the mini-manifest.

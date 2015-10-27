@@ -11,8 +11,6 @@
 
 NS_IMPL_ISUPPORTS(nsRandomGenerator, nsIRandomGenerator)
 
-// void generateRandomBytes(in unsigned long aLength,
-//                          [retval, array, size_is(aLength)] out octet aBuffer)
 NS_IMETHODIMP
 nsRandomGenerator::GenerateRandomBytes(uint32_t aLength,
                                        uint8_t** aBuffer)

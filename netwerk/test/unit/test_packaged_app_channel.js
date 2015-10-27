@@ -241,7 +241,7 @@ function test_channel_with_bad_signature_from_trusted_origin() {
   let pref = "network.http.signed-packages.trusted-origin";
   ok(!!Ci.nsISupportsString, "Ci.nsISupportsString");
   let origin = Cc["@mozilla.org/supports-string;1"].createInstance(Ci.nsISupportsString);
-  origin.data = uri + "^appId=1024";
+  origin.data = uri;
   Services.prefs.setComplexValue(pref, Ci.nsISupportsString, origin);
   var channel = make_channel(uri+"/package_with_bad_signature!//index.html");
   channel.notificationCallbacks = new LoadContextCallback(1024, false, false, false);

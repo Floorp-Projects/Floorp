@@ -6717,7 +6717,7 @@ class MStringSplit
     }
 };
 
-// Returns an object to use as |this| value. See also ComputeThis and
+// Returns the value to use as |this| value. See also ComputeThis and
 // BoxNonStrictThis in Interpreter.h.
 class MComputeThis
   : public MUnaryInstruction,
@@ -6726,7 +6726,7 @@ class MComputeThis
     explicit MComputeThis(MDefinition* def)
       : MUnaryInstruction(def)
     {
-        setResultType(MIRType_Object);
+        setResultType(MIRType_Value);
     }
 
   public:

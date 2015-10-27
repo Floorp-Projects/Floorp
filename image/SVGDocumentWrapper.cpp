@@ -200,9 +200,6 @@ SVGDocumentWrapper::TickRefreshDriver()
 
 /** nsIStreamListener methods **/
 
-/* void onDataAvailable (in nsIRequest request, in nsISupports ctxt,
-                         in nsIInputStream inStr, in unsigned long sourceOffset,
-                         in unsigned long count); */
 NS_IMETHODIMP
 SVGDocumentWrapper::OnDataAvailable(nsIRequest* aRequest, nsISupports* ctxt,
                                     nsIInputStream* inStr,
@@ -236,8 +233,6 @@ SVGDocumentWrapper::OnStartRequest(nsIRequest* aRequest, nsISupports* ctxt)
 }
 
 
-/* void onStopRequest (in nsIRequest request, in nsISupports ctxt,
-                       in nsresult status); */
 NS_IMETHODIMP
 SVGDocumentWrapper::OnStopRequest(nsIRequest* aRequest, nsISupports* ctxt,
                                   nsresult status)

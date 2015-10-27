@@ -52,6 +52,7 @@ Structure::
       chromeHangs: {...},
       threadHangStats: {...},
       log: [...],
+      webrtc: {...},
       fileIOReports: {...},
       lateWrites: {...},
       addonDetails: {...},
