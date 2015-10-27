@@ -12,7 +12,6 @@
 
 #include "mozilla/Mutex.h"
 #include "nsDebug.h"
-#include "MediaDecoder.h"
 #include "nsNetUtil.h"
 #include "nsThreadUtils.h"
 #include "nsIFile.h"
@@ -904,32 +903,6 @@ ChannelMediaResource::CacheClientNotifyDataReceived()
   NS_DispatchToMainThread(mDataReceivedEvent.get());
 }
 
-class DataEnded : public nsRunnable {
-public:
-  DataEnded(MediaDecoder* aDecoder, nsresult aStatus) :
-    mDecoder(aDecoder), mStatus(aStatus) {}
-  NS_IMETHOD Run() {
-    mDecoder->NotifyDownloadEnded(mStatus);
-    if (NS_SUCCEEDED(mStatus)) {
-      MediaDecoderOwner* owner = mDecoder->GetMediaOwner();
-      if (owner) {
-        dom::HTMLMediaElement* element = owner->GetMediaElement();
-        if (element) {
-          element->DownloadSuspended();
-        }
-      }
-      // NotifySuspendedStatusChanged will tell the element that download
-      // has been suspended "by the cache", which is true since we never download
-      // anything. The element can then transition to HAVE_ENOUGH_DATA.
-      mDecoder->NotifySuspendedStatusChanged();
-    }
-    return NS_OK;
-  }
-private:
-  RefPtr<MediaDecoder> mDecoder;
-  nsresult               mStatus;
-};
-
 void
 ChannelMediaResource::CacheClientNotifyDataEnded(nsresult aStatus)
 {
@@ -1647,38 +1620,6 @@ void BaseMediaResource::ModifyLoadFlags(nsLoadFlags aFlags)
     NS_ASSERTION(NS_SUCCEEDED(rv), "AddRequest() failed!");
   }
 }
-
-class DispatchBytesConsumedEvent : public nsRunnable {
-public:
-  DispatchBytesConsumedEvent(MediaDecoder* aDecoder,
-                             int64_t aNumBytes,
-                             int64_t aOffset)
-    : mDecoder(aDecoder),
-      mNumBytes(aNumBytes),
-      mOffset(aOffset)
-  {
-    MOZ_COUNT_CTOR(DispatchBytesConsumedEvent);
-  }
-
-protected:
-  ~DispatchBytesConsumedEvent()
-  {
-    MOZ_COUNT_DTOR(DispatchBytesConsumedEvent);
-  }
-
-public:
-  NS_IMETHOD Run() {
-    mDecoder->NotifyBytesConsumed(mNumBytes, mOffset);
-    // Drop ref to decoder on main thread, just in case this reference
-    // ends up being the last owning reference somehow.
-    mDecoder = nullptr;
-    return NS_OK;
-  }
-
-  RefPtr<MediaDecoder> mDecoder;
-  int64_t mNumBytes;
-  int64_t mOffset;
-};
 
 void BaseMediaResource::DispatchBytesConsumed(int64_t aNumBytes, int64_t aOffset)
 {
