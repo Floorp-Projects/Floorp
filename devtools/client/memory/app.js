@@ -6,7 +6,6 @@ const { DOM: dom, createClass, createFactory, PropTypes } = require("devtools/cl
 const { connect } = require("devtools/client/shared/vendor/react-redux");
 const { toggleRecordingAllocationStacks } = require("./actions/allocations");
 const { setBreakdownAndRefresh } = require("./actions/breakdown");
-const { toggleInvertedAndRefresh } = require("./actions/inverted");
 const { selectSnapshotAndRefresh, takeSnapshotAndCensus } = require("./actions/snapshot");
 const { breakdownNameToSpec, getBreakdownDisplayData } = require("./utils");
 const Toolbar = createFactory(require("./components/toolbar"));
@@ -40,7 +39,6 @@ const App = createClass({
       heapWorker,
       breakdown,
       allocations,
-      inverted
     } = this.props;
 
     let selectedSnapshot = snapshots.find(s => s.selected);
@@ -55,10 +53,7 @@ const App = createClass({
             dispatch(setBreakdownAndRefresh(heapWorker, breakdownNameToSpec(breakdown))),
           onToggleRecordAllocationStacks: () =>
             dispatch(toggleRecordingAllocationStacks(front)),
-          allocations,
-          inverted,
-          onToggleInverted: () =>
-            dispatch(toggleInvertedAndRefresh(heapWorker))
+          allocations
         }),
 
         dom.div({ id: "memory-tool-container" }, [
