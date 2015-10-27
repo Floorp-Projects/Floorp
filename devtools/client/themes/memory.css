@@ -19,9 +19,24 @@
   --row-hover-background-color: rgba(76,158,217,0.2);
 }
 
+html, .theme-body, #app, #memory-tool, #memory-tool-container {
+  height: 100%;
+}
+
+.theme-body {
+  overflow: hidden;
+  background-color: var(--theme-body-background);
+}
+
 #memory-tool-container {
   display: flex;
   flex-direction: row;
+  --toolbar-height: 20px;
+  /**
+   * If --heap-tree-row-height changes, be sure to change HEAP_TREE_ROW_HEIGHT
+   * in `devtools/client/memory/components/heap.js`.
+   */
+  --heap-tree-row-height: 14px;
 }
 
 /**
@@ -63,7 +78,7 @@
   display: flex;
   flex-direction: row;
   align-items: center;
-  height: 20px;
+  height: var(--toolbar-height);
 }
 
 /**
@@ -91,13 +106,18 @@
   width: 186px;
   list-style-type: none;
   font-size: 12px;
+  height: 100%;
+  overflow-y: scroll;
+  background-color: var(--theme-toolbar-background);
+  border-color: var(--theme-splitter-color);
+  color: var(--theme-body-color-alt);
+  border-left-width: 1px;
 }
 
 .list > li {
   height: 40px;
   color: var(--theme-body-color);
-  border-bottom: 1px solid transparent;
-  border-top: 1px solid rgba(128,128,128,0.15);
+  border-bottom: 1px solid rgba(128,128,128,0.15);
   padding: 8px;
   cursor: pointer;
 }
@@ -127,6 +147,9 @@
 
 #heap-view {
   flex: 1 1 auto;
+  border-color: var(--theme-splitter-color);
+  color: var(--theme-body-color)
+  border-left-width: 1px;
 }
 
 #heap-view .heap-view-panel {
@@ -138,65 +161,86 @@
 }
 
 /**
- * Heap View
+ * Heap Tree View
  */
 
-.heap-view {
-  position: relative;
+#heap-view .theme-twisty {
+  float: left;
 }
 
-.heap-view .theme-twisty {
-  text-align: end;
+.tree {
+  height: 100%;
+  overflow-y: scroll;
 }
 
-.heap-tree-item {
+.tree .header {
+  height: 17px;
+  overflow: hidden;
+  color: var(--theme-body-color);
+  background-color: var(--theme-tab-toolbar-background);
+}
+
+.tree span {
+  border-left-color: var(--cell-border-color);
+  border-left-width: 1px;
+}
+
+.tree-node {
+  height: var(--heap-tree-row-height);
+}
+
+.heap-tree-item, .header {
   list-style-type: none;
-  /* display: none; */
+  height: var(--heap-tree-row-height);
 }
 
-.heap-tree-item[expanded] {
-  display: block;
+.heap-tree-item span, .header span {
+  float: left;
 }
 
-.heap-tree-item:nth-child(2n) {
+.tree-node:nth-child(2n) {
   background-color: var(--row-alt-background-color);
 }
 
-.heap-tree-item:hover {
+.tree-node:hover {
   background-color: var(--row-hover-background-color);
 }
 
-.heap-tree-item:focus {
+.tree-node:focus {
   background-color: var(--theme-selection-background);
 }
 
-.heap-tree-item:focus description {
-  color: var(--theme-selection-color) !important;
+.header {
+  background-color: var(--theme-tab-toolbar-background);
 }
 
-.heap-tree-item:focus .call-tree-cell {
-  -moz-border-end-color: var(--focus-cell-border-color);
-}
-
-
-.heap-tree-cell[type="bytes"], .heap-tree-cell[type="count"] {
-  position: absolute;
-  text-align: right;
-  width: 40px;
-}
-
-.heap-tree-cell[type="name"] {
-  width: 150px;
+.header span {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  display: block;
+  text-align: center;
+  font-size: 90%;
 }
 
-.heap-tree-cell[type="count"] {
-  left: 300px;
+.heap-tree-item-bytes,
+.heap-tree-item-count,
+.heap-tree-item-total-bytes,
+.heap-tree-item-total-count {
+  text-align: right;
+  border-right: var(--cell-border-color) 1px solid;
+  padding-right: 5px;
 }
 
-.heap-tree-cell[type="bytes"] {
-  left: 250px;
+.heap-tree-item-count,
+.heap-tree-item-total-count {
+  width: 5vw;
+}
+
+.heap-tree-item-bytes,
+.heap-tree-item-total-bytes {
+  width: 7vw;
+}
+
+.heap-tree-item-name {
+  padding-left: 10px;
 }
