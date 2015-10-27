@@ -96,10 +96,6 @@ add_task(function* test_expiration_origin_threshold() {
     makeWebSocket(uri) {
       return new MockWebSocket(uri, {
         onHello(request) {
-          deepEqual(request.channelIDs.sort(), [
-            '46cc6f6a-c106-4ffa-bb7c-55c60bd50c41',
-            'eb33fc90-c883-4267-b5cb-613969e8e349',
-          ], 'Wrong active registrations in handshake');
           this.serverSendMsg(JSON.stringify({
             messageType: 'hello',
             status: 200,

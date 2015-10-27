@@ -112,8 +112,7 @@ AudioChannelAgent::InitInternal(nsIDOMWindow* aWindow, int32_t aChannelType,
   MOZ_ASSERT(pInnerWindow->IsInnerWindow());
   mInnerWindowID = pInnerWindow->WindowID();
 
-  nsCOMPtr<nsIDOMWindow> topWindow;
-  aWindow->GetScriptableTop(getter_AddRefs(topWindow));
+  nsCOMPtr<nsPIDOMWindow> topWindow = pInnerWindow->GetScriptableTop();
   if (NS_WARN_IF(!topWindow)) {
     return NS_OK;
   }

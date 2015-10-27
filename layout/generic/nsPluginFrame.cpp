@@ -788,10 +788,9 @@ nsPluginFrame::GetRemoteTabChromeOffset()
 {
   LayoutDeviceIntPoint offset;
   if (XRE_IsContentProcess()) {
-    nsCOMPtr<nsIDOMWindow> window = do_QueryInterface(GetContent()->OwnerDoc()->GetWindow());
+    nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(GetContent()->OwnerDoc()->GetWindow());
     if (window) {
-      nsCOMPtr<nsIDOMWindow> topWindow;
-      window->GetTop(getter_AddRefs(topWindow));
+      nsCOMPtr<nsPIDOMWindow> topWindow = window->GetTop();
       if (topWindow) {
         dom::TabChild* tc = dom::TabChild::GetFrom(topWindow);
         if (tc) {

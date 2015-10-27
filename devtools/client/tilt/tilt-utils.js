@@ -371,8 +371,10 @@ TiltUtils.DOM = {
     aContentWindow)
   {
     return {
-      width: aContentWindow.innerWidth + aContentWindow.scrollMaxX,
-      height: aContentWindow.innerHeight + aContentWindow.scrollMaxY
+      width: aContentWindow.innerWidth +
+        aContentWindow.scrollMaxX - aContentWindow.scrollMinX,
+      height: aContentWindow.innerHeight +
+        aContentWindow.scrollMaxY - aContentWindow.scrollMinY
     };
   },
 

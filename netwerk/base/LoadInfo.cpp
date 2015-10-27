@@ -74,10 +74,8 @@ LoadInfo::LoadInfo(nsIPrincipal* aLoadingPrincipal,
       mInnerWindowID = inner ? inner->WindowID() : 0;
       mOuterWindowID = outerWindow->WindowID();
 
-      nsCOMPtr<nsIDOMWindow> parent;
-      outerWindow->GetParent(getter_AddRefs(parent));
-      nsCOMPtr<nsPIDOMWindow> piParent = do_QueryInterface(parent);
-      mParentOuterWindowID = piParent->WindowID();
+      nsCOMPtr<nsPIDOMWindow> parent = outerWindow->GetParent();
+      mParentOuterWindowID = parent->WindowID();
     }
 
     mUpgradeInsecureRequests = aLoadingContext->OwnerDoc()->GetUpgradeInsecureRequests();

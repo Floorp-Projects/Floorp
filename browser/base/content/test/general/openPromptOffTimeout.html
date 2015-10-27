@@ -1,0 +1,10 @@
+<body>
+This page opens an alert box when the page is hidden.
+<script>
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden) {
+    alert("You hid my page!");
+  }
+}, false);
+</script>
+</body>

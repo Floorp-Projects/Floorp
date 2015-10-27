@@ -991,6 +991,7 @@ MessageChannel::Send(Message* aMsg, Message* aReply)
 bool
 MessageChannel::Call(Message* aMsg, Message* aReply)
 {
+    nsAutoPtr<Message> msg(aMsg);
     AssertWorkerThread();
     mMonitor->AssertNotCurrentThreadOwns();
 
@@ -1000,11 +1001,11 @@ MessageChannel::Call(Message* aMsg, Message* aReply)
 
     // This must come before MonitorAutoLock, as its destructor acquires the
     // monitor lock.
-    CxxStackFrame cxxframe(*this, OUT_MESSAGE, aMsg);
+    CxxStackFrame cxxframe(*this, OUT_MESSAGE, msg);
 
     MonitorAutoLock lock(*mMonitor);
     if (!Connected()) {
-        ReportConnectionError("MessageChannel::Call", aMsg);
+        ReportConnectionError("MessageChannel::Call", msg);
         return false;
     }
 
@@ -1013,9 +1014,7 @@ MessageChannel::Call(Message* aMsg, Message* aReply)
                "cannot issue Interrupt call while blocked on sync request");
     IPC_ASSERT(!DispatchingSyncMessage(),
                "violation of sync handler invariant");
-    IPC_ASSERT(aMsg->is_interrupt(), "can only Call() Interrupt messages here");
-
-    nsAutoPtr<Message> msg(aMsg);
+    IPC_ASSERT(msg->is_interrupt(), "can only Call() Interrupt messages here");
 
     msg->set_seqno(NextSeqno());
     msg->set_interrupt_remote_stack_depth_guess(mRemoteStackDepthGuess);

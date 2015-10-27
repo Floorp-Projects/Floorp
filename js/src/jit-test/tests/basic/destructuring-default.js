@@ -92,17 +92,6 @@ function testThrow(pattern, input) {
 }
 testAll(testThrow);
 
-// XXX: Support for let blocks will be removed in bug 1023609.
-// However, they test a special code path in destructuring assignment so having
-// these tests here for now seems like a good idea.
-function testLetBlock(pattern, input) {
-  return new Function('input',
-    'let (' + pattern + ' = input)' +
-    '{ return [a, b, c, d, e, f]; }'
-  )(input);
-}
-testAll(testLetBlock);
-
 // test global const
 const [ca = 1, cb = 2] = [];
 assertEq(ca, 1);

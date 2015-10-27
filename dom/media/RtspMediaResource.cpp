@@ -488,9 +488,9 @@ RtspTrackBuffer::PlayoutDelayTimerCallback(nsITimer *aTimer,
 //-----------------------------------------------------------------------------
 // RtspMediaResource
 //-----------------------------------------------------------------------------
-RtspMediaResource::RtspMediaResource(MediaDecoder* aDecoder,
+RtspMediaResource::RtspMediaResource(MediaResourceCallback* aCallback,
     nsIChannel* aChannel, nsIURI* aURI, const nsACString& aContentType)
-  : BaseMediaResource(aDecoder, aChannel, aURI, aContentType)
+  : BaseMediaResource(aCallback, aChannel, aURI, aContentType)
   , mIsConnected(false)
   , mIsLiveStream(false)
   , mHasTimestamp(true)
@@ -537,8 +537,8 @@ void RtspMediaResource::NotifySuspend(bool aIsSuspend)
   RTSPMLOG("NotifySuspend %d",aIsSuspend);
 
   mIsSuspend = aIsSuspend;
-  if (mDecoder) {
-    mDecoder->NotifySuspendedStatusChanged();
+  if (mCallback) {
+    mCallback->NotifySuspendedStatusChanged();
   }
 }
 
@@ -688,9 +688,7 @@ RtspMediaResource::OnConnected(uint8_t aTrackIdx,
   // video, we give up moving forward.
   if (!IsVideoEnabled() && IsVideo(tracks, meta)) {
     // Give up, report error to media element.
-    nsCOMPtr<nsIRunnable> event =
-      NS_NewRunnableMethod(mDecoder, &MediaDecoder::DecodeError);
-    NS_DispatchToMainThread(event);
+    mCallback->NotifyDecodeError();
     return NS_ERROR_FAILURE;
   }
   uint64_t durationUs = 0;
@@ -717,7 +715,7 @@ RtspMediaResource::OnConnected(uint8_t aTrackIdx,
     mTrackBuffer[i]->Start();
   }
 
-  if (!mDecoder) {
+  if (!mCallback) {
     return NS_ERROR_FAILURE;
   }
 
@@ -725,34 +723,30 @@ RtspMediaResource::OnConnected(uint8_t aTrackIdx,
   if (durationUs) {
     // Not live stream.
     mIsLiveStream = false;
-    mDecoder->SetInfinite(false);
+    mCallback->SetInfinite(false);
   } else {
     // Live stream.
     // Check the preference "media.realtime_decoder.enabled".
     if (!Preferences::GetBool("media.realtime_decoder.enabled", false)) {
       // Give up, report error to media element.
-      nsCOMPtr<nsIRunnable> event =
-        NS_NewRunnableMethod(mDecoder, &MediaDecoder::DecodeError);
-      NS_DispatchToMainThread(event);
+      mCallback->NotifyDecodeError();
       return NS_ERROR_FAILURE;
     } else {
       mIsLiveStream = true;
       bool seekable = false;
-      mDecoder->SetInfinite(true);
-      mDecoder->SetMediaSeekable(seekable);
+      mCallback->SetInfinite(true);
+      mCallback->SetMediaSeekable(seekable);
     }
   }
-  MediaDecoderOwner* owner = mDecoder->GetMediaOwner();
+  MediaDecoderOwner* owner = mCallback->GetMediaOwner();
   NS_ENSURE_TRUE(owner, NS_ERROR_FAILURE);
   // Fires an initial progress event.
   owner->DownloadProgressed();
 
-  dom::HTMLMediaElement* element = owner->GetMediaElement();
-  NS_ENSURE_TRUE(element, NS_ERROR_FAILURE);
+  nsresult rv = mCallback->FinishDecoderSetup(this);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  element->FinishDecoderSetup(mDecoder, this);
   mIsConnected = true;
-
   return NS_OK;
 }
 
@@ -766,7 +760,7 @@ RtspMediaResource::OnDisconnected(uint8_t aTrackIdx, nsresult aReason)
     mTrackBuffer[i]->Reset();
   }
 
-  if (mDecoder) {
+  if (mCallback) {
     if (aReason == NS_ERROR_NOT_INITIALIZED ||
         aReason == NS_ERROR_CONNECTION_REFUSED ||
         aReason == NS_ERROR_NOT_CONNECTED ||
@@ -774,11 +768,11 @@ RtspMediaResource::OnDisconnected(uint8_t aTrackIdx, nsresult aReason)
       // Report error code to Decoder.
       RTSPMLOG("Error in OnDisconnected 0x%x", aReason);
       mIsConnected = false;
-      mDecoder->NetworkError();
+      mCallback->NotifyNetworkError();
     } else {
       // Resetting the decoder and media element when the connection
       // between RTSP client and server goes down.
-      mDecoder->ResetConnectionState();
+      mCallback->ResetConnectionState();
     }
   }
 
@@ -796,18 +790,18 @@ void RtspMediaResource::Suspend(bool aCloseImmediately)
   NS_ASSERTION(NS_IsMainThread(), "Don't call on non-main thread");
 
   mIsSuspend = true;
-  if (NS_WARN_IF(!mDecoder)) {
+  if (NS_WARN_IF(!mCallback)) {
     return;
   }
 
-  MediaDecoderOwner* owner = mDecoder->GetMediaOwner();
+  MediaDecoderOwner* owner = mCallback->GetMediaOwner();
   NS_ENSURE_TRUE_VOID(owner);
   dom::HTMLMediaElement* element = owner->GetMediaElement();
   NS_ENSURE_TRUE_VOID(element);
 
   mMediaStreamController->Suspend();
   element->DownloadSuspended();
-  mDecoder->NotifySuspendedStatusChanged();
+  mCallback->NotifySuspendedStatusChanged();
 }
 
 void RtspMediaResource::Resume()
@@ -815,11 +809,11 @@ void RtspMediaResource::Resume()
   NS_ASSERTION(NS_IsMainThread(), "Don't call on non-main thread");
 
   mIsSuspend = false;
-  if (NS_WARN_IF(!mDecoder)) {
+  if (NS_WARN_IF(!mCallback)) {
     return;
   }
 
-  MediaDecoderOwner* owner = mDecoder->GetMediaOwner();
+  MediaDecoderOwner* owner = mCallback->GetMediaOwner();
   NS_ENSURE_TRUE_VOID(owner);
   dom::HTMLMediaElement* element = owner->GetMediaElement();
   NS_ENSURE_TRUE_VOID(element);
@@ -828,7 +822,7 @@ void RtspMediaResource::Resume()
     element->DownloadResumed();
   }
   mMediaStreamController->Resume();
-  mDecoder->NotifySuspendedStatusChanged();
+  mCallback->NotifySuspendedStatusChanged();
 }
 
 nsresult RtspMediaResource::Open(nsIStreamListener **aStreamListener)
@@ -840,11 +834,11 @@ nsresult RtspMediaResource::Close()
 {
   NS_ASSERTION(NS_IsMainThread(), "Only call on main thread");
   mMediaStreamController->Stop();
-  // Since mDecoder is not an nsCOMPtr in BaseMediaResource, we have to
+  // Since mCallback is not an nsCOMPtr in BaseMediaResource, we have to
   // explicitly set it as null pointer in order to prevent misuse from this
   // object (RtspMediaResource).
-  if (mDecoder) {
-    mDecoder = nullptr;
+  if (mCallback) {
+    mCallback = nullptr;
   }
   return NS_OK;
 }
@@ -866,7 +860,7 @@ nsresult RtspMediaResource::SeekTime(int64_t aOffset)
   NS_ASSERTION(!NS_IsMainThread(), "Don't call on main thread");
 
   RTSPMLOG("Seek requested for aOffset [%lld] for decoder [%p]",
-           aOffset, mDecoder);
+           aOffset, mCallback);
   // Clear buffer and raise the frametype flag.
   for(uint32_t i = 0 ; i < mTrackBuffer.Length(); ++i) {
     mTrackBuffer[i]->ResetWithFrameType(MEDIASTREAM_FRAMETYPE_DISCONTINUITY);

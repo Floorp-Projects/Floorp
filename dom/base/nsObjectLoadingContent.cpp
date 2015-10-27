@@ -3300,17 +3300,14 @@ nsObjectLoadingContent::ShouldPlay(FallbackType &aReason, bool aIgnoreCurrentTyp
   MOZ_ASSERT(thisContent);
   nsIDocument* ownerDoc = thisContent->OwnerDoc();
 
-  nsCOMPtr<nsIDOMWindow> window = ownerDoc->GetWindow();
+  nsCOMPtr<nsPIDOMWindow> window = ownerDoc->GetWindow();
   if (!window) {
     return false;
   }
-  nsCOMPtr<nsIDOMWindow> topWindow;
-  rv = window->GetTop(getter_AddRefs(topWindow));
-  NS_ENSURE_SUCCESS(rv, false);
-  nsCOMPtr<nsIDOMDocument> topDocument;
-  rv = topWindow->GetDocument(getter_AddRefs(topDocument));
-  NS_ENSURE_SUCCESS(rv, false);
-  nsCOMPtr<nsIDocument> topDoc = do_QueryInterface(topDocument);
+  nsCOMPtr<nsPIDOMWindow> topWindow = window->GetTop();
+  NS_ENSURE_TRUE(topWindow, false);
+  nsCOMPtr<nsIDocument> topDoc = topWindow->GetDoc();
+  NS_ENSURE_TRUE(topDoc, false);
 
   nsCOMPtr<nsIPermissionManager> permissionManager = services::GetPermissionManager();
   NS_ENSURE_TRUE(permissionManager, false);

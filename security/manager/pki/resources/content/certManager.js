@@ -11,8 +11,6 @@ const nsICertTree = Components.interfaces.nsICertTree;
 const nsCertTree = "@mozilla.org/security/nsCertTree;1";
 const nsIDialogParamBlock = Components.interfaces.nsIDialogParamBlock;
 const nsDialogParamBlock = "@mozilla.org/embedcomp/dialogparam;1";
-const nsIPKIParamBlock    = Components.interfaces.nsIPKIParamBlock;
-const nsPKIParamBlock    = "@mozilla.org/security/pkiparamblock;1";
 
 const gCertFileTypes = "*.p7b; *.crt; *.cert; *.cer; *.pem; *.der";
 

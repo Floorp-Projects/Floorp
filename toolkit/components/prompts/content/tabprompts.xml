@@ -56,6 +56,8 @@
                             <spacer/>
                             <checkbox anonid="checkbox"/>
                         </row>
+
+                        <xbl:children includes="row"/>
                     </rows>
                 </grid>
                 <xbl:children/>

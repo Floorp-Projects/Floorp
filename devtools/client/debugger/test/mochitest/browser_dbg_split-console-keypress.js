@@ -94,19 +94,4 @@ function test() {
       closeDebuggerAndFinish(gPanel);
     });
   });
-
-  function getSplitConsole(toolbox, theDebugger) {
-    return new Promise(resolve => {
-      toolbox.once("webconsole-ready", () => {
-        let jsterm = toolbox.getPanel("webconsole").hud.jsterm;
-        resolve(jsterm);
-      });
-      EventUtils.synthesizeKey("VK_ESCAPE", {}, theDebugger);
-    });
-  }
 }
-
-registerCleanupFunction(() => {
-  // We don't want the open split console to confuse other tests..
-  Services.prefs.clearUserPref("devtools.toolbox.splitconsoleEnabled");
-});

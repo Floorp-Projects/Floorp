@@ -1683,12 +1683,6 @@ GetPcScript(JSContext* cx, JSScript** scriptRes, jsbytecode** pcRes)
         rt->ionPcScriptCache->add(hash, retAddr, pc, *scriptRes);
 }
 
-void
-OsiIndex::fixUpOffset(MacroAssembler& masm)
-{
-    callPointDisplacement_ = masm.actualOffset(callPointDisplacement_);
-}
-
 uint32_t
 OsiIndex::returnPointDisplacement() const
 {

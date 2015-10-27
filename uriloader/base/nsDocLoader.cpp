@@ -905,10 +905,7 @@ nsDocLoader::GetIsTopLevel(bool *aResult)
     nsCOMPtr<nsPIDOMWindow> piwindow = do_QueryInterface(window);
     NS_ENSURE_STATE(piwindow);
 
-    nsCOMPtr<nsIDOMWindow> topWindow;
-    nsresult rv = piwindow->GetTop(getter_AddRefs(topWindow));
-    NS_ENSURE_SUCCESS(rv, rv);
-
+    nsCOMPtr<nsPIDOMWindow> topWindow = piwindow->GetTop();
     *aResult = piwindow == topWindow;
   }
 
