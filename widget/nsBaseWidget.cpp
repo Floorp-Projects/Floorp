@@ -943,6 +943,19 @@ nsBaseWidget::UpdateZoomConstraints(const uint32_t& aPresShellId,
                                     const Maybe<ZoomConstraints>& aConstraints)
 {
   if (!mCompositorParent || !mAPZC) {
+    if (mInitialZoomConstraints) {
+      MOZ_ASSERT(mInitialZoomConstraints->mPresShellID == aPresShellId);
+      MOZ_ASSERT(mInitialZoomConstraints->mViewID == aViewId);
+      if (!aConstraints) {
+        mInitialZoomConstraints.reset();
+      }
+    }
+
+    if (aConstraints) {
+      // We have some constraints, but the compositor and APZC aren't created yet.
+      // Save these so we can use them later.
+      mInitialZoomConstraints = Some(InitialZoomConstraints(aPresShellId, aViewId, aConstraints.ref()));
+    }
     return;
   }
   uint64_t layersId = mCompositorParent->RootLayerTreeId();
@@ -1107,6 +1120,13 @@ void nsBaseWidget::CreateCompositor(int aWidth, int aHeight)
   mAPZC = CompositorParent::GetAPZCTreeManager(rootLayerTreeId);
   if (mAPZC) {
     ConfigureAPZCTreeManager();
+  }
+
+  if (mInitialZoomConstraints) {
+    UpdateZoomConstraints(mInitialZoomConstraints->mPresShellID,
+                          mInitialZoomConstraints->mViewID,
+                          Some(mInitialZoomConstraints->mConstraints));
+    mInitialZoomConstraints.reset();
   }
 
   TextureFactoryIdentifier textureFactoryIdentifier;
@@ -2920,4 +2940,3 @@ nsBaseWidget::debug_DumpInvalidate(FILE *                aFileOut,
 //////////////////////////////////////////////////////////////
 
 #endif // DEBUG
-
