@@ -599,6 +599,12 @@ private:
                                              mRecorder->GetVideoBitrate(),
                                              mRecorder->GetBitrate(),
                                              aTrackTypes);
+    } else if (mRecorder->mMimeType.EqualsLiteral(AUDIO_3GPP2)) {
+      mEncoder = MediaEncoder::CreateEncoder(NS_LITERAL_STRING(AUDIO_3GPP2),
+                                             mRecorder->GetAudioBitrate(),
+                                             mRecorder->GetVideoBitrate(),
+                                             mRecorder->GetBitrate(),
+                                             aTrackTypes);
     } else {
       mEncoder = MediaEncoder::CreateEncoder(NS_LITERAL_STRING(""),
                                              mRecorder->GetAudioBitrate(),
