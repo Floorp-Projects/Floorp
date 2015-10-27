@@ -119,26 +119,28 @@ enum nsBidiDirection {
   NSBIDI_MIXED
 };
 
-typedef enum nsBidiDirection nsBidiDirection;
-
 /* miscellaneous definitions ------------------------------------------------ */
 
 /* helper macros for each allocated array member */
-#define GETDIRPROPSMEMORY(length) \
-                                  GetMemory((void **)&mDirPropsMemory, &mDirPropsSize, \
-                                  (length))
+#define GETDIRPROPSMEMORY(length) nsBidi::GetMemory((void **)&mDirPropsMemory, \
+                                                    &mDirPropsSize, \
+                                                    (length))
 
-#define GETLEVELSMEMORY(length) \
-                                GetMemory((void **)&mLevelsMemory, &mLevelsSize, \
-                                (length))
+#define GETLEVELSMEMORY(length) nsBidi::GetMemory((void **)&mLevelsMemory, \
+                                                  &mLevelsSize, \
+                                                  (length))
 
-#define GETRUNSMEMORY(length) \
-                              GetMemory((void **)&mRunsMemory, &mRunsSize, \
-                              (length)*sizeof(Run))
+#define GETRUNSMEMORY(length) nsBidi::GetMemory((void **)&mRunsMemory, \
+                                                &mRunsSize, \
+                                                (length)*sizeof(Run))
 
-#define GETISOLATESMEMORY(length) \
-                                  GetMemory((void **)&mIsolatesMemory, &mIsolatesSize, \
-                                  (length)*sizeof(Isolate))
+#define GETISOLATESMEMORY(length) nsBidi::GetMemory((void **)&mIsolatesMemory, \
+                                                    &mIsolatesSize, \
+                                                    (length)*sizeof(Isolate))
+
+#define GETOPENINGSMEMORY(length) nsBidi::GetMemory((void **)&mOpeningsMemory, \
+                                                    &mOpeningsSize, \
+                                                    (length)*sizeof(Opening))
 
 /*
  * Sometimes, bit values are more appropriate
@@ -188,15 +190,6 @@ typedef uint8_t DirProp;
 #define IS_DEFAULT_LEVEL(level) (((level)&0xfe)==0xfe)
 
 /*
- * The following bit is ORed to the property of directional control
- * characters which are ignored: unmatched PDF or PDI; LRx, RLx or FSI
- * which would exceed the maximum explicit bidi level.
- */
-#define IGNORE_CC 0x40
-
-#define PURE_DIRPROP(prop) ((prop)&~IGNORE_CC)
-
-/*
  * The following bit is used for the directional isolate status.
  * Stack entries corresponding to isolate sequences are greater than ISOLATE.
  */
@@ -204,6 +197,9 @@ typedef uint8_t DirProp;
 
 /* number of isolate entries allocated initially without malloc */
 #define SIMPLE_ISOLATES_SIZE 5
+
+/* number of isolate run entries for paired brackets allocated initially without malloc */
+#define SIMPLE_OPENINGS_COUNT 8
 
 /* handle surrogate pairs --------------------------------------------------- */
 
@@ -343,6 +339,32 @@ struct Isolate {
   int16_t stateImp;
   int16_t state;
 };
+
+// For bracket matching
+
+#define FOUND_L DIRPROP_FLAG(L)
+#define FOUND_R DIRPROP_FLAG(R)
+
+struct Opening {
+  int32_t position;                   /* position of opening bracket */
+  int32_t match;                      /* matching char or -position of closing bracket */
+  int32_t contextPos;                 /* position of last strong char found before opening */
+  uint16_t flags;                     /* bits for L or R/AL found within the pair */
+  DirProp contextDir;                 /* L or R according to last strong char before opening */
+  uint8_t filler;                     /* to complete a nice multiple of 4 chars */
+};
+
+struct IsoRun {
+  int32_t  contextPos;                /* position of char determining context */
+  uint16_t start;                     /* index of first opening entry for this run */
+  uint16_t limit;                     /* index after last opening entry for this run */
+  nsBidiLevel level;                  /* level of this run */
+  DirProp lastStrong;                 /* bidi class of last strong char found in this run */
+  DirProp lastBase;                   /* bidi class of last base char found in this run */
+  DirProp contextDir;                 /* L or R to use as context for following openings */
+};
+
+class nsBidi;
 
 /* Run structure for reordering --------------------------------------------- */
 
@@ -635,6 +657,45 @@ public:
 protected:
   friend class nsBidiPresUtils;
 
+  class BracketData {
+  public:
+    explicit BracketData(const nsBidi* aBidi);
+    ~BracketData();
+
+    void ProcessBoundary(int32_t aLastDirControlCharPos,
+                         nsBidiLevel aContextLevel,
+                         nsBidiLevel aEmbeddingLevel,
+                         const DirProp* aDirProps);
+    void ProcessLRI_RLI(nsBidiLevel aLevel);
+    void ProcessPDI();
+    bool AddOpening(char16_t aMatch, int32_t aPosition);
+    void FixN0c(int32_t aOpeningIndex, int32_t aNewPropPosition,
+                DirProp aNewProp, DirProp* aDirProps);
+    DirProp ProcessClosing(int32_t aOpenIdx, int32_t aPosition,
+                           DirProp* aDirProps);
+    bool ProcessChar(int32_t aPosition, char16_t aCh, DirProp* aDirProps,
+                     nsBidiLevel* aLevels);
+
+  private:
+    // array of opening entries which should be enough in most cases;
+    // no malloc() needed
+    Opening  mSimpleOpenings[SIMPLE_OPENINGS_COUNT];
+    Opening* mOpenings;      // pointer to current array of entries,
+                             // either mSimpleOpenings or malloced array
+
+    Opening* mOpeningsMemory;
+    size_t   mOpeningsSize;
+
+    // array of nested isolated sequence entries; can never exceed
+    // UBIDI_MAX_EXPLICIT_LEVEL
+    //   + 1 for index 0
+    //   + 1 for before the first isolated sequence
+    IsoRun  mIsoRuns[NSBIDI_MAX_EXPLICIT_LEVEL+2];
+    int32_t mIsoRunLast;     // index of last used entry in mIsoRuns
+
+    int32_t mOpeningsCount;  // number of allocated entries in mOpenings
+  };
+
   /** length of the current text */
   int32_t mLength;
 
@@ -686,13 +747,13 @@ private:
 
   void Init();
 
-  bool GetMemory(void **aMemory, size_t* aSize, size_t aSizeNeeded);
+  static bool GetMemory(void **aMemory, size_t* aSize, size_t aSizeNeeded);
 
   void Free();
 
   void GetDirProps(const char16_t *aText);
 
-  void ResolveExplicitLevels(nsBidiDirection *aDirection);
+  void ResolveExplicitLevels(nsBidiDirection *aDirection, const char16_t *aText);
 
   nsBidiDirection DirectionFromFlags(Flags aFlags);
 
