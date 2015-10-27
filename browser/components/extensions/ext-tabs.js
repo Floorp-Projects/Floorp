@@ -199,10 +199,16 @@ extensions.registerAPI((extension, context) => {
           },
 
           onLocationChange(browser, webProgress, request, locationURI, flags) {
+            if (!webProgress.isTopLevel) {
+              return;
+            }
             let gBrowser = browser.ownerDocument.defaultView.gBrowser;
             let tab = gBrowser.getTabForBrowser(browser);
             let tabId = TabManager.getId(tab);
-            let [needed, changeInfo] = sanitize(extension, {url: locationURI.spec});
+            let [needed, changeInfo] = sanitize(extension, {
+              status: webProgress.isLoadingDocument ? "loading" : "complete",
+              url: locationURI.spec
+            });
             if (needed) {
               fire(tabId, changeInfo, TabManager.convert(extension, tab));
             }
@@ -213,11 +219,12 @@ extensions.registerAPI((extension, context) => {
         AllWindowEvents.addListener("TabAttrModified", listener);
         AllWindowEvents.addListener("TabPinned", listener);
         AllWindowEvents.addListener("TabUnpinned", listener);
+
         return () => {
           AllWindowEvents.removeListener("progress", progressListener);
-          AllWindowEvents.addListener("TabAttrModified", listener);
-          AllWindowEvents.addListener("TabPinned", listener);
-          AllWindowEvents.addListener("TabUnpinned", listener);
+          AllWindowEvents.removeListener("TabAttrModified", listener);
+          AllWindowEvents.removeListener("TabPinned", listener);
+          AllWindowEvents.removeListener("TabUnpinned", listener);
         };
       }).api(),
 
