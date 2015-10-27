@@ -693,6 +693,9 @@ class MIRGraph
     size_t numBlocks_;
     bool hasTryBlock_;
 
+    InlineList<MPhi> phiFreeList_;
+    size_t phiFreeListLength_;
+
   public:
     explicit MIRGraph(TempAllocator* alloc)
       : alloc_(alloc),
@@ -701,7 +704,8 @@ class MIRGraph
         idGen_(0),
         osrBlock_(nullptr),
         numBlocks_(0),
-        hasTryBlock_(false)
+        hasTryBlock_(false),
+        phiFreeListLength_(0)
     { }
 
     TempAllocator& alloc() const {
@@ -812,6 +816,19 @@ class MIRGraph
 
     void dump(GenericPrinter& out);
     void dump();
+
+    void addPhiToFreeList(MPhi* phi) {
+        phiFreeList_.pushBack(phi);
+        phiFreeListLength_++;
+    }
+    size_t phiFreeListLength() const {
+        return phiFreeListLength_;
+    }
+    MPhi* takePhiFromFreeList() {
+        MOZ_ASSERT(phiFreeListLength_ > 0);
+        phiFreeListLength_--;
+        return phiFreeList_.popBack();
+    }
 };
 
 class MDefinitionIterator
