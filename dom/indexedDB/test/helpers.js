@@ -34,7 +34,14 @@ function executeSoon(aFun)
 }
 
 function clearAllDatabases(callback) {
-  SpecialPowers.clearStorageForDoc(SpecialPowers.wrap(document), callback);
+  let principal = SpecialPowers.wrap(document).nodePrincipal;
+  let appId, inBrowser;
+  if (principal.appId != Components.interfaces.nsIPrincipal.UNKNOWN_APP_ID &&
+      principal.appId != Components.interfaces.nsIPrincipal.NO_APP_ID) {
+    appId = principal.appId;
+    inBrowser = principal.isInBrowserElement;
+  }
+  SpecialPowers.clearStorageForURI(document.documentURI, callback, appId, inBrowser);
 }
 
 var testHarnessGenerator = testHarnessSteps();

@@ -33,7 +33,8 @@ var tests = [
   function() {
     var appId = gAppsService.getAppLocalIdByManifestURL(embedAppHostedManifestURL);
     var context = { url: embedApp.origin,
-                    originAttributes: { appId: appId } };
+                    appId: appId,
+                    isInBrowserElement: false };
     setupOpenAppPermission(context, runTests);
   },
 

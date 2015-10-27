@@ -164,7 +164,7 @@ function runTest() {
   ok(app, "App is non-null");
   is(app.manifestURL, gManifestURL, "App manifest url is correct.");
 
-  var context = {"manifestURL": app.manifestURL};
+  var context = {"manifestURL": app.manifestURL, "isInBrowserElement": false};
 
   SpecialPowers.pushPermissions([{"type": "homescreen-webapps-manage",
                                   "allow": 1,
