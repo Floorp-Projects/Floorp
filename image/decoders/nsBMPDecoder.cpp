@@ -137,7 +137,8 @@ SetPixel(uint32_t*& aDecoded, uint8_t aRed, uint8_t aGreen,
 }
 
 static void
-SetPixel(uint32_t*& aDecoded, uint8_t idx, bmp::ColorTableEntry* aColors)
+SetPixel(uint32_t*& aDecoded, uint8_t idx,
+         const UniquePtr<ColorTableEntry[]>& aColors)
 {
   SetPixel(aDecoded,
            aColors[idx].mRed, aColors[idx].mGreen, aColors[idx].mBlue);
@@ -150,7 +151,7 @@ SetPixel(uint32_t*& aDecoded, uint8_t idx, bmp::ColorTableEntry* aColors)
 /// @param aCount Current count. Is decremented by one or two.
 static void
 Set4BitPixel(uint32_t*& aDecoded, uint8_t aData, uint32_t& aCount,
-             bmp::ColorTableEntry* aColors)
+             const UniquePtr<ColorTableEntry[]>& aColors)
 {
   uint8_t idx = aData >> 4;
   SetPixel(aDecoded, idx, aColors);
@@ -191,7 +192,6 @@ nsBMPDecoder::nsBMPDecoder(RasterImage* aImage)
 
 nsBMPDecoder::~nsBMPDecoder()
 {
-  delete[] mColors;
 }
 
 // Obtains the bits per pixel from the internal BIH header.
@@ -671,8 +671,8 @@ nsBMPDecoder::ReadBitfields(const char* aData, size_t aLength)
 
     // Always allocate and zero 256 entries, even though mNumColors might be
     // smaller, because the file might erroneously index past mNumColors.
-    mColors = new ColorTableEntry[256];
-    memset(mColors, 0, 256 * sizeof(ColorTableEntry));
+    mColors = MakeUnique<ColorTableEntry[]>(256);
+    memset(mColors.get(), 0, 256 * sizeof(ColorTableEntry));
 
     // OS/2 Bitmaps have no padding byte.
     mBytesPerColor = (mBIH.bihsize == InfoHeaderLength::WIN_V2) ? 3 : 4;

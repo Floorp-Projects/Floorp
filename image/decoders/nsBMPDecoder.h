@@ -11,6 +11,7 @@
 #include "Decoder.h"
 #include "gfxColor.h"
 #include "StreamingLexer.h"
+#include "mozilla/UniquePtr.h"
 
 namespace mozilla {
 namespace image {
@@ -190,7 +191,7 @@ private:
 
   uint32_t mNumColors;      // The number of used colors, i.e. the number of
                             // entries in mColors, if it's present.
-  bmp::ColorTableEntry* mColors; // The color table, if it's present.
+  UniquePtr<bmp::ColorTableEntry[]> mColors; // The color table, if it's present.
   uint32_t mBytesPerColor;  // 3 or 4, depending on the format
 
   // The number of bytes prior to the optional gap that have been read. This
