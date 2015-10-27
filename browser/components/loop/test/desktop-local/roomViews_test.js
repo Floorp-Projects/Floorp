@@ -649,6 +649,48 @@ describe("loop.roomViews", function() {
         expect(view.getDOMNode().querySelector(".local video")).not.eql(null);
       });
 
+      describe("Room name priority", function() {
+        var roomEntry;
+        beforeEach(function() {
+          activeRoomStore.setStoreState({
+            participants: [{}],
+            roomState: ROOM_STATES.JOINED,
+            roomName: "fakeName",
+            roomContextUrls: [
+              {
+                description: "Website title",
+                location: "https://fakeurl.com"
+              }
+            ]
+          });
+        });
+
+        it("should use room name by default", function() {
+          view = mountTestComponent();
+          expect(fakeWindow.document.title).to.equal("fakeName");
+        });
+
+        it("should use context title when there's no room title", function() {
+          activeRoomStore.setStoreState({ roomName: null });
+
+          view = mountTestComponent();
+          expect(fakeWindow.document.title).to.equal("Website title");
+        });
+
+        it("should use website url when there's no room title nor website", function() {
+          activeRoomStore.setStoreState({
+            roomName: null,
+            roomContextUrls: [
+                {
+                  location: "https://fakeurl.com"
+                }
+              ]
+          });
+          view = mountTestComponent();
+          expect(fakeWindow.document.title).to.equal("https://fakeurl.com");
+        });
+      });
+
     });
 
     describe("Edit Context", function() {
