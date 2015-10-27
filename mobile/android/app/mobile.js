@@ -934,8 +934,6 @@ pref("consoleservice.logcat", true);
 
 // Enable Cardboard VR on mobile, assuming VR at all is enabled
 pref("dom.vr.cardboard.enabled", true);
-// Enable VR on mobile, making it enable by default.
-pref("dom.vr.enabled", true);
 
 pref("browser.tabs.showAudioPlayingIcon", true);
 
