@@ -354,13 +354,12 @@ void
 nsWebBrowserFind::SetSelectionAndScroll(nsIDOMWindow* aWindow,
                                         nsIDOMRange* aRange)
 {
-  nsCOMPtr<nsIDOMDocument> domDoc;
-  aWindow->GetDocument(getter_AddRefs(domDoc));
-  if (!domDoc) {
+  nsCOMPtr<nsPIDOMWindow> piWindow = do_QueryInterface(aWindow);
+  nsCOMPtr<nsIDocument> doc = piWindow->GetDoc();
+  if (!doc) {
     return;
   }
 
-  nsCOMPtr<nsIDocument> doc(do_QueryInterface(domDoc));
   nsIPresShell* presShell = doc->GetShell();
   if (!presShell) {
     return;
@@ -701,18 +700,13 @@ nsWebBrowserFind::SearchInFrame(nsIDOMWindow* aWindow, bool aWrapping,
 
   *aDidFind = false;
 
-  nsCOMPtr<nsIDOMDocument> domDoc;
-  nsresult rv = aWindow->GetDocument(getter_AddRefs(domDoc));
-  NS_ENSURE_SUCCESS(rv, rv);
-  if (!domDoc) {
-    return NS_ERROR_FAILURE;
-  }
+  nsCOMPtr<nsPIDOMWindow> piWindow = do_QueryInterface(aWindow);
 
   // Do security check, to ensure that the frame we're searching is
   // acccessible from the frame where the Find is being run.
 
   // get a uri for the window
-  nsCOMPtr<nsIDocument> theDoc = do_QueryInterface(domDoc);
+  nsCOMPtr<nsIDocument> theDoc = piWindow->GetDoc();
   if (!theDoc) {
     return NS_ERROR_FAILURE;
   }
@@ -721,6 +715,7 @@ nsWebBrowserFind::SearchInFrame(nsIDOMWindow* aWindow, bool aWrapping,
     return NS_ERROR_DOM_PROP_ACCESS_DENIED;
   }
 
+  nsresult rv;
   nsCOMPtr<nsIFind> find = do_CreateInstance(NS_FIND_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -746,6 +741,9 @@ nsWebBrowserFind::SearchInFrame(nsIDOMWindow* aWindow, bool aWrapping,
   NS_ENSURE_ARG_POINTER(endPt);
 
   nsCOMPtr<nsIDOMRange> foundRange;
+
+  nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(theDoc);
+  MOZ_ASSERT(domDoc);
 
   // If !aWrapping, search from selection to end
   if (!aWrapping)
@@ -794,13 +792,12 @@ nsWebBrowserFind::GetFrameSelection(nsIDOMWindow* aWindow, nsISelection** aSel)
 {
   *aSel = nullptr;
 
-  nsCOMPtr<nsIDOMDocument> domDoc;
-  aWindow->GetDocument(getter_AddRefs(domDoc));
-  if (!domDoc) {
+  nsCOMPtr<nsPIDOMWindow> piWindow = do_QueryInterface(aWindow);
+  nsCOMPtr<nsIDocument> doc = piWindow->GetDoc();
+  if (!doc) {
     return;
   }
 
-  nsCOMPtr<nsIDocument> doc(do_QueryInterface(domDoc));
   nsIPresShell* presShell = doc->GetShell();
   if (!presShell) {
     return;

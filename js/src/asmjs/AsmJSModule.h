@@ -402,10 +402,6 @@ class AsmJSModule
             MOZ_ASSERT(!jitCodeOffset_);
             jitCodeOffset_ = off;
         }
-        void updateOffsets(jit::MacroAssembler& masm) {
-            interpCodeOffset_ = masm.actualOffset(interpCodeOffset_);
-            jitCodeOffset_ = masm.actualOffset(jitCodeOffset_);
-        }
 
         size_t serializedSize() const;
         uint8_t* serialize(uint8_t* cursor) const;
@@ -520,10 +516,6 @@ class AsmJSModule
             MOZ_ASSERT(pod.codeOffset_ == UINT32_MAX);
             pod.codeOffset_ = off;
         }
-        void updateCodeOffset(jit::MacroAssembler& masm) {
-            MOZ_ASSERT(!isChangeHeap());
-            pod.codeOffset_ = masm.actualOffset(pod.codeOffset_);
-        }
 
         unsigned numArgs() const {
             MOZ_ASSERT(!isChangeHeap());
@@ -578,7 +570,6 @@ class AsmJSModule
         CodeRange(Kind kind, uint32_t begin, uint32_t end);
         CodeRange(Kind kind, uint32_t begin, uint32_t profilingReturn, uint32_t end);
         CodeRange(AsmJSExit::BuiltinKind builtin, uint32_t begin, uint32_t pret, uint32_t end);
-        void updateOffsets(jit::MacroAssembler& masm);
 
         Kind kind() const { return Kind(u.kind_); }
         bool isFunction() const { return kind() == Function; }

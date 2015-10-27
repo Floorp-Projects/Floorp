@@ -10,6 +10,7 @@
 #include "nsXPCOM.h"
 #include "nsISupportsPrimitives.h"
 #include "nsIComponentManager.h"
+#include "nsPIDOMWindow.h"
 
 NS_IMPL_ADDREF(nsPrintProgress)
 NS_IMPL_RELEASE(nsPrintProgress)
@@ -62,8 +63,11 @@ NS_IMETHODIMP nsPrintProgress::GetPrompter(nsIPrompt **_retval)
   NS_ENSURE_ARG_POINTER(_retval);
   *_retval = nullptr;
 
-  if (! m_closeProgress && m_dialog)
-    return m_dialog->GetPrompter(_retval);
+  if (! m_closeProgress && m_dialog) {
+    nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(m_dialog);
+    MOZ_ASSERT(window);
+    return window->GetPrompter(_retval);
+  }
     
   return NS_ERROR_FAILURE;
 }

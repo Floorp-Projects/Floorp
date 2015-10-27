@@ -7,7 +7,8 @@
     assertEq("abc".replace(/a|b/g, function(a) { return b[a] }), 'ABc');
 })();
 (function() {
-    let (b = {a:'A', b:'B' }) {
+    {
+        let b = {a:'A', b:'B' };
         assertEq("abc".replace(/a|b/g, function(a) { return b[a] }), 'ABc');
     }
 })();
@@ -18,7 +19,8 @@
     })();
 })();
 (function() {
-    let (b = {a:'A', b:'B' }) {
+    {
+        let b = {a:'A', b:'B' };
         (function () {
             assertEq("abc".replace(/a|b/g, function(a) { return b[a] }), 'ABc');
         })();

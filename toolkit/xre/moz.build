@@ -82,14 +82,15 @@ UNIFIED_SOURCES += [
     'nsNativeAppSupportBase.cpp',
     'nsSigHandlers.cpp',
     'nsXREDirProvider.cpp',
-    'ProfileReset.cpp',
 ]
 
-# nsAppRunner.cpp cannot be built in unified mode because it pulls in OS X system headers.
+# nsAppRunner.cpp and ProfileReset.cpp cannot be built in unified mode because
+# they pull in OS X system headers.
 # nsEmbedFunctions.cpp cannot be built in unified mode because it pulls in X11 headers.
 SOURCES += [
     'nsAppRunner.cpp',
     'nsEmbedFunctions.cpp',
+    'ProfileReset.cpp',
 ]
 
 if CONFIG['MOZ_GL_DEFAULT_PROVIDER'] == 'GLX':

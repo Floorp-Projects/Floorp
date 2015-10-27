@@ -283,4 +283,20 @@ onfetch = function(ev) {
     }
     ev.respondWith(new Response("emptyheader"));
   }
+
+  else if (ev.request.url.includes('fetchevent-extendable')) {
+    if (ev instanceof ExtendableEvent) {
+      ev.respondWith(new Response("extendable"));
+    } else {
+      ev.respondWith(Promise.reject());
+    }
+  }
+
+  else if (ev.request.url.includes('fetchevent-request')) {
+    if ((new FetchEvent("foo")).request === null) {
+      ev.respondWith(new Response("nullable"));
+    } else {
+      ev.respondWith(Promise.reject());
+    }
+  }
 };

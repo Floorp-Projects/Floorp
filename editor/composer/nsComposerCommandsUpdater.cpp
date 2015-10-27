@@ -339,11 +339,13 @@ nsComposerCommandsUpdater::UpdateOneCommand(const char *aCommand)
 bool
 nsComposerCommandsUpdater::SelectionIsCollapsed()
 {
-  nsCOMPtr<nsIDOMWindow> domWindow = do_QueryReferent(mDOMWindow);
+  nsCOMPtr<nsPIDOMWindow> domWindow = do_QueryReferent(mDOMWindow);
   NS_ENSURE_TRUE(domWindow, true);
 
-  nsCOMPtr<nsISelection> domSelection;
-  if (NS_SUCCEEDED(domWindow->GetSelection(getter_AddRefs(domSelection))) && domSelection)
+  domWindow = domWindow->GetOuterWindow();
+  NS_ENSURE_TRUE(domWindow, true);
+
+  if (nsCOMPtr<nsISelection> domSelection = domWindow->GetSelection())
   {
     bool selectionCollapsed = false;
     domSelection->GetIsCollapsed(&selectionCollapsed);
