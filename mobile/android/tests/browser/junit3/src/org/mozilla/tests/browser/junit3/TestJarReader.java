@@ -61,7 +61,7 @@ public class TestJarReader extends InstrumentationTestCase {
         final File file = GeckoJarReader.extractStream(getInstrumentation().getTargetContext(), url, getInstrumentation().getContext().getCacheDir(), ".test");
         assertNotNull(file);
         try {
-            assertTrue(file.getName().endsWith("temp"));
+            assertTrue(file.getName().endsWith("test"));
             final String contents = FileUtils.getFileContents(file);
             assertNotNull(contents);
             assertTrue(contents.length() > 0);
