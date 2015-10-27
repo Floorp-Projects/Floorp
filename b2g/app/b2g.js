@@ -679,7 +679,7 @@ pref("javascript.options.mem.gc_max_empty_chunk_count", 2);
 pref("ui.showHideScrollbars", 1);
 pref("ui.useOverlayScrollbars", 1);
 pref("ui.scrollbarFadeBeginDelay", 450);
-pref("ui.scrollbarFadeDuration", 200);
+pref("ui.scrollbarFadeDuration", 0);
 
 // Scrollbar position follows the document `dir` attribute
 pref("layout.scrollbar.side", 1);
