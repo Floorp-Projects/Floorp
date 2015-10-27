@@ -151,13 +151,8 @@ InternalHeaders::Clear()
 void
 InternalHeaders::SetGuard(HeadersGuardEnum aGuard, ErrorResult& aRv)
 {
-  // Rather than re-validate all current headers, just require code to set
-  // this prior to populating the InternalHeaders object.  Allow setting immutable
-  // late, though, as that is pretty much required to have a  useful, immutable
-  // headers object.
-  if (aGuard != HeadersGuardEnum::Immutable && mList.Length() > 0) {
-    aRv.Throw(NS_ERROR_FAILURE);
-  }
+  // The guard is only checked during ::Set() and ::Append() in the spec.  It
+  // does not require revalidating headers already set.
   mGuard = aGuard;
 }
 
