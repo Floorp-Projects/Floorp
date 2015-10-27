@@ -104,6 +104,15 @@ parseMessage(ZeroCopyInputStream& stream, MessageType& message)
   // 64MB limit is applied per-message rather than to the whole stream.
   CodedInputStream codedStream(&stream);
 
+  // The protobuf message nesting that core dumps exhibit is dominated by
+  // allocation stacks' frames. In the most deeply nested case, each frame has
+  // two messages: a StackFrame message and a StackFrame::Data message. These
+  // frames are on top of a small constant of other messages. There are a
+  // MAX_STACK_DEPTH number of frames, so we multiply this by 3 to make room for
+  // the two messages per frame plus some head room for the constant number of
+  // non-dominating messages.
+  codedStream.SetRecursionLimit(HeapSnapshot::MAX_STACK_DEPTH * 3);
+
   // Because protobuf messages aren't self-delimiting, we serialize each message
   // preceeded by its size in bytes. When deserializing, we read this size and
   // then limit reading from the stream to the given byte size. If we didn't,
@@ -115,7 +124,8 @@ parseMessage(ZeroCopyInputStream& stream, MessageType& message)
 
   auto limit = codedStream.PushLimit(size);
   if (NS_WARN_IF(!message.ParseFromCodedStream(&codedStream)) ||
-      NS_WARN_IF(!codedStream.ConsumedEntireMessage()))
+      NS_WARN_IF(!codedStream.ConsumedEntireMessage()) ||
+      NS_WARN_IF(codedStream.BytesUntilLimit() != 0))
   {
     return false;
   }
@@ -909,7 +919,8 @@ class MOZ_STACK_CLASS StreamWriter : public CoreDumpWriter
     return true;
   }
 
-  protobuf::StackFrame* getProtobufStackFrame(JS::ubi::StackFrame& frame) {
+  protobuf::StackFrame* getProtobufStackFrame(JS::ubi::StackFrame& frame,
+                                              size_t depth = 1) {
     // NB: de-duplicated string properties must be written in the same order
     // here as they are read in `HeapSnapshot::saveStackFrame` or else indices
     // in references to already serialized strings will be off.
@@ -957,8 +968,8 @@ class MOZ_STACK_CLASS StreamWriter : public CoreDumpWriter
     }
 
     auto parent = frame.parent();
-    if (parent) {
-      auto protobufParent = getProtobufStackFrame(parent);
+    if (parent && depth < HeapSnapshot::MAX_STACK_DEPTH) {
+      auto protobufParent = getProtobufStackFrame(parent, depth + 1);
       if (!protobufParent)
         return nullptr;
       data->set_allocated_parent(protobufParent);
