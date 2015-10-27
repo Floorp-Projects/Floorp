@@ -46,6 +46,10 @@ XPCOMUtils.defineLazyServiceGetter(this, "secMan",
                                    "@mozilla.org/scriptsecuritymanager;1",
                                    "nsIScriptSecurityManager");
 
+XPCOMUtils.defineLazyServiceGetter(this, "powerManagerService",
+                                   "@mozilla.org/power/powermanagerservice;1",
+                                   "nsIPowerManagerService");
+
 XPCOMUtils.defineLazyModuleGetter(this, "AlarmService",
                                   "resource://gre/modules/AlarmService.jsm");
 
@@ -595,7 +599,7 @@ this.RequestSyncService = {
 
     // Storing the requestID into the task for the callback.
     this.storePendingRequest(task, aTarget, aData.requestID);
-    this.timeout(task);
+    this.timeout(task, null);
   },
 
   // We cannot expose the full internal object to content but just a subset.
@@ -681,7 +685,7 @@ this.RequestSyncService = {
     this._afterSchedulingTasks.push(aCb);
   },
 
-  timeout: function(aObj) {
+  timeout: function(aObj, aWakeLock) {
     debug("timeout");
 
     if (this._activeTask) {
@@ -690,6 +694,7 @@ this.RequestSyncService = {
       if (this._queuedTasks.indexOf(aObj) == -1) {
         this._queuedTasks.push(aObj);
       }
+      this.maybeReleaseWakeLock(aWakeLock);
       return;
     }
 
@@ -697,7 +702,9 @@ this.RequestSyncService = {
     if (!app) {
       dump("ERROR!! RequestSyncService - Failed to retrieve app data from a principal.\n");
       aObj.active = false;
-      this.updateObjectInDB(aObj);
+      this.updateObjectInDB(aObj, () => {
+        this.maybeReleaseWakeLock(aWakeLock);
+      });
       return;
     }
 
@@ -706,19 +713,24 @@ this.RequestSyncService = {
 
     // Maybe need to be rescheduled?
     if (this.hasPendingMessages('request-sync', manifestURL, pageURL)) {
-      this.scheduleTimer(aObj);
+      this.scheduleTimer(aObj, () => {
+        this.maybeReleaseWakeLock(aWakeLock);
+      });
       return;
     }
 
     this.removeTimer(aObj);
-    this._activeTask = aObj;
 
     if (!manifestURL || !pageURL) {
       dump("ERROR!! RequestSyncService - Failed to create URI for the page or the manifest\n");
       aObj.active = false;
-      this.updateObjectInDB(aObj);
+      this.updateObjectInDB(aObj, () => {
+        this.maybeReleaseWakeLock(aWakeLock);
+      });
       return;
     }
+
+    this._activeTask = aObj;
 
     // We don't want to run more than 1 task at the same time. We do this using
     // the promise created by sendMessage(). But if the task takes more than
@@ -727,6 +739,14 @@ this.RequestSyncService = {
 
     let timer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
 
+    // We need a wakelock to keep the device alive and we want to release it
+    // only when all the steps are fully completely. This can involve calling
+    // timeout() again if we have something in _queuedTasks. In this scenario
+    // we want to reuse the same wakelock and we receive it as param.
+    // The Wakelock is passed to operationCompleted() because we want to wait
+    // until the data is written into IDB and maybe until all the pending next
+    // tasks are executed too.
+    let wakeLock = aWakeLock ? aWakeLock : powerManagerService.newWakeLock("cpu");
     let done = false;
     let self = this;
     function taskCompleted() {
@@ -734,7 +754,7 @@ this.RequestSyncService = {
 
       if (!done) {
         done = true;
-        self.operationCompleted();
+        self.operationCompleted(wakeLock);
       }
 
       timer.cancel();
@@ -768,11 +788,12 @@ this.RequestSyncService = {
     });
   },
 
-  operationCompleted: function() {
+  operationCompleted: function(aWakeLock) {
     debug("operationCompleted");
 
     if (!this._activeTask) {
       dump("ERROR!! RequestSyncService - OperationCompleted called without an active task\n");
+      aWakeLock.unlock();
       return;
     }
 
@@ -790,25 +811,26 @@ this.RequestSyncService = {
     this.updateObjectInDB(this._activeTask, function() {
       if (!this._activeTask.data.oneShot) {
         this.scheduleTimer(this._activeTask, function() {
-          this.processNextTask();
+          this.processNextTask(aWakeLock);
         }.bind(this));
       } else {
-        this.processNextTask();
+        this.processNextTask(aWakeLock);
       }
     }.bind(this));
   },
 
-  processNextTask: function() {
+  processNextTask: function(aWakeLock) {
     debug("processNextTask");
 
     this._activeTask = null;
 
     if (this._queuedTasks.length == 0) {
+      aWakeLock.unlock();
       return;
     }
 
     let task = this._queuedTasks.shift();
-    this.timeout(task);
+    this.timeout(task, aWakeLock);
   },
 
   hasPendingMessages: function(aMessageName, aManifestURL, aPageURL) {
@@ -932,7 +954,7 @@ this.RequestSyncService = {
     AlarmService.add(
       { date: new Date(Date.now() + interval * 1000),
         ignoreTimezone: false },
-      () => this.timeout(aObj),
+      () => this.timeout(aObj, null),
       function(aTimerId) {
         this._timers[aObj.dbKey] = aTimerId;
         aCb();
@@ -968,6 +990,12 @@ this.RequestSyncService = {
     let requests = this._pendingRequests[aObj.dbKey];
     delete this._pendingRequests[aObj.dbKey];
     return requests;
+  },
+
+  maybeReleaseWakeLock: function(aWakeLock) {
+    if (aWakeLock) {
+      aWakeLock.unlock();
+    }
   }
 }
 
