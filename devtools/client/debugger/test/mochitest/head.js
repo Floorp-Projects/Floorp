@@ -1215,3 +1215,30 @@ function getSplitConsole(toolbox, win) {
     });
   });
 }
+
+// This can be removed once debugger uses shared-head.js (bug 1181838)
+function synthesizeKeyFromKeyTag(key) {
+  is(key && key.tagName, "key", "Successfully retrieved the <key> node");
+
+  let modifiersAttr = key.getAttribute("modifiers");
+
+  let name = null;
+
+  if (key.getAttribute("keycode"))
+    name = key.getAttribute("keycode");
+  else if (key.getAttribute("key"))
+    name = key.getAttribute("key");
+
+  isnot(name, null, "Successfully retrieved keycode/key");
+
+  let modifiers = {
+    shiftKey: !!modifiersAttr.match("shift"),
+    ctrlKey: !!modifiersAttr.match("control"),
+    altKey: !!modifiersAttr.match("alt"),
+    metaKey: !!modifiersAttr.match("meta"),
+    accelKey: !!modifiersAttr.match("accel")
+  };
+
+  info("Synthesizing key " + name + " " + JSON.stringify(modifiers));
+  EventUtils.synthesizeKey(name, modifiers);
+}
