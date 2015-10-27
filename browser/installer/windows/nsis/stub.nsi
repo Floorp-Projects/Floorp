@@ -1021,9 +1021,19 @@ Function createOptions
   ${NSD_Check} $CheckboxSendPing
 
 !ifdef MOZ_MAINTENANCE_SERVICE
-  ; Only show the maintenance service checkbox if we have write access to HKLM
+  ; We can only install the maintenance service if the user is an admin.
   Call IsUserAdmin
   Pop $0
+  
+  ; Only show the maintenance service checkbox if we're on XP SP3 or higher;
+  ;  we don't ever want to install it on XP without at least SP3 installed.
+  ${If} $0 == "true"
+  ${AndIf} ${IsWinXP}
+  ${AndIf} ${AtMostServicePack} 2
+    StrCpy $0 "false"
+  ${EndIf}
+  
+  ; Only show the maintenance service checkbox if we have write access to HKLM
   ClearErrors
   WriteRegStr HKLM "Software\Mozilla" "${BrandShortName}InstallerTest" \
                    "Write Test"
