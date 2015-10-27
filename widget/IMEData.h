@@ -113,7 +113,6 @@ struct nsIMEUpdatePreference final
   Notifications mWantUpdates;
 };
 
-
 /**
  * Contains IMEStatus plus information about the current 
  * input context that the IME can use as hints if desired.
@@ -425,6 +424,7 @@ struct IMENotification final
         mMouseButtonEventData.mButton = -1;
         mMouseButtonEventData.mButtons = 0;
         mMouseButtonEventData.mModifiers = 0;
+        break;
       default:
         break;
     }
