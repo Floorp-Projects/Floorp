@@ -355,32 +355,28 @@ public class FennecTabsRepository extends Repository {
   }
 
   /**
-   * Deletes all non-local clients and remote tabs.
-   *
-   * This function doesn't delete non-local clients due to bug in TabsProvider. Refer Bug 1025128.
-   *
-   * Upon remote tabs deletion, the clients without tabs are not shown in UI.
+   * Deletes all non-local clients and their associated remote tabs.
    */
   public static void deleteNonLocalClientsAndTabs(Context context) {
-    final String nonLocalTabsSelection = BrowserContract.Tabs.CLIENT_GUID + " IS NOT NULL";
+    final String nonLocalClientSelection = BrowserContract.Clients.GUID + " IS NOT NULL";
 
-    ContentProviderClient tabsProvider = context.getContentResolver()
-            .acquireContentProviderClient(BrowserContractHelpers.TABS_CONTENT_URI);
-    if (tabsProvider == null) {
-        Logger.warn(LOG_TAG, "Unable to create tabsProvider!");
+    ContentProviderClient clientsProvider = context.getContentResolver()
+            .acquireContentProviderClient(BrowserContractHelpers.CLIENTS_CONTENT_URI);
+    if (clientsProvider == null) {
+        Logger.warn(LOG_TAG, "Unable to create clientsProvider!");
         return;
     }
 
     try {
-      Logger.info(LOG_TAG, "Clearing all non-local tabs for default profile.");
-      tabsProvider.delete(BrowserContractHelpers.TABS_CONTENT_URI, nonLocalTabsSelection, null);
+      Logger.info(LOG_TAG, "Clearing all non-local clients and their associated remote tabs for default profile.");
+      clientsProvider.delete(BrowserContractHelpers.CLIENTS_CONTENT_URI, nonLocalClientSelection, null);
     } catch (RemoteException e) {
       Logger.warn(LOG_TAG, "Error while deleting", e);
     } finally {
       try {
-        tabsProvider.release();
+        clientsProvider.release();
       } catch (Exception e) {
-        Logger.warn(LOG_TAG, "Got exception releasing tabsProvider!", e);
+        Logger.warn(LOG_TAG, "Got exception releasing clientsProvider!", e);
       }
     }
   }

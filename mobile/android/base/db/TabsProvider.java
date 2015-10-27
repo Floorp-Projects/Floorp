@@ -162,14 +162,13 @@ public class TabsProvider extends SharedBrowserDatabaseProvider {
         switch (match) {
             case CLIENTS_ID:
                 trace("Delete on CLIENTS_ID: " + uri);
-                selection = DBUtils.concatenateWhere(selection, selectColumn(TABLE_CLIENTS, Clients.ROWID));
+                selection = DBUtils.concatenateWhere(selection, selectColumn(TABLE_CLIENTS, Clients._ID));
                 selectionArgs = DBUtils.appendSelectionArgs(selectionArgs,
                         new String[] { Long.toString(ContentUris.parseId(uri)) });
                 // fall through
             case CLIENTS:
                 trace("Delete on CLIENTS: " + uri);
                 // Delete from both TABLE_TABS and TABLE_CLIENTS.
-                deleteValues(uri, selection, selectionArgs, TABLE_TABS);
                 deleted = deleteValues(uri, selection, selectionArgs, TABLE_CLIENTS);
                 break;
 
@@ -236,7 +235,7 @@ public class TabsProvider extends SharedBrowserDatabaseProvider {
         switch (match) {
             case CLIENTS_ID:
                 trace("Update on CLIENTS_ID: " + uri);
-                selection = DBUtils.concatenateWhere(selection, selectColumn(TABLE_CLIENTS, Clients.ROWID));
+                selection = DBUtils.concatenateWhere(selection, selectColumn(TABLE_CLIENTS, Clients._ID));
                 selectionArgs = DBUtils.appendSelectionArgs(selectionArgs,
                         new String[] { Long.toString(ContentUris.parseId(uri)) });
                 // fall through
@@ -297,7 +296,7 @@ public class TabsProvider extends SharedBrowserDatabaseProvider {
 
             case CLIENTS_ID:
                 trace("Query is on CLIENTS_ID: " + uri);
-                selection = DBUtils.concatenateWhere(selection, selectColumn(TABLE_CLIENTS, Clients.ROWID));
+                selection = DBUtils.concatenateWhere(selection, selectColumn(TABLE_CLIENTS, Clients._ID));
                 selectionArgs = DBUtils.appendSelectionArgs(selectionArgs,
                         new String[] { Long.toString(ContentUris.parseId(uri)) });
                 // fall through
