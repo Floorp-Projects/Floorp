@@ -306,9 +306,12 @@ RotatedContentBuffer::BorrowDrawTargetForQuadrantUpdate(const IntRect& aBounds,
 void
 BorrowDrawTarget::ReturnDrawTarget(gfx::DrawTarget*& aReturned)
 {
+  MOZ_ASSERT(mLoanedDrawTarget);
   MOZ_ASSERT(aReturned == mLoanedDrawTarget);
-  mLoanedDrawTarget->SetTransform(mLoanedTransform);
-  mLoanedDrawTarget = nullptr;
+  if (mLoanedDrawTarget) {
+    mLoanedDrawTarget->SetTransform(mLoanedTransform);
+    mLoanedDrawTarget = nullptr;
+  }
   aReturned = nullptr;
 }
 
