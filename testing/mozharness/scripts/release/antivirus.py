@@ -155,7 +155,8 @@ class AntivirusScan(BaseScript, VirtualenvMixin):
             return retry(key.get_contents_to_filename,
                          args=(destination, ),
                          sleeptime=5, max_sleeptime=60,
-                         retry_exceptions=(S3CopyError, S3ResponseError))
+                         retry_exceptions=(S3CopyError, S3ResponseError,
+                                           IOError))
 
         def find_release_files():
             candidates_prefix = self._get_candidates_prefix()
