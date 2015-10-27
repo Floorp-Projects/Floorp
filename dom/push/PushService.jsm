@@ -925,6 +925,9 @@ this.PushService = {
     if (this._state == PUSH_SERVICE_CONNECTION_DISABLE) {
       return Promise.reject({state: 0, error: "Service not active"});
     } else if (this._state == PUSH_SERVICE_ACTIVE_OFFLINE) {
+      if (this._service.serviceType() == "WebSocket" && action == "unregister") {
+        return Promise.resolve();
+      }
       return Promise.reject({state: 0, error: "NetworkError"});
     }
     return this._service.request(action, aRecord);
