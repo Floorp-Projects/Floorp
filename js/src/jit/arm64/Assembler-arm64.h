@@ -260,9 +260,7 @@ class Assembler : public vixl::Assembler
         armbuffer_.flushPool();
     }
 
-    int actualOffset(int curOffset) {
-        return curOffset + armbuffer_.poolSizeBefore(curOffset);
-    }
+    int actualOffset(int curOffset) { return curOffset; }
     int actualIndex(int curOffset) {
         ARMBuffer::PoolEntry pe(curOffset);
         return armbuffer_.poolEntryOffset(pe);
@@ -346,7 +344,7 @@ class Assembler : public vixl::Assembler
 
     // Convert a BufferOffset to a final byte offset from the start of the code buffer.
     size_t toFinalOffset(BufferOffset offset) {
-        return size_t(offset.getOffset() + armbuffer_.poolSizeBefore(offset.getOffset()));
+        return size_t(offset.getOffset());
     }
 
   public:
