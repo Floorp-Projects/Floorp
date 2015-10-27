@@ -743,6 +743,68 @@ describe("loop.panel", function() {
         .eql("New room name");
       });
     });
+
+    describe("Room name priority", function() {
+      var roomEntry;
+      beforeEach(function() {
+        roomEntry = mountRoomEntry({
+          dispatcher: dispatcher,
+          room: new loop.store.Room(roomData)
+        });
+      });
+
+      function setDecryptedContext(newDecryptedContext) {
+        return new loop.store.Room(_.extend({}, roomData, {
+          decryptedContext: newDecryptedContext,
+          ctime: new Date().getTime()
+        }));
+      }
+
+      it("should use room name by default", function() {
+        var updatedRoom = setDecryptedContext({
+          roomName: "Room name",
+          urls: [
+            {
+              description: "Website title",
+              location: "https://fakeurl.com"
+            }
+          ]
+        });
+
+        roomEntry.setProps({ room: updatedRoom });
+
+        expect(roomEntry.getDOMNode().textContent).eql("Room name");
+      });
+
+      it("should use context title when there's no room title", function() {
+        var updatedRoom = setDecryptedContext({
+          urls: [
+            {
+              description: "Website title",
+              location: "https://fakeurl.com"
+            }
+          ]
+        });
+
+        roomEntry.setProps({ room: updatedRoom });
+
+        expect(roomEntry.getDOMNode().textContent).eql("Website title");
+      });
+
+      it("should use website url when there's no room title nor website", function() {
+        var updatedRoom = setDecryptedContext({
+          urls: [
+            {
+              location: "https://fakeurl.com"
+            }
+          ]
+        });
+
+        roomEntry.setProps({ room: updatedRoom });
+
+        expect(roomEntry.getDOMNode().textContent).eql("https://fakeurl.com");
+      });
+    });
   });
 
   describe("loop.panel.RoomList", function() {
