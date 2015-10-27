@@ -109,6 +109,13 @@ public class testInputConnection extends UITest {
 
             ic.deleteSurroundingText(3, 0);
             assertTextAndSelectionAt("Can clear text", ic, "", 0);
+
+            // Bug 1209465, cannot enter ideographic space character by itself (U+3000).
+            ic.commitText("\u3000", 1);
+            assertTextAndSelectionAt("Can commit ideographic space", ic, "\u3000", 1);
+
+            ic.deleteSurroundingText(1, 0);
+            assertTextAndSelectionAt("Can clear text", ic, "", 0);
         }
     }
 }
