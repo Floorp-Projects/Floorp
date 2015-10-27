@@ -259,6 +259,13 @@ function test_getSlowSQL() {
   do_check_true(("mainThread" in slow) && ("otherThreads" in slow));
 }
 
+function test_getWebrtc() {
+  var webrtc = Telemetry.webrtcStats;
+  do_check_true("IceCandidatesStats" in webrtc);
+  var icestats = webrtc.IceCandidatesStats;
+  do_check_true(("webrtc" in icestats) && ("loop" in icestats));
+}
+
 function test_addons() {
   var addon_id = "testing-addon";
   var fake_addon_id = "fake-addon";
@@ -897,6 +904,7 @@ function run_test()
   test_getHistogramById();
   test_histogramFrom();
   test_getSlowSQL();
+  test_getWebrtc();
   test_privateMode();
   test_histogramRecording();
   test_addons();

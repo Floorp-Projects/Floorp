@@ -5096,13 +5096,13 @@ void
 CodeGenerator::visitComputeThis(LComputeThis* lir)
 {
     ValueOperand value = ToValue(lir, LComputeThis::ValueIndex);
-    Register output = ToRegister(lir->output());
+    ValueOperand output = ToOutValue(lir);
 
-    OutOfLineCode* ool = oolCallVM(BoxNonStrictThisInfo, lir, ArgList(value), StoreValueTo(value));
+    OutOfLineCode* ool = oolCallVM(BoxNonStrictThisInfo, lir, ArgList(value), StoreValueTo(output));
 
     masm.branchTestObject(Assembler::NotEqual, value, ool->entry());
+    masm.moveValue(value, output);
     masm.bind(ool->rejoin());
-    masm.unboxObject(value, output);
 }
 
 void

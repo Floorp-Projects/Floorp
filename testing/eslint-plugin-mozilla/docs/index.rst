@@ -13,6 +13,9 @@ should be imported by head.js (as far as we can correctly resolve the path).
 ``mark-test-function-used`` simply marks test (the test method) as used. This
 avoids ESLint telling us that the function is never called.
 
+``var-only-at-top-level`` Marks all var declarations that are not at the top
+level invalid.
+
 +-------+-----------------------+
 | Possible values for all rules |
 +-------+-----------------------+
@@ -31,6 +34,7 @@ Example configuration::
      "mozilla/components-imports": 1,
      "mozilla/import-headjs-globals": 1,
      "mozilla/mark-test-function-used": 1,
+     "mozilla/var-only-at-top-level": 1,
    }
 
 .. toctree::
@@ -39,3 +43,4 @@ Example configuration::
    components-imports
    import-headjs-globals
    mark-test-function-used
+   var-only-at-top-level

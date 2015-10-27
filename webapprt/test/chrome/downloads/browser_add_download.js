@@ -37,7 +37,7 @@ function test() {
   waitForExplicitFinish();
 
   loadWebapp("download.webapp", undefined, function onLoad() {
-    for each (let download in downloadsInList) {
+    for (let download of downloadsInList) {
       list.addDownload(download);
     }
   });

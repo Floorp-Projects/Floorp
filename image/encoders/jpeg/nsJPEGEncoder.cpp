@@ -268,8 +268,6 @@ nsJPEGEncoder::Read(char* aBuf, uint32_t aCount, uint32_t* _retval)
   return ReadSegments(NS_CopySegmentToBuffer, aBuf, aCount, _retval);
 }
 
-/* [noscript] unsigned long readSegments (in nsWriteSegmentFun aWriter, in
-   voidPtr aClosure, in unsigned long aCount); */
 NS_IMETHODIMP
 nsJPEGEncoder::ReadSegments(nsWriteSegmentFun aWriter,
                             void* aClosure, uint32_t aCount, uint32_t* _retval)

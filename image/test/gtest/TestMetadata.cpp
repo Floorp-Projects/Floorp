@@ -38,15 +38,15 @@ TEST(ImageMetadata, ImageModuleAvailable)
   EXPECT_TRUE(imgTools != nullptr);
 }
 
-enum class BMPAlpha
+enum class BMPWithinICO
 {
-  DISABLED,
-  ENABLED
+  NO,
+  YES
 };
 
 static void
 CheckMetadata(const ImageTestCase& aTestCase,
-              BMPAlpha aBMPAlpha = BMPAlpha::DISABLED)
+              BMPWithinICO aBMPWithinICO = BMPWithinICO::NO)
 {
   nsCOMPtr<nsIInputStream> inputStream = LoadFile(aTestCase.mPath);
   ASSERT_TRUE(inputStream != nullptr);
@@ -70,13 +70,13 @@ CheckMetadata(const ImageTestCase& aTestCase,
     DecoderFactory::CreateAnonymousMetadataDecoder(decoderType, sourceBuffer);
   ASSERT_TRUE(decoder != nullptr);
 
-  if (aBMPAlpha == BMPAlpha::ENABLED) {
-    static_cast<nsBMPDecoder*>(decoder.get())->SetUseAlphaData(true);
+  if (aBMPWithinICO == BMPWithinICO::YES) {
+    static_cast<nsBMPDecoder*>(decoder.get())->SetIsWithinICO();
   }
 
   // Run the metadata decoder synchronously.
   decoder->Decode();
-  
+
   // Ensure that the metadata decoder didn't make progress it shouldn't have
   // (which would indicate that it decoded past the header of the image).
   Progress metadataProgress = decoder->TakeProgress();
@@ -100,7 +100,7 @@ CheckMetadata(const ImageTestCase& aTestCase,
   EXPECT_EQ(aTestCase.mSize.width, metadataSize.width);
   EXPECT_EQ(aTestCase.mSize.height, metadataSize.height);
 
-  bool expectTransparency = aBMPAlpha == BMPAlpha::ENABLED
+  bool expectTransparency = aBMPWithinICO == BMPWithinICO::YES
                           ? true
                           : bool(aTestCase.mFlags & TEST_CASE_IS_TRANSPARENT);
   EXPECT_EQ(expectTransparency, bool(metadataProgress & FLAG_HAS_TRANSPARENCY));
@@ -114,13 +114,13 @@ CheckMetadata(const ImageTestCase& aTestCase,
                                            DefaultSurfaceFlags());
   ASSERT_TRUE(decoder != nullptr);
 
-  if (aBMPAlpha == BMPAlpha::ENABLED) {
-    static_cast<nsBMPDecoder*>(decoder.get())->SetUseAlphaData(true);
+  if (aBMPWithinICO == BMPWithinICO::YES) {
+    static_cast<nsBMPDecoder*>(decoder.get())->SetIsWithinICO();
   }
 
   // Run the full decoder synchronously.
   decoder->Decode();
-  
+
   EXPECT_TRUE(decoder->GetDecodeDone() && !decoder->HasError());
   Progress fullProgress = decoder->TakeProgress();
 
@@ -164,14 +164,16 @@ TEST(ImageMetadata, FirstFramePaddingGIF)
   CheckMetadata(FirstFramePaddingGIFTestCase());
 }
 
-TEST(ImageMetadata, TransparentBMPWithBMPAlphaOff)
+TEST(ImageMetadata, TransparentIfWithinICOBMPNotWithinICO)
 {
-  CheckMetadata(TransparentBMPWhenBMPAlphaEnabledTestCase(), BMPAlpha::ENABLED);
+  CheckMetadata(TransparentIfWithinICOBMPTestCase(TEST_CASE_DEFAULT_FLAGS),
+                BMPWithinICO::NO);
 }
 
-TEST(ImageMetadata, TransparentBMPWithBMPAlphaOn)
+TEST(ImageMetadata, TransparentIfWithinICOBMPWithinICO)
 {
-  CheckMetadata(TransparentBMPWhenBMPAlphaEnabledTestCase(), BMPAlpha::ENABLED);
+  CheckMetadata(TransparentIfWithinICOBMPTestCase(TEST_CASE_IS_TRANSPARENT),
+                BMPWithinICO::YES);
 }
 
 TEST(ImageMetadata, RLE4BMP) { CheckMetadata(RLE4BMPTestCase()); }

@@ -437,11 +437,6 @@ nsNSSCertificateDB::handleCACertDownload(nsIArray *x509Certs,
   return ImportValidCACertsInList(certList.get(), ctx, proofOfLock);
 }
 
-/*
- *  [noscript] void importCertificates(in charPtr data, in unsigned long length,
- *                                     in unsigned long type, 
- *                                     in nsIInterfaceRequestor ctx);
- */
 NS_IMETHODIMP 
 nsNSSCertificateDB::ImportCertificates(uint8_t * data, uint32_t length, 
                                        uint32_t type, 
@@ -531,10 +526,6 @@ ImportCertsIntoPermanentStorage(
 } 
 
 
-/*
- *  [noscript] void importEmailCertificates(in charPtr data, in unsigned long length,
- *                                     in nsIInterfaceRequestor ctx);
- */
 NS_IMETHODIMP
 nsNSSCertificateDB::ImportEmailCertificate(uint8_t * data, uint32_t length, 
                                        nsIInterfaceRequestor *ctx)
@@ -930,9 +921,6 @@ loser:
   return rv;
 }
 
-/*
- * void deleteCertificate(in nsIX509Cert aCert);
- */
 NS_IMETHODIMP 
 nsNSSCertificateDB::DeleteCertificate(nsIX509Cert *aCert)
 {
@@ -970,11 +958,6 @@ nsNSSCertificateDB::DeleteCertificate(nsIX509Cert *aCert)
   return (srv) ? NS_ERROR_FAILURE : NS_OK;
 }
 
-/*
- * void setCertTrust(in nsIX509Cert cert,
- *                   in unsigned long type,
- *                   in unsigned long trust);
- */
 NS_IMETHODIMP 
 nsNSSCertificateDB::SetCertTrust(nsIX509Cert *cert, 
                                  uint32_t type,

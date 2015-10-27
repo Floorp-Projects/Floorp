@@ -56,7 +56,6 @@ NS_IMETHODIMP LoadContextInfo::GetOriginAttributes(JSContext *aCx,
 
 NS_IMPL_ISUPPORTS(LoadContextInfoFactory, nsILoadContextInfoFactory)
 
-/* readonly attribute nsILoadContextInfo default; */
 NS_IMETHODIMP LoadContextInfoFactory::GetDefault(nsILoadContextInfo * *aDefault)
 {
   nsCOMPtr<nsILoadContextInfo> info = GetLoadContextInfo(false, false, OriginAttributes());
@@ -64,7 +63,6 @@ NS_IMETHODIMP LoadContextInfoFactory::GetDefault(nsILoadContextInfo * *aDefault)
   return NS_OK;
 }
 
-/* readonly attribute nsILoadContextInfo private; */
 NS_IMETHODIMP LoadContextInfoFactory::GetPrivate(nsILoadContextInfo * *aPrivate)
 {
   nsCOMPtr<nsILoadContextInfo> info = GetLoadContextInfo(true, false, OriginAttributes());
@@ -72,7 +70,6 @@ NS_IMETHODIMP LoadContextInfoFactory::GetPrivate(nsILoadContextInfo * *aPrivate)
   return NS_OK;
 }
 
-/* readonly attribute nsILoadContextInfo anonymous; */
 NS_IMETHODIMP LoadContextInfoFactory::GetAnonymous(nsILoadContextInfo * *aAnonymous)
 {
   nsCOMPtr<nsILoadContextInfo> info = GetLoadContextInfo(false, true, OriginAttributes());
@@ -80,7 +77,6 @@ NS_IMETHODIMP LoadContextInfoFactory::GetAnonymous(nsILoadContextInfo * *aAnonym
   return NS_OK;
 }
 
-/* nsILoadContextInfo custom (in boolean aPrivate, in boolean aAnonymous, in jsval aOriginAttributes); */
 NS_IMETHODIMP LoadContextInfoFactory::Custom(bool aPrivate, bool aAnonymous,
                                              JS::HandleValue aOriginAttributes, JSContext *cx,
                                              nsILoadContextInfo * *_retval)
@@ -94,7 +90,6 @@ NS_IMETHODIMP LoadContextInfoFactory::Custom(bool aPrivate, bool aAnonymous,
   return NS_OK;
 }
 
-/* nsILoadContextInfo fromLoadContext (in nsILoadContext aLoadContext, in boolean aAnonymous); */
 NS_IMETHODIMP LoadContextInfoFactory::FromLoadContext(nsILoadContext *aLoadContext, bool aAnonymous,
                                                       nsILoadContextInfo * *_retval)
 {
@@ -103,7 +98,6 @@ NS_IMETHODIMP LoadContextInfoFactory::FromLoadContext(nsILoadContext *aLoadConte
   return NS_OK;
 }
 
-/* nsILoadContextInfo fromWindow (in nsIDOMWindow aWindow, in boolean aAnonymous); */
 NS_IMETHODIMP LoadContextInfoFactory::FromWindow(nsIDOMWindow *aWindow, bool aAnonymous,
                                                  nsILoadContextInfo * *_retval)
 {

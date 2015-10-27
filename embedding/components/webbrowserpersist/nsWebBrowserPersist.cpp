@@ -415,9 +415,6 @@ NS_IMETHODIMP nsWebBrowserPersist::SetProgressListener(
     return NS_OK;
 }
 
-/* void saveURI (in nsIURI aURI, in nsISupports aCacheKey, in nsIURI aReferrer,
-   in nsIInputStream aPostData, in wstring aExtraHeaders,
-   in nsISupports aFile, in nsILoadContext aPrivayContext); */
 NS_IMETHODIMP nsWebBrowserPersist::SaveURI(
     nsIURI *aURI, nsISupports *aCacheKey,
     nsIURI *aReferrer, uint32_t aReferrerPolicy,
@@ -533,7 +530,6 @@ NS_IMETHODIMP nsWebBrowserPersist::SaveDocument(
     return rv;
 }
 
-/* void cancel(nsresult aReason); */
 NS_IMETHODIMP nsWebBrowserPersist::Cancel(nsresult aReason)
 {
     mCancel = true;
@@ -1002,8 +998,6 @@ nsWebBrowserPersist::OnDataAvailable(
 // nsWebBrowserPersist::nsIProgressEventSink
 //*****************************************************************************
 
-/* void onProgress (in nsIRequest request, in nsISupports ctxt,
-    in long long aProgress, in long long aProgressMax); */
 NS_IMETHODIMP nsWebBrowserPersist::OnProgress(
     nsIRequest *request, nsISupports *ctxt, int64_t aProgress,
     int64_t aProgressMax)
@@ -1055,8 +1049,6 @@ NS_IMETHODIMP nsWebBrowserPersist::OnProgress(
     return NS_OK;
 }
 
-/* void onStatus (in nsIRequest request, in nsISupports ctxt,
-    in nsresult status, in wstring statusArg); */
 NS_IMETHODIMP nsWebBrowserPersist::OnStatus(
     nsIRequest *request, nsISupports *ctxt, nsresult status,
     const char16_t *statusArg)

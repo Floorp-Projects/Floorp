@@ -2041,83 +2041,67 @@ XPCOMUtils.defineLazyGetter(this, "bundle", function() {
          createBundle(PLACES_STRING_BUNDLE_URI);
 });
 
-// A promise resolved once the Sqlite.jsm connections
-// can be closed.
-var promiseCanCloseConnection = function() {
-  let TOPIC = "places-will-close-connection";
-  return new Promise(resolve => {
-    let observer = function() {
-      Services.obs.removeObserver(observer, TOPIC);
-      resolve();
-    }
-    Services.obs.addObserver(observer, TOPIC, false)
-  });
-};
+/**
+ * Setup internal databases for closing properly during shutdown.
+ *
+ * 1. Places initiates shutdown.
+ * 2. Before places can move to the step where it closes the low-level connection,
+ *   we need to make sure that we have closed `conn`.
+ * 3. Before we can close `conn`, we need to make sure that all external clients
+ *   have stopped using `conn`.
+ * 4. Before we can close Sqlite, we need to close `conn`.
+ */
+function setupDbForShutdown(conn, name) {
+  try {
+    let state = "0. Not started.";
+    let promiseClosed = new Promise(resolve => {
+      // The service initiates shutdown.
+      // Before it can safely close its connection, we need to make sure
+      // that we have closed the high-level connection.
+      AsyncShutdown.placesClosingInternalConnection.addBlocker(`${name} closing as part of Places shutdown`,
+        Task.async(function*() {
+          state = "1. Service has initiated shutdown";
+
+          // At this stage, all external clients have finished using the
+          // database. We just need to close the high-level connection.
+          yield conn.close();
+          state = "2. Closed Sqlite.jsm connection.";
+
+          resolve();
+        }),
+        () => state
+      );
+    });
+
+    // Make sure that Sqlite.jsm doesn't close until we are done
+    // with the high-level connection.
+    Sqlite.shutdown.addBlocker(`${name} must be closed before Sqlite.jsm`,
+      () => promiseClosed,
+      () => state
+    );
+  } catch(ex) {
+    // It's too late to block shutdown, just close the connection.
+    conn.close();
+    throw ex;
+  }
+}
 
 XPCOMUtils.defineLazyGetter(this, "gAsyncDBConnPromised",
-  () => new Promise((resolve) => {
-    Sqlite.cloneStorageConnection({
-      connection: PlacesUtils.history.DBConnection,
-      readOnly:   true
-    }).then(conn => {
-      try {
-        let state = "0. not started";
-
-        let promiseReady = promiseCanCloseConnection();
-        let promiseShutdownComplete = Task.async(function*() {
-          // Don't close the connection as long as it might be used.
-          state = "1. waiting for `places-will-close-connection`";
-          yield promiseReady;
-
-          // But close the connection before Sqlite shutdown.
-          state = "2. closing the connection";
-          yield conn.close();
-
-          state = "3. done";
-        })();
-        Sqlite.shutdown.addBlocker("PlacesUtils read-only connection closing",
-          promiseShutdownComplete,
-          () => state);
-      } catch(ex) {
-        // It's too late to block shutdown, just close the connection.
-        conn.close();
-        throw ex;
-      }
-      resolve(conn);
-    });
+  () => Sqlite.cloneStorageConnection({
+    connection: PlacesUtils.history.DBConnection,
+    readOnly:   true
+  }).then(conn => {
+      setupDbForShutdown(conn, "PlacesUtils read-only connection");
+      return conn;
   })
 );
 
 XPCOMUtils.defineLazyGetter(this, "gAsyncDBWrapperPromised",
-  () => new Promise((resolve) => {
-    Sqlite.wrapStorageConnection({
+  () => Sqlite.wrapStorageConnection({
       connection: PlacesUtils.history.DBConnection,
-    }).then(conn => {
-      try {
-        let state = "0. not started";
-
-        let promiseReady = promiseCanCloseConnection();
-        let promiseShutdownComplete = Task.async(function*() {
-          // Don't close the connection as long as it might be used.
-          state = "1. waiting for `places-will-close-connection`";
-          yield promiseReady;
-
-          // But close the connection before Sqlite shutdown.
-          state = "2. closing the connection";
-          yield conn.close();
-
-          state = "3. done";
-        })();
-        Sqlite.shutdown.addBlocker("PlacesUtils wrapped connection closing",
-          promiseShutdownComplete,
-          () => state);
-      } catch(ex) {
-        // It's too late to block shutdown, just close the connection.
-        conn.close();
-        throw ex;
-      }
-      resolve(conn);
-    });
+  }).then(conn => {
+    setupDbForShutdown(conn, "PlacesUtils wrapped connection");
+    return conn;
   })
 );
 

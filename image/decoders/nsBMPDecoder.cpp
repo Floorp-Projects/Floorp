@@ -60,6 +60,12 @@
 // - It also added an optional color profile table after the pixel data (and
 //   another optional gap).
 //
+// WinBMPv3-ICO. This is a variant of WinBMPv3.
+// - It's the BMP format used for BMP images within ICO files.
+// - The only difference with WinBMPv3 is that if an image is 32bpp and has no
+//   compression, then instead of treating the pixel data as 0RGB it is treated
+//   as ARGB, but only if one or more of the A values are non-zero.
+//
 // OS/2 VERSIONS OF THE BMP FORMAT
 // -------------------------------
 // OS2-BMPv1.
@@ -168,6 +174,9 @@ GetBMPLog()
 nsBMPDecoder::nsBMPDecoder(RasterImage* aImage)
   : Decoder(aImage)
   , mLexer(Transition::To(State::FILE_HEADER, FileHeader::LENGTH))
+  , mIsWithinICO(false)
+  , mMayHaveTransparency(false)
+  , mDoesHaveTransparency(false)
   , mNumColors(0)
   , mColors(nullptr)
   , mBytesPerColor(0)
@@ -175,8 +184,6 @@ nsBMPDecoder::nsBMPDecoder(RasterImage* aImage)
   , mCurrentRow(0)
   , mCurrentPos(0)
   , mAbsoluteModeNumPixels(0)
-  , mUseAlphaData(false)
-  , mHaveAlphaData(false)
 {
   memset(&mBFH, 0, sizeof(mBFH));
   memset(&mBIH, 0, sizeof(mBIH));
@@ -185,13 +192,6 @@ nsBMPDecoder::nsBMPDecoder(RasterImage* aImage)
 nsBMPDecoder::~nsBMPDecoder()
 {
   delete[] mColors;
-}
-
-// Sets whether or not the BMP will use alpha data.
-void
-nsBMPDecoder::SetUseAlphaData(bool useAlphaData)
-{
-  mUseAlphaData = useAlphaData;
 }
 
 // Obtains the bits per pixel from the internal BIH header.
@@ -250,7 +250,8 @@ nsBMPDecoder::FinishInternal()
     nsIntRect r(0, 0, mBIH.width, GetHeight());
     PostInvalidation(r);
 
-    if (mUseAlphaData && mHaveAlphaData) {
+    if (mDoesHaveTransparency) {
+      MOZ_ASSERT(mMayHaveTransparency);
       PostFrameStop(Opacity::SOME_TRANSPARENCY);
     } else {
       PostFrameStop(Opacity::OPAQUE);
@@ -268,21 +269,39 @@ BitFields::Value::Set(uint32_t aMask)
 {
   mMask = aMask;
 
+  // Handle this exceptional case first. The chosen values don't matter
+  // (because a mask of zero will always give a value of zero) except that
+  // mBitWidth:
+  // - shouldn't be zero, because that would cause an infinite loop in Get();
+  // - shouldn't be 5 or 8, because that could cause a false positive match in
+  //   IsR5G5B5() or IsR8G8B8().
+  if (mMask == 0x0) {
+    mRightShift = 0;
+    mBitWidth = 1;
+    return;
+  }
+
   // Find the rightmost 1.
-  bool started = false;
-  mRightShift = mBitWidth = 0;
-  for (uint8_t pos = 0; pos <= 31; pos++) {
-    if (!started && (aMask & (1 << pos))) {
-      mRightShift = pos;
-      started = true;
-    } else if (started && !(aMask & (1 << pos))) {
-      mBitWidth = pos - mRightShift;
+  uint8_t i;
+  for (i = 0; i < 32; i++) {
+    if (mMask & (1 << i)) {
       break;
     }
   }
+  mRightShift = i;
+
+  // Now find the leftmost 1 in the same run of 1s. (If there are multiple runs
+  // of 1s -- which isn't valid -- we'll behave as if only the lowest run was
+  // present, which seems reasonable.)
+  for (i = i + 1; i < 32; i++) {
+    if (!(mMask & (1 << i))) {
+      break;
+    }
+  }
+  mBitWidth = i - mRightShift;
 }
 
-inline uint8_t
+MOZ_ALWAYS_INLINE uint8_t
 BitFields::Value::Get(uint32_t aValue) const
 {
   // Extract the unscaled value.
@@ -315,11 +334,29 @@ BitFields::Value::Get(uint32_t aValue) const
 }
 
 MOZ_ALWAYS_INLINE uint8_t
+BitFields::Value::GetAlpha(uint32_t aValue, bool& aHasAlphaOut) const
+{
+  if (mMask == 0x0) {
+    return 0xff;
+  }
+  aHasAlphaOut = true;
+  return Get(aValue);
+}
+
+MOZ_ALWAYS_INLINE uint8_t
 BitFields::Value::Get5(uint32_t aValue) const
 {
   MOZ_ASSERT(mBitWidth == 5);
   uint32_t v = (aValue & mMask) >> mRightShift;
   return (v << 3u) | (v >> 2u);
+}
+
+MOZ_ALWAYS_INLINE uint8_t
+BitFields::Value::Get8(uint32_t aValue) const
+{
+  MOZ_ASSERT(mBitWidth == 8);
+  uint32_t v = (aValue & mMask) >> mRightShift;
+  return v;
 }
 
 void
@@ -330,12 +367,30 @@ BitFields::SetR5G5B5()
   mBlue.Set(0x001f);
 }
 
+void
+BitFields::SetR8G8B8()
+{
+  mRed.Set(0xff0000);
+  mGreen.Set(0xff00);
+  mBlue.Set(0x00ff);
+}
+
 bool
 BitFields::IsR5G5B5() const
 {
   return mRed.mBitWidth == 5 &&
          mGreen.mBitWidth == 5 &&
-         mBlue.mBitWidth == 5;
+         mBlue.mBitWidth == 5 &&
+         mAlpha.mMask == 0x0;
+}
+
+bool
+BitFields::IsR8G8B8() const
+{
+  return mRed.mBitWidth == 8 &&
+         mGreen.mBitWidth == 8 &&
+         mBlue.mBitWidth == 8 &&
+         mAlpha.mMask == 0x0;
 }
 
 uint32_t*
@@ -458,6 +513,9 @@ nsBMPDecoder::ReadInfoHeaderSize(const char* aData, size_t aLength)
     PostDataError();
     return Transition::Terminate(State::FAILURE);
   }
+  // ICO BMPs must have a WinVMPv3 header. nsICODecoder should have already
+  // terminated decoding if this isn't the case.
+  MOZ_ASSERT_IF(mIsWithinICO, mBIH.bihsize == InfoHeaderLength::WIN_V3);
 
   return Transition::To(State::INFO_HEADER_REST,
                         mBIH.bihsize - BIHSIZE_FIELD_LENGTH);
@@ -530,6 +588,7 @@ nsBMPDecoder::ReadInfoHeaderRest(const char* aData, size_t aLength)
   // Post our size to the superclass.
   uint32_t realHeight = GetHeight();
   PostSize(mBIH.width, realHeight);
+  mCurrentRow = realHeight;
 
   // Round it up to the nearest byte count, then pad to 4-byte boundary.
   // Compute this even for a metadate decode because GetCompressedImageSize()
@@ -540,23 +599,68 @@ nsBMPDecoder::ReadInfoHeaderRest(const char* aData, size_t aLength)
     mPixelRowSize += 4 - surplus;
   }
 
-  // We treat BMPs as transparent if they're 32bpp and alpha is enabled, but
-  // also if they use RLE encoding, because the 'delta' mode can skip pixels
-  // and cause implicit transparency.
-  bool hasTransparency = (mBIH.compression == Compression::RLE8) ||
-                         (mBIH.compression == Compression::RLE4) ||
-                         (mBIH.bpp == 32 && mUseAlphaData);
-  if (hasTransparency) {
+  size_t bitFieldsLengthStillToRead = 0;
+  if (mBIH.compression == Compression::BITFIELDS) {
+    // Need to read bitfields.
+    if (mBIH.bihsize >= InfoHeaderLength::WIN_V4) {
+      // Bitfields are present in the info header, so we can read them
+      // immediately.
+      mBitFields.ReadFromHeader(aData + 36, /* aReadAlpha = */ true);
+    } else {
+      // Bitfields are present after the info header, so we will read them in
+      // ReadBitfields().
+      bitFieldsLengthStillToRead = BitFields::LENGTH;
+    }
+  } else if (mBIH.bpp == 16) {
+    // No bitfields specified; use the default 5-5-5 values.
+    mBitFields.SetR5G5B5();
+  } else if (mBIH.bpp == 32) {
+    // No bitfields specified; use the default 8-8-8 values.
+    mBitFields.SetR8G8B8();
+  }
+
+  return Transition::To(State::BITFIELDS, bitFieldsLengthStillToRead);
+}
+
+void
+BitFields::ReadFromHeader(const char* aData, bool aReadAlpha)
+{
+  mRed.Set  (LittleEndian::readUint32(aData + 0));
+  mGreen.Set(LittleEndian::readUint32(aData + 4));
+  mBlue.Set (LittleEndian::readUint32(aData + 8));
+  if (aReadAlpha) {
+    mAlpha.Set(LittleEndian::readUint32(aData + 12));
+  }
+}
+
+LexerTransition<nsBMPDecoder::State>
+nsBMPDecoder::ReadBitfields(const char* aData, size_t aLength)
+{
+  mPreGapLength += aLength;
+
+  // If aLength is zero there are no bitfields to read, or we already read them
+  // in ReadInfoHeader().
+  if (aLength != 0) {
+    mBitFields.ReadFromHeader(aData, /* aReadAlpha = */ false);
+  }
+
+  // Note that RLE-encoded BMPs might be transparent because the 'delta' mode
+  // can skip pixels and cause implicit transparency.
+  mMayHaveTransparency =
+    (mBIH.compression == Compression::RGB && mIsWithinICO && mBIH.bpp == 32) ||
+    mBIH.compression == Compression::RLE8 ||
+    mBIH.compression == Compression::RLE4 ||
+    (mBIH.compression == Compression::BITFIELDS &&
+     mBitFields.mAlpha.IsPresent());
+  if (mMayHaveTransparency) {
     PostHasTransparency();
   }
 
-  // If we're doing a metadata decode, we're done.
+  // We've now read all the headers. If we're doing a metadata decode, we're
+  // done.
   if (IsMetadataDecode()) {
     return Transition::Terminate(State::SUCCESS);
   }
-
-  // We're doing a real decode.
-  mCurrentRow = realHeight;
 
   // Set up the color table, if present; it'll be filled in by ReadColorTable().
   if (mBIH.bpp <= 8) {
@@ -588,50 +692,11 @@ nsBMPDecoder::ReadInfoHeaderRest(const char* aData, size_t aLength)
     // BMPs store their rows in reverse order, so the downscaler needs to
     // reverse them again when writing its output.
     rv = mDownscaler->BeginFrame(GetSize(), Nothing(),
-                                 mImageData, hasTransparency,
+                                 mImageData, mMayHaveTransparency,
                                  /* aFlipVertically = */ true);
     if (NS_FAILED(rv)) {
       return Transition::Terminate(State::FAILURE);
     }
-  }
-
-  size_t bitFieldsLengthStillToRead = 0;
-  if (mBIH.compression == Compression::BITFIELDS) {
-    // Need to read bitfields.
-    if (mBIH.bihsize >= InfoHeaderLength::WIN_V4) {
-      // Bitfields are present in the info header, so we can read them
-      // immediately.
-      mBitFields.ReadFromHeader(aData + 36);
-    } else {
-      // Bitfields are present after the info header, so we will read them in
-      // ReadBitfields().
-      bitFieldsLengthStillToRead = BitFields::LENGTH;
-    }
-  } else if (mBIH.bpp == 16) {
-    // No bitfields specified; use the default 5-5-5 values.
-    mBitFields.SetR5G5B5();
-  }
-
-  return Transition::To(State::BITFIELDS, bitFieldsLengthStillToRead);
-}
-
-void
-BitFields::ReadFromHeader(const char* aData)
-{
-  mRed.Set  (LittleEndian::readUint32(aData + 0));
-  mGreen.Set(LittleEndian::readUint32(aData + 4));
-  mBlue.Set (LittleEndian::readUint32(aData + 8));
-}
-
-LexerTransition<nsBMPDecoder::State>
-nsBMPDecoder::ReadBitfields(const char* aData, size_t aLength)
-{
-  mPreGapLength += aLength;
-
-  // If aLength is zero there are no bitfields to read, or we already read them
-  // in ReadInfoHeader().
-  if (aLength != 0) {
-    mBitFields.ReadFromHeader(aData);
   }
 
   return Transition::To(State::COLOR_TABLE, mNumColors * mBytesPerColor);
@@ -726,13 +791,19 @@ nsBMPDecoder::ReadPixelRow(const char* aData)
           src += 2;
         }
       } else {
+        bool anyHasAlpha = false;
         while (lpos > 0) {
           uint16_t val = LittleEndian::readUint16(src);
           SetPixel(dst, mBitFields.mRed.Get(val),
                         mBitFields.mGreen.Get(val),
-                        mBitFields.mBlue.Get(val));
+                        mBitFields.mBlue.Get(val),
+                        mBitFields.mAlpha.GetAlpha(val, anyHasAlpha));
           --lpos;
           src += 2;
+        }
+        if (anyHasAlpha) {
+          MOZ_ASSERT(mMayHaveTransparency);
+          mDoesHaveTransparency = true;
         }
       }
       break;
@@ -746,18 +817,53 @@ nsBMPDecoder::ReadPixelRow(const char* aData)
       break;
 
     case 32:
-      while (lpos > 0) {
-        if (mUseAlphaData) {
-          if (MOZ_UNLIKELY(!mHaveAlphaData && src[3])) {
-            PostHasTransparency();
-            mHaveAlphaData = true;
+      if (mBIH.compression == Compression::RGB && mIsWithinICO &&
+          mBIH.bpp == 32) {
+        // This is a special case only used for 32bpp WinBMPv3-ICO files, which
+        // could be in either 0RGB or ARGB format.
+        while (lpos > 0) {
+          // If src[3] is zero, we can't tell at this point if the image is
+          // 0RGB or ARGB. So we just use 0 value as-is. If the image is 0RGB
+          // then mDoesHaveTransparency will be false at the end, we'll treat
+          // the image as opaque, and the 0 alpha values will be ignored. If
+          // the image is ARGB then mDoesHaveTransparency will be true at the
+          // end and we'll treat the image as non-opaque. (Note: a
+          // fully-transparent ARGB image is indistinguishable from a 0RGB
+          // image, and we will render such an image as a 0RGB image, i.e.
+          // opaquely. This is unlikely to be a problem in practice.)
+          if (src[3] != 0) {
+            MOZ_ASSERT(mMayHaveTransparency);
+            mDoesHaveTransparency = true;
           }
           SetPixel(dst, src[2], src[1], src[0], src[3]);
-        } else {
-          SetPixel(dst, src[2], src[1], src[0]);
+          src += 4;
+          --lpos;
         }
-        --lpos;
-        src += 4;
+      } else if (mBitFields.IsR8G8B8()) {
+        // Specialize this common case.
+        while (lpos > 0) {
+          uint32_t val = LittleEndian::readUint32(src);
+          SetPixel(dst, mBitFields.mRed.Get8(val),
+                        mBitFields.mGreen.Get8(val),
+                        mBitFields.mBlue.Get8(val));
+          --lpos;
+          src += 4;
+        }
+      } else {
+        bool anyHasAlpha = false;
+        while (lpos > 0) {
+          uint32_t val = LittleEndian::readUint32(src);
+          SetPixel(dst, mBitFields.mRed.Get(val),
+                        mBitFields.mGreen.Get(val),
+                        mBitFields.mBlue.Get(val),
+                        mBitFields.mAlpha.GetAlpha(val, anyHasAlpha));
+          --lpos;
+          src += 4;
+        }
+        if (anyHasAlpha) {
+          MOZ_ASSERT(mMayHaveTransparency);
+          mDoesHaveTransparency = true;
+        }
       }
       break;
 
@@ -840,13 +946,10 @@ nsBMPDecoder::ReadRLESegment(const char* aData)
 LexerTransition<nsBMPDecoder::State>
 nsBMPDecoder::ReadRLEDelta(const char* aData)
 {
-  // Delta encoding makes it possible to skip pixels making the image
+  // Delta encoding makes it possible to skip pixels making part of the image
   // transparent.
-  if (MOZ_UNLIKELY(!mHaveAlphaData)) {
-    PostHasTransparency();
-    mHaveAlphaData = true;
-  }
-  mUseAlphaData = mHaveAlphaData = true;
+  MOZ_ASSERT(mMayHaveTransparency);
+  mDoesHaveTransparency = true;
 
   if (mDownscaler) {
     // Clear the skipped pixels. (This clears to the end of the row,

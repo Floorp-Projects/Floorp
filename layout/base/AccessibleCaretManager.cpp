@@ -291,11 +291,7 @@ AccessibleCaretManager::UpdateCaretsForSelectionMode(UpdateCaretsHint aHint)
 
   UpdateCaretsForTilt();
 
-  if ((firstCaretResult == PositionChangedResult::Changed ||
-       secondCaretResult == PositionChangedResult::Changed ||
-       firstCaretResult == PositionChangedResult::Invisible ||
-       secondCaretResult == PositionChangedResult::Invisible) &&
-      !mActiveCaret) {
+  if (!mActiveCaret) {
     DispatchCaretStateChangedEvent(CaretChangedReason::Updateposition);
   }
 }
