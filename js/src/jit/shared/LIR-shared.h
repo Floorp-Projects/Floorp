@@ -1459,7 +1459,7 @@ class LReturnFromCtor : public LInstructionHelper<1, BOX_PIECES + 1, 0>
     static const size_t ObjectIndex = BOX_PIECES;
 };
 
-class LComputeThis : public LInstructionHelper<1, BOX_PIECES, 0>
+class LComputeThis : public LInstructionHelper<BOX_PIECES, BOX_PIECES, 0>
 {
   public:
     LIR_HEADER(ComputeThis)
