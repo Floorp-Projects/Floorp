@@ -1191,20 +1191,8 @@ TabChild::ProvideWindowCommon(nsIDOMWindow* aOpener,
                                          NS_ConvertUTF8toUTF16(features),
                                          aWindowIsNew);
   } else {
-    nsCOMPtr<nsIDOMDocument> domDoc;
-    aOpener->GetDocument(getter_AddRefs(domDoc));
-    if (!domDoc) {
-      NS_ERROR("Could retrieve document from nsIBaseWindow");
-      return NS_ERROR_FAILURE;
-    }
-
-    nsCOMPtr<nsIDocument> doc;
-    doc = do_QueryInterface(domDoc);
-    if (!doc) {
-      NS_ERROR("Document from nsIBaseWindow didn't QI to nsIDocument");
-      return NS_ERROR_FAILURE;
-    }
-
+    nsCOMPtr<nsPIDOMWindow> opener = do_QueryInterface(aOpener);
+    nsCOMPtr<nsIDocument> doc = opener->GetDoc();
     nsCOMPtr<nsIURI> baseURI = doc->GetDocBaseURI();
     if (!baseURI) {
       NS_ERROR("nsIDocument didn't return a base URI");

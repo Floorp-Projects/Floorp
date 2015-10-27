@@ -1135,14 +1135,6 @@ this.PushServiceWebSocket = {
       data.uaid = this._UAID;
     }
 
-    function sendHelloMessage(ids) {
-      // On success, ids is an array, on error its not.
-      data.channelIDs = ids.map ?
-                           ids.map(function(el) { return el.channelID; }) : [];
-      this._wsSendMessage(data);
-      this._currentState = STATE_WAITING_FOR_HELLO;
-    }
-
     this._networkInfo.getNetworkState((networkState) => {
       if (networkState.ip) {
         // Opening an available UDP port.
@@ -1161,9 +1153,8 @@ this.PushServiceWebSocket = {
         };
       }
 
-      this._mainPushService.getAllUnexpired()
-        .then(sendHelloMessage.bind(this),
-              sendHelloMessage.bind(this));
+      this._wsSendMessage(data);
+      this._currentState = STATE_WAITING_FOR_HELLO;
     });
   },
 

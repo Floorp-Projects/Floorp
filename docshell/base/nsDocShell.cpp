@@ -3503,14 +3503,13 @@ nsDocShell::CanAccessItem(nsIDocShellTreeItem* aTargetItem,
     return false;
   }
 
-  nsCOMPtr<nsIDOMWindow> targetWindow = aTargetItem->GetWindow();
+  nsCOMPtr<nsPIDOMWindow> targetWindow = aTargetItem->GetWindow();
   if (!targetWindow) {
     NS_ERROR("This should not happen, really");
     return false;
   }
 
-  nsCOMPtr<nsIDOMWindow> targetOpener;
-  targetWindow->GetOpener(getter_AddRefs(targetOpener));
+  nsCOMPtr<nsIDOMWindow> targetOpener = targetWindow->GetOpener();
   nsCOMPtr<nsIWebNavigation> openerWebNav(do_GetInterface(targetOpener));
   nsCOMPtr<nsIDocShellTreeItem> openerItem(do_QueryInterface(openerWebNav));
 
@@ -7490,7 +7489,7 @@ nsDocShell::EndPageLoad(nsIWebProgress* aProgress,
         return NS_OK;
       }
 
-      thisWindow->GetFrameElement(getter_AddRefs(frameElement));
+      frameElement = thisWindow->GetFrameElement();
       if (!frameElement) {
         return NS_OK;
       }
@@ -9739,8 +9738,7 @@ nsDocShell::InternalLoad(nsIURI* aURI,
           // So, the best we can do, is to tear down the new window
           // that was just created!
           //
-          nsCOMPtr<nsIDOMWindow> domWin = targetDocShell->GetWindow();
-          if (domWin) {
+          if (nsCOMPtr<nsPIDOMWindow> domWin = targetDocShell->GetWindow()) {
             domWin->Close();
           }
         }
@@ -13006,10 +13004,11 @@ nsDocShell::GetAssociatedWindow(nsIDOMWindow** aWindow)
 NS_IMETHODIMP
 nsDocShell::GetTopWindow(nsIDOMWindow** aWindow)
 {
-  nsCOMPtr<nsIDOMWindow> win = GetWindow();
+  nsCOMPtr<nsPIDOMWindow> win = GetWindow();
   if (win) {
-    win->GetTop(aWindow);
+    win = win->GetTop();
   }
+  win.forget(aWindow);
   return NS_OK;
 }
 
@@ -13017,23 +13016,19 @@ NS_IMETHODIMP
 nsDocShell::GetTopFrameElement(nsIDOMElement** aElement)
 {
   *aElement = nullptr;
-  nsCOMPtr<nsIDOMWindow> win = GetWindow();
+  nsCOMPtr<nsPIDOMWindow> win = GetWindow();
   if (!win) {
     return NS_OK;
   }
 
-  nsCOMPtr<nsIDOMWindow> top;
-  win->GetScriptableTop(getter_AddRefs(top));
+  nsCOMPtr<nsPIDOMWindow> top = win->GetScriptableTop();
   NS_ENSURE_TRUE(top, NS_ERROR_FAILURE);
-
-  nsCOMPtr<nsPIDOMWindow> piTop = do_QueryInterface(top);
-  NS_ENSURE_TRUE(piTop, NS_ERROR_FAILURE);
 
   // GetFrameElementInternal, /not/ GetScriptableFrameElement -- if |top| is
   // inside <iframe mozbrowser>, we want to return the iframe, not null.
   // And we want to cross the content/chrome boundary.
   nsCOMPtr<nsIDOMElement> elt =
-    do_QueryInterface(piTop->GetFrameElementInternal());
+    do_QueryInterface(top->GetFrameElementInternal());
   elt.forget(aElement);
   return NS_OK;
 }

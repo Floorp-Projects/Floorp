@@ -50,6 +50,8 @@ protected:
   {
     return true;
   }
+
+  PrincipalKind Kind() override { return eSystemPrincipal; }
 };
 
 #endif // nsSystemPrincipal_h__

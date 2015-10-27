@@ -120,8 +120,7 @@ IsFrameId(JSContext* cx, JSObject* obj, jsid idArg)
         return false;
     }
 
-    nsCOMPtr<nsIDOMWindowCollection> col;
-    win->GetFrames(getter_AddRefs(col));
+    nsCOMPtr<nsIDOMWindowCollection> col = win->GetFrames();
     if (!col) {
         return false;
     }

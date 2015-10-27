@@ -165,6 +165,8 @@ jobs = 4
                                     short_desc=short,
                                     long_desc=long,
                                     compress=True)
+        print("== Hazards (temporarily inline here, beware weirdly interleaved output, see bug 1211402) ==")
+        print(file(os.path.join(analysis_dir, "hazards.txt")).read())
 
     def upload_results(self, builder):
         """Upload the results of the analysis."""

@@ -572,9 +572,10 @@ nsXBLPrototypeHandler::GetController(EventTarget* aTarget)
   }
 
   if (!controllers) {
-    nsCOMPtr<nsIDOMWindow> domWindow(do_QueryInterface(aTarget));
-    if (domWindow)
+    nsCOMPtr<nsPIDOMWindow> domWindow(do_QueryInterface(aTarget));
+    if (domWindow) {
       domWindow->GetControllers(getter_AddRefs(controllers));
+    }
   }
 
   // Return the first controller.

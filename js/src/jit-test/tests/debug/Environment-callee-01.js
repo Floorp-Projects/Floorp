@@ -21,7 +21,7 @@ function check(code, expectedType, expectedCallee) {
 
 check('debugger;', 'declarative', null);
 check('with({}) { debugger; };', 'with', null);
-check('let (x=1) { debugger; };', 'declarative', null);
+check('{ let x=1; debugger; };', 'declarative', null);
 
 g.eval('function f() { debugger; }');
 check('f()', 'declarative', gw.makeDebuggeeValue(g.f));
@@ -41,7 +41,7 @@ check('eval("debugger");', 'declarative', null);
 g.eval('function m() { debugger; yield true; }');
 check('m().next();', 'declarative', gw.makeDebuggeeValue(g.m));
 
-g.eval('function n() { let (x = 1) { debugger; } }');
+g.eval('function n() { { let x = 1; debugger; } }');
 check('n()', 'declarative', null);
 
 g.eval('function* o() { debugger; yield true; }');

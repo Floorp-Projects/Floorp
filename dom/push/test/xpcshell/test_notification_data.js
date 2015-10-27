@@ -99,11 +99,6 @@ add_task(function* test_notification_ack_data() {
         onHello(request) {
           equal(request.uaid, userAgentID,
             'Should send matching device IDs in handshake');
-          deepEqual(
-            request.channelIDs.sort(),
-            ['subscription1', 'subscription2', 'subscription3'],
-            'Should send matching channel IDs in handshake'
-          );
           this.serverSendMsg(JSON.stringify({
             messageType: 'hello',
             uaid: userAgentID,

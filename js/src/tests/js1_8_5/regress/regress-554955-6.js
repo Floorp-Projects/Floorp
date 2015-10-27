@@ -10,7 +10,8 @@ function f(a) {
   // not yet been marked as a delegate at this point, so no scope chain
   // purge takes place when it is extended.
   eval(a);
-  let (b=3) {
+  {
+    let b=3;
     // This eval causes the cloned block object to be added to the
     // scope chain. The block needs a unique shape: its parent call
     // could acquire bindings for anything without affecting the global
@@ -33,8 +34,10 @@ assertEq("local", f("var v='local'"));
 // Similarly,but with a doubly-nested block; make sure everyone gets marked.
 function f2(a) {
   eval(a);
-  let (b=3) {
-    let (c=4) {
+  {
+    let b=3;
+    {
+      let c=4;
       eval("");
       return v;
     };

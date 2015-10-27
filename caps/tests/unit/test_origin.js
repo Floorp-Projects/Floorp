@@ -162,4 +162,16 @@ function run_test() {
   checkCrossOrigin(exampleOrg_signedPkg, exampleOrg);
   checkCrossOrigin(exampleOrg_signedPkg, exampleOrg_signedPkg_browser);
   checkCrossOrigin(exampleOrg_signedPkg, exampleOrg_signedPkg_another);
+
+  // Check Principal kinds.
+  function checkKind(prin, kind) {
+    do_check_eq(prin.isNullPrincipal, kind == 'nullPrincipal');
+    do_check_eq(prin.isCodebasePrincipal, kind == 'codebasePrincipal');
+    do_check_eq(prin.isExpandedPrincipal, kind == 'expandedPrincipal');
+    do_check_eq(prin.isSystemPrincipal, kind == 'systemPrincipal');
+  }
+  checkKind(ssm.createNullPrincipal({}), 'nullPrincipal');
+  checkKind(ssm.createCodebasePrincipal(makeURI('http://www.example.com'), {}), 'codebasePrincipal');
+  checkKind(ssm.createExpandedPrincipal([ssm.createCodebasePrincipal(makeURI('http://www.example.com'), {})]), 'expandedPrincipal');
+  checkKind(ssm.getSystemPrincipal(), 'systemPrincipal');
 }

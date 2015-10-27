@@ -25,7 +25,6 @@
 #include "nsPromiseFlatString.h"
 
 #include "nsNSSDialogs.h"
-#include "nsPKIParamBlock.h"
 #include "nsIKeygenThread.h"
 #include "nsIProtectedAuthThread.h"
 #include "nsNSSDialogHelper.h"
@@ -111,30 +110,36 @@ nsNSSDialogs::ConfirmDownloadCACert(nsIInterfaceRequestor *ctx,
 {
   nsresult rv;
 
-  *_retval = true;
+  nsCOMPtr<nsIMutableArray> dlgArray(do_CreateInstance(NS_ARRAY_CONTRACTID));
+  if (!dlgArray) {
+    return NS_ERROR_FAILURE;
+  }
+  rv = dlgArray->AppendElement(cert, false);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  nsCOMPtr<nsIDialogParamBlock> dlgParamBlock(
+    do_CreateInstance(NS_DIALOGPARAMBLOCK_CONTRACTID));
+  if (!dlgParamBlock) {
+    return NS_ERROR_FAILURE;
+  }
+  rv = dlgParamBlock->SetObjects(dlgArray);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
 
   // Get the parent window for the dialog
   nsCOMPtr<nsIDOMWindow> parent = do_GetInterface(ctx);
-
-  nsCOMPtr<nsIPKIParamBlock> block =
-           do_CreateInstance(NS_PKIPARAMBLOCK_CONTRACTID);
-  if (!block)
-    return NS_ERROR_FAILURE;
-
-  rv = block->SetISupportAtIndex(1, cert);
-  if (NS_FAILED(rv))
-    return rv;
-
   rv = nsNSSDialogHelper::openDialog(parent, 
                                      "chrome://pippki/content/downloadcert.xul",
-                                     block);
-  if (NS_FAILED(rv)) return rv;
+                                     dlgParamBlock);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
 
   int32_t status;
   int32_t ssl, email, objsign;
 
-  nsCOMPtr<nsIDialogParamBlock> dlgParamBlock = do_QueryInterface(block);
-  
   rv = dlgParamBlock->GetInt(1, &status);
   if (NS_FAILED(rv)) return rv;
   rv = dlgParamBlock->GetInt(2, &ssl);
@@ -149,11 +154,10 @@ nsNSSDialogs::ConfirmDownloadCACert(nsIInterfaceRequestor *ctx,
   *_trust |= (email) ? nsIX509CertDB::TRUSTED_EMAIL : 0;
   *_trust |= (objsign) ? nsIX509CertDB::TRUSTED_OBJSIGN : 0;
 
-  *_retval = (status == 0)?false:true;
+  *_retval = (status != 0);
 
   return rv;
 }
-
 
 NS_IMETHODIMP 
 nsNSSDialogs::NotifyCACertExists(nsIInterfaceRequestor *ctx)
@@ -378,28 +382,32 @@ nsNSSDialogs::GetPKCS12FilePassword(nsIInterfaceRequestor* ctx,
 }
 
 NS_IMETHODIMP 
-nsNSSDialogs::ViewCert(nsIInterfaceRequestor *ctx, 
-                       nsIX509Cert *cert)
+nsNSSDialogs::ViewCert(nsIInterfaceRequestor* ctx, nsIX509Cert* cert)
 {
-  nsresult rv;
-
-  nsCOMPtr<nsIPKIParamBlock> block =
-           do_CreateInstance(NS_PKIPARAMBLOCK_CONTRACTID);
-  if (!block)
+  nsCOMPtr<nsIMutableArray> dlgArray(do_CreateInstance(NS_ARRAY_CONTRACTID));
+  if (!dlgArray) {
     return NS_ERROR_FAILURE;
-
-  rv = block->SetISupportAtIndex(1, cert);
-  if (NS_FAILED(rv))
+  }
+  nsresult rv = dlgArray->AppendElement(cert, false);
+  if (NS_FAILED(rv)) {
     return rv;
+  }
+  nsCOMPtr<nsIDialogParamBlock> dlgParamBlock(
+    do_CreateInstance(NS_DIALOGPARAMBLOCK_CONTRACTID));
+  if (!dlgParamBlock) {
+    return NS_ERROR_FAILURE;
+  }
+  rv = dlgParamBlock->SetObjects(dlgArray);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
 
   // Get the parent window for the dialog
   nsCOMPtr<nsIDOMWindow> parent = do_GetInterface(ctx);
-
-  rv = nsNSSDialogHelper::openDialog(parent,
-                                     "chrome://pippki/content/certViewer.xul",
-                                     block,
-                                     false);
-  return rv;
+  return nsNSSDialogHelper::openDialog(parent,
+                                       "chrome://pippki/content/certViewer.xul",
+                                       dlgParamBlock,
+                                       false);
 }
 
 NS_IMETHODIMP
