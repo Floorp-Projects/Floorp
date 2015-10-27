@@ -1484,19 +1484,11 @@ HTMLMediaElement::Seek(double aTime,
   StopSuspendingAfterFirstFrame();
 
   if (mSrcStream) {
-    // do nothing since streams aren't seekable; we effectively clamp to
-    // the current time.
-    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    // do nothing since media streams have an empty Seekable range.
     return;
   }
 
-  if (!mPlayed) {
-    LOG(LogLevel::Debug, ("HTMLMediaElement::mPlayed not available."));
-    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
-    return;
-  }
-
-  if (mCurrentPlayRangeStart != -1.0) {
+  if (mPlayed && mCurrentPlayRangeStart != -1.0) {
     double rangeEndTime = CurrentTime();
     LOG(LogLevel::Debug, ("%p Adding \'played\' a range : [%f, %f]", this, mCurrentPlayRangeStart, rangeEndTime));
     // Multiple seek without playing, or seek while playing.
@@ -1508,14 +1500,14 @@ HTMLMediaElement::Seek(double aTime,
     mCurrentPlayRangeStart = -1.0;
   }
 
-  if (!mDecoder) {
-    LOG(LogLevel::Debug, ("%p SetCurrentTime(%f) failed: no decoder", this, aTime));
-    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+  if (mReadyState == nsIDOMHTMLMediaElement::HAVE_NOTHING) {
+    mDefaultPlaybackStartPosition = aTime;
     return;
   }
 
-  if (mReadyState == nsIDOMHTMLMediaElement::HAVE_NOTHING) {
-    mDefaultPlaybackStartPosition = aTime;
+  if (!mDecoder) {
+    // mDecoder must always be set in order to reach this point.
+    NS_ASSERTION(mDecoder, "SetCurrentTime failed: no decoder");
     return;
   }
 
