@@ -1,6 +1,7 @@
 (function () {
     try {} finally {
-        let(z) {
+        {
+            let z;
             return;
         }
     }

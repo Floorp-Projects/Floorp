@@ -70,4 +70,9 @@
 #define LOCAL_EGL_D3D11_ELSE_D3D9_DISPLAY_ANGLE         ((EGLNativeDisplayType)-2)
 #define LOCAL_EGL_D3D11_ONLY_DISPLAY_ANGLE              ((EGLNativeDisplayType)-3)
 
+// WGL_NV_DX_interop
+#define LOCAL_WGL_ACCESS_READ_ONLY                           0x0000
+#define LOCAL_WGL_ACCESS_READ_WRITE                          0x0001
+#define LOCAL_WGL_ACCESS_WRITE_DISCARD                       0x0002
+
 #endif

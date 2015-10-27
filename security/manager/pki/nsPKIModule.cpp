@@ -7,22 +7,18 @@
 #include "mozilla/ModuleUtils.h"
 
 #include "nsNSSDialogs.h"
-#include "nsPKIParamBlock.h"
 #include "nsASN1Tree.h"
 
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsNSSDialogs, Init)
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsPKIParamBlock, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsNSSASN1Tree)
 
 NS_DEFINE_NAMED_CID(NS_NSSDIALOGS_CID);
 NS_DEFINE_NAMED_CID(NS_NSSASN1OUTINER_CID);
-NS_DEFINE_NAMED_CID(NS_PKIPARAMBLOCK_CID);
 
 
 static const mozilla::Module::CIDEntry kPKICIDs[] = {
   { &kNS_NSSDIALOGS_CID, false, nullptr, nsNSSDialogsConstructor },
   { &kNS_NSSASN1OUTINER_CID, false, nullptr, nsNSSASN1TreeConstructor },
-  { &kNS_PKIPARAMBLOCK_CID, false, nullptr, nsPKIParamBlockConstructor },
   { nullptr }
 };
 
@@ -34,7 +30,6 @@ static const mozilla::Module::ContractIDEntry kPKIContracts[] = {
   { NS_TOKENDIALOGS_CONTRACTID, &kNS_NSSDIALOGS_CID },
   { NS_GENERATINGKEYPAIRINFODIALOGS_CONTRACTID, &kNS_NSSDIALOGS_CID },
   { NS_ASN1TREE_CONTRACTID, &kNS_NSSASN1OUTINER_CID },
-  { NS_PKIPARAMBLOCK_CONTRACTID, &kNS_PKIPARAMBLOCK_CID },
   { nullptr }
 };
 

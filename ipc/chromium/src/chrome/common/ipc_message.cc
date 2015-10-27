@@ -25,10 +25,12 @@ namespace IPC {
 //------------------------------------------------------------------------------
 
 Message::~Message() {
+  MOZ_COUNT_DTOR(IPC::Message);
 }
 
 Message::Message()
     : Pickle(sizeof(Header)) {
+  MOZ_COUNT_CTOR(IPC::Message);
   header()->routing = header()->type = header()->flags = 0;
 #if defined(OS_POSIX)
   header()->num_fds = 0;
@@ -44,6 +46,7 @@ Message::Message()
 Message::Message(int32_t routing_id, msgid_t type, PriorityValue priority,
                  MessageCompression compression, const char* const aName)
     : Pickle(sizeof(Header)) {
+  MOZ_COUNT_CTOR(IPC::Message);
   header()->routing = routing_id;
   header()->type = type;
   header()->flags = priority;
@@ -69,10 +72,12 @@ Message::Message(int32_t routing_id, msgid_t type, PriorityValue priority,
 }
 
 Message::Message(const char* data, int data_len) : Pickle(data, data_len) {
+  MOZ_COUNT_CTOR(IPC::Message);
   InitLoggingVariables();
 }
 
 Message::Message(const Message& other) : Pickle(other) {
+  MOZ_COUNT_CTOR(IPC::Message);
   InitLoggingVariables(other.name_);
 #if defined(OS_POSIX)
   file_descriptor_set_ = other.file_descriptor_set_;
@@ -85,6 +90,7 @@ Message::Message(const Message& other) : Pickle(other) {
 }
 
 Message::Message(Message&& other) : Pickle(mozilla::Move(other)) {
+  MOZ_COUNT_CTOR(IPC::Message);
   InitLoggingVariables(other.name_);
 #if defined(OS_POSIX)
   file_descriptor_set_ = other.file_descriptor_set_.forget();

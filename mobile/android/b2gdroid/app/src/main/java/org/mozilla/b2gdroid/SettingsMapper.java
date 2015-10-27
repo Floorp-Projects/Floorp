@@ -4,6 +4,7 @@
 
 package org.mozilla.b2gdroid;
 
+import java.io.ByteArrayOutputStream;
 import java.util.Hashtable;
 
 import org.json.JSONArray;
@@ -15,6 +16,9 @@ import android.content.Context;
 import android.database.ContentObserver;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Handler;
 import android.provider.Settings.System;
@@ -166,7 +170,8 @@ class SettingsMapper extends ContentObserver implements GeckoEventListener {
         EventDispatcher.getInstance()
                        .registerGeckoThreadListener(this,
                                                     "Settings:Change",
-                                                    "Android:GetIMEI");
+                                                    "Android:GetIMEI",
+                                                    "Android:GetWallpaper");
 
         mContext.getContentResolver()
                 .registerContentObserver(System.CONTENT_URI,
@@ -197,7 +202,8 @@ class SettingsMapper extends ContentObserver implements GeckoEventListener {
         EventDispatcher.getInstance()
                        .unregisterGeckoThreadListener(this,
                                                       "Settings:Change",
-                                                      "Android:GetIMEI");
+                                                      "Android:GetIMEI",
+                                                      "Android:GetWallpaper");
         mGeckoSettings.clear();
         mGeckoSettings = null;
         mAndroidSettings.clear();
@@ -230,6 +236,43 @@ class SettingsMapper extends ContentObserver implements GeckoEventListener {
                 ret.put("imei", telManager.getDeviceId());
             } catch(Exception jsonEx) {
                 Log.wtf(LOGTAG, "Error getting IMEI", jsonEx);
+            }
+            EventDispatcher.sendResponse(message, ret);
+        } else if ("Android:GetWallpaper".equals(event)) {
+            WallpaperManager wpManager = WallpaperManager.getInstance(mContext);
+            Drawable drawable = wpManager.getDrawable();
+
+            // Convert the drawable to a base64 url, using a bitmap.
+            Bitmap bitmap = null;
+
+            if (drawable instanceof BitmapDrawable) {
+                BitmapDrawable bitmapDrawable = (BitmapDrawable) drawable;
+                if(bitmapDrawable.getBitmap() != null) {
+                    bitmap = bitmapDrawable.getBitmap();
+                }
+            }
+
+            if (drawable.getIntrinsicWidth() <= 0 || drawable.getIntrinsicHeight() <= 0) {
+                bitmap = Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888); // Single color bitmap will be created of 1x1 pixel
+            } else {
+                bitmap = Bitmap.createBitmap(drawable.getIntrinsicWidth(),
+                                             drawable.getIntrinsicHeight(),
+                                             Bitmap.Config.ARGB_8888);
+            }
+
+            Canvas canvas = new Canvas(bitmap);
+            drawable.setBounds(0, 0, canvas.getWidth(), canvas.getHeight());
+            drawable.draw(canvas);
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            bitmap.compress(Bitmap.CompressFormat.PNG, 100, baos);
+            byte b [] = baos.toByteArray();
+            final String uri = "data:image/png;base64," + Base64.encodeToString(b, Base64.NO_WRAP);
+
+            JSONObject ret = new JSONObject();
+            try {
+                ret.put("wallpaper", uri);
+            } catch(Exception jsonEx) {
+                Log.wtf(LOGTAG, "Error getting Wallpaper", jsonEx);
             }
             EventDispatcher.sendResponse(message, ret);
         }

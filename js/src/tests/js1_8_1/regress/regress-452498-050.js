@@ -25,7 +25,7 @@ function test()
 // Do not crash
 
 // compiler bug when a block introduces no names
-  let ({}={}) {}
+  { let {}={}; }
 
   try
   {

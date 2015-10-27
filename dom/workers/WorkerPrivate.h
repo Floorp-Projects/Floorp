@@ -1229,111 +1229,17 @@ public:
   bool
   RegisterBindings(JSContext* aCx, JS::Handle<JSObject*> aGlobal);
 
-  bool
-  DumpEnabled() const
-  {
-    AssertIsOnWorkerThread();
-    return mPreferences[WORKERPREF_DUMP];
+#define WORKER_SIMPLE_PREF(name, getter, NAME)                                \
+  bool                                                                        \
+  getter() const                                                              \
+  {                                                                           \
+    AssertIsOnWorkerThread();                                                 \
+    return mPreferences[WORKERPREF_##NAME];                                   \
   }
-
-  bool
-  DOMCachesEnabled() const
-  {
-    AssertIsOnWorkerThread();
-    return mPreferences[WORKERPREF_DOM_CACHES];
-  }
-
-  bool
-  ServiceWorkersEnabled() const
-  {
-    AssertIsOnWorkerThread();
-    return mPreferences[WORKERPREF_SERVICEWORKERS];
-  }
-
-  // Determine if the SW testing browser-wide pref is set
-  bool
-  ServiceWorkersTestingEnabled() const
-  {
-    AssertIsOnWorkerThread();
-    return mPreferences[WORKERPREF_SERVICEWORKERS_TESTING];
-  }
-
-  bool
-  InterceptionEnabled() const
-  {
-    AssertIsOnWorkerThread();
-    return mPreferences[WORKERPREF_INTERCEPTION_ENABLED];
-  }
-
-  bool
-  OpenWindowEnabled() const
-  {
-    AssertIsOnWorkerThread();
-    return mPreferences[WORKERPREF_OPEN_WINDOW_ENABLED];
-  }
-
-  bool
-  OpaqueInterceptionEnabled() const
-  {
-    AssertIsOnWorkerThread();
-    return mPreferences[WORKERPREF_INTERCEPTION_OPAQUE_ENABLED];
-  }
-
-  bool
-  DOMWorkerNotificationEnabled() const
-  {
-    AssertIsOnWorkerThread();
-    return mPreferences[WORKERPREF_DOM_WORKERNOTIFICATION];
-  }
-
-  bool
-  DOMServiceWorkerNotificationEnabled() const
-  {
-    AssertIsOnWorkerThread();
-    return mPreferences[WORKERPREF_DOM_SERVICEWORKERNOTIFICATION];
-  }
-
-  bool
-  DOMCachesTestingEnabled() const
-  {
-    AssertIsOnWorkerThread();
-    return mPreferences[WORKERPREF_DOM_CACHES_TESTING];
-  }
-
-  bool
-  PerformanceLoggingEnabled() const
-  {
-    AssertIsOnWorkerThread();
-    return mPreferences[WORKERPREF_PERFORMANCE_LOGGING_ENABLED];
-  }
-
-  bool
-  PushEnabled() const
-  {
-    AssertIsOnWorkerThread();
-    return mPreferences[WORKERPREF_PUSH];
-  }
-
-  bool
-  RequestCacheEnabled() const
-  {
-    AssertIsOnWorkerThread();
-    return mPreferences[WORKERPREF_REQUESTCACHE];
-  }
-
-  bool
-  RequestContextEnabled() const
-  {
-    AssertIsOnWorkerThread();
-    return mPreferences[WORKERPREF_REQUESTCONTEXT];
-  }
-
-  bool
-  OffscreenCanvasEnabled() const
-  {
-    AssertIsOnWorkerThread();
-    return mPreferences[WORKERPREF_OFFSCREENCANVAS];
-  }
+#define WORKER_PREF(name, callback)
+#include "WorkerPrefs.h"
+#undef WORKER_SIMPLE_PREF
+#undef WORKER_PREF
 
   bool
   OnLine() const

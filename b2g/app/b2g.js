@@ -1025,6 +1025,7 @@ pref("apz.fling_curve_function_x2", "0.80");
 pref("apz.fling_curve_function_y2", "1.0");
 pref("apz.fling_curve_threshold_inches_per_ms", "0.01");
 pref("apz.fling_friction", "0.0019");
+pref("apz.fling_snap_friction", "0.015");
 pref("apz.max_velocity_inches_per_ms", "0.07");
 pref("apz.touch_start_tolerance", "0.1");
 
