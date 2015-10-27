@@ -1,9 +1,0 @@
-{
-  "name": "My packaged app",
-  "developer": {
-    "name": "Foo Bar"
-  },
-  "tester" : {
-    "who": "qa"
-  }
-}

@@ -65,9 +65,13 @@ function run_test() {
             totalBytes: 100,
             count: 0,
             totalCount: 10,
-            children: undefined
+            children: undefined,
+            id: 16,
+            parent: 15,
           }
-        ]
+        ],
+        id: 15,
+        parent: 14,
       },
       {
         name: abc_Stack,
@@ -82,7 +86,9 @@ function run_test() {
             totalBytes: 100,
             count: 0,
             totalCount: 10,
-            children: undefined
+            children: undefined,
+            id: 18,
+            parent: 17,
           },
           {
             name: abc_Stack.parent,
@@ -97,7 +103,9 @@ function run_test() {
                 totalBytes: 100,
                 count: 0,
                 totalCount: 10,
-                children: undefined
+                children: undefined,
+                id: 22,
+                parent: 19,
               },
               {
                 name: abc_Stack.parent.parent,
@@ -112,9 +120,13 @@ function run_test() {
                     totalBytes: 100,
                     count: 0,
                     totalCount: 10,
-                    children: undefined
+                    children: undefined,
+                    id: 21,
+                    parent: 20,
                   }
-                ]
+                ],
+                id: 20,
+                parent: 19,
               },
               {
                 name: dbc_Stack.parent.parent,
@@ -129,11 +141,17 @@ function run_test() {
                     totalBytes: 100,
                     count: 0,
                     totalCount: 10,
-                    children: undefined
+                    children: undefined,
+                    id: 24,
+                    parent: 23,
                   }
-                ]
+                ],
+                id: 23,
+                parent: 19,
               }
-            ]
+            ],
+            id: 19,
+            parent: 17,
           },
           {
             name: ec_Stack.parent,
@@ -148,13 +166,21 @@ function run_test() {
                 totalBytes: 100,
                 count: 0,
                 totalCount: 10,
-                children: undefined
-              }
-            ]
-          }
-        ]
+                children: undefined,
+                id: 26,
+                parent: 25,
+              },
+            ],
+            id: 25,
+            parent: 17,
+          },
+        ],
+        id: 17,
+        parent: 14,
       }
-    ]
+    ],
+    id: 14,
+    parent: undefined,
   };
 
   compareCensusViewData(BREAKDOWN, REPORT, EXPECTED, { invert: true });

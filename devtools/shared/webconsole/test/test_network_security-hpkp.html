@@ -61,7 +61,7 @@ function startTest()
 
   info("Test detection of Public Key Pinning.");
   removeEventListener("load", startTest);
-  attachConsole(["NetworkActivity"], onAttach, true);
+  attachConsoleToTab(["NetworkActivity"], onAttach);
 }
 
 function onAttach(aState, aResponse)

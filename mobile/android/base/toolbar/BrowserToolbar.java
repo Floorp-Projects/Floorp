@@ -135,7 +135,6 @@ public abstract class BrowserToolbar extends ThemedRelativeLayout
     private final int shadowSize;
 
     private final ToolbarPrefs prefs;
-    private boolean contextMenuEnabled = true;
 
     public abstract boolean isAnimating();
 
@@ -881,10 +880,6 @@ public abstract class BrowserToolbar extends ThemedRelativeLayout
         }
 
         return drawable;
-    }
-
-    public void setContextMenuEnabled(boolean enabled) {
-        contextMenuEnabled = enabled;
     }
 
     public static class TabEditingState {

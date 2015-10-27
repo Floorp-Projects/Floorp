@@ -18,16 +18,40 @@ XPCOMUtils.defineLazyModuleGetter(this, "FileUtils",
 XPCOMUtils.defineLazyModuleGetter(this, "AppsUtils",
                                   "resource://gre/modules/AppsUtils.jsm");
 
+XPCOMUtils.defineLazyServiceGetter(this, "settings",
+                                   "@mozilla.org/settingsService;1",
+                                   "nsISettingsService");
+
 function debug() {
   dump("-*- B2GDroidSetup " + Array.slice(arguments) + "\n");
 }
 
-function B2GDroidSetup() { }
+function B2GDroidSetup() {
+  this.wrappedJSObject = this;
+  this.isFirstRun = true;
+}
 
 B2GDroidSetup.prototype = {
   classID:         Components.ID('{8bc88ef2-3aab-4e94-a40c-e2c80added2c}'),
   QueryInterface:  XPCOMUtils.generateQI([Ci.nsIObserver,
                                           Ci.nsISupportsWeakReference]),
+
+  // Returns a promise that resolves once we have set the wallpaper.image
+  // setting in sync with Android's wallpaper.
+  setWallpaper: function() {
+    if (!this.isFirstRun) {
+      return Promise.resolve();
+    }
+
+    debug("Getting wallpaper");
+
+    Cu.import("resource://gre/modules/Messaging.jsm");
+    return Messaging.sendRequestForResult({ type: "Android:GetWallpaper" })
+      .then(aData => {
+        settings.createLock().set("wallpaper.image", aData.wallpaper, null);
+        return Promise.resolve();
+      });
+  },
 
   getApk: function() {
     let registry = Cc["@mozilla.org/chrome/chrome-registry;1"]
@@ -225,6 +249,7 @@ B2GDroidSetup.prototype = {
     let branch = Services.prefs.getBranch("b2gdroid");
     if (!AppsUtils.isFirstRun(branch)) {
       debug("No need to unpack gaia again.");
+      this.isFirstRun = false;
       return;
     }
 
