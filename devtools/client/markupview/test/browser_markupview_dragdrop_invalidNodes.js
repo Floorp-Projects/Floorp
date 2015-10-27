@@ -4,55 +4,42 @@
 
 "use strict";
 
-// Test: pseudo-elements and anonymous nodes should not be draggable
+// Check that pseudo-elements and anonymous nodes are not draggable.
 
 const TEST_URL = TEST_URL_ROOT + "doc_markup_dragdrop.html";
-const GRAB_DELAY = 400;
 
 add_task(function*() {
   Services.prefs.setBoolPref("devtools.inspector.showAllAnonymousContent", true);
 
   let {inspector} = yield addTab(TEST_URL).then(openInspector);
 
-  info("Expanding #test");
+  info("Expanding nodes below #test");
   let parentFront = yield getNodeFront("#test", inspector);
   yield inspector.markup.expandNode(parentFront);
   yield waitForMultipleChildrenUpdates(inspector);
 
+  info("Getting the ::before pseudo element");
   let parentContainer = yield getContainerForNodeFront(parentFront, inspector);
   let beforePseudo = parentContainer.elt.children[1].firstChild.container;
-
   parentContainer.elt.scrollIntoView(true);
 
-  info("Simulating mouseDown on #test::before");
-  beforePseudo._onMouseDown({
-    target: beforePseudo.tagLine,
-    stopPropagation: function() {},
-    preventDefault: function() {}
-  });
+  info("Simulate dragging the ::before pseudo element");
+  yield simulateNodeDrag(inspector, beforePseudo);
 
-  info("Waiting " + (GRAB_DELAY + 1) + "ms")
-  yield wait(GRAB_DELAY + 1);
-  is(beforePseudo.isDragging, false, "[pseudo-element] isDragging is false after GRAB_DELAY has passed");
+  ok(!beforePseudo.isDragging, "::before pseudo element isn't dragging");
 
+  info("Expanding nodes below #anonymousParent");
   let inputFront = yield getNodeFront("#anonymousParent", inspector);
-
   yield inspector.markup.expandNode(inputFront);
   yield waitForMultipleChildrenUpdates(inspector);
 
+  info("Getting the anonymous node");
   let inputContainer = yield getContainerForNodeFront(inputFront, inspector);
   let anonymousDiv = inputContainer.elt.children[1].firstChild.container;
-
   inputContainer.elt.scrollIntoView(true);
 
-  info("Simulating mouseDown on input#anonymousParent div");
-  anonymousDiv._onMouseDown({
-    target: anonymousDiv.tagLine,
-    stopPropagation: function() {},
-    preventDefault: function() {}
-  });
+  info("Simulate dragging the anonymous node");
+  yield simulateNodeDrag(inspector, anonymousDiv);
 
-  info("Waiting " + (GRAB_DELAY + 1) + "ms")
-  yield wait(GRAB_DELAY + 1);
-  is(anonymousDiv.isDragging, false, "[anonymous element] isDragging is false after GRAB_DELAY has passed");
+  ok(!anonymousDiv.isDragging, "anonymous node isn't dragging");
 });
