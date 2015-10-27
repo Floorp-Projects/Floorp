@@ -776,3 +776,73 @@ function unregisterActor(registrar, front) {
     return registrar.unregister();
   });
 }
+
+/**
+ * Simulate dragging a MarkupContainer by calling its mousedown and mousemove
+ * handlers.
+ * @param {InspectorPanel} inspector The current inspector-panel instance.
+ * @param {String|MarkupContainer} selector The selector to identify the node or
+ * the MarkupContainer for this node.
+ * @param {Number} xOffset Optional x offset to drag by.
+ * @param {Number} yOffset Optional y offset to drag by.
+ */
+function* simulateNodeDrag(inspector, selector, xOffset = 10, yOffset = 10) {
+  let container = typeof selector === "string"
+                  ? yield getContainerForSelector(selector, inspector)
+                  : selector;
+  let rect = container.tagLine.getBoundingClientRect();
+  let scrollX = inspector.markup.doc.documentElement.scrollLeft;
+  let scrollY = inspector.markup.doc.documentElement.scrollTop;
+
+  info("Simulate mouseDown on element " + selector);
+  container._onMouseDown({
+    target: container.tagLine,
+    button: 0,
+    pageX: scrollX + rect.x,
+    pageY: scrollY + rect.y,
+    stopPropagation: () => {},
+    preventDefault: () => {}
+  });
+
+  // _onMouseDown selects the node, so make sure to wait for the
+  // inspector-updated event if the current selection was different.
+  if (inspector.selection.nodeFront !== container.node) {
+    yield inspector.once("inspector-updated");
+  }
+
+  info("Simulate mouseMove on element " + selector);
+  container._onMouseMove({
+    pageX: scrollX + rect.x + xOffset,
+    pageY: scrollY + rect.y + yOffset
+  });
+}
+
+/**
+ * Simulate dropping a MarkupContainer by calling its mouseup handler. This is
+ * meant to be called after simulateNodeDrag has been called.
+ * @param {InspectorPanel} inspector The current inspector-panel instance.
+ * @param {String|MarkupContainer} selector The selector to identify the node or
+ * the MarkupContainer for this node.
+ */
+function* simulateNodeDrop(inspector, selector) {
+  info("Simulate mouseUp on element " + selector);
+  let container = typeof selector === "string"
+                  ? yield getContainerForSelector(selector, inspector)
+                  : selector;
+  container._onMouseUp();
+  inspector.markup._onMouseUp();
+}
+
+/**
+ * Simulate drag'n'dropping a MarkupContainer by calling its mousedown,
+ * mousemove and mouseup handlers.
+ * @param {InspectorPanel} inspector The current inspector-panel instance.
+ * @param {String|MarkupContainer} selector The selector to identify the node or
+ * the MarkupContainer for this node.
+ * @param {Number} xOffset Optional x offset to drag by.
+ * @param {Number} yOffset Optional y offset to drag by.
+ */
+function* simulateNodeDragAndDrop(inspector, selector, xOffset, yOffset) {
+  yield simulateNodeDrag(inspector, selector, xOffset, yOffset);
+  yield simulateNodeDrop(inspector, selector);
+}

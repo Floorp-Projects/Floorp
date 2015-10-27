@@ -1158,5 +1158,7 @@ function waitForStyleEditor(toolbox, href) {
 function reloadPage(inspector) {
   let onNewRoot = inspector.once("new-root");
   content.location.reload();
-  return onNewRoot.then(inspector.markup._waitForChildren);
+  return onNewRoot.then(() => {
+    inspector.markup._waitForChildren();
+  });
 }
