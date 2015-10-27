@@ -666,6 +666,7 @@ const XPCWrappedNativeJSClass XPC_WN_NoHelper_JSClass = {
         nullptr, // getElements
         nullptr, // enumerate
         XPC_WN_JSOp_ThisValue,
+        nullptr, // funToString
     }
   }
 };
