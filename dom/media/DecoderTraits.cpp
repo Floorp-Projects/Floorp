@@ -184,7 +184,7 @@ static char const *const gWebMCodecs[7] = {
 #endif
 
 /* static */ bool
-DecoderTraits::IsWebMType(const nsACString& aType)
+DecoderTraits::IsWebMTypeAndEnabled(const nsACString& aType)
 {
 #ifdef MOZ_WEBM
   if (!MediaDecoder::IsWebMEnabled()) {
@@ -203,7 +203,7 @@ IsGStreamerSupportedType(const nsACString& aMimeType)
   if (!MediaDecoder::IsGStreamerEnabled())
     return false;
 
-  if (DecoderTraits::IsWebMType(aMimeType) && !Preferences::GetBool("media.prefer-gstreamer", false))
+  if (DecoderTraits::IsWebMTypeAndEnabled(aMimeType) && !Preferences::GetBool("media.prefer-gstreamer", false))
     return false;
 
   if (IsOggType(aMimeType) && !Preferences::GetBool("media.prefer-gstreamer", false))
@@ -354,7 +354,7 @@ IsMP4SupportedType(const nsACString& aType,
 #endif
 
 /* static */ bool
-DecoderTraits::IsMP4Type(const nsACString& aType)
+DecoderTraits::IsMP4TypeAndEnabled(const nsACString& aType)
 {
 #ifdef MOZ_FMP4
   return IsMP4SupportedType(aType);
@@ -437,12 +437,12 @@ DecoderTraits::CanHandleCodecsType(const char* aMIMEType,
   }
 #endif
 #if !defined(MOZ_OMX_WEBM_DECODER)
-  if (IsWebMType(nsDependentCString(aMIMEType))) {
+  if (IsWebMTypeAndEnabled(nsDependentCString(aMIMEType))) {
     codecList = gWebMCodecs;
   }
 #endif
 #ifdef MOZ_FMP4
-  if (IsMP4Type(nsDependentCString(aMIMEType))) {
+  if (IsMP4TypeAndEnabled(nsDependentCString(aMIMEType))) {
     if (IsMP4SupportedType(nsDependentCString(aMIMEType), aRequestedCodecs)) {
       return CANPLAY_YES;
     } else {
@@ -532,11 +532,11 @@ DecoderTraits::CanHandleMediaType(const char* aMIMEType,
     return CANPLAY_MAYBE;
   }
 #endif
-  if (IsMP4Type(nsDependentCString(aMIMEType))) {
+  if (IsMP4TypeAndEnabled(nsDependentCString(aMIMEType))) {
     return CANPLAY_MAYBE;
   }
 #if !defined(MOZ_OMX_WEBM_DECODER)
-  if (IsWebMType(nsDependentCString(aMIMEType))) {
+  if (IsWebMTypeAndEnabled(nsDependentCString(aMIMEType))) {
     return CANPLAY_MAYBE;
   }
 #endif
@@ -664,7 +664,7 @@ InstantiateDecoder(const nsACString& aType, MediaDecoderOwner* aOwner)
     return decoder.forget();
   }
 #endif
-  if (DecoderTraits::IsWebMType(aType)) {
+  if (DecoderTraits::IsWebMTypeAndEnabled(aType)) {
     decoder = new WebMDecoder();
     return decoder.forget();
   }
@@ -752,7 +752,7 @@ MediaDecoderReader* DecoderTraits::CreateReader(const nsACString& aType, Abstrac
     decoderReader = new AndroidMediaReader(aDecoder, aType);
   } else
 #endif
-  if (IsWebMType(aType)) {
+  if (IsWebMTypeAndEnabled(aType)) {
     decoderReader = Preferences::GetBool("media.format-reader.webm", true) ?
       static_cast<MediaDecoderReader*>(new MediaFormatReader(aDecoder, new WebMDemuxer(aDecoder->GetResource()))) :
       new WebMReader(aDecoder);
@@ -792,7 +792,7 @@ bool DecoderTraits::IsSupportedInVideoDocument(const nsACString& aType)
     (IsOmxSupportedType(aType) &&
      !IsB2GSupportOnlyType(aType)) ||
 #endif
-    IsWebMType(aType) ||
+    IsWebMTypeAndEnabled(aType) ||
 #ifdef MOZ_GSTREAMER
     IsGStreamerSupportedType(aType) ||
 #endif
