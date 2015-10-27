@@ -476,46 +476,11 @@
         <parameter name="aBrowser"/>
         <body>
           <![CDATA[
-            const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
             let browser = (aBrowser || this.mCurrentBrowser);
-            let stack = browser.parentNode;
-            let self = this;
-
-            let promptBox = {
-              appendPrompt : function(args, onCloseCallback) {
-                let newPrompt = document.createElementNS(XUL_NS, "tabmodalprompt");
-                stack.appendChild(newPrompt);
-                browser.setAttribute("tabmodalPromptShowing", true);
-
-                newPrompt.clientTop; // style flush to assure binding is attached
-
-                let tab = self.getTabForBrowser(browser);
-                newPrompt.init(args, tab, onCloseCallback);
-                return newPrompt;
-              },
-
-              removePrompt : function(aPrompt) {
-                stack.removeChild(aPrompt);
-
-                let prompts = this.listPrompts();
-                if (prompts.length) {
-                  let prompt = prompts[prompts.length - 1];
-                  prompt.Dialog.setDefaultFocus();
-                } else {
-                  browser.removeAttribute("tabmodalPromptShowing");
-                  browser.focus();
-                }
-              },
-
-              listPrompts : function(aPrompt) {
-                let els = stack.getElementsByTagNameNS(XUL_NS, "tabmodalprompt");
-                // NodeList --> real JS array
-                let prompts = Array.slice(els);
-                return prompts;
-              },
-            };
-
-            return promptBox;
+            if (!browser.tabModalPromptBox) {
+              browser.tabModalPromptBox = new TabModalPromptBox(browser);
+            }
+            return browser.tabModalPromptBox;
           ]]>
         </body>
       </method>
@@ -1145,6 +1110,7 @@
               this.updateTitlebar();
 
               this.mCurrentTab.removeAttribute("titlechanged");
+              this.mCurrentTab.removeAttribute("attention");
             }
 
             // If the new tab is busy, and our current state is not busy, then
@@ -4365,15 +4331,56 @@
           if (!event.isTrusted)
             return;
 
-          // We're about to open a modal dialog, make sure the opening
-          // tab is brought to the front.
+          let targetIsWindow = event.target instanceof Window;
+
+          // We're about to open a modal dialog, so figure out for which tab:
           // If this is a same-process modal dialog, then we're given its DOM
           // window as the event's target. For remote dialogs, we're given the
-          // browser, but that's in the originalTarget.
-          // XXX Why originalTarget for the browser?
-          this.selectedTab = (event.target instanceof Window) ?
-                               this._getTabForContentWindow(event.target.top) :
-                               this.getTabForBrowser(event.originalTarget);
+          // browser, but that's in the originalTarget and not the target,
+          // because it's across the tabbrowser's XBL boundary.
+          let tabForEvent = targetIsWindow ?
+                            this._getTabForContentWindow(event.target.top) :
+                            this.getTabForBrowser(event.originalTarget);
+
+          // Don't need to act if the tab is already selected:
+          if (tabForEvent.selected)
+            return;
+
+          // If this is a tabprompt, and we're not in tabview/panorama with
+          // the prompt being a beforeunload one, we won't switch tabs
+          // (unless this behaviour has been disabled entirely using the pref).
+          if (event.detail && event.detail.tabPrompt &&
+              !(event.detail.inPermitUnload && ("TabView" in window) && TabView.isVisible()) &&
+              Services.prefs.getBoolPref("browser.tabs.dontfocusfordialogs")) {
+            let docPrincipal = targetIsWindow ? event.target.document.nodePrincipal : null;
+            // At least one of these should/will be non-null:
+            let promptPrincipal = event.detail.promptPrincipal || docPrincipal ||
+                                  tabForEvent.linkedBrowser.contentPrincipal;
+            // For null principals, we bail immediately and don't show the checkbox:
+            if (!promptPrincipal || promptPrincipal.isNullPrincipal) {
+              tabForEvent.setAttribute("attention", "true");
+              return;
+            }
+
+            // For non-system/expanded principals, we bail and show the checkbox
+            if (promptPrincipal.URI &&
+                !Services.scriptSecurityManager.isSystemPrincipal(promptPrincipal)) {
+              let permission = Services.perms.testPermissionFromPrincipal(promptPrincipal,
+                                                                          "focus-tab-by-prompt");
+              if (permission != Services.perms.ALLOW_ACTION) {
+                // Tell the prompt box we want to show the user a checkbox:
+                let tabPrompt = this.getTabModalPromptBox(tabForEvent.linkedBrowser);
+                tabPrompt.onNextPromptShowAllowFocusCheckboxFor(promptPrincipal);
+                tabForEvent.setAttribute("attention", "true");
+                return;
+              }
+            }
+            // ... so system and expanded principals, as well as permitted "normal"
+            // URI-based principals, always get to steal focus for the tab when prompting.
+          }
+
+          // if prefs/permissions/origins so dictate, bring tab to the front:
+          this.selectedTab = tabForEvent;
         ]]>
       </handler>
       <handler event="DOMTitleChanged">
@@ -5866,16 +5873,16 @@
 
     <content context="tabContextMenu">
       <xul:stack class="tab-stack" flex="1">
-        <xul:hbox xbl:inherits="pinned,selected,visuallyselected,titlechanged,fadein"
+        <xul:hbox xbl:inherits="pinned,selected,visuallyselected,fadein"
                   class="tab-background">
-          <xul:hbox xbl:inherits="pinned,selected,visuallyselected,titlechanged"
+          <xul:hbox xbl:inherits="pinned,selected,visuallyselected"
                     class="tab-background-start"/>
-          <xul:hbox xbl:inherits="pinned,selected,visuallyselected,titlechanged"
+          <xul:hbox xbl:inherits="pinned,selected,visuallyselected"
                     class="tab-background-middle"/>
-          <xul:hbox xbl:inherits="pinned,selected,visuallyselected,titlechanged"
+          <xul:hbox xbl:inherits="pinned,selected,visuallyselected"
                     class="tab-background-end"/>
         </xul:hbox>
-        <xul:hbox xbl:inherits="pinned,selected,visuallyselected,titlechanged"
+        <xul:hbox xbl:inherits="pinned,selected,visuallyselected,titlechanged,attention"
                   class="tab-content" align="center">
           <xul:image xbl:inherits="fadein,pinned,busy,progress,selected,visuallyselected"
                      class="tab-throbber"
@@ -5892,7 +5899,7 @@
                      role="presentation"/>
           <xul:label flex="1"
                      anonid="tab-label"
-                     xbl:inherits="value=visibleLabel,crop,accesskey,fadein,pinned,selected,visuallyselected"
+                     xbl:inherits="value=visibleLabel,crop,accesskey,fadein,pinned,selected,visuallyselected,attention"
                      class="tab-text tab-label"
                      role="presentation"/>
           <xul:image xbl:inherits="soundplaying,pinned,muted,visuallyselected"
@@ -6480,6 +6487,8 @@
   <binding id="tabbrowser-browser"
            extends="chrome://global/content/bindings/browser.xml#browser">
     <implementation>
+      <field name="tabModalPromptBox">null</field>
+
       <!-- throws exception for unknown schemes -->
       <method name="loadURIWithFlags">
         <parameter name="aURI"/>
@@ -6508,6 +6517,8 @@
   <binding id="tabbrowser-remote-browser"
            extends="chrome://global/content/bindings/remote-browser.xml#remote-browser">
     <implementation>
+      <field name="tabModalPromptBox">null</field>
+
       <!-- throws exception for unknown schemes -->
       <method name="loadURIWithFlags">
         <parameter name="aURI"/>

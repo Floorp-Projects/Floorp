@@ -451,6 +451,8 @@ pref("browser.tabs.selectOwnerOnClose", true);
 
 pref("browser.tabs.showAudioPlayingIcon", true);
 
+pref("browser.tabs.dontfocusfordialogs", true);
+
 pref("browser.ctrlTab.previews", false);
 
 // By default, do not export HTML at shutdown.

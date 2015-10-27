@@ -283,10 +283,16 @@ window:not([chromehidden~="toolbar"]) #urlbar-wrapper {
   pointer-events: auto;
 }
 
-.tabbrowser-tab[pinned][titlechanged]:not([visuallyselected="true"]) > .tab-stack > .tab-content {
+.tabbrowser-tab[image] > .tab-stack > .tab-content[attention]:not([visuallyselected="true"]),
+.tabbrowser-tab > .tab-stack > .tab-content[pinned][titlechanged]:not([visuallyselected="true"]) {
   background-image: var(--pinned-tab-glow);
   background-position: center;
   background-size: 100%;
+}
+
+.tabbrowser-tab[image] > .tab-stack > .tab-content[attention]:not([pinned]):not([visuallyselected="true"]) {
+  background-position: left bottom var(--tab-toolbar-navbar-overlap);
+  background-size: 34px 100%;
 }
 
 .tabbrowser-arrowscrollbox > .scrollbutton-down:not([disabled]):hover,

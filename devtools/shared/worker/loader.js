@@ -442,8 +442,12 @@ var {
     let scope = this;
 
     let xpcInspector = {
+      get eventLoopNestLevel() {
+        return requestors.length;
+      },
+
       get lastNestRequestor() {
-        return requestors.length === 0 ? null : requestors[0];
+        return requestors.length === 0 ? null : requestors[requestors.length - 1];
       },
 
       enterNestedEventLoop: function (requestor) {
