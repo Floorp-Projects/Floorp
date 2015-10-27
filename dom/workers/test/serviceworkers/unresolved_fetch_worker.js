@@ -1,9 +1,12 @@
 onfetch = function(event) {
-  if (!event.client) {
-    dump("ERROR: event doesnt have a client");
-  }
-
-  event.client.postMessage("continue");
+  event.waitUntil(
+    clients.matchAll()
+           .then(clients => {
+             clients.forEach(client => {
+               client.postMessage("continue");
+             });
+           })
+  );
 
   // never resolve
   event.respondWith(new Promise(function(res, rej) {}));

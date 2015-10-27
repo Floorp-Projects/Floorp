@@ -286,13 +286,6 @@ class ICEntry
         returnOffset_ = (uint32_t) offset.offset();
     }
 
-    void fixupReturnOffset(MacroAssembler& masm) {
-        CodeOffsetLabel offset = returnOffset();
-        offset.fixup(&masm);
-        MOZ_ASSERT(offset.offset() <= UINT32_MAX);
-        returnOffset_ = (uint32_t) offset.offset();
-    }
-
     uint32_t pcOffset() const {
         return pcOffset_;
     }

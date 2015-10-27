@@ -353,7 +353,7 @@ public:
 #ifdef MOZ_EME
   already_AddRefed<Promise>
   RequestMediaKeySystemAccess(const nsAString& aKeySystem,
-                              const Optional<Sequence<MediaKeySystemOptions>>& aOptions,
+                              const Sequence<MediaKeySystemConfiguration>& aConfig,
                               ErrorResult& aRv);
 private:
   RefPtr<MediaKeySystemAccessManager> mMediaKeySystemAccessManager;

@@ -279,7 +279,7 @@ div.CodeMirror span.eval-text {
   outline-style: none;
 }
 
-.theme-twisty[open] {
+.theme-twisty[open], .theme-twisty.open {
   background-position: -14px -14px;
 }
 

@@ -2647,12 +2647,8 @@ Navigator::HasPresentationSupport(JSContext* aCx, JSObject* aGlobal)
     return false;
   }
 
-  nsCOMPtr<nsIDOMWindow> top;
-  nsresult rv = win->GetTop(getter_AddRefs(top));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return false;
-  }
-
+  win = win->GetOuterWindow();
+  nsCOMPtr<nsPIDOMWindow> top = win->GetTop();
   nsCOMPtr<nsIScriptObjectPrincipal> sop = do_QueryInterface(win);
   nsCOMPtr<nsIScriptObjectPrincipal> topSop = do_QueryInterface(top);
   if (!sop || !topSop) {
@@ -2665,8 +2661,7 @@ Navigator::HasPresentationSupport(JSContext* aCx, JSObject* aGlobal)
     return false;
   }
 
-  nsCOMPtr<nsPIDOMWindow> piTop = do_QueryInterface(top);
-  if (!piTop || !(piTop = piTop->GetCurrentInnerWindow())) {
+  if (!(top = top->GetCurrentInnerWindow())) {
     return false;
   }
 
@@ -2677,7 +2672,7 @@ Navigator::HasPresentationSupport(JSContext* aCx, JSObject* aGlobal)
   }
 
   nsAutoString sessionId;
-  presentationService->GetExistentSessionIdAtLaunch(piTop->WindowID(), sessionId);
+  presentationService->GetExistentSessionIdAtLaunch(top->WindowID(), sessionId);
   return !sessionId.IsEmpty();
 }
 
@@ -2853,53 +2848,96 @@ Navigator::GetUserAgent(nsPIDOMWindow* aWindow, nsIURI* aURI,
 }
 
 #ifdef MOZ_EME
+static nsCString
+ToCString(const nsString& aString)
+{
+  return NS_ConvertUTF16toUTF8(aString);
+}
+
+static nsCString
+ToCString(const MediaKeySystemMediaCapability& aValue)
+{
+  nsCString str;
+  str.AppendLiteral("{contentType='");
+  if (!aValue.mContentType.IsEmpty()) {
+    str.Append(ToCString(aValue.mContentType));
+  }
+  str.AppendLiteral("'}");
+  return str;
+}
+
+template<class Type>
+static nsCString
+ToCString(const Sequence<Type>& aSequence)
+{
+  nsCString s;
+  s.AppendLiteral("[");
+  for (size_t i = 0; i < aSequence.Length(); i++) {
+    if (i != 0) {
+      s.AppendLiteral(",");
+    }
+    s.Append(ToCString(aSequence[i]));
+  }
+  s.AppendLiteral("]");
+  return s;
+}
+
+static nsCString
+ToCString(const MediaKeySystemConfiguration& aConfig)
+{
+  nsCString str;
+  str.AppendLiteral("{");
+  str.AppendPrintf("label='%s'", NS_ConvertUTF16toUTF8(aConfig.mLabel).get());
+
+  if (aConfig.mInitDataTypes.WasPassed()) {
+    str.AppendLiteral(", initDataTypes=");
+    str.Append(ToCString(aConfig.mInitDataTypes.Value()));
+  }
+
+  if (aConfig.mAudioCapabilities.WasPassed()) {
+    str.AppendLiteral(", audioCapabilities=");
+    str.Append(ToCString(aConfig.mAudioCapabilities.Value()));
+  }
+  if (aConfig.mVideoCapabilities.WasPassed()) {
+    str.AppendLiteral(", videoCapabilities=");
+    str.Append(ToCString(aConfig.mVideoCapabilities.Value()));
+  }
+
+  if (!aConfig.mAudioType.IsEmpty()) {
+    str.AppendPrintf(", audioType='%s'",
+      NS_ConvertUTF16toUTF8(aConfig.mAudioType).get());
+  }
+  if (!aConfig.mInitDataType.IsEmpty()) {
+    str.AppendPrintf(", initDataType='%s'",
+      NS_ConvertUTF16toUTF8(aConfig.mInitDataType).get());
+  }
+  if (!aConfig.mVideoType.IsEmpty()) {
+    str.AppendPrintf(", videoType='%s'",
+      NS_ConvertUTF16toUTF8(aConfig.mVideoType).get());
+  }
+  str.AppendLiteral("}");
+
+  return str;
+}
+
+static nsCString
+RequestKeySystemAccessLogString(const nsAString& aKeySystem,
+                                const Sequence<MediaKeySystemConfiguration>& aConfigs)
+{
+  nsCString str;
+  str.AppendPrintf("Navigator::RequestMediaKeySystemAccess(keySystem='%s' options=",
+                   NS_ConvertUTF16toUTF8(aKeySystem).get());
+  str.Append(ToCString(aConfigs));
+  str.AppendLiteral(")");
+  return str;
+}
+
 already_AddRefed<Promise>
 Navigator::RequestMediaKeySystemAccess(const nsAString& aKeySystem,
-                                       const Optional<Sequence<MediaKeySystemOptions>>& aOptions,
+                                       const Sequence<MediaKeySystemConfiguration>& aConfigs,
                                        ErrorResult& aRv)
 {
-  nsAutoCString logMsg;
-  logMsg.AppendPrintf("Navigator::RequestMediaKeySystemAccess(keySystem='%s' options=[",
-                      NS_ConvertUTF16toUTF8(aKeySystem).get());
-  if (aOptions.WasPassed()) {
-    const Sequence<MediaKeySystemOptions>& options = aOptions.Value();
-    for (size_t i = 0; i < options.Length(); i++) {
-      const MediaKeySystemOptions& op = options[i];
-      if (i > 0) {
-        logMsg.AppendLiteral(",");
-      }
-      logMsg.AppendLiteral("{");
-      logMsg.AppendPrintf("stateful='%s'",
-        MediaKeysRequirementValues::strings[(size_t)op.mStateful].value);
-
-      logMsg.AppendPrintf(", uniqueIdentifier='%s'",
-        MediaKeysRequirementValues::strings[(size_t)op.mUniqueidentifier].value);
-
-      if (!op.mAudioCapability.IsEmpty()) {
-        logMsg.AppendPrintf(", audioCapability='%s'",
-                            NS_ConvertUTF16toUTF8(op.mAudioCapability).get());
-      }
-      if (!op.mAudioType.IsEmpty()) {
-        logMsg.AppendPrintf(", audioType='%s'",
-          NS_ConvertUTF16toUTF8(op.mAudioType).get());
-      }
-      if (!op.mInitDataType.IsEmpty()) {
-        logMsg.AppendPrintf(", initDataType='%s'",
-          NS_ConvertUTF16toUTF8(op.mInitDataType).get());
-      }
-      if (!op.mVideoCapability.IsEmpty()) {
-        logMsg.AppendPrintf(", videoCapability='%s'",
-          NS_ConvertUTF16toUTF8(op.mVideoCapability).get());
-      }
-      if (!op.mVideoType.IsEmpty()) {
-        logMsg.AppendPrintf(", videoType='%s'",
-          NS_ConvertUTF16toUTF8(op.mVideoType).get());
-      }
-      logMsg.AppendLiteral("}");
-    }
-  }
-  logMsg.AppendPrintf("])");
-  EME_LOG(logMsg.get());
+  EME_LOG("%s", RequestKeySystemAccessLogString(aKeySystem, aConfigs).get());
 
   nsCOMPtr<nsIGlobalObject> go = do_QueryInterface(mWindow);
   RefPtr<DetailedPromise> promise =
@@ -2915,10 +2953,9 @@ Navigator::RequestMediaKeySystemAccess(const nsAString& aKeySystem,
     mMediaKeySystemAccessManager = new MediaKeySystemAccessManager(mWindow);
   }
 
-  mMediaKeySystemAccessManager->Request(promise, aKeySystem, aOptions);
+  mMediaKeySystemAccessManager->Request(promise, aKeySystem, aConfigs);
   return promise.forget();
 }
-
 #endif
 
 Presentation*

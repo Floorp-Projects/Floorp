@@ -155,7 +155,6 @@ BaselineCompiler::compile()
 
     for (size_t i = 0; i < pcMappingEntries_.length(); i++) {
         PCMappingEntry& entry = pcMappingEntries_[i];
-        entry.fixupNativeOffset(masm);
 
         if (entry.addIndexEntry) {
             PCMappingIndexEntry indexEntry;
@@ -189,16 +188,6 @@ BaselineCompiler::compile()
         ReportOutOfMemory(cx);
         return Method_Error;
     }
-
-    prologueOffset_.fixup(&masm);
-    epilogueOffset_.fixup(&masm);
-    profilerEnterFrameToggleOffset_.fixup(&masm);
-    profilerExitFrameToggleOffset_.fixup(&masm);
-#ifdef JS_TRACE_LOGGING
-    traceLoggerEnterToggleOffset_.fixup(&masm);
-    traceLoggerExitToggleOffset_.fixup(&masm);
-#endif
-    postDebugPrologueOffset_.fixup(&masm);
 
     // Note: There is an extra entry in the bytecode type map for the search hint, see below.
     size_t bytecodeTypeMapEntries = script->nTypeSets() + 1;
@@ -258,7 +247,6 @@ BaselineCompiler::compile()
     // Patch IC loads using IC entries.
     for (size_t i = 0; i < icLoadLabels_.length(); i++) {
         CodeOffsetLabel label = icLoadLabels_[i].label;
-        label.fixup(&masm);
         size_t icEntry = icLoadLabels_[i].icEntry;
         ICEntry* entryAddr = &(baselineScript->icEntry(icEntry));
         Assembler::PatchDataWithValueCheck(CodeLocationLabel(code, label),

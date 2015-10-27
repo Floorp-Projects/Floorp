@@ -71,7 +71,9 @@ function run_test() {
                     totalBytes: 40,
                     count: 4,
                     totalCount: 4,
-                    children: undefined
+                    children: undefined,
+                    id: 8,
+                    parent: 4,
                   },
                   {
                     name: "Baz",
@@ -79,7 +81,9 @@ function run_test() {
                     totalBytes: 30,
                     count: 3,
                     totalCount: 3,
-                    children: undefined
+                    children: undefined,
+                    id: 7,
+                    parent: 4,
                   },
                   {
                     name: "Bar",
@@ -87,7 +91,9 @@ function run_test() {
                     totalBytes: 20,
                     count: 2,
                     totalCount: 2,
-                    children: undefined
+                    children: undefined,
+                    id: 6,
+                    parent: 4,
                   },
                   {
                     name: "Foo",
@@ -95,13 +101,21 @@ function run_test() {
                     totalBytes: 10,
                     count: 1,
                     totalCount: 1,
-                    children: undefined
+                    children: undefined,
+                    id: 5,
+                    parent: 4,
                   },
-                ]
+                ],
+                id: 4,
+                parent: 3,
               }
-            ]
+            ],
+            id: 3,
+            parent: 2,
           }
-        ]
+        ],
+        id: 2,
+        parent: 1,
       },
       {
         name: "noStack",
@@ -109,9 +123,13 @@ function run_test() {
         totalBytes: 50,
         count: 5,
         totalCount: 5,
-        children: undefined
+        children: undefined,
+        id: 9,
+        parent: 1,
       },
-    ]
+    ],
+    id: 1,
+    parent: undefined,
   };
 
   compareCensusViewData(BREAKDOWN, REPORT, EXPECTED);

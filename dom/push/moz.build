@@ -10,10 +10,6 @@ EXTRA_COMPONENTS += [
     'PushNotificationService.js',
 ]
 
-EXTRA_PP_JS_MODULES += [
-    'PushServiceWebSocket.jsm',
-]
-
 EXTRA_JS_MODULES += [
     'PushCrypto.jsm',
     'PushDB.jsm',
@@ -21,6 +17,7 @@ EXTRA_JS_MODULES += [
     'PushService.jsm',
     'PushServiceChildPreload.jsm',
     'PushServiceHttp2.jsm',
+    'PushServiceWebSocket.jsm',
 ]
 
 MOCHITEST_MANIFESTS += [

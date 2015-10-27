@@ -70,11 +70,17 @@ function run_test() {
                 totalBytes: 220,
                 count: 0,
                 totalCount: 22,
-                children: undefined
+                children: undefined,
+                id: 14,
+                parent: 13,
               }
-            ]
+            ],
+            id: 13,
+            parent: 12,
           }
-        ]
+        ],
+        id: 12,
+        parent: 11,
       },
       {
         name: "JSAtom",
@@ -96,11 +102,17 @@ function run_test() {
                 totalBytes: 220,
                 count: 0,
                 totalCount: 22,
-                children: undefined
+                children: undefined,
+                id: 17,
+                parent: 16,
               }
-            ]
+            ],
+            id: 16,
+            parent: 15,
           }
-        ]
+        ],
+        id: 15,
+        parent: 11,
       },
       {
         name: "Array",
@@ -122,11 +134,17 @@ function run_test() {
                 totalBytes: 220,
                 count: 0,
                 totalCount: 22,
-                children: undefined
+                children: undefined,
+                id: 20,
+                parent: 19,
               }
-            ]
+            ],
+            id: 19,
+            parent: 18,
           }
-        ]
+        ],
+        id: 18,
+        parent: 11,
       },
       {
         name: "js::jit::JitScript",
@@ -148,11 +166,17 @@ function run_test() {
                 totalBytes: 220,
                 count: 0,
                 totalCount: 22,
-                children: undefined
+                children: undefined,
+                id: 26,
+                parent: 25,
               }
-            ]
+            ],
+            id: 25,
+            parent: 24,
           }
-        ]
+        ],
+        id: 24,
+        parent: 11,
       },
       {
         name: "other",
@@ -174,13 +198,21 @@ function run_test() {
                 totalBytes: 220,
                 count: 0,
                 totalCount: 22,
-                children: undefined
+                children: undefined,
+                id: 23,
+                parent: 22,
               }
-            ]
+            ],
+            id: 22,
+            parent: 21,
           }
-        ]
-      }
-    ]
+        ],
+        id: 21,
+        parent: 11,
+      },
+    ],
+    id: 11,
+    parent: undefined,
   };
 
   compareCensusViewData(BREAKDOWN, REPORT, EXPECTED, { invert: true });

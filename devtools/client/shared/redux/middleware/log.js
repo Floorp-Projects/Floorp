@@ -9,9 +9,9 @@
  */
 function log({ dispatch, getState }) {
   return next => action => {
-    console.log("[DISPATCH]", JSON.stringify(action));
+    console.log("[DISPATCH]", JSON.stringify(action, null, 2));
     next(action);
-  }
+  };
 }
 
 exports.log = log;

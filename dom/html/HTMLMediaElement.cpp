@@ -2268,7 +2268,7 @@ HTMLMediaElement::PlayInternal(bool aCallerIsChrome)
   }
 
   if (Preferences::GetBool("media.block-play-until-visible", false) &&
-      !nsContentUtils::IsCallerChrome() &&
+      !aCallerIsChrome &&
       OwnerDoc()->Hidden()) {
     LOG(LogLevel::Debug, ("%p Blocked playback because owner hidden.", this));
     mPlayBlockedBecauseHidden = true;
@@ -4953,12 +4953,11 @@ HTMLMediaElement::GetTopLevelPrincipal()
 {
   RefPtr<nsIPrincipal> principal;
   nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(OwnerDoc()->GetParentObject());
-  nsCOMPtr<nsIDOMWindow> topWindow;
   if (!window) {
     return nullptr;
   }
-  window->GetTop(getter_AddRefs(topWindow));
-  nsCOMPtr<nsPIDOMWindow> top = do_QueryInterface(topWindow);
+  window = window->GetOuterWindow();
+  nsCOMPtr<nsPIDOMWindow> top = window->GetTop();
   if (!top) {
     return nullptr;
   }

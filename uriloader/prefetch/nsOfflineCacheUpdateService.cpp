@@ -201,8 +201,10 @@ nsOfflineCachePendingUpdate::OnStateChange(nsIWebProgress* aWebProgress,
     aWebProgress->GetDOMWindow(getter_AddRefs(window));
     if (!window) return NS_OK;
 
-    nsCOMPtr<nsIDOMDocument> progressDoc;
-    window->GetDocument(getter_AddRefs(progressDoc));
+    nsCOMPtr<nsPIDOMWindow> piWindow = do_QueryInterface(window);
+    MOZ_ASSERT(piWindow);
+
+    nsCOMPtr<nsIDocument> progressDoc = piWindow->GetDoc();
     if (!progressDoc) return NS_OK;
 
     if (!SameCOMIdentity(progressDoc, updateDoc)) {
@@ -541,12 +543,12 @@ nsOfflineCacheUpdateService::Schedule(nsIURI *aManifestURI,
 
     nsresult rv;
 
-    if (aWindow) {
+    if (nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aWindow)) {
       // Ensure there is window.applicationCache object that is
       // responsible for association of the new applicationCache
       // with the corresponding document.  Just ignore the result.
-      nsCOMPtr<nsIDOMOfflineResourceList> appCacheWindowObject;
-      aWindow->GetApplicationCache(getter_AddRefs(appCacheWindowObject));
+      nsCOMPtr<nsIDOMOfflineResourceList> appCacheWindowObject =
+          window->GetApplicationCache();
     }
 
     rv = update->Init(aManifestURI, aDocumentURI, aLoadingPrincipal, aDocument,

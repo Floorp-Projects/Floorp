@@ -31,11 +31,11 @@ function evaluateJS(input, callback) {
 function startTest()
 {
   removeEventListener("load", startTest);
-  attachConsole([], state => {
+  attachConsoleToTab([], state => {
     gState = state;
     let tests = [checkUndefinedResult,checkAdditionResult,checkObjectResult];
     runTests(tests, testEnd);
-  }, true);
+  });
 }
 
 let checkUndefinedResult = Task.async(function*() {

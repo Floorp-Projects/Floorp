@@ -2192,7 +2192,6 @@ MacroAssembler::linkProfilerCallSites(JitCode* code)
 {
     for (size_t i = 0; i < profilerCallSites_.length(); i++) {
         CodeOffsetLabel offset = profilerCallSites_[i];
-        offset.fixup(this);
         CodeLocationLabel location(code, offset);
         PatchDataWithValueCheck(location, ImmPtr(location.raw()), ImmPtr((void*)-1));
     }
@@ -2628,7 +2627,6 @@ MacroAssembler::linkSelfReference(JitCode* code)
     // the JitCode onto the stack in order to GC it correctly.  exitCodePatch should
     // be unset if the code never needed to push its JitCode*.
     if (hasSelfReference()) {
-        selfReferencePatch_.fixup(this);
         PatchDataWithValueCheck(CodeLocationLabel(code, selfReferencePatch_),
                                 ImmPtr(code),
                                 ImmPtr((void*)-1));

@@ -4548,15 +4548,22 @@ TSFTextStore::GetIMEUpdatePreference()
 nsresult
 TSFTextStore::OnTextChangeInternal(const IMENotification& aIMENotification)
 {
+  const IMENotification::TextChangeDataBase& textChangeData =
+    aIMENotification.mTextChangeData;
+
   MOZ_LOG(sTextStoreLog, LogLevel::Debug,
          ("TSF: 0x%p   TSFTextStore::OnTextChangeInternal(aIMENotification={ "
           "mMessage=0x%08X, mTextChangeData={ mStartOffset=%lu, "
-          "mRemovedEndOffset=%lu, mAddedEndOffset=%lu}), mSink=0x%p, "
-          "mSinkMask=%s, mComposition.IsComposing()=%s",
+          "mRemovedEndOffset=%lu, mAddedEndOffset=%lu, "
+          "mCausedByComposition=%s, mOccurredDuringComposition=%s }), "
+          "mSink=0x%p, mSinkMask=%s, mComposition.IsComposing()=%s",
           this, aIMENotification.mMessage,
-          aIMENotification.mTextChangeData.mStartOffset,
-          aIMENotification.mTextChangeData.mRemovedEndOffset,
-          aIMENotification.mTextChangeData.mAddedEndOffset, mSink.get(),
+          textChangeData.mStartOffset,
+          textChangeData.mRemovedEndOffset,
+          textChangeData.mAddedEndOffset,
+          GetBoolName(textChangeData.mCausedByComposition),
+          GetBoolName(textChangeData.mOccurredDuringComposition),
+          mSink.get(),
           GetSinkMaskNameStr(mSinkMask).get(),
           GetBoolName(mComposition.IsComposing())));
 
@@ -4577,12 +4584,9 @@ TSFTextStore::OnTextChangeInternal(const IMENotification& aIMENotification)
 
   if (aIMENotification.mTextChangeData.IsInInt32Range()) {
     TS_TEXTCHANGE textChange;
-    textChange.acpStart =
-      static_cast<LONG>(aIMENotification.mTextChangeData.mStartOffset);
-    textChange.acpOldEnd =
-      static_cast<LONG>(aIMENotification.mTextChangeData.mRemovedEndOffset);
-    textChange.acpNewEnd =
-      static_cast<LONG>(aIMENotification.mTextChangeData.mAddedEndOffset);
+    textChange.acpStart = static_cast<LONG>(textChangeData.mStartOffset);
+    textChange.acpOldEnd = static_cast<LONG>(textChangeData.mRemovedEndOffset);
+    textChange.acpNewEnd = static_cast<LONG>(textChangeData.mAddedEndOffset);
     NotifyTSFOfTextChange(textChange);
   } else {
     MOZ_LOG(sTextStoreLog, LogLevel::Error,
@@ -4635,7 +4639,8 @@ TSFTextStore::OnSelectionChangeInternal(const IMENotification& aIMENotification)
          ("TSF: 0x%p   TSFTextStore::OnSelectionChangeInternal("
           "aIMENotification={ mSelectionChangeData={ mOffset=%lu, "
           "Length()=%lu, mReversed=%s, mWritingMode=%s, "
-          "mCausedByComposition=%s, mCausedBySelectionEvent=%s } }), "
+          "mCausedByComposition=%s, mCausedBySelectionEvent=%s, "
+          "mOccurredDuringComposition=%s } }), "
           "mSink=0x%p, mSinkMask=%s, mIsRecordingActionsWithoutLock=%s, "
           "mComposition.IsComposing()=%s",
           this, selectionChangeData.mOffset, selectionChangeData.Length(),
@@ -4643,11 +4648,31 @@ TSFTextStore::OnSelectionChangeInternal(const IMENotification& aIMENotification)
           GetWritingModeName(selectionChangeData.GetWritingMode()).get(),
           GetBoolName(selectionChangeData.mCausedByComposition),
           GetBoolName(selectionChangeData.mCausedBySelectionEvent),
+          GetBoolName(selectionChangeData.mOccurredDuringComposition),
           mSink.get(), GetSinkMaskNameStr(mSinkMask).get(),
           GetBoolName(mIsRecordingActionsWithoutLock),
           GetBoolName(mComposition.IsComposing())));
 
   mDeferNotifyingTSF = false;
+
+  // A compositionstart event handler can change selection before actually
+  // starting composition in the editor. This causes very complicated issue
+  // because TSF requests to lock the document but we allow to change the
+  // selection for web apps for keeping compatibility.
+  // For now, we should not send selection change notification until the
+  // active composition ends.  However, this causes TSF stores wrong selection
+  // offset.  That might cause TSF stopping working.  So, at next change,
+  // we should cache content *until* composition end.  Then, we will solve
+  // this issue.
+  if (mComposition.IsComposing() &&
+      !selectionChangeData.mOccurredDuringComposition) {
+    MOZ_LOG(sTextStoreLog, LogLevel::Warning,
+           ("TSF: 0x%p   TSFTextStore::OnSelectionChangeInternal(), WARNING, "
+            "ignoring selection change notification which occurred before "
+            "composition start.", this));
+    return NS_OK;
+  }
+
 
   if (IsReadLocked()) {
     // XXX Why don't we mark mPendingOnSelectionChange as true here?

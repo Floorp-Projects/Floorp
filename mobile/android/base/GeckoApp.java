@@ -30,6 +30,7 @@ import org.mozilla.gecko.tabqueue.TabQueueHelper;
 import org.mozilla.gecko.updater.UpdateServiceHelper;
 import org.mozilla.gecko.util.ActivityResultHandler;
 import org.mozilla.gecko.util.ActivityUtils;
+import org.mozilla.gecko.util.BundleEventListener;
 import org.mozilla.gecko.util.EventCallback;
 import org.mozilla.gecko.util.FileUtils;
 import org.mozilla.gecko.util.GeckoEventListener;
@@ -72,6 +73,7 @@ import android.os.StrictMode;
 import android.provider.ContactsContract;
 import android.provider.MediaStore.Images.Media;
 import android.support.design.widget.Snackbar;
+import android.support.v4.content.ContextCompat;
 import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.util.Base64;
@@ -120,6 +122,7 @@ import java.util.Set;
 public abstract class GeckoApp
     extends GeckoActivity
     implements
+    BundleEventListener,
     ContextGetter,
     GeckoAppShell.GeckoInterface,
     GeckoEventListener,
@@ -724,6 +727,24 @@ public abstract class GeckoApp
         }
     }
 
+    @Override
+    public void handleMessage(final String event, final Bundle message, final EventCallback callback) {
+        if ("History:GetPrePathLastVisitedTimeMilliseconds".equals(event)) {
+            if (callback == null) {
+                Log.e(LOGTAG, "callback must not be null in " + event);
+                return;
+            }
+            final String prePath = message.getString("prePath");
+            if (prePath == null) {
+                callback.sendError("prePath must not be null in " + event);
+                return;
+            }
+            // We're on a background thread, so we can be synchronous.
+            final long millis = mProfile.getDB().getPrePathLastVisitedTimeMilliseconds(getContentResolver(), prePath);
+            callback.sendSuccess(millis);
+        }
+    }
+
     void onStatePurged() { }
 
     /**
@@ -851,6 +872,7 @@ public abstract class GeckoApp
             final SnackbarEventCallback snackbarCallback = new SnackbarEventCallback(callback);
 
             snackbar.setAction(action, snackbarCallback);
+            snackbar.setActionTextColor(ContextCompat.getColor(this, R.color.fennec_ui_orange));
             snackbar.setCallback(snackbarCallback);
         }
 
@@ -1320,6 +1342,9 @@ public abstract class GeckoApp
             "Update:Check",
             "Update:Download",
             "Update:Install");
+
+        EventDispatcher.getInstance().registerBackgroundThreadListener((BundleEventListener) this,
+                "History:GetPrePathLastVisitedTimeMilliseconds");
 
         if (mWebappEventListener == null) {
             mWebappEventListener = new EventListener();
@@ -2136,6 +2161,9 @@ public abstract class GeckoApp
             "Update:Download",
             "Update:Install");
 
+        EventDispatcher.getInstance().unregisterBackgroundThreadListener((BundleEventListener) this,
+                "History:GetPrePathLastVisitedTimeMilliseconds");
+
         if (mWebappEventListener != null) {
             mWebappEventListener.unregisterEvents();
             mWebappEventListener = null;
@@ -2538,7 +2566,6 @@ public abstract class GeckoApp
     public static class MainLayout extends RelativeLayout {
         private TouchEventInterceptor mTouchEventInterceptor;
         private MotionEventInterceptor mMotionEventInterceptor;
-        private LayoutInterceptor mLayoutInterceptor;
 
         public MainLayout(Context context, AttributeSet attrs) {
             super(context, attrs);
@@ -2547,13 +2574,6 @@ public abstract class GeckoApp
         @Override
         protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
             super.onLayout(changed, left, top, right, bottom);
-            if (mLayoutInterceptor != null) {
-                mLayoutInterceptor.onLayout();
-            }
-        }
-
-        public void setLayoutInterceptor(LayoutInterceptor interceptor) {
-            mLayoutInterceptor = interceptor;
         }
 
         public void setTouchEventInterceptor(TouchEventInterceptor interceptor) {

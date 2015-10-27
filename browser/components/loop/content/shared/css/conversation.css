@@ -645,7 +645,7 @@ body[platform="win"] .share-service-dropdown.overflow > .dropdown-menu-item {
   /* 100% height to fill up media-layout, thus forcing other elements into the
      second column that's 200px wide */
   height: 100%;
-  background-color: #4E4E4E;
+  background-color: #D8D8D8;
 }
 
 .media-wrapper > .local {

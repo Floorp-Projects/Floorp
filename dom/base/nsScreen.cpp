@@ -312,7 +312,7 @@ nsScreen::GetWindowInnerRect(nsRect& aRect)
 {
   aRect.x = 0;
   aRect.y = 0;
-  nsCOMPtr<nsIDOMWindow> win = GetOwner();
+  nsCOMPtr<nsPIDOMWindow> win = GetOwner();
   if (!win) {
     return NS_ERROR_FAILURE;
   }

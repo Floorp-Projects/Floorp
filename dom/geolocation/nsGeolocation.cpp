@@ -1605,14 +1605,9 @@ Geolocation::WindowOwnerStillExists()
   nsCOMPtr<nsPIDOMWindow> window = do_QueryReferent(mOwner);
 
   if (window) {
-    bool closed = false;
-    window->GetClosed(&closed);
-    if (closed) {
-      return false;
-    }
-
     nsPIDOMWindow* outer = window->GetOuterWindow();
-    if (!outer || outer->GetCurrentInnerWindow() != window) {
+    if (!outer || outer->GetCurrentInnerWindow() != window ||
+        outer->Closed()) {
       return false;
     }
   }

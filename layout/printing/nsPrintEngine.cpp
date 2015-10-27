@@ -790,13 +790,15 @@ nsPrintEngine::PrintPreview(nsIPrintSettings* aPrintSettings,
     return NS_ERROR_FAILURE;
   }
 
-  NS_ENSURE_STATE(aChildDOMWin);
-  nsCOMPtr<nsIDOMDocument> doc;
-  aChildDOMWin->GetDocument(getter_AddRefs(doc));
+  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aChildDOMWin);
+  NS_ENSURE_STATE(window);
+  nsCOMPtr<nsIDocument> doc = window->GetDoc();
   NS_ENSURE_STATE(doc);
+  nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(doc);
+  MOZ_ASSERT(domDoc);
 
   // Document is not busy -- go ahead with the Print Preview
-  return CommonPrint(true, aPrintSettings, aWebProgressListener, doc);
+  return CommonPrint(true, aPrintSettings, aWebProgressListener, domDoc);
 }
 
 //----------------------------------------------------------------------------------
@@ -3111,9 +3113,9 @@ nsPrintEngine::FindPrintObjectByDOMWin(nsPrintObject* aPO,
     return nullptr;
   }
 
-  nsCOMPtr<nsIDOMDocument> domDoc;
-  aDOMWin->GetDocument(getter_AddRefs(domDoc));
-  nsCOMPtr<nsIDocument> doc = do_QueryInterface(domDoc);
+  nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aDOMWin);
+
+  nsCOMPtr<nsIDocument> doc = window->GetDoc();
   if (aPO->mDocument && aPO->mDocument->GetOriginalDocument() == doc) {
     return aPO;
   }
