@@ -71,6 +71,13 @@ class HeapSnapshot final : public nsISupports
   bool saveStackFrame(const protobuf::StackFrame& frame,
                       StackFrameId& outFrameId);
 
+public:
+  // The maximum number of stack frames that we will serialize into a core
+  // dump. This helps prevent over-recursion in the protobuf library when
+  // deserializing stacks.
+  static const size_t MAX_STACK_DEPTH = 60;
+
+private:
   // If present, a timestamp in the same units that `PR_Now` gives.
   Maybe<uint64_t> timestamp;
 
