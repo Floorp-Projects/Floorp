@@ -124,7 +124,8 @@ protected:
   virtual bool DeallocPFTPChannelParent(PFTPChannelParent*) override;
   virtual PWebSocketParent*
     AllocPWebSocketParent(const PBrowserOrId& browser,
-                          const SerializedLoadContext& aSerialized) override;
+                          const SerializedLoadContext& aSerialized,
+                          const uint32_t& aSerial) override;
   virtual bool DeallocPWebSocketParent(PWebSocketParent*) override;
   virtual PTCPSocketParent* AllocPTCPSocketParent(const nsString& host,
                                                   const uint16_t& port) override;

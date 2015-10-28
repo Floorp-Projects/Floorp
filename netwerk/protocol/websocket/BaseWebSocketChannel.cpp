@@ -14,11 +14,24 @@
 #include "nsStandardURL.h"
 #include "LoadInfo.h"
 #include "nsIDOMNode.h"
+#include "mozilla/dom/ContentChild.h"
+
+using mozilla::dom::ContentChild;
 
 PRLogModuleInfo *webSocketLog = nullptr;
 
 namespace mozilla {
 namespace net {
+
+static uint64_t gNextWebSocketID = 0;
+
+// We use only 53 bits for the WebSocket serial ID so that it can be converted
+// to and from a JS value without loss of precision. The upper bits of the
+// WebSocket serial ID hold the process ID. The lower bits identify the
+// WebSocket.
+static const uint64_t kWebSocketIDTotalBits = 53;
+static const uint64_t kWebSocketIDProcessBits = 22;
+static const uint64_t kWebSocketIDWebSocketBits = kWebSocketIDTotalBits - kWebSocketIDProcessBits;
 
 BaseWebSocketChannel::BaseWebSocketChannel()
   : mWasOpened(0)
@@ -31,6 +44,24 @@ BaseWebSocketChannel::BaseWebSocketChannel()
 {
   if (!webSocketLog)
     webSocketLog = PR_NewLogModule("nsWebSocket");
+
+  // Generation of a unique serial ID.
+  uint64_t processID = 0;
+  if (XRE_IsContentProcess()) {
+    ContentChild* cc = ContentChild::GetSingleton();
+    processID = cc->GetID();
+  }
+
+  uint64_t processBits = processID & ((uint64_t(1) << kWebSocketIDProcessBits) - 1);
+
+  // Make sure no actual webSocket ends up with mWebSocketID == 0 but less then
+  // what the kWebSocketIDProcessBits allows.
+  if (++gNextWebSocketID >= (uint64_t(1) << kWebSocketIDWebSocketBits)) {
+    gNextWebSocketID = 1;
+  }
+
+  uint64_t webSocketBits = gNextWebSocketID & ((uint64_t(1) << kWebSocketIDWebSocketBits) - 1);
+  mSerial = (processBits << kWebSocketIDWebSocketBits) | webSocketBits;
 }
 
 //-----------------------------------------------------------------------------
@@ -194,6 +225,24 @@ BaseWebSocketChannel::InitLoadInfo(nsIDOMNode* aLoadingNode,
   nsCOMPtr<nsINode> node = do_QueryInterface(aLoadingNode);
   mLoadInfo = new LoadInfo(aLoadingPrincipal, aTriggeringPrincipal,
                            node, aSecurityFlags, aContentPolicyType);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+BaseWebSocketChannel::GetSerial(uint32_t* aSerial)
+{
+  if (!aSerial) {
+    return NS_ERROR_FAILURE;
+  }
+
+  *aSerial = mSerial;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+BaseWebSocketChannel::SetSerial(uint32_t aSerial)
+{
+  mSerial = aSerial;
   return NS_OK;
 }
 
