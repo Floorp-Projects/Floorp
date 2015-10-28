@@ -15,6 +15,7 @@ EXPORTS += [
     'gfxColor.h',
     'gfxContext.h',
     'gfxDrawable.h',
+    'gfxEnv.h',
     'gfxFailure.h',
     'gfxFont.h',
     'gfxFontConstants.h',
