@@ -262,6 +262,7 @@ APZEventState::ProcessTouchEvent(const WidgetTouchEvent& aEvent,
   bool isTouchPrevented = TouchManager::gPreventMouseEvents ||
       aEvent.mFlags.mMultipleActionsPrevented;
   bool sentContentResponse = false;
+  APZES_LOG("Handling event type %d\n", aEvent.mMessage);
   switch (aEvent.mMessage) {
   case eTouchStart: {
     mTouchEndCancelled = false;
@@ -272,6 +273,8 @@ APZEventState::ProcessTouchEvent(const WidgetTouchEvent& aEvent,
       mContentReceivedInputBlockCallback(aGuid, aInputBlockId, isTouchPrevented);
       sentContentResponse = true;
     } else {
+      APZES_LOG("Event not prevented; pending response for %" PRIu64 " %s\n",
+        aInputBlockId, Stringify(aGuid).c_str());
       mPendingTouchPreventedResponse = true;
       mPendingTouchPreventedGuid = aGuid;
       mPendingTouchPreventedBlockId = aInputBlockId;
@@ -405,6 +408,8 @@ bool
 APZEventState::SendPendingTouchPreventedResponse(bool aPreventDefault)
 {
   if (mPendingTouchPreventedResponse) {
+    APZES_LOG("Sending response %d for pending guid: %s\n", aPreventDefault,
+      Stringify(mPendingTouchPreventedGuid).c_str());
     mContentReceivedInputBlockCallback(mPendingTouchPreventedGuid,
         mPendingTouchPreventedBlockId, aPreventDefault);
     mPendingTouchPreventedResponse = false;
