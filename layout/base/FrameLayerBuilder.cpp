@@ -4045,9 +4045,14 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
       nscolor uniformColor = NS_RGBA(0,0,0,0);
       nscolor* uniformColorPtr = !mayDrawOutOfOrder ? &uniformColor : nullptr;
       nsIntRect clipRectUntyped;
-      nsIntRect* clipPtr = itemClip.HasClip() ? &clipRectUntyped : nullptr;
-      if (clipPtr) {
-	      clipRectUntyped = ParentLayerIntRect::ToUntyped(clipRect);
+      const DisplayItemClip& layerClip = shouldFixToViewport ? fixedToViewportClip : itemClip;
+      ParentLayerIntRect layerClipRect;
+      nsIntRect* clipPtr = nullptr;
+      if (layerClip.HasClip()) {
+        layerClipRect = ViewAs<ParentLayerPixel>(
+          ScaleToNearestPixels(layerClip.GetClipRect()) + mParameters.mOffset);
+        clipRectUntyped = ParentLayerIntRect::ToUntyped(layerClipRect);
+        clipPtr = &clipRectUntyped;
       }
       if (animatedGeometryRoot == item->Frame() &&
           animatedGeometryRoot != mBuilder->RootReferenceFrame()) {
@@ -4119,20 +4124,20 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
       NS_ASSERTION(ownLayer->Manager() == mManager, "Wrong manager");
       NS_ASSERTION(!ownLayer->HasUserData(&gLayerManagerUserData),
                    "We shouldn't have a FrameLayerBuilder-managed layer here!");
-      NS_ASSERTION(itemClip.HasClip() ||
-                   itemClip.GetRoundedRectCount() == 0,
+      NS_ASSERTION(layerClip.HasClip() ||
+                   layerClip.GetRoundedRectCount() == 0,
                    "If we have rounded rects, we must have a clip rect");
       // It has its own layer. Update that layer's clip and visible rects.
-      if (itemClip.HasClip()) {
-        ownLayer->SetClipRect(Some(clipRect));
+      if (layerClip.HasClip()) {
+        ownLayer->SetClipRect(Some(layerClipRect));
       } else {
         ownLayer->SetClipRect(Nothing());
       }
 
       // rounded rectangle clipping using mask layers
       // (must be done after visible rect is set on layer)
-      if (itemClip.IsRectClippedByRoundedCorner(itemContent)) {
-        SetupMaskLayer(ownLayer, itemClip, itemVisibleRect);
+      if (layerClip.IsRectClippedByRoundedCorner(itemContent)) {
+        SetupMaskLayer(ownLayer, layerClip, itemVisibleRect);
       }
 
       ContainerLayer* oldContainer = ownLayer->GetParent();
@@ -4175,7 +4180,7 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
           newLayerEntry->mVisibleRegion = itemVisibleRect;
         }
         newLayerEntry->mOpaqueRegion = ComputeOpaqueRect(item,
-          animatedGeometryRoot, fixedPosFrame, itemClip, aList,
+          animatedGeometryRoot, fixedPosFrame, layerClip, aList,
           &newLayerEntry->mHideAllLayersBelow,
           &newLayerEntry->mOpaqueForAnimatedGeometryRootParent);
       } else {
