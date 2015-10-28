@@ -21,8 +21,6 @@ class RasterImage;
 
 enum class ICOState
 {
-  SUCCESS,
-  FAILURE,
   HEADER,
   DIR_ENTRY,
   SKIP_TO_RESOURCE,

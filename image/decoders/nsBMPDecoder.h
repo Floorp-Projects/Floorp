@@ -167,9 +167,7 @@ private:
     PIXEL_ROW,
     RLE_SEGMENT,
     RLE_DELTA,
-    RLE_ABSOLUTE,
-    SUCCESS,
-    FAILURE
+    RLE_ABSOLUTE
   };
 
   // This is the constructor used by DecoderFactory.
