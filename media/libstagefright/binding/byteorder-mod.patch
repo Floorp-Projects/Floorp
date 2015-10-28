@@ -1,0 +1,37 @@
+diff --git a/media/libstagefright/binding/byteorder/mod.rs b/media/libstagefright/binding/byteorder/mod.rs
+index 59ba692..9d2d1d5 100644
+--- a/media/libstagefright/binding/byteorder/mod.rs
++++ b/media/libstagefright/binding/byteorder/mod.rs
+@@ -36,16 +36,16 @@ assert_eq!(wtr, vec![5, 2, 0, 3]);
+ ```
+ */
+ 
+-#![crate_name = "byteorder"]
+ #![doc(html_root_url = "http://burntsushi.net/rustdoc/byteorder")]
+ 
+ #![deny(missing_docs)]
+ 
+ use std::mem::transmute;
+ 
+-pub use new::{ReadBytesExt, WriteBytesExt, Error, Result};
++pub use byteorder::new::{ReadBytesExt, WriteBytesExt, Error, Result};
+ 
+-mod new;
++// Re-export new so gecko can build us as a mod intead of a crate.
++pub mod new;
+ 
+ #[inline]
+ fn extend_sign(val: u64, nbytes: usize) -> i64 {
+diff --git a/media/libstagefright/binding/byteorder/new.rs b/media/libstagefright/binding/byteorder/new.rs
+index bbef0cd..a2e5393 100644
+--- a/media/libstagefright/binding/byteorder/new.rs
++++ b/media/libstagefright/binding/byteorder/new.rs
+@@ -3,7 +3,7 @@ use std::fmt;
+ use std::io;
+ use std::result;
+ 
+-use ByteOrder;
++use byteorder::ByteOrder;
+ 
+ /// A short-hand for `result::Result<T, byteorder::Error>`.
+ pub type Result<T> = result::Result<T, Error>;
