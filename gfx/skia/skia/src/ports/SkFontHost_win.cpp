@@ -27,6 +27,7 @@
 #include "SkTemplates.h"
 #include "SkThread.h"
 #include "SkTypeface_win.h"
+#include "SkTypeface_win_dw.h"
 #include "SkTypefaceCache.h"
 #include "SkUtils.h"
 
@@ -340,6 +341,18 @@ SkTypeface* SkCreateTypefaceFromLOGFONT(const LOGFONT& origLF) {
         SkTypefaceCache::Add(face, get_style(lf));
     }
     return face;
+}
+
+/***
+ * This guy is public.
+ */
+
+SkTypeface* SkCreateTypefaceFromDWriteFont(IDWriteFactory* aFactory,
+                                           IDWriteFontFace* aFontFace,
+                                           IDWriteFont* aFont,
+                                           IDWriteFontFamily* aFontFamily)
+{
+  return DWriteFontTypeface::Create(aFactory, aFontFace, aFont, aFontFamily);
 }
 
 /**
