@@ -211,6 +211,12 @@
             "url": "/_mozilla/service-workers/service-worker/fetch-request-no-freshness-headers.https.html"
           }
         ],
+        "service-workers/service-worker/fetch-request-redirect.https.html": [
+          {
+            "path": "service-workers/service-worker/fetch-request-redirect.https.html",
+            "url": "/_mozilla/service-workers/service-worker/fetch-request-redirect.https.html"
+          }
+        ],
         "service-workers/service-worker/fetch-request-resources.https.html": [
           {
             "path": "service-workers/service-worker/fetch-request-resources.https.html",
