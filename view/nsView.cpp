@@ -19,6 +19,7 @@
 #include "nsIWidgetListener.h"
 #include "nsContentUtils.h" // for nsAutoScriptBlocker
 #include "mozilla/TimelineConsumers.h"
+#include "mozilla/CompositeTimelineMarker.h"
 
 using namespace mozilla;
 
@@ -1098,9 +1099,9 @@ nsView::DidCompositeWindow(const TimeStamp& aCompositeStart,
 
     if (timelines && timelines->HasConsumer(docShell)) {
       timelines->AddMarkerForDocShell(docShell,
-        "Composite", aCompositeStart, MarkerTracingType::START);
+        MakeUnique<CompositeTimelineMarker>(aCompositeStart, MarkerTracingType::START));
       timelines->AddMarkerForDocShell(docShell,
-        "Composite", aCompositeEnd, MarkerTracingType::END);
+        MakeUnique<CompositeTimelineMarker>(aCompositeEnd, MarkerTracingType::END));
     }
   }
 }

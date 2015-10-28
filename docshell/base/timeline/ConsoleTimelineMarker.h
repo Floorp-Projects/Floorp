@@ -40,6 +40,8 @@ public:
 
   virtual void AddDetails(JSContext* aCx, dom::ProfileTimelineMarker& aMarker) override
   {
+    TimelineMarker::AddDetails(aCx, aMarker);
+
     if (GetTracingType() == MarkerTracingType::START) {
       aMarker.mCauseName.Construct(mCause);
     } else {
