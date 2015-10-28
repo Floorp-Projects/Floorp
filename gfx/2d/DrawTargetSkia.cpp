@@ -573,8 +573,7 @@ DrawTargetSkia::FillGlyphs(ScaledFont *aFont,
 {
   if (aFont->GetType() != FontType::MAC &&
       aFont->GetType() != FontType::SKIA &&
-      aFont->GetType() != FontType::GDI &&
-      aFont->GetType() != FontType::DWRITE) {
+      aFont->GetType() != FontType::GDI) {
     return;
   }
 
