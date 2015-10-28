@@ -1600,7 +1600,8 @@ MediaDecoderOwner*
 MediaDecoder::GetOwner()
 {
   MOZ_ASSERT(NS_IsMainThread());
-  return mOwner;
+  // mOwner is valid until shutdown.
+  return !mShuttingDown ? mOwner : nullptr;
 }
 
 void
