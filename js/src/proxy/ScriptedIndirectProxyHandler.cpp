@@ -512,7 +512,12 @@ CallableScriptedIndirectProxyHandler::construct(JSContext* cx, HandleObject prox
     if (!FillArgumentsFromArraylike(cx, cargs, args))
         return false;
 
-    return Construct(cx, construct, cargs, args.newTarget(), args.rval());
+    RootedObject obj(cx);
+    if (!Construct(cx, construct, cargs, args.newTarget(), &obj))
+        return false;
+
+    args.rval().setObject(*obj);
+    return true;
 }
 
 const CallableScriptedIndirectProxyHandler CallableScriptedIndirectProxyHandler::singleton;
