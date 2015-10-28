@@ -22,9 +22,9 @@ const List = module.exports = createClass({
     let { items, onClick, itemComponent: Item } = this.props;
 
     return (
-      dom.ul({ className: "list" }, items.map((item, index) => {
+      dom.ul({ className: "list" }, ...items.map((item, index) => {
         return Item({
-          item, index, onClick: () => onClick(item),
+          key: index, item, index, onClick: () => onClick(item),
         });
       }))
     );
