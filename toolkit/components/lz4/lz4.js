@@ -4,15 +4,25 @@
 
 "use strict";
 
+var SharedAll;
+var Primitives;
 if (typeof Components != "undefined") {
-  throw new Error("This file is meant to be loaded in a worker");
-}
-if (!module || !exports) {
-  throw new Error("Please load this module with require()");
-}
+  let Cu = Components.utils;
+  SharedAll = {};
+  Cu.import("resource://gre/modules/osfile/osfile_shared_allthreads.jsm", SharedAll);
+  Cu.import("resource://gre/modules/lz4_internal.js");
+  Cu.import("resource://gre/modules/ctypes.jsm");
 
-const SharedAll = require("resource://gre/modules/osfile/osfile_shared_allthreads.jsm");
-const Internals = require("resource://gre/modules/workers/lz4_internal.js");
+  this.EXPORTED_SYMBOLS = [
+    "Lz4"
+  ];
+  this.exports = {};
+} else if (typeof module != "undefined" && typeof require != "undefined") {
+  SharedAll = require("resource://gre/modules/osfile/osfile_shared_allthreads.jsm");
+  Primitives = require("resource://gre/modules/lz4_internal.js");
+} else {
+  throw new Error("Please load this module with Component.utils.import or with require()");
+}
 
 const MAGIC_NUMBER = new Uint8Array([109, 111, 122, 76, 122, 52, 48, 0]); // "mozLz4a\0"
 
@@ -76,12 +86,12 @@ function compressFileContent(array, options = {}) {
   } else {
     throw new TypeError("compressFileContent requires a size");
   }
-  let maxCompressedSize = Internals.maxCompressedSize(inputBytes);
+  let maxCompressedSize = Primitives.maxCompressedSize(inputBytes);
   let outputArray = new Uint8Array(HEADER_SIZE + maxCompressedSize);
 
   // Compress to output array
   let payload = new Uint8Array(outputArray.buffer, outputArray.byteOffset + HEADER_SIZE);
-  let compressedSize = Internals.compress(array, inputBytes, payload);
+  let compressedSize = Primitives.compress(array, inputBytes, payload);
 
   // Add headers
   outputArray.set(MAGIC_NUMBER);
@@ -125,12 +135,19 @@ function decompressFileContent(array, options = {}) {
   let decompressedBytes = (new SharedAll.Type.size_t.implementation(0));
 
   // Decompress
-  let success = Internals.decompress(inputData, bytes - HEADER_SIZE,
-                                     outputBuffer, outputBuffer.byteLength,
-                                     decompressedBytes.address());
+  let success = Primitives.decompress(inputData, bytes - HEADER_SIZE,
+                                      outputBuffer, outputBuffer.byteLength,
+                                      decompressedBytes.address());
   if (!success) {
     throw new LZError("decompress", "becauseLZInvalidContent", "Invalid content:Decompression stopped at " + decompressedBytes.value);
   }
   return new Uint8Array(outputBuffer.buffer, outputBuffer.byteOffset, decompressedBytes.value);
 }
 exports.decompressFileContent = decompressFileContent;
+
+if (typeof Components != "undefined") {
+  this.Lz4 = {
+    compressFileContent: compressFileContent,
+    decompressFileContent: decompressFileContent
+  };
+}
