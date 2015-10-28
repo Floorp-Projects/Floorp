@@ -526,10 +526,21 @@ void
 MediaCodecReader::NotifyDataArrivedInternal(uint32_t aLength,
                                             int64_t aOffset)
 {
-  IntervalSet<int64_t> intervals = mFilter.NotifyDataArrived(aLength, aOffset);
+  AutoPinned<MediaResource> resource(mDecoder->GetResource());
+  nsTArray<MediaByteRange> byteRanges;
+  nsresult rv = resource->GetCachedRanges(byteRanges);
+
+  if (NS_FAILED(rv)) {
+    return;
+  }
+
+  IntervalSet<int64_t> intervals;
+  for (auto& range : byteRanges) {
+    intervals += mFilter.NotifyDataArrived(range.Length(), range.mStart);
+  }
   for (const auto& interval : intervals) {
     nsRefPtr<MediaByteBuffer> bytes =
-      mDecoder->GetResource()->MediaReadAt(interval.mStart, interval.Length());
+      resource->MediaReadAt(interval.mStart, interval.Length());
     MonitorAutoLock monLock(mParserMonitor);
     if (mNextParserPosition == mParsedDataLength &&
         mNextParserPosition >= interval.mStart &&
