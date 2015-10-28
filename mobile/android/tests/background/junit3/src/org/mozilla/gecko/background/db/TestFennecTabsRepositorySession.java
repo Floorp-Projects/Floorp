@@ -41,10 +41,16 @@ public class TestFennecTabsRepositorySession extends AndroidSyncTestCase {
   public static final String[] TEST_CLIENTS_GUID_IS_LOCAL_SELECTION_ARGS = new String[] { TEST_CLIENT_GUID };
 
   protected ContentProviderClient tabsClient = null;
+  protected ContentProviderClient clientsClient = null;
 
   protected ContentProviderClient getTabsClient() {
     final ContentResolver cr = getApplicationContext().getContentResolver();
     return cr.acquireContentProviderClient(BrowserContractHelpers.TABS_CONTENT_URI);
+  }
+
+  protected ContentProviderClient getClientsClient() {
+    final ContentResolver cr = getApplicationContext().getContentResolver();
+    return cr.acquireContentProviderClient(BrowserContractHelpers.CLIENTS_CONTENT_URI);
   }
 
   public TestFennecTabsRepositorySession() throws NoContentProviderException {
@@ -56,6 +62,16 @@ public class TestFennecTabsRepositorySession extends AndroidSyncTestCase {
     if (tabsClient == null) {
       tabsClient = getTabsClient();
     }
+    if (clientsClient == null) {
+      clientsClient = getClientsClient();
+    }
+  }
+
+  protected int deleteTestClient(final ContentProviderClient clientsClient) throws RemoteException {
+    if (clientsClient == null) {
+      return -1;
+    }
+    return clientsClient.delete(BrowserContractHelpers.CLIENTS_CONTENT_URI, TEST_CLIENTS_GUID_IS_LOCAL_SELECTION, TEST_CLIENTS_GUID_IS_LOCAL_SELECTION_ARGS);
   }
 
   protected int deleteAllTestTabs(final ContentProviderClient tabsClient) throws RemoteException {
@@ -73,6 +89,13 @@ public class TestFennecTabsRepositorySession extends AndroidSyncTestCase {
 
       tabsClient.release();
       tabsClient = null;
+    }
+
+    if (clientsClient != null) {
+      deleteTestClient(clientsClient);
+
+      clientsClient.release();
+      clientsClient = null;
     }
   }
 
@@ -229,14 +252,12 @@ public class TestFennecTabsRepositorySession extends AndroidSyncTestCase {
     // Get a valid tabsRecord to write.
     final TabsRecord tabsRecord = insertTestTabsAndExtractTabsRecord();
     deleteAllTestTabs(tabsClient);
+    deleteTestClient(clientsClient);
 
     final ContentResolver cr = getApplicationContext().getContentResolver();
     final ContentProviderClient clientsClient = cr.acquireContentProviderClient(BrowserContractHelpers.CLIENTS_CONTENT_URI);
 
     try {
-      // We can't delete only our test clients due to a Fennec CP issue with guid vs. client_guid.
-      clientsClient.delete(BrowserContractHelpers.CLIENTS_CONTENT_URI, null, null);
-
       // This clients DB is not the Fennec DB; it's Sync's own clients DB.
       final ClientsDatabaseAccessor db = new ClientsDatabaseAccessor(getApplicationContext());
       try {

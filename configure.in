@@ -3755,6 +3755,7 @@ MOZ_LOCALE_SWITCHER=
 MOZ_ANDROID_READING_LIST_SERVICE=
 MOZ_ANDROID_SEARCH_ACTIVITY=
 MOZ_ANDROID_DOWNLOADS_INTEGRATION=
+MOZ_ANDROID_GCM=
 MOZ_ANDROID_MLS_STUMBLER=
 MOZ_ANDROID_SHARE_OVERLAY=
 MOZ_EXCLUDE_HYPHENATION_DICTIONARIES=
@@ -3910,6 +3911,14 @@ MOZ_ARG_WITH_STRING(adjust-sdk-keyfile,
 [  --with-adjust-sdk-keyfile=file   Use the app token contained in the given keyfile for Adjust SDK requests],
   MOZ_INSTALL_TRACKING_ADJUST_SDK_APP_TOKEN=`cat $withval`)
 AC_SUBST(MOZ_INSTALL_TRACKING_ADJUST_SDK_APP_TOKEN)
+
+# Allow specifying a GCM sender ID key file that contains the sender ID used for
+# GCM requests.  Note that GCM sender IDs are not sensitive: see, for example,
+# http://stackoverflow.com/a/18216063.
+MOZ_ARG_WITH_STRING(gcm-senderid-keyfile,
+[  --with-gcm-senderid-keyfile=file GCM sender ID for GCM requests],
+  MOZ_ANDROID_GCM_SENDERID=`cat $withval`)
+AC_SUBST(MOZ_ANDROID_GCM_SENDERID)
 
 # Whether to include optional-but-large font files in the final APK.
 # We want this in mobile/android/confvars.sh, so it goes early.
@@ -4580,6 +4589,7 @@ dnl values set by configure.sh above.
 dnl ========================================================
 
 MOZ_ANDROID_GOOGLE_PLAY_SERVICES
+MOZ_ANDROID_GOOGLE_CLOUD_MESSAGING
 
 
 dnl ========================================================
@@ -4884,6 +4894,13 @@ dnl = Include Switchboard A/B framework on Android
 dnl ========================================================
 if test -n "$MOZ_SWITCHBOARD"; then
     AC_DEFINE(MOZ_SWITCHBOARD)
+fi
+
+dnl ========================================================
+dnl = Enable GCM on Android.
+dnl ========================================================
+if test -n "$MOZ_ANDROID_GCM"; then
+    AC_DEFINE(MOZ_ANDROID_GCM)
 fi
 
 dnl ========================================================
@@ -8592,6 +8609,7 @@ AC_SUBST(MOZ_WEBSMS_BACKEND)
 AC_SUBST(MOZ_ANDROID_BEAM)
 AC_SUBST(MOZ_LOCALE_SWITCHER)
 AC_SUBST(MOZ_DISABLE_GECKOVIEW)
+AC_SUBST(MOZ_ANDROID_GCM)
 AC_SUBST(MOZ_ANDROID_GECKOLIBS_AAR)
 AC_SUBST(MOZ_ANDROID_READING_LIST_SERVICE)
 AC_SUBST(MOZ_ANDROID_SEARCH_ACTIVITY)

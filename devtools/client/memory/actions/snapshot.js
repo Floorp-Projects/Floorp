@@ -3,10 +3,8 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-// @TODO 1215606
-// Use this assert instead of utils when fixed.
-// const { assert } = require("devtools/shared/DevToolsUtils");
-const { getSnapshot, breakdownEquals, createSnapshot, assert } = require("../utils");
+const { assert, reportException } = require("devtools/shared/DevToolsUtils");
+const { getSnapshot, breakdownEquals, createSnapshot } = require("../utils");
 const { actions, snapshotState: states } = require("../constants");
 
 /**
@@ -20,8 +18,11 @@ const { actions, snapshotState: states } = require("../constants");
 const takeSnapshotAndCensus = exports.takeSnapshotAndCensus = function (front, heapWorker) {
   return function *(dispatch, getState) {
     let snapshot = yield dispatch(takeSnapshot(front));
+
     yield dispatch(readSnapshot(heapWorker, snapshot));
-    yield dispatch(takeCensus(heapWorker, snapshot));
+    if (snapshot.state === states.READ) {
+      yield dispatch(takeCensus(heapWorker, snapshot));
+    }
   };
 };
 
@@ -35,10 +36,7 @@ const takeSnapshotAndCensus = exports.takeSnapshotAndCensus = function (front, h
 const selectSnapshotAndRefresh = exports.selectSnapshotAndRefresh = function (heapWorker, snapshot) {
   return function *(dispatch, getState) {
     dispatch(selectSnapshot(snapshot));
-
-    // Attempt to take another census; if the snapshot already is using
-    // the correct breakdown, this will noop.
-    yield dispatch(takeCensus(heapWorker, snapshot));
+    yield dispatch(refreshSelectedCensus(heapWorker));
   };
 };
 
@@ -51,9 +49,16 @@ const takeSnapshot = exports.takeSnapshot = function (front) {
     dispatch({ type: actions.TAKE_SNAPSHOT_START, snapshot });
     dispatch(selectSnapshot(snapshot));
 
-    let path = yield front.saveHeapSnapshot();
-    dispatch({ type: actions.TAKE_SNAPSHOT_END, snapshot, path });
+    let path;
+    try {
+      path = yield front.saveHeapSnapshot();
+    } catch (error) {
+      reportException("takeSnapshot", error);
+      dispatch({ type: actions.SNAPSHOT_ERROR, snapshot, error });
+      return;
+    }
 
+    dispatch({ type: actions.TAKE_SNAPSHOT_END, snapshot, path });
     return snapshot;
   };
 };
@@ -67,12 +72,18 @@ const takeSnapshot = exports.takeSnapshot = function (front) {
  */
 const readSnapshot = exports.readSnapshot = function readSnapshot (heapWorker, snapshot) {
   return function *(dispatch, getState) {
-    // @TODO 1215606
     assert(snapshot.state === states.SAVED,
-      "Should only read a snapshot once");
+      `Should only read a snapshot once. Found snapshot in state ${snapshot.state}`);
 
     dispatch({ type: actions.READ_SNAPSHOT_START, snapshot });
-    yield heapWorker.readHeapSnapshot(snapshot.path);
+    try {
+      yield heapWorker.readHeapSnapshot(snapshot.path);
+    } catch (error) {
+      reportException("readSnapshot", error);
+      dispatch({ type: actions.SNAPSHOT_ERROR, snapshot, error });
+      return;
+    }
+
     dispatch({ type: actions.READ_SNAPSHOT_END, snapshot });
   };
 };
@@ -87,15 +98,15 @@ const readSnapshot = exports.readSnapshot = function readSnapshot (heapWorker, s
  */
 const takeCensus = exports.takeCensus = function (heapWorker, snapshot) {
   return function *(dispatch, getState) {
-    // @TODO 1215606
     assert([states.READ, states.SAVED_CENSUS].includes(snapshot.state),
-      "Can only take census of snapshots in READ or SAVED_CENSUS state");
+      `Can only take census of snapshots in READ or SAVED_CENSUS state, found ${snapshot.state}`);
 
     let census;
+    let inverted = getState().inverted;
     let breakdown = getState().breakdown;
 
-    // If breakdown hasn't changed, don't do anything
-    if (breakdownEquals(breakdown, snapshot.breakdown)) {
+    // If breakdown and inversion haven't changed, don't do anything.
+    if (inverted === snapshot.inverted && breakdownEquals(breakdown, snapshot.breakdown)) {
       return;
     }
 
@@ -103,12 +114,45 @@ const takeCensus = exports.takeCensus = function (heapWorker, snapshot) {
     // that the breakdown used for the census is the same as
     // the state's breakdown.
     do {
+      inverted = getState().inverted;
       breakdown = getState().breakdown;
-      dispatch({ type: actions.TAKE_CENSUS_START, snapshot, breakdown });
-      census = yield heapWorker.takeCensus(snapshot.path, { breakdown }, { asTreeNode: true });
-    } while (!breakdownEquals(breakdown, getState().breakdown));
+      dispatch({ type: actions.TAKE_CENSUS_START, snapshot, inverted, breakdown });
+      let opts = inverted ? { asInvertedTreeNode: true } : { asTreeNode: true };
 
-    dispatch({ type: actions.TAKE_CENSUS_END, snapshot, breakdown, census });
+      try {
+        census = yield heapWorker.takeCensus(snapshot.path, { breakdown }, opts);
+      } catch(error) {
+        reportException("takeCensus", error);
+        dispatch({ type: actions.SNAPSHOT_ERROR, snapshot, error });
+        return;
+      }
+    }
+    while (inverted !== getState().inverted ||
+           !breakdownEquals(breakdown, getState().breakdown));
+
+    dispatch({ type: actions.TAKE_CENSUS_END, snapshot, breakdown, inverted, census });
+  };
+};
+
+/**
+ * Refresh the selected snapshot's census data, if need be (for example,
+ * breakdown configuration changed).
+ *
+ * @param {HeapAnalysesClient} heapWorker
+ */
+const refreshSelectedCensus = exports.refreshSelectedCensus = function (heapWorker) {
+  return function*(dispatch, getState) {
+    let snapshot = getState().snapshots.find(s => s.selected);
+
+    // Intermediate snapshot states will get handled by the task action that is
+    // orchestrating them. For example, if the snapshot's state is
+    // SAVING_CENSUS, then the takeCensus action will keep taking a census until
+    // the inverted property matches the inverted state. If the snapshot is
+    // still in the process of being saved or read, the takeSnapshotAndCensus
+    // task action will follow through and ensure that a census is taken.
+    if (snapshot && snapshot.state === states.SAVED_CENSUS) {
+      yield dispatch(takeCensus(heapWorker, snapshot));
+    }
   };
 };
 

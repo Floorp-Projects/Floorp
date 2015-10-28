@@ -755,8 +755,11 @@ loop.roomViews = (function(mozL10n) {
     },
 
     render: function() {
-      if (this.state.roomName) {
-        this.setTitle(this.state.roomName);
+      if (this.state.roomName || this.state.roomContextUrls) {
+        var roomTitle = this.state.roomName ||
+                        this.state.roomContextUrls[0].description ||
+                        this.state.roomContextUrls[0].location;
+        this.setTitle(roomTitle);
       }
 
       var screenShareData = {

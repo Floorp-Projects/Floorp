@@ -17,6 +17,7 @@ public interface TabsAccessor {
         public void onQueryTabsComplete(List<RemoteClient> clients);
     }
 
+    public int getRemoteClientCount(Context context);
     public Cursor getRemoteClientsByRecencyCursor(Context context);
     public Cursor getRemoteTabsCursor(Context context);
     public Cursor getRemoteTabsCursor(Context context, int limit);
