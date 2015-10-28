@@ -690,6 +690,28 @@ if CONFIG['MOZ_NATIVE_DEVICES']:
         ANDROID_EXTRA_RES_DIRS += ['%' + CONFIG['ANDROID_PLAY_SERVICES_CAST_AAR_RES']]
         resjar.generated_sources += ['com/google/android/gms/cast/R.java']
 
+if CONFIG['MOZ_ANDROID_GCM']:
+    gbjar.extra_jars += [
+        CONFIG['ANDROID_PLAY_SERVICES_BASE_AAR_LIB'],
+        CONFIG['ANDROID_PLAY_SERVICES_BASEMENT_AAR_LIB'],
+        CONFIG['ANDROID_PLAY_SERVICES_GCM_AAR_LIB'],
+    ]
+
+    if CONFIG['ANDROID_PLAY_SERVICES_BASE_AAR']:
+        ANDROID_EXTRA_PACKAGES += ['com.google.android.gms']
+        ANDROID_EXTRA_RES_DIRS += ['%' + CONFIG['ANDROID_PLAY_SERVICES_BASE_AAR_RES']]
+        resjar.generated_sources += ['com/google/android/gms/R.java']
+
+    if CONFIG['ANDROID_PLAY_SERVICES_BASEMENT_AAR']:
+        ANDROID_EXTRA_PACKAGES += ['com.google.android.gms']
+        ANDROID_EXTRA_RES_DIRS += ['%' + CONFIG['ANDROID_PLAY_SERVICES_BASEMENT_AAR_RES']]
+        resjar.generated_sources += ['com/google/android/gms/R.java']
+
+    if CONFIG['ANDROID_PLAY_SERVICES_GCM_AAR']:
+        ANDROID_EXTRA_PACKAGES += ['com.google.android.gms.gcm']
+        ANDROID_EXTRA_RES_DIRS += ['%' + CONFIG['ANDROID_PLAY_SERVICES_GCM_AAR_RES']]
+        resjar.generated_sources += ['com/google/android/gms/gcm/R.java']
+
 gbjar.extra_jars += [CONFIG['ANDROID_APPCOMPAT_V7_AAR_LIB']]
 gbjar.extra_jars += [CONFIG['ANDROID_DESIGN_AAR_LIB']]
 gbjar.extra_jars += [CONFIG['ANDROID_RECYCLERVIEW_V7_AAR_LIB']]

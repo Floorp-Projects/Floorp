@@ -4589,6 +4589,7 @@ dnl values set by configure.sh above.
 dnl ========================================================
 
 MOZ_ANDROID_GOOGLE_PLAY_SERVICES
+MOZ_ANDROID_GOOGLE_CLOUD_MESSAGING
 
 
 dnl ========================================================
