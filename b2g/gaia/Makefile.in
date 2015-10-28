@@ -7,7 +7,10 @@ GAIA_PATH := $(if MOZ_B2GDROID,gaia/assets/gaia,gaia/profile)
 
 # For b2gdroid, we disable the screen timeout since this is managed by android.
 # We also limit the app set to the production ones.
-GAIA_OPTIONS := $(if MOZ_B2GDROID,GAIA_DISTRIBUTION_DIR=distros/b2gdroid,)
+GAIA_OPTIONS := $(if MOZ_B2GDROID, \
+	GAIA_DISTRIBUTION_DIR=distros/b2gdroid \
+	NO_LOCK_SCREEN=1 \
+)
 
 GENERATED_DIRS += $(DIST)/bin/$(GAIA_PATH)
 
