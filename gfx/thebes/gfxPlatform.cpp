@@ -9,6 +9,7 @@
 #include "mozilla/layers/ImageBridgeChild.h"
 #include "mozilla/layers/SharedBufferManagerChild.h"
 #include "mozilla/layers/ISurfaceAllocator.h"     // for GfxMemoryImageReporter
+#include "mozilla/Telemetry.h"
 
 #include "mozilla/Logging.h"
 #include "mozilla/Services.h"
@@ -184,6 +185,7 @@ class CrashStatsLogForwarder: public mozilla::gfx::LogForwarder
 public:
   explicit CrashStatsLogForwarder(const char* aKey);
   virtual void Log(const std::string& aString) override;
+  virtual void CrashAction(LogReason aReason) override;
 
   virtual std::vector<std::pair<int32_t,std::string> > StringsVectorCopy() override;
 
@@ -278,6 +280,55 @@ void CrashStatsLogForwarder::Log(const std::string& aString)
 
   if (UpdateStringsVector(aString)) {
     UpdateCrashReport();
+  }
+}
+
+class CrashTelemetryEvent : public nsRunnable
+{
+  virtual ~CrashTelemetryEvent() {}
+
+  NS_DECL_ISUPPORTS_INHERITED
+
+  explicit CrashTelemetryEvent(uint32_t aReason) : mReason(aReason) {}
+
+  NS_IMETHOD Run() override {
+    MOZ_ASSERT(NS_IsMainThread());
+    Telemetry::Accumulate(Telemetry::GFX_CRASH, mReason);
+    return NS_OK;
+  }
+
+protected:
+  uint32_t mReason;
+};
+
+NS_IMPL_ISUPPORTS_INHERITED0(CrashTelemetryEvent, nsRunnable);
+
+void
+CrashStatsLogForwarder::CrashAction(LogReason aReason)
+{
+#ifndef RELEASE_BUILD
+  // Non-release builds crash by default, but will use telemetry
+  // if this environment variable is present.
+  static bool useTelemetry = getenv("MOZ_GFX_CRASH_TELEMETRY") != 0;
+#else
+  // Release builds use telemetry bu default, but will crash
+  // if this environment variable is present.  Double negative
+  // to make the intent clear.
+  static bool useTelemetry = !(getenv("MOZ_GFX_CRASH_MOZ_CRASH") != 0);
+#endif
+
+  if (useTelemetry) {
+    // The callers need to assure that aReason is in the range
+    // that the telemetry call below supports.
+    if (NS_IsMainThread()) {
+      Telemetry::Accumulate(Telemetry::GFX_CRASH, (uint32_t)aReason);
+    } else {
+      nsCOMPtr<nsIRunnable> r1 = new CrashTelemetryEvent((uint32_t)aReason);
+      NS_DispatchToMainThread(r1);
+    }
+  } else {
+    // ignoring aReason, we can get the information we need from the stack
+    MOZ_CRASH("GFX_CRASH");
   }
 }
 
@@ -773,7 +824,7 @@ gfxPlatform::CreateDrawTargetForUpdateSurface(gfxASurface *aSurface, const IntSi
     return Factory::CreateDrawTargetForCairoCGContext(static_cast<gfxQuartzSurface*>(aSurface)->GetCGContext(), aSize);
   }
 #endif
-  MOZ_CRASH();
+  MOZ_CRASH("unused function");
   return nullptr;
 }
 
