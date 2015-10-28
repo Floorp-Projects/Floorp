@@ -122,7 +122,6 @@ html, .theme-body, #app, #memory-tool, #memory-tool-container {
   border-bottom: 1px solid rgba(128,128,128,0.15);
   padding: 8px;
   cursor: pointer;
-  color: var(--theme-selection-color);
 }
 
 .list > li.selected {

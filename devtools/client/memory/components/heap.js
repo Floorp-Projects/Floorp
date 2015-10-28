@@ -76,14 +76,14 @@ const Heap = module.exports = createClass({
 
     switch (state) {
       case "initial":
-        content = dom.button({
+        content = [dom.button({
           className: "devtools-toolbarbutton take-snapshot",
           onClick: onSnapshotClick,
           // Want to use the [standalone] tag to leverage our styles,
           // but React hates that evidently
           "data-standalone": true,
           "data-text-only": true,
-        }, TAKE_SNAPSHOT_TEXT)
+        }, TAKE_SNAPSHOT_TEXT)];
         break;
       case states.ERROR:
         content = [
@@ -96,7 +96,7 @@ const Heap = module.exports = createClass({
       case states.READING:
       case states.READ:
       case states.SAVING_CENSUS:
-        content = dom.span({ className: "snapshot-status devtools-throbber" }, statusText)
+        content = [dom.span({ className: "snapshot-status devtools-throbber" }, statusText)];
         break;
       case states.SAVED_CENSUS:
         content = [
@@ -111,7 +111,7 @@ const Heap = module.exports = createClass({
         ];
         break;
     }
-    let pane = dom.div({ className: "heap-view-panel", "data-state": state }, content);
+    let pane = dom.div({ className: "heap-view-panel", "data-state": state }, ...content);
 
     return (
       dom.div({ id: "heap-view", "data-state": state }, pane)
