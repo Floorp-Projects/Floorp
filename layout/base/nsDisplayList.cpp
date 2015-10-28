@@ -2141,6 +2141,25 @@ nsDisplayBackgroundImage::nsDisplayBackgroundImage(nsDisplayListBuilder* aBuilde
   MOZ_COUNT_CTOR(nsDisplayBackgroundImage);
 
   mBounds = GetBoundsInternal(aBuilder);
+  mDestArea = GetDestAreaInternal(aBuilder);
+}
+
+nsRect
+nsDisplayBackgroundImage::GetDestAreaInternal(nsDisplayListBuilder* aBuilder)
+{
+  if (!mBackgroundStyle) {
+    return nsRect();
+  }
+
+  nsPresContext* presContext = mFrame->PresContext();
+  uint32_t flags = aBuilder->GetBackgroundPaintFlags();
+  nsRect borderArea = nsRect(ToReferenceFrame(), mFrame->GetSize());
+  const nsStyleBackground::Layer &layer = mBackgroundStyle->mLayers[mLayer];
+
+  nsBackgroundLayerState state =
+    nsCSSRendering::PrepareBackgroundLayer(presContext, mFrame, flags,
+                                           borderArea, borderArea, layer);
+  return state.mDestArea;
 }
 
 nsDisplayBackgroundImage::~nsDisplayBackgroundImage()
@@ -2789,6 +2808,13 @@ void nsDisplayBackgroundImage::ComputeInvalidationRegion(nsDisplayListBuilder* a
     if (positioningArea.Size() != geometry->mPositioningArea.Size()) {
       NotifyRenderingChanged();
     }
+    return;
+  }
+  if (!mDestArea.IsEqualInterior(geometry->mDestArea)) {
+    // Dest area changed in a way that could cause everything to change,
+    // so invalidate everything (both old and new painting areas).
+    aInvalidRegion->Or(bounds, geometry->mBounds);
+    NotifyRenderingChanged();
     return;
   }
   if (aBuilder->ShouldSyncDecodeImages()) {
