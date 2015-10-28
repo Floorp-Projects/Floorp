@@ -783,8 +783,7 @@ AnimationCollection::RequestRestyle(RestyleType aRestyleType)
   // throttling (e.g. async animations are not enabled).
   if (aRestyleType == RestyleType::Throttled) {
     TimeStamp now = presContext->RefreshDriver()->MostRecentRefresh();
-    if (!CanPerformOnCompositorThread(CanAnimateFlags(0)) ||
-        !CanThrottleAnimation(now)) {
+    if (!CanThrottleAnimation(now)) {
       aRestyleType = RestyleType::Standard;
     }
   }
