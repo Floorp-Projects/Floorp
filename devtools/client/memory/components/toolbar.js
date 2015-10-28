@@ -36,13 +36,10 @@ const Toolbar = module.exports = createClass({
       DOM.div({ className: "devtools-toolbar" }, [
         DOM.button({ className: `take-snapshot devtools-button`, onClick: onTakeSnapshotClick }),
 
-        DOM.label({},
-          "Breakdown by ",
-          DOM.select({
-            className: `select-breakdown`,
-            onChange: e => onBreakdownChange(e.target.value),
-          }, breakdowns.map(({ name, displayName }) => DOM.option({ value: name }, displayName)))
-        ),
+        DOM.select({
+          className: `select-breakdown`,
+          onChange: e => onBreakdownChange(e.target.value),
+        }, breakdowns.map(({ name, displayName }) => DOM.option({ value: name }, displayName))),
 
         DOM.label({}, [
           DOM.input({
