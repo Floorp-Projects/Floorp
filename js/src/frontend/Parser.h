@@ -800,6 +800,15 @@ class Parser : private JS::AutoGCRooter, public StrictModeGetter
                                 ParseNodeKind headKind);
     bool checkForHeadConstInitializers(Node pn1);
 
+    // Use when the current token is TOK_NAME and is known to be 'let'.
+    bool shouldParseLetDeclaration(bool* parseDeclOut);
+
+    // Use when the lookahead token is TOK_NAME and is known to be 'let'. If a
+    // let declaration should be parsed, the TOK_NAME token of 'let' is
+    // consumed. Otherwise, the current token remains the TOK_NAME token of
+    // 'let'.
+    bool peekShouldParseLetDeclaration(bool* parseDeclOut, TokenStream::Modifier modifier);
+
   public:
     enum FunctionCallBehavior {
         PermitAssignmentToFunctionCalls,

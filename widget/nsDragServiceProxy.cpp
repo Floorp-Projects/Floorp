@@ -36,6 +36,7 @@ nsDragServiceProxy::InvokeDragSessionImpl(nsISupportsArray* aArrayTransferables,
   nsTArray<mozilla::dom::IPCDataTransfer> dataTransfers;
   nsContentUtils::TransferablesToIPCTransferables(aArrayTransferables,
                                                   dataTransfers,
+                                                  false,
                                                   child->Manager(),
                                                   nullptr);
 

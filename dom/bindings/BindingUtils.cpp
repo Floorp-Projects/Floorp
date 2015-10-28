@@ -537,44 +537,19 @@ DefineUnforgeableAttributes(JSContext* cx, JS::Handle<JSObject*> obj,
 
 // We should use JSFunction objects for interface objects, but we need a custom
 // hasInstance hook because we have new interface objects on prototype chains of
-// old (XPConnect-based) bindings. Because Function.prototype.toString throws if
-// passed a non-Function object we also need to provide our own toString method
-// for interface objects.
-
-static bool
-InterfaceObjectToString(JSContext* cx, unsigned argc, JS::Value *vp)
+// old (XPConnect-based) bindings. We also need Xrays and arbitrary numbers of
+// reserved slots (e.g. for named constructors).  So we define a custom
+// funToString ObjectOps member for interface objects.
+JSString*
+InterfaceObjectToString(JSContext* aCx, JS::Handle<JSObject*> aObject,
+                        unsigned /* indent */)
 {
-  JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
-  if (!args.thisv().isObject()) {
-    JS_ReportErrorNumber(cx, js::GetErrorMessage, nullptr,
-                         JSMSG_CANT_CONVERT_TO, "null", "object");
-    return false;
-  }
-
-  JS::Rooted<JSObject*> thisObj(cx, &args.thisv().toObject());
-  JS::Rooted<JSObject*> obj(cx, js::CheckedUnwrap(thisObj, /* stopAtOuter = */ false));
-  if (!obj) {
-    JS_ReportError(cx, "Permission denied to access object");
-    return false;
-  }
-
-  const js::Class* clasp = js::GetObjectClass(obj);
-  if (!IsDOMIfaceAndProtoClass(clasp)) {
-    JS_ReportError(cx, "toString called on incompatible object");
-    return false;
-  }
+  const js::Class* clasp = js::GetObjectClass(aObject);
+  MOZ_ASSERT(IsDOMIfaceAndProtoClass(clasp));
 
   const DOMIfaceAndProtoJSClass* ifaceAndProtoJSClass =
     DOMIfaceAndProtoJSClass::FromJSClass(clasp);
-  JS::Rooted<JSString*> str(cx,
-                            JS_NewStringCopyZ(cx,
-                                              ifaceAndProtoJSClass->mToString));
-  if (!str) {
-    return false;
-  }
-
-  args.rval().setString(str);
-  return true;
+  return JS_NewStringCopyZ(aCx, ifaceAndProtoJSClass->mToString);
 }
 
 bool
@@ -647,15 +622,6 @@ CreateInterfaceObject(JSContext* cx, JS::Handle<JSObject*> global,
   }
 
   if (constructorClass) {
-    // Have to shadow Function.prototype.toString, since that throws
-    // on things that are not js::FunctionClass.
-    JS::Rooted<JSFunction*> toString(cx,
-      JS_DefineFunction(cx, constructor, "toString", InterfaceObjectToString,
-                        0, 0));
-    if (!toString) {
-      return nullptr;
-    }
-
     if (!JS_DefineProperty(cx, constructor, "length", ctorNargs,
                            JSPROP_READONLY)) {
       return nullptr;
@@ -1569,22 +1535,6 @@ XrayResolveOwnProperty(JSContext* cx, JS::Handle<JSObject*> wrapper,
                                            nativePropertyHooks->mPrototypeID,
                                            JSPROP_PERMANENT | JSPROP_READONLY,
                                            desc, cacheOnHolder);
-    }
-
-    if (IdEquals(id, "toString") && !JS_ObjectIsFunction(cx, obj)) {
-      MOZ_ASSERT(IsDOMIfaceAndProtoClass(js::GetObjectClass(obj)));
-
-      JS::Rooted<JSFunction*> toString(cx, JS_NewFunction(cx, InterfaceObjectToString, 0, 0, "toString"));
-      if (!toString) {
-        return false;
-      }
-
-      cacheOnHolder = true;
-
-      FillPropertyDescriptor(desc, wrapper, 0,
-                             JS::ObjectValue(*JS_GetFunctionObject(toString)));
-
-      return JS_WrapPropertyDescriptor(cx, desc);
     }
   } else {
     MOZ_ASSERT(IsInterfacePrototype(type));
