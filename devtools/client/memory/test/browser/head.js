@@ -8,6 +8,9 @@ Services.scriptloader.loadSubScript(
   "chrome://mochitests/content/browser/devtools/client/framework/test/shared-head.js",
   this);
 
+var { snapshotState: states } = require("devtools/client/memory/constants");
+var { breakdownEquals, breakdownNameToSpec } = require("devtools/client/memory/utils");
+
 Services.prefs.setBoolPref("devtools.memory.enabled", true);
 
 /**
@@ -61,5 +64,62 @@ function makeMemoryTest(url, generator) {
     yield removeTab(tab);
 
     finish();
+  });
+}
+
+
+function waitUntilState (store, predicate) {
+  let deferred = promise.defer();
+  let unsubscribe = store.subscribe(check);
+
+  function check () {
+    if (predicate(store.getState())) {
+      unsubscribe();
+      deferred.resolve()
+    }
+  }
+
+  // Fire the check immediately incase the action has already occurred
+  check();
+
+  return deferred.promise;
+}
+
+function waitUntilSnapshotState (store, expected) {
+  let predicate = () => {
+    let snapshots = store.getState().snapshots;
+    info(snapshots.map(x => x.state));
+    return snapshots.length === expected.length &&
+           expected.every((state, i) => state === "*" || snapshots[i].state === state);
+  };
+  info(`Waiting for snapshots to be of state: ${expected}`);
+  return waitUntilState(store, predicate);
+}
+
+function takeSnapshot (window) {
+  let { gStore, document } = window;
+  let snapshotCount = gStore.getState().snapshots.length;
+  info(`Taking snapshot...`);
+  document.querySelector(".devtools-toolbar .take-snapshot").click();
+  return waitUntilState(gStore, () => gStore.getState().snapshots.length === snapshotCount + 1);
+}
+
+/**
+ * Sets breakdown and waits for currently selected breakdown to use it
+ * and be completed the census.
+ */
+function setBreakdown (window, type) {
+  info(`Setting breakdown to ${type}...`);
+  let { gStore, gHeapAnalysesClient } = window;
+  // XXX: Should handle this via clicking the DOM, but React doesn't
+  // fire the onChange event, so just change it in the store.
+  // window.document.querySelector(`.select-breakdown`).value = type;
+  gStore.dispatch(require("devtools/client/memory/actions/breakdown")
+                         .setBreakdownAndRefresh(gHeapAnalysesClient, breakdownNameToSpec(type)));
+
+  return waitUntilState(window.gStore, () => {
+    let selected = window.gStore.getState().snapshots.find(s => s.selected);
+    return selected.state === states.SAVED_CENSUS &&
+           breakdownEquals(breakdownNameToSpec(type), selected.breakdown);
   });
 }
