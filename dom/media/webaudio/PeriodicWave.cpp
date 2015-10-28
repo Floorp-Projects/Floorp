@@ -27,7 +27,6 @@ PeriodicWave::PeriodicWave(AudioContext* aContext,
 
   // Caller should have checked this and thrown.
   MOZ_ASSERT(aLength > 0);
-  MOZ_ASSERT(aLength <= 4096);
   mLength = aLength;
 
   // Copy coefficient data. The two arrays share an allocation.

@@ -76,7 +76,7 @@ public:
     size_t sizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
 private:
-    explicit PeriodicWave(float sampleRate);
+    explicit PeriodicWave(float sampleRate, size_t numberOfComponents);
     ~PeriodicWave() {}
 
     void generateBasicWaveform(mozilla::dom::OscillatorType);
