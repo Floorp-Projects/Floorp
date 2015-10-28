@@ -177,7 +177,7 @@ WMFDecoderModule::SupportsMimeType(const nsACString& aMimeType)
       CanCreateWMFDecoder<CLSID_CMP3DecMediaObject>()) {
     return true;
   }
-  if (sIsIntelDecoderEnabled) {
+  if (sIsIntelDecoderEnabled && sDXVAEnabled) {
     if (aMimeType.EqualsLiteral("video/webm; codecs=vp8") &&
         CanCreateWMFDecoder<CLSID_WebmMfVp8Dec>()) {
       return true;
