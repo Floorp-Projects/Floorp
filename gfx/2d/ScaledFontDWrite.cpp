@@ -8,13 +8,6 @@
 #include "DrawTargetD2D.h"
 #include "Logging.h"
 
-#ifdef USE_SKIA
-#include "PathSkia.h"
-#include "skia/include/core/SkPaint.h"
-#include "skia/include/core/SkPath.h"
-#include "skia/include/ports/SkTypeface_win.h"
-#endif
-
 #include <vector>
 
 namespace mozilla {
@@ -294,8 +287,6 @@ DWriteFontFileStream::ReleaseFileFragment(void *fragmentContext)
 ScaledFontDWrite::ScaledFontDWrite(uint8_t *aData, uint32_t aSize,
                                    uint32_t aIndex, Float aGlyphSize)
   : ScaledFontBase(aGlyphSize)
-  , mFont(nullptr)
-  , mFontFamily(nullptr)
 {
   IDWriteFactory *factory = DrawTargetD2D::GetDWriteFactory();
 
@@ -331,21 +322,6 @@ ScaledFontDWrite::GetPathForGlyphs(const GlyphBuffer &aBuffer, const DrawTarget 
 
   return pathBuilder->Finish();
 }
-
-
-#ifdef USE_SKIA
-SkTypeface*
-ScaledFontDWrite::GetSkTypeface()
-{
-  MOZ_ASSERT(mFont);
-  if (!mTypeface) {
-    IDWriteFactory *factory = DrawTargetD2D::GetDWriteFactory();
-    // What to do if no font? How to create a font just with a font face?
-    mTypeface = SkCreateTypefaceFromDWriteFont(factory, mFontFace, mFont, mFontFamily);
-  }
-  return mTypeface;
-}
-#endif
 
 void
 ScaledFontDWrite::CopyGlyphsToBuilder(const GlyphBuffer &aBuffer, PathBuilder *aBuilder, BackendType aBackendType, const Matrix *aTransformHint)

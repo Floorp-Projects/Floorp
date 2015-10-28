@@ -736,15 +736,6 @@ Factory::D2DCleanup()
   DrawTargetD2D::CleanupD2D();
 }
 
-already_AddRefed<ScaledFont>
-Factory::CreateScaledFontForDWriteFont(IDWriteFont* aFont,
-                                       IDWriteFontFamily* aFontFamily,
-                                       IDWriteFontFace* aFontFace,
-                                       float aSize)
-{
-  return MakeAndAddRef<ScaledFontDWrite>(aFont, aFontFamily, aFontFace, aSize);
-}
-
 #endif // XP_WIN
 
 #ifdef USE_SKIA_GPU
