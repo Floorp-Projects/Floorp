@@ -1975,6 +1975,10 @@ RemoteBrowserTabActor.prototype = {
     if (this._form) {
       let deferred = promise.defer();
       let onFormUpdate = msg => {
+        // There may be more than just one childtab.js up and running
+        if (this._form.actor != msg.json.actor) {
+          return;
+        }
         this._mm.removeMessageListener("debug:form", onFormUpdate);
         this._form = msg.json;
         deferred.resolve(this);
