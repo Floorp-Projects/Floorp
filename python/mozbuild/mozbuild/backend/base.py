@@ -153,7 +153,8 @@ class BuildBackend(LoggingMixin):
                 not os.path.exists(self._backend_output_list_file):
             with open(self._backend_output_list_file, 'w') as fh:
                 fh.write('\n'.join(sorted(self._backend_output_files)))
-        elif self._updated_count:
+        else:
+            # Always update its mtime.
             with open(self._backend_output_list_file, 'a'):
                 os.utime(self._backend_output_list_file, None)
 
