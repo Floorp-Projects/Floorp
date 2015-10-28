@@ -340,23 +340,39 @@ loop.panel = (function(_, mozL10n) {
     handleClick: function(event) {
       event.stopPropagation();
       event.preventDefault();
-      this.props.mozLoop.openURL(event.currentTarget.href);
-      this.closeWindow();
+      if (event.currentTarget.href) {
+        this.props.mozLoop.openURL(event.currentTarget.href);
+        this.closeWindow();
+      }
     },
 
-    render: function() {
-      var roomUrl = this.props.roomUrls && this.props.roomUrls[0];
-      if (!roomUrl) {
-        return null;
-      }
-
+    _renderDefaultIcon: function() {
       return (
         <div className="room-entry-context-item">
-          <a href={roomUrl.location} onClick={this.handleClick} title={roomUrl.description}>
+          <img src="loop/shared/img/icons-16x16.svg#globe" />
+        </div>
+      );
+    },
+
+    _renderIcon: function(roomUrl) {
+      return (
+        <div className="room-entry-context-item">
+          <a href={roomUrl.location}
+            onClick={this.handleClick}
+            title={roomUrl.description}>
             <img src={roomUrl.thumbnail || "loop/shared/img/icons-16x16.svg#globe"} />
           </a>
         </div>
       );
+    },
+
+    render: function() {
+      var roomUrl = this.props.roomUrls && this.props.roomUrls[0];
+      if (roomUrl && roomUrl.location) {
+        return this._renderIcon(roomUrl);
+      } else {
+        return this._renderDefaultIcon();
+      }
     }
   });
 
@@ -398,7 +414,7 @@ loop.panel = (function(_, mozL10n) {
       this.closeWindow();
     },
 
-    handleContextChevronClick: function(e) {
+    handleClick: function(e) {
       e.preventDefault();
       e.stopPropagation();
 
@@ -435,23 +451,19 @@ loop.panel = (function(_, mozL10n) {
           onClick={this.props.isOpenedRoom ? null : this.handleClickEntry}
           onMouseLeave={this.props.isOpenedRoom ? null : this._handleMouseOut}
           ref="roomEntry">
-          <h2>
-            {roomTitle}
-          </h2>
           <RoomEntryContextItem
             mozLoop={this.props.mozLoop}
             roomUrls={this.props.room.decryptedContext.urls} />
+          <h2>{roomTitle}</h2>
           {this.props.isOpenedRoom ? null :
             <RoomEntryContextButtons
               dispatcher={this.props.dispatcher}
               eventPosY={this.state.eventPosY}
-              handleClickEntry={this.handleClickEntry}
-              handleContextChevronClick={this.handleContextChevronClick}
+              handleClick={this.handleClick}
               ref="contextActions"
               room={this.props.room}
               showMenu={this.state.showMenu}
-              toggleDropdownMenu={this.toggleDropdownMenu} />
-          }
+              toggleDropdownMenu={this.toggleDropdownMenu} />}
         </div>
       );
     }
@@ -459,16 +471,14 @@ loop.panel = (function(_, mozL10n) {
 
   /**
    * Buttons corresponding to each conversation entry.
-   * This component renders the video icon call button and chevron button for
-   * displaying contextual dropdown menu for conversation entries.
-   * It also holds the dropdown menu.
+   * This component renders the edit button for displaying contextual dropdown
+   * menu for conversation entries. It also holds the dropdown menu.
    */
   var RoomEntryContextButtons = React.createClass({
     propTypes: {
       dispatcher: React.PropTypes.object.isRequired,
       eventPosY: React.PropTypes.number.isRequired,
-      handleClickEntry: React.PropTypes.func.isRequired,
-      handleContextChevronClick: React.PropTypes.func.isRequired,
+      handleClick: React.PropTypes.func.isRequired,
       room: React.PropTypes.object.isRequired,
       showMenu: React.PropTypes.bool.isRequired,
       toggleDropdownMenu: React.PropTypes.func.isRequired
@@ -514,13 +524,9 @@ loop.panel = (function(_, mozL10n) {
     render: function() {
       return (
         <div className="room-entry-context-actions">
-          <button
-            className="btn room-entry-call-btn"
-            onClick={this.props.handleClickEntry}
-            ref="callButton" />
           <div
-            className="room-entry-context-menu-chevron dropdown-menu-button"
-            onClick={this.props.handleContextChevronClick}
+            className="room-entry-context-edit-btn dropdown-menu-button"
+            onClick={this.props.handleClick}
             ref="menu-button" />
           {this.props.showMenu ?
             <ConversationDropdown
@@ -563,7 +569,7 @@ loop.panel = (function(_, mozL10n) {
       // Get the parent element and make sure the menu does not overlow its
       // container.
       var listNode = loop.shared.utils.findParentNode(this.getDOMNode(),
-                                                      ".rooms");
+                                                      "rooms");
       var listNodeRect = listNode.getBoundingClientRect();
 
       // Click offset to not display the menu right next to the area clicked.

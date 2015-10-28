@@ -22,6 +22,9 @@
     use[id$="-disabled"] {
       fill: rgba(255,255,255,0.4);
     }
+    use[id$="-darkgrey"] {
+      fill: #565656;
+    }
   </style>
   <defs>
     <polygon id="close-shape" points="10,1.717 8.336,0.049 5.024,3.369 1.663,0 0,1.668 3.36,5.037 0.098,8.307 1.762,9.975 5.025,6.705 8.311,10 9.975,8.332 6.688,5.037"/>
@@ -43,6 +46,7 @@
   <use id="edit-active" xlink:href="#edit-shape"/>
   <use id="edit-disabled" xlink:href="#edit-shape"/>
   <use id="edit-white" xlink:href="#edit-shape"/>
+  <use id="edit-darkgrey" xlink:href="#edit-shape"/>
   <use id="expand" xlink:href="#expand-shape"/>
   <use id="expand-active" xlink:href="#expand-shape"/>
   <use id="expand-disabled" xlink:href="#expand-shape"/>
