@@ -28,7 +28,7 @@ _JAVA_HARNESS := \
   StructuredLogger.java \
   $(NULL)
 
-java-harness := $(addprefix $(srcdir)/,$(_JAVA_HARNESS))
+java-harness := $(addprefix $(topsrcdir)/mobile/android/tests/browser/robocop/src/androidTest/java/org/mozilla/gecko/,$(_JAVA_HARNESS))
 java-tests   := \
   $(wildcard $(TESTPATH)/*.java) \
   $(wildcard $(TESTPATH)/components/*.java) \
