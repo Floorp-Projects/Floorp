@@ -57,6 +57,38 @@ WebSocketEventListenerParent::UnregisterListener()
 }
 
 NS_IMETHODIMP
+WebSocketEventListenerParent::WebSocketCreated(uint32_t aWebSocketSerialID,
+                                               const nsAString& aURI,
+                                               const nsACString& aProtocols)
+{
+  unused << SendWebSocketCreated(aWebSocketSerialID, nsString(aURI),
+                                 nsCString(aProtocols));
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+WebSocketEventListenerParent::WebSocketOpened(uint32_t aWebSocketSerialID,
+                                              const nsAString& aEffectiveURI,
+                                              const nsACString& aProtocols,
+                                              const nsACString& aExtensions)
+{
+  unused << SendWebSocketOpened(aWebSocketSerialID, nsString(aEffectiveURI),
+                                nsCString(aProtocols), nsCString(aExtensions));
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+WebSocketEventListenerParent::WebSocketClosed(uint32_t aWebSocketSerialID,
+                                              bool aWasClean,
+                                              uint16_t aCode,
+                                              const nsAString& aReason)
+{
+  unused << SendWebSocketClosed(aWebSocketSerialID, aWasClean, aCode,
+                                nsString(aReason));
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 WebSocketEventListenerParent::FrameReceived(uint32_t aWebSocketSerialID,
                                             nsIWebSocketFrame* aFrame)
 {

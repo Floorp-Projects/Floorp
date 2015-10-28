@@ -12,8 +12,13 @@
 
 const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
+const URI = "ws://mochi.test:8888/tests/dom/base/test/file_websocket_basic";
+
 var frameReceivedCounter = 0;
 var frameSentCounter = 0;
+var webSocketCreatedCounter = 0;
+var webSocketOpenedCounter = 0;
+var webSocketClosedCounter = 0;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
@@ -34,6 +39,37 @@ ok(!!service, "We have the nsIWebSocketEventService");
 
 var listener = {
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIWebSocketEventListener]),
+
+  webSocketCreated: function(aWebSocketSerialID, aURI, aProtocols) {
+    info("WebSocketCreated");
+
+    is(aURI, URI, "URI matches");
+    is(aProtocols, "frame", "Protocol matches");
+
+    webSocketCreatedCounter++;
+  },
+
+  webSocketOpened: function(aWebSocketSerialID, aEffectiveURI, aProtocols, aExtensions) {
+    info("WebSocketOpened");
+
+    is(aEffectiveURI, URI, "EffectiveURI matches");
+    is(aProtocols, "frame", "Protocol matches");
+    is(aExtensions, "permessage-deflate", "No extensions");
+
+    webSocketOpenedCounter++;
+  },
+
+  webSocketClosed: function(aWebSocketSerialID, aWasClean,
+                            aCode, aReason) {
+    info("WebSocketClosed");
+
+    ok(aWasClean, "The socket is closed in a clean state");
+    is(aCode, 1000, "Exit code 1000");
+    ok(!aReason.length, "No reason");
+
+    webSocketClosedCounter++;
+    checkListener();
+  },
 
   frameReceived: function(aWebSocketSerialID, aFrame) {
     ok(!!aFrame, "We have received a frame");
@@ -98,10 +134,13 @@ function checkListener() {
 
   ok(frameReceivedCounter, "We received some frames!");
   ok(frameSentCounter, "We sent some frames!");
+  ok(webSocketCreatedCounter, "We have a create notification");
+  ok(webSocketOpenedCounter, "We have a open notification");
+  ok(webSocketClosedCounter, "We have a close notification");
   SimpleTest.finish();
 }
 
-var ws = new WebSocket("ws://mochi.test:8888/tests/dom/base/test/file_websocket_basic", "frame");
+var ws = new WebSocket(URI, "frame");
 ws.onopen = function(e) {
   info("onopen");
 
@@ -110,9 +149,6 @@ ws.onopen = function(e) {
 
 ws.onclose = function(e) {
   info("onclose");
-
-  ws.close();
-  checkListener();
 }
 
 ws.onmessage = function(e) {
