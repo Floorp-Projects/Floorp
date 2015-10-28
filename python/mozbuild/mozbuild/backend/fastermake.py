@@ -215,10 +215,12 @@ class FasterMakeBackend(CommonBackend):
                 install_target = mozpath.join(install_target, jarinfo.base)
             for e in jarinfo.entries:
                 if e.is_locale:
-                    src = mozpath.join(
-                        jarinfo.relativesrcdir or mozpath.dirname(obj.path),
-                        'en-US',
-                        e.source)
+                    if jarinfo.relativesrcdir:
+                        path = mozpath.join(self.environment.topsrcdir,
+                                            jarinfo.relativesrcdir)
+                    else:
+                        path = mozpath.dirname(obj.path)
+                    src = mozpath.join( path, 'en-US', e.source)
                 elif e.source.startswith('/'):
                     src = mozpath.join(self.environment.topsrcdir,
                                        e.source[1:])
