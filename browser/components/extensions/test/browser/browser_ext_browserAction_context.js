@@ -30,12 +30,20 @@ add_task(function* testTabSwitchContext() {
           "popup": browser.runtime.getURL("2.html"),
           "title": "Title 2",
           "badge": "2",
-          "badgeBackgroundColor": [0xff, 0, 0] },
+          "badgeBackgroundColor": [0xff, 0, 0],
+          "disabled": true },
         { "icon": browser.runtime.getURL("1.png"),
           "popup": browser.runtime.getURL("default-2.html"),
           "title": "Default Title 2",
           "badge": "d2",
-          "badgeBackgroundColor": [0, 0xff, 0] },
+          "badgeBackgroundColor": [0, 0xff, 0],
+          "disabled": true },
+        { "icon": browser.runtime.getURL("1.png"),
+          "popup": browser.runtime.getURL("default-2.html"),
+          "title": "Default Title 2",
+          "badge": "d2",
+          "badgeBackgroundColor": [0, 0xff, 0],
+          "disabled": false },
         { "icon": browser.runtime.getURL("default-2.png"),
           "popup": browser.runtime.getURL("default-2.html"),
           "title": "Default Title 2",
@@ -70,6 +78,7 @@ add_task(function* testTabSwitchContext() {
           browser.browserAction.setTitle({ tabId, title: "Title 2" });
           browser.browserAction.setBadgeText({ tabId, text: "2" });
           browser.browserAction.setBadgeBackgroundColor({ tabId, color: [0xff, 0, 0] });
+          browser.browserAction.disable(tabId);
 
           expect(details[2]);
         },
@@ -100,7 +109,13 @@ add_task(function* testTabSwitchContext() {
           browser.browserAction.setTitle({ title: "Default Title 2" });
           browser.browserAction.setBadgeText({ text: "d2" });
           browser.browserAction.setBadgeBackgroundColor({ color: [0, 0xff, 0] });
+          browser.browserAction.disable();
           expect(details[3]);
+        },
+        expect => {
+          browser.test.log("Re-enable by default. Expect enabled.");
+          browser.browserAction.enable();
+          expect(details[4]);
         },
         expect => {
           browser.test.log("Switch back to tab 2. Expect former value, unaffected by changes to defaults in previous step.");
@@ -111,20 +126,20 @@ add_task(function* testTabSwitchContext() {
         expect => {
           browser.test.log("Delete tab, switch back to tab 1. Expect previous results again.");
           browser.tabs.remove(tabs[1], () => {
-            expect(details[3]);
+            expect(details[4]);
           });
         },
         expect => {
           browser.test.log("Create a new tab. Expect new default properties.");
           browser.tabs.create({ active: true, url: "about:blank?2" }, tab => {
             tabs.push(tab.id);
-            expect(details[4]);
+            expect(details[5]);
           });
         },
         expect => {
           browser.test.log("Delete tab.");
           browser.tabs.remove(tabs[2], () => {
-            expect(details[3]);
+            expect(details[4]);
           });
         },
       ];
@@ -208,6 +223,7 @@ add_task(function* testTabSwitchContext() {
     is(button.getAttribute("label"), details.title, "image label is correct");
     is(button.getAttribute("aria-label"), details.title, "image aria-label is correct");
     is(button.getAttribute("badge"), details.badge, "badge text is correct");
+    is(button.getAttribute("disabled") == "true", Boolean(details.disabled), "disabled state is correct");
 
     if (details.badge && details.badgeBackgroundColor) {
       let badge = button.ownerDocument.getAnonymousElementByAttribute(
