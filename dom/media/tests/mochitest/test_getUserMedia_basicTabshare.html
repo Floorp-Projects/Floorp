@@ -25,26 +25,36 @@
     var testVideo = createMediaElement('video', 'testVideo');
 
     return Promise.resolve()
-      .then(() => getUserMedia({
-        video: { mediaSource: "browser", scrollWithPage: true },
-        fake: false
-      }))
+      .then(() => getUserMedia({ video: { mediaSource: "browser",
+                                          scrollWithPage: true } }))
       .then(stream => {
         var playback = new LocalMediaStreamPlayback(testVideo, stream);
         return playback.playMediaWithDeprecatedStreamStop(false);
       })
       .then(() => getUserMedia({
-        video: { mediaSource: "browser" },
-        fake: false
+        video: {
+          mediaSource: "browser",
+          viewportOffsetX: 0,
+          viewportOffsetY: 0,
+          viewportWidth: 100,
+          viewportHeight: 100
+        }
       }))
       .then(stream => {
         var playback = new LocalMediaStreamPlayback(testVideo, stream);
-        return playback.startMedia(false)
-          .then(() => testVideo.srcObject.getVideoTracks()[0].applyConstraints({
-            mediaSource: "browser",
-            viewportOffsetX: 10,
-            viewportOffsetY: 50
-          }))
+        playback.startMedia(false);
+        return playback.verifyPlaying()
+          .then(() => Promise.all([
+            () => testVideo.srcObject.getVideoTracks()[0].applyConstraints({
+              mediaSource: "browser",
+              viewportOffsetX: 10,
+              viewportOffsetY: 50,
+              viewportWidth: 90,
+              viewportHeight: 50
+            }),
+            () => listenUntil(testVideo, "resize", () => true)
+          ]))
+          .then(() => playback.verifyPlaying()) // still playing
           .then(() => playback.deprecatedStopStreamInMediaPlayback())
           .then(() => playback.stopMediaElement());
       });
