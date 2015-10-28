@@ -15,7 +15,7 @@
 #include "mozilla/net/WyciwygChannelChild.h"
 #include "mozilla/net/FTPChannelChild.h"
 #include "mozilla/net/WebSocketChannelChild.h"
-#include "mozilla/net/WebSocketEventListenerChild.h"
+#include "mozilla/net/WebSocketFrameListenerChild.h"
 #include "mozilla/net/DNSRequestChild.h"
 #include "mozilla/net/RemoteOpenFileChild.h"
 #include "mozilla/net/ChannelDiverterChild.h"
@@ -159,19 +159,19 @@ NeckoChild::DeallocPWebSocketChild(PWebSocketChild* child)
   return true;
 }
 
-PWebSocketEventListenerChild*
-NeckoChild::AllocPWebSocketEventListenerChild(const uint64_t& aInnerWindowID)
+PWebSocketFrameListenerChild*
+NeckoChild::AllocPWebSocketFrameListenerChild(const uint64_t& aInnerWindowID)
 {
-  RefPtr<WebSocketEventListenerChild> c =
-    new WebSocketEventListenerChild(aInnerWindowID);
+  RefPtr<WebSocketFrameListenerChild> c =
+    new WebSocketFrameListenerChild(aInnerWindowID);
   return c.forget().take();
 }
 
 bool
-NeckoChild::DeallocPWebSocketEventListenerChild(PWebSocketEventListenerChild* aActor)
+NeckoChild::DeallocPWebSocketFrameListenerChild(PWebSocketFrameListenerChild* aActor)
 {
-  RefPtr<WebSocketEventListenerChild> c =
-    dont_AddRef(static_cast<WebSocketEventListenerChild*>(aActor));
+  RefPtr<WebSocketFrameListenerChild> c =
+    dont_AddRef(static_cast<WebSocketFrameListenerChild*>(aActor));
   MOZ_ASSERT(c);
   return true;
 }

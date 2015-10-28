@@ -50,7 +50,7 @@ class CallOnMessageAvailable;
 class CallOnStop;
 class CallOnServerClose;
 class CallAcknowledge;
-class WebSocketEventService;
+class WebSocketFrameService;
 
 // Used to enforce "1 connecting websocket per host" rule, and reconnect delays
 enum wsConnectingState {
@@ -227,7 +227,7 @@ private:
   const static int32_t            kLingeringCloseTimeout =   1000;
   const static int32_t            kLingeringCloseThreshold = 50;
 
-  RefPtr<WebSocketEventService>   mService;
+  RefPtr<WebSocketFrameService>   mFrameService;
 
   int32_t                         mMaxConcurrentConnections;
 

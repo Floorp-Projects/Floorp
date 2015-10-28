@@ -4,34 +4,34 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "WebSocketEventListenerParent.h"
+#include "WebSocketFrameListenerParent.h"
 #include "mozilla/unused.h"
 
 namespace mozilla {
 namespace net {
 
-NS_INTERFACE_MAP_BEGIN(WebSocketEventListenerParent)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIWebSocketEventListener)
-  NS_INTERFACE_MAP_ENTRY(nsIWebSocketEventListener)
+NS_INTERFACE_MAP_BEGIN(WebSocketFrameListenerParent)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIWebSocketFrameListener)
+  NS_INTERFACE_MAP_ENTRY(nsIWebSocketFrameListener)
 NS_INTERFACE_MAP_END
 
-NS_IMPL_ADDREF(WebSocketEventListenerParent)
-NS_IMPL_RELEASE(WebSocketEventListenerParent)
+NS_IMPL_ADDREF(WebSocketFrameListenerParent)
+NS_IMPL_RELEASE(WebSocketFrameListenerParent)
 
-WebSocketEventListenerParent::WebSocketEventListenerParent(uint64_t aInnerWindowID)
-  : mService(WebSocketEventService::GetOrCreate())
+WebSocketFrameListenerParent::WebSocketFrameListenerParent(uint64_t aInnerWindowID)
+  : mService(WebSocketFrameService::GetOrCreate())
   , mInnerWindowID(aInnerWindowID)
 {
   mService->AddListener(mInnerWindowID, this);
 }
 
-WebSocketEventListenerParent::~WebSocketEventListenerParent()
+WebSocketFrameListenerParent::~WebSocketFrameListenerParent()
 {
   MOZ_ASSERT(!mService);
 }
 
 bool
-WebSocketEventListenerParent::RecvClose()
+WebSocketFrameListenerParent::RecvClose()
 {
   if (mService) {
     UnregisterListener();
@@ -42,13 +42,13 @@ WebSocketEventListenerParent::RecvClose()
 }
 
 void
-WebSocketEventListenerParent::ActorDestroy(ActorDestroyReason aWhy)
+WebSocketFrameListenerParent::ActorDestroy(ActorDestroyReason aWhy)
 {
   UnregisterListener();
 }
 
 void
-WebSocketEventListenerParent::UnregisterListener()
+WebSocketFrameListenerParent::UnregisterListener()
 {
   if (mService) {
     mService->RemoveListener(mInnerWindowID, this);
@@ -57,7 +57,7 @@ WebSocketEventListenerParent::UnregisterListener()
 }
 
 NS_IMETHODIMP
-WebSocketEventListenerParent::FrameReceived(uint32_t aWebSocketSerialID,
+WebSocketFrameListenerParent::FrameReceived(uint32_t aWebSocketSerialID,
                                             nsIWebSocketFrame* aFrame)
 {
   if (!aFrame) {
@@ -70,7 +70,7 @@ WebSocketEventListenerParent::FrameReceived(uint32_t aWebSocketSerialID,
 }
 
 NS_IMETHODIMP
-WebSocketEventListenerParent::FrameSent(uint32_t aWebSocketSerialID,
+WebSocketFrameListenerParent::FrameSent(uint32_t aWebSocketSerialID,
                                         nsIWebSocketFrame* aFrame)
 {
   if (!aFrame) {

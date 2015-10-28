@@ -12,7 +12,7 @@ using mozilla::net::WebSocketFrameData from "ipc/IPCMessageUtils.h";
 namespace mozilla {
 namespace net {
 
-async protocol PWebSocketEventListener
+async protocol PWebSocketFrameListener
 {
   manager PNecko;
 

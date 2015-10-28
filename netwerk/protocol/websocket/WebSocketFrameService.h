@@ -4,11 +4,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_net_WebSocketEventService_h
-#define mozilla_net_WebSocketEventService_h
+#ifndef mozilla_net_WebSocketFrameService_h
+#define mozilla_net_WebSocketFrameService_h
 
 #include "mozilla/Atomics.h"
-#include "nsIWebSocketEventService.h"
+#include "nsIWebSocketFrameService.h"
 #include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "nsClassHashtable.h"
@@ -21,9 +21,9 @@ namespace mozilla {
 namespace net {
 
 class WebSocketFrame;
-class WebSocketEventListenerChild;
+class WebSocketFrameListenerChild;
 
-class WebSocketEventService final : public nsIWebSocketEventService
+class WebSocketFrameService final : public nsIWebSocketFrameService
                                   , public nsIObserver
 {
   friend class WebSocketFrameRunnable;
@@ -31,9 +31,9 @@ class WebSocketEventService final : public nsIWebSocketEventService
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIOBSERVER
-  NS_DECL_NSIWEBSOCKETEVENTSERVICE
+  NS_DECL_NSIWEBSOCKETFRAMESERVICE
 
-  static already_AddRefed<WebSocketEventService> GetOrCreate();
+  static already_AddRefed<WebSocketFrameService> GetOrCreate();
 
   void FrameReceived(uint32_t aWebSocketSerialID,
                      uint64_t aInnerWindowID,
@@ -60,18 +60,18 @@ public:
                       uint8_t* aPayload, uint32_t aPayloadLength);
 
 private:
-  WebSocketEventService();
-  ~WebSocketEventService();
+  WebSocketFrameService();
+  ~WebSocketFrameService();
 
   bool HasListeners() const;
   void Shutdown();
 
-  typedef nsTObserverArray<nsCOMPtr<nsIWebSocketEventListener>> WindowListeners;
+  typedef nsTObserverArray<nsCOMPtr<nsIWebSocketFrameListener>> WindowListeners;
 
   struct WindowListener
   {
     WindowListeners mListeners;
-    RefPtr<WebSocketEventListenerChild> mActor;
+    RefPtr<WebSocketFrameListenerChild> mActor;
   };
 
   WindowListeners* GetListeners(uint64_t aInnerWindowID) const;
@@ -86,4 +86,4 @@ private:
 } // net namespace
 } // mozilla namespace
 
-#endif // mozilla_net_WebSocketEventService_h
+#endif // mozilla_net_WebSocketFrameService_h
