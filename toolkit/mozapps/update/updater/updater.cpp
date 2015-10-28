@@ -127,7 +127,9 @@ static bool sUseHardLinks = true;
 #endif
 
 #ifdef XP_WIN
+#ifdef MOZ_MAINTENANCE_SERVICE
 #include "registrycertificates.h"
+#endif
 BOOL PathAppendSafe(LPWSTR base, LPCWSTR extra);
 BOOL PathGetSiblingFilePath(LPWSTR destinationBuffer,
                             LPCWSTR siblingFilePath,
@@ -1876,7 +1878,7 @@ LaunchWinPostProcess(const WCHAR *installationDir,
     return false;
   }
 
-#if !defined(TEST_UPDATER)
+#if !defined(TEST_UPDATER) && defined(MOZ_MAINTENANCE_SERVICE)
   if (sUsingService &&
       !DoesBinaryMatchAllowedCertificates(installationDir, exefullpath)) {
     return false;
@@ -2752,8 +2754,10 @@ int NS_main(int argc, NS_tchar **argv)
   const int callbackIndex = 6;
 
 #if defined(XP_WIN)
+#ifdef MOZ_MAINTENANCE_SERVICE
   sUsingService = EnvHasValue("MOZ_USING_SERVICE");
   putenv(const_cast<char*>("MOZ_USING_SERVICE="));
+#endif
   // lastFallbackError keeps track of the last error for the service not being
   // used, in case of an error when fallback is not enabled we write the
   // error to the update.status file.
