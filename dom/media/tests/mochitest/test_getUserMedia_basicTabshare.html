@@ -1,0 +1,56 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="mediaStreamPlayback.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+  createHTML({
+    title: "getUserMedia Basic Tabshare Test",
+    bug: "1193075"
+  });
+  /**
+   * Run a test to verify that we can complete a start and stop media playback
+   * cycle for a tabshare LocalMediaStream on a video HTMLMediaElement.
+   *
+   * Additionally, exercise applyConstraints code for tabshare viewport offset.
+   */
+  runTest(function () {
+    const isWinXP = navigator.userAgent.indexOf("Windows NT 5.1") != -1;
+    if (IsMacOSX10_6orOlder() || isWinXP) {
+        ok(true, "Screensharing disabled for OSX10.6 and WinXP");
+        return;
+    }
+    var testVideo = createMediaElement('video', 'testVideo');
+
+    return Promise.resolve()
+      .then(() => getUserMedia({
+        video: { mediaSource: "browser", scrollWithPage: true },
+        fake: false
+      }))
+      .then(stream => {
+        var playback = new LocalMediaStreamPlayback(testVideo, stream);
+        return playback.playMediaWithDeprecatedStreamStop(false);
+      })
+      .then(() => getUserMedia({
+        video: { mediaSource: "browser" },
+        fake: false
+      }))
+      .then(stream => {
+        var playback = new LocalMediaStreamPlayback(testVideo, stream);
+        return playback.startMedia(false)
+          .then(() => testVideo.srcObject.getVideoTracks()[0].applyConstraints({
+            mediaSource: "browser",
+            viewportOffsetX: 10,
+            viewportOffsetY: 50
+          }))
+          .then(() => playback.deprecatedStopStreamInMediaPlayback())
+          .then(() => playback.stopMediaElement());
+      });
+  });
+
+</script>
+</pre>
+</body>
+</html>
