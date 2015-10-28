@@ -45,7 +45,6 @@ default: $(addprefix install-,$(INSTALL_MANIFESTS))
 default: $(addprefix $(TOPOBJDIR)/,$(MANIFEST_TARGETS))
 default: $(TOPOBJDIR)/dist/bin/greprefs.js
 default: $(TOPOBJDIR)/dist/bin/platform.ini
-default: $(TOPOBJDIR)/dist/bin/webapprt/webapprt.ini
 
 # Targets from the recursive make backend to be built for a default build
 default: $(TOPOBJDIR)/config/makefiles/xpidl/xpidl
@@ -129,7 +128,6 @@ $(addprefix $(TOPOBJDIR)/,$(MANIFEST_TARGETS)): FORCE
 # Files to build with the recursive backend and simply copy
 $(TOPOBJDIR)/dist/bin/greprefs.js: $(TOPOBJDIR)/modules/libpref/greprefs.js
 $(TOPOBJDIR)/dist/bin/platform.ini: $(TOPOBJDIR)/toolkit/xre/platform.ini
-$(TOPOBJDIR)/dist/bin/webapprt/webapprt.ini: $(TOPOBJDIR)/webapprt/webapprt.ini
 
 # The xpidl target in config/makefiles/xpidl requires the install manifest for
 # dist/idl to have been processed.
