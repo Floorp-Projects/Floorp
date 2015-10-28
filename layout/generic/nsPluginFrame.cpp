@@ -1553,6 +1553,17 @@ nsPluginFrame::PaintPlugin(nsDisplayListBuilder* aBuilder,
     mInstanceOwner->Paint(ctx, frameGfxRect, dirtyGfxRect);
     return;
   }
+#else
+# if defined(DEBUG)
+  // On Desktop, we should have built a layer as we no longer support in-process
+  // plugins or synchronous painting. We can only get here for windowed plugins
+  // (which draw themselves), or via some error/unload state.
+  if (mInstanceOwner) {
+    NPWindow *window = nullptr;
+    mInstanceOwner->GetWindow(window);
+    MOZ_ASSERT(!window || window->type == NPWindowTypeWindow);
+  }
+# endif
 #endif
 }
 
