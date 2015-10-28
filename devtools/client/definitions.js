@@ -285,9 +285,14 @@ Tools.memory = {
   label: "Memory",
   panelLabel: "Memory Panel",
   tooltip: "Memory (keyboardshortcut)",
+  hiddenInOptions: true,
 
   isTargetSupported: function (target) {
-    return target.getTrait("heapSnapshots");
+    // TODO 1201907
+    // Once Fx44 lands, we should add a root trait `heapSnapshots`
+    // to indicate that the memory actor can handle this.
+    // Shouldn't make this change until Fx44, however.
+    return true; // target.getTrait("heapSnapshots");
   },
 
   build: function (frame, target) {
