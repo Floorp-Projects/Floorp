@@ -1018,10 +1018,6 @@ AccessibleWrap::accNavigate(
   if (accessible->IsDefunct())
     return CO_E_OBJNOTCONNECTED;
 
-  // TODO make this work with proxies.
-  if (IsProxy())
-    return E_NOTIMPL;
-
   Accessible* navAccessible = nullptr;
   Maybe<RelationType> xpRelation;
 
