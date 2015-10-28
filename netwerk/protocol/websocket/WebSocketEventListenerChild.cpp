@@ -50,6 +50,19 @@ WebSocketEventListenerChild::RecvWebSocketOpened(const uint32_t& aWebSocketSeria
 }
 
 bool
+WebSocketEventListenerChild::RecvWebSocketMessageAvailable(const uint32_t& aWebSocketSerialID,
+                                                           const nsCString& aData,
+                                                           const uint16_t& aMessageType)
+{
+  if (mService) {
+    mService->WebSocketMessageAvailable(aWebSocketSerialID, mInnerWindowID,
+                                        aData, aMessageType);
+  }
+
+  return true;
+}
+
+bool
 WebSocketEventListenerChild::RecvWebSocketClosed(const uint32_t& aWebSocketSerialID,
                                                  const bool& aWasClean,
                                                  const uint16_t& aCode,

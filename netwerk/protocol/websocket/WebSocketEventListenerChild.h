@@ -30,6 +30,10 @@ public:
                            const nsCString& aProtocols,
                            const nsCString& aExtensions) override;
 
+  bool RecvWebSocketMessageAvailable(const uint32_t& aWebSocketSerialID,
+                                     const nsCString& aData,
+                                     const uint16_t& aMessageType) override;
+
   bool RecvWebSocketClosed(const uint32_t& aWebSocketSerialID,
                           const bool& aWasClean,
                           const uint16_t& aCode,

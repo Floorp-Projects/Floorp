@@ -18,6 +18,7 @@ var frameReceivedCounter = 0;
 var frameSentCounter = 0;
 var webSocketCreatedCounter = 0;
 var webSocketOpenedCounter = 0;
+var webSocketMessageAvailableCounter = 0;
 var webSocketClosedCounter = 0;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
@@ -57,6 +58,20 @@ var listener = {
     is(aExtensions, "permessage-deflate", "No extensions");
 
     webSocketOpenedCounter++;
+  },
+
+  webSocketMessageAvailable: function(aWebSocketSerialID, aData, aMessageType) {
+    info("WebSocketMessageAvailable");
+
+    is(aData, tests[0].payload, "Message matches!");
+    is(aMessageType, Ci.nsIWebSocketEventListener.TYPE_STRING, "The type is 'string'");
+
+    webSocketMessageAvailableCounter++;
+
+    tests.shift();
+    if (tests.length) {
+      ws.send(tests[0].payload);
+    }
   },
 
   webSocketClosed: function(aWebSocketSerialID, aWasClean,
@@ -136,6 +151,7 @@ function checkListener() {
   ok(frameSentCounter, "We sent some frames!");
   ok(webSocketCreatedCounter, "We have a create notification");
   ok(webSocketOpenedCounter, "We have a open notification");
+  ok(webSocketMessageAvailableCounter, "We have a messageAvailable notification");
   ok(webSocketClosedCounter, "We have a close notification");
   SimpleTest.finish();
 }
@@ -153,12 +169,7 @@ ws.onclose = function(e) {
 
 ws.onmessage = function(e) {
   info("onmessage");
-
   is(e.data, tests[0].payload, "Wrong data");
-  tests.shift();
-  if (tests.length) {
-    ws.send(tests[0].payload);
-  }
 }
 
 SimpleTest.waitForExplicitFinish();

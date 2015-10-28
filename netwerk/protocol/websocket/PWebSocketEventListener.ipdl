@@ -26,6 +26,10 @@ child:
                   nsCString aProtocols,
                   nsCString aExtensions);
 
+  WebSocketMessageAvailable(uint32_t awebSocketSerialID,
+                            nsCString aData,
+                            uint16_t aMessageType);
+
   WebSocketClosed(uint32_t awebSocketSerialID,
                   bool aWasClean,
                   uint16_t aCode,
