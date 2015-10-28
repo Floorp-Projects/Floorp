@@ -41,22 +41,20 @@ function test_getBoolPref() {
 function test_openNewTabWith() {
   openNewTabWith("http://example.com/");
   let tab = gBrowser.selectedTab = gBrowser.tabs[1];
-  tab.linkedBrowser.addEventListener("load", function onLoad(event) {
-    tab.linkedBrowser.removeEventListener("load", onLoad, true);
+  BrowserTestUtils.browserLoaded(tab.linkedBrowser).then(() => {
     is(tab.linkedBrowser.currentURI.spec, "http://example.com/", "example.com loaded");
     gBrowser.removeCurrentTab();
     runNextTest();
-  }, true);
+  });
 }
 
 function test_openUILink() {
   let tab = gBrowser.selectedTab = gBrowser.addTab("about:blank");
-  tab.linkedBrowser.addEventListener("load", function onLoad(event) {
-    tab.linkedBrowser.removeEventListener("load", onLoad, true);
+  BrowserTestUtils.browserLoaded(tab.linkedBrowser).then(() => {
     is(tab.linkedBrowser.currentURI.spec, "http://example.org/", "example.org loaded");
     gBrowser.removeCurrentTab();
     runNextTest();
-  }, true);
+  });
 
   openUILink("http://example.org/"); // defaults to "current"
 }

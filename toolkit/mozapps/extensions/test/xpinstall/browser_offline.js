@@ -34,8 +34,9 @@ function finish_test(count) {
     info("Checking if the browser is still offline...");
 
     let tab = gBrowser.selectedTab;
-    tab.linkedBrowser.addEventListener("DOMContentLoaded", function errorLoad() {
-      tab.linkedBrowser.removeEventListener("DOMContentLoaded", errorLoad, true);
+    ContentTask.spawn(tab.linkedBrowser, null, () => {
+      return ContentTaskUtils.waitForEvent(this, "DOMContentLoaded", true);
+    }).then(() => {
       let url = tab.linkedBrowser.contentDocument.documentURI;
       info("loaded: " + url);
       if (/^about:neterror\?e=netOffline/.test(url)) {
@@ -44,7 +45,7 @@ function finish_test(count) {
         gBrowser.removeCurrentTab();
         Harness.finish();
       }
-    }, true);
+    });
     tab.linkedBrowser.loadURI("http://example.com/");
   }
 
