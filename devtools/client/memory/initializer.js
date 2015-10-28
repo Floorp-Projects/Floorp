@@ -38,5 +38,6 @@ function initialize () {
 }
 
 function destroy () {
+  gRoot = gStore = gApp = gProvider = null;
   return Task.spawn(function*(){});
 }
