@@ -29,9 +29,6 @@ actions.SELECT_SNAPSHOT = "select-snapshot";
 // Fired to toggle tree inversion on or off.
 actions.TOGGLE_INVERTED = "toggle-inverted";
 
-// Fired to set a new breakdown.
-actions.SET_BREAKDOWN = "set-breakdown";
-
 // Fired when there is an error processing a snapshot or taking a census.
 actions.SNAPSHOT_ERROR = "snapshot-error";
 

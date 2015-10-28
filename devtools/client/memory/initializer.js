@@ -19,21 +19,13 @@ const Store = require("devtools/client/memory/store");
  */
 var gToolbox, gTarget, gFront, gHeapAnalysesClient;
 
-/**
- * Globals set by initialize()
- */
-var gRoot, gStore, gApp, gProvider;
-
 function initialize () {
   return Task.spawn(function*() {
-    gRoot = document.querySelector("#app");
-    gStore = Store();
-    gApp = createElement(App, {
-      front: gFront,
-      heapWorker: gHeapAnalysesClient
-    });
-    gProvider = createElement(Provider, { store: gStore }, gApp);
-    render(gProvider, gRoot);
+    let root = document.querySelector("#app");
+    let store = Store();
+    let app = createElement(App, { front: gFront, heapWorker: gHeapAnalysesClient });
+    let provider = createElement(Provider, { store }, app);
+    render(provider, root);
   });
 }
 
