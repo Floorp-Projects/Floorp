@@ -1316,8 +1316,13 @@ Evaluate(JSContext* cx, unsigned argc, Value* vp)
         // replace the current bytecode by the same stream of bytes.
         if (loadBytecode && assertEqBytecode) {
             if (saveLength != loadLength) {
+                char loadLengthStr[16];
+                JS_snprintf(loadLengthStr, sizeof(loadLengthStr), "%u", loadLength);
+                char saveLengthStr[16];
+                JS_snprintf(saveLengthStr, sizeof(saveLengthStr), "%u", saveLength);
+
                 JS_ReportErrorNumber(cx, my_GetErrorMessage, nullptr, JSSMSG_CACHE_EQ_SIZE_FAILED,
-                                     loadLength, saveLength);
+                                     loadLengthStr, saveLengthStr);
                 return false;
             }
 
