@@ -36,23 +36,9 @@ interface nsIWebSocketFrame : nsISupports
   const long OPCODE_PONG         = 0xA;
 };
 
-[scriptable, uuid(ccbd96ae-2b7d-42fc-9ee5-116fa8e1723a)]
+[scriptable, uuid(f6a7ec44-23b2-4c77-bb94-f11a8df5a874)]
 interface nsIWebSocketEventListener : nsISupports
 {
-  void webSocketCreated(in unsigned long aWebSocketSerialID,
-                        in AString aURI,
-                        in ACString aProtocols);
-
-  void webSocketOpened(in unsigned long aWebSocketSerialID,
-                       in AString aEffectiveURI,
-                       in ACString aProtocols,
-                       in ACString aExtensions);
-
-  void webSocketClosed(in unsigned long aWebSocketSerialID,
-                       in boolean aWasClean,
-                       in unsigned short aCode,
-                       in AString aReason);
-
   void frameReceived(in unsigned long aWebSocketSerialID,
                      in nsIWebSocketFrame aFrame);
 

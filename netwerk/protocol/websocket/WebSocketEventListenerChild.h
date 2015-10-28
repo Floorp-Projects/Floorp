@@ -21,20 +21,6 @@ public:
 
   explicit WebSocketEventListenerChild(uint64_t aInnerWindowID);
 
-  bool RecvWebSocketCreated(const uint32_t& aWebSocketSerialID,
-                            const nsString& aURI,
-                            const nsCString& aProtocols) override;
-
-  bool RecvWebSocketOpened(const uint32_t& aWebSocketSerialID,
-                           const nsString& aEffectiveURI,
-                           const nsCString& aProtocols,
-                           const nsCString& aExtensions) override;
-
-  bool RecvWebSocketClosed(const uint32_t& aWebSocketSerialID,
-                          const bool& aWasClean,
-                          const uint16_t& aCode,
-                          const nsString& aReason) override;
-
   bool RecvFrameReceived(const uint32_t& aWebSocketSerialID,
                          const WebSocketFrameData& aFrameData) override;
 
