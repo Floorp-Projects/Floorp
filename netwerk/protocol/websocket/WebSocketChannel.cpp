@@ -1138,8 +1138,6 @@ NS_IMPL_ISUPPORTS(OutboundEnqueuer, nsIRunnable)
 // WebSocketChannel
 //-----------------------------------------------------------------------------
 
-uint32_t WebSocketChannel::sSerialSeed = 0;
-
 WebSocketChannel::WebSocketChannel() :
   mPort(0),
   mCloseTimeout(20000),
@@ -1193,8 +1191,6 @@ WebSocketChannel::WebSocketChannel() :
   mConnectionLogService = do_GetService("@mozilla.org/network/dashboard;1",&rv);
   if (NS_FAILED(rv))
     LOG(("Failed to initiate dashboard service."));
-
-  mSerial = sSerialSeed++;
 
   mService = WebSocketEventService::GetOrCreate();
 }
