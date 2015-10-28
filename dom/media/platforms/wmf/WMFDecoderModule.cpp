@@ -68,7 +68,8 @@ WMFDecoderModule::Init()
 {
   MOZ_ASSERT(NS_IsMainThread(), "Must be on main thread.");
   sDXVAEnabled = gfxPlatform::GetPlatform()->CanUseHardwareVideoDecoding();
-  sIsIntelDecoderEnabled = Preferences::GetBool("media.webm.intel_decoder.enabled", false);
+  Preferences::AddBoolVarCache(&sIsIntelDecoderEnabled,
+                               "media.webm.intel_decoder.enabled");
   sLowLatencyMFTEnabled = Preferences::GetBool("media.wmf.low-latency.enabled", false);
   SetNumOfDecoderThreads();
 }
@@ -139,10 +140,13 @@ CanCreateMFTDecoder(const GUID& aGuid)
   if (FAILED(wmf::MFStartup())) {
     return false;
   }
-  RefPtr<MFTDecoder> decoder(new MFTDecoder());
-  bool hasH264 = SUCCEEDED(decoder->Create(aGuid));
+  bool hasdecoder = false;
+  {
+    RefPtr<MFTDecoder> decoder(new MFTDecoder());
+    hasdecoder = SUCCEEDED(decoder->Create(aGuid));
+  }
   wmf::MFShutdown();
-  return hasH264;
+  return hasdecoder;
 }
 
 template<const GUID& aGuid>
@@ -173,7 +177,7 @@ WMFDecoderModule::SupportsMimeType(const nsACString& aMimeType)
       CanCreateWMFDecoder<CLSID_CMP3DecMediaObject>()) {
     return true;
   }
-  if (sIsIntelDecoderEnabled) {
+  if (sIsIntelDecoderEnabled && sDXVAEnabled) {
     if (aMimeType.EqualsLiteral("video/webm; codecs=vp8") &&
         CanCreateWMFDecoder<CLSID_WebmMfVp8Dec>()) {
       return true;

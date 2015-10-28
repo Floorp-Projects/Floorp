@@ -1175,11 +1175,11 @@ private:
       MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToMainThread(runnable)));
     }
 
-    RefPtr<Promise> respondWithPromise = event->GetPromise();
-    if (respondWithPromise) {
+    RefPtr<Promise> waitUntilPromise = event->GetPromise();
+    if (waitUntilPromise) {
       RefPtr<KeepAliveHandler> keepAliveHandler =
         new KeepAliveHandler(mKeepAliveToken);
-      respondWithPromise->AppendNativeHandler(keepAliveHandler);
+      waitUntilPromise->AppendNativeHandler(keepAliveHandler);
     }
 
     // 9.8.22 If request is a non-subresource request, then: Invoke Soft Update algorithm

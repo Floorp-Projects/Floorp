@@ -73,7 +73,9 @@ WMFVideoMFTManager::WMFVideoMFTManager(
                             mozilla::layers::LayersBackend aLayersBackend,
                             mozilla::layers::ImageContainer* aImageContainer,
                             bool aDXVAEnabled)
-  : mImageContainer(aImageContainer)
+  : mVideoInfo(aConfig)
+  , mVideoStride(0)
+  , mImageContainer(aImageContainer)
   , mDXVAEnabled(aDXVAEnabled)
   , mLayersBackend(aLayersBackend)
   // mVideoStride, mVideoWidth, mVideoHeight, mUseHwAccel are initialized in
@@ -252,13 +254,6 @@ WMFVideoMFTManager::InitInternal(bool aForceD3D9)
 
   LOG("Video Decoder initialized, Using DXVA: %s", (mUseHwAccel ? "Yes" : "No"));
 
-  // Just in case ConfigureVideoFrameGeometry() does not set these
-  mVideoInfo = VideoInfo();
-  mVideoStride = 0;
-  mVideoWidth = 0;
-  mVideoHeight = 0;
-  mPictureRegion.SetEmpty();
-
   return true;
 }
 
@@ -372,26 +367,17 @@ WMFVideoMFTManager::ConfigureVideoFrameGeometry()
   NS_ENSURE_TRUE(videoFormat == MFVideoFormat_NV12 || !mUseHwAccel, E_FAIL);
   NS_ENSURE_TRUE(videoFormat == MFVideoFormat_YV12 || mUseHwAccel, E_FAIL);
 
-  nsIntRect pictureRegion;
-  hr = GetPictureRegion(mediaType, pictureRegion);
-  NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
-
   UINT32 width = 0, height = 0;
   hr = MFGetAttributeSize(mediaType, MF_MT_FRAME_SIZE, &width, &height);
   NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
 
-  uint32_t aspectNum = 0, aspectDenom = 0;
-  hr = MFGetAttributeRatio(mediaType,
-                           MF_MT_PIXEL_ASPECT_RATIO,
-                           &aspectNum,
-                           &aspectDenom);
-  NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
-
+  mVideoInfo.mImage.width = width;
+  mVideoInfo.mImage.height = height;
+  nsIntRect pictureRegion = mVideoInfo.mImage;
   // Calculate and validate the picture region and frame dimensions after
   // scaling by the pixel aspect ratio.
   nsIntSize frameSize = nsIntSize(width, height);
-  nsIntSize displaySize = nsIntSize(pictureRegion.width, pictureRegion.height);
-  ScaleDisplayByAspectRatio(displaySize, float(aspectNum) / float(aspectDenom));
+  nsIntSize displaySize = nsIntSize(mVideoInfo.mDisplay.width, mVideoInfo.mDisplay.height);
   if (!IsValidVideoRegion(frameSize, pictureRegion, displaySize)) {
     // Video track's frame sizes will overflow. Ignore the video track.
     return E_FAIL;
@@ -403,18 +389,13 @@ WMFVideoMFTManager::ConfigureVideoFrameGeometry()
   }
 
   // Success! Save state.
-  mVideoInfo.mDisplay = displaySize;
-  GetDefaultStride(mediaType, &mVideoStride);
-  mVideoWidth = width;
-  mVideoHeight = height;
-  mPictureRegion = pictureRegion;
+  GetDefaultStride(mediaType, width, &mVideoStride);
 
-  LOG("WMFVideoMFTManager frame geometry frame=(%u,%u) stride=%u picture=(%d, %d, %d, %d) display=(%d,%d) PAR=%d:%d",
+  LOG("WMFVideoMFTManager frame geometry frame=(%u,%u) stride=%u picture=(%d, %d, %d, %d) display=(%d,%d)",
       width, height,
       mVideoStride,
-      mPictureRegion.x, mPictureRegion.y, mPictureRegion.width, mPictureRegion.height,
-      displaySize.width, displaySize.height,
-      aspectNum, aspectDenom);
+      pictureRegion.x, pictureRegion.y, pictureRegion.width, pictureRegion.height,
+      mVideoInfo.mDisplay.width, mVideoInfo.mDisplay.height);
 
   return S_OK;
 }
@@ -456,25 +437,28 @@ WMFVideoMFTManager::CreateBasicVideoFrame(IMFSample* aSample,
   // i.e., Y, then V, then U.
   VideoData::YCbCrBuffer b;
 
+  uint32_t videoWidth = mVideoInfo.mImage.width;
+  uint32_t videoHeight = mVideoInfo.mImage.height;
+
   // Y (Y') plane
   b.mPlanes[0].mData = data;
   b.mPlanes[0].mStride = stride;
-  b.mPlanes[0].mHeight = mVideoHeight;
-  b.mPlanes[0].mWidth = mVideoWidth;
+  b.mPlanes[0].mHeight = videoHeight;
+  b.mPlanes[0].mWidth = videoWidth;
   b.mPlanes[0].mOffset = 0;
   b.mPlanes[0].mSkip = 0;
 
   // The V and U planes are stored 16-row-aligned, so we need to add padding
   // to the row heights to ensure the Y'CbCr planes are referenced properly.
   uint32_t padding = 0;
-  if (mVideoHeight % 16 != 0) {
-    padding = 16 - (mVideoHeight % 16);
+  if (videoHeight % 16 != 0) {
+    padding = 16 - (videoHeight % 16);
   }
-  uint32_t y_size = stride * (mVideoHeight + padding);
-  uint32_t v_size = stride * (mVideoHeight + padding) / 4;
+  uint32_t y_size = stride * (videoHeight + padding);
+  uint32_t v_size = stride * (videoHeight + padding) / 4;
   uint32_t halfStride = (stride + 1) / 2;
-  uint32_t halfHeight = (mVideoHeight + 1) / 2;
-  uint32_t halfWidth = (mVideoWidth + 1) / 2;
+  uint32_t halfHeight = (videoHeight + 1) / 2;
+  uint32_t halfWidth = (videoWidth + 1) / 2;
 
   // U plane (Cb)
   b.mPlanes[1].mData = data + y_size + v_size;
@@ -503,7 +487,7 @@ WMFVideoMFTManager::CreateBasicVideoFrame(IMFSample* aSample,
   VideoData::SetVideoDataToImage(image,
                                  mVideoInfo,
                                  b,
-                                 mPictureRegion,
+                                 mVideoInfo.mImage,
                                  false);
 
   RefPtr<VideoData> v =
@@ -515,7 +499,7 @@ WMFVideoMFTManager::CreateBasicVideoFrame(IMFSample* aSample,
                                image.forget(),
                                false,
                                -1,
-                               mPictureRegion);
+                               mVideoInfo.mImage);
 
   v.forget(aOutVideoData);
   return S_OK;
@@ -536,7 +520,7 @@ WMFVideoMFTManager::CreateD3DVideoFrame(IMFSample* aSample,
 
   RefPtr<Image> image;
   hr = mDXVA2Manager->CopyToImage(aSample,
-                                  mPictureRegion,
+                                  mVideoInfo.mImage,
                                   mImageContainer,
                                   getter_AddRefs(image));
   NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
@@ -554,7 +538,7 @@ WMFVideoMFTManager::CreateD3DVideoFrame(IMFSample* aSample,
                                                      image.forget(),
                                                      false,
                                                      -1,
-                                                     mPictureRegion);
+                                                     mVideoInfo.mImage);
 
   NS_ENSURE_TRUE(v, E_FAIL);
   v.forget(aOutVideoData);
@@ -630,6 +614,13 @@ WMFVideoMFTManager::IsHardwareAccelerated(nsACString& aFailureReason) const
 {
   aFailureReason = mDXVAFailureReason;
   return mDecoder && mUseHwAccel;
+}
+
+void
+WMFVideoMFTManager::ConfigurationChanged(const TrackInfo& aConfig)
+{
+  MOZ_ASSERT(aConfig.GetAsVideoInfo());
+  mVideoInfo = *aConfig.GetAsVideoInfo();
 }
 
 } // namespace mozilla

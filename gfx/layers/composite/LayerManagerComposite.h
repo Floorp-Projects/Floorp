@@ -298,9 +298,14 @@ private:
                                              const gfx::Matrix4x4& aTransform);
 
   /**
+   * Update the invalid region and render it.
+   */
+  void UpdateAndRender();
+
+  /**
    * Render the current layer tree to the active target.
    */
-  void Render();
+  void Render(const nsIntRegion& aInvalidRegion);
 #if defined(MOZ_WIDGET_ANDROID) || defined(MOZ_WIDGET_GONK)
   void RenderToPresentationSurface();
 #endif
