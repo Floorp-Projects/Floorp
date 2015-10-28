@@ -6,7 +6,7 @@
 #include "domstubs.idl"
 #include "nsISupports.idl"
 
-[scriptable, builtinclass, uuid(470133f3-a04f-48a9-82bd-8d1bc7eb6f9c)]
+[scriptable, builtinclass, uuid(6714a6be-2265-4f73-a988-d78a12416037)]
 interface nsIWebSocketFrame : nsISupports
 {
   readonly attribute DOMHighResTimeStamp timeStamp;
@@ -26,17 +26,17 @@ interface nsIWebSocketFrame : nsISupports
   readonly attribute ACString payload;
 
   // Non-Control opCode values:
-  const long OPCODE_CONTINUATION = 0x0;
-  const long OPCODE_TEXT         = 0x1;
-  const long OPCODE_BINARY       = 0x2;
+  const unsigned short OPCODE_CONTINUATION = 0x0;
+  const unsigned short OPCODE_TEXT         = 0x1;
+  const unsigned short OPCODE_BINARY       = 0x2;
 
   // Control opCode values:
-  const long OPCODE_CLOSE        = 0x8;
-  const long OPCODE_PING         = 0x9;
-  const long OPCODE_PONG         = 0xA;
+  const unsigned short OPCODE_CLOSE        = 0x8;
+  const unsigned short OPCODE_PING         = 0x9;
+  const unsigned short OPCODE_PONG         = 0xA;
 };
 
-[scriptable, uuid(ccbd96ae-2b7d-42fc-9ee5-116fa8e1723a)]
+[scriptable, uuid(e7c005ab-e694-489b-b741-96db43ffb16f)]
 interface nsIWebSocketEventListener : nsISupports
 {
   void webSocketCreated(in unsigned long aWebSocketSerialID,
@@ -47,6 +47,14 @@ interface nsIWebSocketEventListener : nsISupports
                        in AString aEffectiveURI,
                        in ACString aProtocols,
                        in ACString aExtensions);
+
+  const unsigned short TYPE_STRING      = 0x0;
+  const unsigned short TYPE_BLOB        = 0x1;
+  const unsigned short TYPE_ARRAYBUFFER = 0x2;
+
+  void webSocketMessageAvailable(in unsigned long aWebSocketSerialID,
+                                 in ACString aMessage,
+                                 in unsigned short aType);
 
   void webSocketClosed(in unsigned long aWebSocketSerialID,
                        in boolean aWasClean,
