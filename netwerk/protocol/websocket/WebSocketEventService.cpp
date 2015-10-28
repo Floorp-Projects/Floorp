@@ -149,30 +149,6 @@ private:
   const nsCString mExtensions;
 };
 
-class WebSocketMessageAvailableRunnable final : public WebSocketBaseRunnable
-{
-public:
-  WebSocketMessageAvailableRunnable(uint32_t aWebSocketSerialID,
-                          uint64_t aInnerWindowID,
-                          const nsACString& aData,
-                          uint16_t aMessageType)
-    : WebSocketBaseRunnable(aWebSocketSerialID, aInnerWindowID)
-    , mData(aData)
-    , mMessageType(aMessageType)
-  {}
-
-private:
-  virtual void DoWork(nsIWebSocketEventListener* aListener) override
-  {
-    nsresult rv = aListener->WebSocketMessageAvailable(mWebSocketSerialID,
-                                                       mData, mMessageType);
-    NS_WARN_IF(NS_FAILED(rv));
-  }
-
-  const nsCString mData;
-  uint16_t mMessageType;
-};
-
 class WebSocketClosedRunnable final : public WebSocketBaseRunnable
 {
 public:
@@ -272,24 +248,6 @@ WebSocketEventService::WebSocketOpened(uint32_t aWebSocketSerialID,
   RefPtr<WebSocketOpenedRunnable> runnable =
     new WebSocketOpenedRunnable(aWebSocketSerialID, aInnerWindowID,
                                 aEffectiveURI, aProtocols, aExtensions);
-  nsresult rv = NS_DispatchToMainThread(runnable);
-  NS_WARN_IF(NS_FAILED(rv));
-}
-
-void
-WebSocketEventService::WebSocketMessageAvailable(uint32_t aWebSocketSerialID,
-                                                 uint64_t aInnerWindowID,
-                                                 const nsACString& aData,
-                                                 uint16_t aMessageType)
-{
-  // Let's continue only if we have some listeners.
-  if (!HasListeners()) {
-    return;
-  }
-
-  RefPtr<WebSocketMessageAvailableRunnable> runnable =
-    new WebSocketMessageAvailableRunnable(aWebSocketSerialID, aInnerWindowID,
-                                          aData, aMessageType);
   nsresult rv = NS_DispatchToMainThread(runnable);
   NS_WARN_IF(NS_FAILED(rv));
 }
