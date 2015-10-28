@@ -319,6 +319,9 @@ RasterImage::LookupFrame(uint32_t aFrameNum,
 
   IntSize requestedSize = CanDownscaleDuringDecode(aSize, aFlags)
                         ? aSize : mSize;
+  if (requestedSize.IsEmpty()) {
+    return DrawableFrameRef();  // Can't decode to a surface of zero size.
+  }
 
   LookupResult result = LookupFrameInternal(aFrameNum, requestedSize, aFlags);
 
@@ -1175,6 +1178,15 @@ RasterImage::RequestDecode()
 NS_IMETHODIMP
 RasterImage::StartDecoding()
 {
+  if (mError) {
+    return NS_ERROR_FAILURE;
+  }
+
+  if (!mHasSize) {
+    mWantFullDecode = true;
+    return NS_OK;
+  }
+
   return RequestDecodeForSize(mSize, FLAG_SYNC_DECODE_IF_FAST);
 }
 
@@ -1188,7 +1200,6 @@ RasterImage::RequestDecodeForSize(const IntSize& aSize, uint32_t aFlags)
   }
 
   if (!mHasSize) {
-    mWantFullDecode = true;
     return NS_OK;
   }
 
