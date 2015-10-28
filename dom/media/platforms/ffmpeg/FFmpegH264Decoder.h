@@ -39,6 +39,7 @@ public:
   virtual nsRefPtr<InitPromise> Init() override;
   virtual nsresult Input(MediaRawData* aSample) override;
   virtual void ProcessDrain() override;
+  virtual void ProcessFlush() override;
   static AVCodecID GetCodecId(const nsACString& aMimeType);
 
 private:
@@ -59,13 +60,27 @@ private:
 
   static int AllocateBufferCb(AVCodecContext* aCodecContext, AVFrame* aFrame);
   static void ReleaseBufferCb(AVCodecContext* aCodecContext, AVFrame* aFrame);
-  int64_t GetPts(const AVPacket& packet);
 
   nsRefPtr<ImageContainer> mImageContainer;
   uint32_t mPictureWidth;
   uint32_t mPictureHeight;
   uint32_t mDisplayWidth;
   uint32_t mDisplayHeight;
+
+  class PtsCorrectionContext {
+  public:
+    PtsCorrectionContext();
+    int64_t GuessCorrectPts(int64_t aPts, int64_t aDts);
+    void Reset();
+
+  private:
+    int64_t mNumFaultyPts; /// Number of incorrect PTS values so far
+    int64_t mNumFaultyDts; /// Number of incorrect DTS values so far
+    int64_t mLastPts;       /// PTS of the last frame
+    int64_t mLastDts;       /// DTS of the last frame
+  };
+
+  PtsCorrectionContext mPtsContext;
 };
 
 } // namespace mozilla

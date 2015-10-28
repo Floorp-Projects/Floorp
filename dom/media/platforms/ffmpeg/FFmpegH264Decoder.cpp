@@ -22,6 +22,45 @@ typedef mozilla::layers::PlanarYCbCrImage PlanarYCbCrImage;
 namespace mozilla
 {
 
+FFmpegH264Decoder<LIBAV_VER>::PtsCorrectionContext::PtsCorrectionContext()
+  : mNumFaultyPts(0)
+  , mNumFaultyDts(0)
+  , mLastPts(INT64_MIN)
+  , mLastDts(INT64_MIN)
+{
+}
+
+int64_t
+FFmpegH264Decoder<LIBAV_VER>::PtsCorrectionContext::GuessCorrectPts(int64_t aPts, int64_t aDts)
+{
+  int64_t pts = AV_NOPTS_VALUE;
+
+  if (aDts != int64_t(AV_NOPTS_VALUE)) {
+    mNumFaultyDts += aDts <= mLastDts;
+    mLastDts = aDts;
+  }
+  if (aPts != int64_t(AV_NOPTS_VALUE)) {
+    mNumFaultyPts += aPts <= mLastPts;
+    mLastPts = aPts;
+  }
+  if ((mNumFaultyPts <= mNumFaultyDts || aDts == int64_t(AV_NOPTS_VALUE)) &&
+      aPts != int64_t(AV_NOPTS_VALUE)) {
+    pts = aPts;
+  } else {
+    pts = aDts;
+  }
+  return pts;
+}
+
+void
+FFmpegH264Decoder<LIBAV_VER>::PtsCorrectionContext::Reset()
+{
+  mNumFaultyPts = 0;
+  mNumFaultyDts = 0;
+  mLastPts = INT64_MIN;
+  mLastDts = INT64_MIN;
+}
+
 FFmpegH264Decoder<LIBAV_VER>::FFmpegH264Decoder(
   FlushableTaskQueue* aTaskQueue, MediaDataDecoderCallback* aCallback,
   const VideoInfo& aConfig,
@@ -52,21 +91,6 @@ FFmpegH264Decoder<LIBAV_VER>::Init()
   mCodecContext->height = mPictureHeight;
 
   return InitPromise::CreateAndResolve(TrackInfo::kVideoTrack, __func__);
-}
-
-int64_t
-FFmpegH264Decoder<LIBAV_VER>::GetPts(const AVPacket& packet)
-{
-  MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
-#if LIBAVCODEC_VERSION_MAJOR == 53
-  if (mFrame->pkt_pts == 0) {
-    return mFrame->pkt_dts;
-  } else {
-    return mFrame->pkt_pts;
-  }
-#else
-  return mFrame->pkt_pts;
-#endif
 }
 
 FFmpegH264Decoder<LIBAV_VER>::DecodeResult
@@ -158,7 +182,7 @@ FFmpegH264Decoder<LIBAV_VER>::DoDecodeFrame(MediaRawData* aSample,
 
   // If we've decoded a frame then we need to output it
   if (decoded) {
-    int64_t pts = GetPts(packet);
+    int64_t pts = mPtsContext.GuessCorrectPts(mFrame->pkt_pts, mFrame->pkt_dts);
     FFMPEG_LOG("Got one frame output with pts=%lld opaque=%lld",
                pts, mCodecContext->reordered_opaque);
 
@@ -351,6 +375,13 @@ FFmpegH264Decoder<LIBAV_VER>::ProcessDrain()
   while (DoDecodeFrame(empty) == DecodeResult::DECODE_FRAME) {
   }
   mCallback->DrainComplete();
+}
+
+void
+FFmpegH264Decoder<LIBAV_VER>::ProcessFlush()
+{
+  mPtsContext.Reset();
+  FFmpegDataDecoder::ProcessFlush();
 }
 
 FFmpegH264Decoder<LIBAV_VER>::~FFmpegH264Decoder()
