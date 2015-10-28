@@ -294,6 +294,8 @@ private:
   bool                            mPrivateBrowsing;
 
   nsCOMPtr<nsIDashboardEventNotifier> mConnectionLogService;
+  uint32_t mSerial;
+  static uint32_t sSerialSeed;
 
 // These members are used for network per-app metering (bug 855949)
 // Currently, they are only available on gonk.

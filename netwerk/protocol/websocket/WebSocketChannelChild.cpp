@@ -489,8 +489,7 @@ WebSocketChannelChild::AsyncOpen(nsIURI *aURI,
   NS_ENSURE_SUCCESS(rv, rv);
 
   gNeckoChild->SendPWebSocketConstructor(this, tabChild,
-                                         IPC::SerializedLoadContext(this),
-                                         mSerial);
+                                         IPC::SerializedLoadContext(this));
   if (!SendAsyncOpen(uri, nsCString(aOrigin), aInnerWindowID, mProtocol,
                      mEncrypted, mPingInterval, mClientSetPingInterval,
                      mPingResponseTimeout, mClientSetPingTimeout, loadInfoArgs)) {
