@@ -7984,7 +7984,7 @@ DebuggerEnv_getCallee(JSContext* cx, unsigned argc, Value* vp)
         return true;
 
     JSObject& scope = env->as<DebugScopeObject>().scope();
-    if (!scope.is<CallObject>() || scope.is<ModuleEnvironmentObject>())
+    if (!scope.is<CallObject>())
         return true;
 
     CallObject& callobj = scope.as<CallObject>();
