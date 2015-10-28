@@ -134,18 +134,51 @@ PDMFactory::CreateDecoder(const TrackInfo& aConfig,
                           layers::LayersBackend aLayersBackend,
                           layers::ImageContainer* aImageContainer)
 {
-  RefPtr<PlatformDecoderModule> current = (mEMEPDM && aConfig.mCrypto.mValid)
-    ? mEMEPDM : GetDecoder(aConfig.mMimeType);
+  bool isEncrypted = mEMEPDM && aConfig.mCrypto.mValid;
 
-  if (!current) {
-    return nullptr;
+  if (isEncrypted) {
+    return CreateDecoderWithPDM(mEMEPDM,
+                                aConfig,
+                                aTaskQueue,
+                                aCallback,
+                                aLayersBackend,
+                                aImageContainer);
   }
+
+  for (auto& current : mCurrentPDMs) {
+    if (!current->SupportsMimeType(aConfig.mMimeType)) {
+      continue;
+    }
+    RefPtr<MediaDataDecoder> m =
+      CreateDecoderWithPDM(current,
+                           aConfig,
+                           aTaskQueue,
+                           aCallback,
+                           aLayersBackend,
+                           aImageContainer);
+    if (m) {
+      return m.forget();
+    }
+  }
+  NS_WARNING("Unable to create a decoder, no platform found.");
+  return nullptr;
+}
+
+already_AddRefed<MediaDataDecoder>
+PDMFactory::CreateDecoderWithPDM(PlatformDecoderModule* aPDM,
+                                 const TrackInfo& aConfig,
+                                 FlushableTaskQueue* aTaskQueue,
+                                 MediaDataDecoderCallback* aCallback,
+                                 layers::LayersBackend aLayersBackend,
+                                 layers::ImageContainer* aImageContainer)
+{
+  MOZ_ASSERT(aPDM);
   RefPtr<MediaDataDecoder> m;
 
   if (aConfig.GetAsAudioInfo()) {
-    m = current->CreateAudioDecoder(*aConfig.GetAsAudioInfo(),
-                                    aTaskQueue,
-                                    aCallback);
+    m = aPDM->CreateAudioDecoder(*aConfig.GetAsAudioInfo(),
+                                 aTaskQueue,
+                                 aCallback);
     return m.forget();
   }
 
@@ -165,7 +198,7 @@ PDMFactory::CreateDecoder(const TrackInfo& aConfig,
 
   if (H264Converter::IsH264(aConfig)) {
     RefPtr<H264Converter> h
-      = new H264Converter(current,
+      = new H264Converter(aPDM,
                           *aConfig.GetAsVideoInfo(),
                           aLayersBackend,
                           aImageContainer,
@@ -179,11 +212,11 @@ PDMFactory::CreateDecoder(const TrackInfo& aConfig,
       m = h.forget();
     }
   } else {
-    m = current->CreateVideoDecoder(*aConfig.GetAsVideoInfo(),
-                                    aLayersBackend,
-                                    aImageContainer,
-                                    aTaskQueue,
-                                    callback);
+    m = aPDM->CreateVideoDecoder(*aConfig.GetAsVideoInfo(),
+                                 aLayersBackend,
+                                 aImageContainer,
+                                 aTaskQueue,
+                                 callback);
   }
 
   if (callbackWrapper && m) {

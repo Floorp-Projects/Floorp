@@ -16,6 +16,7 @@
 
 #include "mozilla/dom/Promise.h"
 
+using namespace mozilla;
 using namespace mozilla::dom;
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(ScreenOrientation,

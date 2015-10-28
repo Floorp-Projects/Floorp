@@ -7,15 +7,42 @@
 #ifndef mozilla_image_decoders_nsBMPDecoder_h
 #define mozilla_image_decoders_nsBMPDecoder_h
 
-#include "BMPFileHeaders.h"
+#include "BMPHeaders.h"
 #include "Decoder.h"
 #include "gfxColor.h"
 #include "StreamingLexer.h"
+#include "mozilla/UniquePtr.h"
 
 namespace mozilla {
 namespace image {
 
 namespace bmp {
+
+/// This struct contains the fields from the file header and info header that
+/// we use during decoding. (Excluding bitfields fields, which are kept in
+/// BitFields.)
+struct Header {
+  uint32_t mDataOffset;     // Offset to raster data.
+  uint32_t mBIHSize;        // Header size.
+  int32_t  mWidth;          // Image width.
+  int32_t  mHeight;         // Image height.
+  uint16_t mBpp;            // Bits per pixel.
+  uint32_t mCompression;    // See struct Compression for valid values.
+  uint32_t mImageSize;      // (compressed) image size. Can be 0 if
+                            // mCompression==0.
+  uint32_t mNumColors;      // Used colors.
+
+  Header()
+   : mDataOffset(0)
+   , mBIHSize(0)
+   , mWidth(0)
+   , mHeight(0)
+   , mBpp(0)
+   , mCompression(0)
+   , mImageSize(0)
+   , mNumColors(0)
+  {}
+};
 
 /// An entry in the color table.
 struct ColorTableEntry {
@@ -98,23 +125,17 @@ class nsBMPDecoder : public Decoder
 public:
   ~nsBMPDecoder();
 
-  /// Obtains the bits per pixel from the internal BIH header.
-  int32_t GetBitsPerPixel() const;
-
-  /// Obtains the width from the internal BIH header.
-  int32_t GetWidth() const;
-
-  /// Obtains the abs-value of the height from the internal BIH header.
-  int32_t GetHeight() const;
-
   /// Obtains the internal output image buffer.
-  uint32_t* GetImageData();
+  uint32_t* GetImageData() { return reinterpret_cast<uint32_t*>(mImageData); }
+
+  /// Obtains the length of the internal output image buffer.
   size_t GetImageDataLength() const { return mImageDataLength; }
 
   /// Obtains the size of the compressed image resource.
   int32_t GetCompressedImageSize() const;
 
-  /// Mark this BMP as being within an ICO file.
+  /// Mark this BMP as being within an ICO file. Only used for testing purposes
+  /// because the ICO-specific constructor does this marking automatically.
   void SetIsWithinICO() { mIsWithinICO = true; }
 
   /// Did the BMP file have alpha data of any kind? (Only use this after the
@@ -136,14 +157,6 @@ private:
   friend class DecoderFactory;
   friend class nsICODecoder;
 
-  // Decoders should only be instantiated via DecoderFactory.
-  // XXX(seth): nsICODecoder is temporarily an exception to this rule.
-  explicit nsBMPDecoder(RasterImage* aImage);
-
-  uint32_t* RowBuffer();
-
-  void FinishRow();
-
   enum class State {
     FILE_HEADER,
     INFO_HEADER_SIZE,
@@ -159,6 +172,23 @@ private:
     FAILURE
   };
 
+  // This is the constructor used by DecoderFactory.
+  explicit nsBMPDecoder(RasterImage* aImage);
+
+  // This is the constructor used by nsICODecoder.
+  // XXX(seth): nsICODecoder is temporarily an exception to the rule that
+  //            decoders should only be instantiated via DecoderFactory.
+  nsBMPDecoder(RasterImage* aImage, uint32_t aDataOffset);
+
+  // Helper constructor called by the other two.
+  nsBMPDecoder(RasterImage* aImage, State aState, size_t aLength);
+
+  int32_t AbsoluteHeight() const { return abs(mH.mHeight); }
+
+  uint32_t* RowBuffer();
+
+  void FinishRow();
+
   LexerTransition<State> ReadFileHeader(const char* aData, size_t aLength);
   LexerTransition<State> ReadInfoHeaderSize(const char* aData, size_t aLength);
   LexerTransition<State> ReadInfoHeaderRest(const char* aData, size_t aLength);
@@ -172,8 +202,7 @@ private:
 
   StreamingLexer<State> mLexer;
 
-  bmp::FileHeader mBFH;
-  bmp::V5InfoHeader mBIH;
+  bmp::Header mH;
 
   // If the BMP is within an ICO file our treatment of it differs slightly.
   bool mIsWithinICO;
@@ -190,7 +219,7 @@ private:
 
   uint32_t mNumColors;      // The number of used colors, i.e. the number of
                             // entries in mColors, if it's present.
-  bmp::ColorTableEntry* mColors; // The color table, if it's present.
+  UniquePtr<bmp::ColorTableEntry[]> mColors; // The color table, if it's present.
   uint32_t mBytesPerColor;  // 3 or 4, depending on the format
 
   // The number of bytes prior to the optional gap that have been read. This

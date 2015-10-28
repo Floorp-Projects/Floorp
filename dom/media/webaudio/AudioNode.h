@@ -89,8 +89,8 @@ public:
     return mContext;
   }
 
-  virtual void Connect(AudioNode& aDestination, uint32_t aOutput,
-                       uint32_t aInput, ErrorResult& aRv);
+  virtual AudioNode* Connect(AudioNode& aDestination, uint32_t aOutput,
+                             uint32_t aInput, ErrorResult& aRv);
 
   virtual void Connect(AudioParam& aDestination, uint32_t aOutput,
                        ErrorResult& aRv);

@@ -1,0 +1,80 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=120684
+-->
+<window title="Mozilla Bug 120684"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  <a href="https://bugzilla.mozilla.org/show_bug.cgi?id=120684"
+     target="_blank">Mozilla Bug 120684</a>
+  </body>
+
+  <!-- test code goes here -->
+  <script type="application/javascript">
+  <![CDATA[
+  /** Test for Bug 120684 **/
+
+  var list = new ChromeNodeList();
+  is(list.length, 0, "Length should be initially 0.");
+
+  ok(list instanceof NodeList, "ChromeNodeList object should be an instance of NodeList.");
+
+  try {
+    list.append(document);
+    ok(false, "should have throw!");
+  } catch(ex) {
+    ok(true, "ChromeNodeList supports only nsIContent objects for now.");
+  }
+
+  try {
+    list.remove(document);
+    ok(false, "should have throw!");
+  } catch(ex) {
+    ok(true, "ChromeNodeList supports only nsIContent objects for now.");
+  }
+  is(list.length, 0, "Length should be 0.");
+
+  list.append(document.documentElement);
+  is(list.length, 1, "Length should be 1.");
+  is(list[0], document.documentElement);
+  is(list[1], undefined);
+
+  // Removing element which isn't in the list shouldn't do anything.
+  list.remove(document.createElement("foo"));
+  is(list.length, 1, "Length should be 1.");
+  is(list[0], document.documentElement);
+
+  list.remove(document.documentElement);
+  is(list.length, 0, "Length should be 0.");
+  is(list[0], undefined);
+
+  var e1 = document.createElement("foo");
+  var e2 = document.createElement("foo");
+  var e3 = document.createElement("foo");
+
+  list.append(e1);
+  list.append(e2);
+  list.append(e3);
+
+  is(list[0], e1);
+  is(list[1], e2);
+  is(list[2], e3);
+  is(list.length, 3);
+
+  list.remove(e2);
+  is(list[0], e1);
+  is(list[1], e3);
+  is(list[2], undefined);
+  is(list.length, 2);
+
+  // A leak test.
+  list.expando = list;
+
+  ]]>
+  </script>
+</window>

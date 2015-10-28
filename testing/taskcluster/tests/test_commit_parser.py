@@ -26,21 +26,21 @@ class TestCommitParser(unittest.TestCase):
         )
 
     def test_normalize_test_list_specific_tests(self):
-        self.assertEqual(
-            normalize_test_list({}, ['woot'], 'a,b,c'),
-            [{ 'test': 'a' }, { 'test': 'b' }, { 'test': 'c' }]
+        self.assertEqual(sorted(
+            normalize_test_list({}, ['woot'], 'a,b,c')),
+            sorted([{ 'test': 'a' }, { 'test': 'b' }, { 'test': 'c' }])
         )
 
     def test_normalize_test_list_specific_tests_with_whitespace(self):
-        self.assertEqual(
-            normalize_test_list({}, ['woot'], 'a, b, c'),
-            [{ 'test': 'a' }, { 'test': 'b' }, { 'test': 'c' }]
+        self.assertEqual(sorted(
+            normalize_test_list({}, ['woot'], 'a, b, c')),
+            sorted([{ 'test': 'a' }, { 'test': 'b' }, { 'test': 'c' }])
         )
 
     def test_normalize_test_list_with_alias(self):
-        self.assertEqual(
-            normalize_test_list({ "a": "alpha" }, ['woot'], 'a, b, c'),
-            [{ 'test': 'alpha' }, { 'test': 'b' }, { 'test': 'c' }]
+        self.assertEqual(sorted(
+            normalize_test_list({ "a": "alpha" }, ['woot'], 'a, b, c')),
+            sorted([{ 'test': 'alpha' }, { 'test': 'b' }, { 'test': 'c' }])
         )
 
     def test_normalize_test_list_with_alias_and_chunk(self):
@@ -50,23 +50,23 @@ class TestCommitParser(unittest.TestCase):
         )
 
     def test_normalize_test_list_with_alias_pattern(self):
-        self.assertEqual(
+        self.assertEqual(sorted(
             normalize_test_list({ "a": '/.*oo.*/' },
                                 ['woot', 'foo', 'bar'],
-                                'a, b, c'),
-            [{ 'test': t } for t in ['woot', 'foo', 'b', 'c']]
+                                'a, b, c')),
+            sorted([{ 'test': t } for t in ['woot', 'foo', 'b', 'c']])
         )
 
     def test_normalize_test_list_with_alias_pattern_anchored(self):
-        self.assertEqual(
+        self.assertEqual(sorted(
             normalize_test_list({ "a": '/.*oo/' },
                                 ['woot', 'foo', 'bar'],
-                                'a, b, c'),
-            [{ 'test': t } for t in ['foo', 'b', 'c']]
+                                'a, b, c')),
+            sorted([{ 'test': t } for t in ['foo', 'b', 'c']])
         )
 
     def test_normalize_test_list_with_alias_pattern_list(self):
-        self.assertEqual( sorted(
+        self.assertEqual(sorted(
             normalize_test_list({ "a": ['/.*oo/', 'bar', '/bi.*/'] },
                                 ['woot', 'foo', 'bar', 'bing', 'baz'],
                                 'a, b')),
@@ -74,7 +74,7 @@ class TestCommitParser(unittest.TestCase):
         )
 
     def test_normalize_test_list_with_alias_pattern_list_chunks(self):
-        self.assertEqual( sorted(
+        self.assertEqual(sorted(
             normalize_test_list({ "a": ['/.*oo/', 'bar', '/bi.*/'] },
                                 ['woot', 'foo', 'bar', 'bing', 'baz'],
                                 'a-1, a-4, b')),

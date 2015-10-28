@@ -39,7 +39,7 @@ HNsToFrames(int64_t aHNs, uint32_t aRate, int64_t* aOutFrames)
 }
 
 HRESULT
-GetDefaultStride(IMFMediaType *aType, uint32_t* aOutStride)
+GetDefaultStride(IMFMediaType *aType, uint32_t aWidth, uint32_t* aOutStride)
 {
   // Try to get the default stride from the media type.
   HRESULT hr = aType->GetUINT32(MF_MT_DEFAULT_STRIDE, aOutStride);
@@ -49,16 +49,11 @@ GetDefaultStride(IMFMediaType *aType, uint32_t* aOutStride)
 
   // Stride attribute not set, calculate it.
   GUID subtype = GUID_NULL;
-  uint32_t width = 0;
-  uint32_t height = 0;
 
   hr = aType->GetGUID(MF_MT_SUBTYPE, &subtype);
   NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
 
-  hr = MFGetAttributeSize(aType, MF_MT_FRAME_SIZE, &width, &height);
-  NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
-
-  hr = wmf::MFGetStrideForBitmapInfoHeader(subtype.Data1, width, (LONG*)(aOutStride));
+  hr = wmf::MFGetStrideForBitmapInfoHeader(subtype.Data1, aWidth, (LONG*)(aOutStride));
   NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
 
   return hr;

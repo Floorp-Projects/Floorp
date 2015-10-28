@@ -31,6 +31,15 @@ catch (e) {
     ok(false, "Stringifying a DOM interface object shouldn't throw.");
 }
 
+try {
+    eventTargetToString = Function.prototype.toString.call(EventTarget);
+    is(eventTargetToString, nativeToString,
+       "Stringifying a DOM interface object via Function.prototype.toString " +
+       "should return the same string as stringifying a native function.");
+}
+catch (e) {
+    ok(false, "Stringifying a DOM interface object shouldn't throw.");
+}
 
 </script>
 </pre>
