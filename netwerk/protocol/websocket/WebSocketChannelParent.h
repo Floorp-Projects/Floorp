@@ -35,8 +35,7 @@ class WebSocketChannelParent : public PWebSocketParent,
 
   WebSocketChannelParent(nsIAuthPromptProvider* aAuthProvider,
                          nsILoadContext* aLoadContext,
-                         PBOverrideStatus aOverrideStatus,
-                         uint32_t aSerial);
+                         PBOverrideStatus aOverrideStatus);
 
  private:
   bool RecvAsyncOpen(const URIParams& aURI,
@@ -67,7 +66,6 @@ class WebSocketChannelParent : public PWebSocketParent,
   nsCOMPtr<nsILoadContext> mLoadContext;
   bool mIPCOpen;
 
-  uint32_t mSerial;
 };
 
 } // namespace net

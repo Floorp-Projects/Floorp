@@ -320,8 +320,7 @@ NeckoParent::DeallocPWyciwygChannelParent(PWyciwygChannelParent* channel)
 
 PWebSocketParent*
 NeckoParent::AllocPWebSocketParent(const PBrowserOrId& browser,
-                                   const SerializedLoadContext& serialized,
-                                   const uint32_t& aSerial)
+                                   const SerializedLoadContext& serialized)
 {
   nsCOMPtr<nsILoadContext> loadContext;
   const char *error = CreateChannelLoadContext(browser, Manager(),
@@ -336,8 +335,7 @@ NeckoParent::AllocPWebSocketParent(const PBrowserOrId& browser,
   RefPtr<TabParent> tabParent = TabParent::GetFrom(browser.get_PBrowserParent());
   PBOverrideStatus overrideStatus = PBOverrideStatusFromLoadContext(serialized);
   WebSocketChannelParent* p = new WebSocketChannelParent(tabParent, loadContext,
-                                                         overrideStatus,
-                                                         aSerial);
+                                                         overrideStatus);
   p->AddRef();
   return p;
 }
