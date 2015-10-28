@@ -1032,18 +1032,34 @@ AccessibleWrap::accNavigate(
 
   switch(navDir) {
     case NAVDIR_FIRSTCHILD:
-      if (!nsAccUtils::MustPrune(accessible))
-        navAccessible = accessible->FirstChild();
+      if (accessible->IsProxy()) {
+        if (!accessible->Proxy()->MustPruneChildren()) {
+          navAccessible = WrapperFor(accessible->Proxy()->FirstChild());
+        }
+      } else {
+        if (!nsAccUtils::MustPrune(accessible))
+          navAccessible = accessible->FirstChild();
+      }
       break;
     case NAVDIR_LASTCHILD:
-      if (!nsAccUtils::MustPrune(accessible))
-        navAccessible = accessible->LastChild();
+      if (accessible->IsProxy()) {
+        if (!accessible->Proxy()->MustPruneChildren()) {
+          navAccessible = WrapperFor(accessible->Proxy()->LastChild());
+        }
+      } else {
+        if (!nsAccUtils::MustPrune(accessible))
+          navAccessible = accessible->LastChild();
+      }
       break;
     case NAVDIR_NEXT:
-      navAccessible = accessible->NextSibling();
+      navAccessible = accessible->IsProxy()
+        ? WrapperFor(accessible->Proxy()->NextSibling())
+        : accessible->NextSibling();
       break;
     case NAVDIR_PREVIOUS:
-      navAccessible = accessible->PrevSibling();
+      navAccessible = accessible->IsProxy()
+        ? WrapperFor(accessible->Proxy()->PrevSibling())
+        : accessible->PrevSibling();
       break;
     case NAVDIR_DOWN:
     case NAVDIR_LEFT:
