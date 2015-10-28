@@ -139,17 +139,33 @@ this.BrowserTestUtils = {
    *        A xul:browser.
    * @param {Boolean} includeSubFrames
    *        A boolean indicating if loads from subframes should be included.
+   * @param {optional string or function} wantLoad
+   *        If a function, takes a URL and returns true if that's the load we're
+   *        interested in. If a string, gives the URL of the load we're interested
+   *        in. If not present, the first load resolves the promise.
    *
    * @return {Promise}
    * @resolves When a load event is triggered for the browser.
    */
-  browserLoaded(browser, includeSubFrames=false) {
+  browserLoaded(browser, includeSubFrames=false, wantLoad=null) {
+    function isWanted(url) {
+      if (!wantLoad) {
+        return true;
+      } else if (typeof(wantLoad) == "function") {
+        return wantLoad(url);
+      } else {
+        // It's a string.
+        return wantLoad == url;
+      }
+    }
+
     return new Promise(resolve => {
       let mm = browser.ownerDocument.defaultView.messageManager;
       mm.addMessageListener("browser-test-utils:loadEvent", function onLoad(msg) {
-        if (msg.target == browser && (!msg.data.subframe || includeSubFrames)) {
+        if (msg.target == browser && (!msg.data.subframe || includeSubFrames) &&
+            isWanted(msg.data.url)) {
           mm.removeMessageListener("browser-test-utils:loadEvent", onLoad);
-          resolve();
+          resolve(msg.data.url);
         }
       });
     });

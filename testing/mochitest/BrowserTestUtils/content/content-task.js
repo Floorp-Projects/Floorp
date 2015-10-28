@@ -13,6 +13,33 @@ addMessageListener("content-task:spawn", function (msg) {
   let id = msg.data.id;
   let source = msg.data.runnable || "()=>{}";
 
+  function getStack(aStack) {
+    let frames = [];
+    for (let frame = aStack; frame; frame = frame.caller) {
+      frames.push(frame.filename + ":" + frame.name + ":" + frame.lineNumber);
+    }
+    return frames.join("\n");
+  }
+
+  function ok(condition, name, diag) {
+    let stack = getStack(Components.stack.caller);
+    sendAsyncMessage("content-task:test-result", {
+      id, condition, name, diag, stack
+    });
+  }
+
+  function is(a, b, name) {
+    ok(Object.is(a, b), name, "Got " + a + ", expected " + b);
+  }
+
+  function isnot(a, b, name) {
+    ok(!Object.is(a, b), name, "Didn't expect " + a + ", but got it");
+  }
+
+  function info(name) {
+    sendAsyncMessage("content-task:test-info", {id, name});
+  }
+
   try {
     let runnablestr = `
       (() => {
@@ -20,7 +47,7 @@ addMessageListener("content-task:spawn", function (msg) {
       })();`
 
     let runnable = eval(runnablestr);
-    let iterator = runnable(msg.data.arg);
+    let iterator = runnable.call(this, msg.data.arg);
     Task.spawn(iterator).then((val) => {
       sendAsyncMessage("content-task:complete", {
         id: id,
