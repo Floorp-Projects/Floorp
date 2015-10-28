@@ -2,13 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const TIMEUPDATE_TIMEOUT_LENGTH = 10000;
 const ENDED_TIMEOUT_LENGTH = 30000;
 
-/* Time we wait for the canplaythrough event to fire
+/* The time we wait depends primarily on the canplaythrough event firing
  * Note: this needs to be at least 30s because the
  *       B2G emulator in VMs is really slow. */
-const CANPLAYTHROUGH_TIMEOUT_LENGTH = 60000;
+const VERIFYPLAYING_TIMEOUT_LENGTH = 60000;
 
 /**
  * This class manages playback of a HTMLMediaElement with a MediaStream.
@@ -34,7 +33,8 @@ MediaStreamPlayback.prototype = {
    *                           from a previous run
    */
   playMedia : function(isResume) {
-    return this.startMedia(isResume)
+    this.startMedia(isResume);
+    return this.verifyPlaying()
       .then(() => this.stopMediaElement());
   },
 
@@ -45,28 +45,34 @@ MediaStreamPlayback.prototype = {
    *                           is being resumed from a previous run
    */
   startMedia : function(isResume) {
-    var canPlayThroughFired = false;
 
-    // If we're playing this media element for the first time,
-    // check that the time is zero.
+    // If we're playing media element for the first time, check that time is zero.
     if (!isResume) {
       is(this.mediaElement.currentTime, 0,
          "Before starting the media element, currentTime = 0");
     }
+    this.canPlayThroughFired = listenUntil(this.mediaElement, 'canplaythrough',
+                                           () => true);
 
-    return new Promise((resolve, reject) => {
-      /**
-       * Callback fired when the canplaythrough event is fired. We only
-       * run the logic of this function once, as this event can fire
-       * multiple times while a HTMLMediaStream is playing content from
-       * a real-time MediaStream.
-       */
-      var canPlayThroughCallback = () => {
-        // Disable the canplaythrough event listener to prevent multiple calls
-        canPlayThroughFired = true;
-        this.mediaElement.removeEventListener('canplaythrough',
-                                              canPlayThroughCallback, false);
+    // Hooks up the media stream to the media element and starts playing it
+    this.mediaElement.srcObject = this.mediaStream;
+    this.mediaElement.play();
+  },
 
+  /**
+   * Verifies that media is playing.
+   */
+  verifyPlaying : function() {
+    var lastStreamTime = this.mediaStream.currentTime;
+    var lastElementTime = this.mediaElement.currentTime;
+
+    var mediaTimeProgressed = listenUntil(this.mediaElement, 'timeupdate',
+        () => this.mediaStream.currentTime > lastStreamTime &&
+              this.mediaElement.currentTime > lastElementTime);
+
+    return timeout(Promise.all([this.canPlayThroughFired, mediaTimeProgressed]),
+                   VERIFYPLAYING_TIMEOUT_LENGTH, "verifyPlaying timed out")
+      .then(() => {
         is(this.mediaElement.paused, false,
            "Media element should be playing");
         is(this.mediaElement.duration, Number.POSITIVE_INFINITY,
@@ -93,45 +99,7 @@ MediaStreamPlayback.prototype = {
         is(this.mediaElement.src, "", "No src should be defined");
         is(this.mediaElement.currentSrc, "",
            "Current src should still be an empty string");
-
-        var timeUpdateCallback = () => {
-          if (this.mediaStream.currentTime > 0 &&
-              this.mediaElement.currentTime > 0) {
-            this.mediaElement.removeEventListener('timeupdate',
-                                                  timeUpdateCallback, false);
-            resolve();
-          }
-        };
-
-        // When timeupdate fires, we validate time has passed and move
-        // onto the success condition
-        this.mediaElement.addEventListener('timeupdate', timeUpdateCallback,
-                                           false);
-
-        // If timeupdate doesn't fire in enough time, we fail the test
-        setTimeout(() => {
-          this.mediaElement.removeEventListener('timeupdate',
-                                                timeUpdateCallback, false);
-          reject(new Error("timeUpdate event never fired"));
-        }, TIMEUPDATE_TIMEOUT_LENGTH);
-      };
-
-      // Adds a listener intended to be fired when playback is available
-      // without further buffering.
-      this.mediaElement.addEventListener('canplaythrough', canPlayThroughCallback,
-                                         false);
-
-      // Hooks up the media stream to the media element and starts playing it
-      this.mediaElement.srcObject = this.mediaStream;
-      this.mediaElement.play();
-
-      // If canplaythrough doesn't fire in enough time, we fail the test
-      setTimeout(() => {
-        this.mediaElement.removeEventListener('canplaythrough',
-                                              canPlayThroughCallback, false);
-        reject(new Error("canplaythrough event never fired"));
-      }, CANPLAYTHROUGH_TIMEOUT_LENGTH);
-    });
+      });
   },
 
   /**
@@ -172,7 +140,8 @@ LocalMediaStreamPlayback.prototype = Object.create(MediaStreamPlayback.prototype
    */
   playMediaWithMediaStreamTracksStop: {
     value: function(isResume) {
-      return this.startMedia(isResume)
+      this.startMedia(isResume);
+      return this.verifyPlaying()
         .then(() => this.stopTracksForStreamInMediaPlayback())
         .then(() => this.stopMediaElement());
     }
@@ -217,7 +186,8 @@ LocalMediaStreamPlayback.prototype = Object.create(MediaStreamPlayback.prototype
    */
   playMediaWithDeprecatedStreamStop : {
     value: function(isResume) {
-      return this.startMedia(isResume)
+      this.startMedia(isResume);
+      return this.verifyPlaying()
         .then(() => this.deprecatedStopStreamInMediaPlayback())
         .then(() => this.stopMediaElement());
     }
