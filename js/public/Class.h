@@ -324,6 +324,14 @@ typedef bool
 (* JSEnumerateOp)(JSContext* cx, JS::HandleObject obj);
 
 /**
+ * The type of ObjectOps::funToString.  This callback allows an object to
+ * provide a custom string to use when Function.prototype.toString is invoked on
+ * that object.  A null return value means OOM.
+ */
+typedef JSString*
+(* JSFunToStringOp)(JSContext* cx, JS::HandleObject obj, unsigned indent);
+
+/**
  * Resolve a lazy property named by id in obj by defining it directly in obj.
  * Lazy properties are those reflected from some peer native property space
  * (e.g., the DOM attributes for a given node reflected as obj) on demand.
@@ -650,6 +658,7 @@ struct ObjectOps
     GetElementsOp       getElements;
     JSNewEnumerateOp    enumerate;
     ThisValueOp         thisValue;
+    JSFunToStringOp     funToString;
 };
 
 #define JS_NULL_OBJECT_OPS                                                    \
@@ -665,7 +674,7 @@ typedef void (*JSClassInternal)();
 struct JSClass {
     JS_CLASS_MEMBERS(JSFinalizeOp);
 
-    void*               reserved[25];
+    void*               reserved[26];
 };
 
 #define JSCLASS_HAS_PRIVATE             (1<<0)  // objects have private slot

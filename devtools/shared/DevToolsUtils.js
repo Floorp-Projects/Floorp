@@ -818,3 +818,10 @@ exports.isGenerator = function (fn) {
 exports.isPromise = function (p) {
   return p && typeof p.then === "function";
 };
+
+/**
+ * Return true if `thing` is a SavedFrame, false otherwise.
+ */
+exports.isSavedFrame = function (thing) {
+  return Object.prototype.toString.call(thing) === "[object SavedFrame]";
+};

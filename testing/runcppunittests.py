@@ -237,8 +237,6 @@ def run_test_harness(options, args):
     update_mozinfo()
     progs = extract_unittests_from_args(args, mozinfo.info, options.manifest_path)
     options.xre_path = os.path.abspath(options.xre_path)
-    if mozinfo.isMac:
-        options.xre_path = os.path.join(os.path.dirname(options.xre_path), 'Resources')
     tester = CPPUnitTests()
     result = tester.run_tests(progs, options.xre_path, options.symbols_path)
 

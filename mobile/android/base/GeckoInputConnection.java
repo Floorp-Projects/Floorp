@@ -17,6 +17,7 @@ import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.util.ThreadUtils.AssertBehavior;
 
 import android.content.Context;
+import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.SystemClock;
@@ -321,6 +322,29 @@ class GeckoInputConnection
                 break;
         }
         return true;
+    }
+
+    @Override
+    public boolean performPrivateCommand(final String action, final Bundle data) {
+        switch (action) {
+            case "process-gecko-events":
+                // Process all currently pending Gecko thread events before returning.
+
+                final Editable editable = getEditable();
+                if (editable == null) {
+                    return false;
+                }
+
+                // Removing an invalid span is essentially a no-op, but it does force the
+                // current thread to wait for the Gecko thread when we call length(), in order
+                // to process the removeSpan event. Once Gecko thread processes the removeSpan
+                // event, all previous events in the Gecko event queue would have been
+                // processed as well.
+                editable.removeSpan(null);
+                editable.length();
+                return true;
+        }
+        return false;
     }
 
     @Override

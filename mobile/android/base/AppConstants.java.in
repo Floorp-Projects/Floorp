@@ -116,6 +116,20 @@ public class AppConstants {
     false;
 //#endif
 
+    public static final boolean MOZ_ANDROID_GCM =
+//#ifdef MOZ_ANDROID_GCM
+    true;
+//#else
+    false;
+//#endif
+
+    public static final String MOZ_ANDROID_GCM_SENDERID =
+//#ifdef MOZ_ANDROID_GCM_SENDERID
+    "@MOZ_ANDROID_GCM_SENDERID@";
+//#else
+    null;
+//#endif
+
     public static final String MOZ_CHILD_PROCESS_NAME = "@MOZ_CHILD_PROCESS_NAME@";
     public static final String MOZ_UPDATE_CHANNEL = "@MOZ_UPDATE_CHANNEL@";
     public static final String OMNIJAR_NAME = "@OMNIJAR_NAME@";

@@ -232,4 +232,27 @@ WMFMediaDataDecoder::IsHardwareAccelerated(nsACString& aFailureReason) const {
   return mMFTManager && mMFTManager->IsHardwareAccelerated(aFailureReason);
 }
 
+nsresult
+WMFMediaDataDecoder::ConfigurationChanged(const TrackInfo& aConfig)
+{
+  MOZ_ASSERT(mCallback->OnReaderTaskQueue());
+
+  nsCOMPtr<nsIRunnable> runnable =
+    NS_NewRunnableMethodWithArg<UniquePtr<TrackInfo>&&>(
+    this,
+    &WMFMediaDataDecoder::ProcessConfigurationChanged,
+    aConfig.Clone());
+  mTaskQueue->Dispatch(runnable.forget());
+  return NS_OK;
+
+}
+
+void
+WMFMediaDataDecoder::ProcessConfigurationChanged(UniquePtr<TrackInfo>&& aConfig)
+{
+  if (mMFTManager) {
+    mMFTManager->ConfigurationChanged(*aConfig);
+  }
+}
+
 } // namespace mozilla

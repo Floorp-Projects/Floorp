@@ -188,6 +188,11 @@ public: /* internal necko use only */
         return NS_OK;
     }
 
+    uint32_t GetRequestTime() const
+    {
+        return mRequestTime;
+    }
+
     nsresult OpenCacheEntry(bool usingSSL);
     nsresult ContinueConnect();
 

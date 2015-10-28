@@ -8,7 +8,6 @@ task:
   scopes:
     - 'docker-worker:cache:build-nexus-4-kk-user'
     - 'docker-worker:cache:build-nexus-4-kk-user-objdir-gecko-{{project}}'
-    - 'docker-worker:relengapi-proxy:tooltool.download.internal'
   metadata:
     name: '[TC] B2G Nexus 4 KK User'
   payload:
@@ -18,7 +17,6 @@ task:
     env:
       TARGET: 'nexus-4-kk'
       DEBUG: 0
-      TOOLTOOL_MANIFEST: 'b2g/config/nexus-4-kk/releng-mako.tt'
     command:
       - phone
   extra:

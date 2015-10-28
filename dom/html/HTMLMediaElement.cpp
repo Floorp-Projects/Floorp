@@ -1404,11 +1404,11 @@ HTMLMediaElement::CurrentTime() const
     return stream->StreamTimeToSeconds(stream->GetCurrentTime());
   }
 
-  if (mDecoder) {
+  if (mDefaultPlaybackStartPosition == 0.0 && mDecoder) {
     return mDecoder->GetCurrentTime();
   }
 
-  return 0.0;
+  return mDefaultPlaybackStartPosition;
 }
 
 NS_IMETHODIMP HTMLMediaElement::GetCurrentTime(double* aCurrentTime)
@@ -1484,19 +1484,11 @@ HTMLMediaElement::Seek(double aTime,
   StopSuspendingAfterFirstFrame();
 
   if (mSrcStream) {
-    // do nothing since streams aren't seekable; we effectively clamp to
-    // the current time.
-    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    // do nothing since media streams have an empty Seekable range.
     return;
   }
 
-  if (!mPlayed) {
-    LOG(LogLevel::Debug, ("HTMLMediaElement::mPlayed not available."));
-    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
-    return;
-  }
-
-  if (mCurrentPlayRangeStart != -1.0) {
+  if (mPlayed && mCurrentPlayRangeStart != -1.0) {
     double rangeEndTime = CurrentTime();
     LOG(LogLevel::Debug, ("%p Adding \'played\' a range : [%f, %f]", this, mCurrentPlayRangeStart, rangeEndTime));
     // Multiple seek without playing, or seek while playing.
@@ -1508,15 +1500,14 @@ HTMLMediaElement::Seek(double aTime,
     mCurrentPlayRangeStart = -1.0;
   }
 
-  if (!mDecoder) {
-    LOG(LogLevel::Debug, ("%p SetCurrentTime(%f) failed: no decoder", this, aTime));
-    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+  if (mReadyState == nsIDOMHTMLMediaElement::HAVE_NOTHING) {
+    mDefaultPlaybackStartPosition = aTime;
     return;
   }
 
-  if (mReadyState == nsIDOMHTMLMediaElement::HAVE_NOTHING) {
-    LOG(LogLevel::Debug, ("%p SetCurrentTime(%f) failed: no source", this, aTime));
-    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+  if (!mDecoder) {
+    // mDecoder must always be set in order to reach this point.
+    NS_ASSERTION(mDecoder, "SetCurrentTime failed: no decoder");
     return;
   }
 
@@ -2114,7 +2105,8 @@ HTMLMediaElement::HTMLMediaElement(already_AddRefed<mozilla::dom::NodeInfo>& aNo
     mMediaStreamTrackListener(nullptr),
     mElementInTreeState(ELEMENT_NOT_INTREE),
     mHasUserInteraction(false),
-    mFirstFrameLoaded(false)
+    mFirstFrameLoaded(false),
+    mDefaultPlaybackStartPosition(0.0)
 {
   if (!gMediaElementLog) {
     gMediaElementLog = PR_NewLogModule("nsMediaElement");
@@ -3439,6 +3431,11 @@ void HTMLMediaElement::MetadataLoaded(const MediaInfo* aInfo,
   if (IsVideo() && aInfo->HasVideo()) {
     // We are a video element playing video so update the screen wakelock
     NotifyOwnerDocumentActivityChangedInternal();
+  }
+
+  if (mDefaultPlaybackStartPosition > 0) {
+    SetCurrentTime(mDefaultPlaybackStartPosition);
+    mDefaultPlaybackStartPosition = 0.0;
   }
 }
 

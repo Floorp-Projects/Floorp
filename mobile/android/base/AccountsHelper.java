@@ -16,12 +16,14 @@ import android.content.Intent;
 import android.util.Log;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.mozilla.gecko.background.fxa.FxAccountUtils;
 import org.mozilla.gecko.fxa.FirefoxAccounts;
 import org.mozilla.gecko.fxa.FxAccountConstants;
 import org.mozilla.gecko.fxa.authenticator.AndroidFxAccount;
 import org.mozilla.gecko.fxa.login.Engaged;
 import org.mozilla.gecko.fxa.login.State;
 import org.mozilla.gecko.restrictions.Restriction;
+import org.mozilla.gecko.sync.SyncConfiguration;
 import org.mozilla.gecko.sync.Utils;
 import org.mozilla.gecko.sync.setup.SyncAccounts;
 import org.mozilla.gecko.util.EventCallback;
@@ -32,6 +34,8 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URISyntaxException;
 import java.security.GeneralSecurityException;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Helper class to manage Android Accounts corresponding to Firefox Accounts.
@@ -57,7 +61,8 @@ public class AccountsHelper implements NativeEventListener {
                 "Accounts:Create",
                 "Accounts:DeleteFirefoxAccount",
                 "Accounts:Exist",
-                "Accounts:ProfileUpdated");
+                "Accounts:ProfileUpdated",
+                "Accounts:ShowSyncPreferences");
     }
 
     public synchronized void uninit() {
@@ -72,7 +77,8 @@ public class AccountsHelper implements NativeEventListener {
                 "Accounts:Create",
                 "Accounts:DeleteFirefoxAccount",
                 "Accounts:Exist",
-                "Accounts:ProfileUpdated");
+                "Accounts:ProfileUpdated",
+                "Accounts:ShowSyncPreferences");
     }
 
     @Override
@@ -113,6 +119,26 @@ public class AccountsHelper implements NativeEventListener {
                         profileServerEndpoint,
                         state,
                         AndroidFxAccount.DEFAULT_AUTHORITIES_TO_SYNC_AUTOMATICALLY_MAP);
+
+                final String[] declinedSyncEngines = json.optStringArray("declinedSyncEngines", null);
+                if (declinedSyncEngines != null) {
+                    Log.i(LOGTAG, "User has selected engines; storing to prefs.");
+                    final Map<String, Boolean> selectedEngines = new HashMap<String, Boolean>();
+                    for (String enabledSyncEngine : SyncConfiguration.validEngineNames()) {
+                        selectedEngines.put(enabledSyncEngine, true);
+                    }
+                    for (String declinedSyncEngine : declinedSyncEngines) {
+                        selectedEngines.put(declinedSyncEngine, false);
+                    }
+                    // The "forms" engine has the same state as the "history" engine.
+                    selectedEngines.put("forms", selectedEngines.get("history"));
+                    FxAccountUtils.pii(LOGTAG, "User selected engines: " + selectedEngines.toString());
+                    try {
+                        SyncConfiguration.storeSelectedEnginesToPrefs(fxAccount.getSyncPrefs(), selectedEngines);
+                    } catch (UnsupportedEncodingException | GeneralSecurityException e) {
+                        Log.e(LOGTAG, "Got exception storing selected engines; ignoring.", e);
+                    }
+                }
             } catch (URISyntaxException | GeneralSecurityException | UnsupportedEncodingException e) {
                 Log.w(LOGTAG, "Got exception creating Firefox Account from JSON; ignoring.", e);
                 if (callback != null) {
@@ -270,6 +296,17 @@ public class AccountsHelper implements NativeEventListener {
             }
             final AndroidFxAccount androidFxAccount = new AndroidFxAccount(mContext, account);
             androidFxAccount.fetchProfileJSON();
+        } else if ("Accounts:ShowSyncPreferences".equals(event)) {
+            final Account account = FirefoxAccounts.getFirefoxAccount(mContext);
+            if (account == null) {
+                Log.w(LOGTAG, "Can't change show Sync preferences of non-existent Firefox Account!; ignored");
+                return;
+            }
+            // We don't necessarily have an Activity context here, so we always start in a new task.
+            final Intent intent = new Intent(FxAccountConstants.ACTION_FXA_STATUS);
+            intent.setFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            mContext.startActivity(intent);
         }
     }
 }
