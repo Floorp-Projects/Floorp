@@ -21,9 +21,17 @@ enum HitTestResult {
 };
 
 enum CancelAnimationFlags : uint32_t {
-  Default = 0,            /* Cancel all animations */
-  ExcludeOverscroll = 1   /* Don't clear overscroll */
+  Default = 0x0,            /* Cancel all animations */
+  ExcludeOverscroll = 0x1,  /* Don't clear overscroll */
+  RequestSnap = 0x2         /* Request snapping to snap points */
 };
+
+inline CancelAnimationFlags
+operator|(CancelAnimationFlags a, CancelAnimationFlags b)
+{
+  return static_cast<CancelAnimationFlags>(static_cast<int>(a)
+                                         | static_cast<int>(b));
+}
 
 enum class ScrollSource {
   // scrollTo() or something similar.
