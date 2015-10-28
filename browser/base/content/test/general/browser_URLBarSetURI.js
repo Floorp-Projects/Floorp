@@ -70,12 +70,8 @@ function loadTabInWindow(win, callback) {
   info("Loading tab");
   let url = "http://user:pass@example.com/";
   let tab = win.gBrowser.selectedTab = win.gBrowser.addTab(url);
-  tab.linkedBrowser.addEventListener("load", function listener() {
+  BrowserTestUtils.browserLoaded(tab.linkedBrowser, false, url).then(() => {
     info("Tab loaded");
-    if (tab.linkedBrowser.currentURI.spec != url)
-      return;
-    tab.linkedBrowser.removeEventListener("load", listener, true);
-
     is(win.gURLBar.textValue, "example.com", "URL bar had user/pass stripped initially");
     callback(tab);
   }, true);

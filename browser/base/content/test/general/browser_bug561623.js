@@ -1,9 +1,7 @@
 function test() {
   waitForExplicitFinish();
   gBrowser.selectedTab = gBrowser.addTab();
-  gBrowser.selectedBrowser.addEventListener("load", function () {
-    gBrowser.selectedBrowser.removeEventListener("load", arguments.callee, true);
-
+  BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser).then(() => {
     let doc = gBrowser.contentDocument;
     let tooltip = document.getElementById("aHTMLTooltip");
     let i = doc.getElementById("i");
@@ -21,9 +19,10 @@ function test() {
 
     gBrowser.removeCurrentTab();
     finish();
-  }, true);
+  });
 
-  content.location = 
-    "data:text/html,<!DOCTYPE html><html><body><input id='i'></body></html>";
+  gBrowser.loadURI(
+    "data:text/html,<!DOCTYPE html><html><body><input id='i'></body></html>"
+  );
 }
 

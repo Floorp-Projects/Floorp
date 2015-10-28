@@ -2,15 +2,7 @@
 // Test whether setting a new property in InstallTrigger then persists to other
 // page loads
 function loadURI(aUri, aCallback) {
-  gBrowser.selectedBrowser.addEventListener("load", function() {
-    if (gBrowser.selectedBrowser.currentURI.spec != aUri)
-      return;
-
-    gBrowser.selectedBrowser.removeEventListener("load", arguments.callee, true);
-
-    aCallback();
-  }, true);
-
+  BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser, false, aUri).then(aCallback);
   gBrowser.loadURI(aUri);
 }
 

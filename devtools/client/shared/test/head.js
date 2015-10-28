@@ -27,17 +27,16 @@ function addTab(aURL, aCallback)
   waitForExplicitFinish();
 
   gBrowser.selectedTab = gBrowser.addTab();
-  content.location = aURL;
-
   let tab = gBrowser.selectedTab;
   let browser = gBrowser.getBrowserForTab(tab);
 
-  function onTabLoad() {
-    browser.removeEventListener("load", onTabLoad, true);
-    aCallback(browser, tab, browser.contentDocument);
-  }
+  let url = encodeURI(aURL);
 
-  browser.addEventListener("load", onTabLoad, true);
+  BrowserTestUtils.browserLoaded(browser, false, url).then(() => {
+    aCallback(browser, tab, browser.contentDocument);
+  });
+
+  browser.loadURI(url);
 }
 
 function promiseTab(aURL) {
