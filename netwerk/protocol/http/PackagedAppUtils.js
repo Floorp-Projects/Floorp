@@ -14,6 +14,7 @@ const PACKAGEDAPPUTILS_CID = Components.ID("{fe8f1c2e-3c13-11e5-9a3f-bbf47d1e669
 
 function PackagedAppUtils() {
   this.packageIdentifier = '';
+  this.packageOrigin = '';
 }
 
 var DEBUG = 0
@@ -49,19 +50,20 @@ PackagedAppUtils.prototype = {
     debug("Signature: " + signature);
 
     try {
-      // Base64 decode
-      signature = atob(signature);
-
       // Remove header
       let manifestBody = aManifest.substr(aManifest.indexOf('\r\n\r\n') + 4);
       debug("manifestBody: " + manifestBody);
 
       // Parse manifest, store resource hashes
       let manifestObj = JSON.parse(manifestBody);
-      this.resources = manifestObj["moz-resources"];
       this.packageIdentifier = manifestObj["package-identifier"];
+      this.packageOrigin = manifestObj["moz-package-origin"];
+      this.resources = manifestObj["moz-resources"];
+
+      // Base64 decode
+      signature = atob(signature);
     } catch (e) {
-      debug("JSON parsing failure");
+      debug("Manifest parsing failure");
       aCallback.fireVerifiedEvent(true, false);
       return;
     }
