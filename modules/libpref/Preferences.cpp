@@ -1000,8 +1000,8 @@ static nsresult openPrefFile(nsIFile* aFile)
   if (NS_FAILED(rv)) 
     return rv;        
 
-  uint64_t fileSize64;
-  rv = inStr->Available(&fileSize64);
+  int64_t fileSize64;
+  rv = aFile->GetFileSize(&fileSize64);
   if (NS_FAILED(rv))
     return rv;
   NS_ENSURE_TRUE(fileSize64 <= UINT32_MAX, NS_ERROR_FILE_TOO_BIG);
