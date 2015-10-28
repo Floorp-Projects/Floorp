@@ -28,7 +28,7 @@ function initialize () {
   return Task.spawn(function*() {
     let root = document.querySelector("#app");
     gStore = Store();
-    let app = createElement(App, { front: gFront, heapWorker: gHeapAnalysesClient });
+    let app = createElement(App, { toolbox: gToolbox, front: gFront, heapWorker: gHeapAnalysesClient });
     let provider = createElement(Provider, { store: gStore }, app);
     render(provider, root);
     unsubscribe = gStore.subscribe(onStateChange);
