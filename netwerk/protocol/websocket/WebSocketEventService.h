@@ -15,7 +15,7 @@
 #include "nsHashKeys.h"
 #include "nsIObserver.h"
 #include "nsISupportsImpl.h"
-#include "nsTArray.h"
+#include "nsTObserverArray.h"
 
 namespace mozilla {
 namespace net {
@@ -26,7 +26,7 @@ class WebSocketEventListenerChild;
 class WebSocketEventService final : public nsIWebSocketEventService
                                   , public nsIObserver
 {
-  friend class WebSocketBaseRunnable;
+  friend class WebSocketFrameRunnable;
 
 public:
   NS_DECL_ISUPPORTS
@@ -34,23 +34,6 @@ public:
   NS_DECL_NSIWEBSOCKETEVENTSERVICE
 
   static already_AddRefed<WebSocketEventService> GetOrCreate();
-
-  void WebSocketCreated(uint32_t aWebSocketSerialID,
-                        uint64_t aInnerWindowID,
-                        const nsAString& aURI,
-                        const nsACString& aProtocols);
-
-  void WebSocketOpened(uint32_t aWebSocketSerialID,
-                       uint64_t aInnerWindowID,
-                       const nsAString& aEffectiveURI,
-                       const nsACString& aProtocols,
-                       const nsACString& aExtensions);
-
-  void WebSocketClosed(uint32_t aWebSocketSerialID,
-                       uint64_t aInnerWindowID,
-                       bool aWasClean,
-                       uint16_t aCode,
-                       const nsAString& aReason);
 
   void FrameReceived(uint32_t aWebSocketSerialID,
                      uint64_t aInnerWindowID,
@@ -83,7 +66,7 @@ private:
   bool HasListeners() const;
   void Shutdown();
 
-  typedef nsTArray<nsCOMPtr<nsIWebSocketEventListener>> WindowListeners;
+  typedef nsTObserverArray<nsCOMPtr<nsIWebSocketEventListener>> WindowListeners;
 
   struct WindowListener
   {
@@ -91,9 +74,7 @@ private:
     RefPtr<WebSocketEventListenerChild> mActor;
   };
 
-  void GetListeners(uint64_t aInnerWindowID,
-                    WindowListeners& aListeners) const;
-
+  WindowListeners* GetListeners(uint64_t aInnerWindowID) const;
   void ShutdownActorListener(WindowListener* aListener);
 
   // Used only on the main-thread.

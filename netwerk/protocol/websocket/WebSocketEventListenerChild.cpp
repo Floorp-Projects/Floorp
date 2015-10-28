@@ -23,47 +23,6 @@ WebSocketEventListenerChild::~WebSocketEventListenerChild()
 }
 
 bool
-WebSocketEventListenerChild::RecvWebSocketCreated(const uint32_t& aWebSocketSerialID,
-                                                  const nsString& aURI,
-                                                  const nsCString& aProtocols)
-{
-  if (mService) {
-    mService->WebSocketCreated(aWebSocketSerialID, mInnerWindowID, aURI,
-                               aProtocols);
-  }
-
-  return true;
-}
-
-bool
-WebSocketEventListenerChild::RecvWebSocketOpened(const uint32_t& aWebSocketSerialID,
-                                                 const nsString& aEffectiveURI,
-                                                 const nsCString& aProtocols,
-                                                 const nsCString& aExtensions)
-{
-  if (mService) {
-    mService->WebSocketOpened(aWebSocketSerialID, mInnerWindowID,
-                              aEffectiveURI, aProtocols, aExtensions);
-  }
-
-  return true;
-}
-
-bool
-WebSocketEventListenerChild::RecvWebSocketClosed(const uint32_t& aWebSocketSerialID,
-                                                 const bool& aWasClean,
-                                                 const uint16_t& aCode,
-                                                 const nsString& aReason)
-{
-  if (mService) {
-    mService->WebSocketClosed(aWebSocketSerialID, mInnerWindowID,
-                              aWasClean, aCode, aReason);
-  }
-
-  return true;
-}
-
-bool
 WebSocketEventListenerChild::RecvFrameReceived(const uint32_t& aWebSocketSerialID,
                                                const WebSocketFrameData& aFrameData)
 {
