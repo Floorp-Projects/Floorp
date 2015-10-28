@@ -39,6 +39,8 @@ public:
     return TrackInfo::kVideoTrack;
   }
 
+  void ConfigurationChanged(const TrackInfo& aConfig) override;
+
 private:
 
   bool InitializeDXVA(bool aForceD3D9);
