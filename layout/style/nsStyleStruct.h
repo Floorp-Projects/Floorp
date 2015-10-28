@@ -962,9 +962,6 @@ struct nsStyleBorder {
     return mBorderImageSource.IsLoaded();
   }
 
-  // Defined in nsStyleStructInlines.h
-  inline nsresult RequestDecode();
-
   void GetBorderColor(mozilla::css::Side aSide, nscolor& aColor,
                       bool& aForeground) const
   {

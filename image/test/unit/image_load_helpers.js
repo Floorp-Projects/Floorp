@@ -48,12 +48,6 @@ function ImageListener(start_callback, stop_callback)
   {
     do_check_false(this.synchronous);
 
-    try {
-      aRequest.requestDecode();
-    } catch (e) {
-      do_print("requestDecode threw " + e);
-    }
-
     this.state |= LOAD_COMPLETE;
 
     if (this.stop_callback)
