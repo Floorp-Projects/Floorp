@@ -1652,20 +1652,6 @@ nsPluginFrame::PaintPlugin(nsDisplayListBuilder* aBuilder,
       mInstanceOwner->Paint(tmpRect, nullptr);
     }
   }
-#elif defined(MOZ_X11)
-  if (mInstanceOwner) {
-    NPWindow *window;
-    mInstanceOwner->GetWindow(window);
-    if (window->type == NPWindowTypeDrawable) {
-      gfxRect frameGfxRect =
-        PresContext()->AppUnitsToGfxUnits(aPluginRect);
-      gfxRect dirtyGfxRect =
-        PresContext()->AppUnitsToGfxUnits(aDirtyRect);
-      gfxContext* ctx = aRenderingContext.ThebesContext();
-
-      mInstanceOwner->Paint(ctx, frameGfxRect, dirtyGfxRect);
-    }
-  }
 #endif
 }
 
