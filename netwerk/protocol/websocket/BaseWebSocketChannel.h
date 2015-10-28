@@ -55,6 +55,8 @@ class BaseWebSocketChannel : public nsIWebSocketChannel,
   NS_IMETHOD InitLoadInfo(nsIDOMNode* aLoadingNode, nsIPrincipal* aLoadingPrincipal,
                           nsIPrincipal* aTriggeringPrincipal, uint32_t aSecurityFlags,
                           uint32_t aContentPolicyType) override;
+  NS_IMETHOD GetSerial(uint32_t* aSerial) override;
+  NS_IMETHOD SetSerial(uint32_t aSerial) override;
 
   // Off main thread URI access.
   virtual void GetEffectiveURL(nsAString& aEffectiveURL) const = 0;
@@ -98,6 +100,8 @@ class BaseWebSocketChannel : public nsIWebSocketChannel,
 
   uint32_t                        mPingInterval;         /* milliseconds */
   uint32_t                        mPingResponseTimeout;  /* milliseconds */
+
+  uint32_t                        mSerial;
 };
 
 } // namespace net
