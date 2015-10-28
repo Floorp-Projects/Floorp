@@ -999,6 +999,11 @@ TokenStream::checkForKeyword(const KeywordInfo* kw, TokenKind* ttp)
 
     if (kw->tokentype != TOK_STRICT_RESERVED) {
         if (kw->version <= versionNumber()) {
+            // Treat 'let' as an identifier and contextually a keyword in
+            // sloppy mode. It is always a keyword in strict mode.
+            if (kw->tokentype == TOK_LET && !strictMode())
+                return true;
+
             // Working keyword.
             if (ttp) {
                 *ttp = kw->tokentype;
@@ -1006,12 +1011,6 @@ TokenStream::checkForKeyword(const KeywordInfo* kw, TokenKind* ttp)
             }
             return reportError(JSMSG_RESERVED_ID, kw->chars);
         }
-
-        // The keyword is not in this version. Treat it as an identifier, unless
-        // it is let which we treat as TOK_STRICT_RESERVED by falling through to
-        // the code below (ES5 forbids it in strict mode).
-        if (kw->tokentype != TOK_LET)
-            return true;
     }
 
     // Strict reserved word.
