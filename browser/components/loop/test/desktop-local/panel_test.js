@@ -793,6 +793,7 @@ describe("loop.panel", function() {
       beforeEach(function() {
         roomEntry = mountRoomEntry({
           dispatcher: dispatcher,
+          isOpenedRoom: false,
           room: new loop.store.Room(roomData)
         });
       });
