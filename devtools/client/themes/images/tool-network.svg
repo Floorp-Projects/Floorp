@@ -1,9 +1,7 @@
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<svg height="16" width="16" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" fill="whitesmoke">
-    <path d="M28.2 10.6H4.6c-1 0-1.9-.8-1.9-1.9s.8-1.9 1.9-1.9h23.6c1 0 1.9.8 1.9 1.9s-.8 1.9-1.9 1.9z"/>
-    <path opacity="0.75" d="M35.4 18.1H16.7c-1 0-1.9-.8-1.9-1.9s.8-1.9 1.9-1.9h18.7c1 0 1.9.8 1.9 1.9s-.9 1.9-1.9 1.9z"/>
-    <path d="M21 25.6h-8.7c-1 0-1.9-.8-1.9-1.9s.8-1.9 1.9-1.9H21c1 0 1.9.8 1.9 1.9s-.9 1.9-1.9 1.9z"/>
-    <path opacity="0.75" d="M12.3 33.2H6.4c-1 0-1.9-.8-1.9-1.9 0-1 .8-1.9 1.9-1.9h5.9c1 0 1.9.8 1.9 1.9 0 1.1-.8 1.9-1.9 1.9z"/>
+<svg height="16" width="16" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="whitesmoke">
+    <path d="M11 5H3c-.6 0-1-.4-1-1s.4-1 1-1h8c.6 0 1 .4 1 1s-.4 1-1 1zM9 11H4c-.6 0-1-.4-1-1s.4-1 1-1h5c.6 0 1 .4 1 1s-.4 1-1 1z"/>
+    <path opacity="0.5" d="M14 8H6c-.6 0-1-.4-1-1s.4-1 1-1h8c.6 0 1 .4 1 1s-.4 1-1 1zM5 14H2c-.6 0-1-.4-1-1s.4-1 1-1h3c.6 0 1 .4 1 1s-.4 1-1 1z"/>
 </svg>
