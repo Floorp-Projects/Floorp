@@ -11,7 +11,7 @@
 #include "mozilla/UniquePtr.h"
 
 #include "imgIEncoder.h"
-#include "BMPFileHeaders.h"
+#include "BMPHeaders.h"
 
 #include "nsCOMPtr.h"
 
@@ -22,6 +22,62 @@
      0x4fa4,                                         \
     {0xbd, 0x16, 0xb0, 0x81, 0xa3, 0Xba, 0x8c, 0x0b} \
 }
+
+namespace mozilla {
+namespace image {
+namespace bmp {
+
+struct FileHeader {
+  char signature[2];   // String "BM".
+  uint32_t filesize;   // File size.
+  int32_t reserved;    // Zero.
+  uint32_t dataoffset; // Offset to raster data.
+};
+
+struct XYZ {
+  int32_t x, y, z;
+};
+
+struct XYZTriple {
+  XYZ r, g, b;
+};
+
+struct V5InfoHeader {
+  uint32_t bihsize;          // Header size
+  int32_t width;             // Uint16 in OS/2 BMPs
+  int32_t height;            // Uint16 in OS/2 BMPs
+  uint16_t planes;           // =1
+  uint16_t bpp;              // Bits per pixel.
+  uint32_t compression;      // See Compression for valid values
+  uint32_t image_size;       // (compressed) image size. Can be 0 if
+                             // compression==0
+  uint32_t xppm;             // Pixels per meter, horizontal
+  uint32_t yppm;             // Pixels per meter, vertical
+  uint32_t colors;           // Used Colors
+  uint32_t important_colors; // Number of important colors. 0=all
+  // The rest of the header is not available in WIN_V3 BMP Files
+  uint32_t red_mask;         // Bits used for red component
+  uint32_t green_mask;       // Bits used for green component
+  uint32_t blue_mask;        // Bits used for blue component
+  uint32_t alpha_mask;       // Bits used for alpha component
+  uint32_t color_space;      // 0x73524742=LCS_sRGB ...
+  // These members are unused unless color_space == LCS_CALIBRATED_RGB
+  XYZTriple white_point;     // Logical white point
+  uint32_t gamma_red;        // Red gamma component
+  uint32_t gamma_green;      // Green gamma component
+  uint32_t gamma_blue;       // Blue gamma component
+  uint32_t intent;           // Rendering intent
+  // These members are unused unless color_space == LCS_PROFILE_*
+  uint32_t profile_offset;   // Offset to profile data in bytes
+  uint32_t profile_size;     // Size of profile data in bytes
+  uint32_t reserved;         // =0
+
+  static const uint32_t COLOR_SPACE_LCS_SRGB = 0x73524742;
+};
+
+} // namespace bmp
+} // namespace image
+} // namespace mozilla
 
 // Provides BMP encoding functionality. Use InitFromData() to do the
 // encoding. See that function definition for encoding options.

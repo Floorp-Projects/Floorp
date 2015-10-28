@@ -220,8 +220,8 @@ AnnexB::ConvertSampleToAVCC(mozilla::MediaRawData* aSample)
     return ConvertSampleTo4BytesAVCC(aSample);
   }
   if (!IsAnnexB(aSample)) {
-    // Not AnnexB, can't convert.
-    return false;
+    // Not AnnexB, nothing to convert.
+    return true;
   }
 
   mozilla::Vector<uint8_t> nalu;
@@ -237,15 +237,17 @@ already_AddRefed<mozilla::MediaByteBuffer>
 AnnexB::ExtractExtraData(const mozilla::MediaRawData* aSample)
 {
   RefPtr<mozilla::MediaByteBuffer> extradata = new mozilla::MediaByteBuffer;
-  if (IsAVCC(aSample) && HasSPS(aSample->mExtraData)) {
+  if (HasSPS(aSample->mExtraData)) {
     // We already have an explicit extradata, re-use it.
     extradata = aSample->mExtraData;
     return extradata.forget();
   }
 
   if (IsAnnexB(aSample)) {
+    // We can't extract data from AnnexB.
     return extradata.forget();
   }
+
   // SPS content
   mozilla::Vector<uint8_t> sps;
   ByteWriter spsw(sps);

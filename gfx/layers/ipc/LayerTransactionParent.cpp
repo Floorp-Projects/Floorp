@@ -345,9 +345,12 @@ LayerTransactionParent::RecvUpdate(InfallibleTArray<Edit>&& cset,
         layer->SetMaskLayer(nullptr);
       }
       layer->SetAnimations(common.animations());
-      layer->SetInvalidRegion(common.invalidRegion());
       layer->SetFrameMetrics(common.metrics());
       layer->SetDisplayListLog(common.displayListLog().get());
+
+      // The updated invalid region is added to the existing one, since we can
+      // update multiple times before the next composite.
+      layer->AddInvalidRegion(common.invalidRegion());
 
       nsTArray<RefPtr<Layer>> maskLayers;
       for (size_t i = 0; i < common.ancestorMaskLayersParent().Length(); i++) {

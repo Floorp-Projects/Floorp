@@ -9,45 +9,14 @@
 
 #include "jit/mips32/MacroAssembler-mips32.h"
 
+#include "jit/mips-shared/MacroAssembler-mips-shared-inl.h"
+
 namespace js {
 namespace jit {
 
 //{{{ check_macroassembler_style
 // ===============================================================
 // Logical instructions
-
-void
-MacroAssembler::not32(Register reg)
-{
-    ma_not(reg, reg);
-}
-
-void
-MacroAssembler::and32(Register src, Register dest)
-{
-    as_and(dest, dest, src);
-}
-
-void
-MacroAssembler::and32(Imm32 imm, Register dest)
-{
-    ma_and(dest, imm);
-}
-
-void
-MacroAssembler::and32(Imm32 imm, const Address& dest)
-{
-    load32(dest, SecondScratchReg);
-    ma_and(SecondScratchReg, imm);
-    store32(SecondScratchReg, dest);
-}
-
-void
-MacroAssembler::and32(const Address& src, Register dest)
-{
-    load32(src, SecondScratchReg);
-    ma_and(dest, SecondScratchReg);
-}
 
 void
 MacroAssembler::andPtr(Register src, Register dest)
@@ -69,26 +38,6 @@ MacroAssembler::and64(Imm64 imm, Register64 dest)
 }
 
 void
-MacroAssembler::or32(Register src, Register dest)
-{
-    ma_or(dest, src);
-}
-
-void
-MacroAssembler::or32(Imm32 imm, Register dest)
-{
-    ma_or(dest, imm);
-}
-
-void
-MacroAssembler::or32(Imm32 imm, const Address& dest)
-{
-    load32(dest, SecondScratchReg);
-    ma_or(SecondScratchReg, imm);
-    store32(SecondScratchReg, dest);
-}
-
-void
 MacroAssembler::orPtr(Register src, Register dest)
 {
     ma_or(dest, src);
@@ -105,12 +54,6 @@ MacroAssembler::or64(Register64 src, Register64 dest)
 {
     or32(src.low, dest.low);
     or32(src.high, dest.high);
-}
-
-void
-MacroAssembler::xor32(Imm32 imm, Register dest)
-{
-    ma_xor(dest, imm);
 }
 
 void

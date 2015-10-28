@@ -116,10 +116,10 @@ function report(testName, success) {
 <script type="text/javascript"><![CDATA[
   try {
     eval("let x = 1;");
-    var success = false;
+    var success = true;
   }
-  catch (e) { success = true; }
-  is(success, true, "JS 1.7 should not work in versionless HTML script tags");
+  catch (e) { success = false; }
+  is(success, true, "let should work in versionless HTML script tags");
 ]]></script>
 </pre>
 </body>

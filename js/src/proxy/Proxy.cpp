@@ -738,6 +738,12 @@ js::proxy_GetElements(JSContext* cx, HandleObject proxy, uint32_t begin, uint32_
     return Proxy::getElements(cx, proxy, begin, end, adder);
 }
 
+JSString*
+js::proxy_FunToString(JSContext* cx, HandleObject proxy, unsigned indent)
+{
+    return Proxy::fun_toString(cx, proxy, indent);
+}
+
 const Class js::ProxyObject::class_ =
     PROXY_CLASS_DEF("Proxy", JSCLASS_HAS_CACHED_PROTO(JSProto_Proxy));
 

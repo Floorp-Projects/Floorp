@@ -487,9 +487,9 @@ nsBMPEncoder::InitFileHeader(Version aVersion, uint32_t aBPP, uint32_t aWidth,
   mBMPFileHeader.signature[1] = 'M';
 
   if (aVersion == VERSION_3) {
-    mBMPFileHeader.dataoffset = FileHeader::LENGTH + InfoHeaderLength::WIN_V3;
+    mBMPFileHeader.dataoffset = FILE_HEADER_LENGTH + InfoHeaderLength::WIN_V3;
   } else { // aVersion == 5
-    mBMPFileHeader.dataoffset = FileHeader::LENGTH + InfoHeaderLength::WIN_V5;
+    mBMPFileHeader.dataoffset = FILE_HEADER_LENGTH + InfoHeaderLength::WIN_V5;
   }
 
   // The color table is present only if BPP is <= 8

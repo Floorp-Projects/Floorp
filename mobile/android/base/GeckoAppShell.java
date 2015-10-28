@@ -605,14 +605,14 @@ public class GeckoAppShell
             if (gOrientationSensor == null)
                 gOrientationSensor = sm.getDefaultSensor(Sensor.TYPE_ORIENTATION);
             if (gOrientationSensor != null)
-                sm.registerListener(gi.getSensorEventListener(), gOrientationSensor, SensorManager.SENSOR_DELAY_GAME);
+                sm.registerListener(gi.getSensorEventListener(), gOrientationSensor, SensorManager.SENSOR_DELAY_FASTEST);
             break;
 
         case GeckoHalDefines.SENSOR_ACCELERATION:
             if (gAccelerometerSensor == null)
                 gAccelerometerSensor = sm.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
             if (gAccelerometerSensor != null)
-                sm.registerListener(gi.getSensorEventListener(), gAccelerometerSensor, SensorManager.SENSOR_DELAY_GAME);
+                sm.registerListener(gi.getSensorEventListener(), gAccelerometerSensor, SensorManager.SENSOR_DELAY_FASTEST);
             break;
 
         case GeckoHalDefines.SENSOR_PROXIMITY:
@@ -633,28 +633,28 @@ public class GeckoAppShell
             if (gLinearAccelerometerSensor == null)
                 gLinearAccelerometerSensor = sm.getDefaultSensor(Sensor.TYPE_LINEAR_ACCELERATION);
             if (gLinearAccelerometerSensor != null)
-                sm.registerListener(gi.getSensorEventListener(), gLinearAccelerometerSensor, SensorManager.SENSOR_DELAY_GAME);
+                sm.registerListener(gi.getSensorEventListener(), gLinearAccelerometerSensor, SensorManager.SENSOR_DELAY_FASTEST);
             break;
 
         case GeckoHalDefines.SENSOR_GYROSCOPE:
             if (gGyroscopeSensor == null)
                 gGyroscopeSensor = sm.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
             if (gGyroscopeSensor != null)
-                sm.registerListener(gi.getSensorEventListener(), gGyroscopeSensor, SensorManager.SENSOR_DELAY_GAME);
+                sm.registerListener(gi.getSensorEventListener(), gGyroscopeSensor, SensorManager.SENSOR_DELAY_FASTEST);
             break;
 
         case GeckoHalDefines.SENSOR_ROTATION_VECTOR:
             if (gRotationVectorSensor == null)
                 gRotationVectorSensor = sm.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR);
             if (gRotationVectorSensor != null)
-                sm.registerListener(gi.getSensorEventListener(), gRotationVectorSensor, SensorManager.SENSOR_DELAY_GAME);
+                sm.registerListener(gi.getSensorEventListener(), gRotationVectorSensor, SensorManager.SENSOR_DELAY_FASTEST);
             break;
 
         case GeckoHalDefines.SENSOR_GAME_ROTATION_VECTOR:
             if (gGameRotationVectorSensor == null)
                 gGameRotationVectorSensor = sm.getDefaultSensor(15 /* Sensor.TYPE_GAME_ROTATION_VECTOR */); // API >= 18
             if (gGameRotationVectorSensor != null)
-                sm.registerListener(gi.getSensorEventListener(), gGameRotationVectorSensor, SensorManager.SENSOR_DELAY_GAME);
+                sm.registerListener(gi.getSensorEventListener(), gGameRotationVectorSensor, SensorManager.SENSOR_DELAY_FASTEST);
             break;
 
         default:
