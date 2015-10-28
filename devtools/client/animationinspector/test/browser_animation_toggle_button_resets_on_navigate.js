@@ -22,10 +22,7 @@ add_task(function*() {
     "The toggle button now is in its paused state");
 
   info("Reloading the page");
-  let onNewRoot = inspector.once("new-root");
-  yield reloadTab();
-  yield onNewRoot;
-  yield inspector.once("inspector-updated");
+  yield reloadTab(inspector);
 
   ok(!panel.toggleAllButtonEl.classList.contains("paused"),
     "The toggle button is back in its running state");
