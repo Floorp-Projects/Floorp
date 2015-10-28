@@ -185,28 +185,6 @@ gfxWindowsNativeDrawing::BeginNativeDrawing()
 }
 
 bool
-gfxWindowsNativeDrawing::IsDoublePass()
-{
-    if (mContext->GetDrawTarget()->GetBackendType() != mozilla::gfx::BackendType::CAIRO ||
-        mContext->GetDrawTarget()->IsDualDrawTarget()) {
-      return true;
-    }
-
-    RefPtr<gfxASurface> surf = mContext->CurrentSurface(&mDeviceOffset.x, &mDeviceOffset.y);
-    if (!surf || surf->CairoStatus())
-        return false;
-    if (surf->GetType() != gfxSurfaceType::Win32 &&
-        surf->GetType() != gfxSurfaceType::Win32Printing) {
-        return true;
-    }
-    if ((surf->GetContentType() != gfxContentType::COLOR ||
-         (surf->GetContentType() == gfxContentType::COLOR_ALPHA &&
-          !(mNativeDrawFlags & CAN_DRAW_TO_COLOR_ALPHA))))
-        return true;
-    return false;
-}
-
-bool
 gfxWindowsNativeDrawing::ShouldRenderAgain()
 {
     switch (mRenderState) {
