@@ -23,6 +23,17 @@ runWithMSE(function(ms, el) {
     ok(true, "Receive a sourceopen event");
     var audiosb = ms.addSourceBuffer("audio/mp4");
     var videosb = ms.addSourceBuffer("video/mp4");
+    el.addEventListener("error", function(e) {
+      ok(false, "should not fire '" + e + "' event");
+    });
+    is(el.readyState, el.HAVE_NOTHING, "readyState is HAVE_NOTHING");
+    try {
+      el.currentTime = 3;
+    } catch (e) {
+      ok(false, "should not throw '" + e + "' exception");
+    }
+    is(el.currentTime, 3, "currentTime is default playback start position");
+    is(el.seeking, false, "seek not started with HAVE_NOTHING");
     fetchAndLoad(audiosb, 'bipbop/bipbop_audio', ['init'], '.mp4')
     .then(fetchAndLoad.bind(null, videosb, 'bipbop/bipbop_video', ['init'], '.mp4'))
     .then(once.bind(null, el, 'loadedmetadata'))
@@ -30,6 +41,9 @@ runWithMSE(function(ms, el) {
       var p = once(el, 'seeking');
       el.play();
       el.currentTime = 5;
+      is(el.readyState, el.HAVE_METADATA, "readyState is HAVE_METADATA");
+      is(el.seeking, true, "seek not started with HAVE_METADATA");
+      is(el.currentTime, 5, "currentTime is seek position");
       return p;
     })
     .then(function() {

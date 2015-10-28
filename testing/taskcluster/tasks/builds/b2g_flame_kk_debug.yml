@@ -8,7 +8,6 @@ task:
   scopes:
     - 'docker-worker:cache:build-flame-kk-debug'
     - 'docker-worker:cache:build-flame-kk-debug-objdir-gecko-{{project}}'
-    - 'docker-worker:relengapi-proxy:tooltool.download.internal'
   metadata:
     name: '[TC] B2G Flame KK Debug'
 
@@ -20,7 +19,6 @@ task:
       TARGET: 'flame-kk'
       DEBUG: 0
       VARIANT: userdebug
-      TOOLTOOL_MANIFEST: 'b2g/config/flame-kk/releng-flame-kk.tt'
     command:
       - phone
   extra:
