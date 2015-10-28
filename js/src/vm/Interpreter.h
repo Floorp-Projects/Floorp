@@ -87,7 +87,7 @@ InvokeSetter(JSContext* cx, const Value& thisv, Value fval, HandleValue v);
 //       ensure |fval| and |newTarget| are both |IsConstructor|.
 extern bool
 Construct(JSContext* cx, HandleValue fval, const ConstructArgs& args, HandleValue newTarget,
-          MutableHandleValue rval);
+          MutableHandleObject objp);
 
 // Call Construct(fval, args, newTarget), but use the given |thisv| as |this|
 // during construction of |fval|.
@@ -477,9 +477,6 @@ ThrowUninitializedThis(JSContext* cx, AbstractFramePtr frame);
 
 bool
 DefaultClassConstructor(JSContext* cx, unsigned argc, Value* vp);
-
-bool
-DefaultDerivedClassConstructor(JSContext* cx, unsigned argc, Value* vp);
 
 bool
 Debug_CheckSelfHosted(JSContext* cx, HandleValue v);

@@ -2522,9 +2522,8 @@ JS_NewDataView(JSContext* cx, HandleObject arrayBuffer, uint32_t byteOffset, int
     cargs[2].setInt32(byteLength);
 
     RootedValue fun(cx, ObjectValue(*constructor));
-    RootedValue rval(cx);
-    if (!Construct(cx, fun, cargs, fun, &rval))
+    RootedObject obj(cx);
+    if (!Construct(cx, fun, cargs, fun, &obj))
         return nullptr;
-    MOZ_ASSERT(rval.isObject());
-    return &rval.toObject();
+    return obj;
 }
