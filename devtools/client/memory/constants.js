@@ -26,6 +26,12 @@ actions.TOGGLE_RECORD_ALLOCATION_STACKS_END = "toggle-record-allocation-stacks-e
 // Fired by UI to select a snapshot to view.
 actions.SELECT_SNAPSHOT = "select-snapshot";
 
+// Fired to toggle tree inversion on or off.
+actions.TOGGLE_INVERTED = "toggle-inverted";
+
+// Fired when there is an error processing a snapshot or taking a census.
+actions.SNAPSHOT_ERROR = "snapshot-error";
+
 // Options passed to MemoryFront's startRecordingAllocations never change.
 exports.ALLOCATION_RECORDING_OPTIONS = {
   probability: 1,
@@ -71,10 +77,14 @@ const snapshotState = exports.snapshotState = {};
  * Various states a snapshot can be in.
  * An FSM describing snapshot states:
  *
- * SAVING -> SAVED -> READING -> READ   <-  <-  <- SAVED_CENSUS
- *                                    ↘             ↗
- *                                     SAVING_CENSUS
+ *     SAVING -> SAVED -> READING -> READ   <-  <-  <- SAVED_CENSUS
+ *                                        ↘             ↗
+ *                                         SAVING_CENSUS
+ *
+ * Any of these states may go to the ERROR state, from which they can never
+ * leave (mwah ha ha ha!)
  */
+snapshotState.ERROR = "snapshot-state-error";
 snapshotState.SAVING = "snapshot-state-saving";
 snapshotState.SAVED = "snapshot-state-saved";
 snapshotState.READING = "snapshot-state-reading";
