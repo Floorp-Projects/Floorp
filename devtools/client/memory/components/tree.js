@@ -45,7 +45,7 @@ const ArrowExpander = createFactory(createClass({
 const TreeNode = createFactory(createClass({
   componentDidUpdate() {
     if (this.props.focused) {
-      this.refs.button.focus();
+      this.refs.button.getDOMNode().focus();
     }
   },
 
@@ -244,7 +244,7 @@ const Tree = module.exports = createClass({
    */
   _updateHeight() {
     this.setState({
-      height: this.refs.tree.clientHeight
+      height: this.refs.tree.getDOMNode().clientHeight
     });
   },
 
@@ -361,8 +361,8 @@ const Tree = module.exports = createClass({
    */
   _onScroll(e) {
     this.setState({
-      scroll: Math.max(this.refs.tree.scrollTop, 0),
-      height: this.refs.tree.clientHeight
+      scroll: Math.max(this.refs.tree.getDOMNode().scrollTop, 0),
+      height: this.refs.tree.getDOMNode().clientHeight
     });
   },
 

@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const { DOM: dom, createClass, PropTypes } = require("devtools/client/shared/vendor/react");
+const { DOM, createClass, PropTypes } = require("devtools/client/shared/vendor/react");
 
 const models = require("../models");
 
@@ -33,29 +33,29 @@ const Toolbar = module.exports = createClass({
     } = this.props;
 
     return (
-      dom.div({ className: "devtools-toolbar" },
-        dom.button({ className: `take-snapshot devtools-button`, onClick: onTakeSnapshotClick }),
+      DOM.div({ className: "devtools-toolbar" }, [
+        DOM.button({ className: `take-snapshot devtools-button`, onClick: onTakeSnapshotClick }),
 
         DOM.label({},
           "Breakdown by ",
           DOM.select({
             className: `select-breakdown`,
             onChange: e => onBreakdownChange(e.target.value),
-          }, ...breakdowns.map(({ name, displayName }) => DOM.option({ key: name, value: name }, displayName)))
+          }, breakdowns.map(({ name, displayName }) => DOM.option({ value: name }, displayName)))
         ),
 
-        dom.label({},
-          dom.input({
+        DOM.label({}, [
+          DOM.input({
             type: "checkbox",
             checked: inverted,
             onChange: onToggleInverted,
           }),
           // TODO bug 1214799
           "Invert tree"
-        ),
+        ]),
 
-        dom.label({},
-          dom.input({
+        DOM.label({}, [
+          DOM.input({
             type: "checkbox",
             checked: allocations.recording,
             disabled: allocations.togglingInProgress,
@@ -63,8 +63,8 @@ const Toolbar = module.exports = createClass({
           }),
           // TODO bug 1214799
           "Record allocation stacks"
-        )
-      )
+        ])
+])
     );
   }
 });
