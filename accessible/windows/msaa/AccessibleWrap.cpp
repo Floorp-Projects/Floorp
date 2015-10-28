@@ -1079,8 +1079,16 @@ AccessibleWrap::accNavigate(
   pvarEndUpAt->vt = VT_EMPTY;
 
   if (xpRelation) {
-    Relation rel = RelationByType(*xpRelation);
-    navAccessible = rel.Next();
+    if (accessible->IsProxy()) {
+      nsTArray<ProxyAccessible*> targets =
+        accessible->Proxy()->RelationByType(*xpRelation);
+      if (targets.Length()) {
+        navAccessible = WrapperFor(targets[0]);
+      }
+    } else {
+      Relation rel = RelationByType(*xpRelation);
+      navAccessible = rel.Next();
+    }
   }
 
   if (!navAccessible)
