@@ -37,7 +37,6 @@
 #include "nsIStringBundle.h"
 #include "nsIConsoleService.h"
 #include "mozilla/dom/CloseEvent.h"
-#include "mozilla/net/WebSocketEventService.h"
 #include "nsICryptoHash.h"
 #include "nsJSUtils.h"
 #include "nsIScriptError.h"
@@ -240,8 +239,6 @@ public:
   // This mutex protects mWorkerShuttingDown.
   mozilla::Mutex mMutex;
   bool mWorkerShuttingDown;
-
-  RefPtr<WebSocketEventService> mService;
 
 private:
   ~WebSocketImpl()
@@ -633,8 +630,11 @@ WebSocketImpl::Disconnect()
   // until the end of the method.
   RefPtr<WebSocketImpl> kungfuDeathGrip = this;
 
-  NS_ReleaseOnMainThread(mChannel);
-  NS_ReleaseOnMainThread(static_cast<nsIWebSocketEventService*>(mService.forget().take()));
+  nsCOMPtr<nsIThread> mainThread;
+  if (NS_FAILED(NS_GetMainThread(getter_AddRefs(mainThread))) ||
+      NS_FAILED(NS_ProxyRelease(mainThread, mChannel))) {
+    NS_WARNING("Failed to proxy release of channel, leaking instead!");
+  }
 
   mWebSocket->DontKeepAliveAnyMore();
   mWebSocket->mImpl = nullptr;
@@ -768,11 +768,6 @@ WebSocketImpl::OnStart(nsISupports* aContext)
   UpdateURI();
 
   mWebSocket->SetReadyState(WebSocket::OPEN);
-
-  mService->WebSocketOpened(mChannel->Serial(),mInnerWindowID,
-                            mWebSocket->mEffectiveURL,
-                            mWebSocket->mEstablishedProtocol,
-                            mWebSocket->mEstablishedExtensions);
 
   // Let's keep the object alive because the webSocket can be CCed in the
   // onopen callback.
@@ -1364,12 +1359,6 @@ WebSocket::Constructor(const GlobalObject& aGlobal,
     return nullptr;
   }
 
-  // Let's inform devtools about this new active WebSocket.
-  webSocket->mImpl->mService->WebSocketCreated(webSocket->mImpl->mChannel->Serial(),
-                                               webSocket->mImpl->mInnerWindowID,
-                                               webSocket->mURI,
-                                               webSocket->mImpl->mRequestedProtocolList);
-
   cws.Done();
   return webSocket.forget();
 }
@@ -1454,8 +1443,6 @@ WebSocketImpl::Init(JSContext* aCx,
 {
   AssertIsOnMainThread();
   MOZ_ASSERT(aPrincipal);
-
-  mService = WebSocketEventService::GetOrCreate();
 
   // We need to keep the implementation alive in case the init disconnects it
   // because of some error.
@@ -1671,8 +1658,6 @@ WebSocketImpl::AsyncOpen(nsIPrincipal* aPrincipal, uint64_t aInnerWindowID,
   if (NS_WARN_IF(aRv.Failed())) {
     return;
   }
-
-  mInnerWindowID = aInnerWindowID;
 }
 
 //-----------------------------------------------------------------------------
@@ -1898,14 +1883,10 @@ WebSocket::CreateAndDispatchMessageEvent(JSContext* aCx,
 nsresult
 WebSocket::CreateAndDispatchCloseEvent(bool aWasClean,
                                        uint16_t aCode,
-                                       const nsAString& aReason)
+                                       const nsAString &aReason)
 {
   MOZ_ASSERT(mImpl);
   AssertIsOnTargetThread();
-
-  mImpl->mService->WebSocketClosed(mImpl->mChannel->Serial(),
-                                   mImpl->mInnerWindowID,
-                                   aWasClean, aCode, aReason);
 
   nsresult rv = CheckInnerWindowCorrectness();
   if (NS_FAILED(rv)) {
