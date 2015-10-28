@@ -190,6 +190,9 @@ APZCTreeManager::UpdateHitTestingTree(CompositorParent* aCompositor,
     mApzcTreeLog << "[end]\n";
   }
 
+  // We do not support tree structures where the root node has siblings.
+  MOZ_ASSERT(!(mRootNode && mRootNode->GetPrevSibling()));
+
   for (size_t i = 0; i < state.mNodesToDestroy.Length(); i++) {
     APZCTM_LOG("Destroying node at %p with APZC %p\n",
         state.mNodesToDestroy[i].get(),
