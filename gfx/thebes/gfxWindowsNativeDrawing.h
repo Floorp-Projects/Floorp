@@ -79,9 +79,6 @@ public:
     /* Returns true if the native drawing should be executed again */
     bool ShouldRenderAgain();
 
-    /* Returns true if double pass alpha extraction is taking place. */
-    bool IsDoublePass();
-
     /* Places the result to the context, if necessary */
     void PaintToContext();
 
