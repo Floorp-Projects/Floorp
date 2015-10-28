@@ -63,7 +63,7 @@
 // PER_SHARED_ARCH.
 
 # define ALL_ARCH mips32, arm, arm64, x86, x64
-# define ALL_SHARED_ARCH mips32, arm, arm64, x86_shared
+# define ALL_SHARED_ARCH arm, arm64, x86_shared, mips_shared
 
 // * How this macro works:
 //
@@ -107,6 +107,7 @@
 # define DEFINED_ON_arm
 # define DEFINED_ON_arm64
 # define DEFINED_ON_mips32
+# define DEFINED_ON_mips_shared
 # define DEFINED_ON_none
 
 // Specialize for each architecture.
@@ -129,6 +130,8 @@
 #elif defined(JS_CODEGEN_MIPS32)
 # undef DEFINED_ON_mips32
 # define DEFINED_ON_mips32 define
+# undef DEFINED_ON_mips_shared
+# define DEFINED_ON_mips_shared define
 #elif defined(JS_CODEGEN_NONE)
 # undef DEFINED_ON_none
 # define DEFINED_ON_none crash

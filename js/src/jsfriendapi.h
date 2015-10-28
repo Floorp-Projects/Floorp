@@ -354,6 +354,7 @@ namespace js {
             js::proxy_GetElements,                                                      \
             nullptr,             /* enumerate       */                                  \
             nullptr,             /* thisObject      */                                  \
+            js::proxy_FunToString,                                                      \
         }                                                                               \
     }
 
@@ -419,6 +420,8 @@ proxy_Unwatch(JSContext* cx, JS::HandleObject obj, JS::HandleId id);
 extern JS_FRIEND_API(bool)
 proxy_GetElements(JSContext* cx, JS::HandleObject proxy, uint32_t begin, uint32_t end,
                   ElementAdder* adder);
+extern JS_FRIEND_API(JSString*)
+proxy_FunToString(JSContext* cx, JS::HandleObject proxy, unsigned indent);
 
 /**
  * A class of objects that return source code on demand.

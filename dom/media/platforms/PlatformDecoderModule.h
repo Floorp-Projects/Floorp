@@ -214,6 +214,8 @@ public:
   // that the format of the next input sample is about to change.
   // If video decoder, aConfig will be a VideoInfo object.
   // If audio decoder, aConfig will be a AudioInfo object.
+  // It is not safe to store a reference to this object and the decoder must
+  // make a copy.
   virtual nsresult ConfigurationChanged(const TrackInfo& aConfig)
   {
     return NS_OK;

@@ -365,6 +365,13 @@ class MOZ_STACK_CLASS TokenStream
         return currentToken().name();
     }
 
+    PropertyName* nextName() const {
+        if (nextToken().type == TOK_YIELD)
+            return cx->names().yield;
+        MOZ_ASSERT(nextToken().type == TOK_NAME);
+        return nextToken().name();
+    }
+
     bool isCurrentTokenAssignment() const {
         return TokenKindIsAssignment(currentToken().type);
     }
@@ -999,12 +1006,12 @@ class MOZ_STACK_CLASS TokenStream
     void updateLineInfoForEOL();
     void updateFlagsForEOL();
 
-    const Token& nextToken() {
+    const Token& nextToken() const {
         MOZ_ASSERT(hasLookahead());
         return tokens[(cursor + 1) & ntokensMask];
     }
 
-    bool hasLookahead() { return lookahead > 0; }
+    bool hasLookahead() const { return lookahead > 0; }
 
     // Options used for parsing/tokenizing.
     const ReadOnlyCompileOptions& options_;

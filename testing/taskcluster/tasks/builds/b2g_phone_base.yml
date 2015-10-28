@@ -1,14 +1,10 @@
 $inherits:
   from: 'tasks/phone_build.yml'
 task:
-  scopes:
-    - 'docker-worker:cache:tooltool-cache'
   metadata:
     description: |
       Android phones + b2g environment used in full stack testing.
   payload:
-    cache:
-      tooltool-cache: '/home/worker/tooltool-cache'
     env:
       MOZILLA_OFFICIAL: '1'
       ENABLE_DEFAULT_BOOTANIMATION: 'true'

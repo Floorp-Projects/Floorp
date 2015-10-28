@@ -53,6 +53,13 @@ private:
   bool StartupPDM(PlatformDecoderModule* aPDM);
   // Returns the first PDM in our list supporting the mimetype.
   already_AddRefed<PlatformDecoderModule> GetDecoder(const nsACString& aMimeType);
+  already_AddRefed<MediaDataDecoder>
+  CreateDecoderWithPDM(PlatformDecoderModule* aPDM,
+                       const TrackInfo& aConfig,
+                       FlushableTaskQueue* aTaskQueue,
+                       MediaDataDecoderCallback* aCallback,
+                       layers::LayersBackend aLayersBackend,
+                       layers::ImageContainer* aImageContainer);
 
   // PDM pref caches...
   static bool sUseBlankDecoder;

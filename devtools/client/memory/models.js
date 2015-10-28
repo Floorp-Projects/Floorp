@@ -31,6 +31,10 @@ let snapshotModel = exports.snapshot = PropTypes.shape({
   census: PropTypes.object,
   // The breakdown used to generate the current census
   breakdown: breakdownModel,
+  // Whether the currently cached census tree is inverted or not.
+  inverted: PropTypes.bool,
+  // If an error was thrown while processing this snapshot, the `Error` instance is attached here.
+  error: PropTypes.object,
   // State the snapshot is in
   // @see ./constants.js
   state: function (props, propName) {
@@ -63,7 +67,7 @@ let appModel = exports.app = {
   // {MemoryFront} Used to communicate with platform
   front: PropTypes.instanceOf(MemoryFront),
   // Allocations recording related data.
-  allocations: allocationsModel,
+  allocations: allocationsModel.isRequired,
   // {HeapAnalysesClient} Used to interface with snapshots
   heapWorker: PropTypes.instanceOf(HeapAnalysesClient),
   // The breakdown object DSL describing how we want
@@ -72,4 +76,6 @@ let appModel = exports.app = {
   breakdown: breakdownModel.isRequired,
   // List of reference to all snapshots taken
   snapshots: PropTypes.arrayOf(snapshotModel).isRequired,
+  // True iff we want the tree displayed inverted.
+  inverted: PropTypes.bool.isRequired,
 };

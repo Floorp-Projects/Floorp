@@ -37,7 +37,7 @@ class TempAllocator
 
     void* allocateInfallible(size_t bytes)
     {
-        return lifoScope_.alloc().allocInfallible(bytes);
+        return lifoScope_.alloc().allocInfallibleOrAssert(bytes);
     }
 
     void* allocate(size_t bytes)

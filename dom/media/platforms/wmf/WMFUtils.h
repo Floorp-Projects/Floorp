@@ -37,7 +37,7 @@ HRESULT
 HNsToFrames(int64_t aHNs, uint32_t aRate, int64_t* aOutFrames);
 
 HRESULT
-GetDefaultStride(IMFMediaType *aType, uint32_t* aOutStride);
+GetDefaultStride(IMFMediaType *aType, uint32_t aWidth, uint32_t* aOutStride);
 
 int32_t
 MFOffsetToInt32(const MFOffset& aOffset);

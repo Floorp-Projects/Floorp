@@ -25,8 +25,15 @@ function test() {
 }
 
 function performTest() {
+  // Make sure that the search box becomes focused when pressing ctrl+f - Bug 1211038
+  gEditor.focus();
+  synthesizeKeyFromKeyTag(gDebugger.document.getElementById("tokenSearchKey"));
+  let focusedEl = Services.focus.focusedElement;
+  focusedEl = focusedEl.ownerDocument.getBindingParent(focusedEl) || focusedEl;
+  is(focusedEl, gDebugger.document.getElementById("searchbox"), "Searchbox is focused");
+
   setText(gSearchBox, "#html");
-  
+
   EventUtils.synthesizeKey("VK_RETURN", { shiftKey: true }, gDebugger);
   is(gFiltering.searchData.toSource(), '["#", ["", "html"]]',
     "The searchbox data wasn't parsed correctly.");
@@ -44,7 +51,7 @@ function performTest() {
     "The searchbox data wasn't parsed correctly.");
   ok(isCaretPos(gPanel, 3, 15),
     "The editor didn't jump to the correct line.");
-  
+
   setText(gSearchBox, ":12");
   is(gFiltering.searchData.toSource(), '[":", ["", 12]]',
     "The searchbox data wasn't parsed correctly.");
