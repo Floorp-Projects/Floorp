@@ -62,10 +62,6 @@
      * when strict.  Punt logic to parser. \
      */ \
     macro(yield, yield, TOK_YIELD, JSVERSION_DEFAULT) \
-    /* \
-     * Let is a future reserved keyword in strict mode, and a keyword in \
-     * JS1.7. \
-     */ \
-    macro(let, let, TOK_LET, JSVERSION_1_7)
+    macro(let, let, TOK_LET, JSVERSION_DEFAULT)
 
 #endif /* vm_Keywords_h */

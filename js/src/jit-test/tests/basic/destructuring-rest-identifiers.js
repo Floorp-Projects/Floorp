@@ -57,7 +57,7 @@ var strictIdentifiers = [
   'static'
 ];
 assertThrowsInstanceOf(() => new Function('[...yield] = []'), SyntaxError);
-assertThrowsInstanceOf(() => new Function('[...let] = []'), SyntaxError);
+assertThrowsInstanceOf(() => new Function('"use strict"; [...let] = []'), SyntaxError);
 
 strictIdentifiers.forEach(ident =>
   assertThrowsInstanceOf(() =>
