@@ -44,7 +44,8 @@
 .objectBox-number,
 .objectLink-styleRule,
 .objectLink-element,
-.objectLink-textNode {
+.objectLink-textNode,
+.objectBox-array > .length {
   color: #000088;
 }
 
@@ -54,7 +55,7 @@
 
 .objectLink-function,
 .objectBox-stackTrace,
-.objectLink-profile  {
+.objectLink-profile {
   color: DarkGreen;
 }
 
@@ -177,6 +178,8 @@
   color: var(--theme-highlight-bluegrey);
 }
 
+.theme-dark .objectBox-array .length,
+.theme-light .objectBox-array .length,
 .theme-dark .objectBox-number,
 .theme-light .objectBox-number {
   color: var(--theme-highlight-green);
@@ -184,7 +187,7 @@
 
 .theme-dark .objectBox-string,
 .theme-light .objectBox-string {
-  color: var(--theme-highlight-orange)
+  color: var(--theme-highlight-orange);
 }
 
 .theme-dark .objectBox-null,
@@ -193,6 +196,11 @@
 .theme-light .objectBox-undefined {
   font-style: normal;
   color: var(--theme-comment);
+}
+
+.theme-dark .objectBox-array,
+.theme-light .objectBox-array {
+  color: var(--theme-body-color);
 }
 
 .theme-dark .objectBox-object,
