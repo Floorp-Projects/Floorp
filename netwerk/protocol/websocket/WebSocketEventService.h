@@ -46,11 +46,6 @@ public:
                        const nsACString& aProtocols,
                        const nsACString& aExtensions);
 
-  void WebSocketMessageAvailable(uint32_t aWebSocketSerialID,
-                                 uint64_t aInnerWindowID,
-                                 const nsACString& aData,
-                                 uint16_t aMessageType);
-
   void WebSocketClosed(uint32_t aWebSocketSerialID,
                        uint64_t aInnerWindowID,
                        bool aWasClean,
