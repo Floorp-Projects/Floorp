@@ -12,7 +12,10 @@ task:
       TARGET: 'flame-kk'
       DEBUG: 0
     command:
-      - phone-ota
+      - >
+        checkout-gecko workspace &&
+        cd ./workspace/gecko/testing/taskcluster/scripts/phone-builder &&
+        buildbot_step 'Build' ./build-phone-ota.sh $HOME/workspace
 
   extra:
     treeherder:
