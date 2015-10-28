@@ -265,14 +265,9 @@ APZEventState::ProcessTouchEvent(const WidgetTouchEvent& aEvent,
   switch (aEvent.mMessage) {
   case eTouchStart: {
     mTouchEndCancelled = false;
-    if (mPendingTouchPreventedResponse) {
-      // We can enter here if we get two TOUCH_STARTs in a row and didn't
-      // respond to the first one. Respond to it now.
-      mContentReceivedInputBlockCallback(mPendingTouchPreventedGuid,
-          mPendingTouchPreventedBlockId, false);
-      sentContentResponse = true;
-      mPendingTouchPreventedResponse = false;
-    }
+    sentContentResponse = SendPendingTouchPreventedResponse(false);
+    // sentContentResponse can be true here if we get two TOUCH_STARTs in a row
+    // and just responded to the first one.
     if (isTouchPrevented) {
       mContentReceivedInputBlockCallback(aGuid, aInputBlockId, isTouchPrevented);
       sentContentResponse = true;
