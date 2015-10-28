@@ -183,7 +183,7 @@ CONTEXTS.SelectorContext = Class({
     let selector = this.selector;
 
     while (!(popupNode instanceof Ci.nsIDOMDocument)) {
-      if (popupNode.mozMatchesSelector(selector))
+      if (popupNode.matches(selector))
         return popupNode;
 
       popupNode = popupNode.parentNode;
