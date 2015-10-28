@@ -684,13 +684,22 @@ AnimationsTimeline.prototype = {
            this.animations.every(({state}) => state.currentTime === 0);
   },
 
+  hasInfiniteAnimations: function() {
+    return this.animations.some(({state}) => !state.iterationCount);
+  },
+
   startAnimatingScrubber: function(time) {
     let x = TimeScale.startTimeToDistance(time, this.timeHeaderEl.offsetWidth);
     this.scrubberEl.style.left = x + "px";
 
-    if (time < TimeScale.minStartTime ||
-        time > TimeScale.maxEndTime ||
-        !this.isAtLeastOneAnimationPlaying()) {
+    // Only stop the scrubber if it's out of bounds or all animations have been
+    // paused, but not if at least an animation is infinite.
+    let isOutOfBounds = time < TimeScale.minStartTime ||
+                        time > TimeScale.maxEndTime;
+    let isAllPaused = !this.isAtLeastOneAnimationPlaying();
+    let hasInfinite = this.hasInfiniteAnimations();
+
+    if (isAllPaused || (isOutOfBounds && !hasInfinite)) {
       this.stopAnimatingScrubber();
       this.emit("timeline-data-changed", {
         isPaused: !this.isAtLeastOneAnimationPlaying(),

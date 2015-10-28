@@ -179,7 +179,7 @@ var AnimationsPanel = {
 
   onTimelineDataChanged: function(e, data) {
     this.timelineData = data;
-    let {isMoving, isUserDrag, time} = data;
+    let {isMoving, isPaused, isUserDrag, time} = data;
 
     this.playTimelineButtonEl.classList.toggle("paused", !isMoving);
 
