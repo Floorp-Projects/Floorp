@@ -84,13 +84,6 @@ exports['test exceptions'] = function(assert) {
   }
 };
 
-exports['test opt version'] = function(assert) {
-  let fixture = sandbox();
-  assert.throws(function() {
-    evaluate(fixture, 'let a = 2;', 'test.js', 1, '1.5');
-  }, 'No let in js 1.5');
-};
-
 exports['test load'] = function(assert) {
   let fixture = sandbox();
   load(fixture, fixturesURI + 'sandbox-normal.js');
