@@ -3,9 +3,10 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 const { DOM: dom, createClass, PropTypes, createFactory } = require("devtools/client/shared/vendor/react");
+const { safeErrorString } = require("devtools/shared/DevToolsUtils");
 const Tree = createFactory(require("./tree"));
 const TreeItem = createFactory(require("./tree-item"));
-const { getSnapshotStatusText } = require("../utils");
+const { getSnapshotStatusTextFull } = require("../utils");
 const { snapshotState: states } = require("../constants");
 const { snapshot: snapshotModel } = require("../models");
 const TAKE_SNAPSHOT_TEXT = "Take snapshot";
@@ -40,8 +41,6 @@ function createTreeProperties (census) {
   let map = createParentMap(census);
 
   return {
-    // getParent only used for focusing parents when child selected;
-    // handle this later?
     getParent: node => map(node.id),
     getChildren: node => node.children || [],
     renderItem: (item, depth, focused, arrow) => new TreeItem({ item, depth, focused, arrow }),
@@ -67,26 +66,37 @@ const Heap = module.exports = createClass({
 
   render() {
     let { snapshot, onSnapshotClick } = this.props;
-    let pane;
     let census = snapshot ? snapshot.census : null;
     let state = snapshot ? snapshot.state : "initial";
+    let statusText = snapshot ? getSnapshotStatusTextFull(snapshot) : "";
+    let content;
 
     switch (state) {
       case "initial":
-        pane = dom.div({ className: "heap-view-panel", "data-state": "initial" },
-          dom.button({ className: "take-snapshot", onClick: onSnapshotClick }, TAKE_SNAPSHOT_TEXT)
-        );
+        content = dom.button({
+          className: "devtools-toolbarbutton take-snapshot",
+          onClick: onSnapshotClick,
+          // Want to use the [standalone] tag to leverage our styles,
+          // but React hates that evidently
+          "data-standalone": true,
+          "data-text-only": true,
+        }, TAKE_SNAPSHOT_TEXT)
+        break;
+      case states.ERROR:
+        content = [
+          dom.span({ className: "snapshot-status error" }, statusText),
+          dom.pre({}, safeErrorString(snapshot.error || new Error("blahblah"))),
+        ];
         break;
       case states.SAVING:
       case states.SAVED:
       case states.READING:
       case states.READ:
       case states.SAVING_CENSUS:
-        pane = dom.div({ className: "heap-view-panel", "data-state": state },
-          getSnapshotStatusText(snapshot));
+        content = dom.span({ className: "snapshot-status devtools-throbber" }, statusText)
         break;
       case states.SAVED_CENSUS:
-        pane = dom.div({ className: "heap-view-panel", "data-state": "loaded" },
+        content = [
           dom.div({ className: "header" },
             dom.span({ className: "heap-tree-item-bytes" }, "Bytes"),
             dom.span({ className: "heap-tree-item-count" }, "Count"),
@@ -95,9 +105,10 @@ const Heap = module.exports = createClass({
             dom.span({ className: "heap-tree-item-name" }, "Name")
           ),
           Tree(createTreeProperties(snapshot.census))
-        );
+        ];
         break;
     }
+    let pane = dom.div({ className: "heap-view-panel", "data-state": state }, content);
 
     return (
       dom.div({ id: "heap-view", "data-state": state }, pane)
