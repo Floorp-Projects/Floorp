@@ -22,6 +22,7 @@ H264Converter::H264Converter(PlatformDecoderModule* aPDM,
                              FlushableTaskQueue* aVideoTaskQueue,
                              MediaDataDecoderCallback* aCallback)
   : mPDM(aPDM)
+  , mOriginalConfig(aConfig)
   , mCurrentConfig(aConfig)
   , mLayersBackend(aLayersBackend)
   , mImageContainer(aImageContainer)
@@ -139,7 +140,7 @@ H264Converter::CreateDecoder()
   }
   UpdateConfigFromExtraData(mCurrentConfig.mExtraData);
 
-  mDecoder = mPDM->CreateVideoDecoder(mCurrentConfig,
+  mDecoder = mPDM->CreateVideoDecoder(mNeedAVCC ? mCurrentConfig : mOriginalConfig,
                                       mLayersBackend,
                                       mImageContainer,
                                       mVideoTaskQueue,
