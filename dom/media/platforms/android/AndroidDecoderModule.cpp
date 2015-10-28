@@ -259,7 +259,7 @@ public:
                                            audio,
                                            numChannels,
                                            sampleRate);
-    INVOKE_CALLBACK(Output, data);
+    ENVOKE_CALLBACK(Output, data);
     return NS_OK;
   }
 };
