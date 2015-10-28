@@ -6678,16 +6678,8 @@ Parser<ParseHandler>::shouldParseLetDeclaration(bool* parseDeclOut)
 
       case TOK_LC:
       case TOK_LB:
-        // A following name is always a declaration.
-        //
         // |let {| and |let [| are destructuring declarations.
         *parseDeclOut = true;
-        break;
-
-      case TOK_LP:
-        // Only parse let blocks for 1.7 and 1.8. Do not expose deprecated let
-        // blocks to content.
-        *parseDeclOut = versionNumber() == JSVERSION_1_7 || versionNumber() == JSVERSION_1_8;
         break;
 
       default:
