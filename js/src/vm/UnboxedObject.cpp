@@ -893,34 +893,12 @@ UnboxedPlainObject::obj_watch(JSContext* cx, HandleObject obj, HandleId id, Hand
 UnboxedPlainObject::obj_enumerate(JSContext* cx, HandleObject obj, AutoIdVector& properties,
                                   bool enumerableOnly)
 {
-    UnboxedExpandoObject* expando = obj->as<UnboxedPlainObject>().maybeExpando();
-
-    // Add dense elements in the expando first, for consistency with plain objects.
-    if (expando) {
-        for (size_t i = 0; i < expando->getDenseInitializedLength(); i++) {
-            if (!expando->getDenseElement(i).isMagic(JS_ELEMENTS_HOLE)) {
-                if (!properties.append(INT_TO_JSID(i)))
-                    return false;
-            }
-        }
-    }
+    // Ignore expando properties here, they are special-cased by the property
+    // enumeration code.
 
     const UnboxedLayout::PropertyVector& unboxed = obj->as<UnboxedPlainObject>().layout().properties();
     for (size_t i = 0; i < unboxed.length(); i++) {
         if (!properties.append(NameToId(unboxed[i].name)))
-            return false;
-    }
-
-    if (expando) {
-        Vector<jsid> ids(cx);
-        for (Shape::Range<NoGC> r(expando->lastProperty()); !r.empty(); r.popFront()) {
-            if (enumerableOnly && !r.front().enumerable())
-                continue;
-            if (!ids.append(r.front().propid()))
-                return false;
-        }
-        ::Reverse(ids.begin(), ids.end());
-        if (!properties.append(ids.begin(), ids.length()))
             return false;
     }
 
