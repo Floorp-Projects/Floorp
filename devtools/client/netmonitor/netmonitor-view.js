@@ -2981,7 +2981,6 @@ NetworkDetailsView.prototype = {
       // file name, mime type and encoding.
       $("#response-content-image-name-value").setAttribute("value", NetworkHelper.nsIURL(aUrl).fileName);
       $("#response-content-image-mime-value").setAttribute("value", mimeType);
-      $("#response-content-image-encoding-value").setAttribute("value", encoding);
 
       // Wait for the image to load in order to display the width and height.
       $("#response-content-image").onload = e => {
