@@ -131,8 +131,8 @@ public:
       observerService->NotifyObservers(
         ToSupports(mWindow),
         "audio-playback",
-        mActive ? NS_LITERAL_STRING("active").get()
-                : NS_LITERAL_STRING("inactive").get());
+        mActive ? MOZ_UTF16("active")
+                : MOZ_UTF16("inactive"));
     }
 
     return NS_OK;

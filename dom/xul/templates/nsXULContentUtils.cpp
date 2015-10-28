@@ -95,7 +95,7 @@ nsXULContentUtils::Init()
 
 #define XUL_LITERAL(ident, val)                                   \
   PR_BEGIN_MACRO                                                  \
-   rv = gRDF->GetLiteral(NS_LITERAL_STRING(val).get(), &(ident)); \
+   rv = gRDF->GetLiteral(MOZ_UTF16(val), &(ident));               \
    if (NS_FAILED(rv)) return rv;                                  \
   PR_END_MACRO
 
