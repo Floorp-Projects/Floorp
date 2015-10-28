@@ -15,6 +15,7 @@
 #include "LayersLogging.h"              // for AppendToString
 #include "ReadbackLayer.h"              // for ReadbackLayer
 #include "UnitTransforms.h"             // for ViewAs
+#include "gfxEnv.h"
 #include "gfxPlatform.h"                // for gfxPlatform
 #include "gfxPrefs.h"
 #include "gfxUtils.h"                   // for gfxUtils, etc
@@ -1362,7 +1363,7 @@ ContainerLayer::DefaultComputeEffectiveTransforms(const Matrix4x4& aTransformToS
       GetForceIsolatedGroup()) {
     useIntermediateSurface = true;
 #ifdef MOZ_DUMP_PAINTING
-  } else if (gfxUtils::sDumpPaintingIntermediate && !Extend3DContext()) {
+  } else if (gfxEnv::DumpPaintIntermediate() && !Extend3DContext()) {
     useIntermediateSurface = true;
 #endif
   } else {
@@ -1685,9 +1686,9 @@ void
 Layer::Dump(std::stringstream& aStream, const char* aPrefix, bool aDumpHtml)
 {
 #ifdef MOZ_DUMP_PAINTING
-  bool dumpCompositorTexture = gfxUtils::sDumpCompositorTextures && AsLayerComposite() &&
+  bool dumpCompositorTexture = gfxEnv::DumpCompositorTextures() && AsLayerComposite() &&
                                AsLayerComposite()->GetCompositableHost();
-  bool dumpClientTexture = gfxUtils::sDumpPainting && AsShadowableLayer() &&
+  bool dumpClientTexture = gfxEnv::DumpPaint() && AsShadowableLayer() &&
                            AsShadowableLayer()->GetCompositableClient();
   nsCString layerId(Name());
   layerId.Append('-');

@@ -22,6 +22,7 @@
 #include "UnitTransforms.h"
 #include "Units.h"
 #include "gfx2DGlue.h"
+#include "gfxEnv.h"
 #include "gfxUtils.h"
 #include "nsDisplayList.h"
 #include "nsDocShell.h"
@@ -3653,7 +3654,7 @@ PaintInactiveLayer(nsDisplayListBuilder* aBuilder,
     aItem->GetVisibleRect().ToOutsidePixels(appUnitsPerDevPixel);
 
   RefPtr<DrawTarget> tempDT;
-  if (gfxUtils::sDumpPainting) {
+  if (gfxEnv::DumpPaint()) {
     tempDT = gfxPlatform::GetPlatform()->CreateOffscreenContentDrawTarget(
                                       itemVisibleRect.Size(),
                                       SurfaceFormat::B8G8R8A8);
@@ -3683,7 +3684,7 @@ PaintInactiveLayer(nsDisplayListBuilder* aBuilder,
   basic->SetTarget(nullptr);
 
 #ifdef MOZ_DUMP_PAINTING
-  if (gfxUtils::sDumpPainting && tempDT) {
+  if (gfxEnv::DumpPaint() && tempDT) {
     RefPtr<SourceSurface> surface = tempDT->Snapshot();
     DumpPaintedImage(aItem, surface);
 
@@ -4503,10 +4504,10 @@ FrameLayerBuilder::AddPaintedDisplayItem(PaintedLayerData* aLayerData,
       tempManager->AbortTransaction();
 
 #ifdef MOZ_DUMP_PAINTING
-      if (gfxUtils::DumpDisplayList() || gfxUtils::sDumpPainting) {
+      if (gfxUtils::DumpDisplayList() || gfxEnv::DumpPaint()) {
         fprintf_stderr(gfxUtils::sDumpPaintFile, "Basic layer tree for painting contents of display item %s(%p):\n", aItem->Name(), aItem->Frame());
         std::stringstream stream;
-        tempManager->Dump(stream, "", gfxUtils::sDumpPaintingToFile);
+        tempManager->Dump(stream, "", gfxEnv::DumpPaintToFile());
         fprint_stderr(gfxUtils::sDumpPaintFile, stream);  // not a typo, fprint_stderr declared in LayersLogging.h
       }
 #endif
@@ -5719,7 +5720,7 @@ FrameLayerBuilder::PaintItems(nsTArray<ClippedDisplayItem>& aItems,
       nsIFrame* frame = cdi->mItem->Frame();
       frame->AddStateBits(NS_FRAME_PAINTED_THEBES);
 #ifdef MOZ_DUMP_PAINTING
-      if (gfxUtils::sDumpPaintItems) {
+      if (gfxEnv::DumpPaintItems()) {
         DebugPaintItem(aDrawTarget, aPresContext, cdi->mItem, aBuilder);
       } else {
 #else
