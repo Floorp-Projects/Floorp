@@ -74,6 +74,14 @@ ifdef MOZ_NATIVE_DEVICES
         $(NULL)
 endif
 
+ifdef MOZ_ANDROID_GCM
+    JAVA_CLASSPATH += \
+        $(ANDROID_PLAY_SERVICES_BASE_AAR_LIB) \
+        $(ANDROID_PLAY_SERVICES_BASEMENT_AAR_LIB) \
+        $(ANDROID_PLAY_SERVICES_GCM_AAR_LIB) \
+        $(NULL)
+endif
+
 JAVA_CLASSPATH := $(subst $(NULL) ,:,$(strip $(JAVA_CLASSPATH)))
 
 # Library jars that we're bundling: these are subject to Proguard before inclusion
@@ -96,6 +104,18 @@ ifdef MOZ_NATIVE_DEVICES
         $(NULL)
 endif
 
+ifdef MOZ_ANDROID_GCM
+    java_bundled_libs += \
+        $(ANDROID_PLAY_SERVICES_BASE_AAR_LIB) \
+        $(ANDROID_PLAY_SERVICES_BASEMENT_AAR_LIB) \
+        $(ANDROID_PLAY_SERVICES_GCM_AAR_LIB) \
+        $(NULL)
+endif
+
+# uniq purloined from http://stackoverflow.com/a/16151140.
+uniq = $(if $1,$(firstword $1) $(call uniq,$(filter-out $(firstword $1),$1)))
+
+java_bundled_libs := $(call uniq,$(java_bundled_libs))
 java_bundled_libs := $(subst $(NULL) ,:,$(strip $(java_bundled_libs)))
 
 # All the jars we're compiling from source. (not to be confused with
@@ -371,6 +391,7 @@ generated/android/support/v7/recyclerview/R.java: .aapt.deps ;
 generated/com/google/android/gms/R.java: .aapt.deps ;
 generated/com/google/android/gms/base/R.java: .aapt.deps ;
 generated/com/google/android/gms/cast/R.java: .aapt.deps ;
+generated/com/google/android/gms/gcm/R.java: .aapt.deps ;
 
 gecko.ap_: .aapt.deps ;
 R.txt: .aapt.deps ;
