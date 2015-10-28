@@ -3,6 +3,7 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+"use strict";
 
 const {Cc, Cu, Ci} = require("chrome");
 
@@ -16,11 +17,11 @@ const NEW_SELECTION_HIGHLIGHTER_TIMER = 1000;
 const DRAG_DROP_AUTOSCROLL_EDGE_DISTANCE = 50;
 const DRAG_DROP_MIN_AUTOSCROLL_SPEED = 5;
 const DRAG_DROP_MAX_AUTOSCROLL_SPEED = 15;
+const DRAG_DROP_MIN_INITIAL_DISTANCE = 10;
 const AUTOCOMPLETE_POPUP_PANEL_ID = "markupview_autoCompletePopup";
 
 const {UndoStack} = require("devtools/client/shared/undo");
 const {editableField, InplaceEditor} = require("devtools/client/shared/inplace-editor");
-const {gDevTools} = Cu.import("resource://devtools/client/framework/gDevTools.jsm", {});
 const {HTMLEditor} = require("devtools/client/markupview/html-editor");
 const promise = require("promise");
 const {Tooltip} = require("devtools/client/shared/widgets/Tooltip");
@@ -37,7 +38,7 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 loader.lazyGetter(this, "DOMParser", function() {
- return Cc["@mozilla.org/xmlextras/domparser;1"].createInstance(Ci.nsIDOMParser);
+  return Cc["@mozilla.org/xmlextras/domparser;1"].createInstance(Ci.nsIDOMParser);
 });
 loader.lazyGetter(this, "AutocompletePopup", () => {
   return require("devtools/client/shared/autocomplete-popup").AutocompletePopup;
@@ -75,7 +76,7 @@ function MarkupView(aInspector, aFrame, aControllerWindow) {
 
   try {
     this.maxChildren = Services.prefs.getIntPref("devtools.markup.pagesize");
-  } catch(ex) {
+  } catch (ex) {
     this.maxChildren = DEFAULT_MAX_CHILDREN;
   }
 
@@ -94,34 +95,34 @@ function MarkupView(aInspector, aFrame, aControllerWindow) {
 
   this._containers = new Map();
 
-  this._boundMutationObserver = this._mutationObserver.bind(this);
-  this.walker.on("mutations", this._boundMutationObserver);
-
-  this._boundOnDisplayChange = this._onDisplayChange.bind(this);
-  this.walker.on("display-change", this._boundOnDisplayChange);
-
+  // Binding functions that need to be called in scope.
+  this._mutationObserver = this._mutationObserver.bind(this);
+  this._onDisplayChange = this._onDisplayChange.bind(this);
   this._onMouseClick = this._onMouseClick.bind(this);
-
   this._onMouseUp = this._onMouseUp.bind(this);
-  this.doc.body.addEventListener("mouseup", this._onMouseUp);
-
-  this._boundOnNewSelection = this._onNewSelection.bind(this);
-  this._inspector.selection.on("new-node-front", this._boundOnNewSelection);
-  this._onNewSelection();
-
-  this._boundKeyDown = this._onKeyDown.bind(this);
-  this._frame.contentWindow.addEventListener("keydown", this._boundKeyDown, false);
-
+  this._onNewSelection = this._onNewSelection.bind(this);
+  this._onKeyDown = this._onKeyDown.bind(this);
   this._onCopy = this._onCopy.bind(this);
-  this._frame.contentWindow.addEventListener("copy", this._onCopy);
+  this._onFocus = this._onFocus.bind(this);
+  this._onMouseMove = this._onMouseMove.bind(this);
+  this._onMouseLeave = this._onMouseLeave.bind(this);
+  this._onToolboxPickerHover = this._onToolboxPickerHover.bind(this);
 
-  this._boundFocus = this._onFocus.bind(this);
-  this._frame.addEventListener("focus", this._boundFocus, false);
+  // Listening to various events.
+  this._elt.addEventListener("click", this._onMouseClick, false);
+  this._elt.addEventListener("mousemove", this._onMouseMove, false);
+  this._elt.addEventListener("mouseleave", this._onMouseLeave, false);
+  this.doc.body.addEventListener("mouseup", this._onMouseUp);
+  this.win.addEventListener("keydown", this._onKeyDown, false);
+  this.win.addEventListener("copy", this._onCopy);
+  this._frame.addEventListener("focus", this._onFocus, false);
+  this.walker.on("mutations", this._mutationObserver);
+  this.walker.on("display-change", this._onDisplayChange);
+  this._inspector.selection.on("new-node-front", this._onNewSelection);
+  this._inspector.toolbox.on("picker-node-hovered", this._onToolboxPickerHover);
 
-  this._makeTooltipPersistent = this._makeTooltipPersistent.bind(this);
-
+  this._onNewSelection();
   this._initTooltips();
-  this._initHighlighter();
 
   EventEmitter.decorate(this);
 }
@@ -133,36 +134,12 @@ MarkupView.prototype = {
    * How long does a node flash when it mutates (in ms).
    */
   CONTAINER_FLASHING_DURATION: 500,
-  /**
-   * How long do you have to hold the mouse down before a drag
-   * starts (in ms).
-   */
-  GRAB_DELAY: 400,
 
   _selectedContainer: null,
 
   _initTooltips: function() {
     this.tooltip = new Tooltip(this._inspector.panelDoc);
     this._makeTooltipPersistent(false);
-
-    this._elt.addEventListener("click", this._onMouseClick, false);
-  },
-
-  _initHighlighter: function() {
-    // Show the box model on markup-view mousemove
-    this._onMouseMove = this._onMouseMove.bind(this);
-    this._elt.addEventListener("mousemove", this._onMouseMove, false);
-    this._onMouseLeave = this._onMouseLeave.bind(this);
-    this._elt.addEventListener("mouseleave", this._onMouseLeave, false);
-
-    // Show markup-containers as hovered on toolbox "picker-node-hovered" event
-    // which happens when the "pick" button is pressed
-    this._onToolboxPickerHover = (event, nodeFront) => {
-      this.showNode(nodeFront).then(() => {
-        this._showContainerAsHovered(nodeFront);
-      });
-    };
-    this._inspector.toolbox.on("picker-node-hovered", this._onToolboxPickerHover);
   },
 
   _makeTooltipPersistent: function(state) {
@@ -174,52 +151,26 @@ MarkupView.prototype = {
     }
   },
 
+  _onToolboxPickerHover: function(event, nodeFront) {
+    this.showNode(nodeFront).then(() => {
+      this._showContainerAsHovered(nodeFront);
+    }, e => console.error(e));
+  },
+
   isDragging: false,
 
   _onMouseMove: function(event) {
-    if (this.isDragging) {
-      event.preventDefault();
-      this._dragStartEl = event.target;
-
-      let docEl = this.doc.documentElement;
-
-      if (this._scrollInterval) {
-        clearInterval(this._scrollInterval);
-      }
-
-      // Auto-scroll when the mouse approaches top/bottom edge
-      let distanceFromBottom = docEl.clientHeight - event.pageY + this.win.scrollY,
-          distanceFromTop = event.pageY - this.win.scrollY;
-
-      if (distanceFromBottom <= DRAG_DROP_AUTOSCROLL_EDGE_DISTANCE) {
-        // Map our distance from 0-50 to 5-15 range so the speed is kept
-        // in a range not too fast, not too slow
-        let speed = map(distanceFromBottom, 0, DRAG_DROP_AUTOSCROLL_EDGE_DISTANCE,
-                        DRAG_DROP_MIN_AUTOSCROLL_SPEED, DRAG_DROP_MAX_AUTOSCROLL_SPEED);
-        // Here, we use minus because the value of speed - 15 is always negative
-        // and it makes the speed relative to the distance between mouse and edge
-        // the closer to the edge, the faster
-        this._scrollInterval = setInterval(() => {
-          docEl.scrollTop -= speed - DRAG_DROP_MAX_AUTOSCROLL_SPEED;
-        }, 0);
-      }
-
-      if (distanceFromTop <= DRAG_DROP_AUTOSCROLL_EDGE_DISTANCE) {
-        // refer to bottom edge's comments for more info
-        let speed = map(distanceFromTop, 0, DRAG_DROP_AUTOSCROLL_EDGE_DISTANCE,
-                        DRAG_DROP_MIN_AUTOSCROLL_SPEED, DRAG_DROP_MAX_AUTOSCROLL_SPEED);
-
-        this._scrollInterval = setInterval(() => {
-          docEl.scrollTop += speed - DRAG_DROP_MAX_AUTOSCROLL_SPEED;
-        }, 0);
-      }
-
-      return;
-    };
-
     let target = event.target;
 
-    // Search target for a markupContainer reference, if not found, walk up
+    // Auto-scroll if we're dragging.
+    if (this.isDragging) {
+      event.preventDefault();
+      this._autoScroll(event);
+      return;
+    }
+
+    // Show the current container as hovered and highlight it.
+    // This requires finding the current MarkupContainer (walking up the DOM).
     while (!target.container) {
       if (target.tagName.toLowerCase() === "body") {
         return;
@@ -236,6 +187,47 @@ MarkupView.prototype = {
       }
     }
     this._showContainerAsHovered(container.node);
+  },
+
+  /**
+   * Executed on each mouse-move while a node is being dragged in the view.
+   * Auto-scrolls the view to reveal nodes below the fold to drop the dragged
+   * node in.
+   */
+  _autoScroll: function(event) {
+    let docEl = this.doc.documentElement;
+
+    if (this._autoScrollInterval) {
+      clearInterval(this._autoScrollInterval);
+    }
+
+    // Auto-scroll when the mouse approaches top/bottom edge.
+    let fromBottom = docEl.clientHeight - event.pageY + this.win.scrollY;
+    let fromTop = event.pageY - this.win.scrollY;
+
+    if (fromBottom <= DRAG_DROP_AUTOSCROLL_EDGE_DISTANCE) {
+      // Map our distance from 0-50 to 5-15 range so the speed is kept in a
+      // range not too fast, not too slow.
+      let speed = map(
+        fromBottom,
+        0, DRAG_DROP_AUTOSCROLL_EDGE_DISTANCE,
+        DRAG_DROP_MIN_AUTOSCROLL_SPEED, DRAG_DROP_MAX_AUTOSCROLL_SPEED);
+
+      this._autoScrollInterval = setInterval(() => {
+        docEl.scrollTop -= speed - DRAG_DROP_MAX_AUTOSCROLL_SPEED;
+      }, 0);
+    }
+
+    if (fromTop <= DRAG_DROP_AUTOSCROLL_EDGE_DISTANCE) {
+      let speed = map(
+        fromTop,
+        0, DRAG_DROP_AUTOSCROLL_EDGE_DISTANCE,
+        DRAG_DROP_MIN_AUTOSCROLL_SPEED, DRAG_DROP_MAX_AUTOSCROLL_SPEED);
+
+      this._autoScrollInterval = setInterval(() => {
+        docEl.scrollTop += speed - DRAG_DROP_MAX_AUTOSCROLL_SPEED;
+      }, 0);
+    }
   },
 
   _onMouseClick: function(event) {
@@ -261,8 +253,8 @@ MarkupView.prototype = {
   _onMouseUp: function() {
     this.indicateDropTarget(null);
     this.indicateDragTarget(null);
-    if (this._scrollInterval) {
-      clearInterval(this._scrollInterval);
+    if (this._autoScrollInterval) {
+      clearInterval(this._autoScrollInterval);
     }
   },
 
@@ -280,12 +272,10 @@ MarkupView.prototype = {
 
     this.indicateDropTarget(null);
     this.indicateDragTarget(null);
-    if (this._scrollInterval) {
-      clearInterval(this._scrollInterval);
+    if (this._autoScrollInterval) {
+      clearInterval(this._autoScrollInterval);
     }
   },
-
-
 
   _hoveredNode: null,
 
@@ -307,10 +297,12 @@ MarkupView.prototype = {
   },
 
   _onMouseLeave: function() {
-    if (this._scrollInterval) {
-      clearInterval(this._scrollInterval);
+    if (this._autoScrollInterval) {
+      clearInterval(this._autoScrollInterval);
     }
-    if (this.isDragging) return;
+    if (this.isDragging) {
+      return;
+    }
 
     this._hideBoxModel(true);
     if (this._hoveredNode) {
@@ -457,7 +449,6 @@ MarkupView.prototype = {
    */
   _onNewSelection: function() {
     let selection = this._inspector.selection;
-    let reason = selection.reason;
 
     this.htmlEditor.hide();
     if (this._hoveredNode && this._hoveredNode !== selection.nodeFront) {
@@ -1237,7 +1228,7 @@ MarkupView.prototype = {
       this.htmlEditor.once("popuphidden", (e, aCommit, aValue) => {
         // Need to focus the <html> element instead of the frame / window
         // in order to give keyboard focus back to doc (from editor).
-        this._frame.contentDocument.documentElement.focus();
+        this.doc.documentElement.focus();
 
         if (aCommit) {
           this.updateNodeOuterHTML(aNode, aValue, oldValue);
@@ -1527,10 +1518,7 @@ MarkupView.prototype = {
 
     this._clearBriefBoxModelTimer();
 
-    this._elt.removeEventListener("click", this._onMouseClick, false);
-
     this._hoveredNode = null;
-    this._inspector.toolbox.off("picker-node-hovered", this._onToolboxPickerHover);
 
     this.htmlEditor.destroy();
     this.htmlEditor = null;
@@ -1541,46 +1529,21 @@ MarkupView.prototype = {
     this.popup.destroy();
     this.popup = null;
 
-    this._frame.removeEventListener("focus", this._boundFocus, false);
-    this._boundFocus = null;
-
-    if (this._boundUpdatePreview) {
-      this._frame.contentWindow.removeEventListener("scroll",
-        this._boundUpdatePreview, true);
-      this._boundUpdatePreview = null;
-    }
-
-    if (this._boundResizePreview) {
-      this._frame.contentWindow.removeEventListener("resize",
-        this._boundResizePreview, true);
-      this._frame.contentWindow.removeEventListener("overflow",
-        this._boundResizePreview, true);
-      this._frame.contentWindow.removeEventListener("underflow",
-        this._boundResizePreview, true);
-      this._boundResizePreview = null;
-    }
-
-    this._frame.contentWindow.removeEventListener("keydown",
-      this._boundKeyDown, false);
-    this._boundKeyDown = null;
-
-    this._frame.contentWindow.removeEventListener("copy", this._onCopy);
-    this._onCopy = null;
-
-    this._inspector.selection.off("new-node-front", this._boundOnNewSelection);
-    this._boundOnNewSelection = null;
-
-    this.walker.off("mutations", this._boundMutationObserver);
-    this._boundMutationObserver = null;
-
-    this.walker.off("display-change", this._boundOnDisplayChange);
-    this._boundOnDisplayChange = null;
-
+    this._elt.removeEventListener("click", this._onMouseClick, false);
     this._elt.removeEventListener("mousemove", this._onMouseMove, false);
     this._elt.removeEventListener("mouseleave", this._onMouseLeave, false);
+    this.doc.body.removeEventListener("mouseup", this._onMouseUp);
+    this.win.removeEventListener("keydown", this._onKeyDown, false);
+    this.win.removeEventListener("copy", this._onCopy);
+    this._frame.removeEventListener("focus", this._onFocus, false);
+    this.walker.off("mutations", this._mutationObserver);
+    this.walker.off("display-change", this._onDisplayChange);
+    this._inspector.selection.off("new-node-front", this._onNewSelection);
+    this._inspector.toolbox.off("picker-node-hovered", this._onToolboxPickerHover);
+
     this._elt = null;
 
-    for (let [key, container] of this._containers) {
+    for (let [, container] of this._containers) {
       container.destroy();
     }
     this._containers = null;
@@ -1598,6 +1561,18 @@ MarkupView.prototype = {
   },
 
   /**
+   * Find the closest element with class tag-line. These are used to indicate
+   * drag and drop targets.
+   * @param {DOMNode} el
+   * @return {DOMNode}
+   */
+  findClosestDragDropTarget: function(el) {
+    return el.classList.contains("tag-line")
+           ? el
+           : el.querySelector(".tag-line") || el.closest(".tag-line");
+  },
+
+  /**
    * Takes an element as it's only argument and marks the element
    * as the drop target
    */
@@ -1606,14 +1581,15 @@ MarkupView.prototype = {
       this._lastDropTarget.classList.remove("drop-target");
     }
 
-    if (!el) return;
+    if (!el) {
+      return;
+    }
 
-    let target = el.classList.contains("tag-line") ?
-                 el : el.querySelector(".tag-line") || el.closest(".tag-line");
-    if (!target) return;
-
-    target.classList.add("drop-target");
-    this._lastDropTarget = target;
+    let target = this.findClosestDragDropTarget(el);
+    if (target) {
+      target.classList.add("drop-target");
+      this._lastDropTarget = target;
+    }
   },
 
   /**
@@ -1624,19 +1600,20 @@ MarkupView.prototype = {
       this._lastDragTarget.classList.remove("drag-target");
     }
 
-    if (!el) return;
+    if (!el) {
+      return;
+    }
 
-    let target = el.classList.contains("tag-line") ?
-                 el : el.querySelector(".tag-line") || el.closest(".tag-line");
-
-    if (!target) return;
-
-    target.classList.add("drag-target");
-    this._lastDragTarget = target;
+    let target = this.findClosestDragDropTarget(el);
+    if (target) {
+      target.classList.add("drag-target");
+      this._lastDragTarget = target;
+    }
   },
 
   /**
-   * Used to get the nodes required to modify the markup after dragging the element (parent/nextSibling)
+   * Used to get the nodes required to modify the markup after dragging the
+   * element (parent/nextSibling).
    */
   get dropTargetNodes() {
     let target = this._lastDropTarget;
@@ -1686,7 +1663,6 @@ MarkupView.prototype = {
 function MarkupContainer() { }
 
 MarkupContainer.prototype = {
-
   /*
    * Initialize the MarkupContainer.  Should be called while one
    * of the other contain classes is instantiated.
@@ -1743,9 +1719,9 @@ MarkupContainer.prototype = {
       let isCanvas = tagName === "canvas";
 
       return isImage || isCanvas;
-    } else {
-      return false;
     }
+
+    return false;
   },
 
   /**
@@ -1868,7 +1844,6 @@ MarkupContainer.prototype = {
     return this.elt.parentNode ? this.elt.parentNode.container : null;
   },
 
-  _isMouseDown: false,
   _isDragging: false,
   _dragStartY: 0,
 
@@ -1892,25 +1867,30 @@ MarkupContainer.prototype = {
   /**
    * Check if element is draggable
    */
-  isDraggable: function(target) {
-    return this._isMouseDown &&
-           this.markup._dragStartEl === target &&
-           !this.node.isPseudoElement &&
+  isDraggable: function() {
+    let tagName = this.node.tagName.toLowerCase();
+
+    return !this.node.isPseudoElement &&
            !this.node.isAnonymous &&
+           !this.node.isDocumentElement &&
+           tagName !== "body" &&
+           tagName !== "head" &&
            this.win.getSelection().isCollapsed &&
            this.node.parentNode().tagName !== null;
   },
 
   _onMouseDown: function(event) {
-    let target = event.target;
+    let {target, button, metaKey, ctrlKey} = event;
+    let isLeftClick = button === 0;
+    let isMiddleClick = button === 1;
+    let isMetaClick = isLeftClick && (metaKey || ctrlKey);
 
-    // The "show more nodes" button (already has its onclick).
+    // The "show more nodes" button already has its onclick, so early return.
     if (target.nodeName === "button") {
       return;
     }
 
     // target is the MarkupContainer itself.
-    this._isMouseDown = true;
     this.hovered = false;
     this.markup.navigate(this);
     event.stopPropagation();
@@ -1924,9 +1904,7 @@ MarkupContainer.prototype = {
       event.preventDefault();
     }
 
-    let isMiddleClick = event.button === 1;
-    let isMetaClick = event.button === 0 && (event.metaKey || event.ctrlKey);
-
+    // Follow attribute links if middle or meta click.
     if (isMiddleClick || isMetaClick) {
       let link = target.dataset.link;
       let type = target.dataset.type;
@@ -1934,62 +1912,61 @@ MarkupContainer.prototype = {
       return;
     }
 
-    // Start dragging the container after a delay.
-    this.markup._dragStartEl = target;
-    setTimeout(() => {
-      // Make sure the mouse is still down and on target.
-      if (!this.isDraggable(target)) {
-        return;
-      }
-      this.isDragging = true;
-
+    // Start node drag & drop (if the mouse moved, see _onMouseMove).
+    if (isLeftClick && this.isDraggable()) {
+      this._isPreDragging = true;
       this._dragStartY = event.pageY;
-      this.markup.indicateDropTarget(this.elt);
-
-      // If this is the last child, use the closing <div.tag-line> of parent as indicator
-      this.markup.indicateDragTarget(this.elt.nextElementSibling ||
-                                     this.markup.getContainer(this.node.parentNode()).closeTagLine);
-    }, this.markup.GRAB_DELAY);
+    }
   },
 
   /**
    * On mouse up, stop dragging.
    */
   _onMouseUp: Task.async(function*() {
-    this._isMouseDown = false;
+    this._isPreDragging = false;
 
-    if (!this.isDragging) {
-      return;
+    if (this.isDragging) {
+      this.cancelDragging();
+
+      let dropTargetNodes = this.markup.dropTargetNodes;
+
+      if (!dropTargetNodes) {
+        return;
+      }
+
+      yield this.markup.walker.insertBefore(this.node, dropTargetNodes.parent,
+                                            dropTargetNodes.nextSibling);
+      this.markup.emit("drop-completed");
     }
-
-    this.cancelDragging();
-
-    let dropTargetNodes = this.markup.dropTargetNodes;
-
-    if (!dropTargetNodes) {
-      return;
-    }
-
-    yield this.markup.walker.insertBefore(this.node, dropTargetNodes.parent,
-                                          dropTargetNodes.nextSibling);
-    this.markup.emit("drop-completed");
   }),
 
   /**
-   * On mouse move, move the dragged element if any and indicate the drop target.
+   * On mouse move, move the dragged element and indicate the drop target.
    */
   _onMouseMove: function(event) {
-    if (!this.isDragging) {
-      return;
+    // If this is the first move after mousedown, only start dragging after the
+    // mouse has travelled a few pixels and then indicate the start position.
+    let initialDiff = Math.abs(event.pageY - this._dragStartY);
+    if (this._isPreDragging && initialDiff >= DRAG_DROP_MIN_INITIAL_DISTANCE) {
+      this._isPreDragging = false;
+      this.isDragging = true;
+
+      // If this is the last child, use the closing <div.tag-line> of parent as
+      // indicator.
+      let position = this.elt.nextElementSibling ||
+                     this.markup.getContainer(this.node.parentNode())
+                                .closeTagLine;
+      this.markup.indicateDragTarget(position);
     }
 
-    let diff = event.pageY - this._dragStartY;
-    this.elt.style.top = diff + "px";
+    if (this.isDragging) {
+      let diff = event.pageY - this._dragStartY;
+      this.elt.style.top = diff + "px";
 
-    let el = this.markup.doc.elementFromPoint(event.pageX - this.win.scrollX,
-                                              event.pageY - this.win.scrollY);
-
-    this.markup.indicateDropTarget(el);
+      let el = this.markup.doc.elementFromPoint(event.pageX - this.win.scrollX,
+                                                event.pageY - this.win.scrollY);
+      this.markup.indicateDropTarget(el);
+    }
   },
 
   cancelDragging: function() {
@@ -1997,7 +1974,7 @@ MarkupContainer.prototype = {
       return;
     }
 
-    this._isMouseDown = false;
+    this._isPreDragging = false;
     this.isDragging = false;
     this.elt.style.removeProperty("top");
   },
