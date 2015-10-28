@@ -70,7 +70,8 @@
 #include "mozilla/dom/TreeWalker.h"
 
 #include "nsIServiceManager.h"
-#include "nsIServiceWorkerManager.h"
+#include "mozilla/dom/workers/ServiceWorkerManager.h"
+#include "imgLoader.h"
 
 #include "nsCanvasFrame.h"
 #include "nsContentCID.h"
@@ -8901,8 +8902,13 @@ nsDocument::Destroy()
 
   mRegistry = nullptr;
 
-  nsCOMPtr<nsIServiceWorkerManager> swm = mozilla::services::GetServiceWorkerManager();
+  using mozilla::dom::workers::ServiceWorkerManager;
+  RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
   if (swm) {
+    ErrorResult error;
+    if (swm->IsControlled(this, error)) {
+      nsContentUtils::GetImgLoaderForDocument(this)->ClearCacheForControlledDocument(this);
+    }
     swm->MaybeStopControlling(this);
   }
 
