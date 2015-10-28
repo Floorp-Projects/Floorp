@@ -17,6 +17,16 @@
 #include "nsISupportsPrimitives.h"
 #include "punycode.h"
 
+#ifdef IDNA2008
+// Currently we use the transitional processing option -- see
+// http://unicode.org/reports/tr46/
+// To switch to non-transitional processing, change the value of this flag
+// and kTransitionalProcessing in netwerk/test/unit/test_idna2008.js to false
+// (patch in bug 1218179).
+const bool kIDNA2008_TransitionalProcessing = true;
+
+#include "ICUUtils.h"
+#endif
 
 using namespace mozilla::unicode;
 
@@ -123,17 +133,90 @@ void nsIDNService::prefsChanged(nsIPrefBranch *prefBranch, const char16_t *pref)
 
 nsIDNService::nsIDNService()
 {
+#ifdef IDNA2008
+  uint32_t IDNAOptions = UIDNA_CHECK_BIDI | UIDNA_CHECK_CONTEXTJ;
+  if (!kIDNA2008_TransitionalProcessing) {
+    IDNAOptions |= UIDNA_NONTRANSITIONAL_TO_UNICODE;
+  }
+  UErrorCode errorCode = U_ZERO_ERROR;
+  mIDNA = uidna_openUTS46(IDNAOptions, &errorCode);
+#else
   if (idn_success != idn_nameprep_create(nullptr, &mNamePrepHandle))
     mNamePrepHandle = nullptr;
 
   mNormalizer = do_GetService(NS_UNICODE_NORMALIZER_CONTRACTID);
   /* member initializers and constructor code */
+#endif
 }
 
 nsIDNService::~nsIDNService()
 {
+#ifdef IDNA2008
+  uidna_close(mIDNA);
+#else
   idn_nameprep_destroy(mNamePrepHandle);
+#endif
 }
+
+#ifdef IDNA2008
+nsresult
+nsIDNService::IDNA2008ToUnicode(const nsACString& input, nsAString& output)
+{
+  NS_ConvertUTF8toUTF16 inputStr(input);
+  UIDNAInfo info = UIDNA_INFO_INITIALIZER;
+  UErrorCode errorCode = U_ZERO_ERROR;
+  int32_t inLen = inputStr.Length();
+  int32_t outMaxLen = inLen - kACEPrefixLen + 1;
+  UChar outputBuffer[kMaxDNSNodeLen + 1];
+
+  int32_t outLen = uidna_labelToUnicode(mIDNA, (const UChar*)inputStr.get(),
+                                        inLen, outputBuffer, outMaxLen,
+                                        &info, &errorCode);
+  if (info.errors != 0) {
+    return NS_ERROR_FAILURE;
+  }
+
+  if (U_SUCCESS(errorCode)) {
+    ICUUtils::AssignUCharArrayToString(outputBuffer, outLen, output);
+  }
+
+  return ICUUtils::UErrorToNsResult(errorCode);
+}
+
+nsresult
+nsIDNService::IDNA2008StringPrep(const nsAString& input,
+                                 nsAString& output,
+                                 stringPrepFlag flag)
+{
+  UIDNAInfo info = UIDNA_INFO_INITIALIZER;
+  UErrorCode errorCode = U_ZERO_ERROR;
+  int32_t inLen = input.Length();
+  int32_t outMaxLen = kMaxDNSNodeLen + 1;
+  UChar outputBuffer[kMaxDNSNodeLen + 1];
+
+  int32_t outLen =
+    uidna_labelToUnicode(mIDNA, (const UChar*)PromiseFlatString(input).get(),
+                         inLen, outputBuffer, outMaxLen, &info, &errorCode);
+  nsresult rv = ICUUtils::UErrorToNsResult(errorCode);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Output the result of nameToUnicode even if there were errors
+  ICUUtils::AssignUCharArrayToString(outputBuffer, outLen, output);
+
+  if (flag == eStringPrepIgnoreErrors) {
+    return NS_OK;
+  }
+
+  if (info.errors != 0) {
+    if (flag == eStringPrepForDNS) {
+      output.Truncate();
+    }
+    rv = NS_ERROR_FAILURE;
+  }
+
+  return rv;
+}
+#endif
 
 NS_IMETHODIMP nsIDNService::ConvertUTF8toACE(const nsACString & input, nsACString & ace)
 {
@@ -396,6 +479,7 @@ static nsresult utf16ToUcs4(const nsAString& in,
   return NS_OK;
 }
 
+#ifndef IDNA2008
 static void ucs4toUtf16(const uint32_t *in, nsAString& out)
 {
   while (*in) {
@@ -408,6 +492,7 @@ static void ucs4toUtf16(const uint32_t *in, nsAString& out)
     in++;
   }
 }
+#endif
 
 static nsresult punycode(const nsAString& in, nsACString& out)
 {
@@ -462,6 +547,9 @@ static nsresult punycode(const nsAString& in, nsACString& out)
 nsresult nsIDNService::stringPrep(const nsAString& in, nsAString& out,
                                   stringPrepFlag flag)
 {
+#ifdef IDNA2008
+  return IDNA2008StringPrep(in, out, flag);
+#else
   if (!mNamePrepHandle || !mNormalizer)
     return NS_ERROR_FAILURE;
 
@@ -523,6 +611,7 @@ nsresult nsIDNService::stringPrep(const nsAString& in, nsAString& out,
   }
 
   return rv;
+#endif
 }
 
 nsresult nsIDNService::stringPrepAndACE(const nsAString& in, nsACString& out,
@@ -612,6 +701,11 @@ nsresult nsIDNService::decodeACE(const nsACString& in, nsACString& out,
     return NS_OK;
   }
 
+  nsAutoString utf16;
+#ifdef IDNA2008
+  nsresult result = IDNA2008ToUnicode(in, utf16);
+  NS_ENSURE_SUCCESS(result, result);
+#else
   // RFC 3490 - 4.2 ToUnicode
   // The ToUnicode output never contains more code points than its input.
   punycode_uint output_length = in.Length() - kACEPrefixLen + 1;
@@ -630,9 +724,9 @@ nsresult nsIDNService::decodeACE(const nsACString& in, nsACString& out,
 
   // UCS4 -> UTF8
   output[output_length] = 0;
-  nsAutoString utf16;
   ucs4toUtf16(output, utf16);
   delete [] output;
+#endif
   if (flag != eStringPrepForUI || isLabelSafe(utf16)) {
     CopyUTF16toUTF8(utf16, out);
   } else {
