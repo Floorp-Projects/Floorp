@@ -33,13 +33,14 @@ public:
 
   virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
-  virtual void Connect(AudioNode& aDestination, uint32_t aOutput,
-                       uint32_t aInput, ErrorResult& aRv) override
+  virtual AudioNode* Connect(AudioNode& aDestination, uint32_t aOutput,
+                             uint32_t aInput, ErrorResult& aRv) override
   {
-    AudioNode::Connect(aDestination, aOutput, aInput, aRv);
+    AudioNode* node = AudioNode::Connect(aDestination, aOutput, aInput, aRv);
     if (!aRv.Failed()) {
       UpdateConnectedStatus();
     }
+    return node;
   }
 
   virtual void Connect(AudioParam& aDestination, uint32_t aOutput,
