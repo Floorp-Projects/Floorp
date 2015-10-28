@@ -20,6 +20,20 @@ var Reader = {
     return this._hasUsedToolbar = Services.prefs.getBoolPref("reader.has_used_toolbar");
   },
 
+  get _buttonHistogram() {
+    delete this._buttonHistogram;
+    return this._buttonHistogram = Services.telemetry.getHistogramById("FENNEC_READER_VIEW_BUTTON");
+  },
+
+  // Values for "FENNEC_READER_VIEW_BUTTON" histogram.
+  _buttonHistogramValues: {
+    HIDDEN: 0,
+    SHOWN: 1,
+    TAP_ENTER: 2,
+    TAP_EXIT: 3,
+    LONG_TAP: 4
+  },
+
   /**
    * BackPressListener (listeners / ReaderView Ids).
    */
@@ -202,14 +216,17 @@ var Reader = {
         } else {
           browser.loadURI(originalURL);
         }
+        Reader._buttonHistogram.add(Reader._buttonHistogramValues.TAP_EXIT);
       } else {
         browser.messageManager.sendAsyncMessage("Reader:ParseDocument", { url: url });
+        Reader._buttonHistogram.add(Reader._buttonHistogramValues.TAP_ENTER);
       }
     },
 
     readerModeActiveCallback: function(tabID) {
       Reader._addTabToReadingList(tabID).catch(e => Cu.reportError("Error adding tab to reading list: " + e));
       UITelemetry.addEvent("save.1", "pageaction", null, "reader");
+      Reader._buttonHistogram.add(Reader._buttonHistogramValues.LONG_TAP);
     },
   },
 
@@ -247,6 +264,9 @@ var Reader = {
 
     if (browser.isArticle) {
       showPageAction("drawable://reader", Strings.reader.GetStringFromName("readerView.enter"));
+      this._buttonHistogram.add(this._buttonHistogramValues.SHOWN);
+    } else {
+      this._buttonHistogram.add(this._buttonHistogramValues.HIDDEN);
     }
   },
 
