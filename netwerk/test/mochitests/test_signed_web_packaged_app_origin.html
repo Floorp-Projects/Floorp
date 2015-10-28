@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title> Web packaged app </title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script class="testbody" type="application/javascript;version=1.7">
+
+// The test is mainly to verify whether the packageId is populated
+// to the child side when loading a signed packaged content.
+// Since we have to have chrome priviledge to test if the node principal
+// has the expected origin attributes, we have to load and run a script
+// in content to get the nodePrincipal and send back to the opener
+// to check the origin.
+
+var Cc = SpecialPowers.Cc;
+var Ci = SpecialPowers.Ci;
+var Cu = SpecialPowers.Cu;
+var Cr = SpecialPowers.Cr;
+
+SpecialPowers.pushPrefEnv(
+  { "set": [["network.http.enable-packaged-apps", true],
+            ["network.http.signed-packages.enabled", true],
+            ["dom.mozBrowserFramesEnabled", true]] },
+  () => SpecialPowers.pushPermissions([
+    { "type": "browser", "allow": 1, "context": document }
+  ], function() {
+    runTest();
+  }));
+
+SimpleTest.waitForExplicitFinish();
+
+function runTest() {
+  var iframe = document.createElement("iframe");
+
+  // 1. We open a remote browser and navigate to a regular content first.
+  iframe.setAttribute('mozbrowser', 'true');
+  iframe.setAttribute('remote', 'true');
+  iframe.setAttribute("src", "http://example.org:80");
+
+  iframe.addEventListener("mozbrowserloadend", function loadend(e) {
+    iframe.removeEventListener("mozbrowserloadend", loadend);
+    ok(true, "Got mozbrowserloadend");
+
+    // 2. Then we navigate to a signed packaged content.
+    iframe.setAttribute("src", "http://mochi.test:8888/tests/netwerk/test/mochitests/signed_web_packaged_app.sjs!//index.html");
+
+    iframe.addEventListener("mozbrowserloadend", function loadend(e) {
+      iframe.removeEventListener("mozbrowserloadend", loadend);
+
+        // 3. Inject a script with chrome priviledge to content to get the nodePrincipal.
+        //    We communicate via message manager with event 'my-e10s-extension-message'.
+        var mm = SpecialPowers.wrap(iframe)
+                              .QueryInterface(Ci.nsIFrameLoaderOwner)
+                              .frameLoader
+                              .messageManager;
+
+        var fsl = mm.QueryInterface(Ci.nsIFrameScriptLoader);
+
+        mm.addMessageListener("get-node-principal-origin", function(message) {
+          let contentOrigin = message.objects.origin;
+          // The expected signedPkg is defined in 'signed_web_packaged_app.sjs'.
+          let kExpectedOrigin =
+            'http://mochi.test:8888^inBrowser=1&signedPkg=09bc9714-7ab6-4320-9d20-fde4c237522c';
+          is(contentOrigin, kExpectedOrigin, 'content origin check: ' + contentOrigin);
+          SimpleTest.finish();
+        });
+
+        // The script we are going to inject to the content.
+        let frameScript =
+`
+function getNodePrincipalOrigin() {
+  sendAsyncMessage("get-node-principal-origin", {}, { origin: content.document.nodePrincipal.origin });
+}
+`;
+        fsl.loadFrameScript("data:,(" + frameScript + ")()", true);
+    });
+  });
+
+  document.body.appendChild(iframe);
+}
+
+</script>
+</pre>
+</body>
+</html>

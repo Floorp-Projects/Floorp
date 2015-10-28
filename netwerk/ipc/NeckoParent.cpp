@@ -144,7 +144,12 @@ NeckoParent::GetValidatedAppInfo(const SerializedLoadContext& aSerialized,
         continue;
       }
     }
+    if (!aSerialized.mOriginAttributes.mSignedPkg.IsEmpty() &&
+        aSerialized.mOriginAttributes.mSignedPkg != tabContext.OriginAttributesRef().mSignedPkg) {
+      continue;
+    }
     aAttrs = OriginAttributes(appId, inBrowserElement);
+    aAttrs.mSignedPkg = tabContext.OriginAttributesRef().mSignedPkg;
     return nullptr;
   }
 
@@ -295,7 +300,7 @@ NeckoParent::AllocPCookieServiceParent()
   return new CookieServiceParent();
 }
 
-bool 
+bool
 NeckoParent::DeallocPCookieServiceParent(PCookieServiceParent* cs)
 {
   delete cs;
@@ -454,7 +459,7 @@ NeckoParent::AllocPTCPSocketParent(const nsString& /* host */,
 {
   // We actually don't need host/port to construct a TCPSocketParent since
   // TCPSocketParent will maintain an internal nsIDOMTCPSocket instance which
-  // can be delegated to get the host/port. 
+  // can be delegated to get the host/port.
   TCPSocketParent* p = new TCPSocketParent();
   p->AddIPDLReference();
   return p;
