@@ -1516,6 +1516,11 @@ private:
 
   // True if the first frame has been successfully loaded.
   bool mFirstFrameLoaded;
+
+  // Media elements also have a default playback start position, which must
+  // initially be set to zero seconds. This time is used to allow the element to
+  // be seeked even before the media is loaded.
+  double mDefaultPlaybackStartPosition;
 };
 
 } // namespace dom

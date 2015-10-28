@@ -575,11 +575,11 @@ nsIconChannel::MakeInputStream(nsIInputStream** _retval, bool aNonBlocking)
                             colorHeader.biSizeImage +
                             maskHeader.biSizeImage;
 
-        char* buffer = new char[iconSize];
+        UniquePtr<char[]> buffer = MakeUnique<char[]>(iconSize);
         if (!buffer) {
           rv = NS_ERROR_OUT_OF_MEMORY;
         } else {
-          char* whereTo = buffer;
+          char* whereTo = buffer.get();
           int howMuch;
 
           // the data starts with an icon file header
@@ -640,7 +640,7 @@ nsIconChannel::MakeInputStream(nsIInputStream** _retval, bool aNonBlocking)
                               iconSize, iconSize, aNonBlocking);
               if (NS_SUCCEEDED(rv)) {
                 uint32_t written;
-                rv = outStream->Write(buffer, iconSize, &written);
+                rv = outStream->Write(buffer.get(), iconSize, &written);
                 if (NS_SUCCEEDED(rv)) {
                   NS_ADDREF(*_retval = inStream);
                 }
@@ -650,7 +650,6 @@ nsIconChannel::MakeInputStream(nsIInputStream** _retval, bool aNonBlocking)
             delete maskInfo;
           } // if we got mask bits
           delete colorInfo;
-          delete [] buffer;
         } // if we allocated the buffer
       } // if we got mask size
 

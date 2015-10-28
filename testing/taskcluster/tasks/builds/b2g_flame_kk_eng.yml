@@ -7,7 +7,6 @@ task:
   scopes:
     - 'docker-worker:cache:build-flame-kk-eng'
     - 'docker-worker:cache:build-flame-kk-eng-objdir-gecko-{{project}}'
-    - 'docker-worker:relengapi-proxy:tooltool.download.internal'
   metadata:
     name: '[TC] B2G Flame KK Eng'
 
@@ -17,7 +16,6 @@ task:
       build-flame-kk-eng-objdir-gecko-{{project}}: /home/worker/objdir-gecko
     env:
       TARGET: 'flame-kk'
-      TOOLTOOL_MANIFEST: 'b2g/config/flame-kk/releng-flame-kk.tt'
   extra:
     treeherderEnv:
       - production
