@@ -7372,6 +7372,7 @@ nsContentUtils::CallOnAllRemoteChildren(nsIDOMWindow* aWindow,
 void
 nsContentUtils::TransferablesToIPCTransferables(nsISupportsArray* aTransferables,
                                                 nsTArray<IPCDataTransfer>& aIPC,
+                                                bool aInSyncMessage,
                                                 mozilla::dom::nsIContentChild* aChild,
                                                 mozilla::dom::nsIContentParent* aParent)
 {
@@ -7384,14 +7385,71 @@ nsContentUtils::TransferablesToIPCTransferables(nsISupportsArray* aTransferables
       nsCOMPtr<nsISupports> genericItem;
       aTransferables->GetElementAt(i, getter_AddRefs(genericItem));
       nsCOMPtr<nsITransferable> transferable(do_QueryInterface(genericItem));
-      TransferableToIPCTransferable(transferable, dt, aChild, aParent);
+      TransferableToIPCTransferable(transferable, dt, aInSyncMessage, aChild, aParent);
     }
   }
+}
+
+nsresult
+nsContentUtils::SlurpFileToString(nsIFile* aFile, nsACString& aString)
+{
+  aString.Truncate();
+
+  nsCOMPtr<nsIURI> fileURI;
+  nsresult rv = NS_NewFileURI(getter_AddRefs(fileURI), aFile);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  nsCOMPtr<nsIChannel> channel;
+  rv = NS_NewChannel(getter_AddRefs(channel),
+                     fileURI,
+                     nsContentUtils::GetSystemPrincipal(),
+                     nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
+                     nsIContentPolicy::TYPE_OTHER);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  nsCOMPtr<nsIInputStream> stream;
+  rv = channel->Open2(getter_AddRefs(stream));
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  rv = NS_ConsumeStream(stream, UINT32_MAX, aString);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  rv = stream->Close();
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  return NS_OK;
+}
+
+bool
+nsContentUtils::IsFileImage(nsIFile* aFile, nsACString& aType)
+{
+  nsCOMPtr<nsIMIMEService> mime = do_GetService("@mozilla.org/mime;1");
+  if (!mime) {
+    return false;
+  }
+
+  nsresult rv = mime->GetTypeFromFile(aFile, aType);
+  if (NS_FAILED(rv)) {
+    return false;
+  }
+
+  return StringBeginsWith(aType, NS_LITERAL_CSTRING("image/"));
 }
 
 void
 nsContentUtils::TransferableToIPCTransferable(nsITransferable* aTransferable,
                                               IPCDataTransfer* aIPCDataTransfer,
+                                              bool aInSyncMessage,
                                               mozilla::dom::nsIContentChild* aChild,
                                               mozilla::dom::nsIContentParent* aParent)
 {
@@ -7465,7 +7523,7 @@ nsContentUtils::TransferableToIPCTransferable(nsITransferable* aTransferable,
               int32_t stride;
               mozilla::UniquePtr<char[]> surfaceData =
                 nsContentUtils::GetSurfaceData(dataSurface, &length, &stride);
-              
+
               IPCDataTransferItem* item = aIPCDataTransfer->items().AppendElement();
               item->flavor() = nsCString(flavorStr);
               item->data() = nsCString(surfaceData.get(), length);
@@ -7485,6 +7543,22 @@ nsContentUtils::TransferableToIPCTransferable(nsITransferable* aTransferable,
           nsCOMPtr<BlobImpl> blobImpl;
           nsCOMPtr<nsIFile> file = do_QueryInterface(data);
           if (file) {
+            // If we can send this over as a blob, do so. Otherwise, we're
+            // responding to a sync message and the child can't process the blob
+            // constructor before processing our response, which would crash. In
+            // that case, hope that the caller is nsClipboardProxy::GetData,
+            // called from editor and send over images as raw data.
+            if (aInSyncMessage) {
+              nsAutoCString type;
+              if (IsFileImage(file, type)) {
+                IPCDataTransferItem* item = aIPCDataTransfer->items().AppendElement();
+                item->flavor() = type;
+                SlurpFileToString(file, item->data());
+              }
+
+              continue;
+            }
+
             blobImpl = new BlobImplFile(file, false);
             ErrorResult rv;
             // Ensure that file data is cached no that the content process
@@ -7493,6 +7567,10 @@ nsContentUtils::TransferableToIPCTransferable(nsITransferable* aTransferable,
             blobImpl->GetLastModified(rv);
             blobImpl->LookupAndCacheIsDirectory();
           } else {
+            if (aInSyncMessage) {
+              // Can't do anything.
+              continue;
+            }
             blobImpl = do_QueryInterface(data);
           }
           if (blobImpl) {

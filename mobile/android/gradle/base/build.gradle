@@ -105,6 +105,12 @@ dependencies {
         compile 'com.google.android.gms:play-services-cast:8.1.0'
     }
 
+    if (mozconfig.substs.MOZ_ANDROID_GCM) {
+        compile 'com.google.android.gms:play-services-basement:8.1.0'
+        compile 'com.google.android.gms:play-services-base:8.1.0'
+        compile 'com.google.android.gms:play-services-gcm:8.1.0'
+    }
+
     compile project(':thirdparty')
 
     testCompile 'junit:junit:4.12'

@@ -185,7 +185,7 @@ class AutoTry(object):
     @property
     def resolver(self):
         if self._resolver is None:
-            self._resolver = self.resolver_func
+            self._resolver = self._resolver_func()
         return self._resolver
 
     @property

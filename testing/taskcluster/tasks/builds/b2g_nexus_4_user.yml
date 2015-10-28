@@ -7,7 +7,6 @@ task:
   workerType: flame-kk
   scopes:
     - 'docker-worker:cache:build-nexus-4-user'
-    - 'docker-worker:relengapi-proxy:tooltool.download.internal'
   metadata:
     name: '[TC] B2G Nexus 4 User'
 
@@ -17,7 +16,6 @@ task:
     env:
       TARGET: 'nexus-4'
       DEBUG: 0
-      TOOLTOOL_MANIFEST: 'b2g/config/nexus-4/releng-mako.tt'
     command:
       - phone
   extra:

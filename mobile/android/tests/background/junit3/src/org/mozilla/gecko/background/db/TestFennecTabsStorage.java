@@ -26,6 +26,7 @@ public class TestFennecTabsStorage extends ActivityInstrumentationTestCase2<Acti
   public static final String TEST_CLIENT_GUID = "test guid"; // Real GUIDs never contain spaces.
   public static final String TEST_CLIENT_NAME = "test client name";
 
+  public static final String CLIENTS_GUID_IS = BrowserContract.Clients.GUID + " = ?";
   public static final String TABS_CLIENT_GUID_IS = BrowserContract.Tabs.CLIENT_GUID + " = ?";
 
   protected Tab testTab1;
@@ -46,16 +47,30 @@ public class TestFennecTabsStorage extends ActivityInstrumentationTestCase2<Acti
     return cr.acquireContentProviderClient(BrowserContractHelpers.TABS_CONTENT_URI);
   }
 
+  protected int deleteTestClient(final ContentProviderClient clientsClient) throws RemoteException {
+    if (clientsClient == null) {
+      return -1;
+    }
+    return clientsClient.delete(BrowserContractHelpers.CLIENTS_CONTENT_URI, CLIENTS_GUID_IS, new String[] { TEST_CLIENT_GUID });
+  }
+
   protected int deleteAllTestTabs(final ContentProviderClient tabsClient) throws RemoteException {
     if (tabsClient == null) {
       return -1;
     }
-    return tabsClient.delete(BrowserContractHelpers.TABS_CONTENT_URI, TABS_CLIENT_GUID_IS, new String[] { TEST_CLIENT_GUID });
+    return tabsClient.delete(BrowserContractHelpers.TABS_CONTENT_URI, TABS_CLIENT_GUID_IS, new String[]{TEST_CLIENT_GUID});
   }
 
   @Override
   protected void tearDown() throws Exception {
     deleteAllTestTabs(getTabsClient());
+  }
+
+  protected void insertTestClient(final ContentProviderClient clientsClient) throws RemoteException {
+    ContentValues cv = new ContentValues();
+    cv.put(BrowserContract.Clients.GUID, TEST_CLIENT_GUID);
+    cv.put(BrowserContract.Clients.NAME, TEST_CLIENT_NAME);
+    clientsClient.insert(BrowserContractHelpers.CLIENTS_CONTENT_URI, cv);
   }
 
   @SuppressWarnings("unchecked")
@@ -169,8 +184,11 @@ public class TestFennecTabsStorage extends ActivityInstrumentationTestCase2<Acti
 
   public void testTabFromCursor() throws Exception {
     final ContentProviderClient tabsClient = getTabsClient();
+    final ContentProviderClient clientsClient = getClientsClient();
 
     deleteAllTestTabs(tabsClient);
+    deleteTestClient(clientsClient);
+    insertTestClient(clientsClient);
     insertSomeTestTabs(tabsClient);
 
     final String positionAscending = BrowserContract.Tabs.POSITION + " ASC";
@@ -190,6 +208,28 @@ public class TestFennecTabsStorage extends ActivityInstrumentationTestCase2<Acti
       cursor.moveToPosition(2);
       final Tab parsed3 = Tab.fromCursor(cursor);
       assertEquals(testTab3, parsed3);
+    } finally {
+      cursor.close();
+    }
+  }
+
+  public void testDeletingClientDeletesTabs() throws Exception {
+    final ContentProviderClient tabsClient = getTabsClient();
+    final ContentProviderClient clientsClient = getClientsClient();
+
+    deleteAllTestTabs(tabsClient);
+    deleteTestClient(clientsClient);
+    insertTestClient(clientsClient);
+    insertSomeTestTabs(tabsClient);
+
+    // Delete just the client...
+    clientsClient.delete(BrowserContractHelpers.CLIENTS_CONTENT_URI, CLIENTS_GUID_IS, new String [] { TEST_CLIENT_GUID });
+
+    Cursor cursor = null;
+    try {
+      cursor = tabsClient.query(BrowserContractHelpers.TABS_CONTENT_URI, null, TABS_CLIENT_GUID_IS, new String[] { TEST_CLIENT_GUID }, null);
+      // ... and all that client's tabs should be removed.
+      assertEquals(0, cursor.getCount());
     } finally {
       cursor.close();
     }

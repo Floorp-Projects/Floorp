@@ -50,7 +50,7 @@ config = {
         "cppunittest": {
             "options": [
                 "--symbols-path=%(symbols_path)s",
-                "--xre-path=%(abs_app_dir)s"
+                "--xre-path=%(abs_res_dir)s"
             ],
             "run_filename": "runcppunittests.py",
             "testsdir": "cppunittest"
