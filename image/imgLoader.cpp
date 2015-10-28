@@ -1361,6 +1361,25 @@ imgLoader::FindEntryProperties(nsIURI* uri,
   return NS_OK;
 }
 
+NS_IMETHODIMP_(void)
+imgLoader::ClearCacheForControlledDocument(nsIDocument* aDoc)
+{
+  MOZ_ASSERT(aDoc);
+  nsAutoTArray<RefPtr<imgCacheEntry>, 128> entriesToBeRemoved;
+  imgCacheTable& cache = GetCache(false);
+  for (auto iter = cache.Iter(); !iter.Done(); iter.Next()) {
+    auto& key = iter.Key();
+    if (key.ControlledDocument() == aDoc) {
+      entriesToBeRemoved.AppendElement(iter.Data());
+    }
+  }
+  for (auto& entry : entriesToBeRemoved) {
+    if (!RemoveFromCache(entry)) {
+      NS_WARNING("Couldn't remove an entry from the cache in ClearCacheForControlledDocument()\n");
+    }
+  }
+}
+
 void
 imgLoader::Shutdown()
 {

@@ -46,6 +46,10 @@ public:
   /// Is this cache entry for a chrome image?
   bool IsChrome() const { return mIsChrome; }
 
+  /// A token indicating which service worker controlled document this entry
+  /// belongs to, if any.
+  void* ControlledDocument() const { return mControlledDocument; }
+
 private:
   static uint32_t ComputeHash(ImageURL* aURI,
                               const Maybe<uint64_t>& aBlobSerial,
