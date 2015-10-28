@@ -9641,6 +9641,13 @@
     "kind": "count",
     "description": "Attempt to notify ServiceWorker of push notification resubscription."
   },
+  "GFX_CRASH": {
+    "expires_in_version": "never",
+    "kind": "enumerated",
+    "n_values": 100,
+    "releaseChannelCollection": "opt-out",
+    "description": "Graphics Crash Reason (...)"
+  },
   "PLUGIN_ACTIVATION_COUNT": {
     "alert_emails": ["cpeterson@mozilla.com"],
     "expires_in_version": "48",

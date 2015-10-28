@@ -904,5 +904,13 @@ CriticalLogger::OutputMessage(const std::string &aString,
   BasicLogger::OutputMessage(aString, aLevel, aNoNewline);
 }
 
+void
+CriticalLogger::CrashAction(LogReason aReason)
+{
+  if (Factory::GetLogForwarder()) {
+    Factory::GetLogForwarder()->CrashAction(aReason);
+  }
+}
+
 } // namespace gfx
 } // namespace mozilla
