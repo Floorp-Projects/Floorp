@@ -12,7 +12,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/Endian.h"
 #include "mozilla/MathAlgorithms.h"
-#include "mozilla/net/WebSocketEventService.h"
+#include "mozilla/net/WebSocketFrameService.h"
 
 #include "nsIURI.h"
 #include "nsIChannel.h"
@@ -1196,7 +1196,7 @@ WebSocketChannel::WebSocketChannel() :
 
   mSerial = sSerialSeed++;
 
-  mService = WebSocketEventService::GetOrCreate();
+  mFrameService = WebSocketFrameService::GetOrCreate();
 }
 
 WebSocketChannel::~WebSocketChannel()
@@ -1228,7 +1228,7 @@ WebSocketChannel::~WebSocketChannel()
 
   NS_ReleaseOnMainThread(mLoadGroup);
   NS_ReleaseOnMainThread(mLoadInfo);
-  NS_ReleaseOnMainThread(static_cast<nsIWebSocketEventService*>(mService.forget().take()));
+  NS_ReleaseOnMainThread(static_cast<nsIWebSocketFrameService*>(mFrameService.forget().take()));
 }
 
 NS_IMETHODIMP
@@ -1699,11 +1699,11 @@ WebSocketChannel::ProcessInput(uint8_t *buffer, uint32_t count)
         }
 
         RefPtr<WebSocketFrame> frame =
-          mService->CreateFrameIfNeeded(finBit, rsvBit1, rsvBit2, rsvBit3,
-                                        opcode, maskBit, mask, utf8Data);
+          mFrameService->CreateFrameIfNeeded(finBit, rsvBit1, rsvBit2, rsvBit3,
+                                             opcode, maskBit, mask, utf8Data);
 
         if (frame) {
-          mService->FrameReceived(mSerial, mInnerWindowID, frame);
+          mFrameService->FrameReceived(mSerial, mInnerWindowID, frame);
         }
 
         mTargetThread->Dispatch(new CallOnMessageAvailable(this, utf8Data, -1),
@@ -1722,9 +1722,9 @@ WebSocketChannel::ProcessInput(uint8_t *buffer, uint32_t count)
       }
 
       RefPtr<WebSocketFrame> frame =
-        mService->CreateFrameIfNeeded(finBit, rsvBit1, rsvBit2, rsvBit3,
-                                      opcode, maskBit, mask, payload,
-                                      payloadLength);
+        mFrameService->CreateFrameIfNeeded(finBit, rsvBit1, rsvBit2, rsvBit3,
+                                           opcode, maskBit, mask, payload,
+                                           payloadLength);
 
       if (opcode == nsIWebSocketFrame::OPCODE_CLOSE) {
         LOG(("WebSocketChannel:: close received\n"));
@@ -1762,7 +1762,7 @@ WebSocketChannel::ProcessInput(uint8_t *buffer, uint32_t count)
         if (frame) {
           // We send the frame immediately becuase we want to have it dispatched
           // before the CallOnServerClose.
-          mService->FrameReceived(mSerial, mInnerWindowID, frame);
+          mFrameService->FrameReceived(mSerial, mInnerWindowID, frame);
           frame = nullptr;
         }
 
@@ -1802,7 +1802,7 @@ WebSocketChannel::ProcessInput(uint8_t *buffer, uint32_t count)
       }
 
       if (frame) {
-        mService->FrameReceived(mSerial, mInnerWindowID, frame);
+        mFrameService->FrameReceived(mSerial, mInnerWindowID, frame);
       }
     } else if (opcode == nsIWebSocketFrame::OPCODE_BINARY) {
       bool isDeflated = mPMCECompressor && mPMCECompressor->IsMessageDeflated();
@@ -1828,10 +1828,10 @@ WebSocketChannel::ProcessInput(uint8_t *buffer, uint32_t count)
         }
 
         RefPtr<WebSocketFrame> frame =
-          mService->CreateFrameIfNeeded(finBit, rsvBit1, rsvBit2, rsvBit3,
-                                        opcode, maskBit, mask, binaryData);
+          mFrameService->CreateFrameIfNeeded(finBit, rsvBit1, rsvBit2, rsvBit3,
+                                             opcode, maskBit, mask, binaryData);
         if (frame) {
-          mService->FrameReceived(mSerial, mInnerWindowID, frame);
+          mFrameService->FrameReceived(mSerial, mInnerWindowID, frame);
         }
 
         mTargetThread->Dispatch(
@@ -2177,7 +2177,7 @@ WebSocketChannel::PrimeNewOutgoingMessage()
   // For real data frames we ship the bulk of the payload off to ApplyMask()
 
    RefPtr<WebSocketFrame> frame =
-     mService->CreateFrameIfNeeded(
+     mFrameService->CreateFrameIfNeeded(
                            mOutHeader[0] & WebSocketChannel::kFinalFragBit,
                            mOutHeader[0] & WebSocketChannel::kRsv1Bit,
                            mOutHeader[0] & WebSocketChannel::kRsv2Bit,
@@ -2190,7 +2190,7 @@ WebSocketChannel::PrimeNewOutgoingMessage()
                            mCurrentOut->OrigLength());
 
   if (frame) {
-    mService->FrameSent(mSerial, mInnerWindowID, frame);
+    mFrameService->FrameSent(mSerial, mInnerWindowID, frame);
   }
 
   while (payload < (mOutHeader + mHdrOutToSend)) {
