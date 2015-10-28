@@ -110,7 +110,11 @@
 }
 
 .search-panel-current-engine {
-  border-bottom: 1px solid #ccc;
+  border-bottom: none;
+}
+
+.search-panel-tree {
+  border-top: 1px solid #ccc !important;
 }
 
 .search-panel-header {
@@ -121,10 +125,6 @@
   margin: 0;
   padding: 3px 6px;
   color: #666;
-}
-
-.search-panel-tree[collapsed=true] + .search-panel-header {
-  border-top: none;
 }
 
 .search-panel-header > label {
