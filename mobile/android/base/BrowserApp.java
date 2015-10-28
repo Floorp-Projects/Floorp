@@ -3391,7 +3391,10 @@ public class BrowserApp extends GeckoApp
             return;
         }
 
-        if (getOtherSyncClientCount() == 0) {
+        final BrowserDB browserDB = GeckoProfile.get(this).getDB();
+        final TabsAccessor tabsAccessor = browserDB.getTabsAccessor();
+        final int remoteClientCount = tabsAccessor.getRemoteClientCount(this);
+        if (remoteClientCount == 0) {
             final Toast toast = Toast.makeText(this, R.string.menu_no_synced_devices, Toast.LENGTH_LONG);
             toast.show();
 
@@ -3406,21 +3409,6 @@ public class BrowserApp extends GeckoApp
                 sendToDeviceIntent.setClass(getContext(), ShareDialog.class);
                 startActivity(sendToDeviceIntent);
             }
-        }
-    }
-
-    private int getOtherSyncClientCount() {
-        final BrowserDB browserDB = GeckoProfile.get(this).getDB();
-        final TabsAccessor tabsAccessor = browserDB.getTabsAccessor();
-        final Cursor remoteClientsCursor = tabsAccessor.getRemoteClientsByRecencyCursor(this);
-        if (remoteClientsCursor == null) {
-            return 0;
-        }
-
-        try {
-            return remoteClientsCursor.getCount();
-        } finally {
-            remoteClientsCursor.close();
         }
     }
 
