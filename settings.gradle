@@ -27,7 +27,7 @@ include ':omnijar'
 include ':thirdparty'
 
 def gradleRoot = new File("${json.topobjdir}/mobile/android/gradle")
-project(':app').projectDir = new File(gradleRoot, 'app')
+project(':app').projectDir = new File("${json.topsrcdir}/mobile/android/app")
 project(':base').projectDir = new File(gradleRoot, 'base')
 project(':omnijar').projectDir = new File(gradleRoot, 'omnijar')
 project(':thirdparty').projectDir = new File("${json.topsrcdir}/mobile/android/thirdparty")
