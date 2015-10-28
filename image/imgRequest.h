@@ -95,7 +95,7 @@ public:
   void ContinueEvict();
 
   // Request that we start decoding the image as soon as data becomes available.
-  void RequestDecode();
+  void StartDecoding();
 
   inline uint64_t InnerWindowID() const {
     return mInnerWindowId;
@@ -220,7 +220,7 @@ private:
   // Update the cache entry size based on the image container.
   void UpdateCacheEntrySize();
 
-  /// Returns true if RequestDecode() was called.
+  /// Returns true if StartDecoding() was called.
   bool IsDecodeRequested() const;
 
   // Weak reference to parent loader; this request cannot outlive its owner.

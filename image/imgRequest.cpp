@@ -413,7 +413,7 @@ imgRequest::ContinueEvict()
 }
 
 void
-imgRequest::RequestDecode()
+imgRequest::StartDecoding()
 {
   MutexAutoLock lock(mMutex);
   mDecodeRequested = true;
