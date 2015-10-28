@@ -113,6 +113,7 @@ nsCSPContext::ShouldLoad(nsContentPolicyType aContentType,
     nsAutoCString spec;
     aContentLocation->GetSpec(spec);
     CSPCONTEXTLOG(("nsCSPContext::ShouldLoad, aContentLocation: %s", spec.get()));
+    CSPCONTEXTLOG((">>>>                      aContentType: %d", aContentType));
   }
 
   bool isStyleOrScriptPreLoad =
@@ -121,7 +122,9 @@ nsCSPContext::ShouldLoad(nsContentPolicyType aContentType,
 
   // Since we know whether we are dealing with a preload, we have to convert
   // the internal policytype ot the external policy type before moving on.
-  aContentType = nsContentUtils::InternalContentPolicyTypeToExternal(aContentType);
+  // We still need to know if this is a worker so child-src can handle that
+  // case correctly.
+  aContentType = nsContentUtils::InternalContentPolicyTypeToExternalOrWorker(aContentType);
 
   nsresult rv = NS_OK;
 
@@ -187,7 +190,7 @@ nsCSPContext::ShouldLoad(nsContentPolicyType aContentType,
   if (CSPCONTEXTLOGENABLED()) {
     nsAutoCString spec;
     aContentLocation->GetSpec(spec);
-    CSPCONTEXTLOG(("nsCSPContext::ShouldLoad, decision: %s, aContentLocation: %s", *outDecision ? "load" : "deny", spec.get()));
+    CSPCONTEXTLOG(("nsCSPContext::ShouldLoad, decision: %s, aContentLocation: %s", *outDecision > 0 ? "load" : "deny", spec.get()));
   }
   return NS_OK;
 }
