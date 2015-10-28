@@ -4,26 +4,26 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "WebSocketFrameListenerChild.h"
+#include "WebSocketEventListenerChild.h"
 
+#include "WebSocketEventService.h"
 #include "WebSocketFrame.h"
-#include "WebSocketFrameService.h"
 
 namespace mozilla {
 namespace net {
 
-WebSocketFrameListenerChild::WebSocketFrameListenerChild(uint64_t aInnerWindowID)
-  : mService(WebSocketFrameService::GetOrCreate())
+WebSocketEventListenerChild::WebSocketEventListenerChild(uint64_t aInnerWindowID)
+  : mService(WebSocketEventService::GetOrCreate())
   , mInnerWindowID(aInnerWindowID)
 {}
 
-WebSocketFrameListenerChild::~WebSocketFrameListenerChild()
+WebSocketEventListenerChild::~WebSocketEventListenerChild()
 {
   MOZ_ASSERT(!mService);
 }
 
 bool
-WebSocketFrameListenerChild::RecvFrameReceived(const uint32_t& aWebSocketSerialID,
+WebSocketEventListenerChild::RecvFrameReceived(const uint32_t& aWebSocketSerialID,
                                                const WebSocketFrameData& aFrameData)
 {
   if (mService) {
@@ -35,7 +35,7 @@ WebSocketFrameListenerChild::RecvFrameReceived(const uint32_t& aWebSocketSerialI
 }
 
 bool
-WebSocketFrameListenerChild::RecvFrameSent(const uint32_t& aWebSocketSerialID,
+WebSocketEventListenerChild::RecvFrameSent(const uint32_t& aWebSocketSerialID,
                                            const WebSocketFrameData& aFrameData)
 {
   if (mService) {
@@ -47,14 +47,14 @@ WebSocketFrameListenerChild::RecvFrameSent(const uint32_t& aWebSocketSerialID,
 }
 
 void
-WebSocketFrameListenerChild::Close()
+WebSocketEventListenerChild::Close()
 {
   mService = nullptr;
   SendClose();
 }
 
 void
-WebSocketFrameListenerChild::ActorDestroy(ActorDestroyReason aWhy)
+WebSocketEventListenerChild::ActorDestroy(ActorDestroyReason aWhy)
 {
   mService = nullptr;
 }
