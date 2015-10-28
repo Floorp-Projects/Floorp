@@ -41,6 +41,9 @@ Structure::
         subsessionStartDate: <ISO date>, // daily precision, ISO date in local time
         sessionLength: <number>, // the session length until now in seconds, monotonic
         subsessionLength: <number>, // the subsession length in seconds, monotonic
+
+        flashVersion: <string>, // obsolete, use ``environment.addons.activePlugins``
+        addons: <string>, // obsolete, use ``environment.addons``
       },
 
       childPayloads: {...}, // only present with e10s; a reduced payload from content processes, null on failure
