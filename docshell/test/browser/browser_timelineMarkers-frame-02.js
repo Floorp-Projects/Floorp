@@ -11,6 +11,12 @@ function rectangleContains(rect, x, y, width, height) {
     rect.height >= height;
 }
 
+function sanitizeMarkers(list) {
+  // Worker markers are currently gathered from all docshells, which may
+  // interfere with this test.
+  return list.filter(e => e.name != "Worker")
+}
+
 var TESTS = [{
   desc: "Changing the width of the test element",
   searchFor: "Paint",
@@ -19,6 +25,7 @@ var TESTS = [{
     div.setAttribute("class", "resize-change-color");
   },
   check: function(markers) {
+    markers = sanitizeMarkers(markers);
     ok(markers.length > 0, "markers were returned");
     console.log(markers);
     info(JSON.stringify(markers.filter(m => m.name == "Paint")));
@@ -40,6 +47,7 @@ var TESTS = [{
     div.setAttribute("class", "change-color");
   },
   check: function(markers) {
+    markers = sanitizeMarkers(markers);
     ok(markers.length > 0, "markers were returned");
     ok(!markers.some(m => m.name == "Reflow"), "markers doesn't include Reflow");
     ok(markers.some(m => m.name == "Paint"), "markers includes Paint");
@@ -59,6 +67,7 @@ var TESTS = [{
     div.setAttribute("class", "change-color add-class");
   },
   check: function(markers) {
+    markers = sanitizeMarkers(markers);
     ok(markers.length > 0, "markers were returned");
     ok(!markers.some(m => m.name == "Reflow"), "markers doesn't include Reflow");
     ok(!markers.some(m => m.name == "Paint"), "markers doesn't include Paint");
@@ -84,6 +93,7 @@ var TESTS = [{
     }, 100);
   },
   check: function(markers) {
+    markers = sanitizeMarkers(markers);
     is(markers.length, 2, "Got 2 markers");
     is(markers[0].name, "ConsoleTime", "Got first ConsoleTime marker");
     is(markers[0].causeName, "FOO", "Got ConsoleTime FOO detail");
@@ -105,7 +115,7 @@ var TESTS = [{
     content.console.timeStamp(undefined);
   },
   check: function (markers) {
-    markers = markers.filter(e => e.name != "Worker");
+    markers = sanitizeMarkers(markers);
     is(markers.length, 4, "Got 4 markers");
     is(markers[0].name, "TimeStamp", "Got Timestamp marker");
     is(markers[0].causeName, "paper", "Got Timestamp label value");
