@@ -31,8 +31,8 @@
 #include <cmath>
 #include "mozilla/FFTBlock.h"
 
-const unsigned PeriodicWaveSize = 4096; // This must be a power of two.
-const unsigned NumberOfRanges = 36; // There should be 3 * log2(PeriodicWaveSize) 1/3 octave ranges.
+const unsigned MinPeriodicWaveSize = 4096; // This must be a power of two.
+const unsigned MaxPeriodicWaveSize = 8192; // This must be a power of two.
 const float CentsPerRange = 1200 / 3; // 1/3 Octave.
 
 using namespace mozilla;
@@ -46,12 +46,11 @@ PeriodicWave::create(float sampleRate,
                      const float* imag,
                      size_t numberOfComponents)
 {
-    bool isGood = real && imag && numberOfComponents > 0 &&
-         numberOfComponents <= PeriodicWaveSize;
+    bool isGood = real && imag && numberOfComponents > 0;
     MOZ_ASSERT(isGood);
     if (isGood) {
         RefPtr<PeriodicWave> periodicWave =
-            new PeriodicWave(sampleRate);
+            new PeriodicWave(sampleRate, numberOfComponents);
         periodicWave->createBandLimitedTables(real, imag, numberOfComponents);
         return periodicWave.forget();
     }
@@ -62,7 +61,7 @@ already_AddRefed<PeriodicWave>
 PeriodicWave::createSine(float sampleRate)
 {
     RefPtr<PeriodicWave> periodicWave =
-        new PeriodicWave(sampleRate);
+        new PeriodicWave(sampleRate, MinPeriodicWaveSize);
     periodicWave->generateBasicWaveform(OscillatorType::Sine);
     return periodicWave.forget();
 }
@@ -71,7 +70,7 @@ already_AddRefed<PeriodicWave>
 PeriodicWave::createSquare(float sampleRate)
 {
     RefPtr<PeriodicWave> periodicWave =
-        new PeriodicWave(sampleRate);
+        new PeriodicWave(sampleRate, MinPeriodicWaveSize);
     periodicWave->generateBasicWaveform(OscillatorType::Square);
     return periodicWave.forget();
 }
@@ -80,7 +79,7 @@ already_AddRefed<PeriodicWave>
 PeriodicWave::createSawtooth(float sampleRate)
 {
     RefPtr<PeriodicWave> periodicWave =
-        new PeriodicWave(sampleRate);
+        new PeriodicWave(sampleRate, MinPeriodicWaveSize);
     periodicWave->generateBasicWaveform(OscillatorType::Sawtooth);
     return periodicWave.forget();
 }
@@ -89,18 +88,25 @@ already_AddRefed<PeriodicWave>
 PeriodicWave::createTriangle(float sampleRate)
 {
     RefPtr<PeriodicWave> periodicWave =
-        new PeriodicWave(sampleRate);
+        new PeriodicWave(sampleRate, MinPeriodicWaveSize);
     periodicWave->generateBasicWaveform(OscillatorType::Triangle);
     return periodicWave.forget();
 }
 
-PeriodicWave::PeriodicWave(float sampleRate)
+PeriodicWave::PeriodicWave(float sampleRate, size_t numberOfComponents)
     : m_sampleRate(sampleRate)
-    , m_periodicWaveSize(PeriodicWaveSize)
-    , m_numberOfRanges(NumberOfRanges)
     , m_centsPerRange(CentsPerRange)
 {
     float nyquist = 0.5 * m_sampleRate;
+
+    if (numberOfComponents <= MinPeriodicWaveSize) {
+        m_periodicWaveSize = MinPeriodicWaveSize;
+    } else {
+        unsigned npow2 = powf(2.0f, floorf(logf(numberOfComponents - 1.0)/logf(2.0f) + 1.0f));
+        m_periodicWaveSize = std::min(MaxPeriodicWaveSize, npow2);
+    }
+
+    m_numberOfRanges = (unsigned)(3.0f*logf(m_periodicWaveSize)/logf(2.0f));
     m_lowestFundamentalFrequency = nyquist / maxNumberOfPartials();
     m_rateScale = m_periodicWaveSize / m_sampleRate;
 }
