@@ -207,6 +207,7 @@ class FasterMakeBackend(CommonBackend):
         )
         pp.out = JarManifestParser()
         pp.do_include(obj.path)
+        self.backend_input_files |= pp.includes
 
         for jarinfo in pp.out:
             install_target = obj.install_target
@@ -294,6 +295,7 @@ class FasterMakeBackend(CommonBackend):
         mk.create_rule(['default'])
         mk.add_statement('TOPSRCDIR = %s' % self.environment.topsrcdir)
         mk.add_statement('TOPOBJDIR = %s' % self.environment.topobjdir)
+        mk.add_statement('BACKEND = %s' % self._backend_output_list_file)
 
         # Add a few necessary variables inherited from configure
         for var in (
@@ -323,6 +325,10 @@ class FasterMakeBackend(CommonBackend):
         for target, deps in self._dependencies.iteritems():
             mk.create_rule([target]).add_dependencies(
                 '$(TOPOBJDIR)/%s' % d for d in deps)
+
+        # Add backend dependencies:
+        mk.create_rule([self._backend_output_list_file]).add_dependencies(
+            self.backend_input_files)
 
         mk.add_statement('include $(TOPSRCDIR)/config/faster/rules.mk')
 
