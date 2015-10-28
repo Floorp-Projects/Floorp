@@ -21,6 +21,45 @@ namespace mozilla
 bool FFmpegDataDecoder<LIBAV_VER>::sFFmpegInitDone = false;
 StaticMutex FFmpegDataDecoder<LIBAV_VER>::sMonitor;
 
+FFmpegDataDecoder<LIBAV_VER>::PtsCorrectionContext::PtsCorrectionContext()
+  : mNumFaultyPts(0)
+  , mNumFaultyDts(0)
+  , mLastPts(INT64_MIN)
+  , mLastDts(INT64_MIN)
+{
+}
+
+int64_t
+FFmpegDataDecoder<LIBAV_VER>::PtsCorrectionContext::GuessCorrectPts(int64_t aPts, int64_t aDts)
+{
+  int64_t pts = AV_NOPTS_VALUE;
+
+  if (aDts != int64_t(AV_NOPTS_VALUE)) {
+    mNumFaultyDts += aDts <= mLastDts;
+    mLastDts = aDts;
+  }
+  if (aPts != int64_t(AV_NOPTS_VALUE)) {
+    mNumFaultyPts += aPts <= mLastPts;
+    mLastPts = aPts;
+  }
+  if ((mNumFaultyPts <= mNumFaultyDts || aDts == int64_t(AV_NOPTS_VALUE)) &&
+      aPts != int64_t(AV_NOPTS_VALUE)) {
+    pts = aPts;
+  } else {
+    pts = aDts;
+  }
+  return pts;
+}
+
+void
+FFmpegDataDecoder<LIBAV_VER>::PtsCorrectionContext::Reset()
+{
+  mNumFaultyPts = 0;
+  mNumFaultyDts = 0;
+  mLastPts = INT64_MIN;
+  mLastDts = INT64_MIN;
+}
+
 FFmpegDataDecoder<LIBAV_VER>::FFmpegDataDecoder(FlushableTaskQueue* aTaskQueue,
                                                 MediaDataDecoderCallback* aCallback,
                                                 AVCodecID aCodecID)
@@ -184,6 +223,7 @@ FFmpegDataDecoder<LIBAV_VER>::ProcessFlush()
   if (mCodecContext) {
     avcodec_flush_buffers(mCodecContext);
   }
+  mPtsContext.Reset();
   MonitorAutoLock mon(mMonitor);
   mIsFlushing = false;
   mon.NotifyAll();

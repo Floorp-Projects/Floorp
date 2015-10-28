@@ -54,21 +54,6 @@ FFmpegH264Decoder<LIBAV_VER>::Init()
   return InitPromise::CreateAndResolve(TrackInfo::kVideoTrack, __func__);
 }
 
-int64_t
-FFmpegH264Decoder<LIBAV_VER>::GetPts(const AVPacket& packet)
-{
-  MOZ_ASSERT(mTaskQueue->IsCurrentThreadIn());
-#if LIBAVCODEC_VERSION_MAJOR == 53
-  if (mFrame->pkt_pts == 0) {
-    return mFrame->pkt_dts;
-  } else {
-    return mFrame->pkt_pts;
-  }
-#else
-  return mFrame->pkt_pts;
-#endif
-}
-
 FFmpegH264Decoder<LIBAV_VER>::DecodeResult
 FFmpegH264Decoder<LIBAV_VER>::DoDecodeFrame(MediaRawData* aSample)
 {
@@ -158,7 +143,7 @@ FFmpegH264Decoder<LIBAV_VER>::DoDecodeFrame(MediaRawData* aSample,
 
   // If we've decoded a frame then we need to output it
   if (decoded) {
-    int64_t pts = GetPts(packet);
+    int64_t pts = mPtsContext.GuessCorrectPts(mFrame->pkt_pts, mFrame->pkt_dts);
     FFMPEG_LOG("Got one frame output with pts=%lld opaque=%lld",
                pts, mCodecContext->reordered_opaque);
 
