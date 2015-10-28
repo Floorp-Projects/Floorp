@@ -1541,10 +1541,6 @@ nsPluginFrame::PaintPlugin(nsDisplayListBuilder* aBuilder,
                            nsRenderingContext& aRenderingContext,
                            const nsRect& aDirtyRect, const nsRect& aPluginRect)
 {
-#if defined(XP_MACOSX)
-  DrawTarget& aDrawTarget = *aRenderingContext.GetDrawTarget();
-#endif
-
 #if defined(MOZ_WIDGET_ANDROID)
   if (mInstanceOwner) {
     gfxRect frameGfxRect =
@@ -1556,101 +1552,6 @@ nsPluginFrame::PaintPlugin(nsDisplayListBuilder* aBuilder,
 
     mInstanceOwner->Paint(ctx, frameGfxRect, dirtyGfxRect);
     return;
-  }
-#endif
-
-  // Screen painting code
-#if defined(XP_MACOSX)
-  // delegate all painting to the plugin instance.
-  if (mInstanceOwner) {
-    if (mInstanceOwner->GetDrawingModel() == NPDrawingModelCoreGraphics ||
-        mInstanceOwner->GetDrawingModel() == NPDrawingModelCoreAnimation ||
-        mInstanceOwner->GetDrawingModel() == 
-                                  NPDrawingModelInvalidatingCoreAnimation) {
-      int32_t appUnitsPerDevPixel = PresContext()->AppUnitsPerDevPixel();
-      // Clip to the content area where the plugin should be drawn. If
-      // we don't do this, the plugin can draw outside its bounds.
-      nsIntRect contentPixels = aPluginRect.ToNearestPixels(appUnitsPerDevPixel);
-      nsIntRect dirtyPixels = aDirtyRect.ToOutsidePixels(appUnitsPerDevPixel);
-      nsIntRect clipPixels;
-      clipPixels.IntersectRect(contentPixels, dirtyPixels);
-
-      // Don't invoke the drawing code if the clip is empty.
-      if (clipPixels.IsEmpty())
-        return;
-
-      gfxRect nativeClipRect(clipPixels.x, clipPixels.y,
-                             clipPixels.width, clipPixels.height);
-      gfxContext* ctx = aRenderingContext.ThebesContext();
-
-      gfxContextAutoSaveRestore save(ctx);
-      ctx->NewPath();
-      ctx->Rectangle(nativeClipRect);
-      ctx->Clip();
-      gfxPoint offset(contentPixels.x, contentPixels.y);
-      ctx->SetMatrix(
-        ctx->CurrentMatrix().Translate(offset));
-
-      gfxQuartzNativeDrawing nativeDrawing(aDrawTarget,
-                                           ToRect(nativeClipRect - offset));
-
-      CGContextRef cgContext = nativeDrawing.BeginNativeDrawing();
-      if (!cgContext) {
-        NS_WARNING("null CGContextRef during PaintPlugin");
-        return;
-      }
-
-      RefPtr<nsNPAPIPluginInstance> inst;
-      GetPluginInstance(getter_AddRefs(inst));
-      if (!inst) {
-        NS_WARNING("null plugin instance during PaintPlugin");
-        nativeDrawing.EndNativeDrawing();
-        return;
-      }
-      NPWindow* window;
-      mInstanceOwner->GetWindow(window);
-      if (!window) {
-        NS_WARNING("null plugin window during PaintPlugin");
-        nativeDrawing.EndNativeDrawing();
-        return;
-      }
-      NP_CGContext* cgPluginPortCopy =
-                static_cast<NP_CGContext*>(mInstanceOwner->GetPluginPortCopy());
-      if (!cgPluginPortCopy) {
-        NS_WARNING("null plugin port copy during PaintPlugin");
-        nativeDrawing.EndNativeDrawing();
-        return;
-      }
-
-      mInstanceOwner->BeginCGPaint();
-      if (mInstanceOwner->GetDrawingModel() == NPDrawingModelCoreAnimation ||
-          mInstanceOwner->GetDrawingModel() == 
-                                   NPDrawingModelInvalidatingCoreAnimation) {
-        // CoreAnimation is updated, render the layer and perform a readback.
-        mInstanceOwner->RenderCoreAnimation(cgContext, window->width, window->height);
-      } else {
-        mInstanceOwner->Paint(nativeClipRect - offset, cgContext);
-      }
-      mInstanceOwner->EndCGPaint();
-
-      nativeDrawing.EndNativeDrawing();
-    } else {
-      gfxContext* ctx = aRenderingContext.ThebesContext();
-
-      // Translate the context:
-      gfxPoint devPixelPt =
-        nsLayoutUtils::PointToGfxPoint(aPluginRect.TopLeft(),
-                                       PresContext()->AppUnitsPerDevPixel());
-
-      gfxContextMatrixAutoSaveRestore autoSR(ctx);
-      ctx->SetMatrix(ctx->CurrentMatrix().Translate(devPixelPt));
-
-      // FIXME - Bug 385435: Doesn't aDirtyRect need translating too?
-
-      // this rect is used only in the CoreGraphics drawing model
-      gfxRect tmpRect(0, 0, 0, 0);
-      mInstanceOwner->Paint(tmpRect, nullptr);
-    }
   }
 #endif
 }

@@ -136,19 +136,9 @@ public:
   // This calls into the plugin (NPP_SetWindow) and can run script.
   void FixUpPluginWindow(int32_t inPaintState);
   void HidePluginWindow();
-  // Return a pointer to the internal nsPluginPort structure that's used to
-  // store a copy of plugin port info and to detect when it's been changed.
-  void* GetPluginPortCopy();
   // Set plugin port info in the plugin (in the 'window' member of the
   // NPWindow structure passed to the plugin by SetWindow()).
   void SetPluginPort();
-  // Flag when we've set up a Thebes (and CoreGraphics) context in
-  // nsPluginFrame::PaintPlugin().  We need to know this in
-  // FixUpPluginWindow() (i.e. we need to know when FixUpPluginWindow() has
-  // been called from nsPluginFrame::PaintPlugin() when we're using the
-  // CoreGraphics drawing model).
-  void BeginCGPaint();
-  void EndCGPaint();
 #else // XP_MACOSX
   void UpdateWindowPositionAndClipRect(bool aSetWindow);
   void UpdateWindowVisibility(bool aVisible);
@@ -293,11 +283,6 @@ private:
   RefPtr<nsPluginHost>      mPluginHost;
   
 #ifdef XP_MACOSX
-  NP_CGContext                              mCGPluginPortCopy;
-  int32_t                                   mInCGPaintLevel;
-  RefPtr<MacIOSurface>             mIOSurface;
-  RefPtr<nsCARenderer>             mCARenderer;
-  CGColorSpaceRef                           mColorProfile;
   static nsCOMPtr<nsITimer>                *sCATimer;
   static nsTArray<nsPluginInstanceOwner*>  *sCARefreshListeners;
   bool                                      mSentInitialTopLevelWindowEvent;
