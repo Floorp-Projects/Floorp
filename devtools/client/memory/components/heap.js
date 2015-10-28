@@ -37,13 +37,13 @@ function createParentMap (node, aggregator=Object.create(null)) {
  * @param {CensusTreeNode} census
  * @return {Object}
  */
-function createTreeProperties (census) {
+function createTreeProperties (census, toolbox) {
   let map = createParentMap(census);
 
   return {
-    getParent: node => map(node.id),
+    getParent: node => map[node.id],
     getChildren: node => node.children || [],
-    renderItem: (item, depth, focused, arrow) => new TreeItem({ item, depth, focused, arrow }),
+    renderItem: (item, depth, focused, arrow) => new TreeItem({ toolbox, item, depth, focused, arrow }),
     getRoots: () => census.children,
     getKey: node => node.id,
     itemHeight: HEAP_TREE_ROW_HEIGHT,
@@ -68,7 +68,7 @@ const Heap = module.exports = createClass({
   },
 
   render() {
-    let { snapshot, onSnapshotClick } = this.props;
+    let { snapshot, onSnapshotClick, toolbox } = this.props;
     let census = snapshot ? snapshot.census : null;
     let state = snapshot ? snapshot.state : "initial";
     let statusText = snapshot ? getSnapshotStatusTextFull(snapshot) : "";
@@ -107,7 +107,7 @@ const Heap = module.exports = createClass({
             dom.span({ className: "heap-tree-item-total-count" }, "Total Count"),
             dom.span({ className: "heap-tree-item-name" }, "Name")
           ),
-          Tree(createTreeProperties(snapshot.census))
+          Tree(createTreeProperties(snapshot.census, toolbox))
         ];
         break;
     }

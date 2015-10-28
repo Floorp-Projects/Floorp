@@ -31,12 +31,14 @@ const App = createClass({
   childContextTypes: {
     front: PropTypes.any,
     heapWorker: PropTypes.any,
+    toolbox: PropTypes.any,
   },
 
   getChildContext() {
     return {
       front: this.props.front,
       heapWorker: this.props.heapWorker,
+      toolbox: this.props.toolbox,
     }
   },
 
@@ -48,7 +50,8 @@ const App = createClass({
       heapWorker,
       breakdown,
       allocations,
-      inverted
+      inverted,
+      toolbox,
     } = this.props;
 
     let selectedSnapshot = snapshots.find(s => s.selected);
@@ -79,6 +82,7 @@ const App = createClass({
           HeapView({
             snapshot: selectedSnapshot,
             onSnapshotClick: () => dispatch(takeSnapshotAndCensus(front, heapWorker)),
+            toolbox
           })
         )
       )
