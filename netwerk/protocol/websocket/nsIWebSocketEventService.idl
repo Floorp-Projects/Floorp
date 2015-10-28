@@ -37,7 +37,7 @@ interface nsIWebSocketFrame : nsISupports
 };
 
 [scriptable, uuid(f6a7ec44-23b2-4c77-bb94-f11a8df5a874)]
-interface nsIWebSocketFrameListener : nsISupports
+interface nsIWebSocketEventListener : nsISupports
 {
   void frameReceived(in unsigned long aWebSocketSerialID,
                      in nsIWebSocketFrame aFrame);
@@ -47,11 +47,11 @@ interface nsIWebSocketFrameListener : nsISupports
 };
 
 [scriptable, builtinclass, uuid(b89d1b90-2cf3-4d8f-ac21-5aedfb25c760)]
-interface nsIWebSocketFrameService : nsISupports
+interface nsIWebSocketEventService : nsISupports
 {
   void addListener(in unsigned long long aInnerWindowID,
-                   in nsIWebSocketFrameListener aListener);
+                   in nsIWebSocketEventListener aListener);
 
   void removeListener(in unsigned long long aInnerWindowID,
-                      in nsIWebSocketFrameListener aListener);
+                      in nsIWebSocketEventListener aListener);
 };

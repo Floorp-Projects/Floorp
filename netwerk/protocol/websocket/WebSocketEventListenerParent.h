@@ -4,28 +4,28 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_net_WebSocketFrameListenerParent_h
-#define mozilla_net_WebSocketFrameListenerParent_h
+#ifndef mozilla_net_WebSocketEventListenerParent_h
+#define mozilla_net_WebSocketEventListenerParent_h
 
-#include "mozilla/net/PWebSocketFrameListenerParent.h"
-#include "nsIWebSocketFrameService.h"
+#include "mozilla/net/PWebSocketEventListenerParent.h"
+#include "nsIWebSocketEventService.h"
 
 namespace mozilla {
 namespace net {
 
-class WebSocketFrameService;
+class WebSocketEventService;
 
-class WebSocketFrameListenerParent final : public PWebSocketFrameListenerParent
-                                         , public nsIWebSocketFrameListener
+class WebSocketEventListenerParent final : public PWebSocketEventListenerParent
+                                         , public nsIWebSocketEventListener
 {
 public:
   NS_DECL_ISUPPORTS
-  NS_DECL_NSIWEBSOCKETFRAMELISTENER
+  NS_DECL_NSIWEBSOCKETEVENTLISTENER
 
-  explicit WebSocketFrameListenerParent(uint64_t aInnerWindowID);
+  explicit WebSocketEventListenerParent(uint64_t aInnerWindowID);
 
 private:
-  ~WebSocketFrameListenerParent();
+  ~WebSocketEventListenerParent();
 
   virtual bool RecvClose() override;
 
@@ -33,11 +33,11 @@ private:
 
   void UnregisterListener();
 
-  RefPtr<WebSocketFrameService> mService;
+  RefPtr<WebSocketEventService> mService;
   uint64_t mInnerWindowID;
 };
 
 } // namespace net
 } // namespace mozilla
 
-#endif // mozilla_net_WebSocketFrameListenerParent_h
+#endif // mozilla_net_WebSocketEventListenerParent_h
