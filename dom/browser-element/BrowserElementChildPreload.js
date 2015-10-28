@@ -1935,7 +1935,12 @@ BrowserElementChild.prototype = {
       }
 
       if (stateFlags & Ci.nsIWebProgressListener.STATE_STOP) {
-        sendAsyncMsg('loadend');
+        let bgColor = 'transparent';
+        try {
+          bgColor = content.getComputedStyle(content.document.body)
+                           .getPropertyValue('background-color');
+        } catch (e) {}
+        sendAsyncMsg('loadend', {backgroundColor: bgColor});
 
         switch (status) {
           case Cr.NS_OK :
