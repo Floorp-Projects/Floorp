@@ -7,5 +7,6 @@ DevToolsModules(
     'allocations.js',
     'breakdown.js',
     'errors.js',
+    'inverted.js',
     'snapshots.js',
 )

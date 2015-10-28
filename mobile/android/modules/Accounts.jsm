@@ -158,5 +158,17 @@ var Accounts = Object.freeze({
     return Messaging.sendRequestForResult({
       type: "Accounts:DeleteFirefoxAccount",
     });
+  },
+
+  showSyncPreferences: function () {
+    // Only show Sync preferences of an existing Android Account.
+    return Accounts.getFirefoxAccount().then(account => {
+      if (!account) {
+        throw new Error("Can't show Sync preferences of non-existent Firefox Account!");
+      }
+      return Messaging.sendRequestForResult({
+        type: "Accounts:ShowSyncPreferences"
+      });
+    });
   }
 });

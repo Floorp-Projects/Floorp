@@ -300,15 +300,12 @@ public class BrowserContract {
         public static final String POSITION = "position";
     }
 
-    public static final class Clients {
+    public static final class Clients implements CommonColumns {
         private Clients() {}
         public static final Uri CONTENT_RECENCY_URI = Uri.withAppendedPath(TABS_AUTHORITY_URI, "clients_recency");
         public static final Uri CONTENT_URI = Uri.withAppendedPath(TABS_AUTHORITY_URI, "clients");
         public static final String CONTENT_TYPE = "vnd.android.cursor.dir/client";
         public static final String CONTENT_ITEM_TYPE = "vnd.android.cursor.item/client";
-
-        // Implicit rowid in SQL table.
-        public static final String ROWID = "rowid";
 
         // Client-provided name string. Could conceivably be null.
         public static final String NAME = "name";
