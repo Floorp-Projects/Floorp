@@ -1017,6 +1017,7 @@ static nsresult openPrefFile(nsIFile* aFile)
   // Read is not guaranteed to return a buf the size of fileSize,
   // but usually will.
   nsresult rv2 = NS_OK;
+  uint32_t offset = 0;
   for (;;) {
     uint32_t amtRead = 0;
     rv = inStr->Read((char*)fileBuffer, fileSize, &amtRead);
@@ -1024,6 +1025,10 @@ static nsresult openPrefFile(nsIFile* aFile)
       break;
     if (!PREF_ParseBuf(&ps, fileBuffer, amtRead))
       rv2 = NS_ERROR_FILE_CORRUPTED;
+    offset += amtRead;
+    if (offset == fileSize) {
+      break;
+    }
   }
 
   PREF_FinalizeParseState(&ps);
