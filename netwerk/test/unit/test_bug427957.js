@@ -92,8 +92,14 @@ function run_test() {
 
   // www.1מיץ.com is invalid
   expected_fail("www.1\u05DE\u05D9\u05E5.com");
-  // www.מיץ1.com is invalid
-  expected_fail("www.\u05DE\u05D9\u05E51.com");
+  // www.!מיץ.com is invalid
+  expected_fail("www.!\u05DE\u05D9\u05E5.com");
+  // www.מיץ!.com is invalid
+  expected_fail("www.\u05DE\u05D9\u05E5!.com");
+
+  // XXX TODO: add a test for an RTL label ending with a digit. This was
+  //           invalid in IDNA2003 but became valid in IDNA2008
+
   // But www.מיץ1פטל.com is fine
   expected_pass("www.\u05DE\u05D9\u05E51\u05E4\u05D8\u05DC.com");
 }
