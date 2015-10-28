@@ -67,7 +67,7 @@ function test() {
           statusText: "OK",
           type: "png",
           fullMimeType: "image/png",
-          size: L10N.getFormatStrWithNumbers("networkMenu.sizeKB", 0.76),
+          size: L10N.getFormatStrWithNumbers("networkMenu.sizeKB", 0.57),
           time: true
         });
       verifyRequestItemTarget(RequestsMenu.getItemAtIndex(6),
@@ -216,9 +216,6 @@ function test() {
               is(tabpanel.querySelector("#response-content-image-mime-value")
                 .getAttribute("value"), "image/png",
                 "The image mime info isn't correct.");
-              is(tabpanel.querySelector("#response-content-image-encoding-value")
-                .getAttribute("value"), "base64",
-                "The image encoding info isn't correct.");
               is(tabpanel.querySelector("#response-content-image-dimensions-value")
                 .getAttribute("value"), "16" + " \u00D7 " + "16",
                 "The image dimensions info isn't correct.");

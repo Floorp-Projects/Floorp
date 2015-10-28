@@ -477,14 +477,6 @@
                              crop="end"
                              flex="1"/>
                     </hbox>
-                    <hbox>
-                      <label class="plain tabpanel-summary-label"
-                             value="&netmonitorUI.response.encoding;"/>
-                      <label id="response-content-image-encoding-value"
-                             class="plain tabpanel-summary-value devtools-monospace"
-                             crop="end"
-                             flex="1"/>
-                    </hbox>
                   </vbox>
                 </vbox>
               </tabpanel>
