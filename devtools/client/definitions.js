@@ -278,8 +278,9 @@ Tools.performance = {
 Tools.memory = {
   id: "memory",
   ordinal: 8,
-  icon: "chrome://devtools/skin/themes/images/tool-styleeditor.svg",
+  icon: "chrome://devtools/skin/themes/images/tool-memory.svg",
   invertIconForLightTheme: true,
+  highlightedicon: "chrome://devtools/skin/themes/images/tool-memory-active.svg",
   url: "chrome://devtools/content/memory/memory.xhtml",
   visibilityswitch: "devtools.memory.enabled",
   label: "Memory",
