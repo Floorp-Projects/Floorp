@@ -68,7 +68,8 @@ WMFDecoderModule::Init()
 {
   MOZ_ASSERT(NS_IsMainThread(), "Must be on main thread.");
   sDXVAEnabled = gfxPlatform::GetPlatform()->CanUseHardwareVideoDecoding();
-  sIsIntelDecoderEnabled = Preferences::GetBool("media.webm.intel_decoder.enabled", false);
+  Preferences::AddBoolVarCache(&sIsIntelDecoderEnabled,
+                               "media.webm.intel_decoder.enabled");
   sLowLatencyMFTEnabled = Preferences::GetBool("media.wmf.low-latency.enabled", false);
   SetNumOfDecoderThreads();
 }
