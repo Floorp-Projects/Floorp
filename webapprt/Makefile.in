@@ -13,10 +13,4 @@ libs:: $(call mkdir_deps,$(FINAL_TARGET))
 MOZ_APP_BUILDID := $(shell cat $(DEPTH)/config/buildid)
 DEFINES += -DMOZ_APP_BUILDID=$(MOZ_APP_BUILDID)
 
-webapprt.ini: application.ini.in $(DEPTH)/config/buildid $(topsrcdir)/config/milestone.txt
-	$(call py_action,preprocessor,$(DEFINES) $< -o $@)
-
-libs:: webapprt.ini
-	$(INSTALL) webapprt.ini $(FINAL_TARGET)
-
-GARBAGE += webapprt.ini
+$(FINAL_TARGET)/webapprt.ini: $(DEPTH)/config/buildid $(topsrcdir)/config/milestone.txt
