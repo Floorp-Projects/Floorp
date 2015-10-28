@@ -52,14 +52,14 @@ const breakdowns = exports.breakdowns = {
     breakdown: {
       by: "coarseType",
       objects: ALLOCATION_STACK,
-      strings: COUNT,
+      strings: ALLOCATION_STACK,
       scripts: INTERNAL_TYPE,
       other: INTERNAL_TYPE,
     }
   },
 
   allocationStack: {
-    displayName: "Allocation Stack",
+    displayName: "Allocation Site",
     breakdown: ALLOCATION_STACK,
   },
 
