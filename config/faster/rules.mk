@@ -43,7 +43,6 @@ default: $(addprefix install-,$(INSTALL_MANIFESTS))
 
 # Explicit files to be built for a default build
 default: $(addprefix $(TOPOBJDIR)/,$(MANIFEST_TARGETS))
-default: $(TOPOBJDIR)/dist/bin/greprefs.js
 default: $(TOPOBJDIR)/dist/bin/platform.ini
 
 # Targets from the recursive make backend to be built for a default build
@@ -126,7 +125,6 @@ $(addprefix $(TOPOBJDIR)/,$(MANIFEST_TARGETS)): FORCE
 # that are not supported by data in moz.build.
 
 # Files to build with the recursive backend and simply copy
-$(TOPOBJDIR)/dist/bin/greprefs.js: $(TOPOBJDIR)/modules/libpref/greprefs.js
 $(TOPOBJDIR)/dist/bin/platform.ini: $(TOPOBJDIR)/toolkit/xre/platform.ini
 
 # The xpidl target in config/makefiles/xpidl requires the install manifest for
