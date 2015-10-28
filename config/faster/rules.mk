@@ -24,6 +24,8 @@
 # python/mozbuild/mozbuild/backend/fastermake.py is the following:
 # - TOPSRCDIR/TOPOBJDIR, respectively the top source directory and the top
 #   object directory
+# - BACKEND, the path to the file the backend will always update when running
+#   mach build-backend
 # - PYTHON, the path to the python executable
 # - ACDEFINES, which contains a set of -Dvar=name to be used during
 #   preprocessing
@@ -69,11 +71,21 @@ $(TOPOBJDIR)/%: FORCE
 # fallback
 $(TOPOBJDIR)/faster/%: ;
 
+# Files under the python virtualenv, which are dependencies of the BACKEND
+# file, are not meant to use the fallback either.
+$(TOPOBJDIR)/_virtualenv/%: ;
+
 # And files under dist/ are meant to be copied from their first dependency
 # if there is no other rule.
 $(TOPOBJDIR)/dist/%:
 	rm -f $@
 	cp $< $@
+
+# Refresh backend
+$(BACKEND):
+	cd $(TOPOBJDIR) && $(PYTHON) config.status --backend FasterMake
+
+$(MAKEFILE_LIST): $(BACKEND)
 
 # Install files using install manifests
 #
