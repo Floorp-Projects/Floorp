@@ -89,16 +89,6 @@ WebSocketEventListenerParent::WebSocketClosed(uint32_t aWebSocketSerialID,
 }
 
 NS_IMETHODIMP
-WebSocketEventListenerParent::WebSocketMessageAvailable(uint32_t aWebSocketSerialID,
-                                                        const nsACString& aData,
-                                                        uint16_t aMessageType)
-{
-  unused << SendWebSocketMessageAvailable(aWebSocketSerialID, nsCString(aData),
-                                          aMessageType);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 WebSocketEventListenerParent::FrameReceived(uint32_t aWebSocketSerialID,
                                             nsIWebSocketFrame* aFrame)
 {
