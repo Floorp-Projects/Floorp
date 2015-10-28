@@ -12,7 +12,7 @@
 
 namespace js {
 
-template <typename, typename> struct DefaultTracer;
+template <typename> struct DefaultTracer;
 
 // A TraceableFifo is a Fifo with an additional trace method that knows how to
 // visit all of the items stored in the Fifo. For Fifos that contain GC things,

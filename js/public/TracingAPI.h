@@ -370,22 +370,15 @@ JS_GetTraceThingInfo(char* buf, size_t bufsize, JSTracer* trc,
 namespace js {
 
 // Automates static dispatch for tracing for TraceableContainers.
-template <typename, typename=void> struct DefaultTracer;
-
-// The default for POD, non-pointer types is to do nothing.
-template <typename T>
-struct DefaultTracer<T, typename mozilla::EnableIf<!mozilla::IsPointer<T>::value &&
-                                                   mozilla::IsPod<T>::value>::Type> {
-    static void trace(JSTracer* trc, T* t, const char* name) {
-        MOZ_ASSERT(mozilla::IsPod<T>::value);
-        MOZ_ASSERT(!mozilla::IsPointer<T>::value);
-    }
-};
+template <typename> struct DefaultTracer;
 
 // The default for non-pod (e.g. struct) types is to call the trace method.
 template <typename T>
-struct DefaultTracer<T, typename mozilla::EnableIf<!mozilla::IsPod<T>::value>::Type> {
+struct DefaultTracer {
     static void trace(JSTracer* trc, T* t, const char* name) {
+        // If your build is failing here, it means you either need an
+        // implementation of DefaultTracer<T> for your type or, for container
+        // and structure types that contain GC pointers, a trace method.
         t->trace(trc);
     }
 };
@@ -396,6 +389,10 @@ struct DefaultTracer<jsid>
     static void trace(JSTracer* trc, jsid* id, const char* name) {
         JS_CallUnbarrieredIdTracer(trc, id, name);
     }
+};
+
+template <> struct DefaultTracer<uint32_t> {
+    static void trace(JSTracer* trc, uint32_t* id, const char* name) {}
 };
 
 } // namespace js
