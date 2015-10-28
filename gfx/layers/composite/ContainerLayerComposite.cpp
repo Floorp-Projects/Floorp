@@ -8,8 +8,8 @@
 #include "apz/src/AsyncPanZoomController.h"  // for AsyncPanZoomController
 #include "FrameMetrics.h"               // for FrameMetrics
 #include "Units.h"                      // for LayerRect, LayerPixel, etc
+#include "gfxEnv.h"                     // for gfxEnv
 #include "gfxPrefs.h"                   // for gfxPrefs
-#include "gfxUtils.h"                   // for gfxUtils, etc
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc
 #include "mozilla/RefPtr.h"             // for RefPtr
 #include "mozilla/UniquePtr.h"          // for UniquePtr
@@ -40,7 +40,7 @@
 #define CULLING_LOG(...)
 // #define CULLING_LOG(...) printf_stderr("CULLING: " __VA_ARGS__)
 
-#define DUMP(...) do { if (getenv("DUMP_DEBUG")) { printf_stderr(__VA_ARGS__); } } while(0)
+#define DUMP(...) do { if (gfxEnv::DumpDebug()) { printf_stderr(__VA_ARGS__); } } while(0)
 #define XYWH(k)  (k).x, (k).y, (k).width, (k).height
 #define XY(k)    (k).x, (k).y
 #define WH(k)    (k).width, (k).height
@@ -163,7 +163,7 @@ ContainerRenderVR(ContainerT* aContainer,
   surfaceRect.height = std::min(maxTextureSize, surfaceRect.height);
 
   gfx::VRHMDRenderingSupport *vrRendering = aHMD->GetRenderingSupport();
-  if (PR_GetEnv("NO_VR_RENDERING")) vrRendering = nullptr;
+  if (gfxEnv::NoVRRendering()) vrRendering = nullptr;
   if (vrRendering) {
     if (!aContainer->mVRRenderTargetSet || aContainer->mVRRenderTargetSet->size != surfaceRect.Size()) {
       aContainer->mVRRenderTargetSet = vrRendering->CreateRenderTargetSet(compositor, surfaceRect.Size());
@@ -297,7 +297,7 @@ ContainerRenderVR(ContainerT* aContainer,
 
   // draw the temporary surface with VR distortion to the original destination
   EffectChain vrEffect(aContainer);
-  bool skipDistortion = vrRendering || PR_GetEnv("MOZ_GFX_VR_NO_DISTORTION");
+  bool skipDistortion = vrRendering || gfxEnv::VRNoDistortion();
   if (skipDistortion) {
     vrEffect.mPrimaryEffect = new EffectRenderTarget(surface);
   } else {
@@ -708,7 +708,7 @@ ContainerRender(ContainerT* aContainer,
     gfx::Rect visibleRect(aContainer->GetEffectiveVisibleRegion().GetBounds());
     RefPtr<Compositor> compositor = aManager->GetCompositor();
 #ifdef MOZ_DUMP_PAINTING
-    if (gfxUtils::sDumpCompositorTextures) {
+    if (gfxEnv::DumpCompositorTextures()) {
       RefPtr<gfx::DataSourceSurface> surf = surface->Dump(compositor);
       if (surf) {
         WriteSnapshotToDumpFile(aContainer, surf);
