@@ -13,6 +13,7 @@ describe("loop.panel", function() {
   var sandbox, notifications;
   var fakeXHR, fakeWindow, fakeMozLoop, fakeEvent;
   var requests = [];
+  var roomData, roomData2, roomList, roomName;
   var mozL10nGetSpy;
 
   beforeEach(function() {
@@ -72,6 +73,45 @@ describe("loop.panel", function() {
       getSelectedTabMetadata: sandbox.stub(),
       userProfile: null
     };
+
+    roomName = "First Room Name";
+    roomData = {
+      roomToken: "QzBbvGmIZWU",
+      roomUrl: "http://sample/QzBbvGmIZWU",
+      decryptedContext: {
+        roomName: roomName
+      },
+      maxSize: 2,
+        participants: [{
+        displayName: "Alexis",
+          account: "alexis@example.com",
+          roomConnectionId: "2a1787a6-4a73-43b5-ae3e-906ec1e763cb"
+      }, {
+        displayName: "Adam",
+        roomConnectionId: "781f012b-f1ea-4ce1-9105-7cfc36fb4ec7"
+    }],
+      ctime: 1405517418
+    };
+
+    roomData2 = {
+      roomToken: "QzBbvlmIZWU",
+      roomUrl: "http://sample/QzBbvlmIZWU",
+      decryptedContext: {
+        roomName: "Second Room Name"
+      },
+      maxSize: 2,
+        participants: [{
+        displayName: "Bill",
+          account: "bill@example.com",
+          roomConnectionId: "2a1737a6-4a73-43b5-ae3e-906ec1e763cb"
+      }, {
+          displayName: "Bob",
+            roomConnectionId: "781f212b-f1ea-4ce1-9105-7cfc36fb4ec7"
+        }],
+      ctime: 1405517417
+    };
+
+    roomList = [new loop.store.Room(roomData), new loop.store.Room(roomData2)];
 
     document.mozL10n.initialize(navigator.mozLoop);
     sandbox.stub(document.mozL10n, "get").returns("Fake title");
@@ -538,25 +578,10 @@ describe("loop.panel", function() {
   });
 
   describe("loop.panel.RoomEntry", function() {
-    var dispatcher, roomData;
+    var dispatcher;
 
     beforeEach(function() {
       dispatcher = new loop.Dispatcher();
-      roomData = {
-        roomToken: "QzBbvGmIZWU",
-        roomUrl: "http://sample/QzBbvGmIZWU",
-        decryptedContext: {
-          roomName: "Second Room Name"
-        },
-        maxSize: 2,
-        participants: [
-          { displayName: "Alexis", account: "alexis@example.com",
-            roomConnectionId: "2a1787a6-4a73-43b5-ae3e-906ec1e763cb" },
-          { displayName: "Adam",
-            roomConnectionId: "781f012b-f1ea-4ce1-9105-7cfc36fb4ec7" }
-        ],
-        ctime: 1405517418
-      };
     });
 
     function mountRoomEntry(props) {
@@ -576,7 +601,10 @@ describe("loop.panel", function() {
         // the actions we are triggering.
         sandbox.stub(dispatcher, "dispatch");
 
-        view = mountRoomEntry({ room: new loop.store.Room(roomData) });
+        view = mountRoomEntry({
+          isOpenedRoom: false,
+          room: new loop.store.Room(roomData)
+        });
       });
 
       // XXX Current version of React cannot use TestUtils.Simulate, please
@@ -618,6 +646,7 @@ describe("loop.panel", function() {
 
         roomEntry = mountRoomEntry({
           deleteRoom: sandbox.stub(),
+          isOpenedRoom: false,
           room: new loop.store.Room(roomData)
         });
       });
@@ -648,6 +677,18 @@ describe("loop.panel", function() {
 
           sinon.assert.calledOnce(fakeWindow.close);
         });
+
+        it("should not dispatch an OpenRoom action when button is clicked if room is already opened", function() {
+          roomEntry = mountRoomEntry({
+            deleteRoom: sandbox.stub(),
+            isOpenedRoom: true,
+            room: new loop.store.Room(roomData)
+          });
+
+          TestUtils.Simulate.click(roomEntry.refs.roomEntry.getDOMNode());
+
+          sinon.assert.notCalled(dispatcher.dispatch);
+        });
       });
     });
 
@@ -656,6 +697,7 @@ describe("loop.panel", function() {
 
       function mountEntryForContext() {
         return mountRoomEntry({
+          isOpenedRoom: false,
           room: new loop.store.Room(roomData)
         });
       }
@@ -716,6 +758,7 @@ describe("loop.panel", function() {
 
         roomEntry = mountRoomEntry({
           dispatcher: dispatcher,
+          isOpenedRoom: false,
           room: new loop.store.Room(roomData)
         });
         roomEntryNode = roomEntry.getDOMNode();
@@ -727,6 +770,7 @@ describe("loop.panel", function() {
       it("should update room name", function() {
         var roomEntry = mountRoomEntry({
           dispatcher: dispatcher,
+          isOpenedRoom: false,
           room: new loop.store.Room(roomData)
         });
         var updatedRoom = new loop.store.Room(_.extend({}, roomData, {
@@ -808,7 +852,7 @@ describe("loop.panel", function() {
   });
 
   describe("loop.panel.RoomList", function() {
-    var roomStore, dispatcher, fakeEmail, dispatch, roomData;
+    var roomStore, dispatcher, fakeEmail, dispatch;
 
     beforeEach(function() {
       fakeEmail = "fakeEmail@example.com";
@@ -817,6 +861,7 @@ describe("loop.panel", function() {
         mozLoop: navigator.mozLoop
       });
       roomStore.setStoreState({
+        openedRoom: null,
         pendingCreation: false,
         pendingInitialRetrieval: false,
         rooms: [],
@@ -824,24 +869,6 @@ describe("loop.panel", function() {
       });
 
       dispatch = sandbox.stub(dispatcher, "dispatch");
-
-      roomData = {
-        roomToken: "QzBbvGmIZWU",
-        roomUrl: "http://sample/QzBbvGmIZWU",
-        decryptedContext: {
-          roomName: "Second Room Name"
-        },
-        maxSize: 2,
-        participants: [{
-          displayName: "Alexis",
-          account: "alexis@example.com",
-          roomConnectionId: "2a1787a6-4a73-43b5-ae3e-906ec1e763cb"
-        }, {
-          displayName: "Adam",
-          roomConnectionId: "781f012b-f1ea-4ce1-9105-7cfc36fb4ec7"
-        }],
-        ctime: 1405517418
-      };
     });
 
     function createTestComponent() {
@@ -895,6 +922,27 @@ describe("loop.panel", function() {
       roomStore.setStoreState({ pendingInitialRetrieval: true });
 
       expect(view.getDOMNode().querySelectorAll(".room-list-loading").length).to.eql(1);
+    });
+
+    it("should show multiple rooms in list with no opened room", function() {
+      roomStore.setStoreState({ rooms: roomList });
+
+      var view = createTestComponent();
+
+      var node = view.getDOMNode();
+      expect(node.querySelectorAll(".room-opened").length).to.eql(0);
+      expect(node.querySelectorAll(".room-entry").length).to.eql(2);
+    });
+
+    it("should only show the opened room you're in when you're in a room", function() {
+      roomStore.setStoreState({ rooms: roomList, openedRoom: roomList[0].roomToken });
+
+      var view = createTestComponent();
+
+      var node = view.getDOMNode();
+      expect(node.querySelectorAll(".room-opened").length).to.eql(1);
+      expect(node.querySelectorAll(".room-entry").length).to.eql(1);
+      expect(node.querySelectorAll(".room-opened h2")[0].textContent).to.equal(roomName);
     });
   });
 
@@ -1074,7 +1122,7 @@ describe("loop.panel", function() {
   });
 
   describe("RoomEntryContextButtons", function() {
-    var view, dispatcher, roomData;
+    var view, dispatcher;
 
     function createTestComponent(extraProps) {
       var props = _.extend({
@@ -1091,24 +1139,6 @@ describe("loop.panel", function() {
     }
 
     beforeEach(function() {
-      roomData = {
-        roomToken: "QzBbvGmIZWU",
-        roomUrl: "http://sample/QzBbvGmIZWU",
-        decryptedContext: {
-          roomName: "Second Room Name"
-        },
-        maxSize: 2,
-        participants: [{
-          displayName: "Alexis",
-          account: "alexis@example.com",
-          roomConnectionId: "2a1787a6-4a73-43b5-ae3e-906ec1e763cb"
-        }, {
-          displayName: "Adam",
-          roomConnectionId: "781f012b-f1ea-4ce1-9105-7cfc36fb4ec7"
-        }],
-        ctime: 1405517418
-      };
-
       dispatcher = new loop.Dispatcher();
       sandbox.stub(dispatcher, "dispatch");
 
