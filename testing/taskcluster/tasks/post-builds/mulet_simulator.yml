@@ -17,6 +17,9 @@ task:
   provisionerId: aws-provisioner-v1
   schedulerId: task-graph-scheduler
 
+  routes:
+    - 'index.gecko.v1.{{project}}.latest.simulator.{{build_type}}'
+
   scopes:
     - 'docker-worker:cache:tc-vcs'
     - 'docker-worker:image:{{#docker_image}}builder{{/docker_image}}'
