@@ -172,9 +172,9 @@ protected:
   virtual bool RecvCancelHTMLDNSPrefetch(const nsString& hostname,
                                          const uint16_t& flags,
                                          const nsresult& reason) override;
-  virtual PWebSocketEventListenerParent*
-    AllocPWebSocketEventListenerParent(const uint64_t& aInnerWindowID) override;
-  virtual bool DeallocPWebSocketEventListenerParent(PWebSocketEventListenerParent*) override;
+  virtual PWebSocketFrameListenerParent*
+    AllocPWebSocketFrameListenerParent(const uint64_t& aInnerWindowID) override;
+  virtual bool DeallocPWebSocketFrameListenerParent(PWebSocketFrameListenerParent*) override;
 
   virtual mozilla::ipc::IProtocol*
   CloneProtocol(Channel* aChannel,

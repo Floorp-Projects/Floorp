@@ -4,9 +4,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "WebSocketEventListenerChild.h"
-#include "WebSocketEventService.h"
 #include "WebSocketFrame.h"
+#include "WebSocketFrameListenerChild.h"
+#include "WebSocketFrameService.h"
 
 #include "mozilla/net/NeckoChild.h"
 #include "mozilla/StaticPtr.h"
@@ -20,7 +20,7 @@ namespace net {
 
 namespace {
 
-StaticRefPtr<WebSocketEventService> gWebSocketEventService;
+StaticRefPtr<WebSocketFrameService> gWebSocketFrameService;
 
 bool
 IsChildProcess()
@@ -47,19 +47,20 @@ public:
   {
     MOZ_ASSERT(NS_IsMainThread());
 
-    RefPtr<WebSocketEventService> service = WebSocketEventService::GetOrCreate();
+    RefPtr<WebSocketFrameService> service =
+      WebSocketFrameService::GetOrCreate();
     MOZ_ASSERT(service);
 
-    WebSocketEventService::WindowListeners* listeners =
+    WebSocketFrameService::WindowListeners* listeners =
       service->GetListeners(mInnerWindowID);
     if (!listeners) {
       return NS_OK;
     }
 
     nsresult rv;
-    WebSocketEventService::WindowListeners::ForwardIterator iter(*listeners);
+    WebSocketFrameService::WindowListeners::ForwardIterator iter(*listeners);
     while (iter.HasMore()) {
-      nsCOMPtr<nsIWebSocketEventListener> listener = iter.GetNext();
+      nsCOMPtr<nsIWebSocketFrameListener> listener = iter.GetNext();
 
       if (mFrameSent) {
         rv = listener->FrameSent(mWebSocketSerialID, mFrame);
@@ -85,29 +86,29 @@ protected:
   bool mFrameSent;
 };
 
-/* static */ already_AddRefed<WebSocketEventService>
-WebSocketEventService::GetOrCreate()
+/* static */ already_AddRefed<WebSocketFrameService>
+WebSocketFrameService::GetOrCreate()
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  if (!gWebSocketEventService) {
-    gWebSocketEventService = new WebSocketEventService();
+  if (!gWebSocketFrameService) {
+    gWebSocketFrameService = new WebSocketFrameService();
   }
 
-  RefPtr<WebSocketEventService> service = gWebSocketEventService.get();
+  RefPtr<WebSocketFrameService> service = gWebSocketFrameService.get();
   return service.forget();
 }
 
-NS_INTERFACE_MAP_BEGIN(WebSocketEventService)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIWebSocketEventService)
+NS_INTERFACE_MAP_BEGIN(WebSocketFrameService)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIWebSocketFrameService)
   NS_INTERFACE_MAP_ENTRY(nsIObserver)
-  NS_INTERFACE_MAP_ENTRY(nsIWebSocketEventService)
+  NS_INTERFACE_MAP_ENTRY(nsIWebSocketFrameService)
 NS_INTERFACE_MAP_END
 
-NS_IMPL_ADDREF(WebSocketEventService)
-NS_IMPL_RELEASE(WebSocketEventService)
+NS_IMPL_ADDREF(WebSocketFrameService)
+NS_IMPL_RELEASE(WebSocketFrameService)
 
-WebSocketEventService::WebSocketEventService()
+WebSocketFrameService::WebSocketFrameService()
   : mCountListeners(0)
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -119,13 +120,13 @@ WebSocketEventService::WebSocketEventService()
   }
 }
 
-WebSocketEventService::~WebSocketEventService()
+WebSocketFrameService::~WebSocketFrameService()
 {
   MOZ_ASSERT(NS_IsMainThread());
 }
 
 void
-WebSocketEventService::FrameReceived(uint32_t aWebSocketSerialID,
+WebSocketFrameService::FrameReceived(uint32_t aWebSocketSerialID,
                                      uint64_t aInnerWindowID,
                                      WebSocketFrame* aFrame)
 {
@@ -144,7 +145,7 @@ WebSocketEventService::FrameReceived(uint32_t aWebSocketSerialID,
 }
 
 void
-WebSocketEventService::FrameSent(uint32_t aWebSocketSerialID,
+WebSocketFrameService::FrameSent(uint32_t aWebSocketSerialID,
                                  uint64_t aInnerWindowID,
                                  WebSocketFrame* aFrame)
 {
@@ -164,8 +165,8 @@ WebSocketEventService::FrameSent(uint32_t aWebSocketSerialID,
 }
 
 NS_IMETHODIMP
-WebSocketEventService::AddListener(uint64_t aInnerWindowID,
-                                   nsIWebSocketEventListener* aListener)
+WebSocketFrameService::AddListener(uint64_t aInnerWindowID,
+                                   nsIWebSocketFrameListener* aListener)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -180,10 +181,10 @@ WebSocketEventService::AddListener(uint64_t aInnerWindowID,
     listener = new WindowListener();
 
     if (IsChildProcess()) {
-      PWebSocketEventListenerChild* actor =
-        gNeckoChild->SendPWebSocketEventListenerConstructor(aInnerWindowID);
+      PWebSocketFrameListenerChild* actor =
+        gNeckoChild->SendPWebSocketFrameListenerConstructor(aInnerWindowID);
 
-      listener->mActor = static_cast<WebSocketEventListenerChild*>(actor);
+      listener->mActor = static_cast<WebSocketFrameListenerChild*>(actor);
       MOZ_ASSERT(listener->mActor);
     }
 
@@ -196,8 +197,8 @@ WebSocketEventService::AddListener(uint64_t aInnerWindowID,
 }
 
 NS_IMETHODIMP
-WebSocketEventService::RemoveListener(uint64_t aInnerWindowID,
-                                      nsIWebSocketEventListener* aListener)
+WebSocketFrameService::RemoveListener(uint64_t aInnerWindowID,
+                                      nsIWebSocketFrameListener* aListener)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -230,7 +231,7 @@ WebSocketEventService::RemoveListener(uint64_t aInnerWindowID,
 }
 
 NS_IMETHODIMP
-WebSocketEventService::Observe(nsISupports* aSubject, const char* aTopic,
+WebSocketFrameService::Observe(nsISupports* aSubject, const char* aTopic,
                                const char16_t* aData)
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -268,37 +269,37 @@ WebSocketEventService::Observe(nsISupports* aSubject, const char* aTopic,
 }
 
 void
-WebSocketEventService::Shutdown()
+WebSocketFrameService::Shutdown()
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  if (gWebSocketEventService) {
+  if (gWebSocketFrameService) {
     nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
     if (obs) {
-      obs->RemoveObserver(gWebSocketEventService, "xpcom-shutdown");
-      obs->RemoveObserver(gWebSocketEventService, "inner-window-destroyed");
+      obs->RemoveObserver(gWebSocketFrameService, "xpcom-shutdown");
+      obs->RemoveObserver(gWebSocketFrameService, "inner-window-destroyed");
     }
 
     mWindows.Clear();
-    gWebSocketEventService = nullptr;
+    gWebSocketFrameService = nullptr;
   }
 }
 
 bool
-WebSocketEventService::HasListeners() const
+WebSocketFrameService::HasListeners() const
 {
   return !!mCountListeners;
 }
 
-WebSocketEventService::WindowListeners*
-WebSocketEventService::GetListeners(uint64_t aInnerWindowID) const
+WebSocketFrameService::WindowListeners*
+WebSocketFrameService::GetListeners(uint64_t aInnerWindowID) const
 {
   WindowListener* listener = mWindows.Get(aInnerWindowID);
   return listener ? &listener->mListeners : nullptr;
 }
 
 void
-WebSocketEventService::ShutdownActorListener(WindowListener* aListener)
+WebSocketFrameService::ShutdownActorListener(WindowListener* aListener)
 {
   MOZ_ASSERT(aListener);
   MOZ_ASSERT(aListener->mActor);
@@ -307,7 +308,7 @@ WebSocketEventService::ShutdownActorListener(WindowListener* aListener)
 }
 
 WebSocketFrame*
-WebSocketEventService::CreateFrameIfNeeded(bool aFinBit, bool aRsvBit1,
+WebSocketFrameService::CreateFrameIfNeeded(bool aFinBit, bool aRsvBit1,
                                            bool aRsvBit2, bool aRsvBit3,
                                            uint8_t aOpCode, bool aMaskBit,
                                            uint32_t aMask,
@@ -322,7 +323,7 @@ WebSocketEventService::CreateFrameIfNeeded(bool aFinBit, bool aRsvBit1,
 }
 
 WebSocketFrame*
-WebSocketEventService::CreateFrameIfNeeded(bool aFinBit, bool aRsvBit1,
+WebSocketFrameService::CreateFrameIfNeeded(bool aFinBit, bool aRsvBit1,
                                            bool aRsvBit2, bool aRsvBit3,
                                            uint8_t aOpCode, bool aMaskBit,
                                            uint32_t aMask, uint8_t* aPayload,
@@ -343,7 +344,7 @@ WebSocketEventService::CreateFrameIfNeeded(bool aFinBit, bool aRsvBit1,
 }
 
 WebSocketFrame*
-WebSocketEventService::CreateFrameIfNeeded(bool aFinBit, bool aRsvBit1,
+WebSocketFrameService::CreateFrameIfNeeded(bool aFinBit, bool aRsvBit1,
                                            bool aRsvBit2, bool aRsvBit3,
                                            uint8_t aOpCode, bool aMaskBit,
                                            uint32_t aMask,

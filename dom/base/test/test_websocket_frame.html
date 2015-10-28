@@ -28,12 +28,12 @@ var innerId =
         .getInterface(Ci.nsIDOMWindowUtils).currentInnerWindowID;
 ok(innerId, "We have a valid innerWindowID: " + innerId);
 
-var service = Cc["@mozilla.org/websocketevent/service;1"]
-                .getService(Ci.nsIWebSocketEventService);
-ok(!!service, "We have the nsIWebSocketEventService");
+var service = Cc["@mozilla.org/websocketframe/service;1"]
+                .getService(Ci.nsIWebSocketFrameService);
+ok(!!service, "We have the nsIWebSocketFrameService");
 
 var listener = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIWebSocketEventListener]),
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIWebSocketFrameListener]),
 
   frameReceived: function(aWebSocketSerialID, aFrame) {
     ok(!!aFrame, "We have received a frame");
