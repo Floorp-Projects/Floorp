@@ -27,6 +27,7 @@
 #include "nsThreadUtils.h"
 #include "mozilla/Logging.h"
 #include "nsServiceManagerUtils.h"
+#include "gfxPlatform.h"
 
 #ifdef MOZ_WIDGET_ANDROID
 #include "AndroidBridge.h"
@@ -75,13 +76,14 @@ static const char* const gMediaSourceTypes[6] = {
 //   * Windows Vista and Server 2008 without the optional "Platform Update Supplement"
 //   * N/KN editions (Europe and Korea) of Windows 7/8/8.1/10 without the
 //     optional "Windows Media Feature Pack"
-
+// 2. If H264 hardware acceleration is not available.
 static bool
 IsWebMForced()
 {
   bool mp4supported =
     DecoderTraits::IsMP4TypeAndEnabled(NS_LITERAL_CSTRING("video/mp4"));
-  return !mp4supported;
+  bool hwsupported = gfxPlatform::GetPlatform()->CanUseHardwareVideoDecoding();
+  return !mp4supported || !hwsupported;
 }
 
 static nsresult
