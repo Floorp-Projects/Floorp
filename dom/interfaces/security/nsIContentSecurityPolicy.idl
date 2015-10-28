@@ -20,7 +20,7 @@ interface nsIURI;
 
 typedef unsigned short CSPDirective;
 
-[scriptable, uuid(fe07ab08-21ba-470c-8b89-78d0e7298c68)]
+[scriptable, uuid(36c6d419-24c2-40e8-9adb-11d0b1341770)]
 interface nsIContentSecurityPolicy : nsISerializable
 {
   /**
@@ -50,6 +50,7 @@ interface nsIContentSecurityPolicy : nsISerializable
   const unsigned short REFERRER_DIRECTIVE             = 15;
   const unsigned short WEB_MANIFEST_SRC_DIRECTIVE     = 16;
   const unsigned short UPGRADE_IF_INSECURE_DIRECTIVE  = 17;
+  const unsigned short CHILD_SRC_DIRECTIVE            = 18;
 
   /**
    * Accessor method for a read-only string version of the policy at a given
