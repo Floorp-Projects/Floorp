@@ -7,6 +7,7 @@
 #include "nsISupports.idl"
 
 interface imgIRequest;
+interface nsIDocument;
 interface nsIDOMDocument;
 interface nsIProperties;
 interface nsIURI;
@@ -18,7 +19,7 @@ interface nsIURI;
  * @version 0.1
  * @see imagelib2
  */
-[scriptable, builtinclass, uuid(6c1e3f96-4701-4c75-9883-217a790a53e2)]
+[scriptable, builtinclass, uuid(bfdf23ff-378e-402e-8a6c-840f0c82b6c3)]
 interface imgICache : nsISupports
 {
   /**
@@ -52,4 +53,11 @@ interface imgICache : nsISupports
    * last-pb-context-exited notification is observed.
    */
   void respectPrivacyNotifications();
+
+  /**
+   * Clear the image cache for a document.  Controlled documents are responsible
+   * for doing this manually when they get destroyed.
+   */
+  [noscript, notxpcom]
+  void clearCacheForControlledDocument(in nsIDocument doc);
 };
