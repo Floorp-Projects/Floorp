@@ -355,10 +355,6 @@ class Talos(TestingMixin, MercurialScript, BlobUploadMixin):
             self.info("Looking at the minidump files for debugging purposes...")
             for item in parser.minidump_output:
                 self.run_command(["ls", "-l", item])
-        if parser.num_times_found_talosdata != 1:
-            self.critical("TALOSDATA was seen %d times, expected 1."
-                          % parser.num_times_found_talosdata)
-            parser.update_worst_log_and_tbpl_levels(WARNING, TBPL_WARNING)
 
         if self.return_code not in [0]:
             # update the worst log level and tbpl status
@@ -372,6 +368,10 @@ class Talos(TestingMixin, MercurialScript, BlobUploadMixin):
                 tbpl_level = TBPL_RETRY
 
             parser.update_worst_log_and_tbpl_levels(log_level, tbpl_level)
+        elif parser.num_times_found_talosdata != 1:
+            self.critical("TALOSDATA was seen %d times, expected 1."
+                          % parser.num_times_found_talosdata)
+            parser.update_worst_log_and_tbpl_levels(WARNING, TBPL_WARNING)
 
         self.buildbot_status(parser.worst_tbpl_status,
                              level=parser.worst_log_level)
