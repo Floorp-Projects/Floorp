@@ -48,7 +48,8 @@ class ZoneHeapThreshold
     double allocTrigger(bool highFrequencyGC) const;
 
     void updateAfterGC(size_t lastBytes, JSGCInvocationKind gckind,
-                       const GCSchedulingTunables& tunables, const GCSchedulingState& state);
+                       const GCSchedulingTunables& tunables, const GCSchedulingState& state,
+                       const AutoLockGC& lock);
     void updateForRemovedArena(const GCSchedulingTunables& tunables);
 
   private:
@@ -57,7 +58,8 @@ class ZoneHeapThreshold
                                                          const GCSchedulingState& state);
     static size_t computeZoneTriggerBytes(double growthFactor, size_t lastBytes,
                                           JSGCInvocationKind gckind,
-                                          const GCSchedulingTunables& tunables);
+                                          const GCSchedulingTunables& tunables,
+                                          const AutoLockGC& lock);
 };
 
 // Maps a Cell* to a unique, 64bit id.

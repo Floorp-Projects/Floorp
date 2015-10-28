@@ -739,7 +739,7 @@ GCRuntime::expireEmptyChunkPool(bool shrinkBuffers, const AutoLockGC& lock)
         MOZ_ASSERT(!fullChunks(lock).contains(chunk));
         MOZ_ASSERT(!availableChunks(lock).contains(chunk));
         if (freeChunkCount >= tunables.maxEmptyChunkCount() ||
-            (freeChunkCount >= tunables.minEmptyChunkCount() &&
+            (freeChunkCount >= tunables.minEmptyChunkCount(lock) &&
              (shrinkBuffers || chunk->info.age == MAX_EMPTY_CHUNK_AGE)))
         {
             emptyChunks(lock).remove(chunk);
@@ -754,7 +754,7 @@ GCRuntime::expireEmptyChunkPool(bool shrinkBuffers, const AutoLockGC& lock)
     MOZ_ASSERT(expired.verify());
     MOZ_ASSERT(emptyChunks(lock).verify());
     MOZ_ASSERT(emptyChunks(lock).count() <= tunables.maxEmptyChunkCount());
-    MOZ_ASSERT_IF(shrinkBuffers, emptyChunks(lock).count() <= tunables.minEmptyChunkCount());
+    MOZ_ASSERT_IF(shrinkBuffers, emptyChunks(lock).count() <= tunables.minEmptyChunkCount(lock));
     return expired;
 }
 
@@ -1021,7 +1021,7 @@ GCRuntime::wantBackgroundAllocation(const AutoLockGC& lock) const
     // allocation if we already have some empty chunks or when the runtime has
     // a small heap size (and therefore likely has a small growth rate).
     return allocTask.enabled() &&
-           emptyChunks(lock).count() < tunables.minEmptyChunkCount() &&
+           emptyChunks(lock).count() < tunables.minEmptyChunkCount(lock) &&
            (fullChunks(lock).count() + availableChunks(lock).count()) >= 4;
 }
 
@@ -1288,8 +1288,13 @@ GCRuntime::init(uint32_t maxbytes, uint32_t maxNurseryBytes)
      * Separate gcMaxMallocBytes from gcMaxBytes but initialize to maxbytes
      * for default backward API compatibility.
      */
-    tunables.setParameter(JSGC_MAX_BYTES, maxbytes);
+    AutoLockGC lock(rt);
+    tunables.setParameter(JSGC_MAX_BYTES, maxbytes, lock);
     setMaxMallocBytes(maxbytes);
+
+    const char* size = getenv("JSGC_MARK_STACK_LIMIT");
+    if (size)
+        setMarkStackLimit(atoi(size), lock);
 
     jitReleaseNumber = majorGCNumber + JIT_SCRIPT_RELEASE_TYPES_PERIOD;
 
@@ -1393,7 +1398,7 @@ GCRuntime::finishRoots()
 }
 
 void
-GCRuntime::setParameter(JSGCParamKey key, uint32_t value)
+GCRuntime::setParameter(JSGCParamKey key, uint32_t value, AutoLockGC& lock)
 {
     switch (key) {
       case JSGC_MAX_MALLOC_BYTES:
@@ -1405,7 +1410,7 @@ GCRuntime::setParameter(JSGCParamKey key, uint32_t value)
         defaultTimeBudget_ = value ? value : SliceBudget::UnlimitedTimeBudget;
         break;
       case JSGC_MARK_STACK_LIMIT:
-        setMarkStackLimit(value);
+        setMarkStackLimit(value, lock);
         break;
       case JSGC_DECOMMIT_THRESHOLD:
         decommitThreshold = value * 1024 * 1024;
@@ -1420,16 +1425,16 @@ GCRuntime::setParameter(JSGCParamKey key, uint32_t value)
         compactingEnabled = value != 0;
         break;
       default:
-        tunables.setParameter(key, value);
+        tunables.setParameter(key, value, lock);
         for (ZonesIter zone(rt, WithAtoms); !zone.done(); zone.next()) {
             zone->threshold.updateAfterGC(zone->usage.gcBytes(), GC_NORMAL, tunables,
-                                         schedulingState);
+                                          schedulingState, lock);
         }
     }
 }
 
 void
-GCSchedulingTunables::setParameter(JSGCParamKey key, uint32_t value)
+GCSchedulingTunables::setParameter(JSGCParamKey key, uint32_t value, const AutoLockGC& lock)
 {
     switch(key) {
       case JSGC_MAX_BYTES:
@@ -1536,7 +1541,7 @@ GCRuntime::getParameter(JSGCParamKey key, const AutoLockGC& lock)
       case JSGC_ALLOCATION_THRESHOLD:
         return tunables.gcZoneAllocThresholdBase() / 1024 / 1024;
       case JSGC_MIN_EMPTY_CHUNK_COUNT:
-        return tunables.minEmptyChunkCount();
+        return tunables.minEmptyChunkCount(lock);
       case JSGC_MAX_EMPTY_CHUNK_COUNT:
         return tunables.maxEmptyChunkCount();
       case JSGC_COMPACTING_ENABLED:
@@ -1548,9 +1553,10 @@ GCRuntime::getParameter(JSGCParamKey key, const AutoLockGC& lock)
 }
 
 void
-GCRuntime::setMarkStackLimit(size_t limit)
+GCRuntime::setMarkStackLimit(size_t limit, AutoLockGC& lock)
 {
     MOZ_ASSERT(!rt->isHeapBusy());
+    AutoUnlockGC unlock(lock);
     AutoStopVerifyingBarriers pauseVerification(rt, false);
     marker.setMaxCapacity(limit);
 }
@@ -1805,10 +1811,11 @@ ZoneHeapThreshold::computeZoneHeapGrowthFactorForHeapSize(size_t lastBytes,
 /* static */ size_t
 ZoneHeapThreshold::computeZoneTriggerBytes(double growthFactor, size_t lastBytes,
                                            JSGCInvocationKind gckind,
-                                           const GCSchedulingTunables& tunables)
+                                           const GCSchedulingTunables& tunables,
+                                           const AutoLockGC& lock)
 {
     size_t base = gckind == GC_SHRINK
-                ? Max(lastBytes, tunables.minEmptyChunkCount() * ChunkSize)
+                ? Max(lastBytes, tunables.minEmptyChunkCount(lock) * ChunkSize)
                 : Max(lastBytes, tunables.gcZoneAllocThresholdBase());
     double trigger = double(base) * growthFactor;
     return size_t(Min(double(tunables.gcMaxBytes()), trigger));
@@ -1817,10 +1824,11 @@ ZoneHeapThreshold::computeZoneTriggerBytes(double growthFactor, size_t lastBytes
 void
 ZoneHeapThreshold::updateAfterGC(size_t lastBytes, JSGCInvocationKind gckind,
                                  const GCSchedulingTunables& tunables,
-                                 const GCSchedulingState& state)
+                                 const GCSchedulingState& state, const AutoLockGC& lock)
 {
     gcHeapGrowthFactor_ = computeZoneHeapGrowthFactorForHeapSize(lastBytes, tunables, state);
-    gcTriggerBytes_ = computeZoneTriggerBytes(gcHeapGrowthFactor_, lastBytes, gckind, tunables);
+    gcTriggerBytes_ = computeZoneTriggerBytes(gcHeapGrowthFactor_, lastBytes, gckind, tunables,
+                                              lock);
 }
 
 void
@@ -5208,9 +5216,10 @@ GCRuntime::endSweepingZoneGroup()
     /* Update the GC state for zones we have swept. */
     for (GCZoneGroupIter zone(rt); !zone.done(); zone.next()) {
         MOZ_ASSERT(zone->isGCSweeping());
+        AutoLockGC lock(rt);
         zone->setGCState(Zone::Finished);
         zone->threshold.updateAfterGC(zone->usage.gcBytes(), invocationKind, tunables,
-                                      schedulingState);
+                                      schedulingState, lock);
     }
 
     /* Start background thread to sweep zones if required. */
