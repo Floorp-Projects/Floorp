@@ -732,7 +732,7 @@
                 <image id="plugins-notification-icon" class="notification-anchor-icon" role="button"
                        aria-label="&urlbar.pluginsNotificationAnchor.label;"/>
                 <image id="web-notifications-notification-icon" class="notification-anchor-icon" role="button"
-                       aria-label="&urlbar.webNotsNotificationAnchor.label;"/>
+                       aria-label="&urlbar.webNotsNotificationAnchor2.label;"/>
                 <image id="webRTC-shareDevices-notification-icon" class="notification-anchor-icon" role="button"
                        aria-label="&urlbar.webRTCShareDevicesNotificationAnchor.label;"/>
                 <image id="webRTC-sharingDevices-notification-icon" class="notification-anchor-icon" role="button"
