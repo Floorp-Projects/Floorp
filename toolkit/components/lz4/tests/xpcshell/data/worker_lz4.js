@@ -44,8 +44,8 @@ self.onmessage = function() {
 var Lz4;
 var Internals;
 function test_import() {
-  Lz4 = require("resource://gre/modules/workers/lz4.js");
-  Internals = require("resource://gre/modules/workers/lz4_internal.js");
+  Lz4 = require("resource://gre/modules/lz4.js");
+  Internals = require("resource://gre/modules/lz4_internal.js");
 }
 
 function test_bound() {
