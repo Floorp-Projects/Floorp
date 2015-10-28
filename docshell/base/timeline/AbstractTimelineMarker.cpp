@@ -75,4 +75,16 @@ AbstractTimelineMarker::SetCustomTime(DOMHighResTimeStamp aTime)
   mTime = aTime;
 }
 
+void
+AbstractTimelineMarker::SetProcessType(GeckoProcessType aProcessType)
+{
+  mProcessType = aProcessType;
+}
+
+void
+AbstractTimelineMarker::SetOffMainThread(bool aIsOffMainThread)
+{
+  mIsOffMainThread = aIsOffMainThread;
+}
+
 } // namespace mozilla

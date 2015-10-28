@@ -7,7 +7,7 @@
 
 function* spawnTest() {
   let { panel } = yield initPerformance(WORKER_URL);
-  let { PerformanceController } = panel.panelWin;
+  let { $$, $, PerformanceController } = panel.panelWin;
 
   loadFrameScripts();
 
@@ -27,26 +27,43 @@ function* spawnTest() {
       return false;
     }
 
-    testWorkerMarker(markers.find(m => m.name == "Worker"));
+    testWorkerMarkerData(markers.find(m => m.name == "Worker"));
     return true;
   });
 
   yield stopRecording(panel);
   ok(true, "Recording has ended.");
 
+  for (let node of $$(".waterfall-marker-name[value=Worker")) {
+    testWorkerMarkerUI(node.parentNode.parentNode);
+  }
+
   yield teardown(panel);
   finish();
 }
 
-function testWorkerMarker(marker) {
+function testWorkerMarkerData(marker) {
   ok(true, "Found a worker marker.");
 
   ok("start" in marker,
     "The start time is specified in the worker marker.");
   ok("end" in marker,
     "The end time is specified in the worker marker.");
+
   ok("workerOperation" in marker,
     "The worker operation is specified in the worker marker.");
+
+  ok("processType" in marker,
+    "The process type is specified in the worker marker.");
+  ok("isOffMainThread" in marker,
+    "The thread origin is specified in the worker marker.");
+}
+
+function testWorkerMarkerUI(node) {
+  is(node.className, "waterfall-tree-item",
+    "The marker node has the correct class name.");
+  ok(node.hasAttribute("otmt"),
+    "The marker node specifies if it is off the main thread or not.");
 }
 
 /**
