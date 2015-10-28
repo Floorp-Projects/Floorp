@@ -177,10 +177,6 @@
   -  in the network details response tab identifying an image's mime. -->
 <!ENTITY netmonitorUI.response.mime       "MIME Type:">
 
-<!-- LOCALIZATION NOTE (netmonitorUI.response.encoding): This is the label displayed
-  -  in the network details response tab identifying an image's encoding. -->
-<!ENTITY netmonitorUI.response.encoding   "Encoding:">
-
 <!-- LOCALIZATION NOTE (netmonitorUI.timings.blocked): This is the label displayed
   -  in the network details timings tab identifying the amount of time spent
   -  in a "blocked" state. -->
