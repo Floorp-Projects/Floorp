@@ -53,14 +53,10 @@ H264Converter::Init()
 nsresult
 H264Converter::Input(MediaRawData* aSample)
 {
-  if (!mNeedAVCC) {
-    if (!mp4_demuxer::AnnexB::ConvertSampleToAnnexB(aSample)) {
-      return NS_ERROR_FAILURE;
-    }
-  } else {
-    if (!mp4_demuxer::AnnexB::ConvertSampleToAVCC(aSample)) {
-      return NS_ERROR_FAILURE;
-    }
+  if (!mp4_demuxer::AnnexB::ConvertSampleToAVCC(aSample)) {
+    // We need AVCC content to be able to later parse the SPS.
+    // This is a no-op if the data is already AVCC.
+    return NS_ERROR_FAILURE;
   }
 
   if (mInitPromiseRequest.Exists()) {
@@ -83,6 +79,11 @@ H264Converter::Input(MediaRawData* aSample)
     rv = CheckForSPSChange(aSample);
   }
   NS_ENSURE_SUCCESS(rv, rv);
+
+  if (!mNeedAVCC &&
+      !mp4_demuxer::AnnexB::ConvertSampleToAnnexB(aSample)) {
+    return NS_ERROR_FAILURE;
+  }
 
   aSample->mExtraData = mCurrentConfig.mExtraData;
 
