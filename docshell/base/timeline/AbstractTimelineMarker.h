@@ -9,6 +9,7 @@
 
 #include "TimelineMarkerEnums.h" // for MarkerTracingType
 #include "nsDOMNavigationTiming.h" // for DOMHighResTimeStamp
+#include "nsXULAppAPI.h" // for GeckoProcessType
 #include "mozilla/UniquePtr.h"
 
 struct JSContext;
@@ -63,6 +64,8 @@ protected:
   void SetCurrentTime();
   void SetCustomTime(const TimeStamp& aTime);
   void SetCustomTime(DOMHighResTimeStamp aTime);
+  void SetProcessType(GeckoProcessType aProcessType);
+  void SetOffMainThread(bool aIsOffMainThread);
 };
 
 } // namespace mozilla
