@@ -362,10 +362,14 @@ loop.panel = (function(_, mozL10n) {
 
   /**
    * Room list entry.
+   *
+   * Active Room means there are participants in the room.
+   * Opened Room means the user is in the room.
    */
   var RoomEntry = React.createClass({
     propTypes: {
       dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
+      isOpenedRoom: React.PropTypes.bool.isRequired,
       mozLoop: React.PropTypes.object.isRequired,
       room: React.PropTypes.instanceOf(loop.store.Room).isRequired
     },
@@ -418,7 +422,8 @@ loop.panel = (function(_, mozL10n) {
     render: function() {
       var roomClasses = React.addons.classSet({
         "room-entry": true,
-        "room-active": this._isActive()
+        "room-active": this._isActive(),
+        "room-opened": this.props.isOpenedRoom
       });
 
       var roomTitle = this.props.room.decryptedContext.roomName ||
@@ -427,8 +432,8 @@ loop.panel = (function(_, mozL10n) {
 
       return (
         <div className={roomClasses}
-          onClick={this.handleClickEntry}
-          onMouseLeave={this._handleMouseOut}
+          onClick={this.props.isOpenedRoom ? null : this.handleClickEntry}
+          onMouseLeave={this.props.isOpenedRoom ? null : this._handleMouseOut}
           ref="roomEntry">
           <h2>
             {roomTitle}
@@ -436,15 +441,17 @@ loop.panel = (function(_, mozL10n) {
           <RoomEntryContextItem
             mozLoop={this.props.mozLoop}
             roomUrls={this.props.room.decryptedContext.urls} />
-          <RoomEntryContextButtons
-            dispatcher={this.props.dispatcher}
-            eventPosY={this.state.eventPosY}
-            handleClickEntry={this.handleClickEntry}
-            handleContextChevronClick={this.handleContextChevronClick}
-            ref="contextActions"
-            room={this.props.room}
-            showMenu={this.state.showMenu}
-            toggleDropdownMenu={this.toggleDropdownMenu} />
+          {this.props.isOpenedRoom ? null :
+            <RoomEntryContextButtons
+              dispatcher={this.props.dispatcher}
+              eventPosY={this.state.eventPosY}
+              handleClickEntry={this.handleClickEntry}
+              handleContextChevronClick={this.handleContextChevronClick}
+              ref="contextActions"
+              room={this.props.room}
+              showMenu={this.state.showMenu}
+              toggleDropdownMenu={this.toggleDropdownMenu} />
+          }
         </div>
       );
     }
@@ -719,12 +726,20 @@ loop.panel = (function(_, mozL10n) {
       return (
         <div className="rooms">
           {this._renderNewRoomButton()}
-          <h1>{mozL10n.get("rooms_list_recent_conversations")}</h1>
+          <h1>{mozL10n.get(this.state.openedRoom === null ?
+                "rooms_list_recently_browsed" :
+                "rooms_list_currently_browsing")}</h1>
           <div className="room-list">{
             this.state.rooms.map(function(room, i) {
+              if (this.state.openedRoom !== null &&
+                room.roomToken !== this.state.openedRoom) {
+                return null;
+              }
+
               return (
                 <RoomEntry
                   dispatcher={this.props.dispatcher}
+                  isOpenedRoom={room.roomToken === this.state.openedRoom}
                   key={room.roomToken}
                   mozLoop={this.props.mozLoop}
                   room={room} />
@@ -927,8 +942,8 @@ loop.panel = (function(_, mozL10n) {
             clearOnDocumentHidden={true}
             notifications={this.props.notifications} />
             <RoomList dispatcher={this.props.dispatcher}
-                      mozLoop={this.props.mozLoop}
-                      store={this.props.roomStore} />
+              mozLoop={this.props.mozLoop}
+              store={this.props.roomStore} />
           <div className="footer">
             <div className="user-details">
               <AccountLink fxAEnabled={this.props.mozLoop.fxAEnabled}
