@@ -1,0 +1,13 @@
+diff --git a/media/libstagefright/binding/MP4Metadata.rs b/media/libstagefright/binding/MP4Metadata.rs
+index a9ab567..b746f15 100644
+--- a/media/libstagefright/binding/MP4Metadata.rs
++++ b/media/libstagefright/binding/MP4Metadata.rs
+@@ -214,7 +214,7 @@ pub struct Track {
+     track_type: TrackType,
+ }
+ 
+-extern crate byteorder;
++mod byteorder; // 'extern crate' upstream.
+ use byteorder::{BigEndian, ReadBytesExt};
+ use std::io::{Read, BufRead, Take};
+ use std::io::Cursor;
