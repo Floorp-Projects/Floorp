@@ -101,7 +101,7 @@ nsEdgeReadingListExtractor::Extract(const nsAString& aDBPath, nsIArray** aItems)
   if (urlColumnInfo.cbMax > MAX_URL_LENGTH) {
     nsCOMPtr<nsIConsoleService> consoleService = do_GetService(NS_CONSOLESERVICE_CONTRACTID);
     if (consoleService) {
-      consoleService->LogStringMessage(NS_LITERAL_STRING("Edge migration: URL column size increased").get());
+      consoleService->LogStringMessage(MOZ_UTF16("Edge migration: URL column size increased"));
     }
   }
   err = JetGetColumnInfo(sesid, dbid, "ReadingList", "Title", &titleColumnInfo,
@@ -110,7 +110,7 @@ nsEdgeReadingListExtractor::Extract(const nsAString& aDBPath, nsIArray** aItems)
   if (titleColumnInfo.cbMax > MAX_TITLE_LENGTH) {
     nsCOMPtr<nsIConsoleService> consoleService = do_GetService(NS_CONSOLESERVICE_CONTRACTID);
     if (consoleService) {
-      consoleService->LogStringMessage(NS_LITERAL_STRING("Edge migration: Title column size increased").get());
+      consoleService->LogStringMessage(MOZ_UTF16("Edge migration: Title column size increased"));
     }
   }
   err = JetGetColumnInfo(sesid, dbid, "ReadingList", "AddedDate", &addedDateColumnInfo,

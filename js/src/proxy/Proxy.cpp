@@ -637,7 +637,7 @@ ProxyObject::trace(JSTracer* trc, JSObject* obj)
 
 #ifdef DEBUG
     if (trc->runtime()->gc.isStrictProxyCheckingEnabled() && proxy->is<WrapperObject>()) {
-        JSObject* referent = MaybeForwarded(&proxy->private_().toObject());
+        JSObject* referent = MaybeForwarded(proxy->target());
         if (referent->compartment() != proxy->compartment()) {
             /*
              * Assert that this proxy is tracked in the wrapper map. We maintain
