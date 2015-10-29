@@ -13,6 +13,10 @@ by NSS/PSM via netError.xhtml. -->
 <!ENTITY certerror.pagetitle  "Untrusted Connection">
 <!ENTITY certerror.longpagetitle "This Connection is Untrusted">
 
+<!-- These are going to be used for the updated design in Bug 1207107 -->
+<!ENTITY certerror.pagetitle1  "Insecure Connection">
+<!ENTITY certerror.longpagetitle1 "Your connection is not secure">
+
 <!-- Localization note (certerror.introPara1) - The string "#1" will
 be replaced at runtime with the name of the server to which the user
 was trying to connect. -->
@@ -21,6 +25,15 @@ securely to <b>#1</b>, but we can't confirm that your connection is secure.">
 <!ENTITY certerror.introPara2 "Normally, when you try to connect securely,
 sites will present trusted identification to prove that you are
 going to the right place. However, this site's identity can't be verified.">
+
+<!-- These are going to be used for the udpated design in Bug 1207107 -->
+<!-- Localization note (certerror.introPara) - The text content of the span tag
+will be replaced at runtime with the name of the server to which the user
+was trying to connect. -->
+<!ENTITY certerror.introPara "The owner of <span class='hostname'/> has configured their website improperly.  To protect your information from being stolen, &brandShortName; has not connected to this website.">
+<!ENTITY certerror.returnToPreviousPage.label "Go Back">
+<!ENTITY certerror.learnMore "Learn more…">
+<!ENTITY certerror.advanced.label "Advanced">
 
 <!ENTITY certerror.whatShouldIDo.heading "What Should I Do?">
 <!ENTITY certerror.whatShouldIDo.content "If you usually connect to
