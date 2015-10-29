@@ -68,10 +68,13 @@
       <column/>
     </columns>
     <rows>
-      <row id="notificationsPolicyRow">
-        <vbox align="start">
+      <row id="notificationsPolicyRow" align="center">
+        <hbox align="start">
           <label id="notificationsPolicy">&notificationsPolicyDesc2.label;</label>
-        </vbox>
+          <label id="notificationsPolicyLearnMore"
+                 class="text-link"
+                 value="&notificationsPolicyLearnMore.label;"/>
+        </hbox>
         <hbox pack="end">
           <button id="notificationsPolicyButton" label="&notificationsPolicyButton.label;"
                   accesskey="&notificationsPolicyButton.accesskey;"/>
