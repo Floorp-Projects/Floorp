@@ -350,8 +350,9 @@ pref("browser.link.open_newwindow", 3);
 // 0=force all new windows to tabs, 1=don't force, 2=only force those with no features set
 pref("browser.link.open_newwindow.restriction", 0);
 
-// Image blocking policy
-pref("browser.image_blocking.enabled", false);
+// image blocking policy
+// 0=disabled, 1=enabled, 2=cellular-only
+pref("browser.image_blocking", 0);
 
 // controls which bits of private data to clear. by default we clear them all.
 pref("privacy.item.cache", true);
@@ -955,7 +956,7 @@ pref("identity.fxaccounts.remote.webchannel.uri", "https://accounts.firefox.com"
 pref("identity.fxaccounts.remote.profile.uri", "https://profile.accounts.firefox.com/v1");
 
 // The remote URL of the Firefox Account oauth server.
-pref("identity.fxaccounts.remote.oauth.uri", "https://oauth.accounts.firefox.com/v1"); 
+pref("identity.fxaccounts.remote.oauth.uri", "https://oauth.accounts.firefox.com/v1");
 
 // Token server used by Firefox Account-authenticated Sync.
 pref("identity.sync.tokenserver.uri", "https://token.services.mozilla.com/1.0/sync/1.5");

@@ -133,7 +133,10 @@ OnSharedPreferenceChangeListener
     public static final String PREFS_OPEN_URLS_IN_PRIVATE = NON_PREF_PREFIX + "openExternalURLsPrivately";
     public static final String PREFS_VOICE_INPUT_ENABLED = NON_PREF_PREFIX + "voice_input_enabled";
     public static final String PREFS_QRCODE_ENABLED = NON_PREF_PREFIX + "qrcode_enabled";
-    private static final String PREFS_CUSTOMIZE_IMAGE_BLOCKING = "browser.image_blocking.enabled";
+    private static final String PREFS_ADVANCED = NON_PREF_PREFIX + "advanced.enabled";
+    private static final String PREFS_ACCESSIBILITY = NON_PREF_PREFIX + "accessibility.enabled";
+    private static final String PREFS_CUSTOMIZE_HOME = NON_PREF_PREFIX + "customize_home";
+    private static final String PREFS_CUSTOMIZE_IMAGE_BLOCKING = "browser.image_blocking";
     private static final String PREFS_TRACKING_PROTECTION_PRIVATE_BROWSING = "privacy.trackingprotection.pbmode.enabled";
     private static final String PREFS_TRACKING_PROTECTION_LEARN_MORE = NON_PREF_PREFIX + "trackingprotection.learn_more";
     private static final String PREFS_CLEAR_PRIVATE_DATA = NON_PREF_PREFIX + "privacy.clear";
@@ -882,7 +885,6 @@ OnSharedPreferenceChangeListener
                         continue;
                     }
                 } else if (PREFS_CUSTOMIZE_IMAGE_BLOCKING.equals(key)) {
-                    // Only enable the ZoomedView / magnifying pref on Nightly.
                     if (!AppConstants.NIGHTLY_BUILD) {
                         preferences.removePreference(pref);
                         i--;
