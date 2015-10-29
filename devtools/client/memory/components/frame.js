@@ -15,7 +15,7 @@ const Frame = module.exports = createClass({
 
   render() {
     let { toolbox, frame } = this.props;
-    const { short, long, host } = parseSource(frame);
+    const { short, long, host } = parseSource(frame.source);
 
     let func = frame.functionDisplayName || "";
     let tooltip = `${func} (${long}:${frame.line}:${frame.column})`;
