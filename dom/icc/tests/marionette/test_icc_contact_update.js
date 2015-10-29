@@ -52,36 +52,65 @@ function testUpdateContact(aIcc, aType, aContactId, aMozContact, aExpect, aPin2)
 
   return aIcc.updateContact(aType, contact, aPin2)
     .then((aResult) => {
-      // Get ICC contact for checking expect contact
-      return aIcc.readContacts(aType)
-        .then((aResult) => {
-          let contact = aResult[aContactId - 1];
-
-          is(contact.name[0], aMozContact.name[0]);
-
-          if (aExpect.number == null) {
-            is(contact.tel, null);
-          } else {
-            is(contact.tel[0].value, aExpect.number);
-          }
-
-          is(contact.id, aIcc.iccInfo.iccid + aContactId);
-        });
-      }, (aError) => {
-        if (aType === "fdn" && aPin2 === undefined) {
-          ok(aError.name === "SimPin2",
-             "expected error when pin2 is not provided");
-        } else {
-          ok(false, "Cannot update " + aType + " contact: " + aError.name);
-        }
-      });
+      if (aExpect.number === null) {
+        is(aResult.tel, null);
+      } else {
+        is(aResult.tel[0].value, aExpect.number);
+        ok(aResult.tel.length == 1);
+      }
+      // We only support SIM in emulator, so we don't have anr and email field.
+      ok(!aResult.email);
+      is(contact.id, aIcc.iccInfo.iccid + aContactId);
+    }, (aError) => {
+      if (aType === "fdn" && aPin2 === undefined) {
+        ok(aError.name === "SimPin2",
+           "expected error when pin2 is not provided");
+      } else {
+        ok(false, "Cannot update " + aType + " contact: " + aError.name);
+      }
+    });
 }
 
-function revertContact(aIcc, aContact, aType, aPin2) {
-  log("revertContact: contact:" + JSON.stringify(aContact) +
-      ", type=" + aType + ", pin2=" + aPin2);
+function revertContacts(aIcc, aContacts, aType, aPin2) {
+  log("revertContacts type=" + aType + ", pin2=" + aPin2);
+  let promise = Promise.resolve();
 
-  return aIcc.updateContact(aType, aContact, aPin2);
+  for (let i = 0; i < aContacts.length; i++) {
+    let aContact = aContacts[i];
+    promise = promise.then(() => aIcc.updateContact(aType, aContact, aPin2));
+  }
+  return promise;
+}
+
+function testUpdateContacts(aIcc, aType, aCacheContacts, aPin2) {
+  let promise = Promise.resolve();
+
+  for (let i = 0; i < TEST_UPDATE_DATA.length; i++) {
+    let test_data = TEST_UPDATE_DATA[i];
+    promise = promise.then(() => testUpdateContact(aIcc, aType, test_data.id,
+                                                   test_data.data, test_data.expect,
+                                                   aPin2));
+  }
+
+  // Get ICC contact for checking expect contacts
+  promise = promise.then(() => aIcc.readContacts(aType))
+  .then((aResult) => {
+    for (let i = 0; i < TEST_UPDATE_DATA.length; i++) {
+      let expectedResult = TEST_UPDATE_DATA[i];
+      let contact = aResult[expectedResult.id - 1];
+
+      is(contact.name[0], expectedResult.data.name[0]);
+      is(contact.id, aIcc.iccInfo.iccid + expectedResult.id);
+      if (expectedResult.expect.number === null) {
+        is(contact.tel, null);
+      } else {
+        is(contact.tel[0].value, expectedResult.expect.number);
+      }
+    }
+    return revertContacts(aIcc, aCacheContacts, aType, aPin2);
+  });
+
+  return promise;
 }
 
 // Start tests
@@ -98,25 +127,12 @@ startTestCommon(function() {
     .then((aResult) => {
       fdnContacts = aResult;
     })
-    .then(() => {
-      let promise = Promise.resolve();
-      for (let i = 0; i < TEST_UPDATE_DATA.length; i++) {
-        let test_data = TEST_UPDATE_DATA[i];
-        let adnContact = adnContacts[test_data.id - 1];
-        let fdnContact = fdnContacts[test_data.id - 1];
-
-        // Test update adn contacts
-        promise = promise.then(() => testUpdateContact(icc, "adn", test_data.id,
-                                                       test_data.data, test_data.expect))
-          // Test update fdn contacts
-          .then(() => testUpdateContact(icc, "fdn", test_data.id, test_data.data,
-                                        test_data.expect))
-          // Test update fdn contacts without passing pin2
-          .then(() => testUpdateContact(icc, "fdn", test_data.id, test_data.data,
-                                        test_data.expect, "0000"))
-          .then(() => revertContact(icc, adnContact, "adn"))
-          .then(() => revertContact(icc, fdnContact, "fdn", "0000"));
-      }
-      return promise;
-    });
+    // Test update adn contacts
+    .then(() => testUpdateContacts(icc, "adn", adnContacts))
+    // Test update fdn contacts
+    .then(() => testUpdateContacts(icc, "fdn", fdnContacts, "0000"))
+    // Test one fdn contact without passing pin2
+    .then(() => testUpdateContact(icc, "fdn", TEST_UPDATE_DATA[0].id,
+                                  TEST_UPDATE_DATA[0].data,
+                                  TEST_UPDATE_DATA[0].expect));
 });
