@@ -126,22 +126,24 @@ function setUp() {
             ['network.disable.ipc.security', true]]}, runNextTest);
 }
 
-function makeKillTest(isApp) function testKill() {
-  loadBrowser(isApp, function (iframe) {
-    // We want to make sure we get notified on both the frame and
-    // process message managers.
-    let frameMM = SpecialPowers.getBrowserFrameMessageManager(iframe);
-    prepareProcess(frameMM, function (processMM) {
-      // Let's kill the content process by asking for a permission
-      // that it doesn't have.
-      ok(!processMM.assertPermission("frobnaz"),
-         "Content child should not have this permission");
-      expectFrameProcessShutdown(iframe, frameMM, processMM, function () {
-        iframe.parentNode.removeChild(iframe);
-        runNextTest();
+function makeKillTest(isApp) {
+  return function testKill() {
+    loadBrowser(isApp, function (iframe) {
+      // We want to make sure we get notified on both the frame and
+      // process message managers.
+      let frameMM = SpecialPowers.getBrowserFrameMessageManager(iframe);
+      prepareProcess(frameMM, function (processMM) {
+        // Let's kill the content process by asking for a permission
+        // that it doesn't have.
+        ok(!processMM.assertPermission("frobnaz"),
+           "Content child should not have this permission");
+        expectFrameProcessShutdown(iframe, frameMM, processMM, function () {
+          iframe.parentNode.removeChild(iframe);
+          runNextTest();
+        });
       });
     });
-  });
+  };
 }
 
 function tearDown() {
