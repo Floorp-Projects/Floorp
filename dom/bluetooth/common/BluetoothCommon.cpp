@@ -21,4 +21,13 @@ const BluetoothAddress BluetoothAddress::ALL(0xff, 0xff, 0xff,
 const BluetoothAddress BluetoothAddress::LOCAL(0x00, 0x00, 0x00,
                                                0xff, 0xff, 0xff);
 
+//
+// |BluetoothUuid|
+//
+
+const BluetoothUuid BluetoothUuid::ZERO(0x00, 0x00, 0x00, 0x00,
+                                        0x00, 0x00, 0x00, 0x00,
+                                        0x00, 0x00, 0x00, 0x00,
+                                        0x00, 0x00, 0x00, 0x00);
+
 END_BLUETOOTH_NAMESPACE
