@@ -249,7 +249,7 @@ ShaderConfigFromTargetAndFormat(GLenum aTarget,
                    aFormat == gfx::SurfaceFormat::B8G8R8X8);
   config.SetNoAlpha(aFormat == gfx::SurfaceFormat::B8G8R8X8 ||
                     aFormat == gfx::SurfaceFormat::R8G8B8X8 ||
-                    aFormat == gfx::SurfaceFormat::R5G6B5);
+                    aFormat == gfx::SurfaceFormat::R5G6B5_UINT16);
   return config;
 }
 

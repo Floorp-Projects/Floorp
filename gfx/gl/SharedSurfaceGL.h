@@ -93,6 +93,78 @@ public:
     }
 };
 
+
+// Using shared GL textures:
+class SharedSurface_GLTexture
+    : public SharedSurface
+{
+public:
+    static UniquePtr<SharedSurface_GLTexture> Create(GLContext* prodGL,
+                                                     const GLFormats& formats,
+                                                     const gfx::IntSize& size,
+                                                     bool hasAlpha);
+
+    static SharedSurface_GLTexture* Cast(SharedSurface* surf) {
+        MOZ_ASSERT(surf->mType == SharedSurfaceType::SharedGLTexture);
+
+        return (SharedSurface_GLTexture*)surf;
+    }
+
+protected:
+    const GLuint mTex;
+    GLsync mSync;
+
+    SharedSurface_GLTexture(GLContext* prodGL,
+                            const gfx::IntSize& size,
+                            bool hasAlpha,
+                            GLuint tex)
+        : SharedSurface(SharedSurfaceType::SharedGLTexture,
+                        AttachmentType::GLTexture,
+                        prodGL,
+                        size,
+                        hasAlpha, true)
+        , mTex(tex)
+        , mSync(0)
+    {
+    }
+
+public:
+    virtual ~SharedSurface_GLTexture();
+
+    virtual void LockProdImpl() override {}
+    virtual void UnlockProdImpl() override {}
+
+    virtual void ProducerReleaseImpl() override;
+
+    virtual void Fence() override {}
+    virtual bool WaitSync() override { MOZ_CRASH("should not be called"); }
+    virtual bool PollSync() override { MOZ_CRASH("should not be called"); }
+
+    virtual GLuint ProdTexture() override {
+        return mTex;
+    }
+
+    virtual bool ToSurfaceDescriptor(layers::SurfaceDescriptor* const out_descriptor) override;
+};
+
+class SurfaceFactory_GLTexture
+    : public SurfaceFactory
+{
+public:
+    SurfaceFactory_GLTexture(GLContext* prodGL,
+                             const SurfaceCaps& caps,
+                             const RefPtr<layers::ISurfaceAllocator>& allocator,
+                             const layers::TextureFlags& flags)
+        : SurfaceFactory(SharedSurfaceType::SharedGLTexture, prodGL, caps, allocator, flags)
+    {
+    }
+
+    virtual UniquePtr<SharedSurface> CreateShared(const gfx::IntSize& size) override {
+        bool hasAlpha = mReadCaps.alpha;
+        return SharedSurface_GLTexture::Create(mGL, mFormats, size, hasAlpha);
+    }
+};
+
 } // namespace gl
 
 } /* namespace mozilla */

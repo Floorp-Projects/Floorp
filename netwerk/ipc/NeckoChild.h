@@ -40,7 +40,8 @@ protected:
   virtual bool DeallocPFTPChannelChild(PFTPChannelChild*) override;
   virtual PWebSocketChild*
     AllocPWebSocketChild(const PBrowserOrId&,
-                         const SerializedLoadContext&) override;
+                         const SerializedLoadContext&,
+                         const uint32_t&) override;
   virtual bool DeallocPWebSocketChild(PWebSocketChild*) override;
   virtual PTCPSocketChild* AllocPTCPSocketChild(const nsString& host,
                                                 const uint16_t& port) override;
@@ -79,9 +80,9 @@ protected:
                                                  const nsString& aRealm,
                                                  const uint64_t& aCallbackId) override;
   virtual bool RecvAppOfflineStatus(const uint32_t& aId, const bool& aOffline) override;
-  virtual PWebSocketFrameListenerChild*
-    AllocPWebSocketFrameListenerChild(const uint64_t& aInnerWindowID) override;
-  virtual bool DeallocPWebSocketFrameListenerChild(PWebSocketFrameListenerChild*) override;
+  virtual PWebSocketEventListenerChild*
+    AllocPWebSocketEventListenerChild(const uint64_t& aInnerWindowID) override;
+  virtual bool DeallocPWebSocketEventListenerChild(PWebSocketEventListenerChild*) override;
 
   /* Predictor Messsages */
   virtual bool RecvPredOnPredictPreconnect(const URIParams& aURI) override;

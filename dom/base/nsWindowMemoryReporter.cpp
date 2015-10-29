@@ -789,37 +789,6 @@ CheckForGhostWindowsEnumerator(nsISupports *aKey, TimeStamp& aTimeStamp,
   return PL_DHASH_NEXT;
 }
 
-struct GetNonDetachedWindowDomainsEnumeratorData
-{
-  nsTHashtable<nsCStringHashKey> *nonDetachedDomains;
-  nsIEffectiveTLDService *tldService;
-};
-
-static PLDHashOperator
-GetNonDetachedWindowDomainsEnumerator(const uint64_t& aId, nsGlobalWindow* aWindow,
-                                      void* aClosure)
-{
-  GetNonDetachedWindowDomainsEnumeratorData *data =
-    static_cast<GetNonDetachedWindowDomainsEnumeratorData*>(aClosure);
-
-  // Null outer window implies null top, but calling GetTop() when there's no
-  // outer window causes us to spew debug warnings.
-  if (!aWindow->GetOuterWindow() || !aWindow->GetTopInternal()) {
-    // This window is detached, so we don't care about its domain.
-    return PL_DHASH_NEXT;
-  }
-
-  nsCOMPtr<nsIURI> uri = GetWindowURI(aWindow);
-
-  nsAutoCString domain;
-  if (uri) {
-    data->tldService->GetBaseDomain(uri, 0, domain);
-  }
-
-  data->nonDetachedDomains->PutEntry(domain);
-  return PL_DHASH_NEXT;
-}
-
 /**
  * Iterate over mDetachedWindows and update it to reflect the current state of
  * the world.  In particular:
@@ -861,10 +830,22 @@ nsWindowMemoryReporter::CheckForGhostWindows(
   nsTHashtable<nsCStringHashKey> nonDetachedWindowDomains;
 
   // Populate nonDetachedWindowDomains.
-  GetNonDetachedWindowDomainsEnumeratorData nonDetachedEnumData =
-    { &nonDetachedWindowDomains, tldService };
-  windowsById->EnumerateRead(GetNonDetachedWindowDomainsEnumerator,
-                             &nonDetachedEnumData);
+  for (auto iter = windowsById->Iter(); !iter.Done(); iter.Next()) {
+    // Null outer window implies null top, but calling GetTop() when there's no
+    // outer window causes us to spew debug warnings.
+    nsGlobalWindow* window = iter.UserData();
+    if (!window->GetOuterWindow() || !window->GetTopInternal()) {
+      // This window is detached, so we don't care about its domain.
+      continue;
+    }
+
+    nsCOMPtr<nsIURI> uri = GetWindowURI(window);
+    nsAutoCString domain;
+    if (uri) {
+      tldService->GetBaseDomain(uri, 0, domain);
+    }
+    nonDetachedWindowDomains.PutEntry(domain);
+  }
 
   // Update mDetachedWindows and write the ghost window IDs into aOutGhostIDs,
   // if it's not null.

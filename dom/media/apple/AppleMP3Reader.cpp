@@ -430,9 +430,10 @@ AppleMP3Reader::SetupDecoder()
   // Set output format
 #if defined(MOZ_SAMPLE_TYPE_FLOAT32)
   outputFormat.mBitsPerChannel = 32;
-  outputFormat.mFormatFlags =
-    kLinearPCMFormatFlagIsFloat |
-    0;
+  outputFormat.mFormatFlags = kLinearPCMFormatFlagIsFloat;
+#elif defined(MOZ_SAMPLE_TYPE_S16)
+  outputFormat.mBitsPerChannel = 32;
+  outputFormat.mFormatFlags = kLinearPCMFormatFlagIsSignedInteger;
 #else
 #error Unknown audio sample type
 #endif
@@ -506,23 +507,34 @@ AppleMP3Reader::NotifyDataArrivedInternal(uint32_t aLength, int64_t aOffset)
     return;
   }
 
-  IntervalSet<int64_t> intervals = mFilter.NotifyDataArrived(aLength, aOffset);
+  AutoPinned<MediaResource> resource(mResource.GetResource());
+  nsTArray<MediaByteRange> byteRanges;
+  nsresult rv = resource->GetCachedRanges(byteRanges);
+
+  if (NS_FAILED(rv)) {
+    return;
+  }
+
+  IntervalSet<int64_t> intervals;
+  for (auto& range : byteRanges) {
+    intervals += mFilter.NotifyDataArrived(range.Length(), range.mStart);
+  }
   for (const auto& interval : intervals) {
     RefPtr<MediaByteBuffer> bytes =
-      mResource.MediaReadAt(interval.mStart, interval.Length());
+      resource->MediaReadAt(interval.mStart, interval.Length());
     NS_ENSURE_TRUE_VOID(bytes);
     mMP3FrameParser.Parse(bytes->Elements(), interval.Length(), interval.mStart);
     if (!mMP3FrameParser.IsMP3()) {
       return;
     }
+  }
 
-    uint64_t duration = mMP3FrameParser.GetDuration();
-    if (duration != mDuration) {
-      LOGD("Updating media duration to %lluus\n", duration);
-      MOZ_ASSERT(mDecoder);
-      mDuration = duration;
-      mDecoder->DispatchUpdateEstimatedMediaDuration(duration);
-    }
+  uint64_t duration = mMP3FrameParser.GetDuration();
+  if (duration != mDuration) {
+    LOGD("Updating media duration to %lluus\n", duration);
+    MOZ_ASSERT(mDecoder);
+    mDuration = duration;
+    mDecoder->DispatchUpdateEstimatedMediaDuration(duration);
   }
 }
 
