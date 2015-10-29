@@ -35,7 +35,6 @@
   <project name="device/common" path="device/common" revision="798a3664597e6041985feab9aef42e98d458bc3d"/>
   <project name="device/sample" path="device/sample" revision="9aebb4ac5b6c1b2552599651a0e51b01e720eea6"/>
   <project name="platform/abi/cpp" path="abi/cpp" revision="77d97588f8ca4ea280d4e6b6225fc72853078778"/>
-  <project name="platform/bionic" path="bionic" revision="ab513342d514efb2b6b5eddaa11fdb332ee6b857"/>
   <project name="platform/bootable/recovery" path="bootable/recovery" revision="4fd89afeff2706cc226724dd039e086b2b5a86d4"/>
   <project name="platform/external/aac" path="external/aac" revision="585942dfe8ce0b450af2409720cc0bd9a595ceae"/>
   <project name="platform/external/bison" path="external/bison" revision="00953c546c8e02ba618355544009f373b465471e"/>
@@ -129,6 +128,7 @@
   <!-- Emulator specific things -->
   <project name="device/generic/armv7-a-neon" path="device/generic/armv7-a-neon" revision="72ffdf71c68a96309212eb13d63560d66db14c9e"/>
   <project name="device_generic_goldfish" path="device/generic/goldfish" remote="b2g" revision="8d4018ebd33ac3f1a043b2d54bc578028656a659"/>
+  <project name="platform_bionic" path="bionic" remote="b2g" revision="3e85c4683c121530c1c3a48c696a569bf5f587e2"/>
   <project name="platform_external_qemu" path="external/qemu" remote="b2g" revision="5a50f96a1d7c788817abb7c57acbb75172c1f48d"/>
   <project name="platform/external/libnfc-nci" path="external/libnfc-nci" revision="f37bd545063039e30a92f2550ae78c0e6e4e2d08"/>
   <project name="platform_external_wpa_supplicant_8" path="external/wpa_supplicant_8" remote="b2g" revision="0c6a6547cd1fd302fa2b0f6e375654df36bf0ec4"/>
