@@ -194,24 +194,6 @@ void tracefunc (void *aClosure, const char *aStmt)
                                      aStmt));
 }
 
-struct FFEArguments
-{
-    nsISupports *target;
-    bool found;
-};
-PLDHashOperator
-findFunctionEnumerator(const nsACString &aKey,
-                       Connection::FunctionInfo aData,
-                       void *aUserArg)
-{
-  FFEArguments *args = static_cast<FFEArguments *>(aUserArg);
-  if (aData.function == args->target) {
-    args->found = true;
-    return PL_DHASH_STOP;
-  }
-  return PL_DHASH_NEXT;
-}
-
 PLDHashOperator
 copyFunctionEnumerator(const nsACString &aKey,
                        Connection::FunctionInfo aData,
@@ -864,9 +846,13 @@ bool
 Connection::findFunctionByInstance(nsISupports *aInstance)
 {
   sharedDBMutex.assertCurrentThreadOwns();
-  FFEArguments args = { aInstance, false };
-  (void)mFunctions.EnumerateRead(findFunctionEnumerator, &args);
-  return args.found;
+
+  for (auto iter = mFunctions.Iter(); !iter.Done(); iter.Next()) {
+    if (iter.UserData().function == aInstance) {
+      return true;
+    }
+  }
+  return false;
 }
 
 /* static */ int
