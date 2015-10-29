@@ -506,6 +506,17 @@
 }
 
 /**
+ * OTMT markers
+ */
+
+.waterfall-tree-item[otmt=true] .waterfall-marker-bullet,
+.waterfall-tree-item[otmt=true] .waterfall-marker-bar {
+  background-color: transparent;
+  border-width: 1px;
+  border-style: solid;
+}
+
+/**
  * Marker details view
  */
 
@@ -552,43 +563,53 @@
 menuitem.marker-color-graphs-full-red:before,
 .marker-color-graphs-full-red {
   background-color: var(--theme-graphs-full-red);
+  border-color: var(--theme-graphs-full-red);
 }
 menuitem.marker-color-graphs-full-blue:before,
 .marker-color-graphs-full-blue {
   background-color: var(--theme-graphs-full-blue);
+  border-color: var(--theme-graphs-full-blue);
 }
 
 menuitem.marker-color-graphs-green:before,
 .marker-color-graphs-green {
   background-color: var(--theme-graphs-green);
+  border-color: var(--theme-graphs-green);
 }
 menuitem.marker-color-graphs-blue:before,
 .marker-color-graphs-blue {
   background-color: var(--theme-graphs-blue);
+  border-color: var(--theme-graphs-blue);
 }
 menuitem.marker-color-graphs-bluegrey:before,
 .marker-color-graphs-bluegrey {
   background-color: var(--theme-graphs-bluegrey);
+  border-color: var(--theme-graphs-bluegrey);
 }
 menuitem.marker-color-graphs-purple:before,
 .marker-color-graphs-purple {
   background-color: var(--theme-graphs-purple);
+  border-color: var(--theme-graphs-purple);
 }
 menuitem.marker-color-graphs-yellow:before,
 .marker-color-graphs-yellow {
   background-color: var(--theme-graphs-yellow);
+  border-color: var(--theme-graphs-yellow);
 }
 menuitem.marker-color-graphs-orange:before,
 .marker-color-graphs-orange {
   background-color: var(--theme-graphs-orange);
+  border-color: var(--theme-graphs-orange);
 }
 menuitem.marker-color-graphs-red:before,
 .marker-color-graphs-red {
   background-color: var(--theme-graphs-red);
+  border-color: var(--theme-graphs-red);
 }
 menuitem.marker-color-graphs-grey:before,
 .marker-color-graphs-grey{
   background-color: var(--theme-graphs-grey);
+  border-color: var(--theme-graphs-grey);
 }
 
 /**

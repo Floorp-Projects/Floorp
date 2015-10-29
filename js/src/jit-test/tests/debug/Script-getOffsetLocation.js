@@ -2,18 +2,28 @@
 
 var global = newGlobal();
 Debugger(global).onDebuggerStatement = function (frame) {
-    var script = frame.eval("f").return.script;
+    var script = frame.script;
+    var byOffset = [];
     script.getAllColumnOffsets().forEach(function (entry) {
         var {lineNumber, columnNumber, offset} = entry;
-        var location = script.getOffsetLocation(offset);
-        assertEq(location.lineNumber, lineNumber);
-        assertEq(location.columnNumber, columnNumber);
+        byOffset[offset] = {lineNumber, columnNumber};
     });
+
+    frame.onStep = function() {
+        var offset = frame.offset;
+        var location = script.getOffsetLocation(offset);
+        if (location.isEntryPoint) {
+            assertEq(location.lineNumber, byOffset[offset].lineNumber);
+            assertEq(location.columnNumber, byOffset[offset].columnNumber);
+        } else {
+            assertEq(byOffset[offset], undefined);
+        }
+    };
 };
 
 function test(body) {
   print("Test: " + body);
-  global.eval(`function f(n) { ${body} } debugger;`);
+  global.eval(`function f(n) { debugger; ${body} }`);
   global.f(3);
 }
 
