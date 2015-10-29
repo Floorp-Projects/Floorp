@@ -8,7 +8,8 @@
 <!ENTITY  blockPopups.accesskey       "B">
 
 <!ENTITY  notificationsPolicy.label            "Notifications">
-<!ENTITY  notificationsPolicyDesc2.label        "Choose which sites are allowed to receive notifications">
+<!ENTITY  notificationsPolicyLearnMore.label   "Learn more">
+<!ENTITY  notificationsPolicyDesc2.label       "Choose which sites are allowed to receive notifications">
 <!ENTITY  notificationsPolicyButton.accesskey  "h">
 <!ENTITY  notificationsPolicyButton.label      "Choose…">
 <!ENTITY  notificationsDoNotDisturb.label      "Do not disturb me">
