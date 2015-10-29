@@ -50,7 +50,7 @@ class CallOnMessageAvailable;
 class CallOnStop;
 class CallOnServerClose;
 class CallAcknowledge;
-class WebSocketFrameService;
+class WebSocketEventService;
 
 // Used to enforce "1 connecting websocket per host" rule, and reconnect delays
 enum wsConnectingState {
@@ -227,7 +227,7 @@ private:
   const static int32_t            kLingeringCloseTimeout =   1000;
   const static int32_t            kLingeringCloseThreshold = 50;
 
-  RefPtr<WebSocketFrameService>   mFrameService;
+  RefPtr<WebSocketEventService>   mService;
 
   int32_t                         mMaxConcurrentConnections;
 
@@ -294,8 +294,6 @@ private:
   bool                            mPrivateBrowsing;
 
   nsCOMPtr<nsIDashboardEventNotifier> mConnectionLogService;
-  uint32_t mSerial;
-  static uint32_t sSerialSeed;
 
 // These members are used for network per-app metering (bug 855949)
 // Currently, they are only available on gonk.

@@ -1,0 +1,79 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+* License, v. 2.0. If a copy of the MPL was not distributed with this
+* file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "domstubs.idl"
+#include "nsISupports.idl"
+
+[scriptable, builtinclass, uuid(6714a6be-2265-4f73-a988-d78a12416037)]
+interface nsIWebSocketFrame : nsISupports
+{
+  readonly attribute DOMHighResTimeStamp timeStamp;
+
+  readonly attribute boolean finBit;
+
+  readonly attribute boolean rsvBit1;
+  readonly attribute boolean rsvBit2;
+  readonly attribute boolean rsvBit3;
+
+  readonly attribute unsigned short opCode;
+
+  readonly attribute boolean maskBit;
+
+  readonly attribute unsigned long mask;
+
+  readonly attribute ACString payload;
+
+  // Non-Control opCode values:
+  const unsigned short OPCODE_CONTINUATION = 0x0;
+  const unsigned short OPCODE_TEXT         = 0x1;
+  const unsigned short OPCODE_BINARY       = 0x2;
+
+  // Control opCode values:
+  const unsigned short OPCODE_CLOSE        = 0x8;
+  const unsigned short OPCODE_PING         = 0x9;
+  const unsigned short OPCODE_PONG         = 0xA;
+};
+
+[scriptable, uuid(e7c005ab-e694-489b-b741-96db43ffb16f)]
+interface nsIWebSocketEventListener : nsISupports
+{
+  void webSocketCreated(in unsigned long aWebSocketSerialID,
+                        in AString aURI,
+                        in ACString aProtocols);
+
+  void webSocketOpened(in unsigned long aWebSocketSerialID,
+                       in AString aEffectiveURI,
+                       in ACString aProtocols,
+                       in ACString aExtensions);
+
+  const unsigned short TYPE_STRING      = 0x0;
+  const unsigned short TYPE_BLOB        = 0x1;
+  const unsigned short TYPE_ARRAYBUFFER = 0x2;
+
+  void webSocketMessageAvailable(in unsigned long aWebSocketSerialID,
+                                 in ACString aMessage,
+                                 in unsigned short aType);
+
+  void webSocketClosed(in unsigned long aWebSocketSerialID,
+                       in boolean aWasClean,
+                       in unsigned short aCode,
+                       in AString aReason);
+
+  void frameReceived(in unsigned long aWebSocketSerialID,
+                     in nsIWebSocketFrame aFrame);
+
+  void frameSent(in unsigned long aWebSocketSerialID,
+                 in nsIWebSocketFrame aFrame);
+};
+
+[scriptable, builtinclass, uuid(b89d1b90-2cf3-4d8f-ac21-5aedfb25c760)]
+interface nsIWebSocketEventService : nsISupports
+{
+  void addListener(in unsigned long long aInnerWindowID,
+                   in nsIWebSocketEventListener aListener);
+
+  void removeListener(in unsigned long long aInnerWindowID,
+                      in nsIWebSocketEventListener aListener);
+};

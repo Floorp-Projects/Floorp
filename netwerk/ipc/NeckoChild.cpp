@@ -15,7 +15,7 @@
 #include "mozilla/net/WyciwygChannelChild.h"
 #include "mozilla/net/FTPChannelChild.h"
 #include "mozilla/net/WebSocketChannelChild.h"
-#include "mozilla/net/WebSocketFrameListenerChild.h"
+#include "mozilla/net/WebSocketEventListenerChild.h"
 #include "mozilla/net/DNSRequestChild.h"
 #include "mozilla/net/RemoteOpenFileChild.h"
 #include "mozilla/net/ChannelDiverterChild.h"
@@ -145,7 +145,8 @@ NeckoChild::DeallocPWyciwygChannelChild(PWyciwygChannelChild* channel)
 
 PWebSocketChild*
 NeckoChild::AllocPWebSocketChild(const PBrowserOrId& browser,
-                                 const SerializedLoadContext& aSerialized)
+                                 const SerializedLoadContext& aSerialized,
+                                 const uint32_t& aSerial)
 {
   NS_NOTREACHED("AllocPWebSocketChild should not be called");
   return nullptr;
@@ -159,19 +160,19 @@ NeckoChild::DeallocPWebSocketChild(PWebSocketChild* child)
   return true;
 }
 
-PWebSocketFrameListenerChild*
-NeckoChild::AllocPWebSocketFrameListenerChild(const uint64_t& aInnerWindowID)
+PWebSocketEventListenerChild*
+NeckoChild::AllocPWebSocketEventListenerChild(const uint64_t& aInnerWindowID)
 {
-  RefPtr<WebSocketFrameListenerChild> c =
-    new WebSocketFrameListenerChild(aInnerWindowID);
+  RefPtr<WebSocketEventListenerChild> c =
+    new WebSocketEventListenerChild(aInnerWindowID);
   return c.forget().take();
 }
 
 bool
-NeckoChild::DeallocPWebSocketFrameListenerChild(PWebSocketFrameListenerChild* aActor)
+NeckoChild::DeallocPWebSocketEventListenerChild(PWebSocketEventListenerChild* aActor)
 {
-  RefPtr<WebSocketFrameListenerChild> c =
-    dont_AddRef(static_cast<WebSocketFrameListenerChild*>(aActor));
+  RefPtr<WebSocketEventListenerChild> c =
+    dont_AddRef(static_cast<WebSocketEventListenerChild*>(aActor));
   MOZ_ASSERT(c);
   return true;
 }

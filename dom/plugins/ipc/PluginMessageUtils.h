@@ -93,9 +93,6 @@ struct NPRemoteWindow
   VisualID visualID;
   Colormap colormap;
 #endif /* XP_UNIX */
-#if defined(XP_WIN)
-  base::SharedMemoryHandle surfaceHandle;
-#endif
 #if defined(XP_MACOSX)
   double contentsScaleFactor;
 #endif
@@ -254,11 +251,6 @@ struct DeletingObjectEntry : public nsPtrHashKey<NPObject>
   bool mDeleted;
 };
 
-#ifdef XP_WIN
-// The private event used for double-pass widgetless plugin rendering.
-UINT DoublePassRenderingEvent();
-#endif
-
 } /* namespace plugins */
 
 } /* namespace mozilla */
@@ -345,9 +337,6 @@ struct ParamTraits<mozilla::plugins::NPRemoteWindow>
     aMsg->WriteULong(aParam.visualID);
     aMsg->WriteULong(aParam.colormap);
 #endif
-#if defined(XP_WIN)
-    WriteParam(aMsg, aParam.surfaceHandle);
-#endif
 #if defined(XP_MACOSX)
     aMsg->WriteDouble(aParam.contentsScaleFactor);
 #endif
@@ -377,12 +366,6 @@ struct ParamTraits<mozilla::plugins::NPRemoteWindow>
       return false;
 #endif
 
-#if defined(XP_WIN)
-    base::SharedMemoryHandle surfaceHandle;
-    if (!ReadParam(aMsg, aIter, &surfaceHandle))
-      return false;
-#endif
-
 #if defined(XP_MACOSX)
     double contentsScaleFactor;
     if (!aMsg->ReadDouble(aIter, &contentsScaleFactor))
@@ -399,9 +382,6 @@ struct ParamTraits<mozilla::plugins::NPRemoteWindow>
 #if defined(MOZ_X11) && defined(XP_UNIX) && !defined(XP_MACOSX)
     aResult->visualID = visualID;
     aResult->colormap = colormap;
-#endif
-#if defined(XP_WIN)
-    aResult->surfaceHandle = surfaceHandle;
 #endif
 #if defined(XP_MACOSX)
     aResult->contentsScaleFactor = contentsScaleFactor;
