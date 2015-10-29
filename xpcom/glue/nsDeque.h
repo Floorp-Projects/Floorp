@@ -141,11 +141,6 @@ public:
   void* ObjectAt(int aIndex) const;
 
   /**
-   * Remove all items from container without destroying them.
-   */
-  void Empty();
-
-  /**
    * Remove and delete all items from container.
    * Deletes are handled by the deallocator nsDequeFunctor
    * which is specified at deque construction.
@@ -160,8 +155,6 @@ public:
    * @param   aFunctor object to call for each member
    */
   void ForEach(nsDequeFunctor& aFunctor) const;
-
-  void SetDeallocator(nsDequeFunctor* aDeallocator);
 
   size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
@@ -192,5 +185,11 @@ private:
   nsDeque& operator=(const nsDeque& aOther);
 
   bool GrowCapacity();
+  void SetDeallocator(nsDequeFunctor* aDeallocator);
+
+  /**
+   * Remove all items from container without destroying them.
+   */
+  void Empty();
 };
 #endif
