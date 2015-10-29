@@ -54,8 +54,8 @@ public:
 
   bool Listen();
 
-  bool SendFile(const nsAString& aDeviceAddress, BlobParent* aActor);
-  bool SendFile(const nsAString& aDeviceAddress, Blob* aBlob);
+  bool SendFile(const BluetoothAddress& aDeviceAddress, BlobParent* aActor);
+  bool SendFile(const BluetoothAddress& aDeviceAddress, Blob* aBlob);
   bool StopSendingFile();
   bool ConfirmReceivingFile(bool aConfirm);
 
@@ -101,10 +101,10 @@ private:
   void NotifyAboutFileChange();
   bool AcquireSdcardMountLock();
   void SendObexData(uint8_t* aData, uint8_t aOpcode, int aSize);
-  void AppendBlobToSend(const nsAString& aDeviceAddress, Blob* aBlob);
+  void AppendBlobToSend(const BluetoothAddress& aDeviceAddress, Blob* aBlob);
   void DiscardBlobsToSend();
   bool ProcessNextBatch();
-  void ConnectInternal(const nsAString& aDeviceAddress);
+  void ConnectInternal(const BluetoothAddress& aDeviceAddress);
 
   /**
    * Usually we won't get a full PUT packet in one operation, which means that
@@ -123,7 +123,7 @@ private:
    * Set when OBEX session is established.
    */
   bool mConnected;
-  nsString mDeviceAddress;
+  BluetoothAddress mDeviceAddress;
 
   /**
    * Remote information

@@ -169,7 +169,7 @@ private:
    * OBEX session status. Set when OBEX session is established
    */
   bool mConnected;
-  nsString mDeviceAddress;
+  BluetoothAddress mDeviceAddress;
 
   /**
    * Current phonebook path
