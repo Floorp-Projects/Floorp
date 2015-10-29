@@ -9691,14 +9691,14 @@
   },
   "FXA_CONFIGURED": {
     "alert_emails": ["fx-team@mozilla.com"],
-    "expires_in_version": "45",
+    "expires_in_version": "46",
     "kind": "flag",
     "releaseChannelCollection": "opt-out",
     "description": "If the user is signed in to a Firefox Account on this device"
   },
   "FXA_UNVERIFIED_ACCOUNT_ERRORS": {
     "alert_emails": ["fx-team@mozilla.com"],
-    "expires_in_version": "45",
+    "expires_in_version": "46",
     "kind": "count",
     "keyed": true,
     "releaseChannelCollection": "opt-out",
@@ -9706,7 +9706,7 @@
   },
   "FXA_HAWK_ERRORS": {
     "alert_emails": ["fx-team@mozilla.com"],
-    "expires_in_version": "45",
+    "expires_in_version": "46",
     "kind": "count",
     "keyed": true,
     "releaseChannelCollection": "opt-out",
@@ -9714,7 +9714,7 @@
   },
   "FXA_SERVER_ERRORS": {
     "alert_emails": ["fx-team@mozilla.com"],
-    "expires_in_version": "45",
+    "expires_in_version": "46",
     "kind": "count",
     "keyed": true,
     "releaseChannelCollection": "opt-out",
@@ -9722,7 +9722,7 @@
   },
   "TOKENSERVER_AUTH_ERRORS": {
     "alert_emails": ["fx-team@mozilla.com"],
-    "expires_in_version": "45",
+    "expires_in_version": "46",
     "kind": "count",
     "keyed": true,
     "releaseChannelCollection": "opt-out",
@@ -9730,7 +9730,7 @@
   },
   "WEAVE_ENGINE_APPLY_NEW_FAILURES": {
     "alert_emails": ["fx-team@mozilla.com"],
-    "expires_in_version": "45",
+    "expires_in_version": "46",
     "kind": "count",
     "keyed": true,
     "releaseChannelCollection": "opt-out",
@@ -9738,7 +9738,7 @@
   },
   "WEAVE_ENGINE_APPLY_FAILURES": {
     "alert_emails": ["fx-team@mozilla.com"],
-    "expires_in_version": "45",
+    "expires_in_version": "46",
     "kind": "count",
     "keyed": true,
     "releaseChannelCollection": "opt-out",
@@ -9746,7 +9746,7 @@
   },
   "WEAVE_ENGINE_SYNC_ERRORS": {
     "alert_emails": ["fx-team@mozilla.com"],
-    "expires_in_version": "45",
+    "expires_in_version": "46",
     "kind": "count",
     "keyed": true,
     "releaseChannelCollection": "opt-out",
@@ -9754,21 +9754,21 @@
   },
   "WEAVE_CAN_FETCH_KEYS": {
     "alert_emails": ["fx-team@mozilla.com"],
-    "expires_in_version": "45",
+    "expires_in_version": "46",
     "kind": "flag",
     "releaseChannelCollection": "opt-out",
     "description": "Whether Sync keys are present in account storage."
   },
   "WEAVE_FXA_KEY_FETCH_ERRORS": {
     "alert_emails": ["fx-team@mozilla.com"],
-    "expires_in_version": "45",
+    "expires_in_version": "46",
     "kind": "count",
     "releaseChannelCollection": "opt-out",
     "description": "Errors encountered fetching Sync keys, including network errors."
   },
   "WEAVE_STORAGE_AUTH_ERRORS": {
     "alert_emails": ["fx-team@mozilla.com"],
-    "expires_in_version": "45",
+    "expires_in_version": "46",
     "kind": "count",
     "keyed": true,
     "releaseChannelCollection": "opt-out",
@@ -9776,7 +9776,7 @@
   },
   "WEAVE_HMAC_ERRORS": {
     "alert_emails": ["fx-team@mozilla.com"],
-    "expires_in_version": "45",
+    "expires_in_version": "46",
     "kind": "count",
     "releaseChannelCollection": "opt-out",
     "description": "Sync cryptoKeys collection HMAC mismatches."
