@@ -9,8 +9,11 @@
 #include "AppleCMLinker.h"
 #include "MainThreadUtils.h"
 #include "mozilla/ArrayUtils.h"
-#include "nsCocoaFeatures.h"
 #include "nsDebug.h"
+
+#ifndef MOZ_WIDGET_UIKIT
+#include "nsCocoaFeatures.h"
+#endif
 
 extern PRLogModuleInfo* GetPDMLog();
 #define LOG(...) MOZ_LOG(GetPDMLog(), mozilla::LogLevel::Debug, (__VA_ARGS__))
@@ -57,7 +60,11 @@ AppleCMLinker::Link()
     goto fail;
   }
 
+#ifdef MOZ_WIDGET_UIKIT
+  if (true) {
+#else
   if (nsCocoaFeatures::OnLionOrLater()) {
+#endif
 #define LINK_FUNC2(func)                                       \
   func = (typeof(func))dlsym(sLink, #func);                    \
   if (!func) {                                                 \

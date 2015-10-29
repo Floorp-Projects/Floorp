@@ -28,6 +28,7 @@
 #include "vm/UnboxedObject.h"
 
 #include "jscompartmentinlines.h"
+#include "jsgcinlines.h"
 #include "jsobjinlines.h"
 
 #include "gc/Nursery-inl.h"
@@ -580,23 +581,23 @@ DispatchToTracer(JSTracer* trc, T* thingp, const char* name)
 
 namespace js {
 
-typedef bool DoNothingMarkingType;
+typedef bool HasNoImplicitEdgesType;
 
 template <typename T>
-struct LinearlyMarkedEphemeronKeyType {
-    typedef DoNothingMarkingType Type;
+struct ImplicitEdgeHolderType {
+    typedef HasNoImplicitEdgesType Type;
 };
 
-// For now, we only handle JSObject* keys, but the linear time algorithm can be
-// easily extended by adding in more types here, then making
+// For now, we only handle JSObject* and JSScript* keys, but the linear time
+// algorithm can be easily extended by adding in more types here, then making
 // GCMarker::traverse<T> call markPotentialEphemeronKey.
 template <>
-struct LinearlyMarkedEphemeronKeyType<JSObject*> {
+struct ImplicitEdgeHolderType<JSObject*> {
     typedef JSObject* Type;
 };
 
 template <>
-struct LinearlyMarkedEphemeronKeyType<JSScript*> {
+struct ImplicitEdgeHolderType<JSScript*> {
     typedef JSScript* Type;
 };
 
@@ -605,7 +606,7 @@ GCMarker::markEphemeronValues(gc::Cell* markedCell, WeakEntryVector& values)
 {
     size_t initialLen = values.length();
     for (size_t i = 0; i < initialLen; i++)
-        values[i].weakmap->maybeMarkEntry(this, markedCell, values[i].key);
+        values[i].weakmap->traceEntry(this, markedCell, values[i].key);
 
     // The vector should not be appended to during iteration because the key is
     // already marked, and even in cases where we have a multipart key, we
@@ -615,33 +616,35 @@ GCMarker::markEphemeronValues(gc::Cell* markedCell, WeakEntryVector& values)
 
 template <typename T>
 void
-GCMarker::markPotentialEphemeronKeyHelper(T markedThing)
+GCMarker::markImplicitEdgesHelper(T markedThing)
 {
     if (!isWeakMarkingTracer())
         return;
 
-    MOZ_ASSERT(gc::TenuredCell::fromPointer(markedThing)->zone()->isGCMarking());
-    MOZ_ASSERT(!gc::TenuredCell::fromPointer(markedThing)->zone()->isGCSweeping());
+    Zone* zone = gc::TenuredCell::fromPointer(markedThing)->zone();
+    MOZ_ASSERT(zone->isGCMarking());
+    MOZ_ASSERT(!zone->isGCSweeping());
 
-    auto weakValues = weakKeys.get(JS::GCCellPtr(markedThing));
-    if (!weakValues)
+    auto p = zone->gcWeakKeys.get(JS::GCCellPtr(markedThing));
+    if (!p)
         return;
+    WeakEntryVector& markables = p->value;
 
-    markEphemeronValues(markedThing, weakValues->value);
-    weakValues->value.clear(); // If key address is reused, it should do nothing
+    markEphemeronValues(markedThing, markables);
+    markables.clear(); // If key address is reused, it should do nothing
 }
 
 template <>
 void
-GCMarker::markPotentialEphemeronKeyHelper(bool)
+GCMarker::markImplicitEdgesHelper(HasNoImplicitEdgesType)
 {
 }
 
 template <typename T>
 void
-GCMarker::markPotentialEphemeronKey(T* thing)
+GCMarker::markImplicitEdges(T* thing)
 {
-    markPotentialEphemeronKeyHelper<typename LinearlyMarkedEphemeronKeyType<T*>::Type>(thing);
+    markImplicitEdgesHelper<typename ImplicitEdgeHolderType<T*>::Type>(thing);
 }
 
 } // namespace js
@@ -810,7 +813,7 @@ js::GCMarker::markAndPush(StackTag tag, T* thing)
     if (!mark(thing))
         return;
     pushTaggedPtr(tag, thing);
-    markPotentialEphemeronKey(thing);
+    markImplicitEdges(thing);
 }
 namespace js {
 template <> void GCMarker::traverse(JSObject* thing) { markAndPush(ObjectTag, thing); }
@@ -1425,7 +1428,7 @@ GCMarker::processMarkStackTop(SliceBudget& budget)
             return;
         }
 
-        markPotentialEphemeronKey(obj);
+        markImplicitEdges(obj);
         ObjectGroup* group = obj->groupFromGC();
         traverseEdge(obj, group);
 
@@ -1709,7 +1712,7 @@ GCMarker::GCMarker(JSRuntime* rt)
 bool
 GCMarker::init(JSGCMode gcMode)
 {
-    return stack.init(gcMode) && weakKeys.init();
+    return stack.init(gcMode);
 }
 
 void
@@ -1737,7 +1740,8 @@ GCMarker::stop()
 
     /* Free non-ballast stack memory. */
     stack.reset();
-    weakKeys.clear();
+    for (GCZonesIter zone(runtime()); !zone.done(); zone.next())
+        zone->gcWeakKeys.clear();
 }
 
 void
@@ -1777,10 +1781,23 @@ GCMarker::enterWeakMarkingMode()
         for (GCZoneGroupIter zone(runtime()); !zone.done(); zone.next()) {
             for (WeakMapBase* m : zone->gcWeakMapList) {
                 if (m->marked)
-                    m->markEphemeronEntries(this);
+                    (void) m->traceEntries(this);
             }
         }
     }
+}
+
+void
+GCMarker::leaveWeakMarkingMode()
+{
+    MOZ_ASSERT_IF(weakMapAction() == ExpandWeakMaps && !linearWeakMarkingDisabled_,
+                  tag_ == TracerKindTag::WeakMarking);
+    tag_ = TracerKindTag::Marking;
+
+    // Table is expensive to maintain when not in weak marking mode, so we'll
+    // rebuild it upon entry rather than allow it to contain stale data.
+    for (GCZonesIter zone(runtime()); !zone.done(); zone.next())
+        zone->gcWeakKeys.clear();
 }
 
 void

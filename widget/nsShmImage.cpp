@@ -112,7 +112,7 @@ nsShmImage::Create(const IntSize& aSize,
         }
         goto unsupported;
     case 16:
-        shm->mFormat = SurfaceFormat::R5G6B5;
+        shm->mFormat = SurfaceFormat::R5G6B5_UINT16;
         break;
     unsupported:
     default:

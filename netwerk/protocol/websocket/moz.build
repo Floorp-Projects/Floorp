@@ -6,7 +6,7 @@
 
 XPIDL_SOURCES += [
     'nsIWebSocketChannel.idl',
-    'nsIWebSocketFrameService.idl',
+    'nsIWebSocketEventService.idl',
     'nsIWebSocketListener.idl',
 ]
 
@@ -17,10 +17,10 @@ EXPORTS.mozilla.net += [
     'WebSocketChannel.h',
     'WebSocketChannelChild.h',
     'WebSocketChannelParent.h',
+    'WebSocketEventListenerChild.h',
+    'WebSocketEventListenerParent.h',
+    'WebSocketEventService.h',
     'WebSocketFrame.h',
-    'WebSocketFrameListenerChild.h',
-    'WebSocketFrameListenerParent.h',
-    'WebSocketFrameService.h',
 ]
 
 UNIFIED_SOURCES += [
@@ -28,15 +28,15 @@ UNIFIED_SOURCES += [
     'WebSocketChannel.cpp',
     'WebSocketChannelChild.cpp',
     'WebSocketChannelParent.cpp',
+    'WebSocketEventListenerChild.cpp',
+    'WebSocketEventListenerParent.cpp',
+    'WebSocketEventService.cpp',
     'WebSocketFrame.cpp',
-    'WebSocketFrameListenerChild.cpp',
-    'WebSocketFrameListenerParent.cpp',
-    'WebSocketFrameService.cpp',
 ]
 
 IPDL_SOURCES += [
     'PWebSocket.ipdl',
-    'PWebSocketFrameListener.ipdl',
+    'PWebSocketEventListener.ipdl',
 ]
 
 include('/ipc/chromium/chromium-config.mozbuild')

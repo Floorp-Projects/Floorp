@@ -81,6 +81,8 @@ def main(argv):
                   help='Retest using test list file [FILE]')
     op.add_option('-g', '--debug', action='store_const', const='gdb', dest='debugger',
                   help='Run a single test under the gdb debugger')
+    op.add_option('-G', '--debug-rr', action='store_const', const='rr', dest='debugger',
+                  help='Run a single test under the rr debugger')
     op.add_option('--debugger', type='string',
                   help='Run a single test under the specified debugger')
     op.add_option('--valgrind', dest='valgrind', action='store_true',
@@ -266,11 +268,15 @@ def main(argv):
             debug_cmd = ['gdb', '--args']
         elif options.debugger == 'lldb':
             debug_cmd = ['lldb', '--']
+        elif options.debugger == 'rr':
+            debug_cmd = ['rr', 'record']
         else:
             debug_cmd = options.debugger.split()
 
         with change_env(test_environment):
             subprocess.call(debug_cmd + tc.command(prefix, jittests.LIB_DIR))
+            if options.debugger == 'rr':
+                subprocess.call(['rr', 'replay'])
         sys.exit()
 
     try:
