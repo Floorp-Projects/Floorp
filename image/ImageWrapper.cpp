@@ -215,6 +215,12 @@ ImageWrapper::Draw(gfxContext* aContext,
 }
 
 NS_IMETHODIMP
+ImageWrapper::RequestDecode()
+{
+  return mInnerImage->RequestDecode();
+}
+
+NS_IMETHODIMP
 ImageWrapper::StartDecoding()
 {
   return mInnerImage->StartDecoding();

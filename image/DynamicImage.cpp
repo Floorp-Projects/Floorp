@@ -247,6 +247,12 @@ DynamicImage::Draw(gfxContext* aContext,
 }
 
 NS_IMETHODIMP
+DynamicImage::RequestDecode()
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 DynamicImage::StartDecoding()
 {
   return NS_OK;
