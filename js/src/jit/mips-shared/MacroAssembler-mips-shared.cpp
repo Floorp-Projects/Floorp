@@ -898,6 +898,24 @@ MacroAssembler::call(JitCode* c)
     callJitNoProfiler(ScratchRegister);
 }
 
+void
+MacroAssembler::callAndPushReturnAddress(Register callee)
+{
+    // Push return address during jalr delay slot.
+    subPtr(Imm32(sizeof(intptr_t)), StackPointer);
+    as_jalr(callee);
+    storePtr(ra, Address(StackPointer, 0));
+}
+
+void
+MacroAssembler::callAndPushReturnAddress(Label* label)
+{
+    // Push return address during bal delay slot.
+    subPtr(Imm32(sizeof(intptr_t)), StackPointer);
+    ma_bal(label, DontFillDelaySlot);
+    storePtr(ra, Address(StackPointer, 0));
+}
+
 // ===============================================================
 // Jit Frames.
 
