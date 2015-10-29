@@ -302,7 +302,7 @@ public:
 
   /*
    * Get the style data for a style struct.  This is the most important
-   * member function of nsIStyleContext.  It fills in a const pointer
+   * member function of nsStyleContext.  It fills in a const pointer
    * to a style data struct that is appropriate for the style context's
    * frame.  This struct may be shared with other contexts (either in
    * the rule tree or the style context tree), so it should not be
@@ -333,7 +333,7 @@ public:
   #undef STYLE_STRUCT
 
   /**
-   * PeekStyle* is like GetStyle* but doesn't trigger style
+   * PeekStyle* is like Style* but doesn't trigger style
    * computation if the data is not cached on either the style context
    * or the rule node.
    *
