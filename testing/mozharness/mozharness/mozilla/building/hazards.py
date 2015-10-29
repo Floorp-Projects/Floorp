@@ -137,7 +137,7 @@ jobs = 4
         """Gather up the analysis output and place in the upload dir."""
         dirs = builder.query_abs_dirs()
         analysis_dir = dirs['abs_analysis_dir']
-        upload_dir = dirs['abs_upload_dir']
+        upload_dir = dirs['abs_blob_upload_dir']
         builder.mkdir_p(upload_dir)
         files = (('rootingHazards.txt',
                   'rooting_hazards',
@@ -162,9 +162,10 @@ jobs = 4
                   'list of just the hazards, together with gcFunction reason for each'))
         for f, short, long in files:
             builder.copy_to_upload_dir(os.path.join(analysis_dir, f),
-                                    short_desc=short,
-                                    long_desc=long,
-                                    compress=True)
+                                       short_desc=short,
+                                       long_desc=long,
+                                       compress=False,  # blobber will compress
+                                       upload_dir=upload_dir)
         print("== Hazards (temporarily inline here, beware weirdly interleaved output, see bug 1211402) ==")
         print(file(os.path.join(analysis_dir, "hazards.txt")).read())
 
