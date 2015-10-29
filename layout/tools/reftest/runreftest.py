@@ -26,26 +26,23 @@ import mozcrash
 import mozdebug
 import mozinfo
 import mozleak
+import mozlog
 import mozprocess
 import mozprofile
 import mozrunner
 from mozrunner.utils import get_stack_fixer_function, test_environment
 from mozscreenshot import printstatus, dump_screen
 
+from output import OutputHandler, ReftestFormatter
 import reftestcommandline
 
-# set up logging handler a la automation.py.in for compatability
-import logging
-log = logging.getLogger()
+here = os.path.abspath(os.path.dirname(__file__))
 
-
-def resetGlobalLog():
-    while log.handlers:
-        log.removeHandler(log.handlers[0])
-    handler = logging.StreamHandler(sys.stdout)
-    log.setLevel(logging.INFO)
-    log.addHandler(handler)
-resetGlobalLog()
+try:
+    from mozbuild.base import MozbuildObject
+    build_obj = MozbuildObject.from_environment(cwd=here)
+except ImportError:
+    build_obj = None
 
 
 def categoriesToRegex(categoryList):
@@ -203,6 +200,21 @@ class RefTest(object):
         self.lastTestSeen = 'reftest'
         self.haveDumpedScreen = False
         self.resolver = self.resolver_cls()
+        self.log = None
+
+    def _populate_logger(self, options):
+        if self.log:
+            return
+
+        mozlog.commandline.log_formatters["tbpl"] = (ReftestFormatter,
+                                                     "Reftest specific formatter for the"
+                                                     "benefit of legacy log parsers and"
+                                                     "tools such as the reftest analyzer")
+        fmt_options = {}
+        if not options.log_tbpl_level and os.environ.get('MOZ_REFTEST_VERBOSE'):
+            options.log_tbpl_level = fmt_options['level'] = 'debug'
+        self.log = mozlog.commandline.setup_logging(
+            "reftest harness", options, {"tbpl": sys.stdout}, fmt_options)
 
     def update_mozinfo(self):
         """walk up directories to find mozinfo.json update the info"""
@@ -255,6 +267,7 @@ class RefTest(object):
         if options.runUntilFailure:
             prefs['reftest.runUntilFailure'] = True
         prefs['reftest.focusFilterMode'] = options.focusFilterMode
+        prefs['reftest.logLevel'] = options.log_tbpl_level or 'info'
         prefs['reftest.manifests'] = json.dumps(manifests)
 
         # Ensure that telemetry is disabled, so we don't connect to the telemetry
@@ -331,7 +344,7 @@ class RefTest(object):
         return profile
 
     def environment(self, **kwargs):
-        kwargs['log'] = log
+        kwargs['log'] = self.log
         return test_environment(**kwargs)
 
     def buildBrowserEnv(self, options, profileDir):
@@ -360,11 +373,11 @@ class RefTest(object):
 
     def killNamedOrphans(self, pname):
         """ Kill orphan processes matching the given command name """
-        log.info("Checking for orphan %s processes..." % pname)
+        self.log.info("Checking for orphan %s processes..." % pname)
 
         def _psInfo(line):
             if pname in line:
-                log.info(line)
+                self.log.info(line)
         process = mozprocess.ProcessHandler(['ps', '-f'],
                                             processOutputLine=_psInfo)
         process.run()
@@ -375,13 +388,13 @@ class RefTest(object):
             if len(parts) == 3 and parts[0].isdigit():
                 pid = int(parts[0])
                 if parts[2] == pname and parts[1] == '1':
-                    log.info("killing %s orphan with pid %d" % (pname, pid))
+                    self.log.info("killing %s orphan with pid %d" % (pname, pid))
                     try:
                         os.kill(
                             pid, getattr(signal, "SIGKILL", signal.SIGTERM))
                     except Exception as e:
-                        log.info("Failed to kill process %d: %s" %
-                                 (pid, str(e)))
+                        self.log.info("Failed to kill process %d: %s" %
+                                      (pid, str(e)))
         process = mozprocess.ProcessHandler(['ps', '-o', 'pid,ppid,comm'],
                                             processOutputLine=_psKill)
         process.run()
@@ -392,6 +405,8 @@ class RefTest(object):
             shutil.rmtree(profileDir, True)
 
     def runTests(self, tests, options, cmdlineArgs=None):
+        self._populate_logger(options)
+
         # Despite our efforts to clean up servers started by this script, in practice
         # we still see infrequent cases where a process is orphaned and interferes
         # with future tests, typically because the old server is keeping the port in use.
@@ -484,17 +499,16 @@ class RefTest(object):
         """handle process output timeout"""
         # TODO: bug 913975 : _processOutput should call self.processOutputLine
         # one more time one timeout (I think)
-        log.error("TEST-UNEXPECTED-FAIL | %s | application timed out after %d seconds with no output" %
-                  (self.lastTestSeen, int(timeout)))
+        self.log.error("%s | application timed out after %d seconds with no output" % (self.lastTestSeen, int(timeout)))
         self.killAndGetStack(
             proc, utilityPath, debuggerInfo, dump_screen=not debuggerInfo)
 
     def dumpScreen(self, utilityPath):
         if self.haveDumpedScreen:
-            log.info("Not taking screenshot here: see the one that was previously logged")
+            self.log.info("Not taking screenshot here: see the one that was previously logged")
             return
         self.haveDumpedScreen = True
-        dump_screen(utilityPath, log)
+        dump_screen(utilityPath, self.log)
 
     def killAndGetStack(self, process, utilityPath, debuggerInfo, dump_screen=False):
         """
@@ -522,74 +536,10 @@ class RefTest(object):
                     process.kill(sig=signal.SIGABRT)
                 except OSError:
                     # https://bugzilla.mozilla.org/show_bug.cgi?id=921509
-                    log.info("Can't trigger Breakpad, process no longer exists")
+                    self.log.info("Can't trigger Breakpad, process no longer exists")
                 return
-        log.info("Can't trigger Breakpad, just killing process")
+        self.log.info("Can't trigger Breakpad, just killing process")
         process.kill()
-
-    # output processing
-
-    class OutputHandler(object):
-
-        """line output handler for mozrunner"""
-
-        def __init__(self, harness, utilityPath, symbolsPath=None, dump_screen_on_timeout=True):
-            """
-            harness -- harness instance
-            dump_screen_on_timeout -- whether to dump the screen on timeout
-            """
-            self.harness = harness
-            self.utilityPath = utilityPath
-            self.symbolsPath = symbolsPath
-            self.dump_screen_on_timeout = dump_screen_on_timeout
-            self.stack_fixer_function = self.stack_fixer()
-
-        def processOutputLine(self, line):
-            """per line handler of output for mozprocess"""
-            for handler in self.output_handlers():
-                line = handler(line)
-        __call__ = processOutputLine
-
-        def output_handlers(self):
-            """returns ordered list of output handlers"""
-            return [self.fix_stack,
-                    self.format,
-                    self.record_last_test,
-                    self.handle_timeout_and_dump_screen,
-                    self.log,
-                    ]
-
-        def stack_fixer(self):
-            """
-            return get_stack_fixer_function, if any, to use on the output lines
-            """
-            return get_stack_fixer_function(self.utilityPath, self.symbolsPath)
-
-        # output line handlers:
-        # these take a line and return a line
-        def fix_stack(self, line):
-            if self.stack_fixer_function:
-                return self.stack_fixer_function(line)
-            return line
-
-        def format(self, line):
-            """format the line"""
-            return line.rstrip().decode("UTF-8", "ignore")
-
-        def record_last_test(self, line):
-            """record last test on harness"""
-            if "TEST-START" in line and "|" in line:
-                self.harness.lastTestSeen = line.split("|")[1].strip()
-            return line
-
-        def handle_timeout_and_dump_screen(self, line):
-            if self.dump_screen_on_timeout and "TEST-UNEXPECTED-FAIL" in line and "Test timed out" in line:
-                self.harness.dumpScreen(self.utilityPath)
-            return line
-
-        def log(self, line):
-            log.info(line)
-            return line
 
     def runApp(self, profile, binary, cmdargs, env,
                timeout=None, debuggerInfo=None,
@@ -606,10 +556,14 @@ class RefTest(object):
             interactive = debuggerInfo.interactive
             debug_args = [debuggerInfo.path] + debuggerInfo.args
 
-        outputHandler = self.OutputHandler(harness=self,
-                                           utilityPath=options.utilityPath,
-                                           symbolsPath=symbolsPath,
-                                           dump_screen_on_timeout=not debuggerInfo)
+        def record_last_test(message):
+            """Records the last test seen by this harness for the benefit of crash logging."""
+            if message['action'] == 'test_start':
+                self.lastTestSeen = message['test']
+
+        self.log.add_handler(record_last_test)
+
+        outputHandler = OutputHandler(self.log, options.utilityPath, symbolsPath=symbolsPath)
 
         kp_kwargs = {
             'kill_on_timeout': False,
@@ -639,21 +593,18 @@ class RefTest(object):
                      interactive=interactive,
                      outputTimeout=timeout)
         proc = runner.process_handler
+
         status = runner.wait()
         runner.process_handler = None
-        if timeout is None:
-            didTimeout = False
-        else:
-            didTimeout = proc.didTimeout
 
         if status:
-            log.info("TEST-UNEXPECTED-FAIL | %s | application terminated with exit code %s",
-                     self.lastTestSeen, status)
+            self.log.error("TEST-UNEXPECTED-FAIL | %s | application terminated with exit code %s" % (self.lastTestSeen, status))
         else:
             self.lastTestSeen = 'Main app process exited normally'
 
-        crashed = mozcrash.check_for_crashes(os.path.join(profile.profile, "minidumps"),
-                                             symbolsPath, test_name=self.lastTestSeen)
+        crashed = mozcrash.log_crashes(self.log, os.path.join(profile.profile, 'minidumps'),
+                                       symbolsPath, test=self.lastTestSeen)
+
         runner.cleanup()
         if not status and crashed:
             status = 1
@@ -667,7 +618,7 @@ class RefTest(object):
 
         profileDir = None
         try:
-            if cmdlineArgs == None:
+            if cmdlineArgs is None:
                 cmdlineArgs = []
             profile = self.createReftestProfile(options, manifests)
             profileDir = profile.profile  # name makes more sense
@@ -675,7 +626,6 @@ class RefTest(object):
             # browser environment
             browserEnv = self.buildBrowserEnv(options, profileDir)
 
-            log.info("REFTEST INFO | runreftest.py | Running tests: start.\n")
             status = self.runApp(profile,
                                  binary=options.app,
                                  cmdargs=cmdlineArgs,
@@ -688,11 +638,9 @@ class RefTest(object):
                                  debuggerInfo=debuggerInfo)
             mozleak.process_leak_log(self.leakLogFile,
                                      leak_thresholds=options.leakThresholds,
-                                     log=log,
                                      stack_fixer=get_stack_fixer_function(options.utilityPath,
                                                                           options.symbolsPath),
             )
-            log.info("\nREFTEST INFO | runreftest.py | Running tests: end.")
         finally:
             self.cleanup(profileDir)
         return status
@@ -712,31 +660,28 @@ class RefTest(object):
                 dest = os.path.join(profileDir, os.path.basename(abspath))
                 shutil.copytree(abspath, dest)
             else:
-                log.warning(
-                    "WARNING | runreftest.py | Failed to copy %s to profile", abspath)
+                self.log.warning(
+                    "runreftest.py | Failed to copy %s to profile" % abspath)
                 continue
 
 
 def run(**kwargs):
+    parser = reftestcommandline.DesktopArgumentsParser()
+
     # Mach gives us kwargs; this is a way to turn them back into an
     # options object
-    parser = reftestcommandline.DesktopArgumentsParser()
-    reftest = RefTest()
     parser.set_defaults(**kwargs)
-    options = parser.parse_args(kwargs["tests"])
+
+    if 'tests' in kwargs:
+        options = parser.parse_args(kwargs["tests"])
+    else:
+        options = parser.parse_args()
+
+    reftest = RefTest()
     parser.validate(options, reftest)
+
     return reftest.runTests(options.tests, options)
 
 
-def main():
-    parser = reftestcommandline.DesktopArgumentsParser()
-    reftest = RefTest()
-
-    options = parser.parse_args()
-    parser.validate(options, reftest)
-
-    sys.exit(reftest.runTests(options.tests, options))
-
-
 if __name__ == "__main__":
-    main()
+    sys.exit(run())
