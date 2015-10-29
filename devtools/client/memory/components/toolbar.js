@@ -39,6 +39,7 @@ const Toolbar = module.exports = createClass({
         dom.label({},
           "Breakdown by ",
           dom.select({
+            id: "select-breakdown",
             className: `select-breakdown`,
             onChange: e => onBreakdownChange(e.target.value),
           }, ...breakdowns.map(({ name, displayName }) => dom.option({ key: name, value: name }, displayName)))
@@ -46,6 +47,7 @@ const Toolbar = module.exports = createClass({
 
         dom.label({},
           dom.input({
+            id: "invert-tree-checkbox",
             type: "checkbox",
             checked: inverted,
             onChange: onToggleInverted,
