@@ -405,7 +405,7 @@ GetDataSourceSurfaceFrom(android::sp<android::GraphicBuffer>& aGraphicBuffer,
   MOZ_ASSERT(aGraphicBuffer.get());
 
   RefPtr<gfx::DataSourceSurface> surface =
-    gfx::Factory::CreateDataSourceSurface(aSize, gfx::SurfaceFormat::R5G6B5);
+    gfx::Factory::CreateDataSourceSurface(aSize, gfx::SurfaceFormat::R5G6B5_UINT16);
   if (NS_WARN_IF(!surface)) {
     return nullptr;
   }
