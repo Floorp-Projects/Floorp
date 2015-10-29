@@ -1124,6 +1124,7 @@ class ADBDevice(ADBCommand):
         buffers = self._get_logcat_buffer_args(buffers)
         cmds = ["logcat", "-c"] + buffers
         self.command_output(cmds, timeout=timeout)
+        self.shell_output("log logcat cleared", timeout=timeout)
 
     def get_logcat(self,
                    filter_specs=[
