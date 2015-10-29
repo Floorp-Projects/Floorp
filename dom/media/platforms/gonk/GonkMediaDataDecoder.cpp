@@ -137,8 +137,8 @@ GonkDecoderManager::Shutdown()
   return NS_OK;
 }
 
-bool
-GonkDecoderManager::HasQueuedSample()
+size_t
+GonkDecoderManager::NumQueuedSamples()
 {
   MutexAutoLock lock(mMutex);
   return mQueuedSamples.Length();
@@ -159,6 +159,8 @@ GonkDecoderManager::ProcessInput(bool aEndOfStream)
         mToDo->setInt32("input-eos", 1);
       }
       mDecoder->requestActivityNotification(mToDo);
+    } else if (aEndOfStream) {
+      mToDo->setInt32("input-eos", 1);
     }
   } else {
     GMDD_LOG("input processed: error#%d", rv);
@@ -186,15 +188,9 @@ GonkDecoderManager::ProcessToDo(bool aEndOfStream)
   MOZ_ASSERT(mToDo.get() != nullptr);
   mToDo.clear();
 
-  if (HasQueuedSample()) {
-    status_t pendingInput = ProcessQueuedSamples();
-    if (pendingInput < 0) {
-      mDecodeCallback->Error();
-      return;
-    }
-    if (!aEndOfStream && pendingInput <= MIN_QUEUED_SAMPLES) {
-      mDecodeCallback->InputExhausted();
-    }
+  if (NumQueuedSamples() > 0 && ProcessQueuedSamples() < 0) {
+    mDecodeCallback->Error();
+    return;
   }
 
   nsresult rv = NS_OK;
@@ -226,8 +222,18 @@ GonkDecoderManager::ProcessToDo(bool aEndOfStream)
     }
   }
 
-  if (HasQueuedSample() || mWaitOutput.Length() > 0) {
+  if (!aEndOfStream && NumQueuedSamples() <= MIN_QUEUED_SAMPLES) {
+    mDecodeCallback->InputExhausted();
+    // No need to shedule todo task this time because InputExhausted() will
+    // cause Input() to be invoked and do it for us.
+    return;
+  }
+
+  if (NumQueuedSamples() || mWaitOutput.Length() > 0) {
     mToDo = new AMessage(kNotifyDecoderActivity, id());
+    if (aEndOfStream) {
+      mToDo->setInt32("input-eos", 1);
+    }
     mDecoder->requestActivityNotification(mToDo);
   }
 }
