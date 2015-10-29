@@ -10,7 +10,7 @@ const epsilon = 0.01;
 // "All implementations must support arrays up to at least 8192", but the
 // linear interpolation of the current implementation distorts the higher
 // frequency components too much to pass this test.
-const frequencyIndexMax = 100;
+const frequencyIndexMax = 200;
 
 // A set of oscillators are created near the Nyquist frequency.
 // These are factors giving each oscillator frequency relative to the Nyquist.
@@ -80,7 +80,7 @@ function test_frequency_index(frequencyIndex) {
 for (var frequencyIndex = 1;
      frequencyIndex < frequencyIndexMax;
      frequencyIndex = Math.floor((5 * frequencyIndex + 3) / 4)) {
-  promise_test(() => test_frequency_index(frequencyIndex),
+  promise_test(test_frequency_index.bind(null, frequencyIndex),
                "Frequency " + frequencyIndex);
 }
 </script>
