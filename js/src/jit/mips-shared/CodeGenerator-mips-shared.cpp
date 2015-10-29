@@ -111,10 +111,21 @@ CodeGeneratorMIPSShared::visitTestIAndBranch(LTestIAndBranch* test)
 void
 CodeGeneratorMIPSShared::visitCompare(LCompare* comp)
 {
-    Assembler::Condition cond = JSOpToCondition(comp->mir()->compareType(), comp->jsop());
+    MCompare* mir = comp->mir();
+    Assembler::Condition cond = JSOpToCondition(mir->compareType(), comp->jsop());
     const LAllocation* left = comp->getOperand(0);
     const LAllocation* right = comp->getOperand(1);
     const LDefinition* def = comp->getDef(0);
+
+#ifdef JS_CODEGEN_MIPS64
+    if (mir->compareType() == MCompare::Compare_Object) {
+        if (right->isGeneralReg())
+            masm.cmpPtrSet(cond, ToRegister(left), ToRegister(right), ToRegister(def));
+        else
+            masm.cmpPtrSet(cond, ToRegister(left), ToAddress(right), ToRegister(def));
+        return;
+    }
+#endif
 
     if (right->isConstant())
         masm.cmp32Set(cond, ToRegister(left), Imm32(ToInt32(right)), ToRegister(def));
@@ -127,7 +138,23 @@ CodeGeneratorMIPSShared::visitCompare(LCompare* comp)
 void
 CodeGeneratorMIPSShared::visitCompareAndBranch(LCompareAndBranch* comp)
 {
-    Assembler::Condition cond = JSOpToCondition(comp->cmpMir()->compareType(), comp->jsop());
+    MCompare* mir = comp->cmpMir();
+    Assembler::Condition cond = JSOpToCondition(mir->compareType(), comp->jsop());
+
+#ifdef JS_CODEGEN_MIPS64
+    if (mir->compareType() == MCompare::Compare_Object) {
+        if (comp->right()->isGeneralReg()) {
+            emitBranch(ToRegister(comp->left()), ToRegister(comp->right()), cond,
+                       comp->ifTrue(), comp->ifFalse());
+        } else {
+            masm.loadPtr(ToAddress(comp->right()), ScratchRegister);
+            emitBranch(ToRegister(comp->left()), ScratchRegister, cond,
+                       comp->ifTrue(), comp->ifFalse());
+        }
+        return;
+    }
+#endif
+
     if (comp->right()->isConstant()) {
         emitBranch(ToRegister(comp->left()), Imm32(ToInt32(comp->right())), cond,
                    comp->ifTrue(), comp->ifFalse());
