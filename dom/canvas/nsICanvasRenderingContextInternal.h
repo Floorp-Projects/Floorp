@@ -14,6 +14,7 @@
 #include "mozilla/dom/HTMLCanvasElement.h"
 #include "mozilla/dom/OffscreenCanvas.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/UniquePtr.h"
 
 #define NS_ICANVASRENDERINGCONTEXTINTERNAL_IID \
 { 0xb84f2fed, 0x9d4b, 0x430b, \
@@ -96,7 +97,7 @@ public:
   NS_IMETHOD InitializeWithSurface(nsIDocShell *docShell, gfxASurface *surface, int32_t width, int32_t height) = 0;
 
   // Creates an image buffer. Returns null on failure.
-  virtual void GetImageBuffer(uint8_t** imageBuffer, int32_t* format) = 0;
+  virtual mozilla::UniquePtr<uint8_t[]> GetImageBuffer(int32_t* format) = 0;
 
   // Gives you a stream containing the image represented by this context.
   // The format is given in mimeTime, for example "image/png".

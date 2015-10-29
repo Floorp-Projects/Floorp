@@ -1441,6 +1441,8 @@ JitCompartment::generateRegExpExecStub(JSContext* cx)
     Linker linker(masm);
     AutoFlushICache afc("RegExpExecStub");
     JitCode* code = linker.newCode<CanGC>(cx, OTHER_CODE);
+    if (!code)
+        return nullptr;
 
 #ifdef JS_ION_PERF
     writePerfSpewerJitCodeProfile(code, "RegExpExecStub");
@@ -1572,6 +1574,8 @@ JitCompartment::generateRegExpTestStub(JSContext* cx)
     Linker linker(masm);
     AutoFlushICache afc("RegExpTestStub");
     JitCode* code = linker.newCode<CanGC>(cx, OTHER_CODE);
+    if (!code)
+        return nullptr;
 
 #ifdef JS_ION_PERF
     writePerfSpewerJitCodeProfile(code, "RegExpTestStub");

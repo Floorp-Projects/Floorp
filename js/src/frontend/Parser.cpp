@@ -3145,16 +3145,15 @@ Parser<ParseHandler>::maybeParseDirective(Node list, Node pn, bool* cont)
                     // Request that this function be reparsed as strict.
                     pc->newDirectives->setStrict();
                     return false;
-                } else {
-                    // We don't reparse global scopes, so we keep track of the
-                    // one possible strict violation that could occur in the
-                    // directive prologue -- octal escapes -- and complain now.
-                    if (tokenStream.sawOctalEscape()) {
-                        report(ParseError, false, null(), JSMSG_DEPRECATED_OCTAL);
-                        return false;
-                    }
-                    pc->sc->strictScript = true;
                 }
+                // We don't reparse global scopes, so we keep track of the one
+                // possible strict violation that could occur in the directive
+                // prologue -- octal escapes -- and complain now.
+                if (tokenStream.sawOctalEscape()) {
+                    report(ParseError, false, null(), JSMSG_DEPRECATED_OCTAL);
+                    return false;
+                }
+                pc->sc->strictScript = true;
             }
         } else if (directive == context->names().useAsm) {
             if (pc->sc->isFunctionBox())
