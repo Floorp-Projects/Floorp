@@ -16,18 +16,17 @@
 #include "mozIApplicationClearPrivateDataParams.h"
 #include "nsIObserverService.h"
 #include "mozilla/Services.h"
+#include "mozilla/DebugOnly.h"
 #include "nsNetUtil.h"
 
 namespace mozilla {
 namespace net {
 
 static inline void
-GetAuthKey(const char *scheme, const char *host, int32_t port, uint32_t appId, bool inBrowserElement, nsCString &key)
+GetAuthKey(const char *scheme, const char *host, int32_t port, nsACString const &originSuffix, nsCString &key)
 {
     key.Truncate();
-    key.AppendInt(appId);
-    key.Append(':');
-    key.AppendInt(inBrowserElement);
+    key.Append(originSuffix);
     key.Append(':');
     key.Append(scheme);
     key.AppendLiteral("://");
@@ -57,11 +56,11 @@ StrEquivalent(const char16_t *a, const char16_t *b)
 
 nsHttpAuthCache::nsHttpAuthCache()
     : mDB(nullptr)
-    , mObserver(new AppDataClearObserver(this))
+    , mObserver(new OriginClearObserver(this))
 {
     nsCOMPtr<nsIObserverService> obsSvc = services::GetObserverService();
     if (obsSvc) {
-        obsSvc->AddObserver(mObserver, "webapps-clear-data", false);
+        obsSvc->AddObserver(mObserver, "clear-origin-data", false);
     }
 }
 
@@ -71,7 +70,7 @@ nsHttpAuthCache::~nsHttpAuthCache()
         ClearAll();
     nsCOMPtr<nsIObserverService> obsSvc = services::GetObserverService();
     if (obsSvc) {
-        obsSvc->RemoveObserver(mObserver, "webapps-clear-data");
+        obsSvc->RemoveObserver(mObserver, "clear-origin-data");
         mObserver->mOwner = nullptr;
     }
 }
@@ -97,15 +96,14 @@ nsHttpAuthCache::GetAuthEntryForPath(const char *scheme,
                                      const char *host,
                                      int32_t     port,
                                      const char *path,
-                                     uint32_t    appId,
-                                     bool        inBrowserElement,
+                                     nsACString const &originSuffix,
                                      nsHttpAuthEntry **entry)
 {
     LOG(("nsHttpAuthCache::GetAuthEntryForPath [key=%s://%s:%d path=%s]\n",
         scheme, host, port, path));
 
     nsAutoCString key;
-    nsHttpAuthNode *node = LookupAuthNode(scheme, host, port, appId, inBrowserElement, key);
+    nsHttpAuthNode *node = LookupAuthNode(scheme, host, port, originSuffix, key);
     if (!node)
         return NS_ERROR_NOT_AVAILABLE;
 
@@ -118,8 +116,7 @@ nsHttpAuthCache::GetAuthEntryForDomain(const char *scheme,
                                        const char *host,
                                        int32_t     port,
                                        const char *realm,
-                                       uint32_t    appId,
-                                       bool        inBrowserElement,
+                                       nsACString const &originSuffix,
                                        nsHttpAuthEntry **entry)
 
 {
@@ -127,7 +124,7 @@ nsHttpAuthCache::GetAuthEntryForDomain(const char *scheme,
         scheme, host, port, realm));
 
     nsAutoCString key;
-    nsHttpAuthNode *node = LookupAuthNode(scheme, host, port, appId, inBrowserElement, key);
+    nsHttpAuthNode *node = LookupAuthNode(scheme, host, port, originSuffix, key);
     if (!node)
         return NS_ERROR_NOT_AVAILABLE;
 
@@ -143,8 +140,7 @@ nsHttpAuthCache::SetAuthEntry(const char *scheme,
                               const char *realm,
                               const char *creds,
                               const char *challenge,
-                              uint32_t    appId,
-                              bool        inBrowserElement,
+                              nsACString const &originSuffix,
                               const nsHttpAuthIdentity *ident,
                               nsISupports *metadata)
 {
@@ -159,7 +155,7 @@ nsHttpAuthCache::SetAuthEntry(const char *scheme,
     }
 
     nsAutoCString key;
-    nsHttpAuthNode *node = LookupAuthNode(scheme, host, port, appId, inBrowserElement, key);
+    nsHttpAuthNode *node = LookupAuthNode(scheme, host, port, originSuffix, key);
 
     if (!node) {
         // create a new entry node and set the given entry
@@ -182,14 +178,13 @@ nsHttpAuthCache::ClearAuthEntry(const char *scheme,
                                 const char *host,
                                 int32_t     port,
                                 const char *realm,
-                                uint32_t    appId,
-                                bool        inBrowserElement)
+                                nsACString const &originSuffix)
 {
     if (!mDB)
         return;
 
     nsAutoCString key;
-    GetAuthKey(scheme, host, port, appId, inBrowserElement, key);
+    GetAuthKey(scheme, host, port, originSuffix, key);
     PL_HashTableRemove(mDB, key.get());
 }
 
@@ -213,14 +208,13 @@ nsHttpAuthNode *
 nsHttpAuthCache::LookupAuthNode(const char *scheme,
                                 const char *host,
                                 int32_t     port,
-                                uint32_t    appId,
-                                bool        inBrowserElement,
+                                nsACString const &originSuffix,
                                 nsCString  &key)
 {
     if (!mDB)
         return nullptr;
 
-    GetAuthKey(scheme, host, port, appId, inBrowserElement, key);
+    GetAuthKey(scheme, host, port, originSuffix, key);
 
     return (nsHttpAuthNode *) PL_HashTableLookup(mDB, key.get());
 }
@@ -268,60 +262,56 @@ PLHashAllocOps nsHttpAuthCache::gHashAllocOps =
     nsHttpAuthCache::FreeEntry
 };
 
-NS_IMPL_ISUPPORTS(nsHttpAuthCache::AppDataClearObserver, nsIObserver)
+NS_IMPL_ISUPPORTS(nsHttpAuthCache::OriginClearObserver, nsIObserver)
 
 NS_IMETHODIMP
-nsHttpAuthCache::AppDataClearObserver::Observe(nsISupports *subject,
-                                               const char *      topic,
-                                               const char16_t * data_unicode)
+nsHttpAuthCache::OriginClearObserver::Observe(nsISupports *subject,
+                                              const char *      topic,
+                                              const char16_t * data_unicode)
 {
     NS_ENSURE_TRUE(mOwner, NS_ERROR_NOT_AVAILABLE);
 
-    nsCOMPtr<mozIApplicationClearPrivateDataParams> params =
-            do_QueryInterface(subject);
-    if (!params) {
-        NS_ERROR("'webapps-clear-data' notification's subject should be a mozIApplicationClearPrivateDataParams");
-        return NS_ERROR_UNEXPECTED;
+    OriginAttributesPattern pattern;
+    if (!pattern.Init(nsDependentString(data_unicode))) {
+        NS_ERROR("Cannot parse origin attributes pattern");
+        return NS_ERROR_FAILURE;
     }
 
-    uint32_t appId;
-    bool browserOnly;
-
-    nsresult rv = params->GetAppId(&appId);
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = params->GetBrowserOnly(&browserOnly);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    MOZ_ASSERT(appId != NECKO_UNKNOWN_APP_ID);
-    mOwner->ClearAppData(appId, browserOnly);
+    mOwner->ClearOriginData(pattern);
     return NS_OK;
 }
 
 static int
-RemoveEntriesForApp(PLHashEntry *entry, int32_t number, void *arg)
+RemoveEntriesForPattern(PLHashEntry *entry, int32_t number, void *arg)
 {
     nsDependentCString key(static_cast<const char*>(entry->key));
-    nsAutoCString* prefix = static_cast<nsAutoCString*>(arg);
-    if (StringBeginsWith(key, *prefix)) {
+
+    // Extract the origin attributes suffix from the key.
+    int32_t colon = key.Find(NS_LITERAL_CSTRING(":"));
+    MOZ_ASSERT(colon != kNotFound);
+    nsDependentCSubstring oaSuffix;
+    oaSuffix.Rebind(key.BeginReading(), colon);
+
+    // Build the OriginAttributes object of it...
+    OriginAttributes oa;
+    DebugOnly<bool> rv = oa.PopulateFromSuffix(oaSuffix);
+    MOZ_ASSERT(rv);
+
+    // ...and match it against the given pattern.
+    OriginAttributesPattern const *pattern = static_cast<OriginAttributesPattern const*>(arg);
+    if (pattern->Matches(oa)) {
         return HT_ENUMERATE_NEXT | HT_ENUMERATE_REMOVE;
     }
     return HT_ENUMERATE_NEXT;
 }
 
 void
-nsHttpAuthCache::ClearAppData(uint32_t appId, bool browserOnly)
+nsHttpAuthCache::ClearOriginData(OriginAttributesPattern const &pattern)
 {
     if (!mDB) {
         return;
     }
-    nsAutoCString keyPrefix;
-    keyPrefix.AppendInt(appId);
-    keyPrefix.Append(':');
-    if (browserOnly) {
-        keyPrefix.AppendInt(browserOnly);
-        keyPrefix.Append(':');
-    }
-    PL_HashTableEnumerateEntries(mDB, RemoveEntriesForApp, &keyPrefix);
+    PL_HashTableEnumerateEntries(mDB, RemoveEntriesForPattern, (void*)&pattern);
 }
 
 //-----------------------------------------------------------------------------
