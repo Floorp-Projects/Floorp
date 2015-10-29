@@ -226,16 +226,6 @@ CodeGeneratorMIPSShared::bailout(LSnapshot* snapshot)
 }
 
 void
-CodeGeneratorMIPSShared::visitOutOfLineBailout(OutOfLineBailout* ool)
-{
-    // Push snapshotOffset and make sure stack is aligned.
-    masm.subPtr(Imm32(2 * sizeof(void*)), StackPointer);
-    masm.storePtr(ImmWord(ool->snapshot()->snapshotOffset()), Address(StackPointer, 0));
-
-    masm.jump(&deoptLabel_);
-}
-
-void
 CodeGeneratorMIPSShared::visitMinMaxD(LMinMaxD* ins)
 {
     FloatRegister first = ToFloatRegister(ins->first());
