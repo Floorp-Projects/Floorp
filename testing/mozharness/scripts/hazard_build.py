@@ -3,6 +3,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+import copy
 import os
 import sys
 from datetime import datetime
@@ -11,6 +12,7 @@ from functools import wraps
 sys.path.insert(1, os.path.dirname(sys.path[0]))
 
 from mozharness.base.errors import MakefileErrorList
+from mozharness.mozilla.blob_upload import BlobUploadMixin, blobupload_config_options
 from mozharness.mozilla.building.buildb2gbase import B2GBuildBaseScript, B2GMakefileErrorList
 from mozharness.mozilla.purge import PurgeMixin
 from mozharness.mozilla.building.hazards import HazardAnalysis, HazardError
@@ -36,7 +38,7 @@ def requires(*queries):
     return make_wrapper
 
 
-class B2GHazardBuild(PurgeMixin, B2GBuildBaseScript):
+class B2GHazardBuild(PurgeMixin, B2GBuildBaseScript, BlobUploadMixin):
     all_actions = [
         'clobber',
         'checkout-tools',
@@ -72,7 +74,7 @@ class B2GHazardBuild(PurgeMixin, B2GBuildBaseScript):
 
     def __init__(self):
         super(B2GHazardBuild, self).__init__(
-            config_options=[],
+            config_options=copy.deepcopy(blobupload_config_options),
             config={
                 'default_vcs': 'hgtool',
                 'ccache': False,
@@ -87,6 +89,7 @@ class B2GHazardBuild(PurgeMixin, B2GBuildBaseScript):
         )
 
         self.buildid = None
+        self.create_virtualenv()
         self.analysis = HazardAnalysis()
 
     def _pre_config_lock(self, rw_config):
@@ -94,8 +97,10 @@ class B2GHazardBuild(PurgeMixin, B2GBuildBaseScript):
 
         if self.buildbot_config:
             self.config['is_automation'] = True
+            self.config.setdefault('blob_upload_branch', self.config.get('branch', self.buildbot_config['properties']['branch']))
         else:
             self.config['is_automation'] = False
+            self.config.setdefault('blob_upload_branch', 'devel')
 
         dirs = self.query_abs_dirs()
         replacements = self.config['env_replacements'].copy()
@@ -105,6 +110,7 @@ class B2GHazardBuild(PurgeMixin, B2GBuildBaseScript):
         self.env = self.query_env(replace_dict=replacements,
                                   partial_env=self.config['partial_env'],
                                   purge_env=nuisance_env_vars)
+        self.env['MOZ_UPLOAD_DIR'] = dirs['abs_blob_upload_dir']
 
     def query_abs_dirs(self):
         if self.abs_dirs:
@@ -126,7 +132,9 @@ class B2GHazardBuild(PurgeMixin, B2GBuildBaseScript):
             'abs_analyzed_objdir':
                 os.path.join(abs_work_dir, self.config['srcdir'], self.config['analysis-objdir']),
             'analysis_scriptdir':
-                os.path.join(abs_dirs['gecko_src'], self.config['analysis-scriptdir'])
+                os.path.join(abs_dirs['gecko_src'], self.config['analysis-scriptdir']),
+            'abs_blob_upload_dir':
+                os.path.join(abs_work_dir, 'blobber_upload_dir'),
         }
 
         abs_dirs.update(dirs)
