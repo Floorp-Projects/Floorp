@@ -41,6 +41,7 @@ var radioInterface = ril.getRadioInterface(0);
 ok(radioInterface, "radioInterface.constructor is " + radioInterface.constrctor);
 
 var _pendingEmulatorShellCmdCount = 0;
+var _pendingEmulatorCmdCount = 0;
 
 /**
  * Send emulator shell command with safe guard.
@@ -65,6 +66,41 @@ function runEmulatorShellCmdSafe(aCommands) {
 
       log("Emulator shell response: " + JSON.stringify(aResult));
       aResolve(aResult);
+    });
+  });
+}
+
+/**
+ * Send emulator command with safe guard.
+ *
+ * We should only call |finish()| after all emulator command transactions
+ * end, so here comes with the pending counter.  Resolve when the emulator
+ * gives positive response, and reject otherwise.
+ *
+ * Fulfill params:
+ *   result -- an array of emulator response lines.
+ * Reject params:
+ *   result -- an array of emulator response lines.
+ *
+ * @param aCommand
+ *        A string command to be passed to emulator through its telnet console.
+ *
+ * @return A deferred promise.
+ */
+function runEmulatorCmdSafe(aCommand) {
+  log(aCommand);
+  return new Promise(function(aResolve, aReject) {
+    ++_pendingEmulatorCmdCount;
+    runEmulatorCmd(aCommand, function(aResult) {
+      --_pendingEmulatorCmdCount;
+
+      log("Emulator console response: " + JSON.stringify(aResult));
+      if (Array.isArray(aResult) &&
+          aResult[aResult.length - 1] === "OK") {
+        aResolve(aResult);
+      } else {
+        aReject(aResult);
+      }
     });
   });
 }
@@ -286,10 +322,10 @@ function cleanUp() {
   ok(true, ":: CLEANING UP ::");
 
   waitFor(finish, function() {
-    return _pendingEmulatorShellCmdCount === 0;
+    return _pendingEmulatorShellCmdCount === 0 &&
+           _pendingEmulatorCmdCount === 0;
   });
 }
-
 
 /**
  * Basic test routine helper.

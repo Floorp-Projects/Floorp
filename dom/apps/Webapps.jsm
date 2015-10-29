@@ -4654,6 +4654,10 @@ this.DOMApplicationRegistry = {
     }
 
     return this.getManifestFor(aManifestURL).then((aManifest) => {
+      if (!aManifest) {
+        return Promise.reject("NoManifest");
+      }
+
       let manifest = aEntryPoint && aManifest.entry_points &&
                      aManifest.entry_points[aEntryPoint]
         ? aManifest.entry_points[aEntryPoint]

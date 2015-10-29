@@ -218,6 +218,9 @@ methods of other kinds of objects.
 
     * columnNumber: the column number for which offset is an entry point
 
+    * isEntryPoint: true if the offset is a column entry point, as
+      would be reported by getAllColumnOffsets(); otherwise false.
+
 `getOffsetsCoverage()`:
 :   Return `null` or an array which contains informations about the coverage of
     all opcodes. The elements of the array are objects, each of which describes
