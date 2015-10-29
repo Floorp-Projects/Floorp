@@ -66,6 +66,18 @@ def expectedTabProcessLeakCounts():
         'SyncObject': 1
     })
 
+    # Bug 1219916 - On Aurora, we leak textures and image containers
+    # on Windows.
+    appendExpectedLeakCounts({
+        'CondVar': 4,
+        'Mutex': 8,
+        'PImageContainerChild': 4,
+        'PTextureChild': 4,
+        'SharedMemory': 4,
+        'TextureChild': 4,
+        'WeakReference<MessageListener>': 8,
+    })
+
     return leaks
 
 
