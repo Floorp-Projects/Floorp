@@ -93,8 +93,7 @@ private:
 
   bool SetVideoFormat();
 
-  nsresult CreateVideoData(int64_t aStreamOffset, VideoData** aOutData);
-  void ReleaseVideoBuffer();
+  nsresult CreateVideoData(MediaBuffer* aBuffer, int64_t aStreamOffset, VideoData** aOutData);
   uint8_t* GetColorConverterBuffer(int32_t aWidth, int32_t aHeight);
 
   // For codec resource management
@@ -113,8 +112,6 @@ private:
   nsIntSize mInitialFrame;
 
   RefPtr<layers::ImageContainer> mImageContainer;
-
-  android::MediaBuffer* mVideoBuffer;
 
   MediaInfo mInfo;
   android::sp<VideoResourceListener> mVideoListener;

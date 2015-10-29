@@ -137,39 +137,40 @@ GonkVideoDecoderManager::Init()
 }
 
 nsresult
-GonkVideoDecoderManager::CreateVideoData(int64_t aStreamOffset, VideoData **v)
+GonkVideoDecoderManager::CreateVideoData(MediaBuffer* aBuffer,
+                                         int64_t aStreamOffset,
+                                         VideoData **v)
 {
   *v = nullptr;
   RefPtr<VideoData> data;
   int64_t timeUs;
   int32_t keyFrame;
 
-  if (mVideoBuffer == nullptr) {
+  if (aBuffer == nullptr) {
     GVDM_LOG("Video Buffer is not valid!");
     return NS_ERROR_UNEXPECTED;
   }
 
-  if (!mVideoBuffer->meta_data()->findInt64(kKeyTime, &timeUs)) {
-    ReleaseVideoBuffer();
+  AutoReleaseMediaBuffer autoRelease(aBuffer, mDecoder.get());
+
+  if (!aBuffer->meta_data()->findInt64(kKeyTime, &timeUs)) {
     GVDM_LOG("Decoder did not return frame time");
     return NS_ERROR_UNEXPECTED;
   }
 
   if (mLastTime > timeUs) {
-    ReleaseVideoBuffer();
     GVDM_LOG("Output decoded sample time is revert. time=%lld", timeUs);
     return NS_ERROR_NOT_AVAILABLE;
   }
   mLastTime = timeUs;
 
-  if (mVideoBuffer->range_length() == 0) {
+  if (aBuffer->range_length() == 0) {
     // Some decoders may return spurious empty buffers that we just want to ignore
     // quoted from Android's AwesomePlayer.cpp
-    ReleaseVideoBuffer();
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  if (!mVideoBuffer->meta_data()->findInt32(kKeyIsSyncFrame, &keyFrame)) {
+  if (!aBuffer->meta_data()->findInt32(kKeyIsSyncFrame, &keyFrame)) {
     keyFrame = 0;
   }
 
@@ -188,14 +189,15 @@ GonkVideoDecoderManager::CreateVideoData(int64_t aStreamOffset, VideoData **v)
 
   RefPtr<mozilla::layers::TextureClient> textureClient;
 
-  if ((mVideoBuffer->graphicBuffer().get())) {
-    textureClient = mNativeWindow->getTextureClientFromBuffer(mVideoBuffer->graphicBuffer().get());
+  if ((aBuffer->graphicBuffer().get())) {
+    textureClient = mNativeWindow->getTextureClientFromBuffer(aBuffer->graphicBuffer().get());
   }
 
   if (textureClient) {
     GrallocTextureClientOGL* grallocClient = static_cast<GrallocTextureClientOGL*>(textureClient.get());
-    grallocClient->SetMediaBuffer(mVideoBuffer);
+    grallocClient->SetMediaBuffer(aBuffer);
     textureClient->SetRecycleCallback(GonkVideoDecoderManager::RecycleCallback, this);
+    autoRelease.forget(); // RecycleCallback will return it back to decoder.
 
     data = VideoData::Create(mInfo.mVideo,
                              mImageContainer,
@@ -208,11 +210,11 @@ GonkVideoDecoderManager::CreateVideoData(int64_t aStreamOffset, VideoData **v)
                              -1,
                              picture);
   } else {
-    if (!mVideoBuffer->data()) {
+    if (!aBuffer->data()) {
       GVDM_LOG("No data in Video Buffer!");
       return NS_ERROR_UNEXPECTED;
     }
-    uint8_t *yuv420p_buffer = (uint8_t *)mVideoBuffer->data();
+    uint8_t *yuv420p_buffer = (uint8_t *)aBuffer->data();
     int32_t stride = mFrameInfo.mStride;
     int32_t slice_height = mFrameInfo.mSliceHeight;
 
@@ -224,9 +226,8 @@ GonkVideoDecoderManager::CreateVideoData(int64_t aStreamOffset, VideoData **v)
       crop.left = 0;
       crop.right = mFrameInfo.mWidth;
       yuv420p_buffer = GetColorConverterBuffer(mFrameInfo.mWidth, mFrameInfo.mHeight);
-      if (mColorConverter.convertDecoderOutputToI420(mVideoBuffer->data(),
+      if (mColorConverter.convertDecoderOutputToI420(aBuffer->data(),
           mFrameInfo.mWidth, mFrameInfo.mHeight, crop, yuv420p_buffer) != OK) {
-          ReleaseVideoBuffer();
           GVDM_LOG("Color conversion failed!");
           return NS_ERROR_UNEXPECTED;
       }
@@ -275,7 +276,6 @@ GonkVideoDecoderManager::CreateVideoData(int64_t aStreamOffset, VideoData **v)
         keyFrame,
         -1,
         picture);
-    ReleaseVideoBuffer();
   }
 
   data.forget(v);
@@ -336,13 +336,14 @@ GonkVideoDecoderManager::Output(int64_t aStreamOffset,
     GVDM_LOG("Decoder is not inited");
     return NS_ERROR_UNEXPECTED;
   }
-  err = mDecoder->Output(&mVideoBuffer, READ_OUTPUT_BUFFER_TIMEOUT_US);
+  MediaBuffer* outputBuffer;
+  err = mDecoder->Output(&outputBuffer, READ_OUTPUT_BUFFER_TIMEOUT_US);
 
   switch (err) {
     case OK:
     {
       RefPtr<VideoData> data;
-      nsresult rv = CreateVideoData(aStreamOffset, getter_AddRefs(data));
+      nsresult rv = CreateVideoData(outputBuffer, aStreamOffset, getter_AddRefs(data));
       if (rv == NS_ERROR_NOT_AVAILABLE) {
         // Decoder outputs a empty video buffer, try again
         return NS_ERROR_NOT_AVAILABLE;
@@ -379,7 +380,7 @@ GonkVideoDecoderManager::Output(int64_t aStreamOffset,
     {
       GVDM_LOG("Got the EOS frame!");
       RefPtr<VideoData> data;
-      nsresult rv = CreateVideoData(aStreamOffset, getter_AddRefs(data));
+      nsresult rv = CreateVideoData(outputBuffer, aStreamOffset, getter_AddRefs(data));
       if (rv == NS_ERROR_NOT_AVAILABLE) {
         // For EOS, no need to do any thing.
         return NS_ERROR_ABORT;
@@ -404,13 +405,6 @@ GonkVideoDecoderManager::Output(int64_t aStreamOffset,
   }
 
   return NS_OK;
-}
-
-void GonkVideoDecoderManager::ReleaseVideoBuffer() {
-  if (mVideoBuffer) {
-    mDecoder->ReleaseMediaBuffer(mVideoBuffer);
-    mVideoBuffer = nullptr;
-  }
 }
 
 void
