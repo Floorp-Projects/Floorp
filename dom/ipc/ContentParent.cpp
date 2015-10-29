@@ -693,6 +693,7 @@ static const char* sObserverTopics[] = {
     "profiler-subprocess-gather",
     "profiler-subprocess",
 #endif
+    "gmp-changed",
 };
 
 #ifdef MOZ_NUWA_PROCESS
@@ -3297,6 +3298,9 @@ ContentParent::Observe(nsISupports* aSubject,
         }
     }
 #endif
+    else if (!strcmp(aTopic, "gmp-changed")) {
+      unused << SendNotifyGMPsChanged();
+    }
     return NS_OK;
 }
 
