@@ -19,51 +19,47 @@
   --row-hover-background-color: rgba(76,158,217,0.2);
 }
 
-html, .theme-body, #app, #memory-tool, #memory-tool-container {
+html, body, #app, #memory-tool {
   height: 100%;
 }
 
-.theme-body {
-  overflow: hidden;
-  /* Not sure why .theme-body declares it as `background` and overrides */
-  background-color: var(--theme-toolbar-background) !important;
-}
-
-#memory-tool-container {
+#memory-tool {
   display: flex;
-  flex-direction: row;
-  --toolbar-height: 20px;
+  flex-direction: column;
+  --sidebar-width: 185px;
   /**
    * If --heap-tree-row-height changes, be sure to change HEAP_TREE_ROW_HEIGHT
    * in `devtools/client/memory/components/heap.js`.
    */
   --heap-tree-row-height: 14px;
+  --heap-tree-header-height: 17px;
+}
+
+#memory-tool .devtools-toolbar {
+  display: flex;
+  align-items: center;
+}
+
+#memory-tool-container {
+  overflow: hidden;
+  display: flex;
+  flex: 1;
 }
 
 /**
- * TODO bug 1213100
- * should generalize toolbar buttons with images in them
- * toolbars.inc.css contains definitions for .devtools-button,
- * I wager that many of the below styles can be rolled into that
+ * Toolbar
  */
+
 .devtools-toolbar .devtools-button.take-snapshot {
-  margin: 2px 1px;
-  padding: 1px;
-  border-width: 0px;
-  /* [standalone] buttons override min-height from 18px to 24px -- why? */
-  min-height: 18px;
-  /* not sure why this is needed for positioning */
-  display: -moz-box;
+  -moz-appearance: none;
+  margin-inline-start: 1px;
+  margin-inline-end: 1px;
 }
 
 .devtools-toolbar .devtools-button.take-snapshot::before {
   background-image: url(images/command-screenshot.png);
-  -moz-appearance: none;
-  width: 16px;
-  height: 16px;
   background-size: 64px 16px;
   background-position: 0 center;
-  background-repeat: no-repeat;
 }
 @media (min-resolution: 1.1dppx) {
   .devtools-toolbar .devtools-button.take-snapshot::before {
@@ -72,18 +68,6 @@ html, .theme-body, #app, #memory-tool, #memory-tool-container {
 }
 
 /**
- * TODO bug 1213100
- * Should this be codified in .devtools-toolbar itself?
- */
-#memory-tool .devtools-toolbar {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  height: var(--toolbar-height);
-}
-
-/**
- * TODO bug 1213100
  * Once we figure out how to store invertable buttons (pseudo element like in this case?)
  * we should add a .invertable class to handle this generally, rather than the definitions
  * in toolbars.inc.css.
@@ -94,30 +78,18 @@ html, .theme-body, #app, #memory-tool, #memory-tool-container {
   filter: url(images/filters.svg#invert);
 }
 
-/**
- * TODO bug 1213100
- * The .list style is for a generalized React list component. It's children (.list > li)
- * are generally styled here, as the component can take any type of child component.
- * Memory tool specific styling are handling in (li.snapshot-list-item).
- */
-
 .list {
+  width: var(--sidebar-width);
+  overflow-y: auto;
   margin: 0;
   padding: 0;
-  width: 186px;
-  list-style-type: none;
-  font-size: 12px;
-  height: 100%;
-  overflow-y: scroll;
-  background-color: var(--theme-toolbar-background);
-  color: var(--theme-body-color-alt);
-  border-color: var(--theme-splitter-color);
-  border-style: solid;
-  border-width: 0px 1px 0px 0px;
+  background-color: var(--theme-sidebar-background);
+  border-inline-end: 1px solid var(--theme-splitter-color);
 }
 
 .list > li {
-  height: 40px;
+  display: flex;
+  flex-direction: column;
   color: var(--theme-body-color);
   border-bottom: 1px solid rgba(128,128,128,0.15);
   padding: 8px;
@@ -129,27 +101,19 @@ html, .theme-body, #app, #memory-tool, #memory-tool-container {
   color: var(--theme-selection-color);
 }
 
-.snapshot-list-item {
-  position: relative;
-}
-.snapshot-list-item span {
+.snapshot-list-item .snapshot-title {
   display: block;
+  margin-bottom: 14px;
 }
-.snapshot-list-item .snapshot-state, .snapshot-list-item .snapshot-totals {
+
+.snapshot-list-item .snapshot-state,
+.snapshot-list-item .snapshot-totals {
   font-size: 90%;
   color: var(--theme-body-color-alt);
-  position: absolute;
 }
-.snapshot-list-item .snapshot-state {
-  top: 38px;
-}
-.snapshot-list-item .snapshot-totals {
-  top: 38px;
-}
-.snapshot-list-item .total-bytes {
-  float: left;
-}
-.snapshot-list-item.selected .snapshot-state, .snapshot-list-item.selected .snapshot-totals {
+
+.snapshot-list-item.selected .snapshot-state,
+.snapshot-list-item.selected .snapshot-totals {
   /* Text inside a selected item should not be custom colored. */
   color: inherit !important;
 }
@@ -159,26 +123,21 @@ html, .theme-body, #app, #memory-tool, #memory-tool-container {
  */
 
 #heap-view {
-  flex: 1 1 auto;
-  border-color: var(--theme-splitter-color);
-  color: var(--theme-body-color);
-  border-left-width: 1px;
+  display: flex;
+  flex: 1;
+  justify-content: center;
+  background-color: var(--theme-toolbar-background);
 }
 
-#heap-view .heap-view-panel {
-  width: 100%;
-  height: 100%;
-  background-color: var(--theme-toolbar-background)
-}
-
-#heap-view .heap-view-panel .snapshot-status, #heap-view .take-snapshot {
+#heap-view .snapshot-status,
+#heap-view .take-snapshot {
+  margin: auto;
+  margin-top: 65px;
   font-size: 120%;
-  display: block;
-  margin: 65px auto;
 }
 
-#heap-view .heap-view-panel .snapshot-status {
-  width: 500px;
+#heap-view .snapshot-status {
+  display: block;
   text-align: center;
 }
 
@@ -186,10 +145,16 @@ html, .theme-body, #app, #memory-tool, #memory-tool-container {
   padding: 5px;
 }
 
+#heap-view .heap-view-panel {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
 #heap-view .heap-view-panel[data-state="snapshot-state-error"] pre {
+  /* TODO */
   background-color: var(--theme-body-background);
-  overflow-y: scroll;
-  height: 100px;
+  overflow-y: auto;
   margin: 20px;
   padding: 20px;
 }
@@ -202,34 +167,47 @@ html, .theme-body, #app, #memory-tool, #memory-tool-container {
   float: left;
 }
 
-.tree {
-  height: 100%;
-  overflow-y: scroll;
-  background-color: var(--theme-body-background);
-}
-
-.tree .header {
-  height: 17px;
-  overflow: hidden;
+.header {
+  height: var(--heap-tree-header-height);
+  display: flex;
+  align-items: center;
   color: var(--theme-body-color);
   background-color: var(--theme-tab-toolbar-background);
 }
 
+.header span {
+  text-align: center;
+  line-height: var(--heap-tree-header-height);
+  font-size: 90%;
+}
+
 .tree span {
-  border-left-color: var(--cell-border-color);
-  border-left-width: 1px;
+  line-height: var(--heap-tree-row-height);
+}
+
+.header span,
+.tree span {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tree {
+  flex: 1;
+  overflow-y: auto;
+  background-color: var(--theme-body-background);
 }
 
 .tree-node {
   height: var(--heap-tree-row-height);
+  clear: left;
 }
 
-.heap-tree-item, .header {
-  list-style-type: none;
-  height: var(--heap-tree-row-height);
+.heap-tree-item {
+  height: inherit;
 }
 
-.heap-tree-item-field, .header span {
+.heap-tree-item-field {
   float: left;
 }
 
@@ -246,25 +224,13 @@ html, .theme-body, #app, #memory-tool, #memory-tool-container {
   color: var(--theme-selection-color);
 }
 
-.header {
-  background-color: var(--theme-tab-toolbar-background);
-}
-
-.header span {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  text-align: center;
-  font-size: 90%;
-}
-
 .heap-tree-item-bytes,
 .heap-tree-item-count,
 .heap-tree-item-total-bytes,
 .heap-tree-item-total-count {
-  text-align: right;
-  border-right: var(--cell-border-color) 1px solid;
-  padding-right: 5px;
+  text-align: end;
+  border-inline-end: var(--cell-border-color) 1px solid;
+  padding-inline-end: 5px;
 }
 
 .heap-tree-item-count,
@@ -278,22 +244,24 @@ html, .theme-body, #app, #memory-tool, #memory-tool-container {
 }
 
 .heap-tree-item-name {
-  padding-left: 5px;
+  -moz-padding-start: 5px;
 }
 
 .error::before {
   content: "";
-  background-image: url(chrome://devtools/skin/themes/images/webconsole.svg);
-  background-repeat: no-repeat;
-  background-size: 72px 60px;
+  display: inline-block;
   width: 12px;
   height: 12px;
-  display: inline-block;
-
+  background-image: url(chrome://devtools/skin/themes/images/webconsole.svg);
+  background-size: 72px 60px;
   background-position: -24px -24px;
-  margin: 2px 5px 0 0;
+  background-repeat: no-repeat;
+  margin: 0px;
+  margin-top: 2px;
+  margin-inline-end: 5px;
   max-height: 12px;
 }
+
 .theme-light .error::before {
   background-image: url(chrome://devtools/skin/themes/images/webconsole.svg#light-icons);
 }
