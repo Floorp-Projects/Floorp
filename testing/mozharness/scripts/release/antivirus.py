@@ -132,6 +132,7 @@ class AntivirusScan(BaseScript, VirtualenvMixin):
         from boto.s3.connection import S3Connection
         from boto.exception import S3CopyError, S3ResponseError
         from redo import retry
+        from httplib import HTTPException
 
         # suppress boto debug logging, it's too verbose with --loglevel=debug
         import logging
@@ -156,7 +157,7 @@ class AntivirusScan(BaseScript, VirtualenvMixin):
                          args=(destination, ),
                          sleeptime=5, max_sleeptime=60,
                          retry_exceptions=(S3CopyError, S3ResponseError,
-                                           IOError))
+                                           IOError, HTTPException))
 
         def find_release_files():
             candidates_prefix = self._get_candidates_prefix()

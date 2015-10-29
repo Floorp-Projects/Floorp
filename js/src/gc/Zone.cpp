@@ -65,7 +65,7 @@ Zone::~Zone()
 bool Zone::init(bool isSystemArg)
 {
     isSystem = isSystemArg;
-    return uniqueIds_.init() && gcZoneGroupEdges.init();
+    return uniqueIds_.init() && gcZoneGroupEdges.init() && gcWeakKeys.init();
 }
 
 void
