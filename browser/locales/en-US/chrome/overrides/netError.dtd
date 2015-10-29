@@ -224,7 +224,3 @@ functionality specific to firefox. -->
 <!ENTITY weakCryptoAdvanced.title "Advanced">
 <!ENTITY weakCryptoAdvanced.longDesc "<span class='hostname'></span> uses security technology that is outdated and vulnerable to attack. An attacker could easily reveal information which you thought to be safe.">
 <!ENTITY weakCryptoAdvanced.override "(Not secure) Try loading <span class='hostname'></span> using outdated security">
-<!ENTITY weakCryptoAdvanced.desc2 "Why can't I go to <span class='hostname'></span>?">
-<!ENTITY weakCryptoAdvanced.desc3 "The website owner has asked &brandShortName; to stop this page from loading. It's not your fault, and it's not &brandShortName;'s fault.">
-<!ENTITY weakCryptoAdvanced.desc4 "How do I fix it?">
-<!ENTITY weakCryptoAdvanced.desc5 "Try visiting this page a little bit later, or visit it using another network.">
