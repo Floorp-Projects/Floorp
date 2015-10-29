@@ -1853,7 +1853,13 @@ class ADBDevice(ADBCommand):
         to determine if the device has completed booting.
         """
         self.command_output(["reboot"], timeout=timeout)
-        self.command_output(["wait-for-device"], timeout=timeout)
+        # command_output automatically inserts a 'wait-for-device'
+        # argument to adb. Issuing an empty command is the same as adb
+        # -s <device> wait-for-device. We don't send an explicit
+        # 'wait-for-device' since that would add duplicate
+        # 'wait-for-device' arguments which is an error in newer
+        # versions of adb.
+        self.command_output([], timeout=timeout)
         return self.is_device_ready(timeout=timeout)
 
     @abstractmethod
