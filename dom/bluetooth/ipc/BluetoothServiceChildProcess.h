@@ -82,12 +82,12 @@ public:
                        BluetoothReplyRunnable* aRunnable) override;
 
   virtual nsresult
-  GetServiceChannel(const BluetoothAddress& aDeviceAddress,
-                    const BluetoothUuid& aServiceUuid,
+  GetServiceChannel(const nsAString& aDeviceAddress,
+                    const nsAString& aServiceUuid,
                     BluetoothProfileManagerBase* aManager) override;
 
   virtual bool
-  UpdateSdpRecords(const BluetoothAddress& aDeviceAddress,
+  UpdateSdpRecords(const nsAString& aDeviceAddress,
                    BluetoothProfileManagerBase* aManager) override;
 
   virtual void

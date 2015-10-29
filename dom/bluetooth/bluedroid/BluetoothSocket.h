@@ -24,7 +24,7 @@ public:
   BluetoothSocket(BluetoothSocketObserver* aObserver);
   ~BluetoothSocket();
 
-  nsresult Connect(const BluetoothAddress& aDeviceAddress,
+  nsresult Connect(const nsAString& aDeviceAddress,
                    const BluetoothUuid& aServiceUuid,
                    BluetoothSocketType aType,
                    int aChannel,
@@ -32,7 +32,7 @@ public:
                    MessageLoop* aConsumerLoop,
                    MessageLoop* aIOLoop);
 
-  nsresult Connect(const BluetoothAddress& aDeviceAddress,
+  nsresult Connect(const nsAString& aDeviceAddress,
                    const BluetoothUuid& aServiceUuid,
                    BluetoothSocketType aType,
                    int aChannel,
@@ -60,12 +60,12 @@ public:
    */
   void ReceiveSocketData(nsAutoPtr<mozilla::ipc::UnixSocketBuffer>& aBuffer);
 
-  inline void GetAddress(BluetoothAddress& aDeviceAddress)
+  inline void GetAddress(nsAString& aDeviceAddress)
   {
     aDeviceAddress = mDeviceAddress;
   }
 
-  inline void SetAddress(const BluetoothAddress& aDeviceAddress)
+  inline void SetAddress(const nsAString& aDeviceAddress)
   {
     mDeviceAddress = aDeviceAddress;
   }
@@ -93,7 +93,7 @@ private:
   BluetoothSocketObserver* mObserver;
   BluetoothSocketResultHandler* mCurrentRes;
   DroidSocketImpl* mImpl;
-  BluetoothAddress mDeviceAddress;
+  nsString mDeviceAddress;
 };
 
 END_BLUETOOTH_NAMESPACE

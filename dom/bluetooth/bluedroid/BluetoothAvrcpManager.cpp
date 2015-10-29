@@ -441,11 +441,11 @@ private:
 };
 
 void
-BluetoothAvrcpManager::Connect(const BluetoothAddress& aDeviceAddress,
+BluetoothAvrcpManager::Connect(const nsAString& aDeviceAddress,
                                BluetoothProfileController* aController)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(!aDeviceAddress.IsCleared());
+  MOZ_ASSERT(!aDeviceAddress.IsEmpty());
   MOZ_ASSERT(aController);
 
   // AVRCP doesn't require connecting. We just set the remote address here.
@@ -479,7 +479,7 @@ BluetoothAvrcpManager::Disconnect(BluetoothProfileController* aController)
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!mController);
 
-  mDeviceAddress.Clear();
+  mDeviceAddress.Truncate();
   mController = aController;
   SetConnected(false);
 
@@ -519,19 +519,17 @@ BluetoothAvrcpManager::OnDisconnect(const nsAString& aErrorStr)
 }
 
 void
-BluetoothAvrcpManager::OnGetServiceChannel(
-  const BluetoothAddress& aDeviceAddress,
-  const BluetoothUuid& aServiceUuid,
-  int aChannel)
+BluetoothAvrcpManager::OnGetServiceChannel(const nsAString& aDeviceAddress,
+                                          const nsAString& aServiceUuid,
+                                          int aChannel)
 { }
 
 void
-BluetoothAvrcpManager::OnUpdateSdpRecords(
-  const BluetoothAddress& aDeviceAddress)
+BluetoothAvrcpManager::OnUpdateSdpRecords(const nsAString& aDeviceAddress)
 { }
 
 void
-BluetoothAvrcpManager::GetAddress(BluetoothAddress& aDeviceAddress)
+BluetoothAvrcpManager::GetAddress(nsAString& aDeviceAddress)
 {
   aDeviceAddress = mDeviceAddress;
 }

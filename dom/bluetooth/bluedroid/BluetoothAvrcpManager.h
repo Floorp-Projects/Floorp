@@ -109,7 +109,7 @@ private:
 
   void PassthroughCmdNotification(int aId, int aKeyState) override;
 
-  BluetoothAddress mDeviceAddress;
+  nsString mDeviceAddress;
   RefPtr<BluetoothProfileController> mController;
 
   bool mAvrcpConnected;

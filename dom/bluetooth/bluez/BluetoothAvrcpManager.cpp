@@ -116,11 +116,11 @@ BluetoothAvrcpManager::HandleShutdown()
 }
 
 void
-BluetoothAvrcpManager::Connect(const BluetoothAddress& aDeviceAddress,
+BluetoothAvrcpManager::Connect(const nsAString& aDeviceAddress,
                               BluetoothProfileController* aController)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(!aDeviceAddress.IsCleared());
+  MOZ_ASSERT(!aDeviceAddress.IsEmpty());
   MOZ_ASSERT(aController && !mController);
 
   mDeviceAddress = aDeviceAddress;
@@ -130,7 +130,7 @@ BluetoothAvrcpManager::Connect(const BluetoothAddress& aDeviceAddress,
 void
 BluetoothAvrcpManager::Disconnect(BluetoothProfileController* aController)
 {
-  mDeviceAddress.Clear();
+  mDeviceAddress.Truncate();
   OnDisconnect(EmptyString());
 }
 
@@ -167,18 +167,17 @@ BluetoothAvrcpManager::OnDisconnect(const nsAString& aErrorStr)
 }
 
 void
-BluetoothAvrcpManager::OnGetServiceChannel(
-  const BluetoothAddress& aDeviceAddress,
-  const BluetoothUuid& aServiceUuid,
-  int aChannel)
+BluetoothAvrcpManager::OnGetServiceChannel(const nsAString& aDeviceAddress,
+                                          const nsAString& aServiceUuid,
+                                          int aChannel)
 { }
 
 void
-BluetoothAvrcpManager::OnUpdateSdpRecords(const BluetoothAddress& aDeviceAddress)
+BluetoothAvrcpManager::OnUpdateSdpRecords(const nsAString& aDeviceAddress)
 { }
 
 void
-BluetoothAvrcpManager::GetAddress(BluetoothAddress& aDeviceAddress)
+BluetoothAvrcpManager::GetAddress(nsAString& aDeviceAddress)
 {
   aDeviceAddress = mDeviceAddress;
 }

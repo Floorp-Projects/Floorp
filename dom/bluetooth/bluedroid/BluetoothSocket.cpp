@@ -403,7 +403,10 @@ public:
       return;
     }
 
-    mImpl->mConsumer->SetAddress(aBdAddress);
+    nsAutoString addressStr;
+    AddressToString(aBdAddress, addressStr);
+
+    mImpl->mConsumer->SetAddress(addressStr);
     mImpl->GetIOLoop()->PostTask(FROM_HERE,
                                  new AcceptTask(mImpl, fd.forget()));
   }
@@ -590,6 +593,7 @@ BluetoothSocket::BluetoothSocket(BluetoothSocketObserver* aObserver)
   MOZ_COUNT_CTOR_INHERITED(BluetoothSocket, DataSocket);
 
   EnsureBluetoothSocketHalLoad();
+  mDeviceAddress.AssignLiteral(BLUETOOTH_ADDRESS_NONE);
 }
 
 BluetoothSocket::~BluetoothSocket()
@@ -621,7 +625,10 @@ public:
       return;
     }
 
-    mImpl->mConsumer->SetAddress(aBdAddress);
+    nsAutoString addressStr;
+    AddressToString(aBdAddress, addressStr);
+
+    mImpl->mConsumer->SetAddress(addressStr);
     mImpl->GetIOLoop()->PostTask(FROM_HERE,
                                  new SocketConnectTask(mImpl, aFd));
   }
@@ -645,7 +652,7 @@ private:
 };
 
 nsresult
-BluetoothSocket::Connect(const BluetoothAddress& aDeviceAddress,
+BluetoothSocket::Connect(const nsAString& aDeviceAddress,
                          const BluetoothUuid& aServiceUuid,
                          BluetoothSocketType aType,
                          int aChannel,
@@ -662,8 +669,14 @@ BluetoothSocket::Connect(const BluetoothAddress& aDeviceAddress,
   BluetoothSocketResultHandler* res = new ConnectSocketResultHandler(mImpl);
   SetCurrentResultHandler(res);
 
+  BluetoothAddress deviceAddress;
+  nsresult rv = StringToAddress(aDeviceAddress, deviceAddress);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
   sBluetoothSocketInterface->Connect(
-    aDeviceAddress, aType,
+    deviceAddress, aType,
     aServiceUuid, aChannel,
     aEncrypt, aAuth, res);
 
@@ -671,7 +684,7 @@ BluetoothSocket::Connect(const BluetoothAddress& aDeviceAddress,
 }
 
 nsresult
-BluetoothSocket::Connect(const BluetoothAddress& aDeviceAddress,
+BluetoothSocket::Connect(const nsAString& aDeviceAddress,
                          const BluetoothUuid& aServiceUuid,
                          BluetoothSocketType aType,
                          int aChannel,

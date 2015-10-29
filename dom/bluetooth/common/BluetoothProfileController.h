@@ -93,7 +93,7 @@ public:
    *                        aCod or disconnect all connected profiles.
    */
   BluetoothProfileController(bool aConnect,
-                             const BluetoothAddress& aDeviceAddress,
+                             const nsAString& aDeviceAddress,
                              BluetoothReplyRunnable* aRunnable,
                              BluetoothProfileControllerCallback aCallback,
                              uint16_t aServiceUuid,
@@ -139,7 +139,7 @@ private:
   bool IsBtServiceAvailable() const;
 
   const bool mConnect;
-  BluetoothAddress mDeviceAddress;
+  nsString mDeviceAddress;
   RefPtr<BluetoothReplyRunnable> mRunnable;
   BluetoothProfileControllerCallback mCallback;
 
