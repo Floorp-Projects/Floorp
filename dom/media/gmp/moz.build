@@ -109,7 +109,7 @@ UNIFIED_SOURCES += [
     'GMPVideoPlaneImpl.cpp',
 ]
 
-if CONFIG['OS_TARGET'] == 'WINNT':
+if CONFIG['OS_TARGET'] in ('WINNT', 'Darwin'):
   DIRS += [
       'rlz',
   ]

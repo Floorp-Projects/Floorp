@@ -13,8 +13,20 @@ USE_STATIC_LIBS = True
 
 UNIFIED_SOURCES += [
     'lib/string_utils.cc',
-    'win/lib/machine_id_win.cc',
 ]
+
+if CONFIG['OS_TARGET'] == 'WINNT':
+    UNIFIED_SOURCES += [
+        'win/lib/machine_id_win.cc',
+    ]
+
+if CONFIG['OS_TARGET'] == 'Darwin':
+    UNIFIED_SOURCES += [
+        'mac/lib/machine_id_mac.cc',
+    ]
+    OS_LIBS += [
+        '-framework IOKit',
+    ]
 
 LOCAL_INCLUDES += [
     '..',
