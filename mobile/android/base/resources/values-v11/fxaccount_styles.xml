@@ -14,7 +14,7 @@
 
     <style name="FxAccountTheme" parent="@style/Gecko" />
 
-    <style name="FxAccountTheme.FxAccountStatusActivity" parent="@FxAccountTheme">
+    <style name="FxAccountTheme.FxAccountStatusActivity" parent="Gecko.Preferences">
          <item name="android:windowActionBar">true</item>
          <item name="android:windowNoTitle">false</item>
          <item name="android:actionBarStyle">@style/ActionBar.FxAccountStatusActivity</item>
