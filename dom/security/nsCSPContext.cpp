@@ -776,7 +776,7 @@ nsCSPContext::SendReports(nsISupports* aBlockedContentSource,
       const char16_t* params[] = { reportURIs[r].get() };
       CSPCONTEXTLOG(("Could not create nsIURI for report URI %s",
                      reportURICstring.get()));
-      CSP_LogLocalizedStr(NS_LITERAL_STRING("triedToSendReport").get(),
+      CSP_LogLocalizedStr(MOZ_UTF16("triedToSendReport"),
                           params, ArrayLength(params),
                           aSourceFile, aScriptSample, aLineNum, 0,
                           nsIScriptError::errorFlag, "CSP", mInnerWindowID);
@@ -820,7 +820,7 @@ nsCSPContext::SendReports(nsISupports* aBlockedContentSource,
 
     if (!isHttpScheme) {
       const char16_t* params[] = { reportURIs[r].get() };
-      CSP_LogLocalizedStr(NS_LITERAL_STRING("reportURInotHttpsOrHttp2").get(),
+      CSP_LogLocalizedStr(MOZ_UTF16("reportURInotHttpsOrHttp2"),
                           params, ArrayLength(params),
                           aSourceFile, aScriptSample, aLineNum, 0,
                           nsIScriptError::errorFlag, "CSP", mInnerWindowID);
@@ -904,7 +904,7 @@ nsCSPContext::SendReports(nsISupports* aBlockedContentSource,
     if (NS_FAILED(rv)) {
       const char16_t* params[] = { reportURIs[r].get() };
       CSPCONTEXTLOG(("AsyncOpen failed for report URI %s", params[0]));
-      CSP_LogLocalizedStr(NS_LITERAL_STRING("triedToSendReport").get(),
+      CSP_LogLocalizedStr(MOZ_UTF16("triedToSendReport"),
                           params, ArrayLength(params),
                           aSourceFile, aScriptSample, aLineNum, 0,
                           nsIScriptError::errorFlag, "CSP", mInnerWindowID);
@@ -994,8 +994,8 @@ class CSPReportSenderRunnable final : public nsRunnable
         const char16_t* params[] = { mViolatedDirective.get(),
                                      blockedDataChar16.get() };
 
-        CSP_LogLocalizedStr(mReportOnlyFlag ? NS_LITERAL_STRING("CSPROViolationWithURI").get() :
-                                              NS_LITERAL_STRING("CSPViolationWithURI").get(),
+        CSP_LogLocalizedStr(mReportOnlyFlag ? MOZ_UTF16("CSPROViolationWithURI") :
+                                              MOZ_UTF16("CSPViolationWithURI"),
                             params, ArrayLength(params),
                             mSourceFile, mScriptSample, mLineNum, 0,
                             nsIScriptError::errorFlag, "CSP", mInnerWindowID);
@@ -1313,7 +1313,7 @@ CSPReportRedirectSink::AsyncOnChannelRedirect(nsIChannel* aOldChannel,
   NS_ASSERTION(observerService, "Observer service required to log CSP violations");
   observerService->NotifyObservers(uri,
                                    CSP_VIOLATION_TOPIC,
-                                   NS_LITERAL_STRING("denied redirect while sending violation report").get());
+                                   MOZ_UTF16("denied redirect while sending violation report"));
 
   return NS_BINDING_REDIRECTED;
 }

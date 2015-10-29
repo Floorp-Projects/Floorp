@@ -358,7 +358,7 @@ nsHttpChannel::Connect()
 
                 const char16_t* params[] = { reportSpec.get(), reportScheme.get() };
                 uint32_t innerWindowId = mLoadInfo ? mLoadInfo->GetInnerWindowID() : 0;
-                CSP_LogLocalizedStr(NS_LITERAL_STRING("upgradeInsecureRequest").get(),
+                CSP_LogLocalizedStr(MOZ_UTF16("upgradeInsecureRequest"),
                                     params, ArrayLength(params),
                                     EmptyString(), // aSourceFile
                                     EmptyString(), // aScriptSample

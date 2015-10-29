@@ -36,6 +36,7 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/EventForwards.h"
+#include "mozilla/UniquePtr.h"
 
 /**
  * NS_INLINE_DECL_IUNKNOWN_REFCOUNTING should be used for defining and
@@ -459,15 +460,15 @@ public:
 
   // Warning: AsyncEncodeAndWriteIcon assumes ownership of the aData buffer passed in
   AsyncEncodeAndWriteIcon(const nsAString &aIconPath,
-                          uint8_t *aData, uint32_t aDataLen, uint32_t aStride,
-                          uint32_t aWidth, uint32_t aHeight,
+                          UniquePtr<uint8_t[]> aData, uint32_t aDataLen,
+                          uint32_t aStride, uint32_t aWidth, uint32_t aHeight,
                           const bool aURLShortcut);
 
 private:
   virtual ~AsyncEncodeAndWriteIcon();
 
   nsAutoString mIconPath;
-  nsAutoArrayPtr<uint8_t> mBuffer;
+  UniquePtr<uint8_t[]> mBuffer;
   HMODULE sDwmDLL;
   uint32_t mBufferLength;
   uint32_t mStride;
