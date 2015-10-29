@@ -148,7 +148,7 @@ public:
 
   void NotifyDiscoverCompleted(bool aSuccess)
   {
-    MOZ_ASSERT(!mAppUuid.IsCleared());
+    MOZ_ASSERT(mAppUuid != BluetoothUuid::ZERO);
     MOZ_ASSERT(mDiscoverRunnable);
 
     BluetoothService* bs = BluetoothService::Get();
@@ -829,7 +829,7 @@ private:
 };
 
 void
-BluetoothGattManager::StartLeScan(const nsTArray<BluetoothUuid>& aServiceUuids,
+BluetoothGattManager::StartLeScan(const nsTArray<nsString>& aServiceUuids,
                                   BluetoothReplyRunnable* aRunnable)
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -865,7 +865,7 @@ BluetoothGattManager::StartLeScan(const nsTArray<BluetoothUuid>& aServiceUuids,
 }
 
 void
-BluetoothGattManager::StopLeScan(const BluetoothUuid& aScanUuid,
+BluetoothGattManager::StopLeScan(const nsAString& aScanUuid,
                                  BluetoothReplyRunnable* aRunnable)
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -873,7 +873,10 @@ BluetoothGattManager::StopLeScan(const BluetoothUuid& aScanUuid,
 
   ENSURE_GATT_INTF_IS_READY_VOID(aRunnable);
 
-  size_t index = sClients->IndexOf(aScanUuid, 0 /* Start */, UuidComparator());
+  BluetoothUuid scanUuid;
+  StringToUuid(aScanUuid, scanUuid);
+
+  size_t index = sClients->IndexOf(scanUuid, 0 /* Start */, UuidComparator());
   if (NS_WARN_IF(index == sClients->NoIndex)) {
     // Reject the stop LE scan request
     DispatchReplyError(aRunnable, NS_LITERAL_STRING("StopLeScan failed"));
@@ -926,8 +929,8 @@ private:
 };
 
 void
-BluetoothGattManager::Connect(const BluetoothUuid& aAppUuid,
-                              const BluetoothAddress& aDeviceAddr,
+BluetoothGattManager::Connect(const nsAString& aAppUuid,
+                              const nsAString& aDeviceAddr,
                               BluetoothReplyRunnable* aRunnable)
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -935,10 +938,30 @@ BluetoothGattManager::Connect(const BluetoothUuid& aAppUuid,
 
   ENSURE_GATT_INTF_IS_READY_VOID(aRunnable);
 
-  size_t index = sClients->IndexOf(aAppUuid, 0 /* Start */, UuidComparator());
+  BluetoothUuid appUuid;
+  StringToUuid(aAppUuid, appUuid);
+
+  BluetoothAddress deviceAddr;
+  nsresult rv = StringToAddress(aDeviceAddr, deviceAddr);
+  if (NS_FAILED(rv)) {
+    BluetoothService* bs = BluetoothService::Get();
+    NS_ENSURE_TRUE_VOID(bs);
+
+    // Notify BluetoothGatt for client disconnected
+    bs->DistributeSignal(
+      NS_LITERAL_STRING(GATT_CONNECTION_STATE_CHANGED_ID),
+      aAppUuid,
+      BluetoothValue(false)); // Disconnected
+
+    // Reject the connect request
+    DispatchReplyError(aRunnable, STATUS_PARM_INVALID);
+    return;
+  }
+
+  size_t index = sClients->IndexOf(appUuid, 0 /* Start */, UuidComparator());
   if (index == sClients->NoIndex) {
     index = sClients->Length();
-    sClients->AppendElement(new BluetoothGattClient(aAppUuid, aDeviceAddr));
+    sClients->AppendElement(new BluetoothGattClient(appUuid, deviceAddr));
   }
 
   RefPtr<BluetoothGattClient> client = sClients->ElementAt(index);
@@ -946,14 +969,14 @@ BluetoothGattManager::Connect(const BluetoothUuid& aAppUuid,
 
   if (client->mClientIf > 0) {
     sBluetoothGattInterface->Connect(client->mClientIf,
-                                     aDeviceAddr,
+                                     deviceAddr,
                                      true, // direct connect
                                      TRANSPORT_AUTO,
                                      new ConnectResultHandler(client));
   } else {
     // connect will be proceeded after client registered
     sBluetoothGattInterface->RegisterClient(
-      aAppUuid, new RegisterClientResultHandler(client));
+      appUuid, new RegisterClientResultHandler(client));
   }
 }
 
@@ -996,8 +1019,8 @@ private:
 };
 
 void
-BluetoothGattManager::Disconnect(const BluetoothUuid& aAppUuid,
-                                 const BluetoothAddress& aDeviceAddr,
+BluetoothGattManager::Disconnect(const nsAString& aAppUuid,
+                                 const nsAString& aDeviceAddr,
                                  BluetoothReplyRunnable* aRunnable)
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -1005,7 +1028,27 @@ BluetoothGattManager::Disconnect(const BluetoothUuid& aAppUuid,
 
   ENSURE_GATT_INTF_IS_READY_VOID(aRunnable);
 
-  size_t index = sClients->IndexOf(aAppUuid, 0 /* Start */, UuidComparator());
+  BluetoothAddress deviceAddr;
+  nsresult rv = StringToAddress(aDeviceAddr, deviceAddr);
+  if (NS_FAILED(rv)) {
+    BluetoothService* bs = BluetoothService::Get();
+    NS_ENSURE_TRUE_VOID(bs);
+
+    // Notify BluetoothGatt that client remains connected
+    bs->DistributeSignal(
+      NS_LITERAL_STRING(GATT_CONNECTION_STATE_CHANGED_ID),
+      aAppUuid,
+      BluetoothValue(true)); // Connected
+
+    // Reject the Disconnect request
+    DispatchReplyError(aRunnable, STATUS_PARM_INVALID);
+    return;
+  }
+
+  BluetoothUuid appUuid;
+  StringToUuid(aAppUuid, appUuid);
+
+  size_t index = sClients->IndexOf(appUuid, 0 /* Start */, UuidComparator());
   if (NS_WARN_IF(index == sClients->NoIndex)) {
     DispatchReplyError(aRunnable, STATUS_PARM_INVALID);
     return;
@@ -1016,7 +1059,7 @@ BluetoothGattManager::Disconnect(const BluetoothUuid& aAppUuid,
 
   sBluetoothGattInterface->Disconnect(
     client->mClientIf,
-    aDeviceAddr,
+    deviceAddr,
     client->mConnId,
     new DisconnectResultHandler(client));
 }
@@ -1044,7 +1087,7 @@ private:
 };
 
 void
-BluetoothGattManager::Discover(const BluetoothUuid& aAppUuid,
+BluetoothGattManager::Discover(const nsAString& aAppUuid,
                                BluetoothReplyRunnable* aRunnable)
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -1052,7 +1095,10 @@ BluetoothGattManager::Discover(const BluetoothUuid& aAppUuid,
 
   ENSURE_GATT_INTF_IS_READY_VOID(aRunnable);
 
-  size_t index = sClients->IndexOf(aAppUuid, 0 /* Start */, UuidComparator());
+  BluetoothUuid appUuid;
+  StringToUuid(aAppUuid, appUuid);
+
+  size_t index = sClients->IndexOf(appUuid, 0 /* Start */, UuidComparator());
   if (NS_WARN_IF(index == sClients->NoIndex)) {
     DispatchReplyError(aRunnable, STATUS_PARM_INVALID);
     return;
@@ -1080,7 +1126,7 @@ BluetoothGattManager::Discover(const BluetoothUuid& aAppUuid,
   sBluetoothGattInterface->SearchService(
     client->mConnId,
     true, // search all services
-    BluetoothUuid::ZERO,
+    BluetoothUuid(),
     new DiscoverResultHandler(client));
 }
 
@@ -1112,13 +1158,20 @@ private:
 
 void
 BluetoothGattManager::ReadRemoteRssi(int aClientIf,
-                                     const BluetoothAddress& aDeviceAddr,
+                                     const nsAString& aDeviceAddr,
                                      BluetoothReplyRunnable* aRunnable)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aRunnable);
 
   ENSURE_GATT_INTF_IS_READY_VOID(aRunnable);
+
+  BluetoothAddress deviceAddr;
+  nsresult rv = StringToAddress(aDeviceAddr, deviceAddr);
+  if (NS_FAILED(rv)) {
+    DispatchReplyError(aRunnable, STATUS_PARM_INVALID);
+    return;
+  }
 
   size_t index = sClients->IndexOf(aClientIf, 0 /* Start */,
                                    InterfaceIdComparator());
@@ -1131,7 +1184,7 @@ BluetoothGattManager::ReadRemoteRssi(int aClientIf,
   client->mReadRemoteRssiRunnable = aRunnable;
 
   sBluetoothGattInterface->ReadRemoteRssi(
-    aClientIf, aDeviceAddr,
+    aClientIf, deviceAddr,
     new ReadRemoteRssiResultHandler(client));
 }
 
@@ -1180,7 +1233,7 @@ private:
 
 void
 BluetoothGattManager::RegisterNotifications(
-  const BluetoothUuid& aAppUuid, const BluetoothGattServiceId& aServId,
+  const nsAString& aAppUuid, const BluetoothGattServiceId& aServId,
   const BluetoothGattId& aCharId, BluetoothReplyRunnable* aRunnable)
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -1188,7 +1241,10 @@ BluetoothGattManager::RegisterNotifications(
 
   ENSURE_GATT_INTF_IS_READY_VOID(aRunnable);
 
-  size_t index = sClients->IndexOf(aAppUuid, 0 /* Start */, UuidComparator());
+  BluetoothUuid appUuid;
+  StringToUuid(aAppUuid, appUuid);
+
+  size_t index = sClients->IndexOf(appUuid, 0 /* Start */, UuidComparator());
   if (NS_WARN_IF(index == sClients->NoIndex)) {
     DispatchReplyError(aRunnable, STATUS_PARM_INVALID);
     return;
@@ -1256,7 +1312,7 @@ private:
 
 void
 BluetoothGattManager::DeregisterNotifications(
-  const BluetoothUuid& aAppUuid, const BluetoothGattServiceId& aServId,
+  const nsAString& aAppUuid, const BluetoothGattServiceId& aServId,
   const BluetoothGattId& aCharId, BluetoothReplyRunnable* aRunnable)
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -1264,7 +1320,10 @@ BluetoothGattManager::DeregisterNotifications(
 
   ENSURE_GATT_INTF_IS_READY_VOID(aRunnable);
 
-  size_t index = sClients->IndexOf(aAppUuid, 0 /* Start */, UuidComparator());
+  BluetoothUuid appUuid;
+  StringToUuid(aAppUuid, appUuid);
+
+  size_t index = sClients->IndexOf(appUuid, 0 /* Start */, UuidComparator());
   if (NS_WARN_IF(index == sClients->NoIndex)) {
     DispatchReplyError(aRunnable, STATUS_PARM_INVALID);
     return;
@@ -1317,7 +1376,7 @@ private:
 
 void
 BluetoothGattManager::ReadCharacteristicValue(
-  const BluetoothUuid& aAppUuid,
+  const nsAString& aAppUuid,
   const BluetoothGattServiceId& aServiceId,
   const BluetoothGattId& aCharacteristicId,
   BluetoothReplyRunnable* aRunnable)
@@ -1327,7 +1386,10 @@ BluetoothGattManager::ReadCharacteristicValue(
 
   ENSURE_GATT_INTF_IS_READY_VOID(aRunnable);
 
-  size_t index = sClients->IndexOf(aAppUuid, 0 /* Start */, UuidComparator());
+  BluetoothUuid appUuid;
+  StringToUuid(aAppUuid, appUuid);
+
+  size_t index = sClients->IndexOf(appUuid, 0 /* Start */, UuidComparator());
   if (NS_WARN_IF(index == sClients->NoIndex)) {
     DispatchReplyError(aRunnable, STATUS_PARM_INVALID);
     return;
@@ -1395,7 +1457,7 @@ private:
 
 void
 BluetoothGattManager::WriteCharacteristicValue(
-  const BluetoothUuid& aAppUuid,
+  const nsAString& aAppUuid,
   const BluetoothGattServiceId& aServiceId,
   const BluetoothGattId& aCharacteristicId,
   const BluetoothGattWriteType& aWriteType,
@@ -1407,7 +1469,10 @@ BluetoothGattManager::WriteCharacteristicValue(
 
   ENSURE_GATT_INTF_IS_READY_VOID(aRunnable);
 
-  size_t index = sClients->IndexOf(aAppUuid, 0 /* Start */, UuidComparator());
+  BluetoothUuid appUuid;
+  StringToUuid(aAppUuid, appUuid);
+
+  size_t index = sClients->IndexOf(appUuid, 0 /* Start */, UuidComparator());
   if (NS_WARN_IF(index == sClients->NoIndex)) {
     DispatchReplyError(aRunnable, STATUS_PARM_INVALID);
     return;
@@ -1478,7 +1543,7 @@ private:
 
 void
 BluetoothGattManager::ReadDescriptorValue(
-  const BluetoothUuid& aAppUuid,
+  const nsAString& aAppUuid,
   const BluetoothGattServiceId& aServiceId,
   const BluetoothGattId& aCharacteristicId,
   const BluetoothGattId& aDescriptorId,
@@ -1489,7 +1554,10 @@ BluetoothGattManager::ReadDescriptorValue(
 
   ENSURE_GATT_INTF_IS_READY_VOID(aRunnable);
 
-  size_t index = sClients->IndexOf(aAppUuid, 0 /* Start */, UuidComparator());
+  BluetoothUuid appUuid;
+  StringToUuid(aAppUuid, appUuid);
+
+  size_t index = sClients->IndexOf(appUuid, 0 /* Start */, UuidComparator());
   if (NS_WARN_IF(index == sClients->NoIndex)) {
     DispatchReplyError(aRunnable, STATUS_PARM_INVALID);
     return;
@@ -1558,7 +1626,7 @@ private:
 
 void
 BluetoothGattManager::WriteDescriptorValue(
-  const BluetoothUuid& aAppUuid,
+  const nsAString& aAppUuid,
   const BluetoothGattServiceId& aServiceId,
   const BluetoothGattId& aCharacteristicId,
   const BluetoothGattId& aDescriptorId,
@@ -1570,7 +1638,10 @@ BluetoothGattManager::WriteDescriptorValue(
 
   ENSURE_GATT_INTF_IS_READY_VOID(aRunnable);
 
-  size_t index = sClients->IndexOf(aAppUuid, 0 /* Start */, UuidComparator());
+  BluetoothUuid appUuid;
+  StringToUuid(aAppUuid, appUuid);
+
+  size_t index = sClients->IndexOf(appUuid, 0 /* Start */, UuidComparator());
   if (NS_WARN_IF(index == sClients->NoIndex)) {
     DispatchReplyError(aRunnable, STATUS_PARM_INVALID);
     return;
@@ -1688,8 +1759,8 @@ private:
 
 void
 BluetoothGattManager::ConnectPeripheral(
-  const BluetoothUuid& aAppUuid,
-  const BluetoothAddress& aAddress,
+  const nsAString& aAppUuid,
+  const nsAString& aAddress,
   BluetoothReplyRunnable* aRunnable)
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -1697,10 +1768,20 @@ BluetoothGattManager::ConnectPeripheral(
 
   ENSURE_GATT_INTF_IS_READY_VOID(aRunnable);
 
-  size_t index = sServers->IndexOf(aAppUuid, 0 /* Start */, UuidComparator());
+  BluetoothUuid appUuid;
+  StringToUuid(aAppUuid, appUuid);
+
+  BluetoothAddress address;
+  nsresult rv = StringToAddress(aAddress, address);
+  if (NS_FAILED(rv)) {
+    DispatchReplyError(aRunnable, STATUS_PARM_INVALID);
+    return;
+  }
+
+  size_t index = sServers->IndexOf(appUuid, 0 /* Start */, UuidComparator());
   if (index == sServers->NoIndex) {
     index = sServers->Length();
-    sServers->AppendElement(new BluetoothGattServer(aAppUuid));
+    sServers->AppendElement(new BluetoothGattServer(appUuid));
   }
   RefPtr<BluetoothGattServer> server = (*sServers)[index];
 
@@ -1723,28 +1804,28 @@ BluetoothGattManager::ConnectPeripheral(
   }
 
   int connId = 0;
-  if (server->mConnectionMap.Get(aAddress, &connId)) {
+  if (server->mConnectionMap.Get(address, &connId)) {
     MOZ_ASSERT(connId > 0);
     DispatchReplySuccess(aRunnable);
     return;
   }
 
-  server->mConnectionMap.Put(aAddress, 0);
+  server->mConnectionMap.Put(address, 0);
   server->mConnectPeripheralRunnable = aRunnable;
 
   if (server->mServerIf > 0) {
     sBluetoothGattInterface->ConnectPeripheral(
       server->mServerIf,
-      aAddress,
+      address,
       true, // direct connect
       TRANSPORT_AUTO,
-      new ConnectPeripheralResultHandler(server, aAddress));
+      new ConnectPeripheralResultHandler(server, address));
   } else if (!server->mIsRegistering) { /* avoid triggering another registration
                                          * procedure if there is an on-going one
                                          * already */
     // connect will be proceeded after server registered
     sBluetoothGattInterface->RegisterServer(
-      aAppUuid, new RegisterServerResultHandler(server));
+      appUuid, new RegisterServerResultHandler(server));
   }
 }
 
@@ -1776,8 +1857,8 @@ private:
 
 void
 BluetoothGattManager::DisconnectPeripheral(
-  const BluetoothUuid& aAppUuid,
-  const BluetoothAddress& aAddress,
+  const nsAString& aAppUuid,
+  const nsAString& aAddress,
   BluetoothReplyRunnable* aRunnable)
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -1785,7 +1866,17 @@ BluetoothGattManager::DisconnectPeripheral(
 
   ENSURE_GATT_INTF_IS_READY_VOID(aRunnable);
 
-  size_t index = sServers->IndexOf(aAppUuid, 0 /* Start */, UuidComparator());
+  BluetoothUuid appUuid;
+  StringToUuid(aAppUuid, appUuid);
+
+  BluetoothAddress address;
+  nsresult rv = StringToAddress(aAddress, address);
+  if (NS_FAILED(rv)) {
+    DispatchReplyError(aRunnable, STATUS_PARM_INVALID);
+    return;
+  }
+
+  size_t index = sServers->IndexOf(appUuid, 0 /* Start */, UuidComparator());
   if (NS_WARN_IF(index == sServers->NoIndex)) {
     DispatchReplyError(aRunnable, STATUS_PARM_INVALID);
     return;
@@ -1807,7 +1898,7 @@ BluetoothGattManager::DisconnectPeripheral(
 
   // Resolve the request if the device is not connected.
   int connId = 0;
-  if (!server->mConnectionMap.Get(aAddress, &connId)) {
+  if (!server->mConnectionMap.Get(address, &connId)) {
     DispatchReplySuccess(aRunnable);
     return;
   }
@@ -1816,7 +1907,7 @@ BluetoothGattManager::DisconnectPeripheral(
 
   sBluetoothGattInterface->DisconnectPeripheral(
     server->mServerIf,
-    aAddress,
+    address,
     connId,
     new DisconnectPeripheralResultHandler(server));
 }
@@ -1919,7 +2010,7 @@ private:
 
 void
 BluetoothGattManager::ServerAddService(
-  const BluetoothUuid& aAppUuid,
+  const nsAString& aAppUuid,
   const BluetoothGattServiceId& aServiceId,
   uint16_t aHandleCount,
   BluetoothReplyRunnable* aRunnable)
@@ -1929,10 +2020,13 @@ BluetoothGattManager::ServerAddService(
 
   ENSURE_GATT_INTF_IS_READY_VOID(aRunnable);
 
-  size_t index = sServers->IndexOf(aAppUuid, 0 /* Start */, UuidComparator());
+  BluetoothUuid appUuid;
+  StringToUuid(aAppUuid, appUuid);
+
+  size_t index = sServers->IndexOf(appUuid, 0 /* Start */, UuidComparator());
   if (index == sServers->NoIndex) {
     index = sServers->Length();
-    sServers->AppendElement(new BluetoothGattServer(aAppUuid));
+    sServers->AppendElement(new BluetoothGattServer(appUuid));
   }
   RefPtr<BluetoothGattServer> server = sServers->ElementAt(index);
 
@@ -1955,7 +2049,7 @@ BluetoothGattManager::ServerAddService(
                                          * already */
     // add service will be proceeded after server registered
     sBluetoothGattInterface->RegisterServer(
-      aAppUuid, new RegisterServerResultHandler(server));
+      appUuid, new RegisterServerResultHandler(server));
   }
 }
 
@@ -1988,7 +2082,7 @@ private:
 
 void
 BluetoothGattManager::ServerAddIncludedService(
-  const BluetoothUuid& aAppUuid,
+  const nsAString& aAppUuid,
   const BluetoothAttributeHandle& aServiceHandle,
   const BluetoothAttributeHandle& aIncludedServiceHandle,
   BluetoothReplyRunnable* aRunnable)
@@ -1998,7 +2092,10 @@ BluetoothGattManager::ServerAddIncludedService(
 
   ENSURE_GATT_INTF_IS_READY_VOID(aRunnable);
 
-  size_t index = sServers->IndexOf(aAppUuid, 0 /* Start */, UuidComparator());
+  BluetoothUuid appUuid;
+  StringToUuid(aAppUuid, appUuid);
+
+  size_t index = sServers->IndexOf(appUuid, 0 /* Start */, UuidComparator());
   if (NS_WARN_IF(index == sServers->NoIndex)) {
     DispatchReplyError(aRunnable, STATUS_PARM_INVALID);
     return;
@@ -2054,7 +2151,7 @@ private:
 
 void
 BluetoothGattManager::ServerAddCharacteristic(
-  const BluetoothUuid& aAppUuid,
+  const nsAString& aAppUuid,
   const BluetoothAttributeHandle& aServiceHandle,
   const BluetoothUuid& aCharacteristicUuid,
   BluetoothGattAttrPerm aPermissions,
@@ -2066,7 +2163,10 @@ BluetoothGattManager::ServerAddCharacteristic(
 
   ENSURE_GATT_INTF_IS_READY_VOID(aRunnable);
 
-  size_t index = sServers->IndexOf(aAppUuid, 0 /* Start */, UuidComparator());
+  BluetoothUuid appUuid;
+  StringToUuid(aAppUuid, appUuid);
+
+  size_t index = sServers->IndexOf(appUuid, 0 /* Start */, UuidComparator());
   if (NS_WARN_IF(index == sServers->NoIndex)) {
     DispatchReplyError(aRunnable, STATUS_PARM_INVALID);
     return;
@@ -2124,7 +2224,7 @@ private:
 
 void
 BluetoothGattManager::ServerAddDescriptor(
-  const BluetoothUuid& aAppUuid,
+  const nsAString& aAppUuid,
   const BluetoothAttributeHandle& aServiceHandle,
   const BluetoothAttributeHandle& aCharacteristicHandle,
   const BluetoothUuid& aDescriptorUuid,
@@ -2136,7 +2236,10 @@ BluetoothGattManager::ServerAddDescriptor(
 
   ENSURE_GATT_INTF_IS_READY_VOID(aRunnable);
 
-  size_t index = sServers->IndexOf(aAppUuid, 0 /* Start */, UuidComparator());
+  BluetoothUuid appUuid;
+  StringToUuid(aAppUuid, appUuid);
+
+  size_t index = sServers->IndexOf(appUuid, 0 /* Start */, UuidComparator());
   if (NS_WARN_IF(index == sServers->NoIndex)) {
     DispatchReplyError(aRunnable, STATUS_PARM_INVALID);
     return;
@@ -2196,7 +2299,7 @@ private:
 
 void
 BluetoothGattManager::ServerRemoveService(
-  const BluetoothUuid& aAppUuid,
+  const nsAString& aAppUuid,
   const BluetoothAttributeHandle& aServiceHandle,
   BluetoothReplyRunnable* aRunnable)
 {
@@ -2205,7 +2308,10 @@ BluetoothGattManager::ServerRemoveService(
 
   ENSURE_GATT_INTF_IS_READY_VOID(aRunnable);
 
-  size_t index = sServers->IndexOf(aAppUuid, 0 /* Start */, UuidComparator());
+  BluetoothUuid appUuid;
+  StringToUuid(aAppUuid, appUuid);
+
+  size_t index = sServers->IndexOf(appUuid, 0 /* Start */, UuidComparator());
   if (NS_WARN_IF(index == sServers->NoIndex)) {
     DispatchReplyError(aRunnable, STATUS_PARM_INVALID);
     return;
@@ -2260,7 +2366,7 @@ private:
 
 void
 BluetoothGattManager::ServerStartService(
-  const BluetoothUuid& aAppUuid,
+  const nsAString& aAppUuid,
   const BluetoothAttributeHandle& aServiceHandle,
   BluetoothReplyRunnable* aRunnable)
 {
@@ -2269,7 +2375,10 @@ BluetoothGattManager::ServerStartService(
 
   ENSURE_GATT_INTF_IS_READY_VOID(aRunnable);
 
-  size_t index = sServers->IndexOf(aAppUuid, 0 /* Start */, UuidComparator());
+  BluetoothUuid appUuid;
+  StringToUuid(aAppUuid, appUuid);
+
+  size_t index = sServers->IndexOf(appUuid, 0 /* Start */, UuidComparator());
   if (NS_WARN_IF(index == sServers->NoIndex)) {
     DispatchReplyError(aRunnable, STATUS_PARM_INVALID);
     return;
@@ -2325,7 +2434,7 @@ private:
 
 void
 BluetoothGattManager::ServerStopService(
-  const BluetoothUuid& aAppUuid,
+  const nsAString& aAppUuid,
   const BluetoothAttributeHandle& aServiceHandle,
   BluetoothReplyRunnable* aRunnable)
 {
@@ -2334,7 +2443,10 @@ BluetoothGattManager::ServerStopService(
 
   ENSURE_GATT_INTF_IS_READY_VOID(aRunnable);
 
-  size_t index = sServers->IndexOf(aAppUuid, 0 /* Start */, UuidComparator());
+  BluetoothUuid appUuid;
+  StringToUuid(aAppUuid, appUuid);
+
+  size_t index = sServers->IndexOf(appUuid, 0 /* Start */, UuidComparator());
   if (NS_WARN_IF(index == sServers->NoIndex)) {
     DispatchReplyError(aRunnable, STATUS_PARM_INVALID);
     return;
@@ -2396,8 +2508,8 @@ private:
 };
 
 void
-BluetoothGattManager::ServerSendResponse(const BluetoothUuid& aAppUuid,
-                                         const BluetoothAddress& aAddress,
+BluetoothGattManager::ServerSendResponse(const nsAString& aAppUuid,
+                                         const nsAString& aAddress,
                                          uint16_t aStatus,
                                          int aRequestId,
                                          const BluetoothGattResponse& aRsp,
@@ -2408,7 +2520,10 @@ BluetoothGattManager::ServerSendResponse(const BluetoothUuid& aAppUuid,
 
   ENSURE_GATT_INTF_IS_READY_VOID(aRunnable);
 
-  size_t index = sServers->IndexOf(aAppUuid, 0 /* Start */, UuidComparator());
+  BluetoothUuid appUuid;
+  StringToUuid(aAppUuid, appUuid);
+
+  size_t index = sServers->IndexOf(appUuid, 0 /* Start */, UuidComparator());
   if (index == sServers->NoIndex) {
     DispatchReplyError(aRunnable, STATUS_NOT_READY);
     return;
@@ -2420,8 +2535,15 @@ BluetoothGattManager::ServerSendResponse(const BluetoothUuid& aAppUuid,
     return;
   }
 
+  BluetoothAddress address;
+  nsresult rv = StringToAddress(aAddress, address);
+  if (NS_FAILED(rv)) {
+    DispatchReplyError(aRunnable, STATUS_PARM_INVALID);
+    return;
+  }
+
   int connId = 0;
-  server->mConnectionMap.Get(aAddress, &connId);
+  server->mConnectionMap.Get(address, &connId);
   if (!connId) {
     DispatchReplyError(aRunnable, STATUS_NOT_READY);
     return;
@@ -2472,8 +2594,8 @@ private:
 
 void
 BluetoothGattManager::ServerSendIndication(
-  const BluetoothUuid& aAppUuid,
-  const BluetoothAddress& aAddress,
+  const nsAString& aAppUuid,
+  const nsAString& aAddress,
   const BluetoothAttributeHandle& aCharacteristicHandle,
   bool aConfirm,
   const nsTArray<uint8_t>& aValue,
@@ -2484,7 +2606,10 @@ BluetoothGattManager::ServerSendIndication(
 
   ENSURE_GATT_INTF_IS_READY_VOID(aRunnable);
 
-  size_t index = sServers->IndexOf(aAppUuid, 0 /* Start */, UuidComparator());
+  BluetoothUuid appUuid;
+  StringToUuid(aAppUuid, appUuid);
+
+  size_t index = sServers->IndexOf(appUuid, 0 /* Start */, UuidComparator());
   // Reject the request if the server has not been registered yet.
   if (index == sServers->NoIndex) {
     DispatchReplyError(aRunnable, STATUS_NOT_READY);
@@ -2503,8 +2628,15 @@ BluetoothGattManager::ServerSendIndication(
     return;
   }
 
+  BluetoothAddress address;
+  nsresult rv = StringToAddress(aAddress, address);
+  if (NS_FAILED(rv)) {
+    DispatchReplyError(aRunnable, STATUS_PARM_INVALID);
+    return;
+  }
+
   int connId = 0;
-  if (!server->mConnectionMap.Get(aAddress, &connId)) {
+  if (!server->mConnectionMap.Get(address, &connId)) {
     DispatchReplyError(aRunnable, STATUS_PARM_INVALID);
     return;
   }

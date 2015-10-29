@@ -361,13 +361,7 @@ BluetoothServiceBluedroid::StartLeScanInternal(
   BluetoothGattManager* gatt = BluetoothGattManager::Get();
   ENSURE_GATT_MGR_IS_READY_VOID(gatt, aRunnable);
 
-  nsTArray<BluetoothUuid> serviceUuids(aServiceUuids.Length());
-
-  for (auto i = 0ul; i < aServiceUuids.Length(); ++i) {
-    StringToUuid(aServiceUuids[i], serviceUuids[i]);
-  }
-
-  gatt->StartLeScan(serviceUuids, aRunnable);
+  gatt->StartLeScan(aServiceUuids, aRunnable);
 }
 
 void
@@ -381,10 +375,7 @@ BluetoothServiceBluedroid::StopLeScanInternal(
   BluetoothGattManager* gatt = BluetoothGattManager::Get();
   ENSURE_GATT_MGR_IS_READY_VOID(gatt, aRunnable);
 
-  BluetoothUuid scanUuid;
-  StringToUuid(aScanUuid, scanUuid);
-
-  gatt->StopLeScan(scanUuid, aRunnable);
+  gatt->StopLeScan(aScanUuid, aRunnable);
 }
 
 void
@@ -399,16 +390,7 @@ BluetoothServiceBluedroid::ConnectGattClientInternal(
   BluetoothGattManager* gatt = BluetoothGattManager::Get();
   ENSURE_GATT_MGR_IS_READY_VOID(gatt, aRunnable);
 
-  BluetoothUuid appUuid;
-  StringToUuid(aAppUuid, appUuid);
-
-  BluetoothAddress deviceAddress;
-  if (NS_FAILED(StringToAddress(aDeviceAddress, deviceAddress))) {
-    DispatchReplyError(aRunnable, STATUS_PARM_INVALID);
-    return;
-  }
-
-  gatt->Connect(appUuid, deviceAddress, aRunnable);
+  gatt->Connect(aAppUuid, aDeviceAddress, aRunnable);
 }
 
 void
@@ -423,16 +405,7 @@ BluetoothServiceBluedroid::DisconnectGattClientInternal(
   BluetoothGattManager* gatt = BluetoothGattManager::Get();
   ENSURE_GATT_MGR_IS_READY_VOID(gatt, aRunnable);
 
-  BluetoothUuid appUuid;
-  StringToUuid(aAppUuid, appUuid);
-
-  BluetoothAddress deviceAddress;
-  if (NS_FAILED(StringToAddress(aDeviceAddress, deviceAddress))) {
-    DispatchReplyError(aRunnable, STATUS_PARM_INVALID);
-    return;
-  }
-
-  gatt->Disconnect(appUuid, deviceAddress, aRunnable);
+  gatt->Disconnect(aAppUuid, aDeviceAddress, aRunnable);
 }
 
 void
@@ -446,10 +419,7 @@ BluetoothServiceBluedroid::DiscoverGattServicesInternal(
   BluetoothGattManager* gatt = BluetoothGattManager::Get();
   ENSURE_GATT_MGR_IS_READY_VOID(gatt, aRunnable);
 
-  BluetoothUuid appUuid;
-  StringToUuid(aAppUuid, appUuid);
-
-  gatt->Discover(appUuid, aRunnable);
+  gatt->Discover(aAppUuid, aRunnable);
 }
 
 void
@@ -464,10 +434,7 @@ BluetoothServiceBluedroid::GattClientStartNotificationsInternal(
   BluetoothGattManager* gatt = BluetoothGattManager::Get();
   ENSURE_GATT_MGR_IS_READY_VOID(gatt, aRunnable);
 
-  BluetoothUuid appUuid;
-  StringToUuid(aAppUuid, appUuid);
-
-  gatt->RegisterNotifications(appUuid, aServId, aCharId, aRunnable);
+  gatt->RegisterNotifications(aAppUuid, aServId, aCharId, aRunnable);
 }
 
 void
@@ -482,10 +449,7 @@ BluetoothServiceBluedroid::GattClientStopNotificationsInternal(
   BluetoothGattManager* gatt = BluetoothGattManager::Get();
   ENSURE_GATT_MGR_IS_READY_VOID(gatt, aRunnable);
 
-  BluetoothUuid appUuid;
-  StringToUuid(aAppUuid, appUuid);
-
-  gatt->DeregisterNotifications(appUuid, aServId, aCharId, aRunnable);
+  gatt->DeregisterNotifications(aAppUuid, aServId, aCharId, aRunnable);
 }
 
 void
@@ -514,13 +478,7 @@ BluetoothServiceBluedroid::GattClientReadRemoteRssiInternal(
   BluetoothGattManager* gatt = BluetoothGattManager::Get();
   ENSURE_GATT_MGR_IS_READY_VOID(gatt, aRunnable);
 
-  BluetoothAddress deviceAddress;
-  if (NS_FAILED(StringToAddress(aDeviceAddress, deviceAddress))) {
-    DispatchReplyError(aRunnable, STATUS_PARM_INVALID);
-    return;
-  }
-
-  gatt->ReadRemoteRssi(aClientIf, deviceAddress, aRunnable);
+  gatt->ReadRemoteRssi(aClientIf, aDeviceAddress, aRunnable);
 }
 
 void
@@ -537,10 +495,7 @@ BluetoothServiceBluedroid::GattClientReadCharacteristicValueInternal(
   BluetoothGattManager* gatt = BluetoothGattManager::Get();
   ENSURE_GATT_MGR_IS_READY_VOID(gatt, aRunnable);
 
-  BluetoothUuid appUuid;
-  StringToUuid(aAppUuid, appUuid);
-
-  gatt->ReadCharacteristicValue(appUuid, aServiceId, aCharacteristicId,
+  gatt->ReadCharacteristicValue(aAppUuid, aServiceId, aCharacteristicId,
                                 aRunnable);
 }
 
@@ -560,10 +515,7 @@ BluetoothServiceBluedroid::GattClientWriteCharacteristicValueInternal(
   BluetoothGattManager* gatt = BluetoothGattManager::Get();
   ENSURE_GATT_MGR_IS_READY_VOID(gatt, aRunnable);
 
-  BluetoothUuid appUuid;
-  StringToUuid(aAppUuid, appUuid);
-
-  gatt->WriteCharacteristicValue(appUuid, aServiceId, aCharacteristicId,
+  gatt->WriteCharacteristicValue(aAppUuid, aServiceId, aCharacteristicId,
                                  aWriteType, aValue, aRunnable);
 }
 
@@ -582,10 +534,7 @@ BluetoothServiceBluedroid::GattClientReadDescriptorValueInternal(
   BluetoothGattManager* gatt = BluetoothGattManager::Get();
   ENSURE_GATT_MGR_IS_READY_VOID(gatt, aRunnable);
 
-  BluetoothUuid appUuid;
-  StringToUuid(aAppUuid, appUuid);
-
-  gatt->ReadDescriptorValue(appUuid, aServiceId, aCharacteristicId,
+  gatt->ReadDescriptorValue(aAppUuid, aServiceId, aCharacteristicId,
                             aDescriptorId, aRunnable);
 }
 
@@ -605,10 +554,7 @@ BluetoothServiceBluedroid::GattClientWriteDescriptorValueInternal(
   BluetoothGattManager* gatt = BluetoothGattManager::Get();
   ENSURE_GATT_MGR_IS_READY_VOID(gatt, aRunnable);
 
-  BluetoothUuid appUuid;
-  StringToUuid(aAppUuid, appUuid);
-
-  gatt->WriteDescriptorValue(appUuid, aServiceId, aCharacteristicId,
+  gatt->WriteDescriptorValue(aAppUuid, aServiceId, aCharacteristicId,
                              aDescriptorId, aValue, aRunnable);
 }
 
@@ -625,16 +571,7 @@ BluetoothServiceBluedroid::GattServerConnectPeripheralInternal(
   BluetoothGattManager* gatt = BluetoothGattManager::Get();
   ENSURE_GATT_MGR_IS_READY_VOID(gatt, aRunnable);
 
-  BluetoothUuid appUuid;
-  StringToUuid(aAppUuid, appUuid);
-
-  BluetoothAddress address;
-  if (NS_FAILED(StringToAddress(aAddress, address))) {
-    DispatchReplyError(aRunnable, STATUS_PARM_INVALID);
-    return;
-  }
-
-  gatt->ConnectPeripheral(appUuid, address, aRunnable);
+  gatt->ConnectPeripheral(aAppUuid, aAddress, aRunnable);
 }
 
 void
@@ -649,16 +586,7 @@ BluetoothServiceBluedroid::GattServerDisconnectPeripheralInternal(
   BluetoothGattManager* gatt = BluetoothGattManager::Get();
   ENSURE_GATT_MGR_IS_READY_VOID(gatt, aRunnable);
 
-  BluetoothUuid appUuid;
-  StringToUuid(aAppUuid, appUuid);
-
-  BluetoothAddress address;
-  if (NS_FAILED(StringToAddress(aAddress, address))) {
-    DispatchReplyError(aRunnable, STATUS_PARM_INVALID);
-    return;
-  }
-
-  gatt->DisconnectPeripheral(appUuid, address, aRunnable);
+  gatt->DisconnectPeripheral(aAppUuid, aAddress, aRunnable);
 }
 
 void
@@ -689,10 +617,7 @@ BluetoothServiceBluedroid::GattServerAddServiceInternal(
   BluetoothGattManager* gatt = BluetoothGattManager::Get();
   ENSURE_GATT_MGR_IS_READY_VOID(gatt, aRunnable);
 
-  BluetoothUuid appUuid;
-  StringToUuid(aAppUuid, appUuid);
-
-  gatt->ServerAddService(appUuid, aServiceId, aHandleCount, aRunnable);
+  gatt->ServerAddService(aAppUuid, aServiceId, aHandleCount, aRunnable);
 }
 
 void
@@ -709,10 +634,7 @@ BluetoothServiceBluedroid::GattServerAddIncludedServiceInternal(
   BluetoothGattManager* gatt = BluetoothGattManager::Get();
   ENSURE_GATT_MGR_IS_READY_VOID(gatt, aRunnable);
 
-  BluetoothUuid appUuid;
-  StringToUuid(aAppUuid, appUuid);
-
-  gatt->ServerAddIncludedService(appUuid,
+  gatt->ServerAddIncludedService(aAppUuid,
                                  aServiceHandle,
                                  aIncludedServiceHandle,
                                  aRunnable);
@@ -734,10 +656,7 @@ BluetoothServiceBluedroid::GattServerAddCharacteristicInternal(
   BluetoothGattManager* gatt = BluetoothGattManager::Get();
   ENSURE_GATT_MGR_IS_READY_VOID(gatt, aRunnable);
 
-  BluetoothUuid appUuid;
-  StringToUuid(aAppUuid, appUuid);
-
-  gatt->ServerAddCharacteristic(appUuid,
+  gatt->ServerAddCharacteristic(aAppUuid,
                                 aServiceHandle,
                                 aCharacteristicUuid,
                                 aPermissions,
@@ -761,10 +680,7 @@ BluetoothServiceBluedroid::GattServerAddDescriptorInternal(
   BluetoothGattManager* gatt = BluetoothGattManager::Get();
   ENSURE_GATT_MGR_IS_READY_VOID(gatt, aRunnable);
 
-  BluetoothUuid appUuid;
-  StringToUuid(aAppUuid, appUuid);
-
-  gatt->ServerAddDescriptor(appUuid,
+  gatt->ServerAddDescriptor(aAppUuid,
                             aServiceHandle,
                             aCharacteristicHandle,
                             aDescriptorUuid,
@@ -785,10 +701,7 @@ BluetoothServiceBluedroid::GattServerRemoveServiceInternal(
   BluetoothGattManager* gatt = BluetoothGattManager::Get();
   ENSURE_GATT_MGR_IS_READY_VOID(gatt, aRunnable);
 
-  BluetoothUuid appUuid;
-  StringToUuid(aAppUuid, appUuid);
-
-  gatt->ServerRemoveService(appUuid, aServiceHandle, aRunnable);
+  gatt->ServerRemoveService(aAppUuid, aServiceHandle, aRunnable);
 }
 
 void
@@ -804,10 +717,7 @@ BluetoothServiceBluedroid::GattServerStartServiceInternal(
   BluetoothGattManager* gatt = BluetoothGattManager::Get();
   ENSURE_GATT_MGR_IS_READY_VOID(gatt, aRunnable);
 
-  BluetoothUuid appUuid;
-  StringToUuid(aAppUuid, appUuid);
-
-  gatt->ServerStartService(appUuid, aServiceHandle, aRunnable);
+  gatt->ServerStartService(aAppUuid, aServiceHandle, aRunnable);
 }
 
 void
@@ -823,10 +733,7 @@ BluetoothServiceBluedroid::GattServerStopServiceInternal(
   BluetoothGattManager* gatt = BluetoothGattManager::Get();
   ENSURE_GATT_MGR_IS_READY_VOID(gatt, aRunnable);
 
-  BluetoothUuid appUuid;
-  StringToUuid(aAppUuid, appUuid);
-
-  gatt->ServerStopService(appUuid, aServiceHandle, aRunnable);
+  gatt->ServerStopService(aAppUuid, aServiceHandle, aRunnable);
 }
 
 void
@@ -845,17 +752,8 @@ BluetoothServiceBluedroid::GattServerSendResponseInternal(
   BluetoothGattManager* gatt = BluetoothGattManager::Get();
   ENSURE_GATT_MGR_IS_READY_VOID(gatt, aRunnable);
 
-  BluetoothUuid appUuid;
-  StringToUuid(aAppUuid, appUuid);
-
-  BluetoothAddress address;
-  if (NS_FAILED(StringToAddress(aAddress, address))) {
-    DispatchReplyError(aRunnable, STATUS_PARM_INVALID);
-    return;
-  }
-
   gatt->ServerSendResponse(
-    appUuid, address, aStatus, aRequestId, aRsp, aRunnable);
+    aAppUuid, aAddress, aStatus, aRequestId, aRsp, aRunnable);
 }
 
 void
@@ -874,17 +772,8 @@ BluetoothServiceBluedroid::GattServerSendIndicationInternal(
   BluetoothGattManager* gatt = BluetoothGattManager::Get();
   ENSURE_GATT_MGR_IS_READY_VOID(gatt, aRunnable);
 
-  BluetoothUuid appUuid;
-  StringToUuid(aAppUuid, appUuid);
-
-  BluetoothAddress address;
-  if (NS_FAILED(StringToAddress(aAddress, address))) {
-    DispatchReplyError(aRunnable, STATUS_PARM_INVALID);
-    return;
-  }
-
-  gatt->ServerSendIndication(appUuid,
-                             address,
+  gatt->ServerSendIndication(aAppUuid,
+                             aAddress,
                              aCharacteristicHandle,
                              aConfirm,
                              aValue,
