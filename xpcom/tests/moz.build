@@ -56,7 +56,6 @@ GeckoCppUnitTests([
     'TestCOMArray',
     'TestCOMPtr',
     'TestCOMPtrEq',
-    'TestDeque',
     'TestFile',
     'TestHashtables',
     'TestID',

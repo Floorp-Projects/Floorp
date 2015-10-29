@@ -8,6 +8,7 @@ UNIFIED_SOURCES += [
     'TestArray.cpp',
     'TestFileUtils.cpp',
     'TestGCPostBarriers.cpp',
+    'TestNsDeque.cpp',
     'TestThreadUtils.cpp',
 ]
 
