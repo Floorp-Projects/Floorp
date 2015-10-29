@@ -17,8 +17,10 @@
     "eslint-plugin-mozilla": "../../../../testing/eslint-plugin-mozilla",
     "eslint-plugin-react": "3.5.x",
     "exports-loader": "0.6.x",
+    "expose-loader": "0.7.x",
     "express": "4.x",
     "imports-loader": "0.6.x",
+    "react": "0.12.x",
     "script-loader": "0.6.x",
     "webpack": "1.12.x"
   },
