@@ -251,7 +251,7 @@ public class GeckoActionProvider {
             chooseActivity(item.getItemId());
 
             // Context: Sharing via chrome mainmenu list (no explicit session is active)
-            Telemetry.sendUIEvent(TelemetryContract.Event.SHARE, TelemetryContract.Method.LIST);
+            Telemetry.sendUIEvent(TelemetryContract.Event.SHARE, TelemetryContract.Method.LIST, "actionprovider");
             return true;
         }
 
@@ -261,7 +261,7 @@ public class GeckoActionProvider {
             chooseActivity(index);
 
             // Context: Sharing via chrome mainmenu and content contextmenu quickshare (no explicit session is active)
-            Telemetry.sendUIEvent(TelemetryContract.Event.SHARE, TelemetryContract.Method.BUTTON);
+            Telemetry.sendUIEvent(TelemetryContract.Event.SHARE, TelemetryContract.Method.BUTTON, "actionprovider");
         }
     }
 
