@@ -19,8 +19,6 @@
 // we turn that off by forcing require to false in that context.
 require("imports?require=>false!shared/libs/sdk.js");
 
-require("script!./libs/l10n-gaia-02ca67948fe8.js");
-
 // Ultimately, we'll likely want to pull the vendor libraries from npm, as that
 // makes upgrading easier, and it's generally better practice to minify the
 // "source" versions of libraries rather than built artifacts.  We probably do
@@ -28,29 +26,64 @@ require("script!./libs/l10n-gaia-02ca67948fe8.js");
 // elimination, but that can be a bit of judgement call.
 require("exports?_!shared/libs/lodash-3.9.3.js");
 
-// Note that anything that uses the script loader doesn't get minified, so
-// these need to be shimmed to use to other loaders (easiest first cut) or
-// turned into real modules:
-require("script!shared/libs/backbone-1.2.1.js");
-require("script!shared/libs/react-0.12.2.js");
+// Disable Backbone's AMD auto-detection, as described at:
+//
+// https://github.com/jashkenas/backbone/wiki/Using-Backbone-without-jQuery
+//
+require("expose?Backbone!imports?define=>false!shared/libs/backbone-1.2.1.js");
 
-require("script!shared/js/utils.js");
-require("script!shared/js/crypto.js");
-require("script!shared/js/mixins.js");
-require("script!shared/js/actions.js");
-require("script!shared/js/validate.js");
-require("script!shared/js/dispatcher.js");
-require("script!shared/js/otSdkDriver.js");
-require("script!shared/js/store.js");
-require("script!shared/js/activeRoomStore.js");
-require("script!shared/js/views.js");
-require("script!shared/js/urlRegExps.js");
-require("script!shared/js/textChatStore.js");
-require("script!shared/js/textChatView.js");
-require("script!shared/js/linkifiedTextView.js");
+/* global: __PROD__ */
+if (typeof __PROD__ !== "undefined") {
+  // webpack warns if we try to minify some prebuilt libraries, so we
+  // pull in the unbuilt version from node_modules
+  require("expose?React!react");
+  require("expose?React!react/addons");
+} else {
+  // our development server setup doesn't yet handle real modules, so for now...
+  require("shared/libs/react-0.12.2.js");
+}
 
-require("script!./js/standaloneAppStore.js");
-require("script!./js/standaloneMozLoop.js");
-require("script!./js/standaloneRoomViews.js");
-require("script!./js/standaloneMetricsStore.js");
-require("script!./js/webapp.js");
+
+// Someday, these will be real modules.  For now, we're chaining loaders
+// to teach webpack how to treat them like modules anyway.
+//
+// We do it in this file rather than globally in webpack.config.js
+// because:
+//
+// * it's easiest to understand magic (like loader chaining
+//   interactions) when it's explicit and in one place
+// * migrating stuff over to real modules is easier to do gradually
+//
+// The strategy works like this (webpack loaders chain from right to left):
+//
+// In standalone, loop is defined for the first time in index.html.
+//
+// The exports?loop loader sets up webpack to ensure that exports is
+// actually exposed to outside world, rather than held privately.
+//
+// The imports=?loop=>window.loop loader puts the existing window.loop
+// reference into that exported container for further modification.
+//
+// See https://webpack.github.io/docs/shimming-modules.html for more
+// context.
+//
+require("imports?loop=>window.loop!exports?loop!shared/js/utils.js");
+require("imports?this=>window,loop=>window.loop!exports?loop!shared/js/crypto.js");
+require("imports?loop=>window.loop!exports?loop!shared/js/mixins.js");
+require("imports?loop=>window.loop!exports?loop!shared/js/actions.js");
+require("imports?loop=>window.loop!exports?loop!shared/js/validate.js");
+require("imports?loop=>window.loop!exports?loop!shared/js/dispatcher.js");
+require("imports?loop=>window.loop!exports?loop!shared/js/otSdkDriver.js");
+require("imports?loop=>window.loop!exports?loop!shared/js/store.js");
+require("imports?loop=>window.loop!exports?loop!shared/js/activeRoomStore.js");
+require("imports?loop=>window.loop!exports?loop!shared/js/views.js");
+require("imports?loop=>window.loop!exports?loop!shared/js/urlRegExps.js");
+require("imports?loop=>window.loop!exports?loop!shared/js/textChatStore.js");
+require("imports?loop=>window.loop!exports?loop!shared/js/textChatView.js");
+require("imports?loop=>window.loop!exports?loop!shared/js/linkifiedTextView.js");
+
+require("imports?loop=>window.loop!exports?loop!./js/standaloneAppStore.js");
+require("imports?loop=>window.loop!exports?loop!./js/standaloneMozLoop.js");
+require("imports?loop=>window.loop!exports?loop!./js/standaloneRoomViews.js");
+require("imports?loop=>window.loop!exports?loop!./js/standaloneMetricsStore.js");
+require("imports?loop=>window.loop!exports?loop!./js/webapp.js");
