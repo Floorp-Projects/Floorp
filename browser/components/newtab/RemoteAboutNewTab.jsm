@@ -1,9 +1,9 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+/*globals Services, XPCOMUtils, Task, SearchProvider, RemoteNewTabUtils, BackgroundPageThumbs,
+  RemotePages, PageThumbs, RemoteDirectoryLinksProvider, RemoteNewTabLocation*/
 
-/* globals Services, XPCOMUtils, RemotePages, RemoteNewTabLocation, RemoteNewTabUtils, Task  */
-/* globals BackgroundPageThumbs, PageThumbs, RemoteDirectoryLinksProvider */
 /* exported RemoteAboutNewTab */
 
 "use strict";
@@ -31,6 +31,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "RemoteDirectoryLinksProvider",
   "resource:///modules/RemoteDirectoryLinksProvider.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "RemoteNewTabLocation",
   "resource:///modules/RemoteNewTabLocation.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "SearchProvider",
+  "resource:///modules/SearchProvider.jsm");
 
 let RemoteAboutNewTab = {
 
@@ -44,11 +46,67 @@ let RemoteAboutNewTab = {
     this.pageListener.addMessageListener("NewTab:InitializeGrid", this.initializeGrid.bind(this));
     this.pageListener.addMessageListener("NewTab:UpdateGrid", this.updateGrid.bind(this));
     this.pageListener.addMessageListener("NewTab:CaptureBackgroundPageThumbs",
-        this.captureBackgroundPageThumb.bind(this));
+      this.captureBackgroundPageThumb.bind(this));
     this.pageListener.addMessageListener("NewTab:PageThumbs", this.createPageThumb.bind(this));
+    this.pageListener.addMessageListener("NewTab:Search", this.search.bind(this));
+    this.pageListener.addMessageListener("NewTab:GetState", this.getState.bind(this));
+    this.pageListener.addMessageListener("NewTab:GetStrings", this.getStrings.bind(this));
+    this.pageListener.addMessageListener("NewTab:GetSuggestions", this.getSuggestions.bind(this));
+    this.pageListener.addMessageListener("NewTab:RemoveFormHistoryEntry", this.removeFormHistoryEntry.bind(this));
+    this.pageListener.addMessageListener("NewTab:ManageEngines", this.manageEngines.bind(this));
+    this.pageListener.addMessageListener("NewTab:SetCurrentEngine", this.setCurrentEngine.bind(this));
     this.pageListener.addMessageListener("NewTabFrame:GetInit", this.initContentFrame.bind(this));
 
     this._addObservers();
+  },
+
+  search: function(message) {
+    SearchProvider.performSearch(message.target.browser, message.data);
+  },
+
+  getState: Task.async(function* (message) {
+    let state = yield SearchProvider.state;
+    message.target.sendAsyncMessage("NewTab:ContentSearchService", {
+      state,
+      name: "State",
+    });
+  }),
+
+  getStrings: function(message) {
+    let strings = SearchProvider.searchSuggestionUIStrings;
+    message.target.sendAsyncMessage("NewTab:ContentSearchService", {
+      strings,
+      name: "Strings",
+    });
+  },
+
+  getSuggestions: Task.async(function* (message) {
+    try {
+      let suggestion = yield SearchProvider.getSuggestions(message.target.browser, message.data);
+
+      // In the case where there is no suggestion available, do not send a message.
+      if (suggestion !== null) {
+        message.target.sendAsyncMessage("NewTab:ContentSearchService", {
+          suggestion,
+          name: "Suggestions",
+        });
+      }
+    } catch(e) {
+      Cu.reportError(e);
+    }
+  }),
+
+  removeFormHistoryEntry: function(message) {
+    SearchProvider.removeFormHistoryEntry(message.target.browser, message.data.suggestionStr);
+  },
+
+  manageEngines: function(message) {
+    let browserWin = message.target.browser.ownerDocument.defaultView;
+    browserWin.openPreferences("paneSearch");
+  },
+
+  setCurrentEngine: function(message) {
+    Services.search.currentEngine = Services.search.getEngineByName(message.data.engineName);
   },
 
   /**
@@ -147,7 +205,7 @@ let RemoteAboutNewTab = {
     let canvas = doc.createElementNS(XHTML_NAMESPACE, "canvas");
     let enhanced = Services.prefs.getBoolPref("browser.newtabpage.enhanced");
 
-    img.onload = function(e) { // jshint ignore:line
+    img.onload = function() {
       canvas.width = img.naturalWidth;
       canvas.height = img.naturalHeight;
       var ctx = canvas.getContext("2d");
@@ -179,14 +237,14 @@ let RemoteAboutNewTab = {
   },
 
   /**
-   * Listens for a preference change or session purge for all pages and sends
-   * a message to update the pages that are open. If a session purge occured,
-   * also clear the links cache and update the set of links to display, as they
-   * may have changed, then proceed with the page update.
+   * Listens for a preference change, a session purge for all pages, or if the
+   * current search engine is modified, and sends a message to update the pages
+   * that are open. If a session purge occured, also clear the links cache and
+   * update the set of links to display, as they may have changed, then proceed
+   * with the page update.
    */
   observe: function(aSubject, aTopic, aData) { // jshint ignore:line
     let extraData;
-    let refreshPage = false;
     if (aTopic === "browser:purge-session-history") {
       RemoteNewTabUtils.links.resetCache();
       RemoteNewTabUtils.links.populateCache(() => {
@@ -195,6 +253,28 @@ let RemoteAboutNewTab = {
           enhancedLinks: this.getEnhancedLinks(),
         });
       });
+    } else if (aTopic === "browser-search-engine-modified" && aData === "engine-current") {
+      Task.spawn(function* () {
+        try {
+          let engine = yield SearchProvider.currentEngine;
+          this.pageListener.sendAsyncMessage("NewTab:ContentSearchService", {
+            engine, name: "CurrentEngine"
+          });
+        } catch (e) {
+          Cu.reportError(e);
+        }
+      }.bind(this));
+    } else if (aTopic === "nsPref:changed" && aData === "browser.search.hiddenOneOffs") {
+      Task.spawn(function* () {
+        try {
+          let state = yield SearchProvider.state;
+          this.pageListener.sendAsyncMessage("NewTab:ContentSearchService", {
+            state, name: "CurrentState"
+          });
+        } catch (e) {
+          Cu.reportError(e);
+        }
+      }.bind(this));
     }
 
     if (extraData !== undefined || aTopic === "page-thumbnail:create") {
@@ -202,7 +282,10 @@ let RemoteAboutNewTab = {
         // Change the topic for enhanced and enabled observers.
         aTopic = aData;
       }
-      this.pageListener.sendAsyncMessage("NewTab:Observe", {topic: aTopic, data: extraData});
+      this.pageListener.sendAsyncMessage("NewTab:Observe", {
+        topic: aTopic,
+        data: extraData
+      });
     }
   },
 
@@ -212,6 +295,8 @@ let RemoteAboutNewTab = {
   _addObservers: function() {
     Services.obs.addObserver(this, "page-thumbnail:create", true);
     Services.obs.addObserver(this, "browser:purge-session-history", true);
+    Services.prefs.addObserver("browser.search.hiddenOneOffs", this, false);
+    Services.obs.addObserver(this, "browser-search-engine-modified", true);
   },
 
   /**
@@ -220,10 +305,13 @@ let RemoteAboutNewTab = {
   _removeObservers: function() {
     Services.obs.removeObserver(this, "page-thumbnail:create");
     Services.obs.removeObserver(this, "browser:purge-session-history");
+    Services.prefs.removeObserver("browser.search.hiddenOneOffs", this);
+    Services.obs.removeObserver(this, "browser-search-engine-modified");
   },
 
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver,
-                                         Ci.nsISupportsWeakReference]),
+    Ci.nsISupportsWeakReference
+  ]),
 
   uninit: function() {
     this._removeObservers();
