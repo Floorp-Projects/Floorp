@@ -19,7 +19,7 @@
 }
 
 #extensionIcon {
-  list-style-image: url("chrome://mozapps/skin/extensions/extensionGeneric.png");
+  list-style-image: url("chrome://mozapps/skin/extensions/extensionGeneric.svg");
   max-width: 64px;
   max-height: 64px;
   -moz-margin-end: 6px;
