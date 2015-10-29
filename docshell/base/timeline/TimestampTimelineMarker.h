@@ -22,6 +22,8 @@ public:
 
   virtual void AddDetails(JSContext* aCx, dom::ProfileTimelineMarker& aMarker) override
   {
+    TimelineMarker::AddDetails(aCx, aMarker);
+
     if (!mCause.IsEmpty()) {
       aMarker.mCauseName.Construct(mCause);
     }

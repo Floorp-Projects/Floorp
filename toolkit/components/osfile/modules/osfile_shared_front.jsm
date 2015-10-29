@@ -18,7 +18,7 @@ var SharedAll =
   require("resource://gre/modules/osfile/osfile_shared_allthreads.jsm");
 var Path = require("resource://gre/modules/osfile/ospath.jsm");
 var Lz4 =
-  require("resource://gre/modules/workers/lz4.js");
+  require("resource://gre/modules/lz4.js");
 var LOG = SharedAll.LOG.bind(SharedAll, "Shared front-end");
 var clone = SharedAll.clone;
 

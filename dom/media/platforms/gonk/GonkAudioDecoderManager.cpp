@@ -74,7 +74,7 @@ GonkAudioDecoderManager::InitMediaCodecProxy()
   if (!mDecoder.get()) {
     return false;
   }
-  if (!mDecoder->AskMediaCodecAndWait())
+  if (!mDecoder->AllocateAudioMediaCodec())
   {
     mDecoder = nullptr;
     return false;

@@ -4,18 +4,27 @@
 
 "use strict";
 
+var Primitives = {};
+
+var SharedAll;
 if (typeof Components != "undefined") {
-  throw new Error("This file is meant to be loaded in a worker");
-}
-if (!module || !exports) {
-  throw new Error("Please load this module with require()");
+  let Cu = Components.utils;
+  SharedAll = {};
+  Cu.import("resource://gre/modules/osfile/osfile_shared_allthreads.jsm", SharedAll);
+
+  this.EXPORTED_SYMBOLS = [
+    "Primitives"
+  ];
+  this.Primitives = Primitives;
+  this.exports = {};
+} else if (typeof module != "undefined" && typeof require != "undefined") {
+  SharedAll = require("resource://gre/modules/osfile/osfile_shared_allthreads.jsm");
+} else {
+  throw new Error("Please load this module with Component.utils.import or with require()");
 }
 
-var SharedAll = require("resource://gre/modules/osfile/osfile_shared_allthreads.jsm");
 var libxul = new SharedAll.Library("libxul", SharedAll.Constants.Path.libxul);
 var Type = SharedAll.Type;
-
-var Primitives = {};
 
 libxul.declareLazyFFI(Primitives, "compress",
   "workerlz4_compress",
@@ -44,14 +53,16 @@ libxul.declareLazyFFI(Primitives, "maxCompressedSize",
   /*inputSize*/ Type.size_t
 );
 
-module.exports = {
-  get compress() {
-    return Primitives.compress;
-  },
-  get decompress() {
-    return Primitives.decompress;
-  },
-  get maxCompressedSize() {
-    return Primitives.maxCompressedSize;
-  }
-};
+if (typeof module != "undefined") {
+  module.exports = {
+    get compress() {
+      return Primitives.compress;
+    },
+    get decompress() {
+      return Primitives.decompress;
+    },
+    get maxCompressedSize() {
+      return Primitives.maxCompressedSize;
+    }
+  };
+}

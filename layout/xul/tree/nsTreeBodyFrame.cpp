@@ -3607,26 +3607,35 @@ nsTreeBodyFrame::PaintImage(int32_t              aRowIndex,
     // Deflate destRect for the border and padding.
     destRect.Deflate(bp);
 
-    // Get the image source rectangle - the rectangle containing the part of
-    // the image that we are going to display.
-    // sourceRect will be passed as the aSrcRect argument in the DrawImage method.
-    nsRect sourceRect = GetImageSourceRect(imageContext, useImageRegion, image);
-
-    // Let's say that the image is 100 pixels tall and
-    // that the CSS has specified that the destination height should be 50
-    // pixels tall. Let's say that the cell height is only 20 pixels. So, in
-    // those 20 visible pixels, we want to see the top 20/50ths of the image.
-    // So, the sourceRect.height should be 100 * 20 / 50, which is 40 pixels.
-    // Essentially, we are scaling the image as dictated by the CSS destination
-    // height and width, and we are then clipping the scaled image by the cell
-    // width and height.
+    // Compute the area where our whole image would be mapped, to get the
+    // desired subregion onto our actual destRect:
+    nsRect wholeImageDest;
     CSSIntSize rawImageCSSIntSize;
-    image->GetWidth(&rawImageCSSIntSize.width);
-    image->GetHeight(&rawImageCSSIntSize.height);
-    nsSize rawImageSize(CSSPixel::ToAppUnits(rawImageCSSIntSize));
-    nsRect wholeImageDest =
-      nsLayoutUtils::GetWholeImageDestination(rawImageSize, sourceRect,
-          nsRect(destRect.TopLeft(), imageDestSize));
+    if (NS_SUCCEEDED(image->GetWidth(&rawImageCSSIntSize.width)) &&
+        NS_SUCCEEDED(image->GetHeight(&rawImageCSSIntSize.height))) {
+      // Get the image source rectangle - the rectangle containing the part of
+      // the image that we are going to display.  sourceRect will be passed as
+      // the aSrcRect argument in the DrawImage method.
+      nsRect sourceRect = GetImageSourceRect(imageContext, useImageRegion, image);
+
+      // Let's say that the image is 100 pixels tall and that the CSS has
+      // specified that the destination height should be 50 pixels tall. Let's
+      // say that the cell height is only 20 pixels. So, in those 20 visible
+      // pixels, we want to see the top 20/50ths of the image.  So, the
+      // sourceRect.height should be 100 * 20 / 50, which is 40 pixels.
+      // Essentially, we are scaling the image as dictated by the CSS
+      // destination height and width, and we are then clipping the scaled
+      // image by the cell width and height.
+      nsSize rawImageSize(CSSPixel::ToAppUnits(rawImageCSSIntSize));
+      wholeImageDest =
+        nsLayoutUtils::GetWholeImageDestination(rawImageSize, sourceRect,
+                                                nsRect(destRect.TopLeft(),
+                                                       imageDestSize));
+    } else {
+      // GetWidth/GetHeight failed, so we can't easily map a subregion of the
+      // source image onto the destination area. So, just draw the whole image.
+      wholeImageDest = destRect;
+    }
 
     gfxContext* ctx = aRenderingContext.ThebesContext();
     if (opacity != 1.0f) {

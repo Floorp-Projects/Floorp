@@ -110,6 +110,7 @@ MarkerView.prototype = Heritage.extend(AbstractTreeItem.prototype, {
   _displaySelf: function(document, arrowNode) {
     let targetNode = document.createElement("hbox");
     targetNode.className = "waterfall-tree-item";
+    targetNode.setAttribute("otmt", this.marker.isOffMainThread);
 
     if (this == this.root) {
       // Bounds are needed for properly positioning and scaling markers in
