@@ -265,22 +265,6 @@ public:
   // Tell this style context to cache aStruct as the struct for aSID
   void SetStyle(nsStyleStructID aSID, void* aStruct);
 
-  // Setters for inherit structs only, since rulenode only sets those eagerly.
-  #define STYLE_STRUCT_INHERITED(name_, checkdata_cb_)                      \
-    void SetStyle##name_ (nsStyle##name_ * aStruct) {                       \
-      void *& slot =                                                        \
-        mCachedInheritedData.mStyleStructs[eStyleStruct_##name_];           \
-      NS_ASSERTION(!slot ||                                                 \
-                   (mBits &                                                 \
-                    nsCachedStyleData::GetBitForSID(eStyleStruct_##name_)), \
-                   "Going to leak styledata");                              \
-      slot = aStruct;                                                       \
-    }
-#define STYLE_STRUCT_RESET(name_, checkdata_cb_) /* nothing */
-  #include "nsStyleStructList.h"
-  #undef STYLE_STRUCT_RESET
-  #undef STYLE_STRUCT_INHERITED
-
   /**
    * Returns whether this style context has cached style data for a
    * given style struct and it does NOT own that struct.  This can
