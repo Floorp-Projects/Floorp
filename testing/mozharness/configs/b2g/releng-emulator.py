@@ -50,7 +50,8 @@ config = {
         "ssh_user": "b2gbld",
         "branches": {
             'mozilla-b2g37_v2_2': '2.2.0',
-            'mozilla-central': '2.5.0',
+            'mozilla-b2g44_v2_5': '2.5.0',
+            'mozilla-central': '2.6.0',
         },
         "translate_hg_to_git": True,
         "translate_base_url": "http://cruncher.build.mozilla.org/mapper/{project}/{vcs}/{rev}",
