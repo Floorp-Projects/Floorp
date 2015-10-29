@@ -71,7 +71,8 @@ enum ProcessArchitecture {
   PROCESS_ARCH_I386 = 0x1,
   PROCESS_ARCH_X86_64 = 0x2,
   PROCESS_ARCH_PPC = 0x4,
-  PROCESS_ARCH_ARM = 0x8
+  PROCESS_ARCH_ARM = 0x8,
+  PROCESS_ARCH_MIPS = 0x10
 };
 
 inline ProcessArchitecture GetCurrentProcessArchitecture()
@@ -85,6 +86,8 @@ inline ProcessArchitecture GetCurrentProcessArchitecture()
   currentArchitecture = base::PROCESS_ARCH_PPC;
 #elif defined(ARCH_CPU_ARMEL)
   currentArchitecture = base::PROCESS_ARCH_ARM;
+#elif defined(ARCH_CPU_MIPS)
+  currentArchitecture = base::PROCESS_ARCH_MIPS;
 #endif
   return currentArchitecture;
 }
