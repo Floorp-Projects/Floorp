@@ -95,6 +95,7 @@ html, body, #app, #memory-tool {
 }
 
 .list {
+  min-width: var(--sidebar-width);
   width: var(--sidebar-width);
   overflow-y: auto;
   margin: 0;
@@ -143,6 +144,7 @@ html, body, #app, #memory-tool {
   flex: 1;
   justify-content: center;
   background-color: var(--theme-toolbar-background);
+  min-width: 400px;
 }
 
 #heap-view .snapshot-status,
@@ -191,21 +193,8 @@ html, body, #app, #memory-tool {
   background-color: var(--theme-tab-toolbar-background);
 }
 
-.header span {
-  text-align: center;
-  line-height: var(--heap-tree-header-height);
-  font-size: 90%;
-}
-
 .tree span {
   line-height: var(--heap-tree-row-height);
-}
-
-.header span,
-.tree span {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 .tree {
@@ -219,10 +208,6 @@ html, body, #app, #memory-tool {
   clear: left;
 }
 
-.heap-tree-item {
-  height: inherit;
-}
-
 .heap-tree-percent {
   width: 30%;
 }
@@ -230,6 +215,7 @@ html, body, #app, #memory-tool {
 .heap-tree-number {
   width: 70%;
   color: var(--theme-content-color3);
+  padding-right: 5px;
 }
 
 .focused .heap-tree-number {
@@ -239,10 +225,8 @@ html, body, #app, #memory-tool {
 .heap-tree-item, .header {
   list-style-type: none;
   height: var(--heap-tree-row-height);
-}
-
-.heap-tree-item-field {
-  float: left;
+  display: flex;
+  flex-direction: row;
 }
 
 .tree-node:nth-child(2n) {
@@ -266,11 +250,20 @@ html, body, #app, #memory-tool {
 }
 
 .header span {
+  text-align: center;
+  line-height: var(--heap-tree-header-height);
+  font-size: 90%;
+  display: inline;
+}
+
+.header span, .heap-tree-number, .heap-tree-percent, .heap-tree-item-name {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  text-align: center;
-  font-size: 90%;
+}
+
+.header .heap-tree-item-name {
+  text-align: left;
 }
 
 .heap-tree-item-bytes,
@@ -282,21 +275,21 @@ html, body, #app, #memory-tool {
   padding-inline-end: 5px;
   display: flex;
   flex-direction: row;
-  min-width: 10em;
 }
 
 .heap-tree-item-count,
 .heap-tree-item-total-count {
-  width: 8vw;
+  width: 8%;
 }
 
 .heap-tree-item-bytes,
 .heap-tree-item-total-bytes {
-  width: 8vw;
+  width: 10%;
 }
 
 .heap-tree-item-name {
-  -moz-padding-start: 5px;
+  width: 50%;
+  padding-left: 5px;
 }
 
 .error::before {
