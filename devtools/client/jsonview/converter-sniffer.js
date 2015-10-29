@@ -39,7 +39,9 @@ var Sniffer = Class({
     "nsIContentSniffer",
   ],
 
-  get wrappedJSObject() this,
+  get wrappedJSObject() {
+    return this;
+  },
 
   getMIMETypeFromContent: function(aRequest, aData, aLength) {
     // JSON View is enabled only for top level loads only.

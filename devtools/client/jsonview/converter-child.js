@@ -52,7 +52,9 @@ var Converter = Class({
     "nsIRequestObserver"
   ],
 
-  get wrappedJSObject() this,
+  get wrappedJSObject() {
+    return this;
+  },
 
   /**
    * This component works as such:
