@@ -26,35 +26,34 @@ ImageBlockingPolicy.prototype = {
 
   // nsIContentPolicy interface implementation
   shouldLoad: function(contentType, contentLocation, requestOrigin, node, mimeTypeGuess, extra) {
-    if (!getEnabled()) {
-      return Ci.nsIContentPolicy.ACCEPT;
-    }
-
-    if (contentType === Ci.nsIContentPolicy.TYPE_IMAGE || contentType === Ci.nsIContentPolicy.TYPE_IMAGESET) {
-      // Accept any non-http(s) image URLs
-      if (!contentLocation.schemeIs("http") && !contentLocation.schemeIs("https")) {
-        return Ci.nsIContentPolicy.ACCEPT;
-      }
-
-      if (node instanceof Ci.nsIDOMHTMLImageElement) {
-        // Accept if the user has asked to view the image
-        if (node.getAttribute("data-ctv-show") == "true") {
+    // When enabled or when on cellular, and option for cellular-only is selected
+    if (this._enabled() == 1 || (this._enabled() == 2 && this._usingCellular())) {
+      if (contentType === Ci.nsIContentPolicy.TYPE_IMAGE || contentType === Ci.nsIContentPolicy.TYPE_IMAGESET) {
+        // Accept any non-http(s) image URLs
+        if (!contentLocation.schemeIs("http") && !contentLocation.schemeIs("https")) {
           return Ci.nsIContentPolicy.ACCEPT;
         }
 
-        setTimeout(() => {
-          // Cache the original image URL and swap in our placeholder
-          node.setAttribute("data-ctv-src", contentLocation.spec);
-          node.setAttribute("src", PLACEHOLDER_IMG);
+        if (node instanceof Ci.nsIDOMHTMLImageElement) {
+          // Accept if the user has asked to view the image
+          if (node.getAttribute("data-ctv-show") == "true") {
+            return Ci.nsIContentPolicy.ACCEPT;
+          }
 
-          // For imageset (img + srcset) the "srcset" is used even after we reset the "src" causing a loop.
-          // We are given the final image URL anyway, so it's OK to just remove the "srcset" value.
-          node.removeAttribute("srcset");
-        }, 0);
+          setTimeout(() => {
+            // Cache the original image URL and swap in our placeholder
+            node.setAttribute("data-ctv-src", contentLocation.spec);
+            node.setAttribute("src", PLACEHOLDER_IMG);
+
+            // For imageset (img + srcset) the "srcset" is used even after we reset the "src" causing a loop.
+            // We are given the final image URL anyway, so it's OK to just remove the "srcset" value.
+            node.removeAttribute("srcset");
+          }, 0);
+        }
+
+        // Reject any image that is not associated with a DOM element
+        return Ci.nsIContentPolicy.REJECT;
       }
-
-      // Reject any image that is not associated with a DOM element
-      return Ci.nsIContentPolicy.REJECT;
     }
 
     // Accept all other content types
@@ -65,10 +64,18 @@ ImageBlockingPolicy.prototype = {
     return Ci.nsIContentPolicy.ACCEPT;
   },
 
-};
+  _usingCellular: function() {
+    let network = Cc["@mozilla.org/network/network-link-service;1"].getService(Ci.nsINetworkLinkService);
+    return !(network.linkType == Ci.nsINetworkLinkService.LINK_TYPE_UNKNOWN ||
+        network.linkType == Ci.nsINetworkLinkService.LINK_TYPE_ETHERNET ||
+        network.linkType == Ci.nsINetworkLinkService.LINK_TYPE_USB  ||
+        network.linkType == Ci.nsINetworkLinkService.LINK_TYPE_WIFI);
+  },
 
-function getEnabled() {
-  return Services.prefs.getBoolPref("browser.image_blocking.enabled");
-}
+  _enabled: function() {
+    return Services.prefs.getIntPref("browser.image_blocking");
+  },
+
+};
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([ImageBlockingPolicy]);
