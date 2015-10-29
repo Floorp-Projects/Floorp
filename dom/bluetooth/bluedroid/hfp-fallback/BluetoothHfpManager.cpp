@@ -42,7 +42,7 @@ BluetoothHfpManager::Observe(nsISupports* aSubject,
  * BluetoothProfileManagerBase functions
  */
 void
-BluetoothHfpManager::Connect(const BluetoothAddress& aDeviceAddress,
+BluetoothHfpManager::Connect(const nsAString& aDeviceAddress,
                              BluetoothProfileController* aController)
 {
   MOZ_ASSERT(aController);
@@ -77,16 +77,15 @@ BluetoothHfpManager::OnDisconnect(const nsAString& aErrorStr)
 }
 
 void
-BluetoothHfpManager::GetAddress(BluetoothAddress& aDeviceAddress)
+BluetoothHfpManager::GetAddress(nsAString& aDeviceAddress)
 {
-  aDeviceAddress.Clear();
+  aDeviceAddress.AssignLiteral(BLUETOOTH_ADDRESS_NONE);
 }
 
 void
-BluetoothHfpManager::OnGetServiceChannel(
-  const BluetoothAddress& aDeviceAddress,
-  const BluetoothUuid& aServiceUuid,
-  int aChannel)
+BluetoothHfpManager::OnGetServiceChannel(const nsAString& aDeviceAddress,
+                                         const nsAString& aServiceUuid,
+                                         int aChannel)
 {
   MOZ_ASSERT(false);
 }

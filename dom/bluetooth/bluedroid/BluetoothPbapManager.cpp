@@ -100,6 +100,7 @@ BluetoothPbapManager::BluetoothPbapManager() : mPhonebookSizeRequired(false)
                                              , mConnected(false)
                                              , mRemoteMaxPacketLength(0)
 {
+  mDeviceAddress.AssignLiteral(BLUETOOTH_ADDRESS_NONE);
   mCurrentPath.AssignLiteral("");
 }
 
@@ -654,7 +655,7 @@ BluetoothPbapManager::IsConnected()
 }
 
 void
-BluetoothPbapManager::GetAddress(BluetoothAddress& aDeviceAddress)
+BluetoothPbapManager::GetAddress(nsAString& aDeviceAddress)
 {
   return mSocket->GetAddress(aDeviceAddress);
 }
@@ -1012,7 +1013,7 @@ BluetoothPbapManager::OnSocketDisconnect(BluetoothSocket* aSocket)
   }
 
   AfterPbapDisconnected();
-  mDeviceAddress.Clear();
+  mDeviceAddress.AssignLiteral(BLUETOOTH_ADDRESS_NONE);
   mSocket = nullptr;
 
   Listen();
@@ -1032,24 +1033,22 @@ BluetoothPbapManager::Disconnect(BluetoothProfileController* aController)
 NS_IMPL_ISUPPORTS(BluetoothPbapManager, nsIObserver)
 
 void
-BluetoothPbapManager::Connect(const BluetoothAddress& aDeviceAddress,
+BluetoothPbapManager::Connect(const nsAString& aDeviceAddress,
                               BluetoothProfileController* aController)
 {
   MOZ_ASSERT(false);
 }
 
 void
-BluetoothPbapManager::OnGetServiceChannel(
-  const BluetoothAddress& aDeviceAddress,
-  const BluetoothUuid& aServiceUuid,
-  int aChannel)
+BluetoothPbapManager::OnGetServiceChannel(const nsAString& aDeviceAddress,
+                                          const nsAString& aServiceUuid,
+                                          int aChannel)
 {
   MOZ_ASSERT(false);
 }
 
 void
-BluetoothPbapManager::OnUpdateSdpRecords(
-  const BluetoothAddress& aDeviceAddress)
+BluetoothPbapManager::OnUpdateSdpRecords(const nsAString& aDeviceAddress)
 {
   MOZ_ASSERT(false);
 }

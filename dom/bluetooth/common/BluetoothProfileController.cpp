@@ -51,7 +51,7 @@ private:
 
 BluetoothProfileController::BluetoothProfileController(
                                    bool aConnect,
-                                   const BluetoothAddress& aDeviceAddress,
+                                   const nsAString& aDeviceAddress,
                                    BluetoothReplyRunnable* aRunnable,
                                    BluetoothProfileControllerCallback aCallback,
                                    uint16_t aServiceUuid,
@@ -64,7 +64,7 @@ BluetoothProfileController::BluetoothProfileController(
   , mSuccess(false)
   , mProfilesIndex(-1)
 {
-  MOZ_ASSERT(!aDeviceAddress.IsCleared());
+  MOZ_ASSERT(!aDeviceAddress.IsEmpty());
   MOZ_ASSERT(aRunnable);
   MOZ_ASSERT(aCallback);
 
@@ -230,6 +230,7 @@ void
 BluetoothProfileController::StartSession()
 {
   MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(!mDeviceAddress.IsEmpty());
   MOZ_ASSERT(mProfilesIndex == -1);
   MOZ_ASSERT(mTimer);
 
@@ -284,6 +285,7 @@ void
 BluetoothProfileController::Next()
 {
   MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(!mDeviceAddress.IsEmpty());
   MOZ_ASSERT(mProfilesIndex < (int)mProfiles.Length());
   MOZ_ASSERT(mTimer);
 

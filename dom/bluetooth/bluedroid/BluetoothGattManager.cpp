@@ -1709,7 +1709,7 @@ public:
     , mDeviceAddr(aDeviceAddr)
   {
     MOZ_ASSERT(mServer);
-    MOZ_ASSERT(!mDeviceAddr.IsCleared());
+    MOZ_ASSERT(mDeviceAddr != BluetoothAddress::ANY);
   }
 
   void OnError(BluetoothStatus aStatus) override
