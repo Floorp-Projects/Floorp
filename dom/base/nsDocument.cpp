@@ -2117,19 +2117,11 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsDocument)
   tmp->mInUnlinkOrDeletion = false;
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
-static bool sPrefsInitialized = false;
-static uint32_t sOnloadDecodeLimit = 0;
-
 nsresult
 nsDocument::Init()
 {
   if (mCSSLoader || mStyleImageLoader || mNodeInfoManager || mScriptLoader) {
     return NS_ERROR_ALREADY_INITIALIZED;
-  }
-
-  if (!sPrefsInitialized) {
-    sPrefsInitialized = true;
-    Preferences::AddUintVarCache(&sOnloadDecodeLimit, "image.onload.decode.limit", 0);
   }
 
   // Force initialization.
@@ -10522,12 +10514,8 @@ nsDocument::AddImage(imgIRequest* aImage)
 
   // If this is the first insertion and we're locking images, lock this image
   // too.
-  if (oldCount == 0) {
-    if (mLockingImages)
-      rv = aImage->LockImage();
-    if (NS_SUCCEEDED(rv) && (!sOnloadDecodeLimit ||
-                             mImageTracker.Count() < sOnloadDecodeLimit))
-      rv = aImage->StartDecoding();
+  if (oldCount == 0 && mLockingImages) {
+    rv = aImage->LockImage();
   }
 
   // If this is the first insertion and we're animating images, request
@@ -10658,7 +10646,6 @@ PLDHashOperator LockEnumerator(imgIRequest* aKey,
                                void*    userArg)
 {
   aKey->LockImage();
-  aKey->RequestDecode();
   return PL_DHASH_NEXT;
 }
 
