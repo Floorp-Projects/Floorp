@@ -32,8 +32,8 @@
 #define BHR_BETA_MOD 100;
 
 // Maximum depth of the call stack in the reported thread hangs. This value represents
-// the 95th pecentile of the thread hangs stack depths reported by Telemetry.
-static const size_t kMaxThreadHangStackDepth = 11;
+// the 99.9th percentile of the thread hangs stack depths reported by Telemetry.
+static const size_t kMaxThreadHangStackDepth = 30;
 
 // An utility comparator function used by std::unique to collapse "(* script)" entries in
 // a vector representing a call stack.
