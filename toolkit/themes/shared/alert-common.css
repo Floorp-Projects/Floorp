@@ -76,6 +76,10 @@
   width: 255px;
 }
 
+#alertTextLabel {
+  padding-inline-end: 8px;
+}
+
 .alertTitle {
   -moz-box-flex: 1;
   font-weight: bold;
