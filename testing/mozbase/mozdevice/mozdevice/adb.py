@@ -1106,7 +1106,7 @@ class ADBDevice(ADBCommand):
             args.extend(['-b', b])
         return args
 
-    def clear_logcat(self, timeout=None, buffers=["main"]):
+    def clear_logcat(self, timeout=None, buffers=[]):
         """Clears logcat via adb logcat -c.
 
         :param timeout: The maximum time in
@@ -1136,7 +1136,7 @@ class ADBDevice(ADBCommand):
                    format="time",
                    filter_out_regexps=[],
                    timeout=None,
-                   buffers=["main"]):
+                   buffers=[]):
         """Returns the contents of the logcat file as a list of strings.
 
         :param list filter_specs: Optional logcat messages to
