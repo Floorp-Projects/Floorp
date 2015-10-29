@@ -1,4 +1,4 @@
-skip-if(B2G||Mulet) == display-types-01.html display-types-01-ref.html # bug 773482 # Initial mulet triage: parity with B2G/B2G Desktop
+skip-if(B2G||Mulet) fuzzy-if(OSX==1010,1,3) == display-types-01.html display-types-01-ref.html # bug 773482 # Initial mulet triage: parity with B2G/B2G Desktop
 == dynamic-attr-01.html dynamic-attr-01-ref.html
 == dynamic-button-01a.html dynamic-button-01-ref.html
 == dynamic-button-01b.html dynamic-button-01-ref.html
@@ -12,4 +12,4 @@ skip-if(B2G||Mulet) == display-types-01.html display-types-01-ref.html # bug 773
 == positioned-01.html positioned-01-ref.html
 == quotes-001.xml quotes-001-ref.xml
 == table-ignoring-whitespace-01.html table-ignoring-whitespace-01-ref.html
-== table-parts-01.html table-parts-01-ref.html
+fuzzy-if(OSX==1010,1,1) == table-parts-01.html table-parts-01-ref.html
