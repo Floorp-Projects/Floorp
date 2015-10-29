@@ -187,6 +187,9 @@ class StructuredLogger(object):
                 "expected" not in raw_data):
                 del data["expected"]
 
+        if not self._ensure_suite_state(action, data):
+            return
+
         self._handle_log(data)
 
     def _log_data(self, action, data=None):
@@ -217,6 +220,21 @@ class StructuredLogger(object):
         all_data.update(data)
         return all_data
 
+    def _ensure_suite_state(self, action, data):
+        if action == 'suite_start':
+            if self._state.suite_started:
+                self.error("Got second suite_start message before suite_end. " +
+                           "Logged with data: {}".format(json.dumps(data)))
+                return False
+            self._state.suite_started = True
+        elif action == 'suite_end':
+            if not self._state.suite_started:
+                self.error("Got suite_end message before suite_start. " +
+                           "Logged with data: {}".format(json.dumps(data)))
+                return False
+            self._state.suite_started = False
+        return True
+
     @log_action(List("tests", Unicode),
                 Dict("run_info", default=None, optional=True),
                 Dict("version_info", default=None, optional=True),
@@ -229,23 +247,16 @@ class StructuredLogger(object):
         :param dict version_info: Optional target application version information provided by mozversion.
         :param dict device_info: Optional target device information provided by mozdevice.
         """
-        if self._state.suite_started:
-            self.error("Got second suite_start message before suite_end. Logged with data %s" %
-                       json.dumps(data))
+        if not self._ensure_suite_state('suite_start', data):
             return
-
-        self._state.suite_started = True
 
         self._log_data("suite_start", data)
 
     @log_action()
     def suite_end(self, data):
         """Log a suite_end message"""
-        if not self._state.suite_started:
-            self.error("Got suite_end message before suite_start.")
+        if not self._ensure_suite_state('suite_end', data):
             return
-
-        self._state.suite_started = False
 
         self._log_data("suite_end")
 
