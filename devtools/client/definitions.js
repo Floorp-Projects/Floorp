@@ -278,21 +278,17 @@ Tools.performance = {
 Tools.memory = {
   id: "memory",
   ordinal: 8,
-  icon: "chrome://devtools/skin/themes/images/tool-styleeditor.svg",
+  icon: "chrome://devtools/skin/themes/images/tool-memory.svg",
   invertIconForLightTheme: true,
+  highlightedicon: "chrome://devtools/skin/themes/images/tool-memory-active.svg",
   url: "chrome://devtools/content/memory/memory.xhtml",
   visibilityswitch: "devtools.memory.enabled",
   label: "Memory",
   panelLabel: "Memory Panel",
   tooltip: "Memory (keyboardshortcut)",
-  hiddenInOptions: true,
 
   isTargetSupported: function (target) {
-    // TODO 1201907
-    // Once Fx44 lands, we should add a root trait `heapSnapshots`
-    // to indicate that the memory actor can handle this.
-    // Shouldn't make this change until Fx44, however.
-    return true; // target.getTrait("heapSnapshots");
+    return target.getTrait("heapSnapshots");
   },
 
   build: function (frame, target) {
