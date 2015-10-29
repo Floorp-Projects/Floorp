@@ -130,7 +130,7 @@ GMPLoaderImpl::Load(const char* aUTF8LibPath,
   std::string nodeId;
 #ifdef HASH_NODE_ID_WITH_DEVICE_ID
   if (aOriginSaltLen > 0) {
-    string16 deviceId;
+    std::vector<uint8_t> deviceId;
     int volumeId;
     if (!rlz_lib::GetRawMachineId(&deviceId, &volumeId)) {
       return false;
@@ -139,7 +139,7 @@ GMPLoaderImpl::Load(const char* aUTF8LibPath,
     SHA256Context ctx;
     SHA256_Begin(&ctx);
     SHA256_Update(&ctx, (const uint8_t*)aOriginSalt, aOriginSaltLen);
-    SHA256_Update(&ctx, (const uint8_t*)deviceId.c_str(), deviceId.size() * sizeof(string16::value_type));
+    SHA256_Update(&ctx, deviceId.data(), deviceId.size());
     SHA256_Update(&ctx, (const uint8_t*)&volumeId, sizeof(int));
     uint8_t digest[SHA256_LENGTH] = {0};
     unsigned int digestLen = 0;
@@ -151,8 +151,8 @@ GMPLoaderImpl::Load(const char* aUTF8LibPath,
     SecureMemset(&ctx, 0, sizeof(ctx));
     SecureMemset(aOriginSalt, 0, aOriginSaltLen);
     SecureMemset(&volumeId, 0, sizeof(volumeId));
-    SecureMemset(&deviceId[0], '*', sizeof(string16::value_type) * deviceId.size());
-    deviceId = L"";
+    SecureMemset(deviceId.data(), '*', deviceId.size());
+    deviceId.clear();
 
     if (!rlz_lib::BytesToString(digest, SHA256_LENGTH, &nodeId)) {
       return false;
