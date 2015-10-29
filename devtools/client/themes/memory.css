@@ -332,3 +332,11 @@ html, .theme-body, #app, #memory-tool, #memory-tool-container {
 .frame-link-function-display-name {
   margin-right: 5px;
 }
+
+.no-allocation-stacks {
+    border-color: var(--theme-splitter-color);
+    border-style: solid;
+    border-width: 0px 0px 1px 0px;
+    text-align: center;
+    padding: 5px;
+}
