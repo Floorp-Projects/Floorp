@@ -190,7 +190,7 @@ LIRGeneratorShared::defineSinCos(LInstructionHelper<2, Ops, Temps> *lir, MDefini
 #elif defined(JS_CODEGEN_ARM64)
     lir->setDef(1, LDefinition(vreg + VREG_INCREMENT, LDefinition::DOUBLE,
                 LFloatReg(FloatRegister(FloatRegisters::d1, FloatRegisters::Double))));
-#elif defined(JS_CODEGEN_MIPS32)
+#elif defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
     lir->setDef(1, LDefinition(vreg + VREG_INCREMENT, LDefinition::DOUBLE, LFloatReg(f2)));
 #elif defined(JS_CODEGEN_NONE)
     MOZ_CRASH();
