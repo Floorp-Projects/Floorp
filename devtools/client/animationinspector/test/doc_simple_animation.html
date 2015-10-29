@@ -74,6 +74,14 @@
       animation-fill-mode: forwards;
     }
 
+    .no-compositor {
+      top: 0;
+      right: 10px;
+      background: gold;
+
+      animation: no-compositor 10s cubic-bezier(.57,-0.02,1,.31) forwards;
+    }
+
     @keyframes simple-animation {
       100% {
         transform: translateX(300px);
@@ -83,6 +91,12 @@
     @keyframes other-animation {
       100% {
         background: blue;
+      }
+    }
+
+    @keyframes no-compositor {
+      100% {
+        margin-right: 600px;
       }
     }
   </style>
@@ -97,5 +111,6 @@
   <div class="ball short"></div>
   <div class="ball long"></div>
   <div class="ball negative-delay"></div>
+  <div class="ball no-compositor"></div>
 </body>
 </html>
