@@ -5092,6 +5092,17 @@ nsDisplayTransform::GetResultingTransformMatrixInternal(const FrameTransformProp
     result = Matrix4x4::From2D(svgTransform);
   }
 
+  if (aProperties.mChildPerspective > 0.0) {
+    Matrix4x4 perspective;
+    perspective._34 =
+      -1.0 / NSAppUnitsToFloatPixels(aProperties.mChildPerspective, aAppUnitsPerPixel);
+    /* At the point when perspective is applied, we have been translated to the transform origin.
+     * The translation to the perspective origin is the difference between these values.
+     */
+    perspective.ChangeBasis(aProperties.GetToPerspectiveOrigin() - aProperties.mToTransformOrigin);
+    result = result * perspective;
+  }
+
   /* Account for the transform-origin property by translating the
    * coordinate space to the new origin.
    */
@@ -5103,15 +5114,12 @@ nsDisplayTransform::GetResultingTransformMatrixInternal(const FrameTransformProp
                         hasSVGTransforms ? newOrigin.y : NS_round(newOrigin.y),
                         0);
 
-  bool hasPerspective = aProperties.mChildPerspective > 0.0;
-
   if (!hasSVGTransforms || !hasTransformFromSVGParent) {
     // This is a simplification of the following |else| block, the
     // simplification being possible because we don't need to apply
     // mToTransformOrigin between two transforms.
     Point3D offsets = roundedOrigin + aProperties.mToTransformOrigin;
-    if (aOffsetByOrigin &&
-        !hasPerspective) {
+    if (aOffsetByOrigin) {
       // We can fold the final translation by roundedOrigin into the first matrix
       // basis change translation. This is more stable against variation due to
       // insufficient floating point precision than reversing the translation
@@ -5145,25 +5153,11 @@ nsDisplayTransform::GetResultingTransformMatrixInternal(const FrameTransformProp
     // for mToTransformOrigin so we don't include that. We also need to reapply
     // refBoxOffset.
     Point3D offsets = roundedOrigin + refBoxOffset;
-    if (aOffsetByOrigin &&
-        !hasPerspective) {
+    if (aOffsetByOrigin) {
       result.PreTranslate(-refBoxOffset);
       result.PostTranslate(offsets);
     } else {
       result.ChangeBasis(offsets);
-    }
-  }
-
-  if (hasPerspective) {
-    Matrix4x4 perspective;
-    perspective._34 =
-      -1.0 / NSAppUnitsToFloatPixels(aProperties.mChildPerspective, aAppUnitsPerPixel);
-    
-    perspective.ChangeBasis(aProperties.GetToPerspectiveOrigin() + roundedOrigin);
-    result = result * perspective;
-
-    if (aOffsetByOrigin) {
-      result.PreTranslate(roundedOrigin);
     }
   }
 
