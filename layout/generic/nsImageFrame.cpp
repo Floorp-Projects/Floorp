@@ -1814,7 +1814,11 @@ nsImageFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
       // decoded yet. And we are not going to ask the image to draw, so this
       // may be the only chance to tell it that it should decode.
       if (currentRequest) {
-        currentRequest->RequestDecode();
+        uint32_t status = 0;
+        currentRequest->GetImageStatus(&status);
+        if (!(status & imgIRequest::STATUS_DECODE_COMPLETE)) {
+          MaybeDecodeForPredictedSize();
+        }
       }
     } else {
       aLists.Content()->AppendNewToTop(new (aBuilder)
@@ -2295,7 +2299,6 @@ nsresult nsImageFrame::LoadIcons(nsPresContext *aPresContext)
   if (NS_FAILED(rv)) {
     return rv;
   }
-  gIconLoad->mLoadingImage->RequestDecode();
 
   rv = LoadIcon(brokenSrc,
                 aPresContext,
@@ -2303,7 +2306,6 @@ nsresult nsImageFrame::LoadIcons(nsPresContext *aPresContext)
   if (NS_FAILED(rv)) {
     return rv;
   }
-  gIconLoad->mBrokenImage->RequestDecode();
 
   return rv;
 }
@@ -2373,11 +2375,33 @@ void nsImageFrame::IconLoad::GetPrefs()
 }
 
 NS_IMETHODIMP
-nsImageFrame::IconLoad::Notify(imgIRequest *aRequest, int32_t aType, const nsIntRect* aData)
+nsImageFrame::IconLoad::Notify(imgIRequest* aRequest,
+                               int32_t aType,
+                               const nsIntRect* aData)
 {
+  MOZ_ASSERT(aRequest);
+
   if (aType != imgINotificationObserver::LOAD_COMPLETE &&
       aType != imgINotificationObserver::FRAME_UPDATE) {
     return NS_OK;
+  }
+
+  if (aType == imgINotificationObserver::LOAD_COMPLETE) {
+    nsCOMPtr<imgIContainer> image;
+    aRequest->GetImage(getter_AddRefs(image));
+    if (!image) {
+      return NS_ERROR_FAILURE;
+    }
+
+    // Retrieve the image's intrinsic size.
+    int32_t width = 0;
+    int32_t height = 0;
+    image->GetWidth(&width);
+    image->GetHeight(&height);
+
+    // Request a decode at that size.
+    image->RequestDecodeForSize(IntSize(width, height),
+                                imgIContainer::DECODE_FLAGS_DEFAULT);
   }
 
   nsTObserverArray<nsImageFrame*>::ForwardIterator iter(mIconObservers);
