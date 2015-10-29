@@ -340,7 +340,6 @@ private:
   RefPtr<MediaResourcePromise> CreateMediaCodecs();
   static bool CreateMediaCodec(android::sp<android::ALooper>& aLooper,
                                Track& aTrack,
-                               bool aAsync,
                                bool& aIsWaiting,
                                android::wp<android::MediaCodecProxy::CodecResourceListener> aListener);
   static bool ConfigureMediaCodec(Track& aTrack);

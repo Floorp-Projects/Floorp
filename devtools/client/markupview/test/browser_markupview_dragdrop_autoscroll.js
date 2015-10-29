@@ -4,62 +4,64 @@
 
 "use strict";
 
-// Test: Dragging nodes near top/bottom edges of inspector
-// should auto-scroll
+// Test that dragging a node near the top or bottom edge of the markup-view
+// auto-scrolls the view.
 
 const TEST_URL = TEST_URL_ROOT + "doc_markup_dragdrop_autoscroll.html";
-const GRAB_DELAY = 400;
 
 add_task(function*() {
   let {inspector} = yield addTab(TEST_URL).then(openInspector);
-
   let markup = inspector.markup;
+  let viewHeight = markup.doc.documentElement.clientHeight;
 
-  let container = yield getContainerForSelector("#first", inspector);
-  let rect = container.elt.getBoundingClientRect();
+  info("Pretend the markup-view is dragging");
+  markup.isDragging = true;
 
-  info("Simulating mouseDown on #first");
-  container._onMouseDown({
-    target: container.tagLine,
-    pageX: 10,
-    pageY: rect.top,
-    stopPropagation: function() {},
-    preventDefault: function() {}
+  info("Simulate a mousemove on the view, at the bottom, and expect scrolling");
+  let onScrolled = waitForViewScroll(markup);
+
+  markup._onMouseMove({
+    preventDefault: () => {},
+    target: markup.doc.body,
+    pageY: viewHeight
   });
 
-  yield wait(GRAB_DELAY + 1);
+  let bottomScrollPos = yield onScrolled;
+  ok(bottomScrollPos > 0, "The view was scrolled down");
 
-  let clientHeight = markup.doc.documentElement.clientHeight;
-  info("Simulating mouseMove on #first with pageY: " + clientHeight);
+  info("Simulate a mousemove at the top and expect more scrolling");
+  onScrolled = waitForViewScroll(markup);
 
-  let ev = {
-    target: container.tagLine,
-    pageX: 10,
-    pageY: clientHeight,
-    preventDefault: function() {}
-  };
+  markup._onMouseMove({
+    preventDefault: () => {},
+    target: markup.doc.body,
+    pageY: 0
+  });
 
-  info("Listening on scroll event");
-  let scroll = onScroll(markup.win);
+  let topScrollPos = yield onScrolled;
+  ok(topScrollPos < bottomScrollPos, "The view was scrolled up");
+  is(topScrollPos, 0, "The view was scrolled up to the top");
 
-  markup._onMouseMove(ev);
-
-  yield scroll;
-
-  let dropCompleted = once(markup, "drop-completed");
-
-  container._onMouseUp(ev);
-  markup._onMouseUp(ev);
-
-  yield dropCompleted;
-
-  ok("Scroll event fired");
+  info("Simulate a mouseup to stop dragging");
+  markup._onMouseUp();
 });
 
-function onScroll(win) {
-  return new Promise((resolve, reject) => {
-    win.onscroll = function(e) {
-      resolve(e);
-    }
+function waitForViewScroll(markup) {
+  let el = markup.doc.documentElement;
+  let startPos = el.scrollTop;
+
+  return new Promise(resolve => {
+    let isDone = () => {
+      if (el.scrollTop === startPos) {
+        resolve(el.scrollTop);
+      } else {
+        startPos = el.scrollTop;
+        // Continue checking every 50ms.
+        setTimeout(isDone, 50);
+      }
+    };
+
+    // Start checking if the view scrolled after a while.
+    setTimeout(isDone, 50);
   });
-};
+}

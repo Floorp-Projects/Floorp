@@ -119,9 +119,13 @@ public:
 protected:
   virtual ~CamerasParent();
 
+  // We use these helpers for shutdown and for the respective IPC commands.
+  void StopCapture(const int& aCapEngine, const int& capnum);
+  int ReleaseCaptureDevice(const int& aCapEngine, const int& capnum);
+
   bool SetupEngine(CaptureEngine aCapEngine);
-  void CloseEngines();
   bool EnsureInitialized(int aEngine);
+  void CloseEngines();
   void StopIPC();
   void StopVideoCapture();
   nsresult DispatchToVideoCaptureThread(nsRunnable *event);

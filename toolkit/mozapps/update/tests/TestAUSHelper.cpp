@@ -217,7 +217,7 @@ int NS_main(int argc, NS_tchar **argv)
   }
 
   if (!NS_tstrcmp(argv[1], NS_T("check-signature"))) {
-#ifdef XP_WIN
+#if defined(XP_WIN) && defined(MOZ_MAINTENANCE_SERVICE)
     if (ERROR_SUCCESS == VerifyCertificateTrustForFile(argv[2])) {
       return 0;
     } else {

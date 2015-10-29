@@ -28,7 +28,10 @@ TimelineMarker::TimelineMarker(const char* aName,
 void
 TimelineMarker::AddDetails(JSContext* aCx, dom::ProfileTimelineMarker& aMarker)
 {
-  // Nothing to do here for plain markers.
+  if (GetTracingType() == MarkerTracingType::START) {
+    aMarker.mProcessType.Construct(GetProcessType());
+    aMarker.mIsOffMainThread.Construct(IsOffMainThread());
+  }
 }
 
 JSObject*

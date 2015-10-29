@@ -20,6 +20,7 @@
 #include "mozilla/dom/CanvasPattern.h"
 #include "mozilla/gfx/Rect.h"
 #include "mozilla/gfx/2D.h"
+#include "mozilla/UniquePtr.h"
 #include "gfx2DGlue.h"
 #include "imgIEncoder.h"
 #include "nsLayoutUtils.h"
@@ -526,7 +527,7 @@ public:
 
   friend class CanvasRenderingContext2DUserData;
 
-  virtual void GetImageBuffer(uint8_t** aImageBuffer, int32_t* aFormat) override;
+  virtual UniquePtr<uint8_t[]> GetImageBuffer(int32_t* aFormat) override;
 
 
   // Given a point, return hit region ID if it exists

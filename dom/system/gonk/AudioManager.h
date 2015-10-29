@@ -18,7 +18,9 @@
 
 #include "mozilla/HalTypes.h"
 #include "mozilla/Observer.h"
+#include "mozilla/UniquePtr.h"
 #include "nsAutoPtr.h"
+#include "nsDataHashtable.h"
 #include "nsIAudioManager.h"
 #include "nsIObserver.h"
 #include "android_audio/AudioSystem.h"
@@ -53,32 +55,7 @@ enum AudioOutputProfiles {
   DEVICE_TOTAL_NUMBER = 3,
 };
 
-/**
- * We have five sound volume settings from UX spec,
- * You can see more informations in Bug1068219.
- * (1) Media : music, video, FM ...
- * (2) Notification : ringer, notification ...
- * (3) Alarm : alarm
- * (4) Telephony : GSM call, WebRTC call
- * (5) Bluetooth SCO : SCO call
- **/
-enum AudioVolumeCategories {
-  VOLUME_MEDIA         = 0,
-  VOLUME_NOTIFICATION  = 1,
-  VOLUME_ALARM         = 2,
-  VOLUME_TELEPHONY     = 3,
-  VOLUME_BLUETOOTH_SCO = 4,
-  VOLUME_TOTAL_NUMBER  = 5,
-};
-
-struct VolumeData {
-  const char* mChannelName;
-  uint32_t mCategory;
-};
-
-class RecoverTask;
 class VolumeInitCallback;
-class AudioProfileData;
 
 class AudioManager final : public nsIAudioManager
                          , public nsIObserver
@@ -90,27 +67,63 @@ public:
   NS_DECL_NSIAUDIOMANAGER
   NS_DECL_NSIOBSERVER
 
-  // When audio backend is dead, recovery task needs to read all volume
-  // settings then set back into audio backend.
-  friend class RecoverTask;
-  friend class VolumeInitCallback;
-
-  // Open or close the specific profile
-  void SwitchProfileData(AudioOutputProfiles aProfile, bool aActive);
-
   // Validate whether the volume index is within the range
-  nsresult ValidateVolumeIndex(uint32_t aCategory, uint32_t aIndex) const;
+  nsresult ValidateVolumeIndex(int32_t aStream, uint32_t aIndex) const;
 
   // Called when android AudioFlinger in mediaserver is died
   void HandleAudioFlingerDied();
 
   void HandleHeadphoneSwitchEvent(const hal::SwitchEvent& aEvent);
 
+  class VolumeStreamState {
+  public:
+    explicit VolumeStreamState(AudioManager& aManager, int32_t aStreamType);
+    int32_t GetStreamType()
+    {
+      return mStreamType;
+    }
+    bool IsDevicesChanged(bool aFromCache = true);
+    void ClearDevicesChanged();
+    uint32_t GetLastDevices()
+    {
+      return mLastDevices;
+    }
+    void InitStreamVolume();
+    uint32_t GetMaxIndex();
+    uint32_t GetDefaultIndex();
+    uint32_t GetVolumeIndex();
+    uint32_t GetVolumeIndex(uint32_t aDevice);
+    void ClearCurrentVolumeUpdated();
+    // Set volume index to all active devices.
+    // Active devices are chosen by android AudioPolicyManager.
+    nsresult SetVolumeIndexToActiveDevices(uint32_t aIndex);
+    // Set volume index to all alias streams. Alias streams have same volume.
+    // It is used to update volume based on audio output profile data.
+    nsresult SetVolumeIndexToAliasStreams(uint32_t aIndex, uint32_t aDevice);
+    // Set volume index to all alias devices in audio output profile.
+    // Alias devices have same volume.
+    nsresult SetVolumeIndexToAliasDevices(uint32_t aIndex, uint32_t aDevice);
+    nsresult SetVolumeIndex(uint32_t aIndex, uint32_t aDevice, bool aUpdateCache = true);
+    // Restore volume index to all devices. Called when AudioFlinger is restarted.
+    void RestoreVolumeIndexToAllDevices();
+  private:
+    AudioManager& mManager;
+    const int32_t mStreamType;
+    uint32_t mLastDevices;
+    bool mIsDevicesChanged;
+    nsDataHashtable<nsUint32HashKey, uint32_t> mVolumeIndexes;
+  };
+
 protected:
   int32_t mPhoneState;
 
-  // A bitwise variable for recording what kind of headset/headphone is attached.
-  int32_t mHeadsetState;
+  bool mIsVolumeInited;
+
+  // A bitwise variable for volume update of audio output profiles
+  uint32_t mAudioOutProfileUpdated;
+
+  // Connected devices that are controlled by setDeviceConnectionState()
+  nsDataHashtable<nsUint32HashKey, nsCString> mConnectedDevices;
 
   bool mSwitchDone;
 
@@ -120,10 +133,22 @@ protected:
 #ifdef MOZ_B2G_BT
   bool mA2dpSwitchDone;
 #endif
-  uint32_t mCurrentStreamVolumeTbl[AUDIO_STREAM_CNT];
+  nsTArray<UniquePtr<VolumeStreamState> > mStreamStates;
+  uint32_t mLastChannelVolume[AUDIO_STREAM_CNT];
 
+  bool IsFmOutConnected();
+
+  nsresult SetStreamVolumeForProfile(AudioOutputProfiles aProfile,
+                                     int32_t aStream,
+                                     uint32_t aIndex);
   nsresult SetStreamVolumeIndex(int32_t aStream, uint32_t aIndex);
   nsresult GetStreamVolumeIndex(int32_t aStream, uint32_t *aIndex);
+
+  void UpdateCachedActiveDevicesForStreams();
+  uint32_t GetDevicesForStream(int32_t aStream, bool aFromCache = true);
+  uint32_t GetDeviceForStream(int32_t aStream);
+  // Choose one device as representative of active devices.
+  static uint32_t SelectDeviceFromDevices(uint32_t aOutDevices);
 
 private:
   nsAutoPtr<mozilla::hal::SwitchObserver> mObserver;
@@ -132,57 +157,41 @@ private:
   // mIsMicMuted is only used for toggling mute call to RIL.
   bool                                    mIsMicMuted;
 #endif
-  nsTArray<nsAutoPtr<AudioProfileData>>   mAudioProfiles;
-  AudioOutputProfiles mPresentProfile;
 
   void HandleBluetoothStatusChanged(nsISupports* aSubject,
                                     const char* aTopic,
                                     const nsCString aAddress);
   void HandleAudioChannelProcessChanged();
 
-  void CreateAudioProfilesData();
+  // Initialize volume index for audio output profile
+  void InitVolumeForProfile(AudioOutputProfiles aProfile,
+                            int32_t aStreamType,
+                            uint32_t aIndex);
 
-  // Init the volume setting from the init setting callback
-  void InitProfileVolume(AudioOutputProfiles aProfile,
-                        uint32_t aCatogory, uint32_t aIndex);
-
-  // Update volume data of profiles
-  void UpdateVolumeToProfile(AudioProfileData* aProfileData);
-
-  // Apply the volume data to device
-  void UpdateVolumeFromProfile(AudioProfileData* aProfileData);
-
-  // Send the volume changing event to Gaia
-  void SendVolumeChangeNotification(AudioProfileData* aProfileData);
-
-  // Update the mPresentProfile and profiles active status
-  void UpdateProfileState(AudioOutputProfiles aProfile, bool aActive);
-
-  // Volume control functions
-  nsresult SetVolumeByCategory(uint32_t aCategory, uint32_t aIndex);
-  uint32_t GetVolumeByCategory(uint32_t aCategory) const;
-  uint32_t GetMaxVolumeByCategory(uint32_t aCategory) const;
-
-  AudioProfileData* FindAudioProfileData(AudioOutputProfiles aProfile);
-
-  // Append the profile to the volume setting string.
+  // Append the audio output profile to the volume setting string.
   nsAutoCString AppendProfileToVolumeSetting(const char* aName,
                                              AudioOutputProfiles aProfile);
 
   // We store the volume setting in the database, these are related functions.
   void InitVolumeFromDatabase();
-  void UpdateVolumeSettingToDatabase(nsISettingsServiceLock* aLock,
-                                     const char* aTopic,
-                                     uint32_t aVolIndex);
+  void MaybeUpdateVolumeSettingToDatabase(bool aForce = false);
 
   // Promise functions.
   void InitProfileVolumeSucceeded();
   void InitProfileVolumeFailed(const char* aError);
 
+  void AudioOutProfileUpdated(AudioOutputProfiles aProfile);
+
   void UpdateHeadsetConnectionState(hal::SwitchState aState);
+  void UpdateDeviceConnectionState(bool aIsConnected, uint32_t aDevice, const nsCString& aDeviceName);
+  void SetAllDeviceConnectionStates();
 
   AudioManager();
   ~AudioManager();
+
+  friend class VolumeInitCallback;
+  friend class VolumeStreamState;
+  friend class GonkAudioPortCallback;
 };
 
 } /* namespace gonk */

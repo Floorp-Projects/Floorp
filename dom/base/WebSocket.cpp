@@ -1563,8 +1563,8 @@ WebSocketImpl::Init(JSContext* aCx,
     }
     mSecure = true;
 
-    const char16_t* params[] = { reportSpec.get(), NS_LITERAL_STRING("wss").get() };
-    CSP_LogLocalizedStr(NS_LITERAL_STRING("upgradeInsecureRequest").get(),
+    const char16_t* params[] = { reportSpec.get(), MOZ_UTF16("wss") };
+    CSP_LogLocalizedStr(MOZ_UTF16("upgradeInsecureRequest"),
                         params, ArrayLength(params),
                         EmptyString(), // aSourceFile
                         EmptyString(), // aScriptSample

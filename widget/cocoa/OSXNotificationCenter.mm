@@ -252,7 +252,7 @@ OSXNotificationCenter::ShowAlertNotification(const nsAString & aImageUrl, const 
   if (!hostPort.IsEmpty()) {
     const char16_t* formatStrings[] = { hostPort.get() };
     nsXPIDLString notificationSource;
-    bundle->FormatStringFromName(NS_LITERAL_STRING("source.label").get(),
+    bundle->FormatStringFromName(MOZ_UTF16("source.label"),
                                  formatStrings,
                                  ArrayLength(formatStrings),
                                  getter_Copies(notificationSource));
@@ -267,18 +267,18 @@ OSXNotificationCenter::ShowAlertNotification(const nsAString & aImageUrl, const 
   if (nsAlertsUtils::IsActionablePrincipal(aPrincipal)) {
     if (NS_SUCCEEDED(rv)) {
       nsXPIDLString closeButtonTitle, actionButtonTitle, disableButtonTitle, settingsButtonTitle;
-      bundle->GetStringFromName(NS_LITERAL_STRING("closeButton.title").get(),
+      bundle->GetStringFromName(MOZ_UTF16("closeButton.title"),
                                 getter_Copies(closeButtonTitle));
-      bundle->GetStringFromName(NS_LITERAL_STRING("actionButton.label").get(),
+      bundle->GetStringFromName(MOZ_UTF16("actionButton.label"),
                                 getter_Copies(actionButtonTitle));
       if (!hostPort.IsEmpty()) {
         const char16_t* formatStrings[] = { hostPort.get() };
-        bundle->FormatStringFromName(NS_LITERAL_STRING("webActions.disableForOrigin.label").get(),
+        bundle->FormatStringFromName(MOZ_UTF16("webActions.disableForOrigin.label"),
                                      formatStrings,
                                      ArrayLength(formatStrings),
                                      getter_Copies(disableButtonTitle));
       }
-      bundle->GetStringFromName(NS_LITERAL_STRING("webActions.settings.label").get(),
+      bundle->GetStringFromName(MOZ_UTF16("webActions.settings.label"),
                                 getter_Copies(settingsButtonTitle));
 
       notification.hasActionButton = YES;
