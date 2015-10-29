@@ -107,9 +107,7 @@ enum class DiagnosticFlags : uint16_t {
   TILE            = 1 << 5,
   BIGIMAGE        = 1 << 6,
   COMPONENT_ALPHA = 1 << 7,
-  REGION_RECT     = 1 << 8,
-  NV12            = 1 << 9,
-  YCBCR           = 1 << 10
+  REGION_RECT     = 1 << 8
 };
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(DiagnosticFlags)
 
