@@ -15,7 +15,7 @@
  * N: N bytes alignment for the first element, defaults to 32
   */
 template <typename E, int N = 32>
-class AlignedTArray : public nsTArray_Impl<E, nsTArrayInfallibleAllocator>
+class AlignedTArray : private nsTArray_Impl<E, nsTArrayInfallibleAllocator>
 {
   static_assert((N & (N-1)) == 0, "N must be power of 2");
   typedef nsTArray_Impl<E, nsTArrayInfallibleAllocator> base_type;
@@ -45,6 +45,9 @@ public:
   size_type Length() const {
     return base_type::Length() <= sExtra ? 0 : base_type::Length() - sExtra;
   }
+
+  using base_type::ShallowSizeOfExcludingThis;
+  using base_type::ShallowSizeOfIncludingThis;
 
 private:
   AlignedTArray(const AlignedTArray& other) = delete;
