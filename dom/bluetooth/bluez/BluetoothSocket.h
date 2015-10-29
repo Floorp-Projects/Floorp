@@ -26,7 +26,7 @@ public:
   BluetoothSocket(BluetoothSocketObserver* aObserver);
   ~BluetoothSocket();
 
-  nsresult Connect(const nsAString& aDeviceAddress,
+  nsresult Connect(const BluetoothAddress& aDeviceAddress,
                    const BluetoothUuid& aServiceUuid,
                    BluetoothSocketType aType,
                    int aChannel,
@@ -105,9 +105,9 @@ public:
   /**
    * Get the current socket address.
    *
-   * @param[out] aDeviceAddress Returns the address string.
+   * @param[out] aDeviceAddress Returns the address.
    */
-  void GetAddress(nsAString& aDeviceAddress);
+  void GetAddress(BluetoothAddress& aDeviceAddress);
 
   // Methods for |DataSocket|
   //
