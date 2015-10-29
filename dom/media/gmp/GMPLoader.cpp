@@ -22,6 +22,10 @@
 #endif
 #endif
 
+#ifdef XP_MACOSX
+#include <assert.h>
+#endif
+
 #if defined(HASH_NODE_ID_WITH_DEVICE_ID)
 // In order to provide EME plugins with a "device binding" capability,
 // in the parent we generate and store some random bytes as salt for every
@@ -105,6 +109,18 @@ GetStackAfterCurrentFrame(uint8_t** aOutTop, uint8_t** aOutBottom)
   }
   *aOutTop = top;
   *aOutBottom = bottom;
+  return true;
+}
+#endif
+
+#if defined(XP_MACOSX) && defined(HASH_NODE_ID_WITH_DEVICE_ID)
+MOZ_NEVER_INLINE
+static bool
+GetStackAfterCurrentFrame(uint8_t** aOutTop, uint8_t** aOutBottom)
+{
+  // TODO
+  *aOutTop = nullptr;
+  *aOutBottom = nullptr;
   return true;
 }
 #endif
