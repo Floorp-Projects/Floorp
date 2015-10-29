@@ -44,22 +44,6 @@ function testAddContact(aIcc, aType, aMozContact, aPin2) {
       // We only support SIM in emulator, so we don't have anr and email field.
       ok(aResult.tel.length == 1);
       ok(!aResult.email);
-
-      // Get ICC contact for checking new contact
-      return aIcc.readContacts(aType)
-        .then((aResult) => {
-          let contact = aResult[aResult.length - 1];
-          is(contact.name[0], aMozContact.name[0]);
-          // Maximum digits of the Dialling Number is 20, and maximum digits of Extension is 20.
-          is(contact.tel[0].value, aMozContact.tel[0].value.substring(0, 40));
-          is(contact.id.substring(0, aIcc.iccInfo.iccid.length), aIcc.iccInfo.iccid);
-
-          return contact.id;
-        })
-        .then((aContactId) => {
-          // Clean up contact
-          return removeContact(aIcc, aContactId, aType, aPin2);
-        });
     }, (aError) => {
       if (aType === "fdn" && aPin2 === undefined) {
         ok(aError.name === "SimPin2",
@@ -67,31 +51,61 @@ function testAddContact(aIcc, aType, aMozContact, aPin2) {
       } else {
         ok(false, "Cannot add " + aType + " contact: " + aError.name);
       }
-    })
+    });
 }
 
-function removeContact(aIcc, aContactId, aType, aPin2) {
-  log("removeContact: contactId=" + aContactId +
-      ", type=" + aType + ", pin2=" + aPin2);
+function removeContacts(aIcc, aContacts, aType, aPin2) {
+  log("removeContacts: type=" + aType + ", pin2=" + aPin2);
+  let promise = Promise.resolve();
 
-  let contact = new mozContact({});
-  contact.id = aContactId;
+  // Clean up contacts
+  for (let i = 0; i < aContacts.length ; i++) {
+    let contact = new mozContact({});
+    contact.id = aContacts[i].id;
+    promise = promise.then(() => aIcc.updateContact(aType, contact, aPin2));
+  }
+  return promise;
+}
 
-  return aIcc.updateContact(aType, contact, aPin2);
+function testAddContacts(aIcc, aType, aPin2) {
+  let promise = Promise.resolve();
+
+  for (let i = 0; i < TEST_ADD_DATA.length; i++) {
+    let test_data = TEST_ADD_DATA[i];
+
+    promise = promise.then(() => testAddContact(aIcc, aType, test_data, aPin2));
+  }
+
+  // Get ICC contact for checking new contacts
+  promise = promise.then(() => aIcc.readContacts(aType))
+  .then((aResult) => {
+    aResult = aResult.slice(aResult.length - TEST_ADD_DATA.length);
+
+    for (let i = 0; i < aResult.length ; i++) {
+      let contact = aResult[i];
+      let expectedResult = TEST_ADD_DATA[i];
+
+      is(contact.name[0], expectedResult.name[0]);
+      // Maximum digits of the Dialling Number is 20, and maximum digits of Extension is 20.
+      is(contact.tel[0].value, expectedResult.tel[0].value.substring(0, 40));
+      is(contact.id.substring(0, aIcc.iccInfo.iccid.length), aIcc.iccInfo.iccid);
+    }
+    return removeContacts(aIcc, aResult, aType, aPin2);
+  });
+
+
+  return promise;
 }
 
 // Start tests
 startTestCommon(function() {
   let icc = getMozIcc();
-  let promise = Promise.resolve();
-  for (let i = 0; i < TEST_ADD_DATA.length; i++) {
-    let test_data = TEST_ADD_DATA[i];
+
+  return Promise.resolve()
     // Test add adn contacts
-    promise = promise.then(() => testAddContact(icc, "adn", test_data))
-      // Test add fdn contacts
-      .then(() => testAddContact(icc, "fdn", test_data, "0000"))
-      // Test add fdn contacts without passing pin2
-      .then(() => testAddContact(icc, "fdn", test_data));
-  }
-  return promise;
+    .then(() => testAddContacts(icc, "adn"))
+    // Test add fdn contacts
+    .then(() => testAddContacts(icc, "fdn", "0000"))
+    // Test one fdn contact without passing pin2
+    .then(() => testAddContact(icc, "fdn", TEST_ADD_DATA[0]));
 });
