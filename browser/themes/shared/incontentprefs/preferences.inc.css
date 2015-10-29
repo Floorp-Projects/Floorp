@@ -171,6 +171,10 @@ treecol {
   margin-right: 4px !important;
 }
 
+#notificationsPolicyLearnMore {
+  -moz-margin-start: 1.5em !important;
+}
+
 #defaultFontSizeLabel {
   /* !important needed to override common !important rule */
   -moz-margin-start: 4px !important;
