@@ -593,7 +593,7 @@ describe("loop.panel", function() {
         React.createElement(loop.panel.RoomEntry, props));
     }
 
-    describe("handleContextChevronClick", function() {
+    describe("handleClick", function() {
       var view;
 
       beforeEach(function() {
@@ -613,15 +613,15 @@ describe("loop.panel", function() {
         expect(view.refs.contextActions.state.showMenu).to.eql(false);
       });
 
-      it("should set eventPosY when handleContextChevronClick is called", function() {
-        view.handleContextChevronClick(fakeEvent);
+      it("should set eventPosY when handleClick is called", function() {
+        view.handleClick(fakeEvent);
 
         expect(view.state.eventPosY).to.eql(fakeEvent.pageY);
       });
 
-      it("toggle state.showMenu when handleContextChevronClick is called", function() {
+      it("toggle state.showMenu when handleClick is called", function() {
         var prevState = view.state.showMenu;
-        view.handleContextChevronClick(fakeEvent);
+        view.handleClick(fakeEvent);
 
         expect(view.state.showMenu).to.eql(!prevState);
       });
@@ -702,10 +702,10 @@ describe("loop.panel", function() {
         });
       }
 
-      it("should not display a context indicator if the room doesn't have any", function() {
+      it("should display a default context indicator if the room doesn't have any", function() {
         roomEntry = mountEntryForContext();
 
-        expect(roomEntry.getDOMNode().querySelector(".room-entry-context-item")).eql(null);
+        expect(roomEntry.getDOMNode().querySelector(".room-entry-context-item")).not.eql(null);
       });
 
       it("should a context indicator if the room specifies context", function() {
@@ -1129,11 +1129,10 @@ describe("loop.panel", function() {
       var props = _.extend({
         dispatcher: dispatcher,
         eventPosY: 0,
-        handleClickEntry: sandbox.stub(),
         showMenu: false,
         room: roomData,
         toggleDropdownMenu: sandbox.stub(),
-        handleContextChevronClick: sandbox.stub()
+        handleClick: sandbox.stub()
       }, extraProps);
       return TestUtils.renderIntoDocument(
         React.createElement(loop.panel.RoomEntryContextButtons, props));
@@ -1191,12 +1190,6 @@ describe("loop.panel", function() {
 
       sinon.assert.calledWithExactly(dispatcher.dispatch,
         new sharedActions.DeleteRoom({ roomToken: roomData.roomToken }));
-    });
-
-    it("should trigger handleClickEntry when button is clicked", function() {
-      TestUtils.Simulate.click(view.refs.callButton.getDOMNode());
-
-      sinon.assert.calledOnce(view.props.handleClickEntry);
     });
   });
 });

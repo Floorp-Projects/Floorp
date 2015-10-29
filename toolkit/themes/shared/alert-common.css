@@ -10,11 +10,6 @@
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
-#alertNotification {
-  padding: 30px;
-  padding-inline-start: 90px;
-}
-
 #alertBox[hasBodyText] > #alertTextBox,
 #alertBox[hasOrigin] > #alertTitleBox {
   border-bottom: 1px solid ThreeDShadow;
@@ -38,37 +33,32 @@
 
 @keyframes alert-animation {
   from {
-    transform: translate(110%, 0) rotate(-20deg);
+    opacity: 0;
   }
   5% {
-    transform: none;
+    opacity: 1;
   }
   95% {
-    transform: none;
     opacity: 1;
   }
   to {
-    transform: translate(0, 60px) rotate(15deg);
     opacity: 0;
   }
 }
 
 @keyframes alert-clicked-animation {
   to {
-    transform: scale(1.5);
     opacity: 0;
   }
 }
 
 @keyframes alert-closing-animation {
   to {
-    transform: translate(0, 60px) rotate(15deg);
     opacity: 0;
   }
 }
 
 #alertImage {
-  margin: 8px 0;
   width: 64px;
 }
 
@@ -83,6 +73,10 @@
 
 #alertBox[hasImage] > box > #alertTextBox {
   width: 255px;
+}
+
+#alertTextLabel {
+  padding-inline-end: 8px;
 }
 
 .alertTitle {
