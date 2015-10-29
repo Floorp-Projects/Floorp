@@ -122,7 +122,6 @@ html, .theme-body, #app, #memory-tool, #memory-tool-container {
   border-bottom: 1px solid rgba(128,128,128,0.15);
   padding: 8px;
   cursor: pointer;
-  color: var(--theme-selection-color);
 }
 
 .list > li.selected {
@@ -219,7 +218,7 @@ html, .theme-body, #app, #memory-tool, #memory-tool-container {
   height: var(--heap-tree-row-height);
 }
 
-.heap-tree-item span, .header span {
+.heap-tree-item-field, .header span {
   float: left;
 }
 
@@ -268,7 +267,7 @@ html, .theme-body, #app, #memory-tool, #memory-tool-container {
 }
 
 .heap-tree-item-name {
-  padding-left: 10px;
+  padding-left: 5px;
 }
 
 .error::before {
@@ -286,4 +285,35 @@ html, .theme-body, #app, #memory-tool, #memory-tool-container {
 }
 .theme-light .error::before {
   background-image: url(chrome://devtools/skin/themes/images/webconsole.svg#light-icons);
+}
+
+/**
+ * Frame View components
+ */
+
+.focused .frame-link-filename,
+.focused .frame-link-column,
+.focused .frame-link-line,
+.focused .frame-link-host,
+.focused .frame-link-colon {
+  color: var(--theme-selection-color);
+}
+
+.frame-link-filename {
+  color: var(--theme-highlight-blue);
+  cursor: pointer;
+}
+
+.frame-link-filename:hover {
+  text-decoration: underline;
+}
+
+.frame-link-column, .frame-link-line, .frame-link-colon {
+  color: var(--theme-highlight-orange);
+}
+
+.frame-link-host {
+  font-size: 90%;
+  margin-left: 5px;
+  color: var(--theme-content-color2);
 }

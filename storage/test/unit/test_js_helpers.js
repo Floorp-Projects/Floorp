@@ -70,7 +70,7 @@ function test_params_gets_sync()
   // Make sure we do not assert in getting the value.
   let originalCount = Object.getOwnPropertyNames(stmt.params).length;
   let expected = ["a", "b", "c"];
-  for each (let name in expected) {
+  for (let name of expected) {
     stmt.params[name];
   }
 
@@ -91,7 +91,7 @@ function test_params_gets_async()
   // Make sure we do not assert in getting the value.
   let originalCount = Object.getOwnPropertyNames(stmt.params).length;
   let expected = ["a", "b", "c"];
-  for each (let name in expected) {
+  for (let name of expected) {
     stmt.params[name];
   }
 

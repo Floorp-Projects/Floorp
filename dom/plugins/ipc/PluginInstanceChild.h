@@ -427,29 +427,6 @@ private:
      */
     nsAutoPtr< nsTHashtable<DeletingObjectEntry> > mDeletingHash;
 
-#if defined(OS_WIN)
-private:
-    // Shared dib rendering management for windowless plugins.
-    bool SharedSurfaceSetWindow(const NPRemoteWindow& aWindow);
-    int16_t SharedSurfacePaint(NPEvent& evcopy);
-    void SharedSurfaceRelease();
-    bool AlphaExtractCacheSetup();
-    void AlphaExtractCacheRelease();
-    void UpdatePaintClipRect(RECT* aRect);
-
-private:
-    enum {
-      RENDER_NATIVE,
-      RENDER_BACK_ONE,
-      RENDER_BACK_TWO 
-    };
-    gfx::SharedDIBWin mSharedSurfaceDib;
-    struct {
-      uint16_t        doublePass;
-      HDC             hdc;
-      HBITMAP         bmp;
-    } mAlphaExtract;
-#endif // defined(OS_WIN)
 #if defined(MOZ_WIDGET_COCOA)
 private:
 #if defined(__i386__)

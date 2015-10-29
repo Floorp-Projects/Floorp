@@ -30,7 +30,7 @@ GfxFormatToSkiaColorType(SurfaceFormat format)
     case SurfaceFormat::B8G8R8X8:
       // We probably need to do something here.
       return kBGRA_8888_SkColorType;
-    case SurfaceFormat::R5G6B5:
+    case SurfaceFormat::R5G6B5_UINT16:
       return kRGB_565_SkColorType;
     case SurfaceFormat::A8:
       return kAlpha_8_SkColorType;
@@ -47,7 +47,7 @@ SkiaColorTypeToGfxFormat(SkColorType type)
     case kBGRA_8888_SkColorType:
       return SurfaceFormat::B8G8R8A8;
     case kRGB_565_SkColorType:
-      return SurfaceFormat::R5G6B5;
+      return SurfaceFormat::R5G6B5_UINT16;
     case kAlpha_8_SkColorType:
       return SurfaceFormat::A8;
     default:
@@ -66,7 +66,7 @@ GfxFormatToGrConfig(SurfaceFormat format)
     case SurfaceFormat::B8G8R8X8:
       // We probably need to do something here.
       return kBGRA_8888_GrPixelConfig;
-    case SurfaceFormat::R5G6B5:
+    case SurfaceFormat::R5G6B5_UINT16:
       return kRGB_565_GrPixelConfig;
     case SurfaceFormat::A8:
       return kAlpha_8_GrPixelConfig;

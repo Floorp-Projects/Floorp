@@ -35,7 +35,7 @@ SurfaceFormatForAndroidPixelFormat(android::PixelFormat aFormat,
   case android::PIXEL_FORMAT_RGBX_8888:
     return swapRB ? gfx::SurfaceFormat::B8G8R8X8 : gfx::SurfaceFormat::R8G8B8X8;
   case android::PIXEL_FORMAT_RGB_565:
-    return gfx::SurfaceFormat::R5G6B5;
+    return gfx::SurfaceFormat::R5G6B5_UINT16;
   case HAL_PIXEL_FORMAT_YCbCr_422_SP:
   case HAL_PIXEL_FORMAT_YCrCb_420_SP:
   case HAL_PIXEL_FORMAT_YCbCr_422_I:
