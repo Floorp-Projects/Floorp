@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+
+<svg version="1.1"
+     xmlns="http://www.w3.org/2000/svg"
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     width="45"
+     height="45"
+     viewBox="0 0 45 45">
+
+  <style>
+    .icon-default {
+      fill: #999;
+    }
+  </style>
+
+  <defs>
+    <rect id="shape-lock-clasp-outer" x="8" y="2" width="28" height="40" rx="14" ry="14" />
+    <rect id="shape-lock-clasp-inner" x="14" y="8" width="16" height="28" rx="8" ry="8" />
+    <rect id="shape-lock-base" x="4" y="18" width="36" height="24" rx="3" ry="3" />
+
+    <mask id="mask-clasp-cutout">
+      <rect width="48" height="48" fill="#000" />
+      <use xlink:href="#shape-lock-clasp-outer" fill="#fff" />
+      <use xlink:href="#shape-lock-clasp-inner" fill="#000" />
+      <line x1="4" y1="38" x2="41" y2="3" stroke="#000" stroke-width="5.5" />
+      <line x1="4" y1="46" x2="41" y2="11" stroke="#000" stroke-width="5.5" />
+      <rect x="4" y="18" width="36" height="26" rx="6" ry="6" />
+    </mask>
+
+    <mask id="mask-base-cutout">
+      <rect width="45" height="45" fill="#000" />
+      <use xlink:href="#shape-lock-base" fill="#fff" />
+      <line x1="2.5" y1="41.5" x2="41" y2="5" stroke="#000" stroke-width="8.5" />
+    </mask>
+  </defs>
+
+  <use xlink:href="#shape-lock-clasp-outer" mask="url(#mask-clasp-cutout)" fill="#999" />
+  <use xlink:href="#shape-lock-base" mask="url(#mask-base-cutout)" fill="#999" />
+
+  <line x1="2.5" y1="41.5" x2="41" y2="5" stroke="#d92d21" stroke-width="5.5" />
+
+</svg>

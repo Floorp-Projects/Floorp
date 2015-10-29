@@ -17,12 +17,12 @@ function testIframeCert(e) {
   gBrowser.selectedBrowser.removeEventListener("load", testIframeCert, true);
   // Confirm that the expert section is hidden
   var doc = gBrowser.contentDocument.getElementsByTagName('iframe')[0].contentDocument;
-  var eC = doc.getElementById("expertContent");
-  ok(eC, "Expert content should exist")
-  ok(eC.hasAttribute("hidden"), "Expert content should be hidded by default");
+  var aP = doc.getElementById("advancedPanel");
+  ok(aP, "Advanced content should exist");
+  is_element_hidden(aP, "Advanced content should not be visible by default")
 
   // Clean up
   gBrowser.removeCurrentTab();
-  
+
   finish();
 }

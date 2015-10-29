@@ -18,7 +18,7 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
-    <title>&certerror.pagetitle;</title>
+    <title>&certerror.pagetitle1;</title>
     <link rel="stylesheet" href="chrome://browser/skin/aboutCertError.css" type="text/css" media="all" />
     <link rel="stylesheet" href="chrome://browser/content/certerror/aboutCertError.css" type="text/css" media="all" />
     <!-- This page currently uses the same favicon as neterror.xhtml.
@@ -51,6 +51,22 @@
         return decodeURIComponent(matches[1]);
       }
 
+      function goBack(buttonEl)
+      {
+        if (history.length > 1) {
+          history.back();
+        } else {
+          location.href = "about:home";
+        }
+        buttonEl.disabled = true;
+      }
+
+      function toggleVisibility(id)
+      {
+        var node = document.getElementById(id);
+        node.style.visibility = node.style.visibility == "" ? "hidden" : "";
+      }
+
       function getDescription()
       {
         var url = document.documentURI;
@@ -66,31 +82,20 @@
 
       function initPage()
       {
-        // Replace the "#1" string in the intro with the hostname.  Trickier
-        // than it might seem since we want to preserve the <b> tags, but
-        // not allow for any injection by just using innerHTML.  Instead,
-        // just find the right target text node.
-        var intro = document.getElementById('introContentP1');
-        function replaceWithHost(node) {
-          if (node.textContent == "#1")
-            node.textContent = location.host;
-          else
-            for(var i = 0; i < node.childNodes.length; i++)
-              replaceWithHost(node.childNodes[i]);
-        };
-        replaceWithHost(intro);
+        for (let host of document.querySelectorAll(".hostname")) {
+          host.textContent = document.location.hostname;
+        }
 
         var cssClass = getCSSClass();
         if (cssClass == "expertBadCert") {
-          toggle('technicalContent');
-          toggle('expertContent');
+          toggleVisibility('advancedPanel');
         }
 
         // Disallow overrides if this is a Strict-Transport-Security
         // host and the cert is bad (STS Spec section 7.3) or if the
         // certerror is in a frame (bug 633691).
         if (cssClass == "badStsCert" || window != top) {
-          document.getElementById("expertContent").setAttribute("hidden", "true");
+          document.getElementById("advancedPanel").setAttribute("hidden", "true");
         }
         if (cssClass != "badStsCert") {
           document.getElementById("badStsCertExplanation").setAttribute("hidden", "true");
@@ -167,7 +172,7 @@
          * domain names are famous for having '.' characters in them,
          * which would allow spurious and possibly hostile matches.
          */
-        if (endsWith(okHost, "." + thisHost))
+        if (okHost.endsWith("." + thisHost))
           link.href = proto + okHost;
 
         /* case #2:
@@ -175,68 +180,46 @@
          *
          * The certificate is only valid for garage.maemo.org
          */
-        if (endsWith(thisHost, "." + okHost))
+        if (thisHost.endsWith("." + okHost))
           link.href = proto + okHost;
 
         // If we set a link, meaning there's something helpful for
         // the user here, expand the section by default
         if (link.href && getCSSClass() != "expertBadCert")
-          toggle("technicalContent");
-      }
-
-      function endsWith(haystack, needle) {
-        return haystack.slice(-needle.length) == needle;
-      }
-
-      function toggle(id) {
-        var el = document.getElementById(id);
-        if (el.getAttribute("collapsed"))
-          el.removeAttribute("collapsed");
-        else
-          el.setAttribute("collapsed", true);
+          toggleVisibility("advancedPanel");
       }
     ]]></script>
   </head>
 
   <body dir="&locale.dir;">
-
     <!-- PAGE CONTAINER (for styling purposes only) -->
     <div id="errorPageContainer">
 
       <!-- Error Title -->
       <div id="errorTitle">
-        <h1 id="errorTitleText">&certerror.longpagetitle;</h1>
+        <h1 id="errorTitleText">&certerror.longpagetitle1;</h1>
       </div>
 
       <!-- LONG CONTENT (the section most likely to require scrolling) -->
       <div id="errorLongContent">
-        <div id="introContent">
-          <p id="introContentP1">&certerror.introPara1;</p>
-          <p>&certerror.introPara2;</p>
+
+        <!-- Short Description -->
+        <div id="errorShortDesc">
+          <p>&certerror.introPara;</p>
         </div>
-
-        <div id="whatShouldIDoContent">
-          <h2>&certerror.whatShouldIDo.heading;</h2>
-          <div id="whatShouldIDoContentText">
-            <p>&certerror.whatShouldIDo.content;</p>
-            <p id="badStsCertExplanation">&certerror.whatShouldIDo.badStsCertExplanation;</p>
-            <button id='getMeOutOfHereButton'>&certerror.getMeOutOfHere.label;</button>
-          </div>
-        </div>
-
-        <!-- The following sections can be unhidden by default by setting the
-             "browser.xul.error_pages.expert_bad_cert" pref to true -->
-        <h2 id="technicalContent" class="expander" collapsed="true">
-          <button onclick="toggle('technicalContent');">&certerror.technical.heading;</button>
-        </h2>
-        <p id="technicalContentText"/>
-
-        <h2 id="expertContent" class="expander" collapsed="true">
-          <button onclick="toggle('expertContent');">&certerror.expert.heading;</button>
-        </h2>
+        <p id="badStsCertExplanation">&certerror.whatShouldIDo.badStsCertExplanation;</p>
         <div>
-          <p>&certerror.expert.content;</p>
-          <p>&certerror.expert.contentPara2;</p>
+          <p><a href="https://support.mozilla.org/kb/tls-error-reports" id="learnMoreLink" target="new">&certerror.learnMore;</a></p>
+        </div>
+
+        <div id="buttonContainer">
+          <button id="returnButton" autocomplete="off" onclick="goBack(this);" autofocus="true">&certerror.returnToPreviousPage.label;</button>
+          <div id="buttonSpacer"></div>
+          <button id="advancedButton" autocomplete="off" onclick="toggleVisibility('advancedPanel');" autofocus="true">&certerror.advanced.label;</button>
+        </div>
+        <!-- Advanced panel, which is hidden by default -->
+        <div id="advancedPanel" style="visibility: hidden;">
+          <p id="technicalContentText"/>
           <button id='exceptionDialogButton'>&certerror.addException.label;</button>
         </div>
       </div>
