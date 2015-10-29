@@ -126,6 +126,15 @@ function URL(url, base) {
     }
   }
 
+  let fileName = "/";
+  try {
+    fileName = uri.QueryInterface(Ci.nsIURL).fileName;
+  } catch (e) {
+    if (e.result != Cr.NS_NOINTERFACE) {
+      throw e;
+    }
+  }
+
   let uriData = [uri.path, uri.path.length, {}, {}, {}, {}, {}, {}];
   URLParser.parsePath.apply(URLParser, uriData);
   let [{ value: filepathPos }, { value: filepathLen },
@@ -137,6 +146,7 @@ function URL(url, base) {
   let search = uri.path.substr(queryPos, queryLen);
   search = search ? "?" + search : "";
 
+  this.__defineGetter__("fileName", () => fileName);
   this.__defineGetter__("scheme", () => uri.scheme);
   this.__defineGetter__("userPass", () => userPass);
   this.__defineGetter__("host", () => host);

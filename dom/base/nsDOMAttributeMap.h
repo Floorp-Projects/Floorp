@@ -128,13 +128,7 @@ public:
 
   typedef nsRefPtrHashtable<nsAttrHashKey, Attr> AttrCache;
 
-  /**
-   * Enumerates over the attribute nodess in the map and calls aFunc for each
-   * one. If aFunc returns PL_DHASH_STOP we'll stop enumerating at that point.
-   *
-   * @return The number of attribute nodes that aFunc was called for.
-   */
-  uint32_t Enumerate(AttrCache::EnumReadFunction aFunc, void *aUserArg) const;
+  static void BlastSubtreeToPieces(nsINode *aNode);
 
   Element* GetParentObject() const
   {

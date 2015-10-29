@@ -1316,8 +1316,13 @@ Evaluate(JSContext* cx, unsigned argc, Value* vp)
         // replace the current bytecode by the same stream of bytes.
         if (loadBytecode && assertEqBytecode) {
             if (saveLength != loadLength) {
+                char loadLengthStr[16];
+                JS_snprintf(loadLengthStr, sizeof(loadLengthStr), "%u", loadLength);
+                char saveLengthStr[16];
+                JS_snprintf(saveLengthStr, sizeof(saveLengthStr), "%u", saveLength);
+
                 JS_ReportErrorNumber(cx, my_GetErrorMessage, nullptr, JSSMSG_CACHE_EQ_SIZE_FAILED,
-                                     loadLength, saveLength);
+                                     loadLengthStr, saveLengthStr);
                 return false;
             }
 
@@ -5234,9 +5239,10 @@ PrintStackTrace(JSContext* cx, HandleValue exn)
     if (!exnObj->is<ErrorObject>())
         return true;
 
+    // Exceptions thrown while compiling top-level script have no stack.
     RootedObject stackObj(cx, exnObj->as<ErrorObject>().stack());
     if (!stackObj)
-        return false;
+        return true;
 
     RootedString stackStr(cx);
     if (!BuildStackString(cx, stackObj, &stackStr, 2))

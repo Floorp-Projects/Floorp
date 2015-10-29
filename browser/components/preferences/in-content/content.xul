@@ -70,7 +70,7 @@
     <rows>
       <row id="notificationsPolicyRow">
         <vbox align="start">
-          <label id="notificationsPolicy">&notificationsPolicyDesc.label;</label>
+          <label id="notificationsPolicy">&notificationsPolicyDesc2.label;</label>
         </vbox>
         <hbox pack="end">
           <button id="notificationsPolicyButton" label="&notificationsPolicyButton.label;"

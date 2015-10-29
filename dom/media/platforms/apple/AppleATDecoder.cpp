@@ -397,6 +397,9 @@ AppleATDecoder::SetupDecoder(MediaRawData* aSample)
   mOutputFormat.mFormatFlags =
     kLinearPCMFormatFlagIsFloat |
     0;
+#elif defined(MOZ_SAMPLE_TYPE_S16)
+  mOutputFormat.mBitsPerChannel = 16;
+  mOutputFormat.mFormatFlags = kLinearPCMFormatFlagIsSignedInteger | 0;
 #else
 # error Unknown audio sample type
 #endif

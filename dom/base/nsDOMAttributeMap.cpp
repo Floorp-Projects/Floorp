@@ -557,13 +557,6 @@ nsDOMAttributeMap::Count() const
   return mAttributeCache.Count();
 }
 
-uint32_t
-nsDOMAttributeMap::Enumerate(AttrCache::EnumReadFunction aFunc,
-                             void *aUserArg) const
-{
-  return mAttributeCache.EnumerateRead(aFunc, aUserArg);
-}
-
 size_t
 nsDOMAttributeMap::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
 {

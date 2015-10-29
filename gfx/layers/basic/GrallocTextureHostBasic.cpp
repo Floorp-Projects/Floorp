@@ -26,7 +26,7 @@ HalFormatToSurfaceFormat(int aHalFormat, TextureFlags aFlags)
   case android::PIXEL_FORMAT_RGBX_8888:
     return swapRB ? gfx::SurfaceFormat::B8G8R8X8 : gfx::SurfaceFormat::R8G8B8X8;
   case android::PIXEL_FORMAT_RGB_565:
-    return gfx::SurfaceFormat::R5G6B5;
+    return gfx::SurfaceFormat::R5G6B5_UINT16;
   case HAL_PIXEL_FORMAT_YCbCr_422_SP:
   case HAL_PIXEL_FORMAT_YCrCb_420_SP:
   case HAL_PIXEL_FORMAT_YCbCr_422_I:
@@ -37,12 +37,12 @@ HalFormatToSurfaceFormat(int aHalFormat, TextureFlags aFlags)
   case HAL_PIXEL_FORMAT_IMPLEMENTATION_DEFINED:
 #endif
       // Needs convert to RGB565
-      return gfx::SurfaceFormat::R5G6B5;
+      return gfx::SurfaceFormat::R5G6B5_UINT16;
   default:
     if (aHalFormat >= 0x100 && aHalFormat <= 0x1FF) {
       // Reserved range for HAL specific formats.
       // Needs convert to RGB565
-      return gfx::SurfaceFormat::R5G6B5;
+      return gfx::SurfaceFormat::R5G6B5_UINT16;
     } else {
       MOZ_CRASH("Unhandled HAL pixel format");
       return SurfaceFormat::UNKNOWN; // not reached

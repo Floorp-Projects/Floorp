@@ -37,13 +37,13 @@ function createParentMap (node, aggregator=Object.create(null)) {
  * @param {CensusTreeNode} census
  * @return {Object}
  */
-function createTreeProperties (census) {
+function createTreeProperties (census, toolbox) {
   let map = createParentMap(census);
 
   return {
-    getParent: node => map(node.id),
+    getParent: node => map[node.id],
     getChildren: node => node.children || [],
-    renderItem: (item, depth, focused, arrow) => new TreeItem({ item, depth, focused, arrow }),
+    renderItem: (item, depth, focused, arrow) => new TreeItem({ toolbox, item, depth, focused, arrow }),
     getRoots: () => census.children,
     getKey: node => node.id,
     itemHeight: HEAP_TREE_ROW_HEIGHT,
@@ -68,7 +68,7 @@ const Heap = module.exports = createClass({
   },
 
   render() {
-    let { snapshot, onSnapshotClick } = this.props;
+    let { snapshot, onSnapshotClick, toolbox } = this.props;
     let census = snapshot ? snapshot.census : null;
     let state = snapshot ? snapshot.state : "initial";
     let statusText = snapshot ? getSnapshotStatusTextFull(snapshot) : "";
@@ -76,14 +76,14 @@ const Heap = module.exports = createClass({
 
     switch (state) {
       case "initial":
-        content = dom.button({
+        content = [dom.button({
           className: "devtools-toolbarbutton take-snapshot",
           onClick: onSnapshotClick,
           // Want to use the [standalone] tag to leverage our styles,
           // but React hates that evidently
           "data-standalone": true,
           "data-text-only": true,
-        }, TAKE_SNAPSHOT_TEXT)
+        }, TAKE_SNAPSHOT_TEXT)];
         break;
       case states.ERROR:
         content = [
@@ -96,7 +96,7 @@ const Heap = module.exports = createClass({
       case states.READING:
       case states.READ:
       case states.SAVING_CENSUS:
-        content = dom.span({ className: "snapshot-status devtools-throbber" }, statusText)
+        content = [dom.span({ className: "snapshot-status devtools-throbber" }, statusText)];
         break;
       case states.SAVED_CENSUS:
         content = [
@@ -107,11 +107,11 @@ const Heap = module.exports = createClass({
             dom.span({ className: "heap-tree-item-total-count" }, "Total Count"),
             dom.span({ className: "heap-tree-item-name" }, "Name")
           ),
-          Tree(createTreeProperties(snapshot.census))
+          Tree(createTreeProperties(snapshot.census, toolbox))
         ];
         break;
     }
-    let pane = dom.div({ className: "heap-view-panel", "data-state": state }, content);
+    let pane = dom.div({ className: "heap-view-panel", "data-state": state }, ...content);
 
     return (
       dom.div({ id: "heap-view", "data-state": state }, pane)

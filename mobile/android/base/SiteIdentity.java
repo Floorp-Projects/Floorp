@@ -5,7 +5,6 @@
 
 package org.mozilla.gecko;
 
-import android.util.Log;
 import org.json.JSONObject;
 
 import android.text.TextUtils;
@@ -14,6 +13,7 @@ public class SiteIdentity {
     private final String LOGTAG = "GeckoSiteIdentity";
     private SecurityMode mSecurityMode;
     private boolean mSecure;
+    private boolean mLoginInsecure;
     private MixedMode mMixedModeActive;
     private MixedMode mMixedModeDisplay;
     private TrackingMode mTrackingMode;
@@ -134,6 +134,7 @@ public class SiteIdentity {
         mSupplemental = null;
         mVerifier = null;
         mSecure = false;
+        mLoginInsecure = false;
     }
 
     public void reset() {
@@ -218,6 +219,14 @@ public class SiteIdentity {
 
     public boolean isSecure() {
         return mSecure;
+    }
+
+    public void setLoginInsecure(boolean isInsecure) {
+        mLoginInsecure = isInsecure;
+    }
+
+    public boolean loginInsecure() {
+        return mLoginInsecure;
     }
 
     public MixedMode getMixedModeActive() {
