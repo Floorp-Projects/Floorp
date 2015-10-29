@@ -4,8 +4,8 @@ category profile-after-change nsBlocklistService @mozilla.org/extensions/blockli
 component {e0a106ed-6ad4-47a4-b6af-2f1c8aa4712d} nsBlocklistServiceContent.js process=content
 contract @mozilla.org/extensions/blocklist;1 {e0a106ed-6ad4-47a4-b6af-2f1c8aa4712d} process=content
 
-#ifndef MOZ_WIDGET_GONK
 category update-timer nsBlocklistService @mozilla.org/extensions/blocklist;1,getService,blocklist-background-update-timer,extensions.blocklist.interval,86400
+#ifndef MOZ_WIDGET_GONK
 component {4399533d-08d1-458c-a87a-235f74451cfa} addonManager.js
 contract @mozilla.org/addons/integration;1 {4399533d-08d1-458c-a87a-235f74451cfa}
 category update-timer addonManager @mozilla.org/addons/integration;1,getService,addon-background-update-timer,extensions.update.interval,86400
