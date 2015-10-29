@@ -11,8 +11,12 @@
 #include "mozIGeckoMediaPluginService.h"
 #include "nsServiceManagerUtils.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/StaticMutex.h"
 #include "gmp-audio-decode.h"
 #include "gmp-video-decode.h"
+#ifdef XP_WIN
+#include "WMFDecoderModule.h"
+#endif
 
 namespace mozilla {
 
@@ -89,6 +93,71 @@ GMPDecoderModule::DecoderNeedsConversion(const TrackInfo& aConfig) const
   }
 }
 
+static bool
+HasGMPFor(const nsACString& aAPI,
+          const nsACString& aCodec,
+          const nsACString& aGMP)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+#ifdef XP_WIN
+  // gmp-clearkey uses WMF for decoding, so if we're using clearkey we must
+  // verify that WMF works before continuing.
+  if (aGMP.EqualsLiteral("org.w3.clearkey")) {
+    RefPtr<WMFDecoderModule> pdm(new WMFDecoderModule());
+    if (aCodec.EqualsLiteral("aac") &&
+        !pdm->SupportsMimeType(NS_LITERAL_CSTRING("audio/mp4a-latm"))) {
+      return false;
+    }
+    if (aCodec.EqualsLiteral("h264") &&
+        !pdm->SupportsMimeType(NS_LITERAL_CSTRING("video/avc"))) {
+      return false;
+    }
+  }
+#endif
+  nsTArray<nsCString> tags;
+  tags.AppendElement(aCodec);
+  tags.AppendElement(aGMP);
+  nsCOMPtr<mozIGeckoMediaPluginService> mps =
+    do_GetService("@mozilla.org/gecko-media-plugin-service;1");
+  if (NS_WARN_IF(!mps)) {
+    return false;
+  }
+  bool hasPlugin = false;
+  if (NS_FAILED(mps->HasPluginForAPI(aAPI, &tags, &hasPlugin))) {
+    return false;
+  }
+  return hasPlugin;
+}
+
+StaticMutex sGMPCodecsMutex;
+
+struct GMPCodecs {
+  const char* mKeySystem;
+  bool mHasAAC;
+  bool mHasH264;
+};
+
+static GMPCodecs sGMPCodecs[] = {
+  { "org.w3.clearkey", false, false },
+  { "com.adobe.primetime", false, false },
+};
+
+void
+GMPDecoderModule::UpdateUsableCodecs()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  StaticMutexAutoLock lock(sGMPCodecsMutex);
+  for (GMPCodecs& gmp : sGMPCodecs) {
+    gmp.mHasAAC = HasGMPFor(NS_LITERAL_CSTRING(GMP_API_AUDIO_DECODER),
+                            NS_LITERAL_CSTRING("aac"),
+                            nsDependentCString(gmp.mKeySystem));
+    gmp.mHasH264 = HasGMPFor(NS_LITERAL_CSTRING(GMP_API_VIDEO_DECODER),
+                             NS_LITERAL_CSTRING("h264"),
+                             nsDependentCString(gmp.mKeySystem));
+  }
+}
+
 static uint32_t sPreferredAacGmp = 0;
 static uint32_t sPreferredH264Gmp = 0;
 
@@ -96,6 +165,13 @@ static uint32_t sPreferredH264Gmp = 0;
 void
 GMPDecoderModule::Init()
 {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  // GMPService::HasPluginForAPI is main thread only, so to implement
+  // SupportsMimeType() we build a table of the codecs which each whitelisted
+  // GMP has and update it when any GMPs are removed or added at runtime.
+  UpdateUsableCodecs();
+
   Preferences::AddUintVarCache(&sPreferredAacGmp,
                                "media.gmp.decoder.aac", 0);
   Preferences::AddUintVarCache(&sPreferredH264Gmp,
@@ -115,7 +191,8 @@ GMPDecoderModule::PreferredGMP(const nsACString& aMimeType)
     }
   }
 
-  if (aMimeType.EqualsLiteral("video/avc")) {
+  if (aMimeType.EqualsLiteral("video/avc") ||
+      aMimeType.EqualsLiteral("video/mp4")) {
     switch (sPreferredH264Gmp) {
       case 1: rv.emplace(NS_LITERAL_CSTRING("org.w3.clearkey")); break;
       case 2: rv.emplace(NS_LITERAL_CSTRING("com.adobe.primetime")); break;
@@ -126,35 +203,28 @@ GMPDecoderModule::PreferredGMP(const nsACString& aMimeType)
   return rv;
 }
 
+/* static */
 bool
 GMPDecoderModule::SupportsMimeType(const nsACString& aMimeType,
                                    const Maybe<nsCString>& aGMP)
 {
-  nsTArray<nsCString> tags;
-  nsCString api;
-  if (aMimeType.EqualsLiteral("audio/mp4a-latm")) {
-    tags.AppendElement(NS_LITERAL_CSTRING("aac"));
-    api = NS_LITERAL_CSTRING(GMP_API_AUDIO_DECODER);
-  } else if (aMimeType.EqualsLiteral("video/avc") ||
-             aMimeType.EqualsLiteral("video/mp4")) {
-    tags.AppendElement(NS_LITERAL_CSTRING("h264"));
-    api = NS_LITERAL_CSTRING(GMP_API_VIDEO_DECODER);
-  } else {
-    return false;
+  const bool isAAC = aMimeType.EqualsLiteral("audio/mp4a-latm");
+  const bool isH264 = aMimeType.EqualsLiteral("video/avc") ||
+                      aMimeType.EqualsLiteral("video/mp4");
+
+  StaticMutexAutoLock lock(sGMPCodecsMutex);
+  for (GMPCodecs& gmp : sGMPCodecs) {
+    if (isAAC && gmp.mHasAAC &&
+        (aGMP.isNothing() || aGMP.value().EqualsASCII(gmp.mKeySystem))) {
+      return true;
+    }
+    if (isH264 && gmp.mHasH264 &&
+        (aGMP.isNothing() || aGMP.value().EqualsASCII(gmp.mKeySystem))) {
+      return true;
+    }
   }
-  if (aGMP.isSome()) {
-    tags.AppendElement(aGMP.value());
-  }
-  nsCOMPtr<mozIGeckoMediaPluginService> mps =
-    do_GetService("@mozilla.org/gecko-media-plugin-service;1");
-  if (NS_WARN_IF(!mps)) {
-    return false;
-  }
-  bool hasPlugin = false;
-  if (NS_FAILED(mps->HasPluginForAPI(api, &tags, &hasPlugin))) {
-    return false;
-  }
-  return hasPlugin;
+
+  return false;
 }
 
 bool
