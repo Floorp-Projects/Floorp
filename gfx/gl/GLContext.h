@@ -124,6 +124,7 @@ enum class GLFeature {
     sRGB_framebuffer,
     sRGB_texture,
     sampler_objects,
+    split_framebuffer,
     standard_derivatives,
     sync,
     texture_3D,
@@ -390,6 +391,7 @@ public:
         ANGLE_timer_query,
         APPLE_client_storage,
         APPLE_framebuffer_multisample,
+        APPLE_sync,
         APPLE_texture_range,
         APPLE_vertex_array_object,
         ARB_ES2_compatibility,
@@ -3137,6 +3139,16 @@ public:
         const GLubyte* ret = mSymbols.fGetStringi(name, index);
         AFTER_GL_CALL;
         return ret;
+    }
+
+// -----------------------------------------------------------------------------
+// APPLE_framebuffer_multisample
+
+    void fResolveMultisampleFramebufferAPPLE() {
+        BEFORE_GL_CALL;
+        ASSERT_SYMBOL_PRESENT(fResolveMultisampleFramebufferAPPLE);
+        mSymbols.fResolveMultisampleFramebufferAPPLE();
+        AFTER_GL_CALL;
     }
 
 // -----------------------------------------------------------------------------

@@ -61,6 +61,11 @@ def expectedTabProcessLeakCounts():
         'nsTArray_base': 2,
     })
 
+    # Bug 1219369 - On Aurora, we leak a SyncObject in Windows.
+    appendExpectedLeakCounts({
+        'SyncObject': 1
+    })
+
     return leaks
 
 

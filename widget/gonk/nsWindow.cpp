@@ -642,7 +642,7 @@ HalFormatToSurfaceFormat(int aHalFormat)
     case HAL_PIXEL_FORMAT_BGRA_8888:
         return SurfaceFormat::B8G8R8A8;
     case HAL_PIXEL_FORMAT_RGB_565:
-        return SurfaceFormat::R5G6B5;
+        return SurfaceFormat::R5G6B5_UINT16;
     default:
         MOZ_CRASH("Unhandled HAL pixel format");
         return SurfaceFormat::UNKNOWN; // not reached

@@ -1,3 +1,5 @@
+var test = `
+
 class foo extends null {
     constructor() {
         // If you return an object, we don't care that |this| went
@@ -8,6 +10,11 @@ class foo extends null {
 
 for (let i = 0; i < 1100; i++)
     new foo();
+
+`;
+
+if (classesEnabled())
+    eval(test);
 
 if (typeof reportCompare === 'function')
     reportCompare(0,0,"OK");
