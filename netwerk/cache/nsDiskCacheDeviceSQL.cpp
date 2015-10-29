@@ -7,6 +7,9 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Attributes.h"
 
+#include "mozilla/IntegerPrintfMacros.h"
+#include "mozilla/Snprintf.h"
+
 #include "nsCache.h"
 #include "nsDiskCache.h"
 #include "nsDiskCacheDeviceSQL.h"
@@ -411,7 +414,7 @@ nsOfflineCacheBinding::Create(nsIFile *cacheDir,
 
     for (generation = 0; ; ++generation)
     {
-      PR_snprintf(leaf, sizeof(leaf), "%014llX-%X", hash, generation);
+      snprintf_literal(leaf, "%014" PRIx64 "-%X", hash, generation);
 
       rv = file->SetNativeLeafName(nsDependentCString(leaf));
       if (NS_FAILED(rv))
@@ -425,7 +428,7 @@ nsOfflineCacheBinding::Create(nsIFile *cacheDir,
   }
   else
   {
-    PR_snprintf(leaf, sizeof(leaf), "%014llX-%X", hash, generation);
+    snprintf_literal(leaf, "%014" PRIx64 "-%X", hash, generation);
     rv = file->AppendNative(nsDependentCString(leaf));
     if (NS_FAILED(rv))
       return nullptr;
