@@ -113,8 +113,6 @@ GonkDecoderManager::Flush()
     mQueuedSamples.Clear();
   }
 
-  mLastTime = 0;
-
   MonitorAutoLock lock(mFlushMonitor);
   mIsFlushing = true;
   sp<AMessage> flush = new AMessage(kNotifyProcessFlush, id());
@@ -171,6 +169,7 @@ GonkDecoderManager::ProcessInput(bool aEndOfStream)
 void
 GonkDecoderManager::ProcessFlush()
 {
+  mLastTime = 0;
   MonitorAutoLock lock(mFlushMonitor);
   mWaitOutput.Clear();
   if (mDecoder->flush() != OK) {
