@@ -302,6 +302,8 @@ devtools.jar:
     skin/themes/images/tool-network.svg (themes/images/tool-network.svg)
     skin/themes/images/tool-scratchpad.svg (themes/images/tool-scratchpad.svg)
     skin/themes/images/tool-webaudio.svg (themes/images/tool-webaudio.svg)
+    skin/themes/images/tool-memory.svg (themes/images/tool-memory.svg)
+    skin/themes/images/tool-memory-active.svg (themes/images/tool-memory-active.svg)
     skin/themes/images/close.png (themes/images/close.png)
     skin/themes/images/close@2x.png (themes/images/close@2x.png)
     skin/themes/images/vview-delete.png (themes/images/vview-delete.png)

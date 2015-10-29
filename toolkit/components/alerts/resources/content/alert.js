@@ -9,7 +9,7 @@ const NS_ALERT_HORIZONTAL = 1;
 const NS_ALERT_LEFT = 2;
 const NS_ALERT_TOP = 4;
 
-const WINDOW_MARGIN = 0;
+const WINDOW_MARGIN = 10;
 
 Cu.import("resource://gre/modules/Services.jsm");
 

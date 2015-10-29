@@ -419,7 +419,7 @@ class RobocopTestRunner(Mochitest):
                 "-e", "quit_and_finish", "1",
                 "-e", "deviceroot", self.deviceRoot,
                 "-e", "class",
-                "org.mozilla.gecko.tests.%s" % test['name'].split('.java')[0],
+                "org.mozilla.gecko.tests.%s" % test['name'].split('/')[-1].split('.java')[0],
                 "org.mozilla.roboexample.test/org.mozilla.gecko.FennecInstrumentationTestRunner"]
         else:
             # This does not launch a test at all. It launches an activity
