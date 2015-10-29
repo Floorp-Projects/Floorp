@@ -894,6 +894,8 @@ class Parser : private JS::AutoGCRooter, public StrictModeGetter
 
     void addTelemetry(JSCompartment::DeprecatedLanguageExtension e);
 
+    bool warnOnceAboutExprClosure();
+
     friend class LegacyCompExprTransplanter;
     friend struct BindData<ParseHandler>;
 };
