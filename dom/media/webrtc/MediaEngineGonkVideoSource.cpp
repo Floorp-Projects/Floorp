@@ -79,8 +79,8 @@ MediaEngineGonkVideoSource::NotifyPull(MediaStreamGraph* aGraph,
   // Note: we're not giving up mImage here
   RefPtr<layers::Image> image = mImage;
   StreamTime delta = aDesiredTime - aSource->GetEndOfAppendedData(aID);
-  LOGFRAME(("NotifyPull, desired = %ld, delta = %ld %s", (int64_t) aDesiredTime,
-            (int64_t) delta, image ? "" : "<null>"));
+  LOGFRAME(("NotifyPull, desired = %" PRIi64 ", delta = %" PRIi64 " %s",
+            (int64_t) aDesiredTime, (int64_t) delta, image ? "" : "<null>"));
 
   // Bug 846188 We may want to limit incoming frames to the requested frame rate
   // mFps - if you want 30FPS, and the camera gives you 60FPS, this could

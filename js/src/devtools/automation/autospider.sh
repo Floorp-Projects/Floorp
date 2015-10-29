@@ -219,12 +219,17 @@ elif [[ "$VARIANT" = arm64* ]]; then
 fi
 
 $COMMAND_PREFIX $MAKE check || exit 1
+
+RESULT=0
+
 if $RUN_JITTEST; then
-    $COMMAND_PREFIX $MAKE check-jit-test || exit 1
+    $COMMAND_PREFIX $MAKE check-jit-test || RESULT=$?
 fi
 if $RUN_JSAPITESTS; then
-    $COMMAND_PREFIX $OBJDIR/dist/bin/jsapi-tests || exit 1
+    $COMMAND_PREFIX $OBJDIR/dist/bin/jsapi-tests || RESULT=$?
 fi
 if $RUN_JSTESTS; then
-    $COMMAND_PREFIX $MAKE check-jstests || exit 1
+    $COMMAND_PREFIX $MAKE check-jstests || RESULT=$?
 fi
+
+exit $RESULT

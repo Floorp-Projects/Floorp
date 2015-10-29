@@ -90,12 +90,7 @@ public:
                           gfx::Rect *aClipRectOut = nullptr,
                           gfx::Rect *aRenderBoundsOut = nullptr) override;
   virtual void EndFrame() override;
-  virtual void EndFrameForExternalComposition(const gfx::Matrix& aTransform) override
-  {
-      MOZ_ASSERT(!mTarget);
-      MOZ_ASSERT(!mDrawTarget);
-      MOZ_ASSERT(!mRenderTarget);
-  }
+  virtual void EndFrameForExternalComposition(const gfx::Matrix& aTransform) override;
 
   virtual bool SupportsPartialTextureUpdate() override { return true; }
   virtual bool CanUseCanvasLayerForSize(const gfx::IntSize &aSize) override { return true; }
@@ -134,6 +129,7 @@ private:
 
   gfx::IntRect mInvalidRect;
   nsIntRegion mInvalidRegion;
+  bool mDidExternalComposition;
 
   uint32_t mMaxTextureSize;
 };

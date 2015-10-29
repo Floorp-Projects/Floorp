@@ -10,8 +10,14 @@
 #include "nsCOMPtr.h"
 #include "nsIObserver.h"
 #include "nsWeakReference.h"
+
+#ifdef IDNA2008
+#include "unicode/uidna.h"
+#else
 #include "nsIUnicodeNormalizer.h"
 #include "nsIDNKitInterface.h"
+#endif
+
 #include "nsString.h"
 
 class nsIPrefBranch;
@@ -143,8 +149,23 @@ private:
    */
   bool illegalScriptCombo(int32_t script, int32_t& savedScript);
 
+#ifdef IDNA2008
+  /**
+   * Convert a DNS label from ASCII to Unicode using IDNA2008
+   */
+  nsresult IDNA2008ToUnicode(const nsACString& input, nsAString& output);
+
+  /**
+   * Convert a DNS label to a normalized form conforming to IDNA2008
+   */
+  nsresult IDNA2008StringPrep(const nsAString& input, nsAString& output,
+                              stringPrepFlag flag);
+
+  UIDNA* mIDNA;
+#else
   idn_nameprep_t mNamePrepHandle;
   nsCOMPtr<nsIUnicodeNormalizer> mNormalizer;
+#endif
   nsXPIDLString mIDNBlacklist;
 
   /**

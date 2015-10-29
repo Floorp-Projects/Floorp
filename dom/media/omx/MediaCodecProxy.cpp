@@ -106,43 +106,22 @@ MediaCodecProxy::~MediaCodecProxy()
 }
 
 bool
-MediaCodecProxy::AskMediaCodecAndWait()
+MediaCodecProxy::AllocateAudioMediaCodec()
 {
   if (mResourceClient || mCodec.get()) {
     return false;
   }
 
-  if (strncasecmp(mCodecMime.get(), "video/", 6) == 0) {
-    mozilla::MediaSystemResourceType type =
-      mCodecEncoder ? mozilla::MediaSystemResourceType::VIDEO_ENCODER :
-                      mozilla::MediaSystemResourceType::VIDEO_DECODER;
-    mResourceClient = new mozilla::MediaSystemResourceClient(type);
-    mResourceClient->SetListener(this);
-  } else if (strncasecmp(mCodecMime.get(), "audio/", 6) == 0) {
+  if (strncasecmp(mCodecMime.get(), "audio/", 6) == 0) {
     if (allocateCodec()) {
       return true;
     }
   }
-
-  if (!mResourceClient) {
-    return false;
-  }
-
-  mozilla::MonitorAutoLock mon(mMediaCodecLock);
-  mPendingRequestMediaResource = true;
-  // request video codec
-  mResourceClient->Acquire();
-
-  while (mPendingRequestMediaResource) {
-    mMediaCodecLock.Wait();
-  }
-  MCP_LOG("AskMediaCodecAndWait complete");
-
-  return true;
+  return false;
 }
 
 bool
-MediaCodecProxy::AsyncAskMediaCodec()
+MediaCodecProxy::AsyncAllocateVideoMediaCodec()
 {
   if (mResourceClient || mCodec.get()) {
     return false;

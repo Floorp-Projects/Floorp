@@ -40,7 +40,6 @@ UNIFIED_SOURCES += [
     'DNSRequestChild.cpp',
     'DNSRequestParent.cpp',
     'GetAddrInfo.cpp',
-    'nameprep.c',
     'nsDNSService2.cpp',
     'nsIDNService.cpp',
     'punycode.c',
@@ -69,3 +68,13 @@ LOCAL_INCLUDES += [
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk' and CONFIG['ANDROID_VERSION'] > '19':
     CXXFLAGS += ['-I%s/bionic/libc/dns/include' % CONFIG['ANDROID_SOURCE']]
+
+if CONFIG['ENABLE_INTL_API']:
+    DEFINES['IDNA2008'] = True
+    CXXFLAGS += CONFIG['MOZ_ICU_CFLAGS']
+    CFLAGS += CONFIG['MOZ_ICU_CFLAGS']
+    USE_LIBS += ['icu']
+else:
+    UNIFIED_SOURCES += [
+        'nameprep.c',
+    ]

@@ -10,8 +10,19 @@ from adb import ADBDevice, ADBError
 from distutils.version import StrictVersion
 
 
-class ADBAndroidMixin(object):
-    """Mixin to extend ADB with Android-specific functionality"""
+class ADBAndroid(ADBDevice):
+    """ADBAndroid implements :class:`ADBDevice` providing Android-specific
+    functionality.
+
+    ::
+
+       from mozdevice import ADBAndroid
+
+       adbdevice = ADBAndroid()
+       print adbdevice.list_files("/mnt/sdcard")
+       if adbdevice.process_exist("org.mozilla.fennec"):
+           print "Fennec is running"
+    """
 
     # Informational methods
 
@@ -28,7 +39,6 @@ class ADBAndroidMixin(object):
         :returns: battery charge as a percentage.
         :raises: * ADBTimeoutError
                  * ADBError
-
         """
         level = None
         scale = None
@@ -67,7 +77,6 @@ class ADBAndroidMixin(object):
         :type timeout: integer or None
         :raises: * ADBTimeoutError
                  * ADBError
-
         """
         self.command_output(["wait-for-device"], timeout=timeout)
         pm_error_string = "Error: Could not access the Package Manager"
@@ -120,7 +129,6 @@ class ADBAndroidMixin(object):
         :type timeout: integer or None
         :raises: * ADBTimeoutError
                  * ADBError
-
         """
         try:
             self.shell_output('svc power stayon true', timeout=timeout)
@@ -130,31 +138,6 @@ class ADBAndroidMixin(object):
             if 'exitcode: 137' not in e.message:
                 raise
             self._logger.warning('Unable to set power stayon true: %s' % e)
-
-    def reboot(self, timeout=None):
-        """Reboots the device.
-
-        This method uses the Android only package manager to determine
-        if the device is ready after the reboot.
-
-        :param timeout: The maximum time in
-            seconds for any spawned adb process to complete before
-            throwing an ADBTimeoutError.
-            This timeout is per adb call. The total time spent
-            may exceed this value. If it is not specified, the value
-            set in the ADB constructor is used.
-        :type timeout: integer or None
-        :raises: * ADBTimeoutError
-                 * ADBError
-
-        reboot() reboots the device, issues an adb wait-for-device in order to
-        wait for the device to complete rebooting, then calls is_device_ready()
-        to determine if the device has completed booting.
-
-        """
-        self.command_output(["reboot"], timeout=timeout)
-        self.command_output(["wait-for-device"], timeout=timeout)
-        return self.is_device_ready(timeout=timeout)
 
     # Application management methods
 
@@ -171,7 +154,6 @@ class ADBAndroidMixin(object):
         :type timeout: integer or None
         :raises: * ADBTimeoutError
                  * ADBError
-
         """
         data = self.command_output(["install", apk_path], timeout=timeout)
         if data.find('Success') == -1:
@@ -191,7 +173,6 @@ class ADBAndroidMixin(object):
         :type timeout: integer or None
         :raises: * ADBTimeoutError
                  * ADBError
-
         """
         pm_error_string = 'Error: Could not access the Package Manager'
         data = self.shell_output("pm list package %s" % app_name, timeout=timeout)
@@ -226,7 +207,6 @@ class ADBAndroidMixin(object):
         :type timeout: integer or None
         :raises: * ADBTimeoutError
                  * ADBError
-
         """
         # If fail_if_running is True, we throw an exception here. Only one
         # instance of an application can be running at once on Android,
@@ -287,7 +267,6 @@ class ADBAndroidMixin(object):
         :type timeout: integer or None
         :raises: * ADBTimeoutError
                  * ADBError
-
         """
         extras = {}
 
@@ -327,7 +306,6 @@ class ADBAndroidMixin(object):
             executed as root.
         :raises: * ADBTimeoutError
                  * ADBError
-
         """
         version = self.shell_output("getprop ro.build.version.release",
                                     timeout=timeout, root=root)
@@ -367,7 +345,6 @@ class ADBAndroidMixin(object):
         :type timeout: integer or None
         :raises: * ADBTimeoutError
                  * ADBError
-
         """
         if self.is_app_installed(app_name, timeout=timeout):
             data = self.command_output(["uninstall", app_name], timeout=timeout)
@@ -391,27 +368,8 @@ class ADBAndroidMixin(object):
         :type timeout: integer or None
         :raises: * ADBTimeoutError
                  * ADBError
-
         """
         output = self.command_output(["install", "-r", apk_path],
                                      timeout=timeout)
         self.reboot(timeout=timeout)
         return output
-
-
-class ADBAndroid(ADBDevice, ADBAndroidMixin):
-    """ADBAndroid provides all of the methods of :class:`mozdevice.ADB` with
-    Android specific extensions useful for that platform.
-
-    ::
-
-        from mozdevice import ADBAndroid as ADBDevice
-
-        adb = ADBDevice(...)
-
-        if adb.is_device_ready():
-            adb.install_app("/tmp/build.apk")
-            adb.launch_fennec("org.mozilla.fennec")
-
-    """
-    pass
