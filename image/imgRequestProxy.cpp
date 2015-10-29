@@ -208,15 +208,6 @@ imgRequestProxy::ChangeOwner(imgRequest* aNewOwner)
   uint32_t oldAnimationConsumers = mAnimationConsumers;
   ClearAnimationConsumers();
 
-  // Were we decoded before?
-  bool wasDecoded = false;
-  RefPtr<ProgressTracker> progressTracker = GetProgressTracker();
-  if (progressTracker->HasImage() &&
-      progressTracker->GetImageStatus() &
-        imgIRequest::STATUS_FRAME_COMPLETE) {
-    wasDecoded = true;
-  }
-
   GetOwner()->RemoveProxy(this, NS_IMAGELIB_CHANGING_OWNER);
 
   mBehaviour->SetOwner(aNewOwner);
@@ -235,9 +226,9 @@ imgRequestProxy::ChangeOwner(imgRequest* aNewOwner)
 
   GetOwner()->AddProxy(this);
 
-  // If we were decoded, or if we'd previously requested a decode, request a
-  // decode on the new image
-  if (wasDecoded || mDecodeRequested) {
+  // If we'd previously requested a synchronous decode, request a decode on the
+  // new image.
+  if (mDecodeRequested) {
     StartDecoding();
   }
 
@@ -389,18 +380,6 @@ imgRequestProxy::StartDecoding()
 NS_IMETHODIMP
 imgRequestProxy::RequestDecode()
 {
-  // Flag this, so we know to transfer the request if our owner changes
-  mDecodeRequested = true;
-
-  RefPtr<Image> image = GetImage();
-  if (image) {
-    return image->RequestDecode();
-  }
-
-  if (GetOwner()) {
-    GetOwner()->RequestDecode();
-  }
-
   return NS_OK;
 }
 
