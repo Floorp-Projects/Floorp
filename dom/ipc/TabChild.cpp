@@ -1175,19 +1175,23 @@ TabChild::ProvideWindowCommon(nsIDOMWindow* aOpener,
       tabId, IPCTabContext(context), aChromeFlags,
       cc->GetID(), cc->IsForApp(), cc->IsForBrowser());
 
-  nsAutoCString spec;
+  nsAutoCString url;
   if (aURI) {
-    aURI->GetSpec(spec);
+    aURI->GetSpec(url);
+  } else {
+    // We can't actually send a nullptr up as the URI, since IPDL doesn't let us
+    // send nullptr's for primitives. We indicate that the nsString for the URI
+    // should be converted to a nullptr by voiding the string.
+    url.SetIsVoid(true);
   }
 
-  NS_ConvertUTF8toUTF16 url(spec);
   nsString name(aName);
   nsAutoCString features(aFeatures);
   nsTArray<FrameScriptInfo> frameScripts;
   nsCString urlToLoad;
 
   if (aIframeMoz) {
-    newChild->SendBrowserFrameOpenWindow(this, url, name,
+    newChild->SendBrowserFrameOpenWindow(this, NS_ConvertUTF8toUTF16(url), name,
                                          NS_ConvertUTF8toUTF16(features),
                                          aWindowIsNew);
   } else {
@@ -1208,7 +1212,7 @@ TabChild::ProvideWindowCommon(nsIDOMWindow* aOpener,
                           aChromeFlags, aCalledFromJS, aPositionSpecified,
                           aSizeSpecified, url,
                           name, features,
-                          NS_ConvertUTF8toUTF16(baseURIString),
+                          baseURIString,
                           &rv,
                           aWindowIsNew,
                           &frameScripts,
