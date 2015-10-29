@@ -393,8 +393,7 @@ public:
   void PaintText(nsRenderingContext* aRenderingContext, nsPoint aPt,
                  const nsRect& aDirtyRect, const nsCharClipDisplayItem& aItem,
                  gfxTextContextPaint* aContextPaint = nullptr,
-                 DrawPathCallbacks* aCallbacks = nullptr,
-                 float aOpacity = 1.0f);
+                 DrawPathCallbacks* aCallbacks = nullptr);
   // helper: paint text frame when we're impacted by at least one selection.
   // Return false if the text was not painted and we should continue with
   // the fast path.
