@@ -74,6 +74,10 @@ var gContentPane = {
     setEventListener("notificationsDoNotDisturb", "command",
       gContentPane.toggleDoNotDisturbNotifications);
 
+    let notificationInfoURL = Services.urlFormatter.formatURLPref("browser.push.warning.infoURL");
+    document.getElementById("notificationsPolicyLearnMore").setAttribute("href",
+                                                                         notificationInfoURL);
+
     let drmInfoURL =
       Services.urlFormatter.formatURLPref("app.support.baseURL") + "drm-content";
     document.getElementById("playDRMContentLink").setAttribute("href", drmInfoURL);
