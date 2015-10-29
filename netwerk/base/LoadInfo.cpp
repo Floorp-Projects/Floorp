@@ -74,7 +74,7 @@ LoadInfo::LoadInfo(nsIPrincipal* aLoadingPrincipal,
       mInnerWindowID = inner ? inner->WindowID() : 0;
       mOuterWindowID = outerWindow->WindowID();
 
-      nsCOMPtr<nsPIDOMWindow> parent = outerWindow->GetParent();
+      nsCOMPtr<nsPIDOMWindow> parent = outerWindow->GetScriptableParent();
       mParentOuterWindowID = parent->WindowID();
     }
 
