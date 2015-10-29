@@ -91,7 +91,6 @@ BluetoothMapSmsManager::BluetoothMapSmsManager() : mMasConnected(false),
                                                    mMnsConnected(false),
                                                    mNtfRequired(false)
 {
-  mDeviceAddress.AssignLiteral(BLUETOOTH_ADDRESS_NONE);
   BuildDefaultFolderStructure();
 }
 
@@ -483,7 +482,7 @@ BluetoothMapSmsManager::IsConnected()
 }
 
 void
-BluetoothMapSmsManager::GetAddress(nsAString& aDeviceAddress)
+BluetoothMapSmsManager::GetAddress(BluetoothAddress& aDeviceAddress)
 {
   return mMasSocket->GetAddress(aDeviceAddress);
 }
@@ -1235,7 +1234,7 @@ BluetoothMapSmsManager::OnSocketDisconnect(BluetoothSocket* aSocket)
 
   // MAS socket is disconnected
   AfterMapSmsDisconnected();
-  mDeviceAddress.AssignLiteral(BLUETOOTH_ADDRESS_NONE);
+  mDeviceAddress.Clear();
   mMasSocket = nullptr;
 
   Listen();
@@ -1255,22 +1254,23 @@ BluetoothMapSmsManager::Disconnect(BluetoothProfileController* aController)
 NS_IMPL_ISUPPORTS(BluetoothMapSmsManager, nsIObserver)
 
 void
-BluetoothMapSmsManager::Connect(const nsAString& aDeviceAddress,
+BluetoothMapSmsManager::Connect(const BluetoothAddress& aDeviceAddress,
                                 BluetoothProfileController* aController)
 {
   MOZ_ASSERT(false);
 }
 
 void
-BluetoothMapSmsManager::OnGetServiceChannel(const nsAString& aDeviceAddress,
-                                            const nsAString& aServiceUuid,
-                                            int aChannel)
+BluetoothMapSmsManager::OnGetServiceChannel(
+  const BluetoothAddress& aDeviceAddress,
+  const BluetoothUuid& aServiceUuid,
+  int aChannel)
 {
   MOZ_ASSERT(false);
 }
 
 void
-BluetoothMapSmsManager::OnUpdateSdpRecords(const nsAString& aDeviceAddress)
+BluetoothMapSmsManager::OnUpdateSdpRecords(const BluetoothAddress& aDeviceAddress)
 {
   MOZ_ASSERT(false);
 }

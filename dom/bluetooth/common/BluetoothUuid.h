@@ -16,15 +16,6 @@ class BluetoothProfileManagerBase;
 class BluetoothUuidHelper
 {
 public:
-  /**
-   * Get a 128-bit uuid string calculated from a 16-bit service class UUID and
-   * BASE_UUID
-   *
-   * @param aServiceClassUuid  16-bit service class UUID
-   * @param aRetUuidStr  out parameter, 128-bit uuid string
-   */
-  static void
-  GetString(BluetoothServiceClass aServiceClassUuid, nsAString& aRetUuidStr);
 
   /**
    * Convert a 128-bit uuid string to a value of BluetoothServiceClass
