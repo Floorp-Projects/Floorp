@@ -210,10 +210,6 @@ this.DOMApplicationRegistry = {
   dirKey: DIRECTORY_NAME,
 
   init: function() {
-    // ***** TESTING ONLY, DO NOT COMMIT
-    AppsUtils.allowUnsignedAddons = true;
-    // *****
-
     // Keep the messages in sync with the lazy-loading in browser.js (bug 1171013).
     this.messages = ["Webapps:Install",
                      "Webapps:Uninstall",
