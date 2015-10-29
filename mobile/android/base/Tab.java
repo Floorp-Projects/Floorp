@@ -36,7 +36,6 @@ import android.os.Build;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
-import android.widget.Toast;
 import org.mozilla.gecko.widget.SiteLogins;
 
 public class Tab {
@@ -506,6 +505,10 @@ public class Tab {
 
     public void updateIdentityData(JSONObject identityData) {
         mSiteIdentity.update(identityData);
+    }
+
+    public void setLoginInsecure(boolean isInsecure) {
+        mSiteIdentity.setLoginInsecure(isInsecure);
     }
 
     public void setSiteLogins(SiteLogins siteLogins) {

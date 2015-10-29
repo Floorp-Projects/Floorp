@@ -186,12 +186,11 @@ body {
 }
 
 .rooms > h1 {
-  font-weight: bold;
   color: #666;
+  font-size: 1rem;
   padding: .5rem 0;
   height: 3rem;
   line-height: 3rem;
-  font-size: 1.1rem;
   margin: 0 15px;
 }
 
@@ -205,7 +204,7 @@ body {
   border-radius: 5px;
   font-size: 1.2rem;
   font-weight: bold;
-  margin: 1rem;
+  margin: 1.5rem;
   padding: 1rem;
 }
 
@@ -252,8 +251,8 @@ body {
   line-height: 2.4rem;
   color: #000;
   /* See .room-entry-context-item for the margin/size reductions.
-    * An extra 40px to make space for the call button and chevron. */
-  width: calc(100% - 1rem - 56px);
+   * An extra 16px to make space for the edit button. */
+  width: calc(100% - 1rem - 32px);
 }
 
 .room-list > .room-entry.room-active:not(.room-opened) > h2 {
@@ -331,27 +330,9 @@ body {
   vertical-align: middle;
 }
 
-.room-list > .room-entry > h2:before {
-  content: "";
-  display: inline-block;
-  background-image: url("../shared/img/icons-14x14.svg#hello");
-  background-repeat: no-repeat;
-  background-size: cover;
-  width: 13px;
-  height: 13px;
-  -moz-margin-end: 1rem;
-  margin-bottom: -3px;
-}
-
-.room-list > .room-entry.room-active > h2:before {
-  background-image: url("../shared/img/icons-14x14.svg#hello-active");
-}
-
-/* Room entry context button (call button + chevron) */
+/* Room entry context button (edit button) */
 .room-entry-context-actions {
   display: none;
-  border-radius: 30px;
-  background: #56b397;
   vertical-align: top;
 }
 
@@ -359,41 +340,17 @@ body {
   display: inline-block;
 }
 
-.room-entry:hover .room-entry-context-actions:hover {
-  background: #50e3c2;
-}
-
-/* Room entry call button */
-.room-entry-call-btn {
-  border-top-left-radius: 30px;
-  border-bottom-left-radius: 30px;
-  background-color: transparent;
-  background-image: url("../shared/img/icons-14x14.svg#video-white");
-  background-position: right center;
-}
-
-html[dir="rtl"] .room-entry-call-btn {
-  background-position: left center;
-}
-
-/* Room entry context menu */
-.room-entry-context-menu-chevron {
-  display: inline-block;
-  border-top-right-radius: 30px;
-  border-bottom-right-radius: 30px;
-  background-image: url("../shared/img/icons-10x10.svg#dropdown-white");
+/* Room entry edit button */
+.room-entry-context-edit-btn {
+  background-image: url("../shared/img/icons-10x10.svg#edit-darkgrey");
   background-position: center;
-  cursor: pointer;
-}
-
-/* Common styles for chevron and call button. */
-.room-entry-context-menu-chevron,
-.room-entry-call-btn {
-  width: 30px;
-  height: 24px;
-  background-size: 12px;
   background-repeat: no-repeat;
+  background-size: 12px;
+  cursor: pointer;
+  display: inline-block;
+  height: 24px;
   vertical-align: middle;
+  width: 16px;
 }
 
 html[dir="rtl"] .room-entry-context-actions > .dropdown-menu {
@@ -410,16 +367,11 @@ html[dir="rtl"] .room-entry-context-actions > .dropdown-menu {
 /* Keep ".room-list > .room-entry > h2" in sync with these. */
 .room-entry-context-item {
   display: inline-block;
+  -moz-margin-end: 1rem;
   vertical-align: middle;
-  -moz-margin-start: 1rem;
-  height: 16px;
 }
 
-.room-entry:not(.room-opened):hover .room-entry-context-item {
-  display: none;
-}
-
-.room-entry-context-item > a > img {
+.room-entry-context-item > img {
   height: 16px;
   width: 16px;
 }

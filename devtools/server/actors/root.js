@@ -173,6 +173,9 @@ RootActor.prototype = {
     // Whether or not `getProfile()` supports specifying a `startTime`
     // and `endTime` to filter out samples. Fx40+
     profilerDataFilterable: true,
+    // Whether or not the MemoryActor's heap snapshot abilities are
+    // fully equipped to handle heap snapshots for the memory tool. Fx44+
+    heapSnapshots: true,
   },
 
   /**
