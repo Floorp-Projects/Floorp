@@ -29,7 +29,7 @@ include ':thirdparty'
 def gradleRoot = new File("${json.topobjdir}/mobile/android/gradle")
 project(':app').projectDir = new File("${json.topsrcdir}/mobile/android/app")
 project(':base').projectDir = new File(gradleRoot, 'base')
-project(':omnijar').projectDir = new File(gradleRoot, 'omnijar')
+project(':omnijar').projectDir = new File("${json.topsrcdir}/mobile/android/app/omnijar")
 project(':thirdparty').projectDir = new File("${json.topsrcdir}/mobile/android/thirdparty")
 
 // The Gradle instance is shared between settings.gradle and all the
