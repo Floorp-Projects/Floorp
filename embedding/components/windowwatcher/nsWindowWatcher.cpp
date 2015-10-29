@@ -495,7 +495,10 @@ nsWindowWatcher::OpenWindowInternal(nsIDOMWindow* aParent,
 
   GetWindowTreeOwner(aParent, getter_AddRefs(parentTreeOwner));
 
-  if (aUrl) {
+  // We expect TabParent to have provided us the absolute URI of the window
+  // we're to open, so there's no need to call URIfromURL (or more importantly,
+  // to check for a chrome URI, which cannot be opened from a remote tab).
+  if (aUrl && !openedFromRemoteTab) {
     rv = URIfromURL(aUrl, aParent, getter_AddRefs(uriToLoad));
     if (NS_FAILED(rv)) {
       return rv;
@@ -507,6 +510,8 @@ nsWindowWatcher::OpenWindowInternal(nsIDOMWindow* aParent,
   if (aName) {
     CopyUTF8toUTF16(aName, name);
     nameSpecified = true;
+  } else {
+    name.SetIsVoid(true);
   }
 
   bool featuresSpecified = false;
@@ -514,6 +519,8 @@ nsWindowWatcher::OpenWindowInternal(nsIDOMWindow* aParent,
     features.Assign(aFeatures);
     featuresSpecified = true;
     features.StripWhitespace();
+  } else {
+    features.SetIsVoid(true);
   }
 
   // We only want to check for existing named windows if:

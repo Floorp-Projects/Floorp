@@ -170,10 +170,10 @@ parent:
                       bool aCalledFromJS,
                       bool aPositionSpecified,
                       bool aSizeSpecified,
-                      nsString aURI,
+                      nsCString aURI,
                       nsString aName,
                       nsCString aFeatures,
-                      nsString aBaseURI)
+                      nsCString aBaseURI)
       returns (nsresult rv,
                bool windowOpened,
                FrameScriptInfo[] frameScripts,
