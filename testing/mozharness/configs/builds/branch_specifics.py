@@ -82,6 +82,11 @@ config = {
     'b2g-inbound': {
         'repo_path': 'integration/b2g-inbound',
         'stage_server': 'upload.ffxbld.productdelivery.prod.mozaws.net',
+        'platform_overrides': {
+            'macosx64-mulet': {
+                'stage_server': 'stage.mozilla.org',
+            },
+        },
     },
     'fx-team': {
         'repo_path': 'integration/fx-team',
