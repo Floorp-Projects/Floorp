@@ -1525,28 +1525,6 @@ public class BrowserApp extends GeckoApp
         });
     }
 
-    private void shareCurrentUrl() {
-        Tab tab = Tabs.getInstance().getSelectedTab();
-        if (tab == null) {
-            return;
-        }
-
-        String url = tab.getURL();
-        if (url == null) {
-            return;
-        }
-
-        if (AboutPages.isAboutReader(url)) {
-            url = ReaderModeUtils.getUrlFromAboutReader(url);
-        }
-
-        GeckoAppShell.openUriExternal(url, "text/plain", "", "",
-                                      Intent.ACTION_SEND, tab.getDisplayTitle());
-
-        // Context: Sharing via chrome list (no explicit session is active)
-        Telemetry.sendUIEvent(TelemetryContract.Event.SHARE, TelemetryContract.Method.LIST);
-    }
-
     private void setToolbarMargin(int margin) {
         ((RelativeLayout.LayoutParams) mGeckoLayout.getLayoutParams()).topMargin = margin;
         mGeckoLayout.requestLayout();
@@ -3393,7 +3371,20 @@ public class BrowserApp extends GeckoApp
         }
 
         if (itemId == R.id.share) {
-            shareCurrentUrl();
+            tab = Tabs.getInstance().getSelectedTab();
+            if (tab != null) {
+                String url = tab.getURL();
+                if (url != null) {
+                    if (AboutPages.isAboutReader(url)) {
+                        url = ReaderModeUtils.getUrlFromAboutReader(url);
+                    }
+
+                    // Context: Sharing via chrome list (no explicit session is active)
+                    Telemetry.sendUIEvent(TelemetryContract.Event.SHARE, TelemetryContract.Method.LIST, "menu");
+
+                    GeckoAppShell.openUriExternal(url, "text/plain", "", "", Intent.ACTION_SEND, tab.getDisplayTitle(), false);
+                }
+            }
             return true;
         }
 

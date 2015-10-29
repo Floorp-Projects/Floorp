@@ -217,7 +217,7 @@ public class PromptListAdapter extends ArrayAdapter<PromptListItem> {
                         provider.chooseActivity(p);
 
                         // Context: Sharing via content contextmenu list (no explicit session is active)
-                        Telemetry.sendUIEvent(TelemetryContract.Event.SHARE, TelemetryContract.Method.LIST);
+                        Telemetry.sendUIEvent(TelemetryContract.Event.SHARE, TelemetryContract.Method.LIST, "promptlist");
                     }
 
                     @Override
