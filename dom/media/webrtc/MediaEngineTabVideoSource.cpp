@@ -270,7 +270,8 @@ MediaEngineTabVideoSource::Draw() {
 
   nscolor bgColor = NS_RGB(255, 255, 255);
   uint32_t renderDocFlags = mScrollWithPage? 0 :
-                            nsIPresShell::RENDER_IGNORE_VIEWPORT_SCROLLING;
+      (nsIPresShell::RENDER_IGNORE_VIEWPORT_SCROLLING |
+       nsIPresShell::RENDER_DOCUMENT_RELATIVE);
   nsRect r(nsPresContext::CSSPixelsToAppUnits((float)mViewportOffsetX),
            nsPresContext::CSSPixelsToAppUnits((float)mViewportOffsetY),
            nsPresContext::CSSPixelsToAppUnits((float)mViewportWidth),
