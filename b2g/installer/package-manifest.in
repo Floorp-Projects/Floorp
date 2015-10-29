@@ -537,16 +537,15 @@
 #endif // MOZ_WIDGET_GONK && MOZ_B2G_RIL
 
 #ifndef MOZ_WIDGET_GONK
+@RESPATH@/components/extensions.manifest
 @RESPATH@/components/addonManager.js
 @RESPATH@/components/amContentHandler.js
 @RESPATH@/components/amInstallTrigger.js
 @RESPATH@/components/amWebInstallListener.js
-
+@RESPATH@/components/nsBlocklistService.js
 @RESPATH@/components/OopCommandLine.js
 @RESPATH@/components/CommandLine.js
 #endif
-@RESPATH@/components/extensions.manifest
-@RESPATH@/components/nsBlocklistService.js
 @RESPATH@/components/BootstrapCommandLine.js
 
 #ifdef MOZ_UPDATER
