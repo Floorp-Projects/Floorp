@@ -86,14 +86,6 @@
   width: 255px;
 }
 
-#alertNotification[clickable="true"] {
-  cursor: pointer;
-}
-
-label {
-  cursor: inherit;
-}
-
 #alertSourceLabel {
   -moz-box-flex: 1;
   font-size: 83.334%;
