@@ -54,6 +54,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(NotificationController)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mHangingChildDocuments)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mContentInsertions)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mEvents)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mRelocations)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(NotificationController, AddRef)
@@ -86,6 +87,7 @@ NotificationController::Shutdown()
   mContentInsertions.Clear();
   mNotifications.Clear();
   mEvents.Clear();
+  mRelocations.Clear();
 }
 
 void
@@ -350,6 +352,16 @@ NotificationController::WillRefresh(mozilla::TimeStamp aTime)
   // Process invalidation list of the document after all accessible tree
   // modification are done.
   mDocument->ProcessInvalidationList();
+
+  // We cannot rely on DOM tree to keep aria-owns relations updated. Make
+  // a validation to remove dead links.
+  mDocument->ValidateARIAOwned();
+
+  // Process relocation list.
+  for (uint32_t idx = 0; idx < mRelocations.Length(); idx++) {
+    mDocument->DoARIAOwnsRelocation(mRelocations[idx]);
+  }
+  mRelocations.Clear();
 
   // If a generic notification occurs after this point then we may be allowed to
   // process it synchronously.  However we do not want to reenter if fireing
