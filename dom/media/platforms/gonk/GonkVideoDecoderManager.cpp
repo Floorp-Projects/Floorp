@@ -124,13 +124,14 @@ GonkVideoDecoderManager::Init()
         self->codecCanceled();
       }));
   mDecoder = MediaCodecProxy::CreateByType(mDecodeLooper, mMimeType.get(), false, mVideoListener);
-  mDecoder->AsyncAllocateVideoMediaCodec();
 
   uint32_t capability = MediaCodecProxy::kEmptyCapability;
   if (mDecoder->getCapability(&capability) == OK && (capability &
       MediaCodecProxy::kCanExposeGraphicBuffer)) {
     mNativeWindow = new GonkNativeWindow();
   }
+
+  mDecoder->AsyncAllocateVideoMediaCodec();
 
   return p;
 }
