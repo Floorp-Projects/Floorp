@@ -22,15 +22,15 @@ var gToolbox, gTarget, gFront, gHeapAnalysesClient;
 /**
  * Variables set by `initialize()`
  */
-var gStore, unsubscribe, isHighlighted;
+var gStore, gRoot, gApp, gProvider, unsubscribe, isHighlighted;
 
 function initialize () {
   return Task.spawn(function*() {
-    let root = document.querySelector("#app");
+    gRoot = document.querySelector("#app");
     gStore = Store();
-    let app = createElement(App, { toolbox: gToolbox, front: gFront, heapWorker: gHeapAnalysesClient });
-    let provider = createElement(Provider, { store: gStore }, app);
-    render(provider, root);
+    gApp = createElement(App, { toolbox: gToolbox, front: gFront, heapWorker: gHeapAnalysesClient });
+    gProvider = createElement(Provider, { store: gStore }, gApp);
+    render(gProvider, gRoot);
     unsubscribe = gStore.subscribe(onStateChange);
   });
 }
@@ -38,6 +38,7 @@ function initialize () {
 function destroy () {
   return Task.spawn(function*(){
     unsubscribe();
+    gStore, gRoot, gApp, gProvider, unsubscribe, isHighlighted = null;
   });
 }
 
