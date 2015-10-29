@@ -4,6 +4,7 @@
 
 const { DOM: dom, createClass, createFactory, PropTypes } = require("devtools/client/shared/vendor/react");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
+const { breakdowns } = require("./constants");
 const { toggleRecordingAllocationStacks } = require("./actions/allocations");
 const { setBreakdownAndRefresh } = require("./actions/breakdown");
 const { toggleInvertedAndRefresh } = require("./actions/inverted");
@@ -20,15 +21,24 @@ const App = createClass({
 
   propTypes: appModel,
 
+  getDefaultProps() {
+    return {
+      breakdown: breakdowns.coarseType.breakdown,
+      inverted: false,
+    };
+  },
+
   childContextTypes: {
     front: PropTypes.any,
     heapWorker: PropTypes.any,
+    toolbox: PropTypes.any,
   },
 
   getChildContext() {
     return {
       front: this.props.front,
       heapWorker: this.props.heapWorker,
+      toolbox: this.props.toolbox,
     }
   },
 
@@ -40,13 +50,14 @@ const App = createClass({
       heapWorker,
       breakdown,
       allocations,
-      inverted
+      inverted,
+      toolbox,
     } = this.props;
 
     let selectedSnapshot = snapshots.find(s => s.selected);
 
     return (
-      dom.div({ id: "memory-tool" }, [
+      dom.div({ id: "memory-tool" },
 
         Toolbar({
           breakdowns: getBreakdownDisplayData(),
@@ -61,7 +72,7 @@ const App = createClass({
             dispatch(toggleInvertedAndRefresh(heapWorker))
         }),
 
-        dom.div({ id: "memory-tool-container" }, [
+        dom.div({ id: "memory-tool-container" },
           List({
             itemComponent: SnapshotListItem,
             items: snapshots,
@@ -71,9 +82,10 @@ const App = createClass({
           HeapView({
             snapshot: selectedSnapshot,
             onSnapshotClick: () => dispatch(takeSnapshotAndCensus(front, heapWorker)),
-          }),
-        ])
-      ])
+            toolbox
+          })
+        )
+      )
     );
   },
 });
