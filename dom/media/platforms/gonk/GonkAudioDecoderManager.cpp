@@ -155,25 +155,6 @@ GonkAudioDecoderManager::CreateAudioData(MediaBuffer* aBuffer, int64_t aStreamOf
   return NS_OK;
 }
 
-class AutoReleaseAudioBuffer
-{
-public:
-  AutoReleaseAudioBuffer(MediaBuffer* aBuffer, MediaCodecProxy* aCodecProxy)
-    : mAudioBuffer(aBuffer)
-    , mCodecProxy(aCodecProxy)
-  {}
-
-  ~AutoReleaseAudioBuffer()
-  {
-    if (mAudioBuffer) {
-      mCodecProxy->ReleaseMediaBuffer(mAudioBuffer);
-    }
-  }
-private:
-  MediaBuffer* mAudioBuffer;
-  sp<MediaCodecProxy> mCodecProxy;
-};
-
 nsresult
 GonkAudioDecoderManager::Output(int64_t aStreamOffset,
                                 RefPtr<MediaData>& aOutData)
@@ -187,7 +168,7 @@ GonkAudioDecoderManager::Output(int64_t aStreamOffset,
   status_t err;
   MediaBuffer* audioBuffer = nullptr;
   err = mDecoder->Output(&audioBuffer, READ_OUTPUT_BUFFER_TIMEOUT_US);
-  AutoReleaseAudioBuffer a(audioBuffer, mDecoder.get());
+  AutoReleaseMediaBuffer a(audioBuffer, mDecoder.get());
 
   switch (err) {
     case OK:
