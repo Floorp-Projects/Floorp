@@ -582,11 +582,53 @@ this.MigrationUtils = Object.freeze({
     }
 #endif
 
+    // nsIWindowWatcher doesn't deal with raw arrays, so we convert the input
+    let params;
+    if (Array.isArray(aParams)) {
+      params = Cc["@mozilla.org/array;1"].createInstance(Ci.nsIMutableArray);
+      for (let item of aParams) {
+        let comtaminatedVal;
+        if (item && item instanceof Ci.nsISupports) {
+          comtaminatedVal = item;
+        } else {
+          switch (typeof item) {
+            case "boolean":
+              comtaminatedVal = Cc["@mozilla.org/supports-PRBool;1"].
+                                createInstance(Ci.nsISupportsPRBool);
+              comtaminatedVal.data = item;
+              break;
+            case "number":
+              comtaminatedVal = Cc["@mozilla.org/supports-PRUint32;1"].
+                                createInstance(Ci.nsISupportsPRUint32);
+              comtaminatedVal.data = item;
+              break;
+            case "string":
+              comtaminatedVal = Cc["@mozilla.org/supports-cstring;1"].
+                                createInstance(Ci.nsISupportsCString);
+              comtaminatedVal.data = item;
+              break;
+
+            case "undefined":
+            case "object":
+              if (!item) {
+                comtaminatedVal = null;
+                break;
+              }
+            default:
+              throw new Error("Unexpected parameter type " + (typeof item) + ": " + item);
+          }
+        }
+        params.appendElement(comtaminatedVal, false);
+      }
+    } else {
+      params = aParams;
+    }
+
     Services.ww.openWindow(aOpener,
                            "chrome://browser/content/migration/migration.xul",
                            "_blank",
                            features,
-                           aParams);
+                           params);
   },
 
   /**
