@@ -5507,7 +5507,8 @@ nsGlobalWindow::GetScrollBoundaryOuter(Side aSide)
 
   FlushPendingNotifications(Flush_Layout);
   if (nsIScrollableFrame *sf = GetScrollFrame()) {
-    return sf->GetScrollRange().Edge(aSide);
+    return nsPresContext::
+      AppUnitsToIntCSSPixels(sf->GetScrollRange().Edge(aSide));
   }
   return 0;
 }
