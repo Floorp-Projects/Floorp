@@ -22,7 +22,7 @@ interface nsIPrincipal;
  * We are also making it scriptable for now, but this may change once we have
  * WebSockets for Workers.
  */
-[scriptable, uuid(352e0c08-f14c-40c8-ad06-2f8bb5d9d9e0)]
+[scriptable, uuid(ce71d028-322a-4105-a947-a894689b52bf)]
 interface nsIWebSocketChannel : nsISupports
 {
     /**
@@ -223,4 +223,21 @@ interface nsIWebSocketChannel : nsISupports
      */
     attribute unsigned long pingTimeout;
 
+    /**
+     * Unique ID for this channel. It's not readonly because when the channel is
+     * created via IPC, the serial number is received from the child process.
+     */
+    attribute unsigned long serial;
+
+%{C++
+    inline uint32_t Serial()
+    {
+      uint32_t serial;
+      nsresult rv = GetSerial(&serial);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return 0;
+      }
+      return serial;
+    }
+%}
 };

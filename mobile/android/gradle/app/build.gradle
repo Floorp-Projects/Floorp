@@ -36,7 +36,6 @@ android {
         androidTest {
             manifest.srcFile "${topobjdir}/build/mobile/robocop/AndroidManifest.xml"
             java {
-                srcDir "src/robocop_harness"
                 srcDir "src/robocop"
                 srcDir "src/background"
                 srcDir "src/browser"

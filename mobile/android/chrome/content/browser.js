@@ -4763,6 +4763,7 @@ var BrowserEventHandler = {
 
     InitLater(() => BrowserApp.deck.addEventListener("click", InputWidgetHelper, true));
     InitLater(() => BrowserApp.deck.addEventListener("click", SelectHelper, true));
+    InitLater(() => BrowserApp.deck.addEventListener("InsecureLoginFormsStateChange", IdentityHandler.sendLoginInsecure, true));
 
     // ReaderViews support backPress listeners.
     Messaging.addListener(() => {
@@ -6616,6 +6617,18 @@ var IdentityHandler = {
     this.shieldHistogramAdd(aBrowser, 0);
     return this.TRACKING_MODE_UNKNOWN;
   },
+
+  sendLoginInsecure: function sendLoginInsecure() {
+    let loginInsecure = LoginManagerParent.hasInsecureLoginForms(BrowserApp.selectedBrowser);
+        if (loginInsecure) {
+          let message = {
+            type: "Content:LoginInsecure",
+            tabID: BrowserApp.selectedTab.id
+          };
+          Messaging.sendRequest(message);
+        }
+    },
+
 
   shieldHistogramAdd: function(browser, value) {
     if (PrivateBrowsingUtils.isBrowserPrivate(browser)) {

@@ -396,7 +396,7 @@ imgFrame::Optimize()
     ->Optimal2DFormatForContent(gfxContentType::COLOR);
 
   if (mFormat != SurfaceFormat::B8G8R8A8 &&
-      optFormat == SurfaceFormat::R5G6B5) {
+      optFormat == SurfaceFormat::R5G6B5_UINT16) {
     RefPtr<VolatileBuffer> buf =
       AllocateBufferForImage(mSize, optFormat);
     if (!buf) {

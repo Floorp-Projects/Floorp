@@ -1541,10 +1541,6 @@ nsPluginFrame::PaintPlugin(nsDisplayListBuilder* aBuilder,
                            nsRenderingContext& aRenderingContext,
                            const nsRect& aDirtyRect, const nsRect& aPluginRect)
 {
-#if defined(XP_MACOSX)
-  DrawTarget& aDrawTarget = *aRenderingContext.GetDrawTarget();
-#endif
-
 #if defined(MOZ_WIDGET_ANDROID)
   if (mInstanceOwner) {
     gfxRect frameGfxRect =
@@ -1557,219 +1553,17 @@ nsPluginFrame::PaintPlugin(nsDisplayListBuilder* aBuilder,
     mInstanceOwner->Paint(ctx, frameGfxRect, dirtyGfxRect);
     return;
   }
-#endif
-
-  // Screen painting code
-#if defined(XP_MACOSX)
-  // delegate all painting to the plugin instance.
+#else
+# if defined(DEBUG)
+  // On Desktop, we should have built a layer as we no longer support in-process
+  // plugins or synchronous painting. We can only get here for windowed plugins
+  // (which draw themselves), or via some error/unload state.
   if (mInstanceOwner) {
-    if (mInstanceOwner->GetDrawingModel() == NPDrawingModelCoreGraphics ||
-        mInstanceOwner->GetDrawingModel() == NPDrawingModelCoreAnimation ||
-        mInstanceOwner->GetDrawingModel() == 
-                                  NPDrawingModelInvalidatingCoreAnimation) {
-      int32_t appUnitsPerDevPixel = PresContext()->AppUnitsPerDevPixel();
-      // Clip to the content area where the plugin should be drawn. If
-      // we don't do this, the plugin can draw outside its bounds.
-      nsIntRect contentPixels = aPluginRect.ToNearestPixels(appUnitsPerDevPixel);
-      nsIntRect dirtyPixels = aDirtyRect.ToOutsidePixels(appUnitsPerDevPixel);
-      nsIntRect clipPixels;
-      clipPixels.IntersectRect(contentPixels, dirtyPixels);
-
-      // Don't invoke the drawing code if the clip is empty.
-      if (clipPixels.IsEmpty())
-        return;
-
-      gfxRect nativeClipRect(clipPixels.x, clipPixels.y,
-                             clipPixels.width, clipPixels.height);
-      gfxContext* ctx = aRenderingContext.ThebesContext();
-
-      gfxContextAutoSaveRestore save(ctx);
-      ctx->NewPath();
-      ctx->Rectangle(nativeClipRect);
-      ctx->Clip();
-      gfxPoint offset(contentPixels.x, contentPixels.y);
-      ctx->SetMatrix(
-        ctx->CurrentMatrix().Translate(offset));
-
-      gfxQuartzNativeDrawing nativeDrawing(aDrawTarget,
-                                           ToRect(nativeClipRect - offset));
-
-      CGContextRef cgContext = nativeDrawing.BeginNativeDrawing();
-      if (!cgContext) {
-        NS_WARNING("null CGContextRef during PaintPlugin");
-        return;
-      }
-
-      RefPtr<nsNPAPIPluginInstance> inst;
-      GetPluginInstance(getter_AddRefs(inst));
-      if (!inst) {
-        NS_WARNING("null plugin instance during PaintPlugin");
-        nativeDrawing.EndNativeDrawing();
-        return;
-      }
-      NPWindow* window;
-      mInstanceOwner->GetWindow(window);
-      if (!window) {
-        NS_WARNING("null plugin window during PaintPlugin");
-        nativeDrawing.EndNativeDrawing();
-        return;
-      }
-      NP_CGContext* cgPluginPortCopy =
-                static_cast<NP_CGContext*>(mInstanceOwner->GetPluginPortCopy());
-      if (!cgPluginPortCopy) {
-        NS_WARNING("null plugin port copy during PaintPlugin");
-        nativeDrawing.EndNativeDrawing();
-        return;
-      }
-
-      mInstanceOwner->BeginCGPaint();
-      if (mInstanceOwner->GetDrawingModel() == NPDrawingModelCoreAnimation ||
-          mInstanceOwner->GetDrawingModel() == 
-                                   NPDrawingModelInvalidatingCoreAnimation) {
-        // CoreAnimation is updated, render the layer and perform a readback.
-        mInstanceOwner->RenderCoreAnimation(cgContext, window->width, window->height);
-      } else {
-        mInstanceOwner->Paint(nativeClipRect - offset, cgContext);
-      }
-      mInstanceOwner->EndCGPaint();
-
-      nativeDrawing.EndNativeDrawing();
-    } else {
-      gfxContext* ctx = aRenderingContext.ThebesContext();
-
-      // Translate the context:
-      gfxPoint devPixelPt =
-        nsLayoutUtils::PointToGfxPoint(aPluginRect.TopLeft(),
-                                       PresContext()->AppUnitsPerDevPixel());
-
-      gfxContextMatrixAutoSaveRestore autoSR(ctx);
-      ctx->SetMatrix(ctx->CurrentMatrix().Translate(devPixelPt));
-
-      // FIXME - Bug 385435: Doesn't aDirtyRect need translating too?
-
-      // this rect is used only in the CoreGraphics drawing model
-      gfxRect tmpRect(0, 0, 0, 0);
-      mInstanceOwner->Paint(tmpRect, nullptr);
-    }
-  }
-#elif defined(MOZ_X11)
-  if (mInstanceOwner) {
-    NPWindow *window;
+    NPWindow *window = nullptr;
     mInstanceOwner->GetWindow(window);
-    if (window->type == NPWindowTypeDrawable) {
-      gfxRect frameGfxRect =
-        PresContext()->AppUnitsToGfxUnits(aPluginRect);
-      gfxRect dirtyGfxRect =
-        PresContext()->AppUnitsToGfxUnits(aDirtyRect);
-      gfxContext* ctx = aRenderingContext.ThebesContext();
-
-      mInstanceOwner->Paint(ctx, frameGfxRect, dirtyGfxRect);
-    }
+    MOZ_ASSERT(!window || window->type == NPWindowTypeWindow);
   }
-#elif defined(XP_WIN)
-  RefPtr<nsNPAPIPluginInstance> inst;
-  GetPluginInstance(getter_AddRefs(inst));
-  if (inst) {
-    gfxRect frameGfxRect =
-      PresContext()->AppUnitsToGfxUnits(aPluginRect);
-    gfxRect dirtyGfxRect =
-      PresContext()->AppUnitsToGfxUnits(aDirtyRect);
-    gfxContext *ctx = aRenderingContext.ThebesContext();
-    gfxMatrix currentMatrix = ctx->CurrentMatrix();
-
-    if (ctx->UserToDevicePixelSnapped(frameGfxRect, false)) {
-      dirtyGfxRect = ctx->UserToDevice(dirtyGfxRect);
-      ctx->SetMatrix(gfxMatrix());
-    }
-    dirtyGfxRect.RoundOut();
-
-    // Look if it's windowless
-    NPWindow *window;
-    mInstanceOwner->GetWindow(window);
-
-    if (window->type == NPWindowTypeDrawable) {
-      // the offset of the DC
-      nsPoint origin;
-
-      gfxWindowsNativeDrawing nativeDraw(ctx, frameGfxRect);
-      if (nativeDraw.IsDoublePass()) {
-        // OOP plugin specific: let the shim know before we paint if we are doing a
-        // double pass render. If this plugin isn't oop, the register window message
-        // will be ignored.
-        NPEvent pluginEvent;
-        pluginEvent.event = plugins::DoublePassRenderingEvent();
-        pluginEvent.wParam = 0;
-        pluginEvent.lParam = 0;
-        if (pluginEvent.event)
-          inst->HandleEvent(&pluginEvent, nullptr);
-      }
-      do {
-        HDC hdc = nativeDraw.BeginNativeDrawing();
-        if (!hdc)
-          return;
-
-        RECT dest;
-        nativeDraw.TransformToNativeRect(frameGfxRect, dest);
-        RECT dirty;
-        nativeDraw.TransformToNativeRect(dirtyGfxRect, dirty);
-
-        window->window = hdc;
-        window->x = dest.left;
-        window->y = dest.top;
-        window->clipRect.left = 0;
-        window->clipRect.top = 0;
-        // if we're painting, we're visible.
-        window->clipRect.right = window->width;
-        window->clipRect.bottom = window->height;
-
-        // Windowless plugins on windows need a special event to update their location,
-        // see bug 135737.
-        //
-        // bug 271442: note, the rectangle we send is now purely the bounds of the plugin
-        // relative to the window it is contained in, which is useful for the plugin to
-        // correctly translate mouse coordinates.
-        //
-        // this does not mesh with the comments for bug 135737 which imply that the rectangle
-        // must be clipped in some way to prevent the plugin attempting to paint over areas
-        // it shouldn't.
-        //
-        // since the two uses of the rectangle are mutually exclusive in some cases, and
-        // since I don't see any incorrect painting (at least with Flash and ViewPoint -
-        // the originator of bug 135737), it seems that windowless plugins are not relying
-        // on information here for clipping their drawing, and we can safely use this message
-        // to tell the plugin exactly where it is in all cases.
-
-        nsIntPoint origin = GetWindowOriginInPixels(true);
-        nsIntRect winlessRect = nsIntRect(origin, nsIntSize(window->width, window->height));
-
-        if (!mWindowlessRect.IsEqualEdges(winlessRect)) {
-          mWindowlessRect = winlessRect;
-
-          WINDOWPOS winpos;
-          memset(&winpos, 0, sizeof(winpos));
-          winpos.x = mWindowlessRect.x;
-          winpos.y = mWindowlessRect.y;
-          winpos.cx = mWindowlessRect.width;
-          winpos.cy = mWindowlessRect.height;
-
-          // finally, update the plugin by sending it a WM_WINDOWPOSCHANGED event
-          NPEvent pluginEvent;
-          pluginEvent.event = WM_WINDOWPOSCHANGED;
-          pluginEvent.wParam = 0;
-          pluginEvent.lParam = (LPARAM)&winpos;
-          inst->HandleEvent(&pluginEvent, nullptr);
-        }
-
-        inst->SetWindow(window);
-
-        mInstanceOwner->Paint(dirty, hdc);
-        nativeDraw.EndNativeDrawing();
-      } while (nativeDraw.ShouldRenderAgain());
-      nativeDraw.PaintToContext();
-    }
-
-    ctx->SetMatrix(currentMatrix);
-  }
+# endif
 #endif
 }
 

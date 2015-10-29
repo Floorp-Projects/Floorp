@@ -4,36 +4,58 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_net_WebSocketFrameService_h
-#define mozilla_net_WebSocketFrameService_h
+#ifndef mozilla_net_WebSocketEventService_h
+#define mozilla_net_WebSocketEventService_h
 
 #include "mozilla/Atomics.h"
-#include "nsIWebSocketFrameService.h"
+#include "nsIWebSocketEventService.h"
 #include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "nsClassHashtable.h"
 #include "nsHashKeys.h"
 #include "nsIObserver.h"
 #include "nsISupportsImpl.h"
-#include "nsTObserverArray.h"
+#include "nsTArray.h"
 
 namespace mozilla {
 namespace net {
 
 class WebSocketFrame;
-class WebSocketFrameListenerChild;
+class WebSocketEventListenerChild;
 
-class WebSocketFrameService final : public nsIWebSocketFrameService
+class WebSocketEventService final : public nsIWebSocketEventService
                                   , public nsIObserver
 {
-  friend class WebSocketFrameRunnable;
+  friend class WebSocketBaseRunnable;
 
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIOBSERVER
-  NS_DECL_NSIWEBSOCKETFRAMESERVICE
+  NS_DECL_NSIWEBSOCKETEVENTSERVICE
 
-  static already_AddRefed<WebSocketFrameService> GetOrCreate();
+  static already_AddRefed<WebSocketEventService> GetOrCreate();
+
+  void WebSocketCreated(uint32_t aWebSocketSerialID,
+                        uint64_t aInnerWindowID,
+                        const nsAString& aURI,
+                        const nsACString& aProtocols);
+
+  void WebSocketOpened(uint32_t aWebSocketSerialID,
+                       uint64_t aInnerWindowID,
+                       const nsAString& aEffectiveURI,
+                       const nsACString& aProtocols,
+                       const nsACString& aExtensions);
+
+  void WebSocketMessageAvailable(uint32_t aWebSocketSerialID,
+                                 uint64_t aInnerWindowID,
+                                 const nsACString& aData,
+                                 uint16_t aMessageType);
+
+  void WebSocketClosed(uint32_t aWebSocketSerialID,
+                       uint64_t aInnerWindowID,
+                       bool aWasClean,
+                       uint16_t aCode,
+                       const nsAString& aReason);
 
   void FrameReceived(uint32_t aWebSocketSerialID,
                      uint64_t aInnerWindowID,
@@ -60,21 +82,23 @@ public:
                       uint8_t* aPayload, uint32_t aPayloadLength);
 
 private:
-  WebSocketFrameService();
-  ~WebSocketFrameService();
+  WebSocketEventService();
+  ~WebSocketEventService();
 
   bool HasListeners() const;
   void Shutdown();
 
-  typedef nsTObserverArray<nsCOMPtr<nsIWebSocketFrameListener>> WindowListeners;
+  typedef nsTArray<nsCOMPtr<nsIWebSocketEventListener>> WindowListeners;
 
   struct WindowListener
   {
     WindowListeners mListeners;
-    RefPtr<WebSocketFrameListenerChild> mActor;
+    RefPtr<WebSocketEventListenerChild> mActor;
   };
 
-  WindowListeners* GetListeners(uint64_t aInnerWindowID) const;
+  void GetListeners(uint64_t aInnerWindowID,
+                    WindowListeners& aListeners) const;
+
   void ShutdownActorListener(WindowListener* aListener);
 
   // Used only on the main-thread.
@@ -86,4 +110,4 @@ private:
 } // net namespace
 } // mozilla namespace
 
-#endif // mozilla_net_WebSocketFrameService_h
+#endif // mozilla_net_WebSocketEventService_h
