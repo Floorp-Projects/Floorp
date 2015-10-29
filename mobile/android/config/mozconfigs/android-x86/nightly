@@ -2,9 +2,9 @@
 
 ac_add_options --target=i386-linux-android
 
-ac_add_options --enable-profiling
 
-ac_add_options --with-branding=mobile/android/branding/nightly
+
+ac_add_options --with-branding=mobile/android/branding/aurora
 
 # This will overwrite the default of stripping everything and keep the symbol table.
 # This is useful for profiling with eideticker. See bug 788680
