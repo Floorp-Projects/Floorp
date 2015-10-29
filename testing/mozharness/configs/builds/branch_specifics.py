@@ -28,6 +28,16 @@
 #     },
 # }
 
+# XXX Remove when we have the ability to push mulet to s3 for mac/win.
+_BUG1218570_OVERRIDES = {
+    'macosx64-mulet': {
+        'stage_server': 'stage.mozilla.org',
+    },
+    'win32-mulet': {
+        'stage_server': 'stage.mozilla.org',
+    },
+}
+
 config = {
     ### release branches
     "mozilla-central": {
@@ -36,6 +46,7 @@ config = {
         "graph_server_branch_name": "Firefox",
         'use_branch_in_symbols_extra_buildid': False,
         'stage_server': 'upload.ffxbld.productdelivery.prod.mozaws.net',
+        'platform_overrides': _BUG1218570_OVERRIDES,
     },
     'mozilla-release': {
         'repo_path': 'releases/mozilla-release',
@@ -76,16 +87,19 @@ config = {
         'stage_ssh_key': 'trybld_dsa',
         'branch_supports_uploadsymbols': False,
         'use_clobberer': False,
+        'platform_overrides': _BUG1218570_OVERRIDES,
     },
 
     ### project branches
     'b2g-inbound': {
         'repo_path': 'integration/b2g-inbound',
         'stage_server': 'upload.ffxbld.productdelivery.prod.mozaws.net',
+        'platform_overrides': _BUG1218570_OVERRIDES,
     },
     'fx-team': {
         'repo_path': 'integration/fx-team',
         'stage_server': 'upload.ffxbld.productdelivery.prod.mozaws.net',
+        'platform_overrides': _BUG1218570_OVERRIDES,
     },
     'gum': {
         'branch_uses_per_checkin_strategy': True,
@@ -94,6 +108,7 @@ config = {
     'mozilla-inbound': {
         'repo_path': 'integration/mozilla-inbound',
         'stage_server': 'upload.ffxbld.productdelivery.prod.mozaws.net',
+        'platform_overrides': _BUG1218570_OVERRIDES,
     },
     'services-central': {
         'repo_path': 'services/services-central',
@@ -135,9 +150,11 @@ config = {
     ### other branches that do not require anything special:
     'alder': {
         'stage_server': 'upload.ffxbld.productdelivery.prod.mozaws.net',
+        'platform_overrides': _BUG1218570_OVERRIDES,
     },
     'ash': {
         'stage_server': 'upload.ffxbld.productdelivery.prod.mozaws.net',
+        'platform_overrides': _BUG1218570_OVERRIDES,
     },
     'birch': {
         'stage_server': 'upload.ffxbld.productdelivery.prod.mozaws.net',
@@ -161,8 +178,10 @@ config = {
     # 'maple': {},
     'oak': {
         'stage_server': 'upload.ffxbld.productdelivery.prod.mozaws.net',
+        'platform_overrides': _BUG1218570_OVERRIDES,
     },
     'pine': {
         'stage_server': 'upload.ffxbld.productdelivery.prod.mozaws.net',
+        'platform_overrides': _BUG1218570_OVERRIDES,
     },
 }
