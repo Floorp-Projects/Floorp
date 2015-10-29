@@ -1,0 +1,32 @@
+buildDir "${topobjdir}/gradle/build/mobile/android/omnijar"
+
+apply plugin: 'java'
+
+// This project is a dummy project; the JAR produced is not used.  The :app
+// project uses the set of inputs here to check if the omnijar needs to be
+// rebuilt.  By listing them here as resource directories, IntelliJ labels each
+// checked directly nicely.  Why list the directories here?  There's a mismatch
+// between SourceDirectorySet and TaskInputs: the former is directory oriented,
+// while the latter is more general.  That means its easy to convert this list
+// into inputs for :app, but not vice-versa.  Sadly this implies that :app
+// evaluation depends on :omnijar, but the evaluation overhead is low enough
+// that we accept it.
+sourceSets {
+    main {
+        // Depend on the Gecko resources in mobile/android.
+        resources {
+            srcDir "${topsrcdir}/mobile/android/chrome"
+            srcDir "${topsrcdir}/mobile/android/components"
+            srcDir "${topsrcdir}/mobile/android/locales"
+            srcDir "${topsrcdir}/mobile/android/modules"
+            srcDir "${topsrcdir}/mobile/android/themes"
+        }
+    }
+}
+
+apply plugin: 'idea'
+
+idea {
+    module {
+    }
+}
