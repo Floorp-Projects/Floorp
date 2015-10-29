@@ -8,7 +8,7 @@ Components.utils.import("resource://gre/modules/Services.jsm");
 Components.utils.importGlobalProperties(["URL"]);
 
 // TODO: will get dynamically set in bug 1210478
-const DEFAULT_PAGE_LOCATION = "https://newtab.cdn.mozilla.net/v0/nightly/en-US/index.html";
+const DEFAULT_PAGE_LOCATION = "https://newtab.cdn.mozilla.net/v2/nightly/en-US/index.html";
 
 this.RemoteNewTabLocation = {
   _url: new URL(DEFAULT_PAGE_LOCATION),
