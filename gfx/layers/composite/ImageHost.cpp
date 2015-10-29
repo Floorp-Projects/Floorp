@@ -316,13 +316,6 @@ ImageHost::Composite(LayerComposite* aLayer,
       return;
     }
 
-    DiagnosticFlags diagnosticFlags = DiagnosticFlags::IMAGE;
-    if (effect->mType == EffectTypes::NV12) {
-      diagnosticFlags |= DiagnosticFlags::NV12;
-    } else if (effect->mType == EffectTypes::YCBCR) {
-      diagnosticFlags |= DiagnosticFlags::YCBCR;
-    }
-
     if (mLastFrameID != img->mFrameID || mLastProducerID != img->mProducerID) {
       if (mImageContainer) {
         aLayer->GetLayerManager()->
@@ -370,12 +363,12 @@ ImageHost::Composite(LayerComposite* aLayer,
         }
         GetCompositor()->DrawQuad(rect, aClipRect, aEffectChain,
                                   aOpacity, aTransform);
-        GetCompositor()->DrawDiagnostics(diagnosticFlags | DiagnosticFlags::BIGIMAGE,
+        GetCompositor()->DrawDiagnostics(DiagnosticFlags::IMAGE | DiagnosticFlags::BIGIMAGE,
                                          rect, aClipRect, aTransform, mFlashCounter);
       } while (it->NextTile());
       it->EndBigImageIteration();
       // layer border
-      GetCompositor()->DrawDiagnostics(diagnosticFlags, pictureRect,
+      GetCompositor()->DrawDiagnostics(DiagnosticFlags::IMAGE, pictureRect,
                                        aClipRect, aTransform, mFlashCounter);
     } else {
       IntSize textureSize = img->mTextureSource->GetSize();
@@ -391,7 +384,7 @@ ImageHost::Composite(LayerComposite* aLayer,
 
       GetCompositor()->DrawQuad(pictureRect, aClipRect, aEffectChain,
                                 aOpacity, aTransform);
-      GetCompositor()->DrawDiagnostics(diagnosticFlags,
+      GetCompositor()->DrawDiagnostics(DiagnosticFlags::IMAGE,
                                        pictureRect, aClipRect,
                                        aTransform, mFlashCounter);
     }
