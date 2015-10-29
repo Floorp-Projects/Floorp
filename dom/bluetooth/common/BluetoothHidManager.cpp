@@ -110,11 +110,11 @@ BluetoothHidManager::HandleShutdown()
 }
 
 void
-BluetoothHidManager::Connect(const BluetoothAddress& aDeviceAddress,
+BluetoothHidManager::Connect(const nsAString& aDeviceAddress,
                              BluetoothProfileController* aController)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(!aDeviceAddress.IsCleared());
+  MOZ_ASSERT(!aDeviceAddress.IsEmpty());
   MOZ_ASSERT(aController && !mController);
 
   BluetoothService* bs = BluetoothService::Get();
@@ -131,10 +131,7 @@ BluetoothHidManager::Connect(const BluetoothAddress& aDeviceAddress,
   mDeviceAddress = aDeviceAddress;
   mController = aController;
 
-  nsAutoString deviceAddressStr;
-  AddressToString(mDeviceAddress, deviceAddressStr);
-
-  if (NS_FAILED(bs->SendInputMessage(deviceAddressStr,
+  if (NS_FAILED(bs->SendInputMessage(aDeviceAddress,
                                      NS_LITERAL_STRING("Connect")))) {
     aController->NotifyCompletion(NS_LITERAL_STRING(ERR_NO_AVAILABLE_RESOURCE));
     return;
@@ -163,15 +160,12 @@ BluetoothHidManager::Disconnect(BluetoothProfileController* aController)
     return;
   }
 
-  MOZ_ASSERT(!mDeviceAddress.IsCleared());
+  MOZ_ASSERT(!mDeviceAddress.IsEmpty());
   MOZ_ASSERT(!mController);
 
   mController = aController;
 
-  nsAutoString deviceAddressStr;
-  AddressToString(mDeviceAddress, deviceAddressStr);
-
-  if (NS_FAILED(bs->SendInputMessage(deviceAddressStr,
+  if (NS_FAILED(bs->SendInputMessage(mDeviceAddress,
                                      NS_LITERAL_STRING("Disconnect")))) {
     aController->NotifyCompletion(NS_LITERAL_STRING(ERR_NO_AVAILABLE_RESOURCE));
     return;
@@ -247,35 +241,31 @@ BluetoothHidManager::NotifyStatusChanged()
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsAutoString deviceAddressStr;
-  AddressToString(mDeviceAddress, deviceAddressStr);
-
   NS_NAMED_LITERAL_STRING(type, BLUETOOTH_HID_STATUS_CHANGED_ID);
   InfallibleTArray<BluetoothNamedValue> parameters;
 
   AppendNamedValue(parameters, "connected", mConnected);
-  AppendNamedValue(parameters, "address", deviceAddressStr);
+  AppendNamedValue(parameters, "address", mDeviceAddress);
 
   BT_ENSURE_TRUE_VOID_BROADCAST_SYSMSG(type, parameters);
 }
 
 void
-BluetoothHidManager::OnGetServiceChannel(
-  const BluetoothAddress& aDeviceAddress,
-  const BluetoothUuid& aServiceUuid,
-  int aChannel)
+BluetoothHidManager::OnGetServiceChannel(const nsAString& aDeviceAddress,
+                                         const nsAString& aServiceUuid,
+                                         int aChannel)
 {
   // Do nothing here as bluez acquires service channel and connects for us
 }
 
 void
-BluetoothHidManager::OnUpdateSdpRecords(const BluetoothAddress& aDeviceAddress)
+BluetoothHidManager::OnUpdateSdpRecords(const nsAString& aDeviceAddress)
 {
   // Do nothing here as bluez acquires service channel and connects for us
 }
 
 void
-BluetoothHidManager::GetAddress(BluetoothAddress& aDeviceAddress)
+BluetoothHidManager::GetAddress(nsAString& aDeviceAddress)
 {
   aDeviceAddress = mDeviceAddress;
 }

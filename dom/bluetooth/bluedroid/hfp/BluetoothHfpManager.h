@@ -222,7 +222,7 @@ private:
   bool mDialingRequestProcessed;
   bool mNrecEnabled;
   PhoneType mPhoneType;
-  BluetoothAddress mDeviceAddress;
+  nsString mDeviceAddress;
   nsString mMsisdn;
   nsString mOperatorName;
 

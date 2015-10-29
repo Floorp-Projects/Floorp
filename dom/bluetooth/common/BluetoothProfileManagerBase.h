@@ -44,15 +44,15 @@ protected:
 class BluetoothProfileManagerBase : public nsIObserver
 {
 public:
-  virtual void OnGetServiceChannel(const BluetoothAddress& aDeviceAddress,
-                                   const BluetoothUuid& aServiceUuid,
+  virtual void OnGetServiceChannel(const nsAString& aDeviceAddress,
+                                   const nsAString& aServiceUuid,
                                    int aChannel) = 0;
-  virtual void OnUpdateSdpRecords(const BluetoothAddress& aDeviceAddress) = 0;
+  virtual void OnUpdateSdpRecords(const nsAString& aDeviceAddress) = 0;
 
   /**
    * Return the address of the connected device.
    */
-  virtual void GetAddress(BluetoothAddress& aDeviceAddress) = 0;
+  virtual void GetAddress(nsAString& aDeviceAddress) = 0;
 
   /**
    * Return true if the profile is connected.
@@ -63,7 +63,7 @@ public:
    * Connect to a specific remote device. When it has been done, the
    * callback "OnConnect" will be invoked.
    */
-  virtual void Connect(const BluetoothAddress& aDeviceAddress,
+  virtual void Connect(const nsAString& aDeviceAddress,
                        BluetoothProfileController* aController) = 0;
 
   /**
@@ -93,14 +93,13 @@ public:
 public:                                                                      \
   NS_DECL_ISUPPORTS                                                          \
   NS_DECL_NSIOBSERVER                                                        \
-  virtual void OnGetServiceChannel(const BluetoothAddress& aDeviceAddress,   \
-                                   const BluetoothUuid& aServiceUuid,        \
+  virtual void OnGetServiceChannel(const nsAString& aDeviceAddress,          \
+                                   const nsAString& aServiceUuid,            \
                                    int aChannel) override;                   \
-  virtual void OnUpdateSdpRecords(                                           \
-    const BluetoothAddress& aDeviceAddress) override;                        \
-  virtual void GetAddress(BluetoothAddress& aDeviceAddress) override;        \
+  virtual void OnUpdateSdpRecords(const nsAString& aDeviceAddress) override; \
+  virtual void GetAddress(nsAString& aDeviceAddress) override;               \
   virtual bool IsConnected() override;                                       \
-  virtual void Connect(const BluetoothAddress& aDeviceAddress,               \
+  virtual void Connect(const nsAString& aDeviceAddress,                      \
                        BluetoothProfileController* aController) override;    \
   virtual void Disconnect(BluetoothProfileController* aController) override; \
   virtual void OnConnect(const nsAString& aErrorStr) override;               \

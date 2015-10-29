@@ -208,15 +208,15 @@ BluetoothServiceChildProcess::RemoveDeviceInternal(
 }
 
 nsresult
-BluetoothServiceChildProcess::GetServiceChannel(const BluetoothAddress& aDeviceAddress,
-                                                const BluetoothUuid& aServiceUuid,
+BluetoothServiceChildProcess::GetServiceChannel(const nsAString& aDeviceAddress,
+                                                const nsAString& aServiceUuid,
                                                 BluetoothProfileManagerBase* aManager)
 {
   MOZ_CRASH("This should never be called!");
 }
 
 bool
-BluetoothServiceChildProcess::UpdateSdpRecords(const BluetoothAddress& aDeviceAddress,
+BluetoothServiceChildProcess::UpdateSdpRecords(const nsAString& aDeviceAddress,
                                                BluetoothProfileManagerBase* aManager)
 {
   MOZ_CRASH("This should never be called!");
