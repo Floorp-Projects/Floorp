@@ -814,6 +814,11 @@ or run without that action (ie: --no-{action})"
         self.info("Skipping......")
         return
 
+    def query_is_nightly_promotion(self):
+        platform_enabled = self.config.get('enable_nightly_promotion')
+        branch_enabled = self.branch in self.config.get('nightly_promotion_branches')
+        return platform_enabled and branch_enabled
+
     def query_build_env(self, replace_dict=None, **kwargs):
         c = self.config
 
@@ -833,7 +838,7 @@ or run without that action (ie: --no-{action})"
         # first grab the buildid
         env['MOZ_BUILD_DATE'] = self.query_buildid()
 
-        if self.query_is_nightly():
+        if self.query_is_nightly() or self.query_is_nightly_promotion():
             env["IS_NIGHTLY"] = "yes"
             # in branch_specifics.py we might set update_channel explicitly
             if c.get('update_channel'):
