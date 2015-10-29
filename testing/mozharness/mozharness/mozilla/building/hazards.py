@@ -170,25 +170,7 @@ jobs = 4
 
     def upload_results(self, builder):
         """Upload the results of the analysis."""
-        dirs = builder.query_abs_dirs()
-        upload_path = builder.query_upload_path()
-
-        retval = builder.rsync_upload_directory(
-            dirs['abs_upload_dir'],
-            builder.query_upload_ssh_key(),
-            builder.query_upload_ssh_user(),
-            builder.query_upload_ssh_server(),
-            upload_path
-        )
-
-        if retval is not None:
-            raise HazardError("failed to upload")
-
-        upload_url = "{baseuri}{upload_path}".format(
-            baseuri=builder.query_upload_remote_baseuri(),
-            upload_path=upload_path,
-        )
-        builder.info("TinderboxPrint: upload <a title='hazards_results' href='%s'>results</a>: complete" % upload_url)
+        pass
 
     def check_expectations(self, builder):
         """Compare the actual to expected number of problems."""
