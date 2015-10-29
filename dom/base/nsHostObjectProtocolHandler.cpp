@@ -66,15 +66,125 @@ class BlobURLsReporter final : public nsIMemoryReporter
   NS_IMETHOD CollectReports(nsIHandleReportCallback* aCallback,
                             nsISupports* aData, bool aAnonymize) override
   {
-    EnumArg env;
-    env.mCallback = aCallback;
-    env.mData = aData;
-    env.mAnonymize = aAnonymize;
-
-    if (gDataTable) {
-      gDataTable->EnumerateRead(CountCallback, &env);
-      gDataTable->EnumerateRead(ReportCallback, &env);
+    if (!gDataTable) {
+      return NS_OK;
     }
+
+    nsDataHashtable<nsPtrHashKey<nsIDOMBlob>, uint32_t> refCounts;
+
+    // Determine number of URLs per blob, to handle the case where it's > 1.
+    for (auto iter = gDataTable->Iter(); !iter.Done(); iter.Next()) {
+      nsCOMPtr<nsIDOMBlob> blob =
+        do_QueryInterface(iter.UserData()->mObject);
+      if (blob) {
+        refCounts.Put(blob, refCounts.Get(blob) + 1);
+      }
+    }
+
+    for (auto iter = gDataTable->Iter(); !iter.Done(); iter.Next()) {
+      nsCStringHashKey::KeyType key = iter.Key();
+      DataInfo* info = iter.UserData();
+
+      nsCOMPtr<nsIDOMBlob> tmp = do_QueryInterface(info->mObject);
+      RefPtr<mozilla::dom::Blob> blob =
+        static_cast<mozilla::dom::Blob*>(tmp.get());
+
+      if (blob) {
+        NS_NAMED_LITERAL_CSTRING(desc,
+          "A blob URL allocated with URL.createObjectURL; the referenced "
+          "blob cannot be freed until all URLs for it have been explicitly "
+          "invalidated with URL.revokeObjectURL.");
+        nsAutoCString path, url, owner, specialDesc;
+        nsCOMPtr<nsIURI> principalURI;
+        uint64_t size = 0;
+        uint32_t refCount = 1;
+        DebugOnly<bool> blobWasCounted;
+
+        blobWasCounted = refCounts.Get(blob, &refCount);
+        MOZ_ASSERT(blobWasCounted);
+        MOZ_ASSERT(refCount > 0);
+
+        bool isMemoryFile = blob->IsMemoryFile();
+
+        if (isMemoryFile) {
+          ErrorResult rv;
+          size = blob->GetSize(rv);
+          if (NS_WARN_IF(rv.Failed())) {
+            rv.SuppressException();
+            size = 0;
+          }
+        }
+
+        path = isMemoryFile ? "memory-blob-urls/" : "file-blob-urls/";
+        BuildPath(path, key, info, aAnonymize);
+
+        if (refCount > 1) {
+          nsAutoCString addrStr;
+
+          addrStr = "0x";
+          addrStr.AppendInt((uint64_t)(nsIDOMBlob*)blob, 16);
+
+          path += " ";
+          path.AppendInt(refCount);
+          path += "@";
+          path += addrStr;
+
+          specialDesc = desc;
+          specialDesc += "\n\nNOTE: This blob (address ";
+          specialDesc += addrStr;
+          specialDesc += ") has ";
+          specialDesc.AppendInt(refCount);
+          specialDesc += " URLs.";
+          if (isMemoryFile) {
+            specialDesc += " Its size is divided ";
+            specialDesc += refCount > 2 ? "among" : "between";
+            specialDesc += " them in this report.";
+          }
+        }
+
+        const nsACString& descString = specialDesc.IsEmpty()
+            ? static_cast<const nsACString&>(desc)
+            : static_cast<const nsACString&>(specialDesc);
+        if (isMemoryFile) {
+          aCallback->Callback(EmptyCString(),
+              path,
+              KIND_OTHER,
+              UNITS_BYTES,
+              size / refCount,
+              descString,
+              aData);
+        } else {
+          aCallback->Callback(EmptyCString(),
+              path,
+              KIND_OTHER,
+              UNITS_COUNT,
+              1,
+              descString,
+              aData);
+        }
+      } else {
+        // Just report the path for the DOMMediaStream or MediaSource.
+        nsCOMPtr<mozilla::dom::MediaSource>
+          ms(do_QueryInterface(info->mObject));
+        nsAutoCString path;
+        path = ms ? "media-source-urls/" : "dom-media-stream-urls/";
+        BuildPath(path, key, info, aAnonymize);
+
+        NS_NAMED_LITERAL_CSTRING(desc,
+          "An object URL allocated with URL.createObjectURL; the referenced "
+          "data cannot be freed until all URLs for it have been explicitly "
+          "invalidated with URL.revokeObjectURL.");
+
+        aCallback->Callback(EmptyCString(),
+            path,
+            KIND_OTHER,
+            UNITS_COUNT,
+            1,
+            desc,
+            aData);
+      }
+    }
+
     return NS_OK;
   }
 
@@ -143,28 +253,6 @@ class BlobURLsReporter final : public nsIMemoryReporter
  private:
   ~BlobURLsReporter() {}
 
-  struct EnumArg {
-    nsIHandleReportCallback* mCallback;
-    nsISupports* mData;
-    bool mAnonymize;
-    nsDataHashtable<nsPtrHashKey<nsIDOMBlob>, uint32_t> mRefCounts;
-  };
-
-  // Determine number of URLs per blob, to handle the case where it's > 1.
-  static PLDHashOperator CountCallback(nsCStringHashKey::KeyType aKey,
-                                       DataInfo* aInfo,
-                                       void* aUserArg)
-  {
-    EnumArg* envp = static_cast<EnumArg*>(aUserArg);
-    nsCOMPtr<nsIDOMBlob> blob;
-
-    blob = do_QueryInterface(aInfo->mObject);
-    if (blob) {
-      envp->mRefCounts.Put(blob, envp->mRefCounts.Get(blob) + 1);
-    }
-    return PL_DHASH_NEXT;
-  }
-
   static void BuildPath(nsAutoCString& path,
                         nsCStringHashKey::KeyType aKey,
                         DataInfo* aInfo,
@@ -200,112 +288,6 @@ class BlobURLsReporter final : public nsIMemoryReporter
     } else {
       path += url;
     }
-  }
-
-  static PLDHashOperator ReportCallback(nsCStringHashKey::KeyType aKey,
-                                        DataInfo* aInfo,
-                                        void* aUserArg)
-  {
-    EnumArg* envp = static_cast<EnumArg*>(aUserArg);
-    nsCOMPtr<nsIDOMBlob> tmp = do_QueryInterface(aInfo->mObject);
-    RefPtr<mozilla::dom::Blob> blob = static_cast<mozilla::dom::Blob*>(tmp.get());
-
-    if (blob) {
-      NS_NAMED_LITERAL_CSTRING
-        (desc, "A blob URL allocated with URL.createObjectURL; the referenced "
-         "blob cannot be freed until all URLs for it have been explicitly "
-         "invalidated with URL.revokeObjectURL.");
-      nsAutoCString path, url, owner, specialDesc;
-      nsCOMPtr<nsIURI> principalURI;
-      uint64_t size = 0;
-      uint32_t refCount = 1;
-      DebugOnly<bool> blobWasCounted;
-
-      blobWasCounted = envp->mRefCounts.Get(blob, &refCount);
-      MOZ_ASSERT(blobWasCounted);
-      MOZ_ASSERT(refCount > 0);
-
-      bool isMemoryFile = blob->IsMemoryFile();
-
-      if (isMemoryFile) {
-        ErrorResult rv;
-        size = blob->GetSize(rv);
-        if (NS_WARN_IF(rv.Failed())) {
-          rv.SuppressException();
-          size = 0;
-        }
-      }
-
-      path = isMemoryFile ? "memory-blob-urls/" : "file-blob-urls/";
-      BuildPath(path, aKey, aInfo, envp->mAnonymize);
-
-      if (refCount > 1) {
-        nsAutoCString addrStr;
-
-        addrStr = "0x";
-        addrStr.AppendInt((uint64_t)(nsIDOMBlob*)blob, 16);
-
-        path += " ";
-        path.AppendInt(refCount);
-        path += "@";
-        path += addrStr;
-
-        specialDesc = desc;
-        specialDesc += "\n\nNOTE: This blob (address ";
-        specialDesc += addrStr;
-        specialDesc += ") has ";
-        specialDesc.AppendInt(refCount);
-        specialDesc += " URLs.";
-        if (isMemoryFile) {
-          specialDesc += " Its size is divided ";
-          specialDesc += refCount > 2 ? "among" : "between";
-          specialDesc += " them in this report.";
-        }
-      }
-
-      const nsACString& descString = specialDesc.IsEmpty()
-          ? static_cast<const nsACString&>(desc)
-          : static_cast<const nsACString&>(specialDesc);
-      if (isMemoryFile) {
-        envp->mCallback->Callback(EmptyCString(),
-            path,
-            KIND_OTHER,
-            UNITS_BYTES,
-            size / refCount,
-            descString,
-            envp->mData);
-      }
-      else {
-        envp->mCallback->Callback(EmptyCString(),
-            path,
-            KIND_OTHER,
-            UNITS_COUNT,
-            1,
-            descString,
-            envp->mData);
-      }
-    } else {
-      // Just report the path for the DOMMediaStream or MediaSource.
-      nsCOMPtr<mozilla::dom::MediaSource> ms(do_QueryInterface(aInfo->mObject));
-      nsAutoCString path;
-      path = ms ? "media-source-urls/" : "dom-media-stream-urls/";
-      BuildPath(path, aKey, aInfo, envp->mAnonymize);
-
-      NS_NAMED_LITERAL_CSTRING
-        (desc, "An object URL allocated with URL.createObjectURL; the referenced "
-               "data cannot be freed until all URLs for it have been explicitly "
-               "invalidated with URL.revokeObjectURL.");
-
-      envp->mCallback->Callback(EmptyCString(),
-          path,
-          KIND_OTHER,
-          UNITS_COUNT,
-          1,
-          desc,
-          envp->mData);
-    }
-
-    return PL_DHASH_NEXT;
   }
 };
 

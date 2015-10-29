@@ -486,10 +486,10 @@ UploadImageDataToTexture(GLContext* gl,
             }
             internalFormat = LOCAL_GL_RGBA;
             break;
-        case SurfaceFormat::R5G6B5:
+        case SurfaceFormat::R5G6B5_UINT16:
             internalFormat = format = LOCAL_GL_RGB;
             type = LOCAL_GL_UNSIGNED_SHORT_5_6_5;
-            surfaceFormat = SurfaceFormat::R5G6B5;
+            surfaceFormat = SurfaceFormat::R5G6B5_UINT16;
             break;
         case SurfaceFormat::A8:
             internalFormat = format = LOCAL_GL_LUMINANCE;

@@ -95,12 +95,95 @@ SharedSurface_Basic::~SharedSurface_Basic()
         mGL->fDeleteTextures(1, &mTex);
 }
 
+
 ////////////////////////////////////////////////////////////////////////
 
 SurfaceFactory_Basic::SurfaceFactory_Basic(GLContext* gl, const SurfaceCaps& caps,
                                            const layers::TextureFlags& flags)
     : SurfaceFactory(SharedSurfaceType::Basic, gl, caps, nullptr, flags)
 { }
+
+
+////////////////////////////////////////////////////////////////////////
+// SharedSurface_GLTexture
+
+/*static*/ UniquePtr<SharedSurface_GLTexture>
+SharedSurface_GLTexture::Create(GLContext* prodGL,
+                                const GLFormats& formats,
+                                const IntSize& size,
+                                bool hasAlpha)
+{
+    MOZ_ASSERT(prodGL);
+
+    prodGL->MakeCurrent();
+
+    UniquePtr<SharedSurface_GLTexture> ret;
+    GLContext::LocalErrorScope localError(*prodGL);
+
+    GLuint tex = CreateTextureForOffscreen(prodGL, formats, size);
+
+    GLenum err = localError.GetError();
+    MOZ_ASSERT_IF(err, err == LOCAL_GL_OUT_OF_MEMORY);
+    if (err) {
+        prodGL->fDeleteTextures(1, &tex);
+        return Move(ret);
+    }
+
+    ret.reset(new SharedSurface_GLTexture(prodGL, size,
+                                          hasAlpha, tex));
+    return Move(ret);
+}
+
+SharedSurface_GLTexture::~SharedSurface_GLTexture()
+{
+    if (!mGL->MakeCurrent())
+        return;
+
+    if (mTex) {
+        mGL->fDeleteTextures(1, &mTex);
+    }
+
+    if (mSync) {
+        mGL->fDeleteSync(mSync);
+    }
+}
+
+void
+SharedSurface_GLTexture::ProducerReleaseImpl()
+{
+    mGL->MakeCurrent();
+
+    if (mGL->IsSupported(GLFeature::sync)) {
+        if (mSync) {
+            mGL->fDeleteSync(mSync);
+            mSync = 0;
+        }
+
+        mSync = mGL->fFenceSync(LOCAL_GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
+        if (mSync) {
+            mGL->fFlush();
+            return;
+        }
+    }
+    MOZ_ASSERT(!mSync);
+
+    mGL->fFinish();
+}
+
+bool
+SharedSurface_GLTexture::ToSurfaceDescriptor(layers::SurfaceDescriptor* const out_descriptor)
+{
+    *out_descriptor = layers::SurfaceDescriptorSharedGLTexture(ProdTexture(),
+                                                               ProdTextureTarget(),
+                                                               (uintptr_t)mSync,
+                                                               mSize,
+                                                               mHasAlpha);
+
+    // Transfer ownership of the fence to the host
+    mSync = nullptr;
+    return true;
+}
+
 
 } // namespace gl
 

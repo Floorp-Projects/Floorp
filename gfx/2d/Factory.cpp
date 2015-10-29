@@ -23,12 +23,12 @@
 #include "ScaledFontWin.h"
 #endif
 
-#ifdef XP_MACOSX
+#ifdef XP_DARWIN
 #include "ScaledFontMac.h"
 #endif
 
 
-#ifdef XP_MACOSX
+#ifdef XP_DARWIN
 #include "DrawTargetCG.h"
 #endif
 
@@ -299,7 +299,7 @@ Factory::CreateDrawTarget(BackendType aBackend, const IntSize &aSize, SurfaceFor
       }
       break;
     }
-#elif defined XP_MACOSX
+#elif defined XP_DARWIN
   case BackendType::COREGRAPHICS:
   case BackendType::COREGRAPHICS_ACCELERATED:
     {
@@ -382,7 +382,7 @@ Factory::CreateDrawTargetForData(BackendType aBackend,
       break;
     }
 #endif
-#ifdef XP_MACOSX
+#ifdef XP_DARWIN
   case BackendType::COREGRAPHICS:
     {
       RefPtr<DrawTargetCG> newTarget = new DrawTargetCG();
@@ -489,7 +489,7 @@ Factory::CreateScaledFontForNativeFont(const NativeFont &aNativeFont, Float aSiz
     }
 #endif
 #endif
-#ifdef XP_MACOSX
+#ifdef XP_DARWIN
   case NativeFontType::MAC_FONT_FACE:
     {
       return MakeAndAddRef<ScaledFontMac>(static_cast<CGFontRef>(aNativeFont.mFont), aSize);
@@ -791,7 +791,7 @@ Factory::CreateDrawTargetForCairoSurface(cairo_surface_t* aSurface, const IntSiz
   return retVal.forget();
 }
 
-#ifdef XP_MACOSX
+#ifdef XP_DARWIN
 already_AddRefed<DrawTarget>
 Factory::CreateDrawTargetForCairoCGContext(CGContextRef cg, const IntSize& aSize)
 {

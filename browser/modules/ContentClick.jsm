@@ -80,7 +80,7 @@ var ContentClick = {
     // visits across frames should be preserved.
     try {
       if (!PrivateBrowsingUtils.isWindowPrivate(window))
-        PlacesUIUtils.markPageAsFollowedLink(href);
+        PlacesUIUtils.markPageAsFollowedLink(json.href);
     } catch (ex) { /* Skip invalid URIs. */ }
   }
 };

@@ -4216,60 +4216,58 @@ BytecodeEmitter::emitTemplateString(ParseNode* pn)
 }
 
 bool
-BytecodeEmitter::emitVariables(ParseNode* pn, VarEmitOption emitOption, bool isLetExpr)
+BytecodeEmitter::emitVariables(ParseNode* pn, VarEmitOption emitOption)
 {
     MOZ_ASSERT(pn->isArity(PN_LIST));
-    MOZ_ASSERT(isLetExpr == (emitOption == PushInitialValues));
 
     ParseNode* next;
-    for (ParseNode* pn2 = pn->pn_head; ; pn2 = next) {
-        if (!updateSourceCoordNotes(pn2->pn_pos.begin))
+    for (ParseNode* binding = pn->pn_head; binding; binding = next) {
+        if (!updateSourceCoordNotes(binding->pn_pos.begin))
             return false;
-        next = pn2->pn_next;
+        next = binding->pn_next;
 
-        ParseNode* pn3;
-        if (!pn2->isKind(PNK_NAME)) {
-            if (pn2->isKind(PNK_ARRAY) || pn2->isKind(PNK_OBJECT)) {
-                // If the emit option is DefineVars, emit variable binding
-                // ops, but not destructuring ops.  The parser (see
-                // Parser::variables) has ensured that our caller will be the
-                // PNK_FOR/PNK_FORIN/PNK_FOROF case in emitTree (we don't have
-                // to worry about this being a variable declaration, as
-                // destructuring declarations without initializers, e.g., |var
-                // [x]|, are not legal syntax), and that case will emit the
-                // destructuring code only after emitting an enumerating
-                // opcode and a branch that tests whether the enumeration
-                // ended. Thus, each iteration's assignment is responsible for
-                // initializing, and nothing needs to be done here.
-                //
-                // Otherwise this is emitting destructuring let binding
-                // initialization for a legacy comprehension expression. See
+        if (binding->isKind(PNK_ARRAY) || binding->isKind(PNK_OBJECT)) {
+            // Destructuring BindingPattern in a `for` loop head:
+            //     for (let [x, y] of pts) ...;
+            // or in a deprecated comprehension:
+            //     a = [x*y for (let [x, y] of pts)];
+            //
+            // (ES6 calls this a ForDeclaration. When emitting code for a plain
+            // LexicalDeclaration, like `let [x, y] = pt;`, binding will be a
+            // PNK_ASSIGN node, not a PNK_ARRAY node.  `let [x, y];` without an
+            // initializer is a SyntaxError.)
+
+            MOZ_ASSERT(pn->pn_count == 1);
+            if (emitOption == DefineVars) {
+                // Emit JSOP_DEFVAR instructions if needed, but not
+                // destructuring ops. Each iteration of the for-loop is
+                // responsible for initializing these variables, so it's
+                // the caller's responsibility.
+                if (!emitDestructuringDecls(pn->getOp(), binding))
+                    return false;
+            } else {
+                // We're emitting destructuring let binding initialization
+                // for a legacy comprehension expression. See
                 // emitForInOrOfVariables.
-                MOZ_ASSERT(pn->pn_count == 1);
-                if (emitOption == DefineVars) {
-                    if (!emitDestructuringDecls(pn->getOp(), pn2))
-                        return false;
-                } else {
-                    // Lexical bindings cannot be used before they are
-                    // initialized. Similar to the JSOP_INITLEXICAL case below.
-                    MOZ_ASSERT(emitOption != DefineVars);
-                    MOZ_ASSERT_IF(emitOption == InitializeVars, pn->pn_xflags & PNX_POPVAR);
-                    if (!emit1(JSOP_UNDEFINED))
-                        return false;
-                    if (!emitInitializeDestructuringDecls(pn->getOp(), pn2))
-                        return false;
-                }
-                break;
-            }
 
+                // Lexical bindings cannot be used before they are
+                // initialized. Similar to the JSOP_INITLEXICAL case below.
+                MOZ_ASSERT(emitOption == InitializeVars);
+                if (!emit1(JSOP_UNDEFINED))
+                    return false;
+                if (!emitInitializeDestructuringDecls(pn->getOp(), binding))
+                    return false;
+                if (!emit1(JSOP_POP))
+                    return false;
+            }
+        } else if (binding->isKind(PNK_ASSIGN)) {
             /*
              * A destructuring initialiser assignment preceded by var will
              * never occur to the left of 'in' in a for-in loop.  As with 'for
              * (var x = i in o)...', this will cause the entire 'var [a, b] =
              * i' to be hoisted out of the loop.
              */
-            MOZ_ASSERT(pn2->isKind(PNK_ASSIGN));
-            MOZ_ASSERT(pn2->isOp(JSOP_NOP));
+            MOZ_ASSERT(binding->isOp(JSOP_NOP));
             MOZ_ASSERT(emitOption != DefineVars);
 
             /*
@@ -4277,112 +4275,99 @@ BytecodeEmitter::emitVariables(ParseNode* pn, VarEmitOption emitOption, bool isL
              * function f(){} precedes the var, detect simple name assignment
              * here and initialize the name.
              */
-            if (pn2->pn_left->isKind(PNK_NAME)) {
-                pn3 = pn2->pn_right;
-                pn2 = pn2->pn_left;
-                goto do_name;
-            }
-
-            pn3 = pn2->pn_left;
-            if (!emitDestructuringDecls(pn->getOp(), pn3))
-                return false;
-
-            if (!emitTree(pn2->pn_right))
-                return false;
-
-            if (!emitDestructuringOps(pn3, isLetExpr))
-                return false;
-
-            /* If we are not initializing, nothing to pop. */
-            if (emitOption != InitializeVars) {
-                if (next)
-                    continue;
-                break;
-            }
-            goto emit_note_pop;
-        }
-
-        /*
-         * Load initializer early to share code above that jumps to do_name.
-         * NB: if this var redeclares an existing binding, then pn2 is linked
-         * on its definition's use-chain and pn_expr has been overlayed with
-         * pn_lexdef.
-         */
-        pn3 = pn2->maybeExpr();
-
-     do_name:
-        if (!bindNameToSlot(pn2))
-            return false;
-
-
-        JSOp op;
-        op = pn2->getOp();
-        MOZ_ASSERT(op != JSOP_CALLEE);
-        MOZ_ASSERT(!pn2->pn_scopecoord.isFree() || !pn->isOp(JSOP_NOP));
-
-        jsatomid atomIndex;
-        if (!maybeEmitVarDecl(pn->getOp(), pn2, &atomIndex))
-            return false;
-
-        if (pn3) {
-            MOZ_ASSERT(emitOption != DefineVars);
-            if (op == JSOP_SETNAME ||
-                op == JSOP_STRICTSETNAME ||
-                op == JSOP_SETGNAME ||
-                op == JSOP_STRICTSETGNAME ||
-                op == JSOP_SETINTRINSIC)
-            {
-                MOZ_ASSERT(emitOption != PushInitialValues);
-                JSOp bindOp;
-                if (op == JSOP_SETNAME || op == JSOP_STRICTSETNAME)
-                    bindOp = JSOP_BINDNAME;
-                else if (op == JSOP_SETGNAME || op == JSOP_STRICTSETGNAME)
-                    bindOp = JSOP_BINDGNAME;
-                else
-                    bindOp = JSOP_BINDINTRINSIC;
-                if (!emitIndex32(bindOp, atomIndex))
+            if (binding->pn_left->isKind(PNK_NAME)) {
+                if (!emitSingleVariable(pn, binding->pn_left, binding->pn_right, emitOption))
                     return false;
+            } else {
+                ParseNode* initializer = binding->pn_left;
+                if (!emitDestructuringDecls(pn->getOp(), initializer))
+                    return false;
+
+                if (!emitTree(binding->pn_right))
+                    return false;
+
+                if (!emitDestructuringOpsHelper(initializer, emitOption))
+                    return false;
+
+                if (emitOption == InitializeVars) {
+                    if (!emit1(JSOP_POP))
+                        return false;
+                }
             }
-
-            bool oldEmittingForInit = emittingForInit;
-            emittingForInit = false;
-            if (!emitTree(pn3))
+        } else {
+            if (!emitSingleVariable(pn, binding, binding->maybeExpr(), emitOption))
                 return false;
-            emittingForInit = oldEmittingForInit;
-        } else if (op == JSOP_INITLEXICAL || op == JSOP_INITGLEXICAL || isLetExpr) {
-            // 'let' bindings cannot be used before they are
-            // initialized. JSOP_INITLEXICAL distinguishes the binding site.
-            MOZ_ASSERT(emitOption != DefineVars);
-            MOZ_ASSERT_IF(emitOption == InitializeVars, pn->pn_xflags & PNX_POPVAR);
-            if (!emit1(JSOP_UNDEFINED))
+        }
+    }
+    return true;
+}
+
+bool
+BytecodeEmitter::emitSingleVariable(ParseNode* pn, ParseNode* binding, ParseNode* initializer,
+                                    VarEmitOption emitOption)
+{
+    // NB: if this var redeclares an existing binding, then `binding` is linked
+    // on its definition's use-chain and pn_expr has been overlayed with
+    // pn_lexdef.
+    MOZ_ASSERT(binding->isKind(PNK_NAME));
+    if (!bindNameToSlot(binding))
+        return false;
+
+    JSOp op = binding->getOp();
+    MOZ_ASSERT(op != JSOP_CALLEE);
+    MOZ_ASSERT(!binding->pn_scopecoord.isFree() || !pn->isOp(JSOP_NOP));
+
+    jsatomid atomIndex;
+    if (!maybeEmitVarDecl(pn->getOp(), binding, &atomIndex))
+        return false;
+
+    if (initializer) {
+        MOZ_ASSERT(emitOption != DefineVars);
+        if (op == JSOP_SETNAME ||
+            op == JSOP_STRICTSETNAME ||
+            op == JSOP_SETGNAME ||
+            op == JSOP_STRICTSETGNAME)
+        {
+            MOZ_ASSERT(emitOption != PushInitialValues);
+            JSOp bindOp;
+            if (op == JSOP_SETNAME || op == JSOP_STRICTSETNAME)
+                bindOp = JSOP_BINDNAME;
+            else
+                bindOp = JSOP_BINDGNAME;
+            if (!emitIndex32(bindOp, atomIndex))
                 return false;
         }
 
-        // If we are not initializing, nothing to pop. If we are initializing
-        // lets, we must emit the pops.
-        if (emitOption != InitializeVars) {
-            if (next)
-                continue;
-            break;
-        }
+        bool oldEmittingForInit = emittingForInit;
+        emittingForInit = false;
+        if (!emitTree(initializer))
+            return false;
+        emittingForInit = oldEmittingForInit;
+    } else if (op == JSOP_INITLEXICAL ||
+               op == JSOP_INITGLEXICAL ||
+               emitOption == PushInitialValues)
+    {
+        // 'let' bindings cannot be used before they are
+        // initialized. JSOP_INITLEXICAL distinguishes the binding site.
+        MOZ_ASSERT(emitOption != DefineVars);
+        if (!emit1(JSOP_UNDEFINED))
+            return false;
+    } else {
+        // The declaration is like `var x;`. Nothing to do.
+        return true;
+    }
 
-        MOZ_ASSERT_IF(pn2->isDefn(), pn3 == pn2->pn_expr);
-        if (!pn2->pn_scopecoord.isFree()) {
-            if (!emitVarOp(pn2, op))
+    // If we are not initializing, nothing to pop. If we are initializing
+    // lets, we must emit the pops.
+    if (emitOption == InitializeVars) {
+        MOZ_ASSERT_IF(binding->isDefn(), initializer == binding->pn_expr);
+        if (!binding->pn_scopecoord.isFree()) {
+            if (!emitVarOp(binding, op))
                 return false;
         } else {
             if (!emitIndexOp(op, atomIndex))
                 return false;
         }
-
-    emit_note_pop:
-        if (!next)
-            break;
-        if (!emit1(JSOP_POP))
-            return false;
-    }
-
-    if (pn->pn_xflags & PNX_POPVAR) {
         if (!emit1(JSOP_POP))
             return false;
     }
@@ -4408,13 +4393,16 @@ BytecodeEmitter::emitAssignment(ParseNode* lhs, JSOp op, ParseNode* rhs)
         if (lhs->pn_scopecoord.isFree()) {
             if (!makeAtomIndex(lhs->pn_atom, &atomIndex))
                 return false;
+
             JSOp bindOp;
-            if (lhs->isOp(JSOP_SETNAME) || lhs->isOp(JSOP_STRICTSETNAME))
+            if (lhs->isOp(JSOP_SETNAME) || lhs->isOp(JSOP_STRICTSETNAME)) {
                 bindOp = JSOP_BINDNAME;
-            else if (lhs->isOp(JSOP_SETGNAME) || lhs->isOp(JSOP_STRICTSETGNAME))
+            } else if (lhs->isOp(JSOP_SETGNAME) || lhs->isOp(JSOP_STRICTSETGNAME)) {
                 bindOp = JSOP_BINDGNAME;
-            else
-                bindOp = JSOP_BINDINTRINSIC;
+            } else {
+                MOZ_ASSERT(lhs->isOp(JSOP_SETINTRINSIC));
+                break;
+            }
             if (!emitIndex32(bindOp, atomIndex))
                 return false;
             offset++;
@@ -4984,6 +4972,15 @@ BytecodeEmitter::emitTry(ParseNode* pn)
         for (ParseNode* pn3 = catchList->pn_head; pn3; pn3 = pn3->pn_next) {
             MOZ_ASSERT(this->stackDepth == depth);
 
+            // Clear the frame's return value that might have been set by the
+            // try block:
+            //
+            //   eval("try { 1; throw 2 } catch(e) {}"); // undefined, not 1
+            if (!emit1(JSOP_UNDEFINED))
+                return false;
+            if (!emit1(JSOP_SETRVAL))
+                return false;
+
             // Emit the lexical scope and catch body.
             MOZ_ASSERT(pn3->isKind(PNK_LEXICALSCOPE));
             if (!emitTree(pn3))
@@ -5034,14 +5031,26 @@ BytecodeEmitter::emitTry(ParseNode* pn)
         stmtInfo.type = StmtType::SUBROUTINE;
         if (!updateSourceCoordNotes(pn->pn_kid3->pn_pos.begin))
             return false;
-        if (!emit1(JSOP_FINALLY) ||
-            !emit1(JSOP_GETRVAL) ||
-            !emitTree(pn->pn_kid3) ||
-            !emit1(JSOP_SETRVAL) ||
-            !emit1(JSOP_RETSUB))
-        {
+        if (!emit1(JSOP_FINALLY))
             return false;
-        }
+        if (!emit1(JSOP_GETRVAL))
+            return false;
+
+        // Clear the frame's return value to make break/continue return
+        // correct value even if there's no other statement before them:
+        //
+        //   eval("x: try { 1 } finally { break x; }");  // undefined, not 1
+        if (!emit1(JSOP_UNDEFINED))
+            return false;
+        if (!emit1(JSOP_SETRVAL))
+            return false;
+
+        if (!emitTree(pn->pn_kid3))
+            return false;
+        if (!emit1(JSOP_SETRVAL))
+            return false;
+        if (!emit1(JSOP_RETSUB))
+            return false;
         hasTryFinally = true;
         MOZ_ASSERT(this->stackDepth == depth);
     }
@@ -5170,7 +5179,7 @@ BytecodeEmitter::emitLetBlock(ParseNode* pnLet)
 
     int letHeadDepth = this->stackDepth;
 
-    if (!emitVariables(varList, PushInitialValues, true))
+    if (!emitVariables(varList, PushInitialValues))
         return false;
 
     /* Push storage for hoisted let decls (e.g. 'let (x) { let y }'). */
@@ -5593,33 +5602,31 @@ BytecodeEmitter::emitNormalFor(ParseNode* pn, ptrdiff_t top)
 
     /* C-style for (init; cond; update) ... loop. */
     bool forLoopRequiresFreshening = false;
-    JSOp op;
-    ParseNode* init = forHead->pn_kid1;
-    if (!init) {
-        // If there's no init, emit a nop so that there's somewhere to put the
-        // SRC_FOR annotation that IonBuilder will look for.
-        op = JSOP_NOP;
-    } else if (init->isKind(PNK_FRESHENBLOCK)) {
-        // Also emit a nop, as above.
-        op = JSOP_NOP;
+    if (ParseNode* init = forHead->pn_kid1) {
+        if (init->isKind(PNK_FRESHENBLOCK)) {
+            // The loop's init declaration was hoisted into an enclosing lexical
+            // scope node.  Note that the block scope must be freshened each
+            // iteration.
+            forLoopRequiresFreshening = true;
+        } else {
+            emittingForInit = true;
+            if (!updateSourceCoordNotes(init->pn_pos.begin))
+                return false;
+            if (!emitTree(init))
+                return false;
+            emittingForInit = false;
 
-        // The loop's init declaration was hoisted into an enclosing lexical
-        // scope node.  Note that the block scope must be freshened each
-        // iteration.
-        forLoopRequiresFreshening = true;
-    } else {
-        emittingForInit = true;
-        if (!updateSourceCoordNotes(init->pn_pos.begin))
-            return false;
-        if (!emitTree(init))
-            return false;
-        emittingForInit = false;
-
-        op = JSOP_POP;
+            if (!init->isKind(PNK_VAR) && !init->isKind(PNK_LET) && !init->isKind(PNK_CONST)) {
+                // 'init' is an expression, not a declaration. emitTree left
+                // its value on the stack.
+                if (!emit1(JSOP_POP))
+                    return false;
+            }
+        }
     }
 
     /*
-     * NB: the SRC_FOR note has offsetBias 1 (JSOP_{NOP,POP}_LENGTH).
+     * NB: the SRC_FOR note has offsetBias 1 (JSOP_NOP_LENGTH).
      * Use tmp to hold the biased srcnote "top" offset, which differs
      * from the top local variable by the length of the JSOP_GOTO
      * emitted in between tmp and top if this loop has a condition.
@@ -5627,7 +5634,7 @@ BytecodeEmitter::emitNormalFor(ParseNode* pn, ptrdiff_t top)
     unsigned noteIndex;
     if (!newSrcNote(SRC_FOR, &noteIndex))
         return false;
-    if (!emit1(op))
+    if (!emit1(JSOP_NOP))
         return false;
     ptrdiff_t tmp = offset();
 
@@ -5635,9 +5642,6 @@ BytecodeEmitter::emitNormalFor(ParseNode* pn, ptrdiff_t top)
     if (forHead->pn_kid2) {
         /* Goto the loop condition, which branches back to iterate. */
         if (!emitJump(JSOP_GOTO, 0, &jmp))
-            return false;
-    } else {
-        if (op != JSOP_NOP && !emit1(JSOP_NOP))
             return false;
     }
 
@@ -5685,12 +5689,9 @@ BytecodeEmitter::emitNormalFor(ParseNode* pn, ptrdiff_t top)
     if (ParseNode* update = forHead->pn_kid3) {
         if (!updateSourceCoordNotes(update->pn_pos.begin))
             return false;
-        op = JSOP_POP;
         if (!emitTree(update))
             return false;
-
-        /* Always emit the POP or NOP to help IonBuilder. */
-        if (!emit1(op))
+        if (!emit1(JSOP_POP))
             return false;
 
         /* Restore the absolute line number for source note readers. */
@@ -5721,13 +5722,13 @@ BytecodeEmitter::emitNormalFor(ParseNode* pn, ptrdiff_t top)
         return false;
     if (!setSrcNoteOffset(noteIndex, 1, tmp2 - tmp))
         return false;
+
     /* The third note offset helps us find the loop-closing jump. */
     if (!setSrcNoteOffset(noteIndex, 2, offset() - tmp))
         return false;
 
     /* If no loop condition, just emit a loop-closing jump. */
-    op = forHead->pn_kid2 ? JSOP_IFNE : JSOP_GOTO;
-    if (!emitJump(op, top - offset()))
+    if (!emitJump(forHead->pn_kid2 ? JSOP_IFNE : JSOP_GOTO, top - offset()))
         return false;
 
     if (!tryNoteList.append(JSTRY_LOOP, stackDepth, top, offset()))

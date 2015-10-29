@@ -353,11 +353,6 @@ private:
 
 #if defined(OS_WIN)
 private:
-    // Used in rendering windowless plugins in other processes.
-    bool SharedSurfaceSetWindow(const NPWindow* aWindow, NPRemoteWindow& aRemoteWindow);
-    void SharedSurfaceBeforePaint(RECT &rect, NPRemoteEvent& npremoteevent);
-    void SharedSurfaceAfterPaint(NPEvent* npevent);
-    void SharedSurfaceRelease();
     // Used in handling parent/child forwarding of events.
     static LRESULT CALLBACK PluginWindowHookProc(HWND hWnd, UINT message,
                                                  WPARAM wParam, LPARAM lParam);
@@ -368,7 +363,6 @@ private:
     void MaybeCreateChildPopupSurrogate();
 
 private:
-    gfx::SharedDIBWin  mSharedSurfaceDib;
     nsIntRect          mPluginPort;
     nsIntRect          mSharedSize;
     HWND               mPluginHWND;

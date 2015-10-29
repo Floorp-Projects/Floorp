@@ -4497,7 +4497,7 @@ CanvasRenderingContext2D::DrawImage(const CanvasImageSource& image,
     if (ok) {
       NativeSurface texSurf;
       texSurf.mType = NativeSurfaceType::OPENGL_TEXTURE;
-      texSurf.mFormat = SurfaceFormat::R5G6B5;
+      texSurf.mFormat = SurfaceFormat::R5G6B5_UINT16;
       texSurf.mSize.width = mCurrentVideoSize.width;
       texSurf.mSize.height = mCurrentVideoSize.height;
       texSurf.mSurface = (void*)((uintptr_t)mVideoTexture);
