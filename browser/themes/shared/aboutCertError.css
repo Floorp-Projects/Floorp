@@ -2,71 +2,97 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-
-html {
-  background: -moz-Dialog;
-}
+@import url("chrome://global/skin/in-content/common.css");
 
 body {
-  margin: 0;
-  padding: 0 1em;
-  color: -moz-FieldText;
-  font: message-box;
-}
-
-h1 {
-  margin: 0 0 .6em 0;
-  border-bottom: 1px solid ThreeDLightShadow;
-  font-size: 160%;
-}
-
-h2 {
-  font-size: 130%;
+  display: flex;
+  box-sizing: border-box;
+  min-height: 100vh;
+  padding: 0 48px;
+  align-items: center;
+  justify-content: center;
 }
 
 #errorPageContainer {
   position: relative;
-  min-width: 13em;
-  max-width: 52em;
-  margin: 4em auto;
-  border: 1px solid #FFBD09; /* pale yellow extracted from yellow passport icon */
-  border-radius: 10px;
-  padding: 3em;
-  -moz-padding-start: 30px;
-  background: url("chrome://global/skin/icons/sslWarning.png") left 0 no-repeat -moz-Field;
-  background-origin: content-box;
-}
-
-#errorPageContainer:-moz-dir(rtl) {
-  background-position: right 0;
+  min-width: 320px;
+  max-width: 512px;
 }
 
 #errorTitle {
-  -moz-margin-start: 80px;
+  background: url("chrome://browser/skin/cert-error.svg") left 0 no-repeat;
+  background-size: 3em;
+  margin-inline-start: -5em;
+  padding-inline-start: 5em;
 }
 
-#errorLongContent {
-  -moz-margin-start: 80px;
+#errorTitle:-moz-dir(rtl) {
+  background-position: right 0;
 }
 
-.expander > button {
-  -moz-padding-start: 20px;
-  -moz-margin-start: -20px;
-  background: url("chrome://browser/skin/aboutCertError_sectionExpanded.png") left center no-repeat;
-  border: none;
-  font: inherit;
-  color: inherit;
+#errorTitleText {
+  border-bottom: 1px solid #C1C1C1;
+  padding-bottom: 0.4em;
+}
+
+@media (max-width: 675px) {
+  #errorTitle {
+    padding-top: 0;
+    background-image: none;
+    margin-inline-start: 0;
+    padding-inline-start: 0;
+  }
+}
+
+#buttonContainer {
+  display: flex;
+  flex-flow: row wrap;
+}
+
+#buttonSpacer {
+  flex: 1;
+}
+
+/* Pressing the retry button will cause the cursor to flicker from a pointer to
+ * not-allowed. Override the disabled cursor behaviour since we will never show
+ * the button disabled as the initial state. Remove this in Bug 1219861. */
+button:disabled {
   cursor: pointer;
 }
 
-.expander > button:-moz-dir(rtl) {
-  background-position: right center;
+#returnButton {
+  background-color: var(--in-content-primary-button-background);
+  border: none;
+  color: var(--in-content-selected-text);
+  min-width: 250px;
+  margin-inline-start: 0;
 }
 
-.expander[collapsed] > button {
-  background-image: url("chrome://browser/skin/aboutCertError_sectionCollapsed.png");
+#returnButton:hover {
+  background-color: var(--in-content-primary-button-background-hover) !important;
 }
 
-.expander[collapsed] > button:-moz-dir(rtl) {
-  background-image: url("chrome://browser/skin/aboutCertError_sectionCollapsed-rtl.png");
+#returnButton:hover:active {
+  background-color: var(--in-content-primary-button-background-active) !important;
+}
+
+#advancedButton {
+  min-width: 150px;
+}
+
+/* Advanced section is hidden via inline styles until the link is clicked */
+#advancedPanel {
+  background-color: white;
+  color: var(--in-content-text-color);
+  border: 1px lightgray solid;
+  /* Don't use top padding because the default p style has top padding, and it
+   * makes the overall div look uneven */
+  padding: 0 12px 10px;
+  margin-top: 10px;
+  box-shadow: 0 0 4px #ddd;
+  font-size: 0.9em;
+}
+
+.hostname {
+  font-weight: bold;
 }
