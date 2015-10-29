@@ -265,8 +265,7 @@ GonkDecoderManager::onMessageReceived(const sp<AMessage> &aMessage)
 GonkMediaDataDecoder::GonkMediaDataDecoder(GonkDecoderManager* aManager,
                                            FlushableTaskQueue* aTaskQueue,
                                            MediaDataDecoderCallback* aCallback)
-  : mTaskQueue(aTaskQueue)
-  , mManager(aManager)
+  : mManager(aManager)
 {
   MOZ_COUNT_CTOR(GonkMediaDataDecoder);
   mManager->SetDecodeCallback(aCallback);
@@ -305,11 +304,6 @@ GonkMediaDataDecoder::Input(MediaRawData* aSample)
 nsresult
 GonkMediaDataDecoder::Flush()
 {
-  // Flush the input task queue. This cancels all pending Decode() calls.
-  // Note this blocks until the task queue finishes its current job, if
-  // it's executing at all. Note the MP4Reader ignores all output while
-  // flushing.
-  mTaskQueue->Flush();
   return mManager->Flush();
 }
 
