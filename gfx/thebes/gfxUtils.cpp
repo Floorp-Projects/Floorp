@@ -1547,26 +1547,24 @@ gfxUtils::CopyAsDataURI(DrawTarget* aDT)
   }
 }
 
-/* static */ void
+/* static */ UniquePtr<uint8_t[]>
 gfxUtils::GetImageBuffer(gfx::DataSourceSurface* aSurface,
                          bool aIsAlphaPremultiplied,
-                         uint8_t** outImageBuffer,
                          int32_t* outFormat)
 {
-    *outImageBuffer = nullptr;
     *outFormat = 0;
 
     DataSourceSurface::MappedSurface map;
     if (!aSurface->Map(DataSourceSurface::MapType::READ, &map))
-        return;
+        return nullptr;
 
     uint32_t bufferSize = aSurface->GetSize().width * aSurface->GetSize().height * 4;
-    uint8_t* imageBuffer = new (fallible) uint8_t[bufferSize];
+    UniquePtr<uint8_t[]> imageBuffer(new (fallible) uint8_t[bufferSize]);
     if (!imageBuffer) {
         aSurface->Unmap();
-        return;
+        return nullptr;
     }
-    memcpy(imageBuffer, map.mData, bufferSize);
+    memcpy(imageBuffer.get(), map.mData, bufferSize);
 
     aSurface->Unmap();
 
@@ -1577,12 +1575,12 @@ gfxUtils::GetImageBuffer(gfx::DataSourceSurface* aSurface,
         // Yes, it is THAT silly.
         // Except for different lossy conversions by color,
         // we could probably just change the label, and not change the data.
-        gfxUtils::ConvertBGRAtoRGBA(imageBuffer, bufferSize);
+        gfxUtils::ConvertBGRAtoRGBA(imageBuffer.get(), bufferSize);
         format = imgIEncoder::INPUT_FORMAT_RGBA;
     }
 
-    *outImageBuffer = imageBuffer;
     *outFormat = format;
+    return imageBuffer;
 }
 
 /* static */ nsresult
@@ -1598,15 +1596,14 @@ gfxUtils::GetInputStream(gfx::DataSourceSurface* aSurface,
     if (!encoder)
         return NS_ERROR_FAILURE;
 
-    nsAutoArrayPtr<uint8_t> imageBuffer;
     int32_t format = 0;
-    GetImageBuffer(aSurface, aIsAlphaPremultiplied, getter_Transfers(imageBuffer), &format);
+    UniquePtr<uint8_t[]> imageBuffer = GetImageBuffer(aSurface, aIsAlphaPremultiplied, &format);
     if (!imageBuffer)
         return NS_ERROR_FAILURE;
 
     return dom::ImageEncoder::GetInputStream(aSurface->GetSize().width,
                                              aSurface->GetSize().height,
-                                             imageBuffer, format,
+                                             imageBuffer.get(), format,
                                              encoder, aEncoderOptions, outStream);
 }
 
