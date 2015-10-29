@@ -351,7 +351,7 @@ AboutReader.prototype = {
       url: this._article.url,
       title: this._article.title
     });
-    UITelemetry.addEvent("share.1", "list", null);
+    UITelemetry.addEvent("share.1", "list", null, "reader");
   },
 
   /**
