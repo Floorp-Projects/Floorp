@@ -1544,15 +1544,6 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
     </implementation>
     <handlers>
 
-      <handler event="select"><![CDATA[
-        // When the user selects one of matches, stop the search to avoid
-        // changing the underlying result unexpectedly.
-        if (!this._ignoreNextSelect && this.selectedIndex >= 0) {
-          let controller = this.view.QueryInterface(Components.interfaces.nsIAutoCompleteController);
-          controller.stopSearch();
-        }
-      ]]></handler>
-
       <handler event="mousedown"><![CDATA[
         // Required to make the xul:label.text-link elements in the search
         // suggestions notification work correctly when clicked on Linux.
