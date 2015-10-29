@@ -32,10 +32,11 @@
                     android:entryValues="@array/pref_restore_values"
                     android:persistent="true" />
 
-    <CheckBoxPreference android:key="browser.image_blocking.enabled"
-                        android:title="@string/pref_tap_to_load_images_title"
-                        android:summary="@string/pref_tap_to_load_images_summary2"
-                        android:defaultValue="false"/>
+    <ListPreference android:key="browser.image_blocking"
+                    android:title="@string/pref_tap_to_load_images_title2"
+                    android:entries="@array/pref_browser_image_blocking_entries"
+                    android:entryValues="@array/pref_browser_image_blocking_values"
+                    android:persistent="false" />
 
     <ListPreference android:key="plugin.enable"
                     android:title="@string/pref_plugins"

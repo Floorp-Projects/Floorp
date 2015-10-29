@@ -1553,6 +1553,7 @@ var BrowserApp = {
         case "network.cookie.cookieBehavior":
         case "font.size.inflation.minTwips":
         case "home.sync.updateMode":
+        case "browser.image_blocking":
           pref.type = "string";
           pref.value = pref.value.toString();
           break;
@@ -1629,6 +1630,7 @@ var BrowserApp = {
       case "network.cookie.cookieBehavior":
       case "font.size.inflation.minTwips":
       case "home.sync.updateMode":
+      case "browser.image_blocking":
         json.type = "int";
         json.value = parseInt(json.value);
         break;
@@ -2632,11 +2634,7 @@ var NativeWindow = {
 
     imageBlockingPolicyContext: {
       matches: function imageBlockingPolicyContextMatches(aElement) {
-        if (!Services.prefs.getBoolPref("browser.image_blocking.enabled")) {
-          return false;
-        }
-
-        if (aElement instanceof Ci.nsIDOMHTMLImageElement) {
+        if (aElement instanceof Ci.nsIDOMHTMLImageElement && aElement.getAttribute("data-ctv-src")) {
           // Only show the menuitem if we are blocking the image
           if (aElement.getAttribute("data-ctv-show") == "true") {
             return false;
