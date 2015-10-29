@@ -95,14 +95,6 @@ StringToUuid(const nsAString& aString, BluetoothUuid& aUuid);
 /**
  * Generate a random uuid.
  *
- * @param aUuid [out] The generated uuid.
- */
-nsresult
-GenerateUuid(BluetoothUuid &aUuid);
-
-/**
- * Generate a random uuid.
- *
  * @param aUuidString [out] String to store the generated uuid.
  */
 nsresult
