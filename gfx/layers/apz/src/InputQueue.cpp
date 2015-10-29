@@ -97,7 +97,8 @@ InputQueue::ReceiveTouchInput(const RefPtr<AsyncPanZoomController>& aTarget,
     }
 
     block = StartNewTouchBlock(aTarget, aTargetConfirmed, false);
-    INPQ_LOG("started new touch block %p for target %p\n", block, aTarget.get());
+    INPQ_LOG("started new touch block %p id %" PRIu64 " for target %p\n",
+        block, block->GetBlockId(), aTarget.get());
 
     // XXX using the chain from |block| here may be wrong in cases where the
     // target isn't confirmed and the real target turns out to be something

@@ -1212,7 +1212,7 @@ AsyncFaviconDataReady::OnComplete(nsIURI *aFaviconURI,
 
   // Allocate a new buffer that we own and can use out of line in
   // another thread.
-  uint8_t *data = SurfaceToPackedBGRA(dataSurface);
+  UniquePtr<uint8_t[]> data = SurfaceToPackedBGRA(dataSurface);
   if (!data) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -1220,7 +1220,7 @@ AsyncFaviconDataReady::OnComplete(nsIURI *aFaviconURI,
   int32_t dataLength = stride * size.height;
 
   // AsyncEncodeAndWriteIcon takes ownership of the heap allocated buffer
-  nsCOMPtr<nsIRunnable> event = new AsyncEncodeAndWriteIcon(path, data,
+  nsCOMPtr<nsIRunnable> event = new AsyncEncodeAndWriteIcon(path, Move(data),
                                                             dataLength,
                                                             stride,
                                                             size.width,
@@ -1234,7 +1234,7 @@ AsyncFaviconDataReady::OnComplete(nsIURI *aFaviconURI,
 
 // Warning: AsyncEncodeAndWriteIcon assumes ownership of the aData buffer passed in
 AsyncEncodeAndWriteIcon::AsyncEncodeAndWriteIcon(const nsAString &aIconPath,
-                                                 uint8_t *aBuffer,
+                                                 UniquePtr<uint8_t[]> aBuffer,
                                                  uint32_t aBufferLength,
                                                  uint32_t aStride,
                                                  uint32_t aWidth,
@@ -1242,7 +1242,7 @@ AsyncEncodeAndWriteIcon::AsyncEncodeAndWriteIcon(const nsAString &aIconPath,
                                                  const bool aURLShortcut) :
   mURLShortcut(aURLShortcut),
   mIconPath(aIconPath),
-  mBuffer(aBuffer),
+  mBuffer(Move(aBuffer)),
   mBufferLength(aBufferLength),
   mStride(aStride),
   mWidth(aWidth),
@@ -1257,7 +1257,7 @@ NS_IMETHODIMP AsyncEncodeAndWriteIcon::Run()
   // Note that since we're off the main thread we can't use
   // gfxPlatform::GetPlatform()->ScreenReferenceDrawTarget()
   RefPtr<DataSourceSurface> surface =
-    Factory::CreateWrappingDataSourceSurface(mBuffer, mStride,
+    Factory::CreateWrappingDataSourceSurface(mBuffer.get(), mStride,
                                              IntSize(mWidth, mHeight),
                                              SurfaceFormat::B8G8R8A8);
 

@@ -138,7 +138,7 @@ public:
 
   EncodingRunnable(const nsAString& aType,
                    const nsAString& aOptions,
-                   uint8_t* aImageBuffer,
+                   UniquePtr<uint8_t[]> aImageBuffer,
                    layers::Image* aImage,
                    imgIEncoder* aEncoder,
                    EncodingCompleteEvent* aEncodingCompleteEvent,
@@ -147,7 +147,7 @@ public:
                    bool aUsingCustomOptions)
     : mType(aType)
     , mOptions(aOptions)
-    , mImageBuffer(aImageBuffer)
+    , mImageBuffer(Move(aImageBuffer))
     , mImage(aImage)
     , mEncoder(aEncoder)
     , mEncodingCompleteEvent(aEncodingCompleteEvent)
@@ -161,7 +161,7 @@ public:
     nsCOMPtr<nsIInputStream> stream;
     nsresult rv = ImageEncoder::ExtractDataInternal(mType,
                                                     mOptions,
-                                                    mImageBuffer,
+                                                    mImageBuffer.get(),
                                                     mFormat,
                                                     mSize,
                                                     mImage,
@@ -175,7 +175,7 @@ public:
     if (rv == NS_ERROR_INVALID_ARG && mUsingCustomOptions) {
       rv = ImageEncoder::ExtractDataInternal(mType,
                                              EmptyString(),
-                                             mImageBuffer,
+                                             mImageBuffer.get(),
                                              mFormat,
                                              mSize,
                                              mImage,
@@ -220,7 +220,7 @@ public:
 private:
   nsAutoString mType;
   nsAutoString mOptions;
-  nsAutoArrayPtr<uint8_t> mImageBuffer;
+  UniquePtr<uint8_t[]> mImageBuffer;
   RefPtr<layers::Image> mImage;
   nsCOMPtr<imgIEncoder> mEncoder;
   RefPtr<EncodingCompleteEvent> mEncodingCompleteEvent;
@@ -287,7 +287,7 @@ nsresult
 ImageEncoder::ExtractDataAsync(nsAString& aType,
                                const nsAString& aOptions,
                                bool aUsingCustomOptions,
-                               uint8_t* aImageBuffer,
+                               UniquePtr<uint8_t[]> aImageBuffer,
                                int32_t aFormat,
                                const nsIntSize aSize,
                                EncodeCompleteCallback* aEncodeCallback)
@@ -306,7 +306,7 @@ ImageEncoder::ExtractDataAsync(nsAString& aType,
 
   nsCOMPtr<nsIRunnable> event = new EncodingRunnable(aType,
                                                      aOptions,
-                                                     aImageBuffer,
+                                                     Move(aImageBuffer),
                                                      nullptr,
                                                      encoder,
                                                      completeEvent,

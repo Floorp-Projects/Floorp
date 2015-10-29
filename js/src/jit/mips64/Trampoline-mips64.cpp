@@ -554,10 +554,8 @@ JitRuntime::generateArgumentsRectifier(JSContext* cx, void** returnAddrOut)
     AutoFlushICache afc("ArgumentsRectifier");
     JitCode* code = linker.newCode<NoGC>(cx, OTHER_CODE);
 
-    CodeOffsetLabel returnLabel(returnOffset);
-    returnLabel.fixup(&masm);
     if (returnAddrOut)
-        *returnAddrOut = (void*) (code->raw() + returnLabel.offset());
+        *returnAddrOut = (void*) (code->raw() + returnOffset);
 
 #ifdef JS_ION_PERF
     writePerfSpewerJitCodeProfile(code, "ArgumentsRectifier");
@@ -1197,7 +1195,7 @@ JitRuntime::generateProfilerExitFrameTailStub(JSContext* cx)
     {
         // scratch2 := StackPointer + Descriptor.size*1 + JitFrameLayout::Size();
         masm.as_daddu(scratch2, StackPointer, scratch1);
-        masm.add32(Imm32(JitFrameLayout::Size()), scratch2);
+        masm.addPtr(Imm32(JitFrameLayout::Size()), scratch2);
         masm.loadPtr(Address(scratch2, RectifierFrameLayout::offsetOfDescriptor()), scratch3);
         masm.ma_dsrl(scratch1, scratch3, Imm32(FRAMESIZE_SHIFT));
         masm.and32(Imm32((1 << FRAMETYPE_BITS) - 1), scratch3);
@@ -1218,7 +1216,7 @@ JitRuntime::generateProfilerExitFrameTailStub(JSContext* cx)
 
         // scratch3 := RectFrame + Rect-Descriptor.Size + RectifierFrameLayout::Size()
         masm.as_daddu(scratch3, scratch2, scratch1);
-        masm.add32(Imm32(RectifierFrameLayout::Size()), scratch3);
+        masm.addPtr(Imm32(RectifierFrameLayout::Size()), scratch3);
         masm.storePtr(scratch3, lastProfilingFrame);
         masm.ret();
 

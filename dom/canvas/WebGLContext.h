@@ -237,8 +237,7 @@ public:
         return NS_ERROR_NOT_IMPLEMENTED;
     }
 
-    virtual void GetImageBuffer(uint8_t** out_imageBuffer,
-                                int32_t* out_format) override;
+    virtual UniquePtr<uint8_t[]> GetImageBuffer(int32_t* out_format) override;
     NS_IMETHOD GetInputStream(const char* mimeType,
                               const char16_t* encoderOptions,
                               nsIInputStream** out_stream) override;
