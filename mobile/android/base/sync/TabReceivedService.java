@@ -36,6 +36,7 @@ public class TabReceivedService extends IntentService {
 
     public TabReceivedService() {
         super(LOGTAG);
+        setIntentRedelivery(true);
     }
 
     @Override
@@ -74,6 +75,10 @@ public class TabReceivedService extends IntentService {
         final NotificationManagerCompat notificationManager = NotificationManagerCompat.from(this);
         notificationManager.notify(notificationId, builder.build());
 
+        // Save the ID last so if the Service is killed and the Intent is redelivered,
+        // the ID is unlikely to have been updated and we would re-use the the old one.
+        // This would prevent two identical notifications from appearing if the
+        // notification was shown during the previous Intent processing attempt.
         prefs.edit().putInt(PREF_NOTIFICATION_ID, notificationId).apply();
     }
 
