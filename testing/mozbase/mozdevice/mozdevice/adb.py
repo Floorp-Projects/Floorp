@@ -1443,7 +1443,13 @@ class ADBDevice(ADBCommand):
                             # exitcode to raise an ADBError.
                             self.shell_output('mkdir %s' % name,
                                               timeout=timeout, root=root)
-        self.shell_output('mkdir %s' % path, timeout=timeout, root=root)
+
+        # If parents is True and the directory does exist, we don't
+        # need to do anything. Otherwise we call mkdir. If the
+        # directory already exists or if it is a file instead of a
+        # directory, mkdir will fail and we will raise an ADBError.
+        if not parents or not self.is_dir(path, root=root):
+            self.shell_output('mkdir %s' % path, timeout=timeout, root=root)
         if not self.is_dir(path, timeout=timeout, root=root):
             raise ADBError('mkdir %s Failed' % path)
 
