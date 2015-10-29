@@ -38,8 +38,8 @@ public:
   // Shutdown decoder and rejects the init promise.
   virtual nsresult Shutdown();
 
-  // True if sample is queued.
-  bool HasQueuedSample();
+  // How many samples are waiting for processing.
+  size_t NumQueuedSamples();
 
   // Set callback for decoder events, such as requesting more input,
   // returning output, or reporting error.
