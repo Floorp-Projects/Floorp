@@ -4,27 +4,19 @@
 
 "use strict";
 
-// Test if html root node is draggable
+// Test that the root node isn't draggable (as well as head and body).
 
 const TEST_URL = TEST_URL_ROOT + "doc_markup_dragdrop.html";
-const GRAB_DELAY = 400;
+const TEST_DATA = ["html", "head", "body"];
 
 add_task(function*() {
   let {inspector} = yield addTab(TEST_URL).then(openInspector);
 
-  let el = yield getContainerForSelector("html", inspector);
-  let rect = el.tagLine.getBoundingClientRect();
+  for (let selector of TEST_DATA) {
+    info("Try to drag/drop node " + selector);
+    yield simulateNodeDrag(inspector, selector);
 
-  info("Simulating mouseDown on html root node");
-  el._onMouseDown({
-    target: el.tagLine,
-    pageX: rect.x,
-    pageY: rect.y,
-    stopPropagation: function() {},
-    preventDefault: function() {}
-  });
-
-  info("Waiting for a little bit more than the markup-view grab delay");
-  yield wait(GRAB_DELAY + 1);
-  is(el.isDragging, false, "isDragging is false");
+    let container = yield getContainerForSelector(selector, inspector);
+    ok(!container.isDragging, "The container hasn't been marked as dragging");
+  }
 });

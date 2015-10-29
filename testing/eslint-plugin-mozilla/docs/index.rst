@@ -4,6 +4,9 @@
 Mozilla ESLint Plugin
 =====================
 
+``balanced-listeners`` checks that every addEventListener has a
+removeEventListener (and does the same for on/off).
+
 ``components-imports`` adds the filename of imported files e.g.
 ``Cu.import("some/path/Blah.jsm")`` adds Blah to the global scope.
 
@@ -12,6 +15,8 @@ should be imported by head.js (as far as we can correctly resolve the path).
 
 ``mark-test-function-used`` simply marks test (the test method) as used. This
 avoids ESLint telling us that the function is never called.
+
+``no-aArgs`` prevents using the hungarian notation in function arguments.
 
 ``var-only-at-top-level`` Marks all var declarations that are not at the top
 level invalid.
@@ -31,6 +36,7 @@ level invalid.
 Example configuration::
 
    "rules": {
+     "mozilla/balanced-listeners": 2,
      "mozilla/components-imports": 1,
      "mozilla/import-headjs-globals": 1,
      "mozilla/mark-test-function-used": 1,
@@ -40,7 +46,9 @@ Example configuration::
 .. toctree::
    :maxdepth: 1
 
+   balanced-listeners
    components-imports
    import-headjs-globals
    mark-test-function-used
+   no-aArgs
    var-only-at-top-level

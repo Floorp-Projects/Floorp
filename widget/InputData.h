@@ -208,13 +208,15 @@ public:
 
   MultiTouchInput(MultiTouchType aType, uint32_t aTime, TimeStamp aTimeStamp,
                   Modifiers aModifiers)
-    : InputData(MULTITOUCH_INPUT, aTime, aTimeStamp, aModifiers),
-      mType(aType)
+    : InputData(MULTITOUCH_INPUT, aTime, aTimeStamp, aModifiers)
+    , mType(aType)
+    , mHandledByAPZ(false)
   {
   }
 
   MultiTouchInput()
     : InputData(MULTITOUCH_INPUT)
+    , mHandledByAPZ(false)
   {
   }
 
@@ -222,6 +224,7 @@ public:
     : InputData(MULTITOUCH_INPUT, aOther.mTime,
                 aOther.mTimeStamp, aOther.modifiers)
     , mType(aOther.mType)
+    , mHandledByAPZ(aOther.mHandledByAPZ)
   {
     mTouches.AppendElements(aOther.mTouches);
   }
@@ -246,6 +249,7 @@ public:
 
   MultiTouchType mType;
   nsTArray<SingleTouchData> mTouches;
+  bool mHandledByAPZ;
 };
 
 class MouseInput : public InputData

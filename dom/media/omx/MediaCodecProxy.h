@@ -138,14 +138,11 @@ public:
 
   void ReleaseMediaBuffer(MediaBuffer* abuffer);
 
-  // It asks for the OMX codec and blocked until the resource is grant to be
-  // allocated.
-  // Audio codec allocation should use this.
-  bool AskMediaCodecAndWait();
+  // It allocates audio MediaCodec synchronously.
+  bool AllocateAudioMediaCodec();
 
-  // It asks for the OMX codec asynchronously.
-  // Only video codec is supported.
-  bool AsyncAskMediaCodec();
+  // It allocates video MediaCodec asynchronously.
+  bool AsyncAllocateVideoMediaCodec();
 
   // Free the OMX codec so others can allocate it.
   void ReleaseMediaCodec();

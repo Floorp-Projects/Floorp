@@ -254,15 +254,13 @@ body {
   /* See .room-entry-context-item for the margin/size reductions.
     * An extra 40px to make space for the call button and chevron. */
   width: calc(100% - 1rem - 56px);
-
 }
 
-.room-list > .room-entry.room-active > h2 {
+.room-list > .room-entry.room-active:not(.room-opened) > h2 {
   font-weight: bold;
-  color: #000;
 }
 
-.room-list > .room-entry:hover {
+.room-list > .room-entry:not(.room-opened):hover {
   background: #dbf7ff;
 }
 
@@ -417,7 +415,7 @@ html[dir="rtl"] .room-entry-context-actions > .dropdown-menu {
   height: 16px;
 }
 
-.room-entry:hover .room-entry-context-item {
+.room-entry:not(.room-opened):hover .room-entry-context-item {
   display: none;
 }
 

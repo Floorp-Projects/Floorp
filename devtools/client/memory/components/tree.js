@@ -100,7 +100,7 @@ const TreeNode = createFactory(createClass({
 
 /**
  * A generic tree component. See propTypes for the public API.
- * 
+ *
  * @see `devtools/client/memory/components/test/mochitest/head.js` for usage
  * @see `devtools/client/memory/components/heap.js` for usage
  */
@@ -130,7 +130,11 @@ const Tree = module.exports = createClass({
     // A predicate function to filter out unwanted items from the tree.
     filter: PropTypes.func,
     // The depth to which we should automatically expand new items.
-    autoExpandDepth: PropTypes.number
+    autoExpandDepth: PropTypes.number,
+    // A predicate that returns true if the last DFS traversal that was cached
+    // can be reused, false otherwise. The predicate function is passed the
+    // cached traversal as an array of nodes.
+    reuseCachedTraversal: PropTypes.func,
   },
 
   getDefaultProps() {
@@ -139,7 +143,8 @@ const Tree = module.exports = createClass({
       expanded: new Set(),
       seen: new Set(),
       focused: undefined,
-      autoExpandDepth: AUTO_EXPAND_DEPTH
+      autoExpandDepth: AUTO_EXPAND_DEPTH,
+      reuseCachedTraversal: null,
     };
   },
 
@@ -149,7 +154,8 @@ const Tree = module.exports = createClass({
       height: window.innerHeight,
       expanded: new Set(),
       seen: new Set(),
-      focused: undefined
+      focused: undefined,
+      cachedTraversal: undefined,
     };
   },
 
@@ -273,10 +279,23 @@ const Tree = module.exports = createClass({
    * Perform a pre-order depth-first search over the whole forest.
    */
   _dfsFromRoots(maxDepth = Infinity) {
+    const cached = this.state.cachedTraversal;
+    if (cached
+        && maxDepth === Infinity
+        && this.props.reuseCachedTraversal
+        && this.props.reuseCachedTraversal(cached)) {
+      return cached;
+    }
+
     const traversal = [];
     for (let root of this.props.getRoots()) {
       this._dfs(root, maxDepth, traversal);
     }
+
+    if (this.props.reuseCachedTraversal) {
+      this.state.cachedTraversal = traversal;
+    }
+
     return traversal;
   },
 
@@ -296,7 +315,8 @@ const Tree = module.exports = createClass({
     }
 
     this.setState({
-      expanded: this.state.expanded
+      expanded: this.state.expanded,
+      cachedTraversal: null,
     });
   },
 
@@ -308,7 +328,8 @@ const Tree = module.exports = createClass({
   _onCollapse(item) {
     this.state.expanded.delete(item);
     this.setState({
-      expanded: this.state.expanded
+      expanded: this.state.expanded,
+      cachedTraversal: null,
     });
   },
 

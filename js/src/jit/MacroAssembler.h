@@ -420,12 +420,14 @@ class MacroAssembler : public MacroAssemblerSpecific
     // ===============================================================
     // Stack manipulation functions.
 
-    void PushRegsInMask(LiveRegisterSet set) PER_SHARED_ARCH;
+    void PushRegsInMask(LiveRegisterSet set)
+                            DEFINED_ON(arm, arm64, mips32, x86_shared);
     void PushRegsInMask(LiveGeneralRegisterSet set);
 
     void PopRegsInMask(LiveRegisterSet set);
     void PopRegsInMask(LiveGeneralRegisterSet set);
-    void PopRegsInMaskIgnore(LiveRegisterSet set, LiveRegisterSet ignore) PER_SHARED_ARCH;
+    void PopRegsInMaskIgnore(LiveRegisterSet set, LiveRegisterSet ignore)
+                                 DEFINED_ON(arm, arm64, mips32, x86_shared);
 
     void Push(const Operand op) DEFINED_ON(x86_shared);
     void Push(Register reg) PER_SHARED_ARCH;

@@ -77,26 +77,30 @@ body.dragging .tag-line {
   position: relative;
   pointer-events: none;
   opacity: 0.7;
+  z-index: 1;
   height: 0;
 }
 
 /* Indicates a tag-line in the markup-view as being an active drop target by
  * drawing a horizontal line where the dragged element would be inserted if
  * dropped here */
-.tag-line.drop-target::before, .tag-line.drag-target::before {
+.tag-line.drop-target::before,
+.tag-line.drag-target::before {
   content: '';
   position: absolute;
-  left: 0;
   top: 0;
   width: 100%;
+  /* Offset these by 1000px to make sure they cover the full width of the view */
+  padding-left: 1000px;
+  left: -1000px;
 }
 
 .tag-line.drag-target::before {
-  border-top: 2px dashed var(--theme-contrast-background);
+  border-top: 2px solid var(--theme-content-color2);
 }
 
 .tag-line.drop-target::before {
-  border-top: 2px dashed var(--theme-content-color1);
+  border-top: 2px solid var(--theme-contrast-background);
 }
 
 /* In case the indicator is put on the closing .tag-line, the indentation level
