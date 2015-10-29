@@ -286,13 +286,9 @@ public:
    */
   Accessible* ARIAOwnedAt(Accessible* aParent, uint32_t aIndex) const
   {
-    nsTArray<nsIContent*>* childrenEl = mARIAOwnsHash.Get(aParent);
-    if (childrenEl) {
-      nsIContent* childEl = childrenEl->SafeElementAt(aIndex);
-      Accessible* child = GetAccessible(childEl);
-      if (child && child->IsRepositioned()) {
-        return child;
-      }
+    nsTArray<RefPtr<Accessible> >* children = mARIAOwnsHash.Get(aParent);
+    if (children) {
+      return children->SafeElementAt(aIndex);
     }
     return nullptr;
   }
@@ -437,12 +433,6 @@ protected:
                              nsIAtom* aRelAttr = nullptr);
 
   /**
-   * Return true if given ARIA owner element and its referred content make
-   * the loop closed.
-   */
-  bool IsInARIAOwnsLoop(nsIContent* aOwnerEl, nsIContent* aDependentEl);
-
-  /**
    * Update or recreate an accessible depending on a changed attribute.
    *
    * @param aElement   [in] the element the attribute was changed on
@@ -514,9 +504,36 @@ protected:
                               AccReorderEvent* aReorderEvent);
 
   /**
+   * Schedule ARIA owned element relocation if needed.
+   */
+  void RelocateARIAOwnedIfNeeded(nsIContent* aEl);
+
+  /**
    * Validates all aria-owns connections and updates the tree accordingly.
    */
   void ValidateARIAOwned();
+
+  /**
+   * Steals or puts back accessible subtrees.
+   */
+  void DoARIAOwnsRelocation(Accessible* aOwner);
+
+  /**
+   * Moves the child from old parent under new one.
+   */
+  bool SeizeChild(Accessible* aNewParent, Accessible* aChild,
+                  int32_t aIdxInParent);
+
+  /**
+   * Move the child under same parent.
+   */
+  void MoveChild(Accessible* aChild, int32_t aIdxInParent);
+
+  /**
+   * Moves children back under their original parents.
+   */
+  void PutChildrenBack(nsTArray<RefPtr<Accessible> >* aChildren,
+                       uint32_t aStartIdx);
 
   /**
    * Create accessible tree.
@@ -649,14 +666,12 @@ protected:
     AttrRelProvider& operator =(const AttrRelProvider&);
   };
 
-  typedef nsTArray<nsAutoPtr<AttrRelProvider> > AttrRelProviderArray;
-  typedef nsClassHashtable<nsStringHashKey, AttrRelProviderArray>
-    DependentIDsHashtable;
-
   /**
    * The cache of IDs pointed by relation attributes.
    */
-  DependentIDsHashtable mDependentIDsHash;
+  typedef nsTArray<nsAutoPtr<AttrRelProvider> > AttrRelProviderArray;
+  nsClassHashtable<nsStringHashKey, AttrRelProviderArray>
+    mDependentIDsHash;
 
   friend class RelatedAccIterator;
 
@@ -669,23 +684,10 @@ protected:
   nsTArray<nsIContent*> mInvalidationList;
 
   /**
-   * Holds a list of aria-owns relations.
+   * Holds a list of aria-owns relocations.
    */
-  nsClassHashtable<nsPtrHashKey<Accessible>, nsTArray<nsIContent*> >
+  nsClassHashtable<nsPtrHashKey<Accessible>, nsTArray<RefPtr<Accessible> > >
     mARIAOwnsHash;
-
-  struct ARIAOwnsPair {
-    ARIAOwnsPair(Accessible* aOwner, nsIContent* aChild) :
-      mOwner(aOwner), mChild(aChild) { }
-    ARIAOwnsPair(const ARIAOwnsPair& aPair) :
-      mOwner(aPair.mOwner), mChild(aPair.mChild) { }
-    ARIAOwnsPair& operator =(const ARIAOwnsPair& aPair)
-      { mOwner = aPair.mOwner; mChild = aPair.mChild; return *this; }
-
-    RefPtr<Accessible> mOwner;
-    nsCOMPtr<nsIContent> mChild;
-  };
-  nsTArray<ARIAOwnsPair> mARIAOwnsInvalidationList;
 
   /**
    * Used to process notification from core and accessible events.
