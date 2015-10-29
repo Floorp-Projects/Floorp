@@ -18,7 +18,7 @@ toolkit.jar:
   skin/classic/mozapps/extensions/category-recent.png             (extensions/category-recent.png)
   skin/classic/mozapps/extensions/category-available.png          (extensions/category-available.png)
   skin/classic/mozapps/extensions/discover-logo.png               (extensions/discover-logo.png)
-  skin/classic/mozapps/extensions/extensionGeneric.png            (extensions/extensionGeneric.png)
+  skin/classic/mozapps/extensions/extensionGeneric.svg            (../../shared/extensions/extensionGeneric.svg)
   skin/classic/mozapps/extensions/extensionGeneric-16.png         (extensions/extensionGeneric-16.png)
   skin/classic/mozapps/extensions/themeGeneric.png                (extensions/themeGeneric.png)
   skin/classic/mozapps/extensions/themeGeneric-16.png             (extensions/themeGeneric-16.png)
@@ -33,14 +33,10 @@ toolkit.jar:
   skin/classic/mozapps/extensions/toolbarbutton-dropmarker.png    (extensions/toolbarbutton-dropmarker.png)
   skin/classic/mozapps/extensions/heart.png                       (extensions/heart.png)
   skin/classic/mozapps/extensions/navigation.png                  (../../shared/extensions/navigation.png)
-  skin/classic/mozapps/extensions/stripes-warning.png             (extensions/stripes-warning.png)
-  skin/classic/mozapps/extensions/stripes-error.png               (extensions/stripes-error.png)
-  skin/classic/mozapps/extensions/stripes-info-positive.png       (extensions/stripes-info-positive.png)
-  skin/classic/mozapps/extensions/stripes-info-negative.png       (extensions/stripes-info-negative.png)
-  skin/classic/mozapps/extensions/alerticon-warning.png           (extensions/alerticon-warning.png)
-  skin/classic/mozapps/extensions/alerticon-error.png             (extensions/alerticon-error.png)
-  skin/classic/mozapps/extensions/alerticon-info-positive.png     (extensions/alerticon-info-positive.png)
-  skin/classic/mozapps/extensions/alerticon-info-negative.png     (extensions/alerticon-info-negative.png)
+  skin/classic/mozapps/extensions/alerticon-warning.svg           (../../shared/extensions/alerticon-warning.svg)
+  skin/classic/mozapps/extensions/alerticon-error.svg             (../../shared/extensions/alerticon-error.svg)
+  skin/classic/mozapps/extensions/alerticon-info-positive.svg     (../../shared/extensions/alerticon-info-positive.svg)
+  skin/classic/mozapps/extensions/alerticon-info-negative.svg     (../../shared/extensions/alerticon-info-negative.svg)
   skin/classic/mozapps/extensions/search.png                      (extensions/search.png)
   skin/classic/mozapps/extensions/about.css                       (extensions/about.css)
 * skin/classic/mozapps/extensions/extensions.css                  (extensions/extensions.css)
@@ -89,8 +85,7 @@ toolkit.jar:
 #elif MOZ_SEPARATE_MANIFEST_FOR_THEME_OVERRIDES
 [extensions/{972ce4c6-7e08-4474-a285-3208198ce6fd}] chrome.jar:
 #endif
-% override chrome://mozapps/skin/extensions/category-extensions.png       chrome://mozapps/skin/extensions/extensionGeneric.png
+% override chrome://mozapps/skin/extensions/category-extensions.svg       chrome://mozapps/skin/extensions/extensionGeneric.svg
 % override chrome://mozapps/skin/extensions/category-languages.png        chrome://mozapps/skin/extensions/localeGeneric.png
 % override chrome://mozapps/skin/extensions/category-themes.png           chrome://mozapps/skin/extensions/themeGeneric.png
 % override chrome://mozapps/skin/plugins/notifyPluginCrashed.png          chrome://mozapps/skin/plugins/notifyPluginGeneric.png
-% override chrome://mozapps/skin/xpinstall/xpinstallItemGeneric.png       chrome://mozapps/skin/extensions/extensionGeneric.png
