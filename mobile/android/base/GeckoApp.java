@@ -646,7 +646,7 @@ public abstract class GeckoApp
             GeckoAppShell.openUriExternal(text, "text/plain", "", "", Intent.ACTION_SEND, title, false);
 
             // Context: Sharing via chrome list (no explicit session is active)
-            Telemetry.sendUIEvent(TelemetryContract.Event.SHARE, TelemetryContract.Method.LIST);
+            Telemetry.sendUIEvent(TelemetryContract.Event.SHARE, TelemetryContract.Method.LIST, "text");
 
         } else if ("Snackbar:Show".equals(event)) {
             final String msg = message.getString("message");
