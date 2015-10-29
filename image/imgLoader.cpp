@@ -1590,7 +1590,7 @@ imgLoader::ValidateRequestWithNewChannel(imgRequest* request,
       // We will send notifications from imgCacheValidator::OnStartRequest().
       // In the mean time, we must defer notifications because we are added to
       // the imgRequest's proxy list, and we can get extra notifications
-      // resulting from methods such as RequestDecode(). See bug 579122.
+      // resulting from methods such as StartDecoding(). See bug 579122.
       proxy->SetNotificationsDeferred(true);
 
       // Attach the proxy without notifying
@@ -1666,7 +1666,7 @@ imgLoader::ValidateRequestWithNewChannel(imgRequest* request,
     // We will send notifications from imgCacheValidator::OnStartRequest().
     // In the mean time, we must defer notifications because we are added to
     // the imgRequest's proxy list, and we can get extra notifications
-    // resulting from methods such as RequestDecode(). See bug 579122.
+    // resulting from methods such as StartDecoding(). See bug 579122.
     req->SetNotificationsDeferred(true);
 
     // Add the proxy without notifying

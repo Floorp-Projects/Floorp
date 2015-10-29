@@ -371,18 +371,11 @@ imgRequestProxy::StartDecoding()
   }
 
   if (GetOwner()) {
-    GetOwner()->RequestDecode();
+    GetOwner()->StartDecoding();
   }
 
   return NS_OK;
 }
-
-NS_IMETHODIMP
-imgRequestProxy::RequestDecode()
-{
-  return NS_OK;
-}
-
 
 NS_IMETHODIMP
 imgRequestProxy::LockImage()
