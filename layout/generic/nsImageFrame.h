@@ -230,6 +230,7 @@ protected:
 protected:
   friend class nsImageListener;
   friend class nsImageLoadingContent;
+  friend class PresShell;
 
   nsresult OnSizeAvailable(imgIRequest* aRequest, imgIContainer* aImage);
   nsresult OnFrameUpdate(imgIRequest* aRequest, const nsIntRect* aRect);
