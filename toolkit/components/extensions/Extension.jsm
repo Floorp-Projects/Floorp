@@ -4,7 +4,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["Extension"];
+this.EXPORTED_SYMBOLS = ["Extension", "ExtensionData"];
 
 /*
  * This file is the main entry point for extensions. When an extension
@@ -58,6 +58,7 @@ var {
   MessageBroker,
   Messenger,
   injectAPI,
+  extend,
   flushJarCache,
 } = ExtensionUtils;
 
@@ -322,210 +323,26 @@ var GlobalManager = {
   },
 };
 
-// We create one instance of this class per extension. |addonData|
-// comes directly from bootstrap.js when initializing.
-this.Extension = function(addonData)
+// Represents the data contained in an extension, contained either
+// in a directory or a zip file, which may or may not be installed.
+// This class implements the functionality of the Extension class,
+// primarily related to manifest parsing and localization, which is
+// useful prior to extension installation or initialization.
+//
+// No functionality of this class is guaranteed to work before
+// |readManifest| has been called, and completed.
+this.ExtensionData = function(rootURI)
 {
-  let uuidGenerator = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator);
-  let uuid = uuidGenerator.generateUUID().number;
-  uuid = uuid.substring(1, uuid.length - 1); // Strip of { and } off the UUID.
-  this.uuid = uuid;
+  this.rootURI = rootURI;
 
-  if (addonData.cleanupFile) {
-    Services.obs.addObserver(this, "xpcom-shutdown", false);
-    this.cleanupFile = addonData.cleanupFile || null;
-    delete addonData.cleanupFile;
-  }
-
-  this.addonData = addonData;
-  this.id = addonData.id;
-  this.baseURI = Services.io.newURI("moz-extension://" + uuid, null, null);
-  this.baseURI.QueryInterface(Ci.nsIURL);
   this.manifest = null;
   this.localeMessages = null;
-  this.logger = Log.repository.getLogger(LOGGER_ID_BASE + this.id.replace(/\./g, "-"));
-  this.principal = this.createPrincipal();
+  this.selectedLocale = null;
 
-  this.views = new Set();
-
-  this.onStartup = null;
-
-  this.hasShutdown = false;
-  this.onShutdown = new Set();
-
-  this.permissions = new Set();
-  this.whiteListedHosts = null;
-  this.webAccessibleResources = new Set();
-
-  this.emitter = new EventEmitter();
+  this.errors = [];
 }
 
-/**
- * This code is designed to make it easy to test a WebExtension
- * without creating a bunch of files. Everything is contained in a
- * single JSON blob.
- *
- * Properties:
- *   "background": "<JS code>"
- *     A script to be loaded as the background script.
- *     The "background" section of the "manifest" property is overwritten
- *     if this is provided.
- *   "manifest": {...}
- *     Contents of manifest.json
- *   "files": {"filename1": "contents1", ...}
- *     Data to be included as files. Can be referenced from the manifest.
- *     If a manifest file is provided here, it takes precedence over
- *     a generated one. Always use "/" as a directory separator.
- *     Directories should appear here only implicitly (as a prefix
- *     to file names)
- *
- * To make things easier, the value of "background" and "files"[] can
- * be a function, which is converted to source that is run.
- */
-this.Extension.generate = function(id, data)
-{
-  let manifest = data.manifest;
-  if (!manifest) {
-    manifest = {};
-  }
-
-  let files = data.files;
-  if (!files) {
-    files = {};
-  }
-
-  function provide(obj, keys, value, override = false) {
-    if (keys.length == 1) {
-      if (!(keys[0] in obj) || override) {
-        obj[keys[0]] = value;
-      }
-    } else {
-      if (!(keys[0] in obj)) {
-        obj[keys[0]] = {};
-      }
-      provide(obj[keys[0]], keys.slice(1), value, override);
-    }
-  }
-
-  provide(manifest, ["applications", "gecko", "id"], id);
-
-  provide(manifest, ["name"], "Generated extension");
-  provide(manifest, ["manifest_version"], 2);
-  provide(manifest, ["version"], "1.0");
-
-  if (data.background) {
-    let uuidGenerator = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator);
-    let bgScript = uuidGenerator.generateUUID().number + ".js";
-
-    provide(manifest, ["background", "scripts"], [bgScript], true);
-    files[bgScript] = data.background;
-  }
-
-  provide(files, ["manifest.json"], JSON.stringify(manifest));
-
-  let ZipWriter = Components.Constructor("@mozilla.org/zipwriter;1", "nsIZipWriter");
-  let zipW = new ZipWriter();
-
-  let file = FileUtils.getFile("TmpD", ["generated-extension.xpi"]);
-  file.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, FileUtils.PERMS_FILE);
-
-  const MODE_WRONLY = 0x02;
-  const MODE_TRUNCATE = 0x20;
-  zipW.open(file, MODE_WRONLY | MODE_TRUNCATE);
-
-  // Needs to be in microseconds for some reason.
-  let time = Date.now() * 1000;
-
-  function generateFile(filename) {
-    let components = filename.split("/");
-    let path = "";
-    for (let component of components.slice(0, -1)) {
-      path += component + "/";
-      if (!zipW.hasEntry(path)) {
-        zipW.addEntryDirectory(path, time, false);
-      }
-    }
-  }
-
-  for (let filename in files) {
-    let script = files[filename];
-    if (typeof(script) == "function") {
-      script = "(" + script.toString() + ")()";
-    }
-
-    let stream = Cc["@mozilla.org/io/string-input-stream;1"].createInstance(Ci.nsIStringInputStream);
-    stream.data = script;
-
-    generateFile(filename);
-    zipW.addEntryStream(filename, time, 0, stream, false);
-  }
-
-  zipW.close();
-
-  flushJarCache(file);
-  Services.ppmm.broadcastAsyncMessage("Extension:FlushJarCache", {path: file.path});
-
-  let fileURI = Services.io.newFileURI(file);
-  let jarURI = Services.io.newURI("jar:" + fileURI.spec + "!/", null, null);
-
-  return new Extension({
-    id,
-    resourceURI: jarURI,
-    cleanupFile: file
-  });
-}
-
-Extension.prototype = {
-  on(hook, f) {
-    return this.emitter.on(hook, f);
-  },
-
-  off(hook, f) {
-    return this.emitter.off(hook, f);
-  },
-
-  emit(...args) {
-    return this.emitter.emit(...args);
-  },
-
-  testMessage(...args) {
-    Management.emit("test-message", this, ...args);
-  },
-
-  createPrincipal(uri = this.baseURI) {
-    return Services.scriptSecurityManager.createCodebasePrincipal(
-      uri, {addonId: this.id});
-  },
-
-  // Checks that the given URL is a child of our baseURI.
-  isExtensionURL(url) {
-    let uri = Services.io.newURI(url, null, null);
-
-    let common = this.baseURI.getCommonBaseSpec(uri);
-    return common == this.baseURI.spec;
-  },
-
-  // Report an error about the extension's manifest file.
-  manifestError(message) {
-    this.logger.error(`Loading extension '${this.id}': ${message}`);
-  },
-
-  // Representation of the extension to send to content
-  // processes. This should include anything the content process might
-  // need.
-  serialize() {
-    return {
-      id: this.id,
-      uuid: this.uuid,
-      manifest: this.manifest,
-      resourceURL: this.addonData.resourceURI.spec,
-      baseURL: this.baseURI.spec,
-      content_scripts: this.manifest.content_scripts || [],
-      webAccessibleResources: this.webAccessibleResources,
-      whiteListedHosts: this.whiteListedHosts.serialize(),
-    };
-  },
-
+ExtensionData.prototype = {
   // https://developer.chrome.com/extensions/i18n
   localizeMessage(message, substitutions) {
     if (message in this.localeMessages) {
@@ -665,6 +482,211 @@ Extension.prototype = {
       return this.readLocaleFile(locale.name).catch(() => {});
     }
     return {};
+  }
+};
+
+// We create one instance of this class per extension. |addonData|
+// comes directly from bootstrap.js when initializing.
+this.Extension = function(addonData)
+{
+  ExtensionData.call(this, addonData.resourceURI);
+
+  let uuidGenerator = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator);
+  let uuid = uuidGenerator.generateUUID().number;
+  uuid = uuid.slice(1, -1); // Strip of { and } off the UUID.
+  this.uuid = uuid;
+
+  if (addonData.cleanupFile) {
+    Services.obs.addObserver(this, "xpcom-shutdown", false);
+    this.cleanupFile = addonData.cleanupFile || null;
+    delete addonData.cleanupFile;
+  }
+
+  this.addonData = addonData;
+  this.id = addonData.id;
+  this.baseURI = Services.io.newURI("moz-extension://" + uuid, null, null);
+  this.baseURI.QueryInterface(Ci.nsIURL);
+  this.logger = Log.repository.getLogger(LOGGER_ID_BASE + this.id.replace(/\./g, "-"));
+  this.principal = this.createPrincipal();
+
+  this.views = new Set();
+
+  this.onStartup = null;
+
+  this.hasShutdown = false;
+  this.onShutdown = new Set();
+
+  this.permissions = new Set();
+  this.whiteListedHosts = null;
+  this.webAccessibleResources = new Set();
+
+  this.emitter = new EventEmitter();
+}
+
+/**
+ * This code is designed to make it easy to test a WebExtension
+ * without creating a bunch of files. Everything is contained in a
+ * single JSON blob.
+ *
+ * Properties:
+ *   "background": "<JS code>"
+ *     A script to be loaded as the background script.
+ *     The "background" section of the "manifest" property is overwritten
+ *     if this is provided.
+ *   "manifest": {...}
+ *     Contents of manifest.json
+ *   "files": {"filename1": "contents1", ...}
+ *     Data to be included as files. Can be referenced from the manifest.
+ *     If a manifest file is provided here, it takes precedence over
+ *     a generated one. Always use "/" as a directory separator.
+ *     Directories should appear here only implicitly (as a prefix
+ *     to file names)
+ *
+ * To make things easier, the value of "background" and "files"[] can
+ * be a function, which is converted to source that is run.
+ */
+this.Extension.generate = function(id, data)
+{
+  let manifest = data.manifest;
+  if (!manifest) {
+    manifest = {};
+  }
+
+  let files = data.files;
+  if (!files) {
+    files = {};
+  }
+
+  function provide(obj, keys, value, override = false) {
+    if (keys.length == 1) {
+      if (!(keys[0] in obj) || override) {
+        obj[keys[0]] = value;
+      }
+    } else {
+      if (!(keys[0] in obj)) {
+        obj[keys[0]] = {};
+      }
+      provide(obj[keys[0]], keys.slice(1), value, override);
+    }
+  }
+
+  provide(manifest, ["applications", "gecko", "id"], id);
+
+  provide(manifest, ["name"], "Generated extension");
+  provide(manifest, ["manifest_version"], 2);
+  provide(manifest, ["version"], "1.0");
+
+  if (data.background) {
+    let uuidGenerator = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator);
+    let bgScript = uuidGenerator.generateUUID().number + ".js";
+
+    provide(manifest, ["background", "scripts"], [bgScript], true);
+    files[bgScript] = data.background;
+  }
+
+  provide(files, ["manifest.json"], JSON.stringify(manifest));
+
+  let ZipWriter = Components.Constructor("@mozilla.org/zipwriter;1", "nsIZipWriter");
+  let zipW = new ZipWriter();
+
+  let file = FileUtils.getFile("TmpD", ["generated-extension.xpi"]);
+  file.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, FileUtils.PERMS_FILE);
+
+  const MODE_WRONLY = 0x02;
+  const MODE_TRUNCATE = 0x20;
+  zipW.open(file, MODE_WRONLY | MODE_TRUNCATE);
+
+  // Needs to be in microseconds for some reason.
+  let time = Date.now() * 1000;
+
+  function generateFile(filename) {
+    let components = filename.split("/");
+    let path = "";
+    for (let component of components.slice(0, -1)) {
+      path += component + "/";
+      if (!zipW.hasEntry(path)) {
+        zipW.addEntryDirectory(path, time, false);
+      }
+    }
+  }
+
+  for (let filename in files) {
+    let script = files[filename];
+    if (typeof(script) == "function") {
+      script = "(" + script.toString() + ")()";
+    }
+
+    let stream = Cc["@mozilla.org/io/string-input-stream;1"].createInstance(Ci.nsIStringInputStream);
+    stream.data = script;
+
+    generateFile(filename);
+    zipW.addEntryStream(filename, time, 0, stream, false);
+  }
+
+  zipW.close();
+
+  flushJarCache(file);
+  Services.ppmm.broadcastAsyncMessage("Extension:FlushJarCache", {path: file.path});
+
+  let fileURI = Services.io.newFileURI(file);
+  let jarURI = Services.io.newURI("jar:" + fileURI.spec + "!/", null, null);
+
+  return new Extension({
+    id,
+    resourceURI: jarURI,
+    cleanupFile: file
+  });
+}
+
+Extension.prototype = extend(Object.create(ExtensionData.prototype), {
+  on(hook, f) {
+    return this.emitter.on(hook, f);
+  },
+
+  off(hook, f) {
+    return this.emitter.off(hook, f);
+  },
+
+  emit(...args) {
+    return this.emitter.emit(...args);
+  },
+
+  testMessage(...args) {
+    Management.emit("test-message", this, ...args);
+  },
+
+  createPrincipal(uri = this.baseURI) {
+    return Services.scriptSecurityManager.createCodebasePrincipal(
+      uri, {addonId: this.id});
+  },
+
+  // Checks that the given URL is a child of our baseURI.
+  isExtensionURL(url) {
+    let uri = Services.io.newURI(url, null, null);
+
+    let common = this.baseURI.getCommonBaseSpec(uri);
+    return common == this.baseURI.spec;
+  },
+
+  // Report an error about the extension's manifest file.
+  manifestError(message) {
+    this.logger.error(`Loading extension '${this.id}': ${message}`);
+  },
+
+  // Representation of the extension to send to content
+  // processes. This should include anything the content process might
+  // need.
+  serialize() {
+    return {
+      id: this.id,
+      uuid: this.uuid,
+      manifest: this.manifest,
+      resourceURL: this.addonData.resourceURI.spec,
+      baseURL: this.baseURI.spec,
+      content_scripts: this.manifest.content_scripts || [],
+      webAccessibleResources: this.webAccessibleResources,
+      whiteListedHosts: this.whiteListedHosts.serialize(),
+    };
   },
 
   broadcast(msg, data) {
@@ -808,5 +830,5 @@ Extension.prototype = {
   get name() {
     return this.localize(this.manifest.name);
   },
-};
+});
 
