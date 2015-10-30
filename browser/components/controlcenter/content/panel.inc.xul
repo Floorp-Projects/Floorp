@@ -12,6 +12,7 @@
   <broadcasterset>
     <broadcaster id="identity-popup-content-host" class="identity-popup-headline" crop="start"/>
     <broadcaster id="identity-popup-mcb-learn-more" class="text-link plain" value="&identity.learnMore;"/>
+    <broadcaster id="identity-popup-insecure-login-forms-learn-more" class="text-link plain" value="&identity.learnMore;"/>
   </broadcasterset>
 
   <panelmultiview id="identity-popup-multiView"
@@ -121,7 +122,7 @@
                      and-when-loginforms="secure">&identity.description.insecure;</description>
 
         <!-- Insecure login forms -->
-        <description when-loginforms="insecure">&identity.description.insecureLoginForms;</description>
+        <description when-loginforms="insecure">&identity.description.insecureLoginForms; <label observes="identity-popup-insecure-login-forms-learn-more"/></description>
 
         <!-- Weak Cipher -->
         <description when-ciphers="weak">&identity.description.weakCipher;</description>
