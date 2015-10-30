@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" height="70">
+<script>
+
+function boom()
+{
+  document.documentElement.style.minHeight = '68121107503rem'
+}
+
+window.addEventListener("load", boom, false);
+
+</script>
+</svg>
