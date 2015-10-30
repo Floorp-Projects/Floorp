@@ -117,7 +117,7 @@ MResumePoint::writeRecoverData(CompactBufferWriter& writer) const
     // arguments_object.
     MOZ_ASSERT(CountArgSlots(script, fun) < SNAPSHOT_MAX_NARGS + 4);
 
-#ifdef DEBUG
+#ifdef JS_JITSPEW
     uint32_t implicit = StartArgSlot(script);
 #endif
     uint32_t formalArgs = CountArgSlots(script, fun);

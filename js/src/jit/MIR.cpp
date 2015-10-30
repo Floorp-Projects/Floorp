@@ -508,7 +508,7 @@ MDefinition::dumpLocation() const
     out.finish();
 }
 
-#ifdef DEBUG
+#if defined(DEBUG) || defined(JS_JITSPEW)
 size_t
 MDefinition::useCount() const
 {
