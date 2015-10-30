@@ -566,6 +566,10 @@ child:
 
     PreferenceUpdate(PrefSetting pref);
 
+    DataStoragePut(nsString aFilename, DataStorageItem aItem);
+    DataStorageRemove(nsString aFilename, nsCString aKey, DataStorageType aType);
+    DataStorageClear(nsString aFilename);
+
     NotifyAlertsObserver(nsCString topic, nsString data);
 
     GeolocationUpdate(GeoPosition somewhere);
