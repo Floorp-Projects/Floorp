@@ -36,11 +36,14 @@ let snapshotModel = exports.snapshot = PropTypes.shape({
   inverted: PropTypes.bool,
   // If an error was thrown while processing this snapshot, the `Error` instance is attached here.
   error: PropTypes.object,
+  // The creation time of the snapshot; required after the snapshot has been read.
+  creationTime: PropTypes.number,
   // State the snapshot is in
   // @see ./constants.js
   state: function (snapshot, propName) {
     let current = snapshot.state;
     let shouldHavePath = [states.SAVED, states.READ, states.SAVING_CENSUS, states.SAVED_CENSUS];
+    let shouldHaveCreationTime = [states.READ, states.SAVING_CENSUS, states.SAVED_CENSUS];
     let shouldHaveCensus = [states.SAVED_CENSUS];
 
     if (!stateKeys.includes(current)) {
@@ -51,6 +54,9 @@ let snapshotModel = exports.snapshot = PropTypes.shape({
     }
     if (shouldHaveCensus.includes(current) && (!snapshot.census || !snapshot.breakdown)) {
       throw new Error(`Snapshots in state ${current} must have a census and breakdown.`);
+    }
+    if (shouldHaveCreationTime.includes(current) && !snapshot.creationTime) {
+      throw new Error(`Snapshots in state ${current} must have a creation time.`);
     }
   },
 });
