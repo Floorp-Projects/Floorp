@@ -1857,7 +1857,8 @@ Predictor::Resetter::OnCacheStorageInfo(uint32_t entryCount, uint64_t consumptio
 NS_IMETHODIMP
 Predictor::Resetter::OnCacheEntryInfo(nsIURI *uri, const nsACString &idEnhance,
                                       int64_t dataSize, int32_t fetchCount,
-                                      uint32_t lastModifiedTime, uint32_t expirationTime)
+                                      uint32_t lastModifiedTime, uint32_t expirationTime,
+                                      bool aPinned)
 {
   MOZ_ASSERT(NS_IsMainThread());
 

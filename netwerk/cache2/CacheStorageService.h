@@ -103,7 +103,8 @@ public:
   public:
     virtual void OnEntryInfo(const nsACString & aURISpec, const nsACString & aIdEnhance,
                              int64_t aDataSize, int32_t aFetchCount,
-                             uint32_t aLastModifiedTime, uint32_t aExpirationTime) = 0;
+                             uint32_t aLastModifiedTime, uint32_t aExpirationTime,
+                             bool aPinned) = 0;
   };
 
   // Invokes OnEntryInfo for the given aEntry, synchronously.
