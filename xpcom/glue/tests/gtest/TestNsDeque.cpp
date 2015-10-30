@@ -67,7 +67,7 @@ namespace TestNsDeque {
 
 using namespace TestNsDeque;
 
-TEST(NsDeque, OriginalTest)
+TEST(NsDeque, OriginalTest) 
 {
   const int size = 200;
   int ints[size];
@@ -181,6 +181,8 @@ TEST(NsDeque, OriginalFlaw)
   }
 }
 
+
+
 TEST(NsDeque, TestObjectAt)
 {
   nsDeque d;
@@ -277,10 +279,26 @@ TEST(NsDeque,TestEmpty)
   EXPECT_EQ(nullptr, d.ObjectAt(0)) << "Invalid operation should return nullptr";
 }
 
-TEST(NsDeque,TestEraseMethod)
+TEST(NsDeque,TestEmptyMethod)
 {
   nsDeque d;
   size_t numberOfEntries = 8;
+
+  // Fill it up before calling Empty
+  for (size_t i = 0; i < numberOfEntries; i++) {
+    d.Push((void*)0xAA);
+  }
+
+  // Call empty
+  d.Empty();
+
+  // Now check it again.
+  EXPECT_EQ(0, d.GetSize())         <<"Size should be 0";
+  EXPECT_EQ(nullptr, d.Pop())       <<"Invalid operation should return nullptr";
+  EXPECT_EQ(nullptr, d.PopFront())  << "Invalid operation should return nullptr";
+  EXPECT_EQ(nullptr, d.Peek())      << "Invalid operation should return nullptr";
+  EXPECT_EQ(nullptr, d.PeekFront()) <<"Invalid operation should return nullptr";
+  EXPECT_EQ(nullptr, d.ObjectAt(0)) << "Invalid operation should return nullptr";
 
   // Fill it up before calling Erase
   for (size_t i = 0; i < numberOfEntries; i++) {
@@ -325,6 +343,35 @@ TEST(NsDeque,TestEraseShouldCallDeallocator)
   for (size_t i=0; i < NumTestValues; i++)
   {
     EXPECT_EQ(-1, *(testArray[i])) << "Erase should call deallocator: " << *(testArray[i]);
+  }  
+}
+
+TEST(NsDeque,TestEmptyShouldNotCallDeallocator)
+{
+  nsDeque d(new Deallocator());
+  const int NumTestValues = 8;
+
+  int* testArray[NumTestValues];
+  for (size_t i=0; i < NumTestValues; i++)
+  {
+    testArray[i] = new int();
+    *(testArray[i]) = i;
+    d.Push((void*)testArray[i]);
+  }
+
+  d.Empty();
+
+  // Now check it again.
+  EXPECT_EQ(0, d.GetSize())         <<"Size should be 0";
+  EXPECT_EQ(nullptr, d.Pop())       <<"Invalid operation should return nullptr";
+  EXPECT_EQ(nullptr, d.PopFront())  << "Invalid operation should return nullptr";
+  EXPECT_EQ(nullptr, d.Peek())      << "Invalid operation should return nullptr";
+  EXPECT_EQ(nullptr, d.PeekFront()) <<"Invalid operation should return nullptr";
+  EXPECT_EQ(nullptr, d.ObjectAt(0)) << "Invalid operation should return nullptr";
+
+  for (size_t i=0; i < NumTestValues; i++)
+  {
+    EXPECT_EQ(i, *(testArray[i])) << "Empty should not call deallocator";
   }
 }
 
