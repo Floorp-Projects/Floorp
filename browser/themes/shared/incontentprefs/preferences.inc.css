@@ -624,8 +624,7 @@ description > html|a {
 }
 
 .fxaMobilePromo {
-  margin-top: 14px;
-  margin-bottom: 41px;
+  margin-bottom: 31px;
 }
 
 #fxaLoginRejectedWarning {
@@ -638,26 +637,14 @@ description > html|a {
   margin-bottom: 27.5px;
 }
 
-.androidLogo {
-  list-style-image: url(chrome://browser/skin/fxa/android.png);
-  max-width: 24px;
-  position: relative;
-  top: 8px;
-  margin: 0px;
-  margin-inline-end: 5px;
-}
-
-.androidLink {
+.androidLink,
+.iOSLink {
   margin: 0;
 }
 
 #tosPP-small {
+  margin-top: 20px;
   margin-bottom: 20px;
-}
-
-.androidAttribution {
-  font-size: 12px;
-  color: #D1D2D3;
 }
 
 @media (min-resolution: 1.1dppx) {
@@ -666,9 +653,6 @@ description > html|a {
   }
   .fxaFirefoxLogo {
     list-style-image: url(chrome://browser/skin/fxa/logo@2x.png);
-  }
-  .androidLogo {
-    list-style-image: url(chrome://browser/skin/fxa/android@2x.png);
   }
   #fxaProfileImage {
     list-style-image: url(chrome://browser/skin/fxa/default-avatar@2x.png);
