@@ -17,10 +17,14 @@ class BluetoothUnixSocketConnector final
   : public mozilla::ipc::UnixSocketConnector
 {
 public:
-  BluetoothUnixSocketConnector(const nsACString& aAddressString,
+  BluetoothUnixSocketConnector(const BluetoothAddress& aAddress,
                                BluetoothSocketType aType,
                                int aChannel, bool aAuth, bool aEncrypt);
   ~BluetoothUnixSocketConnector();
+
+  nsresult ConvertAddress(const struct sockaddr& aAddress,
+                          socklen_t aAddressLength,
+                          BluetoothAddress& aAddressOut);
 
   // Methods for |UnixSocketConnector|
   //
@@ -45,14 +49,18 @@ public:
   nsresult Duplicate(UnixSocketConnector*& aConnector) override;
 
 private:
+  static nsresult ConvertAddress(const BluetoothAddress& aAddress,
+                                 bdaddr_t& aBdAddr);
+
+  static nsresult ConvertAddress(const bdaddr_t& aBdAddr,
+                                 BluetoothAddress& aAddress);
+
   nsresult CreateSocket(int& aFd) const;
   nsresult SetSocketFlags(int aFd) const;
   nsresult CreateAddress(struct sockaddr& aAddress,
                          socklen_t& aAddressLength) const;
-  static nsresult ConvertAddressString(const char* aAddressString,
-                                       bdaddr_t& aAddress);
 
-  nsCString mAddressString;
+  BluetoothAddress mAddress;
   BluetoothSocketType mType;
   int mChannel;
   bool mAuth;
