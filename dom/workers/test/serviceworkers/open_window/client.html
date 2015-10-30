@@ -1,0 +1,48 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 1172870 - page opened by ServiceWorkerClients.OpenWindow</title>
+</head>
+<body>
+<p id="display"></p>
+<div id="content" style="display: none"></div>
+<pre id="test"></pre>
+<script class="testbody" type="text/javascript">
+
+  window.onload = function() {
+    if (window.location == "http://mochi.test:8888/tests/dom/workers/test/serviceworkers/open_window/client.html") {
+      navigator.serviceWorker.ready.then(function(result) {
+        navigator.serviceWorker.onmessage = function(event) {
+          if (event.data !== "CLOSE") {
+            dump("ERROR: unexepected reply from the service worker.\n");
+          }
+          if (parent) {
+            parent.postMessage("CLOSE", "*");
+          }
+          window.close();
+        }
+        navigator.serviceWorker.controller.postMessage("NEW_WINDOW");
+      })
+    } else {
+      window.onmessage = function(event) {
+        if (event.data !== "CLOSE") {
+            dump("ERROR: unexepected reply from the iframe.\n");
+        }
+        window.close();
+      }
+
+      var iframe = document.createElement('iframe');
+      iframe.src = "http://mochi.test:8888/tests/dom/workers/test/serviceworkers/open_window/client.html";
+      document.body.appendChild(iframe);
+    }
+  }
+
+</script>
+</pre>
+</body>
+</html>
+
