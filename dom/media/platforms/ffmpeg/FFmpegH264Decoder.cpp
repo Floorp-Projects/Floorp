@@ -214,7 +214,7 @@ FFmpegH264Decoder<LIBAV_VER>::DoDecodeFrame(MediaRawData* aSample,
                                               pts,
                                               aSample->mDuration,
                                               b,
-                                              aSample->mKeyframe,
+                                              !!mFrame->key_frame,
                                               -1,
                                               gfx::IntRect(0, 0, mCodecContext->width, mCodecContext->height));
     if (!v) {
