@@ -521,7 +521,6 @@ AbstractTreeItem.prototype = {
    * Handler for the "click" event on the element displaying this tree item.
    */
   _onClick: function(e) {
-    e.preventDefault();
     e.stopPropagation();
     this.focus();
   },
