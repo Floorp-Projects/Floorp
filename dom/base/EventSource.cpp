@@ -1066,7 +1066,7 @@ EventSource::DispatchCurrentMessageEvent()
     message->mLastEventID.Assign(mLastEventID);
   }
 
-  size_t sizeBefore = mMessagesToDispatch.GetSize();
+  int32_t sizeBefore = mMessagesToDispatch.GetSize();
   mMessagesToDispatch.Push(message.forget());
   NS_ENSURE_TRUE(mMessagesToDispatch.GetSize() == sizeBefore + 1,
                  NS_ERROR_OUT_OF_MEMORY);

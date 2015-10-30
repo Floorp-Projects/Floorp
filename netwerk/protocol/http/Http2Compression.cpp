@@ -247,7 +247,7 @@ nvFIFO::VariableLength() const
   return mTable.GetSize();
 }
 
-size_t
+uint32_t
 nvFIFO::StaticLength() const
 {
   return gStaticHeaders->GetSize();
@@ -262,7 +262,7 @@ nvFIFO::Clear()
 }
 
 const nvPair *
-nvFIFO::operator[] (size_t index) const
+nvFIFO::operator[] (int32_t index) const
 {
   // NWGH - ensure index > 0
   // NWGH - subtract 1 from index here
