@@ -18,7 +18,7 @@ const Frame = module.exports = createClass({
 
     let url = new URL(frame.source);
     let spec = url.toString();
-    let func = frame.functionDisplayFrame || "";
+    let func = frame.functionDisplayName || "";
     let tooltip = `${func} (${spec}:${frame.line}:${frame.column})`;
     let onClick = () => toolbox.viewSourceInDebugger(spec, frame.line);
 
