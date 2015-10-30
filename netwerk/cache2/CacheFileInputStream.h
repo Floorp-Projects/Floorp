@@ -53,7 +53,7 @@ private:
   void NotifyListener();
   void MaybeNotifyListener();
 
-  RefPtr<CacheFile>      mFile;
+  RefPtr<CacheFile>        mFile;
   RefPtr<CacheFileChunk> mChunk;
   int64_t                  mPos;
   bool                     mClosed;

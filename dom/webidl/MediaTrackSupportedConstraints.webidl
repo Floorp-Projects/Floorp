@@ -29,7 +29,12 @@ dictionary MediaTrackSupportedConstraints {
     boolean mediaSource = true;
 
     // Experimental https://bugzilla.mozilla.org/show_bug.cgi?id=1131568#c3
+    //              https://bugzilla.mozilla.org/show_bug.cgi?id=1193075
 
     boolean browserWindow = true;
     boolean scrollWithPage = true;
+    boolean viewportOffsetX = true;
+    boolean viewportOffsetY = true;
+    boolean viewportWidth = true;
+    boolean viewportHeight = true;
 };

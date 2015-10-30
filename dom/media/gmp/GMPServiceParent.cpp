@@ -42,6 +42,7 @@
 #include "nsPrintfCString.h"
 #endif
 #include "nsIXULRuntime.h"
+#include "GMPDecoderModule.h"
 #include <limits>
 
 namespace mozilla {
@@ -700,6 +701,27 @@ GeckoMediaPluginServiceParent::LoadFromEnvironment()
   mScannedPluginOnDisk = true;
 }
 
+class NotifyObserversTask final : public nsRunnable {
+public:
+  explicit NotifyObserversTask(const char* aTopic, nsString aData = EmptyString())
+    : mTopic(aTopic)
+    , mData(aData)
+  {}
+  NS_IMETHOD Run() override {
+    MOZ_ASSERT(NS_IsMainThread());
+    nsCOMPtr<nsIObserverService> obsService = mozilla::services::GetObserverService();
+    MOZ_ASSERT(obsService);
+    if (obsService) {
+      obsService->NotifyObservers(nullptr, mTopic, mData.get());
+    }
+    return NS_OK;
+  }
+private:
+  ~NotifyObserversTask() {}
+  const char* mTopic;
+  const nsString mData;
+};
+
 NS_IMETHODIMP
 GeckoMediaPluginServiceParent::PathRunnable::Run()
 {
@@ -710,6 +732,16 @@ GeckoMediaPluginServiceParent::PathRunnable::Run()
                                 mOperation == REMOVE_AND_DELETE_FROM_DISK,
                                 mDefer);
   }
+#ifndef MOZ_WIDGET_GONK // Bug 1214967: disabled on B2G due to inscrutable test failures.
+  // For e10s, we must fire a notification so that all ContentParents notify
+  // their children to update the codecs that the GMPDecoderModule can use.
+  NS_DispatchToMainThread(new NotifyObserversTask("gmp-changed"), NS_DISPATCH_NORMAL);
+  // For non-e10s, and for decoding in the chrome process, must update GMP
+  // PDM's codecs list directly.
+  NS_DispatchToMainThread(NS_NewRunnableFunction([]() -> void {
+    GMPDecoderModule::UpdateUsableCodecs();
+  }));
+#endif
   return NS_OK;
 }
 
@@ -934,27 +966,6 @@ GeckoMediaPluginServiceParent::ClonePlugin(const GMPParent* aOriginal)
 
   return gmp.get();
 }
-
-class NotifyObserversTask final : public nsRunnable {
-public:
-  explicit NotifyObserversTask(const char* aTopic, nsString aData = EmptyString())
-    : mTopic(aTopic)
-    , mData(aData)
-  {}
-  NS_IMETHOD Run() override {
-    MOZ_ASSERT(NS_IsMainThread());
-    nsCOMPtr<nsIObserverService> obsService = mozilla::services::GetObserverService();
-    MOZ_ASSERT(obsService);
-    if (obsService) {
-      obsService->NotifyObservers(nullptr, mTopic, mData.get());
-    }
-    return NS_OK;
-  }
-private:
-  ~NotifyObserversTask() {}
-  const char* mTopic;
-  const nsString mData;
-};
 
 void
 GeckoMediaPluginServiceParent::AddOnGMPThread(const nsAString& aDirectory)

@@ -244,7 +244,7 @@
               class="pref-item" align="top">
           <image class="pref-icon" type="desktop-notification"/>
           <vbox>
-            <label class="pref-title" value="&desktop-notification.label;"/>
+            <label class="pref-title" value="&desktop-notification2.label;"/>
             <hbox align="center">
               <menulist id="desktop-notification-menulist"
                         class="pref-menulist"

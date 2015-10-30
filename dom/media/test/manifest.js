@@ -1406,6 +1406,11 @@ const DEBUG_TEST_LOOP_FOREVER = false;
 //      or end the mochitest if all the tests are done.
 function MediaTestManager() {
 
+  // Return how many seconds elapsed since |begin|.
+  function elapsedTime(begin) {
+    var end = new Date();
+    return (end.getTime() - begin.getTime()) / 1000;
+  }
   // Sets up a MediaTestManager to runs through the 'tests' array, which needs
   // to be one of, or have the same fields as, the g*Test arrays of tests. Uses
   // the user supplied 'startTest' function to initialize the test. This
@@ -1450,7 +1455,8 @@ function MediaTestManager() {
     this.tokens.push(token);
     this.numTestsRunning++;
     this.handlers[token] = handler;
-    is(this.numTestsRunning, this.tokens.length, "[started " + token + "] Length of array should match number of running tests");
+    is(this.numTestsRunning, this.tokens.length,
+       "[started " + token + " t=" + elapsedTime(this.startTime) + "] Length of array should match number of running tests");
   }
 
   // Registers that the test corresponding to 'token' has finished. Call when
@@ -1466,7 +1472,8 @@ function MediaTestManager() {
 
     info("[finished " + token + "] remaining= " + this.tokens);
     this.numTestsRunning--;
-    is(this.numTestsRunning, this.tokens.length, "[finished " + token + "] Length of array should match number of running tests");
+    is(this.numTestsRunning, this.tokens.length,
+       "[finished " + token + " t=" + elapsedTime(this.startTime) + "] Length of array should match number of running tests");
     if (this.tokens.length < PARALLEL_TESTS) {
       this.nextTest();
     }
@@ -1504,7 +1511,7 @@ function MediaTestManager() {
       var onCleanup = function() {
         var end = new Date();
         SimpleTest.info("Finished at " + end + " (" + (end.getTime() / 1000) + "s)");
-        SimpleTest.info("Running time: " + (end.getTime() - this.startTime.getTime())/1000 + "s");
+        SimpleTest.info("Running time: " + elapsedTime(this.startTime) + "s");
         SimpleTest.finish();
       }.bind(this);
       mediaTestCleanup(onCleanup);
