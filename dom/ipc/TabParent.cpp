@@ -789,10 +789,10 @@ TabParent::RecvCreateWindow(PBrowserParent* aNewTab,
                             const bool& aCalledFromJS,
                             const bool& aPositionSpecified,
                             const bool& aSizeSpecified,
-                            const nsCString& aURI,
+                            const nsString& aURI,
                             const nsString& aName,
                             const nsCString& aFeatures,
-                            const nsCString& aBaseURI,
+                            const nsString& aBaseURI,
                             nsresult* aResult,
                             bool* aWindowIsNew,
                             InfallibleTArray<FrameScriptInfo>* aFrameScripts,
@@ -873,7 +873,7 @@ TabParent::RecvCreateWindow(PBrowserParent* aNewTab,
     loadContext->GetUsePrivateBrowsing(&isPrivate);
 
     nsCOMPtr<nsIOpenURIInFrameParams> params = new nsOpenURIInFrameParams();
-    params->SetReferrer(NS_ConvertUTF8toUTF16(aBaseURI));
+    params->SetReferrer(aBaseURI);
     params->SetIsPrivate(isPrivate);
 
     AutoUseNewTab aunt(newTab, aWindowIsNew, aURLToLoad);
@@ -906,7 +906,7 @@ TabParent::RecvCreateWindow(PBrowserParent* aNewTab,
   nsAutoCString finalURIString;
   if (!aURI.IsEmpty()) {
     nsCOMPtr<nsIURI> finalURI;
-    *aResult = NS_NewURI(getter_AddRefs(finalURI), aURI.get(), baseURI);
+    *aResult = NS_NewURI(getter_AddRefs(finalURI), NS_ConvertUTF16toUTF8(aURI).get(), baseURI);
 
     if (NS_WARN_IF(NS_FAILED(*aResult)))
       return true;
@@ -918,15 +918,11 @@ TabParent::RecvCreateWindow(PBrowserParent* aNewTab,
 
   AutoUseNewTab aunt(newTab, aWindowIsNew, aURLToLoad);
 
-  // If nsWindowWatcher::OpenWindowInternal was passed a nullptr for the URI
-  // to open in the content process, we indicate that by sending up a voided
-  // nsString (since primitives are not nullable). If we detect the voided
-  // nsString, we know that we need to send OpenWindow2 a nullptr for the URI.
-  const char* uri = aURI.IsVoid() ? nullptr : finalURIString.get();
-  const char* name = aName.IsVoid() ? nullptr : NS_ConvertUTF16toUTF8(aName).get();
-  const char* features = aFeatures.IsVoid() ? nullptr : aFeatures.get();
+  const char* features = aFeatures.Length() ? aFeatures.get() : nullptr;
 
-  *aResult = pwwatch->OpenWindow2(parent, uri, name, features, aCalledFromJS,
+  *aResult = pwwatch->OpenWindow2(parent, finalURIString.get(),
+                                  NS_ConvertUTF16toUTF8(aName).get(),
+                                  features, aCalledFromJS,
                                   false, false, this, nullptr, getter_AddRefs(window));
 
   if (NS_WARN_IF(NS_FAILED(*aResult)))
