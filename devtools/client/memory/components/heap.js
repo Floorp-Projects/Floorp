@@ -6,7 +6,7 @@ const { DOM: dom, createClass, PropTypes, createFactory } = require("devtools/cl
 const { safeErrorString } = require("devtools/shared/DevToolsUtils");
 const Tree = createFactory(require("./tree"));
 const TreeItem = createFactory(require("./tree-item"));
-const { getSnapshotStatusTextFull, L10N } = require("../utils");
+const { getSnapshotStatusTextFull, getSnapshotTotals, L10N } = require("../utils");
 const { snapshotState: states } = require("../constants");
 const { snapshot: snapshotModel } = require("../models");
 // If HEAP_TREE_ROW_HEIGHT changes, be sure to change `var(--heap-tree-row-height)`
@@ -36,13 +36,24 @@ function createParentMap (node, aggregator=Object.create(null)) {
  * @param {CensusTreeNode} census
  * @return {Object}
  */
-function createTreeProperties (census, toolbox) {
+function createTreeProperties (snapshot, toolbox) {
+  const census = snapshot.census;
   let map = createParentMap(census);
+  const totals = getSnapshotTotals(snapshot);
 
   return {
     getParent: node => map[node.id],
     getChildren: node => node.children || [],
-    renderItem: (item, depth, focused, arrow) => new TreeItem({ toolbox, item, depth, focused, arrow }),
+    renderItem: (item, depth, focused, arrow) =>
+      new TreeItem({
+        toolbox,
+        item,
+        depth,
+        focused,
+        arrow,
+        getPercentBytes: bytes => bytes / totals.bytes * 100,
+        getPercentCount: count => count / totals.count * 100,
+      }),
     getRoots: () => census.children,
     getKey: node => node.id,
     itemHeight: HEAP_TREE_ROW_HEIGHT,
@@ -115,7 +126,7 @@ const Heap = module.exports = createClass({
             dom.span({ className: "heap-tree-item-total-count" }, L10N.getStr("heapview.field.totalcount")),
             dom.span({ className: "heap-tree-item-name" }, L10N.getStr("heapview.field.name"))
           ),
-          Tree(createTreeProperties(snapshot.census, toolbox))
+          Tree(createTreeProperties(snapshot, toolbox))
         );
         break;
     }

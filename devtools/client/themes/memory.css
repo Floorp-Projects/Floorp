@@ -207,6 +207,24 @@ html, body, #app, #memory-tool {
   height: inherit;
 }
 
+.heap-tree-percent {
+  width: 30%;
+}
+
+.heap-tree-number {
+  width: 70%;
+  color: var(--theme-content-color3);
+}
+
+.focused .heap-tree-number {
+  color: var(--theme-selection-color);
+}
+
+.heap-tree-item, .header {
+  list-style-type: none;
+  height: var(--heap-tree-row-height);
+}
+
 .heap-tree-item-field {
   float: left;
 }
@@ -224,6 +242,21 @@ html, body, #app, #memory-tool {
   color: var(--theme-selection-color);
 }
 
+.header {
+  background-color: var(--theme-tab-toolbar-background);
+  border-color: var(--cell-border-color);
+  border-style: solid;
+  border-width: 0px 0px 1px 0px;
+}
+
+.header span {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: center;
+  font-size: 90%;
+}
+
 .heap-tree-item-bytes,
 .heap-tree-item-count,
 .heap-tree-item-total-bytes,
@@ -231,16 +264,19 @@ html, body, #app, #memory-tool {
   text-align: end;
   border-inline-end: var(--cell-border-color) 1px solid;
   padding-inline-end: 5px;
+  display: flex;
+  flex-direction: row;
+  min-width: 10em;
 }
 
 .heap-tree-item-count,
 .heap-tree-item-total-count {
-  width: 5vw;
+  width: 8vw;
 }
 
 .heap-tree-item-bytes,
 .heap-tree-item-total-bytes {
-  width: 7vw;
+  width: 8vw;
 }
 
 .heap-tree-item-name {
@@ -307,4 +343,8 @@ html, body, #app, #memory-tool {
     border-width: 0px 0px 1px 0px;
     text-align: center;
     padding: 5px;
+}
+
+label select {
+  margin: 5px;
 }
