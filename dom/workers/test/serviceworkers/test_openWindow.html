@@ -65,15 +65,19 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1172870
     return p;
   }
 
+  function checkNumberOfWindows(ctx) {
+    return new Promise(function(res, rej) {
+      navigator.serviceWorker.onmessage = function(event) {
+        navigator.serviceWorker.onmessage = null;
+        ok(event.data.result, event.data.message);
+        res(ctx);
+      }
+      ctx.registration.active.postMessage("CHECK_NUMBER_OF_WINDOWS");
+    });
+  }
+
   function clear(ctx) {
     MockServices.unregister();
-
-    var browser = SpecialPowers.Services.wm.getMostRecentWindow("navigator:browser").gBrowser;
-
-    ok(browser.tabs.length == 7, "Total number of tabs is correct.");
-    while (browser.tabs.length > 1) {
-      browser.removeTab(browser.tabs[1]);
-    }
 
     return ctx.registration.unregister().then(function(result) {
       ctx.registration = null;
@@ -88,6 +92,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1172870
       // click event, so the order here is important.
       .then(testPopupNotAllowed)
       .then(testPopupAllowed)
+      .then(checkNumberOfWindows)
       .then(clear)
       .catch(function(e) {
         ok(false, "Some test failed with error " + e);

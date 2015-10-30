@@ -882,8 +882,7 @@ ContentChild::ProvideWindowCommon(TabChild* aTabOpener,
         renderFrame = nullptr;
     }
 
-  ShowInfo showInfo(EmptyString(), false, false, true,
-                    aTabOpener->mDPI, aTabOpener->mDefaultScale);
+  ShowInfo showInfo(EmptyString(), false, false, true, 0, 0);
   nsCOMPtr<nsPIDOMWindow> opener = do_QueryInterface(aParent);
   nsIDocShell* openerShell;
   if (opener && (openerShell = opener->GetDocShell())) {
