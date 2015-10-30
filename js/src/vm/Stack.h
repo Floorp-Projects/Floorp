@@ -43,7 +43,7 @@ class ScopeObject;
 class ScriptFrameIter;
 class SPSProfiler;
 class InterpreterFrame;
-class StaticBlockObject;
+class StaticBlockScope;
 class ClonedBlockObject;
 
 class ScopeCoordinate;
@@ -560,7 +560,7 @@ class InterpreterFrame
      * bindings per iteration of a for-loop.
      */
 
-    bool pushBlock(JSContext* cx, StaticBlockObject& block);
+    bool pushBlock(JSContext* cx, StaticBlockScope& block);
     void popBlock(JSContext* cx);
     bool freshenBlock(JSContext* cx);
 

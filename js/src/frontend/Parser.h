@@ -307,11 +307,11 @@ struct MOZ_STACK_CLASS ParseContext : public GenericParseContext
         // 'eval' and non-syntactic scripts are always under an invisible
         // lexical scope, but since it is not syntactic, it should still be
         // considered at body level.
-        if (sc->staticScope()->is<StaticEvalObject>()) {
+        if (sc->staticScope()->is<StaticEvalScope>()) {
             bool bl = !stmt->enclosing;
             MOZ_ASSERT_IF(bl, stmt->type == StmtType::BLOCK);
             MOZ_ASSERT_IF(bl, stmt->staticScope
-                                  ->template as<StaticBlockObject>()
+                                  ->template as<StaticBlockScope>()
                                   .enclosingStaticScope() == sc->staticScope());
             return bl;
         }
@@ -389,11 +389,11 @@ class Parser : private JS::AutoGCRooter, public StrictModeGetter
       public:
         AutoPushStmtInfoPC(Parser<ParseHandler>& parser, StmtType type);
         AutoPushStmtInfoPC(Parser<ParseHandler>& parser, StmtType type,
-                           NestedStaticScopeObject& staticScope);
+                           NestedStaticScope& staticScope);
         ~AutoPushStmtInfoPC();
 
         bool generateBlockId();
-        bool makeInnermostLexicalScope(StaticBlockObject& blockObj);
+        bool makeInnermostLexicalScope(StaticBlockScope& blockObj);
 
         StmtInfoPC& operator*() { return stmt_; }
         StmtInfoPC* operator->() { return &stmt_; }
@@ -670,14 +670,14 @@ class Parser : private JS::AutoGCRooter, public StrictModeGetter
                       ParseNodeKind* forHeadKind,
                       Node* forInitialPart,
                       mozilla::Maybe<AutoPushStmtInfoPC>& letStmt,
-                      MutableHandle<StaticBlockObject*> blockObj,
+                      MutableHandle<StaticBlockScope*> blockObj,
                       Node* forLetImpliedBlock,
                       Node* forInOrOfExpression);
     bool validateForInOrOfLHSExpression(Node target);
     Node expressionAfterForInOrOf(ParseNodeKind forHeadKind, YieldHandling yieldHandling);
 
     void assertCurrentLexicalStaticBlockIs(ParseContext<ParseHandler>* pc,
-                                           Handle<StaticBlockObject*> blockObj);
+                                           Handle<StaticBlockScope*> blockObj);
 
     Node switchStatement(YieldHandling yieldHandling);
     Node continueStatement(YieldHandling yieldHandling);
@@ -717,7 +717,7 @@ class Parser : private JS::AutoGCRooter, public StrictModeGetter
     // parsed into |*forInOrOfExpression|.
     Node declarationList(YieldHandling yieldHandling,
                          ParseNodeKind kind,
-                         StaticBlockObject* blockObj = nullptr,
+                         StaticBlockScope* blockObj = nullptr,
                          ParseNodeKind* forHeadKind = nullptr,
                          Node* forInOrOfExpression = nullptr);
 
@@ -884,8 +884,8 @@ class Parser : private JS::AutoGCRooter, public StrictModeGetter
     bool defineArg(Node funcpn, HandlePropertyName name,
                    bool disallowDuplicateArgs = false, Node* duplicatedArg = nullptr);
     Node pushLexicalScope(AutoPushStmtInfoPC& stmt);
-    Node pushLexicalScope(Handle<StaticBlockObject*> blockObj, AutoPushStmtInfoPC& stmt);
-    Node pushLetScope(Handle<StaticBlockObject*> blockObj, AutoPushStmtInfoPC& stmt);
+    Node pushLexicalScope(Handle<StaticBlockScope*> blockObj, AutoPushStmtInfoPC& stmt);
+    Node pushLetScope(Handle<StaticBlockScope*> blockObj, AutoPushStmtInfoPC& stmt);
     bool noteNameUse(HandlePropertyName name, Node pn);
     Node propertyName(YieldHandling yieldHandling, Node propList,
                       PropertyType* propType, MutableHandleAtom propAtom);

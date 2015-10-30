@@ -17,7 +17,7 @@
 namespace js {
 
 class DeclEnvObject;
-class StaticWithObject;
+class StaticWithScope;
 class InlineTypedObject;
 class GeneratorObject;
 
@@ -282,8 +282,8 @@ template <> struct TypeToDataType<Handle<InlineTypedObject*> > { static const Da
 template <> struct TypeToDataType<Handle<ArrayObject*> > { static const DataType result = Type_Handle; };
 template <> struct TypeToDataType<Handle<GeneratorObject*> > { static const DataType result = Type_Handle; };
 template <> struct TypeToDataType<Handle<PlainObject*> > { static const DataType result = Type_Handle; };
-template <> struct TypeToDataType<Handle<StaticWithObject*> > { static const DataType result = Type_Handle; };
-template <> struct TypeToDataType<Handle<StaticBlockObject*> > { static const DataType result = Type_Handle; };
+template <> struct TypeToDataType<Handle<StaticWithScope*> > { static const DataType result = Type_Handle; };
+template <> struct TypeToDataType<Handle<StaticBlockScope*> > { static const DataType result = Type_Handle; };
 template <> struct TypeToDataType<HandleScript> { static const DataType result = Type_Handle; };
 template <> struct TypeToDataType<HandleValue> { static const DataType result = Type_Handle; };
 template <> struct TypeToDataType<MutableHandleValue> { static const DataType result = Type_Handle; };
@@ -323,11 +323,11 @@ template <> struct TypeToArgProperties<Handle<GeneratorObject*> > {
 template <> struct TypeToArgProperties<Handle<PlainObject*> > {
     static const uint32_t result = TypeToArgProperties<PlainObject*>::result | VMFunction::ByRef;
 };
-template <> struct TypeToArgProperties<Handle<StaticWithObject*> > {
-    static const uint32_t result = TypeToArgProperties<StaticWithObject*>::result | VMFunction::ByRef;
+template <> struct TypeToArgProperties<Handle<StaticWithScope*> > {
+    static const uint32_t result = TypeToArgProperties<StaticWithScope*>::result | VMFunction::ByRef;
 };
-template <> struct TypeToArgProperties<Handle<StaticBlockObject*> > {
-    static const uint32_t result = TypeToArgProperties<StaticBlockObject*>::result | VMFunction::ByRef;
+template <> struct TypeToArgProperties<Handle<StaticBlockScope*> > {
+    static const uint32_t result = TypeToArgProperties<StaticBlockScope*>::result | VMFunction::ByRef;
 };
 template <> struct TypeToArgProperties<HandleScript> {
     static const uint32_t result = TypeToArgProperties<JSScript*>::result | VMFunction::ByRef;
@@ -400,10 +400,10 @@ template <> struct TypeToRootType<Handle<GeneratorObject*> > {
 template <> struct TypeToRootType<Handle<PlainObject*> > {
     static const uint32_t result = VMFunction::RootObject;
 };
-template <> struct TypeToRootType<Handle<StaticBlockObject*> > {
+template <> struct TypeToRootType<Handle<StaticBlockScope*> > {
     static const uint32_t result = VMFunction::RootObject;
 };
-template <> struct TypeToRootType<Handle<StaticWithObject*> > {
+template <> struct TypeToRootType<Handle<StaticWithScope*> > {
     static const uint32_t result = VMFunction::RootCell;
 };
 template <class T> struct TypeToRootType<Handle<T> > {
@@ -673,10 +673,10 @@ bool OnDebuggerStatement(JSContext* cx, BaselineFrame* frame, jsbytecode* pc, bo
 bool GlobalHasLiveOnDebuggerStatement(JSContext* cx);
 
 bool EnterWith(JSContext* cx, BaselineFrame* frame, HandleValue val,
-               Handle<StaticWithObject*> templ);
+               Handle<StaticWithScope*> templ);
 bool LeaveWith(JSContext* cx, BaselineFrame* frame);
 
-bool PushBlockScope(JSContext* cx, BaselineFrame* frame, Handle<StaticBlockObject*> block);
+bool PushBlockScope(JSContext* cx, BaselineFrame* frame, Handle<StaticBlockScope*> block);
 bool PopBlockScope(JSContext* cx, BaselineFrame* frame);
 bool DebugLeaveThenPopBlockScope(JSContext* cx, BaselineFrame* frame, jsbytecode* pc);
 bool FreshenBlockScope(JSContext* cx, BaselineFrame* frame);
