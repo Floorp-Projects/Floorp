@@ -1305,6 +1305,7 @@ AppendJARIdentifier(nsACString &_result, OriginAttributes const *aOriginAttribut
 {
   nsAutoCString suffix;
   aOriginAttributes->CreateSuffix(suffix);
+  _result.Append('#');
   _result.Append(suffix);
 }
 
