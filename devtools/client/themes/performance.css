@@ -269,6 +269,16 @@
   background-color: var(--theme-tab-toolbar-background);
 }
 
+.call-tree-item .call-tree-cell,
+.call-tree-item .call-tree-cell[type=function] description {
+  -moz-user-select: text;
+}
+
+.call-tree-item .call-tree-cell::-moz-selection,
+.call-tree-item .call-tree-cell[type=function] description::-moz-selection {
+  background-color: var(--theme-highlight-orange);
+}
+
 .call-tree-item:last-child {
   border-bottom: 1px solid var(--cell-border-color);
 }
