@@ -223,6 +223,7 @@ class ModuleObject : public NativeObject
     static void finalize(js::FreeOp* fop, JSObject* obj);
 
     bool hasScript() const;
+    bool hasImportBindings() const;
     FunctionDeclarationVector* functionDeclarations();
 };
 
