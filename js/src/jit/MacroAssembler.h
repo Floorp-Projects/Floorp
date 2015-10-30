@@ -395,8 +395,6 @@ class MacroAssembler : public MacroAssemblerSpecific
 #endif
     }
 
-    void resetForNewCodeGenerator(TempAllocator& alloc);
-
     void constructRoot(JSContext* cx) {
         autoRooter_.emplace(cx, this);
     }
@@ -1740,6 +1738,34 @@ StackDecrementForCall(uint32_t alignment, size_t bytesAlreadyPushed, size_t byte
     return bytesToPush +
            ComputeByteAlignment(bytesAlreadyPushed + bytesToPush, alignment);
 }
+
+static inline MIRType
+ToMIRType(MIRType t)
+{
+    return t;
+}
+
+template <class VecT>
+class ABIArgIter
+{
+    ABIArgGenerator gen_;
+    const VecT& types_;
+    unsigned i_;
+
+    void settle() { if (!done()) gen_.next(ToMIRType(types_[i_])); }
+
+  public:
+    explicit ABIArgIter(const VecT& types) : types_(types), i_(0) { settle(); }
+    void operator++(int) { MOZ_ASSERT(!done()); i_++; settle(); }
+    bool done() const { return i_ == types_.length(); }
+
+    ABIArg* operator->() { MOZ_ASSERT(!done()); return &gen_.current(); }
+    ABIArg& operator*() { MOZ_ASSERT(!done()); return gen_.current(); }
+
+    unsigned index() const { MOZ_ASSERT(!done()); return i_; }
+    MIRType mirType() const { MOZ_ASSERT(!done()); return ToMIRType(types_[i_]); }
+    uint32_t stackBytesConsumedSoFar() const { return gen_.stackBytesConsumedSoFar(); }
+};
 
 } // namespace jit
 } // namespace js

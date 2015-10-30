@@ -19,13 +19,11 @@
 #include "asmjs/AsmJSFrameIterator.h"
 
 #include "asmjs/AsmJSModule.h"
-#include "asmjs/AsmJSValidate.h"
-#include "jit/MacroAssembler.h"
-
 #include "jit/MacroAssembler-inl.h"
 
 using namespace js;
 using namespace js::jit;
+using namespace js::wasm;
 
 using mozilla::DebugOnly;
 
@@ -169,7 +167,7 @@ PushRetAddr(MacroAssembler& masm)
 // generated code.
 static void
 GenerateProfilingPrologue(MacroAssembler& masm, unsigned framePushed, AsmJSExit::Reason reason,
-                          Label* begin)
+                          AsmJSProfilingOffsets* offsets, Label* maybeEntry = nullptr)
 {
 #if !defined (JS_CODEGEN_ARM)
     Register scratch = ABIArgGenerator::NonArg_VolatileReg;
@@ -182,7 +180,7 @@ GenerateProfilingPrologue(MacroAssembler& masm, unsigned framePushed, AsmJSExit:
 #endif
 
     // AsmJSProfilingFrameIterator needs to know the offsets of several key
-    // instructions from 'begin'. To save space, we make these offsets static
+    // instructions from entry. To save space, we make these offsets static
     // constants and assert that they match the actual codegen below. On ARM,
     // this requires AutoForbidPools to prevent a constant pool from being
     // randomly inserted between two instructions.
@@ -190,18 +188,20 @@ GenerateProfilingPrologue(MacroAssembler& masm, unsigned framePushed, AsmJSExit:
 #if defined(JS_CODEGEN_ARM)
         AutoForbidPools afp(&masm, /* number of instructions in scope = */ 5);
 #endif
-        DebugOnly<uint32_t> offsetAtBegin = masm.currentOffset();
-        masm.bind(begin);
+
+        offsets->begin = masm.currentOffset();
+        if (maybeEntry)
+            masm.bind(maybeEntry);
 
         PushRetAddr(masm);
-        MOZ_ASSERT_IF(!masm.oom(), PushedRetAddr == masm.currentOffset() - offsetAtBegin);
+        MOZ_ASSERT_IF(!masm.oom(), PushedRetAddr == masm.currentOffset() - offsets->begin);
 
         masm.loadAsmJSActivation(scratch);
         masm.push(Address(scratch, AsmJSActivation::offsetOfFP()));
-        MOZ_ASSERT_IF(!masm.oom(), PushedFP == masm.currentOffset() - offsetAtBegin);
+        MOZ_ASSERT_IF(!masm.oom(), PushedFP == masm.currentOffset() - offsets->begin);
 
         masm.storePtr(masm.getStackPointer(), Address(scratch, AsmJSActivation::offsetOfFP()));
-        MOZ_ASSERT_IF(!masm.oom(), StoredFP == masm.currentOffset() - offsetAtBegin);
+        MOZ_ASSERT_IF(!masm.oom(), StoredFP == masm.currentOffset() - offsets->begin);
     }
 
     if (reason != AsmJSExit::None)
@@ -218,7 +218,7 @@ GenerateProfilingPrologue(MacroAssembler& masm, unsigned framePushed, AsmJSExit:
 // Generate the inverse of GenerateProfilingPrologue.
 static void
 GenerateProfilingEpilogue(MacroAssembler& masm, unsigned framePushed, AsmJSExit::Reason reason,
-                          Label* profilingReturn)
+                          AsmJSProfilingOffsets* offsets)
 {
     Register scratch = ABIArgGenerator::NonReturn_VolatileReg0;
 #if defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_ARM64) || \
@@ -258,7 +258,7 @@ GenerateProfilingEpilogue(MacroAssembler& masm, unsigned framePushed, AsmJSExit:
         MOZ_ASSERT(PostStorePrePopFP == 0);
 #endif
 
-        masm.bind(profilingReturn);
+        offsets->profilingReturn = masm.currentOffset();
         masm.ret();
     }
 }
@@ -272,41 +272,29 @@ GenerateProfilingEpilogue(MacroAssembler& masm, unsigned framePushed, AsmJSExit:
 // either call the profiling or non-profiling entry point.
 void
 js::GenerateAsmJSFunctionPrologue(MacroAssembler& masm, unsigned framePushed,
-                                  AsmJSFunctionLabels* labels)
+                                  AsmJSFunctionOffsets* offsets)
 {
 #if defined(JS_CODEGEN_ARM)
     // Flush pending pools so they do not get dumped between the 'begin' and
-    // 'entry' labels since the difference must be less than UINT8_MAX.
+    // 'entry' offsets since the difference must be less than UINT8_MAX.
     masm.flushBuffer();
 #endif
 
     masm.haltingAlign(CodeAlignment);
 
-    GenerateProfilingPrologue(masm, framePushed, AsmJSExit::None, &labels->profilingEntry);
+    GenerateProfilingPrologue(masm, framePushed, AsmJSExit::None, offsets);
     Label body;
     masm.jump(&body);
 
     // Generate normal prologue:
     masm.haltingAlign(CodeAlignment);
-    masm.bind(&labels->nonProfilingEntry);
+    offsets->nonProfilingEntry = masm.currentOffset();
     PushRetAddr(masm);
     masm.subFromStackPtr(Imm32(framePushed + AsmJSFrameBytesAfterReturnAddress));
 
     // Prologue join point, body begin:
     masm.bind(&body);
     masm.setFramePushed(framePushed);
-
-    // Overflow checks are omitted by CodeGenerator in some cases (leaf
-    // functions with small framePushed). Perform overflow-checking after
-    // pushing framePushed to catch cases with really large frames.
-    if (labels->overflowThunk) {
-        // If framePushed is zero, we don't need a thunk to adjust StackPointer.
-        Label* target = framePushed ? labels->overflowThunk.ptr() : &labels->overflowExit;
-        masm.branchPtr(Assembler::AboveOrEqual,
-                       AsmJSAbsoluteAddress(AsmJSImm_StackLimit),
-                       masm.getStackPointer(),
-                       target);
-    }
 }
 
 // Similar to GenerateAsmJSFunctionPrologue (see comment), we generate both a
@@ -316,17 +304,19 @@ js::GenerateAsmJSFunctionPrologue(MacroAssembler& masm, unsigned framePushed,
 // to the profiling epilogue).
 void
 js::GenerateAsmJSFunctionEpilogue(MacroAssembler& masm, unsigned framePushed,
-                                  AsmJSFunctionLabels* labels)
+                                  AsmJSFunctionOffsets* offsets)
 {
     MOZ_ASSERT(masm.framePushed() == framePushed);
 
 #if defined(JS_CODEGEN_ARM)
     // Flush pending pools so they do not get dumped between the profilingReturn
-    // and profilingJump/profilingEpilogue labels since the difference must be
+    // and profilingJump/profilingEpilogue offsets since the difference must be
     // less than UINT8_MAX.
     masm.flushBuffer();
 #endif
 
+    // Generate a nop that is overwritten by a jump to the profiling epilogue
+    // when profiling is enabled.
     {
 #if defined(JS_CODEGEN_ARM)
         // Forbid pools from being inserted between the profilingJump label and
@@ -336,7 +326,7 @@ js::GenerateAsmJSFunctionEpilogue(MacroAssembler& masm, unsigned framePushed,
 
         // The exact form of this instruction must be kept consistent with the
         // patching in AsmJSModule::setProfilingEnabled.
-        masm.bind(&labels->profilingJump);
+        offsets->profilingJump = masm.currentOffset();
 #if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
         masm.twoByteNop();
 #elif defined(JS_CODEGEN_ARM)
@@ -362,60 +352,26 @@ js::GenerateAsmJSFunctionEpilogue(MacroAssembler& masm, unsigned framePushed,
     masm.setFramePushed(0);
 
     // Profiling epilogue:
-    masm.bind(&labels->profilingEpilogue);
-    GenerateProfilingEpilogue(masm, framePushed, AsmJSExit::None, &labels->profilingReturn);
-
-    if (labels->overflowThunk && labels->overflowThunk->used()) {
-        // The general throw stub assumes that only sizeof(AsmJSFrame) bytes
-        // have been pushed. The overflow check occurs after incrementing by
-        // framePushed, so pop that before jumping to the overflow exit.
-        masm.bind(labels->overflowThunk.ptr());
-        masm.addToStackPtr(Imm32(framePushed));
-        masm.jump(&labels->overflowExit);
-    }
-}
-
-void
-js::GenerateAsmJSStackOverflowExit(MacroAssembler& masm, Label* overflowExit, Label* throwLabel)
-{
-    masm.bind(overflowExit);
-
-    // If we reach here via the non-profiling prologue, AsmJSActivation::fp has
-    // not been updated. To enable stack unwinding from C++, store to it now. If
-    // we reached here via the profiling prologue, we'll just store the same
-    // value again. Do not update AsmJSFrame::callerFP as it is not necessary in
-    // the non-profiling case (there is no return path from this point) and, in
-    // the profiling case, it is already correct.
-    Register activation = ABIArgGenerator::NonArgReturnReg0;
-    masm.loadAsmJSActivation(activation);
-    masm.storePtr(masm.getStackPointer(), Address(activation, AsmJSActivation::offsetOfFP()));
-
-    // Prepare the stack for calling C++.
-    if (uint32_t d = StackDecrementForCall(ABIStackAlignment, sizeof(AsmJSFrame), ShadowStackSpace))
-        masm.subFromStackPtr(Imm32(d));
-
-    // No need to restore the stack; the throw stub pops everything.
-    masm.assertStackAlignment(ABIStackAlignment);
-    masm.call(AsmJSImmPtr(AsmJSImm_ReportOverRecursed));
-    masm.jump(throwLabel);
+    offsets->profilingEpilogue = masm.currentOffset();
+    GenerateProfilingEpilogue(masm, framePushed, AsmJSExit::None, offsets);
 }
 
 void
 js::GenerateAsmJSExitPrologue(MacroAssembler& masm, unsigned framePushed, AsmJSExit::Reason reason,
-                              Label* begin)
+                              AsmJSProfilingOffsets* offsets, Label* maybeEntry)
 {
     masm.haltingAlign(CodeAlignment);
-    GenerateProfilingPrologue(masm, framePushed, reason, begin);
+    GenerateProfilingPrologue(masm, framePushed, reason, offsets, maybeEntry);
     masm.setFramePushed(framePushed);
 }
 
 void
 js::GenerateAsmJSExitEpilogue(MacroAssembler& masm, unsigned framePushed, AsmJSExit::Reason reason,
-                              Label* profilingReturn)
+                              AsmJSProfilingOffsets* offsets)
 {
     // Inverse of GenerateAsmJSExitPrologue:
     MOZ_ASSERT(masm.framePushed() == framePushed);
-    GenerateProfilingEpilogue(masm, framePushed, reason, profilingReturn);
+    GenerateProfilingEpilogue(masm, framePushed, reason, offsets);
     masm.setFramePushed(0);
 }
 

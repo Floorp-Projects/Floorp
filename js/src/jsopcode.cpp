@@ -214,32 +214,6 @@ js::DumpCompartmentPCCounts(JSContext* cx)
             fprintf(stdout, "--- END SCRIPT %s:%" PRIuSIZE " ---\n", script->filename(), script->lineno());
         }
     }
-
-    for (auto thingKind : ObjectAllocKinds()) {
-        for (ZoneCellIter i(cx->zone(), thingKind); !i.done(); i.next()) {
-            JSObject* obj = i.get<JSObject>();
-            if (obj->compartment() != cx->compartment())
-                continue;
-
-            if (obj->is<AsmJSModuleObject>()) {
-                AsmJSModule& module = obj->as<AsmJSModuleObject>().module();
-
-                Sprinter sprinter(cx);
-                if (!sprinter.init())
-                    return;
-
-                fprintf(stdout, "--- Asm.js Module ---\n");
-
-                for (size_t i = 0; i < module.numFunctionCounts(); i++) {
-                    jit::IonScriptCounts* counts = module.functionCounts(i);
-                    DumpIonScriptCounts(&sprinter, counts);
-                }
-
-                fputs(sprinter.string(), stdout);
-                fprintf(stdout, "--- END Asm.js Module ---\n");
-            }
-        }
-    }
 }
 
 /////////////////////////////////////////////////////////////////////

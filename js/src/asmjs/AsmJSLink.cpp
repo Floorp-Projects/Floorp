@@ -49,6 +49,7 @@
 
 using namespace js;
 using namespace js::jit;
+using namespace js::wasm;
 
 using mozilla::IsNaN;
 using mozilla::PodZero;
@@ -135,27 +136,25 @@ ValidateGlobalVariable(JSContext* cx, const AsmJSModule& module, AsmJSModule::Gl
 
     switch (global.varInitKind()) {
       case AsmJSModule::Global::InitConstant: {
-        const AsmJSNumLit& lit = global.varInitNumLit();
-        switch (lit.which()) {
-          case AsmJSNumLit::Fixnum:
-          case AsmJSNumLit::NegativeInt:
-          case AsmJSNumLit::BigUnsigned:
-            *(int32_t*)datum = lit.scalarValue().toInt32();
+        Val v = global.varInitVal();
+        switch (v.type()) {
+          case ValType::I32:
+            *(int32_t*)datum = v.i32();
             break;
-          case AsmJSNumLit::Double:
-            *(double*)datum = lit.scalarValue().toDouble();
+          case ValType::I64:
+            MOZ_CRASH("int64");
+          case ValType::F32:
+            *(float*)datum = v.f32();
             break;
-          case AsmJSNumLit::Float:
-            *(float*)datum = static_cast<float>(lit.scalarValue().toDouble());
+          case ValType::F64:
+            *(double*)datum = v.f64();
             break;
-          case AsmJSNumLit::Int32x4:
-            memcpy(datum, lit.simdValue().asInt32x4(), Simd128DataSize);
+          case ValType::I32x4:
+            memcpy(datum, v.i32x4(), Simd128DataSize);
             break;
-          case AsmJSNumLit::Float32x4:
-            memcpy(datum, lit.simdValue().asFloat32x4(), Simd128DataSize);
+          case ValType::F32x4:
+            memcpy(datum, v.f32x4(), Simd128DataSize);
             break;
-          case AsmJSNumLit::OutOfRangeInt:
-            MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("OutOfRangeInt isn't valid in the first place");
         }
         break;
       }
@@ -169,30 +168,35 @@ ValidateGlobalVariable(JSContext* cx, const AsmJSModule& module, AsmJSModule::Gl
         if (!v.isPrimitive() && !HasPureCoercion(cx, v))
             return LinkFail(cx, "Imported values must be primitives");
 
-        SimdConstant simdConstant;
-        switch (global.varInitCoercion()) {
-          case AsmJS_ToInt32:
+        switch (global.varInitImportType()) {
+          case ValType::I32:
             if (!ToInt32(cx, v, (int32_t*)datum))
                 return false;
             break;
-          case AsmJS_ToNumber:
-            if (!ToNumber(cx, v, (double*)datum))
-                return false;
-            break;
-          case AsmJS_FRound:
+          case ValType::I64:
+            MOZ_CRASH("int64");
+          case ValType::F32:
             if (!RoundFloat32(cx, v, (float*)datum))
                 return false;
             break;
-          case AsmJS_ToInt32x4:
+          case ValType::F64:
+            if (!ToNumber(cx, v, (double*)datum))
+                return false;
+            break;
+          case ValType::I32x4: {
+            SimdConstant simdConstant;
             if (!ToSimdConstant<Int32x4>(cx, v, &simdConstant))
                 return false;
             memcpy(datum, simdConstant.asInt32x4(), Simd128DataSize);
             break;
-          case AsmJS_ToFloat32x4:
+          }
+          case ValType::F32x4: {
+            SimdConstant simdConstant;
             if (!ToSimdConstant<Float32x4>(cx, v, &simdConstant))
                 return false;
             memcpy(datum, simdConstant.asFloat32x4(), Simd128DataSize);
             break;
+          }
         }
         break;
       }
@@ -684,33 +688,35 @@ CallAsmJS(JSContext* cx, unsigned argc, Value* vp)
     // The return value is stored in the first element of the array (which,
     // therefore, must have length >= 1).
     js::Vector<AsmJSModule::EntryArg, 8> coercedArgs(cx);
-    if (!coercedArgs.resize(Max<size_t>(1, func.numArgs())))
+    if (!coercedArgs.resize(Max<size_t>(1, func.sig().args().length())))
         return false;
 
     RootedValue v(cx);
-    for (unsigned i = 0; i < func.numArgs(); ++i) {
+    for (unsigned i = 0; i < func.sig().args().length(); ++i) {
         v = i < callArgs.length() ? callArgs[i] : UndefinedValue();
-        switch (func.argCoercion(i)) {
-          case AsmJS_ToInt32:
+        switch (func.sig().arg(i)) {
+          case ValType::I32:
             if (!ToInt32(cx, v, (int32_t*)&coercedArgs[i]))
                 return false;
             break;
-          case AsmJS_ToNumber:
-            if (!ToNumber(cx, v, (double*)&coercedArgs[i]))
-                return false;
-            break;
-          case AsmJS_FRound:
+          case ValType::I64:
+            MOZ_CRASH("int64");
+          case ValType::F32:
             if (!RoundFloat32(cx, v, (float*)&coercedArgs[i]))
                 return false;
             break;
-          case AsmJS_ToInt32x4: {
+          case ValType::F64:
+            if (!ToNumber(cx, v, (double*)&coercedArgs[i]))
+                return false;
+            break;
+          case ValType::I32x4: {
             SimdConstant simd;
             if (!ToSimdConstant<Int32x4>(cx, v, &simd))
                 return false;
             memcpy(&coercedArgs[i], simd.asInt32x4(), Simd128DataSize);
             break;
           }
-          case AsmJS_ToFloat32x4: {
+          case ValType::F32x4: {
             SimdConstant simd;
             if (!ToSimdConstant<Float32x4>(cx, v, &simd))
                 return false;
@@ -759,23 +765,26 @@ CallAsmJS(JSContext* cx, unsigned argc, Value* vp)
     }
 
     JSObject* simdObj;
-    switch (func.returnType()) {
-      case AsmJSModule::Return_Void:
+    switch (func.sig().ret()) {
+      case ExprType::Void:
         callArgs.rval().set(UndefinedValue());
         break;
-      case AsmJSModule::Return_Int32:
+      case ExprType::I32:
         callArgs.rval().set(Int32Value(*(int32_t*)&coercedArgs[0]));
         break;
-      case AsmJSModule::Return_Double:
+      case ExprType::I64:
+        MOZ_CRASH("int64");
+      case ExprType::F32:
+      case ExprType::F64:
         callArgs.rval().set(NumberValue(*(double*)&coercedArgs[0]));
         break;
-      case AsmJSModule::Return_Int32x4:
+      case ExprType::I32x4:
         simdObj = CreateSimd<Int32x4>(cx, (int32_t*)&coercedArgs[0]);
         if (!simdObj)
             return false;
         callArgs.rval().set(ObjectValue(*simdObj));
         break;
-      case AsmJSModule::Return_Float32x4:
+      case ExprType::F32x4:
         simdObj = CreateSimd<Float32x4>(cx, (float*)&coercedArgs[0]);
         if (!simdObj)
             return false;
@@ -791,7 +800,7 @@ NewExportedFunction(JSContext* cx, const AsmJSModule::ExportedFunction& func,
                     HandleObject moduleObj, unsigned exportIndex)
 {
     RootedPropertyName name(cx, func.name());
-    unsigned numArgs = func.isChangeHeap() ? 1 : func.numArgs();
+    unsigned numArgs = func.isChangeHeap() ? 1 : func.sig().args().length();
     JSFunction* fun =
         NewNativeConstructor(cx, CallAsmJS, numArgs, name,
                              gc::AllocKind::FUNCTION_EXTENDED, GenericObject,

@@ -398,7 +398,7 @@ CodeGeneratorX86::emitSimdLoad(LAsmJSLoadHeap* ins)
     uint32_t maybeCmpOffset = AsmJSHeapAccess::NoLengthCheck;
     if (gen->needsAsmJSBoundsCheckBranch(mir))
         maybeCmpOffset = emitAsmJSBoundsCheckBranch(mir, mir, ToRegister(ptr),
-                                                    gen->outOfBoundsLabel());
+                                                    masm.asmOnOutOfBoundsLabel());
 
     unsigned numElems = mir->numSimdElems();
     if (numElems == 3) {
@@ -457,7 +457,7 @@ CodeGeneratorX86::visitAsmJSLoadHeap(LAsmJSLoadHeap* ins)
     if (gen->needsAsmJSBoundsCheckBranch(mir)) {
         Label* jumpTo = nullptr;
         if (mir->isAtomicAccess()) {
-            jumpTo = gen->outOfBoundsLabel();
+            jumpTo = masm.asmOnOutOfBoundsLabel();
         } else {
             ool = new(alloc()) OutOfLineLoadTypedArrayOutOfBounds(ToAnyRegister(out), accessType);
             addOutOfLineCode(ool, mir);
@@ -576,7 +576,7 @@ CodeGeneratorX86::emitSimdStore(LAsmJSStoreHeap* ins)
     uint32_t maybeCmpOffset = AsmJSHeapAccess::NoLengthCheck;
     if (gen->needsAsmJSBoundsCheckBranch(mir))
         maybeCmpOffset = emitAsmJSBoundsCheckBranch(mir, mir, ToRegister(ptr),
-                                                    gen->outOfBoundsLabel());
+                                                    masm.asmOnOutOfBoundsLabel());
 
     unsigned numElems = mir->numSimdElems();
     if (numElems == 3) {
@@ -634,7 +634,7 @@ CodeGeneratorX86::visitAsmJSStoreHeap(LAsmJSStoreHeap* ins)
     if (gen->needsAsmJSBoundsCheckBranch(mir)) {
         Label* jumpTo = nullptr;
         if (mir->isAtomicAccess())
-            jumpTo = gen->outOfBoundsLabel();
+            jumpTo = masm.asmOnOutOfBoundsLabel();
         else
             rejoin = jumpTo = alloc().lifoAlloc()->newInfallible<Label>();
         maybeCmpOffset = emitAsmJSBoundsCheckBranch(mir, mir, ToRegister(ptr), jumpTo);
@@ -685,7 +685,7 @@ CodeGeneratorX86::asmJSAtomicComputeAddress(Register addrTemp, Register ptrReg, 
 
     if (boundsCheck) {
         maybeCmpOffset = masm.cmp32WithPatch(ptrReg, Imm32(-endOffset)).offset();
-        masm.j(Assembler::Above, gen->outOfBoundsLabel());
+        masm.j(Assembler::Above, masm.asmOnOutOfBoundsLabel());
     }
 
     // Add in the actual heap pointer explicitly, to avoid opening up
