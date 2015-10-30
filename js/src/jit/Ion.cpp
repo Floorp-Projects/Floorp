@@ -136,6 +136,17 @@ JitContext::JitContext(CompileRuntime* rt)
     SetJitContext(this);
 }
 
+JitContext::JitContext(CompileRuntime* rt, TempAllocator* temp)
+  : cx(nullptr),
+    temp(temp),
+    runtime(rt),
+    compartment(nullptr),
+    prev_(CurrentJitContext()),
+    assemblerCount_(0)
+{
+    SetJitContext(this);
+}
+
 JitContext::~JitContext()
 {
     SetJitContext(prev_);

@@ -2270,9 +2270,7 @@ CodeGeneratorX86Shared::visitOutOfLineSimdFloatToIntCheck(OutOfLineSimdFloatToIn
     static const SimdConstant Int32MinX4 = SimdConstant::SplatX4(-2147483648.f);
 
     Label bail;
-    Label* onConversionError = gen->conversionErrorLabel();
-    if (!onConversionError)
-        onConversionError = &bail;
+    Label* onConversionError = gen->compilingAsmJS() ? masm.asmOnConversionErrorLabel() : &bail;
 
     FloatRegister input = ool->input();
     Register temp = ool->temp();

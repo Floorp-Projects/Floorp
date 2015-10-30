@@ -16,31 +16,30 @@
  * limitations under the License.
  */
 
-#ifndef jit_AsmJSCompileInputs_h
-#define jit_AsmJSCompileInputs_h
+#ifndef asmjs_wasm_compile_args_h
+#define asmjs_wasm_compile_args_h
 
 namespace js {
 
 namespace jit {
-    class CompileCompartment;
     class CompileRuntime;
 }
 
-struct ModuleCompileInputs
+namespace wasm {
+
+struct CompileArgs
 {
-    jit::CompileCompartment* compartment;
     jit::CompileRuntime* runtime;
     bool usesSignalHandlersForOOB;
 
-    ModuleCompileInputs(jit::CompileCompartment* compartment,
-                        jit::CompileRuntime* runtime,
-                        bool usesSignalHandlersForOOB)
-      : compartment(compartment),
-        runtime(runtime),
+    CompileArgs(jit::CompileRuntime* runtime,
+                bool usesSignalHandlersForOOB)
+      : runtime(runtime),
         usesSignalHandlersForOOB(usesSignalHandlersForOOB)
     {}
 };
 
+} // namespace wasm
 } // namespace js
 
-#endif //jit_AsmJSCompileInputs_h
+#endif // asmjs_wasm_compile_args_h

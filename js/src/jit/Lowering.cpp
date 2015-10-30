@@ -4037,7 +4037,7 @@ LIRGenerator::visitSimdConvert(MSimdConvert* ins)
     if (ins->type() == MIRType_Int32x4) {
         MOZ_ASSERT(input->type() == MIRType_Float32x4);
         LFloat32x4ToInt32x4* lir = new(alloc()) LFloat32x4ToInt32x4(use, temp());
-        if (!gen->conversionErrorLabel())
+        if (!gen->compilingAsmJS())
             assignSnapshot(lir, Bailout_BoundsCheck);
         define(lir, ins);
     } else if (ins->type() == MIRType_Float32x4) {

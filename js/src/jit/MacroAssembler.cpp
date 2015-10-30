@@ -2232,17 +2232,6 @@ MacroAssembler::MacroAssembler(JSContext* cx, IonScript* ion,
     }
 }
 
-void
-MacroAssembler::resetForNewCodeGenerator(TempAllocator& alloc)
-{
-    setFramePushed(0);
-    moveResolver_.clearTempObjectPool();
-    moveResolver_.setAllocator(alloc);
-#ifdef DEBUG
-    debugTrackedRegisters_.clear();
-#endif
-}
-
 MacroAssembler::AfterICSaveLive
 MacroAssembler::icSaveLive(LiveRegisterSet& liveRegs)
 {

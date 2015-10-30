@@ -29,7 +29,6 @@ namespace js {
 
 class AsmJSActivation;
 class AsmJSModule;
-struct AsmJSFunctionLabels;
 namespace jit { class CallSite; class MacroAssembler; class Label; }
 
 // Iterates over the frames of a single AsmJSActivation, called synchronously
@@ -157,22 +156,70 @@ class AsmJSProfilingFrameIterator
 /******************************************************************************/
 // Prologue/epilogue code generation.
 
-void
-GenerateAsmJSFunctionPrologue(jit::MacroAssembler& masm, unsigned framePushed,
-                              AsmJSFunctionLabels* labels);
-void
-GenerateAsmJSFunctionEpilogue(jit::MacroAssembler& masm, unsigned framePushed,
-                              AsmJSFunctionLabels* labels);
-void
-GenerateAsmJSStackOverflowExit(jit::MacroAssembler& masm, jit::Label* overflowExit,
-                               jit::Label* throwLabel);
+struct AsmJSOffsets
+{
+    MOZ_IMPLICIT AsmJSOffsets(uint32_t begin = 0,
+                              uint32_t end = 0)
+      : begin(begin), end(end)
+    {}
+
+    // These define a [begin, end) contiguous range of instructions compiled
+    // into an AsmJSModule::CodeRange.
+    uint32_t begin;
+    uint32_t end;
+};
+
+struct AsmJSProfilingOffsets : AsmJSOffsets
+{
+    MOZ_IMPLICIT AsmJSProfilingOffsets(uint32_t profilingReturn = 0)
+      : AsmJSOffsets(), profilingReturn(profilingReturn)
+    {}
+
+    // For CodeRanges with AsmJSProfilingOffsets, 'begin' is the offset of the
+    // profiling entry.
+    uint32_t profilingEntry() const { return begin; }
+
+    // The profiling return is the offset of the return instruction, which
+    // precedes the 'end' by a variable number of instructions due to
+    // out-of-line codegen.
+    uint32_t profilingReturn;
+};
+
+struct AsmJSFunctionOffsets : AsmJSProfilingOffsets
+{
+    MOZ_IMPLICIT AsmJSFunctionOffsets(uint32_t nonProfilingEntry = 0,
+                                      uint32_t profilingJump = 0,
+                                      uint32_t profilingEpilogue = 0)
+      : AsmJSProfilingOffsets(),
+        nonProfilingEntry(nonProfilingEntry),
+        profilingJump(profilingJump),
+        profilingEpilogue(profilingEpilogue)
+    {}
+
+    // Function CodeRanges have an additional non-profiling entry that comes
+    // after the profiling entry and a non-profiling epilogue that comes before
+    // the profiling epilogue.
+    uint32_t nonProfilingEntry;
+
+    // When profiling is enabled, the 'nop' at offset 'profilingJump' is
+    // overwritten to be a jump to 'profilingEpilogue'.
+    uint32_t profilingJump;
+    uint32_t profilingEpilogue;
+};
 
 void
 GenerateAsmJSExitPrologue(jit::MacroAssembler& masm, unsigned framePushed, AsmJSExit::Reason reason,
-                          jit::Label* begin);
+                          AsmJSProfilingOffsets* offsets, jit::Label* maybeEntry = nullptr);
 void
 GenerateAsmJSExitEpilogue(jit::MacroAssembler& masm, unsigned framePushed, AsmJSExit::Reason reason,
-                          jit::Label* profilingReturn);
+                          AsmJSProfilingOffsets* offsets);
+
+void
+GenerateAsmJSFunctionPrologue(jit::MacroAssembler& masm, unsigned framePushed,
+                              AsmJSFunctionOffsets* offsets);
+void
+GenerateAsmJSFunctionEpilogue(jit::MacroAssembler& masm, unsigned framePushed,
+                              AsmJSFunctionOffsets* offsets);
 
 } // namespace js
 

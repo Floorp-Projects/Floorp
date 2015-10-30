@@ -16,8 +16,8 @@
  * limitations under the License.
  */
 
-#ifndef jit_AsmJS_h
-#define jit_AsmJS_h
+#ifndef asmjs_AsmJSValidate_h
+#define asmjs_AsmJSValidate_h
 
 #include "mozilla/MathAlgorithms.h"
 
@@ -125,4 +125,4 @@ IsAsmJSCompilationAvailable(JSContext* cx, unsigned argc, JS::Value* vp);
 
 } // namespace js
 
-#endif // jit_AsmJS_h
+#endif // asmjs_AsmJSValidate_h

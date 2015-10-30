@@ -322,9 +322,6 @@ class MoveResolver
     uint32_t numCycles() const {
         return numCycles_;
     }
-    void clearTempObjectPool() {
-        movePool_.clear();
-    }
     void setAllocator(TempAllocator& alloc) {
         movePool_.setAllocator(alloc);
     }
