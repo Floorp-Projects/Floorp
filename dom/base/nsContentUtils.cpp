@@ -3477,42 +3477,6 @@ nsContentUtils::ReportToConsole(uint32_t aErrorFlags,
                                      aLineNumber, aColumnNumber);
 }
 
-/* static */ nsresult
-nsContentUtils::MaybeReportInterceptionErrorToConsole(nsIDocument* aDocument,
-                                                      nsresult aError)
-{
-  const char* messageName = nullptr;
-  if (aError == NS_ERROR_INTERCEPTION_FAILED) {
-    messageName = "InterceptionFailed";
-  } else if (aError == NS_ERROR_OPAQUE_INTERCEPTION_DISABLED) {
-    messageName = "OpaqueInterceptionDisabled";
-  } else if (aError == NS_ERROR_BAD_OPAQUE_INTERCEPTION_REQUEST_MODE) {
-    messageName = "BadOpaqueInterceptionRequestMode";
-  } else if (aError == NS_ERROR_INTERCEPTED_ERROR_RESPONSE) {
-    messageName = "InterceptedErrorResponse";
-  } else if (aError == NS_ERROR_INTERCEPTED_USED_RESPONSE) {
-    messageName = "InterceptedUsedResponse";
-  } else if (aError == NS_ERROR_CLIENT_REQUEST_OPAQUE_INTERCEPTION) {
-    messageName = "ClientRequestOpaqueInterception";
-  } else if (aError == NS_ERROR_BAD_OPAQUE_REDIRECT_INTERCEPTION) {
-    messageName = "BadOpaqueRedirectInterception";
-  } else if (aError == NS_ERROR_INTERCEPTION_CANCELED) {
-    messageName = "InterceptionCanceled";
-  } else if (aError == NS_ERROR_REJECTED_RESPONSE_INTERCEPTION) {
-    messageName = "InterceptionRejectedResponse";
-  }
-
-  if (messageName) {
-    return ReportToConsole(nsIScriptError::warningFlag,
-                           NS_LITERAL_CSTRING("Service Worker Interception"),
-                           aDocument,
-                           nsContentUtils::eDOM_PROPERTIES,
-                           messageName);
-  }
-
-  return NS_OK;
-}
-
 
 /* static */ nsresult
 nsContentUtils::ReportToConsoleNonLocalized(const nsAString& aErrorText,
