@@ -2933,7 +2933,7 @@ SearchService.prototype = {
     if (cacheFile.exists())
       cache = this._readCacheFile(cacheFile);
 
-    let [chromeFiles, chromeURIs] = this._findJAREngines();
+    let chromeURIs = this._findJAREngines();
 
     let distDirs = [];
     let locations;
@@ -2961,8 +2961,6 @@ SearchService.prototype = {
         otherDirs.push(dir);
     }
 
-    let toLoad = chromeFiles.concat(distDirs, otherDirs);
-
     function modifiedDir(aDir) {
       return (!cache.directories || !cache.directories[aDir.path] ||
               (cache.directories[aDir.path].lastModifiedTime &&
@@ -2970,28 +2968,28 @@ SearchService.prototype = {
     }
 
     function notInCachePath(aPathToLoad) {
-      return cachePaths.indexOf(aPathToLoad.path) == -1;
+      return cacheOtherPaths.indexOf(aPathToLoad.path) == -1;
     }
     function notInCacheVisibleEngines(aEngineName) {
       return cache.visibleDefaultEngines.indexOf(aEngineName) == -1;
     }
 
     let buildID = Services.appinfo.platformBuildID;
-    let cachePaths = [];
+    let cacheOtherPaths = [];
     if (cache.directories) {
-      cachePaths = [path for (path in cache.directories)]
-                     .filter(p => p != "[user-installed]");
+      cacheOtherPaths = [path for (path in cache.directories)]
+                          .filter(p => p != "[user-installed]" && p != "[default]");
     }
 
     let rebuildCache = !cache.directories ||
                        cache.version != CACHE_VERSION ||
                        cache.locale != getLocale() ||
                        cache.buildID != buildID ||
-                       cachePaths.length != toLoad.length ||
-                       toLoad.some(notInCachePath) ||
+                       cacheOtherPaths.length != otherDirs.length ||
+                       otherDirs.some(notInCachePath) ||
                        cache.visibleDefaultEngines.length != this._visibleDefaultEngines.length ||
                        this._visibleDefaultEngines.some(notInCacheVisibleEngines) ||
-                       toLoad.some(modifiedDir);
+                       otherDirs.some(modifiedDir);
 
     if (rebuildCache) {
       LOG("_loadEngines: Absent or outdated cache. Loading engines from disk.");
@@ -3029,7 +3027,7 @@ SearchService.prototype = {
       cache = yield checkForSyncCompletion(this._asyncReadCacheFile(cacheFilePath));
 
       Services.obs.notifyObservers(null, SEARCH_SERVICE_TOPIC, "find-jar-engines");
-      let [chromeFiles, chromeURIs] =
+      let chromeURIs =
         yield checkForSyncCompletion(this._asyncFindJAREngines());
 
       // Get the non-empty distribution directories into distDirs...
@@ -3080,7 +3078,6 @@ SearchService.prototype = {
         }
       }
 
-      let toLoad = chromeFiles.concat(distDirs, otherDirs);
       function hasModifiedDir(aList) {
         return Task.spawn(function() {
           let modifiedDir = false;
@@ -3107,40 +3104,39 @@ SearchService.prototype = {
       }
 
       function notInCachePath(aPathToLoad) {
-        return cachePaths.indexOf(aPathToLoad.path) == -1;
+        return cacheOtherPaths.indexOf(aPathToLoad.path) == -1;
       }
       function notInCacheVisibleEngines(aEngineName) {
         return cache.visibleDefaultEngines.indexOf(aEngineName) == -1;
       }
 
       let buildID = Services.appinfo.platformBuildID;
-      let cachePaths = [];
+      let cacheOtherPaths = [];
       if (cache.directories) {
-        cachePaths = [path for (path in cache.directories)]
-                       .filter(p => p != "[user-installed]");
+        cacheOtherPaths = [path for (path in cache.directories)]
+                       .filter(p => p != "[user-installed]" && p != "[default]");
       }
 
       let rebuildCache = !cache.directories ||
                          cache.version != CACHE_VERSION ||
                          cache.locale != getLocale() ||
                          cache.buildID != buildID ||
-                         cachePaths.length != toLoad.length ||
-                         toLoad.some(notInCachePath) ||
+                         cacheOtherPaths.length != otherDirs.length ||
+                         otherDirs.some(notInCachePath) ||
                          cache.visibleDefaultEngines.length != this._visibleDefaultEngines.length ||
                          this._visibleDefaultEngines.some(notInCacheVisibleEngines) ||
-                         (yield checkForSyncCompletion(hasModifiedDir(toLoad)));
+                         (yield checkForSyncCompletion(hasModifiedDir(otherDirs)));
 
       if (rebuildCache) {
         LOG("_asyncLoadEngines: Absent or outdated cache. Loading engines from disk.");
-        let engines = [];
         for (let loadDir of distDirs) {
           let enginesFromDir =
             yield checkForSyncCompletion(this._asyncLoadEnginesFromDir(loadDir));
-          engines = engines.concat(enginesFromDir);
+          enginesFromDir.forEach(this._addEngineToStore, this);
         }
         let enginesFromURLs =
-           yield checkForSyncCompletion(this._asyncLoadFromChromeURLs(chromeURIs));
-        engines = engines.concat(enginesFromURLs);
+          yield checkForSyncCompletion(this._asyncLoadFromChromeURLs(chromeURIs));
+        enginesFromURLs.forEach(this._addEngineToStore, this);
 
         LOG("_asyncLoadEngines: loading user-installed engines from the obsolete cache");
         this._loadEnginesFromCache(cache, true);
@@ -3148,12 +3144,9 @@ SearchService.prototype = {
         for (let loadDir of otherDirs) {
           let enginesFromDir =
             yield checkForSyncCompletion(this._asyncLoadEnginesFromDir(loadDir));
-          engines = engines.concat(enginesFromDir);
+          enginesFromDir.forEach(this._addEngineToStore, this);
         }
 
-        for (let engine of engines) {
-          this._addEngineToStore(engine);
-        }
         this._buildCache();
         return;
       }
@@ -3315,11 +3308,15 @@ SearchService.prototype = {
 
     for (let key in cache.directories) {
       let engines = cache.directories[key].engines;
-      LOG("_loadEnginesFromCache: Loading from cache. " + engines.length + " engines to load.");
+      LOG("_loadEnginesFromCache: Loading from cache. " +
+          engines.length + " engines in " + key);
 
+      let skippedEngines = 0;
       for (let engine of engines) {
-        if (skipReadOnly && engine._readOnly !== false)
+        if (skipReadOnly && engine._readOnly !== false) {
+          ++skippedEngines;
           continue;
+        }
 
         let engineObj = this._loadEngineFromCache(engine);
         if (key != "[default]" && key != "[used-installed]") {
@@ -3327,6 +3324,10 @@ SearchService.prototype = {
           engineObj._cacheKey = key;
           engineObj._cacheKeyLastModifiedTime = cache.directories[key].lastModifiedTime;
         }
+      }
+
+      if (skippedEngines) {
+        LOG("_loadEnginesFromCache: skipped " + skippedEngines + " read-only engines.");
       }
     }
   },
@@ -3506,26 +3507,16 @@ SearchService.prototype = {
     let chan = makeChannel(APP_SEARCH_PREFIX + "list.txt");
     if (!chan) {
       LOG("_findJAREngines: " + APP_SEARCH_PREFIX + " isn't registered");
-      return [[], []];
+      return [];
     }
 
     let uris = [];
-    let chromeFiles = [];
-
-    // Find the underlying JAR file (_loadEngines uses it to determine
-    // whether it needs to invalidate the cache)
-    let jarPackaging = false;
-    if (chan.URI instanceof Ci.nsIJARURI) {
-      chromeFiles.push(this._convertChannelToFile(chan));
-      jarPackaging = true;
-    }
 
     let sis = Cc["@mozilla.org/scriptableinputstream;1"].
                 createInstance(Ci.nsIScriptableInputStream);
     sis.init(chan.open());
-    this._parseListTxt(sis.read(sis.available()), jarPackaging,
-                       chromeFiles, uris);
-    return [chromeFiles, uris];
+    this._parseListTxt(sis.read(sis.available()), uris);
+    return uris;
   },
 
   /**
@@ -3542,19 +3533,10 @@ SearchService.prototype = {
       let chan = makeChannel(listURL);
       if (!chan) {
         LOG("_asyncFindJAREngines: " + APP_SEARCH_PREFIX + " isn't registered");
-        throw new Task.Result([[], []]);
+        throw new Task.Result([]);
       }
 
       let uris = [];
-      let chromeFiles = [];
-
-      // Find the underlying JAR file (_loadEngines uses it to determine
-      // whether it needs to invalidate the cache)
-      let jarPackaging = false;
-      if (chan.URI instanceof Ci.nsIJARURI) {
-        chromeFiles.push(this._convertChannelToFile(chan));
-        jarPackaging = true;
-      }
 
       // Read list.txt to find the engines we need to load.
       let deferred = Promise.defer();
@@ -3572,13 +3554,12 @@ SearchService.prototype = {
       request.send();
       let list = yield deferred.promise;
 
-      this._parseListTxt(list, jarPackaging, chromeFiles, uris);
-      throw new Task.Result([chromeFiles, uris]);
+      this._parseListTxt(list, uris);
+      throw new Task.Result(uris);
     }.bind(this));
   },
 
-  _parseListTxt: function SRCH_SVC_parseListTxt(list, jarPackaging,
-                                                chromeFiles, uris) {
+  _parseListTxt: function SRCH_SVC_parseListTxt(list, uris) {
     let names = list.split("\n").filter(n => !!n);
     // This maps the names of our built-in engines to a boolean
     // indicating whether it should be hidden by default.
@@ -3626,17 +3607,7 @@ SearchService.prototype = {
     }
 
     for (let name of engineNames) {
-      let uri = APP_SEARCH_PREFIX + name + ".xml";
-      uris.push(uri);
-      if (!jarPackaging) {
-        // Flat packaging requires that _loadEngines checks the modification
-        // time of each engine file.
-        let chan = makeChannel(uri);
-        if (chan)
-          chromeFiles.push(this._convertChannelToFile(chan));
-        else
-          LOG("_findJAREngines: couldn't resolve " + uri);
-      }
+      uris.push(APP_SEARCH_PREFIX + name + ".xml");
     }
 
     // Store this so that it can be used while writing the cache file.
