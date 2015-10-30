@@ -189,5 +189,41 @@ module.exports = {
         globalReturn: true
       }
     };
+  },
+
+  /**
+   * Check whether the context is the global scope.
+   *
+   * @param {ASTContext} context
+   *        The current context.
+   *
+   * @return {Boolean}
+   *         True or false
+   */
+  getIsGlobalScope: function(context) {
+    var ancestors = context.getAncestors();
+    var parent = ancestors.pop();
+
+    if (parent.type == "ExpressionStatement") {
+      parent = ancestors.pop();
+    }
+
+    return parent.type == "Program";
+  },
+
+  /**
+   * Check whether we are in a browser mochitest.
+   *
+   * @param  {RuleContext} scope
+   *         You should pass this from within a rule
+   *         e.g. helpers.getIsBrowserMochitest(this)
+   *
+   * @return {Boolean}
+   *         True or false
+   */
+  getIsBrowserMochitest: function(scope) {
+    var pathAndFilename = scope.getFilename();
+
+    return /.*[\\/]browser_.+\.js$/.test(pathAndFilename);
   }
 };
