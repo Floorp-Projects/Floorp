@@ -14,10 +14,15 @@
 #include "mozilla/UniquePtr.h"
 #include "sandbox/linux/bpf_dsl/bpf_dsl.h"
 
+// Older kernel headers (mostly Android, but also some older desktop
+// distributions) are missing some or all of these:
 #ifndef SYS_ACCEPT4
-// Android's kernel headers don't define these.
 #define SYS_ACCEPT4  18
+#endif
+#ifndef SYS_RECVMMSG
 #define SYS_RECVMMSG 19
+#endif
+#ifndef SYS_SENDMMSG
 #define SYS_SENDMMSG 20
 #endif
 
