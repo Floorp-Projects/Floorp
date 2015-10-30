@@ -209,6 +209,8 @@
 
       <method name="onSearchBegin">
         <body><![CDATA[
+          if (this.popup && typeof this.popup.onSearchBegin == "function")
+            this.popup.onSearchBegin();
           if (this._searchBeginHandler)
             this._searchBeginHandler();
         ]]></body>
@@ -1044,6 +1046,12 @@ extends="chrome://global/content/bindings/popup.xml#popup">
         </setter>
       </property>
 
+      <method name="onSearchBegin">
+        <body><![CDATA[
+          this.richlistbox.mouseSelectedIndex = -1;
+        ]]></body>
+      </method>
+
       <method name="openAutocompletePopup">
         <parameter name="aInput"/>
         <parameter name="aElement"/>
@@ -1226,9 +1234,13 @@ extends="chrome://global/content/bindings/popup.xml#popup">
               // re-use the existing item
               item = this.richlistbox.childNodes[this._currentIndex];
 
-              // Completely re-use the existing richlistitem if it's the same
+              // Completely re-use the existing richlistitem if it's the same.
+              // Also re-use it if we are about to replace the currently mouse
+              // selected item, to avoid surprising the user.
               if (item.getAttribute("text") == trimmedSearchString &&
-                  item.getAttribute("url") == url) {
+                   (item.getAttribute("url") == url ||
+                    this.richlistbox.mouseSelectedIndex === this._currentIndex)
+                  ) {
                 item.collapsed = false;
                 this._currentIndex++;
                 continue;
@@ -1992,15 +2004,16 @@ extends="chrome://global/content/bindings/popup.xml#popup">
   <binding id="autocomplete-richlistbox" extends="chrome://global/content/bindings/richlistbox.xml#richlistbox">
     <implementation>
       <field name="mLastMoveTime">Date.now()</field>
+      <field name="mouseSelectedIndex">-1</field>
     </implementation>
     <handlers>
       <handler event="mouseup">
         <![CDATA[
         // don't call onPopupClick for the scrollbar buttons, thumb, slider, etc.
-        var item = event.originalTarget;
-
-        while (item && item.localName != "richlistitem")
+        let item = event.originalTarget;
+        while (item && item.localName != "richlistitem") {
           item = item.parentNode;
+        }
 
         if (!item)
           return;
@@ -2012,17 +2025,18 @@ extends="chrome://global/content/bindings/popup.xml#popup">
       <handler event="mousemove">
         <![CDATA[
         if (Date.now() - this.mLastMoveTime > 30) {
-         var item = event.target;
-
-         while (item && item.localName != "richlistitem")
+         let item = event.target;
+         while (item && item.localName != "richlistitem") {
            item = item.parentNode;
+         }
 
          if (!item)
            return;
 
-         var rc = this.getIndexOfItem(item);
-         if (rc != this.selectedIndex)
-            this.selectedIndex = rc;
+         let index = this.getIndexOfItem(item);
+         if (index != this.selectedIndex) {
+            this.mouseSelectedIndex = this.selectedIndex = index;
+         }
 
          this.mLastMoveTime = Date.now();
         }

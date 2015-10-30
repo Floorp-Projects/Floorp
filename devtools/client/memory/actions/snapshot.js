@@ -75,16 +75,19 @@ const readSnapshot = exports.readSnapshot = function readSnapshot (heapWorker, s
     assert(snapshot.state === states.SAVED,
       `Should only read a snapshot once. Found snapshot in state ${snapshot.state}`);
 
+    let creationTime;
+
     dispatch({ type: actions.READ_SNAPSHOT_START, snapshot });
     try {
       yield heapWorker.readHeapSnapshot(snapshot.path);
+      creationTime = yield heapWorker.getCreationTime(snapshot.path);
     } catch (error) {
       reportException("readSnapshot", error);
       dispatch({ type: actions.SNAPSHOT_ERROR, snapshot, error });
       return;
     }
 
-    dispatch({ type: actions.READ_SNAPSHOT_END, snapshot });
+    dispatch({ type: actions.READ_SNAPSHOT_END, snapshot, creationTime });
   };
 };
 

@@ -131,6 +131,10 @@ function _setAppProperties(aObj, aApp) {
   aObj.enabled = aApp.enabled !== undefined ? aApp.enabled : true;
   aObj.sideloaded = aApp.sideloaded;
   aObj.extensionVersion = aApp.extensionVersion;
+  aObj.blockedStatus =
+    aApp.blockedStatus !== undefined ? aApp.blockedStatus
+                                     : Ci.nsIBlocklistService.STATE_NOT_BLOCKED;
+  aObj.blocklistId = aApp.blocklistId;
 #ifdef MOZ_B2GDROID
   aObj.android_packagename = aApp.android_packagename;
   aObj.android_classname = aApp.android_classname;
