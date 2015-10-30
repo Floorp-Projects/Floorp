@@ -803,7 +803,7 @@ IonBuilder::build()
     if (!current)
         return false;
 
-#ifdef JS_JITSPEW
+#ifdef DEBUG
     if (info().isAnalysis()) {
         JitSpew(JitSpew_IonScripts, "Analyzing script %s:%" PRIuSIZE " (%p) %s",
                 script()->filename(), script()->lineno(), (void*)script(),

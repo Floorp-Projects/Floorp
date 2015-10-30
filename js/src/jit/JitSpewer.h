@@ -105,7 +105,7 @@ class TempAllocator;
 // None of the global functions have effect on non-debug builds.
 static const int NULL_ID = -1;
 
-#ifdef JS_JITSPEW
+#ifdef DEBUG
 
 // Class made to hold the MIR and LIR graphs of an AsmJS / Ion compilation.
 class GraphSpewer
@@ -247,7 +247,7 @@ static inline void EnableIonDebugSyncLogging()
 static inline void EnableIonDebugAsyncLogging()
 { }
 
-#endif /* JS_JITSPEW */
+#endif /* DEBUG */
 
 template <JitSpewChannel Channel>
 class AutoDisableSpew
@@ -263,7 +263,7 @@ class AutoDisableSpew
 
     ~AutoDisableSpew()
     {
-#ifdef JS_JITSPEW
+#ifdef DEBUG
         if (enabled_)
             EnableChannel(Channel);
 #endif

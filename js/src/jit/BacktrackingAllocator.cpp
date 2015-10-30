@@ -1408,23 +1408,20 @@ BacktrackingAllocator::tryAllocateRegister(PhysicalRegister& r, LiveBundle* bund
         // case of multiple conflicting sets keep track of the set with the
         // lowest maximum spill weight.
 
-        // The #ifdef guards against "unused variable 'existing'" bustage.
-#ifdef JS_JITSPEW
         if (JitSpewEnabled(JitSpew_RegAlloc)) {
             if (aliasedConflicting.length() == 1) {
-                LiveBundle* existing = aliasedConflicting[0];
+                mozilla::DebugOnly<LiveBundle*> existing = aliasedConflicting[0];
                 JitSpew(JitSpew_RegAlloc, "  %s collides with %s [weight %lu]",
                         r.reg.name(), existing->toString(), computeSpillWeight(existing));
             } else {
                 JitSpew(JitSpew_RegAlloc, "  %s collides with the following", r.reg.name());
                 for (size_t i = 0; i < aliasedConflicting.length(); i++) {
-                    LiveBundle* existing = aliasedConflicting[i];
+                    mozilla::DebugOnly<LiveBundle*> existing = aliasedConflicting[i];
                     JitSpew(JitSpew_RegAlloc, "      %s [weight %lu]",
                             existing->toString(), computeSpillWeight(existing));
                 }
             }
         }
-#endif
 
         if (conflicting.empty()) {
             if (!conflicting.appendAll(aliasedConflicting))

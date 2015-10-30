@@ -1420,14 +1420,12 @@ jit::BailoutIonToBaseline(JSContext* cx, JitActivation* activation, JitFrameIter
     //      Entry - Interpreter or other calling into Ion.
     //      Rectifier - Arguments rectifier calling into Ion.
     MOZ_ASSERT(iter.isBailoutJS());
-#if defined(DEBUG) || defined(JS_JITSPEW)
-    FrameType prevFrameType = iter.prevType();
+    mozilla::DebugOnly<FrameType> prevFrameType = iter.prevType();
     MOZ_ASSERT(prevFrameType == JitFrame_IonJS ||
                prevFrameType == JitFrame_BaselineStub ||
                prevFrameType == JitFrame_Entry ||
                prevFrameType == JitFrame_Rectifier ||
                prevFrameType == JitFrame_IonAccessorIC);
-#endif
 
     // All incoming frames are going to look like this:
     //

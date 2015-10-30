@@ -24,7 +24,7 @@ enum OptimizationLevel
     Optimization_Count
 };
 
-#ifdef JS_JITSPEW
+#ifdef DEBUG
 inline const char*
 OptimizationLevelString(OptimizationLevel level)
 {

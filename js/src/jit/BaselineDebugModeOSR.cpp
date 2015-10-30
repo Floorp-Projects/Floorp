@@ -287,7 +287,7 @@ CollectInterpreterStackScripts(JSContext* cx, const Debugger::ExecutionObservabl
     return true;
 }
 
-#ifdef JS_JITSPEW
+#ifdef DEBUG
 static const char*
 ICEntryKindToString(ICEntry::Kind kind)
 {
@@ -312,7 +312,7 @@ ICEntryKindToString(ICEntry::Kind kind)
         MOZ_CRASH("bad ICEntry kind");
     }
 }
-#endif // JS_JITSPEW
+#endif // DEBUG
 
 static void
 SpewPatchBaselineFrame(uint8_t* oldReturnAddress, uint8_t* newReturnAddress,
