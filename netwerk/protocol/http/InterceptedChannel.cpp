@@ -134,6 +134,16 @@ InterceptedChannelChrome::NotifyController()
   DoNotifyController();
 }
 
+nsIConsoleReportCollector*
+InterceptedChannelChrome::GetConsoleReportCollector() const
+{
+  // The ConsoleReportCollector should only be used when the inner channel is
+  // stable.  Nothing should try to use it once we return to the main thread
+  // and clear the inner channel.
+  MOZ_ASSERT(mChannel);
+  return mChannel;
+}
+
 NS_IMETHODIMP
 InterceptedChannelChrome::GetChannel(nsIChannel** aChannel)
 {
@@ -310,6 +320,16 @@ InterceptedChannelContent::NotifyController()
   NS_ENSURE_SUCCESS_VOID(rv);
 
   DoNotifyController();
+}
+
+nsIConsoleReportCollector*
+InterceptedChannelContent::GetConsoleReportCollector() const
+{
+  // The ConsoleReportCollector should only be used when the inner channel is
+  // stable.  Nothing should try to use it once we return to the main thread
+  // and clear the inner channel.
+  MOZ_ASSERT(mChannel);
+  return mChannel;
 }
 
 NS_IMETHODIMP
