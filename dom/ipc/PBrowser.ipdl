@@ -90,6 +90,7 @@ struct ShowInfo
   nsString name;
   bool fullscreenAllowed;
   bool isPrivate;
+  bool fakeShowInfo;
   float dpi;
   double defaultScale;
 };
@@ -553,7 +554,7 @@ child:
          nullable PRenderFrame renderFrame,
          bool parentIsActive);
 
-    LoadURL(nsCString uri, BrowserConfiguration config);
+    LoadURL(nsCString uri, BrowserConfiguration config, ShowInfo info);
 
     CacheFileDescriptor(nsString path, FileDescriptor fd);
 

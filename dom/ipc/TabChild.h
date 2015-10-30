@@ -299,7 +299,8 @@ public:
                                          const ViewID& aViewId,
                                          const Maybe<ZoomConstraints>& aConstraints) override;
     virtual bool RecvLoadURL(const nsCString& aURI,
-                             const BrowserConfiguration& aConfiguration) override;
+                             const BrowserConfiguration& aConfiguration,
+                             const ShowInfo& aInfo) override;
     virtual bool RecvCacheFileDescriptor(const nsString& aPath,
                                          const FileDescriptor& aFileDescriptor)
                                          override;
@@ -523,7 +524,8 @@ public:
     // Call RecvShow(nsIntSize(0, 0)) and block future calls to RecvShow().
     void DoFakeShow(const TextureFactoryIdentifier& aTextureFactoryIdentifier,
                     const uint64_t& aLayersId,
-                    PRenderFrameChild* aRenderFrame);
+                    PRenderFrameChild* aRenderFrame,
+                    const ShowInfo& aShowInfo);
 
 protected:
     virtual ~TabChild();
@@ -634,12 +636,16 @@ private:
     // Position of tab, relative to parent widget (typically the window)
     LayoutDeviceIntPoint mChromeDisp;
     TabId mUniqueId;
+
+    friend class ContentChild;
     float mDPI;
     double mDefaultScale;
+
     bool mIPCOpen;
     bool mParentIsActive;
     bool mAsyncPanZoomEnabled;
     CSSSize mUnscaledInnerSize;
+    bool mDidSetRealShowInfo;
 
     nsAutoTArray<bool, NUMBER_OF_AUDIO_CHANNELS> mAudioChannelsActive;
 
