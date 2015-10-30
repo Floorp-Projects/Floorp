@@ -41,6 +41,8 @@ add_test(function simple_callback_test() {
     onSuccess: function (engine) {
       do_check_true(!!engine);
       do_check_neq(engine.name, Services.search.defaultEngine.name);
+      do_check_eq(engine.wrappedJSObject._loadPath,
+                  "[http]localhost/test-search-engine.xml");
       run_next_test();
     },
     onError: function (errorCode) {
