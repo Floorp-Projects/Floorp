@@ -91,8 +91,18 @@ both, to better adapt this sentence to their language.
 
 <!ENTITY signedIn.engines.label       "Sync across all devices">
 
-<!ENTITY mobilePromo.start            "Download Firefox for ">
+<!-- LOCALIZATION NOTE (mobilePromo.*): the following strings will be used to
+     create a single sentence with active links.
+     The resulting sentence in English is: "Sync to your mobile device.
+     Download Firefox for Android or Firefox for iOS." -->
+
+<!ENTITY mobilePromo.start            "Sync to your mobile device. Download ">
 <!-- LOCALIZATION NOTE (mobilePromo.androidLink): This is a link title that links to https://www.mozilla.org/firefox/android/ -->
-<!ENTITY mobilePromo.androidLink      "Android™">
-<!ENTITY mobilePromo.end              " to sync with your mobile device.">
-<!ENTITY androidAttribution           "Android is a trademark of Google Inc.">
+<!ENTITY mobilePromo.androidLink      "Firefox for Android">
+
+<!-- LOCALIZATION NOTE (mobilePromo.iOSBefore): This is text displayed between mobilePromo.androidLink and mobilePromo.iosLink -->
+<!ENTITY mobilePromo.iOSBefore         " or ">
+<!-- LOCALIZATION NOTE (mobilePromo.iOSLink): This is a link title that links to https://www.mozilla.org/firefox/ios/ -->
+<!ENTITY mobilePromo.iOSLink          "Firefox for iOS">
+
+<!ENTITY mobilePromo.end              ".">
