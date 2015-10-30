@@ -727,6 +727,35 @@ var settingsToObserve = {
   },
   'wap.UAProf.tagname': 'x-wap-profile',
   'wap.UAProf.url': ''
+  'wap.UAProf.url': '',
+  'webvtt.font.color': {
+    prefName: 'webvtt.font.color',
+    defaultValue: 'FFFFFF'
+  },
+  'webvtt.font.opacity': {
+    prefName: 'webvtt.font.opacity',
+    defaultValue: 100
+  },
+  'webvtt.font.scale': {
+    prefName: 'webvtt.font.scale',
+    defaultValue: 100
+  },
+  'webvtt.bg.color': {
+    prefName: 'webvtt.bg.color',
+    defaultValue: "000000"
+  },
+  'webvtt.bg.opacity': {
+    prefName: 'webvtt.bg.opacity',
+    defaultValue: 100
+  },
+  'webvtt.edge.type': {
+    prefName: 'webvtt.edge.type',
+    defaultValue: 0
+  },
+  'webvtt.edge.color': {
+    prefName: 'webvtt.edge.color',
+    defaultValue: 'FFFFFF'
+  }
 };
 
 function settingObserver(setPref, prefName, setting) {
