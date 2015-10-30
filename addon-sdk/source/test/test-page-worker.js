@@ -327,19 +327,6 @@ exports.testAllowScript = function(assert, done) {
                    "                 document.documentElement.getAttribute('foo') == 3)",
     contentScriptWhen: "ready"
   });
-
-  let frame = getActiveView(page);
-  assert.equal(getDocShell(frame).allowJavascript, true, "allowJavascript is true");
-}
-
-exports.testGetActiveViewAndDestroy = function(assert) {
-  let page = Page({
-    contentURL: "data:text/html;charset=utf-8,<title>test</title>"
-  });
-  let frame = getActiveView(page);
-  assert.ok(frame.parentNode, "there is a parent node");
-  page.destroy();
-  assert.ok(!frame.parentNode, "there is not a parent node");
 }
 
 exports.testPingPong = function(assert, done) {

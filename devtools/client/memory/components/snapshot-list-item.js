@@ -44,4 +44,3 @@ const SnapshotListItem = module.exports = createClass({
     );
   }
 });
-

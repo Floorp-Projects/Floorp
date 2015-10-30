@@ -114,6 +114,7 @@
   skin/classic/browser/urlbar-arrow.png                        (../shared/urlbar-arrow.png)
   skin/classic/browser/urlbar-arrow@2x.png                     (../shared/urlbar-arrow@2x.png)
   skin/classic/browser/warning.svg                             (../shared/warning.svg)
+  skin/classic/browser/cert-error.svg                          (../shared/incontent-icons/cert-error.svg)
   skin/classic/browser/session-restore.svg                     (../shared/incontent-icons/session-restore.svg)
   skin/classic/browser/tab-crashed.svg                         (../shared/incontent-icons/tab-crashed.svg)
   skin/classic/browser/welcome-back.svg                        (../shared/incontent-icons/welcome-back.svg)
