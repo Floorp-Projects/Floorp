@@ -99,7 +99,7 @@ const backgroundPageThumbsContent = {
   onStateChange: function (webProgress, req, flags, status) {
     if (webProgress.isTopLevel &&
         (flags & Ci.nsIWebProgressListener.STATE_STOP) &&
-        this._currentCapture) {
+        this._currentCapture && Components.isSuccessCode(status)) {
       if (req.name == "about:blank") {
         if (this._state == STATE_CAPTURING) {
           // about:blank has loaded, ending the current capture.
