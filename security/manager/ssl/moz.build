@@ -75,6 +75,10 @@ EXPORTS.mozilla.psm += [
     'PSMContentListener.h',
 ]
 
+EXPORTS.ipc += [
+    'DataStorageIPCUtils.h',
+]
+
 UNIFIED_SOURCES += [
     'CertBlocklist.cpp',
     'CryptoTask.cpp',
