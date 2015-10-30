@@ -58,9 +58,9 @@ RemapMatrixForOrientation(ScreenOrientationInternal screenConfig, const Matrix4x
     o[0] = in[1]; o[1] = -in[0]; o[2] = in[2];
     o[4] = in[5]; o[5] = -in[4]; o[6] = in[6];
     o[8] = in[9]; o[9] = -in[8]; o[10] = in[10];
-  } else if (screenConfig == eScreenOrientation_PortraitPrimary ||
-             screenConfig == eScreenOrientation_PortraitSecondary)
-  {
+  } else if (screenConfig == eScreenOrientation_PortraitPrimary) {
+    out = aMatrix;
+  } else if (screenConfig == eScreenOrientation_PortraitSecondary) {
     // remap X,Y -> X,-Z
     o[0] = in[0]; o[1] = in[2]; o[2] = -in[1];
     o[4] = in[4]; o[5] = in[6]; o[6] = -in[5];
@@ -131,19 +131,23 @@ HMDInfoCardboard::StartSensorTracking()
   return true;
 }
 
+// Android sends us events that have a 90-degree rotation about 
+// the x axis compared to what we want (phone flat vs. phone held in front of the eyes).
+// Correct for this by applying a transform to undo this rotation.
 void
 HMDInfoCardboard::Notify(const mozilla::hal::ScreenConfiguration& config)
 {
   mOrient = config.orientation();
 
   if (mOrient == eScreenOrientation_LandscapePrimary) {
-    mScreenTransform = Quaternion(0.f, 0.f, (float) M_SQRT1_2, (float) M_SQRT1_2);
+    mScreenTransform = Quaternion(-0.5f, 0.5f, 0.5f, 0.5f);
   } else if (mOrient == eScreenOrientation_LandscapeSecondary) {
-    mScreenTransform = Quaternion(0.f, 0.f, (float) -M_SQRT1_2, (float) M_SQRT1_2);
+    mScreenTransform = Quaternion(-0.5f, -0.5f, -0.5f, 0.5f);
   } else if (mOrient == eScreenOrientation_PortraitPrimary) {
-    mScreenTransform = Quaternion();
+    mScreenTransform = Quaternion((float) -M_SQRT1_2, 0.f, 0.f, (float) M_SQRT1_2);
   } else if (mOrient == eScreenOrientation_PortraitSecondary) {
-    mScreenTransform = Quaternion(0.f, 0.f, 1.f, 0.f);
+    // Currently, PortraitSecondary event doesn't be triggered.
+    mScreenTransform = Quaternion((float) M_SQRT1_2, 0.f, 0.f, (float) M_SQRT1_2);
   }
 }
 

@@ -815,7 +815,7 @@ loop.roomViews = (function(mozL10n) {
                 renderRemoteVideo: this.shouldRenderRemoteVideo(), 
                 screenShareMediaElement: this.state.screenShareMediaElement, 
                 screenSharePosterUrl: null, 
-                showContextRoomName: false, 
+                showInitialContext: false, 
                 useDesktopPaths: true}, 
                 React.createElement(sharedViews.ConversationToolbar, {
                   audio: { enabled: !this.state.audioMuted, visible: true}, 

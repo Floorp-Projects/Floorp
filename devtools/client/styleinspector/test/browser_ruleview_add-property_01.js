@@ -60,6 +60,9 @@ function* testCreateNew(view) {
   is(editor, inplaceEditor(textProp.editor.valueSpan),
     "Editing the value span now.");
 
+  ok(!textProp.editor.element.classList.contains("ruleview-overridden"),
+    "property should not be overridden.");
+
   info("Entering a value and bluring the field to expect a rule change");
   editor.input.value = "#XYZ";
   let onBlur = once(editor.input, "blur");

@@ -365,7 +365,9 @@ HistoryStore.prototype = {
   },
 
   wipe: function HistStore_wipe() {
-    PlacesUtils.history.removeAllPages();
+    let cb = Async.makeSyncCallback();
+    PlacesUtils.history.clear().then(result => {cb(null, result)}, err => {cb(err)});
+    return Async.waitForSyncCallback(cb);
   }
 };
 

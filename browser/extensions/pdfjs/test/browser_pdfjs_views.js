@@ -32,7 +32,9 @@ function test() {
 
     // Runs tests after all 'load' event handlers have fired off
     window.addEventListener("documentload", function() {
-      runTests(document, window, finish);
+      runTests(document, window, function () {
+        closePDFViewer(window, finish);
+      });
     }, false, true);
   }, true);
 }
@@ -73,4 +75,12 @@ function runTests(document, window, callback) {
   sidebar.click();
 
   callback();
+}
+
+/**
+ * Destroys PDF.js viewer opened document.
+ */
+function closePDFViewer(window, callback) {
+  var viewer = window.wrappedJSObject.PDFViewerApplication;
+  viewer.close().then(callback);
 }

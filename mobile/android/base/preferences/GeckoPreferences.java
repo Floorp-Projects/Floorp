@@ -249,6 +249,8 @@ OnSharedPreferenceChangeListener
             title = R.string.pref_category_vendor;
         } else if (res == R.xml.preferences_customize) {
             title = R.string.pref_category_customize;
+        } else if (res == R.xml.preferences_search) {
+            title = R.string.pref_category_search;
         }
         if (title != -1) {
             updateTitle(title);
