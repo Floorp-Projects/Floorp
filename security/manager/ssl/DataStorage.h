@@ -20,6 +20,10 @@
 
 namespace mozilla {
 
+namespace dom {
+class DataStorageItem;
+}
+
 /**
  * DataStorage is a threadsafe, generic, narrow string-based hash map that
  * persists data on disk and additionally handles temporary and private data.
@@ -83,6 +87,8 @@ enum DataStorageType {
 
 class DataStorage : public nsIObserver
 {
+  typedef dom::DataStorageItem DataStorageItem;
+
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIOBSERVER
@@ -108,6 +114,9 @@ public:
   void Remove(const nsCString& aKey, DataStorageType aType);
   // Removes all entries of all types of data.
   nsresult Clear();
+
+  // Read all of the data items.
+  void GetAll(InfallibleTArray<DataStorageItem>* aItems);
 
 private:
   explicit DataStorage(const nsString& aFilename);
@@ -162,6 +171,10 @@ private:
   DataStorageTable& GetTableForType(DataStorageType aType,
                                     const MutexAutoLock& aProofOfLock);
 
+  void ReadAllFromTable(DataStorageType aType,
+                        InfallibleTArray<DataStorageItem>* aItems,
+                        const MutexAutoLock& aProofOfLock);
+
   Mutex mMutex; // This mutex protects access to the following members:
   DataStorageTable  mPersistentDataTable;
   DataStorageTable  mTemporaryDataTable;
@@ -172,6 +185,7 @@ private:
   uint32_t mTimerDelay; // in milliseconds
   bool mPendingWrite; // true if a write is needed but hasn't been dispatched
   bool mShuttingDown;
+  bool mInitCalled; // Indicates that Init() has been called.
   // (End list of members protected by mMutex)
 
   Monitor mReadyMonitor; // Do not acquire this at the same time as mMutex.
