@@ -1106,7 +1106,7 @@ class ADBDevice(ADBCommand):
             args.extend(['-b', b])
         return args
 
-    def clear_logcat(self, timeout=None, buffers=["main"]):
+    def clear_logcat(self, timeout=None, buffers=[]):
         """Clears logcat via adb logcat -c.
 
         :param timeout: The maximum time in
@@ -1124,6 +1124,7 @@ class ADBDevice(ADBCommand):
         buffers = self._get_logcat_buffer_args(buffers)
         cmds = ["logcat", "-c"] + buffers
         self.command_output(cmds, timeout=timeout)
+        self.shell_output("log logcat cleared", timeout=timeout)
 
     def get_logcat(self,
                    filter_specs=[
@@ -1136,7 +1137,7 @@ class ADBDevice(ADBCommand):
                    format="time",
                    filter_out_regexps=[],
                    timeout=None,
-                   buffers=["main"]):
+                   buffers=[]):
         """Returns the contents of the logcat file as a list of strings.
 
         :param list filter_specs: Optional logcat messages to
@@ -1426,23 +1427,30 @@ class ADBDevice(ADBCommand):
             if self._mkdir_p is None or self._mkdir_p:
                 # Use shell_bool to catch the possible
                 # non-zero exitcode if -p is not supported.
-                if self.shell_bool('mkdir -p %s' % path, timeout=timeout):
+                if self.shell_bool('mkdir -p %s' % path, timeout=timeout,
+                                   root=root):
                     self._mkdir_p = True
                     return
             # mkdir -p is not supported. create the parent
             # directories individually.
-            if not self.is_dir(posixpath.dirname(path)):
+            if not self.is_dir(posixpath.dirname(path), root=root):
                 parts = path.split('/')
                 name = "/"
                 for part in parts[:-1]:
                     if part != "":
                         name = posixpath.join(name, part)
-                        if not self.is_dir(name):
+                        if not self.is_dir(name, root=root):
                             # Use shell_output to allow any non-zero
                             # exitcode to raise an ADBError.
                             self.shell_output('mkdir %s' % name,
                                               timeout=timeout, root=root)
-        self.shell_output('mkdir %s' % path, timeout=timeout, root=root)
+
+        # If parents is True and the directory does exist, we don't
+        # need to do anything. Otherwise we call mkdir. If the
+        # directory already exists or if it is a file instead of a
+        # directory, mkdir will fail and we will raise an ADBError.
+        if not parents or not self.is_dir(path, root=root):
+            self.shell_output('mkdir %s' % path, timeout=timeout, root=root)
         if not self.is_dir(path, timeout=timeout, root=root):
             raise ADBError('mkdir %s Failed' % path)
 
@@ -1845,7 +1853,13 @@ class ADBDevice(ADBCommand):
         to determine if the device has completed booting.
         """
         self.command_output(["reboot"], timeout=timeout)
-        self.command_output(["wait-for-device"], timeout=timeout)
+        # command_output automatically inserts a 'wait-for-device'
+        # argument to adb. Issuing an empty command is the same as adb
+        # -s <device> wait-for-device. We don't send an explicit
+        # 'wait-for-device' since that would add duplicate
+        # 'wait-for-device' arguments which is an error in newer
+        # versions of adb.
+        self.command_output([], timeout=timeout)
         return self.is_device_ready(timeout=timeout)
 
     @abstractmethod

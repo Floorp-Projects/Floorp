@@ -4,31 +4,37 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef jit_mips32_CodeGenerator_mips32_h
-#define jit_mips32_CodeGenerator_mips32_h
+#ifndef jit_mips64_CodeGenerator_mips64_h
+#define jit_mips64_CodeGenerator_mips64_h
 
 #include "jit/mips-shared/CodeGenerator-mips-shared.h"
 
 namespace js {
 namespace jit {
 
-class CodeGeneratorMIPS : public CodeGeneratorMIPSShared
+class CodeGeneratorMIPS64 : public CodeGeneratorMIPSShared
 {
   protected:
     void testNullEmitBranch(Assembler::Condition cond, const ValueOperand& value,
                             MBasicBlock* ifTrue, MBasicBlock* ifFalse)
     {
-        emitBranch(value.typeReg(), (Imm32)ImmType(JSVAL_TYPE_NULL), cond, ifTrue, ifFalse);
+        MOZ_ASSERT(value.valueReg() != SecondScratchReg);
+        masm.splitTag(value.valueReg(), SecondScratchReg);
+        emitBranch(SecondScratchReg, ImmTag(JSVAL_TAG_NULL), cond, ifTrue, ifFalse);
     }
     void testUndefinedEmitBranch(Assembler::Condition cond, const ValueOperand& value,
                                  MBasicBlock* ifTrue, MBasicBlock* ifFalse)
     {
-        emitBranch(value.typeReg(), (Imm32)ImmType(JSVAL_TYPE_UNDEFINED), cond, ifTrue, ifFalse);
+        MOZ_ASSERT(value.valueReg() != SecondScratchReg);
+        masm.splitTag(value.valueReg(), SecondScratchReg);
+        emitBranch(SecondScratchReg, ImmTag(JSVAL_TAG_UNDEFINED), cond, ifTrue, ifFalse);
     }
     void testObjectEmitBranch(Assembler::Condition cond, const ValueOperand& value,
                               MBasicBlock* ifTrue, MBasicBlock* ifFalse)
     {
-        emitBranch(value.typeReg(), (Imm32)ImmType(JSVAL_TYPE_OBJECT), cond, ifTrue, ifFalse);
+        MOZ_ASSERT(value.valueReg() != SecondScratchReg);
+        masm.splitTag(value.valueReg(), SecondScratchReg);
+        emitBranch(SecondScratchReg, ImmTag(JSVAL_TAG_OBJECT), cond, ifTrue, ifFalse);
     }
 
     void emitTableSwitchDispatch(MTableSwitch* mir, Register index, Register base);
@@ -51,20 +57,20 @@ class CodeGeneratorMIPS : public CodeGeneratorMIPSShared
     Register splitTagForTest(const ValueOperand& value);
 
   public:
-    CodeGeneratorMIPS(MIRGenerator* gen, LIRGraph* graph, MacroAssembler* masm)
+    CodeGeneratorMIPS64(MIRGenerator* gen, LIRGraph* graph, MacroAssembler* masm)
       : CodeGeneratorMIPSShared(gen, graph, masm)
     { }
 
   public:
     void visitBox(LBox* box);
-    void visitBoxFloatingPoint(LBoxFloatingPoint* box);
     void visitUnbox(LUnbox* unbox);
+
     void setReturnDoubleRegs(LiveRegisterSet* regs);
 };
 
-typedef CodeGeneratorMIPS CodeGeneratorSpecific;
+typedef CodeGeneratorMIPS64 CodeGeneratorSpecific;
 
 } // namespace jit
 } // namespace js
 
-#endif /* jit_mips32_CodeGenerator_mips32_h */
+#endif /* jit_mips64_CodeGenerator_mips64_h */
