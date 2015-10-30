@@ -8,7 +8,6 @@
 #define __FFmpegH264Decoder_h__
 
 #include "FFmpegDataDecoder.h"
-#include <map>
 
 namespace mozilla
 {
@@ -66,9 +65,6 @@ private:
   uint32_t mPictureHeight;
   uint32_t mDisplayWidth;
   uint32_t mDisplayHeight;
-
-  // Used to match a frame to its duration. Key used is the frame's dts.
-  std::map<int64_t, int64_t> mDurationMap;
 };
 
 } // namespace mozilla

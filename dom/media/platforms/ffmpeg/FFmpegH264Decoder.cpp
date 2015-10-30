@@ -116,13 +116,6 @@ FFmpegH264Decoder<LIBAV_VER>::DoDecodeFrame(MediaRawData* aSample,
   packet.flags = aSample->mKeyframe ? AV_PKT_FLAG_KEY : 0;
   packet.pos = aSample->mOffset;
 
-  // LibAV provides no API to retrieve the decoded sample's duration.
-  // (FFmpeg >= 1.0 provides av_frame_get_pkt_duration)
-  // As such we instead use a map using the dts as key that we will retrieve
-  // later.
-  // The map will have a typical size of 16 entry.
-  mDurationMap[aSample->mTimecode] = aSample->mDuration;
-
   if (!PrepareFrame()) {
     NS_WARNING("FFmpeg h264 decoder failed to allocate frame.");
     mCallback->Error();
@@ -153,20 +146,6 @@ FFmpegH264Decoder<LIBAV_VER>::DoDecodeFrame(MediaRawData* aSample,
     int64_t pts = mPtsContext.GuessCorrectPts(mFrame->pkt_pts, mFrame->pkt_dts);
     FFMPEG_LOG("Got one frame output with pts=%lld opaque=%lld",
                pts, mCodecContext->reordered_opaque);
-    // Retrieve duration from dts.
-    auto it = mDurationMap.find(mFrame->pkt_dts);
-    int64_t duration;
-    if (it != mDurationMap.end()) {
-      duration = it->second;
-      mDurationMap.erase(it);
-    } else {
-      NS_WARNING("Unable to retrieve duration from map");
-      duration = aSample->mDuration;
-      // dts are probably incorrectly reported ; so clear the map as we're
-      // unlikely to find them in the future anyway. This also guards
-      // against the map becoming extremely big.
-      mDurationMap.clear();
-    }
 
     VideoInfo info;
     info.mDisplay = nsIntSize(mDisplayWidth, mDisplayHeight);
@@ -194,7 +173,7 @@ FFmpegH264Decoder<LIBAV_VER>::DoDecodeFrame(MediaRawData* aSample,
                                               mImageContainer,
                                               aSample->mOffset,
                                               pts,
-                                              duration,
+                                              aSample->mDuration,
                                               b,
                                               !!mFrame->key_frame,
                                               -1,
