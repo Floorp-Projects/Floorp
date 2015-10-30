@@ -317,3 +317,7 @@ html, .theme-body, #app, #memory-tool, #memory-tool-container {
   margin-left: 5px;
   color: var(--theme-content-color2);
 }
+
+.frame-link-function-display-name {
+  margin-right: 5px;
+}
