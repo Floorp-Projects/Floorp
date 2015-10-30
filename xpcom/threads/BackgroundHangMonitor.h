@@ -26,7 +26,7 @@ class BackgroundHangManager;
 
 /**
  * The background hang monitor is responsible for detecting and reporting
- * hangs in background (non-main) threads. A thread registers itself using
+ * hangs in main and background threads. A thread registers itself using
  * the BackgroundHangMonitor object and periodically calls its methods to
  * inform the hang monitor of the thread's activity. Each thread is given
  * a thread name, a timeout, and a maximum timeout. If one of the thread's

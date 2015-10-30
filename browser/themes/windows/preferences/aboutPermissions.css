@@ -105,7 +105,7 @@
   list-style-image: url(chrome://global/skin/icons/question-64.png);
 }
 .pref-icon[type="install"] {
-  list-style-image: url(chrome://mozapps/skin/extensions/extensionGeneric.png);
+  list-style-image: url(chrome://mozapps/skin/extensions/extensionGeneric.svg);
 }
 .pref-icon[type="popup"] {
   list-style-image: url(chrome://global/skin/icons/question-64.png);
