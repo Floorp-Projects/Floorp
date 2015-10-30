@@ -18702,6 +18702,14 @@
         "url": "/infrastructure/failing-test.html"
       },
       {
+        "path": "innerText/getter.html",
+        "url": "/innerText/getter.html"
+      },
+      {
+        "path": "innerText/setter.html",
+        "url": "/innerText/setter.html"
+      },
+      {
         "path": "js/behaviours/SetPrototypeOf-window.html",
         "url": "/js/behaviours/SetPrototypeOf-window.html"
       },
