@@ -82,6 +82,7 @@
 #include "nsViewSourceHandler.h"
 #include "nsWhitespaceTokenizer.h"
 #include "nsICookieService.h"
+#include "nsIConsoleReportCollector.h"
 
 // we want to explore making the document own the load group
 // so we can associate the document URI with the load group.
@@ -7355,6 +7356,11 @@ nsDocShell::EndPageLoad(nsIWebProgress* aProgress,
 {
   if (!aChannel) {
     return NS_ERROR_NULL_POINTER;
+  }
+
+  nsCOMPtr<nsIConsoleReportCollector> reporter = do_QueryInterface(aChannel);
+  if (reporter) {
+    reporter->FlushConsoleReports(GetDocument());
   }
 
   nsCOMPtr<nsIURI> url;
