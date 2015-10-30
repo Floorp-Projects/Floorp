@@ -10,6 +10,10 @@ import os
 
 import mozpack.path as mozpath
 
+from mozpack.manifests import (
+    InstallManifest,
+)
+
 from mozbuild.base import (
     MachCommandBase,
     MachCommandConditions as conditions,
@@ -168,7 +172,20 @@ class PackageFrontend(MachCommandBase):
         self._set_log_level(verbose)
         tree, job = self._compute_defaults(tree, job)
         artifacts = self._make_artifacts(tree=tree, job=job)
-        return artifacts.install_from(source, self.bindir)
+
+        manifest_path = mozpath.join(self.topobjdir, '_build_manifests', 'install', 'dist_bin')
+        manifest = InstallManifest(manifest_path)
+
+        def install_callback(path, file_existed, file_updated):
+            if path not in manifest:
+                manifest.add_optional_exists(path)
+
+        retcode = artifacts.install_from(source, self.bindir, install_callback=install_callback)
+
+        if retcode == 0:
+            manifest.write(manifest_path)
+
+        return retcode
 
     @ArtifactSubCommand('artifact', 'last',
         'Print the last pre-built artifact installed.')
