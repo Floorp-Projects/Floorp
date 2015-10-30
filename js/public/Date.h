@@ -39,6 +39,22 @@ struct JSContext;
 
 namespace JS {
 
+/**
+ * Re-query the system to determine the current time zone adjustment from UTC,
+ * including any component due to DST.  If the time zone has changed, this will
+ * cause all Date object non-UTC methods and formatting functions to produce
+ * appropriately adjusted results.
+ *
+ * Left to its own devices, SpiderMonkey itself may occasionally call this
+ * method to attempt to keep up with system time changes.  However, no
+ * particular frequency of checking is guaranteed.  Embedders unable to accept
+ * occasional inaccuracies should call this method in response to system time
+ * changes, or immediately before operations requiring instantaneous
+ * correctness, to guarantee correct behavior.
+ */
+extern JS_PUBLIC_API(void)
+ResetTimeZone();
+
 class ClippedTime;
 inline ClippedTime TimeClip(double time);
 

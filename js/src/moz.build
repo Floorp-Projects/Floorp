@@ -114,6 +114,7 @@ EXPORTS.js += [
     '../public/HashTable.h',
     '../public/HeapAPI.h',
     '../public/Id.h',
+    '../public/Initialization.h',
     '../public/LegacyIntTypes.h',
     '../public/MemoryMetrics.h',
     '../public/Principals.h',
@@ -362,6 +363,7 @@ SOURCES += [
     'jsatom.cpp',
     'jsmath.cpp',
     'jsutil.cpp',
+    'vm/Initialization.cpp',
 ]
 
 if CONFIG['JS_POSIX_NSPR']:

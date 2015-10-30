@@ -18,6 +18,7 @@
 
 #include "gc/Marking.h"
 #include "jit/JitCompartment.h"
+#include "js/Date.h"
 #include "js/Proxy.h"
 #include "js/RootingAPI.h"
 #include "proxy/DeadObjectProxy.h"
@@ -120,11 +121,10 @@ JSCompartment::init(JSContext* maybecx)
      *
      * As a hack, we clear our timezone cache every time we create a new
      * compartment. This ensures that the cache is always relatively fresh, but
-     * shouldn't interfere with benchmarks which create tons of date objects
+     * shouldn't interfere with benchmarks that create tons of date objects
      * (unless they also create tons of iframes, which seems unlikely).
      */
-    if (maybecx)
-        maybecx->runtime()->dateTimeInfo.updateTimeZoneAdjustment();
+    JS::ResetTimeZone();
 
     if (!crossCompartmentWrappers.init(0)) {
         if (maybecx)
