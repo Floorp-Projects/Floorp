@@ -837,15 +837,6 @@ describe("loop.shared.views", function() {
       expect(view.getDOMNode().querySelector(".context-content > p")).eql(null);
     });
 
-    it("should display a title if required", function() {
-      view = mountTestComponent({
-        showContextTitle: true,
-        url: "http://wonderful.invalid"
-      });
-
-      expect(view.getDOMNode().querySelector(".context-content > p")).not.eql(null);
-    });
-
     it("should set the href on the link if clicks are allowed", function() {
       view = mountTestComponent({
         allowClick: true,
@@ -1024,7 +1015,7 @@ describe("loop.shared.views", function() {
         localVideoMuted: false,
         matchMedia: window.matchMedia,
         renderRemoteVideo: false,
-        showContextRoomName: false,
+        showInitialContext: false,
         useDesktopPaths: false
       };
 
