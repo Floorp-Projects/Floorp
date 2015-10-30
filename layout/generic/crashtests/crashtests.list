@@ -465,7 +465,7 @@ load text-overflow-bug666751-2.html
 load text-overflow-bug670564.xhtml
 load text-overflow-bug671796.xhtml
 load 667025.html
-load 673770.html # bug 569193 and bug 459597
+load 673770.html
 load 679933-1.html
 load 682649-1.html
 load 683702-1.xhtml
@@ -504,7 +504,7 @@ load 784600.html
 load 785555.html
 load 786740-1.html
 load 790260-1.html
-asserts(0-4) test-pref(font.size.inflation.emPerLine,15) load 791601.xhtml # 3 counts of bug 871327, 1 bug 367185
+asserts(1) test-pref(font.size.inflation.emPerLine,15) load 791601.xhtml # Bug 871327
 test-pref(font.size.inflation.minTwips,120) load 794693.html
 asserts-if(!Android,4) load 798020-1.html
 load 798235-1.html
