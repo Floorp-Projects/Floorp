@@ -74,7 +74,7 @@ public:
    *
    * @return  number of elements currently in the deque
    */
-  inline size_t GetSize() const { return mSize; }
+  inline int32_t GetSize() const { return mSize; }
 
   /**
    * Appends new member at the end of the deque.
@@ -138,7 +138,7 @@ public:
    * @param   index of desired item
    * @return  element in list
    */
-  void* ObjectAt(size_t aIndex) const;
+  void* ObjectAt(int aIndex) const;
 
   /**
    * Remove and delete all items from container.
@@ -160,9 +160,9 @@ public:
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
 protected:
-  size_t         mSize;
-  size_t         mCapacity;
-  size_t         mOrigin;
+  int32_t         mSize;
+  int32_t         mCapacity;
+  int32_t         mOrigin;
   nsDequeFunctor* mDeallocator;
   void*           mBuffer[8];
   void**          mData;
