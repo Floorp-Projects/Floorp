@@ -26,7 +26,7 @@ load 431705-1.xul
 load 432561-1.html
 load 437170-1.html
 load 437532-1.html
-skip load 439184-1.html # skip until we figure out how to test this
+load 439184-1.html
 load 444237-1.html
 load 444848-1.html 
 load 447776-1.html
@@ -107,7 +107,7 @@ load 927734-1.html
 load 930270-1.html
 load 930270-2.html
 load 945048-1.html
-pref(layers.offmainthreadcomposition.async-animations,true) load 972199-1.html
+load 972199-1.html
 load 989965-1.html
 load 992333-1.html
 pref(dom.webcomponents.enabled,true) load 1017798-1.html

@@ -7,7 +7,7 @@ load 56746-1.html
 load 89101-1.html
 load 89358-1.html
 load 90205-1.html
-skip-if((OSX==1007||OSX==1008)&&browserIsRemote) load 99776-1.html # Bug 849747
+skip-if(cocoaWidget&&browserIsRemote) load 99776-1.html # Bug 849747
 load 118931-1.html
 load 121533-1.html
 load 123049-1.html
@@ -21,7 +21,7 @@ load 143862-2.html
 load 147320-1.html
 load 148245-1.html
 load 149014-1.html
-skip load 150431-1.html # slow test
+load 150431-1.html
 load 176915-1.html
 load 191272-1.html
 load 199696-1.html
@@ -153,7 +153,7 @@ load 374297-2.html
 load 376223-1.xhtml
 asserts(0-99) load 378325-1.html # bug 531589
 load 378682.html
-asserts(0-3) load 379105-1.xhtml # bug 570215, bug 479160
+load 379105-1.xhtml
 load 379419-1.xhtml
 load 379768-1.html
 load 379799-1.html
@@ -367,7 +367,7 @@ load 579655.html
 load 580129-1.html
 load 580494-1.html
 load 580834-1.xhtml
-asserts(0-13) load 589787.html # bug 574889
+load 589787.html
 load 591075-1.html
 load 591998-1.html
 load 595039-1.html
@@ -429,12 +429,12 @@ load 772306.html
 load 788360.html
 load 793848.html
 load 795646.html
-skip-if(1) load 802902.html # bug 901752
+skip load 802902.html # bug 901752
 load 806056-1.html
 load 806056-2.html
 load 812665.html
 load 813372-1.html
-asserts(0-4) load 817219.html # bug 623436
+load 817219.html
 load 818454.html
 asserts-if(gtkWidget,0-1) load 822865.html # bug 540078
 load 824862.html
@@ -454,7 +454,7 @@ load 876221.html
 load 897852.html
 asserts-if(Android,2) asserts-if(!Android,4-6) load 898913.html # bug 847368
 pref(layers.acceleration.disabled,true) pref(layers.force-active,true) load 919434.html
-pref(layout.css.sticky.enabled,true) load 926728.html
+load 926728.html
 load 930381.html
 load 931464.html
 load 936988-1.html
