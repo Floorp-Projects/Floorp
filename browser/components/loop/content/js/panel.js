@@ -942,6 +942,7 @@ loop.panel = (function(_, mozL10n) {
 
       return (
         React.createElement("div", {className: "panel-content"}, 
+          React.createElement("div", {className: "beta-ribbon"}), 
           React.createElement(NotificationListView, {
             clearOnDocumentHidden: true, 
             notifications: this.props.notifications}), 
