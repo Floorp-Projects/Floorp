@@ -40,7 +40,7 @@ export USE_ELF_HACK ELF_HACK_FLAGS
 stage-package: $(MOZ_PKG_MANIFEST) $(MOZ_PKG_MANIFEST_DEPS)
 	OMNIJAR_NAME=$(OMNIJAR_NAME) \
 	NO_PKG_FILES="$(NO_PKG_FILES)" \
-	$(PYTHON) $(MOZILLA_DIR)/toolkit/mozapps/installer/packager.py $(DEFINES) \
+	$(PYTHON) $(MOZILLA_DIR)/toolkit/mozapps/installer/packager.py $(DEFINES) $(ACDEFINES) \
 		--format $(MOZ_PACKAGER_FORMAT) \
 		$(addprefix --removals ,$(MOZ_PKG_REMOVALS)) \
 		$(if $(filter-out 0,$(MOZ_PKG_FATAL_WARNINGS)),,--ignore-errors) \
