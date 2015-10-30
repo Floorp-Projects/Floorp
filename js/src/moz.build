@@ -616,6 +616,9 @@ if CONFIG['JS_HAS_CTYPES']:
 if CONFIG['MOZ_LINKER']:
     DEFINES['MOZ_LINKER'] = True
 
+if CONFIG['JS_JITSPEW']:
+    DEFINES['JS_JITSPEW'] = True
+
 if CONFIG['_MSC_VER']:
     if CONFIG['CPU_ARCH'] == 'x86':
         SOURCES['builtin/RegExp.cpp'].no_pgo = True # Bug 772303
