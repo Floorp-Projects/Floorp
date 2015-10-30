@@ -10,6 +10,11 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/SystemAppProxy.jsm");
 Cu.import("resource://gre/modules/Messaging.jsm");
+Cu.import("resource://gre/modules/AppsUtils.jsm");
+
+XPCOMUtils.defineLazyServiceGetter(this, "appsService",
+                                   "@mozilla.org/AppsService;1",
+                                   "nsIAppsService");
 
 XPCOMUtils.defineLazyServiceGetter(this, "settings",
                                    "@mozilla.org/settingsService;1",
@@ -36,7 +41,10 @@ this.MessagesBridge = {
     Services.obs.addObserver(this.onAndroidMessage, "Android:Launcher", false);
     Services.obs.addObserver(this.onAndroidSetting, "Android:Setting", false);
     Services.obs.addObserver(this.onSettingChange, "mozsettings-changed", false);
+    Services.obs.addObserver(this.onAndroidNotification, "Android:Notification", false);
     Services.obs.addObserver(this, "xpcom-shutdown", false);
+
+    SystemAppProxy.addEventListener("mozContentNotificationEvent", this);
 
     // Send a request to get the device's IMEI.
     Messaging.sendRequestForResult({ type: "Android:GetIMEI" })
@@ -45,6 +53,38 @@ this.MessagesBridge = {
       let lock = settings.createLock();
       lock.set("deviceinfo.imei", aData.imei, null);
     });
+  },
+
+  handleEvent: function(evt) {
+    let detail = evt.detail;
+
+    switch(detail.type) {
+      case "desktop-notification-click":
+        debug("Sending Android:NotificationOpened");
+        Messaging.sendRequest({ type: "Android:NotificationOpened", value: { id: detail.id }});
+        break;
+      case "desktop-notification-close":
+        // On receipt of a notification close, send the id to the Android layer
+        // so it can be removed from the Android NotificationManager.
+        debug("Sending Android:NotificationClosed");
+        Messaging.sendRequest({ type: "Android:NotificationClosed", value: { id: detail.id }});
+        break;
+    }
+  },
+
+  onAndroidNotification: function(aSubject, aTopic, aData) {
+    let data = JSON.parse(aData);
+    debug("Got android notification: " + data._action);
+    switch(data._action) {
+      case "post":
+        debug("showNotification(id=" + data.id + ")");
+        showNotification(data);
+        break;
+      case "remove":
+        debug("removeNotification(id=" + data.id + ")");
+        removeNotification(data);
+        break;
+    }
   },
 
   onAndroidMessage: function(aSubject, aTopic, aData) {
@@ -122,9 +162,50 @@ this.MessagesBridge = {
       Services.obs.removeObserver(this.onAndroidMessage, "Android:Launcher");
       Services.obs.removeObserver(this.onAndroidSetting, "Android:Setting");
       Services.obs.removeObserver(this.onSettingChange, "mozsettings-changed");
+      Services.obs.removeObserver(this.onAndroidNotification, "Android:Notification");
       Services.obs.removeObserver(this, "xpcom-shutdown");
     }
   }
+}
+
+function removeNotification(aDetail) {
+  // Remove the notification
+  SystemAppProxy._sendCustomEvent("mozChromeNotificationEvent", {
+    type: "desktop-notification-close",
+    id: aDetail.id
+  });
+}
+
+function showNotification(aDetail) {
+  const manifestURL = aDetail.manifestURL;
+
+  function send(appName) {
+    aDetail.type = "desktop-notification";
+    aDetail.appName = appName;
+
+    SystemAppProxy._sendCustomEvent("mozChromeNotificationEvent", aDetail);
+  }
+
+  if (!manifestURL|| !manifestURL.length) {
+    send(null);
+    return;
+  }
+
+  // If we have a manifest URL, get the app title from the manifest
+  // to prevent spoofing.
+  appsService.getManifestFor(manifestURL).then((manifest) => {
+    let app = appsService.getAppByManifestURL(manifestURL);
+
+    // Sometimes an android notification may be created by a service rather
+    // than an app. In this case, don't use the appName.
+    if (!app) {
+      send(null);
+      return;
+    }
+
+    let helper = new ManifestHelper(manifest, app.origin, manifestURL);
+    send(helper.name);
+  });
 }
 
 this.MessagesBridge.init();

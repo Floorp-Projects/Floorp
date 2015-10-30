@@ -122,6 +122,15 @@
         </activity>
 
         <service
+            android:name="org.mozilla.b2gdroid.NotificationObserver"
+            android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE"
+            android:process="org.mozilla.b2gdroid.NotificationObserver">
+            <intent-filter>
+                <action android:name="android.service.notification.NotificationListenerService" />
+            </intent-filter>
+        </service>
+
+        <service
             android:exported="false"
             android:name="org.mozilla.gecko.updater.UpdateService"
             android:process="org.mozilla.b2gdroid.UpdateService">

@@ -6,13 +6,8 @@ package org.mozilla.b2gdroid;
 
 import java.util.Date;
 
-import android.app.Activity;
-import android.app.ActivityManager;
-import android.app.KeyguardManager;
-import android.app.KeyguardManager.KeyguardLock;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.location.Location;
 import android.location.LocationListener;
@@ -33,6 +28,7 @@ import org.mozilla.gecko.GeckoBatteryManager;
 import org.mozilla.gecko.GeckoEvent;
 import org.mozilla.gecko.GeckoThread;
 import org.mozilla.gecko.IntentHelper;
+import org.mozilla.gecko.AppNotificationClient;
 import org.mozilla.gecko.updater.UpdateServiceHelper;
 import org.mozilla.gecko.util.GeckoEventListener;
 
@@ -44,10 +40,12 @@ public class Launcher extends FragmentActivity
                       implements GeckoEventListener, ContextGetter {
     private static final String LOGTAG = "B2G";
 
-    private ContactService      mContactService;
-    private ScreenStateObserver mScreenStateObserver;
-    private Apps                mApps;
-    private SettingsMapper      mSettings;
+    private ContactService        mContactService;
+    private ScreenStateObserver   mScreenStateObserver;
+    private Apps                  mApps;
+    private SettingsMapper        mSettings;
+    private GeckoEventReceiver    mGeckoEventReceiver;
+    private RemoteGeckoEventProxy mGeckoEventProxy;
 
     private static final long   kHomeRepeat = 2;
     private static final long   kHomeDelay  = 500; // delay in ms to tap kHomeRepeat times.
@@ -95,6 +93,7 @@ public class Launcher extends FragmentActivity
     /** Initializes Gecko APIs */
     private void initGecko() {
         GeckoAppShell.setContextGetter(this);
+        GeckoAppShell.setNotificationClient(new AppNotificationClient(this));
 
         GeckoBatteryManager.getInstance().start(this);
         mContactService = new ContactService(EventDispatcher.getInstance(), this);
@@ -122,12 +121,23 @@ public class Launcher extends FragmentActivity
 
         initGecko();
 
+        mGeckoEventProxy = new RemoteGeckoEventProxy(this);
+
+        mGeckoEventReceiver = new GeckoEventReceiver();
+        mGeckoEventReceiver.registerWithContext(this);
+
         GeckoAppShell.setGeckoInterface(new GeckoInterface(this));
 
         UpdateServiceHelper.registerForUpdates(this);
 
         EventDispatcher.getInstance().registerGeckoThreadListener(this,
             "Launcher:Ready");
+
+        // Register the RemoteGeckoEventProxy with the Notification Opened
+        // event, Notifications are handled in a different process as a
+        // service, so we need to forward them to the remote service
+        EventDispatcher.getInstance().registerGeckoThreadListener(mGeckoEventProxy,
+            "Android:NotificationOpened");
 
         setContentView(R.layout.launcher);
 
@@ -141,6 +151,7 @@ public class Launcher extends FragmentActivity
         super.onResume();
         if (GeckoThread.isRunning()) {
             hideSplashScreen();
+            NotificationObserver.registerForNativeNotifications(this);
         }
     }
 
@@ -149,6 +160,10 @@ public class Launcher extends FragmentActivity
         Log.w(LOGTAG, "onDestroy");
         super.onDestroy();
         IntentHelper.destroy();
+
+        mGeckoEventReceiver.destroy(this);
+        mGeckoEventReceiver = null;
+
         mScreenStateObserver.destroy(this);
         mScreenStateObserver = null;
 
