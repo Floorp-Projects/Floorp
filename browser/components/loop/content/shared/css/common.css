@@ -545,14 +545,13 @@ html[dir="rtl"] .context-content {
 }
 
 .context-wrapper {
-  border: 1px solid #5cccee;
+  border: 2px solid #ebebeb;
   border-radius: 4px;
-  background: #fff;
-  padding: .8em;
+  background: #fafafa;
+  padding: 1.1rem .8rem;
   /* Use the flex row mode to position the elements next to each other. */
   display: flex;
   flex-flow: row nowrap;
-  line-height: 1.1em;
   /* No underline for the text in the context view. */
   text-decoration: none;
 }
@@ -590,9 +589,6 @@ html[dir="rtl"] .context-wrapper > .context-preview {
 
 .clicks-allowed.context-wrapper:hover {
   border: 2px solid #5cccee;
-  /* Due to the increased border width, reduce the padding accordingly so that
-     the text doesn't move. */
-  padding: calc(.8em - 1px);
 }
 
 /* Only underline the url, not the associated text */

@@ -55,34 +55,48 @@ var burn_rubber = Task.async(function*({histogramName, topic, expectedReason, pr
     for  (let key of Object.keys(prefs)) {
       Services.prefs.setIntPref(key, prefs[key]);
     }
-    info("Preparing add-on watcher");
-    let wait = new Promise(resolve => AddonWatcher.init((id, reason) => {
-      Assert.equal(id, ADDON_ID, "The add-on watcher has detected the misbehaving addon");
-      if (reason == expectedReason) {
-        resolve(reason);
+
+    // We let the add-on watcher a few chances to get things right, as it may
+    // detect jank before it detects cpow.
+    for (let i = 0; i < 5; ++i) {
+      info(`Preparing add-on watcher for attempt ${i}`);
+      let wait = new Promise(resolve => AddonWatcher.init((id, reason) => {
+        Assert.equal(id, ADDON_ID, "The add-on watcher has detected the misbehaving addon");
+        info(`Reason: ${reason}, expected ${expectedReason}`);
+        if (reason == expectedReason) {
+          resolve(reason);
+        }
+      }));
+      let done = false;
+      wait = wait.then(result => {
+        done = true;
+        return result;
+      });
+
+      let histogram = Services.telemetry.getKeyedHistogramById(histogramName);
+      histogram.clear();
+      let snap1 = histogram.snapshot(ADDON_ID);
+      Assert.equal(snap1.sum, 0, `Histogram ${histogramName} is initially empty for the add-on`);
+      while (!done) {
+        yield new Promise(resolve => setTimeout(resolve, 100));
+        info("Burning some CPU. This should cause an add-on watcher notification");
+        Services.obs.notifyObservers(null, topic, "");
       }
-    }));
-    let done = false;
-    wait = wait.then(result => {
-      done = true;
-      return result;
-    });
+      let reason = yield wait;
 
-    let histogram = Services.telemetry.getKeyedHistogramById(histogramName);
-    histogram.clear();
-    let snap1 = histogram.snapshot(ADDON_ID);
-    Assert.equal(snap1.sum, 0, `Histogram ${histogramName} is initially empty for the add-on`);
-    while (!done) {
-      yield new Promise(resolve => setTimeout(resolve, 100));
-      info("Burning some CPU. This should cause an add-on watcher notification");
-      Services.obs.notifyObservers(null, topic, "");
+      Assert.equal(reason, expectedReason, "Reason is valid");
+      let snap2 = histogram.snapshot(ADDON_ID);
+
+      if (snap2.sum >= expectedMinSum) {
+        // Success.
+        return;
+      } else {
+        info(`Histogram ${histogramName} recorded a gravity of ${snap2.sum}, expecting at least ${expectedMinSum}.`);
+      }
+
+      AddonWatcher.uninit();
     }
-    let reason = yield wait;
-
-    Assert.equal(reason, expectedReason, "Reason is valid");
-    let snap2 = histogram.snapshot(ADDON_ID);
-
-    Assert.ok(snap2.sum >= expectedMinSum, `Histogram ${histogramName} recorded a gravity of ${snap2.sum}, expecting at least ${expectedMinSum}.`);
+    Assert.ok(false, "I should have recorded the expected gravity by now.");
   } finally {
     AddonWatcher.uninit();
     for  (let key of Object.keys(prefs)) {
@@ -120,7 +134,7 @@ add_task(function* test_burn_CPOW() {
     },
     histogramName: "MISBEHAVING_ADDONS_CPOW_TIME_MS",
     topic: "test-addonwatcher-burn-some-cpow",
-    expectedReason: "totalCPOWTime",
+    expectedReason: "longestDuration",
     expectedMinSum: 400,
   });
 });

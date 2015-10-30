@@ -88,6 +88,8 @@ interface nsIBrowserHistory : nsISupports
      * Visits are removed synchronously, but pages are expired asynchronously
      * off the main-thread.
      *
+     * @deprecated Please use PlacesUtils.history.clear() instead.
+     *
      * @note The removal happens in a batch. Single removals are not notified,
      *       instead an onClearHistory notification is sent to
      *       nsINavHistoryObserver implementers.

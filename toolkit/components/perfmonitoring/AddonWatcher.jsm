@@ -26,7 +26,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "Services",
                                   "resource://gre/modules/Services.jsm");
 const FILTERS = [
   {probe: "jank", field: "longestDuration"},
-  {probe: "cpow", field: "totalCPOWTime"},
 ];
 
 const WAKEUP_IS_SURPRISINGLY_SLOW_FACTOR = 2;
@@ -70,16 +69,6 @@ var AddonWatcher = {
    * @param {function} callback A callback, called whenever we determine
    * that an add-on is causing performance issues. It takes as argument
    *  {string} addonId The identifier of the add-on known to cause issues.
-   *  {string} reason The reason for which the add-on has been flagged,
-   *     as one of "totalCPOWTime" (the add-on has caused blocking process
-   *     communications, which freeze the UX)
-   *     Use preference "browser.addon-watch.limits.totalCPOWTime" to control
-   *     the maximal amount of CPOW time per watch interval.
-   *
-   *     or "longestDuration" (the add-on has caused user-visible missed frames).
-   *     Use preference "browser.addon-watch.limits.longestDuration" to control
-   *     the longest uninterrupted execution of code of an add-on during a watch
-   *     interval.
    */
   init: function(callback) {
     if (!callback) {
@@ -132,7 +121,7 @@ var AddonWatcher = {
       }
       this._monitor = null;
     } else {
-      this._monitor = PerformanceStats.getMonitor([for (filter of FILTERS) filter.probe]);
+      this._monitor = PerformanceStats.getMonitor(["jank", "cpow"]);
       this._timer.initWithCallback(this._checkAddons.bind(this), this._interval, Ci.nsITimer.TYPE_REPEATING_SLACK);
     }
     this._isPaused = isPaused;
@@ -187,13 +176,11 @@ var AddonWatcher = {
 
   /**
    * Check the performance of add-ons during the latest slice of time.
-   *
-   * We consider that an add-on is causing slowdown if it has executed
-   * without interruption for at least 64ms (4 frames) at least once
-   * during the latest slice, or if it has used any CPOW during the latest
-   * slice.
    */
   _checkAddons: function() {
+    if (this.paused) {
+      return;
+    }
     let previousWakeup = this._latestWakeup;
     let currentWakeup = this._latestWakeup = Date.now();
 
@@ -201,11 +188,13 @@ var AddonWatcher = {
       try {
         let previousSnapshot = this._latestSnapshot;
         let snapshot = this._latestSnapshot = yield this._monitor.promiseSnapshot();
+        if (this.paused) {
+          return;
+        }
+
         let isSystemTooBusy = this._isSystemTooBusy(currentWakeup - previousWakeup, snapshot, previousSnapshot);
 
         let limits = {
-          // By default, warn if we have a total time of 1s of CPOW per 15 seconds
-          totalCPOWTime: Math.round(Preferences.get("browser.addon-watch.limits.totalCPOWTime", 1000000) * this._interval / 15000),
           // By default, warn if we have skipped 4 consecutive frames
           // at least once during the latest slice.
           longestDuration: Math.round(Math.log2(Preferences.get("browser.addon-watch.limits.longestDuration", 128))),
