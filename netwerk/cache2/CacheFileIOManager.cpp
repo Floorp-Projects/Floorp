@@ -108,13 +108,16 @@ NS_INTERFACE_MAP_BEGIN(CacheFileHandle)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END_THREADSAFE
 
-CacheFileHandle::CacheFileHandle(const SHA1Sum::Hash *aHash, bool aPriority)
+CacheFileHandle::CacheFileHandle(const SHA1Sum::Hash *aHash, bool aPriority, PinningStatus aPinning)
   : mHash(aHash)
   , mPriority(aPriority)
   , mClosed(false)
   , mSpecialFile(false)
   , mInvalid(false)
   , mFileExists(false)
+  , mPinning(aPinning)
+  , mDoomWhenFoundPinned(false)
+  , mDoomWhenFoundNonPinned(false)
   , mFileSize(-1)
   , mFD(nullptr)
 {
@@ -127,13 +130,16 @@ CacheFileHandle::CacheFileHandle(const SHA1Sum::Hash *aHash, bool aPriority)
        , this, LOGSHA1(aHash)));
 }
 
-CacheFileHandle::CacheFileHandle(const nsACString &aKey, bool aPriority)
+CacheFileHandle::CacheFileHandle(const nsACString &aKey, bool aPriority, PinningStatus aPinning)
   : mHash(nullptr)
   , mPriority(aPriority)
   , mClosed(false)
   , mSpecialFile(true)
   , mInvalid(false)
   , mFileExists(false)
+  , mPinning(aPinning)
+  , mDoomWhenFoundPinned(false)
+  , mDoomWhenFoundNonPinned(false)
   , mFileSize(-1)
   , mFD(nullptr)
   , mKey(aKey)
@@ -197,6 +203,32 @@ CacheFileHandle::FileSizeInK() const
   }
 
   return size;
+}
+
+bool
+CacheFileHandle::SetPinned(bool aPinned)
+{
+  LOG(("CacheFileHandle::SetPinned [this=%p, pinned=%d]", this, aPinned));
+
+  MOZ_ASSERT(CacheFileIOManager::IsOnIOThreadOrCeased());
+
+  mPinning = aPinned
+    ? PinningStatus::PINNED
+    : PinningStatus::NON_PINNED;
+
+  if ((MOZ_UNLIKELY(mDoomWhenFoundPinned) && aPinned) ||
+      (MOZ_UNLIKELY(mDoomWhenFoundNonPinned) && !aPinned)) {
+
+    LOG(("  dooming, when: pinned=%d, non-pinned=%d, found: pinned=%d",
+      bool(mDoomWhenFoundPinned), bool(mDoomWhenFoundNonPinned), aPinned));
+
+    mDoomWhenFoundPinned = false;
+    mDoomWhenFoundNonPinned = false;
+
+    return false;
+  }
+
+  return true;
 }
 
 // Memory reporting
@@ -360,7 +392,7 @@ CacheFileHandles::GetHandle(const SHA1Sum::Hash *aHash,
 
 nsresult
 CacheFileHandles::NewHandle(const SHA1Sum::Hash *aHash,
-                            bool aPriority,
+                            bool aPriority, CacheFileHandle::PinningStatus aPinning,
                             CacheFileHandle **_retval)
 {
   MOZ_ASSERT(CacheFileIOManager::IsOnIOThreadOrCeased());
@@ -381,7 +413,7 @@ CacheFileHandles::NewHandle(const SHA1Sum::Hash *aHash,
   entry->AssertHandlesState();
 #endif
 
-  RefPtr<CacheFileHandle> handle = new CacheFileHandle(entry->Hash(), aPriority);
+  RefPtr<CacheFileHandle> handle = new CacheFileHandle(entry->Hash(), aPriority, aPinning);
   entry->AddHandle(handle);
 
   LOG(("CacheFileHandles::NewHandle() hash=%08x%08x%08x%08x%08x "
@@ -576,8 +608,8 @@ public:
         }
       }
     }
-    mCallback->OnFileOpened(mHandle, rv);
 
+    mCallback->OnFileOpened(mHandle, rv);
     return NS_OK;
   }
 
@@ -585,8 +617,8 @@ protected:
   SHA1Sum::Hash                 mHash;
   uint32_t                      mFlags;
   nsCOMPtr<CacheFileIOListener> mCallback;
-  RefPtr<CacheFileIOManager>  mIOMan;
-  RefPtr<CacheFileHandle>     mHandle;
+  RefPtr<CacheFileIOManager>    mIOMan;
+  RefPtr<CacheFileHandle>       mHandle;
   nsCString                     mKey;
 };
 
@@ -626,7 +658,7 @@ public:
   }
 
 protected:
-  RefPtr<CacheFileHandle>     mHandle;
+  RefPtr<CacheFileHandle>       mHandle;
   int64_t                       mOffset;
   char                         *mBuf;
   int32_t                       mCount;
@@ -685,7 +717,7 @@ public:
   }
 
 protected:
-  RefPtr<CacheFileHandle>     mHandle;
+  RefPtr<CacheFileHandle>       mHandle;
   int64_t                       mOffset;
   const char                   *mBuf;
   int32_t                       mCount;
@@ -729,9 +761,9 @@ public:
   }
 
 protected:
-  nsCOMPtr<CacheFileIOListener> mCallback;
-  nsCOMPtr<nsIEventTarget>      mTarget;
-  RefPtr<CacheFileHandle>     mHandle;
+  nsCOMPtr<CacheFileIOListener>              mCallback;
+  nsCOMPtr<nsIEventTarget>                   mTarget;
+  RefPtr<CacheFileHandle>                    mHandle;
 };
 
 class DoomFileByKeyEvent : public nsRunnable {
@@ -777,7 +809,7 @@ public:
 protected:
   SHA1Sum::Hash                 mHash;
   nsCOMPtr<CacheFileIOListener> mCallback;
-  RefPtr<CacheFileIOManager>  mIOMan;
+  RefPtr<CacheFileIOManager>    mIOMan;
 };
 
 class ReleaseNSPRHandleEvent : public nsRunnable {
@@ -805,7 +837,7 @@ public:
   }
 
 protected:
-  RefPtr<CacheFileHandle>     mHandle;
+  RefPtr<CacheFileHandle>       mHandle;
 };
 
 class TruncateSeekSetEOFEvent : public nsRunnable {
@@ -846,7 +878,7 @@ public:
   }
 
 protected:
-  RefPtr<CacheFileHandle>     mHandle;
+  RefPtr<CacheFileHandle>       mHandle;
   int64_t                       mTruncatePos;
   int64_t                       mEOFPos;
   nsCOMPtr<CacheFileIOListener> mCallback;
@@ -889,7 +921,7 @@ public:
   }
 
 protected:
-  RefPtr<CacheFileHandle>     mHandle;
+  RefPtr<CacheFileHandle>       mHandle;
   nsCString                     mNewName;
   nsCOMPtr<CacheFileIOListener> mCallback;
 };
@@ -897,11 +929,12 @@ protected:
 class InitIndexEntryEvent : public nsRunnable {
 public:
   InitIndexEntryEvent(CacheFileHandle *aHandle, uint32_t aAppId,
-                      bool aAnonymous, bool aInBrowser)
+                      bool aAnonymous, bool aInBrowser, bool aPinning)
     : mHandle(aHandle)
     , mAppId(aAppId)
     , mAnonymous(aAnonymous)
     , mInBrowser(aInBrowser)
+    , mPinning(aPinning)
   {
     MOZ_COUNT_CTOR(InitIndexEntryEvent);
   }
@@ -919,7 +952,7 @@ public:
       return NS_OK;
     }
 
-    CacheIndex::InitEntry(mHandle->Hash(), mAppId, mAnonymous, mInBrowser);
+    CacheIndex::InitEntry(mHandle->Hash(), mAppId, mAnonymous, mInBrowser, mPinning);
 
     // We cannot set the filesize before we init the entry. If we're opening
     // an existing entry file, frecency and expiration time will be set after
@@ -936,6 +969,7 @@ protected:
   uint32_t                  mAppId;
   bool                      mAnonymous;
   bool                      mInBrowser;
+  bool                      mPinning;
 };
 
 class UpdateIndexEntryEvent : public nsRunnable {
@@ -1523,6 +1557,10 @@ CacheFileIOManager::OpenFileInternal(const SHA1Sum::Hash *aHash,
     if (NS_FAILED(rv)) return rv;
   }
 
+  CacheFileHandle::PinningStatus pinning = aFlags & PINNED
+    ? CacheFileHandle::PinningStatus::PINNED
+    : CacheFileHandle::PinningStatus::NON_PINNED;
+
   nsCOMPtr<nsIFile> file;
   rv = GetFile(aHash, getter_AddRefs(file));
   NS_ENSURE_SUCCESS(rv, rv);
@@ -1537,7 +1575,7 @@ CacheFileIOManager::OpenFileInternal(const SHA1Sum::Hash *aHash,
       handle = nullptr;
     }
 
-    rv = mHandles.NewHandle(aHash, aFlags & PRIORITY, getter_AddRefs(handle));
+    rv = mHandles.NewHandle(aHash, aFlags & PRIORITY, pinning, getter_AddRefs(handle));
     NS_ENSURE_SUCCESS(rv, rv);
 
     bool exists;
@@ -1567,7 +1605,7 @@ CacheFileIOManager::OpenFileInternal(const SHA1Sum::Hash *aHash,
     return NS_OK;
   }
 
-  bool exists;
+  bool exists, evictedAsPinned = false, evictedAsNonPinned = false;
   rv = file->Exists(&exists);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1575,15 +1613,7 @@ CacheFileIOManager::OpenFileInternal(const SHA1Sum::Hash *aHash,
     if (mContextEvictor->ContextsCount() == 0) {
       mContextEvictor = nullptr;
     } else {
-      bool wasEvicted = false;
-      mContextEvictor->WasEvicted(aKey, file, &wasEvicted);
-      if (wasEvicted) {
-        LOG(("CacheFileIOManager::OpenFileInternal() - Removing file since the "
-             "entry was evicted by EvictByContext()"));
-        exists = false;
-        file->Remove(false);
-        CacheIndex::RemoveEntry(aHash);
-      }
+      mContextEvictor->WasEvicted(aKey, file, &evictedAsPinned, &evictedAsNonPinned);
     }
   }
 
@@ -1591,10 +1621,29 @@ CacheFileIOManager::OpenFileInternal(const SHA1Sum::Hash *aHash,
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  rv = mHandles.NewHandle(aHash, aFlags & PRIORITY, getter_AddRefs(handle));
+  if (exists) {
+    // For existing files we determine the pinning status later, after the metadata gets parsed.
+    pinning = CacheFileHandle::PinningStatus::UNKNOWN;
+  }
+
+  rv = mHandles.NewHandle(aHash, aFlags & PRIORITY, pinning, getter_AddRefs(handle));
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (exists) {
+    // If this file has been found evicted through the context file evictor above for
+    // any of pinned or non-pinned state, these calls ensure we doom the handle ASAP
+    // we know the real pinning state after metadta has been parsed.  DoomFileInternal
+    // on the |handle| doesn't doom right now, since the pinning state is unknown
+    // and we pass down a pinning restriction.
+    if (evictedAsPinned) {
+      rv = DoomFileInternal(handle, DOOM_WHEN_PINNED);
+      MOZ_ASSERT(!handle->IsDoomed() && NS_SUCCEEDED(rv));
+    }
+    if (evictedAsNonPinned) {
+      rv = DoomFileInternal(handle, DOOM_WHEN_NON_PINNED);
+      MOZ_ASSERT(!handle->IsDoomed() && NS_SUCCEEDED(rv));
+    }
+
     rv = file->GetFileSize(&handle->mFileSize);
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -1652,7 +1701,7 @@ CacheFileIOManager::OpenSpecialFileInternal(const nsACString &aKey,
       handle = nullptr;
     }
 
-    handle = new CacheFileHandle(aKey, aFlags & PRIORITY);
+    handle = new CacheFileHandle(aKey, aFlags & PRIORITY, CacheFileHandle::PinningStatus::NON_PINNED);
     mSpecialHandles.AppendElement(handle);
 
     bool exists;
@@ -1687,7 +1736,7 @@ CacheFileIOManager::OpenSpecialFileInternal(const nsACString &aKey,
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  handle = new CacheFileHandle(aKey, aFlags & PRIORITY);
+  handle = new CacheFileHandle(aKey, aFlags & PRIORITY, CacheFileHandle::PinningStatus::NON_PINNED);
   mSpecialHandles.AppendElement(handle);
 
   if (exists) {
@@ -1984,15 +2033,50 @@ CacheFileIOManager::DoomFile(CacheFileHandle *aHandle,
 }
 
 nsresult
-CacheFileIOManager::DoomFileInternal(CacheFileHandle *aHandle)
+CacheFileIOManager::DoomFileInternal(CacheFileHandle *aHandle,
+                                     PinningDoomRestriction aPinningDoomRestriction)
 {
   LOG(("CacheFileIOManager::DoomFileInternal() [handle=%p]", aHandle));
   aHandle->Log();
+
+  MOZ_ASSERT(CacheFileIOManager::IsOnIOThreadOrCeased());
 
   nsresult rv;
 
   if (aHandle->IsDoomed()) {
     return NS_OK;
+  }
+
+  if (aPinningDoomRestriction > NO_RESTRICTION) {
+    switch (aHandle->mPinning) {
+    case CacheFileHandle::PinningStatus::NON_PINNED:
+      if (MOZ_LIKELY(aPinningDoomRestriction != DOOM_WHEN_NON_PINNED)) {
+        LOG(("  not dooming, it's a non-pinned handle"));
+        return NS_OK;
+      }
+      // Doom now
+      break;
+
+    case CacheFileHandle::PinningStatus::PINNED:
+      if (MOZ_UNLIKELY(aPinningDoomRestriction != DOOM_WHEN_PINNED)) {
+        LOG(("  not dooming, it's a pinned handle"));
+        return NS_OK;
+      }
+      // Doom now
+      break;
+
+    case CacheFileHandle::PinningStatus::UNKNOWN:
+      if (MOZ_LIKELY(aPinningDoomRestriction == DOOM_WHEN_NON_PINNED)) {
+        LOG(("  doom when non-pinned set"));
+        aHandle->mDoomWhenFoundNonPinned = true;
+      } else if (MOZ_UNLIKELY(aPinningDoomRestriction == DOOM_WHEN_PINNED)) {
+        LOG(("  doom when pinned set"));
+        aHandle->mDoomWhenFoundPinned = true;
+      }
+
+      LOG(("  pinning status not known, deferring doom decision"));
+      return NS_OK;
+    }
   }
 
   if (aHandle->mFileExists) {
@@ -2784,7 +2868,7 @@ CacheFileIOManager::EvictAllInternal()
 
 // static
 nsresult
-CacheFileIOManager::EvictByContext(nsILoadContextInfo *aLoadContextInfo)
+CacheFileIOManager::EvictByContext(nsILoadContextInfo *aLoadContextInfo, bool aPinned)
 {
   LOG(("CacheFileIOManager::EvictByContext() [loadContextInfo=%p]",
        aLoadContextInfo));
@@ -2797,8 +2881,8 @@ CacheFileIOManager::EvictByContext(nsILoadContextInfo *aLoadContextInfo)
   }
 
   nsCOMPtr<nsIRunnable> ev;
-  ev = NS_NewRunnableMethodWithArg<nsCOMPtr<nsILoadContextInfo> >
-         (ioMan, &CacheFileIOManager::EvictByContextInternal, aLoadContextInfo);
+  ev = NS_NewRunnableMethodWithArgs<nsCOMPtr<nsILoadContextInfo>, bool>
+         (ioMan, &CacheFileIOManager::EvictByContextInternal, aLoadContextInfo, aPinned);
 
   rv = ioMan->mIOThread->DispatchAfterPendingOpens(ev);
   if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -2809,24 +2893,35 @@ CacheFileIOManager::EvictByContext(nsILoadContextInfo *aLoadContextInfo)
 }
 
 nsresult
-CacheFileIOManager::EvictByContextInternal(nsILoadContextInfo *aLoadContextInfo)
+CacheFileIOManager::EvictByContextInternal(nsILoadContextInfo *aLoadContextInfo, bool aPinned)
 {
-  nsAutoCString suffix;
-  aLoadContextInfo->OriginAttributesPtr()->CreateSuffix(suffix);
-  LOG(("CacheFileIOManager::EvictByContextInternal() [loadContextInfo=%p, "
-       "anonymous=%u, suffix=%s]", aLoadContextInfo, aLoadContextInfo->IsAnonymous(),
-       suffix.get()));
+  LOG(("CacheFileIOManager::EvictByContextInternal() [loadContextInfo=%p, pinned=%d]",
+      aLoadContextInfo, aPinned));
 
   nsresult rv;
 
-  MOZ_ASSERT(mIOThread->IsCurrentThread());
+  if (aLoadContextInfo) {
+    nsAutoCString suffix;
+    aLoadContextInfo->OriginAttributesPtr()->CreateSuffix(suffix);
+    LOG(("  anonymous=%u, suffix=%s]", aLoadContextInfo->IsAnonymous(), suffix.get()));
 
-  MOZ_ASSERT(!aLoadContextInfo->IsPrivate());
-  if (aLoadContextInfo->IsPrivate()) {
-    return NS_ERROR_INVALID_ARG;
+    MOZ_ASSERT(mIOThread->IsCurrentThread());
+
+    MOZ_ASSERT(!aLoadContextInfo->IsPrivate());
+    if (aLoadContextInfo->IsPrivate()) {
+      return NS_ERROR_INVALID_ARG;
+    }
   }
 
   if (!mCacheDirectory) {
+    // This is a kind of hack. Somebody called EvictAll() without a profile.
+    // This happens in xpcshell tests that use cache without profile. We need
+    // to notify observers in this case since the tests are waiting for it.
+    // Also notify for aPinned == true, those are interested as well.
+    if (!aLoadContextInfo) {
+      RefPtr<EvictionNotifierRunnable> r = new EvictionNotifierRunnable();
+      NS_DispatchToMainThread(r);
+    }
     return NS_ERROR_FILE_INVALID_PATH;
   }
 
@@ -2846,24 +2941,38 @@ CacheFileIOManager::EvictByContextInternal(nsILoadContextInfo *aLoadContextInfo)
   mHandles.GetActiveHandles(&handles);
 
   for (uint32_t i = 0; i < handles.Length(); ++i) {
-    bool equals;
-    rv = CacheFileUtils::KeyMatchesLoadContextInfo(handles[i]->Key(),
-                                                   aLoadContextInfo,
-                                                   &equals);
-    if (NS_FAILED(rv)) {
-      LOG(("CacheFileIOManager::EvictByContextInternal() - Cannot parse key in "
-           "handle! [handle=%p, key=%s]", handles[i].get(),
-           handles[i]->Key().get()));
-      MOZ_CRASH("Unexpected error!");
-    }
+    CacheFileHandle* handle = handles[i];
 
-    if (equals) {
-      rv = DoomFileInternal(handles[i]);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        LOG(("CacheFileIOManager::EvictByContextInternal() - Cannot doom handle"
-             " [handle=%p]", handles[i].get()));
+    if (aLoadContextInfo) {
+      bool equals;
+      rv = CacheFileUtils::KeyMatchesLoadContextInfo(handle->Key(),
+                                                     aLoadContextInfo,
+                                                     &equals);
+      if (NS_FAILED(rv)) {
+        LOG(("CacheFileIOManager::EvictByContextInternal() - Cannot parse key in "
+             "handle! [handle=%p, key=%s]", handle, handle->Key().get()));
+        MOZ_CRASH("Unexpected error!");
+      }
+
+      if (!equals) {
+        continue;
       }
     }
+
+    // handle will be doomed only when pinning status is known and equal or
+    // doom decision will be deferred until pinning status is determined.
+    rv = DoomFileInternal(handle, aPinned
+                                  ? CacheFileIOManager::DOOM_WHEN_PINNED
+                                  : CacheFileIOManager::DOOM_WHEN_NON_PINNED);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      LOG(("CacheFileIOManager::EvictByContextInternal() - Cannot doom handle"
+            " [handle=%p]", handle));
+    }
+  }
+
+  if (!aLoadContextInfo) {
+    RefPtr<EvictionNotifierRunnable> r = new EvictionNotifierRunnable();
+    NS_DispatchToMainThread(r);
   }
 
   if (!mContextEvictor) {
@@ -2871,7 +2980,7 @@ CacheFileIOManager::EvictByContextInternal(nsILoadContextInfo *aLoadContextInfo)
     mContextEvictor->Init(mCacheDirectory);
   }
 
-  mContextEvictor->AddContext(aLoadContextInfo);
+  mContextEvictor->AddContext(aLoadContextInfo, aPinned);
 
   return NS_OK;
 }
@@ -3243,10 +3352,11 @@ nsresult
 CacheFileIOManager::InitIndexEntry(CacheFileHandle *aHandle,
                                    uint32_t         aAppId,
                                    bool             aAnonymous,
-                                   bool             aInBrowser)
+                                   bool             aInBrowser,
+                                   bool             aPinning)
 {
   LOG(("CacheFileIOManager::InitIndexEntry() [handle=%p, appId=%u, anonymous=%d"
-       ", inBrowser=%d]", aHandle, aAppId, aAnonymous, aInBrowser));
+       ", inBrowser=%d, pinned=%d]", aHandle, aAppId, aAnonymous, aInBrowser, aPinning));
 
   nsresult rv;
   RefPtr<CacheFileIOManager> ioMan = gInstance;
@@ -3260,7 +3370,7 @@ CacheFileIOManager::InitIndexEntry(CacheFileHandle *aHandle,
   }
 
   RefPtr<InitIndexEntryEvent> ev =
-    new InitIndexEntryEvent(aHandle, aAppId, aAnonymous, aInBrowser);
+    new InitIndexEntryEvent(aHandle, aAppId, aAnonymous, aInBrowser, aPinning);
   rv = ioMan->mIOThread->Dispatch(ev, CacheIOThread::WRITE);
   NS_ENSURE_SUCCESS(rv, rv);
 
