@@ -3,6 +3,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 const { DOM: dom, createClass, PropTypes } = require("devtools/client/shared/vendor/react");
+const { L10N } = require("../utils");
 const { URL } = require("sdk/url");
 
 const Frame = module.exports = createClass({
@@ -20,11 +21,12 @@ const Frame = module.exports = createClass({
     let spec = url.toString();
     let func = frame.functionDisplayName || "";
     let tooltip = `${func} (${spec}:${frame.line}:${frame.column})`;
+    let viewTooltip = L10N.getFormatStr("viewsourceindebugger", `${spec}:${frame.line}:${frame.column}`);
     let onClick = () => toolbox.viewSourceInDebugger(spec, frame.line);
 
     let fields = [
       dom.span({ className: "frame-link-function-display-name" }, func),
-      dom.a({ className: "frame-link-filename", onClick }, url.fileName),
+      dom.a({ className: "frame-link-filename", onClick, title: viewTooltip }, url.fileName),
       dom.span({ className: "frame-link-colon" }, ":"),
       dom.span({ className: "frame-link-line" }, frame.line),
       dom.span({ className: "frame-link-colon" }, ":"),

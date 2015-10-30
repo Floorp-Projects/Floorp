@@ -3,7 +3,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 const { DOM: dom, createClass, PropTypes } = require("devtools/client/shared/vendor/react");
-
+const { L10N } = require("../utils");
 const models = require("../models");
 
 const Toolbar = module.exports = createClass({
@@ -34,10 +34,14 @@ const Toolbar = module.exports = createClass({
 
     return (
       dom.div({ className: "devtools-toolbar" },
-        dom.button({ className: `take-snapshot devtools-button`, onClick: onTakeSnapshotClick }),
+        dom.button({
+          className: `take-snapshot devtools-button`,
+          onClick: onTakeSnapshotClick,
+          title: L10N.getStr("take-snapshot")
+        }),
 
         dom.label({},
-          "Breakdown by ",
+          L10N.getStr("toolbar.breakdownBy"),
           dom.select({
             id: "select-breakdown",
             className: `select-breakdown`,
@@ -52,8 +56,7 @@ const Toolbar = module.exports = createClass({
             checked: inverted,
             onChange: onToggleInverted,
           }),
-          // TODO bug 1214799
-          "Invert tree"
+          L10N.getStr("checkbox.invertTree")
         ),
 
         dom.label({},
@@ -63,8 +66,7 @@ const Toolbar = module.exports = createClass({
             disabled: allocations.togglingInProgress,
             onChange: onToggleRecordAllocationStacks,
           }),
-          // TODO bug 1214799
-          "Record allocation stacks"
+          L10N.getStr("checkbox.recordAllocationStacks")
         )
       )
     );
