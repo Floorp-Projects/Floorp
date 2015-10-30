@@ -99,7 +99,7 @@
         <item name="drawableTintList">@color/action_bar_secondary_menu_item_colors</item>
     </style>
 
-    <style name="Widget.MenuItemSwitcherLayout">
+    <style name="Widget.MenuItemActionView">
         <item name="android:gravity">left</item>
     </style>
 
