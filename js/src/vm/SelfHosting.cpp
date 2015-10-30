@@ -1263,7 +1263,7 @@ intrinsic_LocalTZA(JSContext* cx, unsigned argc, Value* vp)
     CallArgs args = CallArgsFromVp(argc, vp);
     MOZ_ASSERT(args.length() == 0, "the LocalTZA intrinsic takes no arguments");
 
-    args.rval().setDouble(cx->runtime()->dateTimeInfo.localTZA());
+    args.rval().setDouble(DateTimeInfo::localTZA());
     return true;
 }
 
