@@ -1,0 +1,33 @@
+{
+  "[global]": {
+    "searchdefaultexpir": 1471013469846
+  },
+  "[profile]\/engine.xml": {
+    "order": 1,
+    "alias": "foo"
+  },
+  "[app]\/google.xml": {
+    "order": 2
+  },
+  "[app]\/yahoo.xml": {
+    "order": 3
+  },
+  "[app]\/bing.xml": {
+    "order": 4
+  },
+  "[app]\/amazondotcom.xml": {
+    "order": 5
+  },
+  "[app]\/ddg.xml": {
+    "order": 6
+  },
+  "[app]\/eBay.xml": {
+    "order": 7
+  },
+  "[app]\/twitter.xml": {
+    "order": 8
+  },
+  "[app]\/wikipedia.xml": {
+    "order": 9
+  }
+}

@@ -192,6 +192,11 @@ Telemetry.prototype = {
       userHistogram: "DEVTOOLS_DEVELOPERTOOLBAR_OPENED_PER_USER_FLAG",
       timerHistogram: "DEVTOOLS_DEVELOPERTOOLBAR_TIME_ACTIVE_SECONDS"
     },
+    aboutdebugging: {
+      histogram: "DEVTOOLS_ABOUTDEBUGGING_OPENED_BOOLEAN",
+      userHistogram: "DEVTOOLS_ABOUTDEBUGGING_OPENED_PER_USER_FLAG",
+      timerHistogram: "DEVTOOLS_ABOUTDEBUGGING_TIME_ACTIVE_SECONDS"
+    },
     webide: {
       histogram: "DEVTOOLS_WEBIDE_OPENED_BOOLEAN",
       userHistogram: "DEVTOOLS_WEBIDE_OPENED_PER_USER_FLAG",

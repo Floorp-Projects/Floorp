@@ -37,8 +37,17 @@ function getSharedDir() {
 module.exports = {
   entry: "./content/webappEntryPoint.js",
 
+  // These symbols come in either via <script> tags or the expose loader,
+  // so we tell webpack to allow them to be unresolved
+  externals: {
+    "Backbone": "Backbone",
+    "navigator.mozL10n": "navigator.mozL10n",
+    "React": "React",
+    "underscore": "_"
+  },
+
   // We want the shared modules to be available without the requirer needing
-  // to know the path to them, especially that path is different in
+  // to know the path to them, especially since that path is different in
   // mozilla-central and loop-client.
   resolve: {
     alias: {
@@ -55,6 +64,21 @@ module.exports = {
   },
 
   plugins: [
+    // This is a soft-dependency for Backbone, and since we don't use it,
+    // we need to tell webpack to ignore the unresolved reference. Cribbed
+    // from
+    // https://github.com/jashkenas/backbone/wiki/Using-Backbone-without-jQuery
+    new webpack.IgnorePlugin(/^jquery$/),
+
+    // definePlugin takes raw strings and inserts them, so we can put a
+    // JS string for evaluation at build time.  Right now, we test NODE_ENV
+    // to so we can do different things at build time based on whether we're
+    // in production mode.
+    new webpack.DefinePlugin({
+      __PROD__: JSON.stringify(JSON.parse(
+        process.env.NODE_ENV && process.env.NODE_ENV === "production"))
+    }),
+
     new webpack.optimize.UglifyJsPlugin({
       compress: {
         // XXX I'd _like_ to only suppress the warnings for vendor code, since

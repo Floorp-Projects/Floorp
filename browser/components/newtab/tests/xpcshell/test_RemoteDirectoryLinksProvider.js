@@ -22,6 +22,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
   "resource://gre/modules/NetUtil.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "RemoteNewTabUtils",
   "resource:///modules/RemoteNewTabUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "PlacesTestUtils",
+  "resource://testing-common/PlacesTestUtils.jsm");
 
 do_get_profile();
 
@@ -1285,8 +1287,7 @@ add_task(function test_RemoteDirectoryLinksProvider_ClickRemoval() {
 
   testObserver = new UrlDeletionTester();
   RemoteDirectoryLinksProvider.addObserver(testObserver);
-  // remove all hostory
-  PlacesUtils.bhistory.removeAllPages();
+  yield PlacesTestUtils.clearHistory();
 
   yield testObserver.promise;
   RemoteDirectoryLinksProvider.removeObserver(testObserver);

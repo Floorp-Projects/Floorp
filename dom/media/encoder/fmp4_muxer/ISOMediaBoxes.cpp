@@ -13,6 +13,7 @@
 #include "MP4ESDS.h"
 #include "AMRBox.h"
 #include "AVCBox.h"
+#include "EVRCBox.h"
 #include "VideoUtils.h"
 
 namespace mozilla {
@@ -666,6 +667,8 @@ SampleDescriptionBox::CreateAudioSampleEntry(RefPtr<SampleEntryBox>& aSampleEntr
     aSampleEntry = new AMRSampleEntry(mControl);
   } else if (mAudioMeta->GetKind() == TrackMetadataBase::METADATA_AAC) {
     aSampleEntry = new MP4AudioSampleEntry(mControl);
+  } else if (mAudioMeta->GetKind() == TrackMetadataBase::METADATA_EVRC) {
+    aSampleEntry = new EVRCSampleEntry(mControl);
   } else {
     MOZ_ASSERT(0);
   }
@@ -1250,6 +1253,17 @@ FileTypeBox::Generate(uint32_t* aBoxSize)
     compatible_brands.AppendElement("3gp7");
     compatible_brands.AppendElement("3gp6");
     compatible_brands.AppendElement("isom");
+  } else if (mControl->GetMuxingType() == ISOMediaWriter::TYPE_FRAG_3G2) {
+    major_brand = "3g2a";
+    // 3GPP2 Release 0 and A and 3GPP Release 6 allow movie fragmentation
+    compatible_brands.AppendElement("3gp9");
+    compatible_brands.AppendElement("3gp8");
+    compatible_brands.AppendElement("3gp7");
+    compatible_brands.AppendElement("3gp6");
+    compatible_brands.AppendElement("isom");
+    compatible_brands.AppendElement("3g2c");
+    compatible_brands.AppendElement("3g2b");
+    compatible_brands.AppendElement("3g2a");
   } else {
     MOZ_ASSERT(0);
   }

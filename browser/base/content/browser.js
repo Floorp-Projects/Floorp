@@ -6927,6 +6927,13 @@ var gIdentityHandler = {
     return this._state & Ci.nsIWebProgressListener.STATE_LOADED_MIXED_DISPLAY_CONTENT;
   },
 
+  get _hasInsecureLoginForms() {
+    // checks if the page has been flagged for an insecure login. Also checks
+    // if the pref to degrade the UI is set to true
+    return LoginManagerParent.hasInsecureLoginForms(gBrowser.selectedBrowser) &&
+           Services.prefs.getBoolPref("security.insecure_password.ui.enabled");
+  },
+
   // smart getters
   get _identityPopup () {
     delete this._identityPopup;
@@ -7257,7 +7264,7 @@ var gIdentityHandler = {
           this._identityBox.classList.add("weakCipher");
         }
       }
-      if (LoginManagerParent.hasInsecureLoginForms(gBrowser.selectedBrowser)) {
+      if (this._hasInsecureLoginForms) {
         // Insecure login forms can only be present on "unknown identity"
         // pages, either already insecure or with mixed active content loaded.
         this._identityBox.classList.add("insecureLoginForms");
@@ -7301,7 +7308,7 @@ var gIdentityHandler = {
 
     // Determine if there are insecure login forms.
     let loginforms = "secure";
-    if (LoginManagerParent.hasInsecureLoginForms(gBrowser.selectedBrowser)) {
+    if (this._hasInsecureLoginForms) {
       loginforms = "insecure";
     }
 

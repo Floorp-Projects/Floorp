@@ -248,23 +248,6 @@ describe("loop.store.TextChatStore", function() {
       }]);
     });
 
-    it("should dispatch a LoopChatDisabledMessageAppended event", function() {
-      store.setStoreState({ textChatEnabled: false });
-      store.updateRoomInfo(new sharedActions.UpdateRoomInfo({
-        roomName: "Let's share!",
-        roomUrl: "fake",
-        roomContextUrls: [{
-          description: "A wonderful event2",
-          location: "http://wonderful.invalid2",
-          thumbnail: "fake2"
-        }]
-      }));
-
-      sinon.assert.calledOnce(window.dispatchEvent);
-      sinon.assert.calledWithExactly(window.dispatchEvent,
-        new CustomEvent("LoopChatDisabledMessageAppended"));
-    });
-
     it("should not dispatch a LoopChatMessageAppended event", function() {
       store.updateRoomInfo(new sharedActions.UpdateRoomInfo({
         roomName: "Let's share!",

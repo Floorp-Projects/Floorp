@@ -31,7 +31,7 @@ var MigrationWizard = {
 
     this._wiz = document.documentElement;
 
-    let args = (window.arguments && window.arguments[0]) || [];
+    let args = window.arguments;
     let entryPointId = args[0] || MigrationUtils.MIGRATION_ENTRYPOINT_UNKNOWN;
     Services.telemetry.getHistogramById("FX_MIGRATION_ENTRY_POINT").add(entryPointId);
 

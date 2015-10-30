@@ -99,6 +99,33 @@ public:
   ~AMRTrackMetadata() { MOZ_COUNT_DTOR(AMRTrackMetadata); }
 };
 
+// EVRC sample rate is 8000 samples/s.
+#define EVRC_SAMPLE_RATE 8000
+
+class EVRCTrackMetadata : public AudioTrackMetadata {
+public:
+  // AudioTrackMetadata members
+  //
+  // The number of sample sets generates by encoder is variant. So the
+  // frame duration and frame size are both 0.
+  uint32_t GetAudioFrameDuration() override { return 0; }
+  uint32_t GetAudioFrameSize() override { return 0; }
+  uint32_t GetAudioSampleRate() override { return EVRC_SAMPLE_RATE; }
+  uint32_t GetAudioChannels() override { return mChannels; }
+
+  // TrackMetadataBase member
+  MetadataKind GetKind() const override { return METADATA_EVRC; }
+
+  // EVRCTrackMetadata members
+  EVRCTrackMetadata()
+    : mChannels(0) {
+    MOZ_COUNT_CTOR(EVRCTrackMetadata);
+  }
+  ~EVRCTrackMetadata() { MOZ_COUNT_DTOR(EVRCTrackMetadata); }
+
+  uint32_t mChannels;       // Channel number, it should be 1 or 2.
+};
+
 }
 
 #endif // ISOTrackMetadata_h_
