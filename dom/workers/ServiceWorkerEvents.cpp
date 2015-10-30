@@ -109,9 +109,11 @@ AsyncLog(nsIInterceptedChannel *aInterceptedChannel,
          const nsACString& aMessageName, const nsTArray<nsString>& aParams)
 {
   MOZ_ASSERT(aInterceptedChannel);
-  nsCOMPtr<nsIChannel> inner;
-  aInterceptedChannel->GetChannel(getter_AddRefs(inner));
-  nsCOMPtr<nsIConsoleReportCollector> reporter = do_QueryInterface(inner);
+  // Since the intercepted channel is kept alive and paused while handling
+  // the FetchEvent, we are guaranteed the reporter is stable on the worker
+  // thread.
+  nsIConsoleReportCollector* reporter =
+    aInterceptedChannel->GetConsoleReportCollector();
   if (reporter) {
     reporter->AddConsoleReport(nsIScriptError::errorFlag,
                                NS_LITERAL_CSTRING("Service Worker Interception"),
