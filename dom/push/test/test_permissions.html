@@ -59,10 +59,10 @@ http://creativecommons.org/licenses/publicdomain/
     var p = new Promise(function(res, rej) {
       swr.pushManager.getSubscription().then(
         function(pushSubscription) {
-          ok(false, "getSubscription() should fail because no permission for push");
+          is(pushSubscription, null, "getSubscription() should return null because no permission for push");
           res(swr);
         }, function(error) {
-          ok(true, "getSubscription() could not register for push notification");
+          ok(false, "getSubscription() could not register for push notification");
           res(swr);
         }
         );
