@@ -141,6 +141,14 @@ public:
   void* ObjectAt(int aIndex) const;
 
   /**
+   * Removes and returns the a member from the deque.
+   *
+   * @param   index of desired item
+   * @return  element which was removed
+   */
+  void* RemoveObjectAt(int aIndex);
+
+  /**
    * Remove all items from container without destroying them.
    */
   void Empty();
@@ -152,6 +160,8 @@ public:
    */
   void Erase();
 
+  void* Last() const;
+
   /**
    * Call this method when you want to iterate all the
    * members of the container, passing a functor along
@@ -160,6 +170,17 @@ public:
    * @param   aFunctor object to call for each member
    */
   void ForEach(nsDequeFunctor& aFunctor) const;
+
+  /**
+   * Call this method when you want to iterate all the
+   * members of the container, calling the functor you
+   * passed with each member. This process will interrupt
+   * if your function returns non 0 to this method.
+   *
+   * @param   aFunctor object to call for each member
+   * @return  first nonzero result of aFunctor or 0.
+   */
+  const void* FirstThat(nsDequeFunctor& aFunctor) const;
 
   void SetDeallocator(nsDequeFunctor* aDeallocator);
 
