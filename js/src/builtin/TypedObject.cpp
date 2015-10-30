@@ -2265,7 +2265,7 @@ OutlineTransparentTypedObject::getOrCreateBuffer(JSContext* cx)
             nullptr, nullptr, /* watch/unwatch */        \
             nullptr,   /* getElements */                 \
             TypedObject::obj_enumerate,                  \
-            nullptr, /* thisObject */                    \
+            nullptr, /* thisValue */                     \
         }                                                \
     }
 
