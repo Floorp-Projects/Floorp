@@ -1430,6 +1430,13 @@ pref("dom.identity.enabled", false);
 // Block insecure active content on https pages
 pref("security.mixed_content.block_active_content", true);
 
+// Show degraded UI for http pages with password fields
+#ifdef NIGHTLY_BUILD
+pref("security.insecure_password.ui.enabled", true);
+#else
+pref("security.insecure_password.ui.enabled", false);
+#endif
+
 // 1 = allow MITM for certificate pinning checks.
 pref("security.cert_pinning.enforcement_level", 1);
 
