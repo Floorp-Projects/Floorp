@@ -4950,7 +4950,16 @@ nsComputedDOMStyle::StyleCoordToNSCoord(const nsStyleCoord& aCoord,
       nscoord result =
         nsRuleNode::ComputeCoordPercentCalc(aCoord, percentageBase);
       if (aClampNegativeCalc && result < 0) {
-        MOZ_ASSERT(aCoord.IsCalcUnit(),
+        // It's expected that we can get a negative value here with calc().
+        // We can also get a negative value with a percentage value if
+        // percentageBase is negative; this isn't expected, but can happen
+        // when large length values overflow.
+        NS_WARN_IF_FALSE(percentageBase >= 0,
+                         "percentage base value overflowed to become "
+                         "negative for a property that disallows negative "
+                         "values");
+        MOZ_ASSERT(aCoord.IsCalcUnit() ||
+                   (aCoord.HasPercent() && percentageBase < 0),
                    "parser should have rejected value");
         result = 0;
       }
