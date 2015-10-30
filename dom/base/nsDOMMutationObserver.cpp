@@ -572,7 +572,7 @@ nsDOMMutationObserver::GetAllSubtreeObserversFor(nsINode* aNode,
 void
 nsDOMMutationObserver::ScheduleForRun()
 {
-  nsDOMMutationObserver::AddCurrentlyHandlingObserver(this);
+  nsDOMMutationObserver::AddCurrentlyHandlingObserver(this, sMutationLevel);
 
   if (mWaitingForRun) {
     return;
@@ -928,6 +928,15 @@ nsDOMMutationObserver::CurrentRecord(nsIAtom* aType)
     ScheduleForRun();
   }
 
+#ifdef DEBUG
+  MOZ_ASSERT(sCurrentlyHandlingObservers->Length() == sMutationLevel);
+  for (size_t i = 0; i < sCurrentlyHandlingObservers->Length(); ++i) {
+    MOZ_ASSERT(sCurrentlyHandlingObservers->ElementAt(i).Contains(this),
+               "MutationObserver should be added as an observer of all the "
+               "nested mutations!");
+  }
+#endif
+
   NS_ASSERTION(mCurrentMutations[last]->mType == aType,
                "Unexpected MutationRecord type!");
 
@@ -972,23 +981,30 @@ nsDOMMutationObserver::LeaveMutationHandling()
 }
 
 void
-nsDOMMutationObserver::AddCurrentlyHandlingObserver(nsDOMMutationObserver* aObserver)
+nsDOMMutationObserver::AddCurrentlyHandlingObserver(nsDOMMutationObserver* aObserver,
+                                                    uint32_t aMutationLevel)
 {
-  NS_ASSERTION(sMutationLevel > 0, "Unexpected mutation level!");
+  NS_ASSERTION(aMutationLevel > 0, "Unexpected mutation level!");
+
+  if (aMutationLevel > 1) {
+    // MutationObserver must be in the currently handling observer list
+    // in all the nested levels.
+    AddCurrentlyHandlingObserver(aObserver, aMutationLevel - 1);
+  }
 
   if (!sCurrentlyHandlingObservers) {
     sCurrentlyHandlingObservers =
       new nsAutoTArray<nsAutoTArray<RefPtr<nsDOMMutationObserver>, 4>, 4>;
   }
 
-  while (sCurrentlyHandlingObservers->Length() < sMutationLevel) {
+  while (sCurrentlyHandlingObservers->Length() < aMutationLevel) {
     sCurrentlyHandlingObservers->InsertElementAt(
       sCurrentlyHandlingObservers->Length());
   }
 
-  uint32_t last = sMutationLevel - 1;
-  if (!sCurrentlyHandlingObservers->ElementAt(last).Contains(aObserver)) {
-    sCurrentlyHandlingObservers->ElementAt(last).AppendElement(aObserver);
+  uint32_t index = aMutationLevel - 1;
+  if (!sCurrentlyHandlingObservers->ElementAt(index).Contains(aObserver)) {
+    sCurrentlyHandlingObservers->ElementAt(index).AppendElement(aObserver);
   }
 }
 
