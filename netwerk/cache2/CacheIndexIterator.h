@@ -49,7 +49,7 @@ protected:
                      CacheIndexRecord *aNewRecord);
 
   nsresult                     mStatus;
-  RefPtr<CacheIndex>         mIndex;
+  RefPtr<CacheIndex>           mIndex;
   nsTArray<CacheIndexRecord *> mRecords;
   bool                         mAddNew;
 };

@@ -153,6 +153,9 @@ PluginProcessParent::Launch(mozilla::UniquePtr<LaunchCompleteTask> aLaunchComple
         else if (base::PROCESS_ARCH_ARM & pluginLibArchitectures & containerArchitectures) {
           selectedArchitecture = base::PROCESS_ARCH_ARM;
         }
+        else if (base::PROCESS_ARCH_MIPS & pluginLibArchitectures & containerArchitectures) {
+          selectedArchitecture = base::PROCESS_ARCH_MIPS;
+        }
         else {
             return false;
         }

@@ -19,6 +19,12 @@ class nsICacheEntryMetaDataVisitor;
 namespace mozilla {
 namespace net {
 
+// Flags stored in CacheFileMetadataHeader.mFlags
+
+// Whether an entry is a pinned entry (created with
+// nsICacheStorageService.pinningCacheStorage.)
+static const uint32_t kCacheEntryIsPinned = 1 << 0;
+
 // By multiplying with the current half-life we convert the frecency
 // to time independent of half-life value.  The range fits 32bits.
 // When decay time changes on next run of the browser, we convert
@@ -28,6 +34,9 @@ namespace net {
   ((uint32_t)((aFrecency) * CacheObserver::HalfLifeSeconds()))
 #define INT2FRECENCY(aInt) \
   ((double)(aInt) / (double)CacheObserver::HalfLifeSeconds())
+
+
+#define kCacheEntryVersion 2
 
 
 #pragma pack(push)
@@ -42,19 +51,22 @@ public:
   uint32_t        mFrecency;
   uint32_t        mExpirationTime;
   uint32_t        mKeySize;
+  uint32_t        mFlags;
 
   void WriteToBuf(void *aBuf)
   {
     EnsureCorrectClassSize();
 
     uint8_t* ptr = static_cast<uint8_t*>(aBuf);
+    MOZ_ASSERT(mVersion == kCacheEntryVersion);
     NetworkEndian::writeUint32(ptr, mVersion); ptr += sizeof(uint32_t);
     NetworkEndian::writeUint32(ptr, mFetchCount); ptr += sizeof(uint32_t);
     NetworkEndian::writeUint32(ptr, mLastFetched); ptr += sizeof(uint32_t);
     NetworkEndian::writeUint32(ptr, mLastModified); ptr += sizeof(uint32_t);
     NetworkEndian::writeUint32(ptr, mFrecency); ptr += sizeof(uint32_t);
     NetworkEndian::writeUint32(ptr, mExpirationTime); ptr += sizeof(uint32_t);
-    NetworkEndian::writeUint32(ptr, mKeySize);
+    NetworkEndian::writeUint32(ptr, mKeySize); ptr += sizeof(uint32_t);
+    NetworkEndian::writeUint32(ptr, mFlags);
   }
 
   void ReadFromBuf(const void *aBuf)
@@ -68,14 +80,19 @@ public:
     mLastModified = BigEndian::readUint32(ptr); ptr += sizeof(uint32_t);
     mFrecency = BigEndian::readUint32(ptr); ptr += sizeof(uint32_t);
     mExpirationTime = BigEndian::readUint32(ptr); ptr += sizeof(uint32_t);
-    mKeySize = BigEndian::readUint32(ptr);
+    mKeySize = BigEndian::readUint32(ptr); ptr += sizeof(uint32_t);
+    if (mVersion >= kCacheEntryVersion) {
+      mFlags = BigEndian::readUint32(ptr);
+    } else {
+      mFlags = 0;
+    }
   }
 
   inline void EnsureCorrectClassSize()
   {
     static_assert((sizeof(mVersion) + sizeof(mFetchCount) +
       sizeof(mLastFetched) + sizeof(mLastModified) + sizeof(mFrecency) +
-      sizeof(mExpirationTime) + sizeof(mKeySize)) ==
+      sizeof(mExpirationTime) + sizeof(mKeySize)) + sizeof(mFlags) ==
       sizeof(CacheFileMetadataHeader),
       "Unexpected sizeof(CacheFileMetadataHeader)!");
   }
@@ -114,6 +131,7 @@ public:
   CacheFileMetadata(CacheFileHandle *aHandle,
                     const nsACString &aKey);
   CacheFileMetadata(bool aMemoryOnly,
+                    bool aPinned,
                     const nsACString &aKey);
   CacheFileMetadata();
 
@@ -127,8 +145,9 @@ public:
                          CacheFileMetadataListener *aListener);
   nsresult SyncReadMetadata(nsIFile *aFile);
 
-  bool     IsAnonymous() { return mAnonymous; }
+  bool     IsAnonymous() const { return mAnonymous; }
   mozilla::OriginAttributes const & OriginAttributes() const { return mOriginAttributes; }
+  bool     Pinned() const      { return !!(mMetaHdr.mFlags & kCacheEntryIsPinned); }
 
   const char * GetElement(const char *aKey);
   nsresult     SetElement(const char *aKey, const char *aValue);
@@ -137,6 +156,9 @@ public:
   CacheHash::Hash16_t GetHash(uint32_t aIndex);
   nsresult            SetHash(uint32_t aIndex, CacheHash::Hash16_t aHash);
 
+  nsresult AddFlags(uint32_t aFlags);
+  nsresult RemoveFlags(uint32_t aFlags);
+  nsresult GetFlags(uint32_t *_retval);
   nsresult SetExpirationTime(uint32_t aExpirationTime);
   nsresult GetExpirationTime(uint32_t *_retval);
   nsresult SetFrecency(uint32_t aFrecency);
@@ -175,7 +197,7 @@ private:
   nsresult EnsureBuffer(uint32_t aSize);
   nsresult ParseKey(const nsACString &aKey);
 
-  RefPtr<CacheFileHandle>           mHandle;
+  RefPtr<CacheFileHandle>             mHandle;
   nsCString                           mKey;
   CacheHash::Hash16_t                *mHashArray;
   uint32_t                            mHashArraySize;

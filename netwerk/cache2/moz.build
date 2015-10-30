@@ -11,6 +11,7 @@ XPIDL_SOURCES += [
     'nsICacheStorage.idl',
     'nsICacheStorageService.idl',
     'nsICacheStorageVisitor.idl',
+    'nsICacheTesting.idl',
 ]
 
 XPIDL_MODULE = 'necko_cache2'
