@@ -6,9 +6,9 @@
 
 const TEST_URI = "data:text/xml;charset=UTF-8,<?xml version='1.0'?>" +
   "<?xml-stylesheet href='chrome://global/skin/global.css'?>" +
-  "<?xml-stylesheet href='chrome://devtools/skin/themes/common.css'?>" +
-  "<?xml-stylesheet href='chrome://devtools/skin/themes/light-theme.css'?>" +
-  "<?xml-stylesheet href='chrome://devtools/skin/themes/widgets.css'?>" +
+  "<?xml-stylesheet href='chrome://devtools/skin/common.css'?>" +
+  "<?xml-stylesheet href='chrome://devtools/skin/light-theme.css'?>" +
+  "<?xml-stylesheet href='chrome://devtools/skin/widgets.css'?>" +
   "<window xmlns='http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul'" +
   " title='Table Widget' width='600' height='500'>" +
   "<box flex='1' class='theme-light'/></window>";
