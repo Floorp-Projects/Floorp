@@ -168,7 +168,7 @@ class PackageFrontend(MachCommandBase):
         self._set_log_level(verbose)
         tree, job = self._compute_defaults(tree, job)
         artifacts = self._make_artifacts(tree=tree, job=job)
-        return artifacts.install_from(source, self.distdir)
+        return artifacts.install_from(source, self.bindir)
 
     @ArtifactSubCommand('artifact', 'last',
         'Print the last pre-built artifact installed.')

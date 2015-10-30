@@ -332,19 +332,19 @@ class Artifacts(object):
         if self._log:
             self._log(*args, **kwargs)
 
-    def install_from_file(self, filename, distdir, install_callback=None):
+    def install_from_file(self, filename, bindir, install_callback=None):
         self.log(logging.INFO, 'artifact',
             {'filename': filename},
             'Installing from {filename}')
 
-        # Copy all .so files to dist/bin, avoiding modification where possible.
-        ensureParentDir(mozpath.join(distdir, 'bin', '.dummy'))
+        # Copy all .so files, avoiding modification where possible.
+        ensureParentDir(mozpath.join(bindir, '.dummy'))
 
         with zipfile.ZipFile(filename) as zf:
             for info in zf.infolist():
                 if not info.filename.endswith('.so'):
                     continue
-                n = mozpath.join(distdir, 'bin', os.path.basename(info.filename))
+                n = mozpath.join(bindir, os.path.basename(info.filename))
                 fh = FileAvoidWrite(n, mode='r')
                 shutil.copyfileobj(zf.open(info), fh)
                 file_existed, file_updated = fh.close()
@@ -355,15 +355,15 @@ class Artifacts(object):
                     install_callback(os.path.basename(info.filename), file_existed, file_updated)
         return 0
 
-    def install_from_url(self, url, distdir, install_callback=None):
+    def install_from_url(self, url, bindir, install_callback=None):
         self.log(logging.INFO, 'artifact',
             {'url': url},
             'Installing from {url}')
         with self._artifact_cache as artifact_cache:  # The with block handles persistence.
             filename = artifact_cache.fetch(url)
-        return self.install_from_file(filename, distdir, install_callback=install_callback)
+        return self.install_from_file(filename, bindir, install_callback=install_callback)
 
-    def install_from_hg(self, revset, distdir, install_callback=None):
+    def install_from_hg(self, revset, bindir, install_callback=None):
         if not revset:
             revset = '.'
         if len(revset) != 40:
@@ -391,27 +391,27 @@ class Artifacts(object):
                 except ValueError:
                     pass
         if url:
-            return self.install_from_url(url, distdir, install_callback=install_callback)
+            return self.install_from_url(url, bindir, install_callback=install_callback)
         self.log(logging.ERROR, 'artifact',
                  {'revset': revset},
                  'No built artifacts for {revset} found.')
         return 1
 
-    def install_from(self, source, distdir, install_callback=None):
-        """Install artifacts from a ``source`` into the given ``distdir``.
+    def install_from(self, source, bindir, install_callback=None):
+        """Install artifacts from a ``source`` into the given ``bindir``.
 
         If ``callback`` is given, it is called once with arguments ``(path,
         existed, updated)``, where ``path`` is the file path written relative
-        to ``distdir``; ``existed`` is a boolean indicating whether the file
+        to ``bindir``; ``existed`` is a boolean indicating whether the file
         existed; and ``updated`` is a boolean indicating whether the file was
         updated.
         """
         if source and os.path.isfile(source):
-            return self.install_from_file(source, distdir, install_callback=install_callback)
+            return self.install_from_file(source, bindir, install_callback=install_callback)
         elif source and urlparse.urlparse(source).scheme:
-            return self.install_from_url(source, distdir, install_callback=install_callback)
+            return self.install_from_url(source, bindir, install_callback=install_callback)
         else:
-            return self.install_from_hg(source, distdir, install_callback=install_callback)
+            return self.install_from_hg(source, bindir, install_callback=install_callback)
 
     def print_last(self):
         self.log(logging.INFO, 'artifact',
