@@ -52,7 +52,7 @@ add_task(function* test_nodb_pluschanges() {
 
   // Check that the entries are placed as specified correctly
   let json = getSearchMetadata();
-  do_check_eq(json["[app]/test-search-engine.xml"].order, 1);
+  do_check_eq(json["[profile]/test-search-engine.xml"].order, 1);
   do_check_eq(json["[profile]/a-second-test-engine.xml"].order, 2);
 
   do_print("Cleaning up");
