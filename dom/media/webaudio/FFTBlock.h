@@ -83,6 +83,9 @@ public:
     PodCopy(complex.Elements(), aData, mFFTSize);
     av_rdft_calc(mAvRDFT, complex.Elements());
     PodCopy((FFTSample*)mOutputBuffer.Elements(), complex.Elements(), mFFTSize);
+    // Recover packed Nyquist.
+    mOutputBuffer[mFFTSize / 2].r = mOutputBuffer[0].i;
+    mOutputBuffer[0].i = 0.0f;
 #else
 #ifdef BUILD_ARM_NEON
     if (mozilla::supports_neon()) {
@@ -110,6 +113,7 @@ public:
 #if defined(MOZ_LIBAV_FFT)
     {
       PodCopy(aDataOut, (float*)mOutputBuffer.Elements(), mFFTSize);
+      aDataOut[1] = mOutputBuffer[mFFTSize/2].r; // Packed Nyquist
       av_rdft_calc(mAvIRDFT, aDataOut);
       // TODO: Once bug 877662 lands, change this to use SSE.
       // Even though this function doesn't scale, the libav forward transform
@@ -136,10 +140,17 @@ public:
 
   void Multiply(const FFTBlock& aFrame)
   {
+    uint32_t halfSize = mFFTSize / 2;
+    // DFTs are not packed.
+    MOZ_ASSERT(mOutputBuffer[0].i == 0);
+    MOZ_ASSERT(mOutputBuffer[halfSize].i == 0);
+    MOZ_ASSERT(aFrame.mOutputBuffer[0].i == 0);
+    MOZ_ASSERT(aFrame.mOutputBuffer[halfSize].i == 0);
+
     BufferComplexMultiply(mOutputBuffer.Elements()->f,
                           aFrame.mOutputBuffer.Elements()->f,
                           mOutputBuffer.Elements()->f,
-                          mFFTSize / 2 + 1);
+                          halfSize + 1);
   }
 
   // Perform a forward FFT on |aData|, assuming zeros after dataSize samples,
