@@ -806,9 +806,7 @@ loop.panel = (function(_, mozL10n) {
     },
 
     handleCreateButtonClick: function() {
-      var createRoomAction = new sharedActions.CreateRoom({
-        nameTemplate: mozL10n.get("rooms_default_room_name_template")
-      });
+      var createRoomAction = new sharedActions.CreateRoom();
 
       createRoomAction.urls = [{
         location: this.state.url,
