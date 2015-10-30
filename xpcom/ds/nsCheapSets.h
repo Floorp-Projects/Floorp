@@ -135,7 +135,8 @@ nsCheapSet<EntryType>::Put(const KeyType aVal)
       mUnion.table = table;
       mState = MANY;
     }
-    // Fall through.
+    MOZ_FALLTHROUGH;
+
     case MANY:
       mUnion.table->PutEntry(aVal);
       return NS_OK;

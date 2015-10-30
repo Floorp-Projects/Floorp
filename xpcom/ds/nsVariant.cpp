@@ -356,7 +356,8 @@ CloneArray(uint16_t aInType, const nsIID* aInIID,
       if (aOutIID) {
         *aOutIID = *aInIID;
       }
-    // fall through...
+      MOZ_FALLTHROUGH;
+
     case nsIDataType::VTYPE_INTERFACE: {
       memcpy(*aOutValue, aInValue, allocSize);
 
@@ -759,7 +760,7 @@ nsDiscriminatedUnion::ToString(nsACString& aOutString) const
     case nsIDataType::VTYPE_WSTRING_SIZE_IS:
     case nsIDataType::VTYPE_WCHAR:
       NS_ERROR("ToString being called for a string type - screwy logic!");
-      // fall through...
+      MOZ_FALLTHROUGH;
 
     // XXX We might want stringified versions of these... ???
 
@@ -1654,10 +1655,12 @@ nsDiscriminatedUnion::Traverse(nsCycleCollectionTraversalCallback& aCb) const
             NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(aCb, "mData[i]");
             aCb.NoteXPCOMChild(*p);
           }
+          break;
         }
         default:
           break;
       }
+      break;
     default:
       break;
   }
