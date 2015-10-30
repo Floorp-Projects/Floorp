@@ -29,6 +29,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "setTimeout",
   "resource://gre/modules/Timer.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "clearTimeout",
   "resource://gre/modules/Timer.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Lz4",
+  "resource://gre/modules/lz4.js");
 
 XPCOMUtils.defineLazyServiceGetter(this, "gTextToSubURI",
                                    "@mozilla.org/intl/texttosuburi;1",
@@ -95,7 +97,9 @@ const CACHE_INVALIDATION_DELAY = 1000;
 
 // Current cache version. This should be incremented if the format of the cache
 // file is modified.
-const CACHE_VERSION = 7;
+const CACHE_VERSION = 1;
+
+const CACHE_FILENAME = "search.json.mozlz4";
 
 const ICON_DATAURL_PREFIX = "data:image/x-icon;base64,";
 
@@ -2659,6 +2663,13 @@ SearchService.prototype = {
   // The boolean indicates that the initialization has started or not.
   _initStarted: null,
 
+  // Reading the JSON cache file is the first thing done during initialization.
+  // During the async init, we save it in a field so that if we have to do a
+  // sync init before the async init finishes, we can avoid reading the cache
+  // with sync disk I/O and handling lz4 decompression synchronously.
+  // This is set back to null as soon as the initialization is finished.
+  _cacheFileJSON: null,
+
   // If initialization has not been completed yet, perform synchronous
   // initialization.
   // Throws in case of initialization error.
@@ -2705,6 +2716,7 @@ SearchService.prototype = {
     this._addObservers();
 
     gInitialized = true;
+    this._cacheFileJSON = null;
 
     this._initObservers.resolve(this._initRV);
 
@@ -2748,6 +2760,7 @@ SearchService.prototype = {
       }
       this._addObservers();
       gInitialized = true;
+      this._cacheFileJSON = null;
       this._initObservers.resolve(this._initRV);
       Services.obs.notifyObservers(null, SEARCH_SERVICE_TOPIC, "init-complete");
       Services.telemetry.getHistogramById("SEARCH_SERVICE_INIT_SYNC").add(false);
@@ -2838,9 +2851,10 @@ SearchService.prototype = {
 
     try {
       LOG("_buildCache: Writing to cache file.");
-      let path = OS.Path.join(OS.Constants.Path.profileDir, "search.json");
+      let path = OS.Path.join(OS.Constants.Path.profileDir, CACHE_FILENAME);
       let data = gEncoder.encode(JSON.stringify(cache));
-      let promise = OS.File.writeAtomic(path, data, { tmpPath: path + ".tmp"});
+      let promise = OS.File.writeAtomic(path, data, {compression: "lz4",
+                                                     tmpPath: path + ".tmp"});
 
       promise.then(
         function onSuccess() {
@@ -3086,6 +3100,7 @@ SearchService.prototype = {
     this._defaultEngine = null;
     this._visibleDefaultEngines = [];
     this._metaData = {};
+    this._cacheFileJSON = null;
 
     Task.spawn(function* () {
       try {
@@ -3102,28 +3117,48 @@ SearchService.prototype = {
 
         // Typically we'll re-init as a result of a pref observer,
         // so signal to 'callers' that we're done.
-        Services.obs.notifyObservers(null, SEARCH_SERVICE_TOPIC, "reinit-complete");
+        Services.obs.notifyObservers(null, SEARCH_SERVICE_TOPIC, "init-complete");
         gInitialized = true;
       } catch (err) {
         LOG("Reinit failed: " + err);
         Services.obs.notifyObservers(null, SEARCH_SERVICE_TOPIC, "reinit-failed");
+      } finally {
+        Services.obs.notifyObservers(null, SEARCH_SERVICE_TOPIC, "reinit-complete");
       }
     }.bind(this));
   },
 
+  /**
+   * Read the cache file synchronously. This also imports data from the old
+   * search-metadata.json file if needed.
+   *
+   * @returns A JS object containing the cached data.
+   */
   _readCacheFile: function SRCH_SVC__readCacheFile() {
-    let cacheFile = getDir(NS_APP_USER_PROFILE_50_DIR);
-    cacheFile.append("search.json");
+    if (this._cacheFileJSON) {
+      return this._cacheFileJSON;
+    }
 
-    let json = Cc["@mozilla.org/dom/json;1"].createInstance(Ci.nsIJSON);
+    let cacheFile = getDir(NS_APP_USER_PROFILE_50_DIR);
+    cacheFile.append(CACHE_FILENAME);
 
     let stream;
     try {
       stream = Cc["@mozilla.org/network/file-input-stream;1"].
                  createInstance(Ci.nsIFileInputStream);
       stream.init(cacheFile, MODE_RDONLY, FileUtils.PERMS_FILE, 0);
-      return json.decodeFromStream(stream, stream.available());
-    } catch (ex) {
+
+      let bis = Cc["@mozilla.org/binaryinputstream;1"]
+                  .createInstance(Ci.nsIBinaryInputStream);
+      bis.setInputStream(stream);
+
+      let count = stream.available();
+      let array = new Uint8Array(count);
+      bis.readArrayBuffer(count, array.buffer);
+
+      let bytes = Lz4.decompressFileContent(array);
+      return JSON.parse(new TextDecoder().decode(bytes));
+    } catch(ex) {
       LOG("_readCacheFile: Error reading cache file: " + ex);
     } finally {
       stream.close();
@@ -3131,8 +3166,8 @@ SearchService.prototype = {
 
     try {
       cacheFile.leafName = "search-metadata.json";
-      let stream = Cc["@mozilla.org/network/file-input-stream;1"].
-                   createInstance(Ci.nsIFileInputStream);
+      stream = Cc["@mozilla.org/network/file-input-stream;1"].
+                 createInstance(Ci.nsIFileInputStream);
       stream.init(cacheFile, MODE_RDONLY, FileUtils.PERMS_FILE, 0);
       let metadata = json.decodeFromStream(stream, stream.available());
       let json;
@@ -3162,19 +3197,20 @@ SearchService.prototype = {
   },
 
   /**
-   * Read from a given cache file asynchronously.
+   * Read the cache file asynchronously. This also imports data from the old
+   * search-metadata.json file if needed.
    *
    * @returns {Promise} A promise, resolved successfully if retrieveing data
    * succeeds.
    */
   _asyncReadCacheFile: function SRCH_SVC__asyncReadCacheFile() {
-    let cacheFilePath = OS.Path.join(OS.Constants.Path.profileDir, "search.json");
-
     return Task.spawn(function() {
       let json;
       try {
-        let bytes = yield OS.File.read(cacheFilePath);
+        let cacheFilePath = OS.Path.join(OS.Constants.Path.profileDir, CACHE_FILENAME);
+        let bytes = yield OS.File.read(cacheFilePath, {compression: "lz4"});
         json = JSON.parse(new TextDecoder().decode(bytes));
+        this._cacheFileJSON = json;
       } catch (ex) {
         LOG("_asyncReadCacheFile: Error reading cache file: " + ex);
         json = {};
@@ -3202,7 +3238,7 @@ SearchService.prototype = {
         } catch (ex) {}
       }
       throw new Task.Result(json);
-    });
+    }.bind(this));
   },
 
   _batchTask: null,

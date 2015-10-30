@@ -7,9 +7,6 @@
 
 "use strict";
 
-// Metadata to write to search-metadata.json for the test.
-var gMetadata = {"[profile]/test-search-engine.xml":{"used":true}};
-
 /**
  * Gets a directory from the directory service.
  * @param aKey
@@ -35,7 +32,7 @@ function makeURI(uri) {
 var cacheTemplate, appPluginsPath, profPlugins;
 
 /**
- * Test reading from search.json
+ * Test reading from search.json.mozlz4
  */
 function run_test() {
   removeMetadata();
@@ -81,41 +78,10 @@ function run_test() {
 }
 
 add_test(function prepare_test_data() {
-
-  let ostream = Cc["@mozilla.org/network/file-output-stream;1"].
-                createInstance(Ci.nsIFileOutputStream);
-  let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"].
-                  createInstance(Ci.nsIScriptableUnicodeConverter);
-
-  // Write the modified cache template to the profile directory.
-  let cacheFile = gProfD.clone();
-  cacheFile.append("search.json");
-  ostream.init(cacheFile, (MODE_WRONLY | MODE_CREATE | MODE_TRUNCATE), FileUtils.PERMS_FILE,
-               ostream.DEFER_OPEN);
-  converter.charset = "UTF-8";
-  let data = converter.convertToInputStream(JSON.stringify(cacheTemplate));
-
-  // Write to the cache and metadata files asynchronously before starting the search service.
-  NetUtil.asyncCopy(data, ostream, function afterMetadataCopy(aResult) {
-    do_check_true(Components.isSuccessCode(aResult));
-    let metadataFile = gProfD.clone();
-    metadataFile.append("search-metadata.json");
-
-    let ostream = Cc["@mozilla.org/network/file-output-stream;1"].
-                  createInstance(Ci.nsIFileOutputStream);
-    let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"].
-                    createInstance(Ci.nsIScriptableUnicodeConverter);
-
-    ostream.init(metadataFile, (MODE_WRONLY | MODE_CREATE | MODE_TRUNCATE), FileUtils.PERMS_FILE,
-                 ostream.DEFER_OPEN);
-    converter.charset = "UTF-8";
-    let data = converter.convertToInputStream(JSON.stringify(gMetadata));
-
-    NetUtil.asyncCopy(data, ostream, function afterCacheCopy(aResult) {
-      do_check_true(Components.isSuccessCode(aResult));
-      run_next_test();
-    });
-  });
+  OS.File.writeAtomic(OS.Path.join(OS.Constants.Path.profileDir, CACHE_FILENAME),
+                      new TextEncoder().encode(JSON.stringify(cacheTemplate)),
+                      {compression: "lz4"})
+    .then(run_next_test);
 });
 
 /**
@@ -151,7 +117,7 @@ add_test(function test_cache_write() {
   do_print("test cache writing");
 
   let cache = gProfD.clone();
-  cache.append("search.json");
+  cache.append(CACHE_FILENAME);
   do_check_false(cache.exists());
 
   do_print("Next step is forcing flush");
@@ -169,14 +135,14 @@ add_test(function test_cache_write() {
         Services.obs.removeObserver(cacheWriteObserver, "browser-search-service");
         do_print("Cache write complete");
         do_check_true(cache.exists());
-        // Check that the search.json cache matches the template
+        // Check that the search.json.mozlz4 cache matches the template
 
-        let cacheWritten = readJSONFile(cache);
+        promiseCacheData().then(cacheWritten => {
+          do_print("Check search.json.mozlz4");
+          isSubObjectOf(cacheTemplate, cacheWritten);
 
-        do_print("Check search.json");
-        isSubObjectOf(cacheTemplate, cacheWritten);
-
-        run_next_test();
+          run_next_test();
+        });
       }
     };
     Services.obs.addObserver(cacheWriteObserver, "browser-search-service", false);
