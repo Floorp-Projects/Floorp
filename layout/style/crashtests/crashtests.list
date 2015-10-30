@@ -48,35 +48,33 @@ load 473892-1.html
 load 473914-1.html
 load 474377-1.xhtml
 load 478321-1.xhtml
-load 512851-1.xhtml
-load 539613-1.xhtml
-load 575464-1.html
-load 588627-1.html
-skip load long-url-list-stack-overflow.html # skipped due to being slow (bug 477490)
 load 495269-1.html
 load 495269-2.html
 load 498036-1.html
 load 509155-1.html
 load 509156-1.html
 load 509569-1.html
+load 512851-1.xhtml
 load 524252-1.html
-load font-face-truncated-src.html 
 load 536789-1.html
-load 565248-1.html
+load 539613-1.xhtml
 load 558943-1.xhtml
 load 559491.html
+load 565248-1.html
 load 571105-1.xhtml
 load 573127-1.html
+load 575464-1.html
 load 580685.html
 load 585185-1.html
+load 588627-1.html
 load 592698-1.html
 load 601437-1.html
 load 601439-1.html
 load 605689-1.html
+load 611922-1.html
 load 621596-1.html
 load 637242.xhtml
 load 645142.html
-load 611922-1.html
 == 645951-1.html 645951-1-ref.html
 load 665209-1.html
 load 671799-1.html
@@ -91,8 +89,8 @@ skip-if(browserIsRemote) load 786108-2.html # Bug 795534
 load 788836.html
 load 806310-1.html
 load 812824.html
-load 822842.html
 load 822766-1.html
+load 822842.html
 load 827591-1.html
 load 829817.html
 load 840898.html
@@ -100,8 +98,8 @@ load 842134.html
 load 861489-1.html
 load 862113.html
 load 867487.html
-load 880862.html
 load 873222.html
+load 880862.html
 load 915440.html
 load 927734-1.html
 load 930270-1.html
@@ -126,5 +124,7 @@ load 1164813-1.html
 load 1167782-1.html
 load 1200568-1.html
 load 1206105-1.html
-load large_border_image_width.html
 load border-image-visited-link.html
+load font-face-truncated-src.html 
+load large_border_image_width.html
+skip load long-url-list-stack-overflow.html # skipped due to being slow (bug 477490)
