@@ -62,12 +62,7 @@ namespace {
   static const double kSdpUpdatingTimeoutMs = 3000.0;
 
   // UUID of OBEX Object Push
-  static const BluetoothUuid kObexObjectPush = {
-    {
-      0x00, 0x00, 0x11, 0x05, 0x00, 0x00, 0x10, 0x00,
-      0x80, 0x00, 0x00, 0x80, 0x5F, 0x9B, 0x34, 0xFB
-    }
-  };
+  static const BluetoothUuid kObexObjectPush(OBJECT_PUSH);
 
   StaticRefPtr<BluetoothOppManager> sBluetoothOppManager;
   static bool sInShutdown = false;

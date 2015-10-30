@@ -82,28 +82,13 @@ namespace {
   static const char kHfpCrlf[] = "\xd\xa";
 
   // UUID of Handsfree Audio Gateway
-  static const BluetoothUuid kHandsfreeAG = {
-    {
-      0x00, 0x00, 0x11, 0x1F, 0x00, 0x00, 0x10, 0x00,
-      0x80, 0x00, 0x00, 0x80, 0x5F, 0x9B, 0x34, 0xFB
-    }
-  };
+  static const BluetoothUuid kHandsfreeAG(HANDSFREE_AG);
 
   // UUID of Headset Audio Gateway
-  static const BluetoothUuid kHeadsetAG = {
-    {
-      0x00, 0x00, 0x11, 0x12, 0x00, 0x00, 0x10, 0x00,
-      0x80, 0x00, 0x00, 0x80, 0x5F, 0x9B, 0x34, 0xFB
-    }
-  };
+  static const BluetoothUuid kHeadsetAG(HEADSET_AG);
 
   // Unknown service UUID (for SCO socket)
-  static const BluetoothUuid kUnknownService = {
-    {
-      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x10, 0x00,
-      0x80, 0x00, 0x00, 0x80, 0x5F, 0x9B, 0x34, 0xFB
-    }
-  };
+  static const BluetoothUuid kUnknownService(BluetoothServiceClass::UNKNOWN);
 
 #ifdef MOZ_B2G_RIL
   // Sending ringtone related
