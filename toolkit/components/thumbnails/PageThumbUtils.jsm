@@ -148,7 +148,9 @@ this.PageThumbUtils = {
     }
 
     let [contentWidth, contentHeight] = this.getContentSize(aWindow);
-    let [thumbnailWidth, thumbnailHeight] = this.getThumbnailSize(aWindow);
+    let [thumbnailWidth, thumbnailHeight] = aDestCanvas ?
+                                            [aDestCanvas.width, aDestCanvas.height] :
+                                            this.getThumbnailSize(aWindow);
     let intermediateWidth = thumbnailWidth * 2;
     let intermediateHeight = thumbnailHeight * 2;
     let skipDownscale = false;
@@ -185,7 +187,6 @@ this.PageThumbUtils = {
     // remove the scrollbar sizes.
     let scale = Math.min(Math.max(intermediateWidth / contentWidth,
                                   intermediateHeight / contentHeight), 1);
-
     let snapshotCtx = snapshotCanvas.getContext("2d");
     snapshotCtx.save();
     snapshotCtx.scale(scale, scale);
