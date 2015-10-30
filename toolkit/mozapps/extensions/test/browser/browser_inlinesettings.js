@@ -500,7 +500,7 @@ add_test(function() {
 
     // disable
     var button = gManagerWindow.document.getElementById("detail-disable-btn");
-    button.focus(); // make sure it's in view
+    button.scrollIntoView();
     EventUtils.synthesizeMouseAtCenter(button, { clickCount: 1 }, gManagerWindow);
 
     observer.checkHidden("inlinesettings1@tests.mozilla.org");
@@ -561,7 +561,7 @@ add_test(function() {
 
     // disable
     var button = gManagerWindow.document.getElementById("detail-disable-btn");
-    button.focus(); // make sure it's in view
+    button.scrollIntoView();
     EventUtils.synthesizeMouseAtCenter(button, { clickCount: 1 }, gManagerWindow);
     observer.checkNotHidden();
 
@@ -570,7 +570,7 @@ add_test(function() {
 
     // cancel pending disable
     button = gManagerWindow.document.getElementById("detail-enable-btn");
-    button.focus(); // make sure it's in view
+    button.scrollIntoView();
     EventUtils.synthesizeMouseAtCenter(button, { clickCount: 1 }, gManagerWindow);
     observer.checkNotDisplayed();
 
