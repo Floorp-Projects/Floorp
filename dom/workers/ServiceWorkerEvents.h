@@ -147,7 +147,7 @@ public:
   }
 
   void
-  RespondWith(Promise& aArg, ErrorResult& aRv);
+  RespondWith(JSContext* aCx, Promise& aArg, ErrorResult& aRv);
 
   already_AddRefed<Promise>
   ForwardTo(const nsAString& aUrl);

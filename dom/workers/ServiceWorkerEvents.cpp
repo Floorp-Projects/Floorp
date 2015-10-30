@@ -198,6 +198,9 @@ class RespondWithHandler final : public PromiseNativeHandler
   const DebugOnly<bool> mIsClientRequest;
   const bool mIsNavigationRequest;
   const nsCString mScriptSpec;
+  const nsCString mRespondWithScriptSpec;
+  const uint32_t mRespondWithLineNumber;
+  const uint32_t mRespondWithColumnNumber;
   bool mRequestWasHandled;
 public:
   NS_DECL_ISUPPORTS
@@ -205,12 +208,18 @@ public:
   RespondWithHandler(nsMainThreadPtrHandle<nsIInterceptedChannel>& aChannel,
                      RequestMode aRequestMode, bool aIsClientRequest,
                      bool aIsNavigationRequest,
-                     const nsACString& aScriptSpec)
+                     const nsACString& aScriptSpec,
+                     const nsACString& aRespondWithScriptSpec,
+                     uint32_t aRespondWithLineNumber,
+                     uint32_t aRespondWithColumnNumber)
     : mInterceptedChannel(aChannel)
     , mRequestMode(aRequestMode)
     , mIsClientRequest(aIsClientRequest)
     , mIsNavigationRequest(aIsNavigationRequest)
     , mScriptSpec(aScriptSpec)
+    , mRespondWithScriptSpec(aRespondWithScriptSpec)
+    , mRespondWithLineNumber(aRespondWithLineNumber)
+    , mRespondWithColumnNumber(aRespondWithColumnNumber)
     , mRequestWasHandled(false)
   {
   }
@@ -450,8 +459,9 @@ RespondWithHandler::AsyncLog(const nsACString& aMessageName)
     reporter->AddConsoleReport(nsIScriptError::errorFlag,
                                NS_LITERAL_CSTRING("Service Worker Interception"),
                                nsContentUtils::eDOM_PROPERTIES,
-                               mScriptSpec,
-                               0, 0,
+                               mRespondWithScriptSpec,
+                               mRespondWithLineNumber,
+                               mRespondWithColumnNumber,
                                aMessageName,
                                nsTArray<nsString>());
   }
@@ -460,19 +470,29 @@ RespondWithHandler::AsyncLog(const nsACString& aMessageName)
 } // namespace
 
 void
-FetchEvent::RespondWith(Promise& aArg, ErrorResult& aRv)
+FetchEvent::RespondWith(JSContext* aCx, Promise& aArg, ErrorResult& aRv)
 {
   if (EventPhase() == nsIDOMEvent::NONE || mWaitToRespond) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return;
   }
 
+
+  // Record where respondWith() was called in the script so we can include the
+  // information in any error reporting.  We should be guaranteed not to get
+  // a file:// string here because service workers require http/https.
+  nsCString spec;
+  uint32_t line = 0;
+  uint32_t column = 0;
+  nsJSUtils::GetCallingLocation(aCx, spec, &line, &column);
+
   RefPtr<InternalRequest> ir = mRequest->GetInternalRequest();
   StopImmediatePropagation();
   mWaitToRespond = true;
   RefPtr<RespondWithHandler> handler =
     new RespondWithHandler(mChannel, mRequest->Mode(), ir->IsClientRequest(),
-                           ir->IsNavigationRequest(), mScriptSpec);
+                           ir->IsNavigationRequest(), mScriptSpec,
+                           spec, line, column);
   aArg.AppendNativeHandler(handler);
 
   WaitUntil(aArg, aRv);
