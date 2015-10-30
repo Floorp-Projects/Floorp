@@ -12,7 +12,7 @@
 
 function run_test()
 {
-  removeCache();
+  removeCacheFile();
   updateAppInfo();
   do_load_manifest("data/chrome.manifest");
   useHttpServer();
@@ -64,5 +64,5 @@ add_task(function* test_nocache() {
   }
   do_check_true(found);
 
-  removeCache();
+  removeCacheFile();
 });

@@ -39,8 +39,7 @@ XPCOMUtils.defineLazyServiceGetter(this, "gEnvironment",
 
 Cu.importGlobalProperties(["XMLHttpRequest"]);
 
-// A text encoder to UTF8, used whenever we commit the
-// engine metadata to disk.
+// A text encoder to UTF8, used whenever we commit the cache to disk.
 XPCOMUtils.defineLazyGetter(this, "gEncoder",
                             function() {
                               return new TextEncoder();
@@ -82,11 +81,6 @@ const SEARCH_ENGINE_DEFAULT      = "engine-default";
  * Topic used for events involving the service itself.
  */
 const SEARCH_SERVICE_TOPIC       = "browser-search-service";
-
-/**
- * Sent whenever metadata is fully written to disk.
- */
-const SEARCH_SERVICE_METADATA_WRITTEN  = "write-metadata-to-disk-complete";
 
 /**
  * Sent whenever the cache is fully written to disk.
@@ -517,7 +511,7 @@ function isUSTimezone() {
 // If this succeeds and we are using an en-US locale, we set the pref used by
 // the hacky method above, so isUS() can avoid the hacky timezone method.
 // If it fails we don't touch that pref so isUS() does its normal thing.
-var ensureKnownCountryCode = Task.async(function* () {
+var ensureKnownCountryCode = Task.async(function* (ss) {
   // If we have a country-code already stored in our prefs we trust it.
   let countryCode;
   try {
@@ -528,24 +522,23 @@ var ensureKnownCountryCode = Task.async(function* () {
     // We don't have it cached, so fetch it. fetchCountryCode() will call
     // storeCountryCode if it gets a result (even if that happens after the
     // promise resolves) and fetchRegionDefault.
-    yield fetchCountryCode();
+    yield fetchCountryCode(ss);
   } else {
     // if nothing to do, return early.
     if (!geoSpecificDefaultsEnabled())
       return;
 
-    let expir = engineMetadataService.getGlobalAttr("searchDefaultExpir") || 0;
+    let expir = ss.getGlobalAttr("searchDefaultExpir") || 0;
     if (expir > Date.now()) {
       // The territory default we have already fetched hasn't expired yet.
       // If we have a default engine or a list of visible default engines
       // saved, the hashes should be valid, verify them now so that we can
       // refetch if they have been tampered with.
-      let defaultEngine = engineMetadataService.getGlobalAttr("searchDefault");
-      let visibleDefaultEngines =
-        engineMetadataService.getGlobalAttr("visibleDefaultEngines");
-      if ((!defaultEngine || engineMetadataService.getGlobalAttr("searchDefaultHash") == getVerificationHash(defaultEngine)) &&
+      let defaultEngine = ss.getGlobalAttr("searchDefault");
+      let visibleDefaultEngines = ss.getGlobalAttr("visibleDefaultEngines");
+      if ((!defaultEngine || ss.getGlobalAttr("searchDefaultHash") == getVerificationHash(defaultEngine)) &&
           (!visibleDefaultEngines ||
-           engineMetadataService.getGlobalAttr("visibleDefaultEnginesHash") == getVerificationHash(visibleDefaultEngines))) {
+           ss.getGlobalAttr("visibleDefaultEnginesHash") == getVerificationHash(visibleDefaultEngines))) {
         // No geo defaults, or valid hashes; nothing to do.
         return;
       }
@@ -562,7 +555,7 @@ var ensureKnownCountryCode = Task.async(function* () {
         clearTimeout(timerId);
         resolve();
       };
-      fetchRegionDefault().then(callback).catch(err => {
+      fetchRegionDefault(ss).then(callback).catch(err => {
         Components.utils.reportError(err);
         callback();
       });
@@ -622,7 +615,7 @@ function storeCountryCode(cc) {
 }
 
 // Get the country we are in via a XHR geoip request.
-function fetchCountryCode() {
+function fetchCountryCode(ss) {
   // values for the SEARCH_SERVICE_COUNTRY_FETCH_RESULT 'enum' telemetry probe.
   const TELEMETRY_RESULT_ENUM = {
     SUCCESS: 0,
@@ -687,7 +680,7 @@ function fetchCountryCode() {
       };
 
       if (result && geoSpecificDefaultsEnabled()) {
-        fetchRegionDefault().then(callback).catch(err => {
+        fetchRegionDefault(ss).then(callback).catch(err => {
           Components.utils.reportError(err);
           callback();
         });
@@ -734,7 +727,7 @@ function fetchCountryCode() {
 // This promise may take up to 100s to resolve, it's the caller's
 // responsibility to ensure with a timer that we are not going to
 // block the async init for too long.
-var fetchRegionDefault = () => new Promise(resolve => {
+var fetchRegionDefault = (ss) => new Promise(resolve => {
   let urlTemplate = Services.prefs.getDefaultBranch(BROWSER_SEARCH_PREF)
                             .getCharPref("geoSpecificDefaults.url");
   let endpoint = Services.urlFormatter.formatURL(urlTemplate);
@@ -767,8 +760,7 @@ var fetchRegionDefault = () => new Promise(resolve => {
       LOG("fetchRegionDefault failed with HTTP code " + status);
       let retryAfter = request.getResponseHeader("retry-after");
       if (retryAfter) {
-        engineMetadataService.setGlobalAttr("searchDefaultExpir",
-                                            Date.now() + retryAfter * 1000);
+        ss.setGlobalAttr("searchDefaultExpir", Date.now() + retryAfter * 1000);
       }
       resolve();
       return;
@@ -785,27 +777,26 @@ var fetchRegionDefault = () => new Promise(resolve => {
 
     if (response.settings && response.settings.searchDefault) {
       let defaultEngine = response.settings.searchDefault;
-      engineMetadataService.setGlobalAttr("searchDefault", defaultEngine);
+      ss.setGlobalAttr("searchDefault", defaultEngine);
       let hash = getVerificationHash(defaultEngine);
       LOG("fetchRegionDefault saved searchDefault: " + defaultEngine +
           " with verification hash: " + hash);
-      engineMetadataService.setGlobalAttr("searchDefaultHash", hash);
+      ss.setGlobalAttr("searchDefaultHash", hash);
     }
 
     if (response.settings && response.settings.visibleDefaultEngines) {
       let visibleDefaultEngines = response.settings.visibleDefaultEngines;
       let string = visibleDefaultEngines.join(",");
-      engineMetadataService.setGlobalAttr("visibleDefaultEngines", string);
+      ss.setGlobalAttr("visibleDefaultEngines", string);
       let hash = getVerificationHash(string);
       LOG("fetchRegionDefault saved visibleDefaultEngines: " + string +
           " with verification hash: " + hash);
-      engineMetadataService.setGlobalAttr("visibleDefaultEnginesHash", hash);
+      ss.setGlobalAttr("visibleDefaultEnginesHash", hash);
     }
 
     let interval = response.interval || SEARCH_GEO_DEFAULT_UPDATE_INTERVAL;
     let milliseconds = interval * 1000; // |interval| is in seconds.
-    engineMetadataService.setGlobalAttr("searchDefaultExpir",
-                                        Date.now() + milliseconds);
+    ss.setGlobalAttr("searchDefaultExpir", Date.now() + milliseconds);
 
     LOG("fetchRegionDefault got success response in " + took + "ms");
     resolve();
@@ -1275,6 +1266,7 @@ EngineURL.prototype = {
 function Engine(aLocation, aIsReadOnly) {
   this._readOnly = aIsReadOnly;
   this._urls = [];
+  this._metaData = {};
 
   let file, uri;
   if (typeof aLocation == "string") {
@@ -1348,9 +1340,8 @@ function Engine(aLocation, aIsReadOnly) {
 }
 
 Engine.prototype = {
-  // The engine's alias (can be null). Initialized to |undefined| to indicate
-  // not-initialized-from-engineMetadataService.
-  _alias: undefined,
+  // Data set by the user.
+  _metaData: null,
   // The data describing the engine, in the form of an XML document element.
   _data: null,
   // Whether or not the engine is readonly.
@@ -1470,8 +1461,7 @@ Engine.prototype = {
                                                     Ci.nsIContentPolicy.TYPE_OTHER);
 
     if (this._engineToUpdate && (chan instanceof Ci.nsIHttpChannel)) {
-      var lastModified = engineMetadataService.getAttr(this._engineToUpdate,
-                                                       "updatelastmodified");
+      var lastModified = this._engineToUpdate.getAttr("updatelastmodified");
       if (lastModified)
         chan.setRequestHeader("If-Modified-Since", lastModified, false);
     }
@@ -1716,8 +1706,7 @@ Engine.prototype = {
     if (engineToUpdate) {
       // Keep track of the last modified date, so that we can make conditional
       // requests for future updates.
-      engineMetadataService.setAttr(aEngine, "updatelastmodified",
-                                    (new Date()).toUTCString());
+      aEngine.setAttr("updatelastmodified", (new Date()).toUTCString());
 
       // Set the new engine's icon, if it doesn't yet have one.
       if (!aEngine._iconURI && engineToUpdate._iconURI)
@@ -2077,6 +2066,7 @@ Engine.prototype = {
     this._readOnly = aJson._readOnly == undefined;
     this._iconURI = makeURI(aJson._iconURL);
     this._iconMapObj = aJson._iconMapObj;
+    this._metaData = aJson._metaData || {};
     if (aJson.filePath) {
       this._filePath = aJson.filePath;
     }
@@ -2107,6 +2097,7 @@ Engine.prototype = {
       __searchForm: this.__searchForm,
       _iconURL: this._iconURL,
       _iconMapObj: this._iconMapObj,
+      _metaData: this._metaData,
       _urls: this._urls
     };
 
@@ -2132,17 +2123,21 @@ Engine.prototype = {
     return json;
   },
 
+  setAttr(name, val) {
+    this._metaData[name] = val;
+    notifyAction(this, SEARCH_ENGINE_CHANGED);
+  },
+
+  getAttr(name) {
+    return this._metaData[name] || undefined;
+  },
+
   // nsISearchEngine
   get alias() {
-    if (this._alias === undefined)
-      this._alias = engineMetadataService.getAttr(this, "alias");
-
-    return this._alias;
+    return this.getAttr("alias");
   },
   set alias(val) {
-    this._alias = val;
-    engineMetadataService.setAttr(this, "alias", val);
-    notifyAction(this, SEARCH_ENGINE_CHANGED);
+    this.setAttr("alias", val);
   },
 
   /**
@@ -2166,13 +2161,12 @@ Engine.prototype = {
   },
 
   get hidden() {
-    return engineMetadataService.getAttr(this, "hidden") || false;
+    return this.getAttr("hidden") || false;
   },
   set hidden(val) {
     var value = !!val;
     if (value != this.hidden) {
-      engineMetadataService.setAttr(this, "hidden", value);
-      notifyAction(this, SEARCH_ENGINE_CHANGED);
+      this.setAttr("hidden", value);
     }
   },
 
@@ -2279,6 +2273,11 @@ Engine.prototype = {
   },
 
   get _isDefault() {
+    // If we don't have a shortName, the engine is being parsed from a
+    // downloaded file, so this can't be a default engine.
+    if (!this._shortName)
+      return false;
+
     // An engine is a default one if we initially loaded it from the application
     // or distribution directory.
     if (/^(?:jar:)?(?:\[app\]|\[distribution\])/.test(this._loadPath))
@@ -2675,7 +2674,6 @@ SearchService.prototype = {
     Deprecated.warning(warning, "https://developer.mozilla.org/en-US/docs/XPCOM_Interface_Reference/nsIBrowserSearchService#async_warning");
     LOG(warning);
 
-    engineMetadataService.syncInit();
     this._syncInit();
     if (!Components.isSuccessCode(this._initRV)) {
       throw this._initRV;
@@ -2689,8 +2687,18 @@ SearchService.prototype = {
     LOG("_syncInit start");
     this._initStarted = true;
     migrateRegionPrefs();
+
+    let cache = {};
+    let cacheFile = getDir(NS_APP_USER_PROFILE_50_DIR);
+    cacheFile.append("search.json");
+    if (cacheFile.exists())
+      cache = this._readCacheFile(cacheFile);
+
+    if (cache.metaData)
+      this._metaData = cache.metaData;
+
     try {
-      this._syncLoadEngines();
+      this._syncLoadEngines(cache);
     } catch (ex) {
       this._initRV = Cr.NS_ERROR_FAILURE;
       LOG("_syncInit: failure loading engines: " + ex);
@@ -2717,13 +2725,25 @@ SearchService.prototype = {
     migrateRegionPrefs();
     return Task.spawn(function() {
       LOG("_asyncInit start");
+
+      // See if we have a cache file so we don't have to parse a bunch of XML.
+      let cache = {};
+      let cacheFilePath = OS.Path.join(OS.Constants.Path.profileDir, "search.json");
+      // Not using checkForSyncCompletion here because we want to ensure we
+      // fetch the country code and geo specific defaults asynchronously even
+      // if a sync init has been forced.
+      cache = yield this._asyncReadCacheFile(cacheFilePath);
+
+      if (!gInitialized && cache.metaData)
+        this._metaData = cache.metaData;
+
       try {
-        yield checkForSyncCompletion(ensureKnownCountryCode());
+        yield checkForSyncCompletion(ensureKnownCountryCode(this));
       } catch (ex if ex.result != Cr.NS_ERROR_ALREADY_INITIALIZED) {
         LOG("_asyncInit: failure determining country code: " + ex);
       }
       try {
-        yield checkForSyncCompletion(this._asyncLoadEngines());
+        yield checkForSyncCompletion(this._asyncLoadEngines(cache));
       } catch (ex if ex.result != Cr.NS_ERROR_ALREADY_INITIALIZED) {
         this._initRV = Cr.NS_ERROR_FAILURE;
         LOG("_asyncInit: failure loading engines: " + ex);
@@ -2738,6 +2758,16 @@ SearchService.prototype = {
     }.bind(this));
   },
 
+  _metaData: { },
+  setGlobalAttr(name, val) {
+    this._metaData[name] = val;
+    this.batchTask.disarm();
+    this.batchTask.arm();
+  },
+
+  getGlobalAttr(name) {
+    return this._metaData[name] || undefined;
+  },
 
   _engines: { },
   __sortedEngines: null,
@@ -2751,9 +2781,9 @@ SearchService.prototype = {
   // Get the original Engine object that is the default for this region,
   // ignoring changes the user may have subsequently made.
   get _originalDefaultEngine() {
-    let defaultEngine = engineMetadataService.getGlobalAttr("searchDefault");
+    let defaultEngine = this.getGlobalAttr("searchDefault");
     if (defaultEngine &&
-        engineMetadataService.getGlobalAttr("searchDefaultHash") != getVerificationHash(defaultEngine)) {
+        this.getGlobalAttr("searchDefaultHash") != getVerificationHash(defaultEngine)) {
       LOG("get _originalDefaultEngine, invalid searchDefaultHash for: " + defaultEngine);
       defaultEngine = "";
     }
@@ -2797,6 +2827,7 @@ SearchService.prototype = {
 
     cache.directories = {};
     cache.visibleDefaultEngines = this._visibleDefaultEngines;
+    cache.metaData = this._metaData;
 
     for (let name in this._engines) {
       let engine = this._engines[name];
@@ -2842,15 +2873,9 @@ SearchService.prototype = {
     TelemetryStopwatch.finish("SEARCH_SERVICE_BUILD_CACHE_MS");
   },
 
-  _syncLoadEngines: function SRCH_SVC__syncLoadEngines() {
+  _syncLoadEngines: function SRCH_SVC__syncLoadEngines(cache) {
     LOG("_syncLoadEngines: start");
     // See if we have a cache file so we don't have to parse a bunch of XML.
-    let cache = {};
-    let cacheFile = getDir(NS_APP_USER_PROFILE_50_DIR);
-    cacheFile.append("search.json");
-    if (cacheFile.exists())
-      cache = this._readCacheFile(cacheFile);
-
     let chromeURIs = this._findJAREngines();
 
     let distDirs = [];
@@ -2920,6 +2945,7 @@ SearchService.prototype = {
 
       otherDirs.forEach(this._loadEnginesFromDir, this);
 
+      this._loadEnginesMetadataFromCache(cache);
       this._buildCache();
       return;
     }
@@ -2936,14 +2962,9 @@ SearchService.prototype = {
    * @returns {Promise} A promise, resolved successfully if loading data
    * succeeds.
    */
-  _asyncLoadEngines: function SRCH_SVC__asyncLoadEngines() {
+  _asyncLoadEngines: function SRCH_SVC__asyncLoadEngines(cache) {
     return Task.spawn(function() {
       LOG("_asyncLoadEngines: start");
-      // See if we have a cache file so we don't have to parse a bunch of XML.
-      let cache = {};
-      let cacheFilePath = OS.Path.join(OS.Constants.Path.profileDir, "search.json");
-      cache = yield checkForSyncCompletion(this._asyncReadCacheFile(cacheFilePath));
-
       Services.obs.notifyObservers(null, SEARCH_SERVICE_TOPIC, "find-jar-engines");
       let chromeURIs =
         yield checkForSyncCompletion(this._asyncFindJAREngines());
@@ -3065,6 +3086,7 @@ SearchService.prototype = {
           enginesFromDir.forEach(this._addEngineToStore, this);
         }
 
+        this._loadEnginesMetadataFromCache(cache);
         this._buildCache();
         return;
       }
@@ -3087,21 +3109,21 @@ SearchService.prototype = {
     this._currentEngine = null;
     this._defaultEngine = null;
     this._visibleDefaultEngines = [];
-
-    // Clear the metadata service.
-    engineMetadataService._initialized = false;
-    engineMetadataService._initializer = null;
+    this._metaData = {};
 
     Task.spawn(function* () {
       try {
-        LOG("Restarting engineMetadataService");
-        yield engineMetadataService.init();
-        yield ensureKnownCountryCode();
+        let cache = {};
+        let cacheFilePath = OS.Path.join(OS.Constants.Path.profileDir, "search.json");
+        cache = yield this._asyncReadCacheFile(cacheFilePath);
+        if (!gInitialized && cache.metaData)
+          this._metaData = cache.metaData;
 
+        yield ensureKnownCountryCode(this);
         // Due to the HTTP requests done by ensureKnownCountryCode, it's possible that
         // at this point a synchronous init has been forced by other code.
         if (!gInitialized)
-          yield this._asyncLoadEngines();
+          yield this._asyncLoadEngines(cache);
 
         // Typically we'll re-init as a result of a pref observer,
         // so signal to 'callers' that we're done.
@@ -3214,8 +3236,24 @@ SearchService.prototype = {
 
     if (aEngine._hasUpdates) {
       // Schedule the engine's next update, if it isn't already.
-      if (!engineMetadataService.getAttr(aEngine, "updateexpir"))
+      if (!aEngine.getAttr("updateexpir"))
         engineUpdateService.scheduleNextUpdate(aEngine);
+    }
+  },
+
+  _loadEnginesMetadataFromCache: function SRCH_SVC__loadEnginesMetadataFromCache(cache) {
+    if (!cache.directories)
+      return;
+
+    for (let key in cache.directories) {
+      let engines = cache.directories[key].engines;
+      for (let engine of engines) {
+        let name = engine._name;
+        if (name in this._engines) {
+          LOG("_loadEnginesMetadataFromCache, transfering metadata for " + name);
+          this._engines[name]._metaData = engine._metaData;
+        }
+      }
     }
   },
 
@@ -3488,9 +3526,9 @@ SearchService.prototype = {
     // Check if we have a useable country specific list of visible default engines.
     let engineNames;
     let visibleDefaultEngines =
-      engineMetadataService.getGlobalAttr("visibleDefaultEngines");
+      this.getGlobalAttr("visibleDefaultEngines");
     if (visibleDefaultEngines &&
-        engineMetadataService.getGlobalAttr("visibleDefaultEnginesHash") == getVerificationHash(visibleDefaultEngines)) {
+        this.getGlobalAttr("visibleDefaultEnginesHash") == getVerificationHash(visibleDefaultEngines)) {
       engineNames = visibleDefaultEngines.split(",");
 
       for (let engineName of engineNames) {
@@ -3536,16 +3574,10 @@ SearchService.prototype = {
 
     var engines = this._getSortedEngines(true);
 
-    let instructions = [];
     for (var i = 0; i < engines.length; ++i) {
-      instructions.push(
-        {key: "order",
-         value: i+1,
-         engine: engines[i]
-        });
+      engines[i].setAttr("order", i + 1);
     }
 
-    engineMetadataService.setAttrs(instructions);
     LOG("SRCH_SVC_saveSortedEngineList: done");
   },
 
@@ -3556,8 +3588,7 @@ SearchService.prototype = {
     var engine;
 
     // If the user has specified a custom engine order, read the order
-    // information from the engineMetadataService instead of the default
-    // prefs.
+    // information from the metadata instead of the default prefs.
     if (getBoolPref(BROWSER_SEARCH_PREF + "useDBForOrder", false)) {
       LOG("_buildSortedEngineList: using db for order");
 
@@ -3566,7 +3597,7 @@ SearchService.prototype = {
 
       for (let name in this._engines) {
         let engine = this._engines[name];
-        var orderNumber = engineMetadataService.getAttr(engine, "order");
+        var orderNumber = engine.getAttr("order");
 
         // Since the DB isn't regularly cleared, and engine files may disappear
         // without us knowing, we may already have an engine in this slot. If
@@ -3672,7 +3703,6 @@ SearchService.prototype = {
       this._initStarted = true;
       Task.spawn(function task() {
         try {
-          yield checkForSyncCompletion(engineMetadataService.init());
           // Complete initialization by calling asynchronous initializer.
           yield self._asyncInit();
           TelemetryStopwatch.finish("SEARCH_SERVICE_INIT_MS");
@@ -4015,8 +4045,8 @@ SearchService.prototype = {
   get currentEngine() {
     this._ensureInitialized();
     if (!this._currentEngine) {
-      let name = engineMetadataService.getGlobalAttr("current");
-      if (engineMetadataService.getGlobalAttr("hash") == getVerificationHash(name)) {
+      let name = this.getGlobalAttr("current");
+      if (this.getGlobalAttr("hash") == getVerificationHash(name)) {
         this._currentEngine = this.getEngineByName(name);
       }
     }
@@ -4063,8 +4093,8 @@ SearchService.prototype = {
       newName = "";
     }
 
-    engineMetadataService.setGlobalAttr("current", newName);
-    engineMetadataService.setGlobalAttr("hash", getVerificationHash(newName));
+    this.setGlobalAttr("current", newName);
+    this.setGlobalAttr("hash", getVerificationHash(newName));
 
     notifyAction(this._currentEngine, SEARCH_ENGINE_CURRENT);
   },
@@ -4354,7 +4384,7 @@ SearchService.prototype = {
 
       LOG("checking " + engine.name);
 
-      var expirTime = engineMetadataService.getAttr(engine, "updateexpir");
+      var expirTime = engine.getAttr("updateexpir");
       LOG("expirTime: " + expirTime + "\nupdateURL: " + engine._updateURL +
           "\niconUpdateURL: " + engine._iconUpdateURL);
 
@@ -4413,11 +4443,6 @@ SearchService.prototype = {
             Promise.reject(ex);
           }
         }
-
-        shutdownState.step = "Finalizing engine metadata service";
-        yield engineMetadataService.finalize();
-        shutdownState.step = "Engine metadata service finalized";
-
       }.bind(this)),
 
       () => shutdownState
@@ -4443,238 +4468,6 @@ SearchService.prototype = {
   }
 };
 
-var engineMetadataService = {
-  _jsonFile: OS.Path.join(OS.Constants.Path.profileDir, "search-metadata.json"),
-
-  // Boolean flag that is true if initialization was successful.
-  _initialized: false,
-
-  // A promise fulfilled once initialization is complete
-  _initializer: null,
-
-  /**
-   * Asynchronous initializer
-   *
-   * Note: In the current implementation, initialization never fails.
-   */
-  init: function epsInit() {
-    if (!this._initializer) {
-      // Launch asynchronous initialization
-      let initializer = this._initializer = Promise.defer();
-      Task.spawn((function task_init() {
-        LOG("metadata init: starting");
-        if (this._initialized) {
-          throw new Error("metadata init: invalid state, _initialized is " +
-                          "true but initialization promise has not been " +
-                          "resolved");
-        }
-        // 1. Load json file if it exists
-        try {
-          let contents = yield OS.File.read(this._jsonFile);
-          if (this._initialized) {
-            // No need to pursue asynchronous initialization,
-            // synchronous fallback was called and has finished.
-            return;
-          }
-          this._store = JSON.parse(new TextDecoder().decode(contents));
-        } catch (ex) {
-          if (this._initialized) {
-            // No need to pursue asynchronous initialization,
-            // synchronous fallback was called and has finished.
-            return;
-          }
-          // Couldn't load json, use an empty store
-          LOG("metadata init: could not load JSON file " + ex);
-          this._store = {};
-        }
-
-        this._initialized = true;
-        LOG("metadata init: complete");
-      }).bind(this)).then(
-        // 3. Inform any observers
-        function onSuccess() {
-          initializer.resolve();
-        },
-        function onError() {
-          initializer.reject();
-        }
-      );
-    }
-    return this._initializer.promise;
-  },
-
-  /**
-   * Synchronous implementation of initializer
-   *
-   * This initializer is able to pick wherever the async initializer
-   * is waiting. The asynchronous initializer is expected to stop
-   * if it detects that the synchronous initializer has completed
-   * initialization.
-   */
-  syncInit: function epsSyncInit() {
-    LOG("metadata syncInit start");
-    if (this._initialized) {
-      return;
-    }
-    let jsonFile = new FileUtils.File(this._jsonFile);
-    // 1. Load json file if it exists
-    if (jsonFile.exists()) {
-      try {
-        let uri = Services.io.newFileURI(jsonFile);
-        let stream = Services.io.newChannelFromURI2(uri,
-                                                    null,      // aLoadingNode
-                                                    Services.scriptSecurityManager.getSystemPrincipal(),
-                                                    null,      // aTriggeringPrincipal
-                                                    Ci.nsILoadInfo.SEC_NORMAL,
-                                                    Ci.nsIContentPolicy.TYPE_OTHER).open();
-        this._store = parseJsonFromStream(stream);
-      } catch (x) {
-        LOG("metadata syncInit: could not load JSON file " + x);
-        this._store = {};
-      }
-    } else {
-      LOG("metadata syncInit: using an empty store");
-      this._store = {};
-    }
-
-    this._initialized = true;
-
-    // 3. Inform any observers
-    if (this._initializer) {
-      this._initializer.resolve();
-    } else {
-      this._initializer = Promise.resolve();
-    }
-    LOG("metadata syncInit end");
-  },
-
-  getAttr: function epsGetAttr(engine, name) {
-    let record = this._store[engine._id];
-    if (!record) {
-      return null;
-    }
-
-    // attr names must be lower case
-    let aName = name.toLowerCase();
-    if (!record[aName])
-      return null;
-    return record[aName];
-  },
-
-  _globalFakeEngine: {_id: "[global]"},
-  getGlobalAttr: function epsGetGlobalAttr(name) {
-    return this.getAttr(this._globalFakeEngine, name);
-  },
-
-  _setAttr: function epsSetAttr(engine, name, value) {
-    // attr names must be lower case
-    name = name.toLowerCase();
-    let db = this._store;
-    let record = db[engine._id];
-    if (!record) {
-      record = db[engine._id] = {};
-    }
-    if (!record[name] || (record[name] != value)) {
-      record[name] = value;
-      return true;
-    }
-    return false;
-  },
-
-  /**
-   * Set one metadata attribute for an engine.
-   *
-   * If an actual change has taken place, the attribute is committed
-   * automatically (and lazily), using this._commit.
-   *
-   * @param {nsISearchEngine} engine The engine to update.
-   * @param {string} key The name of the attribute. Case-insensitive. In
-   * the current implementation, this _must not_ conflict with properties
-   * of |Object|.
-   * @param {*} value A value to store.
-   */
-  setAttr: function epsSetAttr(engine, key, value) {
-    if (this._setAttr(engine, key, value)) {
-      this._commit();
-    }
-  },
-
-  setGlobalAttr: function epsGetGlobalAttr(key, value) {
-    this.setAttr(this._globalFakeEngine, key, value);
-  },
-
-  /**
-   * Bulk set metadata attributes for a number of engines.
-   *
-   * If actual changes have taken place, the store is committed
-   * automatically (and lazily), using this._commit.
-   *
-   * @param {Array.<{engine: nsISearchEngine, key: string, value: *}>} changes
-   * The list of changes to effect. See |setAttr| for the documentation of
-   * |engine|, |key|, |value|.
-   */
-  setAttrs: function epsSetAttrs(changes) {
-    let self = this;
-    let changed = false;
-    changes.forEach(function(change) {
-      changed |= self._setAttr(change.engine, change.key, change.value);
-    });
-    if (changed) {
-      this._commit();
-    }
-  },
-
-  /**
-   * Flush any waiting write.
-   */
-  finalize: function () {
-    return this._lazyWriter ? this._lazyWriter.finalize()
-                            : Promise.resolve();
-  },
-
-  /**
-   * Commit changes to disk, asynchronously.
-   *
-   * Calls to this function are actually delayed by LAZY_SERIALIZE_DELAY
-   * (= 100ms). If the function is called again before the expiration of
-   * the delay, commits are merged and the function is again delayed by
-   * the same amount of time.
-   */
-  _commit: function epsCommit() {
-    LOG("metadata _commit: start");
-    if (!this._store) {
-      LOG("metadata _commit: nothing to do");
-      return;
-    }
-
-    if (!this._lazyWriter) {
-      LOG("metadata _commit: initializing lazy writer");
-      let writeCommit = function () {
-        LOG("metadata writeCommit: start");
-        let data = gEncoder.encode(JSON.stringify(engineMetadataService._store));
-        let path = engineMetadataService._jsonFile;
-        LOG("metadata writeCommit: path " + path);
-        let promise = OS.File.writeAtomic(path, data, { tmpPath: path + ".tmp" });
-        promise = promise.then(
-          function onSuccess() {
-            Services.obs.notifyObservers(null,
-              SEARCH_SERVICE_TOPIC,
-              SEARCH_SERVICE_METADATA_WRITTEN);
-            LOG("metadata writeCommit: done");
-          }
-        );
-        return promise;
-      }
-      this._lazyWriter = new DeferredTask(writeCommit, LAZY_SERIALIZE_DELAY);
-    }
-    LOG("metadata _commit: (re)setting timer");
-    this._lazyWriter.disarm();
-    this._lazyWriter.arm();
-  },
-  _lazyWriter: null
-};
-
-engineMetadataService._initialized = false;
 
 const SEARCH_UPDATE_LOG_PREFIX = "*** Search update: ";
 
@@ -4693,8 +4486,7 @@ var engineUpdateService = {
   scheduleNextUpdate: function eus_scheduleNextUpdate(aEngine) {
     var interval = aEngine._updateInterval || SEARCH_DEFAULT_UPDATE_INTERVAL;
     var milliseconds = interval * 86400000; // |interval| is in days
-    engineMetadataService.setAttr(aEngine, "updateexpir",
-                                  Date.now() + milliseconds);
+    aEngine.setAttr("updateexpir", Date.now() + milliseconds);
   },
 
   update: function eus_Update(aEngine) {
