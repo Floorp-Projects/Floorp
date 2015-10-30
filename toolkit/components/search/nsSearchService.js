@@ -2880,42 +2880,24 @@ SearchService.prototype = {
     cache.directories = {};
     cache.visibleDefaultEngines = this._visibleDefaultEngines;
 
-    let getParent = engine => {
-      if (!engine._readOnly)
-        return null;
-
-      if (engine._file)
-        return engine._file.parent;
-
-      let uri = engine._uri;
-      if (!uri.schemeIs("resource")) {
-        LOG("getParent: engine URI must be a resource URI if it has no file");
-        return null;
-      }
-
-      // use the underlying JAR file, for resource URIs
-      let chan = makeChannel(uri.spec);
-      if (chan)
-        return this._convertChannelToFile(chan);
-
-      LOG("getParent: couldn't map resource:// URI to a file");
-      return null;
-    };
-
     for (let name in this._engines) {
       let engine = this._engines[name];
-      let parent = getParent(engine);
-      if (!parent && engine._readOnly) {
-        LOG("Error: no parent for engine " + engine._location + ", failing to cache it");
-
+      let cacheKey;
+      if (!engine._readOnly) {
+        cacheKey = "[user-installed]";
+      } else if (engine._isDefault) {
+        cacheKey = "[default]";
+      } else if (engine._cacheKey) {
+        cacheKey = engine._cacheKey;
+      } else {
+        LOG("Error: no cache key for engine " + engine._name + ", failing to cache it");
         continue;
       }
 
-      let cacheKey = parent ? parent.path : "[user-installed]";
       if (!cache.directories[cacheKey]) {
         let cacheEntry = {};
-        if (parent)
-          cacheEntry.lastModifiedTime = parent.lastModifiedTime;
+        if (engine._cacheKeyLastModifiedTime)
+          cacheEntry.lastModifiedTime = engine._cacheKeyLastModifiedTime;
         cacheEntry.engines = [];
         cache.directories[cacheKey] = cacheEntry;
       }
@@ -2983,7 +2965,8 @@ SearchService.prototype = {
 
     function modifiedDir(aDir) {
       return (!cache.directories || !cache.directories[aDir.path] ||
-              cache.directories[aDir.path].lastModifiedTime != aDir.lastModifiedTime);
+              (cache.directories[aDir.path].lastModifiedTime &&
+               cache.directories[aDir.path].lastModifiedTime != aDir.lastModifiedTime));
     }
 
     function notInCachePath(aPathToLoad) {
@@ -3108,9 +3091,13 @@ SearchService.prototype = {
               break;
             }
 
+            let lastModifiedTime = cache.directories[dir.path].lastModifiedTime;
+            if (!lastModifiedTime) {
+              continue;
+            }
+
             let info = yield OS.File.stat(dir.path);
-            if (cache.directories[dir.path].lastModifiedTime !=
-                info.lastModificationDate.getTime()) {
+            if (lastModifiedTime != info.lastModificationDate.getTime()) {
               modifiedDir = true;
               break;
             }
@@ -3326,14 +3313,20 @@ SearchService.prototype = {
     if (!cache.directories)
       return;
 
-    for each (let dir in cache.directories) {
-      let engines = dir.engines;
+    for (let key in cache.directories) {
+      let engines = cache.directories[key].engines;
       LOG("_loadEnginesFromCache: Loading from cache. " + engines.length + " engines to load.");
+
       for (let engine of engines) {
         if (skipReadOnly && engine._readOnly !== false)
           continue;
 
-        this._loadEngineFromCache(engine);
+        let engineObj = this._loadEngineFromCache(engine);
+        if (key != "[default]" && key != "[used-installed]") {
+          // These 2 values will only be used if we need to write the cache to disk again.
+          engineObj._cacheKey = key;
+          engineObj._cacheKeyLastModifiedTime = cache.directories[key].lastModifiedTime;
+        }
       }
     }
   },
@@ -3351,9 +3344,13 @@ SearchService.prototype = {
 
       engine._initWithJSON(json);
       this._addEngineToStore(engine);
+
+      return engine;
     } catch (ex) {
       LOG("Failed to load " + json._name + " from cache: " + ex);
       LOG("Engine JSON: " + json.toSource());
+
+      return null;
     }
   },
 
@@ -3375,7 +3372,6 @@ SearchService.prototype = {
 
       var fileURL = NetUtil.ioService.newFileURI(file).QueryInterface(Ci.nsIURL);
       var fileExtension = fileURL.fileExtension.toLowerCase();
-      var isWritable = isInProfile && file.isWritable();
 
       if (fileExtension != "xml") {
         // Not an engine
@@ -3384,8 +3380,12 @@ SearchService.prototype = {
 
       var addedEngine = null;
       try {
-        addedEngine = new Engine(file, !isWritable);
+        addedEngine = new Engine(file, !isInProfile);
         addedEngine._initFromFile();
+        if (!isInProfile && !addedEngine._isDefault) {
+          addedEngine._cacheKey = aDir.path;
+          addedEngine._cacheKeyLastModifiedTime = aDir.lastModifiedTime;
+        }
       } catch (ex) {
         LOG("_loadEnginesFromDir: Failed to load " + file.path + "!\n" + ex);
         continue;
@@ -3408,7 +3408,8 @@ SearchService.prototype = {
 
     // Check whether aDir is the user profile dir
     let isInProfile = aDir.equals(getDir(NS_APP_USER_SEARCH_DIR));
-    let iterator = new OS.File.DirectoryIterator(aDir.path);
+    let dirPath = aDir.path;
+    let iterator = new OS.File.DirectoryIterator(dirPath);
     return Task.spawn(function() {
       let osfiles = yield iterator.nextBatch();
       iterator.close();
@@ -3431,9 +3432,14 @@ SearchService.prototype = {
         let addedEngine = null;
         try {
           let file = new FileUtils.File(osfile.path);
-          let isWritable = isInProfile;
-          addedEngine = new Engine(file, !isWritable);
+          addedEngine = new Engine(file, !isInProfile);
           yield checkForSyncCompletion(addedEngine._asyncInitFromFile());
+          if (!isInProfile && !addedEngine._isDefault) {
+            addedEngine._cacheKey = dirPath;
+            let info = yield OS.File.stat(dirPath);
+            addedEngine._cacheKeyLastModifiedTime =
+              info.lastModificationDate.getTime();
+          }
         } catch (ex if ex.result != Cr.NS_ERROR_ALREADY_INITIALIZED) {
           LOG("_asyncLoadEnginesFromDir: Failed to load " + osfile.path + "!\n" + ex);
           continue;
