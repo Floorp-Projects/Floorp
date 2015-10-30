@@ -24,7 +24,7 @@ interface nsIVerificationCallback;
  *   https://wiki.mozilla.org/FirefoxOS/New_security_model/Packaging
  */
 
-[scriptable, uuid(edf91fee-ef4a-4479-9136-27eb3b7a6312)]
+[scriptable, uuid(2963609c-370b-4a76-9858-6f05121d0473)]
 interface nsIPackagedAppUtils : nsISupports
 {
   /**
@@ -55,6 +55,12 @@ interface nsIPackagedAppUtils : nsISupports
    * manifest is verified.
    */
   readonly attribute ACString packageIdentifier;
+
+  /**
+   * The moz-package-location in the manifest of this signed package.
+   * Only available after the manifest is verified.
+   */
+  readonly attribute ACString packageOrigin;
 };
 
 /**

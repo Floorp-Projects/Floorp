@@ -677,6 +677,11 @@ child:
      */
     async NotifyPresentationReceiverCleanUp(nsString aSessionId);
 
+    /**
+     * Notify the child that the Gecko Media Plugins installed changed.
+     */
+    async NotifyGMPsChanged();
+
 parent:
     /**
      * Tell the content process some attributes of itself.  This is
