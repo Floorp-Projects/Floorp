@@ -3,6 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 toolkit.jar:
+#include ../../shared/mozapps.inc.mn
 + skin/classic/mozapps/update/updates.css                  (update/updates.css)
 + skin/classic/mozapps/downloads/downloadIcon.png          (downloads/downloadIcon.png)
 + skin/classic/mozapps/downloads/downloads.css             (downloads/downloads.css)
@@ -13,7 +14,6 @@ toolkit.jar:
 + skin/classic/mozapps/extensions/category-service.png     (extensions/category-service.png)
 + skin/classic/mozapps/extensions/category-recent.png      (extensions/category-recent.png)
 + skin/classic/mozapps/extensions/category-available.png   (extensions/category-available.png)
-+ skin/classic/mozapps/extensions/extensionGeneric.png     (extensions/extensionGeneric.png)
 + skin/classic/mozapps/extensions/extensionGeneric-16.png  (extensions/extensionGeneric-16.png)
 + skin/classic/mozapps/extensions/dictionaryGeneric.png    (extensions/dictionaryGeneric.png)
 + skin/classic/mozapps/extensions/dictionaryGeneric-16.png (extensions/dictionaryGeneric-16.png)
@@ -23,8 +23,6 @@ toolkit.jar:
 * skin/classic/mozapps/extensions/newaddon.css             (extensions/newaddon.css)
 + skin/classic/mozapps/extensions/selectAddons.css         (extensions/selectAddons.css)
 + skin/classic/mozapps/extensions/heart.png                (extensions/heart.png)
-+ skin/classic/mozapps/extensions/navigation.png           (../../shared/extensions/navigation.png)
-+ skin/classic/mozapps/extensions/utilities.svg            (../../shared/extensions/utilities.svg)
 + skin/classic/mozapps/passwordmgr/key-16.png              (passwordmgr/key-16.png)
 + skin/classic/mozapps/passwordmgr/key-64.png              (passwordmgr/key-64.png)
 + skin/classic/mozapps/plugins/pluginGeneric.png           (plugins/pluginGeneric.png)
