@@ -534,11 +534,10 @@ var ensureKnownCountryCode = Task.async(function* (ss) {
       // If we have a default engine or a list of visible default engines
       // saved, the hashes should be valid, verify them now so that we can
       // refetch if they have been tampered with.
-      let defaultEngine = ss.getGlobalAttr("searchDefault");
-      let visibleDefaultEngines = ss.getGlobalAttr("visibleDefaultEngines");
-      if ((!defaultEngine || ss.getGlobalAttr("searchDefaultHash") == getVerificationHash(defaultEngine)) &&
-          (!visibleDefaultEngines ||
-           ss.getGlobalAttr("visibleDefaultEnginesHash") == getVerificationHash(visibleDefaultEngines))) {
+      let defaultEngine = ss.getVerifiedGlobalAttr("searchDefault");
+      let visibleDefaultEngines = ss.getVerifiedGlobalAttr("visibleDefaultEngines");
+      if ((defaultEngine || defaultEngine === undefined) &&
+          (visibleDefaultEngines || visibleDefaultEngines === undefined)) {
         // No geo defaults, or valid hashes; nothing to do.
         return;
       }
@@ -777,21 +776,15 @@ var fetchRegionDefault = (ss) => new Promise(resolve => {
 
     if (response.settings && response.settings.searchDefault) {
       let defaultEngine = response.settings.searchDefault;
-      ss.setGlobalAttr("searchDefault", defaultEngine);
-      let hash = getVerificationHash(defaultEngine);
-      LOG("fetchRegionDefault saved searchDefault: " + defaultEngine +
-          " with verification hash: " + hash);
-      ss.setGlobalAttr("searchDefaultHash", hash);
+      ss.setVerifiedGlobalAttr("searchDefault", defaultEngine);
+      LOG("fetchRegionDefault saved searchDefault: " + defaultEngine);
     }
 
     if (response.settings && response.settings.visibleDefaultEngines) {
       let visibleDefaultEngines = response.settings.visibleDefaultEngines;
       let string = visibleDefaultEngines.join(",");
-      ss.setGlobalAttr("visibleDefaultEngines", string);
-      let hash = getVerificationHash(string);
-      LOG("fetchRegionDefault saved visibleDefaultEngines: " + string +
-          " with verification hash: " + hash);
-      ss.setGlobalAttr("visibleDefaultEnginesHash", hash);
+      ss.setVerifiedGlobalAttr("visibleDefaultEngines", string);
+      LOG("fetchRegionDefault saved visibleDefaultEngines: " + string);
     }
 
     let interval = response.interval || SEARCH_GEO_DEFAULT_UPDATE_INTERVAL;
@@ -1702,6 +1695,7 @@ Engine.prototype = {
       aEngine._shortName = sanitizeName(aEngine.name);
 
     aEngine._loadPath = aEngine.getAnonymizedLoadPath(null, aEngine._uri);
+    aEngine.setAttr("loadPathHash", getVerificationHash(aEngine._loadPath));
 
     if (engineToUpdate) {
       // Keep track of the last modified date, so that we can make conditional
@@ -2134,7 +2128,6 @@ Engine.prototype = {
 
   setAttr(name, val) {
     this._metaData[name] = val;
-    notifyAction(this, SEARCH_ENGINE_CHANGED);
   },
 
   getAttr(name) {
@@ -2147,6 +2140,7 @@ Engine.prototype = {
   },
   set alias(val) {
     this.setAttr("alias", val);
+    notifyAction(this, SEARCH_ENGINE_CHANGED);
   },
 
   /**
@@ -2176,6 +2170,7 @@ Engine.prototype = {
     var value = !!val;
     if (value != this.hidden) {
       this.setAttr("hidden", value);
+      notifyAction(this, SEARCH_ENGINE_CHANGED);
     }
   },
 
@@ -2767,9 +2762,21 @@ SearchService.prototype = {
     this.batchTask.disarm();
     this.batchTask.arm();
   },
+  setVerifiedGlobalAttr(name, val) {
+    this.setGlobalAttr(name, val);
+    this.setGlobalAttr(name + "Hash", getVerificationHash(val));
+  },
 
   getGlobalAttr(name) {
     return this._metaData[name] || undefined;
+  },
+  getVerifiedGlobalAttr(name) {
+    let val = this.getGlobalAttr(name);
+    if (val && this.getGlobalAttr(name + "Hash") != getVerificationHash(val)) {
+      LOG("getVerifiedGlobalAttr, invalid hash for " + name);
+      return "";
+    }
+    return val;
   },
 
   _engines: { },
@@ -2784,13 +2791,7 @@ SearchService.prototype = {
   // Get the original Engine object that is the default for this region,
   // ignoring changes the user may have subsequently made.
   get _originalDefaultEngine() {
-    let defaultEngine = this.getGlobalAttr("searchDefault");
-    if (defaultEngine &&
-        this.getGlobalAttr("searchDefaultHash") != getVerificationHash(defaultEngine)) {
-      LOG("get _originalDefaultEngine, invalid searchDefaultHash for: " + defaultEngine);
-      defaultEngine = "";
-    }
-
+    let defaultEngine = this.getVerifiedGlobalAttr("searchDefault");
     if (!defaultEngine) {
       let defaultPrefB = Services.prefs.getDefaultBranch(BROWSER_SEARCH_PREF);
       let nsIPLS = Ci.nsIPrefLocalizedString;
@@ -3551,10 +3552,8 @@ SearchService.prototype = {
 
     // Check if we have a useable country specific list of visible default engines.
     let engineNames;
-    let visibleDefaultEngines =
-      this.getGlobalAttr("visibleDefaultEngines");
-    if (visibleDefaultEngines &&
-        this.getGlobalAttr("visibleDefaultEnginesHash") == getVerificationHash(visibleDefaultEngines)) {
+    let visibleDefaultEngines = this.getVerifiedGlobalAttr("visibleDefaultEngines");
+    if (visibleDefaultEngines) {
       engineNames = visibleDefaultEngines.split(",");
 
       for (let engineName of engineNames) {
@@ -4072,8 +4071,13 @@ SearchService.prototype = {
     this._ensureInitialized();
     if (!this._currentEngine) {
       let name = this.getGlobalAttr("current");
-      if (this.getGlobalAttr("hash") == getVerificationHash(name)) {
-        this._currentEngine = this.getEngineByName(name);
+      let engine = this.getEngineByName(name);
+      if (engine && (this.getGlobalAttr("hash") == getVerificationHash(name) ||
+                     engine._isDefault)) {
+        // If the current engine is a default one, we can relax the
+        // verification hash check to reduce the annoyance for users who
+        // backup/sync their profile in custom ways.
+        this._currentEngine = engine;
       }
     }
 
