@@ -25,7 +25,7 @@ const TEST_UPDATE_DATA = [{
       name: ["Fire 火"],
       tel: [{value: ""}]},
     expect: {
-      number: null}
+      number: ""}
   }, {
     id: 5,
     data: {
@@ -52,12 +52,8 @@ function testUpdateContact(aIcc, aType, aContactId, aMozContact, aExpect, aPin2)
 
   return aIcc.updateContact(aType, contact, aPin2)
     .then((aResult) => {
-      if (aExpect.number === null) {
-        is(aResult.tel, null);
-      } else {
-        is(aResult.tel[0].value, aExpect.number);
-        ok(aResult.tel.length == 1);
-      }
+      is(aResult.tel[0].value, aExpect.number);
+      ok(aResult.tel.length == 1);
       // We only support SIM in emulator, so we don't have anr and email field.
       ok(!aResult.email);
       is(contact.id, aIcc.iccInfo.iccid + aContactId);
@@ -101,11 +97,7 @@ function testUpdateContacts(aIcc, aType, aCacheContacts, aPin2) {
 
       is(contact.name[0], expectedResult.data.name[0]);
       is(contact.id, aIcc.iccInfo.iccid + expectedResult.id);
-      if (expectedResult.expect.number === null) {
-        is(contact.tel, null);
-      } else {
-        is(contact.tel[0].value, expectedResult.expect.number);
-      }
+      is(contact.tel[0].value, expectedResult.expect.number);
     }
     return revertContacts(aIcc, aCacheContacts, aType, aPin2);
   });
