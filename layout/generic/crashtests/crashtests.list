@@ -50,7 +50,7 @@ load 345139-1.xhtml
 load 345617-1.html
 load 348510-1.html
 load 348510-2.html
-skip load 348887-1.html # bug 623091
+load 348887-1.html
 load 348991-1.xhtml
 load 350370.html
 load 354458-1.html
