@@ -42,7 +42,10 @@ function createTreeProperties (snapshot, toolbox) {
   const totals = getSnapshotTotals(snapshot);
 
   return {
-    getParent: node => map[node.id],
+    getParent: node => {
+      const parent = map[node.id];
+      return parent === census ? null : parent;
+    },
     getChildren: node => node.children || [],
     renderItem: (item, depth, focused, arrow) =>
       new TreeItem({
