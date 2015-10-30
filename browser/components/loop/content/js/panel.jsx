@@ -942,6 +942,7 @@ loop.panel = (function(_, mozL10n) {
 
       return (
         <div className="panel-content">
+          <div className="beta-ribbon" />
           <NotificationListView
             clearOnDocumentHidden={true}
             notifications={this.props.notifications} />
