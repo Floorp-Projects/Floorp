@@ -54,14 +54,7 @@ public:
   NS_DECL_NSIDRAGSERVICE
   NS_DECL_NSIDRAGSESSION
 
-  void SetDragEndPoint(nsIntPoint aEndDragPoint)
-  {
-    mEndDragPoint = mozilla::LayoutDeviceIntPoint::FromUntyped(aEndDragPoint);
-  }
-  void SetDragEndPoint(mozilla::LayoutDeviceIntPoint aEndDragPoint)
-  {
-    mEndDragPoint = aEndDragPoint;
-  }
+  void SetDragEndPoint(nsIntPoint aEndDragPoint) { mEndDragPoint = aEndDragPoint; }
 
   uint16_t GetInputSource() { return mInputSource; }
 
@@ -178,7 +171,7 @@ protected:
   int32_t mScreenY;
 
   // the screen position where the drag ended
-  mozilla::LayoutDeviceIntPoint mEndDragPoint;
+  nsIntPoint mEndDragPoint;
 
   uint32_t mSuppressLevel;
 
