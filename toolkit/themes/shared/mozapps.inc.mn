@@ -1,0 +1,28 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# This is not a complete / proper jar manifest. It is included by the
+# actual theme-specific manifests, so that shared resources need only
+# be specified once. As a result, the source file paths are relative
+# to the location of the actual manifest.
+
+  skin/classic/mozapps/extensions/extensionGeneric.svg       (../../shared/extensions/extensionGeneric.svg)
+  skin/classic/mozapps/extensions/utilities.svg              (../../shared/extensions/utilities.svg)
+  skin/classic/mozapps/extensions/navigation.png             (../../shared/extensions/navigation.png)
+  skin/classic/mozapps/extensions/alerticon-warning.svg      (../../shared/extensions/alerticon-warning.svg)
+  skin/classic/mozapps/extensions/alerticon-error.svg        (../../shared/extensions/alerticon-error.svg)
+  skin/classic/mozapps/extensions/alerticon-info-positive.svg (../../shared/extensions/alerticon-info-positive.svg)
+  skin/classic/mozapps/extensions/alerticon-info-negative.svg (../../shared/extensions/alerticon-info-negative.svg)
+  skin/classic/mozapps/formautofill/requestAutocomplete.css  (../../shared/formautofill/requestAutocomplete.css)
+  skin/classic/mozapps/plugins/pluginProblem.css             (../../shared/plugins/pluginProblem.css)
+  skin/classic/mozapps/aboutNetworking.css                   (../../shared/aboutNetworking.css)
+  skin/classic/mozapps/aboutServiceWorkers.css               (../../shared/aboutServiceWorkers.css)
+  skin/classic/mozapps/plugins/contentPluginActivate.png     (../../shared/plugins/contentPluginActivate.png)
+  skin/classic/mozapps/plugins/contentPluginBlocked.png      (../../shared/plugins/contentPluginBlocked.png)
+  skin/classic/mozapps/plugins/contentPluginClose.png        (../../shared/plugins/contentPluginClose.png)
+  skin/classic/mozapps/plugins/contentPluginCrashed.png      (../../shared/plugins/contentPluginCrashed.png)
+  skin/classic/mozapps/plugins/contentPluginDisabled.png     (../../shared/plugins/contentPluginDisabled.png)
+  skin/classic/mozapps/plugins/contentPluginDownload.png     (../../shared/plugins/contentPluginDownload.png)
+  skin/classic/mozapps/plugins/contentPluginMissing.png      (../../shared/plugins/contentPluginMissing.png)
+  skin/classic/mozapps/plugins/contentPluginStripe.png       (../../shared/plugins/contentPluginStripe.png)

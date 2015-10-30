@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id={1208242}
+-->
+<head>
+  <title>Test for Bug {1208242}</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="common.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id={1208242}">Mozilla Bug {1208242}</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script class="testbody" type="application/javascript;version=1.7">
+
+var baseURL = "http://mochi.test:8888/tests/dom/apps/tests/addons/";
+var appManifestURL = baseURL + "update.webapp";
+
+SimpleTest.waitForExplicitFinish();
+
+var gGenerator = runTest();
+
+// Utilities to turn off auto update of the blocklist.
+// Copied from toolkit/mozapps/extensions/test/browser/head.js
+var gCatMan = SpecialPowers.Cc["@mozilla.org/categorymanager;1"]
+                           .getService(SpecialPowers.Ci.nsICategoryManager);
+
+var UTIMER = "update-timer";
+var BLOCKLIST = "nsBlocklistService";
+
+var blocklistUpdateConfig = "@mozilla.org/extensions/blocklist;1,getService,blocklist-background-update-timer,extensions.blocklist.interval,86400";
+
+function disableBlocklistUpdateTimer() {
+  info("Disabling " + UTIMER + " " + BLOCKLIST);
+  blocklistUpdateConfig = gCatMan.getCategoryEntry(UTIMER, BLOCKLIST);
+  gCatMan.deleteCategoryEntry(UTIMER, BLOCKLIST, true);
+}
+
+function enableBlocklistUpdateTimer() {
+  info("Enabling " + UTIMER + " " + BLOCKLIST);
+  gCatMan.addCategoryEntry(UTIMER, BLOCKLIST, blocklistUpdateConfig, false, true);
+}
+
+// End of utilities
+
+function go() {
+  disableBlocklistUpdateTimer();
+  SpecialPowers.allowUnsignedAddons();
+  SpecialPowers.pushPermissions(
+    [{ "type": "webapps-manage", "allow": 1, "context": document }],
+    function() { gGenerator.next() });
+}
+
+function continueTest() {
+  try {
+    gGenerator.next();
+  } catch (e if e instanceof StopIteration) {
+    finish();
+  }
+}
+
+function finish() {
+  enableBlocklistUpdateTimer();
+  SimpleTest.finish();
+}
+
+function cbError(aEvent) {
+  ok(false, "Error callback invoked " +
+            aEvent.target.error.name + " " + aEvent.target.error.message);
+  finish();
+}
+
+function mozAppsError() {
+  ok(false, "mozApps error: " + this.error.name);
+  SpecialPowers.debugUserCustomizations(false);
+  SimpleTest.finish();
+}
+
+function installApp(manifestURL) {
+  info("About to install app at " + manifestURL);
+  let req = navigator.mozApps.installPackage(manifestURL);
+  req.onsuccess = function() {
+    is(req.result.manifestURL, manifestURL, "app installed");
+    if (req.result.installState == "installed") {
+      is(req.result.manifest.version, "1.0", "correct version");
+      is(req.result.installState, "installed", "app downloaded");
+      continueTest();
+    } else {
+      req.result.ondownloadapplied = function() {
+        is(req.result.manifest.version, "1.0", "correct version");
+        is(req.result.installState, "installed", "app downloaded");
+        continueTest();
+      }
+
+      req.result.ondownloaderror = function() {
+        ok(false, "unexpected installation error: " + req.result.downloadError.name);
+        continueTest();
+      }
+    }
+  }
+  req.onerror = mozAppsError;
+  return req;
+}
+
+/**
+  * Test blocking of an add-on.
+  */
+function runTest() {
+  SpecialPowers.setAllAppsLaunchable(true);
+
+  SpecialPowers.autoConfirmAppInstall(continueTest);
+  yield undefined;
+
+  SpecialPowers.autoConfirmAppUninstall(continueTest);
+  yield undefined;
+
+  request = navigator.mozApps.mgmt.getAll();
+  request.onerror = cbError;
+  request.onsuccess = continueTest;
+  yield undefined;
+  var initialAppsCount = request.result.length;
+  info("Starting with " + initialAppsCount + " apps installed.");
+
+  // Install valid addon app.
+  var req = installApp(appManifestURL, false);
+  yield undefined;
+
+  var app = req.result;
+
+  ok(app, "App  is non-null");
+  is(app.manifestURL, appManifestURL, "App manifest url is correct.");
+  is(app.enabled, true, "App is enabled by default after install.");
+
+  // Check that the app is disabled
+  navigator.mozApps.mgmt.onenabledstatechange = function(event) {
+    ok(true, "onenabledstatechange received");
+    is(event.application.enabled, false, "Application is disabled");
+    continueTest();
+  }
+
+  // Trigger the blocklist by passing an XML blocklist string.
+  var blocklist =
+    `<?xml version="1.0"?>
+       <blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1443544016000">
+         <emItems>
+           <emItem blockID="i00" id="webextension@mochitest">
+             <versionRange minVersion="0" maxVersion="*" severity="1"> </versionRange>
+           </emItem>
+         </emItems>
+       </blocklist>`;
+
+  var bls = SpecialPowers.Cc["@mozilla.org/extensions/blocklist;1"]
+                         .getService(SpecialPowers.Ci.nsIBlocklistService).wrappedJSObject;
+  bls._loadBlocklistFromString(blocklist);
+
+  //navigator.mozApps.mgmt.setEnabled(app, true);
+  yield undefined;
+
+  // Cleaning up after ourselves.
+  navigator.mozApps.mgmt.onuninstall = function(event) {
+    var app = event.application;
+    is(app.manifestURL, appManifestURL, "App uninstall event ok.");
+    is(app.manifest.name, "Addon app", "App uninstall manifest ok.");
+    continueTest();
+  }
+  request = navigator.mozApps.mgmt.uninstall(app);
+  request.onerror = cbError;
+  request.onsuccess = continueTest;
+  yield undefined;
+  yield undefined;
+  is(request.result, appManifestURL, "App uninstalled.");
+  navigator.mozApps.mgmt.onuninstall = null;
+
+  request = navigator.mozApps.mgmt.getAll();
+  request.onerror = cbError;
+  request.onsuccess = continueTest;
+  yield undefined;
+  is(request.result.length, initialAppsCount, "All apps are uninstalled.");
+}
+
+addLoadEvent(() => prepareEnv(go));
+
+</script>
+</pre>
+</body>
+</html>

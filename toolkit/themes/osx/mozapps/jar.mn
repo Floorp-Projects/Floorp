@@ -4,6 +4,7 @@
 
 toolkit.jar:
 % skin mozapps classic/1.0 %skin/classic/mozapps/
+#include ../../shared/mozapps.inc.mn
   skin/classic/mozapps/downloads/buttons.png                      (downloads/buttons.png)
   skin/classic/mozapps/downloads/downloadIcon.png                 (downloads/downloadIcon.png)
 * skin/classic/mozapps/downloads/downloads.css                    (downloads/downloads.css)
@@ -18,7 +19,6 @@ toolkit.jar:
   skin/classic/mozapps/extensions/category-recent.png             (extensions/category-recent.png)
   skin/classic/mozapps/extensions/category-available.png          (extensions/category-available.png)
   skin/classic/mozapps/extensions/discover-logo.png               (extensions/discover-logo.png)
-  skin/classic/mozapps/extensions/extensionGeneric.png            (extensions/extensionGeneric.png)
   skin/classic/mozapps/extensions/extensionGeneric-16.png         (extensions/extensionGeneric-16.png)
   skin/classic/mozapps/extensions/themeGeneric.png                (extensions/themeGeneric.png)
   skin/classic/mozapps/extensions/themeGeneric-16.png             (extensions/themeGeneric-16.png)
@@ -29,18 +29,8 @@ toolkit.jar:
   skin/classic/mozapps/extensions/rating-won.png                  (extensions/rating-won.png)
   skin/classic/mozapps/extensions/rating-not-won.png              (extensions/rating-not-won.png)
   skin/classic/mozapps/extensions/cancel.png                      (extensions/cancel.png)
-  skin/classic/mozapps/extensions/utilities.svg                   (../../shared/extensions/utilities.svg)
   skin/classic/mozapps/extensions/toolbarbutton-dropmarker.png    (extensions/toolbarbutton-dropmarker.png)
   skin/classic/mozapps/extensions/heart.png                       (extensions/heart.png)
-  skin/classic/mozapps/extensions/navigation.png                  (../../shared/extensions/navigation.png)
-  skin/classic/mozapps/extensions/stripes-warning.png             (extensions/stripes-warning.png)
-  skin/classic/mozapps/extensions/stripes-error.png               (extensions/stripes-error.png)
-  skin/classic/mozapps/extensions/stripes-info-positive.png       (extensions/stripes-info-positive.png)
-  skin/classic/mozapps/extensions/stripes-info-negative.png       (extensions/stripes-info-negative.png)
-  skin/classic/mozapps/extensions/alerticon-warning.png           (extensions/alerticon-warning.png)
-  skin/classic/mozapps/extensions/alerticon-error.png             (extensions/alerticon-error.png)
-  skin/classic/mozapps/extensions/alerticon-info-positive.png     (extensions/alerticon-info-positive.png)
-  skin/classic/mozapps/extensions/alerticon-info-negative.png     (extensions/alerticon-info-negative.png)
   skin/classic/mozapps/extensions/search.png                      (extensions/search.png)
   skin/classic/mozapps/extensions/about.css                       (extensions/about.css)
 * skin/classic/mozapps/extensions/extensions.css                  (extensions/extensions.css)
@@ -57,14 +47,6 @@ toolkit.jar:
   skin/classic/mozapps/plugins/pluginProblem.css                  (../../shared/plugins/pluginProblem.css)
   skin/classic/mozapps/aboutNetworking.css                        (../../shared/aboutNetworking.css)
   skin/classic/mozapps/aboutServiceWorkers.css                    (../../shared/aboutServiceWorkers.css)
-  skin/classic/mozapps/plugins/contentPluginActivate.png          (../../shared/plugins/contentPluginActivate.png)
-  skin/classic/mozapps/plugins/contentPluginBlocked.png           (../../shared/plugins/contentPluginBlocked.png)
-  skin/classic/mozapps/plugins/contentPluginClose.png             (../../shared/plugins/contentPluginClose.png)
-  skin/classic/mozapps/plugins/contentPluginCrashed.png           (../../shared/plugins/contentPluginCrashed.png)
-  skin/classic/mozapps/plugins/contentPluginDisabled.png          (../../shared/plugins/contentPluginDisabled.png)
-  skin/classic/mozapps/plugins/contentPluginDownload.png          (../../shared/plugins/contentPluginDownload.png)
-  skin/classic/mozapps/plugins/contentPluginMissing.png           (../../shared/plugins/contentPluginMissing.png)
-  skin/classic/mozapps/plugins/contentPluginStripe.png            (../../shared/plugins/contentPluginStripe.png)
   skin/classic/mozapps/plugins/notifyPluginGeneric.png            (plugins/notifyPluginGeneric.png)
   skin/classic/mozapps/plugins/pluginGeneric.png                  (plugins/pluginGeneric.png)
   skin/classic/mozapps/plugins/pluginBlocked.png                  (plugins/pluginBlocked.png)
@@ -89,8 +71,7 @@ toolkit.jar:
 #elif MOZ_SEPARATE_MANIFEST_FOR_THEME_OVERRIDES
 [extensions/{972ce4c6-7e08-4474-a285-3208198ce6fd}] chrome.jar:
 #endif
-% override chrome://mozapps/skin/extensions/category-extensions.png       chrome://mozapps/skin/extensions/extensionGeneric.png
+% override chrome://mozapps/skin/extensions/category-extensions.svg       chrome://mozapps/skin/extensions/extensionGeneric.svg
 % override chrome://mozapps/skin/extensions/category-languages.png        chrome://mozapps/skin/extensions/localeGeneric.png
 % override chrome://mozapps/skin/extensions/category-themes.png           chrome://mozapps/skin/extensions/themeGeneric.png
 % override chrome://mozapps/skin/plugins/notifyPluginCrashed.png          chrome://mozapps/skin/plugins/notifyPluginGeneric.png
-% override chrome://mozapps/skin/xpinstall/xpinstallItemGeneric.png       chrome://mozapps/skin/extensions/extensionGeneric.png

@@ -4,6 +4,7 @@
 
 const { isSavedFrame } = require("devtools/shared/DevToolsUtils");
 const { DOM: dom, createClass, createFactory, PropTypes } = require("devtools/client/shared/vendor/react");
+const { L10N } = require("../utils");
 const FrameView = createFactory(require("./frame"));
 
 const INDENT = 10;
@@ -33,8 +34,9 @@ const TreeItem = module.exports = createClass({
   },
 
   toLabel(name, toolbox) {
-    return isSavedFrame(name)
-      ? FrameView({ frame: name, toolbox })
-      : String(name);
+    return isSavedFrame(name) ? FrameView({ frame: name, toolbox }) :
+           name === "noStack" ? L10N.getStr("tree-item.nostack") :
+           name === null ? L10N.getStr("tree-item.root") :
+           String(name);
   },
 });
