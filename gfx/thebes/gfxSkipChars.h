@@ -235,7 +235,7 @@ public:
         return GetSkippedOffset();
     }
 
-    uint32_t ConvertSkippedToOriginal(int32_t aSkippedStringOffset)
+    int32_t ConvertSkippedToOriginal(uint32_t aSkippedStringOffset)
     {
         SetSkippedOffset(aSkippedStringOffset);
         return GetOriginalOffset();
