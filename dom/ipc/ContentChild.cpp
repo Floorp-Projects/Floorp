@@ -882,9 +882,21 @@ ContentChild::ProvideWindowCommon(TabChild* aTabOpener,
         renderFrame = nullptr;
     }
 
+  ShowInfo showInfo(EmptyString(), false, false, true,
+                    aTabOpener->mDPI, aTabOpener->mDefaultScale);
+  nsCOMPtr<nsPIDOMWindow> opener = do_QueryInterface(aParent);
+  nsIDocShell* openerShell;
+  if (opener && (openerShell = opener->GetDocShell())) {
+    nsCOMPtr<nsILoadContext> context = do_QueryInterface(openerShell);
+    showInfo = ShowInfo(EmptyString(), false,
+                        context->UsePrivateBrowsing(), true,
+                        aTabOpener->mDPI, aTabOpener->mDefaultScale);
+  }
+
     // Unfortunately we don't get a window unless we've shown the frame.  That's
     // pretty bogus; see bug 763602.
-    newChild->DoFakeShow(textureFactoryIdentifier, layersId, renderFrame);
+    newChild->DoFakeShow(textureFactoryIdentifier, layersId, renderFrame,
+                         showInfo);
 
     for (size_t i = 0; i < frameScripts.Length(); i++) {
         FrameScriptInfo& info = frameScripts[i];
@@ -894,7 +906,7 @@ ContentChild::ProvideWindowCommon(TabChild* aTabOpener,
     }
 
     if (!urlToLoad.IsEmpty()) {
-        newChild->RecvLoadURL(urlToLoad, BrowserConfiguration());
+        newChild->RecvLoadURL(urlToLoad, BrowserConfiguration(), showInfo);
     }
 
     nsCOMPtr<nsIDOMWindow> win = do_GetInterface(newChild->WebNavigation());
