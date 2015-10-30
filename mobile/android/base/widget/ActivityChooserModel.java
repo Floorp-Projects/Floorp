@@ -771,11 +771,23 @@ public class ActivityChooserModel extends DataSetObservable {
                 ResolveInfo resolveInfo = resolveInfos.get(i);
 
                 /**
-                 * Mozilla: Do not display "Add to Firefox" from share menu.
+                 * Mozilla: We want "Add to Firefox" to appear differently inside of Firefox than
+                 * from external applications - override the name and icon here.
+                 *
+                 * Do not display the menu item if there are no devices to share to.
+                 *
+                 * Note: we check both the class name and the label to ensure we only change the
+                 * label of the current channel.
                  */
                 if (shareDialogClassName.equals(resolveInfo.activityInfo.name) &&
                         channelToRemoveLabel.equals(resolveInfo.loadLabel(packageManager))) {
-                    continue;
+                    // Don't add the menu item if there are no devices to share to.
+                    if (!hasOtherSyncClients()) {
+                        continue;
+                    }
+
+                    resolveInfo.labelRes = R.string.overlay_share_send_other;
+                    resolveInfo.icon = R.drawable.icon_shareplane;
                 }
 
                 mActivities.add(new ActivityResolveInfo(resolveInfo));

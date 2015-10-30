@@ -101,8 +101,8 @@ public class GeckoMenu extends ListView
     // Map of "ifRoom" action-items in action-bar and their views.
     private final Map<GeckoMenuItem, View> mSecondaryActionItems;
 
-    // Map of "ifRoom|withText" action-items in action-bar and their views.
-    private final Map<GeckoMenuItem, View> mShareActionItems;
+    // Map of "collapseActionView" action-items in action-bar and their views.
+    private final Map<GeckoMenuItem, View> mQuickShareActionItems;
 
     // Reference to a callback for menu events.
     private Callback mCallback;
@@ -116,8 +116,8 @@ public class GeckoMenu extends ListView
     // Reference to "ifRoom" action-items bar in action-bar.
     private final ActionItemBarPresenter mSecondaryActionItemBar;
 
-    // Reference to "ifRoom|withText" action-items bar in action-bar.
-    private final ActionItemBarPresenter mShareActionItemBar;
+    // Reference to "collapseActionView" action-items bar in action-bar.
+    private final ActionItemBarPresenter mQuickShareActionItemBar;
 
     // Adapter to hold the list of menu items.
     private final MenuItemsAdapter mAdapter;
@@ -148,11 +148,11 @@ public class GeckoMenu extends ListView
         mItemsById = new SparseArray<MenuItem>();
         mPrimaryActionItems = new HashMap<GeckoMenuItem, View>();
         mSecondaryActionItems = new HashMap<GeckoMenuItem, View>();
-        mShareActionItems = new HashMap<GeckoMenuItem, View>();
+        mQuickShareActionItems = new HashMap<GeckoMenuItem, View>();
 
         mPrimaryActionItemBar = (DefaultActionItemBar) LayoutInflater.from(context).inflate(R.layout.menu_action_bar, null);
         mSecondaryActionItemBar = (DefaultActionItemBar) LayoutInflater.from(context).inflate(R.layout.menu_secondary_action_bar, null);
-        mShareActionItemBar = (DefaultActionItemBar) LayoutInflater.from(context).inflate(R.layout.menu_secondary_action_bar, null);
+        mQuickShareActionItemBar = (DefaultActionItemBar) LayoutInflater.from(context).inflate(R.layout.menu_secondary_action_bar, null);
     }
 
     private static void assertOnUiThread() {
@@ -227,17 +227,23 @@ public class GeckoMenu extends ListView
                 mSecondaryActionItems.put(menuItem, actionView);
                 mItems.add(menuItem);
             }
-        } else if (actionEnum == GeckoMenuItem.SHOW_AS_ACTION_IF_ROOM_WITH_TEXT) {
-            if (added = mShareActionItemBar.addActionItem(actionView)) {
-                if (mShareActionItems.size() == 0) {
-                    // Reset the adapter before adding the header view to a list.
-                    setAdapter(null);
-                    addHeaderView((DefaultActionItemBar) mShareActionItemBar);
-                    setAdapter(mAdapter);
-                }
+        } else if (actionEnum == GeckoMenuItem.SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW) {
+            if (actionView instanceof MenuItemActionView) {
+                final MenuItemActionView quickShareView = (MenuItemActionView) actionView;
 
-                mShareActionItems.put(menuItem, actionView);
-                mItems.add(menuItem);
+                // We don't want to add the quick share bar if we don't have any quick share items.
+                if (quickShareView.getActionButtonCount() > 0 &&
+                        (added = mQuickShareActionItemBar.addActionItem(quickShareView))) {
+                    if (mQuickShareActionItems.size() == 0) {
+                        // Reset the adapter before adding the header view to a list.
+                        setAdapter(null);
+                        addHeaderView((DefaultActionItemBar) mQuickShareActionItemBar);
+                        setAdapter(mAdapter);
+                    }
+
+                    mQuickShareActionItems.put(menuItem, quickShareView);
+                    mItems.add(menuItem);
+                }
             }
         }
 
@@ -333,10 +339,10 @@ public class GeckoMenu extends ListView
         setAdapter(mAdapter);
     }
 
-    private void removeShareActionBarView() {
+    private void removeQuickShareActionBarView() {
         // Reset the adapter before removing the header view from a list.
         setAdapter(null);
-        removeHeaderView((DefaultActionItemBar) mShareActionItemBar);
+        removeHeaderView((DefaultActionItemBar) mQuickShareActionItemBar);
         setAdapter(mAdapter);
     }
 
@@ -379,12 +385,12 @@ public class GeckoMenu extends ListView
         }
         mSecondaryActionItems.clear();
 
-        if (mShareActionItemBar != null) {
-            for (View item : mShareActionItems.values()) {
-                mShareActionItemBar.removeActionItem(item);
+        if (mQuickShareActionItemBar != null) {
+            for (View item : mQuickShareActionItems.values()) {
+                mQuickShareActionItemBar.removeActionItem(item);
             }
         }
-        mShareActionItems.clear();
+        mQuickShareActionItems.clear();
 
         // Remove the view, too -- the first addActionItem will re-add it,
         // and this is simpler than changing that logic.
@@ -393,7 +399,7 @@ public class GeckoMenu extends ListView
         }
 
         removeSecondaryActionBarView();
-        removeShareActionBarView();
+        removeQuickShareActionBarView();
     }
 
     @Override
@@ -448,7 +454,7 @@ public class GeckoMenu extends ListView
             if (menuItem.isVisible() &&
                 !mPrimaryActionItems.containsKey(menuItem) &&
                 !mSecondaryActionItems.containsKey(menuItem) &&
-                !mShareActionItems.containsKey(menuItem))
+                !mQuickShareActionItems.containsKey(menuItem))
                 return true;
         }
 
@@ -525,15 +531,15 @@ public class GeckoMenu extends ListView
             return;
         }
 
-        if (mShareActionItems.containsKey(item)) {
-            if (mShareActionItemBar != null)
-                mShareActionItemBar.removeActionItem(mShareActionItems.get(item));
+        if (mQuickShareActionItems.containsKey(item)) {
+            if (mQuickShareActionItemBar != null)
+                mQuickShareActionItemBar.removeActionItem(mQuickShareActionItems.get(item));
 
-            mShareActionItems.remove(item);
+            mQuickShareActionItems.remove(item);
             mItems.remove(item);
 
-            if (mShareActionItems.size() == 0) {
-                removeShareActionBarView();
+            if (mQuickShareActionItems.size() == 0) {
+                removeQuickShareActionBarView();
             }
 
             return;
@@ -568,7 +574,7 @@ public class GeckoMenu extends ListView
     public boolean hasActionItemBar() {
          return (mPrimaryActionItemBar != null) &&
                  (mSecondaryActionItemBar != null) &&
-                 (mShareActionItemBar != null);
+                 (mQuickShareActionItemBar != null);
     }
 
     @Override
@@ -592,7 +598,7 @@ public class GeckoMenu extends ListView
             } else if (actionEnum == GeckoMenuItem.SHOW_AS_ACTION_IF_ROOM) {
                 actionView = mSecondaryActionItems.get(item);
             } else {
-                actionView = mShareActionItems.get(item);
+                actionView = mQuickShareActionItems.get(item);
             }
 
             if (actionView != null) {
