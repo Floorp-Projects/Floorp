@@ -2462,41 +2462,53 @@ nsDisplayBackgroundImage::GetContainer(LayerManager* aManager,
   return container.forget();
 }
 
-LayerState
-nsDisplayBackgroundImage::GetLayerState(nsDisplayListBuilder* aBuilder,
-                                        LayerManager* aManager,
-                                        const ContainerLayerParameters& aParameters)
+nsDisplayBackgroundImage::ImageLayerization
+nsDisplayBackgroundImage::ShouldCreateOwnLayer(nsDisplayListBuilder* aBuilder,
+                                               LayerManager* aManager)
 {
-  bool animated = false;
-  if (mBackgroundStyle) {
+  if (nsLayoutUtils::AnimatedImageLayersEnabled() && mBackgroundStyle) {
     const nsStyleBackground::Layer &layer = mBackgroundStyle->mLayers[mLayer];
     const nsStyleImage* image = &layer.mImage;
     if (image->GetType() == eStyleImageType_Image) {
       imgIRequest* imgreq = image->GetImageData();
       nsCOMPtr<imgIContainer> image;
       if (NS_SUCCEEDED(imgreq->GetImage(getter_AddRefs(image))) && image) {
-        if (NS_FAILED(image->GetAnimated(&animated))) {
-          animated = false;
+        bool animated = false;
+        if (NS_SUCCEEDED(image->GetAnimated(&animated)) && animated) {
+          return WHENEVER_POSSIBLE;
         }
       }
     }
   }
 
-  if (!animated ||
-      !nsLayoutUtils::AnimatedImageLayersEnabled()) {
-    if (!aManager->IsCompositingCheap() ||
-        !nsLayoutUtils::GPUImageScalingEnabled()) {
-      return LAYER_NONE;
-    }
+  if (nsLayoutUtils::GPUImageScalingEnabled() &&
+      aManager->IsCompositingCheap()) {
+    return ONLY_FOR_SCALING;
   }
 
-  if (!CanOptimizeToImageLayer(aManager, aBuilder)) {
+  return NO_LAYER_NEEDED;
+}
+
+LayerState
+nsDisplayBackgroundImage::GetLayerState(nsDisplayListBuilder* aBuilder,
+                                        LayerManager* aManager,
+                                        const ContainerLayerParameters& aParameters)
+{
+  ImageLayerization shouldLayerize = ShouldCreateOwnLayer(aBuilder, aManager);
+  if (shouldLayerize == NO_LAYER_NEEDED) {
+    // We can skip the call to CanOptimizeToImageLayer if we don't want a
+    // layer anyway.
     return LAYER_NONE;
   }
 
-  MOZ_ASSERT(mImage);
+  if (CanOptimizeToImageLayer(aManager, aBuilder)) {
+    if (shouldLayerize == WHENEVER_POSSIBLE) {
+      return LAYER_ACTIVE;
+    }
 
-  if (!animated) {
+    MOZ_ASSERT(shouldLayerize == ONLY_FOR_SCALING, "unhandled ImageLayerization value?");
+
+    MOZ_ASSERT(mImage);
     int32_t imageWidth;
     int32_t imageHeight;
     mImage->GetWidth(&imageWidth);
@@ -2509,18 +2521,16 @@ nsDisplayBackgroundImage::GetLayerState(nsDisplayListBuilder* aBuilder,
     const gfxSize scale = gfxSize(destLayerRect.width / imageWidth,
                                   destLayerRect.height / imageHeight);
 
-    // If we are not scaling at all, no point in separating this into a layer.
-    if (scale.width == 1.0f && scale.height == 1.0f) {
-      return LAYER_NONE;
-    }
-
-    // If the target size is pretty small, no point in using a layer.
-    if (destLayerRect.width * destLayerRect.height < 64 * 64) {
-      return LAYER_NONE;
+    if ((scale.width != 1.0f || scale.height != 1.0f) &&
+        (destLayerRect.width * destLayerRect.height >= 64 * 64)) {
+      // Separate this image into a layer.
+      // There's no point in doing this if we are not scaling at all or if the
+      // target size is pretty small.
+      return LAYER_ACTIVE;
     }
   }
 
-  return LAYER_ACTIVE;
+  return LAYER_NONE;
 }
 
 already_AddRefed<Layer>

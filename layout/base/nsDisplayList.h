@@ -2619,6 +2619,16 @@ protected:
   void PaintInternal(nsDisplayListBuilder* aBuilder, nsRenderingContext* aCtx,
                      const nsRect& aBounds, nsRect* aClipRect);
 
+  // Determine whether we want to be separated into our own layer, independent
+  // of whether this item can actually be layerized.
+  enum ImageLayerization {
+    WHENEVER_POSSIBLE,
+    ONLY_FOR_SCALING,
+    NO_LAYER_NEEDED
+  };
+  ImageLayerization ShouldCreateOwnLayer(nsDisplayListBuilder* aBuilder,
+                                         LayerManager* aManager);
+
   // Cache the result of nsCSSRendering::FindBackground. Always null if
   // mIsThemed is true or if FindBackground returned false.
   const nsStyleBackground* mBackgroundStyle;
