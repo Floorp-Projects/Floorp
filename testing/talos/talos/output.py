@@ -517,11 +517,17 @@ class PerfherderOutput(Output):
                                       test.test_config['filters'])
                     vals.extend([[i['value'], j] for i, j in filtered_results])
                     for val, page in filtered_results:
+                        measurement_metadata = {}
+                        if test.test_config.get('lower_is_better') is not None:
+                            measurement_metadata['lowerIsBetter'] = test.test_config['lower_is_better']
+                        if test.test_config.get('unit'):
+                            measurement_metadata['unit'] = test.test_config['unit']
                         if page == 'NULL':
                             summary['subtests'][test.name()] = val
+                            summary['subtests'][test.name()].update(measurement_metadata)
                         else:
                             summary['subtests'][page] = val
-
+                            summary['subtests'][page].update(measurement_metadata)
 
                 suite_summary = self.construct_results(vals,
                                                        testname=test.name())
