@@ -33,6 +33,9 @@ XPCOMUtils.defineLazyModuleGetter(this, "clearTimeout",
 XPCOMUtils.defineLazyServiceGetter(this, "gTextToSubURI",
                                    "@mozilla.org/intl/texttosuburi;1",
                                    "nsITextToSubURI");
+XPCOMUtils.defineLazyServiceGetter(this, "gEnvironment",
+                                   "@mozilla.org/process/environment;1",
+                                   "nsIEnvironment");
 
 Cu.importGlobalProperties(["XMLHttpRequest"]);
 
@@ -60,13 +63,6 @@ const NS_APP_USER_PROFILE_50_DIR = "ProfD";
 // Instead, we now load plugins from APP_SEARCH_PREFIX, where a
 // list.txt file needs to exist to list available engines.
 const APP_SEARCH_PREFIX = "resource://search-plugins/";
-
-// Search engine "locations". If this list is changed, be sure to update
-// the engine's _isDefault function accordingly.
-const SEARCH_APP_DIR = 1;
-const SEARCH_PROFILE_DIR = 2;
-const SEARCH_IN_EXTENSION = 3;
-const SEARCH_JAR = 4;
 
 // See documentation in nsIBrowserSearchService.idl.
 const SEARCH_ENGINE_TOPIC        = "browser-search-engine-modified";
@@ -1275,22 +1271,17 @@ EngineURL.prototype = {
  *        search engine data file.
  * @param aIsReadOnly
  *        Boolean indicating whether the engine should be treated as read-only.
- *        Read only engines cannot be serialized to file.
  */
 function Engine(aLocation, aIsReadOnly) {
   this._readOnly = aIsReadOnly;
   this._urls = [];
 
-  if (aLocation.type) {
-    if (aLocation.type == "filePath")
-      this._file = aLocation.value;
-    else if (aLocation.type == "uri")
-      this._uri = aLocation.value;
-    else if (aLocation.type == "user")
-      this._shortName = aLocation.shortName;
+  let file, uri;
+  if (typeof aLocation == "string") {
+    this._shortName = aLocation;
   } else if (aLocation instanceof Ci.nsILocalFile) {
     // we already have a file (e.g. loading engines from disk)
-    this._file = aLocation;
+    file = aLocation;
   } else if (aLocation instanceof Ci.nsIURI) {
     switch (aLocation.scheme) {
       case "https":
@@ -1300,7 +1291,7 @@ function Engine(aLocation, aIsReadOnly) {
       case "file":
       case "resource":
       case "chrome":
-        this._uri = aLocation;
+        uri = aLocation;
         break;
       default:
         ERROR("Invalid URI passed to the nsISearchEngine constructor",
@@ -1311,15 +1302,41 @@ function Engine(aLocation, aIsReadOnly) {
           Cr.NS_ERROR_INVALID_ARG);
 
   if (!this._shortName) {
+    // If we don't have a shortName at this point, it's the first time we load
+    // this engine, so let's generate the shortName, id and loadPath values.
     let shortName;
-    if (this._file) {
-      shortName = this._file.leafName;
+    if (file) {
+      shortName = file.leafName;
     }
-    else if (aIsReadOnly && this._uri && this._uri instanceof Ci.nsIURL) {
-      shortName = this._uri.fileName;
+    else if (uri && uri instanceof Ci.nsIURL) {
+      if (aIsReadOnly || (gEnvironment.get("XPCSHELL_TEST_PROFILE_DIR") &&
+                          uri.scheme == "resource")) {
+        shortName = uri.fileName;
+      }
     }
     if (shortName && shortName.endsWith(".xml")) {
       this._shortName = shortName.slice(0, -4);
+    }
+    this._loadPath = this.getAnonymizedLoadPath(file, uri);
+
+    if (!shortName && !aIsReadOnly) {
+      // We are in the process of downloading and installing the engine.
+      // We'll have the shortName and id once we are done parsing it.
+     return;
+    }
+
+    // Build the id used for the metadata storage.
+    if (this._isDefault) {
+      this._id = "[app]/" + this._shortName + ".xml";
+    }
+    else if (!aIsReadOnly) {
+      this._id = "[profile]/" + this._shortName + ".xml";
+    }
+    else {
+      // If the engine is neither a default one, nor a user-installed one,
+      // it must be extension-shipped, so use the full path as id.
+      LOG("Setting _id to full path for engine from " + this._loadPath);
+      this._id = file ? file.path : uri.spec;
     }
   }
 }
@@ -1332,24 +1349,15 @@ Engine.prototype = {
   _data: null,
   // Whether or not the engine is readonly.
   _readOnly: true,
+  // Anonymized path of where we initially loaded the engine from.
+  // This will stay null for engines installed in the profile before we moved
+  // to a JSON storage.
+  _loadPath: null,
   // The engine's description
   _description: "",
   // Used to store the engine to replace, if we're an update to an existing
   // engine.
   _engineToUpdate: null,
-  // The file from which the plugin was loaded.
-  __file: null,
-  get _file() {
-    if (this.__file && !(this.__file instanceof Ci.nsILocalFile)) {
-      let file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
-      file.persistentDescriptor = this.__file;
-      return this.__file = file;
-    }
-    return this.__file;
-  },
-  set _file(aValue) {
-    this.__file = aValue;
-  },
   // Set to true if the engine has a preferred icon (an icon that should not be
   // overridden by a non-preferred icon).
   _hasPreferredIcon: null,
@@ -1369,19 +1377,6 @@ Engine.prototype = {
       LOG("_searchForm: Invalid URL dropped for " + this._name ||
           "the current engine");
   },
-  // The URI object from which the engine was retrieved.
-  // This is null for engines loaded from disk, but present for engines loaded
-  // from chrome:// URIs.
-  __uri: null,
-  get _uri() {
-    if (this.__uri && !(this.__uri instanceof Ci.nsIURI))
-      this.__uri = makeURI(this.__uri);
-
-    return this.__uri;
-  },
-  set _uri(aValue) {
-    this.__uri = aValue;
-  },
   // Whether to obtain user confirmation before adding the engine. This is only
   // used when the engine is first added to the list.
   _confirm: false,
@@ -1391,9 +1386,6 @@ Engine.prototype = {
   // A function to be invoked when this engine object's addition completes (or
   // fails). Only used for installation via addEngine.
   _installCallback: null,
-  // Where the engine was loaded from. Can be one of: SEARCH_APP_DIR,
-  // SEARCH_PROFILE_DIR, SEARCH_IN_EXTENSION.
-  __installLocation: null,
   // The number of days between update checks for new versions
   _updateInterval: null,
   // The url to check at for a new update
@@ -1407,19 +1399,19 @@ Engine.prototype = {
    * Retrieves the data from the engine's file.
    * The document element is placed in the engine's data field.
    */
-  _initFromFile: function SRCH_ENG_initFromFile() {
-    if (!this._file || !this._file.exists())
+  _initFromFile: function SRCH_ENG_initFromFile(file) {
+    if (!file || !file.exists())
       FAIL("File must exist before calling initFromFile!", Cr.NS_ERROR_UNEXPECTED);
 
     var fileInStream = Cc["@mozilla.org/network/file-input-stream;1"].
                        createInstance(Ci.nsIFileInputStream);
 
-    fileInStream.init(this._file, MODE_RDONLY, FileUtils.PERMS_FILE, false);
+    fileInStream.init(file, MODE_RDONLY, FileUtils.PERMS_FILE, false);
 
     var domParser = Cc["@mozilla.org/xmlextras/domparser;1"].
                     createInstance(Ci.nsIDOMParser);
     var doc = domParser.parseFromStream(fileInStream, "UTF-8",
-                                        this._file.fileSize,
+                                        file.fileSize,
                                         "text/xml");
 
     this._data = doc.documentElement;
@@ -1433,15 +1425,17 @@ Engine.prototype = {
    * Retrieves the data from the engine's file asynchronously.
    * The document element is placed in the engine's data field.
    *
+   * @param file The file to load the search plugin from.
+   *
    * @returns {Promise} A promise, resolved successfully if initializing from
    * data succeeds, rejected if it fails.
    */
-  _asyncInitFromFile: function SRCH_ENG__asyncInitFromFile() {
+  _asyncInitFromFile: function SRCH_ENG__asyncInitFromFile(file) {
     return Task.spawn(function() {
-      if (!this._file || !(yield OS.File.exists(this._file.path)))
+      if (!file || !(yield OS.File.exists(file.path)))
         FAIL("File must exist before calling initFromFile!", Cr.NS_ERROR_UNEXPECTED);
 
-      let fileURI = NetUtil.ioService.newFileURI(this._file);
+      let fileURI = NetUtil.ioService.newFileURI(file);
       yield this._retrieveSearchXMLData(fileURI.spec);
 
       // Now that the data is loaded, initialize the engine object
@@ -1452,15 +1446,17 @@ Engine.prototype = {
   /**
    * Retrieves the engine data from a URI. Initializes the engine, flushes to
    * disk, and notifies the search service once initialization is complete.
+   *
+   * @param uri The uri to load the search plugin from.
    */
-  _initFromURIAndLoad: function SRCH_ENG_initFromURIAndLoad() {
-    ENSURE_WARN(this._uri instanceof Ci.nsIURI,
+  _initFromURIAndLoad: function SRCH_ENG_initFromURIAndLoad(uri) {
+    ENSURE_WARN(uri instanceof Ci.nsIURI,
                 "Must have URI when calling _initFromURIAndLoad!",
                 Cr.NS_ERROR_UNEXPECTED);
 
-    LOG("_initFromURIAndLoad: Downloading engine from: \"" + this._uri.spec + "\".");
+    LOG("_initFromURIAndLoad: Downloading engine from: \"" + uri.spec + "\".");
 
-    var chan = NetUtil.ioService.newChannelFromURI2(this._uri,
+    var chan = NetUtil.ioService.newChannelFromURI2(uri,
                                                     null,      // aLoadingNode
                                                     Services.scriptSecurityManager.getSystemPrincipal(),
                                                     null,      // aTriggeringPrincipal
@@ -1473,6 +1469,7 @@ Engine.prototype = {
       if (lastModified)
         chan.setRequestHeader("If-Modified-Since", lastModified, false);
     }
+    this._uri = uri;
     var listener = new loadListener(chan, this, this._onLoad);
     chan.notificationCallbacks = listener;
     chan.asyncOpen(listener, null);
@@ -1481,13 +1478,15 @@ Engine.prototype = {
   /**
    * Retrieves the engine data from a URI asynchronously and initializes it.
    *
+   * @param uri The uri to load the search plugin from.
+   *
    * @returns {Promise} A promise, resolved successfully if retrieveing data
    * succeeds.
    */
-  _asyncInitFromURI: function SRCH_ENG__asyncInitFromURI() {
+  _asyncInitFromURI: function SRCH_ENG__asyncInitFromURI(uri) {
     return Task.spawn(function() {
-      LOG("_asyncInitFromURI: Loading engine from: \"" + this._uri.spec + "\".");
-      yield this._retrieveSearchXMLData(this._uri.spec);
+      LOG("_asyncInitFromURI: Loading engine from: \"" + uri.spec + "\".");
+      yield this._retrieveSearchXMLData(uri.spec);
       // Now that the data is loaded, initialize the engine object
       this._initFromData();
     }.bind(this));
@@ -1518,17 +1517,17 @@ Engine.prototype = {
     return deferred.promise;
   },
 
-  _initFromURISync: function SRCH_ENG_initFromURISync() {
-    ENSURE_WARN(this._uri instanceof Ci.nsIURI,
+  _initFromURISync: function SRCH_ENG_initFromURISync(uri) {
+    ENSURE_WARN(uri instanceof Ci.nsIURI,
                 "Must have URI when calling _initFromURISync!",
                 Cr.NS_ERROR_UNEXPECTED);
 
-    ENSURE_WARN(this._uri.schemeIs("resource"), "_initFromURISync called for non-resource URI",
+    ENSURE_WARN(uri.schemeIs("resource"), "_initFromURISync called for non-resource URI",
                 Cr.NS_ERROR_FAILURE);
 
-    LOG("_initFromURISync: Loading engine from: \"" + this._uri.spec + "\".");
+    LOG("_initFromURISync: Loading engine from: \"" + uri.spec + "\".");
 
-    var chan = NetUtil.ioService.newChannelFromURI2(this._uri,
+    var chan = NetUtil.ioService.newChannelFromURI2(uri,
                                                     null,      // aLoadingNode
                                                     Services.scriptSecurityManager.getSystemPrincipal(),
                                                     null,      // aTriggeringPrincipal
@@ -1705,36 +1704,13 @@ Engine.prototype = {
     if (!aEngine._shortName)
       aEngine._shortName = sanitizeName(aEngine.name);
 
+    aEngine._id = "[profile]/" + aEngine._shortName + ".xml";
+
     if (engineToUpdate) {
       // Keep track of the last modified date, so that we can make conditional
       // requests for future updates.
       engineMetadataService.setAttr(aEngine, "updatelastmodified",
                                     (new Date()).toUTCString());
-
-      // If we're updating an app-shipped engine, ensure that the updateURLs
-      // are the same.
-      if (engineToUpdate._isInAppDir) {
-        let oldUpdateURL = engineToUpdate._updateURL;
-        let newUpdateURL = aEngine._updateURL;
-        let oldSelfURL = engineToUpdate._getURLOfType(URLTYPE_OPENSEARCH, "self");
-        if (oldSelfURL) {
-          oldUpdateURL = oldSelfURL.template;
-          let newSelfURL = aEngine._getURLOfType(URLTYPE_OPENSEARCH, "self");
-          if (!newSelfURL) {
-            LOG("_onLoad: updateURL missing in updated engine for " +
-                aEngine.name + " aborted");
-            onError();
-            return;
-          }
-          newUpdateURL = newSelfURL.template;
-        }
-
-        if (oldUpdateURL != newUpdateURL) {
-          LOG("_onLoad: updateURLs do not match! Update of " + aEngine.name + " aborted");
-          onError();
-          return;
-        }
-      }
 
       // Set the new engine's icon, if it doesn't yet have one.
       if (!aEngine._iconURI && engineToUpdate._iconURI)
@@ -1913,6 +1889,7 @@ Engine.prototype = {
     this._urls.push(new EngineURL(URLTYPE_SEARCH_HTML, aMethod, aTemplate));
 
     this._name = aName;
+    this._id = "[profile]/" + this._shortName + ".xml";
     this.alias = aAlias;
     this._description = aDescription;
     this._setIcon(aIconURL, true);
@@ -2079,9 +2056,10 @@ Engine.prototype = {
    * Init from a JSON record.
    **/
   _initWithJSON: function SRCH_ENG__initWithJSON(aJson) {
-    this.__id = aJson._id;
+    this._id = aJson._id;
     this._name = aJson._name;
     this._shortName = aJson._shortName;
+    this._loadPath = aJson._loadPath;
     this._description = aJson.description;
     if (aJson._hasPreferredIcon == undefined)
       this._hasPreferredIcon = true;
@@ -2089,7 +2067,6 @@ Engine.prototype = {
       this._hasPreferredIcon = false;
     this._queryCharset = aJson.queryCharset || DEFAULT_QUERY_CHARSET;
     this.__searchForm = aJson.__searchForm;
-    this.__installLocation = aJson._installLocation || SEARCH_APP_DIR;
     this._updateInterval = aJson._updateInterval || null;
     this._updateURL = aJson._updateURL || null;
     this._iconUpdateURL = aJson._iconUpdateURL || null;
@@ -2121,6 +2098,7 @@ Engine.prototype = {
       _id: this._id,
       _name: this._name,
       _shortName: this._shortName,
+      _loadPath: this._loadPath,
       description: this.description,
       __searchForm: this.__searchForm,
       _iconURL: this._iconURL,
@@ -2128,12 +2106,6 @@ Engine.prototype = {
       _urls: this._urls
     };
 
-    if (this._file instanceof Ci.nsILocalFile)
-      json.filePath = this._file.persistentDescriptor;
-    if (this._uri)
-      json._url = this._uri.spec;
-    if (this._installLocation != SEARCH_APP_DIR)
-      json._installLocation = this._installLocation;
     if (this._updateInterval)
       json._updateInterval = this._updateInterval;
     if (this._updateURL)
@@ -2193,11 +2165,7 @@ Engine.prototype = {
    */
   get identifier() {
     // No identifier if If the engine isn't app-provided
-    if (!this._isInAppDir && !this._isInJAR) {
-      return null;
-    }
-
-    return this._shortName;
+    return this._isDefault ? this._shortName : null;
   },
 
   get description() {
@@ -2231,59 +2199,15 @@ Engine.prototype = {
   // engine is being downloaded and does not yet have a file. This is only used
   // for logging and error messages.
   get _location() {
-    if (this._file)
-      return this._file.path;
-
     if (this._uri)
       return this._uri.spec;
 
-    return "";
-  },
-
-  // The file that the plugin is loaded from is a unique identifier for it.  We
-  // use this as the identifier to store data in the sqlite database
-  __id: null,
-  get _id() {
-    if (this.__id) {
-      return this.__id;
-    }
-
-    let leafName = this._shortName + ".xml";
-
-    // Treat engines loaded from JARs the same way we treat app shipped
-    // engines.
-    // Theoretically, these could also come from extensions, but there's no
-    // real way for extensions to register their chrome locations at the
-    // moment, so let's not deal with that case.
-    // This means we're vulnerable to conflicts if a file loaded from a JAR
-    // has the same filename as a file loaded from the app dir, but with a
-    // different engine name. People using the JAR functionality should be
-    // careful not to do that!
-    if (this._isInAppDir || this._isInJAR) {
-      // App dir and JAR engines should always have leafNames
-      ENSURE_WARN(leafName, "_id: no leafName for appDir or JAR engine",
-                  Cr.NS_ERROR_UNEXPECTED);
-      return this.__id = "[app]/" + leafName;
-    }
-
-    if (this._isInProfile) {
-      ENSURE_WARN(leafName, "_id: no leafName for profile engine",
-                  Cr.NS_ERROR_UNEXPECTED);
-      return this.__id = "[profile]/" + leafName;
-    }
-
-    // If the engine isn't a JAR engine, it should have a file.
-    ENSURE_WARN(this._file, "_id: no _file for non-JAR engine",
-                Cr.NS_ERROR_UNEXPECTED);
-
-    // We're not in the profile or appdir, so this must be an extension-shipped
-    // plugin. Use the full filename.
-    return this.__id = this._file.path;
+    return this._loadPath;
   },
 
   // This indicates where we found the .xml file to load the engine,
   // and attempts to hide user-identifiable data (such as username).
-  get _anonymizedLoadPath() {
+  getAnonymizedLoadPath(file, uri) {
     /* Examples of expected output:
      *   jar:[app]/omni.ja!browser/engine.xml
      *     'browser' here is the name of the chrome package, not a folder.
@@ -2298,9 +2222,7 @@ Engine.prototype = {
     leafName += ".xml";
 
     let prefix = "", suffix = "";
-    let file = this._file;
     if (!file) {
-      let uri = this._uri;
       if (uri.schemeIs("resource")) {
         uri = makeURI(Services.io.getProtocolHandler("resource")
                               .QueryInterface(Ci.nsISubstitutingProtocolHandler)
@@ -2356,39 +2278,35 @@ Engine.prototype = {
     return prefix + id + suffix;
   },
 
-  get _installLocation() {
-    if (this.__installLocation === null) {
-      if (!this._readOnly)
-        this.__installLocation = SEARCH_PROFILE_DIR;
-      else if (!this._file) {
-        ENSURE_WARN(this._uri, "Engines without files must have URIs",
-                    Cr.NS_ERROR_UNEXPECTED);
-        this.__installLocation = SEARCH_JAR;
-      }
-      else if (this._file.parent.equals(getDir(NS_APP_SEARCH_DIR)))
-        this.__installLocation = SEARCH_APP_DIR;
-      else
-        this.__installLocation = SEARCH_IN_EXTENSION;
+  get _isDefault() {
+    // An engine is a default one if we initially loaded it from the application
+    // or distribution directory.
+    if (/^(?:jar:)?(?:\[app\]|\[distribution\])/.test(this._loadPath))
+      return true;
+
+    // If we are in the xpcshell test case, we'll accept as a 'default' engine
+    // anything that has been registered at resource://search-plugins/ even if
+    // the file doesn't come from the application folder.
+    // If not, skip costly additional checks.
+    if (!gEnvironment.get("XPCSHELL_TEST_PROFILE_DIR"))
+      return false;
+
+    // Some xpcshell tests use the search service without registering
+    // resource://search-plugins/.
+    if (!Services.io.getProtocolHandler("resource")
+                 .QueryInterface(Ci.nsIResProtocolHandler)
+                 .hasSubstitution("search-plugins"))
+      return false;
+
+    let uri = makeURI(APP_SEARCH_PREFIX + this._shortName + ".xml");
+    if (this.getAnonymizedLoadPath(null, uri) == this._loadPath) {
+      // This isn't a real default engine, but it's very close.
+      LOG("_isDefault, pretending " + this._loadPath +
+          " is a default engine for testing purposes");
+      return true;
     }
 
-    return this.__installLocation;
-  },
-
-  get _isInJAR() {
-    return this._installLocation == SEARCH_JAR;
-  },
-  get _isInAppDir() {
-    return this._installLocation == SEARCH_APP_DIR;
-  },
-  get _isInProfile() {
-    return this._installLocation == SEARCH_PROFILE_DIR;
-  },
-
-  get _isDefault() {
-    // For now, our concept of a "default engine" is "one that is not in the
-    // user's profile directory", which is currently equivalent to "is app- or
-    // extension-shipped".
-    return !this._isInProfile;
+    return false;
   },
 
   get _hasUpdates() {
@@ -3334,15 +3252,7 @@ SearchService.prototype = {
 
   _loadEngineFromCache: function SRCH_SVC__loadEngineFromCache(json) {
     try {
-      let engine;
-      if (json.filePath)
-        engine = new Engine({type: "filePath", value: json.filePath},
-                             json._readOnly);
-      else if (json._url)
-        engine = new Engine({type: "uri", value: json._url}, json._readOnly);
-      else if (json._shortName)
-        engine = new Engine({type: "user", value: json._shortName}, false);
-
+      let engine = new Engine(json._shortName, json._readOnly);
       engine._initWithJSON(json);
       this._addEngineToStore(engine);
 
@@ -3382,7 +3292,7 @@ SearchService.prototype = {
       var addedEngine = null;
       try {
         addedEngine = new Engine(file, !isInProfile);
-        addedEngine._initFromFile();
+        addedEngine._initFromFile(file);
         if (!isInProfile && !addedEngine._isDefault) {
           addedEngine._cacheKey = aDir.path;
           addedEngine._cacheKeyLastModifiedTime = aDir.lastModifiedTime;
@@ -3434,7 +3344,7 @@ SearchService.prototype = {
         try {
           let file = new FileUtils.File(osfile.path);
           addedEngine = new Engine(file, !isInProfile);
-          yield checkForSyncCompletion(addedEngine._asyncInitFromFile());
+          yield checkForSyncCompletion(addedEngine._asyncInitFromFile(file));
           if (!isInProfile && !addedEngine._isDefault) {
             addedEngine._cacheKey = dirPath;
             let info = yield OS.File.stat(dirPath);
@@ -3456,9 +3366,10 @@ SearchService.prototype = {
       try {
         LOG("_loadFromChromeURLs: loading engine from chrome url: " + url);
 
-        let engine = new Engine(makeURI(url), true);
+        let uri = makeURI(url);
+        let engine = new Engine(uri, true);
 
-        engine._initFromURISync();
+        engine._initFromURISync(uri);
 
         this._addEngineToStore(engine);
       } catch (ex) {
@@ -3481,8 +3392,9 @@ SearchService.prototype = {
       for (let url of aURLs) {
         try {
           LOG("_asyncLoadFromChromeURLs: loading engine from chrome url: " + url);
-          let engine = new Engine(NetUtil.newURI(url), true);
-          yield checkForSyncCompletion(engine._asyncInitFromURI());
+          let uri = NetUtil.newURI(url);
+          let engine = new Engine(uri, true);
+          yield checkForSyncCompletion(engine._asyncInitFromURI(uri));
           engines.push(engine);
         } catch (ex if ex.result != Cr.NS_ERROR_ALREADY_INITIALIZED) {
           LOG("_asyncLoadFromChromeURLs: failed to load engine: " + ex);
@@ -3900,7 +3812,7 @@ SearchService.prototype = {
     if (this._engines[aName])
       FAIL("An engine with that name already exists!", Cr.NS_ERROR_FILE_ALREADY_EXISTS);
 
-    var engine = new Engine({type: "user", shortName: sanitizeName(aName)}, false);
+    var engine = new Engine(sanitizeName(aName), false);
     engine._initFromMetadata(aName, aIconURL, aAlias, aDescription,
                              aMethod, aTemplate, aExtensionID);
     this._addEngineToStore(engine);
@@ -3927,7 +3839,7 @@ SearchService.prototype = {
           engine._installCallback = null;
         };
       }
-      engine._initFromURIAndLoad();
+      engine._initFromURIAndLoad(uri);
     } catch (ex) {
       // Drop the reference to the callback, if set
       if (engine)
@@ -4173,12 +4085,10 @@ SearchService.prototype = {
       if (engine.name)
         result.name = engine.name;
 
-      result.loadPath = engine._anonymizedLoadPath;
+      result.loadPath = engine._loadPath;
 
-      // For privacy, we only collect the submission URL for engines
-      // from the application or distribution folder...
-      let sendSubmissionURL =
-        /^(?:jar:)?(?:\[app\]|\[distribution\])/.test(result.loadPath);
+      // For privacy, we only collect the submission URL for default engines...
+      let sendSubmissionURL = engine._isDefault;
 
       // ... or engines sorted by default near the top of the list.
       if (!sendSubmissionURL) {
@@ -4804,7 +4714,7 @@ var engineUpdateService = {
       ULOG("updating " + engine.name + " from " + updateURI.spec);
       testEngine = new Engine(updateURI, false);
       testEngine._engineToUpdate = engine;
-      testEngine._initFromURIAndLoad();
+      testEngine._initFromURIAndLoad(updateURI);
     } else
       ULOG("invalid updateURI");
 
