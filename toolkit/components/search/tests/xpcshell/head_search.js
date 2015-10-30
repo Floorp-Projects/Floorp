@@ -217,10 +217,8 @@ function promiseEngineMetadata() {
   return new Promise(resolve => Task.spawn(function* () {
     let cache = yield promiseCacheData();
     let data = {};
-    for (let path in cache.directories) {
-      for (let engine of cache.directories[path].engines) {
-        data[engine._shortName] = engine._metaData;
-      }
+    for (let engine of cache.engines) {
+      data[engine._shortName] = engine._metaData;
     }
     resolve(data);
   }));

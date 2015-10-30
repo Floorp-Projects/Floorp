@@ -51,14 +51,9 @@ add_task(function* test_nocache() {
   let text = new TextDecoder().decode(data);
   let cache = JSON.parse(text);
   let found = false;
-  for (let dirName in cache.directories) {
-    for (let engine of cache.directories[dirName].engines) {
-      if (engine._shortName == "test-search-engine") {
-        found = true;
-        break;
-      }
-    }
-    if (found) {
+  for (let engine of cache.engines) {
+    if (engine._shortName == "test-search-engine") {
+      found = true;
       break;
     }
   }

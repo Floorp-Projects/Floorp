@@ -2068,6 +2068,10 @@ Engine.prototype = {
     if (aJson.filePath) {
       this._filePath = aJson.filePath;
     }
+    if (aJson.dirPath) {
+      this._dirPath = aJson.dirPath;
+      this._dirLastModifiedTime = aJson.dirLastModifiedTime;
+    }
     if (aJson.extensionID) {
       this._extensionID = aJson.extensionID;
     }
@@ -2111,7 +2115,15 @@ Engine.prototype = {
     if (!this._readOnly)
       json._readOnly = this._readOnly;
     if (this._filePath) {
+      // File path is stored so that we can remove legacy xml files
+      // from the profile if the user removes the engine.
       json.filePath = this._filePath;
+    }
+    if (this._dirPath) {
+      // The directory path is only stored for extension-shipped engines,
+      // it's used to invalidate the cache.
+      json.dirPath = this._dirPath;
+      json.dirLastModifiedTime = this._dirLastModifiedTime;
     }
     if (this._extensionID) {
       json.extensionID = this._extensionID;
@@ -2809,39 +2821,18 @@ SearchService.prototype = {
     cache.version = CACHE_VERSION;
     // We don't want to incur the costs of stat()ing each plugin on every
     // startup when the only (supported) time they will change is during
-    // runtime (where we refresh for changes through the API) and app updates
-    // (where the buildID is obviously going to change).
+    // app updates (where the buildID is obviously going to change).
     // Extension-shipped plugins are the only exception to this, but their
     // directories are blown away during updates, so we'll detect their changes.
     cache.buildID = buildID;
     cache.locale = locale;
 
-    cache.directories = {};
     cache.visibleDefaultEngines = this._visibleDefaultEngines;
     cache.metaData = this._metaData;
+    cache.engines = [];
 
     for (let name in this._engines) {
-      let engine = this._engines[name];
-      let cacheKey;
-      if (!engine._readOnly) {
-        cacheKey = "[user-installed]";
-      } else if (engine._isDefault) {
-        cacheKey = "[default]";
-      } else if (engine._cacheKey) {
-        cacheKey = engine._cacheKey;
-      } else {
-        LOG("Error: no cache key for engine " + engine._name + ", failing to cache it");
-        continue;
-      }
-
-      if (!cache.directories[cacheKey]) {
-        let cacheEntry = {};
-        if (engine._cacheKeyLastModifiedTime)
-          cacheEntry.lastModifiedTime = engine._cacheKeyLastModifiedTime;
-        cacheEntry.engines = [];
-        cache.directories[cacheKey] = cacheEntry;
-      }
-      cache.directories[cacheKey].engines.push(engine);
+      cache.engines.push(this._engines[name]);
     }
 
     try {
@@ -2890,37 +2881,35 @@ SearchService.prototype = {
     locations = getDir(NS_APP_SEARCH_DIR_LIST, Ci.nsISimpleEnumerator);
     while (locations.hasMoreElements()) {
       let dir = locations.getNext().QueryInterface(Ci.nsIFile);
-      if ((!cache.directories || !dir.equals(userSearchDir)) &&
+      if ((!cache.engines || !dir.equals(userSearchDir)) &&
           dir.directoryEntries.hasMoreElements())
         otherDirs.push(dir);
     }
 
     function modifiedDir(aDir) {
-      return (!cache.directories || !cache.directories[aDir.path] ||
-              (cache.directories[aDir.path].lastModifiedTime &&
-               cache.directories[aDir.path].lastModifiedTime != aDir.lastModifiedTime));
+      return cacheOtherPaths.get(aDir.path) != aDir.lastModifiedTime;
     }
 
-    function notInCachePath(aPathToLoad) {
-      return cacheOtherPaths.indexOf(aPathToLoad.path) == -1;
-    }
     function notInCacheVisibleEngines(aEngineName) {
       return cache.visibleDefaultEngines.indexOf(aEngineName) == -1;
     }
 
     let buildID = Services.appinfo.platformBuildID;
-    let cacheOtherPaths = [];
-    if (cache.directories) {
-      cacheOtherPaths = [path for (path in cache.directories)]
-                          .filter(p => p != "[user-installed]" && p != "[default]");
+    let cacheOtherPaths = new Map();
+    if (cache.engines) {
+      for (let engine of cache.engines) {
+        if (engine._dirPath) {
+          cacheOtherPaths.set(engine._dirPath, engine._dirLastModifiedTime);
+        }
+      }
     }
 
-    let rebuildCache = !cache.directories ||
+    let rebuildCache = !cache.engines ||
                        cache.version != CACHE_VERSION ||
                        cache.locale != getLocale() ||
                        cache.buildID != buildID ||
-                       cacheOtherPaths.length != otherDirs.length ||
-                       otherDirs.some(notInCachePath) ||
+                       cacheOtherPaths.size != otherDirs.length ||
+                       otherDirs.some(d => !cacheOtherPaths.has(d.path)) ||
                        cache.visibleDefaultEngines.length != this._visibleDefaultEngines.length ||
                        this._visibleDefaultEngines.some(notInCacheVisibleEngines) ||
                        otherDirs.some(modifiedDir);
@@ -2993,7 +2982,7 @@ SearchService.prototype = {
       locations = getDir(NS_APP_SEARCH_DIR_LIST, Ci.nsISimpleEnumerator);
       while (locations.hasMoreElements()) {
         let dir = locations.getNext().QueryInterface(Ci.nsIFile);
-        if (cache.directories && dir.equals(userSearchDir))
+        if (cache.engines && dir.equals(userSearchDir))
           continue;
         let iterator = new OS.File.DirectoryIterator(dir.path,
                                                      { winPattern: "*.xml" });
@@ -3013,12 +3002,7 @@ SearchService.prototype = {
           let modifiedDir = false;
 
           for (let dir of aList) {
-            if (!cache.directories || !cache.directories[dir.path]) {
-              modifiedDir = true;
-              break;
-            }
-
-            let lastModifiedTime = cache.directories[dir.path].lastModifiedTime;
+            let lastModifiedTime = cacheOtherPaths.get(dir.path);
             if (!lastModifiedTime) {
               continue;
             }
@@ -3033,26 +3017,26 @@ SearchService.prototype = {
         });
       }
 
-      function notInCachePath(aPathToLoad) {
-        return cacheOtherPaths.indexOf(aPathToLoad.path) == -1;
-      }
       function notInCacheVisibleEngines(aEngineName) {
         return cache.visibleDefaultEngines.indexOf(aEngineName) == -1;
       }
 
       let buildID = Services.appinfo.platformBuildID;
-      let cacheOtherPaths = [];
-      if (cache.directories) {
-        cacheOtherPaths = [path for (path in cache.directories)]
-                       .filter(p => p != "[user-installed]" && p != "[default]");
+      let cacheOtherPaths = new Map();
+      if (cache.engines) {
+        for (let engine of cache.engines) {
+          if (engine._dirPath) {
+            cacheOtherPaths.set(engine._dirPath, engine._dirLastModifiedTime);
+          }
+        }
       }
 
-      let rebuildCache = !cache.directories ||
+      let rebuildCache = !cache.engines ||
                          cache.version != CACHE_VERSION ||
                          cache.locale != getLocale() ||
                          cache.buildID != buildID ||
-                         cacheOtherPaths.length != otherDirs.length ||
-                         otherDirs.some(notInCachePath) ||
+                         cacheOtherPaths.size != otherDirs.length ||
+                         otherDirs.some(d => !cacheOtherPaths.has(d.path)) ||
                          cache.visibleDefaultEngines.length != this._visibleDefaultEngines.length ||
                          this._visibleDefaultEngines.some(notInCacheVisibleEngines) ||
                          (yield checkForSyncCompletion(hasModifiedDir(otherDirs)));
@@ -3299,49 +3283,38 @@ SearchService.prototype = {
       return;
     }
 
-    if (!cache.directories)
+    if (!cache.engines)
       return;
 
-    for (let key in cache.directories) {
-      let engines = cache.directories[key].engines;
-      for (let engine of engines) {
-        let name = engine._name;
-        if (name in this._engines) {
-          LOG("_loadEnginesMetadataFromCache, transfering metadata for " + name);
-          this._engines[name]._metaData = engine._metaData;
-        }
+    for (let engine of cache.engines) {
+      let name = engine._name;
+      if (name in this._engines) {
+        LOG("_loadEnginesMetadataFromCache, transfering metadata for " + name);
+        this._engines[name]._metaData = engine._metaData;
       }
     }
   },
 
   _loadEnginesFromCache: function SRCH_SVC__loadEnginesFromCache(cache,
                                                                  skipReadOnly) {
-    if (!cache.directories)
+    if (!cache.engines)
       return;
 
-    for (let key in cache.directories) {
-      let engines = cache.directories[key].engines;
-      LOG("_loadEnginesFromCache: Loading from cache. " +
-          engines.length + " engines in " + key);
+    LOG("_loadEnginesFromCache: Loading " +
+        cache.engines.length + " engines from cache");
 
-      let skippedEngines = 0;
-      for (let engine of engines) {
-        if (skipReadOnly && engine._readOnly !== false) {
-          ++skippedEngines;
-          continue;
-        }
-
-        let engineObj = this._loadEngineFromCache(engine);
-        if (key != "[default]" && key != "[used-installed]") {
-          // These 2 values will only be used if we need to write the cache to disk again.
-          engineObj._cacheKey = key;
-          engineObj._cacheKeyLastModifiedTime = cache.directories[key].lastModifiedTime;
-        }
+    let skippedEngines = 0;
+    for (let engine of cache.engines) {
+      if (skipReadOnly && engine._readOnly !== false) {
+        ++skippedEngines;
+        continue;
       }
 
-      if (skippedEngines) {
-        LOG("_loadEnginesFromCache: skipped " + skippedEngines + " read-only engines.");
-      }
+      this._loadEngineFromCache(engine);
+    }
+
+    if (skippedEngines) {
+      LOG("_loadEnginesFromCache: skipped " + skippedEngines + " read-only engines.");
     }
   },
 
@@ -3350,13 +3323,9 @@ SearchService.prototype = {
       let engine = new Engine(json._shortName, json._readOnly);
       engine._initWithJSON(json);
       this._addEngineToStore(engine);
-
-      return engine;
     } catch (ex) {
       LOG("Failed to load " + json._name + " from cache: " + ex);
       LOG("Engine JSON: " + json.toSource());
-
-      return null;
     }
   },
 
@@ -3389,8 +3358,8 @@ SearchService.prototype = {
         addedEngine = new Engine(file, !isInProfile);
         addedEngine._initFromFile(file);
         if (!isInProfile && !addedEngine._isDefault) {
-          addedEngine._cacheKey = aDir.path;
-          addedEngine._cacheKeyLastModifiedTime = aDir.lastModifiedTime;
+          addedEngine._dirPath = aDir.path;
+          addedEngine._dirLastModifiedTime = aDir.lastModifiedTime;
         }
       } catch (ex) {
         LOG("_loadEnginesFromDir: Failed to load " + file.path + "!\n" + ex);
@@ -3441,9 +3410,9 @@ SearchService.prototype = {
           addedEngine = new Engine(file, !isInProfile);
           yield checkForSyncCompletion(addedEngine._asyncInitFromFile(file));
           if (!isInProfile && !addedEngine._isDefault) {
-            addedEngine._cacheKey = dirPath;
+            addedEngine._dirPath = dirPath;
             let info = yield OS.File.stat(dirPath);
-            addedEngine._cacheKeyLastModifiedTime =
+            addedEngine._dirLastModifiedTime =
               info.lastModificationDate.getTime();
           }
         } catch (ex if ex.result != Cr.NS_ERROR_ALREADY_INITIALIZED) {

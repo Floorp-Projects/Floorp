@@ -173,12 +173,6 @@ add_test(function test_cache_write() {
 
         let cacheWritten = readJSONFile(cache);
 
-        // Delete the empty dirs from the template since they are not written out.
-        for (let dir of Object.keys(cacheTemplate.directories)) {
-          if (!cacheTemplate.directories[dir].engines.length)
-            delete cacheTemplate.directories[dir];
-        }
-
         do_print("Check search.json");
         isSubObjectOf(cacheTemplate, cacheWritten);
 
