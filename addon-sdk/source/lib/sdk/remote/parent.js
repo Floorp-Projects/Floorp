@@ -29,6 +29,11 @@ const options = require('@loader/options');
 const loaderModule = require('toolkit/loader');
 const { getTabForBrowser } = require('../tabs/utils');
 
+const appInfo = Cc["@mozilla.org/xre/app-info;1"].
+                getService(Ci.nsIXULRuntime);
+
+exports.useRemoteProcesses = appInfo.browserTabsRemoteAutostart;
+
 // Chose the right function for resolving relative a module id
 var moduleResolve;
 if (options.isNative) {
@@ -174,7 +179,10 @@ const Frame = Class({
 
     this.port = new EventTarget();
     this.port.emit = (...args) => {
-      ns(this).messageManager.sendAsyncMessage('sdk/remote/frame/message', {
+      let manager = ns(this).messageManager;
+      if (!manager)
+        return;
+      manager.sendAsyncMessage('sdk/remote/frame/message', {
         loaderID,
         args
       });

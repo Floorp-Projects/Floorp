@@ -20,6 +20,7 @@ import org.json.JSONObject;
 
 import android.content.Intent;
 import android.net.Uri;
+import android.support.annotation.Nullable;
 import android.support.v4.app.FragmentActivity;
 import android.text.TextUtils;
 import android.util.Log;
@@ -52,8 +53,6 @@ public final class IntentHelper implements GeckoEventListener,
     private static String EXTRA_BROWSER_FALLBACK_URL = "browser_fallback_url";
 
     /** A partial URI to an error page - the encoded error URI should be appended before loading. */
-    private static final String GENERIC_URI_PREFIX = "about:neterror?e=generic&u=";
-    private static final String MALFORMED_URI_PREFIX = "about:neterror?e=malformedURI&u=";
     private static String UNKNOWN_PROTOCOL_URI_PREFIX = "about:neterror?e=unknownProtocolFound&u=";
 
     private static IntentHelper instance;
@@ -186,24 +185,10 @@ public final class IntentHelper implements GeckoEventListener,
 
         // For this flow, we follow Chrome's lead:
         //   https://developer.chrome.com/multidevice/android/intents
-        if (intent.hasExtra(EXTRA_BROWSER_FALLBACK_URL)) {
-            final String fallbackUrl = intent.getStringExtra(EXTRA_BROWSER_FALLBACK_URL);
-            String urlToLoad;
-            try {
-                final String anyCaseScheme = new URI(fallbackUrl).getScheme();
-                final String scheme = (anyCaseScheme == null) ? null : anyCaseScheme.toLowerCase(Locale.US);
-                if ("http".equals(scheme) || "https".equals(scheme)) {
-                    urlToLoad = fallbackUrl;
-                } else {
-                    Log.w(LOGTAG, "Fallback URI uses unsupported scheme: " + scheme);
-                    urlToLoad = GENERIC_URI_PREFIX + fallbackUrl;
-                }
-            } catch (final URISyntaxException e) {
-                // Do not include Exception to avoid leaking uris.
-                Log.w(LOGTAG, "Exception parsing fallback URI");
-                urlToLoad = MALFORMED_URI_PREFIX + fallbackUrl;
-            }
-            callback.sendError(urlToLoad);
+        final String fallbackUrl = intent.getStringExtra(EXTRA_BROWSER_FALLBACK_URL);
+        if (isFallbackUrlValid(fallbackUrl)) {
+            // Opens the page in JS.
+            callback.sendError(fallbackUrl);
 
         } else if (intent.getPackage() != null) {
             // Note on alternative flows: we could get the intent package from a component, however, for
@@ -230,6 +215,26 @@ public final class IntentHelper implements GeckoEventListener,
             Log.w(LOGTAG, "Unable to open URI, default case - loading about:neterror");
             callback.sendError(getUnknownProtocolErrorPageUri(intent.getData().toString()));
         }
+    }
+
+    private static boolean isFallbackUrlValid(@Nullable final String fallbackUrl) {
+        if (fallbackUrl == null) {
+            return false;
+        }
+
+        try {
+            final String anyCaseScheme = new URI(fallbackUrl).getScheme();
+            final String scheme = (anyCaseScheme == null) ? null : anyCaseScheme.toLowerCase(Locale.US);
+            if ("http".equals(scheme) || "https".equals(scheme)) {
+                return true;
+            } else {
+                Log.w(LOGTAG, "Fallback URI uses unsupported scheme: " + scheme + ". Try http or https.");
+            }
+        } catch (final URISyntaxException e) {
+            // Do not include Exception to avoid leaking uris.
+            Log.w(LOGTAG, "URISyntaxException parsing fallback URI");
+        }
+        return false;
     }
 
     /**

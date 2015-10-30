@@ -10,23 +10,9 @@
 a replacement for the standard security certificate errors produced
 by NSS/PSM via netError.xhtml. -->
 
-<!ENTITY certerror.pagetitle  "Untrusted Connection">
-<!ENTITY certerror.longpagetitle "This Connection is Untrusted">
-
-<!-- These are going to be used for the updated design in Bug 1207107 -->
 <!ENTITY certerror.pagetitle1  "Insecure Connection">
 <!ENTITY certerror.longpagetitle1 "Your connection is not secure">
 
-<!-- Localization note (certerror.introPara1) - The string "#1" will
-be replaced at runtime with the name of the server to which the user
-was trying to connect. -->
-<!ENTITY certerror.introPara1 "You have asked &brandShortName; to connect
-securely to <b>#1</b>, but we can't confirm that your connection is secure.">
-<!ENTITY certerror.introPara2 "Normally, when you try to connect securely,
-sites will present trusted identification to prove that you are
-going to the right place. However, this site's identity can't be verified.">
-
-<!-- These are going to be used for the udpated design in Bug 1207107 -->
 <!-- Localization note (certerror.introPara) - The text content of the span tag
 will be replaced at runtime with the name of the server to which the user
 was trying to connect. -->
@@ -35,17 +21,11 @@ was trying to connect. -->
 <!ENTITY certerror.learnMore "Learn more…">
 <!ENTITY certerror.advanced.label "Advanced">
 
-<!ENTITY certerror.whatShouldIDo.heading "What Should I Do?">
-<!ENTITY certerror.whatShouldIDo.content "If you usually connect to
-this site without problems, this error could mean that someone is
-trying to impersonate the site, and you shouldn't continue.">
 <!ENTITY certerror.whatShouldIDo.badStsCertExplanation "This site uses HTTP
 Strict Transport Security (HSTS) to specify that &brandShortName; only connect
 to it securely. As a result, it is not possible to add an exception for this
 certificate.">
-<!ENTITY certerror.getMeOutOfHere.label "Get me out of here!">
 
-<!ENTITY certerror.expert.heading "I Understand the Risks">
 <!ENTITY certerror.expert.content "If you understand what's going on, you
 can tell &brandShortName; to start trusting this site's identification.
 <b>Even if you trust the site, this error could mean that someone is
@@ -53,5 +33,3 @@ tampering with your connection.</b>">
 <!ENTITY certerror.expert.contentPara2 "Don't add an exception unless
 you know there's a good reason why this site doesn't use trusted identification.">
 <!ENTITY certerror.addException.label "Add Exception…">
-
-<!ENTITY certerror.technical.heading "Technical Details">
