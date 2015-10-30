@@ -83,6 +83,19 @@ static mozilla::LazyLogModule sRefreshDriverLog("nsRefreshDriver");
 // after 10 minutes, stop firing off inactive timers
 #define DEFAULT_INACTIVE_TIMER_DISABLE_SECONDS 600
 
+namespace {
+  // `true` if we are currently in jank-critical mode.
+  //
+  // In jank-critical mode, any iteration of the event loop that takes
+  // more than 16ms to compute will cause an ongoing animation to miss
+  // frames.
+  //
+  // For simplicity, the current implementation assumes that we are in
+  // jank-critical mode if and only if at least one vsync driver has
+  // at least one observer.
+  static uint64_t sActiveVsyncTimers = 0;
+}
+
 namespace mozilla {
 
 /*
@@ -503,6 +516,9 @@ private:
 
   virtual void StartTimer() override
   {
+    // Protect updates to `sActiveVsyncTimers`.
+    MOZ_ASSERT(NS_IsMainThread());
+
     mLastFireEpoch = JS_Now();
     mLastFireTime = TimeStamp::Now();
 
@@ -512,15 +528,23 @@ private:
       Unused << mVsyncChild->SendObserve();
       mVsyncObserver->OnTimerStart();
     }
+
+    ++sActiveVsyncTimers;
   }
 
   virtual void StopTimer() override
   {
+    // Protect updates to `sActiveVsyncTimers`.
+    MOZ_ASSERT(NS_IsMainThread());
+
     if (XRE_IsParentProcess()) {
       mVsyncDispatcher->SetParentRefreshTimer(nullptr);
     } else {
       Unused << mVsyncChild->SendUnobserve();
     }
+
+    MOZ_ASSERT(sActiveVsyncTimers > 0);
+    --sActiveVsyncTimers;
   }
 
   virtual void ScheduleNextTick(TimeStamp aNowTime) override
@@ -2126,6 +2150,13 @@ nsRefreshDriver::CancelPendingEvents(nsIDocument* aDocument)
       mPendingEvents.RemoveElementAt(i);
     }
   }
+}
+
+/* static */ bool
+nsRefreshDriver::IsJankCritical()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  return sActiveVsyncTimers > 0;
 }
 
 #undef LOG
