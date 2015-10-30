@@ -53,6 +53,9 @@ public:
   NS_DECL_NSIINTERCEPTEDCHANNEL
 
   void NotifyController();
+
+  virtual nsIConsoleReportCollector*
+  GetConsoleReportCollector() const override;
 };
 
 } // namespace net
