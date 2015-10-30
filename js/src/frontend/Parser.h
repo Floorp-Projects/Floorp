@@ -389,7 +389,7 @@ class Parser : private JS::AutoGCRooter, public StrictModeGetter
       public:
         AutoPushStmtInfoPC(Parser<ParseHandler>& parser, StmtType type);
         AutoPushStmtInfoPC(Parser<ParseHandler>& parser, StmtType type,
-                           NestedScopeObject& staticScope);
+                           NestedStaticScopeObject& staticScope);
         ~AutoPushStmtInfoPC();
 
         bool generateBlockId();

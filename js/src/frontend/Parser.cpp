@@ -73,8 +73,8 @@ namespace frontend {
 
 typedef Rooted<StaticBlockObject*> RootedStaticBlockObject;
 typedef Handle<StaticBlockObject*> HandleStaticBlockObject;
-typedef Rooted<NestedScopeObject*> RootedNestedScopeObject;
-typedef Handle<NestedScopeObject*> HandleNestedScopeObject;
+typedef Rooted<NestedStaticScopeObject*> RootedNestedStaticScopeObject;
+typedef Handle<NestedStaticScopeObject*> HandleNestedStaticScopeObject;
 
 /* Read a token. Report an error and return null() if that token isn't of type tt. */
 #define MUST_MATCH_TOKEN_MOD(tt, modifier, errno)                                           \
@@ -874,7 +874,7 @@ Parser<ParseHandler>::parse()
      *   an object lock before it finishes generating bytecode into a script
      *   protected from the GC by a root or a stack frame reference.
      */
-    Rooted<ScopeObject*> staticLexical(context, &context->global()->lexicalScope().staticBlock());
+    Rooted<StaticScopeObject*> staticLexical(context, &context->global()->lexicalScope().staticBlock());
     Directives directives(options().strictOption);
     GlobalSharedContext globalsc(context, staticLexical, directives,
                                  options().extraWarningsOption);
@@ -3770,7 +3770,7 @@ Parser<ParseHandler>::AutoPushStmtInfoPC::AutoPushStmtInfoPC(Parser<ParseHandler
 template <typename ParseHandler>
 Parser<ParseHandler>::AutoPushStmtInfoPC::AutoPushStmtInfoPC(Parser<ParseHandler>& parser,
                                                              StmtType type,
-                                                             NestedScopeObject& staticScope)
+                                                             NestedStaticScopeObject& staticScope)
   : parser_(parser),
     stmt_(parser.context)
 {
@@ -3791,7 +3791,7 @@ Parser<ParseHandler>::AutoPushStmtInfoPC::~AutoPushStmtInfoPC()
     TokenStream& ts = parser_.tokenStream;
 
     MOZ_ASSERT(pc->innermostStmt() == &stmt_);
-    RootedNestedScopeObject scopeObj(parser_.context, stmt_.staticScope);
+    RootedNestedStaticScopeObject scopeObj(parser_.context, stmt_.staticScope);
 
     AccumulateBlockScopeDepth(pc);
     pc->stmtStack.pop();
