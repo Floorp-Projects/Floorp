@@ -761,7 +761,7 @@ class TreeMetadataEmitter(LoggingMixin):
                 if isinstance(f, SourcePath):
                     srcs.append(full_path)
                 else:
-                    assert isinstance(f, ObjDirPath)
+                    assert isinstance(f, Path)
                     gen_srcs.append(full_path)
                 if symbol == 'SOURCES':
                     flags = context_srcs[f]
