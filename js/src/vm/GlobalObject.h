@@ -27,7 +27,7 @@ InitSharedArrayBufferClass(JSContext* cx, HandleObject obj);
 
 class Debugger;
 class TypedObjectModuleObject;
-class StaticBlockObject;
+class StaticBlockScope;
 class ClonedBlockObject;
 
 class SimdTypeDescr;

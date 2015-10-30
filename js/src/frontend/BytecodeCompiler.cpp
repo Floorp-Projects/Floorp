@@ -51,7 +51,7 @@ class MOZ_STACK_CLASS BytecodeCompiler
                      LifoAlloc* alloc,
                      const ReadOnlyCompileOptions& options,
                      SourceBufferHolder& sourceBuffer,
-                     Handle<StaticScopeObject*> enclosingStaticScope,
+                     Handle<StaticScope*> enclosingStaticScope,
                      TraceLoggerTextId logId);
 
     // Call setters for optional arguments.
@@ -99,7 +99,7 @@ class MOZ_STACK_CLASS BytecodeCompiler
     const ReadOnlyCompileOptions& options;
     SourceBufferHolder& sourceBuffer;
 
-    Rooted<StaticScopeObject*> enclosingStaticScope;
+    Rooted<StaticScope*> enclosingStaticScope;
     bool sourceArgumentsNotIncluded;
 
     RootedScriptSource sourceObject;
@@ -131,7 +131,7 @@ BytecodeCompiler::BytecodeCompiler(ExclusiveContext* cx,
                                    LifoAlloc* alloc,
                                    const ReadOnlyCompileOptions& options,
                                    SourceBufferHolder& sourceBuffer,
-                                   Handle<StaticScopeObject*> enclosingStaticScope,
+                                   Handle<StaticScope*> enclosingStaticScope,
                                    TraceLoggerTextId logId)
   : traceLogger(cx, logId, options),
     keepAtoms(cx->perThreadData),
@@ -278,7 +278,7 @@ BytecodeCompiler::createEmitter(SharedContext* sharedContext, HandleScript evalC
 bool
 BytecodeCompiler::isEvalCompilationUnit()
 {
-    return enclosingStaticScope->is<StaticEvalObject>();
+    return enclosingStaticScope->is<StaticEvalScope>();
 }
 
 bool
@@ -286,7 +286,7 @@ BytecodeCompiler::isNonGlobalEvalCompilationUnit()
 {
     if (!isEvalCompilationUnit())
         return false;
-    StaticEvalObject& eval = enclosingStaticScope->as<StaticEvalObject>();
+    StaticEvalScope& eval = enclosingStaticScope->as<StaticEvalScope>();
     JSObject* enclosing = eval.enclosingScopeForStaticScopeIter();
     return !IsStaticGlobalLexicalScope(enclosing);
 }
@@ -294,7 +294,7 @@ BytecodeCompiler::isNonGlobalEvalCompilationUnit()
 bool
 BytecodeCompiler::isNonSyntacticCompilationUnit()
 {
-    return enclosingStaticScope->is<StaticNonSyntacticScopeObjects>();
+    return enclosingStaticScope->is<StaticNonSyntacticScope>();
 }
 
 bool
@@ -712,7 +712,7 @@ frontend::CreateScriptSourceObject(ExclusiveContext* cx, const ReadOnlyCompileOp
 
 JSScript*
 frontend::CompileScript(ExclusiveContext* cx, LifoAlloc* alloc, HandleObject scopeChain,
-                        Handle<StaticScopeObject*> enclosingStaticScope,
+                        Handle<StaticScope*> enclosingStaticScope,
                         HandleScript evalCaller,
                         const ReadOnlyCompileOptions& options,
                         SourceBufferHolder& srcBuf,
@@ -769,7 +769,7 @@ frontend::CompileModule(JSContext* cx, HandleObject obj,
     options.maybeMakeStrictMode(true); // ES6 10.2.1 Module code is always strict mode code.
     options.setIsRunOnce(true);
 
-    Rooted<StaticScopeObject*> staticScope(cx, &cx->global()->lexicalScope().staticBlock());
+    Rooted<StaticScope*> staticScope(cx, &cx->global()->lexicalScope().staticBlock());
     BytecodeCompiler compiler(cx, &cx->tempLifoAlloc(), options, srcBuf, staticScope,
                               TraceLogger_ParserCompileModule);
     return compiler.compileModule();
@@ -841,7 +841,7 @@ frontend::CompileLazyFunction(JSContext* cx, Handle<LazyScript*> lazy, const cha
 static bool
 CompileFunctionBody(JSContext* cx, MutableHandleFunction fun, const ReadOnlyCompileOptions& options,
                     Handle<PropertyNameVector> formals, SourceBufferHolder& srcBuf,
-                    Handle<StaticScopeObject*> enclosingStaticScope, GeneratorKind generatorKind)
+                    Handle<StaticScope*> enclosingStaticScope, GeneratorKind generatorKind)
 {
     MOZ_ASSERT(!options.isRunOnce);
 
@@ -858,7 +858,7 @@ bool
 frontend::CompileFunctionBody(JSContext* cx, MutableHandleFunction fun,
                               const ReadOnlyCompileOptions& options,
                               Handle<PropertyNameVector> formals, JS::SourceBufferHolder& srcBuf,
-                              Handle<StaticScopeObject*> enclosingStaticScope)
+                              Handle<StaticScope*> enclosingStaticScope)
 {
     return CompileFunctionBody(cx, fun, options, formals, srcBuf,
                                enclosingStaticScope, NotGenerator);
@@ -869,7 +869,7 @@ frontend::CompileFunctionBody(JSContext* cx, MutableHandleFunction fun,
                               const ReadOnlyCompileOptions& options,
                               Handle<PropertyNameVector> formals, JS::SourceBufferHolder& srcBuf)
 {
-    Rooted<StaticScopeObject*> staticLexical(cx, &cx->global()->lexicalScope().staticBlock());
+    Rooted<StaticScope*> staticLexical(cx, &cx->global()->lexicalScope().staticBlock());
     return CompileFunctionBody(cx, fun, options, formals, srcBuf, staticLexical, NotGenerator);
 }
 
@@ -880,6 +880,6 @@ frontend::CompileStarGeneratorBody(JSContext* cx, MutableHandleFunction fun,
                                    Handle<PropertyNameVector> formals,
                                    JS::SourceBufferHolder& srcBuf)
 {
-    Rooted<StaticScopeObject*> staticLexical(cx, &cx->global()->lexicalScope().staticBlock());
+    Rooted<StaticScope*> staticLexical(cx, &cx->global()->lexicalScope().staticBlock());
     return CompileFunctionBody(cx, fun, options, formals, srcBuf, staticLexical, StarGenerator);
 }

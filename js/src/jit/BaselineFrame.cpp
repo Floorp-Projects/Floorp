@@ -88,7 +88,7 @@ bool
 BaselineFrame::isNonGlobalEvalFrame() const
 {
     return isEvalFrame() &&
-           script()->enclosingStaticScope()->as<StaticEvalObject>().isNonGlobal();
+           script()->enclosingStaticScope()->as<StaticEvalScope>().isNonGlobal();
 }
 
 bool

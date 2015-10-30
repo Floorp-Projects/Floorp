@@ -6875,7 +6875,7 @@ gc::MergeCompartments(JSCompartment* source, JSCompartment* target)
             for (uint32_t i = 0; i < scopes->length; i++) {
                 uint32_t scopeIndex = scopes->vector[i].index;
                 if (scopeIndex != BlockScopeNote::NoBlockScopeIndex) {
-                    StaticScopeObject* scope = &script->getObject(scopeIndex)->as<StaticScopeObject>();
+                    StaticScope* scope = &script->getObject(scopeIndex)->as<StaticScope>();
                     MOZ_ASSERT(!IsStaticGlobalLexicalScope(scope));
                     JSObject* enclosing = scope->enclosingScope();
                     if (IsStaticGlobalLexicalScope(enclosing))

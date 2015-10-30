@@ -48,8 +48,8 @@ class BindingIter;
 class Debugger;
 class LazyScript;
 class ModuleObject;
-class NestedStaticScopeObject;
-class StaticScopeObject;
+class NestedStaticScope;
+class StaticScope;
 class RegExpObject;
 struct SourceCompressionTask;
 class Shape;
@@ -115,7 +115,7 @@ namespace js {
 struct BlockScopeNote {
     static const uint32_t NoBlockScopeIndex = UINT32_MAX;
 
-    uint32_t        index;      // Index of NestedStaticScopeObject in the object
+    uint32_t        index;      // Index of NestedStaticScope in the object
                                 // array, or NoBlockScopeIndex if there is no
                                 // block scope in this range.
     uint32_t        start;      // Bytecode offset at which this scope starts,
@@ -1869,7 +1869,7 @@ class JSScript : public js::gc::TenuredCell
     // The following 4 functions find the static scope just before the
     // execution of the instruction pointed to by pc.
 
-    js::NestedStaticScopeObject* getStaticBlockScope(jsbytecode* pc);
+    js::NestedStaticScope* getStaticBlockScope(jsbytecode* pc);
 
     // Returns the innermost static scope at pc if it falls within the extent
     // of the script. Returns nullptr otherwise.
@@ -2534,7 +2534,7 @@ CloneScriptIntoFunction(JSContext* cx, HandleObject enclosingScope, HandleFuncti
                         HandleScript src);
 
 JSScript*
-CloneGlobalScript(JSContext* cx, Handle<StaticScopeObject*> enclosingScope, HandleScript src);
+CloneGlobalScript(JSContext* cx, Handle<StaticScope*> enclosingScope, HandleScript src);
 
 } /* namespace js */
 
