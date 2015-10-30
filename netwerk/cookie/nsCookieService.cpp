@@ -51,6 +51,7 @@
 #include "mozIApplication.h"
 #include "mozIApplicationClearPrivateDataParams.h"
 #include "nsIConsoleService.h"
+#include "nsVariant.h"
 
 using namespace mozilla;
 using namespace mozilla::net;
@@ -74,7 +75,7 @@ static nsCookieService *gCookieService;
 #define HTTP_ONLY_PREFIX "#HttpOnly_"
 
 #define COOKIES_FILE "cookies.sqlite"
-#define COOKIES_SCHEMA_VERSION 6
+#define COOKIES_SCHEMA_VERSION 7
 
 // parameter indexes; see EnsureReadDomain, EnsureReadComplete and
 // ReadCookieDBListener::HandleResult
@@ -827,7 +828,7 @@ NS_IMPL_ISUPPORTS(ConvertAppIdToOriginAttrsSQLFunction, mozIStorageFunction);
 
 NS_IMETHODIMP
 ConvertAppIdToOriginAttrsSQLFunction::OnFunctionCall(
-    mozIStorageValueArray* aFunctionArguments, nsIVariant** aResult)
+  mozIStorageValueArray* aFunctionArguments, nsIVariant** aResult)
 {
   nsresult rv;
   int32_t appId, inBrowser;
@@ -843,11 +844,70 @@ ConvertAppIdToOriginAttrsSQLFunction::OnFunctionCall(
   nsAutoCString suffix;
   attrs.CreateSuffix(suffix);
 
-  nsCOMPtr<nsIWritableVariant> outVar(do_CreateInstance(
-    NS_VARIANT_CONTRACTID, &rv));
+  RefPtr<nsVariant> outVar(new nsVariant());
+  rv = outVar->SetAsAUTF8String(suffix);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = outVar->SetAsAUTF8String(suffix);
+  outVar.forget(aResult);
+  return NS_OK;
+}
+
+class SetAppIdFromOriginAttributesSQLFunction final : public mozIStorageFunction
+{
+  ~SetAppIdFromOriginAttributesSQLFunction() {}
+
+  NS_DECL_ISUPPORTS
+  NS_DECL_MOZISTORAGEFUNCTION
+};
+
+NS_IMPL_ISUPPORTS(SetAppIdFromOriginAttributesSQLFunction, mozIStorageFunction);
+
+NS_IMETHODIMP
+SetAppIdFromOriginAttributesSQLFunction::OnFunctionCall(
+  mozIStorageValueArray* aFunctionArguments, nsIVariant** aResult)
+{
+  nsresult rv;
+  nsAutoCString suffix;
+  OriginAttributes attrs;
+
+  rv = aFunctionArguments->GetUTF8String(0, suffix);
+  NS_ENSURE_SUCCESS(rv, rv);
+  attrs.PopulateFromSuffix(suffix);
+
+  RefPtr<nsVariant> outVar(new nsVariant());
+  rv = outVar->SetAsInt32(attrs.mAppId);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  outVar.forget(aResult);
+  return NS_OK;
+}
+
+class SetInBrowserFromOriginAttributesSQLFunction final :
+  public mozIStorageFunction
+{
+  ~SetInBrowserFromOriginAttributesSQLFunction() {}
+
+  NS_DECL_ISUPPORTS
+  NS_DECL_MOZISTORAGEFUNCTION
+};
+
+NS_IMPL_ISUPPORTS(SetInBrowserFromOriginAttributesSQLFunction,
+                  mozIStorageFunction);
+
+NS_IMETHODIMP
+SetInBrowserFromOriginAttributesSQLFunction::OnFunctionCall(
+  mozIStorageValueArray* aFunctionArguments, nsIVariant** aResult)
+{
+  nsresult rv;
+  nsAutoCString suffix;
+  OriginAttributes attrs;
+
+  rv = aFunctionArguments->GetUTF8String(0, suffix);
+  NS_ENSURE_SUCCESS(rv, rv);
+  attrs.PopulateFromSuffix(suffix);
+
+  RefPtr<nsVariant> outVar(new nsVariant());
+  rv = outVar->SetAsInt32(attrs.mInBrowser);
   NS_ENSURE_SUCCESS(rv, rv);
 
   outVar.forget(aResult);
@@ -1147,7 +1207,7 @@ nsCookieService::TryInitDB(bool aRecreateDB)
     case 5:
       {
         // Change in the version: Replace the columns |appId| and
-        // |isBrowserElement| by a single column |originAttributes|.
+        // |inBrowserElement| by a single column |originAttributes|.
         //
         // Why we made this change: FxOS new security model (NSec) encapsulates
         // "appId/inBrowser" in nsIPrincipal::originAttributes to make it easier
@@ -1179,9 +1239,11 @@ nsCookieService::TryInitDB(bool aRecreateDB)
           convertToOriginAttrs(new ConvertAppIdToOriginAttrsSQLFunction());
         NS_ENSURE_TRUE(convertToOriginAttrs, RESULT_RETRY);
 
-        rv = mDefaultDBState->dbConn->CreateFunction(
-             NS_LITERAL_CSTRING("CONVERT_TO_ORIGIN_ATTRIBUTES"), 2,
-             convertToOriginAttrs);
+        NS_NAMED_LITERAL_CSTRING(convertToOriginAttrsName,
+                                 "CONVERT_TO_ORIGIN_ATTRIBUTES");
+
+        rv = mDefaultDBState->dbConn->CreateFunction(convertToOriginAttrsName,
+                                                     2, convertToOriginAttrs);
         NS_ENSURE_SUCCESS(rv, RESULT_RETRY);
 
         rv = mDefaultDBState->dbConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
@@ -1195,6 +1257,9 @@ nsCookieService::TryInitDB(bool aRecreateDB)
           "FROM moz_cookies_old"));
         NS_ENSURE_SUCCESS(rv, RESULT_RETRY);
 
+        rv = mDefaultDBState->dbConn->RemoveFunction(convertToOriginAttrsName);
+        NS_ENSURE_SUCCESS(rv, RESULT_RETRY);
+
         // Drop old table
         rv = mDefaultDBState->dbConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
              "DROP TABLE moz_cookies_old"));
@@ -1202,6 +1267,58 @@ nsCookieService::TryInitDB(bool aRecreateDB)
 
         COOKIE_LOGSTRING(LogLevel::Debug,
           ("Upgraded database to schema version 6"));
+      }
+
+    case 6:
+      {
+        // We made a mistake in schema version 6. We cannot remove expected
+        // columns of any version (checked in the default case) from cookie
+        // database, because doing this would destroy the possibility of
+        // downgrading database.
+        //
+        // This version simply restores appId and inBrowserElement columns in
+        // order to fix downgrading issue even though these two columns are no
+        // longer used in the latest schema.
+        rv = mDefaultDBState->dbConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+          "ALTER TABLE moz_cookies ADD appId INTEGER DEFAULT 0;"));
+        NS_ENSURE_SUCCESS(rv, RESULT_RETRY);
+
+        rv = mDefaultDBState->dbConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+          "ALTER TABLE moz_cookies ADD inBrowserElement INTEGER DEFAULT 0;"));
+        NS_ENSURE_SUCCESS(rv, RESULT_RETRY);
+
+        // Compute and populate the values of appId and inBrwoserElement from
+        // originAttributes.
+        nsCOMPtr<mozIStorageFunction>
+          setAppId(new SetAppIdFromOriginAttributesSQLFunction());
+        NS_ENSURE_TRUE(setAppId, RESULT_RETRY);
+
+        NS_NAMED_LITERAL_CSTRING(setAppIdName, "SET_APP_ID");
+
+        rv = mDefaultDBState->dbConn->CreateFunction(setAppIdName, 1, setAppId);
+        NS_ENSURE_SUCCESS(rv, RESULT_RETRY);
+
+        nsCOMPtr<mozIStorageFunction>
+          setInBrowser(new SetInBrowserFromOriginAttributesSQLFunction());
+        NS_ENSURE_TRUE(setInBrowser, RESULT_RETRY);
+
+        NS_NAMED_LITERAL_CSTRING(setInBrowserName, "SET_IN_BROWSER");
+
+        rv = mDefaultDBState->dbConn->CreateFunction(setInBrowserName, 1,
+                                                     setInBrowser);
+        NS_ENSURE_SUCCESS(rv, RESULT_RETRY);
+
+        rv = mDefaultDBState->dbConn->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+          "UPDATE moz_cookies SET appId = SET_APP_ID(originAttributes), "
+          "inBrowserElement = SET_IN_BROWSER(originAttributes);"
+        ));
+        NS_ENSURE_SUCCESS(rv, RESULT_RETRY);
+
+        rv = mDefaultDBState->dbConn->RemoveFunction(setAppIdName);
+        NS_ENSURE_SUCCESS(rv, RESULT_RETRY);
+
+        rv = mDefaultDBState->dbConn->RemoveFunction(setInBrowserName);
+        NS_ENSURE_SUCCESS(rv, RESULT_RETRY);
       }
 
       // No more upgrades. Update the schema version.
