@@ -803,7 +803,7 @@ BytecodeEmitter::computeLocalOffset(Handle<StaticBlockObject*> blockObj)
     unsigned localOffset = nbodyfixed;
 
     if (StmtInfoBCE* stmt = innermostScopeStmt()) {
-        Rooted<NestedScopeObject*> outer(cx, stmt->staticScope);
+        Rooted<NestedStaticScopeObject*> outer(cx, stmt->staticScope);
         for (; outer; outer = outer->enclosingNestedScope()) {
             if (outer->is<StaticBlockObject>() && !IsStaticGlobalLexicalScope(outer)) {
                 StaticBlockObject& outerBlock = outer->as<StaticBlockObject>();
@@ -839,9 +839,9 @@ BytecodeEmitter::computeLocalOffset(Handle<StaticBlockObject*> blockObj)
 // To help debuggers, the bytecode emitter arranges to record the PC ranges
 // comprehended by a nested scope, and ultimately attach them to the JSScript.
 // An element in the "block scope array" specifies the PC range, and links to a
-// NestedScopeObject in the object list of the script.  That scope object is
-// linked to the previous link in the static scope chain, if any.  The static
-// scope chain at any pre-retire PC can be retrieved using
+// NestedStaticScopeObject in the object list of the script.  That scope object
+// is linked to the previous link in the static scope chain, if any.  The
+// static scope chain at any pre-retire PC can be retrieved using
 // JSScript::getStaticScope(jsbytecode* pc).
 //
 // Block scopes store their locals in the fixed part of a stack frame, after the
@@ -874,7 +874,7 @@ BytecodeEmitter::computeLocalOffset(Handle<StaticBlockObject*> blockObj)
 bool
 BytecodeEmitter::enterNestedScope(StmtInfoBCE* stmt, ObjectBox* objbox, StmtType stmtType)
 {
-    Rooted<NestedScopeObject*> scopeObj(cx, &objbox->object->as<NestedScopeObject>());
+    Rooted<NestedStaticScopeObject*> scopeObj(cx, &objbox->object->as<NestedStaticScopeObject>());
     uint32_t scopeObjectIndex = objectList.add(objbox);
 
     switch (stmtType) {
@@ -948,7 +948,7 @@ BytecodeEmitter::leaveNestedScope(StmtInfoBCE* stmt)
     MOZ_ASSERT(blockScopeList.list[blockScopeIndex].length == 0);
     uint32_t blockObjIndex = blockScopeList.list[blockScopeIndex].index;
     ObjectBox* blockObjBox = objectList.find(blockObjIndex);
-    NestedScopeObject* staticScope = &blockObjBox->object->as<NestedScopeObject>();
+    NestedStaticScopeObject* staticScope = &blockObjBox->object->as<NestedStaticScopeObject>();
     MOZ_ASSERT(stmt->staticScope == staticScope);
     MOZ_ASSERT_IF(!stmt->isBlockScope, staticScope->is<StaticWithObject>());
 #endif

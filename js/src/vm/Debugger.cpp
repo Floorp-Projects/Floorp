@@ -6698,7 +6698,7 @@ EvaluateInEnv(JSContext* cx, Handle<Env*> env, AbstractFramePtr frame,
      * boundaries, and we are putting a DebugScopeProxy or non-syntactic With on
      * the scope chain.
      */
-    Rooted<ScopeObject*> enclosingStaticScope(cx);
+    Rooted<StaticScopeObject*> enclosingStaticScope(cx);
     if (!IsGlobalLexicalScope(env)) {
         // If we are doing a global evalWithBindings, we will still need to
         // link the static global lexical scope to the static non-syntactic
@@ -6717,7 +6717,7 @@ EvaluateInEnv(JSContext* cx, Handle<Env*> env, AbstractFramePtr frame,
     // circumvent the fresh lexical scope that all eval have, so that the
     // users of executeInGlobal, like the web console, may add new bindings to
     // the global scope.
-    Rooted<ScopeObject*> staticScope(cx);
+    Rooted<StaticScopeObject*> staticScope(cx);
     if (frame) {
         staticScope = StaticEvalObject::create(cx, enclosingStaticScope);
         if (!staticScope)

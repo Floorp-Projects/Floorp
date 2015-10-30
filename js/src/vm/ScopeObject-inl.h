@@ -84,12 +84,12 @@ template <AllowGC allowGC>
 inline void
 StaticScopeIter<allowGC>::operator++(int)
 {
-    if (obj->template is<NestedScopeObject>()) {
-        obj = obj->template as<NestedScopeObject>().enclosingScopeForStaticScopeIter();
+    if (obj->template is<NestedStaticScopeObject>()) {
+        obj = obj->template as<NestedStaticScopeObject>().enclosingScope();
     } else if (obj->template is<StaticEvalObject>()) {
-        obj = obj->template as<StaticEvalObject>().enclosingScopeForStaticScopeIter();
+        obj = obj->template as<StaticEvalObject>().enclosingScope();
     } else if (obj->template is<StaticNonSyntacticScopeObjects>()) {
-        obj = obj->template as<StaticNonSyntacticScopeObjects>().enclosingScopeForStaticScopeIter();
+        obj = obj->template as<StaticNonSyntacticScopeObjects>().enclosingScope();
     } else if (obj->template is<ModuleObject>()) {
         obj = obj->template as<ModuleObject>().enclosingStaticScope();
     } else if (onNamedLambda || !obj->template as<JSFunction>().isNamedLambda()) {

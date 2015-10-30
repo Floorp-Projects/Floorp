@@ -259,7 +259,7 @@ class CompileInfo
     jsbytecode* osrPc() const {
         return osrPc_;
     }
-    NestedScopeObject* osrStaticScope() const {
+    NestedStaticScopeObject* osrStaticScope() const {
         return osrStaticScope_;
     }
     InlineScriptTree* inlineScriptTree() const {
@@ -407,7 +407,7 @@ class CompileInfo
         return nimplicit() + nargs() + nlocals();
     }
 
-    bool isSlotAliased(uint32_t index, NestedScopeObject* staticScope) const {
+    bool isSlotAliased(uint32_t index, NestedStaticScopeObject* staticScope) const {
         MOZ_ASSERT(index >= startArgSlot());
 
         if (funMaybeLazy() && index == thisSlot())
@@ -570,7 +570,7 @@ class CompileInfo
     JSScript* script_;
     JSFunction* fun_;
     jsbytecode* osrPc_;
-    NestedScopeObject* osrStaticScope_;
+    NestedStaticScopeObject* osrStaticScope_;
     bool constructing_;
     AnalysisMode analysisMode_;
 

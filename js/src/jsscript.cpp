@@ -566,7 +566,7 @@ XDRRelazificationInfo(XDRState<mode>* xdr, HandleFunction fun, HandleScript scri
 }
 
 static inline uint32_t
-FindScopeObjectIndex(JSScript* script, NestedScopeObject& scope)
+FindScopeObjectIndex(JSScript* script, NestedStaticScopeObject& scope)
 {
     ObjectArray* objects = script->objects();
     HeapPtrObject* vector = objects->vector;
@@ -1032,8 +1032,8 @@ js::XDRScript(XDRState<mode>* xdr, HandleObject enclosingScopeArg, HandleScript 
             /* Code the nested block's enclosing scope. */
             uint32_t enclosingStaticScopeIndex = 0;
             if (mode == XDR_ENCODE) {
-                NestedScopeObject& scope = (*objp)->as<NestedScopeObject>();
-                if (NestedScopeObject* enclosing = scope.enclosingNestedScope()) {
+                NestedStaticScopeObject& scope = (*objp)->as<NestedStaticScopeObject>();
+                if (NestedStaticScopeObject* enclosing = scope.enclosingNestedScope()) {
                     if (IsStaticGlobalLexicalScope(enclosing))
                         enclosingStaticScopeIndex = UINT32_MAX;
                     else
@@ -3480,11 +3480,11 @@ js::detail::CopyScript(JSContext* cx, HandleObject scriptStaticScope, HandleScri
         for (unsigned i = 0; i < nobjects; i++) {
             RootedObject obj(cx, vector[i]);
             RootedObject clone(cx);
-            if (obj->is<NestedScopeObject>()) {
-                Rooted<NestedScopeObject*> innerBlock(cx, &obj->as<NestedScopeObject>());
+            if (obj->is<NestedStaticScopeObject>()) {
+                Rooted<NestedStaticScopeObject*> innerBlock(cx, &obj->as<NestedStaticScopeObject>());
 
                 RootedObject enclosingScope(cx);
-                if (NestedScopeObject* enclosingBlock = innerBlock->enclosingNestedScope()) {
+                if (NestedStaticScopeObject* enclosingBlock = innerBlock->enclosingNestedScope()) {
                     if (IsStaticGlobalLexicalScope(enclosingBlock)) {
                         MOZ_ASSERT(IsStaticGlobalLexicalScope(scriptStaticScope) ||
                                    scriptStaticScope->is<StaticNonSyntacticScopeObjects>());
@@ -3679,7 +3679,7 @@ CreateEmptyScriptForClone(JSContext* cx, HandleObject enclosingScope, HandleScri
 }
 
 JSScript*
-js::CloneGlobalScript(JSContext* cx, Handle<ScopeObject*> enclosingScope, HandleScript src)
+js::CloneGlobalScript(JSContext* cx, Handle<StaticScopeObject*> enclosingScope, HandleScript src)
 {
     MOZ_ASSERT(IsStaticGlobalLexicalScope(enclosingScope) ||
                enclosingScope->is<StaticNonSyntacticScopeObjects>());
@@ -3997,7 +3997,7 @@ JSScript::calculateLiveFixed(jsbytecode* pc)
     size_t nlivefixed = nbodyfixed();
 
     if (nfixed() != nlivefixed) {
-        NestedScopeObject* staticScope = getStaticBlockScope(pc);
+        NestedStaticScopeObject* staticScope = getStaticBlockScope(pc);
         if (staticScope)
             staticScope = MaybeForwarded(staticScope);
         while (staticScope && !staticScope->is<StaticBlockObject>()) {
@@ -4018,7 +4018,7 @@ JSScript::calculateLiveFixed(jsbytecode* pc)
     return nlivefixed;
 }
 
-NestedScopeObject*
+NestedStaticScopeObject*
 JSScript::getStaticBlockScope(jsbytecode* pc)
 {
     MOZ_ASSERT(containsPC(pc));
@@ -4029,7 +4029,7 @@ JSScript::getStaticBlockScope(jsbytecode* pc)
     size_t offset = pc - code();
 
     BlockScopeArray* scopes = blockScopes();
-    NestedScopeObject* blockChain = nullptr;
+    NestedStaticScopeObject* blockChain = nullptr;
 
     // Find the innermost block chain using a binary search.
     size_t bottom = 0;
@@ -4054,7 +4054,7 @@ JSScript::getStaticBlockScope(jsbytecode* pc)
                     if (checkNote->index == BlockScopeNote::NoBlockScopeIndex)
                         blockChain = nullptr;
                     else
-                        blockChain = &getObject(checkNote->index)->as<NestedScopeObject>();
+                        blockChain = &getObject(checkNote->index)->as<NestedStaticScopeObject>();
                     break;
                 }
                 if (checkNote->parent == UINT32_MAX)
