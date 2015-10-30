@@ -37,6 +37,7 @@ handlers[actions.READ_SNAPSHOT_START] = function (snapshots, action) {
 handlers[actions.READ_SNAPSHOT_END] = function (snapshots, action) {
   let snapshot = getSnapshot(snapshots, action.snapshot);
   snapshot.state = states.READ;
+  snapshot.creationTime = action.creationTime;
   return [...snapshots];
 };
 
