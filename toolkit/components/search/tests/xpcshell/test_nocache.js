@@ -3,11 +3,11 @@
 
 /*
  * test_nocache: Start search engine
- * - without search.json
+ * - without search.json.mozlz4
  *
  * Ensure that :
  * - nothing explodes;
- * - search.json is created.
+ * - search.json.mozlz4 is created.
  */
 
 function run_test()
@@ -34,7 +34,7 @@ add_task(function* test_nocache() {
 
   // Check that search.json has been created.
   let cacheFile = gProfD.clone();
-  cacheFile.append("search.json");
+  cacheFile.append(CACHE_FILENAME);
   do_check_true(cacheFile.exists());
 
   // Add engine and wait for cache update
@@ -46,10 +46,7 @@ add_task(function* test_nocache() {
   yield promiseAfterCache();
 
   do_print("Searching test engine in cache");
-  let path = OS.Path.join(OS.Constants.Path.profileDir, "search.json");
-  let data = yield OS.File.read(path);
-  let text = new TextDecoder().decode(data);
-  let cache = JSON.parse(text);
+  let cache = yield promiseCacheData();
   let found = false;
   for (let engine of cache.engines) {
     if (engine._shortName == "test-search-engine") {
