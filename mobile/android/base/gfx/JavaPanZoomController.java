@@ -121,8 +121,8 @@ class JavaPanZoomController
     private AxisLockMode mMode;
     /* Whether or not to wait for a double-tap before dispatching a single-tap */
     private boolean mWaitForDoubleTap;
-    /* Used to change the scrollY direction */
-    private boolean mNegateWheelScrollY;
+    /* Used to change the scroll direction */
+    private boolean mNegateWheelScroll;
     /* Whether the current event has been default-prevented. */
     private boolean mDefaultPrevented;
     /* Whether longpress events are enabled, or suppressed by robocop tests. */
@@ -156,7 +156,7 @@ class JavaPanZoomController
         mMode = AxisLockMode.STANDARD;
 
         String[] prefs = { "ui.scrolling.axis_lock_mode",
-                           "ui.scrolling.negate_wheel_scrollY",
+                           "ui.scrolling.negate_wheel_scroll",
                            "ui.scrolling.gamepad_dead_zone" };
         PrefsHelper.getPrefs(prefs, new PrefsHelper.PrefHandlerBase() {
             @Override public void prefValue(String pref, String value) {
@@ -178,8 +178,8 @@ class JavaPanZoomController
             }
 
             @Override public void prefValue(String pref, boolean value) {
-                if (pref.equals("ui.scrolling.negate_wheel_scrollY")) {
-                    mNegateWheelScrollY = value;
+                if (pref.equals("ui.scrolling.negate_wheel_scroll")) {
+                    mNegateWheelScroll = value;
                 }
             }
 
@@ -587,7 +587,8 @@ class JavaPanZoomController
         if (mState == PanZoomState.NOTHING || mState == PanZoomState.FLING) {
             float scrollX = event.getAxisValue(MotionEvent.AXIS_HSCROLL);
             float scrollY = event.getAxisValue(MotionEvent.AXIS_VSCROLL);
-            if (mNegateWheelScrollY) {
+            if (mNegateWheelScroll) {
+                scrollX *= -1.0;
                 scrollY *= -1.0;
             }
             scrollBy(scrollX * mPointerScrollFactor, scrollY * mPointerScrollFactor);
