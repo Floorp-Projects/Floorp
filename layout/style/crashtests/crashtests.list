@@ -129,4 +129,4 @@ load 1206105-1.html
 load border-image-visited-link.html
 load font-face-truncated-src.html 
 load large_border_image_width.html
-skip load long-url-list-stack-overflow.html # skipped due to being slow (bug 477490)
+load long-url-list-stack-overflow.html
