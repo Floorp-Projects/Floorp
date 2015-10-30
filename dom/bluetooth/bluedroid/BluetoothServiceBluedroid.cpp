@@ -902,15 +902,8 @@ BluetoothServiceBluedroid::GetConnectedDevicePropertiesInternal(
   }
 
   // Get address of the connected device
-  nsString addressString;
-  profile->GetAddress(addressString);
-
   BluetoothAddress address;
-  nsresult rv = StringToAddress(addressString, address);
-  if (NS_FAILED(rv)) {
-    DispatchReplyError(aRunnable, STATUS_PARM_INVALID);
-    return rv;
-  }
+  profile->GetAddress(address);
 
   // Append request of the connected device
   GetDeviceRequest request(1, aRunnable);
@@ -1105,11 +1098,8 @@ public:
 
     // Signal error to profile manager
 
-    nsAutoString addressStr, uuidStr;
-    AddressToString(mDeviceAddress, addressStr);
-    UuidToString(mUuid, uuidStr);
     mGetRemoteServiceRecordArray[i].mManager->OnGetServiceChannel(
-      addressStr, uuidStr, -1);
+      mDeviceAddress, mUuid, -1);
     mGetRemoteServiceRecordArray.RemoveElementAt(i);
   }
 
@@ -1139,25 +1129,16 @@ private:
 
 nsresult
 BluetoothServiceBluedroid::GetServiceChannel(
-  const nsAString& aDeviceAddress,
-  const nsAString& aServiceUuid,
+  const BluetoothAddress& aDeviceAddress,
+  const BluetoothUuid& aServiceUuid,
   BluetoothProfileManagerBase* aManager)
 {
-  BluetoothAddress address;
-  nsresult rv = StringToAddress(aDeviceAddress, address);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  BluetoothUuid uuid;
-  StringToUuid(aServiceUuid, uuid);
-
   mGetRemoteServiceRecordArray.AppendElement(
-    GetRemoteServiceRecordRequest(address, uuid, aManager));
+    GetRemoteServiceRecordRequest(aDeviceAddress, aServiceUuid, aManager));
 
   RefPtr<BluetoothResultHandler> res =
     new GetRemoteServiceRecordResultHandler(mGetRemoteServiceRecordArray,
-                                            address, uuid);
+                                            aDeviceAddress, aServiceUuid);
 
   /* Stop discovery of remote devices here, because SDP operations
    * won't be performed while the adapter is in discovery mode.
@@ -1165,7 +1146,7 @@ BluetoothServiceBluedroid::GetServiceChannel(
   if (mDiscovering) {
     sBtInterface->CancelDiscovery(res);
   } else {
-    sBtInterface->GetRemoteServiceRecord(address, uuid, res);
+    sBtInterface->GetRemoteServiceRecord(aDeviceAddress, aServiceUuid, res);
   }
 
   return NS_OK;
@@ -1213,9 +1194,7 @@ public:
     mGetRemoteServicesArray.RemoveElementAt(i);
 
     // There's no error-signaling mechanism; just call manager
-    nsAutoString addressStr;
-    AddressToString(mDeviceAddress, addressStr);
-    mManager->OnUpdateSdpRecords(addressStr);
+    mManager->OnUpdateSdpRecords(mDeviceAddress);
   }
 
   void CancelDiscovery() override
@@ -1244,21 +1223,15 @@ private:
 
 bool
 BluetoothServiceBluedroid::UpdateSdpRecords(
-  const nsAString& aDeviceAddress,
+  const BluetoothAddress& aDeviceAddress,
   BluetoothProfileManagerBase* aManager)
 {
-  BluetoothAddress address;
-  nsresult rv = StringToAddress(aDeviceAddress, address);
-  if (NS_FAILED(rv)) {
-    return false;
-  }
-
   mGetRemoteServicesArray.AppendElement(
-    GetRemoteServicesRequest(address, aManager));
+    GetRemoteServicesRequest(aDeviceAddress, aManager));
 
   RefPtr<BluetoothResultHandler> res =
     new GetRemoteServicesResultHandler(mGetRemoteServicesArray,
-                                       address, aManager);
+                                       aDeviceAddress, aManager);
 
   /* Stop discovery of remote devices here, because SDP operations
    * won't be performed while the adapter is in discovery mode.
@@ -1266,7 +1239,7 @@ BluetoothServiceBluedroid::UpdateSdpRecords(
   if (mDiscovering) {
     sBtInterface->CancelDiscovery(res);
   } else {
-    sBtInterface->GetRemoteServices(address, res);
+    sBtInterface->GetRemoteServices(aDeviceAddress, res);
   }
 
   return true;
@@ -1456,8 +1429,15 @@ BluetoothServiceBluedroid::ConnectDisconnect(
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aRunnable);
 
+  BluetoothAddress address;
+  nsresult rv = StringToAddress(aDeviceAddress, address);
+  if (NS_FAILED(rv)) {
+    DispatchReplyError(aRunnable, STATUS_PARM_INVALID);
+    return;
+  }
+
   BluetoothProfileController* controller =
-    new BluetoothProfileController(aConnect, aDeviceAddress, aRunnable,
+    new BluetoothProfileController(aConnect, address, aRunnable,
                                    NextBluetoothProfileController,
                                    aServiceUuid, aCod);
   sControllerArray.AppendElement(controller);
@@ -1497,13 +1477,20 @@ BluetoothServiceBluedroid::SendFile(const nsAString& aDeviceAddress,
 {
   MOZ_ASSERT(NS_IsMainThread());
 
+  BluetoothAddress deviceAddress;
+  nsresult rv = StringToAddress(aDeviceAddress, deviceAddress);
+  if (NS_FAILED(rv)) {
+    DispatchReplyError(aRunnable, STATUS_PARM_INVALID);
+    return;
+  }
+
   // Currently we only support one device sending one file at a time,
   // so we don't need aDeviceAddress here because the target device
   // has been determined when calling 'Connect()'. Nevertheless, keep
   // it for future use.
 
   BluetoothOppManager* opp = BluetoothOppManager::Get();
-  if (!opp || !opp->SendFile(aDeviceAddress, aBlobParent)) {
+  if (!opp || !opp->SendFile(deviceAddress, aBlobParent)) {
     DispatchReplyError(aRunnable, NS_LITERAL_STRING("SendFile failed"));
     return;
   }
@@ -1518,13 +1505,20 @@ BluetoothServiceBluedroid::SendFile(const nsAString& aDeviceAddress,
 {
   MOZ_ASSERT(NS_IsMainThread());
 
+  BluetoothAddress deviceAddress;
+  nsresult rv = StringToAddress(aDeviceAddress, deviceAddress);
+  if (NS_FAILED(rv)) {
+    DispatchReplyError(aRunnable, STATUS_PARM_INVALID);
+    return;
+  }
+
   // Currently we only support one device sending one file at a time,
   // so we don't need aDeviceAddress here because the target device
   // has been determined when calling 'Connect()'. Nevertheless, keep
   // it for future use.
 
   BluetoothOppManager* opp = BluetoothOppManager::Get();
-  if (!opp || !opp->SendFile(aDeviceAddress, aBlob)) {
+  if (!opp || !opp->SendFile(deviceAddress, aBlob)) {
     DispatchReplyError(aRunnable, NS_LITERAL_STRING("SendFile failed"));
     return;
   }
@@ -2256,7 +2250,7 @@ BluetoothServiceBluedroid::RemoteDevicePropertiesNotification(
       }
 
       if (index < mGetRemoteServicesArray.Length()) {
-        mGetRemoteServicesArray[index].mManager->OnUpdateSdpRecords(bdAddrStr);
+        mGetRemoteServicesArray[index].mManager->OnUpdateSdpRecords(aBdAddr);
         mGetRemoteServicesArray.RemoveElementAt(index);
         continue; // continue with outer loop
       }
@@ -2291,11 +2285,10 @@ BluetoothServiceBluedroid::RemoteDevicePropertiesNotification(
             (mGetRemoteServiceRecordArray[i].mUuid == p.mServiceRecord.mUuid)) {
 
           // Signal channel to profile manager
-          nsAutoString uuidStr;
-          UuidToString(mGetRemoteServiceRecordArray[i].mUuid, uuidStr);
-
           mGetRemoteServiceRecordArray[i].mManager->OnGetServiceChannel(
-            bdAddrStr, uuidStr, p.mServiceRecord.mChannel);
+            aBdAddr,
+            mGetRemoteServiceRecordArray[i].mUuid,
+            p.mServiceRecord.mChannel);
 
           mGetRemoteServiceRecordArray.RemoveElementAt(i);
           break;

@@ -449,6 +449,15 @@ struct BluetoothAddress {
     operator=(ANY);
   }
 
+  /**
+   * |IsCleared| returns true if the address doesn not contain a
+   * specific value (i.e., it contains ANY).
+   */
+  bool IsCleared() const
+  {
+    return operator==(ANY);
+  }
+
   /*
    * Getter and setter methods for the address parts. The figure
    * below illustrates the mapping to bytes; from LSB to MSB.
