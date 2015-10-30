@@ -35,7 +35,7 @@
           android:showAsAction="ifRoom"/>
 
     <item android:id="@+id/send_to_device"
-          android:icon="@drawable/overlay_send_tab_icon_menu"
+          android:icon="@drawable/overlay_send_tab_icon"
           android:title="@string/overlay_share_send_other"
           android:showAsAction="ifRoom"/>
 
