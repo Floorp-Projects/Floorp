@@ -30,6 +30,7 @@ class Test(object):
     keys = []
     desktop = True
     filters = filter.ignore_first.prepare(1) + filter.median.prepare()
+    lower_is_better = True
 
     @classmethod
     def name(cls):
@@ -137,6 +138,7 @@ class ts_paint(TsBase):
     rss = False
     mainthread = False
     responsiveness = False
+    unit = 'ms'
 
 
 @register_test()
@@ -159,6 +161,7 @@ class sessionrestore(TsBase):
     reinstall = ['sessionstore.js', 'sessionCheckpoints.json']
     # Restore the session
     preferences = {'browser.startup.page': 3}
+    unit = 'ms'
 
 
 @register_test()
@@ -189,6 +192,7 @@ class tpaint(TsBase):
     sps_profile_entries = 2000000
     tpmozafterpaint = True
     filters = filter.ignore_first.prepare(5) + filter.median.prepare()
+    unit = 'ms'
 
 
 @register_test()
@@ -204,6 +208,7 @@ class tresize(TsBase):
     sps_profile_entries = 1000000
     tpmozafterpaint = True
     filters = filter.ignore_first.prepare(5) + filter.median.prepare()
+    unit = 'ms'
 
 
 # Media Test
@@ -240,7 +245,8 @@ class PageloaderTest(Test):
             'timeout', 'shutdown', 'responsiveness', 'profile_path',
             'xperf_providers', 'xperf_user_providers', 'xperf_stackwalk',
             'filters', 'preferences', 'extensions', 'setup', 'cleanup',
-            'test_name_extension']
+            'test_name_extension', 'lower_is_better', 'unit']
+    unit = 'ms'
 
 
 @register_test()
@@ -386,6 +392,7 @@ class glterrain(PageloaderTest):
                    'docshell.event_starvation_delay_hint': 1,
                    'dom.send_after_paint_to_content': False}
     filters = filter.ignore_first.prepare(1) + filter.median.prepare()
+    unit = 'frame interval'
 
 
 @register_test()
@@ -475,6 +482,7 @@ class tp5o_scroll(PageloaderTest):
                    'docshell.event_starvation_delay_hint': 1,
                    'dom.send_after_paint_to_content': False}
     filters = filter.ignore_first.prepare(1) + filter.median.prepare()
+    unit = '1/FPS'
 
 
 @register_test()
@@ -494,6 +502,8 @@ class v8_7(PageloaderTest):
     tpmozafterpaint = False
     preferences = {'dom.send_after_paint_to_content': False}
     filters = filter.v8_subtest.prepare()
+    unit = 'score'
+    lower_is_better = False
 
 
 @register_test()
@@ -527,11 +537,14 @@ class tcanvasmark(PageloaderTest):
     tpmozafterpaint = False
     preferences = {'dom.send_after_paint_to_content': False}
     filters = filter.ignore_first.prepare(1) + filter.median.prepare()
+    unit = 'score'
+    lower_is_better = False
 
 
 class dromaeo(PageloaderTest):
     """abstract base class for dramaeo tests"""
     filters = filter.dromaeo.prepare()
+    lower_is_better = False
 
 
 @register_test()
