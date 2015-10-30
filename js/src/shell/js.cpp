@@ -1629,7 +1629,11 @@ StartTimingMutator(JSContext* cx, unsigned argc, Value* vp)
         return false;
     }
 
-    cx->runtime()->gc.stats.startTimingMutator();
+    if (!cx->runtime()->gc.stats.startTimingMutator()) {
+        JS_ReportError(cx, "StartTimingMutator should only be called from outside of GC");
+        return false;
+    }
+
     args.rval().setUndefined();
     return true;
 }

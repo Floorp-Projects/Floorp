@@ -116,7 +116,7 @@ TreeWalker::Next(ChildrenIterator* aIter, Accessible** aAccesible,
     // Ignore the accessible and its subtree if it was repositioned by means of
     // aria-owns.
     if (accessible) {
-      if (accessible->IsRepositioned()) {
+      if (accessible->IsRelocated()) {
         *aSkipSubtree = true;
       } else {
         *aAccesible = accessible;

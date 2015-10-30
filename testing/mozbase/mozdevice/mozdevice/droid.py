@@ -8,12 +8,13 @@ import re
 import threading
 import time
 
+import version_codes
+
 from Zeroconf import Zeroconf, ServiceBrowser
 from devicemanager import ZeroconfListener
 from devicemanagerADB import DeviceManagerADB
 from devicemanagerSUT import DeviceManagerSUT
 from devicemanager import DMError
-from distutils.version import StrictVersion
 
 class DroidMixin(object):
     """Mixin to extend DeviceManager with Android-specific functionality"""
@@ -131,8 +132,8 @@ class DroidMixin(object):
 
         :param appName: Name of application (e.g. `com.android.chrome`)
         """
-        version = self.shellCheckOutput(["getprop", "ro.build.version.release"])
-        if StrictVersion(version) >= StrictVersion('3.0'):
+        version = self.shellCheckOutput(["getprop", "ro.build.version.sdk"])
+        if int(version) >= version_codes.HONEYCOMB:
             self.shellCheckOutput([ "am", "force-stop", appName ], root=self._stopApplicationNeedsRoot)
         else:
             num_tries = 0

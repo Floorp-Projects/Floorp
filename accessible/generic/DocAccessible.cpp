@@ -130,9 +130,13 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(DocAccessible, Accessible)
   }
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mAccessibleCache)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mAnchorJumpElm)
-  for (uint32_t i = 0; i < tmp->mARIAOwnsInvalidationList.Length(); ++i) {
-    NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mARIAOwnsInvalidationList[i].mOwner)
-    NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mARIAOwnsInvalidationList[i].mChild)
+  for (auto it = tmp->mARIAOwnsHash.ConstIter(); !it.Done(); it.Next()) {
+    nsTArray<RefPtr<Accessible> >* ar = it.UserData();
+    for (uint32_t i = 0; i < ar->Length(); i++) {
+      NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb,
+                                         "mARIAOwnsHash entry item");
+      cb.NoteXPCOMChild(ar->ElementAt(i));
+    }
   }
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
@@ -144,10 +148,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(DocAccessible, Accessible)
   tmp->mNodeToAccessibleMap.Clear();
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mAccessibleCache)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mAnchorJumpElm)
-  for (uint32_t i = 0; i < tmp->mARIAOwnsInvalidationList.Length(); ++i) {
-    NS_IMPL_CYCLE_COLLECTION_UNLINK(mARIAOwnsInvalidationList[i].mOwner)
-    NS_IMPL_CYCLE_COLLECTION_UNLINK(mARIAOwnsInvalidationList[i].mChild)
-  }
+  tmp->mARIAOwnsHash.Clear();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(DocAccessible)
@@ -731,6 +732,10 @@ DocAccessible::AttributeWillChange(nsIDocument* aDocument,
   if (aModType != nsIDOMMutationEvent::ADDITION)
     RemoveDependentIDsFor(accessible, aAttribute);
 
+  if (aAttribute == nsGkAtoms::id) {
+    RelocateARIAOwnedIfNeeded(aElement);
+  }
+
   // Store the ARIA attribute old value so that it can be used after
   // attribute change. Note, we assume there's no nested ARIA attribute
   // changes. If this happens then we should end up with keeping a stack of
@@ -906,6 +911,10 @@ DocAccessible::AttributeChangedImpl(Accessible* aAccessible,
     return;
   }
 
+  if (aAttribute == nsGkAtoms::id) {
+    RelocateARIAOwnedIfNeeded(elm);
+  }
+
   // ARIA or XUL selection
   if ((aAccessible->GetContent()->IsXULElement() &&
        aAttribute == nsGkAtoms::selected) ||
@@ -1039,6 +1048,10 @@ DocAccessible::ARIAAttributeChanged(Accessible* aAccessible, nsIAtom* aAttribute
                          nsGkAtoms::_empty, eCaseMatters)))) {
     FireDelayedEvent(nsIAccessibleEvent::EVENT_VALUE_CHANGE, aAccessible);
     return;
+  }
+
+  if (aAttribute == nsGkAtoms::aria_owns) {
+    mNotificationController->ScheduleRelocation(aAccessible);
   }
 }
 
@@ -1271,6 +1284,15 @@ DocAccessible::BindToDocument(Accessible* aAccessible,
   aAccessible->SetRoleMapEntry(aRoleMapEntry);
 
   AddDependentIDsFor(aAccessible);
+
+  if (aAccessible->HasOwnContent()) {
+    nsIContent* el = aAccessible->GetContent();
+    if (el->HasAttr(kNameSpaceID_None, nsGkAtoms::aria_owns)) {
+      mNotificationController->ScheduleRelocation(aAccessible);
+    }
+
+    RelocateARIAOwnedIfNeeded(el);
+  }
 }
 
 void
@@ -1365,67 +1387,6 @@ DocAccessible::ProcessInvalidationList()
   }
 
   mInvalidationList.Clear();
-
-  // Alter the tree according to aria-owns (seize the trees).
-  for (uint32_t idx = 0; idx < mARIAOwnsInvalidationList.Length(); idx++) {
-    Accessible* owner = mARIAOwnsInvalidationList[idx].mOwner;
-    if (!owner->IsInDocument()) { // eventually died before we've got here
-      continue;
-    }
-
-    Accessible* child = GetAccessible(mARIAOwnsInvalidationList[idx].mChild);
-    if (!child || !child->IsInDocument()) {
-      continue;
-    }
-
-    Accessible* oldParent = child->Parent();
-    if (!oldParent) {
-      NS_ERROR("The accessible is in document but doesn't have a parent");
-      continue;
-    }
-    int32_t idxInParent = child->IndexInParent();
-
-    // XXX: update context flags
-    {
-      RefPtr<AccReorderEvent> reorderEvent = new AccReorderEvent(oldParent);
-      RefPtr<AccMutationEvent> hideEvent =
-        new AccHideEvent(child, child->GetContent(), false);
-      FireDelayedEvent(hideEvent);
-      reorderEvent->AddSubMutationEvent(hideEvent);
-
-      AutoTreeMutation mut(oldParent);
-      oldParent->RemoveChild(child);
-
-      MaybeNotifyOfValueChange(oldParent);
-      FireDelayedEvent(reorderEvent);
-    }
-
-    bool isReinserted = false;
-    {
-      AutoTreeMutation mut(owner);
-      isReinserted = owner->AppendChild(child);
-    }
-
-    Accessible* newParent = owner;
-    if (!isReinserted) {
-      AutoTreeMutation mut(oldParent);
-      oldParent->InsertChildAt(idxInParent, child);
-      newParent = oldParent;
-    }
-
-    RefPtr<AccReorderEvent> reorderEvent = new AccReorderEvent(newParent);
-    RefPtr<AccMutationEvent> showEvent =
-      new AccShowEvent(child, child->GetContent());
-    FireDelayedEvent(showEvent);
-    reorderEvent->AddSubMutationEvent(showEvent);
-
-    MaybeNotifyOfValueChange(newParent);
-    FireDelayedEvent(reorderEvent);
-
-    child->SetRepositioned(isReinserted);
-  }
-
-  mARIAOwnsInvalidationList.Clear();
 }
 
 Accessible*
@@ -1635,31 +1596,6 @@ DocAccessible::AddDependentIDsFor(Accessible* aRelProvider, nsIAtom* aRelAttr)
             if (!HasAccessible(dependentContent)) {
               mInvalidationList.AppendElement(dependentContent);
             }
-
-            // Update ARIA owns cache.
-            if (relAttr == nsGkAtoms::aria_owns) {
-              // ARIA owns cannot refer to itself or a parent. Ignore
-              // the element if so.
-              nsIContent* parentEl = relProviderEl;
-              while (parentEl && parentEl != dependentContent) {
-                parentEl = parentEl->GetParent();
-              }
-
-              if (!parentEl) {
-                // ARIA owns element cannot refer to an element in parents chain
-                // of other ARIA owns element (including that ARIA owns element)
-                // if it's inside of a dependent element subtree of that
-                // ARIA owns element. Applied recursively.
-                if (!IsInARIAOwnsLoop(relProviderEl, dependentContent)) {
-                  nsTArray<nsIContent*>* list =
-                    mARIAOwnsHash.LookupOrAdd(aRelProvider);
-                  list->AppendElement(dependentContent);
-
-                  mARIAOwnsInvalidationList.AppendElement(
-                    ARIAOwnsPair(aRelProvider, dependentContent));
-                }
-              }
-            }
           }
         }
       }
@@ -1709,103 +1645,11 @@ DocAccessible::RemoveDependentIDsFor(Accessible* aRelProvider,
       }
     }
 
-    // aria-owns has gone, put the children back.
-    if (relAttr == nsGkAtoms::aria_owns) {
-      nsTArray<nsIContent*>* children = mARIAOwnsHash.Get(aRelProvider);
-      if (children) {
-        nsTArray<Accessible*> containers;
-
-        // Remove ARIA owned elements from where they belonged.
-        RefPtr<AccReorderEvent> reorderEvent = new AccReorderEvent(aRelProvider);
-        {
-          AutoTreeMutation mut(aRelProvider);
-          for (uint32_t idx = 0; idx < children->Length(); idx++) {
-            nsIContent* childEl = children->ElementAt(idx);
-            Accessible* child = GetAccessible(childEl);
-            if (child && child->IsRepositioned()) {
-              {
-                RefPtr<AccMutationEvent> hideEvent =
-                  new AccHideEvent(child, childEl, false);
-                FireDelayedEvent(hideEvent);
-                reorderEvent->AddSubMutationEvent(hideEvent);
-
-                aRelProvider->RemoveChild(child);
-              }
-
-              // Collect DOM-order containers to update their trees.
-              child->SetRepositioned(false);
-              Accessible* container = GetContainerAccessible(childEl);
-              if (!containers.Contains(container)) {
-                containers.AppendElement(container);
-              }
-            }
-          }
-        }
-
-        mARIAOwnsHash.Remove(aRelProvider);
-        for (uint32_t idx = 0; idx < mARIAOwnsInvalidationList.Length();) {
-          if (mARIAOwnsInvalidationList[idx].mOwner == aRelProvider) {
-            mARIAOwnsInvalidationList.RemoveElementAt(idx);
-            continue;
-          }
-          idx++;
-        }
-
-        MaybeNotifyOfValueChange(aRelProvider);
-        FireDelayedEvent(reorderEvent);
-
-        // Reinserted previously ARIA owned elements into the tree
-        // (restore a DOM-like order).
-        for (uint32_t idx = 0; idx < containers.Length(); idx++) {
-          UpdateTreeOnInsertion(containers[idx]);
-        }
-      }
-    }
-
     // If the relation attribute is given then we don't have anything else to
     // check.
     if (aRelAttr)
       break;
   }
-}
-
-bool
-DocAccessible::IsInARIAOwnsLoop(nsIContent* aOwnerEl, nsIContent* aDependentEl)
-{
-  // ARIA owns element cannot refer to an element in parents chain of other ARIA
-  // owns element (including that ARIA owns element) if it's inside of
-  // a dependent element subtree of that ARIA owns element.
-  for (auto it = mARIAOwnsHash.Iter(); !it.Done(); it.Next()) {
-    Accessible* otherOwner = it.Key();
-    nsIContent* parentEl = otherOwner->GetContent();
-    while (parentEl && parentEl != aDependentEl) {
-      parentEl = parentEl->GetParent();
-    }
-
-    // The dependent element of this ARIA owns element contains some other ARIA
-    // owns element, make sure this ARIA owns element is not in a subtree of
-    // a dependent element of that other ARIA owns element. If not then
-    // continue a check recursively.
-    if (parentEl) {
-      nsTArray<nsIContent*>* childEls = it.UserData();
-      for (uint32_t idx = 0; idx < childEls->Length(); idx++) {
-        nsIContent* childEl = childEls->ElementAt(idx);
-        nsIContent* parentEl = aOwnerEl;
-        while (parentEl && parentEl != childEl) {
-          parentEl = parentEl->GetParent();
-        }
-        if (parentEl) {
-          return true;
-        }
-
-        if (IsInARIAOwnsLoop(aOwnerEl, childEl)) {
-          return true;
-        }
-      }
-    }
-  }
-
-  return false;
 }
 
 bool
@@ -2023,11 +1867,6 @@ DocAccessible::UpdateTreeOnRemoval(Accessible* aContainer, nsIContent* aChildNod
     }
   }
 
-  // We may not have an integral DOM tree to remove all aria-owns relations
-  // from the tree. Validate all relations after timeout to workaround that.
-  mNotificationController->ScheduleNotification<DocAccessible>
-    (this, &DocAccessible::ValidateARIAOwned);
-
   // Content insertion/removal is not cause of accessible tree change.
   if (updateFlags == eNoAccessible)
     return;
@@ -2112,21 +1951,242 @@ DocAccessible::UpdateTreeInternal(Accessible* aChild, bool aIsInsert,
 }
 
 void
+DocAccessible::RelocateARIAOwnedIfNeeded(nsIContent* aElement)
+{
+  if (!aElement->HasID())
+    return;
+
+  AttrRelProviderArray* list =
+    mDependentIDsHash.Get(nsDependentAtomString(aElement->GetID()));
+  if (list) {
+    for (uint32_t idx = 0; idx < list->Length(); idx++) {
+      if (list->ElementAt(idx)->mRelAttr == nsGkAtoms::aria_owns) {
+        Accessible* owner = GetAccessible(list->ElementAt(idx)->mContent);
+        if (owner) {
+          mNotificationController->ScheduleRelocation(owner);
+        }
+      }
+    }
+  }
+}
+
+void
 DocAccessible::ValidateARIAOwned()
 {
   for (auto it = mARIAOwnsHash.Iter(); !it.Done(); it.Next()) {
-    nsTArray<nsIContent*>* childEls = it.UserData();
-    for (uint32_t idx = 0; idx < childEls->Length(); idx++) {
-      nsIContent* childEl = childEls->ElementAt(idx);
-      Accessible* child = GetAccessible(childEl);
-      if (child && child->IsInDocument() && !child->GetFrame()) {
-        if (!child->Parent()) {
-          NS_ERROR("An element in the document doesn't have a parent?");
-          continue;
-        }
-        UpdateTreeOnRemoval(child->Parent(), childEl);
+    Accessible* owner = it.Key();
+    nsTArray<RefPtr<Accessible> >* children = it.UserData();
+
+    // Owner is about to die, put children back if applicable.
+    if (!owner->IsInDocument()) {
+      PutChildrenBack(children, 0);
+      it.Remove();
+      continue;
+    }
+
+    for (uint32_t idx = 0; idx < children->Length(); idx++) {
+      Accessible* child = children->ElementAt(idx);
+      if (!child->IsInDocument()) {
+        children->RemoveElementAt(idx);
+        idx--;
+        continue;
+      }
+
+      NS_ASSERTION(child->Parent(), "No parent for ARIA owned?");
+
+      // If DOM node doesn't have a frame anymore then shutdown its accessible.
+      if (child->Parent() && !child->GetFrame()) {
+        UpdateTreeOnRemoval(child->Parent(), child->GetContent());
+        children->RemoveElementAt(idx);
+        idx--;
+        continue;
+      }
+
+      NS_ASSERTION(child->Parent() == owner,
+                   "Illigally stolen ARIA owned child!");
+    }
+
+    if (children->Length() == 0) {
+      it.Remove();
+    }
+  }
+}
+
+void
+DocAccessible::DoARIAOwnsRelocation(Accessible* aOwner)
+{
+  nsTArray<RefPtr<Accessible> >* children = mARIAOwnsHash.LookupOrAdd(aOwner);
+
+  IDRefsIterator iter(this, aOwner->Elm(), nsGkAtoms::aria_owns);
+  Accessible* child = nullptr;
+
+  uint32_t arrayIdx = 0, insertIdx = aOwner->ChildCount() - children->Length();
+  while ((child = iter.Next())) {
+    // Same child on same position, no change.
+    if (child->Parent() == aOwner &&
+        child->IndexInParent() == static_cast<int32_t>(insertIdx)) {
+      NS_ASSERTION(child == children->ElementAt(arrayIdx), "Not in sync!");
+      insertIdx++; arrayIdx++;
+      continue;
+    }
+
+    NS_ASSERTION(children->SafeElementAt(arrayIdx) != child, "Already in place!");
+
+    nsTArray<RefPtr<Accessible> >::index_type idx = children->IndexOf(child);
+    if (idx < arrayIdx) {
+      continue; // ignore second entry of same ID
+    }
+
+    // A new child is found, check for loops.
+    if (child->Parent() != aOwner) {
+      Accessible* parent = aOwner;
+      while (parent && parent != child && !parent->IsDoc()) {
+        parent = parent->Parent();
+      }
+      // A referred child cannot be a parent of the owner.
+      if (parent == child) {
+        continue;
       }
     }
+
+    if (child->Parent() == aOwner) {
+      MoveChild(child, insertIdx - 1);
+      children->InsertElementAt(arrayIdx, child);
+      arrayIdx++;
+
+    } else if (SeizeChild(aOwner, child, insertIdx)) {
+      children->InsertElementAt(arrayIdx, child);
+      insertIdx++; arrayIdx++;
+    }
+  }
+
+  // Put back children that are not seized anymore.
+  PutChildrenBack(children, arrayIdx);
+  if (children->Length() == 0) {
+    mARIAOwnsHash.Remove(aOwner);
+  }
+}
+
+bool
+DocAccessible::SeizeChild(Accessible* aNewParent, Accessible* aChild,
+                          int32_t aIdxInParent)
+{
+  Accessible* oldParent = aChild->Parent();
+  NS_PRECONDITION(oldParent, "No parent?");
+
+  int32_t oldIdxInParent = aChild->IndexInParent();
+
+  RefPtr<AccReorderEvent> reorderEvent = new AccReorderEvent(oldParent);
+  RefPtr<AccMutationEvent> hideEvent =
+    new AccHideEvent(aChild, aChild->GetContent(), false);
+  reorderEvent->AddSubMutationEvent(hideEvent);
+
+  {
+    AutoTreeMutation mut(oldParent);
+    oldParent->RemoveChild(aChild);
+  }
+
+  bool isReinserted = false;
+  {
+    AutoTreeMutation mut(aNewParent);
+    isReinserted = aNewParent->InsertChildAt(aIdxInParent, aChild);
+  }
+
+  if (!isReinserted) {
+    AutoTreeMutation mut(oldParent);
+    oldParent->InsertChildAt(oldIdxInParent, aChild);
+    return false;
+  }
+
+  // The child may be stolen from other ARIA owns element.
+  if (aChild->IsRelocated()) {
+    nsTArray<RefPtr<Accessible> >* children = mARIAOwnsHash.Get(oldParent);
+    children->RemoveElement(aChild);
+  }
+
+  FireDelayedEvent(hideEvent);
+  MaybeNotifyOfValueChange(oldParent);
+  FireDelayedEvent(reorderEvent);
+
+  reorderEvent = new AccReorderEvent(aNewParent);
+  RefPtr<AccMutationEvent> showEvent =
+    new AccShowEvent(aChild, aChild->GetContent());
+  reorderEvent->AddSubMutationEvent(showEvent);
+
+  FireDelayedEvent(showEvent);
+  MaybeNotifyOfValueChange(aNewParent);
+  FireDelayedEvent(reorderEvent);
+
+  aChild->SetRelocated(true);
+  return true;
+}
+
+void
+DocAccessible::MoveChild(Accessible* aChild, int32_t aIdxInParent)
+{
+  NS_PRECONDITION(aChild->Parent(), "No parent?");
+
+  Accessible* parent = aChild->Parent();
+  RefPtr<AccReorderEvent> reorderEvent = new AccReorderEvent(parent);
+  RefPtr<AccMutationEvent> hideEvent =
+    new AccHideEvent(aChild, aChild->GetContent(), false);
+  reorderEvent->AddSubMutationEvent(hideEvent);
+
+  AutoTreeMutation mut(parent);
+  parent->RemoveChild(aChild);
+
+  parent->InsertChildAt(aIdxInParent, aChild);
+  aChild->SetRelocated(true);
+
+  FireDelayedEvent(hideEvent);
+
+  RefPtr<AccMutationEvent> showEvent =
+    new AccShowEvent(aChild, aChild->GetContent());
+  reorderEvent->AddSubMutationEvent(showEvent);
+  FireDelayedEvent(showEvent);
+
+  MaybeNotifyOfValueChange(parent);
+  FireDelayedEvent(reorderEvent);
+}
+
+void
+DocAccessible::PutChildrenBack(nsTArray<RefPtr<Accessible> >* aChildren,
+                               uint32_t aStartIdx)
+{
+  nsTArray<Accessible*> containers;
+  for (auto idx = aStartIdx; idx < aChildren->Length(); idx++) {
+    Accessible* child = aChildren->ElementAt(idx);
+
+    // If the child is in the tree then remove it from the owner.
+    if (child->IsInDocument()) {
+      Accessible* owner = child->Parent();
+      RefPtr<AccReorderEvent> reorderEvent = new AccReorderEvent(owner);
+      RefPtr<AccMutationEvent> hideEvent =
+        new AccHideEvent(child, child->GetContent(), false);
+      reorderEvent->AddSubMutationEvent(hideEvent);
+
+      {
+        AutoTreeMutation mut(owner);
+        owner->RemoveChild(child);
+        child->SetRelocated(false);
+      }
+
+      FireDelayedEvent(hideEvent);
+      MaybeNotifyOfValueChange(owner);
+      FireDelayedEvent(reorderEvent);
+    }
+
+    Accessible* container = GetContainerAccessible(child->GetContent());
+    if (container &&
+        containers.IndexOf(container) == nsTArray<Accessible*>::NoIndex) {
+      containers.AppendElement(container);
+    }
+  }
+
+  // And put it back where it belongs to.
+  aChildren->RemoveElementsAt(aStartIdx, aChildren->Length() - aStartIdx);
+  for (uint32_t idx = 0; idx < containers.Length(); idx++) {
+    UpdateTreeOnInsertion(containers[idx]);
   }
 }
 

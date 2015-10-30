@@ -910,13 +910,13 @@ public:
    * Get/set repositioned bit indicating that the accessible was moved in
    * the accessible tree, i.e. the accessible tree structure differs from DOM.
    */
-  bool IsRepositioned() const { return mStateFlags & eRepositioned; }
-  void SetRepositioned(bool aRepositioned)
+  bool IsRelocated() const { return mStateFlags & eRelocated; }
+  void SetRelocated(bool aRelocated)
   {
-    if (aRepositioned)
-      mStateFlags |= eRepositioned;
+    if (aRelocated)
+      mStateFlags |= eRelocated;
     else
-      mStateFlags &= ~eRepositioned;
+      mStateFlags &= ~eRelocated;
   }
 
   /**
@@ -1009,9 +1009,9 @@ protected:
     eSubtreeMutating = 1 << 6, // subtree is being mutated
     eIgnoreDOMUIEvent = 1 << 7, // don't process DOM UI events for a11y events
     eSurvivingInUpdate = 1 << 8, // parent drops children to recollect them
-    eRepositioned = 1 << 9, // accessible was moved in tree
+    eRelocated = 1 << 9, // accessible was moved in tree
 
-    eLastStateFlag = eRepositioned
+    eLastStateFlag = eRelocated
   };
 
   /**

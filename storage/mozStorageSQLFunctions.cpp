@@ -117,48 +117,6 @@ likeCompare(nsAString::const_iterator aPatternItr,
 }
 
 /**
- * This class manages a dynamic array.  It can represent an array of any 
- * reasonable size, but if the array is "N" elements or smaller, it will be
- * stored using fixed space inside the auto array itself.  If the auto array
- * is a local variable, this internal storage will be allocated cheaply on the
- * stack, similar to nsAutoString.  If a larger size is requested, the memory
- * will be dynamically allocated from the heap.  Since the destructor will
- * free any heap-allocated memory, client code doesn't need to care where the
- * memory came from.
- */
-template <class T, size_t N> class AutoArray
-{
-
-public:
-
-  explicit AutoArray(size_t size)
-  : mBuffer(size <= N ? mAutoBuffer : new T[size])
-  {
-  }
-
-  ~AutoArray()
-  { 
-    if (mBuffer != mAutoBuffer)
-      delete[] mBuffer; 
-  }
-
-  /**
-   * Return the pointer to the allocated array.
-   * @note If the array allocation failed, get() will return nullptr!
-   *
-   * @return the pointer to the allocated array
-   */
-  T *get() 
-  {
-    return mBuffer; 
-  }
-
-private:
-  T *mBuffer;           // Points to mAutoBuffer if we can use it, heap otherwise.
-  T mAutoBuffer[N];     // The internal memory buffer that we use if we can.
-};
-
-/**
  * Compute the Levenshtein Edit Distance between two strings.
  * 
  * @param aStringS
@@ -206,17 +164,13 @@ levenshteinDistance(const nsAString &aStringS,
     // left-to-right within each row.  The computation only requires that
     // we be able to see the current row and the previous one.
 
-    // Allocate memory for two rows.  Use AutoArray's to manage the memory
-    // so we don't have to explicitly free it, and so we can avoid the expense
-    // of memory allocations for relatively small strings.
-    AutoArray<int, nsAutoString::kDefaultStorageSize> row1(sLen + 1);
-    AutoArray<int, nsAutoString::kDefaultStorageSize> row2(sLen + 1);
+    // Allocate memory for two rows.
+    nsAutoTArray<int, nsAutoString::kDefaultStorageSize> row1;
+    nsAutoTArray<int, nsAutoString::kDefaultStorageSize> row2;
 
     // Declare the raw pointers that will actually be used to access the memory.
-    int *prevRow = row1.get();
-    NS_ENSURE_TRUE(prevRow, SQLITE_NOMEM);
-    int *currRow = row2.get();
-    NS_ENSURE_TRUE(currRow, SQLITE_NOMEM);
+    int *prevRow = row1.AppendElements(sLen + 1);
+    int *currRow = row2.AppendElements(sLen + 1);
 
     // Initialize the first row.
     for (uint32_t i = 0; i <= sLen; i++)

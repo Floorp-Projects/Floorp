@@ -322,23 +322,6 @@
   /* nsIInterceptedChannel */
   /* Generic error for non-specific failures during service worker interception */
   ERROR(NS_ERROR_INTERCEPTION_FAILED,                  FAILURE(100)),
-  /* Service worker intercepted with an opaque response while
-     dom.serviceWorkers.interception.opaque.enabled pref was set to false */
-  ERROR(NS_ERROR_OPAQUE_INTERCEPTION_DISABLED,         FAILURE(101)),
-  /* Attempt to return opaque response for anything but "non-cors" request */
-  ERROR(NS_ERROR_BAD_OPAQUE_INTERCEPTION_REQUEST_MODE, FAILURE(102)),
-  /* Service worker intercepted with an error response */
-  ERROR(NS_ERROR_INTERCEPTED_ERROR_RESPONSE,           FAILURE(103)),
-  /* Service worker intercepted with a response with bodyUsed set to true */
-  ERROR(NS_ERROR_INTERCEPTED_USED_RESPONSE,            FAILURE(104)),
-  /* Service worker intercepted a client request with an opaque response */
-  ERROR(NS_ERROR_CLIENT_REQUEST_OPAQUE_INTERCEPTION,   FAILURE(105)),
-  /* Service worker intercepted a non-navigation with an opaque redirect */
-  ERROR(NS_ERROR_BAD_OPAQUE_REDIRECT_INTERCEPTION,     FAILURE(106)),
-  /* Service worker intentionally canceled load via preventDefault(). */
-  ERROR(NS_ERROR_INTERCEPTION_CANCELED,                FAILURE(107)),
-  /* Service worker passed a rejected promise to respondwith. */
-  ERROR(NS_ERROR_REJECTED_RESPONSE_INTERCEPTION,       FAILURE(108)),
 #undef MODULE
 
 

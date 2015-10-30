@@ -194,48 +194,6 @@ void tracefunc (void *aClosure, const char *aStmt)
                                      aStmt));
 }
 
-struct FFEArguments
-{
-    nsISupports *target;
-    bool found;
-};
-PLDHashOperator
-findFunctionEnumerator(const nsACString &aKey,
-                       Connection::FunctionInfo aData,
-                       void *aUserArg)
-{
-  FFEArguments *args = static_cast<FFEArguments *>(aUserArg);
-  if (aData.function == args->target) {
-    args->found = true;
-    return PL_DHASH_STOP;
-  }
-  return PL_DHASH_NEXT;
-}
-
-PLDHashOperator
-copyFunctionEnumerator(const nsACString &aKey,
-                       Connection::FunctionInfo aData,
-                       void *aUserArg)
-{
-  NS_PRECONDITION(aData.type == Connection::FunctionInfo::SIMPLE ||
-                  aData.type == Connection::FunctionInfo::AGGREGATE,
-                  "Invalid function type!");
-
-  Connection *connection = static_cast<Connection *>(aUserArg);
-  if (aData.type == Connection::FunctionInfo::SIMPLE) {
-    mozIStorageFunction *function =
-      static_cast<mozIStorageFunction *>(aData.function.get());
-    (void)connection->CreateFunction(aKey, aData.numArgs, function);
-  }
-  else {
-    mozIStorageAggregateFunction *function =
-      static_cast<mozIStorageAggregateFunction *>(aData.function.get());
-    (void)connection->CreateAggregateFunction(aKey, aData.numArgs, function);
-  }
-
-  return PL_DHASH_NEXT;
-}
-
 void
 basicFunctionHelper(sqlite3_context *aCtx,
                     int aArgc,
@@ -864,9 +822,13 @@ bool
 Connection::findFunctionByInstance(nsISupports *aInstance)
 {
   sharedDBMutex.assertCurrentThreadOwns();
-  FFEArguments args = { aInstance, false };
-  (void)mFunctions.EnumerateRead(findFunctionEnumerator, &args);
-  return args.found;
+
+  for (auto iter = mFunctions.Iter(); !iter.Done(); iter.Next()) {
+    if (iter.UserData().function == aInstance) {
+      return true;
+    }
+  }
+  return false;
 }
 
 /* static */ int
@@ -1352,7 +1314,31 @@ Connection::initializeClone(Connection* aClone, bool aReadOnly)
 
   // Copy any functions that have been added to this connection.
   SQLiteMutexAutoLock lockedScope(sharedDBMutex);
-  (void)mFunctions.EnumerateRead(copyFunctionEnumerator, aClone);
+  for (auto iter = mFunctions.Iter(); !iter.Done(); iter.Next()) {
+    const nsACString &key = iter.Key();
+    Connection::FunctionInfo data = iter.UserData();
+
+    MOZ_ASSERT(data.type == Connection::FunctionInfo::SIMPLE ||
+               data.type == Connection::FunctionInfo::AGGREGATE,
+               "Invalid function type!");
+
+    if (data.type == Connection::FunctionInfo::SIMPLE) {
+      mozIStorageFunction *function =
+        static_cast<mozIStorageFunction *>(data.function.get());
+      rv = aClone->CreateFunction(key, data.numArgs, function);
+      if (NS_FAILED(rv)) {
+        NS_WARNING("Failed to copy function to cloned connection");
+      }
+
+    } else {
+      mozIStorageAggregateFunction *function =
+        static_cast<mozIStorageAggregateFunction *>(data.function.get());
+      rv = aClone->CreateAggregateFunction(key, data.numArgs, function);
+      if (NS_FAILED(rv)) {
+        NS_WARNING("Failed to copy aggregate function to cloned connection");
+      }
+    }
+  }
 
   return NS_OK;
 }

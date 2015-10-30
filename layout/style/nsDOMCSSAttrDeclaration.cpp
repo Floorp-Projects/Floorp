@@ -194,7 +194,8 @@ nsDOMCSSAttributeDeclaration::SetPropertyValue(const nsCSSProperty aPropID,
       aPropID == eCSSProperty_left || aPropID == eCSSProperty_top ||
       aPropID == eCSSProperty_right || aPropID == eCSSProperty_bottom ||
       aPropID == eCSSProperty_margin_left || aPropID == eCSSProperty_margin_top ||
-      aPropID == eCSSProperty_margin_right || aPropID == eCSSProperty_margin_bottom) {
+      aPropID == eCSSProperty_margin_right || aPropID == eCSSProperty_margin_bottom ||
+      aPropID == eCSSProperty_background_position) {
     nsIFrame* frame = mElement->GetPrimaryFrame();
     if (frame) {
       ActiveLayerTracker::NotifyInlineStyleRuleModified(frame, aPropID);
