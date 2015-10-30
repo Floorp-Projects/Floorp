@@ -1,0 +1,15 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test of browser element audio channel method, notifyChannel</title>
+</head>
+<body>
+<script type="application/javascript;version=1.8">
+  "use strict";
+  navigator.mozSetMessageHandler('audiochannel-interruption-begin',
+    function (e) {
+      alert("audiochannel-interruption-begin");
+  });
+</script>
+</body>
+</html>

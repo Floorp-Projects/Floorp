@@ -136,7 +136,9 @@ this.SystemMessagePermissionsTable = {
   },
   "first-run-with-sim": {
     "settings": ["read", "write"]
-  }
+  },
+  "audiochannel-interruption-begin" : {},
+  "audiochannel-interruption-ended" : {}
 };
 
 
