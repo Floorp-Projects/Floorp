@@ -2172,6 +2172,7 @@ nsGonkCameraControl::LoadRecorderProfiles()
 
     nsTArray<RecorderProfile>::size_type bestIndexMatch = 0;
     int bestAreaMatch = 0;
+    uint32_t bestPriorityMatch = UINT32_MAX;
 
     // Limit profiles to those video sizes supported by the camera hardware...
     for (nsTArray<RecorderProfile>::size_type i = 0; i < profiles.Length(); ++i) {
@@ -2186,17 +2187,22 @@ nsGonkCameraControl::LoadRecorderProfiles()
         if (static_cast<uint32_t>(width) == sizes[n].width &&
             static_cast<uint32_t>(height) == sizes[n].height) {
           mRecorderProfiles.Put(profiles[i]->GetName(), profiles[i]);
+
+          // "Best" or default profile is the one with the lowest priority
+          // value and largest area.
           int area = width * height;
-          if (area > bestAreaMatch) {
+          uint32_t priority = profiles[i]->GetPriority();
+          if (bestPriorityMatch > priority ||
+              (bestPriorityMatch == priority && area > bestAreaMatch)) {
             bestIndexMatch = i;
             bestAreaMatch = area;
+            bestPriorityMatch = priority;
           }
           break;
         }
       }
     }
 
-    // Default profile is the one with the largest area.
     if (bestAreaMatch > 0) {
       nsAutoString name;
       name.AssignASCII("default");

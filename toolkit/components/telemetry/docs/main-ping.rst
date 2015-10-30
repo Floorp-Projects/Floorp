@@ -41,6 +41,9 @@ Structure::
         subsessionStartDate: <ISO date>, // daily precision, ISO date in local time
         sessionLength: <number>, // the session length until now in seconds, monotonic
         subsessionLength: <number>, // the subsession length in seconds, monotonic
+
+        flashVersion: <string>, // obsolete, use ``environment.addons.activePlugins``
+        addons: <string>, // obsolete, use ``environment.addons``
       },
 
       childPayloads: {...}, // only present with e10s; a reduced payload from content processes, null on failure
@@ -50,7 +53,7 @@ Structure::
       histograms: {...},
       keyedHistograms: {...},
       chromeHangs: {...},
-      threadHangStats: {...},
+      threadHangStats: [...],
       log: [...],
       webrtc: {...},
       fileIOReports: {...},
@@ -79,3 +82,88 @@ The length of this subsession in seconds.
 This uses a monotonic clock, so this may mismatch with other measurements that are not monotonic (e.g. based on Date.now()).
 
 If ``sessionLength`` is ``-1``, the monotonic clock is not working.
+
+threadHangStats
+~~~~~~~~~~~~~~~
+Contains the statistics about the hangs in main and background threads. Note that hangs in this section capture the [C++ pseudostack](https://developer.mozilla.org/en-US/docs/Mozilla/Performance/Profiling_with_the_Built-in_Profiler#Native_stack_vs._Pseudo_stack) and an incomplete JS stack, which is not 100% precise.
+
+To avoid submitting overly large payloads, some limits are applied:
+
+* Identical, adjacent "(chrome script)" or "(content script)" stack entries are collapsed together. If a stack is reduced, the "(reduced stack)" frame marker is added as the oldest frame.
+* The depth of the reported stacks is limited to 11 entries. This value represents the 95th percentile of the thread hangs stack depths reported by Telemetry.
+
+Structure::
+
+    "threadHangStats" : [
+      {
+        "name" : "Gecko",
+        "activity" : {...}, // a time histogram of all task run times
+        "hangs" : [
+          {
+            "stack" : [
+              "Startup::XRE_Main",
+              "Timer::Fire",
+              "(content script)",
+              "IPDL::PPluginScriptableObject::SendGetChildProperty",
+              ... up to 11 frames ...
+            ],
+            "nativeStack": [...], // optionally available
+            "histogram" : {...}, // the time histogram of the hang times
+            "annotations" : [
+              {
+                "pluginName" : "Shockwave Flash",
+                "pluginVersion" : "18.0.0.209",
+                "pluginIsWhitelistedForShumway" : "false"
+              },
+              ... other annotations ...
+            ]
+          },
+        ],
+      },
+      ... other threads ...
+     ]
+
+chromeHangs
+~~~~~~~~~~~
+Contains the statistics about the hangs happening exclusively on the main thread of the parent process. Precise C++ stacks are reported. This is only available on Nightly Release on Windows, when building using "--enable-profiling" switch.
+
+Some limits are applied:
+
+* Reported chrome hang stacks are limited in depth to 50 entries.
+* The maximum number of reported stacks is 50.
+
+Structure::
+
+    "chromeHangs" : {
+      "memoryMap" : [
+        ["wgdi32.pdb", "08A541B5942242BDB4AEABD8C87E4CFF2"],
+        ["igd10iumd32.pdb", "D36DEBF2E78149B5BE1856B772F1C3991"],
+        ... other entries in the format ["module name", "breakpad identifier"] ...
+       ],
+      "stacks" : [
+        [
+          [
+            0, // the module index or -1 for invalid module indices
+            190649 // the offset of this program counter in its module or an absolute pc
+          ],
+          [1, 2540075],
+          ... other frames, up to 50 ...
+         ],
+         ... other stacks, up to 50 ...
+      ],
+      "durations" : [8, ...], // the hang durations (in seconds)
+      "systemUptime" : [692, ...], // the system uptime (in minutes) at the time of the hang
+      "firefoxUptime" : [672, ...], // the Firefox uptime (in minutes) at the time of the hang
+      "annotations" : [
+        [
+          [0, ...], // the indices of the related hangs
+          {
+            "pluginName" : "Shockwave Flash",
+            "pluginVersion" : "18.0.0.209",
+            "pluginIsWhitelistedForShumway" : "false",
+            ... other annotations as key:value pairs ...
+          }
+        ],
+        ...
+      ]
+    },
