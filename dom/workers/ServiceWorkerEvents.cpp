@@ -6,6 +6,7 @@
 
 #include "ServiceWorkerEvents.h"
 
+#include "nsIConsoleReportCollector.h"
 #include "nsIHttpChannelInternal.h"
 #include "nsINetworkInterceptController.h"
 #include "nsIOutputStream.h"
@@ -219,10 +220,14 @@ public:
   void RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override;
 
   void CancelRequest(nsresult aStatus);
+
+  void AsyncLog(const nsACString& aMessageName);
+
 private:
   ~RespondWithHandler()
   {
     if (!mRequestWasHandled) {
+      AsyncLog(NS_LITERAL_CSTRING("InterceptionFailed"));
       CancelRequest(NS_ERROR_INTERCEPTION_FAILED);
     }
   }
@@ -270,26 +275,28 @@ void RespondWithCopyComplete(void* aClosure, nsresult aStatus)
 class MOZ_STACK_CLASS AutoCancel
 {
   RefPtr<RespondWithHandler> mOwner;
-  nsresult mStatus;
+  nsCString mMessageName;
 
 public:
   explicit AutoCancel(RespondWithHandler* aOwner)
     : mOwner(aOwner)
-    , mStatus(NS_ERROR_INTERCEPTION_FAILED)
+    , mMessageName(NS_LITERAL_CSTRING("InterceptionFailed"))
   {
   }
 
   ~AutoCancel()
   {
     if (mOwner) {
-      mOwner->CancelRequest(mStatus);
+      mOwner->AsyncLog(mMessageName);
+      mOwner->CancelRequest(NS_ERROR_INTERCEPTION_FAILED);
     }
   }
 
-  void SetCancelStatus(nsresult aStatus)
+  void SetCancelMessageName(const nsACString& aMessageName)
   {
-    MOZ_ASSERT(NS_FAILED(aStatus));
-    mStatus = aStatus;
+    MOZ_ASSERT(mOwner);
+    MOZ_ASSERT(mMessageName.EqualsLiteral("InterceptionFailed"));
+    mMessageName = aMessageName;
   }
 
   void Reset()
@@ -324,7 +331,8 @@ RespondWithHandler::ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValu
   // security implications are not a complete disaster.
   if (response->Type() == ResponseType::Opaque &&
       !worker->OpaqueInterceptionEnabled()) {
-    autoCancel.SetCancelStatus(NS_ERROR_OPAQUE_INTERCEPTION_DISABLED);
+    autoCancel.SetCancelMessageName(
+      NS_LITERAL_CSTRING("OpaqueInterceptionDisabled"));
     return;
   }
 
@@ -336,24 +344,28 @@ RespondWithHandler::ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValu
   //      "opaqueredirect".
 
   if (response->Type() == ResponseType::Error) {
-    autoCancel.SetCancelStatus(NS_ERROR_INTERCEPTED_ERROR_RESPONSE);
+    autoCancel.SetCancelMessageName(
+      NS_LITERAL_CSTRING("InterceptedErrorResponse"));
     return;
   }
 
   MOZ_ASSERT_IF(mIsClientRequest, mRequestMode == RequestMode::Same_origin);
 
   if (response->Type() == ResponseType::Opaque && mRequestMode != RequestMode::No_cors) {
-    autoCancel.SetCancelStatus(NS_ERROR_BAD_OPAQUE_INTERCEPTION_REQUEST_MODE);
+    autoCancel.SetCancelMessageName(
+      NS_LITERAL_CSTRING("BadOpaqueInterceptionRequestMode"));
     return;
   }
 
   if (!mIsNavigationRequest && response->Type() == ResponseType::Opaqueredirect) {
-    autoCancel.SetCancelStatus(NS_ERROR_BAD_OPAQUE_REDIRECT_INTERCEPTION);
+    autoCancel.SetCancelMessageName(
+      NS_LITERAL_CSTRING("BadOpaqueRedirectInterception"));
     return;
   }
 
   if (NS_WARN_IF(response->BodyUsed())) {
-    autoCancel.SetCancelStatus(NS_ERROR_INTERCEPTED_USED_RESPONSE);
+    autoCancel.SetCancelMessageName(
+      NS_LITERAL_CSTRING("InterceptedUsedResponse"));
     return;
   }
 
@@ -369,7 +381,6 @@ RespondWithHandler::ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValu
   if (response->Type() == ResponseType::Opaque) {
     ir->GetUnfilteredUrl(responseURL);
     if (NS_WARN_IF(responseURL.IsEmpty())) {
-      autoCancel.SetCancelStatus(NS_ERROR_INTERCEPTION_FAILED);
       return;
     }
   }
@@ -414,7 +425,8 @@ RespondWithHandler::ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValu
 void
 RespondWithHandler::RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue)
 {
-  CancelRequest(NS_ERROR_REJECTED_RESPONSE_INTERCEPTION);
+  AsyncLog(NS_LITERAL_CSTRING("InterceptionRejectedResponse"));
+  CancelRequest(NS_ERROR_INTERCEPTION_FAILED);
 }
 
 void
@@ -424,6 +436,25 @@ RespondWithHandler::CancelRequest(nsresult aStatus)
     new CancelChannelRunnable(mInterceptedChannel, aStatus);
   NS_DispatchToMainThread(runnable);
   mRequestWasHandled = true;
+}
+
+void
+RespondWithHandler::AsyncLog(const nsACString& aMessageName)
+{
+  // TODO: pass request URL, line number
+  // TODO: pass rejection value
+  nsCOMPtr<nsIChannel> inner;
+  mInterceptedChannel->GetChannel(getter_AddRefs(inner));
+  nsCOMPtr<nsIConsoleReportCollector> reporter = do_QueryInterface(inner);
+  if (reporter) {
+    reporter->AddConsoleReport(nsIScriptError::errorFlag,
+                               NS_LITERAL_CSTRING("Service Worker Interception"),
+                               nsContentUtils::eDOM_PROPERTIES,
+                               mScriptSpec,
+                               0, 0,
+                               aMessageName,
+                               nsTArray<nsString>());
+  }
 }
 
 } // namespace
