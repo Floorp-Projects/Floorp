@@ -36,7 +36,7 @@ public:
     Reset();
   }
 
-  inline size_t GetSize() {
+  inline int32_t GetSize() {
     ReentrantMonitorAutoEnter mon(mReentrantMonitor);
     return nsDeque::GetSize();
   }
@@ -126,7 +126,7 @@ public:
     ReentrantMonitorAutoEnter mon(mReentrantMonitor);
     if (!GetSize())
       return;
-    size_t i;
+    int32_t i;
     for (i = GetSize() - 1; i > 0; --i) {
       T* v = static_cast<T*>(ObjectAt(i));
       if (v->GetEndTime() < aTime)
@@ -142,7 +142,7 @@ public:
 
   void GetFirstElements(uint32_t aMaxElements, nsTArray<RefPtr<T>>* aResult) {
     ReentrantMonitorAutoEnter mon(mReentrantMonitor);
-    for (size_t i = 0; i < (size_t)aMaxElements && i < GetSize(); ++i) {
+    for (int32_t i = 0; i < (int32_t)aMaxElements && i < GetSize(); ++i) {
       *aResult->AppendElement() = static_cast<T*>(ObjectAt(i));
     }
   }
@@ -150,7 +150,7 @@ public:
   uint32_t FrameCount() {
     ReentrantMonitorAutoEnter mon(mReentrantMonitor);
     uint32_t frames = 0;
-    for (size_t i = 0; i < GetSize(); ++i) {
+    for (int32_t i = 0; i < GetSize(); ++i) {
       T* v = static_cast<T*>(ObjectAt(i));
       frames += v->mFrames;
     }
