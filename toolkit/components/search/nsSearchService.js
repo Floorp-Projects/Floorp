@@ -1323,7 +1323,8 @@ function Engine(aLocation, aIsReadOnly) {
      return;
     }
 
-    // Build the id used for the metadata storage.
+    // Build the id used for the legacy metadata storage, so that we
+    // can do a one-time import of data from old profiles.
     if (this._isDefault) {
       this._id = "[app]/" + this._shortName + ".xml";
     }
@@ -1700,7 +1701,6 @@ Engine.prototype = {
     if (!aEngine._shortName)
       aEngine._shortName = sanitizeName(aEngine.name);
 
-    aEngine._id = "[profile]/" + aEngine._shortName + ".xml";
     aEngine._loadPath = aEngine.getAnonymizedLoadPath(null, aEngine._uri);
 
     if (engineToUpdate) {
@@ -1885,7 +1885,6 @@ Engine.prototype = {
     this._urls.push(new EngineURL(URLTYPE_SEARCH_HTML, aMethod, aTemplate));
 
     this._name = aName;
-    this._id = "[profile]/" + this._shortName + ".xml";
     this.alias = aAlias;
     this._description = aDescription;
     this._setIcon(aIconURL, true);
@@ -2052,7 +2051,6 @@ Engine.prototype = {
    * Init from a JSON record.
    **/
   _initWithJSON: function SRCH_ENG__initWithJSON(aJson) {
-    this._id = aJson._id;
     this._name = aJson._name;
     this._shortName = aJson._shortName;
     this._loadPath = aJson._loadPath;
@@ -2089,7 +2087,6 @@ Engine.prototype = {
    **/
   toJSON: function SRCH_ENG_toJSON() {
     var json = {
-      _id: this._id,
       _name: this._name,
       _shortName: this._shortName,
       _loadPath: this._loadPath,
@@ -2688,12 +2685,7 @@ SearchService.prototype = {
     this._initStarted = true;
     migrateRegionPrefs();
 
-    let cache = {};
-    let cacheFile = getDir(NS_APP_USER_PROFILE_50_DIR);
-    cacheFile.append("search.json");
-    if (cacheFile.exists())
-      cache = this._readCacheFile(cacheFile);
-
+    let cache = this._readCacheFile();
     if (cache.metaData)
       this._metaData = cache.metaData;
 
@@ -2728,11 +2720,10 @@ SearchService.prototype = {
 
       // See if we have a cache file so we don't have to parse a bunch of XML.
       let cache = {};
-      let cacheFilePath = OS.Path.join(OS.Constants.Path.profileDir, "search.json");
       // Not using checkForSyncCompletion here because we want to ensure we
       // fetch the country code and geo specific defaults asynchronously even
       // if a sync init has been forced.
-      cache = yield this._asyncReadCacheFile(cacheFilePath);
+      cache = yield this._asyncReadCacheFile();
 
       if (!gInitialized && cache.metaData)
         this._metaData = cache.metaData;
@@ -3114,8 +3105,7 @@ SearchService.prototype = {
     Task.spawn(function* () {
       try {
         let cache = {};
-        let cacheFilePath = OS.Path.join(OS.Constants.Path.profileDir, "search.json");
-        cache = yield this._asyncReadCacheFile(cacheFilePath);
+        cache = yield this._asyncReadCacheFile();
         if (!gInitialized && cache.metaData)
           this._metaData = cache.metaData;
 
@@ -3136,39 +3126,95 @@ SearchService.prototype = {
     }.bind(this));
   },
 
-  _readCacheFile: function SRCH_SVC__readCacheFile(aFile) {
-    let stream = Cc["@mozilla.org/network/file-input-stream;1"].
-                 createInstance(Ci.nsIFileInputStream);
+  _readCacheFile: function SRCH_SVC__readCacheFile() {
+    let cacheFile = getDir(NS_APP_USER_PROFILE_50_DIR);
+    cacheFile.append("search.json");
+
     let json = Cc["@mozilla.org/dom/json;1"].createInstance(Ci.nsIJSON);
 
+    let stream;
     try {
-      stream.init(aFile, MODE_RDONLY, FileUtils.PERMS_FILE, 0);
+      stream = Cc["@mozilla.org/network/file-input-stream;1"].
+                 createInstance(Ci.nsIFileInputStream);
+      stream.init(cacheFile, MODE_RDONLY, FileUtils.PERMS_FILE, 0);
       return json.decodeFromStream(stream, stream.available());
     } catch (ex) {
       LOG("_readCacheFile: Error reading cache file: " + ex);
     } finally {
       stream.close();
     }
-    return false;
+
+    try {
+      cacheFile.leafName = "search-metadata.json";
+      let stream = Cc["@mozilla.org/network/file-input-stream;1"].
+                   createInstance(Ci.nsIFileInputStream);
+      stream.init(cacheFile, MODE_RDONLY, FileUtils.PERMS_FILE, 0);
+      let metadata = json.decodeFromStream(stream, stream.available());
+      let json;
+      if ("[global]" in metadata) {
+        LOG("_readCacheFile: migrating metadata from search-metadata.json");
+        let data = metadata["[global]"];
+        json.metaData = {};
+        let fields = ["searchDefault", "searchDefaultHash", "searchDefaultExpir",
+                      "current", "hash",
+                      "visibleDefaultEngines", "visibleDefaultEnginesHash"];
+        for (let field of fields) {
+          let name = field.toLowerCase();
+          if (name in data)
+            json.metaData[field] = data[name];
+        }
+      }
+      delete metadata["[global]"];
+      json._oldMetadata = metadata;
+
+      return json;
+    } catch(ex) {
+      LOG("_readCacheFile: failed to read old metadata");
+      return {};
+    } finally {
+      stream.close();
+    }
   },
 
   /**
    * Read from a given cache file asynchronously.
    *
-   * @param aPath the file path.
-   *
    * @returns {Promise} A promise, resolved successfully if retrieveing data
    * succeeds.
    */
-  _asyncReadCacheFile: function SRCH_SVC__asyncReadCacheFile(aPath) {
+  _asyncReadCacheFile: function SRCH_SVC__asyncReadCacheFile() {
+    let cacheFilePath = OS.Path.join(OS.Constants.Path.profileDir, "search.json");
+
     return Task.spawn(function() {
       let json;
       try {
-        let bytes = yield OS.File.read(aPath);
+        let bytes = yield OS.File.read(cacheFilePath);
         json = JSON.parse(new TextDecoder().decode(bytes));
       } catch (ex) {
         LOG("_asyncReadCacheFile: Error reading cache file: " + ex);
         json = {};
+
+        let oldMetadata =
+          OS.Path.join(OS.Constants.Path.profileDir, "search-metadata.json");
+        try {
+          let bytes = yield OS.File.read(oldMetadata);
+          let metadata = JSON.parse(new TextDecoder().decode(bytes));
+          if ("[global]" in metadata) {
+            LOG("_asyncReadCacheFile: migrating metadata from search-metadata.json");
+            let data = metadata["[global]"];
+            json.metaData = {};
+            let fields = ["searchDefault", "searchDefaultHash", "searchDefaultExpir",
+                          "current", "hash",
+                          "visibleDefaultEngines", "visibleDefaultEnginesHash"];
+            for (let field of fields) {
+              let name = field.toLowerCase();
+              if (name in data)
+                json.metaData[field] = data[name];
+            }
+          }
+          delete metadata["[global]"];
+          json._oldMetadata = metadata;
+        } catch (ex) {}
       }
       throw new Task.Result(json);
     });
@@ -3242,6 +3288,17 @@ SearchService.prototype = {
   },
 
   _loadEnginesMetadataFromCache: function SRCH_SVC__loadEnginesMetadataFromCache(cache) {
+    if (cache._oldMetadata) {
+      // If we have old metadata in the cache, we had no valid cache
+      // file and read data from search-metadata.json.
+      for (let name in this._engines) {
+        let engine = this._engines[name];
+        if (engine._id && cache._oldMetadata[engine._id])
+          engine._metaData = cache._oldMetadata[engine._id];
+      }
+      return;
+    }
+
     if (!cache.directories)
       return;
 
