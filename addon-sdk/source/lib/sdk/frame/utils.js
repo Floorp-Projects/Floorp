@@ -57,25 +57,23 @@ function create(target, options) {
   frame.setAttribute('type', options.type || 'content');
   frame.setAttribute('src', options.uri || 'about:blank');
 
+  // Must set the remote attribute before attaching the frame to the document
+  if (remote && isXUL) {
+    // We remove XBL binding to avoid execution of code that is not going to
+    // work because browser has no docShell attribute in remote mode
+    // (for example)
+    frame.setAttribute('style', '-moz-binding: none;');
+    frame.setAttribute('remote', 'true');
+  }
+
   target.appendChild(frame);
 
   // Load in separate process if `options.remote` is `true`.
   // http://mxr.mozilla.org/mozilla-central/source/content/base/src/nsFrameLoader.cpp#1347
-  if (remote) {
-    if (isXUL) {
-      // We remove XBL binding to avoid execution of code that is not going to
-      // work because browser has no docShell attribute in remote mode
-      // (for example)
-      frame.setAttribute('style', '-moz-binding: none;');
-      frame.setAttribute('remote', 'true');
-    }
-    else {
-      frame.QueryInterface(Ci.nsIMozBrowserFrame);
-      frame.createRemoteFrameLoader(null);
-    }
+  if (remote && !isXUL) {
+    frame.QueryInterface(Ci.nsIMozBrowserFrame);
+    frame.createRemoteFrameLoader(null);
   }
-
-
 
   // If browser is remote it won't have a `docShell`.
   if (!remote) {
@@ -83,12 +81,7 @@ function create(target, options) {
     docShell.allowAuth = options.allowAuth || false;
     docShell.allowJavascript = options.allowJavascript || false;
     docShell.allowPlugins = options.allowPlugins || false;
-
-    // Control whether the document can move/resize the window. Requires
-    // recently added platform capability, so we test to avoid exceptions
-    // in cases where capability is not present yet.
-    if ("allowWindowControl" in docShell && "allowWindowControl" in options)
-      docShell.allowWindowControl = !!options.allowWindowControl;
+    docShell.allowWindowControl = options.allowWindowControl || false;
   }
 
   return frame;

@@ -102,11 +102,12 @@ idea {
         // Exclude them.  Convention is that object directories start with obj.
         // IntelliJ is clever and will not exclude the parts of the object
         // directory that are referenced, if there are any.
+        // In practice, indexing the entirety of the tree is taking too long.
         def topsrcdirURI = file(topsrcdir).toURI()
         excludeDirs += files(file(topsrcdir)
             .listFiles({it.isDirectory()} as FileFilter)
             .collect({topsrcdirURI.relativize(it.toURI()).toString()}) // Relative paths.
-            .findAll({it.startsWith('obj')}))
+            .findAll({it.startsWith('obj') && !it.startsWith('.') && !it.equals('mobile/')}))
 
         // If topobjdir is below topsrcdir, hide only some portions of that tree.
         def topobjdirURI = file(topobjdir).toURI()

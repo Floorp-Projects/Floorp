@@ -33,7 +33,7 @@ var ArrayRep = React.createClass({
     var items;
 
     if (mode == "tiny") {
-      items = object.length;
+      items = DOM.span({className: "length"}, object.length);
     } else {
       var max = (mode == "short") ? 3 : 300;
       items = this.arrayIterator(object, max);

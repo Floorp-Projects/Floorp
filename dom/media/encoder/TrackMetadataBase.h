@@ -22,6 +22,7 @@ public:
     METADATA_AVC,
     METADATA_AAC,
     METADATA_AMR,
+    METADATA_EVRC,
     METADATA_UNKNOWN  // Metadata Kind not set
   };
   // Return the specific metadata kind

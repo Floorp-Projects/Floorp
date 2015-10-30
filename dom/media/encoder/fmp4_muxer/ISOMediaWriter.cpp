@@ -104,7 +104,9 @@ ISOMediaWriter::WriteEncodedTrack(const EncodedFrameContainer& aData,
     if (type == EncodedFrame::AAC_AUDIO_FRAME ||
         type == EncodedFrame::AAC_CSD ||
         type == EncodedFrame::AMR_AUDIO_FRAME ||
-        type == EncodedFrame::AMR_AUDIO_CSD) {
+        type == EncodedFrame::AMR_AUDIO_CSD ||
+        type == EncodedFrame::EVRC_AUDIO_FRAME ||
+        type == EncodedFrame::EVRC_AUDIO_CSD) {
       frag = mAudioFragmentBuffer;
     } else if (type == EncodedFrame::AVC_I_FRAME ||
                type == EncodedFrame::AVC_P_FRAME ||
@@ -212,7 +214,8 @@ ISOMediaWriter::SetMetadata(TrackMetadataBase* aMetadata)
   PROFILER_LABEL("ISOMediaWriter", "SetMetadata",
     js::ProfileEntry::Category::OTHER);
   if (aMetadata->GetKind() == TrackMetadataBase::METADATA_AAC ||
-      aMetadata->GetKind() == TrackMetadataBase::METADATA_AMR) {
+      aMetadata->GetKind() == TrackMetadataBase::METADATA_AMR ||
+      aMetadata->GetKind() == TrackMetadataBase::METADATA_EVRC) {
     mControl->SetMetadata(aMetadata);
     mAudioFragmentBuffer = new FragmentBuffer(Audio_Track, FRAG_DURATION);
     mControl->SetFragment(mAudioFragmentBuffer);

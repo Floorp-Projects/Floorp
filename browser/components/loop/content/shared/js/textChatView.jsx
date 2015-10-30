@@ -106,6 +106,7 @@ loop.shared.views.chat = (function(mozL10n) {
     propTypes: {
       dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
       messageList: React.PropTypes.arrayOf(React.PropTypes.object).isRequired,
+      showInitialContext: React.PropTypes.bool.isRequired,
       useDesktopPaths: React.PropTypes.bool.isRequired
     },
 
@@ -174,6 +175,7 @@ loop.shared.views.chat = (function(mozL10n) {
             {
               this.props.messageList.map(function(entry, i) {
                 if (entry.type === CHAT_MESSAGE_TYPES.SPECIAL) {
+                  if (!this.props.showInitialContext) { return null; }
                   switch (entry.contentType) {
                     case CHAT_CONTENT_TYPES.ROOM_NAME:
                       return (
@@ -188,7 +190,6 @@ loop.shared.views.chat = (function(mozL10n) {
                             allowClick={true}
                             description={entry.message}
                             dispatcher={this.props.dispatcher}
-                            showContextTitle={true}
                             thumbnail={entry.extraData.thumbnail}
                             url={entry.extraData.location}
                             useDesktopPaths={this.props.useDesktopPaths} />
@@ -357,8 +358,8 @@ loop.shared.views.chat = (function(mozL10n) {
    * as a field for entering new messages.
    *
    * @property {loop.Dispatcher} dispatcher
-   * @property {Boolean}         showRoomName Set to true to show the room name
-   *                                          special list item.
+   * @property {Boolean}         showInitialContext Set to true to show the room name
+   *                                          and initial context tile for linker clicker's special list items
    */
   var TextChatView = React.createClass({
     mixins: [
@@ -368,7 +369,7 @@ loop.shared.views.chat = (function(mozL10n) {
 
     propTypes: {
       dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
-      showRoomName: React.PropTypes.bool.isRequired,
+      showInitialContext: React.PropTypes.bool.isRequired,
       useDesktopPaths: React.PropTypes.bool.isRequired
     },
 
@@ -377,18 +378,15 @@ loop.shared.views.chat = (function(mozL10n) {
     },
 
     render: function() {
-      var messageList;
-      var showingRoomName = false;
+      var messageList = this.state.messageList;
 
-      if (this.props.showRoomName) {
-        messageList = this.state.messageList;
-        showingRoomName = this.state.messageList.some(function(item) {
-          return item.contentType === CHAT_CONTENT_TYPES.ROOM_NAME;
-        });
-      } else {
-        messageList = this.state.messageList.filter(function(item) {
+      // Filter out items not displayed when showing initial context.
+      // We do this here so that we can set the classes correctly on the view.
+      if (!this.props.showInitialContext) {
+        messageList = messageList.filter(function(item) {
           return item.type !== CHAT_MESSAGE_TYPES.SPECIAL ||
-            item.contentType !== CHAT_CONTENT_TYPES.ROOM_NAME;
+            (item.contentType !== CHAT_CONTENT_TYPES.ROOM_NAME &&
+             item.contentType !== CHAT_CONTENT_TYPES.CONTEXT);
         });
       }
 
@@ -398,10 +396,9 @@ loop.shared.views.chat = (function(mozL10n) {
       });
 
       var textChatViewClasses = React.addons.classSet({
-        "showing-room-name": showingRoomName,
         "text-chat-view": true,
-        "text-chat-disabled": !this.state.textChatEnabled,
-        "text-chat-entries-empty": !messageList.length
+        "text-chat-entries-empty": !messageList.length,
+        "text-chat-disabled": !this.state.textChatEnabled
       });
 
       return (
@@ -409,6 +406,7 @@ loop.shared.views.chat = (function(mozL10n) {
           <TextChatEntriesView
             dispatcher={this.props.dispatcher}
             messageList={messageList}
+            showInitialContext={this.props.showInitialContext}
             useDesktopPaths={this.props.useDesktopPaths} />
           <TextChatInputView
             dispatcher={this.props.dispatcher}

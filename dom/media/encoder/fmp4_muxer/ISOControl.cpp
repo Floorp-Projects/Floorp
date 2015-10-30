@@ -62,7 +62,7 @@ FragmentBuffer::AddFrame(EncodedFrame* aFrame)
 
   EncodedFrame::FrameType type = aFrame->GetFrameType();
   if (type == EncodedFrame::AAC_CSD || type == EncodedFrame::AVC_CSD ||
-      type == EncodedFrame::AMR_AUDIO_CSD) {
+      type == EncodedFrame::AMR_AUDIO_CSD || type == EncodedFrame::EVRC_AUDIO_CSD) {
     mCSDFrame = aFrame;
     // Use CSD's timestamp as the start time. Encoder should send CSD frame first
     // and then data frames.
@@ -168,7 +168,8 @@ ISOControl::SetMetadata(TrackMetadataBase* aTrackMeta)
 {
   if (aTrackMeta->GetKind() == TrackMetadataBase::METADATA_AAC ||
       aTrackMeta->GetKind() == TrackMetadataBase::METADATA_AMR ||
-      aTrackMeta->GetKind() == TrackMetadataBase::METADATA_AVC) {
+      aTrackMeta->GetKind() == TrackMetadataBase::METADATA_AVC ||
+      aTrackMeta->GetKind() == TrackMetadataBase::METADATA_EVRC) {
     mMetaArray.AppendElement(aTrackMeta);
     return NS_OK;
   }
@@ -180,7 +181,8 @@ ISOControl::GetAudioMetadata(RefPtr<AudioTrackMetadata>& aAudMeta)
 {
   for (uint32_t i = 0; i < mMetaArray.Length() ; i++) {
     if (mMetaArray[i]->GetKind() == TrackMetadataBase::METADATA_AAC ||
-        mMetaArray[i]->GetKind() == TrackMetadataBase::METADATA_AMR) {
+        mMetaArray[i]->GetKind() == TrackMetadataBase::METADATA_AMR ||
+        mMetaArray[i]->GetKind() == TrackMetadataBase::METADATA_EVRC) {
       aAudMeta = static_cast<AudioTrackMetadata*>(mMetaArray[i].get());
       return NS_OK;
     }
