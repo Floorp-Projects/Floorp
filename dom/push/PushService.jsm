@@ -1314,10 +1314,10 @@ this.PushService = {
         if (record.isExpired()) {
           return record.quotaChanged().then(isChanged => {
             if (isChanged) {
-              return this._db.delete(record.keyID);
+              return this._db.delete(record.keyID).then(_ => null);
             }
-            throw {state: 0, error: "NotFoundError"};
-          }).then(_ => null);
+            return null;
+          });
         }
         return record.toRegistration();
       });
