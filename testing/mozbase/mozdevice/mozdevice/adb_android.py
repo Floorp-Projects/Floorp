@@ -6,8 +6,9 @@ import os
 import re
 import time
 
+import version_codes
+
 from adb import ADBDevice, ADBError
-from distutils.version import StrictVersion
 
 
 class ADBAndroid(ADBDevice):
@@ -315,9 +316,9 @@ class ADBAndroid(ADBDevice):
         :raises: * ADBTimeoutError
                  * ADBError
         """
-        version = self.shell_output("getprop ro.build.version.release",
+        version = self.shell_output("getprop ro.build.version.sdk",
                                     timeout=timeout, root=root)
-        if StrictVersion(version) >= StrictVersion('3.0'):
+        if int(version) >= version_codes.HONEYCOMB:
             self.shell_output("am force-stop %s" % app_name,
                               timeout=timeout, root=root)
         else:

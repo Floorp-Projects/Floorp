@@ -76,6 +76,7 @@ class FxDesktopBuild(BuildScript, object):
                 'compare_locales_vcs': 'hgtool',
                 'influx_credentials_file': 'oauth.txt',
                 'build_resources_path': '%(abs_src_dir)s/obj-firefox/.mozbuild/build_resources.json',
+                'nightly_promotion_branches': ['mozilla-central', 'mozilla-aurora'],
 
                 # try will overwrite these
                 'clone_with_purge': False,

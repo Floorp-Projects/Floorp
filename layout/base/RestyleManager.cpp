@@ -1341,7 +1341,7 @@ RestyleManager::GetMaxAnimationGenerationForFrame(nsIFrame* aFrame)
 void
 RestyleManager::RestyleForEmptyChange(Element* aContainer)
 {
-  // In some cases (:empty + E, :empty ~ E), a change if the content of
+  // In some cases (:empty + E, :empty ~ E), a change in the content of
   // an element requires restyling its parent's siblings.
   nsRestyleHint hint = eRestyle_Subtree;
   nsIContent* grandparent = aContainer->GetParent();

@@ -10,6 +10,7 @@
 #include <stdlib.h>                     // for getenv
 #include "DirectedGraph.h"              // for DirectedGraph
 #include "Layers.h"                     // for Layer
+#include "gfxEnv.h"                     // for gfxEnv
 #include "gfxLineSegment.h"             // for gfxLineSegment
 #include "gfxPoint.h"                   // for gfxPoint
 #include "gfxQuad.h"                    // for gfxQuad
@@ -152,8 +153,6 @@ static LayerSortOrder CompareDepth(Layer* aOne, Layer* aTwo) {
 }
 
 #ifdef DEBUG
-static bool gDumpLayerSortList = getenv("MOZ_DUMP_LAYER_SORT_LIST") != 0;
-
 // #define USE_XTERM_COLORING
 #ifdef USE_XTERM_COLORING
 // List of color values, which can be added to the xterm foreground offset or
@@ -251,7 +250,7 @@ void SortLayersBy3DZOrder(nsTArray<Layer*>& aLayers)
   DirectedGraph<Layer*> graph;
 
 #ifdef DEBUG
-  if (gDumpLayerSortList) {
+  if (gfxEnv::DumpLayerSortList()) {
     for (uint32_t i = 0; i < nodeCount; i++) {
       if (aLayers.ElementAt(i)->GetDebugColorIndex() == 0) {
         aLayers.ElementAt(i)->SetDebugColorIndex(gColorIndex++);
@@ -280,7 +279,7 @@ void SortLayersBy3DZOrder(nsTArray<Layer*>& aLayers)
   }
 
 #ifdef DEBUG
-  if (gDumpLayerSortList) {
+  if (gfxEnv::DumpLayerSortList()) {
     fprintf(stderr, " --- Edge List: --- \n");
     DumpEdgeList(graph);
   }
@@ -347,7 +346,7 @@ void SortLayersBy3DZOrder(nsTArray<Layer*>& aLayers)
   } while (!noIncoming.IsEmpty());
   NS_ASSERTION(!graph.GetEdgeCount(), "Cycles detected!");
 #ifdef DEBUG
-  if (gDumpLayerSortList) {
+  if (gfxEnv::DumpLayerSortList()) {
     fprintf(stderr, " --- Layers after sorting: --- \n");
     DumpLayerList(sortedList);
   }

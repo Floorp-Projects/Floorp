@@ -5,12 +5,12 @@
 #include "OGLShaderProgram.h"
 #include <stdint.h>                     // for uint32_t
 #include <sstream>                      // for ostringstream
+#include "gfxEnv.h"
 #include "gfxRect.h"                    // for gfxRect
 #include "mozilla/DebugOnly.h"          // for DebugOnly
 #include "nsAString.h"
 #include "nsAutoPtr.h"                  // for nsRefPtr
 #include "nsString.h"                   // for nsAutoCString
-#include "prenv.h"                      // for PR_GetEnv
 #include "Layers.h"
 #include "GLContext.h"
 
@@ -577,7 +577,7 @@ ShaderProgramOGL::CreateShader(GLenum aShaderType, const char *aShaderSource)
    */
   if (!success
 #ifdef DEBUG
-      || (len > 10 && PR_GetEnv("MOZ_DEBUG_SHADERS"))
+      || (len > 10 && gfxEnv::DebugShaders())
 #endif
       )
   {
@@ -630,7 +630,7 @@ ShaderProgramOGL::CreateProgram(const char *aVertexShaderString,
    */
   if (!success
 #ifdef DEBUG
-      || (len > 10 && PR_GetEnv("MOZ_DEBUG_SHADERS"))
+      || (len > 10 && gfxEnv::DebugShaders())
 #endif
       )
   {

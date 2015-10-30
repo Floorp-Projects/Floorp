@@ -102,6 +102,7 @@ class nsWrapperCache;
 class nsAttrValue;
 class nsITransferable;
 class nsPIWindowRoot;
+class nsIWindowProvider;
 
 struct JSPropertyDescriptor;
 struct JSRuntime;
@@ -900,9 +901,6 @@ public:
                                   uint32_t aLineNumber = 0,
                                   uint32_t aColumnNumber = 0);
 
-  static nsresult
-  MaybeReportInterceptionErrorToConsole(nsIDocument* aDocument, nsresult aError);
-
   static void LogMessageToConsole(const char* aMsg, ...);
   
   /**
@@ -1639,6 +1637,11 @@ public:
   static bool IsSafeToRunScript() {
     return sScriptBlockerCount == 0;
   }
+
+  // XXXcatalinb: workaround for weird include error when trying to reference
+  // ipdl types in WindowWatcher.
+  static nsIWindowProvider*
+  GetWindowProviderForContentProcess();
 
   /**
    * Call this function if !IsSafeToRunScript() and we fail to run the script

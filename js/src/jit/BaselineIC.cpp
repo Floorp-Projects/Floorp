@@ -4041,8 +4041,9 @@ ICSetElem_DenseOrUnboxedArray::Compiler::generateStubCode(MacroAssembler& masm)
     EmitReturnFromIC(masm);
 
     if (failurePopR0.used()) {
+        // Failure case: restore the value of R0
         masm.bind(&failurePopR0);
-        masm.Pop(R0);
+        masm.popValue(R0);
     }
 
     // Failure case - jump to next stub
@@ -4277,8 +4278,9 @@ ICSetElemDenseOrUnboxedArrayAddCompiler::generateStubCode(MacroAssembler& masm)
     EmitReturnFromIC(masm);
 
     if (failurePopR0.used()) {
+        // Failure case: restore the value of R0
         masm.bind(&failurePopR0);
-        masm.Pop(R0);
+        masm.popValue(R0);
         masm.jump(&failure);
     }
 
