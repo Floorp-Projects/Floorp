@@ -55,8 +55,7 @@ function run_test() {
   let engineTemplateFile = do_get_file("data/engine.xml");
   engineTemplateFile.copyTo(engineFile.parent, "test-search-engine.xml");
 
-  // Add the application's built-in plugin locations to the cache so it won't be ignored.
-  let filesToIgnore = []
+  // The list of visibleDefaultEngines needs to match or the cache will be ignored.
   let chan = NetUtil.ioService.newChannel2("resource://search-plugins/list.txt",
                                            null, // aOriginCharset
                                            null, // aBaseURI
@@ -76,37 +75,6 @@ function run_test() {
       continue;
     visibleDefaultEngines.push(name);
   }
-  let chromeURI = chan.URI;
-  if (chromeURI instanceof Ci.nsIJARURI) {
-    // JAR packaging, we only need the parent jar file.
-    let fileURI = chromeURI; // flat packaging
-    while (fileURI instanceof Ci.nsIJARURI)
-      fileURI = fileURI.JARFile;
-    fileURI.QueryInterface(Ci.nsIFileURL);
-    filesToIgnore.push(fileURI.file);
-  } else {
-    // flat packaging, we need to find each .xml file.
-    for (let name of names) {
-      let url = "resource://search-plugins/" + name + ".xml";
-      let chan = NetUtil.ioService.newChannel2(url,
-                                               null, // aOriginCharset
-                                               null, // aBaseURI
-                                               null, // aLoadingNode
-                                               Services.scriptSecurityManager.getSystemPrincipal(),
-                                               null, // aTriggeringPrincipal
-                                               Ci.nsILoadInfo.SEC_NORMAL,
-                                               Ci.nsIContentPolicy.TYPE_OTHER);
-      filesToIgnore.push(chan.URI.QueryInterface(Ci.nsIFileURL).file);
-    }
-  }
-
-  for (let file of filesToIgnore) {
-    cacheTemplate.directories[file.path] = {
-      lastModifiedTime: file.lastModifiedTime,
-      engines: []
-    };
-  }
-
   cacheTemplate.visibleDefaultEngines = visibleDefaultEngines;
 
   run_next_test();

@@ -3,6 +3,9 @@
   "buildID": "20121106",
   "locale": "en-US",
   "directories": {
+    "[default]": {
+      "engines": []
+    },
     "[user-installed]": {
       "engines": [
         {
