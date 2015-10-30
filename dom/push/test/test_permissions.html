@@ -10,6 +10,7 @@ http://creativecommons.org/licenses/publicdomain/
 <head>
   <title>Test for Bug 1038811</title>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
   <meta http-equiv="Content-type" content="text/html;charset=UTF-8">
 </head>
@@ -27,50 +28,37 @@ http://creativecommons.org/licenses/publicdomain/
   //  console.log(str + "\n");
   }
 
-  function start() {
-    return navigator.serviceWorker.register("worker.js" + "?" + (Math.random()), {scope: "."})
-    .then((swr) => registration = swr);
-  }
-
-  function unregister() {
-    return registration.unregister().then(function(result) {
-      ok(result, "Unregister should return true.");
-    }, function(e) {
-      dump("Unregistering the SW failed with " + e + "\n");
+  var registration;
+  add_task(function* start() {
+    SpecialPowers.addPermission("desktop-notification", false, document);
+    yield new Promise(resolve => {
+      SpecialPowers.pushPrefEnv({"set": [
+        ["dom.push.enabled", true],
+        ["dom.serviceWorkers.exemptFromPerDomainMax", true],
+        ["dom.serviceWorkers.enabled", true],
+        ["dom.serviceWorkers.testing.enabled", true]
+        ]}, resolve);
     });
-  }
 
-  function setupPushNotification(swr) {
-    var p = new Promise(function(res, rej) {
-      swr.pushManager.subscribe().then(
-        function(pushSubscription) {
-          ok(false, "subscribe() should fail because no permission for push");
-          res(swr);
-        }, function(error) {
-          ok(true, "subscribe() could not register for push notification");
-          res(swr);
-        }
-        );
-    });
-    return p;
-  }
+    var url = "worker.js" + "?" + Math.random();
+    registration = yield navigator.serviceWorker.register(url, {scope: "."});
+  });
 
-  function getEndpoint(swr) {
-    var p = new Promise(function(res, rej) {
-      swr.pushManager.getSubscription().then(
-        function(pushSubscription) {
-          is(pushSubscription, null, "getSubscription() should return null because no permission for push");
-          res(swr);
-        }, function(error) {
-          ok(false, "getSubscription() could not register for push notification");
-          res(swr);
-        }
-        );
-    });
-    return p;
-  }
+  add_task(function* setupPushNotification() {
+    try {
+      yield registration.pushManager.subscribe();
+      ok(false, "subscribe() should fail because no permission for push");
+    } catch (error) {
+      ok(true, "subscribe() could not register for push notification");
+    }
+  });
 
-  function checkPermissionState(swr) {
+  add_task(function* getEndpoint() {
+    var pushSubscription = yield registration.pushManager.getSubscription();
+    is(pushSubscription, null, "getSubscription() should return null because no permission for push");
+  });
+
+  add_task(function* checkPermissionState() {
     var permissionManager = SpecialPowers.Ci.nsIPermissionManager;
     var tests = [{
       action: permissionManager.ALLOW_ACTION,
@@ -85,40 +73,22 @@ http://creativecommons.org/licenses/publicdomain/
       action: permissionManager.UNKNOWN_ACTION,
       state: "prompt",
     }];
-    return tests.reduce((promise, test) => {
-      return promise.then(function() {
-        if (test.action == permissionManager.UNKNOWN_ACTION) {
-          SpecialPowers.removePermission("desktop-notification", document);
-        } else {
-          SpecialPowers.addPermission("desktop-notification",
-            test.action, document);
-        }
-        return swr.pushManager.permissionState().then(state => {
-          is(state, test.state, JSON.stringify(test));
-        });
-      });
-    }, Promise.resolve());
-  }
+    for (var test of tests) {
+      if (test.action == permissionManager.UNKNOWN_ACTION) {
+        SpecialPowers.removePermission("desktop-notification", document);
+      } else {
+        SpecialPowers.addPermission("desktop-notification",
+          test.action, document);
+      }
+      var state = yield registration.pushManager.permissionState();
+      is(state, test.state, JSON.stringify(test));
+    }
+  });
 
-  function runTest() {
-    start()
-    .then(setupPushNotification)
-    .then(getEndpoint)
-    .then(checkPermissionState)
-    .then(unregister)
-    .catch(function(e) {
-      ok(false, "Some test failed with error " + e);
-    }).then(SimpleTest.finish);
-  }
-
-  SpecialPowers.addPermission("desktop-notification", false, document);
-  SpecialPowers.pushPrefEnv({"set": [
-    ["dom.push.enabled", true],
-    ["dom.serviceWorkers.exemptFromPerDomainMax", true],
-    ["dom.serviceWorkers.enabled", true],
-    ["dom.serviceWorkers.testing.enabled", true]
-    ]}, runTest);
-  SimpleTest.waitForExplicitFinish();
+  add_task(function* unregister() {
+    var result = yield registration.unregister();
+    ok(result, "Unregister should return true.");
+  });
 
 </script>
 </body>
