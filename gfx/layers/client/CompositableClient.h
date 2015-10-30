@@ -227,7 +227,7 @@ public:
   static void DumpTextureClient(std::stringstream& aStream, TextureClient* aTexture);
 protected:
   CompositableChild* mCompositableChild;
-  CompositableForwarder* mForwarder;
+  RefPtr<CompositableForwarder> mForwarder;
   // Some layers may want to enforce some flags to all their textures
   // (like disallowing tiling)
   TextureFlags mTextureFlags;
