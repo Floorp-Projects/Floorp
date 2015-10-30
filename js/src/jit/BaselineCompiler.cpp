@@ -3382,13 +3382,13 @@ BaselineCompiler::emit_JSOP_RETSUB()
     return emitOpIC(stubCompiler.getStub(&stubSpace_));
 }
 
-typedef bool (*PushBlockScopeFn)(JSContext*, BaselineFrame*, Handle<StaticBlockObject*>);
+typedef bool (*PushBlockScopeFn)(JSContext*, BaselineFrame*, Handle<StaticBlockScope*>);
 static const VMFunction PushBlockScopeInfo = FunctionInfo<PushBlockScopeFn>(jit::PushBlockScope);
 
 bool
 BaselineCompiler::emit_JSOP_PUSHBLOCKSCOPE()
 {
-    StaticBlockObject& blockObj = script->getObject(pc)->as<StaticBlockObject>();
+    StaticBlockScope& blockObj = script->getObject(pc)->as<StaticBlockScope>();
 
     // Call a stub to push the block on the block chain.
     prepareVMCall();
@@ -3466,13 +3466,13 @@ BaselineCompiler::emit_JSOP_DEBUGLEAVEBLOCK()
     return callVM(DebugLeaveBlockInfo);
 }
 
-typedef bool (*EnterWithFn)(JSContext*, BaselineFrame*, HandleValue, Handle<StaticWithObject*>);
+typedef bool (*EnterWithFn)(JSContext*, BaselineFrame*, HandleValue, Handle<StaticWithScope*>);
 static const VMFunction EnterWithInfo = FunctionInfo<EnterWithFn>(jit::EnterWith);
 
 bool
 BaselineCompiler::emit_JSOP_ENTERWITH()
 {
-    StaticWithObject& withObj = script->getObject(pc)->as<StaticWithObject>();
+    StaticWithScope& withObj = script->getObject(pc)->as<StaticWithScope>();
 
     // Pop "with" object to R0.
     frame.popRegsAndSync(1);

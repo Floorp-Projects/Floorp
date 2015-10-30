@@ -386,7 +386,7 @@ struct BytecodeEmitter
     bool enterBlockScope(StmtInfoBCE* stmtInfo, ObjectBox* objbox, JSOp initialValueOp,
                          unsigned alreadyPushed = 0);
 
-    bool computeAliasedSlots(Handle<StaticBlockObject*> blockObj);
+    bool computeAliasedSlots(Handle<StaticBlockScope*> blockObj);
 
     bool lookupAliasedName(HandleScript script, PropertyName* name, uint32_t* pslot,
                            ParseNode* pn = nullptr);
@@ -396,7 +396,7 @@ struct BytecodeEmitter
     // fixed part of a stack frame.  Outside a function, there are no fixed vars,
     // but block-scoped locals still form part of the fixed part of a stack frame
     // and are thus addressable via GETLOCAL and friends.
-    void computeLocalOffset(Handle<StaticBlockObject*> blockObj);
+    void computeLocalOffset(Handle<StaticBlockScope*> blockObj);
 
     bool flushPops(int* npops);
 
@@ -639,7 +639,7 @@ struct BytecodeEmitter
     bool emitLexicalInitialization(ParseNode* pn, JSOp globalDefOp);
 
     bool pushInitialConstants(JSOp op, unsigned n);
-    bool initializeBlockScopedLocalsFromStack(Handle<StaticBlockObject*> blockObj);
+    bool initializeBlockScopedLocalsFromStack(Handle<StaticBlockScope*> blockObj);
 
     // Emit bytecode for the spread operator.
     //
