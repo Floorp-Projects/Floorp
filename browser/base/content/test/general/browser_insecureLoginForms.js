@@ -18,6 +18,10 @@ function waitForInsecureLoginFormsStateChange(browser, count) {
  * Checks the insecure login forms logic for the identity block.
  */
 add_task(function* test_simple() {
+  yield new Promise(resolve => SpecialPowers.pushPrefEnv({
+    "set": [["security.insecure_password.ui.enabled", true]],
+  }, resolve));
+
   for (let scheme of ["http", "https"]) {
     let tab = gBrowser.addTab(scheme + testUrlPath + "form_basic.html");
     let browser = tab.linkedBrowser;
