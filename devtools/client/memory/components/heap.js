@@ -6,10 +6,9 @@ const { DOM: dom, createClass, PropTypes, createFactory } = require("devtools/cl
 const { safeErrorString } = require("devtools/shared/DevToolsUtils");
 const Tree = createFactory(require("./tree"));
 const TreeItem = createFactory(require("./tree-item"));
-const { getSnapshotStatusTextFull } = require("../utils");
+const { getSnapshotStatusTextFull, L10N } = require("../utils");
 const { snapshotState: states } = require("../constants");
 const { snapshot: snapshotModel } = require("../models");
-const TAKE_SNAPSHOT_TEXT = "Take snapshot";
 // If HEAP_TREE_ROW_HEIGHT changes, be sure to change `var(--heap-tree-row-height)`
 // in `devtools/client/themes/memory.css`
 const HEAP_TREE_ROW_HEIGHT = 14;
@@ -83,12 +82,12 @@ const Heap = module.exports = createClass({
           // but React hates that evidently
           "data-standalone": true,
           "data-text-only": true,
-        }, TAKE_SNAPSHOT_TEXT)];
+        }, L10N.getStr("take-snapshot"))];
         break;
       case states.ERROR:
         content = [
           dom.span({ className: "snapshot-status error" }, statusText),
-          dom.pre({}, safeErrorString(snapshot.error || new Error("blahblah"))),
+          dom.pre({}, safeErrorString(snapshot.error))
         ];
         break;
       case states.SAVING:
@@ -101,11 +100,11 @@ const Heap = module.exports = createClass({
       case states.SAVED_CENSUS:
         content = [
           dom.div({ className: "header" },
-            dom.span({ className: "heap-tree-item-bytes" }, "Bytes"),
-            dom.span({ className: "heap-tree-item-count" }, "Count"),
-            dom.span({ className: "heap-tree-item-total-bytes" }, "Total Bytes"),
-            dom.span({ className: "heap-tree-item-total-count" }, "Total Count"),
-            dom.span({ className: "heap-tree-item-name" }, "Name")
+            dom.span({ className: "heap-tree-item-bytes" }, L10N.getStr("heapview.field.bytes")),
+            dom.span({ className: "heap-tree-item-count" }, L10N.getStr("heapview.field.count")),
+            dom.span({ className: "heap-tree-item-total-bytes" }, L10N.getStr("heapview.field.totalbytes")),
+            dom.span({ className: "heap-tree-item-total-count" }, L10N.getStr("heapview.field.totalcount")),
+            dom.span({ className: "heap-tree-item-name" }, L10N.getStr("heapview.field.name"))
           ),
           Tree(createTreeProperties(snapshot.census, toolbox))
         ];

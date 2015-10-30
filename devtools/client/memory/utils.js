@@ -2,16 +2,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+const { Cu } = require("chrome");
+Cu.import("resource://devtools/client/shared/widgets/ViewHelpers.jsm");
+const STRINGS_URI = "chrome://browser/locale/devtools/memory.properties"
+const L10N = exports.L10N = new ViewHelpers.L10N(STRINGS_URI);
 const { assert } = require("devtools/shared/DevToolsUtils");
 const { Preferences } = require("resource://gre/modules/Preferences.jsm");
 const CUSTOM_BREAKDOWN_PREF = "devtools.memory.custom-breakdowns";
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const { snapshotState: states, breakdowns } = require("./constants");
-const FULL_ERROR_TEXT = "There was an error processing this snapshot.";
-const ERROR_SNAPSHOT_TEXT = "⚠ Error!";
-const SAVING_SNAPSHOT_TEXT = "Saving snapshot...";
-const READING_SNAPSHOT_TEXT = "Reading snapshot...";
-const SAVING_CENSUS_TEXT = "Taking heap census...";
 
 /**
  * Returns an array of objects with the unique key `name`
@@ -98,17 +97,16 @@ exports.getSnapshotStatusText = function (snapshot) {
 
   switch (snapshot.state) {
     case states.ERROR:
-      return ERROR_SNAPSHOT_TEXT;
+      return L10N.getStr("snapshot.state.error");
     case states.SAVING:
-      return SAVING_SNAPSHOT_TEXT;
+      return L10N.getStr("snapshot.state.saving");
     case states.SAVED:
     case states.READING:
-      return READING_SNAPSHOT_TEXT;
+      return L10N.getStr("snapshot.state.reading");
     case states.SAVING_CENSUS:
-      return SAVING_CENSUS_TEXT;
-    // If it's read, it shouldn't have any label, as we could've cleared the
-    // census cache by changing the breakdown, and we should lazily
-    // go to SAVING_CENSUS. If it's SAVED_CENSUS, we have no status to display.
+      return L10N.getStr("snapshot.state.saving-census");
+    // Both READ and SAVED_CENSUS state do not have any message
+    // to show as other content will be displayed.
     case states.READ:
     case states.SAVED_CENSUS:
       return "";
@@ -130,9 +128,20 @@ exports.getSnapshotStatusTextFull = function (snapshot) {
     `Snapshot must have expected state, found ${(snapshot || {}).state}.`);
   switch (snapshot.state) {
     case states.ERROR:
-      return FULL_ERROR_TEXT;
+      return L10N.getStr("snapshot.state.error.full");
+    case states.SAVING:
+      return L10N.getStr("snapshot.state.saving.full");
+    case states.SAVED:
+    case states.READING:
+      return L10N.getStr("snapshot.state.reading.full");
+    case states.SAVING_CENSUS:
+      return L10N.getStr("snapshot.state.saving-census.full");
+    // Both READ and SAVED_CENSUS state do not have any full message
+    // to show as other content will be displayed.
+    case states.READ:
+    case states.SAVED_CENSUS:
+      return "";
   }
-  return exports.getSnapshotStatusText(snapshot);
 }
 
 /**
