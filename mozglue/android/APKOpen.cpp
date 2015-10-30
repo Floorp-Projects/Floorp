@@ -34,6 +34,7 @@
 #include "application.ini.h"
 
 #include "mozilla/TimeStamp.h"
+#include "mozilla/UniquePtr.h"
 
 /* Android headers don't define RUSAGE_THREAD */
 #ifndef RUSAGE_THREAD
@@ -189,6 +190,19 @@ report_mapping(char *name, void *base, uint32_t len, uint32_t offset)
   info->offset = offset;
 }
 
+static void*
+dlopenAPKLibrary(const char* apkName, const char* libraryName)
+{
+#define APK_ASSETS_PATH "!/assets/" ANDROID_CPU_ARCH "/"
+  size_t filenameLength = strlen(apkName) +
+    sizeof(APK_ASSETS_PATH) + 	// includes \0 terminator
+    strlen(libraryName);
+  auto file = MakeUnique<char[]>(filenameLength);
+  snprintf(file.get(), filenameLength, "%s" APK_ASSETS_PATH "%s",
+	   apkName, libraryName);
+  return __wrap_dlopen(file.get(), RTLD_GLOBAL | RTLD_LAZY);
+#undef APK_ASSETS_PATH
+}
 static mozglueresult
 loadGeckoLibs(const char *apkName)
 {
@@ -196,12 +210,8 @@ loadGeckoLibs(const char *apkName)
   struct rusage usage1_thread, usage1;
   getrusage(RUSAGE_THREAD, &usage1_thread);
   getrusage(RUSAGE_SELF, &usage1);
-  
-  char *file = new char[strlen(apkName) + sizeof("!/assets/" ANDROID_CPU_ARCH "/libxul.so")];
-  sprintf(file, "%s!/assets/" ANDROID_CPU_ARCH "/libxul.so", apkName);
-  xul_handle = __wrap_dlopen(file, RTLD_GLOBAL | RTLD_LAZY);
-  delete[] file;
 
+  xul_handle = dlopenAPKLibrary(apkName, "libxul.so");
   if (!xul_handle) {
     __android_log_print(ANDROID_LOG_ERROR, "GeckoLibLoad", "Couldn't get a handle to libxul!");
     return FAILURE;
@@ -253,11 +263,7 @@ loadSQLiteLibs(const char *apkName)
     lib_mapping = (struct mapping_info *)calloc(MAX_MAPPING_INFO, sizeof(*lib_mapping));
   }
 
-  char *file = new char[strlen(apkName) + sizeof("!/assets/" ANDROID_CPU_ARCH "/libmozsqlite3.so")];
-  sprintf(file, "%s!/assets/" ANDROID_CPU_ARCH "/libmozsqlite3.so", apkName);
-  sqlite_handle = __wrap_dlopen(file, RTLD_GLOBAL | RTLD_LAZY);
-  delete [] file;
-
+  sqlite_handle = dlopenAPKLibrary(apkName, "libmozsqlite3.so");
   if (!sqlite_handle) {
     __android_log_print(ANDROID_LOG_ERROR, "GeckoLibLoad", "Couldn't get a handle to libmozsqlite3!");
     return FAILURE;
@@ -278,21 +284,12 @@ loadNSSLibs(const char *apkName)
     lib_mapping = (struct mapping_info *)calloc(MAX_MAPPING_INFO, sizeof(*lib_mapping));
   }
 
-  char *file = new char[strlen(apkName) + sizeof("!/assets/" ANDROID_CPU_ARCH "/libnss3.so")];
-  sprintf(file, "%s!/assets/" ANDROID_CPU_ARCH "/libnss3.so", apkName);
-  nss_handle = __wrap_dlopen(file, RTLD_GLOBAL | RTLD_LAZY);
-  delete [] file;
+  nss_handle = dlopenAPKLibrary(apkName, "libnss3.so");
 
 #ifndef MOZ_FOLD_LIBS
-  file = new char[strlen(apkName) + sizeof("!/assets/" ANDROID_CPU_ARCH "/libnspr4.so")];
-  sprintf(file, "%s!/assets/" ANDROID_CPU_ARCH "/libnspr4.so", apkName);
-  nspr_handle = __wrap_dlopen(file, RTLD_GLOBAL | RTLD_LAZY);
-  delete [] file;
+  nspr_handle = dlopenAPKLibrary(apkName, "libnspr4.so");
 
-  file = new char[strlen(apkName) + sizeof("!/assets/" ANDROID_CPU_ARCH "/libplc4.so")];
-  sprintf(file, "%s!/assets/" ANDROID_CPU_ARCH "/libplc4.so", apkName);
-  plc_handle = __wrap_dlopen(file, RTLD_GLOBAL | RTLD_LAZY);
-  delete [] file;
+  plc_handle = dlopenAPKLibrary(apkName, "libplc4.so");
 #endif
 
   if (!nss_handle) {
