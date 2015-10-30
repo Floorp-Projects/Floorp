@@ -940,7 +940,7 @@ const Class UnboxedPlainObject::class_ = {
         nullptr,   /* No unwatch needed, as watch() converts the object to native */
         nullptr,   /* getElements */
         UnboxedPlainObject::obj_enumerate,
-        nullptr, /* thisObject */
+        nullptr, /* thisValue */
     }
 };
 
@@ -1631,7 +1631,7 @@ const Class UnboxedArrayObject::class_ = {
         nullptr,   /* No unwatch needed, as watch() converts the object to native */
         nullptr,   /* getElements */
         UnboxedArrayObject::obj_enumerate,
-        nullptr,   /* thisObject */
+        nullptr,   /* thisValue */
     }
 };
 
