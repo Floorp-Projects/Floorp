@@ -64,6 +64,21 @@ function runSafe(context, f, ...args)
   return runSafeWithoutClone(f, ...args);
 }
 
+// Extend the object |obj| with the property descriptors of each object in
+// |args|.
+function extend(obj, ...args) {
+  for (let arg of args) {
+    let props = [...Object.getOwnPropertyNames(arg),
+                 ...Object.getOwnPropertySymbols(arg)];
+    for (let prop of props) {
+      let descriptor = Object.getOwnPropertyDescriptor(arg, prop);
+      Object.defineProperty(obj, prop, descriptor);
+    }
+  }
+
+  return obj;
+}
+
 // Similar to a WeakMap, but returns a particular default value for
 // |get| if a key is not present.
 function DefaultWeakMap(defaultValue)
@@ -602,5 +617,6 @@ this.ExtensionUtils = {
   injectAPI,
   MessageBroker,
   Messenger,
+  extend,
   flushJarCache,
 };
