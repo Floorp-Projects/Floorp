@@ -7,9 +7,6 @@
 
 "use strict";
 
-// Metadata to write to search-metadata.json for the test.
-var gMetadata = {"[profile]/test-search-engine.xml":{"used":true}};
-
 /**
  * Gets a directory from the directory service.
  * @param aKey
@@ -35,7 +32,7 @@ function makeURI(uri) {
 var cacheTemplate, appPluginsPath, profPlugins;
 
 /**
- * Test reading from search.json
+ * Test reading from search.json.mozlz4
  */
 function run_test() {
   removeMetadata();
@@ -55,8 +52,7 @@ function run_test() {
   let engineTemplateFile = do_get_file("data/engine.xml");
   engineTemplateFile.copyTo(engineFile.parent, "test-search-engine.xml");
 
-  // Add the application's built-in plugin locations to the cache so it won't be ignored.
-  let filesToIgnore = []
+  // The list of visibleDefaultEngines needs to match or the cache will be ignored.
   let chan = NetUtil.ioService.newChannel2("resource://search-plugins/list.txt",
                                            null, // aOriginCharset
                                            null, // aBaseURI
@@ -76,85 +72,16 @@ function run_test() {
       continue;
     visibleDefaultEngines.push(name);
   }
-  let chromeURI = chan.URI;
-  if (chromeURI instanceof Ci.nsIJARURI) {
-    // JAR packaging, we only need the parent jar file.
-    let fileURI = chromeURI; // flat packaging
-    while (fileURI instanceof Ci.nsIJARURI)
-      fileURI = fileURI.JARFile;
-    fileURI.QueryInterface(Ci.nsIFileURL);
-    filesToIgnore.push(fileURI.file);
-  } else {
-    // flat packaging, we need to find each .xml file.
-    for (let name of names) {
-      let url = "resource://search-plugins/" + name + ".xml";
-      let chan = NetUtil.ioService.newChannel2(url,
-                                               null, // aOriginCharset
-                                               null, // aBaseURI
-                                               null, // aLoadingNode
-                                               Services.scriptSecurityManager.getSystemPrincipal(),
-                                               null, // aTriggeringPrincipal
-                                               Ci.nsILoadInfo.SEC_NORMAL,
-                                               Ci.nsIContentPolicy.TYPE_OTHER);
-      filesToIgnore.push(chan.URI.QueryInterface(Ci.nsIFileURL).file);
-    }
-  }
-
-  for (let file of filesToIgnore) {
-    cacheTemplate.directories[file.path] = {
-      lastModifiedTime: file.lastModifiedTime,
-      engines: []
-    };
-  }
-
-  // Replace the profile placeholder with the correct path.
-  profPlugins = engineFile.parent.path;
-  cacheTemplate.directories[profPlugins] = cacheTemplate.directories["[profile]/searchplugins"];
-  delete cacheTemplate.directories["[profile]/searchplugins"];
-  cacheTemplate.directories[profPlugins].engines[0].filePath = engineFile.path;
-  cacheTemplate.directories[profPlugins].lastModifiedTime = engineFile.parent.lastModifiedTime;
-
   cacheTemplate.visibleDefaultEngines = visibleDefaultEngines;
 
   run_next_test();
 }
 
 add_test(function prepare_test_data() {
-
-  let ostream = Cc["@mozilla.org/network/file-output-stream;1"].
-                createInstance(Ci.nsIFileOutputStream);
-  let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"].
-                  createInstance(Ci.nsIScriptableUnicodeConverter);
-
-  // Write the modified cache template to the profile directory.
-  let cacheFile = gProfD.clone();
-  cacheFile.append("search.json");
-  ostream.init(cacheFile, (MODE_WRONLY | MODE_CREATE | MODE_TRUNCATE), FileUtils.PERMS_FILE,
-               ostream.DEFER_OPEN);
-  converter.charset = "UTF-8";
-  let data = converter.convertToInputStream(JSON.stringify(cacheTemplate));
-
-  // Write to the cache and metadata files asynchronously before starting the search service.
-  NetUtil.asyncCopy(data, ostream, function afterMetadataCopy(aResult) {
-    do_check_true(Components.isSuccessCode(aResult));
-    let metadataFile = gProfD.clone();
-    metadataFile.append("search-metadata.json");
-
-    let ostream = Cc["@mozilla.org/network/file-output-stream;1"].
-                  createInstance(Ci.nsIFileOutputStream);
-    let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"].
-                    createInstance(Ci.nsIScriptableUnicodeConverter);
-
-    ostream.init(metadataFile, (MODE_WRONLY | MODE_CREATE | MODE_TRUNCATE), FileUtils.PERMS_FILE,
-                 ostream.DEFER_OPEN);
-    converter.charset = "UTF-8";
-    let data = converter.convertToInputStream(JSON.stringify(gMetadata));
-
-    NetUtil.asyncCopy(data, ostream, function afterCacheCopy(aResult) {
-      do_check_true(Components.isSuccessCode(aResult));
-      run_next_test();
-    });
-  });
+  OS.File.writeAtomic(OS.Path.join(OS.Constants.Path.profileDir, CACHE_FILENAME),
+                      new TextEncoder().encode(JSON.stringify(cacheTemplate)),
+                      {compression: "lz4"})
+    .then(run_next_test);
 });
 
 /**
@@ -190,7 +117,7 @@ add_test(function test_cache_write() {
   do_print("test cache writing");
 
   let cache = gProfD.clone();
-  cache.append("search.json");
+  cache.append(CACHE_FILENAME);
   do_check_false(cache.exists());
 
   do_print("Next step is forcing flush");
@@ -208,20 +135,14 @@ add_test(function test_cache_write() {
         Services.obs.removeObserver(cacheWriteObserver, "browser-search-service");
         do_print("Cache write complete");
         do_check_true(cache.exists());
-        // Check that the search.json cache matches the template
+        // Check that the search.json.mozlz4 cache matches the template
 
-        let cacheWritten = readJSONFile(cache);
+        promiseCacheData().then(cacheWritten => {
+          do_print("Check search.json.mozlz4");
+          isSubObjectOf(cacheTemplate, cacheWritten);
 
-        // Delete the empty dirs from the template since they are not written out.
-        for (let dir of Object.keys(cacheTemplate.directories)) {
-          if (!cacheTemplate.directories[dir].engines.length)
-            delete cacheTemplate.directories[dir];
-        }
-
-        do_print("Check search.json");
-        isSubObjectOf(cacheTemplate, cacheWritten);
-
-        run_next_test();
+          run_next_test();
+        });
       }
     };
     Services.obs.addObserver(cacheWriteObserver, "browser-search-service", false);

@@ -619,7 +619,7 @@ loop.standaloneRoomViews = (function(mozL10n) {
             renderRemoteVideo: this.shouldRenderRemoteVideo(), 
             screenShareMediaElement: this.state.screenShareMediaElement, 
             screenSharePosterUrl: this.props.screenSharePosterUrl, 
-            showContextRoomName: true, 
+            showInitialContext: true, 
             useDesktopPaths: false}, 
             React.createElement(StandaloneOverlayWrapper, {dispatcher: this.props.dispatcher}), 
             React.createElement(StandaloneRoomInfoArea, {activeRoomStore: this.props.activeRoomStore, 

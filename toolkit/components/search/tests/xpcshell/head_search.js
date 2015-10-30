@@ -21,6 +21,8 @@ const MODE_WRONLY = FileUtils.MODE_WRONLY;
 const MODE_CREATE = FileUtils.MODE_CREATE;
 const MODE_TRUNCATE = FileUtils.MODE_TRUNCATE;
 
+const CACHE_FILENAME = "search.json.mozlz4";
+
 // nsSearchService.js uses Services.appinfo.name to build a salt for a hash.
 var XULRuntime = Components.classesByID["{95d89e3e-a169-41a3-8e56-719978e15b12}"]
                            .getService(Ci.nsIXULRuntime);
@@ -205,22 +207,39 @@ function getSearchMetadata()
   return readJSONFile(metadata);
 }
 
+function promiseCacheData() {
+  return new Promise(resolve => Task.spawn(function* () {
+    let path = OS.Path.join(OS.Constants.Path.profileDir, CACHE_FILENAME);
+    let bytes = yield OS.File.read(path, {compression: "lz4"});
+    resolve(JSON.parse(new TextDecoder().decode(bytes)));
+  }));
+}
+
+function promiseEngineMetadata() {
+  return new Promise(resolve => Task.spawn(function* () {
+    let cache = yield promiseCacheData();
+    let data = {};
+    for (let engine of cache.engines) {
+      data[engine._shortName] = engine._metaData;
+    }
+    resolve(data);
+  }));
+}
+
 function promiseGlobalMetadata() {
   return new Promise(resolve => Task.spawn(function* () {
-    let path = OS.Path.join(OS.Constants.Path.profileDir, "search-metadata.json");
-    let bytes = yield OS.File.read(path);
-    resolve(JSON.parse(new TextDecoder().decode(bytes))["[global]"]);
+    let cache = yield promiseCacheData();
+    resolve(cache.metaData);
   }));
 }
 
 function promiseSaveGlobalMetadata(globalData) {
   return new Promise(resolve => Task.spawn(function* () {
-    let path = OS.Path.join(OS.Constants.Path.profileDir, "search-metadata.json");
-    let bytes = yield OS.File.read(path);
-    let data = JSON.parse(new TextDecoder().decode(bytes));
-    data["[global]"] = globalData;
-    yield OS.File.writeAtomic(path,
-                              new TextEncoder().encode(JSON.stringify(data)));
+    let data = yield promiseCacheData();
+    data.metaData = globalData;
+    yield OS.File.writeAtomic(OS.Path.join(OS.Constants.Path.profileDir, CACHE_FILENAME),
+                              new TextEncoder().encode(JSON.stringify(data)),
+                              {compression: "lz4"});
     resolve();
   }));
 }
@@ -229,30 +248,20 @@ var forceExpiration = Task.async(function* () {
   let metadata = yield promiseGlobalMetadata();
 
   // Make the current geodefaults expire 1s ago.
-  metadata.searchdefaultexpir = Date.now() - 1000;
+  metadata.searchDefaultExpir = Date.now() - 1000;
   yield promiseSaveGlobalMetadata(metadata);
 });
-
-function removeCacheFile()
-{
-  let file = gProfD.clone();
-  file.append("search.json");
-  if (file.exists()) {
-    file.remove(false);
-  }
-}
 
 /**
  * Clean the profile of any cache file left from a previous run.
  */
-function removeCache()
+function removeCacheFile()
 {
   let file = gProfD.clone();
-  file.append("search.json");
+  file.append(CACHE_FILENAME);
   if (file.exists()) {
     file.remove(false);
   }
-
 }
 
 /**
@@ -289,14 +298,6 @@ function getDefaultEngineName(isUS) {
     pref += ".US";
   }
   return Services.prefs.getComplexValue(pref, nsIPLS).data;
-}
-
-/**
- * Waits for metadata being committed.
- * @return {Promise} Resolved when the metadata is committed to disk.
- */
-function promiseAfterCommit() {
-  return waitForSearchNotification("write-metadata-to-disk-complete");
 }
 
 /**

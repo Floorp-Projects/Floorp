@@ -810,7 +810,6 @@ loop.shared.views = (function(_, mozL10n) {
    *                                        is specified, then 'dispatcher' is also required.
    * @property {String}  description        The description for the context url.
    * @property {loop.Dispatcher} dispatcher
-   * @property {Boolean} showContextTitle   Whether or not to show the "Let's talk about" title.
    * @property {String}  thumbnail          The thumbnail url (expected to be a data url) to
    *                                        display. If not specified, a fallback url will be
    *                                        shown.
@@ -826,7 +825,6 @@ loop.shared.views = (function(_, mozL10n) {
       allowClick: React.PropTypes.bool.isRequired,
       description: React.PropTypes.string.isRequired,
       dispatcher: React.PropTypes.instanceOf(loop.Dispatcher),
-      showContextTitle: React.PropTypes.bool.isRequired,
       thumbnail: React.PropTypes.string,
       url: React.PropTypes.string,
       useDesktopPaths: React.PropTypes.bool.isRequired
@@ -843,17 +841,6 @@ loop.shared.views = (function(_, mozL10n) {
       this.props.dispatcher.dispatch(new sharedActions.RecordClick({
         linkInfo: "Shared URL"
       }));
-    },
-
-    /**
-     * Renders the context title ("Let's talk about") if necessary.
-     */
-    renderContextTitle: function() {
-      if (!this.props.showContextTitle) {
-        return null;
-      }
-
-      return <p>{mozL10n.get("context_inroom_label2")}</p>;
     },
 
     render: function() {
@@ -880,7 +867,6 @@ loop.shared.views = (function(_, mozL10n) {
 
       return (
         <div className="context-content">
-          {this.renderContextTitle()}
           <a className={wrapperClasses}
              href={this.props.allowClick ? this.props.url : null}
              onClick={this.handleLinkClick}
@@ -1031,7 +1017,7 @@ loop.shared.views = (function(_, mozL10n) {
       renderRemoteVideo: React.PropTypes.bool.isRequired,
       screenShareMediaElement: React.PropTypes.object,
       screenSharePosterUrl: React.PropTypes.string,
-      showContextRoomName: React.PropTypes.bool.isRequired,
+      showInitialContext: React.PropTypes.bool.isRequired,
       useDesktopPaths: React.PropTypes.bool.isRequired
     },
 
@@ -1135,7 +1121,7 @@ loop.shared.views = (function(_, mozL10n) {
             </div>
             <loop.shared.views.chat.TextChatView
               dispatcher={this.props.dispatcher}
-              showRoomName={this.props.showContextRoomName}
+              showInitialContext={this.props.showInitialContext}
               useDesktopPaths={this.props.useDesktopPaths} />
             {this.state.localMediaAboslutelyPositioned ?
               null : this.renderLocalVideo()}
