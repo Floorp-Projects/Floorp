@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script>
+
+function boom()
+{
+  document.documentElement.style.MozColumnWidth = "1px";
+  document.documentElement.style.MozOutlineRadiusBottomleft = "100%";
+  document.documentElement.style.padding = "2251799813685249em";
+  window.getComputedStyle(document.documentElement).MozOutlineRadiusBottomleft;
+}
+
+</script>
+</head>
+
+<body onload="boom();"></body>
+</html>
