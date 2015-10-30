@@ -10,6 +10,10 @@
 #include "nsStringStream.h"
 #include "mozilla/dom/FetchUtil.h"
 
+#include "nsIConsoleReportCollector.h"
+#include "nsIScriptError.h"
+#include "nsIScriptError.h"
+
 using namespace mozilla;
 using namespace mozilla::dom;
 
@@ -1167,7 +1171,21 @@ private:
     if (NS_WARN_IF(NS_FAILED(rv2)) || !event->WaitToRespond()) {
       nsCOMPtr<nsIRunnable> runnable;
       if (event->DefaultPrevented(aCx)) {
-        runnable = new CancelChannelRunnable(mInterceptedChannel, NS_ERROR_INTERCEPTION_CANCELED);
+        nsCOMPtr<nsIChannel> inner;
+        mInterceptedChannel->GetChannel(getter_AddRefs(inner));
+        nsCOMPtr<nsIConsoleReportCollector> reporter = do_QueryInterface(inner);
+        if (reporter) {
+          NS_ConvertUTF8toUTF16 requestURL(mSpec);
+          reporter->AddConsoleReport(nsIScriptError::errorFlag,
+                                     NS_LITERAL_CSTRING("Service Worker Interception"),
+                                     nsContentUtils::eDOM_PROPERTIES,
+                                     mScriptSpec, 0, 0,
+                                     NS_LITERAL_CSTRING("InterceptionCanceledWithURL"),
+                                     &requestURL);
+
+        }
+        runnable = new CancelChannelRunnable(mInterceptedChannel,
+                                             NS_ERROR_INTERCEPTION_FAILED);
       } else {
         runnable = new ResumeRequest(mInterceptedChannel);
       }
