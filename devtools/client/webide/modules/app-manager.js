@@ -29,7 +29,7 @@ const Strings = Services.strings.createBundle("chrome://browser/locale/devtools/
 
 var AppManager = exports.AppManager = {
 
-  DEFAULT_PROJECT_ICON: "chrome://devtools/skin/themes/webide/default-app-icon.png",
+  DEFAULT_PROJECT_ICON: "chrome://devtools/skin/webide/default-app-icon.png",
   DEFAULT_PROJECT_NAME: "--",
 
   _initialized: false,
