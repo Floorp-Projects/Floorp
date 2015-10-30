@@ -3,12 +3,12 @@
   "buildID": "20121106",
   "locale": "en-US",
   "directories": {
-    "[profile]/searchplugins": {
-      "lastModifiedTime": 1333761316000,
+    "[user-installed]": {
       "engines": [
         {
-          "_id": "[app]/test-search-engine.xml",
+          "_id": "[profile]/test-search-engine.xml",
           "_name": "Test search engine",
+          "_shortName": "test-search-engine",
           "description": "A test search engine (based on Google search)",
           "extensionID": "test-addon-id@mozilla.org",
           "__searchForm": "http://www.google.com/",
@@ -85,7 +85,6 @@
               ]
             }
           ],
-          "filePath": "[profile]/searchplugins/test-search-engine.xml",
           "_installLocation": 4,
           "queryCharset": "UTF-8",
           "_readOnly": false

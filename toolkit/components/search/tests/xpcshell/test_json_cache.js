@@ -107,13 +107,6 @@ function run_test() {
     };
   }
 
-  // Replace the profile placeholder with the correct path.
-  profPlugins = engineFile.parent.path;
-  cacheTemplate.directories[profPlugins] = cacheTemplate.directories["[profile]/searchplugins"];
-  delete cacheTemplate.directories["[profile]/searchplugins"];
-  cacheTemplate.directories[profPlugins].engines[0].filePath = engineFile.path;
-  cacheTemplate.directories[profPlugins].lastModifiedTime = engineFile.parent.lastModifiedTime;
-
   cacheTemplate.visibleDefaultEngines = visibleDefaultEngines;
 
   run_next_test();
