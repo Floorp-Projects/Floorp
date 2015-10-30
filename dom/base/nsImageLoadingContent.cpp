@@ -229,53 +229,6 @@ nsImageLoadingContent::OnLoadComplete(imgIRequest* aRequest, nsresult aStatus)
   MOZ_ASSERT(aRequest == mCurrentRequest,
              "One way or another, we should be current by now");
 
-  // We just loaded all the data we're going to get. If we're visible and
-  // haven't done an initial paint (*), we want to make sure the image starts
-  // decoding immediately, for two reasons:
-  //
-  // 1) This image is sitting idle but might need to be decoded as soon as we
-  // start painting, in which case we've wasted time.
-  //
-  // 2) We want to block onload until all visible images are decoded. We do this
-  // by blocking onload until all in-progress decodes get at least one frame
-  // decoded. However, if all the data comes in while painting is suppressed
-  // (ie, before the initial paint delay is finished), we fire onload without
-  // doing a paint first. This means that decode-on-draw images don't start
-  // decoding, so we can't wait for them to finish. See bug 512435.
-  //
-  // (*) IsPaintingSuppressed returns false if we haven't gotten the initial
-  // reflow yet, so we have to test !DidInitialize || IsPaintingSuppressed.
-  // It's possible for painting to be suppressed for reasons other than the
-  // initial paint delay (for example, being in the bfcache), but we probably
-  // aren't loading images in those situations.
-
-  // XXXkhuey should this be GetOurCurrentDoc?  Decoding if we're not in
-  // the document seems silly.
-  nsIDocument* doc = GetOurOwnerDoc();
-  nsIPresShell* shell = doc ? doc->GetShell() : nullptr;
-  if (shell && shell->IsVisible() &&
-      (!shell->DidInitialize() || shell->IsPaintingSuppressed())) {
-
-    nsIFrame* f = GetOurPrimaryFrame();
-    // If we haven't gotten a frame yet either we aren't going to (so don't
-    // bother kicking off a decode), or we will get very soon on the next
-    // refresh driver tick when it flushes. And it will most likely be a
-    // specific image type frame (we only create generic (ie inline) type
-    // frames for images that don't have a size, and since we have all the data
-    // we should have the size) which will check its own visibility on its
-    // first reflow.
-    if (f) {
-      // If we've gotten a frame and that frame has called FrameCreate and that
-      // frame has been reflowed then we know that it checked it's own visibility
-      // so we can trust our visible count and we don't start decode if we are not
-      // visible.
-      if (!mFrameCreateCalled || (f->GetStateBits() & NS_FRAME_FIRST_REFLOW) ||
-          mVisibleCount > 0 || shell->AssumeAllImagesVisible()) {
-        mCurrentRequest->StartDecoding();
-      }
-    }
-  }
-
   // Fire the appropriate DOM event.
   if (NS_SUCCEEDED(aStatus)) {
     FireEvent(NS_LITERAL_STRING("load"));

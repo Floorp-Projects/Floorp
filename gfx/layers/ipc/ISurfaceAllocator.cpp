@@ -99,6 +99,9 @@ ISurfaceAllocator::AllocSurfaceDescriptor(const gfx::IntSize& aSize,
                                           gfxContentType aContent,
                                           SurfaceDescriptor* aBuffer)
 {
+  if (!IPCOpen()) {
+    return false;
+  }
   return AllocSurfaceDescriptorWithCaps(aSize, aContent, DEFAULT_BUFFER_CAPS, aBuffer);
 }
 
@@ -108,6 +111,9 @@ ISurfaceAllocator::AllocSurfaceDescriptorWithCaps(const gfx::IntSize& aSize,
                                                   uint32_t aCaps,
                                                   SurfaceDescriptor* aBuffer)
 {
+  if (!IPCOpen()) {
+    return false;
+  }
   gfx::SurfaceFormat format =
     gfxPlatform::GetPlatform()->Optimal2DFormatForContent(aContent);
   size_t size = ImageDataSerializer::ComputeMinBufferSize(aSize, format);
@@ -154,6 +160,11 @@ ISurfaceAllocator::IsShmem(SurfaceDescriptor* aSurface)
 void
 ISurfaceAllocator::DestroySharedSurface(SurfaceDescriptor* aSurface)
 {
+  MOZ_ASSERT(IPCOpen());
+  if (!IPCOpen()) {
+    return;
+  }
+
   MOZ_ASSERT(aSurface);
   if (!aSurface) {
     return;
@@ -207,6 +218,10 @@ struct ShmemSectionHeapAllocation
 bool
 ISurfaceAllocator::AllocShmemSection(size_t aSize, mozilla::layers::ShmemSection* aShmemSection)
 {
+  MOZ_ASSERT(IPCOpen());
+  if (!IPCOpen()) {
+    return false;
+  }
   // For now we only support sizes of 4. If we want to support different sizes
   // some more complicated bookkeeping should be added.
   MOZ_ASSERT(aSize == sSupportedBlockSize);
@@ -277,6 +292,11 @@ ISurfaceAllocator::AllocShmemSection(size_t aSize, mozilla::layers::ShmemSection
 void
 ISurfaceAllocator::FreeShmemSection(mozilla::layers::ShmemSection& aShmemSection)
 {
+  MOZ_ASSERT(IPCOpen());
+  if (!IPCOpen()) {
+    return;
+  }
+
   MOZ_ASSERT(aShmemSection.size() == sSupportedBlockSize);
   MOZ_ASSERT(aShmemSection.offset() < sShmemPageSize - sSupportedBlockSize);
 
@@ -301,6 +321,10 @@ ISurfaceAllocator::FreeShmemSection(mozilla::layers::ShmemSection& aShmemSection
 void
 ISurfaceAllocator::ShrinkShmemSectionHeap()
 {
+  if (!IPCOpen()) {
+    return;
+  }
+
   // The loop will terminate as we either increase i, or decrease size
   // every time through.
   size_t i = 0;
@@ -327,18 +351,33 @@ ISurfaceAllocator::AllocGrallocBuffer(const gfx::IntSize& aSize,
                                       uint32_t aUsage,
                                       MaybeMagicGrallocBufferHandle* aHandle)
 {
+  MOZ_ASSERT(IPCOpen());
+  if (!IPCOpen()) {
+    return false;
+  }
+
   return SharedBufferManagerChild::GetSingleton()->AllocGrallocBuffer(aSize, aFormat, aUsage, aHandle);
 }
 
 void
 ISurfaceAllocator::DeallocGrallocBuffer(MaybeMagicGrallocBufferHandle* aHandle)
 {
+  MOZ_ASSERT(IPCOpen());
+  if (!IPCOpen()) {
+    return;
+  }
+
   SharedBufferManagerChild::GetSingleton()->DeallocGrallocBuffer(*aHandle);
 }
 
 void
 ISurfaceAllocator::DropGrallocBuffer(MaybeMagicGrallocBufferHandle* aHandle)
 {
+  MOZ_ASSERT(IPCOpen());
+  if (!IPCOpen()) {
+    return;
+  }
+
   SharedBufferManagerChild::GetSingleton()->DropGrallocBuffer(*aHandle);
 }
 

@@ -413,7 +413,7 @@ imgRequest::ContinueEvict()
 }
 
 void
-imgRequest::RequestDecode()
+imgRequest::StartDecoding()
 {
   MutexAutoLock lock(mMutex);
   mDecodeRequested = true;
@@ -1053,7 +1053,7 @@ imgRequest::FinishPreparingForNewPart(const NewPartResult& aResult)
   }
 
   if (IsDecodeRequested()) {
-    aResult.mImage->RequestDecode();
+    aResult.mImage->StartDecoding();
   }
 }
 

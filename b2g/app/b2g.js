@@ -343,7 +343,6 @@ pref("image.mem.surfacecache.max_size_kb", 131072);  // 128MB
 pref("image.mem.surfacecache.size_factor", 8);  // 1/8 of main memory
 pref("image.mem.surfacecache.discard_factor", 2);  // Discard 1/2 of the surface cache at a time.
 pref("image.mem.surfacecache.min_expiration_ms", 86400000); // 24h, we rely on the out of memory hook
-pref("image.onload.decode.limit", 24); /* don't decode more than 24 images eagerly */
 
 // XXX this isn't a good check for "are touch events supported", but
 // we don't really have a better one at the moment.

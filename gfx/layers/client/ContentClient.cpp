@@ -7,6 +7,7 @@
 #include "BasicLayers.h"                // for BasicLayerManager
 #include "gfxContext.h"                 // for gfxContext, etc
 #include "gfxPlatform.h"                // for gfxPlatform
+#include "gfxEnv.h"                     // for gfxEnv
 #include "gfxPrefs.h"                   // for gfxPrefs
 #include "gfxPoint.h"                   // for IntSize, gfxPoint
 #include "gfxTeeSurface.h"              // for gfxTeeSurface
@@ -26,7 +27,6 @@
 #include "nsDebug.h"                    // for NS_ASSERTION, NS_WARNING, etc
 #include "nsISupportsImpl.h"            // for gfxContext::Release, etc
 #include "nsIWidget.h"                  // for nsIWidget
-#include "prenv.h"                      // for PR_GetEnv
 #include "nsLayoutUtils.h"
 #ifdef XP_WIN
 #include "gfxWindowsPlatform.h"
@@ -88,7 +88,7 @@ ContentClient::CreateContentClient(CompositableForwarder* aForwarder)
                          backend == LayersBackend::LAYERS_BASIC;
   }
 
-  if (useDoubleBuffering || PR_GetEnv("MOZ_FORCE_DOUBLE_BUFFERING")) {
+  if (useDoubleBuffering || gfxEnv::ForceDoubleBuffering()) {
     return MakeAndAddRef<ContentClientDoubleBuffered>(aForwarder);
   }
   return MakeAndAddRef<ContentClientSingleBuffered>(aForwarder);

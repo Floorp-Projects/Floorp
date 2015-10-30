@@ -19,7 +19,7 @@ interface nsIPrincipal;
  * @version 0.1
  * @see imagelib2
  */
-[scriptable, builtinclass, uuid(4cb01f0a-ef94-4345-a8d7-1a93f15ff548)]
+[scriptable, builtinclass, uuid(db0a945c-3883-424a-98d0-2ee0523b0255)]
 interface imgIRequest : nsIRequest
 {
   /**
@@ -145,15 +145,14 @@ interface imgIRequest : nsIRequest
   void cancelAndForgetObserver(in nsresult aStatus);
 
   /**
-   * Requests a decode for the image.
+   * Requests a synchronous decode for the image.
    *
-   * imgIContainer has a requestDecode() method, but callers may want to request
+   * imgIContainer has a startDecoding() method, but callers may want to request
    * a decode before the container has necessarily been instantiated. Calling
-   * requestDecode() on the imgIRequest simply forwards along the request if the
-   * container already exists, or calls it once it gets OnStartContainer if the
-   * container does not yet exist.
+   * startDecoding() on the imgIRequest simply forwards along the request if the
+   * container already exists, or calls it once the container becomes available
+   * if it does not yet exist.
    */
-  void requestDecode();
   void startDecoding();
 
   /**

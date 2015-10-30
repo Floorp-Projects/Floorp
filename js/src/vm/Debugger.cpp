@@ -6774,8 +6774,8 @@ DebuggerGenericEval(JSContext* cx, const char* fullMethodName, const Value& code
     } else {
         /*
          * Use the global lexical scope as 'this'. If the global is an inner
-         * object, it should have a thisObject hook that returns the
-         * appropriate outer object.
+         * object, it should have a thisValue hook that returns the appropriate
+         * outer object.
          */
         if (!GetThisValue(cx, scope, &thisv))
             return false;

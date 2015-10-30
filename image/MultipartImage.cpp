@@ -70,6 +70,16 @@ public:
       return;
     }
 
+    // Retrieve the image's intrinsic size.
+    int32_t width = 0;
+    int32_t height = 0;
+    mImage->GetWidth(&width);
+    mImage->GetHeight(&height);
+
+    // Request decoding at the intrinsic size.
+    mImage->RequestDecodeForSize(IntSize(width, height),
+                                 imgIContainer::DECODE_FLAGS_DEFAULT);
+
     // If there's already an error, we may never get a FRAME_COMPLETE
     // notification, so go ahead and notify our owner right away.
     RefPtr<ProgressTracker> tracker = mImage->GetProgressTracker();
@@ -125,7 +135,6 @@ MultipartImage::Init()
   RefPtr<ProgressTracker> firstPartTracker =
     InnerImage()->GetProgressTracker();
   firstPartTracker->AddObserver(this);
-  InnerImage()->RequestDecode();
   InnerImage()->IncrementAnimationConsumers();
 }
 
@@ -154,7 +163,6 @@ MultipartImage::BeginTransitionToPart(Image* aNextPart)
   // Start observing the next part; we'll complete the transition when
   // NextPartObserver calls FinishTransition.
   mNextPartObserver->BeginObserving(mNextPart);
-  mNextPart->RequestDecode();
   mNextPart->IncrementAnimationConsumers();
 }
 
