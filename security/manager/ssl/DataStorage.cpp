@@ -405,19 +405,6 @@ DataStorage::GetTableForType(DataStorageType aType,
   MOZ_CRASH("given bad DataStorage storage type");
 }
 
-// NB: The lock must be held when calling this function.
-/* static */
-PLDHashOperator
-DataStorage::EvictCallback(const nsACString& aKey, Entry aEntry, void* aArg)
-{
-  KeyAndEntry* toEvict = (KeyAndEntry*)aArg;
-  if (aEntry.mScore < toEvict->mEntry.mScore) {
-    toEvict->mKey = aKey;
-    toEvict->mEntry = aEntry;
-  }
-  return PLDHashOperator::PL_DHASH_NEXT;
-}
-
 // Limit the number of entries per table. This is to prevent unbounded
 // resource use. The eviction strategy is as follows:
 // - An entry's score is incremented once for every day it is accessed.
@@ -442,7 +429,15 @@ DataStorage::MaybeEvictOneEntry(DataStorageType aType,
     // ultimately not that concerning, considering that if an attacker can
     // modify data in the profile, they can cause much worse harm.
     toEvict.mEntry.mScore = sMaxScore;
-    table.EnumerateRead(EvictCallback, (void*)&toEvict);
+
+    for (auto iter = table.Iter(); !iter.Done(); iter.Next()) {
+      Entry entry = iter.UserData();
+      if (entry.mScore < toEvict.mEntry.mScore) {
+        toEvict.mKey = iter.Key();
+        toEvict.mEntry = entry;
+      }
+    }
+
     table.Remove(toEvict.mKey);
   }
 }
@@ -573,23 +568,6 @@ DataStorage::Writer::Run()
   return NS_OK;
 }
 
-// NB: The lock must be held when calling this function.
-/* static */
-PLDHashOperator
-DataStorage::WriteDataCallback(const nsACString& aKey, Entry aEntry, void* aArg)
-{
-  nsCString* output = (nsCString*)aArg;
-  output->Append(aKey);
-  output->Append('\t');
-  output->AppendInt(aEntry.mScore);
-  output->Append('\t');
-  output->AppendInt(aEntry.mLastAccessed);
-  output->Append('\t');
-  output->Append(aEntry.mValue);
-  output->Append('\n');
-  return PLDHashOperator::PL_DHASH_NEXT;
-}
-
 nsresult
 DataStorage::AsyncWriteData(const MutexAutoLock& /*aProofOfLock*/)
 {
@@ -598,7 +576,17 @@ DataStorage::AsyncWriteData(const MutexAutoLock& /*aProofOfLock*/)
   }
 
   nsCString output;
-  mPersistentDataTable.EnumerateRead(WriteDataCallback, (void*)&output);
+  for (auto iter = mPersistentDataTable.Iter(); !iter.Done(); iter.Next()) {
+    Entry entry = iter.UserData();
+    output.Append(iter.Key());
+    output.Append('\t');
+    output.AppendInt(entry.mScore);
+    output.Append('\t');
+    output.AppendInt(entry.mLastAccessed);
+    output.Append('\t');
+    output.Append(entry.mValue);
+    output.Append('\n');
+  }
 
   RefPtr<Writer> job(new Writer(output, this));
   nsresult rv = mWorkerThread->Dispatch(job, NS_DISPATCH_NORMAL);

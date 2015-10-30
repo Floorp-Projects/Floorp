@@ -144,10 +144,6 @@ private:
   static nsresult ValidateKeyAndValue(const nsCString& aKey,
                                       const nsCString& aValue);
   static void TimerCallback(nsITimer* aTimer, void* aClosure);
-  static PLDHashOperator WriteDataCallback(const nsACString& aKey, Entry aEntry,
-                                           void* aArg);
-  static PLDHashOperator EvictCallback(const nsACString& aKey, Entry aEntry,
-                                       void* aArg);
   void SetTimer();
   void ShutdownTimer();
   void NotifyObservers(const char* aTopic);
