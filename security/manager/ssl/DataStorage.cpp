@@ -9,6 +9,7 @@
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/dom/PContent.h"
 #include "mozilla/dom/ContentChild.h"
+#include "mozilla/dom/ContentParent.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
 #include "mozilla/Telemetry.h"
@@ -69,6 +70,19 @@ DataStorage::Get(const nsString& aFilename)
     storage = new DataStorage(aFilename);
     sDataStorages->Put(aFilename, storage);
   }
+  return storage.forget();
+}
+
+// static
+already_AddRefed<DataStorage>
+DataStorage::GetIfExists(const nsString& aFilename)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  if (!sDataStorages) {
+    sDataStorages = new DataStorages();
+  }
+  RefPtr<DataStorage> storage;
+  sDataStorages->Get(aFilename, getter_AddRefs(storage));
   return storage.forget();
 }
 
@@ -520,6 +534,22 @@ DataStorage::MaybeEvictOneEntry(DataStorageType aType,
   }
 }
 
+template <class Functor>
+static
+void
+RunOnAllContentParents(Functor func)
+{
+  if (!XRE_IsParentProcess()) {
+    return;
+  }
+  using dom::ContentParent;
+  nsTArray<ContentParent*> parents;
+  ContentParent::GetAll(parents);
+  for (auto& parent: parents) {
+    func(parent);
+  }
+}
+
 nsresult
 DataStorage::Put(const nsCString& aKey, const nsCString& aValue,
                  DataStorageType aType)
@@ -545,6 +575,14 @@ DataStorage::Put(const nsCString& aKey, const nsCString& aValue,
   if (NS_FAILED(rv)) {
     return rv;
   }
+
+  RunOnAllContentParents([&](dom::ContentParent* aParent) {
+    DataStorageItem item;
+    item.key() = aKey;
+    item.value() = aValue;
+    item.type() = aType;
+    Unused << aParent->SendDataStoragePut(mFilename, item);
+  });
 
   return NS_OK;
 }
@@ -576,6 +614,10 @@ DataStorage::Remove(const nsCString& aKey, DataStorageType aType)
   if (aType == DataStorage_Persistent && !mPendingWrite) {
     Unused << AsyncSetTimer(lock);
   }
+
+  RunOnAllContentParents([&](dom::ContentParent* aParent) {
+    Unused << aParent->SendDataStorageRemove(mFilename, aKey, aType);
+  });
 }
 
 class DataStorage::Writer : public nsRunnable
@@ -696,6 +738,11 @@ DataStorage::Clear()
       return rv;
     }
   }
+
+  RunOnAllContentParents([&](dom::ContentParent* aParent) {
+    Unused << aParent->SendDataStorageClear(mFilename);
+  });
+
   return NS_OK;
 }
 

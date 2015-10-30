@@ -96,6 +96,7 @@ public:
   // If there is a profile directory, there is or will eventually be a file
   // by the name specified by aFilename there.
   static already_AddRefed<DataStorage> Get(const nsString& aFilename);
+  static already_AddRefed<DataStorage> GetIfExists(const nsString& aFilename);
 
   // Initializes the DataStorage. Must be called before using.
   // aDataWillPersist returns whether or not data can be persistently saved.
