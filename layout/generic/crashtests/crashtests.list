@@ -252,7 +252,7 @@ load 420000-1.html
 load 420718.html
 load 420785-1.xhtml
 load 421404-1.html
-asserts(0-2) load 421671.html # Bug 481035
+load 421671.html
 load 422283-1.html
 load 422301-1.html
 load 423055-1.html
