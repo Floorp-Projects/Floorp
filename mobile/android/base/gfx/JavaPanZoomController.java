@@ -22,6 +22,7 @@ import org.mozilla.gecko.util.ThreadUtils;
 import android.graphics.PointF;
 import android.graphics.RectF;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.GestureDetector;
 import android.view.InputDevice;
 import android.view.KeyEvent;
@@ -128,6 +129,8 @@ class JavaPanZoomController
     private boolean isLongpressEnabled;
     /* Whether longpress detection should be ignored */
     private boolean mIgnoreLongPress;
+    /* Pointer scrolling delta, scaled by the preferred list item height which matches Android platform behavior */
+    private float mPointerScrollFactor;
 
     // Handler to be notified when overscroll occurs
     private Overscroll mOverscroll;
@@ -188,6 +191,13 @@ class JavaPanZoomController
         });
 
         Axis.initPrefs();
+
+        TypedValue outValue = new TypedValue();
+        if (view.getContext().getTheme().resolveAttribute(android.R.attr.listPreferredItemHeight, outValue, true)) {
+            mPointerScrollFactor = outValue.getDimension(view.getContext().getResources().getDisplayMetrics());
+        } else {
+            mPointerScrollFactor = MAX_SCROLL;
+        }
     }
 
     @Override
@@ -580,7 +590,7 @@ class JavaPanZoomController
             if (mNegateWheelScrollY) {
                 scrollY *= -1.0;
             }
-            scrollBy(scrollX * MAX_SCROLL, scrollY * MAX_SCROLL);
+            scrollBy(scrollX * mPointerScrollFactor, scrollY * mPointerScrollFactor);
             bounce();
             return true;
         }
