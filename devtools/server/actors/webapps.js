@@ -875,7 +875,8 @@ WebappsActor.prototype = {
 
     if (Services.appinfo.ID &&
         Services.appinfo.ID != "{3c2e2abc-06d4-11e1-ac3b-374f68613e61}" &&
-        Services.appinfo.ID != "{d1bfe7d9-c01e-4237-998b-7b5f960a4314}") {
+        Services.appinfo.ID != "{d1bfe7d9-c01e-4237-998b-7b5f960a4314}" &&
+        Services.appinfo.ID != "{f7b06d8d-139c-459a-85fa-46bc6c52e2b7}") {
       return { error: "notSupported",
                message: "Not B2G. Can't launch app." };
     }
