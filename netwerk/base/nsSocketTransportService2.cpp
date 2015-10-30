@@ -17,7 +17,6 @@
 #include "nsIPrefBranch.h"
 #include "nsServiceManagerUtils.h"
 #include "nsIObserverService.h"
-#include "mozilla/Atomics.h"
 #include "mozilla/Services.h"
 #include "mozilla/Likely.h"
 #include "mozilla/PublicSSL.h"
@@ -34,7 +33,7 @@ PRLogModuleInfo *gSocketTransportLog = nullptr;
 PRLogModuleInfo *gUDPSocketLog = nullptr;
 
 nsSocketTransportService *gSocketTransportService = nullptr;
-Atomic<PRThread*, Relaxed> gSocketThread;
+PRThread                 *gSocketThread           = nullptr;
 
 #define SEND_BUFFER_PREF "network.tcp.sendbuffer"
 #define KEEPALIVE_ENABLED_PREF "network.tcp.keepalive.enabled"

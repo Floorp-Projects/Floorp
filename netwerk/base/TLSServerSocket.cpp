@@ -20,6 +20,8 @@
 #include "ScopedNSSTypes.h"
 #include "ssl.h"
 
+extern PRThread *gSocketThread;
+
 namespace mozilla {
 namespace net {
 
