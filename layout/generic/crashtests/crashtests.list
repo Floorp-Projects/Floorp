@@ -418,7 +418,7 @@ load 574958.xhtml
 asserts(0-4) load 578977.html # bug 757305
 load 580504-1.xhtml
 load 585598-1.xhtml
-asserts(0-11) load 586806-1.html # Bug 439258
+load 586806-1.html
 load 586806-2.html
 load 586806-3.html
 load 586973-1.html
