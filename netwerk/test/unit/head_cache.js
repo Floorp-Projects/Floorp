@@ -50,6 +50,7 @@ function getCacheStorage(where, lci, appcache)
     case "disk": return svc.diskCacheStorage(lci, false);
     case "memory": return svc.memoryCacheStorage(lci);
     case "appcache": return svc.appCacheStorage(lci, appcache);
+    case "pin": return svc.pinningCacheStorage(lci);
   }
   return null;
 }

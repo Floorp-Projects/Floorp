@@ -90,11 +90,6 @@ public class Launcher extends FragmentActivity
         IntentHelper.init(this);
         mScreenStateObserver = new ScreenStateObserver(this);
 
-        // Disable the default lockscreen.
-        KeyguardManager keyguardManager = (KeyguardManager)getSystemService(KEYGUARD_SERVICE);
-        KeyguardLock lock = keyguardManager.newKeyguardLock(KEYGUARD_SERVICE);
-        lock.disableKeyguard();
-
         initGecko();
 
         GeckoAppShell.setGeckoInterface(new BaseGeckoInterface(this));

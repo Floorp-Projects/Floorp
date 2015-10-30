@@ -24,7 +24,7 @@
   <project name="rilproxy" path="rilproxy" remote="b2g" revision="5ef30994f4778b4052e58a4383dbe7890048c87e"/>
   <project name="valgrind" path="external/valgrind" remote="b2g" revision="5f931350fbc87c3df9db8b0ceb37734b8b471593"/>
   <project name="vex" path="external/VEX" remote="b2g" revision="48d8c7c950745f1b166b42125e6f0d3293d71636"/>
-  <project name="apitrace" path="external/apitrace" remote="apitrace" revision="1837d370a964a9719160c79155a07980f2ea4bdf"/>
+  <project name="apitrace" path="external/apitrace" remote="apitrace" revision="95bc959ff0e4ce73e1c9ed5e6916d84922d0a3cc"/>
   <project name="platform_hardware_libhardware_moz" path="hardware/libhardware_moz" remote="b2g" revision="fdf3a143dc777e5f9d33a88373af7ea161d3b440"/>
   <!-- Stock Android things -->
   <project groups="linux" name="platform/prebuilts/gcc/linux-x86/host/i686-linux-glibc2.7-4.6" path="prebuilts/gcc/linux-x86/host/i686-linux-glibc2.7-4.6" revision="95bb5b66b3ec5769c3de8d3f25d681787418e7d2"/>
@@ -154,5 +154,5 @@
   <!-- Shinano specific things -->
   <project name="device-shinano" path="device/sony/leo" remote="b2g" revision="653f7e1f093b948e40262fcb3c665c2b4976df74"/>
   <!-- Aries specific things -->
-  <project name="device-aries" path="device/sony/aries" remote="b2g" revision="2916e2368074b5383c80bf5a0fba3fc83ba310bd"/>
+  <project name="device-aries" path="device/sony/aries" remote="b2g" revision="a19052e4389c3ae2d8fc3e7a74a475401baacc56"/>
 </manifest>

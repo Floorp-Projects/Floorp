@@ -250,10 +250,6 @@ PDMFactory::CreatePDMs()
     return;
   }
 
-  if (sGMPDecoderEnabled) {
-    m = new GMPDecoderModule();
-    StartupPDM(m);
-  }
 #ifdef MOZ_WIDGET_ANDROID
   if(sAndroidMCDecoderPreferred && sAndroidMCDecoderEnabled) {
     m = new AndroidDecoderModule();
@@ -291,6 +287,11 @@ PDMFactory::CreatePDMs()
 
   m = new AgnosticDecoderModule();
   StartupPDM(m);
+
+  if (sGMPDecoderEnabled) {
+    m = new GMPDecoderModule();
+    StartupPDM(m);
+  }  
 }
 
 bool
