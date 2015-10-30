@@ -133,7 +133,8 @@ enum class LogReason : int {
   MustBeMoreThanThis = -1,
   // Start.  Do not insert, always add at end.  If you remove items,
   // make sure the other items retain their values.
-
+  D3D11InvalidCallDeviceRemoved = 0,
+  D3D11InvalidCall = 1,
   // End
   MustBeLessThanThis = 101,
 };

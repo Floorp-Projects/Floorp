@@ -81,32 +81,49 @@ CacheFileContextEvictor::ContextsCount()
 }
 
 nsresult
-CacheFileContextEvictor::AddContext(nsILoadContextInfo *aLoadContextInfo)
+CacheFileContextEvictor::AddContext(nsILoadContextInfo *aLoadContextInfo,
+                                    bool aPinned)
 {
-  LOG(("CacheFileContextEvictor::AddContext() [this=%p, loadContextInfo=%p]",
-       this, aLoadContextInfo));
+  LOG(("CacheFileContextEvictor::AddContext() [this=%p, loadContextInfo=%p, pinned=%d]",
+       this, aLoadContextInfo, aPinned));
 
   nsresult rv;
 
   MOZ_ASSERT(CacheFileIOManager::IsOnIOThread());
 
   CacheFileContextEvictorEntry *entry = nullptr;
-  for (uint32_t i = 0; i < mEntries.Length(); ++i) {
-    if (mEntries[i]->mInfo->Equals(aLoadContextInfo)) {
-      entry = mEntries[i];
-      break;
+  if (aLoadContextInfo) {
+    for (uint32_t i = 0; i < mEntries.Length(); ++i) {
+      if (mEntries[i]->mInfo &&
+          mEntries[i]->mInfo->Equals(aLoadContextInfo) &&
+          mEntries[i]->mPinned == aPinned) {
+        entry = mEntries[i];
+        break;
+      }
+    }
+  } else {
+    // Not providing load context info means we want to delete everything,
+    // so let's not bother with any currently running context cleanups
+    // for the same pinning state.
+    for (uint32_t i = mEntries.Length(); i > 0;) {
+      --i;
+      if (mEntries[i]->mInfo && mEntries[i]->mPinned == aPinned) {
+        RemoveEvictInfoFromDisk(mEntries[i]->mInfo, mEntries[i]->mPinned);
+        mEntries.RemoveElementAt(i);
+      }
     }
   }
 
   if (!entry) {
     entry = new CacheFileContextEvictorEntry();
     entry->mInfo = aLoadContextInfo;
+    entry->mPinned = aPinned;
     mEntries.AppendElement(entry);
   }
 
   entry->mTimeStamp = PR_Now() / PR_USEC_PER_MSEC;
 
-  PersistEvictionInfoToDisk(aLoadContextInfo);
+  PersistEvictionInfoToDisk(aLoadContextInfo, aPinned);
 
   if (mIndexIsUpToDate) {
     // Already existing context could be added again, in this case the iterator
@@ -180,12 +197,15 @@ CacheFileContextEvictor::CacheIndexStateChanged()
 
 nsresult
 CacheFileContextEvictor::WasEvicted(const nsACString &aKey, nsIFile *aFile,
-                                    bool *_retval)
+                                    bool *aEvictedAsPinned, bool *aEvictedAsNonPinned)
 {
   LOG(("CacheFileContextEvictor::WasEvicted() [key=%s]",
        PromiseFlatCString(aKey).get()));
 
   nsresult rv;
+
+  *aEvictedAsPinned = false;
+  *aEvictedAsNonPinned = false;
 
   MOZ_ASSERT(CacheFileIOManager::IsOnIOThread());
 
@@ -193,45 +213,46 @@ CacheFileContextEvictor::WasEvicted(const nsACString &aKey, nsIFile *aFile,
   MOZ_ASSERT(info);
   if (!info) {
     LOG(("CacheFileContextEvictor::WasEvicted() - Cannot parse key!"));
-    *_retval = false;
     return NS_OK;
   }
 
-  CacheFileContextEvictorEntry *entry = nullptr;
   for (uint32_t i = 0; i < mEntries.Length(); ++i) {
-    if (info->Equals(mEntries[i]->mInfo)) {
-      entry = mEntries[i];
-      break;
+    CacheFileContextEvictorEntry *entry = mEntries[i];
+
+    if (entry->mInfo && !info->Equals(entry->mInfo)) {
+      continue;
+    }
+
+    PRTime lastModifiedTime;
+    rv = aFile->GetLastModifiedTime(&lastModifiedTime);
+    if (NS_FAILED(rv)) {
+      LOG(("CacheFileContextEvictor::WasEvicted() - Cannot get last modified time"
+            ", returning false."));
+      return NS_OK;
+    }
+
+    if (lastModifiedTime > entry->mTimeStamp) {
+      // File has been modified since context eviction.
+      continue;
+    }
+
+    LOG(("CacheFileContextEvictor::WasEvicted() - evicted [pinning=%d, "
+         "mTimeStamp=%lld, lastModifiedTime=%lld]",
+         entry->mPinned, entry->mTimeStamp, lastModifiedTime));
+
+    if (entry->mPinned) {
+      *aEvictedAsPinned = true;
+    } else {
+      *aEvictedAsNonPinned = true;
     }
   }
-
-  if (!entry) {
-    LOG(("CacheFileContextEvictor::WasEvicted() - Didn't find equal context, "
-         "returning false."));
-    *_retval = false;
-    return NS_OK;
-  }
-
-  PRTime lastModifiedTime;
-  rv = aFile->GetLastModifiedTime(&lastModifiedTime);
-  if (NS_FAILED(rv)) {
-    LOG(("CacheFileContextEvictor::WasEvicted() - Cannot get last modified time"
-         ", returning false."));
-    *_retval = false;
-    return NS_OK;
-  }
-
-  *_retval = !(lastModifiedTime > entry->mTimeStamp);
-  LOG(("CacheFileContextEvictor::WasEvicted() - returning %s. [mTimeStamp=%lld,"
-       " lastModifiedTime=%lld]", *_retval ? "true" : "false",
-       mEntries[0]->mTimeStamp, lastModifiedTime));
 
   return NS_OK;
 }
 
 nsresult
 CacheFileContextEvictor::PersistEvictionInfoToDisk(
-  nsILoadContextInfo *aLoadContextInfo)
+  nsILoadContextInfo *aLoadContextInfo, bool aPinned)
 {
   LOG(("CacheFileContextEvictor::PersistEvictionInfoToDisk() [this=%p, "
        "loadContextInfo=%p]", this, aLoadContextInfo));
@@ -241,7 +262,7 @@ CacheFileContextEvictor::PersistEvictionInfoToDisk(
   MOZ_ASSERT(CacheFileIOManager::IsOnIOThread());
 
   nsCOMPtr<nsIFile> file;
-  rv = GetContextFile(aLoadContextInfo, getter_AddRefs(file));
+  rv = GetContextFile(aLoadContextInfo, aPinned, getter_AddRefs(file));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -268,7 +289,7 @@ CacheFileContextEvictor::PersistEvictionInfoToDisk(
 
 nsresult
 CacheFileContextEvictor::RemoveEvictInfoFromDisk(
-  nsILoadContextInfo *aLoadContextInfo)
+  nsILoadContextInfo *aLoadContextInfo, bool aPinned)
 {
   LOG(("CacheFileContextEvictor::RemoveEvictInfoFromDisk() [this=%p, "
        "loadContextInfo=%p]", this, aLoadContextInfo));
@@ -278,7 +299,7 @@ CacheFileContextEvictor::RemoveEvictInfoFromDisk(
   MOZ_ASSERT(CacheFileIOManager::IsOnIOThread());
 
   nsCOMPtr<nsIFile> file;
-  rv = GetContextFile(aLoadContextInfo, getter_AddRefs(file));
+  rv = GetContextFile(aLoadContextInfo, aPinned, getter_AddRefs(file));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -363,15 +384,25 @@ CacheFileContextEvictor::LoadEvictInfoFromDisk()
       continue;
     }
 
-    nsCOMPtr<nsILoadContextInfo> info = CacheFileUtils::ParseKey(decoded);
-
-    if (!info) {
-      LOG(("CacheFileContextEvictor::LoadEvictInfoFromDisk() - Cannot parse "
-           "context key, removing file. [contextKey=%s, file=%s]",
-           decoded.get(), leaf.get()));
-      file->Remove(false);
-      continue;
+    bool pinned = decoded[0] == '\t';
+    if (pinned) {
+      decoded = Substring(decoded, 1);
     }
+
+    nsCOMPtr<nsILoadContextInfo> info;
+    if (!NS_LITERAL_CSTRING("*").Equals(decoded)) {
+      // "*" is indication of 'delete all', info left null will pass
+      // to CacheFileContextEvictor::AddContext and clear all the cache data.
+      info = CacheFileUtils::ParseKey(decoded);
+      if (!info) {
+        LOG(("CacheFileContextEvictor::LoadEvictInfoFromDisk() - Cannot parse "
+             "context key, removing file. [contextKey=%s, file=%s]",
+             decoded.get(), leaf.get()));
+        file->Remove(false);
+        continue;
+      }
+    }
+
 
     PRTime lastModifiedTime;
     rv = file->GetLastModifiedTime(&lastModifiedTime);
@@ -381,6 +412,7 @@ CacheFileContextEvictor::LoadEvictInfoFromDisk()
 
     CacheFileContextEvictorEntry *entry = new CacheFileContextEvictorEntry();
     entry->mInfo = info;
+    entry->mPinned = pinned;
     entry->mTimeStamp = lastModifiedTime;
     mEntries.AppendElement(entry);
   }
@@ -390,6 +422,7 @@ CacheFileContextEvictor::LoadEvictInfoFromDisk()
 
 nsresult
 CacheFileContextEvictor::GetContextFile(nsILoadContextInfo *aLoadContextInfo,
+                                        bool aPinned,
                                         nsIFile **_retval)
 {
   nsresult rv;
@@ -398,7 +431,16 @@ CacheFileContextEvictor::GetContextFile(nsILoadContextInfo *aLoadContextInfo,
   leafName.AssignLiteral(CONTEXT_EVICTION_PREFIX);
 
   nsAutoCString keyPrefix;
-  CacheFileUtils::AppendKeyPrefix(aLoadContextInfo, keyPrefix);
+  if (aPinned) {
+    // Mark pinned context files with a tab char at the start.
+    // Tab is chosen because it can never be used as a context key tag.
+    keyPrefix.Append('\t');
+  }
+  if (aLoadContextInfo) {
+    CacheFileUtils::AppendKeyPrefix(aLoadContextInfo, keyPrefix);
+  } else {
+    keyPrefix.Append('*');
+  }
 
   nsAutoCString data64;
   rv = Base64Encode(keyPrefix, data64);
@@ -530,7 +572,7 @@ CacheFileContextEvictor::EvictEntries()
       LOG(("CacheFileContextEvictor::EvictEntries() - No more entries left in "
            "iterator. [iterator=%p, info=%p]", mEntries[0]->mIterator.get(),
            mEntries[0]->mInfo.get()));
-      RemoveEvictInfoFromDisk(mEntries[0]->mInfo);
+      RemoveEvictInfoFromDisk(mEntries[0]->mInfo, mEntries[0]->mPinned);
       mEntries.RemoveElementAt(0);
       continue;
     } else if (NS_FAILED(rv)) {
@@ -554,6 +596,20 @@ CacheFileContextEvictor::EvictEntries()
       // this must be a new one. Skip it.
       LOG(("CacheFileContextEvictor::EvictEntries() - Skipping entry since we "
            "found an active handle. [handle=%p]", handle.get()));
+      continue;
+    }
+
+    CacheIndex::EntryStatus status;
+    bool pinned;
+    rv = CacheIndex::HasEntry(hash, &status, &pinned);
+    // This must never fail, since eviction (this code) happens only when the index
+    // is up-to-date and thus the informatin is known.
+    MOZ_ASSERT(NS_SUCCEEDED(rv));
+
+    if (pinned != mEntries[0]->mPinned) {
+      LOG(("CacheFileContextEvictor::EvictEntries() - Skipping entry since pinning "
+           "doesn't match [evicting pinned=%d, entry pinned=%d]",
+           mEntries[0]->mPinned, pinned));
       continue;
     }
 

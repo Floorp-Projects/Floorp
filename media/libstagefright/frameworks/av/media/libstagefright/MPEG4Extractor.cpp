@@ -2190,7 +2190,7 @@ status_t MPEG4Extractor::parseSegmentIndex(off64_t offset, size_t size) {
             ALOGW("sub-sidx boxes not supported yet");
         }
         bool sap = d3 & 0x80000000;
-        bool saptype = d3 >> 28;
+        uint32_t saptype = (d3 >> 28) & 0x3;
         if (!sap || saptype > 2) {
             ALOGW("not a stream access point, or unsupported type");
         }
