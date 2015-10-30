@@ -1222,31 +1222,6 @@ public class GeckoAppShell
             return intent;
         }
 
-        if ("vnd.youtube".equals(scheme) &&
-            !hasHandlersForIntent(intent) &&
-            !TextUtils.isEmpty(uri.getSchemeSpecificPart())) {
-
-            // Return an intent with a URI that will open the YouTube page in the
-            // current Fennec instance.
-            final Class<?> c;
-            final String browserClassName = AppConstants.MOZ_ANDROID_BROWSER_INTENT_CLASS;
-            try {
-                c = Class.forName(browserClassName);
-            } catch (ClassNotFoundException e) {
-                // This should never occur.
-                Log.wtf(LOGTAG, "Class " + browserClassName + " not found!");
-                return null;
-            }
-
-            final Uri youtubeURI = getYouTubeHTML5URI(uri);
-            if (youtubeURI != null) {
-                // Load it as a new URL in the current tab. Hitting 'back' will return
-                // the user to the YouTube overview page.
-                final Intent view = new Intent(GeckoApp.ACTION_LOAD, youtubeURI, context, c);
-                return view;
-            }
-        }
-
         // Have a special handling for SMS, as the message body
         // is not extracted from the URI automatically.
         if (!"sms".equals(scheme)) {
@@ -1295,30 +1270,6 @@ public class GeckoAppShell
         }
 
         intent.setSelector(null);
-    }
-
-    /**
-     * Input: vnd:youtube:3MWr19Dp2OU?foo=bar
-     * Output: https://www.youtube.com/embed/3MWr19Dp2OU?foo=bar
-     *
-     * Ideally this should include ?html5=1. However, YouTube seems to do a
-     * fine job of taking care of this on its own, and the Kindle Fire ships
-     * Flash, so...
-     *
-     * @param uri a vnd:youtube URI.
-     * @return an HTTPS URI for web player.
-     */
-    private static Uri getYouTubeHTML5URI(final Uri uri) {
-        if (uri == null) {
-            return null;
-        }
-
-        final String ssp = uri.getSchemeSpecificPart();
-        if (TextUtils.isEmpty(ssp)) {
-            return null;
-        }
-
-        return Uri.parse("https://www.youtube.com/embed/" + ssp);
     }
 
     /**

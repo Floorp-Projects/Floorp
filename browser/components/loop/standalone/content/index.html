@@ -42,9 +42,9 @@
        *
        */
       function require(url) {
-        var devTimeUrl = url.replace(/^script!/, '');
-        var devTimeUrl = devTimeUrl.replace(/^imports.*!/, '');
-        var devTimeUrl = devTimeUrl.replace(/^exports.*!/, '');
+        // strip off everything up to and including the last !, as those are
+        // all directives to webpack
+        var devTimeUrl = url.replace(/^.*!/, '');
         insertScript(devTimeUrl, true);
       }
 
@@ -174,16 +174,60 @@
       // We don't use the SDK's CSS. This will prevent spurious 404 errors.
       window.OTProperties.cssURL = "about:blank";
     </script>
+
+    <script>
+      // Explicitly create this here so that it's deterministic and easier to
+      // understand, rather than having it created as a side-effect of loading
+      // one of our faux-modules.
+      var loop = {};
+    </script>
+
     <script type="text/javascript" src="config.js"></script>
 
-    <!-- note that for 'make dist', webappEntryPoint.js is replaced by -->
-    <!-- the standalone.js bundle -->
+    <script>
+    // Wait for both "localized" to fire and webapp.js to finish executing.
+    // This needs to be available ahead of either of those things happening,
+    // so we declare it here.
+    //
+    // The localized event fires asynchronously after l10n.js loads,
+    // so it could happen before or after loop.webapp.init has been
+    // defined.
+    //
+    // This means at least in the (current) dev setup where our
+    // require shim injects script tags dynamically. The race could conceivably
+    // happen in production as well, after l10n.js loads and before webpack.js
+    // is loaded.
+    //
+    // Fortunately, that dev setup nastiness will go away once we get to a
+    // single build setup using real modules and obsolete build-jsx.
+    var localizedHasFired = false;
+    function initIfReady() {
+      if (localizedHasFired && "webapp" in loop) {
+        loop.webapp.init();
+      }
+    }
+    </script>
+
+    <!-- We'd like to bundle/minify this at some point, but we need to work
+         out how to configure webpack to run this in a module container
+         rather than directly in the global scope. -->
+
+    <!-- Note that as long as the various closures in the files loaded by
+         webppEntryPoint.js take navigator.mozL10n as an argument, this
+         JS must run to completion before that file loads, so this one must be
+         loaded synchronously first -->
+    <script type="text/javascript" src="libs/l10n-gaia-02ca67948fe8.js">
+    </script>
+
+    <!-- Note that for 'make dist', webappEntryPoint.js is replaced by
+         the standalone.js bundle -->
     <script type="text/javascript" src="webappEntryPoint.js"></script>
 
     <script>
-      // Wait for all the localization notes to load
       window.addEventListener("localized", function() {
-        loop.webapp.init();
+        // see the initIfReady() comments in this file for details
+        localizedHasFired = true;
+        initIfReady();
       }, false);
     </script>
 

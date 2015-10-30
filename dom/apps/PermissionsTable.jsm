@@ -365,6 +365,11 @@ this.PermissionsTable =  { geolocation: {
                              privileged: ALLOW_ACTION,
                              certified: ALLOW_ACTION
                            },
+                           "audio-capture:3gpp2": {
+                             app: DENY_ACTION,
+                             privileged: ALLOW_ACTION,
+                             certified: ALLOW_ACTION
+                           },
                            "nfc": {
                              app: DENY_ACTION,
                              privileged: ALLOW_ACTION,

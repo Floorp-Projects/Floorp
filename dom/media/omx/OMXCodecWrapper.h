@@ -88,6 +88,7 @@ public:
     AAC_ENC, // AAC encoder.
     AMR_NB_ENC, // AMR_NB encoder.
     AVC_ENC, // AVC/H.264 encoder.
+    EVRC_ENC, // EVRC encoder
     TYPE_COUNT
   };
 
@@ -119,6 +120,9 @@ public:
 
   /** Create a AMR audio encoder. Returns nullptr when failed. */
   static OMXAudioEncoder* CreateAMRNBEncoder();
+
+  /** Create a EVRC audio encoder. Returns nullptr when failed. */
+  static OMXAudioEncoder* CreateEVRCEncoder();
 
   /** Create a AVC/H.264 video encoder. Returns nullptr when failed. */
   static OMXVideoEncoder* CreateAVCEncoder();
@@ -204,6 +208,7 @@ private:
   int mCodecType;
   bool mStarted; // Has MediaCodec been started?
   bool mAMRCSDProvided;
+  bool mEVRCCSDProvided;
 };
 
 /**

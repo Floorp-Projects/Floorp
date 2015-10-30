@@ -553,7 +553,7 @@ private:
     }
   }
 
-  bool Check3gppPermission()
+  bool CheckPermission(const char* aType)
   {
     nsCOMPtr<nsIDocument> doc = mRecorder->GetOwner()->GetExtantDoc();
     if (!doc) {
@@ -576,7 +576,7 @@ private:
     }
 
     uint32_t perm = nsIPermissionManager::DENY_ACTION;
-    pm->TestExactPermissionFromPrincipal(doc->NodePrincipal(), "audio-capture:3gpp", &perm);
+    pm->TestExactPermissionFromPrincipal(doc->NodePrincipal(), aType, &perm);
     return perm == nsIPermissionManager::ALLOW_ACTION;
   }
 
@@ -593,8 +593,14 @@ private:
     // At this stage, the API doesn't allow UA to choose the output mimeType format.
 
     // Make sure the application has permission to assign AUDIO_3GPP
-    if (mRecorder->mMimeType.EqualsLiteral(AUDIO_3GPP) && Check3gppPermission()) {
+    if (mRecorder->mMimeType.EqualsLiteral(AUDIO_3GPP) && CheckPermission("audio-capture:3gpp")) {
       mEncoder = MediaEncoder::CreateEncoder(NS_LITERAL_STRING(AUDIO_3GPP),
+                                             mRecorder->GetAudioBitrate(),
+                                             mRecorder->GetVideoBitrate(),
+                                             mRecorder->GetBitrate(),
+                                             aTrackTypes);
+    } else if (mRecorder->mMimeType.EqualsLiteral(AUDIO_3GPP2) && CheckPermission("audio-capture:3gpp2")) {
+      mEncoder = MediaEncoder::CreateEncoder(NS_LITERAL_STRING(AUDIO_3GPP2),
                                              mRecorder->GetAudioBitrate(),
                                              mRecorder->GetVideoBitrate(),
                                              mRecorder->GetBitrate(),

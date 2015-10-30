@@ -184,7 +184,7 @@ OmxAudioTrackEncoder::AppendEncodedFrames(EncodedFrameContainer& aContainer)
                                               3000); // wait up to 3ms
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (!frameData.IsEmpty()) {
+  if (!frameData.IsEmpty() || outFlags & OMXCodecWrapper::BUFFER_EOS) { // Some hw codec may send out EOS with an empty frame
     bool isCSD = false;
     if (outFlags & OMXCodecWrapper::BUFFER_CODEC_CONFIG) { // codec specific data
       isCSD = true;
@@ -199,6 +199,9 @@ OmxAudioTrackEncoder::AppendEncodedFrames(EncodedFrameContainer& aContainer)
     } else if (mEncoder->GetCodecType() == OMXCodecWrapper::AMR_NB_ENC){
       audiodata->SetFrameType(isCSD ?
         EncodedFrame::AMR_AUDIO_CSD : EncodedFrame::AMR_AUDIO_FRAME);
+    } else if (mEncoder->GetCodecType() == OMXCodecWrapper::EVRC_ENC){
+      audiodata->SetFrameType(isCSD ?
+        EncodedFrame::EVRC_AUDIO_CSD : EncodedFrame::EVRC_AUDIO_FRAME);
     } else {
       MOZ_ASSERT(false, "audio codec not supported");
     }
@@ -340,6 +343,46 @@ OmxAMRAudioTrackEncoder::GetMetadata()
   }
 
   RefPtr<AMRTrackMetadata> meta = new AMRTrackMetadata();
+  return meta.forget();
+}
+
+nsresult
+OmxEVRCAudioTrackEncoder::Init(int aChannels, int aSamplingRate)
+{
+  mChannels = aChannels;
+  mSamplingRate = aSamplingRate;
+
+  mEncoder = OMXCodecWrapper::CreateEVRCEncoder();
+  NS_ENSURE_TRUE(mEncoder, NS_ERROR_FAILURE);
+
+  nsresult rv = mEncoder->Configure(mChannels, mSamplingRate, EVRC_SAMPLERATE);
+  ReentrantMonitorAutoEnter mon(mReentrantMonitor);
+  mInitialized = (rv == NS_OK);
+
+  mReentrantMonitor.NotifyAll();
+
+  return NS_OK;
+}
+
+already_AddRefed<TrackMetadataBase>
+OmxEVRCAudioTrackEncoder::GetMetadata()
+{
+  PROFILER_LABEL("OmxEVRCAudioTrackEncoder", "GetMetadata",
+    js::ProfileEntry::Category::OTHER);
+  {
+    // Wait if mEncoder is not initialized nor is being canceled.
+    ReentrantMonitorAutoEnter mon(mReentrantMonitor);
+    while (!mCanceled && !mInitialized) {
+      mReentrantMonitor.Wait();
+    }
+  }
+
+  if (mCanceled || mEncodingComplete) {
+    return nullptr;
+  }
+
+  RefPtr<EVRCTrackMetadata> meta = new EVRCTrackMetadata();
+  meta->mChannels = mChannels;
   return meta.forget();
 }
 

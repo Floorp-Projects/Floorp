@@ -87,6 +87,11 @@ using base::Histogram;
 using base::LinearHistogram;
 using base::StatisticsRecorder;
 
+// The maximum number of chrome hangs stacks that we're keeping.
+const size_t kMaxChromeStacksKept = 50;
+// The maximum depth of a single chrome hang stack.
+const size_t kMaxChromeStackDepth = 50;
+
 #define KEYED_HISTOGRAM_NAME_SEPARATOR "#"
 #define SUBSESSION_HISTOGRAM_PREFIX "sub#"
 
@@ -108,16 +113,20 @@ ReflectHistogramSnapshot(JSContext *cx, JS::Handle<JSObject*> obj, Histogram *h)
 // more efficiently by keeping a single global list of modules.
 class CombinedStacks {
 public:
+  CombinedStacks() : mNextIndex(0) {}
   typedef std::vector<Telemetry::ProcessedStack::Frame> Stack;
   const Telemetry::ProcessedStack::Module& GetModule(unsigned aIndex) const;
   size_t GetModuleCount() const;
   const Stack& GetStack(unsigned aIndex) const;
-  void AddStack(const Telemetry::ProcessedStack& aStack);
+  size_t AddStack(const Telemetry::ProcessedStack& aStack);
   size_t GetStackCount() const;
   size_t SizeOfExcludingThis() const;
 private:
   std::vector<Telemetry::ProcessedStack::Module> mModules;
+  // A circular buffer to hold the stacks.
   std::vector<Stack> mStacks;
+  // The index of the next buffer element to write to in mStacks.
+  size_t mNextIndex;
 };
 
 static JSObject *
@@ -133,10 +142,18 @@ CombinedStacks::GetModule(unsigned aIndex) const {
   return mModules[aIndex];
 }
 
-void
+size_t
 CombinedStacks::AddStack(const Telemetry::ProcessedStack& aStack) {
-  mStacks.resize(mStacks.size() + 1);
-  CombinedStacks::Stack& adjustedStack = mStacks.back();
+  // Advance the indices of the circular queue holding the stacks.
+  size_t index = mNextIndex++ % kMaxChromeStacksKept;
+  // Grow the vector up to the maximum size, if needed.
+  if (mStacks.size() < kMaxChromeStacksKept) {
+    mStacks.resize(mStacks.size() + 1);
+  }
+  // Get a reference to the location holding the new stack.
+  CombinedStacks::Stack& adjustedStack = mStacks[index];
+  // If we're using an old stack to hold aStack, clear it.
+  adjustedStack.clear();
 
   size_t stackSize = aStack.GetStackSize();
   for (size_t i = 0; i < stackSize; ++i) {
@@ -159,6 +176,7 @@ CombinedStacks::AddStack(const Telemetry::ProcessedStack& aStack) {
     Telemetry::ProcessedStack::Frame adjustedFrame = { frame.mOffset, modIndex };
     adjustedStack.push_back(adjustedFrame);
   }
+  return index;
 }
 
 const CombinedStacks::Stack&
@@ -249,6 +267,7 @@ public:
   void AddHang(const Telemetry::ProcessedStack& aStack, uint32_t aDuration,
                int32_t aSystemUptime, int32_t aFirefoxUptime,
                HangAnnotationsPtr aAnnotations);
+  void PruneStackReferences(const size_t aRemovedStackIndex);
   uint32_t GetDuration(unsigned aIndex) const;
   int32_t GetSystemUptime(unsigned aIndex) const;
   int32_t GetFirefoxUptime(unsigned aIndex) const;
@@ -278,17 +297,24 @@ HangReports::AddHang(const Telemetry::ProcessedStack& aStack,
                      int32_t aSystemUptime,
                      int32_t aFirefoxUptime,
                      HangAnnotationsPtr aAnnotations) {
+  // Append the new stack to the stack's circular queue.
+  size_t hangIndex = mStacks.AddStack(aStack);
+  // Append the hang info at the same index, in mHangInfo.
   HangInfo info = { aDuration, aSystemUptime, aFirefoxUptime };
-  mHangInfo.push_back(info);
-  mStacks.AddStack(aStack);
+  if (mHangInfo.size() < kMaxChromeStacksKept) {
+    mHangInfo.push_back(info);
+  } else {
+    mHangInfo[hangIndex] = info;
+    // Remove any reference to the stack overwritten in the circular queue
+    // from the annotations.
+    PruneStackReferences(hangIndex);
+  }
 
   if (!aAnnotations) {
     return;
   }
 
   nsAutoString annotationsKey;
-  uint32_t hangIndex = static_cast<uint32_t>(mHangInfo.size() - 1);
-
   // Generate a key to index aAnnotations in the hash map.
   nsresult rv = ComputeAnnotationsKey(aAnnotations, annotationsKey);
   if (NS_FAILED(rv)) {
@@ -305,6 +331,38 @@ HangReports::AddHang(const Telemetry::ProcessedStack& aStack,
 
   // If the key was not found, add the annotations to the hash map.
   mAnnotationInfo.Put(annotationsKey, new AnnotationInfo(hangIndex, Move(aAnnotations)));
+}
+
+/**
+ * This function removes links to discarded chrome hangs stacks and prunes unused
+ * annotations.
+ */
+void
+HangReports::PruneStackReferences(const size_t aRemovedStackIndex) {
+  // We need to adjust the indices that link annotations to chrome hangs. Since we
+  // removed a stack, we must remove all references to it and prune annotations
+  // linked to no stacks.
+  for (auto iter = mAnnotationInfo.Iter(); !iter.Done(); iter.Next()) {
+    nsTArray<uint32_t>& stackIndices = iter.Data()->mHangIndices;
+    size_t toRemove = stackIndices.NoIndex;
+    for (size_t k = 0; k < stackIndices.Length(); k++) {
+      // Is this index referencing the removed stack?
+      if (stackIndices[k] == aRemovedStackIndex) {
+        toRemove = k;
+        break;
+      }
+    }
+
+    // Remove the index referencing the old stack from the annotation.
+    if (toRemove != stackIndices.NoIndex) {
+      stackIndices.RemoveElementAt(toRemove);
+    }
+
+    // If this annotation no longer references any stack, drop it.
+    if (!stackIndices.Length()) {
+      iter.Remove();
+    }
+  }
 }
 
 size_t
@@ -3960,8 +4018,8 @@ ProcessedStack
 GetStackAndModules(const std::vector<uintptr_t>& aPCs)
 {
   std::vector<StackFrame> rawStack;
-  for (std::vector<uintptr_t>::const_iterator i = aPCs.begin(),
-         e = aPCs.end(); i != e; ++i) {
+  auto stackEnd = aPCs.begin() + std::min(aPCs.size(), kMaxChromeStackDepth);
+  for (auto i = aPCs.begin(); i != stackEnd; ++i) {
     uintptr_t aPC = *i;
     StackFrame Frame = {aPC, static_cast<uint16_t>(rawStack.size()),
                         std::numeric_limits<uint16_t>::max()};

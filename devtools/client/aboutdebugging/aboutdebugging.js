@@ -17,6 +17,8 @@ loader.lazyRequireGetter(this, "DebuggerClient",
   "devtools/shared/client/main", true);
 loader.lazyRequireGetter(this, "DebuggerServer",
   "devtools/server/main", true);
+loader.lazyRequireGetter(this, "Telemetry",
+  "devtools/client/shared/telemetry");
 loader.lazyRequireGetter(this, "WorkersComponent",
   "devtools/client/aboutdebugging/components/workers", true);
 loader.lazyRequireGetter(this, "Services");
@@ -56,6 +58,9 @@ var AboutDebugging = {
   },
 
   init() {
+    let telemetry = this._telemetry = new Telemetry();
+    telemetry.toolOpened("aboutdebugging");
+
     // Show the first available tab.
     this.showTab();
     window.addEventListener("hashchange", () => this.showTab());
@@ -89,9 +94,20 @@ var AboutDebugging = {
         document.querySelector("#workers"));
     });
   },
+
+  destroy() {
+    let telemetry = this._telemetry;
+    telemetry.toolClosed("aboutdebugging");
+    telemetry.destroy();
+  },
 };
 
 window.addEventListener("DOMContentLoaded", function load() {
   window.removeEventListener("DOMContentLoaded", load);
   AboutDebugging.init();
+});
+
+window.addEventListener("unload", function unload() {
+  window.removeEventListener("unload", unload);
+  AboutDebugging.destroy();
 });
