@@ -16,8 +16,6 @@
 #include "FFmpegLog.h"
 #include "mozilla/PodOperations.h"
 
-#define GECKO_FRAME_TYPE 0x00093CC0
-
 typedef mozilla::layers::Image Image;
 typedef mozilla::layers::PlanarYCbCrImage PlanarYCbCrImage;
 
@@ -317,15 +315,19 @@ FFmpegH264Decoder<LIBAV_VER>::AllocateYUV420PVideoBuffer(
     aFrame->data[i] = buffer + offsets[i] + planesEdgeWidth[i];
   }
 
-  // Unused, but needs to be non-zero to keep ffmpeg happy.
-  aFrame->type = GECKO_FRAME_TYPE;
-
   aFrame->extended_data = aFrame->data;
   aFrame->width = aCodecContext->width;
   aFrame->height = aCodecContext->height;
 
   aFrame->opaque = static_cast<void*>(image.forget().take());
 
+  aFrame->type = FF_BUFFER_TYPE_USER;
+  aFrame->reordered_opaque = aCodecContext->reordered_opaque;
+#if LIBAVCODEC_VERSION_MAJOR == 53
+  if (aCodecContext->pkt) {
+    aFrame->pkt_pts = aCodecContext->pkt->pts;
+  }
+#endif
   return 0;
 }
 
