@@ -459,6 +459,10 @@ LayerTransactionParent::RecvUpdate(InfallibleTArray<Edit>&& cset,
         edit.get_OpSetDiagnosticTypes().diagnostics());
       break;
     }
+    case Edit::TOpWindowOverlayChanged: {
+      mLayerManager->SetWindowOverlayChanged();
+      break;
+    }
     // Tree ops
     case Edit::TOpSetRoot: {
       MOZ_LAYERS_LOG(("[ParentSide] SetRoot"));
