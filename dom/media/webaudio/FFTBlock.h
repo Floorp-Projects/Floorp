@@ -79,10 +79,8 @@ public:
   {
     EnsureFFT();
 #if defined(MOZ_LIBAV_FFT)
-    AlignedTArray<FFTSample> complex(mFFTSize);
-    PodCopy(complex.Elements(), aData, mFFTSize);
-    av_rdft_calc(mAvRDFT, complex.Elements());
-    PodCopy((FFTSample*)mOutputBuffer.Elements(), complex.Elements(), mFFTSize);
+    PodCopy(mOutputBuffer.Elements()->f, aData, mFFTSize);
+    av_rdft_calc(mAvRDFT, mOutputBuffer.Elements()->f);
     // Recover packed Nyquist.
     mOutputBuffer[mFFTSize / 2].r = mOutputBuffer[0].i;
     mOutputBuffer[0].i = 0.0f;
