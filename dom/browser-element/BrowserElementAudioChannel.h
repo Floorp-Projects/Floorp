@@ -40,6 +40,7 @@ public:
          nsIFrameLoader* aFrameLoader,
          nsIBrowserElementAPI* aAPI,
          AudioChannel aAudioChannel,
+         const nsAString& aManifestURL,
          ErrorResult& aRv);
 
   // WebIDL methods
@@ -57,13 +58,17 @@ public:
 
   already_AddRefed<dom::DOMRequest> IsActive(ErrorResult& aRv);
 
+  already_AddRefed<dom::DOMRequest> NotifyChannel(const nsAString& aEvent,
+                                                  ErrorResult& aRv);
+
   IMPL_EVENT_HANDLER(activestatechanged);
 
 private:
   BrowserElementAudioChannel(nsPIDOMWindow* aWindow,
                              nsIFrameLoader* aFrameLoader,
                              nsIBrowserElementAPI* aAPI,
-                             AudioChannel aAudioChannel);
+                             AudioChannel aAudioChannel,
+                             const nsAString& aManifestURL);
 
   ~BrowserElementAudioChannel();
 
@@ -76,6 +81,7 @@ private:
   nsCOMPtr<nsITabParent> mTabParent;
   nsCOMPtr<nsPIDOMWindow> mFrameWindow;
   AudioChannel mAudioChannel;
+  nsString mManifestURL;
 
   enum {
     eStateActive,
