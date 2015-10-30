@@ -3331,7 +3331,7 @@ nsWindow::ThemeChanged()
 }
 
 void
-nsWindow::DispatchDragEvent(EventMessage aMsg, const LayoutDeviceIntPoint& aRefPoint,
+nsWindow::DispatchDragEvent(EventMessage aMsg, const nsIntPoint& aRefPoint,
                             guint aTime)
 {
     WidgetDragEvent event(true, aMsg, this);
@@ -3340,7 +3340,7 @@ nsWindow::DispatchDragEvent(EventMessage aMsg, const LayoutDeviceIntPoint& aRefP
         InitDragEvent(event);
     }
 
-    event.refPoint = aRefPoint;
+    event.refPoint = LayoutDeviceIntPoint::FromUntyped(aRefPoint);
     event.time = aTime;
     event.timeStamp = GetEventTimeStamp(aTime);
 
@@ -5978,11 +5978,9 @@ drag_motion_event_cb(GtkWidget *aWidget,
 
     LOGDRAG(("nsWindow drag-motion signal for %p\n", (void*)innerMostWindow));
 
-    LayoutDeviceIntPoint point = window->GdkPointToDevicePixels({ retx, rety });
-
     return nsDragService::GetInstance()->
         ScheduleMotionEvent(innerMostWindow, aDragContext,
-                            point, aTime);
+                            nsIntPoint(retx, rety), aTime);
 }
 
 static void
@@ -6050,11 +6048,9 @@ drag_drop_event_cb(GtkWidget *aWidget,
 
     LOGDRAG(("nsWindow drag-drop signal for %p\n", (void*)innerMostWindow));
 
-    LayoutDeviceIntPoint point = window->GdkPointToDevicePixels({ retx, rety });
-
     return nsDragService::GetInstance()->
         ScheduleDropEvent(innerMostWindow, aDragContext,
-                          point, aTime);
+                          nsIntPoint(retx, rety), aTime);
 }
 
 static void
