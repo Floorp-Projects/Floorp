@@ -405,6 +405,7 @@ gbjar.sources += [
     'menu/MenuItemDefault.java',
     'menu/MenuPanel.java',
     'menu/MenuPopup.java',
+    'menu/QuickShareBarActionView.java',
     'MotionEventInterceptor.java',
     'NotificationClient.java',
     'NotificationHandler.java',
