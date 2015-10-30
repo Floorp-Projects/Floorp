@@ -257,8 +257,10 @@ exports.getSnapshotTotals = function (snapshot) {
       census = census.children && census.children[0];
     }
   } else {
-    bytes = census.totalBytes;
-    count = census.totalCount;
+    if (census) {
+      bytes = census.totalBytes;
+      count = census.totalCount;
+    }
   }
 
   return {
@@ -266,4 +268,3 @@ exports.getSnapshotTotals = function (snapshot) {
     count: count || 0,
   };
 };
-
