@@ -3396,36 +3396,38 @@ nsRange::GetInnerTextNoFlush(DOMString& aValue, ErrorResult& aError,
       nsIContent* child = currentNode->GetFirstChild();
       if (child) {
         currentNode = child;
-      } else {
-        currentState = AFTER_NODE;
+        continue;
       }
-    } else {
-      if (isVisibleAndNotReplaced) {
-        if (currentNode->IsHTMLElement(nsGkAtoms::br)) {
+      currentState = AFTER_NODE;
+    }
+    if (currentNode == endNode && currentState == endState) {
+      break;
+    }
+    if (isVisibleAndNotReplaced) {
+      if (currentNode->IsHTMLElement(nsGkAtoms::br)) {
+        result.Append('\n');
+      }
+      switch (f->StyleDisplay()->mDisplay) {
+      case NS_STYLE_DISPLAY_TABLE_CELL:
+        if (!IsLastCellOfRow(f)) {
+          result.Append('\t');
+        }
+        break;
+      case NS_STYLE_DISPLAY_TABLE_ROW:
+        if (!IsLastRowOfRowGroup(f) ||
+            !IsLastNonemptyRowGroupOfTable(f->GetParent())) {
           result.Append('\n');
         }
-        switch (f->StyleDisplay()->mDisplay) {
-        case NS_STYLE_DISPLAY_TABLE_CELL:
-          if (!IsLastCellOfRow(f)) {
-            result.Append('\t');
-          }
-          break;
-        case NS_STYLE_DISPLAY_TABLE_ROW:
-          if (!IsLastRowOfRowGroup(f) ||
-              !IsLastNonemptyRowGroupOfTable(f->GetParent())) {
-            result.Append('\n');
-          }
-          break;
-        }
-        result.AddRequiredLineBreakCount(GetRequiredInnerTextLineBreakCount(f));
+        break;
       }
-      nsIContent* next = currentNode->GetNextSibling();
-      if (next) {
-        currentNode = next;
-        currentState = AT_NODE;
-      } else {
-        currentNode = currentNode->GetParent();
-      }
+      result.AddRequiredLineBreakCount(GetRequiredInnerTextLineBreakCount(f));
+    }
+    nsIContent* next = currentNode->GetNextSibling();
+    if (next) {
+      currentNode = next;
+      currentState = AT_NODE;
+    } else {
+      currentNode = currentNode->GetParent();
     }
   }
 
