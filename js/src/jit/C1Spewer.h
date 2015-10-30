@@ -7,7 +7,7 @@
 #ifndef jit_C1Spewer_h
 #define jit_C1Spewer_h
 
-#ifdef JS_JITSPEW
+#ifdef DEBUG
 
 #include "NamespaceImports.h"
 
@@ -46,6 +46,6 @@ class C1Spewer
 } // namespace jit
 } // namespace js
 
-#endif /* JS_JITSPEW */
+#endif /* DEBUG */
 
 #endif /* jit_C1Spewer_h */
