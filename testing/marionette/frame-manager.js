@@ -180,6 +180,9 @@ FrameManager.prototype = {
    *     ChromeMessageBroadcaster or ChromeMessageSender.
    */
   addMessageManagerListeners: function FM_addMessageManagerListeners(mm) {
+    mm.addWeakMessageListener("Marionette:ok", this.server);
+    mm.addWeakMessageListener("Marionette:done", this.server);
+    mm.addWeakMessageListener("Marionette:error", this.server);
     mm.addWeakMessageListener("Marionette:emitTouchEvent", this.server);
     mm.addWeakMessageListener("Marionette:log", this.server);
     mm.addWeakMessageListener("Marionette:runEmulatorCmd", this.server);
@@ -211,6 +214,9 @@ FrameManager.prototype = {
    *     ChromeMessageBroadcaster or ChromeMessageSender.
    */
   removeMessageManagerListeners: function FM_removeMessageManagerListeners(mm) {
+    mm.removeWeakMessageListener("Marionette:ok", this.server);
+    mm.removeWeakMessageListener("Marionette:done", this.server);
+    mm.removeWeakMessageListener("Marionette:error", this.server);
     mm.removeWeakMessageListener("Marionette:log", this.server);
     mm.removeWeakMessageListener("Marionette:shareData", this.server);
     mm.removeWeakMessageListener("Marionette:runEmulatorCmd", this.server);
