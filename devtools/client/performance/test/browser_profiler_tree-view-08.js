@@ -43,21 +43,21 @@ function test() {
     "Generalized JS node has correct category");
   is(JS.target.getAttribute("tooltiptext"), "JIT",
     "Generalized JS node has correct category");
-  is(JS.target.querySelector(".call-tree-name").getAttribute("value"), "JIT",
+  is(JS.target.querySelector(".call-tree-name").textContent.trim(), "JIT",
     "Generalized JS node has correct display value as just the category name.");
 
   is(JS2.target.getAttribute("category"), "js",
     "Generalized second JS node has correct category");
   is(JS2.target.getAttribute("tooltiptext"), "JIT",
     "Generalized second JS node has correct category");
-  is(JS2.target.querySelector(".call-tree-name").getAttribute("value"), "JIT",
+  is(JS2.target.querySelector(".call-tree-name").textContent.trim(), "JIT",
     "Generalized second JS node has correct display value as just the category name.");
 
   is(GC.target.getAttribute("category"), "gc",
     "Generalized GC node has correct category");
   is(GC.target.getAttribute("tooltiptext"), "GC",
     "Generalized GC node has correct category");
-  is(GC.target.querySelector(".call-tree-name").getAttribute("value"), "GC",
+  is(GC.target.querySelector(".call-tree-name").textContent.trim(), "GC",
     "Generalized GC node has correct display value as just the category name.");
 
   finish();
