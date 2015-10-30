@@ -524,7 +524,7 @@ js::Invoke(JSContext* cx, const Value& thisv, const Value& fval, unsigned argc, 
 
     if (args.thisv().isObject()) {
         /*
-         * We must call the thisObject hook in case we are not called from the
+         * We must call the thisValue hook in case we are not called from the
          * interpreter, where a prior bytecode has computed an appropriate
          * |this| already.  But don't do that if fval is a DOM function.
          */

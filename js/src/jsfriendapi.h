@@ -353,7 +353,7 @@ namespace js {
             js::proxy_Watch, js::proxy_Unwatch,                                         \
             js::proxy_GetElements,                                                      \
             nullptr,             /* enumerate       */                                  \
-            nullptr,             /* thisObject      */                                  \
+            nullptr,             /* thisValue       */                                  \
             js::proxy_FunToString,                                                      \
         }                                                                               \
     }
