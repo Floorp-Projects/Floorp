@@ -67,7 +67,7 @@ SharedPlanarYCbCrImage::GetTextureClient(CompositableClient* aClient)
 uint8_t*
 SharedPlanarYCbCrImage::GetBuffer()
 {
-  return mTextureClient->GetBuffer();
+  return mTextureClient ? mTextureClient->GetBuffer() : nullptr;
 }
 
 already_AddRefed<gfx::SourceSurface>
@@ -135,6 +135,9 @@ void
 SharedPlanarYCbCrImage::SetDataNoCopy(const Data &aData)
 {
   MOZ_ASSERT(mTextureClient, "This Image should have already allocated data");
+  if (!mTextureClient) {
+    return;
+  }
   mData = aData;
   mSize = aData.mPicSize;
   /* SetDataNoCopy is used to update YUV plane offsets without (re)allocating
