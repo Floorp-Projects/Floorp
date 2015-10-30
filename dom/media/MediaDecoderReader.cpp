@@ -259,6 +259,7 @@ MediaDecoderReader::AsyncReadMetadata()
   // Attempt to read the metadata.
   RefPtr<MetadataHolder> metadata = new MetadataHolder();
   nsresult rv = ReadMetadata(&metadata->mInfo, getter_Transfers(metadata->mTags));
+  metadata->mInfo.AssertValid();
 
   // We're not waiting for anything. If we didn't get the metadata, that's an
   // error.

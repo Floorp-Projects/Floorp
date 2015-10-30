@@ -106,8 +106,7 @@ static const nsString GetKind(const nsCString& aRole)
   return EmptyString();
 }
 
-static void InitTrack(TrackInfo::TrackType aTrackType,
-                      MessageField* aMsgInfo,
+static void InitTrack(MessageField* aMsgInfo,
                       TrackInfo* aInfo,
                       bool aEnable)
 {
@@ -118,8 +117,7 @@ static void InitTrack(TrackInfo::TrackType aTrackType,
   nsCString* sRole = aMsgInfo->mValuesStore.Get(eRole);
   nsCString* sTitle = aMsgInfo->mValuesStore.Get(eTitle);
   nsCString* sLanguage = aMsgInfo->mValuesStore.Get(eLanguage);
-  aInfo->Init(aTrackType,
-              sName? NS_ConvertUTF8toUTF16(*sName):EmptyString(),
+  aInfo->Init(sName? NS_ConvertUTF8toUTF16(*sName):EmptyString(),
               sRole? GetKind(*sRole):EmptyString(),
               sTitle? NS_ConvertUTF8toUTF16(*sTitle):EmptyString(),
               sLanguage? NS_ConvertUTF8toUTF16(*sLanguage):EmptyString(),
@@ -319,8 +317,7 @@ void OggReader::SetupMediaTracksInfo(const nsTArray<uint32_t>& aSerials)
       }
 
       if (msgInfo) {
-        InitTrack(TrackInfo::kVideoTrack,
-                  msgInfo,
+        InitTrack(msgInfo,
                   &mInfo.mVideo,
                   mTheoraState == theoraState);
       }
@@ -344,8 +341,7 @@ void OggReader::SetupMediaTracksInfo(const nsTArray<uint32_t>& aSerials)
       }
 
       if (msgInfo) {
-        InitTrack(TrackInfo::kAudioTrack,
-                  msgInfo,
+        InitTrack(msgInfo,
                   &mInfo.mAudio,
                   mVorbisState == vorbisState);
       }
@@ -359,8 +355,7 @@ void OggReader::SetupMediaTracksInfo(const nsTArray<uint32_t>& aSerials)
       }
 
       if (msgInfo) {
-        InitTrack(TrackInfo::kAudioTrack,
-                  msgInfo,
+        InitTrack(msgInfo,
                   &mInfo.mAudio,
                   mOpusState == opusState);
       }
@@ -777,7 +772,7 @@ bool OggReader::ReadOggChain()
     LOG(LogLevel::Debug, ("New vorbis ogg link, serial=%d\n", mVorbisSerial));
 
     if (msgInfo) {
-      InitTrack(TrackInfo::kAudioTrack, msgInfo, &mInfo.mAudio, true);
+      InitTrack(msgInfo, &mInfo.mAudio, true);
     }
     mInfo.mAudio.mRate = newVorbisState->mInfo.rate;
     mInfo.mAudio.mChannels = newVorbisState->mInfo.channels;
@@ -793,7 +788,7 @@ bool OggReader::ReadOggChain()
     SetupTargetOpus(newOpusState);
 
     if (msgInfo) {
-      InitTrack(TrackInfo::kAudioTrack, msgInfo, &mInfo.mAudio, true);
+      InitTrack(msgInfo, &mInfo.mAudio, true);
     }
     mInfo.mAudio.mRate = newOpusState->mRate;
     mInfo.mAudio.mChannels = newOpusState->mChannels;
