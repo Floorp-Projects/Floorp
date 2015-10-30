@@ -14,7 +14,7 @@ using namespace js::jit;
 
 BailoutFrameInfo::BailoutFrameInfo(const JitActivationIterator& activations,
                                    BailoutStack* bailout)
-  : machine_(bailout->machine())
+  : machine_(bailout->machineState())
 {
     uint8_t* sp = bailout->parentStackPointer();
     framePointer_ = sp + bailout->frameSize();

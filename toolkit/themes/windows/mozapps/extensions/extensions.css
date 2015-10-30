@@ -15,27 +15,6 @@
   }
 }
 
-.warning-icon {
-  list-style-image: url("chrome://mozapps/skin/extensions/alerticon-warning.png");
-  height: 15px;
-}
-
-.error-icon {
-  list-style-image: url("chrome://mozapps/skin/extensions/alerticon-error.png");
-  height: 15px;
-}
-
-.pending-icon,
-.info-icon {
-  list-style-image: url("chrome://mozapps/skin/extensions/alerticon-info-positive.png");
-  height: 15px;
-}
-
-.addon-view[pending="disable"] .pending-icon,
-.addon-view[pending="uninstall"] .pending-icon {
-  list-style-image: url("chrome://mozapps/skin/extensions/alerticon-info-negative.png");
-}
-
 .sorter[checkState="1"] {
   list-style-image: url("chrome://global/skin/arrow/arrow-dn.gif");
 }
