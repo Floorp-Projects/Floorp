@@ -228,11 +228,6 @@ NS_IMPL_ISUPPORTS(nsSiteSecurityService,
 nsresult
 nsSiteSecurityService::Init()
 {
-   // Child processes are not allowed direct access to this.
-   if (!XRE_IsParentProcess()) {
-     MOZ_CRASH("Child process: no direct access to nsSiteSecurityService");
-   }
-
   // Don't access Preferences off the main thread.
   if (!NS_IsMainThread()) {
     NS_NOTREACHED("nsSiteSecurityService initialized off main thread");
@@ -351,6 +346,11 @@ NS_IMETHODIMP
 nsSiteSecurityService::RemoveState(uint32_t aType, nsIURI* aURI,
                                    uint32_t aFlags)
 {
+   // Child processes are not allowed direct access to this.
+   if (!XRE_IsParentProcess()) {
+     MOZ_CRASH("Child process: no direct access to nsISiteSecurityService::RemoveState");
+   }
+
   // Only HSTS is supported at the moment.
   NS_ENSURE_TRUE(aType == nsISiteSecurityService::HEADER_HSTS ||
                  aType == nsISiteSecurityService::HEADER_HPKP,
@@ -401,6 +401,11 @@ nsSiteSecurityService::ProcessHeader(uint32_t aType,
                                      bool* aIncludeSubdomains,
                                      uint32_t* aFailureResult)
 {
+   // Child processes are not allowed direct access to this.
+   if (!XRE_IsParentProcess()) {
+     MOZ_CRASH("Child process: no direct access to nsISiteSecurityService::ProcessHeader");
+   }
+
   if (aFailureResult) {
     *aFailureResult = nsISiteSecurityService::ERROR_UNKNOWN;
   }
@@ -422,6 +427,11 @@ nsSiteSecurityService::UnsafeProcessHeader(uint32_t aType,
                                            bool* aIncludeSubdomains,
                                            uint32_t* aFailureResult)
 {
+   // Child processes are not allowed direct access to this.
+   if (!XRE_IsParentProcess()) {
+     MOZ_CRASH("Child process: no direct access to nsISiteSecurityService::UnsafeProcessHeader");
+   }
+
   return ProcessHeaderInternal(aType, aSourceURI, aHeader, nullptr, aFlags,
                                aMaxAge, aIncludeSubdomains, aFailureResult);
 }
@@ -866,6 +876,11 @@ NS_IMETHODIMP
 nsSiteSecurityService::IsSecureURI(uint32_t aType, nsIURI* aURI,
                                    uint32_t aFlags, bool* aResult)
 {
+   // Child processes are not allowed direct access to this.
+   if (!XRE_IsParentProcess() && aType != nsISiteSecurityService::HEADER_HSTS) {
+     MOZ_CRASH("Child process: no direct access to nsISiteSecurityService::IsSecureURI for non-HSTS entries");
+   }
+
   NS_ENSURE_ARG(aURI);
   NS_ENSURE_ARG(aResult);
 
@@ -915,6 +930,11 @@ NS_IMETHODIMP
 nsSiteSecurityService::IsSecureHost(uint32_t aType, const char* aHost,
                                     uint32_t aFlags, bool* aResult)
 {
+   // Child processes are not allowed direct access to this.
+   if (!XRE_IsParentProcess() && aType != nsISiteSecurityService::HEADER_HSTS) {
+     MOZ_CRASH("Child process: no direct access to nsISiteSecurityService::IsSecureHost for non-HSTS entries");
+   }
+
   NS_ENSURE_ARG(aHost);
   NS_ENSURE_ARG(aResult);
 
@@ -1050,6 +1070,11 @@ nsSiteSecurityService::IsSecureHost(uint32_t aType, const char* aHost,
 NS_IMETHODIMP
 nsSiteSecurityService::ClearAll()
 {
+   // Child processes are not allowed direct access to this.
+   if (!XRE_IsParentProcess()) {
+     MOZ_CRASH("Child process: no direct access to nsISiteSecurityService::ClearAll");
+   }
+
   return mSiteStateStorage->Clear();
 }
 
@@ -1059,6 +1084,11 @@ nsSiteSecurityService::GetKeyPinsForHostname(const char* aHostname,
                                              /*out*/ nsTArray<nsCString>& pinArray,
                                              /*out*/ bool* aIncludeSubdomains,
                                              /*out*/ bool* afound) {
+   // Child processes are not allowed direct access to this.
+   if (!XRE_IsParentProcess()) {
+     MOZ_CRASH("Child process: no direct access to nsISiteSecurityService::GetKeyPinsForHostname");
+   }
+
   NS_ENSURE_ARG(afound);
   NS_ENSURE_ARG(aHostname);
 
@@ -1101,6 +1131,11 @@ nsSiteSecurityService::SetKeyPins(const char* aHost, bool aIncludeSubdomains,
                                   const char** aSha256Pins,
                                   /*out*/ bool* aResult)
 {
+   // Child processes are not allowed direct access to this.
+   if (!XRE_IsParentProcess()) {
+     MOZ_CRASH("Child process: no direct access to nsISiteSecurityService::SetKeyPins");
+   }
+
   NS_ENSURE_ARG_POINTER(aHost);
   NS_ENSURE_ARG_POINTER(aResult);
   NS_ENSURE_ARG_POINTER(aSha256Pins);
