@@ -7,7 +7,7 @@ skip-if(B2G||Mulet) fuzzy-if(OSX==1010,1,3) == display-types-01.html display-typ
 == dynamic-restyle-01.html dynamic-restyle-01-ref.html
 == dynamic-table-cell-01a.html dynamic-table-cell-01-ref.html
 == dynamic-table-cell-01b.html dynamic-table-cell-01-ref.html
-== floated-01.html floated-01-ref.html
+fuzzy-if(OSX==1010,1,2) == floated-01.html floated-01-ref.html
 == images-01.html images-01-ref.html
 == positioned-01.html positioned-01-ref.html
 == quotes-001.xml quotes-001-ref.xml
