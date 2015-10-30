@@ -19,14 +19,14 @@ class LazyScript;
 class LifoAlloc;
 class ModuleObject;
 class ScriptSourceObject;
-class ScopeObject;
+class StaticScopeObject;
 struct SourceCompressionTask;
 
 namespace frontend {
 
 JSScript*
 CompileScript(ExclusiveContext* cx, LifoAlloc* alloc,
-              HandleObject scopeChain, Handle<ScopeObject*> enclosingStaticScope,
+              HandleObject scopeChain, Handle<StaticScopeObject*> enclosingStaticScope,
               HandleScript evalCaller, const ReadOnlyCompileOptions& options,
               SourceBufferHolder& srcBuf, JSString* source_ = nullptr,
               SourceCompressionTask* extraSct = nullptr,
@@ -47,7 +47,7 @@ bool
 CompileFunctionBody(JSContext* cx, MutableHandleFunction fun,
                     const ReadOnlyCompileOptions& options,
                     Handle<PropertyNameVector> formals, JS::SourceBufferHolder& srcBuf,
-                    Handle<ScopeObject*> enclosingStaticScope);
+                    Handle<StaticScopeObject*> enclosingStaticScope);
 
 // As above, but defaults to the global lexical scope as the enclosing static
 // scope.

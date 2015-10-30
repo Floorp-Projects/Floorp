@@ -458,7 +458,7 @@ js::ExecuteInGlobalAndReturnScope(JSContext* cx, HandleObject global, HandleScri
     RootedScript script(cx, scriptArg);
     Rooted<GlobalObject*> globalRoot(cx, &global->as<GlobalObject>());
     if (script->compartment() != cx->compartment()) {
-        Rooted<ScopeObject*> staticScope(cx, &globalRoot->lexicalScope().staticBlock());
+        Rooted<StaticScopeObject*> staticScope(cx, &globalRoot->lexicalScope().staticBlock());
         staticScope = StaticNonSyntacticScopeObjects::create(cx, staticScope);
         if (!staticScope)
             return false;

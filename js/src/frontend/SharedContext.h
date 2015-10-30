@@ -285,11 +285,12 @@ class SharedContext
 
 class MOZ_STACK_CLASS GlobalSharedContext : public SharedContext
 {
-    Rooted<ScopeObject*> staticScope_;
+    Rooted<StaticScopeObject*> staticScope_;
 
   public:
-    GlobalSharedContext(ExclusiveContext* cx, ScopeObject* staticScope, Directives directives,
-                        bool extraWarnings, JSFunction* maybeEvalCaller = nullptr)
+    GlobalSharedContext(ExclusiveContext* cx, StaticScopeObject* staticScope,
+                        Directives directives, bool extraWarnings,
+                        JSFunction* maybeEvalCaller = nullptr)
       : SharedContext(cx, directives, extraWarnings),
         staticScope_(cx, staticScope)
     {
@@ -530,7 +531,7 @@ struct StmtInfoBase
     RootedAtom      label;
 
     // Compile-time scope chain node for this scope.
-    Rooted<NestedScopeObject*> staticScope;
+    Rooted<NestedStaticScopeObject*> staticScope;
 
     explicit StmtInfoBase(ExclusiveContext* cx)
         : isBlockScope(false), isForLetBlock(false),
@@ -604,7 +605,7 @@ class MOZ_STACK_CLASS StmtInfoStack
         innermostStmt_ = stmt;
     }
 
-    void pushNestedScope(StmtInfo* stmt, StmtType type, NestedScopeObject& staticScope) {
+    void pushNestedScope(StmtInfo* stmt, StmtType type, NestedStaticScopeObject& staticScope) {
         push(stmt, type);
         linkAsInnermostScopeStmt(stmt, staticScope);
     }
@@ -616,7 +617,7 @@ class MOZ_STACK_CLASS StmtInfoStack
             innermostScopeStmt_ = stmt->enclosingScope;
     }
 
-    void linkAsInnermostScopeStmt(StmtInfo* stmt, NestedScopeObject& staticScope) {
+    void linkAsInnermostScopeStmt(StmtInfo* stmt, NestedStaticScopeObject& staticScope) {
         MOZ_ASSERT(stmt != innermostScopeStmt_);
         MOZ_ASSERT(!stmt->enclosingScope);
         stmt->enclosingScope = innermostScopeStmt_;
