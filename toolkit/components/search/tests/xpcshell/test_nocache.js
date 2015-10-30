@@ -53,7 +53,7 @@ add_task(function* test_nocache() {
   let found = false;
   for (let dirName in cache.directories) {
     for (let engine of cache.directories[dirName].engines) {
-      if (engine._id == "[profile]/test-search-engine.xml") {
+      if (engine._shortName == "test-search-engine") {
         found = true;
         break;
       }

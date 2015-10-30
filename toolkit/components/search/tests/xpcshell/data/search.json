@@ -10,7 +10,6 @@
     "[user-installed]": {
       "engines": [
         {
-          "_id": "[profile]/test-search-engine.xml",
           "_name": "Test search engine",
           "_shortName": "test-search-engine",
           "description": "A test search engine (based on Google search)",
