@@ -3032,6 +3032,9 @@ SearchService.prototype = {
 
       this._loadFromChromeURLs(chromeURIs);
 
+      // Load user-installed engines from the obsolete cache.
+      this._loadEnginesFromCache(cache, true);
+
       otherDirs.forEach(this._loadEnginesFromDir, this);
 
       this._buildCache();
@@ -3039,10 +3042,7 @@ SearchService.prototype = {
     }
 
     LOG("_loadEngines: loading from cache directories");
-    for (let cacheKey in cache.directories) {
-      let dir = cache.directories[cacheKey];
-      this._loadEnginesFromCache(dir);
-    }
+    this._loadEnginesFromCache(cache);
 
     LOG("_loadEngines: done");
   },
@@ -3163,6 +3163,10 @@ SearchService.prototype = {
         let enginesFromURLs =
            yield checkForSyncCompletion(this._asyncLoadFromChromeURLs(chromeURIs));
         engines = engines.concat(enginesFromURLs);
+
+        // Load user-installed engines from the obsolete cache.
+        this._loadEnginesFromCache(cache, true);
+
         for (let loadDir of otherDirs) {
           let enginesFromDir =
             yield checkForSyncCompletion(this._asyncLoadEnginesFromDir(loadDir));
@@ -3177,10 +3181,7 @@ SearchService.prototype = {
       }
 
       LOG("_asyncLoadEngines: loading from cache directories");
-      for (let cacheKey in cache.directories) {
-        let dir = cache.directories[cacheKey];
-        this._loadEnginesFromCache(dir);
-      }
+      this._loadEnginesFromCache(cache);
 
       LOG("_asyncLoadEngines: done");
     }.bind(this));
@@ -3329,26 +3330,37 @@ SearchService.prototype = {
     }
   },
 
-  _loadEnginesFromCache: function SRCH_SVC__loadEnginesFromCache(aDir) {
-    let engines = aDir.engines;
-    LOG("_loadEnginesFromCache: Loading from cache. " + engines.length + " engines to load.");
-    for (let i = 0; i < engines.length; i++) {
-      let json = engines[i];
+  _loadEnginesFromCache: function SRCH_SVC__loadEnginesFromCache(cache,
+                                                                 skipReadOnly) {
+    if (!cache.directories)
+      return;
 
-      try {
-        let engine;
-        if (json.filePath)
-          engine = new Engine({type: "filePath", value: json.filePath},
-                               json._readOnly);
-        else if (json._url)
-          engine = new Engine({type: "uri", value: json._url}, json._readOnly);
+    for each (let dir in cache.directories) {
+      let engines = dir.engines;
+      LOG("_loadEnginesFromCache: Loading from cache. " + engines.length + " engines to load.");
+      for (let engine of engines) {
+        if (skipReadOnly && engine._readOnly !== false)
+          continue;
 
-        engine._initWithJSON(json);
-        this._addEngineToStore(engine);
-      } catch (ex) {
-        LOG("Failed to load " + engines[i]._name + " from cache: " + ex);
-        LOG("Engine JSON: " + engines[i].toSource());
+        this._loadEngineFromCache(engine);
       }
+    }
+  },
+
+  _loadEngineFromCache: function SRCH_SVC__loadEngineFromCache(json) {
+    try {
+      let engine;
+      if (json.filePath)
+        engine = new Engine({type: "filePath", value: json.filePath},
+                             json._readOnly);
+      else if (json._url)
+        engine = new Engine({type: "uri", value: json._url}, json._readOnly);
+
+      engine._initWithJSON(json);
+      this._addEngineToStore(engine);
+    } catch (ex) {
+      LOG("Failed to load " + json._name + " from cache: " + ex);
+      LOG("Engine JSON: " + json.toSource());
     }
   },
 
