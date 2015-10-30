@@ -59,6 +59,7 @@ private:
 
   static int AllocateBufferCb(AVCodecContext* aCodecContext, AVFrame* aFrame);
   static void ReleaseBufferCb(AVCodecContext* aCodecContext, AVFrame* aFrame);
+  int64_t GetPts(const AVPacket& packet);
 
   RefPtr<ImageContainer> mImageContainer;
   uint32_t mPictureWidth;
