@@ -16,8 +16,8 @@
         <!-- Style for MenuItemActionBar -->
         <attr name="menuItemActionModeStyle" format="reference"/>
 
-        <!-- Style for MenuItemSwitcherLayout -->
-        <attr name="menuItemSwitcherLayoutStyle" format="reference"/>
+        <!-- Style for MenuItemActionView -->
+        <attr name="menuItemActionViewStyle" format="reference"/>
 
         <!-- Style for MenuItemDefault -->
         <attr name="menuItemDefaultStyle" format="reference"/>
@@ -25,7 +25,7 @@
         <!-- Style for MenuItemActionBar when shown in SecondaryActionBar -->
         <attr name="menuItemSecondaryActionBarStyle" format="reference"/>
 
-        <!-- Style for MenuItemSwitcherLayout's ShareActionButton -->
+        <!-- Style for MenuItemActionView's ShareActionButton -->
         <attr name="menuItemShareActionButtonStyle" format="reference"/>
 
         <!-- Default style for the BookmarksListView -->
