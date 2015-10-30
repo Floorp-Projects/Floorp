@@ -9,9 +9,9 @@
  *
  * Ensure that :
  * - nothing explodes;
- * - if we change the order, search.json is updated;
- * - this search.json can be parsed;
- * - the order stored in search.json is consistent.
+ * - if we change the order, search.json.mozlz4 is updated;
+ * - this search.json.mozlz4 can be parsed;
+ * - the order stored in search.json.mozlz4 is consistent.
  *
  * Notes:
  * - we install the search engines of test "test_downloadAndAddEngines.js"

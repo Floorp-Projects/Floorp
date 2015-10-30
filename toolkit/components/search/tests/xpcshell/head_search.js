@@ -21,6 +21,8 @@ const MODE_WRONLY = FileUtils.MODE_WRONLY;
 const MODE_CREATE = FileUtils.MODE_CREATE;
 const MODE_TRUNCATE = FileUtils.MODE_TRUNCATE;
 
+const CACHE_FILENAME = "search.json.mozlz4";
+
 // nsSearchService.js uses Services.appinfo.name to build a salt for a hash.
 var XULRuntime = Components.classesByID["{95d89e3e-a169-41a3-8e56-719978e15b12}"]
                            .getService(Ci.nsIXULRuntime);
@@ -207,8 +209,8 @@ function getSearchMetadata()
 
 function promiseCacheData() {
   return new Promise(resolve => Task.spawn(function* () {
-    let path = OS.Path.join(OS.Constants.Path.profileDir, "search.json");
-    let bytes = yield OS.File.read(path);
+    let path = OS.Path.join(OS.Constants.Path.profileDir, CACHE_FILENAME);
+    let bytes = yield OS.File.read(path, {compression: "lz4"});
     resolve(JSON.parse(new TextDecoder().decode(bytes)));
   }));
 }
@@ -233,12 +235,11 @@ function promiseGlobalMetadata() {
 
 function promiseSaveGlobalMetadata(globalData) {
   return new Promise(resolve => Task.spawn(function* () {
-    let path = OS.Path.join(OS.Constants.Path.profileDir, "search.json");
-    let bytes = yield OS.File.read(path);
-    let data = JSON.parse(new TextDecoder().decode(bytes));
+    let data = yield promiseCacheData();
     data.metaData = globalData;
-    yield OS.File.writeAtomic(path,
-                              new TextEncoder().encode(JSON.stringify(data)));
+    yield OS.File.writeAtomic(OS.Path.join(OS.Constants.Path.profileDir, CACHE_FILENAME),
+                              new TextEncoder().encode(JSON.stringify(data)),
+                              {compression: "lz4"});
     resolve();
   }));
 }
@@ -257,7 +258,7 @@ var forceExpiration = Task.async(function* () {
 function removeCacheFile()
 {
   let file = gProfD.clone();
-  file.append("search.json");
+  file.append(CACHE_FILENAME);
   if (file.exists()) {
     file.remove(false);
   }
