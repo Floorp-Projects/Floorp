@@ -38,10 +38,6 @@ function indirectCallCannotGC(fullCaller, fullVariable)
     if (name == "op" && /GetWeakmapKeyDelegate/.test(caller))
         return true;
 
-    var CheckCallArgs = "AsmJSValidate.cpp:uint8 CheckCallArgs(FunctionValidator*, js::frontend::ParseNode*, (uint8)(FunctionValidator*,js::frontend::ParseNode*,js::wasm::Type)*, js::wasm::Signature*)";
-    if (name == "checkArg" && caller == CheckCallArgs)
-        return true;
-
     // hook called during script finalization which cannot GC.
     if (/CallDestroyScriptHook/.test(caller))
         return true;
@@ -273,7 +269,6 @@ function isRootedGCPointerTypeName(name)
         name == "WrappableJSErrorResult" ||
         name == "frontend::TokenStream" ||
         name == "frontend::TokenStream::Position" ||
-        name == "ModuleCompiler" ||
         name == "ModuleValidator")
     {
         return true;

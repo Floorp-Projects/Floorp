@@ -27,6 +27,7 @@
 
 #include "asmjs/AsmJSFrameIterator.h"
 #include "asmjs/AsmJSValidate.h"
+#include "asmjs/Wasm.h"
 #include "builtin/SIMD.h"
 #include "gc/Marking.h"
 #include "jit/IonTypes.h"
@@ -43,16 +44,6 @@ namespace js {
 namespace frontend { class TokenStream; }
 
 using JS::GenericNaN;
-
-// These EcmaScript-defined coercions form the basis of the asm.js type system.
-enum AsmJSCoercion
-{
-    AsmJS_ToInt32,
-    AsmJS_ToNumber,
-    AsmJS_FRound,
-    AsmJS_ToInt32x4,
-    AsmJS_ToFloat32x4
-};
 
 // The asm.js spec recognizes this set of builtin Math functions.
 enum AsmJSMathBuiltinFunction
@@ -97,113 +88,6 @@ enum AsmJSSimdOperation
 #undef ASMJSSIMDOPERATION
 };
 
-// These labels describe positions in the prologue/epilogue of functions while
-// compiling an AsmJSModule.
-struct MOZ_STACK_CLASS AsmJSFunctionLabels
-{
-    AsmJSFunctionLabels(jit::Label& entry, jit::Label& overflowExit)
-      : nonProfilingEntry(entry), overflowExit(overflowExit) {}
-
-    jit::Label  profilingEntry;
-    jit::Label& nonProfilingEntry;
-    jit::Label  profilingJump;
-    jit::Label  profilingEpilogue;
-    jit::Label  profilingReturn;
-    jit::Label  endAfterOOL;
-    mozilla::Maybe<jit::Label> overflowThunk;
-    jit::Label& overflowExit;
-
-  private:
-    AsmJSFunctionLabels(const AsmJSFunctionLabels&) = delete;
-    AsmJSFunctionLabels& operator=(const AsmJSFunctionLabels&) = delete;
-};
-
-// Represents the type and value of an asm.js numeric literal.
-//
-// A literal is a double iff the literal contains a decimal point (even if the
-// fractional part is 0). Otherwise, integers may be classified:
-//  fixnum: [0, 2^31)
-//  negative int: [-2^31, 0)
-//  big unsigned: [2^31, 2^32)
-//  out of range: otherwise
-// Lastly, a literal may be a float literal which is any double or integer
-// literal coerced with Math.fround.
-class AsmJSNumLit
-{
-  public:
-    enum Which {
-        Fixnum,
-        NegativeInt,
-        BigUnsigned,
-        Double,
-        Float,
-        Int32x4,
-        Float32x4,
-        OutOfRangeInt = -1
-    };
-
-  private:
-    Which which_;
-    union {
-        Value scalar_;
-        jit::SimdConstant simd_;
-    } value;
-
-  public:
-    static AsmJSNumLit Create(Which w, Value v) {
-        AsmJSNumLit lit;
-        lit.which_ = w;
-        lit.value.scalar_ = v;
-        MOZ_ASSERT(!lit.isSimd());
-        return lit;
-    }
-
-    static AsmJSNumLit Create(Which w, jit::SimdConstant c) {
-        AsmJSNumLit lit;
-        lit.which_ = w;
-        lit.value.simd_ = c;
-        MOZ_ASSERT(lit.isSimd());
-        return lit;
-    }
-
-    Which which() const {
-        return which_;
-    }
-
-    int32_t toInt32() const {
-        MOZ_ASSERT(which_ == Fixnum || which_ == NegativeInt || which_ == BigUnsigned);
-        return value.scalar_.toInt32();
-    }
-
-    double toDouble() const {
-        MOZ_ASSERT(which_ == Double);
-        return value.scalar_.toDouble();
-    }
-
-    float toFloat() const {
-        MOZ_ASSERT(which_ == Float);
-        return float(value.scalar_.toDouble());
-    }
-
-    Value scalarValue() const {
-        MOZ_ASSERT(which_ != OutOfRangeInt);
-        return value.scalar_;
-    }
-
-    bool isSimd() const {
-        return which_ == Int32x4 || which_ == Float32x4;
-    }
-
-    const jit::SimdConstant& simdValue() const {
-        MOZ_ASSERT(isSimd());
-        return value.simd_;
-    }
-
-    bool hasType() const {
-        return which_ != OutOfRangeInt;
-    }
-};
-
 // An asm.js module represents the collection of functions nested inside a
 // single outer "use asm" function. For example, this asm.js module:
 //   function() { "use asm"; function f() {} function g() {} return f }
@@ -233,8 +117,8 @@ class AsmJSModule
                     uint32_t index_;
                     VarInitKind initKind_;
                     union {
-                        AsmJSCoercion coercion_;
-                        AsmJSNumLit numLit_;
+                        wasm::ValType importType_;
+                        wasm::Val val_;
                     } u;
                 } var;
                 uint32_t ffiIndex_;
@@ -266,8 +150,6 @@ class AsmJSModule
         void trace(JSTracer* trc) {
             if (name_)
                 TraceManuallyBarrieredEdge(trc, &name_, "asm.js global name");
-            MOZ_ASSERT_IF(pod.which_ == Variable && pod.u.var.initKind_ == InitConstant,
-                          !pod.u.var.u.numLit_.scalarValue().isMarkable());
         }
 
       public:
@@ -283,15 +165,15 @@ class AsmJSModule
             MOZ_ASSERT(pod.which_ == Variable);
             return pod.u.var.initKind_;
         }
-        const AsmJSNumLit& varInitNumLit() const {
+        wasm::Val varInitVal() const {
             MOZ_ASSERT(pod.which_ == Variable);
             MOZ_ASSERT(pod.u.var.initKind_ == InitConstant);
-            return pod.u.var.u.numLit_;
+            return pod.u.var.u.val_;
         }
-        AsmJSCoercion varInitCoercion() const {
+        wasm::ValType varInitImportType() const {
             MOZ_ASSERT(pod.which_ == Variable);
             MOZ_ASSERT(pod.u.var.initKind_ == InitImport);
-            return pod.u.var.u.coercion_;
+            return pod.u.var.u.importType_;
         }
         PropertyName* varImportField() const {
             MOZ_ASSERT(pod.which_ == Variable);
@@ -430,18 +312,13 @@ class AsmJSModule
         HeapPtrFunction fun;
     };
 
-    typedef Vector<AsmJSCoercion, 0, SystemAllocPolicy> ArgCoercionVector;
-
-    enum ReturnType { Return_Int32, Return_Double, Return_Int32x4, Return_Float32x4, Return_Void };
-
     class ExportedFunction
     {
         PropertyName* name_;
         PropertyName* maybeFieldName_;
-        ArgCoercionVector argCoercions_;
+        wasm::MallocSig sig_;
         struct Pod {
             bool isChangeHeap_;
-            ReturnType returnType_;
             uint32_t codeOffset_;
             uint32_t startOffsetInModule_;  // Store module-start-relative offsets
             uint32_t endOffsetInModule_;    // so preserved by serialization.
@@ -452,17 +329,15 @@ class AsmJSModule
         ExportedFunction(PropertyName* name,
                          uint32_t startOffsetInModule, uint32_t endOffsetInModule,
                          PropertyName* maybeFieldName,
-                         ArgCoercionVector&& argCoercions,
-                         ReturnType returnType)
+                         wasm::MallocSig&& sig)
+         : name_(name),
+           maybeFieldName_(maybeFieldName),
+           sig_(Move(sig))
         {
-            MOZ_ASSERT(name->isTenured());
-            MOZ_ASSERT_IF(maybeFieldName, maybeFieldName->isTenured());
-            name_ = name;
-            maybeFieldName_ = maybeFieldName;
-            argCoercions_ = mozilla::Move(argCoercions);
+            MOZ_ASSERT(name_->isTenured());
+            MOZ_ASSERT_IF(maybeFieldName_, maybeFieldName_->isTenured());
             mozilla::PodZero(&pod);  // zero padding for Valgrind
             pod.isChangeHeap_ = false;
-            pod.returnType_ = returnType;
             pod.codeOffset_ = UINT32_MAX;
             pod.startOffsetInModule_ = startOffsetInModule;
             pod.endOffsetInModule_ = endOffsetInModule;
@@ -471,11 +346,11 @@ class AsmJSModule
         ExportedFunction(PropertyName* name,
                          uint32_t startOffsetInModule, uint32_t endOffsetInModule,
                          PropertyName* maybeFieldName)
+          : name_(name),
+            maybeFieldName_(maybeFieldName)
         {
-            MOZ_ASSERT(name->isTenured());
-            MOZ_ASSERT_IF(maybeFieldName, maybeFieldName->isTenured());
-            name_ = name;
-            maybeFieldName_ = maybeFieldName;
+            MOZ_ASSERT(name_->isTenured());
+            MOZ_ASSERT_IF(maybeFieldName_, maybeFieldName_->isTenured());
             mozilla::PodZero(&pod);  // zero padding for Valgrind
             pod.isChangeHeap_ = true;
             pod.startOffsetInModule_ = startOffsetInModule;
@@ -490,10 +365,11 @@ class AsmJSModule
 
       public:
         ExportedFunction() {}
-        ExportedFunction(ExportedFunction&& rhs) {
-            name_ = rhs.name_;
-            maybeFieldName_ = rhs.maybeFieldName_;
-            argCoercions_ = mozilla::Move(rhs.argCoercions_);
+        ExportedFunction(ExportedFunction&& rhs)
+          : name_(rhs.name_),
+            maybeFieldName_(rhs.maybeFieldName_),
+            sig_(mozilla::Move(rhs.sig_))
+        {
             mozilla::PodZero(&pod);  // zero padding for Valgrind
             pod = rhs.pod;
         }
@@ -510,28 +386,17 @@ class AsmJSModule
         uint32_t endOffsetInModule() const {
             return pod.endOffsetInModule_;
         }
-
         bool isChangeHeap() const {
             return pod.isChangeHeap_;
         }
-
         void initCodeOffset(unsigned off) {
             MOZ_ASSERT(!isChangeHeap());
             MOZ_ASSERT(pod.codeOffset_ == UINT32_MAX);
             pod.codeOffset_ = off;
         }
-
-        unsigned numArgs() const {
+        const wasm::MallocSig& sig() const {
             MOZ_ASSERT(!isChangeHeap());
-            return argCoercions_.length();
-        }
-        AsmJSCoercion argCoercion(unsigned i) const {
-            MOZ_ASSERT(!isChangeHeap());
-            return argCoercions_[i];
-        }
-        ReturnType returnType() const {
-            MOZ_ASSERT(!isChangeHeap());
-            return pod.returnType_;
+            return sig_;
         }
 
         size_t serializedSize() const;
@@ -564,16 +429,16 @@ class AsmJSModule
             uint8_t kind_;
         } u;
 
-        void setDeltas(uint32_t entry, uint32_t profilingJump, uint32_t profilingEpilogue);
+        void assertValid();
 
       public:
         enum Kind { Function, Entry, JitFFI, SlowFFI, Interrupt, Thunk, Inline };
 
         CodeRange() {}
-        CodeRange(uint32_t nameIndex, uint32_t lineNumber, const AsmJSFunctionLabels& l);
-        CodeRange(Kind kind, uint32_t begin, uint32_t end);
-        CodeRange(Kind kind, uint32_t begin, uint32_t profilingReturn, uint32_t end);
-        CodeRange(AsmJSExit::BuiltinKind builtin, uint32_t begin, uint32_t pret, uint32_t end);
+        CodeRange(Kind kind, AsmJSOffsets offsets);
+        CodeRange(Kind kind, AsmJSProfilingOffsets offsets);
+        CodeRange(AsmJSExit::BuiltinKind builtin, AsmJSProfilingOffsets offsets);
+        CodeRange(uint32_t lineNumber, AsmJSFunctionOffsets offsets);
 
         Kind kind() const { return Kind(u.kind_); }
         bool isFunction() const { return kind() == Function; }
@@ -607,13 +472,17 @@ class AsmJSModule
             MOZ_ASSERT(isFunction() || isFFI() || isInterrupt() || isThunk());
             return profilingReturn_;
         }
+        void initNameIndex(uint32_t nameIndex) {
+            MOZ_ASSERT(nameIndex_ == UINT32_MAX);
+            nameIndex_ = nameIndex;
+        }
         uint32_t functionNameIndex() const {
             MOZ_ASSERT(isFunction());
+            MOZ_ASSERT(nameIndex_ != UINT32_MAX);
             return nameIndex_;
         }
         PropertyName* functionName(const AsmJSModule& module) const {
-            MOZ_ASSERT(isFunction());
-            return module.names_[nameIndex_].name();
+            return module.names_[functionNameIndex()].name();
         }
         const char* functionProfilingLabel(const AsmJSModule& module) const {
             MOZ_ASSERT(isFunction());
@@ -632,28 +501,6 @@ class AsmJSModule
         AsmJSExit::BuiltinKind thunkTarget() const {
             MOZ_ASSERT(isThunk());
             return AsmJSExit::BuiltinKind(u.thunk.target_);
-        }
-    };
-
-    class FunctionCodeRange : public CodeRange
-    {
-      private:
-        PropertyName* name_;
-
-      public:
-        FunctionCodeRange()
-          : CodeRange(), name_(nullptr)
-        {}
-
-        FunctionCodeRange(PropertyName* name, uint32_t lineNumber, const AsmJSFunctionLabels& l)
-          : CodeRange(UINT32_MAX, lineNumber, l), name_(name)
-        {}
-
-        PropertyName* name() const { return name_; }
-
-        void initNameIndex(uint32_t nameIndex) {
-            MOZ_ASSERT(nameIndex_ == UINT32_MAX);
-            nameIndex_ = nameIndex;
         }
     };
 
@@ -867,7 +714,6 @@ class AsmJSModule
     Vector<Name,                   0, SystemAllocPolicy> names_;
     Vector<ProfilingLabel,         0, SystemAllocPolicy> profilingLabels_;
     Vector<jit::AsmJSHeapAccess,   0, SystemAllocPolicy> heapAccesses_;
-    Vector<jit::IonScriptCounts*,  0, SystemAllocPolicy> functionCounts_;
 #if defined(MOZ_VTUNE) || defined(JS_ION_PERF)
     Vector<ProfiledFunction,       0, SystemAllocPolicy> profiledFunctions_;
 #endif
@@ -956,12 +802,6 @@ class AsmJSModule
         MOZ_ASSERT(pod.hasFixedMinHeapLength_);
         return pod.heapLengthMask_;
     }
-    unsigned numFunctionCounts() const {
-        return functionCounts_.length();
-    }
-    jit::IonScriptCounts* functionCounts(unsigned i) {
-        return functionCounts_[i];
-    }
 
     // about:memory reporting
     void addSizeOfMisc(mozilla::MallocSizeOf mallocSizeOf, size_t* asmJSModuleCode,
@@ -995,13 +835,12 @@ class AsmJSModule
     PropertyName* bufferArgumentName() const {
         return bufferArgumentName_;
     }
-    bool addGlobalVarInit(const AsmJSNumLit& lit, uint32_t* globalIndex) {
+    bool addGlobalVarInit(const wasm::Val& v, uint32_t* globalIndex) {
         MOZ_ASSERT(!isFinishedWithModulePrologue());
         Global g(Global::Variable, nullptr);
         g.pod.u.var.initKind_ = Global::InitConstant;
-        g.pod.u.var.u.numLit_ = lit;
-
-        if (lit.isSimd()) {
+        g.pod.u.var.u.val_ = v;
+        if (v.isSimd()) {
             if (pod.numGlobalSimdVars_ == UINT32_MAX)
                 return false;
             *globalIndex = pod.numGlobalSimdVars_++;
@@ -1010,29 +849,17 @@ class AsmJSModule
                 return false;
             *globalIndex = pod.numGlobalScalarVars_++;
         }
-
         g.pod.u.var.index_ = *globalIndex;
         return globals_.append(g);
     }
-    static bool IsSimdCoercion(AsmJSCoercion c) {
-        switch (c) {
-          case AsmJS_ToInt32:
-          case AsmJS_ToNumber:
-          case AsmJS_FRound:
-            return false;
-          case AsmJS_ToInt32x4:
-          case AsmJS_ToFloat32x4:
-            return true;
-        }
-        MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("unexpected AsmJSCoercion");
-    }
-    bool addGlobalVarImport(PropertyName* name, AsmJSCoercion coercion, uint32_t* globalIndex) {
+    bool addGlobalVarImport(PropertyName* name, wasm::ValType importType, uint32_t* globalIndex) {
         MOZ_ASSERT(!isFinishedWithModulePrologue());
         Global g(Global::Variable, name);
         g.pod.u.var.initKind_ = Global::InitImport;
-        g.pod.u.var.u.coercion_ = coercion;
-        *globalIndex = IsSimdCoercion(coercion) ? pod.numGlobalSimdVars_++
-                                                : pod.numGlobalScalarVars_++;
+        g.pod.u.var.u.importType_ = importType;
+        *globalIndex = IsSimdType(importType)
+                       ? pod.numGlobalSimdVars_++
+                       : pod.numGlobalScalarVars_++;
         g.pod.u.var.index_ = *globalIndex;
         return globals_.append(g);
     }
@@ -1167,14 +994,13 @@ class AsmJSModule
             pod.minHeapLength_ = len;
         return true;
     }
-    bool addCodeRange(CodeRange::Kind kind, uint32_t begin, uint32_t end) {
-        return codeRanges_.append(CodeRange(kind, begin, end));
+    bool addCodeRange(CodeRange::Kind kind, AsmJSOffsets offsets) {
+        return codeRanges_.append(CodeRange(kind, offsets));
     }
-    bool addCodeRange(CodeRange::Kind kind, uint32_t begin, uint32_t pret, uint32_t end) {
-        return codeRanges_.append(CodeRange(kind, begin, pret, end));
+    bool addCodeRange(CodeRange::Kind kind, AsmJSProfilingOffsets offsets) {
+        return codeRanges_.append(CodeRange(kind, offsets));
     }
-    bool addFunctionCodeRange(PropertyName* name, FunctionCodeRange codeRange)
-    {
+    bool addFunctionCodeRange(PropertyName* name, CodeRange codeRange) {
         MOZ_ASSERT(!isFinished());
         MOZ_ASSERT(name->isTenured());
         if (names_.length() >= UINT32_MAX)
@@ -1182,11 +1008,9 @@ class AsmJSModule
         codeRange.initNameIndex(names_.length());
         return names_.append(name) && codeRanges_.append(codeRange);
     }
-    bool addBuiltinThunkCodeRange(AsmJSExit::BuiltinKind builtin, uint32_t begin,
-                                  uint32_t profilingReturn, uint32_t end)
-    {
-        return builtinThunkOffsets_.append(begin) &&
-               codeRanges_.append(CodeRange(builtin, begin, profilingReturn, end));
+    bool addBuiltinThunkCodeRange(AsmJSExit::BuiltinKind builtin, AsmJSProfilingOffsets offsets) {
+        return builtinThunkOffsets_.append(offsets.begin) &&
+               codeRanges_.append(CodeRange(builtin, offsets));
     }
     bool addExit(unsigned ffiIndex, unsigned* exitIndex) {
         MOZ_ASSERT(isFinishedWithModulePrologue() && !isFinishedWithFunctionBodies());
@@ -1220,10 +1044,6 @@ class AsmJSModule
             return false;
         pod.funcPtrTableAndExitBytes_ += numElems * sizeof(void*);
         return true;
-    }
-    bool addFunctionCounts(jit::IonScriptCounts* counts) {
-        MOZ_ASSERT(isFinishedWithModulePrologue() && !isFinishedWithFunctionBodies());
-        return functionCounts_.append(counts);
     }
 #if defined(MOZ_VTUNE) || defined(JS_ION_PERF)
     bool addProfiledFunction(ProfiledFunction&& func)
@@ -1260,8 +1080,7 @@ class AsmJSModule
                              uint32_t funcSrcBegin,
                              uint32_t funcSrcEnd,
                              PropertyName* maybeFieldName,
-                             ArgCoercionVector&& argCoercions,
-                             ReturnType returnType)
+                             wasm::MallocSig&& sig)
     {
         // NB: funcSrcBegin/funcSrcEnd are given relative to the ScriptSource
         // (the entire file) and ExportedFunctions store offsets relative to
@@ -1270,7 +1089,7 @@ class AsmJSModule
         MOZ_ASSERT(srcStart_ < funcSrcBegin);
         MOZ_ASSERT(funcSrcBegin < funcSrcEnd);
         ExportedFunction func(name, funcSrcBegin - srcStart_, funcSrcEnd - srcStart_,
-                              maybeFieldName, mozilla::Move(argCoercions), returnType);
+                              maybeFieldName, mozilla::Move(sig));
         return exports_.length() < UINT32_MAX && exports_.append(mozilla::Move(func));
     }
     bool addExportedChangeHeap(PropertyName* name,
@@ -1467,13 +1286,13 @@ class AsmJSModule
     void* globalVarToGlobalDatum(const Global& g) const {
         unsigned index = g.varIndex();
         if (g.varInitKind() == Global::VarInitKind::InitConstant) {
-            return g.varInitNumLit().isSimd()
+            return g.varInitVal().isSimd()
                    ? globalSimdVarIndexToGlobalDatum(index)
                    : globalScalarVarIndexToGlobalDatum(index);
         }
 
         MOZ_ASSERT(g.varInitKind() == Global::VarInitKind::InitImport);
-        return IsSimdCoercion(g.varInitCoercion())
+        return IsSimdType(g.varInitImportType())
                ? globalSimdVarIndexToGlobalDatum(index)
                : globalScalarVarIndexToGlobalDatum(index);
     }

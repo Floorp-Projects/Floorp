@@ -2183,7 +2183,7 @@ CodeGeneratorARM::visitAsmJSLoadHeap(LAsmJSLoadHeap* ins)
     } else {
         Register d = ToRegister(ins->output());
         if (mir->isAtomicAccess())
-            masm.ma_b(gen->outOfBoundsLabel(), Assembler::AboveOrEqual);
+            masm.ma_b(masm.asmOnOutOfBoundsLabel(), Assembler::AboveOrEqual);
         else
             masm.ma_mov(Imm32(0), d, LeaveCC, Assembler::AboveOrEqual);
         masm.ma_dataTransferN(IsLoad, size, isSigned, HeapReg, ptrReg, d, Offset, Assembler::Below);
@@ -2257,7 +2257,7 @@ CodeGeneratorARM::visitAsmJSStoreHeap(LAsmJSStoreHeap* ins)
             masm.ma_vstr(vd, HeapReg, ptrReg, 0, 0, Assembler::Below);
     } else {
         if (mir->isAtomicAccess())
-            masm.ma_b(gen->outOfBoundsLabel(), Assembler::AboveOrEqual);
+            masm.ma_b(masm.asmOnOutOfBoundsLabel(), Assembler::AboveOrEqual);
         masm.ma_dataTransferN(IsStore, size, isSigned, HeapReg, ptrReg,
                               ToRegister(ins->value()), Offset, Assembler::Below);
     }
@@ -2282,7 +2282,7 @@ CodeGeneratorARM::visitAsmJSCompareExchangeHeap(LAsmJSCompareExchangeHeap* ins)
     if (mir->needsBoundsCheck()) {
         BufferOffset bo = masm.ma_BoundsCheck(ptrReg);
         maybeCmpOffset = bo.getOffset();
-        masm.ma_b(gen->outOfBoundsLabel(), Assembler::AboveOrEqual);
+        masm.ma_b(masm.asmOnOutOfBoundsLabel(), Assembler::AboveOrEqual);
     }
     masm.compareExchangeToTypedIntArray(vt == Scalar::Uint32 ? Scalar::Int32 : vt,
                                         srcAddr, oldval, newval, InvalidReg,
@@ -2328,7 +2328,7 @@ CodeGeneratorARM::visitAsmJSAtomicExchangeHeap(LAsmJSAtomicExchangeHeap* ins)
     if (mir->needsBoundsCheck()) {
         BufferOffset bo = masm.ma_BoundsCheck(ptrReg);
         maybeCmpOffset = bo.getOffset();
-        masm.ma_b(gen->outOfBoundsLabel(), Assembler::AboveOrEqual);
+        masm.ma_b(masm.asmOnOutOfBoundsLabel(), Assembler::AboveOrEqual);
     }
 
     masm.atomicExchangeToTypedIntArray(vt == Scalar::Uint32 ? Scalar::Int32 : vt,
@@ -2379,7 +2379,7 @@ CodeGeneratorARM::visitAsmJSAtomicBinopHeap(LAsmJSAtomicBinopHeap* ins)
     if (mir->needsBoundsCheck()) {
         BufferOffset bo = masm.ma_BoundsCheck(ptrReg);
         maybeCmpOffset = bo.getOffset();
-        masm.ma_b(gen->outOfBoundsLabel(), Assembler::AboveOrEqual);
+        masm.ma_b(masm.asmOnOutOfBoundsLabel(), Assembler::AboveOrEqual);
     }
 
     if (value->isConstant())
@@ -2414,7 +2414,7 @@ CodeGeneratorARM::visitAsmJSAtomicBinopHeapForEffect(LAsmJSAtomicBinopHeapForEff
     if (mir->needsBoundsCheck()) {
         BufferOffset bo = masm.ma_BoundsCheck(ptrReg);
         maybeCmpOffset = bo.getOffset();
-        masm.ma_b(gen->outOfBoundsLabel(), Assembler::AboveOrEqual);
+        masm.ma_b(masm.asmOnOutOfBoundsLabel(), Assembler::AboveOrEqual);
     }
 
     if (value->isConstant())
