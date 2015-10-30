@@ -110,16 +110,13 @@ public:
     EnsureIFFT();
 #if defined(MOZ_LIBAV_FFT)
     {
-      PodCopy(aDataOut, (float*)mOutputBuffer.Elements(), mFFTSize);
-      aDataOut[1] = mOutputBuffer[mFFTSize/2].r; // Packed Nyquist
-      av_rdft_calc(mAvIRDFT, aDataOut);
-      // TODO: Once bug 877662 lands, change this to use SSE.
       // Even though this function doesn't scale, the libav forward transform
       // gives a value that needs scaling by 2 in order for things to turn out
       // similar to how we expect from kissfft/openmax.
-      for (uint32_t i = 0; i < mFFTSize; ++i) {
-        aDataOut[i] *= 2.0;
-      }
+      AudioBufferCopyWithScale(mOutputBuffer.Elements()->f, 2.0f,
+                               aDataOut, mFFTSize);
+      aDataOut[1] = 2.0f * mOutputBuffer[mFFTSize/2].r; // Packed Nyquist
+      av_rdft_calc(mAvIRDFT, aDataOut);
     }
 #else
 #ifdef BUILD_ARM_NEON
