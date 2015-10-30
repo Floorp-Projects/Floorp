@@ -128,4 +128,18 @@ HeapAnalysesClient.prototype.takeCensusDiff = function (firstSnapshotFilePath,
     censusOptions,
     requestOptions
   });
-}
+};
+
+/**
+ * Request the creation time given a snapshot file path. Returns `null`
+ * if snapshot does not exist.
+ *
+ * @param {String} snapshotFilePath
+ *        The path to the snapshot.
+ * @return {Number?}
+ *        The unix timestamp of the creation time of the snapshot, or null if
+ *        snapshot does not exist.
+ */
+HeapAnalysesClient.prototype.getCreationTime = function (snapshotFilePath) {
+  return this._worker.performTask("getCreationTime", snapshotFilePath);
+};

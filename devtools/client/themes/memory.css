@@ -129,16 +129,27 @@ html, .theme-body, #app, #memory-tool, #memory-tool-container {
   color: var(--theme-selection-color);
 }
 
+.snapshot-list-item {
+  position: relative;
+}
 .snapshot-list-item span {
   display: block;
 }
-
-.snapshot-list-item .snapshot-state {
+.snapshot-list-item .snapshot-state, .snapshot-list-item .snapshot-totals {
   font-size: 90%;
   color: var(--theme-body-color-alt);
+  position: absolute;
 }
-
-.snapshot-list-item.selected .snapshot-state {
+.snapshot-list-item .snapshot-state {
+  top: 38px;
+}
+.snapshot-list-item .snapshot-totals {
+  top: 38px;
+}
+.snapshot-list-item .total-bytes {
+  float: left;
+}
+.snapshot-list-item.selected .snapshot-state, .snapshot-list-item.selected .snapshot-totals {
   /* Text inside a selected item should not be custom colored. */
   color: inherit !important;
 }
