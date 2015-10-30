@@ -15,6 +15,7 @@
 #include "nsHttpRequestHead.h"
 #include "nsHttpResponseHead.h"
 #include "nsHttpConnectionInfo.h"
+#include "nsIConsoleReportCollector.h"
 #include "nsIEncodedChannel.h"
 #include "nsIHttpChannel.h"
 #include "nsHttpHandler.h"
@@ -48,6 +49,9 @@ class nsISecurityConsoleMessage;
 class nsIPrincipal;
 
 namespace mozilla {
+
+class LogCollector;
+
 namespace net {
 
 /*
@@ -70,6 +74,7 @@ class HttpBaseChannel : public nsHashPropertyBag
                       , public PrivateBrowsingChannel<HttpBaseChannel>
                       , public nsITimedChannel
                       , public nsIForcePendingChannel
+                      , public nsIConsoleReportCollector
 {
 protected:
   virtual ~HttpBaseChannel();
@@ -224,6 +229,19 @@ public:
 
   // nsIResumableChannel
   NS_IMETHOD GetEntityID(nsACString& aEntityID) override;
+
+
+  // nsIConsoleReportCollector
+  void
+  AddConsoleReport(uint32_t aErrorFlags, const nsACString& aCategory,
+                   nsContentUtils::PropertiesFile aPropertiesFile,
+                   const nsACString& aSourceFileURI,
+                   uint32_t aLineNumber, uint32_t aColumnNumber,
+                   const nsACString& aMessageName,
+                   const nsTArray<nsString>& aStringParams) override;
+
+  void
+  FlushConsoleReports(nsIDocument* aDocument) override;
 
   class nsContentEncodings : public nsIUTF8StringEnumerator
     {
@@ -462,6 +480,8 @@ protected:
   bool                              mWithCredentials;
   nsTArray<nsCString>               mUnsafeHeaders;
   nsCOMPtr<nsIPrincipal>            mPreflightPrincipal;
+
+  nsCOMPtr<nsIConsoleReportCollector> mReportCollector;
 
   bool mForceMainDocumentChannel;
 };
