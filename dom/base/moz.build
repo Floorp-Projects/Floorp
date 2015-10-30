@@ -84,6 +84,7 @@ EXPORTS += [
     'nsHostObjectURI.h',
     'nsIAnimationObserver.h',
     'nsIAttribute.h',
+    'nsIConsoleReportCollector.h',
     'nsIContent.h',
     'nsIContentInlines.h',
     'nsIContentIterator.h',
@@ -142,6 +143,7 @@ if CONFIG['MOZ_WEBRTC']:
     ]
 
 EXPORTS.mozilla += [
+    'ConsoleReportCollector.h',
     'CORSMode.h',
     'FeedWriterEnabled.h',
     'TextInputProcessor.h',
@@ -222,6 +224,7 @@ UNIFIED_SOURCES += [
     'ChromeUtils.cpp',
     'Comment.cpp',
     'Console.cpp',
+    'ConsoleReportCollector.cpp',
     'Crypto.cpp',
     'DirectionalityUtils.cpp',
     'DocumentFragment.cpp',
