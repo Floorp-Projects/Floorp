@@ -8014,7 +8014,7 @@
     "expires_in_version": "default",
     "kind": "enumerated",
     "n_values": 100,
-    "description": "If certificate verification failed in a TLS handshake, what was the error? (see mapping in SSLServerCertVerification.cpp)"
+    "description": "If certificate verification failed in a TLS handshake, what was the error? (see MapCertErrorToProbeValue in security/manager/ssl/SSLServerCertVerification.cpp and the values in security/pkix/include/pkix/Result.h)"
   },
   "SSL_PERMANENT_CERT_ERROR_OVERRIDES": {
     "alert_emails": ["seceng@mozilla.org"],
