@@ -90,12 +90,17 @@ LoadInfo::LoadInfo(const LoadInfo& rhs)
   , mLoadingContext(rhs.mLoadingContext)
   , mSecurityFlags(rhs.mSecurityFlags)
   , mInternalContentPolicyType(rhs.mInternalContentPolicyType)
+  , mTainting(rhs.mTainting)
   , mUpgradeInsecureRequests(rhs.mUpgradeInsecureRequests)
   , mInnerWindowID(rhs.mInnerWindowID)
   , mOuterWindowID(rhs.mOuterWindowID)
   , mParentOuterWindowID(rhs.mParentOuterWindowID)
-  , mEnforceSecurity(false)
-  , mInitialSecurityCheckDone(false)
+  , mEnforceSecurity(rhs.mEnforceSecurity)
+  , mInitialSecurityCheckDone(rhs.mInitialSecurityCheckDone)
+  , mOriginAttributes(rhs.mOriginAttributes)
+  , mRedirectChainIncludingInternalRedirects(
+      rhs.mRedirectChainIncludingInternalRedirects)
+  , mRedirectChain(rhs.mRedirectChain)
 {
 }
 
@@ -143,6 +148,17 @@ already_AddRefed<nsILoadInfo>
 LoadInfo::Clone() const
 {
   RefPtr<LoadInfo> copy(new LoadInfo(*this));
+  return copy.forget();
+}
+
+already_AddRefed<nsILoadInfo>
+LoadInfo::CloneForNewRequest() const
+{
+  RefPtr<LoadInfo> copy(new LoadInfo(*this));
+  copy->mEnforceSecurity = false;
+  copy->mInitialSecurityCheckDone = false;
+  copy->mRedirectChainIncludingInternalRedirects.Clear();
+  copy->mRedirectChain.Clear();
   return copy.forget();
 }
 

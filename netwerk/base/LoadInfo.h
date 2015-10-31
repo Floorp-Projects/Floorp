@@ -53,7 +53,12 @@ public:
            nsSecurityFlags aSecurityFlags,
            nsContentPolicyType aContentPolicyType);
 
+  // create an exact copy of the loadinfo
   already_AddRefed<nsILoadInfo> Clone() const;
+  // creates a copy of the loadinfo which is appropriate to use for a
+  // separate request. I.e. not for a redirect or an inner channel, but
+  // when a separate request is made with the same security properties.
+  already_AddRefed<nsILoadInfo> CloneForNewRequest() const;
 
 private:
   // private constructor that is only allowed to be called from within
@@ -88,6 +93,7 @@ private:
   void SetWithCredentialsSecFlag();
   friend class ::nsXMLHttpRequest;
 
+  // if you add a member, please also update the copy constructor
   nsCOMPtr<nsIPrincipal>           mLoadingPrincipal;
   nsCOMPtr<nsIPrincipal>           mTriggeringPrincipal;
   nsWeakPtr                        mLoadingContext;
