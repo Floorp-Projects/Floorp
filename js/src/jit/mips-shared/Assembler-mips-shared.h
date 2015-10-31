@@ -1084,8 +1084,6 @@ class AssemblerMIPSShared : public AssemblerShared
 
     static uint32_t NopSize() { return 4; }
 
-    static void PatchDataWithValueCheck(CodeLocationLabel label, ImmPtr newValue,
-                                        ImmPtr expectedValue);
     static void PatchWrite_Imm32(CodeLocationLabel label, Imm32 imm);
 
     static uint32_t AlignDoubleArg(uint32_t offset) {

@@ -399,6 +399,14 @@ Assembler::WriteLuiOriInstructions(Instruction* inst0, Instruction* inst1,
 }
 
 void
+Assembler::PatchDataWithValueCheck(CodeLocationLabel label, ImmPtr newValue,
+                                   ImmPtr expectedValue)
+{
+    PatchDataWithValueCheck(label, PatchedImmPtr(newValue.value),
+                            PatchedImmPtr(expectedValue.value));
+}
+
+void
 Assembler::PatchDataWithValueCheck(CodeLocationLabel label, PatchedImmPtr newValue,
                                    PatchedImmPtr expectedValue)
 {
