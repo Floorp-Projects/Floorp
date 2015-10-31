@@ -21,6 +21,7 @@
 #include "nsProxyRelease.h"
 #include "nsXULAppAPI.h"
 #include "nsContentSecurityManager.h"
+#include "LoadInfo.h"
 
 static PLDHashOperator
 CopyProperties(const nsAString &key, nsIVariant *data, void *closure)
@@ -88,7 +89,27 @@ nsBaseChannel::Redirect(nsIChannel *newChannel, uint32_t redirectFlags,
   newChannel->SetLoadGroup(mLoadGroup);
   newChannel->SetNotificationCallbacks(mCallbacks);
   newChannel->SetLoadFlags(mLoadFlags | LOAD_REPLACE);
-  newChannel->SetLoadInfo(mLoadInfo);
+
+  // make a copy of the loadinfo, append to the redirectchain
+  // and set it on the new channel
+  if (mLoadInfo) {
+    nsCOMPtr<nsILoadInfo> newLoadInfo =
+      static_cast<mozilla::LoadInfo*>(mLoadInfo.get())->Clone();
+
+    nsCOMPtr<nsIPrincipal> uriPrincipal;
+    nsIScriptSecurityManager *sm = nsContentUtils::GetSecurityManager();
+    sm->GetChannelURIPrincipal(this, getter_AddRefs(uriPrincipal));
+    bool isInternalRedirect =
+      (redirectFlags & (nsIChannelEventSink::REDIRECT_INTERNAL |
+                        nsIChannelEventSink::REDIRECT_STS_UPGRADE));
+    newLoadInfo->AppendRedirectedPrincipal(uriPrincipal, isInternalRedirect);
+    newChannel->SetLoadInfo(newLoadInfo);
+  }
+  else {
+    // the newChannel was created with a dummy loadInfo, we should clear
+    // it in case the original channel does not have a loadInfo
+    newChannel->SetLoadInfo(nullptr);
+  }
 
   // Try to preserve the privacy bit if it has been overridden
   if (mPrivateBrowsingOverriden) {
@@ -163,14 +184,6 @@ nsBaseChannel::ContinueRedirect()
       rv = mRedirectChannel->AsyncOpen(mListener, mListenerContext);
     }
     NS_ENSURE_SUCCESS(rv, rv);
-    // Append the initial uri of the channel to the redirectChain
-    // after the channel got openend successfully.
-    if (mLoadInfo) {
-      nsCOMPtr<nsIPrincipal> uriPrincipal;
-      nsIScriptSecurityManager *sm = nsContentUtils::GetSecurityManager();
-      sm->GetChannelURIPrincipal(this, getter_AddRefs(uriPrincipal));
-      mLoadInfo->AppendRedirectedPrincipal(uriPrincipal, false);
-    }
   }
 
   mRedirectChannel = nullptr;
