@@ -50,7 +50,7 @@ load 797583.html
 load 806751.html
 load 833856.html
 load 851418.html
-load 854604.html
 load 854139.html
+load 854604.html
 pref(dom.use_xbl_scopes_for_remote_xul,true) load 898939.html
 pref(security.fileuri.strict_origin_policy,false) load 938297.html
