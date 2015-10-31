@@ -180,7 +180,7 @@ function disableServiceWorkerEvents(...scopes) {
   for (let scope of scopes) {
     Services.perms.add(
       Services.io.newURI(scope, null, null),
-      'push',
+      'desktop-notification',
       Ci.nsIPermissionManager.DENY_ACTION
     );
   }

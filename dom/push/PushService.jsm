@@ -1377,7 +1377,7 @@ this.PushService = {
     }
 
     let permission = subject.QueryInterface(Ci.nsIPermission);
-    if (permission.type != "push") {
+    if (permission.type != "desktop-notification") {
       return Promise.resolve();
     }
 
