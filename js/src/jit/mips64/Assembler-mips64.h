@@ -124,7 +124,6 @@ class Assembler : public AssemblerMIPSShared
     static uintptr_t GetPointer(uint8_t*);
 
     using AssemblerMIPSShared::bind;
-    using AssemblerMIPSShared::PatchDataWithValueCheck;
 
     void bind(RepatchLabel* label);
     void Bind(uint8_t* rawCode, AbsoluteLabel* label, const void* address);
@@ -146,6 +145,8 @@ class Assembler : public AssemblerMIPSShared
 
 
     static void PatchWrite_NearCall(CodeLocationLabel start, CodeLocationLabel toCall);
+    static void PatchDataWithValueCheck(CodeLocationLabel label, ImmPtr newValue,
+                                        ImmPtr expectedValue);
     static void PatchDataWithValueCheck(CodeLocationLabel label, PatchedImmPtr newValue,
                                         PatchedImmPtr expectedValue);
 
