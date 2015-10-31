@@ -646,19 +646,22 @@ public:
   {
     MOZ_ASSERT(aWorkerPrivate);
 
-    WorkerGlobalScope* globalScope = aWorkerPrivate->GlobalScope();
+    RefPtr<EventTarget> target = aWorkerPrivate->GlobalScope();
 
-    RefPtr<Event> event = NS_NewDOMEvent(globalScope, nullptr, nullptr);
+    ExtendableEventInit init;
+    init.mBubbles = false;
+    init.mCancelable = false;
 
-    nsresult rv = event->InitEvent(NS_LITERAL_STRING("pushsubscriptionchange"),
-                                   false, false);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return false;
-    }
+    RefPtr<ExtendableEvent> event =
+      ExtendableEvent::Constructor(target,
+                                   NS_LITERAL_STRING("pushsubscriptionchange"),
+                                   init);
 
     event->SetTrusted(true);
 
-    globalScope->DispatchDOMEvent(nullptr, event, nullptr, nullptr);
+    DispatchExtendableEventOnWorkerScope(aCx, aWorkerPrivate->GlobalScope(),
+                                         event, nullptr);
+
     return true;
   }
 };
