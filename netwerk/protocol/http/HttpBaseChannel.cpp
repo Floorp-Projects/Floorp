@@ -42,8 +42,10 @@
 #include "mozIThirdPartyUtil.h"
 #include "nsStreamUtils.h"
 #include "nsContentSecurityManager.h"
+#include "nsIChannelEventSink.h"
 #include "nsILoadGroupChild.h"
 #include "mozilla/ConsoleReportCollector.h"
+#include "LoadInfo.h"
 
 #include <algorithm>
 
@@ -2501,11 +2503,13 @@ HttpBaseChannel::ShouldRewriteRedirectToGET(uint32_t httpStatus,
 nsresult
 HttpBaseChannel::SetupReplacementChannel(nsIURI       *newURI,
                                          nsIChannel   *newChannel,
-                                         bool          preserveMethod)
+                                         bool          preserveMethod,
+                                         uint32_t      redirectFlags)
 {
   LOG(("HttpBaseChannel::SetupReplacementChannel "
      "[this=%p newChannel=%p preserveMethod=%d]",
      this, newChannel, preserveMethod));
+
   uint32_t newLoadFlags = mLoadFlags | LOAD_REPLACE;
   // if the original channel was using SSL and this channel is not using
   // SSL, then no need to inhibit persistent caching.  however, if the
@@ -2534,8 +2538,22 @@ HttpBaseChannel::SetupReplacementChannel(nsIURI       *newURI,
     }
   }
 
-  // Propagate our loadinfo if needed.
-  newChannel->SetLoadInfo(mLoadInfo);
+  // make a copy of the loadinfo, append to the redirectchain
+  // and set it on the new channel
+  if (mLoadInfo) {
+    nsCOMPtr<nsILoadInfo> newLoadInfo =
+      static_cast<mozilla::LoadInfo*>(mLoadInfo.get())->Clone();
+    bool isInternalRedirect =
+      (redirectFlags & (nsIChannelEventSink::REDIRECT_INTERNAL |
+                        nsIChannelEventSink::REDIRECT_STS_UPGRADE));
+    newLoadInfo->AppendRedirectedPrincipal(GetURIPrincipal(), isInternalRedirect);
+    newChannel->SetLoadInfo(newLoadInfo);
+  }
+  else {
+    // the newChannel was created with a dummy loadInfo, we should clear
+    // it in case the original channel does not have a loadInfo
+    newChannel->SetLoadInfo(nullptr);
+  }
 
   nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(newChannel);
   if (!httpChannel)

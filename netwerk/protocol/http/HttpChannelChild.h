@@ -276,6 +276,7 @@ private:
   // response headers.
   nsresult SetupRedirect(nsIURI* uri,
                          const nsHttpResponseHead* responseHead,
+                         const uint32_t& redirectFlags,
                          nsIChannel** outChannel);
 
   // Perform a redirection without communicating with the parent process at all.
