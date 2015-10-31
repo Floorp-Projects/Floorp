@@ -103,6 +103,9 @@ class FetchEvent final : public ExtendableEvent
   nsMainThreadPtrHandle<nsIInterceptedChannel> mChannel;
   RefPtr<Request> mRequest;
   nsCString mScriptSpec;
+  nsCString mPreventDefaultScriptSpec;
+  uint32_t mPreventDefaultLineNumber;
+  uint32_t mPreventDefaultColumnNumber;
   bool mIsReload;
   bool mWaitToRespond;
 protected:
@@ -112,7 +115,10 @@ protected:
 public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(FetchEvent, ExtendableEvent)
-  NS_FORWARD_TO_EVENT
+
+  // Note, we cannot use NS_FORWARD_TO_EVENT because we want a different
+  // PreventDefault(JSContext*) override.
+  NS_FORWARD_NSIDOMEVENT(Event::)
 
   virtual JSObject* WrapObjectInternal(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override
   {
@@ -147,13 +153,19 @@ public:
   }
 
   void
-  RespondWith(Promise& aArg, ErrorResult& aRv);
+  RespondWith(JSContext* aCx, Promise& aArg, ErrorResult& aRv);
 
   already_AddRefed<Promise>
   ForwardTo(const nsAString& aUrl);
 
   already_AddRefed<Promise>
   Default();
+
+  void
+  PreventDefault(JSContext* aCx) override;
+
+  void
+  ReportCanceled();
 };
 
 #ifndef MOZ_SIMPLEPUSH

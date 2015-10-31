@@ -5,4 +5,5 @@ config = {
     'src_mozconfig': 'mobile/android/b2gdroid/config/mozconfigs/nightly',
     'tooltool_manifest_src': 'mobile/android/config/tooltool-manifests/b2gdroid/releng.manifest',
     'multi_locale_config_platform': 'android',
+    'enable_nightly_promotion': True,
 }

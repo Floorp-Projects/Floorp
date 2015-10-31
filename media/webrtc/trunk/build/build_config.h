@@ -156,6 +156,10 @@
 #elif defined(__alpha__)
 #define ARCH_CPU_ALPHA 1
 #define ARCH_CPU_64_BITS 1
+#elif defined(__aarch64__)
+#define ARCH_CPU_ARM_FAMILY 1
+#define ARCH_CPU_ARM64 1
+#define ARCH_CPU_64_BITS 1
 #else
 #error Please add support for your architecture in build/build_config.h
 #endif

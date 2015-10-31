@@ -169,7 +169,7 @@ struct Statistics
                     SliceBudget budget, JS::gcreason::Reason reason);
     void endSlice();
 
-    void startTimingMutator();
+    bool startTimingMutator();
     bool stopTimingMutator(double& mutator_ms, double& gc_ms);
 
     void reset(const char* reason) {

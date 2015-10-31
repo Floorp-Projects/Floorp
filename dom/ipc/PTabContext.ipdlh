@@ -44,22 +44,25 @@ struct FrameIPCTabContext
   nsCString signedPkgOriginNoSuffix;
 };
 
+// XXXcatalinb: This is only used by ServiceWorkerClients::OpenWindow.
+// Because service workers don't have an associated TabChild
+// we can't satisfy the security constraints on b2g. As such, the parent
+// process will accept this tab context only on desktop.
+struct UnsafeIPCTabContext
+{ };
+
 // IPCTabContext is an analog to mozilla::dom::TabContext.  Both specify an
 // iframe/PBrowser's own and containing app-ids and tell you whether the
 // iframe/PBrowser is a browser frame.  But only IPCTabContext is allowed to
 // travel over IPC.
 //
 // We need IPCTabContext (specifically, PopupIPCTabContext) to prevent a
-// privilege escalation attack by a compromised child process.  See the comment
-// on AllocPBrowser for details.
-union IPCTabContextUnion
+// privilege escalation attack by a compromised child process.
+union IPCTabContext
 {
   PopupIPCTabContext;
   FrameIPCTabContext;
-};
-
-struct IPCTabContext {
-  IPCTabContextUnion contextUnion;
+  UnsafeIPCTabContext;
 };
 
 }

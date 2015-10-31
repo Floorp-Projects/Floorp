@@ -28,7 +28,7 @@
     {
       var tree =
         { SECTION: [ // t1_1
-          { SECTION: [ // t1_2
+          { HEADING: [ // t1_2
             // no kids, no loop
           ] }
         ] };
@@ -36,8 +36,8 @@
 
       tree =
         { SECTION: [ // t2_1
-          { SECTION: [ // t2_2
-            { SECTION: [ // t2_3
+          { GROUPING: [ // t2_2
+            { HEADING: [ // t2_3
               // no kids, no loop
             ] }
           ] }
@@ -46,9 +46,9 @@
 
       tree =
         { SECTION: [ // t3_3
-          { SECTION: [ // t3_1
-            { SECTION: [ // t3_2
-              { SECTION: [ // DOM child of t3_2
+          { GROUPING: [ // t3_1
+            { NOTE: [ // t3_2
+              { HEADING: [ // DOM child of t3_2
                 // no kids, no loop
               ] }
             ] }
@@ -58,7 +58,7 @@
 
       tree =
         { SECTION: [ // t4_1
-          { SECTION: [ // DOM child of t4_1
+          { GROUPING: [ // DOM child of t4_1, aria-owns ignored
             // no kids, no loop
           ] }
         ] };
@@ -66,11 +66,11 @@
 
       tree =
         { SECTION: [ // t5_1
-          { SECTION: [ // DOM child of t5_1
-            { SECTION: [ // t5_2
-              { SECTION: [ // DOM child of t5_2
-                { SECTION: [ // t5_3
-                  { SECTION: [ // DOM child of t5_3
+          { GROUPING: [ // DOM child of t5_1
+            { NOTE: [ // t5_2
+              { HEADING: [ // DOM child of t5_2
+                { FORM: [ // t5_3
+                  { TOOLTIP: [ // DOM child of t5_3
                     // no kids, no loop
                   ]}
                 ]}
@@ -79,6 +79,14 @@
           ] }
         ] };
       testAccessibleTree("t5_1", tree);
+
+      tree =
+        { SECTION: [ // t6_1
+          { RADIOBUTTON: [ ] },
+          { CHECKBUTTON: [ ] }, // t6_3, rearranged by aria-owns
+          { PUSHBUTTON: [ ] }, // t6_2, rearranged by aria-owns
+        ] };
+      testAccessibleTree("t6_1", tree);
 
       SimpleTest.finish();
     }
@@ -96,24 +104,37 @@
   <pre id="test">
   </pre>
 
+  <!-- simple loop -->
   <div id="t1_1" aria-owns="t1_2"></div>
-  <div id="t1_2" aria-owns="t1_1"></div>
+  <div id="t1_2" aria-owns="t1_1" role="heading"></div>
 
-  <div id="t2_2" aria-owns="t2_3"></div>
+  <!-- loop -->
+  <div id="t2_2" aria-owns="t2_3" role="group"></div>
   <div id="t2_1" aria-owns="t2_2"></div>
-  <div id="t2_3" aria-owns="t2_1"></div>
+  <div id="t2_3" aria-owns="t2_1" role="heading"></div>
 
-  <div id="t3_1" aria-owns="t3_2"></div>
-  <div id="t3_2">
-    <div aria-owns="t3_3"></div>
+  <!-- loop #2 -->
+  <div id="t3_1" aria-owns="t3_2" role="group"></div>
+  <div id="t3_2" role="note">
+    <div aria-owns="t3_3" role="heading"></div>
   </div>
   <div id="t3_3" aria-owns="t3_1"></div>
 
-  <div id="t4_1"><div aria-owns="t4_1"></div></div>
+  <!-- self loop -->
+  <div id="t4_1"><div aria-owns="t4_1" role="group"></div></div>
 
-  <div id="t5_1"><div aria-owns="t5_2"></div>
-  <div id="t5_2"><div aria-owns="t5_3"></div></div>
-  <div id="t5_3"><div aria-owns="t5_1"></div></div>
+  <!-- natural and aria-owns hierarchy -->
+  <div id="t5_1"><div aria-owns="t5_2" role="group"></div></div>
+  <div id="t5_2" role="note"><div aria-owns="t5_3" role="heading"></div></div>
+  <div id="t5_3" role="form"><div aria-owns="t5_1" role="tooltip"></div></div>
+
+  <!-- rearrange children -->
+  <div id="t6_1" aria-owns="t6_3 t6_2">
+    <div id="t6_2" role="button"></div>
+    <div id="t6_3" role="checkbox"></div>
+    <div role="radio"></div>
+  </div>
+
 </body>
 
 </html>

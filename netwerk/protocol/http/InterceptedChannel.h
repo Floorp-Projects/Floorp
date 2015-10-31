@@ -82,6 +82,9 @@ public:
   NS_IMETHOD GetInternalContentPolicyType(nsContentPolicyType *aInternalContentPolicyType) override;
 
   virtual void NotifyController() override;
+
+  virtual nsIConsoleReportCollector*
+  GetConsoleReportCollector() const override;
 };
 
 class InterceptedChannelContent : public InterceptedChannelBase
@@ -110,6 +113,9 @@ public:
   NS_IMETHOD GetInternalContentPolicyType(nsContentPolicyType *aInternalContentPolicyType) override;
 
   virtual void NotifyController() override;
+
+  virtual nsIConsoleReportCollector*
+  GetConsoleReportCollector() const override;
 };
 
 } // namespace net

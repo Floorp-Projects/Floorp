@@ -964,15 +964,6 @@ VectorImage::RecoverFromLossOfSurfaces()
   SurfaceCache::RemoveImage(ImageKey(this));
 }
 
-//******************************************************************************
-
-NS_IMETHODIMP
-VectorImage::RequestDecode()
-{
-  // Nothing to do for SVG images
-  return NS_OK;
-}
-
 NS_IMETHODIMP
 VectorImage::StartDecoding()
 {

@@ -134,6 +134,16 @@ public:
                                 nsIContent* aEndChildNode);
 
   /**
+   * Pend an accessible subtree relocation.
+   */
+  void ScheduleRelocation(Accessible* aOwner)
+  {
+    if (!mRelocations.Contains(aOwner) && mRelocations.AppendElement(aOwner)) {
+      ScheduleProcessing();
+    }
+  }
+
+  /**
    * Start to observe refresh to make notifications and events processing after
    * layout.
    */
@@ -303,6 +313,11 @@ private:
    * use SwapElements() on it.
    */
   nsTArray<RefPtr<Notification> > mNotifications;
+
+  /**
+   * Holds all scheduled relocations.
+   */
+  nsTArray<RefPtr<Accessible> > mRelocations;
 };
 
 } // namespace a11y
