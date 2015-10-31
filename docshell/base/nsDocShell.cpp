@@ -82,6 +82,7 @@
 #include "nsViewSourceHandler.h"
 #include "nsWhitespaceTokenizer.h"
 #include "nsICookieService.h"
+#include "nsIConsoleReportCollector.h"
 
 // we want to explore making the document own the load group
 // so we can associate the document URI with the load group.
@@ -5015,17 +5016,7 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI* aURI,
         error.AssignLiteral("corruptedContentError");
         break;
       case NS_ERROR_INTERCEPTION_FAILED:
-      case NS_ERROR_OPAQUE_INTERCEPTION_DISABLED:
-      case NS_ERROR_BAD_OPAQUE_INTERCEPTION_REQUEST_MODE:
-      case NS_ERROR_INTERCEPTED_ERROR_RESPONSE:
-      case NS_ERROR_INTERCEPTED_USED_RESPONSE:
-      case NS_ERROR_CLIENT_REQUEST_OPAQUE_INTERCEPTION:
-      case NS_ERROR_BAD_OPAQUE_REDIRECT_INTERCEPTION:
-      case NS_ERROR_INTERCEPTION_CANCELED:
-      case NS_ERROR_REJECTED_RESPONSE_INTERCEPTION:
         // ServiceWorker intercepted request, but something went wrong.
-        nsContentUtils::MaybeReportInterceptionErrorToConsole(GetDocument(),
-                                                              aError);
         error.AssignLiteral("corruptedContentError");
         break;
       default:
@@ -7357,6 +7348,11 @@ nsDocShell::EndPageLoad(nsIWebProgress* aProgress,
     return NS_ERROR_NULL_POINTER;
   }
 
+  nsCOMPtr<nsIConsoleReportCollector> reporter = do_QueryInterface(aChannel);
+  if (reporter) {
+    reporter->FlushConsoleReports(GetDocument());
+  }
+
   nsCOMPtr<nsIURI> url;
   nsresult rv = aChannel->GetURI(getter_AddRefs(url));
   if (NS_FAILED(rv)) {
@@ -7683,13 +7679,6 @@ nsDocShell::EndPageLoad(nsIWebProgress* aProgress,
                aStatus == NS_ERROR_UNSAFE_CONTENT_TYPE ||
                aStatus == NS_ERROR_REMOTE_XUL ||
                aStatus == NS_ERROR_INTERCEPTION_FAILED ||
-               aStatus == NS_ERROR_OPAQUE_INTERCEPTION_DISABLED ||
-               aStatus == NS_ERROR_BAD_OPAQUE_INTERCEPTION_REQUEST_MODE ||
-               aStatus == NS_ERROR_INTERCEPTED_ERROR_RESPONSE ||
-               aStatus == NS_ERROR_INTERCEPTED_USED_RESPONSE ||
-               aStatus == NS_ERROR_CLIENT_REQUEST_OPAQUE_INTERCEPTION ||
-               aStatus == NS_ERROR_INTERCEPTION_CANCELED ||
-               aStatus == NS_ERROR_REJECTED_RESPONSE_INTERCEPTION ||
                NS_ERROR_GET_MODULE(aStatus) == NS_ERROR_MODULE_SECURITY) {
       // Errors to be shown for any frame
       DisplayLoadError(aStatus, url, nullptr, aChannel);

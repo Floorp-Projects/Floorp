@@ -75,7 +75,7 @@ native nsIntSizeByVal(nsIntSize);
  *
  * Internally, imgIContainer also manages animation of images.
  */
-[scriptable, builtinclass, uuid(7c795421-a79c-43ac-9e20-6d4e8a9dfb76)]
+[scriptable, builtinclass, uuid(a8dbee24-ff86-4755-b40e-51175caf31af)]
 interface imgIContainer : nsISupports
 {
   /**
@@ -383,22 +383,16 @@ interface imgIContainer : nsISupports
 
   /*
    * Ensures that an image is decoding. Calling this function guarantees that
-   * the image will at some point fire off decode notifications. Calling draw()
-   * or getFrame() triggers the same mechanism internally. Thus, if you want to
-   * be sure that the image will be decoded but don't want to access it until
-   * then, you must call requestDecode().
-   */
-  void requestDecode();
-
-  /*
-   * This is equivalent to requestDecode() but it also synchronously decodes
-   * images that can be decoded "quickly" according to some heuristic.
+   * the image will at some point fire off decode notifications. Images that
+   * can be decoded "quickly" according to some heuristic will be decoded
+   * synchronously.
    */
   [noscript] void startDecoding();
 
   /*
-   * This method is equivalent to requestDecode(), but enables the caller to
-   * provide more detailed information about the decode request.
+   * This method triggers decoding for an image, but unlike startDecoding() it
+   * enables the caller to provide more detailed information about the decode
+   * request.
    *
    * @param aSize The size to which the image should be scaled while decoding,
    *              if possible. If the image cannot be scaled to this size while

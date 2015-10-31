@@ -20,3 +20,4 @@ task:
       groupName: Desktop mochitests
       groupSymbol: tc-M
       symbol: gl
+      tier: 2

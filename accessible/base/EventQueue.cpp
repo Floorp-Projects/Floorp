@@ -295,12 +295,16 @@ EventQueue::CoalesceReorderEvents(AccEvent* aTailEvent)
         AccReorderEvent* thisReorder = downcast_accEvent(thisEvent);
         AccReorderEvent* tailReorder = downcast_accEvent(aTailEvent);
         uint32_t eventType = thisReorder->IsShowHideEventTarget(tailParent);
-        if (eventType == nsIAccessibleEvent::EVENT_SHOW)
+        if (eventType == nsIAccessibleEvent::EVENT_SHOW) {
           tailReorder->DoNotEmitAll();
-        else if (eventType == nsIAccessibleEvent::EVENT_HIDE)
+        }
+        else if (eventType == nsIAccessibleEvent::EVENT_HIDE) {
           NS_ERROR("Accessible tree was modified after it was removed! Huh?");
-        else
+        }
+        else {
           aTailEvent->mEventRule = AccEvent::eDoNotEmit;
+          mEvents[index].swap(mEvents[count - 1]);
+        }
 
         return;
       }

@@ -212,22 +212,6 @@ tests:
         task: tasks/tests/b2g_linter.yml
       tasks/builds/mulet_linux.yml:
         task: tasks/tests/mulet_linter.yml
-  gaia-ui-test-functional:
-    allowed_build_tasks:
-      tasks/builds/b2g_flame_kk_eng.yml:
-        task: tasks/tests/flame_kk_gaia_ui_test_functional.yml
-  gaia-ui-test-functional-dsds:
-    allowed_build_tasks:
-      tasks/builds/b2g_flame_kk_eng.yml:
-        task: tasks/tests/flame_kk_gaia_ui_test_functional_dsds.yml
-  gaia-ui-test-sanity:
-    allowed_build_tasks:
-      tasks/builds/b2g_flame_kk_eng.yml:
-        task: tasks/tests/flame_kk_gaia_ui_test_sanity.yml
-  gaia-ui-test-unit:
-    allowed_build_tasks:
-      tasks/builds/b2g_flame_kk_eng.yml:
-        task: tasks/tests/flame_kk_gaia_ui_test_unit.yml
   gaia-unit:
     allowed_build_tasks:
       tasks/builds/b2g_desktop_opt.yml:
@@ -258,6 +242,10 @@ tests:
     allowed_build_tasks:
       tasks/builds/b2g_desktop_opt.yml:
         task: tasks/tests/b2g_mochitest_oop.yml
+  mochitest-webgl:
+    allowed_build_tasks:
+      tasks/builds/dbg_linux64.yml:
+        task: tasks/tests/fx_linux64_mochitest_gl.yml
   reftest:
     allowed_build_tasks:
       tasks/builds/mulet_linux.yml:

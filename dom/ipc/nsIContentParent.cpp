@@ -71,35 +71,36 @@ nsIContentParent::DeallocPJavaScriptParent(PJavaScriptParent* aParent)
 bool
 nsIContentParent::CanOpenBrowser(const IPCTabContext& aContext)
 {
-  const IPCTabContextUnion& contextUnion = aContext.contextUnion();
-
-  // We don't trust the IPCTabContext we receive from the child, so we'll bail
-  // if we receive an IPCTabContext that's not a PopupIPCTabContext.
   // (PopupIPCTabContext lets the child process prove that it has access to
   // the app it's trying to open.)
-  if (contextUnion.type() != IPCTabContextUnion::TPopupIPCTabContext) {
+  // On e10s we also allow UnsafeTabContext to allow service workers to open
+  // windows. This is enforced in MaybeInvalidTabContext.
+  if (aContext.type() != IPCTabContext::TPopupIPCTabContext &&
+      aContext.type() != IPCTabContext::TUnsafeIPCTabContext) {
     ASSERT_UNLESS_FUZZING("Unexpected IPCTabContext type.  Aborting AllocPBrowserParent.");
     return false;
   }
 
-  const PopupIPCTabContext& popupContext = contextUnion.get_PopupIPCTabContext();
-  if (popupContext.opener().type() != PBrowserOrId::TPBrowserParent) {
-    ASSERT_UNLESS_FUZZING("Unexpected PopupIPCTabContext type.  Aborting AllocPBrowserParent.");
-    return false;
-  }
+  if (aContext.type() == IPCTabContext::TPopupIPCTabContext) {
+    const PopupIPCTabContext& popupContext = aContext.get_PopupIPCTabContext();
+    if (popupContext.opener().type() != PBrowserOrId::TPBrowserParent) {
+      ASSERT_UNLESS_FUZZING("Unexpected PopupIPCTabContext type.  Aborting AllocPBrowserParent.");
+      return false;
+    }
 
-  auto opener = TabParent::GetFrom(popupContext.opener().get_PBrowserParent());
-  if (!opener) {
-    ASSERT_UNLESS_FUZZING("Got null opener from child; aborting AllocPBrowserParent.");
-    return false;
-  }
+    auto opener = TabParent::GetFrom(popupContext.opener().get_PBrowserParent());
+    if (!opener) {
+      ASSERT_UNLESS_FUZZING("Got null opener from child; aborting AllocPBrowserParent.");
+      return false;
+    }
 
-  // Popup windows of isBrowser frames must be isBrowser if the parent
-  // isBrowser.  Allocating a !isBrowser frame with same app ID would allow
-  // the content to access data it's not supposed to.
-  if (!popupContext.isBrowserElement() && opener->IsBrowserElement()) {
-    ASSERT_UNLESS_FUZZING("Child trying to escalate privileges!  Aborting AllocPBrowserParent.");
-    return false;
+    // Popup windows of isBrowser frames must be isBrowser if the parent
+    // isBrowser.  Allocating a !isBrowser frame with same app ID would allow
+    // the content to access data it's not supposed to.
+    if (!popupContext.isBrowserElement() && opener->IsBrowserElement()) {
+      ASSERT_UNLESS_FUZZING("Child trying to escalate privileges!  Aborting AllocPBrowserParent.");
+      return false;
+    }
   }
 
   MaybeInvalidTabContext tc(aContext);
@@ -129,26 +130,25 @@ nsIContentParent::AllocPBrowserParent(const TabId& aTabId,
     return nullptr;
   }
 
-  const IPCTabContextUnion& contextUnion = aContext.contextUnion();
-  const PopupIPCTabContext& popupContext = contextUnion.get_PopupIPCTabContext();
-
   uint32_t chromeFlags = aChromeFlags;
+  if (aContext.type() == IPCTabContext::TPopupIPCTabContext) {
+    // CanOpenBrowser has ensured that the IPCTabContext is of
+    // type PopupIPCTabContext, and that the opener TabParent is
+    // reachable.
+    const PopupIPCTabContext& popupContext = aContext.get_PopupIPCTabContext();
+    auto opener = TabParent::GetFrom(popupContext.opener().get_PBrowserParent());
+    // We must ensure that the private browsing and remoteness flags
+    // match those of the opener.
+    nsCOMPtr<nsILoadContext> loadContext = opener->GetLoadContext();
+    if (!loadContext) {
+      return nullptr;
+    }
 
-  // CanOpenBrowser has ensured that the IPCTabContext is of
-  // type PopupIPCTabContext, and that the opener TabParent is
-  // reachable.
-  auto opener = TabParent::GetFrom(popupContext.opener().get_PBrowserParent());
-  // We must ensure that the private browsing and remoteness flags
-  // match those of the opener.
-  nsCOMPtr<nsILoadContext> loadContext = opener->GetLoadContext();
-  if (!loadContext) {
-    return nullptr;
-  }
-
-  bool isPrivate;
-  loadContext->GetUsePrivateBrowsing(&isPrivate);
-  if (isPrivate) {
-    chromeFlags |= nsIWebBrowserChrome::CHROME_PRIVATE_WINDOW;
+    bool isPrivate;
+    loadContext->GetUsePrivateBrowsing(&isPrivate);
+    if (isPrivate) {
+      chromeFlags |= nsIWebBrowserChrome::CHROME_PRIVATE_WINDOW;
+    }
   }
 
   // And because we're allocating a remote browser, of course the

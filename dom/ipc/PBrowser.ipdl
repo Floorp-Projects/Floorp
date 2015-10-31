@@ -90,14 +90,9 @@ struct ShowInfo
   nsString name;
   bool fullscreenAllowed;
   bool isPrivate;
+  bool fakeShowInfo;
   float dpi;
   double defaultScale;
-};
-
-struct FrameScriptInfo
-{
-    nsString url;
-    bool runInGlobalScope;
 };
 
 prio(normal upto urgent) sync protocol PBrowser
@@ -164,20 +159,6 @@ parent:
     MoveFocus(bool forward, bool forDocumentNavigation);
 
     Event(RemoteDOMEvent aEvent);
-
-    sync CreateWindow(PBrowser aNewTab,
-                      uint32_t aChromeFlags,
-                      bool aCalledFromJS,
-                      bool aPositionSpecified,
-                      bool aSizeSpecified,
-                      nsString aURI,
-                      nsString aName,
-                      nsCString aFeatures,
-                      nsString aBaseURI)
-      returns (nsresult rv,
-               bool windowOpened,
-               FrameScriptInfo[] frameScripts,
-               nsCString urlToLoad);
 
     sync SyncMessage(nsString aMessage, ClonedMessageData aData,
                      CpowEntry[] aCpows, Principal aPrincipal)
@@ -573,7 +554,7 @@ child:
          nullable PRenderFrame renderFrame,
          bool parentIsActive);
 
-    LoadURL(nsCString uri, BrowserConfiguration config);
+    LoadURL(nsCString uri, BrowserConfiguration config, ShowInfo info);
 
     CacheFileDescriptor(nsString path, FileDescriptor fd);
 

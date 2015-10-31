@@ -324,8 +324,14 @@ IDRefsIterator::GetElem(const nsDependentSubstring& aID)
 Accessible*
 IDRefsIterator::Next()
 {
-  nsIContent* nextElm = NextElem();
-  return nextElm ? mDoc->GetAccessible(nextElm) : nullptr;
+  nsIContent* nextEl = nullptr;
+  while ((nextEl = NextElem())) {
+    Accessible* acc = mDoc->GetAccessible(nextEl);
+    if (acc) {
+      return acc;
+    }
+  }
+  return nullptr;
 }
 
 

@@ -318,9 +318,10 @@ struct nsCachedStyleData
     }
   #define STYLE_STRUCT_RESET(name_, checkdata_cb_)                             \
     nsStyle##name_ * NS_FASTCALL GetStyle##name_ (nsStyleContext* aContext,    \
-                                                  bool aCanComputeData) {         \
+                                                  bool aCanComputeData) {      \
       return mResetData ? static_cast<nsStyle##name_*>(                        \
-        mResetData->GetStyleData(eStyleStruct_##name_, aContext, aCanComputeData))\
+        mResetData->GetStyleData(eStyleStruct_##name_, aContext,               \
+                                 aCanComputeData))                             \
                         : nullptr;                                             \
     }
   #include "nsStyleStructList.h"
