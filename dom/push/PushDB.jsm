@@ -227,12 +227,26 @@ this.PushDB.prototype = {
     );
   },
 
-  getAllByOrigin: function(origin, originAttributes) {
-    debug("getAllByOrigin()");
+  /**
+   * Updates all push registrations for an origin.
+   *
+   * @param {String} origin The origin, matched as a prefix against the scope.
+   * @param {String} originAttributes Additional origin attributes. Requires
+   *  an exact match.
+   * @param {Function} updateFunc A function that receives the existing
+   *  registration record as its argument, and returns a new record. The record
+   *  will not be updated if the function returns `null`, `undefined`, or an
+   *  invalid record. If the function returns `false`, the record will be
+   *  dropped.
+   * @returns {Promise} A promise that resolves once all records have been
+   *  updated.
+   */
+  updateByOrigin: function(origin, originAttributes, updateFunc) {
+    debug("updateByOrigin()");
 
     return new Promise((resolve, reject) =>
       this.newTxn(
-        "readonly",
+        "readwrite",
         this._dbStoreName,
         (aTxn, aStore) => {
           aTxn.result = [];
@@ -244,10 +258,24 @@ this.PushDB.prototype = {
           );
           index.openCursor(range).onsuccess = event => {
             let cursor = event.target.result;
-            if (cursor) {
-              aTxn.result.push(this.toPushRecord(cursor.value));
-              cursor.continue();
+            if (!cursor) {
+              return;
             }
+            let record = this.toPushRecord(cursor.value);
+            let newRecord = updateFunc(record);
+            if (newRecord === false) {
+              debug("updateByOrigin: Removing record for key ID " +
+                record.keyID);
+              cursor.delete();
+            } else if (this.isValidRecord(newRecord)) {
+              debug("updateByOrigin: Updating record for key ID " +
+                record.keyID);
+              cursor.update(newRecord);
+            } else {
+              debug("updateByOrigin: Ignoring invalid update for key ID " +
+                record.keyID + ": " + JSON.stringify(newRecord));
+            }
+            cursor.continue();
           };
         },
         resolve,

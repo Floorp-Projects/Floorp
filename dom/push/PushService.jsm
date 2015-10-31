@@ -1395,22 +1395,27 @@ this.PushService = {
       // Permission set to "allow". Drop all expired registrations for this
       // site, notify the associated service workers, and reset the quota
       // for active registrations.
-      return this._getByPrincipal(permission.principal)
-        .then(records => this._permissionAllowed(records));
+      return this._updateByPrincipal(
+        permission.principal,
+        record => this._permissionAllowed(record)
+      );
     } else if (isChange || (isAllow && type == "deleted")) {
       // Permission set to "block" or "always ask," or "allow" permission
       // removed. Expire all registrations for this site.
-      return this._getByPrincipal(permission.principal)
-        .then(records => this._permissionDenied(records));
+      return this._updateByPrincipal(
+        permission.principal,
+        record => this._permissionDenied(record)
+      );
     }
 
     return Promise.resolve();
   },
 
-  _getByPrincipal: function(principal) {
-    return this._db.getAllByOrigin(
+  _updateByPrincipal: function(principal, updateFunc) {
+    return this._db.updateByOrigin(
       principal.URI.prePath,
-      ChromeUtils.originAttributesToSuffix(principal.originAttributes)
+      ChromeUtils.originAttributesToSuffix(principal.originAttributes),
+      updateFunc
     );
   },
 
@@ -1423,13 +1428,15 @@ this.PushService = {
    * @param {Array} A list of records to expire.
    * @returns {Promise} A promise resolved with the expired records.
    */
-  _permissionDenied: function(records) {
-    return Promise.all(records.filter(record =>
+  _permissionDenied: function(record) {
+    if (!record.quotaApplies() || record.isExpired()) {
       // Ignore already-expired records.
-      record.quotaApplies() && !record.isExpired()
-    ).map(record =>
-      this._expireRegistration(record)
-    ));
+      return null;
+    }
+    // Drop the registration in the background.
+    this._unregisterIfConnected(record);
+    record.setQuota(0);
+    return record;
   },
 
   /**
@@ -1440,32 +1447,17 @@ this.PushService = {
    * @param {Array} A list of records to refresh.
    * @returns {Promise} A promise resolved with the refreshed records.
    */
-  _permissionAllowed: function(records) {
-    return Promise.all(records.map(record => {
-      if (!record.quotaApplies()) {
-        return record;
-      }
-      if (record.isExpired()) {
-        // If the registration has expired, drop and notify the worker
-        // unconditionally.
-        return this.dropRecordAndNotifyApp(record);
-      }
-      return this._db.update(record.keyID, record => {
-        record.resetQuota();
-        return record;
-      });
-    }));
-  },
-
-  _expireRegistration: function(record) {
-    // Drop the registration in the background.
-    this._unregisterIfConnected(record);
-    return this._db.update(record.keyID, record => {
-      record.setQuota(0);
-      return record;
-    }).catch(error => {
-      debug("expireRegistration: Error dropping expired registration " +
-        record.keyID + ": " + error);
-    });
+  _permissionAllowed: function(record) {
+    if (!record.quotaApplies()) {
+      return null;
+    }
+    if (record.isExpired()) {
+      // If the registration has expired, drop and notify the worker
+      // unconditionally.
+      this._notifySubscriptionChangeObservers(record);
+      return false;
+    }
+    record.resetQuota();
+    return record;
   },
 };
