@@ -296,9 +296,9 @@ load 470851-1.xhtml
 load 471594-1.xhtml
 asserts-if(Android,2) load 473042.xhtml # bug 1034369 (may also cause a few assertions to be registered on the next test)
 asserts(0-5) load 474075.html # bug 847368
-load 479114-1.html
 load 477333-1.xhtml
 load 477731-1.html
+load 479114-1.html
 load 479360-1.xhtml
 load 480686-1.html
 load 481806-1.html
@@ -383,9 +383,9 @@ load 629035-1.html
 load 629908-1.html
 load 635329.html
 load 636229-1.html
-load 645572-1.html
 == 640272.html 640272-ref.html
 load 645193.html
+load 645572-1.html
 load 650475.xhtml
 load 650489.xhtml
 load 651342-1.html
@@ -446,9 +446,9 @@ load 836990-1.html
 load 840480.html
 load 847242.html
 pref(layers.progressive-paint,false) pref(layers.low-precision-buffer,false) load 852293.html
-load 860579-1.html
 pref(layers.force-active,true) load 859526-1.html
 pref(layers.force-active,true) load 859630-1.html
+load 860579-1.html
 load 866588.html
 load 876092.html
 load 876221.html
@@ -457,18 +457,18 @@ asserts-if(Android,2) asserts-if(!Android,4-6) load 898913.html # bug 847368
 pref(layers.acceleration.disabled,true) pref(layers.force-active,true) load 919434.html
 load 926728.html
 load 930381.html
-load 931464.html
-load 936988-1.html
 load 931450.html
 load 931460-1.html
+load 931464.html
 load 935765-1.html
+load 936988-1.html
 load 942690.html
 load 973390-1.html
 load 1001237.html
 load 1043163-1.html
 load 1061028.html
-load 1116104.html
 load 1107508-1.html
+load 1116104.html
 load 1127198-1.html
 load 1140198.html
 pref(layout.css.grid.enabled,true) load 1156588.html
