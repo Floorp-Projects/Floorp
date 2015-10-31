@@ -23,7 +23,6 @@
 #include "nsServiceManagerUtils.h"
 #include "nsXPCOM.h"
 #include "prprf.h"
-#include "mozilla/Snprintf.h"
 
 // Define CIDs...
 static NS_DEFINE_CID(kIOServiceCID,              NS_IOSERVICE_CID);
@@ -93,7 +92,7 @@ nsresult writeoutto(const char* i_pURL, char** o_Result, int32_t urlFactory = UR
         output += ',';
         rv = tURL->GetPort(&port);
         char portbuffer[40];
-        snprintf_literal(portbuffer, "%d", port);
+        PR_snprintf(portbuffer, sizeof(portbuffer), "%d", port);
         output.Append(portbuffer);
         output += ',';
         rv = tURL->GetDirectory(temp);

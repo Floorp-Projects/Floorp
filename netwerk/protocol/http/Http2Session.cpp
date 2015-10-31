@@ -32,9 +32,9 @@
 #include "nsISupportsPriority.h"
 #include "nsStandardURL.h"
 #include "nsURLHelper.h"
+#include "prprf.h"
 #include "prnetdb.h"
 #include "sslt.h"
-#include "mozilla/Snprintf.h"
 
 #ifdef DEBUG
 // defined by the socket transport service while active
@@ -225,10 +225,11 @@ Http2Session::LogIO(Http2Session *self, Http2Stream *stream,
         LOG5(("%s", linebuf));
       }
       line = linebuf;
-      snprintf(line, 128, "%08X: ", index);
+      PR_snprintf(line, 128, "%08X: ", index);
       line += 10;
     }
-    snprintf(line, 128 - (line - linebuf), "%02X ", (reinterpret_cast<const uint8_t *>(data))[index]);
+    PR_snprintf(line, 128 - (line - linebuf), "%02X ",
+                (reinterpret_cast<const uint8_t *>(data))[index]);
     line += 3;
   }
   if (index) {
