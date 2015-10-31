@@ -7,7 +7,7 @@
 define(function(require, exports, module) {
 
 // ReactJS
-const React = require("react");
+const ReactDOM = require("react-dom");
 
 // RDP Inspector
 const { createFactories } = require("./components/reps/rep-utils");
@@ -79,7 +79,7 @@ input.actions = {
  * at the top of the window. This component also represents ReacJS root.
  */
 var content = document.getElementById("content");
-var theApp = React.render(MainTabbedArea(input), content);
+var theApp = ReactDOM.render(MainTabbedArea(input), content);
 
 var onResize = event => {
   window.document.body.style.height = window.innerHeight + "px";
