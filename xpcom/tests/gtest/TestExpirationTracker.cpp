@@ -18,7 +18,6 @@
 #include "nsIFile.h"
 #include "prinrval.h"
 #include "nsThreadUtils.h"
-#include "mozilla/UniquePtr.h"
 #include "gtest/gtest.h"
 
 namespace TestExpirationTracker {
@@ -50,7 +49,7 @@ public:
     LogAction(obj, "Created");
   }
 
-  nsTArray<mozilla::UniquePtr<Object>> mUniverse;
+  nsTArray<nsAutoArrayPtr<Object> > mUniverse;
 
   void LogAction(Object* aObj, const char* aAction) {
     if (logging) {
@@ -80,28 +79,28 @@ public:
       break;
     }
     case 1: {
-      UniquePtr<Object>& objref = mUniverse[uint32_t(rand())%mUniverse.Length()];
-      if (objref->mExpiration.IsTracked()) {
-        nsExpirationTracker<Object,K>::RemoveObject(objref.get());
-        LogAction(objref.get(), "Removed");
+      obj = mUniverse[uint32_t(rand())%mUniverse.Length()];
+      if (obj->mExpiration.IsTracked()) {
+        nsExpirationTracker<Object,K>::RemoveObject(obj);
+        LogAction(obj, "Removed");
       }
       break;
     }
     case 2: {
-      UniquePtr<Object>& objref = mUniverse[uint32_t(rand())%mUniverse.Length()];
-      if (!objref->mExpiration.IsTracked()) {
-        objref->Touch();
-        nsExpirationTracker<Object,K>::AddObject(objref.get());
-        LogAction(objref.get(), "Added");
+      obj = mUniverse[uint32_t(rand())%mUniverse.Length()];
+      if (!obj->mExpiration.IsTracked()) {
+        obj->Touch();
+        nsExpirationTracker<Object,K>::AddObject(obj);
+        LogAction(obj, "Added");
       }
       break;
     }
     case 3: {
-      UniquePtr<Object>& objref = mUniverse[uint32_t(rand())%mUniverse.Length()];
-      if (objref->mExpiration.IsTracked()) {
-        objref->Touch();
-        nsExpirationTracker<Object,K>::MarkUsed(objref.get());
-        LogAction(objref.get(), "Marked used");
+      obj = mUniverse[uint32_t(rand())%mUniverse.Length()];
+      if (obj->mExpiration.IsTracked()) {
+        obj->Touch();
+        nsExpirationTracker<Object,K>::MarkUsed(obj);
+        LogAction(obj, "Marked used");
       }
       break;
     }
