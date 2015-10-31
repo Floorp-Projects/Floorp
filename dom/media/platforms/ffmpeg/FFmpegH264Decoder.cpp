@@ -155,6 +155,13 @@ FFmpegH264Decoder<LIBAV_VER>::DoDecodeFrame(MediaRawData* aSample,
   packet.flags = aSample->mKeyframe ? AV_PKT_FLAG_KEY : 0;
   packet.pos = aSample->mOffset;
 
+  // LibAV provides no API to retrieve the decoded sample's duration.
+  // (FFmpeg >= 1.0 provides av_frame_get_pkt_duration)
+  // As such we instead use a map using the dts as key that we will retrieve
+  // later.
+  // The map will have a typical size of 16 entry.
+  mDurationMap.Insert(aSample->mTimecode, aSample->mDuration);
+
   if (!PrepareFrame()) {
     NS_WARNING("FFmpeg h264 decoder failed to allocate frame.");
     mCallback->Error();
@@ -185,6 +192,19 @@ FFmpegH264Decoder<LIBAV_VER>::DoDecodeFrame(MediaRawData* aSample,
     int64_t pts = mPtsContext.GuessCorrectPts(mFrame->pkt_pts, mFrame->pkt_dts);
     FFMPEG_LOG("Got one frame output with pts=%lld opaque=%lld",
                pts, mCodecContext->reordered_opaque);
+    // Retrieve duration from dts.
+    // We use the first entry found matching this dts (this is done to
+    // handle damaged file with multiple frames with the same dts)
+
+    int64_t duration;
+    if (!mDurationMap.Find(mFrame->pkt_dts, duration)) {
+      NS_WARNING("Unable to retrieve duration from map");
+      duration = aSample->mDuration;
+      // dts are probably incorrectly reported ; so clear the map as we're
+      // unlikely to find them in the future anyway. This also guards
+      // against the map becoming extremely big.
+      mDurationMap.Clear();
+    }
 
     VideoInfo info;
     info.mDisplay = nsIntSize(mDisplayWidth, mDisplayHeight);
@@ -212,7 +232,7 @@ FFmpegH264Decoder<LIBAV_VER>::DoDecodeFrame(MediaRawData* aSample,
                                               mImageContainer,
                                               aSample->mOffset,
                                               pts,
-                                              aSample->mDuration,
+                                              duration,
                                               b,
                                               !!mFrame->key_frame,
                                               -1,
@@ -381,6 +401,7 @@ void
 FFmpegH264Decoder<LIBAV_VER>::ProcessFlush()
 {
   mPtsContext.Reset();
+  mDurationMap.Clear();
   FFmpegDataDecoder::ProcessFlush();
 }
 
