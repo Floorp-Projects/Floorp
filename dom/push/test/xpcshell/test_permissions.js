@@ -45,7 +45,7 @@ function makePushPermission(url, capability) {
     principal: Services.scriptSecurityManager.getCodebasePrincipal(
       Services.io.newURI(url, null, null)
     ),
-    type: 'push',
+    type: 'desktop-notification',
   };
 }
 
