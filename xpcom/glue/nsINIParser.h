@@ -15,7 +15,7 @@
 
 #include "nscore.h"
 #include "nsClassHashtable.h"
-#include "nsAutoPtr.h"
+#include "mozilla/UniquePtr.h"
 
 #include <stdio.h>
 
@@ -106,11 +106,11 @@ private:
 
     const char* key;
     const char* value;
-    nsAutoPtr<INIValue> next;
+    mozilla::UniquePtr<INIValue> next;
   };
 
   nsClassHashtable<nsDepCharHashKey, INIValue> mSections;
-  nsAutoArrayPtr<char> mFileContents;
+  mozilla::UniquePtr<char[]> mFileContents;
 
   nsresult InitFromFILE(FILE* aFd);
 };
