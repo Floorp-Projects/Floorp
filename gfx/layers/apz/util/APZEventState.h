@@ -57,7 +57,8 @@ public:
   void ProcessTouchEvent(const WidgetTouchEvent& aEvent,
                          const ScrollableLayerGuid& aGuid,
                          uint64_t aInputBlockId,
-                         nsEventStatus aApzResponse);
+                         nsEventStatus aApzResponse,
+                         nsEventStatus aContentResponse);
   void ProcessWheelEvent(const WidgetWheelEvent& aEvent,
                          const ScrollableLayerGuid& aGuid,
                          uint64_t aInputBlockId);
