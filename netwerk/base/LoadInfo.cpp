@@ -110,6 +110,7 @@ LoadInfo::LoadInfo(nsIPrincipal* aLoadingPrincipal,
                    bool aEnforceSecurity,
                    bool aInitialSecurityCheckDone,
                    const OriginAttributes& aOriginAttributes,
+                   nsTArray<nsCOMPtr<nsIPrincipal>>& aRedirectChainIncludingInternalRedirects,
                    nsTArray<nsCOMPtr<nsIPrincipal>>& aRedirectChain)
   : mLoadingPrincipal(aLoadingPrincipal)
   , mTriggeringPrincipal(aTriggeringPrincipal)
@@ -125,6 +126,9 @@ LoadInfo::LoadInfo(nsIPrincipal* aLoadingPrincipal,
 {
   MOZ_ASSERT(mLoadingPrincipal);
   MOZ_ASSERT(mTriggeringPrincipal);
+
+  mRedirectChainIncludingInternalRedirects.SwapElements(
+    aRedirectChainIncludingInternalRedirects);
 
   mRedirectChain.SwapElements(aRedirectChain);
 }
@@ -369,11 +373,29 @@ LoadInfo::GetInitialSecurityCheckDone(bool* aResult)
 }
 
 NS_IMETHODIMP
-LoadInfo::AppendRedirectedPrincipal(nsIPrincipal* aPrincipal)
+LoadInfo::AppendRedirectedPrincipal(nsIPrincipal* aPrincipal, bool aIsInternalRedirect)
 {
   NS_ENSURE_ARG(aPrincipal);
-  mRedirectChain.AppendElement(aPrincipal);
+  mRedirectChainIncludingInternalRedirects.AppendElement(aPrincipal);
+  if (!aIsInternalRedirect) {
+    mRedirectChain.AppendElement(aPrincipal);
+  }
   return NS_OK;
+}
+
+NS_IMETHODIMP
+LoadInfo::GetRedirectChainIncludingInternalRedirects(JSContext* aCx, JS::MutableHandle<JS::Value> aChain)
+{
+  if (!ToJSValue(aCx, mRedirectChainIncludingInternalRedirects, aChain)) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  return NS_OK;
+}
+
+const nsTArray<nsCOMPtr<nsIPrincipal>>&
+LoadInfo::RedirectChainIncludingInternalRedirects()
+{
+  return mRedirectChainIncludingInternalRedirects;
 }
 
 NS_IMETHODIMP
