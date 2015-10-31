@@ -16,10 +16,11 @@ Test focusing with the Tree component.
 
 window.onload = Task.async(function* () {
   try {
+    const ReactDOM = bRequire("devtools/client/shared/vendor/react-dom");
     const React = bRequire("devtools/client/shared/vendor/react");
     const { Simulate } = React.addons.TestUtils;
     const Tree = React.createFactory(bRequire("devtools/client/memory/components/tree"));
-    const tree = React.render(Tree(TEST_TREE_INTERFACE), window.document.body);
+    const tree = ReactDOM.render(Tree(TEST_TREE_INTERFACE), window.document.body);
 
     yield setState(tree, {
       focused: "G",

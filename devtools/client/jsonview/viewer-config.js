@@ -23,7 +23,8 @@ require.config({
     "react": [
       "resource://devtools/client/shared/vendor/react-dev",
       "resource://devtools/client/shared/vendor/react"
-    ]
+    ],
+    "react-dom": "resource://devtools/client/shared/vendor/react-dom"
   }
 });
 
