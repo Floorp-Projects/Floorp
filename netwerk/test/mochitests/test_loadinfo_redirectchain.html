@@ -1,0 +1,213 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 1194052 - Append Principal to RedirectChain within LoadInfo before the channel is succesfully openend</title>
+  <!-- Including SimpleTest.js so we can use waitForExplicitFinish !-->
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<iframe style="width:100%;" id="testframe"></iframe>
+
+<script class="testbody" type="text/javascript">
+
+/*
+ * We perform the following tests on the redirectchain of the loadinfo:
+ *  (1) checkLoadInfoWithoutRedirects:
+ *      checks the length of the redirectchain and tries to pop an element
+ *      which should result in an exception and not a crash.
+ *  (2) checkLoadInfoWithTwoRedirects:
+ *      perform two redirects and confirm that both redirect chains
+ *      contain the redirected URIs.
+ *  (3) checkLoadInfoWithInternalRedirects:
+ *      perform two redirects including CSPs upgrade-insecure-requests
+ *      so that the redirectchain which includes internal redirects differs.
+ *  (4) checkLoadInfoWithInternalRedirectsAndFallback
+ *      perform two redirects including CSPs upgrade-insecure-requests
+ *      including a 404 repsonse and hence a fallback.
+ */
+
+SimpleTest.waitForExplicitFinish();
+
+// *************** TEST 1 ***************
+
+function checkLoadInfoWithoutRedirects() {
+  var myXHR = new XMLHttpRequest();
+  myXHR.open("GET", "http://mochi.test:8888/tests/netwerk/test/mochitests/file_loadinfo_redirectchain.sjs?redir-0");
+
+  myXHR.onload = function() {
+    var loadinfo = SpecialPowers.wrap(myXHR).channel.loadInfo;
+    var redirectChain = loadinfo.redirectChain;
+    var redirectChainIncludingInternalRedirects = loadinfo.redirectChainIncludingInternalRedirects;
+
+    is(redirectChain.length, 0, "no redirect, length should be 0");
+    is(redirectChainIncludingInternalRedirects.length, 0, "no redirect, length should be 0");
+    is(myXHR.responseText, "checking redirectchain", "sanity check to make sure redirects succeeded");
+
+    // try to pop an element from redirectChain
+    try {
+      loadInfo.popRedirectedPrincipal(false);
+      ok(false, "should not be possible to pop from redirectChain");
+    }
+    catch(e) {
+      ok(true, "popping element from empty redirectChain should throw");
+    }
+
+    // try to pop an element from redirectChainIncludingInternalRedirects
+    try {
+      loadInfo.popRedirectedPrincipal(true);
+      ok(false, "should not be possible to pop from redirectChainIncludingInternalRedirects");
+    }
+    catch(e) {
+      ok(true, "popping element from empty redirectChainIncludingInternalRedirects should throw");
+    }
+    // move on to the next test
+    checkLoadInfoWithTwoRedirects();
+  }
+  myXHR.onerror = function() {
+    ok(false, "xhr problem within checkLoadInfoWithoutRedirect()");
+  }
+  myXHR.send();
+}
+
+// *************** TEST 2 ***************
+
+function checkLoadInfoWithTwoRedirects() {
+  var myXHR = new XMLHttpRequest();
+  myXHR.open("GET", "http://mochi.test:8888/tests/netwerk/test/mochitests/file_loadinfo_redirectchain.sjs?redir-2");
+
+  const EXPECTED_REDIRECT_CHAIN = [
+    "http://mochi.test:8888/tests/netwerk/test/mochitests/file_loadinfo_redirectchain.sjs?redir-2",
+    "http://mochi.test:8888/tests/netwerk/test/mochitests/file_loadinfo_redirectchain.sjs?redir-1"
+  ];
+
+  myXHR.onload = function() {
+    is(myXHR.responseText, "checking redirectchain", "sanity check to make sure redirects succeeded");
+
+    var loadinfo = SpecialPowers.wrap(myXHR).channel.loadInfo;
+    var redirectChain = loadinfo.redirectChain;
+    var redirectChainIncludingInternalRedirects = loadinfo.redirectChainIncludingInternalRedirects;
+
+    is(redirectChain.length,
+       EXPECTED_REDIRECT_CHAIN.length,
+       "two redirects, chain should have length 2");
+    is(redirectChainIncludingInternalRedirects.length,
+       EXPECTED_REDIRECT_CHAIN.length,
+       "two redirect, chainInternal should have length 2");
+
+    for (var i = 0; i < redirectChain.length; i++) {
+      is(redirectChain[i].URI.spec,
+        EXPECTED_REDIRECT_CHAIN[i],
+         "redirectChain at index [" + i + "] should match");
+      is(redirectChainIncludingInternalRedirects[i].URI.spec,
+         EXPECTED_REDIRECT_CHAIN[i],
+         "redirectChainIncludingInternalRedirects at index [" + i + "] should match");
+    }
+
+    // move on to the next test
+    checkLoadInfoWithInternalRedirects();
+  }
+  myXHR.onerror = function() {
+    ok(false, "xhr problem within checkLoadInfoWithTwoRedirects()");
+  }
+  myXHR.send();
+}
+
+// ************** HELPERS ***************
+
+function compareChains(aLoadInfo, aExpectedRedirectChain, aExpectedRedirectChainIncludingInternalRedirects) {
+
+  var redirectChain = aLoadInfo.redirectChain;
+  var redirectChainIncludingInternalRedirects = aLoadInfo.redirectChainIncludingInternalRedirects;
+
+    is(redirectChain.length,
+       aExpectedRedirectChain.length,
+       "confirming length of redirectChain");
+
+    is(redirectChainIncludingInternalRedirects.length,
+       aExpectedRedirectChainIncludingInternalRedirects.length,
+       "confirming length of redirectChainIncludingInternalRedirects");
+
+    for (var i = 0; i < redirectChain.length; i++) {
+      is(redirectChain[i],
+         aExpectedRedirectChain[i],
+         "redirectChain at index [" + i + "] should match");
+    }
+
+    for (var i = 0; i < redirectChainIncludingInternalRedirects.length; i++) {
+      is(redirectChainIncludingInternalRedirects[i],
+         aExpectedRedirectChainIncludingInternalRedirects[i],
+         "redirectChainIncludingInternalRedirects at index [" + i + "] should match");
+    }
+}
+
+// *************** TEST 3 ***************
+
+function confirmCheckLoadInfoWithInternalRedirects(event) {
+
+  const EXPECTED_REDIRECT_CHAIN = [
+    "https://example.com/tests/netwerk/test/mochitests/file_loadinfo_redirectchain.sjs?redir-https-2",
+    "https://example.com/tests/netwerk/test/mochitests/file_loadinfo_redirectchain.sjs?redir-https-1"
+  ];
+
+  const EXPECTED_REDIRECT_CHAIN_INCLUDING_INTERNAL_REDIRECTS = [
+    "http://example.com/tests/netwerk/test/mochitests/file_loadinfo_redirectchain.sjs?redir-https-2",
+    "https://example.com/tests/netwerk/test/mochitests/file_loadinfo_redirectchain.sjs?redir-https-2",
+    "http://example.com/tests/netwerk/test/mochitests/file_loadinfo_redirectchain.sjs?redir-https-1",
+    "https://example.com/tests/netwerk/test/mochitests/file_loadinfo_redirectchain.sjs?redir-https-1",
+    "http://example.com/tests/netwerk/test/mochitests/file_loadinfo_redirectchain.sjs?redir-https-0",
+  ];
+
+  var loadinfo = JSON.parse(event.data.loadinfo);
+  compareChains(loadinfo, EXPECTED_REDIRECT_CHAIN, EXPECTED_REDIRECT_CHAIN_INCLUDING_INTERNAL_REDIRECTS);
+
+  // remove the postMessage listener and move on to the next test
+  window.removeEventListener("message", confirmCheckLoadInfoWithInternalRedirects, false);
+  checkLoadInfoWithInternalRedirectsAndFallback();
+}
+
+function checkLoadInfoWithInternalRedirects() {
+  // load the XHR request into an iframe so we can apply a CSP to the iframe
+  // a postMessage returns the result back to the main page.
+  window.addEventListener("message", confirmCheckLoadInfoWithInternalRedirects, false);
+  document.getElementById("testframe").src =
+    "https://example.com/tests/netwerk/test/mochitests/file_loadinfo_redirectchain.sjs?iframe-redir-https-2";
+}
+
+// *************** TEST 4 ***************
+
+function confirmCheckLoadInfoWithInternalRedirectsAndFallback(event) {
+
+  var EXPECTED_REDIRECT_CHAIN = [
+    "https://example.com/tests/netwerk/test/mochitests/file_loadinfo_redirectchain.sjs?redir-err-2",
+  ];
+
+  var EXPECTED_REDIRECT_CHAIN_INCLUDING_INTERNAL_REDIRECTS = [
+    "http://example.com/tests/netwerk/test/mochitests/file_loadinfo_redirectchain.sjs?redir-err-2",
+    "https://example.com/tests/netwerk/test/mochitests/file_loadinfo_redirectchain.sjs?redir-err-2",
+    "http://example.com/tests/netwerk/test/mochitests/file_loadinfo_redirectchain.sjs?redir-err-1",
+  ];
+
+  var loadinfo = JSON.parse(event.data.loadinfo);
+  compareChains(loadinfo, EXPECTED_REDIRECT_CHAIN, EXPECTED_REDIRECT_CHAIN_INCLUDING_INTERNAL_REDIRECTS);
+
+  // remove the postMessage listener and finish test
+  window.removeEventListener("message", confirmCheckLoadInfoWithInternalRedirectsAndFallback, false);
+  SimpleTest.finish();
+}
+
+function checkLoadInfoWithInternalRedirectsAndFallback() {
+  // load the XHR request into an iframe so we can apply a CSP to the iframe
+  // a postMessage returns the result back to the main page.
+  window.addEventListener("message", confirmCheckLoadInfoWithInternalRedirectsAndFallback, false);
+  document.getElementById("testframe").src =
+    "https://example.com/tests/netwerk/test/mochitests/file_loadinfo_redirectchain.sjs?iframe-redir-err-2";
+}
+
+// *************** START TESTS ***************
+
+checkLoadInfoWithoutRedirects();
+
+</script>
+</body>
+</html>
