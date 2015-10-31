@@ -1361,13 +1361,6 @@ AssemblerMIPSShared::as_sync(uint32_t stype)
     writeInst(InstReg(op_special, zero, zero, zero, stype, ff_sync).encode());
 }
 
-void
-AssemblerMIPSShared::PatchDataWithValueCheck(CodeLocationLabel label, ImmPtr newValue, ImmPtr expectedValue)
-{
-    Assembler::PatchDataWithValueCheck(label, PatchedImmPtr(newValue.value),
-                            PatchedImmPtr(expectedValue.value));
-}
-
 // This just stomps over memory with 32 bits of raw data. Its purpose is to
 // overwrite the call of JITed code with 32 bits worth of an offset. This will
 // is only meant to function on code that has been invalidated, so it should

@@ -438,6 +438,14 @@ Assembler::WriteLoad64Instructions(Instruction* inst0, Register reg, uint64_t va
 }
 
 void
+Assembler::PatchDataWithValueCheck(CodeLocationLabel label, ImmPtr newValue,
+                                   ImmPtr expectedValue)
+{
+    PatchDataWithValueCheck(label, PatchedImmPtr(newValue.value),
+                            PatchedImmPtr(expectedValue.value));
+}
+
+void
 Assembler::PatchDataWithValueCheck(CodeLocationLabel label, PatchedImmPtr newValue,
                                    PatchedImmPtr expectedValue)
 {
