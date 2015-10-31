@@ -155,49 +155,6 @@ BindingParams::getOwner() const
   return mOwningArray;
 }
 
-PLDHashOperator
-AsyncBindingParams::iterateOverNamedParameters(const nsACString &aName,
-                                               nsIVariant *aValue,
-                                               void *voidClosureThunk)
-{
-  NamedParameterIterationClosureThunk *closureThunk =
-    static_cast<NamedParameterIterationClosureThunk *>(voidClosureThunk);
-
-  // We do not accept any forms of names other than ":name", but we need to add
-  // the colon for SQLite.
-  nsAutoCString name(":");
-  name.Append(aName);
-  int oneIdx = ::sqlite3_bind_parameter_index(closureThunk->statement,
-                                              name.get());
-
-  if (oneIdx == 0) {
-    nsAutoCString errMsg(aName);
-    errMsg.AppendLiteral(" is not a valid named parameter.");
-    closureThunk->err = new Error(SQLITE_RANGE, errMsg.get());
-    return PL_DHASH_STOP;
-  }
-
-  // XPCVariant's AddRef and Release are not thread-safe and so we must not do
-  // anything that would invoke them here on the async thread.  As such we can't
-  // cram aValue into self->mParameters using ReplaceObjectAt so that we can
-  // freeload off of the BindingParams::Bind implementation.
-  int rc = variantToSQLiteT(BindingColumnData(closureThunk->statement,
-                                              oneIdx - 1),
-                            aValue);
-  if (rc != SQLITE_OK) {
-    // We had an error while trying to bind.  Now we need to create an error
-    // object with the right message.  Note that we special case
-    // SQLITE_MISMATCH, but otherwise get the message from SQLite.
-    const char *msg = "Could not covert nsIVariant to SQLite type.";
-    if (rc != SQLITE_MISMATCH)
-      msg = ::sqlite3_errmsg(::sqlite3_db_handle(closureThunk->statement));
-
-    closureThunk->err = new Error(rc, msg);
-    return PL_DHASH_STOP;
-  }
-  return PL_DHASH_NEXT;
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 //// nsISupports
 
@@ -241,13 +198,44 @@ AsyncBindingParams::bind(sqlite3_stmt * aStatement)
   if (!mNamedParameters.Count())
     return BindingParams::bind(aStatement);
 
-  // Enumerate over everyone in the map, propagating them into mParameters if
-  // we can and creating an error immediately when we cannot.
-  NamedParameterIterationClosureThunk closureThunk = {this, aStatement, nullptr};
-  (void)mNamedParameters.EnumerateRead(iterateOverNamedParameters,
-                                       (void *)&closureThunk);
+  nsCOMPtr<mozIStorageError> err;
 
-  return closureThunk.err.forget();
+  for (auto iter = mNamedParameters.Iter(); !iter.Done(); iter.Next()) {
+    const nsACString &key = iter.Key();
+
+    // We do not accept any forms of names other than ":name", but we need to
+    // add the colon for SQLite.
+    nsAutoCString name(":");
+    name.Append(key);
+    int oneIdx = ::sqlite3_bind_parameter_index(aStatement, name.get());
+
+    if (oneIdx == 0) {
+      nsAutoCString errMsg(key);
+      errMsg.AppendLiteral(" is not a valid named parameter.");
+      err = new Error(SQLITE_RANGE, errMsg.get());
+      break;
+    }
+
+    // XPCVariant's AddRef and Release are not thread-safe and so we must not
+    // do anything that would invoke them here on the async thread.  As such we
+    // can't cram aValue into mParameters using ReplaceObjectAt so that
+    // we can freeload off of the BindingParams::Bind implementation.
+    int rc = variantToSQLiteT(BindingColumnData(aStatement, oneIdx - 1),
+                              iter.UserData());
+    if (rc != SQLITE_OK) {
+      // We had an error while trying to bind.  Now we need to create an error
+      // object with the right message.  Note that we special case
+      // SQLITE_MISMATCH, but otherwise get the message from SQLite.
+      const char *msg = "Could not covert nsIVariant to SQLite type.";
+      if (rc != SQLITE_MISMATCH) {
+        msg = ::sqlite3_errmsg(::sqlite3_db_handle(aStatement));
+      }
+      err = new Error(rc, msg);
+      break;
+    }
+  }
+
+  return err.forget();
 }
 
 

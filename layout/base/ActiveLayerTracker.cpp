@@ -47,6 +47,7 @@ public:
     , mMarginTopRestyleCount(0)
     , mMarginRightRestyleCount(0)
     , mMarginBottomRestyleCount(0)
+    , mBackgroundPositionRestyleCount(0)
     , mContentActive(false)
   {}
   ~LayerActivity();
@@ -64,6 +65,7 @@ public:
     case eCSSProperty_margin_top: return mMarginTopRestyleCount;
     case eCSSProperty_margin_right: return mMarginRightRestyleCount;
     case eCSSProperty_margin_bottom: return mMarginBottomRestyleCount;
+    case eCSSProperty_background_position: return mBackgroundPositionRestyleCount;
     default: MOZ_ASSERT(false); return mOpacityRestyleCount;
     }
   }
@@ -92,6 +94,7 @@ public:
   uint8_t mMarginTopRestyleCount;
   uint8_t mMarginRightRestyleCount;
   uint8_t mMarginBottomRestyleCount;
+  uint8_t mBackgroundPositionRestyleCount;
   bool mContentActive;
 };
 

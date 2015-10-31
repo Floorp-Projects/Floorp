@@ -82,6 +82,10 @@ if system in ["Microsoft", "Windows"]:
         version = "%d.%d.%d" % (major, minor, build_number)
 
     os_version = "%d.%d" % (major, minor)
+elif system.startswith('MINGW'):
+    # windows/mingw python build (msys)
+    info['os'] = 'win'
+    os_version = version = unknown
 elif system == "Linux":
     if hasattr(platform, "linux_distribution"):
         (distro, os_version, codename) = platform.linux_distribution()
