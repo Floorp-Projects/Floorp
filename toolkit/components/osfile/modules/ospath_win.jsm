@@ -34,7 +34,7 @@ if (typeof Components != "undefined") {
   // In non-main thread, |exports| is provided by the module
   // loader.
   this.exports = {};
-} else if (typeof "module" == "undefined" || typeof "exports" == "undefined") {
+} else if (typeof module == "undefined" || typeof exports == "undefined") {
   throw new Error("Please load this module using require()");
 }
 
