@@ -130,32 +130,6 @@ static const char BEFORE_FIRST_PAINT[] = "before-first-paint";
 typedef nsDataHashtable<nsUint64HashKey, TabChild*> TabChildMap;
 static TabChildMap* sTabChildren;
 
-class TabChild::DelayedFireContextMenuEvent final : public nsITimerCallback
-{
-public:
-  NS_DECL_ISUPPORTS
-
-  explicit DelayedFireContextMenuEvent(TabChild* tabChild)
-    : mTabChild(tabChild)
-  {
-  }
-
-  NS_IMETHODIMP Notify(nsITimer*) override
-  {
-    mTabChild->FireContextMenuEvent();
-    return NS_OK;
-  }
-
-private:
-  ~DelayedFireContextMenuEvent()
-  {
-  }
-
-  // Raw pointer is safe here because this object is held by a Timer, which is
-  // held by TabChild, we won't stay alive if TabChild dies.
-  TabChild *mTabChild;
-};
-
 static bool
 UsingCompositorLRU()
 {
@@ -168,9 +142,6 @@ UsingCompositorLRU()
   }
   return sCompositorLRUSize != 0;
 }
-
-NS_IMPL_ISUPPORTS(TabChild::DelayedFireContextMenuEvent,
-                  nsITimerCallback)
 
 TabChildBase::TabChildBase()
   : mTabChildGlobal(nullptr)
@@ -602,7 +573,6 @@ TabChild::TabChild(nsIContentChild* aManager,
   , mChromeFlags(aChromeFlags)
   , mActiveSuppressDisplayport(0)
   , mLayersId(0)
-  , mActivePointerId(-1)
   , mAppPackageFileDescriptorRecved(false)
   , mDidFakeShow(false)
   , mNotified(false)
@@ -1849,153 +1819,6 @@ TabChild::RecvMouseScrollTestEvent(const FrameMetrics::ViewID& aScrollId, const 
   return true;
 }
 
-static Touch*
-GetTouchForIdentifier(const WidgetTouchEvent& aEvent, int32_t aId)
-{
-  for (uint32_t i = 0; i < aEvent.touches.Length(); ++i) {
-    Touch* touch = static_cast<Touch*>(aEvent.touches[i].get());
-    if (touch->mIdentifier == aId) {
-      return touch;
-    }
-  }
-  return nullptr;
-}
-
-void
-TabChild::UpdateTapState(const WidgetTouchEvent& aEvent, nsEventStatus aStatus)
-{
-  static bool sHavePrefs;
-  static bool sClickHoldContextMenusEnabled;
-  static nsIntSize sDragThreshold;
-  static int32_t sContextMenuDelayMs;
-  if (!sHavePrefs) {
-    sHavePrefs = true;
-    Preferences::AddBoolVarCache(&sClickHoldContextMenusEnabled,
-                                 "ui.click_hold_context_menus", true);
-    Preferences::AddIntVarCache(&sDragThreshold.width,
-                                "ui.dragThresholdX", 25);
-    Preferences::AddIntVarCache(&sDragThreshold.height,
-                                "ui.dragThresholdY", 25);
-    Preferences::AddIntVarCache(&sContextMenuDelayMs,
-                                "ui.click_hold_context_menus.delay", 500);
-  }
-
-  if (aEvent.touches.Length() == 0) {
-    return;
-  }
-
-  bool currentlyTrackingTouch = (mActivePointerId >= 0);
-  if (aEvent.mMessage == eTouchStart) {
-    if (currentlyTrackingTouch || aEvent.touches.Length() > 1) {
-      // We're tracking a possible tap for another point, or we saw a
-      // touchstart for a later pointer after we canceled tracking of
-      // the first point.  Ignore this one.
-      return;
-    }
-    if (aStatus == nsEventStatus_eConsumeNoDefault ||
-        TouchManager::gPreventMouseEvents ||
-        aEvent.mFlags.mMultipleActionsPrevented) {
-      return;
-    }
-
-    Touch* touch = aEvent.touches[0];
-    mGestureDownPoint = LayoutDevicePoint(touch->mRefPoint.x, touch->mRefPoint.y);
-    mActivePointerId = touch->mIdentifier;
-    if (sClickHoldContextMenusEnabled) {
-      MOZ_ASSERT(!mTapHoldTimer);
-      mTapHoldTimer = do_CreateInstance(NS_TIMER_CONTRACTID);
-      RefPtr<DelayedFireContextMenuEvent> callback =
-        new DelayedFireContextMenuEvent(this);
-      mTapHoldTimer->InitWithCallback(callback,
-                                      sContextMenuDelayMs,
-                                      nsITimer::TYPE_ONE_SHOT);
-    }
-    return;
-  }
-
-  // If we're not tracking a touch or this event doesn't include the
-  // one we care about, bail.
-  if (!currentlyTrackingTouch) {
-    return;
-  }
-  Touch* trackedTouch = GetTouchForIdentifier(aEvent, mActivePointerId);
-  if (!trackedTouch) {
-    return;
-  }
-
-  LayoutDevicePoint currentPoint = LayoutDevicePoint(trackedTouch->mRefPoint.x, trackedTouch->mRefPoint.y);
-  int64_t time = aEvent.time;
-  switch (aEvent.mMessage) {
-  case eTouchMove:
-    if (std::abs(currentPoint.x - mGestureDownPoint.x) > sDragThreshold.width ||
-        std::abs(currentPoint.y - mGestureDownPoint.y) > sDragThreshold.height) {
-      CancelTapTracking();
-    }
-    return;
-
-  case eTouchEnd:
-    if (!TouchManager::gPreventMouseEvents) {
-      APZCCallbackHelper::DispatchSynthesizedMouseEvent(
-        eMouseMove, time, currentPoint, 0, mPuppetWidget);
-      APZCCallbackHelper::DispatchSynthesizedMouseEvent(
-        eMouseDown, time, currentPoint, 0, mPuppetWidget);
-      APZCCallbackHelper::DispatchSynthesizedMouseEvent(
-        eMouseUp, time, currentPoint, 0, mPuppetWidget);
-    }
-    // fall through
-  case eTouchCancel:
-    CancelTapTracking();
-    return;
-
-  default:
-    NS_WARNING("Unknown touch event type");
-  }
-}
-
-void
-TabChild::FireContextMenuEvent()
-{
-  if (mDestroyed) {
-    return;
-  }
-
-  double scale;
-  GetDefaultScale(&scale);
-  if (scale < 0) {
-    scale = 1;
-  }
-
-  MOZ_ASSERT(mTapHoldTimer && mActivePointerId >= 0);
-  bool defaultPrevented = APZCCallbackHelper::DispatchMouseEvent(
-      GetPresShell(),
-      NS_LITERAL_STRING("contextmenu"),
-      mGestureDownPoint / CSSToLayoutDeviceScale(scale),
-      2 /* Right button */,
-      1 /* Click count */,
-      0 /* Modifiers */,
-      true /* Ignore root scroll frame */,
-      nsIDOMMouseEvent::MOZ_SOURCE_TOUCH);
-
-  // Fire a click event if someone didn't call preventDefault() on the context
-  // menu event.
-  if (defaultPrevented) {
-    CancelTapTracking();
-  } else if (mTapHoldTimer) {
-    mTapHoldTimer->Cancel();
-    mTapHoldTimer = nullptr;
-  }
-}
-
-void
-TabChild::CancelTapTracking()
-{
-  mActivePointerId = -1;
-  if (mTapHoldTimer) {
-    mTapHoldTimer->Cancel();
-  }
-  mTapHoldTimer = nullptr;
-}
-
 bool
 TabChild::RecvRealTouchEvent(const WidgetTouchEvent& aEvent,
                              const ScrollableLayerGuid& aGuid,
@@ -2024,7 +1847,9 @@ TabChild::RecvRealTouchEvent(const WidgetTouchEvent& aEvent,
   nsEventStatus status = APZCCallbackHelper::DispatchWidgetEvent(localEvent);
 
   if (!AsyncPanZoomEnabled()) {
-    UpdateTapState(localEvent, status);
+    // We shouldn't have any e10s platforms that have touch events enabled
+    // without APZ.
+    MOZ_ASSERT(false);
     return true;
   }
 
