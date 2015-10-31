@@ -8,6 +8,8 @@
 #define __FFmpegH264Decoder_h__
 
 #include "FFmpegDataDecoder.h"
+#include "mozilla/Pair.h"
+#include "nsTArray.h"
 
 namespace mozilla
 {
@@ -81,6 +83,42 @@ private:
   };
 
   PtsCorrectionContext mPtsContext;
+
+  class DurationMap {
+  public:
+    typedef Pair<int64_t, int64_t> DurationElement;
+
+    // Insert Dts and Duration pair at the end of our map.
+    void Insert(int64_t aDts, int64_t aDuration)
+    {
+      mMap.AppendElement(MakePair(aDts, aDuration));
+    }
+    // Sets aDuration matching aDts and remove it from the map if found.
+    // The element returned is the first one found.
+    // Returns true if found, false otherwise.
+    bool Find(int64_t aDts, int64_t& aDuration)
+    {
+      for (uint32_t i = 0; i < mMap.Length(); i++) {
+        DurationElement& element = mMap[i];
+        if (element.first() == aDts) {
+          aDuration = element.second();
+          mMap.RemoveElementAt(i);
+          return true;
+        }
+      }
+      return false;
+    }
+    // Remove all elements of the map.
+    void Clear()
+    {
+      mMap.Clear();
+    }
+
+  private:
+    nsAutoTArray<DurationElement, 16> mMap;
+  };
+
+  DurationMap mDurationMap;
 };
 
 } // namespace mozilla
