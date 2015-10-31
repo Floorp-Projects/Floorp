@@ -210,7 +210,7 @@ AutoRedirectVetoNotifier::ReportRedirectResult(bool succeeded)
 
     // Append the initial uri of the channel to the redirectChain
     if (succeeded && mChannel->mLoadInfo) {
-        mChannel->mLoadInfo->AppendRedirectedPrincipal(mChannel->GetURIPrincipal());
+        mChannel->mLoadInfo->AppendRedirectedPrincipal(mChannel->GetURIPrincipal(), false);
     }
 
     mChannel->mRedirectChannel = nullptr;

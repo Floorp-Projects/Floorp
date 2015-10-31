@@ -169,7 +169,7 @@ nsBaseChannel::ContinueRedirect()
       nsCOMPtr<nsIPrincipal> uriPrincipal;
       nsIScriptSecurityManager *sm = nsContentUtils::GetSecurityManager();
       sm->GetChannelURIPrincipal(this, getter_AddRefs(uriPrincipal));
-      mLoadInfo->AppendRedirectedPrincipal(uriPrincipal);
+      mLoadInfo->AppendRedirectedPrincipal(uriPrincipal, false);
     }
   }
 
