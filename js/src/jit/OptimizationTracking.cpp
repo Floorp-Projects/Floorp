@@ -139,7 +139,7 @@ void
 SpewTempOptimizationTypeInfoVector(const TempOptimizationTypeInfoVector* types,
                                    const char* indent = nullptr)
 {
-#ifdef DEBUG
+#ifdef JS_JITSPEW
     for (const OptimizationTypeInfo* t = types->begin(); t != types->end(); t++) {
         JitSpewStart(JitSpew_OptimizationTracking, "   %s%s of type %s, type set",
                      indent ? indent : "",
@@ -155,7 +155,7 @@ void
 SpewTempOptimizationAttemptsVector(const TempOptimizationAttemptsVector* attempts,
                                    const char* indent = nullptr)
 {
-#ifdef DEBUG
+#ifdef JS_JITSPEW
     for (const OptimizationAttempt* a = attempts->begin(); a != attempts->end(); a++) {
         JitSpew(JitSpew_OptimizationTracking, "   %s%s: %s", indent ? indent : "",
                 TrackedStrategyString(a->strategy()), TrackedOutcomeString(a->outcome()));
@@ -166,7 +166,7 @@ SpewTempOptimizationAttemptsVector(const TempOptimizationAttemptsVector* attempt
 void
 TrackedOptimizations::spew() const
 {
-#ifdef DEBUG
+#ifdef JS_JITSPEW
     SpewTempOptimizationTypeInfoVector(&types_);
     SpewTempOptimizationAttemptsVector(&attempts_);
 #endif
@@ -852,7 +852,7 @@ MaybeConstructorFromType(TypeSet::Type ty)
 static void
 SpewConstructor(TypeSet::Type ty, JSFunction* constructor)
 {
-#ifdef DEBUG
+#ifdef JS_JITSPEW
     if (!constructor->isInterpreted()) {
         JitSpew(JitSpew_OptimizationTracking, "   Unique type %s has native constructor",
                 TypeSet::TypeString(ty));
@@ -883,7 +883,7 @@ SpewConstructor(TypeSet::Type ty, JSFunction* constructor)
 static void
 SpewAllocationSite(TypeSet::Type ty, JSScript* script, uint32_t offset)
 {
-#ifdef DEBUG
+#ifdef JS_JITSPEW
     JitSpew(JitSpew_OptimizationTracking, "   Unique type %s has alloc site %s:%u",
             TypeSet::TypeString(ty), script->filename(),
             PCToLineNumber(script, script->offsetToPC(offset)));
@@ -903,7 +903,7 @@ jit::WriteIonTrackedOptimizationsTable(JSContext* cx, CompactBufferWriter& write
 {
     MOZ_ASSERT(unique.sorted());
 
-#ifdef DEBUG
+#ifdef JS_JITSPEW
     // Spew training data, which may be fed into a script to determine a good
     // encoding strategy.
     if (JitSpewEnabled(JitSpew_OptimizationTracking)) {
