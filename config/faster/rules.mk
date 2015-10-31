@@ -24,6 +24,8 @@
 # python/mozbuild/mozbuild/backend/fastermake.py is the following:
 # - TOPSRCDIR/TOPOBJDIR, respectively the top source directory and the top
 #   object directory
+# - BACKEND, the path to the file the backend will always update when running
+#   mach build-backend
 # - PYTHON, the path to the python executable
 # - ACDEFINES, which contains a set of -Dvar=name to be used during
 #   preprocessing
@@ -41,9 +43,7 @@ default: $(addprefix install-,$(INSTALL_MANIFESTS))
 
 # Explicit files to be built for a default build
 default: $(addprefix $(TOPOBJDIR)/,$(MANIFEST_TARGETS))
-default: $(TOPOBJDIR)/dist/bin/greprefs.js
 default: $(TOPOBJDIR)/dist/bin/platform.ini
-default: $(TOPOBJDIR)/dist/bin/webapprt/webapprt.ini
 
 # Targets from the recursive make backend to be built for a default build
 default: $(TOPOBJDIR)/config/makefiles/xpidl/xpidl
@@ -69,11 +69,21 @@ $(TOPOBJDIR)/%: FORCE
 # fallback
 $(TOPOBJDIR)/faster/%: ;
 
+# Files under the python virtualenv, which are dependencies of the BACKEND
+# file, are not meant to use the fallback either.
+$(TOPOBJDIR)/_virtualenv/%: ;
+
 # And files under dist/ are meant to be copied from their first dependency
 # if there is no other rule.
 $(TOPOBJDIR)/dist/%:
 	rm -f $@
 	cp $< $@
+
+# Refresh backend
+$(BACKEND):
+	cd $(TOPOBJDIR) && $(PYTHON) config.status --backend FasterMake
+
+$(MAKEFILE_LIST): $(BACKEND)
 
 # Install files using install manifests
 #
@@ -115,9 +125,7 @@ $(addprefix $(TOPOBJDIR)/,$(MANIFEST_TARGETS)): FORCE
 # that are not supported by data in moz.build.
 
 # Files to build with the recursive backend and simply copy
-$(TOPOBJDIR)/dist/bin/greprefs.js: $(TOPOBJDIR)/modules/libpref/greprefs.js
 $(TOPOBJDIR)/dist/bin/platform.ini: $(TOPOBJDIR)/toolkit/xre/platform.ini
-$(TOPOBJDIR)/dist/bin/webapprt/webapprt.ini: $(TOPOBJDIR)/webapprt/webapprt.ini
 
 # The xpidl target in config/makefiles/xpidl requires the install manifest for
 # dist/idl to have been processed.

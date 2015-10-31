@@ -999,12 +999,17 @@ static float GetAxisScale(AsyncDragMetrics::DragDirection aDir, T aValue) {
 nsEventStatus AsyncPanZoomController::HandleDragEvent(const MouseInput& aEvent,
                                                       const AsyncDragMetrics& aDragMetrics)
 {
+  if (!GetApzcTreeManager()) {
+    return nsEventStatus_eConsumeNoDefault;
+  }
+
   RefPtr<HitTestingTreeNode> node =
     GetApzcTreeManager()->FindScrollNode(aDragMetrics);
   if (!node) {
     return nsEventStatus_eConsumeNoDefault;
   }
 
+  ReentrantMonitorAutoEnter lock(mMonitor);
   CSSPoint scrollFramePoint = aEvent.mLocalOrigin / GetFrameMetrics().GetZoom();
   // The scrollbar can be transformed with the frame but the pres shell
   // resolution is only applied to the scroll frame.

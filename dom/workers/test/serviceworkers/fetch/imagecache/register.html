@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<!-- Load the image here to put it in the image cache -->
+<img src="image-20px.png">
+<script>
+  function ok(v, msg) {
+    window.parent.postMessage({status: "ok", result: !!v, message: msg}, "*");
+  }
+
+  function done(reg) {
+    ok(reg.active, "The active worker should be available.");
+    window.parent.postMessage({status: "registrationdone"}, "*");
+  }
+
+  navigator.serviceWorker.ready.then(done);
+  navigator.serviceWorker.register("imagecache_test.js", {scope: "."});
+</script>
