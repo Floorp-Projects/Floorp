@@ -25,7 +25,7 @@ TOOLTOOL_URL = 'https://raw.githubusercontent.com/mozilla/build-tooltool/master/
 
 TRY_URL = 'https://hg.mozilla.org/try/raw-file/default'
 
-MANIFEST_URL = '%s/testing/config/tooltool-manifests' % TRY_URL
+MANIFEST_PATH = 'testing/config/tooltool-manifests'
 
 verbose_logging = False
 
@@ -171,8 +171,8 @@ def verify_android_device(build_obj, install=False, xre=False):
                     plat = None
                     _log_warning("Unable to install host utilities -- your platform is not supported!")
                 if plat:
-                    url = '%s/%s/hostutils.manifest' % (MANIFEST_URL, plat)
-                    _download_file(url, 'releng.manifest', EMULATOR_HOME_DIR)
+                    path = os.path.join(MANIFEST_PATH, plat, 'hostutils.manifest')
+                    _get_tooltool_manifest(build_obj.substs, path, EMULATOR_HOME_DIR, 'releng.manifest')
                     _tooltool_fetch()
                     xre_path = glob.glob(os.path.join(EMULATOR_HOME_DIR, 'host-utils*'))
                     for path in xre_path:
@@ -598,6 +598,19 @@ def _download_file(url, filename, path):
     local_file.close()
     _log_debug("Downloaded %s to %s/%s" % (url, path, filename))
     return True
+
+def _get_tooltool_manifest(substs, src_path, dst_path, filename):
+    copied = False
+    if substs and 'top_srcdir' in substs:
+        src = os.path.join(substs['top_srcdir'], src_path)
+        if os.path.exists(src):
+            dst = os.path.join(dst_path, filename)
+            shutil.copy(src, dst)
+            copied = True
+            _log_debug("Copied tooltool manifest %s to %s" % (src, dst))
+    if not copied:
+        url = os.path.join(TRY_URL, src_path)
+        _download_file(url, filename, dst_path)
 
 def _tooltool_fetch():
     def outputHandler(line):
