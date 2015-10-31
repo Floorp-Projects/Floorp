@@ -10,18 +10,7 @@
 
 #include "jsutil.h"
 
-#include "js/Date.h"
-#if ENABLE_INTL_API
-#include "unicode/timezone.h"
-#endif
-
 using mozilla::UnspecifiedNaN;
-
-/* static */ js::DateTimeInfo
-js::DateTimeInfo::instance;
-
-/* static */ mozilla::Atomic<bool, mozilla::ReleaseAcquire>
-js::DateTimeInfo::AcquireLock::spinLock;
 
 static bool
 ComputeLocalTime(time_t local, struct tm* ptm)
@@ -142,7 +131,7 @@ UTCToLocalStandardOffsetSeconds()
 }
 
 void
-js::DateTimeInfo::internalUpdateTimeZoneAdjustment()
+js::DateTimeInfo::updateTimeZoneAdjustment()
 {
     /*
      * The difference between local standard time and UTC will never change for
@@ -175,19 +164,12 @@ js::DateTimeInfo::internalUpdateTimeZoneAdjustment()
  * negative numbers to ensure the first computation is always a cache miss and
  * doesn't return a bogus offset.
  */
-/* static */ void
-js::DateTimeInfo::init()
+js::DateTimeInfo::DateTimeInfo()
 {
-    DateTimeInfo* dtInfo = &DateTimeInfo::instance;
-
-    MOZ_ASSERT(dtInfo->localTZA_ == 0,
-               "we should be initializing only once, and the static instance "
-               "should have started out zeroed");
-
     // Set to a totally impossible TZA so that the comparison above will fail
     // and all fields will be properly initialized.
-    dtInfo->localTZA_ = UnspecifiedNaN<double>();
-    dtInfo->internalUpdateTimeZoneAdjustment();
+    localTZA_ = UnspecifiedNaN<double>();
+    updateTimeZoneAdjustment();
 }
 
 int64_t
@@ -219,7 +201,7 @@ js::DateTimeInfo::computeDSTOffsetMilliseconds(int64_t utcSeconds)
 }
 
 int64_t
-js::DateTimeInfo::internalGetDSTOffsetMilliseconds(int64_t utcMilliseconds)
+js::DateTimeInfo::getDSTOffsetMilliseconds(int64_t utcMilliseconds)
 {
     sanityCheck();
 
@@ -305,14 +287,4 @@ js::DateTimeInfo::sanityCheck()
                   rangeStartSeconds >= 0 && rangeEndSeconds >= 0);
     MOZ_ASSERT_IF(rangeStartSeconds != INT64_MIN,
                   rangeStartSeconds <= MaxUnixTimeT && rangeEndSeconds <= MaxUnixTimeT);
-}
-
-JS_PUBLIC_API(void)
-JS::ResetTimeZone()
-{
-    DateTimeInfo::updateTimeZoneAdjustment();
-
-#if ENABLE_INTL_API && defined(ICU_TZ_HAS_RECREATE_DEFAULT)
-    icu::TimeZone::recreateDefault();
-#endif
 }
