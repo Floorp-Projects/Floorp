@@ -16,7 +16,7 @@ Cu.import("resource://services-sync/util.js");
 Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://gre/modules/Log.jsm");
 
-const FORMS_TTL = 5184000; // 60 days
+const FORMS_TTL = 3 * 365 * 24 * 60 * 60;   // Three years in seconds.
 
 this.FormRec = function FormRec(collection, id) {
   CryptoWrapper.call(this, collection, id);
