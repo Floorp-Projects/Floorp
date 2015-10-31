@@ -56,7 +56,7 @@ ValueNumberer::VisibleValues::ValueHasher::match(Key k, Lookup l)
         return false;
 
     bool congruent = k->congruentTo(l); // Ask the values themselves what they think.
-#ifdef DEBUG
+#ifdef JS_JITSPEW
     if (congruent != l->congruentTo(k)) {
        JitSpew(JitSpew_GVN, "      congruentTo relation is not symmetric between %s%u and %s%u!!",
                k->opName(), k->id(),
@@ -332,11 +332,12 @@ ValueNumberer::releaseOperands(MDefinition* def)
 bool
 ValueNumberer::discardDef(MDefinition* def)
 {
-#ifdef DEBUG
+#ifdef JS_JITSPEW
     JitSpew(JitSpew_GVN, "      Discarding %s %s%u",
             def->block()->isMarked() ? "unreachable" : "dead",
             def->opName(), def->id());
-
+#endif
+#ifdef DEBUG
     MOZ_ASSERT(def != nextDef_, "Invalidating the MDefinition iterator");
     if (def->block()->isMarked()) {
         MOZ_ASSERT(!def->hasUses(), "Discarding def that still has uses");
@@ -532,7 +533,7 @@ ValueNumberer::removePredecessorAndCleanUp(MBasicBlock* block, MBasicBlock* pred
                         "Loop with header block%u is no longer reachable",
                         block->id());
             }
-#ifdef DEBUG
+#ifdef JS_JITSPEW
         } else if (block->hasUniqueBackedge() && block->backedge() == pred) {
             JitSpew(JitSpew_GVN, "      Loop with header block%u is no longer a loop",
                     block->id());
@@ -648,7 +649,7 @@ ValueNumberer::leader(MDefinition* def)
                 return nullptr;
         }
 
-#ifdef DEBUG
+#ifdef JS_JITSPEW
         JitSpew(JitSpew_GVN, "      Recording %s%u", def->opName(), def->id());
 #endif
     }
@@ -762,7 +763,7 @@ ValueNumberer::visitDefinition(MDefinition* def)
         if (isNewInstruction)
             def->block()->insertAfter(def->toInstruction(), sim->toInstruction());
 
-#ifdef DEBUG
+#ifdef JS_JITSPEW
         JitSpew(JitSpew_GVN, "      Folded %s%u to %s%u",
                 def->opName(), def->id(), sim->opName(), sim->id());
 #endif
@@ -804,7 +805,7 @@ ValueNumberer::visitDefinition(MDefinition* def)
         if (rep == nullptr)
             return false;
         if (rep->updateForReplacement(def)) {
-#ifdef DEBUG
+#ifdef JS_JITSPEW
             JitSpew(JitSpew_GVN,
                     "      Replacing %s%u with %s%u",
                     def->opName(), def->id(), rep->opName(), rep->id());
@@ -848,7 +849,7 @@ ValueNumberer::visitControlInstruction(MBasicBlock* block, const MBasicBlock* do
     MControlInstruction* newControl = rep->toControlInstruction();
     MOZ_ASSERT(!newControl->block(),
                "Control instruction replacement shouldn't already be in a block");
-#ifdef DEBUG
+#ifdef JS_JITSPEW
     JitSpew(JitSpew_GVN, "      Folded control instruction %s%u to %s%u",
             control->opName(), control->id(), newControl->opName(), graph_.getNumInstructionIds());
 #endif

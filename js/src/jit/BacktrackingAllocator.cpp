@@ -3009,7 +3009,7 @@ BacktrackingAllocator::splitAcrossCalls(LiveBundle* bundle)
     }
     MOZ_ASSERT(callPositions.length());
 
-#ifdef DEBUG
+#ifdef JS_JITSPEW
     JitSpewStart(JitSpew_RegAlloc, "  split across calls at ");
     for (size_t i = 0; i < callPositions.length(); ++i)
         JitSpewCont(JitSpew_RegAlloc, "%s%u", i != 0 ? ", " : "", callPositions[i].bits());
