@@ -4770,6 +4770,11 @@ HTMLMediaElement::IsPlayingThroughTheAudioChannel() const
     return true;
   }
 
+  // If we are playing an external stream.
+  if (mSrcAttrStream) {
+    return true;
+  }
+
   return false;
 }
 
