@@ -128,10 +128,10 @@ class Registers
         uintptr_t r;
     };
 
+    static const char * const RegNames[];
     static const char* GetName(Code code) {
         MOZ_ASSERT(code < Total);
-        static const char * const Names[] = REGISTERS_NAMES;
-        return Names[code];
+        return RegNames[code];
     }
     static const char* GetName(Encoding i) {
         return GetName(Code(i));
@@ -143,12 +143,12 @@ class Registers
     static const Encoding Invalid = invalid_reg;
 
     static const uint32_t Total = 32;
-    static const uint32_t Allocatable = REGISTERS_ALLOCATABLE;
+    static const uint32_t Allocatable;
 
     typedef uint32_t SetType;
     static const SetType AllMask = 0xffffffff;
     static const SetType SharedArgRegMask = (1 << a0) | (1 << a1) | (1 << a2) | (1 << a3);
-    static const SetType ArgRegMask = REGISTERS_ARGREGMASK;
+    static const SetType ArgRegMask;
 
     static const SetType VolatileMask =
         (1 << Registers::v0) |
@@ -200,11 +200,11 @@ class Registers
     static const SetType TempMask = VolatileMask & ~NonAllocatableMask;
 
     // Registers returned from a JS -> JS call.
-    static const SetType JSCallMask = REGISTERS_JSCALLMASK;
+    static const SetType JSCallMask;
 
     // Registers returned from a JS -> C call.
     static const SetType SharedCallMask = (1 << Registers::v0);
-    static const SetType CallMask = REGISTERS_CALLMASK;
+    static const SetType CallMask;
 
     static const SetType AllocatableMask = AllMask & ~NonAllocatableMask;
 
