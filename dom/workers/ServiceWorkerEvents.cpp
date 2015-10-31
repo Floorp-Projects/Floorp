@@ -22,6 +22,8 @@
 
 #include "mozilla/ErrorResult.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/dom/DOMException.h"
+#include "mozilla/dom/DOMExceptionBinding.h"
 #include "mozilla/dom/FetchEventBinding.h"
 #include "mozilla/dom/PromiseNativeHandler.h"
 #include "mozilla/dom/Request.h"
@@ -39,7 +41,9 @@
 #endif
 
 #include "js/Conversions.h"
+#include "js/TypeDecls.h"
 #include "WorkerPrivate.h"
+#include "xpcpublic.h"
 
 using namespace mozilla::dom;
 
@@ -346,6 +350,74 @@ void RespondWithCopyComplete(void* aClosure, nsresult aStatus)
   MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToMainThread(event)));
 }
 
+namespace {
+
+void
+ExtractErrorValues(JSContext* aCx, JS::Handle<JS::Value> aValue,
+                  nsACString& aSourceSpecOut, uint32_t *aLineOut,
+                  uint32_t *aColumnOut, nsString& aMessageOut)
+{
+  MOZ_ASSERT(aLineOut);
+  MOZ_ASSERT(aColumnOut);
+
+  if (aValue.isObject()) {
+    JS::Rooted<JSObject*> obj(aCx, &aValue.toObject());
+    RefPtr<DOMException> domException;
+
+    // Try to process as an Error object.  Use the file/line/column values
+    // from the Error as they will be more specific to the root cause of
+    // the problem.
+    JSErrorReport* err = obj ? JS_ErrorFromException(aCx, obj) : nullptr;
+    if (err) {
+      // Use xpc to extract the error message only.  We don't actually send
+      // this report anywhere.
+      RefPtr<xpc::ErrorReport> report = new xpc::ErrorReport();
+      report->Init(err,
+                   "<unknown>", // fallback message
+                   false,       // chrome
+                   0);          // window ID
+
+      if (!report->mFileName.IsEmpty()) {
+        CopyUTF16toUTF8(report->mFileName, aSourceSpecOut);
+        *aLineOut = report->mLineNumber;
+        *aColumnOut = report->mColumn;
+      }
+      aMessageOut.Assign(report->mErrorMsg);
+    }
+
+    // Next, try to unwrap the rejection value as a DOMException.
+    else if(NS_SUCCEEDED(UNWRAP_OBJECT(DOMException, obj, domException))) {
+
+      nsAutoString filename;
+      if (NS_SUCCEEDED(domException->GetFilename(filename)) &&
+          !filename.IsEmpty()) {
+        CopyUTF16toUTF8(filename, aSourceSpecOut);
+        *aLineOut = domException->LineNumber();
+        *aColumnOut = domException->ColumnNumber();
+      }
+
+      domException->GetName(aMessageOut);
+      aMessageOut.AppendLiteral(": ");
+
+      nsAutoString message;
+      domException->GetMessageMoz(message);
+      aMessageOut.Append(message);
+    }
+  }
+
+  // If we could not unwrap a specific error type, then perform default safe
+  // string conversions on primitives.  Objects will result in "[Object]"
+  // unfortunately.
+  if (aMessageOut.IsEmpty()) {
+    nsAutoJSString jsString;
+    if (jsString.init(aCx, aValue)) {
+      aMessageOut = jsString;
+    }
+  }
+}
+
+} // anonymous namespace
+
 class MOZ_STACK_CLASS AutoCancel
 {
   RefPtr<RespondWithHandler> mOwner;
@@ -514,13 +586,17 @@ RespondWithHandler::ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValu
 void
 RespondWithHandler::RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue)
 {
-  nsAutoJSString rejectionString;
-  if (rejectionString.init(aCx, aValue)) {
-    ::AsyncLog(mInterceptedChannel, mRespondWithScriptSpec, mRespondWithLineNumber,
-               mRespondWithColumnNumber,
-               NS_LITERAL_CSTRING("InterceptionRejectedResponseWithURL"),
-               &mRequestURL, &rejectionString);
-  }
+  nsCString sourceSpec = mRespondWithScriptSpec;
+  uint32_t line = mRespondWithLineNumber;
+  uint32_t column = mRespondWithColumnNumber;
+  nsString valueString;
+
+  ExtractErrorValues(aCx, aValue, sourceSpec, &line, &column, valueString);
+
+  ::AsyncLog(mInterceptedChannel, sourceSpec, line, column,
+             NS_LITERAL_CSTRING("InterceptionRejectedResponseWithURL"),
+             &mRequestURL, &valueString);
+
   CancelRequest(NS_ERROR_INTERCEPTION_FAILED);
 }
 
