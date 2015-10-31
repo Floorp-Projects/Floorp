@@ -16,6 +16,7 @@ depth.
 <script type="application/javascript;version=1.8">
 window.onload = Task.async(function* () {
   try {
+    let ReactDOM = bRequire("devtools/client/shared/vendor/react-dom");
     let React = bRequire("devtools/client/shared/vendor/react");
     let Tree = React.createFactory(bRequire("devtools/client/memory/components/tree"));
 
@@ -25,7 +26,7 @@ window.onload = Task.async(function* () {
     const t = Tree(TEST_TREE_INTERFACE);
     ok(t, "Should be able to create Tree instances");
 
-    const tree = React.render(t, window.document.body);
+    const tree = ReactDOM.render(t, window.document.body);
     ok(tree, "Should be able to mount Tree instances");
 
     yield setState(tree, {
