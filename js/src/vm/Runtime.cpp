@@ -45,7 +45,6 @@
 #include "jit/JitCompartment.h"
 #include "jit/mips32/Simulator-mips32.h"
 #include "jit/PcScriptCache.h"
-#include "js/Date.h"
 #include "js/MemoryMetrics.h"
 #include "js/SliceBudget.h"
 #include "vm/Debugger.h"
@@ -334,7 +333,7 @@ JSRuntime::init(uint32_t maxbytes, uint32_t maxNurseryBytes)
     if (!InitRuntimeNumberState(this))
         return false;
 
-    JS::ResetTimeZone();
+    dateTimeInfo.updateTimeZoneAdjustment();
 
 #ifdef JS_SIMULATOR
     simulator_ = js::jit::Simulator::Create();
