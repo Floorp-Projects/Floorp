@@ -84,8 +84,8 @@ load 466585-1.svg
 load 467323-1.svg
 load 467498-1.svg
 load 470124-1.svg
-load 474700-1.svg
 load 472782-1.svg
+load 474700-1.svg
 load 475181-1.svg
 load 475193-1.html
 load 475302-1.svg
@@ -100,7 +100,6 @@ load 515288-1.html
 load 522394-1.svg
 load 522394-2.svg
 load 522394-3.svg
-load extref-test-1.xhtml
 load 566216-1.svg
 skip-if(Android&&!browserIsRemote) load 587336-1.html
 load 590291-1.svg
@@ -136,21 +135,21 @@ load 740627-1.svg
 load 740627-2.svg
 load 757704-1.svg
 load 757718-1.svg
-load 767056-1.svg
-load 768351.svg
-load 780963-1.html
 load 757751-1.svg
+load 767056-1.svg
 load 767535-1.xhtml
 load 768087-1.html
+load 768351.svg
 load 778492-1.svg
 load 779971-1.svg
 load 780764-1.svg
+load 780963-1.html
 load 782141-1.svg
 load 784061-1.svg
 load 788831-1.svg
+load 789390-1.html
 load 790072.svg
 load 791826-1.svg
-load 789390-1.html
 load 808318-1.svg
 load 813420-1.svg
 load 841163-1.svg
@@ -183,8 +182,8 @@ load 919371-1.xhtml
 load 950324-1.svg
 load 952270-1.svg
 load 963086-1.svg
-load 975773-1.svg
 load 974746-1.svg
+load 975773-1.svg
 load 979407-1.svg
 load 979407-2.svg
 load 993443.svg
@@ -194,3 +193,4 @@ load 1140080-1.svg
 load 1149542-1.svg
 load 1182496-1.html
 load 1209525-1.svg
+load extref-test-1.xhtml
