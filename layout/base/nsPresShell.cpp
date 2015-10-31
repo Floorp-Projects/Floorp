@@ -7315,8 +7315,6 @@ PresShell::HandleEvent(nsIFrame* aFrame,
         nsCOMPtr<nsIContent> anyTarget;
         if (TouchManager::gCaptureTouchList->Count() > 0 && touchEvent->touches.Length() > 1) {
           TouchManager::gCaptureTouchList->Enumerate(&FindAnyTarget, &anyTarget);
-        } else {
-          TouchManager::gPreventMouseEvents = false;
         }
 
         for (int32_t i = touchEvent->touches.Length(); i; ) {
@@ -8136,14 +8134,7 @@ PresShell::DispatchTouchEventToDOM(WidgetEvent* aEvent,
     }
   }
 
-  // if preventDefault was called on any of the events dispatched
-  // and this is touchstart, or the first touchmove, widget should consume
-  // other events that would be associated with this touch session
   if (preventDefault && canPrevent) {
-    TouchManager::gPreventMouseEvents = true;
-  }
-
-  if (TouchManager::gPreventMouseEvents) {
     *aStatus = nsEventStatus_eConsumeNoDefault;
   } else {
     *aStatus = nsEventStatus_eIgnore;
