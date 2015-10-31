@@ -283,6 +283,13 @@ public:
                mRespondWithColumnNumber, aMessageName, aParams);
   }
 
+  void AsyncLog(const nsACString& aSourceSpec, uint32_t aLine, uint32_t aColumn,
+                const nsACString& aMessageName, const nsTArray<nsString>& aParams)
+  {
+    ::AsyncLog(mInterceptedChannel, aSourceSpec, aLine, aColumn, aMessageName,
+               aParams);
+  }
+
 private:
   ~RespondWithHandler()
   {
@@ -421,12 +428,17 @@ ExtractErrorValues(JSContext* aCx, JS::Handle<JS::Value> aValue,
 class MOZ_STACK_CLASS AutoCancel
 {
   RefPtr<RespondWithHandler> mOwner;
+  nsCString mSourceSpec;
+  uint32_t mLine;
+  uint32_t mColumn;
   nsCString mMessageName;
   nsTArray<nsString> mParams;
 
 public:
   AutoCancel(RespondWithHandler* aOwner, const nsString& aRequestURL)
     : mOwner(aOwner)
+    , mLine(0)
+    , mColumn(0)
     , mMessageName(NS_LITERAL_CSTRING("InterceptionFailedWithURL"))
   {
     mParams.AppendElement(aRequestURL);
@@ -435,7 +447,11 @@ public:
   ~AutoCancel()
   {
     if (mOwner) {
-      mOwner->AsyncLog(mMessageName, mParams);
+      if (mSourceSpec.IsEmpty()) {
+        mOwner->AsyncLog(mMessageName, mParams);
+      } else {
+        mOwner->AsyncLog(mSourceSpec, mLine, mColumn, mMessageName, mParams);
+      }
       mOwner->CancelRequest(NS_ERROR_INTERCEPTION_FAILED);
     }
   }
@@ -446,6 +462,25 @@ public:
     MOZ_ASSERT(mOwner);
     MOZ_ASSERT(mMessageName.EqualsLiteral("InterceptionFailedWithURL"));
     MOZ_ASSERT(mParams.Length() == 1);
+    mMessageName = aMessageName;
+    mParams.Clear();
+    StringArrayAppender::Append(mParams, sizeof...(Params), aParams...);
+  }
+
+  template<typename... Params>
+  void SetCancelMessageAndLocation(const nsACString& aSourceSpec,
+                                   uint32_t aLine, uint32_t aColumn,
+                                   const nsACString& aMessageName,
+                                   Params... aParams)
+  {
+    MOZ_ASSERT(mOwner);
+    MOZ_ASSERT(mMessageName.EqualsLiteral("InterceptionFailedWithURL"));
+    MOZ_ASSERT(mParams.Length() == 1);
+
+    mSourceSpec = aSourceSpec;
+    mLine = aLine;
+    mColumn = aColumn;
+
     mMessageName = aMessageName;
     mParams.Clear();
     StringArrayAppender::Append(mParams, sizeof...(Params), aParams...);
@@ -466,12 +501,31 @@ RespondWithHandler::ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValu
 
   if (!aValue.isObject()) {
     NS_WARNING("FetchEvent::RespondWith was passed a promise resolved to a non-Object value");
+
+    nsCString sourceSpec;
+    uint32_t line = 0;
+    uint32_t column = 0;
+    nsString valueString;
+    ExtractErrorValues(aCx, aValue, sourceSpec, &line, &column, valueString);
+
+    autoCancel.SetCancelMessageAndLocation(sourceSpec, line, column,
+                                           NS_LITERAL_CSTRING("InterceptedNonResponseWithURL"),
+                                           &mRequestURL, &valueString);
     return;
   }
 
   RefPtr<Response> response;
   nsresult rv = UNWRAP_OBJECT(Response, &aValue.toObject(), response);
   if (NS_FAILED(rv)) {
+    nsCString sourceSpec;
+    uint32_t line = 0;
+    uint32_t column = 0;
+    nsString valueString;
+    ExtractErrorValues(aCx, aValue, sourceSpec, &line, &column, valueString);
+
+    autoCancel.SetCancelMessageAndLocation(sourceSpec, line, column,
+                                           NS_LITERAL_CSTRING("InterceptedNonResponseWithURL"),
+                                           &mRequestURL, &valueString);
     return;
   }
 
