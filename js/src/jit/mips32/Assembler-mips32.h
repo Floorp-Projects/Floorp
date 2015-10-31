@@ -129,7 +129,7 @@ class Assembler : public AssemblerMIPSShared
     static void TraceJumpRelocations(JSTracer* trc, JitCode* code, CompactBufferReader& reader);
     static void TraceDataRelocations(JSTracer* trc, JitCode* code, CompactBufferReader& reader);
 
-    void bind(InstImm* inst, uint32_t branch, uint32_t target);
+    void bind(InstImm* inst, uintptr_t branch, uintptr_t target);
 
     // Copy the assembly code to the given buffer, and perform any pending
     // relocations relying on the target address.

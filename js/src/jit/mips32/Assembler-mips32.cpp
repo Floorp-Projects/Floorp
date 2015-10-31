@@ -261,7 +261,7 @@ Assembler::Bind(uint8_t* rawCode, AbsoluteLabel* label, const void* address)
 }
 
 void
-Assembler::bind(InstImm* inst, uint32_t branch, uint32_t target)
+Assembler::bind(InstImm* inst, uintptr_t branch, uintptr_t target)
 {
     int32_t offset = target - branch;
     InstImm inst_bgezal = InstImm(op_regimm, zero, rt_bgezal, BOffImm16(0));

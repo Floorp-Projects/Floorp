@@ -1030,7 +1030,7 @@ class AssemblerMIPSShared : public AssemblerShared
 
     // label operations
     void bind(Label* label, BufferOffset boff = BufferOffset());
-    virtual void bind(InstImm* inst, uint32_t branch, uint32_t target) = 0;
+    virtual void bind(InstImm* inst, uintptr_t branch, uintptr_t target) = 0;
     virtual void Bind(uint8_t* rawCode, AbsoluteLabel* label, const void* address) = 0;
     uint32_t currentOffset() {
         return nextOffset().getOffset();
