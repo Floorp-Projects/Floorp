@@ -302,7 +302,7 @@ private:
 DecodePool::Initialize()
 {
   MOZ_ASSERT(NS_IsMainThread());
-  sNumCores = PR_GetNumberOfProcessors();
+  sNumCores = max<int32_t>(PR_GetNumberOfProcessors(), 1);
   DecodePool::Singleton();
 }
 
