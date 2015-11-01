@@ -184,7 +184,7 @@ VorbisDataDecoder::DoDecode(MediaRawData* aSample)
   }
   while (frames > 0) {
     uint32_t channels = mVorbisDsp.vi->channels;
-    nsAutoArrayPtr<AudioDataValue> buffer(new AudioDataValue[frames*channels]);
+    auto buffer = MakeUnique<AudioDataValue[]>(frames*channels);
     for (uint32_t j = 0; j < channels; ++j) {
       VorbisPCMValue* channel = pcm[j];
       for (uint32_t i = 0; i < uint32_t(frames); ++i) {
@@ -215,7 +215,7 @@ VorbisDataDecoder::DoDecode(MediaRawData* aSample)
                                     time.value(),
                                     duration.value(),
                                     frames,
-                                    buffer.forget(),
+                                    Move(buffer),
                                     mVorbisDsp.vi->channels,
                                     mVorbisDsp.vi->rate));
     mFrames += aTotalFrames;
