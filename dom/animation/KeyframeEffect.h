@@ -13,7 +13,8 @@
 #include "nsIDocument.h"
 #include "nsWrapperCache.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/LayerAnimationInfo.h" // LayerAnimations::kRecords
+#include "mozilla/ComputedTimingFunction.h" // ComputedTimingFunction
+#include "mozilla/LayerAnimationInfo.h"     // LayerAnimations::kRecords
 #include "mozilla/StickyTimeDuration.h"
 #include "mozilla/StyleAnimationValue.h"
 #include "mozilla/TimeStamp.h"
@@ -21,8 +22,6 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/KeyframeBinding.h"
 #include "mozilla/dom/Nullable.h"
-#include "nsSMILKeySpline.h"
-#include "nsStyleStruct.h" // for nsTimingFunction
 
 struct JSContext;
 class nsCSSPropertySet;
@@ -95,41 +94,6 @@ struct ComputedTiming
     After   // Sampled after (or at) the end of the active interval
   };
   AnimationPhase      mPhase = AnimationPhase::Null;
-};
-
-class ComputedTimingFunction
-{
-public:
-  typedef nsTimingFunction::Type Type;
-  typedef nsTimingFunction::StepSyntax StepSyntax;
-  void Init(const nsTimingFunction &aFunction);
-  double GetValue(double aPortion) const;
-  const nsSMILKeySpline* GetFunction() const {
-    NS_ASSERTION(HasSpline(), "Type mismatch");
-    return &mTimingFunction;
-  }
-  Type GetType() const { return mType; }
-  bool HasSpline() const { return nsTimingFunction::IsSplineType(mType); }
-  uint32_t GetSteps() const { return mSteps; }
-  StepSyntax GetStepSyntax() const { return mStepSyntax; }
-  bool operator==(const ComputedTimingFunction& aOther) const {
-    return mType == aOther.mType &&
-           (HasSpline() ?
-            mTimingFunction == aOther.mTimingFunction :
-            (mSteps == aOther.mSteps &&
-             mStepSyntax == aOther.mStepSyntax));
-  }
-  bool operator!=(const ComputedTimingFunction& aOther) const {
-    return !(*this == aOther);
-  }
-  int32_t Compare(const ComputedTimingFunction& aRhs) const;
-  void AppendToString(nsAString& aResult) const;
-
-private:
-  Type mType;
-  nsSMILKeySpline mTimingFunction;
-  uint32_t mSteps;
-  StepSyntax mStepSyntax;
 };
 
 struct AnimationPropertySegment
