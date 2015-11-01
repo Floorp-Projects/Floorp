@@ -6968,6 +6968,11 @@ var gIdentityHandler = {
     return this._identityPopupMixedContentLearnMore =
       document.getElementById("identity-popup-mcb-learn-more");
   },
+  get _identityPopupInsecureLoginFormsLearnMore () {
+    delete this._identityPopupInsecureLoginFormsLearnMore;
+    return this._identityPopupInsecureLoginFormsLearnMore =
+      document.getElementById("identity-popup-insecure-login-forms-learn-more");
+  },
   get _identityIconLabel () {
     delete this._identityIconLabel;
     return this._identityIconLabel = document.getElementById("identity-icon-label");
@@ -7289,10 +7294,12 @@ var gIdentityHandler = {
    * applicable
    */
   refreshIdentityPopup() {
-    // Update the "Learn More" hrefs for Mixed Content Blocking.
+    // Update "Learn More" for Mixed Content Blocking and Insecure Login Forms.
     let baseURL = Services.urlFormatter.formatURLPref("app.support.baseURL");
-    let learnMoreHref = `${baseURL}mixed-content`;
-    this._identityPopupMixedContentLearnMore.setAttribute("href", learnMoreHref);
+    this._identityPopupMixedContentLearnMore
+        .setAttribute("href", baseURL + "mixed-content");
+    this._identityPopupInsecureLoginFormsLearnMore
+        .setAttribute("href", baseURL + "insecure-password");
 
     // Determine connection security information.
     let connection = "not-secure";
