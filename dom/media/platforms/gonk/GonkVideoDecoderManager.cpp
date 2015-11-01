@@ -14,14 +14,16 @@
 #include "nsThreadUtils.h"
 #include "Layers.h"
 #include "mozilla/Logging.h"
-#include "stagefright/MediaBuffer.h"
-#include "stagefright/MetaData.h"
-#include "stagefright/MediaErrors.h"
+#include <stagefright/MediaBuffer.h>
+#include <stagefright/MetaData.h>
+#include <stagefright/MediaErrors.h>
 #include <stagefright/foundation/AString.h>
 #include "GonkNativeWindow.h"
 #include "GonkNativeWindowClient.h"
 #include "mozilla/layers/GrallocTextureClient.h"
+#include "mozilla/layers/ImageBridgeChild.h"
 #include "mozilla/layers/TextureClient.h"
+#include "mozilla/layers/TextureClientRecycleAllocator.h"
 #include <cutils/properties.h>
 
 #define CODECCONFIG_TIMEOUT_US 10000LL
@@ -45,6 +47,7 @@ GonkVideoDecoderManager::GonkVideoDecoderManager(
   , mColorConverterBufferSize(0)
   , mNativeWindow(nullptr)
   , mPendingReleaseItemsLock("GonkVideoDecoderManager::mPendingReleaseItemsLock")
+  , mNeedsCopyBuffer(false)
 {
   MOZ_COUNT_CTOR(GonkVideoDecoderManager);
   mMimeType = aConfig.mMimeType;
@@ -78,6 +81,8 @@ GonkVideoDecoderManager::Shutdown()
 RefPtr<MediaDataDecoder::InitPromise>
 GonkVideoDecoderManager::Init()
 {
+  mNeedsCopyBuffer = false;
+
   nsIntSize displaySize(mDisplayWidth, mDisplayHeight);
   nsIntRect pictureRect(0, 0, mVideoWidth, mVideoHeight);
 
@@ -187,99 +192,275 @@ GonkVideoDecoderManager::CreateVideoData(MediaBuffer* aBuffer,
     picture.height = (mFrameInfo.mHeight * mPicture.height) / mInitialFrame.height;
   }
 
-  RefPtr<mozilla::layers::TextureClient> textureClient;
-
-  if ((aBuffer->graphicBuffer().get())) {
-    textureClient = mNativeWindow->getTextureClientFromBuffer(aBuffer->graphicBuffer().get());
-  }
-
-  if (textureClient) {
-    GrallocTextureClientOGL* grallocClient = static_cast<GrallocTextureClientOGL*>(textureClient.get());
-    grallocClient->SetMediaBuffer(aBuffer);
-    textureClient->SetRecycleCallback(GonkVideoDecoderManager::RecycleCallback, this);
-    autoRelease.forget(); // RecycleCallback will return it back to decoder.
-
-    data = VideoData::Create(mInfo.mVideo,
-                             mImageContainer,
-                             aStreamOffset,
-                             timeUs,
-                             1, // No way to pass sample duration from muxer to
-                                // OMX codec, so we hardcode the duration here.
-                             textureClient,
-                             keyFrame,
-                             -1,
-                             picture);
+  if (aBuffer->graphicBuffer().get()) {
+    data = CreateVideoDataFromGraphicBuffer(aBuffer, picture);
+    if (data && !mNeedsCopyBuffer) {
+      // RecycleCallback() will be responsible for release the buffer.
+      autoRelease.forget();
+    }
+    mNeedsCopyBuffer = false;
   } else {
-    if (!aBuffer->data()) {
-      GVDM_LOG("No data in Video Buffer!");
-      return NS_ERROR_UNEXPECTED;
-    }
-    uint8_t *yuv420p_buffer = (uint8_t *)aBuffer->data();
-    int32_t stride = mFrameInfo.mStride;
-    int32_t slice_height = mFrameInfo.mSliceHeight;
-
-    // Converts to OMX_COLOR_FormatYUV420Planar
-    if (mFrameInfo.mColorFormat != OMX_COLOR_FormatYUV420Planar) {
-      ARect crop;
-      crop.top = 0;
-      crop.bottom = mFrameInfo.mHeight;
-      crop.left = 0;
-      crop.right = mFrameInfo.mWidth;
-      yuv420p_buffer = GetColorConverterBuffer(mFrameInfo.mWidth, mFrameInfo.mHeight);
-      if (mColorConverter.convertDecoderOutputToI420(aBuffer->data(),
-          mFrameInfo.mWidth, mFrameInfo.mHeight, crop, yuv420p_buffer) != OK) {
-          GVDM_LOG("Color conversion failed!");
-          return NS_ERROR_UNEXPECTED;
-      }
-        stride = mFrameInfo.mWidth;
-        slice_height = mFrameInfo.mHeight;
-    }
-
-    size_t yuv420p_y_size = stride * slice_height;
-    size_t yuv420p_u_size = ((stride + 1) / 2) * ((slice_height + 1) / 2);
-    uint8_t *yuv420p_y = yuv420p_buffer;
-    uint8_t *yuv420p_u = yuv420p_y + yuv420p_y_size;
-    uint8_t *yuv420p_v = yuv420p_u + yuv420p_u_size;
-
-    // This is the approximate byte position in the stream.
-    int64_t pos = aStreamOffset;
-
-    VideoData::YCbCrBuffer b;
-    b.mPlanes[0].mData = yuv420p_y;
-    b.mPlanes[0].mWidth = mFrameInfo.mWidth;
-    b.mPlanes[0].mHeight = mFrameInfo.mHeight;
-    b.mPlanes[0].mStride = stride;
-    b.mPlanes[0].mOffset = 0;
-    b.mPlanes[0].mSkip = 0;
-
-    b.mPlanes[1].mData = yuv420p_u;
-    b.mPlanes[1].mWidth = (mFrameInfo.mWidth + 1) / 2;
-    b.mPlanes[1].mHeight = (mFrameInfo.mHeight + 1) / 2;
-    b.mPlanes[1].mStride = (stride + 1) / 2;
-    b.mPlanes[1].mOffset = 0;
-    b.mPlanes[1].mSkip = 0;
-
-    b.mPlanes[2].mData = yuv420p_v;
-    b.mPlanes[2].mWidth =(mFrameInfo.mWidth + 1) / 2;
-    b.mPlanes[2].mHeight = (mFrameInfo.mHeight + 1) / 2;
-    b.mPlanes[2].mStride = (stride + 1) / 2;
-    b.mPlanes[2].mOffset = 0;
-    b.mPlanes[2].mSkip = 0;
-
-    data = VideoData::Create(
-        mInfo.mVideo,
-        mImageContainer,
-        pos,
-        timeUs,
-        1, // We don't know the duration.
-        b,
-        keyFrame,
-        -1,
-        picture);
+    data = CreateVideoDataFromDataBuffer(aBuffer, picture);
   }
+
+  if (!data) {
+    return NS_ERROR_UNEXPECTED;
+  }
+  // Fill necessary info.
+  data->mOffset = aStreamOffset;
+  data->mTime = timeUs;
+  data->mKeyframe = keyFrame;
 
   data.forget(v);
   return NS_OK;
+}
+
+// Copy pixels from one planar YUV to another.
+static void
+CopyYUV(PlanarYCbCrData& aSource, PlanarYCbCrData& aDestination)
+{
+  // Fill Y plane.
+  uint8_t* srcY = aSource.mYChannel;
+  gfx::IntSize ySize = aSource.mYSize;
+  uint8_t* destY = aDestination.mYChannel;
+  // Y plane.
+  for (int i = 0; i < ySize.height; i++) {
+    memcpy(destY, srcY, ySize.width);
+    srcY += aSource.mYStride;
+    destY += aDestination.mYStride;
+  }
+
+  // Fill UV plane.
+  // Line start
+  uint8_t* srcU = aSource.mCbChannel;
+  uint8_t* srcV = aSource.mCrChannel;
+  uint8_t* destU = aDestination.mCbChannel;
+  uint8_t* destV = aDestination.mCrChannel;
+
+  gfx::IntSize uvSize = aSource.mCbCrSize;
+  for (int i = 0; i < uvSize.height; i++) {
+    uint8_t* su = srcU;
+    uint8_t* sv = srcV;
+    uint8_t* du = destU;
+    uint8_t* dv =destV;
+    for (int j = 0; j < uvSize.width; j++) {
+      *du++ = *su++;
+      *dv++ = *sv++;
+      // Move to next pixel.
+      su += aSource.mCbSkip;
+      sv += aSource.mCrSkip;
+      du += aDestination.mCbSkip;
+      dv += aDestination.mCrSkip;
+    }
+    // Move to next line.
+    srcU += aSource.mCbCrStride;
+    srcV += aSource.mCbCrStride;
+    destU += aDestination.mCbCrStride;
+    destV += aDestination.mCbCrStride;
+  }
+}
+
+inline static int
+Align(int aX, int aAlign)
+{
+  return (aX + aAlign - 1) & ~(aAlign - 1);
+}
+
+static void
+CopyGraphicBuffer(sp<GraphicBuffer>& aSource, sp<GraphicBuffer>& aDestination, gfx::IntRect& aPicture)
+{
+  void* srcPtr = nullptr;
+  aSource->lock(GraphicBuffer::USAGE_SW_READ_OFTEN, &srcPtr);
+  void* destPtr = nullptr;
+  aDestination->lock(GraphicBuffer::USAGE_SW_WRITE_OFTEN, &destPtr);
+  MOZ_ASSERT(srcPtr && destPtr);
+
+  // Build PlanarYCbCrData for source buffer.
+  PlanarYCbCrData srcData;
+  switch (aSource->getPixelFormat()) {
+    case HAL_PIXEL_FORMAT_YV12:
+      // Android YV12 format is defined in system/core/include/system/graphics.h
+      srcData.mYChannel = static_cast<uint8_t*>(srcPtr);
+      srcData.mYSkip = 0;
+      srcData.mYSize.width = aSource->getWidth();
+      srcData.mYSize.height = aSource->getHeight();
+      srcData.mYStride = aSource->getStride();
+      // 4:2:0.
+      srcData.mCbCrSize.width = srcData.mYSize.width / 2;
+      srcData.mCbCrSize.height = srcData.mYSize.height / 2;
+      srcData.mCrChannel = srcData.mYChannel + (srcData.mYStride * srcData.mYSize.height);
+      // Aligned to 16 bytes boundary.
+      srcData.mCbCrStride = Align(srcData.mYStride / 2, 16);
+      srcData.mCrSkip = 0;
+      srcData.mCbChannel = srcData.mCrChannel + (srcData.mCbCrStride * srcData.mCbCrSize.height);
+      srcData.mCbSkip = 0;
+      break;
+    case GrallocImage::HAL_PIXEL_FORMAT_YCbCr_420_SP_VENUS:
+      // Venus formats are doucmented in kernel/include/media/msm_media_info.h:
+      srcData.mYChannel = static_cast<uint8_t*>(srcPtr);
+      srcData.mYSkip = 0;
+      srcData.mYSize.width = aSource->getWidth();
+      srcData.mYSize.height = aSource->getHeight();
+      // - Y & UV Width aligned to 128
+      srcData.mYStride = aSource->getStride();
+      srcData.mCbCrSize.width = (srcData.mYSize.width + 1) / 2;
+      srcData.mCbCrSize.height = (srcData.mYSize.height + 1) / 2;
+      // - Y height aligned to 32
+      srcData.mCbChannel = srcData.mYChannel + (srcData.mYStride * Align(srcData.mYSize.height, 32));
+      // Interleaved VU plane.
+      srcData.mCbSkip = 1;
+      srcData.mCrChannel = srcData.mCbChannel + 1;
+      srcData.mCrSkip = 1;
+      srcData.mCbCrStride = srcData.mYStride;
+      break;
+    default:
+      NS_ERROR("Unsupported input gralloc image type. Should never be here.");
+  }
+  // Build PlanarYCbCrData for destination buffer.
+  PlanarYCbCrData destData;
+  destData.mYChannel = static_cast<uint8_t*>(destPtr);
+  destData.mYSkip = 0;
+  destData.mYSize.width = aDestination->getWidth();
+  destData.mYSize.height = aDestination->getHeight();
+  destData.mYStride = aDestination->getStride();
+  // 4:2:0.
+  destData.mCbCrSize.width = destData.mYSize.width / 2;
+  destData.mCbCrSize.height = destData.mYSize.height / 2;
+  destData.mCrChannel = destData.mYChannel + (destData.mYStride * destData.mYSize.height);
+  // Aligned to 16 bytes boundary.
+  destData.mCbCrStride = Align(destData.mYStride / 2, 16);
+  destData.mCrSkip = 0;
+  destData.mCbChannel = destData.mCrChannel + (destData.mCbCrStride * destData.mCbCrSize.height);
+  destData.mCbSkip = 0;
+
+  CopyYUV(srcData, destData);
+
+  aSource->unlock();
+  aDestination->unlock();
+}
+
+already_AddRefed<VideoData>
+GonkVideoDecoderManager::CreateVideoDataFromGraphicBuffer(MediaBuffer* aSource,
+                                                          gfx::IntRect& aPicture)
+{
+  sp<GraphicBuffer> srcBuffer(aSource->graphicBuffer());
+  RefPtr<TextureClient> textureClient;
+
+  if (mNeedsCopyBuffer) {
+    // Copy buffer contents for bug 1199809.
+    if (!mCopyAllocator) {
+      mCopyAllocator = new TextureClientRecycleAllocator(ImageBridgeChild::GetSingleton());
+    }
+    if (!mCopyAllocator) {
+      GVDM_LOG("Create buffer allocator failed!");
+      return nullptr;
+    }
+
+    gfx::IntSize size(Align(srcBuffer->getWidth(), 2) , Align(srcBuffer->getHeight(), 2));
+    textureClient =
+      mCopyAllocator->CreateOrRecycle(gfx::SurfaceFormat::YUV, size,
+                                      BackendSelector::Content,
+                                      TextureFlags::DEFAULT,
+                                      ALLOC_DISALLOW_BUFFERTEXTURECLIENT);
+    if (!textureClient) {
+      GVDM_LOG("Copy buffer allocation failed!");
+      return nullptr;
+    }
+    // Update size to match buffer's.
+    aPicture.width = size.width;
+    aPicture.height = size.height;
+
+    sp<GraphicBuffer> destBuffer =
+      static_cast<GrallocTextureClientOGL*>(textureClient.get())->GetGraphicBuffer();
+
+    CopyGraphicBuffer(srcBuffer, destBuffer, aPicture);
+  } else {
+    textureClient = mNativeWindow->getTextureClientFromBuffer(srcBuffer.get());
+    textureClient->SetRecycleCallback(GonkVideoDecoderManager::RecycleCallback, this);
+    GrallocTextureClientOGL* grallocClient = static_cast<GrallocTextureClientOGL*>(textureClient.get());
+    grallocClient->SetMediaBuffer(aSource);
+  }
+
+  RefPtr<VideoData> data = VideoData::Create(mInfo.mVideo,
+                                             mImageContainer,
+                                             0, // Filled later by caller.
+                                             0, // Filled later by caller.
+                                             1, // No way to pass sample duration from muxer to
+                                                // OMX codec, so we hardcode the duration here.
+                                             textureClient,
+                                             false, // Filled later by caller.
+                                             -1,
+                                             aPicture);
+  return data.forget();
+}
+
+already_AddRefed<VideoData>
+GonkVideoDecoderManager::CreateVideoDataFromDataBuffer(MediaBuffer* aSource, gfx::IntRect& aPicture)
+{
+  if (!aSource->data()) {
+    GVDM_LOG("No data in Video Buffer!");
+    return nullptr;
+  }
+  uint8_t *yuv420p_buffer = (uint8_t *)aSource->data();
+  int32_t stride = mFrameInfo.mStride;
+  int32_t slice_height = mFrameInfo.mSliceHeight;
+
+  // Converts to OMX_COLOR_FormatYUV420Planar
+  if (mFrameInfo.mColorFormat != OMX_COLOR_FormatYUV420Planar) {
+    ARect crop;
+    crop.top = 0;
+    crop.bottom = mFrameInfo.mHeight;
+    crop.left = 0;
+    crop.right = mFrameInfo.mWidth;
+    yuv420p_buffer = GetColorConverterBuffer(mFrameInfo.mWidth, mFrameInfo.mHeight);
+    if (mColorConverter.convertDecoderOutputToI420(aSource->data(),
+        mFrameInfo.mWidth, mFrameInfo.mHeight, crop, yuv420p_buffer) != OK) {
+        GVDM_LOG("Color conversion failed!");
+        return nullptr;
+    }
+      stride = mFrameInfo.mWidth;
+      slice_height = mFrameInfo.mHeight;
+  }
+
+  size_t yuv420p_y_size = stride * slice_height;
+  size_t yuv420p_u_size = ((stride + 1) / 2) * ((slice_height + 1) / 2);
+  uint8_t *yuv420p_y = yuv420p_buffer;
+  uint8_t *yuv420p_u = yuv420p_y + yuv420p_y_size;
+  uint8_t *yuv420p_v = yuv420p_u + yuv420p_u_size;
+
+  VideoData::YCbCrBuffer b;
+  b.mPlanes[0].mData = yuv420p_y;
+  b.mPlanes[0].mWidth = mFrameInfo.mWidth;
+  b.mPlanes[0].mHeight = mFrameInfo.mHeight;
+  b.mPlanes[0].mStride = stride;
+  b.mPlanes[0].mOffset = 0;
+  b.mPlanes[0].mSkip = 0;
+
+  b.mPlanes[1].mData = yuv420p_u;
+  b.mPlanes[1].mWidth = (mFrameInfo.mWidth + 1) / 2;
+  b.mPlanes[1].mHeight = (mFrameInfo.mHeight + 1) / 2;
+  b.mPlanes[1].mStride = (stride + 1) / 2;
+  b.mPlanes[1].mOffset = 0;
+  b.mPlanes[1].mSkip = 0;
+
+  b.mPlanes[2].mData = yuv420p_v;
+  b.mPlanes[2].mWidth =(mFrameInfo.mWidth + 1) / 2;
+  b.mPlanes[2].mHeight = (mFrameInfo.mHeight + 1) / 2;
+  b.mPlanes[2].mStride = (stride + 1) / 2;
+  b.mPlanes[2].mOffset = 0;
+  b.mPlanes[2].mSkip = 0;
+
+  RefPtr<VideoData> data = VideoData::Create(mInfo.mVideo,
+                                             mImageContainer,
+                                             0, // Filled later by caller.
+                                             0, // Filled later by caller.
+                                             1, // We don't know the duration.
+                                             b,
+                                             0, // Filled later by caller.
+                                             -1,
+                                             aPicture);
+
+  return data.forget();
 }
 
 bool
@@ -336,7 +517,7 @@ GonkVideoDecoderManager::Output(int64_t aStreamOffset,
     GVDM_LOG("Decoder is not inited");
     return NS_ERROR_UNEXPECTED;
   }
-  MediaBuffer* outputBuffer;
+  MediaBuffer* outputBuffer = nullptr;
   err = mDecoder->Output(&outputBuffer, READ_OUTPUT_BUFFER_TIMEOUT_US);
 
   switch (err) {
