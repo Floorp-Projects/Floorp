@@ -34,6 +34,9 @@ Transport* OpenDescriptor(const TransportDescriptor& aTd,
 Transport* OpenDescriptor(const FileDescriptor& aFd,
                           Transport::Mode aMode);
 
+TransportDescriptor
+DuplicateDescriptor(const TransportDescriptor& aTd);
+
 void CloseDescriptor(const TransportDescriptor& aTd);
 
 } // namespace ipc
