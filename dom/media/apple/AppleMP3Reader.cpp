@@ -208,7 +208,7 @@ AppleMP3Reader::AudioSampleCallback(UInt32 aNumBytes,
 
   do {
     // Decompressed audio buffer
-    nsAutoArrayPtr<uint8_t> decoded(new uint8_t[decodedSize]);
+    auto decoded = MakeUnique<uint8_t[]>(decodedSize);
 
     AudioBufferList decBuffer;
     decBuffer.mNumberBuffers = 1;
@@ -246,9 +246,11 @@ AppleMP3Reader::AudioSampleCallback(UInt32 aNumBytes,
     LOGD("pushed audio at time %lfs; duration %lfs\n",
          (double)time / USECS_PER_S, (double)duration / USECS_PER_S);
 
+    auto samples = UniquePtr<AudioDataValue[]>(reinterpret_cast<AudioDataValue*>
+					       (decoded.release()));
     AudioData *audio = new AudioData(mResource.Tell(),
                                      time, duration, numFrames,
-                                     reinterpret_cast<AudioDataValue *>(decoded.forget()),
+                                     Move(samples),
                                      mAudioChannels, mAudioSampleRate);
     mAudioQueue.Push(audio);
 

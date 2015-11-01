@@ -180,7 +180,7 @@ VorbisDecoder::Decode(const unsigned char* aData, size_t aLength,
   }
   while (frames > 0) {
     uint32_t channels = mVorbisDsp.vi->channels;
-    nsAutoArrayPtr<AudioDataValue> buffer(new AudioDataValue[frames*channels]);
+    auto buffer = MakeUnique<AudioDataValue[]>(frames*channels);
     for (uint32_t j = 0; j < channels; ++j) {
       VorbisPCMValue* channel = pcm[j];
       for (uint32_t i = 0; i < uint32_t(frames); ++i) {
@@ -211,7 +211,7 @@ VorbisDecoder::Decode(const unsigned char* aData, size_t aLength,
                                              time.value(),
                                              duration.value(),
                                              frames,
-                                             buffer.forget(),
+                                             Move(buffer),
                                              mVorbisDsp.vi->channels,
                                              mVorbisDsp.vi->rate));
     if (vorbis_synthesis_read(&mVorbisDsp, frames)) {
@@ -371,17 +371,17 @@ OpusDecoder::Decode(const unsigned char* aData, size_t aLength,
   if (frames < 120 || frames > 5760)
     return false;
 
-  nsAutoArrayPtr<AudioDataValue> buffer(new AudioDataValue[frames * channels]);
+  auto buffer = MakeUnique<AudioDataValue[]>(frames * channels);
 
   // Decode to the appropriate sample type.
 #ifdef MOZ_SAMPLE_TYPE_FLOAT32
   int ret = opus_multistream_decode_float(mOpusDecoder,
                                           aData, aLength,
-                                          buffer, frames, false);
+                                          buffer.get(), frames, false);
 #else
   int ret = opus_multistream_decode(mOpusDecoder,
                                     aData, aLength,
-                                    buffer, frames, false);
+                                    buffer.get(), frames, false);
 #endif
   if (ret < 0)
     return false;
@@ -463,7 +463,7 @@ OpusDecoder::Decode(const unsigned char* aData, size_t aLength,
                                            time.value(),
                                            duration.value(),
                                            frames,
-                                           buffer.forget(),
+                                           Move(buffer),
                                            mOpusParser->mChannels,
                                            mOpusParser->mRate));
   return true;
