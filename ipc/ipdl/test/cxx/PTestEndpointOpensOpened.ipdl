@@ -1,0 +1,30 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
+namespace mozilla {
+namespace _ipdltest2 {
+
+// (Opens protocols can have different semantics than the endpoints
+// that opened them)
+intr protocol PTestEndpointOpensOpened {
+child:
+    Hi();
+    intr HiRpc();
+
+parent:
+    Hello();
+    sync HelloSync();
+    intr HelloRpc();
+    __delete__();
+
+state START:       recv Hello goto HI;
+state HI:          send Hi goto HELLO_SYNC;
+state HELLO_SYNC:  recv HelloSync goto HELLO_RPC;
+state HELLO_RPC:   answer HelloRpc goto HI_RPC;
+state HI_RPC:      call HiRpc goto DEAD;
+state DEAD:
+    recv __delete__;
+};
+
+
+} // namespace mozilla
+} // namespace _ipdltest2

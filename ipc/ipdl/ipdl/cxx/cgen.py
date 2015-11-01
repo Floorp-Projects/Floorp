@@ -86,9 +86,16 @@ class CxxCodeGen(CodePrinter, Visitor):
 
 
     def visitTypedef(self, td):
-        self.printdent('typedef ')
-        td.fromtype.accept(self)
-        self.println(' '+ td.totypename +';')
+        if td.templateargs:
+            formals = ', '.join([ 'class ' + T for T in td.templateargs ])
+            args = ', '.join(td.templateargs)
+            self.printdent('template<' + formals + '> using ' + td.totypename + ' = ')
+            td.fromtype.accept(self)
+            self.println('<' + args + '>;')
+        else:
+            self.printdent('typedef ')
+            td.fromtype.accept(self)
+            self.println(' '+ td.totypename +';')
 
     def visitUsing(self, us):
         self.printdent('using ')

@@ -34,25 +34,52 @@ CreateTransport(base::ProcessId aProcIdOne,
   // NB: we create the server pipe immediately, instead of just
   // grabbing an ID, on purpose.  In the current setup, the client
   // needs to connect to an existing server pipe, so to prevent race
-  // conditions, we create the server side here and then dup it to the
-  // eventual server process.
+  // conditions, we create the server side here. When we send the pipe
+  // to the server, we DuplicateHandle it to the server process to give it
+  // access.
   HANDLE serverDup;
   DWORD access = 0;
   DWORD options = DUPLICATE_SAME_ACCESS;
-  if (!DuplicateHandle(serverPipe, aProcIdOne, &serverDup, access, options)) {
+  if (!DuplicateHandle(serverPipe, base::GetCurrentProcId(), &serverDup, access, options)) {
     return NS_ERROR_DUPLICATE_HANDLE;
   }
 
   aOne->mPipeName = aTwo->mPipeName = id;
-  aOne->mServerPipe = serverDup;
-  aTwo->mServerPipe = INVALID_HANDLE_VALUE;
+  aOne->mServerPipeHandle = serverDup;
+  aOne->mDestinationProcessId = aProcIdOne;
+  aTwo->mServerPipeHandle = INVALID_HANDLE_VALUE;
+  aTwo->mDestinationProcessId = 0;
   return NS_OK;
+}
+
+HANDLE
+TransferHandleToProcess(HANDLE source, base::ProcessId pid)
+{
+  // At this point we're sending the handle to another process.
+
+  if (source == INVALID_HANDLE_VALUE) {
+    return source;
+  }
+  HANDLE handleDup;
+  DWORD access = 0;
+  DWORD options = DUPLICATE_SAME_ACCESS;
+  bool ok = DuplicateHandle(source, pid, &handleDup, access, options);
+  MOZ_RELEASE_ASSERT(ok);
+
+  // Now close our own copy of the handle (we're supposed to be transferring,
+  // not copying).
+  CloseHandle(source);
+
+  return handleDup;
 }
 
 Transport*
 OpenDescriptor(const TransportDescriptor& aTd, Transport::Mode aMode)
 {
-  return new Transport(aTd.mPipeName, aTd.mServerPipe, aMode, nullptr);
+  if (aTd.mServerPipeHandle != INVALID_HANDLE_VALUE) {
+    MOZ_RELEASE_ASSERT(aTd.mDestinationProcessId == base::GetCurrentProcId());
+  }
+  return new Transport(aTd.mPipeName, aTd.mServerPipeHandle, aMode, nullptr);
 }
 
 Transport*
@@ -62,10 +89,33 @@ OpenDescriptor(const FileDescriptor& aFd, Transport::Mode aMode)
   return nullptr;
 }
 
+TransportDescriptor
+DuplicateDescriptor(const TransportDescriptor& aTd)
+{
+  // We're duplicating this handle in our own process for bookkeeping purposes.
+
+  if (aTd.mServerPipeHandle == INVALID_HANDLE_VALUE) {
+    return aTd;
+  }
+
+  HANDLE serverDup;
+  DWORD access = 0;
+  DWORD options = DUPLICATE_SAME_ACCESS;
+  bool ok = DuplicateHandle(aTd.mServerPipeHandle, base::GetCurrentProcId(),
+                            &serverDup, access, options);
+  MOZ_RELEASE_ASSERT(ok);
+
+  TransportDescriptor desc = aTd;
+  desc.mServerPipeHandle = serverDup;
+  return desc;
+}
+
 void
 CloseDescriptor(const TransportDescriptor& aTd)
 {
-  CloseHandle(aTd.mServerPipe);
+  // We're closing our own local copy of the pipe.
+
+  CloseHandle(aTd.mServerPipeHandle);
 }
 
 } // namespace ipc

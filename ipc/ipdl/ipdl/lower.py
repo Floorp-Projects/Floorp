@@ -527,6 +527,9 @@ class _ConvertToCxxType(TypeVisitor):
     def visitFDType(self, s):
         return Type(self.typename(s))
 
+    def visitEndpointType(self, s):
+        return Type(self.typename(s))
+
     def visitProtocolType(self, p): assert 0
     def visitMessageType(self, m): assert 0
     def visitVoidType(self, v): assert 0
@@ -553,7 +556,7 @@ def _cxxConstRefType(ipdltype, side):
 
 def _cxxMoveRefType(ipdltype, side):
     t = _cxxBareType(ipdltype, side)
-    if ipdltype.isIPDL() and (ipdltype.isArray() or ipdltype.isShmem()):
+    if ipdltype.isIPDL() and (ipdltype.isArray() or ipdltype.isShmem() or ipdltype.isEndpoint()):
         t.ref = 2
         return t
     return _cxxConstRefType(ipdltype, side)
@@ -1358,6 +1361,8 @@ with some new IPDL/C++ nodes that are tuned for C++ codegen."""
                                         'ProtocolId'),
                                 Typedef(Type('mozilla::ipc::Transport'),
                                         'Transport'),
+                                Typedef(Type('mozilla::ipc::Endpoint'),
+                                        'Endpoint', ['FooSide']),
                                 Typedef(Type('mozilla::ipc::TransportDescriptor'),
                                         'TransportDescriptor') ])
         self.protocolName = None
@@ -1566,6 +1571,14 @@ class _GenerateProtocolCode(ipdl.ast.Visitor):
 
     def visitProtocol(self, p):
         self.cppIncludeHeaders.append(_protocolHeaderName(self.protocol, ''))
+
+        # Forward declare our own actors.
+        self.hdrfile.addthings([
+            Whitespace.NL,
+            _makeForwardDeclForActor(p.decl.type, 'Parent'),
+            _makeForwardDeclForActor(p.decl.type, 'Child')
+        ])
+
         bridges = ProcessGraph.bridgesOf(p.decl.type)
         for bridge in bridges:
             ppt, pside = bridge.parent.ptype, _otherSide(bridge.parent.side)
@@ -1610,6 +1623,10 @@ class _GenerateProtocolCode(ipdl.ast.Visitor):
             odecl, odefn = _splitFuncDeclDefn(self.genOpenFunc(o))
             ns.addstmts([ odecl, Whitespace.NL ])
             self.funcDefns.append(odefn)
+
+        edecl, edefn = _splitFuncDeclDefn(self.genEndpointFunc())
+        ns.addstmts([ edecl, Whitespace.NL ])
+        self.funcDefns.append(edefn)
 
         # state information
         stateenum = TypeEnum('State')
@@ -1711,6 +1728,36 @@ class _GenerateProtocolCode(ipdl.ast.Visitor):
                    _sideToTransportMode(localside),
                    _protocolId(p.decl.type),
                    ExprVar(_messageStartName(p.decl.type) + 'Child')
+                   ])))
+        return openfunc
+
+
+    # Generate code for PFoo::CreateEndpoints.
+    def genEndpointFunc(self):
+        p = self.protocol.decl.type
+        tparent = _cxxBareType(ActorType(p), 'Parent', fq=1)
+        tchild = _cxxBareType(ActorType(p), 'Child', fq=1)
+        methodvar = ExprVar('CreateEndpoints')
+        rettype = Type.NSRESULT
+        parentpidvar = ExprVar('aParentDestPid')
+        childpidvar = ExprVar('aChildDestPid')
+        parentvar = ExprVar('aParent')
+        childvar = ExprVar('aChild')
+
+        openfunc = MethodDefn(MethodDecl(
+            methodvar.name,
+            params=[ Decl(Type('base::ProcessId'), parentpidvar.name),
+                     Decl(Type('base::ProcessId'), childpidvar.name),
+                     Decl(Type('mozilla::ipc::Endpoint<' + tparent.name + '>', ptr=1), parentvar.name),
+                     Decl(Type('mozilla::ipc::Endpoint<' + tchild.name + '>', ptr=1), childvar.name) ],
+            ret=rettype))
+        openfunc.addstmt(StmtReturn(ExprCall(
+            ExprVar('mozilla::ipc::CreateEndpoints'),
+            args=[ _backstagePass(),
+                   parentpidvar, childpidvar,
+                   _protocolId(p),
+                   ExprVar(_messageStartName(p) + 'Child'),
+                   parentvar, childvar
                    ])))
         return openfunc
 
@@ -4410,7 +4457,6 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
                                          args=[ msgvar, itervar, var ])))
 
         self.cls.addstmts([ write, Whitespace.NL, read, Whitespace.NL ])
-
 
     def implementActorPickling(self, actortype):
         # Note that we pickle based on *protocol* type and *not* actor

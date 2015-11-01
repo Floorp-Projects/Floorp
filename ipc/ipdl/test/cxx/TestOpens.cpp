@@ -141,7 +141,7 @@ TestOpensOpenedParent::ActorDestroy(ActorDestroyReason why)
     // ActorDestroy() is just a callback from IPDL-generated code,
     // which needs the top-level actor (this) to stay alive a little
     // longer so other things can be cleaned up.
-    gMainThread->PostTask(
+    gParentThread->message_loop()->PostTask(
         FROM_HERE,
         NewRunnableFunction(ShutdownTestOpensOpenedParent,
                             this, mTransport));
@@ -273,7 +273,7 @@ TestOpensOpenedChild::ActorDestroy(ActorDestroyReason why)
     // which needs the top-level actor (this) to stay alive a little
     // longer so other things can be cleaned up.  Defer shutdown to
     // let cleanup finish.
-    gMainThread->PostTask(
+    gChildThread->message_loop()->PostTask(
         FROM_HERE,
         NewRunnableFunction(ShutdownTestOpensOpenedChild,
                             this, mTransport));
