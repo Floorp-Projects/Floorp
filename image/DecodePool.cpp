@@ -347,6 +347,9 @@ DecodePool::DecodePool()
   } else {
     limit = static_cast<uint32_t>(prefLimit);
   }
+  if (limit > 32) {
+    limit = 32;
+  }
 
   // Initialize the thread pool.
   for (uint32_t i = 0 ; i < limit ; ++i) {
