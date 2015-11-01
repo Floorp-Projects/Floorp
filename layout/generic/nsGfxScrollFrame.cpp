@@ -3092,7 +3092,14 @@ ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
       //
       // This is not compatible when using containes for root scrollframes.
       MOZ_ASSERT(couldBuildLayer && mScrolledFrame->GetContent());
+      bool needToRecomputeAGR = false;
+      if (!mWillBuildScrollableLayer) {
+        needToRecomputeAGR = true;
+      }
       mWillBuildScrollableLayer = true;
+      if (needToRecomputeAGR) {
+        aBuilder->RecomputeCurrentAnimatedGeometryRoot();
+      }
     }
   }
 
