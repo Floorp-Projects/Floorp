@@ -273,15 +273,15 @@ AppleATDecoder::DecodeSample(MediaRawData* aSample)
       duration.ToSeconds());
 #endif
 
-  nsAutoArrayPtr<AudioDataValue> data(new AudioDataValue[outputData.Length()]);
+  auto data = MakeUnique<AudioDataValue[]>(outputData.Length());
   PodCopy(data.get(), &outputData[0], outputData.Length());
   RefPtr<AudioData> audio = new AudioData(aSample->mOffset,
-                                            aSample->mTime,
-                                            duration.ToMicroseconds(),
-                                            numFrames,
-                                            data.forget(),
-                                            channels,
-                                            rate);
+                                          aSample->mTime,
+                                          duration.ToMicroseconds(),
+                                          numFrames,
+                                          Move(data),
+                                          channels,
+                                          rate);
   mCallback->Output(audio);
   return NS_OK;
 }

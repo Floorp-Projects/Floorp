@@ -194,7 +194,7 @@ bool WaveReader::DecodeAudioData()
                 sizeof(AudioDataValue) / MAX_CHANNELS,
                 "bufferSize calculation could overflow.");
   const size_t bufferSize = static_cast<size_t>(frames * mChannels);
-  nsAutoArrayPtr<AudioDataValue> sampleBuffer(new AudioDataValue[bufferSize]);
+  auto sampleBuffer = MakeUnique<AudioDataValue[]>(bufferSize);
 
   static_assert(uint64_t(BLOCK_SIZE) < UINT_MAX / sizeof(char),
                 "BLOCK_SIZE too large for enumerator.");
@@ -229,7 +229,7 @@ bool WaveReader::DecodeAudioData()
                                  static_cast<int64_t>(posTime * USECS_PER_S),
                                  static_cast<int64_t>(readSizeTime * USECS_PER_S),
                                  static_cast<int32_t>(frames),
-                                 sampleBuffer.forget(),
+                                 Move(sampleBuffer),
                                  mChannels,
                                  mSampleRate));
 
