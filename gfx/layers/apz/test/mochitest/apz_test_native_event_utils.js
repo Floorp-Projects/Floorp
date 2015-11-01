@@ -60,8 +60,8 @@ function coordinatesRelativeToWindow(aX, aY, aElement) {
   var scale = targetWindow.devicePixelRatio;
   var rect = aElement.getBoundingClientRect();
   return {
-    x: targetWindow.mozInnerScreenX + ((rect.left + aX) * scale),
-    y: targetWindow.mozInnerScreenY + ((rect.top + aY) * scale)
+    x: (targetWindow.mozInnerScreenX + rect.left + aX) * scale,
+    y: (targetWindow.mozInnerScreenY + rect.top + aY) * scale
   };
 }
 
