@@ -6,7 +6,7 @@ load 83804-1.gif
 load 89341-1.gif
 load 463696.bmp
 load 570451.png
-skip-if(Android&&smallScreen) skip-if(B2G) skip-if(OSX==1010&&isDebugBuild) load 694165-1.xhtml # nexus-s Android 2.3.6, bug 876275 for B2G on a VM; bug 1123195 for OS X 10.10 debug
+skip-if(Android||B2G) load 694165-1.xhtml # Bug 876275
 load 681190.html
 load 732319-1.html
 load 844403-1.html
