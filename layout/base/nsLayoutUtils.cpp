@@ -1157,9 +1157,9 @@ nsLayoutUtils::SetDisplayPortMargins(nsIContent* aContent,
   }
 
   if (aRepaintMode == RepaintMode::Repaint) {
-    nsIFrame* rootFrame = aPresShell->FrameManager()->GetRootFrame();
-    if (rootFrame) {
-      rootFrame->SchedulePaint();
+    nsIFrame* frame = aContent->GetPrimaryFrame();
+    if (frame) {
+      frame->SchedulePaint();
     }
   }
 
