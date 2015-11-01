@@ -65,6 +65,15 @@ OpenDescriptor(const FileDescriptor& aFd, Transport::Mode aMode)
   return new Transport(aFd.PlatformHandle(), aMode, nullptr);
 }
 
+TransportDescriptor
+DuplicateDescriptor(const TransportDescriptor& aTd)
+{
+  TransportDescriptor result = aTd;
+  result.mFd.fd = dup(aTd.mFd.fd);
+  MOZ_RELEASE_ASSERT(result.mFd.fd != -1, "DuplicateDescriptor failed");
+  return result;
+}
+
 void
 CloseDescriptor(const TransportDescriptor& aTd)
 {

@@ -7,6 +7,7 @@ IPDLTESTS = $(IPDLTESTSRCS:.cpp=)
 
 EXTRA_PROTOCOLS = \
   TestBridgeSub \
+  TestEndpointBridgeSub \
   $(NULL)
 
 IPDLTESTHDRS = $(addprefix $(srcdir)/,$(addsuffix .h,$(IPDLTESTS)))

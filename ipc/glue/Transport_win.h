@@ -10,6 +10,7 @@
 
 #include <string>
 
+#include "base/process.h"
 #include "ipc/IPCMessageUtils.h"
 
 
@@ -19,8 +20,12 @@ namespace ipc {
 struct TransportDescriptor
 {
   std::wstring mPipeName;
-  HANDLE mServerPipe;
+  HANDLE mServerPipeHandle;
+  base::ProcessId mDestinationProcessId;
 };
+
+HANDLE
+TransferHandleToProcess(HANDLE source, base::ProcessId pid);
 
 } // namespace ipc
 } // namespace mozilla
@@ -34,13 +39,25 @@ struct ParamTraits<mozilla::ipc::TransportDescriptor>
   typedef mozilla::ipc::TransportDescriptor paramType;
   static void Write(Message* aMsg, const paramType& aParam)
   {
+    HANDLE pipe = mozilla::ipc::TransferHandleToProcess(aParam.mServerPipeHandle,
+                                                        aParam.mDestinationProcessId);
+
     WriteParam(aMsg, aParam.mPipeName);
-    WriteParam(aMsg, aParam.mServerPipe);
+    WriteParam(aMsg, pipe);
+    WriteParam(aMsg, aParam.mDestinationProcessId);
   }
   static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
   {
-    return (ReadParam(aMsg, aIter, &aResult->mPipeName) &&
-            ReadParam(aMsg, aIter, &aResult->mServerPipe));
+    bool r = (ReadParam(aMsg, aIter, &aResult->mPipeName) &&
+              ReadParam(aMsg, aIter, &aResult->mServerPipeHandle) &&
+              ReadParam(aMsg, aIter, &aResult->mDestinationProcessId));
+    if (!r) {
+      return r;
+    }
+    if (aResult->mServerPipeHandle != INVALID_HANDLE_VALUE) {
+      MOZ_RELEASE_ASSERT(aResult->mDestinationProcessId == base::GetCurrentProcId());
+    }
+    return r;
   }
 };
 
