@@ -401,7 +401,6 @@
 
 .devtools-rule-searchbox {
   -moz-box-flex: 1;
-  padding-right: 23px;
   width: 100%;
   font: inherit;
 }
@@ -409,6 +408,7 @@
 .devtools-rule-searchbox[filled] {
   background-color: var(--searchbox-background-color);
   border-color: var(--searchbox-border-color);
+  padding-right: 23px;
 }
 
 .devtools-style-searchbox-no-match {
