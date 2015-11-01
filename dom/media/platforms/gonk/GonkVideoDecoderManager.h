@@ -29,6 +29,7 @@ namespace mozilla {
 
 namespace layers {
 class TextureClient;
+class TextureClientRecycleAllocator;
 } // namespace mozilla::layers
 
 class GonkVideoDecoderManager : public GonkDecoderManager {
@@ -49,6 +50,16 @@ public:
                           RefPtr<MediaData>& aOutput) override;
 
   nsresult Shutdown() override;
+
+  // Bug 1199809: workaround to avoid sending the graphic buffer by making a
+  // copy of output buffer after calling flush(). Bug 1203859 was created to
+  // reimplementing Gonk PDM on top of OpenMax IL directly. Its buffer
+  // management will work better with Gecko and solve problems like this.
+  nsresult Flush() override
+  {
+    mNeedsCopyBuffer = true;
+    return GonkDecoderManager::Flush();
+  }
 
   static void RecycleCallback(TextureClient* aClient, void* aClosure);
 
@@ -94,6 +105,11 @@ private:
   bool SetVideoFormat();
 
   nsresult CreateVideoData(MediaBuffer* aBuffer, int64_t aStreamOffset, VideoData** aOutData);
+  already_AddRefed<VideoData> CreateVideoDataFromGraphicBuffer(android::MediaBuffer* aSource,
+                                                               gfx::IntRect& aPicture);
+  already_AddRefed<VideoData> CreateVideoDataFromDataBuffer(android::MediaBuffer* aSource,
+                                                            gfx::IntRect& aPicture);
+
   uint8_t* GetColorConverterBuffer(int32_t aWidth, int32_t aHeight);
 
   // For codec resource management
@@ -112,6 +128,7 @@ private:
   nsIntSize mInitialFrame;
 
   RefPtr<layers::ImageContainer> mImageContainer;
+  RefPtr<layers::TextureClientRecycleAllocator> mCopyAllocator;
 
   MediaInfo mInfo;
   android::sp<VideoResourceListener> mVideoListener;
@@ -143,6 +160,10 @@ private:
   // This TaskQueue should be the same one in mDecodeCallback->OnReaderTaskQueue().
   // It is for codec resource mangement, decoding task should not dispatch to it.
   RefPtr<TaskQueue> mReaderTaskQueue;
+
+  // Bug 1199809: do we need to make a copy of output buffer? Used only when
+  // the decoder outputs graphic buffers.
+  bool mNeedsCopyBuffer;
 };
 
 } // namespace mozilla
