@@ -241,9 +241,6 @@ loop.shared.actions = (function() {
      * XXX: should move to some roomActions module - refs bug 1079284
      */
     CreateRoom: Action.define("createRoom", {
-      // The localized template to use to name the new room
-      // (eg. "Conversation {{conversationLabel}}").
-      nameTemplate: String
       // See https://wiki.mozilla.org/Loop/Architecture/Context#Format_of_context.value
       // urls: Object - Optional
     }),

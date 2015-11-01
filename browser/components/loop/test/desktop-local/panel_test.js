@@ -1000,7 +1000,6 @@ describe("loop.panel", function() {
       TestUtils.Simulate.click(node.querySelector(".new-room-button"));
 
       sinon.assert.calledWith(dispatch, new sharedActions.CreateRoom({
-        nameTemplate: "Fake title",
         urls: [{
           location: "http://invalid.com",
           description: "fakeSite",

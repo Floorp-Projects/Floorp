@@ -214,44 +214,7 @@ describe("loop.store.RoomStore", function() {
       });
     });
 
-    describe("#findNextAvailableRoomNumber", function() {
-      var fakeNameTemplate = "RoomWord {{conversationLabel}}";
-
-      it("should find next available room number from an empty room list",
-        function() {
-          store.setStoreState({ rooms: [] });
-
-          expect(store.findNextAvailableRoomNumber(fakeNameTemplate)).eql(1);
-        });
-
-      it("should find next available room number from a non empty room list",
-        function() {
-          store.setStoreState({
-            rooms: [{ decryptedContext: { roomName: "RoomWord 1" } }]
-          });
-
-          expect(store.findNextAvailableRoomNumber(fakeNameTemplate)).eql(2);
-        });
-
-      it("should not be sensitive to initial list order", function() {
-        store.setStoreState({
-          rooms: [{
-            decryptedContext: {
-              roomName: "RoomWord 99"
-            }
-          }, {
-            decryptedContext: {
-              roomName: "RoomWord 98"
-            }
-          }]
-        });
-
-        expect(store.findNextAvailableRoomNumber(fakeNameTemplate)).eql(100);
-      });
-    });
-
     describe("#createRoom", function() {
-      var fakeNameTemplate = "Conversation {{conversationLabel}}";
       var fakeLocalRoomId = "777";
       var fakeOwner = "fake@invalid";
       var fakeRoomCreationData;
@@ -259,9 +222,7 @@ describe("loop.store.RoomStore", function() {
       beforeEach(function() {
         sandbox.stub(dispatcher, "dispatch");
         store.setStoreState({ pendingCreation: false, rooms: [] });
-        fakeRoomCreationData = {
-          nameTemplate: fakeNameTemplate
-        };
+        fakeRoomCreationData = {};
       });
 
       it("should clear any existing room errors", function() {
@@ -298,9 +259,7 @@ describe("loop.store.RoomStore", function() {
         store.createRoom(new sharedActions.CreateRoom(fakeRoomCreationData));
 
         sinon.assert.calledWith(fakeMozLoop.rooms.create, {
-          decryptedContext: {
-            roomName: "Conversation 1"
-          },
+          decryptedContext: { },
           maxSize: store.maxRoomCreationSize
         });
       });
@@ -318,7 +277,6 @@ describe("loop.store.RoomStore", function() {
 
         sinon.assert.calledWith(fakeMozLoop.rooms.create, {
           decryptedContext: {
-            roomName: "Conversation 1",
             urls: [{
               location: "http://invalid.com",
               description: "fakeSite",
