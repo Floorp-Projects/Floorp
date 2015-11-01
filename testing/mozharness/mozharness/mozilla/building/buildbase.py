@@ -839,7 +839,10 @@ or run without that action (ie: --no-{action})"
         env['MOZ_BUILD_DATE'] = self.query_buildid()
 
         if self.query_is_nightly() or self.query_is_nightly_promotion():
-            env["IS_NIGHTLY"] = "yes"
+            if self.query_is_nightly():
+                # nightly promotion needs to set update_channel but not do all the 'IS_NIGHTLY'
+                # automation parts like uploading symbols for now
+                env["IS_NIGHTLY"] = "yes"
             # in branch_specifics.py we might set update_channel explicitly
             if c.get('update_channel'):
                 env["MOZ_UPDATE_CHANNEL"] = c['update_channel']
