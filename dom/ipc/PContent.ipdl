@@ -521,8 +521,6 @@ child:
      */
     async BidiKeyboardNotify(bool isLangRTL);
 
-    async UpdateServiceWorkerRegistrations();
-
     async DataStoreNotify(uint32_t aAppId, nsString aName,
                           nsString aManifestURL);
 
