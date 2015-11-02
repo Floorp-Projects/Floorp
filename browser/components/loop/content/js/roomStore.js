@@ -356,11 +356,11 @@ loop.store = loop.store || {};
 
       switch (providerOrigin) {
         case "mail.google.com":
-          shareTitle = mozL10n.get("share_email_subject6");
-          shareBody = mozL10n.get("share_email_body6", {
+          shareTitle = mozL10n.get("share_email_subject7");
+          shareBody = mozL10n.get("share_email_body7", {
             callUrl: actionData.roomUrl
           });
-          shareBody += mozL10n.get("share_email_footer");
+          shareBody += mozL10n.get("share_email_footer2");
           break;
         case "twitter.com":
         default:
