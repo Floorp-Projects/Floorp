@@ -11,8 +11,8 @@ Cu.import("resource://gre/modules/Task.jsm");
 
 const {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
 const {Toolbox} = require("devtools/client/framework/toolbox");
-const {Services} = Cu.import("resource://gre/modules/Services.jsm");
-const {AppProjects} = require("devtools/client/app-manager/app-projects");
+const Services = require("Services");
+const {AppProjects} = require("devtools/client/webide/modules/app-projects");
 const {Connection} = require("devtools/shared/client/connection-manager");
 const {AppManager} = require("devtools/client/webide/modules/app-manager");
 const EventEmitter = require("devtools/shared/event-emitter");
