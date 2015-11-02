@@ -4645,12 +4645,8 @@ BindNameIC::update(JSContext* cx, HandleScript outerScript, size_t cacheIndex,
     HandlePropertyName name = cache.name();
 
     RootedObject holder(cx);
-    if (scopeChain->is<GlobalObject>()) {
-        holder = scopeChain;
-    } else {
-        if (!LookupNameUnqualified(cx, name, scopeChain, &holder))
-            return nullptr;
-    }
+    if (!LookupNameUnqualified(cx, name, scopeChain, &holder))
+        return nullptr;
 
     // Stop generating new stubs once we hit the stub count limit, see
     // GetPropertyCache.
