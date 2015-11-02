@@ -18540,51 +18540,7 @@ DatabaseOperationBase::GetUniqueIndexTableForObjectStore(
   MOZ_ASSERT(aObjectStoreId);
   MOZ_ASSERT(aMaybeUniqueIndexTable.isNothing());
 
-  class MOZ_STACK_CLASS Helper final
-  {
-  public:
-    static nsresult
-    CopyUniqueValues(const IndexTable& aIndexes,
-                     Maybe<UniqueIndexTable>& aMaybeUniqueIndexTable)
-    {
-      const uint32_t indexCount = aIndexes.Count();
-      MOZ_ASSERT(indexCount);
-
-      aMaybeUniqueIndexTable.emplace();
-
-      aIndexes.EnumerateRead(Enumerate, aMaybeUniqueIndexTable.ptr());
-
-      if (NS_WARN_IF(aMaybeUniqueIndexTable.ref().Count() != indexCount)) {
-        IDB_REPORT_INTERNAL_ERR();
-        aMaybeUniqueIndexTable.reset();
-        return NS_ERROR_OUT_OF_MEMORY;
-      }
-
-#ifdef DEBUG
-      aMaybeUniqueIndexTable.ref().MarkImmutable();
-#endif
-      return NS_OK;
-    }
-
-  private:
-    static PLDHashOperator
-    Enumerate(const uint64_t& aKey, FullIndexMetadata* aValue, void* aClosure)
-    {
-      auto* uniqueIndexTable = static_cast<UniqueIndexTable*>(aClosure);
-      MOZ_ASSERT(uniqueIndexTable);
-      MOZ_ASSERT(!uniqueIndexTable->Get(aValue->mCommonMetadata.id()));
-
-      if (NS_WARN_IF(!uniqueIndexTable->Put(aValue->mCommonMetadata.id(),
-                                            aValue->mCommonMetadata.unique(),
-                                            fallible))) {
-        return PL_DHASH_STOP;
-      }
-
-      return PL_DHASH_NEXT;
-    }
-  };
-
-  const RefPtr<FullObjectStoreMetadata> objectStoreMetadata = 
+  const RefPtr<FullObjectStoreMetadata> objectStoreMetadata =
     aTransaction->GetMetadataForObjectStoreId(aObjectStoreId);
   MOZ_ASSERT(objectStoreMetadata);
 
@@ -18592,11 +18548,34 @@ DatabaseOperationBase::GetUniqueIndexTableForObjectStore(
     return NS_OK;
   }
 
-  nsresult rv = Helper::CopyUniqueValues(objectStoreMetadata->mIndexes,
-                                         aMaybeUniqueIndexTable);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+  const uint32_t indexCount = objectStoreMetadata->mIndexes.Count();
+  MOZ_ASSERT(indexCount > 0);
+
+  aMaybeUniqueIndexTable.emplace();
+  UniqueIndexTable* uniqueIndexTable = aMaybeUniqueIndexTable.ptr();
+  MOZ_ASSERT(uniqueIndexTable);
+
+  for (auto iter = objectStoreMetadata->mIndexes.Iter(); !iter.Done(); iter.Next()) {
+    FullIndexMetadata* value = iter.UserData();
+    MOZ_ASSERT(!uniqueIndexTable->Get(value->mCommonMetadata.id()));
+
+    if (NS_WARN_IF(!uniqueIndexTable->Put(value->mCommonMetadata.id(),
+                                          value->mCommonMetadata.unique(),
+                                          fallible))) {
+      break;
+    }
   }
+
+  if (NS_WARN_IF(aMaybeUniqueIndexTable.ref().Count() != indexCount)) {
+    IDB_REPORT_INTERNAL_ERR();
+    aMaybeUniqueIndexTable.reset();
+    NS_WARNING("out of memory");
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+#ifdef DEBUG
+  aMaybeUniqueIndexTable.ref().MarkImmutable();
+#endif
 
   return NS_OK;
 }
