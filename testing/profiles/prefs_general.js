@@ -115,6 +115,9 @@ user_pref("network.sntp.pools", "%(server)s");
 // at least once will mean that codepath is still tested in automation.
 user_pref("network.sntp.maxRetryCount", 1);
 
+// Make sure the notification permission migration test doesn't hit the network.
+user_pref("browser.push.warning.infoURL", "http://%(server)s/alerts-dummy/infoURL");
+
 // Existing tests don't wait for the notification button security delay
 user_pref("security.notification_enable_delay", 0);
 
