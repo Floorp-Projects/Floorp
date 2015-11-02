@@ -1,4 +1,4 @@
-// Copyright 2014, ARM Limited
+// Copyright 2013, ARM Limited
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -53,7 +53,6 @@ class FormatToken;
 class Debugger : public Simulator {
  public:
   explicit Debugger(Decoder* decoder, FILE* stream = stdout);
-  ~Debugger();
 
   virtual void Run();
   virtual void VisitException(const Instruction* instr);
@@ -67,8 +66,8 @@ class Debugger : public Simulator {
 
   // Numbers of instructions to execute before the debugger shell is given
   // back control.
-  int64_t steps() const { return steps_; }
-  void set_steps(int64_t value) {
+  int steps() const { return steps_; }
+  void set_steps(int value) {
     VIXL_ASSERT(value > 1);
     steps_ = value;
   }
@@ -99,7 +98,7 @@ class Debugger : public Simulator {
 
   int debug_parameters_;
   bool pending_request_;
-  int64_t steps_;
+  int steps_;
   DebugCommand* last_command_;
   PrintDisassembler* disasm_;
   Decoder* printer_;
