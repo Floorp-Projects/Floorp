@@ -39,9 +39,8 @@ class nsSecureBrowserUIImpl : public nsISecureBrowserUI,
                               public nsISSLStatusProvider
 {
 public:
-  
   nsSecureBrowserUIImpl();
-  
+
   NS_DECL_ISUPPORTS
   NS_DECL_NSIWEBPROGRESSLISTENER
   NS_DECL_NSISECUREBROWSERUI
@@ -50,14 +49,12 @@ public:
 protected:
   virtual ~nsSecureBrowserUIImpl() {};
 
-  mozilla::ReentrantMonitor mReentrantMonitor;
-  
   nsWeakPtr mWindow;
   nsWeakPtr mDocShell;
   nsCOMPtr<nsINetUtil> mIOService;
   nsCOMPtr<nsIURI> mCurrentURI;
   nsCOMPtr<nsISecurityEventSink> mToplevelEventSink;
-  
+
   enum lockIconState {
     lis_no_security,
     lis_broken_security,
@@ -80,7 +77,6 @@ protected:
   bool mRestoreSubrequests;
   bool mOnLocationChangeSeen;
 #ifdef DEBUG
-  /* related to mReentrantMonitor */
   mozilla::Atomic<int32_t> mOnStateLocationChangeReentranceDetection;
 #endif
 
