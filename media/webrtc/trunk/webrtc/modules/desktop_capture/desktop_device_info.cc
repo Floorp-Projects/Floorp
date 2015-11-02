@@ -76,6 +76,9 @@ const char *DesktopDisplayDevice::getUniqueIdName() {
 }
 
 DesktopDisplayDevice& DesktopDisplayDevice::operator= (DesktopDisplayDevice& other) {
+  if (&other == this) {
+    return *this;
+  }
   screenId_ = other.getScreenId();
   setUniqueIdName(other.getUniqueIdName());
   setDeviceName(other.getDeviceName());
