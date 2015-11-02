@@ -123,7 +123,6 @@ public:
 
 NS_IMPL_ISUPPORTS(DataChannelShutdown, nsIObserver);
 
-
 BufferedMsg::BufferedMsg(struct sctp_sendv_spa &spa, const char *data,
                          size_t length) : mLength(length)
 {
@@ -699,7 +698,7 @@ DataChannelConnection::SctpDtlsOutput(void *addr, void *buffer, size_t length,
   // SCTP has an option for Apple, on IP connections only, to release at least
   // one of the locks before calling a packet output routine; with changes to
   // the underlying SCTP stack this might remove the need to use an async proxy.
-  if (0 /*peer->IsSTSThread()*/) {
+  if ((0 /*peer->IsSTSThread()*/)) {
     res = peer->SendPacket(static_cast<unsigned char *>(buffer), length, false);
   } else {
     unsigned char *data = new unsigned char[length];
@@ -1799,7 +1798,6 @@ void
 DataChannelConnection::HandleStreamChangeEvent(const struct sctp_stream_change_event *strchg)
 {
   uint16_t stream;
-  uint32_t i;
   RefPtr<DataChannel> channel;
 
   if (strchg->strchange_flags == SCTP_STREAM_CHANGE_DENIED) {
@@ -1854,7 +1852,7 @@ DataChannelConnection::HandleStreamChangeEvent(const struct sctp_stream_change_e
     // else probably not a change in # of streams
   }
 
-  for (i = 0; i < mStreams.Length(); ++i) {
+  for (uint32_t i = 0; i < mStreams.Length(); ++i) {
     channel = mStreams[i];
     if (!channel)
       continue;
@@ -1885,7 +1883,6 @@ DataChannelConnection::HandleStreamChangeEvent(const struct sctp_stream_change_e
     }
   }
 }
-
 
 // Called with mLock locked!
 void
