@@ -259,8 +259,10 @@ PROT_ListManager.prototype.kickoffUpdate_ = function (onDiskTableData)
 PROT_ListManager.prototype.stopUpdateCheckers = function() {
   log("Stopping updates");
   for (var updateUrl in this.updateCheckers_) {
-    this.updateCheckers_[updateUrl].cancel();
-    this.updateCheckers_[updateUrl] = null;
+    if (this.updateCheckers_[updateUrl]) {
+      this.updateCheckers_[updateUrl].cancel();
+      this.updateCheckers_[updateUrl] = null;
+    }
   }
 }
 
