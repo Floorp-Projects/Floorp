@@ -132,6 +132,8 @@ public:
     NS_IMETHOD GetSecurityInfo(nsISupports **aSecurityInfo) override;
     NS_IMETHOD AsyncOpen(nsIStreamListener *listener, nsISupports *aContext) override;
     NS_IMETHOD AsyncOpen2(nsIStreamListener *aListener) override;
+    // nsIHttpChannel
+    NS_IMETHOD GetEncodedBodySize(uint64_t *aEncodedBodySize) override;
     // nsIHttpChannelInternal
     NS_IMETHOD SetupFallbackChannel(const char *aFallbackKey) override;
     NS_IMETHOD ForceIntercepted(uint64_t aInterceptionID) override;
@@ -530,7 +532,6 @@ private:
 
     // If non-null, warnings should be reported to this object.
     HttpChannelSecurityWarningReporter* mWarningReporter;
-
 protected:
     virtual void DoNotifyListenerCleanup() override;
 

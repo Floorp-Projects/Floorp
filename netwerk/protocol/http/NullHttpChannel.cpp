@@ -57,6 +57,18 @@ NullHttpChannel::Init(nsIURI *aURI,
 //-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
+NullHttpChannel::GetTransferSize(uint64_t *aTransferSize)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+NullHttpChannel::GetDecodedBodySize(uint64_t *aDecodedBodySize)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
 NullHttpChannel::GetRequestMethod(nsACString & aRequestMethod)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
@@ -228,6 +240,18 @@ NullHttpChannel::GetSchedulingContextID(nsID *_retval)
 
 NS_IMETHODIMP
 NullHttpChannel::SetSchedulingContextID(const nsID scID)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+NullHttpChannel::GetProtocolVersion(nsACString& aProtocolVersion)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+NullHttpChannel::GetEncodedBodySize(uint64_t *aEncodedBodySize)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }

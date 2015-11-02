@@ -140,14 +140,15 @@ def process_single_leak_file(leakLogFileName, processType, leakThreshold,
                 logAsWarning = True
                 continue
             if name != "TOTAL" and numLeaked != 0 and recordLeakedObjects:
-                leakedObjectNames.append(name)
-
                 currExpectedLeak = expectedLeaks.get(name, 0)
                 if not expectedLeaks or numLeaked <= currExpectedLeak:
+                    if not expectedLeaks:
+                        leakedObjectNames.append(name)
                     leakedObjectAnalysis.append("TEST-INFO | leakcheck | %s leaked %d %s"
                                                 % (processString, numLeaked, name))
                 else:
-                    leakedObjectAnalysis.append("TEST-UNEXPECTED-FAIL | leakcheck | %s leaked too many %s (expected %d, got %d)"
+                    leakedObjectNames.append(name)
+                    leakedObjectAnalysis.append("WARNING | leakcheck | %s leaked too many %s (expected %d, got %d)"
                                                 % (processString, name, currExpectedLeak, numLeaked))
 
 
@@ -179,8 +180,7 @@ def process_single_leak_file(leakLogFileName, processType, leakThreshold,
                  processString)
         return
 
-    # totalBytesLeaked was seen and is non-zero.
-    if totalBytesLeaked > leakThreshold:
+    if totalBytesLeaked > leakThreshold or (expectedLeaks and leakedObjectNames):
         logAsWarning = True
         # Fail the run if we're over the threshold (which defaults to 0)
         prefix = "TEST-UNEXPECTED-FAIL"
@@ -194,6 +194,8 @@ def process_single_leak_file(leakLogFileName, processType, leakThreshold,
     if len(leakedObjectNames) > maxSummaryObjects:
         leakedObjectSummary += ', ...'
 
+    # totalBytesLeaked will include any expected leaks, so it can be off
+    # by a few thousand bytes.
     if logAsWarning:
         log.warning("%s | leakcheck | %s %d bytes leaked (%s)"
                     % (prefix, processString, totalBytesLeaked, leakedObjectSummary))

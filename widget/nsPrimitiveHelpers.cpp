@@ -59,11 +59,11 @@ nsPrimitiveHelpers :: CreatePrimitiveForData ( const char* aFlavor, const void* 
         do_CreateInstance(NS_SUPPORTS_STRING_CONTRACTID);
     if (primitive ) {
       if (aDataLen % 2) {
-        nsAutoArrayPtr<char> buffer(new char[aDataLen + 1]);
+        auto buffer = MakeUnique<char[]>(aDataLen + 1);
         if (!MOZ_LIKELY(buffer))
           return;
 
-        memcpy(buffer, aDataBuff, aDataLen);
+        memcpy(buffer.get(), aDataBuff, aDataLen);
         buffer[aDataLen] = 0;
         const char16_t* start = reinterpret_cast<const char16_t*>(buffer.get());
         // recall that length takes length as characters, not bytes
