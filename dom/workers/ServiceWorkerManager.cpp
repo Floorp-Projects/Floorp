@@ -1215,7 +1215,7 @@ private:
     swm->MaybeRemoveRegistration(mRegistration);
     // Ensures that the job can't do anything useful from this point on.
     mRegistration = nullptr;
-    unused << NS_WARN_IF(NS_FAILED(aRv));
+    Unused << NS_WARN_IF(NS_FAILED(aRv));
     Done(aRv);
   }
 
@@ -2222,7 +2222,7 @@ private:
   UnregisterAndDone()
   {
     nsresult rv = Unregister();
-    unused << NS_WARN_IF(NS_FAILED(rv));
+    Unused << NS_WARN_IF(NS_FAILED(rv));
     Done(rv);
   }
 };
@@ -3990,7 +3990,7 @@ ServiceWorkerManager::Observe(nsISupports* aSubject,
 
       RefPtr<TeardownRunnable> runnable = new TeardownRunnable(mActor);
       nsresult rv = NS_DispatchToMainThread(runnable);
-      unused << NS_WARN_IF(NS_FAILED(rv));
+      Unused << NS_WARN_IF(NS_FAILED(rv));
       mActor = nullptr;
     }
     return NS_OK;

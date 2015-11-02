@@ -71,7 +71,7 @@ BluetoothDaemonHandsfreeModule::ConnectCmd(
   if (NS_FAILED(rv)) {
     return rv;
   }
-  unused << pdu.forget();
+  Unused << pdu.forget();
   return NS_OK;
 }
 
@@ -93,7 +93,7 @@ BluetoothDaemonHandsfreeModule::DisconnectCmd(
   if (NS_FAILED(rv)) {
     return rv;
   }
-  unused << pdu.forget();
+  Unused << pdu.forget();
   return NS_OK;
 }
 
@@ -115,7 +115,7 @@ BluetoothDaemonHandsfreeModule::ConnectAudioCmd(
   if (NS_FAILED(rv)) {
     return rv;
   }
-  unused << pdu.forget();
+  Unused << pdu.forget();
   return NS_OK;
 }
 
@@ -137,7 +137,7 @@ BluetoothDaemonHandsfreeModule::DisconnectAudioCmd(
   if (NS_FAILED(rv)) {
     return rv;
   }
-  unused << pdu.forget();
+  Unused << pdu.forget();
   return NS_OK;
 }
 
@@ -162,7 +162,7 @@ BluetoothDaemonHandsfreeModule::StartVoiceRecognitionCmd(
   if (NS_FAILED(rv)) {
     return rv;
   }
-  unused << pdu.forget();
+  Unused << pdu.forget();
   return NS_OK;
 }
 
@@ -187,7 +187,7 @@ BluetoothDaemonHandsfreeModule::StopVoiceRecognitionCmd(
   if (NS_FAILED(rv)) {
     return rv;
   }
-  unused << pdu.forget();
+  Unused << pdu.forget();
   return NS_OK;
 }
 
@@ -217,7 +217,7 @@ BluetoothDaemonHandsfreeModule::VolumeControlCmd(
   if (NS_FAILED(rv)) {
     return rv;
   }
-  unused << pdu.forget();
+  Unused << pdu.forget();
   return NS_OK;
 }
 
@@ -246,7 +246,7 @@ BluetoothDaemonHandsfreeModule::DeviceStatusNotificationCmd(
   if (NS_FAILED(rv)) {
     return rv;
   }
-  unused << pdu.forget();
+  Unused << pdu.forget();
   return NS_OK;
 }
 
@@ -275,7 +275,7 @@ BluetoothDaemonHandsfreeModule::CopsResponseCmd(
   if (NS_FAILED(rv)) {
     return rv;
   }
-  unused << pdu.forget();
+  Unused << pdu.forget();
   return NS_OK;
 }
 
@@ -326,7 +326,7 @@ BluetoothDaemonHandsfreeModule::CindResponseCmd(
   if (NS_FAILED(rv)) {
     return rv;
   }
-  unused << pdu.forget();
+  Unused << pdu.forget();
   return NS_OK;
 }
 
@@ -355,7 +355,7 @@ BluetoothDaemonHandsfreeModule::FormattedAtResponseCmd(
   if (NS_FAILED(rv)) {
     return rv;
   }
-  unused << pdu.forget();
+  Unused << pdu.forget();
   return NS_OK;
 }
 
@@ -387,7 +387,7 @@ BluetoothDaemonHandsfreeModule::AtResponseCmd(
   if (NS_FAILED(rv)) {
     return rv;
   }
-  unused << pdu.forget();
+  Unused << pdu.forget();
   return NS_OK;
 }
 
@@ -430,7 +430,7 @@ BluetoothDaemonHandsfreeModule::ClccResponseCmd(
   if (NS_FAILED(rv)) {
     return rv;
   }
-  unused << pdu.forget();
+  Unused << pdu.forget();
   return NS_OK;
 }
 
@@ -463,7 +463,7 @@ BluetoothDaemonHandsfreeModule::PhoneStateChangeCmd(
   if (NS_FAILED(rv)) {
     return rv;
   }
-  unused << pdu.forget();
+  Unused << pdu.forget();
   return NS_OK;
 }
 
@@ -488,7 +488,7 @@ BluetoothDaemonHandsfreeModule::ConfigureWbsCmd(
   if (NS_FAILED(rv)) {
     return rv;
   }
-  unused << pdu.forget();
+  Unused << pdu.forget();
   return NS_OK;
 }
 

@@ -1356,7 +1356,7 @@ nsSVGElement::UpdateAnimatedContentStyleRule()
                   SMIL_MAPPED_ATTR_STYLERULE_ATOM,
                   animContentStyleRule.get(),
                   ReleaseStyleRule);
-    unused << animContentStyleRule.forget();
+    Unused << animContentStyleRule.forget();
     MOZ_ASSERT(rv == NS_OK,
                "SetProperty failed (or overwrote something)");
   }

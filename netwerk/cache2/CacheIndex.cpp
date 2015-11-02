@@ -3023,7 +3023,7 @@ CacheIndex::FinishUpdate(bool aSucceeded)
       NS_WARNING(("CacheIndex::FinishUpdate() - Leaking mDirEnumerator!"));
       // This can happen only in case dispatching event to IO thread failed in
       // CacheIndex::PreShutdown().
-      unused << mDirEnumerator.forget(); // Leak it since dir enumerator is not threadsafe
+      Unused << mDirEnumerator.forget(); // Leak it since dir enumerator is not threadsafe
     } else {
       mDirEnumerator->Close();
       mDirEnumerator = nullptr;

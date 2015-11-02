@@ -8,6 +8,6 @@
 
 namespace mozilla {
 
-const unused_t unused = unused_t();
+const unused_t Unused = unused_t();
 
 } // namespace mozilla

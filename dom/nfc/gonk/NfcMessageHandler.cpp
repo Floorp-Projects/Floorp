@@ -55,7 +55,7 @@ NfcMessageHandler::Marshall(Parcel& aParcel, const CommandOptions& aOptions)
 bool
 NfcMessageHandler::Unmarshall(const Parcel& aParcel, EventOptions& aOptions)
 {
-  mozilla::unused << htonl(aParcel.readInt32());  // parcel size
+  mozilla::Unused << htonl(aParcel.readInt32());  // parcel size
   int32_t type = aParcel.readInt32();
   bool isNtf = type >> 31;
   int32_t msgType = type & ~(1 << 31);

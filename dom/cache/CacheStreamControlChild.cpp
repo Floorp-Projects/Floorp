@@ -101,7 +101,7 @@ CacheStreamControlChild::SerializeFds(CacheReadStream* aReadStreamOut,
   if (!aFds.IsEmpty()) {
     fdSet = Manager()->SendPFileDescriptorSetConstructor(aFds[0]);
     for (uint32_t i = 1; i < aFds.Length(); ++i) {
-      unused << fdSet->SendAddFileDescriptor(aFds[i]);
+      Unused << fdSet->SendAddFileDescriptor(aFds[i]);
     }
   }
 
@@ -128,14 +128,14 @@ CacheStreamControlChild::DeserializeFds(const CacheReadStream& aReadStream,
   fdSetActor->ForgetFileDescriptors(aFdsOut);
   MOZ_ASSERT(!aFdsOut.IsEmpty());
 
-  unused << fdSetActor->Send__delete__(fdSetActor);
+  Unused << fdSetActor->Send__delete__(fdSetActor);
 }
 
 void
 CacheStreamControlChild::NoteClosedAfterForget(const nsID& aId)
 {
   NS_ASSERT_OWNINGTHREAD(CacheStreamControlChild);
-  unused << SendNoteClosed(aId);
+  Unused << SendNoteClosed(aId);
 
   // A stream has closed.  If we delayed StartDestry() due to this stream
   // being read, then we should check to see if any of the remaining streams

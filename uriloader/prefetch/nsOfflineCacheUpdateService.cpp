@@ -400,7 +400,7 @@ nsOfflineCacheUpdateService::ScheduleOnDocumentStop(nsIURI *aManifestURI,
     NS_ENSURE_SUCCESS(rv, rv);
 
     // The update will release when it has scheduled itself.
-    unused << update.forget();
+    Unused << update.forget();
 
     return NS_OK;
 }

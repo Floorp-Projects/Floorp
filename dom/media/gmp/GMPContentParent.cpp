@@ -95,7 +95,7 @@ GMPContentParent::VideoDecoderDestroyed(GMPVideoDecoderParent* aDecoder)
   MOZ_ASSERT(GMPThread() == NS_GetCurrentThread());
 
   // If the constructor fails, we'll get called before it's added
-  unused << NS_WARN_IF(!mVideoDecoders.RemoveElement(aDecoder));
+  Unused << NS_WARN_IF(!mVideoDecoders.RemoveElement(aDecoder));
   CloseIfUnused();
 }
 
@@ -105,7 +105,7 @@ GMPContentParent::VideoEncoderDestroyed(GMPVideoEncoderParent* aEncoder)
   MOZ_ASSERT(GMPThread() == NS_GetCurrentThread());
 
   // If the constructor fails, we'll get called before it's added
-  unused << NS_WARN_IF(!mVideoEncoders.RemoveElement(aEncoder));
+  Unused << NS_WARN_IF(!mVideoEncoders.RemoveElement(aEncoder));
   CloseIfUnused();
 }
 

@@ -22,7 +22,7 @@
 
 using mozilla::psm::SyncRunnableBase;
 using mozilla::Atomic;
-using mozilla::unused;
+using mozilla::Unused;
 
 namespace {
 
