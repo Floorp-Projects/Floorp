@@ -12,7 +12,6 @@ task:
   schedulerId: task-graph-scheduler
 
   scopes:
-    - 'docker-worker:image:{{#docker_image}}tester{{/docker_image}}'
     - 'queue:define-task:aws-provisioner-v1/test-c4-2xlarge'
     - 'queue:create-task:aws-provisioner-v1/test-c4-2xlarge'
 
