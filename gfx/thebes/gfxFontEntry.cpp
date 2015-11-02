@@ -875,8 +875,8 @@ gfxFontEntry::HasGraphiteSpaceContextuals()
             const gr_faceinfo* faceInfo = gr_face_info(face, 0);
             mHasGraphiteSpaceContextuals =
                 faceInfo->space_contextuals != gr_faceinfo::gr_space_none;
-            ReleaseGrFace(face);
         }
+        ReleaseGrFace(face); // always balance GetGrFace, even if face is null
         mGraphiteSpaceContextualsInitialized = true;
     }
     return mHasGraphiteSpaceContextuals;
@@ -1055,7 +1055,7 @@ gfxFontEntry::SupportsGraphiteFeature(uint32_t aFeatureTag)
     }
 
     gr_face* face = GetGrFace();
-    result = gr_face_find_fref(face, aFeatureTag) != nullptr;
+    result = face ? gr_face_find_fref(face, aFeatureTag) != nullptr : false;
     ReleaseGrFace(face);
 
     mSupportedFeatures->Put(scriptFeature, result);

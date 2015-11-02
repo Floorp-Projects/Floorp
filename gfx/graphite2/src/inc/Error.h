@@ -115,6 +115,7 @@ enum errors {
     E_BADEMPTYPASS = 54,    // Can't have empty passes (no rules) except for collision passes
     E_BADSILFVERSION = 55,  // The Silf table has a bad version (probably too high)
     E_BADCOLLISIONPASS = 56,    // Collision flags set on a non positioning pass
+    E_BADNUMCOLUMNS = 57,   // Arbitrarily limit number of columns in fsm
 // Code errors
     E_CODEFAILURE = 60,     // Base code error. The following subcodes must align with Machine::Code::status_t in Code.h
     E_CODEALLOC = 61,       // Out of memory

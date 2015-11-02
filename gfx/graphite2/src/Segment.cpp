@@ -46,7 +46,6 @@ Segment::Segment(unsigned int numchars, const Face* face, uint32 script, int tex
 : m_freeSlots(NULL),
   m_freeJustifies(NULL),
   m_charinfo(new CharInfo[numchars]),
-  m_collisions(NULL),
   m_face(face),
   m_silf(face->chooseSilf(script)),
   m_first(NULL),
@@ -57,7 +56,7 @@ Segment::Segment(unsigned int numchars, const Face* face, uint32 script, int tex
   m_passBits(m_silf->aPassBits() ? -1 : 0),
   m_defaultOriginal(0),
   m_dir(textDir),
-  m_flags(0)
+  m_flags(((m_silf->flags() & 0x20) != 0) << 1)
 {
     freeSlot(newSlot());
     m_bufSize = log_binary(numchars)+1;
@@ -176,11 +175,17 @@ Slot *Segment::newSlot()
         if (m_face->logger()) ++numUser;
 #endif
         Slot *newSlots = grzeroalloc<Slot>(m_bufSize);
-        int16 *newAttrs = grzeroalloc<int16>(numUser * m_bufSize);
-        if (!newSlots || !newAttrs) return NULL;
+        int attrSize = numUser + (hasCollisionInfo() ? ((sizeof(SlotCollision) + 1) / 2) : 0);
+        int16 *newAttrs = grzeroalloc<int16>(m_bufSize * attrSize);
+        if (!newSlots || !newAttrs)
+        {
+            free(newSlots);
+            free(newAttrs);
+            return NULL;
+        }
         for (size_t i = 0; i < m_bufSize; i++)
         {
-            ::new (newSlots + i) Slot(newAttrs + i * numUser);
+            ::new (newSlots + i) Slot(newAttrs + i * attrSize);
             newSlots[i].next(newSlots + i + 1);
         }
         newSlots[m_bufSize - 1].next(NULL);
@@ -209,7 +214,8 @@ void Segment::freeSlot(Slot *aSlot)
     }
     // reset the slot incase it is reused
     ::new (aSlot) Slot(aSlot->userAttrs());
-    memset(aSlot->userAttrs(), 0, m_silf->numUser() * sizeof(int16));
+    int attrSize = m_silf->numUser() + (hasCollisionInfo() ? ((sizeof(SlotCollision) + 1) / 2) : 0);
+    memset(aSlot->userAttrs(), 0, attrSize * sizeof(int16));
     // Update generation counter for debug
 #if !defined GRAPHITE2_NTRACING
     if (m_face->logger())
@@ -298,13 +304,14 @@ void Segment::splice(size_t offset, size_t length, Slot * const startSlot,
     assert(offset + numChars <= m_numCharinfo);
     Slot * indexmap[eMaxSpliceSize*3];
     assert(numGlyphs < sizeof indexmap/sizeof *indexmap);
+    int attrSize = m_silf->numUser() + (hasCollisionInfo() ? ((sizeof(SlotCollision) + 1) / 2) : 0);
     Slot * slot = startSlot;
     for (uint16 i=0; i < numGlyphs; slot = slot->next(), ++i)
         indexmap[i] = slot;
 
     for (slot = startSlot; slot != endSlot; slot = slot->next(), srcSlot = srcSlot->next())
     {
-        slot->set(*srcSlot, offset, m_silf->numUser(), m_silf->numJustLevels(), numChars);
+        slot->set(*srcSlot, offset, attrSize, m_silf->numJustLevels(), numChars);
         if (srcSlot->attachedTo())  slot->attachTo(indexmap[srcSlot->attachedTo()->index()]);
         if (srcSlot->nextSibling()) slot->m_sibling = indexmap[srcSlot->nextSibling()->index()];
         if (srcSlot->firstChild())  slot->m_child = indexmap[srcSlot->firstChild()->index()];
@@ -516,14 +523,7 @@ void Segment::doMirror(uint16 aMirror)
 
 bool Segment::initCollisions()
 {
-    if (m_collisions) free(m_collisions);
-    Slot *p = m_first;
-    m_collisions = gralloc<SlotCollision>(slotCount());
-    if (!m_collisions) return false;
-    for (unsigned short i = 0; i < slotCount(); ++i)
-    {
-        ::new (m_collisions + p->index()) SlotCollision(this, p);
-        p = p->next();
-    }
+    for (Slot *p = m_first; p; p = p->next())
+        ::new (collisionInfo(p)) SlotCollision(this, p);
     return true;
 }
