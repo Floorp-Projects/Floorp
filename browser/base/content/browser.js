@@ -230,9 +230,9 @@ XPCOMUtils.defineLazyModuleGetter(this, "fxAccounts",
 XPCOMUtils.defineLazyModuleGetter(this, "gWebRTCUI",
   "resource:///modules/webrtcUI.jsm", "webrtcUI");
 
-#ifdef MOZ_CRASHREPORTER
 XPCOMUtils.defineLazyModuleGetter(this, "TabCrashReporter",
   "resource:///modules/ContentCrashReporters.jsm");
+#ifdef MOZ_CRASHREPORTER
 XPCOMUtils.defineLazyModuleGetter(this, "PluginCrashReporter",
   "resource:///modules/ContentCrashReporters.jsm");
 #endif
@@ -1145,56 +1145,15 @@ var gBrowserInit = {
     });
 
     gBrowser.addEventListener("AboutTabCrashedLoad", function(event) {
-      let browser = gBrowser.getBrowserForDocument(event.target);
-#ifdef MOZ_CRASHREPORTER
-      TabCrashReporter.onAboutTabCrashedLoad(browser, {
-        crashedTabCount: SessionStore.crashedTabCount,
-      });
-#endif
-
-      // Reset the zoom for the tabcrashed page.
-      ZoomManager.setZoomForBrowser(browser, 1);
-    }, false, true);
-
-    gBrowser.addEventListener("AboutTabCrashedMessage", function(event) {
       let ownerDoc = event.originalTarget;
 
       if (!ownerDoc.documentURI.startsWith("about:tabcrashed")) {
         return;
       }
 
-      let isTopFrame = (ownerDoc.defaultView.parent === ownerDoc.defaultView);
-      if (!isTopFrame) {
-        return;
-      }
-
-      let browser = gBrowser.getBrowserForDocument(ownerDoc);
-#ifdef MOZ_CRASHREPORTER
-      if (event.detail.sendCrashReport) {
-        TabCrashReporter.submitCrashReport(browser, {
-          comments: event.detail.comments,
-          email: event.detail.email,
-          emailMe: event.detail.emailMe,
-          includeURL: event.detail.includeURL,
-          URL: event.detail.URL,
-        });
-      } else {
-        TabCrashReporter.dontSubmitCrashReport();
-      }
-#endif
-
-      let tab = gBrowser.getTabForBrowser(browser);
-      switch (event.detail.message) {
-      case "closeTab":
-        gBrowser.removeTab(tab, { animate: true });
-        break;
-      case "restoreTab":
-        SessionStore.reviveCrashedTab(tab);
-        break;
-      case "restoreAll":
-        SessionStore.reviveAllCrashedTabs();
-        break;
-      }
+      let browser = gBrowser.getBrowserForDocument(event.target);
+      // Reset the zoom for the tabcrashed page.
+      ZoomManager.setZoomForBrowser(browser, 1);
     }, false, true);
 
     gBrowser.addEventListener("InsecureLoginFormsStateChange", function() {
