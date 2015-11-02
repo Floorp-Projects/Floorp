@@ -480,6 +480,11 @@ function* assertScrubberMoving(panel, isMoving) {
   }
 }
 
+/**
+ * Click the play/pause button in the timeline toolbar and wait for animations
+ * to update.
+ * @param {AnimationsPanel} panel
+ */
 function* clickTimelinePlayPauseButton(panel) {
   let onUiUpdated = panel.once(panel.UI_UPDATED_EVENT);
 
@@ -491,6 +496,11 @@ function* clickTimelinePlayPauseButton(panel) {
   yield waitForAllAnimationTargets(panel);
 }
 
+/**
+ * Click the rewind button in the timeline toolbar and wait for animations to
+ * update.
+ * @param {AnimationsPanel} panel
+ */
 function* clickTimelineRewindButton(panel) {
   let onUiUpdated = panel.once(panel.UI_UPDATED_EVENT);
 
@@ -500,4 +510,53 @@ function* clickTimelineRewindButton(panel) {
 
   yield onUiUpdated;
   yield waitForAllAnimationTargets(panel);
+}
+
+/**
+ * Select a rate inside the playback rate selector in the timeline toolbar and
+ * wait for animations to update.
+ * @param {AnimationsPanel} panel
+ * @param {Number} rate The new rate value to be selected
+ */
+function* changeTimelinePlaybackRate(panel, rate) {
+  let onUiUpdated = panel.once(panel.UI_UPDATED_EVENT);
+
+  let select = panel.rateSelectorEl.firstChild;
+  let win = select.ownerDocument.defaultView;
+
+  // Get the right option.
+  let option = [...select.options].filter(o => o.value === rate + "")[0];
+  if (!option) {
+    ok(false,
+       "Could not find an option for rate " + rate + " in the rate selector. " +
+       "Values are: " + [...select.options].map(o => o.value));
+    return;
+  }
+
+  // Simulate the right events to select the option in the drop-down.
+  EventUtils.synthesizeMouseAtCenter(select, {type: "mousedown"}, win);
+  EventUtils.synthesizeMouseAtCenter(option, {type: "mouseup"}, win);
+
+  yield onUiUpdated;
+  yield waitForAllAnimationTargets(panel);
+
+  // Simulate a mousemove outside of the rate selector area to avoid subsequent
+  // tests from failing because of unwanted mouseover events.
+  EventUtils.synthesizeMouseAtCenter(win.document.querySelector("#timeline-toolbar"),
+                                     {type: "mousemove"}, win);
+}
+
+/**
+ * Prevent the toolbox common highlighter from making backend requests.
+ * @param {Toolbox} toolbox
+ */
+function disableHighlighter(toolbox) {
+  toolbox._highlighter = {
+    showBoxModel: () => new Promise(r => r()),
+    hideBoxModel: () => new Promise(r => r()),
+    pick: () => new Promise(r => r()),
+    cancelPick: () => new Promise(r => r()),
+    destroy: () => {},
+    traits: {}
+  };
 }
