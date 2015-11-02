@@ -593,7 +593,12 @@ nsWebBrowserPersist::SerializeNextFile()
         // number of times this method is called.  If it becomes a
         // bottleneck, the count of not-yet-persisted URIs could be
         // maintained separately.
-        mURIMap.EnumerateRead(EnumCountURIsToPersist, &urisToPersist);
+        for (auto iter = mURIMap.Iter(); !iter.Done(); iter.Next()) {
+            URIData *data = iter.UserData();
+            if (data->mNeedsPersisting && !data->mSaved) {
+                urisToPersist++;
+            }
+        }
     }
 
     if (urisToPersist > 0) {
@@ -2432,17 +2437,6 @@ nsWebBrowserPersist::EnumCalcUploadProgress(nsISupports *aKey, UploadData *aData
         nsWebBrowserPersist *pthis = static_cast<nsWebBrowserPersist*>(aClosure);
         pthis->mTotalCurrentProgress += aData->mSelfProgress;
         pthis->mTotalMaxProgress += aData->mSelfProgressMax;
-    }
-    return PL_DHASH_NEXT;
-}
-
-PLDHashOperator
-nsWebBrowserPersist::EnumCountURIsToPersist(const nsACString &aKey, URIData *aData, void* aClosure)
-{
-    uint32_t *count = static_cast<uint32_t*>(aClosure);
-    if (aData->mNeedsPersisting && !aData->mSaved)
-    {
-        (*count)++;
     }
     return PL_DHASH_NEXT;
 }
