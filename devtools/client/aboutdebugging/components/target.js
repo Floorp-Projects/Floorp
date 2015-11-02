@@ -8,7 +8,7 @@
 "use strict";
 
 loader.lazyRequireGetter(this, "React",
-  "resource://devtools/client/shared/vendor/react.js");
+  "devtools/client/shared/vendor/react");
 loader.lazyRequireGetter(this, "TargetFactory",
   "devtools/client/framework/target", true);
 loader.lazyRequireGetter(this, "Toolbox",

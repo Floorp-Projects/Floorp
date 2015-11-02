@@ -43,12 +43,12 @@ static const int L2CAP_SO_RCVBUF = 400 * 1024;  // 400 KB receive buffer
 static const int L2CAP_MAX_MTU = 65000;
 
 BluetoothUnixSocketConnector::BluetoothUnixSocketConnector(
-  const nsACString& aAddressString,
+  const BluetoothAddress& aAddress,
   BluetoothSocketType aType,
   int aChannel,
   bool aAuth,
   bool aEncrypt)
-  : mAddressString(aAddressString)
+  : mAddress(aAddress)
   , mType(aType)
   , mChannel(aChannel)
   , mAuth(aAuth)
@@ -238,8 +238,7 @@ BluetoothUnixSocketConnector::CreateAddress(struct sockaddr& aAddress,
         struct sockaddr_rc* rc =
           reinterpret_cast<struct sockaddr_rc*>(&aAddress);
         rc->rc_family = AF_BLUETOOTH;
-        nsresult rv = ConvertAddressString(mAddressString.get(),
-                                           rc->rc_bdaddr);
+        nsresult rv = ConvertAddress(mAddress, rc->rc_bdaddr);
         if (NS_FAILED(rv)) {
           return rv;
         }
@@ -253,8 +252,7 @@ BluetoothUnixSocketConnector::CreateAddress(struct sockaddr& aAddress,
           reinterpret_cast<struct sockaddr_l2*>(&aAddress);
         l2->l2_family = AF_BLUETOOTH;
         l2->l2_psm = mChannel;
-        nsresult rv = ConvertAddressString(mAddressString.get(),
-                                           l2->l2_bdaddr);
+        nsresult rv = ConvertAddress(mAddress, l2->l2_bdaddr);
         if (NS_FAILED(rv)) {
           return rv;
         }
@@ -266,8 +264,7 @@ BluetoothUnixSocketConnector::CreateAddress(struct sockaddr& aAddress,
         struct sockaddr_sco* sco =
           reinterpret_cast<struct sockaddr_sco*>(&aAddress);
         sco->sco_family = AF_BLUETOOTH;
-        nsresult rv = ConvertAddressString(mAddressString.get(),
-                                           sco->sco_bdaddr);
+        nsresult rv = ConvertAddress(mAddress, sco->sco_bdaddr);
         if (NS_FAILED(rv)) {
           return rv;
         }
@@ -284,19 +281,68 @@ BluetoothUnixSocketConnector::CreateAddress(struct sockaddr& aAddress,
 }
 
 nsresult
-BluetoothUnixSocketConnector::ConvertAddressString(const char* aAddressString,
-                                                   bdaddr_t& aAddress)
+BluetoothUnixSocketConnector::ConvertAddress(const BluetoothAddress& aAddress,
+                                             bdaddr_t& aBdAddr)
 {
-  char* d = reinterpret_cast<char*>(aAddress.b) + 5;
+  MOZ_ASSERT(MOZ_ARRAY_LENGTH(aBdAddr.b) == MOZ_ARRAY_LENGTH(aAddress.mAddr));
 
-  for (size_t i = 0; i < MOZ_ARRAY_LENGTH(aAddress.b); ++i) {
-    char* endp;
-    *d-- = strtoul(aAddressString, &endp, 16);
-    MOZ_ASSERT(!(*endp != ':' && i != 5));
-    aAddressString = endp + 1;
+  /* read source address from end backwards */
+  auto src = aAddress.mAddr + MOZ_ARRAY_LENGTH(aAddress.mAddr) - 1;
+
+  for (size_t i = 0ul; i < MOZ_ARRAY_LENGTH(aBdAddr.b); ++i) {
+    aBdAddr.b[i] = *src--;
   }
   return NS_OK;
 }
+
+nsresult
+BluetoothUnixSocketConnector::ConvertAddress(const bdaddr_t& aBdAddr,
+                                             BluetoothAddress& aAddress)
+{
+  MOZ_ASSERT(MOZ_ARRAY_LENGTH(aBdAddr.b) == MOZ_ARRAY_LENGTH(aAddress.mAddr));
+
+  /* read source address from end backwards */
+  auto src = aBdAddr.b + MOZ_ARRAY_LENGTH(aBdAddr.b) - 1;
+
+  for (size_t i = 0ul; i < MOZ_ARRAY_LENGTH(aAddress.mAddr); ++i) {
+    aAddress.mAddr[i] = *src--;
+  }
+  return NS_OK;
+}
+
+nsresult
+BluetoothUnixSocketConnector::ConvertAddress(
+  const struct sockaddr& aAddress, socklen_t aAddressLength,
+  BluetoothAddress& aAddressOut)
+{
+  MOZ_ASSERT(aAddress.sa_family == AF_BLUETOOTH);
+
+  switch (mType) {
+    case BluetoothSocketType::RFCOMM: {
+        const struct sockaddr_rc* rc =
+          reinterpret_cast<const struct sockaddr_rc*>(&aAddress);
+        return ConvertAddress(rc->rc_bdaddr, aAddressOut);
+      }
+      break;
+    case BluetoothSocketType::SCO: {
+        const struct sockaddr_sco* sco =
+          reinterpret_cast<const struct sockaddr_sco*>(&aAddress);
+        return ConvertAddress(sco->sco_bdaddr, aAddressOut);
+      }
+      break;
+    case BluetoothSocketType::L2CAP:
+    case BluetoothSocketType::EL2CAP: {
+        const struct sockaddr_l2* l2 =
+          reinterpret_cast<const struct sockaddr_l2*>(&aAddress);
+        return ConvertAddress(l2->l2_bdaddr, aAddressOut);
+      }
+      break;
+    default:
+      BT_LOGR("Unknown socket type %d", static_cast<int>(mType));
+      return NS_ERROR_ILLEGAL_VALUE;
+  }
+}
+
 
 // |UnixSocketConnector|
 

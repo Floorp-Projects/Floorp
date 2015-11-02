@@ -7,7 +7,7 @@
 "use strict";
 
 loader.lazyRequireGetter(this, "React",
-  "resource://devtools/client/shared/vendor/react.js");
+  "devtools/client/shared/vendor/react");
 loader.lazyRequireGetter(this, "TargetComponent",
   "devtools/client/aboutdebugging/components/target", true);
 loader.lazyRequireGetter(this, "Services");
