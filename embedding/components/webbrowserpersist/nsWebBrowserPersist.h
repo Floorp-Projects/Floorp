@@ -137,10 +137,6 @@ private:
     void SetApplyConversionIfNeeded(nsIChannel *aChannel);
 
     // Hash table enumerators
-    static PLDHashOperator EnumCleanupOutputMap(
-        nsISupports *aKey, OutputData *aData, void* aClosure);
-    static PLDHashOperator EnumCleanupUploadList(
-        nsISupports *aKey, UploadData *aData, void* aClosure);
     static PLDHashOperator EnumCalcProgress(
         nsISupports *aKey, OutputData *aData, void* aClosure);
     static PLDHashOperator EnumCalcUploadProgress(
