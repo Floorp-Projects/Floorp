@@ -19,10 +19,8 @@
 namespace mozilla {
 
 class TimedMetadata;
-typedef MediaEventProducer<TimedMetadata, ListenerMode::Exclusive>
-        TimedMetadataEventProducer;
-typedef MediaEventSource<TimedMetadata, ListenerMode::Exclusive>
-        TimedMetadataEventSource;
+typedef MediaEventProducerExc<TimedMetadata> TimedMetadataEventProducer;
+typedef MediaEventSourceExc<TimedMetadata> TimedMetadataEventSource;
 
 // A struct that contains the metadata of a media, and the time at which those
 // metadata should start to be reported.

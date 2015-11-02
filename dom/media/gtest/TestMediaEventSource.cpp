@@ -304,7 +304,7 @@ TEST(MediaEventSource, MoveOnly)
   RefPtr<TaskQueue> queue = new TaskQueue(
     GetMediaThreadPool(MediaThreadType::PLAYBACK));
 
-  MediaEventProducer<UniquePtr<int>, ListenerMode::Exclusive> source;
+  MediaEventProducerExc<UniquePtr<int>> source;
 
   auto func = [] (UniquePtr<int>&& aEvent) {
     EXPECT_EQ(*aEvent, 20);
