@@ -237,7 +237,7 @@ AutoStopwatch::~AutoStopwatch()
         return;
     }
 
-    mozilla::unused << exit(); // Sadly, there is nothing we can do about an error at this point.
+    mozilla::Unused << exit(); // Sadly, there is nothing we can do about an error at this point.
 
     for (auto group = groups_.begin(); group < groups_.end(); group++)
         releaseGroup(*group);

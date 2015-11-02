@@ -22,7 +22,7 @@ ImageContainerParent::~ImageContainerParent()
 
 bool ImageContainerParent::RecvAsyncDelete()
 {
-  unused << PImageContainerParent::Send__delete__(this);
+  Unused << PImageContainerParent::Send__delete__(this);
   return true;
 }
 

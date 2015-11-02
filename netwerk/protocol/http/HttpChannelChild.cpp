@@ -1825,7 +1825,7 @@ HttpChannelChild::ContinueAsyncOpen()
     PFileDescriptorSetChild* fdSet =
       gNeckoChild->Manager()->SendPFileDescriptorSetConstructor(fds[0]);
     for (uint32_t i = 1; i < fds.Length(); ++i) {
-      unused << fdSet->SendAddFileDescriptor(fds[i]);
+      Unused << fdSet->SendAddFileDescriptor(fds[i]);
     }
 
     optionalFDs = fdSet;

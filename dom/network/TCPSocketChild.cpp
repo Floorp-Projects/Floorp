@@ -231,7 +231,7 @@ TCPSocketChild::GetPort(uint16_t* aPort)
 bool
 TCPSocketChild::RecvRequestDelete()
 {
-  mozilla::unused << Send__delete__(this);
+  mozilla::Unused << Send__delete__(this);
   return true;
 }
 

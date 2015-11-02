@@ -33,7 +33,7 @@
 #include "nsIDOMEvent.h"
 #include "nsWeakPtr.h"
 
-using mozilla::unused;          // <snicker>
+using mozilla::Unused;          // <snicker>
 using namespace mozilla::dom;
 using namespace mozilla;
 
@@ -473,7 +473,7 @@ nsContentPermissionRequestProxy::nsContentPermissionRequesterProxy
 
   mGetCallback = aCallback;
   mWaitGettingResult = true;
-  unused << mParent->SendGetVisibility();
+  Unused << mParent->SendGetVisibility();
   return NS_OK;
 }
 
@@ -608,7 +608,7 @@ nsContentPermissionRequestProxy::Cancel()
 
   nsTArray<PermissionChoice> emptyChoices;
 
-  unused << ContentPermissionRequestParent::Send__delete__(mParent, false, emptyChoices);
+  Unused << ContentPermissionRequestParent::Send__delete__(mParent, false, emptyChoices);
   mParent = nullptr;
   return NS_OK;
 }
@@ -672,7 +672,7 @@ nsContentPermissionRequestProxy::Allow(JS::HandleValue aChoices)
     return NS_ERROR_FAILURE;
   }
 
-  unused << ContentPermissionRequestParent::Send__delete__(mParent, true, choices);
+  Unused << ContentPermissionRequestParent::Send__delete__(mParent, true, choices);
   mParent = nullptr;
   return NS_OK;
 }
@@ -776,7 +776,7 @@ RemotePermissionRequest::RecvGetVisibility()
 
   bool isActive = false;
   docshell->GetIsActive(&isActive);
-  unused << SendNotifyVisibility(isActive);
+  Unused << SendNotifyVisibility(isActive);
   return true;
 }
 
@@ -787,6 +787,6 @@ RemotePermissionRequest::NotifyVisibility(bool isVisible)
     return NS_OK;
   }
 
-  unused << SendNotifyVisibility(isVisible);
+  Unused << SendNotifyVisibility(isVisible);
   return NS_OK;
 }

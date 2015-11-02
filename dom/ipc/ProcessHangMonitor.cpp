@@ -350,7 +350,7 @@ HangMonitorChild::NotifySlowScriptAsync(TabId aTabId,
                                         unsigned aLineNo)
 {
   if (mIPCOpen) {
-    unused << SendHangEvidence(SlowScriptData(aTabId, aFileName, aLineNo));
+    Unused << SendHangEvidence(SlowScriptData(aTabId, aFileName, aLineNo));
   }
 }
 
@@ -429,7 +429,7 @@ HangMonitorChild::NotifyPluginHangAsync(uint32_t aPluginId)
 
   // bounce back to parent on background thread
   if (mIPCOpen) {
-    unused << SendHangEvidence(PluginHangData(aPluginId));
+    Unused << SendHangEvidence(PluginHangData(aPluginId));
   }
 }
 
@@ -623,7 +623,7 @@ HangMonitorParent::TerminateScript()
   MOZ_RELEASE_ASSERT(MessageLoop::current() == MonitorLoop());
 
   if (mIPCOpen) {
-    unused << SendTerminateScript();
+    Unused << SendTerminateScript();
   }
 }
 
@@ -633,7 +633,7 @@ HangMonitorParent::BeginStartingDebugger()
   MOZ_RELEASE_ASSERT(MessageLoop::current() == MonitorLoop());
 
   if (mIPCOpen) {
-    unused << SendBeginStartingDebugger();
+    Unused << SendBeginStartingDebugger();
   }
 }
 
@@ -643,7 +643,7 @@ HangMonitorParent::EndStartingDebugger()
   MOZ_RELEASE_ASSERT(MessageLoop::current() == MonitorLoop());
 
   if (mIPCOpen) {
-    unused << SendEndStartingDebugger();
+    Unused << SendEndStartingDebugger();
   }
 }
 

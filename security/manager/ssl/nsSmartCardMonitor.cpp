@@ -152,7 +152,7 @@ SmartCardThreadList::Add(SmartCardMonitoringThread* thread)
   SmartCardThreadEntry* current = new SmartCardThreadEntry(thread, head,
                                                            nullptr, &head);
   // OK to forget current here, it's on the list.
-  unused << current;
+  Unused << current;
 
   return thread->Start();
 }

@@ -781,8 +781,8 @@ FetchDriver::AsyncOnChannelRedirect(nsIChannel* aOldChannel,
     // be ignored.
     MOZ_ASSERT(!mFoundOpaqueRedirect);
     mFoundOpaqueRedirect = true;
-    unused << OnStartRequest(aOldChannel, nullptr);
-    unused << OnStopRequest(aOldChannel, nullptr, NS_OK);
+    Unused << OnStartRequest(aOldChannel, nullptr);
+    Unused << OnStopRequest(aOldChannel, nullptr, NS_OK);
 
     aOldChannel->Cancel(NS_BINDING_FAILED);
 

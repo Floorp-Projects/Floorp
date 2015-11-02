@@ -196,7 +196,7 @@ GMPAudioDecoderParent::Shutdown()
 
   mIsOpen = false;
   if (!mActorDestroyed) {
-    unused << SendDecodingComplete();
+    Unused << SendDecodingComplete();
   }
 
   return NS_OK;

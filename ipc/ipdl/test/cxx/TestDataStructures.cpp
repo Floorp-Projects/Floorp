@@ -452,7 +452,7 @@ bool TestDataStructuresParent::RecvTest18(RegionArray&& ra)
         // if |ra| has been realloc()d and given a different allocator
         // chunk, this next line will nondeterministically crash or
         // iloop
-        while (const nsIntRect* sr = it.Next()) unused << sr;
+        while (const nsIntRect* sr = it.Next()) Unused << sr;
     }
 
     return true;

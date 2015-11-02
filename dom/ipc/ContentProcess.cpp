@@ -58,7 +58,7 @@ SetUpSandboxEnvironment()
 
   // Change the gecko defined temp directory to our low integrity one.
   // Undefine returns a failure if the property is not already set.
-  unused << nsDirectoryService::gService->Undefine(NS_OS_TEMP_DIR);
+  Unused << nsDirectoryService::gService->Undefine(NS_OS_TEMP_DIR);
   rv = nsDirectoryService::gService->Set(NS_OS_TEMP_DIR, lowIntegrityTemp);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return;

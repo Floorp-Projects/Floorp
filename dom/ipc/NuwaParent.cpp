@@ -125,7 +125,7 @@ NuwaParent::CloneProtocol(Channel* aChannel,
       actor->ActorConstructed();
 
       // The actor can finally be deleted after fully constructed.
-      mozilla::unused << actor->Send__delete__(actor);
+      mozilla::Unused << actor->Send__delete__(actor);
     });
     MOZ_ASSERT(nested);
     MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
@@ -232,7 +232,7 @@ NuwaParent::ForkNewProcess(uint32_t& aPid,
   RefPtr<NuwaParent> self = this;
   nsCOMPtr<nsIRunnable> runnable = NS_NewRunnableFunction([self] () -> void
   {
-    mozilla::unused << self->SendFork();
+    mozilla::Unused << self->SendFork();
   });
   MOZ_ASSERT(runnable);
   MOZ_ALWAYS_TRUE(NS_SUCCEEDED(mWorkerThread->Dispatch(runnable,

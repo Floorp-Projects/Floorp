@@ -346,7 +346,7 @@ class ProxyNativeCall
         int dummy[] = {
             (ProxyArg<Args>::Clear(env, Get<Indices>(mArgs)), 0)...
         };
-        mozilla::unused << dummy;
+        mozilla::Unused << dummy;
     }
 
 public:

@@ -60,7 +60,7 @@ DumpSignalHandler(int aSignum)
 
   if (sDumpPipeWriteFd != -1) {
     uint8_t signum = static_cast<int>(aSignum);
-    unused << write(sDumpPipeWriteFd, &signum, sizeof(signum));
+    Unused << write(sDumpPipeWriteFd, &signum, sizeof(signum));
   }
 }
 

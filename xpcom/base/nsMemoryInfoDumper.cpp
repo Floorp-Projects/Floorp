@@ -342,7 +342,7 @@ public:
 private:
   ~nsDumpGCAndCCLogsCallbackHolder()
   {
-    unused << mCallback->OnFinish();
+    Unused << mCallback->OnFinish();
   }
 
   nsCOMPtr<nsIDumpGCAndCCLogsCallback> mCallback;
@@ -372,7 +372,7 @@ nsMemoryInfoDumper::DumpGCAndCCLogsToFile(const nsAString& aIdentifier,
       logSink->SetFilenameIdentifier(identifier);
       logSink->SetProcessIdentifier(cp->Pid());
 
-      unused << cp->CycleCollectWithLogs(aDumpAllTraces, logSink,
+      Unused << cp->CycleCollectWithLogs(aDumpAllTraces, logSink,
                                          callbackHolder);
     }
   }

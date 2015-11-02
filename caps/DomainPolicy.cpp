@@ -35,7 +35,7 @@ BroadcastDomainSetChange(DomainSetType aSetType, DomainSetChangeType aChangeType
     SerializeURI(aDomain, uri);
 
     for (uint32_t i = 0; i < parents.Length(); i++) {
-        unused << parents[i]->SendDomainSetChanged(aSetType, aChangeType, uri);
+        Unused << parents[i]->SendDomainSetChanged(aSetType, aChangeType, uri);
     }
     return NS_OK;
 }

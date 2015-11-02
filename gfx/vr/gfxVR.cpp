@@ -112,7 +112,7 @@ VRHMDManager::ManagerInit()
   // the >= 0.6.0 one failed to load; otherwise
   // we might initialize oculus twice
   bool useOculus050 = true;
-  unused << useOculus050;
+  Unused << useOculus050;
 
 #if defined(XP_WIN)
   mgr = new VRHMDManagerOculus();
