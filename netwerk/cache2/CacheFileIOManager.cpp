@@ -2382,7 +2382,7 @@ CacheFileIOManager::GetEntryInfo(const SHA1Sum::Hash *aHash,
 
   // Call directly on the callback.
   aCallback->OnEntryInfo(uriSpec, enhanceId, dataSize, fetchCount,
-                         lastModified, expirationTime);
+                         lastModified, expirationTime, metadata->Pinned());
 
   return NS_OK;
 }
