@@ -35,6 +35,24 @@ const nsTArray<int>& FakeHugeArray()
 }
 #endif
 
+TEST(TArray, AppendElementsRvalue)
+{
+  nsTArray<int> array;
+
+  nsTArray<int> temp(DummyArray());
+  array.AppendElements(Move(temp));
+  ASSERT_EQ(DummyArray(), array);
+  ASSERT_TRUE(temp.IsEmpty());
+
+  temp = DummyArray();
+  array.AppendElements(Move(temp));
+  nsTArray<int> expected;
+  expected.AppendElements(DummyArray());
+  expected.AppendElements(DummyArray());
+  ASSERT_EQ(expected, array);
+  ASSERT_TRUE(temp.IsEmpty());
+}
+
 TEST(TArray, Assign)
 {
   nsTArray<int> array;
