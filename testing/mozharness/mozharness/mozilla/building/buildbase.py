@@ -1624,7 +1624,7 @@ or run without that action (ie: --no-{action})"
                     installer_size = filesize
                 else:
                     size_measurements.append({'name': name, 'value': filesize})
-        if filesize or size_measurements:
+        if installer_size or size_measurements:
             self.info('PERFHERDER_DATA: %s' % (json.dumps({
                 "framework": {"name": "build_metrics"},
                 "suites": [{"name": "installer size",
