@@ -974,7 +974,7 @@ public:
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr<nsIURI> uri;
-    rv = channel->GetURI(getter_AddRefs(uri));
+    rv = mInterceptedChannel->GetSecureUpgradedChannelURI(getter_AddRefs(uri));
     NS_ENSURE_SUCCESS(rv, rv);
 
     rv = uri->GetSpec(mSpec);
