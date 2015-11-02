@@ -37,10 +37,7 @@ ActivityWrapper.prototype = {
     // Activity workflow.
     cpmm.sendAsyncMessage("Activity:Ready", { id: aMessage.id });
 
-    // Gecko should ignore |postResult| calls for WebActivities with no returnValue
-    // We need to pass returnValue to ActivityRequestHandler constructor to then properly
-    // decide if should call postResult or not
-    let handler = new aWindow.ActivityRequestHandler(aMessage.id, aMessage.payload, aMessage.target.returnValue);
+    let handler = new aWindow.ActivityRequestHandler(aMessage.id, aMessage.payload);
 
     // When the activity window is closed, fire an error to notify the activity
     // caller of the situation.
