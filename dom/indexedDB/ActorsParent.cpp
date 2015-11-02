@@ -398,7 +398,7 @@ public:
     MOZ_ASSERT(aId);
 
     SelfType closure(aId, aName);
-    aEnumerable.EnumerateRead(Enumerate, &closure);
+    MatchHelper(aEnumerable, &closure);
 
     return closure.mMetadata;
   }
@@ -411,7 +411,7 @@ public:
     MOZ_ASSERT(aId);
 
     SelfType closure(aId);
-    aEnumerable.EnumerateRead(Enumerate, &closure);
+    MatchHelper(aEnumerable, &closure);
 
     return closure.mMetadata;
   }
@@ -436,25 +436,29 @@ private:
     MOZ_ASSERT(aId);
   }
 
-  static PLDHashOperator
-  Enumerate(const uint64_t& aKey, MetadataType* aValue, void* aClosure)
+  template <class Enumerable>
+  static void
+  MatchHelper(const Enumerable& aEnumerable, SelfType* aClosure)
   {
     AssertIsOnBackgroundThread();
-    MOZ_ASSERT(aKey);
-    MOZ_ASSERT(aValue);
     MOZ_ASSERT(aClosure);
 
-    auto* closure = static_cast<SelfType*>(aClosure);
+    for (auto iter = aEnumerable.ConstIter(); !iter.Done(); iter.Next()) {
+#ifdef DEBUG
+      const uint64_t key = iter.Key();
+#endif
+      MetadataType* value = iter.UserData();
+      MOZ_ASSERT(key != 0);
+      MOZ_ASSERT(value);
 
-    if (!aValue->mDeleted &&
-        (closure->mId == aValue->mCommonMetadata.id() ||
-         (closure->mCheckName &&
-          closure->mName == aValue->mCommonMetadata.name()))) {
-      closure->mMetadata = aValue;
-      return PL_DHASH_STOP;
+      if (!value->mDeleted &&
+          (aClosure->mId == value->mCommonMetadata.id() ||
+           (aClosure->mCheckName &&
+            aClosure->mName == value->mCommonMetadata.name()))) {
+        aClosure->mMetadata = value;
+        break;
+      }
     }
-
-    return PL_DHASH_NEXT;
   }
 };
 
