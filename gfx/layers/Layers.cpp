@@ -245,6 +245,7 @@ Layer::Layer(LayerManager* aManager, void* aImplData) :
   mContentFlags(0),
   mUseTileSourceRect(false),
   mIsFixedPosition(false),
+  mTransformIsPerspective(false),
   mFixedPositionData(nullptr),
   mStickyPositionData(nullptr),
   mScrollbarTargetId(FrameMetrics::NULL_SCROLL_ID),
@@ -1885,6 +1886,9 @@ Layer::PrintInfo(std::stringstream& aStream, const char* aPrefix)
   }
   if (!mTransform.IsIdentity()) {
     AppendToString(aStream, mTransform, " [transform=", "]");
+  }
+  if (mTransformIsPerspective) {
+    aStream << " [perspective]";
   }
   if (!mLayerBounds.IsEmpty()) {
     AppendToString(aStream, mLayerBounds, " [bounds=", "]");

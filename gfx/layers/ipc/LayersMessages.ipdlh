@@ -208,6 +208,7 @@ struct CommonLayerAttributes {
   nsIntRegion visibleRegion;
   EventRegions eventRegions;
   TransformMatrix transform;
+  bool transformIsPerspective;
   float postXScale;
   float postYScale;
   uint32_t contentFlags;
