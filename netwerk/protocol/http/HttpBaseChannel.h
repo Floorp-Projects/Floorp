@@ -299,6 +299,10 @@ public: /* Necko internal use only... */
     // the new mUploadStream.
     void EnsureUploadStreamIsCloneableComplete(nsresult aStatus);
 
+    // Returns an https URI for channels that need to go through secure
+    // upgrades.
+    static nsresult GetSecureUpgradedURI(nsIURI* aURI, nsIURI** aUpgradedURI);
+
 protected:
   nsCOMArray<nsISecurityConsoleMessage> mSecurityConsoleMessages;
 
