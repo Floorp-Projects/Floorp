@@ -811,12 +811,6 @@ private:
 
   typedef nsClassHashtable<nsCStringHashKey, KeyedHistogram> KeyedHistogramMapType;
   KeyedHistogramMapType mKeyedHistograms;
-
-  struct KeyedHistogramReflectArgs {
-    JSContext* jsContext;
-    JS::Handle<JSObject*> object;
-  };
-  static PLDHashOperator KeyedHistogramsReflector(const nsACString&, nsAutoPtr<KeyedHistogram>&, void* args);
 };
 
 TelemetryImpl*  TelemetryImpl::sTelemetry = nullptr;
@@ -2467,29 +2461,6 @@ TelemetryImpl::GetAddonHistogramSnapshots(JSContext *cx, JS::MutableHandle<JS::V
   return NS_OK;
 }
 
-/* static */
-PLDHashOperator
-TelemetryImpl::KeyedHistogramsReflector(const nsACString& key, nsAutoPtr<KeyedHistogram>& entry, void* arg)
-{
-  KeyedHistogramReflectArgs* args = static_cast<KeyedHistogramReflectArgs*>(arg);
-  JSContext *cx = args->jsContext;
-  JS::RootedObject snapshot(cx, JS_NewPlainObject(cx));
-  if (!snapshot) {
-    return PL_DHASH_STOP;
-  }
-
-  if (!NS_SUCCEEDED(entry->GetJSSnapshot(cx, snapshot, false, false))) {
-    return PL_DHASH_STOP;
-  }
-
-  if (!JS_DefineProperty(cx, args->object, PromiseFlatCString(key).get(),
-                         snapshot, JSPROP_ENUMERATE)) {
-    return PL_DHASH_STOP;
-  }
-
-  return PL_DHASH_NEXT;
-}
-
 NS_IMETHODIMP
 TelemetryImpl::GetKeyedHistogramSnapshots(JSContext *cx, JS::MutableHandle<JS::Value> ret)
 {
@@ -2498,11 +2469,20 @@ TelemetryImpl::GetKeyedHistogramSnapshots(JSContext *cx, JS::MutableHandle<JS::V
     return NS_ERROR_FAILURE;
   }
 
-  KeyedHistogramReflectArgs reflectArgs = {cx, obj};
-  const uint32_t num = mKeyedHistograms.Enumerate(&TelemetryImpl::KeyedHistogramsReflector,
-                                                      static_cast<void*>(&reflectArgs));
-  if (num != mKeyedHistograms.Count()) {
-    return NS_ERROR_FAILURE;
+  for (auto iter = mKeyedHistograms.Iter(); !iter.Done(); iter.Next()) {
+    JS::RootedObject snapshot(cx, JS_NewPlainObject(cx));
+    if (!snapshot) {
+      return NS_ERROR_FAILURE;
+    }
+
+    if (!NS_SUCCEEDED(iter.Data()->GetJSSnapshot(cx, snapshot, false, false))) {
+      return NS_ERROR_FAILURE;
+    }
+
+    if (!JS_DefineProperty(cx, obj, PromiseFlatCString(iter.Key()).get(),
+                           snapshot, JSPROP_ENUMERATE)) {
+      return NS_ERROR_FAILURE;
+    }
   }
 
   ret.setObject(*obj);
