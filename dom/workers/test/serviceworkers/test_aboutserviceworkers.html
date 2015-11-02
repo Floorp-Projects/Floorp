@@ -46,7 +46,7 @@ function update() {
     ok(registrations.length === 1, "The registration shows up in about:serviceworker page");
 
     for (let i = 0; i < registrations.length; i++) {
-      let registration = registrations.queryElementAt(i, Ci.nsIServiceWorkerInfo);
+      let registration = registrations.queryElementAt(i, Ci.nsIServiceWorkerRegistrationInfo);
       if (!registration) {
         reject();
         return;

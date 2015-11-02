@@ -95,6 +95,9 @@ HttpBaseChannel::HttpBaseChannel()
   , mCorsMode(nsIHttpChannelInternal::CORS_MODE_NO_CORS)
   , mRedirectMode(nsIHttpChannelInternal::REDIRECT_MODE_FOLLOW)
   , mOnStartRequestCalled(false)
+  , mTransferSize(0)
+  , mDecodedBodySize(0)
+  , mEncodedBodySize(0)
   , mRequireCORSPreflight(false)
   , mWithCredentials(false)
   , mReportCollector(new ConsoleReportCollector())
@@ -1093,6 +1096,27 @@ HttpBaseChannel::nsContentEncodings::PrepareForNext(void)
 //-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
+HttpBaseChannel::GetTransferSize(uint64_t *aTransferSize)
+{
+  *aTransferSize = mTransferSize;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HttpBaseChannel::GetDecodedBodySize(uint64_t *aDecodedBodySize)
+{
+  *aDecodedBodySize = mDecodedBodySize;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HttpBaseChannel::GetEncodedBodySize(uint64_t *aEncodedBodySize)
+{
+  *aEncodedBodySize = mEncodedBodySize;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 HttpBaseChannel::GetRequestMethod(nsACString& aMethod)
 {
   aMethod = mRequestHead.Method();
@@ -1751,6 +1775,30 @@ HttpBaseChannel::SetIsMainDocumentChannel(bool aValue)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+HttpBaseChannel::GetProtocolVersion(nsACString& aProtocolVersion)
+{
+  nsresult rv;
+  nsCOMPtr<nsISSLSocketControl> ssl = do_QueryInterface(mSecurityInfo, &rv);
+  nsAutoCString protocol;
+  if (NS_SUCCEEDED(rv) && ssl &&
+      NS_SUCCEEDED(ssl->GetNegotiatedNPN(protocol)) &&
+      !protocol.IsEmpty()) {
+    // The negotiated protocol was not empty so we can use it.
+    aProtocolVersion = protocol;
+    return NS_OK;
+  }
+
+  if (mResponseHead) {
+    uint32_t version = mResponseHead->Version();
+    aProtocolVersion.Assign(nsHttp::GetProtocolVersion(version));
+    return NS_OK;
+  }
+
+  return NS_ERROR_NOT_AVAILABLE;
+}
+
+
 //-----------------------------------------------------------------------------
 // HttpBaseChannel::nsIHttpChannelInternal
 //-----------------------------------------------------------------------------
@@ -2396,6 +2444,7 @@ HttpBaseChannel::ReleaseListeners()
   mListenerContext = nullptr;
   mCallbacks = nullptr;
   mProgressSink = nullptr;
+  mCompressListener = nullptr;
 }
 
 void

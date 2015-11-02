@@ -158,7 +158,8 @@ this.PageThumbs = {
    */
   getThumbnailURL: function PageThumbs_getThumbnailURL(aUrl) {
     return this.scheme + "://" + this.staticHost +
-           "/?url=" + encodeURIComponent(aUrl);
+           "/?url=" + encodeURIComponent(aUrl) +
+           "&revision=" + PageThumbsStorage.getRevision(aUrl);
   },
 
    /**
@@ -542,6 +543,44 @@ this.PageThumbsStorage = {
     return OS.Path.join(this.path, this.getLeafNameForURL(aURL));
   },
 
+  _revisionTable: {},
+
+  // Generate an arbitrary revision tag, i.e. one that can't be used to
+  // infer URL frecency.
+  _updateRevision(aURL) {
+    // Initialize with a random value and increment on each update. Wrap around
+    // modulo _revisionRange, so that even small values carry no meaning.
+    let rev = this._revisionTable[aURL];
+    if (rev == null)
+      rev = Math.floor(Math.random() * this._revisionRange);
+    this._revisionTable[aURL] = (rev + 1) % this._revisionRange;
+  },
+
+  // If two thumbnails with the same URL and revision are in cache at the
+  // same time, the image loader may pick the stale thumbnail in some cases.
+  // Therefore _revisionRange must be large enough to prevent this, e.g.
+  // in the pathological case image.cache.size (5MB by default) could fill
+  // with (abnormally small) 10KB thumbnail images if the browser session
+  // runs long enough (though this is unlikely as thumbnails are usually
+  // only updated every MAX_THUMBNAIL_AGE_SECS).
+  _revisionRange: 8192,
+
+  /**
+  * Return a revision tag for the thumbnail stored for a given URL.
+  *
+  * @param aURL The URL spec string
+  * @return A revision tag for the corresponding thumbnail. Returns a changed
+  * value whenever the stored thumbnail changes.
+  */
+  getRevision(aURL) {
+    let rev = this._revisionTable[aURL];
+    if (rev == null) {
+      this._updateRevision(aURL);
+      rev = this._revisionTable[aURL];
+    }
+    return rev;
+  },
+
   /**
    * Write the contents of a thumbnail, off the main thread.
    *
@@ -571,7 +610,7 @@ this.PageThumbsStorage = {
       msg /*we don't want that message garbage-collected,
            as OS.Shared.Type.void_t.in_ptr.toMsg uses C-level
            memory tricks to enforce zero-copy*/).
-      then(null, this._eatNoOverwriteError(aNoOverwrite));
+      then(() => this._updateRevision(aURL), this._eatNoOverwriteError(aNoOverwrite));
   },
 
   /**
@@ -590,7 +629,7 @@ this.PageThumbsStorage = {
     let targetFile = this.getFilePathForURL(aTargetURL);
     let options = { noOverwrite: aNoOverwrite };
     return PageThumbsWorker.post("copy", [sourceFile, targetFile, options]).
-      then(null, this._eatNoOverwriteError(aNoOverwrite));
+      then(() => this._updateRevision(aTargetURL), this._eatNoOverwriteError(aNoOverwrite));
   },
 
   /**
