@@ -75,7 +75,8 @@ def exponential_buckets(dmin, dmax, n_buckets):
     return ret_array
 
 always_allowed_keys = ['kind', 'description', 'cpp_guard', 'expires_in_version',
-                       'alert_emails', 'keyed', 'releaseChannelCollection']
+                       'alert_emails', 'keyed', 'releaseChannelCollection',
+                       'bug_numbers']
 
 class Histogram:
     """A class for representing a histogram definition."""
@@ -209,6 +210,7 @@ is enabled."""
                        lambda allowed_keys: Histogram.check_keys(name, definition, allowed_keys))
 
         Histogram.check_expiration(name, definition)
+        Histogram.check_bug_numbers(name, definition)
 
     def check_name(self, name):
         if '#' in name:
@@ -227,6 +229,18 @@ is enabled."""
             expiration = expiration + "a1"
 
         definition['expires_in_version'] = expiration
+
+    @staticmethod
+    def check_bug_numbers(name, definition):
+        bug_numbers = definition.get('bug_numbers')
+        if not bug_numbers:
+            return
+
+        if not isinstance(bug_numbers, list):
+            raise ValueError, 'bug_numbers field for "%s" should be an array' % (name)
+
+        if not all(type(num) is int for num in bug_numbers):
+            raise ValueError, 'bug_numbers array for "%s" should only contain integers' % (name)
 
     @staticmethod
     def check_keys(name, definition, allowed_keys):
