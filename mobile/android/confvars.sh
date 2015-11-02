@@ -118,10 +118,5 @@ MOZ_ADDON_SIGNING=1
 # usage of the framework.
 MOZ_SWITCHBOARD=1
 
-# Use native Firefox Accounts UI after Nightly.
-if ! test "$NIGHTLY_BUILD"; then
-MOZ_ANDROID_NATIVE_ACCOUNT_UI=1
-fi
-
 # Disable GeckoView by default.
 export MOZ_DISABLE_GECKOVIEW=1
