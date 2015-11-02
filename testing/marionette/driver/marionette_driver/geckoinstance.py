@@ -25,6 +25,7 @@ class GeckoInstance(object):
                       "browser.sessionstore.resume_from_crash": False,
                       "browser.shell.checkDefaultBrowser": False,
                       "browser.startup.page": 0,
+                      "browser.tabs.remote.autostart": False,
                       "browser.tabs.remote.autostart.1": False,
                       "browser.tabs.remote.autostart.2": False,
                       "browser.urlbar.userMadeSearchSuggestionsChoice": True,
