@@ -866,8 +866,7 @@ BluetoothOppManager::ComposePacket(uint8_t aOpCode, UnixSocketBuffer* aMessage)
     // [opcode:1][length:2][Headers:var]
     frameHeaderLength = 3;
 
-    mPacketLength = ((static_cast<int>(data[1]) << 8) | data[2]) -
-                    frameHeaderLength;
+    mPacketLength = BigEndian::readUint16(&data[1]) - frameHeaderLength;
 
     /**
      * A PUT request from remote devices may be divided into multiple parts.
@@ -1119,7 +1118,7 @@ BluetoothOppManager::ClientDataHandler(UnixSocketBuffer* aMessage)
     // Keep remote information
     mRemoteObexVersion = data[3];
     mRemoteConnectionFlags = data[4];
-    mRemoteMaxPacketLength = ((static_cast<int>(data[5]) << 8) | data[6]);
+    mRemoteMaxPacketLength = BigEndian::readUint16(&data[5]);
 
     // The length of file name exceeds maximum length.
     int fileNameByteLen = (mFileName.Length() + 1) * 2;
