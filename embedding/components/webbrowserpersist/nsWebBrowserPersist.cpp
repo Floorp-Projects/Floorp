@@ -1806,23 +1806,35 @@ nsWebBrowserPersist::FinishSaveDocumentInternal(nsIURI* aFile,
 void nsWebBrowserPersist::Cleanup()
 {
     mURIMap.Clear();
-    mOutputMap.EnumerateRead(EnumCleanupOutputMap, this);
+    for (auto iter = mOutputMap.Iter(); !iter.Done(); iter.Next()) {
+        nsCOMPtr<nsIChannel> channel = do_QueryInterface(iter.Key());
+        if (channel) {
+            channel->Cancel(NS_BINDING_ABORTED);
+        }
+    }
     mOutputMap.Clear();
-    mUploadList.EnumerateRead(EnumCleanupUploadList, this);
+
+    for (auto iter = mUploadList.Iter(); !iter.Done(); iter.Next()) {
+        nsCOMPtr<nsIChannel> channel = do_QueryInterface(iter.Key());
+        if (channel) {
+            channel->Cancel(NS_BINDING_ABORTED);
+        }
+    }
     mUploadList.Clear();
+
     uint32_t i;
-    for (i = 0; i < mDocList.Length(); i++)
-    {
+    for (i = 0; i < mDocList.Length(); i++) {
         DocData *docData = mDocList.ElementAt(i);
         delete docData;
     }
     mDocList.Clear();
-    for (i = 0; i < mCleanupList.Length(); i++)
-    {
+
+    for (i = 0; i < mCleanupList.Length(); i++) {
         CleanupData *cleanupData = mCleanupList.ElementAt(i);
         delete cleanupData;
     }
     mCleanupList.Clear();
+
     mFilenameList.Clear();
 }
 
@@ -2483,28 +2495,6 @@ nsWebBrowserPersist::EnumCalcUploadProgress(nsISupports *aKey, UploadData *aData
         nsWebBrowserPersist *pthis = static_cast<nsWebBrowserPersist*>(aClosure);
         pthis->mTotalCurrentProgress += aData->mSelfProgress;
         pthis->mTotalMaxProgress += aData->mSelfProgressMax;
-    }
-    return PL_DHASH_NEXT;
-}
-
-PLDHashOperator
-nsWebBrowserPersist::EnumCleanupOutputMap(nsISupports *aKey, OutputData *aData, void* aClosure)
-{
-    nsCOMPtr<nsIChannel> channel = do_QueryInterface(aKey);
-    if (channel)
-    {
-        channel->Cancel(NS_BINDING_ABORTED);
-    }
-    return PL_DHASH_NEXT;
-}
-
-PLDHashOperator
-nsWebBrowserPersist::EnumCleanupUploadList(nsISupports *aKey, UploadData *aData, void* aClosure)
-{
-    nsCOMPtr<nsIChannel> channel = do_QueryInterface(aKey);
-    if (channel)
-    {
-        channel->Cancel(NS_BINDING_ABORTED);
     }
     return PL_DHASH_NEXT;
 }
