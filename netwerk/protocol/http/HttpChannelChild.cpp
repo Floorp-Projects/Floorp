@@ -2365,6 +2365,12 @@ HttpChannelChild::DivertToParent(ChannelDiverterChild **aChild)
   MOZ_RELEASE_ASSERT(gNeckoChild);
   MOZ_RELEASE_ASSERT(!mDivertingToParent);
 
+  // If we have a synthesized response, then there is no parent actor.  We
+  // need to make this work somehow, but for now avoid crashing.  (bug 1220681)
+  if (mSynthesizedResponse) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
   // We must fail DivertToParent() if there's no parent end of the channel (and
   // won't be!) due to early failure.
   if (NS_FAILED(mStatus) && !RemoteChannelExists()) {
