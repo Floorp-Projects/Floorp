@@ -9,11 +9,13 @@
 
 #include "mozilla/Monitor.h"
 #include "mozilla/Mutex.h"
+#include "mozilla/StaticPtr.h"
 #include "nsCOMPtr.h"
 #include "nsDataHashtable.h"
 #include "nsIObserver.h"
 #include "nsIThread.h"
 #include "nsITimer.h"
+#include "nsRefPtrHashtable.h"
 #include "nsString.h"
 
 namespace mozilla {
@@ -87,7 +89,7 @@ public:
 
   // If there is a profile directory, there is or will eventually be a file
   // by the name specified by aFilename there.
-  explicit DataStorage(const nsString& aFilename);
+  static already_AddRefed<DataStorage> Get(const nsString& aFilename);
 
   // Initializes the DataStorage. Must be called before using.
   // aDataWillPersist returns whether or not data can be persistently saved.
@@ -108,6 +110,7 @@ public:
   nsresult Clear();
 
 private:
+  explicit DataStorage(const nsString& aFilename);
   virtual ~DataStorage();
 
   class Writer;
@@ -133,6 +136,7 @@ private:
   };
 
   typedef nsDataHashtable<nsCStringHashKey, Entry> DataStorageTable;
+  typedef nsRefPtrHashtable<nsStringHashKey, DataStorage> DataStorages;
 
   void WaitForReady();
   nsresult AsyncWriteData(const MutexAutoLock& aProofOfLock);
@@ -174,6 +178,8 @@ private:
   bool mReady; // Indicates that saved data has been read and Get can proceed.
 
   const nsString mFilename;
+
+  static StaticAutoPtr<DataStorages> sDataStorages;
 };
 
 } // namespace mozilla
