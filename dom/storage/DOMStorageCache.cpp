@@ -352,36 +352,6 @@ DOMStorageCache::GetLength(const DOMStorage* aStorage, uint32_t* aRetval)
   return NS_OK;
 }
 
-namespace {
-
-class IndexFinderData
-{
-public:
-  IndexFinderData(uint32_t aIndex, nsAString& aRetval)
-    : mIndex(aIndex), mKey(aRetval)
-  {
-    mKey.SetIsVoid(true);
-  }
-
-  uint32_t mIndex;
-  nsAString& mKey;
-};
-
-PLDHashOperator
-FindKeyOrder(const nsAString& aKey, const nsString aValue, void* aArg)
-{
-  IndexFinderData* data = static_cast<IndexFinderData*>(aArg);
-
-  if (data->mIndex--) {
-    return PL_DHASH_NEXT;
-  }
-
-  data->mKey = aKey;
-  return PL_DHASH_STOP;
-}
-
-} // namespace
-
 nsresult
 DOMStorageCache::GetKey(const DOMStorage* aStorage, uint32_t aIndex, nsAString& aRetval)
 {
@@ -396,8 +366,15 @@ DOMStorageCache::GetKey(const DOMStorage* aStorage, uint32_t aIndex, nsAString& 
     }
   }
 
-  IndexFinderData data(aIndex, aRetval);
-  DataSet(aStorage).mKeys.EnumerateRead(FindKeyOrder, &data);
+  aRetval.SetIsVoid(true);
+  for (auto iter = DataSet(aStorage).mKeys.Iter(); !iter.Done(); iter.Next()) {
+    if (aIndex == 0) {
+      aRetval = iter.Key();
+      break;
+    }
+    aIndex--;
+  }
+
   return NS_OK;
 }
 
