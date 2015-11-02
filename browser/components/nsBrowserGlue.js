@@ -647,6 +647,7 @@ BrowserGlue.prototype = {
     ExtensionManagement.registerScript("chrome://browser/content/ext-bookmarks.js");
 
     this._flashHangCount = 0;
+    this._firstWindowReady = new Promise(resolve => this._firstWindowLoaded = resolve);
   },
 
   // cleanup (called on application shutdown)
@@ -1145,6 +1146,7 @@ BrowserGlue.prototype = {
     this._checkForOldBuildUpdates();
 
     this._firstWindowTelemetry(aWindow);
+    this._firstWindowLoaded();
   },
 
   /**
@@ -2249,7 +2251,7 @@ BrowserGlue.prototype = {
     }
 
     if (currentUIVersion < 32) {
-      this._notifyNotificationsUpgrade();
+      this._notifyNotificationsUpgrade().catch(Cu.reportError);
     }
 
     if (currentUIVersion < 33) {
@@ -2272,10 +2274,11 @@ BrowserGlue.prototype = {
     return false;
   },
 
-  _notifyNotificationsUpgrade: function BG__notifyNotificationsUpgrade() {
+  _notifyNotificationsUpgrade: Task.async(function* () {
     if (!this._hasExistingNotificationPermission()) {
       return;
     }
+    yield this._firstWindowReady;
     function clickCallback(subject, topic, data) {
       if (topic != "alertclickcallback")
         return;
@@ -2287,14 +2290,9 @@ BrowserGlue.prototype = {
     let text = gBrowserBundle.GetStringFromName("webNotifications.upgradeBody");
     let url = Services.urlFormatter.formatURLPref("browser.push.warning.migrationURL");
 
-    try {
-      AlertsService.showAlertNotification(imageURL, title, text,
-                                          true, url, clickCallback);
-    }
-    catch (e) {
-      Cu.reportError(e);
-    }
-  },
+    AlertsService.showAlertNotification(imageURL, title, text,
+                                        true, url, clickCallback);
+  }),
 
   // ------------------------------
   // public nsIBrowserGlue members
