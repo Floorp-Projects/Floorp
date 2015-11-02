@@ -153,6 +153,10 @@ RemotePages.prototype = {
 
     this.listener.removeMessageListener(name, callback);
   },
+
+  portsForBrowser: function(browser) {
+    return [...this.messagePorts].filter(port => port.browser == browser);
+  },
 };
 
 
