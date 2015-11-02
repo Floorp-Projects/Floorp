@@ -459,25 +459,22 @@ HangMonitorParent::HangMonitorParent(ProcessHangMonitor* aMonitor)
   mReportHangs = mozilla::Preferences::GetBool("dom.ipc.reportProcessHangs", false);
 }
 
-static PLDHashOperator
-DeleteMinidump(const uint32_t& aPluginId, nsString aCrashId, void* aUserData)
-{
-#ifdef MOZ_CRASHREPORTER
-  if (!aCrashId.IsEmpty()) {
-    CrashReporter::DeleteMinidumpFilesForID(aCrashId);
-  }
-#endif
-  return PL_DHASH_NEXT;
-}
-
 HangMonitorParent::~HangMonitorParent()
 {
   // For some reason IPDL doesn't automatically delete the channel for a
   // bridged protocol (bug 1090570). So we have to do it ourselves.
   XRE_GetIOMessageLoop()->PostTask(FROM_HERE, new DeleteTask<Transport>(GetTransport()));
 
+#ifdef MOZ_CRASHREPORTER
   MutexAutoLock lock(mBrowserCrashDumpHashLock);
-  mBrowserCrashDumpIds.EnumerateRead(DeleteMinidump, nullptr);
+
+  for (auto iter = mBrowserCrashDumpIds.Iter(); !iter.Done(); iter.Next()) {
+    nsString crashId = iter.UserData();
+    if (!crashId.IsEmpty()) {
+      CrashReporter::DeleteMinidumpFilesForID(crashId);
+    }
+  }
+#endif
 }
 
 void
