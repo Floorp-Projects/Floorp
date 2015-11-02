@@ -13,8 +13,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "ZipUtils", "resource://gre/modules/ZipU
 XPCOMUtils.defineLazyModuleGetter(this, "Downloads", "resource://gre/modules/Downloads.jsm");
 
 const {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
-const {FileUtils} = Cu.import("resource://gre/modules/FileUtils.jsm");
-const {AppProjects} = require("devtools/client/app-manager/app-projects");
+const {FileUtils} = Cu.import("resource://gre/modules/FileUtils.jsm", {});
+const {AppProjects} = require("devtools/client/webide/modules/app-projects");
 const {AppManager} = require("devtools/client/webide/modules/app-manager");
 const {getJSON} = require("devtools/client/shared/getjson");
 
