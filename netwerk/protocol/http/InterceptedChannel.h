@@ -104,10 +104,14 @@ class InterceptedChannelContent : public InterceptedChannelBase
   // Listener for the synthesized response to fix up the notifications before they reach
   // the actual channel.
   RefPtr<InterceptStreamListener> mStreamListener;
+
+  // Set for intercepted channels that have gone through a secure upgrade.
+  bool mSecureUpgrade;
 public:
   InterceptedChannelContent(HttpChannelChild* aChannel,
                             nsINetworkInterceptController* aController,
-                            InterceptStreamListener* aListener);
+                            InterceptStreamListener* aListener,
+                            bool aSecureUpgrade);
 
   NS_IMETHOD ResetInterception() override;
   NS_IMETHOD FinishSynthesizedResponse(const nsACString& aFinalURLSpec) override;
