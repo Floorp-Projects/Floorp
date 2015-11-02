@@ -10,9 +10,10 @@
  *
  * URL structure:
  *
- * moz-page-thumb://thumbnail/?url=http%3A%2F%2Fwww.mozilla.org%2F
+ * moz-page-thumb://thumbnail/?url=http%3A%2F%2Fwww.mozilla.org%2F&revision=XX
  *
  * This URL requests an image for 'http://www.mozilla.org/'.
+ * The value of the revision key may change when the stored thumbnail changes.
  */
 
 "use strict";

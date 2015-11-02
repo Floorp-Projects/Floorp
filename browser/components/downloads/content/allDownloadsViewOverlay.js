@@ -1292,11 +1292,11 @@ DownloadsPlacesView.prototype = {
         goUpdateCommand("downloadsCmd_clearDownloads");
         break;
       default: {
-        // Slicing the array to get a freezed list of selected items. Otherwise,
-        // the selectedItems array is live and doCommand may alter the selection
-        // while we are trying to do one particular action, like removing items
-        // from history.
-        let selectedElements = this._richlistbox.selectedItems.slice();
+        // Cloning the nodelist into an array to get a frozen list of selected items.
+        // Otherwise, the selectedItems nodelist is live and doCommand may alter the
+        // selection while we are trying to do one particular action, like removing
+        // items from history.
+        let selectedElements = [... this._richlistbox.selectedItems];
         for (let element of selectedElements) {
           element._shell.doCommand(aCommand);
         }

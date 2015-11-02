@@ -66,12 +66,12 @@ public:
               BluetoothReplyRunnable* aRunnable);
 
   virtual nsresult
-  GetServiceChannel(const nsAString& aDeviceAddress,
-                    const nsAString& aServiceUuid,
+  GetServiceChannel(const BluetoothAddress& aDeviceAddress,
+                    const BluetoothUuid& aServiceUuid,
                     BluetoothProfileManagerBase* aManager);
 
   virtual bool
-  UpdateSdpRecords(const nsAString& aDeviceAddress,
+  UpdateSdpRecords(const BluetoothAddress& aDeviceAddress,
                    BluetoothProfileManagerBase* aManager);
 
   virtual nsresult

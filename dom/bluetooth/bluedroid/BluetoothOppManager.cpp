@@ -60,12 +60,7 @@ namespace {
   static const double kSdpUpdatingTimeoutMs = 3000.0;
 
   // UUID of OBEX Object Push
-  static const BluetoothUuid kObexObjectPush = {
-    {
-      0x00, 0x00, 0x11, 0x05, 0x00, 0x00, 0x10, 0x00,
-      0x80, 0x00, 0x00, 0x80, 0x5F, 0x9B, 0x34, 0xFB
-    }
-  };
+  static const BluetoothUuid kObexObjectPush(OBJECT_PUSH);
 
   StaticRefPtr<BluetoothOppManager> sBluetoothOppManager;
   static bool sInShutdown = false;
@@ -76,13 +71,13 @@ BEGIN_BLUETOOTH_NAMESPACE
 class BluetoothOppManager::SendFileBatch final
 {
 public:
-  SendFileBatch(const nsAString& aDeviceAddress, Blob* aBlob)
+  SendFileBatch(const BluetoothAddress& aDeviceAddress, Blob* aBlob)
     : mDeviceAddress(aDeviceAddress)
   {
     mBlobs.AppendElement(aBlob);
   }
 
-  nsString mDeviceAddress;
+  BluetoothAddress mDeviceAddress;
   nsTArray<RefPtr<Blob>> mBlobs;
 };
 
@@ -214,9 +209,7 @@ BluetoothOppManager::BluetoothOppManager() : mConnected(false)
                                            , mSentFileLength(0)
                                            , mWaitingToSendPutFinal(false)
                                            , mCurrentBlobIndex(-1)
-{
-  mDeviceAddress.AssignLiteral(BLUETOOTH_ADDRESS_NONE);
-}
+{ }
 
 BluetoothOppManager::~BluetoothOppManager()
 {
@@ -281,7 +274,7 @@ BluetoothOppManager::Get()
 }
 
 void
-BluetoothOppManager::ConnectInternal(const nsAString& aDeviceAddress)
+BluetoothOppManager::ConnectInternal(const BluetoothAddress& aDeviceAddress)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -301,10 +294,7 @@ BluetoothOppManager::ConnectInternal(const nsAString& aDeviceAddress)
 
   mNeedsUpdatingSdpRecords = true;
 
-  nsString uuid;
-  BluetoothUuidHelper::GetString(BluetoothServiceClass::OBJECT_PUSH, uuid);
-
-  if (NS_FAILED(bs->GetServiceChannel(aDeviceAddress, uuid, this))) {
+  if (NS_FAILED(bs->GetServiceChannel(aDeviceAddress, kObexObjectPush, this))) {
     OnSocketConnectError(mSocket);
     return;
   }
@@ -414,7 +404,7 @@ BluetoothOppManager::StartSendingNextFile()
 }
 
 bool
-BluetoothOppManager::SendFile(const nsAString& aDeviceAddress,
+BluetoothOppManager::SendFile(const BluetoothAddress& aDeviceAddress,
                               BlobParent* aActor)
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -426,7 +416,7 @@ BluetoothOppManager::SendFile(const nsAString& aDeviceAddress,
 }
 
 bool
-BluetoothOppManager::SendFile(const nsAString& aDeviceAddress,
+BluetoothOppManager::SendFile(const BluetoothAddress& aDeviceAddress,
                               Blob* aBlob)
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -440,7 +430,7 @@ BluetoothOppManager::SendFile(const nsAString& aDeviceAddress,
 }
 
 void
-BluetoothOppManager::AppendBlobToSend(const nsAString& aDeviceAddress,
+BluetoothOppManager::AppendBlobToSend(const BluetoothAddress& aDeviceAddress,
                                       Blob* aBlob)
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -1327,7 +1317,7 @@ BluetoothOppManager::IsConnected()
 }
 
 void
-BluetoothOppManager::GetAddress(nsAString& aDeviceAddress)
+BluetoothOppManager::GetAddress(BluetoothAddress& aDeviceAddress)
 {
   return mSocket->GetAddress(aDeviceAddress);
 }
@@ -1428,10 +1418,13 @@ BluetoothOppManager::FileTransferComplete()
     return;
   }
 
+  nsAutoString deviceAddressStr;
+  AddressToString(mDeviceAddress, deviceAddressStr);
+
   NS_NAMED_LITERAL_STRING(type, "bluetooth-opp-transfer-complete");
   InfallibleTArray<BluetoothNamedValue> parameters;
 
-  AppendNamedValue(parameters, "address", mDeviceAddress);
+  AppendNamedValue(parameters, "address", deviceAddressStr);
   AppendNamedValue(parameters, "success", mSuccessFlag);
   AppendNamedValue(parameters, "received", mIsServer);
   AppendNamedValue(parameters, "fileName", mFileName);
@@ -1446,10 +1439,13 @@ BluetoothOppManager::FileTransferComplete()
 void
 BluetoothOppManager::StartFileTransfer()
 {
+  nsAutoString deviceAddressStr;
+  AddressToString(mDeviceAddress, deviceAddressStr);
+
   NS_NAMED_LITERAL_STRING(type, "bluetooth-opp-transfer-start");
   InfallibleTArray<BluetoothNamedValue> parameters;
 
-  AppendNamedValue(parameters, "address", mDeviceAddress);
+  AppendNamedValue(parameters, "address", deviceAddressStr);
   AppendNamedValue(parameters, "received", mIsServer);
   AppendNamedValue(parameters, "fileName", mFileName);
   AppendNamedValue(parameters, "fileLength", mFileLength);
@@ -1463,10 +1459,13 @@ BluetoothOppManager::StartFileTransfer()
 void
 BluetoothOppManager::UpdateProgress()
 {
+  nsAutoString deviceAddressStr;
+  AddressToString(mDeviceAddress, deviceAddressStr);
+
   NS_NAMED_LITERAL_STRING(type, "bluetooth-opp-update-progress");
   InfallibleTArray<BluetoothNamedValue> parameters;
 
-  AppendNamedValue(parameters, "address", mDeviceAddress);
+  AppendNamedValue(parameters, "address", deviceAddressStr);
   AppendNamedValue(parameters, "received", mIsServer);
   AppendNamedValue(parameters, "processedLength", mSentFileLength);
   AppendNamedValue(parameters, "fileLength", mFileLength);
@@ -1477,10 +1476,13 @@ BluetoothOppManager::UpdateProgress()
 void
 BluetoothOppManager::ReceivingFileConfirmation()
 {
+  nsAutoString deviceAddressStr;
+  AddressToString(mDeviceAddress, deviceAddressStr);
+
   NS_NAMED_LITERAL_STRING(type, "bluetooth-opp-receiving-file-confirmation");
   InfallibleTArray<BluetoothNamedValue> parameters;
 
-  AppendNamedValue(parameters, "address", mDeviceAddress);
+  AppendNamedValue(parameters, "address", deviceAddressStr);
   AppendNamedValue(parameters, "fileName", mFileName);
   AppendNamedValue(parameters, "fileLength", mFileLength);
   AppendNamedValue(parameters, "contentType", mContentType);
@@ -1579,7 +1581,7 @@ BluetoothOppManager::OnSocketDisconnect(BluetoothSocket* aSocket)
   }
 
   AfterOppDisconnected();
-  mDeviceAddress.AssignLiteral(BLUETOOTH_ADDRESS_NONE);
+  mDeviceAddress.Clear();
   mSuccessFlag = false;
 
   mSocket = nullptr;
@@ -1617,13 +1619,11 @@ BluetoothOppManager::AcquireSdcardMountLock()
 }
 
 void
-BluetoothOppManager::OnGetServiceChannel(const nsAString& aDeviceAddress,
-                                         const nsAString& aServiceUuid,
-                                         int aChannel)
+BluetoothOppManager::OnGetServiceChannel(
+  const BluetoothAddress& aDeviceAddress,
+  const BluetoothUuid& aServiceUuid,
+  int aChannel)
 {
-  BluetoothUuid serviceUuid;
-  StringToUuid(aServiceUuid, serviceUuid);
-
   if (aChannel < 0) {
     BluetoothService* bs = BluetoothService::Get();
     if (!bs || sInShutdown) {
@@ -1650,13 +1650,13 @@ BluetoothOppManager::OnGetServiceChannel(const nsAString& aDeviceAddress,
     }
   }
 
-  mSocket->Connect(aDeviceAddress, serviceUuid,
+  mSocket->Connect(aDeviceAddress, aServiceUuid,
                    BluetoothSocketType::RFCOMM, aChannel,
                    false, true);
 }
 
 void
-BluetoothOppManager::OnUpdateSdpRecords(const nsAString& aDeviceAddress)
+BluetoothOppManager::OnUpdateSdpRecords(const BluetoothAddress& aDeviceAddress)
 {
   BluetoothService* bs = BluetoothService::Get();
   if (!bs || sInShutdown) {
@@ -1664,17 +1664,14 @@ BluetoothOppManager::OnUpdateSdpRecords(const nsAString& aDeviceAddress)
     return;
   }
 
-  nsString uuid;
-  BluetoothUuidHelper::GetString(BluetoothServiceClass::OBJECT_PUSH, uuid);
-
-  if (NS_FAILED(bs->GetServiceChannel(aDeviceAddress, uuid, this))) {
+  if (NS_FAILED(bs->GetServiceChannel(aDeviceAddress, kObexObjectPush, this))) {
     OnSocketConnectError(mSocket);
     return;
   }
 }
 
 void
-BluetoothOppManager::Connect(const nsAString& aDeviceAddress,
+BluetoothOppManager::Connect(const BluetoothAddress& aDeviceAddress,
                              BluetoothProfileController* aController)
 {
   MOZ_ASSERT(false);

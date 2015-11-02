@@ -8,6 +8,7 @@
 #include <fcntl.h>
 #include "BluetoothSocketObserver.h"
 #include "BluetoothUnixSocketConnector.h"
+#include "BluetoothUtils.h"
 #include "mozilla/RefPtr.h"
 #include "nsISupportsImpl.h" // for MOZ_COUNT_CTOR, MOZ_COUNT_DTOR
 #include "nsXULAppAPI.h"
@@ -30,10 +31,10 @@ public:
   BluetoothSocketIO(MessageLoop* aConsumerLoop,
                     MessageLoop* aIOLoop,
                     BluetoothSocket* aConsumer,
-                    UnixSocketConnector* aConnector);
+                    BluetoothUnixSocketConnector* aConnector);
   ~BluetoothSocketIO();
 
-  void GetSocketAddr(nsAString& aAddrStr) const;
+  void GetSocketAddr(BluetoothAddress& aAddress) const;
 
   BluetoothSocket* GetBluetoothSocket();
   DataSocket* GetDataSocket();
@@ -103,7 +104,7 @@ private:
   /**
    * Connector object used to create the connection we are currently using.
    */
-  nsAutoPtr<UnixSocketConnector> mConnector;
+  nsAutoPtr<BluetoothUnixSocketConnector> mConnector;
 
   /**
    * If true, do not requeue whatever task we're running
@@ -136,7 +137,7 @@ BluetoothSocket::BluetoothSocketIO::BluetoothSocketIO(
   MessageLoop* aConsumerLoop,
   MessageLoop* aIOLoop,
   BluetoothSocket* aConsumer,
-  UnixSocketConnector* aConnector)
+  BluetoothUnixSocketConnector* aConnector)
   : UnixSocketWatcher(aIOLoop)
   , DataSocketIO(aConsumerLoop)
   , mConsumer(aConsumer)
@@ -160,24 +161,22 @@ BluetoothSocket::BluetoothSocketIO::~BluetoothSocketIO()
 }
 
 void
-BluetoothSocket::BluetoothSocketIO::GetSocketAddr(nsAString& aAddrStr) const
+BluetoothSocket::BluetoothSocketIO::GetSocketAddr(
+  BluetoothAddress& aAddress) const
 {
   if (!mConnector) {
     NS_WARNING("No connector to get socket address from!");
-    aAddrStr.Truncate();
+    aAddress.Clear();
     return;
   }
 
-  nsCString addressString;
-  nsresult rv = mConnector->ConvertAddressToString(
-    *reinterpret_cast<const struct sockaddr*>(&mAddress), mAddressLength,
-    addressString);
+  nsresult rv = mConnector->ConvertAddress(
+    *reinterpret_cast<const struct sockaddr*>(&mAddress), sizeof(mAddress),
+    aAddress);
   if (NS_FAILED(rv)) {
-    aAddrStr.Truncate();
+    aAddress.Clear();
     return;
   }
-
-  aAddrStr.Assign(NS_ConvertUTF8toUTF16(addressString));
 }
 
 BluetoothSocket*
@@ -579,24 +578,28 @@ BluetoothSocket::~BluetoothSocket()
 }
 
 nsresult
-BluetoothSocket::Connect(const nsAString& aDeviceAddress,
+BluetoothSocket::Connect(const BluetoothAddress& aDeviceAddress,
                          const BluetoothUuid& aServiceUuid,
                          BluetoothSocketType aType,
                          int aChannel,
                          bool aAuth, bool aEncrypt)
 {
-  MOZ_ASSERT(!aDeviceAddress.IsEmpty());
+  MOZ_ASSERT(!aDeviceAddress.IsCleared());
 
   nsAutoPtr<BluetoothUnixSocketConnector> connector(
-    new BluetoothUnixSocketConnector(NS_ConvertUTF16toUTF8(aDeviceAddress),
-                                     aType, aChannel, aAuth, aEncrypt));
+    new BluetoothUnixSocketConnector(aDeviceAddress, aType, aChannel,
+                                     aAuth, aEncrypt));
 
   nsresult rv = Connect(connector);
   if (NS_FAILED(rv)) {
-    nsAutoString addr;
-    GetAddress(addr);
+    BluetoothAddress address;
+    GetAddress(address);
+
+    nsAutoString addressStr;
+    AddressToString(address, addressStr);
+
     BT_LOGD("%s failed. Current connected device address: %s",
-           __FUNCTION__, NS_ConvertUTF16toUTF8(addr).get());
+           __FUNCTION__, NS_ConvertUTF16toUTF8(addressStr).get());
     return rv;
   }
   connector.forget();
@@ -612,15 +615,19 @@ BluetoothSocket::Listen(const nsAString& aServiceName,
                         bool aAuth, bool aEncrypt)
 {
   nsAutoPtr<BluetoothUnixSocketConnector> connector(
-    new BluetoothUnixSocketConnector(NS_LITERAL_CSTRING(BLUETOOTH_ADDRESS_NONE),
-                                     aType, aChannel, aAuth, aEncrypt));
+    new BluetoothUnixSocketConnector(BluetoothAddress::ANY, aType,
+                                     aChannel, aAuth, aEncrypt));
 
   nsresult rv = Listen(connector);
   if (NS_FAILED(rv)) {
-    nsAutoString addr;
-    GetAddress(addr);
+    BluetoothAddress address;
+    GetAddress(address);
+
+    nsAutoString addressStr;
+    AddressToString(address, addressStr);
+
     BT_LOGD("%s failed. Current connected device address: %s",
-           __FUNCTION__, NS_ConvertUTF16toUTF8(addr).get());
+           __FUNCTION__, NS_ConvertUTF16toUTF8(addressStr).get());
     return rv;
   }
   connector.forget();
@@ -704,14 +711,15 @@ BluetoothSocket::Listen(BluetoothUnixSocketConnector* aConnector)
 }
 
 void
-BluetoothSocket::GetAddress(nsAString& aAddrStr)
+BluetoothSocket::GetAddress(BluetoothAddress& aAddress)
 {
-  aAddrStr.Truncate();
   if (!mIO || GetConnectionStatus() != SOCKET_CONNECTED) {
     NS_WARNING("No socket currently open!");
+    aAddress.Clear();
     return;
   }
-  mIO->GetSocketAddr(aAddrStr);
+
+  mIO->GetSocketAddr(aAddress);
 }
 
 // |DataSocket|
