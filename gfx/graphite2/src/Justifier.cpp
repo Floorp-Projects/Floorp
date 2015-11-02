@@ -165,7 +165,7 @@ float Segment::justify(Slot *pSlot, const Font *font, float width, GR_MAYBE_UNUS
                     if (-pref > max) pref = -max;
                     else tWeight += w;
                 }
-                int actual = step ? int(pref / step) * step : int(pref);
+                int actual = int(pref / step) * step;
 
                 if (actual)
                 {

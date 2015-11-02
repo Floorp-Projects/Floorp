@@ -61,7 +61,8 @@ SegCacheEntry::SegCacheEntry(const uint16* cmapGlyphs, size_t length, Segment * 
     }
     const Slot * slot = seg->first();
     m_glyph = new Slot[glyphCount];
-    m_attr = gralloc<int16>(glyphCount * seg->numAttrs());
+    int attrSize = seg->numAttrs() + (seg->hasCollisionInfo() ? (sizeof(SlotCollision) + 1) / 2 : 0);
+    m_attr = gralloc<int16>(glyphCount * attrSize);
     if (!m_glyph || (!m_attr && seg->numAttrs())) return;
     m_glyphLength = glyphCount;
     Slot * slotCopy = m_glyph;
@@ -70,9 +71,9 @@ SegCacheEntry::SegCacheEntry(const uint16* cmapGlyphs, size_t length, Segment * 
     uint16 pos = 0;
     while (slot)
     {
-        slotCopy->userAttrs(m_attr + pos * seg->numAttrs());
+        slotCopy->userAttrs(m_attr + pos * attrSize);
         slotCopy->m_justs = m_justs ? reinterpret_cast<SlotJustify *>(m_justs + justs_pos++ * sizeof_sjust) : 0;
-        slotCopy->set(*slot, -static_cast<int32>(charOffset), seg->numAttrs(), seg->silf()->numJustLevels(), length);
+        slotCopy->set(*slot, -static_cast<int32>(charOffset), attrSize, seg->silf()->numJustLevels(), length);
         slotCopy->index(pos);
         if (slot->firstChild())
             slotCopy->m_child = m_glyph + slot->firstChild()->index();
