@@ -303,8 +303,13 @@ void
 LayerManagerComposite::UpdateAndRender()
 {
   nsIntRegion invalid;
+  bool didEffectiveTransforms = false;
 
   if (mClonedLayerTreeProperties) {
+    // Effective transforms are needed by ComputeDifferences().
+    mRoot->ComputeEffectiveTransforms(gfx::Matrix4x4());
+    didEffectiveTransforms = true;
+
     // We need to compute layer tree differences even if we're not going to
     // immediately use the resulting damage area, since ComputeDifferences
     // is also responsible for invalidates intermediate surfaces in
@@ -349,9 +354,11 @@ LayerManagerComposite::UpdateAndRender()
   // so we will invalidate after we've decided if something changed.
   InvalidateDebugOverlay(mRenderBounds);
 
-  // The results of our drawing always go directly into a pixel buffer,
-  // so we don't need to pass any global transform here.
-  mRoot->ComputeEffectiveTransforms(gfx::Matrix4x4());
+  if (!didEffectiveTransforms) {
+    // The results of our drawing always go directly into a pixel buffer,
+    // so we don't need to pass any global transform here.
+    mRoot->ComputeEffectiveTransforms(gfx::Matrix4x4());
+  }
 
   nsIntRegion opaque;
   ApplyOcclusionCulling(mRoot, opaque);
