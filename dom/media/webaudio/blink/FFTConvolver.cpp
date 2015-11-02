@@ -33,9 +33,9 @@ using namespace mozilla;
 
 namespace WebCore {
 
-FFTConvolver::FFTConvolver(size_t fftSize)
+FFTConvolver::FFTConvolver(size_t fftSize, size_t renderPhase)
     : m_frame(fftSize)
-    , m_readWriteIndex(0)
+    , m_readWriteIndex(renderPhase % (fftSize / 2))
 {
   m_inputBuffer.SetLength(fftSize);
   PodZero(m_inputBuffer.Elements(), fftSize);

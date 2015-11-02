@@ -40,8 +40,12 @@ using mozilla::FFTBlock;
 
 class FFTConvolver {
 public:
-    // fftSize must be a power of two
-    explicit FFTConvolver(size_t fftSize);
+    // |fftSize| must be a power of two.
+    //
+    // |renderPhase| is the initial offset in the initially zero input buffer.
+    // It is coordinated with the other stages, so they don't all do their
+    // FFTs at the same time.
+    explicit FFTConvolver(size_t fftSize, size_t renderPhase = 0);
 
     // |fftKernel| must be pre-scaled for FFTBlock::GetInverseWithoutScaling().
     //

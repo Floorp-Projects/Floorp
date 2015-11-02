@@ -50,7 +50,7 @@ ReverbConvolverStage::ReverbConvolverStage(const float* impulseResponse, size_t,
     if (!m_directMode) {
         m_fftKernel = new FFTBlock(fftSize);
         m_fftKernel->PadAndMakeScaledDFT(impulseResponse + stageOffset, stageLength);
-        m_fftConvolver = new FFTConvolver(fftSize);
+        m_fftConvolver = new FFTConvolver(fftSize, renderPhase);
     } else {
         m_directKernel.SetLength(fftSize / 2);
         PodCopy(m_directKernel.Elements(), impulseResponse + stageOffset, fftSize / 2);
@@ -71,12 +71,7 @@ ReverbConvolverStage::ReverbConvolverStage(const float* impulseResponse, size_t,
     }
 
     // We divide up the total delay, into pre and post delay sections so that we can schedule at exactly the moment when the FFT will happen.
-    // This is coordinated with the other stages, so they don't all do their FFTs at the same time...
-    int maxPreDelayLength = std::min(halfSize, totalDelay);
-    m_preDelayLength = totalDelay > 0 ? renderPhase % maxPreDelayLength : 0;
-    if (m_preDelayLength > totalDelay)
-        m_preDelayLength = 0;
-
+    m_preDelayLength = 0;
     m_postDelayLength = totalDelay - m_preDelayLength;
     m_preReadWriteIndex = 0;
     m_framesProcessed = 0; // total frames processed so far
