@@ -1390,7 +1390,7 @@ public:
 
     float FUnitsToDevUnitsFactor() const {
         // check this was set up during font initialization
-        NS_ASSERTION(mFUnitsConvFactor >= 0.0f, "mFUnitsConvFactor not valid");
+        NS_ASSERTION(mFUnitsConvFactor > 0.0f, "mFUnitsConvFactor not valid");
         return mFUnitsConvFactor;
     }
 
@@ -2032,10 +2032,7 @@ protected:
 
     gfxFloat                   mAdjustedSize;
 
-    // Conversion factor from font units to dev units; note that this may be
-    // zero (in the degenerate case where mAdjustedSize has become zero).
-    // This is OK because we only multiply by this factor, never divide.
-    float                      mFUnitsConvFactor;
+    float                      mFUnitsConvFactor; // conversion factor from font units to dev units
 
     // the AA setting requested for this font - may affect glyph bounds
     AntialiasOption            mAntialiasOption;
