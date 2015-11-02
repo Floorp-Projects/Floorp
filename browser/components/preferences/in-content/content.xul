@@ -70,7 +70,7 @@
     <rows>
       <row id="notificationsPolicyRow" align="center">
         <hbox align="start">
-          <label id="notificationsPolicy">&notificationsPolicyDesc2.label;</label>
+          <label id="notificationsPolicy">&notificationsPolicyDesc3.label;</label>
           <label id="notificationsPolicyLearnMore"
                  class="text-link"
                  value="&notificationsPolicyLearnMore.label;"/>
