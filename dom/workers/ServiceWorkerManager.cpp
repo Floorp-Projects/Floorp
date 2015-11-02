@@ -3604,7 +3604,7 @@ ServiceWorkerManager::PrepareFetchEvent(const PrincipalOriginAttributes& aOrigin
     documentId = aDocumentIdForTopLevelNavigation;
 
     nsCOMPtr<nsIURI> uri;
-    aRv = internalChannel->GetURI(getter_AddRefs(uri));
+    aRv = aChannel->GetSecureUpgradedChannelURI(getter_AddRefs(uri));
     if (NS_WARN_IF(aRv.Failed())) {
       return nullptr;
     }
