@@ -4,9 +4,13 @@
 var scope = Components.utils.import("resource://gre/modules/addons/XPIProvider.jsm");
 const XPIProvider = scope.XPIProvider;
 
+var gIsNightly = false;
+
 function run_test() {
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
   startupManager();
+
+  gIsNightly = isNightlyChannel();
 
   run_next_test();
 }
@@ -18,6 +22,7 @@ add_test(function test_experiment() {
         Assert.ok(addon, "Addon is found.");
 
         Assert.ok(addon.userDisabled, "Experiments are userDisabled by default.");
+        Assert.ok(!addon.appDisabled, "Experiments are not appDisabled by compatibility.");
         Assert.equal(addon.isActive, false, "Add-on is not active.");
         Assert.equal(addon.updateURL, null, "No updateURL for experiments.");
         Assert.equal(addon.applyBackgroundUpdates, AddonManager.AUTOUPDATE_DISABLE,
@@ -91,6 +96,7 @@ add_test(function test_userDisabledNotPersisted() {
             Assert.ok(addon, "Add-on retrieved.");
             Assert.ok(addon.userDisabled, "Add-on is disabled after restart.");
             Assert.equal(addon.isActive, false, "Add-on is not active after restart.");
+            addon.uninstall();
 
             run_next_test();
           });
@@ -100,5 +106,24 @@ add_test(function test_userDisabledNotPersisted() {
 
     AddonManager.addAddonListener(listener);
     addon.userDisabled = false;
+  });
+});
+
+add_test(function test_checkCompatibility() {
+  if (gIsNightly)
+    Services.prefs.setBoolPref("extensions.checkCompatibility.nightly", false);
+  else
+    Services.prefs.setBoolPref("extensions.checkCompatibility.1", false);
+
+  restartManager();
+
+  installAllFiles([do_get_addon("test_experiment1")], () => {
+    AddonManager.getAddonByID("experiment1@tests.mozilla.org", (addon) => {
+      Assert.ok(addon, "Add-on is found.");
+      Assert.ok(addon.userDisabled, "Add-on is user disabled.");
+      Assert.ok(!addon.appDisabled, "Add-on is not app disabled.");
+
+      run_next_test();
+    });
   });
 });
