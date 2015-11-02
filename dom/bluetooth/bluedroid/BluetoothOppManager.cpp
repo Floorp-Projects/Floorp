@@ -1205,7 +1205,7 @@ BluetoothOppManager::SendPutHeaderRequest(const nsAString& aFileName,
     return;
   }
 
-  uint8_t* req = new uint8_t[mRemoteMaxPacketLength];
+  auto req = MakeUnique<uint8_t[]>(mRemoteMaxPacketLength);
 
   int len = aFileName.Length();
   uint8_t* fileName = new uint8_t[(len + 1) * 2];
@@ -1227,10 +1227,9 @@ BluetoothOppManager::SendPutHeaderRequest(const nsAString& aFileName,
   // This is final put packet if file size equals to 0
   uint8_t opcode = (aFileSize > 0) ? ObexRequestCode::Put
                                    : ObexRequestCode::PutFinal;
-  SendObexData(req, opcode, index);
+  SendObexData(Move(req), opcode, index);
 
   delete [] fileName;
-  delete [] req;
 }
 
 void
@@ -1249,14 +1248,13 @@ BluetoothOppManager::SendPutRequest(uint8_t* aFileBody,
 
   // Section 3.3.3 "Put", IrOBEX 1.2
   // [opcode:1][length:2][Headers:var]
-  uint8_t* req = new uint8_t[mRemoteMaxPacketLength];
+  auto req = MakeUnique<uint8_t[]>(mRemoteMaxPacketLength);
 
   int index = 3;
   index += AppendHeaderBody(&req[index], mRemoteMaxPacketLength - index,
                             aFileBody, aFileBodyLength);
 
-  SendObexData(req, ObexRequestCode::Put, index);
-  delete [] req;
+  SendObexData(Move(req), ObexRequestCode::Put, index);
 
   mSentFileLength += aFileBodyLength;
 }
@@ -1277,11 +1275,10 @@ BluetoothOppManager::SendPutFinalRequest()
 
   // [opcode:1][length:2]
   int index = 3;
-  uint8_t* req = new uint8_t[mRemoteMaxPacketLength];
+  auto req = MakeUnique<uint8_t[]>(mRemoteMaxPacketLength);
   index += AppendHeaderEndOfBody(&req[index]);
 
-  SendObexData(req, ObexRequestCode::PutFinal, index);
-  delete [] req;
+  SendObexData(Move(req), ObexRequestCode::PutFinal, index);
 
   mWaitingToSendPutFinal = false;
 }
@@ -1408,6 +1405,18 @@ BluetoothOppManager::SendObexData(uint8_t* aData, uint8_t aOpcode, int aSize)
 
   SetObexPacketInfo(aData, aOpcode, aSize);
   mSocket->SendSocketData(new UnixSocketRawData(aData, aSize));
+}
+
+void
+BluetoothOppManager::SendObexData(UniquePtr<uint8_t[]> aData, uint8_t aOpcode,
+                                  int aSize)
+{
+  if (!mIsServer) {
+    mLastCommand = aOpcode;
+  }
+
+  SetObexPacketInfo(aData.get(), aOpcode, aSize);
+  mSocket->SendSocketData(new UnixSocketRawData(Move(aData), aSize));
 }
 
 void
