@@ -88,11 +88,6 @@ function capIfStaleErrorResponseUpdateTest() {
   yield addTab(URL);
 
   yield captureAndCheckColor(0, 255, 0, "we have a green thumbnail");
-
-  // image cache entry timestamps have second resolution
-  // so make sure the second part of this test takes part in a different second.
-  yield wait(2000);
-
   // update the thumbnail to be stale, then re-request it.  The server will
   // return a 400 response and a red thumbnail.
   // The service should not save the thumbnail - so we (a) check the thumbnail
@@ -124,11 +119,6 @@ function capIfStaleGoodResponseUpdateTest() {
   let browser = gBrowser.selectedBrowser;
 
   yield captureAndCheckColor(0, 255, 0, "we have a green thumbnail");
-
-  // image cache entry timestamps have second resolution
-  // so make sure the second part of this test takes part in a different second.
-  yield wait(2000);
-
   // update the thumbnail to be stale, then re-request it.  The server will
   // return a 200 response and a red thumbnail - so that new thumbnail should
   // end up captured.
@@ -158,11 +148,6 @@ function regularCapErrorResponseUpdateTest() {
   yield addTab(URL);
   yield captureAndCheckColor(0, 255, 0, "we have a green thumbnail");
   gBrowser.removeTab(gBrowser.selectedTab);
-
-  // image cache entry timestamps have second resolution
-  // so make sure the second part of this test takes part in a different second.
-  yield wait(2000);
-
   // do it again - the server will return a 400, so the foreground service
   // should not update it.
   yield addTab(URL);
@@ -177,11 +162,6 @@ function regularCapGoodResponseUpdateTest() {
   yield addTab(URL);
   yield captureAndCheckColor(0, 255, 0, "we have a green thumbnail");
   gBrowser.removeTab(gBrowser.selectedTab);
-
-  // image cache entry timestamps have second resolution
-  // so make sure the second part of this test takes part in a different second.
-  yield wait(2000);
-
   // do it again - the server will return a 200, so the foreground service
   // should  update it.
   yield addTab(URL);

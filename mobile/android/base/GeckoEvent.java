@@ -602,6 +602,8 @@ public class GeckoEvent {
                                                               int value) {
         GeckoEvent event = GeckoEvent.get(NativeGeckoEvent.TELEMETRY_HISTOGRAM_ADD);
         event.mCharacters = histogram;
+        // Set the extras with null so that it cannot be mistaken with a keyed histogram.
+        event.mCharactersExtra = null;
         event.mCount = value;
         return event;
     }

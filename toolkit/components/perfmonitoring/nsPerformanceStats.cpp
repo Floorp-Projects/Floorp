@@ -41,12 +41,10 @@
 #include <mach/mach_types.h>
 #include <mach/message.h>
 #include <mach/thread_info.h>
-#endif // defined(XP_MACOSX)
-
-#if defined(XP_LINUX)
+#elif defined(XP_UNIX)
 #include <sys/time.h>
 #include <sys/resource.h>
-#endif // defined(XP_LINUX)
+#endif // defined(XP_UNIX)
 /* ------------------------------------------------------
  *
  * Utility functions.
