@@ -122,9 +122,18 @@ function handleRequest(request, response)
 
   // script that invokes XHR
   if (query["res"] == "xhr") {
-    response.setHeader("Content-Type", "application/javascript", false);
-    var resp = 'var x = new XMLHttpRequest();x.open("GET", "' + otherSite +
-               resource+'?res=xhr-resp&testid=xhr-src-redir", false);\n' +
+    response.setHeader("Content-Type", "text/html", false);
+    var resp = 'var x = new XMLHttpRequest(); x.open("GET", "' + otherSite +
+               resource+'?res=xhr-resp&testid=xhr-src-redir", false); ' +
+               'x.send(null);';
+    response.write(resp);
+    return;
+  }
+
+  if (query["res"] == "xhr") {
+    response.setHeader("Content-Type", "text/html", false);
+    var resp = 'var x = new XMLHttpRequest(); x.open("GET", "' + otherSite +
+               resource+'?res=xhr-resp&testid=xhr-src-redir", false); ' +
                'x.send(null);';
     response.write(resp);
     return;
