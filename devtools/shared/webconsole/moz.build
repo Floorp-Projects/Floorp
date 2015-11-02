@@ -10,7 +10,6 @@ if CONFIG['OS_TARGET'] != 'Android':
 
 DevToolsModules(
     'client.js',
-    'js-property-provider.js',
     'network-helper.js',
     'network-monitor.js',
     'server-logger-monitor.js',
