@@ -28,10 +28,10 @@ function startTest() {
   ok (!gWin.document.nodePrincipal.equals(systemPrincipal),
       "The test document is not using the system principal");
 
-  attachConsoleToTab([], state => {
+  attachConsole([], state => {
     gState = state;
     runTests(tests, testEnd);
-  });
+  }, true);
 }
 
 tests = [

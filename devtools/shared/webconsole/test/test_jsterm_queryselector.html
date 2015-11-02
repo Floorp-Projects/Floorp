@@ -27,7 +27,7 @@ function startTest() {
   ok (!gWin.document.nodePrincipal.equals(systemPrincipal),
       "The test document is not using the system principal");
 
-  attachConsoleToTab([], state => {
+  attachConsole([], state => {
     gState = state;
     let tests = [
       setupWindow,
@@ -37,7 +37,7 @@ function startTest() {
       checkQuerySelectorAllException
     ];
     runTests(tests, testEnd);
-  });
+  }, true);
 }
 
 let setupWindow = Task.async(function*() {

@@ -26,7 +26,7 @@ function generateReflow()
 function startTest()
 {
   removeEventListener("load", startTest);
-  attachConsoleToTab(["ReflowActivity"], onAttach);
+  attachConsole(["ReflowActivity"], onAttach, true);
 }
 
 function onAttach(aState, aResponse)

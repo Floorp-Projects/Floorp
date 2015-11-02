@@ -50,17 +50,7 @@ function connectToDebugger(aCallback)
   client.connect(aCallback.bind(null, dbgState));
 }
 
-function attachConsole(aListeners, aCallback) {
-  _attachConsole(aListeners, aCallback);
-}
-function attachConsoleToTab(aListeners, aCallback) {
-  _attachConsole(aListeners, aCallback, true);
-}
-function attachConsoleToWorker(aListeners, aCallback) {
-  _attachConsole(aListeners, aCallback, true, true);
-}
-
-function _attachConsole(aListeners, aCallback, aAttachToTab, aAttachToWorker)
+function attachConsole(aListeners, aCallback, aAttachToTab)
 {
   function _onAttachConsole(aState, aResponse, aWebConsoleClient)
   {
@@ -91,26 +81,11 @@ function _attachConsole(aListeners, aCallback, aAttachToTab, aAttachToWorker)
           return;
         }
         let tab = aResponse.tabs[aResponse.selected];
-        aState.dbgClient.attachTab(tab.actor, function (response, tabClient) {
-          if (aAttachToWorker) {
-            var worker = new Worker("console-test-worker.js");
-            worker.addEventListener("message", function listener() {
-              worker.removeEventListener("message", listener);
-              tabClient.listWorkers(function (response) {
-                tabClient.attachWorker(response.workers[0].actor, function (response, workerClient) {
-                  workerClient.attachThread({}, function(aResponse) {
-                    aState.actor = workerClient.consoleActor;
-                    aState.dbgClient.attachConsole(workerClient.consoleActor, aListeners,
-                                                   _onAttachConsole.bind(null, aState));
-                  });
-                });
-              });
-            });
-          } else {
-            aState.actor = tab.consoleActor;
-            aState.dbgClient.attachConsole(tab.consoleActor, aListeners,
-                                           _onAttachConsole.bind(null, aState));
-          }
+        let consoleActor = tab.consoleActor;
+        aState.dbgClient.attachTab(tab.actor, function () {
+          aState.actor = consoleActor;
+          aState.dbgClient.attachConsole(consoleActor, aListeners,
+                                         _onAttachConsole.bind(null, aState));
         });
       });
     } else {
