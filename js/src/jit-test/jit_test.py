@@ -138,6 +138,9 @@ def main(argv):
                   help='The total number of test chunks.')
     op.add_option('--ignore-timeouts', dest='ignore_timeouts', metavar='FILE',
                   help='Ignore timeouts of tests listed in [FILE]')
+    op.add_option('--test-reflect-stringify', dest="test_reflect_stringify",
+                  help="instead of running tests, use them to test the "
+                  "Reflect.stringify code in specified file")
 
     options, args = op.parse_args(argv)
     if len(args) < 1:
@@ -207,6 +210,10 @@ def main(argv):
 
     if not options.run_slow:
         test_list = [_ for _ in test_list if not _.slow]
+
+    if options.test_reflect_stringify is not None:
+        for test in test_list:
+            test.test_reflect_stringify = options.test_reflect_stringify
 
     # If chunking is enabled, determine which tests are part of this chunk.
     # This code was adapted from testing/mochitest/runtestsremote.py.
