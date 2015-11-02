@@ -184,7 +184,7 @@ private:
         // Our TabParent may have been destroyed already.  If so, don't send any
         // fds over, just go back to the IO thread and close them.
         if (!tabParent->IsDestroyed()) {
-            mozilla::unused << tabParent->SendCacheFileDescriptor(mPath, fd);
+            mozilla::Unused << tabParent->SendCacheFileDescriptor(mPath, fd);
         }
 
         if (!mFD) {
@@ -232,7 +232,7 @@ private:
             // Intentionally leak the runnable (but not the fd) rather
             // than crash when trying to release a main thread object
             // off the main thread.
-            mozilla::unused << mTabParent.forget();
+            mozilla::Unused << mTabParent.forget();
             CloseFile();
         }
     }
@@ -549,7 +549,7 @@ TabParent::DestroyInternal()
   // If this fails, it's most likely due to a content-process crash,
   // and auto-cleanup will kick in.  Otherwise, the child side will
   // destroy itself and send back __delete__().
-  unused << SendDestroy();
+  Unused << SendDestroy();
 
   if (RenderFrameParent* frame = GetRenderFrame()) {
     RemoveTabParentFromTable(frame->GetLayersId());
@@ -769,7 +769,7 @@ TabParent::LoadURL(nsIURI* aURI)
     if (mSendOfflineStatus && NS_IsAppOffline(appId)) {
       // If the app is offline in the parent process
       // pass that state to the child process as well
-      unused << SendAppOfflineStatus(appId, true);
+      Unused << SendAppOfflineStatus(appId, true);
     }
     mSendOfflineStatus = false;
 
@@ -779,7 +779,7 @@ TabParent::LoadURL(nsIURI* aURI)
       return;
     }
 
-    unused << SendLoadURL(spec, configuration, GetShowInfo());
+    Unused << SendLoadURL(spec, configuration, GetShowInfo());
 
     // If this app is a packaged app then we can speed startup by sending over
     // the file descriptor for the "application.zip" file that it will
@@ -824,7 +824,7 @@ TabParent::LoadURL(nsIURI* aURI)
                 if (cachedFd) {
                     FileDescriptor::PlatformHandleType handle =
                         FileDescriptor::PlatformHandleType(PR_FileDesc2NativeHandle(cachedFd));
-                    unused << SendCacheFileDescriptor(path, FileDescriptor(handle));
+                    Unused << SendCacheFileDescriptor(path, FileDescriptor(handle));
                 } else
 #endif
                 {
@@ -863,11 +863,11 @@ TabParent::Show(const ScreenIntSize& size, bool aParentIsActive)
                                     &success);
           MOZ_ASSERT(success);
           AddTabParentToTable(layersId, this);
-          unused << SendPRenderFrameConstructor(renderFrame);
+          Unused << SendPRenderFrameConstructor(renderFrame);
         }
     }
 
-    unused << SendShow(size, GetShowInfo(), textureFactoryIdentifier,
+    Unused << SendShow(size, GetShowInfo(), textureFactoryIdentifier,
                        layersId, renderFrame, aParentIsActive);
 }
 
@@ -962,7 +962,7 @@ TabParent::UpdateDimensions(const nsIntRect& rect, const ScreenIntSize& size)
 
     CSSRect unscaledRect = devicePixelRect / widgetScale;
     CSSSize unscaledSize = devicePixelSize / widgetScale;
-    unused << SendUpdateDimensions(unscaledRect, unscaledSize,
+    Unused << SendUpdateDimensions(unscaledRect, unscaledSize,
                                    widget->SizeMode(),
                                    orientation, chromeOffset);
   }
@@ -972,7 +972,7 @@ void
 TabParent::UpdateFrame(const FrameMetrics& aFrameMetrics)
 {
   if (!mIsDestroyed) {
-    unused << SendUpdateFrame(aFrameMetrics);
+    Unused << SendUpdateFrame(aFrameMetrics);
   }
 }
 
@@ -988,7 +988,7 @@ TabParent::UIResolutionChanged()
     // fails to cache the values, then mDefaultScale.scale might be invalid.
     // We don't want to send that value to content. Just send -1 for it too in
     // that case.
-    unused << SendUIResolutionChanged(mDPI, mDPI < 0 ? -1.0 : mDefaultScale.scale);
+    Unused << SendUIResolutionChanged(mDPI, mDPI < 0 ? -1.0 : mDefaultScale.scale);
   }
 }
 
@@ -1001,7 +1001,7 @@ TabParent::ThemeChanged()
     // LookAndFeel should have the up-to-date values, which we now
     // send down to the child. We do this for every remote tab for now,
     // but bug 1156934 has been filed to do it once per content process.
-    unused << SendThemeChanged(LookAndFeel::GetIntCache());
+    Unused << SendThemeChanged(LookAndFeel::GetIntCache());
   }
 }
 
@@ -1011,7 +1011,7 @@ TabParent::HandleAccessKey(nsTArray<uint32_t>& aCharCodes,
                            const int32_t& aModifierMask)
 {
   if (!mIsDestroyed) {
-    unused << SendHandleAccessKey(aCharCodes, aIsTrusted, aModifierMask);
+    Unused << SendHandleAccessKey(aCharCodes, aIsTrusted, aModifierMask);
   }
 }
 
@@ -1020,7 +1020,7 @@ TabParent::RequestFlingSnap(const FrameMetrics::ViewID& aScrollId,
                             const mozilla::CSSPoint& aDestination)
 {
   if (!mIsDestroyed) {
-    unused << SendRequestFlingSnap(aScrollId, aDestination);
+    Unused << SendRequestFlingSnap(aScrollId, aDestination);
   }
 }
 
@@ -1028,7 +1028,7 @@ void
 TabParent::AcknowledgeScrollUpdate(const ViewID& aScrollId, const uint32_t& aScrollGeneration)
 {
   if (!mIsDestroyed) {
-    unused << SendAcknowledgeScrollUpdate(aScrollId, aScrollGeneration);
+    Unused << SendAcknowledgeScrollUpdate(aScrollId, aScrollGeneration);
   }
 }
 
@@ -1037,7 +1037,7 @@ void TabParent::HandleDoubleTap(const CSSPoint& aPoint,
                                 const ScrollableLayerGuid &aGuid)
 {
   if (!mIsDestroyed) {
-    unused << SendHandleDoubleTap(aPoint, aModifiers, aGuid);
+    Unused << SendHandleDoubleTap(aPoint, aModifiers, aGuid);
   }
 }
 
@@ -1046,7 +1046,7 @@ void TabParent::HandleSingleTap(const CSSPoint& aPoint,
                                 const ScrollableLayerGuid &aGuid)
 {
   if (!mIsDestroyed) {
-    unused << SendHandleSingleTap(aPoint, aModifiers, aGuid);
+    Unused << SendHandleSingleTap(aPoint, aModifiers, aGuid);
   }
 }
 
@@ -1056,7 +1056,7 @@ void TabParent::HandleLongTap(const CSSPoint& aPoint,
                               uint64_t aInputBlockId)
 {
   if (!mIsDestroyed) {
-    unused << SendHandleLongTap(aPoint, aModifiers, aGuid, aInputBlockId);
+    Unused << SendHandleLongTap(aPoint, aModifiers, aGuid, aInputBlockId);
   }
 }
 
@@ -1065,7 +1065,7 @@ void TabParent::NotifyAPZStateChange(ViewID aViewId,
                                      int aArg)
 {
   if (!mIsDestroyed) {
-    unused << SendNotifyAPZStateChange(aViewId, aChange, aArg);
+    Unused << SendNotifyAPZStateChange(aViewId, aChange, aArg);
   }
 }
 
@@ -1073,7 +1073,7 @@ void
 TabParent::NotifyMouseScrollTestEvent(const ViewID& aScrollId, const nsString& aEvent)
 {
   if (!mIsDestroyed) {
-    unused << SendMouseScrollTestEvent(aScrollId, aEvent);
+    Unused << SendMouseScrollTestEvent(aScrollId, aEvent);
   }
 }
 
@@ -1081,7 +1081,7 @@ void
 TabParent::NotifyFlushComplete()
 {
   if (!mIsDestroyed) {
-    unused << SendNotifyFlushComplete();
+    Unused << SendNotifyFlushComplete();
   }
 }
 
@@ -1089,7 +1089,7 @@ void
 TabParent::Activate()
 {
   if (!mIsDestroyed) {
-    unused << SendActivate();
+    Unused << SendActivate();
   }
 }
 
@@ -1097,7 +1097,7 @@ void
 TabParent::Deactivate()
 {
   if (!mIsDestroyed) {
-    unused << SendDeactivate();
+    Unused << SendDeactivate();
   }
 }
 
@@ -1288,7 +1288,7 @@ TabParent::SendMouseEvent(const nsAString& aType, float aX, float aY,
                           int32_t aModifiers, bool aIgnoreRootScrollFrame)
 {
   if (!mIsDestroyed) {
-    unused << PBrowserParent::SendMouseEvent(nsString(aType), aX, aY,
+    Unused << PBrowserParent::SendMouseEvent(nsString(aType), aX, aY,
                                              aButton, aClickCount,
                                              aModifiers, aIgnoreRootScrollFrame);
   }
@@ -1302,7 +1302,7 @@ TabParent::SendKeyEvent(const nsAString& aType,
                         bool aPreventDefault)
 {
   if (!mIsDestroyed) {
-    unused << PBrowserParent::SendKeyEvent(nsString(aType), aKeyCode, aCharCode,
+    Unused << PBrowserParent::SendKeyEvent(nsString(aType), aKeyCode, aCharCode,
                                            aModifiers, aPreventDefault);
   }
 }
@@ -2909,7 +2909,7 @@ NS_IMETHODIMP
 TabParent::SetDocShellIsActive(bool isActive)
 {
   mDocShellIsActive = isActive;
-  unused << SendSetDocShellIsActive(isActive);
+  Unused << SendSetDocShellIsActive(isActive);
   return NS_OK;
 }
 
@@ -2935,7 +2935,7 @@ TabParent::SuppressDisplayport(bool aEnabled)
 
   MOZ_ASSERT(mActiveSupressDisplayportCount >= 0);
 
-  unused << SendSuppressDisplayport(aEnabled);
+  Unused << SendSuppressDisplayport(aEnabled);
   return NS_OK;
 }
 
@@ -2962,7 +2962,7 @@ TabParent::SetHasContentOpener(bool aHasContentOpener)
 NS_IMETHODIMP
 TabParent::NavigateByKey(bool aForward, bool aForDocumentNavigation)
 {
-  unused << SendNavigateByKey(aForward, aForDocumentNavigation);
+  Unused << SendNavigateByKey(aForward, aForDocumentNavigation);
   return NS_OK;
 }
 
@@ -3251,7 +3251,7 @@ TabParent::RecvInvokeDragSession(nsTArray<IPCDataTransfer>&& aTransfers,
   nsIPresShell* shell = mFrameElement->OwnerDoc()->GetShell();
   if (!shell) {
     if (Manager()->IsContentParent()) {
-      unused << Manager()->AsContentParent()->SendEndDragSession(true, true);
+      Unused << Manager()->AsContentParent()->SendEndDragSession(true, true);
     }
     return true;
   }

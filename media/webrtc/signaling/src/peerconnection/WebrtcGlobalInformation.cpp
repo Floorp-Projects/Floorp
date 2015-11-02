@@ -256,7 +256,7 @@ OnStatsReport_m(WebrtcGlobalChild* aThisChild,
       }
     }
 
-    unused << aThisChild->SendGetStatsResult(aRequestId, stats);
+    Unused << aThisChild->SendGetStatsResult(aRequestId, stats);
     return;
   }
 
@@ -327,7 +327,7 @@ static void OnGetLogging_m(WebrtcGlobalChild* aThisChild,
       nsLogs.AppendElement(NS_LITERAL_STRING("+++++++ END ++++++++"), fallible);
     }
 
-    unused << aThisChild->SendGetLogResult(aRequestId, nsLogs);
+    Unused << aThisChild->SendGetLogResult(aRequestId, nsLogs);
     return;
   }
 
@@ -585,7 +585,7 @@ WebrtcGlobalInformation::SetDebugLevel(const GlobalObject& aGlobal, int32_t aLev
   sLastSetLevel = aLevel;
 
   for (auto& cp : WebrtcContentParents::GetAll()){
-    unused << cp->SendSetDebugMode(aLevel);
+    Unused << cp->SendSetDebugMode(aLevel);
   }
 }
 
@@ -603,7 +603,7 @@ WebrtcGlobalInformation::SetAecDebug(const GlobalObject& aGlobal, bool aEnable)
   sLastAECDebug = aEnable;
 
   for (auto& cp : WebrtcContentParents::GetAll()){
-    unused << cp->SendSetAecLogging(aEnable);
+    Unused << cp->SendSetAecLogging(aEnable);
   }
 }
 

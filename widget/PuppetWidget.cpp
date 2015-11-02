@@ -338,11 +338,11 @@ PuppetWidget::DispatchInputEvent(WidgetInputEvent* aEvent)
 
   switch (aEvent->mClass) {
     case eMouseEventClass:
-      unused <<
+      Unused <<
         mTabChild->SendDispatchMouseEvent(*aEvent->AsMouseEvent());
       break;
     case eKeyboardEventClass:
-      unused <<
+      Unused <<
         mTabChild->SendDispatchKeyboardEvent(*aEvent->AsKeyboardEvent());
       break;
     default:
@@ -367,7 +367,7 @@ PuppetWidget::DispatchAPZAwareEvent(WidgetInputEvent* aEvent)
 
   switch (aEvent->mClass) {
     case eWheelEventClass:
-      unused <<
+      Unused <<
         mTabChild->SendDispatchWheelEvent(*aEvent->AsWheelEvent());
       break;
     default:

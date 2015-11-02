@@ -273,7 +273,7 @@ CancelableRunnableWrapper::Cancel()
     return NS_ERROR_UNEXPECTED;
   }
 
-  unused << Run();
+  Unused << Run();
   MOZ_ASSERT(!mRunnable);
 
   return NS_OK;
@@ -4108,7 +4108,7 @@ BlobParent::NoteDyingRemoteBlobImpl()
   mBlobImpl = nullptr;
   mRemoteBlobImpl = nullptr;
 
-  unused << PBlobParent::Send__delete__(this);
+  Unused << PBlobParent::Send__delete__(this);
 }
 
 void

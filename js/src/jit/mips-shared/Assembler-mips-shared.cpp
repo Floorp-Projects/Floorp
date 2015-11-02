@@ -100,12 +100,6 @@ AssemblerMIPSShared::PatchableJumpAddress(JitCode* code, uint32_t pe_)
     return code->raw() + pe_;
 }
 
-Assembler&
-AssemblerMIPSShared::asAsm()
-{
-    return *static_cast<Assembler*>(this);
-}
-
 void
 AssemblerMIPSShared::copyJumpRelocationTable(uint8_t* dest)
 {
@@ -132,7 +126,7 @@ AssemblerMIPSShared::processCodeLabels(uint8_t* rawCode)
 {
     for (size_t i = 0; i < codeLabels_.length(); i++) {
         CodeLabel label = codeLabels_[i];
-        asAsm().Bind(rawCode, label.dest(), rawCode + label.src()->offset());
+        Bind(rawCode, label.dest(), rawCode + label.src()->offset());
     }
 }
 
@@ -1308,7 +1302,7 @@ AssemblerMIPSShared::bind(Label* label, BufferOffset boff)
 
             // Second word holds a pointer to the next branch in label's chain.
             next = inst[1].encode();
-            asAsm().bind(reinterpret_cast<InstImm*>(inst), b.getOffset(), dest.getOffset());
+            bind(reinterpret_cast<InstImm*>(inst), b.getOffset(), dest.getOffset());
 
             b = BufferOffset(next);
         } while (next != LabelBase::INVALID_OFFSET);
@@ -1365,13 +1359,6 @@ AssemblerMIPSShared::as_sync(uint32_t stype)
 {
     MOZ_ASSERT(stype <= 31);
     writeInst(InstReg(op_special, zero, zero, zero, stype, ff_sync).encode());
-}
-
-void
-AssemblerMIPSShared::PatchDataWithValueCheck(CodeLocationLabel label, ImmPtr newValue, ImmPtr expectedValue)
-{
-    Assembler::PatchDataWithValueCheck(label, PatchedImmPtr(newValue.value),
-                            PatchedImmPtr(expectedValue.value));
 }
 
 // This just stomps over memory with 32 bits of raw data. Its purpose is to

@@ -244,6 +244,7 @@ MSG_DEF(JSMSG_CURLY_IN_COMPOUND,       0, JSEXN_SYNTAXERR, "missing } in compoun
 MSG_DEF(JSMSG_DECLARATION_AFTER_EXPORT,0, JSEXN_SYNTAXERR, "missing declaration after 'export' keyword")
 MSG_DEF(JSMSG_DECLARATION_AFTER_IMPORT,0, JSEXN_SYNTAXERR, "missing declaration after 'import' keyword")
 MSG_DEF(JSMSG_DEPRECATED_DELETE_OPERAND, 0, JSEXN_SYNTAXERR, "applying the 'delete' operator to an unqualified name is deprecated")
+MSG_DEF(JSMSG_DEPRECATED_EXPR_CLOSURE, 0, JSEXN_NONE, "expression closures are deprecated")
 MSG_DEF(JSMSG_DEPRECATED_FLAGS_ARG,    0, JSEXN_NONE, "flags argument of String.prototype.{search,match,replace} is deprecated")
 MSG_DEF(JSMSG_DEPRECATED_FOR_EACH,     0, JSEXN_NONE, "JavaScript 1.6's for-each-in loops are deprecated; consider using ES6 for-of instead")
 MSG_DEF(JSMSG_DEPRECATED_OCTAL,        0, JSEXN_SYNTAXERR, "octal literals and octal escape sequences are deprecated")

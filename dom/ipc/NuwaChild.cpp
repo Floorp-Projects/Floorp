@@ -239,7 +239,7 @@ OnNuwaProcessReady()
   NuwaChild* nuwaChild = NuwaChild::GetSingleton();
   MOZ_ASSERT(nuwaChild);
 
-  mozilla::unused << nuwaChild->SendNotifyReady();
+  mozilla::Unused << nuwaChild->SendNotifyReady();
 }
 
 NS_EXPORT void

@@ -518,7 +518,7 @@ gfxPlatformFontList::SystemFindFontForChar(uint32_t aCh, uint32_t aNextCh,
     }
     TimeDuration elapsed = TimeStamp::Now() - start;
 
-    PRLogModuleInfo *log = gfxPlatform::GetLog(eGfxLog_textrun);
+    LogModule* log = gfxPlatform::GetLog(eGfxLog_textrun);
 
     if (MOZ_UNLIKELY(MOZ_LOG_TEST(log, LogLevel::Warning))) {
         uint32_t unicodeRange = FindCharUnicodeRange(aCh);

@@ -2315,7 +2315,7 @@ IMEInputHandler::OnCurrentTextInputSourceChange(CFNotificationCenterRef aCenter,
     nsTArray<dom::ContentParent*> children;
     dom::ContentParent::GetAll(children);
     for (uint32_t i = 0; i < children.Length(); i++) {
-      unused << children[i]->SendBidiKeyboardNotify(tis.IsForRTLLanguage());
+      Unused << children[i]->SendBidiKeyboardNotify(tis.IsForRTLLanguage());
     }
     sCachedIsForRTLLangage = tis.IsForRTLLanguage();
   }

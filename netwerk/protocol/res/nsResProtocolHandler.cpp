@@ -19,7 +19,7 @@
 
 using mozilla::dom::ContentParent;
 using mozilla::LogLevel;
-using mozilla::unused;
+using mozilla::Unused;
 
 #define kAPP           NS_LITERAL_CSTRING("app")
 #define kGRE           NS_LITERAL_CSTRING("gre")

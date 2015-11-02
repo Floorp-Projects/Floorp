@@ -325,9 +325,9 @@ ProcessOrientation::OnSensorChanged(const SensorData& event,
 
   // Avoid unused-but-set compile warnings for these variables, when LOGD is
   // a no-op, as it is by default:
-  unused << isAccelerating;
-  unused << isFlat;
-  unused << isSwinging;
+  Unused << isAccelerating;
+  Unused << isFlat;
+  Unused << isSwinging;
 
   // Tell the listener.
   if (mProposedRotation != oldProposedRotation && mProposedRotation >= 0) {

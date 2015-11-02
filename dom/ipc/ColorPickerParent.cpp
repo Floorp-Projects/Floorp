@@ -12,7 +12,7 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/TabParent.h"
 
-using mozilla::unused;
+using mozilla::Unused;
 using namespace mozilla::dom;
 
 NS_IMPL_ISUPPORTS(ColorPickerParent::ColorPickerShownCallback,
@@ -22,7 +22,7 @@ NS_IMETHODIMP
 ColorPickerParent::ColorPickerShownCallback::Update(const nsAString& aColor)
 {
   if (mColorPickerParent) {
-    unused << mColorPickerParent->SendUpdate(nsString(aColor));
+    Unused << mColorPickerParent->SendUpdate(nsString(aColor));
   }
   return NS_OK;
 }
@@ -31,7 +31,7 @@ NS_IMETHODIMP
 ColorPickerParent::ColorPickerShownCallback::Done(const nsAString& aColor)
 {
   if (mColorPickerParent) {
-    unused << mColorPickerParent->Send__delete__(mColorPickerParent,
+    Unused << mColorPickerParent->Send__delete__(mColorPickerParent,
                                                  nsString(aColor));
   }
   return NS_OK;
@@ -68,7 +68,7 @@ bool
 ColorPickerParent::RecvOpen()
 {
   if (!CreateColorPicker()) {
-    unused << Send__delete__(this, mInitialColor);
+    Unused << Send__delete__(this, mInitialColor);
     return true;
   }
 

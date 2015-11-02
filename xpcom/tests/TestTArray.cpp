@@ -1118,7 +1118,7 @@ static bool test_SetLengthAndRetainStorage_no_ctor() {
   } while (0)
 
   // Setup test arrays.
-  FOR_EACH(; unused << , .SetLength(N, fallible));
+  FOR_EACH(; Unused << , .SetLength(N, fallible));
   for (int n = 0; n < N; ++n) {
     FOR_EACH(;, [n] = n);
   }

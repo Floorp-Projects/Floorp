@@ -16,7 +16,7 @@ TestBadActorParent::Main()
   if (!child)
     fail("Sending constructor");
 
-  unused << child->Call__delete__(child);
+  Unused << child->Call__delete__(child);
 }
 
 PTestBadActorSubParent*

@@ -9,6 +9,6 @@ var Cr = Components.results;
 function registerManifests(manifests)
 {
   var reg = Components.manager.QueryInterface(Ci.nsIComponentRegistrar);
-  for each (var manifest in manifests)
+  for (var manifest of manifests)
     reg.autoRegister(manifest);
 }

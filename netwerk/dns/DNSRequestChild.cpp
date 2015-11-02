@@ -264,7 +264,7 @@ DNSRequestChild::RecvLookupCompleted(const DNSRequestResponse& reply)
     mTarget->Dispatch(event, NS_DISPATCH_NORMAL);
   }
 
-  unused << Send__delete__(this);
+  Unused << Send__delete__(this);
 
   return true;
 }

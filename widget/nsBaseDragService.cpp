@@ -393,7 +393,7 @@ nsBaseDragService::EndDragSession(bool aDoneDrag)
   }
 
   for (uint32_t i = 0; i < mChildProcesses.Length(); ++i) {
-    mozilla::unused << mChildProcesses[i]->SendEndDragSession(aDoneDrag,
+    mozilla::Unused << mChildProcesses[i]->SendEndDragSession(aDoneDrag,
                                                               mUserCancelled);
   }
   mChildProcesses.Clear();
