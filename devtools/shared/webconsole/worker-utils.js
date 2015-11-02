@@ -8,5 +8,6 @@ exports.Utils = { l10n: function() {} };
 exports.ConsoleServiceListener = function() {};
 exports.ConsoleAPIListener = function() {};
 exports.addWebConsoleCommands = function() {};
+exports.JSPropertyProvider = function() {};
 exports.ConsoleReflowListener = function() {};
 exports.CONSOLE_WORKER_IDS = [];

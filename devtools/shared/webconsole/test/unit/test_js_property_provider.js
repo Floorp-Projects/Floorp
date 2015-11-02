@@ -4,7 +4,7 @@
 
 "use strict";
 const { require } = Components.utils.import("resource://devtools/shared/Loader.jsm", {});
-const { JSPropertyProvider } = require("devtools/shared/webconsole/js-property-provider");
+const { JSPropertyProvider } = require("devtools/shared/webconsole/utils");
 
 Components.utils.import("resource://gre/modules/jsdebugger.jsm");
 addDebuggerToGlobal(this);
