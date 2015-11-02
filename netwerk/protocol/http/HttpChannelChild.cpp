@@ -1745,7 +1745,8 @@ HttpChannelChild::AsyncOpen(nsIStreamListener *listener, nsISupports *aContext)
     mInterceptListener = new InterceptStreamListener(this, mListenerContext);
 
     RefPtr<InterceptedChannelContent> intercepted =
-        new InterceptedChannelContent(this, controller, mInterceptListener);
+        new InterceptedChannelContent(this, controller,
+                                      mInterceptListener, shouldUpgrade);
     intercepted->NotifyController();
     return NS_OK;
   }
