@@ -252,7 +252,7 @@ nsSiteSecurityService::Init()
   mozilla::Preferences::AddStrongObserver(this,
     "test.currentTimeOffsetSeconds");
   mSiteStateStorage =
-    new mozilla::DataStorage(NS_LITERAL_STRING("SiteSecurityServiceState.txt"));
+    mozilla::DataStorage::Get(NS_LITERAL_STRING("SiteSecurityServiceState.txt"));
   bool storageWillPersist = false;
   nsresult rv = mSiteStateStorage->Init(storageWillPersist);
   if (NS_WARN_IF(NS_FAILED(rv))) {

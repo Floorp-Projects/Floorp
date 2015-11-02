@@ -6,6 +6,7 @@
 
 #include "DataStorage.h"
 
+#include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
 #include "mozilla/Telemetry.h"
@@ -35,6 +36,8 @@ namespace mozilla {
 NS_IMPL_ISUPPORTS(DataStorage,
                   nsIObserver)
 
+StaticAutoPtr<DataStorage::DataStorages> DataStorage::sDataStorages;
+
 DataStorage::DataStorage(const nsString& aFilename)
   : mMutex("DataStorage::mMutex")
   , mPendingWrite(false)
@@ -47,6 +50,23 @@ DataStorage::DataStorage(const nsString& aFilename)
 
 DataStorage::~DataStorage()
 {
+}
+
+// static
+already_AddRefed<DataStorage>
+DataStorage::Get(const nsString& aFilename)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  if (!sDataStorages) {
+    sDataStorages = new DataStorages();
+    ClearOnShutdown(&sDataStorages);
+  }
+  RefPtr<DataStorage> storage;
+  if (!sDataStorages->Get(aFilename, getter_AddRefs(storage))) {
+    storage = new DataStorage(aFilename);
+    sDataStorages->Put(aFilename, storage);
+  }
+  return storage.forget();
 }
 
 nsresult
@@ -737,6 +757,8 @@ DataStorage::Observe(nsISupports* aSubject, const char* aTopic,
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
+
+    sDataStorages->Clear();
   } else if (strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID) == 0) {
     MutexAutoLock lock(mMutex);
     mTimerDelay = Preferences::GetInt("test.datastorage.write_timer_ms",
