@@ -161,6 +161,13 @@ body {
   }
 }
 
+#timeline-rate select {
+  -moz-appearance: none;
+  text-align: center;
+  color: inherit;
+  font-family: inherit;
+}
+
 /* Animation timeline component */
 
 .animation-timeline {
