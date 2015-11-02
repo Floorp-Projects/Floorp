@@ -620,8 +620,8 @@ EnvironmentAddonBuilder.prototype = {
 
     let activeGMPlugins = {};
     for (let plugin of allPlugins) {
-      // Only get GM Plugin info.
-      if (!plugin.isGMPlugin) {
+      // Only get info for valid and enabled GMPlugins.
+      if (!plugin.isGMPlugin || !plugin.isValid || plugin.disabled) {
         continue;
       }
 
