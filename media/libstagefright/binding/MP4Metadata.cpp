@@ -13,6 +13,7 @@
 
 #include <limits>
 #include <stdint.h>
+#include <vector>
 
 using namespace stagefright;
 
@@ -106,9 +107,43 @@ MP4Metadata::~MP4Metadata()
 {
 }
 
+#ifdef MOZ_RUST_MP4PARSE
+#include "mp4parse.h"
+
+// Helper to test the rust parser on a data source.
+static bool try_rust(RefPtr<Stream> aSource)
+{
+  int64_t length;
+  if (!aSource->Length(&length)) {
+    fprintf(stderr, "Couldn't get source length\n");
+    return false;
+  }
+  fprintf(stderr, "Source length %d bytes\n", (long long int)length);
+  if (length <= 0) {
+    return false;
+  }
+  size_t bytes_read = 0;
+  auto buffer = std::vector<uint8_t>(length);
+  bool rv = aSource->ReadAt(0, buffer.data(), length, &bytes_read);
+  if (!rv || bytes_read != size_t(length)) {
+    fprintf(stderr, "Error copying mp4 data\n");
+    return false;
+  }
+  auto context = mp4parse_new();
+  int32_t tracks = mp4parse_read(context, buffer.data(), bytes_read);
+  mp4parse_free(context);
+  fprintf(stderr, "rust parser found %d tracks\n", int(tracks));
+  return true;
+}
+#endif
+
 uint32_t
 MP4Metadata::GetNumberTracks(mozilla::TrackInfo::TrackType aType) const
 {
+#ifdef MOZ_RUST_MP4PARSE
+  // Try in rust first.
+  try_rust(mSource);
+#endif
   size_t tracks = mPrivate->mMetadataExtractor->countTracks();
   uint32_t total = 0;
   for (size_t i = 0; i < tracks; i++) {
