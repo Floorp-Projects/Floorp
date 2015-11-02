@@ -1476,6 +1476,9 @@ a11y::ProxyEvent(ProxyAccessible* aTarget, uint32_t aEventType)
     // A hack using state change showing events as alert events.
     atk_object_notify_state_change(wrapper, ATK_STATE_SHOWING, true);
     break;
+  case nsIAccessibleEvent::EVENT_VALUE_CHANGE:
+    g_object_notify((GObject*)wrapper, "accessible-value");
+    break;
   }
 }
 
