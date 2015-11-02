@@ -311,7 +311,7 @@ TestAuthPrompt::PromptUsernameAndPassword(const char16_t *dialogTitle,
     int n;
 
     printf("Enter username: ");
-    unused << fgets(buf, sizeof(buf), stdin);
+    Unused << fgets(buf, sizeof(buf), stdin);
     n = strlen(buf);
     buf[n-1] = '\0'; // trim trailing newline
     *user = NS_StringCloneData(NS_ConvertUTF8toUTF16(buf));
@@ -808,7 +808,7 @@ nsresult LoadURLFromConsole()
 {
     char buffer[1024];
     printf("Enter URL (\"q\" to start): ");
-    unused << scanf("%s", buffer);
+    Unused << scanf("%s", buffer);
     if (buffer[0]=='q') 
         gAskUserForInput = false;
     else

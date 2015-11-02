@@ -2510,7 +2510,7 @@ ProcessedMediaStream::AllocateInputPort(MediaStream* aStream, TrackID aTrackID,
       mPort->Init();
       // The graph holds its reference implicitly
       mPort->GraphImpl()->SetStreamOrderDirty();
-      unused << mPort.forget();
+      Unused << mPort.forget();
     }
     virtual void RunDuringShutdown()
     {

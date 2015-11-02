@@ -382,10 +382,10 @@ protected:
   typename ActualAlloc::ResultTypeProxy EnsureCapacity(size_type aCapacity,
                                                        size_type aElemSize);
 
-  // Resize the storage to the minimum required amount.
+  // Tries to resize the storage to the minimum required amount. If this fails,
+  // the array is left as-is.
   // @param aElemSize  The size of an array element.
   // @param aElemAlign The alignment in bytes of an array element.
-  template<typename ActualAlloc>
   void ShrinkCapacity(size_type aElemSize, size_t aElemAlign);
 
   // This method may be called to resize a "gap" in the array by shifting
@@ -793,6 +793,7 @@ class nsTArray_Impl
 {
 private:
   typedef nsTArrayFallibleAllocator FallibleAlloc;
+  typedef nsTArrayInfallibleAllocator InfallibleAlloc;
 
 public:
   typedef typename nsTArray_CopyChooser<E>::Type     copy_type;
@@ -1538,12 +1539,13 @@ public:
 
   // Move all elements from another array to the end of this array.
   // @return A pointer to the newly appended elements, or null on OOM.
-  template<class Item, class Allocator>
+protected:
+  template<class Item, class Allocator, typename ActualAlloc = Alloc>
   elem_type* AppendElements(nsTArray_Impl<Item, Allocator>&& aArray)
   {
     MOZ_ASSERT(&aArray != this, "argument must be different aArray");
     if (Length() == 0) {
-      SwapElements(aArray);
+      SwapElements<ActualAlloc>(aArray);
       return Elements();
     }
 
@@ -1559,6 +1561,15 @@ public:
     aArray.template ShiftData<Alloc>(0, otherLen, 0, sizeof(elem_type),
                                      MOZ_ALIGNOF(elem_type));
     return Elements() + len;
+  }
+public:
+
+  template<class Item, class Allocator, typename ActualAlloc = Alloc>
+  /* MOZ_WARN_UNUSED_RESULT */
+  elem_type* AppendElements(nsTArray_Impl<Item, Allocator>&& aArray,
+                            const mozilla::fallible_t&)
+  {
+    return AppendElements<Item, Allocator>(mozilla::Move(aArray));
   }
 
   // Append a new element, move constructing if possible.
@@ -1639,8 +1650,9 @@ public:
     // Check that the previous assert didn't overflow
     MOZ_ASSERT(aStart <= aStart + aCount, "Start index plus length overflows");
     DestructRange(aStart, aCount);
-    this->template ShiftData<Alloc>(aStart, aCount, 0,
-                                    sizeof(elem_type), MOZ_ALIGNOF(elem_type));
+    this->template ShiftData<InfallibleAlloc>(aStart, aCount, 0,
+                                              sizeof(elem_type),
+                                              MOZ_ALIGNOF(elem_type));
   }
 
   // A variation on the RemoveElementsAt method defined above.
@@ -1873,8 +1885,7 @@ public:
   // This method may be called to minimize the memory used by this array.
   void Compact()
   {
-    this->template ShrinkCapacity<Alloc>(sizeof(elem_type),
-                                         MOZ_ALIGNOF(elem_type));
+    ShrinkCapacity(sizeof(elem_type), MOZ_ALIGNOF(elem_type));
   }
 
   //

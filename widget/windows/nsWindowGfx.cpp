@@ -205,7 +205,7 @@ bool nsWindow::OnPaint(HDC aDC, uint32_t aNestingLevel)
     PluginInstanceParent* instance = reinterpret_cast<PluginInstanceParent*>(
       ::GetPropW(mWnd, L"PluginInstanceParentProperty"));
     if (instance) {
-      unused << instance->CallUpdateWindow();
+      Unused << instance->CallUpdateWindow();
     } else {
       // We should never get here since in-process plugins should have
       // subclassed our HWND and handled WM_PAINT, but in some cases that

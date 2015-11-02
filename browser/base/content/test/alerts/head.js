@@ -6,10 +6,11 @@ function promiseAlertWindow() {
         alertWindow.addEventListener("load", function onLoad() {
           alertWindow.removeEventListener("load", onLoad);
           let windowType = alertWindow.document.documentElement.getAttribute("windowtype");
-          if (windowType == "alert:alert") {
-            Services.wm.removeListener(listener);
-            resolve(alertWindow);
+          if (windowType != "alert:alert") {
+            return;
           }
+          Services.wm.removeListener(listener);
+          resolve(alertWindow);
         });
       },
     };
@@ -17,8 +18,10 @@ function promiseAlertWindow() {
   });
 }
 
-// `promiseWindowClosed` is similar to `BrowserTestUtils.closeWindow`, but
-// doesn't call `window.close()`.
+/**
+ * Similar to `BrowserTestUtils.closeWindow`, but
+ * doesn't call `window.close()`.
+ */
 function promiseWindowClosed(window) {
   return new Promise(function(resolve) {
     Services.ww.registerNotification(function observer(subject, topic, data) {

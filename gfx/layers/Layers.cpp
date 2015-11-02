@@ -61,6 +61,14 @@ using namespace mozilla::Compression;
 
 //--------------------------------------------------
 // LayerManager
+
+/* static */ mozilla::LogModule*
+LayerManager::GetLog()
+{
+  static LazyLogModule sLog("Layers");
+  return sLog;
+}
+
 FrameMetrics::ViewID
 LayerManager::GetRootScrollableLayerId()
 {
@@ -652,7 +660,9 @@ Layer::SnapTransformTranslation(const Matrix4x4& aTransform,
   }
 
   if(aTransform.IsSingular() ||
-     (aTransform._14 != 0 || aTransform._24 != 0 || aTransform._34 != 0)) {
+     aTransform.HasPerspectiveComponent() ||
+     aTransform.HasNonTranslation() ||
+     !aTransform.HasNonIntegerTranslation()) {
     // For a singular transform, there is no reversed matrix, so we
     // don't snap it.
     // For a perspective transform, the content is transformed in
@@ -2386,19 +2396,10 @@ LayerManager::DumpPacket(layerscope::LayersPacket* aPacket)
   layer->set_parentptr(0);
 }
 
-/*static*/ void
-LayerManager::InitLog()
-{
-  if (!sLog)
-    sLog = PR_NewLogModule("Layers");
-}
-
 /*static*/ bool
 LayerManager::IsLogEnabled()
 {
-  MOZ_ASSERT(!!sLog,
-             "layer manager must be created before logging is allowed");
-  return MOZ_LOG_TEST(sLog, LogLevel::Debug);
+  return MOZ_LOG_TEST(GetLog(), LogLevel::Debug);
 }
 
 void
@@ -2445,8 +2446,6 @@ ToOutsideIntRect(const gfxRect &aRect)
   r.RoundOut();
   return IntRect(r.X(), r.Y(), r.Width(), r.Height());
 }
-
-PRLogModuleInfo* LayerManager::sLog;
 
 } // namespace layers
 } // namespace mozilla

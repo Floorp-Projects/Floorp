@@ -79,7 +79,7 @@ main(int argc, char **argv)
 
     uint32_t read;
     while (NS_SUCCEEDED(stream->Read(buf, sizeof(buf), &read)) && read) {
-      unused << fwrite(buf, 1, read, outfile);
+      Unused << fwrite(buf, 1, read, outfile);
     }
     printf("Done\n");
 

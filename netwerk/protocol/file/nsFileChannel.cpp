@@ -272,6 +272,14 @@ nsFileChannel::nsFileChannel(nsIURI *uri)
                                          getter_AddRefs(resolvedFile))) &&
       NS_SUCCEEDED(NS_NewFileURI(getter_AddRefs(targetURI), 
                    resolvedFile, nullptr))) {
+    // Make an effort to match up the query strings.
+    nsCOMPtr<nsIURL> origURL = do_QueryInterface(uri);
+    nsCOMPtr<nsIURL> targetURL = do_QueryInterface(targetURI);
+    nsAutoCString queryString;
+    if (origURL && targetURL && NS_SUCCEEDED(origURL->GetQuery(queryString))) {
+      targetURL->SetQuery(queryString);
+    }
+
     SetURI(targetURI);
     SetOriginalURI(uri);
     nsLoadFlags loadFlags = 0;

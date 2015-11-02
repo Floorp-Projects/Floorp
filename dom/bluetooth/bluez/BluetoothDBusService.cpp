@@ -1254,7 +1254,7 @@ AppendDeviceName(BluetoothSignal& aSignal)
 
   NS_ENSURE_TRUE_VOID(success);
 
-  unused << handler.forget(); // picked up by callback handler
+  Unused << handler.forget(); // picked up by callback handler
 }
 
 class SetPairingConfirmationTask : public Task
@@ -1684,7 +1684,7 @@ private:
 
     NS_ENSURE_TRUE(success, false);
 
-    unused << handler.forget(); // picked up by callback handler
+    Unused << handler.forget(); // picked up by callback handler
 
     return true;
   }
@@ -1723,7 +1723,7 @@ public:
 
     NS_ENSURE_TRUE_VOID(success);
 
-    unused << handler.forget(); /* picked up by callback handler */
+    Unused << handler.forget(); /* picked up by callback handler */
   }
 };
 
@@ -2414,7 +2414,7 @@ protected:
       return false;
     }
 
-    unused << handler.forget(); // picked up by callback handler
+    Unused << handler.forget(); // picked up by callback handler
 
     return true;
   }
@@ -2474,7 +2474,7 @@ public:
       DBUS_TYPE_INVALID);
     NS_ENSURE_TRUE_VOID(success);
 
-    unused << handler.forget(); // picked up by callback handler
+    Unused << handler.forget(); // picked up by callback handler
   }
 
 private:
@@ -2547,7 +2547,7 @@ public:
       DBUS_TYPE_INVALID);
     NS_ENSURE_TRUE_VOID(success);
 
-    unused << mRunnable.forget(); // picked up by callback handler
+    Unused << mRunnable.forget(); // picked up by callback handler
   }
 
 private:
@@ -2815,7 +2815,7 @@ protected:
 
     NS_ENSURE_TRUE(success, false);
 
-    unused << handler.forget(); // picked up by callback handler
+    Unused << handler.forget(); // picked up by callback handler
 
     return true;
   }
@@ -2982,7 +2982,7 @@ public:
       1000, msg);
     NS_ENSURE_TRUE_VOID(success);
 
-    unused << mRunnable.forget(); // picked up by callback handler
+    Unused << mRunnable.forget(); // picked up by callback handler
   }
 
 private:
@@ -3127,7 +3127,7 @@ public:
       DBUS_TYPE_INVALID);
     NS_ENSURE_TRUE_VOID(success);
 
-    unused << mRunnable.forget(); // picked up by callback handler
+    Unused << mRunnable.forget(); // picked up by callback handler
 
     /**
      * FIXME: Bug 820274
@@ -3196,7 +3196,7 @@ public:
       DBUS_TYPE_INVALID);
     NS_ENSURE_TRUE_VOID(success);
 
-    unused << mRunnable.forget(); // picked up by callback handler
+    Unused << mRunnable.forget(); // picked up by callback handler
   }
 
 protected:
@@ -3689,7 +3689,7 @@ public:
       DBUS_TYPE_INVALID);
     NS_ENSURE_TRUE_VOID(success);
 
-    unused << handler.forget(); // picked up by callback handler
+    Unused << handler.forget(); // picked up by callback handler
   }
 
 private:
@@ -4006,7 +4006,7 @@ public:
       DBUS_TYPE_INVALID);
     NS_ENSURE_TRUE_VOID(success);
 
-    unused << mRunnable.forget(); // picked up by callback handler
+    Unused << mRunnable.forget(); // picked up by callback handler
   }
 
 private:
@@ -4136,7 +4136,7 @@ public:
       DBUS_TYPE_INVALID);
     NS_ENSURE_TRUE_VOID(success);
 
-    unused << mRunnable.forget(); // picked up by callback handler
+    Unused << mRunnable.forget(); // picked up by callback handler
   }
 
 private:

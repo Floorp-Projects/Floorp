@@ -1006,7 +1006,8 @@ nsBaseWidget::ProcessUntransformedAPZEvent(WidgetInputEvent* aEvent,
         APZCCallbackHelper::SendSetTargetAPZCNotification(this, GetDocument(), *aEvent,
             aGuid, aInputBlockId);
       }
-      mAPZEventState->ProcessTouchEvent(*touchEvent, aGuid, aInputBlockId, aApzResponse);
+      mAPZEventState->ProcessTouchEvent(*touchEvent, aGuid, aInputBlockId,
+          aApzResponse, status);
     } else if (WidgetWheelEvent* wheelEvent = aEvent->AsWheelEvent()) {
       if (wheelEvent->mFlags.mHandledByAPZ) {
         APZCCallbackHelper::SendSetTargetAPZCNotification(this, GetDocument(), *aEvent,
@@ -1016,6 +1017,8 @@ nsBaseWidget::ProcessUntransformedAPZEvent(WidgetInputEvent* aEvent,
         }
         mAPZEventState->ProcessWheelEvent(*wheelEvent, aGuid, aInputBlockId);
       }
+    } else if (WidgetMouseEvent* mouseEvent = aEvent->AsMouseEvent()) {
+      mAPZEventState->ProcessMouseEvent(*mouseEvent, aGuid, aInputBlockId);
     }
   }
 

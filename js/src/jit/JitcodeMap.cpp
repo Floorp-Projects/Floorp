@@ -1390,8 +1390,10 @@ JitcodeRegionEntry::WriteRun(CompactBufferWriter& writer,
             uint32_t curBc = curBytecodeOffset;
             while (curBc < nextBytecodeOffset) {
                 jsbytecode* pc = entry[i].tree->script()->offsetToPC(curBc);
-                mozilla::DebugOnly<JSOp> op = JSOp(*pc);
+#ifdef JS_JITSPEW
+                JSOp op = JSOp(*pc);
                 JitSpewCont(JitSpew_Profiling, "%s ", js_CodeName[op]);
+#endif
                 curBc += GetBytecodeLength(pc);
             }
             JitSpewFin(JitSpew_Profiling);

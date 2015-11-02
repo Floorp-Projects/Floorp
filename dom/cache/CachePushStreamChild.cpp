@@ -192,7 +192,7 @@ CachePushStreamChild::DoRead()
 
     // If we read any data from the stream, send it across.
     if (!buffer.IsEmpty()) {
-      unused << SendBuffer(buffer);
+      Unused << SendBuffer(buffer);
     }
 
     if (rv == NS_BASE_STREAM_WOULD_BLOCK) {
@@ -255,7 +255,7 @@ CachePushStreamChild::OnEnd(nsresult aRv)
   }
 
   // This will trigger an ActorDestroy() from the parent side
-  unused << SendClose(aRv);
+  Unused << SendClose(aRv);
 }
 
 } // namespace cache

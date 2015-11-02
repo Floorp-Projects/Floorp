@@ -77,7 +77,7 @@ BluetoothDaemonSetupModule::RegisterModuleCmd(
   if (NS_FAILED(rv)) {
     return rv;
   }
-  unused << pdu.forget();
+  Unused << pdu.forget();
   return rv;
 }
 
@@ -99,7 +99,7 @@ BluetoothDaemonSetupModule::UnregisterModuleCmd(
   if (NS_FAILED(rv)) {
     return rv;
   }
-  unused << pdu.forget();
+  Unused << pdu.forget();
   return rv;
 }
 
@@ -123,7 +123,7 @@ BluetoothDaemonSetupModule::ConfigurationCmd(
   if (NS_FAILED(rv)) {
     return rv;
   }
-  unused << pdu.forget();
+  Unused << pdu.forget();
   return rv;
 }
 

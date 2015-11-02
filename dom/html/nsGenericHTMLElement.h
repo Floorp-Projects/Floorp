@@ -241,6 +241,9 @@ public:
     mScrollgrab = aValue;
   }
 
+  void GetInnerText(mozilla::dom::DOMString& aValue, mozilla::ErrorResult& aError);
+  void SetInnerText(const nsAString& aValue);
+
   /**
    * Determine whether an attribute is an event (onclick, etc.)
    * @param aName the attribute

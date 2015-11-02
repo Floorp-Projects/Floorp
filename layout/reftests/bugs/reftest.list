@@ -1904,7 +1904,7 @@ skip-if(!B2G) == 1133905-3-rtl.html 1133905-ref-rtl.html
 skip-if(!B2G) == 1133905-4-rtl.html 1133905-ref-rtl.html
 skip-if(!B2G) == 1133905-5-rtl.html 1133905-ref-rtl.html
 skip-if(!B2G) == 1133905-6-rtl.html 1133905-ref-rtl.html
-skip-if(!B2G) fuzzy-if(B2G,20,177) == 1133905-1-v-rtl.html 1133905-ref-v-rtl.html
+skip-if(!B2G) fuzzy-if(B2G,21,175) == 1133905-1-v-rtl.html 1133905-ref-v-rtl.html
 skip-if(!B2G) fuzzy-if(B2G,20,174) == 1133905-2-v-rtl.html 1133905-ref-v-rtl.html
 skip-if(!B2G) fuzzy-if(B2G,64,181) == 1133905-3-v-rtl.html 1133905-ref-v-rtl.html
 skip-if(!B2G) == 1133905-4-v-rtl.html 1133905-ref-v-rtl.html
@@ -1916,7 +1916,7 @@ skip-if(!B2G) == 1133905-3-h-rtl.html 1133905-ref-h-rtl.html
 skip-if(!B2G) == 1133905-4-h-rtl.html 1133905-ref-h-rtl.html
 skip-if(!B2G) == 1133905-5-h-rtl.html 1133905-ref-h-rtl.html
 skip-if(!B2G) == 1133905-6-h-rtl.html 1133905-ref-h-rtl.html
-skip-if(!B2G) fuzzy-if(B2G,20,177) == 1133905-1-vh-rtl.html 1133905-ref-vh-rtl.html
+skip-if(!B2G) fuzzy-if(B2G,21,175) == 1133905-1-vh-rtl.html 1133905-ref-vh-rtl.html
 skip-if(!B2G) fuzzy-if(B2G,62,176) == 1133905-2-vh-rtl.html 1133905-ref-vh-rtl.html
 skip-if(!B2G) fuzzy-if(B2G,23,176) == 1133905-3-vh-rtl.html 1133905-ref-vh-rtl.html
 skip-if(!B2G) == 1133905-4-vh-rtl.html 1133905-ref-vh-rtl.html

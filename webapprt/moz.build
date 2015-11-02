@@ -53,3 +53,7 @@ JAR_MANIFESTS += ['jar.mn']
 JS_PREFERENCE_FILES += [
     'prefs.js',
 ]
+
+DIST_FILES += [
+    'webapprt.ini',
+]

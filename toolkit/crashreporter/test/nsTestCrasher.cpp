@@ -68,9 +68,9 @@ void Crash(int16_t how)
     break;
   }
   case CRASH_OOM: {
-    mozilla::unused << moz_xmalloc((size_t) -1);
-    mozilla::unused << moz_xmalloc((size_t) -1);
-    mozilla::unused << moz_xmalloc((size_t) -1);
+    mozilla::Unused << moz_xmalloc((size_t) -1);
+    mozilla::Unused << moz_xmalloc((size_t) -1);
+    mozilla::Unused << moz_xmalloc((size_t) -1);
     break;
   }
   case CRASH_MOZ_CRASH: {

@@ -57,7 +57,7 @@ public:
     if (!runnable) {
       return;
     }
-    unused << NS_WARN_IF(NS_FAILED(NS_DispatchToMainThread(runnable)));
+    Unused << NS_WARN_IF(NS_FAILED(NS_DispatchToMainThread(runnable)));
   }
 
   NS_IMETHODIMP Run() override
@@ -113,7 +113,7 @@ public:
     if (!runnable) {
       return;
     }
-    unused << NS_WARN_IF(NS_FAILED(NS_DispatchToMainThread(runnable)));
+    Unused << NS_WARN_IF(NS_FAILED(NS_DispatchToMainThread(runnable)));
   }
 
   NS_IMETHODIMP Run() override
@@ -176,7 +176,7 @@ public:
     if (!runnable) {
       return;
     }
-    unused << NS_WARN_IF(NS_FAILED(NS_DispatchToMainThread(runnable)));
+    Unused << NS_WARN_IF(NS_FAILED(NS_DispatchToMainThread(runnable)));
   }
 
   NS_IMETHODIMP Run() override
@@ -251,7 +251,7 @@ public:
     if (!runnable) {
       return;
     }
-    unused << NS_WARN_IF(NS_FAILED(NS_DispatchToMainThread(runnable)));
+    Unused << NS_WARN_IF(NS_FAILED(NS_DispatchToMainThread(runnable)));
   }
 
   NS_IMETHODIMP Run() override
@@ -311,7 +311,7 @@ public:
     if (!runnable) {
       return;
     }
-    unused << NS_WARN_IF(NS_FAILED(NS_DispatchToMainThread(runnable)));
+    Unused << NS_WARN_IF(NS_FAILED(NS_DispatchToMainThread(runnable)));
   }
 
   NS_IMETHODIMP Run() override
@@ -378,7 +378,7 @@ public:
     if (!runnable) {
       return;
     }
-    unused << NS_WARN_IF(NS_FAILED(NS_DispatchToMainThread(runnable)));
+    Unused << NS_WARN_IF(NS_FAILED(NS_DispatchToMainThread(runnable)));
   }
 
   NS_IMETHODIMP Run() override
@@ -448,7 +448,7 @@ public:
     if (!runnable) {
       return;
     }
-    unused << NS_WARN_IF(NS_FAILED(NS_DispatchToMainThread(runnable)));
+    Unused << NS_WARN_IF(NS_FAILED(NS_DispatchToMainThread(runnable)));
   }
 
   NS_IMETHODIMP Run() override
@@ -520,7 +520,7 @@ public:
     if (!runnable) {
       return;
     }
-    unused << NS_WARN_IF(NS_FAILED(NS_DispatchToMainThread(runnable)));
+    Unused << NS_WARN_IF(NS_FAILED(NS_DispatchToMainThread(runnable)));
   }
 
   NS_IMETHODIMP Run() override
@@ -594,7 +594,7 @@ public:
     if (!runnable) {
       return;
     }
-    unused << NS_WARN_IF(NS_FAILED(NS_DispatchToMainThread(runnable)));
+    Unused << NS_WARN_IF(NS_FAILED(NS_DispatchToMainThread(runnable)));
   }
 
   NS_IMETHODIMP Run() override
@@ -670,7 +670,7 @@ public:
     if (!runnable) {
       return;
     }
-    unused << NS_WARN_IF(NS_FAILED(NS_DispatchToMainThread(runnable)));
+    Unused << NS_WARN_IF(NS_FAILED(NS_DispatchToMainThread(runnable)));
   }
 
   NS_IMETHODIMP Run() override
@@ -752,7 +752,7 @@ public:
     if (!runnable) {
       return;
     }
-    unused << NS_WARN_IF(NS_FAILED(NS_DispatchToMainThread(runnable)));
+    Unused << NS_WARN_IF(NS_FAILED(NS_DispatchToMainThread(runnable)));
   }
 
   NS_IMETHODIMP Run() override

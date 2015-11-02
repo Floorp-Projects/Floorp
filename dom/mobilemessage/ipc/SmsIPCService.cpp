@@ -73,7 +73,7 @@ SendCursorRequest(const IPCMobileMessageCursor& aRequest,
   // Add an extra ref for IPDL. Will be released in
   // SmsChild::DeallocPMobileMessageCursor().
   RefPtr<MobileMessageCursorChild> actorCopy(actor);
-  mozilla::unused << actorCopy.forget().take();
+  mozilla::Unused << actorCopy.forget().take();
 
   smsChild->SendPMobileMessageCursorConstructor(actor, aRequest);
 

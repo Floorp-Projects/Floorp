@@ -40,9 +40,6 @@
 
 namespace JS {
 
-extern JS_PUBLIC_API(void)
-ResetTimeZone();
-
 class TwoByteChars;
 
 #ifdef JS_DEBUG
@@ -601,7 +598,10 @@ typedef void
 (* JSFinalizeCallback)(JSFreeOp* fop, JSFinalizeStatus status, bool isCompartment, void* data);
 
 typedef void
-(* JSWeakPointerCallback)(JSRuntime* rt, void* data);
+(* JSWeakPointerZoneGroupCallback)(JSRuntime* rt, void* data);
+
+typedef void
+(* JSWeakPointerCompartmentCallback)(JSRuntime* rt, JSCompartment* comp, void* data);
 
 typedef bool
 (* JSInterruptCallback)(JSContext* cx);
@@ -950,48 +950,13 @@ JS_IsBuiltinFunctionConstructor(JSFunction* fun);
 /************************************************************************/
 
 /*
- * Initialization, locking, contexts, and memory allocation.
+ * Locking, contexts, and memory allocation.
  *
- * It is important that the first runtime and first context be created in a
- * single-threaded fashion, otherwise the behavior of the library is undefined.
+ * It is important that SpiderMonkey be initialized, and the first runtime and
+ * first context be created, in a single-threaded fashion.  Otherwise the
+ * behavior of the library is undefined.
  * See: http://developer.mozilla.org/en/docs/Category:JSAPI_Reference
  */
-
-/**
- * Initialize SpiderMonkey, returning true only if initialization succeeded.
- * Once this method has succeeded, it is safe to call JS_NewRuntime and other
- * JSAPI methods.
- *
- * This method must be called before any other JSAPI method is used on any
- * thread.  Once it has been used, it is safe to call any JSAPI method, and it
- * remains safe to do so until JS_ShutDown is correctly called.
- *
- * It is currently not possible to initialize SpiderMonkey multiple times (that
- * is, calling JS_Init/JSAPI methods/JS_ShutDown in that order, then doing so
- * again).  This restriction may eventually be lifted.
- */
-extern JS_PUBLIC_API(bool)
-JS_Init(void);
-
-/**
- * Destroy free-standing resources allocated by SpiderMonkey, not associated
- * with any runtime, context, or other structure.
- *
- * This method should be called after all other JSAPI data has been properly
- * cleaned up: every new runtime must have been destroyed, every new context
- * must have been destroyed, and so on.  Calling this method before all other
- * resources have been destroyed has undefined behavior.
- *
- * Failure to call this method, at present, has no adverse effects other than
- * leaking memory.  This may not always be the case; it's recommended that all
- * embedders call this method when all other JSAPI operations have completed.
- *
- * It is currently not possible to initialize SpiderMonkey multiple times (that
- * is, calling JS_Init/JSAPI methods/JS_ShutDown in that order, then doing so
- * again).  This restriction may eventually be lifted.
- */
-extern JS_PUBLIC_API(void)
-JS_ShutDown(void);
 
 extern JS_PUBLIC_API(JSRuntime*)
 JS_NewRuntime(uint32_t maxbytes,
@@ -1000,20 +965,6 @@ JS_NewRuntime(uint32_t maxbytes,
 
 extern JS_PUBLIC_API(void)
 JS_DestroyRuntime(JSRuntime* rt);
-
-// These are equivalent to ICU's |UMemAllocFn|, |UMemReallocFn|, and
-// |UMemFreeFn| types.  The first argument (called |context| in the ICU docs)
-// will always be nullptr, and should be ignored.
-typedef void* (*JS_ICUAllocFn)(const void*, size_t size);
-typedef void* (*JS_ICUReallocFn)(const void*, void* p, size_t size);
-typedef void (*JS_ICUFreeFn)(const void*, void* p);
-
-/**
- * This function can be used to track memory used by ICU.
- * Do not use it unless you know what you are doing!
- */
-extern JS_PUBLIC_API(bool)
-JS_SetICUMemoryFunctions(JS_ICUAllocFn allocFn, JS_ICUReallocFn reallocFn, JS_ICUFreeFn freeFn);
 
 typedef double (*JS_CurrentEmbedderTimeFunction)();
 
@@ -1721,11 +1672,20 @@ JS_RemoveFinalizeCallback(JSRuntime* rt, JSFinalizeCallback cb);
  *
  * To handle this, any part of the system that maintain weak pointers to
  * JavaScript GC things must register a callback with
- * JS_(Add,Remove)WeakPointerCallback().  This callback must then call
- * JS_UpdateWeakPointerAfterGC() on all weak pointers it knows about.
+ * JS_(Add,Remove)WeakPointer{ZoneGroup,Compartment}Callback(). This callback
+ * must then call JS_UpdateWeakPointerAfterGC() on all weak pointers it knows
+ * about.
  *
- * The argument to JS_UpdateWeakPointerAfterGC() is an in-out param.  If the
- * referent is about to be finalized the pointer will be set to null.  If the
+ * Since sweeping is incremental, we have several callbacks to avoid repeatedly
+ * having to visit all embedder structures. The WeakPointerZoneGroupCallback is
+ * called once for each strongly connected group of zones, whereas the
+ * WeakPointerCompartmentCallback is called once for each compartment that is
+ * visited while sweeping. Structures that cannot contain references in more
+ * than one compartment should sweep the relevant per-compartment structures
+ * using the latter callback to minimizer per-slice overhead.
+ *
+ * The argument to JS_UpdateWeakPointerAfterGC() is an in-out param. If the
+ * referent is about to be finalized the pointer will be set to null. If the
  * referent has been moved then the pointer will be updated to point to the new
  * location.
  *
@@ -1736,10 +1696,17 @@ JS_RemoveFinalizeCallback(JSRuntime* rt, JSFinalizeCallback cb);
  */
 
 extern JS_PUBLIC_API(bool)
-JS_AddWeakPointerCallback(JSRuntime* rt, JSWeakPointerCallback cb, void* data);
+JS_AddWeakPointerZoneGroupCallback(JSRuntime* rt, JSWeakPointerZoneGroupCallback cb, void* data);
 
 extern JS_PUBLIC_API(void)
-JS_RemoveWeakPointerCallback(JSRuntime* rt, JSWeakPointerCallback cb);
+JS_RemoveWeakPointerZoneGroupCallback(JSRuntime* rt, JSWeakPointerZoneGroupCallback cb);
+
+extern JS_PUBLIC_API(bool)
+JS_AddWeakPointerCompartmentCallback(JSRuntime* rt, JSWeakPointerCompartmentCallback cb,
+                                     void* data);
+
+extern JS_PUBLIC_API(void)
+JS_RemoveWeakPointerCompartmentCallback(JSRuntime* rt, JSWeakPointerCompartmentCallback cb);
 
 extern JS_PUBLIC_API(void)
 JS_UpdateWeakPointerAfterGC(JS::Heap<JSObject*>* objp);
@@ -4972,13 +4939,6 @@ JS_NewDateObject(JSContext* cx, int year, int mon, int mday, int hour, int min, 
  */
 extern JS_PUBLIC_API(bool)
 JS_ObjectIsDate(JSContext* cx, JS::HandleObject obj, bool* isDate);
-
-/**
- * Clears the cache of calculated local time from each Date object.
- * Call to propagate a system timezone change.
- */
-extern JS_PUBLIC_API(void)
-JS_ClearDateCaches(JSContext* cx);
 
 /************************************************************************/
 

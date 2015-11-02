@@ -89,7 +89,7 @@ UnshareUserNamespace()
     MOZ_CRASH("Failed to write /proc/self/uid_map");
   }
 
-  unused << WriteStringToFile("/proc/self/setgroups", "deny", 4);
+  Unused << WriteStringToFile("/proc/self/setgroups", "deny", 4);
 
   len = size_t(snprintf(buf, sizeof(buf), "%u %u 1\n", gid, gid));
   MOZ_ASSERT(len < sizeof(buf));

@@ -7,7 +7,7 @@ load 56746-1.html
 load 89101-1.html
 load 89358-1.html
 load 90205-1.html
-skip-if((OSX==1007||OSX==1008)&&browserIsRemote) load 99776-1.html # Bug 849747
+skip-if(cocoaWidget&&browserIsRemote) load 99776-1.html # Bug 849747
 load 118931-1.html
 load 121533-1.html
 load 123049-1.html
@@ -21,7 +21,7 @@ load 143862-2.html
 load 147320-1.html
 load 148245-1.html
 load 149014-1.html
-skip load 150431-1.html # slow test
+load 150431-1.html
 load 176915-1.html
 load 191272-1.html
 load 199696-1.html
@@ -151,9 +151,9 @@ load 374193-1.xhtml
 load 374297-1.html
 load 374297-2.html
 load 376223-1.xhtml
-asserts(0-99) load 378325-1.html # bug 531589
+load 378325-1.html
 load 378682.html
-asserts(0-3) load 379105-1.xhtml # bug 570215, bug 479160
+load 379105-1.xhtml
 load 379419-1.xhtml
 load 379768-1.html
 load 379799-1.html
@@ -183,7 +183,7 @@ load 393326-2.html
 load 393661-1.html
 load 393801-1.html
 load 394014-1.html
-asserts(0-1) load 394014-2.html # bug 429586
+load 394014-2.html
 load 394150-1.xhtml
 load 397011-1.xhtml
 load 398510-1.xhtml
@@ -238,7 +238,7 @@ load 420213-1.html
 load 420219-1.html
 load 420651-1.xhtml
 load 421203-1.xul
-asserts(0-1) load 421432.html # bug 844525
+load 421432.html
 load 422276.html
 load 423107-1.xhtml
 load 425981-1.html
@@ -256,6 +256,7 @@ load 432752-1.svg
 load 433450-1.html
 load 436982-1.html
 load 437142-1.html
+load 439258-1.html
 load 439343.html
 load 444863-1.html
 load 444925-1.xul
@@ -295,9 +296,9 @@ load 470851-1.xhtml
 load 471594-1.xhtml
 asserts-if(Android,2) load 473042.xhtml # bug 1034369 (may also cause a few assertions to be registered on the next test)
 asserts(0-5) load 474075.html # bug 847368
-load 479114-1.html
 load 477333-1.xhtml
 load 477731-1.html
+load 479114-1.html
 load 479360-1.xhtml
 load 480686-1.html
 load 481806-1.html
@@ -367,24 +368,27 @@ load 579655.html
 load 580129-1.html
 load 580494-1.html
 load 580834-1.xhtml
-asserts(0-13) load 589787.html # bug 574889
+load 589787.html
 load 591075-1.html
 load 591998-1.html
 load 595039-1.html
 load 597924-1.html
 load 606432-1.html
 load 609821-1.xhtml
+load 613817-1.svg
 load 615146-1.html
 load 615781-1.xhtml
 load 616495-single-side-composite-color-border.html
 load 629035-1.html
 load 629908-1.html
 load 635329.html
-load 645572-1.html
+load 636229-1.html
 == 640272.html 640272-ref.html
 load 645193.html
+load 645572-1.html
 load 650475.xhtml
 load 650489.xhtml
+load 651342-1.html
 load 653133-1.html
 load 663295.html
 load 663662-1.html
@@ -394,8 +398,11 @@ load 668579.html
 load 668941.xhtml
 load 670226.html
 asserts(2) load 675246-1.xhtml # Bug 675713
+load 690247-1.html
+load 690619-1.html
 load 691118-1.html
 load 695861.html
+load 695964-1.svg
 load 698335.html
 needs-focus pref(accessibility.browsewithcaret,true) load 699353-1.html
 load 701504.html
@@ -415,7 +422,7 @@ load 727601.html
 # processes so we time out.)
 skip-if(Android||B2G||browserIsRemote) asserts(0-2) pref(dom.disable_open_during_load,false) load 735943.html # the assertion is bug 735966, for android bug 760271, for b2g bug 833371
 asserts(0-2) load 736389-1.xhtml # sometimes the above assertions are delayed and is reported on this test instead
-asserts-if(winWidget,0-2) load 736924-1.html # bug 738803
+load 736924-1.html
 load 749816-1.html
 load 763223-1.html
 test-pref(font.size.inflation.emPerLine,15) test-pref(font.size.inflation.lineThreshold,100) load 763702.xhtml
@@ -426,14 +433,14 @@ load 772306.html
 load 788360.html
 load 793848.html
 load 795646.html
-skip-if(1) load 802902.html # bug 901752
+skip load 802902.html # bug 901752
 load 806056-1.html
 load 806056-2.html
 load 812665.html
 load 813372-1.html
-asserts(0-4) load 817219.html # bug 623436
+load 817219.html
 load 818454.html
-asserts-if(gtkWidget,0-1) load 822865.html # bug 540078
+load 822865.html
 load 824862.html
 load 826163.html
 load 833604-1.html
@@ -442,29 +449,29 @@ load 836990-1.html
 load 840480.html
 load 847242.html
 pref(layers.progressive-paint,false) pref(layers.low-precision-buffer,false) load 852293.html
-load 860579-1.html
 pref(layers.force-active,true) load 859526-1.html
 pref(layers.force-active,true) load 859630-1.html
+load 860579-1.html
 load 866588.html
 load 876092.html
 load 876221.html
 load 897852.html
 asserts-if(Android,2) asserts-if(!Android,4-6) load 898913.html # bug 847368
 pref(layers.acceleration.disabled,true) pref(layers.force-active,true) load 919434.html
-pref(layout.css.sticky.enabled,true) load 926728.html
+load 926728.html
 load 930381.html
-load 931464.html
-load 936988-1.html
 load 931450.html
 load 931460-1.html
+load 931464.html
 load 935765-1.html
+load 936988-1.html
 load 942690.html
 load 973390-1.html
 load 1001237.html
 load 1043163-1.html
 load 1061028.html
-load 1116104.html
 load 1107508-1.html
+load 1116104.html
 load 1127198-1.html
 load 1140198.html
 pref(layout.css.grid.enabled,true) load 1156588.html

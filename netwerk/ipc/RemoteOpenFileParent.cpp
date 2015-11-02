@@ -53,7 +53,7 @@ RemoteOpenFileParent::OpenSendCloseDelete()
   }
 
   // Sending a potentially invalid file descriptor is just fine.
-  unused << Send__delete__(this, fileDescriptor);
+  Unused << Send__delete__(this, fileDescriptor);
 
   // Current process's file descriptor is closed by FileDescriptor destructor.
 #endif // OS_TYPE

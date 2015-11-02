@@ -383,11 +383,13 @@ private:
 class CompartmentStatsExtras {
 public:
     CompartmentStatsExtras()
+      : sizeOfXPCPrivate(0)
     {}
 
     nsAutoCString jsPathPrefix;
     nsAutoCString domPathPrefix;
     nsCOMPtr<nsIURI> location;
+    size_t sizeOfXPCPrivate;
 
 private:
     CompartmentStatsExtras(const CompartmentStatsExtras& other) = delete;
