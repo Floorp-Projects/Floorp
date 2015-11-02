@@ -572,13 +572,13 @@ menuitem:not([type]):not(.menuitem-tooltip):not(.menuitem-iconic-tooltip) {
 
 /* Primary toolbar buttons */
 
-toolbar .toolbarbutton-1 > .toolbarbutton-icon,
-toolbar .toolbarbutton-1 > :-moz-any(.toolbarbutton-menubutton-button, .toolbarbutton-badge-stack) > .toolbarbutton-icon {
+:-moz-any(toolbar, .widget-overflow-list) .toolbarbutton-1 > .toolbarbutton-icon,
+:-moz-any(toolbar, .widget-overflow-list) .toolbarbutton-1 > :-moz-any(.toolbarbutton-menubutton-button, .toolbarbutton-badge-stack) > .toolbarbutton-icon {
   max-width: 16px;
 }
 
-toolbar .toolbarbutton-1:-moz-any(@primaryToolbarButtons@) > .toolbarbutton-icon,
-toolbar .toolbarbutton-1:-moz-any(@primaryToolbarButtons@) > :-moz-any(.toolbarbutton-menubutton-button, .toolbarbutton-badge-stack) > .toolbarbutton-icon,
+:-moz-any(toolbar, .widget-overflow-list) .toolbarbutton-1:-moz-any(@primaryToolbarButtons@) > .toolbarbutton-icon,
+:-moz-any(toolbar, .widget-overflow-list) .toolbarbutton-1:-moz-any(@primaryToolbarButtons@) > :-moz-any(.toolbarbutton-menubutton-button, .toolbarbutton-badge-stack) > .toolbarbutton-icon,
 #bookmarks-menu-button[cui-areatype="toolbar"] > .toolbarbutton-menubutton-dropmarker > .dropmarker-icon {
   max-width: 18px;
 }
@@ -617,7 +617,7 @@ toolbar .toolbarbutton-1:-moz-any(@primaryToolbarButtons@) > :-moz-any(.toolbarb
 :-moz-any(#TabsToolbar, #nav-bar) .toolbarbutton-1 > .toolbarbutton-menubutton-button > .toolbarbutton-icon,
 :-moz-any(#TabsToolbar, #nav-bar) #bookmarks-menu-button[cui-areatype="toolbar"] > .toolbarbutton-menubutton-dropmarker > .dropmarker-icon {
   /* horizontal padding + border + actual icon width */
-  max-width: 32px !important /* bug 561154 */;
+  max-width: 32px;
 }
 
 #nav-bar #PanelUI-menu-button {
