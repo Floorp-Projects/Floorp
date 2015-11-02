@@ -352,10 +352,12 @@ InterceptedChannelChrome::GetSecureUpgradedChannelURI(nsIURI** aURI)
 
 InterceptedChannelContent::InterceptedChannelContent(HttpChannelChild* aChannel,
                                                      nsINetworkInterceptController* aController,
-                                                     InterceptStreamListener* aListener)
+                                                     InterceptStreamListener* aListener,
+                                                     bool aSecureUpgrade)
 : InterceptedChannelBase(aController)
 , mChannel(aChannel)
 , mStreamListener(aListener)
+, mSecureUpgrade(aSecureUpgrade)
 {
 }
 
@@ -433,6 +435,10 @@ InterceptedChannelContent::FinishSynthesizedResponse(const nsACString& aFinalURL
   if (!aFinalURLSpec.IsEmpty()) {
     nsresult rv = NS_NewURI(getter_AddRefs(responseURI), aFinalURLSpec);
     NS_ENSURE_SUCCESS(rv, rv);
+  } else if (mSecureUpgrade) {
+    nsresult rv = HttpBaseChannel::GetSecureUpgradedURI(originalURI,
+                                                        getter_AddRefs(responseURI));
+    NS_ENSURE_SUCCESS(rv, rv);
   } else {
     responseURI = originalURI;
   }
@@ -502,7 +508,13 @@ InterceptedChannelContent::GetInternalContentPolicyType(nsContentPolicyType* aPo
 NS_IMETHODIMP
 InterceptedChannelContent::GetSecureUpgradedChannelURI(nsIURI** aURI)
 {
-  nsCOMPtr<nsIURI> uri = SecureUpgradeChannelURI(mChannel);
+  nsCOMPtr<nsIURI> uri;
+  if (mSecureUpgrade) {
+    uri = SecureUpgradeChannelURI(mChannel);
+  } else {
+    nsresult rv = mChannel->GetURI(getter_AddRefs(uri));
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
   if (uri) {
     uri.forget(aURI);
     return NS_OK;
