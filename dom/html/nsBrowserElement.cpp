@@ -603,8 +603,7 @@ nsBrowserElement::GenerateAllowedAudioChannels(
 
   RefPtr<BrowserElementAudioChannel> ac =
     BrowserElementAudioChannel::Create(aWindow, aFrameLoader, aAPI,
-                                       AudioChannel::Normal,
-                                       aManifestURL, aRv);
+                                       AudioChannel::Normal, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return;
   }
@@ -631,7 +630,7 @@ nsBrowserElement::GenerateAllowedAudioChannels(
         RefPtr<BrowserElementAudioChannel> ac =
           BrowserElementAudioChannel::Create(aWindow, aFrameLoader, aAPI,
                                              (AudioChannel)audioChannelTable[i].value,
-                                             aManifestURL, aRv);
+                                             aRv);
         if (NS_WARN_IF(aRv.Failed())) {
           return;
         }
