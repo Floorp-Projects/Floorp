@@ -54,7 +54,7 @@ function run_test() {
     '/test;+%',
     '/test?action=index/',
     '/test\ test',
-    '/punctuation/;,/?:@&=+$-_.!~*\'()"#',
+    '/punctuation/;,/?:@&=+$-_.!~*\'()[]"#',
     '/CasePreserving'
   ];
 

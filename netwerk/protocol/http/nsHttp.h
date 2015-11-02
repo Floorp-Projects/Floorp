@@ -167,6 +167,9 @@ struct nsHttp
     // Return whether the HTTP status code represents a permanent redirect
     static bool IsPermanentRedirect(uint32_t httpStatus);
 
+    // Returns the APLN token which represents the used protocol version.
+    static const char* GetProtocolVersion(uint32_t pv);
+
     // Declare all atoms
     //
     // The atom names and values are stored in nsHttpAtomList.h and are brought
