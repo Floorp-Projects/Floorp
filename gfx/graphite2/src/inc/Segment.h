@@ -87,7 +87,8 @@ class Segment
 public:
 
     enum {
-        SEG_INITCOLLISIONS = 1
+        SEG_INITCOLLISIONS = 1,
+        SEG_HASCOLLISIONS = 2
     };
 
     unsigned int slotCount() const { return m_numGlyphs; }      //one slot per glyph
@@ -158,8 +159,8 @@ public:
     void reverseSlots();
 
     bool isWhitespace(const int cid) const;
-    bool hasCollisionInfo() const { return m_collisions != 0; }
-    SlotCollision *collisionInfo(const Slot *s) const { return m_collisions ? m_collisions + s->index() : NULL; }
+    bool hasCollisionInfo() const { return (m_flags & SEG_HASCOLLISIONS); }
+    SlotCollision *collisionInfo(const Slot *s) const { return hasCollisionInfo() ? reinterpret_cast<SlotCollision *>(s->userAttrs() + m_silf->numUser()) : 0; }
 
     CLASS_NEW_DELETE
 
@@ -178,7 +179,6 @@ private:
     Slot          * m_freeSlots;        // linked list of free slots
     SlotJustify   * m_freeJustifies;    // Slot justification blocks free list
     CharInfo      * m_charinfo;         // character info, one per input character
-    SlotCollision * m_collisions;       // Array of SlotCollisions for each slot
     const Face    * m_face;             // GrFace
     const Silf    * m_silf;
     Slot          * m_first;            // first slot in segment
@@ -197,7 +197,7 @@ int8 Segment::getSlotBidiClass(Slot *s) const
 {
     int8 res = s->getBidiClass();
     if (res != -1) return res;
-    res = glyphAttr(s->gid(), m_silf->aBidi());
+    res = int8(glyphAttr(s->gid(), m_silf->aBidi()));
     s->setBidiClass(res);
     return res;
 }

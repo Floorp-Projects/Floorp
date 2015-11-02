@@ -46,7 +46,7 @@ Slot::Slot(int16 *user_attrs) :
 }
 
 // take care, this does not copy any of the GrSlot pointer fields
-void Slot::set(const Slot & orig, int charOffset, size_t numUserAttr, size_t justLevels, size_t numChars)
+void Slot::set(const Slot & orig, int charOffset, size_t sizeAttr, size_t justLevels, size_t numChars)
 {
     // leave m_next and m_prev unchanged
     m_glyphid = orig.m_glyphid;
@@ -73,7 +73,7 @@ void Slot::set(const Slot & orig, int charOffset, size_t numUserAttr, size_t jus
     m_bidiCls = orig.m_bidiCls;
     m_bidiLevel = orig.m_bidiLevel;
     if (m_userAttr && orig.m_userAttr)
-        memcpy(m_userAttr, orig.m_userAttr, numUserAttr * sizeof(*m_userAttr));
+        memcpy(m_userAttr, orig.m_userAttr, sizeAttr * sizeof(*m_userAttr));
     if (m_justs && orig.m_justs)
         memcpy(m_justs, orig.m_justs, SlotJustify::size_of(justLevels));
 }
@@ -469,7 +469,11 @@ void Slot::setGlyph(Segment *seg, uint16 glyphid, const GlyphFace * theGlyph)
     }
     m_advance = Position(aGlyph->theAdvance().x, 0.);
     if (seg->silf()->aPassBits())
+    {
         seg->mergePassBits(theGlyph->attrs()[seg->silf()->aPassBits()]);
+        if (seg->silf()->numPasses() > 16)
+            seg->mergePassBits(theGlyph->attrs()[seg->silf()->aPassBits()+1] << 16);
+    }
 }
 
 void Slot::floodShift(Position adj)
@@ -501,7 +505,8 @@ Slot * Slot::nextInCluster(const Slot *s) const
         return s->nextSibling();
     while ((base = s->attachedTo()))
     {
-        if (base->firstChild() == s && base->nextSibling())
+        // if (base->firstChild() == s && base->nextSibling())
+        if (base->nextSibling())
             return base->nextSibling();
         s = base;
     }
