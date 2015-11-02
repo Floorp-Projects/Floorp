@@ -1113,6 +1113,21 @@ public:
     }
   }
 
+  /**
+   * CONSTRUCTION PHASE ONLY
+   * This flag is true when the transform on the layer is a perspective
+   * transform. The compositor treats perspective transforms specially
+   * for async scrolling purposes.
+   */
+  void SetTransformIsPerspective(bool aTransformIsPerspective)
+  {
+    if (mTransformIsPerspective != aTransformIsPerspective) {
+      MOZ_LAYERS_LOG_IF_SHADOWABLE(this, ("Layer::Mutated(%p) TransformIsPerspective", this));
+      mTransformIsPerspective = aTransformIsPerspective;
+      Mutated();
+    }
+  }
+
   // Call AddAnimation to add a new animation to this layer from layout code.
   // Caller must fill in all the properties of the returned animation.
   // A later animation overrides an earlier one.
@@ -1266,6 +1281,7 @@ public:
   virtual float GetPostXScale() const { return mPostXScale; }
   virtual float GetPostYScale() const { return mPostYScale; }
   bool GetIsFixedPosition() { return mIsFixedPosition; }
+  bool GetTransformIsPerspective() const { return mTransformIsPerspective; }
   bool GetIsStickyPosition() { return mStickyPositionData; }
   FrameMetrics::ViewID GetFixedPositionScrollContainerId() { return mFixedPositionData ? mFixedPositionData->mScrollId : FrameMetrics::NULL_SCROLL_ID; }
   LayerPoint GetFixedPositionAnchor() { return mFixedPositionData ? mFixedPositionData->mAnchor : LayerPoint(); }
@@ -1796,6 +1812,7 @@ protected:
   uint32_t mContentFlags;
   bool mUseTileSourceRect;
   bool mIsFixedPosition;
+  bool mTransformIsPerspective;
   struct FixedPositionData {
     FrameMetrics::ViewID mScrollId;
     LayerPoint mAnchor;

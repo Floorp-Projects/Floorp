@@ -328,6 +328,7 @@ LayerTransactionParent::RecvUpdate(InfallibleTArray<Edit>&& cset,
       layer->SetOpacity(common.opacity());
       layer->SetClipRect(common.useClipRect() ? Some(common.clipRect()) : Nothing());
       layer->SetBaseTransform(common.transform().value());
+      layer->SetTransformIsPerspective(common.transformIsPerspective());
       layer->SetPostScale(common.postXScale(), common.postYScale());
       layer->SetIsFixedPosition(common.isFixedPosition());
       if (common.isFixedPosition()) {
