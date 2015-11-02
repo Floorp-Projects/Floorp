@@ -81,7 +81,6 @@
 #include "nsIMutable.h"
 #include "nsIObserverService.h"
 #include "nsIScriptSecurityManager.h"
-#include "nsIServiceWorkerManager.h"
 #include "nsScreenManagerProxy.h"
 #include "nsMemoryInfoDumper.h"
 #include "nsServiceManagerUtils.h"
@@ -1430,16 +1429,6 @@ ContentChild::RecvBidiKeyboardNotify(const bool& aIsLangRTL)
     PuppetBidiKeyboard* bidi = static_cast<PuppetBidiKeyboard*>(nsContentUtils::GetBidiKeyboard());
     if (bidi) {
         bidi->SetIsLangRTL(aIsLangRTL);
-    }
-    return true;
-}
-
-bool
-ContentChild::RecvUpdateServiceWorkerRegistrations()
-{
-    nsCOMPtr<nsIServiceWorkerManager> swm = mozilla::services::GetServiceWorkerManager();
-    if (swm) {
-        swm->UpdateAllRegistrations();
     }
     return true;
 }

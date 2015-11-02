@@ -1999,10 +1999,6 @@ SpecialPowersAPI.prototype = {
     return new File(path, options);
   },
 
-  startPeriodicServiceWorkerUpdates: function() {
-    return this._sendSyncMessage('SPPeriodicServiceWorkerUpdates', {});
-  },
-
   removeAllServiceWorkerData: function() {
     this.notifyObserversInParentProcess(null, "browser:purge-session-history", "");
   },
