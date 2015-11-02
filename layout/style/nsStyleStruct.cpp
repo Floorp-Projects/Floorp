@@ -2251,27 +2251,32 @@ nsChangeHint nsStyleBackground::CalcDifference(const nsStyleBackground& aOther) 
   const nsStyleBackground* lessLayers =
     mImageCount > aOther.mImageCount ? &aOther : this;
 
-  bool hasVisualDifference = false;
+  nsChangeHint hint = nsChangeHint(0);
 
   NS_FOR_VISIBLE_BACKGROUND_LAYERS_BACK_TO_FRONT(i, moreLayers) {
     if (i < lessLayers->mImageCount) {
-      if (moreLayers->mLayers[i] != lessLayers->mLayers[i]) {
-        if ((moreLayers->mLayers[i].mImage.GetType() == eStyleImageType_Element) ||
-            (lessLayers->mLayers[i].mImage.GetType() == eStyleImageType_Element))
-          return NS_CombineHint(nsChangeHint_UpdateEffects,
-                                nsChangeHint_RepaintFrame);
-        hasVisualDifference = true;
+      nsChangeHint layerDifference = moreLayers->mLayers[i].CalcDifference(lessLayers->mLayers[i]);
+      hint |= layerDifference;
+      if (layerDifference &&
+          ((moreLayers->mLayers[i].mImage.GetType() == eStyleImageType_Element) ||
+           (lessLayers->mLayers[i].mImage.GetType() == eStyleImageType_Element))) {
+        hint |= nsChangeHint_UpdateEffects | nsChangeHint_RepaintFrame;
       }
     } else {
-      if (moreLayers->mLayers[i].mImage.GetType() == eStyleImageType_Element)
-        return NS_CombineHint(nsChangeHint_UpdateEffects,
-                              nsChangeHint_RepaintFrame);
-      hasVisualDifference = true;
+      hint |= nsChangeHint_RepaintFrame;
+      if (moreLayers->mLayers[i].mImage.GetType() == eStyleImageType_Element) {
+        hint |= nsChangeHint_UpdateEffects | nsChangeHint_RepaintFrame;
+      }
     }
   }
 
-  if (hasVisualDifference || mBackgroundColor != aOther.mBackgroundColor)
-    return nsChangeHint_RepaintFrame;
+  if (mBackgroundColor != aOther.mBackgroundColor) {
+    hint |= nsChangeHint_RepaintFrame;
+  }
+
+  if (hint) {
+    return hint;
+  }
 
   if (mAttachmentCount != aOther.mAttachmentCount ||
       mClipCount != aOther.mClipCount ||
@@ -2480,6 +2485,25 @@ nsStyleBackground::Layer::operator==(const Layer& aOther) const
          mPosition == aOther.mPosition &&
          mSize == aOther.mSize &&
          mImage == aOther.mImage;
+}
+
+nsChangeHint
+nsStyleBackground::Layer::CalcDifference(const Layer& aOther) const
+{
+  nsChangeHint hint = nsChangeHint(0);
+  if (mAttachment != aOther.mAttachment ||
+      mClip != aOther.mClip ||
+      mOrigin != aOther.mOrigin ||
+      mRepeat != aOther.mRepeat ||
+      mBlendMode != aOther.mBlendMode ||
+      mSize != aOther.mSize ||
+      mImage != aOther.mImage) {
+    hint |= nsChangeHint_RepaintFrame;
+  }
+  if (mPosition != aOther.mPosition) {
+    hint |= nsChangeHint_SchedulePaint;
+  }
+  return hint;
 }
 
 // --------------------
