@@ -1,18 +1,16 @@
+load 0px-size-font-667225.html
+load 0px-size-font-shadow.html
 load 360293-1.html
 load 421715-1.html
 load 553938-1.html
 load 647480.html
 load 727547.html
-load 0px-size-font-667225.html
-load 0px-size-font-shadow.html
-load texImage2D.html
 load 729116.html
 load 745699-1.html
 load 746813-1.html
-# this test crashes in a bunch places still
-#load 745818-large-source.html
 load 743499-negative-size.html
-skip-if(Android) load 767337-1.html
+skip-if(Android||B2G) load 745818-large-source.html # Bug XXX - Crashes Android/B2G mid-run w/o a stack
+load 767337-1.html
 skip-if(Android||B2G) load 780392-1.html # bug 833371 for B2G
 skip-if(Android||B2G) skip-if(gtkWidget&&isDebugBuild) load 789933-1.html # bug 833371 for B2G, bug 1155252 for linux
 load 794463-1.html
@@ -25,4 +23,4 @@ load 1099143-1.html
 load 1161277-1.html
 load 1183363.html
 load 1190705.html
-
+load texImage2D.html

@@ -83,8 +83,8 @@ static func_ptr_type cast(void *ptr)
 
 static void fatal_error(const char *str)
 {
-  mozilla::unused << write(write_end_of_the_pipe, str, strlen(str));
-  mozilla::unused << write(write_end_of_the_pipe, "\n", 1);
+  mozilla::Unused << write(write_end_of_the_pipe, str, strlen(str));
+  mozilla::Unused << write(write_end_of_the_pipe, "\n", 1);
   _exit(EXIT_FAILURE);
 }
 
@@ -98,7 +98,7 @@ x_error_handler(Display *, XErrorEvent *ev)
                         ev->error_code,
                         ev->request_code,
                         ev->minor_code);
-  mozilla::unused << write(write_end_of_the_pipe, buf, length);
+  mozilla::Unused << write(write_end_of_the_pipe, buf, length);
   _exit(EXIT_FAILURE);
   return 0;
 }
@@ -251,7 +251,7 @@ void glxtest()
   dlclose(libgl);
 
   ///// Finally write data to the pipe
-  mozilla::unused << write(write_end_of_the_pipe, buf, length);
+  mozilla::Unused << write(write_end_of_the_pipe, buf, length);
 }
 
 }

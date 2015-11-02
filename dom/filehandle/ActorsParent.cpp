@@ -1003,7 +1003,7 @@ FileHandleThreadPool::Cleanup()
       MOZ_ASSERT(completeCallback);
       MOZ_ASSERT(completeCallback->mCallback);
 
-      unused << completeCallback->mCallback->Run();
+      Unused << completeCallback->mCallback->Run();
     }
 
     mCompleteCallbacks.Clear();
@@ -1651,7 +1651,7 @@ FileHandle::SendCompleteNotification(bool aAborted)
   AssertIsOnBackgroundThread();
 
   if (!IsActorDestroyed()) {
-    unused << SendComplete(aAborted);
+    Unused << SendComplete(aAborted);
   }
 }
 
@@ -2280,7 +2280,7 @@ ProgressRunnable::Run()
 {
   AssertIsOnBackgroundThread();
 
-  unused << mCopyFileHandleOp->SendProgress(mProgress, mProgressMax);
+  Unused << mCopyFileHandleOp->SendProgress(mProgress, mProgressMax);
 
   mCopyFileHandleOp = nullptr;
 

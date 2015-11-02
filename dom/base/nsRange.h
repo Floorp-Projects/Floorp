@@ -212,6 +212,12 @@ public:
                                                   bool aFlushLayout = true);
   already_AddRefed<DOMRectList> GetClientRects(bool aClampToEdge = true,
                                                bool aFlushLayout = true);
+  static void GetInnerTextNoFlush(mozilla::dom::DOMString& aValue,
+                                  mozilla::ErrorResult& aError,
+                                  nsIContent* aStartParent,
+                                  uint32_t aStartOffset,
+                                  nsIContent* aEndParent,
+                                  uint32_t aEndOffset);
 
   nsINode* GetParentObject() const { return mOwner; }
   virtual JSObject* WrapObject(JSContext* cx, JS::Handle<JSObject*> aGivenProto) override final;

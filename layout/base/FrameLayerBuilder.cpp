@@ -2385,7 +2385,7 @@ ContainerState::PreparePaintedLayerForUse(PaintedLayer* aLayer,
     aData->mAnimatedGeometryRootPosition = animatedGeometryRootTopLeft;
   }
 #else
-  unused << didResetScrollPositionForLayerPixelAlignment;
+  Unused << didResetScrollPositionForLayerPixelAlignment;
 #endif
 }
 

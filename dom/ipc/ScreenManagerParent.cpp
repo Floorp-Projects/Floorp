@@ -26,7 +26,7 @@ ScreenManagerParent::ScreenManagerParent(uint32_t* aNumberOfScreens,
     MOZ_CRASH("Couldn't get nsIScreenManager from ScreenManagerParent.");
   }
 
-  unused << RecvRefresh(aNumberOfScreens, aSystemDefaultScale, aSuccess);
+  Unused << RecvRefresh(aNumberOfScreens, aSystemDefaultScale, aSuccess);
 }
 
 bool
@@ -64,7 +64,7 @@ ScreenManagerParent::RecvScreenRefresh(const uint32_t& aId,
   }
 
   ScreenDetails details;
-  unused << ExtractScreenDetails(screen, details);
+  Unused << ExtractScreenDetails(screen, details);
 
   *aRetVal = details;
   *aSuccess = true;

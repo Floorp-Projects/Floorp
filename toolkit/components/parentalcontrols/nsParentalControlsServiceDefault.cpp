@@ -13,7 +13,7 @@ NS_IMPL_ISUPPORTS(nsParentalControlsService, nsIParentalControlsService)
 nsParentalControlsService::nsParentalControlsService() :
   mEnabled(false)
 {
-  mozilla::unused << mEnabled;
+  mozilla::Unused << mEnabled;
 }
 
 nsParentalControlsService::~nsParentalControlsService()

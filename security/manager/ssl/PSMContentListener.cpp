@@ -243,7 +243,7 @@ PSMContentDownloaderParent::RecvOnStopRequest(const nsresult& code)
   }
 
   if (mIPCOpen) {
-    mozilla::unused << Send__delete__(this);
+    mozilla::Unused << Send__delete__(this);
   }
   return true;
 }
@@ -254,7 +254,7 @@ PSMContentDownloaderParent::OnStopRequest(nsIRequest* request, nsISupports* cont
   nsresult rv = PSMContentStreamListener::OnStopRequest(request, context, code);
 
   if (mIPCOpen) {
-    mozilla::unused << Send__delete__(this);
+    mozilla::Unused << Send__delete__(this);
   }
   return rv;
 }
@@ -265,7 +265,7 @@ PSMContentDownloaderParent::RecvDivertToParentUsing(mozilla::net::PChannelDivert
   MOZ_ASSERT(diverter);
   auto p = static_cast<mozilla::net::ChannelDiverterParent*>(diverter);
   p->DivertTo(this);
-  mozilla::unused << p->Send__delete__(p);
+  mozilla::Unused << p->Send__delete__(p);
   return true;
 }
 
@@ -309,7 +309,7 @@ PSMContentDownloaderChild::OnStartRequest(nsIRequest* request, nsISupports* cont
     return NS_ERROR_FAILURE;
   }
 
-  mozilla::unused << SendOnStartRequest(contentLength);
+  mozilla::Unused << SendOnStartRequest(contentLength);
   return NS_OK;
 }
 
@@ -326,7 +326,7 @@ PSMContentDownloaderChild::OnDataAvailable(nsIRequest* request,
     return rv;
   }
 
-  mozilla::unused << SendOnDataAvailable(chunk, aSourceOffset, aLength);
+  mozilla::Unused << SendOnDataAvailable(chunk, aSourceOffset, aLength);
   return NS_OK;
 }
 
@@ -335,7 +335,7 @@ PSMContentDownloaderChild::OnStopRequest(nsIRequest* request,
                                          nsISupports* context,
                                          nsresult aStatus)
 {
-  mozilla::unused << SendOnStopRequest(aStatus);
+  mozilla::Unused << SendOnStopRequest(aStatus);
   return NS_OK;
 }
 

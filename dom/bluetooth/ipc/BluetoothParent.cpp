@@ -17,7 +17,7 @@
 #include "BluetoothReplyRunnable.h"
 #include "BluetoothService.h"
 
-using mozilla::unused;
+using mozilla::Unused;
 USING_BLUETOOTH_NAMESPACE
 
 /*******************************************************************************
@@ -99,7 +99,7 @@ BluetoothParent::BeginShutdown()
 {
   // Only do something here if we haven't yet begun the shutdown sequence.
   if (mShutdownState == Running) {
-    unused << SendBeginShutdown();
+    Unused << SendBeginShutdown();
     mShutdownState = SentBeginShutdown;
   }
 }
@@ -357,7 +357,7 @@ BluetoothParent::DeallocPBluetoothRequestParent(PBluetoothRequestParent* aActor)
 void
 BluetoothParent::Notify(const BluetoothSignal& aSignal)
 {
-  unused << SendNotify(aSignal);
+  Unused << SendNotify(aSignal);
 }
 
 /*******************************************************************************

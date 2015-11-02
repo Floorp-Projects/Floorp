@@ -20,7 +20,7 @@ namespace mozilla {
 namespace dom {
 namespace cache {
 
-using mozilla::unused;
+using mozilla::Unused;
 using mozilla::ipc::FileDescriptor;
 
 // ----------------------------------------------------------------------------
