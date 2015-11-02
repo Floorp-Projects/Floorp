@@ -29,48 +29,48 @@ public:
   static void InitGattInterface(BluetoothProfileResultHandler* aRes);
   static void DeinitGattInterface(BluetoothProfileResultHandler* aRes);
 
-  void StartLeScan(const nsTArray<nsString>& aServiceUuids,
+  void StartLeScan(const nsTArray<BluetoothUuid>& aServiceUuids,
                    BluetoothReplyRunnable* aRunnable);
 
-  void StopLeScan(const nsAString& aScanUuid,
+  void StopLeScan(const BluetoothUuid& aScanUuid,
                   BluetoothReplyRunnable* aRunnable);
 
-  void Connect(const nsAString& aAppUuid,
-               const nsAString& aDeviceAddr,
+  void Connect(const BluetoothUuid& aAppUuid,
+               const BluetoothAddress& aDeviceAddr,
                BluetoothReplyRunnable* aRunnable);
 
-  void Disconnect(const nsAString& aAppUuid,
-                  const nsAString& aDeviceAddr,
+  void Disconnect(const BluetoothUuid& aAppUuid,
+                  const BluetoothAddress& aDeviceAddr,
                   BluetoothReplyRunnable* aRunnable);
 
-  void Discover(const nsAString& aAppUuid,
+  void Discover(const BluetoothUuid& aAppUuid,
                 BluetoothReplyRunnable* aRunnable);
 
   void UnregisterClient(int aClientIf,
                         BluetoothReplyRunnable* aRunnable);
 
   void ReadRemoteRssi(int aClientIf,
-                      const nsAString& aDeviceAddr,
+                      const BluetoothAddress& aDeviceAddr,
                       BluetoothReplyRunnable* aRunnable);
 
-  void RegisterNotifications(const nsAString& aAppUuid,
+  void RegisterNotifications(const BluetoothUuid& aAppUuid,
                              const BluetoothGattServiceId& aServId,
                              const BluetoothGattId& aCharId,
                              BluetoothReplyRunnable* aRunnable);
 
-  void DeregisterNotifications(const nsAString& aAppUuid,
+  void DeregisterNotifications(const BluetoothUuid& aAppUuid,
                                const BluetoothGattServiceId& aServId,
                                const BluetoothGattId& aCharId,
                                BluetoothReplyRunnable* aRunnable);
 
   void ReadCharacteristicValue(
-    const nsAString& aAppUuid,
+    const BluetoothUuid& aAppUuid,
     const BluetoothGattServiceId& aServiceId,
     const BluetoothGattId& aCharacteristicId,
     BluetoothReplyRunnable* aRunnable);
 
   void WriteCharacteristicValue(
-    const nsAString& aAppUuid,
+    const BluetoothUuid& aAppUuid,
     const BluetoothGattServiceId& aServiceId,
     const BluetoothGattId& aCharacteristicId,
     const BluetoothGattWriteType& aWriteType,
@@ -78,14 +78,14 @@ public:
     BluetoothReplyRunnable* aRunnable);
 
   void ReadDescriptorValue(
-    const nsAString& aAppUuid,
+    const BluetoothUuid& aAppUuid,
     const BluetoothGattServiceId& aServiceId,
     const BluetoothGattId& aCharacteristicId,
     const BluetoothGattId& aDescriptorId,
     BluetoothReplyRunnable* aRunnable);
 
   void WriteDescriptorValue(
-    const nsAString& aAppUuid,
+    const BluetoothUuid& aAppUuid,
     const BluetoothGattServiceId& aServiceId,
     const BluetoothGattId& aCharacteristicId,
     const BluetoothGattId& aDescriptorId,
@@ -93,32 +93,32 @@ public:
     BluetoothReplyRunnable* aRunnable);
 
   void ConnectPeripheral(
-    const nsAString& aAppUuid,
-    const nsAString& aAddress,
+    const BluetoothUuid& aAppUuid,
+    const BluetoothAddress& aAddress,
     BluetoothReplyRunnable* aRunnable);
 
   void DisconnectPeripheral(
-    const nsAString& aAppUuid,
-    const nsAString& aAddress,
+    const BluetoothUuid& aAppUuid,
+    const BluetoothAddress& aAddress,
     BluetoothReplyRunnable* aRunnable);
 
   void UnregisterServer(int aServerIf,
                         BluetoothReplyRunnable* aRunnable);
 
   void ServerAddService(
-    const nsAString& aAppUuid,
+    const BluetoothUuid& aAppUuid,
     const BluetoothGattServiceId& aServiceId,
     uint16_t aHandleCount,
     BluetoothReplyRunnable* aRunnable);
 
   void ServerAddIncludedService(
-    const nsAString& aAppUuid,
+    const BluetoothUuid& aAppUuid,
     const BluetoothAttributeHandle& aServiceHandle,
     const BluetoothAttributeHandle& aIncludedServiceHandle,
     BluetoothReplyRunnable* aRunnable);
 
   void ServerAddCharacteristic(
-    const nsAString& aAppUuid,
+    const BluetoothUuid& aAppUuid,
     const BluetoothAttributeHandle& aServiceHandle,
     const BluetoothUuid& aCharacteristicUuid,
     BluetoothGattAttrPerm aPermissions,
@@ -126,7 +126,7 @@ public:
     BluetoothReplyRunnable* aRunnable);
 
   void ServerAddDescriptor(
-    const nsAString& aAppUuid,
+    const BluetoothUuid& aAppUuid,
     const BluetoothAttributeHandle& aServiceHandle,
     const BluetoothAttributeHandle& aCharacteristicHandle,
     const BluetoothUuid& aDescriptorUuid,
@@ -134,31 +134,31 @@ public:
     BluetoothReplyRunnable* aRunnable);
 
   void ServerRemoveService(
-    const nsAString& aAppUuid,
+    const BluetoothUuid& aAppUuid,
     const BluetoothAttributeHandle& aServiceHandle,
     BluetoothReplyRunnable* aRunnable);
 
   void ServerStartService(
-    const nsAString& aAppUuid,
+    const BluetoothUuid& aAppUuid,
     const BluetoothAttributeHandle& aServiceHandle,
     BluetoothReplyRunnable* aRunnable);
 
   void ServerStopService(
-    const nsAString& aAppUuid,
+    const BluetoothUuid& aAppUuid,
     const BluetoothAttributeHandle& aServiceHandle,
     BluetoothReplyRunnable* aRunnable);
 
   void ServerSendResponse(
-    const nsAString& aAppUuid,
-    const nsAString& aAddress,
+    const BluetoothUuid& aAppUuid,
+    const BluetoothAddress& aAddress,
     uint16_t aStatus,
     int32_t aRequestId,
     const BluetoothGattResponse& aRsp,
     BluetoothReplyRunnable* aRunnable);
 
   void ServerSendIndication(
-    const nsAString& aAppUuid,
-    const nsAString& aAddress,
+    const BluetoothUuid& aAppUuid,
+    const BluetoothAddress& aAddress,
     const BluetoothAttributeHandle& aCharacteristicHandle,
     bool aConfirm,
     const nsTArray<uint8_t>& aValue,
@@ -167,11 +167,6 @@ public:
 private:
   ~BluetoothGattManager();
 
-#if 0
-  class CleanupResultHandler;
-  class CleanupResultHandlerRunnable;
-  class InitGattResultHandler;
-#endif
   class DeinitProfileResultHandlerRunnable;
   class InitProfileResultHandlerRunnable;
   class RegisterModuleResultHandler;

@@ -11,6 +11,7 @@
 
 namespace android {
 struct ALooper;
+class MediaBuffer;
 class MediaCodecProxy;
 } // namespace android
 
@@ -38,8 +39,8 @@ public:
   // Shutdown decoder and rejects the init promise.
   virtual nsresult Shutdown();
 
-  // True if sample is queued.
-  bool HasQueuedSample();
+  // How many samples are waiting for processing.
+  size_t NumQueuedSamples();
 
   // Set callback for decoder events, such as requesting more input,
   // returning output, or reporting error.
@@ -121,6 +122,34 @@ protected:
   MediaDataDecoderCallback* mDecodeCallback; // Reports decoder output or error.
 };
 
+class AutoReleaseMediaBuffer
+{
+public:
+  AutoReleaseMediaBuffer(android::MediaBuffer* aBuffer, android::MediaCodecProxy* aCodec)
+    : mBuffer(aBuffer)
+    , mCodec(aCodec)
+  {}
+
+  ~AutoReleaseMediaBuffer()
+  {
+    MOZ_ASSERT(mCodec.get());
+    if (mBuffer) {
+      mCodec->ReleaseMediaBuffer(mBuffer);
+    }
+  }
+
+  android::MediaBuffer* forget()
+  {
+    android::MediaBuffer* tmp = mBuffer;
+    mBuffer = nullptr;
+    return tmp;
+  }
+
+private:
+  android::MediaBuffer* mBuffer;
+  android::sp<android::MediaCodecProxy> mCodec;
+};
+
 // Samples are decoded using the GonkDecoder (MediaCodec)
 // created by the GonkDecoderManager. This class implements
 // the higher-level logic that drives mapping the Gonk to the async
@@ -145,7 +174,6 @@ public:
   nsresult Shutdown() override;
 
 private:
-  RefPtr<FlushableTaskQueue> mTaskQueue;
 
   android::sp<GonkDecoderManager> mManager;
 };

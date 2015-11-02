@@ -23,12 +23,8 @@ function run_test() {
   am.setAuthIdentity("http", "a.example.com", -1, "basic", "realm", "", "example.com", "user3", "pass3", false, app1browser);
   am.setAuthIdentity("http", "a.example.com", -1, "basic", "realm", "", "example.com", "user2", "pass2", false, app10);
 
-  let subject = {
-    appId: 1,
-    browserOnly: true,
-    QueryInterface: XPCOMUtils.generateQI([Ci.mozIApplicationClearPrivateDataParams])
-  };
-  Services.obs.notifyObservers(subject, "webapps-clear-data", null);
+  let attrs_inBrowser = JSON.stringify({ appId:1, inBrowser:true });
+  Services.obs.notifyObservers(null, "clear-origin-data", attrs_inBrowser);
   
   var domain = {value: ""}, user = {value: ""}, pass = {value: ""};
   try {

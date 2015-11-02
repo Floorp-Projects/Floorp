@@ -52,7 +52,7 @@ private:
   void HandleShutdown();
   void NotifyConnectionStatusChanged();
 
-  nsString mDeviceAddress;
+  BluetoothAddress mDeviceAddress;
   RefPtr<BluetoothProfileController> mController;
 
   // AVRCP data member

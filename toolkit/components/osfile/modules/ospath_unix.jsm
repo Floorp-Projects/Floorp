@@ -165,7 +165,10 @@ exports.split = split;
 // The case of %3b is designed to match Services.io, but fundamentally doesn't matter.
 var toFileURIExtraEncodings = {';': '%3b', '?': '%3F', '#': '%23'};
 var toFileURI = function toFileURI(path) {
-  let uri = encodeURI(this.normalize(path));
+  // Per https://url.spec.whatwg.org we should not encode [] in the path
+  let dontNeedEscaping = {'%5B': '[', '%5D': ']'};
+  let uri = encodeURI(this.normalize(path)).replace(/%(5B|5D)/gi,
+    match => dontNeedEscaping[match]);
 
   // add a prefix, and encodeURI doesn't escape a few characters that we do
   // want to escape, so fix that up

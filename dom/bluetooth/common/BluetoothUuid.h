@@ -13,43 +13,9 @@ BEGIN_BLUETOOTH_NAMESPACE
 
 class BluetoothProfileManagerBase;
 
-/*
- * Service classes and Profile Identifiers
- *
- * Supported Bluetooth services for v1 are listed as below.
- *
- * The value of each service class is defined in "AssignedNumbers/Service
- * Discovery Protocol (SDP)/Service classes and Profile Identifiers" in the
- * Bluetooth Core Specification.
- */
-enum BluetoothServiceClass
-{
-  A2DP             = 0x110D,
-  A2DP_SINK        = 0x110B,
-  AVRCP            = 0x110E,
-  AVRCP_TARGET     = 0x110C,
-  AVRCP_CONTROLLER = 0x110F,
-  HANDSFREE        = 0x111E,
-  HANDSFREE_AG     = 0x111F,
-  HEADSET          = 0x1108,
-  HEADSET_AG       = 0x1112,
-  HID              = 0x1124,
-  OBJECT_PUSH      = 0x1105,
-  UNKNOWN          = 0x0000
-};
-
 class BluetoothUuidHelper
 {
 public:
-  /**
-   * Get a 128-bit uuid string calculated from a 16-bit service class UUID and
-   * BASE_UUID
-   *
-   * @param aServiceClassUuid  16-bit service class UUID
-   * @param aRetUuidStr  out parameter, 128-bit uuid string
-   */
-  static void
-  GetString(BluetoothServiceClass aServiceClassUuid, nsAString& aRetUuidStr);
 
   /**
    * Convert a 128-bit uuid string to a value of BluetoothServiceClass

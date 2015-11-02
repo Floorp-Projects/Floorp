@@ -1,9 +1,0 @@
-<!DOCTYPE html>
-<script>
-  function done() {
-    parent.postMessage({status: "callback", data: "done"}, "*");
-  }
-
-  navigator.serviceWorker.ready.then(done);
-  navigator.serviceWorker.register("../periodic.sjs", {scope: "."});
-</script>

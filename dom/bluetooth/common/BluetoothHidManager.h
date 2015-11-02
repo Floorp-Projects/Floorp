@@ -40,7 +40,7 @@ private:
 
   // data member
   bool mConnected;
-  nsString mDeviceAddress;
+  BluetoothAddress mDeviceAddress;
   RefPtr<BluetoothProfileController> mController;
 };
 

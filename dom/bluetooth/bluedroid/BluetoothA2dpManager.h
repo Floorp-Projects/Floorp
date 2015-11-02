@@ -66,7 +66,7 @@ private:
   void AudioStateNotification(BluetoothA2dpAudioState aState,
                               const BluetoothAddress& aBdAddr) override;
 
-  nsString mDeviceAddress;
+  BluetoothAddress mDeviceAddress;
   RefPtr<BluetoothProfileController> mController;
 
   // A2DP data member

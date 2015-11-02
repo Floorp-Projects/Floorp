@@ -220,8 +220,9 @@ function test_clearedSpec()
   symmetricEquality(true, url, ref);
 }
 
-function test_escapeQueryBrackets()
+function test_escapeBrackets()
 {
+  // Query
   var url = stringToURL("http://example.com/?a[x]=1");
   do_check_eq(url.spec, "http://example.com/?a[x]=1");
 
@@ -233,6 +234,14 @@ function test_escapeQueryBrackets()
 
   url = stringToURL("http://[2001::1]/?a%5Bx%5D=1");
   do_check_eq(url.spec, "http://[2001::1]/?a%5Bx%5D=1");
+
+  // Path
+  url = stringToURL("http://example.com/brackets[x]/test");
+  do_check_eq(url.spec, "http://example.com/brackets[x]/test");
+
+  url = stringToURL("http://example.com/a%5Bx%5D/test");
+  do_check_eq(url.spec, "http://example.com/a%5Bx%5D/test");
+
 }
 
 function test_apostropheEncoding()
@@ -243,6 +252,17 @@ function test_apostropheEncoding()
   do_check_eq(url.spec, "http://example.com/dir'/file'.ext'");
 }
 
+function test_accentEncoding()
+{
+  var url = stringToURL("http://example.com/?hello=`");
+  do_check_eq(url.spec, "http://example.com/?hello=`");
+  do_check_eq(url.query, "hello=`");
+
+  url = stringToURL("http://example.com/?hello=%2C");
+  do_check_eq(url.spec, "http://example.com/?hello=%2C");
+  do_check_eq(url.query, "hello=%2C");
+}
+
 function run_test()
 {
   test_setEmptyPath();
@@ -251,6 +271,7 @@ function run_test()
   test_ipv6();
   test_ipv6_fail();
   test_clearedSpec();
-  test_escapeQueryBrackets();
+  test_escapeBrackets();
   test_apostropheEncoding();
+  test_accentEncoding();
 }

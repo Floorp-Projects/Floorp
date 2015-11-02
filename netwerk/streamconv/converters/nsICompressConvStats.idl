@@ -1,0 +1,17 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+/**
+ * nsICompressConvStats
+ *
+ * This interface allows for the observation of decoded resource sizes
+ */
+[builtinclass, scriptable, uuid(58172ad0-46a9-4893-8fde-cd909c10792a)]
+interface nsICompressConvStats : nsISupports
+{
+    readonly attribute uint64_t decodedDataLength;
+};
