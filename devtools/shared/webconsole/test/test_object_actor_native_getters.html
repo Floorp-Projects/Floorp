@@ -21,7 +21,7 @@ function startTest()
 {
   removeEventListener("load", startTest);
 
-  attachConsoleToTab(["ConsoleAPI"], onAttach);
+  attachConsole(["ConsoleAPI"], onAttach, true);
 }
 
 function onAttach(aState, aResponse)

@@ -22,7 +22,7 @@ function startTest()
 {
   removeEventListener("load", startTest);
 
-  attachConsoleToTab([], onAttach);
+  attachConsole([], onAttach, true);
 }
 
 function onAttach(aState, aResponse)
