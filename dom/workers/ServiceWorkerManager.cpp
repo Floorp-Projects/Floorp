@@ -3927,23 +3927,6 @@ ServiceWorkerManager::RemoveAllRegistrations(OriginAttributes* aParams)
 }
 
 NS_IMETHODIMP
-ServiceWorkerManager::UpdateAllRegistrations()
-{
-  AssertIsOnMainThread();
-
-  for (auto it1 = mRegistrationInfos.Iter(); !it1.Done(); it1.Next()) {
-    for (auto it2 = it1.UserData()->mInfos.Iter(); !it2.Done(); it2.Next()) {
-      ServiceWorkerRegistrationInfo* info = it2.UserData();
-      MOZ_ASSERT(!info->mScope.IsEmpty());
-
-      SoftUpdate(info->mPrincipal, info->mScope);
-    }
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 ServiceWorkerManager::Observe(nsISupports* aSubject,
                               const char* aTopic,
                               const char16_t* aData)
