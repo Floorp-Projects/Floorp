@@ -14,7 +14,7 @@ interface nsIHttpHeaderVisitor;
  * the inspection of the resulting HTTP response status and headers when they
  * become available.
  */
-[builtinclass, scriptable, uuid(e90acf2d-eaf2-41d8-97b2-c8d99f6437a1)]
+[builtinclass, scriptable, uuid(b2596105-3d0d-4e6a-824f-0539713bb879)]
 interface nsIHttpChannel : nsIChannel
 {
     /**************************************************************************
@@ -83,6 +83,31 @@ interface nsIHttpChannel : nsIChannel
      * Set the HTTP referrer URI with a referrer policy.
      */
     void setReferrerWithPolicy(in nsIURI referrer, in unsigned long referrerPolicy);
+
+    /**
+     * Returns the network protocol used to fetch the resource as identified
+     * by the ALPN Protocol ID.
+     *
+     * @throws NS_ERROR_NOT_AVAILABLE if called before the response
+     *         has been received (before onStartRequest).
+     */
+    readonly attribute ACString protocolVersion;
+
+    /**
+     * size consumed by the response header fields and the response payload body
+     */
+    readonly attribute uint64_t transferSize;
+
+    /**
+     * The size of the message body received by the client,
+     * after removing any applied content-codings
+     */
+    readonly attribute uint64_t decodedBodySize;
+
+    /**
+     * The size in octets of the payload body, prior to removing content-codings
+     */
+    readonly attribute uint64_t encodedBodySize;
 
     /**
      * Get the value of a particular request header.

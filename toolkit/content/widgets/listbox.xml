@@ -174,7 +174,7 @@
         </setter>
       </property>
 
-      <field name="selectedItems">[]</field>
+      <field name="selectedItems">new ChromeNodeList()</field>
 
       <method name="addItemToSelection">
         <parameter name="aItem"/>
@@ -186,7 +186,7 @@
           if (aItem.selected)
             return;
 
-          this.selectedItems.push(aItem);
+          this.selectedItems.append(aItem);
           aItem.selected = true;
 
           this._fireOnSelect();
@@ -201,14 +201,8 @@
           if (!aItem.selected)
             return;
 
-          for (var i = 0; i < this.selectedItems.length; ++i) {
-            if (this.selectedItems[i] == aItem) {
-              this.selectedItems.splice(i, 1);
-              aItem.selected = false;
-              break;
-            }
-          }
-
+          this.selectedItems.remove(aItem);
+          aItem.selected = false;
           this._fireOnSelect();
         ]]>
         </body>
@@ -355,10 +349,11 @@
         <body>
         <![CDATA[
           if (this.selectedItems) {
-            for (var i = this.selectedItems.length - 1; i >= 0; --i)
-              this.selectedItems[i].selected = false;
-
-            this.selectedItems.length = 0;
+            while (this.selectedItems.length > 0) {
+              let item = this.selectedItems[0];
+              item.selected = false;
+              this.selectedItems.remove(item);
+            }
           }
 
           this._selectionStart = null;
@@ -700,7 +695,7 @@
         for (var index = 0; index < count; index++) {
           var item = this.getItemAtIndex(index);
           if (item.getAttribute("selected") == "true")
-            this.selectedItems.push(item);
+            this.selectedItems.append(item);
         }
       ]]>
       </constructor>

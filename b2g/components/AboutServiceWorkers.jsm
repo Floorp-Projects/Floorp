@@ -109,9 +109,9 @@ this.AboutServiceWorkers = {
         let registrations = [];
 
         for (let i = 0; i < data.length; i++) {
-          let info = data.queryElementAt(i, Ci.nsIServiceWorkerInfo);
+          let info = data.queryElementAt(i, Ci.nsIServiceWorkerRegistrationInfo);
           if (!info) {
-            dump("AboutServiceWorkers: Invalid nsIServiceWorkerInfo " +
+            dump("AboutServiceWorkers: Invalid nsIServiceWorkerRegistrationInfo " +
                  "interface.\n");
             continue;
           }
