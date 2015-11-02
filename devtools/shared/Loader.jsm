@@ -87,9 +87,7 @@ BuiltinProvider.prototype = {
         // ⚠ DISCUSSION ON DEV-DEVELOPER-TOOLS REQUIRED BEFORE MODIFYING ⚠
         "devtools": "resource://devtools",
         // ⚠ DISCUSSION ON DEV-DEVELOPER-TOOLS REQUIRED BEFORE MODIFYING ⚠
-        "devtools/client": "resource://devtools/client",
-        // ⚠ DISCUSSION ON DEV-DEVELOPER-TOOLS REQUIRED BEFORE MODIFYING ⚠
-        "gcli": "resource://devtools/gcli",
+        "gcli": "resource://devtools/shared/gcli/source/lib/gcli",
         // ⚠ DISCUSSION ON DEV-DEVELOPER-TOOLS REQUIRED BEFORE MODIFYING ⚠
         "promise": "resource://gre/modules/Promise-backend.js",
         // ⚠ DISCUSSION ON DEV-DEVELOPER-TOOLS REQUIRED BEFORE MODIFYING ⚠
