@@ -174,6 +174,21 @@ public:
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(JsepTrack);
 
+  struct JsConstraints
+  {
+    std::string rid;
+    EncodingConstraints constraints;
+  };
+
+  void SetJsConstraints(const std::vector<JsConstraints>& constraintsList)
+  {
+    mJsEncodeConstraints = constraintsList;
+  }
+
+  static void AddToMsection(const std::vector<JsConstraints>& constraintsList,
+                            sdp::Direction direction,
+                            SdpMediaSection* msection);
+
 protected:
   virtual ~JsepTrack() {}
 
@@ -189,10 +204,10 @@ private:
   void AddToMsection(const std::vector<JsepCodecDescription*>& codecs,
                      SdpMediaSection* msection) const;
   void GetRids(const SdpMediaSection& msection,
+               sdp::Direction direction,
                std::vector<SdpRidAttributeList::Rid>* rids) const;
-  void UpdateRidsFromAnswer(const std::vector<SdpRidAttributeList::Rid>& rids);
   void CreateEncodings(
-      const SdpMediaSection& answer,
+      const SdpMediaSection& remote,
       const std::vector<JsepCodecDescription*>& negotiatedCodecs,
       JsepTrackNegotiatedDetails* details);
 
@@ -207,17 +222,18 @@ private:
       const SdpMediaSection* answer = nullptr,
       std::map<std::string, std::string>* formatChanges = nullptr) const;
 
+  JsConstraints* FindConstraints(
+      const std::string& rid,
+      std::vector<JsConstraints>& constraintsList) const;
+  void NegotiateRids(const std::vector<SdpRidAttributeList::Rid>& rids,
+                     std::vector<JsConstraints>* constraints) const;
+
   const mozilla::SdpMediaSection::MediaType mType;
   std::string mStreamId;
   std::string mTrackId;
   std::string mCNAME;
   const sdp::Direction mDirection;
   PtrVector<JsepCodecDescription> mPrototypeCodecs;
-  struct JsConstraints
-  {
-    std::string id;
-    EncodingConstraints constraints;
-  };
   // Holds encoding params/constraints from JS. Simulcast happens when there are
   // multiple of these. If there are none, we assume unconstrained unicast with
   // no rid.

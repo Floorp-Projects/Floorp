@@ -1195,8 +1195,7 @@ const std::string kBasicAudioVideoOffer =
 "a=ssrc:1111 foo:bar" CRLF
 "a=imageattr:120 send * recv *" CRLF
 "a=imageattr:121 send [x=640,y=480] recv [x=640,y=480]" CRLF
-"a=simulcast:send pt=120;121" CRLF
-"a=rid:foo send" CRLF
+"a=simulcast:recv pt=120;121" CRLF
 "a=rid:bar recv pt=96;max-width=800;max-height=600" CRLF
 "m=audio 9 RTP/SAVPF 0" CRLF
 "a=mid:third" CRLF
@@ -1778,16 +1777,13 @@ TEST_P(NewSdpTest, CheckRid)
   const SdpRidAttributeList& rids =
     mSdp->GetMediaSection(1).GetAttributeList().GetRid();
 
-  ASSERT_EQ(2U, rids.mRids.size());
-  ASSERT_EQ("foo", rids.mRids[0].id);
-  ASSERT_EQ(sdp::kSend, rids.mRids[0].direction);
-  ASSERT_EQ(0U, rids.mRids[0].formats.size());
-  ASSERT_EQ("bar", rids.mRids[1].id);
-  ASSERT_EQ(sdp::kRecv, rids.mRids[1].direction);
-  ASSERT_EQ(1U, rids.mRids[1].formats.size());
-  ASSERT_EQ(96U, rids.mRids[1].formats[0]);
-  ASSERT_EQ(800U, rids.mRids[1].constraints.maxWidth);
-  ASSERT_EQ(600U, rids.mRids[1].constraints.maxHeight);
+  ASSERT_EQ(1U, rids.mRids.size());
+  ASSERT_EQ("bar", rids.mRids[0].id);
+  ASSERT_EQ(sdp::kRecv, rids.mRids[0].direction);
+  ASSERT_EQ(1U, rids.mRids[0].formats.size());
+  ASSERT_EQ(96U, rids.mRids[0].formats[0]);
+  ASSERT_EQ(800U, rids.mRids[0].constraints.maxWidth);
+  ASSERT_EQ(600U, rids.mRids[0].constraints.maxHeight);
 }
 
 TEST_P(NewSdpTest, CheckMediaLevelIceUfrag) {
@@ -2099,14 +2095,14 @@ TEST_P(NewSdpTest, CheckSimulcast)
   const SdpSimulcastAttribute& simulcast =
     mSdp->GetMediaSection(1).GetAttributeList().GetSimulcast();
 
-  ASSERT_EQ(0U, simulcast.recvVersions.size());
-  ASSERT_EQ(2U, simulcast.sendVersions.size());
-  ASSERT_EQ(1U, simulcast.sendVersions[0].choices.size());
-  ASSERT_EQ("120", simulcast.sendVersions[0].choices[0]);
-  ASSERT_EQ(1U, simulcast.sendVersions[1].choices.size());
-  ASSERT_EQ("121", simulcast.sendVersions[1].choices[0]);
+  ASSERT_EQ(2U, simulcast.recvVersions.size());
+  ASSERT_EQ(0U, simulcast.sendVersions.size());
+  ASSERT_EQ(1U, simulcast.recvVersions[0].choices.size());
+  ASSERT_EQ("120", simulcast.recvVersions[0].choices[0]);
+  ASSERT_EQ(1U, simulcast.recvVersions[1].choices.size());
+  ASSERT_EQ("121", simulcast.recvVersions[1].choices[0]);
   ASSERT_EQ(SdpSimulcastAttribute::Versions::kPt,
-            simulcast.sendVersions.type);
+            simulcast.recvVersions.type);
 }
 
 TEST_P(NewSdpTest, CheckSctpmap) {
@@ -2610,6 +2606,81 @@ TEST_P(NewSdpTest, CheckMalformedImageattr)
   }
 
   ParseSdp(kMalformedImageattr, false);
+  ASSERT_NE("", GetParseErrors());
+}
+
+TEST_P(NewSdpTest, ParseInvalidSimulcastNoSuchSendRid) {
+  ParseSdp("v=0" CRLF
+           "o=- 4294967296 2 IN IP4 127.0.0.1" CRLF
+           "s=SIP Call" CRLF
+           "c=IN IP4 198.51.100.7" CRLF
+           "b=CT:5000" CRLF
+           "t=0 0" CRLF
+           "m=video 56436 RTP/SAVPF 120" CRLF
+           "a=rtpmap:120 VP8/90000" CRLF
+           "a=sendrecv" CRLF
+           "a=simulcast: send rid=9" CRLF,
+           false);
+  ASSERT_NE("", GetParseErrors());
+}
+
+TEST_P(NewSdpTest, ParseInvalidSimulcastNoSuchRecvRid) {
+  ParseSdp("v=0" CRLF
+           "o=- 4294967296 2 IN IP4 127.0.0.1" CRLF
+           "s=SIP Call" CRLF
+           "c=IN IP4 198.51.100.7" CRLF
+           "b=CT:5000" CRLF
+           "t=0 0" CRLF
+           "m=video 56436 RTP/SAVPF 120" CRLF
+           "a=rtpmap:120 VP8/90000" CRLF
+           "a=sendrecv" CRLF
+           "a=simulcast: recv rid=9" CRLF,
+           false);
+  ASSERT_NE("", GetParseErrors());
+}
+
+TEST_P(NewSdpTest, ParseInvalidSimulcastNoSuchPt) {
+  ParseSdp("v=0" CRLF
+           "o=- 4294967296 2 IN IP4 127.0.0.1" CRLF
+           "s=SIP Call" CRLF
+           "c=IN IP4 198.51.100.7" CRLF
+           "b=CT:5000" CRLF
+           "t=0 0" CRLF
+           "m=video 56436 RTP/SAVPF 120" CRLF
+           "a=rtpmap:120 VP8/90000" CRLF
+           "a=sendrecv" CRLF
+           "a=simulcast: send pt=9" CRLF,
+           false);
+  ASSERT_NE("", GetParseErrors());
+}
+
+TEST_P(NewSdpTest, ParseInvalidSimulcastNotSending) {
+  ParseSdp("v=0" CRLF
+           "o=- 4294967296 2 IN IP4 127.0.0.1" CRLF
+           "s=SIP Call" CRLF
+           "c=IN IP4 198.51.100.7" CRLF
+           "b=CT:5000" CRLF
+           "t=0 0" CRLF
+           "m=video 56436 RTP/SAVPF 120" CRLF
+           "a=rtpmap:120 VP8/90000" CRLF
+           "a=recvonly" CRLF
+           "a=simulcast: send pt=120" CRLF,
+           false);
+  ASSERT_NE("", GetParseErrors());
+}
+
+TEST_P(NewSdpTest, ParseInvalidSimulcastNotReceiving) {
+  ParseSdp("v=0" CRLF
+           "o=- 4294967296 2 IN IP4 127.0.0.1" CRLF
+           "s=SIP Call" CRLF
+           "c=IN IP4 198.51.100.7" CRLF
+           "b=CT:5000" CRLF
+           "t=0 0" CRLF
+           "m=video 56436 RTP/SAVPF 120" CRLF
+           "a=rtpmap:120 VP8/90000" CRLF
+           "a=sendonly" CRLF
+           "a=simulcast: recv pt=120" CRLF,
+           false);
   ASSERT_NE("", GetParseErrors());
 }
 
