@@ -390,46 +390,36 @@ nsSecureBrowserUIImpl::ResetStateTracking()
 
 void
 nsSecureBrowserUIImpl::EvaluateAndUpdateSecurityState(nsIRequest* aRequest,
-                                                      nsISupports *info,
+                                                      nsISupports* info,
                                                       bool withNewLocation,
                                                       bool withNewSink)
 {
-  /* I explicitly ignore the camelCase variable naming style here,
-     I want to make it clear these are temp variables that relate to the 
-     member variables with the same suffix.*/
-
-  uint32_t temp_NewToplevelSecurityState = nsIWebProgressListener::STATE_IS_INSECURE;
-  bool temp_NewToplevelIsEV = false;
+  mNewToplevelIsEV = false;
 
   bool updateStatus = false;
   nsCOMPtr<nsISSLStatus> temp_SSLStatus;
 
-    temp_NewToplevelSecurityState =
-      GetSecurityStateFromSecurityInfoAndRequest(info, aRequest);
+  mNewToplevelSecurityState =
+    GetSecurityStateFromSecurityInfoAndRequest(info, aRequest);
 
-    MOZ_LOG(gSecureDocLog, LogLevel::Debug,
-           ("SecureUI:%p: OnStateChange: remember mNewToplevelSecurityState => %x\n", this,
-            temp_NewToplevelSecurityState));
+  MOZ_LOG(gSecureDocLog, LogLevel::Debug,
+          ("SecureUI:%p: OnStateChange: remember mNewToplevelSecurityState => %x\n",
+           this, mNewToplevelSecurityState));
 
-    nsCOMPtr<nsISSLStatusProvider> sp = do_QueryInterface(info);
-    if (sp) {
-      // Ignore result
-      updateStatus = true;
-      (void) sp->GetSSLStatus(getter_AddRefs(temp_SSLStatus));
-      if (temp_SSLStatus) {
-        bool aTemp;
-        if (NS_SUCCEEDED(temp_SSLStatus->GetIsExtendedValidation(&aTemp))) {
-          temp_NewToplevelIsEV = aTemp;
-        }
+  nsCOMPtr<nsISSLStatusProvider> sp(do_QueryInterface(info));
+  if (sp) {
+    // Ignore result
+    updateStatus = true;
+    (void) sp->GetSSLStatus(getter_AddRefs(temp_SSLStatus));
+    if (temp_SSLStatus) {
+      bool aTemp;
+      if (NS_SUCCEEDED(temp_SSLStatus->GetIsExtendedValidation(&aTemp))) {
+        mNewToplevelIsEV = aTemp;
       }
     }
-
-  // assume temp_NewToplevelSecurityState was set in this scope!
-  // see code that is directly above
+  }
 
   mNewToplevelSecurityStateKnown = true;
-  mNewToplevelSecurityState = temp_NewToplevelSecurityState;
-  mNewToplevelIsEV = temp_NewToplevelIsEV;
   if (updateStatus) {
     mSSLStatus = temp_SSLStatus;
   }
@@ -578,23 +568,11 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
   nsCOMPtr<nsIDOMWindow> windowForProgress;
   aWebProgress->GetDOMWindow(getter_AddRefs(windowForProgress));
 
-  nsCOMPtr<nsIDOMWindow> window;
-  bool isViewSource;
-
-  nsCOMPtr<nsINetUtil> ioService;
-
-  window = do_QueryReferent(mWindow);
+  nsCOMPtr<nsIDOMWindow> window(do_QueryReferent(mWindow));
   NS_ASSERTION(window, "Window has gone away?!");
-  isViewSource = mIsViewSource;
-  ioService = mIOService;
 
-  if (!ioService)
-  {
-    ioService = do_GetService(NS_IOSERVICE_CONTRACTID);
-    if (ioService)
-    {
-      mIOService = ioService;
-    }
+  if (!mIOService) {
+    mIOService = do_GetService(NS_IOSERVICE_CONTRACTID);
   }
 
   bool isNoContentResponse = false;
@@ -629,8 +607,9 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
   MOZ_LOG(gSecureDocLog, LogLevel::Debug,
          ("SecureUI:%p: OnStateChange\n", this));
 
-  if (isViewSource)
+  if (mIsViewSource) {
     return NS_OK;
+  }
 
   if (!aRequest)
   {
@@ -721,12 +700,12 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
 
   // This will ignore all resource, chrome, data, file, moz-icon, and anno
   // protocols. Local resources are treated as trusted.
-  if (uri && ioService) {
+  if (uri && mIOService) {
     bool hasFlag;
-    nsresult rv = 
-      ioService->URIChainHasFlags(uri, 
-                                  nsIProtocolHandler::URI_IS_LOCAL_RESOURCE,
-                                  &hasFlag);
+    nsresult rv =
+      mIOService->URIChainHasFlags(uri,
+                                   nsIProtocolHandler::URI_IS_LOCAL_RESOURCE,
+                                   &hasFlag);
     if (NS_SUCCEEDED(rv) && hasFlag) {
       isSubDocumentRelevant = false;
     }
@@ -904,8 +883,6 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
       &&
       loadFlags & nsIChannel::LOAD_DOCUMENT_URI)
   {
-    bool inProgress;
-
     int32_t saveSubBroken;
     int32_t saveSubNo;
     nsCOMPtr<nsIAssociatedContentSecurity> prevContentSecurity;
@@ -913,7 +890,7 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
     int32_t newSubBroken = 0;
     int32_t newSubNo = 0;
 
-    inProgress = (mDocumentRequestsInProgress!=0);
+    bool inProgress = (mDocumentRequestsInProgress != 0);
 
     if (allowSecurityStateChange && !inProgress) {
       saveSubBroken = mSubRequestsBrokenSecurity;
@@ -1012,16 +989,13 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
       &&
       loadFlags & nsIChannel::LOAD_DOCUMENT_URI)
   {
-    int32_t temp_DocumentRequestsInProgress;
     nsCOMPtr<nsISecurityEventSink> temp_ToplevelEventSink;
 
-    temp_DocumentRequestsInProgress = mDocumentRequestsInProgress;
     if (allowSecurityStateChange) {
       temp_ToplevelEventSink = mToplevelEventSink;
     }
 
-    if (temp_DocumentRequestsInProgress <= 0)
-    {
+    if (mDocumentRequestsInProgress <= 0) {
       // Ignore stop requests unless a document load is in progress
       // Unfortunately on application start, see some stops without having seen any starts...
       return NS_OK;
@@ -1073,8 +1047,8 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
       // app handler.  Restore mSubRequests* members to what the current security 
       // state info holds (it was reset to all zero in OnStateChange(START) 
       // before).
-      nsCOMPtr<nsIAssociatedContentSecurity> currentContentSecurity;
-      currentContentSecurity = do_QueryInterface(mCurrentToplevelSecurityInfo);
+      nsCOMPtr<nsIAssociatedContentSecurity> currentContentSecurity(
+        do_QueryInterface(mCurrentToplevelSecurityInfo));
 
       // Drop this indication flag, the restore operation is just being done.
       mRestoreSubrequests = false;
@@ -1125,10 +1099,7 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
       //
       // We skip updating the security state in this case.
 
-      bool temp_NewToplevelSecurityStateKnown;
-      temp_NewToplevelSecurityStateKnown = mNewToplevelSecurityStateKnown;
-
-      if (temp_NewToplevelSecurityStateKnown) {
+      if (mNewToplevelSecurityStateKnown) {
         UpdateSecurityState(aRequest, false, false);
       }
     }
@@ -1196,17 +1167,15 @@ nsSecureBrowserUIImpl::UpdateSecurityState(nsIRequest* aRequest,
 void
 nsSecureBrowserUIImpl::TellTheWorld(nsIRequest* aRequest)
 {
-  nsCOMPtr<nsISecurityEventSink> toplevelEventSink;
   uint32_t state = STATE_IS_INSECURE;
-  toplevelEventSink = mToplevelEventSink;
   GetState(&state);
 
-  if (toplevelEventSink) {
+  if (mToplevelEventSink) {
     MOZ_LOG(gSecureDocLog, LogLevel::Debug,
            ("SecureUI:%p: UpdateSecurityState: calling OnSecurityChange\n",
             this));
 
-    toplevelEventSink->OnSecurityChange(aRequest, state);
+    mToplevelEventSink->OnSecurityChange(aRequest, state);
   } else {
     MOZ_LOG(gSecureDocLog, LogLevel::Debug,
            ("SecureUI:%p: UpdateSecurityState: NO mToplevelEventSink!\n",
@@ -1297,10 +1266,7 @@ nsSecureBrowserUIImpl::OnLocationChange(nsIWebProgress* aWebProgress,
   //
   // We skip updating the security state in this case.
 
-  bool temp_NewToplevelSecurityStateKnown;
-  temp_NewToplevelSecurityStateKnown = mNewToplevelSecurityStateKnown;
-
-  if (temp_NewToplevelSecurityStateKnown) {
+  if (mNewToplevelSecurityStateKnown) {
     UpdateSecurityState(aRequest, true, false);
   }
 
