@@ -2445,13 +2445,13 @@ HttpBaseChannel::BypassServiceWorker() const
 }
 
 bool
-HttpBaseChannel::ShouldIntercept()
+HttpBaseChannel::ShouldIntercept(nsIURI* aURI)
 {
   nsCOMPtr<nsINetworkInterceptController> controller;
   GetCallback(controller);
   bool shouldIntercept = false;
   if (controller && !BypassServiceWorker() && mLoadInfo) {
-    nsresult rv = controller->ShouldPrepareForIntercept(mURI,
+    nsresult rv = controller->ShouldPrepareForIntercept(aURI ? aURI : mURI.get(),
                                                         nsContentUtils::IsNonSubresourceRequest(this),
                                                         &shouldIntercept);
     if (NS_FAILED(rv)) {

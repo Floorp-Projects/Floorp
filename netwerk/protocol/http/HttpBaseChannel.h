@@ -347,7 +347,7 @@ protected:
 
   // Returns true if this channel should intercept the network request and prepare
   // for a possible synthesized response instead.
-  bool ShouldIntercept();
+  bool ShouldIntercept(nsIURI* aURI = nullptr);
 
   friend class PrivateBrowsingChannel<HttpBaseChannel>;
   friend class InterceptFailedOnStop;
