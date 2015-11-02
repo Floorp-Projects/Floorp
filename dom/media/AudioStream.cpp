@@ -130,7 +130,6 @@ AudioStream::AudioStream()
   , mDumpFile(nullptr)
   , mBytesPerFrame(0)
   , mState(INITIALIZED)
-  , mLastGoodPosition(0)
   , mIsMonoAudioEnabled(gfxPrefs::MonoAudio())
 {
 }
@@ -622,12 +621,7 @@ AudioStream::GetPositionInFramesUnlocked()
     }
   }
 
-  MOZ_ASSERT(position >= mLastGoodPosition, "cubeb position shouldn't go backward");
-  // This error handling/recovery keeps us in good shape in release build.
-  if (position >= mLastGoodPosition) {
-    mLastGoodPosition = position;
-  }
-  return std::min<uint64_t>(mLastGoodPosition, INT64_MAX);
+  return std::min<uint64_t>(position, INT64_MAX);
 }
 
 bool
