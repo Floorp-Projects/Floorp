@@ -15163,56 +15163,6 @@ VersionChangeTransaction::RecvDeleteObjectStore(const int64_t& aObjectStoreId)
 {
   AssertIsOnBackgroundThread();
 
-  class MOZ_STACK_CLASS Helper final
-  {
-    const int64_t mObjectStoreId;
-    bool mIsLastObjectStore;
-    DebugOnly<bool> mFoundTargetId;
-
-  public:
-    static bool
-    IsLastObjectStore(const FullDatabaseMetadata* aDatabaseMetadata,
-                      const int64_t aObjectStoreId)
-    {
-      AssertIsOnBackgroundThread();
-      MOZ_ASSERT(aDatabaseMetadata);
-      MOZ_ASSERT(aObjectStoreId);
-
-      Helper helper(aObjectStoreId);
-      aDatabaseMetadata->mObjectStores.EnumerateRead(&Enumerate, &helper);
-
-      MOZ_ASSERT_IF(helper.mIsLastObjectStore, helper.mFoundTargetId);
-
-      return helper.mIsLastObjectStore;
-    }
-
-  private:
-    explicit
-    Helper(const int64_t aObjectStoreId)
-      : mObjectStoreId(aObjectStoreId)
-      , mIsLastObjectStore(true)
-      , mFoundTargetId(false)
-    { }
-
-    static PLDHashOperator
-    Enumerate(const uint64_t& aKey,
-              FullObjectStoreMetadata* aValue,
-              void* aClosure)
-    {
-      auto* helper = static_cast<Helper*>(aClosure);
-      MOZ_ASSERT(helper);
-
-      if (uint64_t(helper->mObjectStoreId) == aKey) {
-        helper->mFoundTargetId = true;
-      } else if(!aValue->mDeleted) {
-        helper->mIsLastObjectStore = false;
-        return PL_DHASH_STOP;
-      }
-
-      return PL_DHASH_NEXT;
-    }
-  };
-
   if (NS_WARN_IF(!aObjectStoreId)) {
     ASSERT_UNLESS_FUZZING();
     return false;
@@ -15242,11 +15192,22 @@ VersionChangeTransaction::RecvDeleteObjectStore(const int64_t& aObjectStoreId)
 
   foundMetadata->mDeleted = true;
 
+  bool isLastObjectStore = true;
+  DebugOnly<bool> foundTargetId = false;
+  for (auto iter = dbMetadata->mObjectStores.Iter();
+       !iter.Done();
+       iter.Next()) {
+    if (uint64_t(aObjectStoreId) == iter.Key()) {
+      foundTargetId = true;
+    } else if (!iter.UserData()->mDeleted) {
+      isLastObjectStore = false;
+      break;
+    }
+  }
+  MOZ_ASSERT_IF(isLastObjectStore, foundTargetId);
+
   RefPtr<DeleteObjectStoreOp> op =
-    new DeleteObjectStoreOp(this,
-                            foundMetadata,
-                            Helper::IsLastObjectStore(dbMetadata,
-                                                      aObjectStoreId));
+    new DeleteObjectStoreOp(this, foundMetadata, isLastObjectStore);
 
   if (NS_WARN_IF(!op->Init(this))) {
     op->Cleanup();
