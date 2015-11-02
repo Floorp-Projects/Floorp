@@ -2380,7 +2380,7 @@ public:
     if (!NS_IsMainThread() && mConnection) {
       MOZ_ASSERT(false);
       // explicitly leak the connection if destroyed off mainthread
-      unused << mConnection.forget().take();
+      Unused << mConnection.forget().take();
     }
   }
 

@@ -72,7 +72,7 @@ ServiceWorkerPeriodicUpdater::Observe(nsISupports* aSubject,
     nsTArray<ContentParent*> children;
     ContentParent::GetAll(children);
     for (uint32_t i = 0; i < children.Length(); i++) {
-      unused << children[i]->SendUpdateServiceWorkerRegistrations();
+      Unused << children[i]->SendUpdateServiceWorkerRegistrations();
     }
   }
 

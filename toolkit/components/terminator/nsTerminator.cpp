@@ -222,8 +222,8 @@ void RunWriter(void* arg)
   tmpFilePath.AppendLiteral(".tmp");
 
   // Cleanup any file leftover from a previous run
-  unused << PR_Delete(tmpFilePath.get());
-  unused << PR_Delete(destinationPath.get());
+  Unused << PR_Delete(tmpFilePath.get());
+  Unused << PR_Delete(destinationPath.get());
 
   while (true) {
     //
@@ -530,7 +530,7 @@ nsTerminator::UpdateCrashReport(const char* aTopic)
   // In case of crash, we wish to know where in shutdown we are
   nsAutoCString report(aTopic);
 
-  unused << CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("ShutdownProgress"),
+  Unused << CrashReporter::AnnotateCrashReport(NS_LITERAL_CSTRING("ShutdownProgress"),
                                                report);
 #endif // defined(MOZ_CRASH_REPORTER)
 }

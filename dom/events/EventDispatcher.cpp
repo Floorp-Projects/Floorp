@@ -255,7 +255,7 @@ void
 EventTargetChainItem::PreHandleEvent(EventChainPreVisitor& aVisitor)
 {
   aVisitor.Reset();
-  unused << mTarget->PreHandleEvent(aVisitor);
+  Unused << mTarget->PreHandleEvent(aVisitor);
   SetForceContentDispatch(aVisitor.mForceContentDispatch);
   SetWantsWillHandleEvent(aVisitor.mWantsWillHandleEvent);
   SetMayHaveListenerManager(aVisitor.mMayHaveListenerManager);

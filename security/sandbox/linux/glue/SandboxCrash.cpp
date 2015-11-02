@@ -51,11 +51,11 @@ SandboxLogJSStack(void)
 
     // Don't stop unwinding if an attribute can't be read.
     fileName.SetIsVoid(true);
-    unused << frame->GetFilename(fileName);
+    Unused << frame->GetFilename(fileName);
     lineNumber = 0;
-    unused << frame->GetLineNumber(&lineNumber);
+    Unused << frame->GetLineNumber(&lineNumber);
     funName.SetIsVoid(true);
-    unused << frame->GetName(funName);
+    Unused << frame->GetName(funName);
 
     if (!funName.IsVoid() || !fileName.IsVoid()) {
       SANDBOX_LOG_ERROR("JS frame %d: %s %s line %d", i,

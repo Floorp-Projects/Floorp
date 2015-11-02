@@ -7,12 +7,17 @@
 #ifndef vm_DateTime_h
 #define vm_DateTime_h
 
+#include "mozilla/Assertions.h"
+#include "mozilla/Atomics.h"
+#include "mozilla/Attributes.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/MathAlgorithms.h"
 
 #include <stdint.h>
 
 #include "js/Conversions.h"
+#include "js/Date.h"
+#include "js/Initialization.h"
 #include "js/Value.h"
 
 namespace js {
@@ -88,23 +93,71 @@ const double EndOfTime = 8.64e15;
  */
 class DateTimeInfo
 {
-  public:
-    DateTimeInfo();
+    static DateTimeInfo instance;
 
+    // Date/time info is shared across all threads in DateTimeInfo::instance,
+    // for consistency with ICU's handling of its default time zone.  Thus we
+    // need something to protect concurrent accesses.
+    //
+    // The spec implicitly assumes DST and time zone adjustment information
+    // never change in the course of a function -- sometimes even across
+    // reentrancy.  So make critical sections as narrow as possible, and use a
+    // bog-standard spinlock with busy-waiting in case of contention for
+    // simplicity.
+    class MOZ_RAII AcquireLock
+    {
+        static mozilla::Atomic<bool, mozilla::ReleaseAcquire> spinLock;
+
+      public:
+        AcquireLock() {
+            while (!spinLock.compareExchange(false, true))
+                continue;
+        }
+        ~AcquireLock() {
+            MOZ_ASSERT(spinLock, "spinlock should have been acquired");
+            spinLock = false;
+        }
+    };
+
+    friend bool ::JS_Init();
+
+    // Initialize global date/time tracking state.  This operation occurs
+    // during, and is restricted to, SpiderMonkey initialization.
+    static void init();
+
+  public:
     /*
      * Get the DST offset in milliseconds at a UTC time.  This is usually
      * either 0 or |msPerSecond * SecondsPerHour|, but at least one exotic time
      * zone (Lord Howe Island, Australia) has a fractional-hour offset, just to
      * keep things interesting.
      */
-    int64_t getDSTOffsetMilliseconds(int64_t utcMilliseconds);
+    static int64_t getDSTOffsetMilliseconds(int64_t utcMilliseconds) {
+        AcquireLock lock;
 
-    void updateTimeZoneAdjustment();
+        return DateTimeInfo::instance.internalGetDSTOffsetMilliseconds(utcMilliseconds);
+    }
 
     /* ES5 15.9.1.7. */
-    double localTZA() { return localTZA_; }
+    static double localTZA() {
+        AcquireLock lock;
+
+        return DateTimeInfo::instance.localTZA_;
+    }
 
   private:
+    // We don't want anyone accidentally calling *only*
+    // DateTimeInfo::updateTimeZoneAdjustment() to respond to a system time
+    // zone change (missing the necessary poking of ICU as well), so ensure
+    // only JS::ResetTimeZone() can call this via access restrictions.
+    friend void JS::ResetTimeZone();
+
+    static void updateTimeZoneAdjustment() {
+        AcquireLock lock;
+
+        DateTimeInfo::instance.internalUpdateTimeZoneAdjustment();
+    }
+
     /*
      * The current local time zone adjustment, cached because retrieving this
      * dynamically is Slow, and a certain venerable benchmark which shall not
@@ -113,7 +166,7 @@ class DateTimeInfo
      * SpiderMonkey occasionally and arbitrarily updates this value from the
      * system time zone to attempt to keep this reasonably up-to-date.  If
      * temporary inaccuracy can't be tolerated, JSAPI clients may call
-     * JS_ClearDateCaches to forcibly sync this with the system time zone.
+     * JS::ResetTimeZone to forcibly sync this with the system time zone.
      */
     double localTZA_;
 
@@ -140,6 +193,9 @@ class DateTimeInfo
     static const int64_t MaxUnixTimeT = 2145859200; /* time_t 12/31/2037 */
 
     static const int64_t RangeExpansionAmount = 30 * SecondsPerDay;
+
+    int64_t internalGetDSTOffsetMilliseconds(int64_t utcMilliseconds);
+    void internalUpdateTimeZoneAdjustment();
 
     void sanityCheck();
 };

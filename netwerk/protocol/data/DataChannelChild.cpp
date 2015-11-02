@@ -53,7 +53,7 @@ DataChannelChild::CompleteRedirectSetup(nsIStreamListener *aListener,
     }
 
     if (mIPCOpen) {
-        unused << Send__delete__(this);
+        Unused << Send__delete__(this);
     }
     return NS_OK;
 }

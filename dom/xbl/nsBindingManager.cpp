@@ -407,7 +407,7 @@ nsBindingManager::DoProcessAttachedQueue()
       NS_ADDREF_THIS();
       // We drop our reference to the timer here, since the timer callback is
       // responsible for releasing the object.
-      unused << timer.forget().take();
+      Unused << timer.forget().take();
     }
   }
 

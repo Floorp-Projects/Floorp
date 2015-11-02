@@ -1022,7 +1022,7 @@ LayerTransactionParent::SendFenceHandleIfPresent(PTextureParent* aTexture,
 void
 LayerTransactionParent::SendAsyncMessage(const InfallibleTArray<AsyncParentMessageData>& aMessage)
 {
-  mozilla::unused << SendParentAsyncMessages(aMessage);
+  mozilla::Unused << SendParentAsyncMessages(aMessage);
 }
 
 void
@@ -1030,7 +1030,7 @@ LayerTransactionParent::ReplyRemoveTexture(const OpReplyRemoveTexture& aReply)
 {
   InfallibleTArray<AsyncParentMessageData> messages;
   messages.AppendElement(aReply);
-  mozilla::unused << SendParentAsyncMessages(messages);
+  mozilla::Unused << SendParentAsyncMessages(messages);
 }
 
 } // namespace layers

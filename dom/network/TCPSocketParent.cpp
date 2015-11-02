@@ -37,7 +37,7 @@ namespace dom {
 static void
 FireInteralError(mozilla::net::PTCPSocketParent* aActor, uint32_t aLineNo)
 {
-  mozilla::unused <<
+  mozilla::Unused <<
       aActor->SendCallback(NS_LITERAL_STRING("onerror"),
                            TCPError(NS_LITERAL_STRING("InvalidStateError"), NS_LITERAL_STRING("Internal error")),
                            static_cast<uint32_t>(TCPReadyState::Connecting));
@@ -135,7 +135,7 @@ NS_IMETHODIMP_(MozExternalRefCountType) TCPSocketParent::Release(void)
 {
   nsrefcnt refcnt = TCPSocketParentBase::Release();
   if (refcnt == 1 && mIPCOpen) {
-    mozilla::unused << PTCPSocketParent::SendRequestDelete();
+    mozilla::Unused << PTCPSocketParent::SendRequestDelete();
     return 1;
   }
   return refcnt;
@@ -335,7 +335,7 @@ TCPSocketParent::FireStringDataEvent(const nsACString& aData, TCPReadyState aRea
 void
 TCPSocketParent::SendEvent(const nsAString& aType, CallbackData aData, TCPReadyState aReadyState)
 {
-  mozilla::unused << PTCPSocketParent::SendCallback(nsString(aType), aData,
+  mozilla::Unused << PTCPSocketParent::SendCallback(nsString(aType), aData,
                                                     static_cast<uint32_t>(aReadyState));
 }
 
@@ -379,7 +379,7 @@ TCPSocketParent::ActorDestroy(ActorDestroyReason why)
 bool
 TCPSocketParent::RecvRequestDelete()
 {
-  mozilla::unused << Send__delete__(this);
+  mozilla::Unused << Send__delete__(this);
   return true;
 }
 
