@@ -15,6 +15,7 @@ import time
 import traceback
 import unittest
 import warnings
+import mozprofile
 import xml.dom.minidom as dom
 
 from manifestparser import TestManifest
@@ -309,6 +310,17 @@ class BaseMarionetteArguments(ArgumentParser):
         self.add_argument('--profile',
                         help='profile to use when launching the gecko process. if not passed, then a profile will be '
                              'constructed and used')
+        self.add_argument('--pref',
+                        action='append',
+                        dest='prefs_args',
+                        help=(" A preference to set. Must be a key-value pair"
+                              " separated by a ':'."))
+        self.add_argument('--preferences',
+                        action='append',
+                        dest='prefs_files',
+                        help=("read preferences from a JSON or INI file. For"
+                              " INI, use 'file.ini:section' to specify a"
+                              " particular section."))
         self.add_argument('--addon',
                         action='append',
                         help="addon to install; repeat for multiple addons.")
@@ -398,6 +410,31 @@ class BaseMarionetteArguments(ArgumentParser):
                 container.parse_args_handler(args)
         return args
 
+    def _get_preferences(self, prefs_files, prefs_args):
+        """
+        return user defined profile preferences as a dict
+        """
+        # object that will hold the preferences
+        prefs = mozprofile.prefs.Preferences()
+
+        # add preferences files
+        if prefs_files:
+            for prefs_file in prefs_files:
+                prefs.add_file(prefs_file)
+
+        separator = ':'
+        cli_prefs = []
+        if prefs_args:
+            for pref in prefs_args:
+                if separator not in pref:
+                    continue
+                cli_prefs.append(pref.split(separator, 1))
+
+        # string preferences
+        prefs.add(cli_prefs, cast=True)
+
+        return dict(prefs())
+
     def verify_usage(self, args):
         if not args.tests:
             print 'must specify one or more test files, manifests, or directories'
@@ -443,10 +480,12 @@ class BaseMarionetteArguments(ArgumentParser):
             args.app_args.append('-jsdebugger')
             args.socket_timeout = None
 
+        args.prefs = self._get_preferences(args.prefs_files, args.prefs_args)
+
         if args.e10s:
-            args.prefs = {
+            args.prefs.update({
                 'browser.tabs.remote.autostart': True
-            }
+            })
 
         for container in self.argument_containers:
             if hasattr(container, 'verify_usage_handler'):
