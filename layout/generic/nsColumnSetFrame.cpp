@@ -142,7 +142,7 @@ nsColumnSetFrame::PaintColumnRule(nsRenderingContext* aCtx,
     // couldn't ignore the DrawResult that PaintBorderWithStyleBorder returns.
     MOZ_ASSERT(border.mBorderImageSource.GetType() == eStyleImageType_Null);
 
-    unused <<
+    Unused <<
       nsCSSRendering::PaintBorderWithStyleBorder(presContext, *aCtx, this,
                                                  aDirtyRect, lineRect, border,
                                                  StyleContext(),

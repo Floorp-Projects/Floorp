@@ -1005,6 +1005,36 @@ public:
   void Perspective(float aDepth);
 
   Point3D GetNormalVector() const;
+
+  /**
+   * Returns true if the matrix has any transform other
+   * than a straight translation.
+   */
+  bool HasNonTranslation() const {
+    return !gfx::FuzzyEqual(_11, 1.0) || !gfx::FuzzyEqual(_22, 1.0) ||
+           !gfx::FuzzyEqual(_12, 0.0) || !gfx::FuzzyEqual(_21, 0.0) ||
+           !gfx::FuzzyEqual(_13, 0.0) || !gfx::FuzzyEqual(_23, 0.0) ||
+           !gfx::FuzzyEqual(_31, 0.0) || !gfx::FuzzyEqual(_32, 0.0) ||
+           !gfx::FuzzyEqual(_33, 1.0);
+  }
+
+  /**
+   * Returns true if the matrix is anything other than a straight
+   * translation by integers.
+  */
+  bool HasNonIntegerTranslation() const {
+    return HasNonTranslation() ||
+      !gfx::FuzzyEqual(_41, floor(_41 + 0.5)) ||
+      !gfx::FuzzyEqual(_42, floor(_42 + 0.5)) ||
+      !gfx::FuzzyEqual(_43, floor(_43 + 0.5));
+  }
+
+  /**
+   * Return true if the matrix is with perspective (w).
+   */
+  bool HasPerspectiveComponent() const {
+    return _14 != 0 || _24 != 0 || _34 != 0 || _44 != 1;
+  }
 };
 
 class Matrix5x4

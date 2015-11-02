@@ -208,7 +208,7 @@ GMPVideoDecoderChild::RecvDecodingComplete()
 
   mPlugin = nullptr;
 
-  unused << Send__delete__(this);
+  Unused << Send__delete__(this);
 
   return true;
 }

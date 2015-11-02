@@ -43,7 +43,7 @@ public:
     NS_WARN_IF_FALSE(thread, "Couldn't get the main thread!");
     if (thread) {
       nsIWyciwygChannel *chan = static_cast<nsIWyciwygChannel *>(mChannel);
-      mozilla::unused << mChannel.forget();
+      mozilla::Unused << mChannel.forget();
       NS_ProxyRelease(thread, chan);
     }
   }

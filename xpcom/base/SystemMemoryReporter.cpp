@@ -728,10 +728,10 @@ private:
     uint64_t size;
 
     // Ignore the header line.
-    unused << fgets(buffer, kBufferLen, iommu);
+    Unused << fgets(buffer, kBufferLen, iommu);
 
     // Ignore the separator line.
-    unused << fgets(buffer, kBufferLen, iommu);
+    Unused << fgets(buffer, kBufferLen, iommu);
 
     const char* const kSep = "----";
     const size_t kSepLen = 4;
@@ -748,7 +748,7 @@ private:
     }
 
     // Ignore the orphaned header.
-    unused << fgets(buffer, kBufferLen, iommu);
+    Unused << fgets(buffer, kBufferLen, iommu);
 
     // Read orphaned entries.
     while (fgets(buffer, kBufferLen, iommu) &&
@@ -775,7 +775,7 @@ private:
     }
 
     uint64_t size = 0;
-    unused << fscanf(sizeFile, "%" SCNu64, &size);
+    Unused << fscanf(sizeFile, "%" SCNu64, &size);
     fclose(sizeFile);
 
     return size;
@@ -1017,7 +1017,7 @@ private:
 
       // Bypass the header line.
       char buff[1024];
-      unused << fgets(buff, 1024, memFile);
+      Unused << fgets(buff, 1024, memFile);
 
       while (fscanf(memFile, kScanFormat, &gpuaddr, &useraddr, &size, &id,
                     flags, type, usage, &sglen) == kNumFields) {

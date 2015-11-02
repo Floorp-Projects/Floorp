@@ -302,7 +302,7 @@ private:
 DecodePool::Initialize()
 {
   MOZ_ASSERT(NS_IsMainThread());
-  sNumCores = PR_GetNumberOfProcessors();
+  sNumCores = max<int32_t>(PR_GetNumberOfProcessors(), 1);
   DecodePool::Singleton();
 }
 
@@ -345,6 +345,9 @@ DecodePool::DecodePool()
     }
   } else {
     limit = static_cast<uint32_t>(prefLimit);
+  }
+  if (limit > 32) {
+    limit = 32;
   }
 
   // Initialize the thread pool.

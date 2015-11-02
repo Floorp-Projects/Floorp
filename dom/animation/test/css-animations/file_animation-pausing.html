@@ -257,6 +257,19 @@ test(function(t) {
                 'infinite-duration animation');
 }, 'pause() from idle with a negative playbackRate and endless effect');
 
+promise_test(function(t) {
+  var div = addDiv(t, { style: 'animation: anim 1000s' });
+  return div.getAnimations()[0].ready
+    .then(function(animation) {
+      animation.finish();
+      animation.pause();
+      return animation.ready;
+    }).then(function(animation) {
+      assert_equals(animation.currentTime, 1000 * 1000,
+                    'currentTime after pausing finished animation');
+    });
+}, 'pause() on a finished animation');
+
 done();
 </script>
 </body>

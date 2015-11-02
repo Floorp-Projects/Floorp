@@ -18,7 +18,7 @@
 #include "mozilla/dom/TabParent.h"
 #include "mozilla/dom/ipc/BlobParent.h"
 
-using mozilla::unused;
+using mozilla::Unused;
 using namespace mozilla::dom;
 
 NS_IMPL_ISUPPORTS(FilePickerParent::FilePickerShownCallback,
@@ -125,7 +125,7 @@ FilePickerParent::SendFiles(const nsTArray<RefPtr<BlobImpl>>& aBlobs)
 
   InputFiles inblobs;
   inblobs.blobsParent().SwapElements(blobs);
-  unused << Send__delete__(this, inblobs, mResult);
+  Unused << Send__delete__(this, inblobs, mResult);
 }
 
 void
@@ -134,7 +134,7 @@ FilePickerParent::Done(int16_t aResult)
   mResult = aResult;
 
   if (mResult != nsIFilePicker::returnOK) {
-    unused << Send__delete__(this, void_t(), mResult);
+    Unused << Send__delete__(this, void_t(), mResult);
     return;
   }
 
@@ -167,7 +167,7 @@ FilePickerParent::Done(int16_t aResult)
   mRunnable = new FileSizeAndDateRunnable(this, blobs);
   // Dispatch to background thread to do I/O:
   if (!mRunnable->Dispatch()) {
-    unused << Send__delete__(this, void_t(), nsIFilePicker::returnCancel);
+    Unused << Send__delete__(this, void_t(), nsIFilePicker::returnCancel);
   }
 }
 
@@ -202,7 +202,7 @@ FilePickerParent::RecvOpen(const int16_t& aSelectedType,
                            const nsString& aDisplayDirectory)
 {
   if (!CreateFilePicker()) {
-    unused << Send__delete__(this, void_t(), nsIFilePicker::returnCancel);
+    Unused << Send__delete__(this, void_t(), nsIFilePicker::returnCancel);
     return true;
   }
 

@@ -63,7 +63,7 @@ class nsIPrincipal;
 // the geolocation enabled setting
 #define GEO_SETTINGS_ENABLED          "geolocation.enabled"
 
-using mozilla::unused;          // <snicker>
+using mozilla::Unused;          // <snicker>
 using namespace mozilla;
 using namespace mozilla::dom;
 
@@ -1276,7 +1276,7 @@ Geolocation::RemoveRequest(nsGeolocationRequest* aRequest)
     (mPendingCallbacks.RemoveElement(aRequest) !=
      mWatchingCallbacks.RemoveElement(aRequest));
 
-  unused << requestWasKnown;
+  Unused << requestWasKnown;
 }
 
 NS_IMETHODIMP

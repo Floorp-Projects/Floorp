@@ -276,6 +276,7 @@ struct JSCompartment
     bool                         marked;
     bool                         warnedAboutNoSuchMethod;
     bool                         warnedAboutFlagsArgument;
+    bool                         warnedAboutExprClosure;
 
     // A null add-on ID means that the compartment is not associated with an
     // add-on.

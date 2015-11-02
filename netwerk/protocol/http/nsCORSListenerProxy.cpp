@@ -1265,7 +1265,7 @@ nsCORSListenerProxy::StartCORSPreflight(nsIChannel* aRequestChannel,
   }
 
   nsCOMPtr<nsILoadInfo> loadInfo = static_cast<mozilla::LoadInfo*>
-    (originalLoadInfo.get())->Clone();
+    (originalLoadInfo.get())->CloneForNewRequest();
 
   nsSecurityFlags securityMode = loadInfo->GetSecurityMode();
 

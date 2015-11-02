@@ -533,7 +533,7 @@ DOMStorageCache::RemoveItem(const DOMStorage* aStorage, const nsAString& aKey,
   // Recalculate the cached data size
   const int64_t delta = -(static_cast<int64_t>(aOld.Length()) +
                           static_cast<int64_t>(aKey.Length()));
-  unused << ProcessUsageDelta(aStorage, delta);
+  Unused << ProcessUsageDelta(aStorage, delta);
   data.mKeys.Remove(aKey);
 
   if (Persist(aStorage)) {
@@ -572,7 +572,7 @@ DOMStorageCache::Clear(const DOMStorage* aStorage)
   bool hadData = !!data.mKeys.Count();
 
   if (hadData) {
-    unused << ProcessUsageDelta(aStorage, -data.mOriginQuotaUsage);
+    Unused << ProcessUsageDelta(aStorage, -data.mOriginQuotaUsage);
     data.mKeys.Clear();
   }
 
