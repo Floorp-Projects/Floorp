@@ -21,8 +21,8 @@ interface nsIServiceWorkerUnregisterCallback : nsISupports
   void unregisterFailed();
 };
 
-[scriptable, builtinclass, uuid(e633b73b-a734-4d04-a09c-b7779a439f3f)]
-interface nsIServiceWorkerInfo : nsISupports
+[scriptable, builtinclass, uuid(f222dcad-3081-4699-bbc6-5615e20749C8)]
+interface nsIServiceWorkerRegistrationInfo : nsISupports
 {
   readonly attribute nsIPrincipal principal;
 
@@ -113,7 +113,7 @@ interface nsIServiceWorkerManager : nsISupports
   DOMString getScopeForUrl(in nsIPrincipal aPrincipal, in DOMString aPath);
 
   // Note: This is meant to be used only by about:serviceworkers.
-  //It returns an array of nsIServiceWorkerInfo.
+  // It returns an array of nsIServiceWorkerRegistrationInfos.
   nsIArray getAllRegistrations();
 
   // Note: This is meant to be used only by about:serviceworkers.
