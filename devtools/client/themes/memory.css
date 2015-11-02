@@ -24,6 +24,11 @@ html, body, #app, #memory-tool {
 }
 
 #memory-tool {
+  /**
+   * Flex: contains two children: .devtools-toolbar and #memory-tool-container,
+   * which need to be laid out vertically. The toolbar has a fixed height and
+   * the container needs to flex to fill out all remaining vertical space.
+   */
   display: flex;
   flex-direction: column;
   --sidebar-width: 185px;
@@ -35,67 +40,89 @@ html, body, #app, #memory-tool {
   --heap-tree-header-height: 17px;
 }
 
-#memory-tool .devtools-toolbar {
-  display: flex;
-  align-items: center;
-}
-
-.devtools-toolbar .toolbar-group {
-  position: absolute;
-  left: var(--sidebar-width);
-  top: -2px;
-  white-space: nowrap;
-}
-
-.toolbar-group > label {
-  margin-right: 5px;
-}
-
-.toolbar-group .breakdown-by span {
-  margin-right: 5px;
-}
-
-#memory-tool-container {
-  overflow: hidden;
-  display: flex;
-  flex: 1;
-}
-
 /**
  * Toolbar
  */
 
-.devtools-toolbar .devtools-button.take-snapshot {
-  -moz-appearance: none;
-  margin-inline-start: 1px;
-  margin-inline-end: 1px;
+.devtools-toolbar {
+  /**
+   * Flex: contains several children, which need to be laid out horizontally
+   * in the middle of the container.
+   */
+  display: flex;
+  align-items: center;
 }
 
-.devtools-toolbar .devtools-button.take-snapshot::before {
+.devtools-toolbar > .toolbar-group {
+  /**
+   * We want this to be exactly at a --sidebar-width distance from the
+   * toolbar's start boundary. A .devtools-toolbar has a 3px start padding
+   * and the preceeding .take-snapshot button is exactly 32px.
+   */
+  margin-inline-start: calc(var(--sidebar-width) - 3px - 32px);
+  border-inline-start: 1px solid var(--theme-splitter-color);
+  padding-inline-start: 5px;
+}
+
+.devtools-toolbar > .toolbar-group > label {
+  margin-inline-end: 5px;
+}
+
+.devtools-toolbar > .toolbar-group > label.breakdown-by > span {
+  margin-inline-end: 5px;
+}
+
+.devtools-toolbar > .devtools-button.take-snapshot {
+  -moz-appearance: none;
+}
+
+.devtools-toolbar > .devtools-button.take-snapshot::before {
   background-image: url(images/command-screenshot.png);
   background-size: 64px 16px;
   background-position: 0 center;
 }
 @media (min-resolution: 1.1dppx) {
-  .devtools-toolbar .devtools-button.take-snapshot::before {
+  .devtools-toolbar > .devtools-button.take-snapshot::before {
     background-image: url(images/command-screenshot@2x.png);
   }
 }
 
 /**
  * TODO bug 1213100
- * Once we figure out how to store invertable buttons (pseudo element like in this case?)
- * we should add a .invertable class to handle this generally, rather than the definitions
- * in toolbars.inc.css.
+ * Once we figure out how to store invertable buttons (pseudo element like in
+ * this case?) we should add a .invertable class to handle this generally,
+ * rather than the definitions in toolbars.inc.css.
  *
  * @see bug 1173397 for another inverted related bug
  */
-.theme-light .devtools-toolbarbutton.take-snapshot::before {
+.theme-light .devtools-toolbar > .devtools-toolbarbutton.take-snapshot::before {
   filter: url(images/filters.svg#invert);
 }
 
+/**
+ * Container (sidebar + main panel)
+ */
+
+#memory-tool-container {
+  /**
+   * Flex: contains two children, .list (sidebar) and #heap-view (main panel),
+   * which need to be laid out horizontally. The sidebar has a fixed width and
+   * the main panel needs to flex to fill out all remaining horizontal space.
+   */
+  display: flex;
+  /**
+   * Flexing to fill out remaining vertical space. The preceeding sibling is
+   * the toolbar. @see #memory-tool.
+   */
+  flex: 1;
+  overflow: hidden;
+}
+
+/**
+ * Sidebar
+ */
+
 .list {
-  min-width: var(--sidebar-width);
   width: var(--sidebar-width);
   overflow-y: auto;
   margin: 0;
@@ -104,7 +131,10 @@ html, body, #app, #memory-tool {
   border-inline-end: 1px solid var(--theme-splitter-color);
 }
 
-.list > li {
+.snapshot-list-item {
+  /**
+   * Flex: contains several children, which need to be laid out vertically.
+   */
   display: flex;
   flex-direction: column;
   color: var(--theme-body-color);
@@ -113,24 +143,23 @@ html, body, #app, #memory-tool {
   cursor: pointer;
 }
 
-.list > li.selected {
+.snapshot-list-item.selected {
   background-color: var(--theme-selection-background);
   color: var(--theme-selection-color);
 }
 
-.snapshot-list-item .snapshot-title {
-  display: block;
+.snapshot-list-item > .snapshot-title {
   margin-bottom: 14px;
 }
 
-.snapshot-list-item .snapshot-state,
-.snapshot-list-item .snapshot-totals {
+.snapshot-list-item > .snapshot-state,
+.snapshot-list-item > .snapshot-totals {
   font-size: 90%;
   color: var(--theme-body-color-alt);
 }
 
-.snapshot-list-item.selected .snapshot-state,
-.snapshot-list-item.selected .snapshot-totals {
+.snapshot-list-item.selected > .snapshot-state,
+.snapshot-list-item.selected > .snapshot-totals {
   /* Text inside a selected item should not be custom colored. */
   color: inherit !important;
 }
@@ -140,64 +169,88 @@ html, body, #app, #memory-tool {
  */
 
 #heap-view {
+  /**
+   * Flex: contains a .heap-view-panel which needs to fill out all the
+   * available space, horizontally and vertically.
+   */;
   display: flex;
+  /**
+   * Flexing to fill out remaining horizontal space. The preceeding sibling
+   * is the sidebar. @see #memory-tool-container.
+   */
   flex: 1;
-  justify-content: center;
   background-color: var(--theme-toolbar-background);
-  min-width: 400px;
 }
 
-#heap-view .snapshot-status,
-#heap-view .take-snapshot {
+#heap-view > .heap-view-panel {
+  /**
+   * Flex: can contain several children, including a tree with a header and
+   * multiple rows, all of which need to be laid out vertically. When the
+   * tree is visible, the header has a fixed height and tree body needs to flex
+   * to fill out all remaining vertical space.
+   */
+  display: flex;
+  flex-direction: column;
+  /**
+   * Flexing to fill out remaining horizontal space. @see #heap-view.
+   */
+  flex: 1;
+}
+
+#heap-view > .heap-view-panel > .snapshot-status,
+#heap-view > .heap-view-panel > .take-snapshot {
   margin: auto;
   margin-top: 65px;
   font-size: 120%;
 }
 
-#heap-view .snapshot-status {
-  display: block;
-  text-align: center;
-}
-
-#heap-view .take-snapshot {
+#heap-view > .heap-view-panel > .take-snapshot {
   padding: 5px;
 }
 
-#heap-view .heap-view-panel {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-}
-
-#heap-view .heap-view-panel[data-state="snapshot-state-error"] pre {
-  /* TODO */
+#heap-view > .heap-view-panel[data-state="snapshot-state-error"] pre {
   background-color: var(--theme-body-background);
-  overflow-y: auto;
   margin: 20px;
   padding: 20px;
 }
 
 /**
- * Heap Tree View
+ * Heap tree view header
  */
 
-#heap-view .theme-twisty {
-  float: left;
-}
-
 .header {
-  height: var(--heap-tree-header-height);
+  /**
+   * Flex: contains several span columns, all of which need to be laid out
+   * horizontally. All columns except the last one have percentage widths, and
+   * the last one needs to flex to fill out all remaining horizontal space.
+   */
   display: flex;
-  align-items: center;
   color: var(--theme-body-color);
   background-color: var(--theme-tab-toolbar-background);
+  border-bottom: 1px solid var(--cell-border-color);
 }
 
-.tree span {
-  line-height: var(--heap-tree-row-height);
+.header > span {
+  overflow: hidden;
+  line-height: var(--heap-tree-header-height);
+  text-overflow: ellipsis;
+  justify-content: center;
+  font-size: 90%;
+  white-space: nowrap;
 }
+
+.header > .heap-tree-item-name {
+  justify-content: flex-start;
+}
+
+/**
+ * Heap tree view body
+ */
 
 .tree {
+  /**
+   * Flexing to fill out remaining vertical space. @see .heap-view-panel
+   */
   flex: 1;
   overflow-y: auto;
   background-color: var(--theme-body-background);
@@ -205,28 +258,19 @@ html, body, #app, #memory-tool {
 
 .tree-node {
   height: var(--heap-tree-row-height);
-  clear: left;
 }
 
-.heap-tree-percent {
-  width: 30%;
-}
+/**
+ * Heap tree view columns
+ */
 
-.heap-tree-number {
-  width: 70%;
-  color: var(--theme-content-color3);
-  padding-right: 5px;
-}
-
-.focused .heap-tree-number {
-  color: var(--theme-selection-color);
-}
-
-.heap-tree-item, .header {
-  list-style-type: none;
-  height: var(--heap-tree-row-height);
+.heap-tree-item {
+  /**
+   * Flex: contains several span columns, all of which need to be laid out
+   * horizontally. All columns except the last one have percentage widths, and
+   * the last one needs to flex to fill out all remaining horizontal space.
+   */
   display: flex;
-  flex-direction: row;
 }
 
 .tree-node:nth-child(2n) {
@@ -237,44 +281,22 @@ html, body, #app, #memory-tool {
   background-color: var(--row-hover-background-color);
 }
 
-.tree-node:focus, .heap-tree-item.focused {
+.heap-tree-item.focused {
   background-color: var(--theme-selection-background);
   color: var(--theme-selection-color);
-}
-
-.header {
-  background-color: var(--theme-tab-toolbar-background);
-  border-color: var(--cell-border-color);
-  border-style: solid;
-  border-width: 0px 0px 1px 0px;
-}
-
-.header span {
-  text-align: center;
-  line-height: var(--heap-tree-header-height);
-  font-size: 90%;
-  display: inline;
-}
-
-.header span, .heap-tree-number, .heap-tree-percent, .heap-tree-item-name {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.header .heap-tree-item-name {
-  text-align: left;
 }
 
 .heap-tree-item-bytes,
 .heap-tree-item-count,
 .heap-tree-item-total-bytes,
 .heap-tree-item-total-count {
+  /**
+   * Flex: contains several subcolumns, which need to be laid out horizontally.
+   * These subcolumns may have specific widths or need to flex.
+   */
+  display: flex;
   text-align: end;
   border-inline-end: var(--cell-border-color) 1px solid;
-  padding-inline-end: 5px;
-  display: flex;
-  flex-direction: row;
 }
 
 .heap-tree-item-count,
@@ -288,15 +310,60 @@ html, body, #app, #memory-tool {
 }
 
 .heap-tree-item-name {
-  width: 50%;
-  padding-left: 5px;
+  /**
+   * Flex: contains an .arrow and some text, which need to be laid out
+   * horizontally, vertically aligned in the middle of the container.
+   */
+  display: flex;
+  align-items: center;
+  /**
+   * Flexing to fill out remaining vertical space.
+   * @see .header and .heap-tree-item */
+  flex: 1;
+  padding-inline-start: 5px;
 }
+
+/**
+ * Heap tree view subcolumns
+ */
+
+.heap-tree-number,
+.heap-tree-percent,
+.heap-tree-item-name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.heap-tree-number,
+.heap-tree-percent {
+  padding-inline-end: 5px;
+}
+
+.heap-tree-number {
+  flex: 1;
+  color: var(--theme-content-color3);
+}
+
+.heap-tree-percent {
+  width: 2.5em;
+}
+
+.heap-tree-item.focused .heap-tree-number,
+.heap-tree-item.focused .heap-tree-percent {
+  color: inherit;
+}
+
+/**
+ * Heap tree errors.
+ */
 
 .error::before {
   content: "";
   display: inline-block;
   width: 12px;
   height: 12px;
+  max-height: 12px;
   background-image: url(chrome://devtools/skin/themes/images/webconsole.svg);
   background-size: 72px 60px;
   background-position: -24px -24px;
@@ -304,7 +371,6 @@ html, body, #app, #memory-tool {
   margin: 0px;
   margin-top: 2px;
   margin-inline-end: 5px;
-  max-height: 12px;
 }
 
 .theme-light .error::before {
@@ -332,18 +398,20 @@ html, body, #app, #memory-tool {
   text-decoration: underline;
 }
 
-.frame-link-column, .frame-link-line, .frame-link-colon {
+.frame-link-column,
+.frame-link-line,
+.frame-link-colon {
   color: var(--theme-highlight-orange);
 }
 
 .frame-link-host {
+  margin-inline-start: 5px;
   font-size: 90%;
-  margin-left: 5px;
   color: var(--theme-content-color2);
 }
 
 .frame-link-function-display-name {
-  margin-right: 5px;
+  margin-inline-end: 5px;
 }
 
 .no-allocation-stacks {
@@ -352,8 +420,4 @@ html, body, #app, #memory-tool {
     border-width: 0px 0px 1px 0px;
     text-align: center;
     padding: 5px;
-}
-
-label select {
-  margin: 5px;
 }
