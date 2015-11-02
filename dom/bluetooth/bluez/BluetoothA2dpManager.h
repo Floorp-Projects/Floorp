@@ -46,7 +46,7 @@ private:
   void HandleShutdown();
   void NotifyConnectionStatusChanged();
 
-  nsString mDeviceAddress;
+  BluetoothAddress mDeviceAddress;
   RefPtr<BluetoothProfileController> mController;
 
   // A2DP data member

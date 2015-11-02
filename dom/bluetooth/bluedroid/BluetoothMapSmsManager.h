@@ -243,7 +243,7 @@ private:
   // MNS OBEX session status. Set when MNS OBEX session is established.
   bool mMnsConnected;
   bool mNtfRequired;
-  nsString mDeviceAddress;
+  BluetoothAddress mDeviceAddress;
   unsigned int mRemoteMaxPacketLength;
 
   // If a connection has been established, mMasSocket will be the socket

@@ -231,6 +231,26 @@ StringToUuid(const nsAString& aString, BluetoothUuid& aUuid)
 }
 
 nsresult
+GenerateUuid(BluetoothUuid &aUuid)
+{
+  nsresult rv;
+  nsCOMPtr<nsIUUIDGenerator> uuidGenerator =
+    do_GetService("@mozilla.org/uuid-generator;1", &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsID uuid;
+  rv = uuidGenerator->GenerateUUIDInPlace(&uuid);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  aUuid = BluetoothUuid(uuid.m0 >> 24, uuid.m0 >> 16, uuid.m0 >> 8, uuid.m0,
+                        uuid.m1 >> 8, uuid.m1,
+                        uuid.m2 >> 8, uuid.m2,
+                        uuid.m3[0], uuid.m3[1], uuid.m3[2], uuid.m3[3],
+                        uuid.m3[4], uuid.m3[5], uuid.m3[6], uuid.m3[7]);
+  return NS_OK;
+}
+
+nsresult
 GenerateUuid(nsAString &aUuidString)
 {
   nsresult rv;
