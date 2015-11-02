@@ -10,9 +10,45 @@
  * liability, trademark and document use rules apply.
  */
 
+enum FillMode {
+  "none",
+  "forwards",
+  "backwards",
+  "both",
+  "auto"
+};
+
+enum PlaybackDirection {
+  "normal",
+  "reverse",
+  "alternate",
+  "alternate-reverse"
+};
+
+dictionary AnimationEffectTimingProperties {
+  double                              delay = 0.0;
+  double                              endDelay = 0.0;
+  FillMode                            fill = "auto";
+  double                              iterationStart = 0.0;
+  unrestricted double                 iterations = 1.0;
+  (unrestricted double or DOMString)  duration = "auto";
+  PlaybackDirection                   direction = "normal";
+  DOMString                           easing = "linear";
+};
+
+dictionary ComputedTimingProperties : AnimationEffectTimingProperties {
+  unrestricted double   endTime = 0.0;
+  unrestricted double   activeDuration = 0.0;
+  double?               localTime = null;
+  unrestricted double?  progress = null;
+  unrestricted double?  currentIteration = null;
+};
+
 [Func="nsDocument::IsWebAnimationsEnabled"]
 interface AnimationEffectReadOnly {
   // Not yet implemented:
   // readonly attribute AnimationEffectTimingReadOnly timing;
-  // readonly attribute ComputedTimingProperties      computedTiming;
+
+  [BinaryName="getComputedTimingAsDict"]
+  ComputedTimingProperties getComputedTiming();
 };

@@ -21,8 +21,8 @@ interface nsIServiceWorkerUnregisterCallback : nsISupports
   void unregisterFailed();
 };
 
-[scriptable, builtinclass, uuid(e633b73b-a734-4d04-a09c-b7779a439f3f)]
-interface nsIServiceWorkerInfo : nsISupports
+[scriptable, builtinclass, uuid(f222dcad-3081-4699-bbc6-5615e20749C8)]
+interface nsIServiceWorkerRegistrationInfo : nsISupports
 {
   readonly attribute nsIPrincipal principal;
 
@@ -34,7 +34,7 @@ interface nsIServiceWorkerInfo : nsISupports
   readonly attribute DOMString waitingCacheName;
 };
 
-[scriptable, builtinclass, uuid(8fb9db4f-1d04-402b-9c37-542da06e03b9)]
+[scriptable, builtinclass, uuid(10f80c8c-7bf5-479e-a8d8-12ef50c802e8)]
 interface nsIServiceWorkerManager : nsISupports
 {
   /**
@@ -113,7 +113,7 @@ interface nsIServiceWorkerManager : nsISupports
   DOMString getScopeForUrl(in nsIPrincipal aPrincipal, in DOMString aPath);
 
   // Note: This is meant to be used only by about:serviceworkers.
-  //It returns an array of nsIServiceWorkerInfo.
+  // It returns an array of nsIServiceWorkerRegistrationInfos.
   nsIArray getAllRegistrations();
 
   // Note: This is meant to be used only by about:serviceworkers.
@@ -145,8 +145,6 @@ interface nsIServiceWorkerManager : nsISupports
                                      [optional, array, size_is(aDataLength)] in uint8_t aDataBytes);
   void sendPushSubscriptionChangeEvent(in ACString aOriginAttributes,
                                        in ACString scope);
-
-  void updateAllRegistrations();
 };
 
 %{ C++

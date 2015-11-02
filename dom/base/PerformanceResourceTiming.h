@@ -52,6 +52,16 @@ public:
     mInitiatorType = aInitiatorType;
   }
 
+  void GetNextHopProtocol(nsAString& aNextHopProtocol) const
+  {
+    aNextHopProtocol = mNextHopProtocol;
+  }
+
+  void SetNextHopProtocol(const nsAString& aNextHopProtocol)
+  {
+    mNextHopProtocol = aNextHopProtocol;
+  }
+
   DOMHighResTimeStamp FetchStart() const {
     return mTiming
         ? mTiming->FetchStartHighRes()
@@ -128,11 +138,45 @@ public:
     return this;
   }
 
+  uint64_t TransferSize() const
+  {
+    return mTiming && mTiming->TimingAllowed() ? mTransferSize : 0;
+  }
+
+  uint64_t EncodedBodySize() const
+  {
+    return mTiming && mTiming->TimingAllowed() ? mEncodedBodySize : 0;
+  }
+
+  uint64_t DecodedBodySize() const
+  {
+    return mTiming && mTiming->TimingAllowed() ? mDecodedBodySize : 0;
+  }
+
+  void SetEncodedBodySize(uint64_t aEncodedBodySize)
+  {
+    mEncodedBodySize = aEncodedBodySize;
+  }
+
+  void SetTransferSize(uint64_t aTransferSize)
+  {
+    mTransferSize = aTransferSize;
+  }
+
+  void SetDecodedBodySize(uint64_t aDecodedBodySize)
+  {
+    mDecodedBodySize = aDecodedBodySize;
+  }
+
 protected:
   virtual ~PerformanceResourceTiming();
 
   nsString mInitiatorType;
+  nsString mNextHopProtocol;
   RefPtr<nsPerformanceTiming> mTiming;
+  uint64_t mEncodedBodySize;
+  uint64_t mTransferSize;
+  uint64_t mDecodedBodySize;
 };
 
 } // namespace dom

@@ -295,10 +295,6 @@ JSRuntime::init(uint32_t maxbytes, uint32_t maxNurseryBytes)
     if (!gc.init(maxbytes, maxNurseryBytes))
         return false;
 
-    const char* size = getenv("JSGC_MARK_STACK_LIMIT");
-    if (size)
-        gc.setMarkStackLimit(atoi(size));
-
     ScopedJSDeletePtr<Zone> atomsZone(new_<Zone>(this));
     if (!atomsZone || !atomsZone->init(true))
         return false;
