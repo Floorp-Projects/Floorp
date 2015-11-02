@@ -378,19 +378,6 @@ DOMStorageCache::GetKey(const DOMStorage* aStorage, uint32_t aIndex, nsAString& 
   return NS_OK;
 }
 
-namespace {
-
-static PLDHashOperator
-KeysArrayBuilder(const nsAString& aKey, const nsString aValue, void* aArg)
-{
-  nsTArray<nsString>* keys = static_cast<nsTArray<nsString>* >(aArg);
-
-  keys->AppendElement(aKey);
-  return PL_DHASH_NEXT;
-}
-
-} // namespace
-
 void
 DOMStorageCache::GetKeys(const DOMStorage* aStorage, nsTArray<nsString>& aKeys)
 {
@@ -402,7 +389,9 @@ DOMStorageCache::GetKeys(const DOMStorage* aStorage, nsTArray<nsString>& aKeys)
     return;
   }
 
-  DataSet(aStorage).mKeys.EnumerateRead(KeysArrayBuilder, &aKeys);
+  for (auto iter = DataSet(aStorage).mKeys.Iter(); !iter.Done(); iter.Next()) {
+    aKeys.AppendElement(iter.Key());
+  }
 }
 
 nsresult
