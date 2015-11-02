@@ -142,9 +142,9 @@ XPCOMUtils.defineLazyModuleGetter(this, "UpdateUtils",
                                   "resource://gre/modules/UpdateUtils.jsm");
 #endif
 
-#ifdef MOZ_CRASHREPORTER
 XPCOMUtils.defineLazyModuleGetter(this, "TabCrashReporter",
                                   "resource:///modules/ContentCrashReporters.jsm");
+#ifdef MOZ_CRASHREPORTER
 XPCOMUtils.defineLazyModuleGetter(this, "PluginCrashReporter",
                                   "resource:///modules/ContentCrashReporters.jsm");
 #endif
@@ -890,8 +890,8 @@ BrowserGlue.prototype = {
     });
 #endif
 
-#ifdef MOZ_CRASHREPORTER
     TabCrashReporter.init();
+#ifdef MOZ_CRASHREPORTER
     PluginCrashReporter.init();
 #endif
 
