@@ -400,7 +400,7 @@ TCPSocket::NotifyCopyComplete(nsresult aStatus)
   mAsyncCopierActive = false;
   mMultiplexStream->RemoveStream(0);
   if (mSocketBridgeParent) {
-    mozilla::unused << mSocketBridgeParent->SendUpdateBufferedAmount(BufferedAmount(),
+    mozilla::Unused << mSocketBridgeParent->SendUpdateBufferedAmount(BufferedAmount(),
                                                                      mTrackingNumber);
   }
 

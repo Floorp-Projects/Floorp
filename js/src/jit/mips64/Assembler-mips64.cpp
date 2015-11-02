@@ -256,7 +256,7 @@ Assembler::Bind(uint8_t* rawCode, AbsoluteLabel* label, const void* address)
 }
 
 void
-Assembler::bind(InstImm* inst, uint64_t branch, uint64_t target)
+Assembler::bind(InstImm* inst, uintptr_t branch, uintptr_t target)
 {
     int64_t offset = target - branch;
     InstImm inst_bgezal = InstImm(op_regimm, zero, rt_bgezal, BOffImm16(0));
@@ -435,6 +435,14 @@ Assembler::WriteLoad64Instructions(Instruction* inst0, Register reg, uint64_t va
     *inst1 = InstImm(op_ori, reg, reg, Imm16::Upper(Imm32(value)));
     *inst2 = InstReg(op_special, rs_one, reg, reg, 48 - 32, ff_dsrl32);
     *inst3 = InstImm(op_ori, reg, reg, Imm16::Lower(Imm32(value)));
+}
+
+void
+Assembler::PatchDataWithValueCheck(CodeLocationLabel label, ImmPtr newValue,
+                                   ImmPtr expectedValue)
+{
+    PatchDataWithValueCheck(label, PatchedImmPtr(newValue.value),
+                            PatchedImmPtr(expectedValue.value));
 }
 
 void

@@ -512,8 +512,6 @@ public:
   // Returns a weak reference to the media decoder owner.
   MediaDecoderOwner* GetMediaOwner() const override;
 
-  bool OnStateMachineTaskQueue() const override;
-
   MediaDecoderStateMachine* GetStateMachine() const;
   void SetStateMachine(MediaDecoderStateMachine* aStateMachine);
 

@@ -1,62 +1,41 @@
-asserts(0-2) load ownerdiscard.html # bug 804291, bug 807211
+# Bug 668068 - Maximum (256) width and height icons that we currently interpret as 0-width and 0-height.
+load 256-height.ico
+load 256-width.ico
 
 load 83804-1.gif
 load 89341-1.gif
 load 463696.bmp
 load 570451.png
-
+skip-if(Android||B2G) load 694165-1.xhtml # Bug 876275
+load 681190.html
+load 732319-1.html
+load 844403-1.html
+load 856616.gif
+skip-if(B2G) load 944353.jpg
+load 1205923-1.html
+load 1212954-1.svg
 load colormap-range.gif
-
-# the following tests were inspired by bug 525326
-# they have image sizes of 65535x65535 which is larger than we allow
-load invalid-size.gif
-# this image has a valid size for the first frame, but the second frame is 65535x65535
-# AddressSanitizer sometimes fails with a CHECK on an allocation caused by this.
-skip-if(AddressSanitizer) load invalid-size-second-frame.gif
+HTTP load delayedframe.sjs # A 3-frame animated GIF with an inordinate delay between the second and third frame
 
 # Animated gifs with a very large canvas, but tiny actual content.
 skip-if(B2G) load delaytest.html?523528-1.gif
 skip-if(B2G) load delaytest.html?523528-2.gif
 
-# this would have exposed the leak discovered in bug 642902
-load invalid-icc-profile.jpg
-
-# maximum (256) width and height icons that we currently (due to bug 668068)
-# interpret as 0-width and 0-height.
-load 256-width.ico
-load 256-height.ico
-
-# A 3-frame animated GIF with an inordinate delay between the second and third
-# frame.
-HTTP load delayedframe.sjs
-
-asserts(0-1) load 681190.html # asserts can't create such a big surface
-skip-if(Android&&smallScreen) skip-if(B2G) skip-if(OSX==1010&&isDebugBuild) load 694165-1.xhtml # nexus-s Android 2.3.6, bug 876275 for B2G on a VM; bug 1123195 for OS X 10.10 debug
-load 732319-1.html
-load 844403-1.html
-
-load truncated-second-frame.png # bug 863975
-
-# Bug 863958
-# This icon's size is such that it leads to multiple writes to the PNG decoder
-# after we've gotten our size.
-load multiple-png-hassize.ico
-
-# Bug 856615
-# Asserts in the debug build
-load 856616.gif
-
-skip-if(AddressSanitizer) skip-if(B2G) load 944353.jpg
-
-# Bug 1160801: Ensure that we handle invalid disposal types.
+# Bug 1160801 - Ensure that we handle invalid disposal types.
 load invalid-disposal-method-1.gif
 load invalid-disposal-method-2.gif
 load invalid-disposal-method-3.gif
 
-load 1205923-1.html
-load 1212954-1.svg
+load invalid-icc-profile.jpg # This would have exposed the leak discovered in bug 642902
 
-# Ensure we handle ICO directory entries which specify the wrong size for the
-# contained resource.
+# Ensure we handle ICO directory entries which specify the wrong size for the contained resource.
 load invalid_ico_height.ico
 load invalid_ico_width.ico
+
+# Bug 525326 - Test image sizes of 65535x65535 which is larger than we allow)
+load invalid-size.gif
+load invalid-size-second-frame.gif
+
+load multiple-png-hassize.ico # Bug 863958 - This icon's size is such that it leads to multiple writes to the PNG decoder after we've gotten our size.
+asserts(0-2) load ownerdiscard.html # Bug 807211
+load truncated-second-frame.png # Bug 863975

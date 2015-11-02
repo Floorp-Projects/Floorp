@@ -34,7 +34,8 @@ class GLXLibrary
 public:
     GLXLibrary() : mInitialized(false), mTriedInitializing(false),
                    mUseTextureFromPixmap(false), mDebug(false),
-                   mHasRobustness(false), mIsATI(false), mIsNVIDIA(false),
+                   mHasRobustness(false), mHasCreateContextAttribs(false),
+                   mIsATI(false), mIsNVIDIA(false),
                    mClientIsMesa(false), mGLXMajorVersion(0),
                    mGLXMinorVersion(0),
                    mOGLLibrary(nullptr) {}
@@ -106,6 +107,7 @@ public:
 
     bool UseTextureFromPixmap() { return mUseTextureFromPixmap; }
     bool HasRobustness() { return mHasRobustness; }
+    bool HasCreateContextAttribs() { return mHasCreateContextAttribs; }
     bool SupportsTextureFromPixmap(gfxASurface* aSurface);
     bool IsATI() { return mIsATI; }
     bool GLXVersionCheck(int aMajor, int aMinor);
@@ -216,6 +218,7 @@ private:
     bool mUseTextureFromPixmap;
     bool mDebug;
     bool mHasRobustness;
+    bool mHasCreateContextAttribs;
     bool mIsATI;
     bool mIsNVIDIA;
     bool mClientIsMesa;

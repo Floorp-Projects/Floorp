@@ -19,7 +19,7 @@
 #include "nsKeygenHandler.h"
 
 using mozilla::dom::ContentChild;
-using mozilla::unused;
+using mozilla::Unused;
 
 NS_IMPL_ISUPPORTS(nsKeygenFormProcessorContent, nsIFormProcessor)
 
@@ -45,7 +45,7 @@ nsKeygenFormProcessorContent::ProcessValue(nsIDOMHTMLElement* aElement,
 
   nsString oldValue(aValue);
   nsString newValue;
-  unused << child->SendKeygenProcessValue(oldValue, challengeValue,
+  Unused << child->SendKeygenProcessValue(oldValue, challengeValue,
                                           keyTypeValue, keyParamsValue,
                                           &newValue);
 
@@ -70,7 +70,7 @@ nsKeygenFormProcessorContent::ProvideContent(const nsAString& aFormType,
                                              nsAString& aAttribute)
 {
   nsString attribute;
-  unused <<
+  Unused <<
     ContentChild::GetSingleton()->SendKeygenProvideContent(&attribute,
                                                            &aContent);
   aAttribute.Assign(attribute);

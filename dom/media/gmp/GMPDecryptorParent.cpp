@@ -73,7 +73,7 @@ GMPDecryptorParent::CreateSession(uint32_t aCreateSessionToken,
   }
   // Caller should ensure parameters passed in from JS are valid.
   MOZ_ASSERT(!aInitDataType.IsEmpty() && !aInitData.IsEmpty());
-  unused << SendCreateSession(aCreateSessionToken, aPromiseId, aInitDataType, aInitData, aSessionType);
+  Unused << SendCreateSession(aCreateSessionToken, aPromiseId, aInitDataType, aInitData, aSessionType);
 }
 
 void
@@ -88,7 +88,7 @@ GMPDecryptorParent::LoadSession(uint32_t aPromiseId,
   }
   // Caller should ensure parameters passed in from JS are valid.
   MOZ_ASSERT(!aSessionId.IsEmpty());
-  unused << SendLoadSession(aPromiseId, aSessionId);
+  Unused << SendLoadSession(aPromiseId, aSessionId);
 }
 
 void
@@ -105,7 +105,7 @@ GMPDecryptorParent::UpdateSession(uint32_t aPromiseId,
   }
   // Caller should ensure parameters passed in from JS are valid.
   MOZ_ASSERT(!aSessionId.IsEmpty() && !aResponse.IsEmpty());
-  unused << SendUpdateSession(aPromiseId, aSessionId, aResponse);
+  Unused << SendUpdateSession(aPromiseId, aSessionId, aResponse);
 }
 
 void
@@ -121,7 +121,7 @@ GMPDecryptorParent::CloseSession(uint32_t aPromiseId,
   }
   // Caller should ensure parameters passed in from JS are valid.
   MOZ_ASSERT(!aSessionId.IsEmpty());
-  unused << SendCloseSession(aPromiseId, aSessionId);
+  Unused << SendCloseSession(aPromiseId, aSessionId);
 }
 
 void
@@ -137,7 +137,7 @@ GMPDecryptorParent::RemoveSession(uint32_t aPromiseId,
   }
   // Caller should ensure parameters passed in from JS are valid.
   MOZ_ASSERT(!aSessionId.IsEmpty());
-  unused << SendRemoveSession(aPromiseId, aSessionId);
+  Unused << SendRemoveSession(aPromiseId, aSessionId);
 }
 
 void
@@ -153,7 +153,7 @@ GMPDecryptorParent::SetServerCertificate(uint32_t aPromiseId,
   }
   // Caller should ensure parameters passed in from JS are valid.
   MOZ_ASSERT(!aServerCert.IsEmpty());
-  unused << SendSetServerCertificate(aPromiseId, aServerCert);
+  Unused << SendSetServerCertificate(aPromiseId, aServerCert);
 }
 
 void
@@ -177,7 +177,7 @@ GMPDecryptorParent::Decrypt(uint32_t aId,
                          aCrypto.mEncryptedSizes,
                          aCrypto.mSessionIds);
 
-  unused << SendDecrypt(aId, aBuffer, data);
+  Unused << SendDecrypt(aId, aBuffer, data);
 }
 
 bool
@@ -413,7 +413,7 @@ GMPDecryptorParent::Shutdown()
 
   mIsOpen = false;
   if (!mActorDestroyed) {
-    unused << SendDecryptingComplete();
+    Unused << SendDecryptingComplete();
   }
 }
 

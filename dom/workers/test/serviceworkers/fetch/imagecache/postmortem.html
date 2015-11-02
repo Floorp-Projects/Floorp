@@ -1,0 +1,9 @@
+<!DOCTYPE html>
+<script>
+onload = function() {
+  var width = document.querySelector("img").width;
+  window.parent.postMessage({status: "postmortem",
+                             width: width}, "*");
+};
+</script>
+<img src="image-20px.png">

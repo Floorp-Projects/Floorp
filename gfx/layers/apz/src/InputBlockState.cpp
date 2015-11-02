@@ -7,6 +7,7 @@
 #include "InputBlockState.h"
 #include "AsyncPanZoomController.h"         // for AsyncPanZoomController
 #include "gfxPrefs.h"                       // for gfxPrefs
+#include "mozilla/MouseEvents.h"
 #include "mozilla/SizePrintfMacros.h"       // for PRIuSIZE
 #include "mozilla/layers/APZCTreeManager.h" // for AllowedTouchBehavior
 #include "OverscrollHandoffState.h"
@@ -160,6 +161,84 @@ CancelableBlockState::DispatchEvent(const InputData& aEvent) const
   GetTargetApzc()->HandleInputEvent(aEvent, mTransformToApzc);
 }
 
+DragBlockState::DragBlockState(const RefPtr<AsyncPanZoomController>& aTargetApzc,
+                               bool aTargetConfirmed,
+                               const MouseInput& aInitialEvent)
+  : CancelableBlockState(aTargetApzc, aTargetConfirmed)
+  , mReceivedMouseUp(false)
+{
+}
+
+bool
+DragBlockState::HasReceivedMouseUp()
+{
+  return mReceivedMouseUp;
+}
+
+void
+DragBlockState::MarkMouseUpReceived()
+{
+  mReceivedMouseUp = true;
+}
+
+void
+DragBlockState::SetDragMetrics(const AsyncDragMetrics& aDragMetrics)
+{
+  mDragMetrics = aDragMetrics;
+}
+
+void
+DragBlockState::DispatchEvent(const InputData& aEvent) const
+{
+  MouseInput mouseInput = aEvent.AsMouseInput();
+  if (!mouseInput.TransformToLocal(mTransformToApzc)) {
+    return;
+  }
+
+  GetTargetApzc()->HandleDragEvent(mouseInput, mDragMetrics);
+}
+
+void
+DragBlockState::AddEvent(const MouseInput& aEvent)
+{
+  mEvents.AppendElement(aEvent);
+}
+
+bool
+DragBlockState::HasEvents() const
+{
+  return !mEvents.IsEmpty();
+}
+
+void
+DragBlockState::DropEvents()
+{
+  TBS_LOG("%p dropping %" PRIuSIZE " events\n", this, mEvents.Length());
+  mEvents.Clear();
+}
+
+void
+DragBlockState::HandleEvents()
+{
+  while (HasEvents()) {
+    TBS_LOG("%p returning first of %" PRIuSIZE " events\n", this, mEvents.Length());
+    MouseInput event = mEvents[0];
+    mEvents.RemoveElementAt(0);
+    DispatchEvent(event);
+  }
+}
+
+bool
+DragBlockState::MustStayActive()
+{
+  return !mReceivedMouseUp;
+}
+
+const char*
+DragBlockState::Type()
+{
+  return "drag";
+}
 // This is used to track the current wheel transaction.
 static uint64_t sLastWheelBlockId = InputBlockState::NO_BLOCK_ID;
 

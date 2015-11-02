@@ -155,6 +155,7 @@ extern nsresult nsStringInputStreamConstructor(nsISupports*, REFNSIID, void**);
 #include "GeckoProfiler.h"
 
 #include "jsapi.h"
+#include "js/Initialization.h"
 
 #include "gfxPlatform.h"
 

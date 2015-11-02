@@ -57,7 +57,7 @@ nsPrintingProxy::GetInstance()
 nsresult
 nsPrintingProxy::Init()
 {
-  mozilla::unused << ContentChild::GetSingleton()->SendPPrintingConstructor(this);
+  mozilla::Unused << ContentChild::GetSingleton()->SendPPrintingConstructor(this);
   return NS_OK;
 }
 
@@ -103,7 +103,7 @@ nsPrintingProxy::ShowPrintDialog(nsIDOMWindow *parent,
   RefPtr<PrintSettingsDialogChild> dialog = new PrintSettingsDialogChild();
   SendPPrintSettingsDialogConstructor(dialog);
 
-  mozilla::unused << SendShowPrintDialog(dialog, pBrowser, inSettings);
+  mozilla::Unused << SendShowPrintDialog(dialog, pBrowser, inSettings);
 
   while(!dialog->returned()) {
     NS_ProcessNextEvent(nullptr, true);
@@ -149,7 +149,7 @@ nsPrintingProxy::ShowProgress(nsIDOMWindow*            parent,
 
   SendPPrintProgressDialogConstructor(dialogChild);
 
-  mozilla::unused << SendShowProgress(pBrowser, dialogChild,
+  mozilla::Unused << SendShowProgress(pBrowser, dialogChild,
                                       isForPrinting, notifyOnOpen, &rv);
   if (NS_FAILED(rv)) {
     return rv;
@@ -191,7 +191,7 @@ nsPrintingProxy::SavePrintSettings(nsIPrintSettings* aPS,
   rv = po->SerializeToPrintData(aPS, nullptr, &settings);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  unused << SendSavePrintSettings(settings, aUsePrinterNamePrefix, aFlags,
+  Unused << SendSavePrintSettings(settings, aUsePrinterNamePrefix, aFlags,
                                   &rv);
   return rv;
 }

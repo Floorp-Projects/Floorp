@@ -233,7 +233,7 @@ GMPVideoEncoderParent::Shutdown()
 
   mIsOpen = false;
   if (!mActorDestroyed) {
-    unused << SendEncodingComplete();
+    Unused << SendEncodingComplete();
   }
 }
 

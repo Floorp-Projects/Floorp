@@ -447,7 +447,7 @@ Parent<Super>::RecvGetOriginKey(const uint32_t& aRequestId,
       if (!sIPCServingParent) {
         return NS_OK;
       }
-      unused << sIPCServingParent->SendGetOriginKeyResponse(aRequestId, aKey);
+      Unused << sIPCServingParent->SendGetOriginKeyResponse(aRequestId, aKey);
     } else {
       RefPtr<MediaManager> mgr = MediaManager::GetInstance();
       if (!mgr) {

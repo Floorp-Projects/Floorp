@@ -6,6 +6,8 @@
 #ifndef MOZILLA_GFX_TYPES_H_
 #define MOZILLA_GFX_TYPES_H_
 
+#include "mozilla/Endian.h"
+
 #include <stddef.h>
 #include <stdint.h>
 
@@ -38,6 +40,8 @@ enum class SurfaceFormat : int8_t {
   B8G8R8X8,     // [BB, GG, RR, 00]     0x00RRGGBB        0xBBGGRR00
   R8G8B8A8,     // [RR, GG, BB, AA]     0xAABBGGRR        0xRRGGBBAA
   R8G8B8X8,     // [RR, GG, BB, 00]     0x00BBGGRR        0xRRGGBB00
+  A8R8G8B8,     // [AA, RR, GG, BB]     0xBBGGRRAA        0xAARRGGBB
+  X8R8G8B8,     // [00, RR, GG, BB]     0xBBGGRR00        0x00RRGGBB
 
   // The _UINT16 suffix here indicates that the name reflects the layout when
   // viewed as a uint16_t value. In memory these values are stored using native
@@ -52,7 +56,20 @@ enum class SurfaceFormat : int8_t {
   NV12,
 
   // This represents the unknown format.
-  UNKNOWN
+  UNKNOWN,
+
+  // The following values are endian-independent synonyms. The _UINT32 suffix
+  // indicates that the name reflects the layout when viewed as a uint32_t
+  // value.
+#if MOZ_LITTLE_ENDIAN
+  A8R8G8B8_UINT32 = B8G8R8A8,       // 0xAARRGGBB
+  X8R8G8B8_UINT32 = B8G8R8X8        // 0x00RRGGBB
+#elif MOZ_BIG_ENDIAN
+  A8R8G8B8_UINT32 = A8R8G8B8,       // 0xAARRGGBB
+  X8R8G8B8_UINT32 = X8R8G8B8        // 0x00RRGGBB
+#else
+# error "bad endianness"
+#endif
 };
 
 inline bool IsOpaque(SurfaceFormat aFormat)

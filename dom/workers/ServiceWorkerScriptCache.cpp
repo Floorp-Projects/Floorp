@@ -737,7 +737,7 @@ CompareNetwork::OnStreamComplete(nsIStreamLoader* aLoader, nsISupports* aContext
     nsAutoCString maxScope;
     // Note: we explicitly don't check for the return value here, because the
     // absence of the header is not an error condition.
-    unused << httpChannel->GetResponseHeader(NS_LITERAL_CSTRING("Service-Worker-Allowed"),
+    Unused << httpChannel->GetResponseHeader(NS_LITERAL_CSTRING("Service-Worker-Allowed"),
                                              maxScope);
 
     mManager->SetMaxScope(maxScope);

@@ -109,7 +109,7 @@ GetRequestURLFromDocument(nsIDocument* aDocument, const nsAString& aInput,
   // This fails with URIs with weird protocols, even when they are valid,
   // so we ignore the failure
   nsAutoCString credentials;
-  unused << resolvedURI->GetUserPass(credentials);
+  Unused << resolvedURI->GetUserPass(credentials);
   if (!credentials.IsEmpty()) {
     aRv.ThrowTypeError<MSG_URL_HAS_CREDENTIALS>(&aInput);
     return;
@@ -148,7 +148,7 @@ GetRequestURLFromChrome(const nsAString& aInput, nsAString& aRequestURL,
   // This fails with URIs with weird protocols, even when they are valid,
   // so we ignore the failure
   nsAutoCString credentials;
-  unused << uri->GetUserPass(credentials);
+  Unused << uri->GetUserPass(credentials);
   if (!credentials.IsEmpty()) {
     aRv.ThrowTypeError<MSG_URL_HAS_CREDENTIALS>(&aInput);
     return;

@@ -42,27 +42,20 @@
                            [ [ 0, 6, "", 0, 0 ] ]);
       testTextBeforeOffset(ids, BOUNDARY_WORD_END,
                            [ [ 0, 5, "", 0, 0 ],
-                             [ 6, 6, "hello", 0, 5,
-                               [ [6, "e2", kTodo, kOk, kTodo ] ]
-                             ]
+                             [ 6, 6, "hello", 0, 5 ]
                            ]);
 
       testTextAtOffset(ids, BOUNDARY_WORD_START,
                        [ [ 0, 6, "hello ", 0, 6 ] ]);
       testTextAtOffset(ids, BOUNDARY_WORD_END,
                        [ [ 0, 4, "hello", 0, 5 ],
-                         [ 5, 6, " ", 5, 6,
-                           [ [ 5, "e2", kTodo, kTodo, kOk ],
-                             [ 6, "e2", kTodo, kTodo, kOk ] ]
-                         ]
+                         [ 5, 6, " ", 5, 6 ]
                        ]);
 
       testTextAfterOffset(ids, BOUNDARY_WORD_START,
                           [ [ 0, 6, "", 6, 6 ] ]);
       testTextAfterOffset(ids, BOUNDARY_WORD_END,
-                          [ [ 0, 5, " ", 5, 6,
-                              [ [ 5, "e2", kTodo, kTodo, kOk ] ]
-                            ],
+                          [ [ 0, 5, " ", 5, 6 ],
                             [ 6, 6, "", 6, 6 ]
                           ]);
 
@@ -256,7 +249,7 @@
 
   <input id="i2" value="hello "/>
   <pre><div id="d2">hello </div></pre>
-  <div id="e2" contenteditable="true">hello </div>
+  <div id="e2" contenteditable="true" style='white-space:pre'>hello </div>
   <textarea id="t2">hello </textarea>
 
   <input id="i6" value="hello all"/>
