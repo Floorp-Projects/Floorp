@@ -55,7 +55,7 @@ BrowserStreamParent::RecvAsyncNPP_NewStreamResult(const NPError& rv,
   if (mState == DEFERRING_DESTROY) {
     // We've been asked to destroy ourselves before init was complete.
     mState = DYING;
-    unused << SendNPP_DestroyStream(mDeferredDestroyReason);
+    Unused << SendNPP_DestroyStream(mDeferredDestroyReason);
     return true;
   }
 
@@ -73,7 +73,7 @@ BrowserStreamParent::RecvAsyncNPP_NewStreamResult(const NPError& rv,
 
   if (error != NPERR_NO_ERROR) {
     surrogate->DestroyAsyncStream(mStream);
-    unused << PBrowserStreamParent::Send__delete__(this);
+    Unused << PBrowserStreamParent::Send__delete__(this);
   }
 
   return true;
@@ -151,7 +151,7 @@ BrowserStreamParent::NPP_DestroyStream(NPReason reason)
     mDeferredDestroyReason = reason;
   } else {
     mState = DYING;
-    unused << SendNPP_DestroyStream(reason);
+    Unused << SendNPP_DestroyStream(reason);
   }
 }
 
@@ -213,7 +213,7 @@ BrowserStreamParent::StreamAsFile(const char* fname)
     nsNPAPIPlugin::RetainStream(mStream, getter_AddRefs(mStreamPeer));
   }
 
-  unused << SendNPP_StreamAsFile(nsCString(fname));
+  Unused << SendNPP_StreamAsFile(nsCString(fname));
   return;
 }
 

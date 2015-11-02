@@ -102,7 +102,7 @@ struct MOZ_MUST_USE MOZ_NON_AUTOABLE already_AddRefed
 
   // Specialize the unused operator<< for already_AddRefed, to allow
   // nsCOMPtr<nsIFoo> foo;
-  // unused << foo.forget();
+  // Unused << foo.forget();
   // Note that nsCOMPtr is the XPCOM reference counting smart pointer class.
   friend void operator<<(const mozilla::unused_t& aUnused,
                          const already_AddRefed<T>& aRhs)

@@ -114,7 +114,7 @@ GMPTimerParent::TimerExpired(Context* aContext)
   uint32_t id = aContext->mId;
   mTimers.RemoveEntry(aContext);
   if (id) {
-    unused << SendTimerExpired(id);
+    Unused << SendTimerExpired(id);
   }
 }
 

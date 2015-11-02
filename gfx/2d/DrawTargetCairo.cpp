@@ -1478,10 +1478,10 @@ DrawTargetCairo::OptimizeSourceSurface(SourceSurface *aSurface) const
   Display *dpy = DisplayOfScreen(screen);
   XRenderPictFormat* xrenderFormat = nullptr;
   switch (format) {
-  case SurfaceFormat::B8G8R8A8:
+  case SurfaceFormat::A8R8G8B8_UINT32:
     xrenderFormat = XRenderFindStandardFormat(dpy, PictStandardARGB32);
     break;
-  case SurfaceFormat::B8G8R8X8:
+  case SurfaceFormat::X8R8G8B8_UINT32:
     xrenderFormat = XRenderFindStandardFormat(dpy, PictStandardRGB24);
     break;
   case SurfaceFormat::A8:
@@ -1589,7 +1589,7 @@ DrawTargetCairo::InitAlreadyReferenced(cairo_surface_t* aSurface, const IntSize&
   cairo_rectangle(mContext, 0, 0, mSize.width, mSize.height);
   cairo_clip(mContext);
 
-  if (mFormat == SurfaceFormat::B8G8R8A8 ||
+  if (mFormat == SurfaceFormat::A8R8G8B8_UINT32 ||
       mFormat == SurfaceFormat::R8G8B8A8) {
     SetPermitSubpixelAA(false);
   } else {

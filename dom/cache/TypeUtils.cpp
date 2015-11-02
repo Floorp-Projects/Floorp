@@ -78,7 +78,7 @@ SerializeNormalStream(nsIInputStream* aStream, CacheReadStream& aReadStreamOut)
 
     fdSet = manager->SendPFileDescriptorSetConstructor(fds[0]);
     for (uint32_t i = 1; i < fds.Length(); ++i) {
-      unused << fdSet->SendAddFileDescriptor(fds[i]);
+      Unused << fdSet->SendAddFileDescriptor(fds[i]);
     }
   }
 

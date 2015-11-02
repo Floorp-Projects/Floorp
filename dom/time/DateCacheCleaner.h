@@ -7,7 +7,7 @@
 /*
  * InitializeDateCacheCleaner registers DateCacheCleaner to 
  * SystemTimeChangeObserver. When time zone is changed, DateCacheCleaner calls
- * JS_ClearDateCaches to update the time zone information.
+ * JS::ResetTimeZone to update the time zone information.
  */
 
 namespace mozilla {

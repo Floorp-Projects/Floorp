@@ -386,10 +386,11 @@ nsPerformanceSnapshot::SetProcessStats(nsIPerformanceStats* stats)
 NS_IMPL_ISUPPORTS(nsPerformanceStatsService, nsIPerformanceStatsService, nsIObserver)
 
 nsPerformanceStatsService::nsPerformanceStatsService()
+  : mIsAvailable(false)
 #if defined(XP_WIN)
-  : mProcessId(GetCurrentProcessId())
+  , mProcessId(GetCurrentProcessId())
 #else
-  : mProcessId(getpid())
+  , mProcessId(getpid())
 #endif
   , mRuntime(xpc::GetJSRuntime())
   , mUIdCounter(0)
@@ -423,6 +424,7 @@ nsPerformanceStatsService::Dispose()
   // Make sure that we do not accidentally destroy `this` while we are
   // cleaning up back references.
   RefPtr<nsPerformanceStatsService> kungFuDeathGrip(this);
+  mIsAvailable = false;
 
   // Disconnect from nsIObserverService.
   nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
@@ -431,23 +433,25 @@ nsPerformanceStatsService::Dispose()
     obs->RemoveObserver(this, "quit-application");
     obs->RemoveObserver(this, "quit-application-granted");
     obs->RemoveObserver(this, "content-child-shutdown");
+    obs->RemoveObserver(this, "xpcom-will-shutdown");
   }
 
   // Clear up and disconnect from JSAPI.
   js::DisposePerformanceMonitoring(mRuntime);
 
-  mozilla::unused << js::SetStopwatchIsMonitoringCPOW(mRuntime, false);
-  mozilla::unused << js::SetStopwatchIsMonitoringJank(mRuntime, false);
+  mozilla::Unused << js::SetStopwatchIsMonitoringCPOW(mRuntime, false);
+  mozilla::Unused << js::SetStopwatchIsMonitoringJank(mRuntime, false);
 
-  mozilla::unused << js::SetStopwatchStartCallback(mRuntime, nullptr, nullptr);
-  mozilla::unused << js::SetStopwatchCommitCallback(mRuntime, nullptr, nullptr);
-  mozilla::unused << js::SetGetPerformanceGroupsCallback(mRuntime, nullptr, nullptr);
+  mozilla::Unused << js::SetStopwatchStartCallback(mRuntime, nullptr, nullptr);
+  mozilla::Unused << js::SetStopwatchCommitCallback(mRuntime, nullptr, nullptr);
+  mozilla::Unused << js::SetGetPerformanceGroupsCallback(mRuntime, nullptr, nullptr);
 
   // At this stage, the JS VM may still be holding references to
   // instances of PerformanceGroup on the stack. To let the service be
   // collected, we need to break the references from these groups to
   // `this`.
   mTopGroup->Dispose();
+  mTopGroup = nullptr;
 
   // Copy references to the groups to a vector to ensure that we do
   // not modify the hashtable while iterating it.
@@ -488,6 +492,7 @@ nsPerformanceStatsService::InitInternal()
     obs->AddObserver(this, "quit-application-granted", false);
     obs->AddObserver(this, "quit-application", false);
     obs->AddObserver(this, "content-child-shutdown", false);
+    obs->AddObserver(this, "xpcom-will-shutdown", false);
   }
 
   // Connect to JSAPI.
@@ -502,6 +507,8 @@ nsPerformanceStatsService::InitInternal()
   }
 
   mTopGroup->setIsActive(true);
+  mIsAvailable = true;
+
   return NS_OK;
 }
 
@@ -513,7 +520,8 @@ nsPerformanceStatsService::Observe(nsISupports *aSubject, const char *aTopic,
   MOZ_ASSERT(strcmp(aTopic, "profile-before-change") == 0
              || strcmp(aTopic, "quit-application") == 0
              || strcmp(aTopic, "quit-application-granted") == 0
-             || strcmp(aTopic, "content-child-shutdown") == 0);
+             || strcmp(aTopic, "content-child-shutdown") == 0
+             || strcmp(aTopic, "xpcom-will-shutdown") == 0);
 
   Dispose();
   return NS_OK;
@@ -522,6 +530,10 @@ nsPerformanceStatsService::Observe(nsISupports *aSubject, const char *aTopic,
 NS_IMETHODIMP
 nsPerformanceStatsService::GetIsMonitoringCPOW(JSContext* cx, bool *aIsStopwatchActive)
 {
+  if (!mIsAvailable) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
   JSRuntime *runtime = JS_GetRuntime(cx);
   *aIsStopwatchActive = js::GetStopwatchIsMonitoringCPOW(runtime);
   return NS_OK;
@@ -529,6 +541,10 @@ nsPerformanceStatsService::GetIsMonitoringCPOW(JSContext* cx, bool *aIsStopwatch
 NS_IMETHODIMP
 nsPerformanceStatsService::SetIsMonitoringCPOW(JSContext* cx, bool aIsStopwatchActive)
 {
+  if (!mIsAvailable) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
   JSRuntime *runtime = JS_GetRuntime(cx);
   if (!js::SetStopwatchIsMonitoringCPOW(runtime, aIsStopwatchActive)) {
     return NS_ERROR_OUT_OF_MEMORY;
@@ -539,6 +555,10 @@ nsPerformanceStatsService::SetIsMonitoringCPOW(JSContext* cx, bool aIsStopwatchA
 NS_IMETHODIMP
 nsPerformanceStatsService::GetIsMonitoringJank(JSContext* cx, bool *aIsStopwatchActive)
 {
+  if (!mIsAvailable) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
   JSRuntime *runtime = JS_GetRuntime(cx);
   *aIsStopwatchActive = js::GetStopwatchIsMonitoringJank(runtime);
   return NS_OK;
@@ -546,6 +566,10 @@ nsPerformanceStatsService::GetIsMonitoringJank(JSContext* cx, bool *aIsStopwatch
 NS_IMETHODIMP
 nsPerformanceStatsService::SetIsMonitoringJank(JSContext* cx, bool aIsStopwatchActive)
 {
+  if (!mIsAvailable) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
   JSRuntime *runtime = JS_GetRuntime(cx);
   if (!js::SetStopwatchIsMonitoringJank(runtime, aIsStopwatchActive)) {
     return NS_ERROR_OUT_OF_MEMORY;
@@ -556,12 +580,20 @@ nsPerformanceStatsService::SetIsMonitoringJank(JSContext* cx, bool aIsStopwatchA
 NS_IMETHODIMP
 nsPerformanceStatsService::GetIsMonitoringPerCompartment(JSContext*, bool *aIsMonitoringPerCompartment)
 {
+  if (!mIsAvailable) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
   *aIsMonitoringPerCompartment = mIsMonitoringPerCompartment;
   return NS_OK;
 }
 NS_IMETHODIMP
 nsPerformanceStatsService::SetIsMonitoringPerCompartment(JSContext*, bool aIsMonitoringPerCompartment)
 {
+  if (!mIsAvailable) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
   if (aIsMonitoringPerCompartment == mIsMonitoringPerCompartment) {
     return NS_OK;
   }
@@ -624,6 +656,10 @@ nsPerformanceStatsService::GetStatsForGroup(const nsPerformanceGroup* group)
 NS_IMETHODIMP
 nsPerformanceStatsService::GetSnapshot(JSContext* cx, nsIPerformanceSnapshot * *aSnapshot)
 {
+  if (!mIsAvailable) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
   RefPtr<nsPerformanceSnapshot> snapshot = new nsPerformanceSnapshot();
   snapshot->SetProcessStats(GetStatsForGroup(mTopGroup));
 
@@ -638,7 +674,7 @@ nsPerformanceStatsService::GetSnapshot(JSContext* cx, nsIPerformanceSnapshot * *
   js::GetPerfMonitoringTestCpuRescheduling(JS_GetRuntime(cx), &mProcessStayed, &mProcessMoved);
 
   if (++mProcessUpdateCounter % 10 == 0) {
-    mozilla::unused << UpdateTelemetry();
+    mozilla::Unused << UpdateTelemetry();
   }
 
   snapshot.forget(aSnapshot);
@@ -950,7 +986,7 @@ nsPerformanceGroup::nsPerformanceGroup(nsPerformanceStatsService* service,
   , mService(service)
   , mScope(scope)
 {
-  mozilla::unused << mService->mGroups.PutEntry(this);
+  mozilla::Unused << mService->mGroups.PutEntry(this);
 
 #if defined(DEBUG)
   if (scope == GroupScope::ADDON) {

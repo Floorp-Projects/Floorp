@@ -630,7 +630,7 @@ CamerasChild::Shutdown()
       // CamerasChild (this) will remain alive and is only deleted by the
       // IPC layer when SendAllDone returns.
       media::NewRunnableFrom([this]() -> nsresult {
-        unused << this->SendAllDone();
+        Unused << this->SendAllDone();
         return NS_OK;
       });
     CamerasSingleton::Thread()->Dispatch(deleteRunnable, NS_DISPATCH_NORMAL);

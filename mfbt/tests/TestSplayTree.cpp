@@ -119,7 +119,7 @@ static SplayTree<SplayNoCopy, SplayNoCopy> testNoCopy;
 int
 main()
 {
-  mozilla::unused << testNoCopy;
+  mozilla::Unused << testNoCopy;
 
   SplayTree<SplayInt, SplayInt> tree;
 

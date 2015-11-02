@@ -41,7 +41,7 @@ WebGL2Context::DeleteTransformFeedback(WebGLTransformFeedback* tf)
         return;
 
     if (mBoundTransformFeedback == tf)
-        BindTransformFeedback(LOCAL_GL_TRANSFORM_FEEDBACK, tf);
+        BindTransformFeedback(LOCAL_GL_TRANSFORM_FEEDBACK, nullptr);
 
     tf->RequestDelete();
 }

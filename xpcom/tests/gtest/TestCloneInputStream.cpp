@@ -106,7 +106,7 @@ TEST(CloneInputStream, NonCloneableInput_Fallback)
   // but AFAICT, gtest does not support async test completion.
   uint64_t available;
   do {
-    mozilla::unused << PR_Sleep(PR_INTERVAL_NO_WAIT);
+    mozilla::Unused << PR_Sleep(PR_INTERVAL_NO_WAIT);
     rv = stream->Available(&available);
     ASSERT_TRUE(NS_SUCCEEDED(rv));
   } while(available < inputString.Length());

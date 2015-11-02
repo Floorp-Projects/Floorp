@@ -170,7 +170,7 @@ static void
 CloseFileDescriptors(FdArray& aFds)
 {
   for (size_t i = 0; i < aFds.length(); i++) {
-    unused << HANDLE_EINTR(close(aFds[i]));
+    Unused << HANDLE_EINTR(close(aFds[i]));
   }
 }
 

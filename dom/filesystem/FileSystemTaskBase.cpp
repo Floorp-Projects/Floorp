@@ -111,7 +111,7 @@ FileSystemTaskBase::HandleResult()
     return;
   }
   if (mRequestParent && mRequestParent->IsRunning()) {
-    unused << mRequestParent->Send__delete__(mRequestParent,
+    Unused << mRequestParent->Send__delete__(mRequestParent,
       GetRequestResult());
   } else {
     HandlerCallback();

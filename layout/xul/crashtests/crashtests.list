@@ -14,9 +14,9 @@ load 291702-3.xul
 load 294371-1.xul
 load 311457-1.html
 load 321056-1.xhtml
-load 326834-1.html
 load 322786-1.xul
 load 325377.xul
+load 326834-1.html
 load 326879-1.xul
 load 327776-1.xul
 load 328135-1.xul
@@ -31,7 +31,8 @@ load 350460.xul
 load 360642-1.xul
 load 365151.xul
 load 366112-1.xul
-asserts(0-12) asserts-if(Android,0-42) load 366203-1.xul # bug 1217984
+asserts(0-50) load 366203-1.xul # bug 1217984
+asserts(24) asserts-if(Android,9) load 367185-1.xhtml # bug 1220345
 load 369942-1.xhtml
 load 374102-1.xul
 load 376137-1.html
@@ -44,7 +45,7 @@ load 382899-1.xul
 load 383236-1.xul
 load 384037-1.xhtml
 load 384105-1.html
-asserts(0-12) load 384373.html # bug 623436
+load 384373.html
 load 384491-1.xhtml
 load 384871-1.html
 load 386642.xul
@@ -91,7 +92,7 @@ load 514300-1.xul
 load 536931-1.xhtml
 asserts(1) load 538308-1.xul
 load 557174-1.xml
-load menulist-focused.xhtml
 load 564705-1.xul 
 load 583957-1.html
 load 617089.html
+load menulist-focused.xhtml
