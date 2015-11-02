@@ -195,7 +195,6 @@ bool Face::runGraphite(Segment *seg, const Silf *aSilf) const
                 << "output" << json::array;
         for(Slot * s = seg->first(); s; s = s->next())
             *dbgout     << dslot(seg, s);
-        seg->finalise(0);                   // Call this here to fix up charinfo back indexes.
         *dbgout         << json::close
                 << "advance" << seg->advance()
                 << "chars"   << json::array;
@@ -330,9 +329,9 @@ Error Face::Table::decompress()
     {
         uncompressed_size  = hdr & 0x07ffffff;
         uncompressed_table = gralloc<byte>(uncompressed_size);
-        //TODO: Coverty: 1315803: FORWARD_NULL
         if (!e.test(!uncompressed_table, E_OUTOFMEM))
-            //TODO: Coverty: 1315800: CHECKED_RETURN
+            // coverity[forward_null : FALSE] - uncompressed_table has been checked so can't be null
+            // coverity[checked_return : FALSE] - we test e later
             e.test(lz4::decompress(p, _sz - 2*sizeof(uint32), uncompressed_table, uncompressed_size) != signed(uncompressed_size), E_SHRINKERFAILED);
         break;
     }
@@ -343,7 +342,8 @@ Error Face::Table::decompress()
 
     // Check the uncompressed version number against the original.
     if (!e)
-        //TODO: Coverty: 1315800: CHECKED_RETURN
+        // coverity[forward_null : FALSE] - uncompressed_table has already been tested so can't be null
+        // coverity[checked_return : FALSE] - we test e later
         e.test(be::peek<uint32>(uncompressed_table) != version, E_SHRINKERFAILED);
 
     // Tell the provider to release the compressed form since were replacing
@@ -358,7 +358,7 @@ Error Face::Table::decompress()
     }
 
     _p = uncompressed_table;
-    _sz = uncompressed_size + sizeof(uint32);
+    _sz = uncompressed_size;
     _compressed = true;
 
     return e;
