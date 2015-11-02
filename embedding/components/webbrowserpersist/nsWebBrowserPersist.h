@@ -136,12 +136,6 @@ private:
 
     void SetApplyConversionIfNeeded(nsIChannel *aChannel);
 
-    // Hash table enumerators
-    static PLDHashOperator EnumCalcProgress(
-        nsISupports *aKey, OutputData *aData, void* aClosure);
-    static PLDHashOperator EnumCalcUploadProgress(
-        nsISupports *aKey, UploadData *aData, void* aClosure);
-
     nsCOMPtr<nsIURI>          mCurrentDataPath;
     bool                      mCurrentDataPathIsRelative;
     nsCString                 mCurrentRelativePathToData;
