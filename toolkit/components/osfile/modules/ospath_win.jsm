@@ -310,7 +310,10 @@ var toFileURIExtraEncodings = {';': '%3b', '?': '%3F', '#': '%23'};
 var toFileURI = function toFileURI(path) {
   // URI-escape forward slashes and convert backward slashes to forward
   path = this.normalize(path).replace(/[\\\/]/g, m => (m=='\\')? '/' : '%2F');
-  let uri = encodeURI(path);
+  // Per https://url.spec.whatwg.org we should not encode [] in the path
+  let dontNeedEscaping = {'%5B': '[', '%5D': ']'};
+  let uri = encodeURI(path).replace(/%(5B|5D)/gi,
+    match => dontNeedEscaping[match]);
 
   // add a prefix, and encodeURI doesn't escape a few characters that we do
   // want to escape, so fix that up
