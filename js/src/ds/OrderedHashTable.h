@@ -81,7 +81,32 @@ class OrderedHashTable
 
   public:
     explicit OrderedHashTable(AllocPolicy& ap)
-        : hashTable(nullptr), data(nullptr), dataLength(0), ranges(nullptr), alloc(ap) {}
+      : hashTable(nullptr), data(nullptr), dataLength(0), dataCapacity(0)
+      , liveCount(0), ranges(nullptr), alloc(ap) {}
+
+    explicit OrderedHashTable(OrderedHashTable&& rhs) : OrderedHashTable(rhs.alloc) {
+        *this = mozilla::Move(rhs);
+    }
+
+    OrderedHashTable& operator=(OrderedHashTable&& rhs) {
+        if (&rhs == this)
+            return *this;
+
+        this->~OrderedHashTable();
+
+        hashTable = rhs.hashTable;
+        data = rhs.data;
+        dataLength = rhs.dataLength;
+        dataCapacity = rhs.dataCapacity;
+        liveCount = rhs.liveCount;
+        hashShift = rhs.hashShift;
+        ranges = rhs.ranges;
+
+        rhs.hashTable = nullptr;
+        rhs.init();
+
+        return *this;
+    }
 
     bool init() {
         MOZ_ASSERT(!hashTable, "init must be called at most once");
@@ -702,6 +727,8 @@ class OrderedHashMap
     typedef typename Impl::Range Range;
 
     explicit OrderedHashMap(AllocPolicy ap = AllocPolicy()) : impl(ap) {}
+    explicit OrderedHashMap(OrderedHashMap&& rhs) : impl(mozilla::Move(rhs.impl)) {}
+    OrderedHashMap& operator=(OrderedHashMap&& rhs) { impl = mozilla::Move(rhs.impl); return *this; }
     bool init()                                     { return impl.init(); }
     uint32_t count() const                          { return impl.count(); }
     bool has(const Key& key) const                  { return impl.has(key); }
@@ -719,6 +746,10 @@ class OrderedHashMap
             return;
         return impl.rekeyOneEntry(current, newKey, Entry(newKey, e->value));
     }
+
+    // Not copyable.
+    OrderedHashMap& operator=(const OrderedHashMap&) = delete;
+    OrderedHashMap(const OrderedHashMap&) = delete;
 };
 
 template <class T, class OrderedHashPolicy, class AllocPolicy>
