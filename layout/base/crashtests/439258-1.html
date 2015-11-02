@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+<script type="text/javascript">
+
+function boom()
+{
+  document.getElementById("div").focus();
+  document.execCommand("bold", false, null);
+}
+
+</script>
+</head>
+
+<body onload="boom();">
+
+<div id="div" style="position: absolute" contenteditable="true"></div>
+
+</body>
+</html>

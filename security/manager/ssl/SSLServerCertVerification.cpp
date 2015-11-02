@@ -454,7 +454,7 @@ CertErrorRunnable::CheckCertOverrides()
                                     mFdForLogging, this));
   // "Use" mFdForLogging in non-PR_LOGGING builds, too, to suppress
   // clang's -Wunused-private-field build warning for this variable:
-  unused << mFdForLogging;
+  Unused << mFdForLogging;
 
   if (!NS_IsMainThread()) {
     NS_ERROR("CertErrorRunnable::CheckCertOverrides called off main thread");

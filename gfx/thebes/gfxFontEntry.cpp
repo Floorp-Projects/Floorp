@@ -1522,7 +1522,7 @@ gfxFontFamily::FindFontForChar(GlobalFontMatch *aMatchData)
             rank += RANK_MATCHED_CMAP;
             aMatchData->mCount++;
 
-            PRLogModuleInfo *log = gfxPlatform::GetLog(eGfxLog_textrun);
+            LogModule* log = gfxPlatform::GetLog(eGfxLog_textrun);
 
             if (MOZ_UNLIKELY(MOZ_LOG_TEST(log, LogLevel::Debug))) {
                 uint32_t unicodeRange = FindCharUnicodeRange(aMatchData->mCh);

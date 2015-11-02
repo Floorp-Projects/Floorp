@@ -98,41 +98,41 @@ FMRadioParent::Notify(const FMRadioEventType& aType)
 {
   switch (aType) {
     case FrequencyChanged:
-      unused << SendNotifyFrequencyChanged(
+      Unused << SendNotifyFrequencyChanged(
         IFMRadioService::Singleton()->GetFrequency());
       break;
     case EnabledChanged:
-      unused << SendNotifyEnabledChanged(
+      Unused << SendNotifyEnabledChanged(
         IFMRadioService::Singleton()->IsEnabled(),
         IFMRadioService::Singleton()->GetFrequency());
       break;
     case RDSEnabledChanged:
-      unused << SendNotifyRDSEnabledChanged(
+      Unused << SendNotifyRDSEnabledChanged(
         IFMRadioService::Singleton()->IsRDSEnabled());
       break;
     case PIChanged: {
       Nullable<unsigned short> pi =
         IFMRadioService::Singleton()->GetPi();
-      unused << SendNotifyPIChanged(!pi.IsNull(),
+      Unused << SendNotifyPIChanged(!pi.IsNull(),
                                     pi.IsNull() ? 0 : pi.Value());
       break;
     }
     case PTYChanged: {
       Nullable<uint8_t> pty = IFMRadioService::Singleton()->GetPty();
-      unused << SendNotifyPTYChanged(!pty.IsNull(),
+      Unused << SendNotifyPTYChanged(!pty.IsNull(),
                                      pty.IsNull() ? 0 : pty.Value());
       break;
     }
     case PSChanged: {
       nsAutoString psname;
       IFMRadioService::Singleton()->GetPs(psname);
-      unused << SendNotifyPSChanged(psname);
+      Unused << SendNotifyPSChanged(psname);
       break;
     }
     case RadiotextChanged: {
       nsAutoString radiotext;
       IFMRadioService::Singleton()->GetRt(radiotext);
-      unused << SendNotifyRadiotextChanged(radiotext);
+      Unused << SendNotifyRadiotextChanged(radiotext);
       break;
     }
     case NewRDSGroup: {
@@ -140,7 +140,7 @@ FMRadioParent::Notify(const FMRadioEventType& aType)
       DebugOnly<bool> rdsgroupset =
         IFMRadioService::Singleton()->GetRdsgroup(group);
       MOZ_ASSERT(rdsgroupset);
-      unused << SendNotifyNewRDSGroup(group);
+      Unused << SendNotifyNewRDSGroup(group);
       break;
     }
     default:

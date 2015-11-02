@@ -101,7 +101,7 @@ void
 ExternalHelperAppParent::Delete()
 {
   if (!mIPCClosed) {
-    unused << Send__delete__(this);
+    Unused << Send__delete__(this);
   }
 }
 
@@ -154,7 +154,7 @@ ExternalHelperAppParent::RecvDivertToParentUsing(PChannelDiverterParent* diverte
   auto p = static_cast<mozilla::net::ChannelDiverterParent*>(diverter);
   p->DivertTo(this);
   mDiverted = true;
-  unused << p->Send__delete__(p);
+  Unused << p->Send__delete__(p);
   return true;
 }
 
@@ -228,7 +228,7 @@ NS_IMETHODIMP
 ExternalHelperAppParent::Cancel(nsresult aStatus)
 {
   mStatus = aStatus;
-  unused << SendCancel(aStatus);
+  Unused << SendCancel(aStatus);
   return NS_OK;
 }
 

@@ -599,7 +599,7 @@ public:
     if (!Valid()) {
       return;
     }
-    unused << sys_write(mFD, buffer, len);
+    Unused << sys_write(mFD, buffer, len);
   }
 
 private:
@@ -933,12 +933,12 @@ bool MinidumpCallback(
     // need to clobber this, as libcurl might load NSS,
     // and we want it to load the system NSS.
     unsetenv("LD_LIBRARY_PATH");
-    unused << execl(crashReporterPath,
+    Unused << execl(crashReporterPath,
                     crashReporterPath, minidumpPath, (char*)0);
 #else
     // Invoke the reportCrash activity using am
     if (androidUserSerial) {
-      unused << execlp("/system/bin/am",
+      Unused << execlp("/system/bin/am",
                        "/system/bin/am",
                        "start",
                        "--user", androidUserSerial,
@@ -947,7 +947,7 @@ bool MinidumpCallback(
                        "--es", "minidumpPath", minidumpPath,
                        (char*)0);
     } else {
-      unused << execlp("/system/bin/am",
+      Unused << execlp("/system/bin/am",
                        "/system/bin/am",
                        "start",
                        "-a", "org.mozilla.gecko.reportCrash",
@@ -962,7 +962,7 @@ bool MinidumpCallback(
     // We need to wait on the 'am start' command above to finish, otherwise everything will
     // be killed by the ActivityManager as soon as the signal handler exits
     int status;
-    unused << HANDLE_EINTR(sys_waitpid(pid, &status, __WALL));
+    Unused << HANDLE_EINTR(sys_waitpid(pid, &status, __WALL));
 #endif
   }
 #endif // XP_MACOSX

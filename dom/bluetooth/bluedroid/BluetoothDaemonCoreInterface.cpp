@@ -65,7 +65,7 @@ BluetoothDaemonCoreModule::EnableCmd(BluetoothResultHandler* aRes)
   if (NS_FAILED(rv)) {
     return rv;
   }
-  unused << pdu.forget();
+  Unused << pdu.forget();
   return rv;
 }
 
@@ -82,7 +82,7 @@ BluetoothDaemonCoreModule::DisableCmd(BluetoothResultHandler* aRes)
   if (NS_FAILED(rv)) {
     return rv;
   }
-  unused << pdu.forget();
+  Unused << pdu.forget();
   return rv;
 }
 
@@ -100,7 +100,7 @@ BluetoothDaemonCoreModule::GetAdapterPropertiesCmd(
   if (NS_FAILED(rv)) {
     return rv;
   }
-  unused << pdu.forget();
+  Unused << pdu.forget();
   return rv;
 }
 
@@ -122,7 +122,7 @@ BluetoothDaemonCoreModule::GetAdapterPropertyCmd(BluetoothPropertyType aType,
   if (NS_FAILED(rv)) {
     return rv;
   }
-  unused << pdu.forget();
+  Unused << pdu.forget();
   return rv;
 }
 
@@ -144,7 +144,7 @@ BluetoothDaemonCoreModule::SetAdapterPropertyCmd(
   if (NS_FAILED(rv)) {
     return rv;
   }
-  unused << pdu.forget();
+  Unused << pdu.forget();
   return rv;
 }
 
@@ -166,7 +166,7 @@ BluetoothDaemonCoreModule::GetRemoteDevicePropertiesCmd(
   if (NS_FAILED(rv)) {
     return rv;
   }
-  unused << pdu.forget();
+  Unused << pdu.forget();
   return rv;
 }
 
@@ -190,7 +190,7 @@ BluetoothDaemonCoreModule::GetRemoteDevicePropertyCmd(
   if (NS_FAILED(rv)) {
     return rv;
   }
-  unused << pdu.forget();
+  Unused << pdu.forget();
   return rv;
 }
 
@@ -214,7 +214,7 @@ BluetoothDaemonCoreModule::SetRemoteDevicePropertyCmd(
   if (NS_FAILED(rv)) {
     return rv;
   }
-  unused << pdu.forget();
+  Unused << pdu.forget();
   return rv;
 }
 
@@ -237,7 +237,7 @@ BluetoothDaemonCoreModule::GetRemoteServiceRecordCmd(
   if (NS_FAILED(rv)) {
     return rv;
   }
-  unused << pdu.forget();
+  Unused << pdu.forget();
   return rv;
 }
 
@@ -258,7 +258,7 @@ BluetoothDaemonCoreModule::GetRemoteServicesCmd(
   if (NS_FAILED(rv)) {
     return rv;
   }
-  unused << pdu.forget();
+  Unused << pdu.forget();
   return rv;
 }
 
@@ -275,7 +275,7 @@ BluetoothDaemonCoreModule::StartDiscoveryCmd(BluetoothResultHandler* aRes)
   if (NS_FAILED(rv)) {
     return rv;
   }
-  unused << pdu.forget();
+  Unused << pdu.forget();
   return rv;
 }
 
@@ -292,7 +292,7 @@ BluetoothDaemonCoreModule::CancelDiscoveryCmd(BluetoothResultHandler* aRes)
   if (NS_FAILED(rv)) {
     return rv;
   }
-  unused << pdu.forget();
+  Unused << pdu.forget();
   return rv;
 }
 
@@ -319,7 +319,7 @@ BluetoothDaemonCoreModule::CreateBondCmd(const BluetoothAddress& aBdAddr,
   if (NS_FAILED(rv)) {
     return rv;
   }
-  unused << pdu.forget();
+  Unused << pdu.forget();
   return rv;
 }
 
@@ -341,7 +341,7 @@ BluetoothDaemonCoreModule::RemoveBondCmd(const BluetoothAddress& aBdAddr,
   if (NS_FAILED(rv)) {
     return rv;
   }
-  unused << pdu.forget();
+  Unused << pdu.forget();
   return rv;
 }
 
@@ -363,7 +363,7 @@ BluetoothDaemonCoreModule::CancelBondCmd(const BluetoothAddress& aBdAddr,
   if (NS_FAILED(rv)) {
     return rv;
   }
-  unused << pdu.forget();
+  Unused << pdu.forget();
   return rv;
 }
 
@@ -387,7 +387,7 @@ BluetoothDaemonCoreModule::PinReplyCmd(const BluetoothAddress& aBdAddr,
   if (NS_FAILED(rv)) {
     return rv;
   }
-  unused << pdu.forget();
+  Unused << pdu.forget();
   return rv;
 }
 
@@ -411,7 +411,7 @@ BluetoothDaemonCoreModule::SspReplyCmd(const BluetoothAddress& aBdAddr,
   if (NS_FAILED(rv)) {
     return rv;
   }
-  unused << pdu.forget();
+  Unused << pdu.forget();
   return rv;
 }
 
@@ -433,7 +433,7 @@ BluetoothDaemonCoreModule::DutModeConfigureCmd(bool aEnable,
   if (NS_FAILED(rv)) {
     return rv;
   }
-  unused << pdu.forget();
+  Unused << pdu.forget();
   return rv;
 }
 
@@ -457,7 +457,7 @@ BluetoothDaemonCoreModule::DutModeSendCmd(uint16_t aOpcode,
   if (NS_FAILED(rv)) {
     return rv;
   }
-  unused << pdu.forget();
+  Unused << pdu.forget();
   return rv;
 }
 
@@ -481,7 +481,7 @@ BluetoothDaemonCoreModule::LeTestModeCmd(uint16_t aOpcode,
   if (NS_FAILED(rv)) {
     return rv;
   }
-  unused << pdu.forget();
+  Unused << pdu.forget();
   return rv;
 }
 

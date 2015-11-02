@@ -2927,7 +2927,7 @@ ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   // dirty rect here.
   nsRect dirtyRect = aDirtyRect.Intersect(mScrollPort);
 
-  unused << DecideScrollableLayer(aBuilder, &dirtyRect,
+  Unused << DecideScrollableLayer(aBuilder, &dirtyRect,
               /* aAllowCreateDisplayPort = */ !mIsRoot);
 
   bool usingDisplayPort = aBuilder->IsPaintingToWindow() &&
@@ -3092,7 +3092,14 @@ ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
       //
       // This is not compatible when using containes for root scrollframes.
       MOZ_ASSERT(couldBuildLayer && mScrolledFrame->GetContent());
+      bool needToRecomputeAGR = false;
+      if (!mWillBuildScrollableLayer) {
+        needToRecomputeAGR = true;
+      }
       mWillBuildScrollableLayer = true;
+      if (needToRecomputeAGR) {
+        aBuilder->RecomputeCurrentAnimatedGeometryRoot();
+      }
     }
   }
 

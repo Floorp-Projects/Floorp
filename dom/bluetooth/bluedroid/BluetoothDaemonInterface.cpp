@@ -445,7 +445,7 @@ BluetoothDaemonInterface::Init(
   // If we could not cleanup properly before and an old
   // instance of the daemon is still running, we kill it
   // here.
-  unused << NS_WARN_IF(property_set("ctl.stop", "bluetoothd"));
+  Unused << NS_WARN_IF(property_set("ctl.stop", "bluetoothd"));
 
   mResultHandlerQ.AppendElement(aRes);
 
@@ -1006,7 +1006,7 @@ BluetoothDaemonInterface::OnConnectError(int aIndex)
       mCmdChannel->Close();
     case CMD_CHANNEL:
       // Stop daemon and close listen socket
-      unused << NS_WARN_IF(property_set("ctl.stop", "bluetoothd"));
+      Unused << NS_WARN_IF(property_set("ctl.stop", "bluetoothd"));
       mListenSocket->Close();
     case LISTEN_SOCKET:
       if (!mResultHandlerQ.IsEmpty()) {

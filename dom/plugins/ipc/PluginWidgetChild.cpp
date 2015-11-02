@@ -41,7 +41,7 @@ PluginWidgetChild::ProxyShutdown()
     mWidget = nullptr;
     auto tab = static_cast<mozilla::dom::TabChild*>(Manager());
     if (!tab->IsDestroyed()) {
-      unused << Send__delete__(this);
+      Unused << Send__delete__(this);
     }
   }
 }

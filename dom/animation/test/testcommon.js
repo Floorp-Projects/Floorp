@@ -96,7 +96,7 @@ if (opener) {
                         "assert_between_inclusive",
                         "assert_true", "assert_false",
                         "assert_class_string", "assert_throws",
-                        "assert_unreached", "test"]) {
+                        "assert_unreached", "promise_test", "test"]) {
     window[funcName] = opener[funcName].bind(opener);
   }
 

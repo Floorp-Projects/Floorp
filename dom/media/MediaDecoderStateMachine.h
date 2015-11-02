@@ -232,10 +232,6 @@ public:
   // Immutable after construction - may be called on any thread.
   bool IsRealTime() const { return mRealTime; }
 
-  // Functions used by assertions to ensure we're calling things
-  // on the appropriate threads.
-  bool OnTaskQueue() const;
-
   size_t SizeOfVideoQueue() {
     if (mReader) {
       return mReader->SizeOfVideoQueueInBytes();
@@ -251,6 +247,10 @@ public:
   }
 
 private:
+  // Functions used by assertions to ensure we're calling things
+  // on the appropriate threads.
+  bool OnTaskQueue() const;
+
   // Initialization that needs to happen on the task queue. This is the first
   // task that gets run on the task queue, and is dispatched from the MDSM
   // constructor immediately after the task queue is created.

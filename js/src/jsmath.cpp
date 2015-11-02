@@ -805,7 +805,7 @@ js::random_generateSeed(uint64_t* seedBuffer, size_t length)
         ssize_t size = length * sizeof(seedBuffer[0]);
         ssize_t nread = read(fd, (char *) seedBuffer, size);
         MOZ_ASSERT(nread == size, "Can't read /dev/urandom?!");
-        mozilla::unused << nread;
+        mozilla::Unused << nread;
         close(fd);
     }
 #else

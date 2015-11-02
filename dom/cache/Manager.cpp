@@ -138,7 +138,7 @@ public:
     }
 
     rv = BodyDeleteFiles(dbDir, mDeletedBodyIdList);
-    unused << NS_WARN_IF(NS_FAILED(rv));
+    Unused << NS_WARN_IF(NS_FAILED(rv));
 
     aResolver->Resolve(rv);
   }
@@ -897,7 +897,7 @@ private:
     }
 
     rv = trans.Commit();
-    unused << NS_WARN_IF(NS_FAILED(rv));
+    Unused << NS_WARN_IF(NS_FAILED(rv));
 
     DoResolve(rv);
   }

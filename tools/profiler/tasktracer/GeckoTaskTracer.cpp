@@ -219,7 +219,7 @@ InitTaskTracer(uint32_t aFlags)
   sTraceInfos = new nsTArray<nsAutoPtr<TraceInfo>>();
 
   if (!sTraceInfoTLS.initialized()) {
-    unused << sTraceInfoTLS.init();
+    Unused << sTraceInfoTLS.init();
   }
 }
 

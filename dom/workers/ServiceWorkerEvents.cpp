@@ -22,6 +22,8 @@
 
 #include "mozilla/ErrorResult.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/dom/DOMException.h"
+#include "mozilla/dom/DOMExceptionBinding.h"
 #include "mozilla/dom/FetchEventBinding.h"
 #include "mozilla/dom/PromiseNativeHandler.h"
 #include "mozilla/dom/Request.h"
@@ -39,7 +41,9 @@
 #endif
 
 #include "js/Conversions.h"
+#include "js/TypeDecls.h"
 #include "WorkerPrivate.h"
+#include "xpcpublic.h"
 
 using namespace mozilla::dom;
 
@@ -279,6 +283,13 @@ public:
                mRespondWithColumnNumber, aMessageName, aParams);
   }
 
+  void AsyncLog(const nsACString& aSourceSpec, uint32_t aLine, uint32_t aColumn,
+                const nsACString& aMessageName, const nsTArray<nsString>& aParams)
+  {
+    ::AsyncLog(mInterceptedChannel, aSourceSpec, aLine, aColumn, aMessageName,
+               aParams);
+  }
+
 private:
   ~RespondWithHandler()
   {
@@ -346,15 +357,88 @@ void RespondWithCopyComplete(void* aClosure, nsresult aStatus)
   MOZ_ALWAYS_TRUE(NS_SUCCEEDED(NS_DispatchToMainThread(event)));
 }
 
+namespace {
+
+void
+ExtractErrorValues(JSContext* aCx, JS::Handle<JS::Value> aValue,
+                  nsACString& aSourceSpecOut, uint32_t *aLineOut,
+                  uint32_t *aColumnOut, nsString& aMessageOut)
+{
+  MOZ_ASSERT(aLineOut);
+  MOZ_ASSERT(aColumnOut);
+
+  if (aValue.isObject()) {
+    JS::Rooted<JSObject*> obj(aCx, &aValue.toObject());
+    RefPtr<DOMException> domException;
+
+    // Try to process as an Error object.  Use the file/line/column values
+    // from the Error as they will be more specific to the root cause of
+    // the problem.
+    JSErrorReport* err = obj ? JS_ErrorFromException(aCx, obj) : nullptr;
+    if (err) {
+      // Use xpc to extract the error message only.  We don't actually send
+      // this report anywhere.
+      RefPtr<xpc::ErrorReport> report = new xpc::ErrorReport();
+      report->Init(err,
+                   "<unknown>", // fallback message
+                   false,       // chrome
+                   0);          // window ID
+
+      if (!report->mFileName.IsEmpty()) {
+        CopyUTF16toUTF8(report->mFileName, aSourceSpecOut);
+        *aLineOut = report->mLineNumber;
+        *aColumnOut = report->mColumn;
+      }
+      aMessageOut.Assign(report->mErrorMsg);
+    }
+
+    // Next, try to unwrap the rejection value as a DOMException.
+    else if(NS_SUCCEEDED(UNWRAP_OBJECT(DOMException, obj, domException))) {
+
+      nsAutoString filename;
+      if (NS_SUCCEEDED(domException->GetFilename(filename)) &&
+          !filename.IsEmpty()) {
+        CopyUTF16toUTF8(filename, aSourceSpecOut);
+        *aLineOut = domException->LineNumber();
+        *aColumnOut = domException->ColumnNumber();
+      }
+
+      domException->GetName(aMessageOut);
+      aMessageOut.AppendLiteral(": ");
+
+      nsAutoString message;
+      domException->GetMessageMoz(message);
+      aMessageOut.Append(message);
+    }
+  }
+
+  // If we could not unwrap a specific error type, then perform default safe
+  // string conversions on primitives.  Objects will result in "[Object]"
+  // unfortunately.
+  if (aMessageOut.IsEmpty()) {
+    nsAutoJSString jsString;
+    if (jsString.init(aCx, aValue)) {
+      aMessageOut = jsString;
+    }
+  }
+}
+
+} // anonymous namespace
+
 class MOZ_STACK_CLASS AutoCancel
 {
   RefPtr<RespondWithHandler> mOwner;
+  nsCString mSourceSpec;
+  uint32_t mLine;
+  uint32_t mColumn;
   nsCString mMessageName;
   nsTArray<nsString> mParams;
 
 public:
   AutoCancel(RespondWithHandler* aOwner, const nsString& aRequestURL)
     : mOwner(aOwner)
+    , mLine(0)
+    , mColumn(0)
     , mMessageName(NS_LITERAL_CSTRING("InterceptionFailedWithURL"))
   {
     mParams.AppendElement(aRequestURL);
@@ -363,7 +447,11 @@ public:
   ~AutoCancel()
   {
     if (mOwner) {
-      mOwner->AsyncLog(mMessageName, mParams);
+      if (mSourceSpec.IsEmpty()) {
+        mOwner->AsyncLog(mMessageName, mParams);
+      } else {
+        mOwner->AsyncLog(mSourceSpec, mLine, mColumn, mMessageName, mParams);
+      }
       mOwner->CancelRequest(NS_ERROR_INTERCEPTION_FAILED);
     }
   }
@@ -374,6 +462,25 @@ public:
     MOZ_ASSERT(mOwner);
     MOZ_ASSERT(mMessageName.EqualsLiteral("InterceptionFailedWithURL"));
     MOZ_ASSERT(mParams.Length() == 1);
+    mMessageName = aMessageName;
+    mParams.Clear();
+    StringArrayAppender::Append(mParams, sizeof...(Params), aParams...);
+  }
+
+  template<typename... Params>
+  void SetCancelMessageAndLocation(const nsACString& aSourceSpec,
+                                   uint32_t aLine, uint32_t aColumn,
+                                   const nsACString& aMessageName,
+                                   Params... aParams)
+  {
+    MOZ_ASSERT(mOwner);
+    MOZ_ASSERT(mMessageName.EqualsLiteral("InterceptionFailedWithURL"));
+    MOZ_ASSERT(mParams.Length() == 1);
+
+    mSourceSpec = aSourceSpec;
+    mLine = aLine;
+    mColumn = aColumn;
+
     mMessageName = aMessageName;
     mParams.Clear();
     StringArrayAppender::Append(mParams, sizeof...(Params), aParams...);
@@ -394,12 +501,31 @@ RespondWithHandler::ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValu
 
   if (!aValue.isObject()) {
     NS_WARNING("FetchEvent::RespondWith was passed a promise resolved to a non-Object value");
+
+    nsCString sourceSpec;
+    uint32_t line = 0;
+    uint32_t column = 0;
+    nsString valueString;
+    ExtractErrorValues(aCx, aValue, sourceSpec, &line, &column, valueString);
+
+    autoCancel.SetCancelMessageAndLocation(sourceSpec, line, column,
+                                           NS_LITERAL_CSTRING("InterceptedNonResponseWithURL"),
+                                           &mRequestURL, &valueString);
     return;
   }
 
   RefPtr<Response> response;
   nsresult rv = UNWRAP_OBJECT(Response, &aValue.toObject(), response);
   if (NS_FAILED(rv)) {
+    nsCString sourceSpec;
+    uint32_t line = 0;
+    uint32_t column = 0;
+    nsString valueString;
+    ExtractErrorValues(aCx, aValue, sourceSpec, &line, &column, valueString);
+
+    autoCancel.SetCancelMessageAndLocation(sourceSpec, line, column,
+                                           NS_LITERAL_CSTRING("InterceptedNonResponseWithURL"),
+                                           &mRequestURL, &valueString);
     return;
   }
 
@@ -514,13 +640,17 @@ RespondWithHandler::ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValu
 void
 RespondWithHandler::RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue)
 {
-  nsAutoJSString rejectionString;
-  if (rejectionString.init(aCx, aValue)) {
-    ::AsyncLog(mInterceptedChannel, mRespondWithScriptSpec, mRespondWithLineNumber,
-               mRespondWithColumnNumber,
-               NS_LITERAL_CSTRING("InterceptionRejectedResponseWithURL"),
-               &mRequestURL, &rejectionString);
-  }
+  nsCString sourceSpec = mRespondWithScriptSpec;
+  uint32_t line = mRespondWithLineNumber;
+  uint32_t column = mRespondWithColumnNumber;
+  nsString valueString;
+
+  ExtractErrorValues(aCx, aValue, sourceSpec, &line, &column, valueString);
+
+  ::AsyncLog(mInterceptedChannel, sourceSpec, line, column,
+             NS_LITERAL_CSTRING("InterceptionRejectedResponseWithURL"),
+             &mRequestURL, &valueString);
+
   CancelRequest(NS_ERROR_INTERCEPTION_FAILED);
 }
 

@@ -933,7 +933,7 @@ Animation::PauseAt(const TimeDuration& aReadyTime)
   MOZ_ASSERT(mPendingState == PendingState::PausePending,
              "Expected to pause a pause-pending animation");
 
-  if (!mStartTime.IsNull()) {
+  if (!mStartTime.IsNull() && mHoldTime.IsNull()) {
     mHoldTime.SetValue((aReadyTime - mStartTime.Value())
                         .MultDouble(mPlaybackRate));
   }
