@@ -1538,12 +1538,13 @@ public:
 
   // Move all elements from another array to the end of this array.
   // @return A pointer to the newly appended elements, or null on OOM.
-  template<class Item, class Allocator>
+protected:
+  template<class Item, class Allocator, typename ActualAlloc = Alloc>
   elem_type* AppendElements(nsTArray_Impl<Item, Allocator>&& aArray)
   {
     MOZ_ASSERT(&aArray != this, "argument must be different aArray");
     if (Length() == 0) {
-      SwapElements(aArray);
+      SwapElements<ActualAlloc>(aArray);
       return Elements();
     }
 
@@ -1559,6 +1560,15 @@ public:
     aArray.template ShiftData<Alloc>(0, otherLen, 0, sizeof(elem_type),
                                      MOZ_ALIGNOF(elem_type));
     return Elements() + len;
+  }
+public:
+
+  template<class Item, class Allocator, typename ActualAlloc = Alloc>
+  /* MOZ_WARN_UNUSED_RESULT */
+  elem_type* AppendElements(nsTArray_Impl<Item, Allocator>&& aArray,
+                            const mozilla::fallible_t&)
+  {
+    return AppendElements<Item, Allocator>(mozilla::Move(aArray));
   }
 
   // Append a new element, move constructing if possible.
