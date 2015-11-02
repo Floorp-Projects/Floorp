@@ -25,7 +25,7 @@ interface nsIDOMNode;
  *   if (NS_SUCCEEDED(rv)) 
  *     rv = observerService->AddObserver(this, "accessible-event", PR_TRUE);
  */
-[scriptable, builtinclass, uuid(7f66a33a-9ed7-4fd4-87a8-e431b0f43368)]
+[scriptable, builtinclass, uuid(20c69a40-6c2c-42a3-a578-6f4473aab9dd)]
 interface nsIAccessibleEvent : nsISupports
 {
   /**
@@ -75,7 +75,7 @@ interface nsIAccessibleEvent : nsISupports
   const unsigned long EVENT_DESCRIPTION_CHANGE = 0x0009;
 
   /**
-   * An object's Value property has changed.
+   * An object's numeric Value has changed.
    */
   const unsigned long EVENT_VALUE_CHANGE = 0x000A;
 
@@ -413,9 +413,14 @@ interface nsIAccessibleEvent : nsISupports
   const unsigned long EVENT_VIRTUALCURSOR_CHANGED = 0x0056;
 
   /**
+   * An object's text Value has changed.
+   */
+  const unsigned long EVENT_TEXT_VALUE_CHANGE = 0x0057;
+
+  /**
    * Help make sure event map does not get out-of-line.
    */
-  const unsigned long EVENT_LAST_ENTRY = 0x0057;
+  const unsigned long EVENT_LAST_ENTRY = 0x0058;
 
   /**
    * The type of event, based on the enumerated event values
