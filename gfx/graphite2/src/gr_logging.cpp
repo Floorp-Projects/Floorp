@@ -24,7 +24,7 @@ Mozilla Public License (http://mozilla.org/MPL) or the GNU General Public
 License, as published by the Free Software Foundation, either version 2
 of the License or (at your option) any later version.
 */
-#include <stdio.h>
+#include <cstdio>
 
 #include "graphite2/Log.h"
 #include "inc/debug.h"

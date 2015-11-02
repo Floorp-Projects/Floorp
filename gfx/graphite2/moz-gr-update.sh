@@ -5,26 +5,40 @@
 # This script lives in gfx/graphite2, along with the library source,
 # but must be run from the top level of the mozilla-central tree.
 
-# It expects to find a checkout of the graphite2 tree in a directory "graphitedev"
-# alongside the current mozilla tree that is to be updated.
-# Expect error messages from the copy commands if this is not found!
+# Run as
+#
+#    ./gfx/graphite2/moz-gr-update.sh RELEASE
+#
+# where RELEASE is the graphite2 release to be used, e.g. "1.3.4".
 
-# copy the source and headers
-cp -R ../graphitedev/src/* gfx/graphite2/src
-cp ../graphitedev/include/graphite2/* gfx/graphite2/include/graphite2
+RELEASE=$1
 
-# record the upstream changeset that was used
-CHANGESET=$(cd ../graphitedev/ && hg log | head -n 1 | cut -d : -f 1,3 | sed -e 's/:/ /')
-echo "This directory contains the Graphite2 library from http://hg.palaso.org/graphitedev\n" > gfx/graphite2/README.mozilla
-echo "Current version derived from upstream" $CHANGESET >> gfx/graphite2/README.mozilla
-echo "\nSee" $0 "for update procedure.\n" >> gfx/graphite2/README.mozilla
+if [ "x$RELEASE" == "x" ]
+then
+    echo "Must provide the version number to be used."
+    exit 1
+fi
+
+TARBALL="https://github.com/silnrsi/graphite/releases/download/$RELEASE/graphite2-minimal-$RELEASE.tgz"
+
+foo=`basename $0`
+TMPFILE=`mktemp -t ${foo}` || exit 1
+
+curl -L "$TARBALL" -o "$TMPFILE"
+tar -x -z -C gfx/graphite2/ --strip-components 1 -f "$TMPFILE" || exit 1
+rm "$TMPFILE"
+
+echo "This directory contains the Graphite2 library release $RELEASE from" > gfx/graphite2/README.mozilla
+echo "$TARBALL" >> gfx/graphite2/README.mozilla
+echo ""
+echo "See" $0 "for update procedure." >> gfx/graphite2/README.mozilla
 
 # fix up includes because of bug 721839 (cstdio) and bug 803066 (Windows.h)
-find gfx/graphite2/ -name "*.cpp" -exec perl -p -i -e "s/<cstdio>/<stdio.h>/;s/Windows.h/windows.h/;" {} \;
-find gfx/graphite2/ -name "*.h" -exec perl -p -i -e "s/<cstdio>/<stdio.h>/;s/Windows.h/windows.h/;" {} \;
+#find gfx/graphite2/ -name "*.cpp" -exec perl -p -i -e "s/<cstdio>/<stdio.h>/;s/Windows.h/windows.h/;" {} \;
+#find gfx/graphite2/ -name "*.h" -exec perl -p -i -e "s/<cstdio>/<stdio.h>/;s/Windows.h/windows.h/;" {} \;
 
 # summarize what's been touched
-echo Updated to $CHANGESET.
+echo Updated to $RELEASE.
 echo Here is what changed in the gfx/graphite2 directory:
 echo
 
