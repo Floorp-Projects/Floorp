@@ -502,8 +502,7 @@ BluetoothMapSmsManager::ReplyToConnect()
 
   req[3] = 0x10; // version=1.0
   req[4] = 0x00; // flag=0x00
-  req[5] = BluetoothMapSmsManager::MAX_PACKET_LENGTH >> 8;
-  req[6] = (uint8_t)BluetoothMapSmsManager::MAX_PACKET_LENGTH;
+  BigEndian::writeUint16(&req[5], BluetoothMapSmsManager::MAX_PACKET_LENGTH);
 
   // Section 6.4 "Establishing an OBEX Session", MapSms 1.2
   // Headers: [Who:16][Connection ID]
