@@ -108,7 +108,7 @@ class AntivirusScan(BaseScript, VirtualenvMixin):
         self.dest_dir = self.CACHE_DIR
 
     def _get_candidates_prefix(self):
-        return "pub/{}/candidates/{}-candidates/build{}".format(
+        return "pub/{}/candidates/{}-candidates/build{}/".format(
             self.config['product'],
             self.config["version"],
             self.config["build_number"]
