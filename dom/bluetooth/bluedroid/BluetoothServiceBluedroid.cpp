@@ -2405,7 +2405,7 @@ BluetoothServiceBluedroid::RemoteDevicePropertiesNotification(
           break;
         }
       }
-      unused << NS_WARN_IF(i == mGetRemoteServiceRecordArray.Length());
+      Unused << NS_WARN_IF(i == mGetRemoteServiceRecordArray.Length());
     } else if (p.mType == PROPERTY_UNKNOWN) {
       /* Bug 1065999: working around unknown properties */
     } else {

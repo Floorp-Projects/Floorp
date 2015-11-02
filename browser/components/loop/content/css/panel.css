@@ -10,6 +10,14 @@ body {
   background: none;
 }
 
+/* Beta Ribbon */
+.beta-ribbon {
+  background: url("../shared/img/beta-ribbon.svg") no-repeat;
+  background-size: 30px;
+  width: 30px;
+  height: 30px;
+}
+
 /* Panel styles */
 
 .panel {
@@ -28,6 +36,13 @@ body {
   display: flex;
   flex-flow: column nowrap;
   align-items: flex-start;
+}
+
+.panel-content > .beta-ribbon {
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 1000;
 }
 
 /* Notifications displayed over tabs */

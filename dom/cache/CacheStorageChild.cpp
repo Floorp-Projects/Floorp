@@ -53,7 +53,7 @@ CacheStorageChild::ExecuteOp(nsIGlobalObject* aGlobal, Promise* aPromise,
                              nsISupports* aParent, const CacheOpArgs& aArgs)
 {
   mNumChildActors += 1;
-  unused << SendPCacheOpConstructor(
+  Unused << SendPCacheOpConstructor(
     new CacheOpChild(GetFeature(), aGlobal, aParent, aPromise), aArgs);
 }
 
@@ -99,7 +99,7 @@ CacheStorageChild::StartDestroy()
   MOZ_ASSERT(!mListener);
 
   // Start actor destruction from parent process
-  unused << SendTeardown();
+  Unused << SendTeardown();
 }
 
 void

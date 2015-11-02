@@ -81,7 +81,7 @@ struct ScopedCanberraFile {
     }
 
     void forget() {
-        mozilla::unused << mFile.forget();
+        mozilla::Unused << mFile.forget();
     }
     nsIFile* operator->() { return mFile; }
     operator nsIFile*() { return mFile; }

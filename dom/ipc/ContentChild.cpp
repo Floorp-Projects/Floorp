@@ -349,7 +349,7 @@ private:
         }
         // The XPCOM refcount drives the IPC lifecycle; see also
         // DeallocPCycleCollectWithLogsChild.
-        unused << Send__delete__(this);
+        Unused << Send__delete__(this);
     }
 
     nsresult UnimplementedProperty()
@@ -813,18 +813,22 @@ ContentChild::ProvideWindowCommon(TabChild* aTabOpener,
         ipcContext->get_PopupIPCTabContext().opener() = aTabOpener;
     }
 
-    unused << SendPBrowserConstructor(
+    Unused << SendPBrowserConstructor(
         // We release this ref in DeallocPBrowserChild
         RefPtr<TabChild>(newChild).forget().take(),
         tabId, *ipcContext, aChromeFlags,
         GetID(), IsForApp(), IsForBrowser());
 
-    nsAutoCString spec;
+    nsAutoCString url;
     if (aURI) {
-        aURI->GetSpec(spec);
+        aURI->GetSpec(url);
+    } else {
+        // We can't actually send a nullptr up as the URI, since IPDL doesn't let us
+        // send nullptr's for primitives. We indicate that the nsString for the URI
+        // should be converted to a nullptr by voiding the string.
+        url.SetIsVoid(true);
     }
 
-    NS_ConvertUTF8toUTF16 url(spec);
     nsString name(aName);
     nsAutoCString features(aFeatures);
     nsTArray<FrameScriptInfo> frameScripts;
@@ -832,7 +836,7 @@ ContentChild::ProvideWindowCommon(TabChild* aTabOpener,
 
     if (aIframeMoz) {
         MOZ_ASSERT(aTabOpener);
-        newChild->SendBrowserFrameOpenWindow(aTabOpener, url, name,
+        newChild->SendBrowserFrameOpenWindow(aTabOpener, NS_ConvertUTF8toUTF16(url), name,
                                              NS_ConvertUTF8toUTF16(features),
                                              aWindowIsNew);
     } else {
@@ -854,7 +858,7 @@ ContentChild::ProvideWindowCommon(TabChild* aTabOpener,
                               aChromeFlags, aCalledFromJS, aPositionSpecified,
                               aSizeSpecified, url,
                               name, features,
-                              NS_ConvertUTF8toUTF16(baseURIString),
+                              baseURIString,
                               &rv,
                               aWindowIsNew,
                               &frameScripts,
@@ -882,8 +886,7 @@ ContentChild::ProvideWindowCommon(TabChild* aTabOpener,
         renderFrame = nullptr;
     }
 
-  ShowInfo showInfo(EmptyString(), false, false, true,
-                    aTabOpener->mDPI, aTabOpener->mDefaultScale);
+  ShowInfo showInfo(EmptyString(), false, false, true, 0, 0);
   nsCOMPtr<nsPIDOMWindow> opener = do_QueryInterface(aParent);
   nsIDocShell* openerShell;
   if (opener && (openerShell = opener->GetDocShell())) {
@@ -2476,7 +2479,7 @@ OnFinishNuwaPreparation()
     }
 
     // This will create the actor.
-    unused << mozilla::dom::NuwaChild::GetSingleton();
+    Unused << mozilla::dom::NuwaChild::GetSingleton();
 
     MakeNuwaProcess();
 }
@@ -2601,17 +2604,17 @@ ContentChild::RecvFileSystemUpdate(const nsString& aFsName,
     }
 #else
     // Remove warnings about unused arguments
-    unused << aFsName;
-    unused << aVolumeName;
-    unused << aState;
-    unused << aMountGeneration;
-    unused << aIsMediaPresent;
-    unused << aIsSharing;
-    unused << aIsFormatting;
-    unused << aIsFake;
-    unused << aIsUnmounting;
-    unused << aIsRemovable;
-    unused << aIsHotSwappable;
+    Unused << aFsName;
+    Unused << aVolumeName;
+    Unused << aState;
+    Unused << aMountGeneration;
+    Unused << aIsMediaPresent;
+    Unused << aIsSharing;
+    Unused << aIsFormatting;
+    Unused << aIsFake;
+    Unused << aIsUnmounting;
+    Unused << aIsRemovable;
+    Unused << aIsHotSwappable;
 #endif
     return true;
 }
@@ -2626,7 +2629,7 @@ ContentChild::RecvVolumeRemoved(const nsString& aFsName)
     }
 #else
     // Remove warnings about unused arguments
-    unused << aFsName;
+    Unused << aFsName;
 #endif
     return true;
 }
@@ -2818,7 +2821,7 @@ ContentChild::RecvGatherProfile()
         profileCString = EmptyCString();
     }
 
-    unused << SendProfile(profileCString);
+    Unused << SendProfile(profileCString);
     return true;
 }
 
@@ -2929,7 +2932,7 @@ ContentChild::RecvShutdown()
 
     // Ignore errors here. If this fails, the parent will kill us after a
     // timeout.
-    unused << SendFinishShutdown();
+    Unused << SendFinishShutdown();
     return true;
 }
 

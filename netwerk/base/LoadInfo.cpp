@@ -74,7 +74,7 @@ LoadInfo::LoadInfo(nsIPrincipal* aLoadingPrincipal,
       mInnerWindowID = inner ? inner->WindowID() : 0;
       mOuterWindowID = outerWindow->WindowID();
 
-      nsCOMPtr<nsPIDOMWindow> parent = outerWindow->GetParent();
+      nsCOMPtr<nsPIDOMWindow> parent = outerWindow->GetScriptableParent();
       mParentOuterWindowID = parent->WindowID();
     }
 
@@ -90,12 +90,17 @@ LoadInfo::LoadInfo(const LoadInfo& rhs)
   , mLoadingContext(rhs.mLoadingContext)
   , mSecurityFlags(rhs.mSecurityFlags)
   , mInternalContentPolicyType(rhs.mInternalContentPolicyType)
+  , mTainting(rhs.mTainting)
   , mUpgradeInsecureRequests(rhs.mUpgradeInsecureRequests)
   , mInnerWindowID(rhs.mInnerWindowID)
   , mOuterWindowID(rhs.mOuterWindowID)
   , mParentOuterWindowID(rhs.mParentOuterWindowID)
-  , mEnforceSecurity(false)
-  , mInitialSecurityCheckDone(false)
+  , mEnforceSecurity(rhs.mEnforceSecurity)
+  , mInitialSecurityCheckDone(rhs.mInitialSecurityCheckDone)
+  , mOriginAttributes(rhs.mOriginAttributes)
+  , mRedirectChainIncludingInternalRedirects(
+      rhs.mRedirectChainIncludingInternalRedirects)
+  , mRedirectChain(rhs.mRedirectChain)
 {
 }
 
@@ -110,6 +115,7 @@ LoadInfo::LoadInfo(nsIPrincipal* aLoadingPrincipal,
                    bool aEnforceSecurity,
                    bool aInitialSecurityCheckDone,
                    const OriginAttributes& aOriginAttributes,
+                   nsTArray<nsCOMPtr<nsIPrincipal>>& aRedirectChainIncludingInternalRedirects,
                    nsTArray<nsCOMPtr<nsIPrincipal>>& aRedirectChain)
   : mLoadingPrincipal(aLoadingPrincipal)
   , mTriggeringPrincipal(aTriggeringPrincipal)
@@ -126,6 +132,9 @@ LoadInfo::LoadInfo(nsIPrincipal* aLoadingPrincipal,
   MOZ_ASSERT(mLoadingPrincipal);
   MOZ_ASSERT(mTriggeringPrincipal);
 
+  mRedirectChainIncludingInternalRedirects.SwapElements(
+    aRedirectChainIncludingInternalRedirects);
+
   mRedirectChain.SwapElements(aRedirectChain);
 }
 
@@ -139,6 +148,17 @@ already_AddRefed<nsILoadInfo>
 LoadInfo::Clone() const
 {
   RefPtr<LoadInfo> copy(new LoadInfo(*this));
+  return copy.forget();
+}
+
+already_AddRefed<nsILoadInfo>
+LoadInfo::CloneForNewRequest() const
+{
+  RefPtr<LoadInfo> copy(new LoadInfo(*this));
+  copy->mEnforceSecurity = false;
+  copy->mInitialSecurityCheckDone = false;
+  copy->mRedirectChainIncludingInternalRedirects.Clear();
+  copy->mRedirectChain.Clear();
   return copy.forget();
 }
 
@@ -369,11 +389,31 @@ LoadInfo::GetInitialSecurityCheckDone(bool* aResult)
 }
 
 NS_IMETHODIMP
-LoadInfo::AppendRedirectedPrincipal(nsIPrincipal* aPrincipal)
+LoadInfo::AppendRedirectedPrincipal(nsIPrincipal* aPrincipal, bool aIsInternalRedirect)
 {
   NS_ENSURE_ARG(aPrincipal);
-  mRedirectChain.AppendElement(aPrincipal);
+  MOZ_ASSERT(NS_IsMainThread());
+
+  mRedirectChainIncludingInternalRedirects.AppendElement(aPrincipal);
+  if (!aIsInternalRedirect) {
+    mRedirectChain.AppendElement(aPrincipal);
+  }
   return NS_OK;
+}
+
+NS_IMETHODIMP
+LoadInfo::GetRedirectChainIncludingInternalRedirects(JSContext* aCx, JS::MutableHandle<JS::Value> aChain)
+{
+  if (!ToJSValue(aCx, mRedirectChainIncludingInternalRedirects, aChain)) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  return NS_OK;
+}
+
+const nsTArray<nsCOMPtr<nsIPrincipal>>&
+LoadInfo::RedirectChainIncludingInternalRedirects()
+{
+  return mRedirectChainIncludingInternalRedirects;
 }
 
 NS_IMETHODIMP

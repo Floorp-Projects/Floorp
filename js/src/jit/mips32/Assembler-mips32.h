@@ -7,13 +7,6 @@
 #ifndef jit_mips32_Assembler_mips32_h
 #define jit_mips32_Assembler_mips32_h
 
-// NOTE: Don't use these macros directly
-// CallTempNonArgRegs
-#define CALL_TEMP_NON_ARG_REGS  \
-    { t0, t1, t2, t3, t4 };
-// NumIntArgRegs
-#define NUM_INT_ARG_REGS        4;
-
 #include "jit/mips-shared/Assembler-mips-shared.h"
 
 #include "jit/mips32/Architecture-mips32.h"
@@ -23,6 +16,9 @@ namespace jit {
 
 static MOZ_CONSTEXPR_VAR Register CallTempReg4 = t4;
 static MOZ_CONSTEXPR_VAR Register CallTempReg5 = t5;
+
+static MOZ_CONSTEXPR_VAR Register CallTempNonArgRegs[] = { t0, t1, t2, t3, t4 };
+static const uint32_t NumCallTempNonArgRegs = mozilla::ArrayLength(CallTempNonArgRegs);
 
 class ABIArgGenerator
 {
@@ -126,7 +122,6 @@ class Assembler : public AssemblerMIPSShared
 
   public:
     using AssemblerMIPSShared::bind;
-    using AssemblerMIPSShared::PatchDataWithValueCheck;
 
     void bind(RepatchLabel* label);
     void Bind(uint8_t* rawCode, AbsoluteLabel* label, const void* address);
@@ -134,7 +129,7 @@ class Assembler : public AssemblerMIPSShared
     static void TraceJumpRelocations(JSTracer* trc, JitCode* code, CompactBufferReader& reader);
     static void TraceDataRelocations(JSTracer* trc, JitCode* code, CompactBufferReader& reader);
 
-    void bind(InstImm* inst, uint32_t branch, uint32_t target);
+    void bind(InstImm* inst, uintptr_t branch, uintptr_t target);
 
     // Copy the assembly code to the given buffer, and perform any pending
     // relocations relying on the target address.
@@ -148,6 +143,8 @@ class Assembler : public AssemblerMIPSShared
                                         Register reg, uint32_t value);
 
     static void PatchWrite_NearCall(CodeLocationLabel start, CodeLocationLabel toCall);
+    static void PatchDataWithValueCheck(CodeLocationLabel label, ImmPtr newValue,
+                                        ImmPtr expectedValue);
     static void PatchDataWithValueCheck(CodeLocationLabel label, PatchedImmPtr newValue,
                                         PatchedImmPtr expectedValue);
 
@@ -158,6 +155,42 @@ class Assembler : public AssemblerMIPSShared
     static void UpdateBoundsCheck(uint32_t logHeapSize, Instruction* inst);
     static int32_t ExtractCodeLabelOffset(uint8_t* code);
 }; // Assembler
+
+static const uint32_t NumIntArgRegs = 4;
+
+static inline bool
+GetIntArgReg(uint32_t usedArgSlots, Register* out)
+{
+    if (usedArgSlots < NumIntArgRegs) {
+        *out = Register::FromCode(a0.code() + usedArgSlots);
+        return true;
+    }
+    return false;
+}
+
+// Get a register in which we plan to put a quantity that will be used as an
+// integer argument. This differs from GetIntArgReg in that if we have no more
+// actual argument registers to use we will fall back on using whatever
+// CallTempReg* don't overlap the argument registers, and only fail once those
+// run out too.
+static inline bool
+GetTempRegForIntArg(uint32_t usedIntArgs, uint32_t usedFloatArgs, Register* out)
+{
+    // NOTE: We can't properly determine which regs are used if there are
+    // float arguments. If this is needed, we will have to guess.
+    MOZ_ASSERT(usedFloatArgs == 0);
+
+    if (GetIntArgReg(usedIntArgs, out))
+        return true;
+    // Unfortunately, we have to assume things about the point at which
+    // GetIntArgReg returns false, because we need to know how many registers it
+    // can allocate.
+    usedIntArgs -= NumIntArgRegs;
+    if (usedIntArgs >= NumCallTempNonArgRegs)
+        return false;
+    *out = CallTempNonArgRegs[usedIntArgs];
+    return true;
+}
 
 static inline uint32_t
 GetArgStackDisp(uint32_t usedArgSlots)

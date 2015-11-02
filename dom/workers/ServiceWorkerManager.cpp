@@ -1215,7 +1215,7 @@ private:
     swm->MaybeRemoveRegistration(mRegistration);
     // Ensures that the job can't do anything useful from this point on.
     mRegistration = nullptr;
-    unused << NS_WARN_IF(NS_FAILED(aRv));
+    Unused << NS_WARN_IF(NS_FAILED(aRv));
     Done(aRv);
   }
 
@@ -2222,7 +2222,7 @@ private:
   UnregisterAndDone()
   {
     nsresult rv = Unregister();
-    unused << NS_WARN_IF(NS_FAILED(rv));
+    Unused << NS_WARN_IF(NS_FAILED(rv));
     Done(rv);
   }
 };
@@ -3138,7 +3138,6 @@ bool
 ServiceWorkerManager::IsControlled(nsIDocument* aDoc, ErrorResult& aRv)
 {
   MOZ_ASSERT(aDoc);
-  MOZ_ASSERT(!nsContentUtils::IsInPrivateBrowsing(aDoc));
 
   RefPtr<ServiceWorkerRegistrationInfo> registration;
   nsresult rv = GetDocumentRegistration(aDoc, getter_AddRefs(registration));
@@ -3148,6 +3147,7 @@ ServiceWorkerManager::IsControlled(nsIDocument* aDoc, ErrorResult& aRv)
     return false;
   }
 
+  MOZ_ASSERT_IF(!!registration, !nsContentUtils::IsInPrivateBrowsing(aDoc));
   return !!registration;
 }
 
@@ -3990,7 +3990,7 @@ ServiceWorkerManager::Observe(nsISupports* aSubject,
 
       RefPtr<TeardownRunnable> runnable = new TeardownRunnable(mActor);
       nsresult rv = NS_DispatchToMainThread(runnable);
-      unused << NS_WARN_IF(NS_FAILED(rv));
+      Unused << NS_WARN_IF(NS_FAILED(rv));
       mActor = nullptr;
     }
     return NS_OK;

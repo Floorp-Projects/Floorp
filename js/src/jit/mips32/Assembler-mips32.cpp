@@ -261,7 +261,7 @@ Assembler::Bind(uint8_t* rawCode, AbsoluteLabel* label, const void* address)
 }
 
 void
-Assembler::bind(InstImm* inst, uint32_t branch, uint32_t target)
+Assembler::bind(InstImm* inst, uintptr_t branch, uintptr_t target)
 {
     int32_t offset = target - branch;
     InstImm inst_bgezal = InstImm(op_regimm, zero, rt_bgezal, BOffImm16(0));
@@ -396,6 +396,14 @@ Assembler::WriteLuiOriInstructions(Instruction* inst0, Instruction* inst1,
 {
     *inst0 = InstImm(op_lui, zero, reg, Imm16::Upper(Imm32(value)));
     *inst1 = InstImm(op_ori, reg, reg, Imm16::Lower(Imm32(value)));
+}
+
+void
+Assembler::PatchDataWithValueCheck(CodeLocationLabel label, ImmPtr newValue,
+                                   ImmPtr expectedValue)
+{
+    PatchDataWithValueCheck(label, PatchedImmPtr(newValue.value),
+                            PatchedImmPtr(expectedValue.value));
 }
 
 void

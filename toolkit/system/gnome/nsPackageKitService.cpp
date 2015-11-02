@@ -158,7 +158,7 @@ InstallPackagesProxyCallCallback(GObject *aSourceObject,
   }
 
   g_object_unref(proxy);
-  unused << observer.forget().take();
+  Unused << observer.forget().take();
 }
 
 static void

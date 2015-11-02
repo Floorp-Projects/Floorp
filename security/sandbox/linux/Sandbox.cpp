@@ -168,7 +168,7 @@ InstallSigSysHandler(void)
   struct sigaction act;
 
   // Ensure that the Chromium handler is installed.
-  unused << sandbox::Trap::Registry();
+  Unused << sandbox::Trap::Registry();
 
   // If the signal handling state isn't as expected, crash now instead
   // of crashing later (and more confusingly) when SIGSYS happens.
@@ -439,7 +439,7 @@ BroadcastSetThreadSandbox(const sock_fprog* aFilter)
                       signum, oldHandler);
     MOZ_CRASH();
   }
-  unused << closedir(taskdp);
+  Unused << closedir(taskdp);
   // And now, deprivilege the main thread:
   SetThreadSandbox();
   gSetSandboxFilter = nullptr;

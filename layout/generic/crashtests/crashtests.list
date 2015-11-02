@@ -19,7 +19,7 @@ load 307979-1.html
 load 309322-1.html
 load 309322-2.html
 load 309322-3.html
-skip load 309322-4.html # Bug 859424
+load 309322-4.html
 load 310556-1.xhtml
 load 321224.xul
 load 322780-1.xul
@@ -50,7 +50,7 @@ load 345139-1.xhtml
 load 345617-1.html
 load 348510-1.html
 load 348510-2.html
-skip load 348887-1.html # bug 623091
+load 348887-1.html
 load 348991-1.xhtml
 load 350370.html
 load 354458-1.html
@@ -110,8 +110,8 @@ load 379917-1.xhtml
 load 380012-1.html
 load 381152-1.html
 load 381786-1.html
-asserts-if(gtkWidget,0-2) load 382129-1.xhtml # Bug 540078
-asserts-if(gtkWidget,0-1) load 382131-1.html # Bug 540078
+load 382129-1.xhtml
+load 382131-1.html
 load 382199-1.html
 load 382208-1.xhtml
 load 382262-1.html
@@ -161,9 +161,9 @@ load 393956-2.html
 load 393956-3.html
 load 393956-4.html
 load 394237-1.html
-load 394820-1.html
 load 394818-1.html
 load 394818-2.html
+load 394820-1.html
 load 395316-1.html
 load 395450-1.xhtml
 load 397007-1.html
@@ -252,7 +252,7 @@ load 420000-1.html
 load 420718.html
 load 420785-1.xhtml
 load 421404-1.html
-asserts(0-2) load 421671.html # Bug 481035
+load 421671.html
 load 422283-1.html
 load 422301-1.html
 load 423055-1.html
@@ -347,7 +347,7 @@ load 478170-1.html
 load 478185-1.html
 asserts-if(!Android,0-1) load 479938-1.html # Bug 575011
 load 480345-1.html
-skip-if(Android) load 481921.html
+load 481921.html
 load 489462-1.html
 load 489477.html
 load 489480-1.xhtml
@@ -362,17 +362,17 @@ load 495875-1.html
 load 495875-2.html
 load 496742.html
 load 499138.html
-load 499862-1.html
 load 499857-1.html
-asserts-if(winWidget,0-3) load 499885-1.xhtml
+load 499862-1.html
+asserts(0-3) load 499885-1.xhtml # Bug 1220265
 load 501535-1.html
 load 503961-1.xhtml
 load 503961-2.html
+load 505912-1.html
+load 508154-1.xhtml
 load 508168-1.html
 load 508816-1.xul
 load 508908-1.html
-load 505912-1.html
-load 508154-1.xhtml
 load 509749-1.html
 load 511482.html
 load 512724-1.html
@@ -418,14 +418,14 @@ load 574958.xhtml
 asserts(0-4) load 578977.html # bug 757305
 load 580504-1.xhtml
 load 585598-1.xhtml
-asserts(0-11) load 586806-1.html # Bug 439258
+load 586806-1.html
 load 586806-2.html
 load 586806-3.html
 load 586973-1.html
 load 589002-1.html
 load 590404.html
 load 591141.html
-asserts(0-1) load 592118.html
+load 592118.html
 load 594808-1.html
 load 595435-1.xhtml
 load 595740-1.html
@@ -438,6 +438,9 @@ load 604314-1.html
 load 604843.html
 load 605340.html
 load 606642.xhtml
+load 613455-1.svg
+load 613629-1.xhtml
+load 616052-1.html
 load 619021.html
 load 621424-1.html
 load 621841-1.html
@@ -455,30 +458,22 @@ load 656130-1.html
 load 656130-2.html
 load 660416.html
 load 665853.html
-load text-overflow-form-elements.html
-load text-overflow-iframe.html
-load text-overflow-bug666751-1.html
-load text-overflow-bug666751-2.html
-asserts(0-1) load text-overflow-bug670564.xhtml
-load text-overflow-bug671796.xhtml
 load 667025.html
-load 673770.html # bug 569193 and bug 459597
+load 673770.html
 load 679933-1.html
+load 681489-1.html
 load 682649-1.html
 load 683702-1.xhtml
+load 683712.html
 load 688996-1.html
 load 688996-2.html
-load 683712.html
 load 691210.html
-load text-overflow-bug713610.html
 load 700031.xhtml
 load 718516.html
 load 723108.html
 load 724235.html
-skip-if(OSX=1010&&isDebugBuild) load 724978.xhtml
-skip-if(OSX=1010&&isDebugBuild) load 730559.html
-load first-letter-638937.html
-load first-letter-638937-2.html
+load 724978.xhtml
+load 730559.html
 load 734777.html
 load 737313-1.html
 load 737313-2.html
@@ -486,22 +481,21 @@ load 737313-3.html
 test-pref(font.size.inflation.emPerLine,15) load 740199-1.xhtml
 load 747688.html
 load 750066.html
-pref(dom.meta-viewport.enabled,true) test-pref(font.size.inflation.emPerLine,15) asserts(1-100) load font-inflation-762332.html # bug 762332
-load 762902.html
 load 762764-1.html
+load 762902.html
 load 765409.html
 asserts(0-200) load 765621.html # bug 703550
 asserts(0-200) load 767765.html # bug 407550, bug 871758, and various nscoord_MAX related asserts
+load 769120.html
 asserts(0-2) load 769303-1.html # bug 1123979
 load 769303-2.html
-load 769120.html
 load 777838.html
 load 783228.html
-skip-if(Android) load 784600.html
+load 784600.html
 load 785555.html
 load 786740-1.html
 load 790260-1.html
-asserts(0-4) test-pref(font.size.inflation.emPerLine,15) load 791601.xhtml # 3 counts of bug 871327, 1 bug 367185
+asserts(1) test-pref(font.size.inflation.emPerLine,15) load 791601.xhtml # Bug 871327
 test-pref(font.size.inflation.minTwips,120) load 794693.html
 asserts-if(!Android,4) load 798020-1.html
 load 798235-1.html
@@ -513,23 +507,23 @@ load 807565-1.html
 load 807565-2.html
 load 810303.html
 load 810726.html
-load 812879.html
+load 812822-1.html
+load 812879-1.html
 load 812879-2.html
+load 812893.html
 load 814995.html
 load 822910.xhtml
+load 824297-1.html
 load 825810-1.html
 load 825810-2.html
-load 827076.html
-load 840818.html
-load 812822-1.html
-load 812893.html
-load 824297-1.html
 load 826483-1.html
 load 826532-1.html
+load 827076.html
 load 827168-1.html
 load 836895.html
 load 837007.xhtml
 load 840787.html
+load 840818.html
 load 842132-1.html
 load 842166.html
 load 844529-1.html
@@ -544,21 +538,21 @@ load 854263-1.html
 load 862185.html
 load 862947-1.html
 load 863935.html
-needs-focus pref(accessibility.browsewithcaret,true) load 868906.html
 load 866547-1.html
+needs-focus pref(accessibility.browsewithcaret,true) load 868906.html
 asserts(0-5) load 876074-1.html # bug 876749
 load 885009-1.html
 load 893496-1.html
 load 893523.html
-asserts(0-3) load 898871.html # bug 479160
-test-pref(layout.css.sticky.enabled,true) load 914891.html
-test-pref(layout.css.sticky.enabled,true) load 915475.xhtml
+asserts(0-3) load 898871.html # bug 479160 - mostly OSX, sometimes Windows
+load 914891.html
+load 915475.xhtml
 load 927558.html
 load 943509-1.html
 asserts(3-8) load 944909-1.html
 load 946167-1.html
 load 947158.html
-test-pref(layout.css.sticky.enabled,true) load 949932.html
+load 949932.html
 load 970710.html
 load 973701-1.xhtml
 load 973701-2.xhtml
@@ -570,7 +564,6 @@ pref(layout.css.grid.enabled,true) load 1015562.html
 asserts(1-2) load 1015563-1.html
 asserts(1-2) load 1015563-2.html
 asserts(0-300) load 1015844.html # bug 574889
-load outline-on-frameset.xhtml
 pref(font.size.inflation.minTwips,200) load 1032450.html
 load 1032613-1.svg
 load 1032613-2.html
@@ -583,11 +576,6 @@ load 1134531.html
 load 1134667.html
 load 1137723-1.html
 load 1137723-2.html
-# The tests for bug 1137723 above causes delayed assertions too,
-# the next 3 lines can be removed once that is fixed.
-asserts(0-3) load 1134667.html
-asserts(0-3) load 1134667.html
-asserts(0-3) load 1134667.html
 load 1146103.html
 load 1146107.html
 load 1146114.html
@@ -597,3 +585,14 @@ load 1157011.html
 load 1169420-1.html
 load 1169420-2.html
 load 1183431.html
+load first-letter-638937-1.html
+load first-letter-638937-2.html
+pref(dom.meta-viewport.enabled,true) test-pref(font.size.inflation.emPerLine,15) asserts(1-100) load font-inflation-762332.html # bug 762332
+load outline-on-frameset.xhtml
+load text-overflow-bug666751-1.html
+load text-overflow-bug666751-2.html
+load text-overflow-bug670564.xhtml
+load text-overflow-bug671796.xhtml
+load text-overflow-bug713610.html
+load text-overflow-form-elements.html
+load text-overflow-iframe.html

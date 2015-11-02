@@ -1232,12 +1232,6 @@ MediaDecoder::SetLoadInBackground(bool aLoadInBackground)
   }
 }
 
-bool
-MediaDecoder::OnStateMachineTaskQueue() const
-{
-  return mDecoderStateMachine->OnTaskQueue();
-}
-
 void
 MediaDecoder::SetPlaybackRate(double aPlaybackRate)
 {
