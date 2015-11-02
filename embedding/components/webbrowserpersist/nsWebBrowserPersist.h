@@ -141,8 +141,6 @@ private:
         nsISupports *aKey, OutputData *aData, void* aClosure);
     static PLDHashOperator EnumCalcUploadProgress(
         nsISupports *aKey, UploadData *aData, void* aClosure);
-    static PLDHashOperator EnumFixRedirect(
-        nsISupports *aKey, OutputData *aData, void* aClosure);
 
     nsCOMPtr<nsIURI>          mCurrentDataPath;
     bool                      mCurrentDataPathIsRelative;
