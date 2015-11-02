@@ -36,10 +36,9 @@ ActivityRequestHandler.prototype = {
     this._window = aWindow;
   },
 
-  __init: function arh___init(aId, aOptions, aReturnValue) {
+  __init: function arh___init(aId, aOptions) {
     this._id = aId;
     this._options = aOptions;
-    this._returnValue = aReturnValue;
   },
 
   get source() {
@@ -50,13 +49,11 @@ ActivityRequestHandler.prototype = {
   },
 
   postResult: function arh_postResult(aResult) {
-    if (this._returnValue) {
-      cpmm.sendAsyncMessage("Activity:PostResult", {
-        "id": this._id,
-        "result": aResult
-      });
-      Services.obs.notifyObservers(null, "activity-success", this._id);
-    }
+    cpmm.sendAsyncMessage("Activity:PostResult", {
+      "id": this._id,
+      "result": aResult
+    });
+    Services.obs.notifyObservers(null, "activity-success", this._id);
   },
 
   postError: function arh_postError(aError) {
