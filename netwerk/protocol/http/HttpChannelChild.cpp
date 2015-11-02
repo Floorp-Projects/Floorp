@@ -1813,7 +1813,30 @@ HttpChannelChild::AsyncOpen(nsIStreamListener *listener, nsISupports *aContext)
   // Set user agent override
   HttpBaseChannel::SetDocshellUserAgentOverride();
 
-  if (ShouldIntercept()) {
+  bool isHttps = false;
+  rv = mURI->SchemeIs("https", &isHttps);
+  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIPrincipal> resultPrincipal;
+  if (!isHttps && mLoadInfo) {
+      nsContentUtils::GetSecurityManager()->
+        GetChannelResultPrincipal(this, getter_AddRefs(resultPrincipal));
+  }
+  bool shouldUpgrade = false;
+  rv = NS_ShouldSecureUpgrade(mURI,
+                              mLoadInfo,
+                              resultPrincipal,
+                              mPrivateBrowsing,
+                              mAllowSTS,
+                              shouldUpgrade);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIURI> upgradedURI;
+  if (shouldUpgrade) {
+    rv = GetSecureUpgradedURI(mURI, getter_AddRefs(upgradedURI));
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  if (ShouldIntercept(upgradedURI)) {
     mResponseCouldBeSynthesized = true;
 
     nsCOMPtr<nsINetworkInterceptController> controller;
