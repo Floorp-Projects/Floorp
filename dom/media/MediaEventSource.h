@@ -195,12 +195,10 @@ private:
  *
  * @Copy Data will always be copied. Each listener gets a copy.
  * @Move Data will always be moved.
- * @Both Data will be moved when possible or copied when necessary.
  */
 enum class EventPassMode : int8_t {
   Copy,
-  Move,
-  Both
+  Move
 };
 
 class ListenerBase {
@@ -229,14 +227,6 @@ public:
 };
 
 template <typename ArgType>
-class Listener<ArgType, EventPassMode::Both> : public ListenerBase {
-public:
-  virtual ~Listener() {}
-  virtual void Dispatch(const ArgType& aEvent) = 0;
-  virtual void Dispatch(ArgType&& aEvent) = 0;
-};
-
-template <typename ArgType>
 class Listener<ArgType, EventPassMode::Move> : public ListenerBase {
 public:
   virtual ~Listener() {}
@@ -260,22 +250,6 @@ private:
 };
 
 template <typename Target, typename Function, typename ArgType>
-class ListenerImpl<Target, Function, ArgType, EventPassMode::Both>
-  : public Listener<ArgType, EventPassMode::Both> {
-public:
-  ListenerImpl(Target* aTarget, const Function& aFunction)
-    : mHelper(ListenerBase::Token(), aTarget, aFunction) {}
-  void Dispatch(const ArgType& aEvent) override {
-    mHelper.Dispatch(aEvent);
-  }
-  void Dispatch(ArgType&& aEvent) override {
-    mHelper.Dispatch(Move(aEvent));
-  }
-private:
-  ListenerHelper<Target, Function> mHelper;
-};
-
-template <typename Target, typename Function, typename ArgType>
 class ListenerImpl<Target, Function, ArgType, EventPassMode::Move>
   : public Listener<ArgType, EventPassMode::Move> {
 public:
@@ -289,20 +263,16 @@ private:
 };
 
 /**
- * Select EventPassMode based on ListenerMode and if the type is copyable.
+ * Select EventPassMode based on ListenerMode.
  *
  * @Copy Selected when ListenerMode is NonExclusive because each listener
  * must get a copy.
  *
- * @Move Selected when ListenerMode is Exclusive and the type is move-only.
- *
- * @Both Selected when ListenerMode is Exclusive and the type is copyable.
- * The data will be moved when possible and copied when necessary.
+ * @Move Selected when ListenerMode is Exclusive. All types passed to
+ * MediaEventProducer::Notify() must be movable.
  */
-template <typename ArgType, ListenerMode Mode>
+template <ListenerMode Mode>
 struct PassModePicker {
-  // TODO: pick EventPassMode::Both when we can detect if a type is
-  // copy-constructible to allow copy-only types in Exclusive mode.
   static const EventPassMode Value =
     Mode == ListenerMode::NonExclusive ?
     EventPassMode::Copy : EventPassMode::Move;
@@ -364,7 +334,7 @@ class MediaEventSource {
   static_assert(!IsReference<EventType>::value, "Ref-type not supported!");
   typedef typename detail::EventTypeTraits<EventType>::ArgType ArgType;
   static const detail::EventPassMode PassMode
-    = detail::PassModePicker<ArgType, Mode>::Value;
+    = detail::PassModePicker<Mode>::Value;
   typedef detail::Listener<ArgType, PassMode> Listener;
 
   template<typename Target, typename Func>
