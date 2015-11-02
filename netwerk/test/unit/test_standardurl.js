@@ -252,6 +252,17 @@ function test_apostropheEncoding()
   do_check_eq(url.spec, "http://example.com/dir'/file'.ext'");
 }
 
+function test_accentEncoding()
+{
+  var url = stringToURL("http://example.com/?hello=`");
+  do_check_eq(url.spec, "http://example.com/?hello=`");
+  do_check_eq(url.query, "hello=`");
+
+  url = stringToURL("http://example.com/?hello=%2C");
+  do_check_eq(url.spec, "http://example.com/?hello=%2C");
+  do_check_eq(url.query, "hello=%2C");
+}
+
 function run_test()
 {
   test_setEmptyPath();
@@ -262,4 +273,5 @@ function run_test()
   test_clearedSpec();
   test_escapeBrackets();
   test_apostropheEncoding();
+  test_accentEncoding();
 }
