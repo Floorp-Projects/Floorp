@@ -2243,7 +2243,7 @@ BrowserGlue.prototype = {
     }
     let imageURL = "chrome://browser/skin/web-notifications-icon.svg";
     let title = gBrowserBundle.GetStringFromName("webNotifications.upgradeTitle");
-    let text = gBrowserBundle.GetStringFromName("webNotifications.upgradeInfo");
+    let text = gBrowserBundle.GetStringFromName("webNotifications.upgradeBody");
     let url = Services.urlFormatter.formatURLPref("browser.push.warning.migrationURL");
 
     try {
