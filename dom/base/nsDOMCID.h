@@ -21,12 +21,9 @@
   0x45f27d10, 0x987b, 0x11d2,                        \
  {0xbd, 0x40, 0x00, 0x10, 0x5a, 0xa4, 0x5e, 0x89} }
 
-#define SERVICEWORKERPERIODICUPDATER_CONTRACTID \
-  "@mozilla.org/service-worker-periodic-updater;1"
-
 //The dom cannot provide the crypto or pkcs11 classes that
 //were used in older days, so if someone wants to provide
-//the service they must implement an object and give it 
+//the service they must implement an object and give it
 //this class ID
 #define NS_CRYPTO_CONTRACTID "@mozilla.org/security/crypto;1"
 #define NS_PKCS11_CONTRACTID "@mozilla.org/security/pkcs11;1"

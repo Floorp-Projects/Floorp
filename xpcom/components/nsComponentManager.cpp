@@ -71,6 +71,7 @@
 #include "nsArrayEnumerator.h"
 #include "nsStringEnumerator.h"
 #include "mozilla/FileUtils.h"
+#include "mozilla/UniquePtr.h"
 #include "nsDataHashtable.h"
 
 #include <new>     // for placement new
@@ -620,18 +621,18 @@ DoRegisterManifest(NSLocationType aType,
   MOZ_ASSERT(!aXPTOnly || !nsComponentManagerImpl::gComponentManager);
   uint32_t len;
   FileLocation::Data data;
-  nsAutoArrayPtr<char> buf;
+  UniquePtr<char[]> buf;
   nsresult rv = aFile.GetData(data);
   if (NS_SUCCEEDED(rv)) {
     rv = data.GetSize(&len);
   }
   if (NS_SUCCEEDED(rv)) {
-    buf = new char[len + 1];
-    rv = data.Copy(buf, len);
+    buf = MakeUnique<char[]>(len + 1);
+    rv = data.Copy(buf.get(), len);
   }
   if (NS_SUCCEEDED(rv)) {
     buf[len] = '\0';
-    ParseManifest(aType, aFile, buf, aChromeOnly, aXPTOnly);
+    ParseManifest(aType, aFile, buf.get(), aChromeOnly, aXPTOnly);
   } else if (NS_BOOTSTRAPPED_LOCATION != aType) {
     nsCString uri;
     aFile.GetURIString(uri);
@@ -699,17 +700,17 @@ DoRegisterXPT(FileLocation& aFile)
 
   uint32_t len;
   FileLocation::Data data;
-  nsAutoArrayPtr<char> buf;
+  UniquePtr<char[]> buf;
   nsresult rv = aFile.GetData(data);
   if (NS_SUCCEEDED(rv)) {
     rv = data.GetSize(&len);
   }
   if (NS_SUCCEEDED(rv)) {
-    buf = new char[len];
-    rv = data.Copy(buf, len);
+    buf = MakeUnique<char[]>(len);
+    rv = data.Copy(buf.get(), len);
   }
   if (NS_SUCCEEDED(rv)) {
-    XPTInterfaceInfoManager::GetSingleton()->RegisterBuffer(buf, len);
+    XPTInterfaceInfoManager::GetSingleton()->RegisterBuffer(buf.get(), len);
 #ifdef MOZ_B2G_LOADER
     MarkRegisteredXPTIInfo(aFile);
 #endif

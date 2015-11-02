@@ -97,14 +97,14 @@ class ReleasePusher(BaseScript, VirtualenvMixin):
             ]
 
     def _get_candidates_prefix(self):
-        return "pub/{}/candidates/{}-candidates/build{}".format(
+        return "pub/{}/candidates/{}-candidates/build{}/".format(
             self.config['product'],
             self.config["version"],
             self.config["build_number"]
         )
 
     def _get_releases_prefix(self):
-        return "pub/{}/releases/{}".format(
+        return "pub/{}/releases/{}/".format(
             self.config["product"],
             self.config["version"]
         )

@@ -509,7 +509,7 @@ protected:
   nsIntRect         mBounds;
   nsIntRect*        mOriginalBounds;
   // When this pointer is null, the widget is not clipped
-  nsAutoArrayPtr<nsIntRect> mClipRects;
+  mozilla::UniquePtr<nsIntRect[]> mClipRects;
   uint32_t          mClipRectCount;
   nsSizeMode        mSizeMode;
   nsPopupLevel      mPopupLevel;

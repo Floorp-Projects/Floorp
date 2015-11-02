@@ -18,7 +18,7 @@ interface nsIFrameLoader;
  * process will continue to run uninhibitedly during this time.
  */
 
-[scriptable, uuid(90cea731-dd3e-459e-b017-f9a14697b56e)]
+[scriptable, uuid(5fcffbb9-be62-49b1-b8a1-36e820787a74)]
 interface nsIHangReport : nsISupports
 {
   const unsigned long SLOW_SCRIPT = 1;
@@ -49,10 +49,6 @@ interface nsIHangReport : nsISupports
   // Terminate the plugin if it is still hung.
   // Only valid for PLUGIN_HANG reports.
   void terminatePlugin();
-
-  // Terminate the hung content process unconditionally.
-  // Valid for any type of hang.
-  void terminateProcess();
 
   // Ask the content process to start up the slow script debugger.
   // Only valid for SLOW_SCRIPT reports.
