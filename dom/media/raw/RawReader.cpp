@@ -110,7 +110,7 @@ RawReader::IsMediaSeekable()
 
  bool RawReader::DecodeAudioData()
 {
-  MOZ_ASSERT(OnTaskQueue() || mDecoder->OnStateMachineTaskQueue());
+  MOZ_ASSERT(OnTaskQueue());
   return false;
 }
 
