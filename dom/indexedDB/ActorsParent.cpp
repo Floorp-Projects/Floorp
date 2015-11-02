@@ -15295,54 +15295,6 @@ VersionChangeTransaction::RecvDeleteIndex(const int64_t& aObjectStoreId,
 {
   AssertIsOnBackgroundThread();
 
-  class MOZ_STACK_CLASS Helper final
-  {
-    const int64_t mIndexId;
-    bool mIsLastIndex;
-    DebugOnly<bool> mFoundTargetId;
-
-  public:
-    static bool
-    IsLastIndex(const FullObjectStoreMetadata* aObjectStoreMetadata,
-                const int64_t aIndexId)
-    {
-      AssertIsOnBackgroundThread();
-      MOZ_ASSERT(aObjectStoreMetadata);
-      MOZ_ASSERT(aIndexId);
-
-      Helper helper(aIndexId);
-      aObjectStoreMetadata->mIndexes.EnumerateRead(&Enumerate, &helper);
-
-      MOZ_ASSERT_IF(helper.mIsLastIndex, helper.mFoundTargetId);
-
-      return helper.mIsLastIndex;
-    }
-
-  private:
-    explicit
-    Helper(const int64_t aIndexId)
-      : mIndexId(aIndexId)
-      , mIsLastIndex(true)
-      , mFoundTargetId(false)
-    { }
-
-    static PLDHashOperator
-    Enumerate(const uint64_t& aKey, FullIndexMetadata* aValue, void* aClosure)
-    {
-      auto* helper = static_cast<Helper*>(aClosure);
-      MOZ_ASSERT(helper);
-
-      if (uint64_t(helper->mIndexId) == aKey) {
-        helper->mFoundTargetId = true;
-      } else if (!aValue->mDeleted) {
-        helper->mIsLastIndex = false;
-        return PL_DHASH_STOP;
-      }
-
-      return PL_DHASH_NEXT;
-    }
-  };
-
   if (NS_WARN_IF(!aObjectStoreId)) {
     ASSERT_UNLESS_FUZZING();
     return false;
@@ -15391,12 +15343,26 @@ VersionChangeTransaction::RecvDeleteIndex(const int64_t& aObjectStoreId,
 
   foundIndexMetadata->mDeleted = true;
 
+  bool isLastIndex = true;
+  DebugOnly<bool> foundTargetId = false;
+  for (auto iter = foundObjectStoreMetadata->mIndexes.ConstIter();
+       !iter.Done();
+       iter.Next()) {
+    if (uint64_t(aIndexId) == iter.Key()) {
+      foundTargetId = true;
+    } else if (!iter.UserData()->mDeleted) {
+      isLastIndex = false;
+      break;
+    }
+  }
+  MOZ_ASSERT_IF(isLastIndex, foundTargetId);
+
   RefPtr<DeleteIndexOp> op =
     new DeleteIndexOp(this,
                       aObjectStoreId,
                       aIndexId,
                       foundIndexMetadata->mCommonMetadata.unique(),
-                      Helper::IsLastIndex(foundObjectStoreMetadata, aIndexId));
+                      isLastIndex);
 
   if (NS_WARN_IF(!op->Init(this))) {
     op->Cleanup();
