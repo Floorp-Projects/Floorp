@@ -14,6 +14,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.location.Location;
+import android.location.LocationListener;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
 import android.util.Log;
@@ -52,6 +54,34 @@ public class Launcher extends FragmentActivity
     private long                mFirstHome;
     private long                mLastHome;
     private long                mHomeCount;
+
+    final class GeckoInterface extends BaseGeckoInterface
+                               implements LocationListener {
+        public GeckoInterface(Context context) {
+            super(context);
+        }
+
+        public LocationListener getLocationListener() {
+            return this;
+        }
+
+        @Override
+        public void onLocationChanged(Location location) {
+            GeckoAppShell.sendEventToGecko(GeckoEvent.createLocationEvent(location));
+        }
+
+        @Override
+        public void onProviderDisabled(String provider) {
+        }
+
+        @Override
+        public void onProviderEnabled(String provider) {
+        }
+
+        @Override
+        public void onStatusChanged(String provider, int status, Bundle extras) {
+        }
+    }
 
     /** ContextGetter */
     public Context getContext() {
@@ -92,7 +122,7 @@ public class Launcher extends FragmentActivity
 
         initGecko();
 
-        GeckoAppShell.setGeckoInterface(new BaseGeckoInterface(this));
+        GeckoAppShell.setGeckoInterface(new GeckoInterface(this));
 
         UpdateServiceHelper.registerForUpdates(this);
 
