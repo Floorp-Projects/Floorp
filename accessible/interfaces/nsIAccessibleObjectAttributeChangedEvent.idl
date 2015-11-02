@@ -11,7 +11,7 @@ interface nsIAtom;
 /**
  * Fired when an attribute of an accessible changes.
  */
-[scriptable, builtinclass, uuid(4CA96609-23C8-4771-86E7-77C8B651CA24)]
+[scriptable, builtinclass, uuid(ce41add2-096e-4606-b1ca-7408c6d5b4c3)]
 interface nsIAccessibleObjectAttributeChangedEvent : nsIAccessibleEvent
 {
   /**
