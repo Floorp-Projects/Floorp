@@ -1326,7 +1326,7 @@ DataStoreService::EnableDataStore(uint32_t aAppId, const nsAString& aName,
     ContentParent::GetAll(children);
     for (uint32_t i = 0; i < children.Length(); i++) {
       if (children[i]->NeedsDataStoreInfos()) {
-        unused << children[i]->SendDataStoreNotify(aAppId, nsAutoString(aName),
+        Unused << children[i]->SendDataStoreNotify(aAppId, nsAutoString(aName),
                                                    nsAutoString(aManifestURL));
       }
     }

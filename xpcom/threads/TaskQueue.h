@@ -46,7 +46,7 @@ public:
     MonitorAutoLock mon(mQueueMonitor);
     nsresult rv = DispatchLocked(Move(aRunnable), AbortIfFlushing, aFailureHandling, aReason);
     MOZ_DIAGNOSTIC_ASSERT(aFailureHandling == DontAssertDispatchSuccess || NS_SUCCEEDED(rv));
-    unused << rv;
+    Unused << rv;
   }
 
   // Puts the queue in a shutdown state and returns immediately. The queue will

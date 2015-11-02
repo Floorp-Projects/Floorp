@@ -240,7 +240,7 @@ public:
     PBackgroundChild* actor =
       mozilla::ipc::BackgroundChild::GetForCurrentThread();
     if (actor) {
-      unused << actor->SendMessagePortForceClose(aIdentifier.uuid(),
+      Unused << actor->SendMessagePortForceClose(aIdentifier.uuid(),
                                                  aIdentifier.destinationUuid(),
                                                  aIdentifier.sequenceId());
       return;

@@ -116,7 +116,7 @@ DataStorage::Reader::~Reader()
     MonitorAutoLock readyLock(mDataStorage->mReadyMonitor);
     mDataStorage->mReady = true;
     nsresult rv = mDataStorage->mReadyMonitor.NotifyAll();
-    unused << NS_WARN_IF(NS_FAILED(rv));
+    Unused << NS_WARN_IF(NS_FAILED(rv));
   }
 
   // This is for tests.
@@ -125,7 +125,7 @@ DataStorage::Reader::~Reader()
                                              &DataStorage::NotifyObservers,
                                              "data-storage-ready");
   nsresult rv = NS_DispatchToMainThread(job, NS_DISPATCH_NORMAL);
-  unused << NS_WARN_IF(NS_FAILED(rv));
+  Unused << NS_WARN_IF(NS_FAILED(rv));
 }
 
 NS_IMETHODIMP
@@ -496,7 +496,7 @@ DataStorage::Remove(const nsCString& aKey, DataStorageType aType)
   table.Remove(aKey);
 
   if (aType == DataStorage_Persistent && !mPendingWrite) {
-    unused << AsyncSetTimer(lock);
+    Unused << AsyncSetTimer(lock);
   }
 }
 
@@ -623,7 +623,7 @@ DataStorage::TimerCallback(nsITimer* aTimer, void* aClosure)
 {
   RefPtr<DataStorage> aDataStorage = (DataStorage*)aClosure;
   MutexAutoLock lock(aDataStorage->mMutex);
-  unused << aDataStorage->AsyncWriteData(lock);
+  Unused << aDataStorage->AsyncWriteData(lock);
 }
 
 // We only initialize the timer on the worker thread because it's not safe
@@ -661,7 +661,7 @@ DataStorage::SetTimer()
 
   rv = mTimer->InitWithFuncCallback(TimerCallback, this,
                                     mTimerDelay, nsITimer::TYPE_ONE_SHOT);
-  unused << NS_WARN_IF(NS_FAILED(rv));
+  Unused << NS_WARN_IF(NS_FAILED(rv));
 }
 
 void
@@ -697,7 +697,7 @@ DataStorage::ShutdownTimer()
   MOZ_ASSERT(!NS_IsMainThread());
   MutexAutoLock lock(mMutex);
   nsresult rv = mTimer->Cancel();
-  unused << NS_WARN_IF(NS_FAILED(rv));
+  Unused << NS_WARN_IF(NS_FAILED(rv));
   mTimer = nullptr;
 }
 
@@ -724,10 +724,10 @@ DataStorage::Observe(nsISupports* aSubject, const char* aTopic,
       MutexAutoLock lock(mMutex);
       rv = AsyncWriteData(lock);
       mShuttingDown = true;
-      unused << NS_WARN_IF(NS_FAILED(rv));
+      Unused << NS_WARN_IF(NS_FAILED(rv));
       if (mTimer) {
         rv = DispatchShutdownTimer(lock);
-        unused << NS_WARN_IF(NS_FAILED(rv));
+        Unused << NS_WARN_IF(NS_FAILED(rv));
       }
     }
     // Run the thread to completion and prevent any further events

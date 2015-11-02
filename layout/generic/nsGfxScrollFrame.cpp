@@ -2927,7 +2927,7 @@ ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   // dirty rect here.
   nsRect dirtyRect = aDirtyRect.Intersect(mScrollPort);
 
-  unused << DecideScrollableLayer(aBuilder, &dirtyRect,
+  Unused << DecideScrollableLayer(aBuilder, &dirtyRect,
               /* aAllowCreateDisplayPort = */ !mIsRoot);
 
   bool usingDisplayPort = aBuilder->IsPaintingToWindow() &&

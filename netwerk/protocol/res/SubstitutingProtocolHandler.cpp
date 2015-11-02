@@ -169,7 +169,7 @@ SubstitutingProtocolHandler::SendSubstitution(const nsACString& aRoot, nsIURI* a
   }
 
   for (uint32_t i = 0; i < parents.Length(); i++) {
-    unused << parents[i]->SendRegisterChromeItem(mapping);
+    Unused << parents[i]->SendRegisterChromeItem(mapping);
   }
 }
 

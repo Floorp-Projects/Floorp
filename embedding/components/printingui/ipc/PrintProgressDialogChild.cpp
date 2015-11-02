@@ -9,7 +9,7 @@
 class nsIWebProgress;
 class nsIRequest;
 
-using mozilla::unused;
+using mozilla::Unused;
 
 namespace mozilla {
 namespace embedding {
@@ -31,7 +31,7 @@ PrintProgressDialogChild::~PrintProgressDialogChild()
   // progress, it'll drop references to us and destroy us. We need to signal
   // the parent to decrement its refcount, as well as prevent it from attempting
   // to contact us further.
-  unused << Send__delete__(this);
+  Unused << Send__delete__(this);
   MOZ_COUNT_DTOR(PrintProgressDialogChild);
 }
 
@@ -53,7 +53,7 @@ PrintProgressDialogChild::OnStateChange(nsIWebProgress* aProgress,
                                         uint32_t aStateFlags,
                                         nsresult aStatus)
 {
-  unused << SendStateChange(aStateFlags, aStatus);
+  Unused << SendStateChange(aStateFlags, aStatus);
   return NS_OK;
 }
 
@@ -65,7 +65,7 @@ PrintProgressDialogChild::OnProgressChange(nsIWebProgress * aProgress,
                                            int32_t aCurTotalProgress,
                                            int32_t aMaxTotalProgress)
 {
-  unused << SendProgressChange(aCurSelfProgress, aMaxSelfProgress,
+  Unused << SendProgressChange(aCurSelfProgress, aMaxSelfProgress,
                                aCurTotalProgress, aMaxTotalProgress);
   return NS_OK;
 }
@@ -109,7 +109,7 @@ NS_IMETHODIMP PrintProgressDialogChild::GetDocTitle(char16_t* *aDocTitle)
 NS_IMETHODIMP PrintProgressDialogChild::SetDocTitle(const char16_t* aDocTitle)
 {
   mDocTitle = aDocTitle;
-  unused << SendDocTitleChange(nsString(aDocTitle));
+  Unused << SendDocTitleChange(nsString(aDocTitle));
   return NS_OK;
 }
 
@@ -124,7 +124,7 @@ NS_IMETHODIMP PrintProgressDialogChild::GetDocURL(char16_t **aDocURL)
 NS_IMETHODIMP PrintProgressDialogChild::SetDocURL(const char16_t* aDocURL)
 {
   mDocURL = aDocURL;
-  unused << SendDocURLChange(nsString(aDocURL));
+  Unused << SendDocURLChange(nsString(aDocURL));
   return NS_OK;
 }
 

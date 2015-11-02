@@ -2563,6 +2563,6 @@ PluginModuleChild::RecvGatherProfile()
         profileCString = nsCString("", 0);
     }
 
-    unused << SendProfile(profileCString);
+    Unused << SendProfile(profileCString);
     return true;
 }

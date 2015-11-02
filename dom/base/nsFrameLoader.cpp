@@ -990,8 +990,8 @@ nsFrameLoader::SwapWithOtherRemoteLoader(nsFrameLoader* aOther,
 
   mInSwap = aOther->mInSwap = false;
 
-  unused << mRemoteBrowser->SendSwappedWithOtherRemoteLoader();
-  unused << aOther->mRemoteBrowser->SendSwappedWithOtherRemoteLoader();
+  Unused << mRemoteBrowser->SendSwappedWithOtherRemoteLoader();
+  Unused << aOther->mRemoteBrowser->SendSwappedWithOtherRemoteLoader();
   return NS_OK;
 }
 
@@ -2296,7 +2296,7 @@ nsFrameLoader::TryRemoteBrowser()
                                  nsGkAtoms::mozpasspointerevents,
                                  nsGkAtoms::_true,
                                  eCaseMatters)) {
-    unused << mRemoteBrowser->SendSetUpdateHitRegion(true);
+    Unused << mRemoteBrowser->SendSetUpdateHitRegion(true);
   }
 
   ReallyLoadFrameScripts();
@@ -2341,14 +2341,14 @@ nsFrameLoader::DeactivateRemoteFrame() {
 void
 nsFrameLoader::ActivateUpdateHitRegion() {
   if (mRemoteBrowser) {
-    unused << mRemoteBrowser->SendSetUpdateHitRegion(true);
+    Unused << mRemoteBrowser->SendSetUpdateHitRegion(true);
   }
 }
 
 void
 nsFrameLoader::DeactivateUpdateHitRegion() {
   if (mRemoteBrowser) {
-    unused << mRemoteBrowser->SendSetUpdateHitRegion(false);
+    Unused << mRemoteBrowser->SendSetUpdateHitRegion(false);
   }
 }
 
@@ -2857,7 +2857,7 @@ nsFrameLoader::RequestNotifyAfterRemotePaint()
 {
   // If remote browsing (e10s), handle this with the TabParent.
   if (mRemoteBrowser) {
-    unused << mRemoteBrowser->SendRequestNotifyAfterRemotePaint();
+    Unused << mRemoteBrowser->SendRequestNotifyAfterRemotePaint();
   }
 
   return NS_OK;

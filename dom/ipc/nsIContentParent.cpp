@@ -122,9 +122,9 @@ nsIContentParent::AllocPBrowserParent(const TabId& aTabId,
                                       const bool& aIsForApp,
                                       const bool& aIsForBrowser)
 {
-  unused << aCpId;
-  unused << aIsForApp;
-  unused << aIsForBrowser;
+  Unused << aCpId;
+  Unused << aIsForApp;
+  Unused << aIsForBrowser;
 
   if (!CanOpenBrowser(aContext)) {
     return nullptr;

@@ -25,7 +25,7 @@
 
 using mozilla::dom::ContentParent;
 using mozilla::dom::ContentChild;
-using mozilla::unused;
+using mozilla::Unused;
 
 #include "nsWindow.h"
 
@@ -117,7 +117,7 @@ public:
         if (!strcmp(aTopic, "ipc:content-created")) {
             nsCOMPtr<nsIObserver> cpo = do_QueryInterface(aSubject);
             ContentParent* cp = static_cast<ContentParent*>(cpo.get());
-            unused << cp->SendScreenSizeChanged(gAndroidScreenBounds);
+            Unused << cp->SendScreenSizeChanged(gAndroidScreenBounds);
         } else if (!strcmp(aTopic, "xpcom-shutdown")) {
             nsCOMPtr<nsIObserverService> obs =
                 mozilla::services::GetObserverService();
@@ -1134,7 +1134,7 @@ nsWindow::OnGlobalAndroidEvent(AndroidGeckoEvent *ae)
             nsTArray<ContentParent*> cplist;
             ContentParent::GetAll(cplist);
             for (uint32_t i = 0; i < cplist.Length(); ++i)
-                unused << cplist[i]->SendScreenSizeChanged(gAndroidScreenBounds);
+                Unused << cplist[i]->SendScreenSizeChanged(gAndroidScreenBounds);
 
             if (gContentCreationNotifier)
                 break;
