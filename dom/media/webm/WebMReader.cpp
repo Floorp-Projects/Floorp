@@ -787,7 +787,7 @@ media::TimeIntervals WebMReader::GetBuffered()
   return buffered;
 }
 
-void WebMReader::NotifyDataArrivedInternal(uint32_t aLength, int64_t aOffset)
+void WebMReader::NotifyDataArrivedInternal()
 {
   MOZ_ASSERT(OnTaskQueue());
   AutoPinned<MediaResource> resource(mDecoder->GetResource());

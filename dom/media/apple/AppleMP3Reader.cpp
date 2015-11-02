@@ -502,7 +502,7 @@ AppleMP3Reader::Seek(int64_t aTime, int64_t aEndTime)
 }
 
 void
-AppleMP3Reader::NotifyDataArrivedInternal(uint32_t aLength, int64_t aOffset)
+AppleMP3Reader::NotifyDataArrivedInternal()
 {
   MOZ_ASSERT(OnTaskQueue());
   if (!mMP3FrameParser.NeedsData()) {
