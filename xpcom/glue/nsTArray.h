@@ -793,6 +793,7 @@ class nsTArray_Impl
 {
 private:
   typedef nsTArrayFallibleAllocator FallibleAlloc;
+  typedef nsTArrayInfallibleAllocator InfallibleAlloc;
 
 public:
   typedef typename nsTArray_CopyChooser<E>::Type     copy_type;
@@ -1649,8 +1650,9 @@ public:
     // Check that the previous assert didn't overflow
     MOZ_ASSERT(aStart <= aStart + aCount, "Start index plus length overflows");
     DestructRange(aStart, aCount);
-    this->template ShiftData<Alloc>(aStart, aCount, 0,
-                                    sizeof(elem_type), MOZ_ALIGNOF(elem_type));
+    this->template ShiftData<InfallibleAlloc>(aStart, aCount, 0,
+                                              sizeof(elem_type),
+                                              MOZ_ALIGNOF(elem_type));
   }
 
   // A variation on the RemoveElementsAt method defined above.
