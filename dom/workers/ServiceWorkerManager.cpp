@@ -3165,7 +3165,7 @@ ServiceWorkerManager::PrepareFetchEvent(const OriginAttributes& aOriginAttribute
     internalChannel->GetLoadGroup(getter_AddRefs(loadGroup));
 
     nsCOMPtr<nsIURI> uri;
-    aRv = internalChannel->GetURI(getter_AddRefs(uri));
+    aRv = aChannel->GetSecureUpgradedChannelURI(getter_AddRefs(uri));
     if (NS_WARN_IF(aRv.Failed())) {
       return nullptr;
     }
