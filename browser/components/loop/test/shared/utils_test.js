@@ -322,13 +322,13 @@ describe("loop.shared.utils", function() {
       // fake mozL10n
       sandbox.stub(navigator.mozL10n, "get", function(id) {
         switch (id) {
-          case "share_email_subject6":
+          case "share_email_subject7":
             return "subject";
-          case "share_email_body6":
+          case "share_email_body7":
             return "body";
-          case "share_email_body_context2":
+          case "share_email_body_context3":
             return "body_context";
-          case "share_email_footer":
+          case "share_email_footer2":
             return "footer";
         }
       });
