@@ -314,7 +314,7 @@ FeedWriter.prototype = {
   },
 
    /**
-   * Returns a date suitable for displaying in the feed preview. 
+   * Returns a date suitable for displaying in the feed preview.
    * If the date cannot be parsed, the return value is "false".
    * @param   dateString
    *          A date as extracted from a feed entry. (entry.updated)
