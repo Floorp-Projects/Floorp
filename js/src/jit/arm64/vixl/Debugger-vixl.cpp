@@ -1,4 +1,4 @@
-// Copyright 2014, ARM Limited
+// Copyright 2013 ARM Limited
 // All rights reserved.
 //
 // Redistribution and use in source and binary forms, with or without
@@ -129,7 +129,7 @@ class FPRegisterToken : public ValueToken<const FPRegister> {
 class IdentifierToken : public ValueToken<char*> {
  public:
   explicit IdentifierToken(const char* name) {
-    size_t size = strlen(name) + 1;
+    int size = strlen(name) + 1;
     value_ = (char*)js_malloc(size);
     strncpy(value_, name, size);
   }
@@ -170,7 +170,7 @@ class AddressToken : public ValueToken<uint8_t*> {
 // Format: n.
 class IntegerToken : public ValueToken<int64_t> {
  public:
-  explicit IntegerToken(int64_t value) : ValueToken<int64_t>(value) {}
+  explicit IntegerToken(int value) : ValueToken<int64_t>(value) {}
 
   virtual bool IsInteger() const { return true; }
   virtual void Print(FILE* out = stdout) const;
@@ -232,7 +232,7 @@ template<typename T> class Format : public FormatToken {
 class UnknownToken : public Token {
  public:
   explicit UnknownToken(const char* arg) {
-    size_t size = strlen(arg) + 1;
+    int size = strlen(arg) + 1;
     unknown_ = (char*)js_malloc(size);
     strncpy(unknown_, arg, size);
   }
@@ -278,7 +278,7 @@ class HelpCommand : public DebugCommand {
 
   virtual bool Run(Debugger* debugger);
 
-  static DebugCommand* Build(TokenVector&& args);
+  static DebugCommand* Build(TokenVector &&args);
 
   static const char* kHelp;
   static const char* kAliases[];
@@ -292,7 +292,7 @@ class ContinueCommand : public DebugCommand {
 
   virtual bool Run(Debugger* debugger);
 
-  static DebugCommand* Build(TokenVector&& args);
+  static DebugCommand* Build(TokenVector &&args);
 
   static const char* kHelp;
   static const char* kAliases[];
@@ -310,7 +310,7 @@ class StepCommand : public DebugCommand {
   virtual bool Run(Debugger* debugger);
   virtual void Print(FILE* out = stdout);
 
-  static DebugCommand* Build(TokenVector&& args);
+  static DebugCommand* Build(TokenVector &&args);
 
   static const char* kHelp;
   static const char* kAliases[];
@@ -322,7 +322,7 @@ class StepCommand : public DebugCommand {
 
 class DisasmCommand : public DebugCommand {
  public:
-  static DebugCommand* Build(TokenVector&& args);
+  static DebugCommand* Build(TokenVector &&args);
 
   static const char* kHelp;
   static const char* kAliases[];
@@ -344,7 +344,7 @@ class PrintCommand : public DebugCommand {
   virtual bool Run(Debugger* debugger);
   virtual void Print(FILE* out = stdout);
 
-  static DebugCommand* Build(TokenVector&& args);
+  static DebugCommand* Build(TokenVector &&args);
 
   static const char* kHelp;
   static const char* kAliases[];
@@ -374,7 +374,7 @@ class ExamineCommand : public DebugCommand {
   virtual bool Run(Debugger* debugger);
   virtual void Print(FILE* out = stdout);
 
-  static DebugCommand* Build(TokenVector&& args);
+  static DebugCommand* Build(TokenVector &&args);
 
   static const char* kHelp;
   static const char* kAliases[];
@@ -389,7 +389,7 @@ class ExamineCommand : public DebugCommand {
 // Commands which name does not match any of the known commnand.
 class UnknownCommand : public DebugCommand {
  public:
-  explicit UnknownCommand(TokenVector&& args) : args_(Move(args)) {}
+  explicit UnknownCommand(TokenVector &&args) : args_(Move(args)) {}
   virtual ~UnknownCommand();
 
   virtual bool Run(Debugger* debugger);
@@ -401,7 +401,7 @@ class UnknownCommand : public DebugCommand {
 // Commands which name match a known command but the syntax is invalid.
 class InvalidCommand : public DebugCommand {
  public:
-  InvalidCommand(TokenVector&& args, int index, const char* cause)
+  InvalidCommand(TokenVector &&args, int index, const char* cause)
       : args_(Move(args)), index_(index), cause_(cause) {}
   virtual ~InvalidCommand();
 
@@ -542,18 +542,11 @@ Debugger::Debugger(Decoder* decoder, FILE* stream)
 }
 
 
-Debugger::~Debugger() {
-  js_delete(disasm_);
-  js_delete(printer_);
-}
-
-
 void Debugger::Run() {
   pc_modified_ = false;
   while (pc_ != kEndOfSimAddress) {
     if (pending_request()) RunDebuggerShell();
     ExecuteInstruction();
-    LogAllWrittenRegisters();
   }
 }
 
@@ -598,7 +591,7 @@ void Debugger::PrintMemory(const uint8_t* address,
       printf("\n%p: ", current);
     }
 
-    uint64_t data = Memory::Read<uint64_t>(current);
+    uint64_t data = MemoryRead<uint64_t>(current);
     format->PrintData(&data);
     printf(" ");
   }
@@ -628,14 +621,14 @@ void Debugger::PrintRegister(const Register& target_reg,
 }
 
 
-// TODO(all): fix this for vector registers.
 void Debugger::PrintFPRegister(const FPRegister& target_fpreg,
                                const FormatToken* format) {
-  const unsigned fpreg_size = target_fpreg.size();
+  const uint64_t fpreg_size = target_fpreg.size();
   const uint64_t format_size = format->SizeOf() * 8;
   const uint64_t count = fpreg_size / format_size;
   const uint64_t mask = 0xffffffffffffffff >> (64 - format_size);
-  const uint64_t fpreg_value = vreg<uint64_t>(fpreg_size, target_fpreg.code());
+  const uint64_t fpreg_value = fpreg<uint64_t>(fpreg_size,
+                                               target_fpreg.code());
   VIXL_ASSERT(count > 0);
 
   if (target_fpreg.Is32Bits()) {
@@ -658,8 +651,7 @@ void Debugger::VisitException(const Instruction* instr) {
     case BRK:
       DoBreakpoint(instr);
       return;
-    case HLT:
-      VIXL_FALLTHROUGH();
+    case HLT:   // Fall through.
     default: Simulator::VisitException(instr);
   }
 }
@@ -911,14 +903,10 @@ Token* FPRegisterToken::Tokenize(const char* arg) {
         return NULL;
       }
 
-      VRegister fpreg = NoVReg;
+      FPRegister fpreg = NoFPReg;
       switch (*arg) {
-        case 's':
-          fpreg = VRegister::SRegFromCode(static_cast<unsigned>(code));
-          break;
-        case 'd':
-          fpreg = VRegister::DRegFromCode(static_cast<unsigned>(code));
-          break;
+        case 's': fpreg = FPRegister::SRegFromCode(code); break;
+        case 'd': fpreg = FPRegister::DRegFromCode(code); break;
         default: VIXL_UNREACHABLE();
       }
 
@@ -1002,7 +990,7 @@ Token* IntegerToken::Tokenize(const char* arg) {
 
 
 Token* FormatToken::Tokenize(const char* arg) {
-  size_t length = strlen(arg);
+  int length = strlen(arg);
   switch (arg[0]) {
     case 'x':
     case 's':
@@ -1012,7 +1000,6 @@ Token* FormatToken::Tokenize(const char* arg) {
       break;
     case 'i':
       if (length == 1) return js_new<Format<uint32_t>>("%08" PRIx32, 'i');
-      VIXL_FALLTHROUGH();
     default: return NULL;
   }
 
@@ -1179,7 +1166,7 @@ bool HelpCommand::Run(Debugger* debugger) {
 }
 
 
-DebugCommand* HelpCommand::Build(TokenVector&& args) {
+DebugCommand* HelpCommand::Build(TokenVector &&args) {
   if (args.length() != 1) {
     return js_new<InvalidCommand>(Move(args), -1, "too many arguments");
   }
@@ -1196,7 +1183,7 @@ bool ContinueCommand::Run(Debugger* debugger) {
 }
 
 
-DebugCommand* ContinueCommand::Build(TokenVector&& args) {
+DebugCommand* ContinueCommand::Build(TokenVector &&args) {
   if (args.length() != 1) {
     return js_new<InvalidCommand>(Move(args), -1, "too many arguments");
   }
@@ -1224,7 +1211,7 @@ void StepCommand::Print(FILE* out) {
 }
 
 
-DebugCommand* StepCommand::Build(TokenVector&& args) {
+DebugCommand* StepCommand::Build(TokenVector &&args) {
   IntegerToken* count = NULL;
   switch (args.length()) {
     case 1: {  // step [1]
@@ -1247,7 +1234,7 @@ DebugCommand* StepCommand::Build(TokenVector&& args) {
 }
 
 
-DebugCommand* DisasmCommand::Build(TokenVector&& args) {
+DebugCommand* DisasmCommand::Build(TokenVector &&args) {
   IntegerToken* count = NULL;
   switch (args.length()) {
     case 1: {  // disasm [10]
@@ -1289,7 +1276,7 @@ bool PrintCommand::Run(Debugger* debugger) {
     if (strcmp(identifier, "regs") == 0) {
       debugger->PrintRegisters();
     } else if (strcmp(identifier, "fpregs") == 0) {
-      debugger->PrintVRegisters();
+      debugger->PrintFPRegisters();
     } else if (strcmp(identifier, "sysregs") == 0) {
       debugger->PrintSystemRegisters();
     } else if (strcmp(identifier, "pc") == 0) {
@@ -1327,7 +1314,7 @@ bool PrintCommand::Run(Debugger* debugger) {
 }
 
 
-DebugCommand* PrintCommand::Build(TokenVector&& args) {
+DebugCommand* PrintCommand::Build(TokenVector &&args) {
   if (args.length() < 2) {
     return js_new<InvalidCommand>(Move(args), -1, "too few arguments");
   }
@@ -1416,7 +1403,7 @@ void ExamineCommand::Print(FILE* out) {
 }
 
 
-DebugCommand* ExamineCommand::Build(TokenVector&& args) {
+DebugCommand* ExamineCommand::Build(TokenVector &&args) {
   if (args.length() < 2) {
     return js_new<InvalidCommand>(Move(args), -1, "too few arguments");
   }
@@ -1470,9 +1457,8 @@ DebugCommand* ExamineCommand::Build(TokenVector&& args) {
 
 
 UnknownCommand::~UnknownCommand() {
-  const size_t size = args_.length();
-  for (size_t i = 0; i < size; ++i) {
-    js_delete(args_[i]);
+  for (auto arg : args_) {
+    js_delete(arg);
   }
 }
 
@@ -1482,10 +1468,9 @@ bool UnknownCommand::Run(Debugger* debugger) {
   USE(debugger);
 
   printf(" ** Unknown Command:");
-  const size_t size = args_.length();
-  for (size_t i = 0; i < size; ++i) {
+  for (auto arg : args_) {
     printf(" ");
-    args_[i]->Print(stdout);
+    arg->Print(stdout);
   }
   printf(" **\n");
 
@@ -1494,9 +1479,8 @@ bool UnknownCommand::Run(Debugger* debugger) {
 
 
 InvalidCommand::~InvalidCommand() {
-  const size_t size = args_.length();
-  for (size_t i = 0; i < size; ++i) {
-    js_delete(args_[i]);
+  for (auto arg : args_) {
+    js_delete(arg);
   }
 }
 
@@ -1506,10 +1490,10 @@ bool InvalidCommand::Run(Debugger* debugger) {
   USE(debugger);
 
   printf(" ** Invalid Command:");
-  const size_t size = args_.length();
-  for (size_t i = 0; i < size; ++i) {
+  const int size = args_.length();
+  for (int i = 0; i < size; ++i) {
     printf(" ");
-    if (i == static_cast<size_t>(index_)) {
+    if (i == index_) {
       printf(">>");
       args_[i]->Print(stdout);
       printf("<<");
