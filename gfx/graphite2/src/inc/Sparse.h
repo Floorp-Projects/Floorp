@@ -127,6 +127,7 @@ sparse::sparse(I attr, const I last)
         return;
     }
 
+    // coverity[forward_null : FALSE] Since m_array is union and m_array.values is not NULL
     chunk * ci = m_array.map;
     ci->offset = (m_nchunks*sizeof(chunk) + sizeof(mapped_type)-1)/sizeof(mapped_type);
     mapped_type * vi = m_array.values + ci->offset;
