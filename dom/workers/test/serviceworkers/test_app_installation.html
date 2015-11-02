@@ -91,7 +91,7 @@ function checkSwRegistration(aExpectedRegistrations) {
        "There should be " + aExpectedRegistrations.length + " registrations");
 
     for (let i = 0; i < registrations.length; i++) {
-      let registration = registrations.queryElementAt(i, Ci.nsIServiceWorkerInfo);
+      let registration = registrations.queryElementAt(i, Ci.nsIServiceWorkerRegistrationInfo);
       if (!registration) {
         reject();
         return;

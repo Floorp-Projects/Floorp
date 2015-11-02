@@ -10,6 +10,7 @@
 #include <shlwapi.h>
 #include <cderr.h>
 
+#include "mozilla/UniquePtr.h"
 #include "mozilla/WindowsVersion.h"
 #include "nsReadableUtils.h"
 #include "nsNetUtil.h"
@@ -26,6 +27,8 @@
 #include "nsPIDOMWindow.h"
 
 using mozilla::IsVistaOrLater;
+using mozilla::MakeUnique;
+using mozilla::UniquePtr;
 using namespace mozilla::widget;
 
 char16_t *nsFilePicker::mLastUsedUnicodeDirectory;
@@ -70,15 +73,15 @@ class AutoRestoreWorkingPath
 public:
   AutoRestoreWorkingPath() {
     DWORD bufferLength = GetCurrentDirectoryW(0, nullptr);
-    mWorkingPath = new wchar_t[bufferLength];
-    if (GetCurrentDirectoryW(bufferLength, mWorkingPath) == 0) {
+    mWorkingPath = MakeUnique<wchar_t[]>(bufferLength);
+    if (GetCurrentDirectoryW(bufferLength, mWorkingPath.get()) == 0) {
       mWorkingPath = nullptr;
     }
   }
 
   ~AutoRestoreWorkingPath() {
     if (HasWorkingPath()) {
-      ::SetCurrentDirectoryW(mWorkingPath);
+      ::SetCurrentDirectoryW(mWorkingPath.get());
     }
   }
 
@@ -86,7 +89,7 @@ public:
     return mWorkingPath != nullptr;
   }
 private:
-  nsAutoArrayPtr<wchar_t> mWorkingPath;
+  UniquePtr<wchar_t[]> mWorkingPath;
 };
 
 // Manages NS_NATIVE_TMP_WINDOW child windows. NS_NATIVE_TMP_WINDOWs are
@@ -523,8 +526,8 @@ nsFilePicker::ShowXPFolderPicker(const nsString& aInitialDir)
 {
   bool result = false;
 
-  nsAutoArrayPtr<wchar_t> dirBuffer(new wchar_t[FILE_BUFFER_SIZE]);
-  wcsncpy(dirBuffer, aInitialDir.get(), FILE_BUFFER_SIZE);
+  auto dirBuffer = MakeUnique<wchar_t[]>(FILE_BUFFER_SIZE);
+  wcsncpy(dirBuffer.get(), aInitialDir.get(), FILE_BUFFER_SIZE);
   dirBuffer[FILE_BUFFER_SIZE-1] = '\0';
 
   AutoDestroyTmpWindow adtw((HWND)(mParentWidget.get() ?
@@ -532,7 +535,7 @@ nsFilePicker::ShowXPFolderPicker(const nsString& aInitialDir)
 
   BROWSEINFOW browserInfo = {0};
   browserInfo.pidlRoot       = nullptr;
-  browserInfo.pszDisplayName = dirBuffer;
+  browserInfo.pszDisplayName = dirBuffer.get();
   browserInfo.lpszTitle      = mTitle.get();
   browserInfo.ulFlags        = BIF_USENEWUI | BIF_RETURNONLYFSDIRS;
   browserInfo.hwndOwner      = adtw.get(); 
@@ -551,9 +554,9 @@ nsFilePicker::ShowXPFolderPicker(const nsString& aInitialDir)
 
   LPITEMIDLIST list = ::SHBrowseForFolderW(&browserInfo);
   if (list) {
-    result = ::SHGetPathFromIDListW(list, dirBuffer);
+    result = ::SHGetPathFromIDListW(list, dirBuffer.get());
     if (result)
-      mUnicodeFile.Assign(static_cast<const wchar_t*>(dirBuffer));
+      mUnicodeFile.Assign(static_cast<const wchar_t*>(dirBuffer.get()));
     // free PIDL
     CoTaskMemFree(list);
   }
@@ -667,8 +670,8 @@ nsFilePicker::ShowXPFilePicker(const nsString& aInitialDir)
   ofn.lStructSize = sizeof(ofn);
   nsString filterBuffer = mFilterList;
                                 
-  nsAutoArrayPtr<wchar_t> fileBuffer(new wchar_t[FILE_BUFFER_SIZE]);
-  wcsncpy(fileBuffer,  mDefaultFilePath.get(), FILE_BUFFER_SIZE);
+  auto fileBuffer = MakeUnique<wchar_t[]>(FILE_BUFFER_SIZE);
+  wcsncpy(fileBuffer.get(),  mDefaultFilePath.get(), FILE_BUFFER_SIZE);
   fileBuffer[FILE_BUFFER_SIZE-1] = '\0'; // null terminate in case copy truncated
 
   if (!aInitialDir.IsEmpty()) {
@@ -681,7 +684,7 @@ nsFilePicker::ShowXPFilePicker(const nsString& aInitialDir)
   ofn.lpstrTitle   = (LPCWSTR)mTitle.get();
   ofn.lpstrFilter  = (LPCWSTR)filterBuffer.get();
   ofn.nFilterIndex = mSelectedType;
-  ofn.lpstrFile    = fileBuffer;
+  ofn.lpstrFile    = fileBuffer.get();
   ofn.nMaxFile     = FILE_BUFFER_SIZE;
   ofn.hwndOwner    = adtw.get();
   ofn.lCustData    = reinterpret_cast<LPARAM>(this);
@@ -754,9 +757,9 @@ nsFilePicker::ShowXPFilePicker(const nsString& aInitialDir)
       // the new Common File Dialogs for Vista and up.
       if (!IsVistaOrLater()) {
         ofn.lpfnHook = MultiFilePickerHook;
-        fileBuffer.forget();
+        fileBuffer.release();
         result = FilePickerWrapper(&ofn, PICKER_TYPE_OPEN);
-        fileBuffer = ofn.lpstrFile;
+        fileBuffer.reset(ofn.lpstrFile);
       } else {
         result = FilePickerWrapper(&ofn, PICKER_TYPE_OPEN);
       }
@@ -798,7 +801,7 @@ nsFilePicker::ShowXPFilePicker(const nsString& aInitialDir)
 
   // Single file selection, we're done
   if (mMode != modeOpenMultiple) {
-    GetQualifiedPath(fileBuffer, mUnicodeFile);
+    GetQualifiedPath(fileBuffer.get(), mUnicodeFile);
     return true;
   }
 
@@ -808,7 +811,7 @@ nsFilePicker::ShowXPFilePicker(const nsString& aInitialDir)
   // separated, with an extra '\0' character after the last file name. This
   // format enables the Explorer-style dialog boxes to return long file names
   // that include spaces. 
-  wchar_t *current = fileBuffer;
+  wchar_t *current = fileBuffer.get();
   
   nsAutoString dirName(current);
   // Sometimes dirName contains a trailing slash and sometimes it doesn't:
@@ -839,7 +842,7 @@ nsFilePicker::ShowXPFilePicker(const nsString& aInitialDir)
   // Handle the case where the user selected just one file. From msdn: If you
   // specify OFN_ALLOWMULTISELECT and the user selects only one file the
   // lpstrFile string does not have a separator between the path and file name.
-  if (current && *current && (current == fileBuffer)) {
+  if (current && *current && (current == fileBuffer.get())) {
     nsCOMPtr<nsIFile> file = do_CreateInstance("@mozilla.org/file/local;1");
     NS_ENSURE_TRUE(file, false);
     
