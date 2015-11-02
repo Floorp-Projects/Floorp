@@ -1736,7 +1736,30 @@ HttpChannelChild::AsyncOpen(nsIStreamListener *listener, nsISupports *aContext)
     return NS_OK;
   }
 
-  if (ShouldIntercept()) {
+  bool isHttps = false;
+  rv = mURI->SchemeIs("https", &isHttps);
+  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr<nsIPrincipal> resultPrincipal;
+  if (!isHttps && mLoadInfo && mLoadInfo->GetUpgradeInsecureRequests()) {
+      nsContentUtils::GetSecurityManager()->
+        GetChannelResultPrincipal(this, getter_AddRefs(resultPrincipal));
+  }
+  bool shouldUpgrade = false;
+  rv = NS_ShouldSecureUpgrade(mURI,
+                              mLoadInfo,
+                              resultPrincipal,
+                              mPrivateBrowsing,
+                              mAllowSTS,
+                              shouldUpgrade);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  nsCOMPtr<nsIURI> upgradedURI;
+  if (shouldUpgrade) {
+    rv = GetSecureUpgradedURI(mURI, getter_AddRefs(upgradedURI));
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  if (ShouldIntercept(upgradedURI)) {
     mResponseCouldBeSynthesized = true;
 
     nsCOMPtr<nsINetworkInterceptController> controller;
