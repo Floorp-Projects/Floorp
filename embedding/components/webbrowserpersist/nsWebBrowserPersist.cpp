@@ -103,12 +103,6 @@ struct nsWebBrowserPersist::URIData
     nsresult GetLocalURI(nsIURI *targetBaseURI, nsCString& aSpecOut);
 };
 
-struct nsWebBrowserPersist::URIFixupData
-{
-    RefPtr<FlatURIMap> mFlatMap;
-    nsCOMPtr<nsIURI> mTargetBaseURI;
-};
-
 // Information about the output stream
 struct nsWebBrowserPersist::OutputData
 {
@@ -604,7 +598,58 @@ nsWebBrowserPersist::SerializeNextFile()
     if (urisToPersist > 0) {
         // Persist each file in the uri map. The document(s)
         // will be saved after the last one of these is saved.
-        mURIMap.EnumerateRead(EnumPersistURIs, this);
+        for (auto iter = mURIMap.Iter(); !iter.Done(); iter.Next()) {
+            URIData *data = iter.UserData();
+
+            if (!data->mNeedsPersisting || data->mSaved) {
+                continue;
+            }
+
+            nsresult rv;
+
+            // Create a URI from the key.
+            nsCOMPtr<nsIURI> uri;
+            rv = NS_NewURI(getter_AddRefs(uri), iter.Key(),
+                           data->mCharset.get());
+            if (NS_WARN_IF(NS_FAILED(rv))) {
+                break;
+            }
+
+            // Make a URI to save the data to.
+            nsCOMPtr<nsIURI> fileAsURI;
+            rv = data->mDataPath->Clone(getter_AddRefs(fileAsURI));
+            if (NS_WARN_IF(NS_FAILED(rv))) {
+                break;
+            }
+            rv = AppendPathToURI(fileAsURI, data->mFilename);
+            if (NS_WARN_IF(NS_FAILED(rv))) {
+                break;
+            }
+
+            // The Referrer Policy doesn't matter here since the referrer is
+            // nullptr.
+            rv = SaveURIInternal(uri, nullptr, nullptr,
+                                 mozilla::net::RP_Default, nullptr, nullptr,
+                                 fileAsURI, true, mIsPrivate);
+            // If SaveURIInternal fails, then it will have called EndDownload,
+            // which means that |data| is no longer valid memory. We MUST bail.
+            if (NS_WARN_IF(NS_FAILED(rv))) {
+                break;
+            }
+
+            if (rv == NS_OK) {
+                // Store the actual object because once it's persisted this
+                // will be fixed up with the right file extension.
+                data->mFile = fileAsURI;
+                data->mSaved = true;
+            } else {
+                data->mNeedsFixup = false;
+            }
+
+            if (mSerializingOutput) {
+                break;
+            }
+        }
     }
 
     // If there are downloads happening, wait until they're done; the
@@ -657,17 +702,18 @@ nsWebBrowserPersist::SerializeNextFile()
             return;
         }
     }
-    
+
     // mFlatURIMap must be rebuilt each time through SerializeNextFile, as
     // mTargetBaseURI is used to create the relative URLs and will be different
     // with each serialized document.
     RefPtr<FlatURIMap> flatMap = new FlatURIMap(targetBaseSpec);
-    
-    URIFixupData fixupData;
-    fixupData.mFlatMap = flatMap;
-    fixupData.mTargetBaseURI = mTargetBaseURI;
-    
-    mURIMap.EnumerateRead(EnumCopyURIsToFlatMap, &fixupData);
+    for (auto iter = mURIMap.Iter(); !iter.Done(); iter.Next()) {
+        nsAutoCString mapTo;
+        nsresult rv = iter.UserData()->GetLocalURI(mTargetBaseURI, mapTo);
+        if (NS_SUCCEEDED(rv) || !mapTo.IsVoid()) {
+            flatMap->Add(iter.Key(), mapTo);
+        }
+    }
     mFlatURIMap = flatMap.forget();
 
     nsCOMPtr<nsIFile> localFile;
@@ -2442,58 +2488,6 @@ nsWebBrowserPersist::EnumCalcUploadProgress(nsISupports *aKey, UploadData *aData
 }
 
 PLDHashOperator
-nsWebBrowserPersist::EnumPersistURIs(const nsACString &aKey, URIData *aData, void* aClosure)
-{
-    if (!aData->mNeedsPersisting || aData->mSaved)
-    {
-        return PL_DHASH_NEXT;
-    }
-
-    nsWebBrowserPersist *pthis = static_cast<nsWebBrowserPersist*>(aClosure);
-    nsresult rv;
-
-    // Create a URI from the key
-    nsAutoCString key = nsAutoCString(aKey);
-    nsCOMPtr<nsIURI> uri;
-    rv = NS_NewURI(getter_AddRefs(uri),
-                   nsDependentCString(key.get(), key.Length()),
-                   aData->mCharset.get());
-    NS_ENSURE_SUCCESS(rv, PL_DHASH_STOP);
-
-    // Make a URI to save the data to
-    nsCOMPtr<nsIURI> fileAsURI;
-    rv = aData->mDataPath->Clone(getter_AddRefs(fileAsURI));
-    NS_ENSURE_SUCCESS(rv, PL_DHASH_STOP);
-    rv = pthis->AppendPathToURI(fileAsURI, aData->mFilename);
-    NS_ENSURE_SUCCESS(rv, PL_DHASH_STOP);
-
-    // The Referrer Policy doesn't matter here since the referrer is nullptr.
-    rv = pthis->SaveURIInternal(uri, nullptr, nullptr, mozilla::net::RP_Default,
-                                nullptr, nullptr, fileAsURI, true, pthis->mIsPrivate);
-    // if SaveURIInternal fails, then it will have called EndDownload,
-    // which means that |aData| is no longer valid memory.  we MUST bail.
-    NS_ENSURE_SUCCESS(rv, PL_DHASH_STOP);
-
-    if (rv == NS_OK)
-    {
-        // Store the actual object because once it's persisted this
-        // will be fixed up with the right file extension.
-
-        aData->mFile = fileAsURI;
-        aData->mSaved = true;
-    }
-    else
-    {
-        aData->mNeedsFixup = false;
-    }
-
-    if (pthis->mSerializingOutput)
-        return PL_DHASH_STOP;
-
-    return PL_DHASH_NEXT;
-}
-
-PLDHashOperator
 nsWebBrowserPersist::EnumCleanupOutputMap(nsISupports *aKey, OutputData *aData, void* aClosure)
 {
     nsCOMPtr<nsIChannel> channel = do_QueryInterface(aKey);
@@ -2511,21 +2505,6 @@ nsWebBrowserPersist::EnumCleanupUploadList(nsISupports *aKey, UploadData *aData,
     if (channel)
     {
         channel->Cancel(NS_BINDING_ABORTED);
-    }
-    return PL_DHASH_NEXT;
-}
-
-/* static */ PLDHashOperator
-nsWebBrowserPersist::EnumCopyURIsToFlatMap(const nsACString &aKey,
-                                          URIData *aData,
-                                          void* aClosure)
-{
-    URIFixupData *fixupData = static_cast<URIFixupData*>(aClosure);
-    FlatURIMap* theMap = fixupData->mFlatMap;
-    nsAutoCString mapTo;
-    nsresult rv = aData->GetLocalURI(fixupData->mTargetBaseURI, mapTo);
-    if (NS_SUCCEEDED(rv) || !mapTo.IsVoid()) {
-        theMap->Add(aKey, mapTo);
     }
     return PL_DHASH_NEXT;
 }

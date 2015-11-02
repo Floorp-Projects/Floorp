@@ -137,8 +137,6 @@ private:
     void SetApplyConversionIfNeeded(nsIChannel *aChannel);
 
     // Hash table enumerators
-    static PLDHashOperator EnumPersistURIs(
-        const nsACString &aKey, URIData *aData, void* aClosure);
     static PLDHashOperator EnumCleanupOutputMap(
         nsISupports *aKey, OutputData *aData, void* aClosure);
     static PLDHashOperator EnumCleanupUploadList(
@@ -149,8 +147,6 @@ private:
         nsISupports *aKey, UploadData *aData, void* aClosure);
     static PLDHashOperator EnumFixRedirect(
         nsISupports *aKey, OutputData *aData, void* aClosure);
-    static PLDHashOperator EnumCopyURIsToFlatMap(
-        const nsACString &aKey, URIData *aData, void* aClosure);
 
     nsCOMPtr<nsIURI>          mCurrentDataPath;
     bool                      mCurrentDataPathIsRelative;
