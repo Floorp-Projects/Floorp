@@ -115,6 +115,8 @@ nsSecureBrowserUIImpl::nsSecureBrowserUIImpl()
 #endif
   , mTransferringRequests(&gMapOps, sizeof(RequestHashEntry))
 {
+  MOZ_ASSERT(NS_IsMainThread());
+
   ResetStateTracking();
 
   if (!gSecureDocLog)
@@ -128,8 +130,10 @@ NS_IMPL_ISUPPORTS(nsSecureBrowserUIImpl,
                   nsISSLStatusProvider)
 
 NS_IMETHODIMP
-nsSecureBrowserUIImpl::Init(nsIDOMWindow *aWindow)
+nsSecureBrowserUIImpl::Init(nsIDOMWindow* aWindow)
 {
+  MOZ_ASSERT(NS_IsMainThread());
+
   if (MOZ_LOG_TEST(gSecureDocLog, LogLevel::Debug)) {
     nsCOMPtr<nsIDOMWindow> window(do_QueryReferent(mWindow));
 
@@ -186,6 +190,7 @@ nsSecureBrowserUIImpl::Init(nsIDOMWindow *aWindow)
 NS_IMETHODIMP
 nsSecureBrowserUIImpl::GetState(uint32_t* aState)
 {
+  MOZ_ASSERT(NS_IsMainThread());
   ReentrantMonitorAutoEnter lock(mReentrantMonitor);
   return MapInternalToExternalState(aState, mNotifiedSecurityState, mNotifiedToplevelIsEV);
 }
@@ -303,8 +308,9 @@ nsSecureBrowserUIImpl::MapInternalToExternalState(uint32_t* aState, lockIconStat
 }
 
 NS_IMETHODIMP
-nsSecureBrowserUIImpl::SetDocShell(nsIDocShell *aDocShell)
+nsSecureBrowserUIImpl::SetDocShell(nsIDocShell* aDocShell)
 {
+  MOZ_ASSERT(NS_IsMainThread());
   nsresult rv;
   mDocShell = do_GetWeakReference(aDocShell, &rv);
   return rv;
@@ -481,6 +487,7 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
                                      uint32_t aProgressStateFlags,
                                      nsresult aStatus)
 {
+  MOZ_ASSERT(NS_IsMainThread());
 #ifdef DEBUG
   nsAutoAtomic atomic(mOnStateLocationChangeReentranceDetection);
   NS_ASSERTION(mOnStateLocationChangeReentranceDetection == 1,
@@ -1261,6 +1268,7 @@ nsSecureBrowserUIImpl::OnLocationChange(nsIWebProgress* aWebProgress,
                                         nsIURI* aLocation,
                                         uint32_t aFlags)
 {
+  MOZ_ASSERT(NS_IsMainThread());
 #ifdef DEBUG
   nsAutoAtomic atomic(mOnStateLocationChangeReentranceDetection);
   NS_ASSERTION(mOnStateLocationChangeReentranceDetection == 1,
@@ -1363,10 +1371,11 @@ nsSecureBrowserUIImpl::OnStatusChange(nsIWebProgress* aWebProgress,
 }
 
 nsresult
-nsSecureBrowserUIImpl::OnSecurityChange(nsIWebProgress *aWebProgress,
-                                        nsIRequest *aRequest,
+nsSecureBrowserUIImpl::OnSecurityChange(nsIWebProgress* aWebProgress,
+                                        nsIRequest* aRequest,
                                         uint32_t state)
 {
+  MOZ_ASSERT(NS_IsMainThread());
 #if defined(DEBUG)
   nsCOMPtr<nsIChannel> channel(do_QueryInterface(aRequest));
   if (!channel)
@@ -1374,7 +1383,7 @@ nsSecureBrowserUIImpl::OnSecurityChange(nsIWebProgress *aWebProgress,
 
   nsCOMPtr<nsIURI> aURI;
   channel->GetURI(getter_AddRefs(aURI));
-  
+
   if (aURI) {
     nsAutoCString temp;
     aURI->GetSpec(temp);
@@ -1392,6 +1401,7 @@ NS_IMETHODIMP
 nsSecureBrowserUIImpl::GetSSLStatus(nsISSLStatus** _result)
 {
   NS_ENSURE_ARG_POINTER(_result);
+  MOZ_ASSERT(NS_IsMainThread());
 
   ReentrantMonitorAutoEnter lock(mReentrantMonitor);
 
