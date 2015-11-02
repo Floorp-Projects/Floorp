@@ -996,6 +996,7 @@ pref("urlclassifier.downloadAllowTable", "goog-downloadwhite-digest256");
 
 pref("browser.geolocation.warning.infoURL", "https://www.mozilla.org/%LOCALE%/firefox/geolocation/");
 pref("browser.push.warning.infoURL", "https://www.mozilla.org/%LOCALE%/firefox/push/");
+pref("browser.push.warning.migrationURL", "https://support.mozilla.org/1/firefox/%VERSION%/%OS%/%LOCALE%/push#w_upgraded-notifications");
 
 pref("browser.EULA.version", 3);
 pref("browser.rights.version", 3);
