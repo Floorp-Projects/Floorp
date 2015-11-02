@@ -1253,40 +1253,25 @@ DOMStorageDBThread::PendingOperations::Finalize(nsresult aRv)
 
 namespace {
 
-class FindPendingOperationForScopeData
+bool
+FindPendingClearForScope(const nsACString& aScope,
+                         DOMStorageDBThread::DBOperation* aPendingOperation)
 {
-public:
-  explicit FindPendingOperationForScopeData(const nsACString& aScope) : mScope(aScope), mFound(false) {}
-  nsCString mScope;
-  bool mFound;
-};
-
-PLDHashOperator
-FindPendingClearForScope(const nsACString& aMapping,
-                         DOMStorageDBThread::DBOperation* aPendingOperation,
-                         void* aArg)
-{
-  FindPendingOperationForScopeData* data =
-    static_cast<FindPendingOperationForScopeData*>(aArg);
-
   if (aPendingOperation->Type() == DOMStorageDBThread::DBOperation::opClearAll) {
-    data->mFound = true;
-    return PL_DHASH_STOP;
+    return true;
   }
 
   if (aPendingOperation->Type() == DOMStorageDBThread::DBOperation::opClear &&
-      data->mScope == aPendingOperation->Scope()) {
-    data->mFound = true;
-    return PL_DHASH_STOP;
+      aScope == aPendingOperation->Scope()) {
+    return true;
   }
 
   if (aPendingOperation->Type() == DOMStorageDBThread::DBOperation::opClearMatchingScope &&
-      StringBeginsWith(data->mScope, aPendingOperation->Scope())) {
-    data->mFound = true;
-    return PL_DHASH_STOP;
+      StringBeginsWith(aScope, aPendingOperation->Scope())) {
+    return true;
   }
 
-  return PL_DHASH_NEXT;
+  return false;
 }
 
 } // namespace
@@ -1296,17 +1281,14 @@ DOMStorageDBThread::PendingOperations::IsScopeClearPending(const nsACString& aSc
 {
   // Called under the lock
 
-  FindPendingOperationForScopeData data(aScope);
-  mClears.EnumerateRead(FindPendingClearForScope, &data);
-  if (data.mFound) {
-    return true;
+  for (auto iter = mClears.Iter(); !iter.Done(); iter.Next()) {
+    if (FindPendingClearForScope(aScope, iter.UserData())) {
+      return true;
+    }
   }
 
   for (uint32_t i = 0; i < mExecList.Length(); ++i) {
-    DOMStorageDBThread::DBOperation* task = mExecList[i];
-    FindPendingClearForScope(EmptyCString(), task, &data);
-
-    if (data.mFound) {
+    if (FindPendingClearForScope(aScope, mExecList[i])) {
       return true;
     }
   }
@@ -1316,23 +1298,18 @@ DOMStorageDBThread::PendingOperations::IsScopeClearPending(const nsACString& aSc
 
 namespace {
 
-PLDHashOperator
-FindPendingUpdateForScope(const nsACString& aMapping,
-                          DOMStorageDBThread::DBOperation* aPendingOperation,
-                          void* aArg)
+bool
+FindPendingUpdateForScope(const nsACString& aScope,
+                          DOMStorageDBThread::DBOperation* aPendingOperation)
 {
-  FindPendingOperationForScopeData* data =
-    static_cast<FindPendingOperationForScopeData*>(aArg);
-
   if ((aPendingOperation->Type() == DOMStorageDBThread::DBOperation::opAddItem ||
        aPendingOperation->Type() == DOMStorageDBThread::DBOperation::opUpdateItem ||
        aPendingOperation->Type() == DOMStorageDBThread::DBOperation::opRemoveItem) &&
-       data->mScope == aPendingOperation->Scope()) {
-    data->mFound = true;
-    return PL_DHASH_STOP;
+       aScope == aPendingOperation->Scope()) {
+    return true;
   }
 
-  return PL_DHASH_NEXT;
+  return false;
 }
 
 } // namespace
@@ -1342,17 +1319,14 @@ DOMStorageDBThread::PendingOperations::IsScopeUpdatePending(const nsACString& aS
 {
   // Called under the lock
 
-  FindPendingOperationForScopeData data(aScope);
-  mUpdates.EnumerateRead(FindPendingUpdateForScope, &data);
-  if (data.mFound) {
-    return true;
+  for (auto iter = mUpdates.Iter(); !iter.Done(); iter.Next()) {
+    if (FindPendingUpdateForScope(aScope, iter.UserData())) {
+      return true;
+    }
   }
 
   for (uint32_t i = 0; i < mExecList.Length(); ++i) {
-    DOMStorageDBThread::DBOperation* task = mExecList[i];
-    FindPendingUpdateForScope(EmptyCString(), task, &data);
-
-    if (data.mFound) {
+    if (FindPendingUpdateForScope(aScope, mExecList[i])) {
       return true;
     }
   }
