@@ -341,18 +341,6 @@ nsCSPContext::GetReferrerPolicy(uint32_t* outPolicy, bool* outIsSet)
 }
 
 NS_IMETHODIMP
-nsCSPContext::RemovePolicy(uint32_t aIndex)
-{
-  if (aIndex >= mPolicies.Length()) {
-    return NS_ERROR_ILLEGAL_VALUE;
-  }
-  mPolicies.RemoveElementAt(aIndex);
-  // reset cache since effective policy changes
-  mShouldLoadCache.Clear();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsCSPContext::AppendPolicy(const nsAString& aPolicyString,
                            bool aReportOnly)
 {
