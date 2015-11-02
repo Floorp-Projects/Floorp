@@ -21,7 +21,7 @@ interface nsIURI;
 
 typedef unsigned short CSPDirective;
 
-[scriptable, builtinclass, uuid(b756d344-ee2f-44d0-825e-ea4febd0af14)]
+[scriptable, builtinclass, uuid(b9a029c3-9484-4bf7-826d-0c6b545790bc)]
 interface nsIContentSecurityPolicy : nsISerializable
 {
   /**
@@ -86,12 +86,6 @@ interface nsIContentSecurityPolicy : nsISerializable
    *        true if a referrer policy is specified, false if it's unspecified.
    */
   bool getReferrerPolicy(out unsigned long policy);
-
-  /**
-   * Remove a policy associated with this CSP context.
-   * @throws NS_ERROR_FAILURE if the index is out of bounds or invalid.
-   */
-  void removePolicy(in unsigned long index);
 
   /**
    * Parse and install a CSP policy.
