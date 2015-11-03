@@ -573,7 +573,7 @@ ModuleObject::isInstance(HandleValue value)
 }
 
 /* static */ ModuleObject*
-ModuleObject::create(ExclusiveContext* cx, HandleObject enclosingStaticScope)
+ModuleObject::create(ExclusiveContext* cx, Handle<StaticScope*> enclosingStaticScope)
 {
     RootedObject proto(cx, cx->global()->getModulePrototype());
     RootedObject obj(cx, NewObjectWithGivenProto(cx, &class_, proto));
@@ -581,7 +581,11 @@ ModuleObject::create(ExclusiveContext* cx, HandleObject enclosingStaticScope)
         return nullptr;
 
     RootedModuleObject self(cx, &obj->as<ModuleObject>());
-    self->initReservedSlot(StaticScopeSlot, ObjectOrNullValue(enclosingStaticScope));
+    Rooted<StaticModuleScope*> scope(cx, StaticModuleScope::create(cx, self,
+                                                                   enclosingStaticScope));
+    if (!scope)
+        return nullptr;
+    self->initReservedSlot(StaticScopeSlot, ObjectOrNullValue(scope));
 
     Zone* zone = cx->zone();
     IndirectBindingMap* bindings = zone->new_<IndirectBindingMap>(zone);
@@ -729,10 +733,10 @@ ModuleObject::initialEnvironment() const
     return getReservedSlot(InitialEnvironmentSlot).toObject().as<ModuleEnvironmentObject>();
 }
 
-JSObject*
-ModuleObject::enclosingStaticScope() const
+StaticModuleScope*
+ModuleObject::staticScope() const
 {
-    return getReservedSlot(StaticScopeSlot).toObjectOrNull();
+    return &getReservedSlot(StaticScopeSlot).toObject().as<StaticModuleScope>();
 }
 
 /* static */ void
