@@ -47,16 +47,16 @@ public:
     // FFTs at the same time.
     explicit FFTConvolver(size_t fftSize, size_t renderPhase = 0);
 
-    // |fftKernel| must be pre-scaled for FFTBlock::GetInverseWithoutScaling().
+    // Process WEBAUDIO_BLOCK_SIZE elements of array |sourceP| to |destP|.
     //
-    // For now, with multiple calls to Process(), framesToProcess MUST add up EXACTLY to fftSize / 2
+    // |fftKernel| must be pre-scaled for FFTBlock::GetInverseWithoutScaling().
     //
     // FIXME: Later, we can do more sophisticated buffering to relax this requirement...
     //
     // The input to output latency is equal to fftSize / 2
     //
     // Processing in-place is allowed...
-    void process(FFTBlock* fftKernel, const float* sourceP, float* destP, size_t framesToProcess);
+    void process(FFTBlock* fftKernel, const float* sourceP, float* destP);
 
     void reset();
 

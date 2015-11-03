@@ -60,19 +60,19 @@ size_t FFTConvolver::sizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) co
   return aMallocSizeOf(this) + sizeOfExcludingThis(aMallocSizeOf);
 }
 
-void FFTConvolver::process(FFTBlock* fftKernel, const float* sourceP, float* destP, size_t framesToProcess)
+void FFTConvolver::process(FFTBlock* fftKernel, const float* sourceP, float* destP)
 {
     size_t halfSize = fftSize() / 2;
 
-    // framesToProcess must be an exact multiple of halfSize,
-    // or halfSize is a multiple of framesToProcess when halfSize > framesToProcess.
-    bool isGood = !(halfSize % framesToProcess && framesToProcess % halfSize);
-    MOZ_ASSERT(isGood);
-    if (!isGood)
-        return;
+    // WEBAUDIO_BLOCK_SIZE must be an exact multiple of halfSize,
+    // or halfSize is a multiple of WEBAUDIO_BLOCK_SIZE when halfSize > WEBAUDIO_BLOCK_SIZE.
+    MOZ_ASSERT(!(halfSize % WEBAUDIO_BLOCK_SIZE &&
+                 WEBAUDIO_BLOCK_SIZE % halfSize));
 
-    size_t numberOfDivisions = halfSize <= framesToProcess ? (framesToProcess / halfSize) : 1;
-    size_t divisionSize = numberOfDivisions == 1 ? framesToProcess : halfSize;
+    size_t numberOfDivisions = halfSize <= WEBAUDIO_BLOCK_SIZE ?
+        (WEBAUDIO_BLOCK_SIZE / halfSize) : 1;
+    size_t divisionSize = numberOfDivisions == 1 ?
+        WEBAUDIO_BLOCK_SIZE : halfSize;
 
     for (size_t i = 0; i < numberOfDivisions; ++i, sourceP += divisionSize, destP += divisionSize) {
         // Copy samples to input buffer (note contraint above!)

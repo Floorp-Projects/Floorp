@@ -120,8 +120,7 @@ void ReverbConvolverStage::process(const float* source)
     // An expensive FFT will happen every fftSize / 2 frames.
     // We process in-place here...
     if (!m_directMode)
-        m_fftConvolver->process(m_fftKernel, source,
-                                temporaryBuffer, WEBAUDIO_BLOCK_SIZE);
+        m_fftConvolver->process(m_fftKernel, source, temporaryBuffer);
     else
         m_directConvolver->process(&m_directKernel, source,
                                    temporaryBuffer, WEBAUDIO_BLOCK_SIZE);
