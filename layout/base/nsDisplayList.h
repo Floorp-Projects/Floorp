@@ -3939,6 +3939,15 @@ public:
              mFrame->Combines3DTransformWithAncestors()));
   }
 
+  /**
+   * Whether this transform item forms a reference frame boundary.
+   * In other words, the reference frame of the contained items is our frame,
+   * and the reference frame of this item is some ancestor of our frame.
+   */
+  bool IsReferenceFrameBoundary() {
+    return !mTransformGetter && !mIsTransformSeparator;
+  }
+
 private:
   void ComputeBounds(nsDisplayListBuilder* aBuilder);
   void SetReferenceFrameToAncestor(nsDisplayListBuilder* aBuilder);

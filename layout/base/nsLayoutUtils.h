@@ -552,8 +552,17 @@ public:
    * returning aItem->ReferenceFrame() when we can't find another animated
    * geometry root.
    */
+  enum {
+    /**
+     * If the AGR_IGNORE_BACKGROUND_ATTACHMENT_FIXED flag is set, then we
+     * do not do any special processing for background attachment fixed items,
+     * instead treating them like any other frame.
+     */
+    AGR_IGNORE_BACKGROUND_ATTACHMENT_FIXED = 0x01
+  };
   static nsIFrame* GetAnimatedGeometryRootFor(nsDisplayItem* aItem,
-                                              nsDisplayListBuilder* aBuilder);
+                                              nsDisplayListBuilder* aBuilder,
+                                              uint32_t aFlags = 0);
 
   /**
    * Finds the nearest ancestor frame to aFrame that is considered to have (or
