@@ -437,7 +437,7 @@ function BrowserExtensionContent(data)
   this.id = data.id;
   this.uuid = data.uuid;
   this.data = data;
-  this.scripts = [ for (scriptData of data.content_scripts) new Script(scriptData) ];
+  this.scripts = data.content_scripts.map(scriptData => new Script(scriptData));
   this.webAccessibleResources = data.webAccessibleResources;
   this.whiteListedHosts = data.whiteListedHosts;
 
