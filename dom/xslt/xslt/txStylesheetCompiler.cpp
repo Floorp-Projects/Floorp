@@ -5,6 +5,7 @@
 
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Move.h"
+#include "mozilla/UniquePtr.h"
 
 #include "txStylesheetCompiler.h"
 #include "txStylesheetCompileHandlers.h"
@@ -124,9 +125,9 @@ txStylesheetCompiler::startElement(const char16_t *aName,
     nsresult rv = flushCharacters();
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsAutoArrayPtr<txStylesheetAttr> atts;
+    UniquePtr<txStylesheetAttr[]> atts;
     if (aAttrCount > 0) {
-        atts = new txStylesheetAttr[aAttrCount];
+        atts = MakeUnique<txStylesheetAttr[]>(aAttrCount);
     }
 
     bool hasOwnNamespaceMap = false;
@@ -169,7 +170,7 @@ txStylesheetCompiler::startElement(const char16_t *aName,
                                   getter_AddRefs(localname), &namespaceID);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    return startElementInternal(namespaceID, localname, prefix, atts,
+    return startElementInternal(namespaceID, localname, prefix, atts.get(),
                                 aAttrCount);
 }
 
