@@ -65,16 +65,11 @@ private:
     nsAutoPtr<FFTBlock> m_fftKernel;
     nsAutoPtr<FFTConvolver> m_fftConvolver;
 
-    nsTArray<float> m_preDelayBuffer;
-
     ReverbAccumulationBuffer* m_accumulationBuffer;
     int m_accumulationReadIndex;
     int m_inputReadIndex;
 
-    size_t m_preDelayLength;
     size_t m_postDelayLength;
-    size_t m_preReadWriteIndex;
-    size_t m_framesProcessed;
 
     nsTArray<float> m_temporaryBuffer;
 
