@@ -1583,6 +1583,9 @@ FlexItem::FlexItem(nsHTMLReflowState& aFlexItemReflowState,
     mAlignSelf = NS_STYLE_ALIGN_STRETCH;
   }
 
+  // XXX strip off the <overflow-position> bit until we implement that
+  mAlignSelf &= ~NS_STYLE_ALIGN_FLAG_BITS;
+
   SetFlexBaseSizeAndMainSize(aFlexBaseSize);
   CheckForMinSizeAuto(aFlexItemReflowState, aAxisTracker);
 
@@ -1836,6 +1839,7 @@ private:
   nscoord  mPackingSpaceRemaining;
   uint32_t mNumAutoMarginsInMainAxis;
   uint32_t mNumPackingSpacesRemaining;
+  // XXX this should be uint16_t when we add explicit fallback handling
   uint8_t  mJustifyContent;
 };
 
@@ -1869,6 +1873,7 @@ private:
 
   nscoord  mPackingSpaceRemaining;
   uint32_t mNumPackingSpacesRemaining;
+  // XXX this should be uint16_t when we add explicit fallback handling
   uint8_t  mAlignContent;
 };
 
@@ -2431,6 +2436,14 @@ MainAxisPositionTracker::
     mNumPackingSpacesRemaining(0),
     mJustifyContent(aJustifyContent)
 {
+  // 'auto' behaves as 'stretch' which behaves as 'flex-start' in the main axis
+  if (mJustifyContent == NS_STYLE_JUSTIFY_AUTO) {
+    mJustifyContent = NS_STYLE_JUSTIFY_FLEX_START;
+  }
+
+  // XXX strip off the <overflow-position> bit until we implement that
+  mJustifyContent &= ~NS_STYLE_JUSTIFY_FLAG_BITS;
+
   // mPackingSpaceRemaining is initialized to the container's main size.  Now
   // we'll subtract out the main sizes of our flex items, so that it ends up
   // with the *actual* amount of packing space.
@@ -2456,6 +2469,13 @@ MainAxisPositionTracker::
     }
   }
 
+  // Map 'start'/'end' to 'flex-start'/'flex-end'.
+  if (mJustifyContent == NS_STYLE_JUSTIFY_START) {
+    mJustifyContent = NS_STYLE_JUSTIFY_FLEX_START;
+  } else if (mJustifyContent == NS_STYLE_JUSTIFY_END) {
+    mJustifyContent = NS_STYLE_JUSTIFY_FLEX_END;
+  }
+
   // If our main axis is (internally) reversed, swap the justify-content
   // "flex-start" and "flex-end" behaviors:
   if (aAxisTracker.AreAxesInternallyReversed()) {
@@ -2472,6 +2492,12 @@ MainAxisPositionTracker::
       mPackingSpaceRemaining != 0 &&
       !aLine->IsEmpty()) {
     switch (mJustifyContent) {
+      case NS_STYLE_JUSTIFY_LEFT:
+      case NS_STYLE_JUSTIFY_RIGHT:
+      case NS_STYLE_JUSTIFY_BASELINE:
+      case NS_STYLE_JUSTIFY_LAST_BASELINE:
+      case NS_STYLE_JUSTIFY_SPACE_EVENLY:
+        NS_WARNING("NYI: justify-content:left/right/baseline/last-baseline/space-evenly");
       case NS_STYLE_JUSTIFY_FLEX_START:
         // All packing space should go at the end --> nothing to do here.
         break;
@@ -2584,6 +2610,14 @@ CrossAxisPositionTracker::
 {
   MOZ_ASSERT(aFirstLine, "null first line pointer");
 
+  // 'auto' behaves as 'stretch'
+  if (mAlignContent == NS_STYLE_ALIGN_AUTO) {
+    mAlignContent = NS_STYLE_ALIGN_STRETCH;
+  }
+
+  // XXX strip of the <overflow-position> bit until we implement that
+  mAlignContent &= ~NS_STYLE_ALIGN_FLAG_BITS;
+
   if (aIsCrossSizeDefinite && !aFirstLine->getNext()) {
     // "If the flex container has only a single line (even if it's a
     // multi-line flex container) and has a definite cross size, the cross
@@ -2625,6 +2659,13 @@ CrossAxisPositionTracker::
     }
   }
 
+  // Map 'start'/'end' to 'flex-start'/'flex-end'.
+  if (mAlignContent == NS_STYLE_ALIGN_START) {
+    mAlignContent = NS_STYLE_ALIGN_FLEX_START;
+  } else if (mAlignContent == NS_STYLE_ALIGN_END) {
+    mAlignContent = NS_STYLE_ALIGN_FLEX_END;
+  }
+
   // If our cross axis is (internally) reversed, swap the align-content
   // "flex-start" and "flex-end" behaviors:
   if (aAxisTracker.AreAxesInternallyReversed()) {
@@ -2639,6 +2680,14 @@ CrossAxisPositionTracker::
   // past any leading packing-space.
   if (mPackingSpaceRemaining != 0) {
     switch (mAlignContent) {
+      case NS_STYLE_JUSTIFY_LEFT:
+      case NS_STYLE_JUSTIFY_RIGHT:
+      case NS_STYLE_ALIGN_SELF_START:
+      case NS_STYLE_ALIGN_SELF_END:
+      case NS_STYLE_ALIGN_SPACE_EVENLY:
+      case NS_STYLE_ALIGN_BASELINE:
+      case NS_STYLE_ALIGN_LAST_BASELINE:
+        NS_WARNING("NYI: align-self:left/right/self-start/self-end/space-evenly/baseline/last-baseline");
       case NS_STYLE_ALIGN_FLEX_START:
         // All packing space should go at the end --> nothing to do here.
         break;
@@ -2901,6 +2950,13 @@ SingleLineCrossAxisPositionTracker::
     alignSelf = NS_STYLE_ALIGN_FLEX_START;
   }
 
+  // Map 'start'/'end' to 'flex-start'/'flex-end'.
+  if (alignSelf == NS_STYLE_ALIGN_START) {
+    alignSelf = NS_STYLE_ALIGN_FLEX_START;
+  } else if (alignSelf == NS_STYLE_ALIGN_END) {
+    alignSelf = NS_STYLE_ALIGN_FLEX_END;
+  }
+
   // If our cross axis is (internally) reversed, swap the align-self
   // "flex-start" and "flex-end" behaviors:
   if (aAxisTracker.AreAxesInternallyReversed()) {
@@ -2912,6 +2968,12 @@ SingleLineCrossAxisPositionTracker::
   }
 
   switch (alignSelf) {
+    case NS_STYLE_JUSTIFY_LEFT:
+    case NS_STYLE_JUSTIFY_RIGHT:
+    case NS_STYLE_ALIGN_SELF_START:
+    case NS_STYLE_ALIGN_SELF_END:
+    case NS_STYLE_ALIGN_LAST_BASELINE:
+      NS_WARNING("NYI: align-self:left/right/self-start/self-end/last-baseline");
     case NS_STYLE_ALIGN_FLEX_START:
       // No space to skip over -- we're done.
       break;
