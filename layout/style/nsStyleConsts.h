@@ -518,28 +518,6 @@ static inline mozilla::css::Side operator++(mozilla::css::Side& side, int) {
 #define NS_STYLE_JUSTIFY_ALL_BITS         NS_STYLE_ALIGN_ALL_BITS
 #define NS_STYLE_JUSTIFY_ALL_SHIFT        NS_STYLE_ALIGN_ALL_SHIFT
 
-// XXX remove in a later patch after updating flexbox code with the new names
-#define NS_STYLE_ALIGN_CONTENT_AUTO            NS_STYLE_ALIGN_AUTO
-#define NS_STYLE_ALIGN_CONTENT_FLEX_START      NS_STYLE_ALIGN_FLEX_START
-#define NS_STYLE_ALIGN_CONTENT_FLEX_END        NS_STYLE_ALIGN_FLEX_END
-#define NS_STYLE_ALIGN_CONTENT_CENTER          NS_STYLE_ALIGN_CENTER
-#define NS_STYLE_ALIGN_CONTENT_STRETCH         NS_STYLE_ALIGN_STRETCH
-#define NS_STYLE_ALIGN_CONTENT_SPACE_BETWEEN   NS_STYLE_ALIGN_SPACE_BETWEEN
-#define NS_STYLE_ALIGN_CONTENT_SPACE_AROUND    NS_STYLE_ALIGN_SPACE_AROUND
-
-// XXX remove in a later patch after updating flexbox code with the new names
-#define NS_STYLE_ALIGN_ITEMS_FLEX_START         NS_STYLE_ALIGN_FLEX_START
-#define NS_STYLE_ALIGN_ITEMS_FLEX_END           NS_STYLE_ALIGN_FLEX_END
-#define NS_STYLE_ALIGN_ITEMS_CENTER             NS_STYLE_ALIGN_CENTER
-#define NS_STYLE_ALIGN_ITEMS_BASELINE           NS_STYLE_ALIGN_BASELINE
-#define NS_STYLE_ALIGN_ITEMS_STRETCH            NS_STYLE_ALIGN_STRETCH
-
-// The "align-self" property accepts all of the normal "align-items" values
-// (above) plus a special 'auto' value that computes to the parent's
-// "align-items" value. Our computed style code internally represents 'auto'
-// with this enum until we actually evaluate it:
-#define NS_STYLE_ALIGN_SELF_AUTO                5
-
 // See nsStylePosition
 #define NS_STYLE_FLEX_DIRECTION_ROW             0
 #define NS_STYLE_FLEX_DIRECTION_ROW_REVERSE     1
