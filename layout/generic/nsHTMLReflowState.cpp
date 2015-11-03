@@ -2036,8 +2036,8 @@ IsSideCaption(nsIFrame* aFrame, const nsStyleDisplay* aStyleDisplay,
          captionSide == NS_STYLE_CAPTION_SIDE_RIGHT;
 }
 
-// Flex items resolve block-axis percentage margin & padding against the flex
-// container's block-size (which is the containing block block-size).
+// Flex/grid items resolve block-axis percentage margin & padding against the
+// containing block block-size (also for abs/fixed-pos child frames).
 // For everything else: the CSS21 spec requires that margin and padding
 // percentage values are calculated with respect to the inline-size of the
 // containing block, even for margin & padding in the block axis.
@@ -2047,7 +2047,8 @@ OffsetPercentBasis(const nsIFrame*    aFrame,
                    const LogicalSize& aContainingBlockSize)
 {
   LogicalSize offsetPercentBasis = aContainingBlockSize;
-  if (!aFrame->IsFlexOrGridItem()) {
+  if (MOZ_LIKELY(!aFrame->GetParent() ||
+                 !aFrame->GetParent()->IsFlexOrGridContainer())) {
     offsetPercentBasis.BSize(aWM) = offsetPercentBasis.ISize(aWM);
   } else if (offsetPercentBasis.BSize(aWM) == NS_AUTOHEIGHT) {
     offsetPercentBasis.BSize(aWM) = 0;
