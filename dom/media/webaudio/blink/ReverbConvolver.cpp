@@ -83,7 +83,8 @@ ReverbConvolver::ReverbConvolver(const float* impulseResponseData,
     const float* response = impulseResponseData;
     size_t totalResponseLength = impulseResponseLength;
 
-    // The total latency is zero because the direct-convolution is used in the leading portion.
+    // The total latency is zero because the first FFT stage is small enough
+    // to return output in the first block.
     size_t reverbTotalLatency = 0;
 
     size_t stageOffset = 0;
@@ -100,7 +101,7 @@ ReverbConvolver::ReverbConvolver(const float* impulseResponseData,
         // This "staggers" the time when each FFT happens so they don't all happen at the same time
         int renderPhase = convolverRenderPhase + stagePhase;
 
-        bool useDirectConvolver = !stageOffset;
+        bool useDirectConvolver = false;
 
         nsAutoPtr<ReverbConvolverStage> stage
           (new ReverbConvolverStage(response, totalResponseLength,
@@ -116,12 +117,12 @@ ReverbConvolver::ReverbConvolver(const float* impulseResponseData,
         } else
             m_stages.AppendElement(stage.forget());
 
-        stageOffset += stageSize;
-
-        if (!useDirectConvolver) {
+        if (stageOffset != 0) {
             // Figure out next FFT size
             fftSize *= 2;
         }
+
+        stageOffset += stageSize;
 
         if (hasRealtimeConstraint && !isBackgroundStage
             && fftSize > m_maxRealtimeFFTSize) {
