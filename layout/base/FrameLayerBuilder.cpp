@@ -3903,8 +3903,8 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
         // Unlike GetAnimatedGeometryRootFor(), GetAnimatedGeometryRootForFrame() does not
         // take ShouldFixToViewport() into account, so it will return something different
         // for fixed background items.
-        animatedGeometryRootForScrollMetadata = nsLayoutUtils::GetAnimatedGeometryRootForFrame(
-            mBuilder, item->Frame());
+        animatedGeometryRootForScrollMetadata = nsLayoutUtils::GetAnimatedGeometryRootFor(
+          item, mBuilder, nsLayoutUtils::AGR_IGNORE_BACKGROUND_ATTACHMENT_FIXED);
       } else {
         // For inactive layer subtrees, splitting content into PaintedLayers
         // based on animated geometry roots is pointless. It's more efficient
