@@ -221,9 +221,15 @@ void
 VideoSink::OnVideoQueueEvent()
 {
   AssertOwnerThread();
-  // Listen to push event, VideoSink should try rendering ASAP if first frame
-  // arrives but update scheduler is not triggered yet.
-  TryUpdateRenderedVideoFrames();
+
+  // The video queue is empty or contains only one frame before Push() which
+  // means we are slow in video decoding and don't have enough information to
+  // schedule next render loop accurately (default timeout is 40ms). We need
+  // to render incoming frames immediately so render loop can be scheduled
+  // again accurately.
+  if (mAudioSink->IsPlaying() && VideoQueue().GetSize() <= 2) {
+    UpdateRenderedVideoFrames();
+  }
 }
 
 void
