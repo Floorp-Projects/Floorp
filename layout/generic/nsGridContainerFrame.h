@@ -82,6 +82,7 @@ public:
 
     nscoord mBase;
     nscoord mLimit;
+    nscoord mPosition;  // zero until we apply 'align/justify-content'
     StateBits mState;
   };
 
