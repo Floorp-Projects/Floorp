@@ -23,8 +23,7 @@ namespace mozilla {
 namespace net {
 
 static PackagedAppService *gPackagedAppService = nullptr;
-
-static PRLogModuleInfo *gPASLog = nullptr;
+static LazyLogModule gPASLog("PackagedAppService");
 #undef LOG
 #define LOG(args) MOZ_LOG(gPASLog, mozilla::LogLevel::Debug, args)
 
@@ -1043,7 +1042,6 @@ PackagedAppService::PackagedAppDownloader::OnResourceVerified(const ResourceCach
 PackagedAppService::PackagedAppService()
 {
   gPackagedAppService = this;
-  gPASLog = PR_NewLogModule("PackagedAppService");
   LOG(("[%p] Created PackagedAppService\n", this));
 }
 

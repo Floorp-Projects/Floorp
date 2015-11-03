@@ -20,7 +20,7 @@ using mozilla::net::gNeckoChild;
 //
 // set NSPR_LOG_MODULES=UDPSocket:5
 //
-extern PRLogModuleInfo *gUDPSocketLog;
+extern mozilla::LazyLogModule gUDPSocketLog;
 #define UDPSOCKET_LOG(args)     MOZ_LOG(gUDPSocketLog, mozilla::LogLevel::Debug, args)
 #define UDPSOCKET_LOG_ENABLED() MOZ_LOG_TEST(gUDPSocketLog, mozilla::LogLevel::Debug)
 

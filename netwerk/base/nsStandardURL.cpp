@@ -40,7 +40,7 @@ char nsStandardURL::gHostLimitDigits[] = { '/', '\\', '?', '#', 0 };
 //
 // setenv NSPR_LOG_MODULES nsStandardURL:5
 //
-static PRLogModuleInfo *gStandardURLLog;
+static mozilla::LazyLogModule gStandardURLLog("nsStandardURL");
 
 // The Chromium code defines its own LOG macro which we don't want
 #undef LOG
@@ -252,9 +252,6 @@ nsStandardURL::nsStandardURL(bool aSupportsFileURL, bool aTrackURL)
     , mMutable(true)
     , mSupportsFileURL(aSupportsFileURL)
 {
-    if (!gStandardURLLog)
-        gStandardURLLog = PR_NewLogModule("nsStandardURL");
-
     LOG(("Creating nsStandardURL @%p\n", this));
 
     if (!gInitialized) {
