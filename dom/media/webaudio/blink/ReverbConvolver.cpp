@@ -54,9 +54,13 @@ const size_t RealtimeFrameLimit = 8192  + 4096; // ~278msec @ 44.1KHz
 const size_t MinFFTSize = 128;
 const size_t MaxRealtimeFFTSize = 2048;
 
-ReverbConvolver::ReverbConvolver(const float* impulseResponseData, size_t impulseResponseLength, size_t renderSliceSize, size_t maxFFTSize, size_t convolverRenderPhase, bool useBackgroundThreads)
+ReverbConvolver::ReverbConvolver(const float* impulseResponseData,
+                                 size_t impulseResponseLength,
+                                 size_t maxFFTSize,
+                                 size_t convolverRenderPhase,
+                                 bool useBackgroundThreads)
     : m_impulseResponseLength(impulseResponseLength)
-    , m_accumulationBuffer(impulseResponseLength + renderSliceSize)
+    , m_accumulationBuffer(impulseResponseLength + WEBAUDIO_BLOCK_SIZE)
     , m_inputBuffer(InputBufferSize)
     , m_minFFTSize(MinFFTSize) // First stage will have this size - successive stages will double in size each time
     , m_maxFFTSize(maxFFTSize) // until we hit m_maxFFTSize
@@ -94,11 +98,15 @@ ReverbConvolver::ReverbConvolver(const float* impulseResponseData, size_t impuls
             stageSize = totalResponseLength - stageOffset;
 
         // This "staggers" the time when each FFT happens so they don't all happen at the same time
-        int renderPhase = convolverRenderPhase + i * renderSliceSize;
+        int renderPhase = convolverRenderPhase + i * WEBAUDIO_BLOCK_SIZE;
 
         bool useDirectConvolver = !stageOffset;
 
-        nsAutoPtr<ReverbConvolverStage> stage(new ReverbConvolverStage(response, totalResponseLength, reverbTotalLatency, stageOffset, stageSize, fftSize, renderPhase, renderSliceSize, &m_accumulationBuffer, useDirectConvolver));
+        nsAutoPtr<ReverbConvolverStage> stage
+          (new ReverbConvolverStage(response, totalResponseLength,
+                                    reverbTotalLatency, stageOffset, stageSize,
+                                    fftSize, renderPhase,
+                                    &m_accumulationBuffer, useDirectConvolver));
 
         bool isBackgroundStage = false;
 
@@ -209,15 +217,9 @@ void ReverbConvolver::backgroundThreadEntry()
     }
 }
 
-void ReverbConvolver::process(const float* sourceChannelData, size_t sourceChannelLength,
-                              float* destinationChannelData, size_t destinationChannelLength,
-                              size_t framesToProcess)
+void ReverbConvolver::process(const float* sourceChannelData,
+                              float* destinationChannelData)
 {
-    bool isSafe = sourceChannelData && destinationChannelData && sourceChannelLength >= framesToProcess && destinationChannelLength >= framesToProcess;
-    MOZ_ASSERT(isSafe);
-    if (!isSafe)
-        return;
-
     const float* source = sourceChannelData;
     float* destination = destinationChannelData;
     bool isDataSafe = source && destination;
@@ -226,14 +228,14 @@ void ReverbConvolver::process(const float* sourceChannelData, size_t sourceChann
         return;
 
     // Feed input buffer (read by all threads)
-    m_inputBuffer.write(source, framesToProcess);
+    m_inputBuffer.write(source, WEBAUDIO_BLOCK_SIZE);
 
     // Accumulate contributions from each stage
     for (size_t i = 0; i < m_stages.Length(); ++i)
-        m_stages[i]->process(source, framesToProcess);
+        m_stages[i]->process(source, WEBAUDIO_BLOCK_SIZE);
 
     // Finally read from accumulation buffer
-    m_accumulationBuffer.readAndClear(destination, framesToProcess);
+    m_accumulationBuffer.readAndClear(destination, WEBAUDIO_BLOCK_SIZE);
 
     // Now that we've buffered more input, wake up our background thread.
 
