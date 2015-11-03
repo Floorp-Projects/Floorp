@@ -20,7 +20,7 @@ const {require} = scopedCuImport("resource://devtools/shared/Loader.jsm");
 
 const {TargetFactory} = require("devtools/client/framework/target");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
-const promise = require("promise");
+let promise = require("promise");
 
 const TEST_DIR = gTestPath.substr(0, gTestPath.lastIndexOf("/"));
 const CHROME_URL_ROOT = TEST_DIR + "/";
