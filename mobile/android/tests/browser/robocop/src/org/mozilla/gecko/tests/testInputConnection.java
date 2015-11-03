@@ -147,6 +147,10 @@ public class testInputConnection extends UITest {
             ic.commitText(dummyText, 1);
             assertTextAndSelectionAt("Can commit text", ic, dummyText, dummyText.length());
 
+            // Finish processing events from the old input field.
+            processGeckoEvents(ic);
+            processInputConnectionEvents();
+
             final KeyEvent tabKey = new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_TAB);
             ic.sendKeyEvent(tabKey);
             ic.sendKeyEvent(KeyEvent.changeAction(tabKey, KeyEvent.ACTION_UP));
