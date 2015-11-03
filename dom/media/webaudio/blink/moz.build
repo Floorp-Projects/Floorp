@@ -6,7 +6,6 @@
 
 UNIFIED_SOURCES += [
     'Biquad.cpp',
-    'DirectConvolver.cpp',
     'DynamicsCompressor.cpp',
     'DynamicsCompressorKernel.cpp',
     'FFTConvolver.cpp',

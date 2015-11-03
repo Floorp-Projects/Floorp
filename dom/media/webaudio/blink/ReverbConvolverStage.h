@@ -29,7 +29,6 @@
 #ifndef ReverbConvolverStage_h
 #define ReverbConvolverStage_h
 
-#include "DirectConvolver.h"
 #include "FFTConvolver.h"
 
 #include "nsTArray.h"
@@ -49,7 +48,7 @@ class ReverbConvolverStage {
 public:
     // renderPhase is useful to know so that we can manipulate the pre versus post delay so that stages will perform
     // their heavy work (FFT processing) on different slices to balance the load in a real-time thread.
-    ReverbConvolverStage(const float* impulseResponse, size_t responseLength, size_t reverbTotalLatency, size_t stageOffset, size_t stageLength, size_t fftSize, size_t renderPhase, ReverbAccumulationBuffer*, bool directMode = false);
+    ReverbConvolverStage(const float* impulseResponse, size_t responseLength, size_t reverbTotalLatency, size_t stageOffset, size_t stageLength, size_t fftSize, size_t renderPhase, ReverbAccumulationBuffer*);
 
     // |source| must point to an array of WEBAUDIO_BLOCK_SIZE elements.
     void process(const float* source);
@@ -72,10 +71,6 @@ private:
     size_t m_postDelayLength;
 
     nsTArray<float> m_temporaryBuffer;
-
-    bool m_directMode;
-    nsTArray<float> m_directKernel;
-    nsAutoPtr<DirectConvolver> m_directConvolver;
 };
 
 } // namespace WebCore

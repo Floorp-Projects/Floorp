@@ -42,25 +42,18 @@ ReverbConvolverStage::ReverbConvolverStage(const float* impulseResponse, size_t,
                                            size_t stageOffset,
                                            size_t stageLength,
                                            size_t fftSize, size_t renderPhase,
-                                           ReverbAccumulationBuffer* accumulationBuffer,
-                                           bool directMode)
+                                           ReverbAccumulationBuffer* accumulationBuffer)
     : m_accumulationBuffer(accumulationBuffer)
     , m_accumulationReadIndex(0)
     , m_inputReadIndex(0)
-    , m_directMode(directMode)
 {
     MOZ_ASSERT(impulseResponse);
     MOZ_ASSERT(accumulationBuffer);
 
-    if (!m_directMode) {
-        m_fftKernel = new FFTBlock(fftSize);
-        m_fftKernel->PadAndMakeScaledDFT(impulseResponse + stageOffset, stageLength);
-        m_fftConvolver = new FFTConvolver(fftSize, renderPhase);
-    } else {
-        m_directKernel.SetLength(fftSize / 2);
-        PodCopy(m_directKernel.Elements(), impulseResponse + stageOffset, fftSize / 2);
-        m_directConvolver = new DirectConvolver(WEBAUDIO_BLOCK_SIZE);
-    }
+    m_fftKernel = new FFTBlock(fftSize);
+    m_fftKernel->PadAndMakeScaledDFT(impulseResponse + stageOffset, stageLength);
+    m_fftConvolver = new FFTConvolver(fftSize, renderPhase);
+
     m_temporaryBuffer.SetLength(WEBAUDIO_BLOCK_SIZE);
     PodZero(m_temporaryBuffer.Elements(), m_temporaryBuffer.Length());
 
@@ -68,12 +61,9 @@ ReverbConvolverStage::ReverbConvolverStage(const float* impulseResponse, size_t,
     size_t totalDelay = stageOffset + reverbTotalLatency;
 
     // But, the FFT convolution itself incurs latency, so subtract this out...
-    if (!m_directMode) {
-        size_t fftLatency = m_fftConvolver->latencyFrames();
-        MOZ_ASSERT(totalDelay >= fftLatency);
-        if (totalDelay >= fftLatency)
-            totalDelay -= fftLatency;
-    }
+    size_t fftLatency = m_fftConvolver->latencyFrames();
+    MOZ_ASSERT(totalDelay >= fftLatency);
+    totalDelay -= fftLatency;
 
     m_postDelayLength = totalDelay;
 }
@@ -91,11 +81,6 @@ size_t ReverbConvolverStage::sizeOfIncludingThis(mozilla::MallocSizeOf aMallocSi
     }
 
     amount += m_temporaryBuffer.ShallowSizeOfExcludingThis(aMallocSizeOf);
-    amount += m_directKernel.ShallowSizeOfExcludingThis(aMallocSizeOf);
-
-    if (m_directConvolver) {
-        amount += m_directConvolver->sizeOfIncludingThis(aMallocSizeOf);
-    }
 
     return amount;
 }
@@ -119,11 +104,7 @@ void ReverbConvolverStage::process(const float* source)
     // Now, run the convolution (into the delay buffer).
     // An expensive FFT will happen every fftSize / 2 frames.
     // We process in-place here...
-    if (!m_directMode)
-        m_fftConvolver->process(m_fftKernel, source, temporaryBuffer);
-    else
-        m_directConvolver->process(&m_directKernel, source,
-                                   temporaryBuffer, WEBAUDIO_BLOCK_SIZE);
+    m_fftConvolver->process(m_fftKernel, source, temporaryBuffer);
 
     // Now accumulate into reverb's accumulation buffer.
     m_accumulationBuffer->accumulate(temporaryBuffer, WEBAUDIO_BLOCK_SIZE,
