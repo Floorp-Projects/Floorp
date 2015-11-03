@@ -14,10 +14,11 @@ function testClasses() {
     function methodFun(id, kind, generator, args, body = []) {
         assertEq(generator && kind === "method", generator);
         assertEq(typeof id === 'string' || id === null, true);
-        let idN = typeof id === 'string' ? ident(id): null;
-        let methodMaker = generator ? genFunExpr : funExpr;
+        let idN = typeof id === 'string' ? ident(id) : null;
         let methodName = kind !== "method" ? null : idN;
-        return methodMaker(methodName, args.map(ident), blockStmt(body));
+        return generator
+               ? genFunExpr("es6", methodName, args.map(ident), blockStmt(body))
+               : funExpr(methodName, args.map(ident), blockStmt(body));
     }
 
     function simpleMethod(id, kind, generator, args=[], isStatic=false) {

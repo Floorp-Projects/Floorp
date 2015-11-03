@@ -222,6 +222,13 @@ GetPropertyDefault(JSContext* cx, HandleObject obj, HandleId id, HandleValue def
     return GetProperty(cx, obj, obj, id, result);
 }
 
+enum class GeneratorStyle
+{
+    None,
+    Legacy,
+    ES6
+};
+
 /*
  * Builder class that constructs JavaScript AST node objects. See:
  *
@@ -458,8 +465,8 @@ class NodeBuilder
 
     bool function(ASTType type, TokenPos* pos,
                   HandleValue id, NodeVector& args, NodeVector& defaults,
-                  HandleValue body, HandleValue rest, bool isGenerator, bool isExpression,
-                  MutableHandleValue dst);
+                  HandleValue body, HandleValue rest, GeneratorStyle generatorStyle,
+                  bool isExpression, MutableHandleValue dst);
 
     bool variableDeclarator(HandleValue id, HandleValue init, TokenPos* pos,
                             MutableHandleValue dst);
@@ -1595,7 +1602,7 @@ bool
 NodeBuilder::function(ASTType type, TokenPos* pos,
                       HandleValue id, NodeVector& args, NodeVector& defaults,
                       HandleValue body, HandleValue rest,
-                      bool isGenerator, bool isExpression,
+                      GeneratorStyle generatorStyle, bool isExpression,
                       MutableHandleValue dst)
 {
     RootedValue array(cx), defarray(cx);
@@ -1604,12 +1611,34 @@ NodeBuilder::function(ASTType type, TokenPos* pos,
     if (!newArray(defaults, &defarray))
         return false;
 
+    bool isGenerator = generatorStyle != GeneratorStyle::None;
     RootedValue isGeneratorVal(cx, BooleanValue(isGenerator));
     RootedValue isExpressionVal(cx, BooleanValue(isExpression));
 
     RootedValue cb(cx, callbacks[type]);
     if (!cb.isNull()) {
         return callback(cb, opt(id), array, body, isGeneratorVal, isExpressionVal, pos, dst);
+    }
+
+    if (isGenerator) {
+        // Distinguish ES6 generators from legacy generators.
+        RootedValue styleVal(cx);
+        JSAtom* styleStr = generatorStyle == GeneratorStyle::ES6
+                           ? Atomize(cx, "es6", 3)
+                           : Atomize(cx, "legacy", 6);
+        if (!styleStr)
+            return false;
+        styleVal.setString(styleStr);
+        return newNode(type, pos,
+                       "id", id,
+                       "params", array,
+                       "defaults", defarray,
+                       "body", body,
+                       "rest", rest,
+                       "generator", isGeneratorVal,
+                       "style", styleVal,
+                       "expression", isExpressionVal,
+                       dst);
     }
 
     return newNode(type, pos,
@@ -3407,8 +3436,12 @@ ASTSerializer::function(ParseNode* pn, ASTType type, MutableHandleValue dst)
 {
     RootedFunction func(cx, pn->pn_funbox->function());
 
-    // FIXME: Provide more information (legacy generator vs star generator).
-    bool isGenerator = pn->pn_funbox->isGenerator();
+    GeneratorStyle generatorStyle =
+        pn->pn_funbox->isGenerator()
+        ? (pn->pn_funbox->isLegacyGenerator()
+           ? GeneratorStyle::Legacy
+           : GeneratorStyle::ES6)
+        : GeneratorStyle::None;
 
     bool isExpression =
 #if JS_HAS_EXPR_CLOSURES
@@ -3432,7 +3465,7 @@ ASTSerializer::function(ParseNode* pn, ASTType type, MutableHandleValue dst)
         rest.setNull();
     return functionArgsAndBody(pn->pn_body, args, defaults, &body, &rest) &&
         builder.function(type, &pn->pn_pos, id, args, defaults, body,
-                         rest, isGenerator, isExpression, dst);
+                         rest, generatorStyle, isExpression, dst);
 }
 
 bool
