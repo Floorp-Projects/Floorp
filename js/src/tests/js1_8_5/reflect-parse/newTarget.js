@@ -16,7 +16,7 @@ function testNewTarget() {
     assertError("(() => new.target))", SyntaxError);
 
     // valid in generators, too!
-    assertStmt("function *foo() { new.target; }", genFunDecl(ident("foo"), [],
+    assertStmt("function *foo() { new.target; }", genFunDecl("es6", ident("foo"), [],
                blockStmt([exprStmt(newTarget())])));
 
     // new.target is a member expression. You should be able to call, invoke, or
