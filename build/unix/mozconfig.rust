@@ -1,0 +1,9 @@
+# Options to enable rust in automation builds.
+
+# Tell configure to use the tooltool rustc.
+# Assume this is compiled with --enable-rpath so we don't
+# have to set LD_LIBRARY_PATH.
+RUSTC="$topsrcdir/rustc/bin/rustc"
+
+# Enable rust in the build.
+ac_add_options --enable-rust
