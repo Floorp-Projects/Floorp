@@ -1542,7 +1542,7 @@ if ("nsIWindowsRegKey" in AM_Ci) {
    * This is a mock nsIWindowsRegistry implementation. It only implements the
    * methods that the extension manager requires.
    */
-  function MockWindowsRegKey() {
+  var MockWindowsRegKey = function MockWindowsRegKey() {
   }
 
   MockWindowsRegKey.prototype = {
@@ -1722,6 +1722,30 @@ do_register_cleanup(function addon_cleanup() {
     Services.prefs.clearUserPref(PREF_EM_STRICT_COMPATIBILITY);
   } catch (e) {}
 });
+
+/**
+ * Creates a new HttpServer for testing, and begins listening on the
+ * specified port. Automatically shuts down the server when the test
+ * unit ends.
+ *
+ * @param port
+ *        The port to listen on. If omitted, listen on a random
+ *        port. The latter is the preferred behavior.
+ *
+ * @return HttpServer
+ */
+function createHttpServer(port = -1) {
+  let server = new HttpServer();
+  server.start(port);
+
+  do_register_cleanup(() => {
+    return new Promise(resolve => {
+      server.stop(resolve);
+    });
+  });
+
+  return server;
+}
 
 /**
  * Handler function that responds with the interpolated
@@ -1912,3 +1936,43 @@ function promiseFindAddonUpdates(addon, reason = AddonManager.UPDATE_WHEN_PERIOD
     }, reason);
   });
 }
+
+/**
+ * Monitors console output for the duration of a task, and returns a promise
+ * which resolves to a tuple containing a list of all console messages
+ * generated during the task's execution, and the result of the task itself.
+ *
+ * @param {function} aTask
+ *                   The task to run while monitoring console output. May be
+ *                   either a generator function, per Task.jsm, or an ordinary
+ *                   function which returns promose.
+ * @return {Promise<[Array<nsIConsoleMessage>, *]>}
+ */
+var promiseConsoleOutput = Task.async(function*(aTask) {
+  const DONE = "=== xpcshell test console listener done ===";
+
+  let listener, messages = [];
+  let awaitListener = new Promise(resolve => {
+    listener = msg => {
+      if (msg == DONE) {
+        resolve();
+      } else {
+        msg instanceof Components.interfaces.nsIScriptError;
+        messages.push(msg);
+      }
+    }
+  });
+
+  Services.console.registerListener(listener);
+  try {
+    let result = yield aTask();
+
+    Services.console.logStringMessage(DONE);
+    yield awaitListener;
+
+    return { messages, result };
+  }
+  finally {
+    Services.console.unregisterListener(listener);
+  }
+});
