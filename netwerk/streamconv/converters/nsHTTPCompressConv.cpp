@@ -20,11 +20,11 @@
 #include "state.h"
 #include "decode.h"
 
-extern PRLogModuleInfo *gHttpLog;
-#define LOG(args) MOZ_LOG(gHttpLog, mozilla::LogLevel::Debug, args)
-
 namespace mozilla {
 namespace net {
+
+extern LazyLogModule gHttpLog;
+#define LOG(args) MOZ_LOG(mozilla::net::gHttpLog, mozilla::LogLevel::Debug, args)
 
 // nsISupports implementation
 NS_IMPL_ISUPPORTS(nsHTTPCompressConv,

@@ -33,9 +33,9 @@ namespace mozilla {
 namespace net {
 
 // NSPR_LOG_MODULES=BackgroundFileSaver:5
-PRLogModuleInfo *BackgroundFileSaver::prlog = nullptr;
-#define LOG(args) MOZ_LOG(BackgroundFileSaver::prlog, mozilla::LogLevel::Debug, args)
-#define LOG_ENABLED() MOZ_LOG_TEST(BackgroundFileSaver::prlog, mozilla::LogLevel::Debug)
+static LazyLogModule prlog("BackgroundFileSaver");
+#define LOG(args) MOZ_LOG(prlog, mozilla::LogLevel::Debug, args)
+#define LOG_ENABLED() MOZ_LOG_TEST(prlog, mozilla::LogLevel::Debug)
 
 ////////////////////////////////////////////////////////////////////////////////
 //// Globals
@@ -110,8 +110,6 @@ BackgroundFileSaver::BackgroundFileSaver()
 , mActualTargetKeepPartial(false)
 , mDigestContext(nullptr)
 {
-  if (!prlog)
-    prlog = PR_NewLogModule("BackgroundFileSaver");
   LOG(("Created BackgroundFileSaver [this = %p]", this));
 }
 
