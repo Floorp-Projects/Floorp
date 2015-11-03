@@ -22,16 +22,17 @@ interface nsITCPDeviceInfo: nsISupports
   readonly attribute uint16_t port;
 };
 
-[scriptable, uuid(fbb890a9-9e95-47d1-a425-86fd95881d81)]
+[scriptable, uuid(09bddfaf-fcc2-4dc9-b33e-a509a1c2fb6d)]
 interface nsITCPPresentationServerListener: nsISupports
 {
   /**
-   * Callback while the server socket stops listening.
-   * @param   aReason
-   *          The reason of the socket close. NS_OK for manually |close|.
-   *          <other-error> on failure.
+   * Callback while the server socket changes port.
+   * This event won't be cached so you should get current port after setting
+   * this listener to make sure the value is updated.
+   * @param   aPort
+   *          The port of the server socket.
    */
-  void onClose(in nsresult aReason);
+  void onPortChange(in uint16_t aPort);
 
   /**
    * Callback while the remote host is requesting to start a presentation session.

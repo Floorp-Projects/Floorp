@@ -13,6 +13,7 @@
 #include "nsComponentManagerUtils.h"
 #include "nsIObserverService.h"
 #include "nsServiceManagerUtils.h"
+#include "nsThreadUtils.h"
 
 #ifdef MOZ_WIDGET_ANDROID
 #include "nsIPropertyBag2.h"
@@ -25,16 +26,12 @@
 
 #define SERVICE_TYPE "_mozilla_papi._tcp."
 
-inline static PRLogModuleInfo*
-GetProviderLog()
-{
-  static PRLogModuleInfo* log = PR_NewLogModule("MulticastDNSDeviceProvider");
-  return log;
-}
+static mozilla::LazyLogModule sMulticastDNSProviderLogModule("MulticastDNSDeviceProvider");
+
 #undef LOG_I
-#define LOG_I(...) MOZ_LOG(GetProviderLog(), mozilla::LogLevel::Debug, (__VA_ARGS__))
+#define LOG_I(...) MOZ_LOG(sMulticastDNSProviderLogModule, mozilla::LogLevel::Debug, (__VA_ARGS__))
 #undef LOG_E
-#define LOG_E(...) MOZ_LOG(GetProviderLog(), mozilla::LogLevel::Error, (__VA_ARGS__))
+#define LOG_E(...) MOZ_LOG(sMulticastDNSProviderLogModule, mozilla::LogLevel::Error, (__VA_ARGS__))
 
 namespace mozilla {
 namespace dom {
@@ -261,18 +258,33 @@ MulticastDNSDeviceProvider::RegisterService()
     return NS_OK;
   }
 
-  MOZ_ASSERT(!mRegisterRequest);
-
   nsresult rv;
-  if (NS_WARN_IF(NS_FAILED(rv = mPresentationServer->SetListener(mWrappedListener)))) {
-    return rv;
-  }
-  if (NS_WARN_IF(NS_FAILED(rv = mPresentationServer->StartService(0)))) {
-    return rv;
-  }
+
   uint16_t servicePort;
   if (NS_WARN_IF(NS_FAILED(rv = mPresentationServer->GetPort(&servicePort)))) {
     return rv;
+  }
+
+  /**
+    * If |servicePort| is non-zero, it means PresentationServer is running.
+    * Otherwise, we should make it start serving.
+    */
+  if (!servicePort) {
+    if (NS_WARN_IF(NS_FAILED(rv = mPresentationServer->SetListener(mWrappedListener)))) {
+      return rv;
+    }
+    if (NS_WARN_IF(NS_FAILED(rv = mPresentationServer->StartService(0)))) {
+      return rv;
+    }
+    if (NS_WARN_IF(NS_FAILED(rv = mPresentationServer->GetPort(&servicePort)))) {
+      return rv;
+    }
+  }
+
+  // Cancel on going service registration.
+  if (mRegisterRequest) {
+    mRegisterRequest->Cancel(NS_OK);
+    mRegisterRequest = nullptr;
   }
 
   /**
@@ -755,12 +767,9 @@ MulticastDNSDeviceProvider::OnRegistrationFailed(nsIDNSServiceInfo* aServiceInfo
 
   mRegisterRequest = nullptr;
 
-  nsresult rv;
-
   if (aErrorCode == nsIDNSRegistrationListener::ERROR_SERVICE_NOT_RUNNING) {
-    if (NS_WARN_IF(NS_FAILED(rv = RegisterService()))) {
-      return rv;
-    }
+    return NS_DispatchToMainThread(
+             NS_NewRunnableMethod(this, &MulticastDNSDeviceProvider::RegisterService));
   }
 
   return NS_OK;
@@ -855,17 +864,13 @@ MulticastDNSDeviceProvider::OnResolveFailed(nsIDNSServiceInfo* aServiceInfo,
 
 // nsITCPPresentationServerListener
 NS_IMETHODIMP
-MulticastDNSDeviceProvider::OnClose(nsresult aReason)
+MulticastDNSDeviceProvider::OnPortChange(uint16_t aPort)
 {
-  LOG_I("OnClose: %x", aReason);
+  LOG_I("OnPortChange: %d", aPort);
   MOZ_ASSERT(NS_IsMainThread());
 
-  UnregisterService(aReason);
-
-  nsresult rv;
-
-  if (mDiscoverable && NS_WARN_IF(NS_FAILED(rv = RegisterService()))) {
-    return rv;
+  if (mDiscoverable) {
+    RegisterService();
   }
 
   return NS_OK;
