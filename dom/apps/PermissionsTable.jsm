@@ -116,6 +116,11 @@ this.PermissionsTable =  { geolocation: {
                              privileged: DENY_ACTION,
                              certified: ALLOW_ACTION
                            },
+                           "speech-recognition": {
+                             app: DENY_ACTION,
+                             privileged: ALLOW_ACTION,
+                             certified: ALLOW_ACTION
+                           },
                            telephony: {
                              app: DENY_ACTION,
                              privileged: DENY_ACTION,
