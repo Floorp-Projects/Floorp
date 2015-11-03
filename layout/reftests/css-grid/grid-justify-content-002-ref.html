@@ -1,0 +1,62 @@
+<!DOCTYPE HTML>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html><head>
+  <meta charset="utf-8">
+  <title>CSS Grid Test: Testing track distribution rounding errors</title>
+  <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1151214">
+  <style type="text/css">
+html,body {
+  color:black; background-color:white; font-size:16px; padding:0; margin:0;
+}
+
+.grid {
+  display: grid;
+  grid-template-rows: 0 7px;
+  border: 1px solid blue;
+  background: black;
+}
+
+x { background: lime; height:7px; }
+
+  </style>
+</head>
+<body>
+
+<script>
+var justify = [ "" ];
+var cols = [ "151", "1" ];
+var widths = [ "151", "152", "153", "154", "155", "156", "157", "158", "159",
+               "160", "161", "301", "302", "303", "304", "305", "306", "307",
+               "308", "309", "310", "311" ];
+for (var c = 0; c < cols.length; ++c) {
+  var chunk = document.createElement('div');
+  chunk.setAttribute("style", "float:left; margin:1px;");
+  for (var j = 0; j < justify.length; ++j) {
+    for (var w = 0; w < widths.length; ++w) {
+      var grid = document.createElement('div');
+      grid.style.width = widths[w]+"px";
+      if (widths[w] > 300) {
+        grid.style.gridTemplateColumns = "2px " + (widths[w]-4) + "px 2px";
+      } else {
+        grid.style.gridTemplateColumns = "1px " + (widths[w]-2) + "px 1px";
+      }
+      grid.className = "grid " + justify[j];
+      if (cols[c] > 1) {
+        var x = document.createElement('x');
+        x.style.gridColumn = "2 / 3";
+        x.setAttribute('col', cols[c])
+        grid.appendChild(x);
+      }
+      chunk.appendChild(grid);
+    }
+  }
+  document.body.appendChild(chunk);
+}
+document.body.style.display = "";
+</script>
+
+</body>
+</html>
