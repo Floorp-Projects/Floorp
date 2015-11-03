@@ -27,6 +27,8 @@
 #define ZIP_EOCDR_HEADER_SIZE 22
 #define ZIP_EOCDR_HEADER_SIGNATURE 0x06054b50
 
+using namespace mozilla;
+
 /**
  * nsZipWriter is used to create and add to zip files.
  * It is based on the spec available at
@@ -164,7 +166,7 @@ nsresult nsZipWriter::ReadFile(nsIFile *aFile)
                         inputStream->Close();
                         return NS_ERROR_FILE_CORRUPTED;
                     }
-                    nsAutoArrayPtr<char> field(new char[commentlen]);
+                    auto field = MakeUnique<char[]>(commentlen);
                     NS_ENSURE_TRUE(field, NS_ERROR_OUT_OF_MEMORY);
                     rv = seekable->Seek(nsISeekableStream::NS_SEEK_SET,
                                         seek + pos);
