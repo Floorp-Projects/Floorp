@@ -3927,32 +3927,6 @@ QuotaManager::ClearStoragesForApp(uint32_t aAppId, bool aBrowserOnly)
   return NS_OK;
 }
 
-// static
-PLDHashOperator
-QuotaManager::GetAllTemporaryStorageOrigins(const nsACString& aKey,
-                                            GroupInfoPair* aValue,
-                                            void* aUserArg)
-{
-  NS_ASSERTION(!aKey.IsEmpty(), "Empty key!");
-  NS_ASSERTION(aValue, "Null pointer!");
-
-  nsTArray<OriginInfo*>* originInfos =
-    static_cast<nsTArray<OriginInfo*>*>(aUserArg);
-
-  RefPtr<GroupInfo> groupInfo =
-    aValue->LockedGetGroupInfo(PERSISTENCE_TYPE_TEMPORARY);
-  if (groupInfo) {
-    originInfos->AppendElements(groupInfo->mOriginInfos);
-  }
-
-  groupInfo = aValue->LockedGetGroupInfo(PERSISTENCE_TYPE_DEFAULT);
-  if (groupInfo) {
-    originInfos->AppendElements(groupInfo->mOriginInfos);
-  }
-
-  return PL_DHASH_NEXT;
-}
-
 void
 QuotaManager::CheckTemporaryStorageLimits()
 {
@@ -4018,8 +3992,23 @@ QuotaManager::CheckTemporaryStorageLimits()
     if (mTemporaryStorageUsage - usage > mTemporaryStorageLimit) {
       nsTArray<OriginInfo*> originInfos;
 
-      mGroupInfoPairs.EnumerateRead(GetAllTemporaryStorageOrigins,
-                                    &originInfos);
+      for (auto iter = mGroupInfoPairs.Iter(); !iter.Done(); iter.Next()) {
+        GroupInfoPair* pair = iter.UserData();
+
+        MOZ_ASSERT(!iter.Key().IsEmpty(), "Empty key!");
+        MOZ_ASSERT(pair, "Null pointer!");
+
+        RefPtr<GroupInfo> groupInfo =
+          pair->LockedGetGroupInfo(PERSISTENCE_TYPE_TEMPORARY);
+        if (groupInfo) {
+          originInfos.AppendElements(groupInfo->mOriginInfos);
+        }
+
+        groupInfo = pair->LockedGetGroupInfo(PERSISTENCE_TYPE_DEFAULT);
+        if (groupInfo) {
+          originInfos.AppendElements(groupInfo->mOriginInfos);
+        }
+      }
 
       for (uint32_t index = originInfos.Length(); index > 0; index--) {
         if (doomedOriginInfos.Contains(originInfos[index - 1])) {
