@@ -8,6 +8,7 @@ package org.mozilla.gecko.tabs;
 import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.ThumbnailHelper;
+import org.mozilla.gecko.util.HardwareUtils;
 import org.mozilla.gecko.widget.CropImageView;
 
 import android.content.Context;
@@ -35,7 +36,7 @@ public class TabsPanelThumbnailView extends CropImageView {
 
     @Override
     protected float getAspectRatio() {
-        if (AppConstants.NIGHTLY_BUILD) {
+        if (AppConstants.NIGHTLY_BUILD || HardwareUtils.isTablet()) {
             return ThumbnailHelper.TABS_PANEL_THUMBNAIL_ASPECT_RATIO;
         } else {
             return ThumbnailHelper.TOP_SITES_THUMBNAIL_ASPECT_RATIO;
