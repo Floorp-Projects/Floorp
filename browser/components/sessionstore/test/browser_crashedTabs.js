@@ -102,6 +102,23 @@ function promiseHistoryLength(browser, length) {
 }
 
 /**
+ * Returns a Promise that resolves when a browser has fired the
+ * AboutTabCrashedReady event.
+ *
+ * @param browser
+ *        The remote <xul:browser> that will fire the event.
+ * @return Promise
+ */
+function promiseTabCrashedReady(browser) {
+  return new Promise((resolve) => {
+    browser.addEventListener("AboutTabCrashedReady", function ready(e) {
+      browser.removeEventListener("AboutTabCrashedReady", ready, false, true);
+      resolve();
+    }, false, true);
+  });
+}
+
+/**
  * Checks that if a tab crashes, that information about the tab crashed
  * page does not get added to the tab history.
  */
@@ -374,8 +391,13 @@ add_task(function* test_hide_restore_all_button() {
   browser.loadURI(PAGE_2);
   yield promiseBrowserLoaded(browser);
 
+  // We'll need to make sure the second tab's browser has finished
+  // sending its AboutTabCrashedReady event before we know for
+  // sure whether or not we're showing the right Restore buttons.
+  let otherBrowserReady = promiseTabCrashedReady(newTab2.linkedBrowser);
   // Crash the tab
   yield BrowserTestUtils.crashBrowser(browser);
+  yield otherBrowserReady;
 
   doc = browser.contentDocument;
   restoreAllButton = doc.getElementById("restoreAll");
