@@ -1403,6 +1403,13 @@ struct nsStylePosition {
   uint8_t ComputedAlignItems(const nsStyleDisplay* aDisplay) const;
 
   /**
+   * Return the computed value for 'align-self' given our 'display' value in
+   * aDisplay and the parent StyleContext aParent (or null for the root).
+   */
+  uint8_t ComputedAlignSelf(const nsStyleDisplay* aDisplay,
+                            nsStyleContext* aParent) const;
+
+  /**
    * Return the computed value for 'justify-content' given our 'display' value
    * in aDisplay.
    */
@@ -1438,7 +1445,6 @@ struct nsStylePosition {
   uint8_t       mGridAutoFlow;          // [reset] enumerated. See nsStyleConsts.h
   uint8_t       mBoxSizing;             // [reset] see nsStyleConsts.h
   uint8_t       mAlignContent;          // [reset] see nsStyleConsts.h
-  uint8_t       mAlignSelf;             // [reset] see nsStyleConsts.h
 private:
   friend class nsRuleNode;
   // Helper for the ComputedAlign/Justify* methods.
@@ -1446,6 +1452,7 @@ private:
                               const nsStyleDisplay* aDisplay) const;
 
   uint8_t       mAlignItems;            // [reset] see nsStyleConsts.h
+  uint8_t       mAlignSelf;             // [reset] see nsStyleConsts.h
   uint16_t      mJustifyContent;        // [reset] fallback value in the high byte
   uint8_t       mJustifyItems;          // [reset] see nsStyleConsts.h
   uint8_t       mJustifySelf;           // [reset] see nsStyleConsts.h

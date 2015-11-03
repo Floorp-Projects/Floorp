@@ -1336,6 +1336,7 @@ nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult,
     }
 
     case eCSSProperty_align_items:
+    case eCSSProperty_align_self:
     case eCSSProperty_justify_items:
     case eCSSProperty_justify_self:
       AppendAlignJustifyValueToString(intValue, aResult);

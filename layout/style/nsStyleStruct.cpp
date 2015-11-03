@@ -1433,7 +1433,7 @@ nsStylePosition::nsStylePosition(void)
   mBoxSizing = NS_STYLE_BOX_SIZING_CONTENT;
   mAlignContent = NS_STYLE_ALIGN_CONTENT_STRETCH;
   mAlignItems = NS_STYLE_ALIGN_AUTO;
-  mAlignSelf = NS_STYLE_ALIGN_SELF_AUTO;
+  mAlignSelf = NS_STYLE_ALIGN_AUTO;
   mJustifyContent = NS_STYLE_JUSTIFY_AUTO;
   mJustifyItems = NS_STYLE_JUSTIFY_AUTO;
   mJustifySelf = NS_STYLE_JUSTIFY_AUTO;
@@ -1704,6 +1704,26 @@ nsStylePosition::ComputedAlignItems(const nsStyleDisplay* aDisplay) const
   }
   return aDisplay->IsFlexOrGridDisplayType() ? NS_STYLE_ALIGN_STRETCH
                                              : NS_STYLE_ALIGN_START;
+}
+
+uint8_t
+nsStylePosition::ComputedAlignSelf(const nsStyleDisplay* aDisplay,
+                                   nsStyleContext* aParent) const
+{
+  if (mAlignSelf != NS_STYLE_ALIGN_AUTO) {
+    return MapLeftRightToStart(mAlignSelf, eLogicalAxisBlock, aDisplay);
+  }
+  if (MOZ_UNLIKELY(aDisplay->IsAbsolutelyPositionedStyle())) {
+    return NS_STYLE_ALIGN_AUTO;
+  }
+  if (MOZ_LIKELY(aParent)) {
+    auto parentAlignItems = aParent->StylePosition()->
+      ComputedAlignItems(aParent->StyleDisplay());
+    MOZ_ASSERT(!(parentAlignItems & NS_STYLE_ALIGN_LEGACY),
+               "align-items can't have 'legacy'");
+    return MapLeftRightToStart(parentAlignItems, eLogicalAxisBlock, aDisplay);
+  }
+  return NS_STYLE_ALIGN_START;
 }
 
 uint16_t

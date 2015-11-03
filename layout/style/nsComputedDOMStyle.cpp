@@ -3871,32 +3871,6 @@ nsComputedDOMStyle::DoGetAlignContent()
 }
 
 CSSValue*
-nsComputedDOMStyle::DoGetAlignSelf()
-{
-  nsROCSSPrimitiveValue* val = new nsROCSSPrimitiveValue;
-  uint8_t computedAlignSelf = StylePosition()->mAlignSelf;
-
-  if (computedAlignSelf == NS_STYLE_ALIGN_SELF_AUTO) {
-    // "align-self: auto" needs to compute to parent's align-items value.
-    nsStyleContext* parentStyleContext = mStyleContext->GetParent();
-    if (parentStyleContext) {
-      computedAlignSelf = parentStyleContext->StylePosition()->
-        ComputedAlignItems(parentStyleContext->StyleDisplay());
-    } else {
-      // No parent --> use default.
-      computedAlignSelf = NS_STYLE_ALIGN_STRETCH; // XXX temporary, will be removed in later patch
-    }
-  }
-
-  MOZ_ASSERT(computedAlignSelf != NS_STYLE_ALIGN_SELF_AUTO,
-             "Should have swapped out 'auto' for something non-auto");
-  val->SetIdent(
-    nsCSSProps::ValueToKeywordEnum(computedAlignSelf,
-                                   nsCSSProps::kAlignSelfKTable));
-  return val;
-}
-
-CSSValue*
 nsComputedDOMStyle::DoGetFlexBasis()
 {
   nsROCSSPrimitiveValue* val = new nsROCSSPrimitiveValue;
@@ -3967,6 +3941,18 @@ nsComputedDOMStyle::DoGetAlignItems()
   nsROCSSPrimitiveValue* val = new nsROCSSPrimitiveValue;
   nsAutoString str;
   auto align = StylePosition()->ComputedAlignItems(StyleDisplay());
+  nsCSSValue::AppendAlignJustifyValueToString(align, str);
+  val->SetString(str);
+  return val;
+}
+
+CSSValue*
+nsComputedDOMStyle::DoGetAlignSelf()
+{
+  nsROCSSPrimitiveValue* val = new nsROCSSPrimitiveValue;
+  auto align = StylePosition()->
+    ComputedAlignSelf(StyleDisplay(), mStyleContext->GetParent());
+  nsAutoString str;
   nsCSSValue::AppendAlignJustifyValueToString(align, str);
   val->SetString(str);
   return val;

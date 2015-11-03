@@ -10634,6 +10634,8 @@ CSSParserImpl::ParsePropertyByFunction(nsCSSProperty aPropID)
     return ParseRect(eCSSProperty_image_region);
   case eCSSProperty_align_items:
     return ParseAlignItemsSelfJustifySelf(aPropID);
+  case eCSSProperty_align_self:
+    return ParseAlignItemsSelfJustifySelf(aPropID);
   case eCSSProperty_justify_content:
     return ParseAlignJustifyContent(aPropID);
   case eCSSProperty_justify_items:
