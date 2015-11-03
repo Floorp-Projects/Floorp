@@ -8676,3 +8676,15 @@ nsLayoutUtils::GetSelectionBoundingRect(Selection* aSel)
 
   return res;
 }
+
+/* static */ bool
+nsLayoutUtils::IsScrollFrameWithSnapping(nsIFrame* aFrame)
+{
+  nsIScrollableFrame* sf = do_QueryFrame(aFrame);
+  if (!sf) {
+    return false;
+  }
+  ScrollbarStyles styles = sf->GetScrollbarStyles();
+  return styles.mScrollSnapTypeY != NS_STYLE_SCROLL_SNAP_TYPE_NONE ||
+         styles.mScrollSnapTypeX != NS_STYLE_SCROLL_SNAP_TYPE_NONE;
+}
