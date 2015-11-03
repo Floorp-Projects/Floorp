@@ -63,22 +63,22 @@ function getComputedAlignSelf(elem) {
  */
 function testGeneralNode(elem) {
   // Test initial computed style
-  // (Initial value should be 'auto', which should compute to 'stretch')
-  is(getComputedAlignSelf(elem), "stretch",
-     "initial computed value of 'align-self' should be 'stretch', " +
+  // (Initial value should be 'auto', which should compute to 'start')
+  is(getComputedAlignSelf(elem), "start",
+     "initial computed value of 'align-self' should be 'start', " +
      "if we haven't explicitly set any style on the parent");
 
   // Test value after setting align-self explicitly to "auto"
   elem.style.alignSelf = "auto";
-  is(getComputedAlignSelf(elem), "stretch",
-     "computed value of 'align-self: auto' should be 'stretch', " +
+  is(getComputedAlignSelf(elem), "start",
+     "computed value of 'align-self: auto' should be 'start', " +
      "if we haven't explicitly set any style on the parent");
   elem.style.alignSelf = ""; // clean up
 
   // Test value after setting align-self explicitly to "inherit"
   elem.style.alignSelf = "inherit";
-  is(getComputedAlignSelf(elem), "stretch",
-     "computed value of 'align-self: inherit' should be 'stretch', " +
+  is(getComputedAlignSelf(elem), "start",
+     "computed value of 'align-self: inherit' should be 'start', " +
      "if we haven't explicitly set any style on the parent");
   elem.style.alignSelf = ""; // clean up
 }
@@ -111,11 +111,11 @@ function testNodeThatHasParent(elem) {
 
   // Finally: test computed style after setting "align-self" to "inherit"
   // and leaving parent at its initial value (which should be "auto", which
-  // should compute to "stretch")
+  // should compute to "start")
   elem.style.alignSelf = "inherit";
-  is(getComputedAlignSelf(elem), "stretch",
+  is(getComputedAlignSelf(elem), "start",
      "computed value of 'align-self: inherit' should take parent's " +
-     "computed 'align-self' value (which should be 'stretch', " +
+     "computed 'align-self' value (which should be 'start', " +
      "if we haven't explicitly set any other style");
   elem.style.alignSelf = ""; // clean up
  }
