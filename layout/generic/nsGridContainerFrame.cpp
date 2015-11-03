@@ -1407,7 +1407,7 @@ nsGridContainerFrame::ResolveLineRange(
     r.second = std::min(r.second, nsStyleGridLine::kMaxLine - 1);
   } else {
     // http://dev.w3.org/csswg/css-grid/#grid-placement-errors
-    if (r.second < r.first) {
+    if (r.first > r.second) {
       Swap(r.first, r.second);
     } else if (r.first == r.second) {
       if (MOZ_UNLIKELY(r.first == nsStyleGridLine::kMaxLine)) {
