@@ -466,11 +466,6 @@ private:
                       nsAutoPtr<GroupInfoPair>& aValue,
                       void* aUserArg);
 
-  static PLDHashOperator
-  GetAllTemporaryStorageOrigins(const nsACString& aKey,
-                                GroupInfoPair* aValue,
-                                void* aUserArg);
-
   mozilla::Mutex mQuotaMutex;
 
   nsClassHashtable<nsCStringHashKey, GroupInfoPair> mGroupInfoPairs;
