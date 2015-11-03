@@ -1165,33 +1165,22 @@ nsGridContainerFrame::AddImplicitNamedAreas(
   const nsTArray<nsTArray<nsString>>& aLineNameLists)
 {
   // http://dev.w3.org/csswg/css-grid/#implicit-named-areas
-  // XXX this just checks x-start .. x-end in one dimension and there's
-  // no other error checking.  A few wrong cases (maybe):
-  // (x-start x-end)
-  // (x-start) 0 (x-start) 0 (x-end)
-  // (x-end) 0 (x-start) 0 (x-end)
-  // (x-start) 0 (x-end) 0 (x-start) 0 (x-end)
+  // Note: recording these names for fast lookup later is just an optimization.
   const uint32_t len =
     std::min(aLineNameLists.Length(), size_t(nsStyleGridLine::kMaxLine));
   nsTHashtable<nsStringHashKey> currentStarts;
   ImplicitNamedAreas* areas = GetImplicitNamedAreas();
   for (uint32_t i = 0; i < len; ++i) {
-    const nsTArray<nsString>& names(aLineNameLists[i]);
-    const uint32_t jLen = names.Length();
-    for (uint32_t j = 0; j < jLen; ++j) {
-      const nsString& name = names[j];
+    for (const nsString& name : aLineNameLists[i]) {
       uint32_t index;
-      if (::IsNameWithStartSuffix(name, &index)) {
-        currentStarts.PutEntry(nsDependentSubstring(name, 0, index));
-      } else if (::IsNameWithEndSuffix(name, &index)) {
+      if (::IsNameWithStartSuffix(name, &index) ||
+          ::IsNameWithEndSuffix(name, &index)) {
         nsDependentSubstring area(name, 0, index);
-        if (currentStarts.Contains(area)) {
-          if (!areas) {
-            areas = new ImplicitNamedAreas;
-            Properties().Set(ImplicitNamedAreasProperty(), areas);
-          }
-          areas->PutEntry(area);
+        if (!areas) {
+          areas = new ImplicitNamedAreas;
+          Properties().Set(ImplicitNamedAreasProperty(), areas);
         }
+        areas->PutEntry(area);
       }
     }
   }
@@ -1251,8 +1240,6 @@ nsGridContainerFrame::ResolveLine(
           lineName.AppendLiteral("-end");
           implicitLine = area ? area->*aAreaEnd : 0;
         }
-        // XXX must Implicit Named Areas have all four lines?
-        // http://dev.w3.org/csswg/css-grid/#implicit-named-areas
         line = ::FindNamedLine(lineName, &aNth, aFromIndex, implicitLine,
                                aLineNameList);
       }
