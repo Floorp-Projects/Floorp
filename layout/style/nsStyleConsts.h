@@ -471,6 +471,53 @@ static inline mozilla::css::Side operator++(mozilla::css::Side& side, int) {
                                                  NS_STYLE_CONTAIN_STYLE  | \
                                                  NS_STYLE_CONTAIN_PAINT)
 
+// Shared constants for all align/justify properties (nsStylePosition):
+#define NS_STYLE_ALIGN_AUTO             0
+#define NS_STYLE_ALIGN_START            1
+#define NS_STYLE_ALIGN_END              2
+#define NS_STYLE_ALIGN_FLEX_START       3
+#define NS_STYLE_ALIGN_FLEX_END         4
+#define NS_STYLE_ALIGN_CENTER           5
+#define NS_STYLE_ALIGN_LEFT             6
+#define NS_STYLE_ALIGN_RIGHT            7
+#define NS_STYLE_ALIGN_BASELINE         8
+#define NS_STYLE_ALIGN_LAST_BASELINE    9
+#define NS_STYLE_ALIGN_STRETCH          10
+#define NS_STYLE_ALIGN_SELF_START       11
+#define NS_STYLE_ALIGN_SELF_END         12
+#define NS_STYLE_ALIGN_SPACE_BETWEEN    13
+#define NS_STYLE_ALIGN_SPACE_AROUND     14
+#define NS_STYLE_ALIGN_SPACE_EVENLY     15
+#define NS_STYLE_ALIGN_LEGACY        0x10 // mutually exclusive w. SAFE & TRUE
+#define NS_STYLE_ALIGN_SAFE          0x20
+#define NS_STYLE_ALIGN_TRUE          0x40 // mutually exclusive w. SAFE
+#define NS_STYLE_ALIGN_FLAG_BITS     0xF0
+#define NS_STYLE_ALIGN_ALL_BITS      0xFF
+#define NS_STYLE_ALIGN_ALL_SHIFT        8
+
+#define NS_STYLE_JUSTIFY_AUTO             NS_STYLE_ALIGN_AUTO
+#define NS_STYLE_JUSTIFY_START            NS_STYLE_ALIGN_START
+#define NS_STYLE_JUSTIFY_END              NS_STYLE_ALIGN_END
+#define NS_STYLE_JUSTIFY_FLEX_START       NS_STYLE_ALIGN_FLEX_START
+#define NS_STYLE_JUSTIFY_FLEX_END         NS_STYLE_ALIGN_FLEX_END
+#define NS_STYLE_JUSTIFY_CENTER           NS_STYLE_ALIGN_CENTER
+#define NS_STYLE_JUSTIFY_LEFT             NS_STYLE_ALIGN_LEFT
+#define NS_STYLE_JUSTIFY_RIGHT            NS_STYLE_ALIGN_RIGHT
+#define NS_STYLE_JUSTIFY_BASELINE         NS_STYLE_ALIGN_BASELINE
+#define NS_STYLE_JUSTIFY_LAST_BASELINE    NS_STYLE_ALIGN_LAST_BASELINE
+#define NS_STYLE_JUSTIFY_STRETCH          NS_STYLE_ALIGN_STRETCH
+#define NS_STYLE_JUSTIFY_SELF_START       NS_STYLE_ALIGN_SELF_START
+#define NS_STYLE_JUSTIFY_SELF_END         NS_STYLE_ALIGN_SELF_END
+#define NS_STYLE_JUSTIFY_SPACE_BETWEEN    NS_STYLE_ALIGN_SPACE_BETWEEN
+#define NS_STYLE_JUSTIFY_SPACE_AROUND     NS_STYLE_ALIGN_SPACE_AROUND
+#define NS_STYLE_JUSTIFY_SPACE_EVENLY     NS_STYLE_ALIGN_SPACE_EVENLY
+#define NS_STYLE_JUSTIFY_LEGACY           NS_STYLE_ALIGN_LEGACY
+#define NS_STYLE_JUSTIFY_SAFE             NS_STYLE_ALIGN_SAFE
+#define NS_STYLE_JUSTIFY_TRUE             NS_STYLE_ALIGN_TRUE
+#define NS_STYLE_JUSTIFY_FLAG_BITS        NS_STYLE_ALIGN_FLAG_BITS
+#define NS_STYLE_JUSTIFY_ALL_BITS         NS_STYLE_ALIGN_ALL_BITS
+#define NS_STYLE_JUSTIFY_ALL_SHIFT        NS_STYLE_ALIGN_ALL_SHIFT
+
 // See nsStylePosition
 #define NS_STYLE_ALIGN_CONTENT_FLEX_START       0
 #define NS_STYLE_ALIGN_CONTENT_FLEX_END         1
