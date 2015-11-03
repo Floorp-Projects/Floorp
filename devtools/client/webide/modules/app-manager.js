@@ -6,13 +6,13 @@ const {Cu} = require("chrome");
 
 const promise = require("promise");
 const {TargetFactory} = require("devtools/client/framework/target");
-const {Services} = Cu.import("resource://gre/modules/Services.jsm");
-const {FileUtils} = Cu.import("resource://gre/modules/FileUtils.jsm");
+const Services = require("Services");
+const {FileUtils} = Cu.import("resource://gre/modules/FileUtils.jsm", {});
 const EventEmitter = require("devtools/shared/event-emitter");
 const {TextEncoder, OS}  = Cu.import("resource://gre/modules/osfile.jsm", {});
-const {AppProjects} = require("devtools/client/app-manager/app-projects");
+const {AppProjects} = require("devtools/client/webide/modules/app-projects");
 const TabStore = require("devtools/client/webide/modules/tab-store");
-const {AppValidator} = require("devtools/client/app-manager/app-validator");
+const {AppValidator} = require("devtools/client/webide/modules/app-validator");
 const {ConnectionManager, Connection} = require("devtools/shared/client/connection-manager");
 const {AppActorFront} = require("devtools/shared/apps/app-actor-front");
 const {getDeviceFront} = require("devtools/server/actors/device");
@@ -29,8 +29,7 @@ const Strings = Services.strings.createBundle("chrome://browser/locale/devtools/
 
 var AppManager = exports.AppManager = {
 
-  // FIXME: will break when devtools/app-manager will be removed:
-  DEFAULT_PROJECT_ICON: "chrome://devtools/skin/themes/app-manager/images/default-app-icon.png",
+  DEFAULT_PROJECT_ICON: "chrome://devtools/skin/themes/webide/default-app-icon.png",
   DEFAULT_PROJECT_NAME: "--",
 
   _initialized: false,

@@ -4,8 +4,8 @@
 
 const {Cu} = require("chrome");
 
-const {Services} = Cu.import("resource://gre/modules/Services.jsm");
-const {AppProjects} = require("devtools/client/app-manager/app-projects");
+const Services = require("Services");
+const {AppProjects} = require("devtools/client/webide/modules/app-projects");
 const {AppManager} = require("devtools/client/webide/modules/app-manager");
 const promise = require("promise");
 const EventEmitter = require("devtools/shared/event-emitter");

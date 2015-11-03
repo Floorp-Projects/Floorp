@@ -1558,7 +1558,7 @@ function renderPayloadList(ping) {
 
   for (; payloadIndex <= ping.payload.childPayloads.length; ++payloadIndex) {
     option = document.createElement("option");
-    text = bundle.formatStringFromName("childPayload", [payloadIndex], 1);
+    text = bundle.formatStringFromName("childPayloadN", [payloadIndex], 1);
     content = document.createTextNode(text);
     option.appendChild(content);
     option.setAttribute("value", payloadIndex);
