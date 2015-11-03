@@ -184,16 +184,4 @@ void ReverbConvolverStage::process(const float* source, size_t framesToProcess)
     m_framesProcessed += framesToProcess;
 }
 
-void ReverbConvolverStage::reset()
-{
-    if (!m_directMode)
-        m_fftConvolver->reset();
-    else
-        m_directConvolver->reset();
-    PodZero(m_preDelayBuffer.Elements(), m_preDelayBuffer.Length());
-    m_accumulationReadIndex = 0;
-    m_inputReadIndex = 0;
-    m_framesProcessed = 0;
-}
-
 } // namespace WebCore

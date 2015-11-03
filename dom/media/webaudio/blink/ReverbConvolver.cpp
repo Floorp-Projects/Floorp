@@ -249,18 +249,6 @@ void ReverbConvolver::process(const float* sourceChannelData, size_t sourceChann
     }
 }
 
-void ReverbConvolver::reset()
-{
-    for (size_t i = 0; i < m_stages.Length(); ++i)
-        m_stages[i]->reset();
-
-    for (size_t i = 0; i < m_backgroundStages.Length(); ++i)
-        m_backgroundStages[i]->reset();
-
-    m_accumulationBuffer.reset();
-    m_inputBuffer.reset();
-}
-
 size_t ReverbConvolver::latencyFrames() const
 {
     return 0;
