@@ -518,13 +518,14 @@ static inline mozilla::css::Side operator++(mozilla::css::Side& side, int) {
 #define NS_STYLE_JUSTIFY_ALL_BITS         NS_STYLE_ALIGN_ALL_BITS
 #define NS_STYLE_JUSTIFY_ALL_SHIFT        NS_STYLE_ALIGN_ALL_SHIFT
 
-// See nsStylePosition
-#define NS_STYLE_ALIGN_CONTENT_FLEX_START       0
-#define NS_STYLE_ALIGN_CONTENT_FLEX_END         1
-#define NS_STYLE_ALIGN_CONTENT_CENTER           2
-#define NS_STYLE_ALIGN_CONTENT_SPACE_BETWEEN    3
-#define NS_STYLE_ALIGN_CONTENT_SPACE_AROUND     4
-#define NS_STYLE_ALIGN_CONTENT_STRETCH          5
+// XXX remove in a later patch after updating flexbox code with the new names
+#define NS_STYLE_ALIGN_CONTENT_AUTO            NS_STYLE_ALIGN_AUTO
+#define NS_STYLE_ALIGN_CONTENT_FLEX_START      NS_STYLE_ALIGN_FLEX_START
+#define NS_STYLE_ALIGN_CONTENT_FLEX_END        NS_STYLE_ALIGN_FLEX_END
+#define NS_STYLE_ALIGN_CONTENT_CENTER          NS_STYLE_ALIGN_CENTER
+#define NS_STYLE_ALIGN_CONTENT_STRETCH         NS_STYLE_ALIGN_STRETCH
+#define NS_STYLE_ALIGN_CONTENT_SPACE_BETWEEN   NS_STYLE_ALIGN_SPACE_BETWEEN
+#define NS_STYLE_ALIGN_CONTENT_SPACE_AROUND    NS_STYLE_ALIGN_SPACE_AROUND
 
 // XXX remove in a later patch after updating flexbox code with the new names
 #define NS_STYLE_ALIGN_ITEMS_FLEX_START         NS_STYLE_ALIGN_FLEX_START

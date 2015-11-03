@@ -1397,6 +1397,12 @@ struct nsStylePosition {
   typedef nsStyleBackground::Position Position;
 
   /**
+   * Return the computed value for 'align-content' given our 'display' value in
+   * aDisplay.
+   */
+  uint16_t ComputedAlignContent(const nsStyleDisplay* aDisplay) const;
+
+  /**
    * Return the computed value for 'align-items' given our 'display' value in
    * aDisplay.
    */
@@ -1444,13 +1450,13 @@ struct nsStylePosition {
   nsStyleCoord  mGridAutoRowsMax;       // [reset] coord, percent, enum, calc, flex
   uint8_t       mGridAutoFlow;          // [reset] enumerated. See nsStyleConsts.h
   uint8_t       mBoxSizing;             // [reset] see nsStyleConsts.h
-  uint8_t       mAlignContent;          // [reset] see nsStyleConsts.h
 private:
   friend class nsRuleNode;
   // Helper for the ComputedAlign/Justify* methods.
   uint8_t MapLeftRightToStart(uint8_t aAlign, mozilla::LogicalAxis aAxis,
                               const nsStyleDisplay* aDisplay) const;
 
+  uint16_t      mAlignContent;          // [reset] fallback value in the high byte
   uint8_t       mAlignItems;            // [reset] see nsStyleConsts.h
   uint8_t       mAlignSelf;             // [reset] see nsStyleConsts.h
   uint16_t      mJustifyContent;        // [reset] fallback value in the high byte
