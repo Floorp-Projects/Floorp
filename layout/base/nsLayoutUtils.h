@@ -1324,10 +1324,13 @@ public:
    * variations if that's what matches aAxis) and its padding, border and margin
    * in the corresponding dimension.
    */
-  enum IntrinsicISizeType { MIN_ISIZE, PREF_ISIZE };
+  enum class IntrinsicISizeType { MIN_ISIZE, PREF_ISIZE };
+  static const auto MIN_ISIZE = IntrinsicISizeType::MIN_ISIZE;
+  static const auto PREF_ISIZE = IntrinsicISizeType::PREF_ISIZE;
   enum {
     IGNORE_PADDING = 0x01,
     BAIL_IF_REFLOW_NEEDED = 0x02, // returns NS_INTRINSIC_WIDTH_UNKNOWN if so
+    MIN_INTRINSIC_ISIZE = 0x04, // use min-width/height instead of width/height
   };
   static nscoord IntrinsicForAxis(mozilla::PhysicalAxis aAxis,
                                   nsRenderingContext*   aRenderingContext,
@@ -1343,10 +1346,20 @@ public:
                                        uint32_t            aFlags = 0);
 
   /**
-   * Get the contribution of aFrame for the given physical axis.
+   * Get the definite size contribution of aFrame for the given physical axis.
    * This considers the child's 'min-width' property (or 'min-height' if the
    * given axis is vertical), and its padding, border, and margin in the
-   * corresponding dimension.
+   * corresponding dimension.  If the 'min-' property is 'auto' (and 'overflow'
+   * is 'visible') and the corresponding 'width'/'height' is definite it returns
+   * the "specified / transferred size" for:
+   * https://drafts.csswg.org/css-grid/#min-size-auto
+   * Note that any percentage in 'width'/'height' makes it count as indefinite.
+   * If the 'min-' property is 'auto' and 'overflow' is not 'visible', then it
+   * calculates the result as if the 'min-' computed value is zero.
+   * Otherwise, return NS_UNCONSTRAINEDSIZE.
+   *
+   * @note this behavior is specific to Grid/Flexbox (currently) so aFrame
+   * should be a grid/flex item.
    */
   static nscoord MinSizeContributionForAxis(mozilla::PhysicalAxis aAxis,
                                             nsRenderingContext*   aRC,
