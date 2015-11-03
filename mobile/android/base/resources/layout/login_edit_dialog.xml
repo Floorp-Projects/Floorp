@@ -21,7 +21,8 @@
               android:inputType="textPassword"
               android:hint="@string/doorhanger_login_edit_password_hint"/>
 
-    <CheckBox android:id="@+id/checkbox_toggle_password"
+    <android.support.v7.widget.AppCompatCheckBox
+              android:id="@+id/checkbox_toggle_password"
               android:layout_width="match_parent"
               android:layout_height="wrap_content"
               android:text="@string/doorhanger_login_edit_toggle"
