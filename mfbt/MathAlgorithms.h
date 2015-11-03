@@ -484,6 +484,7 @@ inline T
 RotateLeft(const T aValue, uint_fast8_t aShift)
 {
   MOZ_ASSERT(aShift < sizeof(T) * CHAR_BIT, "Shift value is too large!");
+  MOZ_ASSERT(aShift > 0, "Right shift by value size undefined (See Bug 939157).");
   static_assert(IsUnsigned<T>::value, "Rotates require unsigned values");
   return (aValue << aShift) | (aValue >> (sizeof(T) * CHAR_BIT - aShift));
 }
@@ -496,6 +497,7 @@ inline T
 RotateRight(const T aValue, uint_fast8_t aShift)
 {
   MOZ_ASSERT(aShift < sizeof(T) * CHAR_BIT, "Shift value is too large!");
+  MOZ_ASSERT(aShift > 0, "Left shift by value size undefined (See Bug 939157).");
   static_assert(IsUnsigned<T>::value, "Rotates require unsigned values");
   return (aValue >> aShift) | (aValue << (sizeof(T) * CHAR_BIT - aShift));
 }
