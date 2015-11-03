@@ -64,8 +64,6 @@ public:
     bool useBackgroundThreads() const { return m_useBackgroundThreads; }
     void backgroundThreadEntry();
 
-    size_t latencyFrames() const;
-
     size_t sizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 private:
     nsTArray<nsAutoPtr<ReverbConvolverStage> > m_stages;

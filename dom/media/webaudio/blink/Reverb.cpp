@@ -240,9 +240,4 @@ void Reverb::process(const AudioBlock* sourceBus, AudioBlock* destinationBus, si
     }
 }
 
-size_t Reverb::latencyFrames() const
-{
-    return !m_convolvers.IsEmpty() ? m_convolvers[0]->latencyFrames() : 0;
-}
-
 } // namespace WebCore

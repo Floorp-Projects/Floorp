@@ -249,9 +249,4 @@ void ReverbConvolver::process(const float* sourceChannelData, size_t sourceChann
     }
 }
 
-size_t ReverbConvolver::latencyFrames() const
-{
-    return 0;
-}
-
 } // namespace WebCore
