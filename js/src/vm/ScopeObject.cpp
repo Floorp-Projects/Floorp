@@ -118,6 +118,41 @@ StaticBlockScope::addVar(ExclusiveContext* cx, Handle<StaticBlockScope*> block, 
                                              /* allowDictionary = */ false);
 }
 
+StaticModuleScope*
+StaticModuleScope::create(ExclusiveContext* cx, Handle<ModuleObject*> moduleObject,
+                          Handle<StaticScope*> enclosingScope)
+{
+    Rooted<TaggedProto> nullProto(cx, TaggedProto(nullptr));
+    JSObject* obj = NewObjectWithGivenTaggedProto(cx, &ModuleEnvironmentObject::class_, nullProto,
+                                                  TenuredObject, BaseShape::DELEGATE);
+    if (!obj)
+        return nullptr;
+
+    StaticModuleScope* scope = &obj->as<StaticModuleScope>();
+    scope->initEnclosingScope(enclosingScope);
+    scope->setReservedSlot(MODULE_OBJECT_SLOT, ObjectValue(*moduleObject));
+    return scope;
+}
+
+ModuleObject&
+StaticModuleScope::moduleObject()
+{
+    return getReservedSlot(MODULE_OBJECT_SLOT).toObject().as<ModuleObject>();
+}
+
+JSScript*
+StaticModuleScope::script()
+{
+    return moduleObject().script();
+}
+
+Shape*
+StaticModuleScope::environmentShape()
+{
+    ModuleObject* module = &getReservedSlot(MODULE_OBJECT_SLOT).toObject().as<ModuleObject>();
+    return module->script()->bindings.callObjShape();
+}
+
 const Class StaticWithScope::class_ = {
     "WithTemplate",
     JSCLASS_HAS_RESERVED_SLOTS(StaticWithScope::RESERVED_SLOTS) |
@@ -440,6 +475,9 @@ const Class CallObject::class_ = {
 
 /*****************************************************************************/
 
+static_assert(StaticModuleScope::RESERVED_SLOTS == ModuleEnvironmentObject::RESERVED_SLOTS,
+              "static module scopes and dynamic module environments share a Class");
+
 const Class ModuleEnvironmentObject::class_ = {
     "ModuleEnvironmentObject",
     JSCLASS_HAS_RESERVED_SLOTS(ModuleEnvironmentObject::RESERVED_SLOTS) |
@@ -480,7 +518,8 @@ ModuleEnvironmentObject::create(ExclusiveContext* cx, HandleModuleObject module)
     RootedShape shape(cx, script->bindings.callObjShape());
     MOZ_ASSERT(shape->getObjectClass() == &class_);
 
-    RootedObjectGroup group(cx, ObjectGroup::defaultNewGroup(cx, &class_, TaggedProto(nullptr)));
+    Rooted<TaggedProto> proto(cx, module->staticScope());
+    RootedObjectGroup group(cx, ObjectGroup::defaultNewGroup(cx, &class_, proto));
     if (!group)
         return nullptr;
 
@@ -523,6 +562,12 @@ ModuleObject&
 ModuleEnvironmentObject::module()
 {
     return getReservedSlot(MODULE_SLOT).toObject().as<ModuleObject>();
+}
+
+StaticModuleScope&
+ModuleEnvironmentObject::staticScope()
+{
+    return getProto()->as<StaticModuleScope>();
 }
 
 IndirectBindingMap&
@@ -1476,7 +1521,7 @@ ScopeIter::settle()
     if (!ssi_.done() && hasAnyScopeObject()) {
         switch (ssi_.type()) {
           case StaticScopeIter<CanGC>::Module:
-            MOZ_ASSERT(scope_->as<ModuleEnvironmentObject>().module() == ssi_.module());
+            MOZ_ASSERT(scope_->as<ModuleEnvironmentObject>().staticScope() == ssi_.module());
             break;
           case StaticScopeIter<CanGC>::Function:
             MOZ_ASSERT(scope_->as<CallObject>().callee().nonLazyScript() == ssi_.funScript());
@@ -3146,7 +3191,7 @@ js::GetModuleEnvironmentForScript(JSScript* script)
     if (ssi.done())
         return nullptr;
 
-    return ssi.module().environment();
+    return ssi.module().moduleObject().environment();
 }
 
 bool
