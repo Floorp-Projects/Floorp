@@ -1304,6 +1304,32 @@ const KTableValue nsCSSProps::kAlignAutoStretchBaseline[] = {
   eCSSKeyword_UNKNOWN,-1
 };
 
+const KTableValue nsCSSProps::kAlignAutoBaseline[] = {
+  eCSSKeyword_auto,          NS_STYLE_ALIGN_AUTO,
+  eCSSKeyword_baseline,      NS_STYLE_ALIGN_BASELINE,
+  eCSSKeyword_last_baseline, NS_STYLE_ALIGN_LAST_BASELINE,
+  eCSSKeyword_UNKNOWN,-1
+};
+
+const KTableValue nsCSSProps::kAlignContentDistribution[] = {
+  eCSSKeyword_stretch,       NS_STYLE_ALIGN_STRETCH,
+  eCSSKeyword_space_between, NS_STYLE_ALIGN_SPACE_BETWEEN,
+  eCSSKeyword_space_around,  NS_STYLE_ALIGN_SPACE_AROUND,
+  eCSSKeyword_space_evenly,  NS_STYLE_ALIGN_SPACE_EVENLY,
+  eCSSKeyword_UNKNOWN,-1
+};
+
+const KTableValue nsCSSProps::kAlignContentPosition[] = {
+  eCSSKeyword_start,         NS_STYLE_ALIGN_START,
+  eCSSKeyword_end,           NS_STYLE_ALIGN_END,
+  eCSSKeyword_flex_start,    NS_STYLE_ALIGN_FLEX_START,
+  eCSSKeyword_flex_end,      NS_STYLE_ALIGN_FLEX_END,
+  eCSSKeyword_center,        NS_STYLE_ALIGN_CENTER,
+  eCSSKeyword_left,          NS_STYLE_ALIGN_LEFT,
+  eCSSKeyword_right,         NS_STYLE_ALIGN_RIGHT,
+  eCSSKeyword_UNKNOWN,-1
+};
+
 const KTableValue nsCSSProps::kAlignContentKTable[] = {
   eCSSKeyword_flex_start,    NS_STYLE_ALIGN_CONTENT_FLEX_START,
   eCSSKeyword_flex_end,      NS_STYLE_ALIGN_CONTENT_FLEX_END,
@@ -1353,15 +1379,6 @@ const KTableValue nsCSSProps::kHyphensKTable[] = {
   eCSSKeyword_none, NS_STYLE_HYPHENS_NONE,
   eCSSKeyword_manual, NS_STYLE_HYPHENS_MANUAL,
   eCSSKeyword_auto, NS_STYLE_HYPHENS_AUTO,
-  eCSSKeyword_UNKNOWN,-1
-};
-
-const KTableValue nsCSSProps::kJustifyContentKTable[] = {
-  eCSSKeyword_flex_start,    NS_STYLE_JUSTIFY_CONTENT_FLEX_START,
-  eCSSKeyword_flex_end,      NS_STYLE_JUSTIFY_CONTENT_FLEX_END,
-  eCSSKeyword_center,        NS_STYLE_JUSTIFY_CONTENT_CENTER,
-  eCSSKeyword_space_between, NS_STYLE_JUSTIFY_CONTENT_SPACE_BETWEEN,
-  eCSSKeyword_space_around,  NS_STYLE_JUSTIFY_CONTENT_SPACE_AROUND,
   eCSSKeyword_UNKNOWN,-1
 };
 

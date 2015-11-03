@@ -7859,6 +7859,24 @@ nsRuleNode::ComputePositionData(void* aStartStruct,
                 0, 0, 0, 0);
   }
 
+  // justify-content: enum, inherit, initial
+  const auto& justifyContentValue = *aRuleData->ValueForJustifyContent();
+  if (MOZ_UNLIKELY(justifyContentValue.GetUnit() == eCSSUnit_Inherit)) {
+    if (MOZ_LIKELY(parentContext)) {
+      pos->mJustifyContent =
+        parentPos->ComputedJustifyContent(parentContext->StyleDisplay());
+    } else {
+      pos->mJustifyContent = NS_STYLE_JUSTIFY_AUTO;
+    }
+    conditions.SetUncacheable();
+  } else {
+    SetDiscrete(justifyContentValue,
+                pos->mJustifyContent, conditions,
+                SETDSC_ENUMERATED | SETDSC_UNSET_INITIAL,
+                parentPos->mJustifyContent, // unused, we handle 'inherit' above
+                NS_STYLE_JUSTIFY_AUTO, 0, 0, 0, 0);
+  }
+
   // justify-items: enum, inherit, initial
   const auto& justifyItemsValue = *aRuleData->ValueForJustifyItems();
   if (MOZ_UNLIKELY(justifyItemsValue.GetUnit() == eCSSUnit_Inherit)) {
@@ -7940,13 +7958,6 @@ nsRuleNode::ComputePositionData(void* aStartStruct,
               SETDSC_INTEGER | SETDSC_UNSET_INITIAL,
               parentPos->mOrder,
               NS_STYLE_ORDER_INITIAL, 0, 0, 0, 0);
-
-  // justify-content: enum, inherit, initial
-  SetDiscrete(*aRuleData->ValueForJustifyContent(),
-              pos->mJustifyContent, conditions,
-              SETDSC_ENUMERATED | SETDSC_UNSET_INITIAL,
-              parentPos->mJustifyContent,
-              NS_STYLE_JUSTIFY_CONTENT_FLEX_START, 0, 0, 0, 0);
 
   // object-fit: enum, inherit, initial
   SetDiscrete(*aRuleData->ValueForObjectFit(),

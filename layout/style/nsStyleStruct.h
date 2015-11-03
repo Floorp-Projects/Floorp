@@ -1397,6 +1397,12 @@ struct nsStylePosition {
   typedef nsStyleBackground::Position Position;
 
   /**
+   * Return the computed value for 'justify-content' given our 'display' value
+   * in aDisplay.
+   */
+  uint16_t ComputedJustifyContent(const nsStyleDisplay* aDisplay) const;
+
+  /**
    * Return the computed value for 'justify-items' given our 'display' value in
    * aDisplay and the parent StyleContext aParent (or null for the root).
    */
@@ -1434,12 +1440,12 @@ private:
   uint8_t MapLeftRightToStart(uint8_t aAlign, mozilla::LogicalAxis aAxis,
                               const nsStyleDisplay* aDisplay) const;
 
+  uint16_t      mJustifyContent;        // [reset] fallback value in the high byte
   uint8_t       mJustifyItems;          // [reset] see nsStyleConsts.h
   uint8_t       mJustifySelf;           // [reset] see nsStyleConsts.h
 public:
   uint8_t       mFlexDirection;         // [reset] see nsStyleConsts.h
   uint8_t       mFlexWrap;              // [reset] see nsStyleConsts.h
-  uint8_t       mJustifyContent;        // [reset] see nsStyleConsts.h
   uint8_t       mObjectFit;             // [reset] see nsStyleConsts.h
   int32_t       mOrder;                 // [reset] integer
   float         mFlexGrow;              // [reset] float
