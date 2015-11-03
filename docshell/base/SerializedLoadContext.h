@@ -49,7 +49,7 @@ public:
   bool mIsContent;
   bool mUsePrivateBrowsing;
   bool mUseRemoteTabs;
-  mozilla::OriginAttributes mOriginAttributes;
+  mozilla::DocShellOriginAttributes mOriginAttributes;
 };
 
 // Function to serialize over IPDL

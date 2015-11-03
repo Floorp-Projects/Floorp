@@ -45,7 +45,7 @@ class nsIStreamLoaderObserver;
 class nsIUnicharStreamLoader;
 class nsIUnicharStreamLoaderObserver;
 
-namespace mozilla { class OriginAttributes; }
+namespace mozilla { class NeckoOriginAttributes; }
 
 template <class> class nsCOMPtr;
 template <typename> struct already_AddRefed;
@@ -681,10 +681,10 @@ NS_QueryNotificationCallbacks(nsIInterfaceRequestor  *callbacks,
 bool NS_UsePrivateBrowsing(nsIChannel *channel);
 
 /**
- * Extract the OriginAttributes from the channel's triggering principal.
+ * Extract the NeckoOriginAttributes from the channel's triggering principal.
  */
 bool NS_GetOriginAttributes(nsIChannel *aChannel,
-                            mozilla::OriginAttributes &aAttributes);
+                            mozilla::NeckoOriginAttributes &aAttributes);
 
 // Constants duplicated from nsIScriptSecurityManager so we avoid having necko
 // know about script security manager.

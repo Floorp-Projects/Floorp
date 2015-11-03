@@ -154,7 +154,7 @@ AssertAppProcess(TabContext& aContext,
                  AssertAppProcessType aType,
                  const char* aCapability)
 {
-  const mozilla::OriginAttributes& attr = aContext.OriginAttributesRef();
+  const mozilla::DocShellOriginAttributes& attr = aContext.OriginAttributesRef();
   nsCString suffix;
   attr.CreateSuffix(suffix);
 

@@ -39,7 +39,7 @@ interface ChromeUtils : ThreadSafeChromeUtils {
  * IMPORTANT: If you add any members here, you need to do the following:
  * (1) Add them to both dictionaries.
  * (2) Update the methods on mozilla::OriginAttributes, including equality,
- *     serialization, and deserialization.
+ *     serialization, deserialization, and inheritance.
  * (3) Update the methods on mozilla::OriginAttributesPattern, including matching.
  */
 dictionary OriginAttributesDictionary {

@@ -211,7 +211,7 @@ public:
     RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
     MOZ_ASSERT(swm);
 
-    OriginAttributes attrs =
+    PrincipalOriginAttributes attrs =
       mozilla::BasePrincipal::Cast(mRegistration->mPrincipal)->OriginAttributesRef();
 
     swm->PropagateSoftUpdate(attrs,

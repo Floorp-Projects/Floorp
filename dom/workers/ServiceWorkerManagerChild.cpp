@@ -32,7 +32,7 @@ ServiceWorkerManagerChild::RecvNotifyRegister(
 
 bool
 ServiceWorkerManagerChild::RecvNotifySoftUpdate(
-                                      const OriginAttributes& aOriginAttributes,
+                                      const PrincipalOriginAttributes& aOriginAttributes,
                                       const nsString& aScope)
 {
   if (mShuttingDown) {
