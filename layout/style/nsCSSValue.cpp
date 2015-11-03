@@ -1021,6 +1021,11 @@ nsCSSValue::AppendAlignJustifyValueToString(int32_t aValue, nsAString& aResult)
   aValue &= ~overflowPos;
   MOZ_ASSERT(!(aValue & NS_STYLE_ALIGN_FLAG_BITS),
              "unknown bits in align/justify value");
+  MOZ_ASSERT((aValue != NS_STYLE_ALIGN_AUTO &&
+              aValue != NS_STYLE_ALIGN_BASELINE &&
+              aValue != NS_STYLE_ALIGN_LAST_BASELINE) ||
+             (!legacy && !overflowPos),
+             "auto/baseline/last-baseline never have any flags");
   const auto& kwtable(nsCSSProps::kAlignAllKeywords);
   AppendASCIItoUTF16(nsCSSProps::ValueToKeyword(aValue, kwtable), aResult);
   if (MOZ_UNLIKELY(overflowPos != 0)) {
@@ -1316,6 +1321,19 @@ nsCSSValue::AppendToString(nsCSSProperty aProperty, nsAString& aResult,
                                          NS_STYLE_CONTAIN_PAINT,
                                          aResult);
       break;
+
+    case eCSSProperty_justify_content: {
+      AppendAlignJustifyValueToString(intValue & NS_STYLE_ALIGN_ALL_BITS, aResult);
+      auto fallback = intValue >> NS_STYLE_ALIGN_ALL_SHIFT;
+      if (fallback) {
+        MOZ_ASSERT(nsCSSProps::ValueToKeywordEnum(fallback & ~NS_STYLE_ALIGN_FLAG_BITS,
+                                                  nsCSSProps::kAlignSelfPosition)
+                   != eCSSKeyword_UNKNOWN, "unknown fallback value");
+        aResult.Append(' ');
+        AppendAlignJustifyValueToString(fallback, aResult);
+      }
+      break;
+    }
 
     case eCSSProperty_justify_items:
     case eCSSProperty_justify_self:

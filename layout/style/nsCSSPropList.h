@@ -1701,12 +1701,12 @@ CSS_PROP_POSITION(
     justify-content,
     justify_content,
     JustifyContent,
-    CSS_PROPERTY_PARSE_VALUE,
+    CSS_PROPERTY_PARSE_FUNCTION,
     "",
-    VARIANT_HK,
-    kJustifyContentKTable,
-    offsetof(nsStylePosition, mJustifyContent),
-    eStyleAnimType_EnumU8)
+    0,
+    nullptr,
+    CSS_PROP_NO_OFFSET,
+    eStyleAnimType_None)
 CSS_PROP_POSITION(
     justify-items,
     justify_items,
