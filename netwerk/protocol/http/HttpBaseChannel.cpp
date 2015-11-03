@@ -2357,12 +2357,6 @@ HttpBaseChannel::FlushConsoleReports(nsIDocument* aDocument)
   mReportCollector->FlushConsoleReports(aDocument);
 }
 
-void
-HttpBaseChannel::FlushConsoleReports(nsIConsoleReportCollector* aCollector)
-{
-  mReportCollector->FlushConsoleReports(aCollector);
-}
-
 nsIPrincipal *
 HttpBaseChannel::GetURIPrincipal()
 {
