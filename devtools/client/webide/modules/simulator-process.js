@@ -228,8 +228,8 @@ Object.defineProperty(ASPp, "b2gBinary", {
       file = this.addon.getResourceURI().QueryInterface(Ci.nsIFileURL).file;
       file.append("firefox");
       let binaries = {
-        win32: "firefox-bin.exe",
-        mac64: "B2G.app/Contents/MacOS/firefox-bin",
+        win32: "firefox.exe",
+        mac64: "FirefoxNightly.app/Contents/MacOS/firefox-bin",
         linux32: "firefox-bin",
         linux64: "firefox-bin",
       };
