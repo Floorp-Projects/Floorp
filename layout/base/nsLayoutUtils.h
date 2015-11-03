@@ -273,10 +273,13 @@ public:
    *
    * @param aFrame the frame to start at
    * @param aFrameType the frame type to look for
+   * @param aStopAt a frame to stop at after we checked it
    * @return a frame of the given type or nullptr if no
    *         such ancestor exists
    */
-  static nsIFrame* GetClosestFrameOfType(nsIFrame* aFrame, nsIAtom* aFrameType);
+  static nsIFrame* GetClosestFrameOfType(nsIFrame* aFrame,
+                                         nsIAtom* aFrameType,
+                                         nsIFrame* aStopAt = nullptr);
 
   /**
    * Given a frame, search up the frame tree until we find an

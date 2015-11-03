@@ -1061,8 +1061,9 @@ public:
     mContainerAnimatedGeometryRoot = isAtRoot
       ? mContainerReferenceFrame
       : nsLayoutUtils::GetAnimatedGeometryRootFor(aContainerItem, aBuilder);
-    MOZ_ASSERT(nsLayoutUtils::IsAncestorFrameCrossDoc(mBuilder->RootReferenceFrame(),
-                                                      mContainerAnimatedGeometryRoot));
+    MOZ_ASSERT(!mBuilder->IsPaintingToWindow() ||
+      nsLayoutUtils::IsAncestorFrameCrossDoc(mBuilder->RootReferenceFrame(),
+                                             mContainerAnimatedGeometryRoot));
     NS_ASSERTION(!aContainerItem || !aContainerItem->ShouldFixToViewport(mBuilder),
                  "Container items never return true for ShouldFixToViewport");
     mContainerFixedPosFrame =
@@ -4734,6 +4735,12 @@ ContainerState::SetupScrollingMetadata(NewLayerEntry* aEntry)
   if (mFlattenToSingleLayer) {
     // animated geometry roots are forced to all match, so we can't
     // use them and we don't get async scrolling.
+    return;
+  }
+
+  if (!mBuilder->IsPaintingToWindow()) {
+    // async scrolling not possible, and async scrolling info not computed
+    // for this paint.
     return;
   }
 

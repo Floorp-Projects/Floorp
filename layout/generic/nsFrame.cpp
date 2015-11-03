@@ -2520,12 +2520,15 @@ nsIFrame::BuildDisplayListForChild(nsDisplayListBuilder*   aBuilder,
       // return early.
 
       if (aBuilder->IsBuildingLayerEventRegions()) {
+        const nsIFrame* rootReferenceFrame = aBuilder->RootReferenceFrame();
         MOZ_ASSERT(buildingForChild.GetPrevAnimatedGeometryRoot() ==
-                   aBuilder->FindAnimatedGeometryRootFor(child->GetParent()));
+                   aBuilder->FindAnimatedGeometryRootFor(child->GetParent(),
+                                                         rootReferenceFrame));
 
         // If this frame has a different animated geometry root than its parent,
         // make sure we accumulate event regions for its layer.
-        nsIFrame *animatedGeometryRoot = aBuilder->FindAnimatedGeometryRootFor(child);
+        nsIFrame *animatedGeometryRoot =
+          aBuilder->FindAnimatedGeometryRootFor(child, rootReferenceFrame);
         if (animatedGeometryRoot != buildingForChild.GetPrevAnimatedGeometryRoot()) {
           nsDisplayLayerEventRegions* eventRegions =
             new (aBuilder) nsDisplayLayerEventRegions(aBuilder, child);
