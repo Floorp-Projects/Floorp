@@ -23,6 +23,7 @@
 #include "nsPluginsDirUtils.h"
 
 #include "nsILocalFileMac.h"
+#include "mozilla/UniquePtr.h"
 
 #include "nsCocoaFeatures.h"
 #if defined(MOZ_CRASHREPORTER)
@@ -41,7 +42,6 @@
 
 typedef NS_NPAPIPLUGIN_CALLBACK(const char *, NP_GETMIMEDESCRIPTION) ();
 typedef NS_NPAPIPLUGIN_CALLBACK(OSErr, BP_GETSUPPORTEDMIMETYPES) (BPSupportedMIMETypes *mimeInfo, UInt32 flags);
-
 
 /*
 ** Returns a CFBundleRef if the path refers to a Mac OS X bundle directory.
@@ -238,16 +238,16 @@ static void ParsePlistPluginInfo(nsPluginInfo& info, CFBundleRef bundle)
   memset(info.fMimeDescriptionArray, 0, mimeDataArraySize);
 
   // Allocate memory for mime dictionary keys and values
-  nsAutoArrayPtr<CFTypeRef> keys(new CFTypeRef[mimeDictKeyCount]);
+  mozilla::UniquePtr<CFTypeRef[]> keys(new CFTypeRef[mimeDictKeyCount]);
   if (!keys)
     return;
-  nsAutoArrayPtr<CFTypeRef> values(new CFTypeRef[mimeDictKeyCount]);
+  mozilla::UniquePtr<CFTypeRef[]> values(new CFTypeRef[mimeDictKeyCount]);
   if (!values)
     return;
   
   info.fVariantCount = 0;
 
-  ::CFDictionaryGetKeysAndValues(mimeDict, keys, values);
+  ::CFDictionaryGetKeysAndValues(mimeDict, keys.get(), values.get());
   for (int i = 0; i < mimeDictKeyCount; i++) {
     CFTypeRef mimeString = keys[i];
     if (!mimeString || ::CFGetTypeID(mimeString) != ::CFStringGetTypeID()) {

@@ -128,6 +128,14 @@ public:
   }
 
   /**
+   * Clear
+   */
+  void clear()
+  {
+    mBitField = 0;
+  }
+
+  /**
    * Intersection
    */
   void operator&=(const EnumSet<T> aEnumSet)

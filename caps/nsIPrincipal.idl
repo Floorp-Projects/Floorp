@@ -60,8 +60,10 @@ interface nsIPrincipal : nsISerializable
 
     /**
      * The domain URI to which this principal pertains.
-     * This is congruent with HTMLDocument.domain, and may be null.
+     * This is null unless script successfully sets document.domain to our URI
+     * or a superdomain of our URI.
      * Setting this has no effect on the URI.
+     * See https://developer.mozilla.org/en-US/docs/Web/Security/Same-origin_policy#Changing_origin
      */
     [noscript] attribute nsIURI domain;
 

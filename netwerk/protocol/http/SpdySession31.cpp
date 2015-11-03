@@ -15,12 +15,12 @@
 
 #include "mozilla/Telemetry.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/Snprintf.h"
 #include "nsHttp.h"
 #include "nsHttpHandler.h"
 #include "nsHttpConnection.h"
 #include "nsISchedulingContext.h"
 #include "nsISupportsPriority.h"
-#include "prprf.h"
 #include "prnetdb.h"
 #include "SpdyPush31.h"
 #include "SpdySession31.h"
@@ -177,11 +177,10 @@ SpdySession31::LogIO(SpdySession31 *self, SpdyStream31 *stream, const char *labe
         LOG5(("%s", linebuf));
       }
       line = linebuf;
-      PR_snprintf(line, 128, "%08X: ", index);
+      snprintf(line, 128, "%08X: ", index);
       line += 10;
     }
-    PR_snprintf(line, 128 - (line - linebuf), "%02X ",
-                ((unsigned char *)data)[index]);
+    snprintf(line, 128 - (line - linebuf), "%02X ", ((unsigned char *)data)[index]);
     line += 3;
   }
   if (index) {

@@ -13,7 +13,7 @@
 
 using namespace mozilla;
 
-static PRLogModuleInfo *gRequestObserverProxyLog;
+static LazyLogModule gRequestObserverProxyLog("nsRequestObserverProxy");
 
 #undef LOG
 #define LOG(args) MOZ_LOG(gRequestObserverProxyLog, mozilla::LogLevel::Debug, args)
@@ -173,10 +173,6 @@ NS_IMETHODIMP
 nsRequestObserverProxy::Init(nsIRequestObserver *observer, nsISupports *context)
 {
     NS_ENSURE_ARG_POINTER(observer);
-
-    if (!gRequestObserverProxyLog)
-        gRequestObserverProxyLog = PR_NewLogModule("nsRequestObserverProxy");
-
     mObserver = new nsMainThreadPtrHolder<nsIRequestObserver>(observer);
     mContext = new nsMainThreadPtrHolder<nsISupports>(context);
 

@@ -7,6 +7,8 @@
 DevToolsModules(
     'addons.js',
     'app-manager.js',
+    'app-projects.js',
+    'app-validator.js',
     'build.js',
     'config-view.js',
     'project-list.js',

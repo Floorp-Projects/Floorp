@@ -17,10 +17,10 @@
 "unpack": true
 },
 {
-"size": 86474070,
-"digest": "85d528ba396d35e38280d01586d91c082a57846fb82c471579632995565caa54320b083581b04d96e526efa6cef53ea076a32c25f220f7f32f651a4dfdf30e31",
 "algorithm": "sha512",
-"filename": "rustc.tar.gz",
-"unpack": true
+"filename": "rustc.tar.bz2",
+"unpack": true,
+"digest": "28e0d27846cfa6fac5be2df4debb469b6f488d45357d21f2bec14c7c2b6abe5713965497961e7ac10120d3687751ccced95b9498cc54c529cbdfcd59d51a67ec",
+"size": 84116661
 }
 ]
