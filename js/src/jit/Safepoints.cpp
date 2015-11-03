@@ -111,7 +111,7 @@ SafepointWriter::writeGcRegs(LSafepoint* safepoint)
 
     WriteFloatRegisterMask(stream_, spilledFloat.bits());
 
-#ifdef DEBUG
+#ifdef JS_JITSPEW
     if (JitSpewEnabled(JitSpew_Safepoints)) {
         for (GeneralRegisterForwardIterator iter(spilledGpr); iter.more(); iter++) {
             const char* type = gc.has(*iter)
@@ -163,7 +163,7 @@ SafepointWriter::writeGcSlots(LSafepoint* safepoint)
 {
     LSafepoint::SlotList& slots = safepoint->gcSlots();
 
-#ifdef DEBUG
+#ifdef JS_JITSPEW
     for (uint32_t i = 0; i < slots.length(); i++)
         JitSpew(JitSpew_Safepoints, "    gc slot: %d", slots[i]);
 #endif
@@ -181,7 +181,7 @@ SafepointWriter::writeSlotsOrElementsSlots(LSafepoint* safepoint)
     for (uint32_t i = 0; i < slots.length(); i++) {
         if (!slots[i].stack)
             MOZ_CRASH();
-#ifdef DEBUG
+#ifdef JS_JITSPEW
         JitSpew(JitSpew_Safepoints, "    slots/elements slot: %d", slots[i].slot);
 #endif
         stream_.writeUnsigned(slots[i].slot);
@@ -193,7 +193,7 @@ SafepointWriter::writeValueSlots(LSafepoint* safepoint)
 {
     LSafepoint::SlotList& slots = safepoint->valueSlots();
 
-#ifdef DEBUG
+#ifdef JS_JITSPEW
     for (uint32_t i = 0; i < slots.length(); i++)
         JitSpew(JitSpew_Safepoints, "    gc value: %d", slots[i]);
 #endif
@@ -289,7 +289,7 @@ SafepointWriter::writeNunboxParts(LSafepoint* safepoint)
 {
     LSafepoint::NunboxList& entries = safepoint->nunboxParts();
 
-# ifdef DEBUG
+# ifdef JS_JITSPEW
     if (JitSpewEnabled(JitSpew_Safepoints)) {
         for (uint32_t i = 0; i < entries.length(); i++) {
             SafepointNunboxEntry& entry = entries[i];

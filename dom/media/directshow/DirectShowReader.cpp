@@ -380,7 +380,7 @@ DirectShowReader::SeekInternal(int64_t aTargetUs)
 }
 
 void
-DirectShowReader::NotifyDataArrivedInternal(uint32_t aLength, int64_t aOffset)
+DirectShowReader::NotifyDataArrivedInternal()
 {
   MOZ_ASSERT(OnTaskQueue());
   if (!mMP3FrameParser.NeedsData()) {

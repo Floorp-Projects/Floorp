@@ -197,7 +197,7 @@ class ICFallbackStub;
     IC_SHARED_STUB_KIND_LIST(FORWARD_DECLARE_STUBS)
 #undef FORWARD_DECLARE_STUBS
 
-#ifdef DEBUG
+#ifdef JS_JITSPEW
 void FallbackICSpew(JSContext* cx, ICFallbackStub* stub, const char* fmt, ...);
 void TypeFallbackICSpew(JSContext* cx, ICTypeMonitor_Fallback* stub, const char* fmt, ...);
 #else

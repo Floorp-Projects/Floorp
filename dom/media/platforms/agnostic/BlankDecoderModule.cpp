@@ -183,7 +183,7 @@ public:
         frames.value() > (UINT32_MAX / mChannelCount)) {
       return nullptr;
     }
-    AudioDataValue* samples = new AudioDataValue[frames.value() * mChannelCount];
+    auto samples = MakeUnique<AudioDataValue[]>(frames.value() * mChannelCount);
     // Fill the sound buffer with an A4 tone.
     static const float pi = 3.14159265f;
     static const float noteHz = 440.0f;
@@ -198,7 +198,7 @@ public:
                          aDTS.ToMicroseconds(),
                          aDuration.ToMicroseconds(),
                          uint32_t(frames.value()),
-                         samples,
+                         Move(samples),
                          mChannelCount,
                          mSampleRate);
   }

@@ -527,7 +527,7 @@ public:
       case ON_DISCONNECTED:
         // If we've disconnected, make sure we close all the streams - from mainthread!
         mConnection->CloseAll();
-        // fall through
+        MOZ_FALLTHROUGH;
       case ON_CHANNEL_CREATED:
       case ON_CONNECTION:
         // WeakPtr - only used/modified/nulled from MainThread so we can use a WeakPtr here

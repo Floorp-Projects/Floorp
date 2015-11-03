@@ -27,7 +27,7 @@ LoopContainsPossibleCall(MIRGraph& graph, MBasicBlock* header, MBasicBlock* back
         for (auto insIter(block->begin()), insEnd(block->end()); insIter != insEnd; ++insIter) {
             MInstruction* ins = *insIter;
             if (ins->possiblyCalls()) {
-#ifdef DEBUG
+#ifdef JS_JITSPEW
                 JitSpew(JitSpew_LICM, "    Possile call found at %s%u", ins->opName(), ins->id());
 #endif
                 return true;
@@ -154,7 +154,7 @@ MoveDeferredOperands(MInstruction* ins, MInstruction* hoistPoint, bool hasCalls)
         // because we require RequiresHoistedUse to be set at each level.
         MoveDeferredOperands(opIns, hoistPoint, hasCalls);
 
-#ifdef DEBUG
+#ifdef JS_JITSPEW
         JitSpew(JitSpew_LICM, "    Hoisting %s%u (now that a user will be hoisted)",
                 opIns->opName(), opIns->id());
 #endif
@@ -170,7 +170,7 @@ VisitLoopBlock(MBasicBlock* block, MBasicBlock* header, MInstruction* hoistPoint
         MInstruction* ins = *insIter++;
 
         if (!IsHoistable(ins, header, hasCalls)) {
-#ifdef DEBUG
+#ifdef JS_JITSPEW
             if (IsHoistableIgnoringDependency(ins, hasCalls)) {
                 JitSpew(JitSpew_LICM, "    %s%u isn't hoistable due to dependency on %s%u",
                         ins->opName(), ins->id(),
@@ -184,7 +184,7 @@ VisitLoopBlock(MBasicBlock* block, MBasicBlock* header, MInstruction* hoistPoint
         // its uses. We want those instructions as close as possible to their
         // use, to minimize register pressure.
         if (RequiresHoistedUse(ins, hasCalls)) {
-#ifdef DEBUG
+#ifdef JS_JITSPEW
             JitSpew(JitSpew_LICM, "    %s%u will be hoisted only if its users are",
                     ins->opName(), ins->id());
 #endif
@@ -194,7 +194,7 @@ VisitLoopBlock(MBasicBlock* block, MBasicBlock* header, MInstruction* hoistPoint
         // Hoist operands which were too cheap to hoist on their own.
         MoveDeferredOperands(ins, hoistPoint, hasCalls);
 
-#ifdef DEBUG
+#ifdef JS_JITSPEW
         JitSpew(JitSpew_LICM, "    Hoisting %s%u", ins->opName(), ins->id());
 #endif
 
@@ -208,7 +208,7 @@ VisitLoop(MIRGraph& graph, MBasicBlock* header)
 {
     MInstruction* hoistPoint = header->loopPredecessor()->lastIns();
 
-#ifdef DEBUG
+#ifdef JS_JITSPEW
     JitSpew(JitSpew_LICM, "  Visiting loop with header block%u, hoisting to %s%u",
             header->id(), hoistPoint->opName(), hoistPoint->id());
 #endif

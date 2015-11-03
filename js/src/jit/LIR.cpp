@@ -472,7 +472,7 @@ LInstruction::assignSnapshot(LSnapshot* snapshot)
     MOZ_ASSERT(!snapshot_);
     snapshot_ = snapshot;
 
-#ifdef DEBUG
+#ifdef JS_JITSPEW
     if (JitSpewEnabled(JitSpew_IonSnapshots)) {
         JitSpewHeader(JitSpew_IonSnapshots);
         Fprinter& out = JitSpewPrinter();

@@ -13,6 +13,7 @@
 #include "nsIMemoryReporter.h"
 #include "SharedBuffer.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/UniquePtr.h"
 #include "nsTArray.h"
 
 namespace mozilla {
@@ -123,13 +124,13 @@ public:
             int64_t aTime,
             int64_t aDuration,
             uint32_t aFrames,
-            AudioDataValue* aData,
+            UniquePtr<AudioDataValue[]> aData,
             uint32_t aChannels,
             uint32_t aRate)
     : MediaData(sType, aOffset, aTime, aDuration, aFrames)
     , mChannels(aChannels)
     , mRate(aRate)
-    , mAudioData(aData) {}
+    , mAudioData(Move(aData)) {}
 
   static const Type sType = AUDIO_DATA;
   static const char* sTypeName;
@@ -154,7 +155,7 @@ public:
   // mChannels channels, each with mFrames frames
   RefPtr<SharedBuffer> mAudioBuffer;
   // mFrames frames, each with mChannels values
-  nsAutoArrayPtr<AudioDataValue> mAudioData;
+  UniquePtr<AudioDataValue[]> mAudioData;
 
 protected:
   ~AudioData() {}

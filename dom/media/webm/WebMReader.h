@@ -118,7 +118,7 @@ public:
   uint64_t GetCodecDelay() { return mCodecDelay; }
 
 protected:
-  virtual void NotifyDataArrivedInternal(uint32_t aLength, int64_t aOffset) override;
+  virtual void NotifyDataArrivedInternal() override;
 
   // Decode a nestegg packet of audio data. Push the audio data on the
   // audio queue. Returns true when there's more audio to decode,

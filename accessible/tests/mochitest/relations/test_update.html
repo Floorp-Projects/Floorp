@@ -138,10 +138,6 @@
                   RELATION_DESCRIBED_BY, RELATION_DESCRIPTION_FOR,
                   "host", "host", "dependent1", "dependent2");
 
-      testRelated("aria-owns",
-                  null, RELATION_NODE_CHILD_OF,
-                  "host", "host", "dependent1", "dependent2");
-
       testRelated("aria-controls",
                   RELATION_CONTROLLER_FOR, RELATION_CONTROLLED_BY,
                   "host", "host", "dependent1", "dependent2");
@@ -168,11 +164,6 @@
       gQueue.push(new insertRelated("aria-describedby", "dependent6", false,
                                     RELATION_DESCRIBED_BY,
                                     RELATION_DESCRIPTION_FOR));
-
-      gQueue.push(new insertRelated("aria-owns", "dependent7", true,
-                                    null, RELATION_NODE_CHILD_OF));
-      gQueue.push(new insertRelated("aria-owns", "dependent8", false,
-                                    null, RELATION_NODE_CHILD_OF));
 
       gQueue.push(new insertRelated("aria-controls", "dependent9", true,
                                     RELATION_CONTROLLER_FOR,

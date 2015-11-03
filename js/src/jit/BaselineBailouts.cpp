@@ -971,7 +971,9 @@ InitFromBailout(JSContext* cx, HandleScript caller, jsbytecode* callerPC,
             }
         }
     }
+#endif
 
+#ifdef JS_JITSPEW
     JitSpew(JitSpew_BaselineBailouts, "      Resuming %s pc offset %d (op %s) (line %d) of %s:%" PRIuSIZE,
                 resumeAfter ? "after" : "at", (int) pcOff, js_CodeName[op],
                 PCToLineNumber(script, pc), script->filename(), script->lineno());

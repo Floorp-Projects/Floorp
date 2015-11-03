@@ -189,12 +189,16 @@ bool
 IonBuilder::abort(const char* message, ...)
 {
     // Don't call PCToLineNumber in release builds.
-#ifdef DEBUG
+#ifdef JS_JITSPEW
     va_list ap;
     va_start(ap, message);
     abortFmt(message, ap);
     va_end(ap);
+# ifdef DEBUG
     JitSpew(JitSpew_IonAbort, "aborted @ %s:%d", script()->filename(), PCToLineNumber(script(), pc));
+# else
+    JitSpew(JitSpew_IonAbort, "aborted @ %s", script()->filename());
+# endif
 #endif
     trackActionableAbort(message);
     return false;
@@ -10582,7 +10586,7 @@ IonBuilder::annotateGetPropertyCache(MDefinition* obj, PropertyName* name,
         return true;
     }
 
-#ifdef DEBUG
+#ifdef JS_JITSPEW
     if (inlinePropTable->numEntries() > 0)
         JitSpew(JitSpew_Inlining, "Annotated GetPropertyCache with %d/%d inline cases",
                                     (int) inlinePropTable->numEntries(), (int) objCount);
