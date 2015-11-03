@@ -8,7 +8,7 @@ var Cc = Components.classes;
 var Ci = Components.interfaces;
 var Cu = Components.utils;
 
-this.EXPORTED_SYMBOLS = [ "TabCrashReporter", "PluginCrashReporter" ];
+this.EXPORTED_SYMBOLS = [ "TabCrashHandler", "PluginCrashReporter" ];
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
@@ -22,7 +22,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "RemotePages",
 XPCOMUtils.defineLazyModuleGetter(this, "SessionStore",
   "resource:///modules/sessionstore/SessionStore.jsm");
 
-this.TabCrashReporter = {
+this.TabCrashHandler = {
   _crashedTabCount: 0,
 
   get prefs() {

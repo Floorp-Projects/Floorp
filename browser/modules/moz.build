@@ -17,7 +17,7 @@ EXTRA_JS_MODULES += [
     'CastingApps.jsm',
     'Chat.jsm',
     'ContentClick.jsm',
-    'ContentCrashReporters.jsm',
+    'ContentCrashHandlers.jsm',
     'ContentLinkHandler.jsm',
     'ContentObservers.jsm',
     'ContentSearch.jsm',
