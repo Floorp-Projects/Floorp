@@ -56,3 +56,7 @@ fuzzy-if(winWidget,70,130) fuzzy-if(cocoaWidget,85,180) == grid-col-max-sizing-m
 == grid-item-justify-001.html grid-item-justify-001-ref.html
 == grid-item-justify-002.html grid-item-justify-002-ref.html
 == grid-item-stretch-001.html grid-item-stretch-001-ref.html
+== grid-align-content-001.html grid-align-content-001-ref.html
+== grid-justify-content-001.html grid-justify-content-001-ref.html
+== grid-justify-content-002.html grid-justify-content-002-ref.html
+== grid-justify-content-003.html grid-justify-content-003-ref.html
