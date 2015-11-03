@@ -4502,10 +4502,7 @@ Tab.prototype = {
     if (!ParentalControls.isAllowed(ParentalControls.VISIT_FILE_URLS, fixedURI)) {
       aRequest.cancel(Cr.NS_BINDING_ABORTED);
 
-      aRequest = this.browser.docShell.displayLoadError(Cr.NS_ERROR_UNKNOWN_PROTOCOL, fixedURI, null);
-      if (aRequest) {
-        fixedURI = aRequest.URI;
-      }
+      this.browser.docShell.displayLoadError(Cr.NS_ERROR_UNKNOWN_PROTOCOL, fixedURI, null);
     }
 
     let contentType = contentWin.document.contentType;
