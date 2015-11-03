@@ -69,17 +69,9 @@ public:
                 mozilla::jni::NativeStub<GeckoEditable::OnImeAddCompositionRange_t, Impl>
                 ::template Wrap<&Impl::OnImeAddCompositionRange>),
 
-        mozilla::jni::MakeNativeMethod<GeckoEditable::OnImeRemoveComposition_t>(
-                mozilla::jni::NativeStub<GeckoEditable::OnImeRemoveComposition_t, Impl>
-                ::template Wrap<&Impl::OnImeRemoveComposition>),
-
         mozilla::jni::MakeNativeMethod<GeckoEditable::OnImeReplaceText_t>(
                 mozilla::jni::NativeStub<GeckoEditable::OnImeReplaceText_t, Impl>
                 ::template Wrap<&Impl::OnImeReplaceText>),
-
-        mozilla::jni::MakeNativeMethod<GeckoEditable::OnImeSetSelection_t>(
-                mozilla::jni::NativeStub<GeckoEditable::OnImeSetSelection_t, Impl>
-                ::template Wrap<&Impl::OnImeSetSelection>),
 
         mozilla::jni::MakeNativeMethod<GeckoEditable::OnImeSynchronize_t>(
                 mozilla::jni::NativeStub<GeckoEditable::OnImeSynchronize_t, Impl>
