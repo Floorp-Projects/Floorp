@@ -65,7 +65,10 @@ global.IconDetails = {
             Services.scriptSecurityManager.checkLoadURIStrWithPrincipal(
               extension.principal, url,
               Services.scriptSecurityManager.DISALLOW_SCRIPT);
-          } catch (e if !context) {
+          } catch (e) {
+            if (context) {
+              throw e;
+            }
             // If there's no context, it's because we're handling this
             // as a manifest directive. Log a warning rather than
             // raising an error, but don't accept the URL in any case.
@@ -343,7 +346,7 @@ global.TabManager = {
     if (!window.gBrowser) {
       return [];
     }
-    return [ for (tab of window.gBrowser.tabs) this.convert(extension, tab) ];
+    return Array.map(window.gBrowser.tabs, tab => this.convert(extension, tab));
   },
 };
 
