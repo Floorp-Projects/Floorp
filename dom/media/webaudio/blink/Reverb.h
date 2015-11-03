@@ -53,7 +53,6 @@ public:
     void process(const mozilla::AudioBlock* sourceBus, mozilla::AudioBlock* destinationBus, size_t framesToProcess);
 
     size_t impulseResponseLength() const { return m_impulseResponseLength; }
-    size_t latencyFrames() const;
 
     size_t sizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
