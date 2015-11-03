@@ -21,6 +21,7 @@ fails == grid-whitespace-handling-1b.xhtml grid-whitespace-handling-1-ref.xhtml
 == grid-abspos-items-008.html grid-abspos-items-008-ref.html
 == grid-abspos-items-009.html grid-abspos-items-009-ref.html
 == grid-abspos-items-010.html grid-abspos-items-010-ref.html
+== grid-abspos-items-011.html grid-abspos-items-011-ref.html
 == grid-order-abspos-items-001.html grid-order-abspos-items-001-ref.html
 == grid-order-placement-auto-001.html grid-order-placement-auto-001-ref.html
 == grid-order-placement-definite-001.html grid-order-placement-definite-001-ref.html
