@@ -4432,12 +4432,10 @@ FrameLayerBuilder::AddPaintedDisplayItem(PaintedLayerData* aLayerData,
   RefPtr<BasicLayerManager> tempManager;
   nsIntRect intClip;
   bool hasClip = false;
-  bool havePreviousData = false;
   if (aLayerState != LAYER_NONE) {
     DisplayItemData *data = GetDisplayItemDataForManager(aItem, layer->Manager());
     if (data) {
       tempManager = data->mInactiveManager;
-      havePreviousData = !!data->mGeometry;
     }
     if (!tempManager) {
       tempManager = new BasicLayerManager(BasicLayerManager::BLM_INACTIVE);
@@ -4476,13 +4474,7 @@ FrameLayerBuilder::AddPaintedDisplayItem(PaintedLayerData* aLayerData,
         layerBuilder->DidBeginRetainedLayerTransaction(tempManager);
       }
 
-      // If we have previous data for this item, then we need to track changes
-      // to the layer tree and invalidate them. If we don't have any previous
-      // data then ComputeGeometryChangeForItem will invalidate the item's bounds.
-      UniquePtr<LayerProperties> props;
-      if (havePreviousData) {
-        props = LayerProperties::CloneFrom(tempManager->GetRoot());
-      }
+      UniquePtr<LayerProperties> props(LayerProperties::CloneFrom(tempManager->GetRoot()));
       RefPtr<Layer> tmpLayer =
         aItem->BuildLayer(mDisplayListBuilder, tempManager, ContainerLayerParameters());
       // We have no easy way of detecting if this transaction will ever actually get finished.
@@ -4525,31 +4517,29 @@ FrameLayerBuilder::AddPaintedDisplayItem(PaintedLayerData* aLayerData,
       }
 #endif
 
-      if (props) {
-        nsIntPoint offset = GetLastPaintOffset(layer) - GetTranslationForPaintedLayer(layer);
-        props->MoveBy(-offset);
-        nsIntRegion invalid = props->ComputeDifferences(tmpLayer, nullptr);
-        if (aLayerState == LAYER_SVG_EFFECTS) {
-          invalid = nsSVGIntegrationUtils::AdjustInvalidAreaForSVGEffects(aItem->Frame(),
-                                                                          aItem->ToReferenceFrame(),
-                                                                          invalid);
-        }
-        if (!invalid.IsEmpty()) {
+      nsIntPoint offset = GetLastPaintOffset(layer) - GetTranslationForPaintedLayer(layer);
+      props->MoveBy(-offset);
+      nsIntRegion invalid = props->ComputeDifferences(tmpLayer, nullptr);
+      if (aLayerState == LAYER_SVG_EFFECTS) {
+        invalid = nsSVGIntegrationUtils::AdjustInvalidAreaForSVGEffects(aItem->Frame(),
+                                                                        aItem->ToReferenceFrame(),
+                                                                        invalid);
+      }
+      if (!invalid.IsEmpty()) {
 #ifdef MOZ_DUMP_PAINTING
-          if (nsLayoutUtils::InvalidationDebuggingIsEnabled()) {
-             printf_stderr("Inactive LayerManager(%p) for display item %s(%p) has an invalid region - invalidating layer %p\n", tempManager.get(), aItem->Name(), aItem->Frame(), layer);
-          }
-#endif
-          invalid.ScaleRoundOut(paintedData->mXScale, paintedData->mYScale);
-
-          if (hasClip) {
-            invalid.And(invalid, intClip);
-          }
-
-          InvalidatePostTransformRegion(layer, invalid,
-                                        GetTranslationForPaintedLayer(layer),
-                                        paintedData);
+        if (nsLayoutUtils::InvalidationDebuggingIsEnabled()) {
+          printf_stderr("Inactive LayerManager(%p) for display item %s(%p) has an invalid region - invalidating layer %p\n", tempManager.get(), aItem->Name(), aItem->Frame(), layer);
         }
+#endif
+        invalid.ScaleRoundOut(paintedData->mXScale, paintedData->mYScale);
+
+        if (hasClip) {
+          invalid.And(invalid, intClip);
+        }
+
+        InvalidatePostTransformRegion(layer, invalid,
+                                      GetTranslationForPaintedLayer(layer),
+                                      paintedData);
       }
     }
     ClippedDisplayItem* cdi =
