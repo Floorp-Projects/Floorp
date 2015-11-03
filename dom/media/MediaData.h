@@ -282,7 +282,7 @@ public:
 
   // Initialize PlanarYCbCrImage. Only When aCopyData is true,
   // video data is copied to PlanarYCbCrImage.
-  static void SetVideoDataToImage(PlanarYCbCrImage* aVideoImage,
+  static bool SetVideoDataToImage(PlanarYCbCrImage* aVideoImage,
                                   const VideoInfo& aInfo,
                                   const YCbCrBuffer &aBuffer,
                                   const IntRect& aPicture,

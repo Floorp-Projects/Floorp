@@ -200,14 +200,14 @@ VideoData::ShallowCopyUpdateTimestampAndDuration(const VideoData* aOther,
 }
 
 /* static */
-void VideoData::SetVideoDataToImage(PlanarYCbCrImage* aVideoImage,
+bool VideoData::SetVideoDataToImage(PlanarYCbCrImage* aVideoImage,
                                     const VideoInfo& aInfo,
                                     const YCbCrBuffer &aBuffer,
                                     const IntRect& aPicture,
                                     bool aCopyData)
 {
   if (!aVideoImage) {
-    return;
+    return false;
   }
   const YCbCrBuffer::Plane &Y = aBuffer.mPlanes[0];
   const YCbCrBuffer::Plane &Cb = aBuffer.mPlanes[1];
@@ -231,9 +231,9 @@ void VideoData::SetVideoDataToImage(PlanarYCbCrImage* aVideoImage,
 
   aVideoImage->SetDelayedConversion(true);
   if (aCopyData) {
-    aVideoImage->SetData(data);
+    return aVideoImage->SetData(data);
   } else {
-    aVideoImage->SetDataNoCopy(data);
+    return aVideoImage->SetDataNoCopy(data);
   }
 }
 
@@ -332,12 +332,10 @@ VideoData::Create(const VideoInfo& aInfo,
                "Wrong format?");
   PlanarYCbCrImage* videoImage = static_cast<PlanarYCbCrImage*>(v->mImage.get());
 
-  if (!aImage) {
-    VideoData::SetVideoDataToImage(videoImage, aInfo, aBuffer, aPicture,
-                                   true /* aCopyData */);
-  } else {
-    VideoData::SetVideoDataToImage(videoImage, aInfo, aBuffer, aPicture,
-                                   false /* aCopyData */);
+  bool shouldCopyData = (aImage == nullptr);
+  if (!VideoData::SetVideoDataToImage(videoImage, aInfo, aBuffer, aPicture,
+                                      shouldCopyData)) {
+    return nullptr;
   }
 
 #ifdef MOZ_WIDGET_GONK
@@ -348,8 +346,10 @@ VideoData::Create(const VideoInfo& aInfo,
       return nullptr;
     }
     videoImage = static_cast<PlanarYCbCrImage*>(v->mImage.get());
-    VideoData::SetVideoDataToImage(videoImage, aInfo, aBuffer, aPicture,
-                                   true /* aCopyData */);
+    if(!VideoData::SetVideoDataToImage(videoImage, aInfo, aBuffer, aPicture,
+                                       true /* aCopyData */)) {
+      return nullptr;
+    }
   }
 #endif
   return v.forget();
@@ -475,7 +475,9 @@ VideoData::Create(const VideoInfo& aInfo,
   data.mPicSize = aPicture.Size();
   data.mGraphicBuffer = aBuffer;
 
-  videoImage->SetData(data);
+  if (!videoImage->SetData(data)) {
+    return nullptr;
+  }
 
   return v.forget();
 }
