@@ -44,7 +44,11 @@
 #include "prio.h"
 #include "prnetdb.h"
 
-extern PRLogModuleInfo* gRtspLog;
+namespace mozilla {
+namespace net {
+extern LazyLogModule gRtspLog;
+}
+}
 
 // If no access units are received within 10 secs, assume that the rtp
 // stream has ended and abort.

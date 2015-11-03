@@ -14,17 +14,7 @@
  * Cache Service Utility Functions
  */
 
-PRLogModuleInfo * gCacheLog = nullptr;
-
-
-void
-CacheLogInit()
-{
-    if (gCacheLog) return;
-    gCacheLog = PR_NewLogModule("cache");
-    NS_ASSERTION(gCacheLog, "\nfailed to allocate cache log.\n");
-}
-
+mozilla::LazyLogModule gCacheLog("cache");
 
 void
 CacheLogPrintPath(mozilla::LogLevel level, const char * format, nsIFile * item)

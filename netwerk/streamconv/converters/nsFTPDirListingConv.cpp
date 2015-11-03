@@ -30,8 +30,7 @@
 // this enables LogLevel::Debug level information and places all output in
 // the file nspr.log
 //
-PRLogModuleInfo* gFTPDirListConvLog = nullptr;
-
+static mozilla::LazyLogModule gFTPDirListConvLog("nsFTPDirListingConv");
 
 // nsISupports implementation
 NS_IMPL_ISUPPORTS(nsFTPDirListingConv,
@@ -190,19 +189,6 @@ nsFTPDirListingConv::~nsFTPDirListingConv() {
 }
 
 nsresult
-nsFTPDirListingConv::Init() {
-    //
-    // Initialize the global PRLogModule for FTP Protocol logging 
-    // if necessary...
-    //
-    if (nullptr == gFTPDirListConvLog) {
-        gFTPDirListConvLog = PR_NewLogModule("nsFTPDirListingConv");
-    }
-
-    return NS_OK;
-}
-
-nsresult
 nsFTPDirListingConv::GetHeaders(nsACString& headers,
                                 nsIURI* uri)
 {
@@ -358,5 +344,5 @@ NS_NewFTPDirListingConv(nsFTPDirListingConv** aFTPDirListingConv)
         return NS_ERROR_OUT_OF_MEMORY;
 
     NS_ADDREF(*aFTPDirListingConv);
-    return (*aFTPDirListingConv)->Init();
+    return NS_OK;
 }

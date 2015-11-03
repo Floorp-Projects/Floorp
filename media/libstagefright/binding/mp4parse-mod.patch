@@ -1,13 +1,13 @@
 diff --git a/media/libstagefright/binding/MP4Metadata.rs b/media/libstagefright/binding/MP4Metadata.rs
-index a9ab567..b746f15 100644
+index 2f1b873..d2ad827 100644
 --- a/media/libstagefright/binding/MP4Metadata.rs
 +++ b/media/libstagefright/binding/MP4Metadata.rs
-@@ -214,7 +214,7 @@ pub struct Track {
-     track_type: TrackType,
- }
+@@ -4,7 +4,7 @@
+ // License, v. 2.0. If a copy of the MPL was not distributed with this
+ // file, You can obtain one at https://mozilla.org/MPL/2.0/.
  
 -extern crate byteorder;
 +mod byteorder; // 'extern crate' upstream.
- use byteorder::{BigEndian, ReadBytesExt};
+ use byteorder::ReadBytesExt;
+ use std::error::Error as ErrorTrait; // For Err(e) => e.description().
  use std::io::{Read, BufRead, Take};
- use std::io::Cursor;

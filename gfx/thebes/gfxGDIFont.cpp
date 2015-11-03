@@ -360,6 +360,8 @@ gfxGDIFont::Initialize()
         }
 
         SanitizeMetrics(mMetrics, GetFontEntry()->mIsBadUnderlineFont);
+    } else {
+        mFUnitsConvFactor = 0.0; // zero-sized font: all values scale to zero
     }
 
     if (IsSyntheticBold()) {

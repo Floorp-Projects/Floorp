@@ -38,6 +38,7 @@ apt_packages+=('gstreamer0.10-plugins-base')
 apt_packages+=('gstreamer0.10-plugins-good')
 apt_packages+=('gstreamer0.10-plugins-ugly')
 apt_packages+=('gstreamer0.10-tools')
+apt_packages+=('language-pack-en-base')
 apt_packages+=('libasound2-dev')
 apt_packages+=('libasound2-plugins:i386')
 apt_packages+=('libcanberra-pulse')
@@ -123,6 +124,8 @@ apt_packages+=('python-pip')
 
 apt-get update
 apt-get install -y --force-yes ${apt_packages[@]}
+
+dpkg-reconfigure locales
 
 # set up tooltool (temporarily)
 curl https://raw.githubusercontent.com/mozilla/build-tooltool/master/tooltool.py > /setup/tooltool.py

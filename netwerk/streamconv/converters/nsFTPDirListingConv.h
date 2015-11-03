@@ -34,7 +34,6 @@ public:
 
     // nsFTPDirListingConv methods
     nsFTPDirListingConv();
-    nsresult Init();
 
 private:
     virtual ~nsFTPDirListingConv();

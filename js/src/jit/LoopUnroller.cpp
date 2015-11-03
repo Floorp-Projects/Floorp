@@ -168,7 +168,7 @@ LoopUnroller::go(LoopIterationBound* bound)
                 continue;
             if (ins->isTest() || ins->isGoto() || ins->isInterruptCheck())
                 continue;
-#ifdef DEBUG
+#ifdef JS_JITSPEW
             JitSpew(JitSpew_Unrolling, "Aborting: can't clone instruction %s", ins->opName());
 #endif
             return;

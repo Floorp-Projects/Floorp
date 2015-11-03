@@ -3771,7 +3771,6 @@ nsNativeThemeCocoa::ThemeSupportsWidget(nsPresContext* aPresContext, nsIFrame* a
     case NS_THEME_SCROLLBAR_TRACK_HORIZONTAL:
     case NS_THEME_SCROLLBAR_NON_DISAPPEARING:
       return !IsWidgetStyled(aPresContext, aFrame, aWidgetType);
-      break;
 
     case NS_THEME_RESIZER:
     {
@@ -3787,8 +3786,8 @@ nsNativeThemeCocoa::ThemeSupportsWidget(nsPresContext* aPresContext, nsIFrame* a
       nsIScrollableFrame* scrollFrame = do_QueryFrame(parentFrame);
       return (!nsLookAndFeel::UseOverlayScrollbars() &&
               scrollFrame && scrollFrame->GetScrollbarVisibility());
-      break;
     }
+
     case NS_THEME_FOCUS_OUTLINE:
       return true;
 
@@ -3815,7 +3814,6 @@ nsNativeThemeCocoa::WidgetIsContainer(uint8_t aWidgetType)
    case NS_THEME_MAC_DISCLOSURE_BUTTON_OPEN:
    case NS_THEME_MAC_DISCLOSURE_BUTTON_CLOSED:
     return false;
-    break;
   }
   return true;
 }
