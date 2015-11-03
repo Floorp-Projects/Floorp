@@ -50,12 +50,13 @@ public:
     // For certain tweaky de-convolving applications the phase errors add up quickly and lead to non-sensical results with
     // larger FFT sizes and single-precision floats.  In these cases 2048 is a good size.
     // If not doing multi-threaded convolution, then should not go > 8192.
-    ReverbConvolver(const float* impulseResponseData, size_t impulseResponseLength, size_t renderSliceSize, size_t maxFFTSize, size_t convolverRenderPhase, bool useBackgroundThreads);
+    ReverbConvolver(const float* impulseResponseData,
+                    size_t impulseResponseLength, size_t maxFFTSize,
+                    size_t convolverRenderPhase, bool useBackgroundThreads);
     ~ReverbConvolver();
 
-    void process(const float* sourceChannelData, size_t sourceChannelLength,
-                 float* destinationChannelData, size_t destinationChannelLength,
-                 size_t framesToProcess);
+    void process(const float* sourceChannelData,
+                 float* destinationChannelData);
 
     size_t impulseResponseLength() const { return m_impulseResponseLength; }
 
