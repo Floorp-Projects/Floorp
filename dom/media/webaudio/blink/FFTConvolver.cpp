@@ -86,16 +86,7 @@ void FFTConvolver::process(FFTBlock* fftKernel, const float* sourceP, float* des
 
         memcpy(inputP + m_readWriteIndex, sourceP, sizeof(float) * divisionSize);
 
-        // Copy samples from output buffer
         float* outputP = m_outputBuffer.Elements();
-
-        // Sanity check
-        bool isCopyGood2 = destP && outputP && m_readWriteIndex + divisionSize <= m_outputBuffer.Length();
-        MOZ_ASSERT(isCopyGood2);
-        if (!isCopyGood2)
-            return;
-
-        memcpy(destP, outputP + m_readWriteIndex, sizeof(float) * divisionSize);
         m_readWriteIndex += divisionSize;
 
         // Check if it's time to perform the next FFT
@@ -120,6 +111,15 @@ void FFTConvolver::process(FFTBlock* fftKernel, const float* sourceP, float* des
             // Reset index back to start for next time
             m_readWriteIndex = 0;
         }
+
+        // Sanity check
+        bool isCopyGood2 = destP && outputP && m_readWriteIndex + divisionSize <= m_outputBuffer.Length();
+        MOZ_ASSERT(isCopyGood2);
+        if (!isCopyGood2)
+            return;
+
+        // Copy samples from output buffer
+        memcpy(destP, outputP + m_readWriteIndex, sizeof(float) * divisionSize);
     }
 }
 
@@ -127,6 +127,12 @@ void FFTConvolver::reset()
 {
     PodZero(m_lastOverlapBuffer.Elements(), m_lastOverlapBuffer.Length());
     m_readWriteIndex = 0;
+}
+
+size_t FFTConvolver::latencyFrames() const
+{
+    return std::max<size_t>(fftSize()/2, WEBAUDIO_BLOCK_SIZE) -
+        WEBAUDIO_BLOCK_SIZE;
 }
 
 } // namespace WebCore
