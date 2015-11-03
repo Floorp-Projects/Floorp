@@ -439,6 +439,10 @@ CanvasClientSharedSurface::UpdateRenderer(gfx::IntSize aSize, Renderer& aRendere
 void
 CanvasClientSharedSurface::Updated()
 {
+  if (!mNewFront) {
+    return;
+  }
+
   auto forwarder = GetForwarder();
 
 #ifndef MOZ_WIDGET_GONK
