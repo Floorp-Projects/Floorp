@@ -417,9 +417,10 @@ auto Get(Tuple<Elements...>&& aTuple)
  * auto tuple = MakeTuple(42, 0.5f, 'c');  // has type Tuple<int, float, char>
  */
 template<typename... Elements>
-Tuple<Elements...> MakeTuple(Elements&&... aElements)
+inline Tuple<typename Decay<Elements>::Type...>
+MakeTuple(Elements&&... aElements)
 {
-  return Tuple<Elements...>(Forward<Elements>(aElements)...);
+  return Tuple<typename Decay<Elements>::Type...>(Forward<Elements>(aElements)...);
 }
 
 /**
@@ -436,7 +437,8 @@ Tuple<Elements...> MakeTuple(Elements&&... aElements)
  * Tie(i, f, c) = FunctionThatReturnsATuple();
  */
 template<typename... Elements>
-Tuple<Elements&...> Tie(Elements&... aVariables)
+inline Tuple<Elements&...>
+Tie(Elements&... aVariables)
 {
   return Tuple<Elements&...>(aVariables...);
 }
