@@ -17,6 +17,7 @@
 #include "prprf.h"
 #include "nsTArray.h"
 #include "nsString.h"
+#include "mozilla/UniquePtr.h"
 
 #include <ctype.h>
 
@@ -268,11 +269,11 @@ nsLocaleService::GetLocaleFromAcceptLanguage(const char *acceptLanguage, nsILoca
   char	acceptLanguageList[NSILOCALE_MAX_ACCEPT_LANGUAGE][NSILOCALE_MAX_ACCEPT_LENGTH];
   nsresult	result;
 
-  nsAutoArrayPtr<char> input(new char[strlen(acceptLanguage)+1]);
+  auto input = MakeUnique<char[]>(strlen(acceptLanguage)+1);
 
-  strcpy(input, acceptLanguage);
-  cPtr1 = input-1;
-  cPtr2 = input;
+  strcpy(input.get(), acceptLanguage);
+  cPtr1 = input.get()-1;
+  cPtr2 = input.get();
 
   /* put in standard form */
   while (*(++cPtr1)) {
@@ -286,7 +287,7 @@ nsLocaleService::GetLocaleFromAcceptLanguage(const char *acceptLanguage, nsILoca
 
   countLang = 0;
 
-  if (strchr(input,';')) {
+  if (strchr(input.get(), ';')) {
     /* deal with the quality values */
 
     float qvalue[NSILOCALE_MAX_ACCEPT_LANGUAGE];
@@ -295,7 +296,7 @@ nsLocaleService::GetLocaleFromAcceptLanguage(const char *acceptLanguage, nsILoca
     char* ptrLanguage[NSILOCALE_MAX_ACCEPT_LANGUAGE];
     char* ptrSwap;
 
-    cPtr = nsCRT::strtok(input,",",&cPtr2);
+    cPtr = nsCRT::strtok(input.get(),",",&cPtr2);
     while (cPtr) {
       qvalue[countLang] = 1.0f;
       /* add extra parens to get rid of warning */
@@ -332,7 +333,7 @@ nsLocaleService::GetLocaleFromAcceptLanguage(const char *acceptLanguage, nsILoca
   } else {
     /* simple case: no quality values */
 
-    cPtr = nsCRT::strtok(input,",",&cPtr2);
+    cPtr = nsCRT::strtok(input.get(),",",&cPtr2);
     while (cPtr) {
       if (strlen(cPtr)<NSILOCALE_MAX_ACCEPT_LENGTH) {        /* ignore if too long */
         PL_strncpyz(acceptLanguageList[countLang++],cPtr,NSILOCALE_MAX_ACCEPT_LENGTH);
