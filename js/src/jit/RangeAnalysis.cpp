@@ -112,7 +112,7 @@ IsDominatedUse(MBasicBlock* block, MUse* use)
 static inline void
 SpewRange(MDefinition* def)
 {
-#ifdef DEBUG
+#ifdef JS_JITSPEW
     if (JitSpewEnabled(JitSpew_Range) && def->type() != MIRType_None && def->range()) {
         JitSpewHeader(JitSpew_Range);
         Fprinter& out = JitSpewPrinter();

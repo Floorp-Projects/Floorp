@@ -35,8 +35,6 @@ WebSocketChannelParent::WebSocketChannelParent(nsIAuthPromptProvider* aAuthProvi
 {
   // Websocket channels can't have a private browsing override
   MOZ_ASSERT_IF(!aLoadContext, aOverrideStatus == kPBOverride_Unset);
-  if (!webSocketLog)
-    webSocketLog = PR_NewLogModule("nsWebSocket");
   mObserver = new OfflineObserver(this);
 }
 

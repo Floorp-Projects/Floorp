@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg">
+
+<foreignObject width="500" height="500" style="-moz-appearance: checkbox;">
+  <option xmlns="http://www.w3.org/1999/xhtml"></option>
+</foreignObject>
+
+<script>
+<![CDATA[
+
+window.addEventListener("load", function() {
+  document.getElementsByTagName("option")[0].appendChild(document.createTextNode("Option 1"));
+}, false);
+
+]]>
+</script>
+
+</svg>
+

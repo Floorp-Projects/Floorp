@@ -449,7 +449,7 @@ bool MediaOmxReader::DecodeVideoFrame(bool &aKeyframeSkip,
   return true;
 }
 
-void MediaOmxReader::NotifyDataArrivedInternal(uint32_t aLength, int64_t aOffset)
+void MediaOmxReader::NotifyDataArrivedInternal()
 {
   MOZ_ASSERT(OnTaskQueue());
   RefPtr<AbstractMediaDecoder> decoder = SafeGetDecoder();

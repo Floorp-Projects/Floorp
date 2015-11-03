@@ -88,6 +88,36 @@
         ] };
       testAccessibleTree("t6_1", tree);
 
+      tree =
+        { SECTION: [ // ariaowns_container
+          { SECTION: [ // ariaowns_self
+            { SECTION: [ // ariaowns_uncle
+            ] }
+          ] }
+        ] };
+      testAccessibleTree("ariaowns_container", tree);
+
+      tree =
+        { TABLE: [
+          { ROW: [
+            { GRID_CELL: [
+              { TEXT_LEAF: [] }
+            ] },
+            { GRID_CELL: [
+              { TEXT_LEAF: [] }
+            ] }
+          ] },
+          { ROW: [
+            { GRID_CELL: [
+              { TEXT_LEAF: [] }
+            ] },
+            { GRID_CELL: [
+              { TEXT_LEAF: [] }
+            ] }
+          ] }
+        ] };
+      testAccessibleTree("grid", tree);
+
       SimpleTest.finish();
     }
 
@@ -135,6 +165,23 @@
     <div role="radio"></div>
   </div>
 
+  <div id="ariaowns_container">
+    <div id="ariaowns_self"
+         aria-owns="aria_ownscontainer ariaowns_self ariaowns_uncle"></div>
+  </div>
+  <div id="ariaowns_uncle"></div>
+
+  <!-- grid -->
+  <div aria-owns="grid-row2" role="grid" id="grid">
+    <div role="row">
+      <div role="gridcell">cell 1,1</div>
+      <div role="gridcell">cell 1,2</div>
+    </div>
+  </div>
+  <div role="row" id="grid-row2">
+    <div role="gridcell">cell 2,1</div>
+    <div role="gridcell">cell 2,2</div>
+  </div>
 </body>
 
 </html>

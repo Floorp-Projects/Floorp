@@ -29,9 +29,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "NewTabUtils",
 XPCOMUtils.defineLazyModuleGetter(this, "RemoteAboutNewTab",
                                   "resource:///modules/RemoteAboutNewTab.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "RemoteDirectoryLinksProvider",
-                                  "resource:///modules/RemoteDirectoryLinksProvider.jsm");
-
 XPCOMUtils.defineLazyModuleGetter(this, "RemoteNewTabUtils",
                                   "resource:///modules/RemoteNewTabUtils.jsm");
 
@@ -647,6 +644,7 @@ BrowserGlue.prototype = {
     ExtensionManagement.registerScript("chrome://browser/content/ext-bookmarks.js");
 
     this._flashHangCount = 0;
+    this._firstWindowReady = new Promise(resolve => this._firstWindowLoaded = resolve);
   },
 
   // cleanup (called on application shutdown)
@@ -842,15 +840,14 @@ BrowserGlue.prototype = {
     webrtcUI.init();
     AboutHome.init();
 
-    RemoteDirectoryLinksProvider.init();
-    RemoteNewTabUtils.init();
-    RemoteNewTabUtils.links.addProvider(RemoteDirectoryLinksProvider);
-    RemoteAboutNewTab.init();
-
     DirectoryLinksProvider.init();
     NewTabUtils.init();
     NewTabUtils.links.addProvider(DirectoryLinksProvider);
     AboutNewTab.init();
+
+    RemoteNewTabUtils.init();
+    RemoteNewTabUtils.links.addProvider(DirectoryLinksProvider);
+    RemoteAboutNewTab.init();
 
     SessionStore.init();
     BrowserUITelemetry.init();
@@ -1145,6 +1142,7 @@ BrowserGlue.prototype = {
     this._checkForOldBuildUpdates();
 
     this._firstWindowTelemetry(aWindow);
+    this._firstWindowLoaded();
   },
 
   /**
@@ -2213,7 +2211,7 @@ BrowserGlue.prototype = {
     }
 
     if (currentUIVersion < 32) {
-      this._notifyNotificationsUpgrade();
+      this._notifyNotificationsUpgrade().catch(Cu.reportError);
     }
 
     // Update the migration version.
@@ -2231,10 +2229,11 @@ BrowserGlue.prototype = {
     return false;
   },
 
-  _notifyNotificationsUpgrade: function BG__notifyNotificationsUpgrade() {
+  _notifyNotificationsUpgrade: Task.async(function* () {
     if (!this._hasExistingNotificationPermission()) {
       return;
     }
+    yield this._firstWindowReady;
     function clickCallback(subject, topic, data) {
       if (topic != "alertclickcallback")
         return;
@@ -2243,17 +2242,12 @@ BrowserGlue.prototype = {
     }
     let imageURL = "chrome://browser/skin/web-notifications-icon.svg";
     let title = gBrowserBundle.GetStringFromName("webNotifications.upgradeTitle");
-    let text = gBrowserBundle.GetStringFromName("webNotifications.upgradeInfo");
+    let text = gBrowserBundle.GetStringFromName("webNotifications.upgradeBody");
     let url = Services.urlFormatter.formatURLPref("browser.push.warning.migrationURL");
 
-    try {
-      AlertsService.showAlertNotification(imageURL, title, text,
-                                          true, url, clickCallback);
-    }
-    catch (e) {
-      Cu.reportError(e);
-    }
-  },
+    AlertsService.showAlertNotification(imageURL, title, text,
+                                        true, url, clickCallback);
+  }),
 
   // ------------------------------
   // public nsIBrowserGlue members

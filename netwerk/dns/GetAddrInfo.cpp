@@ -23,11 +23,6 @@
 #endif
 
 #include "mozilla/Logging.h"
-static PRLogModuleInfo *gGetAddrInfoLog = PR_NewLogModule("GetAddrInfo");
-#define LOG(msg, ...) \
-  MOZ_LOG(gGetAddrInfoLog, LogLevel::Debug, ("[DNS]: " msg, ##__VA_ARGS__))
-#define LOG_WARNING(msg, ...) \
-  MOZ_LOG(gGetAddrInfoLog, LogLevel::Warning, ("[DNS]: " msg, ##__VA_ARGS__))
 
 #if DNSQUERY_AVAILABLE
 // There is a bug in windns.h where the type of parameter ppQueryResultsSet for
@@ -42,6 +37,12 @@ static PRLogModuleInfo *gGetAddrInfoLog = PR_NewLogModule("GetAddrInfo");
 
 namespace mozilla {
 namespace net {
+
+static LazyLogModule gGetAddrInfoLog("GetAddrInfo");
+#define LOG(msg, ...) \
+  MOZ_LOG(gGetAddrInfoLog, LogLevel::Debug, ("[DNS]: " msg, ##__VA_ARGS__))
+#define LOG_WARNING(msg, ...) \
+  MOZ_LOG(gGetAddrInfoLog, LogLevel::Warning, ("[DNS]: " msg, ##__VA_ARGS__))
 
 #if DNSQUERY_AVAILABLE
 ////////////////////////////

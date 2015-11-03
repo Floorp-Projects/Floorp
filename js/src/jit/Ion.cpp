@@ -2832,7 +2832,7 @@ InvalidateActivation(FreeOp* fop, const JitActivationIterator& activations, bool
     for (JitFrameIterator it(activations); !it.done(); ++it, ++frameno) {
         MOZ_ASSERT_IF(frameno == 1, it.isExitFrame() || it.type() == JitFrame_Bailout);
 
-#ifdef DEBUG
+#ifdef JS_JITSPEW
         switch (it.type()) {
           case JitFrame_Exit:
           case JitFrame_LazyLink:
@@ -2882,7 +2882,7 @@ InvalidateActivation(FreeOp* fop, const JitActivationIterator& activations, bool
             JitSpew(JitSpew_IonInvalidate, "#%d entry frame @ %p", frameno, it.fp());
             break;
         }
-#endif
+#endif // JS_JITSPEW
 
         if (!it.isIonScripted())
             continue;

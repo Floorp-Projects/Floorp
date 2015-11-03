@@ -82,6 +82,6 @@ private:
 
 extern nsFtpProtocolHandler *gFtpHandler;
 
-extern PRLogModuleInfo* gFTPLog;
+extern mozilla::LazyLogModule gFTPLog;
 
 #endif // !nsFtpProtocolHandler_h__

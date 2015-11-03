@@ -278,7 +278,7 @@ CodeGeneratorShared::addNativeToBytecodeEntry(const BytecodeSite* site)
 void
 CodeGeneratorShared::dumpNativeToBytecodeEntries()
 {
-#ifdef DEBUG
+#ifdef JS_JITSPEW
     InlineScriptTree* topTree = gen->info().inlineScriptTree();
     JitSpewStart(JitSpew_Profiling, "Native To Bytecode Entries for %s:%d\n",
                  topTree->script()->filename(), topTree->script()->lineno());
@@ -290,7 +290,7 @@ CodeGeneratorShared::dumpNativeToBytecodeEntries()
 void
 CodeGeneratorShared::dumpNativeToBytecodeEntry(uint32_t idx)
 {
-#ifdef DEBUG
+#ifdef JS_JITSPEW
     NativeToBytecode& ref = nativeToBytecodeList_[idx];
     InlineScriptTree* tree = ref.tree;
     JSScript* script = tree->script();

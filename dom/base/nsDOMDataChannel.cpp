@@ -9,11 +9,6 @@
 #include "base/basictypes.h"
 #include "mozilla/Logging.h"
 
-extern PRLogModuleInfo* GetDataChannelLog();
-#undef LOG
-#define LOG(args) MOZ_LOG(GetDataChannelLog(), mozilla::LogLevel::Debug, args)
-
-
 #include "nsDOMDataChannelDeclarations.h"
 #include "nsDOMDataChannel.h"
 #include "nsIDOMDataChannel.h"
@@ -29,6 +24,10 @@ extern PRLogModuleInfo* GetDataChannelLog();
 #include "nsIScriptObjectPrincipal.h"
 
 #include "DataChannel.h"
+#include "DataChannelLog.h"
+
+#undef LOG
+#define LOG(args) MOZ_LOG(mozilla::gDataChannelLog, mozilla::LogLevel::Debug, args)
 
 // Since we've moved the windows.h include down here, we have to explicitly
 // undef GetBinaryType, otherwise we'll get really odd conflicts

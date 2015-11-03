@@ -55,7 +55,7 @@ public:
   }
 
 protected:
-  void NotifyDataArrivedInternal(uint32_t aLength, int64_t aOffset) override;
+  void NotifyDataArrivedInternal() override;
 
 public:
   media::TimeIntervals GetBuffered() override;
@@ -111,7 +111,7 @@ private:
   // Notify the demuxer that new data has been received.
   // The next queued task calling GetBuffered() is guaranteed to have up to date
   // buffered ranges.
-  void NotifyDemuxer(uint32_t aLength, int64_t aOffset);
+  void NotifyDemuxer();
   void ReturnOutput(MediaData* aData, TrackType aTrack);
 
   bool EnsureDecodersCreated();
