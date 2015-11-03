@@ -20,15 +20,19 @@ nsIFrame::IsFlexItem() const
 }
 
 bool
+nsIFrame::IsFlexOrGridContainer() const
+{
+  nsIAtom* t = GetType();
+  return t == nsGkAtoms::flexContainerFrame ||
+         t == nsGkAtoms::gridContainerFrame;
+}
+
+bool
 nsIFrame::IsFlexOrGridItem() const
 {
-  if (GetParent()) {
-    nsIAtom* t = GetParent()->GetType();
-    return (t == nsGkAtoms::flexContainerFrame ||
-            t == nsGkAtoms::gridContainerFrame) &&
-      !(GetStateBits() & NS_FRAME_OUT_OF_FLOW);
-  }
-  return false;
+  return !(GetStateBits() & NS_FRAME_OUT_OF_FLOW) &&
+         GetParent() &&
+         GetParent()->IsFlexOrGridContainer();
 }
 
 bool

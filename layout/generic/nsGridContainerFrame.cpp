@@ -2799,12 +2799,13 @@ nsGridContainerFrame::ReflowChildren(GridReflowState&     aState,
     }
     WritingMode childWM = child->GetWritingMode();
     LogicalSize childCBSize = cb.Size(wm).ConvertTo(childWM, wm);
+    LogicalSize percentBasis(childCBSize);
     // XXX temporary workaround to avoid being INCOMPLETE until we have
     // support for fragmentation (bug 1144096)
     childCBSize.BSize(childWM) = NS_UNCONSTRAINEDSIZE;
 
     Maybe<nsHTMLReflowState> childRS; // Maybe<> so we can reuse the space
-    childRS.emplace(pc, *aState.mReflowState, child, childCBSize);
+    childRS.emplace(pc, *aState.mReflowState, child, childCBSize, &percentBasis);
     // We need the width of the child before we can correctly convert
     // the writing-mode of its origin, so we reflow at (0, 0) using a dummy
     // containerSize, and then pass the correct position to FinishReflowChild.
@@ -2835,7 +2836,7 @@ nsGridContainerFrame::ReflowChildren(GridReflowState&     aState,
                           NS_FRAME_NO_MOVE_FRAME | NS_FRAME_NO_SIZE_VIEW);
         childSize.reset(); // In reverse declaration order since it runs
         childRS.reset();   // destructors.
-        childRS.emplace(pc, *aState.mReflowState, child, childCBSize);
+        childRS.emplace(pc, *aState.mReflowState, child, childCBSize, &percentBasis);
         if ((alignResize && alignResize.value() == eLogicalAxisBlock) ||
             (justifyResize && justifyResize.value() == eLogicalAxisBlock)) {
           childRS->SetComputedBSize(newContentSize.BSize(childWM));
