@@ -595,4 +595,6 @@
   <string name="intent_uri_private_browsing_multiple_match_title">&intent_uri_private_browsing_multiple_match_title;</string>
 
   <string name="devtools_auth_scan_header">&devtools_auth_scan_header;</string>
+
+  <string name="unsupported_sdk_version">&unsupported_sdk_version;</string>
 </resources>
