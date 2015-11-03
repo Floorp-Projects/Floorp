@@ -40,16 +40,11 @@ TCPPresentationServer.prototype = {
       throw Cr.NS_ERROR_FAILURE;
     }
 
-    if (typeof aPort === "undefined") {
-      DEBUG && log("TCPPresentationServer - aPort should not be undefined");
-      throw Cr.NS_ERROR_FAILURE;
-    }
-
     /**
      * 0 or undefined indicates opt-out parameter, and a port will be selected
      * automatically.
      */
-    let serverSocketPort = (aPort !== 0) ? aPort : -1;
+    let serverSocketPort = (typeof aPort !== "undefined" && aPort !== 0) ? aPort : -1;
 
     this._serverSocket = Cc["@mozilla.org/network/server-socket;1"]
                          .createInstance(Ci.nsIServerSocket);
@@ -70,7 +65,12 @@ TCPPresentationServer.prototype = {
 
     this._port = this._serverSocket.port;
 
-    DEBUG && log("TCPPresentationServer - service start on port: " + aPort);
+    DEBUG && log("TCPPresentationServer - service start on port: " + this._port);
+
+    // Monitor network interface change to restart server socket.
+    // Only B2G has nsINetworkManager
+    Services.obs.addObserver(this, "network-active-changed", false);
+    Services.obs.addObserver(this, "network:offline-status-changed", false);
   },
 
   get id() {
@@ -178,31 +178,74 @@ TCPPresentationServer.prototype = {
   // nsIServerSocketListener (Triggered by nsIServerSocket.init)
   onStopListening: function(aServerSocket, aStatus) {
     DEBUG && log("TCPPresentationServer - onStopListening: " + aStatus);
-
-    if (this._serverSocket) {
-      DEBUG && log("TCPPresentationServer - should be non-manually closed");
-      this.close();
-    } else if (aStatus === Cr.NS_BINDING_ABORTED) {
-      DEBUG && log("TCPPresentationServer - should be manually closed");
-      aStatus = Cr.NS_OK;
-    }
-
-    this._listener && this._listener.onClose(aStatus);
   },
 
   close: function() {
     DEBUG && log("TCPPresentationServer - close");
-    if (this._serverSocket) {
+    if (this._isServiceInit()) {
       DEBUG && log("TCPPresentationServer - close server socket");
       this._serverSocket.close();
       this._serverSocket = null;
+
+      Services.obs.removeObserver(this, "network-active-changed");
+      Services.obs.removeObserver(this, "network:offline-status-changed");
     }
     this._port = 0;
   },
 
+  // nsIObserver
+  observe: function(aSubject, aTopic, aData) {
+    DEBUG && log("TCPPresentationServer - observe: " + aTopic);
+    switch (aTopic) {
+      case "network-active-changed": {
+        if (!aSubject) {
+          DEBUG && log("No active network");
+          return;
+        }
+
+        /**
+         * Restart service only when original status is online because other
+         * cases will be handled by "network:offline-status-changed".
+         */
+        if (!Services.io.offline) {
+          this._restartService();
+        }
+        break;
+      }
+      case "network:offline-status-changed": {
+        if (aData == "offline") {
+          DEBUG && log("network offline");
+          return;
+        }
+        this._restartService();
+        break;
+      }
+    }
+  },
+
+  _restartService: function() {
+    DEBUG && log("TCPPresentationServer - restart service");
+
+    // restart server socket
+    if (this._isServiceInit()) {
+      let port = this._port;
+      this.close();
+
+      try {
+        this.startService();
+        if (this._listener && this._port !== port) {
+           this._listener.onPortChange(this._port);
+        }
+      } catch (e) {
+        DEBUG && log("TCPPresentationServer - restart service fail: " + e);
+      }
+    }
+  },
+
   classID: Components.ID("{f4079b8b-ede5-4b90-a112-5b415a931deb}"),
   QueryInterface : XPCOMUtils.generateQI([Ci.nsIServerSocketListener,
-                                          Ci.nsITCPPresentationServer]),
+                                          Ci.nsITCPPresentationServer,
+                                          Ci.nsIObserver]),
 };
 
 function ChannelDescription(aInit) {
