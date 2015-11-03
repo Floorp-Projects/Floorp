@@ -1468,7 +1468,7 @@ BytecodeEmitter::computeDefinitionIsAliased(BytecodeEmitter* bceOfDef, Definitio
         // computeAliasedSlots.
         uint32_t slot = dn->pn_scopecoord.slot();
         if (blockScopeOfDef(dn)->is<JSFunction>() ||
-            blockScopeOfDef(dn)->is<ModuleObject>())
+            blockScopeOfDef(dn)->is<StaticModuleScope>())
         {
             MOZ_ASSERT(IsArgOp(*op) || slot < bceOfDef->script->bindings.numBodyLevelLocals());
             MOZ_ALWAYS_TRUE(bceOfDef->lookupAliasedName(bceOfDef->script, dn->name(), &slot));
@@ -1582,7 +1582,7 @@ BytecodeEmitter::tryConvertFreeName(ParseNode* pn)
                     }
                 }
             } else if (ssi.type() == StaticScopeIter<NoGC>::Module) {
-                RootedScript moduleScript(cx, ssi.moduleScript());
+                RootedScript moduleScript(cx, ssi.module().script());
                 uint32_t slot_;
                 if (lookupAliasedName(moduleScript, name, &slot_, pn)) {
                     slot = Some(slot_);
@@ -1590,7 +1590,8 @@ BytecodeEmitter::tryConvertFreeName(ParseNode* pn)
                 }
 
                 // Convert module import accesses to use JSOP_GETIMPORT.
-                RootedModuleEnvironmentObject env(cx, &ssi.module().initialEnvironment());
+                RootedModuleEnvironmentObject env(cx, &ssi.module().moduleObject()
+                                                       .initialEnvironment());
                 RootedPropertyName propName(cx, name);
                 MOZ_ASSERT(env);
                 if (env->hasImportBinding(propName)) {

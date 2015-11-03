@@ -562,7 +562,8 @@ BytecodeCompiler::compileScript(HandleObject scopeChain, HandleScript evalCaller
     return script;
 }
 
-ModuleObject* BytecodeCompiler::compileModule()
+ModuleObject*
+BytecodeCompiler::compileModule()
 {
     if (!createSourceAndParser())
         return nullptr;
@@ -571,7 +572,8 @@ ModuleObject* BytecodeCompiler::compileModule()
     if (!module)
         return nullptr;
 
-    if (!createScript(module))
+    Rooted<StaticModuleScope*> moduleScope(cx, module->staticScope());
+    if (!createScript(moduleScope))
         return nullptr;
 
     module->init(script);

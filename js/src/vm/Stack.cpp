@@ -119,7 +119,7 @@ AssertDynamicScopeMatchesStaticScope(JSContext* cx, JSScript* script, JSObject* 
         } else if (i.hasSyntacticDynamicScopeObject()) {
             switch (i.type()) {
               case StaticScopeIter<NoGC>::Module:
-                MOZ_ASSERT(scope->as<ModuleEnvironmentObject>().module().script() == i.moduleScript());
+                MOZ_ASSERT(scope->as<ModuleEnvironmentObject>().module().staticScope() == &i.module());
                 scope = &scope->as<ModuleEnvironmentObject>().enclosingScope();
                 break;
               case StaticScopeIter<NoGC>::Function:

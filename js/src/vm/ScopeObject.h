@@ -53,7 +53,7 @@ typedef Handle<ModuleObject*> HandleModuleObject;
  * JSFunction
  *   Scope for function bodies. e.g., |function f() { var x; let y; }|
  *
- * ModuleObject
+ * StaticModuleScope
  *   Scope for moddules.
  *
  * StaticWithScope
@@ -300,6 +300,23 @@ class StaticBlockScope : public NestedStaticScope
                          bool constant, unsigned index, bool* redeclared);
 };
 
+// The top-level scope of a module.
+// Shares ModuleEnvironmentObject::class_.
+class StaticModuleScope : public StaticScope
+{
+    static const unsigned MODULE_OBJECT_SLOT = StaticScope::RESERVED_SLOTS;
+
+  public:
+    static const unsigned RESERVED_SLOTS = MODULE_OBJECT_SLOT + 1;
+
+    static StaticModuleScope* create(ExclusiveContext* cx, Handle<ModuleObject*> moduleObject,
+                                     Handle<StaticScope*> enclosingScope);
+
+    ModuleObject& moduleObject();
+    JSScript* script();
+    Shape* environmentShape();
+};
+
 // Represents the lexical scope of a 'with' statement.
 class StaticWithScope : public NestedStaticScope
 {
@@ -472,11 +489,11 @@ class StaticScopeIter
 
     static bool IsStaticScope(JSObject* obj) {
         return obj->is<StaticBlockScope>() ||
+               obj->is<StaticModuleScope>() ||
                obj->is<StaticWithScope>() ||
                obj->is<StaticEvalScope>() ||
                obj->is<StaticNonSyntacticScope>() ||
-               obj->is<JSFunction>() ||
-               obj->is<ModuleObject>();
+               obj->is<JSFunction>();
     }
 
   public:
@@ -527,14 +544,13 @@ class StaticScopeIter
     Type type() const;
 
     StaticBlockScope& block() const;
+    StaticModuleScope& module() const;
     StaticWithScope& staticWith() const;
     StaticEvalScope& eval() const;
     StaticNonSyntacticScope& nonSyntactic() const;
     JSScript* funScript() const;
     JSFunction& fun() const;
     frontend::FunctionBox* maybeFunctionBox() const;
-    JSScript* moduleScript() const;
-    ModuleObject& module() const;
 };
 
 
@@ -604,11 +620,13 @@ ScopeCoordinateFunctionScript(JSScript* script, jsbytecode* pc);
  *
  *   JSObject                       Generic object
  *     |   |
- *     |  StaticScope               Created at compile time
+ *     |  StaticScope--+            Created at compile time
+ *     |   |   |   |   |
+ *     |   |   |   |  StaticNonSyntacticScope   See "Non-syntactic scopes"
  *     |   |   |   |
- *     |   |   |  StaticNonSyntacticScope   See "Non-syntactic scopes"
+ *     |   |   |  StaticEvalScope   Placeholder so eval scopes may be iterated through
  *     |   |   |
- *     |   |  StaticEvalScope       Placeholder so eval scopes may be iterated through
+ *     |   |  StaticModuleScope     Toplevel scope in a module
  *     |   |
  *     |  NestedStaticScope         Enclosing scope is in the same JSScript
  *     |   |   |
@@ -750,23 +768,13 @@ class CallObject : public LexicalScopeBase
     static CallObject* createHollowForDebug(JSContext* cx, HandleFunction callee);
 
     /* True if this is for a strict mode eval frame. */
-    bool isForEval() const {
-        if (is<ModuleEnvironmentObject>())
-            return false;
-        MOZ_ASSERT(getFixedSlot(CALLEE_SLOT).isObjectOrNull());
-        MOZ_ASSERT_IF(getFixedSlot(CALLEE_SLOT).isObject(),
-                      getFixedSlot(CALLEE_SLOT).toObject().is<JSFunction>());
-        return getFixedSlot(CALLEE_SLOT).isNull();
-    }
+    inline bool isForEval() const;
 
     /*
      * Returns the function for which this CallObject was created. (This may
      * only be called if !isForEval.)
      */
-    JSFunction& callee() const {
-        MOZ_ASSERT(!is<ModuleEnvironmentObject>());
-        return getFixedSlot(CALLEE_SLOT).toObject().as<JSFunction>();
-    }
+    inline JSFunction& callee() const;
 
     /* For jit access. */
     static size_t offsetOfCallee() {
@@ -789,6 +797,7 @@ class ModuleEnvironmentObject : public LexicalScopeBase
 
     static ModuleEnvironmentObject* create(ExclusiveContext* cx, HandleModuleObject module);
     ModuleObject& module();
+    StaticModuleScope& staticScope();
     IndirectBindingMap& importBindings();
 
     bool createImportBinding(JSContext* cx, HandleAtom importName, HandleModuleObject module,
@@ -1107,11 +1116,11 @@ class MOZ_RAII ScopeIter
 
     JSObject* maybeStaticScope() const;
     StaticBlockScope& staticBlock() const { return ssi_.block(); }
+    StaticModuleScope& module() const { return ssi_.module(); }
     StaticWithScope& staticWith() const { return ssi_.staticWith(); }
     StaticEvalScope& staticEval() const { return ssi_.eval(); }
     StaticNonSyntacticScope& staticNonSyntactic() const { return ssi_.nonSyntactic(); }
     JSFunction& fun() const { return ssi_.fun(); }
-    ModuleObject& module() const { return ssi_.module(); }
 
     bool withinInitialFrame() const { return !!frame_; }
     AbstractFramePtr initialFrame() const { MOZ_ASSERT(withinInitialFrame()); return frame_; }
@@ -1349,6 +1358,13 @@ JSObject::is<js::StaticBlockScope>() const
 
 template<>
 inline bool
+JSObject::is<js::StaticModuleScope>() const
+{
+    return hasClass(&js::ModuleEnvironmentObject::class_) && !getProto();
+}
+
+template<>
+inline bool
 JSObject::is<js::NestedStaticScope>() const
 {
     return is<js::StaticBlockScope>() ||
@@ -1360,8 +1376,16 @@ inline bool
 JSObject::is<js::StaticScope>() const
 {
     return is<js::NestedStaticScope>() ||
+           is<js::StaticModuleScope>() ||
            is<js::StaticEvalScope>() ||
            is<js::StaticNonSyntacticScope>();
+}
+
+template<>
+inline bool
+JSObject::is<js::ModuleEnvironmentObject>() const
+{
+    return hasClass(&js::ModuleEnvironmentObject::class_) && !!getProto();
 }
 
 template<>
@@ -1531,6 +1555,24 @@ ScopeIter::enclosingScope() const
     MOZ_ASSERT(done());
     MOZ_ASSERT(!IsSyntacticScope(scope_));
     return *scope_;
+}
+
+inline bool
+js::CallObject::isForEval() const
+{
+    if (is<ModuleEnvironmentObject>())
+        return false;
+    MOZ_ASSERT(getFixedSlot(CALLEE_SLOT).isObjectOrNull());
+    MOZ_ASSERT_IF(getFixedSlot(CALLEE_SLOT).isObject(),
+                  getFixedSlot(CALLEE_SLOT).toObject().is<JSFunction>());
+    return getFixedSlot(CALLEE_SLOT).isNull();
+}
+
+inline JSFunction&
+js::CallObject::callee() const
+{
+    MOZ_ASSERT(!is<ModuleEnvironmentObject>());
+    return getFixedSlot(CALLEE_SLOT).toObject().as<JSFunction>();
 }
 
 extern bool
