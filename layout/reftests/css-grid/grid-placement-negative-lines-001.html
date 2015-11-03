@@ -1,0 +1,110 @@
+<!DOCTYPE HTML>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html><head>
+  <meta charset="utf-8">
+  <title>CSS Grid Test: Placement involving negative line numbers</title>
+  <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1215957">
+  <link rel="help" href="https://drafts.csswg.org/css-grid/#grid-placement-int">
+  <link rel="match" href="grid-placement-negative-lines-001-ref.html">
+  <style type="text/css">
+body,html { color:black; background:white; font-size:12px; padding:0; margin:0; }
+
+.grid {
+  display: grid;
+  border: 1px solid;
+  grid-template-columns: 60px [A] 60px 60px;
+  grid-auto-columns: 40px;
+  grid-auto-rows: 20px;
+}
+
+x {
+  background: lime;
+  border: 1px solid;
+}
+
+  </style>
+</head>
+<body>
+
+<pre>
+grid-template-columns: 60px [A] 60px 60px;
+grid-auto-columns: 40px;
+</pre>
+
+<pre>grid-column-start:</pre>
+<div class="grid">
+<x style="grid-row:1; grid-column:1; background:grey"></x>
+<x style="grid-row:2; grid-column-start:-1">-1</x>
+<x style="grid-row:2; grid-column-start:4">4</x>
+<x style="grid-row:3; grid-column-start:-2">-2</x>
+<x style="grid-row:3; grid-column-start:-3">-3</x>
+<x style="grid-row:3; grid-column-start:-4">-4</x>
+<x style="grid-row:3; grid-column-start:-5">-5</x>
+<x style="grid-row:4; grid-column-start:A -1">A -1</x>
+<x style="grid-row:4; grid-column-start:B -1">B -1</x>
+<x style="grid-row:5; grid-column-start:A -2">A -2</x>
+<x style="grid-row:6; grid-column-start:A -3">A -3</x>
+<x style="grid-row:6; grid-column-start:A -4">A -4</x>
+<x style="grid-row:6; grid-column-start:A -5">A -5</x>
+<x style="grid-row:7; grid-column-start:A">A</x>
+<x style="grid-row:7; grid-column-start:B">B</x>
+<x style="grid-row:8; grid-column-start:A 1">A 1</x>
+<x style="grid-row:8; grid-column-start:A 2">A 2</x>
+<x style="grid-row:8; grid-column-start:A 3">A 3</x>
+<x style="grid-row:8; grid-column-start:A 4">A 4</x>
+<x style="grid-row:8; grid-column-start:A 5">A 5</x>
+</div>
+
+<pre>grid-column-end:</pre>
+<div class="grid">
+<x style="grid-row:1; grid-column:1; background:grey"></x>
+<x style="grid-row:2; grid-column-end:-1">-1</x>
+<x style="grid-row:2; grid-column-end:4">4</x>
+<x style="grid-row:3; grid-column-end:-5">-5</x>
+<x style="grid-row:3; grid-column-end:-4">-4</x>
+<x style="grid-row:3; grid-column-end:-3">-3</x>
+<x style="grid-row:3; grid-column-end:-2">-2</x>
+<x style="grid-row:4; grid-column-end:A -1">A -1</x>
+<x style="grid-row:4; grid-column-end:B -1">B -1</x>
+<x style="grid-row:5; grid-column-end:A -2">A -2</x>
+<x style="grid-row:6; grid-column-end:A -3">A -3</x>
+<x style="grid-row:6; grid-column-end:A -4">A -4</x>
+<x style="grid-row:6; grid-column-end:A -5">A -5</x>
+<x style="grid-row:7; grid-column-end:A">A</x>
+<x style="grid-row:7; grid-column-end:B">B</x>
+<x style="grid-row:8; grid-column-end:A 1">A 1</x>
+<x style="grid-row:8; grid-column-end:A 2">A 2</x>
+<x style="grid-row:8; grid-column-end:A 3">A 3</x>
+<x style="grid-row:8; grid-column-end:A 4">A 4</x>
+<x style="grid-row:8; grid-column-end:A 5">A 5</x>
+</div>
+
+<pre>grid-column: / span A 2</pre>
+<div class="grid">
+<x style="grid-row:1; grid-column:1; background:grey"></x>
+<x style="grid-row:2; grid-column:-1/span A 2">-1</x>
+<x style="grid-row:3; grid-column:4/span A 2">4</x>
+<x style="grid-row:4; grid-column:-2/span A 2">-2</x>
+<x style="grid-row:5; grid-column:-3/span A 2">-3</x>
+<x style="grid-row:6; grid-column:-4/span A 2">-4</x>
+<x style="grid-row:7; grid-column:-5/span A 2">-5</x>
+<x style="grid-row:8; grid-column:A -1/span A 2">A -1</x>
+<x style="grid-row:9; grid-column:B -1/span A 2">B -1</x>
+<x style="grid-row:10; grid-column:A -2/span A 2">A -2</x>
+<x style="grid-row:11; grid-column:A -3/span A 2">A -3</x>
+<x style="grid-row:12; grid-column:A -4/span A 2">A -4</x>
+<x style="grid-row:13; grid-column:A -5/span A 2">A -5</x>
+<x style="grid-row:14; grid-column:A/span A 2">A</x>
+<x style="grid-row:15; grid-column:B/span B">B</x>
+<x style="grid-row:16; grid-column:A 1/span A 2">A 1</x>
+<x style="grid-row:17; grid-column:A 2/span A 2">A 2</x>
+<x style="grid-row:18; grid-column:A 3/span A 2">A 3</x>
+<x style="grid-row:19; grid-column:A 4/span A 2">A 4</x>
+<x style="grid-row:20; grid-column:A 5/span A 2">A 5</x>
+</div>
+
+</body>
+</html>
