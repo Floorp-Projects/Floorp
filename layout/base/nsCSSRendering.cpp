@@ -5584,6 +5584,8 @@ nsContextBoxBlur::InsetBoxBlur(gfxContext* aDestinationCtx,
     return false;
   }
 
+  gfxContextAutoSaveRestore autoRestore(aDestinationCtx);
+
   IntSize blurRadius;
   IntSize spreadRadius;
   // Convert the blur and spread radius to device pixels
@@ -5597,11 +5599,20 @@ nsContextBoxBlur::InsetBoxBlur(gfxContext* aDestinationCtx,
   // inset blur to the invert of the dest context, then rescale it back
   // when we draw to the destination surface.
   gfxSize scale = aDestinationCtx->CurrentMatrix().ScaleFactors(true);
-  Matrix currentMatrix = ToMatrix(aDestinationCtx->CurrentMatrix());
+  Matrix transform = ToMatrix(aDestinationCtx->CurrentMatrix());
 
-  Rect transformedDestRect = currentMatrix.TransformBounds(aDestinationRect);
-  Rect transformedShadowClipRect = currentMatrix.TransformBounds(aShadowClipRect);
-  Rect transformedSkipRect = currentMatrix.TransformBounds(aSkipRect);
+  // XXX: we could probably handle negative scales but for now it's easier just to fallback
+  if (!transform.HasNonAxisAlignedTransform() && transform._11 > 0.0 && transform._22 > 0.0) {
+    // If we don't have a rotation, we're pre-transforming all the rects.
+    aDestinationCtx->SetMatrix(gfxMatrix());
+  } else {
+    // Don't touch anything, we have a rotation.
+    transform = Matrix();
+  }
+
+  Rect transformedDestRect = transform.TransformBounds(aDestinationRect);
+  Rect transformedShadowClipRect = transform.TransformBounds(aShadowClipRect);
+  Rect transformedSkipRect = transform.TransformBounds(aSkipRect);
 
   transformedDestRect.Round();
   transformedShadowClipRect.Round();
@@ -5612,16 +5623,11 @@ nsContextBoxBlur::InsetBoxBlur(gfxContext* aDestinationCtx,
     aInnerClipRectRadii[i].height = std::floor(scale.height * aInnerClipRectRadii[i].height);
   }
 
-  {
-    gfxContextAutoSaveRestore autoRestore(aDestinationCtx);
-    aDestinationCtx->SetMatrix(gfxMatrix());
-
-    mAlphaBoxBlur.BlurInsetBox(aDestinationCtx, transformedDestRect,
-                               transformedShadowClipRect,
-                               blurRadius, spreadRadius,
-                               aShadowColor, aHasBorderRadius,
-                               aInnerClipRectRadii, transformedSkipRect,
-                               aShadowOffset);
-  }
+  mAlphaBoxBlur.BlurInsetBox(aDestinationCtx, transformedDestRect,
+                             transformedShadowClipRect,
+                             blurRadius, spreadRadius,
+                             aShadowColor, aHasBorderRadius,
+                             aInnerClipRectRadii, transformedSkipRect,
+                             aShadowOffset);
   return true;
 }
