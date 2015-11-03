@@ -80,7 +80,7 @@ SharedPlanarYCbCrImage::GetAsSourceSurface()
   return PlanarYCbCrImage::GetAsSourceSurface();
 }
 
-void
+bool
 SharedPlanarYCbCrImage::SetData(const PlanarYCbCrData& aData)
 {
   // If mTextureClient has not already been allocated (through Allocate(aData))
@@ -88,20 +88,21 @@ SharedPlanarYCbCrImage::SetData(const PlanarYCbCrData& aData)
   // been called since it will trigger a full copy.
   PlanarYCbCrData data = aData;
   if (!mTextureClient && !Allocate(data)) {
-    return;
+    return false;
   }
 
   MOZ_ASSERT(mTextureClient->AsTextureClientYCbCr());
   if (!mTextureClient->Lock(OpenMode::OPEN_WRITE_ONLY)) {
     MOZ_ASSERT(false, "Failed to lock the texture.");
-    return;
+    return false;
   }
   TextureClientAutoUnlock unlock(mTextureClient);
   if (!mTextureClient->AsTextureClientYCbCr()->UpdateYCbCr(aData)) {
     MOZ_ASSERT(false, "Failed to copy YCbCr data into the TextureClient");
-    return;
+    return false;
   }
   mTextureClient->MarkImmutable();
+  return true;
 }
 
 // needs to be overriden because the parent class sets mBuffer which we
@@ -131,12 +132,12 @@ SharedPlanarYCbCrImage::AllocateAndGetNewBuffer(uint32_t aSize)
   return serializer.GetData();
 }
 
-void
+bool
 SharedPlanarYCbCrImage::SetDataNoCopy(const Data &aData)
 {
   MOZ_ASSERT(mTextureClient, "This Image should have already allocated data");
   if (!mTextureClient) {
-    return;
+    return false;
   }
   mData = aData;
   mSize = aData.mPicSize;
@@ -159,6 +160,7 @@ SharedPlanarYCbCrImage::SetDataNoCopy(const Data &aData)
                                   aData.mYSize,
                                   aData.mCbCrSize,
                                   aData.mStereoMode);
+  return true;
 }
 
 uint8_t*
