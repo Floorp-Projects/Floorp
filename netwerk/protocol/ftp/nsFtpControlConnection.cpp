@@ -15,7 +15,10 @@
 #include "nsNetCID.h"
 #include <algorithm>
 
-extern PRLogModuleInfo* gFTPLog;
+using namespace mozilla;
+using namespace mozilla::net;
+
+extern LazyLogModule gFTPLog;
 #define LOG(args)         MOZ_LOG(gFTPLog, mozilla::LogLevel::Debug, args)
 #define LOG_INFO(args)  MOZ_LOG(gFTPLog, mozilla::LogLevel::Info, args)
 

@@ -42,7 +42,7 @@ static const unsigned int kNetworkChangeCoalescingPeriod  = 1000;
 
 using namespace mozilla;
 
-static PRLogModuleInfo *gNotifyAddrLog = nullptr;
+static LazyLogModule gNotifyAddrLog("nsNotifyAddr");
 #define LOG(args) MOZ_LOG(gNotifyAddrLog, mozilla::LogLevel::Debug, args)
 
 #define NETWORK_NOTIFY_CHANGED_PREF "network.notify.changed"
@@ -349,9 +349,6 @@ class NuwaMarkLinkMonitorThreadRunner : public nsRunnable
 nsresult
 nsNotifyAddrListener::Init(void)
 {
-    if (!gNotifyAddrLog)
-        gNotifyAddrLog = PR_NewLogModule("nsNotifyAddr");
-
     nsCOMPtr<nsIObserverService> observerService =
         mozilla::services::GetObserverService();
     if (!observerService)

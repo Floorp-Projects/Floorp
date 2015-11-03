@@ -56,7 +56,8 @@ namespace net {
 
 Predictor *Predictor::sSelf = nullptr;
 
-static PRLogModuleInfo *gPredictorLog = nullptr;
+static LazyLogModule gPredictorLog("NetworkPredictor");
+
 #define PREDICTOR_LOG(args) MOZ_LOG(gPredictorLog, mozilla::LogLevel::Debug, args)
 
 #define RETURN_IF_FAILED(_rv) \
@@ -322,8 +323,6 @@ Predictor::Predictor()
   ,mStartupCount(1)
   ,mMaxURILength(PREDICTOR_MAX_URI_LENGTH_DEFAULT)
 {
-  gPredictorLog = PR_NewLogModule("NetworkPredictor");
-
   MOZ_ASSERT(!sSelf, "multiple Predictor instances!");
   sSelf = this;
 }
