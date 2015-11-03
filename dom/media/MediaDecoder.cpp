@@ -745,6 +745,9 @@ MediaDecoder::NotifyDataEnded(nsresult aStatus)
 {
   RefPtr<MediaDecoder> self = this;
   nsCOMPtr<nsIRunnable> r = NS_NewRunnableFunction([=] () {
+    if (self->mShuttingDown) {
+      return;
+    }
     self->NotifyDownloadEnded(aStatus);
     if (NS_SUCCEEDED(aStatus)) {
       HTMLMediaElement* element = self->mOwner->GetMediaElement();
