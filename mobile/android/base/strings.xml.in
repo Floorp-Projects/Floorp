@@ -599,4 +599,9 @@
   <string name="intent_uri_private_browsing_multiple_match_title">&intent_uri_private_browsing_multiple_match_title;</string>
 
   <string name="devtools_auth_scan_header">&devtools_auth_scan_header;</string>
+
+<!-- (Hard-coded string for beta uplift): The user installed a build of this app that does not support
+     the Android version of this device. the formatS1 is replaced by the CPU ABI (e.g., ARMv7); the formatS2 is
+     replaced by the Android OS version (e.g., 14)-->
+  <string name="unsupported_sdk_version">Sorry! This &brandShortName; won\'t work on this device (&formatS1;, &formatS2;). Please download the correct version.</string>
 </resources>
