@@ -467,11 +467,6 @@ private:
                       void* aUserArg);
 
   static PLDHashOperator
-  GetOriginsExceedingGroupLimit(const nsACString& aKey,
-                                GroupInfoPair* aValue,
-                                void* aUserArg);
-
-  static PLDHashOperator
   GetAllTemporaryStorageOrigins(const nsACString& aKey,
                                 GroupInfoPair* aValue,
                                 void* aUserArg);
