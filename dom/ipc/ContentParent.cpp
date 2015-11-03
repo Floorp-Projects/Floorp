@@ -5188,8 +5188,7 @@ ContentParent::AllocPOfflineCacheUpdateParent(const URIParams& aManifestURI,
     }
     RefPtr<mozilla::docshell::OfflineCacheUpdateParent> update =
         new mozilla::docshell::OfflineCacheUpdateParent(
-            tabContext.OwnOrContainingAppId(),
-            tabContext.IsBrowserElement());
+            tabContext.OriginAttributesRef());
     // Use this reference as the IPDL reference.
     return update.forget().take();
 }
