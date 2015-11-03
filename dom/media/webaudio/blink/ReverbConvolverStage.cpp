@@ -37,8 +37,13 @@ using namespace mozilla;
 
 namespace WebCore {
 
-ReverbConvolverStage::ReverbConvolverStage(const float* impulseResponse, size_t, size_t reverbTotalLatency, size_t stageOffset, size_t stageLength,
-                                           size_t fftSize, size_t renderPhase, size_t renderSliceSize, ReverbAccumulationBuffer* accumulationBuffer, bool directMode)
+ReverbConvolverStage::ReverbConvolverStage(const float* impulseResponse, size_t,
+                                           size_t reverbTotalLatency,
+                                           size_t stageOffset,
+                                           size_t stageLength,
+                                           size_t fftSize, size_t renderPhase,
+                                           ReverbAccumulationBuffer* accumulationBuffer,
+                                           bool directMode)
     : m_accumulationBuffer(accumulationBuffer)
     , m_accumulationReadIndex(0)
     , m_inputReadIndex(0)
@@ -54,9 +59,9 @@ ReverbConvolverStage::ReverbConvolverStage(const float* impulseResponse, size_t,
     } else {
         m_directKernel.SetLength(fftSize / 2);
         PodCopy(m_directKernel.Elements(), impulseResponse + stageOffset, fftSize / 2);
-        m_directConvolver = new DirectConvolver(renderSliceSize);
+        m_directConvolver = new DirectConvolver(WEBAUDIO_BLOCK_SIZE);
     }
-    m_temporaryBuffer.SetLength(renderSliceSize);
+    m_temporaryBuffer.SetLength(WEBAUDIO_BLOCK_SIZE);
     PodZero(m_temporaryBuffer.Elements(), m_temporaryBuffer.Length());
 
     // The convolution stage at offset stageOffset needs to have a corresponding delay to cancel out the offset.
