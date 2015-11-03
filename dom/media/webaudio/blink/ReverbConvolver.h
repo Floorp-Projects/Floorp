@@ -76,13 +76,6 @@ private:
     // One or more background threads read from this input buffer which is fed from the realtime thread.
     ReverbInputBuffer m_inputBuffer;
 
-    // First stage will be of size m_minFFTSize.  Each next stage will be twice as big until we hit m_maxFFTSize.
-    size_t m_minFFTSize;
-    size_t m_maxFFTSize;
-
-    // But don't exceed this size in the real-time thread (if we're doing background processing).
-    size_t m_maxRealtimeFFTSize;
-
     // Background thread and synchronization
     base::Thread m_backgroundThread;
     Lock m_backgroundThreadLock;

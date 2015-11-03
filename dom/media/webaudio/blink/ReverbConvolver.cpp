@@ -51,7 +51,14 @@ const int InputBufferSize = 8 * 16384;
 // tuned for individual platforms if this assumption is found to be incorrect.
 const size_t RealtimeFrameLimit = 8192 + 4096 // ~278msec @ 44.1KHz
                                   - WEBAUDIO_BLOCK_SIZE;
-const size_t MinFFTSize = 128;
+// First stage will have size MinFFTSize - successive stages will double in
+// size each time until we hit the maximum size.
+const size_t MinFFTSize = 256;
+// If we are using background threads then don't exceed this FFT size for the
+// stages which run in the real-time thread.  This avoids having only one or
+// two large stages (size 16384 or so) at the end which take a lot of time
+// every several processing slices.  This way we amortize the cost over more
+// processing slices.
 const size_t MaxRealtimeFFTSize = 4096;
 
 ReverbConvolver::ReverbConvolver(const float* impulseResponseData,
@@ -62,20 +69,12 @@ ReverbConvolver::ReverbConvolver(const float* impulseResponseData,
     : m_impulseResponseLength(impulseResponseLength)
     , m_accumulationBuffer(impulseResponseLength + WEBAUDIO_BLOCK_SIZE)
     , m_inputBuffer(InputBufferSize)
-    , m_minFFTSize(MinFFTSize) // First stage will have this size - successive stages will double in size each time
-    , m_maxFFTSize(maxFFTSize) // until we hit m_maxFFTSize
     , m_backgroundThread("ConvolverWorker")
     , m_backgroundThreadCondition(&m_backgroundThreadLock)
     , m_useBackgroundThreads(useBackgroundThreads)
     , m_wantsToExit(false)
     , m_moreInputBuffered(false)
 {
-    // If we are using background threads then don't exceed this FFT size for the
-    // stages which run in the real-time thread.  This avoids having only one or two
-    // large stages (size 16384 or so) at the end which take a lot of time every several
-    // processing slices.  This way we amortize the cost over more processing slices.
-    m_maxRealtimeFFTSize = MaxRealtimeFFTSize;
-
     // For the moment, a good way to know if we have real-time constraint is to check if we're using background threads.
     // Otherwise, assume we're being run from a command-line tool.
     bool hasRealtimeConstraint = useBackgroundThreads;
@@ -89,7 +88,7 @@ ReverbConvolver::ReverbConvolver(const float* impulseResponseData,
 
     size_t stageOffset = 0;
     size_t stagePhase = 0;
-    size_t fftSize = m_minFFTSize;
+    size_t fftSize = MinFFTSize;
     while (stageOffset < totalResponseLength) {
         size_t stageSize = fftSize / 2;
 
@@ -117,16 +116,14 @@ ReverbConvolver::ReverbConvolver(const float* impulseResponseData,
         } else
             m_stages.AppendElement(stage.forget());
 
-        if (stageOffset != 0) {
-            // Figure out next FFT size
-            fftSize *= 2;
-        }
+        // Figure out next FFT size
+        fftSize *= 2;
 
         stageOffset += stageSize;
 
         if (hasRealtimeConstraint && !isBackgroundStage
-            && fftSize > m_maxRealtimeFFTSize) {
-            fftSize = m_maxRealtimeFFTSize;
+            && fftSize > MaxRealtimeFFTSize) {
+            fftSize = MaxRealtimeFFTSize;
             // Custom phase positions for all but the first of the realtime
             // stages of largest size.  These spread out the work of the
             // larger realtime stages.  None of the FFTs of size 1024, 2048 or
@@ -134,11 +131,11 @@ ReverbConvolver::ReverbConvolver(const float* impulseResponseData,
             // MaxRealtimeFFTSize = 4096 stage, at the end of the doubling,
             // performs its FFT at block 7.  The FFTs of size 2048 are
             // performed in blocks 3 + 8 * n and size 1024 at 1 + 4 * n.
-            const uint32_t phaseLookup[] = { 10, 4, 14, 0 };
+            const uint32_t phaseLookup[] = { 14, 0, 10, 4 };
             stagePhase = WEBAUDIO_BLOCK_SIZE *
                 phaseLookup[m_stages.Length() % ArrayLength(phaseLookup)];
-        } else if (fftSize > m_maxFFTSize) {
-            fftSize = m_maxFFTSize;
+        } else if (fftSize > maxFFTSize) {
+            fftSize = maxFFTSize;
             // A prime offset spreads out FFTs in a way that all
             // available phase positions will be used if there are sufficient
             // stages.
