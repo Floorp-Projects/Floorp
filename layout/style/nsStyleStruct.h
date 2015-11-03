@@ -1396,6 +1396,13 @@ struct nsStylePosition {
   // different scope, since we're now using it in multiple style structs.
   typedef nsStyleBackground::Position Position;
 
+  /**
+   * Return the computed value for 'justify-items' given our 'display' value in
+   * aDisplay and the parent StyleContext aParent (or null for the root).
+   */
+  uint8_t ComputedJustifyItems(const nsStyleDisplay* aDisplay,
+                               nsStyleContext* aParent) const;
+
   Position      mObjectPosition;        // [reset]
   nsStyleSides  mOffset;                // [reset] coord, percent, calc, auto
   nsStyleCoord  mWidth;                 // [reset] coord, percent, enum, calc, auto
@@ -1414,6 +1421,10 @@ struct nsStylePosition {
   uint8_t       mAlignContent;          // [reset] see nsStyleConsts.h
   uint8_t       mAlignItems;            // [reset] see nsStyleConsts.h
   uint8_t       mAlignSelf;             // [reset] see nsStyleConsts.h
+private:
+  friend class nsRuleNode;
+  uint8_t       mJustifyItems;          // [reset] see nsStyleConsts.h
+public:
   uint8_t       mFlexDirection;         // [reset] see nsStyleConsts.h
   uint8_t       mFlexWrap;              // [reset] see nsStyleConsts.h
   uint8_t       mJustifyContent;        // [reset] see nsStyleConsts.h

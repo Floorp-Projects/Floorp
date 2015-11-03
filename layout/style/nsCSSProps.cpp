@@ -1242,6 +1242,68 @@ const KTableValue nsCSSProps::kEmptyCellsKTable[] = {
   eCSSKeyword_UNKNOWN,-1
 };
 
+const KTableValue nsCSSProps::kAlignAllKeywords[] = {
+  eCSSKeyword_auto,          NS_STYLE_ALIGN_AUTO,
+  eCSSKeyword_start,         NS_STYLE_ALIGN_START,
+  eCSSKeyword_end,           NS_STYLE_ALIGN_END,
+  eCSSKeyword_flex_start,    NS_STYLE_ALIGN_FLEX_START,
+  eCSSKeyword_flex_end,      NS_STYLE_ALIGN_FLEX_END,
+  eCSSKeyword_center,        NS_STYLE_ALIGN_CENTER,
+  eCSSKeyword_left,          NS_STYLE_ALIGN_LEFT,
+  eCSSKeyword_right,         NS_STYLE_ALIGN_RIGHT,
+  eCSSKeyword_baseline,      NS_STYLE_ALIGN_BASELINE,
+  eCSSKeyword_last_baseline, NS_STYLE_ALIGN_LAST_BASELINE,
+  eCSSKeyword_stretch,       NS_STYLE_ALIGN_STRETCH,
+  eCSSKeyword_self_start,    NS_STYLE_ALIGN_SELF_START,
+  eCSSKeyword_self_end,      NS_STYLE_ALIGN_SELF_END,
+  eCSSKeyword_space_between, NS_STYLE_ALIGN_SPACE_BETWEEN,
+  eCSSKeyword_space_around,  NS_STYLE_ALIGN_SPACE_AROUND,
+  eCSSKeyword_space_evenly,  NS_STYLE_ALIGN_SPACE_EVENLY,
+  eCSSKeyword_legacy,        NS_STYLE_ALIGN_LEGACY,
+  eCSSKeyword_safe,          NS_STYLE_ALIGN_SAFE,
+  eCSSKeyword_true,          NS_STYLE_ALIGN_TRUE,
+  eCSSKeyword_UNKNOWN,-1
+};
+
+const KTableValue nsCSSProps::kAlignOverflowPosition[] = {
+  eCSSKeyword_true,          NS_STYLE_ALIGN_TRUE,
+  eCSSKeyword_safe,          NS_STYLE_ALIGN_SAFE,
+  eCSSKeyword_UNKNOWN,-1
+};
+
+const KTableValue nsCSSProps::kAlignSelfPosition[] = {
+  eCSSKeyword_start,         NS_STYLE_ALIGN_START,
+  eCSSKeyword_end,           NS_STYLE_ALIGN_END,
+  eCSSKeyword_flex_start,    NS_STYLE_ALIGN_FLEX_START,
+  eCSSKeyword_flex_end,      NS_STYLE_ALIGN_FLEX_END,
+  eCSSKeyword_center,        NS_STYLE_ALIGN_CENTER,
+  eCSSKeyword_left,          NS_STYLE_ALIGN_LEFT,
+  eCSSKeyword_right,         NS_STYLE_ALIGN_RIGHT,
+  eCSSKeyword_self_start,    NS_STYLE_ALIGN_SELF_START,
+  eCSSKeyword_self_end,      NS_STYLE_ALIGN_SELF_END,
+  eCSSKeyword_UNKNOWN,-1
+};
+
+const KTableValue nsCSSProps::kAlignLegacy[] = {
+  eCSSKeyword_legacy,        NS_STYLE_ALIGN_LEGACY,
+  eCSSKeyword_UNKNOWN,-1
+};
+
+const KTableValue nsCSSProps::kAlignLegacyPosition[] = {
+  eCSSKeyword_center,        NS_STYLE_ALIGN_CENTER,
+  eCSSKeyword_left,          NS_STYLE_ALIGN_LEFT,
+  eCSSKeyword_right,         NS_STYLE_ALIGN_RIGHT,
+  eCSSKeyword_UNKNOWN,-1
+};
+
+const KTableValue nsCSSProps::kAlignAutoStretchBaseline[] = {
+  eCSSKeyword_auto,          NS_STYLE_ALIGN_AUTO,
+  eCSSKeyword_stretch,       NS_STYLE_ALIGN_STRETCH,
+  eCSSKeyword_baseline,      NS_STYLE_ALIGN_BASELINE,
+  eCSSKeyword_last_baseline, NS_STYLE_ALIGN_LAST_BASELINE,
+  eCSSKeyword_UNKNOWN,-1
+};
+
 const KTableValue nsCSSProps::kAlignContentKTable[] = {
   eCSSKeyword_flex_start,    NS_STYLE_ALIGN_CONTENT_FLEX_START,
   eCSSKeyword_flex_end,      NS_STYLE_ALIGN_CONTENT_FLEX_END,
