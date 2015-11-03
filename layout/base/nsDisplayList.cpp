@@ -1088,7 +1088,7 @@ nsDisplayListBuilder::GetCachedAnimatedGeometryRoot(const nsIFrame* aFrame,
 
 static nsIFrame*
 ComputeAnimatedGeometryRootFor(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
-                               const nsIFrame* aStopAtAncestor = nullptr,
+                               const nsIFrame* aStopAtAncestor,
                                bool aUseCache = false)
 {
   nsIFrame* cursor = aFrame;
@@ -1123,8 +1123,9 @@ nsDisplayListBuilder::FindAnimatedGeometryRootFor(nsIFrame* aFrame, const nsIFra
 void
 nsDisplayListBuilder::RecomputeCurrentAnimatedGeometryRoot()
 {
-  mCurrentAnimatedGeometryRoot = ComputeAnimatedGeometryRootFor(this, const_cast<nsIFrame *>(mCurrentFrame));
-  AnimatedGeometryRootLookup lookup(mCurrentFrame, nullptr);
+  mCurrentAnimatedGeometryRoot =
+    ComputeAnimatedGeometryRootFor(this, const_cast<nsIFrame *>(mCurrentFrame), mReferenceFrame);
+  AnimatedGeometryRootLookup lookup(mCurrentFrame, mReferenceFrame);
   mAnimatedGeometryRootCache.Put(lookup, mCurrentAnimatedGeometryRoot);
 }
 
