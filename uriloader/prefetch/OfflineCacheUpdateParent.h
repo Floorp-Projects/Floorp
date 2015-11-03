@@ -45,7 +45,7 @@ public:
       mIPCClosed = true;
     }
 
-    OfflineCacheUpdateParent(uint32_t aAppId, bool aIsInBrowser);
+    OfflineCacheUpdateParent(const mozilla::OriginAttributes& aAttrs);
 
     virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 private:
