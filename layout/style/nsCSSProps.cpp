@@ -1340,22 +1340,13 @@ const KTableValue nsCSSProps::kAlignContentKTable[] = {
   eCSSKeyword_UNKNOWN,-1
 };
 
-const KTableValue nsCSSProps::kAlignItemsKTable[] = {
-  eCSSKeyword_flex_start, NS_STYLE_ALIGN_ITEMS_FLEX_START,
-  eCSSKeyword_flex_end,   NS_STYLE_ALIGN_ITEMS_FLEX_END,
-  eCSSKeyword_center,     NS_STYLE_ALIGN_ITEMS_CENTER,
-  eCSSKeyword_baseline,   NS_STYLE_ALIGN_ITEMS_BASELINE,
-  eCSSKeyword_stretch,    NS_STYLE_ALIGN_ITEMS_STRETCH,
-  eCSSKeyword_UNKNOWN,-1
-};
-
 // Note: 'align-self' takes the same keywords as 'align-items', plus 'auto'.
 const KTableValue nsCSSProps::kAlignSelfKTable[] = {
-  eCSSKeyword_flex_start, NS_STYLE_ALIGN_ITEMS_FLEX_START,
-  eCSSKeyword_flex_end,   NS_STYLE_ALIGN_ITEMS_FLEX_END,
-  eCSSKeyword_center,     NS_STYLE_ALIGN_ITEMS_CENTER,
-  eCSSKeyword_baseline,   NS_STYLE_ALIGN_ITEMS_BASELINE,
-  eCSSKeyword_stretch,    NS_STYLE_ALIGN_ITEMS_STRETCH,
+  eCSSKeyword_flex_start, NS_STYLE_ALIGN_FLEX_START,
+  eCSSKeyword_flex_end,   NS_STYLE_ALIGN_FLEX_END,
+  eCSSKeyword_center,     NS_STYLE_ALIGN_CENTER,
+  eCSSKeyword_baseline,   NS_STYLE_ALIGN_BASELINE,
+  eCSSKeyword_stretch,    NS_STYLE_ALIGN_STRETCH,
   eCSSKeyword_auto,       NS_STYLE_ALIGN_SELF_AUTO,
   eCSSKeyword_UNKNOWN,-1
 };

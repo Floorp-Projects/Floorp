@@ -4058,9 +4058,14 @@ var gCSSProperties = {
     domProp: "alignItems",
     inherited: false,
     type: CSS_TYPE_LONGHAND,
-    initial_values: [ "stretch" ],
-    other_values: [ "flex-start", "flex-end", "center", "baseline" ],
-    invalid_values: [ "space-between", "abc", "30px" ]
+    initial_values: [ "auto", "start" ],
+    // Can't test 'left'/'right' here since that computes to 'start' for blocks.
+    other_values: [ "end", "flex-start", "flex-end", "self-start", "self-end",
+                    "center", "stretch", "baseline", "true left",
+                    "center true", "safe right", "center safe" ],
+    invalid_values: [ "space-between", "abc", "5%", "legacy", "legacy end",
+                      "end legacy", "true", "true baseline", "auto true",
+                      "safe left true", "safe stretch", "end end" ]
   },
   "align-self": {
     domProp: "alignSelf",

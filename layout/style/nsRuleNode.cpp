@@ -7802,11 +7802,22 @@ nsRuleNode::ComputePositionData(void* aStartStruct,
               NS_STYLE_ALIGN_CONTENT_STRETCH, 0, 0, 0, 0);
 
   // align-items: enum, inherit, initial
-  SetDiscrete(*aRuleData->ValueForAlignItems(),
-              pos->mAlignItems, conditions,
-              SETDSC_ENUMERATED | SETDSC_UNSET_INITIAL,
-              parentPos->mAlignItems,
-              NS_STYLE_ALIGN_ITEMS_INITIAL_VALUE, 0, 0, 0, 0);
+  const auto& alignItemsValue = *aRuleData->ValueForAlignItems();
+  if (MOZ_UNLIKELY(alignItemsValue.GetUnit() == eCSSUnit_Inherit)) {
+    if (MOZ_LIKELY(parentContext)) {
+      pos->mAlignItems =
+        parentPos->ComputedAlignItems(parentContext->StyleDisplay());
+    } else {
+      pos->mAlignItems = NS_STYLE_ALIGN_AUTO;
+    }
+    conditions.SetUncacheable();
+  } else {
+    SetDiscrete(alignItemsValue,
+                pos->mAlignItems, conditions,
+                SETDSC_ENUMERATED | SETDSC_UNSET_INITIAL,
+                parentPos->mAlignItems, // unused, we handle 'inherit' above
+                NS_STYLE_ALIGN_AUTO, 0, 0, 0, 0);
+  }
 
   // align-self: enum, inherit, initial
   // NOTE: align-self's initial value is the special keyword "auto", which is
@@ -7828,7 +7839,7 @@ nsRuleNode::ComputePositionData(void* aStartStruct,
       if (!parentContext) {
         // We're the root node. Nothing to inherit from --> just use default
         // value.
-        inheritedAlignSelf = NS_STYLE_ALIGN_ITEMS_INITIAL_VALUE;
+        inheritedAlignSelf = NS_STYLE_ALIGN_AUTO; // XXX will be removed in next patch
       } else {
         // Our parent's "auto" value should resolve to our grandparent's value
         // for "align-items".  So, that's what we're supposed to inherit.
@@ -7836,13 +7847,13 @@ nsRuleNode::ComputePositionData(void* aStartStruct,
         if (!grandparentContext) {
           // No grandparent --> our parent is the root node, so its
           // "align-self: auto" computes to the default "align-items" value:
-          inheritedAlignSelf = NS_STYLE_ALIGN_ITEMS_INITIAL_VALUE;
+          inheritedAlignSelf = NS_STYLE_ALIGN_AUTO; // XXX will be removed in next patch
         } else {
           // Normal case -- we have a grandparent.
           // Its "align-items" value is what we should end up inheriting.
           const nsStylePosition* grandparentPos =
             grandparentContext->StylePosition();
-          inheritedAlignSelf = grandparentPos->mAlignItems;
+          inheritedAlignSelf = grandparentPos->ComputedAlignItems(grandparentContext->StyleDisplay());
           aContext->AddStyleBit(NS_STYLE_USES_GRANDANCESTOR_STYLE);
         }
       }

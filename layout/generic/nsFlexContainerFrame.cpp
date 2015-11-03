@@ -1594,8 +1594,9 @@ FlexItem::FlexItem(nsHTMLReflowState& aFlexItemReflowState,
 
   // Resolve "align-self: auto" to parent's "align-items" value.
   if (mAlignSelf == NS_STYLE_ALIGN_SELF_AUTO) {
+    auto parent = mFrame->StyleContext()->GetParent();
     mAlignSelf =
-      mFrame->StyleContext()->GetParent()->StylePosition()->mAlignItems;
+      parent->StylePosition()->ComputedAlignItems(parent->StyleDisplay());
   }
 
   // If the flex item's inline axis is the same as the cross axis, then
