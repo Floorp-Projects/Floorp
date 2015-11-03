@@ -827,6 +827,8 @@ var SessionStoreInternal = {
         this._sendTabRestoredNotification(tab);
         break;
       case "SessionStore:crashedTabRevived":
+        // The browser was revived by navigating to a different page
+        // manually, so we remove it from the ignored browser set.
         this._crashedBrowsers.delete(browser.permanentKey);
         break;
       case "SessionStore:error":
@@ -3146,6 +3148,10 @@ var SessionStoreInternal = {
     browser.__SS_restoreState = TAB_STATE_NEEDS_RESTORE;
     browser.setAttribute("pending", "true");
     tab.setAttribute("pending", "true");
+
+    // If we're restoring this tab, it certainly shouldn't be in
+    // the ignored set anymore.
+    this._crashedBrowsers.delete(browser.permanentKey);
 
     // Update the persistent tab state cache with |tabData| information.
     TabStateCache.update(browser, {
