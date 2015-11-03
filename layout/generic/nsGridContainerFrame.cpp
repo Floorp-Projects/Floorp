@@ -587,6 +587,14 @@ struct MOZ_STACK_CLASS nsGridContainerFrame::Tracks
                       LineRange GridArea::*       aRange,
                       IntrinsicISizeType          aConstraint);
 
+  /**
+   * Apply 'align/justify-content', whichever is relevant for this axis.
+   * https://drafts.csswg.org/css-align-3/#propdef-align-content
+   */
+  void AlignJustifyContent(const nsHTMLReflowState& aReflowState,
+                           const LogicalSize& aContainerSize);
+
+
 #ifdef DEBUG
   void Dump() const
   {
@@ -800,13 +808,13 @@ IsNameWithStartSuffix(const nsString& aString, uint32_t* aIndex)
 static nscoord
 GridLinePosition(uint32_t aLine, const nsTArray<TrackSize>& aTrackSizes)
 {
-  const uint32_t endIndex = aLine;
-  MOZ_ASSERT(endIndex <= aTrackSizes.Length(), "aTrackSizes is too small");
-  nscoord pos = 0;
-  for (uint32_t i = 0; i < endIndex; ++i) {
-    pos += aTrackSizes[i].mBase;
+  MOZ_ASSERT(aTrackSizes.Length() > 0, "There are no lines in this grid");
+  MOZ_ASSERT(aLine <= aTrackSizes.Length(), "aTrackSizes is too small");
+  if (aLine == aTrackSizes.Length()) {
+    const TrackSize& sz = aTrackSizes[aLine - 1];
+    return sz.mPosition + sz.mBase;
   }
-  return pos;
+  return aTrackSizes[aLine].mPosition;
 }
 
 /**
@@ -1064,6 +1072,51 @@ JustifySelf(uint8_t aJustifySelf, const LogicalRect& aCB, const WritingMode aCBW
     resizedAxis.emplace(axis);
   }
   return resizedAxis;
+}
+
+static uint16_t
+GetAlignJustifyValue(uint16_t aAlignment, const WritingMode aWM,
+                     const bool aIsAlign, bool* aOverflowSafe)
+{
+  *aOverflowSafe = aAlignment & NS_STYLE_ALIGN_SAFE;
+  aAlignment &= (NS_STYLE_ALIGN_ALL_BITS & ~NS_STYLE_ALIGN_FLAG_BITS);
+
+  // Map some alignment values to 'start' / 'end'.
+  switch (aAlignment) {
+    case NS_STYLE_ALIGN_LEFT:
+    case NS_STYLE_ALIGN_RIGHT: {
+      MOZ_ASSERT(!aIsAlign, "Grid container's 'align-contents' axis is never "
+                 "parallel to its inline axis, so these should've computed to "
+                 "'start' already");
+      bool isStart = aWM.IsBidiLTR() == (aAlignment == NS_STYLE_ALIGN_LEFT);
+      return isStart ? NS_STYLE_ALIGN_START : NS_STYLE_ALIGN_END;
+    }
+    case NS_STYLE_ALIGN_FLEX_START: // same as 'start' for Grid
+      return NS_STYLE_ALIGN_START;
+    case NS_STYLE_ALIGN_FLEX_END: // same as 'end' for Grid
+      return NS_STYLE_ALIGN_END;
+  }
+  return aAlignment;
+}
+
+static uint16_t
+GetAlignJustifyFallbackIfAny(uint16_t aAlignment, const WritingMode aWM,
+                             const bool aIsAlign, bool* aOverflowSafe)
+{
+  uint16_t fallback = aAlignment >> NS_STYLE_ALIGN_ALL_SHIFT;
+  if (fallback) {
+    return GetAlignJustifyValue(fallback, aWM, aIsAlign, aOverflowSafe);
+  }
+  // https://drafts.csswg.org/css-align-3/#fallback-alignment
+  switch (aAlignment) {
+    case NS_STYLE_ALIGN_STRETCH:
+    case NS_STYLE_ALIGN_SPACE_BETWEEN:
+      return NS_STYLE_ALIGN_START;
+    case NS_STYLE_ALIGN_SPACE_AROUND:
+    case NS_STYLE_ALIGN_SPACE_EVENLY:
+      return NS_STYLE_ALIGN_CENTER;
+  }
+  return 0;
 }
 
 //----------------------------------------------------------------------
@@ -2493,26 +2546,154 @@ nsGridContainerFrame::Tracks::StretchFlexibleTracks(
 }
 
 void
+nsGridContainerFrame::Tracks::AlignJustifyContent(
+  const nsHTMLReflowState& aReflowState,
+  const LogicalSize&     aContainerSize)
+{
+  if (mSizes.IsEmpty()) {
+    return;
+  }
+
+  const bool isAlign = mAxis == eLogicalAxisBlock;
+  auto stylePos = aReflowState.mStylePosition;
+  const auto valueAndFallback = isAlign ?
+    stylePos->ComputedAlignContent(aReflowState.mStyleDisplay) :
+    stylePos->ComputedJustifyContent(aReflowState.mStyleDisplay);
+  WritingMode wm = aReflowState.GetWritingMode();
+  bool overflowSafe;
+  auto alignment = ::GetAlignJustifyValue(valueAndFallback, wm, isAlign,
+                                          &overflowSafe);
+  if (alignment == NS_STYLE_ALIGN_AUTO) {
+    alignment = NS_STYLE_ALIGN_START;
+  }
+
+  // Compute the free space and count auto-sized tracks.
+  size_t numAutoTracks = 0;
+  nscoord space;
+  if (alignment != NS_STYLE_ALIGN_START) {
+    nscoord trackSizeSum = 0;
+    for (const TrackSize& sz : mSizes) {
+      trackSizeSum += sz.mBase;
+      if (sz.mState & TrackSize::eAutoMaxSizing) {
+        ++numAutoTracks;
+      }
+    }
+    nscoord cbSize = isAlign ? aContainerSize.BSize(wm)
+                             : aContainerSize.ISize(wm);
+    space = cbSize - trackSizeSum;
+    // Use the fallback value instead when applicable.
+    if (space < 0 ||
+        (alignment == NS_STYLE_ALIGN_SPACE_BETWEEN && mSizes.Length() == 1)) {
+      auto fallback = ::GetAlignJustifyFallbackIfAny(valueAndFallback, wm,
+                                                     isAlign, &overflowSafe);
+      if (fallback) {
+        alignment = fallback;
+      }
+    }
+    if (space == 0 || (space < 0 && overflowSafe)) {
+      // XXX check that this makes sense also for [last-]baseline (bug 1151204).
+      alignment = NS_STYLE_ALIGN_START;
+    }
+  }
+
+  // Optimize the cases where we just need to set each track's position.
+  nscoord pos = 0;
+  bool distribute = true;
+  switch (alignment) {
+    case NS_STYLE_ALIGN_BASELINE:
+    case NS_STYLE_ALIGN_LAST_BASELINE:
+      NS_WARNING("'NYI: baseline/last-baseline' (bug 1151204)"); // XXX
+    case NS_STYLE_ALIGN_START:
+      distribute = false;
+      break;
+    case NS_STYLE_ALIGN_END:
+      pos = space;
+      distribute = false;
+      break;
+    case NS_STYLE_ALIGN_CENTER:
+      pos = space / 2;
+      distribute = false;
+      break;
+    case NS_STYLE_ALIGN_STRETCH:
+      distribute = numAutoTracks != 0;
+      break;
+  }
+  if (!distribute) {
+    for (TrackSize& sz : mSizes) {
+      sz.mPosition = pos;
+      pos += sz.mBase;
+    }
+    return;
+  }
+
+  // Distribute free space to/between tracks and set their position.
+  MOZ_ASSERT(space > 0, "should've handled that on the fallback path above");
+  nscoord between, roundingError;
+  switch (alignment) {
+    case NS_STYLE_ALIGN_STRETCH: {
+      MOZ_ASSERT(numAutoTracks > 0, "we handled numAutoTracks == 0 above");
+      nscoord spacePerTrack;
+      roundingError = NSCoordDivRem(space, numAutoTracks, &spacePerTrack);
+      for (TrackSize& sz : mSizes) {
+#ifdef DEBUG
+        space += sz.mBase; // for the assert below: space + all mBase == pos
+#endif
+        sz.mPosition = pos;
+        if (!(sz.mState & TrackSize::eAutoMaxSizing)) {
+          pos += sz.mBase;
+          continue;
+        }
+        nscoord stretch = spacePerTrack;
+        if (roundingError) {
+          roundingError -= 1;
+          stretch += 1;
+        }
+        nscoord newBase = sz.mBase + stretch;
+        sz.mBase = newBase;
+        pos += newBase;
+      }
+      MOZ_ASSERT(pos == space && !roundingError,
+                 "we didn't distribute all space?");
+      return;
+    }
+    case NS_STYLE_ALIGN_SPACE_BETWEEN:
+      MOZ_ASSERT(mSizes.Length() > 1, "should've used a fallback above");
+      roundingError = NSCoordDivRem(space, mSizes.Length() - 1, &between);
+      break;
+    case NS_STYLE_ALIGN_SPACE_AROUND:
+      roundingError = NSCoordDivRem(space, mSizes.Length(), &between);
+      pos = between / 2;
+      break;
+    case NS_STYLE_ALIGN_SPACE_EVENLY:
+      roundingError = NSCoordDivRem(space, mSizes.Length() + 1, &between);
+      pos = between;
+      break;
+    default:
+      MOZ_ASSERT_UNREACHABLE("unknown align-/justify-content value");
+  }
+  for (TrackSize& sz : mSizes) {
+    sz.mPosition = pos;
+    nscoord spacing = between;
+    if (roundingError) {
+      roundingError -= 1;
+      spacing += 1;
+    }
+    pos += sz.mBase + spacing;
+  }
+  MOZ_ASSERT(!roundingError, "we didn't distribute all space?");
+}
+
+void
 nsGridContainerFrame::LineRange::ToPositionAndLength(
   const nsTArray<TrackSize>& aTrackSizes, nscoord* aPos, nscoord* aLength) const
 {
   MOZ_ASSERT(mStart != kAutoLine && mEnd != kAutoLine,
              "expected a definite LineRange");
-  nscoord pos = 0;
-  const uint32_t start = mStart;
-  uint32_t i = 0;
-  for (; i < start; ++i) {
-    pos += aTrackSizes[i].mBase;
-  }
-  *aPos = pos;
-
-  nscoord length = 0;
-  const uint32_t end = mEnd;
-  MOZ_ASSERT(end <= aTrackSizes.Length(), "aTrackSizes isn't large enough");
-  for (; i < end; ++i) {
-    length += aTrackSizes[i].mBase;
-  }
-  *aLength = length;
+  MOZ_ASSERT(mStart < mEnd);
+  nscoord startPos = aTrackSizes[mStart].mPosition;
+  const TrackSize& sz = aTrackSizes[mEnd - 1];
+  *aPos = startPos;
+  *aLength = (sz.mPosition + sz.mBase) - startPos;
 }
 
 nscoord
@@ -2521,13 +2702,10 @@ nsGridContainerFrame::LineRange::ToLength(
 {
   MOZ_ASSERT(mStart != kAutoLine && mEnd != kAutoLine,
              "expected a definite LineRange");
-  nscoord length = 0;
-  const uint32_t end = mEnd;
-  MOZ_ASSERT(end <= aTrackSizes.Length(), "aTrackSizes isn't large enough");
-  for (uint32_t i = mStart; i < end; ++i) {
-    length += aTrackSizes[i].mBase;
-  }
-  return length;
+  MOZ_ASSERT(mStart < mEnd);
+  nscoord startPos = aTrackSizes[mStart].mPosition;
+  const TrackSize& sz = aTrackSizes[mEnd - 1];
+  return (sz.mPosition + sz.mBase) - startPos;
 }
 
 void
@@ -2771,6 +2949,11 @@ nsGridContainerFrame::Reflow(nsPresContext*           aPresContext,
 
   LogicalRect contentArea(wm, bp.IStart(wm), bp.BStart(wm),
                           computedISize, bSize);
+
+  // Apply 'align/justify-content' to the grid.
+  gridReflowState.mCols.AlignJustifyContent(aReflowState, contentArea.Size(wm));
+  gridReflowState.mRows.AlignJustifyContent(aReflowState, contentArea.Size(wm));
+
   gridReflowState.mIter.Reset(GridItemCSSOrderIterator::eIncludeAll);
   ReflowChildren(gridReflowState, contentArea, aDesiredSize, aStatus);
 
@@ -2797,8 +2980,11 @@ nsGridContainerFrame::IntrinsicISize(nsRenderingContext* aRenderingContext,
   state.mCols.CalculateSizes(state, mGridItems, state.mColFunctions,
                              NS_UNCONSTRAINEDSIZE, &GridArea::mCols,
                              aConstraint);
-  TranslatedLineRange allTracks(0, mGridColEnd);
-  return allTracks.ToLength(state.mCols.mSizes);
+  nscoord length = 0;
+  for (const TrackSize& sz : state.mCols.mSizes) {
+    length += sz.mBase;
+  }
+  return length;
 }
 
 nscoord
