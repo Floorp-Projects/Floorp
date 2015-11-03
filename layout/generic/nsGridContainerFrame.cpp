@@ -1414,12 +1414,16 @@ nsGridContainerFrame::ResolveLineRange(
     // range has a HypotheticalEnd <= kMaxLine.
     // http://dev.w3.org/csswg/css-grid/#overlarge-grids
     r.second = std::min(r.second, nsStyleGridLine::kMaxLine - 1);
-  } else if (r.second <= r.first) {
+  } else {
     // http://dev.w3.org/csswg/css-grid/#grid-placement-errors
-    if (MOZ_UNLIKELY(r.first == nsStyleGridLine::kMaxLine)) {
-      r.first = nsStyleGridLine::kMaxLine - 1;
+    if (r.second < r.first) {
+      Swap(r.first, r.second);
+    } else if (r.first == r.second) {
+      if (MOZ_UNLIKELY(r.first == nsStyleGridLine::kMaxLine)) {
+        r.first = nsStyleGridLine::kMaxLine - 1;
+      }
+      r.second = r.first + 1; // XXX subgrid explicit size instead of 1?
     }
-    r.second = r.first + 1; // XXX subgrid explicit size instead of 1?
   }
   return LineRange(r.first, r.second);
 }
