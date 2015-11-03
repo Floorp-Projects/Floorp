@@ -1940,6 +1940,16 @@ Experiments.ExperimentEntry.prototype = {
       return changes;
     }
 
+    // Check permissions to see if we can enable the addon.
+    if (!(addon.permissions & AddonManager.PERM_CAN_ENABLE)) {
+      throw new Error("Don't have permission to enable addon " + addon.id + ", perm=" + addon.permission);
+    }
+
+    // Experiment addons should not require a restart.
+    if (!!(addon.operationsRequiringRestart & AddonManager.OP_NEEDS_RESTART_ENABLE)) {
+      throw new Error("Experiment addon requires a restart: " + addon.id);
+    }
+
     let deferred = Promise.defer();
 
     // Else we need to enable it.
@@ -1954,13 +1964,24 @@ Experiments.ExperimentEntry.prototype = {
       },
     };
 
-    this._log.info("Activating add-on: " + addon.id);
+    for (let handler of ["onDisabled", "onOperationCancelled", "onUninstalled"]) {
+      listener[handler] = (evtAddon) => {
+        if (evtAddon.id != addon.id) {
+          return;
+        }
+
+        AddonManager.removeAddonListener(listener);
+        deferred.reject("Failed to enable addon " + addon.id + " due to: " + handler);
+      };
+    }
+
+    this._log.info("reconcileAddonState() - Activating add-on: " + addon.id);
     AddonManager.addAddonListener(listener);
     addon.userDisabled = false;
     yield deferred.promise;
     changes |= this.ADDON_CHANGE_ENABLE;
 
-    this._log.info("Add-on has been enabled: " + addon.id);
+    this._log.info("reconcileAddonState() - Add-on has been enabled: " + addon.id);
     return changes;
    }),
 
