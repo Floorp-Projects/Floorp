@@ -14,7 +14,7 @@ createHTML({
   title: "Captured video-only over peer connection",
   visible: true
 }).then(() => new Promise(resolve => {
-  manager.runTests(getPlayableVideos(gSmallTests), startTest);
+  manager.runTests(getPlayableVideos(gLongerTests), startTest);
   manager.onFinished = () => {
     // Tear down before SimpleTest.finish.
     if ("nsINetworkInterfaceListService" in SpecialPowers.Ci) {
