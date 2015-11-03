@@ -240,12 +240,6 @@ void Reverb::process(const AudioBlock* sourceBus, AudioBlock* destinationBus, si
     }
 }
 
-void Reverb::reset()
-{
-    for (size_t i = 0; i < m_convolvers.Length(); ++i)
-        m_convolvers[i]->reset();
-}
-
 size_t Reverb::latencyFrames() const
 {
     return !m_convolvers.IsEmpty() ? m_convolvers[0]->latencyFrames() : 0;

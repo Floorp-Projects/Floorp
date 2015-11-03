@@ -56,7 +56,6 @@ public:
     void process(const float* sourceChannelData, size_t sourceChannelLength,
                  float* destinationChannelData, size_t destinationChannelLength,
                  size_t framesToProcess);
-    void reset();
 
     size_t impulseResponseLength() const { return m_impulseResponseLength; }
 

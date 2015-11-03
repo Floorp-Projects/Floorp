@@ -51,7 +51,6 @@ public:
     Reverb(mozilla::ThreadSharedFloatArrayBufferList* impulseResponseBuffer, size_t impulseResponseBufferLength, size_t renderSliceSize, size_t maxFFTSize, size_t numberOfChannels, bool useBackgroundThreads, bool normalize, float sampleRate);
 
     void process(const mozilla::AudioBlock* sourceBus, mozilla::AudioBlock* destinationBus, size_t framesToProcess);
-    void reset();
 
     size_t impulseResponseLength() const { return m_impulseResponseLength; }
     size_t latencyFrames() const;
