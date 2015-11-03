@@ -109,25 +109,6 @@ def ensureParentDir(path):
                 raise
 
 
-def readFileContent(name, mode):
-    """Read the content of file, returns tuple (file existed, file content)"""
-    existed = False
-    old_content = None
-    try:
-        existing = open(name, mode)
-        existed = True
-    except IOError:
-        pass
-    else:
-        try:
-            old_content = existing.read()
-        except IOError:
-            pass
-        finally:
-            existing.close()
-    return existed, old_content
-
-
 class FileAvoidWrite(BytesIO):
     """File-like object that buffers output and only writes if content changed.
 
@@ -146,7 +127,6 @@ class FileAvoidWrite(BytesIO):
         self._capture_diff = capture_diff
         self.diff = None
         self.mode = mode
-        self.force_update = False
 
     def write(self, buf):
         if isinstance(buf, unicode):
@@ -166,11 +146,23 @@ class FileAvoidWrite(BytesIO):
         """
         buf = self.getvalue()
         BytesIO.close(self)
+        existed = False
+        old_content = None
 
-        existed, old_content = readFileContent(self.name, self.mode)
-        if not self.force_update and old_content == buf:
-            assert existed
-            return existed, False
+        try:
+            existing = open(self.name, self.mode)
+            existed = True
+        except IOError:
+            pass
+        else:
+            try:
+                old_content = existing.read()
+                if old_content == buf:
+                    return True, False
+            except IOError:
+                pass
+            finally:
+                existing.close()
 
         ensureParentDir(self.name)
         with open(self.name, 'w') as file:
