@@ -1403,6 +1403,13 @@ struct nsStylePosition {
   uint8_t ComputedJustifyItems(const nsStyleDisplay* aDisplay,
                                nsStyleContext* aParent) const;
 
+  /**
+   * Return the computed value for 'justify-self' given our 'display' value in
+   * aDisplay and the parent StyleContext aParent (or null for the root).
+   */
+  uint8_t ComputedJustifySelf(const nsStyleDisplay* aDisplay,
+                              nsStyleContext* aParent) const;
+
   Position      mObjectPosition;        // [reset]
   nsStyleSides  mOffset;                // [reset] coord, percent, calc, auto
   nsStyleCoord  mWidth;                 // [reset] coord, percent, enum, calc, auto
@@ -1423,7 +1430,12 @@ struct nsStylePosition {
   uint8_t       mAlignSelf;             // [reset] see nsStyleConsts.h
 private:
   friend class nsRuleNode;
+  // Helper for the ComputedAlign/Justify* methods.
+  uint8_t MapLeftRightToStart(uint8_t aAlign, mozilla::LogicalAxis aAxis,
+                              const nsStyleDisplay* aDisplay) const;
+
   uint8_t       mJustifyItems;          // [reset] see nsStyleConsts.h
+  uint8_t       mJustifySelf;           // [reset] see nsStyleConsts.h
 public:
   uint8_t       mFlexDirection;         // [reset] see nsStyleConsts.h
   uint8_t       mFlexWrap;              // [reset] see nsStyleConsts.h
