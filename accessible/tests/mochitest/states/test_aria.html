@@ -500,7 +500,8 @@
   <!-- Test that aria-disabled state gets propagated to all descendants -->
   <div id="group" role="group" aria-disabled="true">
     <button>hi</button>
-    <div tabindex="0" role="listbox" aria-activedescendant="item1">
+    <div tabindex="0" role="listbox" aria-activedescendant="item1"
+         aria-owns="item5">
       <div role="option" id="item1">Item 1</div>
       <div role="option" id="item2">Item 2</div>
       <div role="option" id="item3">Item 3</div>
@@ -508,6 +509,7 @@
     </div>
     <div role="slider" tabindex="0">A slider</div>
   </div>
+  <div role="option" id="item5">Item 5</div>
 
   <!-- Test active state -->
   <div id="as_listbox" tabindex="0" role="listbox"
