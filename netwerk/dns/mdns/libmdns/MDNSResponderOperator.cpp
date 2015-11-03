@@ -25,19 +25,14 @@
 
 #include "nsASocketHandler.h"
 
-inline PRLogModuleInfo*
-GetOperatorLog()
-{
-  static PRLogModuleInfo* log = PR_NewLogModule("MDNSResponderOperator");
-  return log;
-}
-#undef LOG_I
-#define LOG_I(...) MOZ_LOG(GetOperatorLog(), mozilla::LogLevel::Debug, (__VA_ARGS__))
-#undef LOG_E
-#define LOG_E(...) MOZ_LOG(GetOperatorLog(), mozilla::LogLevel::Error, (__VA_ARGS__))
-
 namespace mozilla {
 namespace net {
+
+static LazyLogModule gMDNSLog("MDNSResponderOperator");
+#undef LOG_I
+#define LOG_I(...) MOZ_LOG(mozilla::net::gMDNSLog, mozilla::LogLevel::Debug, (__VA_ARGS__))
+#undef LOG_E
+#define LOG_E(...) MOZ_LOG(mozilla::net::gMDNSLog, mozilla::LogLevel::Error, (__VA_ARGS__))
 
 class MDNSResponderOperator::ServiceWatcher final
   : public nsASocketHandler

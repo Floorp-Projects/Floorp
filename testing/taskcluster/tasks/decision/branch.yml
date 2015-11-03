@@ -37,7 +37,6 @@ tasks:
 
       scopes:
         - "docker-worker:cache:tc-vcs-public-sources"
-        - "docker-worker:image:quay.io/mozilla/builder:0.3.0"
 
       payload:
         env:

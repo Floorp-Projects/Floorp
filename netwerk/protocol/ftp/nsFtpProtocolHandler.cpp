@@ -45,7 +45,7 @@ using namespace mozilla::net;
 // this enables LogLevel::Debug level information and places all output in
 // the file nspr.log
 //
-PRLogModuleInfo* gFTPLog = nullptr;
+LazyLogModule gFTPLog("nsFtp");
 #undef LOG
 #define LOG(args) MOZ_LOG(gFTPLog, mozilla::LogLevel::Debug, args)
 
@@ -67,9 +67,6 @@ nsFtpProtocolHandler::nsFtpProtocolHandler()
     , mControlQoSBits(0x00)
     , mDataQoSBits(0x00)
 {
-    if (!gFTPLog)
-        gFTPLog = PR_NewLogModule("nsFtp");
-
     LOG(("FTP:creating handler @%x\n", this));
 
     gFtpHandler = this;

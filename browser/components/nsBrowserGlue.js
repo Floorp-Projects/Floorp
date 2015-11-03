@@ -29,9 +29,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "NewTabUtils",
 XPCOMUtils.defineLazyModuleGetter(this, "RemoteAboutNewTab",
                                   "resource:///modules/RemoteAboutNewTab.jsm");
 
-XPCOMUtils.defineLazyModuleGetter(this, "RemoteDirectoryLinksProvider",
-                                  "resource:///modules/RemoteDirectoryLinksProvider.jsm");
-
 XPCOMUtils.defineLazyModuleGetter(this, "RemoteNewTabUtils",
                                   "resource:///modules/RemoteNewTabUtils.jsm");
 
@@ -843,15 +840,14 @@ BrowserGlue.prototype = {
     webrtcUI.init();
     AboutHome.init();
 
-    RemoteDirectoryLinksProvider.init();
-    RemoteNewTabUtils.init();
-    RemoteNewTabUtils.links.addProvider(RemoteDirectoryLinksProvider);
-    RemoteAboutNewTab.init();
-
     DirectoryLinksProvider.init();
     NewTabUtils.init();
     NewTabUtils.links.addProvider(DirectoryLinksProvider);
     AboutNewTab.init();
+
+    RemoteNewTabUtils.init();
+    RemoteNewTabUtils.links.addProvider(DirectoryLinksProvider);
+    RemoteAboutNewTab.init();
 
     SessionStore.init();
     BrowserUITelemetry.init();
