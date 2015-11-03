@@ -4044,15 +4044,16 @@ var gCSSProperties = {
     domProp: "alignContent",
     inherited: false,
     type: CSS_TYPE_LONGHAND,
-    initial_values: [ "stretch" ],
-    other_values: [
-      "flex-start",
-      "flex-end",
-      "center",
-      "space-between",
-      "space-around"
-    ],
-    invalid_values: [ "abc", "30px", "0", "auto" ]
+    initial_values: [ "auto" ],
+    other_values: [ "start", "end", "flex-start", "flex-end", "center", "left",
+                    "right", "space-between", "space-around", "space-evenly",
+                    "baseline", "last-baseline", "stretch", "start safe",
+                    "true end", "true end stretch", "end safe space-evenly" ],
+    invalid_values: [ "none", "5", "self-end", "safe", "auto true", "true safe",
+                      "safe baseline", "baseline true", "baseline end", "end auto",
+                      "safe end true start", "safe end true", "auto safe start",
+                      "true end start", "end start safe", "space-between true",
+                      "stretch safe" ]
   },
   "align-items": {
     domProp: "alignItems",

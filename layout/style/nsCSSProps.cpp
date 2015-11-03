@@ -1330,16 +1330,6 @@ const KTableValue nsCSSProps::kAlignContentPosition[] = {
   eCSSKeyword_UNKNOWN,-1
 };
 
-const KTableValue nsCSSProps::kAlignContentKTable[] = {
-  eCSSKeyword_flex_start,    NS_STYLE_ALIGN_CONTENT_FLEX_START,
-  eCSSKeyword_flex_end,      NS_STYLE_ALIGN_CONTENT_FLEX_END,
-  eCSSKeyword_center,        NS_STYLE_ALIGN_CONTENT_CENTER,
-  eCSSKeyword_space_between, NS_STYLE_ALIGN_CONTENT_SPACE_BETWEEN,
-  eCSSKeyword_space_around,  NS_STYLE_ALIGN_CONTENT_SPACE_AROUND,
-  eCSSKeyword_stretch,       NS_STYLE_ALIGN_CONTENT_STRETCH,
-  eCSSKeyword_UNKNOWN,-1
-};
-
 const KTableValue nsCSSProps::kFlexDirectionKTable[] = {
   eCSSKeyword_row,            NS_STYLE_FLEX_DIRECTION_ROW,
   eCSSKeyword_row_reverse,    NS_STYLE_FLEX_DIRECTION_ROW_REVERSE,
