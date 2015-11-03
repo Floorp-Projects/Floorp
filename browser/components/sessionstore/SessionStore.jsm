@@ -201,10 +201,6 @@ this.SessionStore = {
     return SessionStoreInternal.canRestoreLastSession;
   },
 
-  get crashedTabCount() {
-    return SessionStoreInternal._crashedBrowsersCount;
-  },
-
   set canRestoreLastSession(val) {
     SessionStoreInternal.canRestoreLastSession = val;
   },
@@ -387,9 +383,6 @@ var SessionStoreInternal = {
   // here - that way we know which browsers to ignore messages from (until
   // they get restored).
   _crashedBrowsers: new WeakSet(),
-
-  // The number of crashed browsers.
-  _crashedBrowsersCount: 0,
 
   // A map (xul:browser -> nsIFrameLoader) that maps a browser to the last
   // associated frameLoader we heard about.
@@ -1580,10 +1573,6 @@ var SessionStoreInternal = {
     if (!aNoNotification) {
       this.saveStateDelayed(aWindow);
     }
-
-    if (this._crashedBrowsers.has(browser.permanentKey)) {
-      this._crashedBrowsersCount++;
-    }
   },
 
   /**
@@ -1612,10 +1601,6 @@ var SessionStoreInternal = {
 
     if (!aNoNotification) {
       this.saveStateDelayed(aWindow);
-    }
-
-    if (this._crashedBrowsers.has(browser.permanentKey)) {
-      this._crashedBrowsersCount--;
     }
   },
 
@@ -1797,7 +1782,6 @@ var SessionStoreInternal = {
    */
   onBrowserCrashed: function(aWindow, aBrowser) {
     this._crashedBrowsers.add(aBrowser.permanentKey);
-    this._crashedBrowsersCount++;
     // If we never got around to restoring this tab, clear its state so
     // that we don't try restoring if the user switches to it before
     // reviving the crashed browser. This is throwing away the information
@@ -2353,8 +2337,6 @@ var SessionStoreInternal = {
 
     let data = TabState.collect(aTab);
     this.restoreTab(aTab, data);
-
-    this._crashedBrowsersCount--;
   },
 
   /**
@@ -2368,8 +2350,6 @@ var SessionStoreInternal = {
         this.reviveCrashedTab(tab);
       }
     }
-
-    this._crashedBrowsersCount = 0;
   },
 
   /**
