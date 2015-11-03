@@ -656,7 +656,7 @@ public:
    * This makes a copy of the data buffers, in order to support functioning
    * in all different layer managers.
    */
-  virtual void SetData(const Data& aData);
+  virtual bool SetData(const Data& aData);
 
   /**
    * This doesn't make a copy of the data buffers. Can be used when mBuffer is
@@ -665,7 +665,7 @@ public:
    * The GStreamer media backend uses this to decode into PlanarYCbCrImage(s)
    * directly.
    */
-  virtual void SetDataNoCopy(const Data &aData);
+  virtual bool SetDataNoCopy(const Data &aData);
 
   /**
    * This allocates and returns a new buffer
@@ -709,7 +709,7 @@ protected:
    *
    * @param aData           Input image data.
    */
-  void CopyData(const Data& aData);
+  bool CopyData(const Data& aData);
 
   /**
    * Return a buffer to store image data in.

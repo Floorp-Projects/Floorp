@@ -48,7 +48,7 @@ public:
     }
   }
 
-  virtual void SetData(const Data& aData) override;
+  virtual bool SetData(const Data& aData) override;
   virtual void SetDelayedConversion(bool aDelayed) override { mDelayedConversion = aDelayed; }
 
   already_AddRefed<gfx::SourceSurface> GetAsSourceSurface() override;
@@ -91,20 +91,20 @@ public:
   }
 };
 
-void
+bool
 BasicPlanarYCbCrImage::SetData(const Data& aData)
 {
   PlanarYCbCrImage::SetData(aData);
 
   if (mDelayedConversion) {
-    return;
+    return false;
   }
 
   // Do some sanity checks to prevent integer overflow
   if (aData.mYSize.width > PlanarYCbCrImage::MAX_DIMENSION ||
       aData.mYSize.height > PlanarYCbCrImage::MAX_DIMENSION) {
     NS_ERROR("Illegal image source width or height");
-    return;
+    return false;
   }
 
   gfx::SurfaceFormat format = gfx::ImageFormatToSurfaceFormat(GetOffscreenFormat());
@@ -114,7 +114,7 @@ BasicPlanarYCbCrImage::SetData(const Data& aData)
   if (size.width > PlanarYCbCrImage::MAX_DIMENSION ||
       size.height > PlanarYCbCrImage::MAX_DIMENSION) {
     NS_ERROR("Illegal image dest width or height");
-    return;
+    return false;
   }
 
   gfxImageFormat iFormat = gfx::SurfaceFormatToImageFormat(format);
@@ -122,12 +122,14 @@ BasicPlanarYCbCrImage::SetData(const Data& aData)
   mDecodedBuffer = AllocateBuffer(size.height * mStride);
   if (!mDecodedBuffer) {
     // out of memory
-    return;
+    return false;
   }
 
   gfx::ConvertYCbCrToRGB(aData, format, size, mDecodedBuffer, mStride);
   SetOffscreenFormat(iFormat);
   mSize = size;
+
+  return true;
 }
 
 already_AddRefed<gfx::SourceSurface>
