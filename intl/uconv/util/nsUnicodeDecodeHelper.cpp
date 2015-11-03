@@ -5,7 +5,7 @@
 
 #include "unicpriv.h"
 #include "nsUnicodeDecodeHelper.h"
-#include "nsAutoPtr.h"
+#include "mozilla/UniquePtr.h"
 
 //----------------------------------------------------------------------
 // Class nsUnicodeDecodeHelper [implementation]
@@ -224,11 +224,11 @@ nsresult nsUnicodeDecodeHelper::CreateFastTable(
 {
   int32_t tableSize = aTableSize;
   int32_t buffSize = aTableSize;
-  nsAutoArrayPtr<char> buff(new char [buffSize]);
+  auto buff = mozilla::MakeUnique<char[]>(buffSize);
 
-  char * p = buff;
+  char * p = buff.get();
   for (int32_t i=0; i<aTableSize; i++) *(p++) = i;
-  return ConvertByTable(buff, &buffSize, aFastTable, &tableSize, 
+  return ConvertByTable(buff.get(), &buffSize, aFastTable, &tableSize, 
                         u1ByteCharset, nullptr, aMappingTable);
 }
 
