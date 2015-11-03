@@ -1867,21 +1867,6 @@ public:
     };
 
 public:
-    struct OnImeRemoveComposition_t {
-        typedef GeckoEditable Owner;
-        typedef void ReturnType;
-        typedef void SetterType;
-        typedef mozilla::jni::Args<> Args;
-        static constexpr char name[] = "onImeRemoveComposition";
-        static constexpr char signature[] =
-                "()V";
-        static const bool isStatic = false;
-        static const bool isMultithreaded = false;
-        static const mozilla::jni::ExceptionMode exceptionMode =
-                mozilla::jni::ExceptionMode::ABORT;
-    };
-
-public:
     struct OnImeReplaceText_t {
         typedef GeckoEditable Owner;
         typedef void ReturnType;
@@ -1889,28 +1874,10 @@ public:
         typedef mozilla::jni::Args<
                 int32_t,
                 int32_t,
-                mozilla::jni::String::Param,
-                bool> Args;
+                mozilla::jni::String::Param> Args;
         static constexpr char name[] = "onImeReplaceText";
         static constexpr char signature[] =
-                "(IILjava/lang/String;Z)V";
-        static const bool isStatic = false;
-        static const bool isMultithreaded = false;
-        static const mozilla::jni::ExceptionMode exceptionMode =
-                mozilla::jni::ExceptionMode::ABORT;
-    };
-
-public:
-    struct OnImeSetSelection_t {
-        typedef GeckoEditable Owner;
-        typedef void ReturnType;
-        typedef void SetterType;
-        typedef mozilla::jni::Args<
-                int32_t,
-                int32_t> Args;
-        static constexpr char name[] = "onImeSetSelection";
-        static constexpr char signature[] =
-                "(II)V";
+                "(IILjava/lang/String;)V";
         static const bool isStatic = false;
         static const bool isMultithreaded = false;
         static const mozilla::jni::ExceptionMode exceptionMode =
