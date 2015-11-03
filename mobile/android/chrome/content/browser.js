@@ -997,10 +997,29 @@ var BrowserApp = {
 
     NativeWindow.contextmenus.add(stringGetter("contextmenu.showImage"),
       NativeWindow.contextmenus.imageBlockingPolicyContext,
-      function(target) {
+      function(aTarget) {
         UITelemetry.addEvent("action.1", "contextmenu", null, "web_show_image");
-        target.setAttribute("data-ctv-show", "true");
-        target.setAttribute("src", target.getAttribute("data-ctv-src"));
+        aTarget.setAttribute("data-ctv-show", "true");
+        aTarget.setAttribute("src", aTarget.getAttribute("data-ctv-src"));
+
+        // Shows a toast to unblock all images if browser.image_blocking.enabled is enabled.
+        let blockedImgs = aTarget.ownerDocument.querySelectorAll("[data-ctv-src]");
+        if (blockedImgs.length == 0) {
+          return;
+        }
+        let message = Strings.browser.GetStringFromName("imageblocking.downloadedImage");
+        NativeWindow.toast.show(message, "short", {
+          button: {
+            label: Strings.browser.GetStringFromName("imageblocking.showAllImages"),
+            callback: () => {
+              UITelemetry.addEvent("action.1", "toast", null, "web_show_all_image");
+              for (let i = 0; i < blockedImgs.length; ++i) {
+                blockedImgs[i].setAttribute("data-ctv-show", "true");
+                blockedImgs[i].setAttribute("src", blockedImgs[i].getAttribute("data-ctv-src"));
+              }
+            },
+          }
+        });
     });
   },
 
