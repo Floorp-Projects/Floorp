@@ -103,6 +103,8 @@ extern PRThread *gSocketThread;
 namespace mozilla {
 namespace net {
 
+LazyLogModule gHttpLog("nsHttp");
+
 static nsresult
 NewURI(const nsACString &aSpec,
        const char *aCharset,
@@ -216,8 +218,6 @@ nsHttpHandler::nsHttpHandler()
     , mTCPKeepaliveLongLivedIdleTimeS(600)
     , mEnforceH1Framing(FRAMECHECK_BARELY)
 {
-    gHttpLog = PR_NewLogModule("nsHttp");
-
     LOG(("Creating nsHttpHandler [this=%p].\n", this));
 
     RegisterStrongMemoryReporter(new SpdyZlibReporter());
