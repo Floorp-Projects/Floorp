@@ -31,6 +31,15 @@ assertExpr("b = { set [meth](a) { } }", aExpr("=", ident("b"),
               objExpr([{ key: computedName(ident("meth")), value: funExpr(null, [ident("a")],
                 blockStmt([])), method: false, kind: "set"}])));
 
+// Bug 1220702 - If it's not written as a method, `.method` should be false.
+assertExpr("({[x]: function () {}})",
+           objExpr([{
+               key: computedName(ident("x")),
+               value: funExpr(null, [], blockStmt([])),
+               method: false,
+               kind: "init"
+           }]));
+
 }
 
 runtest(test);

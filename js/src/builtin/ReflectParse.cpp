@@ -3233,7 +3233,9 @@ ASTSerializer::property(ParseNode* pn, MutableHandleValue dst)
     }
 
     bool isShorthand = pn->isKind(PNK_SHORTHAND);
-    bool isMethod = pn->pn_right->isKind(PNK_FUNCTION) && kind == PROP_INIT;
+    bool isMethod =
+        pn->pn_right->isKind(PNK_FUNCTION) &&
+        pn->pn_right->pn_funbox->function()->kind() == JSFunction::Method;
     RootedValue key(cx), val(cx);
     return propertyName(pn->pn_left, &key) &&
            expression(pn->pn_right, &val) &&
