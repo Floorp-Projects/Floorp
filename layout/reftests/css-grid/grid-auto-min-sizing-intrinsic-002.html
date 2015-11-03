@@ -1,0 +1,150 @@
+<!DOCTYPE HTML>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html><head>
+  <meta charset="utf-8">
+  <title>CSS Grid Test: 'auto' min-sizing with intrinsic min-width and overflow:hidden</title>
+  <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1176775">
+  <link rel="help" href="https://drafts.csswg.org/css-grid/#min-size-auto">
+  <link rel="match" href="grid-auto-min-sizing-intrinsic-002-ref.html">
+  <style type="text/css">
+body,html { color:black; background:white; font-family:monospace; font-size:16px; padding:0; margin:0; }
+
+.grid {
+ display: grid;
+ grid-template-columns: minmax(auto,0) minmax(0,1fr);
+ border: 1px solid;
+ width: 500px;
+ align-items: start;
+ justify-items: start;
+}
+span,img { min-height:0; overflow:hidden; }
+
+.c1 { border:2px solid;   min-width:auto; }
+.c3 { background: blue;   min-width:-moz-min-content; min-width:-webkit-min-content; }
+.c4 { background: lime;   min-width:-moz-max-content; min-width:-webkit-max-content; }
+.c5 { background: cyan;   min-width:-moz-available;   min-width:-webkit-fill; }
+.c6 { background: yellow; min-width:-moz-fit-content; min-width:-webkit-fit-content; }
+.w20   { width: 20px; }
+.w450  { width: 450px; }
+.max50 { max-width: 50px; }
+.h05   { height: 0.5px; }
+.h4    { height: 4px; }
+
+c2 { opacity:0.5; background: grey; min-height:10px; }
+i { display:inline-block; width:20px; height:10px; background:blue; }
+  </style>
+</head>
+<body>
+
+<!-- TODO: row height doesn't seem right - revisit after bug 1174569
+<div class="grid">
+  <span class="c1"><i></i><i></i><i></i><i></i><i></i></span><c2></c2>
+</div>
+-->
+<div class="grid">
+  <span class="c1"></span><c2></c2>
+</div>
+<div class="grid">
+  <span class="c1 w20"><i></i><i></i><i></i><i></i><i></i></span><c2></c2>
+</div>
+<div class="grid">
+  <span class="c1 w450"><i></i><i></i><i></i><i></i><i></i></span><c2></c2>
+</div>
+<!-- TODO: disabled until we have support for "transferred size"
+<div class="grid">
+  <img  class="c1" src="support/lime-25x1.png"><c2></c2>
+</div>
+<div class="grid">
+  <img  class="c1 h05" src="support/lime-25x1.png"><c2></c2>
+</div>
+<div class="grid">
+  <img  class="c1 h4" src="support/lime-25x1.png"><c2></c2>
+</div>
+<div class="grid">
+  <img  class="c1 h4 max50" src="support/lime-25x1.png"><c2></c2>
+</div>
+<div class="grid">
+  <img  class="c1 w20" src="support/lime-25x1.png"><c2></c2>
+</div>
+<div class="grid">
+  <img  class="c1 w450" src="support/lime-25x1.png"><c2></c2>
+</div>
+<div class="grid">
+  <img  class="c1 w450 max50" src="support/lime-25x1.png"><c2></c2>
+</div>
+-->
+<!-- TODO: row height doesn't seem right - revisit after bug 1174569
+<div class="grid" style="margin-left:300px; width:200px">
+  <span class="c3"><i></i><i></i><i></i><i></i><i></i></span><c2></c2>
+</div>
+-->
+<div class="grid">
+  <span class="c4"><i></i><i></i><i></i><i></i><i></i></span><c2></c2>
+</div>
+<div class="grid">
+  <span class="c4 w20"><i></i><i></i><i></i><i></i><i></i></span><c2></c2>
+</div>
+<div class="grid">
+  <span class="c4 w450"><i></i><i></i><i></i><i></i><i></i></span><c2></c2>
+</div>
+<div class="grid">
+  <span class="c4 w450 max50"><i></i><i></i><i></i><i></i><i></i></span><c2></c2>
+</div>
+<div class="grid">
+  <span class="c5"><i></i><i></i><i></i><i></i><i></i></span><c2></c2>
+</div>
+<div class="grid" style="margin-left:40px;margin-bottom:100px">
+  <span class="c5 w20"><i></i><i></i><i></i><i></i><i></i></span><c2></c2>
+</div>
+<div class="grid">
+  <span class="c5 w450"><i></i><i></i><i></i><i></i><i></i></span><c2></c2>
+</div>
+<!-- TODO: row height doesn't seem right - revisit after bug 1174569
+<div class="grid" style="margin-bottom:2em">
+  <span class="c5 w450 max50"><i></i><i></i><i></i><i></i><i></i></span><c2></c2>
+</div>
+-->
+<div class="grid">
+  <span class="c6"><i></i><i></i><i></i><i></i><i></i></span><c2></c2>
+</div>
+<div class="grid" style="margin-left:40px;margin-bottom:100px">
+  <span class="c6 w20"><i></i><i></i><i></i><i></i><i></i></span><c2></c2>
+</div>
+<div class="grid">
+  <span class="c6 w450"><i></i><i></i><i></i><i></i><i></i></span><c2></c2>
+</div>
+<!-- TODO: row height doesn't seem right - revisit after bug 1174569
+<div class="grid" style="margin-bottom:2em">
+  <span class="c6 w450 max50"><i></i><i></i><i></i><i></i><i></i></span><c2></c2>
+</div>
+-->
+<!-- TODO: disabled until we have support for "transferred size"
+<div class="grid">
+  <img  class="c3" src="support/lime-25x1.png"><c2></c2>
+</div>
+<div class="grid">
+  <img  class="c4" src="support/lime-25x1.png"><c2></c2>
+</div>
+-->
+<!-- TODO: row height doesn't seem right - revisit after bug 1174569
+<div class="grid">
+  <img  class="c5" src="support/lime-25x1.png"><c2></c2>
+</div>
+-->
+<!-- TODO: disabled until we have support for "transferred size"
+<div class="grid">
+  <img  class="c6" src="support/lime-25x1.png"><c2></c2>
+</div>
+<div class="grid">
+  <img  class="c6 w450" src="support/lime-25x1.png"><c2></c2>
+</div>
+<div class="grid">
+  <img  class="c6 w450 max50" src="support/lime-25x1.png"><c2></c2>
+</div>
+-->
+
+</body>
+</html>
