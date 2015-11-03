@@ -19,5 +19,12 @@
 "algorithm": "sha512",
 "filename": "sccache.tar.bz2",
 "unpack": true
+},
+{
+"size": 73029932,
+"digest": "ef1818acf065838dcb72554e521f9fd7098f0a3690cb6a3106d7bf18f46c342bfdd5a2b7d86e92ee3ddb9e478380343e58ecf8fd242807b8881a2d53fbec5ab3",
+"algorithm": "sha512",
+"filename": "rustc.tar.xz",
+"unpack": true
 }
 ]
