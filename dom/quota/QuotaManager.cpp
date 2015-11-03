@@ -2231,51 +2231,8 @@ QuotaManager::CollectOriginsForEviction(
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aLocks.IsEmpty());
 
-  class MOZ_STACK_CLASS Closure final
+  struct MOZ_STACK_CLASS Helper final
   {
-    nsTArray<DirectoryLockImpl*>& mTemporaryStorageLocks;
-    nsTArray<DirectoryLockImpl*>& mDefaultStorageLocks;
-    nsTArray<OriginInfo*>& mInactiveOriginInfos;
-
-  public:
-    Closure(nsTArray<DirectoryLockImpl*>& aTemporaryStorageLocks,
-            nsTArray<DirectoryLockImpl*>& aDefaultStorageLocks,
-            nsTArray<OriginInfo*>& aInactiveOriginInfos)
-      : mTemporaryStorageLocks(aTemporaryStorageLocks)
-      , mDefaultStorageLocks(aDefaultStorageLocks)
-      , mInactiveOriginInfos(aInactiveOriginInfos)
-    { }
-
-    static PLDHashOperator
-    GetInactiveTemporaryStorageOrigins(const nsACString& aKey,
-                                       GroupInfoPair* aValue,
-                                       void* aUserArg)
-    {
-      MOZ_ASSERT(!aKey.IsEmpty());
-      MOZ_ASSERT(aValue);
-      MOZ_ASSERT(aUserArg);
-
-      auto* closure = static_cast<Closure*>(aUserArg);
-
-      RefPtr<GroupInfo> groupInfo =
-        aValue->LockedGetGroupInfo(PERSISTENCE_TYPE_TEMPORARY);
-      if (groupInfo) {
-        GetInactiveOriginInfos(groupInfo->mOriginInfos,
-                               closure->mTemporaryStorageLocks,
-                               closure->mInactiveOriginInfos);
-      }
-
-      groupInfo = aValue->LockedGetGroupInfo(PERSISTENCE_TYPE_DEFAULT);
-      if (groupInfo) {
-        GetInactiveOriginInfos(groupInfo->mOriginInfos,
-                               closure->mDefaultStorageLocks,
-                               closure->mInactiveOriginInfos);
-      }
-
-      return PL_DHASH_NEXT;
-    }
-
-  private:
     static void
     GetInactiveOriginInfos(nsTArray<RefPtr<OriginInfo>>& aOriginInfos,
                            nsTArray<DirectoryLockImpl*>& aLocks,
@@ -2331,14 +2288,31 @@ QuotaManager::CollectOriginsForEviction(
 
   nsTArray<OriginInfo*> inactiveOrigins;
 
-  Closure closure(temporaryStorageLocks, defaultStorageLocks, inactiveOrigins);
-
   // Enumerate and process inactive origins. This must be protected by the
   // mutex.
   MutexAutoLock lock(mQuotaMutex);
 
-  mGroupInfoPairs.EnumerateRead(Closure::GetInactiveTemporaryStorageOrigins,
-                                &closure);
+  for (auto iter = mGroupInfoPairs.Iter(); !iter.Done(); iter.Next()) {
+    GroupInfoPair* pair = iter.UserData();
+
+    MOZ_ASSERT(!iter.Key().IsEmpty());
+    MOZ_ASSERT(pair);
+
+    RefPtr<GroupInfo> groupInfo =
+      pair->LockedGetGroupInfo(PERSISTENCE_TYPE_TEMPORARY);
+    if (groupInfo) {
+      Helper::GetInactiveOriginInfos(groupInfo->mOriginInfos,
+                                     temporaryStorageLocks,
+                                     inactiveOrigins);
+    }
+
+    groupInfo = pair->LockedGetGroupInfo(PERSISTENCE_TYPE_DEFAULT);
+    if (groupInfo) {
+      Helper::GetInactiveOriginInfos(groupInfo->mOriginInfos,
+                                     defaultStorageLocks,
+                                     inactiveOrigins);
+    }
+  }
 
 #ifdef DEBUG
   // Make sure the array is sorted correctly.
