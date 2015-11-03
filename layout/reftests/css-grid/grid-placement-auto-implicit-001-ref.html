@@ -12,7 +12,7 @@ body,html { color:black; background:white; font-size:12px; padding:0; margin:0; 
 
 .grid {
  border: 1px solid blue;
- width:300px;
+ width:270px;
 }
 
 .a { background:lime; }
@@ -50,6 +50,7 @@ span {
 <div class="grid">
 <span class="c">c</span><span class="e">e</span><span class="a">a</span><span class="b" span="2">b</span>
 </div>
+
 <div class="grid">
 <span class="c">c</span><span class="f">f</span><span class="a">a</span><span class="b" span="2">b</span>
 </div>
@@ -74,24 +75,27 @@ span {
 <div class="grid">
 <span class="g" style="width:1px">g</span><span class="g" style="width:1px">g</span><span class="a" style="margin-left:161px">a</span><span class="b" span="50">b</span>
 </div>
+
+</div><div style="float:left; margin-top:300px;">
+
 <div class="grid" style="height:40px; position:relative">
-<span style="margin-top:-10000px; height:10060px; width:78px;"></span>
-<span style="position:absolute; left:0; width:216px; ">b</span><br>
-<span style="margin-top:-42px; height:30px; width:78px; color:cyan"></span>
+<span style="margin-top:-10000px; height:20060px; width:78px;"></span>
+<span style="position:absolute; z-index:1; left:0; width:216px; height:10000px">b</span><br>
+<span style="margin-top:-10042px; height:30px; width:78px; color:black"></span>
 </div>
 <div class="grid" style="height:40px; position:relative">
-<span style="margin-top:-10000px; height:10018px; width:78px;"></span>
-<span style="position:absolute; left:0; width:216px;">b</span><br>
-<span style="position:absolute; left:0; z-index:1; height:30px; width:78px; color:lime"></span>
+<span style="margin-top:20px; position:absolute; left:0; z-index:0; height:30px; width:78px; color:black"></span>
+<span style="margin-top:-10000px; height:20018px; width:78px;"></span>
+<span style="position:absolute; left:0; width:216px; height:2000px">b</span><br>
 </div>
 <div class="grid" style="height:40px; position:relative;">
-<span style="position:absolute; left:20px; width: 30px; height:78px; z-index:2; color:cyan;"></span>
+<span style="position:absolute; left:20px; width: 30px; height:78px; z-index:2; color:black;"></span>
 <span style="position:absolute; left:82px; width: 30px;">b</span>
 </div>
 <div class="grid" style="height:40px; position:relative">
-<span style="position:relative; z-index:2; margin-top:-10000px; height:10018px; width:78px;"></span>
-<span style="position:absolute; left:0; z-index:2; width:216px;">b</span><br>
-<span style="position:absolute; left:0; z-index:2; height:30px; width:78px; color:tan"></span>
+<span style="position:absolute; left:0; z-index:1; margin-top:20px; height:30px; width:78px; color:black; border-left-color:black;"></span>
+<span style="position:absolute; left:0; width:216px; height:2000px">b</span><br>
+<span style="position:relative; z-index:1; margin-top:-10000px; height:20018px; width:78px;"></span>
 </div>
 <div class="grid" style="height:40px; position:relative;">
 <span style="position:absolute; left:20px; width: 30px; height:78px; z-index:2; color:silver;"></span>

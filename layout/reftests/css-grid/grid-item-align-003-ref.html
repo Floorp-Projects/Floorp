@@ -1,0 +1,118 @@
+<!DOCTYPE HTML>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html><head>
+  <meta charset="utf-8">
+  <title>Reference: align-self with overflow</title>
+  <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1151213">
+  <style type="text/css">
+html,body {
+    color:black; background-color:white; font-size:16px; padding:0; margin:0;
+}
+body { margin:40px; }
+separator { clear:both; display:block; height:6px; }
+
+.grid {
+  display: block;
+  float: left;
+  position: relative;
+  border: 1px solid;
+  /* border-block-start: 2px solid blue; */
+  border-block-start: 2px solid black;
+  inline-size: 36px;
+  block-size: 25px;
+  margin-right: 20px;
+  margin-bottom: 20px;
+}
+wrap {
+  display: block;
+  position: relative;
+  offset-inline-start:1px;
+  background: white;
+  block-size:20px;
+  inline-size:32px;
+  border-block-start: 3px solid lightgrey;
+}
+
+span {
+  display: block;
+  position: absolute;
+  width: 40px;
+  height: 30px;
+  background: grey;
+  border-block-start: 2px solid blue;
+  border-inline-start: 2px solid lime;
+  margin: 1px 1px 2px 2px;
+  justify-self: start;
+}
+
+abs1,abs2,abs3,abs4 {
+  position: absolute;
+  top:0;left:0;bottom:0;right:0;
+  background: lightgrey;
+}
+abs1 { bottom: 22px; }
+abs2 { top: 23px; }
+abs3 { left: 33px; }
+abs4 { right: 35px; }
+
+.hl { writing-mode: horizontal-tb; direction:ltr; }
+.hr { writing-mode: horizontal-tb; direction:rtl; }
+.vl { writing-mode: vertical-lr; }
+.vr { writing-mode: vertical-rl; }
+.vlr { writing-mode: vertical-lr; direction:rtl; }
+.vrl { writing-mode: vertical-rl; direction:ltr; }
+
+.true.hl.aend,  .true.hl.aflexend  { offset-block-start:-15px; }
+.true.vrl.aend, .true.vrl.aflexend { offset-inline-start:-15px; }
+.true.hl.acenter { offset-block-start:-8px; }
+.true.vrl.acenter { offset-inline-start:-8px; }
+.astretch2 { width:40px; height:15px; }
+.astretch3 { height:15px; }
+.hl.astretch4 { width:27px; }
+.vrl.astretch4 { width:0px; }
+.astretch5 { width:27px; max-width:38px; }
+.vrl.astretch5 { width:0px; }
+.astretch6 { height:15px; max-height:30px; }
+.astretch7 { width:27px; height:15px; max-width:38px; max-height:30px; }
+.vrl.astretch7 { width:0px; }
+
+
+</style>
+</head>
+<body>
+
+<script>
+var gridwm = [ "hl" ];
+var wm = [ "hl true", "vrl true", "hl safe", "vrl safe" ];
+var test = [ "start", "end", "flexstart", "flexend", "center", "left", "right",
+             "stretch1", "stretch2", "stretch3", "stretch4", "stretch5",
+             "stretch6", "stretch7", "auto" ];
+for (var i = 0; i < gridwm.length; ++i) {
+  for (var j = 0; j < wm.length; ++j) {
+    for (var k = 0; k < test.length; ++k) {
+      var div = document.createElement("div");
+      div.className = "grid " + gridwm[i];
+      var wrap = document.createElement("wrap");
+      div.appendChild(wrap);
+      var span = document.createElement("span");
+      span.className = wm[j] + " a" + test[k];
+      div.appendChild(span);
+      wrap.appendChild(span);
+      div.appendChild(document.createElement("abs1"));
+      div.appendChild(document.createElement("abs2"));
+      div.appendChild(document.createElement("abs3"));
+      div.appendChild(document.createElement("abs4"));
+
+      document.body.appendChild(div)
+    }
+    document.body.appendChild(document.createElement("separator"));
+  }
+}
+</script>
+
+
+</body>
+</html>
