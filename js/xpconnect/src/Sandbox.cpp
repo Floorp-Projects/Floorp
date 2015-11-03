@@ -1185,7 +1185,7 @@ ParsePrincipal(JSContext* cx, HandleString codebase, nsIPrincipal** principal)
     // We could allow passing in the app-id and browser-element info to the
     // sandbox constructor. But creating a sandbox based on a string is a
     // deprecated API so no need to add features to it.
-    OriginAttributes attrs;
+    PrincipalOriginAttributes attrs;
     nsCOMPtr<nsIPrincipal> prin =
         BasePrincipal::CreateCodebasePrincipal(uri, attrs);
     prin.forget(principal);

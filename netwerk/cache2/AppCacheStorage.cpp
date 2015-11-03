@@ -126,7 +126,7 @@ NS_IMETHODIMP AppCacheStorage::AsyncEvictStorage(nsICacheEntryDoomCallback* aCal
   if (!mAppCache) {
     // TODO - bug 1165256, have an API on nsIApplicationCacheService that takes
     // optional OAs and decides internally what to do.
-    const OriginAttributes* oa = LoadInfo()->OriginAttributesPtr();
+    const NeckoOriginAttributes* oa = LoadInfo()->OriginAttributesPtr();
     if (oa->mAppId == nsILoadContextInfo::NO_APP_ID && !oa->mInBrowser) {
       // Clear everything.
       nsCOMPtr<nsICacheService> serv =

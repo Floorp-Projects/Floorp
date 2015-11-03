@@ -7,7 +7,7 @@ include protocol PBackground;
 include PBackgroundSharedTypes;
 include ServiceWorkerRegistrarTypes;
 
-using mozilla::OriginAttributes from "mozilla/ipc/BackgroundUtils.h";
+using mozilla::PrincipalOriginAttributes from "mozilla/ipc/BackgroundUtils.h";
 
 namespace mozilla {
 namespace dom {
@@ -21,7 +21,7 @@ parent:
 
   Unregister(PrincipalInfo principalInfo, nsString scope);
 
-  PropagateSoftUpdate(OriginAttributes originAttributes,
+  PropagateSoftUpdate(PrincipalOriginAttributes originAttributes,
                       nsString scope);
   PropagateUnregister(PrincipalInfo principalInfo, nsString scope);
 
@@ -33,7 +33,7 @@ parent:
 
 child:
   NotifyRegister(ServiceWorkerRegistrationData data);
-  NotifySoftUpdate(OriginAttributes originAttributes, nsString scope);
+  NotifySoftUpdate(PrincipalOriginAttributes originAttributes, nsString scope);
   NotifyUnregister(PrincipalInfo principalInfo, nsString scope);
   NotifyRemove(nsCString host);
   NotifyRemoveAll();
