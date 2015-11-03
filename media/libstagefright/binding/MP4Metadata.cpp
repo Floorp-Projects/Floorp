@@ -7,6 +7,7 @@
 #include "media/stagefright/MediaDefs.h"
 #include "media/stagefright/MediaSource.h"
 #include "media/stagefright/MetaData.h"
+#include "mozilla/Logging.h"
 #include "mozilla/Monitor.h"
 #include "mp4_demuxer/MoofParser.h"
 #include "mp4_demuxer/MP4Metadata.h"
@@ -113,26 +114,25 @@ MP4Metadata::~MP4Metadata()
 // Helper to test the rust parser on a data source.
 static bool try_rust(RefPtr<Stream> aSource)
 {
+  static LazyLogModule sLog("MP4Metadata");
   int64_t length;
-  if (!aSource->Length(&length)) {
-    fprintf(stderr, "Couldn't get source length\n");
+  if (!aSource->Length(&length) || length <= 0) {
+    MOZ_LOG(sLog, LogLevel::Warning, ("Couldn't get source length"));
     return false;
   }
-  fprintf(stderr, "Source length %d bytes\n", (long long int)length);
-  if (length <= 0) {
-    return false;
-  }
+  MOZ_LOG(sLog, LogLevel::Debug,
+         ("Source length %d bytes\n", (long long int)length));
   size_t bytes_read = 0;
   auto buffer = std::vector<uint8_t>(length);
   bool rv = aSource->ReadAt(0, buffer.data(), length, &bytes_read);
   if (!rv || bytes_read != size_t(length)) {
-    fprintf(stderr, "Error copying mp4 data\n");
+    MOZ_LOG(sLog, LogLevel::Warning, ("Error copying mp4 data"));
     return false;
   }
   auto context = mp4parse_new();
   int32_t tracks = mp4parse_read(context, buffer.data(), bytes_read);
   mp4parse_free(context);
-  fprintf(stderr, "rust parser found %d tracks\n", int(tracks));
+  MOZ_LOG(sLog, LogLevel::Info, ("rust parser found %d tracks", int(tracks)));
   return true;
 }
 #endif
