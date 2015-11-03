@@ -43,8 +43,8 @@
       srcdir.load();
 
       is(builtin.loader.mapping.length,
-         srcdir.loader.mapping.length + 2,
-         "The built-in loader has 2 additional mappings.");
+         srcdir.loader.mapping.length + 1,
+         "The built-in loader has one additional mappings.");
 
       Services.prefs.clearUserPref(SRCDIR_PREF);
     </script>

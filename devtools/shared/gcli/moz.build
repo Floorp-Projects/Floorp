@@ -6,105 +6,18 @@
 
 DIRS += [
     'commands',
+    'source/lib/gcli',
+    'source/lib/gcli/connectors',
+    'source/lib/gcli/converters',
+    'source/lib/gcli/commands',
+    'source/lib/gcli/fields',
+    'source/lib/gcli/languages',
+    'source/lib/gcli/mozui',
+    'source/lib/gcli/types',
+    'source/lib/gcli/ui',
+    'source/lib/gcli/util',
 ]
 
-FINAL_TARGET_FILES.chrome.devtools.modules.devtools.gcli.commands += [
-    'source/lib/gcli/commands/clear.js',
-    'source/lib/gcli/commands/commands.js',
-    'source/lib/gcli/commands/connect.js',
-    'source/lib/gcli/commands/context.js',
-    'source/lib/gcli/commands/exec.js',
-    'source/lib/gcli/commands/global.js',
-    'source/lib/gcli/commands/help.js',
-    'source/lib/gcli/commands/intro.js',
-    'source/lib/gcli/commands/lang.js',
-    'source/lib/gcli/commands/mocks.js',
-    'source/lib/gcli/commands/pref.js',
-    'source/lib/gcli/commands/preflist.js',
-    'source/lib/gcli/commands/test.js',
-]
-
-FINAL_TARGET_FILES.chrome.devtools.modules.devtools.gcli.connectors += [
-    'source/lib/gcli/connectors/connectors.js',
-]
-
-FINAL_TARGET_FILES.chrome.devtools.modules.devtools.gcli.converters += [
-    'source/lib/gcli/converters/basic.js',
-    'source/lib/gcli/converters/converters.js',
-    'source/lib/gcli/converters/html.js',
-    'source/lib/gcli/converters/terminal.js',
-]
-
-FINAL_TARGET_FILES.chrome.devtools.modules.devtools.gcli.fields += [
-    'source/lib/gcli/fields/delegate.js',
-    'source/lib/gcli/fields/fields.js',
-    'source/lib/gcli/fields/selection.js',
-]
-
-FINAL_TARGET_FILES.chrome.devtools.modules.devtools.gcli.languages += [
-    'source/lib/gcli/languages/command.html',
-    'source/lib/gcli/languages/command.js',
-    'source/lib/gcli/languages/javascript.js',
-    'source/lib/gcli/languages/languages.js',
-]
-
-FINAL_TARGET_FILES.chrome.devtools.modules.devtools.gcli.mozui += [
-    'source/lib/gcli/mozui/completer.js',
-    'source/lib/gcli/mozui/inputter.js',
-    'source/lib/gcli/mozui/tooltip.js',
-]
-
-FINAL_TARGET_FILES.chrome.devtools.modules.devtools.gcli.types += [
-    'source/lib/gcli/types/array.js',
-    'source/lib/gcli/types/boolean.js',
-    'source/lib/gcli/types/command.js',
-    'source/lib/gcli/types/date.js',
-    'source/lib/gcli/types/delegate.js',
-    'source/lib/gcli/types/file.js',
-    'source/lib/gcli/types/fileparser.js',
-    'source/lib/gcli/types/javascript.js',
-    'source/lib/gcli/types/node.js',
-    'source/lib/gcli/types/number.js',
-    'source/lib/gcli/types/resource.js',
-    'source/lib/gcli/types/selection.js',
-    'source/lib/gcli/types/setting.js',
-    'source/lib/gcli/types/string.js',
-    'source/lib/gcli/types/types.js',
-    'source/lib/gcli/types/union.js',
-    'source/lib/gcli/types/url.js',
-]
-
-FINAL_TARGET_FILES.chrome.devtools.modules.devtools.gcli.ui += [
-    'source/lib/gcli/ui/focus.js',
-    'source/lib/gcli/ui/history.js',
-    'source/lib/gcli/ui/intro.js',
-    'source/lib/gcli/ui/menu.css',
-    'source/lib/gcli/ui/menu.html',
-    'source/lib/gcli/ui/menu.js',
-    'source/lib/gcli/ui/view.js',
-]
-
-FINAL_TARGET_FILES.chrome.devtools.modules.devtools.gcli.util += [
-    'source/lib/gcli/util/domtemplate.js',
-    'source/lib/gcli/util/fileparser.js',
-    'source/lib/gcli/util/filesystem.js',
-    'source/lib/gcli/util/host.js',
-    'source/lib/gcli/util/l10n.js',
-    'source/lib/gcli/util/legacy.js',
-    'source/lib/gcli/util/prism.js',
-    'source/lib/gcli/util/spell.js',
-    'source/lib/gcli/util/util.js',
-]
-
-FINAL_TARGET_FILES.chrome.devtools.modules.devtools.gcli += [
-    'source/lib/gcli/cli.js',
-    'source/lib/gcli/index.js',
-    'source/lib/gcli/l10n.js',
-    'source/lib/gcli/settings.js',
-    'source/lib/gcli/system.js',
-]
-
-FINAL_TARGET_FILES.chrome.devtools.modules.devtools.shared.gcli += [
-    'gcli.jsm',
-    'Templater.jsm',
-]
+DevToolsModules(
+    'Templater.jsm'
+)
