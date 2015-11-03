@@ -320,6 +320,12 @@ struct AtomicIntrinsics<T*, Order>
 {
 };
 
+template<typename T>
+struct ToStorageTypeArgument
+{
+  static T convert (T aT) { return aT; }
+};
+
 } // namespace detail
 } // namespace mozilla
 
@@ -384,60 +390,81 @@ struct Barrier<SequentiallyConsistent>
   static void afterStore() { __sync_synchronize(); }
 };
 
+template<typename T, bool TIsEnum = IsEnum<T>::value>
+struct AtomicStorageType
+{
+  // For non-enums, just use the type directly.
+  typedef T Type;
+};
+
+template<typename T>
+struct AtomicStorageType<T, true>
+  : Conditional<sizeof(T) == 4, uint32_t, uint64_t>
+{
+  static_assert(sizeof(T) == 4 || sizeof(T) == 8,
+                "wrong type computed in conditional above");
+};
+
 template<typename T, MemoryOrdering Order>
 struct IntrinsicMemoryOps
 {
-  static T load(const T& aPtr)
+  typedef typename AtomicStorageType<T>::Type ValueType;
+
+  static T load(const ValueType& aPtr)
   {
     Barrier<Order>::beforeLoad();
-    T val = aPtr;
+    T val = T(aPtr);
     Barrier<Order>::afterLoad();
     return val;
   }
 
-  static void store(T& aPtr, T aVal)
+  static void store(ValueType& aPtr, T aVal)
   {
     Barrier<Order>::beforeStore();
-    aPtr = aVal;
+    aPtr = ValueType(aVal);
     Barrier<Order>::afterStore();
   }
 
-  static T exchange(T& aPtr, T aVal)
+  static T exchange(ValueType& aPtr, T aVal)
   {
     // __sync_lock_test_and_set is only an acquire barrier; loads and stores
     // can't be moved up from after to before it, but they can be moved down
     // from before to after it.  We may want a stricter ordering, so we need
     // an explicit barrier.
     Barrier<Order>::beforeStore();
-    return __sync_lock_test_and_set(&aPtr, aVal);
+    return T(__sync_lock_test_and_set(&aPtr, ValueType(aVal)));
   }
 
-  static bool compareExchange(T& aPtr, T aOldVal, T aNewVal)
+  static bool compareExchange(ValueType& aPtr, T aOldVal, T aNewVal)
   {
-    return __sync_bool_compare_and_swap(&aPtr, aOldVal, aNewVal);
+    return __sync_bool_compare_and_swap(&aPtr, ValueType(aOldVal), ValueType(aNewVal));
   }
 };
 
-template<typename T>
+template<typename T, MemoryOrdering Order>
 struct IntrinsicAddSub
+  : public IntrinsicMemoryOps<T, Order>
 {
-  typedef T ValueType;
+  typedef IntrinsicMemoryOps<T, Order> Base;
+  typedef typename Base::ValueType ValueType;
 
-  static T add(T& aPtr, T aVal)
+  static T add(ValueType& aPtr, T aVal)
   {
-    return __sync_fetch_and_add(&aPtr, aVal);
+    return T(__sync_fetch_and_add(&aPtr, ValueType(aVal)));
   }
 
-  static T sub(T& aPtr, T aVal)
+  static T sub(ValueType& aPtr, T aVal)
   {
-    return __sync_fetch_and_sub(&aPtr, aVal);
+    return T(__sync_fetch_and_sub(&aPtr, ValueType(aVal)));
   }
 };
 
-template<typename T>
-struct IntrinsicAddSub<T*>
+template<typename T, MemoryOrdering Order>
+struct IntrinsicAddSub<T*, Order>
+  : public IntrinsicMemoryOps<T*, Order>
 {
-  typedef T* ValueType;
+  typedef IntrinsicMemoryOps<T*, Order> Base;
+  typedef typename Base::ValueType ValueType;
 
   /*
    * The reinterpret_casts are needed so that
@@ -459,16 +486,18 @@ struct IntrinsicAddSub<T*>
   }
 };
 
-template<typename T>
-struct IntrinsicIncDec : public IntrinsicAddSub<T>
+template<typename T, MemoryOrdering Order>
+struct IntrinsicIncDec : public IntrinsicAddSub<T, Order>
 {
-  static T inc(T& aPtr) { return IntrinsicAddSub<T>::add(aPtr, 1); }
-  static T dec(T& aPtr) { return IntrinsicAddSub<T>::sub(aPtr, 1); }
+  typedef IntrinsicAddSub<T, Order> Base;
+  typedef typename Base::ValueType ValueType;
+
+  static T inc(ValueType& aPtr) { return Base::add(aPtr, 1); }
+  static T dec(ValueType& aPtr) { return Base::sub(aPtr, 1); }
 };
 
 template<typename T, MemoryOrdering Order>
-struct AtomicIntrinsics : public IntrinsicMemoryOps<T, Order>,
-                          public IntrinsicIncDec<T>
+struct AtomicIntrinsics : public IntrinsicIncDec<T, Order>
 {
   static T or_( T& aPtr, T aVal) { return __sync_fetch_and_or(&aPtr, aVal); }
   static T xor_(T& aPtr, T aVal) { return __sync_fetch_and_xor(&aPtr, aVal); }
@@ -476,9 +505,22 @@ struct AtomicIntrinsics : public IntrinsicMemoryOps<T, Order>,
 };
 
 template<typename T, MemoryOrdering Order>
-struct AtomicIntrinsics<T*, Order> : public IntrinsicMemoryOps<T*, Order>,
-                                     public IntrinsicIncDec<T*>
+struct AtomicIntrinsics<T*, Order> : public IntrinsicIncDec<T*, Order>
 {
+};
+
+template<typename T, bool TIsEnum = IsEnum<T>::value>
+struct ToStorageTypeArgument
+{
+  typedef typename AtomicStorageType<T>::Type ResultType;
+
+  static ResultType convert (T aT) { return ResultType(aT); }
+};
+
+template<typename T>
+struct ToStorageTypeArgument<T, false>
+{
+  static T convert (T aT) { return aT; }
 };
 
 } // namespace detail
@@ -500,11 +542,14 @@ class AtomicBase
 
 protected:
   typedef typename detail::AtomicIntrinsics<T, Order> Intrinsics;
-  typename Intrinsics::ValueType mValue;
+  typedef typename Intrinsics::ValueType ValueType;
+  ValueType mValue;
 
 public:
   MOZ_CONSTEXPR AtomicBase() : mValue() {}
-  explicit MOZ_CONSTEXPR AtomicBase(T aInit) : mValue(aInit) {}
+  explicit MOZ_CONSTEXPR AtomicBase(T aInit)
+    : mValue(ToStorageTypeArgument<T>::convert(aInit))
+  {}
 
   // Note: we can't provide operator T() here because Atomic<bool> inherits
   // from AtomcBase with T=uint32_t and not T=bool. If we implemented
@@ -691,7 +736,7 @@ public:
   MOZ_CONSTEXPR Atomic() : Base() {}
   explicit MOZ_CONSTEXPR Atomic(T aInit) : Base(aInit) {}
 
-  operator T() const { return Base::Intrinsics::load(Base::mValue); }
+  operator T() const { return T(Base::Intrinsics::load(Base::mValue)); }
 
   using Base::operator=;
 
