@@ -56,6 +56,9 @@ public:
     bool FindUniformByMappedName(const std::string& mappedName,
                                  std::string* const out_userName,
                                  bool* const out_isArray) const;
+    bool FindUniformBlockByMappedName(const std::string& mappedName,
+                                      std::string* const out_userName) const;
+
 };
 
 } // namespace webgl
