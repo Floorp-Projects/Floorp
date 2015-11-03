@@ -1606,12 +1606,12 @@ CSS_PROP_POSITION(
     align-self,
     align_self,
     AlignSelf,
-    CSS_PROPERTY_PARSE_VALUE,
+    CSS_PROPERTY_PARSE_FUNCTION,
     "",
-    VARIANT_HK,
-    kAlignSelfKTable,
-    offsetof(nsStylePosition, mAlignSelf),
-    eStyleAnimType_EnumU8)
+    0,
+    nullptr,
+    CSS_PROP_NO_OFFSET,
+    eStyleAnimType_None)
 CSS_PROP_SHORTHAND(
     flex,
     flex,
