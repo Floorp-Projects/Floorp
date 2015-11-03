@@ -16,12 +16,12 @@ static const char kCaptivePortalLoginSuccessEvent[] = "captive-portal-login-succ
 
 static const uint32_t kDefaultInterval = 60*1000; // check every 60 seconds
 
-static PRLogModuleInfo *gCaptivePortalLog = nullptr;
-#undef LOG
-#define LOG(args) MOZ_LOG(gCaptivePortalLog, mozilla::LogLevel::Debug, args)
-
 namespace mozilla {
 namespace net {
+
+static LazyLogModule gCaptivePortalLog("CaptivePortalService");
+#undef LOG
+#define LOG(args) MOZ_LOG(gCaptivePortalLog, mozilla::LogLevel::Debug, args)
 
 NS_IMPL_ISUPPORTS(CaptivePortalService, nsICaptivePortalService, nsIObserver,
                   nsISupportsWeakReference, nsITimerCallback,
@@ -100,10 +100,6 @@ CaptivePortalService::Initialize()
     return NS_OK;
   }
   mInitialized = true;
-
-  if (!gCaptivePortalLog) {
-    gCaptivePortalLog = PR_NewLogModule("CaptivePortalService");
-  }
 
   nsCOMPtr<nsIObserverService> observerService =
     mozilla::services::GetObserverService();

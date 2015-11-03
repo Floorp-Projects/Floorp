@@ -35,7 +35,6 @@ tasks:
 
       scopes:
         - "docker-worker:cache:tc-vcs-public-sources"
-        - "docker-worker:image:quay.io/mozilla/decision:0.0.3"
         - "queue:route:tc-treeherder-stage.{{project}}.{{revision_hash}}"
         - "queue:route:tc-treeherder.{{project}}.{{revision_hash}}"
 

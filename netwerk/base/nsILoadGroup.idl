@@ -13,7 +13,11 @@ interface nsISchedulingContext;
 typedef unsigned long nsLoadFlags;
 
 /**
- * A load group maintains a collection of nsIRequest objects. 
+ * A load group maintains a collection of nsIRequest objects.
+ * This is used in lots of places where groups of requests need to be tracked.
+ * For example, nsIDocument::mDocumentLoadGroup is used to track all requests
+ * made for subdocuments in order to track page load progress and allow all
+ * requests made on behalf of the document to be stopped, etc.
  */
 [scriptable, uuid(f0c87725-7a35-463c-9ceb-2c07f23406cc)]
 interface nsILoadGroup : nsIRequest

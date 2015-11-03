@@ -250,9 +250,12 @@ public:
   /**
    * Return the URI for the document. May return null.
    *
-   * The value returned corresponds to the "document's current address" in
+   * The value returned corresponds to the "document's address" in
    * HTML5.  As such, it may change over the lifetime of the document, for
-   * instance as a result of a call to pushState() or replaceState().
+   * instance as a result of the user navigating to a fragment identifier on
+   * the page, or as a result to a call to pushState() or replaceState().
+   *
+   * https://html.spec.whatwg.org/multipage/dom.html#the-document%27s-address
    */
   nsIURI* GetDocumentURI() const
   {
@@ -261,11 +264,14 @@ public:
 
   /**
    * Return the original URI of the document.  This is the same as the
-   * document's URI unless history.pushState() or replaceState() is invoked on
-   * the document.
+   * document's URI unless that has changed from its original value (for
+   * example, due to history.pushState() or replaceState() being invoked on the
+   * document).
    *
-   * This method corresponds to the "document's address" in HTML5 and, once
-   * set, doesn't change over the lifetime of the document.
+   * This method corresponds to the "creation URL" in HTML5 and, once set,
+   * doesn't change over the lifetime of the document.
+   *
+   * https://html.spec.whatwg.org/multipage/webappapis.html#creation-url
    */
   nsIURI* GetOriginalURI() const
   {

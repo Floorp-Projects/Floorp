@@ -46,7 +46,7 @@ AudioData::EnsureAudioBuffer()
 size_t
 AudioData::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
 {
-  size_t size = aMallocSizeOf(this) + aMallocSizeOf(mAudioData);
+  size_t size = aMallocSizeOf(this) + aMallocSizeOf(mAudioData.get());
   if (mAudioBuffer) {
     size += mAudioBuffer->SizeOfIncludingThis(aMallocSizeOf);
   }
@@ -61,15 +61,13 @@ AudioData::TransferAndUpdateTimestampAndDuration(AudioData* aOther,
 {
   NS_ENSURE_TRUE(aOther, nullptr);
   RefPtr<AudioData> v = new AudioData(aOther->mOffset,
-                                        aTimestamp,
-                                        aDuration,
-                                        aOther->mFrames,
-                                        aOther->mAudioData,
-                                        aOther->mChannels,
-                                        aOther->mRate);
+                                      aTimestamp,
+                                      aDuration,
+                                      aOther->mFrames,
+                                      Move(aOther->mAudioData),
+                                      aOther->mChannels,
+                                      aOther->mRate);
   v->mDiscontinuity = aOther->mDiscontinuity;
-  // Remove aOther's AudioData as it can't be shared across two targets.
-  aOther->mAudioData.forget();
 
   return v.forget();
 }

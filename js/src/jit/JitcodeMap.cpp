@@ -1272,7 +1272,7 @@ JitcodeRegionEntry::ExpectedRunLength(const CodeGeneratorShared::NativeToBytecod
 
 struct JitcodeMapBufferWriteSpewer
 {
-#ifdef DEBUG
+#ifdef JS_JITSPEW
     CompactBufferWriter* writer;
     uint32_t startPos;
 
@@ -1305,10 +1305,10 @@ struct JitcodeMapBufferWriteSpewer
         // Move to the end of the current buffer.
         startPos = writer->length();
     }
-#else // !DEBUG
+#else // !JS_JITSPEW
     explicit JitcodeMapBufferWriteSpewer(CompactBufferWriter& w) {}
     void spewAndAdvance(const char* name) {}
-#endif // DEBUG
+#endif // JS_JITSPEW
 };
 
 // Write a run, starting at the given NativeToBytecode entry, into the given buffer writer.

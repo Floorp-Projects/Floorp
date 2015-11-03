@@ -12,6 +12,7 @@
 
 #include "mozilla/ipc/MessageChannel.h"
 #include "mozilla/ipc/CrossProcessMutex.h"
+#include "mozilla/UniquePtr.h"
 #include "gfxipc/ShadowLayerUtils.h"
 
 #include "npapi.h"
@@ -420,10 +421,10 @@ struct ParamTraits<NPString>
       }
 
       const char* messageBuffer = nullptr;
-      nsAutoArrayPtr<char> newBuffer(new char[byteCount]);
+      mozilla::UniquePtr<char[]> newBuffer(new char[byteCount]);
       if (newBuffer && aMsg->ReadBytes(aIter, &messageBuffer, byteCount )) {
         memcpy((void*)messageBuffer, newBuffer.get(), byteCount);
-        aResult->UTF8Characters = newBuffer.forget();
+        aResult->UTF8Characters = newBuffer.release();
         return true;
       }
     }

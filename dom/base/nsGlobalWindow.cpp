@@ -2472,13 +2472,10 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
 
   nsresult rv = NS_OK;
 
-  // Set mDoc even if this is an outer window to avoid
+  // We set mDoc even though this is an outer window to avoid
   // having to *always* reach into the inner window to find the
   // document.
   mDoc = aDocument;
-  if (IsInnerWindow()) {
-    ClearDocumentDependentSlots(cx);
-  }
 
   // Take this opportunity to clear mSuspendedDoc. Our old inner window is now
   // responsible for unsuspending it.
