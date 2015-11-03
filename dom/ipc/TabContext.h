@@ -104,11 +104,11 @@ public:
   bool HasOwnOrContainingApp() const;
 
   /**
-   * OriginAttributesRef() returns the OriginAttributes of this frame to the
+   * OriginAttributesRef() returns the DocShellOriginAttributes of this frame to the
    * caller. This is used to store any attribute associated with the frame's
    * docshell, such as the AppId.
    */
-  const OriginAttributes& OriginAttributesRef() const;
+  const DocShellOriginAttributes& OriginAttributesRef() const;
 
   /**
    * Returns the origin associated with the tab (w/o suffix) if this tab owns
@@ -142,7 +142,7 @@ protected:
    */
   bool SetTabContext(mozIApplication* aOwnApp,
                      mozIApplication* aAppFrameOwnerApp,
-                     const OriginAttributes& aOriginAttributes,
+                     const DocShellOriginAttributes& aOriginAttributes,
                      const nsACString& aSignedPkgOriginNoSuffix);
 
 private:
@@ -170,9 +170,9 @@ private:
   uint32_t mContainingAppId;
 
   /**
-   * OriginAttributes of the top level tab docShell
+   * DocShellOriginAttributes of the top level tab docShell
    */
-  OriginAttributes mOriginAttributes;
+  DocShellOriginAttributes mOriginAttributes;
 
   /**
    * The signed package origin without suffix. Since the signed packaged
@@ -198,7 +198,7 @@ public:
 
   bool SetTabContext(mozIApplication* aOwnApp,
                      mozIApplication* aAppFrameOwnerApp,
-                     const OriginAttributes& aOriginAttributes,
+                     const DocShellOriginAttributes& aOriginAttributes,
                      const nsACString& aSignedPkgOriginNoSuffix = EmptyCString())
   {
     return TabContext::SetTabContext(aOwnApp,

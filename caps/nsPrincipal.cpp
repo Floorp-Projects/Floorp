@@ -85,7 +85,7 @@ nsPrincipal::~nsPrincipal()
 }
 
 nsresult
-nsPrincipal::Init(nsIURI *aCodebase, const OriginAttributes& aOriginAttributes)
+nsPrincipal::Init(nsIURI *aCodebase, const PrincipalOriginAttributes& aOriginAttributes)
 {
   NS_ENSURE_STATE(!mInitialized);
   NS_ENSURE_ARG(aCodebase);
@@ -391,7 +391,7 @@ nsPrincipal::Read(nsIObjectInputStream* aStream)
   rv = aStream->ReadCString(suffix);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  OriginAttributes attrs;
+  PrincipalOriginAttributes attrs;
   bool ok = attrs.PopulateFromSuffix(suffix);
   NS_ENSURE_TRUE(ok, NS_ERROR_FAILURE);
 

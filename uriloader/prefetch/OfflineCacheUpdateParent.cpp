@@ -17,7 +17,8 @@
 
 using namespace mozilla::ipc;
 using mozilla::BasePrincipal;
-using mozilla::OriginAttributes;
+using mozilla::DocShellOriginAttributes;
+using mozilla::PrincipalOriginAttributes;
 using mozilla::dom::TabParent;
 
 //
@@ -52,7 +53,7 @@ NS_IMPL_ISUPPORTS(OfflineCacheUpdateParent,
 // OfflineCacheUpdateParent <public>
 //-----------------------------------------------------------------------------
 
-OfflineCacheUpdateParent::OfflineCacheUpdateParent(const OriginAttributes& aAttrs)
+OfflineCacheUpdateParent::OfflineCacheUpdateParent(const DocShellOriginAttributes& aAttrs)
     : mIPCClosed(false)
     , mOriginAttributes(aAttrs)
 {
@@ -93,8 +94,10 @@ OfflineCacheUpdateParent::Schedule(const URIParams& aManifestURI,
 
     bool offlinePermissionAllowed = false;
 
+    PrincipalOriginAttributes principalAttrs;
+    principalAttrs.InheritFromDocShellToDoc(mOriginAttributes, manifestURI);
     nsCOMPtr<nsIPrincipal> principal =
-      BasePrincipal::CreateCodebasePrincipal(manifestURI, mOriginAttributes);
+      BasePrincipal::CreateCodebasePrincipal(manifestURI, principalAttrs);
 
     nsresult rv = service->OfflineAppAllowed(
         principal, nullptr, &offlinePermissionAllowed);

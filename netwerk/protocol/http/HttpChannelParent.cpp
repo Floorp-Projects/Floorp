@@ -41,7 +41,6 @@
 #include "nsIDocument.h"
 
 using mozilla::BasePrincipal;
-using mozilla::OriginAttributes;
 using namespace mozilla::dom;
 using namespace mozilla::ipc;
 
@@ -560,11 +559,18 @@ HttpChannelParent::DoAsyncOpen(  const URIParams&           aURI,
     }
 
     if (setChooseApplicationCache) {
-      OriginAttributes attrs;
+      DocShellOriginAttributes docShellAttrs;
       if (mLoadContext) {
-        attrs.CopyFromLoadContext(mLoadContext);
+        bool result = mLoadContext->GetOriginAttributes(docShellAttrs);
+        if (!result) {
+          return SendFailedAsyncOpen(NS_ERROR_FAILURE);
+        }
       }
 
+      NeckoOriginAttributes neckoAttrs;
+      neckoAttrs.InheritFromDocShellToNecko(docShellAttrs);
+      PrincipalOriginAttributes attrs;
+      attrs.InheritFromNecko(neckoAttrs);
       nsCOMPtr<nsIPrincipal> principal =
         BasePrincipal::CreateCodebasePrincipal(uri, attrs);
 
