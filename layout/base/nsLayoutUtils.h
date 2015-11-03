@@ -2773,6 +2773,12 @@ public:
    * @param aSel      Selection to check
    */
   static nsRect GetSelectionBoundingRect(mozilla::dom::Selection* aSel);
+
+  /**
+   * Returns true if the given frame is a scrollframe and it has snap points.
+   */
+  static bool IsScrollFrameWithSnapping(nsIFrame* aFrame);
+
 private:
   static uint32_t sFontSizeInflationEmPerLine;
   static uint32_t sFontSizeInflationMinTwips;
