@@ -3975,9 +3975,18 @@ CSSValue*
 nsComputedDOMStyle::DoGetJustifyContent()
 {
   nsROCSSPrimitiveValue* val = new nsROCSSPrimitiveValue;
-  val->SetIdent(
-    nsCSSProps::ValueToKeywordEnum(StylePosition()->mJustifyContent,
-                                   nsCSSProps::kJustifyContentKTable));
+  nsAutoString str;
+  auto justify = StylePosition()->ComputedJustifyContent(StyleDisplay());
+  nsCSSValue::AppendAlignJustifyValueToString(justify & NS_STYLE_JUSTIFY_ALL_BITS, str);
+  auto fallback = justify >> NS_STYLE_JUSTIFY_ALL_SHIFT;
+  if (fallback) {
+    MOZ_ASSERT(nsCSSProps::ValueToKeywordEnum(fallback & ~NS_STYLE_JUSTIFY_FLAG_BITS,
+                                              nsCSSProps::kAlignSelfPosition)
+               != eCSSKeyword_UNKNOWN, "unknown fallback value");
+    str.Append(' ');
+    nsCSSValue::AppendAlignJustifyValueToString(fallback, str);
+  }
+  val->SetString(str);
   return val;
 }
 

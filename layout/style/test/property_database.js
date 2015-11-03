@@ -4071,6 +4071,21 @@ var gCSSProperties = {
     other_values: [ "flex-start", "flex-end", "center", "baseline" ],
     invalid_values: [ "space-between", "abc", "30px" ]
   },
+  "justify-content": {
+    domProp: "justifyContent",
+    inherited: false,
+    type: CSS_TYPE_LONGHAND,
+    initial_values: [ "auto" ],
+    other_values: [ "start", "end", "flex-start", "flex-end", "center", "left",
+                    "right", "space-between", "space-around", "space-evenly",
+                    "baseline", "last-baseline", "stretch", "start safe",
+                    "true end", "true end stretch", "end safe space-evenly" ],
+    invalid_values: [ "30px", "5%", "self-end", "safe", "auto true", "true safe",
+                      "safe baseline", "baseline true", "baseline end", "auto end",
+                      "safe end true start", "safe end true", "auto safe start",
+                      "true end start", "end start safe", "space-around true",
+                      "safe stretch"]
+  },
   "justify-items": {
     domProp: "justifyItems",
     inherited: false,
@@ -4285,14 +4300,6 @@ var gCSSProperties = {
     initial_values: [ "0" ],
     other_values: [ "1", "99999", "-1", "-50" ],
     invalid_values: [ "0px", "1.0", "1.", "1%", "0.2", "3em", "stretch" ]
-  },
-  "justify-content": {
-    domProp: "justifyContent",
-    inherited: false,
-    type: CSS_TYPE_LONGHAND,
-    initial_values: [ "flex-start" ],
-    other_values: [ "flex-end", "center", "space-between", "space-around" ],
-    invalid_values: [ "baseline", "stretch", "30px", "5%" ]
   },
 
   // Aliases
