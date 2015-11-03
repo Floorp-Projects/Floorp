@@ -52,7 +52,7 @@ const int InputBufferSize = 8 * 16384;
 const size_t RealtimeFrameLimit = 8192  + 4096; // ~278msec @ 44.1KHz
 
 const size_t MinFFTSize = 128;
-const size_t MaxRealtimeFFTSize = 2048;
+const size_t MaxRealtimeFFTSize = 4096;
 
 ReverbConvolver::ReverbConvolver(const float* impulseResponseData,
                                  size_t impulseResponseLength,
@@ -87,7 +87,7 @@ ReverbConvolver::ReverbConvolver(const float* impulseResponseData,
     size_t reverbTotalLatency = 0;
 
     size_t stageOffset = 0;
-    int i = 0;
+    size_t stagePhase = 0;
     size_t fftSize = m_minFFTSize;
     while (stageOffset < totalResponseLength) {
         size_t stageSize = fftSize / 2;
@@ -98,7 +98,7 @@ ReverbConvolver::ReverbConvolver(const float* impulseResponseData,
             stageSize = totalResponseLength - stageOffset;
 
         // This "staggers" the time when each FFT happens so they don't all happen at the same time
-        int renderPhase = convolverRenderPhase + i * WEBAUDIO_BLOCK_SIZE;
+        int renderPhase = convolverRenderPhase + stagePhase;
 
         bool useDirectConvolver = !stageOffset;
 
@@ -117,17 +117,36 @@ ReverbConvolver::ReverbConvolver(const float* impulseResponseData,
             m_stages.AppendElement(stage.forget());
 
         stageOffset += stageSize;
-        ++i;
 
         if (!useDirectConvolver) {
             // Figure out next FFT size
             fftSize *= 2;
         }
 
-        if (hasRealtimeConstraint && !isBackgroundStage && fftSize > m_maxRealtimeFFTSize)
+        if (hasRealtimeConstraint && !isBackgroundStage
+            && fftSize > m_maxRealtimeFFTSize) {
             fftSize = m_maxRealtimeFFTSize;
-        if (fftSize > m_maxFFTSize)
+            // Custom phase positions for all but the first of the realtime
+            // stages of largest size.  These spread out the work of the
+            // larger realtime stages.  None of the FFTs of size 1024, 2048 or
+            // 4096 are performed when processing the same block.  The first
+            // MaxRealtimeFFTSize = 4096 stage, at the end of the doubling,
+            // performs its FFT at block 7.  The FFTs of size 2048 are
+            // performed in blocks 3 + 8 * n and size 1024 at 1 + 4 * n.
+            const uint32_t phaseLookup[] = { 10, 4, 14, 0 };
+            stagePhase = WEBAUDIO_BLOCK_SIZE *
+                phaseLookup[m_stages.Length() % ArrayLength(phaseLookup)];
+        } else if (fftSize > m_maxFFTSize) {
             fftSize = m_maxFFTSize;
+            // A prime offset spreads out FFTs in a way that all
+            // available phase positions will be used if there are sufficient
+            // stages.
+            stagePhase += 5 * WEBAUDIO_BLOCK_SIZE;
+        } else if (stageSize > WEBAUDIO_BLOCK_SIZE) {
+            // As the stages are doubling in size, the next FFT will occur
+            // mid-way between FFTs for this stage.
+            stagePhase = stageSize - WEBAUDIO_BLOCK_SIZE;
+        }
     }
 
     // Start up background thread
