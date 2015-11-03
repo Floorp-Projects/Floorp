@@ -1011,7 +1011,7 @@ js::XDRScript(XDRState<mode>* xdr, HandleObject enclosingScopeArg, HandleScript 
 
         if (mode == XDR_ENCODE) {
             JSObject* obj = *objp;
-            if (obj->is<BlockObject>())
+            if (obj->is<StaticBlockScope>())
                 classk = CK_BlockObject;
             else if (obj->is<StaticWithScope>())
                 classk = CK_WithObject;
