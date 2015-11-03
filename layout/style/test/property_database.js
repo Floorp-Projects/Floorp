@@ -4086,6 +4086,18 @@ var gCSSProperties = {
                       "safe left legacy", "legacy left legacy", "baseline true",
                       "safe true", "safe left true", "safe stretch" ]
   },
+  "justify-self": {
+    domProp: "justifySelf",
+    inherited: false,
+    type: CSS_TYPE_LONGHAND,
+    initial_values: [ "auto", "start" ],
+    other_values: [ "end", "flex-start", "flex-end", "self-start",
+                    "self-end", "center", "left", "right", "baseline",
+                    "last-baseline", "stretch", "left true", "true right",
+                    "safe right", "center safe" ],
+    invalid_values: [ "space-between", "abc", "30px", "none",
+                      "legacy left", "right legacy" ]
+  },
   "flex": {
     domProp: "flex",
     inherited: false,
