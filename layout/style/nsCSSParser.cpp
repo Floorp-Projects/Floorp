@@ -939,7 +939,7 @@ protected:
   bool ParseAlignJustifyPosition(nsCSSValue& aResult,
                                  const KTableValue aTable[]);
   bool ParseJustifyItems();
-  bool ParseJustifySelf();
+  bool ParseAlignItemsSelfJustifySelf(nsCSSProperty aPropID);
   // parsing 'align/justify-content' from the css-align spec
   bool ParseAlignJustifyContent(nsCSSProperty aPropID);
 
@@ -9454,7 +9454,7 @@ CSSParserImpl::ParseJustifyItems()
 // auto | stretch | <baseline-position> |
 // [ <overflow-position>? && <self-position> ] 
 bool
-CSSParserImpl::ParseJustifySelf()
+CSSParserImpl::ParseAlignItemsSelfJustifySelf(nsCSSProperty aPropID)
 {
   nsCSSValue value;
   if (!ParseSingleTokenVariant(value, VARIANT_INHERIT, nullptr)) {
@@ -9465,7 +9465,7 @@ CSSParserImpl::ParseJustifySelf()
       }
     }
   }
-  AppendValue(eCSSProperty_justify_self, value);
+  AppendValue(aPropID, value);
   return true;
 }
 
@@ -10632,12 +10632,14 @@ CSSParserImpl::ParsePropertyByFunction(nsCSSProperty aPropID)
     return ParseGridArea();
   case eCSSProperty_image_region:
     return ParseRect(eCSSProperty_image_region);
+  case eCSSProperty_align_items:
+    return ParseAlignItemsSelfJustifySelf(aPropID);
   case eCSSProperty_justify_content:
     return ParseAlignJustifyContent(aPropID);
   case eCSSProperty_justify_items:
     return ParseJustifyItems();
   case eCSSProperty_justify_self:
-    return ParseJustifySelf();
+    return ParseAlignItemsSelfJustifySelf(aPropID);
   case eCSSProperty_list_style:
     return ParseListStyle();
   case eCSSProperty_margin:

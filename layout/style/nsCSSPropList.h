@@ -1596,12 +1596,12 @@ CSS_PROP_POSITION(
     align-items,
     align_items,
     AlignItems,
-    CSS_PROPERTY_PARSE_VALUE,
+    CSS_PROPERTY_PARSE_FUNCTION,
     "",
-    VARIANT_HK,
-    kAlignItemsKTable,
-    offsetof(nsStylePosition, mAlignItems),
-    eStyleAnimType_EnumU8)
+    0,
+    nullptr,
+    CSS_PROP_NO_OFFSET,
+    eStyleAnimType_None)
 CSS_PROP_POSITION(
     align-self,
     align_self,
