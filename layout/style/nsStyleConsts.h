@@ -526,15 +526,12 @@ static inline mozilla::css::Side operator++(mozilla::css::Side& side, int) {
 #define NS_STYLE_ALIGN_CONTENT_SPACE_AROUND     4
 #define NS_STYLE_ALIGN_CONTENT_STRETCH          5
 
-// See nsStylePosition
-#define NS_STYLE_ALIGN_ITEMS_FLEX_START         0
-#define NS_STYLE_ALIGN_ITEMS_FLEX_END           1
-#define NS_STYLE_ALIGN_ITEMS_CENTER             2
-#define NS_STYLE_ALIGN_ITEMS_BASELINE           3
-#define NS_STYLE_ALIGN_ITEMS_STRETCH            4
-
-// For convenience/clarity (since we use this default value in multiple places)
-#define NS_STYLE_ALIGN_ITEMS_INITIAL_VALUE      NS_STYLE_ALIGN_ITEMS_STRETCH
+// XXX remove in a later patch after updating flexbox code with the new names
+#define NS_STYLE_ALIGN_ITEMS_FLEX_START         NS_STYLE_ALIGN_FLEX_START
+#define NS_STYLE_ALIGN_ITEMS_FLEX_END           NS_STYLE_ALIGN_FLEX_END
+#define NS_STYLE_ALIGN_ITEMS_CENTER             NS_STYLE_ALIGN_CENTER
+#define NS_STYLE_ALIGN_ITEMS_BASELINE           NS_STYLE_ALIGN_BASELINE
+#define NS_STYLE_ALIGN_ITEMS_STRETCH            NS_STYLE_ALIGN_STRETCH
 
 // The "align-self" property accepts all of the normal "align-items" values
 // (above) plus a special 'auto' value that computes to the parent's
