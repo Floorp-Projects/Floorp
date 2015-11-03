@@ -294,7 +294,7 @@ final class GeckoEditable extends JNIObject
         }
 
         private void sendCharKeyEvents(Action action) {
-            if (action.mSequence.length() == 0 ||
+            if (action.mSequence.length() != 1 ||
                 (action.mSequence instanceof Spannable &&
                 ((Spannable)action.mSequence).nextSpanTransition(
                     -1, Integer.MAX_VALUE, null) < Integer.MAX_VALUE)) {
