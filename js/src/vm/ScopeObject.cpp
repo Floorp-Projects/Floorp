@@ -106,7 +106,7 @@ StaticBlockScope::addVar(ExclusiveContext* cx, Handle<StaticBlockScope*> block, 
      * Don't convert this object to dictionary mode so that we can clone the
      * block's shape later.
      */
-    uint32_t slot = JSSLOT_FREE(&BlockObject::class_) + index;
+    uint32_t slot = JSSLOT_FREE(&ClonedBlockObject::class_) + index;
     uint32_t readonly = constant ? JSPROP_READONLY : 0;
     uint32_t propFlags = readonly | JSPROP_ENUMERATE | JSPROP_PERMANENT;
     return NativeObject::addPropertyInternal(cx, block, id,
@@ -249,7 +249,9 @@ js::ScopeCoordinateFunctionScript(JSScript* script, jsbytecode* pc)
 void
 ScopeObject::setEnclosingScope(HandleObject obj)
 {
-    MOZ_ASSERT_IF(obj->is<LexicalScopeBase>() || obj->is<DeclEnvObject>() || obj->is<BlockObject>(),
+    MOZ_ASSERT_IF(obj->is<LexicalScopeBase>() ||
+                  obj->is<DeclEnvObject>() ||
+                  obj->is<ClonedBlockObject>(),
                   obj->isDelegate());
     setFixedSlot(SCOPE_CHAIN_SLOT, ObjectValue(*obj));
 }
@@ -912,7 +914,7 @@ const Class NonSyntacticVariablesObject::class_ = {
 /*****************************************************************************/
 
 bool
-BlockObject::isExtensible() const
+ClonedBlockObject::isExtensible() const
 {
     return nonProxyIsExtensible();
 }
@@ -920,17 +922,17 @@ BlockObject::isExtensible() const
 /* static */ ClonedBlockObject*
 ClonedBlockObject::create(JSContext* cx, Handle<StaticBlockScope*> block, HandleObject enclosing)
 {
-    MOZ_ASSERT(block->getClass() == &BlockObject::class_);
+    MOZ_ASSERT(block->getClass() == &ClonedBlockObject::class_);
 
-    RootedObjectGroup group(cx, ObjectGroup::defaultNewGroup(cx, &BlockObject::class_,
+    RootedObjectGroup group(cx, ObjectGroup::defaultNewGroup(cx, &ClonedBlockObject::class_,
                                                              TaggedProto(block.get())));
     if (!group)
         return nullptr;
 
     RootedShape shape(cx, block->lastProperty());
 
-    gc::AllocKind allocKind = gc::GetGCObjectKind(&BlockObject::class_);
-    if (CanBeFinalizedInBackground(allocKind, &BlockObject::class_))
+    gc::AllocKind allocKind = gc::GetGCObjectKind(&ClonedBlockObject::class_);
+    if (CanBeFinalizedInBackground(allocKind, &ClonedBlockObject::class_))
         allocKind = GetBackgroundAllocKind(allocKind);
     RootedNativeObject obj(cx, MaybeNativeObject(JSObject::create(cx, allocKind,
                                                                   gc::TenuredHeap, shape, group)));
@@ -1064,9 +1066,12 @@ ClonedBlockObject::thisValue() const
     return v;
 }
 
-const Class BlockObject::class_ = {
+static_assert(StaticBlockScope::RESERVED_SLOTS == ClonedBlockObject::RESERVED_SLOTS,
+              "static block scopes and dynamic block environments share a Class");
+
+const Class ClonedBlockObject::class_ = {
     "Block",
-    JSCLASS_HAS_RESERVED_SLOTS(BlockObject::RESERVED_SLOTS) |
+    JSCLASS_HAS_RESERVED_SLOTS(ClonedBlockObject::RESERVED_SLOTS) |
     JSCLASS_IS_ANONYMOUS,
     nullptr, /* addProperty */
     nullptr, /* delProperty */
@@ -1635,8 +1640,8 @@ class DebugScopeProxy : public BaseProxyHandler
     /*
      * This function handles access to unaliased locals/formals. Since they are
      * unaliased, the values of these variables are not stored in the slots of
-     * the normal Call/BlockObject scope objects and thus must be recovered
-     * from somewhere else:
+     * the normal Call/ClonedBlockObject scope objects and thus must be
+     * recovered from somewhere else:
      *  + if the invocation for which the scope was created is still executing,
      *    there is a JS frame live on the stack holding the values;
      *  + if the invocation for which the scope was created finished executing:
@@ -2352,7 +2357,7 @@ bool
 DebugScopeObject::isForDeclarative() const
 {
     ScopeObject& s = scope();
-    return s.is<LexicalScopeBase>() || s.is<BlockObject>() || s.is<DeclEnvObject>();
+    return s.is<LexicalScopeBase>() || s.is<ClonedBlockObject>() || s.is<DeclEnvObject>();
 }
 
 bool

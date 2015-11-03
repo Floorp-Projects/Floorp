@@ -131,9 +131,10 @@ class NestedStaticScope : public StaticScope
 class StaticBlockScope : public NestedStaticScope
 {
     static const unsigned LOCAL_OFFSET_SLOT = NestedStaticScope::RESERVED_SLOTS;
-    static const unsigned RESERVED_SLOTS = LOCAL_OFFSET_SLOT + 1;
 
   public:
+    static const unsigned RESERVED_SLOTS = LOCAL_OFFSET_SLOT + 1;
+
     /* Return the number of variables associated with this block. */
     uint32_t numVariables() const {
         // TODO: propertyCount() is O(n), use O(1) lastProperty()->slot() instead
@@ -615,8 +616,6 @@ ScopeCoordinateFunctionScript(JSScript* script, jsbytecode* pc);
  *     |   |
  *     |  DynamicWithObject         Run-time "with" object on scope chain
  *     |
- *   BlockObject
- *     |
  *   ClonedBlockObject              let, switch, catch, for
  *
  * This hierarchy represents more than just the interface hierarchy: reserved
@@ -908,37 +907,15 @@ class DynamicWithObject : public NestedScopeObject
     }
 };
 
-class BlockObject : public NestedScopeObject
+class ClonedBlockObject : public NestedScopeObject
 {
+    static const unsigned THIS_VALUE_SLOT = 1;
+
   public:
     static const unsigned RESERVED_SLOTS = 2;
     static const Class class_;
 
-    /* Return the number of variables associated with this block. */
-    uint32_t numVariables() const {
-        // TODO: propertyCount() is O(n), use O(1) lastProperty()->slot() instead
-        return propertyCount();
-    }
-
-    // Global lexical scopes are extensible. Non-global lexicals scopes are
-    // not.
-    bool isExtensible() const;
-
-  protected:
-    /* Blocks contain an object slot for each slot i: 0 <= i < slotCount. */
-    const Value& slotValue(unsigned i) {
-        return getSlotRef(RESERVED_SLOTS + i);
-    }
-
-    void setSlotValue(unsigned i, const Value& v) {
-        setSlot(RESERVED_SLOTS + i, v);
-    }
-};
-
-class ClonedBlockObject : public BlockObject
-{
-    static const unsigned THIS_VALUE_SLOT = 1;
-
+  private:
     static ClonedBlockObject* create(JSContext* cx, Handle<StaticBlockScope*> block,
                                      HandleObject enclosing);
 
@@ -954,6 +931,27 @@ class ClonedBlockObject : public BlockObject
     static ClonedBlockObject* createHollowForDebug(JSContext* cx,
                                                    Handle<StaticBlockScope*> block);
 
+    /* Return the number of variables associated with this block. */
+    uint32_t numVariables() const {
+        // TODO: propertyCount() is O(n), use O(1) lastProperty()->slot() instead
+        return propertyCount();
+    }
+
+    // Global lexical scopes are extensible. Non-global lexicals scopes are
+    // not.
+    bool isExtensible() const;
+
+  private:
+    /* Blocks contain an object slot for each slot i: 0 <= i < slotCount. */
+    const Value& slotValue(unsigned i) {
+        return getSlotRef(RESERVED_SLOTS + i);
+    }
+
+    void setSlotValue(unsigned i, const Value& v) {
+        setSlot(RESERVED_SLOTS + i, v);
+    }
+
+  public:
     /* The static block from which this block was cloned. */
     StaticBlockScope& staticBlock() const {
         return getProto()->as<StaticBlockScope>();

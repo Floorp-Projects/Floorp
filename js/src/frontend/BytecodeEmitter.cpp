@@ -3023,7 +3023,7 @@ BytecodeEmitter::initializeBlockScopedLocalsFromStack(Handle<StaticBlockScope*> 
         if (blockScope->isAliased(i - 1)) {
             ScopeCoordinate sc;
             sc.setHops(0);
-            sc.setSlot(BlockObject::RESERVED_SLOTS + i - 1);
+            sc.setSlot(ClonedBlockObject::RESERVED_SLOTS + i - 1);
             if (!emitAliasedVarOp(JSOP_INITALIASEDLEXICAL, sc, DontCheckLexical))
                 return false;
         } else {
