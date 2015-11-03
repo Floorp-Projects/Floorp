@@ -29,9 +29,6 @@ public:
   void
   FlushConsoleReports(nsIDocument* aDocument) override;
 
-  void
-  FlushConsoleReports(nsIConsoleReportCollector* aCollector) override;
-
 private:
   ~ConsoleReportCollector();
 
