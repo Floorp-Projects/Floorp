@@ -168,6 +168,44 @@ TestEnumWithOrdering()
   A(atomic == EnumType_3, "CAS should have changed atomic's value.");
 }
 
+enum class EnumClass : uint32_t
+{
+  Value0 = 0,
+  Value1 = 1,
+  Value2 = 2,
+  Value3 = 3
+};
+
+template<MemoryOrdering Order>
+static void
+TestEnumClassWithOrdering()
+{
+  Atomic<EnumClass, Order> atomic(EnumClass::Value2);
+  A(atomic == EnumClass::Value2, "Atomic variable did not initialize");
+
+  // Test assignment
+  EnumClass result;
+  result = (atomic = EnumClass::Value3);
+  A(atomic == EnumClass::Value3, "Atomic assignment failed");
+  A(result == EnumClass::Value3, "Atomic assignment returned the wrong value");
+
+  // Test exchange.
+  atomic = EnumClass::Value1;
+  result = atomic.exchange(EnumClass::Value2);
+  A(atomic == EnumClass::Value2, "Atomic exchange did not work");
+  A(result == EnumClass::Value1, "Atomic exchange returned the wrong value");
+
+  // Test CAS.
+  atomic = EnumClass::Value1;
+  bool boolResult = atomic.compareExchange(EnumClass::Value0, EnumClass::Value2);
+  A(!boolResult, "CAS should have returned false.");
+  A(atomic == EnumClass::Value1, "CAS shouldn't have done anything.");
+
+  boolResult = atomic.compareExchange(EnumClass::Value1, EnumClass::Value3);
+  A(boolResult, "CAS should have succeeded.");
+  A(atomic == EnumClass::Value3, "CAS should have changed atomic's value.");
+}
+
 template <MemoryOrdering Order>
 static void
 TestBoolWithOrdering()
@@ -222,6 +260,10 @@ TestEnum()
   TestEnumWithOrdering<SequentiallyConsistent>();
   TestEnumWithOrdering<ReleaseAcquire>();
   TestEnumWithOrdering<Relaxed>();
+
+  TestEnumClassWithOrdering<SequentiallyConsistent>();
+  TestEnumClassWithOrdering<ReleaseAcquire>();
+  TestEnumClassWithOrdering<Relaxed>();
 }
 
 static void
