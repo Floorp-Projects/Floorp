@@ -21,14 +21,32 @@ if (json.substs.MOZ_BUILD_APP != 'mobile/android') {
     throw new GradleException("Building with Gradle is only supported for Fennec, i.e., MOZ_BUILD_APP == 'mobile/android'.");
 }
 
+def srcdir = { dst, src ->
+    def d = java.nio.file.Paths.get("${json.topobjdir}/gradle/${dst}")
+    def s = java.nio.file.Paths.get("${json.topsrcdir}/${src}")
+    try {
+        java.nio.file.Files.createDirectories(d.getParent())
+    } catch (java.nio.file.FileAlreadyExistsException e) {
+        // Do nothing.
+    }
+    try {
+        java.nio.file.Files.createSymbolicLink(d, s)
+    } catch (java.nio.file.FileAlreadyExistsException e) {
+        // Do nothing.
+    }
+}
+
+// Since base/ doesn't have the correct package prefix directory structure, we
+// still need to symlink.
+srcdir('base/src/org/mozilla/gecko', 'mobile/android/base')
+
 include ':app'
 include ':base'
 include ':omnijar'
 include ':thirdparty'
 
-def gradleRoot = new File("${json.topobjdir}/mobile/android/gradle")
 project(':app').projectDir = new File("${json.topsrcdir}/mobile/android/app")
-project(':base').projectDir = new File(gradleRoot, 'base')
+project(':base').projectDir = new File("${json.topsrcdir}/mobile/android/base")
 project(':omnijar').projectDir = new File("${json.topsrcdir}/mobile/android/app/omnijar")
 project(':thirdparty').projectDir = new File("${json.topsrcdir}/mobile/android/thirdparty")
 
