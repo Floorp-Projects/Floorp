@@ -15,7 +15,7 @@ function f(stdlib, foreign, buffer)
 if (isAsmJSCompilationAvailable())
   assertEq(isAsmJSModule(f), true);
 
-var i32 = new Int32Array(65536);
+var i32 = new Int32Array(4096);
 var buffer = i32.buffer;
 var set = f(this, null, buffer);
 if (isAsmJSCompilationAvailable())

@@ -51,13 +51,8 @@ extern bool
 ValidateAsmJS(ExclusiveContext* cx, AsmJSParser& parser, frontend::ParseNode* stmtList,
              bool* validated);
 
-// The minimum heap length for asm.js.
-const size_t AsmJSMinHeapLength = 64 * 1024;
-
 // The assumed page size; dynamically checked in ValidateAsmJS.
 const size_t AsmJSPageSize = 4096;
-
-static_assert(AsmJSMinHeapLength % AsmJSPageSize == 0, "Invalid page size");
 
 #if defined(ASMJS_MAY_USE_SIGNAL_HANDLERS_FOR_OOB)
 
@@ -91,8 +86,8 @@ static const size_t AsmJSMappedSize = 4 * 1024ULL * 1024ULL * 1024ULL +
 inline uint32_t
 RoundUpToNextValidAsmJSHeapLength(uint32_t length)
 {
-    if (length <= AsmJSMinHeapLength)
-        return AsmJSMinHeapLength;
+    if (length <= 4 * 1024)
+        return 4 * 1024;
 
     if (length <= 16 * 1024 * 1024)
         return mozilla::RoundUpPow2(length);
@@ -104,7 +99,7 @@ RoundUpToNextValidAsmJSHeapLength(uint32_t length)
 inline bool
 IsValidAsmJSHeapLength(uint32_t length)
 {
-    bool valid = length >= AsmJSMinHeapLength &&
+    bool valid = length >= 4 * 1024 &&
                  (IsPowerOfTwo(length) ||
                   (length & 0x00ffffff) == 0);
 
@@ -112,6 +107,14 @@ IsValidAsmJSHeapLength(uint32_t length)
     MOZ_ASSERT_IF(valid, length == RoundUpToNextValidAsmJSHeapLength(length));
 
     return valid;
+}
+
+// For now, power-of-2 lengths in this range are accepted, but in the future
+// we'll change this to cause link-time failure.
+inline bool
+IsDeprecatedAsmJSHeapLength(uint32_t length)
+{
+    return length >= 4 * 1024 && length < 64 * 1024 && IsPowerOfTwo(length);
 }
 
 // Return whether asm.js optimization is inhibited by the platform or
