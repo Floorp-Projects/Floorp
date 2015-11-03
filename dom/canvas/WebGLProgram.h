@@ -161,6 +161,8 @@ public:
                                              dom::Nullable<dom::OwningUnsignedLongOrUint32ArrayOrBoolean>& retval,
                                              ErrorResult& rv) const;
     already_AddRefed<WebGLUniformLocation> GetUniformLocation(const nsAString& name) const;
+    void GetUniformIndices(const dom::Sequence<nsString>& uniformNames,
+                           dom::Nullable< nsTArray<GLuint> >& retval) const;
     void UniformBlockBinding(GLuint uniformBlockIndex, GLuint uniformBlockBinding) const;
 
     bool LinkProgram();
