@@ -274,6 +274,7 @@ class nsCookieService final : public nsICookieService
     void                          InitDBStates();
     OpenDBResult                  TryInitDB(bool aDeleteExistingDB);
     nsresult                      CreateTable();
+    nsresult                      CreateTableForSchemaVersion6();
     nsresult                      CreateTableForSchemaVersion5();
     void                          CloseDBStates();
     void                          CleanupCachedStatements();
