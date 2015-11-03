@@ -6,6 +6,7 @@ EN_US_BINARY_URL = "http://archive.mozilla.org/pub/mobile/candidates/%(version)s
 HG_SHARE_BASE_DIR = "/builds/hg-shared"
 
 config = {
+    "stage_product": "mobile",
     "log_name": "single_locale",
     "objdir": OBJDIR,
     "is_automation": True,
