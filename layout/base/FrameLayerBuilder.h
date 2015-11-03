@@ -61,6 +61,7 @@ struct ContainerLayerParameters {
     , mInActiveTransformedSubtree(false)
     , mDisableSubpixelAntialiasingInDescendants(false)
     , mInLowPrecisionDisplayPort(false)
+    , mForEventsOnly(false)
   {}
   ContainerLayerParameters(float aXScale, float aYScale)
     : mXScale(aXScale)
@@ -71,6 +72,7 @@ struct ContainerLayerParameters {
     , mInActiveTransformedSubtree(false)
     , mDisableSubpixelAntialiasingInDescendants(false)
     , mInLowPrecisionDisplayPort(false)
+    , mForEventsOnly(false)
   {}
   ContainerLayerParameters(float aXScale, float aYScale,
                            const nsIntPoint& aOffset,
@@ -84,6 +86,7 @@ struct ContainerLayerParameters {
     , mInActiveTransformedSubtree(aParent.mInActiveTransformedSubtree)
     , mDisableSubpixelAntialiasingInDescendants(aParent.mDisableSubpixelAntialiasingInDescendants)
     , mInLowPrecisionDisplayPort(aParent.mInLowPrecisionDisplayPort)
+    , mForEventsOnly(aParent.mForEventsOnly)
   {}
 
   float mXScale, mYScale;
@@ -112,6 +115,7 @@ struct ContainerLayerParameters {
   bool mInActiveTransformedSubtree;
   bool mDisableSubpixelAntialiasingInDescendants;
   bool mInLowPrecisionDisplayPort;
+  bool mForEventsOnly;
   /**
    * When this is false, PaintedLayer coordinates are drawn to with an integer
    * translation and the scale in mXScale/mYScale.
