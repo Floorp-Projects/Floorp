@@ -3281,6 +3281,12 @@ nsDisplayLayerEventRegions::AddFrame(nsDisplayListBuilder* aBuilder,
     if (pluginFrame && pluginFrame->WantsToHandleWheelEventAsDefaultAction()) {
       mDispatchToContentHitRegion.Or(mDispatchToContentHitRegion, borderBox);
     }
+  } else if (gfxPlatform::GetPlatform()->SupportsApzWheelInput() &&
+             nsLayoutUtils::IsScrollFrameWithSnapping(aFrame->GetParent())) {
+    // If the frame is the inner content of a scrollable frame with snap-points
+    // then we want to handle wheel events for it on the main thread. Add it to
+    // the d-t-c region so that APZ waits for the main thread.
+    mDispatchToContentHitRegion.Or(mDispatchToContentHitRegion, borderBox);
   }
 
   // Touch action region
