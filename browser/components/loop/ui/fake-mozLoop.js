@@ -117,6 +117,7 @@ var fakeRooms = [
       switch (pref) {
         // Ensure we skip FTE completely.
         case "gettingStarted.seen":
+        case "contextInConversations.enabled":
           return true;
       }
       return null;

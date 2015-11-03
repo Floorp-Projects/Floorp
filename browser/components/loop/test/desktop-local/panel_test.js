@@ -52,7 +52,12 @@ describe("loop.panel", function() {
       },
       setLoopPref: sandbox.stub(),
       getLoopPref: function(prefName) {
-        return "unseen";
+        switch (prefName) {
+          case "contextInConversations.enabled":
+            return true;
+          default:
+            return "unseen";
+        }
       },
       getPluralForm: function() {
         return "fakeText";
@@ -974,6 +979,22 @@ describe("loop.panel", function() {
         }, extraProps)));
     }
 
+    it("should dispatch a CreateRoom action when clicking on the Start a " +
+       "conversation button",
+      function() {
+        navigator.mozLoop.userProfile = { email: fakeEmail };
+        var view = createTestComponent({
+          inRoom: false,
+          pendingOperation: false
+        });
+
+        TestUtils.Simulate.click(view.getDOMNode().querySelector(".new-room-button"));
+
+        sinon.assert.calledWith(dispatch, new sharedActions.CreateRoom({
+          nameTemplate: "Fake title"
+        }));
+      });
+
     it("should dispatch a CreateRoom action with context when clicking on the " +
        "Start a conversation button", function() {
       fakeMozLoop.userProfile = { email: fakeEmail };
@@ -996,6 +1017,9 @@ describe("loop.panel", function() {
       view.onDocumentVisible();
 
       var node = view.getDOMNode();
+
+      // Select the checkbox
+      TestUtils.Simulate.click(node.querySelector(".checkbox-wrapper"));
 
       TestUtils.Simulate.click(node.querySelector(".new-room-button"));
 
@@ -1052,6 +1076,140 @@ describe("loop.panel", function() {
       TestUtils.Simulate.click(node.querySelector(".stop-sharing-button"));
 
       sinon.assert.calledOnce(hangupAllChatWindows);
+    });
+
+    it("should show context information when a URL is available", function() {
+      fakeMozLoop.getSelectedTabMetadata = function(callback) {
+        callback({
+          url: "https://www.example.com",
+          description: "fake description",
+          previews: [""]
+        });
+      };
+
+      var view = createTestComponent({
+        inRoom: false,
+        pendingOperation: false
+      });
+
+
+      // Simulate being visible
+      view.onDocumentVisible();
+
+      var contextContent = view.getDOMNode().querySelector(".context-content");
+      expect(contextContent).to.not.equal(null);
+    });
+
+    it("should cancel the checkbox when a new URL is available", function() {
+      fakeMozLoop.getSelectedTabMetadata = function(callback) {
+        callback({
+          url: "https://www.example.com",
+          description: "fake description",
+          previews: [""]
+        });
+      };
+
+      var view = createTestComponent({
+        inRoom: false,
+        pendingOperation: false
+      });
+
+
+      view.setState({ checked: true });
+
+      // Simulate being visible
+      view.onDocumentVisible();
+
+      expect(view.state.checked).eql(false);
+    });
+
+    it("should show a default favicon when none is available", function() {
+      fakeMozLoop.getSelectedTabMetadata = function(callback) {
+        callback({
+          url: "https://www.example.com",
+          description: "fake description",
+          previews: [""]
+        });
+      };
+
+      var view = createTestComponent({
+        inRoom: false,
+        pendingOperation: false
+      });
+
+
+      // Simulate being visible
+      view.onDocumentVisible();
+
+      var previewImage = view.getDOMNode().querySelector(".context-preview");
+      expect(previewImage.src).to.match(/loop\/shared\/img\/icons-16x16.svg#globe$/);
+    });
+
+    it("should not show context information when a URL is unavailable", function() {
+      fakeMozLoop.getSelectedTabMetadata = function(callback) {
+        callback({
+          url: "",
+          description: "fake description",
+          previews: [""]
+        });
+      };
+
+      var view = createTestComponent({
+        inRoom: false,
+        pendingOperation: false
+      });
+
+
+      view.onDocumentVisible();
+
+      var contextInfo = view.getDOMNode().querySelector(".context");
+      expect(contextInfo.classList.contains("hide")).to.equal(true);
+    });
+
+    it("should show only the hostname of the url", function() {
+      fakeMozLoop.getSelectedTabMetadata = function(callback) {
+        callback({
+          url: "https://www.example.com:1234",
+          description: "fake description",
+          previews: [""]
+        });
+      };
+
+      var view = createTestComponent({
+        inRoom: false,
+        pendingOperation: false
+      });
+
+
+      // Simulate being visible
+      view.onDocumentVisible();
+
+      var contextHostname = view.getDOMNode().querySelector(".context-url");
+      expect(contextHostname.textContent).eql("www.example.com");
+    });
+
+    it("should show the favicon when available", function() {
+      var favicon = "data:image/x-icon;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==";
+      fakeMozLoop.getSelectedTabMetadata = function(callback) {
+        callback({
+          url: "https://www.example.com:1234",
+          description: "fake description",
+          favicon: favicon,
+          previews: ["foo.gif"]
+        });
+      };
+
+      var view = createTestComponent({
+        inRoom: false,
+        pendingOperation: false
+      });
+
+
+      // Simulate being visible.
+      view.onDocumentVisible();
+
+      var contextPreview = view.getDOMNode().querySelector(".context-preview");
+      expect(contextPreview.src).eql(favicon);
     });
   });
 
