@@ -1938,15 +1938,6 @@ nsGridContainerFrame::Tracks::Initialize(
   }
 }
 
-static nscoord
-MinSize(nsIFrame* aChild, nsRenderingContext* aRC, WritingMode aCBWM,
-        LogicalAxis aAxis, nsLayoutUtils::IntrinsicISizeType aConstraint)
-{
-  PhysicalAxis axis(aCBWM.PhysicalAxis(aAxis));
-  return nsLayoutUtils::MinSizeContributionForAxis(axis, aRC, aChild,
-                                                   aConstraint);
-}
-
 /**
  * Return the [min|max]-content contribution of aChild to its parent (i.e.
  * the child's margin-box) in aAxis.
@@ -1957,11 +1948,12 @@ ContentContribution(nsIFrame*                         aChild,
                     nsRenderingContext*               aRC,
                     WritingMode                       aCBWM,
                     LogicalAxis                       aAxis,
-                    nsLayoutUtils::IntrinsicISizeType aConstraint)
+                    nsLayoutUtils::IntrinsicISizeType aConstraint,
+                    uint32_t                          aFlags = 0)
 {
   PhysicalAxis axis(aCBWM.PhysicalAxis(aAxis));
   nscoord size = nsLayoutUtils::IntrinsicForAxis(axis, aRC, aChild, aConstraint,
-                   nsLayoutUtils::BAIL_IF_REFLOW_NEEDED);
+                   aFlags | nsLayoutUtils::BAIL_IF_REFLOW_NEEDED);
   if (size == NS_INTRINSIC_WIDTH_UNKNOWN) {
     // We need to reflow the child to find its BSize contribution.
     WritingMode wm = aChild->GetWritingMode();
@@ -2023,6 +2015,39 @@ MaxContentContribution(nsIFrame*                aChild,
 {
   return ContentContribution(aChild, aRS, aRC, aCBWM, aAxis,
                              nsLayoutUtils::PREF_ISIZE);
+}
+
+static nscoord
+MinSize(nsIFrame*                aChild,
+        const nsHTMLReflowState* aRS,
+        nsRenderingContext*      aRC,
+        WritingMode              aCBWM,
+        LogicalAxis              aAxis)
+{
+  PhysicalAxis axis(aCBWM.PhysicalAxis(aAxis));
+  const nsStylePosition* stylePos = aChild->StylePosition();
+  const nsStyleCoord& style = axis == eAxisHorizontal ? stylePos->mMinWidth
+                                                      : stylePos->mMinHeight;
+  // https://drafts.csswg.org/css-grid/#min-size-auto
+  // This calculates the min-content contribution from either a definite
+  // min-width (or min-height depending on aAxis), or the "specified /
+  // transferred size" for min-width:auto if overflow == visible (as min-width:0
+  // otherwise), or NS_UNCONSTRAINEDSIZE for other min-width intrinsic values
+  // (which results in always taking the "content size" part below).
+  nscoord sz =
+    nsLayoutUtils::MinSizeContributionForAxis(axis, aRC, aChild,
+                                              nsLayoutUtils::MIN_ISIZE);
+  auto unit = style.GetUnit();
+  if (unit == eStyleUnit_Enumerated ||
+      (unit == eStyleUnit_Auto &&
+       aChild->StyleDisplay()->mOverflowX == NS_STYLE_OVERFLOW_VISIBLE)) {
+    // Now calculate the "content size" part and return whichever is smaller.
+    MOZ_ASSERT(unit != eStyleUnit_Enumerated || sz == NS_UNCONSTRAINEDSIZE);
+    sz = std::min(sz, ContentContribution(aChild, aRS, aRC, aCBWM, aAxis,
+                                          nsLayoutUtils::MIN_ISIZE,
+                                          nsLayoutUtils::MIN_INTRINSIC_ISIZE));
+  }
+  return sz;
 }
 
 void
@@ -2112,7 +2137,7 @@ nsGridContainerFrame::Tracks::ResolveIntrinsicSizeStep1(
   const nsHTMLReflowState* rs = aState.mReflowState;
   nsRenderingContext* rc = &aState.mRenderingContext;
   if (sz.mState & TrackSize::eAutoMinSizing) {
-    nscoord s = MinSize(aGridItem, rc, wm, mAxis, aConstraint);
+    nscoord s = MinSize(aGridItem, rs, rc, wm, mAxis);
     sz.mBase = std::max(sz.mBase, s);
   } else if ((sz.mState & TrackSize::eMinContentMinSizing) ||
              (aConstraint == nsLayoutUtils::MIN_ISIZE &&
@@ -2217,7 +2242,7 @@ nsGridContainerFrame::Tracks::ResolveIntrinsicSize(
         stateBitsPerSpan[span] |= state;
         nscoord minSize = 0;
         if (state & (flexMin | TrackSize::eIntrinsicMinSizing)) { // for 2.1
-          minSize = MinSize(child, rc, wm, mAxis, aConstraint);
+          minSize = MinSize(child, aState.mReflowState, rc, wm, mAxis);
         }
         nscoord minContent = 0;
         if (state & (flexMin | TrackSize::eMinOrMaxContentMinSizing | // for 2.2
