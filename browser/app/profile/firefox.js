@@ -1418,6 +1418,7 @@ pref("loop.fxa_oauth.tokendata", "");
 pref("loop.fxa_oauth.profile", "");
 pref("loop.support_url", "https://support.mozilla.org/kb/group-conversations-firefox-hello-webrtc");
 pref("loop.browserSharing.showInfoBar", true);
+pref("loop.contextInConversations.enabled", true);
 
 pref("social.sidebar.unload_timeout_ms", 10000);
 

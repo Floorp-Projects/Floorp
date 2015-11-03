@@ -200,11 +200,50 @@ body {
   flex-direction: column;
 }
 
+.new-room-view.context-checkbox-checked {
+  background-color: #dbf7ff;
+}
+
+.new-room-view > .context {
+  flex: 1;
+  border-radius: 3px 3px 0 0;
+  padding: 1rem 1.5rem 0.5rem;
+}
+
+.new-room-view > .context > .context-enabled {
+  margin-bottom: .5rem;
+  display: block;
+}
+
+.new-room-view > .context > .context-enabled > input {
+  -moz-margin-start: 0;
+}
+
+.new-room-view > .context > .checkbox-wrapper {
+  height: 2rem;
+  margin-bottom: .5em;
+  line-height: 2rem;
+}
+
+.new-room-view > .context > .checkbox-wrapper > .checkbox {
+  border-color: #d8d8d8;
+  background-color: #fff;
+}
+
+.new-room-view > .context > .checkbox-wrapper > .checkbox.checked {
+  background-image: url("../shared/img/check.svg#check-blue");
+}
+
+.new-room-view > .context > .checkbox-wrapper > label {
+  color: #333;
+  font-size: 1.1rem;
+}
+
 .new-room-view > .btn {
   border-radius: 5px;
   font-size: 1.2rem;
   font-weight: bold;
-  margin: 1.5rem;
+  margin: 0.5rem 1.5rem 1rem;
   padding: 1rem;
 }
 

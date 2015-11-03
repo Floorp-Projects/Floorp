@@ -733,8 +733,8 @@ loop.panel = (function(_, mozL10n) {
         React.createElement("div", {className: "rooms"}, 
           this._renderNewRoomButton(), 
           React.createElement("h1", null, mozL10n.get(this.state.openedRoom === null ?
-                "rooms_list_recently_browsed" :
-                "rooms_list_currently_browsing")), 
+                "rooms_list_all_conversations_header" :
+                "rooms_list_opened_conversation_header")), 
           React.createElement("div", {className: "room-list"}, 
             this.state.rooms.map(function(room, i) {
               if (this.state.openedRoom !== null &&
@@ -775,6 +775,7 @@ loop.panel = (function(_, mozL10n) {
 
     getInitialState: function() {
       return {
+        checked: false,
         previewImage: "",
         description: "",
         url: ""
@@ -798,6 +799,7 @@ loop.panel = (function(_, mozL10n) {
         var description = metadata.title || metadata.description;
         var url = metadata.url;
         this.setState({
+          checked: false,
           previewImage: previewImage,
           description: description,
           url: url
@@ -805,16 +807,22 @@ loop.panel = (function(_, mozL10n) {
       }.bind(this));
     },
 
+    onCheckboxChange: function(newState) {
+      this.setState({ checked: newState.checked });
+    },
+
     handleCreateButtonClick: function() {
       var createRoomAction = new sharedActions.CreateRoom({
         nameTemplate: mozL10n.get("rooms_default_room_name_template")
       });
 
-      createRoomAction.urls = [{
-        location: this.state.url,
-        description: this.state.description,
-        thumbnail: this.state.previewImage
-      }];
+      if (this.state.checked) {
+        createRoomAction.urls = [{
+          location: this.state.url,
+          description: this.state.description,
+          thumbnail: this.state.previewImage
+        }];
+      }
       this.props.dispatcher.dispatch(createRoomAction);
     },
 
@@ -823,18 +831,49 @@ loop.panel = (function(_, mozL10n) {
     },
 
     render: function() {
+      var hostname;
+
+      try {
+        hostname = new URL(this.state.url).hostname;
+      } catch (ex) {
+        // Empty catch - if there's an error, then we won't show the context.
+      }
+
+      var parentClasses = React.addons.classSet({
+        "context-checkbox-checked": this.state.checked,
+        "new-room-view": true
+      });
+      var contextClasses = React.addons.classSet({
+        context: true,
+        hide: !hostname ||
+          !this.props.mozLoop.getLoopPref("contextInConversations.enabled")
+      });
+
       return (
-        React.createElement("div", {className: "new-room-view"}, 
+        React.createElement("div", {className: parentClasses}, 
+          this.props.inRoom ? null :
+            React.createElement("div", {className: contextClasses}, 
+              React.createElement(Checkbox, {checked: this.state.checked, 
+                        label: mozL10n.get("context_inroom_label2"), 
+                        onChange: this.onCheckboxChange}), 
+              React.createElement(sharedViews.ContextUrlView, {
+                allowClick: false, 
+                description: this.state.description, 
+                showContextTitle: false, 
+                thumbnail: this.state.previewImage, 
+                url: this.state.url, 
+                useDesktopPaths: true})
+            ), 
           this.props.inRoom ?
             React.createElement("button", {className: "btn btn-info stop-sharing-button", 
               disabled: this.props.pendingOperation, 
               onClick: this.handleStopSharingButtonClick}, 
-              mozL10n.get("panel_stop_sharing_tabs_button")
+              mozL10n.get("panel_end_conversation_button")
             ) :
             React.createElement("button", {className: "btn btn-info new-room-button", 
               disabled: this.props.pendingOperation, 
               onClick: this.handleCreateButtonClick}, 
-              mozL10n.get("panel_browse_with_friend_button")
+              mozL10n.get("panel_start_conversation_button")
             )
         )
       );

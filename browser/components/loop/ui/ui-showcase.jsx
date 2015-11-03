@@ -704,6 +704,20 @@
             <FramedExample cssClass="fx-embedded-panel"
                            dashed={true}
                            height={410}
+                           summary="Room list (No Context)"
+                           width={330}>
+              <div className="panel">
+                <PanelView client={mockClient}
+                           dispatcher={dispatcher}
+                           mozLoop={mockMozLoopLoggedInNoContext}
+                           notifications={notifications}
+                           roomStore={roomStore} />
+              </div>
+            </FramedExample>
+
+            <FramedExample cssClass="fx-embedded-panel"
+                           dashed={true}
+                           height={410}
                            summary="Room list (active view)"
                            width={330}>
               <div className="panel">
@@ -724,6 +738,20 @@
                 <PanelView client={mockClient}
                            dispatcher={dispatcher}
                            mozLoop={mockMozLoopNoRooms}
+                           notifications={notifications}
+                           roomStore={roomStoreNoRooms} />
+              </div>
+            </FramedExample>
+
+            <FramedExample cssClass="fx-embedded-panel"
+                           dashed={true}
+                           height={410}
+                           summary="Room list (no rooms and no context)"
+                           width={330}>
+              <div className="panel">
+                <PanelView client={mockClient}
+                           dispatcher={dispatcher}
+                           mozLoop={mockMozLoopNoRoomsNoContext}
                            notifications={notifications}
                            roomStore={roomStoreNoRooms} />
               </div>
