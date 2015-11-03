@@ -5369,8 +5369,8 @@ nsTextFrame::DrawSelectionDecorations(gfxContext* aContext,
         // If underline color is defined and that doesn't depend on the
         // foreground color, we should use the color directly.
         if (aRangeStyle.IsUnderlineColorDefined() &&
-            aRangeStyle.IsForegroundColorDefined() &&
-            aRangeStyle.mUnderlineColor != aRangeStyle.mForegroundColor) {
+            (!aRangeStyle.IsForegroundColorDefined() ||
+             aRangeStyle.mUnderlineColor != aRangeStyle.mForegroundColor)) {
           color = aRangeStyle.mUnderlineColor;
         }
         // If foreground color or background color is defined, the both colors
