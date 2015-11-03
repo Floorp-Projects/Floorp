@@ -43,7 +43,6 @@
 #include "nsISecurityConsoleMessage.h"
 #include "nsCOMArray.h"
 
-extern PRLogModuleInfo *gHttpLog;
 class nsPerformance;
 class nsISecurityConsoleMessage;
 class nsIPrincipal;
@@ -53,6 +52,7 @@ namespace mozilla {
 class LogCollector;
 
 namespace net {
+extern mozilla::LazyLogModule gHttpLog;
 
 /*
  * This class is a partial implementation of nsIHttpChannel.  It contains code

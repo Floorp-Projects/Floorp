@@ -51,24 +51,6 @@
 #include "DataChannel.h"
 #include "DataChannelProtocol.h"
 
-PRLogModuleInfo*
-GetDataChannelLog()
-{
-  static PRLogModuleInfo* sLog;
-  if (!sLog)
-    sLog = PR_NewLogModule("DataChannel");
-  return sLog;
-}
-
-PRLogModuleInfo*
-GetSCTPLog()
-{
-  static PRLogModuleInfo* sLog;
-  if (!sLog)
-    sLog = PR_NewLogModule("SCTP");
-  return sLog;
-}
-
 // Let us turn on and off important assertions in non-debug builds
 #ifdef DEBUG
 #define ASSERT_WEBRTC(x) MOZ_ASSERT((x))
@@ -79,6 +61,9 @@ GetSCTPLog()
 static bool sctp_initialized;
 
 namespace mozilla {
+
+LazyLogModule gDataChannelLog("DataChannel");
+static LazyLogModule gSCTPLog("SCTP");
 
 class DataChannelShutdown : public nsIObserver
 {
@@ -170,7 +155,7 @@ debug_printf(const char *format, ...)
   va_list ap;
   char buffer[1024];
 
-  if (MOZ_LOG_TEST(GetSCTPLog(), LogLevel::Debug)) {
+  if (MOZ_LOG_TEST(gSCTPLog, LogLevel::Debug)) {
     va_start(ap, format);
 #ifdef _WIN32
     if (vsnprintf_s(buffer, sizeof(buffer), _TRUNCATE, format, ap) > 0) {
@@ -327,7 +312,7 @@ DataChannelConnection::Init(unsigned short aPort, uint16_t aNumStreams, bool aUs
       }
 
       // Set logging to SCTP:LogLevel::Debug to get SCTP debugs
-      if (MOZ_LOG_TEST(GetSCTPLog(), LogLevel::Debug)) {
+      if (MOZ_LOG_TEST(gSCTPLog, LogLevel::Debug)) {
         usrsctp_sysctl_set_sctp_debug_on(SCTP_DEBUG_ALL);
       }
 
@@ -671,7 +656,7 @@ void
 DataChannelConnection::SctpDtlsInput(TransportFlow *flow,
                                      const unsigned char *data, size_t len)
 {
-  if (MOZ_LOG_TEST(GetSCTPLog(), LogLevel::Debug)) {
+  if (MOZ_LOG_TEST(gSCTPLog, LogLevel::Debug)) {
     char *buf;
 
     if ((buf = usrsctp_dumppacket((void *)data, len, SCTP_DUMP_INBOUND)) != nullptr) {
@@ -701,7 +686,7 @@ DataChannelConnection::SctpDtlsOutput(void *addr, void *buffer, size_t length,
   DataChannelConnection *peer = static_cast<DataChannelConnection *>(addr);
   int res;
 
-  if (MOZ_LOG_TEST(GetSCTPLog(), LogLevel::Debug)) {
+  if (MOZ_LOG_TEST(gSCTPLog, LogLevel::Debug)) {
     char *buf;
 
     if ((buf = usrsctp_dumppacket(buffer, length, SCTP_DUMP_OUTBOUND)) != nullptr) {

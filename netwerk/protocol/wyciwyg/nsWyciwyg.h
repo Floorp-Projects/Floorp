@@ -23,7 +23,7 @@
 // this enables LogLevel::Debug level information and places all output in
 // the file wyciwyg.log
 //
-extern PRLogModuleInfo *gWyciwygLog;
+extern mozilla::LazyLogModule gWyciwygLog;
 
 // http logging
 #define LOG1(args) MOZ_LOG(gWyciwygLog, mozilla::LogLevel::Error, args)

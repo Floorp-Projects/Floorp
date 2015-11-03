@@ -25,7 +25,6 @@
 class nsIAsyncInputStream;
 class nsIThread;
 class nsIX509CertList;
-struct PRLogModuleInfo;
 
 namespace mozilla {
 namespace net {
@@ -73,8 +72,6 @@ public:
 
 protected:
   virtual ~BackgroundFileSaver();
-
-  static PRLogModuleInfo *prlog;
 
   /**
    * Helper function for managing NSS objects (mDigestContext).

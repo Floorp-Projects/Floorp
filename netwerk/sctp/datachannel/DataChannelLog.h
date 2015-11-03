@@ -10,10 +10,11 @@
 #include "base/basictypes.h"
 #include "mozilla/Logging.h"
 
-extern PRLogModuleInfo* GetDataChannelLog();
-extern PRLogModuleInfo* GetSCTPLog();
+namespace mozilla {
+extern mozilla::LazyLogModule gDataChannelLog;
+}
 
 #undef LOG
-#define LOG(args) MOZ_LOG(GetDataChannelLog(), mozilla::LogLevel::Debug, args)
+#define LOG(args) MOZ_LOG(mozilla::gDataChannelLog, mozilla::LogLevel::Debug, args)
 
 #endif

@@ -10,9 +10,9 @@
 namespace mozilla {
 namespace net {
 
-extern PRLogModuleInfo* GetCache2Log();
-#define LOG(x)  MOZ_LOG(GetCache2Log(), mozilla::LogLevel::Debug, x)
-#define LOG_ENABLED() MOZ_LOG_TEST(GetCache2Log(), mozilla::LogLevel::Debug)
+extern LazyLogModule gCache2Log;
+#define LOG(x)  MOZ_LOG(gCache2Log, mozilla::LogLevel::Debug, x)
+#define LOG_ENABLED() MOZ_LOG_TEST(gCache2Log, mozilla::LogLevel::Debug)
 
 } // namespace net
 } // namespace mozilla
