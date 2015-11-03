@@ -1431,7 +1431,7 @@ nsStylePosition::nsStylePosition(void)
 
   mGridAutoFlow = NS_STYLE_GRID_AUTO_FLOW_ROW;
   mBoxSizing = NS_STYLE_BOX_SIZING_CONTENT;
-  mAlignContent = NS_STYLE_ALIGN_CONTENT_STRETCH;
+  mAlignContent = NS_STYLE_ALIGN_AUTO;
   mAlignItems = NS_STYLE_ALIGN_AUTO;
   mAlignSelf = NS_STYLE_ALIGN_AUTO;
   mJustifyContent = NS_STYLE_JUSTIFY_AUTO;
@@ -1694,6 +1694,16 @@ nsStylePosition::MapLeftRightToStart(uint8_t aAlign, LogicalAxis aAxis,
     }
   }
   return aAlign;
+}
+
+uint16_t
+nsStylePosition::ComputedAlignContent(const nsStyleDisplay* aDisplay) const
+{
+  uint8_t val = mAlignContent & NS_STYLE_ALIGN_ALL_BITS;
+  val = MapLeftRightToStart(val, eLogicalAxisBlock, aDisplay);
+  uint8_t fallback = mAlignContent >> NS_STYLE_ALIGN_ALL_SHIFT;
+  fallback = MapLeftRightToStart(fallback, eLogicalAxisBlock, aDisplay);
+  return (uint16_t(fallback) << NS_STYLE_ALIGN_ALL_SHIFT) | uint16_t(val);
 }
 
 uint8_t

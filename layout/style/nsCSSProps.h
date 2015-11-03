@@ -698,7 +698,6 @@ public:
   static const KTableValue kAlignAutoBaseline[]; // 'auto/baseline/last-baseline'
   static const KTableValue kAlignContentDistribution[]; // <content-distribution>
   static const KTableValue kAlignContentPosition[]; // <content-position>
-  static const KTableValue kAlignContentKTable[];
   static const KTableValue kAlignSelfKTable[];
   static const KTableValue kJustifyContentKTable[];
   // ------------------------------------------------------------------
