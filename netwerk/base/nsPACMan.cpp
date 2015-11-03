@@ -25,8 +25,14 @@
 using namespace mozilla;
 using namespace mozilla::net;
 
+namespace mozilla {
+namespace net {
+LazyLogModule gProxyLog("proxy");
+} // namespace net
+} // namespace mozilla
+
 #undef LOG
-#define LOG(args) MOZ_LOG(GetProxyLog(), mozilla::LogLevel::Debug, args)
+#define LOG(args) MOZ_LOG(mozilla::net::gProxyLog, mozilla::LogLevel::Debug, args)
 
 // The PAC thread does evaluations of both PAC files and
 // nsISystemProxySettings because they can both block the calling thread and we
@@ -768,17 +774,3 @@ nsPACMan::Init(nsISystemProxySettings *systemProxySettings)
   return NS_OK;
 }
 
-namespace mozilla {
-namespace net {
-
-PRLogModuleInfo*
-GetProxyLog()
-{
-    static PRLogModuleInfo *sLog;
-    if (!sLog)
-        sLog = PR_NewLogModule("proxy");
-    return sLog;
-}
-
-} // namespace net
-} // namespace mozilla

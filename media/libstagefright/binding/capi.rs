@@ -1,5 +1,22 @@
-// C API for mp4parse module.
-// Parses ISO Base Media Format aka video/mp4 streams.
+//! C API for mp4parse module.
+//!
+//! Parses ISO Base Media Format aka video/mp4 streams.
+//!
+//! # Examples
+//!
+//! ```rust
+//! extern crate mp4parse;
+//!
+//! // Minimal valid mp4 containing no tracks.
+//! let data = b"\0\0\0\x0cftypmp42";
+//!
+//! let context = mp4parse::mp4parse_new();
+//! unsafe {
+//!     let rv = mp4parse::mp4parse_read(context, data.as_ptr(), data.len());
+//!     assert_eq!(0, rv);
+//!     mp4parse::mp4parse_free(context);
+//! }
+//! ```
 
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -7,30 +24,31 @@
 
 use std;
 use std::io::Cursor;
-use byteorder;
 
 // Symbols we need from our rust api.
 use MediaContext;
 use read_box;
+use Error;
 
 /// Allocate an opaque rust-side parser context.
 #[no_mangle]
 pub extern "C" fn mp4parse_new() -> *mut MediaContext {
     let context = Box::new(MediaContext::new());
-    unsafe {
-        // transmute is unsafe, but context is always valid.
-        std::mem::transmute(context)
-    }
+    Box::into_raw(context)
 }
 
 /// Free a rust-side parser context.
 #[no_mangle]
 pub unsafe extern "C" fn mp4parse_free(context: *mut MediaContext) {
     assert!(!context.is_null());
-    let _: Box<MediaContext> = std::mem::transmute(context);
+    let _ = Box::from_raw(context);
 }
 
-/// Feed a buffer through read_box(), returning the number of detected tracks.
+/// Feed a buffer through `read_box()` with the given rust-side
+/// parser context, returning the number of detected tracks.
+///
+/// This is safe to call with NULL arguments but will crash
+/// if given invalid pointers, as is usual for C.
 #[no_mangle]
 pub unsafe extern "C" fn mp4parse_read(context: *mut MediaContext, buffer: *const u8, size: usize) -> i32 {
     // Validate arguments from C.
@@ -52,7 +70,7 @@ pub unsafe extern "C" fn mp4parse_read(context: *mut MediaContext, buffer: *cons
         loop {
             match read_box(&mut c, &mut context) {
                 Ok(_) => {},
-                Err(byteorder::Error::UnexpectedEOF) => { break },
+                Err(Error::UnexpectedEOF) => { break },
                 Err(e) => { panic!(e); },
             }
         }
@@ -92,7 +110,7 @@ fn arg_validation() {
         assert_eq!(-1, mp4parse_read(context, null_buffer, 0));
     }
 
-    for size in (0..buffer.len()) {
+    for size in 0..buffer.len() {
         println!("testing buffer length {}", size);
         unsafe {
             assert_eq!(-1, mp4parse_read(context, buffer.as_ptr(), size));

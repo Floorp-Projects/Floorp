@@ -1129,8 +1129,6 @@ nsCacheService::Init()
         return NS_ERROR_UNEXPECTED;
     }
 
-    CACHE_LOG_INIT();
-
     nsresult rv;
 
     mStorageService = do_GetService("@mozilla.org/storage/service;1", &rv);

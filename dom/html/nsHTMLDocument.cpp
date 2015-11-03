@@ -1398,6 +1398,9 @@ nsHTMLDocument::Open(JSContext* cx,
                      const nsAString& aReplace,
                      ErrorResult& rv)
 {
+  // Implements the "When called with two arguments (or fewer)" steps here:
+  // https://html.spec.whatwg.org/multipage/webappapis.html#opening-the-input-stream
+
   NS_ASSERTION(nsContentUtils::CanCallerAccess(static_cast<nsIDOMHTMLDocument*>(this)),
                "XOW should have caught this!");
   if (!IsHTMLDocument() || mDisableDocWrite || !IsMasterDocument()) {
@@ -1538,7 +1541,7 @@ nsHTMLDocument::Open(JSContext* cx,
   }
 
   // The open occurred after the document finished loading.
-  // So we reset the document and create a new one.
+  // So we reset the document and then reinitialize it.
   nsCOMPtr<nsIChannel> channel;
   nsCOMPtr<nsILoadGroup> group = do_QueryReferent(mDocumentLoadGroup);
   rv = NS_NewChannel(getter_AddRefs(channel),
@@ -1607,8 +1610,9 @@ nsHTMLDocument::Open(JSContext* cx,
     }
 #endif
 
-    // Should this pass true for aForceReuseInnerWindow?
-    rv = window->SetNewDocument(this, nullptr, false);
+    // Per spec, we pass false here so that a new Window is created.
+    rv = window->SetNewDocument(this, nullptr,
+                                /* aForceReuseInnerWindow */ false);
     if (rv.Failed()) {
       return nullptr;
     }

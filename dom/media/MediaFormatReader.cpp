@@ -1534,11 +1534,10 @@ MediaFormatReader::VideoIsHardwareAccelerated() const
 }
 
 void
-MediaFormatReader::NotifyDemuxer(uint32_t aLength, int64_t aOffset)
+MediaFormatReader::NotifyDemuxer()
 {
   MOZ_ASSERT(OnTaskQueue());
 
-  LOGV("aLength=%u, aOffset=%lld", aLength, aOffset);
   if (mShutdown || !mDemuxer ||
       (!mDemuxerInitDone && !mDemuxerInitRequest.Exists())) {
     return;
@@ -1560,12 +1559,10 @@ MediaFormatReader::NotifyDemuxer(uint32_t aLength, int64_t aOffset)
 }
 
 void
-MediaFormatReader::NotifyDataArrivedInternal(uint32_t aLength, int64_t aOffset)
+MediaFormatReader::NotifyDataArrivedInternal()
 {
   MOZ_ASSERT(OnTaskQueue());
-  MOZ_ASSERT(aLength);
-
-  NotifyDemuxer(aLength, aOffset);
+  NotifyDemuxer();
 }
 
 bool

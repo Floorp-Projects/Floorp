@@ -113,10 +113,7 @@ AsyncLog(nsIInterceptedChannel *aInterceptedChannel,
          const nsACString& aMessageName, const nsTArray<nsString>& aParams)
 {
   MOZ_ASSERT(aInterceptedChannel);
-  // Since the intercepted channel is kept alive and paused while handling
-  // the FetchEvent, we are guaranteed the reporter is stable on the worker
-  // thread.
-  nsIConsoleReportCollector* reporter =
+  nsCOMPtr<nsIConsoleReportCollector> reporter =
     aInterceptedChannel->GetConsoleReportCollector();
   if (reporter) {
     reporter->AddConsoleReport(nsIScriptError::errorFlag,
@@ -396,8 +393,8 @@ ExtractErrorValues(JSContext* aCx, JS::Handle<JS::Value> aValue,
     else if(NS_SUCCEEDED(UNWRAP_OBJECT(DOMException, obj, domException))) {
 
       nsAutoString filename;
-      if (NS_SUCCEEDED(domException->GetFilename(filename)) &&
-          !filename.IsEmpty()) {
+      domException->GetFilename(filename);
+      if (!filename.IsEmpty()) {
         CopyUTF16toUTF8(filename, aSourceSpecOut);
         *aLineOut = domException->LineNumber();
         *aColumnOut = domException->ColumnNumber();
@@ -419,6 +416,8 @@ ExtractErrorValues(JSContext* aCx, JS::Handle<JS::Value> aValue,
     nsAutoJSString jsString;
     if (jsString.init(aCx, aValue)) {
       aMessageOut = jsString;
+    } else {
+      JS_ClearPendingException(aCx);
     }
   }
 }

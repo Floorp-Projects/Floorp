@@ -21,11 +21,6 @@ pref("devtools.errorconsole.enabled", false);
 pref("devtools.toolbar.enabled", true);
 pref("devtools.toolbar.visible", false);
 
-// Enable the app manager
-pref("devtools.appmanager.enabled", true);
-pref("devtools.appmanager.lastTab", "help");
-pref("devtools.appmanager.manifestEditor.enabled", true);
-
 // Enable DevTools WebIDE by default
 pref("devtools.webide.enabled", true);
 

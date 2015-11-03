@@ -13,8 +13,6 @@
 #include "mozilla/HashFunctions.h"
 #include "nsCRT.h"
 
-PRLogModuleInfo *gHttpLog = nullptr;
-
 namespace mozilla {
 namespace net {
 
