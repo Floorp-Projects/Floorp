@@ -385,7 +385,8 @@ BrowserElementParent.prototype = {
       "got-audio-channel-muted": this._gotDOMRequestResult,
       "got-set-audio-channel-muted": this._gotDOMRequestResult,
       "got-is-audio-channel-active": this._gotDOMRequestResult,
-      "got-structured-data": this._gotDOMRequestResult
+      "got-structured-data": this._gotDOMRequestResult,
+      "got-web-manifest": this._gotDOMRequestResult,
     };
 
     let mmSecuritySensitiveCalls = {
@@ -1209,6 +1210,7 @@ BrowserElementParent.prototype = {
 
   getStructuredData: defineDOMRequestMethod('get-structured-data'),
 
+  getWebManifest: defineDOMRequestMethod('get-web-manifest'),
   /**
    * Called when the visibility of the window which owns this iframe changes.
    */
