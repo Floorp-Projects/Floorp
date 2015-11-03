@@ -8,8 +8,11 @@
 #include "mozilla/TypeTraits.h"
 
 using mozilla::AddLvalueReference;
+using mozilla::AddPointer;
 using mozilla::AddRvalueReference;
+using mozilla::Decay;
 using mozilla::DeclVal;
+using mozilla::IsFunction;
 using mozilla::IsArray;
 using mozilla::IsBaseOf;
 using mozilla::IsClass;
@@ -26,6 +29,13 @@ using mozilla::MakeSigned;
 using mozilla::MakeUnsigned;
 using mozilla::RemoveExtent;
 using mozilla::RemovePointer;
+
+static_assert(!IsFunction<int>::value,
+              "int is not a function type");
+static_assert(IsFunction<void(int)>::value,
+              "void(int) is a function type");
+static_assert(!IsFunction<void(*)(int)>::value,
+              "void(*)(int) is not a function type");
 
 static_assert(!IsArray<bool>::value,
               "bool not an array");
@@ -488,6 +498,36 @@ static_assert(IsSame<RemovePointer<void (*)()>::Type, void()>::value,
 static_assert(IsSame<RemovePointer<bool TestRemovePointer::*>::Type,
                                    bool TestRemovePointer::*>::value,
               "removing pointer from bool S::* must return bool S::*");
+
+static_assert(IsSame<AddPointer<int>::Type, int*>::value,
+              "adding pointer to int must return int*");
+static_assert(IsSame<AddPointer<int*>::Type, int**>::value,
+              "adding pointer to int* must return int**");
+static_assert(IsSame<AddPointer<int&>::Type, int*>::value,
+              "adding pointer to int& must return int*");
+static_assert(IsSame<AddPointer<int* const>::Type, int* const*>::value,
+              "adding pointer to int* const must return int* const*");
+static_assert(IsSame<AddPointer<int* volatile>::Type, int* volatile*>::value,
+              "adding pointer to int* volatile must return int* volatile*");
+
+static_assert(IsSame<Decay<int>::Type, int>::value,
+              "decaying int must return int");
+static_assert(IsSame<Decay<int*>::Type, int*>::value,
+              "decaying int* must return int*");
+static_assert(IsSame<Decay<int* const>::Type, int*>::value,
+              "decaying int* const must return int*");
+static_assert(IsSame<Decay<int* volatile>::Type, int*>::value,
+              "decaying int* volatile must return int*");
+static_assert(IsSame<Decay<int&>::Type, int>::value,
+              "decaying int& must return int");
+static_assert(IsSame<Decay<const int&>::Type, int>::value,
+              "decaying const int& must return int");
+static_assert(IsSame<Decay<int&&>::Type, int>::value,
+              "decaying int&& must return int");
+static_assert(IsSame<Decay<int[1]>::Type, int*>::value,
+              "decaying int[1] must return int*");
+static_assert(IsSame<Decay<void(int)>::Type, void(*)(int)>::value,
+              "decaying void(int) must return void(*)(int)");
 
 /*
  * Android's broken [u]intptr_t inttype macros are broken because its PRI*PTR
