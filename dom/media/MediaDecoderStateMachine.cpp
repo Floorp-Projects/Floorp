@@ -890,19 +890,6 @@ MediaDecoderStateMachine::OnVideoDecoded(MediaData* aVideoSample)
         StopPrerollingVideo();
       }
 
-      // Schedule the state machine to send stream data as soon as possible if
-      // the VideoQueue() is empty or contains one frame before the Push().
-      //
-      // The state machine threads requires a frame in VideoQueue() that is `in
-      // the future` to gather precise timing information. The head of
-      // VideoQueue() is always `in the past`.
-      //
-      // Schedule the state machine as soon as possible to render the video
-      // frame or delay the state machine thread accurately.
-      if (VideoQueue().GetSize() <= 2) {
-        ScheduleStateMachine();
-      }
-
       // For non async readers, if the requested video sample was slow to
       // arrive, increase the amount of audio we buffer to ensure that we
       // don't run out of audio. This is unnecessary for async readers,
