@@ -51,10 +51,10 @@ public:
     // their heavy work (FFT processing) on different slices to balance the load in a real-time thread.
     ReverbConvolverStage(const float* impulseResponse, size_t responseLength, size_t reverbTotalLatency, size_t stageOffset, size_t stageLength, size_t fftSize, size_t renderPhase, ReverbAccumulationBuffer*, bool directMode = false);
 
-    // WARNING: framesToProcess must be such that it evenly divides the delay buffer size (stage_offset).
-    void process(const float* source, size_t framesToProcess);
+    // |source| must point to an array of WEBAUDIO_BLOCK_SIZE elements.
+    void process(const float* source);
 
-    void processInBackground(ReverbConvolver* convolver, size_t framesToProcess);
+    void processInBackground(ReverbConvolver* convolver);
 
     // Useful for background processing
     int inputReadIndex() const { return m_inputReadIndex; }
