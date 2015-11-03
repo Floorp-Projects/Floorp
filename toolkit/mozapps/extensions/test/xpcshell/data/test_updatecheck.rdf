@@ -236,7 +236,7 @@
                   A90eF5zy</em:signature>
   </RDF:Description>
 
-  <!-- An update with a valid signature. The updateLink will used since the
+  <!-- An update with a valid signature. The updateLink will not be used since the
        updateHash verifying it is not strong enough. -->
   <RDF:Description about="urn:mozilla:extension:test_bug378216_12@tests.mozilla.org">
     <em:updates>

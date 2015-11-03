@@ -7,51 +7,46 @@
 Components.utils.import("resource://gre/modules/addons/AddonUpdateChecker.jsm");
 
 Components.utils.import("resource://testing-common/httpd.js");
-var testserver;
 
-function run_test() {
-  createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
+var testserver = createHttpServer(4444);
+testserver.registerDirectory("/data/", do_get_file("data"));
 
-  // Create and configure the HTTP server.
-  testserver = new HttpServer();
-  testserver.registerDirectory("/data/", do_get_file("data"));
-  testserver.start(4444);
+function checkUpdates(aId, aUpdateKey, aUpdateFile) {
+  return new Promise((resolve, reject) => {
+    AddonUpdateChecker.checkForUpdates(aId, aUpdateKey, `http://localhost:4444/data/${aUpdateFile}`, {
+      onUpdateCheckComplete: resolve,
 
-  do_test_pending();
-  run_test_1();
-}
-
-function end_test() {
-  testserver.stop(do_test_finished);
-}
-
-// Test that a basic update check returns the expected available updates
-function run_test_1() {
-  AddonUpdateChecker.checkForUpdates("updatecheck1@tests.mozilla.org", null,
-                                     "http://localhost:4444/data/test_updatecheck.rdf", {
-    onUpdateCheckComplete: function(updates) {
-      check_test_1(updates);
-    },
-
-    onUpdateCheckError: function(status) {
-      do_throw("Update check failed with status " + status);
-    }
+      onUpdateCheckError: function(status) {
+        let error = new Error("Update check failed with status " + status);
+        error.status = status;
+        reject(error);
+      }
+    });
   });
 }
 
-function check_test_1(updates) {
-  do_check_eq(updates.length, 5);
-  let update = AddonUpdateChecker.getNewestCompatibleUpdate(updates);
-  do_check_neq(update, null);
-  do_check_eq(update.version, 3);
-  update = AddonUpdateChecker.getCompatibilityUpdate(updates, "2");
-  do_check_neq(update, null);
-  do_check_eq(update.version, 2);
-  do_check_eq(update.targetApplications[0].minVersion, 1);
-  do_check_eq(update.targetApplications[0].maxVersion, 2);
+function run_test() {
+  createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1");
 
-  run_test_2();
+  run_next_test();
 }
+
+// Test that a basic update check returns the expected available updates
+add_task(function* () {
+  for (let file of ["test_updatecheck.rdf", "test_updatecheck.json"]) {
+    let updates = yield checkUpdates("updatecheck1@tests.mozilla.org", null, file);
+
+    equal(updates.length, 5);
+    let update = AddonUpdateChecker.getNewestCompatibleUpdate(updates);
+    notEqual(update, null);
+    equal(update.version, "3.0");
+    update = AddonUpdateChecker.getCompatibilityUpdate(updates, "2");
+    notEqual(update, null);
+    equal(update.version, "2.0");
+    equal(update.targetApplications[0].minVersion, "1");
+    equal(update.targetApplications[0].maxVersion, "2");
+  }
+});
 
 /*
  * Tests that the security checks are applied correctly
@@ -73,240 +68,169 @@ var updateKey = "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDK426erD/H3XtsjvaB5+PJqbh
                 "NyeP6i4LuUYjTURnn7Yw/IgzyIJ2oKsYa32RuxAyteqAWqPT/J63wBixIeCxmysf" +
                 "awB/zH4KaPiY3vnrzQIDAQAB";
 
-function run_test_2() {
-  AddonUpdateChecker.checkForUpdates("test_bug378216_5@tests.mozilla.org",
-                                     updateKey,
-                                     "http://localhost:4444/data/test_updatecheck.rdf", {
-    onUpdateCheckComplete: function(updates) {
-      do_throw("Expected the update check to fail");
-    },
+add_task(function* () {
+  for (let file of ["test_updatecheck.rdf", "test_updatecheck.json"]) {
+    try {
+      yield checkUpdates("test_bug378216_5@tests.mozilla.org",
+                         updateKey, file);
+      throw "Expected the update check to fail";
+    } catch (e) {}
+  }
+});
 
-    onUpdateCheckError: function(status) {
-      run_test_3();
+add_task(function* () {
+  for (let file of ["test_updatecheck.rdf", "test_updatecheck.json"]) {
+    try {
+      yield checkUpdates("test_bug378216_7@tests.mozilla.org",
+                         updateKey, file);
+
+      throw "Expected the update check to fail";
+    } catch (e) {}
+  }
+});
+
+add_task(function* () {
+  // Make sure that the JSON manifest is rejected when an update key is
+  // required, but perform the remaining tests which aren't expected to fail
+  // because of the update key, without requiring one for the JSON variant.
+
+  try {
+    let updates = yield checkUpdates("test_bug378216_8@tests.mozilla.org",
+                                     updateKey, "test_updatecheck.json");
+
+    throw "Expected the update check to fail";
+  } catch(e) {}
+
+  for (let [file, key] of [["test_updatecheck.rdf", updateKey],
+                           ["test_updatecheck.json", null]]) {
+    let updates = yield checkUpdates("test_bug378216_8@tests.mozilla.org",
+                                     key, file);
+    equal(updates.length, 1);
+    ok(!("updateURL" in updates[0]));
+  }
+});
+
+add_task(function* () {
+  for (let [file, key] of [["test_updatecheck.rdf", updateKey],
+                           ["test_updatecheck.json", null]]) {
+    let updates = yield checkUpdates("test_bug378216_9@tests.mozilla.org",
+                                     key, file);
+    equal(updates.length, 1);
+    equal(updates[0].version, "2.0");
+    ok("updateURL" in updates[0]);
+  }
+});
+
+add_task(function* () {
+  for (let [file, key] of [["test_updatecheck.rdf", updateKey],
+                           ["test_updatecheck.json", null]]) {
+    let updates = yield checkUpdates("test_bug378216_10@tests.mozilla.org",
+                                     key, file);
+    equal(updates.length, 1);
+    equal(updates[0].version, "2.0");
+    ok("updateURL" in updates[0]);
+  }
+});
+
+add_task(function* () {
+  for (let [file, key] of [["test_updatecheck.rdf", updateKey],
+                           ["test_updatecheck.json", null]]) {
+    let updates = yield checkUpdates("test_bug378216_11@tests.mozilla.org",
+                                     key, file);
+    equal(updates.length, 1);
+    equal(updates[0].version, "2.0");
+    ok("updateURL" in updates[0]);
+  }
+});
+
+add_task(function* () {
+  for (let [file, key] of [["test_updatecheck.rdf", updateKey],
+                           ["test_updatecheck.json", null]]) {
+    let updates = yield checkUpdates("test_bug378216_12@tests.mozilla.org",
+                                     key, file);
+    equal(updates.length, 1);
+    do_check_false("updateURL" in updates[0]);
+  }
+});
+
+add_task(function* () {
+  for (let [file, key] of [["test_updatecheck.rdf", updateKey],
+                           ["test_updatecheck.json", null]]) {
+    let updates = yield checkUpdates("test_bug378216_13@tests.mozilla.org",
+                                     key, file);
+    equal(updates.length, 1);
+    equal(updates[0].version, "2.0");
+    ok("updateURL" in updates[0]);
+  }
+});
+
+add_task(function* () {
+  for (let file of ["test_updatecheck.rdf", "test_updatecheck.json"]) {
+    let updates = yield checkUpdates("test_bug378216_14@tests.mozilla.org",
+                                     null, file);
+    equal(updates.length, 0);
+  }
+});
+
+add_task(function* () {
+  for (let file of ["test_updatecheck.rdf", "test_updatecheck.json"]) {
+    try {
+      yield checkUpdates("test_bug378216_15@tests.mozilla.org",
+                         null, file);
+
+      throw "Update check should have failed";
+    } catch (e) {
+      equal(e.status, AddonUpdateChecker.ERROR_PARSE_ERROR);
     }
-  });
-}
+  }
+});
 
-function run_test_3() {
-  AddonUpdateChecker.checkForUpdates("test_bug378216_7@tests.mozilla.org",
-                                     updateKey,
-                                     "http://localhost:4444/data/test_updatecheck.rdf", {
-    onUpdateCheckComplete: function(updates) {
-      do_throw("Expected the update check to fail");
-    },
+add_task(function* () {
+  for (let file of ["test_updatecheck.rdf", "test_updatecheck.json"]) {
+    let updates = yield checkUpdates("ignore-compat@tests.mozilla.org",
+                                     null, file);
+    equal(updates.length, 3);
+    let update = AddonUpdateChecker.getNewestCompatibleUpdate(
+      updates, null, null, true);
+    notEqual(update, null);
+    equal(update.version, 2);
+  }
+});
 
-    onUpdateCheckError: function(status) {
-      run_test_4();
-    }
-  });
-}
+add_task(function* () {
+  for (let file of ["test_updatecheck.rdf", "test_updatecheck.json"]) {
+    let updates = yield checkUpdates("compat-override@tests.mozilla.org",
+                                     null, file);
+    equal(updates.length, 3);
+    let overrides = [{
+      type: "incompatible",
+      minVersion: 1,
+      maxVersion: 2,
+      appID: "xpcshell@tests.mozilla.org",
+      appMinVersion: 0.1,
+      appMaxVersion: 0.2
+    }, {
+      type: "incompatible",
+      minVersion: 2,
+      maxVersion: 2,
+      appID: "xpcshell@tests.mozilla.org",
+      appMinVersion: 1,
+      appMaxVersion: 2
+    }];
+    let update = AddonUpdateChecker.getNewestCompatibleUpdate(
+      updates, null, null, true, false, overrides);
+    notEqual(update, null);
+    equal(update.version, 1);
+  }
+});
 
-function run_test_4() {
-  AddonUpdateChecker.checkForUpdates("test_bug378216_8@tests.mozilla.org",
-                                     updateKey,
-                                     "http://localhost:4444/data/test_updatecheck.rdf", {
-    onUpdateCheckComplete: function(updates) {
-      do_check_eq(updates.length, 1);
-      do_check_false("updateURL" in updates[0]);
-      run_test_5();
-    },
-
-    onUpdateCheckError: function(status) {
-      do_throw("Update check failed with status " + status);
-    }
-  });
-}
-
-function run_test_5() {
-  AddonUpdateChecker.checkForUpdates("test_bug378216_9@tests.mozilla.org",
-                                     updateKey,
-                                     "http://localhost:4444/data/test_updatecheck.rdf", {
-    onUpdateCheckComplete: function(updates) {
-      do_check_eq(updates.length, 1);
-      do_check_eq(updates[0].version, "2.0");
-      do_check_true("updateURL" in updates[0]);
-      run_test_6();
-    },
-
-    onUpdateCheckError: function(status) {
-      do_throw("Update check failed with status " + status);
-    }
-  });
-}
-
-function run_test_6() {
-  AddonUpdateChecker.checkForUpdates("test_bug378216_10@tests.mozilla.org",
-                                     updateKey,
-                                     "http://localhost:4444/data/test_updatecheck.rdf", {
-    onUpdateCheckComplete: function(updates) {
-      do_check_eq(updates.length, 1);
-      do_check_eq(updates[0].version, "2.0");
-      do_check_true("updateURL" in updates[0]);
-      run_test_7();
-    },
-
-    onUpdateCheckError: function(status) {
-      do_throw("Update check failed with status " + status);
-    }
-  });
-}
-
-function run_test_7() {
-  AddonUpdateChecker.checkForUpdates("test_bug378216_11@tests.mozilla.org",
-                                     updateKey,
-                                     "http://localhost:4444/data/test_updatecheck.rdf", {
-    onUpdateCheckComplete: function(updates) {
-      do_check_eq(updates.length, 1);
-      do_check_eq(updates[0].version, "2.0");
-      do_check_true("updateURL" in updates[0]);
-      run_test_8();
-    },
-
-    onUpdateCheckError: function(status) {
-      do_throw("Update check failed with status " + status);
-    }
-  });
-}
-
-function run_test_8() {
-  AddonUpdateChecker.checkForUpdates("test_bug378216_12@tests.mozilla.org",
-                                     updateKey,
-                                     "http://localhost:4444/data/test_updatecheck.rdf", {
-    onUpdateCheckComplete: function(updates) {
-      do_check_eq(updates.length, 1);
-      do_check_false("updateURL" in updates[0]);
-      run_test_9();
-    },
-
-    onUpdateCheckError: function(status) {
-      do_throw("Update check failed with status " + status);
-    }
-  });
-}
-
-function run_test_9() {
-  AddonUpdateChecker.checkForUpdates("test_bug378216_13@tests.mozilla.org",
-                                     updateKey,
-                                     "http://localhost:4444/data/test_updatecheck.rdf", {
-    onUpdateCheckComplete: function(updates) {
-      do_check_eq(updates.length, 1);
-      do_check_eq(updates[0].version, "2.0");
-      do_check_true("updateURL" in updates[0]);
-      run_test_10();
-    },
-
-    onUpdateCheckError: function(status) {
-      do_throw("Update check failed with status " + status);
-    }
-  });
-}
-
-function run_test_10() {
-  AddonUpdateChecker.checkForUpdates("test_bug378216_14@tests.mozilla.org",
-                                     null,
-                                     "http://localhost:4444/data/test_updatecheck.rdf", {
-    onUpdateCheckComplete: function(updates) {
-      do_check_eq(updates.length, 0);
-      run_test_11();
-    },
-
-    onUpdateCheckError: function(status) {
-      do_throw("Update check failed with status " + status);
-    }
-  });
-}
-
-function run_test_11() {
-  AddonUpdateChecker.checkForUpdates("test_bug378216_15@tests.mozilla.org",
-                                     null,
-                                     "http://localhost:4444/data/test_updatecheck.rdf", {
-    onUpdateCheckComplete: function(updates) {
-      do_throw("Update check should have failed");
-    },
-
-    onUpdateCheckError: function(status) {
-      do_check_eq(status, AddonUpdateChecker.ERROR_PARSE_ERROR);
-      run_test_12();
-    }
-  });
-}
-
-function run_test_12() {
-  AddonUpdateChecker.checkForUpdates("ignore-compat@tests.mozilla.org",
-                                     null,
-                                     "http://localhost:4444/data/test_updatecheck.rdf", {
-    onUpdateCheckComplete: function(updates) {
-      do_check_eq(updates.length, 3);
-      let update = AddonUpdateChecker.getNewestCompatibleUpdate(updates,
-                                                                null,
-                                                                null,
-                                                                true);
-      do_check_neq(update, null);
-      do_check_eq(update.version, 2);
-      run_test_13();
-    },
-
-    onUpdateCheckError: function(status) {
-      do_throw("Update check failed with status " + status);
-    }
-  });
-}
-
-function run_test_13() {
-  AddonUpdateChecker.checkForUpdates("compat-override@tests.mozilla.org",
-                                     null,
-                                     "http://localhost:4444/data/test_updatecheck.rdf", {
-    onUpdateCheckComplete: function(updates) {
-      do_check_eq(updates.length, 3);
-      let overrides = [{
-        type: "incompatible",
-        minVersion: 1,
-        maxVersion: 2,
-        appID: "xpcshell@tests.mozilla.org",
-        appMinVersion: 0.1,
-        appMaxVersion: 0.2
-      }, {
-        type: "incompatible",
-        minVersion: 2,
-        maxVersion: 2,
-        appID: "xpcshell@tests.mozilla.org",
-        appMinVersion: 1,
-        appMaxVersion: 2
-      }];
-      let update = AddonUpdateChecker.getNewestCompatibleUpdate(updates,
-                                                                null,
-                                                                null,
-                                                                true,
-                                                                false,
-                                                                overrides);
-      do_check_neq(update, null);
-      do_check_eq(update.version, 1);
-      run_test_14();
-    },
-
-    onUpdateCheckError: function(status) {
-      do_throw("Update check failed with status " + status);
-    }
-  });
-}
-
-function run_test_14() {
-  AddonUpdateChecker.checkForUpdates("compat-strict-optin@tests.mozilla.org",
-                                     null,
-                                     "http://localhost:4444/data/test_updatecheck.rdf", {
-    onUpdateCheckComplete: function(updates) {
-      do_check_eq(updates.length, 1);
-      let update = AddonUpdateChecker.getNewestCompatibleUpdate(updates,
-                                                                null,
-                                                                null,
-                                                                true,
-                                                                false);
-      do_check_eq(update, null);
-      end_test();
-    },
-
-    onUpdateCheckError: function(status) {
-      do_throw("Update check failed with status " + status);
-    }
-  });
-}
+add_task(function* () {
+  for (let file of ["test_updatecheck.rdf", "test_updatecheck.json"]) {
+    let updates = yield checkUpdates("compat-strict-optin@tests.mozilla.org",
+                                     null, file);
+    equal(updates.length, 1);
+    let update = AddonUpdateChecker.getNewestCompatibleUpdate(
+      updates, null, null, true, false);
+    equal(update, null);
+  }
+});
