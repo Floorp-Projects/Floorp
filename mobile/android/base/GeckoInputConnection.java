@@ -519,7 +519,12 @@ class GeckoInputConnection
             mBatchSelectionChanged = true;
             return;
         }
-        notifySelectionChange(start, end);
+
+        final Editable editable = getEditable();
+        if (editable != null) {
+            notifySelectionChange(Selection.getSelectionStart(editable),
+                                  Selection.getSelectionEnd(editable));
+        }
     }
 
     private void notifySelectionChange(int start, int end) {
