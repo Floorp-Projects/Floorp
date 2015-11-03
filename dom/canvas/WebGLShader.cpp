@@ -379,9 +379,8 @@ WebGLShader::ApplyTransformFeedbackVaryings(GLuint prog,
         std::string userNameStr(userName.BeginReading());
 
         const std::string* mappedNameStr = &userNameStr;
-        // TODO: Are vertex->fragment shader varyings listed under attribs?
         if (mValidator)
-            mValidator->FindAttribMappedNameByUserName(userNameStr, &mappedNameStr);
+            mValidator->FindVaryingMappedNameByUserName(userNameStr, &mappedNameStr);
 
         mappedVaryings.push_back(*mappedNameStr);
     }

@@ -361,6 +361,21 @@ ShaderValidator::FindAttribMappedNameByUserName(const std::string& userName,
     return false;
 }
 
+bool
+ShaderValidator::FindVaryingMappedNameByUserName(const std::string& userName,
+                                                 const std::string** const out_mappedName) const
+{
+    const std::vector<sh::Varying>& attribs = *ShGetVaryings(mHandle);
+    for (auto itr = attribs.begin(); itr != attribs.end(); ++itr) {
+        if (itr->name == userName) {
+            *out_mappedName = &(itr->mappedName);
+            return true;
+        }
+    }
+
+    return false;
+}
+
 // This must handle names like "foo.bar[0]".
 bool
 ShaderValidator::FindUniformByMappedName(const std::string& mappedName,
