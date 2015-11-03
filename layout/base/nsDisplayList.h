@@ -260,7 +260,7 @@ public:
    * Returns the nearest ancestor frame to aFrame that is considered to have
    * (or will have) animated geometry. This can return aFrame.
    */
-  nsIFrame* FindAnimatedGeometryRootFor(nsIFrame* aFrame, const nsIFrame* aStopAtAncestor = nullptr);
+  nsIFrame* FindAnimatedGeometryRootFor(nsIFrame* aFrame);
 
   /**
    * @return the root of the display list's frame (sub)tree, whose origin
@@ -644,11 +644,11 @@ public:
           aBuilder->mCurrentAnimatedGeometryRoot = aForChild;
         }
       } else {
-        // Stop at the previous animated geometry root to help cases that
-        // aren't immediate descendents.
         aBuilder->mCurrentAnimatedGeometryRoot =
-          aBuilder->FindAnimatedGeometryRootFor(aForChild, aBuilder->mCurrentAnimatedGeometryRoot);
+          aBuilder->FindAnimatedGeometryRootFor(aForChild);
       }
+      MOZ_ASSERT(nsLayoutUtils::IsAncestorFrameCrossDoc(aBuilder->RootReferenceFrame(),
+          aBuilder->mCurrentAnimatedGeometryRoot));
       aBuilder->mCurrentFrame = aForChild;
       aBuilder->mDirtyRect = aDirtyRect;
       aBuilder->mIsAtRootOfPseudoStackingContext = aIsRoot;
@@ -976,12 +976,11 @@ public:
   bool IsInWillChangeBudget(nsIFrame* aFrame, const nsSize& aSize);
 
   /**
-   * Look up the cached animated geometry root for aFrame subject to
-   * aStopAtAncestor. Store the nsIFrame* result into *aOutResult, and return
-   * true if the cache was hit. Return false if the cache was not hit.
+   * Look up the cached animated geometry root for aFrame subject Store the
+   * nsIFrame* result into *aOutResult, and return true if the cache was hit.
+   * Return false if the cache was not hit.
    */
   bool GetCachedAnimatedGeometryRoot(const nsIFrame* aFrame,
-                                     const nsIFrame* aStopAtAncestor,
                                      nsIFrame** aOutResult);
 
   void SetCommittedScrollInfoItemList(nsDisplayList* aScrollInfoItemStorage) {
@@ -1113,27 +1112,8 @@ private:
   // The animated geometry root for mCurrentFrame.
   nsIFrame*                      mCurrentAnimatedGeometryRoot;
 
-  struct AnimatedGeometryRootLookup {
-    const nsIFrame* mFrame;
-    const nsIFrame* mStopAtFrame;
-
-    AnimatedGeometryRootLookup(const nsIFrame* aFrame, const nsIFrame* aStopAtFrame)
-      : mFrame(aFrame)
-      , mStopAtFrame(aStopAtFrame)
-    {
-    }
-
-    PLDHashNumber Hash() const {
-      return mozilla::HashBytes(this, sizeof(*this));
-    }
-
-    bool operator==(const AnimatedGeometryRootLookup& aOther) const {
-      return mFrame == aOther.mFrame && mStopAtFrame == aOther.mStopAtFrame;
-    }
-  };
   // Cache for storing animated geometry roots for arbitrary frames
-  nsDataHashtable<nsGenericHashKey<AnimatedGeometryRootLookup>, nsIFrame*>
-                                 mAnimatedGeometryRootCache;
+  nsDataHashtable<nsPtrHashKey<nsIFrame>, nsIFrame*> mAnimatedGeometryRootCache;
   // will-change budget tracker
   nsDataHashtable<nsPtrHashKey<nsPresContext>, DocumentWillChangeBudget>
                                  mWillChangeBudget;
