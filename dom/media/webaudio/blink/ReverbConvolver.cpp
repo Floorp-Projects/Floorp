@@ -207,12 +207,9 @@ void ReverbConvolver::backgroundThreadEntry()
         int readIndex;
 
         while ((readIndex = m_backgroundStages[0]->inputReadIndex()) != writeIndex) { // FIXME: do better to detect buffer overrun...
-            // The ReverbConvolverStages need to process in amounts which evenly divide half the FFT size
-            const int SliceSize = MinFFTSize / 2;
-
             // Accumulate contributions from each stage
             for (size_t i = 0; i < m_backgroundStages.Length(); ++i)
-                m_backgroundStages[i]->processInBackground(this, SliceSize);
+                m_backgroundStages[i]->processInBackground(this);
         }
     }
 }
@@ -232,7 +229,7 @@ void ReverbConvolver::process(const float* sourceChannelData,
 
     // Accumulate contributions from each stage
     for (size_t i = 0; i < m_stages.Length(); ++i)
-        m_stages[i]->process(source, WEBAUDIO_BLOCK_SIZE);
+        m_stages[i]->process(source);
 
     // Finally read from accumulation buffer
     m_accumulationBuffer.readAndClear(destination, WEBAUDIO_BLOCK_SIZE);
