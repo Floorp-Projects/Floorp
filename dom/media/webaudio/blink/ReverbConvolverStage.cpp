@@ -67,12 +67,12 @@ ReverbConvolverStage::ReverbConvolverStage(const float* impulseResponse, size_t,
     // The convolution stage at offset stageOffset needs to have a corresponding delay to cancel out the offset.
     size_t totalDelay = stageOffset + reverbTotalLatency;
 
-    // But, the FFT convolution itself incurs fftSize / 2 latency, so subtract this out...
-    size_t halfSize = fftSize / 2;
+    // But, the FFT convolution itself incurs latency, so subtract this out...
     if (!m_directMode) {
-        MOZ_ASSERT(totalDelay >= halfSize);
-        if (totalDelay >= halfSize)
-            totalDelay -= halfSize;
+        size_t fftLatency = m_fftConvolver->latencyFrames();
+        MOZ_ASSERT(totalDelay >= fftLatency);
+        if (totalDelay >= fftLatency)
+            totalDelay -= fftLatency;
     }
 
     m_postDelayLength = totalDelay;

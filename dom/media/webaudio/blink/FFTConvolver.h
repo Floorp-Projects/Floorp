@@ -53,14 +53,16 @@ public:
     //
     // FIXME: Later, we can do more sophisticated buffering to relax this requirement...
     //
-    // The input to output latency is equal to fftSize / 2
-    //
     // Processing in-place is allowed...
     void process(FFTBlock* fftKernel, const float* sourceP, float* destP);
 
     void reset();
 
     size_t fftSize() const { return m_frame.FFTSize(); }
+
+    // The input to output latency is up to fftSize / 2, but alignment of the
+    // FFTs with the blocks reduces this by one block.
+    size_t latencyFrames() const;
 
     size_t sizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
     size_t sizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;

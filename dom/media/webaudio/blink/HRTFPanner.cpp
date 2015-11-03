@@ -307,10 +307,12 @@ int HRTFPanner::maxTailFrames() const
     // response, there is additional tail time from the approximations in the
     // implementation.  Because HRTFPanner is implemented with a DelayKernel
     // and a FFTConvolver, the tailTime of the HRTFPanner is the sum of the
-    // tailTime of the DelayKernel and the tailTime of the FFTConvolver.
-    // The FFTConvolver has a tail time of fftSize(), including latency of
-    // fftSize()/2.
-    return m_delayLine.MaxDelayTicks() + fftSize();
+    // tailTime of the DelayKernel and the tailTime of the FFTConvolver.  The
+    // FFTs of the convolver are fftSize(), half of which is latency, but this
+    // is aligned with blocks and so is reduced by the one block which is
+    // processed immediately.
+    return m_delayLine.MaxDelayTicks() +
+        m_convolverL1.fftSize()/2 + m_convolverL1.latencyFrames();
 }
 
 } // namespace WebCore

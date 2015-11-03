@@ -49,8 +49,8 @@ const int InputBufferSize = 8 * 16384;
 // This was found to be a good value on Mac OS X, and may work well on other platforms as well, assuming
 // the very rough scheduling latencies are similar on these time-scales.  Of course, this code may need to be
 // tuned for individual platforms if this assumption is found to be incorrect.
-const size_t RealtimeFrameLimit = 8192  + 4096; // ~278msec @ 44.1KHz
-
+const size_t RealtimeFrameLimit = 8192 + 4096 // ~278msec @ 44.1KHz
+                                  - WEBAUDIO_BLOCK_SIZE;
 const size_t MinFFTSize = 128;
 const size_t MaxRealtimeFFTSize = 4096;
 
