@@ -1079,7 +1079,7 @@ function testCrossOriginCredentials() {
   return finalPromise;
 }
 
-function testRedirects() {
+function testCORSRedirects() {
   var origin = "http://mochi.test:8888";
 
   var tests = [
@@ -1418,6 +1418,98 @@ function testRedirects() {
   return Promise.all(fetches);
 }
 
+function testNoCORSRedirects() {
+  var origin = "http://mochi.test:8888";
+
+  var tests = [
+           { pass: 1,
+             method: "GET",
+             hops: [{ server: "http://example.com",
+                    },
+                    ],
+           },
+           { pass: 1,
+             method: "GET",
+             hops: [{ server: origin,
+                    },
+                    { server: "http://example.com",
+                    },
+                    ],
+           },
+           { pass: 1,
+             method: "GET",
+             hops: [{ server: origin,
+                    },
+                    { server: "http://example.com",
+                    },
+                    { server: origin,
+                    }
+                    ],
+           },
+           { pass: 1,
+             method: "POST",
+             body: 'upload body here',
+             hops: [{ server: origin
+                    },
+                    { server: "http://example.com",
+                    },
+                    ],
+           },
+           { pass: 0,
+             method: "DELETE",
+             hops: [{ server: origin
+                    },
+                    { server: "http://example.com",
+                    },
+                    ],
+           },
+           ];
+
+  var fetches = [];
+  for (test of tests) {
+    req = {
+      url: test.hops[0].server + corsServerPath + "hop=1&hops=" +
+           escape(test.hops.toSource()),
+      method: test.method,
+      headers: test.headers,
+      body: test.body,
+    };
+
+    if (test.pass) {
+      if (test.body)
+        req.url += "&body=" + escape(test.body);
+    }
+
+    fetches.push((function(req, test) {
+      return new Promise(function(resolve, reject) {
+        resolve(new Request(req.url, { mode: 'no-cors',
+                                       method: req.method,
+                                       headers: req.headers,
+                                       body: req.body }));
+      }).then(function(request) {
+        return fetch(request);
+      }).then(function(res) {
+        ok(test.pass, "Expected test to pass for " + test.toSource());
+        // All requests are cross-origin no-cors, we should always have
+        // an opaque response here.  All values on the opaque response
+        // should be hidden.
+        is(res.type, 'opaque', 'wrong response type for ' + test.toSource());
+        is(res.status, 0, "wrong status in test for " + test.toSource());
+        is(res.statusText, "", "wrong status text for " + test.toSource());
+        is(res.url, '', 'wrong response url for ' + test.toSource());
+        return res.text().then(function(v) {
+          is(v, "", "wrong responseText in test for " + test.toSource());
+        });
+      }, function(e) {
+        ok(!test.pass, "Expected test failure for " + test.toSource());
+        ok(e instanceof TypeError, "Exception should be TypeError for " + test.toSource());
+      });
+    })(req, test));
+  }
+
+  return Promise.all(fetches);
+}
+
 function testReferrer() {
   var referrer;
   if (self && self.location) {
@@ -1446,7 +1538,8 @@ function runTest() {
     .then(testModeCors)
     .then(testSameOriginCredentials)
     .then(testCrossOriginCredentials)
-    .then(testRedirects)
+    .then(testCORSRedirects)
+    .then(testNoCORSRedirects)
     .then(testReferrer)
     // Put more promise based tests here.
 }
