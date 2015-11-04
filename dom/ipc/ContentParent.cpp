@@ -219,6 +219,10 @@
 using namespace mozilla::system;
 #endif
 
+#ifdef MOZ_WIDGET_GTK
+#include <gdk/gdk.h>
+#endif
+
 #ifdef MOZ_B2G_BT
 #include "BluetoothParent.h"
 #include "BluetoothService.h"
@@ -1169,6 +1173,18 @@ ContentParent::RecvLoadPlugin(const uint32_t& aPluginId, nsresult* aRv, uint32_t
 {
     *aRv = NS_OK;
     return mozilla::plugins::SetupBridge(aPluginId, this, false, aRv, aRunID);
+}
+
+bool
+ContentParent::RecvUngrabPointer(const uint32_t& aTime)
+{
+#if !defined(MOZ_WIDGET_GTK)
+    NS_RUNTIMEABORT("This message only makes sense on GTK platforms");
+    return false;
+#else
+    gdk_pointer_ungrab(aTime);
+    return true;
+#endif
 }
 
 bool
