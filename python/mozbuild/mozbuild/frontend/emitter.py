@@ -671,17 +671,10 @@ class TreeMetadataEmitter(LoggingMixin):
                 yield klass(context, name)
 
         for local_include in context.get('LOCAL_INCLUDES', []):
-            if local_include.startswith('/'):
-                path = context.config.topsrcdir
-                relative_include = local_include[1:]
-            else:
-                path = context.srcdir
-                relative_include = local_include
-
-            actual_include = os.path.join(path, relative_include)
-            if not os.path.exists(actual_include):
+            if not os.path.exists(local_include.full_path):
                 raise SandboxValidationError('Path specified in LOCAL_INCLUDES '
-                    'does not exist: %s (resolved to %s)' % (local_include, actual_include), context)
+                    'does not exist: %s (resolved to %s)' % (local_include,
+                    local_include.full_path), context)
             yield LocalInclude(context, local_include)
 
         final_target_files = context.get('FINAL_TARGET_FILES')
