@@ -186,7 +186,8 @@ function runNextTest()
     gCurrentTest = gTests[gNextTest++];
     gNumPokes = 0;
 
-    SpecialPowers.pushPrefEnv({"set": [["network.jar.open-unsafe-types", gCurrentTest['pref']]]}, function() {
+    SpecialPowers.pushPrefEnv({"set": [["network.jar.block-remote-files", false],
+                                       ["network.jar.open-unsafe-types", gCurrentTest['pref']]]}, function() {
 
       // Create a new frame each time, so our restictions on loads in a
       // jar:-loaded iframe don't interfere with the test.
