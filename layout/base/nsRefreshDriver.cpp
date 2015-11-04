@@ -361,6 +361,11 @@ private:
 
       if (XRE_IsParentProcess()) {
         MonitorAutoLock lock(mRefreshTickLock);
+        #ifndef ANDROID  /* bug 1142079 */
+          TimeDuration vsyncLatency = TimeStamp::Now() - aVsyncTimestamp;
+          Telemetry::Accumulate(Telemetry::FX_REFRESH_DRIVER_CHROME_FRAME_DELAY_MS,
+          vsyncLatency.ToMilliseconds());
+        #endif
         aVsyncTimestamp = mRecentVsync;
         mProcessedVsync = true;
       }
