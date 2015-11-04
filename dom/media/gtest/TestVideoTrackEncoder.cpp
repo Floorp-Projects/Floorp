@@ -55,7 +55,7 @@ public:
 private:
   Image *CreateI420Image()
   {
-    PlanarYCbCrImage *image = new PlanarYCbCrImage(new BufferRecycleBin());
+    PlanarYCbCrImage *image = new RecyclingPlanarYCbCrImage(new BufferRecycleBin());
     PlanarYCbCrData data;
     data.mPicSize = mImageSize;
 
@@ -93,7 +93,7 @@ private:
 
   Image *CreateNV12Image()
   {
-    PlanarYCbCrImage *image = new PlanarYCbCrImage(new BufferRecycleBin());
+    PlanarYCbCrImage *image = new RecyclingPlanarYCbCrImage(new BufferRecycleBin());
     PlanarYCbCrData data;
     data.mPicSize = mImageSize;
 
@@ -130,7 +130,7 @@ private:
 
   Image *CreateNV21Image()
   {
-    PlanarYCbCrImage *image = new PlanarYCbCrImage(new BufferRecycleBin());
+    PlanarYCbCrImage *image = new RecyclingPlanarYCbCrImage(new BufferRecycleBin());
     PlanarYCbCrData data;
     data.mPicSize = mImageSize;
 
