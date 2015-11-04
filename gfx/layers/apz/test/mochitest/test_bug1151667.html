@@ -6,8 +6,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1151667
 <head>
   <title>Test for Bug 1151667</title>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
-  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/paint_listener.js"></script>
   <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
   <style>
   #subframe {
@@ -55,7 +57,11 @@ function continueTest() {
 }
 
 SimpleTest.waitForExplicitFinish();
-SimpleTest.waitForFocus(startTest, window);
+SimpleTest.waitForFocus(function() {
+  waitForAllPaints(function() {
+    flushApzRepaints(startTest);
+  })
+}, window);
 
 </script>
 </pre>
