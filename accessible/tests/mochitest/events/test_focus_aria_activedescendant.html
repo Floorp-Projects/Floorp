@@ -51,7 +51,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=429547
         var container  = getNode(aID);
         var itemNode = document.createElement("div");
         itemNode.setAttribute("id", aNewItemID);
-        itemNode.textContent = "item3";
+        itemNode.textContent = aNewItemID;
         container.appendChild(itemNode);
 
         container.setAttribute("aria-activedescendant", aNewItemID);
@@ -68,14 +68,15 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=429547
     {
       gQueue = new eventQueue();
 
-      gQueue.push(new synthFocus("container", new focusChecker("item1")));
-      gQueue.push(new changeARIAActiveDescendant("container", "item2"));
+      gQueue.push(new synthFocus("listbox", new focusChecker("item1")));
+      gQueue.push(new changeARIAActiveDescendant("listbox", "item2"));
+      gQueue.push(new changeARIAActiveDescendant("listbox", "item3"));
 
       gQueue.push(new synthFocus("combobox_entry", new focusChecker("combobox_entry")));
       gQueue.push(new changeARIAActiveDescendant("combobox", "combobox_option2"));
 
       todo(false, "No focus for inserted element, bug 687011");
-      //gQueue.push(new insertItemNFocus("container", "item3"));
+      //gQueue.push(new insertItemNFocus("listbox", "item4"));
 
       gQueue.invoke(); // Will call SimpleTest.finish();
     }
@@ -101,10 +102,12 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=429547
   <pre id="test">
   </pre>
 
-  <div role="listbox" aria-activedescendant="item1" id="container" tabindex="1">
+  <div role="listbox" aria-activedescendant="item1" id="listbox" tabindex="1"
+       aria-owns="item3">
     <div role="listitem" id="item1">item1</div>
     <div role="listitem" id="item2">item2</div>
   </div>
+  <div role="listitem" id="item3">item3</div>
 
   <div role="combobox" id="combobox">
     <input id="combobox_entry">

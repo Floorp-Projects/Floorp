@@ -769,14 +769,8 @@ constexpr char GeckoEditable::OnImeAcknowledgeFocus_t::signature[];
 constexpr char GeckoEditable::OnImeAddCompositionRange_t::name[];
 constexpr char GeckoEditable::OnImeAddCompositionRange_t::signature[];
 
-constexpr char GeckoEditable::OnImeRemoveComposition_t::name[];
-constexpr char GeckoEditable::OnImeRemoveComposition_t::signature[];
-
 constexpr char GeckoEditable::OnImeReplaceText_t::name[];
 constexpr char GeckoEditable::OnImeReplaceText_t::signature[];
-
-constexpr char GeckoEditable::OnImeSetSelection_t::name[];
-constexpr char GeckoEditable::OnImeSetSelection_t::signature[];
 
 constexpr char GeckoEditable::OnImeSynchronize_t::name[];
 constexpr char GeckoEditable::OnImeSynchronize_t::signature[];

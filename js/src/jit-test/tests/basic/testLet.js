@@ -3,7 +3,8 @@ var otherGlobal = newGlobal();
 function test(str, arg, result)
 {
     arg = arg || 'ponies';
-    result = result || 'ponies';
+    if (arguments.length < 3)
+        result = 'ponies';
 
     var fun = new Function('x', str);
 
@@ -136,11 +137,7 @@ test('for (let y = 1;; ++y) {return x;}');
 test('for (let y = 1; ++y;) {return x;}');
 test('for (let [[a, [b, c]]] = [[x, []]];;) {return a;}');
 test('var sum = 0;for (let y = x; y < 4; ++y) {sum += y;}return sum;', 1, 6);
-test('var sum = 0;for (let x = x, y = 10; x < 4; ++x) {sum += x;}return sum;', 1, 6);
-test('var sum = 0;for (let x = x; x < 4; ++x) {sum += x;}return x;', 1, 1);
-test('var sum = 0;for (let x = eval("x"); x < 4; ++x) {sum += x;}return sum;', 1, 6);
-test('var sum = 0;for (let x = x; eval("x") < 4; ++x) {sum += eval("x");}return sum;', 1, 6);
-test('var sum = 0;for (let x = eval("x"); eval("x") < 4; ++x) {sum += eval("x");}return sum;', 1, 6);
+test('var sum = 0;for (let x = 1; eval("x") < 4; ++x) {sum += eval("x");}return sum;', 1, 6);
 test('for (var y = 1;;) {return x;}');
 test('for (var y = 1;; ++y) {return x;}');
 test('for (var y = 1; ++y;) {return x;}');
@@ -151,8 +148,6 @@ test('var sum = 0;for (var X = x; X < 4; ++X) {sum += X;}return x;', 1, 1);
 test('var sum = 0;for (var X = eval("x"); X < 4; ++X) {sum += X;}return sum;', 1, 6);
 test('var sum = 0;for (var X = x; eval("X") < 4; ++X) {sum += eval("X");}return sum;', 1, 6);
 test('var sum = 0;for (var X = eval("x"); eval("X") < 4; ++X) {sum += eval("X");}return sum;', 1, 6);
-test('try {for (let x = eval("throw x");;) {}} catch (e) {return e;}');
-test('try {for (let x = x + "s"; eval("throw x");) {}} catch (e) {return e;}', 'ponie');
 test('for (let y = x;;) {let x;return y;}');
 test('for (let y = x;;) {let y;return x;}');
 test('for (let y;;) {let y;return x;}');
@@ -170,27 +165,30 @@ test('for (let i in x) {return x;}');
 test('for (let i in x) {let y;return x;}');
 test('for each (let [a, b] in x) {let y;return x;}');
 test('for (let i in x) {let i = x;return i;}');
-test('for each (let [x, y] in x) {return x + y;}', [['ponies', '']]);
-test('for each (let [{0: x, 1: y}, z] in x) {return x + y + z;}', [[['po','nies'], '']]);
 test('var s = "";for (let a in x) {for (let b in x) {s += a + b;}}return s;', [1,2], '00011011');
 test('var res = "";for (let i in x) {res += x[i];}return res;');
 test('var res = "";for (var i in x) {res += x[i];}return res;');
-test('for each (let {x: y, y: x} in [{x: x, y: x}]) {return y;}');
-test('for (let x in eval("x")) {return x;}', {ponies:true});
-test('for (let x in x) {return eval("x");}', {ponies:true});
-test('for (let x in eval("x")) {return eval("x");}', {ponies:true});
+isParseError('for ((let (x = {y: true}) x).y in eval("x")) {return eval("x");}');
 test('for (let i in x) {break;}return x;');
 test('for (let i in x) {break;}return eval("x");');
-test('for (let x in x) {break;}return x;');
-test('for (let x in x) {break;}return eval("x");');
 test('a:for (let i in x) {for (let j in x) {break a;}}return x;');
 test('a:for (let i in x) {for (let j in x) {break a;}}return eval("x");');
 test('var j;for (let i in x) {j = i;break;}return j;', {ponies:true});
-test('try {for (let x in eval("throw x")) {}} catch (e) {return e;}');
-test('try {for each (let x in x) {eval("throw x");}} catch (e) {return e;}', ['ponies']);
 isParseError('for (let [x, x] in o) {}');
 isParseError('for (let [x, y, x] in o) {}');
 isParseError('for (let [x, [y, [x]]] in o) {}');
+
+// for(let ... in ...) scoping bugs (bug 1069480)
+test('for each (let [x, y] in x) {return x + y;}', [['ponies', '']], undefined);
+test('for each (let [{0: x, 1: y}, z] in x) {return x + y + z;}', [[['po','nies'], '']], undefined);
+test('for (let x in eval("x")) {return x;}', {ponies:true}, undefined);
+test('for (let x in x) {return eval("x");}', {ponies:true}, undefined);
+test('for (let x in eval("x")) {return eval("x");}', {ponies:true}, undefined);
+test('for (let x in x) {break;}return x;');
+test('for (let x in x) {break;}return eval("x");');
+test('try {for (let x in eval("throw x")) {}} catch (e) {return e;}', undefined, undefined);
+test('try {for each (let x in x) {eval("throw x");}} catch (e) {return e;}', ['ponies'], undefined);
+test('for each (let {x: y, y: x} in [{x: x, y: x}]) {return y;}', undefined, undefined);
 
 // genexps
 test('return (i for (i in x)).next();', {ponies:true});
@@ -222,6 +220,13 @@ isReferenceError('let {x} = {x:x};');
 isReferenceError('switch (x) {case 3:let x;break;default:if (x === undefined) {return "ponies";}}');
 isReferenceError('let x = function() {} ? x() : function() {}');
 isReferenceError('(function() { let x = (function() { return x }()); }())');
+isReferenceError('var sum = 0;for (let x = x, y = 10; x < 4; ++x) {sum += x;}return sum;');
+isReferenceError('var sum = 0;for (let x = x; x < 4; ++x) {sum += x;}return x;');
+isReferenceError('var sum = 0;for (let x = eval("x"); x < 4; ++x) {sum += x;}return sum;');
+isReferenceError('var sum = 0;for (let x = x; eval("x") < 4; ++x) {sum += eval("x");}return sum;');
+isReferenceError('var sum = 0;for (let x = eval("x"); eval("x") < 4; ++x) {sum += eval("x");}return sum;');
+isReferenceError('for (let x = eval("throw x");;) {}');
+isReferenceError('for (let x = x + "s"; eval("throw x");) {}');
 
 // redecl with function statements
 isParseError('let a; function a() {}');

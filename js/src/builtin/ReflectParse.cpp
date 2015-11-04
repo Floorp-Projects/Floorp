@@ -2491,8 +2491,9 @@ ASTSerializer::forInit(ParseNode* pn, MutableHandleValue dst)
         return true;
     }
 
-    return (pn->isKind(PNK_VAR))
-           ? variableDeclaration(pn, false, dst)
+    bool lexical = pn->isKind(PNK_LET) || pn->isKind(PNK_CONST);
+    return (lexical || pn->isKind(PNK_VAR))
+           ? variableDeclaration(pn, lexical, dst)
            : expression(pn, dst);
 }
 
@@ -2641,32 +2642,31 @@ ASTSerializer::statement(ParseNode* pn, MutableHandleValue dst)
         if (!statement(pn->pn_right, &stmt))
             return false;
 
-        if (head->isKind(PNK_FORIN)) {
+        if (head->isKind(PNK_FORIN) || head->isKind(PNK_FOROF)) {
             RootedValue var(cx);
-            return (!head->pn_kid1
-                    ? pattern(head->pn_kid2, &var)
-                    : head->pn_kid1->isKind(PNK_LEXICALSCOPE)
-                    ? variableDeclaration(head->pn_kid1->pn_expr, true, &var)
-                    : variableDeclaration(head->pn_kid1, false, &var)) &&
-                forIn(pn, head, var, stmt, dst);
-        }
-
-        if (head->isKind(PNK_FOROF)) {
-            RootedValue var(cx);
-            return (!head->pn_kid1
-                    ? pattern(head->pn_kid2, &var)
-                    : head->pn_kid1->isKind(PNK_LEXICALSCOPE)
-                    ? variableDeclaration(head->pn_kid1->pn_expr, true, &var)
-                    : variableDeclaration(head->pn_kid1, false, &var)) &&
-                forOf(pn, head, var, stmt, dst);
+            if (!head->pn_kid1) {
+                if (!pattern(head->pn_kid2, &var))
+                    return false;
+            } else if (head->pn_kid1->isKind(PNK_LEXICALSCOPE)) {
+                if (!variableDeclaration(head->pn_kid1->pn_expr, true, &var))
+                    return false;
+            } else {
+                if (!variableDeclaration(head->pn_kid1,
+                                         head->pn_kid1->isKind(PNK_LET) ||
+                                         head->pn_kid1->isKind(PNK_CONST),
+                                         &var))
+                {
+                    return false;
+                }
+            }
+            if (head->isKind(PNK_FORIN))
+                return forIn(pn, head, var, stmt, dst);
+            return forOf(pn, head, var, stmt, dst);
         }
 
         RootedValue init(cx), test(cx), update(cx);
 
-        return forInit(head->pn_kid1 && !head->pn_kid1->isKind(PNK_FRESHENBLOCK)
-                       ? head->pn_kid1
-                       : nullptr,
-                       &init) &&
+        return forInit(head->pn_kid1, &init) &&
                optExpression(head->pn_kid2, &test) &&
                optExpression(head->pn_kid3, &update) &&
                builder.forStatement(init, test, update, stmt, &pn->pn_pos, dst);

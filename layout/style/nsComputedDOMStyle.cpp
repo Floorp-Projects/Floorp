@@ -3861,52 +3861,6 @@ nsComputedDOMStyle::DoGetBorderImageRepeat()
 }
 
 CSSValue*
-nsComputedDOMStyle::DoGetAlignContent()
-{
-  nsROCSSPrimitiveValue* val = new nsROCSSPrimitiveValue;
-  val->SetIdent(
-    nsCSSProps::ValueToKeywordEnum(StylePosition()->mAlignContent,
-                                   nsCSSProps::kAlignContentKTable));
-  return val;
-}
-
-CSSValue*
-nsComputedDOMStyle::DoGetAlignItems()
-{
-  nsROCSSPrimitiveValue* val = new nsROCSSPrimitiveValue;
-  val->SetIdent(
-    nsCSSProps::ValueToKeywordEnum(StylePosition()->mAlignItems,
-                                   nsCSSProps::kAlignItemsKTable));
-  return val;
-}
-
-CSSValue*
-nsComputedDOMStyle::DoGetAlignSelf()
-{
-  nsROCSSPrimitiveValue* val = new nsROCSSPrimitiveValue;
-  uint8_t computedAlignSelf = StylePosition()->mAlignSelf;
-
-  if (computedAlignSelf == NS_STYLE_ALIGN_SELF_AUTO) {
-    // "align-self: auto" needs to compute to parent's align-items value.
-    nsStyleContext* parentStyleContext = mStyleContext->GetParent();
-    if (parentStyleContext) {
-      computedAlignSelf =
-        parentStyleContext->StylePosition()->mAlignItems;
-    } else {
-      // No parent --> use default.
-      computedAlignSelf = NS_STYLE_ALIGN_ITEMS_INITIAL_VALUE;
-    }
-  }
-
-  MOZ_ASSERT(computedAlignSelf != NS_STYLE_ALIGN_SELF_AUTO,
-             "Should have swapped out 'auto' for something non-auto");
-  val->SetIdent(
-    nsCSSProps::ValueToKeywordEnum(computedAlignSelf,
-                                   nsCSSProps::kAlignSelfKTable));
-  return val;
-}
-
-CSSValue*
 nsComputedDOMStyle::DoGetFlexBasis()
 {
   nsROCSSPrimitiveValue* val = new nsROCSSPrimitiveValue;
@@ -3972,12 +3926,84 @@ nsComputedDOMStyle::DoGetOrder()
 }
 
 CSSValue*
+nsComputedDOMStyle::DoGetAlignContent()
+{
+  nsROCSSPrimitiveValue* val = new nsROCSSPrimitiveValue;
+  nsAutoString str;
+  auto align = StylePosition()->ComputedAlignContent(StyleDisplay());
+  nsCSSValue::AppendAlignJustifyValueToString(align & NS_STYLE_ALIGN_ALL_BITS, str);
+  auto fallback = align >> NS_STYLE_ALIGN_ALL_SHIFT;
+  if (fallback) {
+    str.Append(' ');
+    nsCSSValue::AppendAlignJustifyValueToString(fallback, str);
+  }
+  val->SetString(str);
+  return val;
+}
+
+CSSValue*
+nsComputedDOMStyle::DoGetAlignItems()
+{
+  nsROCSSPrimitiveValue* val = new nsROCSSPrimitiveValue;
+  nsAutoString str;
+  auto align = StylePosition()->ComputedAlignItems(StyleDisplay());
+  nsCSSValue::AppendAlignJustifyValueToString(align, str);
+  val->SetString(str);
+  return val;
+}
+
+CSSValue*
+nsComputedDOMStyle::DoGetAlignSelf()
+{
+  nsROCSSPrimitiveValue* val = new nsROCSSPrimitiveValue;
+  auto align = StylePosition()->
+    ComputedAlignSelf(StyleDisplay(), mStyleContext->GetParent());
+  nsAutoString str;
+  nsCSSValue::AppendAlignJustifyValueToString(align, str);
+  val->SetString(str);
+  return val;
+}
+
+CSSValue*
 nsComputedDOMStyle::DoGetJustifyContent()
 {
   nsROCSSPrimitiveValue* val = new nsROCSSPrimitiveValue;
-  val->SetIdent(
-    nsCSSProps::ValueToKeywordEnum(StylePosition()->mJustifyContent,
-                                   nsCSSProps::kJustifyContentKTable));
+  nsAutoString str;
+  auto justify = StylePosition()->ComputedJustifyContent(StyleDisplay());
+  nsCSSValue::AppendAlignJustifyValueToString(justify & NS_STYLE_JUSTIFY_ALL_BITS, str);
+  auto fallback = justify >> NS_STYLE_JUSTIFY_ALL_SHIFT;
+  if (fallback) {
+    MOZ_ASSERT(nsCSSProps::ValueToKeywordEnum(fallback & ~NS_STYLE_JUSTIFY_FLAG_BITS,
+                                              nsCSSProps::kAlignSelfPosition)
+               != eCSSKeyword_UNKNOWN, "unknown fallback value");
+    str.Append(' ');
+    nsCSSValue::AppendAlignJustifyValueToString(fallback, str);
+  }
+  val->SetString(str);
+  return val;
+}
+
+CSSValue*
+nsComputedDOMStyle::DoGetJustifyItems()
+{
+  nsROCSSPrimitiveValue* val = new nsROCSSPrimitiveValue;
+  nsAutoString str;
+  auto justify = StylePosition()->
+    ComputedJustifyItems(StyleDisplay(), mStyleContext->GetParent());
+  nsCSSValue::AppendAlignJustifyValueToString(justify, str);
+  val->SetString(str);
+  return val;
+}
+
+CSSValue*
+nsComputedDOMStyle::DoGetJustifySelf()
+{
+  nsROCSSPrimitiveValue* val = new nsROCSSPrimitiveValue;
+  nsAutoString str;
+  auto justify = StylePosition()->
+    ComputedJustifySelf(StyleDisplay(), mStyleContext->GetParent());
+  nsCSSValue::AppendAlignJustifyValueToString(justify, str);
+  val->SetString(str);
   return val;
 }
 

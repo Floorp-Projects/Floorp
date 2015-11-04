@@ -1,0 +1,117 @@
+<!DOCTYPE HTML>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html><head>
+  <meta charset="utf-8">
+  <title>CSS Grid Test: align-items:stretch / justify-items:stretch </title>
+  <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1151213">
+  <link rel="help" href="https://drafts.csswg.org/css-align-3/#align-items-property">
+  <link rel="help" href="https://drafts.csswg.org/css-align-3/#justify-items-property">
+  <link rel="match" href="grid-align-content-001-ref.html">
+  <style type="text/css">
+html,body {
+  color:black; background-color:white; font-size:16px; padding:0; margin:0;
+}
+separator { clear:both; display:block; height:6px; }
+
+.grid {
+  display: grid;
+  float: left;
+  border: 1px solid;
+  border-block-start: 2px solid blue;
+  grid-template: 1px 25px 5px / 3px 21px 1px;
+  padding: 1px 1px 3px 2px;
+  margin-right: 2px;
+  width: 40px;
+  height: 40px;
+  align-items: stretch;
+  justify-items: stretch;
+}
+
+span {
+  position: relative;
+  grid-area: 2 / 2 / 3 / 3; /* the center area */
+  display: block;
+  width: 17px;
+  height: 13px;
+  background: red;
+  /* good for manual debugging but causes anti-aliasing diff: */
+  /* border-block-start: 2px solid blue; */
+  /* border-inline-start: 2px solid lime; */
+  border-block-start: 2px solid black;
+  border-inline-start: 2px solid black;
+  margin: 1px 1px 2px 2px;
+}
+
+abs1,abs2,abs3,abs4 {
+  position: absolute;
+  top:0;left:0;bottom:0;right:0;
+  width:2px; height:2px;
+  background: black;
+}
+abs1 { top:auto; left:auto; }
+abs2 { top:auto; right:auto; }
+abs3 { bottom:auto; left:auto; }
+abs4 { bottom:auto; right:auto; }
+fill {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: lightgrey;
+}
+
+.hl { writing-mode: horizontal-tb; direction:ltr; }
+.hr { writing-mode: horizontal-tb; direction:rtl; }
+.vl { writing-mode: vertical-lr; }
+.vr { writing-mode: vertical-rl; }
+.vlr { writing-mode: vertical-lr; direction:rtl; }
+.vrl { writing-mode: vertical-rl; direction:ltr; }
+
+.stretch1 { }
+.stretch2 { height:auto; }
+.stretch3 { height:auto; max-height:13px; }
+.stretch4 { width:auto; }
+.stretch5 { width:auto; max-width:17px; }
+.stretch6 { width:auto; height:auto; max-width:17px; max-height:13px; }
+.stretch7 { width:auto; height:auto; }
+
+  </style>
+</head>
+<body>
+<pre>
+There should be no red areas.
+All grey areas should have a black dot in each corner.
+</pre>
+
+
+<script>
+var gridwm = [ "hl", "hr", "vl", "vr", "vlr", "vrl" ];
+var wm = [ "hl", "hr", "vl", "vr", "vlr", "vrl" ];
+var test = [ "stretch1", "stretch2", "stretch3", "stretch4", "stretch5",
+             "stretch6", "stretch7" ];
+for (var i = 0; i < gridwm.length; ++i) {
+  for (var j = 0; j < wm.length; ++j) {
+    for (var k = 0; k < test.length; ++k) {
+      var div = document.createElement("div");
+      div.className = "grid " + gridwm[i];
+      var span = document.createElement("span");
+      span.className = wm[j] + " " + test[k];
+      div.appendChild(span);
+      span.appendChild(document.createElement("fill"));
+      span.appendChild(document.createElement("abs1"));
+      span.appendChild(document.createElement("abs2"));
+      span.appendChild(document.createElement("abs3"));
+      span.appendChild(document.createElement("abs4"));
+
+      document.body.appendChild(div)
+    }
+    if (j % 2 == 1) document.body.appendChild(document.createElement("separator"));
+  }
+}
+</script>
+
+
+</body>
+</html>

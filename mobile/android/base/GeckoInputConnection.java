@@ -250,7 +250,7 @@ class GeckoInputConnection
     @Override
     public synchronized boolean beginBatchEdit() {
         mBatchEditCount++;
-        mEditableClient.setUpdateGecko(false);
+        mEditableClient.setBatchMode(true);
         return true;
     }
 
@@ -269,7 +269,7 @@ class GeckoInputConnection
                                            Selection.getSelectionEnd(editable));
                     mBatchSelectionChanged = false;
                 }
-                mEditableClient.setUpdateGecko(true);
+                mEditableClient.setBatchMode(false);
             }
         } else {
             Log.w(LOGTAG, "endBatchEdit() called, but mBatchEditCount == 0?!");
@@ -519,7 +519,12 @@ class GeckoInputConnection
             mBatchSelectionChanged = true;
             return;
         }
-        notifySelectionChange(start, end);
+
+        final Editable editable = getEditable();
+        if (editable != null) {
+            notifySelectionChange(Selection.getSelectionStart(editable),
+                                  Selection.getSelectionEnd(editable));
+        }
     }
 
     private void notifySelectionChange(int start, int end) {

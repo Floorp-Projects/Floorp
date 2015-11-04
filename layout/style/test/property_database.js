@@ -4044,32 +4044,82 @@ var gCSSProperties = {
     domProp: "alignContent",
     inherited: false,
     type: CSS_TYPE_LONGHAND,
-    initial_values: [ "stretch" ],
-    other_values: [
-      "flex-start",
-      "flex-end",
-      "center",
-      "space-between",
-      "space-around"
-    ],
-    invalid_values: [ "abc", "30px", "0", "auto" ]
+    initial_values: [ "auto" ],
+    other_values: [ "start", "end", "flex-start", "flex-end", "center", "left",
+                    "right", "space-between", "space-around", "space-evenly",
+                    "baseline", "last-baseline", "stretch", "start safe",
+                    "true end", "true end stretch", "end safe space-evenly" ],
+    invalid_values: [ "none", "5", "self-end", "safe", "auto true", "true safe",
+                      "safe baseline", "baseline true", "baseline end", "end auto",
+                      "safe end true start", "safe end true", "auto safe start",
+                      "true end start", "end start safe", "space-between true",
+                      "stretch safe" ]
   },
   "align-items": {
     domProp: "alignItems",
     inherited: false,
     type: CSS_TYPE_LONGHAND,
-    initial_values: [ "stretch" ],
-    other_values: [ "flex-start", "flex-end", "center", "baseline" ],
-    invalid_values: [ "space-between", "abc", "30px" ]
+    initial_values: [ "auto", "start" ],
+    // Can't test 'left'/'right' here since that computes to 'start' for blocks.
+    other_values: [ "end", "flex-start", "flex-end", "self-start", "self-end",
+                    "center", "stretch", "baseline", "true left",
+                    "center true", "safe right", "center safe" ],
+    invalid_values: [ "space-between", "abc", "5%", "legacy", "legacy end",
+                      "end legacy", "true", "true baseline", "auto true",
+                      "safe left true", "safe stretch", "end end" ]
   },
   "align-self": {
     domProp: "alignSelf",
     inherited: false,
     type: CSS_TYPE_LONGHAND,
-    // (Assuming defaults on the parent, 'auto' will compute to 'stretch'.)
-    initial_values: [ "auto", "stretch" ],
-    other_values: [ "flex-start", "flex-end", "center", "baseline" ],
-    invalid_values: [ "space-between", "abc", "30px" ]
+    // (Assuming defaults on the parent, 'auto' will compute to 'start'.)
+    initial_values: [ "auto", "start" ],
+    other_values: [ "flex-start", "flex-end", "center", "stretch",
+                    "baseline", "last-baseline", "right safe", "true center",
+                    "self-start", "self-end safe" ],
+    invalid_values: [ "space-between", "abc", "30px", "stretch safe", "safe" ]
+  },
+  "justify-content": {
+    domProp: "justifyContent",
+    inherited: false,
+    type: CSS_TYPE_LONGHAND,
+    initial_values: [ "auto" ],
+    other_values: [ "start", "end", "flex-start", "flex-end", "center", "left",
+                    "right", "space-between", "space-around", "space-evenly",
+                    "baseline", "last-baseline", "stretch", "start safe",
+                    "true end", "true end stretch", "end safe space-evenly" ],
+    invalid_values: [ "30px", "5%", "self-end", "safe", "auto true", "true safe",
+                      "safe baseline", "baseline true", "baseline end", "auto end",
+                      "safe end true start", "safe end true", "auto safe start",
+                      "true end start", "end start safe", "space-around true",
+                      "safe stretch"]
+  },
+  "justify-items": {
+    domProp: "justifyItems",
+    inherited: false,
+    type: CSS_TYPE_LONGHAND,
+    initial_values: [ "auto", "start" ],
+    other_values: [ "end", "flex-start", "flex-end", "self-start", "self-end",
+                    "center", "left", "right", "baseline", "stretch",
+                    "legacy left", "right legacy", "legacy center",
+                    "true right", "left true", "safe right", "center safe" ],
+    invalid_values: [ "space-between", "abc", "30px", "legacy", "legacy start",
+                      "end legacy", "legacy baseline", "legacy legacy", "true",
+                      "safe legacy left", "legacy left safe", "legacy safe left",
+                      "safe left legacy", "legacy left legacy", "baseline true",
+                      "safe true", "safe left true", "safe stretch" ]
+  },
+  "justify-self": {
+    domProp: "justifySelf",
+    inherited: false,
+    type: CSS_TYPE_LONGHAND,
+    initial_values: [ "auto", "start" ],
+    other_values: [ "end", "flex-start", "flex-end", "self-start",
+                    "self-end", "center", "left", "right", "baseline",
+                    "last-baseline", "stretch", "left true", "true right",
+                    "safe right", "center safe" ],
+    invalid_values: [ "space-between", "abc", "30px", "none",
+                      "legacy left", "right legacy" ]
   },
   "flex": {
     domProp: "flex",
@@ -4258,14 +4308,6 @@ var gCSSProperties = {
     initial_values: [ "0" ],
     other_values: [ "1", "99999", "-1", "-50" ],
     invalid_values: [ "0px", "1.0", "1.", "1%", "0.2", "3em", "stretch" ]
-  },
-  "justify-content": {
-    domProp: "justifyContent",
-    inherited: false,
-    type: CSS_TYPE_LONGHAND,
-    initial_values: [ "flex-start" ],
-    other_values: [ "flex-end", "center", "space-between", "space-around" ],
-    invalid_values: [ "baseline", "stretch", "30px", "5%" ]
   },
 
   // Aliases
