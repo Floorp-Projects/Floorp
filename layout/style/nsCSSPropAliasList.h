@@ -237,6 +237,18 @@ CSS_PROP_ALIAS(-webkit-transform-style,
                transform_style,
                WebkitTransformStyle,
                WEBKIT_PREFIX_PREF)
+CSS_PROP_ALIAS(-webkit-backface-visibility,
+               backface_visibility,
+               WebkitBackfaceVisibility,
+               WEBKIT_PREFIX_PREF)
+CSS_PROP_ALIAS(-webkit-perspective,
+               perspective,
+               WebkitPerspective,
+               WEBKIT_PREFIX_PREF)
+CSS_PROP_ALIAS(-webkit-perspective-origin,
+               perspective_origin,
+               WebkitPerspectiveOrigin,
+               WEBKIT_PREFIX_PREF)
 
 CSS_PROP_ALIAS(-webkit-transition,
                transition,
