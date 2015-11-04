@@ -77,7 +77,7 @@ public:
               bool aIsContent,
               bool aUsePrivateBrowsing,
               bool aUseRemoteTabs,
-              const OriginAttributes& aAttrs)
+              OriginAttributes& aAttrs)
     : mTopFrameElement(do_GetWeakReference(aTopFrameElement))
     , mNestedFrameId(0)
     , mIsContent(aIsContent)
