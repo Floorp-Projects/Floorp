@@ -57,10 +57,19 @@ version = re.sub(r'[ab]\d+$', '', release)
 exclude_patterns = ['_build', '_staging', '_venv']
 pygments_style = 'sphinx'
 
-# Read The Docs can't import sphinx_rtd_theme, so don't import it there.
+# We need to perform some adjustment of the settings and environment
+# when running on Read The Docs.
 on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
 
-if not on_rtd:
+if on_rtd:
+    # SHELL isn't set on RTD and mach.mixin.process's import raises if a
+    # shell-related environment variable can't be found. Set the variable here
+    # to hack us into working on RTD.
+    assert 'SHELL' not in os.environ
+    os.environ['SHELL'] = '/bin/bash'
+else:
+    # We only need to set the RTD theme when not on RTD because the RTD
+    # environment handles this otherwise.
     import sphinx_rtd_theme
     html_theme = 'sphinx_rtd_theme'
     html_theme_path = [sphinx_rtd_theme.get_html_theme_path()]
