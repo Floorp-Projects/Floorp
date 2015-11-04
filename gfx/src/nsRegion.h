@@ -15,11 +15,11 @@
 #include "nsPoint.h"                    // for nsIntPoint, nsPoint
 #include "nsRect.h"                     // for mozilla::gfx::IntRect, nsRect
 #include "nsMargin.h"                   // for nsIntMargin
+#include "nsRegionFwd.h"                // for nsIntRegion
 #include "nsStringGlue.h"               // for nsCString
 #include "xpcom-config.h"               // for CPP_THROW_NEW
 #include "mozilla/Move.h"               // for mozilla::Move
 
-class nsIntRegion;
 namespace mozilla {
 namespace gfx {
 class Matrix4x4;
@@ -821,30 +821,42 @@ private:
   }
 };
 
-} // namespace gfx
-} // namespace mozilla
-
-class nsIntRegion : public mozilla::gfx::BaseIntRegion<nsIntRegion, mozilla::gfx::IntRect, nsIntPoint, nsIntMargin>
+template <class units>
+class IntRegionTyped :
+    public BaseIntRegion<IntRegionTyped<units>, IntRectTyped<units>, IntPointTyped<units>, IntMarginTyped<units>>
 {
+  typedef BaseIntRegion<IntRegionTyped<units>, IntRectTyped<units>, IntPointTyped<units>, IntMarginTyped<units>> Super;
 public:
   // Forward constructors.
-  nsIntRegion() {}
-  MOZ_IMPLICIT nsIntRegion(const mozilla::gfx::IntRect& aRect) : BaseIntRegion(aRect) {}
-  nsIntRegion(const nsIntRegion& aRegion) : BaseIntRegion(aRegion) {}
-  nsIntRegion(nsIntRegion&& aRegion) : BaseIntRegion(mozilla::Move(aRegion)) {}
+  IntRegionTyped() {}
+  MOZ_IMPLICIT IntRegionTyped(const IntRectTyped<units>& aRect) : Super(aRect) {}
+  IntRegionTyped(const IntRegionTyped& aRegion) : Super(aRegion) {}
+  IntRegionTyped(IntRegionTyped&& aRegion) : Super(mozilla::Move(aRegion)) {}
 
   // Assignment operators need to be forwarded as well, otherwise the compiler
   // will declare deleted ones.
-  nsIntRegion& operator=(const nsIntRegion& aRegion)
+  IntRegionTyped& operator=(const IntRegionTyped& aRegion)
   {
-    return BaseIntRegion::operator=(aRegion);
+    return Super::operator=(aRegion);
   }
-  nsIntRegion& operator=(nsIntRegion&& aRegion)
+  IntRegionTyped& operator=(IntRegionTyped&& aRegion)
   {
-    return BaseIntRegion::operator=(mozilla::Move(aRegion));
+    return Super::operator=(mozilla::Move(aRegion));
   }
+
+  static IntRegionTyped FromUntyped(const IntRegionTyped<UnknownUnits>& aRegion)
+  {
+    return IntRegionTyped(aRegion.Impl());
+  }
+private:
+  // This is deliberately private, so calling code uses FromUntyped().
+  explicit IntRegionTyped(const nsRegion& aRegion) : Super(aRegion) {}
 };
 
+} // namespace gfx
+} // namespace mozilla
+
+typedef mozilla::gfx::IntRegion nsIntRegion;
 typedef nsIntRegion::RectIterator nsIntRegionRectIterator;
 
 #endif
