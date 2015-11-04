@@ -20,7 +20,7 @@
  */
 class nsLeafFrame : public nsFrame {
 public:
-  NS_DECL_FRAMEARENA_HELPERS
+  NS_DECL_ABSTRACT_FRAME(nsLeafFrame)
 
   // nsIFrame replacements
   virtual void BuildDisplayList(nsDisplayListBuilder*   aBuilder,
