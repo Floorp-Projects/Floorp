@@ -969,26 +969,31 @@ void TransportLayerDtls::PacketReceived(TransportLayer* layer,
 
   // Now try a recv if we're open, since there might be data left
   if (state_ == TS_OPEN) {
-    unsigned char buf[2000];
+    // nICEr uses a 9216 bytes buffer to allow support for jumbo frames
+    unsigned char buf[9216];
 
-    int32_t rv = PR_Recv(ssl_fd_, buf, sizeof(buf), 0, PR_INTERVAL_NO_WAIT);
-    if (rv > 0) {
-      // We have data
-      MOZ_MTLOG(ML_DEBUG, LAYER_INFO << "Read " << rv << " bytes from NSS");
-      SignalPacketReceived(this, buf, rv);
-    } else if (rv == 0) {
-      TL_SET_STATE(TS_CLOSED);
-    } else {
-      int32_t err = PR_GetError();
-
-      if (err == PR_WOULD_BLOCK_ERROR) {
-        // This gets ignored
-        MOZ_MTLOG(ML_DEBUG, LAYER_INFO << "Receive would have blocked");
+    int32_t rv;
+    // One packet might contain several DTLS packets
+    do {
+      rv = PR_Recv(ssl_fd_, buf, sizeof(buf), 0, PR_INTERVAL_NO_WAIT);
+      if (rv > 0) {
+        // We have data
+        MOZ_MTLOG(ML_DEBUG, LAYER_INFO << "Read " << rv << " bytes from NSS");
+        SignalPacketReceived(this, buf, rv);
+      } else if (rv == 0) {
+        TL_SET_STATE(TS_CLOSED);
       } else {
-        MOZ_MTLOG(ML_NOTICE, LAYER_INFO << "NSS Error " << err);
-        TL_SET_STATE(TS_ERROR);
+        int32_t err = PR_GetError();
+
+        if (err == PR_WOULD_BLOCK_ERROR) {
+          // This gets ignored
+          MOZ_MTLOG(ML_DEBUG, LAYER_INFO << "Receive would have blocked");
+        } else {
+          MOZ_MTLOG(ML_NOTICE, LAYER_INFO << "NSS Error " << err);
+          TL_SET_STATE(TS_ERROR);
+        }
       }
-    }
+    } while (rv > 0);
   }
 }
 
