@@ -1238,11 +1238,13 @@ Accessible::ApplyARIAState(uint64_t* aState) const
       *aState &= ~states::READONLY;
 
     if (mContent->HasID()) {
-      // If has a role & ID and aria-activedescendant on the container, assume focusable
-      nsIContent *ancestorContent = mContent;
-      while ((ancestorContent = ancestorContent->GetParent()) != nullptr) {
-        if (ancestorContent->HasAttr(kNameSpaceID_None, nsGkAtoms::aria_activedescendant)) {
-            // ancestor has activedescendant property, this content could be active
+      // If has a role & ID and aria-activedescendant on the container, assume
+      // focusable.
+      const Accessible* ancestor = this;
+      while ((ancestor = ancestor->Parent()) && !ancestor->IsDoc()) {
+        dom::Element* el = ancestor->Elm();
+        if (el &&
+            el->HasAttr(kNameSpaceID_None, nsGkAtoms::aria_activedescendant)) {
           *aState |= states::FOCUSABLE;
           break;
         }
@@ -1251,12 +1253,12 @@ Accessible::ApplyARIAState(uint64_t* aState) const
   }
 
   if (*aState & states::FOCUSABLE) {
-    // Special case: aria-disabled propagates from ancestors down to any focusable descendant
-    nsIContent *ancestorContent = mContent;
-    while ((ancestorContent = ancestorContent->GetParent()) != nullptr) {
-      if (ancestorContent->AttrValueIs(kNameSpaceID_None, nsGkAtoms::aria_disabled,
-                                       nsGkAtoms::_true, eCaseMatters)) {
-          // ancestor has aria-disabled property, this is disabled
+    // Propogate aria-disabled from ancestors down to any focusable descendant.
+    const Accessible* ancestor = this;
+    while ((ancestor = ancestor->Parent()) && !ancestor->IsDoc()) {
+      dom::Element* el = ancestor->Elm();
+      if (el && el->AttrValueIs(kNameSpaceID_None, nsGkAtoms::aria_disabled,
+                                nsGkAtoms::_true, eCaseMatters)) {
         *aState |= states::UNAVAILABLE;
         break;
       }

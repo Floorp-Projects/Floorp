@@ -1413,10 +1413,15 @@ nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame, bool aIsMove, bool aS
     screenPoint.MoveBy(margin.left + offsetForContextMenu.x,
                        margin.top + offsetForContextMenu.y);
 
-    // screen positioned popups can be flipped vertically but never horizontally
 #ifdef XP_MACOSX
-    hFlip = FlipStyle_Outside;
+    // OSX tooltips follow standard flip rule but other popups flip horizontally not vertically
+    if (mPopupType == ePopupTypeTooltip) {
+        vFlip = FlipStyle_Outside;
+    } else {
+        hFlip = FlipStyle_Outside;
+    }
 #else
+    // Other OS screen positioned popups can be flipped vertically but never horizontally
     vFlip = FlipStyle_Outside;
 #endif // #ifdef XP_MACOSX
   }

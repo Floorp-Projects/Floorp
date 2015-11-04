@@ -388,7 +388,9 @@ RenderFrameParent::BuildLayer(nsDisplayListBuilder* aBuilder,
     // draw a manager's subtree.  The latter is bad bad bad, but the the
     // MOZ_ASSERT() above will flag it.  Returning nullptr here will just
     // cause the shadow subtree not to be rendered.
-    NS_WARNING("Remote iframe not rendered");
+    if (!aContainerParameters.mForEventsOnly) {
+      NS_WARNING("Remote iframe not rendered");
+    }
     return nullptr;
   }
 

@@ -2357,7 +2357,11 @@ pref("layout.css.variables.enabled", true);
 pref("layout.css.overflow-clip-box.enabled", false);
 
 // Is support for CSS grid enabled?
+#ifdef RELEASE_BUILD
 pref("layout.css.grid.enabled", false);
+#else
+pref("layout.css.grid.enabled", true);
+#endif
 
 // Is support for CSS contain enabled?
 pref("layout.css.contain.enabled", false);
@@ -4398,6 +4402,7 @@ pref("xpinstall.whitelist.required", true);
 pref("xpinstall.signatures.required", false);
 pref("extensions.alwaysUnpack", false);
 pref("extensions.minCompatiblePlatformVersion", "2.0");
+pref("extensions.webExtensionsMinPlatformVersion", "42.0a1");
 
 pref("network.buffer.cache.count", 24);
 pref("network.buffer.cache.size",  32768);

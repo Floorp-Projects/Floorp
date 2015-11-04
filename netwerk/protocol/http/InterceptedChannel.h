@@ -36,6 +36,8 @@ protected:
   // Response head for use when synthesizing
   Maybe<nsAutoPtr<nsHttpResponseHead>> mSynthesizedResponseHead;
 
+  nsCOMPtr<nsIConsoleReportCollector> mReportCollector;
+
   void EnsureSynthesizedResponse();
   void DoNotifyController();
   nsresult DoSynthesizeStatus(uint16_t aStatus, const nsACString& aReason);
@@ -52,6 +54,7 @@ public:
   NS_DECL_ISUPPORTS
 
   NS_IMETHOD GetResponseBody(nsIOutputStream** aOutput) override;
+  NS_IMETHOD GetConsoleReportCollector(nsIConsoleReportCollector** aCollectorOut) override;
 };
 
 class InterceptedChannelChrome : public InterceptedChannelBase
@@ -82,9 +85,6 @@ public:
   NS_IMETHOD GetInternalContentPolicyType(nsContentPolicyType *aInternalContentPolicyType) override;
 
   virtual void NotifyController() override;
-
-  virtual nsIConsoleReportCollector*
-  GetConsoleReportCollector() const override;
 };
 
 class InterceptedChannelContent : public InterceptedChannelBase
@@ -113,9 +113,6 @@ public:
   NS_IMETHOD GetInternalContentPolicyType(nsContentPolicyType *aInternalContentPolicyType) override;
 
   virtual void NotifyController() override;
-
-  virtual nsIConsoleReportCollector*
-  GetConsoleReportCollector() const override;
 };
 
 } // namespace net

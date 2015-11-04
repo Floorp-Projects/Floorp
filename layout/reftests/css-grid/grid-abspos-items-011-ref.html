@@ -6,7 +6,7 @@
 <html><head>
   <meta charset="utf-8">
   <title>CSS Grid Test: abs pos areas in empty grid</title>
-  <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=">
+  <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1215099">
   <style type="text/css">
 
 div {
@@ -16,6 +16,10 @@ div {
   width: 20px;
   height: 20px;
   background: red;
+}
+x div {
+  padding: 4px;
+  background: white;
 }
 
 span {
@@ -34,7 +38,7 @@ There should be no red areas.
 <div><span class="cs"></span></div>
 <div><span class="ce"></span></div>
 <div><span class="rs"></span></div>
-<div><span class="rs"></span></div>
+<div><span class="re"></span></div>
 
 <div><span class="cs ce"></span></div>
 <div><span class="cs rs"></span></div>
@@ -49,6 +53,30 @@ There should be no red areas.
 <div><span class="rs re ce"></span></div>
 
 <div><span class="cs ce rs re"></span></div>
+
+<br clear="all">
+<br clear="all">
+
+<x>
+<div><span class="cs" style="left:4px"></span></div>
+<div><span class="ce" style="right:auto;width:4px"></span></div>
+<div><span class="rs" style="top:4px"></span></div>
+<div><span class="re" style="bottom:auto;height:4px"></span></div>
+
+<div><span class="cs ce" style="left:4px;"></span></div>
+<div><span class="cs rs" style="left:4px;top:4px"></span></div>
+<div><span class="cs re" style="left:4px;bottom:auto;height:4px"></span></div>
+<div><span class="ce rs" style="right:auto;width:4px;top:4px"></span></div>
+<div><span class="ce re" style="right:auto;width:4px;bottom:auto;height:4px"></span></div>
+<div><span class="rs re" style="top:4px"></span></div>
+
+<div><span class="cs ce rs" style="left:4px;top:4px"></span></div>
+<div><span class="cs ce re" style="left:4px;bottom:auto;height:4px"></span></div>
+<div><span class="rs re cs" style="left:4px;top:4px"></span></div>
+<div><span class="rs re ce" style="top:4px;right:auto;width:4px"></span></div>
+
+<div><span class="cs ce rs re" style="left:4px;top:4px"></span></div>
+</x>
 
 </body>
 </html>

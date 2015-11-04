@@ -6,6 +6,8 @@
 
 #include "vm/DateTime.h"
 
+#include "mozilla/Atomics.h"
+
 #include <time.h>
 
 #include "jsutil.h"
@@ -22,6 +24,9 @@ js::DateTimeInfo::instance;
 
 /* static */ mozilla::Atomic<bool, mozilla::ReleaseAcquire>
 js::DateTimeInfo::AcquireLock::spinLock;
+
+/* extern */ mozilla::Atomic<js::IcuTimeZoneStatus, mozilla::ReleaseAcquire>
+js::DefaultTimeZoneStatus;
 
 static bool
 ComputeLocalTime(time_t local, struct tm* ptm)
@@ -312,7 +317,11 @@ JS::ResetTimeZone()
 {
     js::DateTimeInfo::updateTimeZoneAdjustment();
 
-#if ENABLE_INTL_API && defined(ICU_TZ_HAS_RECREATE_DEFAULT)
-    icu::TimeZone::recreateDefault();
-#endif
+    // Trigger lazy recreation of ICU's default time zone, if needed and not
+    // already being performed.  (If it's already being performed, behavior
+    // will be safe but racy.)  See also Intl.cpp:NewUDateFormat which performs
+    // the recreation.  Note that if new places observing ICU's default time
+    // zone are added, they'll need to do the same things NewUDateFormat does.
+    js::DefaultTimeZoneStatus.compareExchange(js::IcuTimeZoneStatus::Valid,
+                                              js::IcuTimeZoneStatus::NeedsUpdate);
 }

@@ -11,7 +11,7 @@
 body,html { color:black; background:white; font-size:16px; padding:0; margin:0; }
 
 .grid {
- height: 20px;
+ height: 30px;
  border: 3px solid;
 }
 
@@ -24,7 +24,7 @@ span {
   border: 1px solid;
   display: inline-block;
   width: 18px;
-  height: 18px;
+  height: 28px;
   vertical-align: top;
 }
 .abs {
@@ -34,15 +34,16 @@ span {
   left: 204px;
   padding-left: 3px;
   padding-top: 5px;
-  width: 15px;
-  height: 13px;
+  width: 18px;
+  height: 28px;
+  vertical-align: top;
 }
 .abs1 {
   position: absolute;
   top: -5px;
   left: -11px;
-  width: 27px;
-  height: 21px;
+  width: 30px;
+  height: 36px;
 }
   </style>
 </head>
@@ -52,8 +53,8 @@ span {
 <span class="c1">1</span>
 <span class="abs r1"><iframe width="20" height="20" src="data:text/html,<body>F"></iframe></span>
 <span class="abs r2"><iframe width="20" height="20" src="data:text/html,<body>2"></iframe></span>
-<span class="abs r3"><span class="abs1">r3</span></span>
-<span class="abs r4"><span class="abs1">r4</span></span>
+<span class="abs r3" style="xheight:23px"><span class="abs1">r3</span></span>
+<span class="abs r4" style="xheight:23px"><span class="abs1">r4</span></span>
 </div>
 
 </body>

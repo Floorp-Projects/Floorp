@@ -34,29 +34,19 @@ nsCommandManager::~nsCommandManager()
 {
 }
 
-static PLDHashOperator
-TraverseCommandObservers(const char* aKey,
-                         nsCommandManager::ObserverList* aObservers,
-                         void* aClosure)
-{
-  nsCycleCollectionTraversalCallback* cb =
-    static_cast<nsCycleCollectionTraversalCallback*>(aClosure);
-
-  int32_t i, numItems = aObservers->Length();
-  for (i = 0; i < numItems; ++i) {
-    cb->NoteXPCOMChild(aObservers->ElementAt(i));
-  }
-
-  return PL_DHASH_NEXT;
-}
-
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsCommandManager)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsCommandManager)
   tmp->mObserversTable.Clear();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsCommandManager)
-  tmp->mObserversTable.EnumerateRead(TraverseCommandObservers, &cb);
+  for (auto iter = tmp->mObserversTable.Iter(); !iter.Done(); iter.Next()) {
+    nsCommandManager::ObserverList* observers = iter.UserData();
+    int32_t numItems = observers->Length();
+    for (int32_t i = 0; i < numItems; ++i) {
+      cb.NoteXPCOMChild(observers->ElementAt(i));
+    }
+  }
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsCommandManager)

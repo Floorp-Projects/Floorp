@@ -651,7 +651,9 @@ InputQueue::ProcessInputBlocks() {
       curBlock->DropEvents();
     } else if (curBlock->IsDefaultPrevented()) {
       curBlock->DropEvents();
-      target->ResetInputState();
+      if (curBlock->AsTouchBlock()) {
+        target->ResetTouchInputState();
+      }
     } else {
       UpdateActiveApzc(curBlock->GetTargetApzc());
       curBlock->HandleEvents();
@@ -677,7 +679,7 @@ void
 InputQueue::UpdateActiveApzc(const RefPtr<AsyncPanZoomController>& aNewActive) {
   if (mLastActiveApzc && mLastActiveApzc != aNewActive
       && mTouchCounter.GetActiveTouchCount() > 0) {
-    mLastActiveApzc->ResetInputState();
+    mLastActiveApzc->ResetTouchInputState();
   }
   mLastActiveApzc = aNewActive;
 }

@@ -1,0 +1,66 @@
+<!DOCTYPE HTML>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html><head>
+<meta charset="utf-8">
+<title>CSS Grid Test: min-width|min-height:auto</title>
+  <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1176775">
+  <link rel="help" href="https://drafts.csswg.org/css-grid/#min-size-auto">
+  <link rel="match" href="grid-auto-min-sizing-intrinsic-003-ref.html">
+  <style type="text/css">
+body,html { color:black; background:white; font-family:monospace; font-size:16px; padding:0; margin:0; }
+
+.grid {
+  display: grid;
+  width: 60px;
+  grid-template-columns: 30px 30px;
+  grid-auto-rows: 30px;
+  align-items: start;
+  justify-items: start;
+  border: 3px solid blue;
+}
+span {
+  border: 1px solid;
+  background: lime;
+}
+</style>
+</head>
+<body>
+
+<div class="grid">
+  <span>a</span>
+  <span>IAmReallyWideAndTheBorderShouldSurroundMe</span>
+</div>
+
+<pre>The border shouldn't shrink-wrap the wide text below, due to definite "width" values:</pre>
+<div class="grid">
+  <span>a</span>
+  <span style="width: 130%">IAmReallyWideButIHaveADefiniteWidthSoIOverflow</span>
+  <span>c</span>
+  <span style="width: 50px">SameHereeeeeeeeeeeeeeeeeeeeeeeeeeee</span>
+  <span style="width: 20px">SameHereeeeeeeeeeeeeeeeeeeeeeeeeeee</span><span></span>
+  <span style="width: 20px; grid-column:span 2;">SameHereeeeeeeeeeeeeeeeeeeeeeeeeeee</span>
+</div>
+
+<pre>Now the same tests for 'height':</pre>
+
+<div class="grid" style="margin-bottom:50px;">
+  <span>a</span>
+  <span style="font-size:72px">IAmReallyTall</span>
+  <span>c</span>
+  <span>d</span>
+</div>
+
+The border shouldn't shrink-wrap the wide text below, due to definite "height" values:
+<div class="grid">
+  <span>a</span>
+  <span style="font-size:72px; height:10%">IAmReallyTall</span>
+  <span>c</span>
+  <span style="font-size:72px; height:10px">SameHere</span>
+  <span style="font-size:72px; height:40px">SameHere</span>
+</div>
+
+</body>
+</html>

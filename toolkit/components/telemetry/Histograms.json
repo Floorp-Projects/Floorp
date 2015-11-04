@@ -9219,6 +9219,16 @@
     "keyed": "true",
     "description": "Number of warnings, keyed by appName."
   },
+  "DEVTOOLS_HUD_USS": {
+    "alert_emails": ["rnicoletti@mozilla.com","thills@mozilla.com"],
+    "expires_in_version": "52",
+    "kind": "linear",
+    "keyed": "true",
+    "low": "20000000",
+    "high": "100000000",
+    "n_buckets": 52,
+    "description": "The USS memory consumed by an application, keyed by appName."
+  },
   "DEVTOOLS_HUD_APP_STARTUP_TIME_CONTENTINTERACTIVE": {
     "alert_emails": ["rnicoletti@mozilla.com","thills@mozilla.com"],
     "expires_in_version": "52",

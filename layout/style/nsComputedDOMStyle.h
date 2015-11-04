@@ -469,16 +469,22 @@ private:
   mozilla::dom::CSSValue* DoGetAnimationPlayState();
 
   /* CSS Flexbox properties */
-  mozilla::dom::CSSValue* DoGetAlignContent();
-  mozilla::dom::CSSValue* DoGetAlignItems();
-  mozilla::dom::CSSValue* DoGetAlignSelf();
   mozilla::dom::CSSValue* DoGetFlexBasis();
   mozilla::dom::CSSValue* DoGetFlexDirection();
   mozilla::dom::CSSValue* DoGetFlexGrow();
   mozilla::dom::CSSValue* DoGetFlexShrink();
   mozilla::dom::CSSValue* DoGetFlexWrap();
+
+  /* CSS Flexbox/Grid properties */
   mozilla::dom::CSSValue* DoGetOrder();
+
+  /* CSS Box Alignment properties */
+  mozilla::dom::CSSValue* DoGetAlignContent();
+  mozilla::dom::CSSValue* DoGetAlignItems();
+  mozilla::dom::CSSValue* DoGetAlignSelf();
   mozilla::dom::CSSValue* DoGetJustifyContent();
+  mozilla::dom::CSSValue* DoGetJustifyItems();
+  mozilla::dom::CSSValue* DoGetJustifySelf();
 
   /* SVG properties */
   mozilla::dom::CSSValue* DoGetFill();

@@ -58,6 +58,12 @@ var gVideoTests = [
   { name:"bogus.duh", type:"bogus/duh" }
 ];
 
+// Temp hack for trackIDs and captureStream() -- bug 1215769
+var gLongerTests = [
+  { name:"seek.webm", type:"video/webm", width:320, height:240, duration:3.966 },
+  { name:"gizmo.mp4", type:"video/mp4", width:560, height:320, duration:5.56 },
+];
+
 // Used by test_progress to ensure we get the correct progress information
 // during resource download.
 var gProgressTests = [

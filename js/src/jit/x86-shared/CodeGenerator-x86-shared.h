@@ -243,6 +243,8 @@ class CodeGeneratorX86Shared : public CodeGeneratorShared
     virtual void visitMemoryBarrier(LMemoryBarrier* ins);
     virtual void visitAtomicTypedArrayElementBinop(LAtomicTypedArrayElementBinop* lir);
     virtual void visitAtomicTypedArrayElementBinopForEffect(LAtomicTypedArrayElementBinopForEffect* lir);
+    virtual void visitCompareExchangeTypedArrayElement(LCompareExchangeTypedArrayElement* lir);
+    virtual void visitAtomicExchangeTypedArrayElement(LAtomicExchangeTypedArrayElement* lir);
 
     void visitOutOfLineLoadTypedArrayOutOfBounds(OutOfLineLoadTypedArrayOutOfBounds* ool);
     void visitOffsetBoundsCheck(OffsetBoundsCheck* oolCheck);

@@ -81,7 +81,7 @@ class ArchlinuxBootstrapper(BaseBootstrapper):
         self.pacman_install(*self.SYSTEM_PACKAGES)
 
     def install_browser_packages(self):
-        self.aur_install(*self.AUR_BROWSER_PACKAGES)
+        self.aur_install(*self.BROWSER_AUR_PACKAGES)
         self.pacman_install(*self.BROWSER_PACKAGES)
 
     def install_mobile_android_packages(self):

@@ -6,10 +6,12 @@ fails == grid-whitespace-handling-1b.xhtml grid-whitespace-handling-1-ref.xhtml
 == grid-placement-definite-001.html grid-placement-definite-001-ref.html
 == grid-placement-definite-002.html grid-placement-definite-002-ref.html
 == grid-placement-definite-003.html grid-placement-definite-003-ref.html
+== grid-placement-negative-lines-001.html grid-placement-negative-lines-001-ref.html
 == grid-placement-auto-row-sparse-001.html grid-placement-auto-row-sparse-001-ref.html
 == grid-placement-auto-row-dense-001.html grid-placement-auto-row-dense-001-ref.html
 == grid-placement-auto-col-sparse-001.html grid-placement-auto-col-sparse-001-ref.html
 == grid-placement-auto-col-dense-001.html grid-placement-auto-col-dense-001-ref.html
+== grid-placement-implicit-named-areas-001.html grid-placement-implicit-named-areas-001-ref.html
 == grid-track-sizing-001.html grid-track-sizing-001-ref.html
 == grid-abspos-items-001.html grid-abspos-items-001-ref.html
 == grid-abspos-items-002.html grid-abspos-items-002-ref.html
@@ -34,10 +36,18 @@ pref(layout.css.vertical-text.enabled,true) == rtl-grid-placement-auto-row-spars
 pref(layout.css.vertical-text.enabled,true) == vlr-grid-placement-auto-row-sparse-001.html vlr-grid-placement-auto-row-sparse-001-ref.html
 pref(layout.css.vertical-text.enabled,true) == vrl-grid-placement-auto-row-sparse-001.html vrl-grid-placement-auto-row-sparse-001-ref.html
 == grid-relpos-items-001.html grid-relpos-items-001-ref.html
+== grid-item-sizing-percent-001.html grid-item-sizing-percent-001-ref.html
+== grid-item-sizing-px-001.html grid-item-sizing-percent-001-ref.html
 == grid-item-dir-001.html grid-item-dir-001-ref.html
 fuzzy-if(winWidget,70,130) fuzzy-if(cocoaWidget,85,180) == grid-col-max-sizing-max-content-001.html grid-col-max-sizing-max-content-001-ref.html
 fuzzy-if(winWidget,70,130) fuzzy-if(cocoaWidget,85,180) == grid-col-max-sizing-max-content-002.html grid-col-max-sizing-max-content-002-ref.html
 == grid-min-max-content-sizing-001.html grid-min-max-content-sizing-001-ref.html
+fuzzy-if(winWidget,1,36) == grid-auto-min-sizing-definite-001.html grid-auto-min-sizing-definite-001-ref.html
+== grid-auto-min-sizing-intrinsic-001.html grid-auto-min-sizing-intrinsic-001-ref.html
+== grid-auto-min-sizing-intrinsic-002.html grid-auto-min-sizing-intrinsic-002-ref.html
+== grid-auto-min-sizing-intrinsic-003.html grid-auto-min-sizing-intrinsic-003-ref.html
+== grid-auto-min-sizing-intrinsic-004.html grid-auto-min-sizing-intrinsic-004-ref.html
+== grid-auto-min-sizing-percent-001.html grid-auto-min-sizing-percent-001-ref.html
 == grid-track-intrinsic-sizing-001.html grid-track-intrinsic-sizing-001-ref.html
 == grid-track-intrinsic-sizing-002.html grid-track-intrinsic-sizing-002-ref.html
 == grid-track-intrinsic-sizing-003.html grid-track-intrinsic-sizing-003-ref.html
@@ -50,3 +60,13 @@ fuzzy-if(winWidget,70,130) fuzzy-if(cocoaWidget,85,180) == grid-col-max-sizing-m
 == grid-max-sizing-flex-006.html grid-max-sizing-flex-006-ref.html
 == grid-flex-min-sizing-001.html grid-flex-min-sizing-001-ref.html
 == grid-flex-min-sizing-002.html grid-flex-min-sizing-002-ref.html
+== grid-item-align-001.html grid-item-align-001-ref.html
+== grid-item-align-002.html grid-item-align-002-ref.html
+== grid-item-align-003.html grid-item-align-003-ref.html
+== grid-item-justify-001.html grid-item-justify-001-ref.html
+== grid-item-justify-002.html grid-item-justify-002-ref.html
+== grid-item-stretch-001.html grid-item-stretch-001-ref.html
+== grid-align-content-001.html grid-align-content-001-ref.html
+== grid-justify-content-001.html grid-justify-content-001-ref.html
+== grid-justify-content-002.html grid-justify-content-002-ref.html
+== grid-justify-content-003.html grid-justify-content-003-ref.html

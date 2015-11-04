@@ -587,6 +587,14 @@ struct MOZ_STACK_CLASS nsGridContainerFrame::Tracks
                       LineRange GridArea::*       aRange,
                       IntrinsicISizeType          aConstraint);
 
+  /**
+   * Apply 'align/justify-content', whichever is relevant for this axis.
+   * https://drafts.csswg.org/css-align-3/#propdef-align-content
+   */
+  void AlignJustifyContent(const nsHTMLReflowState& aReflowState,
+                           const LogicalSize& aContainerSize);
+
+
 #ifdef DEBUG
   void Dump() const
   {
@@ -800,13 +808,18 @@ IsNameWithStartSuffix(const nsString& aString, uint32_t* aIndex)
 static nscoord
 GridLinePosition(uint32_t aLine, const nsTArray<TrackSize>& aTrackSizes)
 {
-  const uint32_t endIndex = aLine;
-  MOZ_ASSERT(endIndex <= aTrackSizes.Length(), "aTrackSizes is too small");
-  nscoord pos = 0;
-  for (uint32_t i = 0; i < endIndex; ++i) {
-    pos += aTrackSizes[i].mBase;
+  if (aTrackSizes.Length() == 0) {
+    // https://drafts.csswg.org/css-grid/#grid-definition
+    // "... the explicit grid still contains one grid line in each axis."
+    MOZ_ASSERT(aLine == 0, "We should only resolve line 1 in an empty grid");
+    return nscoord(0);
   }
-  return pos;
+  MOZ_ASSERT(aLine <= aTrackSizes.Length(), "aTrackSizes is too small");
+  if (aLine == aTrackSizes.Length()) {
+    const TrackSize& sz = aTrackSizes[aLine - 1];
+    return sz.mPosition + sz.mBase;
+  }
+  return aTrackSizes[aLine].mPosition;
 }
 
 /**
@@ -827,6 +840,288 @@ GetDisplayFlagsForGridItem(nsIFrame* aFrame)
     return nsIFrame::DISPLAY_CHILD_FORCE_STACKING_CONTEXT;
   }
   return nsIFrame::DISPLAY_CHILD_FORCE_PSEUDO_STACKING_CONTEXT;
+}
+
+static nscoord
+SpaceToFill(WritingMode aWM, const LogicalSize& aSize, nscoord aMargin,
+            LogicalAxis aAxis, nscoord aCBSize)
+{
+  nscoord size = aAxis == eLogicalAxisBlock ? aSize.BSize(aWM)
+                                            : aSize.ISize(aWM);
+  return aCBSize - (size + aMargin);
+}
+
+static bool
+AlignJustifySelf(uint8_t aAlignment, bool aOverflowSafe, LogicalAxis aAxis,
+                 bool aSameSide, nscoord aCBSize, const nsHTMLReflowState& aRS,
+                 const LogicalSize& aChildSize, LogicalSize* aContentSize,
+                 LogicalPoint* aPos)
+{
+  MOZ_ASSERT(aAlignment != NS_STYLE_ALIGN_AUTO, "unexpected 'auto' "
+             "computed value for normal flow grid item");
+  MOZ_ASSERT(aAlignment != NS_STYLE_ALIGN_LEFT &&
+             aAlignment != NS_STYLE_ALIGN_RIGHT,
+             "caller should map that to the corresponding START/END");
+
+  // Map some alignment values to 'start' / 'end'.
+  switch (aAlignment) {
+    case NS_STYLE_ALIGN_SELF_START: // align/justify-self: self-start
+      aAlignment = MOZ_LIKELY(aSameSide) ? NS_STYLE_ALIGN_START
+                                         : NS_STYLE_ALIGN_END;
+      break;
+    case NS_STYLE_ALIGN_SELF_END: // align/justify-self: self-end
+      aAlignment = MOZ_LIKELY(aSameSide) ? NS_STYLE_ALIGN_END
+                                         : NS_STYLE_ALIGN_START;
+      break;
+    case NS_STYLE_ALIGN_FLEX_START: // same as 'start' for Grid
+      aAlignment = NS_STYLE_ALIGN_START;
+      break;
+    case NS_STYLE_ALIGN_FLEX_END: // same as 'end' for Grid
+      aAlignment = NS_STYLE_ALIGN_END;
+      break;
+  }
+
+  // XXX try to condense this code a bit by adding the necessary convenience
+  // methods? (bug 1209710)
+
+  // Get the item's margin corresponding to the container's start/end side.
+  const LogicalMargin margin = aRS.ComputedLogicalMargin();
+  WritingMode wm = aRS.GetWritingMode();
+  nscoord marginStart, marginEnd;
+  if (aAxis == eLogicalAxisBlock) {
+    if (MOZ_LIKELY(aSameSide)) {
+      marginStart = margin.BStart(wm);
+      marginEnd = margin.BEnd(wm);
+    } else {
+      marginStart = margin.BEnd(wm);
+      marginEnd = margin.BStart(wm);
+    }
+  } else {
+    if (MOZ_LIKELY(aSameSide)) {
+      marginStart = margin.IStart(wm);
+      marginEnd = margin.IEnd(wm);
+    } else {
+      marginStart = margin.IEnd(wm);
+      marginEnd = margin.IStart(wm);
+    }
+  }
+
+  // https://drafts.csswg.org/css-align-3/#overflow-values
+  // This implements <overflow-position> = 'safe'.
+  if (MOZ_UNLIKELY(aOverflowSafe) && aAlignment != NS_STYLE_ALIGN_START) {
+    nscoord space = SpaceToFill(wm, aChildSize, marginStart + marginEnd,
+                                aAxis, aCBSize);
+    // XXX we might want to include == 0 here as an optimization -
+    // I need to see what the baseline/last-baseline code looks like first.
+    if (space < 0) {
+      aAlignment = NS_STYLE_ALIGN_START;
+    }
+  }
+
+  // Set the position and size (aPos/aContentSize) for the requested alignment.
+  bool didResize = false;
+  nscoord offset = 0;
+  switch (aAlignment) {
+    case NS_STYLE_ALIGN_BASELINE:
+    case NS_STYLE_ALIGN_LAST_BASELINE:
+      NS_WARNING("NYI: baseline/last-baseline for grid (bug 1151204)"); // XXX
+    case NS_STYLE_ALIGN_START:
+      offset = marginStart;
+      break;
+    case NS_STYLE_ALIGN_END: {
+      nscoord size = aAxis == eLogicalAxisBlock ? aChildSize.BSize(wm)
+                                                : aChildSize.ISize(wm);
+      offset = aCBSize - (size + marginEnd);
+      break;
+    }
+    case NS_STYLE_ALIGN_CENTER:
+      offset = SpaceToFill(wm, aChildSize, marginStart + marginEnd,
+                           aAxis, aCBSize) / 2;
+      break;
+    case NS_STYLE_ALIGN_STRETCH: {
+      offset = marginStart;
+      const auto& styleMargin = aRS.mStyleMargin->mMargin;
+      if (aAxis == eLogicalAxisBlock
+             ? (aRS.mStylePosition->BSize(wm).GetUnit() == eStyleUnit_Auto &&
+                styleMargin.GetBStartUnit(wm) != eStyleUnit_Auto &&
+                styleMargin.GetBEndUnit(wm) != eStyleUnit_Auto)
+             : (aRS.mStylePosition->ISize(wm).GetUnit() == eStyleUnit_Auto &&
+                styleMargin.GetIStartUnit(wm) != eStyleUnit_Auto &&
+                styleMargin.GetIEndUnit(wm) != eStyleUnit_Auto)) {
+        nscoord size = aAxis == eLogicalAxisBlock ? aChildSize.BSize(wm)
+                                                  : aChildSize.ISize(wm);
+        nscoord gap = aCBSize - (size + marginStart + marginEnd);
+        if (gap > 0) {
+          // Note: The ComputedMax* values are always content-box max values,
+          // even for box-sizing:border-box.
+          LogicalMargin bp = aRS.ComputedLogicalBorderPadding();
+          // XXX ApplySkipSides is probably not very useful here since we
+          // might not have created any next-in-flow yet.  Use the reflow status
+          // instead?  Do all fragments stretch? (bug 1144096).
+          bp.ApplySkipSides(aRS.frame->GetLogicalSkipSides());
+          nscoord bpInAxis = aAxis == eLogicalAxisBlock ? bp.BStartEnd(wm)
+                                                        : bp.IStartEnd(wm);
+          nscoord contentSize = size - bpInAxis;
+          NS_ASSERTION(contentSize >= 0, "huh?");
+          const nscoord unstretchedContentSize = contentSize;
+          contentSize += gap;
+          nscoord max = aAxis == eLogicalAxisBlock ? aRS.ComputedMaxBSize()
+                                                   : aRS.ComputedMaxISize();
+          if (MOZ_UNLIKELY(contentSize > max)) {
+            contentSize = max;
+            gap = contentSize - unstretchedContentSize;
+          }
+          // |gap| is now how much the content size is actually allowed to grow.
+          didResize = gap > 0;
+          if (didResize) {
+            (aAxis == eLogicalAxisBlock ? aContentSize->BSize(wm)
+                                        : aContentSize->ISize(wm)) = contentSize;
+            if (MOZ_UNLIKELY(!aSameSide)) {
+              offset += gap;
+            }
+          }
+        }
+      }
+      break;
+    }
+    default:
+      MOZ_ASSERT_UNREACHABLE("unknown align-/justify-self value");
+  }
+  if (offset != 0) {
+    nscoord& pos = aAxis == eLogicalAxisBlock ? aPos->B(wm) : aPos->I(wm);
+    pos += MOZ_LIKELY(aSameSide) ? offset : -offset;
+  }
+  return didResize;
+}
+
+static bool
+SameSide(WritingMode aContainerWM, LogicalSide aContainerSide,
+         WritingMode aChildWM, LogicalSide aChildSide)
+{
+  MOZ_ASSERT(aContainerWM.PhysicalAxis(GetAxis(aContainerSide)) ==
+                 aChildWM.PhysicalAxis(GetAxis(aChildSide)));
+  return aContainerWM.PhysicalSide(aContainerSide) ==
+             aChildWM.PhysicalSide(aChildSide);
+}
+
+static Maybe<LogicalAxis>
+AlignSelf(uint8_t aAlignSelf, const LogicalRect& aCB, const WritingMode aCBWM,
+          const nsHTMLReflowState& aRS, const LogicalSize& aSize,
+          LogicalSize* aContentSize, LogicalPoint* aPos)
+{
+  Maybe<LogicalAxis> resizedAxis;
+  auto alignSelf = aAlignSelf;
+  bool overflowSafe = alignSelf & NS_STYLE_ALIGN_SAFE;
+  alignSelf &= ~NS_STYLE_ALIGN_FLAG_BITS;
+  MOZ_ASSERT(alignSelf != NS_STYLE_ALIGN_LEFT &&
+             alignSelf != NS_STYLE_ALIGN_RIGHT,
+             "Grid's 'align-self' axis is never parallel to the container's "
+             "inline axis, so these should've computed to 'start' already");
+  if (MOZ_UNLIKELY(alignSelf == NS_STYLE_ALIGN_AUTO)) {
+    // Happens in rare edge cases when 'position' was ignored by the frame
+    // constructor (and the style system computed 'auto' based on 'position').
+    alignSelf = NS_STYLE_ALIGN_STRETCH;
+  }
+  WritingMode childWM = aRS.GetWritingMode();
+  bool isOrthogonal = aCBWM.IsOrthogonalTo(childWM);
+  // |sameSide| is true if the container's start side in this axis is the same
+  // as the child's start side, in the child's parallel axis.
+  bool sameSide = SameSide(aCBWM, eLogicalSideBStart,
+                           childWM, isOrthogonal ? eLogicalSideIStart
+                                                 : eLogicalSideBStart);
+  LogicalAxis axis = isOrthogonal ? eLogicalAxisInline : eLogicalAxisBlock;
+  if (AlignJustifySelf(alignSelf, overflowSafe, axis, sameSide,
+                       aCB.BSize(aCBWM), aRS, aSize, aContentSize, aPos)) {
+    resizedAxis.emplace(axis);
+  }
+  return resizedAxis;
+}
+
+static Maybe<LogicalAxis>
+JustifySelf(uint8_t aJustifySelf, const LogicalRect& aCB, const WritingMode aCBWM,
+            const nsHTMLReflowState& aRS, const LogicalSize& aSize,
+            LogicalSize* aContentSize, LogicalPoint* aPos)
+{
+  Maybe<LogicalAxis> resizedAxis;
+  auto justifySelf = aJustifySelf;
+  bool overflowSafe = justifySelf & NS_STYLE_JUSTIFY_SAFE;
+  justifySelf &= ~NS_STYLE_JUSTIFY_FLAG_BITS;
+  if (MOZ_UNLIKELY(justifySelf == NS_STYLE_ALIGN_AUTO)) {
+    // Happens in rare edge cases when 'position' was ignored by the frame
+    // constructor (and the style system computed 'auto' based on 'position').
+    justifySelf = NS_STYLE_ALIGN_STRETCH;
+  }
+  WritingMode childWM = aRS.GetWritingMode();
+  bool isOrthogonal = aCBWM.IsOrthogonalTo(childWM);
+  // |sameSide| is true if the container's start side in this axis is the same
+  // as the child's start side, in the child's parallel axis.
+  bool sameSide = SameSide(aCBWM, eLogicalSideIStart,
+                           childWM, isOrthogonal ? eLogicalSideBStart
+                                                 : eLogicalSideIStart);
+  // Grid's 'justify-self' axis is always parallel to the container's inline
+  // axis, so justify-self:left|right always applies.
+  switch (justifySelf) {
+    case NS_STYLE_JUSTIFY_LEFT:
+      justifySelf = aCBWM.IsBidiLTR() ? NS_STYLE_JUSTIFY_START
+                                      : NS_STYLE_JUSTIFY_END;
+    break;
+    case NS_STYLE_JUSTIFY_RIGHT:
+      justifySelf = aCBWM.IsBidiLTR() ? NS_STYLE_JUSTIFY_END
+                                      : NS_STYLE_JUSTIFY_START;
+    break;
+  }
+
+  LogicalAxis axis = isOrthogonal ? eLogicalAxisBlock : eLogicalAxisInline;
+  if (AlignJustifySelf(justifySelf, overflowSafe, axis, sameSide,
+                       aCB.ISize(aCBWM), aRS, aSize, aContentSize, aPos)) {
+    resizedAxis.emplace(axis);
+  }
+  return resizedAxis;
+}
+
+static uint16_t
+GetAlignJustifyValue(uint16_t aAlignment, const WritingMode aWM,
+                     const bool aIsAlign, bool* aOverflowSafe)
+{
+  *aOverflowSafe = aAlignment & NS_STYLE_ALIGN_SAFE;
+  aAlignment &= (NS_STYLE_ALIGN_ALL_BITS & ~NS_STYLE_ALIGN_FLAG_BITS);
+
+  // Map some alignment values to 'start' / 'end'.
+  switch (aAlignment) {
+    case NS_STYLE_ALIGN_LEFT:
+    case NS_STYLE_ALIGN_RIGHT: {
+      MOZ_ASSERT(!aIsAlign, "Grid container's 'align-contents' axis is never "
+                 "parallel to its inline axis, so these should've computed to "
+                 "'start' already");
+      bool isStart = aWM.IsBidiLTR() == (aAlignment == NS_STYLE_ALIGN_LEFT);
+      return isStart ? NS_STYLE_ALIGN_START : NS_STYLE_ALIGN_END;
+    }
+    case NS_STYLE_ALIGN_FLEX_START: // same as 'start' for Grid
+      return NS_STYLE_ALIGN_START;
+    case NS_STYLE_ALIGN_FLEX_END: // same as 'end' for Grid
+      return NS_STYLE_ALIGN_END;
+  }
+  return aAlignment;
+}
+
+static uint16_t
+GetAlignJustifyFallbackIfAny(uint16_t aAlignment, const WritingMode aWM,
+                             const bool aIsAlign, bool* aOverflowSafe)
+{
+  uint16_t fallback = aAlignment >> NS_STYLE_ALIGN_ALL_SHIFT;
+  if (fallback) {
+    return GetAlignJustifyValue(fallback, aWM, aIsAlign, aOverflowSafe);
+  }
+  // https://drafts.csswg.org/css-align-3/#fallback-alignment
+  switch (aAlignment) {
+    case NS_STYLE_ALIGN_STRETCH:
+    case NS_STYLE_ALIGN_SPACE_BETWEEN:
+      return NS_STYLE_ALIGN_START;
+    case NS_STYLE_ALIGN_SPACE_AROUND:
+    case NS_STYLE_ALIGN_SPACE_EVENLY:
+      return NS_STYLE_ALIGN_CENTER;
+  }
+  return 0;
 }
 
 //----------------------------------------------------------------------
@@ -870,33 +1165,22 @@ nsGridContainerFrame::AddImplicitNamedAreas(
   const nsTArray<nsTArray<nsString>>& aLineNameLists)
 {
   // http://dev.w3.org/csswg/css-grid/#implicit-named-areas
-  // XXX this just checks x-start .. x-end in one dimension and there's
-  // no other error checking.  A few wrong cases (maybe):
-  // (x-start x-end)
-  // (x-start) 0 (x-start) 0 (x-end)
-  // (x-end) 0 (x-start) 0 (x-end)
-  // (x-start) 0 (x-end) 0 (x-start) 0 (x-end)
+  // Note: recording these names for fast lookup later is just an optimization.
   const uint32_t len =
     std::min(aLineNameLists.Length(), size_t(nsStyleGridLine::kMaxLine));
   nsTHashtable<nsStringHashKey> currentStarts;
   ImplicitNamedAreas* areas = GetImplicitNamedAreas();
   for (uint32_t i = 0; i < len; ++i) {
-    const nsTArray<nsString>& names(aLineNameLists[i]);
-    const uint32_t jLen = names.Length();
-    for (uint32_t j = 0; j < jLen; ++j) {
-      const nsString& name = names[j];
+    for (const nsString& name : aLineNameLists[i]) {
       uint32_t index;
-      if (::IsNameWithStartSuffix(name, &index)) {
-        currentStarts.PutEntry(nsDependentSubstring(name, 0, index));
-      } else if (::IsNameWithEndSuffix(name, &index)) {
+      if (::IsNameWithStartSuffix(name, &index) ||
+          ::IsNameWithEndSuffix(name, &index)) {
         nsDependentSubstring area(name, 0, index);
-        if (currentStarts.Contains(area)) {
-          if (!areas) {
-            areas = new ImplicitNamedAreas;
-            Properties().Set(ImplicitNamedAreasProperty(), areas);
-          }
-          areas->PutEntry(area);
+        if (!areas) {
+          areas = new ImplicitNamedAreas;
+          Properties().Set(ImplicitNamedAreasProperty(), areas);
         }
+        areas->PutEntry(area);
       }
     }
   }
@@ -956,8 +1240,6 @@ nsGridContainerFrame::ResolveLine(
           lineName.AppendLiteral("-end");
           implicitLine = area ? area->*aAreaEnd : 0;
         }
-        // XXX must Implicit Named Areas have all four lines?
-        // http://dev.w3.org/csswg/css-grid/#implicit-named-areas
         line = ::FindNamedLine(lineName, &aNth, aFromIndex, implicitLine,
                                aLineNameList);
       }
@@ -1030,7 +1312,8 @@ nsGridContainerFrame::ResolveLineRangeHelper(
       return LinePair(kAutoLine, 1); // XXX subgrid explicit size instead of 1?
     }
 
-    auto end = ResolveLine(aEnd, aEnd.mInteger, 0, aLineNameList, aAreaStart,
+    uint32_t from = aEnd.mInteger < 0 ? aExplicitGridEnd : 0;
+    auto end = ResolveLine(aEnd, aEnd.mInteger, from, aLineNameList, aAreaStart,
                            aAreaEnd, aExplicitGridEnd, eLineRangeSideEnd,
                            aStyle);
     int32_t span = aStart.mInteger == 0 ? 1 : aStart.mInteger;
@@ -1063,9 +1346,10 @@ nsGridContainerFrame::ResolveLineRangeHelper(
       return LinePair(start, 1); // XXX subgrid explicit size instead of 1?
     }
   } else {
-    start = ResolveLine(aStart, aStart.mInteger, 0, aLineNameList, aAreaStart,
-                        aAreaEnd, aExplicitGridEnd, eLineRangeSideStart,
-                        aStyle);
+    uint32_t from = aStart.mInteger < 0 ? aExplicitGridEnd : 0;
+    start = ResolveLine(aStart, aStart.mInteger, from, aLineNameList,
+                        aAreaStart, aAreaEnd, aExplicitGridEnd,
+                        eLineRangeSideStart, aStyle);
     if (aEnd.IsAuto()) {
       // A "definite line / auto" should resolve the auto to 'span 1'.
       // The error handling in ResolveLineRange will make that happen and also
@@ -1074,14 +1358,14 @@ nsGridContainerFrame::ResolveLineRangeHelper(
     }
   }
 
-  uint32_t from = 0;
+  uint32_t from;
   int32_t nth = aEnd.mInteger == 0 ? 1 : aEnd.mInteger;
   if (aEnd.mHasSpan) {
     if (MOZ_UNLIKELY(start < 0)) {
       if (aEnd.mLineName.IsEmpty()) {
         return LinePair(start, start + nth);
       }
-      // Fall through and start searching from the start of the grid (from=0).
+      from = 0;
     } else {
       if (start >= int32_t(aExplicitGridEnd)) {
         // The start is at or after the last explicit line, thus all lines
@@ -1090,6 +1374,8 @@ nsGridContainerFrame::ResolveLineRangeHelper(
       }
       from = start;
     }
+  } else {
+    from = aEnd.mInteger < 0 ? aExplicitGridEnd : 0;
   }
   auto end = ResolveLine(aEnd, nth, from, aLineNameList, aAreaStart,
                          aAreaEnd, aExplicitGridEnd, eLineRangeSideEnd, aStyle);
@@ -1119,12 +1405,16 @@ nsGridContainerFrame::ResolveLineRange(
     // range has a HypotheticalEnd <= kMaxLine.
     // http://dev.w3.org/csswg/css-grid/#overlarge-grids
     r.second = std::min(r.second, nsStyleGridLine::kMaxLine - 1);
-  } else if (r.second <= r.first) {
+  } else {
     // http://dev.w3.org/csswg/css-grid/#grid-placement-errors
-    if (MOZ_UNLIKELY(r.first == nsStyleGridLine::kMaxLine)) {
-      r.first = nsStyleGridLine::kMaxLine - 1;
+    if (r.first > r.second) {
+      Swap(r.first, r.second);
+    } else if (r.first == r.second) {
+      if (MOZ_UNLIKELY(r.first == nsStyleGridLine::kMaxLine)) {
+        r.first = nsStyleGridLine::kMaxLine - 1;
+      }
+      r.second = r.first + 1; // XXX subgrid explicit size instead of 1?
     }
-    r.second = r.first + 1; // XXX subgrid explicit size instead of 1?
   }
   return LineRange(r.first, r.second);
 }
@@ -1648,15 +1938,6 @@ nsGridContainerFrame::Tracks::Initialize(
   }
 }
 
-static nscoord
-MinSize(nsIFrame* aChild, nsRenderingContext* aRC, WritingMode aCBWM,
-        LogicalAxis aAxis, nsLayoutUtils::IntrinsicISizeType aConstraint)
-{
-  PhysicalAxis axis(aCBWM.PhysicalAxis(aAxis));
-  return nsLayoutUtils::MinSizeContributionForAxis(axis, aRC, aChild,
-                                                   aConstraint);
-}
-
 /**
  * Return the [min|max]-content contribution of aChild to its parent (i.e.
  * the child's margin-box) in aAxis.
@@ -1667,11 +1948,12 @@ ContentContribution(nsIFrame*                         aChild,
                     nsRenderingContext*               aRC,
                     WritingMode                       aCBWM,
                     LogicalAxis                       aAxis,
-                    nsLayoutUtils::IntrinsicISizeType aConstraint)
+                    nsLayoutUtils::IntrinsicISizeType aConstraint,
+                    uint32_t                          aFlags = 0)
 {
   PhysicalAxis axis(aCBWM.PhysicalAxis(aAxis));
   nscoord size = nsLayoutUtils::IntrinsicForAxis(axis, aRC, aChild, aConstraint,
-                   nsLayoutUtils::BAIL_IF_REFLOW_NEEDED);
+                   aFlags | nsLayoutUtils::BAIL_IF_REFLOW_NEEDED);
   if (size == NS_INTRINSIC_WIDTH_UNKNOWN) {
     // We need to reflow the child to find its BSize contribution.
     WritingMode wm = aChild->GetWritingMode();
@@ -1733,6 +2015,39 @@ MaxContentContribution(nsIFrame*                aChild,
 {
   return ContentContribution(aChild, aRS, aRC, aCBWM, aAxis,
                              nsLayoutUtils::PREF_ISIZE);
+}
+
+static nscoord
+MinSize(nsIFrame*                aChild,
+        const nsHTMLReflowState* aRS,
+        nsRenderingContext*      aRC,
+        WritingMode              aCBWM,
+        LogicalAxis              aAxis)
+{
+  PhysicalAxis axis(aCBWM.PhysicalAxis(aAxis));
+  const nsStylePosition* stylePos = aChild->StylePosition();
+  const nsStyleCoord& style = axis == eAxisHorizontal ? stylePos->mMinWidth
+                                                      : stylePos->mMinHeight;
+  // https://drafts.csswg.org/css-grid/#min-size-auto
+  // This calculates the min-content contribution from either a definite
+  // min-width (or min-height depending on aAxis), or the "specified /
+  // transferred size" for min-width:auto if overflow == visible (as min-width:0
+  // otherwise), or NS_UNCONSTRAINEDSIZE for other min-width intrinsic values
+  // (which results in always taking the "content size" part below).
+  nscoord sz =
+    nsLayoutUtils::MinSizeContributionForAxis(axis, aRC, aChild,
+                                              nsLayoutUtils::MIN_ISIZE);
+  auto unit = style.GetUnit();
+  if (unit == eStyleUnit_Enumerated ||
+      (unit == eStyleUnit_Auto &&
+       aChild->StyleDisplay()->mOverflowX == NS_STYLE_OVERFLOW_VISIBLE)) {
+    // Now calculate the "content size" part and return whichever is smaller.
+    MOZ_ASSERT(unit != eStyleUnit_Enumerated || sz == NS_UNCONSTRAINEDSIZE);
+    sz = std::min(sz, ContentContribution(aChild, aRS, aRC, aCBWM, aAxis,
+                                          nsLayoutUtils::MIN_ISIZE,
+                                          nsLayoutUtils::MIN_INTRINSIC_ISIZE));
+  }
+  return sz;
 }
 
 void
@@ -1822,7 +2137,7 @@ nsGridContainerFrame::Tracks::ResolveIntrinsicSizeStep1(
   const nsHTMLReflowState* rs = aState.mReflowState;
   nsRenderingContext* rc = &aState.mRenderingContext;
   if (sz.mState & TrackSize::eAutoMinSizing) {
-    nscoord s = MinSize(aGridItem, rc, wm, mAxis, aConstraint);
+    nscoord s = MinSize(aGridItem, rs, rc, wm, mAxis);
     sz.mBase = std::max(sz.mBase, s);
   } else if ((sz.mState & TrackSize::eMinContentMinSizing) ||
              (aConstraint == nsLayoutUtils::MIN_ISIZE &&
@@ -1927,7 +2242,7 @@ nsGridContainerFrame::Tracks::ResolveIntrinsicSize(
         stateBitsPerSpan[span] |= state;
         nscoord minSize = 0;
         if (state & (flexMin | TrackSize::eIntrinsicMinSizing)) { // for 2.1
-          minSize = MinSize(child, rc, wm, mAxis, aConstraint);
+          minSize = MinSize(child, aState.mReflowState, rc, wm, mAxis);
         }
         nscoord minContent = 0;
         if (state & (flexMin | TrackSize::eMinOrMaxContentMinSizing | // for 2.2
@@ -2256,26 +2571,154 @@ nsGridContainerFrame::Tracks::StretchFlexibleTracks(
 }
 
 void
+nsGridContainerFrame::Tracks::AlignJustifyContent(
+  const nsHTMLReflowState& aReflowState,
+  const LogicalSize&     aContainerSize)
+{
+  if (mSizes.IsEmpty()) {
+    return;
+  }
+
+  const bool isAlign = mAxis == eLogicalAxisBlock;
+  auto stylePos = aReflowState.mStylePosition;
+  const auto valueAndFallback = isAlign ?
+    stylePos->ComputedAlignContent(aReflowState.mStyleDisplay) :
+    stylePos->ComputedJustifyContent(aReflowState.mStyleDisplay);
+  WritingMode wm = aReflowState.GetWritingMode();
+  bool overflowSafe;
+  auto alignment = ::GetAlignJustifyValue(valueAndFallback, wm, isAlign,
+                                          &overflowSafe);
+  if (alignment == NS_STYLE_ALIGN_AUTO) {
+    alignment = NS_STYLE_ALIGN_START;
+  }
+
+  // Compute the free space and count auto-sized tracks.
+  size_t numAutoTracks = 0;
+  nscoord space;
+  if (alignment != NS_STYLE_ALIGN_START) {
+    nscoord trackSizeSum = 0;
+    for (const TrackSize& sz : mSizes) {
+      trackSizeSum += sz.mBase;
+      if (sz.mState & TrackSize::eAutoMaxSizing) {
+        ++numAutoTracks;
+      }
+    }
+    nscoord cbSize = isAlign ? aContainerSize.BSize(wm)
+                             : aContainerSize.ISize(wm);
+    space = cbSize - trackSizeSum;
+    // Use the fallback value instead when applicable.
+    if (space < 0 ||
+        (alignment == NS_STYLE_ALIGN_SPACE_BETWEEN && mSizes.Length() == 1)) {
+      auto fallback = ::GetAlignJustifyFallbackIfAny(valueAndFallback, wm,
+                                                     isAlign, &overflowSafe);
+      if (fallback) {
+        alignment = fallback;
+      }
+    }
+    if (space == 0 || (space < 0 && overflowSafe)) {
+      // XXX check that this makes sense also for [last-]baseline (bug 1151204).
+      alignment = NS_STYLE_ALIGN_START;
+    }
+  }
+
+  // Optimize the cases where we just need to set each track's position.
+  nscoord pos = 0;
+  bool distribute = true;
+  switch (alignment) {
+    case NS_STYLE_ALIGN_BASELINE:
+    case NS_STYLE_ALIGN_LAST_BASELINE:
+      NS_WARNING("'NYI: baseline/last-baseline' (bug 1151204)"); // XXX
+    case NS_STYLE_ALIGN_START:
+      distribute = false;
+      break;
+    case NS_STYLE_ALIGN_END:
+      pos = space;
+      distribute = false;
+      break;
+    case NS_STYLE_ALIGN_CENTER:
+      pos = space / 2;
+      distribute = false;
+      break;
+    case NS_STYLE_ALIGN_STRETCH:
+      distribute = numAutoTracks != 0;
+      break;
+  }
+  if (!distribute) {
+    for (TrackSize& sz : mSizes) {
+      sz.mPosition = pos;
+      pos += sz.mBase;
+    }
+    return;
+  }
+
+  // Distribute free space to/between tracks and set their position.
+  MOZ_ASSERT(space > 0, "should've handled that on the fallback path above");
+  nscoord between, roundingError;
+  switch (alignment) {
+    case NS_STYLE_ALIGN_STRETCH: {
+      MOZ_ASSERT(numAutoTracks > 0, "we handled numAutoTracks == 0 above");
+      nscoord spacePerTrack;
+      roundingError = NSCoordDivRem(space, numAutoTracks, &spacePerTrack);
+      for (TrackSize& sz : mSizes) {
+#ifdef DEBUG
+        space += sz.mBase; // for the assert below: space + all mBase == pos
+#endif
+        sz.mPosition = pos;
+        if (!(sz.mState & TrackSize::eAutoMaxSizing)) {
+          pos += sz.mBase;
+          continue;
+        }
+        nscoord stretch = spacePerTrack;
+        if (roundingError) {
+          roundingError -= 1;
+          stretch += 1;
+        }
+        nscoord newBase = sz.mBase + stretch;
+        sz.mBase = newBase;
+        pos += newBase;
+      }
+      MOZ_ASSERT(pos == space && !roundingError,
+                 "we didn't distribute all space?");
+      return;
+    }
+    case NS_STYLE_ALIGN_SPACE_BETWEEN:
+      MOZ_ASSERT(mSizes.Length() > 1, "should've used a fallback above");
+      roundingError = NSCoordDivRem(space, mSizes.Length() - 1, &between);
+      break;
+    case NS_STYLE_ALIGN_SPACE_AROUND:
+      roundingError = NSCoordDivRem(space, mSizes.Length(), &between);
+      pos = between / 2;
+      break;
+    case NS_STYLE_ALIGN_SPACE_EVENLY:
+      roundingError = NSCoordDivRem(space, mSizes.Length() + 1, &between);
+      pos = between;
+      break;
+    default:
+      MOZ_ASSERT_UNREACHABLE("unknown align-/justify-content value");
+  }
+  for (TrackSize& sz : mSizes) {
+    sz.mPosition = pos;
+    nscoord spacing = between;
+    if (roundingError) {
+      roundingError -= 1;
+      spacing += 1;
+    }
+    pos += sz.mBase + spacing;
+  }
+  MOZ_ASSERT(!roundingError, "we didn't distribute all space?");
+}
+
+void
 nsGridContainerFrame::LineRange::ToPositionAndLength(
   const nsTArray<TrackSize>& aTrackSizes, nscoord* aPos, nscoord* aLength) const
 {
   MOZ_ASSERT(mStart != kAutoLine && mEnd != kAutoLine,
              "expected a definite LineRange");
-  nscoord pos = 0;
-  const uint32_t start = mStart;
-  uint32_t i = 0;
-  for (; i < start; ++i) {
-    pos += aTrackSizes[i].mBase;
-  }
-  *aPos = pos;
-
-  nscoord length = 0;
-  const uint32_t end = mEnd;
-  MOZ_ASSERT(end <= aTrackSizes.Length(), "aTrackSizes isn't large enough");
-  for (; i < end; ++i) {
-    length += aTrackSizes[i].mBase;
-  }
-  *aLength = length;
+  MOZ_ASSERT(mStart < mEnd);
+  nscoord startPos = aTrackSizes[mStart].mPosition;
+  const TrackSize& sz = aTrackSizes[mEnd - 1];
+  *aPos = startPos;
+  *aLength = (sz.mPosition + sz.mBase) - startPos;
 }
 
 nscoord
@@ -2284,13 +2727,10 @@ nsGridContainerFrame::LineRange::ToLength(
 {
   MOZ_ASSERT(mStart != kAutoLine && mEnd != kAutoLine,
              "expected a definite LineRange");
-  nscoord length = 0;
-  const uint32_t end = mEnd;
-  MOZ_ASSERT(end <= aTrackSizes.Length(), "aTrackSizes isn't large enough");
-  for (uint32_t i = mStart; i < end; ++i) {
-    length += aTrackSizes[i].mBase;
-  }
-  return length;
+  MOZ_ASSERT(mStart < mEnd);
+  nscoord startPos = aTrackSizes[mStart].mPosition;
+  const TrackSize& sz = aTrackSizes[mEnd - 1];
+  return (sz.mPosition + sz.mBase) - startPos;
 }
 
 void
@@ -2367,6 +2807,7 @@ nsGridContainerFrame::ReflowChildren(GridReflowState&     aState,
     (aContentArea.Size(wm) +
      aState.mReflowState->ComputedLogicalBorderPadding().Size(wm)).GetPhysicalSize(wm);
   nsPresContext* pc = PresContext();
+  nsStyleContext* containerSC = StyleContext();
   for (; !aState.mIter.AtEnd(); aState.mIter.Next()) {
     nsIFrame* child = *aState.mIter;
     const bool isGridItem = child->GetType() != nsGkAtoms::placeholderFrame;
@@ -2383,36 +2824,64 @@ nsGridContainerFrame::ReflowChildren(GridReflowState&     aState,
     }
     WritingMode childWM = child->GetWritingMode();
     LogicalSize childCBSize = cb.Size(wm).ConvertTo(childWM, wm);
-    nsHTMLReflowState childRS(pc, *aState.mReflowState, child, childCBSize);
-    const LogicalMargin margin = childRS.ComputedLogicalMargin();
-    if (childRS.ComputedBSize() == NS_AUTOHEIGHT && MOZ_LIKELY(isGridItem)) {
-      // XXX the start of an align-self:stretch impl.  Needs min-/max-bsize
-      // clamping though, and check the prop value is actually 'stretch'!
-      LogicalMargin bp = childRS.ComputedLogicalBorderPadding();
-      bp.ApplySkipSides(child->GetLogicalSkipSides());
-      nscoord bSize = childCBSize.BSize(childWM) - bp.BStartEnd(childWM) -
-                        margin.BStartEnd(childWM);
-      childRS.SetComputedBSize(std::max(bSize, 0));
-    }
+    LogicalSize percentBasis(childCBSize);
+    // XXX temporary workaround to avoid being INCOMPLETE until we have
+    // support for fragmentation (bug 1144096)
+    childCBSize.BSize(childWM) = NS_UNCONSTRAINEDSIZE;
+
+    Maybe<nsHTMLReflowState> childRS; // Maybe<> so we can reuse the space
+    childRS.emplace(pc, *aState.mReflowState, child, childCBSize, &percentBasis);
     // We need the width of the child before we can correctly convert
     // the writing-mode of its origin, so we reflow at (0, 0) using a dummy
     // containerSize, and then pass the correct position to FinishReflowChild.
-    nsHTMLReflowMetrics childSize(childRS);
+    Maybe<nsHTMLReflowMetrics> childSize; // Maybe<> so we can reuse the space
+    childSize.emplace(*childRS);
     nsReflowStatus childStatus;
     const nsSize dummyContainerSize;
-    ReflowChild(child, pc, childSize, childRS, childWM, LogicalPoint(childWM),
+    ReflowChild(child, pc, *childSize, *childRS, childWM, LogicalPoint(childWM),
                 dummyContainerSize, 0, childStatus);
     LogicalPoint childPos =
       cb.Origin(wm).ConvertTo(childWM, wm,
-                              containerSize - childSize.PhysicalSize() -
-                              margin.Size(childWM).GetPhysicalSize(childWM));
-    childPos.I(childWM) += margin.IStart(childWM);
-    childPos.B(childWM) += margin.BStart(childWM);
-    childRS.ApplyRelativePositioning(&childPos, containerSize);
-    FinishReflowChild(child, pc, childSize, &childRS, childWM, childPos,
+                              containerSize - childSize->PhysicalSize());
+    // Apply align/justify-self and reflow again if that affects the size.
+    if (isGridItem) {
+      LogicalSize oldSize = childSize->Size(childWM); // from the ReflowChild()
+      LogicalSize newContentSize(childWM);
+      auto align = childRS->mStylePosition->ComputedAlignSelf(
+                     childRS->mStyleDisplay, containerSC);
+      Maybe<LogicalAxis> alignResize =
+        AlignSelf(align, cb, wm, *childRS, oldSize, &newContentSize, &childPos);
+      auto justify = childRS->mStylePosition->ComputedJustifySelf(
+                       childRS->mStyleDisplay, containerSC);
+      Maybe<LogicalAxis> justifyResize =
+        JustifySelf(justify, cb, wm, *childRS, oldSize, &newContentSize, &childPos);
+      if (alignResize || justifyResize) {
+        FinishReflowChild(child, pc, *childSize, childRS.ptr(), childWM,
+                          LogicalPoint(childWM), containerSize,
+                          NS_FRAME_NO_MOVE_FRAME | NS_FRAME_NO_SIZE_VIEW);
+        childSize.reset(); // In reverse declaration order since it runs
+        childRS.reset();   // destructors.
+        childRS.emplace(pc, *aState.mReflowState, child, childCBSize, &percentBasis);
+        if ((alignResize && alignResize.value() == eLogicalAxisBlock) ||
+            (justifyResize && justifyResize.value() == eLogicalAxisBlock)) {
+          childRS->SetComputedBSize(newContentSize.BSize(childWM));
+          childRS->SetBResize(true);
+        }
+        if ((alignResize && alignResize.value() == eLogicalAxisInline) ||
+            (justifyResize && justifyResize.value() == eLogicalAxisInline)) {
+          childRS->SetComputedISize(newContentSize.ISize(childWM));
+          childRS->SetIResize(true);
+        }
+        childSize.emplace(*childRS);
+        ReflowChild(child, pc, *childSize, *childRS, childWM,
+                    LogicalPoint(childWM), dummyContainerSize, 0, childStatus);
+      }
+    }
+    childRS->ApplyRelativePositioning(&childPos, containerSize);
+    FinishReflowChild(child, pc, *childSize, childRS.ptr(), childWM, childPos,
                       containerSize, 0);
     ConsiderChildOverflow(aDesiredSize.mOverflowAreas, child);
-    // XXX deal with 'childStatus' not being COMPLETE
+    // XXX deal with 'childStatus' not being COMPLETE (bug 1144096)
   }
 
   if (IsAbsoluteContainer()) {
@@ -2506,6 +2975,11 @@ nsGridContainerFrame::Reflow(nsPresContext*           aPresContext,
 
   LogicalRect contentArea(wm, bp.IStart(wm), bp.BStart(wm),
                           computedISize, bSize);
+
+  // Apply 'align/justify-content' to the grid.
+  gridReflowState.mCols.AlignJustifyContent(aReflowState, contentArea.Size(wm));
+  gridReflowState.mRows.AlignJustifyContent(aReflowState, contentArea.Size(wm));
+
   gridReflowState.mIter.Reset(GridItemCSSOrderIterator::eIncludeAll);
   ReflowChildren(gridReflowState, contentArea, aDesiredSize, aStatus);
 
@@ -2532,8 +3006,11 @@ nsGridContainerFrame::IntrinsicISize(nsRenderingContext* aRenderingContext,
   state.mCols.CalculateSizes(state, mGridItems, state.mColFunctions,
                              NS_UNCONSTRAINEDSIZE, &GridArea::mCols,
                              aConstraint);
-  TranslatedLineRange allTracks(0, mGridColEnd);
-  return allTracks.ToLength(state.mCols.mSizes);
+  nscoord length = 0;
+  for (const TrackSize& sz : state.mCols.mSizes) {
+    length += sz.mBase;
+  }
+  return length;
 }
 
 nscoord

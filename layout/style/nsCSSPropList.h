@@ -1586,32 +1586,32 @@ CSS_PROP_POSITION(
     align-content,
     align_content,
     AlignContent,
-    CSS_PROPERTY_PARSE_VALUE,
+    CSS_PROPERTY_PARSE_FUNCTION,
     "",
-    VARIANT_HK,
-    kAlignContentKTable,
-    offsetof(nsStylePosition, mAlignContent),
-    eStyleAnimType_EnumU8)
+    0,
+    nullptr,
+    CSS_PROP_NO_OFFSET,
+    eStyleAnimType_None)
 CSS_PROP_POSITION(
     align-items,
     align_items,
     AlignItems,
-    CSS_PROPERTY_PARSE_VALUE,
+    CSS_PROPERTY_PARSE_FUNCTION,
     "",
-    VARIANT_HK,
-    kAlignItemsKTable,
-    offsetof(nsStylePosition, mAlignItems),
-    eStyleAnimType_EnumU8)
+    0,
+    nullptr,
+    CSS_PROP_NO_OFFSET,
+    eStyleAnimType_None)
 CSS_PROP_POSITION(
     align-self,
     align_self,
     AlignSelf,
-    CSS_PROPERTY_PARSE_VALUE,
+    CSS_PROPERTY_PARSE_FUNCTION,
     "",
-    VARIANT_HK,
-    kAlignSelfKTable,
-    offsetof(nsStylePosition, mAlignSelf),
-    eStyleAnimType_EnumU8)
+    0,
+    nullptr,
+    CSS_PROP_NO_OFFSET,
+    eStyleAnimType_None)
 CSS_PROP_SHORTHAND(
     flex,
     flex,
@@ -1701,12 +1701,32 @@ CSS_PROP_POSITION(
     justify-content,
     justify_content,
     JustifyContent,
-    CSS_PROPERTY_PARSE_VALUE,
+    CSS_PROPERTY_PARSE_FUNCTION,
     "",
-    VARIANT_HK,
-    kJustifyContentKTable,
-    offsetof(nsStylePosition, mJustifyContent),
-    eStyleAnimType_EnumU8)
+    0,
+    nullptr,
+    CSS_PROP_NO_OFFSET,
+    eStyleAnimType_None)
+CSS_PROP_POSITION(
+    justify-items,
+    justify_items,
+    JustifyItems,
+    CSS_PROPERTY_PARSE_FUNCTION,
+    "",
+    0,
+    nullptr,
+    CSS_PROP_NO_OFFSET,
+    eStyleAnimType_None)
+CSS_PROP_POSITION(
+    justify-self,
+    justify_self,
+    JustifySelf,
+    CSS_PROPERTY_PARSE_FUNCTION,
+    "",
+    0,
+    nullptr,
+    CSS_PROP_NO_OFFSET,
+    eStyleAnimType_None)
 CSS_PROP_DISPLAY(
     float,
     float,
