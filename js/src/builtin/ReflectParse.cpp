@@ -2254,8 +2254,8 @@ ASTSerializer::switchCase(ParseNode* pn, MutableHandleValue dst)
 
     RootedValue expr(cx);
 
-    return optExpression(pn->pn_left, &expr) &&
-           statements(pn->pn_right, stmts) &&
+    return optExpression(pn->as<CaseClause>().caseExpression(), &expr) &&
+           statements(pn->as<CaseClause>().statementList(), stmts) &&
            builder.switchCase(expr, stmts, &pn->pn_pos, dst);
 }
 
