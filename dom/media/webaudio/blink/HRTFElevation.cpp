@@ -76,19 +76,19 @@ size_t HRTFElevation::fftSizeForSampleRate(float sampleRate)
     // This is the size if we were to use all raw response samples.
     unsigned resampledLength =
         floorf(ResponseFrameSize * sampleRate / rawSampleRate);
-    // Keep things semi-sane, with max FFT size of 1024 and minimum of 4.
-    // "size |= 3" ensures a minimum of 4 (with the size++ below) and sets the
-    // 2 least significant bits for rounding up to the next power of 2 below.
+    // Keep things semi-sane, with max FFT size of 1024.
     unsigned size = min(resampledLength, 1023U);
-    size |= 3;
+    // Ensure a minimum of 2 * WEBAUDIO_BLOCK_SIZE (with the size++ below) for
+    // FFTConvolver and set the 8 least significant bits for rounding up to
+    // the next power of 2 below.
+    size |= 2 * WEBAUDIO_BLOCK_SIZE - 1;
     // Round up to the next power of 2, making the FFT size no more than twice
     // the impulse response length.  This doubles size for values that are
-    // already powers of 2.  This works by filling in 7 bits to right of the
+    // already powers of 2.  This works by filling in alls bit to right of the
     // most significant bit.  The most significant bit is no greater than
-    // 1 << 9, and the least significant 2 bits were already set above.
+    // 1 << 9, and the least significant 8 bits were already set above, so
+    // there is at most one bit to add.
     size |= (size >> 1);
-    size |= (size >> 2);
-    size |= (size >> 4);
     size++;
     MOZ_ASSERT((size & (size - 1)) == 0);
 
