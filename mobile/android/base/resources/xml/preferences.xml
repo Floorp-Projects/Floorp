@@ -16,26 +16,27 @@
                                                   android:summary="@string/pref_sync_summary"
                                                   android:persistent="false" />
 
-    <PreferenceScreen android:title="@string/pref_category_customize"
-                      android:summary="@string/pref_category_customize_summary"
-                      android:key="android.not_a_preference.customize_screen">
+    <PreferenceScreen android:title="@string/pref_category_general"
+                      android:summary="@string/pref_category_general_summary"
+                      android:key="android.not_a_preference.general_screen">
         <intent android:action="android.intent.action.VIEW"
                 android:targetPackage="@string/android_package_name"
                 android:targetClass="org.mozilla.gecko.preferences.GeckoPreferences" >
             <extra
                 android:name="resource"
-                android:value="preferences_customize" />
+                android:value="preferences_general" />
         </intent>
     </PreferenceScreen>
 
-    <PreferenceScreen android:title="@string/pref_category_display"
-                      android:summary="@string/pref_category_display_summary" >
+    <PreferenceScreen android:title="@string/pref_category_search"
+                      android:summary="@string/pref_category_search_summary"
+                      android:key="android.not_a_preference.search_screen">
         <intent android:action="android.intent.action.VIEW"
                 android:targetPackage="@string/android_package_name"
                 android:targetClass="org.mozilla.gecko.preferences.GeckoPreferences" >
             <extra
                 android:name="resource"
-                android:value="preferences_display" />
+                android:value="preferences_search" />
         </intent>
     </PreferenceScreen>
 
@@ -50,16 +51,38 @@
         </intent>
     </PreferenceScreen>
 
-    <PreferenceScreen android:title="@string/pref_category_language"
-                      android:summary="@string/pref_category_language_summary" >
+    <PreferenceScreen android:title="@string/pref_category_accessibility"
+                      android:summary="@string/pref_category_accessibility_summary" >
         <intent android:action="android.intent.action.VIEW"
                 android:targetPackage="@string/android_package_name"
                 android:targetClass="org.mozilla.gecko.preferences.GeckoPreferences" >
             <extra
-                android:name="resource"
-                android:value="preferences_locale" />
+                    android:name="resource"
+                    android:value="preferences_accessibility" />
         </intent>
     </PreferenceScreen>
+
+    <PreferenceScreen android:title="@string/pref_category_advanced"
+                      android:summary="@string/pref_category_advanced_summary"
+                      android:key="android.not_a_preference.advanced.enabled" >
+        <intent android:action="android.intent.action.VIEW"
+                android:targetPackage="@string/android_package_name"
+                android:targetClass="org.mozilla.gecko.preferences.GeckoPreferences" >
+            <extra
+                    android:name="resource"
+                    android:value="preferences_advanced" />
+        </intent>
+    </PreferenceScreen>
+
+    <org.mozilla.gecko.preferences.PrivateDataPreference
+            android:key="android.not_a_preference.privacy.clear"
+            android:title="@string/pref_clear_private_data_now"
+            android:persistent="true"
+            android:positiveButtonText="@string/button_clear_data"
+            gecko:entries="@array/pref_private_data_entries"
+            gecko:entryValues="@array/pref_private_data_values"
+            gecko:entryKeys="@array/pref_private_data_keys"
+            gecko:initialValues="@array/pref_private_data_defaults" />
 
     <PreferenceScreen android:title="@string/pref_category_vendor"
                       android:summary="@string/pref_category_vendor_summary" >
@@ -69,17 +92,6 @@
             <extra
                 android:name="resource"
                 android:value="preferences_vendor" />
-        </intent>
-    </PreferenceScreen>
-    <PreferenceScreen android:title="@string/pref_category_devtools"
-                      android:summary="@string/pref_developer_remotedebugging"
-	              android:key="android.not_a_preference.devtools.enabled" >
-        <intent android:action="android.intent.action.VIEW"
-                android:targetPackage="@string/android_package_name"
-                android:targetClass="org.mozilla.gecko.preferences.GeckoPreferences" >
-            <extra
-                android:name="resource"
-                android:value="preferences_devtools" />
         </intent>
     </PreferenceScreen>
 

@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+                  android:title="@string/pref_category_accessibility"
+                  android:enabled="false">
+
+    <org.mozilla.gecko.preferences.FontSizePreference
+                    android:key="font.size.inflation.minTwips"
+                    android:title="@string/pref_text_size"
+                    android:positiveButtonText="@string/pref_font_size_set"
+                    android:negativeButtonText="@string/button_cancel"
+                    android:persistent="false" />
+
+    <CheckBoxPreference android:key="browser.ui.zoom.force-user-scalable"
+                        android:title="@string/pref_zoom_force_enabled"
+                        android:summary="@string/pref_zoom_force_enabled_summary" />
+
+    <CheckBoxPreference android:key="ui.zoomedview.enabled"
+                        android:title="@string/pref_magnifying_glass_enabled"
+                        android:summary="@string/pref_magnifying_glass_enabled_summary" />
+
+    <CheckBoxPreference android:key="android.not_a_preference.voice_input_enabled"
+                        android:title="@string/pref_voice_input"
+                        android:summary="@string/pref_voice_input_summary"
+                        android:defaultValue="true"/>
+
+    <CheckBoxPreference android:key="android.not_a_preference.qrcode_enabled"
+                        android:title="@string/pref_qrcode_enabled"
+                        android:summary="@string/pref_qrcode_enabled_summary"
+                        android:defaultValue="true"/>
+
+</PreferenceScreen>

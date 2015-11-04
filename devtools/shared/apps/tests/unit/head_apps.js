@@ -90,6 +90,10 @@ function setup() {
   WebappOSUtils.getPackagePath = function(aApp) {
     return aApp.basePath + "/" + aApp.id;
   }
+
+  // Enable launch/close method of the webapps actor
+  let {WebappsActor} = require("devtools/server/actors/webapps");
+  WebappsActor.prototype.supportsLaunch = true;
 }
 
 function do_get_webappsdir() {

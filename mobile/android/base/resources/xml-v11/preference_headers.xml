@@ -3,23 +3,23 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<!-- Tablet only: Sync is nested within the "Customize" header on tablets,
+<!-- Tablet only: Sync is nested within the "General" header on tablets,
      instead of being a top-level menu item.
      See xml-v11/preferences.xml for single-pane v11+ phone layout. -->
 
 <preference-headers xmlns:android="http://schemas.android.com/apk/res/android">
 
     <header android:fragment="org.mozilla.gecko.preferences.GeckoPreferenceFragment"
-            android:title="@string/pref_header_customize">
+            android:title="@string/pref_header_general">
         <extra android:name="resource"
-               android:value="preferences_customize_tablet"/>
+               android:value="preferences_general_tablet"/>
     </header>
 
     <header android:fragment="org.mozilla.gecko.preferences.GeckoPreferenceFragment"
-            android:title="@string/pref_header_display"
-            android:id="@+id/pref_header_display">
+            android:title="@string/pref_header_search"
+            android:id="@+id/pref_header_search">
         <extra android:name="resource"
-               android:value="preferences_display"/>
+               android:value="preferences_search"/>
     </header>
 
     <header android:fragment="org.mozilla.gecko.preferences.GeckoPreferenceFragment"
@@ -29,23 +29,23 @@
     </header>
 
     <header android:fragment="org.mozilla.gecko.preferences.GeckoPreferenceFragment"
-            android:title="@string/pref_header_language"
-            android:id="@+id/pref_header_language">
+            android:title="@string/pref_header_accessibility"
+            android:id="@+id/pref_header_accessibility">
         <extra android:name="resource"
-               android:value="preferences_locale" />
+               android:value="preferences_accessibility"/>
+    </header>
+
+    <header android:fragment="org.mozilla.gecko.preferences.GeckoPreferenceFragment"
+            android:title="@string/pref_header_advanced"
+            android:id="@+id/pref_header_advanced">
+        <extra android:name="resource"
+               android:value="preferences_advanced"/>
     </header>
 
     <header android:fragment="org.mozilla.gecko.preferences.GeckoPreferenceFragment"
             android:title="@string/pref_header_vendor">
         <extra android:name="resource"
                android:value="preferences_vendor"/>
-    </header>
-
-    <header android:fragment="org.mozilla.gecko.preferences.GeckoPreferenceFragment"
-            android:title="@string/pref_header_devtools"
-            android:id="@+id/pref_header_devtools">
-        <extra android:name="resource"
-               android:value="preferences_devtools"/>
     </header>
 
 </preference-headers>

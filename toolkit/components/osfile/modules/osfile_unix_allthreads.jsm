@@ -28,7 +28,7 @@ if (typeof Components != "undefined") {
   SharedAll = {};
   Cu.import("resource://gre/modules/osfile/osfile_shared_allthreads.jsm", SharedAll);
   this.exports = {};
-} else if (typeof "module" != "undefined" && typeof "require" != "undefined") {
+} else if (typeof module != "undefined" && typeof require != "undefined") {
   // Module is loaded with require()
   SharedAll = require("resource://gre/modules/osfile/osfile_shared_allthreads.jsm");
 } else {

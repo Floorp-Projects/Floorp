@@ -294,21 +294,21 @@ exports.testStringOverload = createProxyTest(html, function (helper, assert) {
   );
 });
 
-exports["test MozMatchedSelector"] = createProxyTest("", function (helper) {
+exports["test Element.matches()"] = createProxyTest("", function (helper) {
   helper.createWorker(
     'new ' + function ContentScriptScope() {
-      // Check mozMatchesSelector XrayWrappers bug:
-      // mozMatchesSelector returns bad results when we are not calling it from the node itself
-      // SEE BUG 658909: mozMatchesSelector returns incorrect results with XrayWrappers
-      assert(document.createElement( "div" ).mozMatchesSelector("div"),
-             "mozMatchesSelector works while being called from the node");
-      assert(document.documentElement.mozMatchesSelector.call(
+      // Check matches XrayWrappers bug (Bug 658909):
+      // Test that Element.matches() does not return bad results when we are
+      // not calling it from the node itself.
+      assert(document.createElement( "div" ).matches("div"),
+             "matches works while being called from the node");
+      assert(document.documentElement.matches.call(
                document.createElement( "div" ),
                "div"
              ),
-             "mozMatchesSelector works while being called from a " +
+             "matches works while being called from a " +
              "function reference to " +
-             "document.documentElement.mozMatchesSelector.call");
+             "document.documentElement.matches.call");
       done();
     }
   );

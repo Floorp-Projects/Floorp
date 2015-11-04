@@ -3,12 +3,14 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-/* globals AnimationsController, document, performance, promise,
-   gToolbox, gInspector, requestAnimationFrame, cancelAnimationFrame, L10N */
+/* globals AnimationsController, document, promise, gToolbox, gInspector */
 
 "use strict";
 
-const {AnimationsTimeline} = require("devtools/client/animationinspector/components");
+const {
+  AnimationsTimeline,
+  RateSelector
+} = require("devtools/client/animationinspector/components");
 const {formatStopwatchTime} = require("devtools/client/animationinspector/utils");
 
 var $ = (selector, target = document) => target.querySelector(selector);
@@ -39,6 +41,7 @@ var AnimationsPanel = {
     this.playTimelineButtonEl = $("#pause-resume-timeline");
     this.rewindTimelineButtonEl = $("#rewind-timeline");
     this.timelineCurrentTimeEl = $("#timeline-current-time");
+    this.rateSelectorEl = $("#timeline-rate");
 
     // If the server doesn't support toggling all animations at once, hide the
     // whole global toolbar.
@@ -49,7 +52,8 @@ var AnimationsPanel = {
     // Binding functions that need to be called in scope.
     for (let functionName of ["onPickerStarted", "onPickerStopped",
       "refreshAnimationsUI", "toggleAll", "onTabNavigated",
-      "onTimelineDataChanged", "playPauseTimeline", "rewindTimeline"]) {
+      "onTimelineDataChanged", "playPauseTimeline", "rewindTimeline",
+      "onRateChanged"]) {
       this[functionName] = this[functionName].bind(this);
     }
     let hUtils = gToolbox.highlighterUtils;
@@ -58,12 +62,16 @@ var AnimationsPanel = {
     this.animationsTimelineComponent = new AnimationsTimeline(gInspector);
     this.animationsTimelineComponent.init(this.playersEl);
 
+    if (AnimationsController.traits.hasSetPlaybackRate) {
+      this.rateSelectorComponent = new RateSelector();
+      this.rateSelectorComponent.init(this.rateSelectorEl);
+    }
+
     this.startListeners();
 
     yield this.refreshAnimationsUI();
 
     this.initialized.resolve();
-
     this.emit(this.PANEL_INITIALIZED);
   }),
 
@@ -83,10 +91,15 @@ var AnimationsPanel = {
     this.animationsTimelineComponent.destroy();
     this.animationsTimelineComponent = null;
 
+    if (this.rateSelectorComponent) {
+      this.rateSelectorComponent.destroy();
+      this.rateSelectorComponent = null;
+    }
+
     this.playersEl = this.errorMessageEl = null;
     this.toggleAllButtonEl = this.pickerButtonEl = null;
     this.playTimelineButtonEl = this.rewindTimelineButtonEl = null;
-    this.timelineCurrentTimeEl = null;
+    this.timelineCurrentTimeEl = this.rateSelectorEl = null;
 
     this.destroyed.resolve();
   }),
@@ -107,6 +120,10 @@ var AnimationsPanel = {
 
     this.animationsTimelineComponent.on("timeline-data-changed",
       this.onTimelineDataChanged);
+
+    if (this.rateSelectorComponent) {
+      this.rateSelectorComponent.on("rate-changed", this.onRateChanged);
+    }
   },
 
   stopListeners: function() {
@@ -125,6 +142,10 @@ var AnimationsPanel = {
 
     this.animationsTimelineComponent.off("timeline-data-changed",
       this.onTimelineDataChanged);
+
+    if (this.rateSelectorComponent) {
+      this.rateSelectorComponent.off("rate-changed", this.onRateChanged);
+    }
   },
 
   togglePlayers: function(isVisible) {
@@ -173,13 +194,23 @@ var AnimationsPanel = {
                         .catch(e => console.error(e));
   },
 
+  /**
+   * Set the playback rate of all current animations shown in the timeline to
+   * the value of this.rateSelectorEl.
+   */
+  onRateChanged: function(e, rate) {
+    AnimationsController.setPlaybackRateAll(rate)
+                        .then(() => this.refreshAnimationsStateAndUI())
+                        .catch(e => console.error(e));
+  },
+
   onTabNavigated: function() {
     this.toggleAllButtonEl.classList.remove("paused");
   },
 
   onTimelineDataChanged: function(e, data) {
     this.timelineData = data;
-    let {isMoving, isPaused, isUserDrag, time} = data;
+    let {isMoving, isUserDrag, time} = data;
 
     this.playTimelineButtonEl.classList.toggle("paused", !isMoving);
 
@@ -231,6 +262,11 @@ var AnimationsPanel = {
     this.animationsTimelineComponent.render(
       AnimationsController.animationPlayers,
       AnimationsController.documentCurrentTime);
+
+    // Re-render the rate selector component.
+    if (this.rateSelectorComponent) {
+      this.rateSelectorComponent.render(AnimationsController.animationPlayers);
+    }
 
     // If there are no players to show, show the error message instead and
     // return.

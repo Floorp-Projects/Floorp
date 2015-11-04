@@ -321,7 +321,11 @@ if test -n "$gonkdir" ; then
     direct_nspr_config=1
     android_cxx_stl=mozstlport
 else
-    MOZ_ANDROID_NDK
+    if test "$COMPILE_ENVIRONMENT"; then
+        MOZ_ANDROID_NDK
+    else
+        AC_DEFINE(ANDROID)
+    fi # COMPILE_ENVIRONMENT
 
     case "$target" in
     *-android*|*-linuxandroid*)
@@ -1197,7 +1201,14 @@ esac
 
 dnl Configure platform-specific CPU architecture compiler options.
 dnl ==============================================================
-MOZ_ARCH_OPTS
+if test "$COMPILE_ENVIRONMENT"; then
+    MOZ_ARCH_OPTS
+else
+    if test "$OS_TARGET" = Android -a x"$MOZ_WIDGET_TOOLKIT" != x"gonk"; then
+        dnl Default Android builds to ARMv7.
+        MOZ_ARCH=armv7-a
+    fi
+fi # COMPILE_ENVIRONMENT
 
 dnl =================================================================
 dnl Set up and test static assertion macros used to avoid AC_TRY_RUN,
@@ -1246,7 +1257,10 @@ dnl Android libstdc++, placed here so it can use MOZ_ARCH
 dnl computed above.
 dnl ========================================================
 
-MOZ_ANDROID_STLPORT
+MOZ_ANDROID_CPU_ARCH
+if test "$COMPILE_ENVIRONMENT"; then
+    MOZ_ANDROID_STLPORT
+fi # COMPILE_ENVIRONMENT
 
 dnl ========================================================
 dnl Suppress Clang Argument Warnings
@@ -2532,6 +2546,7 @@ esac
 if test -z "$COMPILE_ENVIRONMENT"; then
     SKIP_COMPILER_CHECKS=1
     SKIP_LIBRARY_CHECKS=1
+    PKG_SKIP_STRIP=1
 else
     MOZ_COMPILER_OPTS
 fi # COMPILE_ENVIRONMENT

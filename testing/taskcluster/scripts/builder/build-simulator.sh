@@ -1,10 +1,12 @@
 #!/bin/bash
 
 usage() {
-  echo "Usage: $0 GECKO_DIR GAIA_DIR MULET_TARBALL_URL"
+  echo "Usage: $0 GECKO_DIR GAIA_DIR MULET_TARBALL_URL [--release]"
+  echo "  --release"
+  echo "    use xpi name with version and platform"
 }
 
-if [ "$#" -ne 3 ]; then
+if [ "$#" -lt 3 ]; then
   usage
   exit
 fi
@@ -23,30 +25,30 @@ if [ -z $2 ] || [ ! -d $2 ]; then
 fi
 GAIA_DIR=$2
 
-url_re='^(http|https|ftp)://.*tar.bz2'
-if [ -z $3 ] || ! [[ $3 =~ $url_re ]] ; then
+url_re='^(http|https|ftp)://.*(tar.bz2|zip|dmg)'
+if [ -z $3 ] || ! [[ $3 =~ $url_re ]] && ! [ -f $3 ] ; then
   usage
-  echo "Third argument should be URL to mulet tarball"
+  echo "Third argument should be URL or a path to mulet tarball"
   exit
 fi
-BUILD_URL=$3
+MULET=$3
 
-set -ex
+RELEASE=
+if [ "$4" == "--release" ]; then
+  RELEASE=1
+fi
 
-WORKDIR=simulator
-SIM_DIR=$GECKO_DIR/b2g/simulator
-
-if [[ $BUILD_URL =~ 'linux-x86_64' ]] ; then
+if [[ $MULET =~ 'linux-x86_64' ]] ; then
   PLATFORM=linux64
-elif [[ $BUILD_URL =~ 'linux' ]] ; then
+elif [[ $MULET =~ 'linux' ]] ; then
   PLATFORM=linux
-elif [[ $BUILD_URL =~ 'win32' ]] ; then
+elif [[ $MULET =~ 'win32' ]] ; then
   PLATFORM=win32
-elif [[ $BUILD_URL =~ 'mac64' ]] ; then
+elif [[ $MULET =~ 'mac64' ]] ; then
   PLATFORM=mac64
 fi
 if [ -z $PLATFORM ]; then
-  echo "Unable to compute platform out of mulet URL: $BUILD_URL"
+  echo "Unable to compute platform out of mulet package filename: $MULET"
   exit
 fi
 echo "PLATFORM: $PLATFORM"
@@ -59,16 +61,74 @@ if ! [[ $VERSION =~ $re ]] ; then
 fi
 echo "B2G VERSION: $VERSION"
 
-mkdir -p $WORKDIR
+set -ex
 
-if [ ! -f mulet.tar.bz2 ]; then
-  wget -O mulet.tar.bz2 $BUILD_URL
+WORK_DIR=simulator
+
+rm -rf $WORK_DIR/
+mkdir -p $WORK_DIR
+
+# If mulet isn't a file, that's an URL and needs to be downloaded first
+if [ ! -f $MULET ]; then
+  URL=$MULET
+  MULET=$WORK_DIR/$(basename $URL)
+  wget -O $MULET $URL
 fi
-(cd $WORKDIR/ && tar jxvf ../mulet.tar.bz2)
 
-# Not sure it is still useful with mulet...
-# remove useless stuff we don't want to ship in simulators
-rm -rf $WORKDIR/firefox/gaia $WORKDIR/firefox/B2G.app/Contents/MacOS/gaia $WORKDIR/firefox/B2G.app/Contents/Resources/gaia
+# Compute absolute path for all path variables
+realpath() {
+    [[ $1 = /* ]] && echo "$1" || echo "$PWD/${1#./}"
+}
+MULET=$(realpath $MULET)
+WORK_DIR=$(realpath $WORK_DIR)
+GAIA_DIR=$(realpath $GAIA_DIR)
+GECKO_DIR=$(realpath $GECKO_DIR)
+SIM_DIR=$(realpath $GECKO_DIR/b2g/simulator)
+ADDON_DIR=$(realpath $WORK_DIR/addon)
+
+mkdir -p $ADDON_DIR
+
+# Uncompress the Mulet package
+if [[ $MULET =~ .dmg$ ]]; then
+  mkdir -p $WORK_DIR/dmg
+  if [ "$(uname)" == "Darwin" ]; then
+    hdiutil attach -verbose -noautoopen -mountpoint $WORK_DIR/dmg "$MULET"
+    # Wait for files to show up
+    # hdiutil uses a helper process, diskimages-helper, which isn't always done its
+    # work by the time hdiutil exits. So we wait until something shows up in the
+    # mnt directory. Due to the async nature of diskimages-helper, the best thing
+    # we can do is to make sure the glob() rsync is making can find files.
+    i=0
+    TIMEOUT=900
+    while [ "$(echo $WORK_DIR/dmg/*)" == "$WORK_DIR/dmg/*" ]; do
+      if [ $i -gt $TIMEOUT ]; then
+        echo "Unable to mount dmg file."
+        exit 1
+      fi
+      sleep 1
+      i=$(expr $i + 1)
+    done
+    # Now we can copy everything out of the $MOUNTPOINT directory into the target directory
+    mkdir -p $ADDON_DIR/firefox
+    cp -r $WORK_DIR/dmg/FirefoxNightly.app $ADDON_DIR/firefox/
+    hdiutil detach $WORK_DIR/DMG
+  else
+    7z x -o$WORK_DIR/dmg $MULET
+    mkdir -p $WORK_DIR/dmg/hfs
+    sudo mount -o loop,ro -t hfsplus  $WORK_DIR/dmg/2.hfs $WORK_DIR/dmg/hfs
+    mkdir -p $ADDON_DIR/firefox
+    cp -r $WORK_DIR/dmg/hfs/FirefoxNightly.app $ADDON_DIR/firefox/
+    sudo umount $WORK_DIR/dmg/hfs
+  fi
+  rm -rf $WORK_DIR/dmg
+elif [[ $MULET =~ .zip$ ]]; then
+  unzip $MULET -d $ADDON_DIR/
+elif [[ $MULET =~ .tar.bz2 ]]; then
+  (cd $ADDON_DIR/ && tar jxvf $MULET)
+else
+  echo "Unsupported file extension for $MULET"
+  exit
+fi
 
 # Build a gaia profile specific to the simulator in order to:
 # - disable the FTU
@@ -76,10 +136,18 @@ rm -rf $WORKDIR/firefox/gaia $WORKDIR/firefox/B2G.app/Contents/MacOS/gaia $WORKD
 # - set custom settings to disable lockscreen and screen timeout
 # - only ship production apps
 NOFTU=1 GAIA_APP_TARGET=production SETTINGS_PATH=$SIM_DIR/custom-settings.json make -j1 -C $GAIA_DIR profile
-mv $GAIA_DIR/profile $WORKDIR/
-cat $SIM_DIR/custom-prefs.js >> $WORKDIR/profile/user.js
+mv $GAIA_DIR/profile $ADDON_DIR/
+cat $SIM_DIR/custom-prefs.js >> $ADDON_DIR/profile/user.js
 
-MOZ_APP_BUILDID=$(sed -n "s/BuildID=\([0-9]\{8\}\)/\1/p" $WORKDIR/firefox/application.ini)
+if [ -f $ADDON_DIR/firefox/application.ini ]; then
+  APPLICATION_INI=$ADDON_DIR/firefox/application.ini
+elif [ -f $ADDON_DIR/firefox/FirefoxNightly.app/Contents/Resources/application.ini ]; then
+  APPLICATION_INI=$ADDON_DIR/firefox/FirefoxNightly.app/Contents/Resources/application.ini
+else
+  echo "Unable to find application.ini file"
+  exit
+fi
+MOZ_APP_BUILDID=$(sed -n "s/BuildID=\([0-9]\{8\}\)/\1/p" $APPLICATION_INI)
 echo "BUILDID $MOZ_APP_BUILDID -- VERSION $VERSION"
 
 XPI_NAME=fxos-simulator-$VERSION.$MOZ_APP_BUILDID-$PLATFORM.xpi
@@ -102,12 +170,17 @@ sed -e "s/@ADDON_VERSION@/$ADDON_VERSION/" \
     -e "s#@ADDON_UPDATE_URL@#$UPDATE_URL#" \
     -e "s/@ADDON_NAME@/$ADDON_NAME/" \
     -e "s/@ADDON_DESCRIPTION@/$ADDON_DESCRIPTION/" \
-    $SIM_DIR/install.rdf.in > $WORKDIR/install.rdf
+    $SIM_DIR/install.rdf.in > $ADDON_DIR/install.rdf
 
 # copy all useful addon file
-cp $SIM_DIR/icon.png $WORKDIR/
-cp $SIM_DIR/icon64.png $WORKDIR/
+cp $SIM_DIR/icon.png $ADDON_DIR/
+cp $SIM_DIR/icon64.png $ADDON_DIR/
 
+# Create the final zip .xpi file
 mkdir -p artifacts
-(cd $WORKDIR && zip -r - .) > artifacts/fxos-simulator.xpi
+FILE_NAME=fxos-simulator.xpi
+if [ "$RELEASE" ]; then
+  FILE_NAME=$XPI_NAME
+fi
+(cd $ADDON_DIR && zip -r - .) > artifacts/$FILE_NAME
 
