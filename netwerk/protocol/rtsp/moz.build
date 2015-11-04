@@ -66,8 +66,8 @@ for var in ('IMPL_NS_NET', 'FORCE_PR_LOG'):
     DEFINES[var] = True
 
 if CONFIG['ANDROID_VERSION'] == '15':
-    CXXFLAGS += ['-I%s/frameworks/base/media/libstagefright/mpeg2ts' % CONFIG['ANDROID_SOURCE']]
+    LOCAL_INCLUDES += ['%' + '%s/frameworks/base/media/libstagefright/mpeg2ts' % CONFIG['ANDROID_SOURCE']]
 else:
-    CXXFLAGS += ['-I%s/frameworks/av/media/libstagefright/mpeg2ts' % CONFIG['ANDROID_SOURCE']]
+    LOCAL_INCLUDES += ['%' + '%s/frameworks/av/media/libstagefright/mpeg2ts' % CONFIG['ANDROID_SOURCE']]
 
 CXXFLAGS += ['-Wno-multichar']
