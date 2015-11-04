@@ -1650,6 +1650,7 @@ CompositorParent::SetControllerForLayerTree(uint64_t aLayersId,
 /*static*/ APZCTreeManager*
 CompositorParent::GetAPZCTreeManager(uint64_t aLayersId)
 {
+  EnsureLayerTreeMapReady();
   const CompositorParent::LayerTreeState* state = CompositorParent::GetIndirectShadowTree(aLayersId);
   if (state && state->mParent) {
     return state->mParent->mApzcTreeManager;

@@ -599,37 +599,19 @@ ProcessPriorityManagerImpl::ObserveContentParentDestroyed(nsISupports* aSubject)
   }
 }
 
-static PLDHashOperator
-FreezeParticularProcessPriorityManagers(
-  const uint64_t& aKey,
-  RefPtr<ParticularProcessPriorityManager> aValue,
-  void* aUserData)
-{
-  aValue->Freeze();
-  return PL_DHASH_NEXT;
-}
-
-static PLDHashOperator
-UnfreezeParticularProcessPriorityManagers(
-  const uint64_t& aKey,
-  RefPtr<ParticularProcessPriorityManager> aValue,
-  void* aUserData)
-{
-  aValue->Unfreeze();
-  return PL_DHASH_NEXT;
-}
-
 void
 ProcessPriorityManagerImpl::ObserveScreenStateChanged(const char16_t* aData)
 {
   if (NS_LITERAL_STRING("on").Equals(aData)) {
     sFrozen = false;
-    mParticularManagers.EnumerateRead(
-      &UnfreezeParticularProcessPriorityManagers, nullptr);
+    for (auto iter = mParticularManagers.Iter(); !iter.Done(); iter.Next()) {
+      iter.UserData()->Unfreeze();
+    }
   } else {
     sFrozen = true;
-    mParticularManagers.EnumerateRead(
-      &FreezeParticularProcessPriorityManagers, nullptr);
+    for (auto iter = mParticularManagers.Iter(); !iter.Done(); iter.Next()) {
+      iter.UserData()->Freeze();
+    }
   }
 }
 

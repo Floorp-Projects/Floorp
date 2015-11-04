@@ -916,7 +916,7 @@ function loadManifestFromWebManifest(aStream) {
 
   addon.targetApplications = [{
     id: TOOLKIT_ID,
-    minVersion: "42a1",
+    minVersion: AddonManagerPrivate.webExtensionsMinPlatformVersion,
     maxVersion: "*",
   }];
 

@@ -1928,6 +1928,27 @@ NewUDateFormat(JSContext* cx, HandleObject dateTimeFormat)
 
     UErrorCode status = U_ZERO_ERROR;
 
+    if (!uTimeZone) {
+#if ENABLE_INTL_API && defined(ICU_TZ_HAS_RECREATE_DEFAULT)
+        // JS::ResetTimeZone() recomputes the JS language's LocalTZA value.  It
+        // *should* also recreate ICU's default time zone (used for formatting
+        // when no time zone has been specified), but this operation is slow.
+        // Doing it eagerly introduces a perf regression -- see bug 1220693.
+        // Therefore we perform it lazily, responding to the value of a global
+        // atomic variable that records whether ICU's default time zone is
+        // accurate.  Baroque, but it's the only way to get the job done.
+        //
+        // Beware: this is kosher *only* if every place using ICU's default
+        // time zone performs the atomic compare-exchange and possible
+        // recreation song and dance routine here.
+        if (js::DefaultTimeZoneStatus.compareExchange(IcuTimeZoneStatus::NeedsUpdate,
+                                                      IcuTimeZoneStatus::Updating))
+        {
+            icu::TimeZone::recreateDefault();
+        }
+#endif
+    }
+
     // If building with ICU headers before 50.1, use UDAT_IGNORE instead of
     // UDAT_PATTERN.
     UDateFormat* df =

@@ -6,7 +6,7 @@
 <html><head>
   <meta charset="utf-8">
   <title>CSS Grid Test: abs pos areas in empty grid</title>
-  <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=">
+  <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1215099">
   <link rel="help" href="http://dev.w3.org/csswg/css-grid/#abspos-items">
   <link rel="match" href="grid-abspos-items-011-ref.html">
   <style type="text/css">
@@ -19,11 +19,21 @@ div {
   height: 20px;
   background: red;
 }
+div.green {
+  background: lime;
+}
+x div {
+  padding: 4px;
+  background: white;
+}
 
 span {
   position: absolute;
   top:0;left:0;bottom:0;right:0;
   background: lime;
+}
+span.red {
+  background: red;
 }
 
 .cs { grid-column-start: 1; }
@@ -39,9 +49,34 @@ There should be no red areas.
 <br clear="all">
 
 <div><span class="cs"></span></div>
+<div class="green"><span class="ce red"></span></div>
+<div><span class="rs"></span></div>
+<div class="green"><span class="re red"></span></div>
+
+<div><span class="cs ce"></span></div>
+<div><span class="cs rs"></span></div>
+<div class="green"><span class="cs re red"></span></div>
+<div class="green"><span class="ce rs red"></span></div>
+<div class="green"><span class="ce re red"></span></div>
+<div><span class="rs re"></span></div>
+
+<div><span class="cs ce rs"></span></div>
+<div class="green"><span class="cs ce re red"></span></div>
+<div><span class="rs re cs"></span></div>
+<div class="green"><span class="rs re ce red"></span></div>
+
+<div><span class="cs ce rs re"></span></div>
+
+<br clear="all">
+<br clear="all">
+
+<!-- the same combinations in a grid container with padding -->
+
+<x>
+<div><span class="cs"></span></div>
 <div><span class="ce"></span></div>
 <div><span class="rs"></span></div>
-<div><span class="rs"></span></div>
+<div><span class="re"></span></div>
 
 <div><span class="cs ce"></span></div>
 <div><span class="cs rs"></span></div>
@@ -56,6 +91,7 @@ There should be no red areas.
 <div><span class="rs re ce"></span></div>
 
 <div><span class="cs ce rs re"></span></div>
+</x>
 
 </body>
 </html>

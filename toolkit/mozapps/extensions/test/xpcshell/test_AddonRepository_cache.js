@@ -505,9 +505,8 @@ add_task(function* setup() {
   yield promiseInstallAllFiles(ADDON_FILES);
   yield promiseRestartManager();
 
-  gServer = new HttpServer();
+  gServer = createHttpServer(PORT);
   gServer.registerDirectory("/data/", do_get_file("data"));
-  gServer.start(PORT);
 });
 
 // Tests AddonRepository.cacheEnabled
@@ -703,8 +702,4 @@ add_task(function* run_test_17() {
   yield AddonManagerInternal.backgroundUpdateCheck();
   let aAddons = yield promiseAddonsByIDs(ADDON_IDS);
   check_results(aAddons, WITH_EXTENSION_CACHE);
-});
-
-add_task(function* end_test() {
-  yield new Promise((resolve, reject) => gServer.stop(resolve));
 });

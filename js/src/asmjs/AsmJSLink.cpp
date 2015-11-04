@@ -1297,7 +1297,7 @@ js::AsmJSFunctionToString(JSContext* cx, HandleFunction fun)
 
             size_t nameEnd = begin + fun->atom()->length();
             Rooted<JSFlatString*> src(cx, source->substring(cx, nameEnd, end));
-            if (!AppendUseStrictSource(cx, fun, src, out))
+            if (!src || !AppendUseStrictSource(cx, fun, src, out))
                 return nullptr;
         } else {
             Rooted<JSFlatString*> src(cx, source->substring(cx, begin, end));

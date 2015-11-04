@@ -1,0 +1,159 @@
+<!DOCTYPE HTML>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html><head>
+  <meta charset="utf-8">
+  <title>CSS Grid Test: implicit named areas</title>
+  <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1215182">
+  <link rel="help" href="http://dev.w3.org/csswg/css-grid/#grid-placement-slot">
+  <link rel="match" href="grid-placement-implicit-named-areas-001-ref.html">
+  <style type="text/css">
+div {
+  display: grid;
+  grid-auto-columns: 3px;
+  grid-auto-rows: 3px;
+  border: 1px solid;
+  float: left;
+  width: 100px;
+  margin: 2px;
+  align-items: stretch;
+  justify-items: stretch;
+  align-content: start;
+  justify-content: start;
+}
+.row-tests div {
+  height: 100px;
+}
+span { background:lime; grid-column:A; grid-row:A; }
+
+.col-valid { grid-template-columns:[A-start] 40px [] 40px [A-end]; }
+.row-valid { grid-template-rows:   [A-start] 40px [] 40px [A-end]; }
+
+.col-start-1 { grid-template-columns:[A-start] 40px [] 40px; }
+.row-start-1 { grid-template-rows:   [A-start] 40px [] 40px; }
+
+.col-end-1 { grid-template-columns:[A-end] 40px [] 40px; }
+.row-end-1 { grid-template-rows:   [A-end] 40px [] 40px; }
+
+.col-start { grid-template-columns: 40px [A-start] 40px []; }
+.row-start { grid-template-rows:    40px [A-start] 40px []; }
+
+.col-end { grid-template-columns:40px [A-end] 40px; }
+.row-end { grid-template-rows:   40px [A-end] 40px; }
+
+.col-end-start { grid-template-columns:[A-end] 40px [A-start] 40px; }
+.row-end-start { grid-template-rows:   [A-end] 40px [A-start] 40px; }
+
+.col-start-end-start { grid-template-columns:[A-start] 40px [A-end] 40px [A-start] 40px; }
+.row-start-end-start { grid-template-rows:   [A-start] 40px [A-end] 40px [A-start] 40px; }
+
+.col-start-start-end { grid-template-columns:[A-start] 40px [A-start] 40px [A-end] 40px; }
+.row-start-start-end { grid-template-rows:   [A-start] 40px [A-start] 40px [A-end] 40px; }
+
+.col-start-end-end { grid-template-columns:[A-start] 40px [A-end] 40px [A-end]; }
+.row-start-end-end { grid-template-rows:   [A-start] 40px [A-end] 40px [A-end]; }
+
+.col-start-last { grid-template-columns: 40px [] 40px [A-start]; }
+.row-start-last { grid-template-rows:    40px [] 40px [A-start]; }
+
+.col-same-1 { grid-template-columns:[A-end A-start] 40px [] 40px; }
+.row-same-1 { grid-template-rows:   [A-end A-start] 40px [] 40px; }
+
+.col-same-2 { grid-template-columns:40px [A-end A-start] 40px; }
+.row-same-2 { grid-template-rows:   40px [A-end A-start] 40px; }
+
+.col-same-2b { grid-template-columns:40px [A-start A-end] 40px; }
+.row-same-2b { grid-template-rows:   40px [A-start A-end] 40px; }
+
+.col-same-3 { grid-template-columns:40px [] 40px [A-end A-start]; }
+.row-same-3 { grid-template-rows:   40px [] 40px [A-end A-start]; }
+    </style>
+</head>
+<body>
+
+<div class="col-valid"><span></span></div>
+<div class="col-start-1"><span></span></div>
+<div class="col-end-1"><span></span></div>
+<div class="col-start"><span></span></div>
+<div class="col-end"><span></span></div>
+<div class="col-end-start"><span></span></div>
+<div class="col-start-end-start"><span></span></div>
+
+<br clear="all">
+
+<div class="col-valid row-valid"><span></span></div>
+<div class="col-start-1 row-valid"><span></span></div>
+<div class="col-end-1 row-valid"><span></span></div>
+<div class="col-start row-valid"><span></span></div>
+<div class="col-end row-valid"><span></span></div>
+<div class="col-end-start row-valid"><span></span></div>
+<div class="col-start-end-start row-valid"><span></span></div>
+
+<br clear="all">
+
+<div class="col-start-start-end"><span></span></div>
+<div class="col-start-end-end"><span></span></div>
+<div class="col-start-last"><span></span></div>
+<div class="col-same-1"><span></span></div>
+<div class="col-same-2"><span></span></div>
+<div class="col-same-2b"><span></span></div>
+<div class="col-same-3"><span></span></div>
+
+<br clear="all">
+
+<div class="col-start-start-end row-valid"><span></span></div>
+<div class="col-start-end-end row-valid"><span></span></div>
+<div class="col-start-last row-valid"><span></span></div>
+<div class="col-same-1 row-valid"><span></span></div>
+<div class="col-same-2 row-valid"><span></span></div>
+<div class="col-same-2b row-valid"><span></span></div>
+<div class="col-same-3 row-valid"><span></span></div>
+
+<br clear="all">
+
+<x class="row-tests">
+
+<div class="row-valid"><span></span></div>
+<div class="row-start-1"><span></span></div>
+<div class="row-end-1"><span></span></div>
+<div class="row-start"><span></span></div>
+<div class="row-end"><span></span></div>
+<div class="row-end-start"><span></span></div>
+<div class="row-start-end-start"><span></span></div>
+
+<br clear="all">
+
+<div class="row-valid col-valid"><span></span></div>
+<div class="row-start-1 col-valid"><span></span></div>
+<div class="row-end-1 col-valid"><span></span></div>
+<div class="row-start col-valid"><span></span></div>
+<div class="row-end col-valid"><span></span></div>
+<div class="row-end-start col-valid"><span></span></div>
+<div class="row-start-end-start col-valid"><span></span></div>
+
+<br clear="all">
+
+<div class="row-start-start-end"><span></span></div>
+<div class="row-start-end-end"><span></span></div>
+<div class="row-start-last"><span></span></div>
+<div class="row-same-1"><span></span></div>
+<div class="row-same-2"><span></span></div>
+<div class="row-same-2b"><span></span></div>
+<div class="row-same-3"><span></span></div>
+
+<br clear="all">
+
+<div class="row-start-start-end col-valid"><span></span></div>
+<div class="row-start-end-end col-valid"><span></span></div>
+<div class="row-start-last col-valid"><span></span></div>
+<div class="row-same-1 col-valid"><span></span></div>
+<div class="row-same-2 col-valid"><span></span></div>
+<div class="row-same-2b col-valid"><span></span></div>
+<div class="row-same-3 col-valid"><span></span></div>
+
+</x>
+
+</body>
+</html>

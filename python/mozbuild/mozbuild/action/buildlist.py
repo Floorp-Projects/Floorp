@@ -33,7 +33,7 @@ def addEntriesToListFile(listFile, entries):
     for e in entries:
       if e not in existing:
         existing.add(e)
-    with open(listFile, 'w') as f:
+    with open(listFile, 'wb') as f:
       f.write("\n".join(sorted(existing))+"\n")
   finally:
     lock = None

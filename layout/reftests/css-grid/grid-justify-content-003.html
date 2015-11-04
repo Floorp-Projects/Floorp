@@ -1,0 +1,96 @@
+<!DOCTYPE HTML>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html><head>
+  <meta charset="utf-8">
+  <title>CSS Grid Test: Testing 'justify-content' fallback values</title>
+  <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1151214">
+  <link rel="help" href="https://drafts.csswg.org/css-align-3/#propdef-justify-content">
+  <link rel="match" href="grid-justify-content-003-ref.html">
+  <style type="text/css">
+html,body {
+  color:black; background-color:white; font-size:16px; padding:0; margin:0;
+}
+
+.grid {
+  display: grid;
+  grid-auto-columns: minmax(1px,auto);
+  grid-template-rows: 0px 7px;
+  border: 2px solid black;
+  float: left;
+  margin-right: 20px;
+}
+
+.grid :last-child { background:grey; }
+.grid :nth-child(2) { background:pink; }
+
+x { background: lime; height:7px; }
+
+  </style>
+</head>
+<body>
+
+<script>
+document.body.style.display = "none";
+var justify = [
+   "stretch",
+   "stretch end",
+   "stretch center",
+   "stretch end safe",
+   "stretch end true",
+   "start safe",
+   "end safe",
+   "center safe",
+   "start true",
+   "end true",
+   "center true",
+   "space-between",
+   "space-between end",
+   "space-between start",
+   "space-between end safe",
+   "space-between end true",
+   "space-around",
+   "space-around center",
+   "space-around right",
+   "space-around right safe",
+   "space-around left",
+   "space-evenly",
+   "space-evenly flex-end",
+   "space-evenly flex-end safe",
+   "space-evenly flex-start true",
+   "space-evenly right",
+];
+var cols = [ "0", "1", "2", "3", "4", "5", "6", "7", "8", "9" ];
+var widths = [ "0", "1", "2", "3", "4", "5", "6" ];
+for (var j = 0; j < justify.length; ++j) {
+  // document.body.appendChild(document.createTextNode(justify[j])); // for debugging
+  var chunk = document.createElement('div');
+  chunk.setAttribute("style", "border:1px solid; padding:2px 10px; overflow:hidden");
+  for (var c = 0; c < cols.length; ++c) {
+    for (var w = 0; w < widths.length; ++w) {
+     // set this to true if you want to see all tests
+     var run_test = widths[w] < cols[c] || cols[c] == 0 || cols[c] == 1;
+     if (run_test) {
+      var grid = document.createElement('div');
+      grid.style.width = widths[w]+"px";
+      grid.className = "grid";
+      grid.style.justifyContent = justify[j];
+      var span = document.createElement('span');
+      span.style.gridColumn = "1 / span " + cols[c];
+      grid.appendChild(span);
+      for (var x = 0; x < cols[c]; ++x) {
+        grid.appendChild(document.createElement('x'));
+      }
+      chunk.appendChild(grid);
+     }
+    }
+  }
+  document.body.appendChild(chunk);
+}
+document.body.style.display = "";
+</script>
+
+</body>
+</html>
