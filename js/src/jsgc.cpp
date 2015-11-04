@@ -6170,22 +6170,6 @@ GCRuntime::budgetIncrementalGC(SliceBudget& budget)
 
 namespace {
 
-class AutoDisableStoreBuffer
-{
-    StoreBuffer& sb;
-    bool prior;
-
-  public:
-    explicit AutoDisableStoreBuffer(GCRuntime* gc) : sb(gc->storeBuffer) {
-        prior = sb.isEnabled();
-        sb.disable();
-    }
-    ~AutoDisableStoreBuffer() {
-        if (prior)
-            sb.enable();
-    }
-};
-
 class AutoScheduleZonesForGC
 {
     JSRuntime* rt_;
@@ -6236,12 +6220,6 @@ GCRuntime::gcCycle(bool nonincrementalByAPI, SliceBudget& budget, JS::gcreason::
     AutoNotifyGCActivity notify(*this);
 
     evictNursery(reason);
-
-    /*
-     * Marking can trigger many incidental post barriers, some of them for
-     * objects which are not going to be live after the GC.
-     */
-    AutoDisableStoreBuffer adsb(this);
 
     AutoTraceSession session(rt, JS::HeapState::MajorCollecting);
 
@@ -6511,7 +6489,6 @@ GCRuntime::abortGC()
                              SliceBudget::unlimited(), JS::gcreason::ABORT_GC);
 
     evictNursery(JS::gcreason::ABORT_GC);
-    AutoDisableStoreBuffer adsb(this);
     AutoTraceSession session(rt, JS::HeapState::MajorCollecting);
 
     number++;
