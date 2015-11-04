@@ -9,7 +9,7 @@
 <?xml-stylesheet href="chrome://devtools/skin/widgets.css" type="text/css"?>
 <?xml-stylesheet href="chrome://devtools/skin/debugger.css" type="text/css"?>
 <!DOCTYPE window [
-  <!ENTITY % debuggerDTD SYSTEM "chrome://browser/locale/devtools/debugger.dtd">
+  <!ENTITY % debuggerDTD SYSTEM "chrome://devtools/locale/debugger.dtd">
   %debuggerDTD;
 ]>
 <?xul-overlay href="chrome://global/content/editMenuOverlay.xul"?>

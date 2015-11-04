@@ -21,7 +21,7 @@ loader.lazyImporter(this, "gDevTools",
   "resource://devtools/client/framework/gDevTools.jsm");
 
 const Strings = Services.strings.createBundle(
-  "chrome://browser/locale/devtools/aboutdebugging.properties");
+  "chrome://devtools/locale/aboutdebugging.properties");
 
 exports.TargetComponent = React.createClass({
   displayName: "TargetComponent",

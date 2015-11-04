@@ -26,19 +26,19 @@ loader.lazyGetter(this, "StoragePanel", () => require("devtools/client/storage/p
 loader.lazyGetter(this, "ScratchpadPanel", () => require("devtools/client/scratchpad/scratchpad-panel").ScratchpadPanel);
 
 // Strings
-const toolboxProps = "chrome://browser/locale/devtools/toolbox.properties";
-const inspectorProps = "chrome://browser/locale/devtools/inspector.properties";
-const webConsoleProps = "chrome://browser/locale/devtools/webconsole.properties";
-const debuggerProps = "chrome://browser/locale/devtools/debugger.properties";
-const styleEditorProps = "chrome://browser/locale/devtools/styleeditor.properties";
-const shaderEditorProps = "chrome://browser/locale/devtools/shadereditor.properties";
-const canvasDebuggerProps = "chrome://browser/locale/devtools/canvasdebugger.properties";
-const webAudioEditorProps = "chrome://browser/locale/devtools/webaudioeditor.properties";
-const performanceProps = "chrome://browser/locale/devtools/performance.properties";
-const netMonitorProps = "chrome://browser/locale/devtools/netmonitor.properties";
-const storageProps = "chrome://browser/locale/devtools/storage.properties";
-const scratchpadProps = "chrome://browser/locale/devtools/scratchpad.properties";
-const memoryProps = "chrome://browser/locale/devtools/memory.properties";
+const toolboxProps = "chrome://devtools/locale/toolbox.properties";
+const inspectorProps = "chrome://devtools/locale/inspector.properties";
+const webConsoleProps = "chrome://devtools/locale/webconsole.properties";
+const debuggerProps = "chrome://devtools/locale/debugger.properties";
+const styleEditorProps = "chrome://devtools/locale/styleeditor.properties";
+const shaderEditorProps = "chrome://devtools/locale/shadereditor.properties";
+const canvasDebuggerProps = "chrome://devtools/locale/canvasdebugger.properties";
+const webAudioEditorProps = "chrome://devtools/locale/webaudioeditor.properties";
+const performanceProps = "chrome://devtools/locale/performance.properties";
+const netMonitorProps = "chrome://devtools/locale/netmonitor.properties";
+const storageProps = "chrome://devtools/locale/storage.properties";
+const scratchpadProps = "chrome://devtools/locale/scratchpad.properties";
+const memoryProps = "chrome://devtools/locale/memory.properties";
 
 loader.lazyGetter(this, "toolboxStrings", () => Services.strings.createBundle(toolboxProps));
 loader.lazyGetter(this, "performanceStrings",() => Services.strings.createBundle(performanceProps));

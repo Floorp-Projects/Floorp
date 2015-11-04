@@ -12,7 +12,7 @@ const {Devices} = Cu.import("resource://devtools/shared/apps/Devices.jsm");
 const {Task} = Cu.import("resource://gre/modules/Task.jsm", {});
 const utils = require("devtools/client/webide/modules/utils");
 
-const Strings = Services.strings.createBundle("chrome://browser/locale/devtools/webide.properties");
+const Strings = Services.strings.createBundle("chrome://devtools/locale/webide.properties");
 
 var RuntimeList;
 

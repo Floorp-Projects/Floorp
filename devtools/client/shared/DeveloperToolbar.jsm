@@ -36,7 +36,7 @@ XPCOMUtils.defineLazyGetter(this, "prefBranch", function() {
 });
 
 XPCOMUtils.defineLazyGetter(this, "toolboxStrings", function () {
-  return Services.strings.createBundle("chrome://browser/locale/devtools/toolbox.properties");
+  return Services.strings.createBundle("chrome://devtools/locale/toolbox.properties");
 });
 
 const Telemetry = require("devtools/client/shared/telemetry");

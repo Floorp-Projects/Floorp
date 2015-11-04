@@ -8,7 +8,7 @@
 <?xml-stylesheet href="chrome://devtools/skin/shadereditor.css" type="text/css"?>
 <?xml-stylesheet href="chrome://devtools/content/shared/widgets/widgets.css" type="text/css"?>
 <!DOCTYPE window [
-  <!ENTITY % debuggerDTD SYSTEM "chrome://browser/locale/devtools/shadereditor.dtd">
+  <!ENTITY % debuggerDTD SYSTEM "chrome://devtools/locale/shadereditor.dtd">
   %debuggerDTD;
 ]>
 

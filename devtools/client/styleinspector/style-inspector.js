@@ -19,7 +19,7 @@ loader.lazyGetter(this, "RuleView",
 loader.lazyGetter(this, "ComputedView",
   () => require("devtools/client/styleinspector/computed-view"));
 loader.lazyGetter(this, "_strings", () => Services.strings
-  .createBundle("chrome://global/locale/devtools/styleinspector.properties"));
+  .createBundle("chrome://devtools-shared/locale/styleinspector.properties"));
 
 // This module doesn't currently export any symbols directly, it only
 // registers inspector tools.

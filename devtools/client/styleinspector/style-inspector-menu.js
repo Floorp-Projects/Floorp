@@ -16,7 +16,7 @@ loader.lazyServiceGetter(this, "clipboardHelper",
   "@mozilla.org/widget/clipboardhelper;1", "nsIClipboardHelper");
 loader.lazyGetter(this, "_strings", () => {
   return Services.strings
-  .createBundle("chrome://global/locale/devtools/styleinspector.properties");
+  .createBundle("chrome://devtools-shared/locale/styleinspector.properties");
 });
 
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";

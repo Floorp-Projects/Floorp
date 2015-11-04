@@ -23,7 +23,7 @@ var Services = Cu.import('resource://gre/modules/Services.jsm', {}).Services;
 
 var imports = {};
 XPCOMUtils.defineLazyGetter(imports, 'stringBundle', function () {
-  return Services.strings.createBundle('chrome://global/locale/devtools/gcli.properties');
+  return Services.strings.createBundle('chrome://devtools-shared/locale/gcli.properties');
 });
 
 /*
