@@ -192,19 +192,6 @@ typedef nsClassHashtable<nsCStringHashKey, BFSTableData> BFSHashTable;
 
 // nsObjectHashtable enumerator functions.
 
-// Initializes the BFS state table.
-static PLDHashOperator
-InitBFSTable(const nsACString &aKey, nsCOMArray<nsIAtom> *aData, void* aClosure) {
-    MOZ_ASSERT(aData, "no data in the table enumeration");
-
-    BFSHashTable *bfsTable = static_cast<BFSHashTable*>(aClosure);
-    if (!bfsTable) return PL_DHASH_STOP;
-
-    BFSTableData *data = new BFSTableData(aKey);
-    bfsTable->Put(aKey, data);
-    return PL_DHASH_NEXT;
-}
-
 class CStreamConvDeallocator : public nsDequeFunctor {
 public:
     virtual void* operator()(void* anObject) {
@@ -232,7 +219,11 @@ nsStreamConverterService::FindConverter(const char *aContractID, nsTArray<nsCStr
 
     // Create a corresponding color table for each vertex in the graph.
     BFSHashTable lBFSTable;
-    mAdjacencyList.EnumerateRead(InitBFSTable, &lBFSTable);
+    for (auto iter = mAdjacencyList.Iter(); !iter.Done(); iter.Next()) {
+        const nsACString &key = iter.Key();
+        MOZ_ASSERT(iter.UserData(), "no data in the table iteration");
+        lBFSTable.Put(key, new BFSTableData(key));
+    }
 
     NS_ASSERTION(lBFSTable.Count() == vertexCount, "strmconv BFS table init problem");
 
