@@ -896,7 +896,7 @@ bool KernCollider::initSlot(Segment *seg, Slot *aSlot, const Rect &limit, float 
             float y = _miny - 1 + (i + .5f) * _sliceWidth; // vertical center of slice
             if ((dir & 1) && x < _edges[i])
             {
-                t = get_edge(seg, s, currShift, y, _sliceWidth, false);
+                t = get_edge(seg, s, c->shift(), y, _sliceWidth, false);
                 if (t < _edges[i])
                 {
                     _edges[i] = t;
@@ -906,7 +906,7 @@ bool KernCollider::initSlot(Segment *seg, Slot *aSlot, const Rect &limit, float 
             }
             else if (!(dir & 1) && x > _edges[i])
             {
-                t = get_edge(seg, s, currShift, y, _sliceWidth, true);
+                t = get_edge(seg, s, c->shift(), y, _sliceWidth, true);
                 if (t > _edges[i])
                 {
                     _edges[i] = t;
@@ -993,6 +993,9 @@ Position KernCollider::resolve(GR_MAYBE_UNUSED Segment *seg, GR_MAYBE_UNUSED Slo
 				<< "gid" << _target->gid()
                 << "margin" << _margin
                 << "limit" << _limit
+                << "miny" << _miny
+                << "maxy" << _maxy
+                << "slicewidth" << _sliceWidth
                 << "target" << json::object
                     << "origin" << _target->origin()
                     //<< "currShift" << _currShift
@@ -1000,8 +1003,6 @@ Position KernCollider::resolve(GR_MAYBE_UNUSED Segment *seg, GR_MAYBE_UNUSED Slo
                     << "bbox" << seg->theGlyphBBoxTemporary(_target->gid())
                     << "slantBox" << seg->getFace()->glyphs().slant(_target->gid())
                     << "fix" << "kern"
-                    << "slices" << _edges.size()
-                    << "sliceWidth" << _sliceWidth
                     << json::close; // target object
         
         *dbgout << "slices" << json::array;
