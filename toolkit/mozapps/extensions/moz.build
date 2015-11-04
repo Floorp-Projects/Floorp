@@ -49,11 +49,13 @@ if CONFIG['MOZ_EM_DEBUG']:
 JAR_MANIFESTS += ['jar.mn']
 
 EXPORTS.mozilla += [
+    'AddonContentPolicy.h',
     'AddonPathService.h',
 ]
 
 UNIFIED_SOURCES += [
-    'AddonPathService.cpp'
+    'AddonContentPolicy.cpp',
+    'AddonPathService.cpp',
 ]
 
 FINAL_LIBRARY = 'xul'

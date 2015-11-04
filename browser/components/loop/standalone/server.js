@@ -67,6 +67,7 @@ app.get("/content/c/config.js", getConfigFile);
 // /content - for the standalone files.
 
 app.use("/ui", express.static(path.join(__dirname, "..", "ui")));
+app.use("/ui/img/", express.static(path.join(__dirname, "..", "standalone", "content", "img")));
 app.use("/ui/loop/", express.static(path.join(__dirname, "..", "content")));
 app.use("/ui/shared/", express.static(path.join(__dirname, "..", "content",
                                                 "shared")));

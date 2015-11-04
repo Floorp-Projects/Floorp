@@ -1,8 +1,7 @@
-%if 0
+/* vim:set ts=2 sw=2 sts=2 et: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-%endif
 
 /* CSS Variables specific to the devtools toolbar that aren't defined by the themes */
 .theme-light {
@@ -332,13 +331,14 @@
   -moz-appearance: none;
   margin: 1px 3px;
   border: 1px solid;
-%ifdef XP_MACOSX
-  border-radius: 20px;
-%else
   border-radius: 2px;
-%endif
   padding: 4px 6px;
   border-color: var(--theme-splitter-color);
+}
+
+:root[platform="mac"] .devtools-textinput,
+:root[platform="mac"] .devtools-searchinput {
+  border-radius: 20px;
 }
 
 .devtools-searchinput {
@@ -401,7 +401,6 @@
 
 .devtools-rule-searchbox {
   -moz-box-flex: 1;
-  padding-right: 23px;
   width: 100%;
   font: inherit;
 }
@@ -409,6 +408,7 @@
 .devtools-rule-searchbox[filled] {
   background-color: var(--searchbox-background-color);
   border-color: var(--searchbox-border-color);
+  padding-right: 23px;
 }
 
 .devtools-style-searchbox-no-match {
