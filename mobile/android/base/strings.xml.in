@@ -140,16 +140,13 @@
 
   <string name="settings">&settings;</string>
   <string name="settings_title">&settings_title;</string>
-  <string name="pref_category_input_options">&pref_category_input_options;</string>
-  <string name="pref_category_advanced">&pref_category_advanced;</string>
-  <string name="pref_category_customize">&pref_category_customize;</string>
-  <string name="pref_category_customize_summary">&pref_category_customize_summary;</string>
-  <string name="pref_category_customize_alt_summary">&pref_category_customize_alt_summary;</string>
+  <string name="pref_category_general">&pref_category_general;</string>
+  <string name="pref_category_general_summary">&pref_category_general_summary;</string>
 
   <string name="pref_category_search">&pref_category_search3;</string>
   <string name="pref_category_search_summary">&pref_category_search_summary;</string>
-  <string name="pref_category_display">&pref_category_display;</string>
-  <string name="pref_category_display_summary">&pref_category_display_summary;</string>
+  <string name="pref_category_accessibility">&pref_category_accessibility;</string>
+  <string name="pref_category_accessibility_summary">&pref_category_accessibility_summary;</string>
   <string name="pref_category_privacy_short">&pref_category_privacy_short;</string>
   <string name="pref_category_privacy_summary">&pref_category_privacy_summary2;</string>
   <string name="pref_category_vendor">&pref_category_vendor;</string>
@@ -167,7 +164,8 @@
   <string name="pref_browser_locale">&pref_browser_locale;</string>
   <string name="locale_system_default">&locale_system_default;</string>
 
-  <string name="pref_category_devtools">&pref_category_devtools;</string>
+  <string name="pref_category_advanced">&pref_category_advanced;</string>
+  <string name="pref_category_advanced_summary">&pref_category_advanced_summary;</string>
   <string name="pref_developer_remotedebugging">&pref_developer_remotedebugging;</string>
   <string name="pref_developer_remotedebugging_usb">&pref_developer_remotedebugging_usb;</string>
   <string name="pref_developer_remotedebugging_wifi">&pref_developer_remotedebugging_wifi;</string>
@@ -189,16 +187,15 @@
   <string name="home_homepage_title">&home_homepage_title;</string>
   <string name="home_homepage_use_current_tab">&home_homepage_use_current_tab;</string>
 
-  <string name="pref_header_customize">&pref_header_customize;</string>
-  <string name="pref_header_display">&pref_header_display;</string>
+  <string name="pref_header_general">&pref_header_general;</string>
+  <string name="pref_header_search">&pref_header_search;</string>
+  <string name="pref_header_accessibility">&pref_header_accessibility;</string>
   <string name="pref_header_privacy_short">&pref_header_privacy_short;</string>
-  <string name="pref_header_language">&pref_header_language;</string>
+  <string name="pref_header_advanced">&pref_header_advanced;</string>
   <string name="pref_header_vendor">&pref_header_vendor;</string>
-  <string name="pref_header_devtools">&pref_header_devtools;</string>
 
   <string name="pref_learn_more">&pref_learn_more;</string>
 
-  <string name="pref_category_logins">&pref_category_logins;</string>
   <string name="pref_remember_signons">&pref_remember_signons2;</string>
 
   <string name="pref_open_external_urls_privately_title">&pref_open_external_urls_privately_title;</string>
@@ -226,8 +223,7 @@
   <string name="pref_char_encoding">&pref_char_encoding;</string>
   <string name="pref_char_encoding_on">&pref_char_encoding_on;</string>
   <string name="pref_char_encoding_off">&pref_char_encoding_off;</string>
-  <string name="pref_clear_private_data">&pref_clear_private_data2;</string>
-  <string name="pref_clear_private_data_category">&pref_clear_private_data_category;</string>
+  <string name="pref_clear_private_data_now">&pref_clear_private_data_now;</string>
   <string name="pref_clear_on_exit_title">&pref_clear_on_exit_title2;</string>
   <string name="pref_clear_on_exit_summary2">&pref_clear_on_exit_summary2;</string>
   <string name="pref_clear_on_exit_dialog_title">&pref_clear_on_exit_dialog_title;</string>

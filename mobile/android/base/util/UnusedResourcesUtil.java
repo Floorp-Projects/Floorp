@@ -65,8 +65,8 @@ final class UnusedResourcesUtil {
     };
 
     public static final int[] USED_IN_PREFS = {
-            R.xml.preferences_devtools,
-            R.xml.preferences_display,
+            R.xml.preferences_advanced,
+            R.xml.preferences_accessibility,
             R.xml.preferences_home,
             R.xml.preferences_privacy,
     };

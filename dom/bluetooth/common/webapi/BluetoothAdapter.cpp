@@ -1318,7 +1318,7 @@ BluetoothAdapter::HandlePullVCardListingReq(const BluetoothValue& aValue)
     } else if (name.EqualsLiteral("searchKey")) {
       init.mSearchKey = static_cast<vCardSearchKeyType>(value.get_uint32_t());
     } else if (name.EqualsLiteral("searchText")) {
-      init.mSearchValue = value.get_nsString();
+      init.mSearchValue = NS_ConvertUTF8toUTF16(value.get_nsCString());
     } else if (name.EqualsLiteral("maxListCount")) {
       init.mMaxListCount = value.get_uint32_t();
     } else if (name.EqualsLiteral("listStartOffset")) {

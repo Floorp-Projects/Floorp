@@ -100,98 +100,22 @@ public class StringHelper {
     public final String ROBOCOP_BIG_MAILTO_TITLE = "Big Mailto";
     public final String ROBOCOP_BLANK_PAGE_01_TITLE = "Browser Blank Page 01";
     public final String ROBOCOP_BLANK_PAGE_02_TITLE = "Browser Blank Page 02";
-    public final String ROBOCOP_BLANK_PAGE_03_TITLE = "Browser Blank Page 03";
-    public final String ROBOCOP_BLANK_PAGE_04_TITLE = "Browser Blank Page 04";
-    public final String ROBOCOP_BLANK_PAGE_05_TITLE = "Browser Blank Page 05";
-    public final String ROBOCOP_BOXES_TITLE = "Browser Box test";
     public final String ROBOCOP_GEOLOCATION_TITLE = "Geolocation Test Page";
-    public final String ROBOCOP_LOGIN_TITLE = "Robocop Login";
-    public final String ROBOCOP_OFFLINE_STORAGE_TITLE = "Robocop offline storage";
     public final String ROBOCOP_PICTURE_LINK_TITLE = "Picture Link";
     public final String ROBOCOP_SEARCH_TITLE = "Robocop Search Engine";
-    public final String ROBOCOP_TEXT_PAGE_TITLE = "Robocop Text Page";
-    public final String ROBOCOP_INPUT_TITLE = "Robocop Input";
 
     // Distribution tile labels
     public final String DISTRIBUTION1_LABEL = "Distribution 1";
     public final String DISTRIBUTION2_LABEL = "Distribution 2";
 
-    // Import strings
-    public final String BOOKMARKS;
-    public final String IMPORT;
-
     // Settings menu strings
-    // Section labels - ordered as found in the settings menu
-    public final String CUSTOMIZE_SECTION_LABEL;
-    public final String DISPLAY_SECTION_LABEL;
     public final String PRIVACY_SECTION_LABEL;
     public final String MOZILLA_SECTION_LABEL;
-    public final String DEVELOPER_TOOLS_SECTION_LABEL;
-
-    // Option labels
-    // Customize
-    public final String SYNC_LABEL;
-    public final String IMPORT_FROM_ANDROID_LABEL;
-    public final String TABS_LABEL;
-
-    // Display
-    public final String TEXT_SIZE_LABEL;
-    public final String TITLE_BAR_LABEL = "Title bar";
-    public final String SCROLL_TITLE_BAR_LABEL;
-    public final String VOICE_INPUT_TITLE_LABEL;
-    public final String VOICE_INPUT_SUMMARY_LABEL;
-    public final String QRCODE_INPUT_TITLE_LABEL;
-    public final String QRCODE_INPUT_SUMMARY_LABEL;
-    public final String CHARACTER_ENCODING_LABEL;
-    public final String PLUGINS_LABEL;
-
-    // Title bar
-    public final String SHOW_PAGE_TITLE_LABEL = "Show page title";
-    public final String SHOW_PAGE_ADDRESS_LABEL = "Show page address";
-
-    // Privacy
-    public final String TRACKING_PROTECTION_LABEL;
-    public final String TRACKING_PROTECTION_PROMPT_TITLE;
-    public final String TRACKING_PROTECTION_PROMPT_BUTTON;
-    public final String DNT_LABEL;
-    public final String COOKIES_LABEL;
-    public final String REMEMBER_LOGINS_LABEL;
-    public final String MANAGE_LOGINS_LABEL;
-    public final String MASTER_PASSWORD_LABEL;
-    public final String CLEAR_PRIVATE_DATA_LABEL;
-    public final String ENABLED_EXCLUDE_3RD_PARTY;
-    public final String BROWSING_HISTORY;
-    public final String SEARCH_HISTORY;
-    public final String DOWNLOADS;
-    public final String FORM_HISTORY;
-    public final String COOKIES_AND_LOGINS;
-    public final String CACHE;
-    public final String OFFLINE_DATA;
-    public final String SITE_SETTINGS;
-    public final String CLEAR_DATA_BUTTON;
 
     // Mozilla
     public final String BRAND_NAME = "(Fennec|Nightly|Aurora|Firefox Beta|Firefox)";
     public final String ABOUT_LABEL = "About " + BRAND_NAME ;
-    public final String FAQS_LABEL;
-    public final String FEEDBACK_LABEL;
     public final String LOCATION_SERVICES_LABEL = "Mozilla Location Service";
-    public final String HEALTH_REPORT_LABEL = BRAND_NAME + " Health Report";
-    public final String MY_HEALTH_REPORT_LABEL;
-    public final String DATA_CHOICES;
-    public final String HEALTH_REPORT_EXPLANATION;
-    public final String MOZ_LOCATION;
-    public final String MOZ_LOCATION_MSG;
-    public final String LEARN_MORE;
-    public final String CRASH_REPORTER;
-    public final String CRASH_REPORTER_MSG;
-    public final String TELEMETRY;
-    public final String TELEMETRY_MSG;
-
-    // Developer tools
-    public final String REMOTE_DEBUGGING_USB_LABEL;
-    public final String REMOTE_DEBUGGING_WIFI_LABEL;
-    public final String LEARN_MORE_LABEL;
 
     // Labels for the about:home tabs
     public final String HISTORY_LABEL;
@@ -199,7 +123,6 @@ public class StringHelper {
     public final String BOOKMARKS_LABEL;
     public final String READING_LIST_LABEL;
     public final String TODAY_LABEL;
-    public final String TABS_FROM_LAST_TIME_LABEL = "Open all tabs from last time";
 
     // Desktop default bookmarks folders
     public final String BOOKMARKS_UP_TO;
@@ -363,73 +286,9 @@ public class StringHelper {
 
         TITLE_PLACE_HOLDER = res.getString(R.string.url_bar_default_text);
 
-        // Import strings
-        IMPORT = res.getString(R.string.bookmarkhistory_button_import);
-        BOOKMARKS = res.getString(R.string.bookmarks_title);
-
         // Settings menu strings
-        // Section labels - ordered as found in the settings menu
-        CUSTOMIZE_SECTION_LABEL = res.getString(R.string.pref_category_customize);
-        DISPLAY_SECTION_LABEL = res.getString(R.string.pref_category_display);
         PRIVACY_SECTION_LABEL = res.getString(R.string.pref_category_privacy_short);
         MOZILLA_SECTION_LABEL = res.getString(R.string.pref_category_vendor);
-        DEVELOPER_TOOLS_SECTION_LABEL = res.getString(R.string.pref_category_devtools);
-
-        // Option labels
-        // Customize
-        SYNC_LABEL = res.getString(R.string.pref_sync);
-        IMPORT_FROM_ANDROID_LABEL = res.getString(R.string.pref_import_android);
-        TABS_LABEL = res.getString(R.string.pref_restore);
-
-        // Display
-        TEXT_SIZE_LABEL = res.getString(R.string.pref_text_size);
-        SCROLL_TITLE_BAR_LABEL = res.getString(R.string.pref_scroll_title_bar2);
-        VOICE_INPUT_TITLE_LABEL = res.getString(R.string.pref_voice_input);
-        VOICE_INPUT_SUMMARY_LABEL = res.getString(R.string.pref_voice_input_summary);
-        QRCODE_INPUT_TITLE_LABEL = res.getString(R.string.pref_qrcode_enabled);
-        QRCODE_INPUT_SUMMARY_LABEL = res.getString(R.string.pref_qrcode_enabled_summary);
-        CHARACTER_ENCODING_LABEL = res.getString(R.string.pref_char_encoding);
-        PLUGINS_LABEL = res.getString(R.string.pref_plugins);
-
-        // Privacy
-        TRACKING_PROTECTION_LABEL = res.getString(R.string.pref_tracking_protection_title);
-        TRACKING_PROTECTION_PROMPT_TITLE = res.getString(R.string.tracking_protection_prompt_title);
-        TRACKING_PROTECTION_PROMPT_BUTTON = res.getString(R.string.tracking_protection_prompt_action_button);
-        DNT_LABEL = res.getString(R.string.pref_donottrack_title);
-        COOKIES_LABEL = res.getString(R.string.pref_cookies_menu);
-        REMEMBER_LOGINS_LABEL = res.getString(R.string.pref_remember_signons);
-        MANAGE_LOGINS_LABEL = res.getString(R.string.pref_manage_logins);
-        MASTER_PASSWORD_LABEL = res.getString(R.string.pref_use_master_password);
-        CLEAR_PRIVATE_DATA_LABEL = res.getString(R.string.pref_clear_private_data);
-        ENABLED_EXCLUDE_3RD_PARTY = res.getString(R.string.pref_cookies_not_accept_foreign);
-        BROWSING_HISTORY = res.getString(R.string.pref_private_data_history2);
-        SEARCH_HISTORY = res.getString(R.string.pref_private_data_searchHistory);
-        DOWNLOADS = res.getString(R.string.pref_private_data_downloadFiles2);
-        FORM_HISTORY = res.getString(R.string.pref_private_data_formdata2);
-        COOKIES_AND_LOGINS = res.getString(R.string.pref_private_data_cookies2);
-        CACHE = res.getString(R.string.pref_private_data_cache);
-        OFFLINE_DATA = res.getString(R.string.pref_private_data_offlineApps);
-        SITE_SETTINGS = res.getString(R.string.pref_private_data_siteSettings);
-        CLEAR_DATA_BUTTON = res.getString(R.string.button_clear_data);
-
-        // Mozilla
-        FAQS_LABEL = res.getString(R.string.pref_vendor_faqs);
-        FEEDBACK_LABEL = res.getString(R.string.pref_vendor_feedback);
-        DATA_CHOICES = res.getString(R.string.pref_category_datareporting);
-        MY_HEALTH_REPORT_LABEL = res.getString(R.string.datareporting_abouthr_title);
-        HEALTH_REPORT_EXPLANATION = res.getString(R.string.datareporting_fhr_summary2);
-        MOZ_LOCATION = res.getString(R.string.datareporting_wifi_title);
-        MOZ_LOCATION_MSG = res.getString(R.string.datareporting_wifi_geolocation_summary);
-        LEARN_MORE = res.getString(R.string.pref_learn_more);
-        CRASH_REPORTER = res.getString(R.string.datareporting_crashreporter_title_short);
-        CRASH_REPORTER_MSG = res.getString(R.string.datareporting_crashreporter_summary);
-        TELEMETRY = res.getString(R.string.datareporting_telemetry_title);
-        TELEMETRY_MSG = res.getString(R.string.datareporting_telemetry_summary);
-
-        // Developer tools
-        REMOTE_DEBUGGING_USB_LABEL = res.getString(R.string.pref_developer_remotedebugging_usb);
-        REMOTE_DEBUGGING_WIFI_LABEL = res.getString(R.string.pref_developer_remotedebugging_wifi);
-        LEARN_MORE_LABEL = res.getString(R.string.pref_learn_more);
 
         // Labels for the about:home tabs
         HISTORY_LABEL = res.getString(R.string.home_history_title);

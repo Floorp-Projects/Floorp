@@ -101,11 +101,8 @@
 
 <!ENTITY settings "Settings">
 <!ENTITY settings_title "Settings">
-<!ENTITY pref_category_input_options "Input options">
-<!ENTITY pref_category_advanced "Advanced">
-<!ENTITY pref_category_customize "Customize">
-<!ENTITY pref_category_customize_summary "Home, search, tabs, import">
-<!ENTITY pref_category_customize_alt_summary "Home, search, tabs, open later, import">
+<!ENTITY pref_category_general "General">
+<!ENTITY pref_category_general_summary "Home, language, zoom, full-screen browsing">
 
 <!-- Localization note (pref_category_language) : This is the preferences
      section in which the user picks the locale in which to display Firefox
@@ -153,8 +150,8 @@
 
 <!ENTITY pref_category_search3 "Search">
 <!ENTITY pref_category_search_summary "Customize your search providers">
-<!ENTITY pref_category_display "Display">
-<!ENTITY pref_category_display_summary "Text, title bar, full-screen browsing">
+<!ENTITY pref_category_accessibility "Accessibility">
+<!ENTITY pref_category_accessibility_summary "Text size, voice input">
 <!ENTITY pref_category_privacy_short "Privacy">
 <!ENTITY pref_category_privacy_summary2 "Control logins, cookies, tracking, data">
 <!ENTITY pref_category_vendor "&vendorShortName;">
@@ -172,12 +169,12 @@
      The &formatI; in the string will be replaced by a small image of the icon described, and can be moved to wherever
      it is applicable. -->
 <!ENTITY pref_search_hint "TIP: Add any website to your list of search providers by long-pressing on its search field and then tapping the &formatI; icon.">
-<!ENTITY pref_category_devtools "Developer tools">
+<!ENTITY pref_category_advanced "Advanced">
+<!ENTITY pref_category_advanced_summary "Import, plugins, developer tools">
 <!ENTITY pref_developer_remotedebugging "Remote debugging">
 <!ENTITY pref_developer_remotedebugging_usb "Remote debugging via USB">
 <!ENTITY pref_developer_remotedebugging_wifi "Remote debugging via Wi-Fi">
 <!ENTITY pref_developer_remotedebugging_wifi_disabled_summary "Wi-Fi debugging requires your device to have a QR code reader app installed.">
-<!ENTITY pref_category_logins "Logins">
 <!ENTITY pref_remember_signons2 "Remember logins">
 <!ENTITY pref_open_external_urls_privately_title "Open links in Private browsing">
 <!ENTITY pref_open_external_urls_privately_summary "For all external links opened in &brandShortName;">
@@ -203,13 +200,13 @@
 <!ENTITY home_homepage_use_current_tab "Use current tab">
 
 <!-- Localization note: These are shown in the left sidebar on tablets -->
-<!ENTITY pref_header_customize "Customize">
-<!ENTITY pref_header_display "Display">
+<!ENTITY pref_header_general "General">
+<!ENTITY pref_header_search "Search">
 <!ENTITY pref_header_privacy_short "Privacy">
+<!ENTITY pref_header_accessibility "Accessibility">
+<!ENTITY pref_header_advanced "Advanced">
 <!ENTITY pref_header_help "Help">
-<!ENTITY pref_header_language "Language">
 <!ENTITY pref_header_vendor "&vendorShortName;">
-<!ENTITY pref_header_devtools "Developer tools">
 
 <!ENTITY pref_cookies_menu "Cookies">
 <!ENTITY pref_cookies_accept_all "Enabled">
@@ -253,8 +250,7 @@
 <!ENTITY pref_char_encoding "Character encoding">
 <!ENTITY pref_char_encoding_on "Show menu">
 <!ENTITY pref_char_encoding_off "Don\'t show menu">
-<!ENTITY pref_clear_private_data2 "Clear now">
-<!ENTITY pref_clear_private_data_category "Clear private data">
+<!ENTITY pref_clear_private_data_now "Clear private data now">
 <!ENTITY pref_clear_on_exit_title2 "Clear on exit">
 <!ENTITY pref_clear_on_exit_summary2 "&brandShortName; will automatically clear your data whenever you select \u0022Quit\u0022 from the main menu">
 <!ENTITY pref_clear_on_exit_dialog_title "Select which data to clear">
