@@ -2710,7 +2710,6 @@ ServiceWorkerManager::AddScopeAndRegistration(const nsACString& aScope,
     // Perfect match!
     if (aScope.Equals(current)) {
       data->mInfos.Put(aScope, aInfo);
-      swm->NotifyListenersOnRegister(aInfo);
       return;
     }
 
@@ -2720,14 +2719,12 @@ ServiceWorkerManager::AddScopeAndRegistration(const nsACString& aScope,
     if (StringBeginsWith(aScope, current)) {
       data->mOrderedScopes.InsertElementAt(i, aScope);
       data->mInfos.Put(aScope, aInfo);
-      swm->NotifyListenersOnRegister(aInfo);
       return;
     }
   }
 
   data->mOrderedScopes.AppendElement(aScope);
   data->mInfos.Put(aScope, aInfo);
-  swm->NotifyListenersOnRegister(aInfo);
 }
 
 /* static */ bool
@@ -2794,12 +2791,8 @@ ServiceWorkerManager::RemoveScopeAndRegistration(ServiceWorkerRegistrationInfo* 
     return;
   }
 
-  RefPtr<ServiceWorkerRegistrationInfo> info;
-  data->mInfos.Get(aRegistration->mScope, getter_AddRefs(info));
-
   data->mInfos.Remove(aRegistration->mScope);
   data->mOrderedScopes.RemoveElement(aRegistration->mScope);
-  swm->NotifyListenersOnUnregister(info);
 
   swm->MaybeRemoveRegistrationInfo(scopeKey);
 }
@@ -3885,34 +3878,6 @@ ServiceWorkerManager::RemoveAllRegistrations(OriginAttributes* aParams)
 }
 
 NS_IMETHODIMP
-ServiceWorkerManager::AddListener(nsIServiceWorkerManagerListener* aListener)
-{
-  AssertIsOnMainThread();
-
-  if (mListeners.Contains(aListener)) {
-    return NS_ERROR_INVALID_ARG;
-  }
-
-  mListeners.AppendElement(aListener);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-ServiceWorkerManager::RemoveListener(nsIServiceWorkerManagerListener* aListener)
-{
-  AssertIsOnMainThread();
-
-  if (!mListeners.Contains(aListener)) {
-    return NS_ERROR_INVALID_ARG;
-  }
-
-  mListeners.RemoveElement(aListener);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 ServiceWorkerManager::Observe(nsISupports* aSubject,
                               const char* aTopic,
                               const char16_t* aData)
@@ -4030,26 +3995,6 @@ ServiceWorkerManager::PropagateUnregister(nsIPrincipal* aPrincipal,
   }
 
   return NS_OK;
-}
-
-void
-ServiceWorkerManager::NotifyListenersOnRegister(
-                                        nsIServiceWorkerRegistrationInfo* aInfo)
-{
-  nsTArray<nsCOMPtr<nsIServiceWorkerManagerListener>> listeners(mListeners);
-  for (size_t index = 0; index < listeners.Length(); ++index) {
-    listeners[index]->OnRegister(aInfo);
-  }
-}
-
-void
-ServiceWorkerManager::NotifyListenersOnUnregister(
-                                        nsIServiceWorkerRegistrationInfo* aInfo)
-{
-  nsTArray<nsCOMPtr<nsIServiceWorkerManagerListener>> listeners(mListeners);
-  for (size_t index = 0; index < listeners.Length(); ++index) {
-    listeners[index]->OnUnregister(aInfo);
-  }
 }
 
 void
