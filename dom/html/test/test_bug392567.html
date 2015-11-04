@@ -78,7 +78,9 @@ function runTests()
   }
 }
 
-addLoadEvent(runTests);
+addLoadEvent(function() {
+   SpecialPowers.pushPrefEnv({"set": [["network.jar.block-remote-files", false]]}, runTests);
+});
 
 </script>
 </pre>

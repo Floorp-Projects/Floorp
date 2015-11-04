@@ -31,6 +31,8 @@ var listener = {
 };
 
 function run_test() {
+  Services.prefs.setBoolPref("network.jar.block-remote-files", false);
+
   var ios = Cc["@mozilla.org/network/io-service;1"].
             getService(Ci.nsIIOService);
 
