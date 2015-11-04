@@ -137,6 +137,11 @@ html, body {
   flex-grow: 1;
 }
 
+/* Fix the size of inputs */
+/* Especially needed on Linux where input are bigger */
+input {
+  width: 8em;
+}
 
 .theme-light .add,
 .theme-light .remove-button,
