@@ -2,7 +2,7 @@
 # Script to update mp4parse-rust sources to latest upstream
 
 # Default version.
-VER=v0.1.3
+VER=v0.1.4
 
 # Accept version or commit from the command line.
 if test -n "$1"; then
@@ -17,6 +17,7 @@ git checkout ${VER}
 popd
 cp _upstream/mp4parse/src/lib.rs MP4Metadata.rs
 cp _upstream/mp4parse/src/capi.rs .
+cp _upstream/mp4parse/include/mp4parse.h include/
 
 # TODO: download deps from crates.io.
 
