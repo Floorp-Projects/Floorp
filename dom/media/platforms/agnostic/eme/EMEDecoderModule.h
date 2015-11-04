@@ -45,7 +45,7 @@ protected:
   DecoderNeedsConversion(const TrackInfo& aConfig) const override;
 
   bool
-  SupportsMimeType(const nsACString& aMimeType) override;
+  SupportsMimeType(const nsACString& aMimeType) const override;
 
 private:
   RefPtr<CDMProxy> mProxy;
