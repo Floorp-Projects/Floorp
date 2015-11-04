@@ -30,8 +30,6 @@ using namespace mozilla::gfx;
 // nsMathMLContainerFrame implementation
 //
 
-NS_IMPL_FRAMEARENA_HELPERS(nsMathMLContainerFrame)
-
 NS_QUERYFRAME_HEAD(nsMathMLContainerFrame)
   NS_QUERYFRAME_ENTRY(nsIMathMLFrame)
   NS_QUERYFRAME_ENTRY(nsMathMLContainerFrame)

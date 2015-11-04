@@ -78,11 +78,14 @@
 #define NS_FRAME_TRACE_REFLOW_OUT(_method, _status)
 #endif
 
-// Frame allocation boilerplate macros.  Every subclass of nsFrame
-// must define its own operator new and GetFrameId.  If they do
-// not, the per-frame recycler lists in nsPresArena will not work
-// correctly, with potentially catastrophic consequences (not enough
-// memory is allocated for a frame object).
+// Frame allocation boilerplate macros. Every subclass of nsFrame must
+// either use NS_{DECL,IMPL}_FRAMEARENA_HELPERS pair for allocating
+// memory correctly, or use NS_DECL_ABSTRACT_FRAME to declare a frame
+// class abstract and stop it from being instantiated. If a frame class
+// without its own operator new and GetFrameId gets instantiated, the
+// per-frame recycler lists in nsPresArena will not work correctly,
+// with potentially catastrophic consequences (not enough memory is
+// allocated for a frame object).
 
 #define NS_DECL_FRAMEARENA_HELPERS                                \
   void* operator new(size_t, nsIPresShell*) MOZ_MUST_OVERRIDE;    \
@@ -93,6 +96,10 @@
   { return aShell->AllocateFrame(nsQueryFrame::class##_id, sz); } \
   nsQueryFrame::FrameIID class::GetFrameId()                      \
   { return nsQueryFrame::class##_id; }
+
+#define NS_DECL_ABSTRACT_FRAME(class)                                   \
+  void* operator new(size_t, nsIPresShell*) MOZ_MUST_OVERRIDE = delete; \
+  virtual nsQueryFrame::FrameIID GetFrameId() override MOZ_MUST_OVERRIDE = 0;
 
 //----------------------------------------------------------------------
 

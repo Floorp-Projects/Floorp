@@ -55,8 +55,6 @@ nsSVGGradientFrame::nsSVGGradientFrame(nsStyleContext* aContext) :
 {
 }
 
-NS_IMPL_FRAMEARENA_HELPERS(nsSVGGradientFrame)
-
 //----------------------------------------------------------------------
 // nsIFrame methods:
 
