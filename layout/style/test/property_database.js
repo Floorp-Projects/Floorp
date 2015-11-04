@@ -6559,6 +6559,27 @@ if (IsCSSPropertyPrefEnabled("layout.css.prefixes.webkit")) {
     alias_for: "transform-style",
     subproperties: [ "transform-style" ],
   };
+  gCSSProperties["-webkit-backface-visibility"] = {
+    domProp: "webkitBackfaceVisibility",
+    inherited: false,
+    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    alias_for: "backface-visibility",
+    subproperties: [ "backface-visibility" ],
+  };
+  gCSSProperties["-webkit-perspective"] = {
+    domProp: "webkitPerspective",
+    inherited: false,
+    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    alias_for: "perspective",
+    subproperties: [ "perspective" ],
+  };
+  gCSSProperties["-webkit-perspective-origin"] = {
+    domProp: "webkitPerspectiveOrigin",
+    inherited: false,
+    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    alias_for: "perspective-origin",
+    subproperties: [ "perspective-origin" ],
+  };
   gCSSProperties["-webkit-transition"] = {
     domProp: "webkitTransition",
     inherited: false,
