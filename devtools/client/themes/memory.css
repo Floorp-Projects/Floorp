@@ -55,6 +55,12 @@ html, body, #app, #memory-tool {
 
 .devtools-toolbar > .toolbar-group {
   /**
+   * Flex: contains several children, which need to be laid out horizontally,
+   * and aligned vertically in the middle of the container.
+   */
+  display: flex;
+  align-items: center;
+  /**
    * We want this to be exactly at a --sidebar-width distance from the
    * toolbar's start boundary. A .devtools-toolbar has a 3px start padding
    * and the preceeding .take-snapshot button is exactly 32px.
@@ -65,6 +71,12 @@ html, body, #app, #memory-tool {
 }
 
 .devtools-toolbar > .toolbar-group > label {
+  /**
+   * Flex: contains form controls and text, which need to be laid out
+   * horizontally, vertically aligned in the middle of the container.
+   */
+  display: flex;
+  align-items: center;
   margin-inline-end: 5px;
 }
 
