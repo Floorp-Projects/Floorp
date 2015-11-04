@@ -63,12 +63,14 @@ if CONFIG['OS_TARGET'] == 'Android':
 FINAL_LIBRARY = 'gkmedias'
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
-    CFLAGS += [
-        '-I%s/%s' % (CONFIG['ANDROID_SOURCE'], d) for d in [
-            'frameworks/wilhelm/include',
-            'system/media/wilhelm/include',
+    if CONFIG['ANDROID_VERSION'] >= '17':
+        LOCAL_INCLUDES += [
+            '%' + '%s/frameworks/wilhelm/include' % CONFIG['ANDROID_SOURCE'],
         ]
-    ]
+    else:
+        LOCAL_INCLUDES += [
+            '%' + '%s/system/media/wilhelm/include' % CONFIG['ANDROID_SOURCE'],
+        ]
 
 CFLAGS += CONFIG['MOZ_ALSA_CFLAGS']
 CFLAGS += CONFIG['MOZ_PULSEAUDIO_CFLAGS']
