@@ -96,10 +96,14 @@ if CONFIG['ANDROID_VERSION'] != '15':
 if CONFIG['MOZ_OMX_DECODER']:
     DEFINES['MOZ_OMX_DECODER'] = True
 
-CXXFLAGS += [
-    '-I%s/%s' % (CONFIG['ANDROID_SOURCE'], d) for d in [
+if CONFIG['ANDROID_VERSION'] > '15':
+    LOCAL_INCLUDES += [
+        '%' + '%s/frameworks/native/opengl/include' % CONFIG['ANDROID_SOURCE'],
+    ]
+
+LOCAL_INCLUDES += [
+    '%' + '%s/%s' % (CONFIG['ANDROID_SOURCE'], d) for d in [
         'hardware/libhardware/include',
         'hardware/libhardware_legacy/include',
-        'frameworks/native/opengl/include',
     ]
 ]
