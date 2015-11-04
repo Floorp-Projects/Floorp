@@ -49,6 +49,8 @@ struct NodeOneofInstance {
   ::google::protobuf::uint64 typenameref_;
   const ::std::string* jsobjectclassname_;
   ::google::protobuf::uint64 jsobjectclassnameref_;
+  const ::std::string* scriptfilename_;
+  ::google::protobuf::uint64 scriptfilenameref_;
 }* Node_default_oneof_instance_ = NULL;
 const ::google::protobuf::Descriptor* Edge_descriptor_ = NULL;
 const ::google::protobuf::internal::GeneratedMessageReflection*
@@ -130,7 +132,7 @@ void protobuf_AssignDesc_CoreDump_2eproto() {
       ::google::protobuf::MessageFactory::generated_factory(),
       sizeof(StackFrame_Data));
   Node_descriptor_ = file->message_type(2);
-  static const int Node_offsets_[11] = {
+  static const int Node_offsets_[14] = {
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Node, id_),
     PROTO2_GENERATED_DEFAULT_ONEOF_FIELD_OFFSET(Node_default_oneof_instance_, typename__),
     PROTO2_GENERATED_DEFAULT_ONEOF_FIELD_OFFSET(Node_default_oneof_instance_, typenameref_),
@@ -140,8 +142,11 @@ void protobuf_AssignDesc_CoreDump_2eproto() {
     PROTO2_GENERATED_DEFAULT_ONEOF_FIELD_OFFSET(Node_default_oneof_instance_, jsobjectclassname_),
     PROTO2_GENERATED_DEFAULT_ONEOF_FIELD_OFFSET(Node_default_oneof_instance_, jsobjectclassnameref_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Node, coarsetype_),
+    PROTO2_GENERATED_DEFAULT_ONEOF_FIELD_OFFSET(Node_default_oneof_instance_, scriptfilename_),
+    PROTO2_GENERATED_DEFAULT_ONEOF_FIELD_OFFSET(Node_default_oneof_instance_, scriptfilenameref_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Node, TypeNameOrRef_),
     GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Node, JSObjectClassNameOrRef_),
+    GOOGLE_PROTOBUF_GENERATED_MESSAGE_FIELD_OFFSET(Node, ScriptFilenameOrRef_),
   };
   Node_reflection_ =
     new ::google::protobuf::internal::GeneratedMessageReflection(
@@ -237,17 +242,19 @@ void protobuf_AddDesc_CoreDump_2eproto() {
     "nDisplayName\030\007 \001(\014H\001\022 \n\026functionDisplayN"
     "ameRef\030\010 \001(\004H\001\022\020\n\010isSystem\030\t \001(\010\022\024\n\014isSe"
     "lfHosted\030\n \001(\010B\r\n\013SourceOrRefB\032\n\030Functio"
-    "nDisplayNameOrRefB\020\n\016StackFrameType\"\272\002\n\004"
+    "nDisplayNameOrRefB\020\n\016StackFrameType\"\210\003\n\004"
     "Node\022\n\n\002id\030\001 \001(\004\022\022\n\010typeName\030\002 \001(\014H\000\022\025\n\013"
     "typeNameRef\030\003 \001(\004H\000\022\014\n\004size\030\004 \001(\004\022.\n\005edg"
     "es\030\005 \003(\0132\037.mozilla.devtools.protobuf.Edg"
     "e\022>\n\017allocationStack\030\006 \001(\0132%.mozilla.dev"
     "tools.protobuf.StackFrame\022\033\n\021jsObjectCla"
     "ssName\030\007 \001(\014H\001\022\036\n\024jsObjectClassNameRef\030\010"
-    " \001(\004H\001\022\025\n\ncoarseType\030\t \001(\r:\0010B\017\n\rTypeNam"
-    "eOrRefB\030\n\026JSObjectClassNameOrRef\"L\n\004Edge"
-    "\022\020\n\010referent\030\001 \001(\004\022\016\n\004name\030\002 \001(\014H\000\022\021\n\007na"
-    "meRef\030\003 \001(\004H\000B\017\n\rEdgeNameOrRef", 870);
+    " \001(\004H\001\022\025\n\ncoarseType\030\t \001(\r:\0010\022\030\n\016scriptF"
+    "ilename\030\n \001(\014H\002\022\033\n\021scriptFilenameRef\030\013 \001"
+    "(\004H\002B\017\n\rTypeNameOrRefB\030\n\026JSObjectClassNa"
+    "meOrRefB\025\n\023ScriptFilenameOrRef\"L\n\004Edge\022\020"
+    "\n\010referent\030\001 \001(\004\022\016\n\004name\030\002 \001(\014H\000\022\021\n\007name"
+    "Ref\030\003 \001(\004H\000B\017\n\rEdgeNameOrRef", 948);
   ::google::protobuf::MessageFactory::InternalRegisterGeneratedFile(
     "CoreDump.proto", &protobuf_RegisterTypes);
   Metadata::default_instance_ = new Metadata();
@@ -1462,6 +1469,8 @@ const int Node::kAllocationStackFieldNumber;
 const int Node::kJsObjectClassNameFieldNumber;
 const int Node::kJsObjectClassNameRefFieldNumber;
 const int Node::kCoarseTypeFieldNumber;
+const int Node::kScriptFilenameFieldNumber;
+const int Node::kScriptFilenameRefFieldNumber;
 #endif  // !_MSC_VER
 
 Node::Node()
@@ -1476,6 +1485,8 @@ void Node::InitAsDefaultInstance() {
   allocationstack_ = const_cast< ::mozilla::devtools::protobuf::StackFrame*>(&::mozilla::devtools::protobuf::StackFrame::default_instance());
   Node_default_oneof_instance_->jsobjectclassname_ = &::google::protobuf::internal::GetEmptyStringAlreadyInited();
   Node_default_oneof_instance_->jsobjectclassnameref_ = GOOGLE_ULONGLONG(0);
+  Node_default_oneof_instance_->scriptfilename_ = &::google::protobuf::internal::GetEmptyStringAlreadyInited();
+  Node_default_oneof_instance_->scriptfilenameref_ = GOOGLE_ULONGLONG(0);
 }
 
 Node::Node(const Node& from)
@@ -1495,6 +1506,7 @@ void Node::SharedCtor() {
   ::memset(_has_bits_, 0, sizeof(_has_bits_));
   clear_has_TypeNameOrRef();
   clear_has_JSObjectClassNameOrRef();
+  clear_has_ScriptFilenameOrRef();
 }
 
 Node::~Node() {
@@ -1508,6 +1520,9 @@ void Node::SharedDtor() {
   }
   if (has_JSObjectClassNameOrRef()) {
     clear_JSObjectClassNameOrRef();
+  }
+  if (has_ScriptFilenameOrRef()) {
+    clear_ScriptFilenameOrRef();
   }
   if (this != default_instance_) {
     delete allocationstack_;
@@ -1569,6 +1584,23 @@ void Node::clear_JSObjectClassNameOrRef() {
   _oneof_case_[1] = JSOBJECTCLASSNAMEORREF_NOT_SET;
 }
 
+void Node::clear_ScriptFilenameOrRef() {
+  switch(ScriptFilenameOrRef_case()) {
+    case kScriptFilename: {
+      delete ScriptFilenameOrRef_.scriptfilename_;
+      break;
+    }
+    case kScriptFilenameRef: {
+      // No need to clear
+      break;
+    }
+    case SCRIPTFILENAMEORREF_NOT_SET: {
+      break;
+    }
+  }
+  _oneof_case_[2] = SCRIPTFILENAMEORREF_NOT_SET;
+}
+
 
 void Node::Clear() {
 #define OFFSET_OF_FIELD_(f) (reinterpret_cast<char*>(      \
@@ -1595,6 +1627,7 @@ void Node::Clear() {
   edges_.Clear();
   clear_TypeNameOrRef();
   clear_JSObjectClassNameOrRef();
+  clear_ScriptFilenameOrRef();
   ::memset(_has_bits_, 0, sizeof(_has_bits_));
   mutable_unknown_fields()->Clear();
 }
@@ -1734,6 +1767,35 @@ bool Node::MergePartialFromCodedStream(
         } else {
           goto handle_unusual;
         }
+        if (input->ExpectTag(82)) goto parse_scriptFilename;
+        break;
+      }
+
+      // optional bytes scriptFilename = 10;
+      case 10: {
+        if (tag == 82) {
+         parse_scriptFilename:
+          DO_(::google::protobuf::internal::WireFormatLite::ReadBytes(
+                input, this->mutable_scriptfilename()));
+        } else {
+          goto handle_unusual;
+        }
+        if (input->ExpectTag(88)) goto parse_scriptFilenameRef;
+        break;
+      }
+
+      // optional uint64 scriptFilenameRef = 11;
+      case 11: {
+        if (tag == 88) {
+         parse_scriptFilenameRef:
+          clear_ScriptFilenameOrRef();
+          DO_((::google::protobuf::internal::WireFormatLite::ReadPrimitive<
+                   ::google::protobuf::uint64, ::google::protobuf::internal::WireFormatLite::TYPE_UINT64>(
+                 input, &ScriptFilenameOrRef_.scriptfilenameref_)));
+          set_has_scriptfilenameref();
+        } else {
+          goto handle_unusual;
+        }
         if (input->ExpectAtEnd()) goto success;
         break;
       }
@@ -1812,6 +1874,17 @@ void Node::SerializeWithCachedSizes(
     ::google::protobuf::internal::WireFormatLite::WriteUInt32(9, this->coarsetype(), output);
   }
 
+  // optional bytes scriptFilename = 10;
+  if (has_scriptfilename()) {
+    ::google::protobuf::internal::WireFormatLite::WriteBytesMaybeAliased(
+      10, this->scriptfilename(), output);
+  }
+
+  // optional uint64 scriptFilenameRef = 11;
+  if (has_scriptfilenameref()) {
+    ::google::protobuf::internal::WireFormatLite::WriteUInt64(11, this->scriptfilenameref(), output);
+  }
+
   if (!unknown_fields().empty()) {
     ::google::protobuf::internal::WireFormat::SerializeUnknownFields(
         unknown_fields(), output);
@@ -1873,6 +1946,18 @@ void Node::SerializeWithCachedSizes(
   // optional uint32 coarseType = 9 [default = 0];
   if (has_coarsetype()) {
     target = ::google::protobuf::internal::WireFormatLite::WriteUInt32ToArray(9, this->coarsetype(), target);
+  }
+
+  // optional bytes scriptFilename = 10;
+  if (has_scriptfilename()) {
+    target =
+      ::google::protobuf::internal::WireFormatLite::WriteBytesToArray(
+        10, this->scriptfilename(), target);
+  }
+
+  // optional uint64 scriptFilenameRef = 11;
+  if (has_scriptfilenameref()) {
+    target = ::google::protobuf::internal::WireFormatLite::WriteUInt64ToArray(11, this->scriptfilenameref(), target);
   }
 
   if (!unknown_fields().empty()) {
@@ -1964,6 +2049,25 @@ int Node::ByteSize() const {
       break;
     }
   }
+  switch (ScriptFilenameOrRef_case()) {
+    // optional bytes scriptFilename = 10;
+    case kScriptFilename: {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::BytesSize(
+          this->scriptfilename());
+      break;
+    }
+    // optional uint64 scriptFilenameRef = 11;
+    case kScriptFilenameRef: {
+      total_size += 1 +
+        ::google::protobuf::internal::WireFormatLite::UInt64Size(
+          this->scriptfilenameref());
+      break;
+    }
+    case SCRIPTFILENAMEORREF_NOT_SET: {
+      break;
+    }
+  }
   if (!unknown_fields().empty()) {
     total_size +=
       ::google::protobuf::internal::WireFormat::ComputeUnknownFieldsSize(
@@ -2016,6 +2120,19 @@ void Node::MergeFrom(const Node& from) {
       break;
     }
   }
+  switch (from.ScriptFilenameOrRef_case()) {
+    case kScriptFilename: {
+      set_scriptfilename(from.scriptfilename());
+      break;
+    }
+    case kScriptFilenameRef: {
+      set_scriptfilenameref(from.scriptfilenameref());
+      break;
+    }
+    case SCRIPTFILENAMEORREF_NOT_SET: {
+      break;
+    }
+  }
   if (from._has_bits_[0 / 32] & (0xffu << (0 % 32))) {
     if (from.has_id()) {
       set_id(from.id());
@@ -2063,6 +2180,8 @@ void Node::Swap(Node* other) {
     std::swap(_oneof_case_[0], other->_oneof_case_[0]);
     std::swap(JSObjectClassNameOrRef_, other->JSObjectClassNameOrRef_);
     std::swap(_oneof_case_[1], other->_oneof_case_[1]);
+    std::swap(ScriptFilenameOrRef_, other->ScriptFilenameOrRef_);
+    std::swap(_oneof_case_[2], other->_oneof_case_[2]);
     std::swap(_has_bits_[0], other->_has_bits_[0]);
     _unknown_fields_.Swap(&other->_unknown_fields_);
     std::swap(_cached_size_, other->_cached_size_);
