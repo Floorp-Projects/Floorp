@@ -26,7 +26,8 @@ namespace layers {
 using namespace mozilla::ipc;
 
 SharedPlanarYCbCrImage::SharedPlanarYCbCrImage(ImageClient* aCompositable)
-: mCompositable(aCompositable)
+: PlanarYCbCrImage(nullptr)
+, mCompositable(aCompositable)
 {
   MOZ_COUNT_CTOR(SharedPlanarYCbCrImage);
 }
@@ -53,7 +54,8 @@ SharedPlanarYCbCrImage::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
   //     at time of allocation in GfxMemoryImageReporter.
   // Not owned:
   // - mCompositable
-  return 0;
+  size_t size = PlanarYCbCrImage::SizeOfExcludingThis(aMallocSizeOf);
+  return size;
 }
 
 TextureClient*
@@ -159,6 +161,20 @@ SharedPlanarYCbCrImage::SetDataNoCopy(const Data &aData)
                                   aData.mCbCrSize,
                                   aData.mStereoMode);
   return true;
+}
+
+uint8_t*
+SharedPlanarYCbCrImage::AllocateBuffer(uint32_t aSize)
+{
+  MOZ_ASSERT(!mTextureClient,
+             "This image already has allocated data");
+  mTextureClient = TextureClient::CreateWithBufferSize(mCompositable->GetForwarder(),
+                                                       gfx::SurfaceFormat::YUV, aSize,
+                                                       mCompositable->GetTextureFlags());
+  if (!mTextureClient) {
+    return nullptr;
+  }
+  return mTextureClient->GetBuffer();
 }
 
 bool

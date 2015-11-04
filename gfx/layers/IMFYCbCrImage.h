@@ -13,7 +13,7 @@
 namespace mozilla {
 namespace layers {
 
-class IMFYCbCrImage : public RecyclingPlanarYCbCrImage
+class IMFYCbCrImage : public PlanarYCbCrImage
 {
 public:
   IMFYCbCrImage(IMFMediaBuffer* aBuffer, IMF2DBuffer* a2DBuffer);
@@ -23,6 +23,10 @@ public:
   virtual TextureClient* GetTextureClient(CompositableClient* aClient) override;
 
 protected:
+  virtual uint8_t* AllocateBuffer(uint32_t aSize) override {
+    MOZ_CRASH("Can't do manual allocations with IMFYCbCrImage");
+    return nullptr;
+  }
 
   TextureClient* GetD3D9TextureClient(CompositableClient* aClient);
 
