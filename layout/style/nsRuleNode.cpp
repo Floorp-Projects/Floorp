@@ -8053,6 +8053,20 @@ nsRuleNode::ComputePositionData(void* aStartStruct,
               parentPos->mGridRowEnd,
               conditions);
 
+  // grid-column-gap
+  SetCoord(*aRuleData->ValueForGridColumnGap(),
+           pos->mGridColumnGap, parentPos->mGridColumnGap,
+           SETCOORD_LH | SETCOORD_INITIAL_ZERO | SETCOORD_CALC_LENGTH_ONLY |
+           SETCOORD_CALC_CLAMP_NONNEGATIVE | SETCOORD_UNSET_INITIAL,
+           aContext, mPresContext, conditions);
+
+  // grid-row-gap
+  SetCoord(*aRuleData->ValueForGridRowGap(),
+           pos->mGridRowGap, parentPos->mGridRowGap,
+           SETCOORD_LH | SETCOORD_INITIAL_ZERO | SETCOORD_CALC_LENGTH_ONLY |
+           SETCOORD_CALC_CLAMP_NONNEGATIVE | SETCOORD_UNSET_INITIAL,
+           aContext, mPresContext, conditions);
+
   // z-index
   const nsCSSValue* zIndexValue = aRuleData->ValueForZIndex();
   if (! SetCoord(*zIndexValue, pos->mZIndex, parentPos->mZIndex,
