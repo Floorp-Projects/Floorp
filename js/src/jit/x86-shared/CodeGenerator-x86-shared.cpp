@@ -3320,6 +3320,49 @@ CodeGeneratorX86Shared::visitSimdSelect(LSimdSelect* ins)
     masm.bitwiseOrX4(Operand(temp), output);
 }
 
+void
+CodeGeneratorX86Shared::visitCompareExchangeTypedArrayElement(LCompareExchangeTypedArrayElement* lir)
+{
+    Register elements = ToRegister(lir->elements());
+    AnyRegister output = ToAnyRegister(lir->output());
+    Register temp = lir->temp()->isBogusTemp() ? InvalidReg : ToRegister(lir->temp());
+
+    Register oldval = ToRegister(lir->oldval());
+    Register newval = ToRegister(lir->newval());
+
+    Scalar::Type arrayType = lir->mir()->arrayType();
+    int width = Scalar::byteSize(arrayType);
+
+    if (lir->index()->isConstant()) {
+        Address dest(elements, ToInt32(lir->index()) * width);
+        masm.compareExchangeToTypedIntArray(arrayType, dest, oldval, newval, temp, output);
+    } else {
+        BaseIndex dest(elements, ToRegister(lir->index()), ScaleFromElemWidth(width));
+        masm.compareExchangeToTypedIntArray(arrayType, dest, oldval, newval, temp, output);
+    }
+}
+
+void
+CodeGeneratorX86Shared::visitAtomicExchangeTypedArrayElement(LAtomicExchangeTypedArrayElement* lir)
+{
+    Register elements = ToRegister(lir->elements());
+    AnyRegister output = ToAnyRegister(lir->output());
+    Register temp = lir->temp()->isBogusTemp() ? InvalidReg : ToRegister(lir->temp());
+
+    Register value = ToRegister(lir->value());
+
+    Scalar::Type arrayType = lir->mir()->arrayType();
+    int width = Scalar::byteSize(arrayType);
+
+    if (lir->index()->isConstant()) {
+        Address dest(elements, ToInt32(lir->index()) * width);
+        masm.atomicExchangeToTypedIntArray(arrayType, dest, value, temp, output);
+    } else {
+        BaseIndex dest(elements, ToRegister(lir->index()), ScaleFromElemWidth(width));
+        masm.atomicExchangeToTypedIntArray(arrayType, dest, value, temp, output);
+    }
+}
+
 template<typename S, typename T>
 void
 CodeGeneratorX86Shared::atomicBinopToTypedIntArray(AtomicOp op, Scalar::Type arrayType, const S& value,

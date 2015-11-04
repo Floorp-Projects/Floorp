@@ -1,0 +1,190 @@
+<!DOCTYPE HTML>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html><head>
+  <meta charset="utf-8">
+  <title>Reference: align-self (part 1 of 2)</title>
+  <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1151213">
+  <style type="text/css">
+html,body {
+    color:black; background-color:white; font-size:16px; padding:0; margin:0;
+}
+separator { clear:both; display:block; height:6px; }
+
+.grid {
+  display: block;
+  float: left;
+  position: relative;
+  border: 1px solid;
+  border-block-start: 2px solid blue;
+  inline-size: 36px;
+  block-size: 25px;
+  margin-right: 4px;
+}
+
+span {
+  display: block;
+  position: relative;
+  z-index: 1;
+  width: 13px;
+  height: 9px;
+  background: grey;
+  border-block-start: 2px solid blue;
+  border-inline-start: 2px solid lime;
+  margin: 1px 1px 2px 2px;
+  offset-inline-start: 1px;
+}
+
+abs1,abs2,abs3,abs4 {
+  position: absolute;
+  top:0;left:0;bottom:0;right:0;
+  background: white;
+}
+abs1 {
+  border-block-start-width: 3px;
+  border-block-end-width: 2px;
+  border-inline-start-width: 1px;
+  border-inline-end-width: 3px;
+  border-style: solid;
+  border-color: lightgrey;
+}
+abs2 { display:none; }
+abs3 { display:none;  }
+abs4 { display:none;  }
+
+.hl { writing-mode: horizontal-tb; direction:ltr; }
+.hr { writing-mode: horizontal-tb; direction:rtl; }
+.vl { writing-mode: vertical-lr; }
+.vr { writing-mode: vertical-rl; }
+.vlr { writing-mode: vertical-lr; direction:rtl; }
+.vrl { writing-mode: vertical-rl; direction:ltr; }
+
+.astart,.aflexstart,.aleft,.aright,.astretch1,.astretch2,.astretch2,.astretch3,
+.astretch4,.astretch5,.astretch6,.astretch7,.aauto {
+  offset-block-start: 3px;
+}
+
+.aend,.aflexend { offset-block-start: 9px; }
+.acenter {  offset-block-start: 5px; }
+
+.hl .astretch2, .hr .astretch2 { height: 15px; }
+.hl .astretch3, .hr .astretch3 { height: 15px; }
+.hl .astretch4, .hr .astretch4 { width: 27px; }
+
+.astretch2 { width:13px; height:auto; }
+.astretch3 { height:auto; }
+.astretch4 { width:auto; }
+.astretch5 { width:auto; max-width:13px; }
+.astretch6 { height:9px; }
+.astretch7 { width:auto; height:auto; max-width:13px; height:9px; }
+
+.hl .hr {margin-left:4px;}
+.hl .vl {offset-block-start: 1px; offset-inline-start:3px;}
+.hl .vl.aend, .hl .vl.aflexend { margin-top: 7px; }
+.hl .vl.acenter { margin-top:3px; }
+.hl .vl.astretch4, .hl .vr.astretch4, .hl .vlr.astretch4, .hl .vrl.astretch4 { width:0; }
+
+.hl .vr {margin-left:6px; margin-top:3px; }
+.hl .vr.aend, .hl .vr.aflexend {margin-left:12px; margin-top:9px; }
+.hl .vr.acenter {margin-left:8px; margin-top:5px; }
+
+.hl .vlr { margin-left:0px;  margin-top:5px; }
+.hl .vlr.aend, .hl .vlr.aflexend {margin-left:-6px; margin-top:11px; }
+.hl .vlr.acenter {margin-left:-2px; margin-top:7px; }
+
+.hl .vrl { margin-left:6px;  margin-top:3px; }
+.hl .vrl.aend, .hl .vrl.aflexend {margin-left:12px; margin-top:9px; }
+.hl .vrl.acenter {margin-left:8px; margin-top:5px; }
+
+.hr .hl {margin-right:3px}
+
+.hr .vl {margin-right:5px; margin-top:5px; }
+.hr .vl.aend, .hr .vl.aflexend {margin-right:11px; margin-top:11px; }
+.hr .vl.acenter {margin-right:7px; margin-top:7px; }
+.hr .vl.astretch4, .hr .vr.astretch4, .hr .vlr.astretch4, .hr .vrl.astretch4 { width:0; }
+
+.hr .vr {margin-top:5px; margin-right:-1px; }
+.hr .vr.aend, .hr .vr.aflexend {margin-top:11px; margin-right:-7px; }
+.hr .vr.acenter {margin-top:7px; margin-right:-3px; }
+.hr .vr.astretch6, .hr .vr.astretch7 { margin-right:-1px; }
+
+.hr .vlr {margin-top:5px; margin-right:5px;  }
+.hr .vlr.aend, .hr .vlr.aflexend {margin-top:11px; margin-right:11px; }
+.hr .vlr.acenter {margin-top:7px; margin-right:7px; }
+
+.hr .vrl {margin-top:3px; margin-right:-1px;  }
+.hr .vrl.aend, .hr .vrl.aflexend {margin-top:9px; margin-right:-7px; }
+.hr .vrl.acenter {margin-top:5px; margin-right:-3px; }
+
+.vl span { offset-block-start: 1px; offset-inline-start: 3px; }
+.vl .astretch4, .vl .astretch5 { width:15px; }
+
+.vl .hl.aend, .vl .hl.aflexend { margin-left:4px; }
+.vl .hl.acenter { margin-left:1px; }
+.vl .hl.astretch6, .vl .hl.astretch7 { height:0px; }
+.vl .hr.astretch6, .vl .hr.astretch7 { height:0px; }
+.vl .hl.astretch7 { width:14px; }
+.vl .hr.astretch7 { width:14px; }
+
+.vl .hr { margin-left:8px; }
+.vl .hr.aend, .vl .hr.aflexend { margin-left:10px; }
+.vl .hr.acenter { margin-left:7px; }
+
+.vl .vl { margin-top:-1px; margin-left:4px; }
+.vl .vl.aend, .vl .vl.aflexend { margin-left:6px; }
+.vl .vl.acenter { margin-left:3px; }
+.vl .vl.astretch7, .vl .vr.astretch7, .vl .vlr.astretch7, .vl .vrl.astretch7 { width:14px; }
+
+.vl .vl.astretch2,  .vl .vl.astretch3  { height:27px; }
+.vl .vr.astretch2,  .vl .vr.astretch3  { height:27px; }
+.vl .vlr.astretch2, .vl .vlr.astretch3 { height:27px; }
+.vl .vrl.astretch2, .vl .vrl.astretch3 { height:27px; }
+
+.vl .vr  { margin-top:-1px; margin-left:6px;  }
+.vl .vr.aend, .vl .vr.aflexend { margin-left:8px; }
+.vl .vr.acenter { margin-left:5px; }
+
+.vl .vlr { margin-top:5px; margin-left:4px;  }
+.vl .vlr.aend, .vl .vlr.aflexend { margin-left:6px; }
+.vl .vlr.acenter { margin-left:3px; }
+
+.vl .vrl { margin-top:-1px; margin-left:6px;  }
+.vl .vrl.aend, .vl .vrl.aflexend { margin-left:8px; }
+.vl .vrl.acenter { margin-left:5px; }
+
+
+</style>
+</head>
+<body>
+
+<script>
+var gridwm = [ "hl", "hr", "vl" ]; // grid-item-align-002.html tests vr/vlr/vrl
+var wm = [ "hl", "hr", "vl", "vr", "vlr", "vrl" ];
+var test = [ "start", "end", "flexstart", "flexend", "center", "left", "right",
+             "stretch1", "stretch2", "stretch3", "stretch4", "stretch5",
+             "stretch6", "stretch7", "auto" ];
+for (var i = 0; i < gridwm.length; ++i) {
+  for (var j = 0; j < wm.length; ++j) {
+    for (var k = 0; k < test.length; ++k) {
+      var div = document.createElement("div");
+      div.className = "grid " + gridwm[i];
+      var span = document.createElement("span");
+      span.className = wm[j] + " a" + test[k];
+      div.appendChild(span);
+      div.appendChild(document.createElement("abs1"));
+      div.appendChild(document.createElement("abs2"));
+      div.appendChild(document.createElement("abs3"));
+      div.appendChild(document.createElement("abs4"));
+
+      document.body.appendChild(div)
+    }
+    document.body.appendChild(document.createElement("separator"));
+  }
+}
+</script>
+
+
+</body>
+</html>

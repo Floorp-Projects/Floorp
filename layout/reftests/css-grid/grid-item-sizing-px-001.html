@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html><head>
+  <title>CSS Test: Testing grid item 'px' sizes</title>
+  <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1163435">
+  <link rel="help" href="http://dev.w3.org/csswg/css-grid/">
+  <link rel="match" href="grid-item-sizing-percent-001-ref.html">
+  <meta charset="utf-8">
+  <style type="text/css">
+body,html { color:black; background:white; font-size:16px; padding:0; margin:0; }
+
+.grid {
+  display: grid;
+  position:relative;
+  background-color: grey;
+  grid-template-columns: 50px 100px;
+  grid-template-rows: 20px 30px;
+  width: 173px;
+  height: 53px;
+}
+
+.item {
+  width: 100%;
+  height: 100%;
+  background: lime;
+  grid-area: 1 / 1 / 2 / 2;
+  background-clip: content-box;
+}
+.c1 {
+  width: 40%;
+  height: 60%;
+  grid-area: 1 / 1 / 3 / 3;
+}
+.c2 {
+  grid-area: 1 / 1 / 3 / 3;
+}
+#abs > div div {
+  position: absolute;
+}
+.pbox {
+  box-sizing: border-box;
+}
+
+.p { padding:2px 3px; }
+.m { margin:2px 3px; }
+.c1.p,.c2.p { padding:5px 9px; }
+.c1.m,.c2.m { margin:5px 9px; }
+.b { border:solid black; }
+
+</style>
+</head>
+<body>
+
+<div style="float:left">
+<div class="grid"><div class="item"></div></div>
+<div class="grid"><div class="item pbox p"></div></div>
+<div class="grid"><div class="item c1 p"></div></div>
+<div class="grid"><div class="item c1 pbox p"></div></div>
+<div class="grid"><div class="item c2 pbox p"></div></div>
+<div class="grid"><div class="item pbox b"></div></div>
+<div class="grid"><div class="item pbox p b"></div></div>
+<div class="grid"><div class="item c1 pbox p b"></div></div>
+<div class="grid"><div class="item c2 pbox p b"></div></div>
+<div class="grid"><div class="item pbox m"></div></div>
+<div class="grid"><div class="item c1 pbox m"></div></div>
+<div class="grid"><div class="item c2 pbox m"></div></div>
+<div class="grid"><div class="item pbox p m"></div></div>
+<div class="grid"><div class="item pbox p b m"></div></div>
+<div class="grid"><div class="item c2 pbox p b m"></div></div>
+</div>
+
+<div id="abs" style="float:left">
+<div class="grid"><div class="item"></div></div>
+<div class="grid"><div class="item pbox p"></div></div>
+<div class="grid"><div class="item c1 p"></div></div>
+<div class="grid"><div class="item c1 pbox p"></div></div>
+<div class="grid"><div class="item c2 pbox p"></div></div>
+<div class="grid"><div class="item pbox b"></div></div>
+<div class="grid"><div class="item pbox p b"></div></div>
+<div class="grid"><div class="item c1 pbox p b"></div></div>
+<div class="grid"><div class="item c2 pbox p b"></div></div>
+<div class="grid"><div class="item pbox m"></div></div>
+<div class="grid"><div class="item c1 pbox m"></div></div>
+<div class="grid"><div class="item c2 pbox m"></div></div>
+<div class="grid"><div class="item pbox p m"></div></div>
+<div class="grid"><div class="item pbox p b m"></div></div>
+<div class="grid"><div class="item c2 pbox p b m"></div></div>
+</div>
+
+</body>
+</html>

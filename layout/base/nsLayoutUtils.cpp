@@ -1391,11 +1391,16 @@ nsLayoutUtils::GetAfterFrame(nsIFrame* aFrame)
 
 // static
 nsIFrame*
-nsLayoutUtils::GetClosestFrameOfType(nsIFrame* aFrame, nsIAtom* aFrameType)
+nsLayoutUtils::GetClosestFrameOfType(nsIFrame* aFrame,
+                                     nsIAtom* aFrameType,
+                                     nsIFrame* aStopAt)
 {
   for (nsIFrame* frame = aFrame; frame; frame = frame->GetParent()) {
     if (frame->GetType() == aFrameType) {
       return frame;
+    }
+    if (frame == aStopAt) {
+      break;
     }
   }
   return nullptr;
@@ -1866,29 +1871,38 @@ nsLayoutUtils::IsScrollbarThumbLayerized(nsIFrame* aThumbFrame)
 
 nsIFrame*
 nsLayoutUtils::GetAnimatedGeometryRootForFrame(nsDisplayListBuilder* aBuilder,
-                                               nsIFrame* aFrame,
-                                               const nsIFrame* aStopAtAncestor)
+                                               nsIFrame* aFrame)
 {
-  return aBuilder->FindAnimatedGeometryRootFor(aFrame, aStopAtAncestor);
+  return aBuilder->FindAnimatedGeometryRootFor(aFrame);
 }
 
 nsIFrame*
 nsLayoutUtils::GetAnimatedGeometryRootFor(nsDisplayItem* aItem,
-                                          nsDisplayListBuilder* aBuilder)
+                                          nsDisplayListBuilder* aBuilder,
+                                          uint32_t aFlags)
 {
   nsIFrame* f = aItem->Frame();
-  if (aItem->ShouldFixToViewport(aBuilder)) {
+  if (!(aFlags & AGR_IGNORE_BACKGROUND_ATTACHMENT_FIXED) &&
+      aItem->ShouldFixToViewport(aBuilder)) {
     // Make its active scrolled root be the active scrolled root of
     // the enclosing viewport, since it shouldn't be scrolled by scrolled
     // frames in its document. InvalidateFixedBackgroundFramesFromList in
     // nsGfxScrollFrame will not repaint this item when scrolling occurs.
     nsIFrame* viewportFrame =
-      nsLayoutUtils::GetClosestFrameOfType(f, nsGkAtoms::viewportFrame);
-    NS_ASSERTION(viewportFrame, "no viewport???");
-    return GetAnimatedGeometryRootForFrame(aBuilder, viewportFrame,
-        aBuilder->FindReferenceFrameFor(viewportFrame));
+      nsLayoutUtils::GetClosestFrameOfType(f, nsGkAtoms::viewportFrame, aBuilder->RootReferenceFrame());
+    if (viewportFrame) {
+      return GetAnimatedGeometryRootForFrame(aBuilder, viewportFrame);
+    }
   }
-  return GetAnimatedGeometryRootForFrame(aBuilder, f, aItem->ReferenceFrame());
+  if (aItem->GetType() == nsDisplayItem::TYPE_TRANSFORM &&
+      static_cast<nsDisplayTransform*>(aItem)->IsReferenceFrameBoundary() &&
+      f != aBuilder->RootReferenceFrame()) {
+    nsIFrame* parent = nsLayoutUtils::GetCrossDocParentFrame(f);
+    if (parent) {
+      return GetAnimatedGeometryRootForFrame(aBuilder, parent);
+    }
+  }
+  return GetAnimatedGeometryRootForFrame(aBuilder, f);
 }
 
 // static
@@ -4532,10 +4546,15 @@ nsLayoutUtils::IntrinsicForAxis(PhysicalAxis        aAxis,
   const nsStylePosition* stylePos = aFrame->StylePosition();
   uint8_t boxSizing = stylePos->mBoxSizing;
 
-  const nsStyleCoord& styleISize =
-    horizontalAxis ? stylePos->mWidth : stylePos->mHeight;
   const nsStyleCoord& styleMinISize =
     horizontalAxis ? stylePos->mMinWidth : stylePos->mMinHeight;
+  const nsStyleCoord& styleISize =
+    (aFlags & MIN_INTRINSIC_ISIZE) ? styleMinISize :
+    (horizontalAxis ? stylePos->mWidth : stylePos->mHeight);
+  MOZ_ASSERT(!(aFlags & MIN_INTRINSIC_ISIZE) ||
+             styleISize.GetUnit() == eStyleUnit_Auto ||
+             styleISize.GetUnit() == eStyleUnit_Enumerated,
+             "should only use MIN_INTRINSIC_ISIZE for intrinsic values");
   const nsStyleCoord& styleMaxISize =
     horizontalAxis ? stylePos->mMaxWidth : stylePos->mMaxHeight;
 
@@ -4751,9 +4770,9 @@ nsLayoutUtils::MinSizeContributionForAxis(PhysicalAxis        aAxis,
                                           IntrinsicISizeType  aType,
                                           uint32_t            aFlags)
 {
-  NS_PRECONDITION(aFrame, "null frame");
-  NS_PRECONDITION(aFrame->GetParent(),
-                  "MinSizeContributionForAxis called on frame not in tree");
+  MOZ_ASSERT(aFrame);
+  MOZ_ASSERT(aFrame->IsFlexOrGridItem(),
+             "only grid/flex items have this behavior currently");
 
 #ifdef DEBUG_INTRINSIC_WIDTH
   nsFrame::IndentBy(stderr, gNoiseIndent);
@@ -4762,6 +4781,46 @@ nsLayoutUtils::MinSizeContributionForAxis(PhysicalAxis        aAxis,
                 aType == MIN_ISIZE ? "min" : "pref",
                 aWM.IsVertical() ? "vertical" : "horizontal");
 #endif
+
+  const nsStylePosition* const stylePos = aFrame->StylePosition();
+  const nsStyleCoord* style = aAxis == eAxisHorizontal ? &stylePos->mMinWidth
+                                                       : &stylePos->mMinHeight;
+  nscoord minSize;
+  nscoord* fixedMinSize = nullptr;
+  auto minSizeUnit = style->GetUnit();
+  if (minSizeUnit == eStyleUnit_Auto) {
+    if (aFrame->StyleDisplay()->mOverflowX == NS_STYLE_OVERFLOW_VISIBLE) {
+      style = aAxis == eAxisHorizontal ? &stylePos->mWidth
+                                       : &stylePos->mHeight;
+      if (GetAbsoluteCoord(*style, minSize)) {
+        // We have a definite width/height.  This is the "specified size" in:
+        // https://drafts.csswg.org/css-grid/#min-size-auto
+        fixedMinSize = &minSize;
+      }
+      // XXX the "transferred size" piece is missing (bug 1218178)
+    } else {
+      // min-[width|height]:auto with overflow != visible computes to zero.
+      minSize = 0;
+      fixedMinSize = &minSize;
+    }
+  } else if (GetAbsoluteCoord(*style, minSize)) {
+    fixedMinSize = &minSize;
+  } else if (minSizeUnit != eStyleUnit_Enumerated) {
+    MOZ_ASSERT(style->HasPercent());
+    minSize = 0;
+    fixedMinSize = &minSize;
+  }
+
+  if (!fixedMinSize) {
+    // Let the caller deal with the "content size" cases.
+#ifdef DEBUG_INTRINSIC_WIDTH
+    nsFrame::IndentBy(stderr, gNoiseIndent);
+    static_cast<nsFrame*>(aFrame)->ListTag(stderr);
+    printf_stderr(" %s min-isize is indefinite.\n",
+                  aType == MIN_ISIZE ? "min" : "pref");
+#endif
+    return NS_UNCONSTRAINEDSIZE;
+  }
 
   // If aFrame is a container for font size inflation, then shrink
   // wrapping inside of it should not apply font size inflation.
@@ -4774,18 +4833,13 @@ nsLayoutUtils::MinSizeContributionForAxis(PhysicalAxis        aAxis,
                            : aFrame->IntrinsicBSizeOffsets();
   nscoord result = 0;
   nscoord min = 0;
-  const nsStylePosition* stylePos = aFrame->StylePosition();
-  uint8_t boxSizing = stylePos->mBoxSizing;
-  const nsStyleCoord& style = aAxis == eAxisHorizontal ? stylePos->mMinWidth
-                                                       : stylePos->mMinHeight;
-  nscoord minSize;
-  nscoord* fixedMinSize = nullptr;
-  if (GetAbsoluteCoord(style, minSize)) {
-    fixedMinSize = &minSize;
-  }
-  result = AddIntrinsicSizeOffset(aRC, aFrame, offsets, aType, boxSizing,
-                                  result, min, style, fixedMinSize,
-                                  style, fixedMinSize, style, aFlags, aAxis);
+
+  const nsStyleCoord& maxISize =
+    aAxis == eAxisHorizontal ? stylePos->mMaxWidth : stylePos->mMaxHeight;
+  result = AddIntrinsicSizeOffset(aRC, aFrame, offsets, aType,
+                                  stylePos->mBoxSizing,
+                                  result, min, *style, fixedMinSize,
+                                  *style, nullptr, maxISize, aFlags, aAxis);
 
 #ifdef DEBUG_INTRINSIC_WIDTH
   nsFrame::IndentBy(stderr, gNoiseIndent);
@@ -8661,4 +8715,16 @@ nsLayoutUtils::GetSelectionBoundingRect(Selection* aSel)
   }
 
   return res;
+}
+
+/* static */ bool
+nsLayoutUtils::IsScrollFrameWithSnapping(nsIFrame* aFrame)
+{
+  nsIScrollableFrame* sf = do_QueryFrame(aFrame);
+  if (!sf) {
+    return false;
+  }
+  ScrollbarStyles styles = sf->GetScrollbarStyles();
+  return styles.mScrollSnapTypeY != NS_STYLE_SCROLL_SNAP_TYPE_NONE ||
+         styles.mScrollSnapTypeX != NS_STYLE_SCROLL_SNAP_TYPE_NONE;
 }
