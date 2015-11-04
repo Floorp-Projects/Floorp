@@ -1051,6 +1051,11 @@ APZCTreeManager::ProcessMouseEvent(WidgetMouseEventBase& aEvent,
                                    ScrollableLayerGuid* aOutTargetGuid,
                                    uint64_t* aOutInputBlockId)
 {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  // Note, we call this before having transformed the reference point.
+  UpdateWheelTransaction(aEvent);
+
   MouseInput input(aEvent);
   input.mOrigin = ScreenPoint(aEvent.refPoint.x, aEvent.refPoint.y);
 

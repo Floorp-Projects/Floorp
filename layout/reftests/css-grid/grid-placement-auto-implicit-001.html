@@ -20,7 +20,7 @@ body,html { color:black; background:white; font-size:12px; padding:0; margin:0; 
  grid-auto-columns: 3px;
  grid-auto-rows: 20px;
  border: 1px solid blue;
- width: 300px;
+ width: 270px;
 }
 
 .a { grid-area: 1 / 2; background:lime; }
@@ -35,6 +35,7 @@ body,html { color:black; background:white; font-size:12px; padding:0; margin:0; 
 span {
   border: 1px solid;
   line-height: 18px;
+  min-width: 0;
 }
 
   </style>
@@ -76,24 +77,27 @@ span {
 <div class="grid">
 <span class="a">a</span><span class="b" span="50">b</span><span class="g">g</span><span class="g">g</span>
 </div>
+
+</div><div style="float:left; margin-top:300px;">
+
 <div class="grid" style="height:40px">
 <span style="grid-area: X -10000 / 1 / span 10000 / 5; margin-top:-199980px"></span>
-<span style="grid-area: 1 / 1 / span 10000 / 5; margin-top:-199980px; height:30px; color:cyan"></span>
+<span style="grid-area: 1 / 1 / span 10000 / 5; margin-top:-199980px; height:30px; color:black"></span>
 <span span="50" style="margin-top:-399960px">b</span>
 </div>
 <div class="grid" style="height:40px">
 <span style="grid-area: X -10000 / 1 / span 10000 / 5; margin-top:-199980px"></span>
-<span style="grid-area: 1 / 1 / span 10000 / 5; margin-top:-199980px; height:30px; color:lime"></span>
+<span style="grid-area: 1 / 1 / span 10000 / 5; margin-top:-199980px; height:30px; color:black"></span>
 <span style="grid-column: 1 / span 50; margin-top:-399960px">b</span>
 </div>
 <div class="grid" style="height:40px">
 <span style="grid-area: 1 / X -10000 / 5 / span 10000; width: 30px; margin-left:-29980px"></span>
-<span style="grid-area: 1 / 1 / 5 / span 10000; width: 30px; margin-left:-29980px; color:cyan"></span>
+<span style="grid-area: 1 / 1 / 5 / span 10000; width: 30px; margin-left:-29980px; color:black"></span>
 <span style="grid-row: 1; grid-column:auto / span 1; width: 30px; margin-left:-59980px">b</span>
 </div>
 <div class="grid" style="height:40px">
 <span style="grid-area: X -10000 / 1 / span 10000 / 5; margin-top:-199980px"></span>
-<span style="grid-area: 1 / 1 / span 9998 / 5; margin-top:-199980px; height:30px; color:tan"></span>
+<span style="grid-area: 1 / 1 / span 9998 / 5; margin-top:-199980px; height:30px; color:black"></span>
 <span span="50" style="grid-row:auto / span 5; margin-top:-399960px">b</span>
 </div>
 <div class="grid" style="height:40px">

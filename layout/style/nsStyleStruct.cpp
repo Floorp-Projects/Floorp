@@ -1431,12 +1431,14 @@ nsStylePosition::nsStylePosition(void)
 
   mGridAutoFlow = NS_STYLE_GRID_AUTO_FLOW_ROW;
   mBoxSizing = NS_STYLE_BOX_SIZING_CONTENT;
-  mAlignContent = NS_STYLE_ALIGN_CONTENT_STRETCH;
-  mAlignItems = NS_STYLE_ALIGN_ITEMS_INITIAL_VALUE;
-  mAlignSelf = NS_STYLE_ALIGN_SELF_AUTO;
+  mAlignContent = NS_STYLE_ALIGN_AUTO;
+  mAlignItems = NS_STYLE_ALIGN_AUTO;
+  mAlignSelf = NS_STYLE_ALIGN_AUTO;
+  mJustifyContent = NS_STYLE_JUSTIFY_AUTO;
+  mJustifyItems = NS_STYLE_JUSTIFY_AUTO;
+  mJustifySelf = NS_STYLE_JUSTIFY_AUTO;
   mFlexDirection = NS_STYLE_FLEX_DIRECTION_ROW;
   mFlexWrap = NS_STYLE_FLEX_WRAP_NOWRAP;
-  mJustifyContent = NS_STYLE_JUSTIFY_CONTENT_FLEX_START;
   mObjectFit = NS_STYLE_OBJECT_FIT_FILL;
   mOrder = NS_STYLE_ORDER_INITIAL;
   mFlexGrow = 0.0f;
@@ -1473,9 +1475,11 @@ nsStylePosition::nsStylePosition(const nsStylePosition& aSource)
   , mAlignContent(aSource.mAlignContent)
   , mAlignItems(aSource.mAlignItems)
   , mAlignSelf(aSource.mAlignSelf)
+  , mJustifyContent(aSource.mJustifyContent)
+  , mJustifyItems(aSource.mJustifyItems)
+  , mJustifySelf(aSource.mJustifySelf)
   , mFlexDirection(aSource.mFlexDirection)
   , mFlexWrap(aSource.mFlexWrap)
-  , mJustifyContent(aSource.mJustifyContent)
   , mObjectFit(aSource.mObjectFit)
   , mOrder(aSource.mOrder)
   , mFlexGrow(aSource.mFlexGrow)
@@ -1585,9 +1589,11 @@ nsStylePosition::CalcDifference(const nsStylePosition& aOther,
     return NS_CombineHint(hint, nsChangeHint_AllReflowHints);
   }
 
-  // Changing justify-content on a flexbox might affect the positioning of its
-  // children, but it won't affect any sizing.
-  if (mJustifyContent != aOther.mJustifyContent) {
+  // Changing 'justify-content/items/self' might affect the positioning,
+  // but it won't affect any sizing.
+  if (mJustifyContent != aOther.mJustifyContent ||
+      mJustifyItems != aOther.mJustifyItems ||
+      mJustifySelf != aOther.mJustifySelf) {
     NS_UpdateHint(hint, nsChangeHint_NeedReflow);
   }
 
@@ -1667,6 +1673,126 @@ nsStylePosition::WidthCoordDependsOnContainer(const nsStyleCoord &aCoord)
          (aCoord.GetUnit() == eStyleUnit_Enumerated &&
           (aCoord.GetIntValue() == NS_STYLE_WIDTH_FIT_CONTENT ||
            aCoord.GetIntValue() == NS_STYLE_WIDTH_AVAILABLE));
+}
+
+uint8_t
+nsStylePosition::MapLeftRightToStart(uint8_t aAlign, LogicalAxis aAxis,
+                                     const nsStyleDisplay* aDisplay) const
+{
+  auto val = aAlign & ~NS_STYLE_ALIGN_FLAG_BITS;
+  if (val == NS_STYLE_ALIGN_LEFT || val == NS_STYLE_ALIGN_RIGHT) {
+    switch (aDisplay->mDisplay) {
+    case NS_STYLE_DISPLAY_FLEX:
+    case NS_STYLE_DISPLAY_INLINE_FLEX:
+      // XXX TODO
+      // NOTE: make sure to strip off 'legacy' bit when mapping to 'start'
+      break;
+    default:
+      if (aAxis == eLogicalAxisBlock) {
+        return NS_STYLE_ALIGN_START | (aAlign & NS_STYLE_ALIGN_FLAG_BITS);
+      }
+    }
+  }
+  return aAlign;
+}
+
+uint16_t
+nsStylePosition::ComputedAlignContent(const nsStyleDisplay* aDisplay) const
+{
+  uint8_t val = mAlignContent & NS_STYLE_ALIGN_ALL_BITS;
+  val = MapLeftRightToStart(val, eLogicalAxisBlock, aDisplay);
+  uint8_t fallback = mAlignContent >> NS_STYLE_ALIGN_ALL_SHIFT;
+  fallback = MapLeftRightToStart(fallback, eLogicalAxisBlock, aDisplay);
+  return (uint16_t(fallback) << NS_STYLE_ALIGN_ALL_SHIFT) | uint16_t(val);
+}
+
+uint8_t
+nsStylePosition::ComputedAlignItems(const nsStyleDisplay* aDisplay) const
+{
+  if (mAlignItems != NS_STYLE_ALIGN_AUTO) {
+    return MapLeftRightToStart(mAlignItems, eLogicalAxisBlock, aDisplay);
+  }
+  return aDisplay->IsFlexOrGridDisplayType() ? NS_STYLE_ALIGN_STRETCH
+                                             : NS_STYLE_ALIGN_START;
+}
+
+uint8_t
+nsStylePosition::ComputedAlignSelf(const nsStyleDisplay* aDisplay,
+                                   nsStyleContext* aParent) const
+{
+  if (mAlignSelf != NS_STYLE_ALIGN_AUTO) {
+    return MapLeftRightToStart(mAlignSelf, eLogicalAxisBlock, aDisplay);
+  }
+  if (MOZ_UNLIKELY(aDisplay->IsAbsolutelyPositionedStyle())) {
+    return NS_STYLE_ALIGN_AUTO;
+  }
+  if (MOZ_LIKELY(aParent)) {
+    auto parentAlignItems = aParent->StylePosition()->
+      ComputedAlignItems(aParent->StyleDisplay());
+    MOZ_ASSERT(!(parentAlignItems & NS_STYLE_ALIGN_LEGACY),
+               "align-items can't have 'legacy'");
+    return MapLeftRightToStart(parentAlignItems, eLogicalAxisBlock, aDisplay);
+  }
+  return NS_STYLE_ALIGN_START;
+}
+
+uint16_t
+nsStylePosition::ComputedJustifyContent(const nsStyleDisplay* aDisplay) const
+{
+  switch (aDisplay->mDisplay) {
+    case NS_STYLE_DISPLAY_FLEX:
+    case NS_STYLE_DISPLAY_INLINE_FLEX:
+      // XXX maybe map 'auto' too? (ISSUE 8 in the spec)
+      // https://drafts.csswg.org/css-align-3/#content-distribution
+      if (mJustifyContent == NS_STYLE_JUSTIFY_STRETCH) {
+        return NS_STYLE_JUSTIFY_FLEX_START;
+      }
+      break;
+  }
+  uint8_t val = mJustifyContent & NS_STYLE_JUSTIFY_ALL_BITS;
+  val = MapLeftRightToStart(val, eLogicalAxisInline, aDisplay);
+  uint8_t fallback = mJustifyContent >> NS_STYLE_JUSTIFY_ALL_SHIFT;
+  fallback = MapLeftRightToStart(fallback, eLogicalAxisInline, aDisplay);
+  return (uint16_t(fallback) << NS_STYLE_JUSTIFY_ALL_SHIFT) | uint16_t(val);
+}
+
+uint8_t
+nsStylePosition::ComputedJustifyItems(const nsStyleDisplay* aDisplay,
+                                      nsStyleContext* aParent) const
+{
+  if (mJustifyItems != NS_STYLE_JUSTIFY_AUTO) {
+    return MapLeftRightToStart(mJustifyItems, eLogicalAxisInline, aDisplay);
+  }
+  if (MOZ_LIKELY(aParent)) {
+    auto inheritedJustifyItems =
+      aParent->StylePosition()->ComputedJustifyItems(aParent->StyleDisplay(),
+                                                     aParent->GetParent());
+    if (inheritedJustifyItems & NS_STYLE_JUSTIFY_LEGACY) {
+      return inheritedJustifyItems;
+    }
+  }
+  return aDisplay->IsFlexOrGridDisplayType() ? NS_STYLE_JUSTIFY_STRETCH
+                                             : NS_STYLE_JUSTIFY_START;
+}
+
+uint8_t
+nsStylePosition::ComputedJustifySelf(const nsStyleDisplay* aDisplay,
+                                     nsStyleContext* aParent) const
+{
+  if (mJustifySelf != NS_STYLE_JUSTIFY_AUTO) {
+    return MapLeftRightToStart(mJustifySelf, eLogicalAxisInline, aDisplay);
+  }
+  if (MOZ_UNLIKELY(aDisplay->IsAbsolutelyPositionedStyle())) {
+    return NS_STYLE_JUSTIFY_AUTO;
+  }
+  if (MOZ_LIKELY(aParent)) {
+    auto inheritedJustifyItems = aParent->StylePosition()->
+      ComputedJustifyItems(aParent->StyleDisplay(), aParent->GetParent());
+    inheritedJustifyItems &= ~NS_STYLE_JUSTIFY_LEGACY;
+    return MapLeftRightToStart(inheritedJustifyItems, eLogicalAxisInline,
+                               aDisplay);
+  }
+  return NS_STYLE_JUSTIFY_START;
 }
 
 // --------------------

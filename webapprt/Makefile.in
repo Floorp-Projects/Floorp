@@ -2,13 +2,9 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
-# Include config.mk explicitly so we can override FINAL_TARGET.
-include $(topsrcdir)/config/config.mk
-
+# Include rules.mk explicitly so we can use FINAL_TARGET. Also, the dependencies
+# for webapprt.ini need to be set after PP_TARGETS are expanded in rules.mk.
 include $(topsrcdir)/config/rules.mk
-
-libs:: $(call mkdir_deps,$(FINAL_TARGET))
-	$(call py_action,buildlist,$(FINAL_TARGET)/chrome.manifest 'resource webapprt ./')
 
 MOZ_APP_BUILDID := $(shell cat $(DEPTH)/config/buildid)
 DEFINES += -DMOZ_APP_BUILDID=$(MOZ_APP_BUILDID)

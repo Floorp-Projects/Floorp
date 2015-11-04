@@ -3860,13 +3860,13 @@ nsCSSRuleProcessor::RefreshRuleCascade(nsPresContext* aPresContext)
 
       // Sort the hash table of per-weight linked lists by weight.
       uint32_t weightCount = data.mRulesByWeight.EntryCount();
-      nsAutoArrayPtr<PerWeightData> weightArray(new PerWeightData[weightCount]);
+      auto weightArray = MakeUnique<PerWeightData[]>(weightCount);
       int32_t j = 0;
       for (auto iter = data.mRulesByWeight.Iter(); !iter.Done(); iter.Next()) {
         auto entry = static_cast<const RuleByWeightEntry*>(iter.Get());
         weightArray[j++] = entry->data;
       }
-      NS_QuickSort(weightArray, weightCount, sizeof(PerWeightData),
+      NS_QuickSort(weightArray.get(), weightCount, sizeof(PerWeightData),
                    CompareWeightData, nullptr);
 
       // Put things into the rule hash.

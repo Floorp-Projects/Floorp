@@ -67,6 +67,15 @@ def main(argv):
                     mk.dump(dep_file)
                 # The script succeeded, so reset |ret| to indicate that.
                 ret = None
+        # Even when our file's contents haven't changed, we want to update
+        # the file's mtime so make knows this target isn't still older than
+        # whatever prerequisite caused it to be built this time around.
+        try:
+            os.utime(args.output_file, None)
+        except:
+            print('Error processing file "{0}"'.format(args.output_file),
+                  file=sys.stderr)
+            traceback.print_exc()
     except IOError as e:
         print('Error opening file "{0}"'.format(e.filename), file=sys.stderr)
         traceback.print_exc()

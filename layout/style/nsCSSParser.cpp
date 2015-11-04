@@ -935,6 +935,14 @@ protected:
                           nsCSSProperty aEndPropID);
   bool ParseGridArea();
 
+  // parsing 'align/justify-items/self' from the css-align spec
+  bool ParseAlignJustifyPosition(nsCSSValue& aResult,
+                                 const KTableValue aTable[]);
+  bool ParseJustifyItems();
+  bool ParseAlignItemsSelfJustifySelf(nsCSSProperty aPropID);
+  // parsing 'align/justify-content' from the css-align spec
+  bool ParseAlignJustifyContent(nsCSSProperty aPropID);
+
   // for 'clip' and '-moz-image-region'
   bool ParseRect(nsCSSProperty aPropID);
   bool ParseColumns();
@@ -9378,6 +9386,129 @@ CSSParserImpl::ParseGridArea()
   return true;
 }
 
+// [ $aTable && <overflow-position>? ] ?
+// $aTable is for <content-position> or <self-position>
+bool
+CSSParserImpl::ParseAlignJustifyPosition(nsCSSValue& aResult,
+                                         const KTableValue aTable[])
+{
+  nsCSSValue pos, overflowPos;
+  int32_t value = 0;
+  if (ParseEnum(pos, aTable)) {
+    value = pos.GetIntValue();
+    if (ParseEnum(overflowPos, nsCSSProps::kAlignOverflowPosition)) {
+      value |= overflowPos.GetIntValue();
+    }
+    aResult.SetIntValue(value, eCSSUnit_Enumerated);
+    return true;
+  }
+  if (ParseEnum(overflowPos, nsCSSProps::kAlignOverflowPosition)) {
+    if (ParseEnum(pos, aTable)) {
+      aResult.SetIntValue(pos.GetIntValue() | overflowPos.GetIntValue(),
+                          eCSSUnit_Enumerated);
+      return true;
+    }
+    return false; // <overflow-position> must be followed by a value in $table
+  }
+  return true;
+}
+
+// auto | stretch | <baseline-position> |
+// [ <self-position> && <overflow-position>? ] |
+// [ legacy && [ left | right | center ] ]
+bool
+CSSParserImpl::ParseJustifyItems()
+{
+  nsCSSValue value;
+  if (!ParseSingleTokenVariant(value, VARIANT_INHERIT, nullptr)) {
+    if (MOZ_UNLIKELY(ParseEnum(value, nsCSSProps::kAlignLegacy))) {
+      nsCSSValue legacy;
+      if (!ParseEnum(legacy, nsCSSProps::kAlignLegacyPosition)) {
+        return false; // leading 'legacy' not followed by 'left' etc is an error
+      }
+      value.SetIntValue(value.GetIntValue() | legacy.GetIntValue(),
+                        eCSSUnit_Enumerated);
+    } else {
+      if (!ParseEnum(value, nsCSSProps::kAlignAutoStretchBaseline)) {
+        if (!ParseAlignJustifyPosition(value, nsCSSProps::kAlignSelfPosition) ||
+            value.GetUnit() == eCSSUnit_Null) {
+          return false;
+        }
+        // check for a trailing 'legacy' after 'left' etc
+        auto val = value.GetIntValue();
+        if (val == NS_STYLE_JUSTIFY_CENTER ||
+            val == NS_STYLE_JUSTIFY_LEFT   ||
+            val == NS_STYLE_JUSTIFY_RIGHT) {
+          nsCSSValue legacy;
+          if (ParseEnum(legacy, nsCSSProps::kAlignLegacy)) {
+            value.SetIntValue(val | legacy.GetIntValue(), eCSSUnit_Enumerated);
+          }
+        }
+      }
+    }
+  }
+  AppendValue(eCSSProperty_justify_items, value);
+  return true;
+}
+
+// auto | stretch | <baseline-position> |
+// [ <overflow-position>? && <self-position> ] 
+bool
+CSSParserImpl::ParseAlignItemsSelfJustifySelf(nsCSSProperty aPropID)
+{
+  nsCSSValue value;
+  if (!ParseSingleTokenVariant(value, VARIANT_INHERIT, nullptr)) {
+    if (!ParseEnum(value, nsCSSProps::kAlignAutoStretchBaseline)) {
+      if (!ParseAlignJustifyPosition(value, nsCSSProps::kAlignSelfPosition) ||
+          value.GetUnit() == eCSSUnit_Null) {
+        return false;
+      }
+    }
+  }
+  AppendValue(aPropID, value);
+  return true;
+}
+
+// auto | <baseline-position> | [ <content-distribution> ||
+//   [ <overflow-position>? && <content-position> ] ]
+// (the part after the || is called <*-position> below)
+bool
+CSSParserImpl::ParseAlignJustifyContent(nsCSSProperty aPropID)
+{
+  nsCSSValue value;
+  if (!ParseSingleTokenVariant(value, VARIANT_INHERIT, nullptr)) {
+    if (!ParseEnum(value, nsCSSProps::kAlignAutoBaseline)) {
+      nsCSSValue fallbackValue;
+      if (!ParseEnum(value, nsCSSProps::kAlignContentDistribution)) {
+        if (!ParseAlignJustifyPosition(fallbackValue,
+                                       nsCSSProps::kAlignContentPosition) ||
+            fallbackValue.GetUnit() == eCSSUnit_Null) {
+          return false;
+        }
+        // optional <content-distribution> after <*-position> ...
+        if (!ParseEnum(value, nsCSSProps::kAlignContentDistribution)) {
+          // ... is missing so the <*-position> is the value, not the fallback
+          value = fallbackValue;
+          fallbackValue.Reset();
+        }
+      } else {
+        // any optional <*-position> is a fallback value
+        if (!ParseAlignJustifyPosition(fallbackValue,
+                                       nsCSSProps::kAlignContentPosition)) {
+          return false;
+        }
+      }
+      if (fallbackValue.GetUnit() != eCSSUnit_Null) {
+        auto fallback = fallbackValue.GetIntValue();
+        value.SetIntValue(value.GetIntValue() | (fallback << 8),
+                          eCSSUnit_Enumerated);
+      }
+    }
+  }
+  AppendValue(aPropID, value);
+  return true;
+}
+
 // <color-stop> : <color> [ <percentage> | <length> ]?
 bool
 CSSParserImpl::ParseColorStop(nsCSSValueGradient* aGradient)
@@ -10501,6 +10632,18 @@ CSSParserImpl::ParsePropertyByFunction(nsCSSProperty aPropID)
     return ParseGridArea();
   case eCSSProperty_image_region:
     return ParseRect(eCSSProperty_image_region);
+  case eCSSProperty_align_content:
+    return ParseAlignJustifyContent(aPropID);
+  case eCSSProperty_align_items:
+    return ParseAlignItemsSelfJustifySelf(aPropID);
+  case eCSSProperty_align_self:
+    return ParseAlignItemsSelfJustifySelf(aPropID);
+  case eCSSProperty_justify_content:
+    return ParseAlignJustifyContent(aPropID);
+  case eCSSProperty_justify_items:
+    return ParseJustifyItems();
+  case eCSSProperty_justify_self:
+    return ParseAlignItemsSelfJustifySelf(aPropID);
   case eCSSProperty_list_style:
     return ParseListStyle();
   case eCSSProperty_margin:

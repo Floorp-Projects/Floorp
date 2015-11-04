@@ -23,9 +23,9 @@ function testVarPatternCombinations(makePattSrc, makePattPatt) {
         assertStmt("for (var " + pattSrcs[i].join(",") + "; foo; bar);",
                    forStmt(varDecl(pattPatts[i]), ident("foo"), ident("bar"), emptyStmt));
         assertStmt("for (let " + pattSrcs[i].join(",") + "; foo; bar);",
-                   letStmt(pattPatts[i], forStmt(null, ident("foo"), ident("bar"), emptyStmt)));
+                   forStmt(letDecl(pattPatts[i]), ident("foo"), ident("bar"), emptyStmt));
         assertStmt("for (const " + constSrcs[i].join(",") + "; foo; bar);",
-                   letStmt(constPatts[i], forStmt(null, ident("foo"), ident("bar"), emptyStmt)));
+                   forStmt(constDecl(constPatts[i]), ident("foo"), ident("bar"), emptyStmt));
     }
 }
 
