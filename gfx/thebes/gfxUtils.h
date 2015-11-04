@@ -13,13 +13,13 @@
 #include "mozilla/UniquePtr.h"
 #include "nsColor.h"
 #include "nsPrintfCString.h"
+#include "nsRegionFwd.h"
 #include "mozilla/gfx/Rect.h"
 
 class gfxASurface;
 class gfxDrawable;
 class nsIInputStream;
 class nsIGfxInfo;
-class nsIntRegion;
 class nsIPresShell;
 
 namespace mozilla {

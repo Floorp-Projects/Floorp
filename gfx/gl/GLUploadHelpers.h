@@ -9,8 +9,7 @@
 #include "GLDefs.h"
 #include "mozilla/gfx/Types.h"
 #include "nsPoint.h"
-
-class nsIntRegion;
+#include "nsRegionFwd.h"
 
 namespace mozilla {
 
