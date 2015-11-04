@@ -17,6 +17,11 @@ mv $WORKSPACE/B2G/upload/b2g-*.android-arm.tar.gz $HOME/artifacts/b2g-android-ar
 mv $WORKSPACE/B2G/upload/${TARGET}.zip $HOME/artifacts/${TARGET}.zip
 mv $WORKSPACE/B2G/upload/gaia.zip $HOME/artifacts/gaia.zip
 
+# Upload public images as public artifacts on Nexus 4 KK and Nexus 5 L
+if [ "${TARGET}" = "nexus-4-kk" -o "${TARGET}" = "nexus-5-l" ]; then
+  mv $HOME/artifacts/${TARGET}.zip $HOME/artifacts-public/
+fi
+
 if [ -f $WORKSPACE/B2G/upload/b2g-*.crashreporter-symbols.zip ]; then
   mv $WORKSPACE/B2G/upload/b2g-*.crashreporter-symbols.zip $HOME/artifacts/b2g-crashreporter-symbols.zip
 fi
