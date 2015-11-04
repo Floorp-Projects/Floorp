@@ -296,9 +296,10 @@ add_task(function* init() {
   }, profileDir);
 
   // Create and configure the HTTP server.
-  testserver = createHttpServer(4444);
+  testserver = new HttpServer();
   testserver.registerDirectory("/data/", do_get_file("data"));
   testserver.registerDirectory("/addons/", do_get_file("addons"));
+  testserver.start(4444);
 
   startupManager();
 
@@ -463,3 +464,13 @@ add_task(function* run_test_6() {
                                          "override1x2-1x3@tests.mozilla.org"]);
   check_state_v1_2(addons);
 });
+
+add_task(function* cleanup() {
+  return new Promise((resolve, reject) => {
+    testserver.stop(resolve);
+  });
+});
+
+function run_test() {
+  run_next_test();
+}
