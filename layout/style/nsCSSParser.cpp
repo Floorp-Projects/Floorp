@@ -934,8 +934,6 @@ protected:
   bool ParseGridColumnRow(nsCSSProperty aStartPropID,
                           nsCSSProperty aEndPropID);
   bool ParseGridArea();
-  bool ParseGridGap();
-  bool ResetGridGap(); // helper for ParseGrid()
 
   // parsing 'align/justify-items/self' from the css-align spec
   bool ParseAlignJustifyPosition(nsCSSValue& aResult,
@@ -9115,7 +9113,7 @@ CSSParserImpl::ParseGrid()
          *subprops != eCSSProperty_UNKNOWN; ++subprops) {
       AppendValue(*subprops, value);
     }
-    return ResetGridGap();
+    return true;
   }
 
   // An empty value is always invalid.
@@ -9131,8 +9129,7 @@ CSSParserImpl::ParseGrid()
         keyword == eCSSKeyword_column ||
         keyword == eCSSKeyword_row) {
       UngetToken();
-      return ParseGridAutoFlow() && ParseGridShorthandAutoProps() &&
-             ResetGridGap();
+      return ParseGridAutoFlow() && ParseGridShorthandAutoProps();
     }
   }
   UngetToken();
@@ -9144,7 +9141,7 @@ CSSParserImpl::ParseGrid()
   value.SetAutoValue();
   AppendValue(eCSSProperty_grid_auto_columns, value);
   AppendValue(eCSSProperty_grid_auto_rows, value);
-  return ParseGridTemplate() && ResetGridGap();
+  return ParseGridTemplate();
 }
 
 // Parse [ <'grid-auto-columns'> [ / <'grid-auto-rows'> ]? ]?
@@ -9386,42 +9383,6 @@ CSSParserImpl::ParseGridArea()
   AppendValue(eCSSProperty_grid_column_start, values[1]);
   AppendValue(eCSSProperty_grid_row_end, values[2]);
   AppendValue(eCSSProperty_grid_column_end, values[3]);
-  return true;
-}
-
-bool
-CSSParserImpl::ParseGridGap()
-{
-  nsCSSValue first;
-  if (ParseSingleTokenVariant(first, VARIANT_INHERIT, nullptr)) {
-    AppendValue(eCSSProperty_grid_column_gap, first);
-    AppendValue(eCSSProperty_grid_row_gap, first);
-    return true;
-  }
-  if (ParseNonNegativeVariant(first, VARIANT_LCALC, nullptr) !=
-        CSSParseResult::Ok) {
-    return false;
-  }
-  nsCSSValue second;
-  auto result = ParseNonNegativeVariant(second, VARIANT_LCALC, nullptr);
-  if (result == CSSParseResult::Error) {
-    return false;
-  }
-  AppendValue(eCSSProperty_grid_column_gap, first);
-  AppendValue(eCSSProperty_grid_row_gap,
-              result == CSSParseResult::NotFound ? first : second);
-  return true;
-}
-
-// https://drafts.csswg.org/css-grid/#grid-shorthand
-// "Also, the gutter properties are reset by this shorthand,
-//  even though they can't be set by it."
-bool
-CSSParserImpl::ResetGridGap()
-{
-  nsCSSValue value(0.0f, eCSSUnit_Pixel);
-  AppendValue(eCSSProperty_grid_column_gap, value);
-  AppendValue(eCSSProperty_grid_row_gap, value);
   return true;
 }
 
@@ -10669,8 +10630,6 @@ CSSParserImpl::ParsePropertyByFunction(nsCSSProperty aPropID)
                               eCSSProperty_grid_row_end);
   case eCSSProperty_grid_area:
     return ParseGridArea();
-  case eCSSProperty_grid_gap:
-    return ParseGridGap();
   case eCSSProperty_image_region:
     return ParseRect(eCSSProperty_image_region);
   case eCSSProperty_align_content:
