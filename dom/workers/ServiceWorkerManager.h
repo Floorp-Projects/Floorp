@@ -597,14 +597,6 @@ private:
   nsTArray<PendingOperation> mPendingOperations;
 
   bool mShuttingDown;
-
-  nsTArray<nsCOMPtr<nsIServiceWorkerManagerListener>> mListeners;
-
-  void
-  NotifyListenersOnRegister(nsIServiceWorkerRegistrationInfo* aRegistration);
-
-  void
-  NotifyListenersOnUnregister(nsIServiceWorkerRegistrationInfo* aRegistration);
 };
 
 } // namespace workers
