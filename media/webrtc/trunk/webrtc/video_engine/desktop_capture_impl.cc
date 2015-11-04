@@ -13,6 +13,7 @@
 #include <stdlib.h>
 #include <string>
 
+#include "webrtc/common_video/libyuv/include/scaler.h"
 #include "webrtc/common_video/libyuv/include/webrtc_libyuv.h"
 #include "webrtc/modules/interface/module_common_types.h"
 #include "webrtc/modules/video_capture/video_capture_config.h"
@@ -611,18 +612,18 @@ int32_t DesktopCaptureImpl::IncomingFrame(uint8_t* videoFrame,
     int stride_y = width;
     int stride_uv = (width + 1) / 2;
     int target_width = width;
-    int target_height = height;
+    int target_height = abs(height);
     // Rotating resolution when for 90/270 degree rotations.
     if (_rotateFrame == kRotate90 || _rotateFrame == kRotate270)  {
-      target_width = abs(height);
       target_height = width;
+      target_width = abs(height);
     }
 
     // Setting absolute height (in case it was negative).
     // In Windows, the image starts bottom left, instead of top left.
     // Setting a negative source height, inverts the image (within LibYuv).
     int ret = _captureFrame.CreateEmptyFrame(target_width,
-                                             abs(target_height),
+                                             target_height,
                                              stride_y,
                                              stride_uv, stride_uv);
     if (ret < 0) {
@@ -643,7 +644,64 @@ int32_t DesktopCaptureImpl::IncomingFrame(uint8_t* videoFrame,
                    frameInfo.rawType);
       return -1;
     }
-    DeliverCapturedFrame(_captureFrame, captureTime);
+
+    int32_t req_max_width = _requestedCapability.width & 0xffff;
+    int32_t req_max_height = _requestedCapability.height & 0xffff;
+    int32_t req_ideal_width = (_requestedCapability.width >> 16) & 0xffff;
+    int32_t req_ideal_height = (_requestedCapability.height >> 16) & 0xffff;
+
+    int32_t dest_max_width = std::min(req_max_width, target_width);
+    int32_t dest_max_height = std::min(req_max_height, target_height);
+    int32_t dst_width = std::min(req_ideal_width > 0 ? req_ideal_width : target_width, dest_max_width);
+    int32_t dst_height = std::min(req_ideal_height > 0 ? req_ideal_height : target_height, dest_max_height);
+
+    // scale to average of portrait and landscape
+    float scale_width = (float)dst_width / (float)target_width;
+    float scale_height = (float)dst_height / (float)target_height;
+    float scale = (scale_width + scale_height) / 2;
+    dst_width = (int)(scale * target_width);
+    dst_height = (int)(scale * target_height);
+
+    // if scaled rectangle exceeds max rectangle, scale to minimum of portrait and landscape
+    if (dst_width > dest_max_width || dst_height > dest_max_height) {
+      scale_width = (float)dest_max_width / (float)dst_width;
+      scale_height = (float)dest_max_height / (float)dst_height;
+      scale = std::min(scale_width, scale_height);
+      dst_width = (int)(scale * dst_width);
+      dst_height = (int)(scale * dst_height);
+    }
+
+    if (dst_width == target_width && dst_height == target_height) {
+      DeliverCapturedFrame(_captureFrame, captureTime);
+    } else {
+
+      I420VideoFrame scaledFrame;
+      ret = scaledFrame.CreateEmptyFrame(dst_width,
+                                         dst_height,
+                                         stride_y,
+                                         stride_uv, stride_uv);
+      if (ret < 0) {
+        WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceVideoCapture, _id,
+                     "Failed to allocate I420 frame.");
+        return -1;
+      }
+
+      webrtc::Scaler s;
+      s.Set(target_width, target_height, dst_width, dst_height, kI420, kI420, kScaleBox);
+      const int scaleResult = s.Scale(_captureFrame, &scaledFrame);
+
+      if (scaleResult != 0) {
+        WEBRTC_TRACE(webrtc::kTraceError, webrtc::kTraceVideoCapture, _id,
+                     "Failed to scale capture frame from type %d",
+                     frameInfo.rawType);
+        return -1;
+      }
+
+      DeliverCapturedFrame(scaledFrame, captureTime);
+    }
+
+
+
   } else {
     assert(false);
     return -1;
