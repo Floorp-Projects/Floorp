@@ -52,9 +52,11 @@ NS_IMPL_ISUPPORTS(OfflineCacheUpdateParent,
 // OfflineCacheUpdateParent <public>
 //-----------------------------------------------------------------------------
 
-OfflineCacheUpdateParent::OfflineCacheUpdateParent(const OriginAttributes& aAttrs)
+// TODO: Bug 1191740 - Add OriginAttributes in TabContext
+OfflineCacheUpdateParent::OfflineCacheUpdateParent(uint32_t aAppId,
+                                                   bool aIsInBrowser)
     : mIPCClosed(false)
-    , mOriginAttributes(aAttrs)
+    , mOriginAttributes(aAppId, aIsInBrowser)
 {
     // Make sure the service has been initialized
     nsOfflineCacheUpdateService::EnsureService();
