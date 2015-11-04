@@ -114,6 +114,10 @@ if  (${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
     if (CMAKE_COMPILER_IS_GNUCXX)
         add_definitions(-Wdouble-promotion)
     endif (CMAKE_COMPILER_IS_GNUCXX)
+    message(STATUS "Compiler ID is: ${CMAKE_CXX_COMPILER_ID}")
+    if (${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang")
+        add_definitions(-Wimplicit-fallthrough)
+    endif (${CMAKE_CXX_COMPILER_ID} STREQUAL "Clang")
     if (${CMAKE_CXX_COMPILER} MATCHES  ".*mingw.*")
         target_link_libraries(graphite2 kernel32 msvcr90 mingw32 gcc user32)
     else (${CMAKE_CXX_COMPILER} MATCHES  ".*mingw.*")
@@ -131,7 +135,7 @@ endif (${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
 
 if  (${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
     set_target_properties(graphite2 PROPERTIES 
-        COMPILE_FLAGS   "-Wall -Wextra -Wno-unknown-pragmas -Wendif-labels -Wshadow -Wno-ctor-dtor-privacy -Wno-non-virtual-dtor -fno-rtti -fno-exceptions -fvisibility=hidden -fvisibility-inlines-hidden -fno-stack-protector"
+        COMPILE_FLAGS   "-Wall -Wextra -Wno-unknown-pragmas -Wimplicit-fallthrough -Wendif-labels -Wshadow -Wno-ctor-dtor-privacy -Wno-non-virtual-dtor -fno-rtti -fno-exceptions -fvisibility=hidden -fvisibility-inlines-hidden -fno-stack-protector"
         LINK_FLAGS      "-nodefaultlibs" 
         LINKER_LANGUAGE C)
     target_link_libraries(graphite2 c)

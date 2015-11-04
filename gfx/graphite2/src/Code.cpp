@@ -42,7 +42,7 @@ of the License or (at your option) any later version.
 #include "inc/Rule.h"
 #include "inc/Silf.h"
 
-#include <stdio.h>
+#include <cstdio>
 
 #ifdef NDEBUG
 #ifdef __GNUC__
@@ -421,6 +421,7 @@ opcode Machine::Code::decoder::fetch_opcode(const byte * bc)
         case POP_RET :
             if (--_stack_depth < 0)
                 failure(underfull_stack);
+            GR_FALLTHROUGH;
             // no break
         case RET_ZERO :
         case RET_TRUE :
@@ -504,6 +505,7 @@ void Machine::Code::decoder::analyse_opcode(const opcode opc, const int8  * arg)
     case PUT_SUBS : 
       _code._modify = true;
       _analysis.set_changed(0);
+      GR_FALLTHROUGH;
       // no break
     case PUT_COPY :
     {
@@ -516,6 +518,7 @@ void Machine::Code::decoder::analyse_opcode(const opcode opc, const int8  * arg)
     }
     case PUSH_ATT_TO_GATTR_OBS : // slotref on 2nd parameter
         if (_code._constraint) return;
+        GR_FALLTHROUGH;
         // no break
     case PUSH_GLYPH_ATTR_OBS :
     case PUSH_SLOT_ATTR :
@@ -530,6 +533,7 @@ void Machine::Code::decoder::analyse_opcode(const opcode opc, const int8  * arg)
       break;
     case PUSH_ATT_TO_GLYPH_ATTR :
         if (_code._constraint) return;
+        GR_FALLTHROUGH;
         // no break
     case PUSH_GLYPH_ATTR :
       if (arg[2] <= 0 && -arg[2] <= _analysis.slotref - _analysis.contexts[_analysis.slotref].flags.inserted)
@@ -594,7 +598,10 @@ bool Machine::Code::decoder::emit_opcode(opcode opc, const byte * & bc)
             _pre_context = 0;
         }
         else
+        {
+            _pre_context = 0;
             return false;
+        }
     }
     
     return bool(_code);
