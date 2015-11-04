@@ -276,10 +276,19 @@ HeapSnapshot::saveNode(const protobuf::Node& node)
       return false;
   }
 
+  const char* scriptFilename = nullptr;
+  if (node.ScriptFilenameOrRef_case() != protobuf::Node::SCRIPTFILENAMEORREF_NOT_SET) {
+    Maybe<StringOrRef> scriptFilenameOrRef = GET_STRING_OR_REF(node, scriptfilename);
+    scriptFilename = getOrInternString<char>(internedOneByteStrings, scriptFilenameOrRef);
+    if (NS_WARN_IF(!scriptFilename))
+      return false;
+  }
+
   if (NS_WARN_IF(!nodes.putNew(id, DeserializedNode(id, coarseType, typeName,
                                                     size, Move(edges),
                                                     allocationStack,
-                                                    jsObjectClassName, *this))))
+                                                    jsObjectClassName,
+                                                    scriptFilename, *this))))
   {
     return false;
   };
@@ -1074,6 +1083,15 @@ public:
       if (NS_WARN_IF(!attachOneByteString(className,
                                           [&] (std::string* name) { protobufNode.set_allocated_jsobjectclassname(name); },
                                           [&] (uint64_t ref) { protobufNode.set_jsobjectclassnameref(ref); })))
+      {
+        return false;
+      }
+    }
+
+    if (auto scriptFilename = ubiNode.scriptFilename()) {
+      if (NS_WARN_IF(!attachOneByteString(scriptFilename,
+                                          [&] (std::string* name) { protobufNode.set_allocated_scriptfilename(name); },
+                                          [&] (uint64_t ref) { protobufNode.set_scriptfilenameref(ref); })))
       {
         return false;
       }

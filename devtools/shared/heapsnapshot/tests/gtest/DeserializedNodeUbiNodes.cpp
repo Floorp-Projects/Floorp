@@ -39,12 +39,14 @@ size_t fakeMallocSizeOf(const void*) {
 DEF_TEST(DeserializedNodeUbiNodes, {
     const char16_t* typeName = MOZ_UTF16("TestTypeName");
     const char* className = "MyObjectClassName";
+    const char* filename = "my-cool-filename.js";
 
     NodeId id = uint64_t(1) << 33;
     uint64_t size = uint64_t(1) << 60;
     MockDeserializedNode mocked(id, typeName, size);
     mocked.coarseType = JS::ubi::CoarseType::Script;
     mocked.jsObjectClassName = className;
+    mocked.scriptFilename = filename;
 
     DeserializedNode& deserialized = mocked;
     JS::ubi::Node ubi(&deserialized);
@@ -57,6 +59,7 @@ DEF_TEST(DeserializedNodeUbiNodes, {
     EXPECT_EQ(id, ubi.identifier());
     EXPECT_FALSE(ubi.isLive());
     EXPECT_EQ(ubi.jsObjectClassName(), className);
+    EXPECT_EQ(ubi.scriptFilename(), filename);
 
     // Test the ubi::Node's edges.
 
