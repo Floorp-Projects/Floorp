@@ -33,6 +33,13 @@ extensions.registerPrivilegedAPI("storage", (extension, context) => {
             }
           });
         },
+        clear: function(callback) {
+          ExtensionStorage.clear(extension.id).then(() => {
+            if (callback) {
+              runSafe(context, callback);
+            }
+          });
+        },
       },
 
       onChanged: new EventManager(context, "storage.local.onChanged", fire => {
