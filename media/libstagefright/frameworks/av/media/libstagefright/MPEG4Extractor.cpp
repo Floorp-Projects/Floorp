@@ -2629,9 +2629,15 @@ status_t MPEG4Extractor::updateAudioTrackInfoFromESDS_MPEG4Audio(
     }
 
     ABitReader br(csd, csd_size);
+    if (br.numBitsLeft() < 5) {
+        return ERROR_MALFORMED;
+    }
     uint32_t objectType = br.getBits(5);
 
     if (objectType == 31) {  // AAC-ELD => additional 6 bits
+        if (br.numBitsLeft() < 6) {
+            return ERROR_MALFORMED;
+        }
         objectType = 32 + br.getBits(6);
     }
 
@@ -2642,6 +2648,9 @@ status_t MPEG4Extractor::updateAudioTrackInfoFromESDS_MPEG4Audio(
         mLastTrack->meta->setInt32(kKeyAACProfile, objectType);
     }
 
+    if (br.numBitsLeft() < 4) {
+        return ERROR_MALFORMED;
+    }
     uint32_t freqIndex = br.getBits(4);
 
     int32_t sampleRate = 0;
@@ -2650,15 +2659,27 @@ status_t MPEG4Extractor::updateAudioTrackInfoFromESDS_MPEG4Audio(
         if (csd_size < 5) {
             return ERROR_MALFORMED;
         }
+        if (br.numBitsLeft() < 24 + 4) {
+            return ERROR_MALFORMED;
+        }
         sampleRate = br.getBits(24);
         numChannels = br.getBits(4);
     } else {
+        if (br.numBitsLeft() < 4) {
+            return ERROR_MALFORMED;
+        }
         numChannels = br.getBits(4);
         if (objectType == 5) {
             // SBR specific config per 14496-3 table 1.13
+            if (br.numBitsLeft() < 4) {
+                return ERROR_MALFORMED;
+            }
             freqIndex = br.getBits(4);
             if (freqIndex == 15) {
                 if (csd_size < 8) {
+                    return ERROR_MALFORMED;
+                }
+                if (br.numBitsLeft() < 24) {
                     return ERROR_MALFORMED;
                 }
                 sampleRate = br.getBits(24);
