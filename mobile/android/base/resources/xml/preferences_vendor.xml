@@ -22,37 +22,4 @@
                                                   android:persistent="false"
                                                   url="about:feedback" />
 
-    <PreferenceCategory android:key="android.not_a_preference.datareporting.preferences"
-                        android:title="@string/pref_category_datareporting">
-
-        <CheckBoxPreference android:key="toolkit.telemetry.enabled"
-                            android:title="@string/datareporting_telemetry_title"
-                            android:summary="@string/datareporting_telemetry_summary" />
-
-        <CheckBoxPreference android:key="datareporting.crashreporter.submitEnabled"
-                            android:title="@string/datareporting_crashreporter_title_short"
-                            android:summary="@string/datareporting_crashreporter_summary"
-                            android:defaultValue="false" />
-
-        <CheckBoxPreference android:key="android.not_a_preference.app.geo.reportdata"
-                            android:title="@string/datareporting_wifi_title"
-                            android:summary="@string/datareporting_wifi_geolocation_summary" />
-
-        <org.mozilla.gecko.preferences.AlignRightLinkPreference android:key="android.not_a_preference.geo.learn_more"
-                                                                android:title="@string/pref_learn_more"
-                                                                android:persistent="false"
-                                                                url="https://location.services.mozilla.com/" />
-
-        <CheckBoxPreference android:key="android.not_a_preference.healthreport.uploadEnabled"
-                            android:title="@string/datareporting_fhr_title"
-                            android:summary="@string/datareporting_fhr_summary2"
-                            android:defaultValue="true" />
-
-        <org.mozilla.gecko.preferences.AlignRightLinkPreference android:key="android.not_a_preference.healthreport.link"
-                                                                android:title="@string/datareporting_abouthr_title"
-                                                                android:persistent="false"
-                                                                url="about:healthreport" />
-
-    </PreferenceCategory>
-
 </PreferenceScreen>

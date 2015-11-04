@@ -2953,6 +2953,7 @@ NS_PTR_TO_INT32(frame->Properties().Get(nsIFrame::ParagraphDepthProperty()))
    * Is this a flex or grid item? (i.e. a non-abs-pos child of a flex/grid container)
    */
   inline bool IsFlexOrGridItem() const;
+  inline bool IsFlexOrGridContainer() const;
 
   /**
    * @return true if this frame is used as a table caption.

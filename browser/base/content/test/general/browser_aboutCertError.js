@@ -2,10 +2,11 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 // This is testing the aboutCertError page (Bug 1207107).  It's a start,
-// but should be expanded to include cert_domain_link / badStsCert
+// but should be expanded to include cert_domain_link
 
 const GOOD_PAGE = "https://example.com/";
 const BAD_CERT = "https://expired.example.com/";
+const BAD_STS_CERT = "https://badchain.include-subdomains.pinning.example.com:443";
 
 add_task(function* checkReturnToAboutHome() {
   info("Loading a bad cert page directly and making sure 'return to previous page' goes to about:home");
@@ -64,6 +65,26 @@ add_task(function* checkReturnToPreviousPage() {
   is(browser.webNavigation.canGoBack, false, "!webNavigation.canGoBack");
   is(browser.webNavigation.canGoForward, true, "webNavigation.canGoForward");
   is(gBrowser.currentURI.spec, GOOD_PAGE, "Went back");
+
+  gBrowser.removeCurrentTab();
+});
+
+add_task(function* checkBadStsCert() {
+  info("Loading a badStsCert and making sure exception button doesn't show up");
+  let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, GOOD_PAGE);
+  let browser = gBrowser.selectedBrowser;
+
+  info("Loading and waiting for the cert error");
+  let certErrorLoaded = waitForCertErrorLoad(browser);
+  BrowserTestUtils.loadURI(browser, BAD_STS_CERT);
+  yield certErrorLoaded;
+
+  let exceptionButtonHidden = yield ContentTask.spawn(browser, null, function* () {
+    let doc = content.document;
+    let exceptionButton = doc.getElementById("exceptionDialogButton");
+    return exceptionButton.hidden;
+  });
+  ok(exceptionButtonHidden, "Exception button is hidden");
 
   gBrowser.removeCurrentTab();
 });

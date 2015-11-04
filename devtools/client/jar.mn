@@ -150,8 +150,9 @@ devtools.jar:
     content/aboutdebugging/aboutdebugging.js (aboutdebugging/aboutdebugging.js)
 %   skin devtools classic/1.0 %skin/
 *   skin/themes/common.css (themes/common.css)
-*   skin/themes/dark-theme.css (themes/dark-theme.css)
-*   skin/themes/light-theme.css (themes/light-theme.css)
+    skin/themes/dark-theme.css (themes/dark-theme.css)
+    skin/themes/light-theme.css (themes/light-theme.css)
+    skin/themes/toolbars.css (themes/toolbars.css)
     skin/themes/variables.css (themes/variables.css)
     skin/themes/images/add.svg (themes/images/add.svg)
     skin/themes/images/filters.svg (themes/images/filters.svg)

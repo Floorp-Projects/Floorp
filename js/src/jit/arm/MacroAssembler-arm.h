@@ -1616,6 +1616,14 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
         atomicEffectOp(4, AtomicFetchXorOp, value, mem, flagTemp);
     }
 
+    template<typename T>
+    void compareExchangeToTypedIntArray(Scalar::Type arrayType, const T& mem, Register oldval, Register newval,
+                                        Register temp, AnyRegister output);
+
+    template<typename T>
+    void atomicExchangeToTypedIntArray(Scalar::Type arrayType, const T& mem, Register value,
+                                       Register temp, AnyRegister output);
+
     void clampIntToUint8(Register reg) {
         // Look at (reg >> 8) if it is 0, then reg shouldn't be clamped if it is
         // <0, then we want to clamp to 0, otherwise, we wish to clamp to 255

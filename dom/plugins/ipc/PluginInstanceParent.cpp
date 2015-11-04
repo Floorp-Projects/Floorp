@@ -1444,31 +1444,6 @@ PluginInstanceParent::AllocPPluginScriptableObjectParent()
     return new PluginScriptableObjectParent(Proxy);
 }
 
-#ifdef DEBUG
-namespace {
-
-struct ActorSearchData
-{
-    PluginScriptableObjectParent* actor;
-    bool found;
-};
-
-PLDHashOperator
-ActorSearch(NPObject* aKey,
-            PluginScriptableObjectParent* aData,
-            void* aUserData)
-{
-    ActorSearchData* asd = reinterpret_cast<ActorSearchData*>(aUserData);
-    if (asd->actor == aData) {
-        asd->found = true;
-        return PL_DHASH_STOP;
-    }
-    return PL_DHASH_NEXT;
-}
-
-} // namespace
-#endif // DEBUG
-
 bool
 PluginInstanceParent::DeallocPPluginScriptableObjectParent(
                                          PPluginScriptableObjectParent* aObject)
@@ -1484,9 +1459,10 @@ PluginInstanceParent::DeallocPPluginScriptableObjectParent(
     }
 #ifdef DEBUG
     else {
-        ActorSearchData asd = { actor, false };
-        mScriptableObjects.EnumerateRead(ActorSearch, &asd);
-        NS_ASSERTION(!asd.found, "Actor in the hash with a null NPObject!");
+        for (auto iter = mScriptableObjects.Iter(); !iter.Done(); iter.Next()) {
+            NS_ASSERTION(actor != iter.UserData(),
+                         "Actor in the hash with a null NPObject!");
+        }
     }
 #endif
 

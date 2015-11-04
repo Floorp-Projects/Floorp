@@ -15,3 +15,7 @@ webapprt.jar:
   content/downloads/downloads.js        (content/downloads/downloads.js)
   content/downloads/downloads.css       (content/downloads/downloads.css)
   content/downloads/download.xml        (content/downloads/download.xml)
+
+# Trick to put the resource line in dist/bin/webapprt/chrome.manifest
+[.] chrome.jar:
+% resource webapprt ./

@@ -34,6 +34,8 @@ const L10N = new ViewHelpers.L10N(STRINGS_URI);
 const MILLIS_TIME_FORMAT_MAX_DURATION = 4000;
 // The minimum spacing between 2 time graduation headers in the timeline (px).
 const TIME_GRADUATION_MIN_SPACING = 40;
+// List of playback rate presets displayed in the timeline toolbar.
+const PLAYBACK_RATES = [.1, .25, .5, 1, 2, 5, 10];
 // The size of the fast-track icon (for compositor-running animations), this is
 // used to position the icon correctly.
 const FAST_TRACK_ICON_SIZE = 20;
@@ -187,6 +189,10 @@ AnimationTargetNode.prototype = {
       this.previewEl.appendChild(document.createTextNode(">"));
     }
 
+    this.startListeners();
+  },
+
+  startListeners: function() {
     // Init events for highlighting and selecting the node.
     this.previewEl.addEventListener("mouseover", this.onPreviewMouseOver);
     this.previewEl.addEventListener("mouseout", this.onPreviewMouseOut);
@@ -200,15 +206,19 @@ AnimationTargetNode.prototype = {
     TargetNodeHighlighter.on("highlighted", this.onTargetHighlighterLocked);
   },
 
-  destroy: function() {
-    TargetNodeHighlighter.unhighlight().catch(e => console.error(e));
-
+  stopListeners: function() {
     TargetNodeHighlighter.off("highlighted", this.onTargetHighlighterLocked);
     this.inspector.off("markupmutation", this.onMarkupMutations);
     this.previewEl.removeEventListener("mouseover", this.onPreviewMouseOver);
     this.previewEl.removeEventListener("mouseout", this.onPreviewMouseOut);
     this.previewEl.removeEventListener("click", this.onSelectNodeClick);
     this.highlightNodeEl.removeEventListener("click", this.onHighlightNodeClick);
+  },
+
+  destroy: function() {
+    TargetNodeHighlighter.unhighlight().catch(e => console.error(e));
+
+    this.stopListeners();
 
     this.el.remove();
     this.el = this.tagNameEl = this.idEl = this.classEl = null;
@@ -217,21 +227,26 @@ AnimationTargetNode.prototype = {
   },
 
   get highlighterUtils() {
-    return this.inspector.toolbox.highlighterUtils;
+    if (this.inspector && this.inspector.toolbox) {
+      return this.inspector.toolbox.highlighterUtils;
+    }
+    return null;
   },
 
   onPreviewMouseOver: function() {
-    if (!this.nodeFront) {
+    if (!this.nodeFront || !this.highlighterUtils) {
       return;
     }
-    this.highlighterUtils.highlightNodeFront(this.nodeFront);
+    this.highlighterUtils.highlightNodeFront(this.nodeFront)
+                         .catch(e => console.error(e));
   },
 
   onPreviewMouseOut: function() {
-    if (!this.nodeFront) {
+    if (!this.nodeFront || !this.highlighterUtils) {
       return;
     }
-    this.highlighterUtils.unhighlight();
+    this.highlighterUtils.unhighlight()
+                         .catch(e => console.error(e));
   },
 
   onSelectNodeClick: function() {
@@ -329,6 +344,90 @@ AnimationTargetNode.prototype = {
 
     this.emit("target-retrieved");
   })
+};
+
+/**
+ * UI component responsible for displaying a playback rate selector UI.
+ * The rendering logic is such that a predefined list of rates is generated.
+ * If *all* animations passed to render share the same rate, then that rate is
+ * selected in the <select> element, otherwise, the empty value is selected.
+ * If the rate that all animations share isn't part of the list of predefined
+ * rates, than that rate is added to the list.
+ */
+function RateSelector() {
+  this.onRateChanged = this.onRateChanged.bind(this);
+  EventEmitter.decorate(this);
+}
+
+exports.RateSelector = RateSelector;
+
+RateSelector.prototype = {
+  init: function(containerEl) {
+    this.selectEl = createNode({
+      parent: containerEl,
+      nodeType: "select",
+      attributes: {"class": "devtools-button"}
+    });
+
+    this.selectEl.addEventListener("change", this.onRateChanged);
+  },
+
+  destroy: function() {
+    this.selectEl.removeEventListener("change", this.onRateChanged);
+    this.selectEl.remove();
+    this.selectEl = null;
+  },
+
+  getAnimationsRates: function(animations) {
+    return sortedUnique(animations.map(a => a.state.playbackRate));
+  },
+
+  getAllRates: function(animations) {
+    let animationsRates = this.getAnimationsRates(animations);
+    if (animationsRates.length > 1) {
+      return PLAYBACK_RATES;
+    }
+
+    return sortedUnique(PLAYBACK_RATES.concat(animationsRates));
+  },
+
+  render: function(animations) {
+    let allRates = this.getAnimationsRates(animations);
+    let hasOneRate = allRates.length === 1;
+
+    this.selectEl.innerHTML = "";
+
+    if (!hasOneRate) {
+      // When the animations displayed have mixed playback rates, we can't
+      // select any of the predefined ones, instead, insert an empty rate.
+      createNode({
+        parent: this.selectEl,
+        nodeType: "option",
+        attributes: {value: "", selector: "true"},
+        textContent: "-"
+      });
+    }
+    for (let rate of this.getAllRates(animations)) {
+      let option = createNode({
+        parent: this.selectEl,
+        nodeType: "option",
+        attributes: {value: rate},
+        textContent: L10N.getFormatStr("player.playbackRateLabel", rate)
+      });
+
+      // If there's only one rate and this is the option for it, select it.
+      if (hasOneRate && rate === allRates[0]) {
+        option.setAttribute("selected", "true");
+      }
+    }
+  },
+
+  onRateChanged: function() {
+    let rate = parseFloat(this.selectEl.value);
+    if (!isNaN(rate)) {
+      this.emit("rate-changed", rate);
+    }
+  }
 };
 
 /**
@@ -858,21 +957,49 @@ AnimationTimeBlock.prototype = {
   getTooltipText: function(state) {
     let getTime = time => L10N.getFormatStr("player.timeLabel",
                             L10N.numberWithDecimals(time / 1000, 2));
-    // The type isn't always available, older servers don't send it.
-    let title =
+
+    let text = "";
+
+    // Adding the name (the type isn't always available, older servers don't
+    // send it).
+    text +=
       state.type
       ? L10N.getFormatStr("timeline." + state.type + ".nameLabel", state.name)
       : state.name;
-    let delay = L10N.getStr("player.animationDelayLabel") + " " +
-                getTime(state.delay);
-    let duration = L10N.getStr("player.animationDurationLabel") + " " +
-                   getTime(state.duration);
-    let iterations = L10N.getStr("player.animationIterationCountLabel") + " " +
-                     (state.iterationCount ||
-                      L10N.getStr("player.infiniteIterationCountText"));
-    let compositor = state.isRunningOnCompositor
-                     ? L10N.getStr("player.runningOnCompositorTooltip")
-                     : "";
-    return [title, duration, iterations, delay, compositor].join("\n");
+    text += "\n";
+
+    // Adding the delay.
+    text += L10N.getStr("player.animationDelayLabel") + " ";
+    text += getTime(state.delay);
+    text += "\n";
+
+    // Adding the duration.
+    text += L10N.getStr("player.animationDurationLabel") + " ";
+    text += getTime(state.duration);
+    text += "\n";
+
+    // Adding the iteration count (the infinite symbol, or an integer).
+    // XXX: see bug 1219608 to remove this if the count is 1.
+    text += L10N.getStr("player.animationIterationCountLabel") + " ";
+    text += state.iterationCount ||
+            L10N.getStr("player.infiniteIterationCountText");
+    text += "\n";
+
+    // Adding the playback rate if it's different than 1.
+    if (state.playbackRate !== 1) {
+      text += L10N.getStr("player.animationRateLabel") + " ";
+      text += state.playbackRate;
+      text += "\n";
+    }
+
+    // Adding a note that the animation is running on the compositor thread if
+    // needed.
+    if (state.isRunningOnCompositor) {
+      text += L10N.getStr("player.runningOnCompositorTooltip");
+    }
+
+    return text;
   }
 };
+
+let sortedUnique = arr => [...new Set(arr)].sort((a, b) => a > b);

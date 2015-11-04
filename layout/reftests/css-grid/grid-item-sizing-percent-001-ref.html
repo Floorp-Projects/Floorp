@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<!--
+     Any copyright is dedicated to the Public Domain.
+     http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<html><head>
+  <title>Reference 001</title>
+  <link rel="author" title="Mats Palmgren" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1163435">
+  <meta charset="utf-8">
+  <style type="text/css">
+body,html { color:black; background:white; font-size:16px; padding:0; margin:0; }
+
+.grid {
+  position:relative;
+  background-color: grey;
+  width: 173px;
+  height: 53px;
+}
+
+.item {
+  position: absolute;
+  background: lime;
+  background-clip: content-box;
+}
+#abs > div div {
+  position: absolute;
+}
+.pbox {
+  box-sizing: border-box;
+}
+.p { padding:2px 3px; }
+.m { margin:2px 3px; }
+.c1.p,.c2.p { padding:5px 9px; }
+.c1.m,.c2.m { margin:5px 9px; }
+.b { border:solid black; }
+
+#t1 { width:50px; height: 20px; }
+#t2 { width:50px; height: 20px; }
+#t0 { width:60px; height: 30px; }
+#t3 { width:60px; height: 30px; }
+#t4 { width:150px; height: 50px; }
+#t5 { width:50px; height: 20px; }
+#t6 { width:50px; height: 20px; }
+#t7 { width:60px; height: 30px; }
+#t8 { width:150px; height: 50px; }
+#t9 { width:50px; height: 20px; }
+#tA { width:60px; height: 30px; }
+#tB { width:150px; height: 50px; }
+#tC { width:50px; height: 20px; }
+#tD { width:50px; height: 20px; }
+#tE { width:150px; height: 50px; }
+
+</style>
+</head>
+<body>
+
+<div style="float:left">
+<div class="grid"><div id="t1" class="item"></div></div>
+<div class="grid"><div id="t2" class="item pbox p"></div></div>
+<div class="grid"><div id="t0" class="item c1 p"></div></div>
+<div class="grid"><div id="t3" class="item c1 pbox p"></div></div>
+<div class="grid"><div id="t4" class="item c2 pbox p"></div></div>
+<div class="grid"><div id="t5" class="item pbox b"></div></div>
+<div class="grid"><div id="t6" class="item pbox p b"></div></div>
+<div class="grid"><div id="t7" class="item c1 pbox p b"></div></div>
+<div class="grid"><div id="t8" class="item c2 pbox p b"></div></div>
+<div class="grid"><div id="t9" class="item pbox m"></div></div>
+<div class="grid"><div id="tA" class="item c1 pbox m"></div></div>
+<div class="grid"><div id="tB" class="item c2 pbox m"></div></div>
+<div class="grid"><div id="tC" class="item pbox p m"></div></div>
+<div class="grid"><div id="tD" class="item pbox p b m"></div></div>
+<div class="grid"><div id="tE" class="item c2 pbox p b m"></div></div>
+</div>
+
+<div id="abs" style="float:left">
+<div class="grid"><div id="t1" class="item"></div></div>
+<div class="grid"><div id="t2" class="item pbox p"></div></div>
+<div class="grid"><div id="t0" class="item c1 p"></div></div>
+<div class="grid"><div id="t3" class="item c1 pbox p"></div></div>
+<div class="grid"><div id="t4" class="item c2 pbox p"></div></div>
+<div class="grid"><div id="t5" class="item pbox b"></div></div>
+<div class="grid"><div id="t6" class="item pbox p b"></div></div>
+<div class="grid"><div id="t7" class="item c1 pbox p b"></div></div>
+<div class="grid"><div id="t8" class="item c2 pbox p b"></div></div>
+<div class="grid"><div id="t9" class="item pbox m"></div></div>
+<div class="grid"><div id="tA" class="item c1 pbox m"></div></div>
+<div class="grid"><div id="tB" class="item c2 pbox m"></div></div>
+<div class="grid"><div id="tC" class="item pbox p m"></div></div>
+<div class="grid"><div id="tD" class="item pbox p b m"></div></div>
+<div class="grid"><div id="tE" class="item c2 pbox p b m"></div></div>
+</div>
+
+</body>
+</html>

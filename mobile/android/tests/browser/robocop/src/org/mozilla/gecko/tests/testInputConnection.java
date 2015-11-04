@@ -93,11 +93,43 @@ public class testInputConnection extends UITest {
             ic.finishComposingText();
             assertTextAndSelectionAt("Can finish composition", ic, "foobar", 6);
 
+            // Test setComposingRegion
+            ic.setComposingRegion(0, 3);
+            assertTextAndSelectionAt("Can set composing region", ic, "foobar", 6);
+
+            ic.setComposingText("far", 1);
+            assertTextAndSelectionAt("Can set composing region text", ic, "farbar", 3);
+
+            ic.setComposingRegion(1, 4);
+            assertTextAndSelectionAt("Can set existing composing region", ic, "farbar", 3);
+
+            ic.setComposingText("rab", 3);
+            assertTextAndSelectionAt("Can set new composing region text", ic, "frabar", 6);
+
             // Test getTextBeforeCursor
             fAssertEquals("Can retrieve text before cursor", "bar", ic.getTextBeforeCursor(3, 0));
 
             // Test getTextAfterCursor
             fAssertEquals("Can retrieve text after cursor", "", ic.getTextAfterCursor(3, 0));
+
+            ic.finishComposingText();
+            assertTextAndSelectionAt("Can finish composition", ic, "frabar", 6);
+
+            // Test sendKeyEvent
+            final KeyEvent shiftKey = new KeyEvent(KeyEvent.ACTION_DOWN,
+                                                   KeyEvent.KEYCODE_SHIFT_LEFT);
+            final KeyEvent leftKey = new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_DPAD_LEFT);
+            final KeyEvent tKey = new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_T);
+
+            ic.sendKeyEvent(shiftKey);
+            ic.sendKeyEvent(leftKey);
+            ic.sendKeyEvent(KeyEvent.changeAction(leftKey, KeyEvent.ACTION_UP));
+            ic.sendKeyEvent(KeyEvent.changeAction(shiftKey, KeyEvent.ACTION_UP));
+            assertTextAndSelection("Can select using key event", ic, "frabar", 6, 5);
+
+            ic.sendKeyEvent(tKey);
+            ic.sendKeyEvent(KeyEvent.changeAction(tKey, KeyEvent.ACTION_UP));
+            assertTextAndSelectionAt("Can type using event", ic, "frabat", 6);
 
             ic.deleteSurroundingText(6, 0);
             assertTextAndSelectionAt("Can clear text", ic, "", 0);
@@ -146,6 +178,10 @@ public class testInputConnection extends UITest {
             final String dummyText = "dummy switch input text";
             ic.commitText(dummyText, 1);
             assertTextAndSelectionAt("Can commit text", ic, dummyText, dummyText.length());
+
+            // Finish processing events from the old input field.
+            processGeckoEvents(ic);
+            processInputConnectionEvents();
 
             final KeyEvent tabKey = new KeyEvent(KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_TAB);
             ic.sendKeyEvent(tabKey);

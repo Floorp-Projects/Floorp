@@ -32,6 +32,7 @@
 #include "nsIDocument.h"
 #include "nsIDOMEvent.h"
 #include "nsWeakPtr.h"
+#include "ScriptSettings.h"
 
 using mozilla::Unused;          // <snicker>
 using namespace mozilla::dom;
@@ -650,7 +651,10 @@ nsContentPermissionRequestProxy::Allow(JS::HandleValue aChoices)
     for (uint32_t i = 0; i < mPermissionRequests.Length(); ++i) {
       nsCString type = mPermissionRequests[i].type();
 
-      mozilla::AutoSafeJSContext cx;
+      AutoJSAPI jsapi;
+      jsapi.Init();
+
+      JSContext* cx = jsapi.cx();
       JS::Rooted<JSObject*> obj(cx, &aChoices.toObject());
       JSAutoCompartment ac(cx, obj);
 
@@ -658,10 +662,12 @@ nsContentPermissionRequestProxy::Allow(JS::HandleValue aChoices)
 
       if (!JS_GetProperty(cx, obj, type.BeginReading(), &val) ||
           !val.isString()) {
-        // no setting for the permission type, skip it
+        // no setting for the permission type, clear exception and skip it
+        jsapi.ClearException();
       } else {
         nsAutoJSString choice;
         if (!choice.init(cx, val)) {
+          jsapi.ClearException();
           return NS_ERROR_FAILURE;
         }
         choices.AppendElement(PermissionChoice(type, choice));

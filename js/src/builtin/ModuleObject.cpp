@@ -793,7 +793,10 @@ ModuleObject::evaluate(JSContext* cx, HandleModuleObject self, MutableHandleValu
 {
     RootedScript script(cx, self->script());
     RootedModuleEnvironmentObject scope(cx, self->environment());
-    MOZ_ASSERT(scope);
+    if (!scope) {
+        JS_ReportError(cx, "Module declarations have not yet been instantiated");
+        return false;
+    }
 
     return Execute(cx, script, *scope, rval.address());
 }
