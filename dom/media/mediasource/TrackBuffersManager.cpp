@@ -580,8 +580,8 @@ TrackBuffersManager::UpdateBufferedRanges()
 {
   MonitorAutoLock mon(mMonitor);
 
-  mVideoBufferedRanges = mVideoTracks.mBufferedRanges;
-  mAudioBufferedRanges = mAudioTracks.mBufferedRanges;
+  mVideoBufferedRanges = mVideoTracks.mSanitizedBufferedRanges;
+  mAudioBufferedRanges = mAudioTracks.mSanitizedBufferedRanges;
 
 #if DEBUG
   if (HasVideo()) {
@@ -1688,12 +1688,13 @@ TrackBuffersManager::InsertFrames(TrackBuffer& aSamples,
   trackBuffer.mNextInsertionIndex.ref() += aSamples.Length();
 
   // Update our buffered range with new sample interval.
+  trackBuffer.mBufferedRanges += aIntervals;
   // We allow a fuzz factor in our interval of half a frame length,
   // as fuzz is +/- value, giving an effective leeway of a full frame
   // length.
   TimeIntervals range(aIntervals);
   range.SetFuzz(trackBuffer.mLongestFrameDuration.ref() / 2);
-  trackBuffer.mBufferedRanges += range;
+  trackBuffer.mSanitizedBufferedRanges += range;
 }
 
 void
@@ -1784,8 +1785,11 @@ TrackBuffersManager::RemoveFrames(const TimeIntervals& aIntervals,
   }
 
   // Update our buffered range to exclude the range just removed.
-  removedIntervals.SetFuzz(TimeUnit::FromMicroseconds(maxSampleDuration/2));
   aTrackData.mBufferedRanges -= removedIntervals;
+
+  // Recalculate sanitized buffered ranges.
+  aTrackData.mSanitizedBufferedRanges = aTrackData.mBufferedRanges;
+  aTrackData.mSanitizedBufferedRanges.SetFuzz(TimeUnit::FromMicroseconds(maxSampleDuration/2));
 
   data.RemoveElementsAt(firstRemovedIndex.ref(),
                         lastRemovedIndex - firstRemovedIndex.ref() + 1);
