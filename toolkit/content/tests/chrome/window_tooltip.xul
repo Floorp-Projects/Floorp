@@ -229,9 +229,71 @@ var popupTests = [
     is(gOriginalWidth, rect.right - rect.left, testname + " tooltip is original width");
     is(gOriginalHeight, rect.bottom - rect.top, testname + " tooltip is original height");
   }
+},
+{
+  testname: "hover tooltip at bottom edge of screen",
+  events: [ "popupshowing thetooltip", "popupshown thetooltip" ],
+  autohide: "thetooltip",
+  condition: function() {
+    // Only checking OSX here because on other platforms popups and tooltips behave the same way
+    // when there's not enough space to show them below (by flipping vertically)
+    // However, on OSX most popups are not flipped but tooltips are.
+    return navigator.platform.indexOf("Mac") > -1;
+  },
+  test: function() {
+    var buttonRect = document.getElementById("withtext").getBoundingClientRect();
+    var windowY = screen.height -
+      (window.mozInnerScreenY - window.screenY ) - buttonRect.bottom;
+
+    moveWindowTo(window.screenX, windowY, function() {
+      gButton = document.getElementById("withtooltip");
+      disableNonTestMouse(true);
+      synthesizeMouse(gButton, 2, 2, { type: "mouseover" });
+      synthesizeMouse(gButton, 6, 6, { type: "mousemove" });
+      synthesizeMouse(gButton, 4, 4, { type: "mousemove" });
+      disableNonTestMouse(false);
+    });
+  },
+  result: function(testname) {
+    var buttonrect = document.getElementById("withtooltip").getBoundingClientRect();
+    var rect = document.getElementById("thetooltip").getBoundingClientRect();
+    var popupstyle = window.getComputedStyle(document.getElementById("thetooltip"), "");
+
+    is(Math.round(rect.y + rect.height),
+       Math.round(buttonrect.top + 4 - parseFloat(popupstyle.marginTop)),
+       testname + " position of tooltip above button");
+  }
 }
 
 ];
+
+var waitSteps = 0;
+function moveWindowTo(x, y, callback, arg)
+{
+  if (!waitSteps) {
+    oldx = window.screenX;
+    oldy = window.screenY;
+    window.moveTo(x, y);
+
+    waitSteps++;
+    setTimeout(moveWindowTo, 100, x, y, callback, arg);
+    return;
+  }
+
+  if (window.screenX == oldx && window.screenY == oldy) {
+    if (waitSteps++ > 10) {
+      ok(false, "Window never moved properly to " + x + "," + y);
+      window.opener.wrappedJSObject.SimpleTest.finish();
+      window.close();
+    }
+
+    setTimeout(moveWindowTo, 100, x, y, callback, arg);
+  }
+  else {
+    waitSteps = 0;
+    callback(arg);
+  }
+}
 
 window.opener.wrappedJSObject.SimpleTest.waitForFocus(runTest, window);
 ]]>

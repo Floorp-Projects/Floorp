@@ -7,11 +7,12 @@
 #include "nsStreamUtils.h"
 #include <algorithm>
 
-NS_IMPL_ISUPPORTS(nsTemporaryFileInputStream, nsIInputStream)
+NS_IMPL_ISUPPORTS(nsTemporaryFileInputStream, nsIInputStream, nsISeekableStream)
 
 nsTemporaryFileInputStream::nsTemporaryFileInputStream(FileDescOwner* aFileDescOwner, uint64_t aStartPos, uint64_t aEndPos)
   : mFileDescOwner(aFileDescOwner),
     mStartPos(aStartPos),
+    mCurPos(aStartPos),
     mEndPos(aEndPos),
     mClosed(false)
 { 
@@ -31,9 +32,9 @@ nsTemporaryFileInputStream::Available(uint64_t * bytesAvailable)
   if (mClosed)
     return NS_BASE_STREAM_CLOSED;
 
-  NS_ASSERTION(mStartPos <= mEndPos, "StartPos should less equal than EndPos!");
+  NS_ASSERTION(mCurPos <= mEndPos, "CurPos should less equal than EndPos!");
 
-  *bytesAvailable = mEndPos - mStartPos;
+  *bytesAvailable = mEndPos - mCurPos;
   return NS_OK;
 }
 
@@ -50,7 +51,7 @@ nsTemporaryFileInputStream::ReadSegments(nsWriteSegmentFun writer,
                                          uint32_t *        result)
 {
   NS_ASSERTION(result, "null ptr");
-  NS_ASSERTION(mStartPos <= mEndPos, "bad stream state");
+  NS_ASSERTION(mCurPos <= mEndPos, "bad stream state");
   *result = 0;
 
   if (mClosed) {
@@ -58,10 +59,10 @@ nsTemporaryFileInputStream::ReadSegments(nsWriteSegmentFun writer,
   }
 
   mozilla::MutexAutoLock lock(mFileDescOwner->FileMutex());
-  PR_Seek64(mFileDescOwner->mFD, mStartPos, PR_SEEK_SET);
+  PR_Seek64(mFileDescOwner->mFD, mCurPos, PR_SEEK_SET);
 
   // Limit requested count to the amount remaining in our section of the file.
-  count = std::min(count, uint32_t(mEndPos - mStartPos));
+  count = std::min(count, uint32_t(mEndPos - mCurPos));
 
   char buf[4096];
   while (*result < count) {
@@ -81,7 +82,7 @@ nsTemporaryFileInputStream::ReadSegments(nsWriteSegmentFun writer,
         // from writer are not propagated to ReadSegments' caller.
         //
         // If writer fails, leaving bytes still in buf, that's okay: we
-        // only update mStartPos to reflect successful writes, so the call
+        // only update mCurPos to reflect successful writes, so the call
         // to PR_Seek64 at the top will restart us at the right spot.
         return NS_OK;
       }
@@ -89,7 +90,7 @@ nsTemporaryFileInputStream::ReadSegments(nsWriteSegmentFun writer,
                    "writer should not write more than we asked it to write");
       bytesWritten += writerCount;
       *result += writerCount;
-      mStartPos += writerCount;
+      mCurPos += writerCount;
     }
   }
 
@@ -103,3 +104,60 @@ nsTemporaryFileInputStream::IsNonBlocking(bool * nonBlocking)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsTemporaryFileInputStream::Seek(int32_t aWhence, int64_t aOffset)
+{
+  if (mClosed) {
+    return NS_BASE_STREAM_CLOSED;
+  }
+
+  switch (aWhence) {
+    case nsISeekableStream::NS_SEEK_SET:
+      aOffset += mStartPos;
+      break;
+
+    case nsISeekableStream::NS_SEEK_CUR:
+      aOffset += mCurPos;
+      break;
+
+    case nsISeekableStream::NS_SEEK_END:
+      aOffset += mEndPos;
+      break;
+
+    default:
+      return NS_ERROR_FAILURE;
+  }
+
+  if (aOffset < (int64_t)mStartPos || aOffset > (int64_t)mEndPos) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  mCurPos = aOffset;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsTemporaryFileInputStream::Tell(int64_t* aPos)
+{
+  if (!aPos) {
+    return NS_ERROR_FAILURE;
+  }
+
+  if (mClosed) {
+    return NS_BASE_STREAM_CLOSED;
+  }
+
+  MOZ_ASSERT(mStartPos <= mCurPos, "StartPos should less equal than CurPos!");
+  *aPos = mCurPos - mStartPos;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsTemporaryFileInputStream::SetEOF()
+{
+  if (mClosed) {
+    return NS_BASE_STREAM_CLOSED;
+  }
+
+  return Close();
+}

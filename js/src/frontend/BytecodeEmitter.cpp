@@ -2323,7 +2323,6 @@ BytecodeEmitter::checkSideEffects(ParseNode* pn, bool* answer)
       case PNK_FORIN:           // by PNK_FOR
       case PNK_FOROF:           // by PNK_FOR
       case PNK_FORHEAD:         // by PNK_FOR
-      case PNK_FRESHENBLOCK:    // by PNK_FOR
       case PNK_CLASSMETHOD:     // by PNK_CLASS
       case PNK_CLASSNAMES:      // by PNK_CLASS
       case PNK_CLASSMETHODLIST: // by PNK_CLASS
@@ -5289,6 +5288,15 @@ BytecodeEmitter::emitIterator()
 bool
 BytecodeEmitter::emitForInOrOfVariables(ParseNode* pn, bool* letDecl)
 {
+    // ES6 specifies that loop variables get a fresh binding in each iteration.
+    // This is currently implemented for C-style for(;;) loops, but not
+    // for-in/of loops, though a similar approach should work. See bug 449811.
+    //
+    // In `for (let x in/of EXPR)`, ES6 specifies that EXPR is evaluated in a
+    // scope containing an uninitialized `x`. If EXPR accesses `x`, we should
+    // get a ReferenceError due to the TDZ violation. This is not yet
+    // implemented. See bug 1069480.
+
     *letDecl = pn->isKind(PNK_LEXICALSCOPE);
     MOZ_ASSERT_IF(*letDecl, pn->isLexical());
 
@@ -5317,7 +5325,6 @@ BytecodeEmitter::emitForInOrOfVariables(ParseNode* pn, bool* letDecl)
 
     return true;
 }
-
 
 bool
 BytecodeEmitter::emitForOf(StmtType type, ParseNode* pn, ptrdiff_t top)
@@ -5591,8 +5598,9 @@ BytecodeEmitter::emitForIn(ParseNode* pn, ptrdiff_t top)
     return true;
 }
 
+/* C-style `for (init; cond; update) ...` loop. */
 bool
-BytecodeEmitter::emitNormalFor(ParseNode* pn, ptrdiff_t top)
+BytecodeEmitter::emitCStyleFor(ParseNode* pn, ptrdiff_t top)
 {
     LoopStmtInfo stmtInfo(cx);
     pushLoopStatement(&stmtInfo, StmtType::FOR_LOOP, top);
@@ -5600,28 +5608,48 @@ BytecodeEmitter::emitNormalFor(ParseNode* pn, ptrdiff_t top)
     ParseNode* forHead = pn->pn_left;
     ParseNode* forBody = pn->pn_right;
 
-    /* C-style for (init; cond; update) ... loop. */
+    // If the head of this for-loop declared any lexical variables, the parser
+    // wrapped this PNK_FOR node in a PNK_LEXICALSCOPE representing the
+    // implicit scope of those variables. By the time we get here, we have
+    // already entered that scope. So far, so good.
+    //
+    // ### Scope freshening
+    //
+    // Each iteration of a `for (let V...)` loop creates a fresh loop variable
+    // binding for V, even if the loop is a C-style `for(;;)` loop:
+    //
+    //     var funcs = [];
+    //     for (let i = 0; i < 2; i++)
+    //         funcs.push(function() { return i; });
+    //     assertEq(funcs[0](), 0);  // the two closures capture...
+    //     assertEq(funcs[1](), 1);  // ...two different `i` bindings
+    //
+    // This is implemented by "freshening" the implicit block -- changing the
+    // scope chain to a fresh clone of the instantaneous block object -- each
+    // iteration, just before evaluating the "update" in for(;;) loops.
+    //
+    // No freshening occurs in `for (const ...;;)` as there's no point: you
+    // can't reassign consts. This is observable through the Debugger API. (The
+    // ES6 spec also skips cloning the environment in this case.)
     bool forLoopRequiresFreshening = false;
     if (ParseNode* init = forHead->pn_kid1) {
-        if (init->isKind(PNK_FRESHENBLOCK)) {
-            // The loop's init declaration was hoisted into an enclosing lexical
-            // scope node.  Note that the block scope must be freshened each
-            // iteration.
-            forLoopRequiresFreshening = true;
-        } else {
-            emittingForInit = true;
-            if (!updateSourceCoordNotes(init->pn_pos.begin))
-                return false;
-            if (!emitTree(init))
-                return false;
-            emittingForInit = false;
+        forLoopRequiresFreshening = init->isKind(PNK_LET);
 
-            if (!init->isKind(PNK_VAR) && !init->isKind(PNK_LET) && !init->isKind(PNK_CONST)) {
-                // 'init' is an expression, not a declaration. emitTree left
-                // its value on the stack.
-                if (!emit1(JSOP_POP))
-                    return false;
-            }
+        // Emit the `init` clause, whether it's an expression or a variable
+        // declaration. (The loop variables were hoisted into an enclosing
+        // scope, but we still need to emit code for the initializers.)
+        emittingForInit = true;
+        if (!updateSourceCoordNotes(init->pn_pos.begin))
+            return false;
+        if (!emitTree(init))
+            return false;
+        emittingForInit = false;
+
+        if (!init->isKind(PNK_VAR) && !init->isKind(PNK_LET) && !init->isKind(PNK_CONST)) {
+            // 'init' is an expression, not a declaration. emitTree left its
+            // value on the stack.
+            if (!emit1(JSOP_POP))
+                return false;
         }
     }
 
@@ -5749,7 +5777,7 @@ BytecodeEmitter::emitFor(ParseNode* pn, ptrdiff_t top)
         return emitForOf(StmtType::FOR_OF_LOOP, pn, top);
 
     MOZ_ASSERT(pn->pn_left->isKind(PNK_FORHEAD));
-    return emitNormalFor(pn, top);
+    return emitCStyleFor(pn, top);
 }
 
 MOZ_NEVER_INLINE bool

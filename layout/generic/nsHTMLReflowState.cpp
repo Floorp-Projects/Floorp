@@ -18,7 +18,6 @@
 #include "nsFontMetrics.h"
 #include "nsBlockFrame.h"
 #include "nsLineBox.h"
-#include "nsFlexContainerFrame.h"
 #include "nsImageFrame.h"
 #include "nsTableFrame.h"
 #include "nsTableCellFrame.h"
@@ -620,7 +619,7 @@ nsHTMLReflowState::InitResizeFlags(nsPresContext* aPresContext, nsIAtom* aFrameT
     // mCBReflowState->IsBResize() is set correctly below when
     // reflowing descendant.
     SetBResize(true);
-  } else if (mCBReflowState && !nsLayoutUtils::IsNonWrapperBlock(frame)) {
+  } else if (mCBReflowState && frame->IsBlockWrapper()) {
     // XXX Is this problematic for relatively positioned inlines acting
     // as containing block for absolutely positioned elements?
     // Possibly; in that case we should at least be checking
@@ -2037,20 +2036,8 @@ IsSideCaption(nsIFrame* aFrame, const nsStyleDisplay* aStyleDisplay,
          captionSide == NS_STYLE_CAPTION_SIDE_RIGHT;
 }
 
-static nsFlexContainerFrame*
-GetFlexContainer(nsIFrame* aFrame)
-{
-  nsIFrame* parent = aFrame->GetParent();
-  if (!parent ||
-      parent->GetType() != nsGkAtoms::flexContainerFrame) {
-    return nullptr;
-  }
-
-  return static_cast<nsFlexContainerFrame*>(parent);
-}
-
-// Flex items resolve block-axis percentage margin & padding against the flex
-// container's block-size (which is the containing block block-size).
+// Flex/grid items resolve block-axis percentage margin & padding against the
+// containing block block-size (also for abs/fixed-pos child frames).
 // For everything else: the CSS21 spec requires that margin and padding
 // percentage values are calculated with respect to the inline-size of the
 // containing block, even for margin & padding in the block axis.
@@ -2060,7 +2047,8 @@ OffsetPercentBasis(const nsIFrame*    aFrame,
                    const LogicalSize& aContainingBlockSize)
 {
   LogicalSize offsetPercentBasis = aContainingBlockSize;
-  if (!aFrame->IsFlexOrGridItem()) {
+  if (MOZ_LIKELY(!aFrame->GetParent() ||
+                 !aFrame->GetParent()->IsFlexOrGridContainer())) {
     offsetPercentBasis.BSize(aWM) = offsetPercentBasis.ISize(aWM);
   } else if (offsetPercentBasis.BSize(aWM) == NS_AUTOHEIGHT) {
     offsetPercentBasis.BSize(aWM) = 0;
@@ -2306,8 +2294,9 @@ nsHTMLReflowState::InitConstraints(nsPresContext*     aPresContext,
           ComputeSizeFlags(computeSizeFlags | ComputeSizeFlags::eShrinkWrap);
       }
 
-      const nsFlexContainerFrame* flexContainerFrame = GetFlexContainer(frame);
-      if (flexContainerFrame) {
+      nsIFrame* parent = frame->GetParent();
+      nsIAtom* parentFrameType = parent ? parent->GetType() : nullptr;
+      if (parentFrameType == nsGkAtoms::flexContainerFrame) {
         computeSizeFlags =
           ComputeSizeFlags(computeSizeFlags | ComputeSizeFlags::eShrinkWrap);
 
@@ -2343,11 +2332,13 @@ nsHTMLReflowState::InitConstraints(nsPresContext*     aPresContext,
       NS_ASSERTION(ComputedBSize() == NS_UNCONSTRAINEDSIZE ||
                    ComputedBSize() >= 0, "Bogus block-size");
 
-      // Exclude inline tables and flex items from the block margin calculations
+      // Exclude inline tables, side captions, flex and grid items from block
+      // margin calculations.
       if (isBlock &&
           !IsSideCaption(frame, mStyleDisplay, cbwm) &&
           mStyleDisplay->mDisplay != NS_STYLE_DISPLAY_INLINE_TABLE &&
-          !flexContainerFrame) {
+          parentFrameType != nsGkAtoms::flexContainerFrame &&
+          parentFrameType != nsGkAtoms::gridContainerFrame) {
         CalculateBlockSideMargins(aFrameType);
       }
     }

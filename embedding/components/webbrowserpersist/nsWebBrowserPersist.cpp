@@ -103,12 +103,6 @@ struct nsWebBrowserPersist::URIData
     nsresult GetLocalURI(nsIURI *targetBaseURI, nsCString& aSpecOut);
 };
 
-struct nsWebBrowserPersist::URIFixupData
-{
-    RefPtr<FlatURIMap> mFlatMap;
-    nsCOMPtr<nsIURI> mTargetBaseURI;
-};
-
 // Information about the output stream
 struct nsWebBrowserPersist::OutputData
 {
@@ -593,13 +587,69 @@ nsWebBrowserPersist::SerializeNextFile()
         // number of times this method is called.  If it becomes a
         // bottleneck, the count of not-yet-persisted URIs could be
         // maintained separately.
-        mURIMap.EnumerateRead(EnumCountURIsToPersist, &urisToPersist);
+        for (auto iter = mURIMap.Iter(); !iter.Done(); iter.Next()) {
+            URIData *data = iter.UserData();
+            if (data->mNeedsPersisting && !data->mSaved) {
+                urisToPersist++;
+            }
+        }
     }
 
     if (urisToPersist > 0) {
         // Persist each file in the uri map. The document(s)
         // will be saved after the last one of these is saved.
-        mURIMap.EnumerateRead(EnumPersistURIs, this);
+        for (auto iter = mURIMap.Iter(); !iter.Done(); iter.Next()) {
+            URIData *data = iter.UserData();
+
+            if (!data->mNeedsPersisting || data->mSaved) {
+                continue;
+            }
+
+            nsresult rv;
+
+            // Create a URI from the key.
+            nsCOMPtr<nsIURI> uri;
+            rv = NS_NewURI(getter_AddRefs(uri), iter.Key(),
+                           data->mCharset.get());
+            if (NS_WARN_IF(NS_FAILED(rv))) {
+                break;
+            }
+
+            // Make a URI to save the data to.
+            nsCOMPtr<nsIURI> fileAsURI;
+            rv = data->mDataPath->Clone(getter_AddRefs(fileAsURI));
+            if (NS_WARN_IF(NS_FAILED(rv))) {
+                break;
+            }
+            rv = AppendPathToURI(fileAsURI, data->mFilename);
+            if (NS_WARN_IF(NS_FAILED(rv))) {
+                break;
+            }
+
+            // The Referrer Policy doesn't matter here since the referrer is
+            // nullptr.
+            rv = SaveURIInternal(uri, nullptr, nullptr,
+                                 mozilla::net::RP_Default, nullptr, nullptr,
+                                 fileAsURI, true, mIsPrivate);
+            // If SaveURIInternal fails, then it will have called EndDownload,
+            // which means that |data| is no longer valid memory. We MUST bail.
+            if (NS_WARN_IF(NS_FAILED(rv))) {
+                break;
+            }
+
+            if (rv == NS_OK) {
+                // Store the actual object because once it's persisted this
+                // will be fixed up with the right file extension.
+                data->mFile = fileAsURI;
+                data->mSaved = true;
+            } else {
+                data->mNeedsFixup = false;
+            }
+
+            if (mSerializingOutput) {
+                break;
+            }
+        }
     }
 
     // If there are downloads happening, wait until they're done; the
@@ -652,17 +702,18 @@ nsWebBrowserPersist::SerializeNextFile()
             return;
         }
     }
-    
+
     // mFlatURIMap must be rebuilt each time through SerializeNextFile, as
     // mTargetBaseURI is used to create the relative URLs and will be different
     // with each serialized document.
     RefPtr<FlatURIMap> flatMap = new FlatURIMap(targetBaseSpec);
-    
-    URIFixupData fixupData;
-    fixupData.mFlatMap = flatMap;
-    fixupData.mTargetBaseURI = mTargetBaseURI;
-    
-    mURIMap.EnumerateRead(EnumCopyURIsToFlatMap, &fixupData);
+    for (auto iter = mURIMap.Iter(); !iter.Done(); iter.Next()) {
+        nsAutoCString mapTo;
+        nsresult rv = iter.UserData()->GetLocalURI(mTargetBaseURI, mapTo);
+        if (NS_SUCCEEDED(rv) || !mapTo.IsVoid()) {
+            flatMap->Add(iter.Key(), mapTo);
+        }
+    }
     mFlatURIMap = flatMap.forget();
 
     nsCOMPtr<nsIFile> localFile;
@@ -1755,23 +1806,35 @@ nsWebBrowserPersist::FinishSaveDocumentInternal(nsIURI* aFile,
 void nsWebBrowserPersist::Cleanup()
 {
     mURIMap.Clear();
-    mOutputMap.EnumerateRead(EnumCleanupOutputMap, this);
+    for (auto iter = mOutputMap.Iter(); !iter.Done(); iter.Next()) {
+        nsCOMPtr<nsIChannel> channel = do_QueryInterface(iter.Key());
+        if (channel) {
+            channel->Cancel(NS_BINDING_ABORTED);
+        }
+    }
     mOutputMap.Clear();
-    mUploadList.EnumerateRead(EnumCleanupUploadList, this);
+
+    for (auto iter = mUploadList.Iter(); !iter.Done(); iter.Next()) {
+        nsCOMPtr<nsIChannel> channel = do_QueryInterface(iter.Key());
+        if (channel) {
+            channel->Cancel(NS_BINDING_ABORTED);
+        }
+    }
     mUploadList.Clear();
+
     uint32_t i;
-    for (i = 0; i < mDocList.Length(); i++)
-    {
+    for (i = 0; i < mDocList.Length(); i++) {
         DocData *docData = mDocList.ElementAt(i);
         delete docData;
     }
     mDocList.Clear();
-    for (i = 0; i < mCleanupList.Length(); i++)
-    {
+
+    for (i = 0; i < mCleanupList.Length(); i++) {
         CleanupData *cleanupData = mCleanupList.ElementAt(i);
         delete cleanupData;
     }
     mCleanupList.Clear();
+
     mFilenameList.Clear();
 }
 
@@ -2319,67 +2382,42 @@ nsWebBrowserPersist::EndDownload(nsresult aResult)
     mEventSink = nullptr;
 }
 
-struct MOZ_STACK_CLASS FixRedirectData
-{
-    nsCOMPtr<nsIChannel> mNewChannel;
-    nsCOMPtr<nsIURI> mOriginalURI;
-    nsCOMPtr<nsISupports> mMatchingKey;
-};
-
 nsresult
 nsWebBrowserPersist::FixRedirectedChannelEntry(nsIChannel *aNewChannel)
 {
     NS_ENSURE_ARG_POINTER(aNewChannel);
+
+    // Iterate through existing open channels looking for one with a URI
+    // matching the one specified.
     nsCOMPtr<nsIURI> originalURI;
+    aNewChannel->GetOriginalURI(getter_AddRefs(originalURI));
+    for (auto iter = mOutputMap.Iter(); !iter.Done(); iter.Next()) {
+        nsISupports* key = iter.Key();
+        nsCOMPtr<nsIChannel> thisChannel = do_QueryInterface(key);
+        nsCOMPtr<nsIURI> thisURI;
 
-    // Enumerate through existing open channels looking for one with
-    // a URI matching the one specified.
+        thisChannel->GetOriginalURI(getter_AddRefs(thisURI));
 
-    FixRedirectData data;
-    data.mNewChannel = aNewChannel;
-    data.mNewChannel->GetOriginalURI(getter_AddRefs(data.mOriginalURI));
-    mOutputMap.EnumerateRead(EnumFixRedirect, &data);
+        // Compare this channel's URI to the one passed in.
+        bool matchingURI = false;
+        thisURI->Equals(originalURI, &matchingURI);
+        if (matchingURI) {
+            // If a match is found, remove the data entry with the old channel
+            // key and re-add it with the new channel key.
+            nsAutoPtr<OutputData> outputData;
+            mOutputMap.RemoveAndForget(key, outputData);
+            NS_ENSURE_TRUE(outputData, NS_ERROR_FAILURE);
 
-    // If a match is found, remove the data entry with the old channel key
-    // and re-add it with the new channel key.
+            // Store data again with new channel unless told to ignore redirects
+            if (!(mPersistFlags & PERSIST_FLAGS_IGNORE_REDIRECTED_DATA)) {
+                nsCOMPtr<nsISupports> keyPtr = do_QueryInterface(aNewChannel);
+                mOutputMap.Put(keyPtr, outputData.forget());
+            }
 
-    if (data.mMatchingKey)
-    {
-        nsAutoPtr<OutputData> outputData;
-        mOutputMap.RemoveAndForget(data.mMatchingKey, outputData);
-        NS_ENSURE_TRUE(outputData, NS_ERROR_FAILURE);
-
-        // Store data again with new channel unless told to ignore redirects
-        if (!(mPersistFlags & PERSIST_FLAGS_IGNORE_REDIRECTED_DATA))
-        {
-            nsCOMPtr<nsISupports> keyPtr = do_QueryInterface(aNewChannel);
-            mOutputMap.Put(keyPtr, outputData.forget());
+            break;
         }
     }
-
     return NS_OK;
-}
-
-PLDHashOperator
-nsWebBrowserPersist::EnumFixRedirect(nsISupports *aKey, OutputData *aData, void* aClosure)
-{
-    FixRedirectData *data = static_cast<FixRedirectData*>(aClosure);
-
-    nsCOMPtr<nsIChannel> thisChannel = do_QueryInterface(aKey);
-    nsCOMPtr<nsIURI> thisURI;
-
-    thisChannel->GetOriginalURI(getter_AddRefs(thisURI));
-
-    // Compare this channel's URI to the one passed in.
-    bool matchingURI = false;
-    thisURI->Equals(data->mOriginalURI, &matchingURI);
-    if (matchingURI)
-    {
-        data->mMatchingKey = aKey;
-        return PL_DHASH_STOP;
-    }
-
-    return PL_DHASH_NEXT;
 }
 
 void
@@ -2388,16 +2426,28 @@ nsWebBrowserPersist::CalcTotalProgress()
     mTotalCurrentProgress = 0;
     mTotalMaxProgress = 0;
 
-    if (mOutputMap.Count() > 0)
-    {
+    if (mOutputMap.Count() > 0) {
         // Total up the progress of each output stream
-        mOutputMap.EnumerateRead(EnumCalcProgress, this);
+        for (auto iter = mOutputMap.Iter(); !iter.Done(); iter.Next()) {
+            // Only count toward total progress if destination file is local.
+            OutputData* data = iter.UserData();
+            nsCOMPtr<nsIFileURL> fileURL = do_QueryInterface(data->mFile);
+            if (fileURL) {
+                mTotalCurrentProgress += data->mSelfProgress;
+                mTotalMaxProgress += data->mSelfProgressMax;
+            }
+        }
     }
 
-    if (mUploadList.Count() > 0)
-    {
+    if (mUploadList.Count() > 0) {
         // Total up the progress of each upload
-        mUploadList.EnumerateRead(EnumCalcUploadProgress, this);
+        for (auto iter = mUploadList.Iter(); !iter.Done(); iter.Next()) {
+            UploadData* data = iter.UserData();
+            if (data) {
+                mTotalCurrentProgress += data->mSelfProgress;
+                mTotalMaxProgress += data->mSelfProgressMax;
+            }
+        }
     }
 
     // XXX this code seems pretty bogus and pointless
@@ -2407,133 +2457,6 @@ nsWebBrowserPersist::CalcTotalProgress()
         mTotalCurrentProgress = 10000;
         mTotalMaxProgress = 10000;
     }
-}
-
-PLDHashOperator
-nsWebBrowserPersist::EnumCalcProgress(nsISupports *aKey, OutputData *aData, void* aClosure)
-{
-    nsWebBrowserPersist *pthis = static_cast<nsWebBrowserPersist*>(aClosure);
-
-    // only count toward total progress if destination file is local
-    nsCOMPtr<nsIFileURL> fileURL = do_QueryInterface(aData->mFile);
-    if (fileURL)
-    {
-        pthis->mTotalCurrentProgress += aData->mSelfProgress;
-        pthis->mTotalMaxProgress += aData->mSelfProgressMax;
-    }
-    return PL_DHASH_NEXT;
-}
-
-PLDHashOperator
-nsWebBrowserPersist::EnumCalcUploadProgress(nsISupports *aKey, UploadData *aData, void* aClosure)
-{
-    if (aData && aClosure)
-    {
-        nsWebBrowserPersist *pthis = static_cast<nsWebBrowserPersist*>(aClosure);
-        pthis->mTotalCurrentProgress += aData->mSelfProgress;
-        pthis->mTotalMaxProgress += aData->mSelfProgressMax;
-    }
-    return PL_DHASH_NEXT;
-}
-
-PLDHashOperator
-nsWebBrowserPersist::EnumCountURIsToPersist(const nsACString &aKey, URIData *aData, void* aClosure)
-{
-    uint32_t *count = static_cast<uint32_t*>(aClosure);
-    if (aData->mNeedsPersisting && !aData->mSaved)
-    {
-        (*count)++;
-    }
-    return PL_DHASH_NEXT;
-}
-
-PLDHashOperator
-nsWebBrowserPersist::EnumPersistURIs(const nsACString &aKey, URIData *aData, void* aClosure)
-{
-    if (!aData->mNeedsPersisting || aData->mSaved)
-    {
-        return PL_DHASH_NEXT;
-    }
-
-    nsWebBrowserPersist *pthis = static_cast<nsWebBrowserPersist*>(aClosure);
-    nsresult rv;
-
-    // Create a URI from the key
-    nsAutoCString key = nsAutoCString(aKey);
-    nsCOMPtr<nsIURI> uri;
-    rv = NS_NewURI(getter_AddRefs(uri),
-                   nsDependentCString(key.get(), key.Length()),
-                   aData->mCharset.get());
-    NS_ENSURE_SUCCESS(rv, PL_DHASH_STOP);
-
-    // Make a URI to save the data to
-    nsCOMPtr<nsIURI> fileAsURI;
-    rv = aData->mDataPath->Clone(getter_AddRefs(fileAsURI));
-    NS_ENSURE_SUCCESS(rv, PL_DHASH_STOP);
-    rv = pthis->AppendPathToURI(fileAsURI, aData->mFilename);
-    NS_ENSURE_SUCCESS(rv, PL_DHASH_STOP);
-
-    // The Referrer Policy doesn't matter here since the referrer is nullptr.
-    rv = pthis->SaveURIInternal(uri, nullptr, nullptr, mozilla::net::RP_Default,
-                                nullptr, nullptr, fileAsURI, true, pthis->mIsPrivate);
-    // if SaveURIInternal fails, then it will have called EndDownload,
-    // which means that |aData| is no longer valid memory.  we MUST bail.
-    NS_ENSURE_SUCCESS(rv, PL_DHASH_STOP);
-
-    if (rv == NS_OK)
-    {
-        // Store the actual object because once it's persisted this
-        // will be fixed up with the right file extension.
-
-        aData->mFile = fileAsURI;
-        aData->mSaved = true;
-    }
-    else
-    {
-        aData->mNeedsFixup = false;
-    }
-
-    if (pthis->mSerializingOutput)
-        return PL_DHASH_STOP;
-
-    return PL_DHASH_NEXT;
-}
-
-PLDHashOperator
-nsWebBrowserPersist::EnumCleanupOutputMap(nsISupports *aKey, OutputData *aData, void* aClosure)
-{
-    nsCOMPtr<nsIChannel> channel = do_QueryInterface(aKey);
-    if (channel)
-    {
-        channel->Cancel(NS_BINDING_ABORTED);
-    }
-    return PL_DHASH_NEXT;
-}
-
-PLDHashOperator
-nsWebBrowserPersist::EnumCleanupUploadList(nsISupports *aKey, UploadData *aData, void* aClosure)
-{
-    nsCOMPtr<nsIChannel> channel = do_QueryInterface(aKey);
-    if (channel)
-    {
-        channel->Cancel(NS_BINDING_ABORTED);
-    }
-    return PL_DHASH_NEXT;
-}
-
-/* static */ PLDHashOperator
-nsWebBrowserPersist::EnumCopyURIsToFlatMap(const nsACString &aKey,
-                                          URIData *aData,
-                                          void* aClosure)
-{
-    URIFixupData *fixupData = static_cast<URIFixupData*>(aClosure);
-    FlatURIMap* theMap = fixupData->mFlatMap;
-    nsAutoCString mapTo;
-    nsresult rv = aData->GetLocalURI(fixupData->mTargetBaseURI, mapTo);
-    if (NS_SUCCEEDED(rv) || !mapTo.IsVoid()) {
-        theMap->Add(aKey, mapTo);
-    }
-    return PL_DHASH_NEXT;
 }
 
 nsresult

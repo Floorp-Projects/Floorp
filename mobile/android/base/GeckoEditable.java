@@ -27,6 +27,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.text.Editable;
 import android.text.InputFilter;
+import android.text.NoCopySpan;
 import android.text.Selection;
 import android.text.Spannable;
 import android.text.SpannableString;
@@ -66,13 +67,11 @@ final class GeckoEditable extends JNIObject
     private Handler mIcPostHandler;
 
     private GeckoEditableListener mListener;
-    private int mSavedSelectionStart;
-    private volatile int mGeckoUpdateSeqno;
-    private int mIcUpdateSeqno;
-    private int mLastIcUpdateSeqno;
-    private boolean mUpdateGecko;
+    /* package */ boolean mInBatchMode; // Used by IC thread
+    /* package */ boolean mNeedCompositionUpdate; // Used by IC thread
     private boolean mFocused; // Used by IC thread
     private boolean mGeckoFocused; // Used by Gecko thread
+    private boolean mIgnoreSelectionChange; // Used by Gecko thread
     private volatile boolean mSuppressCompositions;
     private volatile boolean mSuppressKeyUp;
 
@@ -133,13 +132,7 @@ final class GeckoEditable extends JNIObject
     private native void onImeAcknowledgeFocus();
 
     @WrapForJNI
-    private native void onImeReplaceText(int start, int end, String text, boolean composing);
-
-    @WrapForJNI
-    private native void onImeSetSelection(int start, int end);
-
-    @WrapForJNI
-    private native void onImeRemoveComposition();
+    private native void onImeReplaceText(int start, int end, String text);
 
     @WrapForJNI
     private native void onImeAddCompositionRange(int start, int end, int rangeType,
@@ -161,29 +154,22 @@ final class GeckoEditable extends JNIObject
         static final int TYPE_EVENT = 0;
         // For Editable.replace() call; use with IME_REPLACE_TEXT
         static final int TYPE_REPLACE_TEXT = 1;
-        /* For Editable.setSpan(Selection...) call; use with IME_SYNCHRONIZE
-           Note that we don't use this with IME_SET_SELECTION because we don't want to update the
-           Gecko selection at the point of this action. The Gecko selection is updated only after
-           IC has updated its selection (during IME_SYNCHRONIZE reply) */
-        static final int TYPE_SET_SELECTION = 2;
         // For Editable.setSpan() call; use with IME_SYNCHRONIZE
-        static final int TYPE_SET_SPAN = 3;
+        static final int TYPE_SET_SPAN = 2;
         // For Editable.removeSpan() call; use with IME_SYNCHRONIZE
-        static final int TYPE_REMOVE_SPAN = 4;
+        static final int TYPE_REMOVE_SPAN = 3;
         // For focus events (in notifyIME); use with IME_ACKNOWLEDGE_FOCUS
-        static final int TYPE_ACKNOWLEDGE_FOCUS = 5;
+        static final int TYPE_ACKNOWLEDGE_FOCUS = 4;
         // For switching handler; use with IME_SYNCHRONIZE
-        static final int TYPE_SET_HANDLER = 6;
-        // For Editable.replace() call involving compositions; use with IME_COMPOSE_TEXT
-        static final int TYPE_COMPOSE_TEXT = 7;
+        static final int TYPE_SET_HANDLER = 5;
 
         final int mType;
+        boolean mUpdateComposition;
         int mStart;
         int mEnd;
         CharSequence mSequence;
         Object mSpanObject;
         int mSpanFlags;
-        boolean mShouldUpdate;
         Handler mHandler;
 
         Action(int type) {
@@ -196,41 +182,14 @@ final class GeckoEditable extends JNIObject
                 throw new IllegalArgumentException("invalid replace text offsets");
             }
 
-            int actionType = TYPE_REPLACE_TEXT;
-
-            if (text instanceof Spanned) {
-                final Spanned spanned = (Spanned) text;
-                final Object[] spans = spanned.getSpans(0, spanned.length(), Object.class);
-
-                for (Object span : spans) {
-                    if ((spanned.getSpanFlags(span) & Spanned.SPAN_COMPOSING) != 0) {
-                        actionType = TYPE_COMPOSE_TEXT;
-                        break;
-                    }
-                }
-            }
-
-            final Action action = new Action(actionType);
+            final Action action = new Action(TYPE_REPLACE_TEXT);
             action.mSequence = text;
             action.mStart = start;
             action.mEnd = end;
             return action;
         }
 
-        static Action newSetSelection(int start, int end) {
-            // start == -1 when the start offset should remain the same
-            // end == -1 when the end offset should remain the same
-            if (start < -1 || end < -1) {
-                Log.e(LOGTAG, "invalid selection offsets: " + start + " to " + end);
-                throw new IllegalArgumentException("invalid selection offsets");
-            }
-            final Action action = new Action(TYPE_SET_SELECTION);
-            action.mStart = start;
-            action.mEnd = end;
-            return action;
-        }
-
-        static Action newSetSpan(Object object, int start, int end, int flags) {
+        static Action newSetSpan(Object object, int start, int end, int flags, boolean update) {
             if (start < 0 || start > end) {
                 Log.e(LOGTAG, "invalid span offsets: " + start + " to " + end);
                 throw new IllegalArgumentException("invalid span offsets");
@@ -240,12 +199,14 @@ final class GeckoEditable extends JNIObject
             action.mStart = start;
             action.mEnd = end;
             action.mSpanFlags = flags;
+            action.mUpdateComposition = update;
             return action;
         }
 
-        static Action newRemoveSpan(Object object) {
+        static Action newRemoveSpan(Object object, boolean update) {
             final Action action = new Action(TYPE_REMOVE_SPAN);
             action.mSpanObject = object;
+            action.mUpdateComposition = update;
             return action;
         }
 
@@ -274,13 +235,7 @@ final class GeckoEditable extends JNIObject
                 Log.d(LOGTAG, "offer: Action(" +
                               getConstantName(Action.class, "TYPE_", action.mType) + ")");
             }
-            /* Events don't need update because they generate text/selection
-               notifications which will do the updating for us */
-            if (action.mType != Action.TYPE_EVENT &&
-                action.mType != Action.TYPE_ACKNOWLEDGE_FOCUS &&
-                action.mType != Action.TYPE_SET_HANDLER) {
-                action.mShouldUpdate = mUpdateGecko;
-            }
+
             if (mActions.isEmpty()) {
                 mActionsActive.acquireUninterruptibly();
                 mActions.offer(action);
@@ -292,7 +247,6 @@ final class GeckoEditable extends JNIObject
 
             switch (action.mType) {
             case Action.TYPE_EVENT:
-            case Action.TYPE_SET_SELECTION:
             case Action.TYPE_SET_SPAN:
             case Action.TYPE_REMOVE_SPAN:
             case Action.TYPE_SET_HANDLER:
@@ -300,14 +254,14 @@ final class GeckoEditable extends JNIObject
                 break;
 
             case Action.TYPE_REPLACE_TEXT:
-                // try key events first
-                sendCharKeyEvents(action);
-
-                // fall-through
-
-            case Action.TYPE_COMPOSE_TEXT:
-                onImeReplaceText(action.mStart, action.mEnd, action.mSequence.toString(),
-                                  action.mType == Action.TYPE_COMPOSE_TEXT);
+                // Because we get composition styling here essentially for free,
+                // we don't need to check if we're in batch mode.
+                if (!icMaybeSendComposition(
+                        action.mSequence, /* useEntireText */ true, /* notifyGecko */ false)) {
+                    // Since we don't have a composition, we can try sending key events.
+                    sendCharKeyEvents(action);
+                }
+                onImeReplaceText(action.mStart, action.mEnd, action.mSequence.toString());
                 break;
 
             case Action.TYPE_ACKNOWLEDGE_FOCUS:
@@ -317,8 +271,6 @@ final class GeckoEditable extends JNIObject
             default:
                 throw new IllegalStateException("Action not processed");
             }
-
-            ++mIcUpdateSeqno;
         }
 
         private KeyEvent [] synthesizeKeyEvents(CharSequence cs) {
@@ -342,7 +294,7 @@ final class GeckoEditable extends JNIObject
         }
 
         private void sendCharKeyEvents(Action action) {
-            if (action.mSequence.length() == 0 ||
+            if (action.mSequence.length() != 1 ||
                 (action.mSequence instanceof Spannable &&
                 ((Spannable)action.mSequence).nextSpanTransition(
                     -1, Integer.MAX_VALUE, null) < Integer.MAX_VALUE)) {
@@ -427,8 +379,6 @@ final class GeckoEditable extends JNIObject
             ThreadUtils.assertOnGeckoThread();
         }
         mActionQueue = new ActionQueue();
-        mSavedSelectionStart = -1;
-        mUpdateGecko = true;
 
         mText = new SpannableStringBuilder();
         mChangedText = new SpannableStringBuilder();
@@ -506,23 +456,6 @@ final class GeckoEditable extends JNIObject
         mIcPostHandler.post(runnable);
     }
 
-    private void geckoUpdateGecko(final boolean force) {
-        /* We do not increment the seqno here, but only check it, because geckoUpdateGecko is a
-           request for update. If we incremented the seqno here, geckoUpdateGecko would have
-           prevented other updates from occurring */
-        final int seqnoWhenPosted = mGeckoUpdateSeqno;
-
-        geckoPostToIc(new Runnable() {
-            @Override
-            public void run() {
-                mActionQueue.syncWithGecko();
-                if (seqnoWhenPosted == mGeckoUpdateSeqno) {
-                    icUpdateGecko(force);
-                }
-            }
-        });
-    }
-
     private Object getField(Object obj, String field, Object def) {
         try {
             return obj.getClass().getField(field).get(obj);
@@ -531,47 +464,76 @@ final class GeckoEditable extends JNIObject
         }
     }
 
-    private void icUpdateGecko(boolean force) {
+    /**
+     * Send composition ranges to Gecko if the text has composing spans.
+     *
+     * @param sequence Text with possible composing spans
+     * @param useEntireText If text has composing spans, treat the entire text as
+     *                      a Gecko composition, instead of just the spanned part.
+     * @param notifyGecko Notify Gecko of the new composition ranges;
+     *                    otherwise, the caller is responsible for notifying Gecko.
+     * @return Whether there was a composition
+     */
+    private boolean icMaybeSendComposition(final CharSequence sequence,
+                                           final boolean useEntireText,
+                                           final boolean notifyGecko) {
+        int selStart = Selection.getSelectionStart(sequence);
+        int selEnd = Selection.getSelectionEnd(sequence);
 
-        // Skip if receiving a repeated request, or
-        // if suppressing compositions during text selection.
-        if ((!force && mIcUpdateSeqno == mLastIcUpdateSeqno) ||
-            mSuppressCompositions) {
-            if (DEBUG) {
-                Log.d(LOGTAG, "icUpdateGecko() skipped");
+        if (sequence instanceof Spanned) {
+            final Spanned text = (Spanned) sequence;
+            final Object[] spans = text.getSpans(0, text.length(), Object.class);
+            boolean found = false;
+            int composingStart = useEntireText ? 0 : Integer.MAX_VALUE;
+            int composingEnd = useEntireText ? text.length() : 0;
+
+            for (Object span : spans) {
+                if ((text.getSpanFlags(span) & Spanned.SPAN_COMPOSING) == 0) {
+                    continue;
+                }
+                if (!useEntireText) {
+                    composingStart = Math.min(composingStart, text.getSpanStart(span));
+                    composingEnd = Math.max(composingEnd, text.getSpanEnd(span));
+                }
+                found = true;
             }
-            return;
+
+            if (useEntireText && (selStart < 0 || selEnd < 0)) {
+                selStart = composingEnd;
+                selEnd = composingEnd;
+            }
+
+            if (found) {
+                icSendComposition(text, selStart, selEnd, composingStart, composingEnd);
+                if (notifyGecko) {
+                    onImeUpdateComposition(composingStart, composingEnd);
+                }
+                return true;
+            }
         }
-        mLastIcUpdateSeqno = mIcUpdateSeqno;
-        mActionQueue.syncWithGecko();
+
+        if (notifyGecko) {
+            // Set the selection by using a composition without ranges
+            onImeUpdateComposition(selStart, selEnd);
+        }
 
         if (DEBUG) {
-            Log.d(LOGTAG, "icUpdateGecko()");
+            Log.d(LOGTAG, "icSendComposition(): no composition");
         }
+        return false;
+    }
 
-        final int selStart = mText.getSpanStart(Selection.SELECTION_START);
-        final int selEnd = mText.getSpanEnd(Selection.SELECTION_END);
-        int composingStart = mText.length();
-        int composingEnd = 0;
-        Object[] spans = mText.getSpans(0, composingStart, Object.class);
-
-        for (Object span : spans) {
-            if ((mText.getSpanFlags(span) & Spanned.SPAN_COMPOSING) != 0) {
-                composingStart = Math.min(composingStart, mText.getSpanStart(span));
-                composingEnd = Math.max(composingEnd, mText.getSpanEnd(span));
-            }
+    private void icSendComposition(final Spanned text,
+                                   final int selStart, final int selEnd,
+                                   final int composingStart, final int composingEnd) {
+        if (DEBUG) {
+            assertOnIcThread();
+            Log.d(LOGTAG, "icSendComposition(\"" + text + "\", " +
+                                             composingStart + ", " + composingEnd + ")");
         }
         if (DEBUG) {
             Log.d(LOGTAG, " range = " + composingStart + "-" + composingEnd);
             Log.d(LOGTAG, " selection = " + selStart + "-" + selEnd);
-        }
-        if (composingStart >= composingEnd) {
-            if (selStart >= 0 && selEnd >= 0) {
-                onImeSetSelection(selStart, selEnd);
-            } else {
-                onImeRemoveComposition();
-            }
-            return;
         }
 
         if (selEnd >= composingStart && selEnd <= composingEnd) {
@@ -579,6 +541,7 @@ final class GeckoEditable extends JNIObject
                     selEnd - composingStart, selEnd - composingStart,
                     IME_RANGE_CARETPOSITION, 0, 0, false, 0, 0, 0);
         }
+
         int rangeStart = composingStart;
         TextPaint tp = new TextPaint();
         TextPaint emptyTp = new TextPaint();
@@ -589,7 +552,7 @@ final class GeckoEditable extends JNIObject
             int rangeType, rangeStyles = 0, rangeLineStyle = IME_RANGE_LINE_NONE;
             boolean rangeBoldLine = false;
             int rangeForeColor = 0, rangeBackColor = 0, rangeLineColor = 0;
-            int rangeEnd = mText.nextSpanTransition(rangeStart, composingEnd, Object.class);
+            int rangeEnd = text.nextSpanTransition(rangeStart, composingEnd, Object.class);
 
             if (selStart > rangeStart && selStart < rangeEnd) {
                 rangeEnd = selStart;
@@ -597,7 +560,7 @@ final class GeckoEditable extends JNIObject
                 rangeEnd = selEnd;
             }
             CharacterStyle[] styleSpans =
-                    mText.getSpans(rangeStart, rangeEnd, CharacterStyle.class);
+                    text.getSpans(rangeStart, rangeEnd, CharacterStyle.class);
 
             if (DEBUG) {
                 Log.d(LOGTAG, " found " + styleSpans.length + " spans @ " +
@@ -662,8 +625,6 @@ final class GeckoEditable extends JNIObject
                               " : " + Integer.toHexString(rangeBackColor));
             }
         } while (rangeStart < composingEnd);
-
-        onImeUpdateComposition(composingStart, composingEnd);
     }
 
     // GeckoEditableClient interface
@@ -682,6 +643,10 @@ final class GeckoEditable extends JNIObject
            the second sync event will have a reply, during which we see that there is a pending
            event-type action, and update the selection/composition/etc. accordingly.
         */
+        if (mNeedCompositionUpdate) {
+            // Make sure Gecko selection is in-sync with Java selection first.
+            icUpdateComposition();
+        }
         onKeyEvent(event, action, metaState, /* isSynthesizedImeKey */ false);
         mActionQueue.offer(new Action(Action.TYPE_EVENT));
     }
@@ -699,18 +664,48 @@ final class GeckoEditable extends JNIObject
     }
 
     @Override
-    public void setUpdateGecko(boolean update) {
+    public void setBatchMode(boolean inBatchMode) {
         if (!onIcThread()) {
             // Android may be holding an old InputConnection; ignore
             if (DEBUG) {
-                Log.i(LOGTAG, "setUpdateGecko() called on non-IC thread");
+                Log.i(LOGTAG, "setBatchMode() called on non-IC thread");
             }
             return;
         }
-        if (update) {
-            icUpdateGecko(false);
+        if (!inBatchMode && mNeedCompositionUpdate) {
+            icUpdateComposition();
         }
-        mUpdateGecko = update;
+        mInBatchMode = inBatchMode;
+    }
+
+    private void icUpdateComposition() {
+        if (DEBUG) {
+            assertOnIcThread();
+        }
+        mNeedCompositionUpdate = false;
+        mActionQueue.syncWithGecko();
+        icMaybeSendComposition(mText, /* useEntireText */ false, /* notifyGecko */ true);
+    }
+
+    private void geckoScheduleCompositionUpdate() {
+        if (DEBUG) {
+            ThreadUtils.assertOnGeckoThread();
+        }
+        // May be called from either Gecko or IC thread
+        geckoPostToIc(new Runnable() {
+            @Override
+            public void run() {
+                if (mInBatchMode || !mNeedCompositionUpdate) {
+                    return;
+                }
+                if (!mActionQueue.isEmpty()) {
+                    // We are likely to block here, so wait a little and try again.
+                    mIcPostHandler.postDelayed(this, 10);
+                    return;
+                }
+                icUpdateComposition();
+            }
+        });
     }
 
     @Override
@@ -808,34 +803,6 @@ final class GeckoEditable extends JNIObject
                           getConstantName(Action.class, "TYPE_", action.mType) + ")");
         }
         switch (action.mType) {
-        case Action.TYPE_SET_SELECTION:
-            final int len = mText.length();
-            final int curStart = Selection.getSelectionStart(mText);
-            final int curEnd = Selection.getSelectionEnd(mText);
-            // start == -1 when the start offset should remain the same
-            // end == -1 when the end offset should remain the same
-            final int selStart = Math.min(action.mStart < 0 ? curStart : action.mStart, len);
-            final int selEnd = Math.min(action.mEnd < 0 ? curEnd : action.mEnd, len);
-
-            if (selStart < action.mStart || selEnd < action.mEnd) {
-                Log.w(LOGTAG, "IME sync error: selection out of bounds");
-            }
-            Selection.setSelection(mText, selStart, selEnd);
-            geckoPostToIc(new Runnable() {
-                @Override
-                public void run() {
-                    mActionQueue.syncWithGecko();
-                    final int start = Selection.getSelectionStart(mText);
-                    final int end = Selection.getSelectionEnd(mText);
-                    if (selStart == start && selEnd == end) {
-                        // There has not been another new selection in the mean time that
-                        // made this notification out-of-date
-                        mListener.onSelectionChange(start, end);
-                    }
-                }
-            });
-            break;
-
         case Action.TYPE_SET_SPAN:
             mText.setSpan(action.mSpanObject, action.mStart, action.mEnd, action.mSpanFlags);
             break;
@@ -848,8 +815,9 @@ final class GeckoEditable extends JNIObject
             geckoSetIcHandler(action.mHandler);
             break;
         }
-        if (action.mShouldUpdate) {
-            geckoUpdateGecko(false);
+
+        if (action.mUpdateComposition) {
+            geckoScheduleCompositionUpdate();
         }
     }
 
@@ -968,7 +936,7 @@ final class GeckoEditable extends JNIObject
     }
 
     @WrapForJNI @Override
-    public void onSelectionChange(final int start, final int end) {
+    public void onSelectionChange(int start, int end) {
         if (DEBUG) {
             // GeckoEditableListener methods should all be called from the Gecko thread
             ThreadUtils.assertOnGeckoThread();
@@ -979,34 +947,22 @@ final class GeckoEditable extends JNIObject
                   start + " to " + end + ", length: " + mText.length());
             throw new IllegalArgumentException("invalid selection notification range");
         }
-        final int seqnoWhenPosted = ++mGeckoUpdateSeqno;
 
-        /* An event (keypress, etc.) has potentially changed the selection,
-           synchronize the selection here. There is not a race with the IC thread
-           because the IC thread should be blocked on the event action */
-        final Action action = mActionQueue.peek();
-        if (action != null && action.mType == Action.TYPE_EVENT) {
+        if (mIgnoreSelectionChange) {
+            start = Selection.getSelectionStart(mText);
+            end = Selection.getSelectionEnd(mText);
+            mIgnoreSelectionChange = false;
+
+        } else {
             Selection.setSelection(mText, start, end);
-            return;
         }
 
+        final int newStart = start;
+        final int newEnd = end;
         geckoPostToIc(new Runnable() {
             @Override
             public void run() {
-                mActionQueue.syncWithGecko();
-                /* check to see there has not been another action that potentially changed the
-                   selection. If so, we can skip this update because we know there is another
-                   update right after this one that will replace the effect of this update */
-                if (mGeckoUpdateSeqno == seqnoWhenPosted) {
-                    /* In this case, Gecko's selection has changed and it's notifying us to change
-                       Java's selection. In the normal case, whenever Java's selection changes,
-                       we go back and set Gecko's selection as well. However, in this case,
-                       since Gecko's selection is already up-to-date, we skip this step. */
-                    boolean oldUpdateGecko = mUpdateGecko;
-                    mUpdateGecko = false;
-                    Selection.setSelection(mProxy, start, end);
-                    mUpdateGecko = oldUpdateGecko;
-                }
+                mListener.onSelectionChange(newStart, newEnd);
             }
         });
     }
@@ -1053,12 +1009,6 @@ final class GeckoEditable extends JNIObject
         final int newEnd = start + text.length();
         final Action action = mActionQueue.peek();
 
-        /* Text changes affect the selection as well, and we may not receive another selection
-           update as a result of selection notification masking on the Gecko side; therefore,
-           in order to prevent previous stale selection notifications from occurring, we need
-           to increment the seqno here as well */
-        ++mGeckoUpdateSeqno;
-
         if (action != null && action.mType == Action.TYPE_ACKNOWLEDGE_FOCUS) {
             // Simply replace the text for newly-focused editors.
             mText.replace(0, mText.length(), text);
@@ -1071,8 +1021,7 @@ final class GeckoEditable extends JNIObject
                                     Object.class, mChangedText, 0);
 
             if (action != null &&
-                    (action.mType == Action.TYPE_REPLACE_TEXT ||
-                    action.mType == Action.TYPE_COMPOSE_TEXT) &&
+                    action.mType == Action.TYPE_REPLACE_TEXT &&
                     start <= action.mStart &&
                     action.mStart + action.mSequence.length() <= newEnd) {
 
@@ -1104,11 +1053,18 @@ final class GeckoEditable extends JNIObject
                                   Spanned.SPAN_POINT_POINT);
                 }
 
+                // Ignore the next selection change because the selection change is a
+                // side-effect of the replace-text event we sent.
+                mIgnoreSelectionChange = true;
+
             } else {
                 // Gecko side initiated the text change.
                 if (isSameText(start, oldEnd, mChangedText)) {
-                    // Nothing to do because the text is the same.
-                    // This could happen when the composition is updated for example.
+                    // Nothing to do because the text is the same. This could happen when
+                    // the composition is updated for example. Ignore the next selection
+                    // change because the selection change is a side-effect of the
+                    // update-composition event we sent.
+                    mIgnoreSelectionChange = true;
                     return;
                 }
                 geckoReplaceText(start, oldEnd, mChangedText);
@@ -1231,24 +1187,26 @@ final class GeckoEditable extends JNIObject
                 what == Selection.SELECTION_END) {
             Log.w(LOGTAG, "selection removed with removeSpan()");
         }
-        mActionQueue.offer(Action.newRemoveSpan(what));
+
+        // "what" could be a composing span (BaseInputConnection.COMPOSING extends
+        // NoCopySpan), so we should update the Gecko composition
+        final boolean update = !mNeedCompositionUpdate && what instanceof NoCopySpan;
+        mActionQueue.offer(Action.newRemoveSpan(what, update));
+        mNeedCompositionUpdate |= update;
     }
 
     @Override
     public void setSpan(Object what, int start, int end, int flags) {
-        if (what == Selection.SELECTION_START) {
-            if ((flags & Spanned.SPAN_INTERMEDIATE) != 0) {
-                // We will get the end offset next, just save the start for now
-                mSavedSelectionStart = start;
-            } else {
-                mActionQueue.offer(Action.newSetSelection(start, -1));
-            }
-        } else if (what == Selection.SELECTION_END) {
-            mActionQueue.offer(Action.newSetSelection(mSavedSelectionStart, end));
-            mSavedSelectionStart = -1;
-        } else {
-            mActionQueue.offer(Action.newSetSpan(what, start, end, flags));
-        }
+        // If mUpdateComposition is true, it means something in the queue will be
+        // scheduling an update, so it would be redundant to have this action schedule
+        // another update.
+        final boolean update = !mNeedCompositionUpdate &&
+                (flags & Spanned.SPAN_INTERMEDIATE) == 0 && (
+                (flags & Spanned.SPAN_COMPOSING) != 0 ||
+                what == Selection.SELECTION_START ||
+                what == Selection.SELECTION_END);
+        mActionQueue.offer(Action.newSetSpan(what, start, end, flags, update));
+        mNeedCompositionUpdate |= update;
     }
 
     // Appendable interface
