@@ -849,31 +849,6 @@ nsHttpConnectionMgr::ProcessAllTransactionsCB(const nsACString &key,
 
 // If the global number of connections is preventing the opening of
 // new connections to a host without idle connections, then
-// close them regardless of their TTL
-PLDHashOperator
-nsHttpConnectionMgr::PurgeExcessIdleConnectionsCB(const nsACString &key,
-                                                  nsAutoPtr<nsConnectionEntry> &ent,
-                                                  void *closure)
-{
-    nsHttpConnectionMgr *self = (nsHttpConnectionMgr *) closure;
-
-    while (self->mNumIdleConns + self->mNumActiveConns + 1 >= self->mMaxConns) {
-        if (!ent->mIdleConns.Length()) {
-            // There are no idle conns left in this connection entry
-            return PL_DHASH_NEXT;
-        }
-        nsHttpConnection *conn = ent->mIdleConns[0];
-        ent->mIdleConns.RemoveElementAt(0);
-        conn->Close(NS_ERROR_ABORT);
-        NS_RELEASE(conn);
-        self->mNumIdleConns--;
-        self->ConditionallyStopPruneDeadConnectionsTimer();
-    }
-    return PL_DHASH_STOP;
-}
-
-// If the global number of connections is preventing the opening of
-// new connections to a host without idle connections, then
 // close any spdy asap
 PLDHashOperator
 nsHttpConnectionMgr::PurgeExcessSpdyConnectionsCB(const nsACString &key,
@@ -1469,8 +1444,26 @@ nsHttpConnectionMgr::MakeNewConnection(nsConnectionEntry *ent,
     // beacuse we have already determined there are no idle connections
     // to our destination
 
-    if ((mNumIdleConns + mNumActiveConns + 1 >= mMaxConns) && mNumIdleConns)
-        mCT.Enumerate(PurgeExcessIdleConnectionsCB, this);
+    if ((mNumIdleConns + mNumActiveConns + 1 >= mMaxConns) && mNumIdleConns) {
+        // If the global number of connections is preventing the opening of new
+        // connections to a host without idle connections, then close them
+        // regardless of their TTL.
+        auto iter = mCT.Iter();
+        while (mNumIdleConns + mNumActiveConns + 1 >= mMaxConns &&
+               !iter.Done()) {
+            nsAutoPtr<nsConnectionEntry> &ent = iter.Data();
+            if (!ent->mIdleConns.Length()) {
+              iter.Next();
+              continue;
+            }
+            nsHttpConnection *conn = ent->mIdleConns[0];
+            ent->mIdleConns.RemoveElementAt(0);
+            conn->Close(NS_ERROR_ABORT);
+            NS_RELEASE(conn);
+            mNumIdleConns--;
+            ConditionallyStopPruneDeadConnectionsTimer();
+        }
+    }
 
     if ((mNumIdleConns + mNumActiveConns + 1 >= mMaxConns) &&
         mNumActiveConns && gHttpHandler->IsSpdyEnabled())
