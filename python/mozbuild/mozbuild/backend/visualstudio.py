@@ -136,13 +136,8 @@ class VisualStudioBackend(CommonBackend):
             self._paths_to_defines.setdefault(reldir, {}).update(obj.defines)
 
         elif isinstance(obj, LocalInclude):
-            p = obj.path
             includes = self._paths_to_includes.setdefault(reldir, [])
-
-            if p.startswith('/'):
-                includes.append(os.path.join('$(TopSrcDir)', p[1:]))
-            else:
-                includes.append(os.path.join('$(TopSrcDir)', reldir, p))
+            includes.append(obj.path.full_path)
 
         # Just acknowledge everything.
         return True
