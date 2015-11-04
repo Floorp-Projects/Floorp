@@ -10,5 +10,5 @@
        android:insetBottom="2dp"
        android:insetLeft="2dp"
        android:insetRight="2dp"
-       android:drawable="@drawable/overlay_send_tab_icon"
+       android:drawable="@drawable/shareplane"
        />
