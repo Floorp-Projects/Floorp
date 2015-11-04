@@ -5,7 +5,7 @@
 
 "use strict";
 
-const L10N_BUNDLE = "chrome://browser/locale/devtools/sourceeditor.properties";
+const L10N_BUNDLE = "chrome://devtools/locale/sourceeditor.properties";
 const L10N = Services.strings.createBundle(L10N_BUNDLE);
 
 const FIND_KEY = L10N.GetStringFromName("find.commandkey");

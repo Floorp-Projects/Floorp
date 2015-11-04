@@ -7,7 +7,7 @@
 // Test that when animations displayed in the timeline are running on the
 // compositor, they get a special icon and information in the tooltip.
 
-const STRINGS_URI = "chrome://browser/locale/devtools/animationinspector.properties";
+const STRINGS_URI = "chrome://devtools/locale/animationinspector.properties";
 const L10N = new ViewHelpers.L10N(STRINGS_URI);
 
 add_task(function*() {

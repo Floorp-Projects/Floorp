@@ -17,7 +17,7 @@ add_task(function*() {
   let elementStyle = view._elementStyle;
 
   let _strings = Services.strings
-    .createBundle("chrome://global/locale/devtools/styleinspector.properties");
+    .createBundle("chrome://devtools-shared/locale/styleinspector.properties");
 
   let inline = _strings.GetStringFromName("rule.sourceInline");
 

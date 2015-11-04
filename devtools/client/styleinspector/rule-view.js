@@ -4049,7 +4049,7 @@ XPCOMUtils.defineLazyGetter(this, "osString", function() {
 
 XPCOMUtils.defineLazyGetter(this, "_strings", function() {
   return Services.strings.createBundle(
-    "chrome://global/locale/devtools/styleinspector.properties");
+    "chrome://devtools-shared/locale/styleinspector.properties");
 });
 
 XPCOMUtils.defineLazyGetter(this, "domUtils", function() {

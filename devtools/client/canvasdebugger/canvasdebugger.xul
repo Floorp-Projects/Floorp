@@ -8,7 +8,7 @@
 <?xml-stylesheet href="chrome://devtools/skin/widgets.css" type="text/css"?>
 <?xml-stylesheet href="chrome://devtools/skin/canvasdebugger.css" type="text/css"?>
 <!DOCTYPE window [
-  <!ENTITY % canvasDebuggerDTD SYSTEM "chrome://browser/locale/devtools/canvasdebugger.dtd">
+  <!ENTITY % canvasDebuggerDTD SYSTEM "chrome://devtools/locale/canvasdebugger.dtd">
   %canvasDebuggerDTD;
 ]>
 

@@ -8,7 +8,7 @@
 <?xul-overlay href="chrome://global/content/editMenuOverlay.xul"?>
 
 <!DOCTYPE window [
-<!ENTITY % toolboxDTD SYSTEM "chrome://browser/locale/devtools/toolbox.dtd" >
+<!ENTITY % toolboxDTD SYSTEM "chrome://devtools/locale/toolbox.dtd" >
 %toolboxDTD;
 <!ENTITY % editMenuStrings SYSTEM "chrome://global/locale/editMenuOverlay.dtd">
 %editMenuStrings;
