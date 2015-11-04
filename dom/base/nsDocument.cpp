@@ -941,31 +941,16 @@ nsExternalResourceMap::RequestResource(nsIURI* aURI,
   return nullptr;
 }
 
-struct
-nsExternalResourceEnumArgs
-{
-  nsIDocument::nsSubDocEnumFunc callback;
-  void *data;
-};
-
-static PLDHashOperator
-ExternalResourceEnumerator(nsIURI* aKey,
-                           nsExternalResourceMap::ExternalResource* aData,
-                           void* aClosure)
-{
-  nsExternalResourceEnumArgs* args =
-    static_cast<nsExternalResourceEnumArgs*>(aClosure);
-  bool next =
-    aData->mDocument ? args->callback(aData->mDocument, args->data) : true;
-  return next ? PL_DHASH_NEXT : PL_DHASH_STOP;
-}
-
 void
 nsExternalResourceMap::EnumerateResources(nsIDocument::nsSubDocEnumFunc aCallback,
                                           void* aData)
 {
-  nsExternalResourceEnumArgs args = { aCallback, aData };
-  mMap.EnumerateRead(ExternalResourceEnumerator, &args);
+  for (auto iter = mMap.Iter(); !iter.Done(); iter.Next()) {
+    nsExternalResourceMap::ExternalResource* resource = iter.UserData();
+    if (resource->mDocument && !aCallback(resource->mDocument, aData)) {
+      break;
+    }
+  }
 }
 
 static PLDHashOperator
