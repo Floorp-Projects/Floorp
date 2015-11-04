@@ -37,6 +37,7 @@ FFTConvolver::FFTConvolver(size_t fftSize, size_t renderPhase)
     : m_frame(fftSize)
     , m_readWriteIndex(renderPhase % (fftSize / 2))
 {
+    MOZ_ASSERT(fftSize >= 2 * WEBAUDIO_BLOCK_SIZE);
   m_inputBuffer.SetLength(fftSize);
   PodZero(m_inputBuffer.Elements(), fftSize);
   m_outputBuffer.SetLength(fftSize);
@@ -60,67 +61,47 @@ size_t FFTConvolver::sizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) co
   return aMallocSizeOf(this) + sizeOfExcludingThis(aMallocSizeOf);
 }
 
-void FFTConvolver::process(FFTBlock* fftKernel, const float* sourceP, float* destP)
+const float* FFTConvolver::process(FFTBlock* fftKernel, const float* sourceP)
 {
     size_t halfSize = fftSize() / 2;
 
     // WEBAUDIO_BLOCK_SIZE must be an exact multiple of halfSize,
-    // or halfSize is a multiple of WEBAUDIO_BLOCK_SIZE when halfSize > WEBAUDIO_BLOCK_SIZE.
-    MOZ_ASSERT(!(halfSize % WEBAUDIO_BLOCK_SIZE &&
-                 WEBAUDIO_BLOCK_SIZE % halfSize));
+    // halfSize must be a multiple of WEBAUDIO_BLOCK_SIZE
+    // and > WEBAUDIO_BLOCK_SIZE.
+    MOZ_ASSERT(halfSize % WEBAUDIO_BLOCK_SIZE == 0 &&
+               WEBAUDIO_BLOCK_SIZE <= halfSize);
 
-    size_t numberOfDivisions = halfSize <= WEBAUDIO_BLOCK_SIZE ?
-        (WEBAUDIO_BLOCK_SIZE / halfSize) : 1;
-    size_t divisionSize = numberOfDivisions == 1 ?
-        WEBAUDIO_BLOCK_SIZE : halfSize;
+    // Copy samples to input buffer (note contraint above!)
+    float* inputP = m_inputBuffer.Elements();
 
-    for (size_t i = 0; i < numberOfDivisions; ++i, sourceP += divisionSize, destP += divisionSize) {
-        // Copy samples to input buffer (note contraint above!)
-        float* inputP = m_inputBuffer.Elements();
+    MOZ_ASSERT(sourceP && inputP && m_readWriteIndex + WEBAUDIO_BLOCK_SIZE <= m_inputBuffer.Length());
 
-        // Sanity check
-        bool isCopyGood1 = sourceP && inputP && m_readWriteIndex + divisionSize <= m_inputBuffer.Length();
-        MOZ_ASSERT(isCopyGood1);
-        if (!isCopyGood1)
-            return;
+    memcpy(inputP + m_readWriteIndex, sourceP, sizeof(float) * WEBAUDIO_BLOCK_SIZE);
 
-        memcpy(inputP + m_readWriteIndex, sourceP, sizeof(float) * divisionSize);
+    float* outputP = m_outputBuffer.Elements();
+    m_readWriteIndex += WEBAUDIO_BLOCK_SIZE;
 
-        float* outputP = m_outputBuffer.Elements();
-        m_readWriteIndex += divisionSize;
+    // Check if it's time to perform the next FFT
+    if (m_readWriteIndex == halfSize) {
+        // The input buffer is now filled (get frequency-domain version)
+        m_frame.PerformFFT(m_inputBuffer.Elements());
+        m_frame.Multiply(*fftKernel);
+        m_frame.GetInverseWithoutScaling(m_outputBuffer.Elements());
 
-        // Check if it's time to perform the next FFT
-        if (m_readWriteIndex == halfSize) {
-            // The input buffer is now filled (get frequency-domain version)
-            m_frame.PerformFFT(m_inputBuffer.Elements());
-            m_frame.Multiply(*fftKernel);
-            m_frame.GetInverseWithoutScaling(m_outputBuffer.Elements());
+        // Overlap-add 1st half from previous time
+        AudioBufferAddWithScale(m_lastOverlapBuffer.Elements(), 1.0f,
+                                m_outputBuffer.Elements(), halfSize);
 
-            // Overlap-add 1st half from previous time
-            AudioBufferAddWithScale(m_lastOverlapBuffer.Elements(), 1.0f,
-                                    m_outputBuffer.Elements(), halfSize);
+        // Finally, save 2nd half of result
+        MOZ_ASSERT(m_outputBuffer.Length() == 2 * halfSize && m_lastOverlapBuffer.Length() == halfSize);
 
-            // Finally, save 2nd half of result
-            bool isCopyGood3 = m_outputBuffer.Length() == 2 * halfSize && m_lastOverlapBuffer.Length() == halfSize;
-            MOZ_ASSERT(isCopyGood3);
-            if (!isCopyGood3)
-                return;
+        memcpy(m_lastOverlapBuffer.Elements(), m_outputBuffer.Elements() + halfSize, sizeof(float) * halfSize);
 
-            memcpy(m_lastOverlapBuffer.Elements(), m_outputBuffer.Elements() + halfSize, sizeof(float) * halfSize);
-
-            // Reset index back to start for next time
-            m_readWriteIndex = 0;
-        }
-
-        // Sanity check
-        bool isCopyGood2 = destP && outputP && m_readWriteIndex + divisionSize <= m_outputBuffer.Length();
-        MOZ_ASSERT(isCopyGood2);
-        if (!isCopyGood2)
-            return;
-
-        // Copy samples from output buffer
-        memcpy(destP, outputP + m_readWriteIndex, sizeof(float) * divisionSize);
+        // Reset index back to start for next time
+        m_readWriteIndex = 0;
     }
+
+    return outputP + m_readWriteIndex;
 }
 
 void FFTConvolver::reset()

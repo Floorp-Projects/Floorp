@@ -50,7 +50,7 @@ public:
     // We need to pass in and update readIndex here, since each ReverbConvolverStage may be running in
     // a different thread than the realtime thread calling ReadAndClear() and maintaining m_readIndex
     // Returns the writeIndex where the accumulation took place
-    int accumulate(float* source, size_t numberOfFrames, int* readIndex, size_t delayFrames);
+    int accumulate(const float* source, size_t numberOfFrames, int* readIndex, size_t delayFrames);
 
     size_t readIndex() const { return m_readIndex; }
     void updateReadIndex(int* readIndex, size_t numberOfFrames) const;
