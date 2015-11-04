@@ -1430,8 +1430,6 @@ nsStylePosition::nsStylePosition(void)
   mGridAutoRowsMax.SetAutoValue();
 
   mGridAutoFlow = NS_STYLE_GRID_AUTO_FLOW_ROW;
-  mGridColumnGap.SetCoordValue(0);
-  mGridRowGap.SetCoordValue(0);
   mBoxSizing = NS_STYLE_BOX_SIZING_CONTENT;
   mAlignContent = NS_STYLE_ALIGN_AUTO;
   mAlignItems = NS_STYLE_ALIGN_AUTO;
@@ -1494,8 +1492,6 @@ nsStylePosition::nsStylePosition(const nsStylePosition& aSource)
   , mGridColumnEnd(aSource.mGridColumnEnd)
   , mGridRowStart(aSource.mGridRowStart)
   , mGridRowEnd(aSource.mGridRowEnd)
-  , mGridColumnGap(aSource.mGridColumnGap)
-  , mGridRowGap(aSource.mGridRowGap)
 {
   MOZ_COUNT_CTOR(nsStylePosition);
 }
@@ -1589,9 +1585,7 @@ nsStylePosition::CalcDifference(const nsStylePosition& aOther,
   if (mGridColumnStart != aOther.mGridColumnStart ||
       mGridColumnEnd != aOther.mGridColumnEnd ||
       mGridRowStart != aOther.mGridRowStart ||
-      mGridRowEnd != aOther.mGridRowEnd ||
-      mGridColumnGap != aOther.mGridColumnGap ||
-      mGridRowGap != aOther.mGridRowGap) {
+      mGridRowEnd != aOther.mGridRowEnd) {
     return NS_CombineHint(hint, nsChangeHint_AllReflowHints);
   }
 

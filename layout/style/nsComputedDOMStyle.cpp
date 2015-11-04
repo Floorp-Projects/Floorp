@@ -2557,22 +2557,6 @@ nsComputedDOMStyle::DoGetGridRowEnd()
 }
 
 CSSValue*
-nsComputedDOMStyle::DoGetGridColumnGap()
-{
-  nsROCSSPrimitiveValue* val = new nsROCSSPrimitiveValue;
-  SetValueToCoord(val, StylePosition()->mGridColumnGap, /*clampNegative*/ true);
-  return val;
-}
-
-CSSValue*
-nsComputedDOMStyle::DoGetGridRowGap()
-{
-  nsROCSSPrimitiveValue* val = new nsROCSSPrimitiveValue;
-  SetValueToCoord(val, StylePosition()->mGridRowGap, /*clampNegative*/ true);
-  return val;
-}
-
-CSSValue*
 nsComputedDOMStyle::DoGetPaddingTop()
 {
   return GetPaddingWidthFor(NS_SIDE_TOP);

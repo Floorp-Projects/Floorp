@@ -266,8 +266,6 @@ private:
   mozilla::dom::CSSValue* DoGetGridColumnEnd();
   mozilla::dom::CSSValue* DoGetGridRowStart();
   mozilla::dom::CSSValue* DoGetGridRowEnd();
-  mozilla::dom::CSSValue* DoGetGridColumnGap();
-  mozilla::dom::CSSValue* DoGetGridRowGap();
 
   /* Background properties */
   mozilla::dom::CSSValue* DoGetBackgroundAttachment();
