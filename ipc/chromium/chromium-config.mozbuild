@@ -5,12 +5,9 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 LOCAL_INCLUDES += [
+    '!/ipc/ipdl/_ipdlheaders',
     '/ipc/chromium/src',
     '/ipc/glue',
-]
-
-GENERATED_INCLUDES += [
-    '/ipc/ipdl/_ipdlheaders',
 ]
 
 if CONFIG['OS_ARCH'] == 'WINNT':

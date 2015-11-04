@@ -648,18 +648,6 @@ class LocalInclude(ContextDerived):
 
         self.path = path
 
-class GeneratedInclude(ContextDerived):
-    """Describes an individual generated include path."""
-
-    __slots__ = (
-        'path',
-    )
-
-    def __init__(self, context, path):
-        ContextDerived.__init__(self, context)
-
-        self.path = path
-
 
 class PerSourceFlag(ContextDerived):
     """Describes compiler flags specified for individual source files."""

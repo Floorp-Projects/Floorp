@@ -26,8 +26,8 @@ for var in ('ANDROID_PACKAGE_NAME',
 if CONFIG['MOZ_FOLD_LIBS']:
     DEFINES['MOZ_FOLD_LIBS'] = True
 
-GENERATED_INCLUDES += ['/build']
 LOCAL_INCLUDES += [
+    '!/build',
     '../linker',
     '/db/sqlite3/src',
     '/ipc/chromium/src',

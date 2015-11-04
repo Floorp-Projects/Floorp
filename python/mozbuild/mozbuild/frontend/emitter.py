@@ -38,7 +38,6 @@ from .data import (
     FinalTargetFiles,
     GeneratedEventWebIDLFile,
     GeneratedFile,
-    GeneratedInclude,
     GeneratedSources,
     GeneratedWebIDLFile,
     ExampleWebIDLInterface,
@@ -659,7 +658,6 @@ class TreeMetadataEmitter(LoggingMixin):
             ('GENERATED_EVENTS_WEBIDL_FILES', GeneratedEventWebIDLFile),
             ('GENERATED_WEBIDL_FILES', GeneratedWebIDLFile),
             ('IPDL_SOURCES', IPDLFile),
-            ('GENERATED_INCLUDES', GeneratedInclude),
             ('PREPROCESSED_TEST_WEBIDL_FILES', PreprocessedTestWebIDLFile),
             ('PREPROCESSED_WEBIDL_FILES', PreprocessedWebIDLFile),
             ('TEST_WEBIDL_FILES', TestWebIDLFile),
@@ -671,7 +669,8 @@ class TreeMetadataEmitter(LoggingMixin):
                 yield klass(context, name)
 
         for local_include in context.get('LOCAL_INCLUDES', []):
-            if not os.path.exists(local_include.full_path):
+            if (not isinstance(local_include, ObjDirPath) and
+                    not os.path.exists(local_include.full_path)):
                 raise SandboxValidationError('Path specified in LOCAL_INCLUDES '
                     'does not exist: %s (resolved to %s)' % (local_include,
                     local_include.full_path), context)
