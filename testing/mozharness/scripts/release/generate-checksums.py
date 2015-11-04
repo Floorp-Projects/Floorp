@@ -243,7 +243,7 @@ class ChecksumsGenerator(BaseScript, VirtualenvMixin, SigningMixin, VCSMixin):
         UploadFiles(
             self.config["upload_user"],
             self.config["upload_host"],
-            "dummy",
+            None,
             files,
             ssh_key=self.config["upload_ssh_key"],
             base_path=dirs["abs_work_dir"],
