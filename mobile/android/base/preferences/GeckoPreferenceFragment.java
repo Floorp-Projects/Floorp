@@ -82,8 +82,7 @@ public class GeckoPreferenceFragment extends PreferenceFragment {
     }
 
     /**
-     * Return the title to use for this preference fragment. This allows
-     * for us to redisplay this fragment in a different locale.
+     * Return the title to use for this preference fragment.
      *
      * We only return titles for the preference screens that are
      * launched directly, and thus might need to be redisplayed.
@@ -96,18 +95,44 @@ public class GeckoPreferenceFragment extends PreferenceFragment {
             return getString(R.string.settings_title);
         }
 
-        // We need this because we can launch straight into this category
-        // from the Data Reporting notification.
+        // We can launch this category from the Data Reporting notification.
         if (res == R.xml.preferences_privacy) {
             return getString(R.string.pref_category_privacy_short);
         }
 
-        // from the Awesomescreen with the magnifying glass.
+        // We can launch this category from the the magnifying glass in the quick search bar.
         if (res == R.xml.preferences_search) {
             return getString(R.string.pref_category_search);
         }
 
         return null;
+    }
+
+    /**
+     * Return the header id for this preference fragment. This allows
+     * us to select the correct header when launching a preference
+     * screen directly.
+     *
+     * We only return titles for the preference screens that are
+     * launched directly.
+     */
+    private int getHeader() {
+        final int res = getResource();
+        if (res == R.xml.preferences) {
+            return R.id.pref_header_general;
+        }
+
+        // We can launch this category from the Data Reporting notification.
+        if (res == R.xml.preferences_privacy) {
+            return R.id.pref_header_privacy;
+        }
+
+        // We can launch this category from the the magnifying glass in the quick search bar.
+        if (res == R.xml.preferences_search) {
+            return R.id.pref_header_search;
+        }
+
+        return -1;
     }
 
     private void updateTitle() {
@@ -122,6 +147,7 @@ public class GeckoPreferenceFragment extends PreferenceFragment {
             // In a multi-pane activity, the title is "Settings", and the action
             // bar is along the top of the screen. We don't want to change those.
             activity.showBreadCrumbs(newTitle, newTitle);
+            ((GeckoPreferences) activity).switchToHeader(getHeader());
             return;
         }
 
