@@ -28,11 +28,11 @@
 namespace mozilla {
 namespace layers {
 
-class BasicPlanarYCbCrImage : public RecyclingPlanarYCbCrImage
+class BasicPlanarYCbCrImage : public PlanarYCbCrImage
 {
 public:
   BasicPlanarYCbCrImage(const gfx::IntSize& aScaleHint, gfxImageFormat aOffscreenFormat, BufferRecycleBin *aRecycleBin)
-    : RecyclingPlanarYCbCrImage(aRecycleBin)
+    : PlanarYCbCrImage(aRecycleBin)
     , mScaleHint(aScaleHint)
     , mDelayedConversion(false)
   {
@@ -60,7 +60,7 @@ public:
 
   virtual size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const override
   {
-    size_t size = RecyclingPlanarYCbCrImage::SizeOfExcludingThis(aMallocSizeOf);
+    size_t size = PlanarYCbCrImage::SizeOfExcludingThis(aMallocSizeOf);
     size += mDecodedBuffer.SizeOfExcludingThis(aMallocSizeOf);
     return size;
   }
@@ -94,7 +94,7 @@ public:
 bool
 BasicPlanarYCbCrImage::SetData(const Data& aData)
 {
-  RecyclingPlanarYCbCrImage::SetData(aData);
+  PlanarYCbCrImage::SetData(aData);
 
   if (mDelayedConversion) {
     return false;
