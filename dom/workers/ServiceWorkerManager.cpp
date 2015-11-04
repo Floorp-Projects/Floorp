@@ -313,7 +313,7 @@ ServiceWorkerJob::Done(nsresult aStatus)
     nsAutoCString errorName;
     GetErrorName(aStatus, errorName);
 #endif
-    NS_WARNING(nsPrintfCString("ServiceWorkerJob failed with error: %s\n",
+    NS_WARNING(nsPrintfCString("ServiceWorkerJob failed with error: %s",
                                errorName.get()).get());
   }
 
