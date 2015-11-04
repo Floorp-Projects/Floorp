@@ -647,6 +647,15 @@ class TestEmitterBasic(unittest.TestCase):
 
         self.assertEqual(local_includes, expected)
 
+        local_includes = [o.path.full_path
+                          for o in objs if isinstance(o, LocalInclude)]
+        expected = [
+            mozpath.join(reader.config.topsrcdir, 'bar/baz'),
+            mozpath.join(reader.config.topsrcdir, 'foo'),
+        ]
+
+        self.assertEqual(local_includes, expected)
+
     def test_generated_includes(self):
         """Test that GENERATED_INCLUDES is emitted correctly."""
         reader = self.reader('generated_includes')

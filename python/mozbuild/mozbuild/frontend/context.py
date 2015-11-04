@@ -1169,7 +1169,7 @@ VARIABLES = {
         """List of system libraries for host programs and libraries.
         """, None),
 
-    'LOCAL_INCLUDES': (StrictOrderingOnAppendList, list,
+    'LOCAL_INCLUDES': (ContextDerivedTypedList(SourcePath, StrictOrderingOnAppendList), list,
         """Additional directories to be searched for include files by the compiler.
         """, None),
 
