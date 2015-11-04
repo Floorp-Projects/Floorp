@@ -34,15 +34,7 @@ interface nsIServiceWorkerRegistrationInfo : nsISupports
   readonly attribute DOMString waitingCacheName;
 };
 
-[scriptable, uuid(9e523e7c-ad6f-4df0-8077-c74aebbc679d)]
-interface nsIServiceWorkerManagerListener : nsISupports
-{
-  void onRegister(in nsIServiceWorkerRegistrationInfo aInfo);
-
-  void onUnregister(in nsIServiceWorkerRegistrationInfo aInfo);
-};
-
-[scriptable, builtinclass, uuid(2f61820a-1e9a-4c16-bf1c-ce182c5f5d6d)]
+[scriptable, builtinclass, uuid(10f80c8c-7bf5-479e-a8d8-12ef50c802e8)]
 interface nsIServiceWorkerManager : nsISupports
 {
   /**
@@ -153,10 +145,6 @@ interface nsIServiceWorkerManager : nsISupports
                                      [optional, array, size_is(aDataLength)] in uint8_t aDataBytes);
   void sendPushSubscriptionChangeEvent(in ACString aOriginAttributes,
                                        in ACString scope);
-
-  void addListener(in nsIServiceWorkerManagerListener aListener);
-
-  void removeListener(in nsIServiceWorkerManagerListener aListener);
 };
 
 %{ C++
