@@ -257,6 +257,9 @@ private:
     // Track buffer ranges variable that represents the presentation time ranges
     // occupied by the coded frames currently stored in the track buffer.
     media::TimeIntervals mBufferedRanges;
+    // Sanitized mBufferedRanges with a fuzz of half a sample's duration applied
+    // This buffered ranges is the basis of what is exposed to the JS.
+    media::TimeIntervals mSanitizedBufferedRanges;
     // Byte size of all samples contained in this track buffer.
     uint32_t mSizeBuffer;
     // TrackInfo of the first metadata received.
