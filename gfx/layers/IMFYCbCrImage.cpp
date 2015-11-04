@@ -15,7 +15,7 @@ namespace mozilla {
 namespace layers {
 
 IMFYCbCrImage::IMFYCbCrImage(IMFMediaBuffer* aBuffer, IMF2DBuffer* a2DBuffer)
-  : RecyclingPlanarYCbCrImage(nullptr)
+  : PlanarYCbCrImage(nullptr)
   , mBuffer(aBuffer)
   , m2DBuffer(a2DBuffer)
 {}

@@ -650,13 +650,13 @@ public:
     MAX_DIMENSION = 16384
   };
 
-  virtual ~PlanarYCbCrImage() {}
+  virtual ~PlanarYCbCrImage();
 
   /**
    * This makes a copy of the data buffers, in order to support functioning
    * in all different layer managers.
    */
-  virtual bool SetData(const Data& aData) = 0;
+  virtual bool SetData(const Data& aData);
 
   /**
    * This doesn't make a copy of the data buffers. Can be used when mBuffer is
@@ -670,7 +670,7 @@ public:
   /**
    * This allocates and returns a new buffer
    */
-  virtual uint8_t* AllocateAndGetNewBuffer(uint32_t aSize) = 0;
+  virtual uint8_t* AllocateAndGetNewBuffer(uint32_t aSize);
 
   /**
    * Ask this Image to not convert YUV to RGB during SetData, and make
@@ -693,7 +693,7 @@ public:
 
   virtual gfx::IntSize GetSize() { return mSize; }
 
-  explicit PlanarYCbCrImage();
+  explicit PlanarYCbCrImage(BufferRecycleBin *aRecycleBin);
 
   virtual SharedPlanarYCbCrImage *AsSharedPlanarYCbCrImage() { return nullptr; }
 
@@ -701,28 +701,8 @@ public:
     return aMallocSizeOf(this) + SizeOfExcludingThis(aMallocSizeOf);
   }
 
-  virtual size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const = 0;
+  virtual size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const;
 
-protected:
-  already_AddRefed<gfx::SourceSurface> GetAsSourceSurface();
-
-  void SetOffscreenFormat(gfxImageFormat aFormat) { mOffscreenFormat = aFormat; }
-  gfxImageFormat GetOffscreenFormat();
-
-  Data mData;
-  gfx::IntSize mSize;
-  gfxImageFormat mOffscreenFormat;
-  nsCountedRef<nsMainThreadSourceSurfaceRef> mSourceSurface;
-  uint32_t mBufferSize;
-};
-
-class RecyclingPlanarYCbCrImage: public PlanarYCbCrImage {
-public:
-  explicit RecyclingPlanarYCbCrImage(BufferRecycleBin *aRecycleBin) : mRecycleBin(aRecycleBin) {}
-  virtual ~RecyclingPlanarYCbCrImage() override;
-  virtual bool SetData(const Data& aData) override;
-  virtual uint8_t* AllocateAndGetNewBuffer(uint32_t aSize) override;
-  virtual size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const override;
 protected:
   /**
    * Make a copy of the YCbCr data into local storage.
@@ -736,10 +716,20 @@ protected:
    * The default implementation returns memory that can
    * be freed wit delete[]
    */
-  uint8_t* AllocateBuffer(uint32_t aSize);
+  virtual uint8_t* AllocateBuffer(uint32_t aSize);
 
-  RefPtr<BufferRecycleBin> mRecycleBin;
+  already_AddRefed<gfx::SourceSurface> GetAsSourceSurface();
+
+  void SetOffscreenFormat(gfxImageFormat aFormat) { mOffscreenFormat = aFormat; }
+  gfxImageFormat GetOffscreenFormat();
+
   nsAutoArrayPtr<uint8_t> mBuffer;
+  uint32_t mBufferSize;
+  Data mData;
+  gfx::IntSize mSize;
+  gfxImageFormat mOffscreenFormat;
+  nsCountedRef<nsMainThreadSourceSurfaceRef> mSourceSurface;
+  RefPtr<BufferRecycleBin> mRecycleBin;
 };
 
 /**

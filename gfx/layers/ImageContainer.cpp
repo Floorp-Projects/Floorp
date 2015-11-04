@@ -74,7 +74,7 @@ ImageFactory::CreateImage(ImageFormat aFormat,
   }
 #endif
   if (aFormat == ImageFormat::PLANAR_YCBCR) {
-    img = new RecyclingPlanarYCbCrImage(aRecycleBin);
+    img = new PlanarYCbCrImage(aRecycleBin);
     return img.forget();
   }
   if (aFormat == ImageFormat::CAIRO_SURFACE) {
@@ -420,14 +420,15 @@ ImageContainer::NotifyCompositeInternal(const ImageCompositeNotification& aNotif
   }
 }
 
-PlanarYCbCrImage::PlanarYCbCrImage()
+PlanarYCbCrImage::PlanarYCbCrImage(BufferRecycleBin *aRecycleBin)
   : Image(nullptr, ImageFormat::PLANAR_YCBCR)
-  , mOffscreenFormat(gfxImageFormat::Unknown)
   , mBufferSize(0)
+  , mOffscreenFormat(gfxImageFormat::Unknown)
+  , mRecycleBin(aRecycleBin)
 {
 }
 
-RecyclingPlanarYCbCrImage::~RecyclingPlanarYCbCrImage()
+PlanarYCbCrImage::~PlanarYCbCrImage()
 {
   if (mBuffer) {
     mRecycleBin->RecycleBuffer(mBuffer.forget(), mBufferSize);
@@ -435,7 +436,7 @@ RecyclingPlanarYCbCrImage::~RecyclingPlanarYCbCrImage()
 }
 
 size_t
-RecyclingPlanarYCbCrImage::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
+PlanarYCbCrImage::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
 {
   // Ignoring:
   // - mData - just wraps mBuffer
@@ -454,7 +455,7 @@ RecyclingPlanarYCbCrImage::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
 }
 
 uint8_t*
-RecyclingPlanarYCbCrImage::AllocateBuffer(uint32_t aSize)
+PlanarYCbCrImage::AllocateBuffer(uint32_t aSize)
 {
   return mRecycleBin->GetBuffer(aSize);
 }
@@ -484,7 +485,7 @@ CopyPlane(uint8_t *aDst, const uint8_t *aSrc,
 }
 
 bool
-RecyclingPlanarYCbCrImage::CopyData(const Data& aData)
+PlanarYCbCrImage::CopyData(const Data& aData)
 {
   mData = aData;
 
@@ -516,7 +517,7 @@ RecyclingPlanarYCbCrImage::CopyData(const Data& aData)
 }
 
 bool
-RecyclingPlanarYCbCrImage::SetData(const Data &aData)
+PlanarYCbCrImage::SetData(const Data &aData)
 {
   return CopyData(aData);
 }
@@ -538,7 +539,7 @@ PlanarYCbCrImage::SetDataNoCopy(const Data &aData)
 }
 
 uint8_t*
-RecyclingPlanarYCbCrImage::AllocateAndGetNewBuffer(uint32_t aSize)
+PlanarYCbCrImage::AllocateAndGetNewBuffer(uint32_t aSize)
 {
   // get new buffer
   mBuffer = AllocateBuffer(aSize);
