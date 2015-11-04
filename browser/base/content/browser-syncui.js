@@ -79,31 +79,9 @@ var gSyncUI = {
       Services.obs.addObserver(this, topic, true);
     }, this);
 
-    if (gBrowser && Weave.Notifications.notifications.length) {
-      this.initNotifications();
-    }
     this.updateUI();
   },
 
-  initNotifications: function SUI_initNotifications() {
-    const XULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
-    let notificationbox = document.createElementNS(XULNS, "notificationbox");
-    notificationbox.id = "sync-notifications";
-    notificationbox.setAttribute("flex", "1");
-
-    let bottombox = document.getElementById("browser-bottombox");
-    bottombox.insertBefore(notificationbox, bottombox.firstChild);
-
-    // Force a style flush to ensure that our binding is attached.
-    notificationbox.clientTop;
-
-    // notificationbox will listen to observers from now on.
-    Services.obs.removeObserver(this, "weave:notification:added");
-    let idx = this._obs.indexOf("weave:notification:added");
-    if (idx >= 0) {
-      this._obs.splice(idx, 1);
-    }
-  },
 
   // Returns a promise that resolves with true if Sync needs to be configured,
   // false otherwise.
@@ -240,7 +218,6 @@ var gSyncUI = {
 
   onLoginError: function SUI_onLoginError() {
     this.log.debug("onLoginError: login=${login}, sync=${sync}", Weave.Status);
-    Weave.Notifications.removeAll();
 
     // We don't show any login errors here; browser-fxaccounts shows them in
     // the hamburger menu.
@@ -249,10 +226,6 @@ var gSyncUI = {
 
   onLogout: function SUI_onLogout() {
     this.updateUI();
-  },
-
-  onStartOver: function SUI_onStartOver() {
-    this.clearError();
   },
 
   _getAppName: function () {
@@ -407,16 +380,8 @@ var gSyncUI = {
     }
   }),
 
-  clearError: function SUI_clearError(errorString) {
-    Weave.Notifications.removeAll(errorString);
-    this.updateUI();
-  },
-
   onSyncFinish: function SUI_onSyncFinish() {
     let title = this._stringBundle.GetStringFromName("error.sync.title");
-
-    // Clear out sync failures on a successful sync
-    this.clearError(title);
   },
 
   observe: function SUI_observe(subject, topic, data) {
@@ -453,16 +418,15 @@ var gSyncUI = {
       case "weave:service:setup-complete":
       case "weave:service:login:finish":
       case "weave:service:login:start":
+      case "weave:service:start-over":
         this.updateUI();
         break;
       case "weave:ui:login:error":
+      case "weave:service:login:error":
         this.onLoginError();
         break;
       case "weave:service:logout:finish":
         this.onLogout();
-        break;
-      case "weave:service:start-over":
-        this.onStartOver();
         break;
       case "weave:service:start-over:finish":
         this.updateUI();
@@ -472,9 +436,6 @@ var gSyncUI = {
         break;
       case "weave:notification:added":
         this.initNotifications();
-        break;
-      case "weave:ui:clear-error":
-        this.clearError();
         break;
     }
   },
