@@ -20,9 +20,8 @@
 #include "mozilla/mozalloc.h"           // for operator delete
 #include "nsCOMPtr.h"                   // for already_AddRefed
 #include "nsRect.h"                     // for mozilla::gfx::IntRect
+#include "nsRegionFwd.h"                // for nsIntRegion
 #include "nscore.h"                     // for nsACString
-
-class nsIntRegion;
 
 namespace mozilla {
 namespace gfx {

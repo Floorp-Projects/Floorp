@@ -10,8 +10,9 @@
 #include "mozilla/EventForwards.h"
 #include "mozilla/TimeStamp.h"
 
+#include "nsRegionFwd.h"
+
 class nsView;
-class nsIntRegion;
 class nsIPresShell;
 class nsIWidget;
 class nsIXULWindow;

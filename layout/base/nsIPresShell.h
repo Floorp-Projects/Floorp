@@ -36,6 +36,7 @@
 #include "nsCompatibility.h"
 #include "nsFrameManagerBase.h"
 #include "nsRect.h"
+#include "nsRegionFwd.h"
 #include "mozFlushType.h"
 #include "nsWeakReference.h"
 #include <stdio.h> // for FILE definition
@@ -69,7 +70,6 @@ class nsFrameManager;
 class nsILayoutHistoryState;
 class nsIReflowCallback;
 class nsIDOMNode;
-class nsIntRegion;
 class nsIStyleSheet;
 class nsCSSFrameConstructor;
 class nsISelection;

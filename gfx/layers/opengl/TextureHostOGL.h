@@ -29,9 +29,8 @@
 #include "nsCOMPtr.h"                   // for already_AddRefed
 #include "nsDebug.h"                    // for NS_WARNING
 #include "nsISupportsImpl.h"            // for TextureImage::Release, etc
+#include "nsRegionFwd.h"                // for nsIntRegion
 #include "OGLShaderProgram.h"           // for ShaderProgramType, etc
-
-class nsIntRegion;
 
 namespace mozilla {
 namespace gfx {
