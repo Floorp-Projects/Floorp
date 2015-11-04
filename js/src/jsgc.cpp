@@ -3879,7 +3879,7 @@ GCRuntime::checkForCompartmentMismatches()
         }
     }
 }
-#endif // DEBUG
+#endif
 
 static void
 RelazifyFunctions(Zone* zone, AllocKind kind)
@@ -6213,10 +6213,6 @@ class AutoScheduleZonesForGC
 MOZ_NEVER_INLINE bool
 GCRuntime::gcCycle(bool nonincrementalByAPI, SliceBudget& budget, JS::gcreason::Reason reason)
 {
-    AutoTraceLog logGC(TraceLoggerForMainThread(rt), TraceLogger_GC);
-    AutoStopVerifyingBarriers av(rt, IsShutdownGC(reason));
-    AutoScheduleZonesForGC asz(rt);
-    gcstats::AutoGCSlice agc(stats, scanZonesBeforeGC(), invocationKind, budget, reason);
     AutoNotifyGCActivity notify(*this);
 
     evictNursery(reason);
@@ -6371,13 +6367,12 @@ GCRuntime::collect(bool nonincrementalByAPI, SliceBudget budget, JS::gcreason::R
     if (!checkIfGCAllowedInCurrentState(reason))
         return;
 
+    AutoTraceLog logGC(TraceLoggerForMainThread(rt), TraceLogger_GC);
+    AutoStopVerifyingBarriers av(rt, IsShutdownGC(reason));
     AutoEnqueuePendingParseTasksAfterGC aept(*this);
+    AutoScheduleZonesForGC asz(rt);
+    gcstats::AutoGCSlice agc(stats, scanZonesBeforeGC(), invocationKind, budget, reason);
 
-    // Run one or more GC cycles. We may decide to re-enter immediately if:
-    //   * some tracee calls JS_PokeGC. (see API documentation)
-    //   * conditions changed such that an ongoing IGC is no longer safe. (see
-    //     the comment at the top of this file)
-    //   * a dead compartment was revived during the GC. (see the comment below)
     bool repeat = false;
     do {
         poked = false;
