@@ -43,7 +43,7 @@ interface nsITabParent;
 
 typedef unsigned long nsLoadFlags;
 
-[scriptable, builtinclass, uuid(539bce70-8261-462f-bbd0-40ee90b7d636)]
+[scriptable, builtinclass, uuid(41b1cf17-b37b-4a62-9df8-5f67cfecab3f)]
 interface nsIDocShell : nsIDocShellTreeItem
 {
   /**
@@ -624,6 +624,12 @@ interface nsIDocShell : nsIDocShellTreeItem
    * like image frame discarding. Docshells are active unless told otherwise.
    */
   attribute boolean isActive;
+
+  /**
+   * Sets whether a docshell is active, as above, but ensuring it does
+   * not discard its layers
+   */
+  attribute boolean isActiveAndForeground;
 
   /**
    * Puts the docshell in prerendering mode. noscript because we want only
