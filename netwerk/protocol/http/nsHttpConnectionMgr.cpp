@@ -838,19 +838,6 @@ nsHttpConnectionMgr::GetSpdyPreferredEnt(nsConnectionEntry *aOriginalEntry)
 // enumeration callbacks
 
 PLDHashOperator
-nsHttpConnectionMgr::ProcessOneTransactionCB(const nsACString &key,
-                                             nsAutoPtr<nsConnectionEntry> &ent,
-                                             void *closure)
-{
-    nsHttpConnectionMgr *self = (nsHttpConnectionMgr *) closure;
-
-    if (self->ProcessPendingQForEntry(ent, false))
-        return PL_DHASH_STOP;
-
-    return PL_DHASH_NEXT;
-}
-
-PLDHashOperator
 nsHttpConnectionMgr::ProcessAllTransactionsCB(const nsACString &key,
                                               nsAutoPtr<nsConnectionEntry> &ent,
                                               void *closure)
@@ -2480,7 +2467,11 @@ nsHttpConnectionMgr::OnMsgProcessPendingQ(int32_t, ARefBase *param)
     if (!(ent && ProcessPendingQForEntry(ent, false))) {
         // if we reach here, it means that we couldn't dispatch a transaction
         // for the specified connection info.  walk the connection table...
-        mCT.Enumerate(ProcessOneTransactionCB, this);
+        for (auto iter = mCT.Iter(); !iter.Done(); iter.Next()) {
+            if (ProcessPendingQForEntry(iter.Data(), false)) {
+                break;
+            }
+        }
     }
 }
 
