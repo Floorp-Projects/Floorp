@@ -8902,16 +8902,6 @@ nsDocument::Destroy()
 
   mRegistry = nullptr;
 
-  using mozilla::dom::workers::ServiceWorkerManager;
-  RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
-  if (swm) {
-    ErrorResult error;
-    if (swm->IsControlled(this, error)) {
-      nsContentUtils::GetImgLoaderForDocument(this)->ClearCacheForControlledDocument(this);
-    }
-    swm->MaybeStopControlling(this);
-  }
-
   // XXX We really should let cycle collection do this, but that currently still
   //     leaks (see https://bugzilla.mozilla.org/show_bug.cgi?id=406684).
   ReleaseWrapper(static_cast<nsINode*>(this));
@@ -8922,6 +8912,19 @@ nsDocument::RemovedFromDocShell()
 {
   if (mRemovedFromDocShell)
     return;
+
+  using mozilla::dom::workers::ServiceWorkerManager;
+  RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
+  if (swm) {
+    ErrorResult error;
+    if (swm->IsControlled(this, error)) {
+      imgLoader* loader = nsContentUtils::GetImgLoaderForDocument(this);
+      if (loader) {
+        loader->ClearCacheForControlledDocument(this);
+      }
+    }
+    swm->MaybeStopControlling(this);
+  }
 
   mRemovedFromDocShell = true;
   EnumerateActivityObservers(NotifyActivityChanged, nullptr);
