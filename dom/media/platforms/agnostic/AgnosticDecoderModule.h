@@ -10,7 +10,7 @@ public:
   AgnosticDecoderModule() = default;
   virtual ~AgnosticDecoderModule() = default;
 
-  bool SupportsMimeType(const nsACString& aMimeType) override;
+  bool SupportsMimeType(const nsACString& aMimeType) const override;
 
   ConversionRequired
   DecoderNeedsConversion(const TrackInfo& aConfig) const override
