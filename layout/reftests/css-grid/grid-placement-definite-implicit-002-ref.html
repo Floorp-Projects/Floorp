@@ -27,15 +27,15 @@ span {
   box-sizing: border-box;
 }
 
-.XeN   { left: 100px;   }
-.XsN   { width: 80px;   }            .XsN ~ span { top:20px; left:60px; }
+.XeN   { left: 20px; width: 80px; }
+.XsN   { width: 80px; }              .XsN ~ span { top:20px; left:60px; }
 .NeX   { left: 20px; width: 80px; }
-.NsX   { left: 20px;  }
-.XeA   { left: 100px; }
+.NsX   { width: 80px; }              .NsX  ~ span { left: 60px; top: 20px; }
+.XeA   { width: 100px; }             .XeA  ~ span { top: 20px; }
 .XsA   { width: 60px; }              .XsA  ~ span { left: 60px; }
 .XsA2  { width: 80px; }              .XsA2 ~ span { left: 60px; top: 20px; }
 .XsA3  { width: 120px; }             .XsA3 ~ span { left: 60px; top: 20px; }
-.AsX   { }                           .AsX  ~ span { top: 20px;  }
+.AsX   { width: 60px;}               .AsX  ~ span { left: 60px; }
 .xsN   { }                           .xsN  ~ span { left: 20px; }
 .x2sN  { width: 40px; }              .x2sN ~ span { left: 40px; }
 .xsN2  { width: 40px; }              .xsN2 ~ span { left: 20px; top: 20px; }
@@ -44,18 +44,18 @@ span {
 .aXe   { left: 20px; width: 60px; }
 .xXe   { width: 100px; }             .xXe  ~ span { left: 20px; top: 20px; }
 
-.AXe   { width: 80px;   }            .AXe  ~ span { top: 20px; }
+.AXe   { width: 80px; }              .AXe  ~ span { top: 20px; }
 .A2Xe  { left: 20px; width: 60px; }
 .XXe   { left: 60px; }
 .XX3e  { left: 60px; width: 40px; }
-.XbXe  { width: 100px;   }           .XbXe ~ span  { top: 20px; left: 40px; }
+.XbXe  { width: 100px; }             .XbXe ~ span  { top: 20px; left: 40px; }
 .XX0b  { }                           .XX0b ~ span  { left: 60px; }
 .XX1b  { }                           .XX1b ~ span  { left: 60px; }
 .XX2b  { width: 40px; }              .XX2b ~ span  { left: 60px; }
 .XbN1  { width: 60px; }              .XbN1 ~ span  { left: 60px; }
 .XbN2  { width: 80px; }              .XbN2 ~ span  { top: 20px; left: 60px; }
-.Xbb   { }                           .Xbb  ~ span  { left: 60px; }
-.Xee   { left: 100px; }
+.Xbb   { }                           .Xbb  ~ span  { left: 80px; }
+.Xee   { left: 60px; width:40px; }
 .nX2s  { width: 40px; }              .nX2s ~ span  { left: 80px; }
 .nXs   { width: 40px; }              .nXs  ~ span  { left: 60px; }
 .nXe   { left: 20px; width: 40px; }
@@ -69,11 +69,11 @@ span {
 .Xea2  { left: 60px; width: 40px; }
 .Xea3  { left: 60px; width: 60px; }
 .Xsa   { }                           .Xsa   ~ span  { left: 20px; }
-.Xsa2  { width: 40px;   }            .Xsa2  ~ span  { left: 20px; top: 20px;  }
-.Xsa4  { width: 100px;  }            .Xsa4  ~ span  { left: 20px; top: 20px;  }
+.Xsa2  { width: 40px;   }            .Xsa2  ~ span  { left: 20px; top: 20px; }
+.Xsa4  { width: 100px;  }            .Xsa4  ~ span  { left: 20px; top: 20px; }
 .Xs2a  { width: 40px;   }            .Xs2a  ~ span  { left: 40px; }
-.Xs2a2 { width: 60px;   }            .Xs2a2 ~ span  { left: 40px; top: 20px;}
-.Xs2a4 { width: 120px;  }            .Xs2a4 ~ span  { left: 40px; top: 20px;  }
+.Xs2a2 { width: 60px;   }            .Xs2a2 ~ span  { left: 40px; top: 20px; }
+.Xs2a4 { width: 120px;  }            .Xs2a4 ~ span  { left: 40px; top: 20px; }
 .Xs3a  { width: 60px;   }            .Xs3a  ~ span  { left: 60px; }
 .Xs3a2 { width: 80px;   }            .Xs3a2 ~ span  { left: 60px; top: 20px; }
 .Xs3a4 { width: 140px;  }            .Xs3a4 ~ span  { left: 60px; top: 20px; }
@@ -88,8 +88,8 @@ span {
 .Aa    { }                           .Aa    ~ span  { top: 20px; }
 .A2a   { left: 20px; width: 40px; }
 .Aa3   { width: 80px;   }            .Aa3   ~ span  { top: 20px; }
-.AXs   { }                           .AXs   ~ span  { top: 20px; }
-.A2Xs  { left: 20px; }
+.AXs   { width: 40px; }              .AXs   ~ span  { left:40px; }
+.A2Xs  { width: 60px; }              .A2Xs  ~ span  { left: 40px; top:20px; }
 ._Xs   { }                           ._Xs   ~ span  { left: 60px; }
 ._Xe   { left: 60px; }
 ._xe   { }                           ._xe   ~ span  { top: 20px; }

@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 @import url(variables.css);
+@import url(toolbars.css);
 
 body {
   margin: 0;
@@ -372,6 +373,3 @@ div.CodeMirror span.eval-text {
   box-shadow: 0 0 4px rgba(128, 128, 128, .5);
   background-color: var(--theme-sidebar-background);
 }
-
-
-%include toolbars.inc.css

@@ -230,6 +230,12 @@ function WebappsActor(aConnection) {
 WebappsActor.prototype = {
   actorPrefix: "webapps",
 
+  // For now, launch and close requests are only supported on B2G products
+  // like devices, mulet/simulators, graphene and b2gdroid.
+  // We set that attribute on the prototype in order to allow test
+  // to enable this feature.
+  supportsLaunch: require("devtools/shared/system").constants.MOZ_B2G,
+
   disconnect: function () {
     try {
       this.unwatchApps();
@@ -873,9 +879,7 @@ WebappsActor.prototype = {
 
     let deferred = promise.defer();
 
-    if (Services.appinfo.ID &&
-        Services.appinfo.ID != "{3c2e2abc-06d4-11e1-ac3b-374f68613e61}" &&
-        Services.appinfo.ID != "{d1bfe7d9-c01e-4237-998b-7b5f960a4314}") {
+    if (!this.supportsLaunch) {
       return { error: "notSupported",
                message: "Not B2G. Can't launch app." };
     }

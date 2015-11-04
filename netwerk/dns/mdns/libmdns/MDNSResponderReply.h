@@ -48,7 +48,7 @@ private:
   nsCString mServiceName;
   nsCString mRegType;
   nsCString mReplyDomain;
-  BrowseOperator* mContext;
+  RefPtr<BrowseOperator> mContext;
 };
 
 class RegisterReplyRunnable final : public nsRunnable
@@ -79,7 +79,7 @@ private:
   nsCString mName;
   nsCString mRegType;
   nsCString mDomain;
-  RegisterOperator* mContext;
+  RefPtr<RegisterOperator> mContext;
 };
 
 class ResolveReplyRunnable final : public nsRunnable

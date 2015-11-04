@@ -7,6 +7,7 @@
 #include "nsIContentPolicyBase.idl"
 
 interface nsIChannel;
+interface nsIConsoleReportCollector;
 interface nsIOutputStream;
 interface nsIURI;
 
@@ -28,7 +29,7 @@ class ChannelInfo;
  * which do not implement nsIChannel.
  */
 
-[scriptable, uuid(ea78e439-cc42-4b2d-a42b-85ab55a149d1)]
+[scriptable, uuid(231bb567-90e1-4973-9728-7dab93ab29a8)]
 interface nsIInterceptedChannel : nsISupports
 {
     /**
@@ -87,16 +88,17 @@ interface nsIInterceptedChannel : nsISupports
     [noscript]
     readonly attribute nsContentPolicyType internalContentPolicyType;
 
+    [noscript]
+    readonly attribute nsIConsoleReportCollector consoleReportCollector;
+
 %{C++
-    // Allow access to the inner channel as a ConsoleReportCollector off
-    // the main thread.  Pure C++ method here to avoid requiring an
-    // AddRef() during QI.  Callers should not save the returned pointer.
-    // May return nullptr.
-    //
-    // Note: Only safe to use OMT prior to resetInterception(),
-    //       finishSynthesizedResponse(), and cancel().
-    virtual nsIConsoleReportCollector*
-    GetConsoleReportCollector() const = 0;
+    already_AddRefed<nsIConsoleReportCollector>
+    GetConsoleReportCollector()
+    {
+      nsCOMPtr<nsIConsoleReportCollector> reporter;
+      GetConsoleReportCollector(getter_AddRefs(reporter));
+      return reporter.forget();
+    }
 %}
 };
 
