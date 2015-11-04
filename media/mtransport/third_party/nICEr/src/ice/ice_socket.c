@@ -46,7 +46,7 @@ static void nr_ice_socket_readable_cb(NR_SOCKET s, int how, void *cb_arg)
     int r;
     nr_ice_stun_ctx *sc1,*sc2;
     nr_ice_socket *sock=cb_arg;
-    UCHAR buf[8192];
+    UCHAR buf[9216];
     char string[256];
     nr_transport_addr addr;
     int len;
