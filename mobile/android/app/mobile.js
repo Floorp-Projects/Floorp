@@ -935,6 +935,11 @@ pref("consoleservice.logcat", true);
 // Enable Cardboard VR on mobile, assuming VR at all is enabled
 pref("dom.vr.cardboard.enabled", true);
 
+#ifndef RELEASE_BUILD
+// Enable VR on mobile, making it enable by default.
+pref("dom.vr.enabled", true);
+#endif
+
 pref("browser.tabs.showAudioPlayingIcon", true);
 
 // Enable service workers and fetch interception on non-release Fennec
