@@ -2124,7 +2124,6 @@ BytecodeEmitter::checkSideEffects(ParseNode* pn, bool* answer)
         *answer = true;
         return true;
 
-      case PNK_DEFAULT:
       case PNK_COLON:
       case PNK_CASE:
         MOZ_ASSERT(pn->isArity(PN_BINARY));
@@ -3043,7 +3042,7 @@ BytecodeEmitter::emitSwitch(ParseNode* pn)
     ParseNode* cases = pn->pn_right;
     MOZ_ASSERT(cases->isKind(PNK_LEXICALSCOPE) || cases->isKind(PNK_STATEMENTLIST));
 
-    /* Push the discriminant. */
+    // Emit code for the discriminant.
     if (!emitTree(pn->pn_left))
         return false;
 
@@ -3055,7 +3054,8 @@ BytecodeEmitter::emitSwitch(ParseNode* pn)
 
         stmtInfo.type = StmtType::SWITCH;
         stmtInfo.update = top = offset();
-        /* Advance |cases| to refer to the switch case list. */
+
+        // Advance |cases| to refer to the switch case list.
         cases = cases->expr();
     } else {
         MOZ_ASSERT(cases->isKind(PNK_STATEMENTLIST));
@@ -3063,21 +3063,22 @@ BytecodeEmitter::emitSwitch(ParseNode* pn)
         pushStatement(&stmtInfo, StmtType::SWITCH, top);
     }
 
-    /* Switch bytecodes run from here till end of final case. */
+    // Switch bytecodes run from here till end of final case.
     uint32_t caseCount = cases->pn_count;
     if (caseCount > JS_BIT(16)) {
         parser->tokenStream.reportError(JSMSG_TOO_MANY_CASES);
         return false;
     }
 
-    /* Try for most optimal, fall back if not dense ints. */
+    // Try for most optimal, fall back if not dense ints.
     JSOp switchOp = JSOP_TABLESWITCH;
     uint32_t tableLength = 0;
     int32_t low, high;
     bool hasDefault = false;
+    CaseClause* firstCase = cases->pn_head ? &cases->pn_head->as<CaseClause>() : nullptr;
     if (caseCount == 0 ||
-        (caseCount == 1 &&
-         (hasDefault = cases->pn_head->isKind(PNK_DEFAULT)))) {
+        (caseCount == 1 && (hasDefault = firstCase->isDefault())))
+    {
         caseCount = 0;
         low = 0;
         high = -1;
@@ -3088,20 +3089,19 @@ BytecodeEmitter::emitSwitch(ParseNode* pn)
         low  = JSVAL_INT_MAX;
         high = JSVAL_INT_MIN;
 
-        for (ParseNode* caseNode = cases->pn_head; caseNode; caseNode = caseNode->pn_next) {
-            if (caseNode->isKind(PNK_DEFAULT)) {
+        for (CaseClause* caseNode = firstCase; caseNode; caseNode = caseNode->next()) {
+            if (caseNode->isDefault()) {
                 hasDefault = true;
-                caseCount--;    /* one of the "cases" was the default */
+                caseCount--;  // one of the "cases" was the default
                 continue;
             }
 
-            MOZ_ASSERT(caseNode->isKind(PNK_CASE));
             if (switchOp == JSOP_CONDSWITCH)
                 continue;
 
             MOZ_ASSERT(switchOp == JSOP_TABLESWITCH);
 
-            ParseNode* caseValue = caseNode->pn_left;
+            ParseNode* caseValue = caseNode->caseExpression();
 
             if (caseValue->getKind() != PNK_NUMBER) {
                 switchOp = JSOP_CONDSWITCH;
@@ -3123,11 +3123,9 @@ BytecodeEmitter::emitSwitch(ParseNode* pn)
             if (i > high)
                 high = i;
 
-            /*
-             * Check for duplicates, which require a JSOP_CONDSWITCH.
-             * We bias i by 65536 if it's negative, and hope that's a rare
-             * case (because it requires a malloc'd bitmap).
-             */
+            // Check for duplicates, which require a JSOP_CONDSWITCH.
+            // We bias i by 65536 if it's negative, and hope that's a rare
+            // case (because it requires a malloc'd bitmap).
             if (i < 0)
                 i += JS_BIT(16);
             if (i >= intmapBitLength) {
@@ -3143,10 +3141,8 @@ BytecodeEmitter::emitSwitch(ParseNode* pn)
             JS_SET_BIT(intmap, i);
         }
 
-        /*
-         * Compute table length and select condswitch instead if overlarge or
-         * more than half-sparse.
-         */
+        // Compute table length and select condswitch instead if overlarge or
+        // more than half-sparse.
         if (switchOp == JSOP_TABLESWITCH) {
             tableLength = uint32_t(high - low + 1);
             if (tableLength >= JS_BIT(16) || tableLength > 2 * caseCount)
@@ -3154,31 +3150,29 @@ BytecodeEmitter::emitSwitch(ParseNode* pn)
         }
     }
 
-    /*
-     * The note has one or two offsets: first tells total switch code length;
-     * second (if condswitch) tells offset to first JSOP_CASE.
-     */
+    // The note has one or two offsets: first tells total switch code length;
+    // second (if condswitch) tells offset to first JSOP_CASE.
     unsigned noteIndex;
     size_t switchSize;
     if (switchOp == JSOP_CONDSWITCH) {
-        /* 0 bytes of immediate for unoptimized switch. */
+        // 0 bytes of immediate for unoptimized switch.
         switchSize = 0;
         if (!newSrcNote3(SRC_CONDSWITCH, 0, 0, &noteIndex))
             return false;
     } else {
         MOZ_ASSERT(switchOp == JSOP_TABLESWITCH);
 
-        /* 3 offsets (len, low, high) before the table, 1 per entry. */
-        switchSize = (size_t)(JUMP_OFFSET_LEN * (3 + tableLength));
+        // 3 offsets (len, low, high) before the table, 1 per entry.
+        switchSize = size_t(JUMP_OFFSET_LEN * (3 + tableLength));
         if (!newSrcNote2(SRC_TABLESWITCH, 0, &noteIndex))
             return false;
     }
 
-    /* Emit switchOp followed by switchSize bytes of jump or lookup table. */
+    // Emit switchOp followed by switchSize bytes of jump or lookup table.
     if (!emitN(switchOp, switchSize))
         return false;
 
-    Vector<ParseNode*, 32, SystemAllocPolicy> table;
+    Vector<CaseClause*, 32, SystemAllocPolicy> table;
 
     ptrdiff_t condSwitchDefaultOff = -1;
     if (switchOp == JSOP_CONDSWITCH) {
@@ -3186,31 +3180,38 @@ BytecodeEmitter::emitSwitch(ParseNode* pn)
         bool beforeCases = true;
         ptrdiff_t prevCaseOffset;
 
-        /* Emit code for evaluating cases and jumping to case statements. */
-        for (ParseNode* caseNode = cases->pn_head; caseNode; caseNode = caseNode->pn_next) {
-            ParseNode* caseValue = caseNode->pn_left;
-            // If the expression is a literal, suppress line number
-            // emission so that debugging works more naturally.
-            if (caseValue &&
-                !emitTree(caseValue, caseValue->isLiteral() ? SUPPRESS_LINENOTE :
-                          EMIT_LINENOTE))
-                return false;
+        // Emit code for evaluating cases and jumping to case statements.
+        for (CaseClause* caseNode = firstCase; caseNode; caseNode = caseNode->next()) {
+            ParseNode* caseValue = caseNode->caseExpression();
+
+            // If the expression is a literal, suppress line number emission so
+            // that debugging works more naturally.
+            if (caseValue) {
+                if (!emitTree(caseValue,
+                              caseValue->isLiteral() ? SUPPRESS_LINENOTE : EMIT_LINENOTE))
+                {
+                    return false;
+                }
+            }
+
             if (!beforeCases) {
-                /* prevCaseOffset is the previous JSOP_CASE's bytecode offset. */
+                // prevCaseOffset is the previous JSOP_CASE's bytecode offset.
                 if (!setSrcNoteOffset(caseNoteIndex, 0, offset() - prevCaseOffset))
                     return false;
             }
             if (!caseValue) {
-                MOZ_ASSERT(caseNode->isKind(PNK_DEFAULT));
+                // This is the default clause.
                 continue;
             }
+
             if (!newSrcNote2(SRC_NEXTCASE, 0, &caseNoteIndex))
                 return false;
             if (!emitJump(JSOP_CASE, 0, &prevCaseOffset))
                 return false;
-            caseNode->pn_offset = prevCaseOffset;
+            caseNode->setOffset(prevCaseOffset);
+
             if (beforeCases) {
-                /* Switch note's second offset is to first JSOP_CASE. */
+                // Switch note's second offset is to first JSOP_CASE.
                 unsigned noteCount = notes().length();
                 if (!setSrcNoteOffset(noteIndex, 1, prevCaseOffset - top))
                     return false;
@@ -3221,12 +3222,10 @@ BytecodeEmitter::emitSwitch(ParseNode* pn)
             }
         }
 
-        /*
-         * If we didn't have an explicit default (which could fall in between
-         * cases, preventing us from fusing this setSrcNoteOffset with the call
-         * in the loop above), link the last case to the implicit default for
-         * the benefit of IonBuilder.
-         */
+        // If we didn't have an explicit default (which could fall in between
+        // cases, preventing us from fusing this setSrcNoteOffset with the call
+        // in the loop above), link the last case to the implicit default for
+        // the benefit of IonBuilder.
         if (!hasDefault &&
             !beforeCases &&
             !setSrcNoteOffset(caseNoteIndex, 0, offset() - prevCaseOffset))
@@ -3234,14 +3233,14 @@ BytecodeEmitter::emitSwitch(ParseNode* pn)
             return false;
         }
 
-        /* Emit default even if no explicit default statement. */
+        // Emit default even if no explicit default statement.
         if (!emitJump(JSOP_DEFAULT, 0, &condSwitchDefaultOff))
             return false;
     } else {
         MOZ_ASSERT(switchOp == JSOP_TABLESWITCH);
         jsbytecode* pc = code(top + JUMP_OFFSET_LEN);
 
-        /* Fill in switch bounds, which we know fit in 16-bit offsets. */
+        // Fill in switch bounds, which we know fit in 16-bit offsets.
         SET_JUMP_OFFSET(pc, low);
         pc += JUMP_OFFSET_LEN;
         SET_JUMP_OFFSET(pc, high);
@@ -3251,55 +3250,49 @@ BytecodeEmitter::emitSwitch(ParseNode* pn)
             if (!table.growBy(tableLength))
                 return false;
 
-            for (ParseNode* caseNode = cases->pn_head; caseNode; caseNode = caseNode->pn_next) {
-                if (caseNode->isKind(PNK_DEFAULT))
-                    continue;
+            for (CaseClause* caseNode = firstCase; caseNode; caseNode = caseNode->next()) {
+                if (ParseNode* caseValue = caseNode->caseExpression()) {
+                    MOZ_ASSERT(caseValue->isKind(PNK_NUMBER));
 
-                MOZ_ASSERT(caseNode->isKind(PNK_CASE));
+                    int32_t i = int32_t(caseValue->pn_dval);
+                    MOZ_ASSERT(double(i) == caseValue->pn_dval);
 
-                ParseNode* caseValue = caseNode->pn_left;
-                MOZ_ASSERT(caseValue->isKind(PNK_NUMBER));
-
-                int32_t i = int32_t(caseValue->pn_dval);
-                MOZ_ASSERT(double(i) == caseValue->pn_dval);
-
-                i -= low;
-                MOZ_ASSERT(uint32_t(i) < tableLength);
-                MOZ_ASSERT(!table[i]);
-                table[i] = caseNode;
+                    i -= low;
+                    MOZ_ASSERT(uint32_t(i) < tableLength);
+                    MOZ_ASSERT(!table[i]);
+                    table[i] = caseNode;
+                }
             }
         }
     }
 
     ptrdiff_t defaultOffset = -1;
 
-    /* Emit code for each case's statements. */
-    for (ParseNode* caseNode = cases->pn_head; caseNode; caseNode = caseNode->pn_next) {
-        if (switchOp == JSOP_CONDSWITCH && !caseNode->isKind(PNK_DEFAULT))
-            setJumpOffsetAt(caseNode->pn_offset);
+    // Emit code for each case's statements.
+    for (CaseClause* caseNode = firstCase; caseNode; caseNode = caseNode->next()) {
+        if (switchOp == JSOP_CONDSWITCH && !caseNode->isDefault())
+            setJumpOffsetAt(caseNode->offset());
 
         // If this is emitted as a TABLESWITCH, we'll need to know this case's
         // offset later when emitting the table. Store it in the node's
         // pn_offset (giving the field a different meaning vs. how we used it
         // on the immediately preceding line of code).
         ptrdiff_t here = offset();
-        caseNode->pn_offset = here;
-        if (caseNode->isKind(PNK_DEFAULT))
+        caseNode->setOffset(here);
+        if (caseNode->isDefault())
             defaultOffset = here - top;
 
-        if (!emitTree(caseNode->pn_right))
+        if (!emitTree(caseNode->statementList()))
             return false;
     }
 
     if (!hasDefault) {
-        /* If no default case, offset for default is to end of switch. */
+        // If no default case, offset for default is to end of switch.
         defaultOffset = offset() - top;
     }
-
-    /* We better have set "defaultOffset" by now. */
     MOZ_ASSERT(defaultOffset != -1);
 
-    /* Set the default offset (to end of switch if no default). */
+    // Set the default offset (to end of switch if no default).
     jsbytecode* pc;
     if (switchOp == JSOP_CONDSWITCH) {
         pc = nullptr;
@@ -3310,18 +3303,18 @@ BytecodeEmitter::emitSwitch(ParseNode* pn)
         pc += JUMP_OFFSET_LEN;
     }
 
-    /* Set the SRC_SWITCH note's offset operand to tell end of switch. */
+    // Set the SRC_SWITCH note's offset operand to tell end of switch.
     if (!setSrcNoteOffset(noteIndex, 0, offset() - top))
         return false;
 
     if (switchOp == JSOP_TABLESWITCH) {
-        /* Skip over the already-initialized switch bounds. */
+        // Skip over the already-initialized switch bounds.
         pc += 2 * JUMP_OFFSET_LEN;
 
-        /* Fill in the jump table, if there is one. */
+        // Fill in the jump table, if there is one.
         for (uint32_t i = 0; i < tableLength; i++) {
-            ParseNode* caseNode = table[i];
-            ptrdiff_t off = caseNode ? caseNode->pn_offset - top : 0;
+            CaseClause* caseNode = table[i];
+            ptrdiff_t off = caseNode ? caseNode->offset() - top : 0;
             SET_JUMP_OFFSET(pc, off);
             pc += JUMP_OFFSET_LEN;
         }
@@ -5788,7 +5781,7 @@ bool
 BytecodeEmitter::emitFor(ParseNode* pn)
 {
     if (pn->pn_left->isKind(PNK_FORHEAD))
-        return emitCStyleFor(pn, top);
+        return emitCStyleFor(pn);
 
     if (!updateLineNumberNotes(pn->pn_pos.begin))
         return false;
