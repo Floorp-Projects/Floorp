@@ -60,7 +60,6 @@ TimelineConsumers::Get()
     if (sInstance->Init()) {
       ClearOnShutdown(&sInstance);
     } else {
-      NS_WARNING("TimelineConsumers could not be initialized.");
       sInstance->RemoveObservers();
       sInstance = nullptr;
     }
