@@ -19,8 +19,8 @@ UNIFIED_SOURCES += [
     'nsPKIModule.cpp',
 ]
 
-GENERATED_INCLUDES += [
-    '/dist/public/nss',
+LOCAL_INCLUDES += [
+    '!/dist/public/nss',
 ]
 
 FINAL_LIBRARY = 'xul'

@@ -12,8 +12,8 @@ SOURCES += [
     'webapprt.cpp',
 ]
 
-GENERATED_INCLUDES += ['/build']
 LOCAL_INCLUDES += [
+    '!/build',
     '/toolkit/xre',
     '/xpcom/base',
     '/xpcom/build',

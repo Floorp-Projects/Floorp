@@ -18,7 +18,6 @@ from mozbuild.frontend.data import (
     DirectoryTraversal,
     Exports,
     GeneratedFile,
-    GeneratedInclude,
     GeneratedSources,
     HostDefines,
     HostSources,
@@ -661,10 +660,19 @@ class TestEmitterBasic(unittest.TestCase):
         reader = self.reader('generated_includes')
         objs = self.read_topsrcdir(reader)
 
-        generated_includes = [o.path for o in objs if isinstance(o, GeneratedInclude)]
+        generated_includes = [o.path for o in objs if isinstance(o, LocalInclude)]
         expected = [
-            '/bar/baz',
-            'foo',
+            '!/bar/baz',
+            '!foo',
+        ]
+
+        self.assertEqual(generated_includes, expected)
+
+        generated_includes = [o.path.full_path
+                              for o in objs if isinstance(o, LocalInclude)]
+        expected = [
+            mozpath.join(reader.config.topobjdir, 'bar/baz'),
+            mozpath.join(reader.config.topobjdir, 'foo'),
         ]
 
         self.assertEqual(generated_includes, expected)

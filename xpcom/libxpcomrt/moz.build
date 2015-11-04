@@ -119,8 +119,8 @@ if CONFIG['INTEL_ARCHITECTURE']:
     sse_string_path = '/xpcom/string/nsUTF8UtilsSSE2.cpp'
     SOURCES[sse_string_path].flags += CONFIG['SSE2_FLAGS']
 
-GENERATED_INCLUDES += ['..']
 LOCAL_INCLUDES = [
+    '!..',
     '../base',
     '../build',
     '../components',

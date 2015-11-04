@@ -73,6 +73,6 @@ if CONFIG['MOZ_RTSP']:
         '/netwerk/protocol/rtsp',
     ]
 
-GENERATED_INCLUDES += [
-    '/netwerk/dns',
+LOCAL_INCLUDES += [
+    '!/netwerk/dns',
 ]
