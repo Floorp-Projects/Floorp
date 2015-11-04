@@ -16,7 +16,8 @@ const WORKING = "signed_bootstrap_1.xpi";
 const ID = "test@tests.mozilla.org";
 
 Components.utils.import("resource://testing-common/httpd.js");
-var gServer = createHttpServer(4444);
+var gServer = new HttpServer();
+gServer.start(4444);
 
 // Creates an add-on with a broken signature by changing an existing file
 function createBrokenAddonModify(file) {
@@ -136,8 +137,7 @@ function* test_update_broken(file, expectedError) {
   serveUpdateRDF(file.leafName);
 
   let addon = yield promiseAddonByID(ID);
-  let update = yield promiseFindAddonUpdates(addon);
-  let install = update.updateAvailable;
+  let install = yield promiseFindAddonUpdates(addon);
   yield promiseCompleteAllInstalls([install]);
 
   do_check_eq(install.state, AddonManager.STATE_DOWNLOAD_FAILED);
@@ -158,8 +158,7 @@ function* test_update_working(file, expectedSignedState) {
   serveUpdateRDF(file.leafName);
 
   let addon = yield promiseAddonByID(ID);
-  let update = yield promiseFindAddonUpdates(addon);
-  let install = update.updateAvailable;
+  let install = yield promiseFindAddonUpdates(addon);
   yield promiseCompleteAllInstalls([install]);
 
   do_check_eq(install.state, AddonManager.STATE_INSTALLED);

@@ -42,8 +42,6 @@ const PREF_MATCH_OS_LOCALE            = "intl.locale.matchOS";
 const PREF_SELECTED_LOCALE            = "general.useragent.locale";
 const UNKNOWN_XPCOM_ABI               = "unknownABI";
 
-const PREF_MIN_WEBEXT_PLATFORM_VERSION = "extensions.webExtensionsMinPlatformVersion";
-
 const UPDATE_REQUEST_VERSION          = 2;
 const CATEGORY_UPDATE_PARAMS          = "extension-update-params";
 
@@ -665,7 +663,6 @@ var gCheckUpdateSecurity = gCheckUpdateSecurityDefault;
 var gUpdateEnabled = true;
 var gAutoUpdateDefault = true;
 var gHotfixID = null;
-var gWebExtensionsMinPlatformVersion = null;
 var gShutdownBarrier = null;
 var gRepoShutdownState = "";
 var gShutdownInProgress = false;
@@ -949,11 +946,6 @@ var AddonManagerInternal = {
         gHotfixID = Services.prefs.getCharPref(PREF_EM_HOTFIX_ID);
       } catch (e) {}
       Services.prefs.addObserver(PREF_EM_HOTFIX_ID, this, false);
-
-      try {
-        gWebExtensionsMinPlatformVersion = Services.prefs.getCharPref(PREF_MIN_WEBEXT_PLATFORM_VERSION);
-      } catch (e) {}
-      Services.prefs.addObserver(PREF_MIN_WEBEXT_PLATFORM_VERSION, this, false);
 
       let defaultProvidersEnabled = true;
       try {
@@ -1383,10 +1375,6 @@ var AddonManagerInternal = {
         } catch(e) {
           gHotfixID = null;
         }
-        break;
-      }
-      case PREF_MIN_WEBEXT_PLATFORM_VERSION: {
-        gWebExtensionsMinPlatformVersion = Services.prefs.getCharPref(PREF_MIN_WEBEXT_PLATFORM_VERSION);
         break;
       }
     }
@@ -2905,10 +2893,6 @@ this.AddonManagerPrivate = {
     if ("onUpdateFinished" in listener) {
       safeCall(listener.onUpdateFinished.bind(listener), addon);
     }
-  },
-
-  get webExtensionsMinPlatformVersion() {
-    return gWebExtensionsMinPlatformVersion;
   },
 };
 
