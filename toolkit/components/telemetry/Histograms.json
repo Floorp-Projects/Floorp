@@ -4078,12 +4078,12 @@
     "n_buckets": 30,
     "description": "Average paint duration during any tab open/close animation (excluding tabstrip scroll) *** No longer needed (bug 1156565). Delete histogram and accumulation code! ***"
   },
-  "FX_REFRESH_DRIVER_FRAME_DELAY_MS": {
+  "FX_REFRESH_DRIVER_CHROME_FRAME_DELAY_MS": {
     "expires_in_version": "default",
     "kind": "exponential",
     "high": "10000",
     "n_buckets": 50,
-    "description": "Delay in ms between the target and the actual handling time of the frame at refresh driver"
+    "description": "Delay in ms between the target and the actual handling time of the frame at refresh driver in chrome process."
   },
   "FX_TAB_SWITCH_UPDATE_MS": {
     "alert_emails": ["perf-telemetry-alerts@mozilla.com"],
