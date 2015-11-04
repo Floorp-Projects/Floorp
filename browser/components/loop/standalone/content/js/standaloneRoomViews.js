@@ -122,7 +122,7 @@ loop.standaloneRoomViews = (function(mozL10n) {
               
             ), 
             React.createElement(ToSView, {dispatcher: this.props.dispatcher}), 
-            React.createElement("p", {className: "mozilla-logo"})
+            React.createElement("img", {className: "mozilla-logo", src: "img/mozilla-logo.svg#logo"})
           )
         )
       );
@@ -654,7 +654,7 @@ loop.standaloneRoomViews = (function(mozL10n) {
         React.createElement("div", {className: "standalone-overlay-wrapper"}, 
           React.createElement("div", {className: "hello-logo"}), 
           React.createElement(GeneralSupportURL, {dispatcher: this.props.dispatcher}), 
-          React.createElement("div", {className: "standalone-moz-logo"})
+          React.createElement("img", {className: "standalone-moz-logo", src: "img/mozilla-logo.svg#logo-white"})
         )
       );
     }

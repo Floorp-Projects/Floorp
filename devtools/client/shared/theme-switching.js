@@ -107,6 +107,17 @@
   const {require} = Components.utils.import("resource://devtools/shared/Loader.jsm", {});
   const StylesheetUtils = require("sdk/stylesheet/utils");
 
+  let os;
+  let platform = navigator.platform;
+  if (platform.startsWith("Win")) {
+    os = "win";
+  } else if (platform.startsWith("Mac")) {
+    os = "mac";
+  } else {
+    os = "linux";
+  }
+  documentElement.setAttribute("platform", os);
+
   if (documentElement.hasAttribute("force-theme")) {
     switchTheme(documentElement.getAttribute("force-theme"));
   } else {

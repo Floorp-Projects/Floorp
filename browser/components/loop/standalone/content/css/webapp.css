@@ -40,10 +40,8 @@ body,
 }
 
 .mozilla-logo {
-  background: url("../img/mozilla-logo.svg#logo") no-repeat;
-  background-size: contain;
+  height: 26px;
   width: 100px;
-  height: 30px;
 }
 
 /* Standalone Overlay wrapper */
@@ -95,9 +93,6 @@ html[dir="rtl"] .standalone-overlay-wrapper > .general-support-url {
 .standalone-overlay-wrapper > .standalone-moz-logo {
   width: 50px;
   height: 13px;
-  background-size: contain;
-  background-image: url("../img/mozilla-logo.svg#logo-white");
-  background-repeat: no-repeat;
   position: absolute;
   bottom: 0;
   right: 0;

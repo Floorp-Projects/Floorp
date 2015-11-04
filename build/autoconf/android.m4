@@ -188,8 +188,8 @@ case "$target" in
 esac
 
 ])
-    
-AC_DEFUN([MOZ_ANDROID_STLPORT],
+
+AC_DEFUN([MOZ_ANDROID_CPU_ARCH],
 [
 
 if test "$OS_TARGET" = "Android" -a -z "$gonkdir"; then
@@ -209,7 +209,13 @@ if test "$OS_TARGET" = "Android" -a -z "$gonkdir"; then
     esac
 
     AC_SUBST(ANDROID_CPU_ARCH)
+fi
+])
 
+AC_DEFUN([MOZ_ANDROID_STLPORT],
+[
+
+if test "$OS_TARGET" = "Android" -a -z "$gonkdir"; then
     cpu_arch_dir="$ANDROID_CPU_ARCH"
     if test "$MOZ_THUMB2" = 1; then
         cpu_arch_dir="$cpu_arch_dir/thumb"
