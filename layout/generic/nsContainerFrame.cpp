@@ -42,8 +42,6 @@ using namespace mozilla;
 using namespace mozilla::dom;
 using namespace mozilla::layout;
 
-NS_IMPL_FRAMEARENA_HELPERS(nsContainerFrame)
-
 nsContainerFrame::~nsContainerFrame()
 {
 }
