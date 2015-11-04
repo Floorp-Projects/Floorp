@@ -843,6 +843,21 @@ nsXBLService::GetBinding(nsIContent* aBoundElement, nsIURI* aURI,
   return NS_OK;
 }
 
+static bool
+IsSystemOrChromeURLPrincipal(nsIPrincipal* aPrincipal)
+{
+  if (nsContentUtils::IsSystemPrincipal(aPrincipal)) {
+    return true;
+  }
+
+  nsCOMPtr<nsIURI> uri;
+  aPrincipal->GetURI(getter_AddRefs(uri));
+  NS_ENSURE_TRUE(uri, false);
+
+  bool isChrome = false;
+  return NS_SUCCEEDED(uri->SchemeIs("chrome", &isChrome)) && isChrome;
+}
+
 nsresult
 nsXBLService::LoadBindingDocumentInfo(nsIContent* aBoundElement,
                                       nsIDocument* aBoundDocument,
@@ -856,7 +871,9 @@ nsXBLService::LoadBindingDocumentInfo(nsIContent* aBoundElement,
                   "If we're doing a security check, we better have a document!");
 
   *aResult = nullptr;
-  if (aOriginPrincipal && !nsContentUtils::IsSystemPrincipal(aOriginPrincipal)) {
+  // Allow XBL in unprivileged documents if it's specified in a privileged or
+  // chrome: stylesheet. This allows themes to specify XBL bindings.
+  if (aOriginPrincipal && !IsSystemOrChromeURLPrincipal(aOriginPrincipal)) {
     NS_ENSURE_TRUE(!aBoundDocument || aBoundDocument->AllowXULXBL(),
                    NS_ERROR_XBL_BLOCKED);
   }
