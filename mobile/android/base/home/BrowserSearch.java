@@ -815,7 +815,7 @@ public class BrowserSearch extends HomeFragment
         mSearchTerm = searchTerm;
         mAutocompleteHandler = handler;
 
-        if (isVisible()) {
+        if (mAdapter != null) {
             if (isNewFilter) {
                 // The adapter depends on the search term to determine its number
                 // of items. Make it we notify the view about it.

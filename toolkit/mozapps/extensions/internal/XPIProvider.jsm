@@ -675,6 +675,16 @@ function isUsableAddon(aAddon) {
   if (aAddon.blocklistState == Blocklist.STATE_BLOCKED)
     return false;
 
+  // Experiments are installed through an external mechanism that
+  // limits target audience to compatible clients. We trust it knows what
+  // it's doing and skip compatibility checks.
+  //
+  // This decision does forfeit defense in depth. If the experiments system
+  // is ever wrong about targeting an add-on to a specific application
+  // or platform, the client will likely see errors.
+  if (aAddon.type == "experiment")
+    return true;
+
   if (AddonManager.checkUpdateSecurity && !aAddon.providesUpdatesSecurely)
     return false;
 
