@@ -75,43 +75,29 @@ Concrete<DeserializedNode>::size(mozilla::MallocSizeOf mallocSizeof) const
 
 class DeserializedEdgeRange : public EdgeRange
 {
-  EdgeVector edges;
-  size_t     i;
+  DeserializedNode* node;
+  Edge              currentEdge;
+  size_t            i;
 
   void settle() {
-    front_ = i < edges.length() ? &edges[i] : nullptr;
+    if (i >= node->edges.length()) {
+      front_ = nullptr;
+      return;
+    }
+
+    auto& edge = node->edges[i];
+    auto referent = node->getEdgeReferent(edge);
+    currentEdge = mozilla::Move(Edge(edge.name ? NS_strdup(edge.name) : nullptr,
+                                     referent));
+    front_ = &currentEdge;
   }
 
 public:
-  explicit DeserializedEdgeRange()
-    : edges()
+  explicit DeserializedEdgeRange(DeserializedNode& node)
+    : node(&node)
     , i(0)
   {
     settle();
-  }
-
-  bool init(DeserializedNode& node)
-  {
-    if (!edges.reserve(node.edges.length()))
-      return false;
-
-    for (DeserializedEdge* edgep = node.edges.begin();
-         edgep != node.edges.end();
-         edgep++)
-    {
-      char16_t* name = nullptr;
-      if (edgep->name) {
-        name = NS_strdup(edgep->name);
-        if (!name)
-          return false;
-      }
-
-      auto referent = node.getEdgeReferent(*edgep);
-      edges.infallibleAppend(mozilla::Move(Edge(name, referent)));
-    }
-
-    settle();
-    return true;
   }
 
   void popFront() override
@@ -138,9 +124,9 @@ UniquePtr<EdgeRange>
 Concrete<DeserializedNode>::edges(JSRuntime* rt, bool) const
 {
   UniquePtr<DeserializedEdgeRange, JS::DeletePolicy<DeserializedEdgeRange>> range(
-    js_new<DeserializedEdgeRange>());
+    js_new<DeserializedEdgeRange>(get()));
 
-  if (!range || !range->init(get()))
+  if (!range)
     return nullptr;
 
   return UniquePtr<EdgeRange>(range.release());

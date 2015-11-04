@@ -96,5 +96,11 @@ DEF_TEST(DeserializedNodeUbiNodes, {
       .Times(1)
       .WillOnce(Return(JS::ubi::Node(referent3.get())));
 
-    ubi.edges(rt);
+    auto range = ubi.edges(rt);
+    ASSERT_TRUE(!!range);
+
+    for ( ; !range->empty(); range->popFront()) {
+      // Nothing to do here. This loop ensures that we get each edge referent
+      // that we expect above.
+    }
   });
