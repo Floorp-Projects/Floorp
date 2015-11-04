@@ -228,7 +228,7 @@ GMPDecoderModule::SupportsMimeType(const nsACString& aMimeType,
 }
 
 bool
-GMPDecoderModule::SupportsMimeType(const nsACString& aMimeType)
+GMPDecoderModule::SupportsMimeType(const nsACString& aMimeType) const
 {
   return SupportsMimeType(aMimeType, PreferredGMP(aMimeType));
 }
