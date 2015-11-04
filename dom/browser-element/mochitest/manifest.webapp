@@ -1,0 +1,7 @@
+{
+  "name": "NotifyChannel Test",
+  "launch_path": "/index.html",
+  "messages": [
+    { "audiochannel-interruption-begin": "./file_browserElement_NotifyChannel.html" }
+  ]
+}
