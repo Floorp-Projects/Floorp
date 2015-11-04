@@ -59,9 +59,22 @@ const TreeItem = module.exports = createClass({
   },
 
   toLabel(name, toolbox) {
-    return isSavedFrame(name) ? FrameView({ frame: name, toolbox }) :
-           name === "noStack" ? L10N.getStr("tree-item.nostack") :
-           name === null ? L10N.getStr("tree-item.root") :
-           String(name);
+    if (isSavedFrame(name)) {
+      return FrameView({ frame: name, toolbox });
+    }
+
+    if (name === null) {
+      return L10N.getStr("tree-item.root");
+    }
+
+    if (name === "noStack") {
+      return L10N.getStr("tree-item.nostack");
+    }
+
+    if (name === "noFilename") {
+      return L10N.getStr("tree-item.nofilename");
+    }
+
+    return String(name);
   },
 });
