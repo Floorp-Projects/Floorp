@@ -141,7 +141,7 @@ PageAction.prototype = {
     let popup = this.tabContext.get(tab).popup;
 
     if (popup) {
-      togglePanel(this.getButton(window), popup, this.extension);
+      openPanel(this.getButton(window), popup, this.extension);
     } else {
       this.emit("click", tab);
     }
