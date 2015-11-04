@@ -745,19 +745,21 @@ developerHUD.registerWatcher(eventLoopLagWatcher);
 
 /*
  * The performanceEntriesWatcher determines the delta between the epoch
- * of an app's launch time and the app's performance entry marks.
+ * of an app's launch time and the epoch of the app's performance entry marks.
  * When it receives an "appLaunch" performance entry mark it records the
  * name of the app being launched and the epoch of when the launch ocurred.
  * When it receives subsequent performance entry events for the app being
  * launched, it records the delta of the performance entry opoch compared
  * to the app-launch epoch and emits an "app-start-time-<performance mark name>"
  * event containing the delta.
+ *
+ * Additionally, while recording the "app-start-time" for a performance mark,
+ * USS memory at the time of the performance mark is also recorded.
  */
 var performanceEntriesWatcher = {
   _client: null,
   _fronts: new Map(),
-  _appLaunchName: null,
-  _appLaunchStartTime: null,
+  _appLaunch: new Map(),
   _supported: [
     'contentInteractive',
     'navigationInteractive',
@@ -800,17 +802,14 @@ var performanceEntriesWatcher = {
       let name = detail.name;
       let epoch = detail.epoch;
 
-      // FIXME There is a potential race condition that can result
-      // in some performance entries being disregarded. See bug 1189942.
-      //
       // If this is an "app launch" mark, record the app that was
       // launched and the epoch of when it was launched.
       if (name.indexOf('appLaunch') !== -1) {
         let CHARS_UNTIL_APP_NAME = 7; // '@app://'
         let startPos = name.indexOf('@app') + CHARS_UNTIL_APP_NAME;
         let endPos = name.indexOf('.');
-        this._appLaunchName = name.slice(startPos, endPos);
-        this._appLaunchStartTime = epoch;
+        let appName = name.slice(startPos, endPos);
+        this._appLaunch.set(appName, epoch);
         return;
       }
 
@@ -822,13 +821,15 @@ var performanceEntriesWatcher = {
       let origin = detail.origin;
       origin = origin.slice(0, origin.indexOf('.'));
 
-      // Continue if the performance mark corresponds to the app
-      // for which we have recorded app launch information.
-      if (this._appLaunchName !== origin) {
+      let appLaunchTime = this._appLaunch.get(origin);
+
+      // Sanity check: ensure we have an app launch time for the app
+      // corresponding to this performance mark.
+      if (!appLaunchTime) {
         return;
       }
 
-      let time = epoch - this._appLaunchStartTime;
+      let time = epoch - appLaunchTime;
       let eventName = 'app_startup_time_' + name;
 
       // Events based on performance marks are for telemetry only, they are
