@@ -173,6 +173,12 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue,
       // The system-font subproperty doesn't count.
       continue;
     }
+    if (aProperty == eCSSProperty_grid &&
+        (*p == eCSSProperty_grid_column_gap ||
+         *p == eCSSProperty_grid_row_gap)) {
+      // These 'grid' sub-properties can only be reset, not get/set.
+      continue;
+    }
     ++totalCount;
     const nsCSSValue *val = mData->ValueFor(*p);
     MOZ_ASSERT(!val || !mImportantData || !mImportantData->ValueFor(*p),
@@ -1075,6 +1081,25 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue,
       }
       break;
     }
+    case eCSSProperty_grid_gap: {
+      const nsCSSProperty* subprops =
+        nsCSSProps::SubpropertyEntryFor(aProperty);
+      MOZ_ASSERT(subprops[2] == eCSSProperty_UNKNOWN,
+                 "must have exactly two subproperties");
+
+      nsAutoString val1, val2;
+      AppendValueToString(subprops[0], val1, aSerialization);
+      AppendValueToString(subprops[1], val2, aSerialization);
+      if (val1 == val2) {
+        aValue.Append(val1);
+      } else {
+        aValue.Append(val1);
+        aValue.Append(' ');
+        aValue.Append(val2);
+      }
+      break;
+    }
+
     case eCSSProperty__moz_transform: {
       // shorthands that are just aliases with different parsing rules
       const nsCSSProperty* subprops =

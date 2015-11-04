@@ -142,6 +142,8 @@ var supported_properties = {
                           /* test_float_zeroToOne_clamped */ ],
     "font-stretch": [ test_font_stretch ],
     "font-weight": [ test_font_weight ],
+    "grid-column-gap": [ test_grid_gap ],
+    "grid-row-gap": [ test_grid_gap ],
     "height": [ test_length_transition, test_percent_transition,
                 test_length_percent_calc_transition,
                 test_length_clamped, test_percent_clamped ],
@@ -1599,6 +1601,14 @@ function test_font_weight(prop) {
   is(cs.getPropertyValue(prop), "900",
      "font-weight property " + prop + ": clamping of values");
   div.style.setProperty("transition-timing-function", "linear", "");
+}
+
+function test_grid_gap(prop) {
+  if (!SpecialPowers.getBoolPref("layout.css.grid.enabled")) {
+    return;
+  }
+  test_length_transition(prop);
+  test_length_clamped(prop);
 }
 
 function test_pos_integer_or_auto_transition(prop) {
