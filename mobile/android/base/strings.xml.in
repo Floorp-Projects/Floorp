@@ -141,16 +141,16 @@
   <string name="settings">&settings;</string>
   <string name="settings_title">&settings_title;</string>
   <string name="pref_category_general">&pref_category_general;</string>
-  <string name="pref_category_general_summary">&pref_category_general_summary;</string>
+  <string name="pref_category_general_summary">&pref_category_general_summary2;</string>
 
   <string name="pref_category_search">&pref_category_search3;</string>
   <string name="pref_category_search_summary">&pref_category_search_summary;</string>
   <string name="pref_category_accessibility">&pref_category_accessibility;</string>
-  <string name="pref_category_accessibility_summary">&pref_category_accessibility_summary;</string>
+  <string name="pref_category_accessibility_summary">&pref_category_accessibility_summary2;</string>
   <string name="pref_category_privacy_short">&pref_category_privacy_short;</string>
-  <string name="pref_category_privacy_summary">&pref_category_privacy_summary2;</string>
-  <string name="pref_category_vendor">&pref_category_vendor;</string>
-  <string name="pref_category_vendor_summary">&pref_category_vendor_summary;</string>
+  <string name="pref_category_privacy_summary">&pref_category_privacy_summary3;</string>
+  <string name="pref_category_vendor">&pref_category_vendor2;</string>
+  <string name="pref_category_vendor_summary">&pref_category_vendor_summary2;</string>
   <string name="pref_category_datareporting">&pref_category_datareporting;</string>
   <string name="pref_category_installed_search_engines">&pref_category_installed_search_engines;</string>
   <string name="pref_category_add_search_providers">&pref_category_add_search_providers;</string>
@@ -165,7 +165,7 @@
   <string name="locale_system_default">&locale_system_default;</string>
 
   <string name="pref_category_advanced">&pref_category_advanced;</string>
-  <string name="pref_category_advanced_summary">&pref_category_advanced_summary;</string>
+  <string name="pref_category_advanced_summary">&pref_category_advanced_summary2;</string>
   <string name="pref_developer_remotedebugging">&pref_developer_remotedebugging;</string>
   <string name="pref_developer_remotedebugging_usb">&pref_developer_remotedebugging_usb;</string>
   <string name="pref_developer_remotedebugging_wifi">&pref_developer_remotedebugging_wifi;</string>
@@ -223,8 +223,8 @@
   <string name="pref_char_encoding">&pref_char_encoding;</string>
   <string name="pref_char_encoding_on">&pref_char_encoding_on;</string>
   <string name="pref_char_encoding_off">&pref_char_encoding_off;</string>
-  <string name="pref_clear_private_data_now">&pref_clear_private_data_now;</string>
-  <string name="pref_clear_on_exit_title">&pref_clear_on_exit_title2;</string>
+  <string name="pref_clear_private_data_now">&pref_clear_private_data;</string>
+  <string name="pref_clear_on_exit_title">&pref_clear_on_exit_title3;</string>
   <string name="pref_clear_on_exit_summary2">&pref_clear_on_exit_summary2;</string>
   <string name="pref_clear_on_exit_dialog_title">&pref_clear_on_exit_dialog_title;</string>
   <string name="pref_plugins">&pref_plugins;</string>
@@ -245,10 +245,10 @@
   <string name="pref_zoom_force_enabled">&pref_zoom_force_enabled;</string>
   <string name="pref_zoom_force_enabled_summary">&pref_zoom_force_enabled_summary;</string>
   <string name="pref_voice_input">&pref_voice_input;</string>
-  <string name="pref_voice_input_summary">&pref_voice_input_summary;</string>
+  <string name="pref_voice_input_summary">&pref_voice_input_summary2;</string>
   <string name="pref_qrcode_enabled">&pref_qrcode_enabled;</string>
-  <string name="pref_qrcode_enabled_summary">&pref_qrcode_enabled_summary;</string>
-  <string name="pref_restore">&pref_restore;</string>
+  <string name="pref_qrcode_enabled_summary">&pref_qrcode_enabled_summary2;</string>
+  <string name="pref_restore">&pref_restore_tabs;</string>
   <string name="pref_restore_always">&pref_restore_always;</string>
   <string name="pref_restore_quit">&pref_restore_quit;</string>
   <string name="pref_sync">&pref_sync;</string>
@@ -265,9 +265,9 @@
   <string name="pref_private_data_siteSettings">&pref_private_data_siteSettings2;</string>
   <string name="pref_private_data_downloadFiles2">&pref_private_data_downloadFiles2;</string>
   <string name="pref_private_data_syncedTabs">&pref_private_data_syncedTabs;</string>
-  <string name="pref_import_android">&pref_import_android;</string>
+  <string name="pref_import_android">&pref_import_options;</string>
   <string name="pref_import_android_summary">&pref_import_android_summary;</string>
-  <string name="pref_update_autodownload">&pref_update_autodownload2;</string>
+  <string name="pref_update_autodownload">&pref_update_autodownload3;</string>
   <string name="pref_update_autodownload_wifi">&pref_update_autodownload_wifi;</string>
   <string name="pref_update_autodownload_disabled">&pref_update_autodownload_never;</string>
   <string name="pref_update_autodownload_enabled">&pref_update_autodownload_always;</string>
@@ -395,7 +395,7 @@
   <string name="doorhanger_login_select_action_text">&doorhanger_login_select_action_text;</string>
   <string name="doorhanger_login_select_title">&doorhanger_login_select_title;</string>
 
-  <string name="pref_titlebar_mode">&pref_titlebar_mode;</string>
+  <string name="pref_titlebar_mode">&pref_titlebar_mode2;</string>
   <string name="pref_titlebar_mode_title">&pref_titlebar_mode_title;</string>
   <string name="pref_titlebar_mode_url">&pref_titlebar_mode_url;</string>
 
@@ -403,7 +403,7 @@
   <string name="pref_magnifying_glass_enabled_summary">&pref_magnifying_glass_enabled_summary;</string>
 
   <string name="pref_scroll_title_bar2">&pref_scroll_title_bar2;</string>
-  <string name="pref_scroll_title_bar_summary">&pref_scroll_title_bar_summary;</string>
+  <string name="pref_scroll_title_bar_summary">&pref_scroll_title_bar_summary2;</string>
 
   <string name="page_removed">&page_removed;</string>
 
@@ -441,8 +441,8 @@
   <string name="home_most_recent_empty">&home_most_recent_empty;</string>
   <string name="home_most_recent_emptyhint">&home_most_recent_emptyhint2;</string>
   <string name="home_reading_list_empty">&home_reading_list_empty;</string>
-  <string name="home_reading_list_hint">&home_reading_list_hint2;</string>
-  <string name="home_reading_list_hint_accessible">&home_reading_list_hint_accessible;</string>
+  <string name="home_reading_list_hint">&home_reading_list_hint3;</string>
+  <string name="home_reading_list_hint_accessible">&home_reading_list_hint_accessible2;</string>
   <string name="home_default_empty">&home_default_empty;</string>
   <string name="home_move_up_to_filter">&home_move_up_to_filter;</string>
   <string name="home_remote_tabs_title">&home_remote_tabs_title;</string>
