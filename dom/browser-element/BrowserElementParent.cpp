@@ -150,7 +150,12 @@ BrowserElementParent::DispatchOpenWindowEvent(Element* aOpenerFrameElement,
 
   // Create the event's detail object.
   OpenWindowEventDetail detail;
-  detail.mUrl = aURL;
+  if (aURL.IsEmpty()) {
+    // URL should never be empty. Assign about:blank as default.
+    detail.mUrl = NS_LITERAL_STRING("about:blank");
+  } else {
+    detail.mUrl = aURL;
+  }
   detail.mName = aName;
   detail.mFeatures = aFeatures;
   detail.mFrameElement = aPopupFrameElement;
