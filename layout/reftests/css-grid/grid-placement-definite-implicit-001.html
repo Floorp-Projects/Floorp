@@ -30,6 +30,7 @@ body,html { color:black; background:white; font-size:12px; padding:0; margin:0; 
 span {
   border: 1px solid;
   line-height: 18px;
+  min-width: 0;
 }
 
   </style>
@@ -79,7 +80,7 @@ span {
 <span class="c" style="grid-column: a;">c</span>
 </div>
 <div class="grid rows" style="grid-auto-rows:3px; grid-auto-cols:20px; margin-top:-30000px; border:none">
-<span class="b" style="grid-row: span 1 / a;">b</span>
+<span class="b" style="grid-row: span 1 / a;"></span>
 </div>
 
 <script>

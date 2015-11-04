@@ -652,9 +652,9 @@ public:
    * @param aFrame The frame for whose reflow state is being constructed.
    * @param aAvailableSpace See comments for availableHeight and availableWidth
    *        members.
-   * @param aContainingBlockSize An optional size, in app units, that
-   *        is used by absolute positioning code to override default containing
-   *        block sizes.
+   * @param aContainingBlockSize An optional size, in app units, specifying
+   *        the containing block size to use instead of the default which is
+   *        to use the aAvailableSpace.
    * @param aFlags A set of flags used for additional boolean parameters (see
    *        below).
    */

@@ -4300,6 +4300,9 @@ nsFrame::ComputeSize(nsRenderingContext *aRenderingContext,
                      const LogicalSize& aPadding,
                      ComputeSizeFlags aFlags)
 {
+  MOZ_ASSERT(GetIntrinsicRatio() == nsSize(0,0),
+             "Please override this method and call "
+             "nsLayoutUtils::ComputeSizeWithIntrinsicDimensions instead.");
   LogicalSize result = ComputeAutoSize(aRenderingContext, aWM,
                                        aCBSize, aAvailableISize,
                                        aMargin, aBorder, aPadding,
@@ -4321,9 +4324,12 @@ nsFrame::ComputeSize(nsRenderingContext *aRenderingContext,
   const nsStyleCoord* inlineStyleCoord = &stylePos->ISize(aWM);
   const nsStyleCoord* blockStyleCoord = &stylePos->BSize(aWM);
 
-  bool isFlexItem = IsFlexItem();
+  nsIAtom* parentFrameType = GetParent() ? GetParent()->GetType() : nullptr;
+  bool isGridItem = (parentFrameType == nsGkAtoms::gridContainerFrame &&
+                     !(GetStateBits() & NS_FRAME_OUT_OF_FLOW));
+  bool isFlexItem = (parentFrameType == nsGkAtoms::flexContainerFrame &&
+                     !(GetStateBits() & NS_FRAME_OUT_OF_FLOW));
   bool isInlineFlexItem = false;
- 
   if (isFlexItem) {
     // Flex items use their "flex-basis" property in place of their main-size
     // property (e.g. "width") for sizing purposes, *unless* they have
@@ -4365,14 +4371,14 @@ nsFrame::ComputeSize(nsRenderingContext *aRenderingContext,
         *inlineStyleCoord);
   }
 
-  const nsStyleCoord& maxISizeCoord = stylePos->MaxISize(aWM);
-
   // Flex items ignore their min & max sizing properties in their
   // flex container's main-axis.  (Those properties get applied later in
   // the flexbox algorithm.)
+  const nsStyleCoord& maxISizeCoord = stylePos->MaxISize(aWM);
+  nscoord maxISize = NS_UNCONSTRAINEDSIZE;
   if (maxISizeCoord.GetUnit() != eStyleUnit_None &&
       !(isFlexItem && isInlineFlexItem)) {
-    nscoord maxISize =
+    maxISize =
       nsLayoutUtils::ComputeISizeValue(aRenderingContext, this,
         aCBSize.ISize(aWM), boxSizingAdjust.ISize(aWM), boxSizingToMarginEdgeISize,
         maxISizeCoord);
@@ -4380,7 +4386,6 @@ nsFrame::ComputeSize(nsRenderingContext *aRenderingContext,
   }
 
   const nsStyleCoord& minISizeCoord = stylePos->MinISize(aWM);
-
   nscoord minISize;
   if (minISizeCoord.GetUnit() != eStyleUnit_Auto &&
       !(isFlexItem && isInlineFlexItem)) {
@@ -4388,6 +4393,13 @@ nsFrame::ComputeSize(nsRenderingContext *aRenderingContext,
       nsLayoutUtils::ComputeISizeValue(aRenderingContext, this,
         aCBSize.ISize(aWM), boxSizingAdjust.ISize(aWM), boxSizingToMarginEdgeISize,
         minISizeCoord);
+  } else if (MOZ_UNLIKELY(isGridItem)) {
+    // This implements "Implied Minimum Size of Grid Items".
+    // https://drafts.csswg.org/css-grid/#min-size-auto
+    minISize = std::min(maxISize, GetMinISize(aRenderingContext));
+    if (inlineStyleCoord->IsCoordPercentCalcUnit()) {
+      minISize = std::min(minISize, result.ISize(aWM));
+    }
   } else {
     // Treat "min-width: auto" as 0.
     // NOTE: Technically, "auto" is supposed to behave like "min-content" on
