@@ -18,7 +18,7 @@ function f2(stdlib, foreign, buffer) {
 }
 if (this.jsFuns)
     ok(jsFuns.isAsmJSModule(f2), "f2 is an asm.js module");
-var i32 = new Int32Array(1024);
+var i32 = new Int32Array(16384); // Smallest allowed buffer size is 64KBy
 for (var i = 0; i < i32.length; i++)
     i32[i] = i;
 var f2Main = f2(this, null, i32.buffer);
