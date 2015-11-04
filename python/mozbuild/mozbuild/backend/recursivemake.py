@@ -47,7 +47,6 @@ from ..frontend.data import (
     ExternalLibrary,
     FinalTargetFiles,
     GeneratedFile,
-    GeneratedInclude,
     GeneratedSources,
     HostDefines,
     HostLibrary,
@@ -560,9 +559,6 @@ class RecursiveMakeBackend(CommonBackend):
 
         elif isinstance(obj, LocalInclude):
             self._process_local_include(obj.path, backend_file)
-
-        elif isinstance(obj, GeneratedInclude):
-            self._process_generated_include(obj.path, backend_file)
 
         elif isinstance(obj, PerSourceFlag):
             self._process_per_source_flag(obj, backend_file)
@@ -1244,13 +1240,6 @@ INSTALL_TARGETS += %(prefix)s
             backend_file.write('LOCAL_INCLUDES += -I\'%s\'\n' % path)
         else:
             backend_file.write('LOCAL_INCLUDES += -I%s\n' % path)
-
-    def _process_generated_include(self, generated_include, backend_file):
-        if generated_include.startswith('/'):
-            path = self.environment.topobjdir.replace('\\', '/')
-        else:
-            path = ''
-        backend_file.write('LOCAL_INCLUDES += -I%s%s\n' % (path, generated_include))
 
     def _process_per_source_flag(self, per_source_flag, backend_file):
         for flag in per_source_flag.flags:

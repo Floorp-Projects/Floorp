@@ -2,4 +2,4 @@
 # Any copyright is dedicated to the Public Domain.
 # http://creativecommons.org/publicdomain/zero/1.0/
 
-GENERATED_INCLUDES += ['/bar/baz', 'foo']
+LOCAL_INCLUDES += ['!/bar/baz', '!foo']

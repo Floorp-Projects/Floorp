@@ -221,10 +221,10 @@ def read_from_gyp(config, path, output, vars, non_unified_sources = set()):
         # Add some features to all contexts. Put here in case LOCAL_INCLUDES
         # order matters.
         context['LOCAL_INCLUDES'] += [
+            '!/ipc/ipdl/_ipdlheaders',
             '/ipc/chromium/src',
             '/ipc/glue',
         ]
-        context['GENERATED_INCLUDES'] += ['/ipc/ipdl/_ipdlheaders']
         # These get set via VC project file settings for normal GYP builds.
         if config.substs['OS_TARGET'] == 'WINNT':
             context['DEFINES']['UNICODE'] = True
