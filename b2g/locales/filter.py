@@ -7,6 +7,7 @@ def test(mod, path, entity = None):
   import re
   # ignore anything but b2g and specific overloads from dom and toolkit
   if mod not in ("netwerk", "dom", "toolkit", "security/manager",
+                 "devtools/shared",
                  "mobile",
                  "b2g"):
     return "ignore"

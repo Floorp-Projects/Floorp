@@ -8,7 +8,7 @@
 <?xml-stylesheet href="chrome://devtools/skin/widgets.css" type="text/css"?>
 <?xml-stylesheet href="chrome://devtools/skin/webaudioeditor.css" type="text/css"?>
 <!DOCTYPE window [
-  <!ENTITY % debuggerDTD SYSTEM "chrome://browser/locale/devtools/webaudioeditor.dtd">
+  <!ENTITY % debuggerDTD SYSTEM "chrome://devtools/locale/webaudioeditor.dtd">
   %debuggerDTD;
 ]>
 

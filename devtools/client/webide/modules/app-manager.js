@@ -25,7 +25,7 @@ const {NetUtil} = Cu.import("resource://gre/modules/NetUtil.jsm", {});
 const Telemetry = require("devtools/client/shared/telemetry");
 const {ProjectBuilding} = require("./build");
 
-const Strings = Services.strings.createBundle("chrome://browser/locale/devtools/webide.properties");
+const Strings = Services.strings.createBundle("chrome://devtools/locale/webide.properties");
 
 var AppManager = exports.AppManager = {
 

@@ -15,7 +15,7 @@ loader.lazyRequireGetter(this, "TargetListComponent",
 loader.lazyRequireGetter(this, "Services");
 
 const Strings = Services.strings.createBundle(
-  "chrome://browser/locale/devtools/aboutdebugging.properties");
+  "chrome://devtools/locale/aboutdebugging.properties");
 
 exports.WorkersComponent = React.createClass({
   displayName: "WorkersComponent",

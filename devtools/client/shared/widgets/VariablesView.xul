@@ -7,7 +7,7 @@
 <?xml-stylesheet href="chrome://devtools/skin/common.css" type="text/css"?>
 <?xml-stylesheet href="chrome://devtools/skin/widgets.css" type="text/css"?>
 <!DOCTYPE window [
-  <!ENTITY % viewDTD SYSTEM "chrome://browser/locale/devtools/VariablesView.dtd">
+  <!ENTITY % viewDTD SYSTEM "chrome://devtools/locale/VariablesView.dtd">
   %viewDTD;
 ]>
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"

@@ -9,7 +9,7 @@
 <?xml-stylesheet href="chrome://devtools/skin/widgets.css" type="text/css"?>
 <?xml-stylesheet href="chrome://devtools/skin/inspector.css" type="text/css"?>
 <!DOCTYPE window [
-  <!ENTITY % inspectorDTD SYSTEM "chrome://browser/locale/devtools/inspector.dtd" >
+  <!ENTITY % inspectorDTD SYSTEM "chrome://devtools/locale/inspector.dtd" >
    %inspectorDTD;
 ]>
 

@@ -10,7 +10,7 @@ const {FileUtils} = Cu.import("resource://gre/modules/FileUtils.jsm", {});
 const Services = require("Services");
 const {Task} = Cu.import("resource://gre/modules/Task.jsm", {});
 var XMLHttpRequest = CC("@mozilla.org/xmlextras/xmlhttprequest;1");
-var strings = Services.strings.createBundle("chrome://browser/locale/devtools/app-manager.properties");
+var strings = Services.strings.createBundle("chrome://devtools/locale/app-manager.properties");
 
 function AppValidator({ type, location }) {
   this.type = type;

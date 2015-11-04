@@ -40,7 +40,7 @@ const EVENTS = {
 };
 XPCOMUtils.defineConstant(this, "EVENTS", EVENTS);
 
-const STRINGS_URI = "chrome://browser/locale/devtools/shadereditor.properties"
+const STRINGS_URI = "chrome://devtools/locale/shadereditor.properties"
 const HIGHLIGHT_TINT = [1, 0, 0.25, 1]; // rgba
 const TYPING_MAX_DELAY = 500; // ms
 const SHADERS_AUTOGROW_ITEMS = 4;
