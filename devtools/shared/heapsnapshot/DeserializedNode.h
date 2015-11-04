@@ -67,6 +67,8 @@ struct DeserializedNode {
   Maybe<StackFrameId> allocationStack;
   // A borrowed reference to a string owned by this node's owning HeapSnapshot.
   const char*         jsObjectClassName;
+  // A borrowed reference to a string owned by this node's owning HeapSnapshot.
+  const char*         scriptFilename;
   // A weak pointer to this node's owning `HeapSnapshot`. Safe without
   // AddRef'ing because this node's lifetime is equal to that of its owner.
   HeapSnapshot*       owner;
@@ -78,6 +80,7 @@ struct DeserializedNode {
                    EdgeVector&& edges,
                    Maybe<StackFrameId> allocationStack,
                    const char* className,
+                   const char* filename,
                    HeapSnapshot& owner)
     : id(id)
     , coarseType(coarseType)
@@ -86,6 +89,7 @@ struct DeserializedNode {
     , edges(Move(edges))
     , allocationStack(allocationStack)
     , jsObjectClassName(className)
+    , scriptFilename(filename)
     , owner(&owner)
   { }
   virtual ~DeserializedNode() { }
@@ -98,6 +102,7 @@ struct DeserializedNode {
     , edges(Move(rhs.edges))
     , allocationStack(rhs.allocationStack)
     , jsObjectClassName(rhs.jsObjectClassName)
+    , scriptFilename(rhs.scriptFilename)
     , owner(rhs.owner)
   { }
 
@@ -125,6 +130,7 @@ protected:
     , edges()
     , allocationStack(Nothing())
     , jsObjectClassName(nullptr)
+    , scriptFilename(nullptr)
     , owner(nullptr)
   { }
 
@@ -260,6 +266,7 @@ public:
   const char16_t* typeName() const override;
   Node::Size size(mozilla::MallocSizeOf mallocSizeof) const override;
   const char* jsObjectClassName() const override { return get().jsObjectClassName; }
+  const char* scriptFilename() const final { return get().scriptFilename; }
 
   bool hasAllocationStack() const override { return get().allocationStack.isSome(); }
   StackFrame allocationStack() const override;

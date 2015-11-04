@@ -468,6 +468,12 @@ class Node : public ::google::protobuf::Message {
     JSOBJECTCLASSNAMEORREF_NOT_SET = 0,
   };
 
+  enum ScriptFilenameOrRefCase {
+    kScriptFilename = 10,
+    kScriptFilenameRef = 11,
+    SCRIPTFILENAMEORREF_NOT_SET = 0,
+  };
+
   void Swap(Node* other);
 
   // implements Message ----------------------------------------------
@@ -578,8 +584,28 @@ class Node : public ::google::protobuf::Message {
   inline ::google::protobuf::uint32 coarsetype() const;
   inline void set_coarsetype(::google::protobuf::uint32 value);
 
+  // optional bytes scriptFilename = 10;
+  inline bool has_scriptfilename() const;
+  inline void clear_scriptfilename();
+  static const int kScriptFilenameFieldNumber = 10;
+  inline const ::std::string& scriptfilename() const;
+  inline void set_scriptfilename(const ::std::string& value);
+  inline void set_scriptfilename(const char* value);
+  inline void set_scriptfilename(const void* value, size_t size);
+  inline ::std::string* mutable_scriptfilename();
+  inline ::std::string* release_scriptfilename();
+  inline void set_allocated_scriptfilename(::std::string* scriptfilename);
+
+  // optional uint64 scriptFilenameRef = 11;
+  inline bool has_scriptfilenameref() const;
+  inline void clear_scriptfilenameref();
+  static const int kScriptFilenameRefFieldNumber = 11;
+  inline ::google::protobuf::uint64 scriptfilenameref() const;
+  inline void set_scriptfilenameref(::google::protobuf::uint64 value);
+
   inline TypeNameOrRefCase TypeNameOrRef_case() const;
   inline JSObjectClassNameOrRefCase JSObjectClassNameOrRef_case() const;
+  inline ScriptFilenameOrRefCase ScriptFilenameOrRef_case() const;
   // @@protoc_insertion_point(class_scope:mozilla.devtools.protobuf.Node)
  private:
   inline void set_has_id();
@@ -594,6 +620,8 @@ class Node : public ::google::protobuf::Message {
   inline void set_has_jsobjectclassnameref();
   inline void set_has_coarsetype();
   inline void clear_has_coarsetype();
+  inline void set_has_scriptfilename();
+  inline void set_has_scriptfilenameref();
 
   inline bool has_TypeNameOrRef();
   void clear_TypeNameOrRef();
@@ -602,6 +630,10 @@ class Node : public ::google::protobuf::Message {
   inline bool has_JSObjectClassNameOrRef();
   void clear_JSObjectClassNameOrRef();
   inline void clear_has_JSObjectClassNameOrRef();
+
+  inline bool has_ScriptFilenameOrRef();
+  void clear_ScriptFilenameOrRef();
+  inline void clear_has_ScriptFilenameOrRef();
 
   ::google::protobuf::UnknownFieldSet _unknown_fields_;
 
@@ -620,7 +652,11 @@ class Node : public ::google::protobuf::Message {
     ::std::string* jsobjectclassname_;
     ::google::protobuf::uint64 jsobjectclassnameref_;
   } JSObjectClassNameOrRef_;
-  ::google::protobuf::uint32 _oneof_case_[2];
+  union ScriptFilenameOrRefUnion {
+    ::std::string* scriptfilename_;
+    ::google::protobuf::uint64 scriptfilenameref_;
+  } ScriptFilenameOrRef_;
+  ::google::protobuf::uint32 _oneof_case_[3];
 
   friend void  protobuf_AddDesc_CoreDump_2eproto();
   friend void protobuf_AssignDesc_CoreDump_2eproto();
@@ -1578,6 +1614,103 @@ inline void Node::set_coarsetype(::google::protobuf::uint32 value) {
   // @@protoc_insertion_point(field_set:mozilla.devtools.protobuf.Node.coarseType)
 }
 
+// optional bytes scriptFilename = 10;
+inline bool Node::has_scriptfilename() const {
+  return ScriptFilenameOrRef_case() == kScriptFilename;
+}
+inline void Node::set_has_scriptfilename() {
+  _oneof_case_[2] = kScriptFilename;
+}
+inline void Node::clear_scriptfilename() {
+  if (has_scriptfilename()) {
+    delete ScriptFilenameOrRef_.scriptfilename_;
+    clear_has_ScriptFilenameOrRef();
+  }
+}
+inline const ::std::string& Node::scriptfilename() const {
+  if (has_scriptfilename()) {
+    return *ScriptFilenameOrRef_.scriptfilename_;
+  }
+  return ::google::protobuf::internal::GetEmptyStringAlreadyInited();
+}
+inline void Node::set_scriptfilename(const ::std::string& value) {
+  if (!has_scriptfilename()) {
+    clear_ScriptFilenameOrRef();
+    set_has_scriptfilename();
+    ScriptFilenameOrRef_.scriptfilename_ = new ::std::string;
+  }
+  ScriptFilenameOrRef_.scriptfilename_->assign(value);
+}
+inline void Node::set_scriptfilename(const char* value) {
+  if (!has_scriptfilename()) {
+    clear_ScriptFilenameOrRef();
+    set_has_scriptfilename();
+    ScriptFilenameOrRef_.scriptfilename_ = new ::std::string;
+  }
+  ScriptFilenameOrRef_.scriptfilename_->assign(value);
+}
+inline void Node::set_scriptfilename(const void* value, size_t size) {
+  if (!has_scriptfilename()) {
+    clear_ScriptFilenameOrRef();
+    set_has_scriptfilename();
+    ScriptFilenameOrRef_.scriptfilename_ = new ::std::string;
+  }
+  ScriptFilenameOrRef_.scriptfilename_->assign(
+      reinterpret_cast<const char*>(value), size);
+}
+inline ::std::string* Node::mutable_scriptfilename() {
+  if (!has_scriptfilename()) {
+    clear_ScriptFilenameOrRef();
+    set_has_scriptfilename();
+    ScriptFilenameOrRef_.scriptfilename_ = new ::std::string;
+  }
+  return ScriptFilenameOrRef_.scriptfilename_;
+}
+inline ::std::string* Node::release_scriptfilename() {
+  if (has_scriptfilename()) {
+    clear_has_ScriptFilenameOrRef();
+    ::std::string* temp = ScriptFilenameOrRef_.scriptfilename_;
+    ScriptFilenameOrRef_.scriptfilename_ = NULL;
+    return temp;
+  } else {
+    return NULL;
+  }
+}
+inline void Node::set_allocated_scriptfilename(::std::string* scriptfilename) {
+  clear_ScriptFilenameOrRef();
+  if (scriptfilename) {
+    set_has_scriptfilename();
+    ScriptFilenameOrRef_.scriptfilename_ = scriptfilename;
+  }
+}
+
+// optional uint64 scriptFilenameRef = 11;
+inline bool Node::has_scriptfilenameref() const {
+  return ScriptFilenameOrRef_case() == kScriptFilenameRef;
+}
+inline void Node::set_has_scriptfilenameref() {
+  _oneof_case_[2] = kScriptFilenameRef;
+}
+inline void Node::clear_scriptfilenameref() {
+  if (has_scriptfilenameref()) {
+    ScriptFilenameOrRef_.scriptfilenameref_ = GOOGLE_ULONGLONG(0);
+    clear_has_ScriptFilenameOrRef();
+  }
+}
+inline ::google::protobuf::uint64 Node::scriptfilenameref() const {
+  if (has_scriptfilenameref()) {
+    return ScriptFilenameOrRef_.scriptfilenameref_;
+  }
+  return GOOGLE_ULONGLONG(0);
+}
+inline void Node::set_scriptfilenameref(::google::protobuf::uint64 value) {
+  if (!has_scriptfilenameref()) {
+    clear_ScriptFilenameOrRef();
+    set_has_scriptfilenameref();
+  }
+  ScriptFilenameOrRef_.scriptfilenameref_ = value;
+}
+
 inline bool Node::has_TypeNameOrRef() {
   return TypeNameOrRef_case() != TYPENAMEORREF_NOT_SET;
 }
@@ -1590,11 +1723,20 @@ inline bool Node::has_JSObjectClassNameOrRef() {
 inline void Node::clear_has_JSObjectClassNameOrRef() {
   _oneof_case_[1] = JSOBJECTCLASSNAMEORREF_NOT_SET;
 }
+inline bool Node::has_ScriptFilenameOrRef() {
+  return ScriptFilenameOrRef_case() != SCRIPTFILENAMEORREF_NOT_SET;
+}
+inline void Node::clear_has_ScriptFilenameOrRef() {
+  _oneof_case_[2] = SCRIPTFILENAMEORREF_NOT_SET;
+}
 inline Node::TypeNameOrRefCase Node::TypeNameOrRef_case() const {
   return Node::TypeNameOrRefCase(_oneof_case_[0]);
 }
 inline Node::JSObjectClassNameOrRefCase Node::JSObjectClassNameOrRef_case() const {
   return Node::JSObjectClassNameOrRefCase(_oneof_case_[1]);
+}
+inline Node::ScriptFilenameOrRefCase Node::ScriptFilenameOrRef_case() const {
+  return Node::ScriptFilenameOrRefCase(_oneof_case_[2]);
 }
 // -------------------------------------------------------------------
 
