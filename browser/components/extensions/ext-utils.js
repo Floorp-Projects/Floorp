@@ -111,25 +111,12 @@ global.makeWidgetId = id => {
   return id.replace(/[^a-z0-9_-]/g, "_");
 }
 
-// Toggle the panel anchored to the given node. The panel will contain a
-// browser opened to the given URL, owned by the given extension. If
-// |popupURL| is not an absolute URL, it is resolved relative to the
-// given extension's base URL.
-global.togglePanel = (node, popupURL, extension) => {
-  // Set the node's "open" attribute to true to style it correctly.
-  node.setAttribute("open", "true");
+// Open a panel anchored to the given node, containing a browser opened
+// to the given URL, owned by the given extension. If |popupURL| is not
+// an absolute URL, it is resolved relative to the given extension's
+// base URL.
+global.openPanel = (node, popupURL, extension) => {
   let document = node.ownerDocument;
-  let id = makeWidgetId(extension.id) + "-panel";
-  let panel = document.getElementById(id);
-  if (panel) {
-    if (panel.state === "open") {
-      // We already have an open panel, so let's close it.
-      return panel.hidePopup();
-    } else if (panel.state === "closed") {
-      // We've got a closed panel, so let's open it.
-      return panel.openPopup(anchor, "bottomcenter topright", 0, 0, false, false);
-    }  // Otherwise, it's opening or closing, so just ignore it…
-  }
 
   let popupURI = Services.io.newURI(popupURL, null, extension.baseURI);
 
@@ -137,8 +124,8 @@ global.togglePanel = (node, popupURL, extension) => {
     extension.principal, popupURI,
     Services.scriptSecurityManager.DISALLOW_SCRIPT);
 
-  panel = document.createElement("panel");
-  panel.setAttribute("id", id);
+  let panel = document.createElement("panel");
+  panel.setAttribute("id", makeWidgetId(extension.id) + "-panel");
   panel.setAttribute("class", "browser-extension-panel");
   panel.setAttribute("type", "arrow");
   panel.setAttribute("role", "group");
@@ -168,8 +155,6 @@ global.togglePanel = (node, popupURL, extension) => {
 
   let context;
   panel.addEventListener("popuphidden", () => {
-    // Remove the node's "open" attribute to remove the style.
-    node.removeAttribute("open");
     browser.removeEventListener("DOMTitleChanged", titleChangedListener, true);
     context.unload();
     panel.remove();
