@@ -557,14 +557,14 @@ public:
 
   void ChangeDeclaration(mozilla::css::Declaration* aDeclaration);
 
-  mozilla::css::ImportantRule* GetImportantRule();
+  mozilla::css::ImportantStyleData* GetImportantRule();
 
   virtual size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const override;
 private:
   RefPtr<mozilla::css::Declaration>     mDeclaration;
   // lazily created when needed:
   RefPtr<nsCSSPageStyleDeclaration>     mDOMDeclaration;
-  RefPtr<mozilla::css::ImportantRule>   mImportantRule;
+  RefPtr<mozilla::css::ImportantStyleData> mImportantRule;
 };
 
 namespace mozilla {

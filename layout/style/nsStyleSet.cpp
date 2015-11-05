@@ -1960,11 +1960,11 @@ nsStyleSet::ResolveAnonymousBoxStyle(nsIAtom* aPseudoTag,
   if (aPseudoTag == nsCSSAnonBoxes::pageContent) {
     // Add any @page rules that are specified.
     nsTArray<nsCSSPageRule*> rules;
-    nsTArray<css::ImportantRule*> importantRules;
+    nsTArray<css::ImportantStyleData*> importantRules;
     PresContext()->StyleSet()->AppendPageRules(rules);
     for (uint32_t i = 0, i_end = rules.Length(); i != i_end; ++i) {
       ruleWalker.Forward(rules[i]);
-      css::ImportantRule* importantRule = rules[i]->GetImportantRule();
+      css::ImportantStyleData* importantRule = rules[i]->GetImportantRule();
       if (importantRule) {
         importantRules.AppendElement(importantRule);
       }
