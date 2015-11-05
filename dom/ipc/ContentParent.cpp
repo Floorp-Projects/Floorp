@@ -1895,6 +1895,28 @@ ContentParent::OnChannelError()
 }
 
 void
+ContentParent::OnBeginSyncTransaction() {
+    if (XRE_IsParentProcess()) {
+        nsCOMPtr<nsIConsoleService> console(do_GetService(NS_CONSOLESERVICE_CONTRACTID));
+        JSContext *cx = nsContentUtils::GetCurrentJSContext();
+        if (!sDisableUnsafeCPOWWarnings) {
+            if (console && cx) {
+                nsAutoString filename;
+                uint32_t lineno = 0, column = 0;
+                nsJSUtils::GetCallingLocation(cx, filename, &lineno, &column);
+                nsCOMPtr<nsIScriptError> error(do_CreateInstance(NS_SCRIPTERROR_CONTRACTID));
+                error->Init(NS_LITERAL_STRING("unsafe CPOW usage"), filename,
+                            EmptyString(), lineno, column,
+                            nsIScriptError::warningFlag, "chrome javascript");
+                console->LogMessage(error);
+            } else {
+                NS_WARNING("Unsafe synchronous IPC message");
+            }
+        }
+    }
+}
+
+void
 ContentParent::OnChannelConnected(int32_t pid)
 {
     SetOtherProcessId(pid);
