@@ -252,6 +252,13 @@ DOMSVGTransformList::InsertItemBefore(SVGTransform& newItem,
     error.Throw(NS_ERROR_OUT_OF_MEMORY);
     return nullptr;
   }
+  if (AnimListMirrorsBaseList()) {
+    if (!mAList->mAnimVal->mItems.SetCapacity(
+          mAList->mAnimVal->mItems.Length() + 1, fallible)) {
+      error.Throw(NS_ERROR_OUT_OF_MEMORY);
+      return nullptr;
+    }
+  }
 
   AutoChangeTransformListNotifier notifier(this);
   // Now that we know we're inserting, keep animVal list in sync as necessary.
