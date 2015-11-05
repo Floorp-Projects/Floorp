@@ -3,14 +3,13 @@
 
 package org.mozilla.android.sync.test.helpers;
 
-import java.util.ArrayList;
-import java.util.concurrent.ExecutorService;
-
 import junit.framework.AssertionFailedError;
-
 import org.mozilla.gecko.background.testhelpers.WaitHelper;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionFetchRecordsDelegate;
 import org.mozilla.gecko.sync.repositories.domain.Record;
+
+import java.util.ArrayList;
+import java.util.concurrent.ExecutorService;
 
 public class ExpectSuccessRepositorySessionFetchRecordsDelegate extends
     ExpectSuccessDelegate implements RepositorySessionFetchRecordsDelegate {

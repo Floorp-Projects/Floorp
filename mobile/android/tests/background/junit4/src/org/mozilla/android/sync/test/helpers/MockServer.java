@@ -3,16 +3,16 @@
 
 package org.mozilla.android.sync.test.helpers;
 
-import static org.junit.Assert.assertEquals;
-
-import java.io.IOException;
-import java.io.PrintStream;
-
 import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.sync.Utils;
 import org.simpleframework.http.Request;
 import org.simpleframework.http.Response;
 import org.simpleframework.http.core.Container;
+
+import java.io.IOException;
+import java.io.PrintStream;
+
+import static org.junit.Assert.assertEquals;
 
 public class MockServer implements Container {
   public static final String LOG_TAG = "MockServer";

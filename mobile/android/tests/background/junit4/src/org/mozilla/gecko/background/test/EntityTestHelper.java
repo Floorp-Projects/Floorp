@@ -3,12 +3,12 @@
 
 package org.mozilla.gecko.background.test;
 
+import ch.boye.httpclientandroidlib.HttpEntity;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-
-import ch.boye.httpclientandroidlib.HttpEntity;
 
 public class EntityTestHelper {
   private static final int DEFAULT_SIZE = 1024;
