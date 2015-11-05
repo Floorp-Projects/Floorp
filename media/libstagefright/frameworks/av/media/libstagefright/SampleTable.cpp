@@ -547,7 +547,12 @@ SampleTable::setSampleAuxiliaryInformationSizeParams(
         data_offset += mCencInfoCount;
     }
 
-    CHECK(data_offset == data_end);
+    if (data_offset != data_end) {
+        ALOGW("wrong saiz data size, expected %lu, actual %lu",
+              data_size, data_offset - (data_end - data_size));
+        // Continue, assume extra data is not important.
+        // Parser will skip past the box end.
+    }
 
     return parseSampleCencInfo();
 }
@@ -612,7 +617,12 @@ SampleTable::setSampleAuxiliaryInformationOffsetParams(
         }
     }
 
-    CHECK(data_offset == data_end);
+    if (data_offset != data_end) {
+        ALOGW("wrong saio data size, expected %lu, actual %lu",
+              data_size, data_offset - (data_end - data_size));
+        // Continue, assume extra data is not important.
+        // Parser will skip past the box end.
+    }
 
     return parseSampleCencInfo();
 }
