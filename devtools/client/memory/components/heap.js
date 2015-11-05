@@ -41,6 +41,14 @@ function createTreeProperties (snapshot, toolbox) {
   let map = createParentMap(census);
   const totals = getSnapshotTotals(snapshot);
 
+  const getPercentBytes = totals.bytes === 0
+    ? _ => 0
+    : bytes => bytes / totals.bytes * 100;
+
+  const getPercentCount = totals.count === 0
+    ? _ => 0
+    : count => count / totals.count * 100;
+
   return {
     getParent: node => {
       const parent = map[node.id];
@@ -54,15 +62,15 @@ function createTreeProperties (snapshot, toolbox) {
         depth,
         focused,
         arrow,
-        getPercentBytes: bytes => bytes / totals.bytes * 100,
-        getPercentCount: count => count / totals.count * 100,
+        getPercentBytes,
+        getPercentCount,
       }),
-    getRoots: () => census.children,
+    getRoots: () => census.children || [],
     getKey: node => node.id,
     itemHeight: HEAP_TREE_ROW_HEIGHT,
     // Because we never add or remove children when viewing the same census, we
     // can always reuse a cached traversal if one is available.
-    reuseCachedTraversal: traversal => true,
+    reuseCachedTraversal: _ => true,
   };
 }
 

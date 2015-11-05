@@ -8,6 +8,7 @@ const { breakdowns } = require("./constants");
 const { toggleRecordingAllocationStacks } = require("./actions/allocations");
 const { setBreakdownAndRefresh } = require("./actions/breakdown");
 const { toggleInvertedAndRefresh } = require("./actions/inverted");
+const { setFilterStringAndRefresh } = require("./actions/filter");
 const { selectSnapshotAndRefresh, takeSnapshotAndCensus } = require("./actions/snapshot");
 const { breakdownNameToSpec, getBreakdownDisplayData } = require("./utils");
 const Toolbar = createFactory(require("./components/toolbar"));
@@ -49,6 +50,7 @@ const App = createClass({
       allocations,
       inverted,
       toolbox,
+      filter,
     } = this.props;
 
     let selectedSnapshot = snapshots.find(s => s.selected);
@@ -66,7 +68,10 @@ const App = createClass({
           allocations,
           inverted,
           onToggleInverted: () =>
-            dispatch(toggleInvertedAndRefresh(heapWorker))
+            dispatch(toggleInvertedAndRefresh(heapWorker)),
+          filter,
+          setFilterString: filterString =>
+            dispatch(setFilterStringAndRefresh(filterString, heapWorker)),
         }),
 
         dom.div({ id: "memory-tool-container" },

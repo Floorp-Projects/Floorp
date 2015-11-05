@@ -60,6 +60,7 @@ html, body, #app, #memory-tool {
    */
   display: flex;
   align-items: center;
+  flex: 1;
   /**
    * We want this to be exactly at a --sidebar-width distance from the
    * toolbar's start boundary. A .devtools-toolbar has a 3px start padding
@@ -93,6 +94,10 @@ html, body, #app, #memory-tool {
   .devtools-toolbar > .devtools-button.take-snapshot::before {
     background-image: url(images/command-screenshot@2x.png);
   }
+}
+
+.spacer {
+  flex: 1;
 }
 
 /**
