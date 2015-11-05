@@ -610,5 +610,5 @@ TiltUtils.bindObjectFunc(TiltUtils.DOM);
 // set the necessary string bundle
 XPCOMUtils.defineLazyGetter(TiltUtils.L10n, "stringBundle", function() {
   return Services.strings.createBundle(
-    "chrome://browser/locale/devtools/tilt.properties");
+    "chrome://devtools/locale/tilt.properties");
 });

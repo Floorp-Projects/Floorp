@@ -847,7 +847,7 @@ CssLogic.l10n = function(aName)
 };
 
 DevToolsUtils.defineLazyGetter(CssLogic, "_strings", function() { return Services.strings
-             .createBundle("chrome://global/locale/devtools/styleinspector.properties")});
+             .createBundle("chrome://devtools-shared/locale/styleinspector.properties")});
 
 /**
  * Is the given property sheet a content stylesheet?

@@ -742,7 +742,7 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
     let { mimeType, text, encoding } = selected.responseContent.content;
 
     gNetwork.getString(text).then(aString => {
-      let data = "data:" + mimeType + ";" + encoding + "," + aString;
+      let data = formDataURI(mimeType, encoding, aString);
       clipboardHelper.copyString(data);
     });
   },
@@ -1722,7 +1722,7 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
           let { text, encoding } = aValue.content;
           let responseBody = yield gNetwork.getString(text);
           let node = $(".requests-menu-icon", aItem.target);
-          node.src = "data:" + mimeType + ";" + encoding + "," + responseBody;
+          node.src = formDataURI(mimeType, encoding, responseBody);
           node.setAttribute("type", "thumbnail");
           node.removeAttribute("hidden");
 
@@ -2014,7 +2014,7 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
     {
       return gNetwork.getString(text).then(aString => {
         let anchor = $(".requests-menu-icon", requestItem.target);
-        let src = "data:" + mimeType + ";" + encoding + "," + aString;
+        let src = formDataURI(mimeType, encoding, aString);
         aTooltip.setImageContent(src, { maxDim: REQUESTS_TOOLTIP_IMAGE_MAX_DIM });
         return anchor;
       });
@@ -2453,6 +2453,7 @@ NetworkDetailsView.prototype = {
       }));
     this._params = new VariablesView($("#request-params"),
       Heritage.extend(GENERIC_VARIABLES_VIEW_SETTINGS, {
+        onlyEnumVisible: true,
         emptyText: L10N.getStr("paramsEmptyText"),
         searchPlaceholder: L10N.getStr("paramsFilterText")
       }));
@@ -2841,29 +2842,33 @@ NetworkDetailsView.prototype = {
         this._addParams(this._paramsFormData, section);
       });
     }
-    // Handle actual forms ("multipart/form-data" content type).
+    // Handle JSON and actual forms ("multipart/form-data" content type).
     else {
-      // This is really awkward, but hey, it works. Let's show an empty
-      // scope in the params view and place the source editor containing
-      // the raw post data directly underneath.
-      $("#request-params-box").removeAttribute("flex");
-      let paramsScope = this._params.addScope(this._paramsPostPayload);
-      paramsScope.expanded = true;
-      paramsScope.locked = true;
-
-      $("#request-post-data-textarea-box").hidden = false;
-      let editor = yield NetMonitorView.editor("#request-post-data-textarea");
       let postDataLongString = aPostData.postData.text;
       let postData = yield gNetwork.getString(postDataLongString);
-
-      // Most POST bodies are usually JSON, so they can be neatly
-      // syntax highlighted as JS. Otheriwse, fall back to plain text.
+      let jsonVal = null;
       try {
-        JSON.parse(postData);
-        editor.setMode(Editor.modes.js);
-      } catch (e) {
+        jsonVal = JSON.parse(postData);
+      } catch (ex) { }
+      if (jsonVal) {
+        let jsonScopeName = L10N.getStr("jsonScopeName");
+        let jsonVar = { label: jsonScopeName, rawObject: jsonVal };
+        let jsonScope = this._params.addScope(jsonScopeName);
+        jsonScope.expanded = true;
+        let jsonItem = jsonScope.addItem("", { enumerable: true });
+        jsonItem.populate(jsonVal, { sorted: true });
+      } else {
+        // This is really awkward, but hey, it works. Let's show an empty
+        // scope in the params view and place the source editor containing
+        // the raw post data directly underneath.
+        $("#request-params-box").removeAttribute("flex");
+        let paramsScope = this._params.addScope(this._paramsPostPayload);
+        paramsScope.expanded = true;
+        paramsScope.locked = true;
+
+        $("#request-post-data-textarea-box").hidden = false;
+        let editor = yield NetMonitorView.editor("#request-post-data-textarea");
         editor.setMode(Editor.modes.text);
-      } finally {
         editor.setText(postData);
       }
     }
@@ -2970,13 +2975,12 @@ NetworkDetailsView.prototype = {
       $("#response-content-image-box").setAttribute("pack", "center");
       $("#response-content-image-box").hidden = false;
       $("#response-content-image").src =
-        "data:" + mimeType + ";" + encoding + "," + responseBody;
+        formDataURI(mimeType, encoding, responseBody);
 
       // Immediately display additional information about the image:
       // file name, mime type and encoding.
       $("#response-content-image-name-value").setAttribute("value", NetworkHelper.nsIURL(aUrl).fileName);
       $("#response-content-image-mime-value").setAttribute("value", mimeType);
-      $("#response-content-image-encoding-value").setAttribute("value", encoding);
 
       // Wait for the image to load in order to display the width and height.
       $("#response-content-image").onload = e => {
@@ -3541,6 +3545,23 @@ function getKeyWithEvent(callback) {
       callback.call(null, key);
     }
   };
+}
+
+/**
+ * Form a data: URI given a mime type, encoding, and some text.
+ *
+ * @param {String} mimeType the mime type
+ * @param {String} encoding the encoding to use; if not set, the
+ *        text will be base64-encoded.
+ * @param {String} text the text of the URI.
+ * @return {String} a data: URI
+ */
+function formDataURI(mimeType, encoding, text) {
+  if (!encoding) {
+    encoding = "base64";
+    text = btoa(text);
+  }
+  return "data:" + mimeType + ";" + encoding + "," + text;
 }
 
 /**

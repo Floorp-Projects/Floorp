@@ -20,7 +20,7 @@ function test() {
       ok(L10N.stringBundle,
         "The localization object should have a string bundle available.");
 
-      let bundleName = "chrome://browser/locale/devtools/netmonitor.properties";
+      let bundleName = "chrome://devtools/locale/netmonitor.properties";
       let stringBundle = Services.strings.createBundle(bundleName);
 
       is(L10N.getStr("netmonitor.label"),

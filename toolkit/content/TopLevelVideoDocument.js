@@ -7,11 +7,35 @@
 // <video> is used for top-level audio documents as well
 let videoElement = document.getElementsByTagName("video")[0];
 
-// Send keystrokes to the video element when the body element is focused,
-// to be received by the event listener in videocontrols.xml.
+// 1. Handle fullscreen mode;
+// 2. Send keystrokes to the video element if the body element is focused,
+//    to be received by the event listener in videocontrols.xml.
 document.addEventListener("keypress", ev => {
   if (ev.synthetic) // prevent recursion
     return;
+
+  // Maximize the video when pressing F11,
+  // because this is the standanlone video document.
+  if (ev.key == "F11") {
+    // If we're in browser fullscreen mode, it means the user pressed F11
+    // while browser chrome or another tab had focus.
+    // Don't break leaving that mode, so do nothing here.
+    if (window.fullScreen) {
+      return;
+    }
+
+    // If we're not in broser fullscreen mode, prevent entering into that,
+    // so we don't end up there after pressing Esc.
+    ev.preventDefault();
+    ev.stopPropagation();
+
+    if (!document.mozFullScreenElement) {
+      videoElement.mozRequestFullScreen();
+    } else {
+      document.mozCancelFullScreen();
+    }
+    return;
+  }
 
   // Check if the video element is focused, so it already receives
   // keystrokes, and don't send it another one from here.

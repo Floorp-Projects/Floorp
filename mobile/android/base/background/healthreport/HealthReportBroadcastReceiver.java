@@ -11,29 +11,19 @@ import android.content.Context;
 import android.content.Intent;
 
 /**
- * Watch for notifications to start Health Report background services.
- *
- * Some observations:
- *
- * From the Android documentation: "Also note that as of Android 3.0 the user
- * needs to have started the application at least once before your application
- * can receive android.intent.action.BOOT_COMPLETED events."
- *
- * We really do want to launch on BOOT_COMPLETED, since it's possible for a user
- * to run Firefox, shut down the phone, then power it on again on the same day.
- * We want to submit a health report in this case, even though they haven't
- * launched Firefox since boot.
+ * Watch for internal notifications to start Health Report background services.
  */
 public class HealthReportBroadcastReceiver extends BroadcastReceiver {
   public static final String LOG_TAG = HealthReportBroadcastReceiver.class.getSimpleName();
 
   /**
-   * Forward the intent to an IntentService to do background processing.
+   * Forward the intent (action and extras) to an IntentService to do background processing.
    */
   @Override
   public void onReceive(Context context, Intent intent) {
     Logger.debug(LOG_TAG, "Received intent - forwarding to BroadcastService.");
     Intent service = new Intent(context, HealthReportBroadcastService.class);
+    // It's safe to forward extras since these are internal intents.
     service.putExtras(intent);
     service.setAction(intent.getAction());
     context.startService(service);
