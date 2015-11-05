@@ -34,6 +34,8 @@ cpmm.addMessageListener('sdk/remote/process/load', ({ data: { modulePath, loader
   if (addons.has(loaderID))
     return;
 
+  options.waiveInterposition = true;
+
   let loader = Loader.Loader(options);
   let addon = {
     loader,
