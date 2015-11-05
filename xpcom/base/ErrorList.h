@@ -927,6 +927,16 @@
 #undef MODULE
 
   /* ======================================================================= */
+  /* 40: NS_ERROR_MODULE_DOM_PUSH */
+  /* ======================================================================= */
+#define MODULE NS_ERROR_MODULE_DOM_PUSH
+  ERROR(NS_ERROR_DOM_PUSH_INVALID_REGISTRATION_ERR, FAILURE(1)),
+  ERROR(NS_ERROR_DOM_PUSH_DENIED_ERR, FAILURE(2)),
+  ERROR(NS_ERROR_DOM_PUSH_ABORT_ERR, FAILURE(3)),
+  ERROR(NS_ERROR_DOM_PUSH_SERVICE_UNREACHABLE, FAILURE(4)),
+#undef MODULE
+
+  /* ======================================================================= */
   /* 51: NS_ERROR_MODULE_GENERAL */
   /* ======================================================================= */
 #define MODULE NS_ERROR_MODULE_GENERAL
