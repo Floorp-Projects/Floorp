@@ -610,9 +610,10 @@ public:
      */
     SCROLLABLE_ONLY_ASYNC_SCROLLABLE = 0x04,
     /**
-     * If the SCROLLABLE_ALWAYS_MATCH_ROOT flag is set, then return the
-     * root scrollable frame for the root document (in the current process)
-     * if we don't hit anything else.
+     * If the SCROLLABLE_ALWAYS_MATCH_ROOT flag is set, then we will always
+     * return the root scrollable frame for the root document (in the current
+     * process) if we encounter it, whether or not it is async scrollable or
+     * overflow: hidden.
      */
     SCROLLABLE_ALWAYS_MATCH_ROOT = 0x08,
   };
