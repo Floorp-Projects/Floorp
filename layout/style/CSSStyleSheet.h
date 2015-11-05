@@ -156,7 +156,6 @@ public:
 #endif
 
   void AppendStyleSheet(CSSStyleSheet* aSheet);
-  void InsertStyleSheetAt(CSSStyleSheet* aSheet, int32_t aIndex);
 
   // XXX do these belong here or are they generic?
   void AppendStyleRule(css::Rule* aRule);
