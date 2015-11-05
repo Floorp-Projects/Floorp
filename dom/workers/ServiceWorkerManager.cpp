@@ -1467,7 +1467,9 @@ ServiceWorkerManager::Register(nsIDOMWindow* aWindow,
   AssertIsOnMainThread();
 
   nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aWindow);
-  MOZ_ASSERT(window);
+  if (NS_WARN_IF(!window)) {
+    return NS_ERROR_DOM_INVALID_STATE_ERR;
+  }
 
   nsCOMPtr<nsIDocument> doc = window->GetExtantDoc();
   if (!doc) {
@@ -1772,14 +1774,15 @@ ServiceWorkerManager::GetRegistrations(nsIDOMWindow* aWindow,
                                        nsISupports** aPromise)
 {
   AssertIsOnMainThread();
-  MOZ_ASSERT(aWindow);
 
   nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aWindow);
-  MOZ_ASSERT(window);
+  if (NS_WARN_IF(!window)) {
+    return NS_ERROR_DOM_INVALID_STATE_ERR;
+  }
 
   nsCOMPtr<nsIDocument> doc = window->GetExtantDoc();
-  if (!doc) {
-    return NS_ERROR_FAILURE;
+  if (NS_WARN_IF(!doc)) {
+    return NS_ERROR_DOM_INVALID_STATE_ERR;
   }
 
   // Don't allow service workers to register when the *document* is chrome for
@@ -1876,14 +1879,15 @@ ServiceWorkerManager::GetRegistration(nsIDOMWindow* aWindow,
                                       nsISupports** aPromise)
 {
   AssertIsOnMainThread();
-  MOZ_ASSERT(aWindow);
 
   nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aWindow);
-  MOZ_ASSERT(window);
+  if (NS_WARN_IF(!window)) {
+    return NS_ERROR_DOM_INVALID_STATE_ERR;
+  }
 
   nsCOMPtr<nsIDocument> doc = window->GetExtantDoc();
-  if (!doc) {
-    return NS_ERROR_FAILURE;
+  if (NS_WARN_IF(!doc)) {
+    return NS_ERROR_DOM_INVALID_STATE_ERR;
   }
 
   // Don't allow service workers to register when the *document* is chrome for
@@ -2029,13 +2033,14 @@ ServiceWorkerManager::GetReadyPromise(nsIDOMWindow* aWindow,
                                       nsISupports** aPromise)
 {
   AssertIsOnMainThread();
-  MOZ_ASSERT(aWindow);
 
   nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aWindow);
-  MOZ_ASSERT(window);
+  if (NS_WARN_IF(!window)) {
+    return NS_ERROR_DOM_INVALID_STATE_ERR;
+  }
 
   nsCOMPtr<nsIDocument> doc = window->GetExtantDoc();
-  if (!doc) {
+  if (NS_WARN_IF(!doc)) {
     return NS_ERROR_FAILURE;
   }
 
@@ -2974,7 +2979,7 @@ ServiceWorkerManager::GetServiceWorkerForScope(nsIDOMWindow* aWindow,
 
   nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aWindow);
   if (NS_WARN_IF(!window)) {
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_DOM_INVALID_STATE_ERR;
   }
 
   nsCOMPtr<nsIDocument> doc = window->GetExtantDoc();
@@ -3239,7 +3244,7 @@ ServiceWorkerManager::GetDocumentController(nsIDOMWindow* aWindow,
   nsCOMPtr<nsPIDOMWindow> window = do_QueryInterface(aWindow);
   MOZ_ASSERT(window);
   if (!window || !window->GetExtantDoc()) {
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_DOM_INVALID_STATE_ERR;
   }
 
   nsCOMPtr<nsIDocument> doc = window->GetExtantDoc();
