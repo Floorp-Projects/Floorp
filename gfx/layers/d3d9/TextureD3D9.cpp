@@ -278,8 +278,8 @@ DataTextureSourceD3D9::DataTextureSourceD3D9(gfx::SurfaceFormat aFormat,
                                              CompositorD3D9* aCompositor,
                                              TextureFlags aFlags,
                                              StereoMode aStereoMode)
-  : mFormat(aFormat)
-  , mCompositor(aCompositor)
+  : mCompositor(aCompositor)
+  , mFormat(aFormat)
   , mCurrentTile(0)
   , mFlags(aFlags)
   , mIsTiled(false)
@@ -294,8 +294,8 @@ DataTextureSourceD3D9::DataTextureSourceD3D9(gfx::SurfaceFormat aFormat,
                                              CompositorD3D9* aCompositor,
                                              IDirect3DTexture9* aTexture,
                                              TextureFlags aFlags)
-  : mFormat(aFormat)
-  , mCompositor(aCompositor)
+  : mCompositor(aCompositor)
+  , mFormat(aFormat)
   , mCurrentTile(0)
   , mFlags(aFlags)
   , mIsTiled(false)
