@@ -30,7 +30,7 @@ Cu.import("resource://gre/modules/Task.jsm");
 loader.lazyImporter(this, "CommandUtils",
   "resource://devtools/client/shared/DeveloperToolbar.jsm");
 loader.lazyGetter(this, "toolboxStrings", () => {
-  const properties = "chrome://browser/locale/devtools/toolbox.properties";
+  const properties = "chrome://devtools/locale/toolbox.properties";
   const bundle = Services.strings.createBundle(properties);
   return (name, ...args) => {
     try {

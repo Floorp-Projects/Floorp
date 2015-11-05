@@ -2822,13 +2822,11 @@ TabParent::GetLoadContext()
   if (mLoadContext) {
     loadContext = mLoadContext;
   } else {
-    // TODO Bug 1191740 - Add OriginAttributes in TabContext
-    OriginAttributes attrs = OriginAttributes(OwnOrContainingAppId(), IsBrowserElement());
     loadContext = new LoadContext(GetOwnerElement(),
                                   true /* aIsContent */,
                                   mChromeFlags & nsIWebBrowserChrome::CHROME_PRIVATE_WINDOW,
                                   mChromeFlags & nsIWebBrowserChrome::CHROME_REMOTE_WINDOW,
-                                  attrs);
+                                  OriginAttributesRef());
     mLoadContext = loadContext;
   }
   return loadContext.forget();

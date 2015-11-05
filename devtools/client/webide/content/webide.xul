@@ -5,14 +5,14 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
 <!DOCTYPE window [
-  <!ENTITY % webideDTD SYSTEM "chrome://browser/locale/devtools/webide.dtd" >
+  <!ENTITY % webideDTD SYSTEM "chrome://devtools/locale/webide.dtd" >
   %webideDTD;
 ]>
 
 <?xul-overlay href="chrome://global/content/editMenuOverlay.xul"?>
 
 <?xml-stylesheet href="chrome://global/skin/global.css"?>
-<?xml-stylesheet href="chrome://devtools/skin/themes/common.css"?>
+<?xml-stylesheet href="chrome://devtools/skin/common.css"?>
 <?xml-stylesheet href="chrome://webide/skin/webide.css"?>
 
 <window id="webide" onclose="return UI.canCloseProject();"

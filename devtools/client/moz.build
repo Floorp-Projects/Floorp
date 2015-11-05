@@ -18,6 +18,7 @@ DIRS += [
     'inspector',
     'jsonview',
     'layoutview',
+    'locales',
     'markupview',
     'memory',
     'netmonitor',

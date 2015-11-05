@@ -382,7 +382,7 @@ var l10n = new L10N();
 
 loader.lazyGetter(L10N.prototype, "strings", () => {
   return Services.strings.createBundle(
-    "chrome://browser/locale/devtools/inspector.properties");
+    "chrome://devtools/locale/inspector.properties");
 });
 
 /**

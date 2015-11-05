@@ -5,11 +5,11 @@
 <?xml-stylesheet href="chrome://browser/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://devtools/content/shared/widgets/widgets.css" type="text/css"?>
 <?xml-stylesheet href="chrome://devtools/content/netmonitor/netmonitor.css" type="text/css"?>
-<?xml-stylesheet href="chrome://devtools/skin/themes/common.css" type="text/css"?>
-<?xml-stylesheet href="chrome://devtools/skin/themes/widgets.css" type="text/css"?>
-<?xml-stylesheet href="chrome://devtools/skin/themes/netmonitor.css" type="text/css"?>
+<?xml-stylesheet href="chrome://devtools/skin/common.css" type="text/css"?>
+<?xml-stylesheet href="chrome://devtools/skin/widgets.css" type="text/css"?>
+<?xml-stylesheet href="chrome://devtools/skin/netmonitor.css" type="text/css"?>
 <!DOCTYPE window [
-  <!ENTITY % netmonitorDTD SYSTEM "chrome://browser/locale/devtools/netmonitor.dtd">
+  <!ENTITY % netmonitorDTD SYSTEM "chrome://devtools/locale/netmonitor.dtd">
   %netmonitorDTD;
   <!ENTITY % certManagerDTD SYSTEM "chrome://pippki/locale/certManager.dtd">
   %certManagerDTD;
@@ -473,14 +473,6 @@
                       <label class="plain tabpanel-summary-label"
                              value="&netmonitorUI.response.mime;"/>
                       <label id="response-content-image-mime-value"
-                             class="plain tabpanel-summary-value devtools-monospace"
-                             crop="end"
-                             flex="1"/>
-                    </hbox>
-                    <hbox>
-                      <label class="plain tabpanel-summary-label"
-                             value="&netmonitorUI.response.encoding;"/>
-                      <label id="response-content-image-encoding-value"
                              class="plain tabpanel-summary-value devtools-monospace"
                              crop="end"
                              flex="1"/>

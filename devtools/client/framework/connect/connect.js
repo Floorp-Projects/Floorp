@@ -21,7 +21,7 @@ var gClient;
 var gConnectionTimeout;
 
 XPCOMUtils.defineLazyGetter(window, 'l10n', function () {
-  return Services.strings.createBundle('chrome://browser/locale/devtools/connection-screen.properties');
+  return Services.strings.createBundle('chrome://devtools/locale/connection-screen.properties');
 });
 
 /**

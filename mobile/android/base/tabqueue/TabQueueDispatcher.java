@@ -7,12 +7,11 @@ package org.mozilla.gecko.tabqueue;
 
 import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.GeckoAppShell;
-import org.mozilla.gecko.GeckoSharedPrefs;
 import org.mozilla.gecko.Locales;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
+import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.mozglue.ContextUtils;
-import org.mozilla.gecko.preferences.GeckoPreferences;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -27,7 +26,6 @@ import android.util.Log;
  */
 public class TabQueueDispatcher extends Locales.LocaleAwareActivity {
     private static final String LOGTAG = "Gecko" + TabQueueDispatcher.class.getSimpleName();
-    public static final String SKIP_TAB_QUEUE_FLAG = "skip_tab_queue";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,7 +50,7 @@ public class TabQueueDispatcher extends Locales.LocaleAwareActivity {
         }
 
         // Skip the Tab Queue if instructed.
-        boolean shouldSkipTabQueue = safeIntent.getBooleanExtra(SKIP_TAB_QUEUE_FLAG, false);
+        boolean shouldSkipTabQueue = safeIntent.getBooleanExtra(BrowserContract.SKIP_TAB_QUEUE_FLAG, false);
         if (shouldSkipTabQueue) {
             loadNormally(safeIntent.getUnsafe());
             return;

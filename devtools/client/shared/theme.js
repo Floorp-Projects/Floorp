@@ -14,7 +14,7 @@ const { NetUtil } = Cu.import("resource://gre/modules/NetUtil.jsm", {});
 loader.lazyRequireGetter(this, "Services");
 loader.lazyImporter(this, "gDevTools", "resource://devtools/client/framework/gDevTools.jsm");
 
-const VARIABLES_URI = "chrome://devtools/skin/themes/variables.css";
+const VARIABLES_URI = "chrome://devtools/skin/variables.css";
 const THEME_SELECTOR_STRINGS = {
   light: ":root.theme-light {",
   dark: ":root.theme-dark {"

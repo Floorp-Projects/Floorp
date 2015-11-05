@@ -4,9 +4,9 @@
 
 package org.mozilla.gecko;
 
+import java.lang.reflect.Method;
 import java.util.Locale;
 
-import org.mozilla.gecko.BrowserLocaleManager;
 import org.mozilla.gecko.LocaleManager;
 
 import android.app.Activity;
@@ -25,8 +25,19 @@ import android.support.v4.app.FragmentActivity;
  * <code>LocaleAwareFragmentActivity</code> or <code>LocaleAwareActivity</code>.
  */
 public class Locales {
+    public static LocaleManager getLocaleManager() {
+        try {
+            final Class<?> clazz = Class.forName("org.mozilla.gecko.BrowserLocaleManager");
+            final Method getInstance = clazz.getMethod("getInstance");
+            final LocaleManager localeManager = (LocaleManager) getInstance.invoke(null);
+            return localeManager;
+        } catch (Exception e) {
+          throw new RuntimeException(e);
+        }
+    }
+
     public static void initializeLocale(Context context) {
-        final LocaleManager localeManager = BrowserLocaleManager.getInstance();
+        final LocaleManager localeManager = getLocaleManager();
         final StrictMode.ThreadPolicy savedPolicy = StrictMode.allowThreadDiskReads();
         StrictMode.allowThreadDiskWrites();
         try {

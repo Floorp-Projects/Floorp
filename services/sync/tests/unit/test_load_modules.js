@@ -19,7 +19,6 @@ const modules = [
   "jpakeclient.js",
   "keys.js",
   "main.js",
-  "notifications.js",
   "policies.js",
   "record.js",
   "resource.js",

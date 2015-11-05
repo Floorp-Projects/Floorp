@@ -19,7 +19,7 @@ const ENABLE_CODE_FOLDING = "devtools.editor.enableCodeFolding";
 const KEYMAP      = "devtools.editor.keymap";
 const AUTO_CLOSE  = "devtools.editor.autoclosebrackets";
 const AUTOCOMPLETE  = "devtools.editor.autocomplete";
-const L10N_BUNDLE = "chrome://browser/locale/devtools/sourceeditor.properties";
+const L10N_BUNDLE = "chrome://devtools/locale/sourceeditor.properties";
 const XUL_NS      = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 const VALID_KEYMAPS = new Set(["emacs", "vim", "sublime"]);
 
@@ -46,7 +46,7 @@ const { OS } = Services.appinfo;
 // order to initialize a CodeMirror instance.
 
 const CM_STYLES   = [
-  "chrome://devtools/skin/themes/common.css",
+  "chrome://devtools/skin/common.css",
   "chrome://devtools/content/sourceeditor/codemirror/codemirror.css",
   "chrome://devtools/content/sourceeditor/codemirror/dialog/dialog.css",
   "chrome://devtools/content/sourceeditor/codemirror/mozilla.css"

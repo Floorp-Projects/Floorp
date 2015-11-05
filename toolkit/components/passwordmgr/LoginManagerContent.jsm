@@ -243,13 +243,8 @@ var LoginManagerContent = {
   _autoCompleteSearchAsync: function(aSearchString, aPreviousResult,
                                      aElement, aRect) {
     let doc = aElement.ownerDocument;
-    let form = aElement.form;
+    let form = FormLikeFactory.createFromField(aElement);
     let win = doc.defaultView;
-
-    if (!form) {
-      return Promise.reject("Bug 1173583: _autoCompleteSearchAsync needs to be " +
-                            "updated to work outside of <form>");
-    }
 
     let formOrigin = LoginUtils._getPasswordOrigin(doc.documentURI);
     let actionOrigin = LoginUtils._getActionOrigin(form);
@@ -524,7 +519,7 @@ var LoginManagerContent = {
     if (!LoginHelper.isUsernameFieldType(acInputField))
       return;
 
-    var acForm = acInputField.form; // XXX: Bug 1173583 - This doesn't work outside of <form>.
+    var acForm = FormLikeFactory.createFromField(acInputField);
     if (!acForm)
       return;
 

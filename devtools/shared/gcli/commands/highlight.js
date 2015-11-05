@@ -12,7 +12,7 @@ const {
 } = require("devtools/server/actors/highlighters");
 
 XPCOMUtils.defineLazyGetter(this, "nodesSelected", function() {
-  return Services.strings.createBundle("chrome://global/locale/devtools/gclicommands.properties");
+  return Services.strings.createBundle("chrome://devtools-shared/locale/gclicommands.properties");
 });
 XPCOMUtils.defineLazyModuleGetter(this, "PluralForm", "resource://gre/modules/PluralForm.jsm");
 
