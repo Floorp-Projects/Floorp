@@ -346,3 +346,37 @@ BEGIN_TEST(test_ubiPostOrder)
     return true;
 }
 END_TEST(test_ubiPostOrder)
+
+BEGIN_TEST(test_JS_ubi_Node_scriptFilename)
+{
+    JS::RootedValue val(cx);
+    CHECK(evaluate("(function one() {                      \n"  // 1
+                   "  return (function two() {             \n"  // 2
+                   "    return (function three() {         \n"  // 3
+                   "      return function four() {};       \n"  // 4
+                   "    }());                              \n"  // 5
+                   "  }());                                \n"  // 6
+                   "}());                                  \n", // 7
+                   "my-cool-filename.js",
+                   1,
+                   &val));
+
+    CHECK(val.isObject());
+    JS::RootedObject obj(cx, &val.toObject());
+
+    CHECK(obj->is<JSFunction>());
+    JS::RootedFunction func(cx, &obj->as<JSFunction>());
+
+    JS::RootedScript script(cx, func->getOrCreateScript(cx));
+    CHECK(script);
+    CHECK(script->filename());
+
+    JS::ubi::Node node(script);
+    const char* filename = node.scriptFilename();
+    CHECK(filename);
+    CHECK(strcmp(filename, script->filename()) == 0);
+    CHECK(strcmp(filename, "my-cool-filename.js") == 0);
+
+    return true;
+}
+END_TEST(test_JS_ubi_Node_scriptFilename)

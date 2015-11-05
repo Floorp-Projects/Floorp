@@ -160,7 +160,12 @@ InputQueue::ReceiveTouchInput(const RefPtr<AsyncPanZoomController>& aTarget,
     INPQ_LOG("dropping event due to block %p being in fast motion\n", block);
     result = nsEventStatus_eConsumeNoDefault;
   } else if (target && target->ArePointerEventsConsumable(block, aEvent.AsMultiTouchInput().mTouches.Length())) {
-    result = nsEventStatus_eConsumeDoDefault;
+    if (block->UpdateSlopState(aEvent.AsMultiTouchInput())) {
+      INPQ_LOG("dropping event due to block %p being in slop\n", block);
+      result = nsEventStatus_eConsumeNoDefault;
+    } else {
+      result = nsEventStatus_eConsumeDoDefault;
+    }
   }
   if (!MaybeHandleCurrentBlock(block, aEvent)) {
     block->AddEvent(aEvent.AsMultiTouchInput());

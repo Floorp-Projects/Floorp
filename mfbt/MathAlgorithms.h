@@ -484,6 +484,11 @@ inline T
 RotateLeft(const T aValue, uint_fast8_t aShift)
 {
   MOZ_ASSERT(aShift < sizeof(T) * CHAR_BIT, "Shift value is too large!");
+  MOZ_ASSERT(aShift > 0,
+             "Rotation by value length is undefined behavior, but compilers "
+             "do not currently fold a test into the rotate instruction. "
+             "Please remove this restriction when compilers optimize the "
+             "zero case (http://blog.regehr.org/archives/1063).");
   static_assert(IsUnsigned<T>::value, "Rotates require unsigned values");
   return (aValue << aShift) | (aValue >> (sizeof(T) * CHAR_BIT - aShift));
 }
@@ -496,6 +501,11 @@ inline T
 RotateRight(const T aValue, uint_fast8_t aShift)
 {
   MOZ_ASSERT(aShift < sizeof(T) * CHAR_BIT, "Shift value is too large!");
+  MOZ_ASSERT(aShift > 0,
+             "Rotation by value length is undefined behavior, but compilers "
+             "do not currently fold a test into the rotate instruction. "
+             "Please remove this restriction when compilers optimize the "
+             "zero case (http://blog.regehr.org/archives/1063).");
   static_assert(IsUnsigned<T>::value, "Rotates require unsigned values");
   return (aValue >> aShift) | (aValue << (sizeof(T) * CHAR_BIT - aShift));
 }

@@ -782,6 +782,7 @@ namespace ubi {
 template<>
 struct Concrete<js::jit::JitCode> : TracerConcrete<js::jit::JitCode> {
     CoarseType coarseType() const final { return CoarseType::Script; }
+
     Size size(mozilla::MallocSizeOf mallocSizeOf) const override {
         Size size = js::gc::Arena::thingSize(get().asTenured().getAllocKind());
         size += get().bufferSize();

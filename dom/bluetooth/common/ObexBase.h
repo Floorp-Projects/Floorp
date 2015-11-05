@@ -8,6 +8,7 @@
 #define mozilla_dom_bluetooth_ObexBase_h
 
 #include "BluetoothCommon.h"
+#include "mozilla/Endian.h"
 #include "nsAutoPtr.h"
 #include "nsTArray.h"
 
@@ -178,7 +179,7 @@ public:
         uint8_t* ptr = mHeaders[i]->mData.get();
 
         for (int j = 0; j < nameLength; ++j) {
-          char16_t c = ((((uint32_t)ptr[j * 2]) << 8) | ptr[j * 2 + 1]);
+          char16_t c = BigEndian::readUint16(&ptr[j * 2]);
           aRetName += c;
         }
 
@@ -211,10 +212,7 @@ public:
     for (int i = 0; i < length; ++i) {
       if (mHeaders[i]->mId == ObexHeaderId::Length) {
         uint8_t* ptr = mHeaders[i]->mData.get();
-        *aRetLength = ((uint32_t)ptr[0] << 24) |
-                      ((uint32_t)ptr[1] << 16) |
-                      ((uint32_t)ptr[2] << 8) |
-                      ((uint32_t)ptr[3]);
+        *aRetLength = BigEndian::readUint32(&ptr[0]);
         return;
       }
     }

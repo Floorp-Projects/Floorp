@@ -91,7 +91,7 @@ public:
     } else {
       if (mLeftOverData != INT32_MIN) {
         mLeftOverData = INT32_MIN;
-        aStream->CheckForInactive();
+        aStream->ScheduleCheckForInactive();
 
         // Delete our buffered data now we no longer need it
         mBuffer.Reset();

@@ -3,17 +3,16 @@ function test() {
   gPrefService.setBoolPref("dom.disable_open_during_load", false);
 
   var browser = gBrowser.selectedBrowser;
-  browser.addEventListener("load", function () {
-    browser.removeEventListener("load", arguments.callee, true);
-
+  BrowserTestUtils.browserLoaded(browser).then(() => {
     if (gPrefService.prefHasUserValue("dom.disable_open_during_load"))
       gPrefService.clearUserPref("dom.disable_open_during_load");
 
     findPopup();
-  }, true);
+  });
 
-  content.location =
-    "data:text/html,<html><script>popup=open('about:blank','','width=300,height=200')</script>";
+  browser.loadURI(
+    "data:text/html,<html><script>popup=open('about:blank','','width=300,height=200')</script>"
+  );
 }
 
 function findPopup() {

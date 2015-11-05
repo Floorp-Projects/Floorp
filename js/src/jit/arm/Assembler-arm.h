@@ -647,9 +647,13 @@ class Imm8 : public Operand2
 
   public:
     static datastore::Imm8mData EncodeImm(uint32_t imm) {
+        // RotateLeft below may not be called with a shift of zero.
+        if (imm <= 0xFF)
+            return datastore::Imm8mData(imm, 0);
+
         // An encodable integer has a maximum of 8 contiguous set bits,
         // with an optional wrapped left rotation to even bit positions.
-        for (int rot = 0; rot < 16; rot++) {
+        for (int rot = 1; rot < 16; rot++) {
             uint32_t rotimm = mozilla::RotateLeft(imm, rot*2);
             if (rotimm <= 0xFF)
                 return datastore::Imm8mData(rotimm, rot);

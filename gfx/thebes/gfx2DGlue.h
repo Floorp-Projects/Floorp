@@ -51,11 +51,6 @@ inline Point ToPoint(const gfxPoint &aPoint)
   return Point(Float(aPoint.x), Float(aPoint.y));
 }
 
-inline IntMargin ToIntMargin(const nsIntMargin& aMargin)
-{
-  return IntMargin(aMargin.top, aMargin.right, aMargin.bottom, aMargin.left);
-}
-
 inline Size ToSize(const gfxSize &aSize)
 {
   return Size(Float(aSize.width), Float(aSize.height));

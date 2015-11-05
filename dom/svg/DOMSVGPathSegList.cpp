@@ -242,6 +242,13 @@ DOMSVGPathSegList::AttrIsAnimating() const
   return InternalAList().IsAnimating();
 }
 
+bool
+DOMSVGPathSegList::AnimListMirrorsBaseList() const
+{
+  return GetDOMWrapperIfExists(InternalAList().GetAnimValKey()) &&
+           !AttrIsAnimating();
+}
+ 
 SVGPathData&
 DOMSVGPathSegList::InternalList() const
 {
@@ -526,22 +533,17 @@ DOMSVGPathSegList::
 {
   MOZ_ASSERT(!IsAnimValList(), "call from baseVal to animVal");
 
-  if (AttrIsAnimating()) {
-    // animVal not a clone of baseVal
+  if (!AnimListMirrorsBaseList()) {
     return;
   }
 
   // The anim val list is in sync with the base val list
   DOMSVGPathSegList *animVal =
     GetDOMWrapperIfExists(InternalAList().GetAnimValKey());
-  if (!animVal) {
-    // No animVal list wrapper
-    return;
-  }
 
+  MOZ_ASSERT(animVal, "AnimListMirrorsBaseList() promised a non-null animVal");
   MOZ_ASSERT(animVal->mItems.Length() == mItems.Length(),
              "animVal list not in sync!");
-
   MOZ_ALWAYS_TRUE(animVal->mItems.InsertElementAt(aIndex,
                                                   ItemProxy(nullptr,
                                                             aInternalIndex),
@@ -557,8 +559,7 @@ DOMSVGPathSegList::
 {
   MOZ_ASSERT(!IsAnimValList(), "call from baseVal to animVal");
 
-  if (AttrIsAnimating()) {
-    // animVal not a clone of baseVal
+  if (!AnimListMirrorsBaseList()) {
     return;
   }
 
@@ -566,11 +567,8 @@ DOMSVGPathSegList::
   // below might drop the last reference to animVal before we're done with it.
   RefPtr<DOMSVGPathSegList> animVal =
     GetDOMWrapperIfExists(InternalAList().GetAnimValKey());
-  if (!animVal) {
-    // No animVal list wrapper
-    return;
-  }
 
+  MOZ_ASSERT(animVal, "AnimListMirrorsBaseList() promised a non-null animVal");
   MOZ_ASSERT(animVal->mItems.Length() == mItems.Length(),
              "animVal list not in sync!");
 

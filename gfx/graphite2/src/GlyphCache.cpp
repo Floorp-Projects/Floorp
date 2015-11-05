@@ -299,7 +299,13 @@ GlyphCache::Loader::Loader(const Face & face, const bool dumb_font)
             _head = Face::Table();
             return;
         }
-        _has_boxes = (version == 0x00030000);
+        else if (version >= 0x00030000)
+        {
+            unsigned int glatflags = be::read<uint32>(p);
+            _has_boxes = glatflags & 1;
+            // delete this once the compiler is fixed
+            _has_boxes = true;
+        }
     }
 }
 

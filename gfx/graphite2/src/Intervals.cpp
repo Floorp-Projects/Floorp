@@ -155,6 +155,7 @@ void Zones::remove(float x, float xm)
         {
         case 0:     // i completely covers e
             if (separated(i->x, x))  { i = _exclusions.insert(i,i->split_at(x)); ++i; }
+            GR_FALLTHROUGH;
             // no break
         case 1:     // i overlaps on the rhs of e
             i->left_trim(xm);
@@ -162,6 +163,7 @@ void Zones::remove(float x, float xm)
         case 2:     // i overlaps on the lhs of e
             i->xm = x;
             if (separated(i->x, i->xm)) break;
+            GR_FALLTHROUGH;
             // no break
         case 3:     // e completely covers i
             i = _exclusions.erase(i);

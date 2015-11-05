@@ -357,8 +357,16 @@ WebGLShader::FindUniformBlockByMappedName(const nsACString& mappedName,
                                           nsCString* const out_userName,
                                           bool* const out_isArray) const
 {
-    // TODO: Extract block information from shader validator.
-    return false;
+    if (!mValidator)
+        return false;
+
+    const std::string mappedNameStr(mappedName.BeginReading(), mappedName.Length());
+    std::string userNameStr;
+    if (!mValidator->FindUniformBlockByMappedName(mappedNameStr, &userNameStr))
+        return false;
+
+    *out_userName = userNameStr.c_str();
+    return true;
 }
 
 void
@@ -379,9 +387,8 @@ WebGLShader::ApplyTransformFeedbackVaryings(GLuint prog,
         std::string userNameStr(userName.BeginReading());
 
         const std::string* mappedNameStr = &userNameStr;
-        // TODO: Are vertex->fragment shader varyings listed under attribs?
         if (mValidator)
-            mValidator->FindAttribMappedNameByUserName(userNameStr, &mappedNameStr);
+            mValidator->FindVaryingMappedNameByUserName(userNameStr, &mappedNameStr);
 
         mappedVaryings.push_back(*mappedNameStr);
     }

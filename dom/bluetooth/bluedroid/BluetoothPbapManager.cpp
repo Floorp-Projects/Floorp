@@ -242,7 +242,7 @@ BluetoothPbapManager::ReceiveSocketData(BluetoothSocket* aSocket,
       }
 
       // Save the max packet length from remote information
-      mRemoteMaxPacketLength = ((static_cast<int>(data[5]) << 8) | data[6]);
+      mRemoteMaxPacketLength = BigEndian::readUint16(&data[5]);
 
       if (mRemoteMaxPacketLength < kObexLeastMaxSize) {
         BT_LOGR("Remote maximum packet length %d is smaller than %d bytes",

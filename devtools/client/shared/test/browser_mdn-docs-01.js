@@ -131,26 +131,22 @@ function* testTheBasics(widget) {
   */
 function checkLinkClick(link) {
 
-  function loadListener(e) {
-    let tab = e.target;
+  function loadListener(tab) {
     var browser = getBrowser().getBrowserForTab(tab);
     var uri = browser.currentURI.spec;
-    // this is horrible, and it's because when we open a new tab
-    // "about:blank: is first loaded into it, before the actual
-    // document we want to load.
-    if (uri != "about:blank") {
-      info("New browser tab has loaded");
-      tab.removeEventListener("load", loadListener);
-      gBrowser.removeTab(tab);
-      info("Resolve promise with new tab URI");
-      deferred.resolve(uri);
-    }
+
+    info("New browser tab has loaded");
+    gBrowser.removeTab(tab);
+    info("Resolve promise with new tab URI");
+    deferred.resolve(uri);
   }
 
   function newTabListener(e) {
     gBrowser.tabContainer.removeEventListener("TabOpen", newTabListener);
     var tab = e.target;
-    tab.addEventListener("load", loadListener, false);
+    BrowserTestUtils.browserLoaded(tab.linkedBrowser, false,
+                                   url => { return url != "about:blank"; })
+      .then(url => loadListener(tab));
   }
 
   let deferred = promise.defer();

@@ -97,9 +97,17 @@ EDGES.allocationStack = function (breakdown, report) {
       edge: key,
       referent: value,
       breakdown: key === "noStack" ? breakdown.noStack : breakdown.then
-    })
+    });
   });
   return edges;
+};
+
+EDGES.filename = function (breakdown, report) {
+  return Object.keys(report).map(key => ({
+    edge: key,
+    referent: report[key],
+    breakdown: key === "noFilename" ? breakdown.noFilename : breakdown.then
+  }));
 };
 
 /**
