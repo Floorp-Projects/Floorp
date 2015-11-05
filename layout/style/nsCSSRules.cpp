@@ -2081,7 +2081,7 @@ nsCSSKeyframeRule::MapRuleInfoInto(nsRuleData* aRuleData)
   NS_ASSERTION(!mDeclaration->HasImportantData(),
                "Keyframe rules has !important data");
 
-  mDeclaration->MapNormalRuleInfoInto(aRuleData);
+  mDeclaration->MapRuleInfoInto(aRuleData);
 }
 
 #ifdef DEBUG
@@ -2710,7 +2710,7 @@ nsCSSPageRule::GetImportantRule()
 /* virtual */ void
 nsCSSPageRule::MapRuleInfoInto(nsRuleData* aRuleData)
 {
-  mDeclaration->MapNormalRuleInfoInto(aRuleData);
+  mDeclaration->MapRuleInfoInto(aRuleData);
 }
 
 NS_IMETHODIMP
