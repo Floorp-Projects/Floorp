@@ -1963,6 +1963,7 @@ nsStyleSet::ResolveAnonymousBoxStyle(nsIAtom* aPseudoTag,
     nsTArray<css::ImportantStyleData*> importantRules;
     PresContext()->StyleSet()->AppendPageRules(rules);
     for (uint32_t i = 0, i_end = rules.Length(); i != i_end; ++i) {
+      rules[i]->Declaration()->SetImmutable();
       ruleWalker.Forward(rules[i]);
       css::ImportantStyleData* importantRule = rules[i]->GetImportantRule();
       if (importantRule) {
