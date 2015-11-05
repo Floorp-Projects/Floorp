@@ -28,8 +28,10 @@ import org.mozilla.gecko.tabs.TabHistoryController;
 import org.mozilla.gecko.toolbar.ToolbarDisplayLayout.OnStopListener;
 import org.mozilla.gecko.toolbar.ToolbarDisplayLayout.OnTitleChangeListener;
 import org.mozilla.gecko.toolbar.ToolbarDisplayLayout.UpdateFlags;
+import org.mozilla.gecko.util.Clipboard;
 import org.mozilla.gecko.util.ColorUtils;
 import org.mozilla.gecko.util.HardwareUtils;
+import org.mozilla.gecko.util.MenuUtils;
 import org.mozilla.gecko.widget.themed.ThemedFrameLayout;
 import org.mozilla.gecko.widget.themed.ThemedImageButton;
 import org.mozilla.gecko.widget.themed.ThemedImageView;
@@ -44,7 +46,9 @@ import android.graphics.drawable.StateListDrawable;
 import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.util.Log;
+import android.view.ContextMenu;
 import android.view.LayoutInflater;
+import android.view.MenuInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewTreeObserver.OnGlobalLayoutListener;
@@ -119,6 +123,7 @@ public abstract class BrowserToolbar extends ThemedRelativeLayout
     private MenuPopup menuPopup;
     protected final List<View> focusOrder;
 
+    private OnActivateListener activateListener;
     private OnFocusChangeListener focusChangeListener;
     private OnStartEditingListener startEditingListener;
     private OnStopEditingListener stopEditingListener;
@@ -208,6 +213,49 @@ public abstract class BrowserToolbar extends ThemedRelativeLayout
         prefs = new ToolbarPrefs();
         urlDisplayLayout.setToolbarPrefs(prefs);
         urlEditLayout.setToolbarPrefs(prefs);
+
+        setOnCreateContextMenuListener(new View.OnCreateContextMenuListener() {
+            @Override
+            public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
+                // NOTE: Use MenuUtils.safeSetVisible because some actions might
+                // be on the Page menu
+                MenuInflater inflater = activity.getMenuInflater();
+                inflater.inflate(R.menu.titlebar_contextmenu, menu);
+
+                String clipboard = Clipboard.getText();
+                if (TextUtils.isEmpty(clipboard)) {
+                    menu.findItem(R.id.pasteandgo).setVisible(false);
+                    menu.findItem(R.id.paste).setVisible(false);
+                }
+
+                Tab tab = Tabs.getInstance().getSelectedTab();
+                if (tab != null) {
+                    String url = tab.getURL();
+                    if (url == null) {
+                        menu.findItem(R.id.copyurl).setVisible(false);
+                        menu.findItem(R.id.add_to_launcher).setVisible(false);
+                    }
+
+                    MenuUtils.safeSetVisible(menu, R.id.subscribe, tab.hasFeeds());
+                    MenuUtils.safeSetVisible(menu, R.id.add_search_engine, tab.hasOpenSearch());
+                } else {
+                    // if there is no tab, remove anything tab dependent
+                    menu.findItem(R.id.copyurl).setVisible(false);
+                    menu.findItem(R.id.add_to_launcher).setVisible(false);
+                    MenuUtils.safeSetVisible(menu, R.id.subscribe, false);
+                    MenuUtils.safeSetVisible(menu, R.id.add_search_engine, false);
+                }
+            }
+        });
+
+        setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (activateListener != null) {
+                    activateListener.onActivate();
+                }
+            }
+        });
     }
 
     @Override
@@ -635,8 +683,8 @@ public abstract class BrowserToolbar extends ThemedRelativeLayout
         urlDisplayLayout.setTitle(title);
     }
 
-    public void setOnActivateListener(OnActivateListener listener) {
-        urlDisplayLayout.setOnActivateListener(listener);
+    public void setOnActivateListener(final OnActivateListener listener) {
+        activateListener = listener;
     }
 
     public void setOnCommitListener(OnCommitListener listener) {
