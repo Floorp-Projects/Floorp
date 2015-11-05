@@ -5291,7 +5291,7 @@ MacroAssembler::pushFakeReturnAddress(Register scratch)
     uint32_t pseudoReturnOffset = currentOffset();
     leaveNoPool();
 
-    MOZ_ASSERT(pseudoReturnOffset - offsetBeforePush == 8);
+    MOZ_ASSERT_IF(!oom(), pseudoReturnOffset - offsetBeforePush == 8);
     return pseudoReturnOffset;
 }
 
