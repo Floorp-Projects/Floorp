@@ -138,7 +138,7 @@ nsDOMCSSAttributeDeclaration::GetCSSDeclaration(Operation aOperation)
   }
 
   // cannot fail
-  css::Declaration *decl = new css::Declaration();
+  RefPtr<css::Declaration> decl = new css::Declaration();
   decl->InitializeEmpty();
   RefPtr<css::StyleRule> newRule = new css::StyleRule(nullptr, decl, 0, 0);
 

@@ -123,7 +123,7 @@ nsDOMCSSDeclaration::SetCssText(const nsAString& aCssText)
   // rule (see stack in bug 209575).
   mozAutoDocConditionalContentUpdateBatch autoUpdate(DocToUpdate(), true);
 
-  nsAutoPtr<css::Declaration> decl(new css::Declaration());
+  RefPtr<css::Declaration> decl(new css::Declaration());
   decl->InitializeEmpty();
   nsCSSParser cssParser(env.mCSSLoader);
   bool changed;
@@ -134,7 +134,7 @@ nsDOMCSSDeclaration::SetCssText(const nsAString& aCssText)
     return result;
   }
 
-  return SetCSSDeclaration(decl.forget());
+  return SetCSSDeclaration(decl);
 }
 
 NS_IMETHODIMP
@@ -328,16 +328,13 @@ nsDOMCSSDeclaration::ParsePropertyValue(const nsCSSProperty aPropID,
   // between when we mutate the declaration and when we set the new
   // rule (see stack in bug 209575).
   mozAutoDocConditionalContentUpdateBatch autoUpdate(DocToUpdate(), true);
-  css::Declaration* decl = olddecl->EnsureMutable();
+  RefPtr<css::Declaration> decl = olddecl->EnsureMutable();
 
   nsCSSParser cssParser(env.mCSSLoader);
   bool changed;
   cssParser.ParseProperty(aPropID, aPropValue, env.mSheetURI, env.mBaseURI,
                           env.mPrincipal, decl, &changed, aIsImportant);
   if (!changed) {
-    if (decl != olddecl) {
-      delete decl;
-    }
     // Parsing failed -- but we don't throw an exception for that.
     return NS_OK;
   }
@@ -369,7 +366,7 @@ nsDOMCSSDeclaration::ParseCustomPropertyValue(const nsAString& aPropertyName,
   // between when we mutate the declaration and when we set the new
   // rule (see stack in bug 209575).
   mozAutoDocConditionalContentUpdateBatch autoUpdate(DocToUpdate(), true);
-  css::Declaration* decl = olddecl->EnsureMutable();
+  RefPtr<css::Declaration> decl = olddecl->EnsureMutable();
 
   nsCSSParser cssParser(env.mCSSLoader);
   bool changed;
@@ -379,9 +376,6 @@ nsDOMCSSDeclaration::ParseCustomPropertyValue(const nsAString& aPropertyName,
                           env.mBaseURI, env.mPrincipal, decl,
                           &changed, aIsImportant);
   if (!changed) {
-    if (decl != olddecl) {
-      delete decl;
-    }
     // Parsing failed -- but we don't throw an exception for that.
     return NS_OK;
   }
@@ -392,8 +386,8 @@ nsDOMCSSDeclaration::ParseCustomPropertyValue(const nsAString& aPropertyName,
 nsresult
 nsDOMCSSDeclaration::RemoveProperty(const nsCSSProperty aPropID)
 {
-  css::Declaration* decl = GetCSSDeclaration(eOperation_RemoveProperty);
-  if (!decl) {
+  css::Declaration* olddecl = GetCSSDeclaration(eOperation_RemoveProperty);
+  if (!olddecl) {
     return NS_OK; // no decl, so nothing to remove
   }
 
@@ -404,7 +398,7 @@ nsDOMCSSDeclaration::RemoveProperty(const nsCSSProperty aPropID)
   // rule (see stack in bug 209575).
   mozAutoDocConditionalContentUpdateBatch autoUpdate(DocToUpdate(), true);
 
-  decl = decl->EnsureMutable();
+  RefPtr<css::Declaration> decl = olddecl->EnsureMutable();
   decl->RemoveProperty(aPropID);
   return SetCSSDeclaration(decl);
 }
@@ -415,8 +409,8 @@ nsDOMCSSDeclaration::RemoveCustomProperty(const nsAString& aPropertyName)
   MOZ_ASSERT(Substring(aPropertyName, 0,
                        CSS_CUSTOM_NAME_PREFIX_LENGTH).EqualsLiteral("--"));
 
-  css::Declaration* decl = GetCSSDeclaration(eOperation_RemoveProperty);
-  if (!decl) {
+  css::Declaration* olddecl = GetCSSDeclaration(eOperation_RemoveProperty);
+  if (!olddecl) {
     return NS_OK; // no decl, so nothing to remove
   }
 
@@ -427,7 +421,7 @@ nsDOMCSSDeclaration::RemoveCustomProperty(const nsAString& aPropertyName)
   // rule (see stack in bug 209575).
   mozAutoDocConditionalContentUpdateBatch autoUpdate(DocToUpdate(), true);
 
-  decl = decl->EnsureMutable();
+  RefPtr<css::Declaration> decl = olddecl->EnsureMutable();
   decl->RemoveVariableDeclaration(Substring(aPropertyName,
                                             CSS_CUSTOM_NAME_PREFIX_LENGTH));
   return SetCSSDeclaration(decl);
