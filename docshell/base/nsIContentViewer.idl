@@ -31,10 +31,9 @@ class nsDOMNavigationTiming;
 [ptr] native nsDOMNavigationTimingPtr(nsDOMNavigationTiming);
 [ref] native nsIContentViewerTArray(nsTArray<nsCOMPtr<nsIContentViewer> >);
 
-[scriptable, builtinclass, uuid(702e0a92-7d63-490e-b5ee-d247e6bd4588)]
+[scriptable, builtinclass, uuid(26425c7d-0e85-419b-933b-8abfe3289882)]
 interface nsIContentViewer : nsISupports
 {
-
   [noscript] void init(in nsIWidgetPtr aParentWidget,
                        [const] in nsIntRectRef aBounds);
 
@@ -244,15 +243,6 @@ interface nsIContentViewer : nsISupports
    * in depth-first pre-order traversal.
    */
   [noscript] void appendSubtree(in nsIContentViewerTArray array);
-
-  /**
-   * Set the maximum line width for the document.
-   * NOTE: This will generate a reflow!
-   *
-   * @param maxLineWidth The maximum width of any line boxes on the page,
-   *        in CSS pixels.
-   */
-  void changeMaxLineBoxWidth(in int32_t maxLineBoxWidth);
 
   /**
    * Instruct the refresh driver to discontinue painting until further
