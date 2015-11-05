@@ -18,9 +18,9 @@
   <project name="rilproxy" path="rilproxy" remote="b2g" revision="5ef30994f4778b4052e58a4383dbe7890048c87e"/>
   <project name="fake-libdvm" path="dalvik" remote="b2g" revision="d50ae982b19f42f0b66d08b9eb306be81687869f"/>
   <project name="fake-qemu-kernel" path="prebuilts/qemu-kernel" remote="b2g" revision="939b377d55a2f081d94029a30a75d05e5a20daf3"/>
-  <project name="gaia" path="gaia" remote="mozillaorg" revision="95047b652729496ec074acd85b0f1710dc28743e"/>
+  <project name="gaia" path="gaia" remote="mozillaorg" revision="d9e3e3bc529221db6793cb9b116059070a65a287"/>
   <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="956700d9754349b630a34551750ae6353614b6aa"/>
-  <project name="moztt" path="external/moztt" remote="b2g" revision="27de93fe66c3e80e157d157bd52ca99565351669"/>
+  <project name="moztt" path="external/moztt" remote="b2g" revision="aa5b7b7f6ed207ea1adc4df11d1d8bdaeabadd85"/>
   <project name="apitrace" path="external/apitrace" remote="apitrace" revision="638ec448619fda80fcb439b1747af62169d05548"/>
   <project name="valgrind" path="external/valgrind" remote="b2g" revision="5f931350fbc87c3df9db8b0ceb37734b8b471593"/>
   <project name="vex" path="external/VEX" remote="b2g" revision="48d8c7c950745f1b166b42125e6f0d3293d71636"/>
