@@ -238,7 +238,8 @@ const Sandbox = iced(function Sandbox(options) {
     sandboxPrototype: 'prototype' in options ? options.prototype : {},
     invisibleToDebugger: 'invisibleToDebugger' in options ?
                          options.invisibleToDebugger : false,
-    metadata: 'metadata' in options ? options.metadata : {}
+    metadata: 'metadata' in options ? options.metadata : {},
+    waiveIntereposition: !!options.waiveIntereposition
   };
 
   if (options.metadata && options.metadata.addonID) {
@@ -791,7 +792,7 @@ Loader.unload = unload;
 function Loader(options) {
   let {
     modules, globals, resolve, paths, rootURI, manifest, requireMap, isNative,
-    metadata, sharedGlobal, sharedGlobalBlacklist, checkCompatibility
+    metadata, sharedGlobal, sharedGlobalBlacklist, checkCompatibility, waiveIntereposition
   } = override({
     paths: {},
     modules: {},
@@ -811,7 +812,8 @@ function Loader(options) {
       // Make the returned resolve function have the same signature
       (id, requirer) => Loader.nodeResolve(id, requirer, { rootURI: rootURI }) :
       Loader.resolve,
-    sharedGlobalBlacklist: ["sdk/indexed-db"]
+    sharedGlobalBlacklist: ["sdk/indexed-db"],
+    waiveIntereposition: false
   }, options);
 
   // Create overrides defaults, none at the moment
