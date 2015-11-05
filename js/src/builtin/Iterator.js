@@ -101,7 +101,7 @@ function CreateListIterator(array) {
             ThrowTypeError(JSMSG_INCOMPATIBLE_METHOD, "next", "method", ToString(this));
 
         let array = UnsafeGetObjectFromReservedSlot(this, ITERATOR_SLOT_TARGET);
-        let index = UnsafeGetInt32FromReservedSlot(this, ITERATOR_SLOT_NEXT_INDEX);
+        let index = UnsafeGetReservedSlot(this, ITERATOR_SLOT_NEXT_INDEX);
 
         if (index >= ToLength(array.length)) {
             UnsafeSetReservedSlot(this, ITERATOR_SLOT_NEXT_INDEX, 1/0);
