@@ -15,19 +15,16 @@ import org.mozilla.gecko.BrowserApp;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.ReaderModeUtils;
 import org.mozilla.gecko.SiteIdentity;
-import org.mozilla.gecko.SiteIdentity.SecurityMode;
 import org.mozilla.gecko.SiteIdentity.MixedMode;
+import org.mozilla.gecko.SiteIdentity.SecurityMode;
 import org.mozilla.gecko.SiteIdentity.TrackingMode;
 import org.mozilla.gecko.Tab;
-import org.mozilla.gecko.Tabs;
 import org.mozilla.gecko.animation.PropertyAnimator;
 import org.mozilla.gecko.animation.ViewHelper;
 import org.mozilla.gecko.favicons.Favicons;
 import org.mozilla.gecko.toolbar.BrowserToolbarTabletBase.ForwardButtonAnimation;
-import org.mozilla.gecko.util.Clipboard;
 import org.mozilla.gecko.util.ColorUtils;
 import org.mozilla.gecko.util.HardwareUtils;
-import org.mozilla.gecko.util.MenuUtils;
 import org.mozilla.gecko.util.StringUtils;
 import org.mozilla.gecko.widget.themed.ThemedLinearLayout;
 import org.mozilla.gecko.widget.themed.ThemedTextView;
@@ -42,9 +39,7 @@ import android.text.TextUtils;
 import android.text.style.ForegroundColorSpan;
 import android.util.AttributeSet;
 import android.util.Log;
-import android.view.ContextMenu;
 import android.view.LayoutInflater;
-import android.view.MenuInflater;
 import android.view.View;
 import android.view.animation.AlphaAnimation;
 import android.view.animation.Animation;
@@ -146,8 +141,6 @@ public class ToolbarDisplayLayout extends ThemedLinearLayout
     private final ForegroundColorSpan mDomainColor;
     private final ForegroundColorSpan mPrivateDomainColor;
 
-    private BrowserToolbar.OnActivateListener mActivateListener;
-
     public ToolbarDisplayLayout(Context context, AttributeSet attrs) {
         super(context, attrs);
         setOrientation(HORIZONTAL);
@@ -239,56 +232,6 @@ public class ToolbarDisplayLayout extends ThemedLinearLayout
         mLockFadeIn.setDuration(lockAnimDuration);
         mTitleSlideLeft.setDuration(lockAnimDuration);
         mTitleSlideRight.setDuration(lockAnimDuration);
-
-        // Context menu
-        mTitle.setOnCreateContextMenuListener(new View.OnCreateContextMenuListener() {
-            @Override
-            public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
-                // NOTE: Use MenuUtils.safeSetVisible because some actions might
-                // be on the Page menu
-                MenuInflater inflater = mActivity.getMenuInflater();
-                inflater.inflate(R.menu.titlebar_contextmenu, menu);
-
-                String clipboard = Clipboard.getText();
-                if (TextUtils.isEmpty(clipboard)) {
-                    menu.findItem(R.id.pasteandgo).setVisible(false);
-                    menu.findItem(R.id.paste).setVisible(false);
-                }
-
-                Tab tab = Tabs.getInstance().getSelectedTab();
-                if (tab != null) {
-                    String url = tab.getURL();
-                    if (url == null) {
-                        menu.findItem(R.id.copyurl).setVisible(false);
-                        menu.findItem(R.id.add_to_launcher).setVisible(false);
-                    }
-
-                    MenuUtils.safeSetVisible(menu, R.id.subscribe, tab.hasFeeds());
-                    MenuUtils.safeSetVisible(menu, R.id.add_search_engine, tab.hasOpenSearch());
-                }
-                else {
-                    // if there is no tab, remove anything tab dependent
-                    menu.findItem(R.id.copyurl).setVisible(false);
-                    menu.findItem(R.id.add_to_launcher).setVisible(false);
-                    MenuUtils.safeSetVisible(menu, R.id.subscribe, false);
-                    MenuUtils.safeSetVisible(menu, R.id.add_search_engine, false);
-                }
-            }
-        });
-
-        // Edit activation
-        mTitle.setOnClickListener(new OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (mActivateListener != null) {
-                    mActivateListener.onActivate();
-                }
-            }
-        });
-    }
-
-    public void setOnActivateListener(BrowserToolbar.OnActivateListener listener) {
-        mActivateListener = listener;
     }
 
     @Override
