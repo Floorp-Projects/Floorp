@@ -604,16 +604,16 @@ public:
   ResolvedStyleCache() : mCache() {}
   nsStyleContext* Get(nsPresContext *aPresContext,
                       nsStyleContext *aParentStyleContext,
-                      nsCSSKeyframeRule *aKeyframe);
+                      Declaration* aKeyframeDeclaration);
 
 private:
-  nsRefPtrHashtable<nsPtrHashKey<nsCSSKeyframeRule>, nsStyleContext> mCache;
+  nsRefPtrHashtable<nsPtrHashKey<Declaration>, nsStyleContext> mCache;
 };
 
 nsStyleContext*
 ResolvedStyleCache::Get(nsPresContext *aPresContext,
                         nsStyleContext *aParentStyleContext,
-                        nsCSSKeyframeRule *aKeyframe)
+                        Declaration* aKeyframeDeclaration)
 {
   // FIXME (spec):  The css3-animations spec isn't very clear about how
   // properties are resolved when they have values that depend on other
@@ -623,19 +623,18 @@ ResolvedStyleCache::Get(nsPresContext *aPresContext,
   // that they're not, since that would prevent us from caching a lot of
   // data that we'd really like to cache (in particular, the
   // StyleAnimationValue values in AnimationPropertySegment).
-  nsStyleContext *result = mCache.GetWeak(aKeyframe);
+  nsStyleContext *result = mCache.GetWeak(aKeyframeDeclaration);
   if (!result) {
-    Declaration* declaration = aKeyframe->Declaration();
-    declaration->SetImmutable();
+    aKeyframeDeclaration->SetImmutable();
     // The spec says that !important declarations should just be ignored
-    MOZ_ASSERT(!declaration->HasImportantData(),
+    MOZ_ASSERT(!aKeyframeDeclaration->HasImportantData(),
                "Keyframe rule has !important data");
 
     nsCOMArray<nsIStyleRule> rules;
-    rules.AppendObject(declaration);
+    rules.AppendObject(aKeyframeDeclaration);
     RefPtr<nsStyleContext> resultStrong = aPresContext->StyleSet()->
       ResolveStyleByAddingRules(aParentStyleContext, rules);
-    mCache.Put(aKeyframe, resultStrong);
+    mCache.Put(aKeyframeDeclaration, resultStrong);
     result = resultStrong;
   }
   return result;
@@ -798,7 +797,8 @@ nsAnimationManager::BuildAnimations(nsStyleContext* aStyleContext,
         KeyframeData &toKeyframe = sortedKeyframes[kfIdx];
 
         RefPtr<nsStyleContext> toContext =
-          resolvedStyles.Get(mPresContext, aStyleContext, toKeyframe.mRule);
+          resolvedStyles.Get(mPresContext, aStyleContext,
+                             toKeyframe.mRule->Declaration());
 
         if (fromKeyframe) {
           interpolated = interpolated &&
