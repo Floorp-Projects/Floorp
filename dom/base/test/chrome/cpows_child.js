@@ -20,7 +20,6 @@ var Cu = Components.utils;
     lifetime_test,
     cancel_test,
     cancel_test2,
-    unsafe_test,
   ];
 
   function go() {
@@ -336,22 +335,5 @@ function cancel_test2(finish)
   addMessageListener("cpows:cancel_test2_done", msg => {
     fin2 = true;
     if (fin1 && fin2) finish();
-  });
-}
-
-function unsafe_test(finish)
-{
-  if (!is_remote) {
-    // Only run this test when running out-of-process.
-    finish();
-    return;
-  }
-
-  function f() {}
-
-  sendAsyncMessage("cpows:unsafe", null, {f});
-  addMessageListener("cpows:unsafe_done", msg => {
-    sendRpcMessage("cpows:safe", null, {f});
-    addMessageListener("cpows:safe_done", finish);
   });
 }
