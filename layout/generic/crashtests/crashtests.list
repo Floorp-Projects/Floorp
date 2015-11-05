@@ -486,7 +486,7 @@ load 737313-3.html
 test-pref(font.size.inflation.emPerLine,15) load 740199-1.xhtml
 load 747688.html
 load 750066.html
-pref(dom.meta-viewport.enabled,true) test-pref(font.size.inflation.emPerLine,15) asserts(1-100) load font-inflation-762332.html # bug 762332
+pref(dom.meta-viewport.enabled,true) test-pref(font.size.inflation.emPerLine,15) asserts-if(!browserIsRemote,1-100) load font-inflation-762332.html # bug 762332
 load 762902.html
 load 762764-1.html
 load 765409.html
