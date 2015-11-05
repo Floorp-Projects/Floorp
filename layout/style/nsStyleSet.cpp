@@ -247,12 +247,12 @@ nsStyleSet::Init(nsPresContext *aPresContext)
 
   // Make an explicit GatherRuleProcessors call for the levels that
   // don't have style sheets.  The other levels will have their calls
-  // triggered by DirtyRuleProcessors.  (We should probably convert the
-  // SheetType::PresHint and SheetType::StyleAttr levels to work like
-  // this as well, and not implement nsIStyleSheet.)
+  // triggered by DirtyRuleProcessors.
+  GatherRuleProcessors(SheetType::PresHint);
+  GatherRuleProcessors(SheetType::SVGAttrAnimation);
+  GatherRuleProcessors(SheetType::StyleAttr);
   GatherRuleProcessors(SheetType::Animation);
   GatherRuleProcessors(SheetType::Transition);
-  GatherRuleProcessors(SheetType::SVGAttrAnimation);
 }
 
 nsresult
