@@ -5,6 +5,12 @@
 function test() {
   waitForExplicitFinish();
 
+  // Ensure TabView has been initialized already. Otherwise it could
+  // activate at an unexpected time and show/hide tabs.
+  TabView._initFrame(runTest);
+}
+
+function runTest() {
   // establish initial state
   is(gBrowser.tabs.length, 1, "we start with one tab");
   

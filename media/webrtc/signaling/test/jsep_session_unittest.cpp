@@ -628,6 +628,14 @@ protected:
         // Stomp existing defaults
         mDefaultCandidates[level][component] =
           std::make_pair("192.168.0.1", port);
+        session.UpdateDefaultCandidate(
+            mDefaultCandidates[level][RTP].first,
+            mDefaultCandidates[level][RTP].second,
+            // Will be empty string if not present, which is how we indicate
+            // that there is no default for RTCP
+            mDefaultCandidates[level][RTCP].first,
+            mDefaultCandidates[level][RTCP].second,
+            level);
       }
 
       void FinishGathering(JsepSession& session) const
@@ -635,7 +643,9 @@ protected:
         // Copy so we can be terse and use []
         for (auto levelAndCandidates : mDefaultCandidates) {
           ASSERT_EQ(1U, levelAndCandidates.second.count(RTP));
-          session.EndOfLocalCandidates(
+          // do a final UpdateDefaultCandidate here in case candidates were
+          // cleared during renegotiation.
+          session.UpdateDefaultCandidate(
               levelAndCandidates.second[RTP].first,
               levelAndCandidates.second[RTP].second,
               // Will be empty string if not present, which is how we indicate
@@ -643,6 +653,7 @@ protected:
               levelAndCandidates.second[RTCP].first,
               levelAndCandidates.second[RTCP].second,
               levelAndCandidates.first);
+          session.EndOfLocalCandidates(levelAndCandidates.first);
         }
       }
 

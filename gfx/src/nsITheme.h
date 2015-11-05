@@ -15,7 +15,6 @@
 #include "Units.h"
 
 struct nsRect;
-struct nsIntMargin;
 class nsPresContext;
 class nsRenderingContext;
 class nsDeviceContext;
