@@ -115,51 +115,6 @@ class ModuleCompiler
 
     /***************************************************** Mutable interface */
 
-    bool getOrCreateFunctionEntry(uint32_t funcIndex, Label** label)
-    {
-        return compileResults_->getOrCreateFunctionEntry(funcIndex, label);
-    }
-
-    bool finishGeneratingFunction(AsmFunction& func, CodeGenerator& codegen,
-                                  const AsmJSFunctionLabels& labels)
-    {
-        // If we have hit OOM then invariants which we assert below may not
-        // hold, so abort now.
-        if (masm().oom())
-            return false;
-
-        // Code range
-        unsigned line = func.lineno();
-        unsigned column = func.column();
-        PropertyName* funcName = func.name();
-        if (!compileResults_->addCodeRange(AsmJSModule::FunctionCodeRange(funcName, line, labels)))
-            return false;
-
-        // Script counts
-        jit::IonScriptCounts* counts = codegen.extractScriptCounts();
-        if (counts && !compileResults_->addFunctionCounts(counts)) {
-            js_delete(counts);
-            return false;
-        }
-
-        // Slow functions
-        if (func.compileTime() >= 250) {
-            ModuleCompileResults::SlowFunction sf(funcName, func.compileTime(), line, column);
-            if (!compileResults_->slowFunctions().append(Move(sf)))
-                return false;
-        }
-
-#if defined(MOZ_VTUNE) || defined(JS_ION_PERF)
-        // Perf and profiling information
-        unsigned begin = labels.nonProfilingEntry.offset();
-        unsigned end = labels.endAfterOOL.offset();
-        AsmJSModule::ProfiledFunction profiledFunc(funcName, begin, end, line, column);
-        if (!compileResults_->addProfiledFunction(profiledFunc))
-            return false;
-#endif // defined(MOZ_VTUNE) || defined(JS_ION_PERF)
-        return true;
-    }
-
     void finish(ScopedJSDeletePtr<ModuleCompileResults>* results) {
         *results = compileResults_.forget();
     }
@@ -801,7 +756,7 @@ class FunctionCompiler
             return true;
         }
 
-        CallSiteDesc::Kind kind = CallSiteDesc::Kind(-1);  // initialize to silence GCC warning
+        CallSiteDesc::Kind kind = CallSiteDesc::Kind(-1);
         switch (callee.which()) {
           case MAsmJSCall::Callee::Internal: kind = CallSiteDesc::Relative; break;
           case MAsmJSCall::Callee::Dynamic:  kind = CallSiteDesc::Register; break;
@@ -819,10 +774,10 @@ class FunctionCompiler
     }
 
   public:
-    bool internalCall(const Signature& sig, Label* entry, const Call& call, MDefinition** def)
+    bool internalCall(const Signature& sig, uint32_t funcIndex, const Call& call, MDefinition** def)
     {
         MIRType returnType = sig.retType().toMIRType();
-        return callPrivate(MAsmJSCall::Callee(entry), call, returnType, def);
+        return callPrivate(MAsmJSCall::Callee(AsmJSInternalCallee(funcIndex)), call, returnType, def);
     }
 
     bool funcPtrCall(const Signature& sig, uint32_t maskLit, uint32_t globalDataOffset, MDefinition* index,
@@ -1741,13 +1696,7 @@ static bool
 EmitInternalCall(FunctionCompiler& f, RetType retType, MDefinition** def)
 {
     uint32_t funcIndex = f.readU32();
-
-    Label* entry;
-    if (!f.m().getOrCreateFunctionEntry(funcIndex, &entry))
-        return false;
-
     const Signature& sig = *f.readSignature();
-
     MOZ_ASSERT_IF(sig.retType() != RetType::Void, sig.retType() == retType);
 
     uint32_t lineno, column;
@@ -1757,7 +1706,7 @@ EmitInternalCall(FunctionCompiler& f, RetType retType, MDefinition** def)
     if (!EmitCallArgs(f, sig, &call))
         return false;
 
-    return f.internalCall(sig, entry, call, def);
+    return f.internalCall(sig, funcIndex, call, def);
 }
 
 static bool
@@ -3168,7 +3117,8 @@ js::GenerateAsmFunctionMIR(ModuleCompiler& m, LifoAlloc& lifo, AsmFunction& func
 }
 
 bool
-js::GenerateAsmFunctionCode(ModuleCompiler& m, AsmFunction& func, MIRGenerator& mir, LIRGraph& lir)
+js::GenerateAsmFunctionCode(ModuleCompiler& m, AsmFunction& func, MIRGenerator& mir, LIRGraph& lir,
+                            FunctionCompileResults* results)
 {
     JitContext jitContext(m.runtime(), /* CompileCompartment = */ nullptr, &mir.alloc());
 
@@ -3185,18 +3135,19 @@ js::GenerateAsmFunctionCode(ModuleCompiler& m, AsmFunction& func, MIRGenerator& 
     if (!codegen)
         return false;
 
-    Label* funcEntry;
-    if (!m.getOrCreateFunctionEntry(func.funcIndex(), &funcEntry))
-        return false;
-
-    AsmJSFunctionLabels labels(*funcEntry, m.stackOverflowLabel());
+    Label entry;
+    AsmJSFunctionLabels labels(entry, m.stackOverflowLabel());
     if (!codegen->generateAsmJS(&labels))
         return false;
 
     func.accumulateCompileTime((PRMJ_Now() - before) / PRMJ_USEC_PER_MSEC);
 
-    if (!m.finishGeneratingFunction(func, *codegen, labels))
-        return false;
+    PropertyName* funcName = func.name();
+    unsigned line = func.lineno();
+
+    // Fill in the results of the function's compilation
+    AsmJSModule::FunctionCodeRange codeRange(funcName, line, labels);
+    results->finishCodegen(func, codeRange, *codegen->extractScriptCounts());
 
     // Unlike regular IonMonkey, which links and generates a new JitCode for
     // every function, we accumulate all the functions in the module in a

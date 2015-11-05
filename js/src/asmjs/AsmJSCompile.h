@@ -27,6 +27,7 @@ class AsmFunction;
 class LifoAlloc;
 class ModuleCompiler;
 class ModuleCompileResults;
+class FunctionCompileResults;
 
 namespace jit {
     class LIRGraph;
@@ -76,7 +77,8 @@ class MOZ_RAII AsmModuleCompilerScope
 
 bool CreateAsmModuleCompiler(ModuleCompileInputs mci, AsmModuleCompilerScope* scope);
 bool GenerateAsmFunctionMIR(ModuleCompiler& m, LifoAlloc& lifo, AsmFunction& func, jit::MIRGenerator** mir);
-bool GenerateAsmFunctionCode(ModuleCompiler& m, AsmFunction& func, jit::MIRGenerator& mir, jit::LIRGraph& lir);
+bool GenerateAsmFunctionCode(ModuleCompiler& m, AsmFunction& func, jit::MIRGenerator& mir,
+                             jit::LIRGraph& lir, FunctionCompileResults* results);
 void FinishAsmModuleCompilation(ModuleCompiler& m, ScopedJSDeletePtr<ModuleCompileResults>* results);
 
 } // namespace js
