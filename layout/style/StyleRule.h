@@ -19,6 +19,7 @@
 #include "nsCOMPtr.h"
 #include "nsCSSPseudoElements.h"
 #include "nsCSSPseudoClasses.h"
+#include "nsIStyleRule.h"
 
 class nsIAtom;
 struct nsCSSSelectorList;
@@ -345,9 +346,6 @@ public:
   virtual nsIDOMCSSRule* GetDOMRule() override;
 
   virtual nsIDOMCSSRule* GetExistingDOMRule() override;
-
-  // The new mapping function.
-  virtual void MapRuleInfoInto(nsRuleData* aRuleData) override;
 
 #ifdef DEBUG
   virtual void List(FILE* out = stdout, int32_t aIndent = 0) const override;
