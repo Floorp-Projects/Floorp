@@ -332,13 +332,6 @@ nsIdentifierMapEntry::RemoveContentChangeCallback(nsIDocument::IDTargetObserver 
   }
 }
 
-// XXX Workaround for bug 980560 to maintain the existing broken semantics
-template<>
-struct nsIStyleRule::COMTypeInfo<css::Rule, void> {
-  static const nsIID kIID;
-};
-const nsIID nsIStyleRule::COMTypeInfo<css::Rule, void>::kIID = NS_ISTYLE_RULE_IID;
-
 namespace mozilla {
 namespace dom {
 
@@ -5236,51 +5229,51 @@ nsDocument::DocumentStatesChanged(EventStates aStateMask)
 
 void
 nsDocument::StyleRuleChanged(nsIStyleSheet* aSheet,
-                             nsIStyleRule* aOldStyleRule,
-                             nsIStyleRule* aNewStyleRule)
+                             css::Rule* aOldStyleRule,
+                             css::Rule* aNewStyleRule)
 {
   NS_DOCUMENT_NOTIFY_OBSERVERS(StyleRuleChanged,
                                (this, aSheet,
                                 aOldStyleRule, aNewStyleRule));
 
   if (StyleSheetChangeEventsEnabled()) {
-    nsCOMPtr<css::Rule> rule = do_QueryInterface(aNewStyleRule);
     DO_STYLESHEET_NOTIFICATION(StyleRuleChangeEvent,
                                "StyleRuleChanged",
                                mRule,
-                               rule ? rule->GetDOMRule() : nullptr);
+                               aNewStyleRule ? aNewStyleRule->GetDOMRule()
+                                             : nullptr);
   }
 }
 
 void
 nsDocument::StyleRuleAdded(nsIStyleSheet* aSheet,
-                           nsIStyleRule* aStyleRule)
+                           css::Rule* aStyleRule)
 {
   NS_DOCUMENT_NOTIFY_OBSERVERS(StyleRuleAdded,
                                (this, aSheet, aStyleRule));
 
   if (StyleSheetChangeEventsEnabled()) {
-    nsCOMPtr<css::Rule> rule = do_QueryInterface(aStyleRule);
     DO_STYLESHEET_NOTIFICATION(StyleRuleChangeEvent,
                                "StyleRuleAdded",
                                mRule,
-                               rule ? rule->GetDOMRule() : nullptr);
+                               aStyleRule ? aStyleRule->GetDOMRule()
+                                          : nullptr);
   }
 }
 
 void
 nsDocument::StyleRuleRemoved(nsIStyleSheet* aSheet,
-                             nsIStyleRule* aStyleRule)
+                             css::Rule* aStyleRule)
 {
   NS_DOCUMENT_NOTIFY_OBSERVERS(StyleRuleRemoved,
                                (this, aSheet, aStyleRule));
 
   if (StyleSheetChangeEventsEnabled()) {
-    nsCOMPtr<css::Rule> rule = do_QueryInterface(aStyleRule);
     DO_STYLESHEET_NOTIFICATION(StyleRuleChangeEvent,
                                "StyleRuleRemoved",
                                mRule,
-                               rule ? rule->GetDOMRule() : nullptr);
+                               aStyleRule ? aStyleRule->GetDOMRule()
+                                          : nullptr);
   }
 }
 
