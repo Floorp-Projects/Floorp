@@ -2169,9 +2169,8 @@ CreateDeclaration(nsINode* aNode,
                          rule->GetDeclaration(), aChanged2, false);
   }
 
-  rule->RuleMatched();
-
   RefPtr<Declaration> declaration = rule->GetDeclaration();
+  declaration->SetImmutable();
   return declaration.forget();
 }
 

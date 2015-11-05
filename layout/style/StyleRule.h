@@ -327,12 +327,6 @@ public:
   already_AddRefed<StyleRule>
   DeclarationChanged(Declaration* aDecl, bool aHandleContainer);
 
-  /**
-   * The rule processor must call this method before calling
-   * nsRuleWalker::Forward on this rule during rule matching.
-   */
-  void RuleMatched();
-
   // hooks for DOM rule
   void GetCssText(nsAString& aCssText);
   void SetCssText(const nsAString& aCssText);

@@ -2631,8 +2631,9 @@ StyleAnimationValue::ComputeValues(
 
     nsCOMArray<nsIStyleRule> ruleArray;
     ruleArray.AppendObject(styleSet->InitialStyleRule());
-    ruleArray.AppendObject(aStyleRule->GetDeclaration());
-    aStyleRule->RuleMatched();
+    css::Declaration* declaration = aStyleRule->GetDeclaration();
+    ruleArray.AppendObject(declaration);
+    declaration->SetImmutable();
     tmpStyleContext =
       styleSet->ResolveStyleByAddingRules(styleContext, ruleArray);
     if (!tmpStyleContext) {
@@ -2658,8 +2659,9 @@ StyleAnimationValue::ComputeValues(
   // value may have been biased by the 'initial' values supplied.
   if (!aIsContextSensitive || *aIsContextSensitive) {
     nsCOMArray<nsIStyleRule> ruleArray;
-    ruleArray.AppendObject(aStyleRule->GetDeclaration());
-    aStyleRule->RuleMatched();
+    css::Declaration* declaration = aStyleRule->GetDeclaration();
+    ruleArray.AppendObject(declaration);
+    declaration->SetImmutable();
     tmpStyleContext =
       styleSet->ResolveStyleByAddingRules(styleContext, ruleArray);
     if (!tmpStyleContext) {
