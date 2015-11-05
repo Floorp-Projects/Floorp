@@ -326,10 +326,6 @@ public:
   already_AddRefed<StyleRule>
   DeclarationChanged(Declaration* aDecl, bool aHandleContainer);
 
-  nsIStyleRule* GetImportantRule() const {
-    return mDeclaration->GetImportantStyleData();
-  }
-
   /**
    * The rule processor must call this method before calling
    * nsRuleWalker::Forward on this rule during rule matching.
