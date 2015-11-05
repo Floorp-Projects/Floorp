@@ -21,7 +21,7 @@ typedef SVGGraphicsElement SVGSwitchElementBase;
 
 class SVGSwitchElement final : public SVGSwitchElementBase
 {
-  friend class nsSVGSwitchFrame;
+  friend class ::nsSVGSwitchFrame;
 protected:
   friend nsresult (::NS_NewSVGSwitchElement(nsIContent **aResult,
                                             already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo));
