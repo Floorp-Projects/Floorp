@@ -396,6 +396,7 @@ public:
     , mDeclaration(aDeclaration)
   {
     mKeys.SwapElements(aKeys);
+    mDeclaration->SetOwningRule(this);
   }
 private:
   nsCSSKeyframeRule(const nsCSSKeyframeRule& aCopy);
@@ -527,6 +528,7 @@ public:
     , mDeclaration(aDeclaration)
     , mImportantRule(nullptr)
   {
+    mDeclaration->SetOwningRule(this);
   }
 private:
   nsCSSPageRule(const nsCSSPageRule& aCopy);

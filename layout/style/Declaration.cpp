@@ -20,7 +20,8 @@ namespace mozilla {
 namespace css {
 
 Declaration::Declaration()
-  : mImmutable(false)
+  : mOwningRule(nullptr)
+  , mImmutable(false)
 {
 }
 
@@ -36,6 +37,7 @@ Declaration::Declaration(const Declaration& aCopy)
     mImportantVariables(aCopy.mImportantVariables ?
         new CSSVariableDeclarations(*aCopy.mImportantVariables) :
         nullptr),
+    mOwningRule(nullptr),
     mImmutable(false)
 {
 }
