@@ -350,18 +350,22 @@ static const char *FourCC2MIME(uint32_t fourcc) {
             return MEDIA_MIMETYPE_VIDEO_VP6;
 
         default:
-            CHECK(!"should not be here.");
+            ALOGE("Unknown MIME type %08x", fourcc);
             return NULL;
     }
 }
 
 static bool AdjustChannelsAndRate(uint32_t fourcc, uint32_t *channels, uint32_t *rate) {
-    if (!strcasecmp(MEDIA_MIMETYPE_AUDIO_AMR_NB, FourCC2MIME(fourcc))) {
+    const char* mime = FourCC2MIME(fourcc);
+    if (!mime) {
+        return false;
+    }
+    if (!strcasecmp(MEDIA_MIMETYPE_AUDIO_AMR_NB, mime)) {
         // AMR NB audio is always mono, 8kHz
         *channels = 1;
         *rate = 8000;
         return true;
-    } else if (!strcasecmp(MEDIA_MIMETYPE_AUDIO_AMR_WB, FourCC2MIME(fourcc))) {
+    } else if (!strcasecmp(MEDIA_MIMETYPE_AUDIO_AMR_WB, mime)) {
         // AMR WB audio is always mono, 16kHz
         *channels = 1;
         *rate = 16000;
@@ -1021,9 +1025,13 @@ status_t MPEG4Extractor::parseChunk(off64_t *offset, int depth) {
             original_fourcc = ntohl(original_fourcc);
             ALOGV("read original format: %d", original_fourcc);
             if (!mLastTrack) {
-              return ERROR_MALFORMED;
+                return ERROR_MALFORMED;
             }
-            mLastTrack->meta->setCString(kKeyMIMEType, FourCC2MIME(original_fourcc));
+            const char* mime = FourCC2MIME(original_fourcc);
+            if (!mime) {
+                return ERROR_UNSUPPORTED;
+            }
+            mLastTrack->meta->setCString(kKeyMIMEType, mime);
             uint32_t num_channels = 0;
             uint32_t sample_rate = 0;
             if (AdjustChannelsAndRate(original_fourcc, &num_channels, &sample_rate)) {
@@ -1336,7 +1344,11 @@ status_t MPEG4Extractor::parseChunk(off64_t *offset, int depth) {
             }
             if (chunk_type != FOURCC('e', 'n', 'c', 'a')) {
                 // if the chunk type is enca, we'll get the type from the sinf/frma box later
-                mLastTrack->meta->setCString(kKeyMIMEType, FourCC2MIME(chunk_type));
+                const char* mime = FourCC2MIME(chunk_type);
+                if (!mime) {
+                    return ERROR_UNSUPPORTED;
+                }
+                mLastTrack->meta->setCString(kKeyMIMEType, mime);
                 AdjustChannelsAndRate(chunk_type, &num_channels, &sample_rate);
             }
 
@@ -1454,7 +1466,11 @@ status_t MPEG4Extractor::parseChunk(off64_t *offset, int depth) {
             }
             if (chunk_type != FOURCC('e', 'n', 'c', 'v')) {
                 // if the chunk type is encv, we'll get the type from the sinf/frma box later
-                mLastTrack->meta->setCString(kKeyMIMEType, FourCC2MIME(chunk_type));
+                const char* mime = FourCC2MIME(chunk_type);
+                if (!mime) {
+                    return ERROR_UNSUPPORTED;
+                }
+                mLastTrack->meta->setCString(kKeyMIMEType, mime);
             }
             mLastTrack->meta->setInt32(kKeyWidth, width);
             mLastTrack->meta->setInt32(kKeyHeight, height);
