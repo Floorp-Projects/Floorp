@@ -2499,11 +2499,6 @@ nsDocument::FillStyleSet(nsStyleSet* aStyleSet)
   NS_PRECONDITION(aStyleSet->SheetCount(SheetType::Doc) == 0,
                   "Style set already has document sheets?");
 
-  // We could consider moving this to nsStyleSet::Init, to match its
-  // handling of the eAnimationSheet and eTransitionSheet levels.
-  aStyleSet->DirtyRuleProcessors(SheetType::PresHint);
-  aStyleSet->DirtyRuleProcessors(SheetType::StyleAttr);
-
   int32_t i;
   for (i = mStyleSheets.Count() - 1; i >= 0; --i) {
     nsIStyleSheet* sheet = mStyleSheets[i];
