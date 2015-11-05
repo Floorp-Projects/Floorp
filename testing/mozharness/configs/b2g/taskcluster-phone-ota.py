@@ -38,6 +38,7 @@ config = {
         "GAIA_OPTIMIZE": "1",
         "WGET_OPTS": "-c -q"
     },
+    "update_types": [ "ota", "fota" ],
     "is_automation": True,
     "repo_remote_mappings": {
         'https://android.googlesource.com/': 'https://git.mozilla.org/external/aosp',
