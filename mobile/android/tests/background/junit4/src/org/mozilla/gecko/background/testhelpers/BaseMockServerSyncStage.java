@@ -3,9 +3,6 @@
 
 package org.mozilla.gecko.background.testhelpers;
 
-import java.io.IOException;
-import java.net.URISyntaxException;
-
 import org.json.simple.parser.ParseException;
 import org.mozilla.gecko.sync.NoCollectionKeysSetException;
 import org.mozilla.gecko.sync.NonObjectJSONException;
@@ -13,6 +10,9 @@ import org.mozilla.gecko.sync.SynchronizerConfiguration;
 import org.mozilla.gecko.sync.repositories.RecordFactory;
 import org.mozilla.gecko.sync.repositories.Repository;
 import org.mozilla.gecko.sync.stage.ServerSyncStage;
+
+import java.io.IOException;
+import java.net.URISyntaxException;
 
 /**
  * A stage that joins two Repositories with no wrapping.

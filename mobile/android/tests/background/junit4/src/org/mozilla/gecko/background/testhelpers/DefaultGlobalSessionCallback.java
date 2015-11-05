@@ -3,11 +3,11 @@
 
 package org.mozilla.gecko.background.testhelpers;
 
-import java.net.URI;
-
 import org.mozilla.gecko.sync.GlobalSession;
 import org.mozilla.gecko.sync.delegates.GlobalSessionCallback;
 import org.mozilla.gecko.sync.stage.GlobalSyncStage.Stage;
+
+import java.net.URI;
 
 public class DefaultGlobalSessionCallback implements GlobalSessionCallback {
 

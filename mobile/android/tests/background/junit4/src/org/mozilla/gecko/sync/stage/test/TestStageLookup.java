@@ -3,17 +3,17 @@
 
 package org.mozilla.gecko.sync.stage.test;
 
-import static org.junit.Assert.assertEquals;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mozilla.gecko.background.testhelpers.TestRunner;
+import org.mozilla.gecko.sync.stage.GlobalSyncStage.Stage;
 
 import java.util.HashSet;
 import java.util.Set;
 
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mozilla.gecko.sync.stage.GlobalSyncStage.Stage;
-import org.robolectric.RobolectricGradleTestRunner;
+import static org.junit.Assert.assertEquals;
 
-@RunWith(RobolectricGradleTestRunner.class)
+@RunWith(TestRunner.class)
 public class TestStageLookup {
 
   @Test
