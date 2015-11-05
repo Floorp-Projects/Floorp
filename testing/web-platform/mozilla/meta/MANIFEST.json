@@ -331,6 +331,13 @@
             "url": "/_mozilla/service-workers/service-worker/referer.https.html"
           }
         ],
+        "service-workers/service-worker/register-closed-window.https.html": [
+          {
+            "path": "service-workers/service-worker/register-closed-window.https.html",
+            "timeout": "long",
+            "url": "/_mozilla/service-workers/service-worker/register-closed-window.https.html"
+          }
+        ],
         "service-workers/service-worker/register-default-scope.https.html": [
           {
             "path": "service-workers/service-worker/register-default-scope.https.html",
@@ -499,22 +506,22 @@
             "url": "/_mozilla/service-workers/service-worker/unregister.https.html"
           }
         ],
-        "service-workers/service-worker/update.https.html": [
-          {
-            "path": "service-workers/service-worker/update.https.html",
-            "url": "/_mozilla/service-workers/service-worker/update.https.html"
-          }
-        ],
         "service-workers/service-worker/update-after-navigation-fetch-event.https.html": [
           {
-            "path": "service-workers/service-worker//update-after-navigation-fetch-event.https.html",
-            "url": "/_mozilla/service-workers/service-worker//update-after-navigation-fetch-event.https.html"
+            "path": "service-workers/service-worker/update-after-navigation-fetch-event.https.html",
+            "url": "/_mozilla/service-workers/service-worker/update-after-navigation-fetch-event.https.html"
           }
         ],
         "service-workers/service-worker/update-after-oneday.https.html": [
           {
-            "path": "service-workers/service-worker//update-after-oneday.https.html",
-            "url": "/_mozilla/service-workers/service-worker//update-after-oneday.https.html"
+            "path": "service-workers/service-worker/update-after-oneday.https.html",
+            "url": "/_mozilla/service-workers/service-worker/update-after-oneday.https.html"
+          }
+        ],
+        "service-workers/service-worker/update.https.html": [
+          {
+            "path": "service-workers/service-worker/update.https.html",
+            "url": "/_mozilla/service-workers/service-worker/update.https.html"
           }
         ],
         "service-workers/service-worker/waiting.https.html": [
