@@ -830,7 +830,7 @@ Tooltip.prototype = {
    * the instance of the widget
    */
   setCubicBezierContent: function(bezier) {
-    let dimensions = {width: "410", height: "360"};
+    let dimensions = {width: "500", height: "360"};
     let panel = this.panel;
     return this.setIFrameContent(dimensions, CUBIC_BEZIER_FRAME).then(onLoaded);
 
