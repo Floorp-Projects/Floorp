@@ -6734,6 +6734,34 @@ if (IsCSSPropertyPrefEnabled("layout.css.prefixes.webkit")) {
     alias_for: "box-sizing",
     subproperties: [ "box-sizing" ],
   };
+  gCSSProperties["-webkit-box-flex"] = {
+    domProp: "webkitBoxFlex",
+    inherited: false,
+    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    alias_for: "flex-grow",
+    subproperties: [ "flex-grow" ],
+  };
+  gCSSProperties["-webkit-box-ordinal-group"] = {
+    domProp: "webkitBoxOrdinalGroup",
+    inherited: false,
+    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    alias_for: "order",
+    subproperties: [ "order" ],
+  };
+  gCSSProperties["-webkit-box-align"] = {
+    domProp: "webkitBoxAlign",
+    inherited: false,
+    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    alias_for: "align-items",
+    subproperties: [ "align-items" ],
+  };
+  gCSSProperties["-webkit-box-pack"] = {
+    domProp: "webkitBoxPack",
+    inherited: false,
+    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    alias_for: "justify-content",
+    subproperties: [ "justify-content" ],
+  };
   gCSSProperties["-webkit-user-select"] = {
     domProp: "webkitUserSelect",
     inherited: false,
