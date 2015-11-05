@@ -201,44 +201,10 @@ OnSharedPreferenceChangeListener
         }
     }
 
-    private void updateTitle(String newTitle) {
-        if (newTitle != null) {
-            Log.v(LOGTAG, "Setting activity title to " + newTitle);
-            setTitle(newTitle);
-        }
-    }
-
-    private void updateTitle(int title) {
-        updateTitle(getString(title));
-    }
-
     /**
-     * This updates the title shown above the prefs fragment in
-     * a multi-pane view.
+     * We only call this method for pre-HC versions of Android.
      */
-    private void updateBreadcrumbTitle(int title) {
-        final String newTitle = getString(title);
-        showBreadCrumbs(newTitle, newTitle);
-    }
-
     private void updateTitleForPrefsResource(int res) {
-        // If we're a multi-pane view, the activity title is really
-        // the header bar above the fragment.
-        // Find out which fragment we're showing, and use that.
-        if (Versions.feature11Plus && isMultiPane()) {
-            int title = getIntent().getIntExtra(EXTRA_SHOW_FRAGMENT_TITLE, -1);
-            if (res == R.xml.preferences) {
-                // This should only occur when res == R.xml.preferences,
-                // but showing "Settings" is better than crashing or showing
-                // "Fennec".
-                updateActionBarTitle(R.string.settings_title);
-            }
-
-            updateTitle(title);
-            updateBreadcrumbTitle(title);
-            return;
-        }
-
         // At present we only need to do this for non-leaf prefs views
         // and the locale switcher itself.
         int title = -1;
@@ -254,7 +220,7 @@ OnSharedPreferenceChangeListener
             title = R.string.pref_category_search;
         }
         if (title != -1) {
-            updateTitle(title);
+            setTitle(title);
         }
     }
 
@@ -291,7 +257,7 @@ OnSharedPreferenceChangeListener
             }
 
             // Update the title to for the preference pane that we're currently showing.
-            updateTitle(R.string.pref_header_general);
+            setTitle(R.string.pref_category_language);
 
             // Don't finish the activity -- we just reloaded all of the
             // individual parts! -- but when it returns, make sure that the
@@ -345,7 +311,7 @@ OnSharedPreferenceChangeListener
 
                 // This is the default header, because it's the first one.
                 // I know, this is an affront to all human decency. And yet.
-                updateTitle(getString(R.string.pref_header_general));
+                setTitle(R.string.pref_header_general);
             }
 
             if (onIsMultiPane()) {
