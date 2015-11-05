@@ -1554,22 +1554,6 @@ CSSStyleSheet::InsertStyleSheetAt(CSSStyleSheet* aSheet, int32_t aIndex)
 }
 
 void
-CSSStyleSheet::PrependStyleRule(css::Rule* aRule)
-{
-  NS_PRECONDITION(nullptr != aRule, "null arg");
-
-  WillDirty();
-  mInner->mOrderedRules.InsertObjectAt(aRule, 0);
-  aRule->SetStyleSheet(this);
-  DidDirty();
-
-  if (css::Rule::NAMESPACE_RULE == aRule->GetType()) {
-    // no api to prepend a namespace (ugh), release old ones and re-create them all
-    mInner->RebuildNameSpaces();
-  }
-}
-
-void
 CSSStyleSheet::AppendStyleRule(css::Rule* aRule)
 {
   NS_PRECONDITION(nullptr != aRule, "null arg");
