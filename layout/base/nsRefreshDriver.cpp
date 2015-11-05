@@ -75,8 +75,8 @@ using namespace mozilla::widget;
 using namespace mozilla::ipc;
 using namespace mozilla::layout;
 
-static PRLogModuleInfo *gLog = nullptr;
-#define LOG(...) MOZ_LOG(gLog, mozilla::LogLevel::Debug, (__VA_ARGS__))
+static mozilla::LazyLogModule sRefreshDriverLog("nsRefreshDriver");
+#define LOG(...) MOZ_LOG(sRefreshDriverLog, mozilla::LogLevel::Debug, (__VA_ARGS__))
 
 #define DEFAULT_THROTTLED_FRAME_RATE 1
 #define DEFAULT_RECOMPUTE_VISIBILITY_INTERVAL_MS 1000
@@ -771,9 +771,6 @@ GetFirstFrameDelay(imgIRequest* req)
 /* static */ void
 nsRefreshDriver::InitializeStatics()
 {
-  if (!gLog) {
-    gLog = PR_NewLogModule("nsRefreshDriver");
-  }
 }
 
 /* static */ void
