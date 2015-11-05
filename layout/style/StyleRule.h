@@ -292,29 +292,6 @@ namespace css {
 class Declaration;
 class DOMCSSStyleRule;
 
-class StyleRule;
-
-class ImportantStyleData final : public nsIStyleRule
-{
-public:
-  explicit ImportantStyleData(Declaration* aDeclaration);
-
-  NS_DECL_ISUPPORTS
-
-  // nsIStyleRule interface
-  virtual void MapRuleInfoInto(nsRuleData* aRuleData) override;
-#ifdef DEBUG
-  virtual void List(FILE* out = stdout, int32_t aIndent = 0) const override;
-#endif
-
-protected:
-  virtual ~ImportantStyleData();
-
-  RefPtr<Declaration> mDeclaration;
-
-  friend class StyleRule;
-};
-
 class StyleRule final : public Rule
 {
  public:
