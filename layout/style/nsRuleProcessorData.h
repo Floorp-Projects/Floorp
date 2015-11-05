@@ -22,6 +22,7 @@
 #include "mozilla/BloomFilter.h"
 #include "mozilla/EventStates.h"
 #include "mozilla/GuardObjects.h"
+#include "mozilla/dom/Element.h"
 
 class nsIAtom;
 class nsIContent;
