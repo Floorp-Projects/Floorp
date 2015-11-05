@@ -44,6 +44,30 @@ Declaration::~Declaration()
 {
 }
 
+NS_INTERFACE_MAP_BEGIN(Declaration)
+  if (aIID.Equals(NS_GET_IID(mozilla::css::Declaration))) {
+    *aInstancePtr = this;
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  else
+  NS_INTERFACE_MAP_ENTRY(nsIStyleRule)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIStyleRule)
+NS_INTERFACE_MAP_END
+
+NS_IMPL_ADDREF(Declaration)
+NS_IMPL_RELEASE(Declaration)
+
+/* virtual */ void
+Declaration::MapRuleInfoInto(nsRuleData* aRuleData)
+{
+  MOZ_ASSERT(mData, "called while expanded");
+  mData->MapRuleInfoInto(aRuleData);
+  if (mVariables) {
+    mVariables->MapRuleInfoInto(aRuleData);
+  }
+}
+
 void
 Declaration::ValueAppended(nsCSSProperty aProperty)
 {
@@ -1336,7 +1360,7 @@ Declaration::ToString(nsAString& aString) const
 }
 
 #ifdef DEBUG
-void
+/* virtual */ void
 Declaration::List(FILE* out, int32_t aIndent) const
 {
   nsAutoCString str;
