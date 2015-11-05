@@ -532,6 +532,8 @@ class PerfherderOutput(Output):
                 suite_summary = self.construct_results(vals,
                                                        testname=test.name())
                 summary['suite'] = suite_summary
+                if test.test_config.get('lower_is_better') is not None:
+                    summary['lowerIsBetter'] = test.test_config['lower_is_better']
                 test_result['summary'] = summary
 
                 for result, values in results.items():
