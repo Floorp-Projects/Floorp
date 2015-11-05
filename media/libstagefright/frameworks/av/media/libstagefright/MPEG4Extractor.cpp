@@ -49,7 +49,7 @@ public:
     // Caller retains ownership of both "dataSource" and "sampleTable".
     MPEG4Source(const sp<MetaData> &format,
                 const sp<DataSource> &dataSource,
-                int32_t timeScale,
+                uint32_t timeScale,
                 const sp<SampleTable> &sampleTable,
                 nsTArray<SidxEntry> &sidx,
                 MPEG4Extractor::TrackExtends &trackExtends);
@@ -71,7 +71,7 @@ private:
 
     sp<MetaData> mFormat;
     sp<DataSource> mDataSource;
-    int32_t mTimescale;
+    uint32_t mTimescale;
     sp<SampleTable> mSampleTable;
     uint32_t mCurrentSampleIndex;
     uint32_t mCurrentFragmentIndex;
@@ -2770,7 +2770,7 @@ status_t MPEG4Extractor::updateAudioTrackInfoFromESDS_MPEG4Audio(
 MPEG4Source::MPEG4Source(
         const sp<MetaData> &format,
         const sp<DataSource> &dataSource,
-        int32_t timeScale,
+        uint32_t timeScale,
         const sp<SampleTable> &sampleTable,
         nsTArray<SidxEntry> &sidx,
         MPEG4Extractor::TrackExtends &trackExtends)
