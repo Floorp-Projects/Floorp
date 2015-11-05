@@ -86,13 +86,8 @@ function IccContact(aContact) {
   this._numbers = [];
   this._emails = [];
 
-  if (aContact.alphaId) {
-    this._names.push(aContact.alphaId);
-  }
-
-  if (aContact.number) {
-    this._numbers.push(aContact.number);
-  }
+  this._names.push(aContact.alphaId);
+  this._numbers.push(aContact.number);
 
   let anrLen = aContact.anr ? aContact.anr.length : 0;
   for (let i = 0; i < anrLen; i++) {

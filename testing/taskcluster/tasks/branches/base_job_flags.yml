@@ -61,6 +61,7 @@ flags:
     - flame-kk       # b2g flame kitkat
     - flame-kk-eng   # b2g flame eng build
     - flame-kk-spark-eng
+    - flame-kk-ota
     - nexus-4
     - nexus-4-eng
     - nexus-4-kk
