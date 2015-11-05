@@ -1608,23 +1608,6 @@ CSSStyleSheet::GetStyleRuleAt(int32_t aIndex) const
   return mInner->mOrderedRules.SafeObjectAt(aIndex);
 }
 
-int32_t
-CSSStyleSheet::StyleSheetCount() const
-{
-  // XXX Far from an ideal way to do this, but the hope is that
-  // it won't be done too often. If it is, we might want to 
-  // consider storing the children in an array.
-  int32_t count = 0;
-
-  const CSSStyleSheet* child = mInner->mFirstChild;
-  while (child) {
-    count++;
-    child = child->mNext;
-  }
-
-  return count;
-}
-
 void
 CSSStyleSheet::EnsureUniqueInner()
 {
