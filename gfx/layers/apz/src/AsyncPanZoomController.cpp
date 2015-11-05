@@ -2692,8 +2692,11 @@ bool AsyncPanZoomController::SnapBackIfOverscrolled() {
     return true;
   }
   // If we don't kick off an overscroll animation, we still need to ask the
-  // main thread to snap to any nearby snap points.
-  RequestSnap();
+  // main thread to snap to any nearby snap points, assuming we haven't already
+  // done so when we started this fling
+  if (mState != FLING) {
+    RequestSnap();
+  }
   return false;
 }
 
@@ -3563,6 +3566,8 @@ void AsyncPanZoomController::ShareCompositorFrameMetrics() {
 
 void AsyncPanZoomController::RequestSnap() {
   if (RefPtr<GeckoContentController> controller = GetGeckoContentController()) {
+    APZC_LOG("%p requesting snap near %s\n", this,
+        Stringify(mFrameMetrics.GetScrollOffset()).c_str());
     controller->RequestFlingSnap(mFrameMetrics.GetScrollId(),
                                  mFrameMetrics.GetScrollOffset());
   }
