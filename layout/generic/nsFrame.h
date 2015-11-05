@@ -676,6 +676,9 @@ private:
 
   NS_IMETHODIMP RefreshSizeCache(nsBoxLayoutState& aState);
 
+  // Returns true if this frame has any kind of CSS animations.
+  bool HasCSSAnimations();
+
 #ifdef DEBUG_FRAME_DUMP
 public:
   /**
