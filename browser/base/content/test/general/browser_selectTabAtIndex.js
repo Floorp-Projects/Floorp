@@ -18,5 +18,5 @@ function test() {
      "gBrowser.selectTabAtIndex(-3) selects expected tab");
 
   for (let i = 0; i < 9; i++)
-    gBrowser.removeCurrentTab();
+    gBrowser.removeTab(gBrowser.selectedTab, {skipPermitUnload: true});
 }

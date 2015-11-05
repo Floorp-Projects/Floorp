@@ -12,10 +12,10 @@
 
 var gTest = {
   length: 2048,
-  numberOfChannels: 8,
+  numberOfChannels: 6,
   createGraph: function(context) {
     var buffers = [];
-    for (var j = 0; j < 4; ++j) {
+    for (var j = 0; j < 6; ++j) {
       var buffer = context.createBuffer(2, 2048, context.sampleRate);
       for (var i = 0; i < 2048; ++i) {
         buffer.getChannelData(0)[i] = Math.sin(440 * 2 * (j + 1) * Math.PI * i / context.sampleRate);
@@ -25,11 +25,11 @@ var gTest = {
     }
 
     var merger = context.createChannelMerger();
-    is(merger.channelCount, 2, "merger node has 2 input channels by default");
-    is(merger.channelCountMode, "max", "Correct channelCountMode for the merger node");
+    is(merger.channelCount, 1, "merger node has 1 input channels");
+    is(merger.channelCountMode, "explicit", "Correct channelCountMode for the merger node");
     is(merger.channelInterpretation, "speakers", "Correct channelCountInterpretation for the merger node");
 
-    for (var i = 0; i < 4; ++i) {
+    for (var i = 0; i < 6; ++i) {
       var source = context.createBufferSource();
       source.buffer = buffers[i];
       var gain = context.createGain();
@@ -42,10 +42,10 @@ var gTest = {
     return merger;
   },
   createExpectedBuffers: function(context) {
-    var expectedBuffer = context.createBuffer(8, 2048, context.sampleRate);
-    for (var i = 0; i < 4; ++i) {
+    var expectedBuffer = context.createBuffer(6, 2048, context.sampleRate);
+    for (var i = 0; i < 6; ++i) {
       for (var j = 0; j < 2048; ++j) {
-        expectedBuffer.getChannelData(i * 2)[j] = Math.sin(440 * 2 * (i + 1) * Math.PI * j / context.sampleRate) / 2;
+        expectedBuffer.getChannelData(i)[j] = 0.5 * 0.5 * Math.sin(440 * 2 * (i + 1) * Math.PI * j / context.sampleRate);
       }
     }
     return expectedBuffer;

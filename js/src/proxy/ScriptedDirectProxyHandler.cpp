@@ -10,6 +10,8 @@
 
 #include "jsobjinlines.h"
 
+#include "vm/NativeObject-inl.h"
+
 using namespace js;
 
 using JS::IsArrayAnswer;

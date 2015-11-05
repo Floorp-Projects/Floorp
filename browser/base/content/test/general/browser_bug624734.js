@@ -17,15 +17,13 @@ function test() {
   waitForExplicitFinish();
 
   let tab = gBrowser.selectedTab = gBrowser.addTab();
-  tab.linkedBrowser.addEventListener("load", (function(event) {
-    tab.linkedBrowser.removeEventListener("load", arguments.callee, true);
-
+  BrowserTestUtils.browserLoaded(tab.linkedBrowser).then(() => {
     if (BookmarkingUI.status == BookmarkingUI.STATUS_UPDATING) {
       waitForCondition(() => BookmarkingUI.status != BookmarkingUI.STATUS_UPDATING, finishTest, "BookmarkingUI was updating for too long");
     } else {
       finishTest();
     }
-  }), true);
+  });
 
   tab.linkedBrowser.loadURI("http://example.com/browser/browser/base/content/test/general/dummy_page.html");
 }

@@ -17,12 +17,10 @@ function test() {
 
   var tab = gBrowser.addTab("http://mochi.test:8888/");
   var browser = gBrowser.getBrowserForTab(tab);
-  browser.addEventListener("load", function() {
-    browser.removeEventListener("load", arguments.callee, true);
-
+  BrowserTestUtils.browserLoaded(browser).then(() => {
     BrowserTestUtils.removeTab(tab).then(() => {
       ok(isUndoCloseEnabled(), "Undo Close Tab should be enabled.");
       finish();
     });
-  }, true);
+  });
 }

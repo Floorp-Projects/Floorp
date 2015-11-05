@@ -122,11 +122,14 @@ public:
                                         std::string* mid,
                                         bool* skipped) override;
 
-  virtual nsresult EndOfLocalCandidates(const std::string& defaultCandidateAddr,
-                                        uint16_t defaultCandidatePort,
-                                        const std::string& defaultRtcpCandidateAddr,
-                                        uint16_t defaultRtcpCandidatePort,
-                                        uint16_t level) override;
+  virtual nsresult UpdateDefaultCandidate(
+      const std::string& defaultCandidateAddr,
+      uint16_t defaultCandidatePort,
+      const std::string& defaultRtcpCandidateAddr,
+      uint16_t defaultRtcpCandidatePort,
+      uint16_t level) override;
+
+  virtual nsresult EndOfLocalCandidates(uint16_t level) override;
 
   virtual nsresult Close() override;
 
@@ -269,6 +272,8 @@ private:
 
   nsresult EnableOfferMsection(SdpMediaSection* msection);
 
+  mozilla::Sdp* GetParsedLocalDescription() const;
+  mozilla::Sdp* GetParsedRemoteDescription() const;
   const Sdp* GetAnswer() const;
 
   std::vector<JsepSendingTrack> mLocalTracks;

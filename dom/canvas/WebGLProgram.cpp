@@ -759,6 +759,51 @@ WebGLProgram::GetUniformLocation(const nsAString& userName_wide) const
 }
 
 void
+WebGLProgram::GetUniformIndices(const dom::Sequence<nsString>& uniformNames,
+                                dom::Nullable< nsTArray<GLuint> >& retval) const
+{
+    size_t count = uniformNames.Length();
+    nsTArray<GLuint>& arr = retval.SetValue();
+
+    gl::GLContext* gl = mContext->GL();
+    gl->MakeCurrent();
+
+    for (size_t i = 0; i < count; i++) {
+        const NS_LossyConvertUTF16toASCII userName(uniformNames[i]);
+
+        nsDependentCString baseUserName;
+        bool isArray;
+        size_t arrayIndex;
+        if (!ParseName(userName, &baseUserName, &isArray, &arrayIndex)) {
+            arr.AppendElement(LOCAL_GL_INVALID_INDEX);
+            continue;
+        }
+
+        const WebGLActiveInfo* activeInfo;
+        if (!LinkInfo()->FindUniform(baseUserName, &activeInfo)) {
+            arr.AppendElement(LOCAL_GL_INVALID_INDEX);
+            continue;
+        }
+
+        const nsCString& baseMappedName = activeInfo->mBaseMappedName;
+
+        nsAutoCString mappedName(baseMappedName);
+        if (isArray) {
+            mappedName.AppendLiteral("[");
+            mappedName.AppendInt(uint32_t(arrayIndex));
+            mappedName.AppendLiteral("]");
+        }
+
+        const GLchar* mappedNameBytes = mappedName.BeginReading();
+
+        GLuint index = 0;
+        gl->fGetUniformIndices(mGLName, 1, &mappedNameBytes, &index);
+        arr.AppendElement(index);
+    }
+}
+
+
+void
 WebGLProgram::UniformBlockBinding(GLuint uniformBlockIndex, GLuint uniformBlockBinding) const
 {
     if (!IsLinked()) {
