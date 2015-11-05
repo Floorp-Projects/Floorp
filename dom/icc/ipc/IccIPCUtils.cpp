@@ -51,7 +51,9 @@ IccIPCUtils::GetIccContactDataFromIccContact(nsIIccContact* aContact,
   NS_ENSURE_SUCCESS_VOID(rv);
   if (count > 0) {
     for (uint32_t i = 0; i < count; i++) {
-      aOutData.names().AppendElement(nsDependentString(rawStringArray[i]));
+      aOutData.names().AppendElement(
+        rawStringArray[i] ? nsDependentString(rawStringArray[i])
+                          : NullString());
     }
     NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(count, rawStringArray);
   }
@@ -63,7 +65,9 @@ IccIPCUtils::GetIccContactDataFromIccContact(nsIIccContact* aContact,
   NS_ENSURE_SUCCESS_VOID(rv);
   if (count > 0) {
     for (uint32_t i = 0; i < count; i++) {
-      aOutData.numbers().AppendElement(nsDependentString(rawStringArray[i]));
+      aOutData.numbers().AppendElement(
+        rawStringArray[i] ? nsDependentString(rawStringArray[i])
+                          : NullString());
     }
     NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(count, rawStringArray);
   }
@@ -75,7 +79,9 @@ IccIPCUtils::GetIccContactDataFromIccContact(nsIIccContact* aContact,
   NS_ENSURE_SUCCESS_VOID(rv);
   if (count > 0) {
     for (uint32_t i = 0; i < count; i++) {
-      aOutData.emails().AppendElement(nsDependentString(rawStringArray[i]));
+      aOutData.emails().AppendElement(
+        rawStringArray[i] ? nsDependentString(rawStringArray[i])
+                          : NullString());
     }
     NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(count, rawStringArray);
   }

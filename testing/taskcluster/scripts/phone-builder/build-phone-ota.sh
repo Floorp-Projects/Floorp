@@ -11,7 +11,6 @@ fi
 PLATFORM=${TARGET%%-*}
 
 aws s3 cp s3://b2g-nightly-credentials/balrog_credentials .
-mar_file=b2g-$PLATFORM-gecko-update.mar
 
 # We need different platform names for each variant (user, userdebug and
 # eng). We do not append variant suffix for "user" to keep compability with
@@ -41,6 +40,6 @@ $WORKSPACE/gecko/testing/mozharness/scripts/b2g_build.py \
   --repo=$WORKSPACE/gecko \
   --platform $PLATFORM \
   --gecko-objdir=$gecko_objdir \
-  --complete-mar-url https://queue.taskcluster.net/v1/task/$TASK_ID/runs/$RUN_ID/artifacts/public/build/$mar_file
+  --complete-mar-url https://queue.taskcluster.net/v1/task/$TASK_ID/runs/$RUN_ID/artifacts/public/build/
 
 . post-build.sh
