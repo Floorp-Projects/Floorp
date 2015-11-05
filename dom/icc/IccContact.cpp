@@ -129,6 +129,11 @@ NS_IMETHODIMP IccContact::Get##_field(uint32_t* aCount, char16_t*** a##_field)  
     return NS_ERROR_OUT_OF_MEMORY;                                              \
   }                                                                             \
   for (uint32_t i = 0; i < count; i++) {                                        \
+    if(m##_field[i].IsVoid()) {                                                 \
+      (temp)[i] = nullptr;                                                      \
+      continue;                                                                 \
+    }                                                                           \
+                                                                                \
     (temp)[i] = ToNewUnicode(m##_field[i]);                                     \
     if (!(temp)[i]) {                                                           \
       NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(i, temp);                           \

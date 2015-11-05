@@ -367,7 +367,7 @@ add_test(function test_write_alpha_identifier() {
 
   // Removal
   let writenAlphaId = iccHelper.writeAlphaIdentifier(10, null);
-  equal(writenAlphaId, null);
+  equal(writenAlphaId, "");
   equal(iccHelper.readAlphaIdentifier(10), "");
 
   // GSM 8 bit
@@ -401,7 +401,7 @@ add_test(function test_write_alpha_identifier() {
   // Write 0 octet.
   writenAlphaId = iccHelper.writeAlphaIdentifier(0, "1");
   helper.writeHexOctet(0xff); // dummy octet.
-  equal(writenAlphaId, null);
+  equal(writenAlphaId, "");
   equal(iccHelper.readAlphaIdentifier(1), "");
 
   run_next_test();
@@ -490,8 +490,8 @@ add_test(function test_write_alpha_id_dialling_number() {
   writtenContact = helper.writeAlphaIdDiallingNumber(recordSize);
   contactR = helper.readAlphaIdDiallingNumber(recordSize);
   equal(contactR, null);
-  equal(writtenContact.alphaId, null);
-  equal(writtenContact.number, null);
+  equal(writtenContact.alphaId, "");
+  equal(writtenContact.number, "");
 
   // Write a longer alphaId/dialling number
   // Dialling Number : Maximum 20 digits(10 octets).
