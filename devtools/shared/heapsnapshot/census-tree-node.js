@@ -274,8 +274,8 @@ function CensusTreeNodeVisitor() {
     bottom: null,
   };
 
-  // The stack of `CensusTreeNodeCache`s that we use to aggregate many SavedFrame stacks
-  // into a single CensusTreeNode tree.
+  // The stack of `CensusTreeNodeCache`s that we use to aggregate many
+  // SavedFrame stacks into a single CensusTreeNode tree.
   this._cacheStack = [new CensusTreeNodeCache()];
 }
 
@@ -384,7 +384,7 @@ CensusTreeNodeVisitor.prototype.root = function () {
  *
  * @param {null|String|SavedFrame} name
  */
-function CensusTreeNode (name) {
+function CensusTreeNode(name) {
   this.name = name;
   this.bytes = 0;
   this.totalBytes = 0;
@@ -432,6 +432,47 @@ function compareBySelf(node1, node2) {
 }
 
 /**
+ * Given a parent cache value from a tree we are building and a child node from
+ * a tree we are basing the new tree off of, if we already have a corresponding
+ * node in the parent's children cache, merge this node's counts with
+ * it. Otherwise, create the corresponding node, add it to the parent's children
+ * cache, and create the parent->child edge.
+ *
+ * @param {CensusTreeNodeCacheValue} parentCachevalue
+ * @param {CensusTreeNode} node
+ *
+ * @returns {CensusTreeNodeCacheValue}
+ *          The new or extant child node's corresponding cache value.
+ */
+function insertOrMergeNode(parentCacheValue, node) {
+  if (!parentCacheValue.children) {
+    parentCacheValue.children = new CensusTreeNodeCache();
+  }
+
+  let val = CensusTreeNodeCache.lookupNode(parentCacheValue.children, node);
+
+  if (val) {
+    val.node.count += node.count;
+    val.node.totalCount += node.totalCount;
+    val.node.bytes += node.bytes;
+    val.node.totalBytes += node.totalBytes;
+  } else {
+    val = new CensusTreeNodeCacheValue();
+
+    val.node = new CensusTreeNode(node.name);
+    val.node.count = node.count;
+    val.node.totalCount = node.totalCount;
+    val.node.bytes = node.bytes;
+    val.node.totalBytes = node.totalBytes;
+
+    addChild(parentCacheValue.node, val.node);
+    CensusTreeNodeCache.insertNode(parentCacheValue.children, val);
+  }
+
+  return val;
+}
+
+/**
  * Given an un-inverted CensusTreeNode tree, return the corresponding inverted
  * CensusTreeNode tree. The input tree is not modified. The resulting inverted
  * tree is sorted by self bytes rather than by total bytes.
@@ -460,39 +501,9 @@ function invert(tree) {
       }
     } else {
       // We found a leaf node, add the reverse path to the inverted tree.
-
-      let current = inverted;
+      let currentCacheValue = inverted;
       for (let i = path.length - 1; i >= 0; i--) {
-        const node = path[i];
-
-        if (!current.children) {
-          current.children = new CensusTreeNodeCache();
-        }
-
-        // If we already have a corresponding node in the inverted tree, merge
-        // this node's counts with it. Otherwise, create the corresponding node
-        // in the inverted tree, add it to the parent's children cache, and
-        // create the parent->child edge.
-        let val = CensusTreeNodeCache.lookupNode(current.children, node);
-        if (val) {
-          val.node.count += node.count;
-          val.node.totalCount += node.totalCount;
-          val.node.bytes += node.bytes;
-          val.node.totalBytes += node.totalBytes;
-        } else {
-          val = new CensusTreeNodeCacheValue();
-
-          val.node = new CensusTreeNode(node.name);
-          val.node.count = node.count;
-          val.node.totalCount = node.totalCount;
-          val.node.bytes = node.bytes;
-          val.node.totalBytes = node.totalBytes;
-
-          addChild(current.node, val.node);
-          CensusTreeNodeCache.insertNode(current.children, val);
-        }
-
-        current = val;
+        currentCacheValue = insertOrMergeNode(currentCacheValue, path[i]);
       }
     }
 
@@ -512,6 +523,88 @@ function invert(tree) {
   }(inverted.node));
 
   return inverted.node;
+}
+
+/**
+ * Given a CensusTreeNode tree and predicate function, create the tree
+ * containing only the nodes in any path `(node_0, node_1, ..., node_n-1)` in
+ * the given tree where `predicate(node_j)` is true for `0 <= j < n`, `node_0`
+ * is the given tree's root, and `node_n-1` is a leaf in the given tree. The
+ * given tree is left unmodified.
+ *
+ * @param {CensusTreeNode} tree
+ * @param {Function} predicate
+ *
+ * @returns {CensusTreeNode}
+ */
+function filter(tree, predicate) {
+  const filtered = new CensusTreeNodeCacheValue();
+  filtered.node = new CensusTreeNode(null);
+  filtered.node.count = tree.count;
+  filtered.node.totalCount = tree.totalCount;
+  filtered.node.bytes = tree.bytes;
+  filtered.node.totalBytes = tree.totalBytes;
+
+  // Do a DFS over the given tree. If the predicate returns true for any node,
+  // add that node and its whole subtree to the filtered tree.
+
+  const path = [];
+  let match = false;
+
+  function addMatchingNodes(node) {
+    path.push(node);
+
+    let oldMatch = match;
+    if (!match && predicate(node)) {
+      match = true;
+    }
+
+    if (node.children) {
+      for (let i = 0, length = node.children.length; i < length; i++) {
+        addMatchingNodes(node.children[i]);
+      }
+    } else if (match) {
+      // We found a matching leaf node, add it to the filtered tree.
+      let currentCacheValue = filtered;
+      for (let i = 0, length = path.length; i < length; i++) {
+        currentCacheValue = insertOrMergeNode(currentCacheValue, path[i]);
+      }
+    }
+
+    match = oldMatch;
+    path.pop();
+  }
+
+  if (tree.children) {
+    for (let i = 0, length = tree.children.length; i < length; i++) {
+      addMatchingNodes(tree.children[i]);
+    }
+  }
+
+  return filtered.node;
+};
+
+/**
+ * Given a filter string, return a predicate function that takes a node and
+ * returns true iff the node matches the filter.
+ *
+ * @param {String} filterString
+ * @returns {Function}
+ */
+function makeFilterPredicate(filterString) {
+  return function (node) {
+    if (!node.name) {
+      return false;
+    }
+
+    if (isSavedFrame(node.name)) {
+      return node.name.source.contains(filterString)
+        || (node.name.functionDisplayName || "").contains(filterString)
+        || (node.name.asyncCause || "").contains(filterString);
+    }
+
+    return String(node.name).contains(filterString);
+  };
 }
 
 /**
@@ -545,9 +638,15 @@ function invert(tree) {
  * @returns {CensusTreeNode}
  */
 exports.censusReportToCensusTreeNode = function (breakdown, report,
-                                                 options = { invert: false }) {
+                                                 options = {
+                                                   invert: false,
+                                                   filter: null
+                                                 }) {
   const visitor = new CensusTreeNodeVisitor();
   walk(breakdown, report, visitor);
   const root = visitor.root();
-  return options.invert ? invert(root) : root;
+  const result = options.invert ? invert(root) : root;
+  return typeof options.filter === "string"
+    ? filter(result, makeFilterPredicate(options.filter))
+    : result;
 };
