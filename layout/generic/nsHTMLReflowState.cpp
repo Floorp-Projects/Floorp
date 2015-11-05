@@ -514,10 +514,9 @@ void
 nsHTMLReflowState::InitResizeFlags(nsPresContext* aPresContext, nsIAtom* aFrameType)
 {
   const WritingMode wm = mWritingMode; // just a shorthand
-  bool isIResize = (frame->ISize(wm) !=
-                     ComputedISize() +
-                       ComputedLogicalBorderPadding().IStartEnd(wm)) ||
-                     aPresContext->PresShell()->IsReflowOnZoomPending();
+  bool isIResize =
+    frame->ISize(wm) !=
+      ComputedISize() + ComputedLogicalBorderPadding().IStartEnd(wm);
 
   if ((frame->GetStateBits() & NS_FRAME_FONT_INFLATION_FLOW_ROOT) &&
       nsLayoutUtils::FontSizeInflationEnabled(aPresContext)) {
