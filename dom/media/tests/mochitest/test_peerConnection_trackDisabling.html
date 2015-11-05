@@ -1,0 +1,95 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="pc.js"></script>
+  <script type="application/javascript" src="/tests/dom/canvas/test/captureStream_common.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript;version=1.8">
+createHTML({
+  bug: "1219711",
+  title: "Disabling locally should be reflected remotely",
+  visible: true
+});
+
+runNetworkTest(() => {
+  var test = new PeerConnectionTest();
+
+  // Always use fake tracks since we depend on video to be somewhat green and
+  // audio to have a large 1000Hz component.
+  test.setMediaConstraints([{audio: true, video: true, fake: true}], []);
+  test.chain.append([
+    function CHECK_ASSUMPTIONS() {
+      is(test.pcLocal.mediaElements.length, 1,
+         "pcLocal should only have one media element");
+      is(test.pcRemote.mediaElements.length, 1,
+         "pcRemote should only have one media element");
+      is(test.pcLocal.streams.length, 1,
+         "pcLocal should only have one stream (the local one)");
+      is(test.pcRemote.streams.length, 1,
+         "pcRemote should only have one stream (the remote one)");
+    },
+    function CHECK_VIDEO() {
+      var h = new CaptureStreamTestHelper2D();
+      var localVideo = test.pcLocal.mediaElements[0];
+      var remoteVideo = test.pcRemote.mediaElements[0];
+      // We check a pixel somewhere away from the top left corner since
+      // MediaEngineDefault puts semi-transparent time indicators there.
+      const offsetX = 50;
+      const offsetY = 50;
+      const threshold = 128;
+      return Promise.resolve()
+        .then(() => info("Checking local video enabled"))
+        .then(() => h.waitForPixel(localVideo, offsetX, offsetY,
+                                   px => h.isPixelNot(px, h.black, 128)))
+        .then(() => info("Checking remote video enabled"))
+        .then(() => h.waitForPixel(remoteVideo, offsetX, offsetY,
+                                   px => h.isPixelNot(px, h.black, 128)))
+
+        .then(() => test.pcLocal.streams[0].getVideoTracks()[0].enabled = false)
+
+        .then(() => info("Checking local video disabled"))
+        .then(() => h.waitForPixel(localVideo, offsetX, offsetY,
+                                   px => h.isPixel(px, h.blackTransparent, 128)))
+        .then(() => info("Checking remote video disabled"))
+        .then(() => h.waitForPixel(remoteVideo, offsetX, offsetY,
+                                   px => h.isPixel(px, h.black, 128)))
+    },
+    function CHECK_AUDIO() {
+      var ac = new AudioContext();
+      var localAnalyser = new AudioStreamAnalyser(ac, test.pcLocal.streams[0]);
+      var remoteAnalyser = new AudioStreamAnalyser(ac, test.pcRemote.streams[0]);
+
+      var checkAudio = (analyser, fun) => {
+        analyser.enableDebugCanvas();
+        return analyser.waitForAnalysisSuccess(fun)
+          .then(() => analyser.disableDebugCanvas());
+      };
+
+      var freq1k = localAnalyser.binIndexForFrequency(1000);
+      var checkAudioEnabled = analyser =>
+        checkAudio(analyser, array => array[freq1k] > 200);
+      var checkAudioDisabled = analyser =>
+        checkAudio(analyser, array => array[freq1k] < 50);
+
+      return Promise.resolve()
+        .then(() => info("Checking local audio enabled"))
+        .then(() => checkAudioEnabled(localAnalyser))
+        .then(() => info("Checking remote audio enabled"))
+        .then(() => checkAudioEnabled(remoteAnalyser))
+
+        .then(() => test.pcLocal.streams[0].getAudioTracks()[0].enabled = false)
+
+        .then(() => info("Checking local audio disabled"))
+        .then(() => checkAudioDisabled(localAnalyser))
+        .then(() => info("Checking remote audio disabled"))
+        .then(() => checkAudioDisabled(remoteAnalyser))
+    }
+  ]);
+  test.run();
+});
+</script>
+</pre>
+</body>
+</html>
