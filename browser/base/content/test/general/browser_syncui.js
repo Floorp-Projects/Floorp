@@ -3,7 +3,6 @@
 
 var {Log} = Cu.import("resource://gre/modules/Log.jsm", {});
 var {Weave} = Cu.import("resource://services-sync/main.js", {});
-var {Notifications} = Cu.import("resource://services-sync/notifications.js", {});
 
 var stringBundle = Cc["@mozilla.org/intl/stringbundle;1"]
                    .getService(Ci.nsIStringBundleService)
@@ -74,7 +73,7 @@ add_task(function* prepare() {
   yield xps.whenLoaded();
   // Put Sync and the UI into a known state.
   Weave.Status.login = Weave.LOGIN_FAILED_NO_USERNAME;
-  yield notifyAndPromiseUIUpdated("weave:ui:clear-error");
+  yield notifyAndPromiseUIUpdated("weave:service:login:error");
 
   checkBroadcasterVisible("sync-setup-state");
   checkButtonTooltips("Sign In To Sync");
@@ -85,21 +84,20 @@ add_task(function* prepare() {
     window.gSyncUI._needsSetup = oldNeedsSetup;
     // and an observer to set the state back to what it should be now we've
     // restored the stub.
-    Services.obs.notifyObservers(null, "weave:ui:clear-error", null);
+    Services.obs.notifyObservers(null, "weave:service:login:finish", null);
   });
   // and a notification to have the state change away from "needs setup"
-  yield notifyAndPromiseUIUpdated("weave:ui:clear-error");
+  yield notifyAndPromiseUIUpdated("weave:service:login:finish");
   checkBroadcasterVisible("sync-syncnow-state");
 });
 
 add_task(function* testSyncNeedsVerification() {
-  Assert.equal(Notifications.notifications.length, 0, "start with no notifications");
   // mock out the "_needsVerification()" function
   let oldNeedsVerification = window.gSyncUI._needsVerification;
   window.gSyncUI._needsVerification = () => true;
   try {
     // a notification for the state change
-    yield notifyAndPromiseUIUpdated("weave:ui:clear-error");
+    yield notifyAndPromiseUIUpdated("weave:service:login:finish");
     checkButtonTooltips("Verify");
   } finally {
     window.gSyncUI._needsVerification = oldNeedsVerification;
@@ -108,7 +106,6 @@ add_task(function* testSyncNeedsVerification() {
 
 
 add_task(function* testSyncLoginError() {
-  Assert.equal(Notifications.notifications.length, 0, "start with no notifications");
   checkBroadcasterVisible("sync-syncnow-state");
 
   // Pretend we are in a "login failed" error state
@@ -116,7 +113,6 @@ add_task(function* testSyncLoginError() {
   Weave.Status.login = Weave.LOGIN_FAILED_LOGIN_REJECTED;
   yield notifyAndPromiseUIUpdated("weave:ui:sync:error");
 
-  Assert.equal(Notifications.notifications.length, 0, "no notifications shown on login error");
   // But the menu *should* reflect the login error.
   checkBroadcasterVisible("sync-reauth-state");
   // The tooltips for the buttons should also reflect it.
@@ -127,7 +123,6 @@ add_task(function* testSyncLoginError() {
   Weave.Status.login = Weave.LOGIN_SUCCEEDED;
   yield notifyAndPromiseUIUpdated("weave:service:login:start");
   yield notifyAndPromiseUIUpdated("weave:service:login:finish");
-  Assert.equal(Notifications.notifications.length, 0, "no notifications left");
   // The menus should be back to "all good"
   checkBroadcasterVisible("sync-syncnow-state");
 });

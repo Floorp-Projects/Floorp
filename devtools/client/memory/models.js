@@ -25,20 +25,23 @@ let snapshotModel = exports.snapshot = PropTypes.shape({
   id: PropTypes.number.isRequired,
   // Whether or not this snapshot is currently selected.
   selected: PropTypes.bool.isRequired,
-  // fs path to where the snapshot is stored; used to
-  // identify the snapshot for HeapAnalysesClient.
+  // Filesystem path to where the snapshot is stored; used to identify the
+  // snapshot for HeapAnalysesClient.
   path: PropTypes.string,
-  // Data of a census breakdown
+  // The current census report data.
   census: PropTypes.object,
   // The breakdown used to generate the current census
   breakdown: breakdownModel,
   // Whether the currently cached census tree is inverted or not.
   inverted: PropTypes.bool,
+  // If present, the currently cached census's filter string used for pruning
+  // the tree items.
+  filter: PropTypes.string,
   // If an error was thrown while processing this snapshot, the `Error` instance is attached here.
   error: PropTypes.object,
   // The creation time of the snapshot; required after the snapshot has been read.
   creationTime: PropTypes.number,
-  // State the snapshot is in
+  // The current state the snapshot is in.
   // @see ./constants.js
   state: function (snapshot, propName) {
     let current = snapshot.state;
@@ -84,4 +87,6 @@ let appModel = exports.app = {
   snapshots: PropTypes.arrayOf(snapshotModel).isRequired,
   // True iff we want the tree displayed inverted.
   inverted: PropTypes.bool.isRequired,
+  // If present, a filter string for pruning the tree items.
+  filter: PropTypes.string,
 };

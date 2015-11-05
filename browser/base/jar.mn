@@ -132,7 +132,6 @@ browser.jar:
         content/browser/sync/genericChange.xul        (content/sync/genericChange.xul)
         content/browser/sync/genericChange.js         (content/sync/genericChange.js)
         content/browser/sync/key.xhtml                (content/sync/key.xhtml)
-        content/browser/sync/notification.xml         (content/sync/notification.xml)
         content/browser/sync/utils.js                 (content/sync/utils.js)
 *       content/browser/sync/customize.xul            (content/sync/customize.xul)
         content/browser/sync/customize.js             (content/sync/customize.js)

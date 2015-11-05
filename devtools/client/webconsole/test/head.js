@@ -36,7 +36,7 @@ const SEVERITY_LOG = 3;
 // The indent of a console group in pixels.
 const GROUP_INDENT = 12;
 
-const WEBCONSOLE_STRINGS_URI = "chrome://browser/locale/devtools/" +
+const WEBCONSOLE_STRINGS_URI = "chrome://devtools/locale/" +
                                "webconsole.properties";
 var WCUL10n = new WebConsoleUtils.l10n(WEBCONSOLE_STRINGS_URI);
 

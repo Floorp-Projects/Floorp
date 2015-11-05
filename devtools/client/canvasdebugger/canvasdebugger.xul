@@ -4,11 +4,11 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <?xml-stylesheet href="chrome://browser/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://devtools/content/shared/widgets/widgets.css" type="text/css"?>
-<?xml-stylesheet href="chrome://devtools/skin/themes/common.css" type="text/css"?>
-<?xml-stylesheet href="chrome://devtools/skin/themes/widgets.css" type="text/css"?>
-<?xml-stylesheet href="chrome://devtools/skin/themes/canvasdebugger.css" type="text/css"?>
+<?xml-stylesheet href="chrome://devtools/skin/common.css" type="text/css"?>
+<?xml-stylesheet href="chrome://devtools/skin/widgets.css" type="text/css"?>
+<?xml-stylesheet href="chrome://devtools/skin/canvasdebugger.css" type="text/css"?>
 <!DOCTYPE window [
-  <!ENTITY % canvasDebuggerDTD SYSTEM "chrome://browser/locale/devtools/canvasdebugger.dtd">
+  <!ENTITY % canvasDebuggerDTD SYSTEM "chrome://devtools/locale/canvasdebugger.dtd">
   %canvasDebuggerDTD;
 ]>
 
