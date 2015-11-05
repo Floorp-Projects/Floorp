@@ -107,7 +107,7 @@ nsDOMCSSDeclaration::SetCssText(const nsAString& aCssText)
   // to ensure that it exists, or else SetCSSDeclaration may crash.
   css::Declaration* olddecl = GetCSSDeclaration(eOperation_Modify);
   if (!olddecl) {
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_NOT_AVAILABLE;
   }
 
   CSSParsingEnvironment env;
@@ -313,7 +313,7 @@ nsDOMCSSDeclaration::ParsePropertyValue(const nsCSSProperty aPropID,
 {
   css::Declaration* olddecl = GetCSSDeclaration(eOperation_Modify);
   if (!olddecl) {
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_NOT_AVAILABLE;
   }
 
   CSSParsingEnvironment env;
@@ -351,7 +351,7 @@ nsDOMCSSDeclaration::ParseCustomPropertyValue(const nsAString& aPropertyName,
 
   css::Declaration* olddecl = GetCSSDeclaration(eOperation_Modify);
   if (!olddecl) {
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_NOT_AVAILABLE;
   }
 
   CSSParsingEnvironment env;
