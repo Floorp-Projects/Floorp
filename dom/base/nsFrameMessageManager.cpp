@@ -121,26 +121,17 @@ nsFrameMessageManager::~nsFrameMessageManager()
   }
 }
 
-static PLDHashOperator
-CycleCollectorTraverseListeners(const nsAString& aKey,
-                                nsAutoTObserverArray<nsMessageListenerInfo, 1>* aListeners,
-                                void* aCb)
-{
-  nsCycleCollectionTraversalCallback* cb =
-    static_cast<nsCycleCollectionTraversalCallback*> (aCb);
-  uint32_t count = aListeners->Length();
-  for (uint32_t i = 0; i < count; ++i) {
-    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(*cb, "listeners[i] mStrongListener");
-    cb->NoteXPCOMChild(aListeners->ElementAt(i).mStrongListener.get());
-  }
-  return PL_DHASH_NEXT;
-}
-
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsFrameMessageManager)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsFrameMessageManager)
-  tmp->mListeners.EnumerateRead(CycleCollectorTraverseListeners,
-                                static_cast<void*>(&cb));
+  for (auto iter = tmp->mListeners.Iter(); !iter.Done(); iter.Next()) {
+    nsAutoTObserverArray<nsMessageListenerInfo, 1>* listeners = iter.UserData();
+    uint32_t count = listeners->Length();
+    for (uint32_t i = 0; i < count; ++i) {
+      NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "listeners[i] mStrongListener");
+      cb.NoteXPCOMChild(listeners->ElementAt(i).mStrongListener.get());
+    }
+  }
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mChildManagers)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mParentManager)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
@@ -419,35 +410,6 @@ nsFrameMessageManager::RemoveMessageListener(const nsAString& aMessage,
   return NS_OK;
 }
 
-#ifdef DEBUG
-typedef struct
-{
-  nsCOMPtr<nsISupports> mCanonical;
-  nsWeakPtr mWeak;
-} CanonicalCheckerParams;
-
-static PLDHashOperator
-CanonicalChecker(const nsAString& aKey,
-                 nsAutoTObserverArray<nsMessageListenerInfo, 1>* aListeners,
-                 void* aParams)
-{
-  CanonicalCheckerParams* params =
-    static_cast<CanonicalCheckerParams*> (aParams);
-
-  uint32_t count = aListeners->Length();
-  for (uint32_t i = 0; i < count; i++) {
-    if (!aListeners->ElementAt(i).mWeakListener) {
-      continue;
-    }
-    nsCOMPtr<nsISupports> otherCanonical =
-      do_QueryReferent(aListeners->ElementAt(i).mWeakListener);
-    MOZ_ASSERT((params->mCanonical == otherCanonical) ==
-               (params->mWeak == aListeners->ElementAt(i).mWeakListener));
-  }
-  return PL_DHASH_NEXT;
-}
-#endif
-
 NS_IMETHODIMP
 nsFrameMessageManager::AddWeakMessageListener(const nsAString& aMessage,
                                               nsIMessageListener* aListener)
@@ -461,10 +423,17 @@ nsFrameMessageManager::AddWeakMessageListener(const nsAString& aMessage,
   // this to happen; it will break e.g. RemoveWeakMessageListener.  So let's
   // check that we're not getting ourselves into that situation.
   nsCOMPtr<nsISupports> canonical = do_QueryInterface(aListener);
-  CanonicalCheckerParams params;
-  params.mCanonical = canonical;
-  params.mWeak = weak;
-  mListeners.EnumerateRead(CanonicalChecker, (void*)&params);
+  for (auto iter = mListeners.Iter(); !iter.Done(); iter.Next()) {
+    nsAutoTObserverArray<nsMessageListenerInfo, 1>* listeners = iter.UserData();
+    uint32_t count = listeners->Length();
+    for (uint32_t i = 0; i < count; i++) {
+      nsWeakPtr weakListener = listeners->ElementAt(i).mWeakListener;
+      if (weakListener) {
+        nsCOMPtr<nsISupports> otherCanonical = do_QueryReferent(weakListener);
+        MOZ_ASSERT((canonical == otherCanonical) == (weak == weakListener));
+      }
+    }
+  }
 #endif
 
   nsAutoTObserverArray<nsMessageListenerInfo, 1>* listeners =
