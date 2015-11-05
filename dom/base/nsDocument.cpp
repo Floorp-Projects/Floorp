@@ -386,30 +386,14 @@ CandidatesTraverse(CustomElementHashKey* aKey,
   return PL_DHASH_NEXT;
 }
 
-struct CustomDefinitionTraceArgs
-{
-  const TraceCallbacks& callbacks;
-  void* closure;
-};
-
-static PLDHashOperator
-CustomDefinitionTrace(CustomElementHashKey *aKey,
-                      CustomElementDefinition *aData,
-                      void *aArg)
-{
-  CustomDefinitionTraceArgs* traceArgs = static_cast<CustomDefinitionTraceArgs*>(aArg);
-  MOZ_ASSERT(aData, "Definition must not be null");
-  traceArgs->callbacks.Trace(&aData->mPrototype, "mCustomDefinitions prototype",
-                             traceArgs->closure);
-  return PL_DHASH_NEXT;
-}
-
 NS_IMPL_CYCLE_COLLECTION_CLASS(Registry)
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(Registry)
-  CustomDefinitionTraceArgs customDefinitionArgs = { aCallbacks, aClosure };
-  tmp->mCustomDefinitions.EnumerateRead(CustomDefinitionTrace,
-                                        &customDefinitionArgs);
+  for (auto iter = tmp->mCustomDefinitions.Iter(); !iter.Done(); iter.Next()) {
+    aCallbacks.Trace(&iter.UserData()->mPrototype,
+                     "mCustomDefinitions prototype",
+                     aClosure);
+  }
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(Registry)
@@ -953,38 +937,29 @@ nsExternalResourceMap::EnumerateResources(nsIDocument::nsSubDocEnumFunc aCallbac
   }
 }
 
-static PLDHashOperator
-ExternalResourceTraverser(nsIURI* aKey,
-                          nsExternalResourceMap::ExternalResource* aData,
-                          void* aClosure)
-{
-  nsCycleCollectionTraversalCallback *cb =
-    static_cast<nsCycleCollectionTraversalCallback*>(aClosure);
-
-  NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(*cb,
-                                     "mExternalResourceMap.mMap entry"
-                                     "->mDocument");
-  cb->NoteXPCOMChild(aData->mDocument);
-
-  NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(*cb,
-                                     "mExternalResourceMap.mMap entry"
-                                     "->mViewer");
-  cb->NoteXPCOMChild(aData->mViewer);
-
-  NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(*cb,
-                                     "mExternalResourceMap.mMap entry"
-                                     "->mLoadGroup");
-  cb->NoteXPCOMChild(aData->mLoadGroup);
-
-  return PL_DHASH_NEXT;
-}
-
 void
 nsExternalResourceMap::Traverse(nsCycleCollectionTraversalCallback* aCallback) const
 {
   // mPendingLoads will get cleared out as the requests complete, so
   // no need to worry about those here.
-  mMap.EnumerateRead(ExternalResourceTraverser, aCallback);
+  for (auto iter = mMap.ConstIter(); !iter.Done(); iter.Next()) {
+    nsExternalResourceMap::ExternalResource* resource = iter.UserData();
+
+    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(*aCallback,
+                                       "mExternalResourceMap.mMap entry"
+                                       "->mDocument");
+    aCallback->NoteXPCOMChild(resource->mDocument);
+
+    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(*aCallback,
+                                       "mExternalResourceMap.mMap entry"
+                                       "->mViewer");
+    aCallback->NoteXPCOMChild(resource->mViewer);
+
+    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(*aCallback,
+                                       "mExternalResourceMap.mMap entry"
+                                       "->mLoadGroup");
+    aCallback->NoteXPCOMChild(resource->mLoadGroup);
+  }
 }
 
 static PLDHashOperator
