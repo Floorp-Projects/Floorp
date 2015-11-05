@@ -175,6 +175,8 @@ class ArtifactSubCommand(SubCommand):
                 help='Firefox tree.'),
             CommandArgument('--job', metavar='JOB', choices=['android-api-11', 'android-x86'],
                 help='Build job.'),
+            CommandArgument('--verbose', '-v', action='store_true',
+                help='Print verbose output.'),
         ]
         for arg in args:
             after = arg(after)
@@ -207,9 +209,10 @@ class PackageFrontend(MachCommandBase):
         '''
         pass
 
-    def _make_artifacts(self, tree=None, job=None):
-        self.log_manager.terminal_handler.setLevel(logging.INFO)
+    def _set_log_level(self, verbose):
+        self.log_manager.terminal_handler.setLevel(logging.INFO if not verbose else logging.DEBUG)
 
+    def _make_artifacts(self, tree=None, job=None):
         self._activate_virtualenv()
         self.virtualenv_manager.install_pip_package('pylru==1.0.9')
         self.virtualenv_manager.install_pip_package('taskcluster==0.0.16')
@@ -242,14 +245,16 @@ class PackageFrontend(MachCommandBase):
             'which case the current hg repository is inspected; an hg revision; '
             'a remote URL; or a local file.',
         default=None)
-    def artifact_install(self, source=None, tree=None, job=None):
+    def artifact_install(self, source=None, tree=None, job=None, verbose=False):
+        self._set_log_level(verbose)
         tree, job = self._compute_defaults(tree, job)
         artifacts = self._make_artifacts(tree=tree, job=job)
         return artifacts.install_from(source, self.distdir)
 
     @ArtifactSubCommand('artifact', 'last',
         'Print the last pre-built artifact installed.')
-    def artifact_print_last(self, tree=None, job=None):
+    def artifact_print_last(self, tree=None, job=None, verbose=False):
+        self._set_log_level(verbose)
         tree, job = self._compute_defaults(tree, job)
         artifacts = self._make_artifacts(tree=tree, job=job)
         artifacts.print_last()
@@ -257,7 +262,8 @@ class PackageFrontend(MachCommandBase):
 
     @ArtifactSubCommand('artifact', 'print-cache',
         'Print local artifact cache for debugging.')
-    def artifact_print_cache(self, tree=None, job=None):
+    def artifact_print_cache(self, tree=None, job=None, verbose=False):
+        self._set_log_level(verbose)
         tree, job = self._compute_defaults(tree, job)
         artifacts = self._make_artifacts(tree=tree, job=job)
         artifacts.print_cache()
@@ -265,7 +271,8 @@ class PackageFrontend(MachCommandBase):
 
     @ArtifactSubCommand('artifact', 'clear-cache',
         'Delete local artifacts and reset local artifact cache.')
-    def artifact_clear_cache(self, tree=None, job=None):
+    def artifact_clear_cache(self, tree=None, job=None, verbose=False):
+        self._set_log_level(verbose)
         tree, job = self._compute_defaults(tree, job)
         artifacts = self._make_artifacts(tree=tree, job=job)
         artifacts.clear_cache()
