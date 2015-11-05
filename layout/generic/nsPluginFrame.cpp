@@ -94,14 +94,7 @@ using mozilla::DefaultXDisplay;
 #undef CreateEvent
 #endif
 
-static PRLogModuleInfo *
-GetObjectFrameLog()
-{
-  static PRLogModuleInfo *sLog;
-  if (!sLog)
-    sLog = PR_NewLogModule("nsPluginFrame");
-  return sLog;
-}
+static mozilla::LazyLogModule sPluginFrameLog("nsPluginFrame");
 
 using namespace mozilla;
 using namespace mozilla::gfx;
@@ -160,13 +153,13 @@ nsPluginFrame::nsPluginFrame(nsStyleContext* aContext)
   , mReflowCallbackPosted(false)
   , mIsHiddenDueToScroll(false)
 {
-  MOZ_LOG(GetObjectFrameLog(), LogLevel::Debug,
+  MOZ_LOG(sPluginFrameLog, LogLevel::Debug,
          ("Created new nsPluginFrame %p\n", this));
 }
 
 nsPluginFrame::~nsPluginFrame()
 {
-  MOZ_LOG(GetObjectFrameLog(), LogLevel::Debug,
+  MOZ_LOG(sPluginFrameLog, LogLevel::Debug,
          ("nsPluginFrame %p deleted\n", this));
 }
 
@@ -196,7 +189,7 @@ nsPluginFrame::Init(nsIContent*       aContent,
                     nsContainerFrame* aParent,
                     nsIFrame*         aPrevInFlow)
 {
-  MOZ_LOG(GetObjectFrameLog(), LogLevel::Debug,
+  MOZ_LOG(sPluginFrameLog, LogLevel::Debug,
          ("Initializing nsPluginFrame %p for content %p\n", this, aContent));
 
   nsPluginFrameSuper::Init(aContent, aParent, aPrevInFlow);
