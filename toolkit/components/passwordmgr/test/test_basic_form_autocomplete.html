@@ -85,6 +85,7 @@ var login10 = new nsLoginInfo(
     "http://mochi.test:8888", "http://autocomplete7", null,
     "testuser10", "testpass10", "uname", "pword");
 
+
 // try/catch in case someone runs the tests manually, twice.
 try {
     pwmgr.addLogin(login0);
@@ -183,6 +184,13 @@ try {
     <input  type="text"   name="2">
     <button type="submit">Submit</button>
   </form>
+
+  <!-- tests <form>-less autocomplete -->
+  <div id="form12">
+     <input  type="text"       name="uname" id="uname">
+     <input  type="password"   name="pword" id="pword">
+     <button type="submit">Submit</button>
+   </div>
 </div>
 
 <pre id="test">
@@ -857,6 +865,23 @@ function* runTest() {
   checkACForm("testuser10", "testpass10");
 
   recipeParent.reset();
+  yield runNextTest();
+
+  // Test form-less autocomplete
+  uname = $_(12, "uname")
+  pword = $_(12, "pword")
+  restoreForm();
+  checkACForm("", "");
+  // Trigger autocomplete popup
+  doKey("down");
+  yield runNextTest("expect popup");
+
+  // Trigger autocomplete
+  doKey("down");
+  checkACForm("", ""); // value shouldn't update
+  doKey("return"); // not "enter"!
+  yield waitForCompletion();
+  checkACForm("testuser", "testpass");
   yield runNextTest();
 
   SimpleTest.finish();

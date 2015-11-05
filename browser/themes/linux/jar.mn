@@ -8,9 +8,6 @@ browser.jar:
 #include ../shared/jar.inc.mn
   skin/classic/browser/sanitizeDialog.css
   skin/classic/browser/aboutSessionRestore-window-icon.png
-  skin/classic/browser/aboutCertError_sectionCollapsed.png
-  skin/classic/browser/aboutCertError_sectionCollapsed-rtl.png
-  skin/classic/browser/aboutCertError_sectionExpanded.png
 #ifdef MOZ_SERVICES_SYNC
   skin/classic/browser/aboutSyncTabs.css
 #endif

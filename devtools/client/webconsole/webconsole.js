@@ -30,7 +30,7 @@ loader.lazyImporter(this, "VariablesViewController", "resource://devtools/client
 loader.lazyImporter(this, "PluralForm", "resource://gre/modules/PluralForm.jsm");
 loader.lazyImporter(this, "gDevTools", "resource://devtools/client/framework/gDevTools.jsm");
 
-const STRINGS_URI = "chrome://browser/locale/devtools/webconsole.properties";
+const STRINGS_URI = "chrome://devtools/locale/webconsole.properties";
 var l10n = new WebConsoleUtils.l10n(STRINGS_URI);
 
 const XHTML_NS = "http://www.w3.org/1999/xhtml";

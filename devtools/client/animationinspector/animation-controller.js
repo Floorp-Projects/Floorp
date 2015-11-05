@@ -20,7 +20,7 @@ loader.lazyRequireGetter(this, "EventEmitter",
 loader.lazyRequireGetter(this, "AnimationsFront",
                                "devtools/server/actors/animation", true);
 
-const STRINGS_URI = "chrome://browser/locale/devtools/animationinspector.properties";
+const STRINGS_URI = "chrome://devtools/locale/animationinspector.properties";
 const L10N = new ViewHelpers.L10N(STRINGS_URI);
 
 // Global toolbox/inspector, set when startup is called.

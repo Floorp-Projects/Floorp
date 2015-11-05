@@ -17,7 +17,7 @@ loader.lazyImporter(this, "AddonManager",
 
 const ExtensionIcon = "chrome://mozapps/skin/extensions/extensionGeneric.svg";
 const Strings = Services.strings.createBundle(
-  "chrome://browser/locale/devtools/aboutdebugging.properties");
+  "chrome://devtools/locale/aboutdebugging.properties");
 
 exports.AddonsComponent = React.createClass({
   displayName: "AddonsComponent",

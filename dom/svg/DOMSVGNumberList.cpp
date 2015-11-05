@@ -349,16 +349,15 @@ DOMSVGNumberList::MaybeInsertNullInAnimValListAt(uint32_t aIndex)
 {
   MOZ_ASSERT(!IsAnimValList(), "call from baseVal to animVal");
 
-  DOMSVGNumberList* animVal = mAList->mAnimVal;
-
-  if (!animVal || mAList->IsAnimating()) {
-    // No animVal list wrapper, or animVal not a clone of baseVal
+  if (!AnimListMirrorsBaseList()) {
     return;
   }
 
+  DOMSVGNumberList* animVal = mAList->mAnimVal;
+
+  MOZ_ASSERT(animVal, "AnimListMirrorsBaseList() promised a non-null animVal");
   MOZ_ASSERT(animVal->mItems.Length() == mItems.Length(),
              "animVal list not in sync!");
-
   MOZ_ALWAYS_TRUE(animVal->mItems.InsertElementAt(aIndex, nullptr, fallible));
 
   UpdateListIndicesFromIndex(animVal->mItems, aIndex + 1);
@@ -369,15 +368,15 @@ DOMSVGNumberList::MaybeRemoveItemFromAnimValListAt(uint32_t aIndex)
 {
   MOZ_ASSERT(!IsAnimValList(), "call from baseVal to animVal");
 
+  if (!AnimListMirrorsBaseList()) {
+    return;
+  }
+
   // This needs to be a strong reference; otherwise, the RemovingFromList call
   // below might drop the last reference to animVal before we're done with it.
   RefPtr<DOMSVGNumberList> animVal = mAList->mAnimVal;
 
-  if (!animVal || mAList->IsAnimating()) {
-    // No animVal list wrapper, or animVal not a clone of baseVal
-    return;
-  }
-
+  MOZ_ASSERT(animVal, "AnimListMirrorsBaseList() promised a non-null animVal");
   MOZ_ASSERT(animVal->mItems.Length() == mItems.Length(),
              "animVal list not in sync!");
 
