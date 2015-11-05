@@ -10,7 +10,7 @@
 
 NS_IMPL_ISUPPORTS(nsContentSecurityManager, nsIContentSecurityManager)
 
-nsresult
+static nsresult
 ValidateSecurityFlags(nsILoadInfo* aLoadInfo)
 {
   nsSecurityFlags securityMode = aLoadInfo->GetSecurityMode();
@@ -43,7 +43,7 @@ static bool SchemeIs(nsIURI* aURI, const char* aScheme)
   return NS_SUCCEEDED(baseURI->SchemeIs(aScheme, &isScheme)) && isScheme;
 }
 
-nsresult
+static nsresult
 DoCheckLoadURIChecks(nsIURI* aURI, nsILoadInfo* aLoadInfo)
 {
   nsresult rv = NS_OK;
@@ -73,11 +73,23 @@ DoCheckLoadURIChecks(nsIURI* aURI, nsILoadInfo* aLoadInfo)
   return NS_OK;
 }
 
-nsresult
+static bool
+URIHasFlags(nsIURI* aURI, uint32_t aURIFlags)
+{
+  bool hasFlags;
+  nsresult rv = NS_URIChainHasFlags(aURI, aURIFlags, &hasFlags);
+  NS_ENSURE_SUCCESS(rv, false);
+
+  return hasFlags;
+}
+
+static nsresult
 DoSOPChecks(nsIURI* aURI, nsILoadInfo* aLoadInfo)
 {
-  if (aLoadInfo->GetAllowChrome() && SchemeIs(aURI, "chrome")) {
-    // Enforce same-origin policy, except to chrome.
+  if (aLoadInfo->GetAllowChrome() &&
+      (URIHasFlags(aURI, nsIProtocolHandler::URI_IS_UI_RESOURCE) ||
+       SchemeIs(aURI, "moz-safe-about"))) {
+    // UI resources are allowed.
     return DoCheckLoadURIChecks(aURI, aLoadInfo);
   }
 
@@ -96,7 +108,7 @@ DoSOPChecks(nsIURI* aURI, nsILoadInfo* aLoadInfo)
                                         sameOriginDataInherits);
 }
 
-nsresult
+static nsresult
 DoCORSChecks(nsIChannel* aChannel, nsILoadInfo* aLoadInfo,
              nsCOMPtr<nsIStreamListener>& aInAndOutListener)
 {
@@ -115,7 +127,7 @@ DoCORSChecks(nsIChannel* aChannel, nsILoadInfo* aLoadInfo,
   return NS_OK;
 }
 
-nsresult
+static nsresult
 DoContentSecurityChecks(nsIURI* aURI, nsILoadInfo* aLoadInfo)
 {
   nsContentPolicyType contentPolicyType =

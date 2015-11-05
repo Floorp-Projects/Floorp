@@ -123,6 +123,12 @@ message Node {
 
     // JS::ubi::CoarseType. Defaults to Other.
     optional uint32     coarseType           = 9 [default = 0];
+
+    // De-duplicated one-byte string.
+    oneof ScriptFilenameOrRef {
+        bytes           scriptFilename       = 10;
+        uint64          scriptFilenameRef    = 11;
+    }
 }
 
 // A serialized edge from the heap graph.

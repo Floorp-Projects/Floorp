@@ -26,7 +26,7 @@ typedef unsigned long nsSecurityFlags;
 /**
  * An nsILoadOwner represents per-load information about who started the load.
  */
-[scriptable, builtinclass, uuid(99abb145-29d2-4a0a-8bca-213fa6211cc9)]
+[scriptable, builtinclass, uuid(45a4a9e1-b50d-468a-a01c-43de5c38c8db)]
 interface nsILoadInfo : nsISupports
 {
   /**
@@ -293,17 +293,7 @@ interface nsILoadInfo : nsISupports
    * Warning: If the loadingDocument is null, then the
    * upgradeInsecureRequests is false.
    */
-  readonly attribute boolean upgradeInsecureRequests;
-
-%{ C++
-  inline bool GetUpgradeInsecureRequests()
-  {
-    bool result;
-    mozilla::DebugOnly<nsresult> rv = GetUpgradeInsecureRequests(&result);
-    MOZ_ASSERT(NS_SUCCEEDED(rv));
-    return result;
-  }
-%}
+  [infallible] readonly attribute boolean upgradeInsecureRequests;
 
   /**
    * Typically these are the window IDs of the window in which the element being
@@ -317,35 +307,9 @@ interface nsILoadInfo : nsISupports
    * available. parentOuterWindowID will be the same as outerWindowID if the
    * window has no parent.
    */
-  readonly attribute unsigned long long innerWindowID;
-  readonly attribute unsigned long long outerWindowID;
-  readonly attribute unsigned long long parentOuterWindowID;
-
-%{ C++
-  inline uint64_t GetInnerWindowID()
-  {
-    uint64_t result;
-    mozilla::DebugOnly<nsresult> rv = GetInnerWindowID(&result);
-    MOZ_ASSERT(NS_SUCCEEDED(rv));
-    return result;
-  }
-
-  inline uint64_t GetOuterWindowID()
-  {
-    uint64_t result;
-    mozilla::DebugOnly<nsresult> rv = GetOuterWindowID(&result);
-    MOZ_ASSERT(NS_SUCCEEDED(rv));
-    return result;
-  }
-
-  inline uint64_t GetParentOuterWindowID()
-  {
-    uint64_t result;
-    mozilla::DebugOnly<nsresult> rv = GetParentOuterWindowID(&result);
-    MOZ_ASSERT(NS_SUCCEEDED(rv));
-    return result;
-  }
-%}
+  [infallible] readonly attribute unsigned long long innerWindowID;
+  [infallible] readonly attribute unsigned long long outerWindowID;
+  [infallible] readonly attribute unsigned long long parentOuterWindowID;
 
   /**
    * Customized OriginAttributes within LoadInfo to allow overwriting of the
@@ -380,17 +344,7 @@ interface nsILoadInfo : nsISupports
    * to anything else than true will be discareded.
    *
    */
-  attribute bool enforceSecurity;
-
-%{ C++
-  inline bool GetEnforceSecurity()
-  {
-    bool result;
-    mozilla::DebugOnly<nsresult> rv = GetEnforceSecurity(&result);
-    MOZ_ASSERT(NS_SUCCEEDED(rv));
-    return result;
-  }
-%}
+  [infallible] attribute boolean enforceSecurity;
 
   /**
    * Whenever a channel is evaluated by the ContentSecurityManager
@@ -405,20 +359,10 @@ interface nsILoadInfo : nsISupports
    *
    * Please note, once the flag is set to true it must remain true
    * throughout the lifetime of the channel. Trying to set it
-   * to anything else than true will be discareded.
+   * to anything else than true will be discarded.
    *
    */
-  attribute bool initialSecurityCheckDone;
-
-%{ C++
-  inline bool GetInitialSecurityCheckDone()
-  {
-    bool result;
-    mozilla::DebugOnly<nsresult> rv = GetInitialSecurityCheckDone(&result);
-    MOZ_ASSERT(NS_SUCCEEDED(rv));
-    return result;
-  }
-%}
+  [infallible] attribute boolean initialSecurityCheckDone;
 
   /**
    * Whenever a channel gets redirected, append the principal of the

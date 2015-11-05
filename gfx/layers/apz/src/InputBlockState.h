@@ -430,6 +430,16 @@ public:
   bool TouchActionAllowsPanningY() const;
   bool TouchActionAllowsPanningXY() const;
 
+  /**
+   * Notifies the input block of an incoming touch event so that the block can
+   * update its internal slop state. "Slop" refers to the area around the
+   * initial touchstart where we drop touchmove events so that content doesn't
+   * see them.
+   * @return true iff the provided event is a touchmove in the slop area and
+   *         so should not be sent to content.
+   */
+  bool UpdateSlopState(const MultiTouchInput& aInput);
+
   bool HasEvents() const override;
   void DropEvents() override;
   void HandleEvents() override;
@@ -442,6 +452,8 @@ private:
   bool mAllowedTouchBehaviorSet;
   bool mDuringFastFling;
   bool mSingleTapOccurred;
+  bool mInSlop;
+  ScreenIntPoint mSlopOrigin;
   nsTArray<MultiTouchInput> mEvents;
   // A reference to the InputQueue's touch counter
   TouchCounter& mTouchCounter;

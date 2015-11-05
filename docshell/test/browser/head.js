@@ -31,8 +31,8 @@ function makeTimelineTest(frameScriptName, url) {
       info(message.data.message);
     });
     mm.addMessageListener("browser:test:finish", function(ignore) {
-      finish();
       gBrowser.removeCurrentTab();
+      finish();
     });
   });
 }

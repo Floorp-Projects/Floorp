@@ -261,22 +261,29 @@ ExtensionContext.prototype = {
   },
 };
 
+function windowId(window)
+{
+  return window.QueryInterface(Ci.nsIInterfaceRequestor)
+               .getInterface(Ci.nsIDOMWindowUtils)
+               .currentInnerWindowID;
+}
+
 // Responsible for creating ExtensionContexts and injecting content
 // scripts into them when new documents are created.
 var DocumentManager = {
   extensionCount: 0,
 
-  // WeakMap[window -> Map[extensionId -> ExtensionContext]]
-  windows: new WeakMap(),
+  // Map[windowId -> Map[extensionId -> ExtensionContext]]
+  windows: new Map(),
 
   init() {
     Services.obs.addObserver(this, "document-element-inserted", false);
-    Services.obs.addObserver(this, "dom-window-destroyed", false);
+    Services.obs.addObserver(this, "inner-window-destroyed", false);
   },
 
   uninit() {
     Services.obs.removeObserver(this, "document-element-inserted");
-    Services.obs.removeObserver(this, "dom-window-destroyed");
+    Services.obs.removeObserver(this, "inner-window-destroyed");
   },
 
   getWindowState(contentWindow) {
@@ -305,23 +312,21 @@ var DocumentManager = {
         return;
       }
 
-      this.windows.delete(window);
-
       this.trigger("document_start", window);
       window.addEventListener("DOMContentLoaded", this, true);
       window.addEventListener("load", this, true);
-    } else if (topic == "dom-window-destroyed") {
-      let window = subject;
-      if (!this.windows.has(window)) {
+    } else if (topic == "inner-window-destroyed") {
+      let id = subject.QueryInterface(Ci.nsISupportsPRUint64).data;
+      if (!this.windows.has(id)) {
         return;
       }
 
-      let extensions = this.windows.get(window);
+      let extensions = this.windows.get(id);
       for (let [extensionId, context] of extensions) {
         context.close();
       }
 
-      this.windows.delete(window);
+      this.windows.delete(id);
     }
   },
 
@@ -365,10 +370,11 @@ var DocumentManager = {
   },
 
   getContext(extensionId, window) {
-    if (!this.windows.has(window)) {
-      this.windows.set(window, new Map());
+    let winId = windowId(window);
+    if (!this.windows.has(winId)) {
+      this.windows.set(winId, new Map());
     }
-    let extensions = this.windows.get(window);
+    let extensions = this.windows.get(winId);
     if (!extensions.has(extensionId)) {
       let context = new ExtensionContext(extensionId, window);
       extensions.set(extensionId, context);
@@ -384,6 +390,9 @@ var DocumentManager = {
 
     let extension = ExtensionManager.get(extensionId);
     for (let global of ExtensionContent.globals.keys()) {
+      // Note that we miss windows in the bfcache here. In theory we
+      // could execute content scripts on a pageshow event for that
+      // window, but that seems extreme.
       for (let [window, state] of this.enumerateWindows(global.docShell)) {
         for (let script of extension.scripts) {
           if (script.matches(window)) {
@@ -396,17 +405,11 @@ var DocumentManager = {
   },
 
   shutdownExtension(extensionId) {
-    for (let global of ExtensionContent.globals.keys()) {
-      for (let [window, state] of this.enumerateWindows(global.docShell)) {
-        let extensions = this.windows.get(window);
-        if (!extensions) {
-          continue;
-        }
-        let context = extensions.get(extensionId);
-        if (context) {
-          context.close();
-          extensions.delete(extensionId);
-        }
+    for (let [windowId, extensions] of this.windows) {
+      let context = extensions.get(extensionId);
+      if (context) {
+        context.close();
+        extensions.delete(extensionId);
       }
     }
 

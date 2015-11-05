@@ -803,12 +803,9 @@ function test_urlbar() {
 
 function test_wronghost() {
   gBrowser.selectedTab = gBrowser.addTab();
-  gBrowser.addEventListener("load", function() {
-    if (gBrowser.currentURI.spec != TESTROOT2 + "enabled.html")
-      return;
 
-    gBrowser.removeEventListener("load", arguments.callee, true);
-
+  let requestedUrl = TESTROOT2 + "enabled.html";
+  BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser, false, requestedUrl).then(() => {
     // Wait for the progress notification
     wait_for_progress_notification(function(aPanel) {
       // Wait for the complete notification
@@ -825,7 +822,7 @@ function test_wronghost() {
     });
 
     gBrowser.loadURI(TESTROOT + "corrupt.xpi");
-  }, true);
+  });
   gBrowser.loadURI(TESTROOT2 + "enabled.html");
 },
 
@@ -848,12 +845,8 @@ function test_reload() {
 
         PopupNotifications.panel.addEventListener("popuphiding", test_fail, false);
 
-        gBrowser.addEventListener("load", function() {
-          if (gBrowser.currentURI.spec != TESTROOT2 + "enabled.html")
-            return;
-
-          gBrowser.removeEventListener("load", arguments.callee, true);
-
+        let requestedUrl = TESTROOT2 + "enabled.html";
+        BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser, false, requestedUrl).then(() => {
           PopupNotifications.panel.removeEventListener("popuphiding", test_fail, false);
 
           AddonManager.getAllInstalls(function(aInstalls) {
@@ -864,7 +857,7 @@ function test_reload() {
             wait_for_notification_close(runNextTest);
             gBrowser.removeTab(gBrowser.selectedTab);
           });
-        }, true);
+        });
         gBrowser.loadURI(TESTROOT2 + "enabled.html");
       });
 

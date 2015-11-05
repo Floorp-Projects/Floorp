@@ -123,12 +123,11 @@ var doc = null;
 function test() {
   waitForExplicitFinish();
   gBrowser.selectedTab = gBrowser.addTab();
-  gBrowser.selectedBrowser.addEventListener("load", function onload() {
-    gBrowser.selectedBrowser.removeEventListener("load", onload, true);
+  BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser).then(() => {
     doc = content.document;
     runTests();
-  }, true);
-  content.location = TEST_URI;
+  });
+  gBrowser.loadURI(TEST_URI);
 }
 
 function runTests() {

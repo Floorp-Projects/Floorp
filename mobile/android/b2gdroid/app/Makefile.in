@@ -9,6 +9,9 @@ JAVAFILES := \
   src/main/java/org/mozilla/b2gdroid/Launcher.java \
   src/main/java/org/mozilla/b2gdroid/ScreenStateObserver.java \
   src/main/java/org/mozilla/b2gdroid/SettingsMapper.java \
+  src/main/java/org/mozilla/b2gdroid/GeckoEventReceiver.java \
+  src/main/java/org/mozilla/b2gdroid/NotificationObserver.java \
+  src/main/java/org/mozilla/b2gdroid/RemoteGeckoEventProxy.java \
   $(NULL)
 
 # The GeckoView consuming APK depends on the GeckoView JAR files.  There are two

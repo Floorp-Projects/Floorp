@@ -6,7 +6,7 @@
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
-<body onload="gen.next()">
+<body>
 <p id="display">
 <iframe id=loader></iframe>
 </p>
@@ -163,6 +163,11 @@ function runTest() {
   yield undefined;
 }
 
+addLoadEvent(function() {
+  SpecialPowers.pushPrefEnv({"set": [["network.jar.block-remote-files", false]]}, function() {
+    gen.next();
+  });
+});
 </script>
 </pre>
 </body>

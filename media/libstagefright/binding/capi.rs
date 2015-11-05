@@ -52,10 +52,7 @@ pub unsafe extern "C" fn mp4parse_free(context: *mut MediaContext) {
 #[no_mangle]
 pub unsafe extern "C" fn mp4parse_read(context: *mut MediaContext, buffer: *const u8, size: usize) -> i32 {
     // Validate arguments from C.
-    if context.is_null() {
-        return -1;
-    }
-    if buffer.is_null() || size < 8 {
+    if context.is_null() || buffer.is_null() || size < 8 {
         return -1;
     }
 
@@ -76,7 +73,7 @@ pub unsafe extern "C" fn mp4parse_read(context: *mut MediaContext, buffer: *cons
         }
         // Make sure the track count fits in an i32 so we can use
         // negative values for failure.
-        assert!(context.tracks.len() < std::i32::MAX as usize);
+        assert!(context.tracks.len() < i32::max_value() as usize);
         context.tracks.len() as i32
     });
     task.join().unwrap_or(-1)

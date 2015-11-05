@@ -9,12 +9,10 @@ function test()
   waitForExplicitFinish();
 
   gBrowser.selectedTab = gBrowser.addTab();
-  gBrowser.selectedBrowser.addEventListener("load", onLoad, true);
+  BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser).then(onLoad);
 }
 
-function onLoad(evt) {
-  gBrowser.selectedBrowser.removeEventListener(evt.type, onLoad, true);
-
+function onLoad() {
   target = TargetFactory.forTab(gBrowser.selectedTab);
 
   is(target.tab, gBrowser.selectedTab, "Target linked to the right tab.");

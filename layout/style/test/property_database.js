@@ -6559,6 +6559,27 @@ if (IsCSSPropertyPrefEnabled("layout.css.prefixes.webkit")) {
     alias_for: "transform-style",
     subproperties: [ "transform-style" ],
   };
+  gCSSProperties["-webkit-backface-visibility"] = {
+    domProp: "webkitBackfaceVisibility",
+    inherited: false,
+    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    alias_for: "backface-visibility",
+    subproperties: [ "backface-visibility" ],
+  };
+  gCSSProperties["-webkit-perspective"] = {
+    domProp: "webkitPerspective",
+    inherited: false,
+    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    alias_for: "perspective",
+    subproperties: [ "perspective" ],
+  };
+  gCSSProperties["-webkit-perspective-origin"] = {
+    domProp: "webkitPerspectiveOrigin",
+    inherited: false,
+    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    alias_for: "perspective-origin",
+    subproperties: [ "perspective-origin" ],
+  };
   gCSSProperties["-webkit-transition"] = {
     domProp: "webkitTransition",
     inherited: false,
@@ -6664,6 +6685,41 @@ if (IsCSSPropertyPrefEnabled("layout.css.prefixes.webkit")) {
     alias_for: "border-image",
     subproperties: [ "border-image-source", "border-image-slice", "border-image-width",  "border-image-outset", "border-image-repeat" ],
   };
+  gCSSProperties["-webkit-border-image-outset"] = {
+    domProp: "webkitBorderImageOutset",
+    inherited: false,
+    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    alias_for: "border-image-outset",
+    subproperties: [ "border-image-outset" ],
+  };
+  gCSSProperties["-webkit-border-image-repeat"] = {
+    domProp: "webkitBorderImageRepeat",
+    inherited: false,
+    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    alias_for: "border-image-repeat",
+    subproperties: [ "border-image-repeat" ],
+  };
+  gCSSProperties["-webkit-border-image-slice"] = {
+    domProp: "webkitBorderImageSlice",
+    inherited: false,
+    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    alias_for: "border-image-slice",
+    subproperties: [ "border-image-slice" ],
+  };
+  gCSSProperties["-webkit-border-image-source"] = {
+    domProp: "webkitBorderImageSource",
+    inherited: false,
+    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    alias_for: "border-image-source",
+    subproperties: [ "border-image-source" ],
+  };
+  gCSSProperties["-webkit-border-image-width"] = {
+    domProp: "webkitBorderImageWidth",
+    inherited: false,
+    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    alias_for: "border-image-width",
+    subproperties: [ "border-image-width" ],
+  };
   gCSSProperties["-webkit-box-shadow"] = {
     domProp: "webkitBoxShadow",
     inherited: false,
@@ -6677,6 +6733,34 @@ if (IsCSSPropertyPrefEnabled("layout.css.prefixes.webkit")) {
     type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
     alias_for: "box-sizing",
     subproperties: [ "box-sizing" ],
+  };
+  gCSSProperties["-webkit-box-flex"] = {
+    domProp: "webkitBoxFlex",
+    inherited: false,
+    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    alias_for: "flex-grow",
+    subproperties: [ "flex-grow" ],
+  };
+  gCSSProperties["-webkit-box-ordinal-group"] = {
+    domProp: "webkitBoxOrdinalGroup",
+    inherited: false,
+    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    alias_for: "order",
+    subproperties: [ "order" ],
+  };
+  gCSSProperties["-webkit-box-align"] = {
+    domProp: "webkitBoxAlign",
+    inherited: false,
+    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    alias_for: "align-items",
+    subproperties: [ "align-items" ],
+  };
+  gCSSProperties["-webkit-box-pack"] = {
+    domProp: "webkitBoxPack",
+    inherited: false,
+    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    alias_for: "justify-content",
+    subproperties: [ "justify-content" ],
   };
   gCSSProperties["-webkit-user-select"] = {
     domProp: "webkitUserSelect",

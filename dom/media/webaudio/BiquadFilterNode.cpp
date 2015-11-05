@@ -149,7 +149,7 @@ public:
       if (!hasTail) {
         if (!mBiquads.IsEmpty()) {
           mBiquads.Clear();
-          aStream->CheckForInactive();
+          aStream->ScheduleCheckForInactive();
 
           RefPtr<PlayingRefChangeHandler> refchanged =
             new PlayingRefChangeHandler(aStream, PlayingRefChangeHandler::RELEASE);

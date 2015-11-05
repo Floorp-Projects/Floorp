@@ -114,6 +114,8 @@ public:
 
   already_AddRefed<dom::DOMRequest> GetStructuredData(ErrorResult& aRv);
 
+  already_AddRefed<dom::DOMRequest> GetWebManifest(ErrorResult& aRv);
+
   void SetNFCFocus(bool isFocus,
                    ErrorResult& aRv);
 
