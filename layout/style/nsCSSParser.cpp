@@ -6786,9 +6786,8 @@ CSSParserImpl::LookupKeywordPrefixAware(nsAString& aKeywordStr,
   nsCSSKeyword keyword = nsCSSKeywords::LookupKeyword(aKeywordStr);
 
   if (aKeywordTable == nsCSSProps::kDisplayKTable) {
-    if (keyword == eCSSKeyword_UNKNOWN &&
-        (sWebkitPrefixedAliasesEnabled || ShouldUseUnprefixingService()) &&
-        aKeywordStr.EqualsLiteral("-webkit-box")) {
+    if (keyword == eCSSKeyword__webkit_box &&
+        (sWebkitPrefixedAliasesEnabled || ShouldUseUnprefixingService())) {
       // Treat "display: -webkit-box" as "display: flex". In simple scenarios,
       // they largely behave the same, as long as we alias the associated
       // properties to modern flexbox equivalents as well.
