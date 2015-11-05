@@ -921,12 +921,17 @@ loop.panel = (function(_, mozL10n) {
       window.removeEventListener("GettingStartedSeen", this._gettingStartedSeen);
     },
 
+    handleContextMenu: function(e) {
+      e.preventDefault();
+    },
+
     render: function() {
       var NotificationListView = sharedViews.NotificationListView;
 
       if (!this.state.gettingStartedSeen) {
         return (
-          React.createElement("div", {className: "fte-get-started-container"}, 
+          React.createElement("div", {className: "fte-get-started-container", 
+               onContextMenu: this.handleContextMenu}, 
             React.createElement(NotificationListView, {
               clearOnDocumentHidden: true, 
               notifications: this.props.notifications}), 
@@ -941,7 +946,8 @@ loop.panel = (function(_, mozL10n) {
       }
 
       return (
-        React.createElement("div", {className: "panel-content"}, 
+        React.createElement("div", {className: "panel-content", 
+             onContextMenu: this.handleContextMenu}, 
           React.createElement("div", {className: "beta-ribbon"}), 
           React.createElement(NotificationListView, {
             clearOnDocumentHidden: true, 
