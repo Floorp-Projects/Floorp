@@ -21,6 +21,7 @@
 #include "mozilla/gfx/Logging.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/UniquePtrExtensions.h"
 #include "mozilla/Vector.h"
 #include "nsComponentManagerUtils.h"
 #include "nsIClipboardHelper.h"
@@ -1560,7 +1561,7 @@ gfxUtils::GetImageBuffer(gfx::DataSourceSurface* aSurface,
         return nullptr;
 
     uint32_t bufferSize = aSurface->GetSize().width * aSurface->GetSize().height * 4;
-    UniquePtr<uint8_t[]> imageBuffer(new (fallible) uint8_t[bufferSize]);
+    auto imageBuffer = MakeUniqueFallible<uint8_t[]>(bufferSize);
     if (!imageBuffer) {
         aSurface->Unmap();
         return nullptr;
