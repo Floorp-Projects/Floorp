@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>GFX Display List & Layer Visualizer</title>
+    <meta charset="utf-8">
+    <link rel="stylesheet" type="text/css" href="tree.css">
+    <script src="layerTreeView.js"></script>
+    <style>
+
+.csstooltip
+{
+  z-index: 5;
+  background: white;
+  border: solid 1px black;
+  position: absolute;
+  padding: 5px;
+  margin: 5px;
+  max-width: 300px;
+}
+    </style>
+  </head>
+  <body>
+    <h1>GFX Layers dump visualizer:</h1>
+    Paste your display list or layers dump into this textarea:<br>
+    <textarea id="input_layers_dump" style="width:100%; height: 80%;" cols="80" rows="10">
+ClientLayerManager (0x1264f5000)
+  ClientContainerLayer (0x1263fe200) [visible=< (x=0, y=0, w=1457, h=1163); >] [opaqueContent] [metrics0={ [cb=(x=0.000000, y=0.000000, w=1457.000000, h=1163.000000)] [sr=(x=0.000000, y=0.000000, w=1457.000000, h=1163.000000)] [s=(0,0)] [dp=(x=0.000000, y=0.000000, w=1457.000000, h=1163.000000)] [cdp=(x=0.000000, y=0.000000, w=0.000000, h=0.000000)] [color=rgba(0, 0, 0, 0.000000)] [scrollId=3] [z=1] }]
+    ClientTiledPaintedLayer (0x1263b3600) [bounds=(x=-1, y=0, w=1458, h=1163)] [visible=< (x=0, y=0, w=1457, h=79); >] { hitregion=< (x=0, y=0, w=1457, h=47); (x=-1, y=47, w=1458, h=24); (x=0, y=71, w=1457, h=1092); > dispatchtocontentregion=< (x=68, y=9, w=1375, h=31); (x=944, y=47, w=280, h=24); >} [opaqueContent] [valid=< (x=0, y=0, w=1457, h=79); >]
+      SingleTiledContentClient (0x126f80680)
+    ClientContainerLayer (0x122a33f00) [clip=(x=0, y=79, w=1457, h=1084)] [visible=< (x=0, y=79, w=1457, h=1084); >] [opaqueContent]
+      ClientTiledPaintedLayer (0x11e11a700) [bounds=(x=0, y=79, w=1457, h=1084)] [visible=< (x=0, y=79, w=1457, h=1084); >] { hitregion=< (x=0, y=79, w=1457, h=1084); > dispatchtocontentregion=< (x=0, y=125, w=1457, h=1034); >} [opaqueContent] [valid=< (x=0, y=79, w=1457, h=1084); >]
+        SingleTiledContentClient (0x1226d52c0)
+    </textarea>
+    <br>
+    <input type="button" value="Process pasted log" onclick="log_pasted()" />
+    <br>
+    <br>
+    Help: To get a layers dump go to about:config and set layout.display-list.dump;true or layers.dump;true.
+    <script>
+function log_pasted() {
+  var container = parseMultiLineDump(document.getElementById("input_layers_dump").value);
+  document.body.innerHTML = "";
+  document.body.appendChild(container);
+}
+    </script>
+  </body>
+</html>
