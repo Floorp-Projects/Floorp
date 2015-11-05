@@ -342,6 +342,25 @@ CSS_PROP_ALIAS(-webkit-box-sizing,
                box_sizing,
                WebkitBoxSizing,
                WEBKIT_PREFIX_PREF)
+
+// Alias old flexbox properties to modern flexbox pseudo-equivalents:
+CSS_PROP_ALIAS(-webkit-box-flex,
+               flex_grow,
+               WebkitBoxFlex,
+               WEBKIT_PREFIX_PREF)
+CSS_PROP_ALIAS(-webkit-box-ordinal-group,
+               order,
+               WebkitBoxOrdinalGroup,
+               WEBKIT_PREFIX_PREF)
+CSS_PROP_ALIAS(-webkit-box-align,
+               align_items,
+               WebkitBoxAlign,
+               WEBKIT_PREFIX_PREF)
+CSS_PROP_ALIAS(-webkit-box-pack,
+               justify_content,
+               WebkitBoxPack,
+               WEBKIT_PREFIX_PREF)
+
 CSS_PROP_ALIAS(-webkit-user-select,
                user_select,
                WebkitUserSelect,
