@@ -15,9 +15,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=430251
 <p id="display"></p>
 <div id="content" style="display: none"></div>
 
-<iframe src="jar:http://mochi.test:8888/tests/dom/tests/mochitest/whatwg/postMessage.jar!/postMessage_jar.html"
-        name="kid"></iframe>
-
 <pre id="test">
 <script class="testbody" type="application/javascript">
 /** Test for Bug 430251 **/
@@ -37,12 +34,18 @@ function receiveMessage(evt)
 
 window.addEventListener("message", receiveMessage, false);
 
-function run()
-{
-  window.frames.kid.postMessage("start-test", "http://mochi.test:8888");
-}
+addLoadEvent(function() {
+  SpecialPowers.pushPrefEnv({"set": [["network.jar.block-remote-files", false]]}, function() {
+    var iframe = document.createElement('iframe');
+    iframe.setAttribute('src', 'jar:http://mochi.test:8888/tests/dom/tests/mochitest/whatwg/postMessage.jar!/postMessage_jar.html');
+    iframe.setAttribute('name', 'kid');
+    document.getElementById("content").appendChild(iframe);
 
-window.addEventListener("load", run, false);
+    iframe.onload = function() {
+      window.frames.kid.postMessage("start-test", "http://mochi.test:8888");
+    }
+  });
+});
 </script>
 </pre>
 </body>

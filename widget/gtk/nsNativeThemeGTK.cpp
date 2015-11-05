@@ -1102,7 +1102,7 @@ nsNativeThemeGTK::DrawWidgetBackground(nsRenderingContext* aContext,
   nsIntRect overflowRect(widgetRect);
   nsIntMargin extraSize;
   if (GetExtraSizeForWidget(aFrame, aWidgetType, &extraSize)) {
-    overflowRect.Inflate(gfx::ToIntMargin(extraSize));
+    overflowRect.Inflate(extraSize);
   }
 
   // This is the rectangle that will actually be drawn, in gdk pixels

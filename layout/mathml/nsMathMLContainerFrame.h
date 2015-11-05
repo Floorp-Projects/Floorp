@@ -38,7 +38,7 @@ public:
 
   NS_DECL_QUERYFRAME_TARGET(nsMathMLContainerFrame)
   NS_DECL_QUERYFRAME
-  NS_DECL_FRAMEARENA_HELPERS
+  NS_DECL_ABSTRACT_FRAME(nsMathMLContainerFrame)
 
   // --------------------------------------------------------------------------
   // Overloaded nsMathMLFrame methods -- see documentation in nsIMathMLFrame.h

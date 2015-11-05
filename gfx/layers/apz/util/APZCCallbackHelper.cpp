@@ -555,7 +555,8 @@ static nsIScrollableFrame*
 GetScrollableAncestorFrame(nsIFrame* aTarget)
 {
   uint32_t flags = nsLayoutUtils::SCROLLABLE_ALWAYS_MATCH_ROOT
-                 | nsLayoutUtils::SCROLLABLE_ONLY_ASYNC_SCROLLABLE;
+                 | nsLayoutUtils::SCROLLABLE_ONLY_ASYNC_SCROLLABLE
+                 | nsLayoutUtils::SCROLLABLE_FIXEDPOS_FINDS_ROOT;
   return nsLayoutUtils::GetNearestScrollableFrame(aTarget, flags);
 }
 

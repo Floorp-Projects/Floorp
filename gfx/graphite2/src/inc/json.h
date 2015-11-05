@@ -32,7 +32,7 @@ of the License or (at your option) any later version.
 
 #include "inc/Main.h"
 #include <cassert>
-#include <stdio.h>
+#include <cstdio>
 #include "inc/List.h"
 
 namespace graphite2 {

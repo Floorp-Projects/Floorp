@@ -2,9 +2,7 @@ function test () {
 
   waitForExplicitFinish();
   gBrowser.selectedTab = gBrowser.addTab();
-  gBrowser.selectedBrowser.addEventListener("load", function () {
-    gBrowser.selectedBrowser.removeEventListener("load", arguments.callee, true);
-
+  BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser).then(() => {
     let doc = gBrowser.contentDocument;
     let tooltip = document.getElementById("aHTMLTooltip");
 
@@ -35,9 +33,10 @@ function test () {
 
     gBrowser.removeCurrentTab();
     finish();
-  }, true);
+  });
 
-  content.location = 
-    "http://mochi.test:8888/browser/browser/base/content/test/general/title_test.svg";
+  gBrowser.loadURI(
+    "http://mochi.test:8888/browser/browser/base/content/test/general/title_test.svg"
+  );
 }
 

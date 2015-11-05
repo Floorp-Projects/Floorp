@@ -40,6 +40,7 @@ AudioNodeStream::AudioNodeStream(AudioNodeEngine* aEngine,
     mPassThrough(false)
 {
   MOZ_ASSERT(NS_IsMainThread());
+  mSuspendedCount = !(mIsActive || mFlags & EXTERNAL_OUTPUT);
   mChannelCountMode = ChannelCountMode::Max;
   mChannelInterpretation = ChannelInterpretation::Speakers;
   // AudioNodes are always producing data
@@ -77,13 +78,13 @@ AudioNodeStream::Create(AudioContext* aCtx, AudioNodeEngine* aEngine,
 
   RefPtr<AudioNodeStream> stream =
     new AudioNodeStream(aEngine, aFlags, graph->GraphRate());
+  stream->mSuspendedCount += aCtx->ShouldSuspendNewStream();
   if (node) {
     stream->SetChannelMixingParametersImpl(node->ChannelCount(),
                                            node->ChannelCountModeValue(),
                                            node->ChannelInterpretationValue());
   }
-  graph->AddStream(stream,
-    aCtx->ShouldSuspendNewStream() ? MediaStreamGraph::ADD_STREAM_SUSPENDED : 0);
+  graph->AddStream(stream);
   return stream.forget();
 }
 
@@ -576,7 +577,9 @@ AudioNodeStream::ProcessInput(GraphTime aFrom, GraphTime aTo, uint32_t aFlags)
     }
     if (finished) {
       mMarkAsFinishedAfterThisBlock = true;
-      CheckForInactive();
+      if (mIsActive) {
+        ScheduleCheckForInactive();
+      }
     }
 
     if (mDisabledTrackIDs.Contains(static_cast<TrackID>(AUDIO_TRACK))) {
@@ -693,6 +696,9 @@ AudioNodeStream::SetActive()
   }
 
   mIsActive = true;
+  if (!(mFlags & EXTERNAL_OUTPUT)) {
+    GraphImpl()->DecrementSuspendCount(this);
+  }
   if (IsAudioParamStream()) {
     // Consumers merely influence stream order.
     // They do not read from the stream.
@@ -705,6 +711,29 @@ AudioNodeStream::SetActive()
       ns->IncrementActiveInputCount();
     }
   }
+}
+
+class AudioNodeStream::CheckForInactiveMessage final : public ControlMessage
+{
+public:
+  explicit CheckForInactiveMessage(AudioNodeStream* aStream) :
+    ControlMessage(aStream) {}
+  virtual void Run() override
+  {
+    auto ns = static_cast<AudioNodeStream*>(mStream);
+    ns->CheckForInactive();
+  }
+};
+
+void
+AudioNodeStream::ScheduleCheckForInactive()
+{
+  if (mActiveInputCount > 0 && !mMarkAsFinishedAfterThisBlock) {
+    return;
+  }
+
+  nsAutoPtr<CheckForInactiveMessage> message(new CheckForInactiveMessage(this));
+  GraphImpl()->RunMessageAfterProcessing(Move(message));
 }
 
 void
@@ -720,6 +749,9 @@ AudioNodeStream::CheckForInactive()
   mInputChunks.Clear(); // not required for foreseeable future
   for (auto& chunk : mLastChunks) {
     chunk.SetNull(WEBAUDIO_BLOCK_SIZE);
+  }
+  if (!(mFlags & EXTERNAL_OUTPUT)) {
+    GraphImpl()->IncrementSuspendCount(this);
   }
   if (IsAudioParamStream()) {
     return;

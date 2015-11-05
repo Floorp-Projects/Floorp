@@ -12,11 +12,9 @@ this.EXPORTED_SYMBOLS = [
 
 const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 Cu.import("resource://gre/modules/Promise.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
 
 const FRAME_SCRIPT = "chrome://mochikit/content/tests/BrowserTestUtils/content-task.js";
-
-const globalMM = Cc["@mozilla.org/globalmessagemanager;1"]
-                   .getService(Ci.nsIMessageListenerManager);
 
 /**
  * Keeps track of whether the frame script was already loaded.
@@ -38,6 +36,16 @@ var gMessageID = 1;
  */
 this.ContentTask = {
   /**
+   * _testScope saves the current testScope from
+   * browser-test.js. This is used to implement SimpleTest functions
+   * like ok() and is() in the content process. The scope is only
+   * valid for tasks spawned in the current test, so we keep track of
+   * the ID of the first task spawned in this test (_scopeValidId).
+   */
+  _testScope: null,
+  _scopeValidId: 0,
+
+  /**
    * Creates and starts a new task in a browser's content.
    *
    * @param browser A xul:browser
@@ -57,7 +65,7 @@ this.ContentTask = {
   spawn: function ContentTask_spawn(browser, arg, task) {
     // Load the frame script if needed.
     if (!gFrameScriptLoaded) {
-      globalMM.loadFrameScript(FRAME_SCRIPT, true);
+      Services.mm.loadFrameScript(FRAME_SCRIPT, true);
       gFrameScriptLoaded = true;
     }
 
@@ -80,20 +88,39 @@ this.ContentTask = {
 
     return deferred.promise;
   },
+
+  setTestScope(scope) {
+    this._testScope = scope;
+    this._scopeValidId = gMessageID;
+  },
 };
 
 var ContentMessageListener = {
   receiveMessage(aMessage) {
-    let id = aMessage.data.id
-    let deferred = gPromises.get(id);
-    gPromises.delete(id);
+    let id = aMessage.data.id;
 
-    if (aMessage.data.error) {
-      deferred.reject(aMessage.data.error);
-    } else {
-      deferred.resolve(aMessage.data.result);
+    if (id < ContentTask._scopeValidId) {
+      throw new Error("test result returned after test finished");
+    }
+
+    if (aMessage.name == "content-task:complete") {
+      let deferred = gPromises.get(id);
+      gPromises.delete(id);
+
+      if (aMessage.data.error) {
+        deferred.reject(aMessage.data.error);
+      } else {
+        deferred.resolve(aMessage.data.result);
+      }
+    } else if (aMessage.name == "content-task:test-result") {
+      let data = aMessage.data;
+      ContentTask._testScope.ok(data.condition, data.name, data.diag, data.stack);
+    } else if (aMessage.name == "content-task:test-info") {
+      ContentTask._testScope.info(aMessage.data.name);
     }
   },
 };
-Cc["@mozilla.org/globalmessagemanager;1"].getService(Ci.nsIMessageListenerManager)
-  .addMessageListener("content-task:complete", ContentMessageListener);
+
+Services.mm.addMessageListener("content-task:complete", ContentMessageListener);
+Services.mm.addMessageListener("content-task:test-result", ContentMessageListener);
+Services.mm.addMessageListener("content-task:test-info", ContentMessageListener);

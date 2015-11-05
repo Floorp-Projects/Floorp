@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    .flexContainer {
+      display: flex;
+
+      /* Just for easier visualization: */
+      width: 600px;
+      justify-content: space-around;
+      border: 1px solid black;
+    }
+
+    .flexContainer:before {
+      position:absolute;
+      content:'before';
+    }
+    .flexContainer:after {
+      position:absolute;
+      content:'after'
+    }
+    </style>
+  </head>
+  <body>
+    <div class="flexContainer">
+      <div class="ordered-item">NormalFlexItem
+        <!-- It's important that this remain unclosed, for some reason. -->

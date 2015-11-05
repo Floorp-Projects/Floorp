@@ -135,6 +135,26 @@ var tests = [
     stereoSource.start(0);
     return expectedBufferNoop();
   },
+  function monoPanningNoopWithGain(ctx, panner) {
+    var monoSource = ctx.createBufferSource();
+    var gain = ctx.createGain();
+    gain.gain.value = GAIN;
+    monoSource.connect(gain);
+    gain.connect(panner);
+    monoSource.buffer = monoBuffer;
+    monoSource.start(0);
+    return expectedBufferNoop(GAIN);
+  },
+  function stereoPanningNoopWithGain(ctx, panner) {
+    var stereoSource = ctx.createBufferSource();
+    var gain = ctx.createGain();
+    gain.gain.value = GAIN;
+    stereoSource.connect(gain);
+    gain.connect(panner);
+    stereoSource.buffer = stereoBuffer;
+    stereoSource.start(0);
+    return expectedBufferNoop(GAIN);
+  },
   function stereoPanningAutomation(ctx, panner) {
     var stereoSource = ctx.createBufferSource();
     stereoSource.connect(panner);
