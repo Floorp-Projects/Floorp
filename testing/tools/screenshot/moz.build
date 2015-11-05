@@ -10,6 +10,7 @@ if CONFIG['MOZ_WIDGET_GTK'] and CONFIG['MOZ_X11']:
         'gdk-screenshot.cpp',
     ]
     CXXFLAGS += CONFIG['TK_CFLAGS']
+    LDFLAGS += CONFIG['XLDFLAGS']
     OS_LIBS += CONFIG['TK_LIBS']
     OS_LIBS += CONFIG['XSS_LIBS']
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
