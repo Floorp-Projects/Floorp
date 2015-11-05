@@ -46,14 +46,14 @@ function test_bug978833() {
 
   p.classList.add("alwaysa");
   kf.style.marginLeft = "100px";
-  todo_is(cs.marginLeft, "100px", "p margin-left should be 100px after change");
+  is(cs.marginLeft, "100px", "p margin-left should be 100px after change");
 
   // Try the same thing a second time, just to make sure it works again.
   p.classList.remove("alwaysa");
   is(cs.marginLeft, "0px", "p margin-left should be 0px without animation");
   p.classList.add("alwaysa");
   kf.style.marginLeft = "150px";
-  todo_is(cs.marginLeft, "150px", "p margin-left should be 150px after second change");
+  is(cs.marginLeft, "150px", "p margin-left should be 150px after second change");
 
   p.style.animation = "";
 }

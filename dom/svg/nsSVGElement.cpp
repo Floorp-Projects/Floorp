@@ -904,7 +904,7 @@ nsSVGElement::WalkContentStyleRules(nsRuleWalker* aRuleWalker)
 
   if (mContentStyleRule) {
     mContentStyleRule->RuleMatched();
-    aRuleWalker->Forward(mContentStyleRule);
+    aRuleWalker->Forward(mContentStyleRule->GetDeclaration());
   }
 
   return NS_OK;
@@ -928,7 +928,7 @@ nsSVGElement::WalkAnimatedContentStyleRules(nsRuleWalker* aRuleWalker)
     }
     if (animContentStyleRule) {
       animContentStyleRule->RuleMatched();
-      aRuleWalker->Forward(animContentStyleRule);
+      aRuleWalker->Forward(animContentStyleRule->GetDeclaration());
     }
   }
 }

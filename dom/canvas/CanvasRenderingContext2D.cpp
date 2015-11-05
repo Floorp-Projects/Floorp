@@ -2135,8 +2135,8 @@ CanvasRenderingContext2D::SetShadowColor(const nsAString& shadowColor)
 // filters
 //
 
-static already_AddRefed<StyleRule>
-CreateStyleRule(nsINode* aNode,
+static already_AddRefed<Declaration>
+CreateDeclaration(nsINode* aNode,
   const nsCSSProperty aProp1, const nsAString& aValue1, bool* aChanged1,
   const nsCSSProperty aProp2, const nsAString& aValue2, bool* aChanged2,
   ErrorResult& error)
@@ -2171,17 +2171,18 @@ CreateStyleRule(nsINode* aNode,
 
   rule->RuleMatched();
 
-  return rule.forget();
+  RefPtr<Declaration> declaration = rule->GetDeclaration();
+  return declaration.forget();
 }
 
-static already_AddRefed<StyleRule>
-CreateFontStyleRule(const nsAString& aFont,
-                    nsINode* aNode,
-                    bool* aOutFontChanged,
-                    ErrorResult& error)
+static already_AddRefed<Declaration>
+CreateFontDeclaration(const nsAString& aFont,
+                      nsINode* aNode,
+                      bool* aOutFontChanged,
+                      ErrorResult& error)
 {
   bool lineHeightChanged;
-  return CreateStyleRule(aNode,
+  return CreateDeclaration(aNode,
     eCSSProperty_font, aFont, aOutFontChanged,
     eCSSProperty_line_height, NS_LITERAL_STRING("normal"), &lineHeightChanged,
     error);
@@ -2205,9 +2206,9 @@ GetFontParentStyleContext(Element* aElement, nsIPresShell* presShell,
 
   // otherwise inherit from default (10px sans-serif)
   bool changed;
-  RefPtr<css::StyleRule> parentRule =
-    CreateFontStyleRule(NS_LITERAL_STRING("10px sans-serif"),
-                        presShell->GetDocument(), &changed, error);
+  RefPtr<css::Declaration> parentRule =
+    CreateFontDeclaration(NS_LITERAL_STRING("10px sans-serif"),
+                          presShell->GetDocument(), &changed, error);
 
   if (error.Failed()) {
     return nullptr;
@@ -2226,13 +2227,12 @@ GetFontParentStyleContext(Element* aElement, nsIPresShell* presShell,
 }
 
 static bool
-PropertyIsInheritOrInitial(StyleRule* aRule, const nsCSSProperty aProperty)
+PropertyIsInheritOrInitial(Declaration* aDeclaration, const nsCSSProperty aProperty)
 {
-  css::Declaration* declaration = aRule->GetDeclaration();
   // We know the declaration is not !important, so we can use
   // GetNormalBlock().
   const nsCSSValue* filterVal =
-    declaration->GetNormalBlock()->ValueFor(aProperty);
+    aDeclaration->GetNormalBlock()->ValueFor(aProperty);
   return (!filterVal || (filterVal->GetUnit() == eCSSUnit_Unset ||
                          filterVal->GetUnit() == eCSSUnit_Inherit ||
                          filterVal->GetUnit() == eCSSUnit_Initial));
@@ -2245,9 +2245,9 @@ GetFontStyleContext(Element* aElement, const nsAString& aFont,
                     ErrorResult& error)
 {
   bool fontParsedSuccessfully = false;
-  RefPtr<css::StyleRule> rule =
-    CreateFontStyleRule(aFont, presShell->GetDocument(),
-                        &fontParsedSuccessfully, error);
+  RefPtr<css::Declaration> decl =
+    CreateFontDeclaration(aFont, presShell->GetDocument(),
+                          &fontParsedSuccessfully, error);
 
   if (error.Failed()) {
     return nullptr;
@@ -2262,7 +2262,7 @@ GetFontStyleContext(Element* aElement, const nsAString& aFont,
   // 'inherit' and 'initial'. The easiest way to check for this is to look
   // at font-size-adjust, which the font shorthand resets to either 'none' or
   // '-moz-system-font'.
-  if (PropertyIsInheritOrInitial(rule, eCSSProperty_font_size_adjust)) {
+  if (PropertyIsInheritOrInitial(decl, eCSSProperty_font_size_adjust)) {
     return nullptr;
   }
 
@@ -2283,7 +2283,7 @@ GetFontStyleContext(Element* aElement, const nsAString& aFont,
              "GetFontParentStyleContext should have returned an error if the presshell is being destroyed.");
 
   nsTArray<nsCOMPtr<nsIStyleRule>> rules;
-  rules.AppendElement(rule);
+  rules.AppendElement(decl);
   // add a rule to prevent text zoom from affecting the style
   rules.AppendElement(new nsDisableTextZoomStyleRule);
 
@@ -2295,34 +2295,34 @@ GetFontStyleContext(Element* aElement, const nsAString& aFont,
   // parsed (including having line-height removed).  (Older drafts of
   // the spec required font sizes be converted to pixels, but that no
   // longer seems to be required.)
-  rule->GetDeclaration()->GetValue(eCSSProperty_font, aOutUsedFont);
+  decl->GetValue(eCSSProperty_font, aOutUsedFont);
 
   return sc.forget();
 }
 
-static already_AddRefed<StyleRule>
-CreateFilterStyleRule(const nsAString& aFilter,
-                      nsINode* aNode,
-                      bool* aOutFilterChanged,
-                      ErrorResult& error)
+static already_AddRefed<Declaration>
+CreateFilterDeclaration(const nsAString& aFilter,
+                        nsINode* aNode,
+                        bool* aOutFilterChanged,
+                        ErrorResult& error)
 {
   bool dummy;
-  return CreateStyleRule(aNode,
+  return CreateDeclaration(aNode,
     eCSSProperty_filter, aFilter, aOutFilterChanged,
     eCSSProperty_UNKNOWN, EmptyString(), &dummy,
     error);
 }
 
 static already_AddRefed<nsStyleContext>
-ResolveStyleForFilterRule(const nsAString& aFilterString,
-                          nsIPresShell* aPresShell,
-                          nsStyleContext* aParentContext,
-                          ErrorResult& error)
+ResolveStyleForFilter(const nsAString& aFilterString,
+                      nsIPresShell* aPresShell,
+                      nsStyleContext* aParentContext,
+                      ErrorResult& error)
 {
   nsIDocument* document = aPresShell->GetDocument();
   bool filterChanged = false;
-  RefPtr<css::StyleRule> rule =
-    CreateFilterStyleRule(aFilterString, document, &filterChanged, error);
+  RefPtr<css::Declaration> decl =
+    CreateFilterDeclaration(aFilterString, document, &filterChanged, error);
 
   if (error.Failed()) {
     return nullptr;
@@ -2335,12 +2335,12 @@ ResolveStyleForFilterRule(const nsAString& aFilterString,
 
   // In addition to unparseable values, the spec says we need to reject
   // 'inherit' and 'initial'.
-  if (PropertyIsInheritOrInitial(rule, eCSSProperty_filter)) {
+  if (PropertyIsInheritOrInitial(decl, eCSSProperty_filter)) {
     return nullptr;
   }
 
   nsTArray<nsCOMPtr<nsIStyleRule>> rules;
-  rules.AppendElement(rule);
+  rules.AppendElement(decl);
 
   RefPtr<nsStyleContext> sc =
     aPresShell->StyleSet()->ResolveStyleForRules(aParentContext, rules);
@@ -2375,7 +2375,7 @@ CanvasRenderingContext2D::ParseFilter(const nsAString& aString,
   }
 
   RefPtr<nsStyleContext> sc =
-    ResolveStyleForFilterRule(aString, presShell, parentContext, error);
+    ResolveStyleForFilter(aString, presShell, parentContext, error);
 
   if (!sc) {
     return false;
