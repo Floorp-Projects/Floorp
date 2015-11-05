@@ -49,8 +49,12 @@ public:
 
   Declaration(const Declaration& aCopy);
 
+  NS_INLINE_DECL_REFCOUNTING(Declaration)
+
+private:
   ~Declaration();
 
+public:
   /**
    * |ValueAppended| must be called to maintain this declaration's
    * |mOrder| whenever a property is parsed into an expanded data block
@@ -243,7 +247,7 @@ public:
   /**
    * Copy |this|, if necessary to ensure that it can be modified.
    */
-  Declaration* EnsureMutable();
+  already_AddRefed<Declaration> EnsureMutable();
 
   /**
    * Crash if |this| cannot be modified.

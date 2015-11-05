@@ -22,7 +22,6 @@ namespace css {
 Declaration::Declaration()
   : mImmutable(false)
 {
-  MOZ_COUNT_CTOR(mozilla::css::Declaration);
 }
 
 Declaration::Declaration(const Declaration& aCopy)
@@ -39,12 +38,10 @@ Declaration::Declaration(const Declaration& aCopy)
         nullptr),
     mImmutable(false)
 {
-  MOZ_COUNT_CTOR(mozilla::css::Declaration);
 }
 
 Declaration::~Declaration()
 {
-  MOZ_COUNT_DTOR(mozilla::css::Declaration);
 }
 
 void
@@ -1381,15 +1378,17 @@ Declaration::InitializeEmpty()
   mData = nsCSSCompressedDataBlock::CreateEmptyBlock();
 }
 
-Declaration*
+already_AddRefed<Declaration>
 Declaration::EnsureMutable()
 {
   MOZ_ASSERT(mData, "should only be called when not expanded");
+  RefPtr<Declaration> result;
   if (!IsMutable()) {
-    return new Declaration(*this);
+    result = new Declaration(*this);
   } else {
-    return this;
+    result = this;
   }
+  return result.forget();
 }
 
 size_t

@@ -388,12 +388,12 @@ class nsCSSKeyframeRule final : public mozilla::css::Rule,
                                 public nsIDOMMozCSSKeyframeRule
 {
 public:
-  // WARNING: Steals the contents of aKeys *and* aDeclaration
+  // WARNING: Steals the contents of aKeys
   nsCSSKeyframeRule(InfallibleTArray<float>& aKeys,
-                    nsAutoPtr<mozilla::css::Declaration>&& aDeclaration,
+                    mozilla::css::Declaration* aDeclaration,
                     uint32_t aLineNumber, uint32_t aColumnNumber)
     : mozilla::css::Rule(aLineNumber, aColumnNumber)
-    , mDeclaration(mozilla::Move(aDeclaration))
+    , mDeclaration(aDeclaration)
   {
     mKeys.SwapElements(aKeys);
   }
@@ -431,7 +431,7 @@ public:
 
 private:
   nsTArray<float>                            mKeys;
-  nsAutoPtr<mozilla::css::Declaration>       mDeclaration;
+  RefPtr<mozilla::css::Declaration>          mDeclaration;
   // lazily created when needed:
   RefPtr<nsCSSKeyframeStyleDeclaration>    mDOMDeclaration;
 };
@@ -521,11 +521,10 @@ class nsCSSPageRule final : public mozilla::css::Rule,
                             public nsIDOMCSSPageRule
 {
 public:
-  // WARNING: Steals the contents of aDeclaration
-  nsCSSPageRule(nsAutoPtr<mozilla::css::Declaration>&& aDeclaration,
+  nsCSSPageRule(mozilla::css::Declaration* aDeclaration,
                 uint32_t aLineNumber, uint32_t aColumnNumber)
     : mozilla::css::Rule(aLineNumber, aColumnNumber)
-    , mDeclaration(mozilla::Move(aDeclaration))
+    , mDeclaration(aDeclaration)
     , mImportantRule(nullptr)
   {
   }
@@ -560,7 +559,7 @@ public:
 
   virtual size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const override;
 private:
-  nsAutoPtr<mozilla::css::Declaration>    mDeclaration;
+  RefPtr<mozilla::css::Declaration>     mDeclaration;
   // lazily created when needed:
   RefPtr<nsCSSPageStyleDeclaration>     mDOMDeclaration;
   RefPtr<mozilla::css::ImportantRule>   mImportantRule;
