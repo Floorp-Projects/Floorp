@@ -1457,55 +1457,45 @@ protected:
 
 NS_IMPL_ISUPPORTS(MessageManagerReporter, nsIMemoryReporter)
 
-static PLDHashOperator
-CollectMessageListenerData(const nsAString& aKey,
-                           nsAutoTObserverArray<nsMessageListenerInfo, 1>* aListeners,
-                           void* aData)
-{
-  MessageManagerReferentCount* referentCount =
-    static_cast<MessageManagerReferentCount*>(aData);
-
-  uint32_t listenerCount = aListeners->Length();
-  if (!listenerCount) {
-    return PL_DHASH_NEXT;
-  }
-
-  nsString key(aKey);
-  uint32_t oldCount = 0;
-  referentCount->mMessageCounter.Get(key, &oldCount);
-  uint32_t currentCount = oldCount + listenerCount;
-  referentCount->mMessageCounter.Put(key, currentCount);
-
-  // Keep track of messages that have a suspiciously large
-  // number of referents (symptom of leak).
-  if (currentCount == MessageManagerReporter::kSuspectReferentCount) {
-    referentCount->mSuspectMessages.AppendElement(key);
-  }
-
-  for (uint32_t i = 0; i < listenerCount; ++i) {
-    const nsMessageListenerInfo& listenerInfo =
-      aListeners->ElementAt(i);
-    if (listenerInfo.mWeakListener) {
-      nsCOMPtr<nsISupports> referent =
-        do_QueryReferent(listenerInfo.mWeakListener);
-      if (referent) {
-        referentCount->mWeakAlive++;
-      } else {
-        referentCount->mWeakDead++;
-      }
-    } else {
-      referentCount->mStrong++;
-    }
-  }
-  return PL_DHASH_NEXT;
-}
-
 void
 MessageManagerReporter::CountReferents(nsFrameMessageManager* aMessageManager,
                                        MessageManagerReferentCount* aReferentCount)
 {
-  aMessageManager->mListeners.EnumerateRead(CollectMessageListenerData,
-                                            aReferentCount);
+  for (auto it = aMessageManager->mListeners.Iter(); !it.Done(); it.Next()) {
+    nsAutoTObserverArray<nsMessageListenerInfo, 1>* listeners =
+      it.UserData();
+    uint32_t listenerCount = listeners->Length();
+    if (listenerCount == 0) {
+      continue;
+    }
+
+    nsString key(it.Key());
+    uint32_t oldCount = 0;
+    aReferentCount->mMessageCounter.Get(key, &oldCount);
+    uint32_t currentCount = oldCount + listenerCount;
+    aReferentCount->mMessageCounter.Put(key, currentCount);
+
+    // Keep track of messages that have a suspiciously large
+    // number of referents (symptom of leak).
+    if (currentCount == MessageManagerReporter::kSuspectReferentCount) {
+      aReferentCount->mSuspectMessages.AppendElement(key);
+    }
+
+    for (uint32_t i = 0; i < listenerCount; ++i) {
+      const nsMessageListenerInfo& listenerInfo = listeners->ElementAt(i);
+      if (listenerInfo.mWeakListener) {
+        nsCOMPtr<nsISupports> referent =
+          do_QueryReferent(listenerInfo.mWeakListener);
+        if (referent) {
+          aReferentCount->mWeakAlive++;
+        } else {
+          aReferentCount->mWeakDead++;
+        }
+      } else {
+        aReferentCount->mStrong++;
+      }
+    }
+  }
 
   // Add referent count in child managers because the listeners
   // participate in messages dispatched from parent message manager.
@@ -2151,24 +2141,20 @@ NS_NewChildProcessMessageManager(nsISyncMessageSender** aResult)
   return NS_OK;
 }
 
-static PLDHashOperator
-CycleCollectorMarkListeners(const nsAString& aKey,
-                            nsAutoTObserverArray<nsMessageListenerInfo, 1>* aListeners,
-                            void* aData)
-{
-  uint32_t count = aListeners->Length();
-  for (uint32_t i = 0; i < count; i++) {
-    if (aListeners->ElementAt(i).mStrongListener) {
-      xpc_TryUnmarkWrappedGrayObject(aListeners->ElementAt(i).mStrongListener);
-    }
-  }
-  return PL_DHASH_NEXT;
-}
-
 bool
 nsFrameMessageManager::MarkForCC()
 {
-  mListeners.EnumerateRead(CycleCollectorMarkListeners, nullptr);
+  for (auto iter = mListeners.Iter(); !iter.Done(); iter.Next()) {
+    nsAutoTObserverArray<nsMessageListenerInfo, 1>* listeners = iter.UserData();
+    uint32_t count = listeners->Length();
+    for (uint32_t i = 0; i < count; i++) {
+      nsCOMPtr<nsIMessageListener> strongListener =
+        listeners->ElementAt(i).mStrongListener;
+      if (strongListener) {
+        xpc_TryUnmarkWrappedGrayObject(strongListener);
+      }
+    }
+  }
 
   if (mRefCnt.IsPurple()) {
     mRefCnt.RemovePurple();
