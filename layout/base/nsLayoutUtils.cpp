@@ -1956,6 +1956,16 @@ nsLayoutUtils::GetNearestScrollableFrame(nsIFrame* aFrame, uint32_t aFlags)
         }
       }
     }
+    if ((aFlags & SCROLLABLE_FIXEDPOS_FINDS_ROOT) &&
+        f->StyleDisplay()->mPosition == NS_STYLE_POSITION_FIXED &&
+        nsLayoutUtils::IsReallyFixedPos(f)) {
+      nsIPresShell* ps = f->PresContext()->PresShell();
+      // We may want to do this in every document (not just root documents) at
+      // some point in the future.
+      if (ps->GetDocument() && ps->GetDocument()->IsRootDisplayDocument()) {
+        return ps->GetRootScrollFrameAsScrollable();
+      }
+    }
   }
   return nullptr;
 }
