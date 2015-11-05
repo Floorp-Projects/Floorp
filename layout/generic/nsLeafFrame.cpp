@@ -14,8 +14,6 @@ nsLeafFrame::~nsLeafFrame()
 {
 }
 
-NS_IMPL_FRAMEARENA_HELPERS(nsLeafFrame)
-
 /* virtual */ nscoord
 nsLeafFrame::GetMinISize(nsRenderingContext *aRenderingContext)
 {

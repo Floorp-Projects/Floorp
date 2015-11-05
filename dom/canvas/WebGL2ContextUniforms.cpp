@@ -312,22 +312,7 @@ WebGL2Context::GetUniformIndices(WebGLProgram* program,
     if (!uniformNames.Length())
         return;
 
-    GLuint progname = program->mGLName;
-    size_t count = uniformNames.Length();
-    nsTArray<GLuint>& arr = retval.SetValue();
-
-    MakeContextCurrent();
-
-    for (size_t n = 0; n < count; n++) {
-        NS_LossyConvertUTF16toASCII name(uniformNames[n]);
-        //        const GLchar* glname = name.get();
-        const GLchar* glname = nullptr;
-        name.BeginReading(glname);
-
-        GLuint index = 0;
-        gl->fGetUniformIndices(progname, 1, &glname, &index);
-        arr.AppendElement(index);
-    }
+    program->GetUniformIndices(uniformNames, retval);
 }
 
 void

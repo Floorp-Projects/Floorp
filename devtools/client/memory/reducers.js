@@ -8,3 +8,4 @@ exports.snapshots = require("./reducers/snapshots");
 exports.breakdown = require("./reducers/breakdown");
 exports.errors = require("./reducers/errors");
 exports.inverted = require("./reducers/inverted");
+exports.filter = require("./reducers/filter");

@@ -84,7 +84,9 @@ function* runTest() {
   yield scrollWheelOver(outer, 10);
 
   // Wait for the transaction timeout to elapse.
-  yield window.setTimeout(driveTest, timeout);
+  // timeout * 5 is used to make it less likely that the timeout is less than
+  // the system timestamp resolution
+  yield window.setTimeout(driveTest, timeout * 5);
 
   // Now scroll down. The transaction having timed out, the event
   // should pick up a new target, and that should be |inner|.
@@ -103,7 +105,9 @@ function* runTest() {
   }
 
   // Wait for the transaction timeout to elapse.
-  yield window.setTimeout(driveTest, timeout);
+  // timeout * 5 is used to make it less likely that the timeout is less than
+  // the system timestamp resolution
+  yield window.setTimeout(driveTest, timeout * 5);
 
   // Continued downward scrolling should scroll |outer| to the bottom.
   prevScrollTop = outer.scrollTop;

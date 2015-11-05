@@ -150,7 +150,7 @@ public:
       } else {
         if (mLeftOverData != INT_MIN) {
           mLeftOverData = INT_MIN;
-          aStream->CheckForInactive();
+          aStream->ScheduleCheckForInactive();
           mHRTFPanner->reset();
 
           RefPtr<PlayingRefChangeHandler> refchanged =

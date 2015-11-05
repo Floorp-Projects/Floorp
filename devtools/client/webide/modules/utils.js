@@ -5,7 +5,7 @@
 const { Cc, Cu, Ci } = require("chrome");
 const { FileUtils } = Cu.import("resource://gre/modules/FileUtils.jsm", {});
 const { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
-const Strings = Services.strings.createBundle("chrome://browser/locale/devtools/webide.properties");
+const Strings = Services.strings.createBundle("chrome://devtools/locale/webide.properties");
 
 function doesFileExist (location) {
   let file = new FileUtils.File(location);

@@ -36,7 +36,9 @@ function runTest() {
   testFrame.src = "jar:http://example.org:80/tests/modules/libjar/test/mochitest/openredirect.sjs?http://mochi.test:8888/tests/modules/libjar/test/mochitest/bug403331.zip!/test.html";
 }
 
-addLoadEvent(runTest);
+addLoadEvent(function() {
+  SpecialPowers.pushPrefEnv({"set": [["network.jar.block-remote-files", false]]}, runTest);
+});
 
 </script>
 </pre>

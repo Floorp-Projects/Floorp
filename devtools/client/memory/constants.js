@@ -35,6 +35,9 @@ actions.SET_BREAKDOWN = "set-breakdown";
 // Fired when there is an error processing a snapshot or taking a census.
 actions.SNAPSHOT_ERROR = "snapshot-error";
 
+// Fired when there is a new filter string set.
+actions.SET_FILTER_STRING = "set-filter-string";
+
 // Options passed to MemoryFront's startRecordingAllocations never change.
 exports.ALLOCATION_RECORDING_OPTIONS = {
   probability: 1,
@@ -53,7 +56,11 @@ const breakdowns = exports.breakdowns = {
       by: "coarseType",
       objects: OBJECT_CLASS,
       strings: COUNT,
-      scripts: INTERNAL_TYPE,
+      scripts: {
+        by: "filename",
+        then: INTERNAL_TYPE,
+        noFilename: INTERNAL_TYPE
+      },
       other: INTERNAL_TYPE,
     }
   },

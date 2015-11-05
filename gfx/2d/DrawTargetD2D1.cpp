@@ -284,7 +284,12 @@ DrawTargetD2D1::MaskSurface(const Pattern &aSource,
 
   RefPtr<ID2D1Bitmap> bitmap;
 
-  RefPtr<ID2D1Image> image = GetImageForSurface(aMask, ExtendMode::CLAMP);
+  Matrix mat = Matrix::Translation(aOffset);
+  RefPtr<ID2D1Image> image = GetImageForSurface(aMask, mat, ExtendMode::CLAMP, nullptr);
+
+  MOZ_ASSERT(!mat.HasNonTranslation());
+  aOffset.x = mat._31;
+  aOffset.y = mat._32;
 
   if (!image) {
     gfxWarning() << "Failed to get image for surface.";
@@ -296,13 +301,15 @@ DrawTargetD2D1::MaskSurface(const Pattern &aSource,
   // FillOpacityMask only works if the antialias mode is MODE_ALIASED
   mDC->SetAntialiasMode(D2D1_ANTIALIAS_MODE_ALIASED);
 
-  IntSize size = aMask->GetSize();
-  Rect maskRect = Rect(0.f, 0.f, Float(size.width), Float(size.height));
-  image->QueryInterface((ID2D1Bitmap**)&bitmap);
+  image->QueryInterface((ID2D1Bitmap**)getter_AddRefs(bitmap));
   if (!bitmap) {
     gfxWarning() << "FillOpacityMask only works with Bitmap source surfaces.";
     return;
   }
+
+  IntSize size = IntSize(bitmap->GetSize().width, bitmap->GetSize().height);
+
+  Rect maskRect = Rect(0.f, 0.f, Float(size.width), Float(size.height));
 
   Rect dest = Rect(aOffset.x, aOffset.y, Float(size.width), Float(size.height));
   RefPtr<ID2D1Brush> brush = CreateBrushForPattern(aSource, aOptions.mAlpha);

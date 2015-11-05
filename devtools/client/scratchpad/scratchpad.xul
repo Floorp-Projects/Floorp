@@ -5,17 +5,17 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
 <!DOCTYPE window [
-<!ENTITY % scratchpadDTD SYSTEM "chrome://browser/locale/devtools/scratchpad.dtd" >
+<!ENTITY % scratchpadDTD SYSTEM "chrome://devtools/locale/scratchpad.dtd" >
  %scratchpadDTD;
 <!ENTITY % editMenuStrings SYSTEM "chrome://global/locale/editMenuOverlay.dtd">
 %editMenuStrings;
-<!ENTITY % sourceEditorStrings SYSTEM "chrome://browser/locale/devtools/sourceeditor.dtd">
+<!ENTITY % sourceEditorStrings SYSTEM "chrome://devtools/locale/sourceeditor.dtd">
 %sourceEditorStrings;
 ]>
 
 <?xml-stylesheet href="chrome://global/skin/global.css"?>
-<?xml-stylesheet href="chrome://devtools/skin/themes/common.css"?>
-<?xml-stylesheet href="chrome://devtools/skin/themes/scratchpad.css"?>
+<?xml-stylesheet href="chrome://devtools/skin/common.css"?>
+<?xml-stylesheet href="chrome://devtools/skin/scratchpad.css"?>
 <?xul-overlay href="chrome://global/content/editMenuOverlay.xul"?>
 
 <window id="main-window"

@@ -130,6 +130,10 @@ public:
    * not simply a mirror of our baseVal).
    */
   bool AttrIsAnimating() const;
+  /**
+   * Returns true if there is an animated list mirroring the base list.
+   */
+  bool AnimListMirrorsBaseList() const;
 
   uint32_t NumberOfItems() const
   {
