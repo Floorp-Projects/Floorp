@@ -4,15 +4,13 @@
 
 package org.mozilla.gecko.background.healthreport.upload;
 
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.net.URISyntaxException;
-import java.util.ArrayList;
-import java.util.Collection;
-
+import android.content.ContentProviderClient;
+import android.content.Context;
+import android.content.SharedPreferences;
+import ch.boye.httpclientandroidlib.HttpResponse;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.mozilla.gecko.BrowserLocaleManager;
+import org.mozilla.gecko.Locales;
 import org.mozilla.gecko.background.bagheera.BagheeraClient;
 import org.mozilla.gecko.background.bagheera.BagheeraRequestDelegate;
 import org.mozilla.gecko.background.common.GlobalConstants;
@@ -30,10 +28,11 @@ import org.mozilla.gecko.background.healthreport.HealthReportStorage.Measurement
 import org.mozilla.gecko.background.healthreport.ProfileInformationCache;
 import org.mozilla.gecko.sync.net.BaseResource;
 
-import android.content.ContentProviderClient;
-import android.content.Context;
-import android.content.SharedPreferences;
-import ch.boye.httpclientandroidlib.HttpResponse;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URISyntaxException;
+import java.util.ArrayList;
+import java.util.Collection;
 
 public class AndroidSubmissionClient implements SubmissionClient {
   protected static final String LOG_TAG = AndroidSubmissionClient.class.getSimpleName();
@@ -410,7 +409,7 @@ public class AndroidSubmissionClient implements SubmissionClient {
           String generationProfilePath, ConfigurationProvider providedConfig) throws JSONException {
 
         // Let's make sure we have an accurate locale.
-        BrowserLocaleManager.getInstance().getAndApplyPersistedLocale(context);
+        Locales.getLocaleManager().getAndApplyPersistedLocale(context);
 
         final JSONObject document;
         // If the given profilePath matches the one we cached for the tracker, use the cached env.

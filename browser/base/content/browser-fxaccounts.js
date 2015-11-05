@@ -160,19 +160,40 @@ var gFxAccounts = {
     // Since we nuked most of the migration code, this notification will fire
     // once after legacy Sync has been disconnected (and should never fire
     // again)
+    let nb = window.document.getElementById("global-notificationbox");
+
     let msg = this.strings.GetStringFromName("autoDisconnectDescription")
     let signInLabel = this.strings.GetStringFromName("autoDisconnectSignIn.label");
     let signInAccessKey = this.strings.GetStringFromName("autoDisconnectSignIn.accessKey");
     let learnMoreLink = this.fxaMigrator.learnMoreLink;
-    let note = new Weave.Notification(
-          undefined, msg, undefined, Weave.Notifications.PRIORITY_WARNING, [
-            new Weave.NotificationButton(signInLabel, signInAccessKey, () => {
-              this.openPreferences();
-            }),
-          ], learnMoreLink
-        );
-    note.title = this.SYNC_MIGRATION_NOTIFICATION_TITLE;
-    Weave.Notifications.replaceTitle(note);
+
+    let buttons = [
+      {
+        label: signInLabel,
+        accessKey: signInAccessKey,
+        callback: () => {
+          this.openPreferences();
+        }
+      }
+    ];
+
+    let fragment = document.createDocumentFragment();
+    let msgNode = document.createTextNode(msg);
+    fragment.appendChild(msgNode);
+    if (learnMoreLink) {
+      let link = document.createElement("label");
+      link.className = "text-link";
+      link.setAttribute("value", learnMoreLink.text);
+      link.href = learnMoreLink.href;
+      fragment.appendChild(link);
+    }
+
+    nb.appendNotification(fragment,
+                          this.SYNC_MIGRATION_NOTIFICATION_TITLE,
+                          undefined,
+                          nb.PRIORITY_WARNING_LOW,
+                          buttons);
+
     // ensure the hamburger menu reflects the newly disconnected state.
     this.updateAppMenuItem();
   },
@@ -211,7 +232,12 @@ var gFxAccounts = {
     // It's possible someone signed in to FxA after seeing our notification
     // about "Legacy Sync migration" (which now is actually "Legacy Sync
     // auto-disconnect") so kill that notification if it still exists.
-    Weave.Notifications.removeAll(this.SYNC_MIGRATION_NOTIFICATION_TITLE);
+    let nb = window.document.getElementById("global-notificationbox");
+    let n = nb.getNotificationWithValue(this.SYNC_MIGRATION_NOTIFICATION_TITLE);
+    if (n) {
+      nb.removeNotification(n, true);
+    }
+
     this.updateAppMenuItem();
   },
 

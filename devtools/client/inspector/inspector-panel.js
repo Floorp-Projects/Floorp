@@ -19,10 +19,10 @@ loader.lazyGetter(this, "ToolSidebar", () => require("devtools/client/framework/
 loader.lazyGetter(this, "SelectorSearch", () => require("devtools/client/inspector/selector-search").SelectorSearch);
 
 loader.lazyGetter(this, "strings", () => {
-  return Services.strings.createBundle("chrome://browser/locale/devtools/inspector.properties");
+  return Services.strings.createBundle("chrome://devtools/locale/inspector.properties");
 });
 loader.lazyGetter(this, "toolboxStrings", () => {
-  return Services.strings.createBundle("chrome://browser/locale/devtools/toolbox.properties");
+  return Services.strings.createBundle("chrome://devtools/locale/toolbox.properties");
 });
 loader.lazyGetter(this, "clipboardHelper", () => {
   return Cc["@mozilla.org/widget/clipboardhelper;1"].getService(Ci.nsIClipboardHelper);

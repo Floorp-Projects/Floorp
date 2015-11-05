@@ -26,7 +26,7 @@ var prefBranch = prefSvc.getBranch(null).QueryInterface(Ci.nsIPrefBranch);
 
 var Services = Cu.import('resource://gre/modules/Services.jsm', {}).Services;
 var stringBundle = Services.strings.createBundle(
-        'chrome://global/locale/devtools/gclicommands.properties');
+        'chrome://devtools-shared/locale/gclicommands.properties');
 
 /**
  * Lookup a string in the GCLI string bundle

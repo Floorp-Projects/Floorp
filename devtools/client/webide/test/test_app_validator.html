@@ -26,7 +26,7 @@
                                            "nsILocalFile", "initWithPath");
     const cr = Cc["@mozilla.org/chrome/chrome-registry;1"]
                  .getService(Ci.nsIChromeRegistry);
-    const strings = Services.strings.createBundle("chrome://browser/locale/devtools/app-manager.properties");
+    const strings = Services.strings.createBundle("chrome://devtools/locale/app-manager.properties");
     let httpserver, origin;
 
     window.onload = function() {

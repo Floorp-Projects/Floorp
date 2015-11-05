@@ -3,15 +3,15 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <!DOCTYPE window [
-<!ENTITY % webConsoleDTD SYSTEM "chrome://browser/locale/devtools/webConsole.dtd">
+<!ENTITY % webConsoleDTD SYSTEM "chrome://devtools/locale/webConsole.dtd">
 %webConsoleDTD;
 ]>
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
-<?xml-stylesheet href="chrome://devtools/skin/themes/common.css"
+<?xml-stylesheet href="chrome://devtools/skin/common.css"
                  type="text/css"?>
-<?xml-stylesheet href="chrome://devtools/skin/themes/widgets.css"
+<?xml-stylesheet href="chrome://devtools/skin/widgets.css"
                  type="text/css"?>
-<?xml-stylesheet href="chrome://devtools/skin/themes/webconsole.css"
+<?xml-stylesheet href="chrome://devtools/skin/webconsole.css"
                  type="text/css"?>
 <?xul-overlay href="chrome://global/content/editMenuOverlay.xul"?>
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"

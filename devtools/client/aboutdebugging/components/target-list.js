@@ -13,7 +13,7 @@ loader.lazyRequireGetter(this, "TargetComponent",
 loader.lazyRequireGetter(this, "Services");
 
 const Strings = Services.strings.createBundle(
-  "chrome://browser/locale/devtools/aboutdebugging.properties");
+  "chrome://devtools/locale/aboutdebugging.properties");
 const LocaleCompare = (a, b) => {
   return a.name.toLowerCase().localeCompare(b.name.toLowerCase());
 };

@@ -4,11 +4,11 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <?xml-stylesheet href="chrome://browser/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://devtools/content/shared/widgets/widgets.css" type="text/css"?>
-<?xml-stylesheet href="chrome://devtools/skin/themes/common.css" type="text/css"?>
-<?xml-stylesheet href="chrome://devtools/skin/themes/widgets.css" type="text/css"?>
-<?xml-stylesheet href="chrome://devtools/skin/themes/webaudioeditor.css" type="text/css"?>
+<?xml-stylesheet href="chrome://devtools/skin/common.css" type="text/css"?>
+<?xml-stylesheet href="chrome://devtools/skin/widgets.css" type="text/css"?>
+<?xml-stylesheet href="chrome://devtools/skin/webaudioeditor.css" type="text/css"?>
 <!DOCTYPE window [
-  <!ENTITY % debuggerDTD SYSTEM "chrome://browser/locale/devtools/webaudioeditor.dtd">
+  <!ENTITY % debuggerDTD SYSTEM "chrome://devtools/locale/webaudioeditor.dtd">
   %debuggerDTD;
 ]>
 

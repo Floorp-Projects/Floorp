@@ -79,10 +79,10 @@ g.edgeLabel tspan {
  */
 
 .theme-light .nodes g.bypassed rect {
-  fill: url(chrome://devtools/skin/themes/images/filters.svg#bypass-light);
+  fill: url(chrome://devtools/skin/images/filters.svg#bypass-light);
 }
 .theme-dark .nodes g.bypassed rect {
-  fill: url(chrome://devtools/skin/themes/images/filters.svg#bypass-dark);
+  fill: url(chrome://devtools/skin/images/filters.svg#bypass-dark);
 }
 .nodes g.bypassed.selected rect {
   stroke: var(--theme-selection-background);
