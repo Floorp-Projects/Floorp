@@ -19,6 +19,8 @@ const Toolbar = module.exports = createClass({
     allocations: models.allocations,
     onToggleInverted: PropTypes.func.isRequired,
     inverted: PropTypes.bool.isRequired,
+    filterString: PropTypes.string,
+    setFilterString: PropTypes.func.isRequired,
   },
 
   render() {
@@ -29,12 +31,15 @@ const Toolbar = module.exports = createClass({
       onToggleRecordAllocationStacks,
       allocations,
       onToggleInverted,
-      inverted
+      inverted,
+      filterString,
+      setFilterString
     } = this.props;
 
     return (
       dom.div({ className: "devtools-toolbar" },
         dom.button({
+          id: "take-snapshot",
           className: `take-snapshot devtools-button`,
           onClick: onTakeSnapshotClick,
           title: L10N.getStr("take-snapshot")
@@ -68,7 +73,17 @@ const Toolbar = module.exports = createClass({
               onChange: onToggleRecordAllocationStacks,
             }),
             L10N.getStr("checkbox.recordAllocationStacks")
-          )
+          ),
+
+          dom.div({ id: "toolbar-spacer", className: "spacer" }),
+
+          dom.input({
+            id: "filter",
+            type: "search",
+            placeholder: L10N.getStr("filter.placeholder"),
+            onChange: event => setFilterString(event.target.value),
+            value: !!filterString ? filterString : undefined,
+          })
         )
       )
     );
