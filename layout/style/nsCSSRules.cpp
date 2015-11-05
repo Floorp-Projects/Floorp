@@ -2701,14 +2701,14 @@ nsCSSPageRule::GetCSSRule()
   return Rule::GetCSSRule();
 }
 
-css::ImportantRule*
+css::ImportantStyleData*
 nsCSSPageRule::GetImportantRule()
 {
   if (!mDeclaration->HasImportantData()) {
     return nullptr;
   }
   if (!mImportantRule) {
-    mImportantRule = new css::ImportantRule(mDeclaration);
+    mImportantRule = new css::ImportantStyleData(mDeclaration);
   }
   return mImportantRule;
 }

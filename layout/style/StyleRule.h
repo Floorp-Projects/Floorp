@@ -294,9 +294,10 @@ class DOMCSSStyleRule;
 
 class StyleRule;
 
-class ImportantRule final : public nsIStyleRule {
+class ImportantStyleData final : public nsIStyleRule
+{
 public:
-  explicit ImportantRule(Declaration *aDeclaration);
+  explicit ImportantStyleData(Declaration* aDeclaration);
 
   NS_DECL_ISUPPORTS
 
@@ -307,7 +308,7 @@ public:
 #endif
 
 protected:
-  virtual ~ImportantRule();
+  virtual ~ImportantStyleData();
 
   RefPtr<Declaration> mDeclaration;
 
@@ -385,7 +386,7 @@ private:
 private:
   nsCSSSelectorList*      mSelector; // null for style attribute
   RefPtr<Declaration>     mDeclaration;
-  RefPtr<ImportantRule> mImportantRule; // initialized by RuleMatched
+  RefPtr<ImportantStyleData> mImportantRule; // initialized by RuleMatched
   RefPtr<DOMCSSStyleRule> mDOMRule;
 
 private:
