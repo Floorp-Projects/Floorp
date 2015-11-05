@@ -42,6 +42,7 @@
 #include "vm/Debugger.h"
 #include "vm/GlobalObject.h"
 #include "vm/Interpreter.h"
+#include "vm/ScopeObject.h"
 #include "vm/Shape.h"
 #include "vm/StringBuffer.h"
 #include "vm/WrapperObject.h"
@@ -751,15 +752,14 @@ static JSObject*
 CreateFunctionPrototype(JSContext* cx, JSProtoKey key)
 {
     Rooted<GlobalObject*> self(cx, cx->global());
-
     RootedObject objectProto(cx, &self->getPrototype(JSProto_Object).toObject());
-    /*
-     * Bizarrely, |Function.prototype| must be an interpreted function, so
-     * give it the guts to be one.
-     */
+
+    // Bizarrely, |Function.prototype| must be an interpreted function, so
+    // give it the guts to be one.
+    Rooted<ClonedBlockObject*> globalLexicalEnv(cx, &self->lexicalScope());
     JSObject* functionProto_ =
         NewFunctionWithProto(cx, nullptr, 0, JSFunction::INTERPRETED,
-                             self, nullptr, objectProto, AllocKind::FUNCTION,
+                             globalLexicalEnv, nullptr, objectProto, AllocKind::FUNCTION,
                              SingletonObject);
     if (!functionProto_)
         return nullptr;
@@ -787,8 +787,12 @@ CreateFunctionPrototype(JSContext* cx, JSProtoKey key)
     if (!sourceObject || !ScriptSourceObject::initFromOptions(cx, sourceObject, options))
         return nullptr;
 
+    Rooted<StaticScope*> globalScope(cx, &globalLexicalEnv->staticBlock());
+    Rooted<StaticScope*> funScope(cx, StaticFunctionScope::create(cx, functionProto, globalScope));
+    if (!funScope)
+        return nullptr;
     RootedScript script(cx, JSScript::Create(cx,
-                                             /* enclosingScope = */ nullptr,
+                                             funScope,
                                              /* savedCallerFun = */ false,
                                              options,
                                              sourceObject,

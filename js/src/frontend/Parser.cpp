@@ -57,9 +57,9 @@ JSFunction::AutoParseUsingFunctionBox::AutoParseUsingFunctionBox(ExclusiveContex
 {
     fun_->unsetEnvironment();
     fun_->setFunctionBox(funbox);
-    funbox->computeAllowSyntax(fun_);
-    funbox->computeInWith(fun_);
-    funbox->computeThisBinding(fun_);
+    funbox->computeAllowSyntax(funbox->staticScope_);
+    funbox->computeInWith(funbox->staticScope_);
+    funbox->computeThisBinding(funbox->staticScope_);
 }
 
 JSFunction::AutoParseUsingFunctionBox::~AutoParseUsingFunctionBox()
@@ -122,15 +122,15 @@ void
 SharedContext::computeAllowSyntax(JSObject* staticScope)
 {
     for (StaticScopeIter<CanGC> it(context, staticScope); !it.done(); it++) {
-        if (it.type() == StaticScopeIter<CanGC>::Function && !it.fun().isArrow()) {
+        if (it.type() == StaticScopeIter<CanGC>::Function && !it.fun().function().isArrow()) {
             // Any function supports new.target.
             allowNewTarget_ = true;
-            allowSuperProperty_ = it.fun().allowSuperProperty();
+            allowSuperProperty_ = it.fun().function().allowSuperProperty();
             if (it.maybeFunctionBox()) {
                 superScopeAlreadyNeedsHomeObject_ = it.maybeFunctionBox()->needsHomeObject();
                 allowSuperCall_ = it.maybeFunctionBox()->isDerivedClassConstructor();
             } else {
-                allowSuperCall_ = it.fun().isDerivedClassConstructor();
+                allowSuperCall_ = it.fun().function().isDerivedClassConstructor();
             }
             break;
         }
@@ -147,9 +147,10 @@ SharedContext::computeThisBinding(JSObject* staticScope)
         }
 
         if (it.type() == StaticScopeIter<CanGC>::Function) {
+            RootedFunction fun(context, &it.fun().function());
             // Arrow functions and generator expression lambdas don't have
             // their own `this` binding.
-            if (it.fun().isArrow())
+            if (fun->isArrow())
                 continue;
             bool isDerived;
             if (it.maybeFunctionBox()) {
@@ -157,9 +158,9 @@ SharedContext::computeThisBinding(JSObject* staticScope)
                     continue;
                 isDerived = it.maybeFunctionBox()->isDerivedClassConstructor();
             } else {
-                if (it.fun().nonLazyScript()->isGeneratorExp())
+                if (fun->nonLazyScript()->isGeneratorExp())
                     continue;
-                isDerived = it.fun().isDerivedClassConstructor();
+                isDerived = fun->isDerivedClassConstructor();
             }
 
             // Derived class constructors (including nested arrow functions and
@@ -195,8 +196,8 @@ SharedContext::markSuperScopeNeedsHomeObject()
         return;
 
     for (StaticScopeIter<CanGC> it(context, staticScope()); !it.done(); it++) {
-        if (it.type() == StaticScopeIter<CanGC>::Function && !it.fun().isArrow()) {
-            MOZ_ASSERT(it.fun().allowSuperProperty());
+        if (it.type() == StaticScopeIter<CanGC>::Function && !it.fun().function().isArrow()) {
+            MOZ_ASSERT(it.fun().function().allowSuperProperty());
             // If we are still emitting the outer function that needs a home
             // object, mark it as needing one. Otherwise, we must be emitting
             // an eval script, and the outer function must already be marked
@@ -204,7 +205,7 @@ SharedContext::markSuperScopeNeedsHomeObject()
             if (it.maybeFunctionBox())
                 it.maybeFunctionBox()->setNeedsHomeObject();
             else
-                MOZ_ASSERT(it.fun().nonLazyScript()->needsHomeObject());
+                MOZ_ASSERT(it.funScript()->needsHomeObject());
             superScopeAlreadyNeedsHomeObject_ = true;
             return;
         }
@@ -754,12 +755,12 @@ Parser<ParseHandler>::newObjectBox(JSObject* obj)
 
 template <typename ParseHandler>
 FunctionBox::FunctionBox(ExclusiveContext* cx, ObjectBox* traceListHead, JSFunction* fun,
-                         JSObject* enclosingStaticScope, ParseContext<ParseHandler>* outerpc,
+                         ParseContext<ParseHandler>* outerpc,
                          Directives directives, bool extraWarnings, GeneratorKind generatorKind)
   : ObjectBox(fun, traceListHead),
     SharedContext(cx, directives, extraWarnings),
     bindings(),
-    enclosingStaticScope_(enclosingStaticScope),
+    staticScope_(nullptr),
     bufStart(0),
     bufEnd(0),
     startLine(1),
@@ -782,6 +783,15 @@ FunctionBox::FunctionBox(ExclusiveContext* cx, ObjectBox* traceListHead, JSFunct
     MOZ_ASSERT(fun->isTenured());
 }
 
+bool
+FunctionBox::initStaticScope(JSObject* enclosingStaticScope)
+{
+    RootedFunction fun(context, function());
+    Rooted<StaticScope*> enclosing(context, &enclosingStaticScope->as<StaticScope>());
+    staticScope_ = StaticFunctionScope::create(context, fun, enclosing);
+    return staticScope_ != nullptr;
+}
+
 template <typename ParseHandler>
 FunctionBox*
 Parser<ParseHandler>::newFunctionBox(Node fn, JSFunction* fun,
@@ -801,15 +811,17 @@ Parser<ParseHandler>::newFunctionBox(Node fn, JSFunction* fun,
      * function.
      */
     FunctionBox* funbox =
-        alloc.new_<FunctionBox>(context, traceListHead, fun, enclosingStaticScope, outerpc,
-                                inheritedDirectives, options().extraWarningsOption,
-                                generatorKind);
+        alloc.new_<FunctionBox>(context, traceListHead, fun, outerpc, inheritedDirectives,
+                                options().extraWarningsOption, generatorKind);
     if (!funbox) {
         ReportOutOfMemory(context);
         return nullptr;
     }
-
     traceListHead = funbox;
+
+    if (!funbox->initStaticScope(enclosingStaticScope))
+        return nullptr;
+
     if (fn)
         handler.setFunctionBox(fn, funbox);
 
@@ -2844,7 +2856,9 @@ Parser<SyntaxParseHandler>::finishFunctionDefinition(Node pn, FunctionBox* funbo
     size_t numInnerFunctions = pc->innerFunctions.length();
 
     RootedFunction fun(context, funbox->function());
-    LazyScript* lazy = LazyScript::CreateRaw(context, fun, numFreeVariables, numInnerFunctions,
+    Rooted<StaticFunctionScope*> funScope(context, &funbox->staticScope()->as<StaticFunctionScope>());
+    LazyScript* lazy = LazyScript::CreateRaw(context, fun, funScope,
+                                             numFreeVariables, numInnerFunctions,
                                              versionNumber(), funbox->bufStart, funbox->bufEnd,
                                              funbox->startLine, funbox->startColumn);
     if (!lazy)
@@ -6501,8 +6515,11 @@ template <>
 ParseNode*
 Parser<FullParseHandler>::withStatement(YieldHandling yieldHandling)
 {
-    // test262/ch12/12.10/12.10-0-1.js fails if we try to parse with-statements
-    // in syntax-parse mode. See bug 892583.
+    // This is intentionally different from other abortIfSyntaxParser()
+    // bailouts: `with` statements rule out syntax-only parsing for the entire
+    // compilation unit. This `return null()` causes us to bail out all the way
+    // to BytecodeCompiler::compileScript(), which retries with syntax parsing
+    // disabled. See bug 892583.
     if (handler.syntaxParser) {
         handler.disableSyntaxParser();
         abortedSyntaxParse = true;

@@ -39,7 +39,7 @@ typedef MutableHandle<ArgumentsObject*> MutableHandleArgumentsObject;
 /*** Static scope objects ************************************************************************/
 
 void
-StaticScope::setEnclosingScope(HandleObject obj)
+StaticScope::setEnclosingScope(JSObject* obj)
 {
     MOZ_ASSERT_IF(obj->is<StaticBlockScope>(), obj->isDelegate());
     setFixedSlot(ENCLOSING_SCOPE_SLOT, ObjectValue(*obj));
@@ -116,6 +116,28 @@ StaticBlockScope::addVar(ExclusiveContext* cx, Handle<StaticBlockScope*> block, 
                                              /* attrs = */ 0,
                                              entry,
                                              /* allowDictionary = */ false);
+}
+
+const Class StaticFunctionScope::class_ = {
+    "StaticFunctionScope",
+    JSCLASS_HAS_RESERVED_SLOTS(StaticFunctionScope::RESERVED_SLOTS) |
+    JSCLASS_IS_ANONYMOUS
+};
+
+StaticFunctionScope*
+StaticFunctionScope::create(ExclusiveContext* cx, Handle<JSFunction*> functionObject,
+                            Handle<StaticScope*> enclosingScope)
+{
+    Rooted<TaggedProto> proto(cx, TaggedProto(nullptr));
+    JSObject* obj = NewObjectWithGivenTaggedProto(cx, &class_, proto, TenuredObject,
+                                                  BaseShape::DELEGATE);
+    if (!obj)
+        return nullptr;
+
+    StaticFunctionScope* scope = &obj->as<StaticFunctionScope>();
+    scope->initEnclosingScope(enclosingScope);
+    scope->setReservedSlot(FUNCTION_OBJECT_SLOT, ObjectValue(*functionObject));
+    return scope;
 }
 
 StaticModuleScope*
@@ -2623,7 +2645,7 @@ DebugScopes::addDebugScope(JSContext* cx, const ScopeIter& si, DebugScopeObject&
     MOZ_ASSERT(!si.hasSyntacticScopeObject());
     MOZ_ASSERT(cx->compartment() == debugScope.compartment());
     // Generators should always reify their scopes.
-    MOZ_ASSERT_IF(si.type() == ScopeIter::Call, !si.fun().isGenerator());
+    MOZ_ASSERT_IF(si.type() == ScopeIter::Call, !si.fun().function().isGenerator());
 
     if (!CanUseDebugScopeMaps(cx))
         return true;
@@ -2981,7 +3003,8 @@ GetDebugScopeForMissing(JSContext* cx, const ScopeIter& si)
           break;
 
       case ScopeIter::Call: {
-        RootedFunction callee(cx, &si.fun());
+        RootedFunction callee(cx, &si.fun().function());
+
         // Generators should always reify their scopes.
         MOZ_ASSERT(!callee->isGenerator());
 
@@ -3204,10 +3227,10 @@ js::GetThisValueForDebuggerMaybeOptimizedOut(JSContext* cx, AbstractFramePtr fra
             return true;
         }
 
-        if (si.type() != ScopeIter::Call || si.fun().hasLexicalThis())
+        if (si.type() != ScopeIter::Call || si.fun().function().hasLexicalThis())
             continue;
 
-        RootedScript script(cx, si.fun().nonLazyScript());
+        RootedScript script(cx, si.fun().function().nonLazyScript());
 
         if (!script->functionHasThisBinding()) {
             MOZ_ASSERT(!script->isDerivedClassConstructor(),
@@ -3403,10 +3426,12 @@ js::DumpStaticScopeChain(JSObject* staticScope)
             fprintf(stdout, "module [%p]", &ssi.module());
             break;
           case StaticScopeIter<NoGC>::Function:
-            if (ssi.fun().isBeingParsed())
-                fprintf(stdout, "funbox [%p fun=%p]", ssi.maybeFunctionBox(), &ssi.fun());
-            else
-                fprintf(stdout, "function [%p]", &ssi.fun());
+            if (ssi.fun().function().isBeingParsed()) {
+                fprintf(stdout, "funbox [%p box=%p fun=%p]",
+                        &ssi.fun(), ssi.maybeFunctionBox(), &ssi.fun().function());
+            } else {
+                fprintf(stdout, "function [%p fun=%p]", &ssi.fun(), &ssi.fun().function());
+            }
             break;
           case StaticScopeIter<NoGC>::Block:
             fprintf(stdout, "block [%p]", &ssi.block());
