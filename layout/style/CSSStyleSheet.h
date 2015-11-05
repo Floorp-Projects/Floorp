@@ -159,7 +159,6 @@ public:
   void InsertStyleSheetAt(CSSStyleSheet* aSheet, int32_t aIndex);
 
   // XXX do these belong here or are they generic?
-  void PrependStyleRule(css::Rule* aRule);
   void AppendStyleRule(css::Rule* aRule);
   void ReplaceStyleRule(css::Rule* aOld, css::Rule* aNew);
 
