@@ -169,6 +169,10 @@ const Tree = module.exports = createClass({
   },
 
   componentWillReceiveProps(nextProps) {
+    if (!this.props.autoExpandDepth) {
+      return;
+    }
+
     // Automatically expand the first autoExpandDepth levels for new items.
     for (let { item } of this._dfsFromRoots(this.props.autoExpandDepth)) {
       if (!this.state.seen.has(item)) {

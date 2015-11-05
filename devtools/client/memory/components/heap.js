@@ -50,6 +50,7 @@ function createTreeProperties (snapshot, toolbox) {
     : count => count / totals.count * 100;
 
   return {
+    autoExpandDepth: 0,
     getParent: node => {
       const parent = map[node.id];
       return parent === census ? null : parent;
