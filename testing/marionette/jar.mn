@@ -31,15 +31,13 @@ marionette.jar:
 
 % content specialpowers %content/
   content/specialpowers.js (../specialpowers/content/specialpowers.js)
-  content/SpecialPowersObserver.js (../specialpowers/components/SpecialPowersObserver.js)
+  content/SpecialPowersObserver.jsm (../specialpowers/content/SpecialPowersObserver.jsm)
 * content/specialpowersAPI.js (../specialpowers/content/specialpowersAPI.js)
   content/SpecialPowersObserverAPI.js (../specialpowers/content/SpecialPowersObserverAPI.js)
   content/ChromePowers.js (../mochitest/tests/SimpleTest/ChromePowers.js)
   content/MozillaLogger.js (../specialpowers/content/MozillaLogger.js)
-
-% resource specialpowers %modules/
-  modules/MockFilePicker.jsm (../specialpowers/content/MockFilePicker.jsm)
-  modules/MockColorPicker.jsm (../specialpowers/content/MockColorPicker.jsm)
-  modules/MockPermissionPrompt.jsm (../specialpowers/content/MockPermissionPrompt.jsm)
-  modules/MockPaymentsUIGlue.jsm (../specialpowers/content/MockPaymentsUIGlue.jsm)
-  modules/Assert.jsm (../modules/Assert.jsm)
+  content/MockFilePicker.jsm (../specialpowers/content/MockFilePicker.jsm)
+  content/MockColorPicker.jsm (../specialpowers/content/MockColorPicker.jsm)
+  content/MockPermissionPrompt.jsm (../specialpowers/content/MockPermissionPrompt.jsm)
+  content/MockPaymentsUIGlue.jsm (../specialpowers/content/MockPaymentsUIGlue.jsm)
+  content/Assert.jsm (../modules/Assert.jsm)
