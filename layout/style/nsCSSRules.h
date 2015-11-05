@@ -556,10 +556,6 @@ public:
 
   void ChangeDeclaration(mozilla::css::Declaration* aDeclaration);
 
-  mozilla::css::ImportantStyleData* GetImportantRule() {
-    return mDeclaration->GetImportantStyleData();
-  }
-
   virtual size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const override;
 private:
   RefPtr<mozilla::css::Declaration>     mDeclaration;
