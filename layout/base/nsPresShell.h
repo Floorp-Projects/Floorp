@@ -436,10 +436,8 @@ protected:
    * Callback handler for whether reflow happened.
    *
    * @param aInterruptible Whether or not reflow interruption is allowed.
-   * @param aWasInterrupted Whether or not the reflow was interrupted earlier.
-   *
    */
-  void     DidDoReflow(bool aInterruptible, bool aWasInterrupted);
+  void     DidDoReflow(bool aInterruptible);
   // ProcessReflowCommands returns whether we processed all our dirty roots
   // without interruptions.
   bool     ProcessReflowCommands(bool aInterruptible);
