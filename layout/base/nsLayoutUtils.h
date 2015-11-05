@@ -616,6 +616,12 @@ public:
      * overflow: hidden.
      */
     SCROLLABLE_ALWAYS_MATCH_ROOT = 0x08,
+    /**
+     * If the SCROLLABLE_FIXEDPOS_FINDS_ROOT flag is set, then for fixed-pos
+     * frames that are in the root document (in the current process) return the
+     * root scrollable frame for that document.
+     */
+    SCROLLABLE_FIXEDPOS_FINDS_ROOT = 0x10
   };
   /**
    * GetNearestScrollableFrame locates the first ancestor of aFrame
