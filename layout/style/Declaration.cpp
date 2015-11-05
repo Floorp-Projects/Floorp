@@ -19,6 +19,38 @@
 namespace mozilla {
 namespace css {
 
+ImportantStyleData::ImportantStyleData(Declaration* aDeclaration)
+  : mDeclaration(aDeclaration)
+{
+}
+
+ImportantStyleData::~ImportantStyleData()
+{
+}
+
+NS_IMPL_ISUPPORTS(ImportantStyleData, nsIStyleRule)
+
+/* virtual */ void
+ImportantStyleData::MapRuleInfoInto(nsRuleData* aRuleData)
+{
+  mDeclaration->MapImportantRuleInfoInto(aRuleData);
+}
+
+#ifdef DEBUG
+/* virtual */ void
+ImportantStyleData::List(FILE* out, int32_t aIndent) const
+{
+  // Indent
+  nsAutoCString str;
+  for (int32_t index = aIndent; --index >= 0; ) {
+    str.AppendLiteral("  ");
+  }
+
+  str.AppendLiteral("! important rule\n");
+  fprintf_stderr(out, "%s", str.get());
+}
+#endif
+
 Declaration::Declaration()
   : mOwningRule(nullptr)
   , mImmutable(false)

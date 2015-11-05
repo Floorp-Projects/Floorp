@@ -37,6 +37,26 @@ namespace mozilla {
 namespace css {
 
 class Rule;
+class Declaration;
+
+class ImportantStyleData final : public nsIStyleRule
+{
+public:
+  explicit ImportantStyleData(Declaration* aDeclaration);
+
+  NS_DECL_ISUPPORTS
+
+  // nsIStyleRule interface
+  virtual void MapRuleInfoInto(nsRuleData* aRuleData) override;
+#ifdef DEBUG
+  virtual void List(FILE* out = stdout, int32_t aIndent = 0) const override;
+#endif
+
+protected:
+  virtual ~ImportantStyleData();
+
+  RefPtr<Declaration> mDeclaration;
+};
 
 // Declaration objects have unusual lifetime rules.  Every declaration
 // begins life in an invalid state which ends when InitializeEmpty or
