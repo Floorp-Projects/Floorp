@@ -162,17 +162,19 @@ struct TestFileData
   uint32_t mNumberVideoTracks;
   int32_t mWidth;
   int32_t mHeight;
+  uint32_t mNumberAudioTracks;
 };
 static const TestFileData testFiles[] = {
-  { "test_case_1156505.mp4", 0, 0, 0 },
-  { "test_case_1181213.mp4", 0, 0, 0 },
-  { "test_case_1181215.mp4", 0, 0, 0 },
-  { "test_case_1181220.mp4", 0, 0, 0 },
-  { "test_case_1181223.mp4", 0, 0, 0 },
-  { "test_case_1181719.mp4", 0, 0, 0 },
-  { "test_case_1187067.mp4", 1, 160, 90 },
-  { "test_case_1200326.mp4", 0, 0, 0 },
-  { "test_case_1204580.mp4", 1, 320, 180 }
+  { "test_case_1156505.mp4", 0,   0,   0, 0 },
+  { "test_case_1181213.mp4", 0,   0,   0, 0 },
+  { "test_case_1181215.mp4", 0,   0,   0, 0 },
+  { "test_case_1181220.mp4", 0,   0,   0, 0 },
+  { "test_case_1181223.mp4", 0,   0,   0, 0 },
+  { "test_case_1181719.mp4", 0,   0,   0, 0 },
+  { "test_case_1185230.mp4", 1, 320, 240, 1 },
+  { "test_case_1187067.mp4", 1, 160,  90, 0 },
+  { "test_case_1200326.mp4", 0,   0,   0, 0 },
+  { "test_case_1204580.mp4", 1, 320, 180, 0 }
 };
 
 TEST(stagefright_MPEG4Metadata, test_case_mp4)
@@ -188,29 +190,45 @@ TEST(stagefright_MPEG4Metadata, test_case_mp4)
 
     MP4Metadata metadata(stream);
     EXPECT_EQ(0u, metadata.GetNumberTracks(TrackInfo::kUndefinedTrack));
-    EXPECT_EQ(0u, metadata.GetNumberTracks(TrackInfo::kAudioTrack));
+    EXPECT_EQ(testFiles[test].mNumberAudioTracks,
+              metadata.GetNumberTracks(TrackInfo::kAudioTrack));
     EXPECT_EQ(testFiles[test].mNumberVideoTracks,
               metadata.GetNumberTracks(TrackInfo::kVideoTrack));
     EXPECT_EQ(0u, metadata.GetNumberTracks(TrackInfo::kTextTrack));
     EXPECT_EQ(0u, metadata.GetNumberTracks(static_cast<TrackInfo::TrackType>(-1)));
     EXPECT_FALSE(metadata.GetTrackInfo(TrackInfo::kUndefinedTrack, 0));
-    EXPECT_FALSE(metadata.GetTrackInfo(TrackInfo::kAudioTrack, 0));
     UniquePtr<TrackInfo> trackInfo = metadata.GetTrackInfo(TrackInfo::kVideoTrack, 0);
     if (testFiles[test].mNumberVideoTracks == 0) {
       EXPECT_TRUE(!trackInfo);
     } else {
-      EXPECT_TRUE(!!trackInfo);
-      if (trackInfo) {
-        const VideoInfo* videoInfo = trackInfo->GetAsVideoInfo();
-        EXPECT_TRUE(!!videoInfo);
-        if (videoInfo) {
-          EXPECT_TRUE(videoInfo->IsValid());
-          EXPECT_TRUE(videoInfo->IsVideo());
-          EXPECT_EQ(testFiles[test].mWidth, videoInfo->mDisplay.width);
-          EXPECT_EQ(testFiles[test].mHeight, videoInfo->mDisplay.height);
-          FallibleTArray<mp4_demuxer::Index::Indice> indices;
-          EXPECT_TRUE(metadata.ReadTrackIndex(indices, videoInfo->mTrackId));
-        }
+      ASSERT_TRUE(!!trackInfo);
+      const VideoInfo* videoInfo = trackInfo->GetAsVideoInfo();
+      ASSERT_TRUE(!!videoInfo);
+      EXPECT_TRUE(videoInfo->IsValid());
+      EXPECT_TRUE(videoInfo->IsVideo());
+      EXPECT_EQ(testFiles[test].mWidth, videoInfo->mDisplay.width);
+      EXPECT_EQ(testFiles[test].mHeight, videoInfo->mDisplay.height);
+      FallibleTArray<mp4_demuxer::Index::Indice> indices;
+      EXPECT_TRUE(metadata.ReadTrackIndex(indices, videoInfo->mTrackId));
+      for (const mp4_demuxer::Index::Indice& indice : indices) {
+        EXPECT_TRUE(indice.start_offset <= indice.end_offset);
+        EXPECT_TRUE(indice.start_composition <= indice.end_composition);
+      }
+    }
+    trackInfo = metadata.GetTrackInfo(TrackInfo::kAudioTrack, 0);
+    if (testFiles[test].mNumberAudioTracks == 0) {
+      EXPECT_TRUE(!trackInfo);
+    } else {
+      ASSERT_TRUE(!!trackInfo);
+      const AudioInfo* audioInfo = trackInfo->GetAsAudioInfo();
+      ASSERT_TRUE(!!audioInfo);
+      EXPECT_TRUE(audioInfo->IsValid());
+      EXPECT_TRUE(audioInfo->IsAudio());
+      FallibleTArray<mp4_demuxer::Index::Indice> indices;
+      EXPECT_TRUE(metadata.ReadTrackIndex(indices, audioInfo->mTrackId));
+      for (const mp4_demuxer::Index::Indice& indice : indices) {
+        EXPECT_TRUE(indice.start_offset <= indice.end_offset);
+        EXPECT_TRUE(indice.start_composition <= indice.end_composition);
       }
     }
     EXPECT_FALSE(metadata.GetTrackInfo(TrackInfo::kTextTrack, 0));
