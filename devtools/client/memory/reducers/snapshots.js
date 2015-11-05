@@ -56,6 +56,7 @@ handlers[actions.TAKE_CENSUS_END] = function (snapshots, action) {
   snapshot.census = action.census;
   snapshot.breakdown = action.breakdown;
   snapshot.inverted = action.inverted;
+  snapshot.filter = action.filter;
   return [...snapshots];
 };
 
