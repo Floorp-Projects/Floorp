@@ -309,10 +309,7 @@ public:
 protected:
   virtual ~ImportantRule();
 
-  // Not an owning reference; the StyleRule that owns this
-  // ImportantRule also owns the mDeclaration, and any rule node
-  // pointing to this rule keeps that StyleRule alive as well.
-  Declaration* mDeclaration;
+  RefPtr<Declaration> mDeclaration;
 
   friend class StyleRule;
 };
@@ -387,7 +384,7 @@ private:
 
 private:
   nsCSSSelectorList*      mSelector; // null for style attribute
-  Declaration*            mDeclaration;
+  RefPtr<Declaration>     mDeclaration;
   RefPtr<ImportantRule> mImportantRule; // initialized by RuleMatched
   RefPtr<DOMCSSStyleRule> mDOMRule;
 
