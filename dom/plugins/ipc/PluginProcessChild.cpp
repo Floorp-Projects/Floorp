@@ -35,16 +35,6 @@ using mozilla::ipc::IOThreadChild;
 #ifdef OS_WIN
 #include "nsSetDllDirectory.h"
 #include <algorithm>
-
-namespace {
-
-std::size_t caseInsensitiveFind(std::string aHaystack, std::string aNeedle) {
-    std::transform(aHaystack.begin(), aHaystack.end(), aHaystack.begin(), ::tolower);
-    std::transform(aNeedle.begin(), aNeedle.end(), aNeedle.begin(), ::tolower);
-    return aHaystack.find(aNeedle);
-}
-
-}
 #endif
 
 namespace mozilla {
