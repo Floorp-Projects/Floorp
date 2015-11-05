@@ -789,8 +789,6 @@ PresShell::PresShell()
 
   mScrollPositionClampingScrollPortSizeSet = false;
 
-  mMaxLineBoxWidth = 0;
-
   static bool addedSynthMouseMove = false;
   if (!addedSynthMouseMove) {
     Preferences::AddBoolVarCache(&sSynthMouseMove,
@@ -10887,19 +10885,6 @@ nsIPresShell::FontSizeInflationEnabled()
   }
 
   return mFontSizeInflationEnabled;
-}
-
-void
-nsIPresShell::SetMaxLineBoxWidth(nscoord aMaxLineBoxWidth)
-{
-  NS_ASSERTION(aMaxLineBoxWidth >= 0, "attempting to set max line box width to a negative value");
-
-  if (mMaxLineBoxWidth != aMaxLineBoxWidth) {
-    mMaxLineBoxWidth = aMaxLineBoxWidth;
-    mReflowOnZoomPending = true;
-    FrameNeedsReflow(GetRootFrame(), nsIPresShell::eResize,
-                     NS_FRAME_HAS_DIRTY_CHILDREN);
-  }
 }
 
 void

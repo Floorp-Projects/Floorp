@@ -1670,12 +1670,6 @@ public:
   virtual void ThemeChanged() = 0;
   virtual void BackingScaleFactorChanged() = 0;
 
-  nscoord MaxLineBoxWidth() {
-    return mMaxLineBoxWidth;
-  }
-
-  void SetMaxLineBoxWidth(nscoord aMaxLineBoxWidth);
-
   /**
    * Returns whether or not there is a reflow on zoom event pending. A reflow
    * on zoom event is a change to the max line box width, followed by a reflow.
@@ -1837,10 +1831,6 @@ protected:
   // Flag to indicate whether or not there is a reflow on zoom event pending.
   // See IsReflowOnZoomPending() for more information.
   bool mReflowOnZoomPending;
-
-  // The maximum width of a line box. Text on a single line that exceeds this
-  // width will be wrapped. A value of 0 indicates that no limit is enforced.
-  nscoord mMaxLineBoxWidth;
 
   // If a document belongs to an invisible DocShell, this flag must be set
   // to true, so we can avoid any paint calls for widget related to this

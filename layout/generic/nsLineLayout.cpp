@@ -211,23 +211,6 @@ nsLineLayout::BeginLineReflow(nscoord aICoord, nscoord aBCoord,
   psd->mIEnd = aICoord + aISize;
   mContainerSize = aContainerSize;
 
-  // If we're in a constrained block-size frame, then we don't allow a
-  // max line box width to take effect.
-  if (!(LineContainerFrame()->GetStateBits() &
-        NS_FRAME_IN_CONSTRAINED_BSIZE)) {
-
-    // If the available size is greater than the maximum line box width (if
-    // specified), then we need to adjust the line box width to be at the max
-    // possible width.
-    nscoord maxLineBoxWidth =
-      LineContainerFrame()->PresContext()->PresShell()->MaxLineBoxWidth();
-
-    if (maxLineBoxWidth > 0 &&
-        psd->mIEnd - psd->mIStart > maxLineBoxWidth) {
-      psd->mIEnd = psd->mIStart + maxLineBoxWidth;
-    }
-  }
-
   mBStartEdge = aBCoord;
 
   psd->mNoWrap = !mStyleText->WhiteSpaceCanWrapStyle() || mSuppressLineWrap;
