@@ -4402,6 +4402,7 @@ CanvasRenderingContext2D::DrawImage(const CanvasImageSource& image,
 
 #ifdef USE_SKIA_GPU
   if (mRenderingMode == RenderingMode::OpenGLBackendMode &&
+      mIsSkiaGL &&
       !srcSurf &&
       image.IsHTMLVideoElement() &&
       gfxPlatform::GetPlatform()->GetSkiaGLGlue()) {
