@@ -653,7 +653,8 @@ BytecodeCompiler::compileFunctionBody(MutableHandleFunction fun,
     if (fn->pn_funbox->function()->isInterpreted()) {
         MOZ_ASSERT(fun == fn->pn_funbox->function());
 
-        if (!createScript(enclosingStaticScope))
+        RootedObject scope(cx, fn->pn_funbox->staticScope());
+        if (!createScript(scope))
             return false;
 
         script->bindings = fn->pn_funbox->bindings;
@@ -805,11 +806,12 @@ frontend::CompileLazyFunction(JSContext* cx, Handle<LazyScript*> lazy, const cha
     if (!NameFunctions(cx, pn))
         return false;
 
-    RootedObject enclosingScope(cx, lazy->enclosingScope());
+    RootedObject staticScope(cx, pn->pn_funbox->staticScope());
+    MOZ_ASSERT(staticScope);
     RootedScriptSource sourceObject(cx, lazy->sourceObject());
     MOZ_ASSERT(sourceObject);
 
-    Rooted<JSScript*> script(cx, JSScript::Create(cx, enclosingScope, false, options,
+    Rooted<JSScript*> script(cx, JSScript::Create(cx, staticScope, false, options,
                                                   sourceObject, lazy->begin(), lazy->end()));
     if (!script)
         return false;

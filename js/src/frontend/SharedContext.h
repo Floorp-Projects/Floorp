@@ -300,7 +300,7 @@ class MOZ_STACK_CLASS GlobalSharedContext : public SharedContext
         // non-function scope, so we have to compute our ThisBinding based on
         // the actual callee.
         if (maybeEvalCaller)
-            computeThisBinding(maybeEvalCaller);
+            computeThisBinding(maybeEvalCaller->nonLazyScript()->staticScope());
         else
             computeThisBinding(staticScope);
     }
@@ -312,7 +312,7 @@ class FunctionBox : public ObjectBox, public SharedContext
 {
   public:
     Bindings        bindings;               /* bindings for this function */
-    JSObject*       enclosingStaticScope_;
+    StaticFunctionScope* staticScope_;
     uint32_t        bufStart;
     uint32_t        bufEnd;
     uint32_t        startLine;
@@ -335,13 +335,15 @@ class FunctionBox : public ObjectBox, public SharedContext
 
     template <typename ParseHandler>
     FunctionBox(ExclusiveContext* cx, ObjectBox* traceListHead, JSFunction* fun,
-                JSObject* enclosingStaticScope, ParseContext<ParseHandler>* pc,
-                Directives directives, bool extraWarnings, GeneratorKind generatorKind);
+                ParseContext<ParseHandler>* pc, Directives directives, bool extraWarnings,
+                GeneratorKind generatorKind);
+
+    bool initStaticScope(JSObject* enclosingStaticScope);
 
     ObjectBox* toObjectBox() override { return this; }
     JSFunction* function() const { return &object->as<JSFunction>(); }
-    JSObject* staticScope() const override { return function(); }
-    JSObject* enclosingStaticScope() const { return enclosingStaticScope_; }
+    JSObject* staticScope() const override { return staticScope_; }
+    JSObject* enclosingStaticScope() const { return staticScope_->enclosingScope(); }
 
     GeneratorKind generatorKind() const { return GeneratorKindFromBits(generatorKindBits_); }
     bool isGenerator() const { return generatorKind() != NotGenerator; }
