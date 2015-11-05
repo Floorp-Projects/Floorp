@@ -437,7 +437,7 @@ SheetLoadData::SheetLoadData(Loader* aLoader,
 
 SheetLoadData::~SheetLoadData()
 {
-  NS_IF_RELEASE(mNext);
+  NS_CSS_NS_RELEASE_LIST_MEMBER(SheetLoadData, this, mNext);
 }
 
 NS_IMETHODIMP
