@@ -67,8 +67,9 @@ nsHTMLCSSStyleSheet::ElementRulesMatching(nsPresContext* aPresContext,
   // just get the one and only style rule from the content's STYLE attribute
   css::StyleRule* rule = aElement->GetInlineStyleRule();
   if (rule) {
-    rule->RuleMatched();
-    aRuleWalker->Forward(rule->GetDeclaration());
+    css::Declaration* declaration = rule->GetDeclaration();
+    declaration->SetImmutable();
+    aRuleWalker->Forward(declaration);
   }
 
   rule = aElement->GetSMILOverrideStyleRule();
@@ -77,8 +78,9 @@ nsHTMLCSSStyleSheet::ElementRulesMatching(nsPresContext* aPresContext,
     if (!restyleManager->SkipAnimationRules()) {
       // Animation restyle (or non-restyle traversal of rules)
       // Now we can walk SMIL overrride style, without triggering transitions.
-      rule->RuleMatched();
-      aRuleWalker->Forward(rule->GetDeclaration());
+      css::Declaration* declaration = rule->GetDeclaration();
+      declaration->SetImmutable();
+      aRuleWalker->Forward(declaration);
     }
   }
 }
@@ -96,8 +98,9 @@ nsHTMLCSSStyleSheet::PseudoElementRulesMatching(Element* aPseudoElement,
   // just get the one and only style rule from the content's STYLE attribute
   css::StyleRule* rule = aPseudoElement->GetInlineStyleRule();
   if (rule) {
-    rule->RuleMatched();
-    aRuleWalker->Forward(rule->GetDeclaration());
+    css::Declaration* declaration = rule->GetDeclaration();
+    declaration->SetImmutable();
+    aRuleWalker->Forward(declaration);
   }
 }
 

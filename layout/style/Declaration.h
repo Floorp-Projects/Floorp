@@ -72,9 +72,10 @@ private:
 // begins life in an invalid state which ends when InitializeEmpty or
 // CompressFrom is called upon it.  After that, it can be attached to
 // exactly one style rule, and will be destroyed when that style rule
-// is destroyed.  A declaration becomes immutable when its style rule's
-// |RuleMatched| method is called; after that, it must be copied before
-// it can be modified, which is taken care of by |EnsureMutable|.
+// is destroyed.  A declaration becomes immutable (via a SetImmutable
+// call) when it is matched (put in the rule tree); after that, it must
+// be copied before it can be modified, which is taken care of by
+// |EnsureMutable|.
 
 class Declaration final : public nsIStyleRule {
 public:
@@ -408,7 +409,7 @@ private:
   friend class ImportantStyleData;
   ImportantStyleData mImportantStyleData;
 
-  // set by style rules when |RuleMatched| is called;
+  // set when declaration put in the rule tree;
   // also by ToString (hence the 'mutable').
   mutable bool mImmutable;
 };

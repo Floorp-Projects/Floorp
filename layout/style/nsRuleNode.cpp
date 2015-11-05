@@ -17,6 +17,8 @@
 #include "mozilla/Likely.h"
 #include "mozilla/LookAndFeel.h"
 
+#include "mozilla/css/Declaration.h"
+
 #include "nsAlgorithm.h" // for clamped()
 #include "nsRuleNode.h"
 #include "nscore.h"
@@ -50,6 +52,7 @@
 #include "nsCSSPropertySet.h"
 #include "mozilla/RuleNodeCacheConditions.h"
 #include "nsDeviceContext.h"
+#include "nsQueryObject.h"
 
 #if defined(_MSC_VER) || defined(__MINGW32__)
 #include <malloc.h>
@@ -1553,6 +1556,14 @@ nsRuleNode*
 nsRuleNode::Transition(nsIStyleRule* aRule, SheetType aLevel,
                        bool aIsImportantRule)
 {
+#ifdef DEBUG
+  {
+    RefPtr<css::Declaration> declaration(do_QueryObject(aRule));
+    MOZ_ASSERT(!declaration || !declaration->IsMutable(),
+               "caller must call Declaration::SetImmutable first");
+  }
+#endif
+
   nsRuleNode* next = nullptr;
   nsRuleNode::Key key(aRule, aLevel, aIsImportantRule);
 
