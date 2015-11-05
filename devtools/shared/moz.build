@@ -15,6 +15,7 @@ DIRS += [
     'heapsnapshot',
     'jsbeautify',
     'layout',
+    'locales',
     'performance',
     'pretty-fast',
     'qrcode',

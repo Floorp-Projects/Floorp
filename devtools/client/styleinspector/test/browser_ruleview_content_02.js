@@ -16,7 +16,7 @@ const CONTENT = '<body style="color:red;">\
                  </body>';
 
 const STRINGS = Services.strings
-  .createBundle("chrome://global/locale/devtools/styleinspector.properties");
+  .createBundle("chrome://devtools-shared/locale/styleinspector.properties");
 
 add_task(function*() {
   yield addTab("data:text/html;charset=utf-8," + CONTENT);

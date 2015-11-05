@@ -40,7 +40,7 @@ protected:
   }
 
 public:
-  NS_DECL_FRAMEARENA_HELPERS
+  NS_DECL_ABSTRACT_FRAME(nsSVGPaintServerFrame)
 
   /**
    * Constructs a gfxPattern of the paint server rendering.

@@ -533,7 +533,7 @@ ToolSidebar.prototype = {
 }
 
 XPCOMUtils.defineLazyGetter(this, "l10n", function() {
-  let bundle = Services.strings.createBundle("chrome://browser/locale/devtools/toolbox.properties");
+  let bundle = Services.strings.createBundle("chrome://devtools/locale/toolbox.properties");
   let l10n = function(aName, ...aArgs) {
     try {
       if (aArgs.length == 0) {

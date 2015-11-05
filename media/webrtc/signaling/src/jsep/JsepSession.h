@@ -143,12 +143,13 @@ public:
                                         uint16_t level,
                                         std::string* mid,
                                         bool* skipped) = 0;
-  virtual nsresult EndOfLocalCandidates(
+  virtual nsresult UpdateDefaultCandidate(
       const std::string& defaultCandidateAddr,
       uint16_t defaultCandidatePort,
       const std::string& defaultRtcpCandidateAddr,
       uint16_t defaultRtcpCandidatePort,
       uint16_t level) = 0;
+  virtual nsresult EndOfLocalCandidates(uint16_t level) = 0;
   virtual nsresult Close() = 0;
 
   // ICE controlling or controlled

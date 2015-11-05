@@ -716,7 +716,7 @@ menuitem.marker-color-graphs-grey:before,
 
 .opt-icon::before {
   content: "";
-  background-image: url(chrome://devtools/skin/themes/images/webconsole.svg);
+  background-image: url(chrome://devtools/skin/images/webconsole.svg);
   background-repeat: no-repeat;
   background-size: 72px 60px;
   /* show grey "i" bubble by default */
@@ -738,7 +738,7 @@ description.opt-icon::before {
   margin: 1px 4px 0px 0px;
 }
 .theme-light .opt-icon::before {
-  background-image: url(chrome://devtools/skin/themes/images/webconsole.svg#light-icons);
+  background-image: url(chrome://devtools/skin/images/webconsole.svg#light-icons);
 }
 .opt-icon[severity=warning]::before {
   background-position: -24px -24px;
@@ -771,7 +771,7 @@ ul.frames-list li.selected {
  */
 menuitem.experimental-option::before {
   content: "";
-  background-image: url(chrome://devtools/skin/themes/images/webconsole.svg);
+  background-image: url(chrome://devtools/skin/images/webconsole.svg);
   background-repeat: no-repeat;
   background-size: 72px 60px;
   width: 12px;
@@ -783,7 +783,7 @@ menuitem.experimental-option::before {
   max-height: 12px;
 }
 .theme-light menuitem.experimental-option::before {
-  background-image: url(chrome://devtools/skin/themes/images/webconsole.svg#light-icons);
+  background-image: url(chrome://devtools/skin/images/webconsole.svg#light-icons);
 }
 
 #performance-options-menupopup:not(.experimental-enabled) .experimental-option,

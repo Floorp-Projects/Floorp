@@ -58,9 +58,7 @@ function todo_check(aElementName, aBarred) {
 function test () {
   waitForExplicitFinish();
   gBrowser.selectedTab = gBrowser.addTab();
-  gBrowser.selectedBrowser.addEventListener("load", function () {
-    gBrowser.selectedBrowser.removeEventListener("load", arguments.callee, true);
-
+  BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser).then(() => {
     let testData = [
     /* element name, barred */
       [ 'input',    false,  null],
@@ -87,9 +85,10 @@ function test () {
 
     gBrowser.removeCurrentTab();
     finish();
-  }, true);
+  });
 
-  content.location = 
-    "data:text/html,<!DOCTYPE html><html><body><form id='content'></form></body></html>";
+  gBrowser.loadURI(
+    "data:text/html,<!DOCTYPE html><html><body><form id='content'></form></body></html>"
+  );
 }
 

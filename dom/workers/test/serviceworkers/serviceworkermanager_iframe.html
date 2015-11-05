@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <script>
+      window.onmessage = function (event) {
+        if (event.data !== "register") {
+          return;
+        }
+        var promise = navigator.serviceWorker.register("worker.js");
+        window.onmessage = function (event) {
+          if (event.data !== "unregister") {
+            return;
+          }
+          promise.then(function (registration) {
+            registration.unregister();
+          });
+          window.onmessage = null;
+        };
+      };
+    </script>
+  </head>
+  <body>
+    This is a test page.
+  </body>
+<html>
