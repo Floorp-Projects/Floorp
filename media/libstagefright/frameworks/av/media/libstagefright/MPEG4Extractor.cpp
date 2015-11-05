@@ -2567,15 +2567,25 @@ sp<MediaSource> MPEG4Extractor::getTrack(size_t index) {
 
 // static
 status_t MPEG4Extractor::verifyTrack(Track *track) {
+    int32_t trackId;
+    if (!track->meta->findInt32(kKeyTrackID, &trackId)) {
+        return ERROR_MALFORMED;
+    }
+
     const char *mime;
-    CHECK(track->meta->findCString(kKeyMIMEType, &mime));
+    if (!track->meta->findCString(kKeyMIMEType, &mime)) {
+        return ERROR_MALFORMED;
+    }
 
     uint32_t type;
     const void *data;
     size_t size;
     if (!strcasecmp(mime, MEDIA_MIMETYPE_VIDEO_AVC)) {
         if (!track->meta->findData(kKeyAVCC, &type, &data, &size)
-                || type != kTypeAVCC) {
+                || type != kTypeAVCC
+                || size < 7
+                // configurationVersion == 1?
+                || reinterpret_cast<const uint8_t*>(data)[0] != 1) {
             return ERROR_MALFORMED;
         }
     } else if (!strcasecmp(mime, MEDIA_MIMETYPE_VIDEO_MPEG4)
@@ -2589,6 +2599,15 @@ status_t MPEG4Extractor::verifyTrack(Track *track) {
     if (!track->sampleTable.get() || !track->sampleTable->isValid()) {
         // Make sure we have all the metadata we need.
         return ERROR_MALFORMED;
+    }
+
+    uint32_t keytype;
+    const void *key;
+    size_t keysize;
+    if (track->meta->findData(kKeyCryptoKey, &keytype, &key, &keysize)) {
+        if (keysize > 16) {
+            return ERROR_MALFORMED;
+        }
     }
 
     return OK;
