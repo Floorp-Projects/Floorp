@@ -1607,6 +1607,19 @@ GetFirstFontMetrics(gfxFontGroup* aFontGroup, bool aVerticalMetrics)
                                            : gfxFont::eHorizontal);
 }
 
+static gfxFloat
+GetSpaceWidthAppUnits(gfxTextRun* aTextRun)
+{
+  // Round the space width when converting to appunits the same way textruns
+  // do.
+  gfxFloat spaceWidthAppUnits =
+    NS_round(GetFirstFontMetrics(aTextRun->GetFontGroup(),
+                                 aTextRun->UseCenterBaseline()).spaceWidth *
+             aTextRun->GetAppUnitsPerDevUnit());
+
+  return spaceWidthAppUnits;
+}
+
 static nscoord
 LetterSpacing(nsIFrame* aFrame, const nsStyleText* aStyleText = nullptr)
 {
@@ -3225,14 +3238,8 @@ ComputeTabWidthAppUnits(nsIFrame* aFrame, gfxTextRun* aTextRun)
 {
   // Get the number of spaces from CSS -moz-tab-size
   const nsStyleText* textStyle = aFrame->StyleText();
-  
-  // Round the space width when converting to appunits the same way
-  // textruns do
-  gfxFloat spaceWidthAppUnits =
-    NS_round(GetFirstFontMetrics(aTextRun->GetFontGroup(),
-                                 aTextRun->UseCenterBaseline()).spaceWidth *
-             aTextRun->GetAppUnitsPerDevUnit());
-  return textStyle->mTabSize * spaceWidthAppUnits;
+
+  return textStyle->mTabSize * GetSpaceWidthAppUnits(aTextRun);
 }
 
 // aX and the result are in whole appunits.
