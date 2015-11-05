@@ -2417,6 +2417,7 @@ MediaInputPort::Init()
 void
 MediaInputPort::Disconnect()
 {
+  MOZ_ASSERT(GraphImpl()->CurrentDriver()->OnThread());
   NS_ASSERTION(!mSource == !mDest,
                "mSource must either both be null or both non-null");
   if (!mSource)
