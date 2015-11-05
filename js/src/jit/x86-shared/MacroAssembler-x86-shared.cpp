@@ -411,16 +411,16 @@ MacroAssembler::Pop(const ValueOperand& val)
 // ===============================================================
 // Simple call functions.
 
-void
+CodeOffsetLabel
 MacroAssembler::call(Register reg)
 {
-    Assembler::call(reg);
+    return Assembler::call(reg);
 }
 
-void
+CodeOffsetLabel
 MacroAssembler::call(Label* label)
 {
-    Assembler::call(label);
+    return Assembler::call(label);
 }
 
 void
@@ -453,6 +453,17 @@ void
 MacroAssembler::call(JitCode* target)
 {
     Assembler::call(target);
+}
+
+CodeOffsetLabel
+MacroAssembler::callWithPatch()
+{
+    return Assembler::callWithPatch();
+}
+void
+MacroAssembler::patchCall(uint32_t callerOffset, uint32_t calleeOffset)
+{
+    Assembler::patchCall(callerOffset, calleeOffset);
 }
 
 void
