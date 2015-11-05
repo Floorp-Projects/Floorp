@@ -730,9 +730,6 @@ protected:
   virtual void ThemeChanged() override { mPresContext->ThemeChanged(); }
   virtual void BackingScaleFactorChanged() override { mPresContext->UIResolutionChanged(); }
 
-  virtual void PausePainting() override;
-  virtual void ResumePainting() override;
-
   void UpdateImageVisibility();
   void UpdateActivePointerState(mozilla::WidgetGUIEvent* aEvent);
 
