@@ -16,7 +16,6 @@ include protocol PCycleCollectWithLogs;
 include protocol PCrashReporter;
 include protocol PPSMContentDownloader;
 include protocol PExternalHelperApp;
-include protocol PHandlerService;
 include protocol PDeviceStorageRequest;
 include protocol PFileDescriptorSet;
 include protocol PFMRadio;
@@ -442,7 +441,6 @@ prio(normal upto urgent) sync protocol PContent
     manages PFileDescriptorSet;
     manages PFMRadio;
     manages PHal;
-    manages PHandlerService;
     manages PHeapSnapshotTempFileHelper;
     manages PIcc;
     manages PMedia;
@@ -868,8 +866,6 @@ parent:
                        int64_t aContentLength,
                        OptionalURIParams aReferrer,
                        nullable PBrowser aBrowser);
-
-    PHandlerService();
 
     AddGeolocationListener(Principal principal, bool highAccuracy);
     RemoveGeolocationListener();
