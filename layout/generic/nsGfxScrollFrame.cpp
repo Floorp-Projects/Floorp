@@ -3062,17 +3062,25 @@ ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
     // clipStatePtr will always point to the innermost used one.
     DisplayListClipState::AutoSaveRestore clipState(aBuilder);
     DisplayListClipState::AutoSaveRestore* clipStatePtr = &clipState;
-    if (!mIsRoot || !usingDisplayPort) {
-      nsRect clip = mScrollPort + aBuilder->ToReferenceFrame(mOuter);
-      nscoord radii[8];
-      bool haveRadii = mOuter->GetPaddingBoxBorderRadii(radii);
-      // Our override of GetBorderRadii ensures we never have a radius at
-      // the corners where we have a scrollbar.
-      if (mClipAllDescendants) {
-        clipState.ClipContentDescendants(clip, haveRadii ? radii : nullptr);
-      } else {
-        clipState.ClipContainingBlockDescendants(clip, haveRadii ? radii : nullptr);
+
+    nsRect clipRect = mScrollPort + aBuilder->ToReferenceFrame(mOuter);
+    // Our override of GetBorderRadii ensures we never have a radius at
+    // the corners where we have a scrollbar.
+    nscoord radii[8];
+    bool haveRadii = mOuter->GetPaddingBoxBorderRadii(radii);
+    if (mIsRoot) {
+      clipRect.SizeTo(nsLayoutUtils::CalculateCompositionSizeForFrame(mOuter));
+      if (mOuter->PresContext()->IsRootContentDocument()) {
+        double res = mOuter->PresContext()->PresShell()->GetResolution();
+        clipRect.width = NSToCoordRound(clipRect.width / res);
+        clipRect.height = NSToCoordRound(clipRect.height / res);
       }
+    }
+
+    if (mClipAllDescendants) {
+      clipState.ClipContentDescendants(clipRect, haveRadii ? radii : nullptr);
+    } else {
+      clipState.ClipContainingBlockDescendants(clipRect, haveRadii ? radii : nullptr);
     }
 
     Maybe<DisplayListClipState::AutoSaveRestore> clipStateCaret;
@@ -3280,34 +3288,18 @@ ScrollFrameHelper::ComputeFrameMetrics(Layer* aLayer,
     return Nothing();
   }
 
-  bool needsParentLayerClip = true;
-  if (gfxPrefs::LayoutUseContainersForRootFrames() && !mAddClipRectToLayer) {
-    // For containerful frames, the clip is on the container frame.
-    needsParentLayerClip = false;
-  }
-
   const Maybe<DisplayItemClip>& ancestorClip = aIsForCaret ? mAncestorClipForCaret : mAncestorClip;
 
   nsPoint toReferenceFrame = mOuter->GetOffsetToCrossDoc(aContainerReferenceFrame);
-  bool isRootContent = mIsRoot && mOuter->PresContext()->IsRootContentDocument();
 
   Maybe<nsRect> parentLayerClip;
-  if (needsParentLayerClip) {
-    nsRect clip = nsRect(mScrollPort.TopLeft() + toReferenceFrame,
-                         nsLayoutUtils::CalculateCompositionSizeForFrame(mOuter));
-    if (isRootContent) {
-      double res = mOuter->PresContext()->PresShell()->GetResolution();
-      clip.width = NSToCoordRound(clip.width / res);
-      clip.height = NSToCoordRound(clip.height / res);
-    }
-
-    if (ancestorClip && ancestorClip->HasClip()) {
-      clip = ancestorClip->GetClipRect().Intersect(clip);
-    }
-
-    parentLayerClip = Some(clip);
+  // For containerful frames, the clip is on the container layer.
+  if (ancestorClip &&
+      (!gfxPrefs::LayoutUseContainersForRootFrames() || mAddClipRectToLayer)) {
+    parentLayerClip = Some(ancestorClip->GetClipRect());
   }
 
+  bool isRootContent = mIsRoot && mOuter->PresContext()->IsRootContentDocument();
   bool thisScrollFrameUsesAsyncScrolling = nsLayoutUtils::UsesAsyncScrolling(mOuter);
 #if defined(MOZ_WIDGET_ANDROID) && !defined(MOZ_ANDROID_APZ)
   // Android without apzc (aka the java pan zoom code) only uses async scrolling
