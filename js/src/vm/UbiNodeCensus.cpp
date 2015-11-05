@@ -280,25 +280,73 @@ static int compareEntries(const void* lhsVoid, const void* rhsVoid) {
     return 0;
 }
 
+// A hash policy that compares C strings.
+struct CStringHashPolicy {
+    using Lookup = const char*;
+    static js::HashNumber hash(Lookup l) { return mozilla::HashString(l); }
+    static bool match(const char* key, Lookup lookup) {
+        return strcmp(key, lookup) == 0;
+    }
+};
+
+// A hash map mapping from C strings to counts.
+using CStringCountMap = HashMap<const char*, CountBasePtr, CStringHashPolicy, SystemAllocPolicy>;
+
+// Convert a CStringCountMap into an object with each key one of the c strings
+// from the map and each value the associated count's report. For use with
+// reporting.
+static PlainObject*
+cStringCountMapToObject(JSContext* cx, CStringCountMap& map) {
+    // Build a vector of pointers to entries; sort by total; and then use
+    // that to build the result object. This makes the ordering of entries
+    // more interesting, and a little less non-deterministic.
+
+    mozilla::Vector<CStringCountMap::Entry*> entries;
+    if (!entries.reserve(map.count())) {
+        ReportOutOfMemory(cx);
+        return nullptr;
+    }
+
+    for (auto r = map.all(); !r.empty(); r.popFront())
+        entries.infallibleAppend(&r.front());
+
+    qsort(entries.begin(), entries.length(), sizeof(*entries.begin()),
+          compareEntries<CStringCountMap::Entry>);
+
+    RootedPlainObject obj(cx, NewBuiltinClassInstance<PlainObject>(cx));
+    if (!obj)
+        return nullptr;
+
+    for (auto& entry : entries) {
+        CountBasePtr& thenCount = entry->value();
+        RootedValue thenReport(cx);
+        if (!thenCount->report(&thenReport))
+            return nullptr;
+
+        const char* name = entry->key();
+        MOZ_ASSERT(name);
+        JSAtom* atom = Atomize(cx, name, strlen(name));
+        if (!atom)
+            return nullptr;
+
+        RootedId entryId(cx, AtomToId(atom));
+        if (!DefineProperty(cx, obj, entryId, thenReport))
+            return nullptr;
+    }
+
+    return obj;
+}
+
 
 // A type that categorizes nodes that are JSObjects by their class name,
 // and places all other nodes in an 'other' category.
 class ByObjectClass : public CountType {
-    // A hash policy that compares C strings.
-    struct HashPolicy {
-        using Lookup = const char*;
-        static js::HashNumber hash(Lookup l) { return mozilla::HashString(l); }
-        static bool match(const char* key, Lookup lookup) {
-            return strcmp(key, lookup) == 0;
-        }
-    };
-
     // A table mapping class names to their counts. Note that we treat js::Class
     // instances with the same name as equal keys. If you have several
     // js::Classes with equal names (and we do; as of this writing there were
     // six named "Object"), you will get several different js::Classes being
     // counted in the same table entry.
-    using Table = HashMap<const char*, CountBasePtr, HashPolicy, SystemAllocPolicy>;
+    using Table = CStringCountMap;
     using Entry = Table::Entry;
 
     struct Count : public CountBase {
@@ -384,51 +432,9 @@ ByObjectClass::report(CountBase& countBase, MutableHandleValue report)
     Count& count = static_cast<Count&>(countBase);
     JSContext* cx = census.cx;
 
-    // Build a vector of pointers to entries; sort by total; and then use
-    // that to build the result object. This makes the ordering of entries
-    // more interesting, and a little less non-deterministic.
-    mozilla::Vector<Entry*> entries;
-    if (!entries.reserve(count.table.count()))
-        return false;
-    for (Table::Range r = count.table.all(); !r.empty(); r.popFront())
-        entries.infallibleAppend(&r.front());
-    qsort(entries.begin(), entries.length(), sizeof(*entries.begin()), compareEntries<Entry>);
-
-    // Now build the result by iterating over the sorted vector.
-    RootedPlainObject obj(cx, NewBuiltinClassInstance<PlainObject>(cx));
+    RootedPlainObject obj(cx, cStringCountMapToObject(cx, count.table));
     if (!obj)
         return false;
-    for (Entry** entryPtr = entries.begin(); entryPtr < entries.end(); entryPtr++) {
-        Entry& entry = **entryPtr;
-        CountBasePtr& classCount = entry.value();
-        RootedValue classReport(cx);
-        if (!classCount->report(&classReport))
-            return false;
-
-        const char* name = entry.key();
-        MOZ_ASSERT(name);
-        JSAtom* atom = Atomize(cx, name, strlen(name));
-        if (!atom)
-            return false;
-        RootedId entryId(cx, AtomToId(atom));
-
-#ifdef DEBUG
-        // We have multiple js::Classes out there with the same name (for
-        // example, JSObject::class_, Debugger.Object, and CollatorClass are
-        // all "Object"), so let's make sure our hash table treats them all
-        // as equivalent.
-        bool has;
-        if (!HasOwnProperty(cx, obj, entryId, &has))
-            return false;
-        if (has) {
-            fprintf(stderr, "already has own property '%s'\n", name);
-            MOZ_ASSERT(!has);
-        }
-#endif
-
-        if (!DefineProperty(cx, obj, entryId, classReport))
-            return false;
-    }
 
     RootedValue otherReport(cx);
     if (!count.other->report(&otherReport) ||
@@ -735,6 +741,118 @@ ByAllocationStack::report(CountBase& countBase, MutableHandleValue report)
     return true;
 }
 
+// A count type that categorizes nodes by their script's filename.
+class ByFilename : public CountType {
+    // A table mapping filenames to their counts. Note that we treat scripts
+    // with the same filename as equivalent. If you have several sources with
+    // the same filename, then all their scripts will get bucketed together.
+    using Table = CStringCountMap;
+    using Entry = Table::Entry;
+
+    struct Count : public CountBase {
+        Table table;
+        CountBasePtr then;
+        CountBasePtr noFilename;
+
+        Count(CountType& type, CountBasePtr&& then, CountBasePtr&& noFilename)
+          : CountBase(type)
+          , then(Move(then))
+          , noFilename(Move(noFilename))
+        { }
+
+        bool init() { return table.init(); }
+    };
+
+    CountTypePtr thenType;
+    CountTypePtr noFilenameType;
+
+  public:
+    ByFilename(Census& census,
+                  CountTypePtr& thenType,
+                  CountTypePtr& noFilenameType)
+        : CountType(census),
+          thenType(Move(thenType)),
+          noFilenameType(Move(noFilenameType))
+    { }
+
+    void destructCount(CountBase& countBase) override {
+        Count& count = static_cast<Count&>(countBase);
+        count.~Count();
+    }
+
+    CountBasePtr makeCount() override;
+    void traceCount(CountBase& countBase, JSTracer* trc) override;
+    bool count(CountBase& countBase, const Node& node) override;
+    bool report(CountBase& countBase, MutableHandleValue report) override;
+};
+
+CountBasePtr
+ByFilename::makeCount()
+{
+    CountBasePtr thenCount(thenType->makeCount());
+    if (!thenCount)
+        return nullptr;
+
+    CountBasePtr noFilenameCount(noFilenameType->makeCount());
+    if (!noFilenameCount)
+        return nullptr;
+
+    UniquePtr<Count> count(census.new_<Count>(*this, Move(thenCount), Move(noFilenameCount)));
+    if (!count || !count->init())
+        return nullptr;
+
+    return CountBasePtr(count.release());
+}
+
+void
+ByFilename::traceCount(CountBase& countBase, JSTracer* trc)
+{
+    Count& count = static_cast<Count&>(countBase);
+    for (Table::Range r = count.table.all(); !r.empty(); r.popFront())
+        r.front().value()->trace(trc);
+    count.noFilename->trace(trc);
+}
+
+bool
+ByFilename::count(CountBase& countBase, const Node& node)
+{
+    Count& count = static_cast<Count&>(countBase);
+    count.total_++;
+
+    const char* filename = node.scriptFilename();
+    if (!filename)
+        return count.noFilename->count(node);
+
+    Table::AddPtr p = count.table.lookupForAdd(filename);
+    if (!p) {
+        CountBasePtr thenCount(thenType->makeCount());
+        if (!thenCount || !count.table.add(p, filename, Move(thenCount)))
+            return false;
+    }
+    return p->value()->count(node);
+}
+
+bool
+ByFilename::report(CountBase& countBase, MutableHandleValue report)
+{
+    Count& count = static_cast<Count&>(countBase);
+    JSContext* cx = census.cx;
+
+    RootedPlainObject obj(cx, cStringCountMapToObject(cx, count.table));
+    if (!obj)
+        return false;
+
+    RootedValue noFilenameReport(cx);
+    if (!count.noFilename->report(&noFilenameReport) ||
+        !DefineProperty(cx, obj, cx->names().noFilename, noFilenameReport))
+    {
+        return false;
+    }
+
+    report.setObject(*obj);
+    return true;
+}
+
 
 /*** Census Handler *******************************************************************************/
 
@@ -906,6 +1024,18 @@ ParseBreakdown(Census& census, HandleValue breakdownValue)
             return nullptr;
 
         return CountTypePtr(census.new_<ByAllocationStack>(census, thenType, noStackType));
+    }
+
+    if (StringEqualsAscii(by, "filename")) {
+        CountTypePtr thenType(ParseChildBreakdown(census, breakdown, cx->names().then));
+        if (!thenType)
+            return nullptr;
+
+        CountTypePtr noFilenameType(ParseChildBreakdown(census, breakdown, cx->names().noFilename));
+        if (!noFilenameType)
+            return nullptr;
+
+        return CountTypePtr(census.new_<ByFilename>(census, thenType, noFilenameType));
     }
 
     // We didn't recognize the breakdown type; complain.

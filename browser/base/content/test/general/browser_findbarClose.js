@@ -3,32 +3,27 @@
 
 // Tests find bar auto-close behavior
 
-var newTab, iframe;
+var newTab;
 
-function test() {
+add_task(function* findbar_test() {
   waitForExplicitFinish();
   newTab = gBrowser.addTab("about:blank");
-  newTab.linkedBrowser.addEventListener("DOMContentLoaded",
-    prepareTestFindBarStaysOpenOnSubdocumentLocationChange, false);
-  newTab.linkedBrowser.contentWindow.location = "http://example.com/browser/" +
-    "browser/base/content/test/general/test_bug628179.html";
-}
 
-function prepareTestFindBarStaysOpenOnSubdocumentLocationChange() {
-  newTab.linkedBrowser.removeEventListener("DOMContentLoaded",
-    prepareTestFindBarStaysOpenOnSubdocumentLocationChange, false);
+  let promise = ContentTask.spawn(newTab.linkedBrowser, null, function* () {
+    yield ContentTaskUtils.waitForEvent(this, "DOMContentLoaded", false);
+  });
+  newTab.linkedBrowser.loadURI("http://example.com/browser/" +
+    "browser/base/content/test/general/test_bug628179.html");
+  yield promise;
 
   gFindBar.open();
 
-  iframe = newTab.linkedBrowser.contentDocument.getElementById("iframe");
-  iframe.addEventListener("load",
-    testFindBarStaysOpenOnSubdocumentLocationChange, false);
-  iframe.src = "http://example.org/";
-}
-
-function testFindBarStaysOpenOnSubdocumentLocationChange() {
-  iframe.removeEventListener("load",
-    testFindBarStaysOpenOnSubdocumentLocationChange, false);
+  yield new ContentTask.spawn(newTab.linkedBrowser, null, function* () {
+    let iframe = content.document.getElementById("iframe");
+    let promise = ContentTaskUtils.waitForEvent(iframe, "load", false);
+    iframe.src = "http://example.org/";
+    yield promise;
+  });
 
   ok(!gFindBar.hidden, "the Find bar isn't hidden after the location of a " +
      "subdocument changes");
@@ -36,5 +31,5 @@ function testFindBarStaysOpenOnSubdocumentLocationChange() {
   gFindBar.close();
   gBrowser.removeTab(newTab);
   finish();
-}
+});
 

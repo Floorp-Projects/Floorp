@@ -106,7 +106,6 @@ class nsIWindowProvider;
 
 struct JSPropertyDescriptor;
 struct JSRuntime;
-struct nsIntMargin;
 
 template<class E> class nsCOMArray;
 template<class K, class V> class nsDataHashtable;

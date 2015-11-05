@@ -12,6 +12,18 @@ function forceRefresh() {
   EventUtils.synthesizeKey('R', { accelKey: true, shiftKey: true });
 }
 
+function frameScript() {
+  function eventHandler(event) {
+    sendAsyncMessage("test:event", {type: event.type});
+  }
+
+  // These are tab-local, so no need to unregister them.
+  addEventListener('base-load', eventHandler, true, true);
+  addEventListener('base-register', eventHandler, true, true);
+  addEventListener('base-sw-ready', eventHandler, true, true);
+  addEventListener('cached-load', eventHandler, true, true);
+}
+
 function test() {
   waitForExplicitFinish();
   SpecialPowers.pushPrefEnv({'set': [['dom.serviceWorkers.enabled', true],
@@ -21,24 +33,29 @@ function test() {
                                      ['dom.caches.enabled', true]]},
                             function() {
     var url = gTestRoot + 'browser_base_force_refresh.html';
-    var tab = gBrowser.addTab(url);
+    var tab = gBrowser.addTab();
     gBrowser.selectedTab = tab;
+
+    tab.linkedBrowser.messageManager.loadFrameScript("data:,(" + encodeURIComponent(frameScript) + ")()", true);
+    gBrowser.loadURI(url);
 
     var cachedLoad = false;
 
-    function eventHandler(event) {
-      if (event.type === 'base-load') {
+    function eventHandler(msg) {
+      if (msg.data.type === 'base-load') {
         if (cachedLoad) {
+          tab.linkedBrowser.messageManager.removeMessageListener("test:event", eventHandler);
+
           gBrowser.removeTab(tab);
           executeSoon(finish);
         }
-      } else if (event.type === 'base-register') {
+      } else if (msg.data.type === 'base-register') {
         ok(!cachedLoad, 'cached load should not occur before base register');
         refresh();
-      } else if (event.type === 'base-sw-ready') {
+      } else if (msg.data.type === 'base-sw-ready') {
         ok(!cachedLoad, 'cached load should not occur before base ready');
         refresh();
-      } else if (event.type === 'cached-load') {
+      } else if (msg.data.type === 'cached-load') {
         ok(!cachedLoad, 'cached load should not occur twice');
         cachedLoad = true;
         forceRefresh();
@@ -47,9 +64,6 @@ function test() {
       return;
     }
 
-    addEventListener('base-load', eventHandler, true, true);
-    addEventListener('base-register', eventHandler, true, true);
-    addEventListener('base-sw-ready', eventHandler, true, true);
-    addEventListener('cached-load', eventHandler, true, true);
+    tab.linkedBrowser.messageManager.addMessageListener("test:event", eventHandler);
   });
 }

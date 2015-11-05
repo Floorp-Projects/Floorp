@@ -58,13 +58,11 @@ const TEST_URI = "data:text/html;charset=UTF-8," + encodeURIComponent(
 var doc = null;
 function test() {
   waitForExplicitFinish();
-  gBrowser.selectedTab = gBrowser.addTab();
-  gBrowser.selectedBrowser.addEventListener("load", function onload() {
-    gBrowser.selectedBrowser.removeEventListener("load", onload, true);
+  gBrowser.selectedTab = gBrowser.addTab(TEST_URI);
+  BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser).then(() => {
     doc = content.document;
     runTests();
-  }, true);
-  content.location = TEST_URI;
+  });
 }
 
 function runTests() {

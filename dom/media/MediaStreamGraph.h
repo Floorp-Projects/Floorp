@@ -1202,13 +1202,10 @@ public:
   ProcessedMediaStream* CreateAudioCaptureStream(DOMMediaStream* aWrapper,
                                                  TrackID aTrackId);
 
-  enum {
-    ADD_STREAM_SUSPENDED = 0x01
-  };
   /**
    * Add a new stream to the graph.  Main thread.
    */
-  void AddStream(MediaStream* aStream, uint32_t aFlags = 0);
+  void AddStream(MediaStream* aStream);
 
   /* From the main thread, ask the MSG to send back an event when the graph
    * thread is running, and audio is being processed. */

@@ -45,10 +45,7 @@ function cleanUpAfterTests() {
 //------------------------ Test 1 ------------------------------
 
 function test1A() {
-  // Removing EventListener because we have to register a new
-  // one once the page is loaded with mixed content blocker disabled
-  gTestBrowser.removeEventListener("load", test1A, true);
-  gTestBrowser.addEventListener("load", test1B, true);
+  BrowserTestUtils.browserLoaded(gTestBrowser).then(test1B);
 
   assertMixedContentBlockingState(gTestBrowser, {activeLoaded: false, activeBlocked: true, passiveLoaded: false});
 
@@ -65,21 +62,18 @@ function test1B() {
 }
 
 function test1C() {
-  gTestBrowser.removeEventListener("load", test1B, true);
   var actual = content.document.getElementById('mctestdiv').innerHTML;
   is(actual, "Mixed Content Blocker disabled", "OK: Executed mixed script in Test 1C");
 
   // The Script loaded after we disabled the page, now we are going to reload the
   // page and see if our decision is persistent
-  gTestBrowser.addEventListener("load", test1D, true);
+  BrowserTestUtils.browserLoaded(gTestBrowser).then(test1D);
 
   var url = gHttpTestRoot1 + "file_bug902156_2.html";
-  gTestBrowser.contentWindow.location = url;
+  gTestBrowser.loadURI(url);
 }
 
 function test1D() {
-  gTestBrowser.removeEventListener("load", test1D, true);
-
   // The Control Center button should appear but isMixedContentBlocked should be NOT true,
   // because our decision of disabling the mixed content blocker is persistent.
   assertMixedContentBlockingState(gTestBrowser, {activeLoaded: true, activeBlocked: false, passiveLoaded: false});
@@ -94,16 +88,13 @@ function test1D() {
 //------------------------ Test 2 ------------------------------
 
 function test2() {
-  gTestBrowser.addEventListener("load", test2A, true);
+  BrowserTestUtils.browserLoaded(gTestBrowser).then(test2A);
   var url = gHttpTestRoot2 + "file_bug902156_2.html";
-  gTestBrowser.contentWindow.location = url;
+  gTestBrowser.loadURI(url);
 }
 
 function test2A() {
-  // Removing EventListener because we have to register a new
-  // one once the page is loaded with mixed content blocker disabled
-  gTestBrowser.removeEventListener("load", test2A, true);
-  gTestBrowser.addEventListener("load", test2B, true);
+  BrowserTestUtils.browserLoaded(gTestBrowser).then(test2B);
 
   assertMixedContentBlockingState(gTestBrowser, {activeLoaded: false, activeBlocked: true, passiveLoaded: false});
 
@@ -120,13 +111,12 @@ function test2B() {
 }
 
 function test2C() {
-  gTestBrowser.removeEventListener("load", test2B, true);
   var actual = content.document.getElementById('mctestdiv').innerHTML;
   is(actual, "Mixed Content Blocker disabled", "OK: Executed mixed script in Test 2C");
 
   // The Script loaded after we disabled the page, now we are going to reload the
   // page and see if our decision is persistent
-  gTestBrowser.addEventListener("load", test2D, true);
+  BrowserTestUtils.browserLoaded(gTestBrowser).then(test2D);
 
   // reload the page using the provided link in the html file
   var mctestlink = content.document.getElementById("mctestlink");
@@ -134,8 +124,6 @@ function test2C() {
 }
 
 function test2D() {
-  gTestBrowser.removeEventListener("load", test2D, true);
-
   // The Control Center button should appear but isMixedContentBlocked should be NOT true,
   // because our decision of disabling the mixed content blocker is persistent.
   assertMixedContentBlockingState(gTestBrowser, {activeLoaded: true, activeBlocked: false, passiveLoaded: false});
@@ -150,16 +138,12 @@ function test2D() {
 //------------------------ Test 3 ------------------------------
 
 function test3() {
-  gTestBrowser.addEventListener("load", test3A, true);
+  BrowserTestUtils.browserLoaded(gTestBrowser).then(test3A);
   var url = gHttpTestRoot1 + "file_bug902156_3.html";
-  gTestBrowser.contentWindow.location = url;
+  gTestBrowser.loadURI(url);
 }
 
 function test3A() {
-  // Removing EventListener because we have to register a new
-  // one once the page is loaded with mixed content blocker disabled
-  gTestBrowser.removeEventListener("load", test3A, true);
-
   assertMixedContentBlockingState(gTestBrowser, {activeLoaded: false, activeBlocked: true, passiveLoaded: false});
 
   // We are done with tests, clean up
@@ -184,7 +168,7 @@ function test() {
   newTab.linkedBrowser.stop()
 
   // Starting Test Number 1:
-  gTestBrowser.addEventListener("load", test1A, true);
+  BrowserTestUtils.browserLoaded(gTestBrowser).then(test1A);
   var url = gHttpTestRoot1 + "file_bug902156_1.html";
-  gTestBrowser.contentWindow.location = url;
+  gTestBrowser.loadURI(url);
 }

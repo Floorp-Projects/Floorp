@@ -726,8 +726,11 @@ static bool underMetaDataPath(const nsTArray<uint32_t> &path) {
 
 // Given a time in seconds since Jan 1 1904, produce a human-readable string.
 static bool convertTimeToDate(int64_t time_1904, String8 *s) {
-    time_t time_1970 = time_1904 - (((66 * 365 + 17) * 24) * 3600);
+    if (!s) {
+        return false;
+    }
 
+    time_t time_1970 = time_1904 - (((66 * 365 + 17) * 24) * 3600);
     if (time_1970 < 0) {
         return false;
     }
