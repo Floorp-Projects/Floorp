@@ -18,6 +18,7 @@ TEST_HARNESS_FILES.gtest += [
     'test_case_1181220.mp4',
     'test_case_1181223.mp4',
     'test_case_1181719.mp4',
+    'test_case_1185230.mp4',
     'test_case_1187067.mp4',
     'test_case_1200326.mp4',
     'test_case_1204580.mp4',
