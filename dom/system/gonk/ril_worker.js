@@ -8689,7 +8689,7 @@ ICCPDUHelperObject.prototype = {
    *                    0xff.
    * @param str         String to be written. Could be null.
    *
-   * @return The string has been written into Buf.
+   * @return The string has been written into Buf. "" if str is null.
    */
   writeStringTo8BitUnpacked: function(numOctets, str) {
     const langTable = PDU_NL_LOCKING_SHIFT_TABLES[PDU_NL_IDENTIFIER_DEFAULT];
@@ -8729,7 +8729,7 @@ ICCPDUHelperObject.prototype = {
       GsmPDUHelper.writeHexOctet(0xff);
     }
 
-    return (str) ? str.substring(0, i) : null;
+    return (str) ? str.substring(0, i) : "";
   },
 
   /**
@@ -9090,7 +9090,7 @@ ICCPDUHelperObject.prototype = {
    */
   writeAlphaIdentifier: function(numOctets, alphaId) {
     if (numOctets === 0) {
-      return null;
+      return "";
     }
 
     // If alphaId is empty or it's of GSM 8 bit.
@@ -9222,7 +9222,7 @@ ICCPDUHelperObject.prototype = {
       for (let i = 0; i < ADN_MAX_BCD_NUMBER_BYTES + 1; i++) {
         GsmPDUHelper.writeHexOctet(0xff);
       }
-      return null;
+      return "";
     }
   }
 };
