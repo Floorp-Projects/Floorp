@@ -374,17 +374,6 @@ public abstract class BrowserToolbar extends ThemedRelativeLayout
     }
 
     @Override
-    public boolean onTouchEvent(MotionEvent event) {
-        // If the motion event has occurred below the toolbar (due to the scroll
-        // offset), let it pass through to the page.
-        if (event != null && event.getY() > getHeight() + ViewHelper.getTranslationY(this)) {
-            return false;
-        }
-
-        return super.onTouchEvent(event);
-    }
-
-    @Override
     protected void onSizeChanged(int w, int h, int oldw, int oldh) {
         super.onSizeChanged(w, h, oldw, oldh);
 
