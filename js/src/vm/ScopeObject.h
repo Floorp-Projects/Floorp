@@ -50,11 +50,11 @@ typedef Handle<ModuleObject*> HandleModuleObject;
  * StaticBlockScope
  *   Scope for non-function body blocks. e.g., |{ let x; }|
  *
- * JSFunction
+ * StaticFunctionScope
  *   Scope for function bodies. e.g., |function f() { var x; let y; }|
  *
  * StaticModuleScope
- *   Scope for moddules.
+ *   Scope for modules.
  *
  * StaticWithScope
  *   Scope for |with|. e.g., |with ({}) { ... }|
@@ -91,7 +91,7 @@ class StaticScope : public NativeObject
         setReservedSlot(ENCLOSING_SCOPE_SLOT, ObjectOrNullValue(obj));
     }
 
-    void setEnclosingScope(HandleObject obj);
+    void setEnclosingScope(JSObject* obj);
 };
 
 class NestedStaticScope : public StaticScope
@@ -180,7 +180,7 @@ class StaticBlockScope : public NestedStaticScope
 
     /*
      * A refinement of enclosingStaticScope that returns nullptr if the enclosing
-     * static scope is a JSFunction.
+     * static scope is a StaticFunctionScope.
      */
     inline StaticBlockScope* enclosingBlock() const;
 
@@ -213,7 +213,7 @@ class StaticBlockScope : public NestedStaticScope
 
     /*
      * A let binding is aliased if accessed lexically by nested functions or
-     * dynamically through dynamic name lookup (eval, with, function::, etc).
+     * dynamically through dynamic name lookup (eval, with, etc).
      */
     bool isAliased(unsigned i) {
         return slotValue(i).isTrue();
@@ -232,7 +232,10 @@ class StaticBlockScope : public NestedStaticScope
 
     // Is this the static global lexical scope?
     bool isGlobal() const {
-        return !enclosingStaticScope();
+        // This method is called from js::gc::MergeCompartments() on scopes
+        // that may be otherwise unreachable (!) and whose enclosing scope slot
+        // may be `undefined`.
+        return getFixedSlot(ENCLOSING_SCOPE_SLOT).isNull();
     }
 
     bool isSyntactic() const {
@@ -298,6 +301,28 @@ class StaticBlockScope : public NestedStaticScope
 
     static Shape* addVar(ExclusiveContext* cx, Handle<StaticBlockScope*> block, HandleId id,
                          bool constant, unsigned index, bool* redeclared);
+};
+
+class StaticFunctionScope : public StaticScope
+{
+    static const unsigned FUNCTION_OBJECT_SLOT = StaticScope::RESERVED_SLOTS;
+
+  public:
+    static const unsigned RESERVED_SLOTS = FUNCTION_OBJECT_SLOT + 1;
+    static const Class class_;
+
+    static StaticFunctionScope* create(ExclusiveContext* cx, HandleFunction functionObject,
+                                       Handle<StaticScope*> enclosingScope);
+
+    JSFunction& function() {
+        return getFixedSlot(FUNCTION_OBJECT_SLOT).toObject().as<JSFunction>();
+    }
+
+    bool isNamedLambda() { return function().isNamedLambda(); }
+
+    Shape* environmentShape() {
+        return function().nonLazyScript()->callObjShape();
+    }
 };
 
 // The top-level scope of a module.
@@ -489,11 +514,11 @@ class StaticScopeIter
 
     static bool IsStaticScope(JSObject* obj) {
         return obj->is<StaticBlockScope>() ||
+               obj->is<StaticFunctionScope>() ||
                obj->is<StaticModuleScope>() ||
                obj->is<StaticWithScope>() ||
                obj->is<StaticEvalScope>() ||
-               obj->is<StaticNonSyntacticScope>() ||
-               obj->is<JSFunction>();
+               obj->is<StaticNonSyntacticScope>();
     }
 
   public:
@@ -548,8 +573,8 @@ class StaticScopeIter
     StaticWithScope& staticWith() const;
     StaticEvalScope& eval() const;
     StaticNonSyntacticScope& nonSyntactic() const;
+    StaticFunctionScope& fun() const;
     JSScript* funScript() const;
-    JSFunction& fun() const;
     frontend::FunctionBox* maybeFunctionBox() const;
 };
 
@@ -618,44 +643,46 @@ ScopeCoordinateFunctionScript(JSScript* script, jsbytecode* pc);
  * chain (that is, fp->scopeChain() or fun->environment()). The hierarchy of
  * scope objects is:
  *
- *   JSObject                       Generic object
- *     |   |
- *     |  StaticScope--+            Created at compile time
- *     |   |   |   |   |
- *     |   |   |   |  StaticNonSyntacticScope   See "Non-syntactic scopes"
- *     |   |   |   |
- *     |   |   |  StaticEvalScope   Placeholder so eval scopes may be iterated through
- *     |   |   |
- *     |   |  StaticModuleScope     Toplevel scope in a module
- *     |   |
- *     |  NestedStaticScope         Enclosing scope is in the same JSScript
- *     |   |   |
- *     |   |  StaticBlockScope      See NB
- *     |   |
- *     |  StaticWithScope           Template for "with" object in static scope chain
+ *    JSObject                          Generic object
  *     |
- *   ScopeObject                    Engine-internal scope
- *     |   |   |
- *     |   |  DeclEnvObject         Holds name of recursive/needsCallObject named lambda
+ *     +--StaticScope                   Created at compile time
  *     |   |
- *     |  LexicalScopeBase          Shared base for function and modules scopes
- *     |   |   |
- *     |   |  CallObject            Scope of entire function or strict eval
+ *     |   +--StaticNonSyntacticScope   See "Non-syntactic scopes"
  *     |   |
- *     |  ModuleEnvironmentObject   Module top-level scope on run-time scope chain
+ *     |   +--StaticEvalScope           Placeholder so eval scopes may be iterated through
+ *     |   |
+ *     |   +--StaticFunctionScope       Scope in a function
+ *     |   |
+ *     |   +--StaticModuleScope         Toplevel scope in a module
+ *     |   |
+ *     |   +--NestedStaticScope         Enclosing scope is in the same JSScript
+ *     |       |
+ *     |       +--StaticBlockScope      See "N.B." below.
+ *     |       |
+ *     |       +--StaticWithScope       Template for "with" object in static scope chain
  *     |
- *   NestedScopeObject              Statement scopes; don't cross script boundaries
- *     |   |
- *     |  DynamicWithObject         Run-time "with" object on scope chain
- *     |
- *   ClonedBlockObject              let, switch, catch, for
+ *     +--ScopeObject                   Engine-internal scope
+ *         |
+ *         +--DeclEnvObject             Holds name of recursive/needsCallObject named lambda
+ *         |
+ *         +--LexicalScopeBase          Shared base for function and modules scopes
+ *         |   |
+ *         |   +--CallObject            Scope of entire function or strict eval
+ *         |   |
+ *         |   +--ModuleEnvironmentObject   Module top-level scope on run-time scope chain
+ *         |
+ *         +--NestedScopeObject         Statement scopes; don't cross script boundaries
+ *             |
+ *             +--ClonedBlockObject     let, switch, catch, for
+ *             |
+ *             +--DynamicWithObject     Run-time "with" object on scope chain
  *
  * This hierarchy represents more than just the interface hierarchy: reserved
  * slots in base classes are fixed for all derived classes. Thus, for example,
  * ScopeObject::enclosingScope() can simply access a fixed slot without further
  * dynamic type information.
  *
- * NB: Static block objects are a special case: these objects are created at
+ * N.B. Static block objects are a special case: these objects are created at
  * compile time to hold the shape/binding information from which block objects
  * are cloned at runtime. These objects should never escape into the wild and
  * support a restricted set of ScopeObject operations.
@@ -1120,7 +1147,7 @@ class MOZ_RAII ScopeIter
     StaticWithScope& staticWith() const { return ssi_.staticWith(); }
     StaticEvalScope& staticEval() const { return ssi_.eval(); }
     StaticNonSyntacticScope& staticNonSyntactic() const { return ssi_.nonSyntactic(); }
-    JSFunction& fun() const { return ssi_.fun(); }
+    StaticFunctionScope& fun() const { return ssi_.fun(); }
 
     bool withinInitialFrame() const { return !!frame_; }
     AbstractFramePtr initialFrame() const { MOZ_ASSERT(withinInitialFrame()); return frame_; }
@@ -1376,6 +1403,7 @@ inline bool
 JSObject::is<js::StaticScope>() const
 {
     return is<js::NestedStaticScope>() ||
+           is<js::StaticFunctionScope>() ||
            is<js::StaticModuleScope>() ||
            is<js::StaticEvalScope>() ||
            is<js::StaticNonSyntacticScope>();

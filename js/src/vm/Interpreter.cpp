@@ -1039,8 +1039,8 @@ SettleOnTryNote(JSContext* cx, JSTryNote* tn, ScopeIter& si, InterpreterRegs& re
     // Unwind the scope to the beginning of the JSOP_TRY.
     UnwindScope(cx, si, UnwindScopeToTryPc(regs.fp()->script(), tn));
 
-    // Set pc to the first bytecode after the the try note to point
-    // to the beginning of catch or finally.
+    // Set pc to the first bytecode after the span of the try note, the
+    // beginning of the first catch or finally block.
     regs.pc = regs.fp()->script()->main() + tn->start + tn->length;
     regs.sp = regs.spForStackDepth(tn->stackDepth);
 }
