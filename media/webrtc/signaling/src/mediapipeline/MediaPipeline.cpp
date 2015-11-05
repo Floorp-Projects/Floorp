@@ -45,6 +45,7 @@
 #include "mozilla/gfx/Point.h"
 #include "mozilla/gfx/Types.h"
 #include "mozilla/UniquePtr.h"
+#include "mozilla/UniquePtrExtensions.h"
 
 #include "logging.h"
 
@@ -1179,7 +1180,7 @@ void MediaPipelineTransmit::PipelineListener::ProcessVideoChunk(
   int half_height = (size.height + 1) >> 1;
   int c_size = half_width * half_height;
   int buffer_size = YSIZE(size.width, size.height) + 2 * c_size;
-  UniquePtr<uint8[]> yuv_scoped(new (fallible) uint8[buffer_size]);
+  auto yuv_scoped = MakeUniqueFallible<uint8[]>(buffer_size);
   if (!yuv_scoped)
     return;
   uint8* yuv = yuv_scoped.get();

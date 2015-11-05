@@ -7,6 +7,7 @@
 
 #include "GLContext.h"
 #include "mozilla/CheckedInt.h"
+#include "mozilla/UniquePtrExtensions.h"
 #include "WebGLBuffer.h"
 #include "WebGLContextUtils.h"
 #include "WebGLFramebuffer.h"
@@ -580,7 +581,7 @@ WebGLContext::DoFakeVertexAttrib0(GLuint vertexCount)
         GetAndFlushUnderlyingGLErrors();
 
         if (mFakeVertexAttrib0BufferStatus == WebGLVertexAttrib0Status::EmulatedInitializedArray) {
-            UniquePtr<GLfloat[]> array(new (fallible) GLfloat[4 * vertexCount]);
+            auto array = MakeUniqueFallible<GLfloat[]>(4 * vertexCount);
             if (!array) {
                 ErrorOutOfMemory("Fake attrib0 array.");
                 return false;
