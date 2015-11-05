@@ -318,6 +318,15 @@ DOMSVGPointList::InsertItemBefore(nsISVGPoint& aNewItem, uint32_t aIndex,
     aError.Throw(NS_ERROR_OUT_OF_MEMORY);
     return nullptr;
   }
+  if (AnimListMirrorsBaseList()) {
+    DOMSVGPointList *animVal =
+      GetDOMWrapperIfExists(InternalAList().GetAnimValKey());
+    if (!animVal->mItems.SetCapacity(
+          animVal->mItems.Length() + 1, fallible)) {
+      aError.Throw(NS_ERROR_OUT_OF_MEMORY);
+      return nullptr;
+    }
+  }
 
   AutoChangePointListNotifier notifier(this);
   // Now that we know we're inserting, keep animVal list in sync as necessary.
