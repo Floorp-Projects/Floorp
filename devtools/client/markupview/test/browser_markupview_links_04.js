@@ -9,9 +9,9 @@
 
 const TEST_URL = TEST_URL_ROOT + "doc_markup_links.html";
 const STRINGS = Services.strings
-  .createBundle("chrome://browser/locale/devtools/inspector.properties");
+  .createBundle("chrome://devtools/locale/inspector.properties");
 const TOOLBOX_STRINGS = Services.strings
-  .createBundle("chrome://browser/locale/devtools/toolbox.properties");
+  .createBundle("chrome://devtools/locale/toolbox.properties");
 
 // The test case array contains objects with the following properties:
 // - selector: css selector for the node to select in the inspector

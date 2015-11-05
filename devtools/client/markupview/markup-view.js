@@ -3093,7 +3093,7 @@ function map(value, oldMin, oldMax, newMin, newMax) {
 }
 
 loader.lazyGetter(MarkupView.prototype, "strings", () => Services.strings.createBundle(
-  "chrome://browser/locale/devtools/inspector.properties"
+  "chrome://devtools/locale/inspector.properties"
 ));
 
 XPCOMUtils.defineLazyGetter(this, "clipboardHelper", function() {

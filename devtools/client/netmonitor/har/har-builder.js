@@ -15,7 +15,7 @@ loader.lazyGetter(this, "appInfo", () => {
 });
 
 loader.lazyGetter(this, "L10N", () => {
-  return new ViewHelpers.L10N("chrome://browser/locale/devtools/har.properties");
+  return new ViewHelpers.L10N("chrome://devtools/locale/har.properties");
 });
 
 const HAR_VERSION = "1.1";

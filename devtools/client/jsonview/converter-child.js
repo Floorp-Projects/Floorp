@@ -34,7 +34,7 @@ const CLASS_ID = "{d8c9acee-dec5-11e4-8c75-1681e6b88ec1}";
 
 // Localization
 var jsonViewStrings = Services.strings.createBundle(
-  "chrome://browser/locale/devtools/jsonview.properties");
+  "chrome://devtools/locale/jsonview.properties");
 
 /**
  * This object detects 'application/vnd.mozilla.json.view' content type
