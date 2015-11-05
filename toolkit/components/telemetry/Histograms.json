@@ -96,6 +96,13 @@
     "high": "1000",
     "n_buckets": 50
   },
+  "COMPOSITE_FRAME_ROUNDTRIP_TIME" : {
+    "expires_in_version": "never",
+    "description": "Time from vsync to finishing a composite in milliseconds.",
+    "kind": "exponential",
+    "high": "1000",
+    "n_buckets": 50
+  },
   "CYCLE_COLLECTOR": {
     "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org"],
     "expires_in_version": "never",
