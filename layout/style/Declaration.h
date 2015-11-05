@@ -36,6 +36,8 @@
 namespace mozilla {
 namespace css {
 
+class Rule;
+
 // Declaration objects have unusual lifetime rules.  Every declaration
 // begins life in an invalid state which ends when InitializeEmpty or
 // CompressFrom is called upon it.  After that, it can be attached to
@@ -280,6 +282,14 @@ public:
     mVariableOrder.Clear();
   }
 
+  void SetOwningRule(Rule* aRule) {
+    MOZ_ASSERT(!mOwningRule || !aRule,
+               "should never overwrite one rule with another");
+    mOwningRule = aRule;
+  }
+
+  Rule* GetOwningRule() { return mOwningRule; }
+
 private:
   Declaration& operator=(const Declaration& aCopy) = delete;
   bool operator==(const Declaration& aCopy) const = delete;
@@ -354,6 +364,9 @@ private:
 
   // may be null
   nsAutoPtr<CSSVariableDeclarations> mImportantVariables;
+
+  // The style rule that owns this declaration.  May be null.
+  Rule* mOwningRule;
 
   // set by style rules when |RuleMatched| is called;
   // also by ToString (hence the 'mutable').
