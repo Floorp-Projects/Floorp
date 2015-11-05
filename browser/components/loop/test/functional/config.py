@@ -1,6 +1,8 @@
+from os import environ
+
 # Loop server configuration
 CONTENT_SERVER_PORT = 3001
-LOOP_SERVER_PORT = 5001
+LOOP_SERVER_PORT = environ.get("LOOP_SERVER_PORT") or 5001
 LOOP_SERVER_URL = "http://localhost:" + str(LOOP_SERVER_PORT)
 FIREFOX_PREFERENCES = {
     "loop.server": LOOP_SERVER_URL + "/v0",
