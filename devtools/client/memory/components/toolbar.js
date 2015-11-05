@@ -67,6 +67,7 @@ const Toolbar = module.exports = createClass({
 
           dom.label({},
             dom.input({
+              id: "record-allocation-stacks-checkbox",
               type: "checkbox",
               checked: allocations.recording,
               disabled: allocations.togglingInProgress,
