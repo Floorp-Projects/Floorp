@@ -1533,8 +1533,7 @@ WebConsoleActor.prototype =
   {
     let result = WebConsoleUtils.cloneObject(aMessage);
 
-    result.workerType = CONSOLE_WORKER_IDS.indexOf(result.innerID) == -1
-                          ? 'none' : result.innerID;
+    result.workerType = WebConsoleUtils.getWorkerType(result) || "none";
 
     delete result.wrappedJSObject;
     delete result.ID;
