@@ -1940,13 +1940,14 @@ nsLayoutUtils::GetNearestScrollableFrame(nsIFrame* aFrame, uint32_t aFlags)
         if (scrollableFrame->WantAsyncScroll()) {
           return scrollableFrame;
         }
-        continue;
+      } else {
+        ScrollbarStyles ss = scrollableFrame->GetScrollbarStyles();
+        if ((aFlags & SCROLLABLE_INCLUDE_HIDDEN) ||
+            ss.mVertical != NS_STYLE_OVERFLOW_HIDDEN ||
+            ss.mHorizontal != NS_STYLE_OVERFLOW_HIDDEN) {
+          return scrollableFrame;
+        }
       }
-      ScrollbarStyles ss = scrollableFrame->GetScrollbarStyles();
-      if ((aFlags & SCROLLABLE_INCLUDE_HIDDEN) ||
-          ss.mVertical != NS_STYLE_OVERFLOW_HIDDEN ||
-          ss.mHorizontal != NS_STYLE_OVERFLOW_HIDDEN)
-        return scrollableFrame;
     }
     if (aFlags & SCROLLABLE_ALWAYS_MATCH_ROOT) {
       nsIPresShell* ps = f->PresContext()->PresShell();
