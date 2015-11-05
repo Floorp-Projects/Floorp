@@ -6787,11 +6787,11 @@ CSSParserImpl::LookupKeywordPrefixAware(nsAString& aKeywordStr,
 
   if (aKeywordTable == nsCSSProps::kDisplayKTable) {
     if (keyword == eCSSKeyword_UNKNOWN &&
-        ShouldUseUnprefixingService() &&
+        (sWebkitPrefixedAliasesEnabled || ShouldUseUnprefixingService()) &&
         aKeywordStr.EqualsLiteral("-webkit-box")) {
       // Treat "display: -webkit-box" as "display: flex". In simple scenarios,
-      // they largely behave the same, as long as we use the CSS Unprefixing
-      // Service to also translate the associated properties.
+      // they largely behave the same, as long as we alias the associated
+      // properties to modern flexbox equivalents as well.
       if (mWebkitBoxUnprefixState == eHaveNotUnprefixed) {
         mWebkitBoxUnprefixState = eHaveUnprefixed;
       }
@@ -6807,9 +6807,10 @@ CSSParserImpl::LookupKeywordPrefixAware(nsAString& aKeywordStr,
     // "display: flex" (but only if we unprefixed an earlier "-webkit-box").
     if (mWebkitBoxUnprefixState == eHaveUnprefixed &&
         keyword == eCSSKeyword__moz_box) {
-      MOZ_ASSERT(ShouldUseUnprefixingService(),
+      MOZ_ASSERT(sWebkitPrefixedAliasesEnabled || ShouldUseUnprefixingService(),
                  "mDidUnprefixWebkitBoxInEarlierDecl should only be set if "
-                 "we're using the unprefixing service on this site");
+                 "we're supporting webkit-prefixed aliases, or if we're using "
+                 "the css unprefixing service on this site");
       return eCSSKeyword_flex;
     }
   }
