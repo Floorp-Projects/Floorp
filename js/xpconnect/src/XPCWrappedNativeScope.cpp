@@ -139,9 +139,11 @@ XPCWrappedNativeScope::XPCWrappedNativeScope(JSContext* cx,
     JSAddonId* addonId = JS::AddonIdOfObject(aGlobal);
     if (gInterpositionMap) {
         bool isSystem = nsContentUtils::IsSystemPrincipal(principal);
-        if (InterpositionMap::Ptr p = gInterpositionMap->lookup(addonId)) {
+        bool waiveInterposition = priv->waiveInterposition;
+        InterpositionMap::Ptr interposition = gInterpositionMap->lookup(addonId);
+        if (!waiveInterposition && interposition) {
             MOZ_RELEASE_ASSERT(isSystem);
-            mInterposition = p->value();
+            mInterposition = interposition->value();
         }
         // We also want multiprocessCompatible add-ons to have a default interposition.
         if (!mInterposition && addonId && isSystem) {
