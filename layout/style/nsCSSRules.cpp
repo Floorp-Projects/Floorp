@@ -2078,11 +2078,6 @@ nsCSSKeyframeRule::MapRuleInfoInto(nsRuleData* aRuleData)
   // We need to implement MapRuleInfoInto because the animation manager
   // constructs a rule node pointing to us in order to compute the
   // styles it needs to animate.
-
-  // The spec says that !important declarations should just be ignored
-  NS_ASSERTION(!mDeclaration->HasImportantData(),
-               "Keyframe rules has !important data");
-
   mDeclaration->MapRuleInfoInto(aRuleData);
 }
 
