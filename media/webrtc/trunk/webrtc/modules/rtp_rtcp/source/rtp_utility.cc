@@ -338,12 +338,6 @@ bool RtpHeaderParser::Parse(RTPHeader& header,
     return false;
   }
 
-  const uint8_t CSRCocts = CC * 4;
-
-  if ((ptr + CSRCocts) > _ptrRTPDataEnd) {
-    return false;
-  }
-
   header.markerBit      = M;
   header.payloadType    = PT;
   header.sequenceNumber = sequenceNumber;
@@ -352,6 +346,14 @@ bool RtpHeaderParser::Parse(RTPHeader& header,
   header.numCSRCs       = CC;
   header.paddingLength  = P ? *(_ptrRTPDataEnd - 1) : 0;
 
+  // 12 == sizeof(RFC rtp header) == kRtpMinParseLength, each CSRC=4 bytes
+  header.headerLength   = 12 + (CC * 4);
+  // not a full validation, just safety against underflow.  Padding must
+  // start after the header.  We can have 0 payload bytes left, note.
+  if (header.paddingLength + header.headerLength > length) {
+    return false;
+  }
+
   for (unsigned int i = 0; i < CC; ++i) {
     uint32_t CSRC = *ptr++ << 24;
     CSRC += *ptr++ << 16;
@@ -359,8 +361,7 @@ bool RtpHeaderParser::Parse(RTPHeader& header,
     CSRC += *ptr++;
     header.arrOfCSRCs[i] = CSRC;
   }
-
-  header.headerLength   = 12 + CSRCocts;
+  assert((ptr - _ptrRTPDataBegin) == header.headerLength);
 
   // If in effect, MAY be omitted for those packets for which the offset
   // is zero.
@@ -385,8 +386,9 @@ bool RtpHeaderParser::Parse(RTPHeader& header,
     |                        header extension                       |
     |                             ....                              |
     */
-    const ptrdiff_t remain = _ptrRTPDataEnd - ptr;
-    if (remain < 4) {
+    // earlier test ensures we have at least paddingLength bytes left
+    const ptrdiff_t remain = (_ptrRTPDataEnd - ptr) - header.paddingLength;
+    if (remain < 4) { // minimum header extension length = 32 bits
       return false;
     }
 
@@ -395,11 +397,11 @@ bool RtpHeaderParser::Parse(RTPHeader& header,
     uint16_t definedByProfile = *ptr++ << 8;
     definedByProfile += *ptr++;
 
-    uint16_t XLen = *ptr++ << 8;
+    size_t XLen = *ptr++ << 8;
     XLen += *ptr++; // in 32 bit words
     XLen *= 4; // in octs
 
-    if (remain < (4 + XLen)) {
+    if (remain < (4 + XLen)) { // we already accounted for padding
       return false;
     }
     if (definedByProfile == kRtpOneByteHeaderExtensionId) {
