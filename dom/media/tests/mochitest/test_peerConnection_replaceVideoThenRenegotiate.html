@@ -21,7 +21,7 @@
           var oldstream = test.pcLocal._pc.getLocalStreams()[0];
           var oldtrack = oldstream.getVideoTracks()[0];
           var sender = test.pcLocal._pc.getSenders()[0];
-          return navigator.mediaDevices.getUserMedia({video:true, fake:true})
+          return navigator.mediaDevices.getUserMedia({video:true})
             .then(newstream => {
               var newtrack = newstream.getVideoTracks()[0];
               return test.pcLocal.senderReplaceTrack(0, newtrack, newstream.id);
