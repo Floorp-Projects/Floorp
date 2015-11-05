@@ -1046,42 +1046,38 @@ class AsmFunction
     }
 };
 
-const size_t LIFO_ALLOC_PRIMARY_CHUNK_SIZE = 1 << 12;
+class FunctionCompileResults
+{
+    const AsmFunction* func_;
+    jit::IonScriptCounts* counts_;
+    AsmJSModule::FunctionCodeRange codeRange_;
+
+  public:
+    FunctionCompileResults()
+      : func_(nullptr),
+        counts_(nullptr),
+        codeRange_()
+    {}
+
+    const AsmFunction& func() const { MOZ_ASSERT(func_); return *func_; }
+    const AsmJSModule::FunctionCodeRange& codeRange() const { return codeRange_; }
+    jit::IonScriptCounts* counts() const { return counts_; }
+
+    void finishCodegen(AsmFunction& func, AsmJSModule::FunctionCodeRange codeRange,
+                       jit::IonScriptCounts& counts)
+    {
+        func_ = &func;
+        codeRange_ = codeRange;
+        counts_ = &counts;
+    }
+};
 
 class ModuleCompileResults
 {
   public:
-    struct SlowFunction
-    {
-        SlowFunction(PropertyName* name, unsigned ms, unsigned line, unsigned column)
-         : name(name), ms(ms), line(line), column(column)
-        {}
-
-        PropertyName* name;
-        unsigned ms;
-        unsigned line;
-        unsigned column;
-    };
-
-    typedef Vector<SlowFunction                  , 0, SystemAllocPolicy> SlowFunctionVector;
-    typedef Vector<jit::Label*                   , 8, SystemAllocPolicy> LabelVector;
-    typedef Vector<AsmJSModule::FunctionCodeRange, 8, SystemAllocPolicy> FunctionCodeRangeVector;
-    typedef Vector<jit::IonScriptCounts*         , 0, SystemAllocPolicy> ScriptCountVector;
-#if defined(MOZ_VTUNE) || defined(JS_ION_PERF)
-    typedef Vector<AsmJSModule::ProfiledFunction , 0, SystemAllocPolicy> ProfiledFunctionVector;
-#endif // defined(MOZ_VTUNE) || defined(JS_ION_PERF)
 
   private:
-    LifoAlloc               lifo_;
     jit::MacroAssembler     masm_;
-
-    SlowFunctionVector      slowFunctions_;
-    LabelVector             functionEntries_;
-    FunctionCodeRangeVector codeRanges_;
-    ScriptCountVector       functionCounts_;
-#if defined(MOZ_VTUNE) || defined(JS_ION_PERF)
-    ProfiledFunctionVector  profiledFunctions_;
-#endif // defined(MOZ_VTUNE) || defined(JS_ION_PERF)
 
     jit::NonAssertingLabel stackOverflowLabel_;
     jit::NonAssertingLabel asyncInterruptLabel_;
@@ -1093,8 +1089,7 @@ class ModuleCompileResults
 
   public:
     ModuleCompileResults()
-      : lifo_(LIFO_ALLOC_PRIMARY_CHUNK_SIZE),
-        masm_(jit::MacroAssembler::AsmJSToken()),
+      : masm_(jit::MacroAssembler::AsmJSToken()),
         usecBefore_(PRMJ_Now())
     {}
 
@@ -1106,41 +1101,6 @@ class ModuleCompileResults
     jit::Label& onDetachedLabel()         { return onDetachedLabel_; }
     jit::Label& onConversionErrorLabel()  { return onConversionErrorLabel_; }
     int64_t usecBefore()                  { return usecBefore_; }
-
-    SlowFunctionVector& slowFunctions()   { return slowFunctions_; }
-
-    size_t numFunctionEntries() const     { return functionEntries_.length(); }
-    jit::Label* functionEntry(unsigned i) { return functionEntries_[i]; }
-
-    bool getOrCreateFunctionEntry(unsigned i, jit::Label** label) {
-        if (i == UINT32_MAX)
-            return false;
-        while (functionEntries_.length() <= i) {
-            jit::Label* newEntry = lifo_.new_<jit::Label>();
-            if (!newEntry || !functionEntries_.append(newEntry))
-                return false;
-        }
-        *label = functionEntries_[i];
-        return true;
-    }
-
-    size_t numCodeRanges() const { return codeRanges_.length(); }
-    bool addCodeRange(AsmJSModule::FunctionCodeRange range) { return codeRanges_.append(range); }
-    AsmJSModule::FunctionCodeRange& codeRange(unsigned i) { return codeRanges_[i]; }
-
-    size_t numFunctionCounts() const { return functionCounts_.length(); }
-    bool addFunctionCounts(jit::IonScriptCounts* counts) { return functionCounts_.append(counts); }
-    jit::IonScriptCounts* functionCount(unsigned i) { return functionCounts_[i]; }
-
-#if defined(MOZ_VTUNE) || defined(JS_ION_PERF)
-    size_t numProfiledFunctions() const { return profiledFunctions_.length(); }
-    bool addProfiledFunction(AsmJSModule::ProfiledFunction func) {
-        return profiledFunctions_.append(func);
-    }
-    AsmJSModule::ProfiledFunction& profiledFunction(unsigned i) {
-        return profiledFunctions_[i];
-    }
-#endif // defined(MOZ_VTUNE) || defined(JS_ION_PERF)
 };
 
 } // namespace js

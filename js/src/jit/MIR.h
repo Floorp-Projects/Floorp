@@ -13707,17 +13707,17 @@ class MAsmJSCall final
       private:
         Which which_;
         union {
-            Label* internal_;
+            AsmJSInternalCallee internal_;
             MDefinition* dynamic_;
             AsmJSImmKind builtin_;
         } u;
       public:
         Callee() {}
-        explicit Callee(Label* callee) : which_(Internal) { u.internal_ = callee; }
+        explicit Callee(AsmJSInternalCallee callee) : which_(Internal) { u.internal_ = callee; }
         explicit Callee(MDefinition* callee) : which_(Dynamic) { u.dynamic_ = callee; }
         explicit Callee(AsmJSImmKind callee) : which_(Builtin) { u.builtin_ = callee; }
         Which which() const { return which_; }
-        Label* internal() const { MOZ_ASSERT(which_ == Internal); return u.internal_; }
+        AsmJSInternalCallee internal() const { MOZ_ASSERT(which_ == Internal); return u.internal_; }
         MDefinition* dynamic() const { MOZ_ASSERT(which_ == Dynamic); return u.dynamic_; }
         AsmJSImmKind builtin() const { MOZ_ASSERT(which_ == Builtin); return u.builtin_; }
     };

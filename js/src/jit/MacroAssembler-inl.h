@@ -79,15 +79,22 @@ MacroAssembler::PushWithPatch(ImmPtr imm)
 void
 MacroAssembler::call(const CallSiteDesc& desc, const Register reg)
 {
-    call(reg);
-    append(desc, currentOffset(), framePushed());
+    CodeOffsetLabel l = call(reg);
+    append(desc, l, framePushed());
 }
 
 void
 MacroAssembler::call(const CallSiteDesc& desc, Label* label)
 {
-    call(label);
-    append(desc, currentOffset(), framePushed());
+    CodeOffsetLabel l = call(label);
+    append(desc, l, framePushed());
+}
+
+void
+MacroAssembler::call(const CallSiteDesc& desc, AsmJSInternalCallee callee)
+{
+    CodeOffsetLabel l = callWithPatch();
+    append(desc, l, framePushed(), callee.index);
 }
 
 // ===============================================================
