@@ -39,14 +39,11 @@ public:
 
   NS_DECL_ISUPPORTS
 
+  // Rule methods
   DECL_STYLE_RULE_INHERIT
-
-  // nsIStyleRule methods
 #ifdef DEBUG
   virtual void List(FILE* out = stdout, int32_t aIndent = 0) const override;
 #endif
-
-  // Rule methods
   virtual int32_t GetType() const override;
   virtual already_AddRefed<Rule> Clone() const override;
 

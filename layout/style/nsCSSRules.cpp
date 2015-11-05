@@ -46,13 +46,9 @@ using namespace mozilla::dom;
   { return this; }                                                \
   /* virtual */ nsIDOMCSSRule* class_::GetExistingDOMRule()       \
   { return this; }
-#define IMPL_STYLE_RULE_INHERIT_MAP_RULE_INFO_INTO(class_, super_) \
-/* virtual */ void class_::MapRuleInfoInto(nsRuleData* aRuleData) \
-  { MOZ_ASSERT(false, "should not be called"); }
 
 #define IMPL_STYLE_RULE_INHERIT(class_, super_) \
-IMPL_STYLE_RULE_INHERIT_GET_DOM_RULE_WEAK(class_, super_) \
-IMPL_STYLE_RULE_INHERIT_MAP_RULE_INFO_INTO(class_, super_)
+IMPL_STYLE_RULE_INHERIT_GET_DOM_RULE_WEAK(class_, super_)
 
 // base class for all rule types in a CSS style sheet
 
@@ -248,10 +244,9 @@ NS_IMPL_CYCLE_COLLECTION(ImportRule, mMedia, mChildSheet)
 
 // QueryInterface implementation for ImportRule
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ImportRule)
-  NS_INTERFACE_MAP_ENTRY(nsIStyleRule)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCSSRule)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCSSImportRule)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIStyleRule)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, mozilla::css::Rule)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(CSSImportRule)
 NS_INTERFACE_MAP_END
 
@@ -428,8 +423,6 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(GroupRule)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(GroupRule)
 NS_INTERFACE_MAP_END
-
-IMPL_STYLE_RULE_INHERIT_MAP_RULE_INFO_INTO(GroupRule, Rule)
 
 static bool
 SetStyleSheetReference(Rule* aRule, void* aSheet)
@@ -662,12 +655,11 @@ NS_IMPL_RELEASE_INHERITED(MediaRule, GroupRule)
 
 // QueryInterface implementation for MediaRule
 NS_INTERFACE_MAP_BEGIN(MediaRule)
-  NS_INTERFACE_MAP_ENTRY(nsIStyleRule)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCSSRule)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCSSGroupingRule)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCSSConditionRule)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCSSMediaRule)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIStyleRule)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, mozilla::css::Rule)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(CSSMediaRule)
 NS_INTERFACE_MAP_END_INHERITING(GroupRule)
 
@@ -880,12 +872,11 @@ NS_IMPL_RELEASE_INHERITED(DocumentRule, GroupRule)
 
 // QueryInterface implementation for DocumentRule
 NS_INTERFACE_MAP_BEGIN(DocumentRule)
-  NS_INTERFACE_MAP_ENTRY(nsIStyleRule)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCSSRule)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCSSGroupingRule)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCSSConditionRule)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCSSMozDocumentRule)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIStyleRule)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, mozilla::css::Rule)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(CSSMozDocumentRule)
 NS_INTERFACE_MAP_END_INHERITING(GroupRule)
 
@@ -1149,9 +1140,8 @@ NS_INTERFACE_MAP_BEGIN(NameSpaceRule)
     return NS_OK;
   }
   else
-  NS_INTERFACE_MAP_ENTRY(nsIStyleRule)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCSSRule)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIStyleRule)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, mozilla::css::Rule)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(CSSNameSpaceRule)
 NS_INTERFACE_MAP_END
 
@@ -1581,10 +1571,9 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 // QueryInterface implementation for nsCSSFontFaceRule
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsCSSFontFaceRule)
-  NS_INTERFACE_MAP_ENTRY(nsIStyleRule)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCSSFontFaceRule)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCSSRule)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIStyleRule)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, mozilla::css::Rule)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(CSSFontFaceRule)
 NS_INTERFACE_MAP_END
 
@@ -1726,10 +1715,9 @@ NS_IMPL_RELEASE(nsCSSFontFeatureValuesRule)
 
 // QueryInterface implementation for nsCSSFontFeatureValuesRule
 NS_INTERFACE_MAP_BEGIN(nsCSSFontFeatureValuesRule)
-  NS_INTERFACE_MAP_ENTRY(nsIStyleRule)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCSSFontFeatureValuesRule)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCSSRule)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIStyleRule)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, mozilla::css::Rule)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(CSSFontFeatureValuesRule)
 NS_INTERFACE_MAP_END
 
@@ -2063,23 +2051,13 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 // QueryInterface implementation for nsCSSKeyframeRule
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsCSSKeyframeRule)
-  NS_INTERFACE_MAP_ENTRY(nsIStyleRule)
   NS_INTERFACE_MAP_ENTRY(nsIDOMMozCSSKeyframeRule)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCSSRule)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIStyleRule)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, mozilla::css::Rule)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(MozCSSKeyframeRule)
 NS_INTERFACE_MAP_END
 
 IMPL_STYLE_RULE_INHERIT_GET_DOM_RULE_WEAK(nsCSSKeyframeRule, Rule)
-
-/* virtual */ void
-nsCSSKeyframeRule::MapRuleInfoInto(nsRuleData* aRuleData)
-{
-  // We need to implement MapRuleInfoInto because the animation manager
-  // constructs a rule node pointing to us in order to compute the
-  // styles it needs to animate.
-  mDeclaration->MapRuleInfoInto(aRuleData);
-}
 
 #ifdef DEBUG
 void
@@ -2280,10 +2258,9 @@ NS_IMPL_RELEASE_INHERITED(nsCSSKeyframesRule, css::GroupRule)
 
 // QueryInterface implementation for nsCSSKeyframesRule
 NS_INTERFACE_MAP_BEGIN(nsCSSKeyframesRule)
-  NS_INTERFACE_MAP_ENTRY(nsIStyleRule)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCSSRule)
   NS_INTERFACE_MAP_ENTRY(nsIDOMMozCSSKeyframesRule)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIStyleRule)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, mozilla::css::Rule)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(MozCSSKeyframesRule)
 NS_INTERFACE_MAP_END_INHERITING(GroupRule)
 
@@ -2620,10 +2597,9 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 // QueryInterface implementation for nsCSSPageRule
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsCSSPageRule)
-  NS_INTERFACE_MAP_ENTRY(nsIStyleRule)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCSSPageRule)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCSSRule)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIStyleRule)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, mozilla::css::Rule)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(CSSPageRule)
 NS_INTERFACE_MAP_END
 
@@ -2694,12 +2670,6 @@ css::Rule*
 nsCSSPageRule::GetCSSRule()
 {
   return Rule::GetCSSRule();
-}
-
-/* virtual */ void
-nsCSSPageRule::MapRuleInfoInto(nsRuleData* aRuleData)
-{
-  mDeclaration->MapRuleInfoInto(aRuleData);
 }
 
 NS_IMETHODIMP
@@ -2798,12 +2768,11 @@ NS_IMPL_RELEASE_INHERITED(CSSSupportsRule, css::GroupRule)
 
 // QueryInterface implementation for CSSSupportsRule
 NS_INTERFACE_MAP_BEGIN(CSSSupportsRule)
-  NS_INTERFACE_MAP_ENTRY(nsIStyleRule)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCSSRule)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCSSGroupingRule)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCSSConditionRule)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCSSSupportsRule)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIStyleRule)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, mozilla::css::Rule)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(CSSSupportsRule)
 NS_INTERFACE_MAP_END_INHERITING(GroupRule)
 
@@ -2929,10 +2898,9 @@ NS_IMPL_RELEASE(nsCSSCounterStyleRule)
 
 // QueryInterface implementation for nsCSSCounterStyleRule
 NS_INTERFACE_MAP_BEGIN(nsCSSCounterStyleRule)
-  NS_INTERFACE_MAP_ENTRY(nsIStyleRule)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCSSRule)
   NS_INTERFACE_MAP_ENTRY(nsIDOMCSSCounterStyleRule)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIStyleRule)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, mozilla::css::Rule)
   NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(CSSCounterStyleRule)
 NS_INTERFACE_MAP_END
 
