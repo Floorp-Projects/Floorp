@@ -2701,18 +2701,6 @@ nsCSSPageRule::GetCSSRule()
   return Rule::GetCSSRule();
 }
 
-css::ImportantStyleData*
-nsCSSPageRule::GetImportantRule()
-{
-  if (!mDeclaration->HasImportantData()) {
-    return nullptr;
-  }
-  if (!mImportantRule) {
-    mImportantRule = new css::ImportantStyleData(mDeclaration);
-  }
-  return mImportantRule;
-}
-
 /* virtual */ void
 nsCSSPageRule::MapRuleInfoInto(nsRuleData* aRuleData)
 {
@@ -2732,7 +2720,6 @@ nsCSSPageRule::GetStyle(nsIDOMCSSStyleDeclaration** aStyle)
 void
 nsCSSPageRule::ChangeDeclaration(css::Declaration* aDeclaration)
 {
-  mImportantRule = nullptr;
   if (aDeclaration != mDeclaration) {
     mDeclaration->SetOwningRule(nullptr);
     mDeclaration = aDeclaration;

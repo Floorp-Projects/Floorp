@@ -526,7 +526,6 @@ public:
                 uint32_t aLineNumber, uint32_t aColumnNumber)
     : mozilla::css::Rule(aLineNumber, aColumnNumber)
     , mDeclaration(aDeclaration)
-    , mImportantRule(nullptr)
   {
     mDeclaration->SetOwningRule(this);
   }
@@ -557,14 +556,15 @@ public:
 
   void ChangeDeclaration(mozilla::css::Declaration* aDeclaration);
 
-  mozilla::css::ImportantStyleData* GetImportantRule();
+  mozilla::css::ImportantStyleData* GetImportantRule() {
+    return mDeclaration->GetImportantStyleData();
+  }
 
   virtual size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const override;
 private:
   RefPtr<mozilla::css::Declaration>     mDeclaration;
   // lazily created when needed:
   RefPtr<nsCSSPageStyleDeclaration>     mDOMDeclaration;
-  RefPtr<mozilla::css::ImportantStyleData> mImportantRule;
 };
 
 namespace mozilla {

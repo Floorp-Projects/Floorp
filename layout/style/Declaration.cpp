@@ -19,21 +19,14 @@
 namespace mozilla {
 namespace css {
 
-ImportantStyleData::ImportantStyleData(Declaration* aDeclaration)
-  : mDeclaration(aDeclaration)
-{
-}
-
-ImportantStyleData::~ImportantStyleData()
-{
-}
-
-NS_IMPL_ISUPPORTS(ImportantStyleData, nsIStyleRule)
+NS_IMPL_QUERY_INTERFACE(ImportantStyleData, nsIStyleRule)
+NS_IMPL_ADDREF_USING_AGGREGATOR(ImportantStyleData, Declaration())
+NS_IMPL_RELEASE_USING_AGGREGATOR(ImportantStyleData, Declaration())
 
 /* virtual */ void
 ImportantStyleData::MapRuleInfoInto(nsRuleData* aRuleData)
 {
-  mDeclaration->MapImportantRuleInfoInto(aRuleData);
+  Declaration()->MapImportantRuleInfoInto(aRuleData);
 }
 
 #ifdef DEBUG

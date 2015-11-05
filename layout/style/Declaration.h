@@ -39,12 +39,21 @@ namespace css {
 class Rule;
 class Declaration;
 
+/**
+ * ImportantStyleData is the implementation of nsIStyleRule (a source of
+ * style data) representing the style data coming from !important rules;
+ * the !important declarations need a separate nsIStyleRule object since
+ * they fit at a different point in the cascade.
+ *
+ * ImportantStyleData is allocated only as part of a Declaration object.
+ */
 class ImportantStyleData final : public nsIStyleRule
 {
 public:
-  explicit ImportantStyleData(Declaration* aDeclaration);
 
   NS_DECL_ISUPPORTS
+
+  inline ::mozilla::css::Declaration* Declaration();
 
   // nsIStyleRule interface
   virtual void MapRuleInfoInto(nsRuleData* aRuleData) override;
@@ -52,10 +61,11 @@ public:
   virtual void List(FILE* out = stdout, int32_t aIndent = 0) const override;
 #endif
 
-protected:
-  virtual ~ImportantStyleData();
+private:
+  ImportantStyleData() {}
+  ~ImportantStyleData() {}
 
-  RefPtr<Declaration> mDeclaration;
+  friend class ::mozilla::css::Declaration;
 };
 
 // Declaration objects have unusual lifetime rules.  Every declaration
@@ -310,6 +320,13 @@ public:
 
   Rule* GetOwningRule() { return mOwningRule; }
 
+  ImportantStyleData* GetImportantStyleData() {
+    if (HasImportantData()) {
+      return &mImportantStyleData;
+    }
+    return nullptr;
+  }
+
 private:
   Declaration& operator=(const Declaration& aCopy) = delete;
   bool operator==(const Declaration& aCopy) const = delete;
@@ -388,10 +405,26 @@ private:
   // The style rule that owns this declaration.  May be null.
   Rule* mOwningRule;
 
+  friend class ImportantStyleData;
+  ImportantStyleData mImportantStyleData;
+
   // set by style rules when |RuleMatched| is called;
   // also by ToString (hence the 'mutable').
   mutable bool mImmutable;
 };
+
+inline ::mozilla::css::Declaration*
+ImportantStyleData::Declaration()
+{
+  union {
+    char* ch; /* for pointer arithmetic */
+    ::mozilla::css::Declaration* declaration;
+    ImportantStyleData* importantData;
+  } u;
+  u.importantData = this;
+  u.ch -= offsetof(::mozilla::css::Declaration, mImportantStyleData);
+  return u.declaration;
+}
 
 NS_DEFINE_STATIC_IID_ACCESSOR(Declaration, NS_CSS_DECLARATION_IMPL_CID)
 
