@@ -116,6 +116,11 @@ public:
   struct Size {
     uint32_t  width;
     uint32_t  height;
+
+    bool Equals(const Size& aSize) const
+    {
+      return width == aSize.width && height == aSize.height;
+    }
   };
 
   struct Region {
