@@ -68,9 +68,12 @@ Push.prototype = {
     debug("askPermission");
 
     return this.createPromise((resolve, reject) => {
-      function permissionDenied() {
-        reject("PermissionDeniedError");
-      }
+      let permissionDenied = () => {
+        reject(new this._window.DOMException(
+          "User denied permission to use the Push API",
+          "PermissionDeniedError"
+        ));
+      };
 
       let permission = Ci.nsIPermissionManager.UNKNOWN_ACTION;
       try {
@@ -190,7 +193,10 @@ PushEndpointCallback.prototype = {
   onPushEndpoint: function(ok, endpoint, keyLen, key) {
     let {pushManager} = this;
     if (!Components.isSuccessCode(ok)) {
-      this.reject("AbortError");
+      this.reject(new pushManager._window.DOMException(
+        "Error retrieving push subscription",
+        "AbortError"
+      ));
       return;
     }
 
