@@ -5487,6 +5487,25 @@ extern JS_PUBLIC_API(bool)
 CaptureCurrentStack(JSContext* cx, MutableHandleObject stackp, unsigned maxFrameCount = 0);
 
 /*
+ * This is a utility function for preparing an async stack to be used
+ * by some other object.  This may be used when you need to treat a
+ * given stack trace as an async parent.  If you just need to capture
+ * the current stack, async parents and all, use CaptureCurrentStack
+ * instead.
+ *
+ * Here |asyncStack| is the async stack to prepare.  It is copied into
+ * |cx|'s current compartment, and the newest frame is given
+ * |asyncCause| as its asynchronous cause.  If |maxFrameCount| is
+ * non-zero, capture at most the youngest |maxFrameCount| frames.  The
+ * new stack object is written to |stackp|.  Returns true on success,
+ * or sets an exception and returns |false| on error.
+ */
+extern JS_PUBLIC_API(bool)
+CopyAsyncStack(JSContext* cx, HandleObject asyncStack,
+               HandleString asyncCause, MutableHandleObject stackp,
+               unsigned maxFrameCount);
+
+/*
  * Accessors for working with SavedFrame JSObjects
  *
  * Each of these functions assert that if their `HandleObject savedFrame`
