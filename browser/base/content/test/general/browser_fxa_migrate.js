@@ -10,7 +10,9 @@ Cu.import("resource://services-sync/FxaMigrator.jsm", imports);
 add_task(function* test() {
   // Fake the state where we saw an EOL notification.
   Services.obs.notifyObservers(null, STATE_CHANGED_TOPIC, null);
-  Assert.ok(Weave.Notifications.notifications.some(n => {
-    return n.title == NOTIFICATION_TITLE;
+
+  let notificationBox = document.getElementById("global-notificationbox");
+  Assert.ok(notificationBox.allNotifications.some(n => {
+    return n.getAttribute("value") == NOTIFICATION_TITLE;
   }), "Disconnect notification should be present");
 });

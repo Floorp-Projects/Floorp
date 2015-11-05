@@ -30,7 +30,6 @@ EXTRA_JS_MODULES['services-sync'] += [
     'modules/jpakeclient.js',
     'modules/keys.js',
     'modules/main.js',
-    'modules/notifications.js',
     'modules/policies.js',
     'modules/record.js',
     'modules/resource.js',
@@ -76,4 +75,3 @@ TESTING_JS_MODULES.services.sync += [
 JS_PREFERENCE_FILES += [
     'services-sync.js',
 ]
-

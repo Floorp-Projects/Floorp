@@ -456,6 +456,7 @@ public class HealthReportGenerator {
     return !a.equals(b);
   }
 
+  @SuppressWarnings("fallthrough")    
   private static JSONObject getAppInfo(Environment e, Environment current) throws JSONException {
     JSONObject appinfo = new JSONObject();
 

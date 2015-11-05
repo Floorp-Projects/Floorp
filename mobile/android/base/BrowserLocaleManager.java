@@ -16,6 +16,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.mozilla.gecko.annotation.ReflectionTarget;
 import org.mozilla.gecko.util.GeckoJarReader;
 
 import android.content.BroadcastReceiver;
@@ -61,6 +62,7 @@ public class BrowserLocaleManager implements LocaleManager {
 
     private static final AtomicReference<LocaleManager> instance = new AtomicReference<LocaleManager>();
 
+    @ReflectionTarget
     public static LocaleManager getInstance() {
         LocaleManager localeManager = instance.get();
         if (localeManager != null) {

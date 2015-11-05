@@ -16,7 +16,7 @@ loader.lazyRequireGetter(this, "AuthenticationResult",
 loader.lazyRequireGetter(this, "DevToolsUtils",
   "devtools/shared/DevToolsUtils");
 
-const Strings = Services.strings.createBundle("chrome://browser/locale/devtools/webide.properties");
+const Strings = Services.strings.createBundle("chrome://devtools/locale/webide.properties");
 
 /**
  * Runtime and Scanner API

@@ -10,7 +10,7 @@ function $_(formNum, name) {
     return null;
   }
 
-  var element = form.elements.namedItem(name);
+  var element = form.children.namedItem(name);
   if (!element) {
     logWarning("$_ couldn't find requested element " + name);
     return null;
@@ -45,7 +45,7 @@ function checkForm(formNum, val1, val2, val3) {
     ok(form, "Locating form " + formNum);
 
     var numToCheck = arguments.length - 1;
-    
+
     if (!numToCheck--)
         return;
     e = form.elements[0];

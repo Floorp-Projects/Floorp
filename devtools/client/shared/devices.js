@@ -10,7 +10,7 @@ const { Services } = require("resource://gre/modules/Services.jsm");
 const promise = require("promise");
 
 const DEVICES_URL = "devtools.devices.url";
-const Strings = Services.strings.createBundle("chrome://browser/locale/devtools/device.properties");
+const Strings = Services.strings.createBundle("chrome://devtools/locale/device.properties");
 
 /* This is a catalog of common web-enabled devices and their properties,
  * intended for (mobile) device emulation.

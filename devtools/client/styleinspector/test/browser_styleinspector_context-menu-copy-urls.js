@@ -5,12 +5,14 @@
 
 /* Tests both Copy URL and Copy Data URL context menu items */
 
-const PROPERTIES_URL = "chrome://global/locale/devtools/styleinspector.properties";
+const PROPERTIES_URL = "chrome://devtools-shared/locale/styleinspector.properties";
 const TEST_DATA_URI = "data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACwAAAAAAQABAAACAkQBADs=";
 
-// invalid URL still needs to be reachable otherwise getImageDataUrl will timeout.
-// Reusing the properties bundle URL as a workaround
-const INVALID_IMAGE_URI = PROPERTIES_URL;
+// Invalid URL still needs to be reachable otherwise getImageDataUrl will
+// timeout.  DevTools chrome:// URLs aren't content accessible, so use some
+// random resource:// URL here.
+const INVALID_IMAGE_URI =
+  "resource://devtools/client/definitions.js";
 
 const ERROR_MESSAGE = Services.strings
   .createBundle(PROPERTIES_URL)
@@ -44,7 +46,7 @@ function* startTest() {
   yield testCopyUrlToClipboard(ruleViewData, "url", ".valid-background", TEST_DATA_URI);
   info("Test invalid background image URL in rue view");
   yield testCopyUrlToClipboard(ruleViewData, "data-uri", ".invalid-background", ERROR_MESSAGE);
-  yield testCopyUrlToClipboard(ruleViewData, "url", ".invalid-background", PROPERTIES_URL);
+  yield testCopyUrlToClipboard(ruleViewData, "url", ".invalid-background", INVALID_IMAGE_URI);
 
   info("Opening computed view");
   let computedViewData = yield openComputedView();
@@ -54,7 +56,7 @@ function* startTest() {
   yield testCopyUrlToClipboard(computedViewData, "url", ".valid-background", TEST_DATA_URI);
   info("Test invalid background image URL in computed view");
   yield testCopyUrlToClipboard(computedViewData, "data-uri", ".invalid-background", ERROR_MESSAGE);
-  yield testCopyUrlToClipboard(computedViewData, "url", ".invalid-background", PROPERTIES_URL);
+  yield testCopyUrlToClipboard(computedViewData, "url", ".invalid-background", INVALID_IMAGE_URI);
 }
 
 function* testCopyUrlToClipboard({view, inspector}, type, selector, expected) {

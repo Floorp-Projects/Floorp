@@ -198,18 +198,18 @@
 }
 
 .ruleview-bezierswatch {
-  background: url("chrome://devtools/skin/themes/images/cubic-bezier-swatch.png");
+  background: url("chrome://devtools/skin/images/cubic-bezier-swatch.png");
   background-size: 1em;
 }
 
 .ruleview-filterswatch {
-  background: url("chrome://devtools/skin/themes/images/filter-swatch.svg");
+  background: url("chrome://devtools/skin/images/filter-swatch.svg");
   background-size: 1em;
 }
 
 @media (min-resolution: 1.1dppx) {
   .ruleview-bezierswatch {
-    background: url("chrome://devtools/skin/themes/images/cubic-bezier-swatch@2x.png");
+    background: url("chrome://devtools/skin/images/cubic-bezier-swatch@2x.png");
     background-size: 1em;
   }
 }
@@ -277,7 +277,7 @@
 }
 
 .ruleview-selectorhighlighter {
-  background: url("chrome://devtools/skin/themes/images/vview-open-inspector.png") no-repeat 0 0;
+  background: url("chrome://devtools/skin/images/vview-open-inspector.png") no-repeat 0 0;
   padding-left: 16px;
   margin-left: 5px;
   cursor: pointer;
@@ -293,16 +293,16 @@
 }
 
 #ruleview-add-rule-button::before {
-  background-image: url("chrome://devtools/skin/themes/images/add.svg");
+  background-image: url("chrome://devtools/skin/images/add.svg");
   background-size: cover;
 }
 
 #pseudo-class-panel-toggle::before {
-  background-image: url("chrome://devtools/skin/themes/images/pseudo-class.svg#pseudo-class");
+  background-image: url("chrome://devtools/skin/images/pseudo-class.svg#pseudo-class");
   background-size: cover;
 }
 #pseudo-class-panel-toggle[checked]::before {
-  background-image: url("chrome://devtools/skin/themes/images/pseudo-class.svg#pseudo-class-checked");
+  background-image: url("chrome://devtools/skin/images/pseudo-class.svg#pseudo-class-checked");
   filter: none !important;
 }
 

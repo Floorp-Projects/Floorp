@@ -26,19 +26,19 @@ loader.lazyGetter(this, "StoragePanel", () => require("devtools/client/storage/p
 loader.lazyGetter(this, "ScratchpadPanel", () => require("devtools/client/scratchpad/scratchpad-panel").ScratchpadPanel);
 
 // Strings
-const toolboxProps = "chrome://browser/locale/devtools/toolbox.properties";
-const inspectorProps = "chrome://browser/locale/devtools/inspector.properties";
-const webConsoleProps = "chrome://browser/locale/devtools/webconsole.properties";
-const debuggerProps = "chrome://browser/locale/devtools/debugger.properties";
-const styleEditorProps = "chrome://browser/locale/devtools/styleeditor.properties";
-const shaderEditorProps = "chrome://browser/locale/devtools/shadereditor.properties";
-const canvasDebuggerProps = "chrome://browser/locale/devtools/canvasdebugger.properties";
-const webAudioEditorProps = "chrome://browser/locale/devtools/webaudioeditor.properties";
-const performanceProps = "chrome://browser/locale/devtools/performance.properties";
-const netMonitorProps = "chrome://browser/locale/devtools/netmonitor.properties";
-const storageProps = "chrome://browser/locale/devtools/storage.properties";
-const scratchpadProps = "chrome://browser/locale/devtools/scratchpad.properties";
-const memoryProps = "chrome://browser/locale/devtools/memory.properties";
+const toolboxProps = "chrome://devtools/locale/toolbox.properties";
+const inspectorProps = "chrome://devtools/locale/inspector.properties";
+const webConsoleProps = "chrome://devtools/locale/webconsole.properties";
+const debuggerProps = "chrome://devtools/locale/debugger.properties";
+const styleEditorProps = "chrome://devtools/locale/styleeditor.properties";
+const shaderEditorProps = "chrome://devtools/locale/shadereditor.properties";
+const canvasDebuggerProps = "chrome://devtools/locale/canvasdebugger.properties";
+const webAudioEditorProps = "chrome://devtools/locale/webaudioeditor.properties";
+const performanceProps = "chrome://devtools/locale/performance.properties";
+const netMonitorProps = "chrome://devtools/locale/netmonitor.properties";
+const storageProps = "chrome://devtools/locale/storage.properties";
+const scratchpadProps = "chrome://devtools/locale/scratchpad.properties";
+const memoryProps = "chrome://devtools/locale/memory.properties";
 
 loader.lazyGetter(this, "toolboxStrings", () => Services.strings.createBundle(toolboxProps));
 loader.lazyGetter(this, "performanceStrings",() => Services.strings.createBundle(performanceProps));
@@ -62,7 +62,7 @@ Tools.options = {
   id: "options",
   ordinal: 0,
   url: "chrome://devtools/content/framework/toolbox-options.xul",
-  icon: "chrome://devtools/skin/themes/images/tool-options.svg",
+  icon: "chrome://devtools/skin/images/tool-options.svg",
   invertIconForLightTheme: true,
   bgTheme: "theme-body",
   label: l10n("options.label", toolboxStrings),
@@ -86,7 +86,7 @@ Tools.inspector = {
   key: l10n("inspector.commandkey", inspectorStrings),
   ordinal: 1,
   modifiers: osString == "Darwin" ? "accel,alt" : "accel,shift",
-  icon: "chrome://devtools/skin/themes/images/tool-inspector.svg",
+  icon: "chrome://devtools/skin/images/tool-inspector.svg",
   invertIconForLightTheme: true,
   url: "chrome://devtools/content/inspector/inspector.xul",
   label: l10n("inspector.label", inspectorStrings),
@@ -122,7 +122,7 @@ Tools.webConsole = {
   accesskey: l10n("webConsoleCmd.accesskey", webConsoleStrings),
   modifiers: Services.appinfo.OS == "Darwin" ? "accel,alt" : "accel,shift",
   ordinal: 2,
-  icon: "chrome://devtools/skin/themes/images/tool-webconsole.svg",
+  icon: "chrome://devtools/skin/images/tool-webconsole.svg",
   invertIconForLightTheme: true,
   url: "chrome://devtools/content/webconsole/webconsole.xul",
   label: l10n("ToolboxTabWebconsole.label", webConsoleStrings),
@@ -158,9 +158,9 @@ Tools.jsdebugger = {
   accesskey: l10n("debuggerMenu.accesskey", debuggerStrings),
   modifiers: osString == "Darwin" ? "accel,alt" : "accel,shift",
   ordinal: 3,
-  icon: "chrome://devtools/skin/themes/images/tool-debugger.svg",
+  icon: "chrome://devtools/skin/images/tool-debugger.svg",
   invertIconForLightTheme: true,
-  highlightedicon: "chrome://devtools/skin/themes/images/tool-debugger-paused.svg",
+  highlightedicon: "chrome://devtools/skin/images/tool-debugger-paused.svg",
   url: "chrome://devtools/content/debugger/debugger.xul",
   label: l10n("ToolboxDebugger.label", debuggerStrings),
   panelLabel: l10n("ToolboxDebugger.panelLabel", debuggerStrings),
@@ -186,7 +186,7 @@ Tools.styleEditor = {
   ordinal: 4,
   accesskey: l10n("open.accesskey", styleEditorStrings),
   modifiers: "shift",
-  icon: "chrome://devtools/skin/themes/images/tool-styleeditor.svg",
+  icon: "chrome://devtools/skin/images/tool-styleeditor.svg",
   invertIconForLightTheme: true,
   url: "chrome://devtools/content/styleeditor/styleeditor.xul",
   label: l10n("ToolboxStyleEditor.label", styleEditorStrings),
@@ -211,7 +211,7 @@ Tools.shaderEditor = {
   id: "shadereditor",
   ordinal: 5,
   visibilityswitch: "devtools.shadereditor.enabled",
-  icon: "chrome://devtools/skin/themes/images/tool-shadereditor.svg",
+  icon: "chrome://devtools/skin/images/tool-shadereditor.svg",
   invertIconForLightTheme: true,
   url: "chrome://devtools/content/shadereditor/shadereditor.xul",
   label: l10n("ToolboxShaderEditor.label", shaderEditorStrings),
@@ -231,7 +231,7 @@ Tools.canvasDebugger = {
   id: "canvasdebugger",
   ordinal: 6,
   visibilityswitch: "devtools.canvasdebugger.enabled",
-  icon: "chrome://devtools/skin/themes/images/tool-canvas.svg",
+  icon: "chrome://devtools/skin/images/tool-canvas.svg",
   invertIconForLightTheme: true,
   url: "chrome://devtools/content/canvasdebugger/canvasdebugger.xul",
   label: l10n("ToolboxCanvasDebugger.label", canvasDebuggerStrings),
@@ -252,9 +252,9 @@ Tools.canvasDebugger = {
 Tools.performance = {
   id: "performance",
   ordinal: 7,
-  icon: "chrome://devtools/skin/themes/images/tool-profiler.svg",
+  icon: "chrome://devtools/skin/images/tool-profiler.svg",
   invertIconForLightTheme: true,
-  highlightedicon: "chrome://devtools/skin/themes/images/tool-profiler-active.svg",
+  highlightedicon: "chrome://devtools/skin/images/tool-profiler-active.svg",
   url: "chrome://devtools/content/performance/performance.xul",
   visibilityswitch: "devtools.performance.enabled",
   label: l10n("performance.label", performanceStrings),
@@ -280,9 +280,9 @@ Tools.performance = {
 Tools.memory = {
   id: "memory",
   ordinal: 8,
-  icon: "chrome://devtools/skin/themes/images/tool-memory.svg",
+  icon: "chrome://devtools/skin/images/tool-memory.svg",
   invertIconForLightTheme: true,
-  highlightedicon: "chrome://devtools/skin/themes/images/tool-memory-active.svg",
+  highlightedicon: "chrome://devtools/skin/images/tool-memory-active.svg",
   url: "chrome://devtools/content/memory/memory.xhtml",
   visibilityswitch: "devtools.memory.enabled",
   label: l10n("memory.label", memoryStrings),
@@ -305,7 +305,7 @@ Tools.netMonitor = {
   ordinal: 9,
   modifiers: osString == "Darwin" ? "accel,alt" : "accel,shift",
   visibilityswitch: "devtools.netmonitor.enabled",
-  icon: "chrome://devtools/skin/themes/images/tool-network.svg",
+  icon: "chrome://devtools/skin/images/tool-network.svg",
   invertIconForLightTheme: true,
   url: "chrome://devtools/content/netmonitor/netmonitor.xul",
   label: l10n("netmonitor.label", netMonitorStrings),
@@ -332,7 +332,7 @@ Tools.storage = {
   accesskey: l10n("storage.accesskey", storageStrings),
   modifiers: "shift",
   visibilityswitch: "devtools.storage.enabled",
-  icon: "chrome://devtools/skin/themes/images/tool-storage.svg",
+  icon: "chrome://devtools/skin/images/tool-storage.svg",
   invertIconForLightTheme: true,
   url: "chrome://devtools/content/storage/storage.xul",
   label: l10n("storage.label", storageStrings),
@@ -359,7 +359,7 @@ Tools.webAudioEditor = {
   id: "webaudioeditor",
   ordinal: 11,
   visibilityswitch: "devtools.webaudioeditor.enabled",
-  icon: "chrome://devtools/skin/themes/images/tool-webaudio.svg",
+  icon: "chrome://devtools/skin/images/tool-webaudio.svg",
   invertIconForLightTheme: true,
   url: "chrome://devtools/content/webaudioeditor/webaudioeditor.xul",
   label: l10n("ToolboxWebAudioEditor1.label", webAudioEditorStrings),
@@ -379,7 +379,7 @@ Tools.scratchpad = {
   id: "scratchpad",
   ordinal: 12,
   visibilityswitch: "devtools.scratchpad.enabled",
-  icon: "chrome://devtools/skin/themes/images/tool-scratchpad.svg",
+  icon: "chrome://devtools/skin/images/tool-scratchpad.svg",
   invertIconForLightTheme: true,
   url: "chrome://devtools/content/scratchpad/scratchpad.xul",
   label: l10n("scratchpad.label", scratchpadStrings),
@@ -419,7 +419,7 @@ Tools.darkTheme = {
   id: "dark",
   label: l10n("options.darkTheme.label", toolboxStrings),
   ordinal: 1,
-  stylesheets: ["chrome://devtools/skin/themes/dark-theme.css"],
+  stylesheets: ["chrome://devtools/skin/dark-theme.css"],
   classList: ["theme-dark"],
 };
 
@@ -427,7 +427,7 @@ Tools.lightTheme = {
   id: "light",
   label: l10n("options.lightTheme.label", toolboxStrings),
   ordinal: 2,
-  stylesheets: ["chrome://devtools/skin/themes/light-theme.css"],
+  stylesheets: ["chrome://devtools/skin/light-theme.css"],
   classList: ["theme-light"],
 };
 

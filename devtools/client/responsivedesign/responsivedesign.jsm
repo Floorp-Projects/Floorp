@@ -35,7 +35,7 @@ const ROUND_RATIO = 10;
 
 const INPUT_PARSER = /(\d+)[^\d]+(\d+)/;
 
-const SHARED_L10N = new ViewHelpers.L10N("chrome://browser/locale/devtools/shared.properties");
+const SHARED_L10N = new ViewHelpers.L10N("chrome://devtools/locale/shared.properties");
 
 var ActiveTabs = new Map();
 
@@ -1018,5 +1018,5 @@ ResponsiveUI.prototype = {
 }
 
 XPCOMUtils.defineLazyGetter(ResponsiveUI.prototype, "strings", function () {
-  return Services.strings.createBundle("chrome://browser/locale/devtools/responsiveUI.properties");
+  return Services.strings.createBundle("chrome://devtools/locale/responsiveUI.properties");
 });
