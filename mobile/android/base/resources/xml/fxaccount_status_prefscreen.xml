@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
-    android:key="status_screen" >
+                  xmlns:gecko="http://schemas.android.com/apk/res-auto"
+                  android:key="status_screen">
 
     <PreferenceCategory
         android:key="signed_in_as_category"
@@ -102,10 +103,11 @@
             android:key="sync_server"
             android:persistent="false"
             android:title="@string/fxaccount_status_sync_server" />
-        <Preference
+        <org.mozilla.gecko.fxa.activities.CustomColorPreference
             android:editable="false"
             android:key="remove_account"
             android:persistent="false"
+            gecko:titleColor="@color/rejection_red"
             android:title="@string/fxaccount_remove_account" />
         <Preference
             android:editable="false"
