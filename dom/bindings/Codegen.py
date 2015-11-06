@@ -418,8 +418,6 @@ class CGDOMJSClass(CGThing):
         classExtensionAndObjectOps = fill(
             """
             {
-              nullptr, /* outerObject */
-              nullptr, /* innerObject */
               false,   /* isWrappedNative */
               nullptr, /* weakmapKeyDelegateOp */
               ${objectMoved} /* objectMovedOp */
@@ -435,8 +433,6 @@ class CGDOMJSClass(CGThing):
                 classExtensionAndObjectOps = fill(
                     """
                     {
-                      nsGlobalWindow::OuterObject, /* outerObject */
-                      nullptr, /* innerObject */
                       false,   /* isWrappedNative */
                       nullptr, /* weakmapKeyDelegateOp */
                       ${objectMoved} /* objectMovedOp */
@@ -453,7 +449,6 @@ class CGDOMJSClass(CGThing):
                       nullptr, /* unwatch */
                       nullptr, /* getElements */
                       nullptr, /* enumerate */
-                      mozilla::dom::ObjectToOuterObjectValue, /* thisValue */
                       nullptr, /* funToString */
                     }
                     """,
@@ -541,9 +536,7 @@ class CGDOMProxyJSClass(CGThing):
             static const DOMJSClass Class = {
               PROXY_CLASS_WITH_EXT("${name}",
                                    ${flags},
-                                   PROXY_MAKE_EXT(nullptr, /* outerObject */
-                                                  nullptr, /* innerObject */
-                                                  false,   /* isWrappedNative */
+                                   PROXY_MAKE_EXT(false,   /* isWrappedNative */
                                                   ${objectMoved})),
               $*{descriptor}
             };
@@ -743,7 +736,6 @@ class CGInterfaceObjectJSClass(CGThing):
                   nullptr, /* unwatch */
                   nullptr, /* getElements */
                   nullptr, /* enumerate */
-                  nullptr, /* thisValue */
                   InterfaceObjectToString, /* funToString */
                 }
               },
