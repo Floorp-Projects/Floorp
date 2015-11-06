@@ -48,7 +48,7 @@ loop.shared.views.chat = (function(mozL10n) {
     },
 
     render: function() {
-      var classes = React.addons.classSet({
+      var classes = classNames({
         "text-chat-entry": true,
         "received": this.props.type === CHAT_MESSAGE_TYPES.RECEIVED,
         "sent": this.props.type === CHAT_MESSAGE_TYPES.SENT,
@@ -165,7 +165,7 @@ loop.shared.views.chat = (function(mozL10n) {
       /* Keep track of the last printed timestamp. */
       var lastTimestamp = 0;
 
-      var entriesClasses = React.addons.classSet({
+      var entriesClasses = classNames({
         "text-chat-entries": true
       });
 
@@ -395,7 +395,7 @@ loop.shared.views.chat = (function(mozL10n) {
         return item.type === CHAT_MESSAGE_TYPES.SENT;
       });
 
-      var textChatViewClasses = React.addons.classSet({
+      var textChatViewClasses = classNames({
         "text-chat-view": true,
         "text-chat-entries-empty": !messageList.length,
         "text-chat-disabled": !this.state.textChatEnabled

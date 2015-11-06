@@ -165,7 +165,7 @@ loop.panel = (function(_, mozL10n) {
     },
 
     render: function() {
-      var cx = React.addons.classSet;
+      var cx = classNames;
 
       if (!this.props.displayed) {
         return null;
@@ -245,7 +245,7 @@ loop.panel = (function(_, mozL10n) {
     },
 
     render: function() {
-      var cx = React.addons.classSet;
+      var cx = classNames;
       var accountEntryCSSClass = this._isSignedIn() ? "entry-settings-signout" :
                                                       "entry-settings-signin";
       var notificationsLabel = this.props.mozLoop.doNotDisturb ? "settings_menu_item_turnnotificationson" :
@@ -436,7 +436,7 @@ loop.panel = (function(_, mozL10n) {
     },
 
     render: function() {
-      var roomClasses = React.addons.classSet({
+      var roomClasses = classNames({
         "room-entry": true,
         "room-active": this._isActive(),
         "room-opened": this.props.isOpenedRoom
@@ -588,7 +588,7 @@ loop.panel = (function(_, mozL10n) {
     },
 
     render: function() {
-      var dropdownClasses = React.addons.classSet({
+      var dropdownClasses = classNames({
         "dropdown-menu": true,
         "dropdown-menu-up": this.state.openDirUp
       });

@@ -4,6 +4,8 @@
 
 const ID = "webextension1@tests.mozilla.org";
 
+const PREF_SELECTED_LOCALE = "general.useragent.locale";
+
 const profileDir = gProfD.clone();
 profileDir.append("extensions");
 
@@ -140,6 +142,33 @@ add_task(function*() {
   addon.uninstall();
 
   yield promiseRestartManager();
+});
+
+add_task(function* test_manifest_localization() {
+  const ID = "webextension3@tests.mozilla.org";
+
+  yield promiseInstallAllFiles([do_get_addon("webextension_3")], true);
+
+  let addon = yield promiseAddonByID(ID);
+
+  equal(addon.name, "Web Extension foo");
+  equal(addon.description, "Descripton bar of add-on");
+
+  Services.prefs.setCharPref(PREF_SELECTED_LOCALE, "fr-FR");
+  yield promiseRestartManager();
+
+  addon = yield promiseAddonByID(ID);
+
+  equal(addon.name, "Web Extension le foo");
+  equal(addon.description, "Descripton le bar of add-on");
+
+  Services.prefs.setCharPref(PREF_SELECTED_LOCALE, "de");
+  yield promiseRestartManager();
+
+  addon = yield promiseAddonByID(ID);
+
+  equal(addon.name, "Web Extension foo");
+  equal(addon.description, "Descripton bar of add-on");
 });
 
 // Missing ID should cause a failure

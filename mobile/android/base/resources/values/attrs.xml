@@ -168,6 +168,11 @@
         <attr name="titlebarFill" format="boolean" />
     </declare-styleable>
 
+    <declare-styleable name="CustomColorPreference">
+        <attr name="titleColor" format="color" />
+        <attr name="summaryColor" format="color" />
+    </declare-styleable>
+
     <declare-styleable name="TabPanelBackButton">
         <attr name="rightDivider" format="reference"/>
         <attr name="dividerVerticalPadding" format="dimension"/>
