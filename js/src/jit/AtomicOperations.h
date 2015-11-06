@@ -298,7 +298,7 @@ AtomicOperations::isLockfree(int32_t size)
 # include "jit/arm/AtomicOperations-arm.h"
 #elif defined(JS_CODEGEN_ARM64)
 # include "jit/arm64/AtomicOperations-arm64.h"
-#elif defined(JS_CODEGEN_MIPS32)
+#elif defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
 # include "jit/mips-shared/AtomicOperations-mips-shared.h"
 #elif defined(JS_CODEGEN_NONE)
 # include "jit/none/AtomicOperations-none.h"
