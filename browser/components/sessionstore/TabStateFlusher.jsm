@@ -28,6 +28,14 @@ this.TabStateFlusher = Object.freeze({
   },
 
   /**
+   * Requests an async flush for all browsers of a given window. Returns a Promise
+   * that will resolve when we've heard back from all browsers.
+   */
+  flushWindow(window) {
+    return TabStateFlusherInternal.flushWindow(window);
+  },
+
+  /**
    * Resolves the flush request with the given flush ID.
    */
   resolve(browser, flushID) {
@@ -73,6 +81,16 @@ var TabStateFlusherInternal = {
       // Update the flush requests stored per browser.
       this._requests.set(permanentKey, perBrowserRequests);
     });
+  },
+
+  /**
+   * Requests an async flush for all browsers of a given window. Returns a Promise
+   * that will resolve when we've heard back from all browsers.
+   */
+  flushWindow(window) {
+    let browsers = window.gBrowser.browsers;
+    let promises = browsers.map((browser) => this.flush(browser));
+    return Promise.all(promises);
   },
 
   /**
