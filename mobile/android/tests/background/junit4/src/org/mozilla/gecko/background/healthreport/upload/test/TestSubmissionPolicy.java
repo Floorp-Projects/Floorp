@@ -3,15 +3,7 @@
 
 package org.mozilla.gecko.background.healthreport.upload.test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-
-import java.net.UnknownHostException;
-import java.util.Collection;
-import java.util.HashSet;
-
+import android.content.SharedPreferences;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -21,12 +13,19 @@ import org.mozilla.gecko.background.healthreport.upload.SubmissionPolicy;
 import org.mozilla.gecko.background.healthreport.upload.test.TestObsoleteDocumentTracker.MockObsoleteDocumentTracker;
 import org.mozilla.gecko.background.healthreport.upload.test.TestSubmissionPolicy.MockSubmissionClient.Response;
 import org.mozilla.gecko.background.testhelpers.MockSharedPreferences;
+import org.mozilla.gecko.background.testhelpers.TestRunner;
 import org.mozilla.gecko.sync.ExtendedJSONObject;
 
-import android.content.SharedPreferences;
-import org.robolectric.RobolectricGradleTestRunner;
+import java.net.UnknownHostException;
+import java.util.Collection;
+import java.util.HashSet;
 
-@RunWith(RobolectricGradleTestRunner.class)
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
+@RunWith(TestRunner.class)
 public class TestSubmissionPolicy {
   public static class MockSubmissionClient implements SubmissionClient {
     public String lastId = null;

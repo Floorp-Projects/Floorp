@@ -3,17 +3,17 @@
 
 package org.mozilla.android.sync.net.test;
 
-import java.net.URI;
-import java.net.URISyntaxException;
-
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mozilla.gecko.background.testhelpers.TestRunner;
 import org.mozilla.gecko.sync.InfoCollections;
 import org.mozilla.gecko.sync.repositories.Server11Repository;
-import org.robolectric.RobolectricGradleTestRunner;
 
-@RunWith(RobolectricGradleTestRunner.class)
+import java.net.URI;
+import java.net.URISyntaxException;
+
+@RunWith(TestRunner.class)
 public class TestServer11Repository {
 
   private static final String COLLECTION = "bookmarks";

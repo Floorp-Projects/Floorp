@@ -3,15 +3,7 @@
 
 package org.mozilla.android.sync.test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-
-import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.concurrent.atomic.AtomicBoolean;
-
+import ch.boye.httpclientandroidlib.HttpEntity;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mozilla.android.sync.test.SynchronizerHelpers.TrackingWBORepository;
@@ -19,6 +11,7 @@ import org.mozilla.android.sync.test.helpers.BaseTestStorageRequestDelegate;
 import org.mozilla.android.sync.test.helpers.HTTPServerTestHelper;
 import org.mozilla.android.sync.test.helpers.MockServer;
 import org.mozilla.gecko.background.testhelpers.MockRecord;
+import org.mozilla.gecko.background.testhelpers.TestRunner;
 import org.mozilla.gecko.background.testhelpers.WaitHelper;
 import org.mozilla.gecko.sync.InfoCollections;
 import org.mozilla.gecko.sync.JSONRecordFetcher;
@@ -43,14 +36,20 @@ import org.mozilla.gecko.sync.repositories.domain.Record;
 import org.mozilla.gecko.sync.stage.SafeConstrainedServer11Repository;
 import org.mozilla.gecko.sync.synchronizer.ServerLocalSynchronizer;
 import org.mozilla.gecko.sync.synchronizer.Synchronizer;
-import org.robolectric.RobolectricGradleTestRunner;
 import org.simpleframework.http.ContentType;
 import org.simpleframework.http.Request;
 import org.simpleframework.http.Response;
 
-import ch.boye.httpclientandroidlib.HttpEntity;
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.concurrent.atomic.AtomicBoolean;
 
-@RunWith(RobolectricGradleTestRunner.class)
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
+@RunWith(TestRunner.class)
 public class TestServer11RepositorySession {
 
   public class POSTMockServer extends MockServer {

@@ -3,15 +3,15 @@
 
 package org.mozilla.gecko.sync.crypto.test;
 
-import java.math.BigInteger;
-
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mozilla.gecko.background.testhelpers.TestRunner;
 import org.mozilla.gecko.sync.net.SRPConstants;
-import org.robolectric.RobolectricGradleTestRunner;
 
-@RunWith(RobolectricGradleTestRunner.class)
+import java.math.BigInteger;
+
+@RunWith(TestRunner.class)
 public class TestSRPConstants extends SRPConstants {
   public void assertSRPConstants(SRPConstants.Parameters params, int bitLength) {
     Assert.assertNotNull(params.g);

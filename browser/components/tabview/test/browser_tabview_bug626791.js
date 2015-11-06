@@ -158,6 +158,8 @@ function test() {
     let onShow = function () {
       cw = win.TabView.getContentWindow();
 
+      cw.document.querySelector('.banner').remove();
+
       let groupItem = cw.GroupItems.groupItems[0];
       groupItem.setSize(200, 200, true);
       groupItem.setUserSize();
