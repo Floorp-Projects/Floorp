@@ -11,13 +11,14 @@ const SnapshotListItem = module.exports = createClass({
   displayName: "snapshot-list-item",
 
   propTypes: {
-    onClick: PropTypes.func,
+    onClick: PropTypes.func.isRequired,
+    onSave: PropTypes.func.isRequired,
     item: snapshotModel.isRequired,
     index: PropTypes.number.isRequired,
   },
 
   render() {
-    let { index, item: snapshot, onClick } = this.props;
+    let { index, item: snapshot, onClick, onSave } = this.props;
     let className = `snapshot-list-item ${snapshot.selected ? " selected" : ""}`;
     let statusText = getSnapshotStatusText(snapshot);
     let title = getSnapshotTitle(snapshot);
@@ -34,12 +35,20 @@ const SnapshotListItem = module.exports = createClass({
       details = dom.span({ className: "snapshot-state" }, statusText);
     }
 
+    let saveLink = !snapshot.path ? void 0 : dom.a({
+      onClick: () => onSave(snapshot),
+      className: "save",
+    }, L10N.getFormatStr("snapshot.io.save"));
+
     return (
       dom.li({ className, onClick },
         dom.span({
           className: `snapshot-title ${statusText ? " devtools-throbber" : ""}`
         }, title),
-        details
+        dom.div({ className: "snapshot-info" },
+          details,
+          saveLink
+        )
       )
     );
   }
