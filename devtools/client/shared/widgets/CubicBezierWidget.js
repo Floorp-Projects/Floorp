@@ -27,7 +27,11 @@
 
 const EventEmitter = require("devtools/shared/event-emitter");
 const {setTimeout, clearTimeout} = require("sdk/timers");
-const {PREDEFINED, PRESETS, DEFAULT_PRESET_CATEGORY} = require("devtools/client/shared/widgets/CubicBezierPresets");
+const {
+  PREDEFINED,
+  PRESETS,
+  DEFAULT_PRESET_CATEGORY
+} = require("devtools/client/shared/widgets/CubicBezierPresets");
 const {Cc, Ci} = require('chrome');
 loader.lazyGetter(this, "DOMUtils", () => {
   return Cc["@mozilla.org/inspector/dom-utils;1"].getService(Ci.inIDOMUtils);
@@ -40,21 +44,21 @@ loader.lazyGetter(this, "DOMUtils", () => {
  */
 function CubicBezier(coordinates) {
   if (!coordinates) {
-    throw "No offsets were defined";
+    throw new Error("No offsets were defined");
   }
 
   this.coordinates = coordinates.map(n => +n);
 
   for (let i = 4; i--;) {
     let xy = this.coordinates[i];
-    if (isNaN(xy) || (!(i%2) && (xy < 0 || xy > 1))) {
-      throw "Wrong coordinate at " + i + "(" + xy + ")";
+    if (isNaN(xy) || (!(i % 2) && (xy < 0 || xy > 1))) {
+      throw new Error(`Wrong coordinate at ${i}(${xy})`);
     }
   }
 
   this.coordinates.toString = function() {
     return this.map(n => {
-      return (Math.round(n * 100)/100 + '').replace(/^0\./, '.');
+      return (Math.round(n * 100) / 100 + "").replace(/^0\./, ".");
     }) + "";
   };
 }
@@ -73,9 +77,10 @@ CubicBezier.prototype = {
   toString: function() {
     // Check first if current coords are one of css predefined functions
     let predefName = Object.keys(PREDEFINED)
-                           .find(key => coordsAreEqual(PREDEFINED[key], this.coordinates));
+                           .find(key => coordsAreEqual(PREDEFINED[key],
+                                                       this.coordinates));
 
-    return predefName || 'cubic-bezier(' + this.coordinates + ')';
+    return predefName || "cubic-bezier(" + this.coordinates + ")";
   }
 };
 
@@ -91,7 +96,7 @@ function BezierCanvas(canvas, bezier, padding) {
   this.padding = getPadding(padding);
 
   // Convert to a cartesian coordinate system with axes from 0 to 1
-  this.ctx = this.canvas.getContext('2d');
+  this.ctx = this.canvas.getContext("2d");
   let p = this.padding;
 
   this.ctx.scale(canvas.width * (1 - p[1] - p[3]),
@@ -111,11 +116,11 @@ BezierCanvas.prototype = {
     let p = this.padding, w = this.canvas.width, h = this.canvas.height;
 
     return [{
-      left: w * (this.bezier.coordinates[0] * (1 - p[3] - p[1]) - p[3]) + 'px',
-      top: h * (1 - this.bezier.coordinates[1] * (1 - p[0] - p[2]) - p[0]) + 'px'
+      left: w * (this.bezier.coordinates[0] * (1 - p[3] - p[1]) - p[3]) + "px",
+      top: h * (1 - this.bezier.coordinates[1] * (1 - p[0] - p[2]) - p[0]) + "px"
     }, {
-      left: w * (this.bezier.coordinates[2] * (1 - p[3] - p[1]) - p[3]) + 'px',
-      top: h * (1 - this.bezier.coordinates[3] * (1 - p[0] - p[2]) - p[0]) + 'px'
+      left: w * (this.bezier.coordinates[2] * (1 - p[3] - p[1]) - p[3]) + "px",
+      top: h * (1 - this.bezier.coordinates[3] * (1 - p[0] - p[2]) - p[0]) + "px"
     }];
   },
 
@@ -126,7 +131,7 @@ BezierCanvas.prototype = {
     let p = this.padding, w = this.canvas.width, h = this.canvas.height;
 
     // Convert padding percentage to actual padding
-    p = p.map(function(a, i) { return a * (i % 2? w : h)});
+    p = p.map((a, i) => a * (i % 2 ? w : h));
 
     return [
       (parseFloat(element.style.left) - p[3]) / (w + p[1] + p[3]),
@@ -137,13 +142,13 @@ BezierCanvas.prototype = {
   /**
    * Draw the cubic bezier curve for the current coordinates
    */
-  plot: function(settings={}) {
+  plot: function(settings = {}) {
     let xy = this.bezier.coordinates;
 
     let defaultSettings = {
-      handleColor: '#666',
+      handleColor: "#666",
       handleThickness: .008,
-      bezierColor: '#4C9ED9',
+      bezierColor: "#4C9ED9",
       bezierThickness: .015,
       drawHandles: true
     };
@@ -168,15 +173,15 @@ BezierCanvas.prototype = {
 
       this.ctx.moveTo(0, 0);
       this.ctx.lineTo(xy[0], xy[1]);
-      this.ctx.moveTo(1,1);
+      this.ctx.moveTo(1, 1);
       this.ctx.lineTo(xy[2], xy[3]);
 
       this.ctx.stroke();
       this.ctx.closePath();
 
-      var circle = function(ctx, cx, cy, r) {
+      let circle = (ctx, cx, cy, r) => {
         ctx.beginPath();
-        ctx.arc(cx, cy, r, 0, 2*Math.PI, !1);
+        ctx.arc(cx, cy, r, 0, 2 * Math.PI, !1);
         ctx.closePath();
       };
 
@@ -190,8 +195,8 @@ BezierCanvas.prototype = {
     this.ctx.beginPath();
     this.ctx.lineWidth = defaultSettings.bezierThickness;
     this.ctx.strokeStyle = defaultSettings.bezierColor;
-    this.ctx.moveTo(0,0);
-    this.ctx.bezierCurveTo(xy[0], xy[1], xy[2], xy[3], 1,1);
+    this.ctx.moveTo(0, 0);
+    this.ctx.bezierCurveTo(xy[0], xy[1], xy[2], xy[3], 1, 1);
     this.ctx.stroke();
     this.ctx.closePath();
   }
@@ -206,7 +211,8 @@ BezierCanvas.prototype = {
  * Emits "updated" events whenever the curve is changed. Along with the event is
  * sent a CubicBezier object
  */
-function CubicBezierWidget(parent, coordinates=PRESETS["ease-in"]["ease-in-sine"]) {
+function CubicBezierWidget(parent,
+                           coordinates = PRESETS["ease-in"]["ease-in-sine"]) {
   EventEmitter.decorate(this);
 
   this.parent = parent;
@@ -337,7 +343,7 @@ CubicBezierWidget.prototype = {
       self._updateFromPoints();
     };
 
-    doc.onmouseup = function () {
+    doc.onmouseup = function() {
       point.focus();
       doc.onmousemove = doc.onmouseup = null;
     };
@@ -351,15 +357,15 @@ CubicBezierWidget.prototype = {
       event.preventDefault();
 
       // Arrow keys pressed
-      let left = parseInt(point.style.left);
-      let top = parseInt(point.style.top);
+      let left = parseInt(point.style.left, 10);
+      let top = parseInt(point.style.top, 10);
       let offset = 3 * (event.shiftKey ? 10 : 1);
 
       switch (code) {
-        case 37: point.style.left = left - offset + 'px'; break;
-        case 38: point.style.top = top - offset + 'px'; break;
-        case 39: point.style.left = left + offset + 'px'; break;
-        case 40: point.style.top = top + offset + 'px'; break;
+        case 37: point.style.left = left - offset + "px"; break;
+        case 38: point.style.top = top - offset + "px"; break;
+        case 39: point.style.left = left + offset + "px"; break;
+        case 40: point.style.top = top + offset + "px"; break;
       }
 
       this._updateFromPoints();
@@ -376,9 +382,9 @@ CubicBezierWidget.prototype = {
 
     // Find which point is closer
     let distP1 = distance(x, y,
-      parseInt(this.p1.style.left), parseInt(this.p1.style.top));
+      parseInt(this.p1.style.left, 10), parseInt(this.p1.style.top, 10));
     let distP2 = distance(x, y,
-      parseInt(this.p2.style.left), parseInt(this.p2.style.top));
+      parseInt(this.p2.style.left, 10), parseInt(this.p2.style.top, 10));
 
     let point = distP1 < distP2 ? this.p1 : this.p2;
     point.style.left = x + "px";
@@ -433,7 +439,8 @@ CubicBezierWidget.prototype = {
 
   /**
    * Set new coordinates for the control point and redraw the curve
-   * @param {String} value A string value. E.g. "linear", "cubic-bezier(0,0,1,1)"
+   * @param {String} value A string value. E.g. "linear",
+   * "cubic-bezier(0,0,1,1)"
    */
   set cssCubicBezierValue(value) {
     if (!value) {
@@ -463,7 +470,8 @@ CubicBezierWidget.prototype = {
 /**
  * CubicBezierPreset widget.
  * Builds a menu of presets from CubicBezierPresets
- * @param {DOMNode} parent The container where the preset panel should be created
+ * @param {DOMNode} parent The container where the preset panel should be
+ * created
  *
  * Emits "new-coordinate" event along with the coordinates
  * whenever a preset is selected.
@@ -552,6 +560,7 @@ CubicBezierPresetWidget.prototype = {
 
     let categoryDisplayLabel = this._normalizeCategoryLabel(categoryLabel);
     category.textContent = categoryDisplayLabel;
+    category.setAttribute("title", categoryDisplayLabel);
 
     return category;
   },
@@ -599,6 +608,7 @@ CubicBezierPresetWidget.prototype = {
     let presetDisplayLabel = this._normalizePresetLabel(categoryLabel, presetLabel);
     presetLabelElem.textContent = presetDisplayLabel;
     preset.appendChild(presetLabelElem);
+    preset.setAttribute("title", presetDisplayLabel);
 
     return preset;
   },
@@ -686,14 +696,12 @@ CubicBezierPresetWidget.prototype = {
     // If the new coordinates do match a preset,
     // set its category and preset button as active.
     Object.keys(PRESETS).forEach(categoryLabel => {
-
       Object.keys(PRESETS[categoryLabel]).forEach(presetLabel => {
         if (coordsAreEqual(PRESETS[categoryLabel][presetLabel], coordinates)) {
           category = this.parent.querySelector("#" + categoryLabel);
           preset = this.parent.querySelector("#" + presetLabel);
         }
       });
-
     });
 
     this.activeCategory = category;
@@ -788,7 +796,7 @@ TimingFunctionPreviewWidget.prototype = {
 // Helpers
 
 function getPadding(padding) {
-  let p = typeof padding === 'number'? [padding] : padding;
+  let p = typeof padding === "number" ? [padding] : padding;
 
   if (p.length === 1) {
     p[1] = p[0];

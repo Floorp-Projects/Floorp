@@ -7,7 +7,7 @@
 
 #container {
   display: flex;
-  width: 410px;
+  width: 500px;
   height: 370px;
   flex-direction: row-reverse;
   overflow: hidden;
@@ -79,7 +79,7 @@ canvas#curve {
 .timing-function-preview {
   position: absolute;
   bottom: 20px;
-  right: 27px;
+  right: 45px;
   width: 150px;
 }
 
@@ -163,6 +163,8 @@ canvas#curve {
   border-right: 1px solid var(--theme-splitter-color);
   cursor: default;
   color: var(--theme-body-color);
+  text-overflow: ellipsis;
+  overflow: hidden;
 }
 
 .category:hover {
@@ -216,10 +218,12 @@ canvas#curve {
 }
 
 .preset p {
-  font-size: 0.9em;
+  font-size: 80%;
   margin: 2px auto 0px auto;
   color: var(--theme-body-color-alt);
   text-transform: capitalize;
+  text-overflow: ellipsis;
+  overflow: hidden;
 }
 
 .active-preset p, .active-preset:hover p {
