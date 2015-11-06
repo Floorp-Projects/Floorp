@@ -1784,6 +1784,12 @@ KeyframeEffectReadOnly::GetPresContext() const
   return shell->GetPresContext();
 }
 
+AnimationCollection *
+KeyframeEffectReadOnly::GetCollection() const
+{
+  return mAnimation ? mAnimation->GetCollection() : nullptr;
+}
+
 /* static */ bool
 KeyframeEffectReadOnly::IsGeometricProperty(
   const nsCSSProperty aProperty)
