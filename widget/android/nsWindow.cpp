@@ -1679,15 +1679,21 @@ void
 nsWindow::RemoveIMEComposition()
 {
     // Remove composition on Gecko side
-    if (!GetIMEComposition()) {
+    const nsRefPtr<mozilla::TextComposition> composition(GetIMEComposition());
+    if (!composition) {
         return;
     }
 
     nsRefPtr<nsWindow> kungFuDeathGrip(this);
     AutoIMEMask selMask(mIMEMaskSelectionUpdate);
 
-    WidgetCompositionEvent compositionCommitEvent(true, eCompositionCommitAsIs,
-                                                  this);
+    // We have to use eCompositionCommit instead of eCompositionCommitAsIs
+    // because TextComposition has a workaround for eCompositionCommitAsIs
+    // that prevents compositions containing a single ideographic space
+    // character from working (see bug 1209465)..
+    WidgetCompositionEvent compositionCommitEvent(
+            true, eCompositionCommit, this);
+    compositionCommitEvent.mData = composition->String();
     InitEvent(compositionCommitEvent, nullptr);
     DispatchEvent(&compositionCommitEvent);
 }
@@ -1861,10 +1867,7 @@ nsWindow::OnIMEEvent(AndroidGeckoEvent *ae)
 
             // Don't end composition when composing text.
             if (ae->Action() != AndroidGeckoEvent::IME_COMPOSE_TEXT) {
-                WidgetCompositionEvent compositionCommitEvent(
-                        true, eCompositionCommitAsIs, this);
-                InitEvent(compositionCommitEvent, nullptr);
-                DispatchEvent(&compositionCommitEvent);
+                RemoveIMEComposition();
             }
 
             if (mInputContext.mMayBeIMEUnaware) {
