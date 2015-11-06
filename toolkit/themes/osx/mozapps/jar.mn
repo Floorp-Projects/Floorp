@@ -11,7 +11,6 @@ toolkit.jar:
   skin/classic/mozapps/downloads/unknownContentType.css           (downloads/unknownContentType.css)
   skin/classic/mozapps/extensions/category-search.png             (extensions/category-search.png)
   skin/classic/mozapps/extensions/category-discover.png           (extensions/category-discover.png)
-  skin/classic/mozapps/extensions/category-searchengines.png      (extensions/category-searchengines.png)
   skin/classic/mozapps/extensions/category-plugins.png            (extensions/category-plugins.png)
   skin/classic/mozapps/extensions/category-service.png            (extensions/category-service.png)
   skin/classic/mozapps/extensions/category-dictionaries.png       (extensions/category-dictionaries.png)

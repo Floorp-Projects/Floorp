@@ -31,6 +31,12 @@
   cursor: text;
 }
 
+#version:-moz-locale-dir(rtl) {
+  direction: ltr;
+  text-align: right;
+  margin-right: 0;
+}
+
 #distribution,
 #distributionId {
   display: none;
