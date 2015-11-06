@@ -424,33 +424,6 @@ AnimValuesStyleRule::List(FILE* out, int32_t aIndent) const
 #endif
 
 bool
-AnimationCollection::CanAnimatePropertyOnCompositor(
-  const dom::Element *aElement,
-  nsCSSProperty aProperty)
-{
-  bool shouldLog = nsLayoutUtils::IsAnimationLoggingEnabled();
-
-  if (KeyframeEffectReadOnly::IsGeometricProperty(aProperty)) {
-    if (shouldLog) {
-      nsCString message;
-      message.AppendLiteral("Performance warning: Async animation of "
-        "'transform' or 'opacity' not possible due to animation of geometric"
-        "properties on the same element");
-      LogAsyncAnimationFailure(message, aElement);
-    }
-    return false;
-  }
-  if (aProperty == eCSSProperty_transform) {
-    nsIFrame* frame = nsLayoutUtils::GetStyleFrame(aElement);
-    if (!KeyframeEffectReadOnly::CanAnimateTransformOnCompositor(frame,
-          shouldLog ? aElement : nullptr)) {
-      return false;
-    }
-  }
-  return true;
-}
-
-bool
 AnimationCollection::CanPerformOnCompositorThread() const
 {
   if (!nsLayoutUtils::AreAsyncAnimationsEnabled()) {
@@ -490,8 +463,9 @@ AnimationCollection::CanPerformOnCompositorThread() const
     for (size_t propIdx = 0, propEnd = effect->Properties().Length();
          propIdx != propEnd; ++propIdx) {
       const AnimationProperty& prop = effect->Properties()[propIdx];
-      if (!CanAnimatePropertyOnCompositor(element,
-                                          prop.mProperty)) {
+      if (!KeyframeEffectReadOnly::CanAnimatePropertyOnCompositor(
+            frame,
+            prop.mProperty)) {
         return false;
       }
     }
