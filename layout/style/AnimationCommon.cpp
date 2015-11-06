@@ -110,8 +110,7 @@ CommonAnimationManager::GetAnimationsForCompositor(const nsIFrame* aFrame,
   AnimationCollection* collection = GetAnimationCollection(aFrame);
   if (!collection ||
       !collection->HasCurrentAnimationOfProperty(aProperty) ||
-      !collection->CanPerformOnCompositorThread(
-        AnimationCollection::CanAnimate_AllowPartial)) {
+      !collection->CanPerformOnCompositorThread()) {
     return nullptr;
   }
 
@@ -427,8 +426,7 @@ AnimValuesStyleRule::List(FILE* out, int32_t aIndent) const
 bool
 AnimationCollection::CanAnimatePropertyOnCompositor(
   const dom::Element *aElement,
-  nsCSSProperty aProperty,
-  CanAnimateFlags aFlags)
+  nsCSSProperty aProperty)
 {
   bool shouldLog = nsLayoutUtils::IsAnimationLoggingEnabled();
 
@@ -449,15 +447,11 @@ AnimationCollection::CanAnimatePropertyOnCompositor(
       return false;
     }
   }
-  bool propertyAllowed = (aProperty == eCSSProperty_transform) ||
-                         (aProperty == eCSSProperty_opacity) ||
-                         (aFlags & CanAnimate_AllowPartial);
-  return propertyAllowed;
+  return true;
 }
 
 bool
-AnimationCollection::CanPerformOnCompositorThread(
-  CanAnimateFlags aFlags) const
+AnimationCollection::CanPerformOnCompositorThread() const
 {
   if (!nsLayoutUtils::AreAsyncAnimationsEnabled()) {
     if (nsLayoutUtils::IsAnimationLoggingEnabled()) {
@@ -497,8 +491,7 @@ AnimationCollection::CanPerformOnCompositorThread(
          propIdx != propEnd; ++propIdx) {
       const AnimationProperty& prop = effect->Properties()[propIdx];
       if (!CanAnimatePropertyOnCompositor(element,
-                                          prop.mProperty,
-                                          aFlags)) {
+                                          prop.mProperty)) {
         return false;
       }
     }
