@@ -15,13 +15,14 @@
         <item name="windowNoTitle">true</item>
         <item name="android:windowContentOverlay">@null</item>
         <item name="android:actionBarStyle">@style/GeckoActionBar</item>
-        <item name="android:actionBarTheme">@style/ActionBarTheme</item>
+        <!-- TODO (bug 1220863): Once we extend AppCompatActivity, set actionBarStyle. -->
     </style>
 
     <style name="GeckoPreferencesBase" parent="Gecko">
         <item name="android:windowActionBar">true</item>
         <item name="android:windowNoTitle">false</item>
         <item name="android:actionBarStyle">@style/ActionBar.GeckoPreferences</item>
+        <item name="android:actionBarTheme">@style/ActionBarThemeGeckoPreferences</item>
     </style>
 
     <style name="ActionBar.FxAccountStatusActivity" parent="@android:style/Widget.Material.ActionBar.Solid">

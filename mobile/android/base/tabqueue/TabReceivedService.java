@@ -4,18 +4,23 @@
 
 package org.mozilla.gecko.tabqueue;
 
+import org.mozilla.gecko.AppConstants;
+import org.mozilla.gecko.BrowserLocaleManager;
+import org.mozilla.gecko.GeckoSharedPrefs;
+import org.mozilla.gecko.R;
+import org.mozilla.gecko.db.BrowserContract;
+
 import android.app.IntentService;
 import android.app.PendingIntent;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
+import android.database.Cursor;
+import android.support.annotation.Nullable;
+import android.support.annotation.WorkerThread;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
 import android.util.Log;
-import org.mozilla.gecko.BrowserLocaleManager;
-import org.mozilla.gecko.GeckoSharedPrefs;
-import org.mozilla.gecko.R;
-import org.mozilla.gecko.db.BrowserContract;
 
 /**
  * An IntentService that displays a notification for a tab sent to this device.
@@ -49,16 +54,11 @@ public class TabReceivedService extends IntentService {
             return;
         }
 
-        final String title = intent.getStringExtra(Intent.EXTRA_TITLE);
-        String notificationTitle = this.getString(R.string.sync_new_tab);
-        if (title != null) {
-            notificationTitle = notificationTitle.concat(": " + title);
-        }
-
         final Intent notificationIntent = new Intent(Intent.ACTION_VIEW, intent.getData());
         notificationIntent.putExtra(BrowserContract.SKIP_TAB_QUEUE_FLAG, true);
         final PendingIntent contentIntent = PendingIntent.getActivity(this, 0, notificationIntent, 0);
 
+        final String notificationTitle = getNotificationTitle(intent.getStringExtra(BrowserContract.EXTRA_CLIENT_GUID));
         final NotificationCompat.Builder builder = new NotificationCompat.Builder(this);
         builder.setSmallIcon(R.drawable.flat_icon);
         builder.setContentTitle(notificationTitle);
@@ -77,6 +77,34 @@ public class TabReceivedService extends IntentService {
         // This would prevent two identical notifications from appearing if the
         // notification was shown during the previous Intent processing attempt.
         prefs.edit().putInt(PREF_NOTIFICATION_ID, notificationId).apply();
+    }
+
+    /**
+     * @param clientGUID the guid of the client in the clients table
+     * @return the client's name from the clients table, if possible, else the brand name.
+     */
+    @WorkerThread
+    private String getNotificationTitle(@Nullable final String clientGUID) {
+        if (clientGUID == null) {
+            Log.w(LOGTAG, "Received null guid, using brand name.");
+            return AppConstants.MOZ_APP_DISPLAYNAME;
+        }
+
+        final Cursor c = getContentResolver().query(BrowserContract.Clients.CONTENT_URI,
+                new String[] { BrowserContract.Clients.NAME },
+                BrowserContract.Clients.GUID + "=?", new String[] { clientGUID }, null);
+        try {
+            if (c != null && c.moveToFirst()) {
+                return c.getString(c.getColumnIndex(BrowserContract.Clients.NAME));
+            } else {
+                Log.w(LOGTAG, "Device not found, using brand name.");
+                return AppConstants.MOZ_APP_DISPLAYNAME;
+            }
+        } finally {
+            if (c != null) {
+                c.close();
+            }
+        }
     }
 
     /**
