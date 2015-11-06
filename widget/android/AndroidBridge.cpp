@@ -2248,6 +2248,7 @@ nsresult AndroidBridge::GetExternalPublicDirectory(const nsAString& aType, nsASt
           child->SendGetDeviceStorageLocation(type, &path);
           if (!path.IsEmpty()) {
             AndroidBridge::sStoragePaths.Put(key, path);
+            aPath = path;
             return NS_OK;
           }
         }
