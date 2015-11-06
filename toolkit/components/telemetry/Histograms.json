@@ -4083,7 +4083,14 @@
     "kind": "exponential",
     "high": "10000",
     "n_buckets": 50,
-    "description": "Delay in ms between the target and the actual handling time of the frame at refresh driver in chrome process."
+    "description": "Delay in ms between the target and the actual handling time of the frame at refresh driver in the chrome process."
+  },
+  "FX_REFRESH_DRIVER_CONTENT_FRAME_DELAY_MS": {
+    "expires_in_version": "default",
+    "kind": "exponential",
+    "high": "10000",
+    "n_buckets": 50,
+    "description": "Delay in ms between the target and the actual handling time of the frame at refresh driver in the content process."
   },
   "FX_TAB_SWITCH_UPDATE_MS": {
     "alert_emails": ["perf-telemetry-alerts@mozilla.com"],
