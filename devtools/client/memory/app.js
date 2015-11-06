@@ -9,6 +9,7 @@ const { toggleRecordingAllocationStacks } = require("./actions/allocations");
 const { setBreakdownAndRefresh } = require("./actions/breakdown");
 const { toggleInvertedAndRefresh } = require("./actions/inverted");
 const { setFilterStringAndRefresh } = require("./actions/filter");
+const { pickFileAndExportSnapshot } = require("./actions/io");
 const { selectSnapshotAndRefresh, takeSnapshotAndCensus } = require("./actions/snapshot");
 const { breakdownNameToSpec, getBreakdownDisplayData } = require("./utils");
 const Toolbar = createFactory(require("./components/toolbar"));
@@ -78,7 +79,8 @@ const App = createClass({
           List({
             itemComponent: SnapshotListItem,
             items: snapshots,
-            onClick: snapshot => dispatch(selectSnapshotAndRefresh(heapWorker, snapshot))
+            onClick: snapshot => dispatch(selectSnapshotAndRefresh(heapWorker, snapshot)),
+            onSave: snapshot => dispatch(pickFileAndExportSnapshot(snapshot))
           }),
 
           HeapView({
