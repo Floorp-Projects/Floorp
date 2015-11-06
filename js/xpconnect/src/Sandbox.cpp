@@ -562,8 +562,6 @@ static const js::Class SandboxClass = {
     nullptr, nullptr, nullptr, JS_GlobalObjectTraceHook,
     JS_NULL_CLASS_SPEC,
     {
-      nullptr,      /* outerObject */
-      nullptr,      /* innerObject */
       false,        /* isWrappedNative */
       nullptr,      /* weakmapKeyDelegateOp */
       sandbox_moved /* objectMovedOp */
@@ -583,8 +581,6 @@ static const js::Class SandboxWriteToProtoClass = {
     nullptr, nullptr, nullptr, JS_GlobalObjectTraceHook,
     JS_NULL_CLASS_SPEC,
     {
-      nullptr,      /* outerObject */
-      nullptr,      /* innerObject */
       false,        /* isWrappedNative */
       nullptr,      /* weakmapKeyDelegateOp */
       sandbox_moved /* objectMovedOp */

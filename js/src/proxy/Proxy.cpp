@@ -533,12 +533,6 @@ Proxy::trace(JSTracer* trc, JSObject* proxy)
     handler->trace(trc, proxy);
 }
 
-JSObject*
-js::proxy_innerObject(JSObject* obj)
-{
-    return obj->as<ProxyObject>().private_().toObjectOrNull();
-}
-
 bool
 js::proxy_LookupProperty(JSContext* cx, HandleObject obj, HandleId id,
                          MutableHandleObject objp, MutableHandleShape propp)

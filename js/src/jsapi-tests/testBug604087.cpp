@@ -19,8 +19,6 @@ const js::Class OuterWrapperClass =
         "Proxy",
         0, /* additional class flags */
         PROXY_MAKE_EXT(
-            nullptr, /* outerObject */
-            js::proxy_innerObject,
             false,   /* isWrappedNative */
             nullptr  /* objectMoved */
         ));
