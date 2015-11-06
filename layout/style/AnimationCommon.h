@@ -259,11 +259,6 @@ struct AnimationCollection : public LinkedListElement<AnimationCollection>
   void RequestRestyle(RestyleType aRestyleType);
   void ClearIsRunningOnCompositor(nsCSSProperty aProperty);
 
-private:
-
-  bool CanThrottleAnimation(TimeStamp aTime);
-  bool CanThrottleTransformChanges(TimeStamp aTime);
-
 public:
   // True if this animation can be performed on the compositor thread.
   //

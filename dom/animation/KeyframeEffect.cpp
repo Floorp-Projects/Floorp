@@ -9,8 +9,10 @@
 #include "mozilla/dom/KeyframeEffectBinding.h"
 #include "mozilla/dom/PropertyIndexedKeyframesBinding.h"
 #include "mozilla/FloatingPoint.h"
+#include "mozilla/LookAndFeel.h" // For LookAndFeel::GetInt
 #include "mozilla/StyleAnimationValue.h"
 #include "AnimationCommon.h"
+#include "Layers.h" // For Layer
 #include "nsCSSParser.h"
 #include "nsCSSPropertySet.h"
 #include "nsCSSProps.h" // For nsCSSProps::PropHasFlags
@@ -1726,12 +1728,108 @@ KeyframeEffectReadOnly::GetFrames(JSContext*& aCx,
 bool
 KeyframeEffectReadOnly::CanThrottle() const
 {
+  // Animation::CanThrottle checks for finished and not in effect animations
+  // before calling this.
+  MOZ_ASSERT(IsInEffect() && IsCurrent(),
+    "Effect should be in effect and current");
+
+  nsIFrame* frame = GetAnimationFrame();
+  if (!frame) {
+    // There are two possible cases here.
+    // a) No target element
+    // b) The target element has no frame, e.g. because it is in a display:none
+    //    subtree.
+    // In either case we can throttle the animation because there is no
+    // need to update on the main thread.
+    return true;
+  }
+
+  // First we need to check layer generation and transform overflow
+  // prior to the IsPropertyRunningOnCompositor check because we should
+  // occasionally unthrottle these animations even if the animations are
+  // already running on compositor.
+  for (const LayerAnimationInfo::Record& record :
+        LayerAnimationInfo::sRecords) {
+    // Skip properties that are overridden in the cascade.
+    // (GetAnimationOfProperty, as called by HasAnimationOfProperty,
+    // only returns an animation if it currently wins in the cascade.)
+    if (!HasAnimationOfProperty(record.mProperty)) {
+      continue;
+    }
+
+    AnimationCollection* collection = GetCollection();
+    MOZ_ASSERT(collection,
+      "CanThrottle should be called on an effect associated with an animation");
+    layers::Layer* layer =
+      FrameLayerBuilder::GetDedicatedLayer(frame, record.mLayerType);
+    // Unthrottle if the layer needs to be brought up to date with the animation.
+    if (!layer ||
+        collection->mAnimationGeneration > layer->GetAnimationGeneration()) {
+      return false;
+    }
+
+    // If this is a transform animation that affects the overflow region,
+    // we should unthrottle the animation periodically.
+    if (record.mProperty == eCSSProperty_transform &&
+        !CanThrottleTransformChanges(*frame)) {
+      return false;
+    }
+  }
+
   for (const AnimationProperty& property : mProperties) {
     if (!IsPropertyRunningOnCompositor(property.mProperty)) {
       return false;
     }
   }
+
   return true;
+}
+
+bool
+KeyframeEffectReadOnly::CanThrottleTransformChanges(nsIFrame& aFrame) const
+{
+  // If we know that the animation cannot cause overflow,
+  // we can just disable flushes for this animation.
+
+  // If we don't show scrollbars, we don't care about overflow.
+  if (LookAndFeel::GetInt(LookAndFeel::eIntID_ShowHideScrollbars) == 0) {
+    return true;
+  }
+
+  nsPresContext* presContext = GetPresContext();
+  // CanThrottleTransformChanges is only called as part of a refresh driver tick
+  // in which case we expect to has a pres context.
+  MOZ_ASSERT(presContext);
+
+  TimeStamp now =
+    presContext->RefreshDriver()->MostRecentRefresh();
+
+  AnimationCollection* collection = GetCollection();
+  MOZ_ASSERT(collection,
+    "CanThrottleTransformChanges should be involved with animation collection");
+  TimeStamp styleRuleRefreshTime = collection->mStyleRuleRefreshTime;
+  // If this animation can cause overflow, we can throttle some of the ticks.
+  if (!styleRuleRefreshTime.IsNull() &&
+      (now - styleRuleRefreshTime) < TimeDuration::FromMilliseconds(200)) {
+    return true;
+  }
+
+  // If the nearest scrollable ancestor has overflow:hidden,
+  // we don't care about overflow.
+  nsIScrollableFrame* scrollable =
+    nsLayoutUtils::GetNearestScrollableFrame(&aFrame);
+  if (!scrollable) {
+    return true;
+  }
+
+  ScrollbarStyles ss = scrollable->GetScrollbarStyles();
+  if (ss.mVertical == NS_STYLE_OVERFLOW_HIDDEN &&
+      ss.mHorizontal == NS_STYLE_OVERFLOW_HIDDEN &&
+      scrollable->GetLogicalScrollPosition() == nsPoint(0, 0)) {
+    return true;
+  }
+
+  return false;
 }
 
 nsIFrame*

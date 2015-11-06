@@ -17,9 +17,7 @@
 #include "nsStyleContext.h"
 #include "nsIFrame.h"
 #include "nsLayoutUtils.h"
-#include "mozilla/LookAndFeel.h"
 #include "LayerAnimationInfo.h" // For LayerAnimationInfo::sRecords
-#include "Layers.h"
 #include "FrameLayerBuilder.h"
 #include "nsDisplayList.h"
 #include "mozilla/MemoryReporting.h"
@@ -29,7 +27,6 @@
 #include "nsStyleSet.h"
 #include "nsStyleChangeList.h"
 
-using mozilla::layers::Layer;
 using mozilla::dom::Animation;
 using mozilla::dom::KeyframeEffectReadOnly;
 
@@ -603,91 +600,6 @@ AnimationCollection::EnsureStyleRuleFor(TimeStamp aRefreshTime)
   }
 }
 
-bool
-AnimationCollection::CanThrottleTransformChanges(TimeStamp aTime)
-{
-  if (!nsLayoutUtils::AreAsyncAnimationsEnabled()) {
-    return false;
-  }
-
-  // If we know that the animation cannot cause overflow,
-  // we can just disable flushes for this animation.
-
-  // If we don't show scrollbars, we don't care about overflow.
-  if (LookAndFeel::GetInt(LookAndFeel::eIntID_ShowHideScrollbars) == 0) {
-    return true;
-  }
-
-  // If this animation can cause overflow, we can throttle some of the ticks.
-  if (!mStyleRuleRefreshTime.IsNull() &&
-      (aTime - mStyleRuleRefreshTime) < TimeDuration::FromMilliseconds(200)) {
-    return true;
-  }
-
-  dom::Element* element = GetElementToRestyle();
-  if (!element) {
-    return false;
-  }
-
-  // If the nearest scrollable ancestor has overflow:hidden,
-  // we don't care about overflow.
-  nsIScrollableFrame* scrollable = nsLayoutUtils::GetNearestScrollableFrame(
-                                     nsLayoutUtils::GetStyleFrame(element));
-  if (!scrollable) {
-    return true;
-  }
-
-  ScrollbarStyles ss = scrollable->GetScrollbarStyles();
-  if (ss.mVertical == NS_STYLE_OVERFLOW_HIDDEN &&
-      ss.mHorizontal == NS_STYLE_OVERFLOW_HIDDEN &&
-      scrollable->GetLogicalScrollPosition() == nsPoint(0, 0)) {
-    return true;
-  }
-
-  return false;
-}
-
-bool
-AnimationCollection::CanThrottleAnimation(TimeStamp aTime)
-{
-  dom::Element* element = GetElementToRestyle();
-  if (!element) {
-    return false;
-  }
-  nsIFrame* frame = nsLayoutUtils::GetStyleFrame(element);
-  if (!frame) {
-    return false;
-  }
-
-  for (const LayerAnimationInfo::Record& record :
-        LayerAnimationInfo::sRecords) {
-    // We only need to worry about *current* animations here.
-    // - If we have a newly-finished animation, Animation::CanThrottle will
-    //   detect that and force an unthrottled sample.
-    // - If we have a newly-idle animation, then whatever caused the animation
-    //   to be idle will update the animation generation so we'll return false
-    //   from the layer generation check below for any other running compositor
-    //   animations (and if no other compositor animations exist we won't get
-    //   this far).
-    if (!HasCurrentAnimationOfProperty(record.mProperty)) {
-      continue;
-    }
-
-    Layer* layer = FrameLayerBuilder::GetDedicatedLayer(
-                     frame, record.mLayerType);
-    if (!layer || mAnimationGeneration > layer->GetAnimationGeneration()) {
-      return false;
-    }
-
-    if (record.mProperty == eCSSProperty_transform &&
-        !CanThrottleTransformChanges(aTime)) {
-      return false;
-    }
-  }
-
-  return true;
-}
-
 void
 AnimationCollection::ClearIsRunningOnCompositor(nsCSSProperty aProperty)
 {
@@ -727,15 +639,6 @@ AnimationCollection::RequestRestyle(RestyleType aRestyleType)
 
   if (mHasPendingAnimationRestyle) {
     return;
-  }
-
-  // Upgrade throttled restyles if other factors prevent
-  // throttling (e.g. async animations are not enabled).
-  if (aRestyleType == RestyleType::Throttled) {
-    TimeStamp now = presContext->RefreshDriver()->MostRecentRefresh();
-    if (!CanThrottleAnimation(now)) {
-      aRestyleType = RestyleType::Standard;
-    }
   }
 
   if (aRestyleType >= RestyleType::Standard) {
