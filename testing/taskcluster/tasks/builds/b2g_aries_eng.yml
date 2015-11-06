@@ -16,7 +16,7 @@ task:
       build-aries-eng-objdir-gecko-{{project}}: /home/worker/objdir-gecko
     env:
       TARGET: 'aries'
-      MOZHARNESS_CONFIG: b2g/taskcluster-spark.py
+      MOZHARNESS_CONFIG: b2g/taskcluster-phone-eng.py
   extra:
     treeherderEnv:
       - production
