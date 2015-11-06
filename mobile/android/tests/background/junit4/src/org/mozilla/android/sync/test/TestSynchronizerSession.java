@@ -3,23 +3,14 @@
 
 package org.mozilla.android.sync.test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Map.Entry;
-
+import android.content.Context;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mozilla.android.sync.test.SynchronizerHelpers.DataAvailableWBORepository;
 import org.mozilla.android.sync.test.SynchronizerHelpers.ShouldSkipWBORepository;
 import org.mozilla.gecko.background.common.log.Logger;
+import org.mozilla.gecko.background.testhelpers.TestRunner;
 import org.mozilla.gecko.background.testhelpers.WBORepository;
 import org.mozilla.gecko.background.testhelpers.WaitHelper;
 import org.mozilla.gecko.sync.SynchronizerConfiguration;
@@ -30,10 +21,18 @@ import org.mozilla.gecko.sync.synchronizer.Synchronizer;
 import org.mozilla.gecko.sync.synchronizer.SynchronizerSession;
 import org.mozilla.gecko.sync.synchronizer.SynchronizerSessionDelegate;
 
-import android.content.Context;
-import org.robolectric.RobolectricGradleTestRunner;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Map.Entry;
 
-@RunWith(RobolectricGradleTestRunner.class)
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
+@RunWith(TestRunner.class)
 public class TestSynchronizerSession {
   public static final String LOG_TAG = TestSynchronizerSession.class.getSimpleName();
 

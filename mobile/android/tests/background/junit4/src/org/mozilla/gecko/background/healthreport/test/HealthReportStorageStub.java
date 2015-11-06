@@ -3,11 +3,9 @@
 
 package org.mozilla.gecko.background.healthreport.test;
 
-import org.json.JSONObject;
-
 import android.database.Cursor;
 import android.util.SparseArray;
-
+import org.json.JSONObject;
 import org.mozilla.gecko.background.healthreport.Environment;
 import org.mozilla.gecko.background.healthreport.HealthReportStorage;
 

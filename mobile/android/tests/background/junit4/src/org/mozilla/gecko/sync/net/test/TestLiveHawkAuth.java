@@ -3,14 +3,14 @@
 
 package org.mozilla.gecko.sync.net.test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.security.GeneralSecurityException;
-
+import ch.boye.httpclientandroidlib.Header;
+import ch.boye.httpclientandroidlib.HttpResponse;
+import ch.boye.httpclientandroidlib.client.ClientProtocolException;
+import ch.boye.httpclientandroidlib.client.methods.HttpRequestBase;
+import ch.boye.httpclientandroidlib.entity.StringEntity;
+import ch.boye.httpclientandroidlib.impl.client.DefaultHttpClient;
+import ch.boye.httpclientandroidlib.message.BasicHeader;
+import ch.boye.httpclientandroidlib.protocol.BasicHttpContext;
 import org.junit.Assert;
 import org.mozilla.gecko.background.testhelpers.WaitHelper;
 import org.mozilla.gecko.sync.net.AuthHeaderProvider;
@@ -20,14 +20,13 @@ import org.mozilla.gecko.sync.net.HawkAuthHeaderProvider;
 import org.mozilla.gecko.sync.net.Resource;
 import org.mozilla.gecko.sync.net.SyncResponse;
 
-import ch.boye.httpclientandroidlib.Header;
-import ch.boye.httpclientandroidlib.HttpResponse;
-import ch.boye.httpclientandroidlib.client.ClientProtocolException;
-import ch.boye.httpclientandroidlib.client.methods.HttpRequestBase;
-import ch.boye.httpclientandroidlib.entity.StringEntity;
-import ch.boye.httpclientandroidlib.impl.client.DefaultHttpClient;
-import ch.boye.httpclientandroidlib.message.BasicHeader;
-import ch.boye.httpclientandroidlib.protocol.BasicHttpContext;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.security.GeneralSecurityException;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 
 public class TestLiveHawkAuth {

@@ -3,15 +3,15 @@
 
 package org.mozilla.android.sync.test.helpers;
 
-import static org.junit.Assert.fail;
-
-import java.io.IOException;
-
 import org.mozilla.gecko.sync.net.AuthHeaderProvider;
 import org.mozilla.gecko.sync.net.BaseResource;
 import org.mozilla.gecko.sync.net.BasicAuthHeaderProvider;
 import org.mozilla.gecko.sync.net.SyncStorageRequestDelegate;
 import org.mozilla.gecko.sync.net.SyncStorageResponse;
+
+import java.io.IOException;
+
+import static org.junit.Assert.fail;
 
 public class BaseTestStorageRequestDelegate implements
     SyncStorageRequestDelegate {

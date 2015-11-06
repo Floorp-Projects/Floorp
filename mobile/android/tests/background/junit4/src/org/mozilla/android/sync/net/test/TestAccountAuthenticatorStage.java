@@ -3,14 +3,7 @@
 
 package org.mozilla.android.sync.net.test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
-import java.io.IOException;
-import java.io.PrintStream;
-import java.net.URISyntaxException;
-
+import ch.boye.httpclientandroidlib.HttpResponse;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -18,21 +11,27 @@ import org.junit.runner.RunWith;
 import org.mozilla.android.sync.test.helpers.HTTPServerTestHelper;
 import org.mozilla.android.sync.test.helpers.MockServer;
 import org.mozilla.gecko.background.common.log.Logger;
+import org.mozilla.gecko.background.testhelpers.TestRunner;
 import org.mozilla.gecko.background.testhelpers.WaitHelper;
 import org.mozilla.gecko.sync.setup.auth.AuthenticateAccountStage;
 import org.mozilla.gecko.sync.setup.auth.AuthenticateAccountStage.AuthenticateAccountStageDelegate;
-import org.robolectric.RobolectricGradleTestRunner;
 import org.simpleframework.http.Request;
 import org.simpleframework.http.Response;
 
-import ch.boye.httpclientandroidlib.HttpResponse;
+import java.io.IOException;
+import java.io.PrintStream;
+import java.net.URISyntaxException;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * Tests the authentication request stage of manual Account setup.
  * @author liuche
  *
  */
-@RunWith(RobolectricGradleTestRunner.class)
+@RunWith(TestRunner.class)
 public class TestAccountAuthenticatorStage {
   private static final int TEST_PORT      = HTTPServerTestHelper.getTestPort();
   private static final String TEST_SERVER = "http://localhost:" + TEST_PORT;

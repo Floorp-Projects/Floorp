@@ -3,8 +3,8 @@
 
 package org.mozilla.gecko.background.testhelpers;
 
-import java.io.IOException;
-
+import android.content.Context;
+import android.content.SharedPreferences;
 import org.json.simple.parser.ParseException;
 import org.mozilla.gecko.sync.GlobalSession;
 import org.mozilla.gecko.sync.NonObjectJSONException;
@@ -16,8 +16,7 @@ import org.mozilla.gecko.sync.delegates.GlobalSessionCallback;
 import org.mozilla.gecko.sync.net.AuthHeaderProvider;
 import org.mozilla.gecko.sync.net.BasicAuthHeaderProvider;
 
-import android.content.Context;
-import android.content.SharedPreferences;
+import java.io.IOException;
 
 /**
  * GlobalSession touches the Android prefs system. Stub that out.
