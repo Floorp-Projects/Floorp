@@ -9,20 +9,14 @@
 
 #include "mozilla/Monitor.h"
 #include "mozilla/Mutex.h"
-#include "mozilla/StaticPtr.h"
 #include "nsCOMPtr.h"
 #include "nsDataHashtable.h"
 #include "nsIObserver.h"
 #include "nsIThread.h"
 #include "nsITimer.h"
-#include "nsRefPtrHashtable.h"
 #include "nsString.h"
 
 namespace mozilla {
-
-namespace dom {
-class DataStorageItem;
-}
 
 /**
  * DataStorage is a threadsafe, generic, narrow string-based hash map that
@@ -87,16 +81,13 @@ enum DataStorageType {
 
 class DataStorage : public nsIObserver
 {
-  typedef dom::DataStorageItem DataStorageItem;
-
 public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIOBSERVER
 
   // If there is a profile directory, there is or will eventually be a file
   // by the name specified by aFilename there.
-  static already_AddRefed<DataStorage> Get(const nsString& aFilename);
-  static already_AddRefed<DataStorage> GetIfExists(const nsString& aFilename);
+  explicit DataStorage(const nsString& aFilename);
 
   // Initializes the DataStorage. Must be called before using.
   // aDataWillPersist returns whether or not data can be persistently saved.
@@ -116,11 +107,7 @@ public:
   // Removes all entries of all types of data.
   nsresult Clear();
 
-  // Read all of the data items.
-  void GetAll(InfallibleTArray<DataStorageItem>* aItems);
-
 private:
-  explicit DataStorage(const nsString& aFilename);
   virtual ~DataStorage();
 
   class Writer;
@@ -146,7 +133,6 @@ private:
   };
 
   typedef nsDataHashtable<nsCStringHashKey, Entry> DataStorageTable;
-  typedef nsRefPtrHashtable<nsStringHashKey, DataStorage> DataStorages;
 
   void WaitForReady();
   nsresult AsyncWriteData(const MutexAutoLock& aProofOfLock);
@@ -172,10 +158,6 @@ private:
   DataStorageTable& GetTableForType(DataStorageType aType,
                                     const MutexAutoLock& aProofOfLock);
 
-  void ReadAllFromTable(DataStorageType aType,
-                        InfallibleTArray<DataStorageItem>* aItems,
-                        const MutexAutoLock& aProofOfLock);
-
   Mutex mMutex; // This mutex protects access to the following members:
   DataStorageTable  mPersistentDataTable;
   DataStorageTable  mTemporaryDataTable;
@@ -186,15 +168,12 @@ private:
   uint32_t mTimerDelay; // in milliseconds
   bool mPendingWrite; // true if a write is needed but hasn't been dispatched
   bool mShuttingDown;
-  bool mInitCalled; // Indicates that Init() has been called.
   // (End list of members protected by mMutex)
 
   Monitor mReadyMonitor; // Do not acquire this at the same time as mMutex.
   bool mReady; // Indicates that saved data has been read and Get can proceed.
 
   const nsString mFilename;
-
-  static StaticAutoPtr<DataStorages> sDataStorages;
 };
 
 } // namespace mozilla
