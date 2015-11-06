@@ -703,7 +703,8 @@ MacroAssemblerMIPS64::ma_bal(Label* label, DelaySlotFill delaySlotFill)
 
     BufferOffset bo = writeInst(getBranchCode(BranchIsCall).encode());
     writeInst(nextInChain);
-    label->use(bo.getOffset());
+    if (!oom())
+        label->use(bo.getOffset());
     // Leave space for long jump.
     as_nop();
     as_nop();
@@ -765,7 +766,8 @@ MacroAssemblerMIPS64::branchWithCode(InstImm code, Label* label, JumpKind jumpKi
         code.setBOffImm16(BOffImm16(4));
         BufferOffset bo = writeInst(code.encode());
         writeInst(nextInChain);
-        label->use(bo.getOffset());
+        if (!oom())
+            label->use(bo.getOffset());
         return;
     }
 
@@ -777,7 +779,8 @@ MacroAssemblerMIPS64::branchWithCode(InstImm code, Label* label, JumpKind jumpKi
 
     BufferOffset bo = writeInst(code.encode());
     writeInst(nextInChain);
-    label->use(bo.getOffset());
+    if (!oom())
+        label->use(bo.getOffset());
     // Leave space for potential long jump.
     as_nop();
     as_nop();
