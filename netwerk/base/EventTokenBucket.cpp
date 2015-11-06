@@ -19,8 +19,6 @@
 #include <mmsystem.h>
 #endif
 
-extern PRThread *gSocketThread;
-
 namespace mozilla {
 namespace net {
 
