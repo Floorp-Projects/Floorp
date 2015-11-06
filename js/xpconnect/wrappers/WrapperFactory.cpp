@@ -55,7 +55,7 @@ WrapperFactory::GetXrayWaiver(HandleObject obj)
 {
     // Object should come fully unwrapped but outerized.
     MOZ_ASSERT(obj == UncheckedUnwrap(obj));
-    MOZ_ASSERT(!js::GetObjectClass(obj)->ext.outerObject);
+    MOZ_ASSERT(!js::IsWindow(obj));
     XPCWrappedNativeScope* scope = ObjectScope(obj);
     MOZ_ASSERT(scope);
 
@@ -397,7 +397,7 @@ WrapperFactory::Rewrap(JSContext* cx, HandleObject existing, HandleObject obj)
 {
     MOZ_ASSERT(!IsWrapper(obj) ||
                GetProxyHandler(obj) == &XrayWaiver ||
-               js::GetObjectClass(obj)->ext.innerObject,
+               js::IsWindowProxy(obj),
                "wrapped object passed to rewrap");
     MOZ_ASSERT(!XrayUtils::IsXPCWNHolderClass(JS_GetClass(obj)), "trying to wrap a holder");
     MOZ_ASSERT(!js::IsWindow(obj));
