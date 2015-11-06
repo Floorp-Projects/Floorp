@@ -30,7 +30,7 @@ import sys
 from check_utils import get_all_toplevel_filenames
 
 architecture_independent = set([ 'generic' ])
-all_architecture_names = set([ 'x86', 'x64', 'arm', 'arm64', 'mips32' ])
+all_architecture_names = set([ 'x86', 'x64', 'arm', 'arm64', 'mips32', 'mips64' ])
 all_shared_architecture_names = set([ 'x86_shared', 'mips_shared', 'arm', 'arm64' ])
 
 reBeforeArg = "(?<=[(,\s])"
