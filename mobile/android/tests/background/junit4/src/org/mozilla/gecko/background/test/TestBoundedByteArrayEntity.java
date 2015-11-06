@@ -3,18 +3,17 @@
 
 package org.mozilla.gecko.background.test;
 
-import java.io.IOException;
-import java.util.Arrays;
-
+import ch.boye.httpclientandroidlib.HttpEntity;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mozilla.gecko.background.bagheera.BoundedByteArrayEntity;
+import org.mozilla.gecko.background.testhelpers.TestRunner;
 
-import ch.boye.httpclientandroidlib.HttpEntity;
-import org.robolectric.RobolectricGradleTestRunner;
+import java.io.IOException;
+import java.util.Arrays;
 
-@RunWith(RobolectricGradleTestRunner.class)
+@RunWith(TestRunner.class)
 public class TestBoundedByteArrayEntity {
   private static void expectFail(byte[] input, int start, int end) {
     try {

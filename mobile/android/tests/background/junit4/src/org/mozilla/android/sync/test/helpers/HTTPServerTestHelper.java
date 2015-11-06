@@ -3,7 +3,11 @@
 
 package org.mozilla.android.sync.test.helpers;
 
-import static org.junit.Assert.fail;
+import org.mozilla.gecko.background.common.log.Logger;
+import org.mozilla.gecko.sync.net.BaseResource;
+import org.mozilla.gecko.sync.net.BaseResourceDelegate;
+import org.simpleframework.transport.connect.Connection;
+import org.simpleframework.transport.connect.SocketConnection;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -11,11 +15,7 @@ import java.net.SocketAddress;
 import java.util.IdentityHashMap;
 import java.util.Map;
 
-import org.mozilla.gecko.background.common.log.Logger;
-import org.mozilla.gecko.sync.net.BaseResource;
-import org.mozilla.gecko.sync.net.BaseResourceDelegate;
-import org.simpleframework.transport.connect.Connection;
-import org.simpleframework.transport.connect.SocketConnection;
+import static org.junit.Assert.fail;
 
 /**
  * Test helper code to bind <code>MockServer</code> instances to ports.

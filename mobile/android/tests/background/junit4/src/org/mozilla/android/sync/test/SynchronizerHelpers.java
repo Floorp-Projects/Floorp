@@ -3,9 +3,7 @@
 
 package org.mozilla.android.sync.test;
 
-import java.util.ArrayList;
-import java.util.concurrent.ExecutorService;
-
+import android.content.Context;
 import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.background.testhelpers.WBORepository;
 import org.mozilla.gecko.sync.repositories.FetchFailedException;
@@ -19,7 +17,8 @@ import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionFetchRecor
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionFinishDelegate;
 import org.mozilla.gecko.sync.repositories.domain.Record;
 
-import android.content.Context;
+import java.util.ArrayList;
+import java.util.concurrent.ExecutorService;
 
 public class SynchronizerHelpers {
   public static final String FAIL_SENTINEL = "Fail";

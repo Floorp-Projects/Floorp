@@ -3,21 +3,14 @@
 
 package org.mozilla.android.sync.test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
-import java.util.Date;
-
+import android.content.Context;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mozilla.android.sync.test.SynchronizerHelpers.TrackingWBORepository;
 import org.mozilla.gecko.background.common.log.Logger;
+import org.mozilla.gecko.background.testhelpers.TestRunner;
 import org.mozilla.gecko.background.testhelpers.WBORepository;
 import org.mozilla.gecko.background.testhelpers.WaitHelper;
 import org.mozilla.gecko.sync.repositories.RepositorySessionBundle;
@@ -27,10 +20,16 @@ import org.mozilla.gecko.sync.synchronizer.SynchronizerDelegate;
 import org.mozilla.gecko.sync.synchronizer.SynchronizerSession;
 import org.mozilla.gecko.sync.synchronizer.SynchronizerSessionDelegate;
 
-import android.content.Context;
-import org.robolectric.RobolectricGradleTestRunner;
+import java.util.Date;
 
-@RunWith(RobolectricGradleTestRunner.class)
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
+@RunWith(TestRunner.class)
 public class TestSynchronizer {
   public static final String LOG_TAG = "TestSynchronizer";
 
