@@ -3849,7 +3849,7 @@ struct ScriptCountBlockState
 
   public:
     ScriptCountBlockState(IonBlockCounts* block, MacroAssembler* masm)
-      : block(*block), masm(*masm), printer(GetJitContext()->cx, false)
+      : block(*block), masm(*masm), printer(GetJitContext()->cx)
     {
     }
 
@@ -3883,8 +3883,7 @@ struct ScriptCountBlockState
     {
         masm.setPrinter(nullptr);
 
-        if (!printer.hadOutOfMemory())
-            block.setCode(printer.string());
+        block.setCode(printer.string());
     }
 };
 
