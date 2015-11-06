@@ -439,7 +439,6 @@ AnimationCollection::CanPerformOnCompositorThread(const nsIFrame* aFrame) const
     return false;
   }
 
-  bool existsProperty = false;
   for (size_t animIdx = mAnimations.Length(); animIdx-- != 0; ) {
     const Animation* anim = mAnimations[animIdx];
     if (!anim->IsPlaying()) {
@@ -448,8 +447,6 @@ AnimationCollection::CanPerformOnCompositorThread(const nsIFrame* aFrame) const
 
     const KeyframeEffectReadOnly* effect = anim->GetEffect();
     MOZ_ASSERT(effect, "A playing animation should have an effect");
-
-    existsProperty = existsProperty || effect->Properties().Length() > 0;
 
     for (size_t propIdx = 0, propEnd = effect->Properties().Length();
          propIdx != propEnd; ++propIdx) {
@@ -460,11 +457,6 @@ AnimationCollection::CanPerformOnCompositorThread(const nsIFrame* aFrame) const
         return false;
       }
     }
-  }
-
-  // No properties to animate
-  if (!existsProperty) {
-    return false;
   }
 
   return true;
