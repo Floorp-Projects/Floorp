@@ -261,12 +261,10 @@ Proxy::hasOwn(JSContext* cx, HandleObject proxy, HandleId id, bool* bp)
 }
 
 static Value
-OuterizeValue(JSContext* cx, HandleValue v)
+ValueToWindowProxyIfWindow(Value v)
 {
-    if (v.isObject()) {
-        RootedObject obj(cx, &v.toObject());
-        return ObjectValue(*GetOuterObject(cx, obj));
-    }
+    if (v.isObject())
+        return ObjectValue(*ToWindowProxyIfWindow(&v.toObject()));
     return v;
 }
 
@@ -281,9 +279,9 @@ Proxy::get(JSContext* cx, HandleObject proxy, HandleValue receiver_, HandleId id
     if (!policy.allowed())
         return policy.returnValue();
 
-    // Outerize the receiver. Proxy handlers shouldn't have to know about
-    // the Window/WindowProxy distinction.
-    RootedValue receiver(cx, OuterizeValue(cx, receiver_));
+    // Use the WindowProxy as receiver if receiver_ is a Window. Proxy handlers
+    // shouldn't have to know about the Window/WindowProxy distinction.
+    RootedValue receiver(cx, ValueToWindowProxyIfWindow(receiver_));
 
     if (handler->hasPrototype()) {
         bool own;
@@ -315,9 +313,9 @@ Proxy::set(JSContext* cx, HandleObject proxy, HandleId id, HandleValue v, Handle
         return result.succeed();
     }
 
-    // Outerize the receiver. Proxy handlers shouldn't have to know about
-    // the Window/WindowProxy distinction.
-    RootedValue receiver(cx, OuterizeValue(cx, receiver_));
+    // Use the WindowProxy as receiver if receiver_ is a Window. Proxy handlers
+    // shouldn't have to know about the Window/WindowProxy distinction.
+    RootedValue receiver(cx, ValueToWindowProxyIfWindow(receiver_));
 
     // Special case. See the comment on BaseProxyHandler::mHasPrototype.
     if (handler->hasPrototype())

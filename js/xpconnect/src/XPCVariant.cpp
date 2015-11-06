@@ -42,8 +42,7 @@ XPCVariant::XPCVariant(JSContext* cx, Value aJSVal)
         // thing, but I'm saving the cleanup here for another day. Blake thinks
         // that we should just not store the WN if we're creating a variant for
         // an outer window.
-        JS::RootedObject obj(cx, &mJSVal.toObject());
-        obj = JS_ObjectToInnerObject(cx, obj);
+        JSObject* obj = js::ToWindowIfWindowProxy(&mJSVal.toObject());
         mJSVal = JS::ObjectValue(*obj);
 
         JSObject* unwrapped = js::CheckedUnwrap(obj, /* stopAtOuter = */ false);

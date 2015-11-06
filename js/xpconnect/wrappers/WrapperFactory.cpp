@@ -98,7 +98,7 @@ WrapperFactory::WaiveXray(JSContext* cx, JSObject* objArg)
 {
     RootedObject obj(cx, objArg);
     obj = UncheckedUnwrap(obj);
-    MOZ_ASSERT(!js::IsInnerObject(obj));
+    MOZ_ASSERT(!js::IsWindow(obj));
 
     JSObject* waiver = GetXrayWaiver(obj);
     if (waiver)
@@ -155,20 +155,20 @@ WrapperFactory::PrepareForWrapping(JSContext* cx, HandleObject scope,
     RootedObject obj(cx, objArg);
     // Outerize any raw inner objects at the entry point here, so that we don't
     // have to worry about them for the rest of the wrapping code.
-    if (js::IsInnerObject(obj)) {
+    if (js::IsWindow(obj)) {
         JSAutoCompartment ac(cx, obj);
-        obj = JS_ObjectToOuterObject(cx, obj);
-        NS_ENSURE_TRUE(obj, nullptr);
-        // The outerization hook wraps, which means that we can end up with a
-        // CCW here if |obj| was a navigated-away-from inner. Strip any CCWs.
+        obj = js::ToWindowProxyIfWindow(obj);
+        MOZ_ASSERT(obj);
+        // ToWindowProxyIfWindow can return a CCW if |obj| was a
+        // navigated-away-from Window. Strip any CCWs.
         obj = js::UncheckedUnwrap(obj);
-        MOZ_ASSERT(js::IsOuterObject(obj));
+        MOZ_ASSERT(js::IsWindowProxy(obj));
     }
 
-    // If we've got an outer window, there's nothing special that needs to be
+    // If we've got a WindowProxy, there's nothing special that needs to be
     // done here, and we can move on to the next phase of wrapping. We handle
     // this case first to allow us to assert against wrappers below.
-    if (js::IsOuterObject(obj))
+    if (js::IsWindowProxy(obj))
         return waive ? WaiveXray(cx, obj) : obj;
 
     // Here are the rules for wrapping:
@@ -400,7 +400,7 @@ WrapperFactory::Rewrap(JSContext* cx, HandleObject existing, HandleObject obj)
                js::GetObjectClass(obj)->ext.innerObject,
                "wrapped object passed to rewrap");
     MOZ_ASSERT(!XrayUtils::IsXPCWNHolderClass(JS_GetClass(obj)), "trying to wrap a holder");
-    MOZ_ASSERT(!js::IsInnerObject(obj));
+    MOZ_ASSERT(!js::IsWindow(obj));
     // We sometimes end up here after nsContentUtils has been shut down but before
     // XPConnect has been shut down, so check the context stack the roundabout way.
     MOZ_ASSERT(XPCJSRuntime::Get()->GetJSContextStack()->Peek() == cx);
@@ -542,7 +542,7 @@ WrapperFactory::WaiveXrayAndWrap(JSContext* cx, MutableHandleObject argObj)
 {
     MOZ_ASSERT(argObj);
     RootedObject obj(cx, js::UncheckedUnwrap(argObj));
-    MOZ_ASSERT(!js::IsInnerObject(obj));
+    MOZ_ASSERT(!js::IsWindow(obj));
     if (js::IsObjectInContextCompartment(obj, cx)) {
         argObj.set(obj);
         return true;

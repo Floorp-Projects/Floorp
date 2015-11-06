@@ -148,14 +148,6 @@ JS_GetScriptPrincipals(JSScript* script);
 extern JS_FRIEND_API(bool)
 JS_ScriptHasMutedErrors(JSScript* script);
 
-/* Safe to call with input obj == nullptr. Returns non-nullptr iff obj != nullptr. */
-extern JS_FRIEND_API(JSObject*)
-JS_ObjectToInnerObject(JSContext* cx, JS::HandleObject obj);
-
-/* Requires obj != nullptr. */
-extern JS_FRIEND_API(JSObject*)
-JS_ObjectToOuterObject(JSContext* cx, JS::HandleObject obj);
-
 extern JS_FRIEND_API(JSObject*)
 JS_CloneObject(JSContext* cx, JS::HandleObject obj, JS::HandleObject proto);
 
@@ -674,16 +666,6 @@ ParentKeyForStandardClass(JSProtoKey key)
 
     // Otherwise, we inherit [Object].
     return JSProto_Object;
-}
-
-inline bool
-IsInnerObject(JSObject* obj) {
-    return !!GetObjectClass(obj)->ext.outerObject;
-}
-
-inline bool
-IsOuterObject(JSObject* obj) {
-    return !!GetObjectClass(obj)->ext.innerObject;
 }
 
 JS_FRIEND_API(bool)
@@ -2858,6 +2840,77 @@ ReportIsNotFunction(JSContext* cx, JS::HandleValue v);
 
 extern JS_FRIEND_API(JSObject*)
 ConvertArgsToArray(JSContext* cx, const JS::CallArgs& args);
+
+/**
+ * Window and WindowProxy
+ *
+ * The functions below have to do with Windows and WindowProxies. There's an
+ * invariant that actual Window objects (the global objects of web pages) are
+ * never directly exposed to script. Instead we often substitute a WindowProxy.
+ *
+ * The scope chain, on the other hand, contains the Window and never its
+ * WindowProxy.
+ *
+ * As a result, we have calls to these "substitute-this-object-for-that-object"
+ * functions sprinkled at apparently arbitrary (but actually *very* carefully
+ * and nervously selected) places throughout the engine and indeed the
+ * universe.
+ */
+
+/**
+ * Tell the JS engine which Class is used for WindowProxy objects. Used by the
+ * functions below.
+ */
+extern JS_FRIEND_API(void)
+SetWindowProxyClass(JSRuntime* rt, const Class* clasp);
+
+/**
+ * Associates a WindowProxy with a Window (global object). `windowProxy` must
+ * have the Class set by SetWindowProxyClass.
+ */
+extern JS_FRIEND_API(void)
+SetWindowProxy(JSContext* cx, JS::HandleObject global, JS::HandleObject windowProxy);
+
+namespace detail {
+
+JS_FRIEND_API(bool)
+IsWindowSlow(JSObject* obj);
+
+} // namespace detail
+
+/**
+ * Returns true iff `obj` is a global object with an associated WindowProxy,
+ * see SetWindowProxy.
+ */
+inline bool
+IsWindow(JSObject* obj)
+{
+    if (GetObjectClass(obj)->flags & JSCLASS_IS_GLOBAL)
+        return detail::IsWindowSlow(obj);
+    return false;
+}
+
+/**
+ * Returns true iff `obj` has the WindowProxy Class (see SetWindowProxyClass).
+ */
+JS_FRIEND_API(bool)
+IsWindowProxy(JSObject* obj);
+
+/**
+ * If `obj` is a Window, get its associated WindowProxy (or a CCW if the
+ * page was navigated away from), else return `obj`. This function is
+ * infallible and never returns nullptr.
+ */
+extern JS_FRIEND_API(JSObject*)
+ToWindowProxyIfWindow(JSObject* obj);
+
+/**
+ * If `obj` is a WindowProxy, get its associated Window (the compartment's
+ * global), else return `obj`. This function is infallible and never returns
+ * nullptr.
+ */
+extern JS_FRIEND_API(JSObject*)
+ToWindowIfWindowProxy(JSObject* obj);
 
 } /* namespace js */
 
