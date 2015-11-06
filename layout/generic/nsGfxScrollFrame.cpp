@@ -3098,13 +3098,20 @@ ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
       //
       // This is not compatible when using containes for root scrollframes.
       MOZ_ASSERT(couldBuildLayer && mScrolledFrame->GetContent());
-      bool needToRecomputeAGR = false;
       if (!mWillBuildScrollableLayer) {
-        needToRecomputeAGR = true;
-      }
-      mWillBuildScrollableLayer = true;
-      if (needToRecomputeAGR) {
-        aBuilder->RecomputeCurrentAnimatedGeometryRoot();
+        // Set a displayport so next paint we don't have to force layerization
+        // after the fact.
+        nsLayoutUtils::SetDisplayPortMargins(mOuter->GetContent(),
+                                             mOuter->PresContext()->PresShell(),
+                                             ScreenMargin(),
+                                             0,
+                                             nsLayoutUtils::RepaintMode::DoNotRepaint);
+        // Call DecideScrollableLayer to recompute mWillBuildScrollableLayer and
+        // recompute the current animated geometry root if needed.
+        // It's too late to change the dirty rect so pass a copy.
+        nsRect copyOfDirtyRect = dirtyRect;
+        Unused << DecideScrollableLayer(aBuilder, &copyOfDirtyRect,
+                    /* aAllowCreateDisplayPort = */ false);
       }
     }
   }
