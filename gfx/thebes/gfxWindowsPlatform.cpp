@@ -2691,8 +2691,8 @@ public:
     NS_INLINE_DECL_THREADSAFE_REFCOUNTING(D3DVsyncDisplay)
     public:
       D3DVsyncDisplay()
-        : mVsyncEnabledLock("D3DVsyncEnabledLock")
-        , mPrevVsync(TimeStamp::Now())
+        : mPrevVsync(TimeStamp::Now())
+        , mVsyncEnabledLock("D3DVsyncEnabledLock")
         , mVsyncEnabled(false)
       {
         mVsyncThread = new base::Thread("WindowsVsyncThread");
