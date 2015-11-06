@@ -19,6 +19,7 @@
 #include "mozilla/SheetType.h"
 #include "mozilla/UniquePtr.h"
 #include "nsAutoPtr.h"
+#include "nsCSSPseudoElements.h"
 #include "nsExpirationTracker.h"
 #include "nsIMediaList.h"
 #include "nsIStyleRuleProcessor.h"

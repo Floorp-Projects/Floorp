@@ -855,17 +855,30 @@ MacroAssembler::Pop(const ValueOperand& val)
 // ===============================================================
 // Simple call functions.
 
-void
+CodeOffsetLabel
 MacroAssembler::call(Register reg)
 {
     as_jalr(reg);
     as_nop();
+    return CodeOffsetLabel(currentOffset());
 }
 
-void
+CodeOffsetLabel
 MacroAssembler::call(Label* label)
 {
     ma_bal(label);
+    return CodeOffsetLabel(currentOffset());
+}
+
+CodeOffsetLabel
+MacroAssembler::callWithPatch()
+{
+    MOZ_CRASH("NYI");
+}
+void
+MacroAssembler::patchCall(uint32_t callerOffset, uint32_t calleeOffset)
+{
+    MOZ_CRASH("NYI");
 }
 
 void

@@ -584,6 +584,8 @@ TypedArrayLoadType(Scalar::Type viewType)
     MOZ_CRASH("Unexpected array type");
 }
 
+const size_t LIFO_ALLOC_PRIMARY_CHUNK_SIZE = 1 << 12;
+
 namespace {
 
 // The ModuleValidator encapsulates the entire validation of an asm.js module.
@@ -885,12 +887,25 @@ class MOZ_STACK_CLASS ModuleValidator
         }
     };
 
+    struct SlowFunction
+    {
+        SlowFunction(PropertyName* name, unsigned ms, unsigned line, unsigned column)
+         : name(name), ms(ms), line(line), column(column)
+        {}
+
+        PropertyName* name;
+        unsigned ms;
+        unsigned line;
+        unsigned column;
+    };
+
   private:
     typedef HashMap<PropertyName*, Global*> GlobalMap;
     typedef HashMap<PropertyName*, MathBuiltin> MathNameMap;
     typedef HashMap<PropertyName*, AsmJSAtomicsBuiltinFunction> AtomicsNameMap;
     typedef HashMap<PropertyName*, AsmJSSimdOperation> SimdOperationNameMap;
     typedef Vector<ArrayView> ArrayViewVector;
+    typedef Vector<SlowFunction> SlowFunctionVector;
 
   public:
     typedef HashMap<ExitDescriptor, unsigned, ExitDescriptor> ExitMap;
@@ -924,6 +939,9 @@ class MOZ_STACK_CLASS ModuleValidator
     bool                                    supportsSimd_;
     bool                                    atomicsPresent_;
 
+    Vector<uint32_t>                        functionEntryOffsets_;
+    SlowFunctionVector                      slowFunctions_;
+
     ScopedJSDeletePtr<ModuleCompileResults> compileResults_;
     DebugOnly<bool>                         finishedFunctionBodies_;
 
@@ -949,6 +967,8 @@ class MOZ_STACK_CLASS ModuleValidator
         hasChangeHeap_(false),
         supportsSimd_(cx->jitSupportsSimd()),
         atomicsPresent_(false),
+        functionEntryOffsets_(cx),
+        slowFunctions_(cx),
         compileResults_(nullptr),
         finishedFunctionBodies_(false)
     {
@@ -1399,6 +1419,9 @@ class MOZ_STACK_CLASS ModuleValidator
     FuncPtrTable& funcPtrTable(unsigned i) const {
         return *funcPtrTables_[i];
     }
+    uint32_t functionEntryOffset(unsigned i) {
+        return functionEntryOffsets_[i];
+    }
 
     const Global* lookupGlobal(PropertyName* name) const {
         if (GlobalMap::Ptr p = globals_.lookup(name))
@@ -1445,8 +1468,42 @@ class MOZ_STACK_CLASS ModuleValidator
     Label& onDetachedLabel()         { return compileResults_->onDetachedLabel(); }
     Label& onOutOfBoundsLabel()      { return compileResults_->onOutOfBoundsLabel(); }
     Label& onConversionErrorLabel()  { return compileResults_->onConversionErrorLabel(); }
-    Label* functionEntry(unsigned i) { return compileResults_->functionEntry(i); }
     ExitMap::Range allExits() const  { return exits_.all(); }
+
+    bool finishGeneratingFunction(FunctionCompileResults& results) {
+        const AsmFunction& func = results.func();
+        unsigned i = func.funcIndex();
+        if (functionEntryOffsets_.length() <= i && !functionEntryOffsets_.resize(i + 1))
+            return false;
+
+        AsmJSModule::FunctionCodeRange codeRange = results.codeRange();
+        functionEntryOffsets_[i] = codeRange.entry();
+
+        PropertyName* funcName = func.name();
+        unsigned line = func.lineno();
+        unsigned column = func.column();
+
+        // These must be done before the module is done with function bodies.
+        if (results.counts() && !module().addFunctionCounts(results.counts()))
+            return false;
+        if (!module().addFunctionCodeRange(codeRange.name(), codeRange))
+            return false;
+
+        unsigned compileTime = func.compileTime();
+        if (compileTime >= 250) {
+            if (!slowFunctions_.append(SlowFunction(funcName, compileTime, line, column)))
+                return false;
+        }
+
+#if defined(MOZ_VTUNE) || defined(JS_ION_PERF)
+        // Perf and profiling information
+        AsmJSModule::ProfiledFunction pf(funcName, codeRange.entry(), codeRange.end(), line, column);
+        if (!module().addProfiledFunction(Move(pf)))
+            return false;
+#endif // defined(MOZ_VTUNE) || defined(JS_ION_PERF)
+
+        return true;
+    }
 
     bool finishGeneratingEntry(unsigned exportIndex, Label* begin) {
         MOZ_ASSERT(finishedFunctionBodies_);
@@ -1504,8 +1561,7 @@ class MOZ_STACK_CLASS ModuleValidator
             for (unsigned elemIndex = 0; elemIndex < table.numElems(); elemIndex++) {
                 AsmJSModule::RelativeLink link(AsmJSModule::RelativeLink::RawPointer);
                 link.patchAtOffset = tableBaseOffset + elemIndex * sizeof(uint8_t*);
-                Label* entry = functionEntry(table.elem(elemIndex).funcIndex());
-                link.targetOffset = entry->offset();
+                link.targetOffset = functionEntryOffset(table.elem(elemIndex).funcIndex());
                 if (!module_->addRelativeLink(link))
                     return false;
             }
@@ -1530,24 +1586,14 @@ class MOZ_STACK_CLASS ModuleValidator
         // Take ownership of compilation results
         compileResults_ = compileResults->forget();
 
-        // These must be done before the module is done with function bodies.
-        for (size_t i = 0; i < compileResults_->numFunctionCounts(); ++i) {
-            if (!module().addFunctionCounts(compileResults_->functionCount(i)))
-                return false;
-        }
-
-#if defined(MOZ_VTUNE) || defined(JS_ION_PERF)
-        for (size_t i = 0; i < compileResults_->numProfiledFunctions(); ++i) {
-            if (!module().addProfiledFunction(Move(compileResults_->profiledFunction(i))))
-                return false;
-        }
-#endif // defined(MOZ_VTUNE) || defined(JS_ION_PERF)
-
-        // Hand in code ranges to the AsmJSModule
-        for (size_t i = 0; i < compileResults_->numCodeRanges(); ++i) {
-            AsmJSModule::FunctionCodeRange& codeRange = compileResults_->codeRange(i);
-            if (!module().addFunctionCodeRange(codeRange.name(), Move(codeRange)))
-                return false;
+        // Patch internal calls to their final positions
+        for (auto& cs : masm().callSites()) {
+            if (!cs.isInternal())
+                continue;
+            MOZ_ASSERT(cs.kind() == CallSiteDesc::Relative);
+            uint32_t callerOffset = cs.returnAddressOffset();
+            uint32_t calleeOffset = functionEntryOffset(cs.targetIndex());
+            masm().patchCall(callerOffset, calleeOffset);
         }
 
         // When an interrupt is triggered, all function code is mprotected and,
@@ -1569,19 +1615,18 @@ class MOZ_STACK_CLASS ModuleValidator
         ScopedJSFreePtr<char> slowFuns;
         int64_t usecAfter = PRMJ_Now();
         int msTotal = (usecAfter - compileResults_->usecBefore()) / PRMJ_USEC_PER_MSEC;
-        ModuleCompileResults::SlowFunctionVector& slowFunctions = compileResults_->slowFunctions();
-        if (!slowFunctions.empty()) {
-            slowFuns.reset(JS_smprintf("; %d functions compiled slowly: ", slowFunctions.length()));
+        if (!slowFunctions_.empty()) {
+            slowFuns.reset(JS_smprintf("; %d functions compiled slowly: ", slowFunctions_.length()));
             if (!slowFuns)
                 return;
-            for (unsigned i = 0; i < slowFunctions.length(); i++) {
-                ModuleCompileResults::SlowFunction& func = slowFunctions[i];
+            for (unsigned i = 0; i < slowFunctions_.length(); i++) {
+                ModuleValidator::SlowFunction& func = slowFunctions_[i];
                 JSAutoByteString name;
                 if (!AtomToPrintableString(cx_, func.name, &name))
                     return;
                 slowFuns.reset(JS_smprintf("%s%s:%u:%u (%ums)%s", slowFuns.get(),
                                            name.ptr(), func.line, func.column, func.ms,
-                                           i+1 < slowFunctions.length() ? ", " : ""));
+                                           i+1 < slowFunctions_.length() ? ", " : ""));
                 if (!slowFuns)
                     return;
             }
@@ -6539,7 +6584,10 @@ CheckFunctionsSequential(ModuleValidator& m, ScopedJSDeletePtr<ModuleCompileResu
             func->accumulateCompileTime((PRMJ_Now() - before) / PRMJ_USEC_PER_MSEC);
         }
 
-        if (!GenerateAsmFunctionCode(mc, *func, *mir, *lir))
+        FunctionCompileResults results;
+        if (!GenerateAsmFunctionCode(mc, *func, *mir, *lir, &results))
+            return false;
+        if (!m.finishGeneratingFunction(results))
             return false;
     }
 
@@ -6620,10 +6668,10 @@ GetFinishedCompilation(ModuleCompiler& m, ParallelGroupState& group)
 }
 
 static bool
-GetUsedTask(ModuleCompiler& m, ParallelGroupState& group, AsmJSParallelTask** outTask)
+GetUsedTask(ModuleValidator& m, ModuleCompiler& mc, ParallelGroupState& group, AsmJSParallelTask** outTask)
 {
     // Block until a used LifoAlloc becomes available.
-    AsmJSParallelTask* task = GetFinishedCompilation(m, group);
+    AsmJSParallelTask* task = GetFinishedCompilation(mc, group);
     if (!task)
         return false;
 
@@ -6631,7 +6679,10 @@ GetUsedTask(ModuleCompiler& m, ParallelGroupState& group, AsmJSParallelTask** ou
     func.accumulateCompileTime(task->compileTime);
 
     // Perform code generation on the main thread.
-    if (!GenerateAsmFunctionCode(m, func, *task->mir, *task->lir))
+    FunctionCompileResults results;
+    if (!GenerateAsmFunctionCode(mc, func, *task->mir, *task->lir, &results))
+        return false;
+    if (!m.finishGeneratingFunction(results))
         return false;
 
     group.compiledJobs++;
@@ -6683,7 +6734,7 @@ CheckFunctionsParallel(ModuleValidator& m, ParallelGroupState& group,
         if (tk != TOK_FUNCTION)
             break;
 
-        if (!task && !GetUnusedTask(group, i, &task) && !GetUsedTask(mc, group, &task))
+        if (!task && !GetUnusedTask(group, i, &task) && !GetUsedTask(m, mc, group, &task))
             return false;
 
         AsmFunction* func;
@@ -6711,7 +6762,7 @@ CheckFunctionsParallel(ModuleValidator& m, ParallelGroupState& group,
     // Block for all outstanding helpers to complete.
     while (group.outstandingJobs > 0) {
         AsmJSParallelTask* ignored = nullptr;
-        if (!GetUsedTask(mc, group, &ignored))
+        if (!GetUsedTask(m, mc, group, &ignored))
             return false;
     }
 
@@ -7181,7 +7232,9 @@ GenerateEntry(ModuleValidator& m, unsigned exportIndex)
 
     // Call into the real function.
     masm.assertStackAlignment(AsmJSStackAlignment);
-    masm.call(CallSiteDesc(CallSiteDesc::Relative), m.functionEntry(func.funcIndex()));
+    Label funcLabel;
+    funcLabel.bind(m.functionEntryOffset(func.funcIndex()));
+    masm.call(CallSiteDesc(CallSiteDesc::Relative), &funcLabel);
 
     // Recover the stack pointer value before dynamic alignment.
     masm.loadAsmJSActivation(scratch);

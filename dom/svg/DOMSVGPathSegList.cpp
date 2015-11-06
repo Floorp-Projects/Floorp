@@ -382,6 +382,15 @@ DOMSVGPathSegList::InsertItemBefore(DOMSVGPathSeg& aNewItem,
     aError.Throw(NS_ERROR_OUT_OF_MEMORY);
     return nullptr;
   }
+  if (AnimListMirrorsBaseList()) {
+    DOMSVGPathSegList *animVal =
+      GetDOMWrapperIfExists(InternalAList().GetAnimValKey());
+    if (!animVal->mItems.SetCapacity(
+          animVal->mItems.Length() + 1, fallible)) {
+      aError.Throw(NS_ERROR_OUT_OF_MEMORY);
+      return nullptr;
+    }
+  }
 
   AutoChangePathSegListNotifier notifier(this);
   // Now that we know we're inserting, keep animVal list in sync as necessary.

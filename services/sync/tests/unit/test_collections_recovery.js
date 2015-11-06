@@ -33,7 +33,7 @@ add_identity_test(this, function test_missing_crypto_collection() {
   };
   let collections = ["clients", "bookmarks", "forms", "history",
                      "passwords", "prefs", "tabs"];
-  for each (let coll in collections) {
+  for (let coll of collections) {
     handlers["/1.1/johndoe/storage/" + coll] =
       johnU(coll, new ServerCollection({}, true).handler());
   }

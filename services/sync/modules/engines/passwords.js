@@ -85,7 +85,7 @@ PasswordEngine.prototype = {
     this._store._sleep(0); // Yield back to main thread after synchronous operation.
 
     // Look for existing logins that match the hostname, but ignore the password.
-    for each (let local in logins) {
+    for (let local of logins) {
       if (login.matches(local, true) && local instanceof Ci.nsILoginMetaInfo) {
         return local.guid;
       }
