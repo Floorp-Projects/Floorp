@@ -96,8 +96,7 @@
             "talos_options": [
                 "--e10s",
                 "--xperf_path",
-                "\"c:/Program Files/Microsoft Windows Performance Toolkit/xperf.exe\"",
-                "C:/slave/talos-data/talos/xperf.config"
+                "\"c:/Program Files/Microsoft Windows Performance Toolkit/xperf.exe\""
             ]
         }
     },
