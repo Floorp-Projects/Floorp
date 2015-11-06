@@ -316,6 +316,9 @@ protected:
   // restyle is performed, this member may temporarily become false even if
   // the animation remains on the layer after the restyle.
   bool mIsPropertyRunningOnCompositor[LayerAnimationInfo::kRecords];
+
+private:
+  nsIFrame* GetAnimationFrame() const;
 };
 
 } // namespace dom
