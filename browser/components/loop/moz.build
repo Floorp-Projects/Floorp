@@ -15,12 +15,8 @@ BROWSER_CHROME_MANIFESTS += [
 EXTRA_JS_MODULES.loop += [
     'content/shared/js/crypto.js',
     'content/shared/js/utils.js',
-    'modules/CardDavImporter.jsm',
-    'modules/GoogleImporter.jsm',
-    'modules/LoopContacts.jsm',
     'modules/LoopRooms.jsm',
     'modules/LoopRoomsCache.jsm',
-    'modules/LoopStorage.jsm',
     'modules/MozLoopAPI.jsm',
     'modules/MozLoopPushHandler.jsm',
     'modules/MozLoopService.jsm',

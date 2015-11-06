@@ -13,7 +13,6 @@
   },
   "globals": {
     // Gecko + Loop Globals.
-    "CardDavImporter": true,
     "Chat": false,
     "ChromeWorker": false,
     "CommonUtils": false,
@@ -27,7 +26,6 @@
     "gBrowser": false,
     "gDNSService": false,
     "gLoopBundle": false,
-    "GoogleImporter": true,
     "gWM": false,
     "HawkClient": false,
     "injectLoopAPI": true,
@@ -36,11 +34,9 @@
     "log": true,
     "LOOP_SESSION_TYPE": true,
     "LoopCalls": true,
-    "LoopContacts": true,
     "loopCrypto": false,
     "LoopRooms": true,
     "LoopRoomsCache": true,
-    "LoopStorage": true,
     "MozLoopPushHandler": true,
     "MozLoopService": true,
     "OS": false,
