@@ -29,7 +29,6 @@
 #ifndef ReverbConvolverStage_h
 #define ReverbConvolverStage_h
 
-#include "DirectConvolver.h"
 #include "FFTConvolver.h"
 
 #include "nsTArray.h"
@@ -49,14 +48,12 @@ class ReverbConvolverStage {
 public:
     // renderPhase is useful to know so that we can manipulate the pre versus post delay so that stages will perform
     // their heavy work (FFT processing) on different slices to balance the load in a real-time thread.
-    ReverbConvolverStage(const float* impulseResponse, size_t responseLength, size_t reverbTotalLatency, size_t stageOffset, size_t stageLength, size_t fftSize, size_t renderPhase, size_t renderSliceSize, ReverbAccumulationBuffer*, bool directMode = false);
+    ReverbConvolverStage(const float* impulseResponse, size_t responseLength, size_t reverbTotalLatency, size_t stageOffset, size_t stageLength, size_t fftSize, size_t renderPhase, ReverbAccumulationBuffer*);
 
-    // WARNING: framesToProcess must be such that it evenly divides the delay buffer size (stage_offset).
-    void process(const float* source, size_t framesToProcess);
+    // |source| must point to an array of WEBAUDIO_BLOCK_SIZE elements.
+    void process(const float* source);
 
-    void processInBackground(ReverbConvolver* convolver, size_t framesToProcess);
-
-    void reset();
+    void processInBackground(ReverbConvolver* convolver);
 
     // Useful for background processing
     int inputReadIndex() const { return m_inputReadIndex; }
@@ -67,22 +64,13 @@ private:
     nsAutoPtr<FFTBlock> m_fftKernel;
     nsAutoPtr<FFTConvolver> m_fftConvolver;
 
-    nsTArray<float> m_preDelayBuffer;
-
     ReverbAccumulationBuffer* m_accumulationBuffer;
     int m_accumulationReadIndex;
     int m_inputReadIndex;
 
-    size_t m_preDelayLength;
     size_t m_postDelayLength;
-    size_t m_preReadWriteIndex;
-    size_t m_framesProcessed;
 
     nsTArray<float> m_temporaryBuffer;
-
-    bool m_directMode;
-    nsTArray<float> m_directKernel;
-    nsAutoPtr<DirectConvolver> m_directConvolver;
 };
 
 } // namespace WebCore

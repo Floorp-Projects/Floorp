@@ -78,7 +78,7 @@ public class DataReportingNotification {
             Intent prefIntent = new Intent(GeckoApp.ACTION_LAUNCH_SETTINGS);
             prefIntent.setClassName(AppConstants.ANDROID_PACKAGE_NAME, AppConstants.MOZ_ANDROID_BROWSER_INTENT_CLASS);
 
-            GeckoPreferences.setResourceToOpen(prefIntent, "preferences_vendor");
+            GeckoPreferences.setResourceToOpen(prefIntent, "preferences_privacy");
             prefIntent.putExtra(ALERT_NAME_DATAREPORTING_NOTIFICATION, true);
 
             PendingIntent contentIntent = PendingIntent.getActivity(context, 0, prefIntent, PendingIntent.FLAG_UPDATE_CURRENT);

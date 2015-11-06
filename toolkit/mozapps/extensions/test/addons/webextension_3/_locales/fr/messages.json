@@ -1,0 +1,10 @@
+{
+  "name": {
+    "message": "le foo",
+    "description": "foo"
+  },
+  "desc": {
+    "message": "le bar",
+    "description": "bar"
+  }
+}

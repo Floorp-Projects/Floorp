@@ -1,0 +1,6 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="org.mozilla.gecko">
+<!-- THIS IS NOT THE REAL MANIFEST!  This is for Gradle only.  See
+     AndroidManifest.xml.in. -->
+
+</manifest>

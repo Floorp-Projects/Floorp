@@ -50,6 +50,18 @@ class CSSStyleSheet;
       cur = dlm_next;                                                          \
     }                                                                          \
   }
+// Ditto, but use NS_RELEASE instead of 'delete' (bug 1221902).
+#define NS_CSS_NS_RELEASE_LIST_MEMBER(type_, ptr_, member_)                    \
+  {                                                                            \
+    type_ *cur = (ptr_)->member_;                                              \
+    (ptr_)->member_ = nullptr;                                                 \
+    while (cur) {                                                              \
+      type_ *dlm_next = cur->member_;                                          \
+      cur->member_ = nullptr;                                                  \
+      NS_RELEASE(cur);                                                         \
+      cur = dlm_next;                                                          \
+    }                                                                          \
+  }
 
 // Clones a linked list iteratively to avoid blowing up the stack.
 // If it fails to clone the entire list then 'to_' is deleted and

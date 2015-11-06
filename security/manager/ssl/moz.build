@@ -161,8 +161,8 @@ LOCAL_INCLUDES += [
     '/security/pkix/include',
 ]
 
-GENERATED_INCLUDES += [
-    '/dist/public/nss',
+LOCAL_INCLUDES += [
+    '!/dist/public/nss',
 ]
 
 if CONFIG['NSS_DISABLE_DBM']:

@@ -49,29 +49,32 @@ const int InputBufferSize = 8 * 16384;
 // This was found to be a good value on Mac OS X, and may work well on other platforms as well, assuming
 // the very rough scheduling latencies are similar on these time-scales.  Of course, this code may need to be
 // tuned for individual platforms if this assumption is found to be incorrect.
-const size_t RealtimeFrameLimit = 8192  + 4096; // ~278msec @ 44.1KHz
+const size_t RealtimeFrameLimit = 8192 + 4096 // ~278msec @ 44.1KHz
+                                  - WEBAUDIO_BLOCK_SIZE;
+// First stage will have size MinFFTSize - successive stages will double in
+// size each time until we hit the maximum size.
+const size_t MinFFTSize = 256;
+// If we are using background threads then don't exceed this FFT size for the
+// stages which run in the real-time thread.  This avoids having only one or
+// two large stages (size 16384 or so) at the end which take a lot of time
+// every several processing slices.  This way we amortize the cost over more
+// processing slices.
+const size_t MaxRealtimeFFTSize = 4096;
 
-const size_t MinFFTSize = 128;
-const size_t MaxRealtimeFFTSize = 2048;
-
-ReverbConvolver::ReverbConvolver(const float* impulseResponseData, size_t impulseResponseLength, size_t renderSliceSize, size_t maxFFTSize, size_t convolverRenderPhase, bool useBackgroundThreads)
+ReverbConvolver::ReverbConvolver(const float* impulseResponseData,
+                                 size_t impulseResponseLength,
+                                 size_t maxFFTSize,
+                                 size_t convolverRenderPhase,
+                                 bool useBackgroundThreads)
     : m_impulseResponseLength(impulseResponseLength)
-    , m_accumulationBuffer(impulseResponseLength + renderSliceSize)
+    , m_accumulationBuffer(impulseResponseLength + WEBAUDIO_BLOCK_SIZE)
     , m_inputBuffer(InputBufferSize)
-    , m_minFFTSize(MinFFTSize) // First stage will have this size - successive stages will double in size each time
-    , m_maxFFTSize(maxFFTSize) // until we hit m_maxFFTSize
     , m_backgroundThread("ConvolverWorker")
     , m_backgroundThreadCondition(&m_backgroundThreadLock)
     , m_useBackgroundThreads(useBackgroundThreads)
     , m_wantsToExit(false)
     , m_moreInputBuffered(false)
 {
-    // If we are using background threads then don't exceed this FFT size for the
-    // stages which run in the real-time thread.  This avoids having only one or two
-    // large stages (size 16384 or so) at the end which take a lot of time every several
-    // processing slices.  This way we amortize the cost over more processing slices.
-    m_maxRealtimeFFTSize = MaxRealtimeFFTSize;
-
     // For the moment, a good way to know if we have real-time constraint is to check if we're using background threads.
     // Otherwise, assume we're being run from a command-line tool.
     bool hasRealtimeConstraint = useBackgroundThreads;
@@ -79,12 +82,13 @@ ReverbConvolver::ReverbConvolver(const float* impulseResponseData, size_t impuls
     const float* response = impulseResponseData;
     size_t totalResponseLength = impulseResponseLength;
 
-    // The total latency is zero because the direct-convolution is used in the leading portion.
+    // The total latency is zero because the first FFT stage is small enough
+    // to return output in the first block.
     size_t reverbTotalLatency = 0;
 
     size_t stageOffset = 0;
-    int i = 0;
-    size_t fftSize = m_minFFTSize;
+    size_t stagePhase = 0;
+    size_t fftSize = MinFFTSize;
     while (stageOffset < totalResponseLength) {
         size_t stageSize = fftSize / 2;
 
@@ -94,11 +98,13 @@ ReverbConvolver::ReverbConvolver(const float* impulseResponseData, size_t impuls
             stageSize = totalResponseLength - stageOffset;
 
         // This "staggers" the time when each FFT happens so they don't all happen at the same time
-        int renderPhase = convolverRenderPhase + i * renderSliceSize;
+        int renderPhase = convolverRenderPhase + stagePhase;
 
-        bool useDirectConvolver = !stageOffset;
-
-        nsAutoPtr<ReverbConvolverStage> stage(new ReverbConvolverStage(response, totalResponseLength, reverbTotalLatency, stageOffset, stageSize, fftSize, renderPhase, renderSliceSize, &m_accumulationBuffer, useDirectConvolver));
+        nsAutoPtr<ReverbConvolverStage> stage
+          (new ReverbConvolverStage(response, totalResponseLength,
+                                    reverbTotalLatency, stageOffset, stageSize,
+                                    fftSize, renderPhase,
+                                    &m_accumulationBuffer));
 
         bool isBackgroundStage = false;
 
@@ -108,18 +114,35 @@ ReverbConvolver::ReverbConvolver(const float* impulseResponseData, size_t impuls
         } else
             m_stages.AppendElement(stage.forget());
 
+        // Figure out next FFT size
+        fftSize *= 2;
+
         stageOffset += stageSize;
-        ++i;
 
-        if (!useDirectConvolver) {
-            // Figure out next FFT size
-            fftSize *= 2;
+        if (hasRealtimeConstraint && !isBackgroundStage
+            && fftSize > MaxRealtimeFFTSize) {
+            fftSize = MaxRealtimeFFTSize;
+            // Custom phase positions for all but the first of the realtime
+            // stages of largest size.  These spread out the work of the
+            // larger realtime stages.  None of the FFTs of size 1024, 2048 or
+            // 4096 are performed when processing the same block.  The first
+            // MaxRealtimeFFTSize = 4096 stage, at the end of the doubling,
+            // performs its FFT at block 7.  The FFTs of size 2048 are
+            // performed in blocks 3 + 8 * n and size 1024 at 1 + 4 * n.
+            const uint32_t phaseLookup[] = { 14, 0, 10, 4 };
+            stagePhase = WEBAUDIO_BLOCK_SIZE *
+                phaseLookup[m_stages.Length() % ArrayLength(phaseLookup)];
+        } else if (fftSize > maxFFTSize) {
+            fftSize = maxFFTSize;
+            // A prime offset spreads out FFTs in a way that all
+            // available phase positions will be used if there are sufficient
+            // stages.
+            stagePhase += 5 * WEBAUDIO_BLOCK_SIZE;
+        } else if (stageSize > WEBAUDIO_BLOCK_SIZE) {
+            // As the stages are doubling in size, the next FFT will occur
+            // mid-way between FFTs for this stage.
+            stagePhase = stageSize - WEBAUDIO_BLOCK_SIZE;
         }
-
-        if (hasRealtimeConstraint && !isBackgroundStage && fftSize > m_maxRealtimeFFTSize)
-            fftSize = m_maxRealtimeFFTSize;
-        if (fftSize > m_maxFFTSize)
-            fftSize = m_maxFFTSize;
     }
 
     // Start up background thread
@@ -199,25 +222,16 @@ void ReverbConvolver::backgroundThreadEntry()
         int readIndex;
 
         while ((readIndex = m_backgroundStages[0]->inputReadIndex()) != writeIndex) { // FIXME: do better to detect buffer overrun...
-            // The ReverbConvolverStages need to process in amounts which evenly divide half the FFT size
-            const int SliceSize = MinFFTSize / 2;
-
             // Accumulate contributions from each stage
             for (size_t i = 0; i < m_backgroundStages.Length(); ++i)
-                m_backgroundStages[i]->processInBackground(this, SliceSize);
+                m_backgroundStages[i]->processInBackground(this);
         }
     }
 }
 
-void ReverbConvolver::process(const float* sourceChannelData, size_t sourceChannelLength,
-                              float* destinationChannelData, size_t destinationChannelLength,
-                              size_t framesToProcess)
+void ReverbConvolver::process(const float* sourceChannelData,
+                              float* destinationChannelData)
 {
-    bool isSafe = sourceChannelData && destinationChannelData && sourceChannelLength >= framesToProcess && destinationChannelLength >= framesToProcess;
-    MOZ_ASSERT(isSafe);
-    if (!isSafe)
-        return;
-
     const float* source = sourceChannelData;
     float* destination = destinationChannelData;
     bool isDataSafe = source && destination;
@@ -226,14 +240,14 @@ void ReverbConvolver::process(const float* sourceChannelData, size_t sourceChann
         return;
 
     // Feed input buffer (read by all threads)
-    m_inputBuffer.write(source, framesToProcess);
+    m_inputBuffer.write(source, WEBAUDIO_BLOCK_SIZE);
 
     // Accumulate contributions from each stage
     for (size_t i = 0; i < m_stages.Length(); ++i)
-        m_stages[i]->process(source, framesToProcess);
+        m_stages[i]->process(source);
 
     // Finally read from accumulation buffer
-    m_accumulationBuffer.readAndClear(destination, framesToProcess);
+    m_accumulationBuffer.readAndClear(destination, WEBAUDIO_BLOCK_SIZE);
 
     // Now that we've buffered more input, wake up our background thread.
 
@@ -247,23 +261,6 @@ void ReverbConvolver::process(const float* sourceChannelData, size_t sourceChann
         m_backgroundThreadCondition.Signal();
         m_backgroundThreadLock.Release();
     }
-}
-
-void ReverbConvolver::reset()
-{
-    for (size_t i = 0; i < m_stages.Length(); ++i)
-        m_stages[i]->reset();
-
-    for (size_t i = 0; i < m_backgroundStages.Length(); ++i)
-        m_backgroundStages[i]->reset();
-
-    m_accumulationBuffer.reset();
-    m_inputBuffer.reset();
-}
-
-size_t ReverbConvolver::latencyFrames() const
-{
-    return 0;
 }
 
 } // namespace WebCore
