@@ -199,7 +199,7 @@ loop.roomViews = (function(mozL10n) {
         return null;
       }
 
-      var cx = React.addons.classSet;
+      var cx = classNames;
       var shareDropdown = cx({
         "share-service-dropdown": true,
         "dropdown-menu": true,
@@ -330,7 +330,7 @@ loop.roomViews = (function(mozL10n) {
         return null;
       }
 
-      var cx = React.addons.classSet;
+      var cx = classNames;
       return (
         <div className="room-invitation-overlay">
           <div className="room-invitation-content">
@@ -546,7 +546,7 @@ loop.roomViews = (function(mozL10n) {
       var urlDescription = url && url.description || "";
       var location = url && url.location || "";
 
-      var cx = React.addons.classSet;
+      var cx = classNames;
       var availableContext = this.state.availableContext;
       return (
         <div className="room-context">

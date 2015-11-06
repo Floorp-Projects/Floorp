@@ -850,6 +850,7 @@ sync_java_files = [
     'browserid/verifier/BrowserIDVerifierException.java',
     'browserid/VerifyingPublicKey.java',
     'fxa/AccountLoader.java',
+    'fxa/activities/CustomColorPreference.java',
     'fxa/activities/FxAccountAbstractActivity.java',
     'fxa/activities/FxAccountAbstractSetupActivity.java',
     'fxa/activities/FxAccountAbstractUpdateCredentialsActivity.java',
