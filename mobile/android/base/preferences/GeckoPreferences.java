@@ -5,6 +5,7 @@
 
 package org.mozilla.gecko.preferences;
 
+import android.annotation.TargetApi;
 import org.mozilla.gecko.AboutPages;
 import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.AppConstants.Versions;
@@ -108,7 +109,7 @@ OnSharedPreferenceChangeListener
     private static boolean sIsCharEncodingEnabled;
     private boolean mInitialized;
     private int mPrefsRequestId;
-    private PanelsPreferenceCategory mPanelsPreferenceCategory;
+    private List<Header> mHeaders;
 
     // These match keys in resources/xml*/preferences*.xml
     private static final String PREFS_SEARCH_RESTORE_DEFAULTS = NON_PREF_PREFIX + "search.restore_defaults";
@@ -499,6 +500,23 @@ OnSharedPreferenceChangeListener
                     iterator.remove();
                 }
             }
+
+            mHeaders = target;
+        }
+    }
+
+    @TargetApi(11)
+    public void switchToHeader(int id) {
+        if (mHeaders == null) {
+            // Can't switch to a header if there are no headers!
+            return;
+        }
+
+        for (Header header : mHeaders) {
+            if (header.id == id) {
+                switchToHeader(header);
+                return;
+            }
         }
     }
 
@@ -692,8 +710,6 @@ OnSharedPreferenceChangeListener
                         i--;
                         continue;
                     }
-                } else if (pref instanceof PanelsPreferenceCategory) {
-                    mPanelsPreferenceCategory = (PanelsPreferenceCategory) pref;
                 }
                 if (PREFS_ADVANCED.equals(key) &&
                     !RestrictedProfiles.isAllowed(this, Restriction.DISALLOW_DEVELOPER_TOOLS)) {
