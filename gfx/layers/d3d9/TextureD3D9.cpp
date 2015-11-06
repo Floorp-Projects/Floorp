@@ -120,7 +120,7 @@ CompositingRenderTargetD3D9::CompositingRenderTargetD3D9(IDirect3DTexture9* aTex
   MOZ_ASSERT(aTexture);
 
   mTexture = aTexture;
-  HRESULT hr = mTexture->GetSurfaceLevel(0, getter_AddRefs(mSurface));
+  mTexture->GetSurfaceLevel(0, getter_AddRefs(mSurface));
   NS_ASSERTION(mSurface, "Couldn't create surface for texture");
   TextureSourceD3D9::SetSize(aRect.Size());
 }
