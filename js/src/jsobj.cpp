@@ -3092,6 +3092,24 @@ js::ToObjectSlow(JSContext* cx, JS::HandleValue val, bool reportScanStack)
     return PrimitiveToObject(cx, val);
 }
 
+Value
+js::GetThisValue(JSObject* obj)
+{
+    if (obj->is<GlobalObject>())
+        return ObjectValue(*ToWindowProxyIfWindow(obj));
+
+    if (obj->is<ClonedBlockObject>())
+        return obj->as<ClonedBlockObject>().thisValue();
+
+    if (obj->is<ModuleEnvironmentObject>())
+        return UndefinedValue();
+
+    if (obj->is<DynamicWithObject>())
+        return ObjectValue(*obj->as<DynamicWithObject>().withThis());
+
+    return ObjectValue(*obj);
+}
+
 class GetObjectSlotNameFunctor : public JS::CallbackTracer::ContextFunctor
 {
     JSObject* obj;
