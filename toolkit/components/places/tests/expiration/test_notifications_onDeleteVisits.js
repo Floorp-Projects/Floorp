@@ -62,7 +62,7 @@ function run_test() {
   run_next_test();
 }
 
-add_task(function test_notifications_onDeleteVisits() {
+add_task(function* test_notifications_onDeleteVisits() {
   // Set interval to a large value so we don't expire on it.
   setInterval(3600); // 1h
 

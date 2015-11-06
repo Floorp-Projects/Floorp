@@ -1269,7 +1269,7 @@ function run_test()
   run_next_test();
 }
 
-add_task(function test_sorting()
+add_task(function* test_sorting()
 {
   for (let [, test] in Iterator(tests)) {
     yield test.setup();

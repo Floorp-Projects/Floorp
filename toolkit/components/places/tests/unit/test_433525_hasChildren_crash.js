@@ -9,7 +9,7 @@ function run_test()
   run_next_test();
 }
 
-add_task(function test_execute()
+add_task(function* test_execute()
 {
   try {
     var histsvc = Cc["@mozilla.org/browser/nav-history-service;1"].
