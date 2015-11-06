@@ -3,23 +3,21 @@
 
 package org.mozilla.gecko.background.healthreport.upload.test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
-
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mozilla.gecko.background.healthreport.upload.AndroidSubmissionClient.SubmissionsFieldName;
+import org.mozilla.gecko.background.healthreport.upload.test.MockAndroidSubmissionClient.MockHealthReportStorage;
+import org.mozilla.gecko.background.healthreport.upload.test.MockAndroidSubmissionClient.MockSubmissionsTracker;
+import org.mozilla.gecko.background.testhelpers.TestRunner;
 
 import java.util.Arrays;
 import java.util.HashSet;
 
-import org.junit.runner.RunWith;
-import org.mozilla.gecko.background.healthreport.upload.AndroidSubmissionClient.SubmissionsFieldName;
-import org.mozilla.gecko.background.healthreport.upload.test.MockAndroidSubmissionClient;
-import org.mozilla.gecko.background.healthreport.upload.test.MockAndroidSubmissionClient.MockHealthReportStorage;
-import org.mozilla.gecko.background.healthreport.upload.test.MockAndroidSubmissionClient.MockSubmissionsTracker;
-import org.robolectric.RobolectricGradleTestRunner;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
-@RunWith(RobolectricGradleTestRunner.class)
+@RunWith(TestRunner.class)
 public class TestSubmissionsTracker {
   protected static class MockHealthReportStorage2 extends MockHealthReportStorage {
     public final int FIRST_ATTEMPT_ID = SubmissionsFieldName.FIRST_ATTEMPT.getID(this);

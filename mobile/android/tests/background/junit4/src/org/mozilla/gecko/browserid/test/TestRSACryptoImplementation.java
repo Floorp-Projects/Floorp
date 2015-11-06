@@ -3,18 +3,17 @@
 
 package org.mozilla.gecko.browserid.test;
 
-import java.math.BigInteger;
-
 import junit.framework.Assert;
-
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mozilla.gecko.background.testhelpers.TestRunner;
 import org.mozilla.gecko.browserid.BrowserIDKeyPair;
 import org.mozilla.gecko.browserid.RSACryptoImplementation;
 import org.mozilla.gecko.sync.ExtendedJSONObject;
-import org.robolectric.RobolectricGradleTestRunner;
 
-@RunWith(RobolectricGradleTestRunner.class)
+import java.math.BigInteger;
+
+@RunWith(TestRunner.class)
 public class TestRSACryptoImplementation {
   @Test
   public void testToJSONObject() throws Exception {

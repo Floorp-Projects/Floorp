@@ -1,10 +1,10 @@
 package org.mozilla.android.sync.test.helpers;
 
-import java.util.HashMap;
-
 import org.simpleframework.http.Path;
 import org.simpleframework.http.Request;
 import org.simpleframework.http.Response;
+
+import java.util.HashMap;
 
 /**
  * A trivial server that collects and returns WBOs.

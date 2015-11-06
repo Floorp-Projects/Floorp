@@ -3,10 +3,7 @@
 
 package org.mozilla.gecko.background.healthreport.prune.test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-
+import android.content.SharedPreferences;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -14,11 +11,13 @@ import org.mozilla.gecko.background.healthreport.HealthReportConstants;
 import org.mozilla.gecko.background.healthreport.prune.PrunePolicy;
 import org.mozilla.gecko.background.healthreport.prune.PrunePolicyStorage;
 import org.mozilla.gecko.background.testhelpers.MockSharedPreferences;
+import org.mozilla.gecko.background.testhelpers.TestRunner;
 
-import android.content.SharedPreferences;
-import org.robolectric.RobolectricGradleTestRunner;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
-@RunWith(RobolectricGradleTestRunner.class)
+@RunWith(TestRunner.class)
 public class TestPrunePolicy {
   public static class MockPrunePolicy extends PrunePolicy {
     public MockPrunePolicy(final PrunePolicyStorage storage, final SharedPreferences sharedPrefs) {

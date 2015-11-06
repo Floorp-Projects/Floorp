@@ -3,19 +3,19 @@
 
 package org.mozilla.gecko.sync.crypto.test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mozilla.apache.commons.codec.binary.Base32;
+import org.mozilla.gecko.background.testhelpers.TestRunner;
+import org.mozilla.gecko.sync.Utils;
 
 import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
 
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mozilla.apache.commons.codec.binary.Base32;
-import org.mozilla.gecko.sync.Utils;
-import org.robolectric.RobolectricGradleTestRunner;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
-@RunWith(RobolectricGradleTestRunner.class)
+@RunWith(TestRunner.class)
 public class TestBase32 {
 
   public static void assertSame(byte[] arrayOne, byte[] arrayTwo) {

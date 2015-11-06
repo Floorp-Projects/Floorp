@@ -9,6 +9,8 @@ android {
     defaultConfig {
         targetSdkVersion 22
         minSdkVersion 9
+        // Used by Robolectric based tests; see TestRunner.
+        buildConfigField 'String', 'BUILD_DIR', "\"${project.buildDir}\""
     }
 
     compileOptions {

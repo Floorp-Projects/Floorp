@@ -3,13 +3,12 @@
 
 package org.mozilla.android.sync.test.helpers;
 
-import java.util.concurrent.ExecutorService;
-
 import junit.framework.AssertionFailedError;
-
 import org.mozilla.gecko.background.testhelpers.WaitHelper;
 import org.mozilla.gecko.sync.repositories.RepositorySession;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionBeginDelegate;
+
+import java.util.concurrent.ExecutorService;
 
 public class ExpectSuccessRepositorySessionBeginDelegate
 extends ExpectSuccessDelegate

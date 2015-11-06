@@ -3,22 +3,22 @@
 
 package org.mozilla.gecko.sync.crypto.test;
 
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mozilla.apache.commons.codec.binary.Base64;
+import org.mozilla.gecko.background.testhelpers.TestRunner;
+import org.mozilla.gecko.sync.crypto.CryptoException;
+import org.mozilla.gecko.sync.crypto.KeyBundle;
+
+import java.io.UnsupportedEncodingException;
+import java.util.Arrays;
+
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import java.io.UnsupportedEncodingException;
-import java.util.Arrays;
-
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mozilla.apache.commons.codec.binary.Base64;
-import org.mozilla.gecko.sync.crypto.CryptoException;
-import org.mozilla.gecko.sync.crypto.KeyBundle;
-import org.robolectric.RobolectricGradleTestRunner;
-
-@RunWith(RobolectricGradleTestRunner.class)
+@RunWith(TestRunner.class)
 public class TestKeyBundle {
   @Test
   public void testCreateKeyBundle() throws UnsupportedEncodingException, CryptoException {

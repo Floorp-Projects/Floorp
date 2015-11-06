@@ -3,27 +3,27 @@
 
 package org.mozilla.android.sync.test;
 
+import org.json.simple.parser.ParseException;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mozilla.gecko.background.testhelpers.TestRunner;
+import org.mozilla.gecko.sync.CommandProcessor;
+import org.mozilla.gecko.sync.CommandRunner;
+import org.mozilla.gecko.sync.ExtendedJSONObject;
+import org.mozilla.gecko.sync.GlobalSession;
+import org.mozilla.gecko.sync.NonObjectJSONException;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-
-import org.json.simple.parser.ParseException;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mozilla.gecko.sync.CommandProcessor;
-import org.mozilla.gecko.sync.CommandRunner;
-import org.mozilla.gecko.sync.ExtendedJSONObject;
-import org.mozilla.gecko.sync.GlobalSession;
-import org.mozilla.gecko.sync.NonObjectJSONException;
-import org.robolectric.RobolectricGradleTestRunner;
-
-@RunWith(RobolectricGradleTestRunner.class)
+@RunWith(TestRunner.class)
 public class TestCommandProcessor extends CommandProcessor {
 
   public static final String commandType = "displayURI";
