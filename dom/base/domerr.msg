@@ -151,5 +151,11 @@ DOM4_MSG_DEF(InvalidStateError, "A mutation operation was attempted on a file st
 DOM4_MSG_DEF(AbortError, "A request was aborted, for example through a call to FileHandle.abort.", NS_ERROR_DOM_FILEHANDLE_ABORT_ERR)
 DOM4_MSG_DEF(QuotaExceededError, "The current file handle exceeded its quota limitations.", NS_ERROR_DOM_FILEHANDLE_QUOTA_ERR)
 
+/* Push API errors. */
+DOM4_MSG_DEF(InvalidStateError, "Invalid service worker registration.", NS_ERROR_DOM_PUSH_INVALID_REGISTRATION_ERR)
+DOM4_MSG_DEF(PermissionDeniedError, "User denied permission to use the Push API.", NS_ERROR_DOM_PUSH_DENIED_ERR)
+DOM4_MSG_DEF(AbortError, "Error retrieving push subscription.", NS_ERROR_DOM_PUSH_ABORT_ERR)
+DOM4_MSG_DEF(NetworkError, "Push service unreachable.", NS_ERROR_DOM_PUSH_SERVICE_UNREACHABLE)
+
 DOM_MSG_DEF(NS_ERROR_DOM_JS_EXCEPTION, "A callback threw an exception")
 DOM_MSG_DEF(NS_ERROR_DOM_DOMEXCEPTION, "A DOMException was thrown")

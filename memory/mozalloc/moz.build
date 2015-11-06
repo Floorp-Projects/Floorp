@@ -36,8 +36,6 @@ FINAL_LIBRARY = 'mozglue'
 # The strndup declaration in string.h is in an ifdef __USE_GNU section
 DEFINES['_GNU_SOURCE'] = True
 
-GENERATED_INCLUDES += ['/xpcom']
-
 DISABLE_STL_WRAPPING = True
 
 DEFINES['IMPL_MFBT'] = True
@@ -45,7 +43,10 @@ DEFINES['IMPL_MFBT'] = True
 if CONFIG['_MSC_VER']:
     DIRS += ['staticruntime']
 
-LOCAL_INCLUDES += ['/memory/build']
+LOCAL_INCLUDES += [
+    '!/xpcom',
+    '/memory/build',
+]
 
 DIST_INSTALL = True
 

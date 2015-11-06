@@ -789,8 +789,6 @@ PresShell::PresShell()
 
   mScrollPositionClampingScrollPortSizeSet = false;
 
-  mMaxLineBoxWidth = 0;
-
   static bool addedSynthMouseMove = false;
   if (!addedSynthMouseMove) {
     Preferences::AddBoolVarCache(&sSynthMouseMove,
@@ -804,7 +802,6 @@ PresShell::PresShell()
     addedPointerEventEnabled = true;
   }
 
-  mPaintingIsFrozen = false;
   mHasCSSBackgroundColor = true;
   mIsLastChromeOnlyEscapeKeyConsumed = false;
   mHasReceivedPaintMessage = false;
@@ -827,13 +824,6 @@ PresShell::~PresShell()
   NS_ASSERTION(mFirstCallbackEventRequest == nullptr &&
                mLastCallbackEventRequest == nullptr,
                "post-reflow queues not empty.  This means we're leaking");
-
-  // Verify that if painting was frozen, but we're being removed from the tree,
-  // that we now re-enable painting on our refresh driver, since it may need to
-  // be re-used by another presentation.
-  if (mPaintingIsFrozen) {
-    mPresContext->RefreshDriver()->Thaw();
-  }
 
 #ifdef DEBUG
   MOZ_ASSERT(mPresArenaAllocCount == 0,
@@ -1869,7 +1859,7 @@ PresShell::ResizeReflowIgnoreOverride(nscoord aWidth, nscoord aHeight)
         DoReflow(rootFrame, true);
       }
 
-      DidDoReflow(true, false);
+      DidDoReflow(true);
     }
   }
 
@@ -6591,22 +6581,6 @@ PresShell::RecordMouseLocation(WidgetGUIEvent* aEvent)
   }
 }
 
-static PLDHashOperator
-FindAnyTarget(const uint32_t& aKey, RefPtr<dom::Touch>& aData,
-              void* aAnyTarget)
-{
-  if (aData) {
-    dom::EventTarget* target = aData->GetTarget();
-    if (target) {
-      nsCOMPtr<nsIContent>* content =
-        static_cast<nsCOMPtr<nsIContent>*>(aAnyTarget);
-      *content = do_QueryInterface(target);
-      return PL_DHASH_STOP;
-    }
-  }
-  return PL_DHASH_NEXT;
-}
-
 nsIFrame* GetNearestFrameContainingPresShell(nsIPresShell* aPresShell)
 {
   nsView* view = aPresShell->GetViewManager()->GetRootView();
@@ -7314,7 +7288,18 @@ PresShell::HandleEvent(nsIFrame* aFrame,
         // the capture list
         nsCOMPtr<nsIContent> anyTarget;
         if (TouchManager::gCaptureTouchList->Count() > 0 && touchEvent->touches.Length() > 1) {
-          TouchManager::gCaptureTouchList->Enumerate(&FindAnyTarget, &anyTarget);
+          for (auto iter = TouchManager::gCaptureTouchList->Iter();
+               !iter.Done();
+               iter.Next()) {
+            RefPtr<dom::Touch>& touch = iter.Data();
+            if (touch) {
+              dom::EventTarget* target = touch->GetTarget();
+              if (target) {
+                anyTarget = do_QueryInterface(target);
+                break;
+              }
+            }
+          }
         }
 
         for (int32_t i = touchEvent->touches.Length(); i; ) {
@@ -8854,7 +8839,7 @@ PresShell::WillDoReflow()
 }
 
 void
-PresShell::DidDoReflow(bool aInterruptible, bool aWasInterrupted)
+PresShell::DidDoReflow(bool aInterruptible)
 {
   mFrameConstructor->EndUpdate();
 
@@ -8875,10 +8860,6 @@ PresShell::DidDoReflow(bool aInterruptible, bool aWasInterrupted)
   }
 
   mPresContext->NotifyMissingFonts();
-
-  if (!aWasInterrupted) {
-    ClearReflowOnZoomPending();
-  }
 }
 
 DOMHighResTimeStamp
@@ -9229,7 +9210,7 @@ PresShell::ProcessReflowCommands(bool aInterruptible)
 
     // Exiting the scriptblocker might have killed us
     if (!mIsDestroying) {
-      DidDoReflow(aInterruptible, interrupted);
+      DidDoReflow(aInterruptible);
     }
 
     // DidDoReflow might have killed us
@@ -10887,39 +10868,6 @@ nsIPresShell::FontSizeInflationEnabled()
   }
 
   return mFontSizeInflationEnabled;
-}
-
-void
-nsIPresShell::SetMaxLineBoxWidth(nscoord aMaxLineBoxWidth)
-{
-  NS_ASSERTION(aMaxLineBoxWidth >= 0, "attempting to set max line box width to a negative value");
-
-  if (mMaxLineBoxWidth != aMaxLineBoxWidth) {
-    mMaxLineBoxWidth = aMaxLineBoxWidth;
-    mReflowOnZoomPending = true;
-    FrameNeedsReflow(GetRootFrame(), nsIPresShell::eResize,
-                     NS_FRAME_HAS_DIRTY_CHILDREN);
-  }
-}
-
-void
-PresShell::PausePainting()
-{
-  if (GetPresContext()->RefreshDriver()->PresContext() != GetPresContext())
-    return;
-
-  mPaintingIsFrozen = true;
-  GetPresContext()->RefreshDriver()->Freeze();
-}
-
-void
-PresShell::ResumePainting()
-{
-  if (GetPresContext()->RefreshDriver()->PresContext() != GetPresContext())
-    return;
-
-  mPaintingIsFrozen = false;
-  GetPresContext()->RefreshDriver()->Thaw();
 }
 
 void

@@ -96,7 +96,6 @@ public:
     }
 
     mReverb = new WebCore::Reverb(mBuffer, mBufferLength,
-                                  WEBAUDIO_BLOCK_SIZE,
                                   MaxFFTSize, 2, mUseBackgroundThreads,
                                   mNormalize, mSampleRate);
   }
@@ -153,7 +152,7 @@ public:
     }
     aOutput->AllocateChannels(2);
 
-    mReverb->process(&input, aOutput, WEBAUDIO_BLOCK_SIZE);
+    mReverb->process(&input, aOutput);
   }
 
   virtual bool IsActive() const override
