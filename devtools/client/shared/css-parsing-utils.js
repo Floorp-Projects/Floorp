@@ -567,7 +567,11 @@ RuleRewriter.prototype = {
    * declarations.
    *
    * @param {String} text The input text.  This should include the trailing ";".
-   * @return {String} Text that has been rewritten to be "lexically safe".
+   * @return {Array} An array of the form [anySanitized, text], where
+   *                 |anySanitized| is a boolean that indicates
+   *                  whether anything substantive has changed; and
+   *                  where |text| is the text that has been rewritten
+   *                  to be "lexically safe".
    */
   sanitizePropertyValue: function(text) {
     let lexer = DOMUtils.getCSSLexer(text);
@@ -575,6 +579,7 @@ RuleRewriter.prototype = {
     let result = "";
     let previousOffset = 0;
     let braceDepth = 0;
+    let anySanitized = false;
     while (true) {
       let token = lexer.nextToken();
       if (!token) {
@@ -605,6 +610,7 @@ RuleRewriter.prototype = {
               // Quote the offending symbol.
               result += "\\" + token.text;
               previousOffset = token.endOffset;
+              anySanitized = true;
             }
             break;
         }
@@ -612,9 +618,13 @@ RuleRewriter.prototype = {
     }
 
     // Copy out any remaining text, then any needed terminators.
-    result += text.substring(previousOffset, text.length) +
-      lexer.performEOFFixup("", true);
-    return result;
+    result += text.substring(previousOffset, text.length);
+    let eofFixup = lexer.performEOFFixup("", true);
+    if (eofFixup) {
+      anySanitized = true;
+      result += eofFixup;
+    }
+    return [anySanitized, result];
   },
 
   /**
@@ -662,10 +672,16 @@ RuleRewriter.prototype = {
       // before any trailing whitespace.
       this.result = this.result.substring(0, endIndex) + termDecl.terminator +
         trailingText;
-      // The terminator includes the ";", but we don't want it in
-      // the changed value.
-      this.changedDeclarations[index] =
-        termDecl.value + termDecl.terminator.slice(0, -1);
+      // In a couple of cases, we may have had to add something to
+      // terminate the declaration, but the termination did not
+      // actually affect the property's value -- and at this spot, we
+      // only care about reporting value changes.  In particular, we
+      // might have added a plain ";", or we might have terminated a
+      // comment with "*/;".  Neither of these affect the value.
+      if (termDecl.terminator !== ";" && termDecl.terminator !== "*/;") {
+        this.changedDeclarations[index] =
+          termDecl.value + termDecl.terminator.slice(0, -1);
+      }
     }
     // If the rule generally has newlines, but this particular
     // declaration doesn't have a trailing newline, insert one now.
@@ -685,8 +701,8 @@ RuleRewriter.prototype = {
    * @return {String} The sanitized text.
    */
   sanitizeText: function(text, index) {
-    let sanitizedText = this.sanitizePropertyValue(text);
-    if (sanitizedText !== text) {
+    let [anySanitized, sanitizedText] = this.sanitizePropertyValue(text);
+    if (anySanitized) {
       this.changedDeclarations[index] = sanitizedText;
     }
     return sanitizedText;
