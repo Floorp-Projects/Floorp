@@ -22,16 +22,13 @@ import java.util.List;
 public class RestrictedProfileConfiguration implements RestrictionConfiguration {
     static List<Restriction> DEFAULT_RESTRICTIONS = Arrays.asList(
             Restriction.DISALLOW_INSTALL_EXTENSION,
-            Restriction.DISALLOW_IMPORT_SETTINGS,
-            Restriction.DISALLOW_DEVELOPER_TOOLS,
-            Restriction.DISALLOW_CUSTOMIZE_HOME,
             Restriction.DISALLOW_PRIVATE_BROWSING,
             Restriction.DISALLOW_LOCATION_SERVICE,
-            Restriction.DISALLOW_DISPLAY_SETTINGS,
             Restriction.DISALLOW_CLEAR_HISTORY,
             Restriction.DISALLOW_MASTER_PASSWORD,
             Restriction.DISALLOW_GUEST_BROWSING,
-            Restriction.DISALLOW_DEFAULT_THEME
+            Restriction.DISALLOW_DEFAULT_THEME,
+            Restriction.DISALLOW_ADVANCED_SETTINGS
     );
 
     private Context context;
