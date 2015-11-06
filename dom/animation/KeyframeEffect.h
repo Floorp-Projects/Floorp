@@ -328,6 +328,9 @@ protected:
 
 private:
   nsIFrame* GetAnimationFrame() const;
+
+  bool CanThrottleTransformChanges(nsIFrame& aFrame) const;
+
   // Returns true unless Gecko limitations prevent performing transform
   // animations for |aFrame|. Any limitations that are encountered are
   // logged using |aContent| to describe the affected content.
