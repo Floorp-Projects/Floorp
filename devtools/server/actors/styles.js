@@ -213,6 +213,9 @@ var PageStyleActor = protocol.ActorClass({
    * Called when a style sheet is updated.
    */
   _styleApplied: function(kind, styleSheet) {
+    // No matter what kind of update is done, we need to invalidate
+    // the keyframe cache.
+    this.cssLogic.reset();
     if (kind === UPDATE_GENERAL) {
       events.emit(this, "stylesheet-updated", styleSheet);
     }
@@ -1108,8 +1111,8 @@ var StyleRuleActor = protocol.ActorClass({
     if (item instanceof (Ci.nsIDOMCSSRule)) {
       this.type = item.type;
       this.rawRule = item;
-      if ((this.rawRule instanceof Ci.nsIDOMCSSStyleRule ||
-           this.rawRule instanceof Ci.nsIDOMMozCSSKeyframeRule) &&
+      if ((this.type === Ci.nsIDOMCSSRule.STYLE_RULE ||
+           this.type === Ci.nsIDOMCSSRule.KEYFRAME_RULE) &&
           this.rawRule.parentStyleSheet) {
         this.line = DOMUtils.getRelativeRuleLine(this.rawRule);
         this.column = DOMUtils.getRuleColumn(this.rawRule);
@@ -1272,18 +1275,61 @@ var StyleRuleActor = protocol.ActorClass({
 
   /**
    * Compute the index of this actor's raw rule in its parent style
-   * sheet.
+   * sheet.  The index is a vector where each element is the index of
+   * a given CSS rule in its parent.  A vector is used to support
+   * nested rules.
    */
   _computeRuleIndex: function() {
     let rule = this.rawRule;
-    let cssRules = this._parentSheet.cssRules;
-    this._ruleIndex = -1;
-    for (let i = 0; i < cssRules.length; i++) {
-      if (rule === cssRules.item(i)) {
-        this._ruleIndex = i;
-        break;
+    let result = [];
+
+    while (rule) {
+      let cssRules;
+      if (rule.parentRule) {
+        cssRules = rule.parentRule.cssRules;
+      } else {
+        cssRules = rule.parentStyleSheet.cssRules;
+      }
+
+      let found = false;
+      for (let i = 0; i < cssRules.length; i++) {
+        if (rule === cssRules.item(i)) {
+          found = true;
+          result.unshift(i);
+          break;
+        }
+      }
+
+      if (!found) {
+        this._ruleIndex = null;
+        return;
+      }
+
+      rule = rule.parentRule;
+    }
+
+    this._ruleIndex = result;
+  },
+
+  /**
+   * Get the rule corresponding to |this._ruleIndex| from the given
+   * style sheet.
+   *
+   * @param  {DOMStyleSheet} sheet
+   *         The style sheet.
+   * @return {CSSStyleRule} the rule corresponding to
+   * |this._ruleIndex|
+   */
+  _getRuleFromIndex: function(parentSheet) {
+    let currentRule = null;
+    for (let i of this._ruleIndex) {
+      if (currentRule === null) {
+        currentRule = parentSheet.cssRules[i];
+      } else {
+        currentRule = currentRule.cssRules.item(i);
       }
     }
+    return currentRule;
   },
 
   /**
@@ -1297,12 +1343,12 @@ var StyleRuleActor = protocol.ActorClass({
       if (this.sheetActor) {
         this.sheetActor.off("style-applied", this._onStyleApplied);
       }
-    } else if (this._ruleIndex >= 0) {
+    } else if (this._ruleIndex) {
       // The sheet was updated by this actor, in a way that preserves
       // the rules.  Now, recompute our new rule from the style sheet,
       // so that we aren't left with a reference to a dangling rule.
       let oldRule = this.rawRule;
-      this.rawRule = this._parentSheet.cssRules[this._ruleIndex];
+      this.rawRule = this._getRuleFromIndex(this._parentSheet);
       // Also tell the page style so that future calls to _styleRef
       // return the same StyleRuleActor.
       this.pageStyle.updateStyleRef(oldRule, this.rawRule, this);
@@ -1488,7 +1534,7 @@ var StyleRuleActor = protocol.ActorClass({
       }
     }
 
-    return parentStyleSheet.cssRules[this._ruleIndex];
+    return this._getRuleFromIndex(parentStyleSheet);
   }),
 
   /**
