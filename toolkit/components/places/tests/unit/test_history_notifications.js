@@ -1,49 +1,12 @@
-/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
-/* vim:set ts=2 sw=2 sts=2 et: */
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-
 const NS_PLACES_INIT_COMPLETE_TOPIC = "places-init-complete";
 const NS_PLACES_DATABASE_LOCKED_TOPIC = "places-database-locked";
 
-function run_test() {
-  do_test_pending();
-
-  // Create an observer for the Places notifications
-  var os = Cc["@mozilla.org/observer-service;1"].
-         getService(Ci.nsIObserverService);
-  var observer = {
-    _lockedNotificationReceived: false,
-    observe: function thn_observe(aSubject, aTopic, aData)
-    {
-      switch (aTopic) {
-        case NS_PLACES_INIT_COMPLETE_TOPIC:
-          do_check_true(this._lockedNotificationReceived);
-          os.removeObserver(this, NS_PLACES_INIT_COMPLETE_TOPIC);
-          os.removeObserver(this, NS_PLACES_DATABASE_LOCKED_TOPIC);
-          do_test_finished();
-          break;
-        case NS_PLACES_DATABASE_LOCKED_TOPIC:
-          if (this._lockedNotificationReceived)
-            do_throw("Locked notification should be observed only one time");
-          this._lockedNotificationReceived = true;
-          break;
-      }
-    }
-  };
-  os.addObserver(observer, NS_PLACES_INIT_COMPLETE_TOPIC, false);
-  os.addObserver(observer, NS_PLACES_DATABASE_LOCKED_TOPIC, false);
-
+add_task(function* () {
   // Create a dummy places.sqlite and open an unshared connection on it
-  var dirSvc = Cc["@mozilla.org/file/directory_service;1"].
-               getService(Ci.nsIProperties);
-  var db = dirSvc.get('ProfD', Ci.nsIFile);
+  let db = Services.dirsvc.get('ProfD', Ci.nsIFile);
   db.append("places.sqlite");
-  var storage = Cc["@mozilla.org/storage/service;1"].
-                getService(Ci.mozIStorageService);
-  var dbConn = storage.openUnsharedDatabase(db);
-  do_check_true(db.exists());
+  let dbConn = Services.storage.openUnsharedDatabase(db);
+  Assert.ok(db.exists(), "The database should have been created");
 
   // We need an exclusive lock on the db
   dbConn.executeSimpleSQL("PRAGMA locking_mode = EXCLUSIVE");
@@ -51,28 +14,25 @@ function run_test() {
   dbConn.executeSimpleSQL("PRAGMA USER_VERSION = 1");
 
   // Try to create history service while the db is locked
-  Assert.throws(() => Cc["@mozilla.org/browser/nav-history-service;1"].
-    getService(Ci.nsINavHistoryService),
-    /NS_ERROR_XPC_GS_RETURNED_FAILURE/);
+  let promiseLocked = promiseTopicObserved(NS_PLACES_DATABASE_LOCKED_TOPIC);
+  Assert.throws(() => Cc["@mozilla.org/browser/nav-history-service;1"]
+                        .getService(Ci.nsINavHistoryService),
+                /NS_ERROR_XPC_GS_RETURNED_FAILURE/);
+  yield promiseLocked;
 
   // Close our connection and try to cleanup the file (could fail on Windows)
   dbConn.close();
   if (db.exists()) {
     try {
       db.remove(false);
-    } catch(e) { dump("Unable to remove dummy places.sqlite"); }
+    } catch(e) {
+      do_print("Unable to remove dummy places.sqlite");
+    }
   }
-
-  // Make sure that the incorrectly opened service is closed before
-  // we make another attempt. Otherwise, there will be a conflict between
-  // the two services (and an assertion failure).
-  yield shutdownPlaces();
 
   // Create history service correctly
-  try {
-    var hs2 = Cc["@mozilla.org/browser/nav-history-service;1"].
-              getService(Ci.nsINavHistoryService);
-  } catch (ex) {
-    do_throw("Creating an instance of history service on a not locked db should not throw");
-  }
-}
+  let promiseComplete = promiseTopicObserved(NS_PLACES_INIT_COMPLETE_TOPIC);
+  Cc["@mozilla.org/browser/nav-history-service;1"]
+    .getService(Ci.nsINavHistoryService);
+  yield promiseComplete;
+});
