@@ -48,7 +48,7 @@ GetDataSourceSurfaceFrom(android::sp<android::GraphicBuffer>& aGraphicBuffer,
  * mPicX, mPicY and mPicSize. The size of the rendered image is
  * mPicSize, not mYSize or mCbCrSize.
  */
-class GrallocImage : public PlanarYCbCrImage
+class GrallocImage : public RecyclingPlanarYCbCrImage
 {
   typedef PlanarYCbCrData Data;
   static int32_t sColorIdMap[];

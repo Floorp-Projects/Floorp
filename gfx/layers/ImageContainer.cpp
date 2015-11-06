@@ -74,7 +74,7 @@ ImageFactory::CreateImage(ImageFormat aFormat,
   }
 #endif
   if (aFormat == ImageFormat::PLANAR_YCBCR) {
-    img = new PlanarYCbCrImage(aRecycleBin);
+    img = new RecyclingPlanarYCbCrImage(aRecycleBin);
     return img.forget();
   }
   if (aFormat == ImageFormat::CAIRO_SURFACE) {
@@ -420,15 +420,14 @@ ImageContainer::NotifyCompositeInternal(const ImageCompositeNotification& aNotif
   }
 }
 
-PlanarYCbCrImage::PlanarYCbCrImage(BufferRecycleBin *aRecycleBin)
+PlanarYCbCrImage::PlanarYCbCrImage()
   : Image(nullptr, ImageFormat::PLANAR_YCBCR)
-  , mBufferSize(0)
   , mOffscreenFormat(gfxImageFormat::Unknown)
-  , mRecycleBin(aRecycleBin)
+  , mBufferSize(0)
 {
 }
 
-PlanarYCbCrImage::~PlanarYCbCrImage()
+RecyclingPlanarYCbCrImage::~RecyclingPlanarYCbCrImage()
 {
   if (mBuffer) {
     mRecycleBin->RecycleBuffer(mBuffer.forget(), mBufferSize);
@@ -436,7 +435,7 @@ PlanarYCbCrImage::~PlanarYCbCrImage()
 }
 
 size_t
-PlanarYCbCrImage::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
+RecyclingPlanarYCbCrImage::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
 {
   // Ignoring:
   // - mData - just wraps mBuffer
@@ -455,7 +454,7 @@ PlanarYCbCrImage::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
 }
 
 uint8_t*
-PlanarYCbCrImage::AllocateBuffer(uint32_t aSize)
+RecyclingPlanarYCbCrImage::AllocateBuffer(uint32_t aSize)
 {
   return mRecycleBin->GetBuffer(aSize);
 }
@@ -485,7 +484,7 @@ CopyPlane(uint8_t *aDst, const uint8_t *aSrc,
 }
 
 bool
-PlanarYCbCrImage::CopyData(const Data& aData)
+RecyclingPlanarYCbCrImage::CopyData(const Data& aData)
 {
   mData = aData;
 
@@ -517,7 +516,7 @@ PlanarYCbCrImage::CopyData(const Data& aData)
 }
 
 bool
-PlanarYCbCrImage::SetData(const Data &aData)
+RecyclingPlanarYCbCrImage::SetData(const Data &aData)
 {
   return CopyData(aData);
 }
@@ -539,7 +538,7 @@ PlanarYCbCrImage::SetDataNoCopy(const Data &aData)
 }
 
 uint8_t*
-PlanarYCbCrImage::AllocateAndGetNewBuffer(uint32_t aSize)
+RecyclingPlanarYCbCrImage::AllocateAndGetNewBuffer(uint32_t aSize)
 {
   // get new buffer
   mBuffer = AllocateBuffer(aSize);
