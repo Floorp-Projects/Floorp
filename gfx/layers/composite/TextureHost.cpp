@@ -26,6 +26,7 @@
 #include "../opengl/CompositorOGL.h"
 #include "gfxPrefs.h"
 #include "gfxUtils.h"
+#include "IPDLActor.h"
 
 #ifdef MOZ_ENABLE_D3D10_LAYER
 #include "../d3d11/CompositorD3D11.h"
@@ -61,7 +62,7 @@ namespace layers {
  * TextureParent is the host-side IPDL glue between TextureClient and TextureHost.
  * It is an IPDL actor just like LayerParent, CompositableParent, etc.
  */
-class TextureParent : public PTextureParent
+class TextureParent : public ParentActor<PTextureParent>
 {
 public:
   explicit TextureParent(CompositableParentManager* aManager);
@@ -76,17 +77,11 @@ public:
 
   virtual bool RecvClientRecycle() override;
 
-  virtual bool RecvClearTextureHostSync() override;
-
-  virtual bool RecvRemoveTexture() override;
-
   virtual bool RecvRecycleTexture(const TextureFlags& aTextureFlags) override;
 
   TextureHost* GetTextureHost() { return mTextureHost; }
 
-  void ActorDestroy(ActorDestroyReason why) override;
-
-  void ClearTextureHost();
+  virtual void Destroy() override;
 
   CompositableParentManager* mCompositableManager;
   RefPtr<TextureHost> mWaitForClientRecycle;
@@ -822,37 +817,8 @@ TextureParent::Init(const SurfaceDescriptor& aSharedData,
   return !!mTextureHost;
 }
 
-bool
-TextureParent::RecvRemoveTexture()
-{
-  return PTextureParent::Send__delete__(this);
-}
-
-bool
-TextureParent::RecvClearTextureHostSync()
-{
-  ClearTextureHost();
-  return true;
-}
-
 void
-TextureParent::ActorDestroy(ActorDestroyReason why)
-{
-  switch (why) {
-  case AncestorDeletion:
-  case Deletion:
-  case NormalShutdown:
-  case AbnormalShutdown:
-    break;
-  case FailedConstructor:
-    NS_RUNTIMEABORT("FailedConstructor isn't possible in PTexture");
-  }
-
-  ClearTextureHost();
-}
-
-void
-TextureParent::ClearTextureHost()
+TextureParent::Destroy()
 {
   if (!mTextureHost) {
     return;
