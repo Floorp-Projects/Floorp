@@ -762,6 +762,10 @@ loop.roomViews = (function(mozL10n) {
       }
     },
 
+    handleContextMenu: function(e) {
+      e.preventDefault();
+    },
+
     render: function() {
       if (this.state.roomName || this.state.roomContextUrls) {
         var roomTitle = this.state.roomName ||
@@ -807,7 +811,8 @@ loop.roomViews = (function(mozL10n) {
             { id: "help" }
           ];
           return (
-            <div className="room-conversation-wrapper desktop-room-wrapper">
+            <div className="room-conversation-wrapper desktop-room-wrapper"
+              onContextMenu={this.handleContextMenu}>
               <sharedViews.MediaLayoutView
                 dispatcher={this.props.dispatcher}
                 displayScreenShare={false}
