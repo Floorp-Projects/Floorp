@@ -5,6 +5,7 @@
 
 #include "nsCRT.h"
 #include "mozilla/Endian.h"
+#include "mozilla/UniquePtrExtensions.h"
 #include "nsBMPEncoder.h"
 #include "prprf.h"
 #include "nsString.h"
@@ -187,9 +188,8 @@ nsBMPEncoder::AddImageFrame(const uint8_t* aData,
     return NS_ERROR_INVALID_ARG;
   }
 
-  UniquePtr<uint8_t[]> row(new (fallible)
-                           uint8_t[mBMPInfoHeader.width *
-                                   BytesPerPixel(mBMPInfoHeader.bpp)]);
+  auto row = MakeUniqueFallible<uint8_t[]>(mBMPInfoHeader.width *
+                                           BytesPerPixel(mBMPInfoHeader.bpp));
   if (!row) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

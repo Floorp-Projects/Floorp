@@ -30,7 +30,7 @@
 
     var newTrack;
     var audiotrack;
-    return navigator.mediaDevices.getUserMedia({video:true, audio:true, fake:true})
+    return navigator.mediaDevices.getUserMedia({video:true, audio:true})
       .then(newStream => {
         window.grip = newStream;
         newTrack = newStream.getVideoTracks()[0];
@@ -112,7 +112,8 @@
 
         var sourceNode = test.audioCtx.createOscillator();
         sourceNode.type = 'sine';
-        // We need a frequency not too close to the fake audio track (1kHz).
+        // We need a frequency not too close to the fake audio track
+        // (440Hz for loopback devices, 1kHz for fake tracks).
         sourceNode.frequency.value = 2000;
         sourceNode.start();
 
@@ -157,7 +158,7 @@
           is(e.name, "InvalidParameterError",
              "addTrack existing track should fail");
         }
-        return navigator.mediaDevices.getUserMedia({video:true, fake: true})
+        return navigator.mediaDevices.getUserMedia({video:true})
           .then(differentStream => {
             var track = differentStream.getVideoTracks()[0];
             try {

@@ -74,6 +74,8 @@ class WrapperOwner : public virtual JavaScriptShared
 
     bool active() { return !inactive_; }
 
+    virtual bool allowMessage(JSContext* cx) = 0;
+
     void drop(JSObject* obj);
     void updatePointer(JSObject* obj, const JSObject* old);
 

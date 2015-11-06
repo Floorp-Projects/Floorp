@@ -19,7 +19,7 @@ UNIFIED_SOURCES += [
     '../mozalloc_oom.cpp',
 ]
 
-GENERATED_INCLUDES += ['/xpcom']
+LOCAL_INCLUDES += ['!/xpcom']
 
 DISABLE_STL_WRAPPING = True
 

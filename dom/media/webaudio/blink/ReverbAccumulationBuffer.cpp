@@ -76,7 +76,7 @@ void ReverbAccumulationBuffer::updateReadIndex(int* readIndex, size_t numberOfFr
     *readIndex = (*readIndex + numberOfFrames) % m_buffer.Length();
 }
 
-int ReverbAccumulationBuffer::accumulate(float* source, size_t numberOfFrames, int* readIndex, size_t delayFrames)
+int ReverbAccumulationBuffer::accumulate(const float* source, size_t numberOfFrames, int* readIndex, size_t delayFrames)
 {
     size_t bufferLength = m_buffer.Length();
 
