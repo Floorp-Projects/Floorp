@@ -3846,14 +3846,19 @@ nsRuleNode::SetFont(nsPresContext* aPresContext, nsStyleContext* aContext,
                            &scriptLevelAdjustedUnconstrainedParentSize);
   NS_ASSERTION(!aUsedStartStruct || aFont->mScriptUnconstrainedSize == aFont->mSize,
                "If we have a start struct, we should have reset everything coming in here");
-  SetFontSize(aPresContext, aRuleData, aFont, aParentFont,
-              &aFont->mSize,
-              systemFont, aParentFont->mSize, scriptLevelAdjustedParentSize,
-              aUsedStartStruct, atRoot, aConditions);
+
+  // Compute whether we're affected by scriptMinSize *before* calling
+  // SetFontSize, since aParentFont might be the same as aFont.  If it
+  // is, calling SetFontSize might throw off our calculation.
   bool affectedByScriptMinSize =
     aParentFont->mSize != aParentFont->mScriptUnconstrainedSize ||
     scriptLevelAdjustedParentSize !=
       scriptLevelAdjustedUnconstrainedParentSize;
+
+  SetFontSize(aPresContext, aRuleData, aFont, aParentFont,
+              &aFont->mSize,
+              systemFont, aParentFont->mSize, scriptLevelAdjustedParentSize,
+              aUsedStartStruct, atRoot, aConditions);
   if (!aPresContext->Document()->GetMathMLEnabled()) {
     MOZ_ASSERT(!affectedByScriptMinSize);
     // If MathML is not enabled, we don't need to mark this node as
