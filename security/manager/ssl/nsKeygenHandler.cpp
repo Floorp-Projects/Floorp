@@ -18,7 +18,6 @@
 #include "nsIDOMHTMLSelectElement.h"
 #include "nsIContent.h"
 #include "nsKeygenThread.h"
-#include "nsNSSHelper.h"
 #include "nsReadableUtils.h"
 #include "nsUnicharUtils.h"
 #include "nsCRT.h"
