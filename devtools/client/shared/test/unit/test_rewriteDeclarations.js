@@ -269,7 +269,8 @@ const TEST_DATA = [
     desc: "enable single quote termination",
     input: "/* content: 'hi */ color: red;",
     instruction: {type: "enable", name: "content", value: true, index: 0},
-    expected: "content: 'hi'; color: red;"
+    expected: "content: 'hi'; color: red;",
+    changed: {0: "'hi'"}
   },
   // Termination insertion corner case.
   {
@@ -277,7 +278,8 @@ const TEST_DATA = [
     input: "content: 'hi",
     instruction: {type: "create", name: "color", value: "red", priority: "",
                   index: 1},
-    expected: "content: 'hi';color: red;"
+    expected: "content: 'hi';color: red;",
+    changed: {0: "'hi'"}
   },
 
   // Termination insertion corner case.
@@ -285,7 +287,8 @@ const TEST_DATA = [
     desc: "enable double quote termination",
     input: "/* content: \"hi */ color: red;",
     instruction: {type: "enable", name: "content", value: true, index: 0},
-    expected: "content: \"hi\"; color: red;"
+    expected: "content: \"hi\"; color: red;",
+    changed: {0: "\"hi\""}
   },
   // Termination insertion corner case.
   {
@@ -293,7 +296,8 @@ const TEST_DATA = [
     input: "content: \"hi",
     instruction: {type: "create", name: "color", value: "red", priority: "",
                   index: 1},
-    expected: "content: \"hi\";color: red;"
+    expected: "content: \"hi\";color: red;",
+    changed: {0: "\"hi\""}
   },
 
   // Termination insertion corner case.
@@ -302,7 +306,8 @@ const TEST_DATA = [
     input: "/* background-image: url(something.jpg */ color: red;",
     instruction: {type: "enable", name: "background-image", value: true,
                   index: 0},
-    expected: "background-image: url(something.jpg); color: red;"
+    expected: "background-image: url(something.jpg); color: red;",
+    changed: {0: "url(something.jpg)"}
   },
   // Termination insertion corner case.
   {
@@ -310,7 +315,8 @@ const TEST_DATA = [
     input: "background-image: url(something.jpg",
     instruction: {type: "create", name: "color", value: "red", priority: "",
                   index: 1},
-    expected: "background-image: url(something.jpg);color: red;"
+    expected: "background-image: url(something.jpg);color: red;",
+    changed: {0: "url(something.jpg)"}
   },
 
   // Termination insertion corner case.
@@ -319,7 +325,8 @@ const TEST_DATA = [
     input: "/* background-image: url('something.jpg */ color: red;",
     instruction: {type: "enable", name: "background-image", value: true,
                   index: 0},
-    expected: "background-image: url('something.jpg'); color: red;"
+    expected: "background-image: url('something.jpg'); color: red;",
+    changed: {0: "url('something.jpg')"}
   },
   // Termination insertion corner case.
   {
@@ -327,7 +334,8 @@ const TEST_DATA = [
     input: "background-image: url('something.jpg",
     instruction: {type: "create", name: "color", value: "red", priority: "",
                   index: 1},
-    expected: "background-image: url('something.jpg');color: red;"
+    expected: "background-image: url('something.jpg');color: red;",
+    changed: {0: "url('something.jpg')"}
   },
 
   // Termination insertion corner case.
@@ -336,7 +344,8 @@ const TEST_DATA = [
     input: "/* background-image: url(\"something.jpg */ color: red;",
     instruction: {type: "enable", name: "background-image", value: true,
                   index: 0},
-    expected: "background-image: url(\"something.jpg\"); color: red;"
+    expected: "background-image: url(\"something.jpg\"); color: red;",
+    changed: {0: "url(\"something.jpg\")"}
   },
   // Termination insertion corner case.
   {
@@ -344,7 +353,8 @@ const TEST_DATA = [
     input: "background-image: url(\"something.jpg",
     instruction: {type: "create", name: "color", value: "red", priority: "",
                   index: 1},
-    expected: "background-image: url(\"something.jpg\");color: red;"
+    expected: "background-image: url(\"something.jpg\");color: red;",
+    changed: {0: "url(\"something.jpg\")"}
   },
 
   // Termination insertion corner case.
@@ -353,7 +363,10 @@ const TEST_DATA = [
     input: "something: \\",
     instruction: {type: "create", name: "color", value: "red", priority: "",
                   index: 1},
-    expected: "something: \\\\;color: red;"
+    expected: "something: \\\\;color: red;",
+    // The lexer rewrites the token before we see it.  However this is
+    // so obscure as to be inconsequential.
+    changed: {0: "\uFFFD\\"}
   },
 
   // Termination insertion corner case.
@@ -362,14 +375,16 @@ const TEST_DATA = [
     input: "something: '\\",
     instruction: {type: "create", name: "color", value: "red", priority: "",
                   index: 1},
-    expected: "something: '\\\\';color: red;"
+    expected: "something: '\\\\';color: red;",
+    changed: {0: "'\\\\'"}
   },
   {
     desc: "enable backslash double quote termination",
     input: "something: \"\\",
     instruction: {type: "create", name: "color", value: "red", priority: "",
                   index: 1},
-    expected: "something: \"\\\\\";color: red;"
+    expected: "something: \"\\\\\";color: red;",
+    changed: {0: "\"\\\\\""}
   },
 
   // Termination insertion corner case.
@@ -471,8 +486,13 @@ function run_test() {
     let {changed, text} = rewriteDeclarations(test.input, test.instruction,
                                               "\t");
     equal(text, test.expected, "output for " + test.desc);
+
+    let expectChanged;
     if ("changed" in test) {
-      deepEqual(changed, test.changed, "changed result for " + test.desc);
+      expectChanged = test.changed;
+    } else {
+      expectChanged = {};
     }
+    deepEqual(changed, expectChanged, "changed result for " + test.desc);
   }
 }
