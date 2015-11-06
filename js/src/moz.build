@@ -519,6 +519,7 @@ elif CONFIG['JS_CODEGEN_MIPS32'] or CONFIG['JS_CODEGEN_MIPS64']:
             'jit/mips64/BaselineIC-mips64.cpp',
             'jit/mips64/CodeGenerator-mips64.cpp',
             'jit/mips64/Lowering-mips64.cpp',
+            'jit/mips64/MacroAssembler-mips64.cpp',
             'jit/mips64/MoveEmitter-mips64.cpp',
             'jit/mips64/SharedIC-mips64.cpp',
             'jit/mips64/Trampoline-mips64.cpp',
