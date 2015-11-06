@@ -611,7 +611,7 @@ loop.panel = (function(_, mozL10n) {
             className: "dropdown-menu-item", 
             onClick: this.props.handleDeleteButtonClick, 
             ref: "deleteButton"}, 
-            mozL10n.get("delete_conversation_menuitem")
+            mozL10n.get("delete_conversation_menuitem2")
           )
         )
       );

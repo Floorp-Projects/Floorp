@@ -147,12 +147,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "HawkClient",
 XPCOMUtils.defineLazyModuleGetter(this, "deriveHawkCredentials",
                                   "resource://services-common/hawkrequest.js");
 
-XPCOMUtils.defineLazyModuleGetter(this, "LoopContacts",
-                                  "resource:///modules/loop/LoopContacts.jsm");
-
-XPCOMUtils.defineLazyModuleGetter(this, "LoopStorage",
-                                  "resource:///modules/loop/LoopStorage.jsm");
-
 XPCOMUtils.defineLazyModuleGetter(this, "LoopRooms",
                                   "resource:///modules/loop/LoopRooms.jsm");
 
@@ -307,7 +301,6 @@ var MozLoopServiceInternal = {
   notifyStatusChanged: function(aReason = null) {
     log.debug("notifyStatusChanged with reason:", aReason);
     let profile = MozLoopService.userProfile;
-    LoopStorage.switchDatabase(profile && profile.uid);
     LoopRooms.maybeRefresh(profile && profile.uid);
     Services.obs.notifyObservers(null, "loop-status-changed", aReason);
   },
