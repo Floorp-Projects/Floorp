@@ -526,6 +526,10 @@ AnimationCollection::CanPerformOnCompositorThread(
     return false;
   }
 
+  if (IsCompositorAnimationDisabledForFrame(frame)) {
+    return false;
+  }
+
   bool existsProperty = false;
   for (size_t animIdx = mAnimations.Length(); animIdx-- != 0; ) {
     const Animation* anim = mAnimations[animIdx];
@@ -543,8 +547,7 @@ AnimationCollection::CanPerformOnCompositorThread(
       const AnimationProperty& prop = effect->Properties()[propIdx];
       if (!CanAnimatePropertyOnCompositor(element,
                                           prop.mProperty,
-                                          aFlags) ||
-          IsCompositorAnimationDisabledForFrame(frame)) {
+                                          aFlags)) {
         return false;
       }
     }
