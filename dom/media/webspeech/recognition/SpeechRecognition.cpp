@@ -21,11 +21,8 @@
 #include "endpointer.h"
 
 #include "mozilla/dom/SpeechRecognitionEvent.h"
-#include "nsContentUtils.h"
 #include "nsIDocument.h"
 #include "nsIObserverService.h"
-#include "nsIPermissionManager.h"
-#include "nsIPrincipal.h"
 #include "nsPIDOMWindow.h"
 #include "nsServiceManagerUtils.h"
 #include "nsQueryObject.h"
@@ -163,25 +160,11 @@ SpeechRecognition::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 bool
 SpeechRecognition::IsAuthorized(JSContext* aCx, JSObject* aGlobal)
 {
-  nsresult rv;
-  nsCOMPtr<nsIPermissionManager> mgr = do_GetService(NS_PERMISSIONMANAGER_CONTRACTID, &rv);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return false;
-  }
-
-  uint32_t speechRecognition = nsIPermissionManager::UNKNOWN_ACTION;
-  nsIPrincipal* principal = nsContentUtils::ObjectPrincipal(aGlobal);
-  rv = mgr->TestExactPermissionFromPrincipal(principal, "speech-recognition", &speechRecognition);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return false;
-  }
-
-  bool hasPermission = (speechRecognition == nsIPermissionManager::ALLOW_ACTION);
-
+  bool inPrivilegedApp = IsInPrivilegedApp(aCx, aGlobal);
   bool enableTests = Preferences::GetBool(TEST_PREFERENCE_ENABLE);
   bool enableRecognitionEnable = Preferences::GetBool(TEST_PREFERENCE_RECOGNITION_ENABLE);
   bool enableRecognitionForceEnable = Preferences::GetBool(TEST_PREFERENCE_RECOGNITION_FORCE_ENABLE);
-  return (hasPermission || enableRecognitionForceEnable || enableTests) && enableRecognitionEnable;
+  return (inPrivilegedApp || enableRecognitionForceEnable || enableTests) && enableRecognitionEnable;
 }
 
 already_AddRefed<SpeechRecognition>
