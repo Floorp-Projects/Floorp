@@ -2704,6 +2704,15 @@ public:
                                           nsRect aDisplayPortBase,
                                           nsRect* aOutDisplayport);
 
+  static nsIScrollableFrame* GetAsyncScrollableAncestorFrame(nsIFrame* aTarget);
+
+  /**
+   * Sets a zero margin display port on all proper ancestors of aFrame that
+   * are async scrollable.
+   */
+  static void SetZeroMarginDisplayPortOnAsyncScrollableAncestors(nsIFrame* aFrame,
+                                                                 RepaintMode aRepaintMode);
+
   static bool IsOutlineStyleAutoEnabled();
 
   static void SetBSizeFromFontMetrics(const nsIFrame* aFrame,

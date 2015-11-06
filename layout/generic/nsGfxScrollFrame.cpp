@@ -1875,6 +1875,8 @@ ScrollFrameHelper::ScrollFrameHelper(nsContainerFrame* aOuter,
                                          ScreenMargin(),
                                          0,
                                          nsLayoutUtils::RepaintMode::DoNotRepaint);
+    nsLayoutUtils::SetZeroMarginDisplayPortOnAsyncScrollableAncestors(
+        mOuter, nsLayoutUtils::RepaintMode::DoNotRepaint);
   }
 
 }
@@ -2135,6 +2137,10 @@ ScrollFrameHelper::ScrollToWithOrigin(nsPoint aScrollPosition,
             // frame to force an APZC which can handle the request.
             nsLayoutUtils::CalculateAndSetDisplayPortMargins(
               mOuter->GetScrollTargetFrame(),
+              nsLayoutUtils::RepaintMode::DoNotRepaint);
+            nsIFrame* frame = do_QueryFrame(mOuter->GetScrollTargetFrame());
+            nsLayoutUtils::SetZeroMarginDisplayPortOnAsyncScrollableAncestors(
+              frame,
               nsLayoutUtils::RepaintMode::DoNotRepaint);
           }
 
