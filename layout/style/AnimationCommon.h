@@ -275,7 +275,7 @@ public:
   // Note that this does not test whether the element's layer uses
   // off-main-thread compositing, although it does check whether
   // off-main-thread compositing is enabled as a whole.
-  bool CanPerformOnCompositorThread() const;
+  bool CanPerformOnCompositorThread(const nsIFrame* aFrame) const;
 
   bool HasCurrentAnimationOfProperty(nsCSSProperty aProperty) const;
 

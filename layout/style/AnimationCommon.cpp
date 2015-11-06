@@ -110,7 +110,7 @@ CommonAnimationManager::GetAnimationsForCompositor(const nsIFrame* aFrame,
   AnimationCollection* collection = GetAnimationCollection(aFrame);
   if (!collection ||
       !collection->HasCurrentAnimationOfProperty(aProperty) ||
-      !collection->CanPerformOnCompositorThread()) {
+      !collection->CanPerformOnCompositorThread(aFrame)) {
     return nullptr;
   }
 
@@ -424,7 +424,7 @@ AnimValuesStyleRule::List(FILE* out, int32_t aIndent) const
 #endif
 
 bool
-AnimationCollection::CanPerformOnCompositorThread() const
+AnimationCollection::CanPerformOnCompositorThread(const nsIFrame* aFrame) const
 {
   if (!nsLayoutUtils::AreAsyncAnimationsEnabled()) {
     if (nsLayoutUtils::IsAnimationLoggingEnabled()) {
@@ -435,16 +435,7 @@ AnimationCollection::CanPerformOnCompositorThread() const
     return false;
   }
 
-  dom::Element* element = GetElementToRestyle();
-  if (!element) {
-    return false;
-  }
-  nsIFrame* frame = nsLayoutUtils::GetStyleFrame(element);
-  if (!frame) {
-    return false;
-  }
-
-  if (frame->RefusedAsyncAnimation()) {
+  if (aFrame->RefusedAsyncAnimation()) {
     return false;
   }
 
@@ -464,7 +455,7 @@ AnimationCollection::CanPerformOnCompositorThread() const
          propIdx != propEnd; ++propIdx) {
       const AnimationProperty& prop = effect->Properties()[propIdx];
       if (!KeyframeEffectReadOnly::CanAnimatePropertyOnCompositor(
-            frame,
+            aFrame,
             prop.mProperty)) {
         return false;
       }
