@@ -26,7 +26,9 @@
 struct JSContext;
 class nsCSSPropertySet;
 class nsIContent;
+class nsIDocument;
 class nsIFrame;
+class nsPresContext;
 
 namespace mozilla {
 
@@ -286,6 +288,9 @@ public:
   // Returns true |aProperty| can be run on compositor for |aFrame|.
   static bool CanAnimatePropertyOnCompositor(const nsIFrame* aFrame,
                                              nsCSSProperty aProperty);
+  nsIDocument* GetRenderedDocument() const;
+  nsPresContext* GetPresContext() const;
+
 protected:
   virtual ~KeyframeEffectReadOnly();
   void ResetIsRunningOnCompositor();

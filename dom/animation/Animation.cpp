@@ -1172,28 +1172,17 @@ Animation::GetRenderedDocument() const
     return nullptr;
   }
 
-  Element* targetElement;
-  nsCSSPseudoElements::Type pseudoType;
-  mEffect->GetTarget(targetElement, pseudoType);
-  if (!targetElement) {
-    return nullptr;
-  }
-
-  return targetElement->GetComposedDoc();
+  return mEffect->GetRenderedDocument();
 }
 
 nsPresContext*
 Animation::GetPresContext() const
 {
-  nsIDocument* doc = GetRenderedDocument();
-  if (!doc) {
+  if (!mEffect) {
     return nullptr;
   }
-  nsIPresShell* shell = doc->GetShell();
-  if (!shell) {
-    return nullptr;
-  }
-  return shell->GetPresContext();
+
+  return mEffect->GetPresContext();
 }
 
 AnimationCollection*
