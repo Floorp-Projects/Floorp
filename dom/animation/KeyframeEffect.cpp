@@ -1761,6 +1761,29 @@ KeyframeEffectReadOnly::GetAnimationFrame() const
   return nsLayoutUtils::GetStyleFrame(frame);
 }
 
+nsIDocument*
+KeyframeEffectReadOnly::GetRenderedDocument() const
+{
+  if (!mTarget) {
+    return nullptr;
+  }
+  return mTarget->GetComposedDoc();
+}
+
+nsPresContext*
+KeyframeEffectReadOnly::GetPresContext() const
+{
+  nsIDocument* doc = GetRenderedDocument();
+  if (!doc) {
+    return nullptr;
+  }
+  nsIPresShell* shell = doc->GetShell();
+  if (!shell) {
+    return nullptr;
+  }
+  return shell->GetPresContext();
+}
+
 /* static */ bool
 KeyframeEffectReadOnly::IsGeometricProperty(
   const nsCSSProperty aProperty)
