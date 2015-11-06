@@ -3,15 +3,12 @@
 
 package org.mozilla.gecko.sync.repositories.test;
 
-import java.net.URISyntaxException;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
-
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mozilla.android.sync.test.helpers.HTTPServerTestHelper;
 import org.mozilla.android.sync.test.helpers.MockServer;
+import org.mozilla.gecko.background.testhelpers.TestRunner;
 import org.mozilla.gecko.background.testhelpers.WaitHelper;
 import org.mozilla.gecko.sync.InfoCollections;
 import org.mozilla.gecko.sync.JSONRecordFetcher;
@@ -19,11 +16,14 @@ import org.mozilla.gecko.sync.net.AuthHeaderProvider;
 import org.mozilla.gecko.sync.repositories.RepositorySession;
 import org.mozilla.gecko.sync.repositories.delegates.RepositorySessionCreationDelegate;
 import org.mozilla.gecko.sync.stage.SafeConstrainedServer11Repository;
-import org.robolectric.RobolectricGradleTestRunner;
 import org.simpleframework.http.Request;
 import org.simpleframework.http.Response;
 
-@RunWith(RobolectricGradleTestRunner.class)
+import java.net.URISyntaxException;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+
+@RunWith(TestRunner.class)
 public class TestSafeConstrainedServer11Repository {
   private static final int     TEST_PORT      = HTTPServerTestHelper.getTestPort();
   private static final String  TEST_SERVER    = "http://localhost:" + TEST_PORT + "/";

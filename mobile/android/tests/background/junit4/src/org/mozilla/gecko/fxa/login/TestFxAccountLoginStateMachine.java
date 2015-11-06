@@ -3,16 +3,13 @@
 
 package org.mozilla.gecko.fxa.login;
 
-import java.security.NoSuchAlgorithmException;
-import java.util.LinkedList;
-
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mozilla.gecko.BuildConfig;
 import org.mozilla.gecko.background.fxa.FxAccountClient;
 import org.mozilla.gecko.background.fxa.FxAccountUtils;
+import org.mozilla.gecko.background.testhelpers.TestRunner;
 import org.mozilla.gecko.background.testhelpers.WaitHelper;
 import org.mozilla.gecko.browserid.BrowserIDKeyPair;
 import org.mozilla.gecko.browserid.RSACryptoImplementation;
@@ -20,10 +17,11 @@ import org.mozilla.gecko.fxa.login.FxAccountLoginStateMachine.LoginStateMachineD
 import org.mozilla.gecko.fxa.login.FxAccountLoginTransition.Transition;
 import org.mozilla.gecko.fxa.login.State.StateLabel;
 import org.mozilla.gecko.sync.Utils;
-import org.robolectric.RobolectricGradleTestRunner;
-import org.robolectric.annotation.Config;
 
-@RunWith(RobolectricGradleTestRunner.class)
+import java.security.NoSuchAlgorithmException;
+import java.util.LinkedList;
+
+@RunWith(TestRunner.class)
 public class TestFxAccountLoginStateMachine {
   // private static final String TEST_AUDIENCE = "http://testAudience.com";
   private static final String TEST_EMAIL = "test@test.com";

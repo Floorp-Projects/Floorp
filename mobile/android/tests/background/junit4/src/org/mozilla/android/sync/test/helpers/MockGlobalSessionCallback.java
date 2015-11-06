@@ -3,14 +3,14 @@
 
 package org.mozilla.android.sync.test.helpers;
 
-import static org.junit.Assert.assertEquals;
-
-import java.net.URI;
-
 import org.mozilla.gecko.background.testhelpers.WaitHelper;
 import org.mozilla.gecko.sync.GlobalSession;
 import org.mozilla.gecko.sync.delegates.GlobalSessionCallback;
 import org.mozilla.gecko.sync.stage.GlobalSyncStage.Stage;
+
+import java.net.URI;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  * A callback for use with a GlobalSession that records what happens for later

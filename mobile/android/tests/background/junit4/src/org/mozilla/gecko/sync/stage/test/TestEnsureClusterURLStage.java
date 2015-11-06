@@ -3,14 +3,10 @@
 
 package org.mozilla.gecko.sync.stage.test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
-
-import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
-
+import ch.boye.httpclientandroidlib.HttpResponse;
+import ch.boye.httpclientandroidlib.ProtocolVersion;
+import ch.boye.httpclientandroidlib.message.BasicHttpResponse;
+import ch.boye.httpclientandroidlib.message.BasicStatusLine;
 import org.json.simple.parser.ParseException;
 import org.junit.Before;
 import org.junit.Test;
@@ -19,6 +15,7 @@ import org.mozilla.android.sync.test.helpers.HTTPServerTestHelper;
 import org.mozilla.android.sync.test.helpers.MockGlobalSessionCallback;
 import org.mozilla.android.sync.test.helpers.MockServer;
 import org.mozilla.gecko.background.testhelpers.MockGlobalSession;
+import org.mozilla.gecko.background.testhelpers.TestRunner;
 import org.mozilla.gecko.background.testhelpers.WaitHelper;
 import org.mozilla.gecko.sync.AlreadySyncingException;
 import org.mozilla.gecko.sync.GlobalSession;
@@ -31,13 +28,15 @@ import org.mozilla.gecko.sync.net.BaseResource;
 import org.mozilla.gecko.sync.stage.EnsureClusterURLStage;
 import org.mozilla.gecko.sync.stage.GlobalSyncStage.Stage;
 
-import ch.boye.httpclientandroidlib.HttpResponse;
-import ch.boye.httpclientandroidlib.ProtocolVersion;
-import ch.boye.httpclientandroidlib.message.BasicHttpResponse;
-import ch.boye.httpclientandroidlib.message.BasicStatusLine;
-import org.robolectric.RobolectricGradleTestRunner;
+import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 
-@RunWith(RobolectricGradleTestRunner.class)
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
+
+@RunWith(TestRunner.class)
 public class TestEnsureClusterURLStage {
   private static final int     TEST_PORT        = HTTPServerTestHelper.getTestPort();
   private static final String  TEST_SERVER      = "http://localhost:" + TEST_PORT + "/";

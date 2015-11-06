@@ -3,17 +3,17 @@
 
 package org.mozilla.android.sync.test;
 
-import java.net.URI;
-
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mozilla.gecko.background.testhelpers.MockSharedPreferences;
+import org.mozilla.gecko.background.testhelpers.TestRunner;
 import org.mozilla.gecko.sync.Sync11Configuration;
 import org.mozilla.gecko.sync.SyncConfiguration;
-import org.robolectric.RobolectricGradleTestRunner;
 
-@RunWith(RobolectricGradleTestRunner.class)
+import java.net.URI;
+
+@RunWith(TestRunner.class)
 public class TestSyncConfiguration {
   @Test
   public void testURLs() throws Exception {

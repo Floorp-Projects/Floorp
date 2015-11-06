@@ -18,9 +18,6 @@ task:
         buildbot_step 'Build' ./build-phone-ota.sh $HOME/workspace
 
   extra:
-    treeherder:
-      machine:
-        platform: b2g-device-image
     locations:
       img: 'private/build/flame-kk.zip'
       mar: 'public/build/b2g-flame-gecko-update.mar'
