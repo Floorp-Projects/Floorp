@@ -68,6 +68,13 @@ VsyncSource::Display::NotifyVsync(TimeStamp aVsyncTimestamp)
   mRefreshTimerVsyncDispatcher->NotifyVsync(aVsyncTimestamp);
 }
 
+TimeDuration
+VsyncSource::Display::GetVsyncRate()
+{
+  // If hardware queries fail / are unsupported, we have to just guess.
+  return TimeDuration::FromMilliseconds(1000.0 / 60.0);
+}
+
 void
 VsyncSource::Display::AddCompositorVsyncDispatcher(CompositorVsyncDispatcher* aCompositorVsyncDispatcher)
 {
