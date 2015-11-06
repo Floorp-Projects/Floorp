@@ -511,6 +511,8 @@ var UI = {
       TabItems.resumePainting();
     }
 
+    this.notifyDeprecation();
+
     if (gTabView.firstUseExperienced)
       gTabView.enableSessionRestore();
   },
@@ -521,6 +523,8 @@ var UI = {
   hideTabView: function UI_hideTabView() {
     if (!this.isTabViewVisible() || this._isChangingVisibility)
       return;
+
+    iQ(".banner").remove();
 
     // another tab might be select if user decides to stay on a page when
     // a onclose confirmation prompts.
@@ -1541,7 +1545,37 @@ var UI = {
     };
 
     banner.animate({opacity: 0.7}, {duration: 1500, complete: onFadeIn});
-  }
+  },
+
+  // Function: notifyDeprecation
+  // Notify the user that tab groups will be deprecated soon.
+  notifyDeprecation() {
+    let brandBundle = gWindow.document.getElementById("bundle_brand");
+    let brandShortName = brandBundle.getString("brandShortName");
+    let browserBundle = gWindow.document.getElementById("bundle_browser");
+    let notificationText = browserBundle.getFormattedString(
+      "tabgroups.deprecationwarning.description", [brandShortName]);
+
+    let learnMoreText = browserBundle.getString("tabgroups.deprecationwarning.learnMore.label");
+
+    let onButtonClick = () => {
+      this.hideTabView();
+      gWindow.openUILinkIn("https://support.mozilla.org/kb/tab-groups-removal", "tab");
+    };
+
+    let button = iQ("<button>")
+      .text(learnMoreText)
+      .css('-moz-margin-start', '10px')
+      .one('click', onButtonClick);
+
+    let banner = iQ("<div>")
+      .text(notificationText)
+      .addClass("banner")
+      .append(button)
+      .appendTo("body");
+
+    banner.animate({opacity: 0.7}, {duration: 1500});
+  },
 };
 
 // ----------
