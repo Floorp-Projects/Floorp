@@ -542,6 +542,18 @@ public:
         CVDisplayLinkRelease(mDisplayLink);
         mDisplayLink = nullptr;
       }
+
+      CVTime vsyncRate = CVDisplayLinkGetNominalOutputVideoRefreshPeriod(mDisplayLink);
+      if (vsyncRate.flags & kCVTimeIsIndefinite) {
+        NS_WARNING("Could not get vsync rate, setting to 60.");
+        mVsyncRate = TimeDuration::FromMilliseconds(1000.0 / 60.0);
+      } else {
+        int64_t timeValue = vsyncRate.timeValue;
+        int64_t timeScale = vsyncRate.timeScale;
+        const int milliseconds = 1000;
+        float rateInMs = ((double) timeValue / (double) timeScale) * milliseconds;
+        mVsyncRate = TimeDuration::FromMilliseconds(rateInMs);
+      }
     }
 
     virtual void DisableVsync() override
@@ -564,6 +576,11 @@ public:
       return mDisplayLink != nullptr;
     }
 
+    virtual TimeDuration GetVsyncRate() override
+    {
+      return mVsyncRate;
+    }
+
     // The vsync timestamps given by the CVDisplayLinkCallback are
     // in the future for the NEXT frame. Large parts of Gecko, such
     // as animations assume a timestamp at either now or in the past.
@@ -575,6 +592,7 @@ public:
     // Manages the display link render thread
     CVDisplayLinkRef   mDisplayLink;
     RefPtr<nsITimer> mTimer;
+    TimeDuration mVsyncRate;
   }; // OSXDisplay
 
 private:

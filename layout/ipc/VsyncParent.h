@@ -36,6 +36,7 @@ private:
   virtual ~VsyncParent();
 
   virtual bool NotifyVsync(TimeStamp aTimeStamp) override;
+  virtual bool RecvRequestVsyncRate() override;
 
   virtual bool RecvObserve() override;
   virtual bool RecvUnobserve() override;
