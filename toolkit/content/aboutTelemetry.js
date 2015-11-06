@@ -298,7 +298,10 @@ var PingPicker = {
             .addEventListener("click", () => this._movePingIndex(-1), false);
     document.getElementById("older-ping")
             .addEventListener("click", () => this._movePingIndex(1), false);
-
+    document.getElementById("show-raw-ping")
+            .addEventListener("click", () => this._showRawPingData(), false);
+    document.getElementById("hide-raw-ping")
+            .addEventListener("click", () => this._hideRawPingData(), false);
     document.getElementById("choose-payload")
             .addEventListener("change", () => displayPingData(gPingData), false);
   },
@@ -447,6 +450,16 @@ var PingPicker = {
 
     this._renderPingList(ping.id);
     this._updateArchivedPingData();
+  },
+
+  _showRawPingData: function() {
+    let pre = document.getElementById("raw-ping-data");
+    pre.textContent = JSON.stringify(gPingData, null, 2);
+    document.getElementById("raw-ping-data-section").classList.remove("hidden");
+  },
+
+  _hideRawPingData: function() {
+    document.getElementById("raw-ping-data-section").classList.add("hidden");
   },
 };
 
