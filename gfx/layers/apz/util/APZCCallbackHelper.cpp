@@ -161,8 +161,14 @@ SetDisplayPortMargins(nsIPresShell* aPresShell,
     return;
   }
 
+  bool hadDisplayPort = nsLayoutUtils::GetDisplayPort(aContent);
   ScreenMargin margins = aMetrics.GetDisplayPortMargins();
   nsLayoutUtils::SetDisplayPortMargins(aContent, aPresShell, margins, 0);
+  if (!hadDisplayPort) {
+    nsLayoutUtils::SetZeroMarginDisplayPortOnAsyncScrollableAncestors(
+        aContent->GetPrimaryFrame(), nsLayoutUtils::RepaintMode::Repaint);
+  }
+
   CSSRect baseCSS = aMetrics.CalculateCompositedRectInCssPixels();
   nsRect base(0, 0,
               baseCSS.width * nsPresContext::AppUnitsPerCSSPixel(),
@@ -237,6 +243,7 @@ APZCCallbackHelper::UpdateRootFrame(FrameMetrics& aMetrics)
   // adjusts the display port margins, so do it before we set those.
   ScrollFrame(content, aMetrics);
 
+  MOZ_ASSERT(nsLayoutUtils::GetDisplayPort(content));
   SetDisplayPortMargins(shell, content, aMetrics);
 }
 
@@ -304,6 +311,8 @@ APZCCallbackHelper::InitializeRootDisplayport(nsIPresShell* aPresShell)
     // nsRootBoxFrame::BuildDisplayList.
     nsLayoutUtils::SetDisplayPortMargins(content, aPresShell, ScreenMargin(), 0,
         nsLayoutUtils::RepaintMode::DoNotRepaint);
+    nsLayoutUtils::SetZeroMarginDisplayPortOnAsyncScrollableAncestors(
+        content->GetPrimaryFrame(), nsLayoutUtils::RepaintMode::DoNotRepaint);
   }
 }
 
@@ -551,15 +560,6 @@ APZCCallbackHelper::FireSingleTapEvent(const LayoutDevicePoint& aPoint,
   DispatchSynthesizedMouseEvent(eMouseUp, time, aPoint, aModifiers, aWidget);
 }
 
-static nsIScrollableFrame*
-GetScrollableAncestorFrame(nsIFrame* aTarget)
-{
-  uint32_t flags = nsLayoutUtils::SCROLLABLE_ALWAYS_MATCH_ROOT
-                 | nsLayoutUtils::SCROLLABLE_ONLY_ASYNC_SCROLLABLE
-                 | nsLayoutUtils::SCROLLABLE_FIXEDPOS_FINDS_ROOT;
-  return nsLayoutUtils::GetNearestScrollableFrame(aTarget, flags);
-}
-
 static dom::Element*
 GetDisplayportElementFor(nsIScrollableFrame* aScrollableFrame)
 {
@@ -610,7 +610,7 @@ PrepareForSetTargetAPZCNotification(nsIWidget* aWidget,
   nsIFrame* target =
     nsLayoutUtils::GetFrameForPoint(aRootFrame, point, nsLayoutUtils::IGNORE_ROOT_SCROLL_FRAME);
   nsIScrollableFrame* scrollAncestor = target
-    ? GetScrollableAncestorFrame(target)
+    ? nsLayoutUtils::GetAsyncScrollableAncestorFrame(target)
     : aRootFrame->PresContext()->PresShell()->GetRootScrollFrameAsScrollable();
 
   // Assuming that if there's no scrollAncestor, there's already a displayPort.
@@ -651,8 +651,17 @@ PrepareForSetTargetAPZCNotification(nsIWidget* aWidget,
   }
 
   APZCCH_LOG("%p didn't have a displayport, so setting one...\n", dpElement.get());
-  return nsLayoutUtils::CalculateAndSetDisplayPortMargins(
+  bool activated = nsLayoutUtils::CalculateAndSetDisplayPortMargins(
       scrollAncestor, nsLayoutUtils::RepaintMode::Repaint);
+  if (!activated) {
+    return false;
+  }
+
+  nsIFrame* frame = do_QueryFrame(scrollAncestor);
+  nsLayoutUtils::SetZeroMarginDisplayPortOnAsyncScrollableAncestors(frame,
+    nsLayoutUtils::RepaintMode::Repaint);
+
+  return true;
 }
 
 static void
