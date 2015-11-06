@@ -338,6 +338,8 @@ private:
   static bool CanAnimateTransformOnCompositor(const nsIFrame* aFrame,
                                               const nsIContent* aContent);
   static bool IsGeometricProperty(const nsCSSProperty aProperty);
+
+  static const TimeDuration OverflowRegionRefreshInterval();
 };
 
 } // namespace dom

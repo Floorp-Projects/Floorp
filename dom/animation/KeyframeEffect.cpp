@@ -1725,6 +1725,17 @@ KeyframeEffectReadOnly::GetFrames(JSContext*& aCx,
   }
 }
 
+/* static */ const TimeDuration
+KeyframeEffectReadOnly::OverflowRegionRefreshInterval()
+{
+  // The amount of time we can wait between updating throttled animations
+  // on the main thread that influence the overflow region.
+  static const TimeDuration kOverflowRegionRefreshInterval =
+    TimeDuration::FromMilliseconds(200);
+
+  return kOverflowRegionRefreshInterval;
+}
+
 bool
 KeyframeEffectReadOnly::CanThrottle() const
 {
@@ -1810,7 +1821,7 @@ KeyframeEffectReadOnly::CanThrottleTransformChanges(nsIFrame& aFrame) const
   TimeStamp styleRuleRefreshTime = collection->mStyleRuleRefreshTime;
   // If this animation can cause overflow, we can throttle some of the ticks.
   if (!styleRuleRefreshTime.IsNull() &&
-      (now - styleRuleRefreshTime) < TimeDuration::FromMilliseconds(200)) {
+      (now - styleRuleRefreshTime) < OverflowRegionRefreshInterval()) {
     return true;
   }
 
