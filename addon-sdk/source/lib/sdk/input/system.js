@@ -9,8 +9,12 @@ const { once, off } = require("../event/core");
 const { id: addonID } = require("../self");
 
 const unloadMessage = require("@loader/unload");
-const { addObserver, removeObserver } = Cc['@mozilla.org/observer-service;1'].
-                                          getService(Ci.nsIObserverService);
+const observerService = Cc['@mozilla.org/observer-service;1'].
+                          getService(Ci.nsIObserverService);
+const { ShimWaiver } = Cu.import("resource://gre/modules/ShimWaiver.jsm");
+const addObserver = ShimWaiver.getProperty(observerService, "addObserver");
+const removeObserver = ShimWaiver.getProperty(observerService, "removeObserver");
+
 
 const addonUnloadTopic = "sdk:loader:destroy";
 

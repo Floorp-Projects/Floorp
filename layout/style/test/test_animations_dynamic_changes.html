@@ -1,0 +1,65 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=978833
+-->
+<head>
+  <title>Test for Bug 978833</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <style id="style">
+  @keyframes a {
+    from, to {
+      /* a non-inherited property, so it's cached in the rule tree */
+      margin-left: 50px;
+    }
+  }
+  .alwaysa {
+    animation: a linear 1s infinite;
+  }
+  </style>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=978833">Mozilla Bug 978833</a>
+<p id="display"></p>
+<pre id="test">
+<script type="application/javascript">
+
+var p = document.getElementById("display");
+var cs = getComputedStyle(p, "");
+var style = document.getElementById("style").sheet;
+
+/** Test for Bug 978833 **/
+function test_bug978833() {
+  var kfs = style.cssRules[0];
+  var kf = kfs.cssRules[0];
+  is(kf.style.marginLeft, "50px", "we found the right keyframe rule");
+
+  p.classList.add("alwaysa");
+  is(cs.marginLeft, "50px", "p margin-left should be 50px");
+
+  // Temporarily remove the animation style, since we resolve keyframes
+  // on top of current animation styles (although maybe we shouldn't),
+  // so we need to remove those styles to hit the rule tree cache.
+  p.classList.remove("alwaysa");
+  is(cs.marginLeft, "0px", "p margin-left should be 0px without animation");
+
+  p.classList.add("alwaysa");
+  kf.style.marginLeft = "100px";
+  is(cs.marginLeft, "100px", "p margin-left should be 100px after change");
+
+  // Try the same thing a second time, just to make sure it works again.
+  p.classList.remove("alwaysa");
+  is(cs.marginLeft, "0px", "p margin-left should be 0px without animation");
+  p.classList.add("alwaysa");
+  kf.style.marginLeft = "150px";
+  is(cs.marginLeft, "150px", "p margin-left should be 150px after second change");
+
+  p.style.animation = "";
+}
+test_bug978833();
+
+</script>
+</pre>
+</body>
+</html>

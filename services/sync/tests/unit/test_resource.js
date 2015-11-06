@@ -140,7 +140,7 @@ function server_headers(metadata, response) {
   header_names = header_names.sort();
 
   headers = {};
-  for each (let header in header_names) {
+  for (let header of header_names) {
     headers[header] = metadata.getHeader(header);
   }
   let body = JSON.stringify(headers);

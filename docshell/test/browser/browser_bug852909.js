@@ -13,7 +13,7 @@ function image(event) {
   }
   gBrowser.selectedBrowser.removeEventListener("load", image, true);
 
-  ok(!gBrowser.docShell.mayEnableCharacterEncodingMenu, "Docshell should say the menu should be disabled for images.");
+  ok(!gBrowser.selectedTab.mayEnableCharacterEncodingMenu, "Docshell should say the menu should be disabled for images.");
 
   gBrowser.removeCurrentTab();
   gBrowser.selectedTab = gBrowser.addTab(rootDir + "file_bug852909.pdf");
@@ -26,7 +26,7 @@ function pdf(event) {
   }
   gBrowser.selectedBrowser.removeEventListener("load", pdf, true);
 
-  ok(!gBrowser.docShell.mayEnableCharacterEncodingMenu, "Docshell should say the menu should be disabled for PDF.js.");
+  ok(!gBrowser.selectedTab.mayEnableCharacterEncodingMenu, "Docshell should say the menu should be disabled for PDF.js.");
 
   gBrowser.removeCurrentTab();
   finish();

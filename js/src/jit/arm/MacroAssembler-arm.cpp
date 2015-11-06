@@ -5098,17 +5098,19 @@ MacroAssembler::reserveStack(uint32_t amount)
 // ===============================================================
 // Simple call functions.
 
-void
+CodeOffsetLabel
 MacroAssembler::call(Register reg)
 {
     as_blx(reg);
+    return CodeOffsetLabel(currentOffset());
 }
 
-void
+CodeOffsetLabel
 MacroAssembler::call(Label* label)
 {
-    // For now, assume that it'll be nearby?
+    // For now, assume that it'll be nearby.
     as_bl(label, Always);
+    return CodeOffsetLabel(currentOffset());
 }
 
 void
@@ -5146,6 +5148,20 @@ MacroAssembler::call(JitCode* c)
     ScratchRegisterScope scratch(*this);
     ma_movPatchable(ImmPtr(c->raw()), scratch, Always, rs);
     callJitNoProfiler(scratch);
+}
+
+CodeOffsetLabel
+MacroAssembler::callWithPatch()
+{
+    // For now, assume that it'll be nearby.
+    as_bl(BOffImm(), Always, /* documentation */ nullptr);
+    return CodeOffsetLabel(currentOffset());
+}
+void
+MacroAssembler::patchCall(uint32_t callerOffset, uint32_t calleeOffset)
+{
+    BufferOffset inst(callerOffset - 4);
+    as_bl(BufferOffset(calleeOffset).diffB<BOffImm>(inst), Always, inst);
 }
 
 void
@@ -5291,7 +5307,7 @@ MacroAssembler::pushFakeReturnAddress(Register scratch)
     uint32_t pseudoReturnOffset = currentOffset();
     leaveNoPool();
 
-    MOZ_ASSERT(pseudoReturnOffset - offsetBeforePush == 8);
+    MOZ_ASSERT_IF(!oom(), pseudoReturnOffset - offsetBeforePush == 8);
     return pseudoReturnOffset;
 }
 

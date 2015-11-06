@@ -24,9 +24,12 @@
 // (In some cases, there are internal (private) methods that don't do this;
 // such methods should only be used by other methods that have already checked
 // the writing modes.)
+// The check ignores the eSidewaysMask bit of writing mode, because this does
+// not affect the interpretation of logical coordinates.
 
 #define CHECK_WRITING_MODE(param) \
-   NS_ASSERTION(param == GetWritingMode(), "writing-mode mismatch")
+   NS_ASSERTION(param.IgnoreSideways() == GetWritingMode().IgnoreSideways(), \
+                "writing-mode mismatch")
 
 namespace mozilla {
 
@@ -258,6 +261,13 @@ public:
    * baseline remains centered.
    */
   bool IsSideways() const { return !!(mWritingMode & eSidewaysMask); }
+
+#ifdef DEBUG // Used by CHECK_WRITING_MODE to compare modes without regard
+             // for the eSidewaysMask flag.
+  WritingMode IgnoreSideways() const {
+    return WritingMode(mWritingMode & ~eSidewaysMask);
+  }
+#endif
 
   static mozilla::PhysicalAxis PhysicalAxisForLogicalAxis(
                                               uint8_t aWritingModeValue,

@@ -18,8 +18,7 @@ const { on: domOn, removeListener: domOff } = require('../dom/events');
 const { isRegExp, isUndefined } = require('../lang/type');
 const { merge } = require('../util/object');
 const { isBrowser, getFrames } = require('../window/utils');
-const { getTabs, getTabContentWindow, getTabForContentWindow,
-        getURI: getTabURI } = require('../tabs/utils');
+const { getTabs, getURI: getTabURI } = require('../tabs/utils');
 const { ignoreWindow } = require('../private-browsing/utils');
 const { Style } = require("../stylesheet/style");
 const { attach, detach } = require("../content/mod");

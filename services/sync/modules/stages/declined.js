@@ -29,8 +29,8 @@ this.DeclinedEngines = function (service) {
 }
 this.DeclinedEngines.prototype = {
   updateDeclined: function (meta, engineManager=this.service.engineManager) {
-    let enabled = new Set([e.name for each (e in engineManager.getEnabled())]);
-    let known = new Set([e.name for each (e in engineManager.getAll())]);
+    let enabled = new Set(engineManager.getEnabled().map(e => e.name));
+    let known = new Set(engineManager.getAll().map(e => e.name));
     let remoteDeclined = new Set(meta.payload.declined || []);
     let localDeclined = new Set(engineManager.getDeclined());
 

@@ -205,16 +205,15 @@ this.CommonUtils = {
   },
 
   byteArrayToString: function byteArrayToString(bytes) {
-    return [String.fromCharCode(byte) for each (byte in bytes)].join("");
+    return bytes.map(byte => String.fromCharCode(byte)).join("");
   },
 
   stringToByteArray: function stringToByteArray(bytesString) {
-    return [String.charCodeAt(byte) for each (byte in bytesString)];
+    return Array.prototype.slice.call(bytesString).map(c => c.charCodeAt(0));
   },
 
   bytesAsHex: function bytesAsHex(bytes) {
-    return [("0" + bytes.charCodeAt(byte).toString(16)).slice(-2)
-      for (byte in bytes)].join("");
+    return Array.prototype.slice.call(bytes).map(c => ("0" + c.charCodeAt(0).toString(16)).slice(-2)).join("");
   },
 
   stringAsHex: function stringAsHex(str) {
@@ -256,7 +255,7 @@ this.CommonUtils = {
     // is turned into 8 characters from the 32 character base.
     let ret = "";
     for (let i = 0; i < bytes.length; i += 5) {
-      let c = [byte.charCodeAt() for each (byte in bytes.slice(i, i + 5))];
+      let c = Array.prototype.slice.call(bytes.slice(i, i + 5)).map(byte => byte.charCodeAt(0));
       ret += key[c[0] >> 3]
            + key[((c[0] << 2) & 0x1f) | (c[1] >> 6)]
            + key[(c[1] >> 1) & 0x1f]

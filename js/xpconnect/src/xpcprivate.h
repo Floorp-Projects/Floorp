@@ -3475,6 +3475,7 @@ public:
         , wantComponents(true)
         , wantExportHelpers(false)
         , isWebExtensionContentScript(false)
+        , waiveInterposition(false)
         , proto(cx)
         , addonId(cx)
         , writeToGlobalPrototype(false)
@@ -3492,6 +3493,7 @@ public:
     bool wantComponents;
     bool wantExportHelpers;
     bool isWebExtensionContentScript;
+    bool waiveInterposition;
     JS::RootedObject proto;
     nsCString sandboxName;
     JS::RootedString addonId;
@@ -3731,6 +3733,11 @@ public:
     // This scope corresponds to a WebExtension content script, and receives
     // various bits of special compatibility behavior.
     bool isWebExtensionContentScript;
+
+    // Even if an add-on needs interposition, it does not necessary need it
+    // for every scope. If this flag is set we waive interposition for this
+    // scope.
+    bool waiveInterposition;
 
     // This is only ever set during mochitest runs when enablePrivilege is called.
     // It's intended as a temporary stopgap measure until we can finish ripping out

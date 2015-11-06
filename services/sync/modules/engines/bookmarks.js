@@ -179,7 +179,7 @@ var kSpecialIds = {
 
   // Don't bother creating mobile: if it doesn't exist, this ID can't be it!
   specialGUIDForId: function specialGUIDForId(id) {
-    for each (let guid in this.guids)
+    for (let guid of this.guids)
       if (this.specialIdForGUID(guid, false) == id)
         return guid;
     return null;
@@ -507,7 +507,8 @@ function BookmarksStore(name, engine) {
 
   // Explicitly nullify our references to our cached services so we don't leak
   Svc.Obs.add("places-shutdown", function() {
-    for each (let [query, stmt] in Iterator(this._stmts)) {
+    for (let query in this._stmts) {
+      let stmt = this._stmts[query];
       stmt.finalize();
     }
     this._stmts = {};
@@ -564,7 +565,7 @@ BookmarksStore.prototype = {
           this._log.debug("Tag query folder: " + tag + " = " + child.itemId);
           
           this._log.trace("Replacing folders in: " + uri);
-          for each (let q in queriesRef.value)
+          for (let q of queriesRef.value)
             q.setFolders([child.itemId], 1);
           
           record.bmkUri = PlacesUtils.history.queriesToQueryString(
@@ -1361,7 +1362,7 @@ BookmarksStore.prototype = {
     if (kSpecialIds.findMobileRoot(false)) {
       items["mobile"] = true;
     }
-    for each (let guid in kSpecialIds.guids) {
+    for (let guid of kSpecialIds.guids) {
       if (guid != "places" && guid != "tags")
         this._getChildren(guid, items);
     }
@@ -1373,7 +1374,7 @@ BookmarksStore.prototype = {
     Task.spawn(function() {
       // Save a backup before clearing out all bookmarks.
       yield PlacesBackups.create(null, true);
-      for each (let guid in kSpecialIds.guids)
+      for (let guid of kSpecialIds.guids)
         if (guid != "places") {
           let id = kSpecialIds.specialIdForGUID(guid);
           if (id)
