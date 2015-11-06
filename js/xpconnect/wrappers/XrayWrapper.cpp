@@ -94,7 +94,7 @@ IsJSXraySupported(JSProtoKey key)
 XrayType
 GetXrayType(JSObject* obj)
 {
-    obj = js::UncheckedUnwrap(obj, /* stopAtOuter = */ false);
+    obj = js::UncheckedUnwrap(obj, /* stopAtWindowProxy = */ false);
     if (mozilla::dom::UseDOMXray(obj))
         return XrayForDOMObject;
 

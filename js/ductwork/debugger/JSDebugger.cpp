@@ -45,7 +45,7 @@ JSDebugger::AddClass(JS::Handle<JS::Value> global, JSContext* cx)
   }
 
   JS::RootedObject obj(cx, &global.toObject());
-  obj = js::UncheckedUnwrap(obj, /* stopAtOuter = */ false);
+  obj = js::UncheckedUnwrap(obj, /* stopAtWindowProxy = */ false);
   if (!obj) {
     return NS_ERROR_FAILURE;
   }
