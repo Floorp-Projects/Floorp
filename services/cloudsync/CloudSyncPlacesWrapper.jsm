@@ -140,7 +140,7 @@ PlacesWrapper.prototype = {
       function (items) {
         let previousIds = folderCache.getChildren(folder);
         let currentIds = new Set();
-        for each (let item in items) {
+        for (let item of items) {
           currentIds.add(item.id);
         }
         let newIds = new Set();
@@ -188,7 +188,7 @@ PlacesWrapper.prototype = {
     this.asyncQuery(query, ["item_id"])
         .then(function (items) {
                 let results = [];
-                for each(let item in items) {
+                for (let item of items) {
                   results.push(item.item_id);
                 }
                 deferred.resolve(results);
@@ -211,7 +211,7 @@ PlacesWrapper.prototype = {
     this.asyncQuery(query, ["name", "content"])
         .then(function (results) {
                 let annos = {};
-                for each(let result in results) {
+                for (let result of results) {
                   annos[result.name] = result.content;
                 }
                 deferred.resolve(annos);
@@ -347,7 +347,7 @@ PlacesWrapper.prototype = {
         let row;
         while ((row = results.getNextRow()) != null) {
           let item = {};
-          for each (let name in names) {
+          for (let name of names) {
             item[name] = row.getResultByName(name);
           }
           this.results.push(item);

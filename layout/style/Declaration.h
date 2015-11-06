@@ -23,22 +23,61 @@
 #include "nsCSSDataBlock.h"
 #include "nsCSSProperty.h"
 #include "nsCSSProps.h"
+#include "nsIStyleRule.h"
 #include "nsStringFwd.h"
 #include "nsTArray.h"
 #include <stdio.h>
 
+// feec07b8-3fe6-491e-90d5-cc93f853e048
+#define NS_CSS_DECLARATION_IMPL_CID \
+{ 0xfeec07b8, 0x3fe6, 0x491e, \
+  { 0x90, 0xd5, 0xcc, 0x93, 0xf8, 0x53, 0xe0, 0x48 } }
+
 namespace mozilla {
 namespace css {
+
+class Rule;
+class Declaration;
+
+/**
+ * ImportantStyleData is the implementation of nsIStyleRule (a source of
+ * style data) representing the style data coming from !important rules;
+ * the !important declarations need a separate nsIStyleRule object since
+ * they fit at a different point in the cascade.
+ *
+ * ImportantStyleData is allocated only as part of a Declaration object.
+ */
+class ImportantStyleData final : public nsIStyleRule
+{
+public:
+
+  NS_DECL_ISUPPORTS
+
+  inline ::mozilla::css::Declaration* Declaration();
+
+  // nsIStyleRule interface
+  virtual void MapRuleInfoInto(nsRuleData* aRuleData) override;
+#ifdef DEBUG
+  virtual void List(FILE* out = stdout, int32_t aIndent = 0) const override;
+#endif
+
+private:
+  ImportantStyleData() {}
+  ~ImportantStyleData() {}
+
+  friend class ::mozilla::css::Declaration;
+};
 
 // Declaration objects have unusual lifetime rules.  Every declaration
 // begins life in an invalid state which ends when InitializeEmpty or
 // CompressFrom is called upon it.  After that, it can be attached to
 // exactly one style rule, and will be destroyed when that style rule
-// is destroyed.  A declaration becomes immutable when its style rule's
-// |RuleMatched| method is called; after that, it must be copied before
-// it can be modified, which is taken care of by |EnsureMutable|.
+// is destroyed.  A declaration becomes immutable (via a SetImmutable
+// call) when it is matched (put in the rule tree); after that, it must
+// be copied before it can be modified, which is taken care of by
+// |EnsureMutable|.
 
-class Declaration {
+class Declaration final : public nsIStyleRule {
 public:
   /**
    * Construct an |Declaration| that is in an invalid state (null
@@ -49,7 +88,20 @@ public:
 
   Declaration(const Declaration& aCopy);
 
+  NS_DECLARE_STATIC_IID_ACCESSOR(NS_CSS_DECLARATION_IMPL_CID)
+
+  NS_DECL_ISUPPORTS
+
+private:
   ~Declaration();
+
+public:
+
+  // nsIStyleRule implementation
+  virtual void MapRuleInfoInto(nsRuleData *aRuleData) override;
+#ifdef DEBUG
+  virtual void List(FILE* out = stdout, int32_t aIndent = 0) const override;
+#endif
 
   /**
    * |ValueAppended| must be called to maintain this declaration's
@@ -166,17 +218,6 @@ public:
     aExpandedData->Expand(mData.forget(), mImportantData.forget());
   }
 
-  /**
-   * Do what |nsIStyleRule::MapRuleInfoInto| needs to do for a style
-   * rule using this declaration for storage.
-   */
-  void MapNormalRuleInfoInto(nsRuleData *aRuleData) const {
-    MOZ_ASSERT(mData, "called while expanded");
-    mData->MapRuleInfoInto(aRuleData);
-    if (mVariables) {
-      mVariables->MapRuleInfoInto(aRuleData);
-    }
-  }
   void MapImportantRuleInfoInto(nsRuleData *aRuleData) const {
     MOZ_ASSERT(mData, "called while expanded");
     MOZ_ASSERT(mImportantData || mImportantVariables,
@@ -243,7 +284,7 @@ public:
   /**
    * Copy |this|, if necessary to ensure that it can be modified.
    */
-  Declaration* EnsureMutable();
+  already_AddRefed<Declaration> EnsureMutable();
 
   /**
    * Crash if |this| cannot be modified.
@@ -272,9 +313,20 @@ public:
     mVariableOrder.Clear();
   }
 
-#ifdef DEBUG
-  void List(FILE* out = stdout, int32_t aIndent = 0) const;
-#endif
+  void SetOwningRule(Rule* aRule) {
+    MOZ_ASSERT(!mOwningRule || !aRule,
+               "should never overwrite one rule with another");
+    mOwningRule = aRule;
+  }
+
+  Rule* GetOwningRule() { return mOwningRule; }
+
+  ImportantStyleData* GetImportantStyleData() {
+    if (HasImportantData()) {
+      return &mImportantStyleData;
+    }
+    return nullptr;
+  }
 
 private:
   Declaration& operator=(const Declaration& aCopy) = delete;
@@ -351,10 +403,31 @@ private:
   // may be null
   nsAutoPtr<CSSVariableDeclarations> mImportantVariables;
 
-  // set by style rules when |RuleMatched| is called;
+  // The style rule that owns this declaration.  May be null.
+  Rule* mOwningRule;
+
+  friend class ImportantStyleData;
+  ImportantStyleData mImportantStyleData;
+
+  // set when declaration put in the rule tree;
   // also by ToString (hence the 'mutable').
   mutable bool mImmutable;
 };
+
+inline ::mozilla::css::Declaration*
+ImportantStyleData::Declaration()
+{
+  union {
+    char* ch; /* for pointer arithmetic */
+    ::mozilla::css::Declaration* declaration;
+    ImportantStyleData* importantData;
+  } u;
+  u.importantData = this;
+  u.ch -= offsetof(::mozilla::css::Declaration, mImportantStyleData);
+  return u.declaration;
+}
+
+NS_DEFINE_STATIC_IID_ACCESSOR(Declaration, NS_CSS_DECLARATION_IMPL_CID)
 
 } // namespace css
 } // namespace mozilla

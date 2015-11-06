@@ -282,6 +282,7 @@ EXTRA_JS_MODULES.commonjs.sdk.deprecated.events += [
 ]
 
 EXTRA_JS_MODULES.commonjs.sdk.dom += [
+    'source/lib/sdk/dom/events-shimmed.js',
     'source/lib/sdk/dom/events.js',
 ]
 
@@ -408,6 +409,7 @@ EXTRA_JS_MODULES.commonjs.sdk.stylesheet += [
 EXTRA_JS_MODULES.commonjs.sdk.system += [
     'source/lib/sdk/system/child_process.js',
     'source/lib/sdk/system/environment.js',
+    'source/lib/sdk/system/events-shimmed.js',
     'source/lib/sdk/system/events.js',
     'source/lib/sdk/system/globals.js',
     'source/lib/sdk/system/process.js',

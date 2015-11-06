@@ -19,6 +19,7 @@
 #include "nsCOMPtr.h"
 #include "nsCSSPseudoElements.h"
 #include "nsCSSPseudoClasses.h"
+#include "nsIStyleRule.h"
 
 class nsIAtom;
 struct nsCSSSelectorList;
@@ -292,31 +293,6 @@ namespace css {
 class Declaration;
 class DOMCSSStyleRule;
 
-class StyleRule;
-
-class ImportantRule final : public nsIStyleRule {
-public:
-  explicit ImportantRule(Declaration *aDeclaration);
-
-  NS_DECL_ISUPPORTS
-
-  // nsIStyleRule interface
-  virtual void MapRuleInfoInto(nsRuleData* aRuleData) override;
-#ifdef DEBUG
-  virtual void List(FILE* out = stdout, int32_t aIndent = 0) const override;
-#endif
-
-protected:
-  virtual ~ImportantRule();
-
-  // Not an owning reference; the StyleRule that owns this
-  // ImportantRule also owns the mDeclaration, and any rule node
-  // pointing to this rule keeps that StyleRule alive as well.
-  Declaration* mDeclaration;
-
-  friend class StyleRule;
-};
-
 class StyleRule final : public Rule
 {
  public:
@@ -351,14 +327,6 @@ public:
   already_AddRefed<StyleRule>
   DeclarationChanged(Declaration* aDecl, bool aHandleContainer);
 
-  nsIStyleRule* GetImportantRule() const { return mImportantRule; }
-
-  /**
-   * The rule processor must call this method before calling
-   * nsRuleWalker::Forward on this rule during rule matching.
-   */
-  void RuleMatched();
-
   // hooks for DOM rule
   void GetCssText(nsAString& aCssText);
   void SetCssText(const nsAString& aCssText);
@@ -373,9 +341,6 @@ public:
 
   virtual nsIDOMCSSRule* GetExistingDOMRule() override;
 
-  // The new mapping function.
-  virtual void MapRuleInfoInto(nsRuleData* aRuleData) override;
-
 #ifdef DEBUG
   virtual void List(FILE* out = stdout, int32_t aIndent = 0) const override;
 #endif
@@ -387,8 +352,7 @@ private:
 
 private:
   nsCSSSelectorList*      mSelector; // null for style attribute
-  Declaration*            mDeclaration;
-  RefPtr<ImportantRule> mImportantRule; // initialized by RuleMatched
+  RefPtr<Declaration>     mDeclaration;
   RefPtr<DOMCSSStyleRule> mDOMRule;
 
 private:

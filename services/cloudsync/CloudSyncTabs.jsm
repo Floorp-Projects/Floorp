@@ -87,7 +87,7 @@ TabCache.prototype = {
       this.clients.set(cRecord.id, cRecord);
     }
 
-    for each (let tab in tabs) {
+    for (let tab of tabs) {
       if (!tab || 'object' !== typeof(tab)) {
         continue;
       }
@@ -158,7 +158,7 @@ this.Tabs = function () {
   };
 
   let registerListenersForWindow = function (window) {
-    for each (let topic in topics) {
+    for (let topic of topics) {
       window.addEventListener(topic, update, false);
     }
     window.addEventListener("unload", unregisterListeners, false);
@@ -166,7 +166,7 @@ this.Tabs = function () {
 
   let unregisterListenersForWindow = function (window) {
     window.removeEventListener("unload", unregisterListeners, false);
-    for each (let topic in topics) {
+    for (let topic of topics) {
       window.removeEventListener(topic, update, false);
     }
   };

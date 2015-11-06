@@ -10,7 +10,7 @@
 
 #include "mozilla/CSSStyleSheet.h"
 #include "mozilla/MemoryReporting.h"
-#include "nsIStyleRule.h"
+#include "nsISupports.h"
 #include "nsIDOMCSSRule.h"
 
 class nsIDocument;
@@ -23,21 +23,20 @@ namespace css {
 class GroupRule;
 
 #define DECL_STYLE_RULE_INHERIT_NO_DOMRULE  \
-virtual void MapRuleInfoInto(nsRuleData* aRuleData) override;
+ /* nothing */
 
 #define DECL_STYLE_RULE_INHERIT                            \
   DECL_STYLE_RULE_INHERIT_NO_DOMRULE                       \
   virtual nsIDOMCSSRule* GetDOMRule() override;        \
   virtual nsIDOMCSSRule* GetExistingDOMRule() override;
 
-class Rule : public nsIStyleRule {
+class Rule : public nsISupports {
 protected:
   Rule(uint32_t aLineNumber, uint32_t aColumnNumber)
     : mSheet(0),
       mParentRule(nullptr),
       mLineNumber(aLineNumber),
-      mColumnNumber(aColumnNumber),
-      mWasMatched(false)
+      mColumnNumber(aColumnNumber)
   {
   }
 
@@ -45,14 +44,17 @@ protected:
     : mSheet(aCopy.mSheet),
       mParentRule(aCopy.mParentRule),
       mLineNumber(aCopy.mLineNumber),
-      mColumnNumber(aCopy.mColumnNumber),
-      mWasMatched(false)
+      mColumnNumber(aCopy.mColumnNumber)
   {
   }
 
   virtual ~Rule() {}
 
 public:
+
+#ifdef DEBUG
+  virtual void List(FILE* out = stdout, int32_t aIndent = 0) const = 0;
+#endif
 
   // The constants in this list must maintain the following invariants:
   //   If a rule of type N must appear before a rule of type M in stylesheets
@@ -140,8 +142,7 @@ protected:
 
   // Keep the same type so that MSVC packs them.
   uint32_t          mLineNumber;
-  uint32_t          mColumnNumber : 31;
-  uint32_t          mWasMatched : 1;
+  uint32_t          mColumnNumber;
 };
 
 } // namespace css
