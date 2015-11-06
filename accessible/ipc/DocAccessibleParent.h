@@ -64,7 +64,10 @@ public:
   void Unbind()
   {
     mParent = nullptr;
-    ParentDoc()->mChildDocs.RemoveElement(this);
+    if (DocAccessibleParent* parent = ParentDoc()) {
+      parent->mChildDocs.RemoveElement(this);
+    }
+
     mParentDoc = nullptr;
   }
 
