@@ -277,47 +277,6 @@ $(CURDIR)/javascript-trace.h: $(srcdir)/devtools/javascript-trace.d
 $(addsuffix .$(OBJ_SUFFIX),Probes jsinterp jsobj): $(CURDIR)/javascript-trace.h
 endif
 
-# Prepare self-hosted JS code for embedding
-export:: selfhosting
-selfhosting:: selfhosted.out.h
-
-selfhosting_srcs := \
-  $(srcdir)/builtin/Utilities.js \
-  $(srcdir)/builtin/Array.js \
-  $(srcdir)/builtin/Date.js \
-  $(srcdir)/builtin/Error.js \
-  $(srcdir)/builtin/Generator.js \
-  $(srcdir)/builtin/Intl.js \
-  $(srcdir)/builtin/IntlData.js \
-  $(srcdir)/builtin/Iterator.js \
-  $(srcdir)/builtin/Map.js \
-  $(srcdir)/builtin/Module.js \
-  $(srcdir)/builtin/Number.js \
-  $(srcdir)/builtin/Object.js \
-  $(srcdir)/builtin/Reflect.js \
-  $(srcdir)/builtin/RegExp.js \
-  $(srcdir)/builtin/String.js \
-  $(srcdir)/builtin/Set.js \
-  $(srcdir)/builtin/TypedArray.js \
-  $(srcdir)/builtin/TypedObject.js \
-  $(srcdir)/builtin/WeakSet.js \
-  $(NULL)
-
-selfhosted_out_h_deps := \
-  $(selfhosting_srcs) \
-  $(srcdir)/js.msg \
-  $(srcdir)/builtin/embedjs.py \
-  $(srcdir)/builtin/TypedObjectConstants.h \
-  $(srcdir)/builtin/SelfHostingDefines.h \
-  $(NULL)
-
-SELFHOSTED_DEFINES += $(DEFINES) $(ACDEFINES) $(MOZ_DEBUG_DEFINES)
-
-selfhosted.out.h: $(selfhosted_out_h_deps)
-	$(PYTHON) $(srcdir)/builtin/embedjs.py $(SELFHOSTED_DEFINES) \
-	  -c '$(CCC)' -p '$(PREPROCESS_OPTION)' -m $(srcdir)/js.msg \
-	  -o $@ $(selfhosting_srcs)
-
 ###############################################
 # Generating source package tarballs
 # (only possible when tar is found)
