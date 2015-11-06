@@ -41,7 +41,7 @@ if (typeof __PROD__ !== "undefined") {
   require("expose?classNames!classnames");
 } else {
   // our development server setup doesn't yet handle real modules, so for now...
-  require("shared/libs/react-0.12.2.js");
+  require("shared/libs/react-0.13.3.js");
   require("shared/libs/classnames-2.2.0.js");
 }
 

@@ -119,7 +119,10 @@ for dirname, dirnames, filenames in os.walk('.'):
 
 
 def jsx_run_watcher(path):
-    subprocess.call(append_arguments(run_command, ['-w', '-x', 'jsx', path, path]))
+    # keep --target=es3 for now, as at least our UnsupportedBrowserView wants
+    # to be able to render on IE8
+    subprocess.call(append_arguments(run_command, ['--target=es3', '-w', '-x',
+                                                   'jsx', path, path]))
 
 
 def start_jsx_watcher_threads(dirs):
