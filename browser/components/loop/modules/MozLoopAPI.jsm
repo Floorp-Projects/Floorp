@@ -11,13 +11,8 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource:///modules/loop/MozLoopService.jsm");
 Cu.import("resource:///modules/loop/LoopRooms.jsm");
-Cu.import("resource:///modules/loop/LoopContacts.jsm");
 Cu.importGlobalProperties(["Blob"]);
 
-XPCOMUtils.defineLazyModuleGetter(this, "LoopContacts",
-                                        "resource:///modules/loop/LoopContacts.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "LoopStorage",
-                                        "resource:///modules/loop/LoopStorage.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "hookWindowCloseForPanelClose",
                                         "resource://gre/modules/MozSocialAPI.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PageMetadata",
@@ -223,7 +218,6 @@ function injectLoopAPI(targetWindow) {
   let ringer;
   let ringerStopper;
   let appVersionInfo;
-  let contactsAPI;
   let roomsAPI;
   let callsAPI;
   let savedWindowListeners = new Map();
@@ -387,27 +381,6 @@ function injectLoopAPI(targetWindow) {
     },
 
     /**
-     * Returns the contacts API.
-     *
-     * @returns {Object} The contacts API object
-     */
-    contacts: {
-      enumerable: true,
-      get: function() {
-        if (contactsAPI) {
-          return contactsAPI;
-        }
-
-        // Make a database switch when a userProfile is active already.
-        let profile = MozLoopService.userProfile;
-        if (profile) {
-          LoopStorage.switchDatabase(profile.uid);
-        }
-        return contactsAPI = injectObjectAPI(LoopContacts, targetWindow);
-      }
-    },
-
-    /**
      * Returns the rooms API.
      *
      * @returns {Object} The rooms API object
@@ -419,25 +392,6 @@ function injectLoopAPI(targetWindow) {
           return roomsAPI;
         }
         return roomsAPI = injectObjectAPI(LoopRooms, targetWindow);
-      }
-    },
-
-    /**
-     * Import a list of (new) contacts from an external data source.
-     *
-     * @param {Object}   options  Property bag of options for the importer
-     * @param {Function} callback Function that will be invoked once the operation
-     *                            finished. The first argument passed will be an
-     *                            `Error` object or `null`. The second argument will
-     *                            be the result of the operation, if successfull.
-     */
-    startImport: {
-      enumerable: true,
-      writable: true,
-      value: function(options, callback) {
-        LoopContacts.startImport(options, getChromeWindow(targetWindow), function(...results) {
-          invokeCallback(callback, ...[cloneValueInto(r, targetWindow) for (r of results)]);
-        });
       }
     },
 
