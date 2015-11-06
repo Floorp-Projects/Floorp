@@ -15,13 +15,7 @@ function handleRequest(request, response)
 
   // CSP header value
   if (query["csp"] == 1) {
-    var additional = ""
-    if (query['testid'] == "worker") {
-      additional = "; script-src 'self' 'unsafe-inline'";
-    }
-    response.setHeader("Content-Security-Policy",
-        "default-src 'self' ; style-src 'self' 'unsafe-inline'" + additional,
-        false);
+    response.setHeader("Content-Security-Policy", "default-src 'self' ; style-src 'self' 'unsafe-inline'", false);
   }
 
   // downloadable font that redirects to another site
@@ -67,13 +61,13 @@ function handleRequest(request, response)
 
   // external stylesheet that redirects to another site
   if (query["testid"] == "style-src") {
-    response.write('<link rel="stylesheet" type="text/css" href="'+resource+'?res=style&redir=other&id=style-src-redir"></link>');
+    response.write('<link rel="stylesheet" type="text/css" href="'+resource+'?res=style&redir=other&id=style-src-redir"></script>');
     return;
   }
 
   // worker script resource that redirects to another site
   if (query["testid"] == "worker") {
-    response.write('<script>var worker = new Worker("'+resource+'?res=worker&redir=other&id=worker-redir");</script>');
+    response.write('<script src="'+resource+'?res=worker&redir=other&id=worker-redir"></script>');
     return;
   }
 
