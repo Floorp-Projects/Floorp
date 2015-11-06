@@ -17,3 +17,14 @@ task:
     env:
       VARIANT: userdebug
       B2G_DEBUG: 0
+  extra:
+    treeherderEnv:
+      - staging
+    treeherder:
+      symbol: B
+      groupSymbol: Flame-KK-OTA
+      groupName:  Flame KitKat Device Image
+      machine:
+        platform: b2g-device-image
+      collection:
+        debug: true

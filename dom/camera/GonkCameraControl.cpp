@@ -331,9 +331,9 @@ nsGonkCameraControl::ValidateConfiguration(const Configuration& aConfig, Configu
   }
 
   if (mCurrentConfiguration.mMode == aConfig.mMode &&
-      mRequestedPreviewSize.width == aConfig.mPreviewSize.width &&
-      mRequestedPreviewSize.height == aConfig.mPreviewSize.height &&
-      mCurrentConfiguration.mRecorderProfile.Equals(profile->GetName()))
+      mCurrentConfiguration.mRecorderProfile.Equals(profile->GetName()) &&
+      mRequestedPreviewSize.Equals(aConfig.mPreviewSize) &&
+      mCurrentConfiguration.mPictureSize.Equals(aValidatedConfig.mPictureSize))
   {
     DOM_CAMERA_LOGI("Camera configuration is unchanged\n");
     return NS_ERROR_ALREADY_INITIALIZED;
