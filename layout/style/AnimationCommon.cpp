@@ -447,10 +447,10 @@ AnimationCollection::CanAnimatePropertyOnCompositor(
   CanAnimateFlags aFlags)
 {
   bool shouldLog = nsLayoutUtils::IsAnimationLoggingEnabled();
-  if (!gfxPlatform::OffMainThreadCompositingEnabled()) {
+  if (!nsLayoutUtils::AreAsyncAnimationsEnabled()) {
     if (shouldLog) {
       nsCString message;
-      message.AppendLiteral("Performance warning: Compositor disabled");
+      message.AppendLiteral("Performance warning: Async animations are disabled");
       LogAsyncAnimationFailure(message);
     }
     return false;
@@ -498,16 +498,10 @@ AnimationCollection::CanAnimatePropertyOnCompositor(
       return false;
     }
   }
-  bool enabled = nsLayoutUtils::AreAsyncAnimationsEnabled();
-  if (!enabled && shouldLog) {
-    nsCString message;
-    message.AppendLiteral("Performance warning: Async animations are disabled");
-    LogAsyncAnimationFailure(message);
-  }
   bool propertyAllowed = (aProperty == eCSSProperty_transform) ||
                          (aProperty == eCSSProperty_opacity) ||
                          (aFlags & CanAnimate_AllowPartial);
-  return enabled && propertyAllowed;
+  return propertyAllowed;
 }
 
 /* static */ bool
