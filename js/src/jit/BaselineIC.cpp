@@ -5551,13 +5551,15 @@ TryAttachNativeGetAccessorPropStub(JSContext* cx, HandleScript script, jsbytecod
     const Class* outerClass = nullptr;
     if (!isDOMProxy && !obj->isNative()) {
         outerClass = obj->getClass();
-        DebugOnly<JSObject*> outer = obj.get();
-        obj = GetInnerObject(obj);
-        MOZ_ASSERT(script->global().isNative());
-        if (obj != &script->global())
+        if (!IsWindowProxy(obj))
             return true;
-        // ICGetProp_CallNative*::Compiler::generateStubCode depends on this.
-        MOZ_ASSERT(&((GetProxyDataLayout(outer)->values->privateSlot).toObject()) == obj);
+
+        // This must be a WindowProxy for the current Window/global. Else it'd
+        // be a cross-compartment wrapper and IsWindowProxy returns false for
+        // those.
+        MOZ_ASSERT(ToWindowIfWindowProxy(obj) == cx->global());
+        obj = cx->global();
+
         if (!EffectlesslyLookupProperty(cx, obj, id, &holder, &shape, &isDOMProxy,
                                         &domProxyShadowsResult, &domProxyHasGeneration))
         {
@@ -6471,13 +6473,9 @@ ICGetPropCallNativeCompiler::generateStubCode(MacroAssembler& masm)
         masm.branchTestObject(Assembler::NotEqual, R0, &failure);
         objReg = masm.extractObject(R0, ExtractTemp0);
         if (outerClass_) {
-            ValueOperand val = regs.takeAnyValue();
             Register tmp = regs.takeAny();
             masm.branchTestObjClass(Assembler::NotEqual, objReg, tmp, outerClass_, &failure);
-            masm.loadPtr(Address(objReg, ProxyDataOffset + offsetof(ProxyDataLayout, values)), tmp);
-            masm.loadValue(Address(tmp, offsetof(ProxyValueArray, privateSlot)), val);
-            masm.movePtr(masm.extractObject(val, ExtractTemp0), objReg);
-            regs.add(val);
+            masm.movePtr(ImmGCPtr(cx->global()), objReg);
             regs.add(tmp);
         }
     }

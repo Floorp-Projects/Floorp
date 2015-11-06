@@ -33,7 +33,7 @@ AssertInnerizedScopeChain(JSContext* cx, JSObject& scopeobj)
 #ifdef DEBUG
     RootedObject obj(cx);
     for (obj = &scopeobj; obj; obj = obj->enclosingScope())
-        MOZ_ASSERT(GetInnerObject(obj) == obj);
+        MOZ_ASSERT(!IsWindowProxy(obj));
 #endif
 }
 

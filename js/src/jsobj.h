@@ -1036,59 +1036,6 @@ extern const char*
 GetObjectClassName(JSContext* cx, HandleObject obj);
 
 /*
- * Inner and outer objects
- *
- * GetInnerObject and GetOuterObject (and also GetThisValue, somewhat) have to
- * do with Windows and WindowProxies. There's a screwy invariant that actual
- * Window objects (the global objects of web pages) are never directly exposed
- * to script. Instead we often substitute a WindowProxy.
- *
- * As a result, we have calls to these three "substitute-this-object-for-that-
- * object" functions sprinkled at apparently arbitrary (but actually *very*
- * carefully and nervously selected) places throughout the engine and indeed
- * the universe.
- */
-
-/*
- * If obj is a WindowProxy, return its current inner Window. Otherwise return
- * obj. This function can't fail and never returns nullptr.
- *
- * GetInnerObject is called when we need a scope chain; you never want a
- * WindowProxy on a scope chain.
- *
- * It's also called in a few places where an object comes in from script, and
- * the user probably intends to operate on the Window, not the
- * WindowProxy. Object.prototype.watch and various Debugger features do
- * this. (Users can't simply pass the Window, because the Window isn't exposed
- * to scripts.)
- */
-inline JSObject*
-GetInnerObject(JSObject* obj)
-{
-    if (InnerObjectOp op = obj->getClass()->ext.innerObject) {
-        JS::AutoSuppressGCAnalysis nogc;
-        return op(obj);
-    }
-    return obj;
-}
-
-/*
- * If obj is a Window object, return the WindowProxy. Otherwise return obj.
- * This function can't fail; it never sets an exception or returns nullptr.
- *
- * This must be called before passing an object to script, if the object might
- * be a Window. (But usually those cases involve scope objects, and for those,
- * it is better to call GetThisValue instead.)
- */
-inline JSObject*
-GetOuterObject(JSContext* cx, HandleObject obj)
-{
-    if (ObjectOp op = obj->getClass()->ext.outerObject)
-        return op(cx, obj);
-    return obj;
-}
-
-/*
  * Return an object that may be used as `this` in place of obj. For most
  * objects this just returns obj.
  *
