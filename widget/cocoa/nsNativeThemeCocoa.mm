@@ -526,24 +526,24 @@ nsNativeThemeCocoa::nsNativeThemeCocoa()
   // before the main event-loop pool is in place
   nsAutoreleasePool pool;
 
-  mDisclosureButtonCell = [[NSButtonCell alloc] initTextCell:nil];
+  mDisclosureButtonCell = [[NSButtonCell alloc] initTextCell:@""];
   [mDisclosureButtonCell setBezelStyle:NSRoundedDisclosureBezelStyle];
   [mDisclosureButtonCell setButtonType:NSPushOnPushOffButton];
   [mDisclosureButtonCell setHighlightsBy:NSPushInCellMask];
   
-  mHelpButtonCell = [[NSButtonCell alloc] initTextCell:nil];
+  mHelpButtonCell = [[NSButtonCell alloc] initTextCell:@""];
   [mHelpButtonCell setBezelStyle:NSHelpButtonBezelStyle];
   [mHelpButtonCell setButtonType:NSMomentaryPushInButton];
   [mHelpButtonCell setHighlightsBy:NSPushInCellMask];
 
-  mPushButtonCell = [[NSButtonCell alloc] initTextCell:nil];
+  mPushButtonCell = [[NSButtonCell alloc] initTextCell:@""];
   [mPushButtonCell setButtonType:NSMomentaryPushInButton];
   [mPushButtonCell setHighlightsBy:NSPushInCellMask];
 
-  mRadioButtonCell = [[RadioButtonCell alloc] initTextCell:nil];
+  mRadioButtonCell = [[RadioButtonCell alloc] initTextCell:@""];
   [mRadioButtonCell setButtonType:NSRadioButton];
 
-  mCheckboxCell = [[CheckboxCell alloc] initTextCell:nil];
+  mCheckboxCell = [[CheckboxCell alloc] initTextCell:@""];
   [mCheckboxCell setButtonType:NSSwitchButton];
   [mCheckboxCell setAllowsMixedState:YES];
 
