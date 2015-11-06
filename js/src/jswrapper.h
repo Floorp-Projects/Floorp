@@ -276,23 +276,23 @@ IsWrapper(JSObject* obj)
 }
 
 // Given a JSObject, returns that object stripped of wrappers. If
-// stopAtOuter is true, then this returns the outer window if it was
+// stopAtWindowProxy is true, then this returns the WindowProxy if it was
 // previously wrapped. Otherwise, this returns the first object for
 // which JSObject::isWrapper returns false.
 JS_FRIEND_API(JSObject*)
-UncheckedUnwrap(JSObject* obj, bool stopAtOuter = true, unsigned* flagsp = nullptr);
+UncheckedUnwrap(JSObject* obj, bool stopAtWindowProxy = true, unsigned* flagsp = nullptr);
 
 // Given a JSObject, returns that object stripped of wrappers. At each stage,
-// the security wrapper has the opportunity to veto the unwrap. Since checked
-// code should never be unwrapping outer window wrappers, we always stop at
-// outer windows.
+// the security wrapper has the opportunity to veto the unwrap. If
+// stopAtWindowProxy is true, then this returns the WindowProxy if it was
+// previously wrapped.
 JS_FRIEND_API(JSObject*)
-CheckedUnwrap(JSObject* obj, bool stopAtOuter = true);
+CheckedUnwrap(JSObject* obj, bool stopAtWindowProxy = true);
 
 // Unwrap only the outermost security wrapper, with the same semantics as
 // above. This is the checked version of Wrapper::wrappedObject.
 JS_FRIEND_API(JSObject*)
-UnwrapOneChecked(JSObject* obj, bool stopAtOuter = true);
+UnwrapOneChecked(JSObject* obj, bool stopAtWindowProxy = true);
 
 JS_FRIEND_API(bool)
 IsCrossCompartmentWrapper(JSObject* obj);

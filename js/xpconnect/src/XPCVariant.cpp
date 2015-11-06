@@ -45,7 +45,7 @@ XPCVariant::XPCVariant(JSContext* cx, Value aJSVal)
         JSObject* obj = js::ToWindowIfWindowProxy(&mJSVal.toObject());
         mJSVal = JS::ObjectValue(*obj);
 
-        JSObject* unwrapped = js::CheckedUnwrap(obj, /* stopAtOuter = */ false);
+        JSObject* unwrapped = js::CheckedUnwrap(obj, /* stopAtWindowProxy = */ false);
         mReturnRawObject = !(unwrapped && IS_WN_REFLECTOR(unwrapped));
     } else
         mReturnRawObject = false;

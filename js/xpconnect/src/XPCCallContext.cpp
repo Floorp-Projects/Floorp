@@ -57,7 +57,7 @@ XPCCallContext::XPCCallContext(XPCContext::LangType callerLanguage,
 
     mTearOff = nullptr;
 
-    JSObject* unwrapped = js::CheckedUnwrap(obj, /* stopAtOuter = */ false);
+    JSObject* unwrapped = js::CheckedUnwrap(obj, /* stopAtWindowProxy = */ false);
     if (!unwrapped) {
         JS_ReportError(mJSContext, "Permission denied to call method on |this|");
         mState = INIT_FAILED;
