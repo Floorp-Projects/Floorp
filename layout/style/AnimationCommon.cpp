@@ -447,14 +447,6 @@ AnimationCollection::CanAnimatePropertyOnCompositor(
   CanAnimateFlags aFlags)
 {
   bool shouldLog = nsLayoutUtils::IsAnimationLoggingEnabled();
-  if (!nsLayoutUtils::AreAsyncAnimationsEnabled()) {
-    if (shouldLog) {
-      nsCString message;
-      message.AppendLiteral("Performance warning: Async animations are disabled");
-      LogAsyncAnimationFailure(message);
-    }
-    return false;
-  }
 
   nsIFrame* frame = nsLayoutUtils::GetStyleFrame(aElement);
   if (IsGeometricProperty(aProperty)) {
@@ -516,6 +508,15 @@ bool
 AnimationCollection::CanPerformOnCompositorThread(
   CanAnimateFlags aFlags) const
 {
+  if (!nsLayoutUtils::AreAsyncAnimationsEnabled()) {
+    if (nsLayoutUtils::IsAnimationLoggingEnabled()) {
+      nsCString message;
+      message.AppendLiteral("Performance warning: Async animations are disabled");
+      LogAsyncAnimationFailure(message);
+    }
+    return false;
+  }
+
   dom::Element* element = GetElementToRestyle();
   if (!element) {
     return false;
