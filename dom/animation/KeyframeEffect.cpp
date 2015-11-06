@@ -1710,6 +1710,33 @@ KeyframeEffectReadOnly::GetFrames(JSContext*& aCx,
   }
 }
 
+nsIFrame*
+KeyframeEffectReadOnly::GetAnimationFrame() const
+{
+  if (!mTarget) {
+    return nullptr;
+  }
+
+  nsIFrame* frame = mTarget->GetPrimaryFrame();
+  if (!frame) {
+    return nullptr;
+  }
+
+  if (mPseudoType == nsCSSPseudoElements::ePseudo_before) {
+    frame = nsLayoutUtils::GetBeforeFrame(frame);
+  } else if (mPseudoType == nsCSSPseudoElements::ePseudo_after) {
+    frame = nsLayoutUtils::GetAfterFrame(frame);
+  } else {
+    MOZ_ASSERT(mPseudoType == nsCSSPseudoElements::ePseudo_NotPseudoElement,
+               "unknown mPseudoType");
+  }
+  if (!frame) {
+    return nullptr;
+  }
+
+  return nsLayoutUtils::GetStyleFrame(frame);
+}
+
 /* static */ bool
 KeyframeEffectReadOnly::IsGeometricProperty(
   const nsCSSProperty aProperty)
