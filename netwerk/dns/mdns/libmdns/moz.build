@@ -17,8 +17,8 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk' and CONFIG['ANDROID_VERSION'] >= '16
         'nsDNSServiceDiscovery.cpp',
     ]
 
-    CXXFLAGS += [
-        '-I%s/%s' % (CONFIG['ANDROID_SOURCE'], d) for d in [
+    LOCAL_INCLUDES += [
+        '%' + '%s/%s' % (CONFIG['ANDROID_SOURCE'], d) for d in [
             'external/mdnsresponder/mDNSShared',
         ]
     ]

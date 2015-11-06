@@ -25,6 +25,8 @@ class JavaScriptParent : public JavaScriptBase<PJavaScriptParent>
 
     void drop(JSObject* obj);
 
+    bool allowMessage(JSContext* cx) override;
+
     mozilla::ipc::IProtocol*
     CloneProtocol(Channel* aChannel, ProtocolCloneContext* aCtx) override;
 

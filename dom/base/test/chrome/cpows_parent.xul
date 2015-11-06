@@ -390,6 +390,33 @@
       msg.target.messageManager.sendAsyncMessage("cpows:cancel_test2_done");
     }
 
+    function recvUnsafe(msg) {
+      let failed = false;
+
+      const PREF_UNSAFE_FORBIDDEN = "dom.ipc.cpows.forbid-unsafe-from-browser";
+      opener.wrappedJSObject.SpecialPowers.setBoolPref(PREF_UNSAFE_FORBIDDEN, true);
+      try {
+        msg.objects.f();
+      } catch (e if /unsafe CPOW usage forbidden/.test(String(e))) {
+        failed = true;
+      }
+      opener.wrappedJSObject.SpecialPowers.clearUserPref(PREF_UNSAFE_FORBIDDEN);
+      ok(failed, "CPOW should fail when unsafe");
+      msg.target.messageManager.sendAsyncMessage("cpows:unsafe_done");
+    }
+
+    function recvSafe(msg) {
+      const PREF_UNSAFE_FORBIDDEN = "dom.ipc.cpows.forbid-unsafe-from-browser";
+      opener.wrappedJSObject.SpecialPowers.setBoolPref(PREF_UNSAFE_FORBIDDEN, true);
+      try {
+        msg.objects.f();
+      } catch (e if /unsafe CPOW usage forbidden/.test(String(e))) {
+        ok(false, "cpow failed");
+      }
+      opener.wrappedJSObject.SpecialPowers.clearUserPref(PREF_UNSAFE_FORBIDDEN);
+      msg.target.messageManager.sendAsyncMessage("cpows:safe_done");
+    }
+
     function run_tests(type) {
       info("Running tests: " + type);
       var node = document.getElementById('cpowbrowser_' + type);
@@ -429,6 +456,8 @@
       mm.addMessageListener("cpows:cancel_test", recvCancelTest);
       mm.addMessageListener("cpows:cancel_sync_message", recvCancelSyncMessage);
       mm.addMessageListener("cpows:cancel_test2", recvCancelTest2);
+      mm.addMessageListener("cpows:unsafe", recvUnsafe);
+      mm.addMessageListener("cpows:safe", recvSafe);
       mm.loadFrameScript("chrome://mochitests/content/chrome/dom/base/test/chrome/cpows_child.js", true);
     }
 

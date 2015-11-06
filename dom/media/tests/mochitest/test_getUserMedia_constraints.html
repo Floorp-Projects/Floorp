@@ -16,16 +16,13 @@ createHTML({ title: "Test getUserMedia constraints", bug: "882145" });
 var tests = [
   // Each test here tests a different constraint or codepath.
   { message: "unknown required constraint on video ignored",
-    constraints: { video: { somethingUnknown: { exact: 0 } },
-                   fake: true },
+    constraints: { video: { somethingUnknown: { exact: 0 } } },
     error: null },
   { message: "unknown required constraint on audio ignored",
-    constraints: { audio: { somethingUnknown: { exact: 0 } },
-                   fake: true },
+    constraints: { audio: { somethingUnknown: { exact: 0 } } },
     error: null },
   { message: "audio overconstrained by facingMode ignored",
-    constraints: { audio: { facingMode: { exact: 'left' } },
-                   fake: true },
+    constraints: { audio: { facingMode: { exact: 'left' } } },
     error: null },
   { message: "full screensharing requires permission",
     constraints: { video: { mediaSource: 'screen' } },
@@ -51,8 +48,7 @@ var tests = [
     constraints: { },
     error: "NotSupportedError" },
   { message: "Success-path: optional video facingMode + audio ignoring facingMode",
-    constraints: { fake: true,
-                   audio: { mediaSource: 'microphone',
+    constraints: { audio: { mediaSource: 'microphone',
                             facingMode: 'left',
                             foo: 0,
                             advanced: [{ facingMode: 'environment' },
@@ -66,7 +62,7 @@ var tests = [
                                        { bar: 0 }] } },
     error: null },
   { message: "legacy facingMode ignored",
-    constraints: { video: { mandatory: { facingMode: 'left' } }, fake: true },
+    constraints: { video: { mandatory: { facingMode: 'left' } } },
     error: null },
 ];
 

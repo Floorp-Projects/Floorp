@@ -11,10 +11,8 @@ for var in ('MOZILLA_EXTERNAL_LINKAGE', 'USE_FAKE_MEDIA_STREAMS', 'USE_FAKE_PCOB
             'NR_SOCKET_IS_VOID_PTR', 'HAVE_STRDUP'):
     DEFINES[var] = True
 
-GENERATED_INCLUDES += [
-  '/dom/bindings',
-]
 LOCAL_INCLUDES += [
+    '!/dom/bindings',
     '/dom/media/',
     '/ipc/chromium/src',
     '/media/mtransport',
