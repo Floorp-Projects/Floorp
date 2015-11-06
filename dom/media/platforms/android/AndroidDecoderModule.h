@@ -100,6 +100,8 @@ protected:
   nsresult ProcessOutput(widget::sdk::BufferInfo::Param aInfo,
                          widget::sdk::MediaFormat::Param aFormat,
                          int32_t aStatus);
+  ModuleState State() const;
+  void State(ModuleState aState);
   void DecoderLoop();
 
   virtual void ClearQueue();
@@ -121,7 +123,7 @@ protected:
   // Only these members are protected by mMonitor.
   Monitor mMonitor;
 
-  State mState;
+  ModuleState mState;
 
   SampleQueue mQueue;
   // Durations are stored in microseconds.
