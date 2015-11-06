@@ -5742,6 +5742,18 @@ ContentParent::RecvGetDeviceStorageLocation(const nsString& aType,
 #endif
 }
 
+bool
+ContentParent::RecvGetAndroidSystemInfo(AndroidSystemInfo* aInfo)
+{
+#ifdef MOZ_WIDGET_ANDROID
+  nsSystemInfo::GetAndroidSystemInfo(aInfo);
+  return true;
+#else
+  MOZ_CRASH("wrong platform!");
+  return false;
+#endif
+}
+
 } // namespace dom
 } // namespace mozilla
 

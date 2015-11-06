@@ -5,7 +5,6 @@ package org.mozilla.gecko.background.healthreport.upload.test;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-
 import org.mozilla.gecko.background.healthreport.Environment;
 import org.mozilla.gecko.background.healthreport.Environment.UIType;
 import org.mozilla.gecko.background.healthreport.EnvironmentBuilder.ConfigurationProvider;

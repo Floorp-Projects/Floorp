@@ -3,6 +3,23 @@
 
 package org.mozilla.android.sync.test;
 
+import org.json.simple.JSONArray;
+import org.json.simple.parser.ParseException;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mozilla.apache.commons.codec.binary.Base64;
+import org.mozilla.gecko.background.testhelpers.TestRunner;
+import org.mozilla.gecko.sync.CollectionKeys;
+import org.mozilla.gecko.sync.CryptoRecord;
+import org.mozilla.gecko.sync.NoCollectionKeysSetException;
+import org.mozilla.gecko.sync.NonObjectJSONException;
+import org.mozilla.gecko.sync.crypto.CryptoException;
+import org.mozilla.gecko.sync.crypto.KeyBundle;
+
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.Set;
+
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -10,24 +27,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.Set;
-
-import org.json.simple.JSONArray;
-import org.json.simple.parser.ParseException;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mozilla.apache.commons.codec.binary.Base64;
-import org.mozilla.gecko.sync.CollectionKeys;
-import org.mozilla.gecko.sync.CryptoRecord;
-import org.mozilla.gecko.sync.NoCollectionKeysSetException;
-import org.mozilla.gecko.sync.NonObjectJSONException;
-import org.mozilla.gecko.sync.crypto.CryptoException;
-import org.mozilla.gecko.sync.crypto.KeyBundle;
-import org.robolectric.RobolectricGradleTestRunner;
-
-@RunWith(RobolectricGradleTestRunner.class)
+@RunWith(TestRunner.class)
 public class TestCollectionKeys {
 
   @Test

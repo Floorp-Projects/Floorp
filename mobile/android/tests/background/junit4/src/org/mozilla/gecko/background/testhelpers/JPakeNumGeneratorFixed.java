@@ -3,9 +3,9 @@
 
 package org.mozilla.gecko.background.testhelpers;
 
-import java.math.BigInteger;
-
 import org.mozilla.gecko.sync.jpake.JPakeNumGenerator;
+
+import java.math.BigInteger;
 
 public class JPakeNumGeneratorFixed implements JPakeNumGenerator {
   private String[] values;

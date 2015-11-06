@@ -3,23 +3,22 @@
 
 package org.mozilla.gecko.tokenserver.test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
-import java.io.UnsupportedEncodingException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
-
+import ch.boye.httpclientandroidlib.Header;
+import ch.boye.httpclientandroidlib.HttpResponse;
+import ch.boye.httpclientandroidlib.ProtocolVersion;
+import ch.boye.httpclientandroidlib.client.methods.HttpGet;
+import ch.boye.httpclientandroidlib.client.methods.HttpRequestBase;
+import ch.boye.httpclientandroidlib.entity.StringEntity;
+import ch.boye.httpclientandroidlib.message.BasicHeader;
+import ch.boye.httpclientandroidlib.message.BasicHttpResponse;
+import ch.boye.httpclientandroidlib.message.BasicStatusLine;
 import junit.framework.Assert;
-
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mozilla.gecko.background.common.log.Logger;
 import org.mozilla.gecko.background.common.log.writers.StringLogWriter;
+import org.mozilla.gecko.background.testhelpers.TestRunner;
 import org.mozilla.gecko.background.testhelpers.WaitHelper;
 import org.mozilla.gecko.sync.ExtendedJSONObject;
 import org.mozilla.gecko.sync.net.AuthHeaderProvider;
@@ -36,18 +35,17 @@ import org.mozilla.gecko.tokenserver.TokenServerException.TokenServerMalformedRe
 import org.mozilla.gecko.tokenserver.TokenServerException.TokenServerUnknownServiceException;
 import org.mozilla.gecko.tokenserver.TokenServerToken;
 
-import ch.boye.httpclientandroidlib.Header;
-import ch.boye.httpclientandroidlib.HttpResponse;
-import ch.boye.httpclientandroidlib.ProtocolVersion;
-import ch.boye.httpclientandroidlib.client.methods.HttpGet;
-import ch.boye.httpclientandroidlib.client.methods.HttpRequestBase;
-import ch.boye.httpclientandroidlib.entity.StringEntity;
-import ch.boye.httpclientandroidlib.message.BasicHeader;
-import ch.boye.httpclientandroidlib.message.BasicHttpResponse;
-import ch.boye.httpclientandroidlib.message.BasicStatusLine;
-import org.robolectric.RobolectricGradleTestRunner;
+import java.io.UnsupportedEncodingException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
-@RunWith(RobolectricGradleTestRunner.class)
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
+@RunWith(TestRunner.class)
 public class TestTokenServerClient {
   public static final String JSON = "application/json";
   public static final String TEXT = "text/plain";

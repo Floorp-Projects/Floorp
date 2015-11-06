@@ -3,12 +3,6 @@
 
 package org.mozilla.android.sync.test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-
-import java.util.ArrayList;
-
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mozilla.android.sync.test.SynchronizerHelpers.BatchFailStoreWBORepository;
@@ -20,6 +14,7 @@ import org.mozilla.android.sync.test.SynchronizerHelpers.FinishFailedException;
 import org.mozilla.android.sync.test.SynchronizerHelpers.SerialFailStoreWBORepository;
 import org.mozilla.android.sync.test.SynchronizerHelpers.TrackingWBORepository;
 import org.mozilla.gecko.background.common.log.Logger;
+import org.mozilla.gecko.background.testhelpers.TestRunner;
 import org.mozilla.gecko.background.testhelpers.WBORepository;
 import org.mozilla.gecko.background.testhelpers.WaitHelper;
 import org.mozilla.gecko.sync.repositories.FetchFailedException;
@@ -28,9 +23,14 @@ import org.mozilla.gecko.sync.repositories.domain.BookmarkRecord;
 import org.mozilla.gecko.sync.synchronizer.ServerLocalSynchronizer;
 import org.mozilla.gecko.sync.synchronizer.Synchronizer;
 import org.mozilla.gecko.sync.synchronizer.SynchronizerDelegate;
-import org.robolectric.RobolectricGradleTestRunner;
 
-@RunWith(RobolectricGradleTestRunner.class)
+import java.util.ArrayList;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+
+@RunWith(TestRunner.class)
 public class TestServerLocalSynchronizer {
   public static final String LOG_TAG = "TestServLocSync";
 

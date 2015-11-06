@@ -423,6 +423,16 @@ struct FrameScriptInfo
     bool runInGlobalScope;
 };
 
+struct AndroidSystemInfo
+{
+    nsString device;
+    nsString manufacturer;
+    nsString release_version;
+    nsString hardware;
+    uint32_t sdk_version;
+    bool     isTablet;
+};
+
 prio(normal upto urgent) sync protocol PContent
 {
     parent spawns PPluginModule;
@@ -1147,6 +1157,9 @@ parent:
 
     sync GetDeviceStorageLocation(nsString type)
         returns (nsString path);
+
+    sync GetAndroidSystemInfo()
+        returns (AndroidSystemInfo info);
 
     /**
      * Tells the parent to ungrab the pointer on the default display.

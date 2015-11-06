@@ -3,9 +3,6 @@
 
 package org.mozilla.gecko.background.testhelpers;
 
-import java.io.IOException;
-import java.util.HashMap;
-
 import org.json.simple.parser.ParseException;
 import org.mozilla.gecko.sync.EngineSettings;
 import org.mozilla.gecko.sync.NonObjectJSONException;
@@ -17,6 +14,9 @@ import org.mozilla.gecko.sync.net.BasicAuthHeaderProvider;
 import org.mozilla.gecko.sync.stage.CompletedStage;
 import org.mozilla.gecko.sync.stage.GlobalSyncStage;
 import org.mozilla.gecko.sync.stage.GlobalSyncStage.Stage;
+
+import java.io.IOException;
+import java.util.HashMap;
 
 
 public class MockGlobalSession extends MockPrefsGlobalSession {

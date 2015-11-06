@@ -3,19 +3,7 @@
 
 package org.mozilla.android.sync.net.test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
-import java.io.IOException;
-import java.io.PrintStream;
-import java.math.BigDecimal;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.ArrayList;
-import java.util.List;
-
+import ch.boye.httpclientandroidlib.HttpStatus;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.ParseException;
@@ -32,6 +20,7 @@ import org.mozilla.gecko.background.testhelpers.MockClientsDataDelegate;
 import org.mozilla.gecko.background.testhelpers.MockClientsDatabaseAccessor;
 import org.mozilla.gecko.background.testhelpers.MockGlobalSession;
 import org.mozilla.gecko.background.testhelpers.MockSharedPreferences;
+import org.mozilla.gecko.background.testhelpers.TestRunner;
 import org.mozilla.gecko.background.testhelpers.WaitHelper;
 import org.mozilla.gecko.sync.CollectionKeys;
 import org.mozilla.gecko.sync.CommandProcessor.Command;
@@ -52,13 +41,23 @@ import org.mozilla.gecko.sync.net.SyncStorageResponse;
 import org.mozilla.gecko.sync.repositories.NullCursorException;
 import org.mozilla.gecko.sync.repositories.android.ClientsDatabaseAccessor;
 import org.mozilla.gecko.sync.repositories.domain.ClientRecord;
-import org.robolectric.RobolectricGradleTestRunner;
 import org.simpleframework.http.Request;
 import org.simpleframework.http.Response;
 
-import ch.boye.httpclientandroidlib.HttpStatus;
+import java.io.IOException;
+import java.io.PrintStream;
+import java.math.BigDecimal;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.ArrayList;
+import java.util.List;
 
-@RunWith(RobolectricGradleTestRunner.class)
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
+@RunWith(TestRunner.class)
 public class TestClientsEngineStage extends MockSyncClientsEngineStage {
   public final static String LOG_TAG = "TestClientsEngSta";
 

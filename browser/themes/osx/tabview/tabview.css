@@ -552,7 +552,7 @@ html[dir=rtl] .iq-resizable-se {
 
 #search{
   width: 100%;
-  height: 100%;
+  height: calc(100% - 1.7em - 20px); /* leave room for banner */
 }
 
 #searchbox {

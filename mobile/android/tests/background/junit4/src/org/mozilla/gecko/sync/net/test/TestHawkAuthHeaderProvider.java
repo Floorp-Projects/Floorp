@@ -3,18 +3,6 @@
 
 package org.mozilla.gecko.sync.net.test;
 
-import static org.junit.Assert.assertEquals;
-
-import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.net.URI;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
-
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mozilla.gecko.sync.net.HawkAuthHeaderProvider;
-
 import ch.boye.httpclientandroidlib.Header;
 import ch.boye.httpclientandroidlib.client.methods.HttpGet;
 import ch.boye.httpclientandroidlib.client.methods.HttpPost;
@@ -24,13 +12,24 @@ import ch.boye.httpclientandroidlib.entity.StringEntity;
 import ch.boye.httpclientandroidlib.impl.client.DefaultHttpClient;
 import ch.boye.httpclientandroidlib.message.BasicHeader;
 import ch.boye.httpclientandroidlib.protocol.BasicHttpContext;
-import org.robolectric.RobolectricGradleTestRunner;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mozilla.gecko.background.testhelpers.TestRunner;
+import org.mozilla.gecko.sync.net.HawkAuthHeaderProvider;
+
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URI;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  * These test vectors were taken from
  * <a href="https://github.com/hueniverse/hawk/blob/871cc597973110900467bd3dfb84a3c892f678fb/README.md">https://github.com/hueniverse/hawk/blob/871cc597973110900467bd3dfb84a3c892f678fb/README.md</a>.
  */
-@RunWith(RobolectricGradleTestRunner.class)
+@RunWith(TestRunner.class)
 public class TestHawkAuthHeaderProvider {
   // Expose a few protected static member functions as public for testing.
   protected static class LeakyHawkAuthHeaderProvider extends HawkAuthHeaderProvider {

@@ -4,19 +4,16 @@
 package org.mozilla.gecko.fxa.login;
 
 import junit.framework.Assert;
-
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mozilla.gecko.BuildConfig;
+import org.mozilla.gecko.background.testhelpers.TestRunner;
 import org.mozilla.gecko.browserid.BrowserIDKeyPair;
 import org.mozilla.gecko.browserid.DSACryptoImplementation;
 import org.mozilla.gecko.fxa.login.State.StateLabel;
 import org.mozilla.gecko.sync.ExtendedJSONObject;
 import org.mozilla.gecko.sync.Utils;
-import org.robolectric.RobolectricGradleTestRunner;
-import org.robolectric.annotation.Config;
 
-@RunWith(RobolectricGradleTestRunner.class)
+@RunWith(TestRunner.class)
 public class TestStateFactory {
   @Test
   public void testGetStateV3() throws Exception {

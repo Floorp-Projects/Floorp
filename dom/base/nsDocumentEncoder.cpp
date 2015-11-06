@@ -1441,7 +1441,7 @@ nsHTMLCopyEncoder::SetSelection(nsISelection* aSelection)
     }
 #ifdef MOZ_THUNDERBIRD
     else if (selContent->IsElement()) {
-      nsRefPtr<nsStyleContext> styleContext =
+      RefPtr<nsStyleContext> styleContext =
         nsComputedDOMStyle::GetStyleContextForElementNoFlush(
           selContent->AsElement(), nullptr, nullptr);
       if (styleContext) {
