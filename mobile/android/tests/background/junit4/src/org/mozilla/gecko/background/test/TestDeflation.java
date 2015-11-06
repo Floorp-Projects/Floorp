@@ -3,21 +3,19 @@
 
 package org.mozilla.gecko.background.test;
 
-import java.util.Arrays;
-import java.util.zip.DataFormatException;
-import java.util.zip.Inflater;
-
+import ch.boye.httpclientandroidlib.HttpEntity;
 import junit.framework.Assert;
-
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mozilla.gecko.background.bagheera.DeflateHelper;
 import org.mozilla.gecko.background.common.log.Logger;
+import org.mozilla.gecko.background.testhelpers.TestRunner;
 
-import ch.boye.httpclientandroidlib.HttpEntity;
-import org.robolectric.RobolectricGradleTestRunner;
+import java.util.Arrays;
+import java.util.zip.DataFormatException;
+import java.util.zip.Inflater;
 
-@RunWith(RobolectricGradleTestRunner.class)
+@RunWith(TestRunner.class)
 public class TestDeflation {
   public static final String TEST_BODY_A = "";
   public static final String TEST_BODY_B = "éíôü}ABCDEFGHaaQRSTUVWXYZá{Zá{";

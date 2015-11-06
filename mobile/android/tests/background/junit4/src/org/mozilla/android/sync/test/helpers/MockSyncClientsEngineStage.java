@@ -3,11 +3,11 @@
 
 package org.mozilla.android.sync.test.helpers;
 
-import static org.junit.Assert.assertTrue;
-
 import org.mozilla.gecko.sync.net.BaseResource;
 import org.mozilla.gecko.sync.net.SyncStorageResponse;
 import org.mozilla.gecko.sync.stage.SyncClientsEngineStage;
+
+import static org.junit.Assert.assertTrue;
 
 public class MockSyncClientsEngineStage extends SyncClientsEngineStage {
   public class MockClientUploadDelegate extends ClientUploadDelegate {

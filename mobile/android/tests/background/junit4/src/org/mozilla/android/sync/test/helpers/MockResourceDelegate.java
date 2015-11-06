@@ -3,21 +3,20 @@
 
 package org.mozilla.android.sync.test.helpers;
 
-import static org.junit.Assert.assertEquals;
-
-import java.io.IOException;
-import java.security.GeneralSecurityException;
-
+import ch.boye.httpclientandroidlib.HttpResponse;
+import ch.boye.httpclientandroidlib.client.ClientProtocolException;
+import ch.boye.httpclientandroidlib.client.methods.HttpRequestBase;
+import ch.boye.httpclientandroidlib.impl.client.DefaultHttpClient;
 import org.mozilla.gecko.background.testhelpers.WaitHelper;
 import org.mozilla.gecko.sync.net.AuthHeaderProvider;
 import org.mozilla.gecko.sync.net.BaseResource;
 import org.mozilla.gecko.sync.net.BasicAuthHeaderProvider;
 import org.mozilla.gecko.sync.net.ResourceDelegate;
 
-import ch.boye.httpclientandroidlib.HttpResponse;
-import ch.boye.httpclientandroidlib.client.ClientProtocolException;
-import ch.boye.httpclientandroidlib.client.methods.HttpRequestBase;
-import ch.boye.httpclientandroidlib.impl.client.DefaultHttpClient;
+import java.io.IOException;
+import java.security.GeneralSecurityException;
+
+import static org.junit.Assert.assertEquals;
 
 public class MockResourceDelegate implements ResourceDelegate {
   public WaitHelper waitHelper = null;

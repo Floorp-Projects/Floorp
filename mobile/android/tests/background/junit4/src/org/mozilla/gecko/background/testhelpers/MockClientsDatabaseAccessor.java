@@ -3,14 +3,14 @@
 
 package org.mozilla.gecko.background.testhelpers;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-
 import org.mozilla.gecko.sync.CommandProcessor.Command;
 import org.mozilla.gecko.sync.repositories.NullCursorException;
 import org.mozilla.gecko.sync.repositories.android.ClientsDatabaseAccessor;
 import org.mozilla.gecko.sync.repositories.domain.ClientRecord;
+
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 
 public class MockClientsDatabaseAccessor extends ClientsDatabaseAccessor {
   public boolean storedRecord = false;

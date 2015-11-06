@@ -3,25 +3,25 @@
 
 package org.mozilla.gecko.sync.repositories.android.test;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mozilla.gecko.background.common.log.Logger;
+import org.mozilla.gecko.background.testhelpers.TestRunner;
+import org.mozilla.gecko.sync.Utils;
+import org.mozilla.gecko.sync.repositories.android.BookmarksInsertionManager;
+import org.mozilla.gecko.sync.repositories.domain.BookmarkRecord;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mozilla.gecko.background.common.log.Logger;
-import org.mozilla.gecko.sync.Utils;
-import org.mozilla.gecko.sync.repositories.android.BookmarksInsertionManager;
-import org.mozilla.gecko.sync.repositories.domain.BookmarkRecord;
-import org.robolectric.RobolectricGradleTestRunner;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
-@RunWith(RobolectricGradleTestRunner.class)
+@RunWith(TestRunner.class)
 public class TestBookmarksInsertionManager {
   public BookmarksInsertionManager manager;
   public ArrayList<String[]> insertions;
