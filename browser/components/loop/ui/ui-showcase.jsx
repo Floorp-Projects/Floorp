@@ -556,7 +556,7 @@
         width += 2;
       }
 
-      var cx = React.addons.classSet;
+      var cx = classNames;
       return (
         <div className="example">
           <h3 id={this.makeId()}>
