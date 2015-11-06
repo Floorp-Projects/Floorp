@@ -18,8 +18,6 @@
 #include "Http2HuffmanOutgoing.h"
 #include "mozilla/StaticPtr.h"
 
-extern PRThread *gSocketThread;
-
 namespace mozilla {
 namespace net {
 
