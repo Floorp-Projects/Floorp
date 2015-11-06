@@ -570,11 +570,7 @@ js::ExecuteKernel(JSContext* cx, HandleScript script, JSObject& scopeChainArg, c
     MOZ_ASSERT_IF(type == EXECUTE_GLOBAL, IsGlobalLexicalScope(&scopeChainArg) ||
                                           !IsSyntacticScope(&scopeChainArg));
 #ifdef DEBUG
-    if (thisv.isObject()) {
-        RootedObject thisObj(cx, &thisv.toObject());
-        AutoSuppressGC nogc(cx);
-        MOZ_ASSERT(GetOuterObject(cx, thisObj) == thisObj);
-    }
+    MOZ_ASSERT_IF(thisv.isObject(), !IsWindow(&thisv.toObject()));
     RootedObject terminatingScope(cx, &scopeChainArg);
     while (IsSyntacticScope(terminatingScope))
         terminatingScope = terminatingScope->enclosingScope();
@@ -613,7 +609,7 @@ js::Execute(JSContext* cx, HandleScript script, JSObject& scopeChainArg, Value* 
     /* The scope chain is something we control, so we know it can't
        have any outer objects on it. */
     RootedObject scopeChain(cx, &scopeChainArg);
-    MOZ_ASSERT(scopeChain == GetInnerObject(scopeChain));
+    MOZ_ASSERT(!IsWindowProxy(scopeChain));
 
     if (script->module()) {
         MOZ_RELEASE_ASSERT(scopeChain == script->module()->environment(),
