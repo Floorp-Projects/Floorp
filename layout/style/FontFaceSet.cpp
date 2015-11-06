@@ -173,8 +173,8 @@ FontFaceSet::ParseFontShorthandForMatching(
                             ErrorResult& aRv)
 {
   // Parse aFont as a 'font' property value.
-  Declaration declaration;
-  declaration.InitializeEmpty();
+  RefPtr<Declaration> declaration = new Declaration;
+  declaration->InitializeEmpty();
 
   bool changed = false;
   nsCSSParser parser;
@@ -183,23 +183,23 @@ FontFaceSet::ParseFontShorthandForMatching(
                        mDocument->GetDocumentURI(),
                        mDocument->GetDocumentURI(),
                        mDocument->NodePrincipal(),
-                       &declaration,
+                       declaration,
                        &changed,
                        /* aIsImportant */ false);
 
   // All of the properties we are interested in should have been set at once.
-  MOZ_ASSERT(changed == (declaration.HasProperty(eCSSProperty_font_family) &&
-                         declaration.HasProperty(eCSSProperty_font_style) &&
-                         declaration.HasProperty(eCSSProperty_font_weight) &&
-                         declaration.HasProperty(eCSSProperty_font_stretch)));
+  MOZ_ASSERT(changed == (declaration->HasProperty(eCSSProperty_font_family) &&
+                         declaration->HasProperty(eCSSProperty_font_style) &&
+                         declaration->HasProperty(eCSSProperty_font_weight) &&
+                         declaration->HasProperty(eCSSProperty_font_stretch)));
 
   if (!changed) {
     aRv.Throw(NS_ERROR_DOM_SYNTAX_ERR);
     return;
   }
 
-  nsCSSCompressedDataBlock* data = declaration.GetNormalBlock();
-  MOZ_ASSERT(!declaration.GetImportantBlock());
+  nsCSSCompressedDataBlock* data = declaration->GetNormalBlock();
+  MOZ_ASSERT(!declaration->GetImportantBlock());
 
   const nsCSSValue* family = data->ValueFor(eCSSProperty_font_family);
   if (family->GetUnit() != eCSSUnit_FontFamilyList) {

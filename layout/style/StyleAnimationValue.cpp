@@ -2491,7 +2491,7 @@ BuildStyleRule(nsCSSProperty aProperty,
                bool aUseSVGMode)
 {
   // Set up an empty CSS Declaration
-  nsAutoPtr<css::Declaration> declaration(new css::Declaration());
+  RefPtr<css::Declaration> declaration(new css::Declaration());
   declaration->InitializeEmpty();
 
   bool changed; // ignored, but needed as outparam for ParseProperty
@@ -2514,7 +2514,7 @@ BuildStyleRule(nsCSSProperty aProperty,
   }
 
   RefPtr<css::StyleRule> rule = new css::StyleRule(nullptr,
-                                                     declaration.forget(),
+                                                     declaration,
                                                      0, 0);
   return rule.forget();
 }
@@ -2631,8 +2631,9 @@ StyleAnimationValue::ComputeValues(
 
     nsCOMArray<nsIStyleRule> ruleArray;
     ruleArray.AppendObject(styleSet->InitialStyleRule());
-    ruleArray.AppendObject(aStyleRule);
-    aStyleRule->RuleMatched();
+    css::Declaration* declaration = aStyleRule->GetDeclaration();
+    ruleArray.AppendObject(declaration);
+    declaration->SetImmutable();
     tmpStyleContext =
       styleSet->ResolveStyleByAddingRules(styleContext, ruleArray);
     if (!tmpStyleContext) {
@@ -2658,8 +2659,9 @@ StyleAnimationValue::ComputeValues(
   // value may have been biased by the 'initial' values supplied.
   if (!aIsContextSensitive || *aIsContextSensitive) {
     nsCOMArray<nsIStyleRule> ruleArray;
-    ruleArray.AppendObject(aStyleRule);
-    aStyleRule->RuleMatched();
+    css::Declaration* declaration = aStyleRule->GetDeclaration();
+    ruleArray.AppendObject(declaration);
+    declaration->SetImmutable();
     tmpStyleContext =
       styleSet->ResolveStyleByAddingRules(styleContext, ruleArray);
     if (!tmpStyleContext) {

@@ -990,7 +990,7 @@ class AssemblerX86Shared : public AssemblerShared
         // Remove the size of the return address which is included in the frame.
         masm.ret_i(n.value - sizeof(void*));
     }
-    void call(Label* label) {
+    CodeOffsetLabel call(Label* label) {
         if (label->bound()) {
             masm.linkJump(masm.call(), JmpDst(label->offset()));
         } else {
@@ -998,9 +998,11 @@ class AssemblerX86Shared : public AssemblerShared
             JmpSrc prev = JmpSrc(label->use(j.offset()));
             masm.setNextJump(j, prev);
         }
+        return CodeOffsetLabel(masm.currentOffset());
     }
-    void call(Register reg) {
+    CodeOffsetLabel call(Register reg) {
         masm.call_r(reg.encoding());
+        return CodeOffsetLabel(masm.currentOffset());
     }
     void call(const Operand& op) {
         switch (op.kind()) {
@@ -1013,6 +1015,14 @@ class AssemblerX86Shared : public AssemblerShared
           default:
             MOZ_CRASH("unexpected operand kind");
         }
+    }
+
+    CodeOffsetLabel callWithPatch() {
+        return CodeOffsetLabel(masm.call().offset());
+    }
+    void patchCall(uint32_t callerOffset, uint32_t calleeOffset) {
+        unsigned char* code = masm.data();
+        X86Encoding::SetRel32(code + callerOffset, code + calleeOffset);
     }
 
     void breakpoint() {

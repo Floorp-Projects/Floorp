@@ -112,6 +112,10 @@ struct MOZ_STACK_CLASS AsmJSFunctionLabels
     jit::Label  endAfterOOL;
     mozilla::Maybe<jit::Label> overflowThunk;
     jit::Label& overflowExit;
+
+  private:
+    AsmJSFunctionLabels(const AsmJSFunctionLabels&) = delete;
+    AsmJSFunctionLabels& operator=(const AsmJSFunctionLabels&) = delete;
 };
 
 // Represents the type and value of an asm.js numeric literal.
@@ -631,6 +635,10 @@ class AsmJSModule
         PropertyName* name_;
 
       public:
+        FunctionCodeRange()
+          : CodeRange(), name_(nullptr)
+        {}
+
         FunctionCodeRange(PropertyName* name, uint32_t lineNumber, const AsmJSFunctionLabels& l)
           : CodeRange(UINT32_MAX, lineNumber, l), name_(name)
         {}
@@ -1159,14 +1167,14 @@ class AsmJSModule
     bool addCodeRange(CodeRange::Kind kind, uint32_t begin, uint32_t pret, uint32_t end) {
         return codeRanges_.append(CodeRange(kind, begin, pret, end));
     }
-    bool addFunctionCodeRange(PropertyName* name, FunctionCodeRange&& codeRange)
+    bool addFunctionCodeRange(PropertyName* name, FunctionCodeRange codeRange)
     {
         MOZ_ASSERT(!isFinished());
         MOZ_ASSERT(name->isTenured());
         if (names_.length() >= UINT32_MAX)
             return false;
         codeRange.initNameIndex(names_.length());
-        return names_.append(name) && codeRanges_.append(Move(codeRange));
+        return names_.append(name) && codeRanges_.append(codeRange);
     }
     bool addBuiltinThunkCodeRange(AsmJSExit::BuiltinKind builtin, uint32_t begin,
                                   uint32_t profilingReturn, uint32_t end)

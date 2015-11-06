@@ -156,10 +156,8 @@ public:
 #endif
 
   void AppendStyleSheet(CSSStyleSheet* aSheet);
-  void InsertStyleSheetAt(CSSStyleSheet* aSheet, int32_t aIndex);
 
   // XXX do these belong here or are they generic?
-  void PrependStyleRule(css::Rule* aRule);
   void AppendStyleRule(css::Rule* aRule);
   void ReplaceStyleRule(css::Rule* aOld, css::Rule* aNew);
 
@@ -169,8 +167,6 @@ public:
   nsresult DeleteRuleFromGroup(css::GroupRule* aGroup, uint32_t aIndex);
   nsresult InsertRuleIntoGroup(const nsAString& aRule, css::GroupRule* aGroup, uint32_t aIndex, uint32_t* _retval);
   nsresult ReplaceRuleInGroup(css::GroupRule* aGroup, css::Rule* aOld, css::Rule* aNew);
-
-  int32_t StyleSheetCount() const;
 
   /**
    * SetURIs must be called on all sheets before parsing into them.

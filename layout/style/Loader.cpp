@@ -1418,7 +1418,10 @@ Loader::InsertSheetInDoc(CSSStyleSheet* aSheet,
  * append to the end because the CSSOM can insert @import rules.  In
  * practice, we get the call to load the child sheet before the CSSOM
  * has finished inserting the @import rule, so we have no idea where
- * to put it anyway.  So just append for now.
+ * to put it anyway.  So just append for now.  (In the future if we
+ * want to insert the sheet at the correct position, we'll need to
+ * restore CSSStyleSheet::InsertStyleSheetAt, which was removed in
+ * bug 1220506.)
  */
 nsresult
 Loader::InsertChildSheet(CSSStyleSheet* aSheet,

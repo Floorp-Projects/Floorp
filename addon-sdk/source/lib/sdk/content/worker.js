@@ -14,11 +14,11 @@ const { method } = require('../lang/functional');
 const { getInnerId } = require('../window/utils');
 const { EventTarget } = require('../event/target');
 const { isPrivate } = require('../private-browsing/utils');
-const { getTabForBrowser, getTabForContentWindow, getBrowserForTab } = require('../tabs/utils');
+const { getTabForBrowser, getTabForContentWindowNoShim, getBrowserForTab } = require('../tabs/utils');
 const { attach, connect, detach, destroy, makeChildOptions } = require('./utils');
 const { ensure } = require('../system/unload');
 const { on: observe } = require('../system/events');
-const { Ci } = require('chrome');
+const { Ci, Cu } = require('chrome');
 const { modelFor: tabFor } = require('sdk/model/core');
 const { remoteRequire, processes, frames } = require('../remote/parent');
 remoteRequire('sdk/content/worker-child');
@@ -117,13 +117,18 @@ exports.Worker = Worker;
 
 attach.define(Worker, function(worker, window) {
   // This method of attaching should be deprecated
+
+  if (Cu.isCrossProcessWrapper(window))
+    throw new Error("Attaching worker to a window from another " +
+                    "process directly is not supported.");
+
   let model = modelFor(worker);
   if (model.attached)
     detach(worker);
 
   model.window = window;
   let frame = null;
-  let tab = getTabForContentWindow(window.top);
+  let tab = getTabForContentWindowNoShim(window);
   if (tab)
     frame = frames.getFrameForBrowser(getBrowserForTab(tab));
 
