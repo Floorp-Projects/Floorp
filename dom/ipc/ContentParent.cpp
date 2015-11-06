@@ -35,7 +35,6 @@
 #include "imgIContainer.h"
 #include "mozIApplication.h"
 #include "mozilla/ClearOnShutdown.h"
-#include "mozilla/DataStorage.h"
 #include "mozilla/devtools/HeapSnapshotTempFileHelperParent.h"
 #include "mozilla/docshell/OfflineCacheUpdateParent.h"
 #include "mozilla/dom/DataStoreService.h"
@@ -2671,15 +2670,6 @@ ContentParent::RecvReadFontList(InfallibleTArray<FontListEntry>* retValue)
 #ifdef ANDROID
     gfxAndroidPlatform::GetPlatform()->GetSystemFontList(retValue);
 #endif
-    return true;
-}
-
-bool
-ContentParent::RecvReadDataStorageArray(const nsString& aFilename,
-                                        InfallibleTArray<DataStorageItem>* aValues)
-{
-    RefPtr<DataStorage> storage = DataStorage::Get(aFilename);
-    storage->GetAll(aValues);
     return true;
 }
 
