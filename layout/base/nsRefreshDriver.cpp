@@ -313,6 +313,9 @@ private:
     explicit RefreshDriverVsyncObserver(VsyncRefreshDriverTimer* aVsyncRefreshDriverTimer)
       : mVsyncRefreshDriverTimer(aVsyncRefreshDriverTimer)
       , mRefreshTickLock("RefreshTickLock")
+      , mRecentVsync(TimeStamp::Now())
+      , mLastChildTick(TimeStamp::Now())
+      , mVsyncRate(TimeDuration::Forever())
       , mProcessedVsync(true)
     {
       MOZ_ASSERT(NS_IsMainThread());
@@ -352,22 +355,47 @@ private:
       mVsyncRefreshDriverTimer = nullptr;
     }
 
+    void OnTimerStart()
+    {
+      if (!XRE_IsParentProcess()) {
+        mLastChildTick = TimeStamp::Now();
+      }
+    }
+
   private:
     virtual ~RefreshDriverVsyncObserver() {}
+
+    void RecordTelemetryProbes(TimeStamp aVsyncTimestamp)
+    {
+      MOZ_ASSERT(NS_IsMainThread());
+    #ifndef ANDROID  /* bug 1142079 */
+      if (XRE_IsParentProcess()) {
+        TimeDuration vsyncLatency = TimeStamp::Now() - aVsyncTimestamp;
+        Telemetry::Accumulate(Telemetry::FX_REFRESH_DRIVER_CHROME_FRAME_DELAY_MS,
+                              vsyncLatency.ToMilliseconds());
+      } else if (mVsyncRate != TimeDuration::Forever()) {
+        TimeDuration contentDelay = (TimeStamp::Now() - mLastChildTick) - mVsyncRate;
+        Telemetry::Accumulate(Telemetry::FX_REFRESH_DRIVER_CONTENT_FRAME_DELAY_MS,
+                              contentDelay.ToMilliseconds());
+      } else {
+        // Request the vsync rate from the parent process. Might be a few vsyncs
+        // until the parent responds.
+        mVsyncRate = mVsyncRefreshDriverTimer->mVsyncChild->GetVsyncRate();
+      }
+    #endif
+    }
 
     void TickRefreshDriver(TimeStamp aVsyncTimestamp)
     {
       MOZ_ASSERT(NS_IsMainThread());
 
+      RecordTelemetryProbes(aVsyncTimestamp);
       if (XRE_IsParentProcess()) {
         MonitorAutoLock lock(mRefreshTickLock);
-        #ifndef ANDROID  /* bug 1142079 */
-          TimeDuration vsyncLatency = TimeStamp::Now() - aVsyncTimestamp;
-          Telemetry::Accumulate(Telemetry::FX_REFRESH_DRIVER_CHROME_FRAME_DELAY_MS,
-          vsyncLatency.ToMilliseconds());
-        #endif
         aVsyncTimestamp = mRecentVsync;
         mProcessedVsync = true;
+      } else {
+        mLastChildTick = TimeStamp::Now();
       }
       MOZ_ASSERT(aVsyncTimestamp <= TimeStamp::Now());
 
@@ -385,6 +413,8 @@ private:
     VsyncRefreshDriverTimer* mVsyncRefreshDriverTimer;
     Monitor mRefreshTickLock;
     TimeStamp mRecentVsync;
+    TimeStamp mLastChildTick;
+    TimeDuration mVsyncRate;
     bool mProcessedVsync;
   }; // RefreshDriverVsyncObserver
 
@@ -418,6 +448,7 @@ private:
       mVsyncDispatcher->SetParentRefreshTimer(mVsyncObserver);
     } else {
       unused << mVsyncChild->SendObserve();
+      mVsyncObserver->OnTimerStart();
     }
   }
 
