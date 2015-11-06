@@ -41,118 +41,118 @@ public: // construction, destruction
   NS_DECL_ISUPPORTS_INHERITED
 
   public: // IUnknown methods - see iunknown.h for documentation
-    STDMETHODIMP QueryInterface(REFIID, void**);
+    STDMETHODIMP QueryInterface(REFIID, void**) override;
 
   // Return the registered OLE class ID of this object's CfDataObj.
     CLSID GetClassID() const;
 
   public: // COM interface IAccessible
     virtual /* [id][propget] */ HRESULT STDMETHODCALLTYPE get_accParent( 
-        /* [retval][out] */ IDispatch __RPC_FAR *__RPC_FAR *ppdispParent);
+        /* [retval][out] */ IDispatch __RPC_FAR *__RPC_FAR *ppdispParent) override;
 
     virtual /* [id][propget] */ HRESULT STDMETHODCALLTYPE get_accChildCount( 
-        /* [retval][out] */ long __RPC_FAR *pcountChildren);
+        /* [retval][out] */ long __RPC_FAR *pcountChildren) override;
 
     virtual /* [id][propget] */ HRESULT STDMETHODCALLTYPE get_accChild( 
         /* [in] */ VARIANT varChild,
-        /* [retval][out] */ IDispatch __RPC_FAR *__RPC_FAR *ppdispChild);
+        /* [retval][out] */ IDispatch __RPC_FAR *__RPC_FAR *ppdispChild) override;
 
     virtual /* [id][propget] */ HRESULT STDMETHODCALLTYPE get_accName( 
         /* [optional][in] */ VARIANT varChild,
-        /* [retval][out] */ BSTR __RPC_FAR *pszName);
+        /* [retval][out] */ BSTR __RPC_FAR *pszName) override;
 
     virtual /* [id][propget] */ HRESULT STDMETHODCALLTYPE get_accValue( 
         /* [optional][in] */ VARIANT varChild,
-        /* [retval][out] */ BSTR __RPC_FAR *pszValue);
+        /* [retval][out] */ BSTR __RPC_FAR *pszValue) override;
 
     virtual /* [id][propget] */ HRESULT STDMETHODCALLTYPE get_accDescription( 
         /* [optional][in] */ VARIANT varChild,
-        /* [retval][out] */ BSTR __RPC_FAR *pszDescription);
+        /* [retval][out] */ BSTR __RPC_FAR *pszDescription) override;
 
     virtual /* [id][propget] */ HRESULT STDMETHODCALLTYPE get_accRole( 
         /* [optional][in] */ VARIANT varChild,
-        /* [retval][out] */ VARIANT __RPC_FAR *pvarRole);
+        /* [retval][out] */ VARIANT __RPC_FAR *pvarRole) override;
 
     virtual /* [id][propget] */ HRESULT STDMETHODCALLTYPE get_accState( 
         /* [optional][in] */ VARIANT varChild,
-        /* [retval][out] */ VARIANT __RPC_FAR *pvarState);
+        /* [retval][out] */ VARIANT __RPC_FAR *pvarState) override;
 
     virtual /* [id][propget] */ HRESULT STDMETHODCALLTYPE get_accHelp( 
         /* [optional][in] */ VARIANT varChild,
-        /* [retval][out] */ BSTR __RPC_FAR *pszHelp);
+        /* [retval][out] */ BSTR __RPC_FAR *pszHelp) override;
 
     virtual /* [id][propget] */ HRESULT STDMETHODCALLTYPE get_accHelpTopic( 
         /* [out] */ BSTR __RPC_FAR *pszHelpFile,
         /* [optional][in] */ VARIANT varChild,
-        /* [retval][out] */ long __RPC_FAR *pidTopic);
+        /* [retval][out] */ long __RPC_FAR *pidTopic) override;
 
     virtual /* [id][propget] */ HRESULT STDMETHODCALLTYPE get_accKeyboardShortcut( 
         /* [optional][in] */ VARIANT varChild,
-        /* [retval][out] */ BSTR __RPC_FAR *pszKeyboardShortcut);
+        /* [retval][out] */ BSTR __RPC_FAR *pszKeyboardShortcut) override;
 
     virtual /* [id][propget] */ HRESULT STDMETHODCALLTYPE get_accFocus( 
-        /* [retval][out] */ VARIANT __RPC_FAR *pvarChild);
+        /* [retval][out] */ VARIANT __RPC_FAR *pvarChild) override;
 
     virtual /* [id][propget] */ HRESULT STDMETHODCALLTYPE get_accSelection( 
-        /* [retval][out] */ VARIANT __RPC_FAR *pvarChildren);
+        /* [retval][out] */ VARIANT __RPC_FAR *pvarChildren) override;
 
     virtual /* [id][propget] */ HRESULT STDMETHODCALLTYPE get_accDefaultAction( 
         /* [optional][in] */ VARIANT varChild,
-        /* [retval][out] */ BSTR __RPC_FAR *pszDefaultAction);
+        /* [retval][out] */ BSTR __RPC_FAR *pszDefaultAction) override;
 
     virtual /* [id] */ HRESULT STDMETHODCALLTYPE accSelect( 
         /* [in] */ long flagsSelect,
-        /* [optional][in] */ VARIANT varChild);
+        /* [optional][in] */ VARIANT varChild) override;
 
     virtual /* [id] */ HRESULT STDMETHODCALLTYPE accLocation( 
         /* [out] */ long __RPC_FAR *pxLeft,
         /* [out] */ long __RPC_FAR *pyTop,
         /* [out] */ long __RPC_FAR *pcxWidth,
         /* [out] */ long __RPC_FAR *pcyHeight,
-        /* [optional][in] */ VARIANT varChild);
+        /* [optional][in] */ VARIANT varChild) override;
 
     virtual /* [id] */ HRESULT STDMETHODCALLTYPE accNavigate( 
         /* [in] */ long navDir,
         /* [optional][in] */ VARIANT varStart,
-        /* [retval][out] */ VARIANT __RPC_FAR *pvarEndUpAt);
+        /* [retval][out] */ VARIANT __RPC_FAR *pvarEndUpAt) override;
 
     virtual /* [id] */ HRESULT STDMETHODCALLTYPE accHitTest( 
         /* [in] */ long xLeft,
         /* [in] */ long yTop,
-        /* [retval][out] */ VARIANT __RPC_FAR *pvarChild);
+        /* [retval][out] */ VARIANT __RPC_FAR *pvarChild) override;
 
     virtual /* [id] */ HRESULT STDMETHODCALLTYPE accDoDefaultAction( 
-        /* [optional][in] */ VARIANT varChild);
+        /* [optional][in] */ VARIANT varChild) override;
 
     virtual /* [id][propput] */ HRESULT STDMETHODCALLTYPE put_accName( 
         /* [optional][in] */ VARIANT varChild,
-        /* [in] */ BSTR szName);
+        /* [in] */ BSTR szName) override;
 
     virtual /* [id][propput] */ HRESULT STDMETHODCALLTYPE put_accValue( 
         /* [optional][in] */ VARIANT varChild,
-        /* [in] */ BSTR szValue);
+        /* [in] */ BSTR szValue) override;
 
   // IDispatch (support of scripting languages like VB)
-  virtual HRESULT STDMETHODCALLTYPE GetTypeInfoCount(UINT *pctinfo);
+  virtual HRESULT STDMETHODCALLTYPE GetTypeInfoCount(UINT *pctinfo) override;
 
   virtual HRESULT STDMETHODCALLTYPE GetTypeInfo(UINT iTInfo, LCID lcid,
-                                                ITypeInfo **ppTInfo);
+                                                ITypeInfo **ppTInfo) override;
 
   virtual HRESULT STDMETHODCALLTYPE GetIDsOfNames(REFIID riid,
                                                   LPOLESTR *rgszNames,
                                                   UINT cNames,
                                                   LCID lcid,
-                                                  DISPID *rgDispId);
+                                                  DISPID *rgDispId) override;
 
   virtual HRESULT STDMETHODCALLTYPE Invoke(DISPID dispIdMember, REFIID riid,
                                            LCID lcid, WORD wFlags,
                                            DISPPARAMS *pDispParams,
                                            VARIANT *pVarResult,
                                            EXCEPINFO *pExcepInfo,
-                                           UINT *puArgErr);
+                                           UINT *puArgErr) override;
 
   // Accessible
-  virtual nsresult HandleAccEvent(AccEvent* aEvent);
+  virtual nsresult HandleAccEvent(AccEvent* aEvent) override;
   virtual void Shutdown() override;
 
   // Helper methods

@@ -17,6 +17,7 @@
 #include "nsTArray.h"
 #include "nsITheme.h"
 #include "nsITimer.h"
+#include "nsRegionFwd.h"
 #include "nsXULAppAPI.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/EventForwards.h"
@@ -36,7 +37,6 @@ class   nsIRollupListener;
 class   imgIContainer;
 class   nsIContent;
 class   ViewWrapper;
-class   nsIntRegion;
 class   nsIScreen;
 class   nsIRunnable;
 

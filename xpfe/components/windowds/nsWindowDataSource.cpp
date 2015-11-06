@@ -265,23 +265,6 @@ nsWindowDataSource::OnCloseWindow(nsIXULWindow *window)
     return NS_OK;
 }
 
-struct findWindowClosure {
-    nsIRDFResource* targetResource;
-    nsIXULWindow *resultWindow;
-};
-
-static PLDHashOperator
-findWindow(nsIXULWindow* aWindow, nsIRDFResource* aResource, void* aClosure)
-{
-    findWindowClosure* closure = static_cast<findWindowClosure*>(aClosure);
-
-    if (aResource == closure->targetResource) {
-        closure->resultWindow = aWindow;
-        return PL_DHASH_STOP;
-    }
-    return PL_DHASH_NEXT;
-}
-
 // nsIWindowDataSource implementation
 
 NS_IMETHODIMP
@@ -297,20 +280,23 @@ nsWindowDataSource::GetWindowForResource(const char *aResourceString,
                              getter_AddRefs(windowResource));
 
     // now reverse-lookup in the hashtable
-    findWindowClosure closure = { windowResource.get(), nullptr };
-    mWindowResources.EnumerateRead(findWindow, &closure);
-    if (closure.resultWindow) {
+    for (auto iter = mWindowResources.Iter(); !iter.Done(); iter.Next()) {
+        nsIXULWindow* window = iter.Key();
+        nsIRDFResource* resource = iter.UserData();
 
-        // this sucks, we have to jump through docshell to go from
-        // nsIXULWindow -> nsIDOMWindow
-        nsCOMPtr<nsIDocShell> docShell;
-        closure.resultWindow->GetDocShell(getter_AddRefs(docShell));
+        if (resource == windowResource) {
+            // This sucks, we have to jump through docshell to go from
+            // nsIXULWindow -> nsIDOMWindow.
+            nsCOMPtr<nsIDocShell> docShell;
+            window->GetDocShell(getter_AddRefs(docShell));
 
-        if (docShell) {
-            nsCOMPtr<nsIDOMWindow> result = do_GetInterface(docShell);
+            if (docShell) {
+                nsCOMPtr<nsIDOMWindow> result = do_GetInterface(docShell);
 
-            *aResult = result;
-            NS_IF_ADDREF(*aResult);
+                *aResult = result;
+                NS_IF_ADDREF(*aResult);
+            }
+            break;
         }
     }
 

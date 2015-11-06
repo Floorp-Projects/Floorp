@@ -44,8 +44,8 @@ if CONFIG['GNU_CXX']:
 
 FINAL_LIBRARY = 'xul'
 
-GENERATED_INCLUDES += ['..']
 LOCAL_INCLUDES += [
+    '!..',
     '../base',
     '../build',
     '../ds',

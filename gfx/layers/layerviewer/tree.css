@@ -1,0 +1,36 @@
+html, body {
+  height: 100%;
+  overflow: hidden;
+}
+.layerObjectDescription:hover {
+  background-color: #E8E8E8;
+}
+
+.layerHover > .layerPreview::after {
+  position: absolute;
+  top: 0; right: 0; bottom: 0; left: 0;
+  background-color: inherit;
+  content: "";
+  background-color: rgba(0,0,0,0.2);
+  box-shadow: -2px 2px 0 #FFF;
+}
+
+@keyframes layerHoverAnimation {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}
+
+.displayHover {
+  background: rgba(0, 128, 0, 0.8);
+}
+
+.layerHover > .layerPreview {
+  animation: layerHoverAnimation 200ms;
+  animation-transform-origin: 50% 50%;
+  background: gold !important;
+  box-shadow: 10px 10px 5px #888888;
+  border-color: blue !important;
+  z-index: 10;
+}
+

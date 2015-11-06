@@ -87,6 +87,9 @@ enum DOM4ErrorTypeCodeMap {
   BtAuthFailureError       = 0,
   BtRmtDevDownError        = 0,
   BtAuthRejectedError      = 0,
+
+  /* Push API errors */
+  PermissionDeniedError    = 0,
 };
 
 #define DOM4_MSG_DEF(name, message, nsresult) {(nsresult), name, #name, message},

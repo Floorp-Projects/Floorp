@@ -79,8 +79,8 @@ FINAL_LIBRARY = 'xul'
 DEFINES['_IMPL_NS_STRINGAPI'] = True
 DEFINES['OMNIJAR_NAME'] = CONFIG['OMNIJAR_NAME']
 
-GENERATED_INCLUDES += ['..']
 LOCAL_INCLUDES += [
+    '!..',
     '../base',
     '../components',
     '../ds',
