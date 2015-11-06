@@ -191,9 +191,6 @@
 #category-locale > .category-icon {
   list-style-image: url("chrome://mozapps/skin/extensions/category-languages.png");
 }
-#category-searchengine > .category-icon {
-  list-style-image: url("chrome://mozapps/skin/extensions/category-searchengines.png");
-}
 #category-extension > .category-icon {
   list-style-image: url("chrome://mozapps/skin/extensions/category-extensions.svg");
 }

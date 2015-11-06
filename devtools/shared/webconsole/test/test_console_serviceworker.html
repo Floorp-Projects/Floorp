@@ -1,0 +1,95 @@
+<!DOCTYPE HTML>
+<html lang="en">
+<head>
+  <meta charset="utf8">
+  <title>Test for the Console API and Service Workers</title>
+  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript;version=1.8" src="common.js"></script>
+  <!-- Any copyright is dedicated to the Public Domain.
+     - http://creativecommons.org/publicdomain/zero/1.0/ -->
+</head>
+<body>
+<p>Test for the Console API and Service Workers</p>
+
+<script class="testbody" type="text/javascript;version=1.8">
+SimpleTest.waitForExplicitFinish();
+
+let SERVICE_WORKER_URL = "https://example.com/chrome/devtools/shared/webconsole/test/helper_serviceworker.js";
+let FRAME_URL = "https://example.com/chrome/devtools/shared/webconsole/test/sandboxed_iframe.html";
+
+let swClosed = new Promise(() => {});
+let expectedConsoleCalls = [
+    {
+      level: "log",
+      filename: /helper_serviceworker/,
+      arguments: ["Hello from serviceworker"],
+    }
+];
+let consoleCalls = [];
+
+let startTest = Task.async(function*() {
+  removeEventListener("load", startTest);
+
+  yield new Promise(resolve => {
+    SpecialPowers.pushPrefEnv({"set": [
+      ["devtools.webconsole.filter.serviceworkers", true]
+    ]}, resolve);
+  });
+
+  attachConsoleToTab(["ConsoleAPI"], onAttach);
+});
+addEventListener("load", startTest);
+
+function onAttach(state, response) {
+  onConsoleAPICall = onConsoleAPICall.bind(null, state);
+  state.dbgClient.addListener("consoleAPICall", onConsoleAPICall);
+
+  info("Loading a ServiceWorker that will use console API");
+  swClosed = new Promise(resolve => {
+    let iframe = document.createElement("iframe");
+    iframe.onload = function() {
+      let win = iframe.contentWindow;
+      info("Registering the service worker");
+      win.navigator.serviceWorker.register(SERVICE_WORKER_URL).then(swr => {
+
+        info("Service worker registered.  Unregistering");
+        swr.unregister().then(() => {
+          resolve();
+        });
+      }, error => {
+        info("Error registering service worker: " + error);
+      });
+    };
+    iframe.src = FRAME_URL;
+
+    document.body.appendChild(iframe);
+  });
+}
+
+function onConsoleAPICall(state, type, packet) {
+  info("received message level: " + packet.message.level);
+  is(packet.from, state.actor, "console API call actor");
+
+  consoleCalls.push(packet.message);
+  if (consoleCalls.length != expectedConsoleCalls.length) {
+    return;
+  }
+
+  state.dbgClient.removeListener("consoleAPICall", onConsoleAPICall);
+
+  expectedConsoleCalls.forEach(function(aMessage, aIndex) {
+    info("checking received console call #" + aIndex);
+    checkConsoleAPICall(consoleCalls[aIndex], expectedConsoleCalls[aIndex]);
+  });
+
+  consoleCalls = [];
+
+  closeDebugger(state, function() {
+    swClosed.then(() => {
+      SimpleTest.finish();
+    });
+  });
+}
+</script>
+</body>
+</html>
