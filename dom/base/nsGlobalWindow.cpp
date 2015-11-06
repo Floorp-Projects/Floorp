@@ -1103,8 +1103,6 @@ NewOuterWindowProxy(JSContext *cx, JS::Handle<JSObject*> global, bool isChrome)
                                             : &nsOuterWindowProxy::singleton,
                                    options);
   MOZ_ASSERT_IF(obj, js::IsWindowProxy(obj));
-
-  NS_ASSERTION(js::GetObjectClass(obj)->ext.innerObject, "bad class");
   return obj;
 }
 

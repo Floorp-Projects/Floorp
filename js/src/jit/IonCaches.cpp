@@ -567,10 +567,10 @@ IsCacheableGetPropCallNative(JSObject* obj, JSObject* holder, Shape* shape)
     if (getter.jitInfo() && !getter.jitInfo()->needsOuterizedThisObject())
         return true;
 
-    // For getters that need an outerized this object, don't cache if
-    // obj has an outerObject hook, since our cache will pass obj
-    // itself without outerizing.
-    return !obj->getClass()->ext.outerObject;
+    // For getters that need the WindowProxy (instead of the Window) as this
+    // object, don't cache if obj is the Window, since our cache will pass that
+    // instead of the WindowProxy.
+    return !IsWindow(obj);
 }
 
 static bool
@@ -590,7 +590,7 @@ IsCacheableGetPropCallScripted(JSObject* obj, JSObject* holder, Shape* shape)
         return false;
 
     // See IsCacheableGetPropCallNative.
-    return !obj->getClass()->ext.outerObject;
+    return !IsWindow(obj);
 }
 
 static bool
