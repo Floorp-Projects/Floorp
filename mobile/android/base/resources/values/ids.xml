@@ -12,5 +12,8 @@
     <item type="id" name="menu_margin"/>
     <item type="id" name="recycler_view_click_support" />
     <item type="id" name="range_list"/>
+    <item type="id" name="pref_header_general"/>
+    <item type="id" name="pref_header_privacy"/>
+    <item type="id" name="pref_header_search"/>
 
 </resources>
