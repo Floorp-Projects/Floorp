@@ -32,8 +32,8 @@ ObjectGroup::ObjectGroup(const Class* clasp, TaggedProto proto, JSCompartment* c
 {
     PodZero(this);
 
-    /* Inner objects may not appear on prototype chains. */
-    MOZ_ASSERT_IF(proto.isObject(), !proto.toObject()->getClass()->ext.outerObject);
+    /* Windows may not appear on prototype chains. */
+    MOZ_ASSERT_IF(proto.isObject(), !IsWindow(proto.toObject()));
 
     this->clasp_ = clasp;
     this->proto_ = proto;
@@ -277,8 +277,8 @@ JSObject::splicePrototype(JSContext* cx, const Class* clasp, Handle<TaggedProto>
      */
     MOZ_ASSERT(self->isSingleton());
 
-    // Inner objects may not appear on prototype chains.
-    MOZ_ASSERT_IF(proto.isObject(), !proto.toObject()->getClass()->ext.outerObject);
+    // Windows may not appear on prototype chains.
+    MOZ_ASSERT_IF(proto.isObject(), !IsWindow(proto.toObject()));
 
     if (proto.isObject() && !proto.toObject()->setDelegate(cx))
         return false;

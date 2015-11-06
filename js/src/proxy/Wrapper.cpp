@@ -60,7 +60,7 @@ js::UncheckedUnwrap(JSObject* wrapped, bool stopAtWindowProxy, unsigned* flagsp)
     unsigned flags = 0;
     while (true) {
         if (!wrapped->is<WrapperObject>() ||
-            MOZ_UNLIKELY(stopAtWindowProxy && wrapped->getClass()->ext.innerObject))
+            MOZ_UNLIKELY(stopAtWindowProxy && IsWindowProxy(wrapped)))
         {
             break;
         }
@@ -92,7 +92,7 @@ JS_FRIEND_API(JSObject*)
 js::UnwrapOneChecked(JSObject* obj, bool stopAtWindowProxy)
 {
     if (!obj->is<WrapperObject>() ||
-        MOZ_UNLIKELY(!!obj->getClass()->ext.innerObject && stopAtWindowProxy))
+        MOZ_UNLIKELY(IsWindowProxy(obj) && stopAtWindowProxy))
     {
         return obj;
     }
@@ -112,7 +112,7 @@ extern JSObject*
 js::TransparentObjectWrapper(JSContext* cx, HandleObject existing, HandleObject obj)
 {
     // Allow wrapping outer window proxies.
-    MOZ_ASSERT(!obj->is<WrapperObject>() || obj->getClass()->ext.innerObject);
+    MOZ_ASSERT(!obj->is<WrapperObject>() || IsWindowProxy(obj));
     return Wrapper::New(cx, obj, &CrossCompartmentWrapper::singleton);
 }
 
