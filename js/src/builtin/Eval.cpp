@@ -273,9 +273,8 @@ EvalKernel(JSContext* cx, const CallArgs& args, EvalType evalType, AbstractFrame
     } else {
         MOZ_ASSERT(args.callee().global() == scopeobj->as<ClonedBlockObject>().global());
 
-        // Use the global as 'this', modulo outerization.
-        if (!GetThisValue(cx, scopeobj, &thisv))
-            return false;
+        // Use the global as 'this' (or the WindowProxy if it's a Window).
+        thisv = GetThisValue(scopeobj);
     }
 
     RootedLinearString linearStr(cx, str->ensureLinear(cx));
@@ -516,9 +515,7 @@ js::ExecuteInGlobalAndReturnScope(JSContext* cx, HandleObject global, HandleScri
     if (!scope)
         return false;
 
-    RootedValue thisv(cx);
-    if (!GetThisValue(cx, global, &thisv))
-        return false;
+    RootedValue thisv(cx, GetThisValue(global));
 
     RootedValue rval(cx);
     if (!ExecuteKernel(cx, script, *scope, thisv, UndefinedValue(), EXECUTE_GLOBAL,
