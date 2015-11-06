@@ -240,12 +240,6 @@ struct AnimationCollection : public LinkedListElement<AnimationCollection>
 
   void EnsureStyleRuleFor(TimeStamp aRefreshTime);
 
-  enum CanAnimateFlags {
-    // Allow the case where OMTA is allowed in general, but not for the
-    // specified property.
-    CanAnimate_AllowPartial = 1
-  };
-
   enum class RestyleType {
     // Animation style has changed but the compositor is applying the same
     // change so we might be able to defer updating the main thread until it
@@ -268,8 +262,7 @@ struct AnimationCollection : public LinkedListElement<AnimationCollection>
 private:
   static bool
   CanAnimatePropertyOnCompositor(const dom::Element *aElement,
-                                 nsCSSProperty aProperty,
-                                 CanAnimateFlags aFlags);
+                                 nsCSSProperty aProperty);
 
   bool CanThrottleAnimation(TimeStamp aTime);
   bool CanThrottleTransformChanges(TimeStamp aTime);
@@ -277,22 +270,15 @@ private:
 public:
   // True if this animation can be performed on the compositor thread.
   //
-  // If aFlags contains CanAnimate_AllowPartial, returns whether the
-  // state of this element's animations at the current refresh driver
-  // time contains animation data that can be done on the compositor
-  // thread.  (This is useful for determining whether a layer should be
-  // active, or whether to send data to the layer.)
-  //
-  // If aFlags does not contain CanAnimate_AllowPartial, returns whether
-  // the state of this element's animations at the current refresh driver
-  // time can be fully represented by data sent to the compositor.
-  // (This is useful for determining whether throttle the animation
-  // (suppress main-thread style updates).)
+  // Returns whether the state of this element's animations at the current
+  // refresh driver time contains animation data that can be done on the
+  // compositor thread.  (This is used for determining whether a layer
+  // should be active, or whether to send data to the layer.)
   //
   // Note that this does not test whether the element's layer uses
   // off-main-thread compositing, although it does check whether
   // off-main-thread compositing is enabled as a whole.
-  bool CanPerformOnCompositorThread(CanAnimateFlags aFlags) const;
+  bool CanPerformOnCompositorThread() const;
 
   bool HasCurrentAnimationOfProperty(nsCSSProperty aProperty) const;
 
