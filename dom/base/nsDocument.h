@@ -900,12 +900,12 @@ public:
                  mozilla::EventStates aStateMask) override;
 
   virtual void StyleRuleChanged(nsIStyleSheet* aStyleSheet,
-                                nsIStyleRule* aOldStyleRule,
-                                nsIStyleRule* aNewStyleRule) override;
+                                mozilla::css::Rule* aOldStyleRule,
+                                mozilla::css::Rule* aNewStyleRule) override;
   virtual void StyleRuleAdded(nsIStyleSheet* aStyleSheet,
-                              nsIStyleRule* aStyleRule) override;
+                              mozilla::css::Rule* aStyleRule) override;
   virtual void StyleRuleRemoved(nsIStyleSheet* aStyleSheet,
-                                nsIStyleRule* aStyleRule) override;
+                                mozilla::css::Rule* aStyleRule) override;
 
   virtual void FlushPendingNotifications(mozFlushType aType) override;
   virtual void FlushExternalResources(mozFlushType aType) override;

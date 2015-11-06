@@ -659,7 +659,7 @@ class CallSiteDesc
     CallSiteDesc(uint32_t line, uint32_t column, Kind kind)
       : line_(line), column_(column), kind_(kind)
     {
-        MOZ_ASSERT(column <= INT32_MAX);
+        MOZ_ASSERT(column_ == column, "column must fit in 31 bits");
     }
     uint32_t line() const { return line_; }
     uint32_t column() const { return column_; }
@@ -693,6 +693,23 @@ class CallSite : public CallSiteDesc
 };
 
 typedef Vector<CallSite, 0, SystemAllocPolicy> CallSiteVector;
+
+class CallSiteAndTarget : public CallSite
+{
+    uint32_t targetIndex_;
+
+  public:
+    explicit CallSiteAndTarget(CallSite cs, uint32_t targetIndex)
+      : CallSite(cs), targetIndex_(targetIndex)
+    { }
+
+    static const uint32_t NOT_INTERNAL = UINT32_MAX;
+
+    bool isInternal() const { return targetIndex_ != NOT_INTERNAL; }
+    uint32_t targetIndex() const { MOZ_ASSERT(isInternal()); return targetIndex_; }
+};
+
+typedef Vector<CallSiteAndTarget, 0, SystemAllocPolicy> CallSiteAndTargetVector;
 
 // As an invariant across architectures, within asm.js code:
 //   $sp % AsmJSStackAlignment = (sizeof(AsmJSFrame) + masm.framePushed) % AsmJSStackAlignment
@@ -916,10 +933,24 @@ struct AsmJSAbsoluteLink
     AsmJSImmKind target;
 };
 
+// Represents a call from an asm.js function to another asm.js function,
+// represented by the index of the callee in the Module Validator
+struct AsmJSInternalCallee
+{
+    uint32_t index;
+
+    // Provide a default constructor for embedding it in unions
+    AsmJSInternalCallee() = default;
+
+    explicit AsmJSInternalCallee(uint32_t calleeIndex)
+      : index(calleeIndex)
+    {}
+};
+
 // The base class of all Assemblers for all archs.
 class AssemblerShared
 {
-    Vector<CallSite, 0, SystemAllocPolicy> callsites_;
+    CallSiteAndTargetVector callsites_;
     Vector<AsmJSHeapAccess, 0, SystemAllocPolicy> asmJSHeapAccesses_;
     Vector<AsmJSGlobalAccess, 0, SystemAllocPolicy> asmJSGlobalAccesses_;
     Vector<AsmJSAbsoluteLink, 0, SystemAllocPolicy> asmJSAbsoluteLinks_;
@@ -952,13 +983,15 @@ class AssemblerShared
         return embedsNurseryPointers_;
     }
 
-    void append(const CallSiteDesc& desc, size_t currentOffset, size_t framePushed) {
+    void append(const CallSiteDesc& desc, CodeOffsetLabel label, size_t framePushed,
+                uint32_t targetIndex = CallSiteAndTarget::NOT_INTERNAL)
+    {
         // framePushed does not include sizeof(AsmJSFrame), so add it in here (see
         // CallSite::stackDepth).
-        CallSite callsite(desc, currentOffset, framePushed + sizeof(AsmJSFrame));
-        enoughMemory_ &= callsites_.append(callsite);
+        CallSite callsite(desc, label.offset(), framePushed + sizeof(AsmJSFrame));
+        enoughMemory_ &= callsites_.append(CallSiteAndTarget(callsite, targetIndex));
     }
-    CallSiteVector&& extractCallSites() { return Move(callsites_); }
+    const CallSiteAndTargetVector& callSites() const { return callsites_; }
 
     void append(AsmJSHeapAccess access) { enoughMemory_ &= asmJSHeapAccesses_.append(access); }
     AsmJSHeapAccessVector&& extractAsmJSHeapAccesses() { return Move(asmJSHeapAccesses_); }

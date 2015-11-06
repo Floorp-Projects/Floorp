@@ -14,38 +14,6 @@
 <iframe style="width:100%;height:300px;" id="harness"></iframe>
 <script class="testbody" type="text/javascript">
 
-function examiner() {
-  SpecialPowers.addObserver(this, "http-on-examine-response", false);
-}
-examiner.prototype  = {
-  observe: function(subject, topic, data) {
-    subject = SpecialPowers.wrap(subject);
-    if(!subject.QueryInterface)
-      return;
-
-    if (topic == "http-on-examine-response") {
-      var chan = subject.QueryInterface(SpecialPowers.Ci.nsIHttpChannel);
-      var uri = chan.URI
-      if (!uri.path.match(/^\/tests\/content\/base\/test\/file_x-frame-options_page\.sjs/))
-        return;
-      dump(">>>> PATH: "+uri.path+"\n");
-      dump(">>> REQUEST:\n>>> "+chan.requestMethod+" "+uri.asciiSpec+"\n");
-      dump(">>> RESPONSE HEADERS:\n");
-      chan.visitResponseHeaders({
-        visitHeader: function(header, value) {
-          dump(">>> "+header+": "+value+"\n");
-        }
-      });
-    }
-  },
-
-  remove: function() {
-    SpecialPowers.removeObserver(this, "http-on-examine-response");
-  }
-}
-
-window.examiner = new examiner();
-
 var path = "/tests/dom/base/test/";
 
 var testFramesLoaded = function() {
@@ -171,8 +139,6 @@ var testFrameInDataURI = function() {
     ok(test != null, "frame under data: URL should have loaded.");
     win.close();
 
-    // finalize test
-    window.examiner.remove();
     SimpleTest.finish();
    }
   win.location.href = "data:text/html,"+html;

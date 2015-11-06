@@ -14,7 +14,7 @@ const { Panel } = require("dev/panel");
 const { Class } = require("sdk/core/heritage");
 const { openToolbox, closeToolbox, getCurrentPanel } = require("dev/utils");
 const { MessageChannel } = require("sdk/messaging");
-const { when } = require("sdk/dom/events");
+const { when } = require("sdk/dom/events-shimmed");
 const { viewFor } = require("sdk/view/core");
 const { createView } = require("dev/panel/view");
 

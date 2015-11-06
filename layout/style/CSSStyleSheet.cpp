@@ -1533,43 +1533,6 @@ CSSStyleSheet::AppendStyleSheet(CSSStyleSheet* aSheet)
 }
 
 void
-CSSStyleSheet::InsertStyleSheetAt(CSSStyleSheet* aSheet, int32_t aIndex)
-{
-  NS_PRECONDITION(nullptr != aSheet, "null arg");
-
-  WillDirty();
-  RefPtr<CSSStyleSheet>* tail = &mInner->mFirstChild;
-  while (*tail && aIndex) {
-    --aIndex;
-    tail = &(*tail)->mNext;
-  }
-  aSheet->mNext = *tail;
-  *tail = aSheet;
-
-  // This is not reference counted. Our parent tells us when
-  // it's going away.
-  aSheet->mParent = this;
-  aSheet->mDocument = mDocument;
-  DidDirty();
-}
-
-void
-CSSStyleSheet::PrependStyleRule(css::Rule* aRule)
-{
-  NS_PRECONDITION(nullptr != aRule, "null arg");
-
-  WillDirty();
-  mInner->mOrderedRules.InsertObjectAt(aRule, 0);
-  aRule->SetStyleSheet(this);
-  DidDirty();
-
-  if (css::Rule::NAMESPACE_RULE == aRule->GetType()) {
-    // no api to prepend a namespace (ugh), release old ones and re-create them all
-    mInner->RebuildNameSpaces();
-  }
-}
-
-void
 CSSStyleSheet::AppendStyleRule(css::Rule* aRule)
 {
   NS_PRECONDITION(nullptr != aRule, "null arg");
@@ -1622,23 +1585,6 @@ CSSStyleSheet::GetStyleRuleAt(int32_t aIndex) const
   // Important: If this function is ever made scriptable, we must add
   // a security check here. See GetCssRules below for an example.
   return mInner->mOrderedRules.SafeObjectAt(aIndex);
-}
-
-int32_t
-CSSStyleSheet::StyleSheetCount() const
-{
-  // XXX Far from an ideal way to do this, but the hope is that
-  // it won't be done too often. If it is, we might want to 
-  // consider storing the children in an array.
-  int32_t count = 0;
-
-  const CSSStyleSheet* child = mInner->mFirstChild;
-  while (child) {
-    count++;
-    child = child->mNext;
-  }
-
-  return count;
 }
 
 void

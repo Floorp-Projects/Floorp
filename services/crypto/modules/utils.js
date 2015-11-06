@@ -56,7 +56,7 @@ this.CryptoUtils = {
    */
   digestBytes: function digestBytes(message, hasher) {
     // No UTF-8 encoding for you, sunshine.
-    let bytes = [b.charCodeAt() for each (b in message)];
+    let bytes = Array.prototype.slice.call(message).map(b => b.charCodeAt(0));
     hasher.update(bytes, bytes.length);
     let result = hasher.finish(false);
     if (hasher instanceof Ci.nsICryptoHMAC) {
