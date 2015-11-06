@@ -2347,7 +2347,7 @@ void AsyncPanZoomController::AcceptFling(ParentLayerPoint& aVelocity,
       aOverscrollHandoffChain,
       !aHandoff);  // only apply acceleration if this is an initial fling
 
-  float friction = gfxPrefs::APZFlingSnapFriction();
+  float friction = gfxPrefs::APZFlingFriction();
   ParentLayerPoint velocity(mX.GetVelocity(), mY.GetVelocity());
   ParentLayerPoint predictedDelta;
   // "-velocity / log(1.0 - friction)" is the integral of the deceleration
@@ -2692,8 +2692,11 @@ bool AsyncPanZoomController::SnapBackIfOverscrolled() {
     return true;
   }
   // If we don't kick off an overscroll animation, we still need to ask the
-  // main thread to snap to any nearby snap points.
-  RequestSnap();
+  // main thread to snap to any nearby snap points, assuming we haven't already
+  // done so when we started this fling
+  if (mState != FLING) {
+    RequestSnap();
+  }
   return false;
 }
 
@@ -2741,8 +2744,11 @@ void AsyncPanZoomController::RequestContentRepaint(FrameMetrics& aFrameMetrics, 
       fabsf(mLastPaintRequestMetrics.GetScrollOffset().y -
             aFrameMetrics.GetScrollOffset().y) < EPSILON &&
       aFrameMetrics.GetZoom() == mLastPaintRequestMetrics.GetZoom() &&
-      fabsf(aFrameMetrics.GetViewport().width - mLastPaintRequestMetrics.GetViewport().width) < EPSILON &&
-      fabsf(aFrameMetrics.GetViewport().height - mLastPaintRequestMetrics.GetViewport().height) < EPSILON) {
+      fabsf(aFrameMetrics.GetViewport().width -
+            mLastPaintRequestMetrics.GetViewport().width) < EPSILON &&
+      fabsf(aFrameMetrics.GetViewport().height -
+            mLastPaintRequestMetrics.GetViewport().height) < EPSILON &&
+      aFrameMetrics.GetScrollGeneration() == mLastPaintRequestMetrics.GetScrollGeneration()) {
     return;
   }
 
@@ -3190,8 +3196,14 @@ void AsyncPanZoomController::NotifyLayersUpdated(const FrameMetrics& aLayerMetri
       Stringify(mFrameMetrics.GetScrollOffset()).c_str(),
       Stringify(aLayerMetrics.GetSmoothScrollOffset()).c_str());
 
-    mFrameMetrics.CopySmoothScrollInfoFrom(aLayerMetrics);
     CancelAnimation();
+
+    // It's important to not send repaint requests between this
+    // CopySmoothScrollInfo call and the sending of the scroll update
+    // acknowledgement below, otherwise that repaint request will get rejected
+    // on the main thread but mLastPaintRequestMetrics will have the new scroll
+    // generation; this would leave the main thread out of date.
+    mFrameMetrics.CopySmoothScrollInfoFrom(aLayerMetrics);
     mLastDispatchedPaintMetrics = aLayerMetrics;
     StartSmoothScroll(ScrollSource::DOM);
 
@@ -3554,6 +3566,8 @@ void AsyncPanZoomController::ShareCompositorFrameMetrics() {
 
 void AsyncPanZoomController::RequestSnap() {
   if (RefPtr<GeckoContentController> controller = GetGeckoContentController()) {
+    APZC_LOG("%p requesting snap near %s\n", this,
+        Stringify(mFrameMetrics.GetScrollOffset()).c_str());
     controller->RequestFlingSnap(mFrameMetrics.GetScrollId(),
                                  mFrameMetrics.GetScrollOffset());
   }

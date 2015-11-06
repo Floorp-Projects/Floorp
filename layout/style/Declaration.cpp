@@ -19,10 +19,35 @@
 namespace mozilla {
 namespace css {
 
-Declaration::Declaration()
-  : mImmutable(false)
+NS_IMPL_QUERY_INTERFACE(ImportantStyleData, nsIStyleRule)
+NS_IMPL_ADDREF_USING_AGGREGATOR(ImportantStyleData, Declaration())
+NS_IMPL_RELEASE_USING_AGGREGATOR(ImportantStyleData, Declaration())
+
+/* virtual */ void
+ImportantStyleData::MapRuleInfoInto(nsRuleData* aRuleData)
 {
-  MOZ_COUNT_CTOR(mozilla::css::Declaration);
+  Declaration()->MapImportantRuleInfoInto(aRuleData);
+}
+
+#ifdef DEBUG
+/* virtual */ void
+ImportantStyleData::List(FILE* out, int32_t aIndent) const
+{
+  // Indent
+  nsAutoCString str;
+  for (int32_t index = aIndent; --index >= 0; ) {
+    str.AppendLiteral("  ");
+  }
+
+  str.AppendLiteral("! important rule\n");
+  fprintf_stderr(out, "%s", str.get());
+}
+#endif
+
+Declaration::Declaration()
+  : mOwningRule(nullptr)
+  , mImmutable(false)
+{
 }
 
 Declaration::Declaration(const Declaration& aCopy)
@@ -37,14 +62,37 @@ Declaration::Declaration(const Declaration& aCopy)
     mImportantVariables(aCopy.mImportantVariables ?
         new CSSVariableDeclarations(*aCopy.mImportantVariables) :
         nullptr),
+    mOwningRule(nullptr),
     mImmutable(false)
 {
-  MOZ_COUNT_CTOR(mozilla::css::Declaration);
 }
 
 Declaration::~Declaration()
 {
-  MOZ_COUNT_DTOR(mozilla::css::Declaration);
+}
+
+NS_INTERFACE_MAP_BEGIN(Declaration)
+  if (aIID.Equals(NS_GET_IID(mozilla::css::Declaration))) {
+    *aInstancePtr = this;
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  else
+  NS_INTERFACE_MAP_ENTRY(nsIStyleRule)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIStyleRule)
+NS_INTERFACE_MAP_END
+
+NS_IMPL_ADDREF(Declaration)
+NS_IMPL_RELEASE(Declaration)
+
+/* virtual */ void
+Declaration::MapRuleInfoInto(nsRuleData* aRuleData)
+{
+  MOZ_ASSERT(mData, "called while expanded");
+  mData->MapRuleInfoInto(aRuleData);
+  if (mVariables) {
+    mVariables->MapRuleInfoInto(aRuleData);
+  }
 }
 
 void
@@ -1339,7 +1387,7 @@ Declaration::ToString(nsAString& aString) const
 }
 
 #ifdef DEBUG
-void
+/* virtual */ void
 Declaration::List(FILE* out, int32_t aIndent) const
 {
   nsAutoCString str;
@@ -1381,15 +1429,17 @@ Declaration::InitializeEmpty()
   mData = nsCSSCompressedDataBlock::CreateEmptyBlock();
 }
 
-Declaration*
+already_AddRefed<Declaration>
 Declaration::EnsureMutable()
 {
   MOZ_ASSERT(mData, "should only be called when not expanded");
+  RefPtr<Declaration> result;
   if (!IsMutable()) {
-    return new Declaration(*this);
+    result = new Declaration(*this);
   } else {
-    return this;
+    result = this;
   }
+  return result.forget();
 }
 
 size_t

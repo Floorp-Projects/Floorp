@@ -238,13 +238,17 @@ inDOMUtils::GetCSSStyleRules(nsIDOMElement *aElement,
   NS_NewISupportsArray(getter_AddRefs(rules));
   if (!rules) return NS_ERROR_OUT_OF_MEMORY;
 
-  RefPtr<mozilla::css::StyleRule> cssRule;
   for ( ; !ruleNode->IsRoot(); ruleNode = ruleNode->GetParent()) {
-    cssRule = do_QueryObject(ruleNode->GetRule());
-    if (cssRule) {
-      nsCOMPtr<nsIDOMCSSRule> domRule = cssRule->GetDOMRule();
-      if (domRule)
-        rules->InsertElementAt(domRule, 0);
+    RefPtr<Declaration> decl = do_QueryObject(ruleNode->GetRule());
+    if (decl) {
+      RefPtr<mozilla::css::StyleRule> styleRule =
+        do_QueryObject(decl->GetOwningRule());
+      if (styleRule) {
+        nsCOMPtr<nsIDOMCSSRule> domRule = styleRule->GetDOMRule();
+        if (domRule) {
+          rules->InsertElementAt(domRule, 0);
+        }
+      }
     }
   }
 

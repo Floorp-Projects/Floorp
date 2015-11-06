@@ -754,6 +754,10 @@ function assertWebRTCIndicatorStatus(expected) {
  * Test the state of the identity box and control center to make
  * sure they are correctly showing the expected mixed content states.
  *
+ * @note The checks are done synchronously, but new code should wait on the
+ *       returned Promise object to ensure the identity panel has closed.
+ *       Bug 1221114 is filed to fix the existing code.
+ *
  * @param tabbrowser
  * @param Object states
  *        MUST include the following properties:
@@ -762,6 +766,9 @@ function assertWebRTCIndicatorStatus(expected) {
  *           activeBlocked: true|false,
  *           passiveLoaded: true|false,
  *        }
+ *
+ * @return {Promise}
+ * @resolves When the operation has finished and the identity panel has closed.
  */
 function assertMixedContentBlockingState(tabbrowser, states = {}) {
   if (!tabbrowser || !("activeLoaded" in states) ||
@@ -898,6 +905,12 @@ function assertMixedContentBlockingState(tabbrowser, states = {}) {
   }
 
   gIdentityHandler._identityPopup.hidden = true;
+
+  // Wait for the panel to be closed before continuing. The promisePopupHidden
+  // function cannot be used because it's unreliable unless promisePopupShown is
+  // also called before closing the panel. This cannot be done until all callers
+  // are made asynchronous (bug 1221114).
+  return new Promise(resolve => executeSoon(resolve));
 }
 
 function makeActionURI(action, params) {

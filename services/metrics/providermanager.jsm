@@ -282,7 +282,8 @@ this.ProviderManager.prototype = Object.freeze({
         }
       }
 
-      for each (let providerType in this._pullOnlyProviders) {
+      for (let name in this._pullOnlyProviders) {
+        let providerType = this._pullOnlyProviders[name];
         // Short-circuit if we're no longer registering.
         if (this._pullOnlyProvidersState != this.PULL_ONLY_REGISTERING) {
           this._log.debug("Aborting pull-only provider registration.");

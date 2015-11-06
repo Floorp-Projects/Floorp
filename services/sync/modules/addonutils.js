@@ -248,7 +248,7 @@ AddonUtilsInternal.prototype = {
     }
 
     let ids = [];
-    for each (let addon in installs) {
+    for (let addon of installs) {
       ids.push(addon.id);
     }
 
@@ -298,7 +298,7 @@ AddonUtilsInternal.prototype = {
         // server-side metrics aren't skewed (bug 708134). The server should
         // ideally send proper URLs, but this solution was deemed too
         // complicated at the time the functionality was implemented.
-        for each (let addon in addons) {
+        for (let addon of addons) {
           // sourceURI presence isn't enforced by AddonRepository. So, we skip
           // add-ons without a sourceURI.
           if (!addon.sourceURI) {
@@ -342,9 +342,9 @@ AddonUtilsInternal.prototype = {
 
         // Start all the installs asynchronously. They will report back to us
         // as they finish, eventually triggering the global callback.
-        for each (let addon in toInstall) {
+        for (let addon of toInstall) {
           let options = {};
-          for each (let install in installs) {
+          for (let install of installs) {
             if (install.id == addon.id) {
               options = install;
               break;

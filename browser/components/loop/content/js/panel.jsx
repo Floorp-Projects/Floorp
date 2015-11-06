@@ -921,12 +921,17 @@ loop.panel = (function(_, mozL10n) {
       window.removeEventListener("GettingStartedSeen", this._gettingStartedSeen);
     },
 
+    handleContextMenu: function(e) {
+      e.preventDefault();
+    },
+
     render: function() {
       var NotificationListView = sharedViews.NotificationListView;
 
       if (!this.state.gettingStartedSeen) {
         return (
-          <div className="fte-get-started-container">
+          <div className="fte-get-started-container"
+               onContextMenu={this.handleContextMenu}>
             <NotificationListView
               clearOnDocumentHidden={true}
               notifications={this.props.notifications} />
@@ -941,7 +946,8 @@ loop.panel = (function(_, mozL10n) {
       }
 
       return (
-        <div className="panel-content">
+        <div className="panel-content"
+             onContextMenu={this.handleContextMenu} >
           <div className="beta-ribbon" />
           <NotificationListView
             clearOnDocumentHidden={true}
