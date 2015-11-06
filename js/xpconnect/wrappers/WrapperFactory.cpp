@@ -124,7 +124,7 @@ inline bool
 ShouldWaiveXray(JSContext* cx, JSObject* originalObj)
 {
     unsigned flags;
-    (void) js::UncheckedUnwrap(originalObj, /* stopAtOuter = */ true, &flags);
+    (void) js::UncheckedUnwrap(originalObj, /* stopAtWindowProxy = */ true, &flags);
 
     // If the original object did not point through an Xray waiver, we're done.
     if (!(flags & WrapperFactory::WAIVE_XRAY_WRAPPER_FLAG))

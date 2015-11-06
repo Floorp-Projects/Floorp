@@ -550,7 +550,7 @@ AddonWindowOrNull(JSObject* aObj)
     // about it and get them to change their code.
     MOZ_RELEASE_ASSERT(js::IsCrossCompartmentWrapper(proto) ||
                        xpc::IsSandboxPrototypeProxy(proto));
-    JSObject* mainGlobal = js::UncheckedUnwrap(proto, /* stopAtOuter = */ false);
+    JSObject* mainGlobal = js::UncheckedUnwrap(proto, /* stopAtWindowProxy = */ false);
     MOZ_RELEASE_ASSERT(JS_IsGlobalObject(mainGlobal));
 
     return WindowOrNull(mainGlobal);
@@ -1433,7 +1433,7 @@ XPCJSRuntime::InterruptCallback(JSContext* cx)
         if (!JS_GetPrototype(cx, global, &proto))
             return false;
         if (proto && IsSandboxPrototypeProxy(proto) &&
-            (proto = js::CheckedUnwrap(proto, /* stopAtOuter = */ false)))
+            (proto = js::CheckedUnwrap(proto, /* stopAtWindowProxy = */ false)))
         {
             win = WindowGlobalOrNull(proto);
         }

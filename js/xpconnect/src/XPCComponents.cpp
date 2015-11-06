@@ -2767,7 +2767,7 @@ nsXPCComponents_Utils::IsProxy(HandleValue vobj, JSContext* cx, bool* rval)
     }
 
     RootedObject obj(cx, &vobj.toObject());
-    obj = js::CheckedUnwrap(obj, /* stopAtOuter = */ false);
+    obj = js::CheckedUnwrap(obj, /* stopAtWindowProxy = */ false);
     NS_ENSURE_TRUE(obj, NS_ERROR_FAILURE);
 
     *rval = js::IsScriptedProxy(obj);
@@ -3045,7 +3045,7 @@ nsXPCComponents_Utils::BlockScriptForGlobal(HandleValue globalArg,
 {
     NS_ENSURE_TRUE(globalArg.isObject(), NS_ERROR_INVALID_ARG);
     RootedObject global(cx, UncheckedUnwrap(&globalArg.toObject(),
-                                            /* stopAtOuter = */ false));
+                                            /* stopAtWindowProxy = */ false));
     NS_ENSURE_TRUE(JS_IsGlobalObject(global), NS_ERROR_INVALID_ARG);
     if (nsContentUtils::IsSystemPrincipal(xpc::GetObjectPrincipal(global))) {
         JS_ReportError(cx, "Script may not be disabled for system globals");
@@ -3061,7 +3061,7 @@ nsXPCComponents_Utils::UnblockScriptForGlobal(HandleValue globalArg,
 {
     NS_ENSURE_TRUE(globalArg.isObject(), NS_ERROR_INVALID_ARG);
     RootedObject global(cx, UncheckedUnwrap(&globalArg.toObject(),
-                                            /* stopAtOuter = */ false));
+                                            /* stopAtWindowProxy = */ false));
     NS_ENSURE_TRUE(JS_IsGlobalObject(global), NS_ERROR_INVALID_ARG);
     if (nsContentUtils::IsSystemPrincipal(xpc::GetObjectPrincipal(global))) {
         JS_ReportError(cx, "Script may not be disabled for system globals");
@@ -3111,7 +3111,7 @@ nsXPCComponents_Utils::GetClassName(HandleValue aObj, bool aUnwrap, JSContext* a
         return NS_ERROR_INVALID_ARG;
     RootedObject obj(aCx, &aObj.toObject());
     if (aUnwrap)
-        obj = js::UncheckedUnwrap(obj, /* stopAtOuter = */ false);
+        obj = js::UncheckedUnwrap(obj, /* stopAtWindowProxy = */ false);
     *aRv = NS_strdup(js::GetObjectClass(obj)->name);
     NS_ENSURE_TRUE(*aRv, NS_ERROR_OUT_OF_MEMORY);
     return NS_OK;
