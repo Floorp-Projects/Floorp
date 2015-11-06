@@ -12,6 +12,7 @@
   },
   "dependencies": {},
   "devDependencies": {
+    "classnames": "2.2.x",
     "compression": "1.5.x",
     "eslint": "1.6.x",
     "eslint-plugin-mozilla": "../../../../testing/eslint-plugin-mozilla",
