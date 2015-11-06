@@ -448,7 +448,6 @@ AnimationCollection::CanAnimatePropertyOnCompositor(
 {
   bool shouldLog = nsLayoutUtils::IsAnimationLoggingEnabled();
 
-  nsIFrame* frame = nsLayoutUtils::GetStyleFrame(aElement);
   if (IsGeometricProperty(aProperty)) {
     if (shouldLog) {
       nsCString message;
@@ -460,33 +459,9 @@ AnimationCollection::CanAnimatePropertyOnCompositor(
     return false;
   }
   if (aProperty == eCSSProperty_transform) {
-    if (frame->Combines3DTransformWithAncestors() ||
-        frame->Extend3DContext()) {
-      if (shouldLog) {
-        nsCString message;
-        message.AppendLiteral("Gecko bug: Async animation of 'preserve-3d' transforms is not supported.  See bug 779598");
-        LogAsyncAnimationFailure(message, aElement);
-      }
-      return false;
-    }
-    // Note that testing BackfaceIsHidden() is not a sufficient test for
-    // what we need for animating backface-visibility correctly if we
-    // remove the above test for Extend3DContext(); that would require
-    // looking at backface-visibility on descendants as well.
-    if (frame->StyleDisplay()->BackfaceIsHidden()) {
-      if (shouldLog) {
-        nsCString message;
-        message.AppendLiteral("Gecko bug: Async animation of 'backface-visibility: hidden' transforms is not supported.  See bug 1186204.");
-        LogAsyncAnimationFailure(message, aElement);
-      }
-      return false;
-    }
-    if (frame->IsSVGTransformed()) {
-      if (shouldLog) {
-        nsCString message;
-        message.AppendLiteral("Gecko bug: Async 'transform' animations of frames with SVG transforms is not supported.  See bug 779599");
-        LogAsyncAnimationFailure(message, aElement);
-      }
+    nsIFrame* frame = nsLayoutUtils::GetStyleFrame(aElement);
+    if (!KeyframeEffectReadOnly::CanAnimateTransformOnCompositor(frame,
+          shouldLog ? aElement : nullptr)) {
       return false;
     }
   }
