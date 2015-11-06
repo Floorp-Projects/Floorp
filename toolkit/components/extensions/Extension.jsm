@@ -4,7 +4,7 @@
 
 "use strict";
 
-this.EXPORTED_SYMBOLS = ["Extension"];
+this.EXPORTED_SYMBOLS = ["Extension", "ExtensionData"];
 
 /*
  * This file is the main entry point for extensions. When an extension
@@ -33,8 +33,12 @@ XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
                                   "resource://gre/modules/NetUtil.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "FileUtils",
                                   "resource://gre/modules/FileUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "OS",
+                                  "resource://gre/modules/osfile.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
                                   "resource://gre/modules/PrivateBrowsingUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Task",
+                                  "resource://gre/modules/Task.jsm");
 
 Cu.import("resource://gre/modules/ExtensionManagement.jsm");
 
@@ -58,6 +62,7 @@ var {
   MessageBroker,
   Messenger,
   injectAPI,
+  extend,
   flushJarCache,
 } = ExtensionUtils;
 
@@ -322,13 +327,335 @@ var GlobalManager = {
   },
 };
 
+// Represents the data contained in an extension, contained either
+// in a directory or a zip file, which may or may not be installed.
+// This class implements the functionality of the Extension class,
+// primarily related to manifest parsing and localization, which is
+// useful prior to extension installation or initialization.
+//
+// No functionality of this class is guaranteed to work before
+// |readManifest| has been called, and completed.
+this.ExtensionData = function(rootURI)
+{
+  this.rootURI = rootURI;
+
+  this.manifest = null;
+  this.id = null;
+  // Map(locale-name -> message-map)
+  // Contains a key for each loaded locale, each of which is a
+  // JSON-compatible object with a property for each message
+  // in that locale.
+  this.localeMessages = new Map();
+  this.selectedLocale = null;
+  this._promiseLocales = null;
+
+  this.errors = [];
+}
+
+ExtensionData.prototype = {
+  get logger() {
+    let id = this.id || "<unknown>";
+    return Log.repository.getLogger(LOGGER_ID_BASE + id);
+  },
+
+  // Report an error about the extension's manifest file.
+  manifestError(message) {
+    this.packagingError(`Reading manifest: ${message}`);
+  },
+
+  // Report an error about the extension's general packaging.
+  packagingError(message) {
+    this.errors.push(message);
+    this.logger.error(`Loading extension '${this.id}': ${message}`);
+  },
+
+  // https://developer.chrome.com/extensions/i18n
+  localizeMessage(message, substitutions, locale = this.selectedLocale) {
+    let messages = {};
+    if (this.localeMessages.has(locale)) {
+      messages = this.localeMessages.get(locale);
+    }
+
+    if (message in messages) {
+      let str = messages[message].message;
+
+      if (!substitutions) {
+        substitutions = [];
+      } else if (!Array.isArray(substitutions)) {
+        substitutions = [substitutions];
+      }
+
+      // https://developer.chrome.com/extensions/i18n-messages
+      // |str| may contain substrings of the form $1 or $PLACEHOLDER$.
+      // In the former case, we replace $n with substitutions[n - 1].
+      // In the latter case, we consult the placeholders array.
+      // The placeholder may itself use $n to refer to substitutions.
+      let replacer = (matched, name) => {
+        if (name.length == 1 && name[0] >= '1' && name[0] <= '9') {
+          return substitutions[parseInt(name) - 1];
+        } else {
+          let content = messages[message].placeholders[name].content;
+          if (content[0] == '$') {
+            return replacer(matched, content[1]);
+          } else {
+            return content;
+          }
+        }
+      };
+      return str.replace(/\$([A-Za-z_@]+)\$/, replacer)
+                .replace(/\$([0-9]+)/, replacer)
+                .replace(/\$\$/, "$");
+    }
+
+    // Check for certain pre-defined messages.
+    if (message == "@@extension_id") {
+      if ("uuid" in this) {
+        // Per Chrome, this isn't available before an ID is guaranteed
+        // to have been assigned, namely, in manifest files.
+        // This should only be present in instances of the |Extension|
+        // subclass.
+        return this.uuid;
+      }
+    } else if (message == "@@ui_locale") {
+      return Locale.getLocale();
+    } else if (message == "@@bidi_dir") {
+      return "ltr"; // FIXME
+    }
+
+    Cu.reportError(`Unknown localization message ${message}`);
+    return "??";
+  },
+
+  // Localize a string, replacing all |__MSG_(.*)__| tokens with the
+  // matching string from the current locale, as determined by
+  // |this.selectedLocale|.
+  //
+  // This may not be called before calling either |initLocale| or
+  // |initAllLocales|.
+  localize(str, locale = this.selectedLocale) {
+    if (!str) {
+      return str;
+    }
+
+    return str.replace(/__MSG_([A-Za-z0-9@_]+?)__/g, (matched, message) => {
+      return this.localizeMessage(message, [], locale);
+    });
+  },
+
+  // If a "default_locale" is specified in that manifest, returns it
+  // as a Gecko-compatible locale string. Otherwise, returns null.
+  get defaultLocale() {
+    if ("default_locale" in this.manifest) {
+      return this.normalizeLocaleCode(this.manifest.default_locale);
+    }
+
+    return null;
+  },
+
+  // Normalizes a Chrome-compatible locale code to the appropriate
+  // Gecko-compatible variant. Currently, this means simply
+  // replacing underscores with hyphens.
+  normalizeLocaleCode(locale) {
+    return String.replace(locale, /_/g, "-");
+  },
+
+  readDirectory: Task.async(function* (path) {
+    if (this.rootURI instanceof Ci.nsIFileURL) {
+      let uri = NetUtil.newURI(this.rootURI.resolve("./" + path));
+      let fullPath = uri.QueryInterface(Ci.nsIFileURL).file.path;
+
+      let iter = new OS.File.DirectoryIterator(fullPath);
+      let results = [];
+
+      try {
+        yield iter.forEach(entry => {
+          results.push(entry);
+        });
+      } catch (e) {}
+      iter.close();
+
+      // Always return a list, even if the directory does not exist (or is
+      // not a directory) for symmetry with the ZipReader behavior.
+      return results;
+    }
+
+    if (!(this.rootURI instanceof Ci.nsIJARURI &&
+          this.rootURI.JARFile instanceof Ci.nsIFileURL)) {
+      throw Error("Invalid extension root URL");
+    }
+
+    // FIXME: We need a way to do this without main thread IO.
+
+    let file = this.rootURI.JARFile.file;
+    let zipReader = Cc["@mozilla.org/libjar/zip-reader;1"].createInstance(Ci.nsIZipReader);
+    try {
+      zipReader.open(file);
+
+      let results = [];
+
+      // Normalize the directory path.
+      path = path.replace(/\/\/+/g, "/").replace(/^\/|\/$/g, "") + "/";
+
+      // Escape pattern metacharacters.
+      let pattern = path.replace(/[[\]()?*~|$\\]/g, "\\$&");
+
+      let enumerator = zipReader.findEntries(pattern + "*");
+      while (enumerator.hasMore()) {
+        let name = enumerator.getNext();
+        if (!name.startsWith(path)) {
+          throw new Error("Unexpected ZipReader entry");
+        }
+
+        // The enumerator returns the full path of all entries.
+        // Trim off the leading path, and filter out entries from
+        // subdirectories.
+        name = name.slice(path.length);
+        if (name && !/\/./.test(name)) {
+          results.push({
+            name: name.replace("/", ""),
+            isDir: name.endsWith("/"),
+          });
+        }
+      }
+
+      return results;
+    } finally {
+      zipReader.close();
+    }
+  }),
+
+  readJSON(path) {
+    return new Promise((resolve, reject) => {
+      let uri = this.rootURI.resolve(`./${path}`);
+
+      NetUtil.asyncFetch({uri, loadUsingSystemPrincipal: true}, (inputStream, status) => {
+        if (!Components.isSuccessCode(status)) {
+          reject(new Error(status));
+          return;
+        }
+        try {
+          let text = NetUtil.readInputStreamToString(inputStream, inputStream.available());
+          resolve(JSON.parse(text));
+        } catch (e) {
+          reject(e);
+        }
+      });
+    });
+  },
+
+  // Reads the extension's |manifest.json| file, and stores its
+  // parsed contents in |this.manifest|.
+  readManifest() {
+    return this.readJSON("manifest.json").then(manifest => {
+      this.manifest = manifest;
+
+      try {
+        this.id = this.manifest.applications.gecko.id;
+      } catch (e) {}
+
+      if (typeof this.id != "string") {
+        this.manifestError("Missing required `applications.gecko.id` property");
+      }
+
+      return manifest;
+    });
+  },
+
+  // Reads the locale file for the given Gecko-compatible locale code, and
+  // stores its parsed contents in |this.localeMessages.get(locale)|.
+  readLocaleFile: Task.async(function* (locale) {
+    let locales = yield this.promiseLocales();
+    let dir = locales.get(locale);
+    let file = `_locales/${dir}/messages.json`;
+
+    let messages = {};
+    try {
+      messages = yield this.readJSON(file);
+    } catch (e) {
+      this.packagingError(`Loading locale file ${file}: ${e}`);
+    }
+
+    this.localeMessages.set(locale, messages);
+    return messages;
+  }),
+
+  // Reads the list of locales available in the extension, and returns a
+  // Promise which resolves to a Map upon completion.
+  // Each map key is a Gecko-compatible locale code, and each value is the
+  // "_locales" subdirectory containing that locale:
+  //
+  // Map(gecko-locale-code -> locale-directory-name)
+  promiseLocales() {
+    if (!this._promiseLocales) {
+      this._promiseLocales = Task.spawn(function* () {
+        let locales = new Map();
+
+        let entries = yield this.readDirectory("_locales");
+        for (let file of entries) {
+          if (file.isDir) {
+            let locale = this.normalizeLocaleCode(file.name);
+            locales.set(locale, file.name);
+          }
+        }
+
+        return locales;
+      }.bind(this));
+    }
+
+    return this._promiseLocales;
+  },
+
+  // Reads the locale messages for all locales, and returns a promise which
+  // resolves to a Map of locale messages upon completion. Each key in the map
+  // is a Gecko-compatible locale code, and each value is a locale data object
+  // as returned by |readLocaleFile|.
+  initAllLocales: Task.async(function* () {
+    let locales = yield this.promiseLocales();
+
+    yield Promise.all(Array.from(locales.keys(),
+                                 locale => this.readLocaleFile(locale)));
+
+    let defaultLocale = this.defaultLocale;
+    if (defaultLocale) {
+      if (!locales.has(defaultLocale)) {
+        this.manifestError('Value for "default_locale" property must correspond to ' +
+                           'a directory in "_locales/". Not found: ' +
+                           JSON.stringify(`_locales/${default_locale}/`));
+      }
+    } else if (this.localeMessages.size) {
+      this.manifestError('The "default_locale" property is required when a ' +
+                         '"_locales/" directory is present.');
+    }
+
+    return this.localeMessages;
+  }),
+
+  // Reads the locale file for the given Gecko-compatible locale code, or the
+  // default locale if no locale code is given, and sets it as the currently
+  // selected locale on success.
+  //
+  // If no locales are unavailable, resolves to |null|.
+  initLocale: Task.async(function* (locale = this.defaultLocale) {
+    if (locale == null) {
+      return null;
+    }
+
+    let localeData = yield this.readLocaleFile(locale);
+
+    this.selectedLocale = locale;
+    return localeData;
+  }),
+};
+
 // We create one instance of this class per extension. |addonData|
 // comes directly from bootstrap.js when initializing.
 this.Extension = function(addonData)
 {
+  ExtensionData.call(this, addonData.resourceURI);
+
   let uuidGenerator = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator);
   let uuid = uuidGenerator.generateUUID().number;
-  uuid = uuid.substring(1, uuid.length - 1); // Strip of { and } off the UUID.
+  uuid = uuid.slice(1, -1); // Strip of { and } off the UUID.
   this.uuid = uuid;
 
   if (addonData.cleanupFile) {
@@ -341,9 +668,6 @@ this.Extension = function(addonData)
   this.id = addonData.id;
   this.baseURI = Services.io.newURI("moz-extension://" + uuid, null, null);
   this.baseURI.QueryInterface(Ci.nsIURL);
-  this.manifest = null;
-  this.localeMessages = null;
-  this.logger = Log.repository.getLogger(LOGGER_ID_BASE + this.id.replace(/\./g, "-"));
   this.principal = this.createPrincipal();
 
   this.views = new Set();
@@ -475,7 +799,7 @@ this.Extension.generate = function(id, data)
   });
 }
 
-Extension.prototype = {
+Extension.prototype = extend(Object.create(ExtensionData.prototype), {
   on(hook, f) {
     return this.emitter.on(hook, f);
   },
@@ -505,11 +829,6 @@ Extension.prototype = {
     return common == this.baseURI.spec;
   },
 
-  // Report an error about the extension's manifest file.
-  manifestError(message) {
-    this.logger.error(`Loading extension '${this.id}': ${message}`);
-  },
-
   // Representation of the extension to send to content
   // processes. This should include anything the content process might
   // need.
@@ -524,147 +843,6 @@ Extension.prototype = {
       webAccessibleResources: this.webAccessibleResources,
       whiteListedHosts: this.whiteListedHosts.serialize(),
     };
-  },
-
-  // https://developer.chrome.com/extensions/i18n
-  localizeMessage(message, substitutions) {
-    if (message in this.localeMessages) {
-      let str = this.localeMessages[message].message;
-
-      if (!substitutions) {
-        substitutions = [];
-      }
-      if (!Array.isArray(substitutions)) {
-        substitutions = [substitutions];
-      }
-
-      // https://developer.chrome.com/extensions/i18n-messages
-      // |str| may contain substrings of the form $1 or $PLACEHOLDER$.
-      // In the former case, we replace $n with substitutions[n - 1].
-      // In the latter case, we consult the placeholders array.
-      // The placeholder may itself use $n to refer to substitutions.
-      let replacer = (matched, name) => {
-        if (name.length == 1 && name[0] >= '1' && name[0] <= '9') {
-          return substitutions[parseInt(name) - 1];
-        } else {
-          let content = this.localeMessages[message].placeholders[name].content;
-          if (content[0] == '$') {
-            return replacer(matched, content[1]);
-          } else {
-            return content;
-          }
-        }
-      };
-      return str.replace(/\$([A-Za-z_@]+)\$/, replacer)
-                .replace(/\$([0-9]+)/, replacer)
-                .replace(/\$\$/, "$");
-    }
-
-    // Check for certain pre-defined messages.
-    if (message == "@@extension_id") {
-      return this.id;
-    } else if (message == "@@ui_locale") {
-      return Locale.getLocale();
-    } else if (message == "@@bidi_dir") {
-      return "ltr"; // FIXME
-    }
-
-    Cu.reportError(`Unknown localization message ${message}`);
-    return "??";
-  },
-
-  localize(str) {
-    if (!str) {
-      return str;
-    }
-
-    if (str.startsWith("__MSG_") && str.endsWith("__")) {
-      let message = str.substring("__MSG_".length, str.length - "__".length);
-      return this.localizeMessage(message);
-    }
-
-    return str;
-  },
-
-  readJSON(uri) {
-    return new Promise((resolve, reject) => {
-      NetUtil.asyncFetch({uri, loadUsingSystemPrincipal: true}, (inputStream, status) => {
-        if (!Components.isSuccessCode(status)) {
-          reject(status);
-          return;
-        }
-        let text = NetUtil.readInputStreamToString(inputStream, inputStream.available());
-        try {
-          resolve(JSON.parse(text));
-        } catch (e) {
-          reject(e);
-        }
-      });
-    });
-  },
-
-  readManifest() {
-    let manifestURI = Services.io.newURI("manifest.json", null, this.baseURI);
-    return this.readJSON(manifestURI);
-  },
-
-  readLocaleFile(locale) {
-    let dir = locale.replace("-", "_");
-    let url = `_locales/${dir}/messages.json`;
-    let uri = Services.io.newURI(url, null, this.baseURI);
-    return this.readJSON(uri);
-  },
-
-  readLocaleMessages() {
-    let locales = [];
-
-    // We need to base this off of this.addonData.resourceURI rather
-    // than baseURI since baseURI is a moz-extension URI, which always
-    // QIs to nsIFileURL.
-    let uri = Services.io.newURI("_locales", null, this.addonData.resourceURI);
-    if (uri instanceof Ci.nsIFileURL) {
-      let file = uri.file;
-      let enumerator;
-      try {
-        enumerator = file.directoryEntries;
-      } catch (e) {
-        return {};
-      }
-      while (enumerator.hasMoreElements()) {
-        let file = enumerator.getNext().QueryInterface(Ci.nsIFile);
-        locales.push({
-          name: file.leafName,
-          locales: [file.leafName.replace("_", "-")]
-        });
-      }
-    }
-
-    if (uri instanceof Ci.nsIJARURI && uri.JARFile instanceof Ci.nsIFileURL) {
-      let file = uri.JARFile.file;
-      let zipReader = Cc["@mozilla.org/libjar/zip-reader;1"].createInstance(Ci.nsIZipReader);
-      try {
-        zipReader.open(file);
-        let enumerator = zipReader.findEntries("_locales/*");
-        while (enumerator.hasMore()) {
-          let name = enumerator.getNext();
-          let match = name.match(new RegExp("_locales\/([^/]*)"));
-          if (match && match[1]) {
-            locales.push({
-              name: match[1],
-              locales: [match[1].replace("_", "-")]
-            });
-          }
-        }
-      } finally {
-        zipReader.close();
-      }
-    }
-
-    let locale = Locale.findClosestLocale(locales);
-    if (locale) {
-      return this.readLocaleFile(locale.name).catch(() => {});
-    }
-    return {};
   },
 
   broadcast(msg, data) {
@@ -723,6 +901,24 @@ Extension.prototype = {
     this.onShutdown.delete(obj);
   },
 
+  // Reads the locale file for the given Gecko-compatible locale code, or if
+  // no locale is given, the available locale closest to the UI locale.
+  // Sets the currently selected locale on success.
+  initLocale: Task.async(function* (locale = undefined) {
+    if (locale === undefined) {
+      let locales = yield this.promiseLocales();
+
+      let localeList = Object.keys(locales).map(locale => {
+        return { name: locale, locales: [locale] };
+      });
+
+      let match = Locale.findClosestLocale(localeList);
+      locale = match ? match.name : this.defaultLocale;
+    }
+
+    return ExtensionData.prototype.initLocale.call(this, locale);
+  }),
+
   startup() {
     try {
       ExtensionManagement.startupExtension(this.uuid, this.addonData.resourceURI, this);
@@ -730,21 +926,20 @@ Extension.prototype = {
       return Promise.reject(e);
     }
 
-    return Promise.all([this.readManifest(), this.readLocaleMessages()]).then(([manifest, messages]) => {
+    return this.readManifest().then(() => {
+      return this.initLocale();
+    }).then(() => {
       if (this.hasShutdown) {
         return;
       }
 
       GlobalManager.init(this);
 
-      this.manifest = manifest;
-      this.localeMessages = messages;
-
       Management.emit("startup", this);
 
-      return this.runManifest(manifest);
+      return this.runManifest(this.manifest);
     }).catch(e => {
-      dump(`Extension error: ${e} ${e.fileName}:${e.lineNumber}\n`);
+      dump(`Extension error: ${e} ${e.filename}:${e.lineNumber}\n`);
       Cu.reportError(e);
       throw e;
     });
@@ -808,5 +1003,5 @@ Extension.prototype = {
   get name() {
     return this.localize(this.manifest.name);
   },
-};
+});
 
