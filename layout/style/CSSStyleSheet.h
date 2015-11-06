@@ -224,7 +224,7 @@ public:
 
   /* Get the URI this sheet was originally loaded from, if any.  Can
      return null */
-  virtual nsIURI* GetOriginalURI() const;
+  nsIURI* GetOriginalURI() const { return mInner->mOriginalSheetURI; }
 
   // nsICSSLoaderObserver interface
   NS_IMETHOD StyleSheetLoaded(CSSStyleSheet* aSheet, bool aWasAlternate,

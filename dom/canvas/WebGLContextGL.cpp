@@ -52,6 +52,7 @@
 #include "mozilla/dom/ToJSValue.h"
 #include "mozilla/Endian.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/UniquePtrExtensions.h"
 
 namespace mozilla {
 
@@ -1622,7 +1623,7 @@ WebGLContext::ReadPixels(GLint x, GLint y, GLsizei width,
         uint32_t subrect_byteLength = (subrect_height-1)*subrect_alignedRowSize + subrect_plainRowSize;
 
         // create subrect buffer, call glReadPixels, copy pixels into destination buffer, delete subrect buffer
-        UniquePtr<GLubyte> subrect_data(new (fallible) GLubyte[subrect_byteLength]);
+        auto subrect_data = MakeUniqueFallible<GLubyte[]>(subrect_byteLength);
         if (!subrect_data)
             return ErrorOutOfMemory("readPixels: subrect_data");
 

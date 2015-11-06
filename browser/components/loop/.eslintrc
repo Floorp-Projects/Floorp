@@ -17,6 +17,7 @@
     "_": false,
     "Backbone": false,
     "chai": false,
+    "classNames": false,
     "console": false,
     "loop": true,
     "MozActivity": false,

@@ -48,7 +48,7 @@ runNetworkTest(function () {
     pc2 = new RTCPeerConnection();
 
     // Test success callbacks (happy path)
-    navigator.mozGetUserMedia({video:true, fake: true}, function(video1) {
+    navigator.mozGetUserMedia({video:true}, function(video1) {
       pc1.addStream(video1);
       pc1.createOffer(function(offer) {
         pc1.setLocalDescription(offer, function() {

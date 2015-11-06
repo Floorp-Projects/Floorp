@@ -150,6 +150,9 @@ const CPOWProxyHandler CPOWProxyHandler::singleton;
         JS_ReportError(cx, "cannot use a CPOW whose process is gone");  \
         return false;                                                   \
     }                                                                   \
+    if (!owner->allowMessage(cx)) {                                     \
+        return false;                                                   \
+    }                                                                   \
     {                                                                   \
         CPOWTimer timer(cx);                                            \
         return owner->call args;                                        \
@@ -978,8 +981,9 @@ InstanceOf(JSObject* proxy, const nsID* id, bool* bp)
 }
 
 bool
-DOMInstanceOf(JSContext* cx, JSObject* proxy, int prototypeID, int depth, bool* bp)
+DOMInstanceOf(JSContext* cx, JSObject* proxyArg, int prototypeID, int depth, bool* bp)
 {
+    RootedObject proxy(cx, proxyArg);
     FORWARD(domInstanceOf, (cx, proxy, prototypeID, depth, bp));
 }
 

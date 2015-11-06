@@ -59,11 +59,6 @@ HRTFPanner::HRTFPanner(float sampleRate, already_AddRefed<HRTFDatabaseLoader> da
 {
     MOZ_ASSERT(m_databaseLoader);
     MOZ_COUNT_CTOR(HRTFPanner);
-
-    m_tempL1.SetLength(RenderingQuantum);
-    m_tempR1.SetLength(RenderingQuantum);
-    m_tempL2.SetLength(RenderingQuantum);
-    m_tempR2.SetLength(RenderingQuantum);
 }
 
 HRTFPanner::~HRTFPanner()
@@ -81,10 +76,6 @@ size_t HRTFPanner::sizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) cons
     amount += m_convolverL2.sizeOfExcludingThis(aMallocSizeOf);
     amount += m_convolverR2.sizeOfExcludingThis(aMallocSizeOf);
     amount += m_delayLine.SizeOfExcludingThis(aMallocSizeOf);
-    amount += m_tempL1.ShallowSizeOfExcludingThis(aMallocSizeOf);
-    amount += m_tempL2.ShallowSizeOfExcludingThis(aMallocSizeOf);
-    amount += m_tempR1.ShallowSizeOfExcludingThis(aMallocSizeOf);
-    amount += m_tempR2.ShallowSizeOfExcludingThis(aMallocSizeOf);
 
     return amount;
 }
@@ -256,23 +247,26 @@ void HRTFPanner::pan(double desiredAzimuth, double elevation, const AudioBlock* 
 
     bool needsCrossfading = m_crossfadeIncr;
 
-    // Have the convolvers render directly to the final destination if we're not cross-fading.
-    float* convolutionDestinationL1 = needsCrossfading ? m_tempL1.Elements() : destinationL;
-    float* convolutionDestinationR1 = needsCrossfading ? m_tempR1.Elements() : destinationR;
-    float* convolutionDestinationL2 = needsCrossfading ? m_tempL2.Elements() : destinationL;
-    float* convolutionDestinationR2 = needsCrossfading ? m_tempR2.Elements() : destinationR;
+    const float* convolutionDestinationL1;
+    const float* convolutionDestinationR1;
+    const float* convolutionDestinationL2;
+    const float* convolutionDestinationR2;
 
     // Now do the convolutions.
     // Note that we avoid doing convolutions on both sets of convolvers if we're not currently cross-fading.
 
     if (m_crossfadeSelection == CrossfadeSelection1 || needsCrossfading) {
-        m_convolverL1.process(kernelL1->fftFrame(), destinationL, convolutionDestinationL1, WEBAUDIO_BLOCK_SIZE);
-        m_convolverR1.process(kernelR1->fftFrame(), destinationR, convolutionDestinationR1, WEBAUDIO_BLOCK_SIZE);
+        convolutionDestinationL1 =
+            m_convolverL1.process(kernelL1->fftFrame(), destinationL);
+        convolutionDestinationR1 =
+            m_convolverR1.process(kernelR1->fftFrame(), destinationR);
     }
 
     if (m_crossfadeSelection == CrossfadeSelection2 || needsCrossfading) {
-        m_convolverL2.process(kernelL2->fftFrame(), destinationL, convolutionDestinationL2, WEBAUDIO_BLOCK_SIZE);
-        m_convolverR2.process(kernelR2->fftFrame(), destinationR, convolutionDestinationR2, WEBAUDIO_BLOCK_SIZE);
+        convolutionDestinationL2 =
+            m_convolverL2.process(kernelL2->fftFrame(), destinationL);
+        convolutionDestinationR2 =
+            m_convolverR2.process(kernelR2->fftFrame(), destinationR);
     }
 
     if (needsCrossfading) {
@@ -298,6 +292,18 @@ void HRTFPanner::pan(double desiredAzimuth, double elevation, const AudioBlock* 
             m_crossfadeX = 0;
             m_crossfadeIncr = 0;
         }
+    } else {
+        const float* sourceL;
+        const float* sourceR;
+        if (m_crossfadeSelection == CrossfadeSelection1) {
+            sourceL = convolutionDestinationL1;
+            sourceR = convolutionDestinationR1;
+        } else {
+            sourceL = convolutionDestinationL2;
+            sourceR = convolutionDestinationR2;
+        }
+        PodCopy(destinationL, sourceL, WEBAUDIO_BLOCK_SIZE);
+        PodCopy(destinationR, sourceR, WEBAUDIO_BLOCK_SIZE);
     }
 }
 
@@ -307,10 +313,12 @@ int HRTFPanner::maxTailFrames() const
     // response, there is additional tail time from the approximations in the
     // implementation.  Because HRTFPanner is implemented with a DelayKernel
     // and a FFTConvolver, the tailTime of the HRTFPanner is the sum of the
-    // tailTime of the DelayKernel and the tailTime of the FFTConvolver.
-    // The FFTConvolver has a tail time of fftSize(), including latency of
-    // fftSize()/2.
-    return m_delayLine.MaxDelayTicks() + fftSize();
+    // tailTime of the DelayKernel and the tailTime of the FFTConvolver.  The
+    // FFTs of the convolver are fftSize(), half of which is latency, but this
+    // is aligned with blocks and so is reduced by the one block which is
+    // processed immediately.
+    return m_delayLine.MaxDelayTicks() +
+        m_convolverL1.fftSize()/2 + m_convolverL1.latencyFrames();
 }
 
 } // namespace WebCore

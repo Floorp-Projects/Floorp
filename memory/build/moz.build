@@ -27,7 +27,7 @@ if CONFIG['MOZ_JEMALLOC4']:
     SOURCES += [
         'mozjemalloc_compat.c',
     ]
-    GENERATED_INCLUDES += ['../jemalloc/src/include']
+    LOCAL_INCLUDES += ['!../jemalloc/src/include']
     if CONFIG['_MSC_VER']:
         LOCAL_INCLUDES += ['/memory/jemalloc/src/include/msvc_compat']
         if not CONFIG['HAVE_INTTYPES_H']:

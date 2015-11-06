@@ -2332,12 +2332,6 @@ CSSStyleSheet::ReparseSheet(const nsAString& aInput)
   return NS_OK;
 }
 
-/* virtual */ nsIURI*
-CSSStyleSheet::GetOriginalURI() const
-{
-  return mInner->mOriginalSheetURI;
-}
-
 /* virtual */
 JSObject*
 CSSStyleSheet::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
