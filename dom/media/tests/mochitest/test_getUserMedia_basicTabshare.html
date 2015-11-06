@@ -25,11 +25,8 @@
     var testVideo = createMediaElement('video', 'testVideo');
 
     return Promise.resolve()
-      .then(() => getUserMedia({
-        video: { mediaSource: "browser",
-                 scrollWithPage: true },
-        fake: false
-      }))
+      .then(() => getUserMedia({ video: { mediaSource: "browser",
+                                          scrollWithPage: true } }))
       .then(stream => {
         var playback = new LocalMediaStreamPlayback(testVideo, stream);
         return playback.playMediaWithDeprecatedStreamStop(false);
@@ -41,8 +38,7 @@
           viewportOffsetY: 0,
           viewportWidth: 100,
           viewportHeight: 100
-        },
-        fake: false
+        }
       }))
       .then(stream => {
         var playback = new LocalMediaStreamPlayback(testVideo, stream);
