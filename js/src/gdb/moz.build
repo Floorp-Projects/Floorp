@@ -23,8 +23,10 @@ UNIFIED_SOURCES += [
 
 DEFINES['EXPORT_JS_API'] = True
 
-LOCAL_INCLUDES += ['..']
-GENERATED_INCLUDES += ['..']
+LOCAL_INCLUDES += [
+    '!..',
+    '..',
+]
 
 USE_LIBS += [
     'static:js',

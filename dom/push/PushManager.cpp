@@ -426,12 +426,13 @@ public:
       do_CreateInstance("@mozilla.org/push/PushClient;1");
     if (!client) {
       callback->OnUnsubscribe(NS_ERROR_FAILURE, false);
+      return NS_OK;
     }
 
     nsCOMPtr<nsIPrincipal> principal = mProxy->GetWorkerPrivate()->GetPrincipal();
     if (NS_WARN_IF(NS_FAILED(client->Unsubscribe(mScope, principal, callback)))) {
       callback->OnUnsubscribe(NS_ERROR_FAILURE, false);
-      return NS_ERROR_FAILURE;
+      return NS_OK;
     }
     return NS_OK;
   }
@@ -521,7 +522,7 @@ public:
         promise->MaybeResolve(sub);
       }
     } else {
-      promise->MaybeReject(NS_ERROR_DOM_ABORT_ERR);
+      promise->MaybeReject(NS_ERROR_DOM_PUSH_ABORT_ERR);
     }
 
     mProxy->CleanUp(aCx);
@@ -647,7 +648,7 @@ public:
 
     if (NS_WARN_IF(NS_FAILED(rv))) {
       callback->OnPushEndpoint(NS_ERROR_FAILURE, EmptyString(), 0, nullptr);
-      return rv;
+      return NS_OK;
     }
 
     return NS_OK;
@@ -677,7 +678,7 @@ WorkerPushManager::PerformSubscriptionAction(SubscriptionAction aAction, ErrorRe
 
   RefPtr<PromiseWorkerProxy> proxy = PromiseWorkerProxy::Create(worker, p);
   if (!proxy) {
-    p->MaybeReject(NS_ERROR_DOM_ABORT_ERR);
+    p->MaybeReject(NS_ERROR_DOM_PUSH_ABORT_ERR);
     return p.forget();
   }
 

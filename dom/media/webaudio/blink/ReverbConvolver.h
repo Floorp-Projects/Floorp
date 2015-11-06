@@ -50,13 +50,13 @@ public:
     // For certain tweaky de-convolving applications the phase errors add up quickly and lead to non-sensical results with
     // larger FFT sizes and single-precision floats.  In these cases 2048 is a good size.
     // If not doing multi-threaded convolution, then should not go > 8192.
-    ReverbConvolver(const float* impulseResponseData, size_t impulseResponseLength, size_t renderSliceSize, size_t maxFFTSize, size_t convolverRenderPhase, bool useBackgroundThreads);
+    ReverbConvolver(const float* impulseResponseData,
+                    size_t impulseResponseLength, size_t maxFFTSize,
+                    size_t convolverRenderPhase, bool useBackgroundThreads);
     ~ReverbConvolver();
 
-    void process(const float* sourceChannelData, size_t sourceChannelLength,
-                 float* destinationChannelData, size_t destinationChannelLength,
-                 size_t framesToProcess);
-    void reset();
+    void process(const float* sourceChannelData,
+                 float* destinationChannelData);
 
     size_t impulseResponseLength() const { return m_impulseResponseLength; }
 
@@ -64,8 +64,6 @@ public:
 
     bool useBackgroundThreads() const { return m_useBackgroundThreads; }
     void backgroundThreadEntry();
-
-    size_t latencyFrames() const;
 
     size_t sizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 private:
@@ -77,13 +75,6 @@ private:
 
     // One or more background threads read from this input buffer which is fed from the realtime thread.
     ReverbInputBuffer m_inputBuffer;
-
-    // First stage will be of size m_minFFTSize.  Each next stage will be twice as big until we hit m_maxFFTSize.
-    size_t m_minFFTSize;
-    size_t m_maxFFTSize;
-
-    // But don't exceed this size in the real-time thread (if we're doing background processing).
-    size_t m_maxRealtimeFFTSize;
 
     // Background thread and synchronization
     base::Thread m_backgroundThread;

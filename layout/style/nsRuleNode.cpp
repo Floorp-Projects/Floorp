@@ -3846,24 +3846,50 @@ nsRuleNode::SetFont(nsPresContext* aPresContext, nsStyleContext* aContext,
                            &scriptLevelAdjustedUnconstrainedParentSize);
   NS_ASSERTION(!aUsedStartStruct || aFont->mScriptUnconstrainedSize == aFont->mSize,
                "If we have a start struct, we should have reset everything coming in here");
+
+  // Compute whether we're affected by scriptMinSize *before* calling
+  // SetFontSize, since aParentFont might be the same as aFont.  If it
+  // is, calling SetFontSize might throw off our calculation.
+  bool affectedByScriptMinSize =
+    aParentFont->mSize != aParentFont->mScriptUnconstrainedSize ||
+    scriptLevelAdjustedParentSize !=
+      scriptLevelAdjustedUnconstrainedParentSize;
+
   SetFontSize(aPresContext, aRuleData, aFont, aParentFont,
               &aFont->mSize,
               systemFont, aParentFont->mSize, scriptLevelAdjustedParentSize,
               aUsedStartStruct, atRoot, aConditions);
-  if (aParentFont->mSize == aParentFont->mScriptUnconstrainedSize &&
-      scriptLevelAdjustedParentSize == scriptLevelAdjustedUnconstrainedParentSize) {
+  if (!aPresContext->Document()->GetMathMLEnabled()) {
+    MOZ_ASSERT(!affectedByScriptMinSize);
+    // If MathML is not enabled, we don't need to mark this node as
+    // uncacheable.  If it becomes enabled, code in
+    // nsMathMLElementFactory will rebuild the rule tree and style data
+    // when MathML is first enabled (see nsMathMLElement::BindToTree).
+    aFont->mScriptUnconstrainedSize = aFont->mSize;
+  } else if (!affectedByScriptMinSize) {
     // Fast path: we have not been affected by scriptminsize so we don't
     // need to call SetFontSize again to compute the
     // scriptminsize-unconstrained size. This is OK even if we have a
     // start struct, because if we have a start struct then 'font-size'
     // was specified and so scriptminsize has no effect.
     aFont->mScriptUnconstrainedSize = aFont->mSize;
+    // It's possible we could, in the future, have a different parent,
+    // which would lead to a different affectedByScriptMinSize.
+    aConditions.SetUncacheable();
   } else {
+    // see previous else-if
+    aConditions.SetUncacheable();
+
+    // Use a separate conditions object because it might get a
+    // *different* font-size dependency.  We can ignore it because we've
+    // already called SetUncacheable.
+    RuleNodeCacheConditions unconstrainedConditions;
+
     SetFontSize(aPresContext, aRuleData, aFont, aParentFont,
                 &aFont->mScriptUnconstrainedSize,
                 systemFont, aParentFont->mScriptUnconstrainedSize,
                 scriptLevelAdjustedUnconstrainedParentSize,
-                aUsedStartStruct, atRoot, aConditions);
+                aUsedStartStruct, atRoot, unconstrainedConditions);
   }
   NS_ASSERTION(aFont->mScriptUnconstrainedSize <= aFont->mSize,
                "scriptminsize should never be making things bigger");
