@@ -460,9 +460,9 @@ AnimationCollection::CanAnimatePropertyOnCompositor(
   if (IsGeometricProperty(aProperty)) {
     if (shouldLog) {
       nsCString message;
-      message.AppendLiteral("Performance warning: Async animation of geometric property '");
-      message.Append(nsCSSProps::GetStringValue(aProperty));
-      message.AppendLiteral("' is disabled");
+      message.AppendLiteral("Performance warning: Async animation of "
+        "'transform' or 'opacity' not possible due to animation of geometric"
+        "properties on the same element");
       LogAsyncAnimationFailure(message, aElement);
     }
     return false;
@@ -493,14 +493,6 @@ AnimationCollection::CanAnimatePropertyOnCompositor(
       if (shouldLog) {
         nsCString message;
         message.AppendLiteral("Gecko bug: Async 'transform' animations of frames with SVG transforms is not supported.  See bug 779599");
-        LogAsyncAnimationFailure(message, aElement);
-      }
-      return false;
-    }
-    if (aFlags & CanAnimate_HasGeometricProperty) {
-      if (shouldLog) {
-        nsCString message;
-        message.AppendLiteral("Performance warning: Async animation of 'transform' not possible due to presence of geometric properties");
         LogAsyncAnimationFailure(message, aElement);
       }
       return false;
@@ -537,24 +529,6 @@ AnimationCollection::CanPerformOnCompositorThread(
   nsIFrame* frame = nsLayoutUtils::GetStyleFrame(element);
   if (!frame) {
     return false;
-  }
-
-  for (size_t animIdx = mAnimations.Length(); animIdx-- != 0; ) {
-    const Animation* anim = mAnimations[animIdx];
-    if (!anim->IsPlaying()) {
-      continue;
-    }
-
-    const KeyframeEffectReadOnly* effect = anim->GetEffect();
-    MOZ_ASSERT(effect, "A playing animation should have an effect");
-
-    for (size_t propIdx = 0, propEnd = effect->Properties().Length();
-         propIdx != propEnd; ++propIdx) {
-      if (IsGeometricProperty(effect->Properties()[propIdx].mProperty)) {
-        aFlags = CanAnimateFlags(aFlags | CanAnimate_HasGeometricProperty);
-        break;
-      }
-    }
   }
 
   bool existsProperty = false;

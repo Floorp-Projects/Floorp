@@ -243,11 +243,9 @@ struct AnimationCollection : public LinkedListElement<AnimationCollection>
   void EnsureStyleRuleFor(TimeStamp aRefreshTime);
 
   enum CanAnimateFlags {
-    // Testing for width, height, top, right, bottom, or left.
-    CanAnimate_HasGeometricProperty = 1,
     // Allow the case where OMTA is allowed in general, but not for the
     // specified property.
-    CanAnimate_AllowPartial = 2
+    CanAnimate_AllowPartial = 1
   };
 
   enum class RestyleType {
