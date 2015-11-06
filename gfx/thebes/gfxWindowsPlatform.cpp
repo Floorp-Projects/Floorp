@@ -1770,7 +1770,6 @@ bool DoesRenderTargetViewNeedsRecreating(ID3D11Device *device)
         gfxCriticalNote << "DoesRecreatingKeyedMutexFailed";
         return false;
     }
-
     D3D11_RENDER_TARGET_VIEW_DESC offscreenRTVDesc;
     offscreenRTVDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
     offscreenRTVDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
@@ -1834,6 +1833,22 @@ bool DoesRenderTargetViewNeedsRecreating(ID3D11Device *device)
     return result;
 }
 
+static bool TryCreateTexture2D(ID3D11Device *device,
+                               D3D11_TEXTURE2D_DESC* desc,
+                               D3D11_SUBRESOURCE_DATA* data,
+                               RefPtr<ID3D11Texture2D>& texture)
+{
+  // Older Intel driver version (see bug 1221348 for version #s) crash when
+  // creating a texture with shared keyed mutex and data.
+  MOZ_SEH_TRY {
+    return !FAILED(device->CreateTexture2D(desc, data, getter_AddRefs(texture)));
+  } MOZ_SEH_EXCEPT(EXCEPTION_EXECUTE_HANDLER) {
+    // For now we want to aggregrate all the crash signature to a known crash.
+    MOZ_CRASH("Crash creating texture. See bug 1221348.");
+    return false;
+  }
+}
+
 
 // See bug 1083071. On some drivers, Direct3D 11 CreateShaderResourceView fails
 // with E_OUTOFMEMORY.
@@ -1890,7 +1905,8 @@ bool DoesD3D11TextureSharingWorkInternal(ID3D11Device *device, DXGI_FORMAT forma
   data.pSysMem = color;
   data.SysMemPitch = texture_size * 4;
   data.SysMemSlicePitch = 0;
-  if (FAILED(device->CreateTexture2D(&desc, &data, getter_AddRefs(texture)))) {
+
+  if (!TryCreateTexture2D(device, &desc, &data, texture)) {
     return false;
   }
 
