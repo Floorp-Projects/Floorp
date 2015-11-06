@@ -256,6 +256,7 @@ public class CommandProcessor {
     sendTabNotificationIntent.setClassName(context, BrowserContract.TAB_RECEIVED_SERVICE_CLASS_NAME);
     sendTabNotificationIntent.setData(Uri.parse(uri));
     sendTabNotificationIntent.putExtra(Intent.EXTRA_TITLE, title);
+    sendTabNotificationIntent.putExtra(BrowserContract.EXTRA_CLIENT_GUID, clientId);
     final ComponentName componentName = context.startService(sendTabNotificationIntent);
   }
 }

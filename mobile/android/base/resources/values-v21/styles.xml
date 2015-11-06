@@ -9,11 +9,9 @@
       <item name="android:textColor">#fff</item>
    </style>
 
-   <style name="ActionBarTheme" parent="@style/ThemeOverlay.AppCompat.ActionBar">
-      <item name="android:colorControlNormal">#fff</item>
-
-      <!-- This color is the system default. -->
-      <item name="android:colorControlHighlight">#65696D</item>
+   <style name="ActionBarThemeGeckoPreferences">
+       <!-- Icon color -->
+       <item name="colorControlNormal">#fff</item>
    </style>
 
 </resources>
