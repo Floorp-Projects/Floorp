@@ -424,7 +424,7 @@ public:
 
       WorkerPrivate::LocationInfo& info = workerPrivate->GetLocationInfo();
       nsCOMPtr<nsIURI> baseURI;
-      nsresult rv = NS_NewURI(getter_AddRefs(baseURI), info.mOrigin);
+      nsresult rv = NS_NewURI(getter_AddRefs(baseURI), info.mHref);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return NS_ERROR_FAILURE;
       }
@@ -484,7 +484,7 @@ private:
     WorkerPrivate::LocationInfo& info = workerPrivate->GetLocationInfo();
 
     nsCOMPtr<nsIURI> baseURI;
-    nsresult rv = NS_NewURI(getter_AddRefs(baseURI), info.mOrigin);
+    nsresult rv = NS_NewURI(getter_AddRefs(baseURI), info.mHref);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return NS_ERROR_TYPE_ERR;
     }
