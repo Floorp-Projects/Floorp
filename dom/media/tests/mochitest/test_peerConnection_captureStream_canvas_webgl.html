@@ -89,7 +89,8 @@ runNetworkTest(() => {
       ok(!!vremote, "Should have remote video element for pcRemote");
     },
     function WAIT_FOR_REMOTE_GREEN() {
-      return h.waitForPixel(vremote, h.green, 128, "pcRemote's remote should become green");
+      return h.waitForPixelColor(vremote, h.green, 128,
+                                 "pcRemote's remote should become green");
     },
     function REQUEST_FRAME(test) {
       // After requesting a frame it will be captured at the time of next render.
@@ -101,7 +102,8 @@ runNetworkTest(() => {
       h.drawColor(canvas, h.red);
     },
     function WAIT_FOR_REMOTE_RED() {
-      return h.waitForPixel(vremote, h.red, 128, "pcRemote's remote should become red");
+      return h.waitForPixelColor(vremote, h.red, 128,
+                                 "pcRemote's remote should become red");
     }
   ]);
   test.run();

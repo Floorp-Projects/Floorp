@@ -49,7 +49,8 @@ http://creativecommons.org/licenses/publicdomain/
       yield registration.pushManager.subscribe();
       ok(false, "subscribe() should fail because no permission for push");
     } catch (error) {
-      ok(true, "subscribe() could not register for push notification");
+      ok(error instanceof DOMException, "Wrong exception type");
+      is(error.name, "PermissionDeniedError", "Wrong exception name");
     }
   });
 

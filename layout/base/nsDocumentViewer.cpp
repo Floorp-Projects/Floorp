@@ -2832,29 +2832,6 @@ nsDocumentViewer::CallChildren(CallChildFunc aFunc, void* aClosure)
   }
 }
 
-struct LineBoxInfo
-{
-  nscoord mMaxLineBoxWidth;
-};
-
-static void
-ChangeChildPaintingEnabled(nsIContentViewer* aChild, void* aClosure)
-{
-  bool* enablePainting = (bool*) aClosure;
-  if (*enablePainting) {
-    aChild->ResumePainting();
-  } else {
-    aChild->PausePainting();
-  }
-}
-
-static void
-ChangeChildMaxLineBoxWidth(nsIContentViewer* aChild, void* aClosure)
-{
-  struct LineBoxInfo* lbi = (struct LineBoxInfo*) aClosure;
-  aChild->ChangeMaxLineBoxWidth(lbi->mMaxLineBoxWidth);
-}
-
 struct ZoomInfo
 {
   float mZoom;
@@ -3281,52 +3258,6 @@ NS_IMETHODIMP nsDocumentViewer::AppendSubtree(nsTArray<nsCOMPtr<nsIContentViewer
 {
   aArray.AppendElement(this);
   CallChildren(AppendChildSubtree, &aArray);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocumentViewer::PausePainting()
-{
-  bool enablePaint = false;
-  CallChildren(ChangeChildPaintingEnabled, &enablePaint);
-
-  nsIPresShell* presShell = GetPresShell();
-  if (presShell) {
-    presShell->PausePainting();
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocumentViewer::ResumePainting()
-{
-  bool enablePaint = true;
-  CallChildren(ChangeChildPaintingEnabled, &enablePaint);
-
-  nsIPresShell* presShell = GetPresShell();
-  if (presShell) {
-    presShell->ResumePainting();
-  }
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocumentViewer::ChangeMaxLineBoxWidth(int32_t aMaxLineBoxWidth)
-{
-  // Change the max line box width for all children.
-  struct LineBoxInfo lbi = { aMaxLineBoxWidth };
-  CallChildren(ChangeChildMaxLineBoxWidth, &lbi);
-
-  // Now, change our max line box width.
-  // Convert to app units, since our input is in CSS pixels.
-  nscoord mlbw = nsPresContext::CSSPixelsToAppUnits(aMaxLineBoxWidth);
-  nsIPresShell* presShell = GetPresShell();
-  if (presShell) {
-    presShell->SetMaxLineBoxWidth(mlbw);
-  }
-
   return NS_OK;
 }
 
