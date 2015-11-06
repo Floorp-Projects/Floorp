@@ -107,6 +107,12 @@ static PRLogModuleInfo* gMediaElementEventsLog;
 
 #include "mozilla/EventStateManager.h"
 
+#if defined(MOZ_B2G) && !defined(MOZ_GRAPHENE)
+// This controls the b2g specific of pausing the media element when the
+// AudioChannel tells us to mute it.
+#define PAUSE_MEDIA_ELEMENT_FROM_AUDIOCHANNEL
+#endif
+
 using namespace mozilla::layers;
 using mozilla::net::nsMediaFragmentURIParser;
 
@@ -4232,12 +4238,15 @@ bool HTMLMediaElement::IsBeingDestroyed()
 void HTMLMediaElement::NotifyOwnerDocumentActivityChanged()
 {
   bool pauseElement = NotifyOwnerDocumentActivityChangedInternal();
-  if (pauseElement && mAudioChannelAgent &&
+  if (pauseElement && mAudioChannelAgent
+#ifdef PAUSE_MEDIA_ELEMENT_FROM_AUDIOCHANNEL
       // On B2G, NotifyOwnerDocumentActivityChangedInternal may return true for
       // two reasons: the document no longer being active, or the element being
       // paused by the audio channel.  However we are only interested in the
       // first case here, so we need to filter out the second case.
-      (!UseAudioChannelAPI() || !ComputedMuted())) {
+      && !ComputedMuted()
+#endif
+      ) {
     // If the element is being paused since we are navigating away from the
     // document, notify the audio channel agent.
     // Be careful to ignore this event during a docshell frame swap.
@@ -4261,13 +4270,15 @@ HTMLMediaElement::NotifyOwnerDocumentActivityChangedInternal()
   }
 
   bool pauseElement = !IsActive();
+#ifdef PAUSE_MEDIA_ELEMENT_FROM_AUDIOCHANNEL
   // Only pause the element when we start playing. If we pause without playing
   // audio, the resource loading would be affected unexpectedly. For example,
   // the media element is muted by default, but we don't want this behavior
   // interrupting the loading process.
-  if (UseAudioChannelAPI() && mAudioChannelAgent) {
+  if (mAudioChannelAgent) {
     pauseElement |= ComputedMuted();
   }
+#endif
 
   SuspendOrResumeElement(pauseElement, !IsActive());
 
@@ -4701,10 +4712,9 @@ nsresult HTMLMediaElement::UpdateChannelMuteState(float aVolume, bool aMuted)
     }
   }
 
-  if (UseAudioChannelAPI()) {
-    SuspendOrResumeElement(ComputedMuted(), false);
-  }
-
+#ifdef PAUSE_MEDIA_ELEMENT_FROM_AUDIOCHANNEL
+  SuspendOrResumeElement(ComputedMuted(), false);
+#endif
   return NS_OK;
 }
 
@@ -4738,12 +4748,6 @@ HTMLMediaElement::IsPlayingThroughTheAudioChannel() const
     return false;
   }
 
-  // We should consider any bfcached page or inactive document/channel as
-  // non-playing.
-  if (mPausedForInactiveDocumentOrChannel) {
-    return false;
-  }
-
   // A loop always is playing
   if (HasAttr(kNameSpaceID_None, nsGkAtoms::loop)) {
     return true;
@@ -4757,11 +4761,6 @@ HTMLMediaElement::IsPlayingThroughTheAudioChannel() const
 
   // If we are seeking, we consider it as playing
   if (mPlayingThroughTheAudioChannelBeforeSeek) {
-    return true;
-  }
-
-  // If we are playing an external stream.
-  if (mSrcAttrStream) {
     return true;
   }
 
@@ -4820,9 +4819,9 @@ NS_IMETHODIMP HTMLMediaElement::WindowVolumeChanged(float aVolume, bool aMuted)
 
   UpdateChannelMuteState(aVolume, aMuted);
 
-  if (UseAudioChannelAPI()) {
-    mPaused.SetCanPlay(!aMuted);
-  }
+#ifdef PAUSE_MEDIA_ELEMENT_FROM_AUDIOCHANNEL
+  mPaused.SetCanPlay(!aMuted);
+#endif
 
   return NS_OK;
 }
