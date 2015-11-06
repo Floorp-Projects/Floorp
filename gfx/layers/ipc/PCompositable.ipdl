@@ -15,9 +15,19 @@ namespace layers {
 async protocol PCompositable
 {
     manager PImageBridge or PLayerTransaction;
-parent:
+child:
     async __delete__();
+parent:
+    /**
+     * Asynchronously tell the compositor side to remove the texture.
+     */
+    async Destroy();
+
+    /**
+     * Never used (needed for ParentActor).
+     */
+    async DestroySync();
 };
-    
+
 } // namespace
 } // namespace
