@@ -1,0 +1,47 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Web Audio memory reporting</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+var ac = new AudioContext();
+var sp = ac.createScriptProcessor(4096, 1, 1);
+sp.connect(ac.destination);
+
+var nodeTypes = ["ScriptProcessorNode", "AudioDestinationNode"];
+var objectTypes = ["dom-nodes", "engine-objects", "stream-objects"];
+
+var usages = {};
+
+for (var i = 0; i < nodeTypes.length; ++i) {
+  for (var j = 0; j < objectTypes.length; ++j) {
+    usages["explicit/webaudio/audio-node/" +
+           nodeTypes[i] + "/" + objectTypes[j]] = 0;
+  }
+}
+
+var handleReport = function(aProcess, aPath, aKind, aUnits, aAmount, aDesc) {
+  if (aPath in usages) {
+    usages[aPath] += aAmount;
+  }
+}
+
+var finished = function () {
+  ok(true, "Yay didn't crash!");
+  for (var resource in usages) {
+    ok(usages[resource] > 0, "Non-zero usage for " + resource);
+  };
+  SimpleTest.finish();
+}
+
+SpecialPowers.Cc["@mozilla.org/memory-reporter-manager;1"].
+  getService(SpecialPowers.Ci.nsIMemoryReporterManager).
+  getReports(handleReport, null, finished, null, /* anonymized = */ false);
+
+</script>
+</html>
