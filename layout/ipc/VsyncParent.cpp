@@ -73,6 +73,15 @@ VsyncParent::DispatchVsyncEvent(TimeStamp aTimeStamp)
 }
 
 bool
+VsyncParent::RecvRequestVsyncRate()
+{
+  AssertIsOnBackgroundThread();
+  TimeDuration vsyncRate = gfxPlatform::GetPlatform()->GetHardwareVsync()->GetGlobalDisplay().GetVsyncRate();
+  unused << SendVsyncRate(vsyncRate.ToMilliseconds());
+  return true;
+}
+
+bool
 VsyncParent::RecvObserve()
 {
   AssertIsOnBackgroundThread();
