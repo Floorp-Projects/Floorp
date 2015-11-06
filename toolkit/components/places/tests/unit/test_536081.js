@@ -19,14 +19,14 @@ function run_test()
   run_next_test();
 }
 
-add_task(function test_execute()
+add_task(function* test_execute()
 {
-  for (let [, url] in Iterator(URLS)) {
+  for (let url of URLS) {
     yield task_test_url(url);
   }
 });
 
-function task_test_url(aURL) {
+function* task_test_url(aURL) {
   print("Testing url: " + aURL.u);
   yield PlacesTestUtils.addVisits(uri(aURL.u));
   let query = hs.getNewQuery();

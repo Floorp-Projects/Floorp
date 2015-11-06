@@ -48,7 +48,7 @@ function run_test()
   run_next_test();
 }
 
-add_task(function pages_query()
+add_task(function* pages_query()
 {
   yield task_populateDB(gTestData);
 
@@ -71,7 +71,7 @@ add_task(function pages_query()
   yield PlacesTestUtils.clearHistory();
 });
 
-add_task(function visits_query()
+add_task(function* visits_query()
 {
   yield task_populateDB(gTestData);
 
@@ -98,7 +98,7 @@ add_task(function visits_query()
   yield PlacesTestUtils.clearHistory();
 });
 
-add_task(function pages_searchterm_query()
+add_task(function* pages_searchterm_query()
 {
   yield task_populateDB(gTestData);
 
@@ -122,7 +122,7 @@ add_task(function pages_searchterm_query()
   yield PlacesTestUtils.clearHistory();
 });
 
-add_task(function visits_searchterm_query()
+add_task(function* visits_searchterm_query()
 {
   yield task_populateDB(gTestData);
 
@@ -149,7 +149,7 @@ add_task(function visits_searchterm_query()
   yield PlacesTestUtils.clearHistory();
 });
 
-add_task(function pages_searchterm_is_title_query()
+add_task(function* pages_searchterm_is_title_query()
 {
   yield task_populateDB(gTestData);
 
@@ -173,7 +173,7 @@ add_task(function pages_searchterm_is_title_query()
   yield PlacesTestUtils.clearHistory();
 });
 
-add_task(function visits_searchterm_is_title_query()
+add_task(function* visits_searchterm_is_title_query()
 {
   yield task_populateDB(gTestData);
 
