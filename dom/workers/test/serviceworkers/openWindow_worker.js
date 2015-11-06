@@ -2,7 +2,7 @@
 // the timeout values.
 var client;
 var window_count = 0;
-var expected_window_count = 6;
+var expected_window_count = 7;
 var resolve_got_all_windows = null;
 var got_all_windows = new Promise(function(res, rej) {
   resolve_got_all_windows = res;
@@ -97,6 +97,7 @@ onnotificationclick = function(e) {
   promises.push(testForUrl("about:blank", "TypeError", null, results));
   promises.push(testForUrl(different_origin, null, null, results));
   promises.push(testForUrl(same_origin, null, {url: same_origin}, results));
+  promises.push(testForUrl("open_window/client.html", null, {url: same_origin}, results));
 
   // redirect tests
   promises.push(testForUrl(redirect + "open_window/client.html", null,
