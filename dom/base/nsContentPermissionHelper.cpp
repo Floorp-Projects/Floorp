@@ -127,7 +127,6 @@ class ContentPermissionRequestParent : public PContentPermissionRequestParent
  private:
   virtual bool Recvprompt();
   virtual bool RecvNotifyVisibility(const bool& aIsVisible);
-  virtual bool RecvDestroy();
   virtual void ActorDestroy(ActorDestroyReason why);
 };
 
@@ -165,13 +164,6 @@ ContentPermissionRequestParent::RecvNotifyVisibility(const bool& aIsVisible)
     return false;
   }
   mProxy->NotifyVisibility(aIsVisible);
-  return true;
-}
-
-bool
-ContentPermissionRequestParent::RecvDestroy()
-{
-  Unused << PContentPermissionRequestParent::Send__delete__(this);
   return true;
 }
 
@@ -617,7 +609,7 @@ nsContentPermissionRequestProxy::Cancel()
 
   nsTArray<PermissionChoice> emptyChoices;
 
-  Unused << mParent->SendNotifyResult(false, emptyChoices);
+  Unused << ContentPermissionRequestParent::Send__delete__(mParent, false, emptyChoices);
   mParent = nullptr;
   return NS_OK;
 }
@@ -686,7 +678,7 @@ nsContentPermissionRequestProxy::Allow(JS::HandleValue aChoices)
     return NS_ERROR_FAILURE;
   }
 
-  Unused << mParent->SendNotifyResult(true, choices);
+  Unused << ContentPermissionRequestParent::Send__delete__(mParent, true, choices);
   mParent = nullptr;
   return NS_OK;
 }
@@ -740,10 +732,9 @@ RemotePermissionRequest::DoAllow(JS::HandleValue aChoices)
 
 // PContentPermissionRequestChild
 bool
-RemotePermissionRequest::RecvNotifyResult(const bool& aAllow,
-                                          InfallibleTArray<PermissionChoice>&& aChoices)
+RemotePermissionRequest::Recv__delete__(const bool& aAllow,
+                                        InfallibleTArray<PermissionChoice>&& aChoices)
 {
-  Unused << this->SendDestroy();
   mListener->RemoveListener();
   mListener = nullptr;
 

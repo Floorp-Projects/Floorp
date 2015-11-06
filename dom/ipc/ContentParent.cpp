@@ -2246,7 +2246,9 @@ ContentParent::NotifyTabDestroyed(const TabId& aTabId,
     // Need to close undeleted ContentPermissionRequestParents before tab is closed.
     for (auto& permissionRequestParent : parentArray) {
         nsTArray<PermissionChoice> emptyChoices;
-        Unused << PContentPermissionRequestParent::Send__delete__(permissionRequestParent);
+        Unused << PContentPermissionRequestParent::Send__delete__(permissionRequestParent,
+                                                                  false,
+                                                                  emptyChoices);
     }
 
     // There can be more than one PBrowser for a given app process
