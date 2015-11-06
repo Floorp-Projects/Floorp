@@ -3,25 +3,23 @@
 
 package org.mozilla.gecko.background.healthreport.upload.test;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mozilla.gecko.background.healthreport.HealthReportStorage;
+import org.mozilla.gecko.background.healthreport.upload.AndroidSubmissionClient.SubmissionsTracker.TrackingRequestDelegate;
+import org.mozilla.gecko.background.healthreport.upload.test.MockAndroidSubmissionClient.MockHealthReportStorage;
+import org.mozilla.gecko.background.testhelpers.StubDelegate;
+import org.mozilla.gecko.background.testhelpers.TestRunner;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URISyntaxException;
 import java.util.HashSet;
 
-import org.junit.Before;
-import org.junit.Test;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
-import org.junit.runner.RunWith;
-import org.mozilla.gecko.background.healthreport.HealthReportStorage;
-import org.mozilla.gecko.background.healthreport.upload.AndroidSubmissionClient.SubmissionsTracker.TrackingRequestDelegate;
-import org.mozilla.gecko.background.healthreport.upload.test.MockAndroidSubmissionClient;
-import org.mozilla.gecko.background.healthreport.upload.test.MockAndroidSubmissionClient.MockHealthReportStorage;
-import org.mozilla.gecko.background.testhelpers.StubDelegate;
-import org.robolectric.RobolectricGradleTestRunner;
-
-@RunWith(RobolectricGradleTestRunner.class)
+@RunWith(TestRunner.class)
 public class TestTrackingRequestDelegate {
   public static class MockAndroidSubmissionClient2 extends MockAndroidSubmissionClient {
     public MockAndroidSubmissionClient2() {
