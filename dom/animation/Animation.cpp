@@ -663,7 +663,7 @@ Animation::CanThrottle() const
     return true;
   }
 
-  return IsRunningOnCompositor();
+  return mEffect->CanThrottle();
 }
 
 void
