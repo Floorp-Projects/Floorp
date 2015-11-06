@@ -295,6 +295,8 @@ public:
 
   void NotifyEffectTimingUpdated();
 
+  AnimationCollection* GetCollection() const;
+
 protected:
   void SilentlySetCurrentTime(const TimeDuration& aNewCurrentTime);
   void SilentlySetPlaybackRate(double aPlaybackRate);
@@ -355,7 +357,6 @@ protected:
   nsIDocument* GetRenderedDocument() const;
   nsPresContext* GetPresContext() const;
   virtual CommonAnimationManager* GetAnimationManager() const = 0;
-  AnimationCollection* GetCollection() const;
 
   RefPtr<AnimationTimeline> mTimeline;
   RefPtr<KeyframeEffectReadOnly> mEffect;

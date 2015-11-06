@@ -32,6 +32,7 @@ class nsPresContext;
 
 namespace mozilla {
 
+struct AnimationCollection;
 class AnimValuesStyleRule;
 
 namespace dom {
@@ -290,6 +291,8 @@ public:
                                              nsCSSProperty aProperty);
   nsIDocument* GetRenderedDocument() const;
   nsPresContext* GetPresContext() const;
+
+  inline AnimationCollection* GetCollection() const;
 
 protected:
   virtual ~KeyframeEffectReadOnly();
