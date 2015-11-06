@@ -556,7 +556,7 @@
         width += 2;
       }
 
-      var cx = React.addons.classSet;
+      var cx = classNames;
       return (
         React.createElement("div", {className: "example"}, 
           React.createElement("h3", {id: this.makeId()}, 

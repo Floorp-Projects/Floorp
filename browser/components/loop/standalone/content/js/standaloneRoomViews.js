@@ -80,7 +80,7 @@ loop.standaloneRoomViews = (function(mozL10n) {
         mozL10n.get("rooms_room_joined_own_conversation_label") :
         mozL10n.get("rooms_room_join_label");
 
-      var buttonClasses = React.addons.classSet({
+      var buttonClasses = classNames({
         btn: true,
         "btn-info": true,
         disabled: this.state.roomState === ROOM_STATES.JOINED
@@ -325,7 +325,7 @@ loop.standaloneRoomViews = (function(mozL10n) {
           var isChrome = utils.isChrome(navigator.userAgent);
           var isFirefox = utils.isFirefox(navigator.userAgent);
           var isOpera = utils.isOpera(navigator.userAgent);
-          var promptMediaMessageClasses = React.addons.classSet({
+          var promptMediaMessageClasses = classNames({
             "prompt-media-message": true,
             "chrome": isChrome,
             "firefox": isFirefox,

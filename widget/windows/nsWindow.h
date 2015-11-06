@@ -28,6 +28,7 @@
 #include "mozilla/MouseEvents.h"
 #include "mozilla/TimeStamp.h"
 #include "nsMargin.h"
+#include "nsRegionFwd.h"
 
 #include "nsWinGesture.h"
 
@@ -49,7 +50,6 @@
 
 class nsNativeDragTarget;
 class nsIRollupListener;
-class nsIntRegion;
 class imgIContainer;
 
 namespace mozilla {

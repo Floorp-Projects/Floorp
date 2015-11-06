@@ -174,7 +174,7 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
     ]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
-    CXXFLAGS += ['-I%s/hardware/libhardware_legacy/include' % CONFIG['ANDROID_SOURCE']]
+    LOCAL_INCLUDES += ['%' + '%s/hardware/libhardware_legacy/include' % CONFIG['ANDROID_SOURCE']]
 
 CFLAGS += CONFIG['GLIB_CFLAGS']
 CFLAGS += CONFIG['MOZ_DBUS_GLIB_CFLAGS']

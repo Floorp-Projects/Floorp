@@ -98,8 +98,8 @@ public class GeckoPreferenceFragment extends PreferenceFragment {
 
         // We need this because we can launch straight into this category
         // from the Data Reporting notification.
-        if (res == R.xml.preferences_vendor) {
-            return getString(R.string.pref_category_vendor);
+        if (res == R.xml.preferences_privacy) {
+            return getString(R.string.pref_category_privacy_short);
         }
 
         // from the Awesomescreen with the magnifying glass.

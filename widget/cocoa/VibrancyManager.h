@@ -17,7 +17,6 @@
 @class NSColor;
 @class NSView;
 class nsChildView;
-class nsIntRegion;
 
 namespace mozilla {
 

@@ -1936,8 +1936,8 @@ TextInputHandler::HandleFlagsChanged(NSEvent* aNativeEvent)
                           timestamp:[aNativeEvent timestamp]
                        windowNumber:[aNativeEvent windowNumber]
                             context:[aNativeEvent context]
-                         characters:nil
-        charactersIgnoringModifiers:nil
+                         characters:@""
+        charactersIgnoringModifiers:@""
                           isARepeat:NO
                             keyCode:keyCode];
         DispatchKeyEventForFlagsChanged(event, dispatchKeyDown);

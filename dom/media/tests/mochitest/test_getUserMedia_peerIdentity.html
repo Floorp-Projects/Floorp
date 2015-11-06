@@ -13,7 +13,7 @@ createHTML({
 });
 function theTest() {
   function testPeerIdentityConstraint(withConstraint) {
-    var config = { audio: true, video: true, fake: true };
+    var config = { audio: true, video: true };
     if (withConstraint) {
       config.peerIdentity = 'user@example.com';
     }
