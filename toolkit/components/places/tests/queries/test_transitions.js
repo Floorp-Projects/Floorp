@@ -93,7 +93,7 @@ function run_test()
   run_next_test();
 }
 
-add_task(function test_transitions()
+add_task(function* test_transitions()
 {
   let timeNow = Date.now();
   for (let item of testData) {

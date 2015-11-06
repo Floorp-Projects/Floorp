@@ -24,7 +24,7 @@ function check_keyword(aURI, aKeyword) {
   }
 }
 
-function check_orphans() {
+function* check_orphans() {
   let db = yield PlacesUtils.promiseDBConnection();
   let rows = yield db.executeCached(
     `SELECT id FROM moz_keywords k
@@ -80,7 +80,7 @@ add_task(function test_invalid_input() {
                 /NS_ERROR_ILLEGAL_VALUE/);
 });
 
-add_task(function test_addBookmarkAndKeyword() {
+add_task(function* test_addBookmarkAndKeyword() {
   check_keyword(URI1, null);
   let fc = yield foreign_count(URI1);
   let observer = expectNotifications();
@@ -108,7 +108,7 @@ add_task(function test_addBookmarkAndKeyword() {
   yield check_orphans();
 });
 
-add_task(function test_addBookmarkToURIHavingKeyword() {
+add_task(function* test_addBookmarkToURIHavingKeyword() {
   // The uri has already a keyword.
   check_keyword(URI1, "keyword");
   let fc = yield foreign_count(URI1);
@@ -126,7 +126,7 @@ add_task(function test_addBookmarkToURIHavingKeyword() {
   check_orphans();
 });
 
-add_task(function test_sameKeywordDifferentURI() {
+add_task(function* test_sameKeywordDifferentURI() {
   let fc1 = yield foreign_count(URI1);
   let fc2 = yield foreign_count(URI2);
   let observer = expectNotifications();
@@ -167,7 +167,7 @@ add_task(function test_sameKeywordDifferentURI() {
   check_orphans();
 });
 
-add_task(function test_sameURIDifferentKeyword() {
+add_task(function* test_sameURIDifferentKeyword() {
   let fc = yield foreign_count(URI2);
   let observer = expectNotifications();
 
@@ -204,7 +204,7 @@ add_task(function test_sameURIDifferentKeyword() {
   check_orphans();
 });
 
-add_task(function test_removeBookmarkWithKeyword() {
+add_task(function* test_removeBookmarkWithKeyword() {
   let fc = yield foreign_count(URI2);
   let itemId =
     PlacesUtils.bookmarks.insertBookmark(PlacesUtils.unfiledBookmarksFolderId,
@@ -222,7 +222,7 @@ add_task(function test_removeBookmarkWithKeyword() {
   check_orphans();
 });
 
-add_task(function test_unsetKeyword() {
+add_task(function* test_unsetKeyword() {
   let fc = yield foreign_count(URI2);
   let observer = expectNotifications();
 
@@ -266,7 +266,7 @@ add_task(function test_unsetKeyword() {
   check_orphans();
 });
 
-add_task(function test_addRemoveBookmark() {
+add_task(function* test_addRemoveBookmark() {
   let fc = yield foreign_count(URI3);
   let observer = expectNotifications();
 

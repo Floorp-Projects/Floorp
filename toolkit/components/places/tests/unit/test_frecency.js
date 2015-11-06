@@ -158,28 +158,28 @@ var c2 = 1;
 
 var tests = [
 // test things without a search term
-function() {
+function*() {
   print("TEST-INFO | Test 0: same count, different date");
   yield task_setCountDate(uri1, c1, d1);
   yield task_setCountDate(uri2, c1, d2);
   tagURI(uri1, ["site"]);
   ensure_results([uri1, uri2], "");
 },
-function() {
+function*() {
   print("TEST-INFO | Test 1: same count, different date");
   yield task_setCountDate(uri1, c1, d2);
   yield task_setCountDate(uri2, c1, d1);
   tagURI(uri1, ["site"]);
   ensure_results([uri2, uri1], "");
 },
-function() {
+function*() {
   print("TEST-INFO | Test 2: different count, same date");
   yield task_setCountDate(uri1, c1, d1);
   yield task_setCountDate(uri2, c2, d1);
   tagURI(uri1, ["site"]);
   ensure_results([uri1, uri2], "");
 },
-function() {
+function*() {
   print("TEST-INFO | Test 3: different count, same date");
   yield task_setCountDate(uri1, c2, d1);
   yield task_setCountDate(uri2, c1, d1);
@@ -188,28 +188,28 @@ function() {
 },
 
 // test things with a search term
-function() {
+function*() {
   print("TEST-INFO | Test 4: same count, different date");
   yield task_setCountDate(uri1, c1, d1);
   yield task_setCountDate(uri2, c1, d2);
   tagURI(uri1, ["site"]);
   ensure_results([uri1, uri2], "site");
 },
-function() {
+function*() {
   print("TEST-INFO | Test 5: same count, different date");
   yield task_setCountDate(uri1, c1, d2);
   yield task_setCountDate(uri2, c1, d1);
   tagURI(uri1, ["site"]);
   ensure_results([uri2, uri1], "site");
 },
-function() {
+function*() {
   print("TEST-INFO | Test 6: different count, same date");
   yield task_setCountDate(uri1, c1, d1);
   yield task_setCountDate(uri2, c2, d1);
   tagURI(uri1, ["site"]);
   ensure_results([uri1, uri2], "site");
 },
-function() {
+function*() {
   print("TEST-INFO | Test 7: different count, same date");
   yield task_setCountDate(uri1, c2, d1);
   yield task_setCountDate(uri2, c1, d1);
@@ -218,43 +218,43 @@ function() {
 },
 // There are multiple tests for 8, hence the multiple functions
 // Bug 426166 section
-function() {
+function*() {
   print("TEST-INFO | Test 8.1a: same count, same date");
   setBookmark(uri3);
   setBookmark(uri4);
   ensure_results([uri4, uri3], "a");
 },
-function() {
+function*() {
   print("TEST-INFO | Test 8.1b: same count, same date");
   setBookmark(uri3);
   setBookmark(uri4);
   ensure_results([uri4, uri3], "aa");
 },
-function() {
+function*() {
   print("TEST-INFO | Test 8.2: same count, same date");
   setBookmark(uri3);
   setBookmark(uri4);
   ensure_results([uri4, uri3], "aaa");
 },
-function() {
+function*() {
   print("TEST-INFO | Test 8.3: same count, same date");
   setBookmark(uri3);
   setBookmark(uri4);
   ensure_results([uri4, uri3], "aaaa");
 },
-function() {
+function*() {
   print("TEST-INFO | Test 8.4: same count, same date");
   setBookmark(uri3);
   setBookmark(uri4);
   ensure_results([uri4, uri3], "aaa");
 },
-function() {
+function*() {
   print("TEST-INFO | Test 8.5: same count, same date");
   setBookmark(uri3);
   setBookmark(uri4);
   ensure_results([uri4, uri3], "aa");
 },
-function() {
+function*() {
   print("TEST-INFO | Test 8.6: same count, same date");
   setBookmark(uri3);
   setBookmark(uri4);
@@ -276,7 +276,7 @@ function run_test()
   run_next_test();
 }
 
-add_task(function test_frecency()
+add_task(function* test_frecency()
 {
   // always search in history + bookmarks, no matter what the default is
   var prefs = Cc["@mozilla.org/preferences-service;1"].
@@ -285,7 +285,7 @@ add_task(function test_frecency()
   prefs.setBoolPref("browser.urlbar.suggest.history", true);
   prefs.setBoolPref("browser.urlbar.suggest.bookmark", true);
   prefs.setBoolPref("browser.urlbar.suggest.openpage", false);
-  for (let [, test] in Iterator(tests)) {
+  for (let test of tests) {
     yield PlacesUtils.bookmarks.eraseEverything();
     yield PlacesTestUtils.clearHistory();
 

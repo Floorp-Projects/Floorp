@@ -11,7 +11,7 @@ function run_test() {
   run_next_test();
 }
 
-add_task(function() {
+add_task(function*() {
   let bm = PlacesUtils.bookmarks.insertBookmark(PlacesUtils.unfiledBookmarksFolderId,
                                                 NetUtil.newURI("http://mozilla.org/"),
                                                 PlacesUtils.bookmarks.DEFAULT_INDEX,

@@ -81,7 +81,7 @@ function run_test() {
   run_next_test();
 }
 
-add_task(function test_historyClear() {
+add_task(function* test_historyClear() {
   // Set interval to a large value so we don't expire on it.
   setInterval(3600); // 1h
 
