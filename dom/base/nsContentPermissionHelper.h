@@ -188,8 +188,8 @@ public:
                           nsPIDOMWindow* aWindow);
 
   // It will be called when prompt dismissed.
-  virtual bool Recv__delete__(const bool &aAllow,
-                              InfallibleTArray<PermissionChoice>&& aChoices) override;
+  virtual bool RecvNotifyResult(const bool &aAllow,
+                                InfallibleTArray<PermissionChoice>&& aChoices) override;
 
   virtual bool RecvGetVisibility() override;
 
