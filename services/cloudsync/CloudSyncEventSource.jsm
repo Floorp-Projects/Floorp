@@ -8,7 +8,7 @@ Components.utils.import("resource://services-common/utils.js");
 
 var EventSource = function (types, suspendFunc, resumeFunc) {
   this.listeners = new Map();
-  for each (let type in types) {
+  for (let type of types) {
     this.listeners.set(type, new Set());
   }
 

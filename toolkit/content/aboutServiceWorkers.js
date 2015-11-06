@@ -116,8 +116,11 @@ function display(info, pushNotificationService) {
 
   createItem(bundle.GetStringFromName('scope'), info.scope);
   createItem(bundle.GetStringFromName('scriptSpec'), info.scriptSpec, true);
-  createItem(bundle.GetStringFromName('currentWorkerURL'), info.currentWorkerURL, true);
+  let currentWorkerURL = info.activeWorker ? info.activeWorker.scriptSpec : "";
+  createItem(bundle.GetStringFromName('currentWorkerURL'), currentWorkerURL, true);
+  let activeCacheName = info.activeWorker ? info.activeWorker.cacheName : "";
   createItem(bundle.GetStringFromName('activeCacheName'), info.activeCacheName);
+  let waitingCacheName = info.waitingWorker ? info.waitingWorker.cacheName : "";
   createItem(bundle.GetStringFromName('waitingCacheName'), info.waitingCacheName);
 
   let pushItem = createItem(bundle.GetStringFromName('pushEndpoint'), bundle.GetStringFromName('waiting'));

@@ -68,7 +68,8 @@ ClientEngine.prototype = {
       numClients: 1,
     };
 
-    for each (let {name, type} in this._store._remoteClients) {
+    for (let id in this._store._remoteClients) {
+      let {name, type} = this._store._remoteClients[id];
       stats.hasMobile = stats.hasMobile || type == "mobile";
       stats.names.push(name);
       stats.numClients++;
@@ -87,7 +88,8 @@ ClientEngine.prototype = {
 
     counts.set(this.localType, 1);
 
-    for each (let record in this._store._remoteClients) {
+    for (let id in this._store._remoteClients) {
+      let record = this._store._remoteClients[id];
       let type = record.type;
       if (!counts.has(type)) {
         counts.set(type, 0);
@@ -258,7 +260,11 @@ ClientEngine.prototype = {
       this.clearCommands();
 
       // Process each command in order.
-      for each (let {command, args} in commands) {
+      if (!commands) {
+        return true;
+      }
+      for (let key in commands) {
+        let {command, args} = commands[key];
         this._log.debug("Processing command: " + command + "(" + args + ")");
 
         let engines = [args[0]];

@@ -247,12 +247,12 @@ nsStyleSet::Init(nsPresContext *aPresContext)
 
   // Make an explicit GatherRuleProcessors call for the levels that
   // don't have style sheets.  The other levels will have their calls
-  // triggered by DirtyRuleProcessors.  (We should probably convert the
-  // SheetType::PresHint and SheetType::StyleAttr levels to work like
-  // this as well, and not implement nsIStyleSheet.)
+  // triggered by DirtyRuleProcessors.
+  GatherRuleProcessors(SheetType::PresHint);
+  GatherRuleProcessors(SheetType::SVGAttrAnimation);
+  GatherRuleProcessors(SheetType::StyleAttr);
   GatherRuleProcessors(SheetType::Animation);
   GatherRuleProcessors(SheetType::Transition);
-  GatherRuleProcessors(SheetType::SVGAttrAnimation);
 }
 
 nsresult
@@ -1039,11 +1039,11 @@ nsStyleSet::AddImportantRules(nsRuleNode* aCurrLevelNode,
        node = node->GetParent()) {
     // We guarantee that we never walk the root node here, so no need
     // to null-check GetRule().  Furthermore, it must be a CSS rule.
-    NS_ASSERTION(RefPtr<css::StyleRule>(do_QueryObject(node->GetRule())),
+    NS_ASSERTION(RefPtr<css::Declaration>(do_QueryObject(node->GetRule())),
                  "Unexpected non-CSS rule");
 
     nsIStyleRule* impRule =
-      static_cast<css::StyleRule*>(node->GetRule())->GetImportantRule();
+      static_cast<css::Declaration*>(node->GetRule())->GetImportantStyleData();
     if (impRule)
       importantRules.AppendElement(impRule);
   }
@@ -1066,10 +1066,11 @@ nsStyleSet::AssertNoImportantRules(nsRuleNode* aCurrLevelNode,
 
   for (nsRuleNode *node = aCurrLevelNode; node != aLastPrevLevelNode;
        node = node->GetParent()) {
-    RefPtr<css::StyleRule> rule(do_QueryObject(node->GetRule()));
-    NS_ASSERTION(rule, "Unexpected non-CSS rule");
+    RefPtr<css::Declaration> declaration(do_QueryObject(node->GetRule()));
+    NS_ASSERTION(declaration, "Unexpected non-CSS rule");
 
-    NS_ASSERTION(!rule->GetImportantRule(), "Unexpected important rule");
+    NS_ASSERTION(!declaration->GetImportantStyleData(),
+                 "Unexpected important style source");
   }
 }
 
@@ -1083,8 +1084,13 @@ nsStyleSet::AssertNoCSSRules(nsRuleNode* aCurrLevelNode,
   for (nsRuleNode *node = aCurrLevelNode; node != aLastPrevLevelNode;
        node = node->GetParent()) {
     nsIStyleRule *rule = node->GetRule();
-    RefPtr<css::StyleRule> cssRule(do_QueryObject(rule));
-    NS_ASSERTION(!cssRule || !cssRule->Selector(), "Unexpected CSS rule");
+    RefPtr<css::Declaration> declaration(do_QueryObject(rule));
+    if (declaration) {
+      RefPtr<css::StyleRule> cssRule =
+        do_QueryObject(declaration->GetOwningRule());
+      NS_ASSERTION(!cssRule || !cssRule->Selector(),
+                   "Unexpected CSS rule");
+    }
   }
 }
 #endif
@@ -1960,11 +1966,14 @@ nsStyleSet::ResolveAnonymousBoxStyle(nsIAtom* aPseudoTag,
   if (aPseudoTag == nsCSSAnonBoxes::pageContent) {
     // Add any @page rules that are specified.
     nsTArray<nsCSSPageRule*> rules;
-    nsTArray<css::ImportantRule*> importantRules;
+    nsTArray<css::ImportantStyleData*> importantRules;
     PresContext()->StyleSet()->AppendPageRules(rules);
     for (uint32_t i = 0, i_end = rules.Length(); i != i_end; ++i) {
-      ruleWalker.Forward(rules[i]);
-      css::ImportantRule* importantRule = rules[i]->GetImportantRule();
+      css::Declaration* declaration = rules[i]->Declaration();
+      declaration->SetImmutable();
+      ruleWalker.Forward(declaration);
+      css::ImportantStyleData* importantRule =
+        declaration->GetImportantStyleData();
       if (importantRule) {
         importantRules.AppendElement(importantRule);
       }

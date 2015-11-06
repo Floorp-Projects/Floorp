@@ -42,14 +42,12 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS(GroupRule)
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
 
-  // implement part of nsIStyleRule and Rule
+  // implement part of Rule
   DECL_STYLE_RULE_INHERIT_NO_DOMRULE
-  virtual void SetStyleSheet(CSSStyleSheet* aSheet) override;
-
-  // to help implement nsIStyleRule
 #ifdef DEBUG
   virtual void List(FILE* out = stdout, int32_t aIndent = 0) const override;
 #endif
+  virtual void SetStyleSheet(CSSStyleSheet* aSheet) override;
 
 public:
   void AppendStyleRule(Rule* aRule);

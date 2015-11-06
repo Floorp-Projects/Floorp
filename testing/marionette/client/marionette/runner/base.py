@@ -569,7 +569,7 @@ class BaseMarionetteTestRunner(object):
                         rv['screenshot'] = marionette.screenshot()
                     with marionette.using_context(marionette.CONTEXT_CONTENT):
                         rv['source'] = marionette.page_source
-                except:
+                except Exception:
                     logger = get_default_logger()
                     logger.warning('Failed to gather test failure debug.', exc_info=True)
             return rv
@@ -638,6 +638,25 @@ class BaseMarionetteTestRunner(object):
 
         self._appName = self.capabilities.get('browserName')
         return self._appName
+
+    @property
+    def bin(self):
+        return self._bin
+
+    @bin.setter
+    def bin(self, path):
+        """
+        Set binary and reset parts of runner accordingly
+
+        Intended use: to change binary between calls to run_tests
+        """
+        self._bin = path
+        self.tests = []
+        if hasattr(self, 'marionette') and self.marionette:
+            self.marionette.cleanup()
+            if self.marionette.instance:
+                self.marionette.instance = None
+        self.marionette = None
 
     def reset_test_stats(self):
         self.passed = 0
@@ -898,7 +917,7 @@ setReq.onerror = function() {
         warnings.warn("start_httpd has been deprecated in favour of create_httpd",
             DeprecationWarning)
         self.httpd = self.create_httpd(need_external_ip)
-        
+
     def create_httpd(self, need_external_ip):
         host = "127.0.0.1"
         if need_external_ip:

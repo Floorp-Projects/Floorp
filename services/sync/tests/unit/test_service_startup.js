@@ -29,7 +29,7 @@ function run_test() {
 
   _("Engines are registered.");
   let engines = Service.engineManager.getAll();
-  do_check_true(Utils.deepEquals([engine.name for each (engine in engines)],
+  do_check_true(Utils.deepEquals(engines.map(engine => engine.name),
                                  ['tabs', 'bookmarks', 'forms', 'history']));
 
   _("Observers are notified of startup");

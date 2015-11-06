@@ -322,7 +322,9 @@ AsmJSModule::finish(ExclusiveContext* cx, TokenStream& tokenStream, MacroAssembl
     heapAccesses_ = masm.extractAsmJSHeapAccesses();
 
     // Call-site metadata used for stack unwinding.
-    callSites_ = masm.extractCallSites();
+    const CallSiteAndTargetVector& callSites = masm.callSites();
+    if (!callSites_.appendAll(callSites))
+        return false;
 
     MOZ_ASSERT(pod.functionBytes_ % AsmJSPageSize == 0);
 
