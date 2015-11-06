@@ -467,6 +467,19 @@ KeyframeEffectReadOnly::ComposeStyle(RefPtr<AnimValuesStyleRule>& aStyleRule,
 }
 
 bool
+KeyframeEffectReadOnly::IsPropertyRunningOnCompositor(
+  nsCSSProperty aProperty) const
+{
+  const auto& info = LayerAnimationInfo::sRecords;
+  for (size_t i = 0; i < ArrayLength(mIsPropertyRunningOnCompositor); i++) {
+    if (info[i].mProperty == aProperty) {
+      return mIsPropertyRunningOnCompositor[i];
+    }
+  }
+  return false;
+}
+
+bool
 KeyframeEffectReadOnly::IsRunningOnCompositor() const
 {
   // We consider animation is running on compositor if there is at least
@@ -1708,6 +1721,17 @@ KeyframeEffectReadOnly::GetFrames(JSContext*& aCx,
 
     aResult.AppendElement(keyframe);
   }
+}
+
+bool
+KeyframeEffectReadOnly::CanThrottle() const
+{
+  for (const AnimationProperty& property : mProperties) {
+    if (!IsPropertyRunningOnCompositor(property.mProperty)) {
+      return false;
+    }
+  }
+  return true;
 }
 
 nsIFrame*

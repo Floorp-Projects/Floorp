@@ -275,8 +275,13 @@ public:
   // Any updated properties are added to |aSetProperties|.
   void ComposeStyle(RefPtr<AnimValuesStyleRule>& aStyleRule,
                     nsCSSPropertySet& aSetProperties);
+  // Returns true if |aProperty| is currently being animated on compositor.
+  bool IsPropertyRunningOnCompositor(nsCSSProperty aProperty) const;
+  // Returns true if at least one property is being animated on compositor.
   bool IsRunningOnCompositor() const;
   void SetIsRunningOnCompositor(nsCSSProperty aProperty, bool aIsRunning);
+
+  bool CanThrottle() const;
 
   // Returns true unless Gecko limitations prevent performing transform
   // animations for |aFrame|. Any limitations that are encountered are
