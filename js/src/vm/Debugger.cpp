@@ -6771,12 +6771,10 @@ DebuggerGenericEval(JSContext* cx, const char* fullMethodName, const Value& code
             return false;
     } else {
         /*
-         * Use the global lexical scope as 'this'. If the global is an inner
-         * object, it should have a thisValue hook that returns the appropriate
-         * outer object.
+         * Use the global lexical scope as 'this'. If the global is a Window
+         * object, GetThisValue should return the WindowProxy.
          */
-        if (!GetThisValue(cx, scope, &thisv))
-            return false;
+        thisv = GetThisValue(scope);
         env = scope;
     }
 

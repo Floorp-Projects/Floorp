@@ -1046,16 +1046,8 @@ GetObjectClassName(JSContext* cx, HandleObject obj);
  *
  * See comments at ComputeImplicitThis.
  */
-inline bool
-GetThisValue(JSContext* cx, HandleObject obj, MutableHandleValue vp)
-{
-    if (ThisValueOp op = obj->getOps()->thisValue)
-        return op(cx, obj, vp);
-
-    vp.setObject(*obj);
-    return true;
-}
-
+Value
+GetThisValue(JSObject* obj);
 
 /* * */
 

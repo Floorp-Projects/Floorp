@@ -90,8 +90,8 @@ js::BoxNonStrictThis(JSContext* cx, HandleValue thisv, MutableHandleValue vp)
     MOZ_ASSERT(!thisv.isMagic());
 
     if (thisv.isNullOrUndefined()) {
-        Rooted<GlobalObject*> global(cx, cx->global());
-        return GetThisValue(cx, global, vp);
+        vp.set(GetThisValue(cx->global()));
+        return true;
     }
 
     if (thisv.isObject()) {
@@ -99,7 +99,11 @@ js::BoxNonStrictThis(JSContext* cx, HandleValue thisv, MutableHandleValue vp)
         return true;
     }
 
-    vp.setObject(*PrimitiveToObject(cx, thisv));
+    JSObject* obj = PrimitiveToObject(cx, thisv);
+    if (!obj)
+        return false;
+
+    vp.setObject(*obj);
     return true;
 }
 
@@ -434,9 +438,8 @@ js::Invoke(JSContext* cx, const Value& thisv, const Value& fval, unsigned argc, 
             !fval.toObject().as<JSFunction>().jitInfo() ||
             fval.toObject().as<JSFunction>().jitInfo()->needsOuterizedThisObject())
         {
-            RootedObject thisObj(cx, &args.thisv().toObject());
-            if (!GetThisValue(cx, thisObj, args.mutableThisv()))
-                return false;
+            JSObject* thisObj = &args.thisv().toObject();
+            args.mutableThisv().set(GetThisValue(thisObj));
         }
     }
 
@@ -631,9 +634,7 @@ js::Execute(JSContext* cx, HandleScript script, JSObject& scopeChainArg, Value* 
 
     ExecuteType type = script->module() ? EXECUTE_MODULE : EXECUTE_GLOBAL;
 
-    RootedValue thisv(cx);
-    if (!GetThisValue(cx, scopeChain, &thisv))
-        return false;
+    RootedValue thisv(cx, GetThisValue(scopeChain));
 
     return ExecuteKernel(cx, script, *scopeChain, thisv, NullValue(), type,
                          NullFramePtr() /* evalInFrame */, rval);
@@ -1208,22 +1209,17 @@ JS_STATIC_ASSERT(JSOP_IFNE == JSOP_IFEQ + 1);
  * in the interpreter and JITs will leave undefined as |this|. If funval is a
  * function not in strict mode, JSOP_THIS code replaces undefined with funval's
  * global.
- *
- * We set *vp to undefined early to reduce code size and bias this code for the
- * common and future-friendly cases.
  */
-static inline bool
-ComputeImplicitThis(JSContext* cx, HandleObject obj, MutableHandleValue vp)
+static inline Value
+ComputeImplicitThis(JSObject* obj)
 {
-    vp.setUndefined();
-
     if (IsGlobalLexicalScope(obj))
-        return true;
+        return UndefinedValue();
 
     if (IsCacheableNonGlobalScope(obj))
-        return true;
+        return UndefinedValue();
 
-    return GetThisValue(cx, obj, vp);
+    return GetThisValue(obj);
 }
 
 static MOZ_ALWAYS_INLINE bool
@@ -2802,9 +2798,7 @@ CASE(JSOP_GIMPLICITTHIS)
         if (!LookupNameWithGlobalDefault(cx, name, scopeObj, &scope))
             goto error;
 
-        ReservedRooted<Value> v(&rootValue0);
-        if (!ComputeImplicitThis(cx, scope, &v))
-            goto error;
+        Value v = ComputeImplicitThis(scope);
         PUSH_COPY(v);
     } else {
         // Treat it like JSOP_UNDEFINED.
@@ -4286,7 +4280,8 @@ js::ImplicitThisOperation(JSContext* cx, HandleObject scopeObj, HandlePropertyNa
     if (!LookupNameWithGlobalDefault(cx, name, scopeObj, &obj))
         return false;
 
-    return ComputeImplicitThis(cx, obj, res);
+    res.set(ComputeImplicitThis(obj));
+    return true;
 }
 
 bool
