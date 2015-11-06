@@ -1710,5 +1710,47 @@ KeyframeEffectReadOnly::GetFrames(JSContext*& aCx,
   }
 }
 
+/* static */ bool
+KeyframeEffectReadOnly::CanAnimateTransformOnCompositor(
+  const nsIFrame* aFrame,
+  const nsIContent* aContent)
+{
+  if (aFrame->Combines3DTransformWithAncestors() ||
+      aFrame->Extend3DContext()) {
+    if (aContent) {
+      nsCString message;
+      message.AppendLiteral("Gecko bug: Async animation of 'preserve-3d' "
+        "transforms is not supported.  See bug 779598");
+      AnimationCollection::LogAsyncAnimationFailure(message, aContent);
+    }
+    return false;
+  }
+  // Note that testing BackfaceIsHidden() is not a sufficient test for
+  // what we need for animating backface-visibility correctly if we
+  // remove the above test for Extend3DContext(); that would require
+  // looking at backface-visibility on descendants as well.
+  if (aFrame->StyleDisplay()->BackfaceIsHidden()) {
+    if (aContent) {
+      nsCString message;
+      message.AppendLiteral("Gecko bug: Async animation of "
+        "'backface-visibility: hidden' transforms is not supported."
+        "  See bug 1186204.");
+      AnimationCollection::LogAsyncAnimationFailure(message, aContent);
+    }
+    return false;
+  }
+  if (aFrame->IsSVGTransformed()) {
+    if (aContent) {
+      nsCString message;
+      message.AppendLiteral("Gecko bug: Async 'transform' animations of "
+        "aFrames with SVG transforms is not supported.  See bug 779599");
+      AnimationCollection::LogAsyncAnimationFailure(message, aContent);
+    }
+    return false;
+  }
+
+  return true;
+}
+
 } // namespace dom
 } // namespace mozilla
