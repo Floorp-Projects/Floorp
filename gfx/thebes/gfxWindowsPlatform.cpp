@@ -16,6 +16,7 @@
 
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
+#include "mozilla/Snprintf.h"
 #include "mozilla/WindowsVersion.h"
 #include "nsServiceManagerUtils.h"
 #include "nsTArray.h"
@@ -1285,7 +1286,7 @@ gfxWindowsPlatform::GetDLLVersion(char16ptr_t aDLLPath, nsAString& aVersion)
     vers[3] = LOWORD(fileVersLS);
 
     char buf[256];
-    sprintf(buf, "%d.%d.%d.%d", vers[0], vers[1], vers[2], vers[3]);
+    snprintf_literal(buf, "%u.%u.%u.%u", vers[0], vers[1], vers[2], vers[3]);
     aVersion.Assign(NS_ConvertUTF8toUTF16(buf));
 }
 
