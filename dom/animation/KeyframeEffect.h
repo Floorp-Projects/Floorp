@@ -284,6 +284,7 @@ public:
   // If |aContent| is nullptr, no logging is performed
   static bool CanAnimateTransformOnCompositor(const nsIFrame* aFrame,
                                               const nsIContent* aContent);
+  static bool IsGeometricProperty(const nsCSSProperty aProperty);
 protected:
   virtual ~KeyframeEffectReadOnly();
   void ResetIsRunningOnCompositor();

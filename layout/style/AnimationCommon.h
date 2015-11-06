@@ -37,8 +37,6 @@ namespace mozilla {
 class RestyleTracker;
 struct AnimationCollection;
 
-bool IsGeometricProperty(nsCSSProperty aProperty);
-
 class CommonAnimationManager : public nsIStyleRuleProcessor {
 public:
   explicit CommonAnimationManager(nsPresContext *aPresContext);
