@@ -114,6 +114,7 @@ browser.jar:
 #endif
   content/browser/loop/shared/libs/lodash-3.9.3.js    (content/shared/libs/lodash-3.9.3.js)
   content/browser/loop/shared/libs/backbone-1.2.1.js  (content/shared/libs/backbone-1.2.1.js)
+  content/browser/loop/shared/libs/classnames-2.2.0.js      (content/shared/libs/classnames-2.2.0.js)
 
   # Shared sounds
   content/browser/loop/shared/sounds/ringtone.ogg       (content/shared/sounds/ringtone.ogg)
