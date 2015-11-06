@@ -262,12 +262,17 @@ body {
 
 .room-list > .room-entry > h2 {
   display: inline-block;
-  font-size: 1.3rem;
-  line-height: 2.4rem;
-  color: #000;
+  vertical-align: middle;
   /* See .room-entry-context-item for the margin/size reductions.
    * An extra 16px to make space for the edit button. */
   width: calc(100% - 1rem - 32px);
+
+  font-size: 1.3rem;
+  line-height: 2.4rem;
+  color: #000;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
 }
 
 .room-list > .room-entry.room-active:not(.room-opened) > h2 {
