@@ -70,7 +70,7 @@ loop.shared.views = (function(_, mozL10n) {
     },
 
     _getClasses: function() {
-      var cx = React.addons.classSet;
+      var cx = classNames;
       // classes
       var classesObj = {
         "btn": true,
@@ -170,7 +170,7 @@ loop.shared.views = (function(_, mozL10n) {
         return null;
       }
 
-      var cx = React.addons.classSet;
+      var cx = classNames;
 
       var isActive = this.props.state === SCREEN_SHARE_STATES.ACTIVE;
       var screenShareClasses = cx({
@@ -304,7 +304,7 @@ loop.shared.views = (function(_, mozL10n) {
      * Recover the needed info for generating an specific menu Item
      */
     getItemInfo: function(menuItem) {
-      var cx = React.addons.classSet;
+      var cx = classNames;
       switch (menuItem.id) {
         case "help":
           return {
@@ -362,7 +362,7 @@ loop.shared.views = (function(_, mozL10n) {
         return null;
       }
 
-      var cx = React.addons.classSet;
+      var cx = classNames;
       var settingsDropdownMenuClasses = cx({
         "settings-menu": true,
         "dropdown-menu": true,
@@ -494,7 +494,7 @@ loop.shared.views = (function(_, mozL10n) {
         return null;
       }
 
-      var cx = React.addons.classSet;
+      var cx = classNames;
       var conversationToolbarCssClasses = cx({
         "conversation-toolbar": true,
         "idle": this.state.idle
@@ -642,7 +642,7 @@ loop.shared.views = (function(_, mozL10n) {
     },
 
     render: function() {
-      var cx = React.addons.classSet;
+      var cx = classNames;
       var classObject = { button: true, disabled: this.props.disabled };
       if (this.props.additionalClass) {
         classObject[this.props.additionalClass] = true;
@@ -675,7 +675,7 @@ loop.shared.views = (function(_, mozL10n) {
     },
 
     render: function() {
-      var cx = React.addons.classSet;
+      var cx = classNames;
       var classObject = { "button-group": true };
       if (this.props.additionalClass) {
         classObject[this.props.additionalClass] = true;
@@ -742,7 +742,7 @@ loop.shared.views = (function(_, mozL10n) {
     },
 
     render: function() {
-      var cx = React.addons.classSet;
+      var cx = classNames;
       var wrapperClasses = {
         "checkbox-wrapper": true,
         disabled: this.props.disabled
@@ -860,7 +860,7 @@ loop.shared.views = (function(_, mozL10n) {
           "shared/img/icons-16x16.svg#globe";
       }
 
-      var wrapperClasses = React.addons.classSet({
+      var wrapperClasses = classNames({
         "context-wrapper": true,
         "clicks-allowed": this.props.allowClick
       });
@@ -1076,17 +1076,17 @@ loop.shared.views = (function(_, mozL10n) {
     },
 
     render: function() {
-      var remoteStreamClasses = React.addons.classSet({
+      var remoteStreamClasses = classNames({
         "remote": true,
         "focus-stream": !this.props.displayScreenShare
       });
 
-      var screenShareStreamClasses = React.addons.classSet({
+      var screenShareStreamClasses = classNames({
         "screen": true,
         "focus-stream": this.props.displayScreenShare
       });
 
-      var mediaWrapperClasses = React.addons.classSet({
+      var mediaWrapperClasses = classNames({
         "media-wrapper": true,
         "receiving-screen-share": this.props.displayScreenShare,
         "showing-local-streams": this.props.localSrcMediaElement ||
