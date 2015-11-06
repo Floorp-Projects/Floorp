@@ -570,16 +570,13 @@
   <string name="voicesearch_prompt">&voicesearch_prompt;</string>
 
   <!-- Restrictions -->
-  <string name="restriction_disallow_import_settings_title">&restriction_disallow_import_settings_title2;</string>
   <string name="restriction_disallow_addons_title">&restriction_disallow_addons_title2;</string>
-  <string name="restriction_disallow_devtools_title">&restriction_disallow_devtools_title2;</string>
-  <string name="restriction_disallow_customize_home_title">&restriction_disallow_customize_home_title2;</string>
   <string name="restriction_disallow_private_browsing_title">&restriction_disallow_private_browsing_title2;</string>
   <string name="restriction_disallow_location_services_title">&restriction_disallow_location_services_title2;</string>
-  <string name="restriction_disallow_display_settings_title">&restriction_disallow_display_settings_title2;</string>
   <string name="restriction_disallow_clear_history_title">&restriction_disallow_clear_history_title2;</string>
   <string name="restriction_disallow_master_password_title">&restriction_disallow_master_password_title2;</string>
   <string name="restriction_disallow_guest_browsing_title">&restriction_disallow_guest_browsing_title2;</string>
+  <string name="restriction_disallow_advanced_settings_title">&restriction_disallow_advanced_settings_title;</string>
 
   <!-- Miscellaneous -->
   <string name="ellipsis">&ellipsis;</string>
