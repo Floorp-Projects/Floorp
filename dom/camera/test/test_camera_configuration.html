@@ -111,7 +111,7 @@ suite.test('picture-mode', function() {
   suite.hw.params['preview-size'] = '1x1';
   suite.hw.params['picture-size'] = '1x1';
   suite.hw.params['preview-size-values'] = '640x480,320x240,1x1';
-  suite.hw.params['picture-size-values'] = '640x480,320x240,1x1';
+  suite.hw.params['picture-size-values'] = '1280x960,640x480,320x240,1x1';
   suite.hw.params['video-size-values'] = '320x240';
 
   var setConfig = {
@@ -130,12 +130,65 @@ suite.test('picture-mode', function() {
       height: 480
     },
     pictureSize: {
+      width: 1280,
+      height: 960
+    }
+  };
+
+  var postConfig = {
+    mode: 'picture',
+    recorderProfile: 'qvga',
+    previewSize: {
+      width: 640,
+      height: 480
+    },
+    pictureSize: {
       width: 640,
       height: 480
     }
   };
 
-  return setAndVerifyConfig(setConfig, expConfig);
+  function syncPreview() {
+    return new Promise(function(resolve, reject) {
+      function onEvent(e) {
+        if (e.newState === 'started') {
+          resolve();
+        }
+      }
+      suite.camera.addEventListener('previewstatechange', onEvent);
+    });
+  }
+
+  function reconfigure(p) {
+    // The preview restarting confirms the configuration actually happened
+    var sync = new Promise(function(resolve, reject) {
+      var i = 0;
+      var expState = ['started', 'stopped', 'started'];
+
+      function onEvent(e) {
+        ok(e.newState === expState[i], 'preview event state ' + expState[i] +
+                                       ' === ' + e.newState);
+        ++i;
+        if (i === expState.length) { return; }
+        suite.camera.removeEventListener('previewstatechange', onEvent);
+        resolve();
+      }
+
+      suite.camera.addEventListener('previewstatechange', onEvent);
+    });
+
+    var configure = suite.camera.setConfiguration(postConfig)
+                      .then(resolveReconfigure);
+    return Promise.all([sync, configure]);
+  }
+
+  function resolveReconfigure(cfg) {
+    verifyConfig(cfg, postConfig);
+  }
+
+  return setAndVerifyConfig(setConfig, expConfig)
+    .then(syncPreview)
+    .then(reconfigure);
 });
 
 suite.test('picture-mode-larger-picture-size', function() {
