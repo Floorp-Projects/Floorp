@@ -317,8 +317,6 @@ class nsStyleSet final
                                   nsIStyleSheet *aNewSheet,
                                   nsIStyleSheet *aReferenceSheet);
 
-  nsresult DirtyRuleProcessors(mozilla::SheetType aType);
-
   // Enable/Disable entire author style level (Doc, ScopedDoc & PresHint levels)
   bool GetAuthorStyleDisabled();
   nsresult SetAuthorStyleDisabled(bool aStyleDisabled);
@@ -393,12 +391,14 @@ class nsStyleSet final
   // to drop any nsCSSSelector pointers it has.
   void ClearSelectors();
 
- private:
+private:
   nsStyleSet(const nsStyleSet& aCopy) = delete;
   nsStyleSet& operator=(const nsStyleSet& aCopy) = delete;
 
   // Run mark-and-sweep GC on mRuleTree and mOldRuleTrees, based on mRoots.
   void GCRuleTrees();
+
+  nsresult DirtyRuleProcessors(mozilla::SheetType aType);
 
   // Update the rule processor list after a change to the style sheet list.
   nsresult GatherRuleProcessors(mozilla::SheetType aType);

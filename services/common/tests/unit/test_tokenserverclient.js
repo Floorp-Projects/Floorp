@@ -60,7 +60,7 @@ add_test(function test_invalid_arguments() {
     ["http://example.com/", "assertion", null]
   ];
 
-  for each (let arg in args) {
+  for (let arg of args) {
     try {
       let client = new TokenServerClient();
       client.getTokenFromBrowserIDAssertion(arg[0], arg[1], arg[2]);

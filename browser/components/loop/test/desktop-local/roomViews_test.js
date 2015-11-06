@@ -342,6 +342,16 @@ describe("loop.roomViews", function() {
         React.createElement(loop.roomViews.DesktopRoomConversationView, props));
     }
 
+    it("should NOT show the context menu on right click", function() {
+      var prevent = sandbox.stub();
+      view = mountTestComponent();
+      TestUtils.Simulate.contextMenu(
+        view.getDOMNode(),
+        { preventDefault: prevent }
+      );
+      sinon.assert.calledOnce(prevent);
+    });
+
     it("should dispatch a setMute action when the audio mute button is pressed",
       function() {
         view = mountTestComponent();
@@ -690,7 +700,6 @@ describe("loop.roomViews", function() {
           expect(fakeWindow.document.title).to.equal("https://fakeurl.com");
         });
       });
-
     });
 
     describe("Edit Context", function() {

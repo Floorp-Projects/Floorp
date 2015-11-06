@@ -37,7 +37,7 @@ function abspath(rel, file) {
     file = file.parent;
   }
 
-  for each(var p in relSplit) {
+  for (var p of relSplit) {
     if (p == '..') {
       file = file.parent;
     } else if (p == '.') {

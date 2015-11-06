@@ -96,6 +96,13 @@
     "high": "1000",
     "n_buckets": 50
   },
+  "COMPOSITE_FRAME_ROUNDTRIP_TIME" : {
+    "expires_in_version": "never",
+    "description": "Time from vsync to finishing a composite in milliseconds.",
+    "kind": "exponential",
+    "high": "1000",
+    "n_buckets": 50
+  },
   "CYCLE_COLLECTOR": {
     "alert_emails": ["dev-telemetry-gc-alerts@mozilla.org"],
     "expires_in_version": "never",
@@ -4357,6 +4364,14 @@
     "expires_in_version": "default",
     "kind": "count",
     "description": "Count of messages sent by SessionRestore from child frames to the parent and that cannot be transmitted as they eat up too much memory."
+  },
+  "FX_SESSION_RESTORE_DOM_STORAGE_SIZE_ESTIMATE_CHARS": {
+    "expires_in_version": "default",
+    "kind": "exponential",
+    "high": "30000000",
+    "n_buckets": 20,
+    "extended_statistics_ok": true,
+    "description": "Session restore: Number of characters in DOM Storage for a tab. Pages without DOM Storage or with an empty DOM Storage are ignored."
   },
   "FX_TABLETMODE_PAGE_LOAD": {
     "expires_in_version": "47",

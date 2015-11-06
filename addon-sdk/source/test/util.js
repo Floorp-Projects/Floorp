@@ -12,16 +12,20 @@ const {when} = require("sdk/dom/events");
 var observerService = Cc["@mozilla.org/observer-service;1"]
                       .getService(Ci.nsIObserverService);
 
+const { ShimWaiver } = Cu.import("resource://gre/modules/ShimWaiver.jsm");
+const addObserver = ShimWaiver.getProperty(observerService, "addObserver");
+const removeObserver = ShimWaiver.getProperty(observerService, "removeObserver");
+
 const getActiveTab = (window=getMostRecentBrowserWindow()) =>
   tabUtils.getActiveTab(window)
 
 const openWindow = () => {
   const window = open();
   return new Promise((resolve) => {
-    observerService.addObserver({
+    addObserver({
       observe(subject, topic) {
         if (subject === window) {
-          observerService.removeObserver(this, topic);
+          removeObserver(this, topic);
           resolve(subject);
         }
       }

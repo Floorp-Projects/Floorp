@@ -218,6 +218,16 @@ describe("loop.panel", function() {
         navigator.mozLoop.fxAEnabled = true;
       });
 
+      it("should NOT show the context menu on right click", function() {
+        var prevent = sandbox.stub();
+        var view = createTestPanelView();
+        TestUtils.Simulate.contextMenu(
+          view.getDOMNode(),
+          { preventDefault: prevent }
+        );
+        sinon.assert.calledOnce(prevent);
+      });
+
       it("should trigger the FxA sign in/up process when clicking the link",
         function() {
           navigator.mozLoop.logInToFxA = sandbox.stub();

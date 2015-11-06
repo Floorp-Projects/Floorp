@@ -13,7 +13,7 @@
 
 #include "nsRuleNode.h"
 #include "nsIStyleRule.h"
-#include "StyleRule.h"
+#include "Declaration.h"
 #include "nsQueryObject.h"
 
 class nsRuleWalker {
@@ -34,14 +34,14 @@ protected:
 
 public:
   void Forward(nsIStyleRule* aRule) {
-    NS_PRECONDITION(!RefPtr<mozilla::css::StyleRule>(do_QueryObject(aRule)),
+    NS_PRECONDITION(!RefPtr<mozilla::css::Declaration>(do_QueryObject(aRule)),
                     "Calling the wrong Forward() overload");
     DoForward(aRule);
   }
-  void Forward(mozilla::css::StyleRule* aRule) {
+  void Forward(mozilla::css::Declaration* aRule) {
     DoForward(aRule);
     mCheckForImportantRules =
-      mCheckForImportantRules && !aRule->GetImportantRule();
+      mCheckForImportantRules && !aRule->HasImportantData();
   }
   // ForwardOnPossiblyCSSRule should only be used by callers that have
   // an explicit list of rules they need to walk, with the list
