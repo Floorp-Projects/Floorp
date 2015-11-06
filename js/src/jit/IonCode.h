@@ -669,7 +669,7 @@ struct IonBlockCounts
     }
 
     void setCode(const char* code) {
-        char* ncode = js_pod_malloc<char>(strlen(code) + 1);
+        char* ncode = (char*) js_malloc(strlen(code) + 1);
         if (ncode) {
             strcpy(ncode, code);
             code_ = ncode;
@@ -715,12 +715,9 @@ struct IonScriptCounts
     }
 
     bool init(size_t numBlocks) {
-        blocks_ = js_pod_calloc<IonBlockCounts>(numBlocks);
-        if (!blocks_)
-            return false;
-
         numBlocks_ = numBlocks;
-        return true;
+        blocks_ = js_pod_calloc<IonBlockCounts>(numBlocks);
+        return blocks_ != nullptr;
     }
 
     size_t numBlocks() const {
