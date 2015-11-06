@@ -1711,6 +1711,23 @@ KeyframeEffectReadOnly::GetFrames(JSContext*& aCx,
 }
 
 /* static */ bool
+KeyframeEffectReadOnly::IsGeometricProperty(
+  const nsCSSProperty aProperty)
+{
+  switch (aProperty) {
+    case eCSSProperty_bottom:
+    case eCSSProperty_height:
+    case eCSSProperty_left:
+    case eCSSProperty_right:
+    case eCSSProperty_top:
+    case eCSSProperty_width:
+      return true;
+    default:
+      return false;
+  }
+}
+
+/* static */ bool
 KeyframeEffectReadOnly::CanAnimateTransformOnCompositor(
   const nsIFrame* aFrame,
   const nsIContent* aContent)

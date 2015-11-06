@@ -35,22 +35,6 @@ using mozilla::dom::KeyframeEffectReadOnly;
 
 namespace mozilla {
 
-/* static */ bool
-IsGeometricProperty(nsCSSProperty aProperty)
-{
-  switch (aProperty) {
-    case eCSSProperty_bottom:
-    case eCSSProperty_height:
-    case eCSSProperty_left:
-    case eCSSProperty_right:
-    case eCSSProperty_top:
-    case eCSSProperty_width:
-      return true;
-    default:
-      return false;
-  }
-}
-
 CommonAnimationManager::CommonAnimationManager(nsPresContext *aPresContext)
   : mPresContext(aPresContext)
 {
@@ -448,7 +432,7 @@ AnimationCollection::CanAnimatePropertyOnCompositor(
 {
   bool shouldLog = nsLayoutUtils::IsAnimationLoggingEnabled();
 
-  if (IsGeometricProperty(aProperty)) {
+  if (KeyframeEffectReadOnly::IsGeometricProperty(aProperty)) {
     if (shouldLog) {
       nsCString message;
       message.AppendLiteral("Performance warning: Async animation of "
