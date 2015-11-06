@@ -67,16 +67,10 @@ add_task(function* no_request_if_prefed_off() {
   Services.prefs.setBoolPref("browser.search.geoSpecificDefaults", false);
   yield asyncInit();
   checkNoRequest();
+  yield promiseAfterCache();
 
   // The default engine should be set based on the prefs.
   do_check_eq(Services.search.currentEngine.name, getDefaultEngineName(false));
-
-  // Change the default engine and then revert to default to ensure
-  // the metadata file exists.
-  let commitPromise = promiseAfterCache();
-  Services.search.currentEngine = Services.search.getEngineByName(kTestEngineName);
-  Services.search.resetToOriginalDefaultEngine();
-  yield commitPromise;
 
   // Ensure nothing related to geoSpecificDefaults has been written in the metadata.
   let metadata = yield promiseGlobalMetadata();
