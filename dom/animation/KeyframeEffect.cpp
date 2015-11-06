@@ -1739,10 +1739,17 @@ KeyframeEffectReadOnly::OverflowRegionRefreshInterval()
 bool
 KeyframeEffectReadOnly::CanThrottle() const
 {
-  // Animation::CanThrottle checks for finished and not in effect animations
+  // Animation::CanThrottle checks for not in effect animations
   // before calling this.
-  MOZ_ASSERT(IsInEffect() && IsCurrent(),
-    "Effect should be in effect and current");
+  MOZ_ASSERT(IsInEffect(), "Effect should be in effect");
+
+  // Unthrottle if this animation is not current (i.e. it has passed the end).
+  // In future we may be able to throttle this case too, but we should only get
+  // occasional ticks while the animation is in this state so it doesn't matter
+  // too much.
+  if (!IsCurrent()) {
+    return false;
+  }
 
   nsIFrame* frame = GetAnimationFrame();
   if (!frame) {
