@@ -416,9 +416,9 @@ static const int64_t kDecoderTimeout = 10000;
 #define BREAK_ON_DECODER_ERROR() \
   if (NS_FAILED(res)) { \
     NS_WARNING("Exiting decoder loop due to exception"); \
-    if (mState == kDrainDecoder) { \
+    if (State() == kDrainDecoder) { \
       INVOKE_CALLBACK(DrainComplete); \
-      mState = kDecoding; \
+      State(kDecoding); \
     } \
     INVOKE_CALLBACK(Error); \
     break; \
@@ -452,13 +452,13 @@ MediaCodecDataDecoder::WaitForInput()
 {
   MonitorAutoLock lock(mMonitor);
 
-  while (mState == kDecoding && mQueue.empty()) {
+  while (State() == kDecoding && mQueue.empty()) {
     // Signal that we require more input.
     INVOKE_CALLBACK(InputExhausted);
     lock.Wait();
   }
 
-  return mState != kStopping;
+  return State() != kStopping;
 }
 
 
@@ -467,17 +467,17 @@ MediaCodecDataDecoder::PeekNextSample()
 {
   MonitorAutoLock lock(mMonitor);
 
-  if (mState == kFlushing) {
+  if (State() == kFlushing) {
     mDecoder->Flush();
     ClearQueue();
-    mState = kDecoding;
+    State(kDecoding);
     lock.Notify();
     return nullptr;
   }
 
   if (mQueue.empty()) {
-    if (mState == kDrainQueue) {
-      mState = kDrainDecoder;
+    if (State() == kDrainQueue) {
+      State(kDrainDecoder);
     }
     return nullptr;
   }
@@ -543,7 +543,7 @@ MediaCodecDataDecoder::QueueEOS()
   res = mDecoder->QueueInputBuffer(inputIndex, 0, 0, 0,
                                    MediaCodec::BUFFER_FLAG_END_OF_STREAM);
   if (NS_SUCCEEDED(res)) {
-    mState = kDrainWaitEOS;
+    State(kDrainWaitEOS);
     mMonitor.Notify();
   }
   return res;
@@ -554,8 +554,8 @@ MediaCodecDataDecoder::HandleEOS(int32_t aOutputStatus)
 {
   MonitorAutoLock lock(mMonitor);
 
-  if (mState == kDrainWaitEOS) {
-    mState = kDecoding;
+  if (State() == kDrainWaitEOS) {
+    State(kDecoding);
     mMonitor.Notify();
 
     INVOKE_CALLBACK(DrainComplete);
@@ -610,7 +610,7 @@ MediaCodecDataDecoder::DecoderLoop()
 
     {
       MonitorAutoLock lock(mMonitor);
-      if (mState == kDrainDecoder) {
+      if (State() == kDrainDecoder) {
         MOZ_ASSERT(!sample, "Shouldn't have a sample when pushing EOF frame");
         res = QueueEOS();
         BREAK_ON_DECODER_ERROR();
@@ -676,8 +676,26 @@ MediaCodecDataDecoder::DecoderLoop()
 
   // We're done.
   MonitorAutoLock lock(mMonitor);
-  mState = kShutdown;
+  State(kShutdown);
   mMonitor.Notify();
+}
+
+MediaCodecDataDecoder::ModuleState
+MediaCodecDataDecoder::State() const
+{
+  return mState;
+}
+
+void
+MediaCodecDataDecoder::State(ModuleState aState)
+{
+  if (aState == kDrainDecoder) {
+    MOZ_ASSERT(mState == kDrainQueue);
+  } else if (aState == kDrainWaitEOS) {
+    MOZ_ASSERT(mState == kDrainDecoder);
+  }
+
+  mState = aState;
 }
 
 void
@@ -719,10 +737,10 @@ nsresult
 MediaCodecDataDecoder::Flush()
 {
   MonitorAutoLock lock(mMonitor);
-  mState = kFlushing;
+  State(kFlushing);
   lock.Notify();
 
-  while (mState == kFlushing) {
+  while (State() == kFlushing) {
     lock.Wait();
   }
 
@@ -733,11 +751,11 @@ nsresult
 MediaCodecDataDecoder::Drain()
 {
   MonitorAutoLock lock(mMonitor);
-  if (mState == kDrainDecoder || mState == kDrainQueue) {
+  if (State() == kDrainDecoder || State() == kDrainQueue) {
     return NS_OK;
   }
 
-  mState = kDrainQueue;
+  State(kDrainQueue);
   lock.Notify();
 
   return NS_OK;
@@ -749,15 +767,15 @@ MediaCodecDataDecoder::Shutdown()
 {
   MonitorAutoLock lock(mMonitor);
 
-  if (!mThread || mState == kStopping) {
+  if (!mThread || State() == kStopping) {
     // Already shutdown or in the process of doing so
     return NS_OK;
   }
 
-  mState = kStopping;
+  State(kStopping);
   lock.Notify();
 
-  while (mState == kStopping) {
+  while (State() == kStopping) {
     lock.Wait();
   }
 
