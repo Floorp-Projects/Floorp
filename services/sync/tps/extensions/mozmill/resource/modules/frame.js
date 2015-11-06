@@ -256,7 +256,7 @@ events.pass = function (obj) {
     events.currentTest.__passes__.push(obj);
   }
 
-  for each (var timer in timers) {
+  for (var timer of timers) {
     timer.actions.push(
       {"currentTest": events.currentModule.__file__ + "::" + events.currentTest.__name__,
        "obj": obj,
@@ -286,7 +286,7 @@ events.fail = function (obj) {
     events.currentTest.__fails__.push(obj);
   }
 
-  for each (var time in timers) {
+  for (var time of timers) {
     timer.actions.push(
       {"currentTest": events.currentModule.__file__ + "::" + events.currentTest.__name__,
        "obj": obj,
@@ -325,7 +325,7 @@ events.fireEvent = function (name, obj) {
     }
   }
 
-  for each(var listener in this.globalListeners) {
+  for (var listener of this.globalListeners) {
     listener(name, obj);
   }
 }

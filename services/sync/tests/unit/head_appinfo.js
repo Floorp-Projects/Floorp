@@ -60,7 +60,7 @@ registrar.registerFactory(Components.ID("{fbfae60b-64a4-44ef-a911-08ceb70b9f31}"
 function addResourceAlias() {
   const resProt = Services.io.getProtocolHandler("resource")
                           .QueryInterface(Ci.nsIResProtocolHandler);
-  for each (let s in ["common", "sync", "crypto"]) {
+  for (let s of ["common", "sync", "crypto"]) {
     let uri = Services.io.newURI("resource://gre/modules/services-" + s + "/", null,
                                  null);
     resProt.setSubstitution("services-" + s, uri);

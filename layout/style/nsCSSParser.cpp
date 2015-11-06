@@ -752,8 +752,9 @@ protected:
     eCSSContext_Page
   };
 
-  css::Declaration* ParseDeclarationBlock(uint32_t aFlags,
-                                          nsCSSContextType aContext = eCSSContext_General);
+  already_AddRefed<css::Declaration>
+    ParseDeclarationBlock(uint32_t aFlags,
+                          nsCSSContextType aContext = eCSSContext_General);
   bool ParseDeclaration(css::Declaration* aDeclaration,
                         uint32_t aFlags,
                         bool aMustCallValueAppended,
@@ -1662,7 +1663,7 @@ CSSParserImpl::ParseStyleAttribute(const nsAString& aAttributeValue,
 
   uint32_t parseFlags = eParseDeclaration_AllowImportant;
 
-  css::Declaration* declaration = ParseDeclarationBlock(parseFlags);
+  RefPtr<css::Declaration> declaration = ParseDeclarationBlock(parseFlags);
   if (declaration) {
     // Create a style rule for the declaration
     NS_ADDREF(*aResult = new css::StyleRule(nullptr, declaration, 0, 0));
@@ -1781,17 +1782,17 @@ CSSParserImpl::ParseLonghandProperty(const nsCSSProperty aPropID,
   MOZ_ASSERT(aPropID < eCSSProperty_COUNT_no_shorthands,
              "ParseLonghandProperty must only take a longhand property");
 
-  Declaration declaration;
-  declaration.InitializeEmpty();
+  RefPtr<Declaration> declaration = new Declaration;
+  declaration->InitializeEmpty();
 
   bool changed;
   ParseProperty(aPropID, aPropValue, aSheetURL, aBaseURL, aSheetPrincipal,
-                &declaration, &changed,
+                declaration, &changed,
                 /* aIsImportant */ false,
                 /* aIsSVGMode */ false);
 
   if (changed) {
-    aValue = *declaration.GetNormalBlock()->ValueFor(aPropID);
+    aValue = *declaration->GetNormalBlock()->ValueFor(aPropID);
   } else {
     aValue.Reset();
   }
@@ -4196,18 +4197,16 @@ CSSParserImpl::ParsePageRule(RuleAppendFunc aAppendFunc, void* aData)
   MOZ_ASSERT(mViewportUnitsEnabled,
              "Viewport units should be enabled outside of @page rules.");
   mViewportUnitsEnabled = false;
-  nsAutoPtr<css::Declaration> declaration(
-                                ParseDeclarationBlock(parseFlags,
-                                                      eCSSContext_Page));
+  RefPtr<css::Declaration> declaration =
+    ParseDeclarationBlock(parseFlags, eCSSContext_Page);
   mViewportUnitsEnabled = true;
 
   if (!declaration) {
     return false;
   }
 
-  // Takes ownership of declaration.
-  RefPtr<nsCSSPageRule> rule = new nsCSSPageRule(Move(declaration),
-                                                   linenum, colnum);
+  RefPtr<nsCSSPageRule> rule =
+    new nsCSSPageRule(declaration, linenum, colnum);
 
   (*aAppendFunc)(rule, aData);
   return true;
@@ -4226,14 +4225,14 @@ CSSParserImpl::ParseKeyframeRule()
 
   // Ignore !important in keyframe rules
   uint32_t parseFlags = eParseDeclaration_InBraces;
-  nsAutoPtr<css::Declaration> declaration(ParseDeclarationBlock(parseFlags));
+  RefPtr<css::Declaration> declaration(ParseDeclarationBlock(parseFlags));
   if (!declaration) {
     return nullptr;
   }
 
   // Takes ownership of declaration, and steals contents of selectorList.
   RefPtr<nsCSSKeyframeRule> rule =
-    new nsCSSKeyframeRule(selectorList, Move(declaration), linenum, colnum);
+    new nsCSSKeyframeRule(selectorList, declaration, linenum, colnum);
   return rule.forget();
 }
 
@@ -5151,7 +5150,7 @@ CSSParserImpl::ParseRuleSet(RuleAppendFunc aAppendFunc, void* aData,
   // Next parse the declaration block
   uint32_t parseFlags = eParseDeclaration_InBraces |
                         eParseDeclaration_AllowImportant;
-  css::Declaration* declaration = ParseDeclarationBlock(parseFlags);
+  RefPtr<css::Declaration> declaration = ParseDeclarationBlock(parseFlags);
   if (nullptr == declaration) {
     delete slist;
     return false;
@@ -6362,7 +6361,7 @@ CSSParserImpl::ParseSelector(nsCSSSelectorList* aList,
   return true;
 }
 
-css::Declaration*
+already_AddRefed<css::Declaration>
 CSSParserImpl::ParseDeclarationBlock(uint32_t aFlags, nsCSSContextType aContext)
 {
   bool checkForBraces = (aFlags & eParseDeclaration_InBraces) != 0;
@@ -6379,7 +6378,7 @@ CSSParserImpl::ParseDeclarationBlock(uint32_t aFlags, nsCSSContextType aContext)
       return nullptr;
     }
   }
-  css::Declaration* declaration = new css::Declaration();
+  RefPtr<css::Declaration> declaration = new css::Declaration();
   mData.AssertInitialState();
   for (;;) {
     bool changed;
@@ -6397,7 +6396,7 @@ CSSParserImpl::ParseDeclarationBlock(uint32_t aFlags, nsCSSContextType aContext)
     }
   }
   declaration->CompressFrom(&mData);
-  return declaration;
+  return declaration.forget();
 }
 
 CSSParseResult

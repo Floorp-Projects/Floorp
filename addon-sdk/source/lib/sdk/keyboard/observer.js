@@ -50,7 +50,8 @@ const Observer = Class({
    *    Keyboard event being emitted.
    */
   handleEvent(event) {
-    emit(this, event.type, event, event.target.ownerDocument.defaultView);
+    emit(this, event.type, event, event.target.ownerDocument ? event.target.ownerDocument.defaultView
+                                                             : undefined);
   }
 });
 

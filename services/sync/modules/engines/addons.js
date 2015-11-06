@@ -160,7 +160,7 @@ AddonsEngine.prototype = {
     // we assume this function is only called from within a sync.
     let reconcilerChanges = this._reconciler.getChangesSinceDate(lastSyncDate);
     let addons = this._reconciler.addons;
-    for each (let change in reconcilerChanges) {
+    for (let change of reconcilerChanges) {
       let changeTime = change[0];
       let id = change[2];
 
@@ -299,7 +299,7 @@ AddonsStore.prototype = {
     let results = cb.wait();
 
     let addon;
-    for each (let a in results.addons) {
+    for (let a of results.addons) {
       if (a.id == record.addonID) {
         addon = a;
         break;
@@ -443,7 +443,8 @@ AddonsStore.prototype = {
     let ids = {};
 
     let addons = this.reconciler.addons;
-    for each (let addon in addons) {
+    for (let id in addons) {
+      let addon = addons[id];
       if (this.isAddonSyncable(addon)) {
         ids[addon.guid] = true;
       }
