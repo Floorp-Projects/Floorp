@@ -260,9 +260,6 @@ struct AnimationCollection : public LinkedListElement<AnimationCollection>
   void ClearIsRunningOnCompositor(nsCSSProperty aProperty);
 
 private:
-  static bool
-  CanAnimatePropertyOnCompositor(const dom::Element *aElement,
-                                 nsCSSProperty aProperty);
 
   bool CanThrottleAnimation(TimeStamp aTime);
   bool CanThrottleTransformChanges(TimeStamp aTime);

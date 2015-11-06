@@ -283,13 +283,9 @@ public:
 
   bool CanThrottle() const;
 
-  // Returns true unless Gecko limitations prevent performing transform
-  // animations for |aFrame|. Any limitations that are encountered are
-  // logged using |aContent| to describe the affected content.
-  // If |aContent| is nullptr, no logging is performed
-  static bool CanAnimateTransformOnCompositor(const nsIFrame* aFrame,
-                                              const nsIContent* aContent);
-  static bool IsGeometricProperty(const nsCSSProperty aProperty);
+  // Returns true |aProperty| can be run on compositor for |aFrame|.
+  static bool CanAnimatePropertyOnCompositor(const nsIFrame* aFrame,
+                                             nsCSSProperty aProperty);
 protected:
   virtual ~KeyframeEffectReadOnly();
   void ResetIsRunningOnCompositor();
@@ -324,6 +320,13 @@ protected:
 
 private:
   nsIFrame* GetAnimationFrame() const;
+  // Returns true unless Gecko limitations prevent performing transform
+  // animations for |aFrame|. Any limitations that are encountered are
+  // logged using |aContent| to describe the affected content.
+  // If |aContent| is nullptr, no logging is performed
+  static bool CanAnimateTransformOnCompositor(const nsIFrame* aFrame,
+                                              const nsIContent* aContent);
+  static bool IsGeometricProperty(const nsCSSProperty aProperty);
 };
 
 } // namespace dom

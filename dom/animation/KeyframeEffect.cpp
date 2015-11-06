@@ -1820,5 +1820,32 @@ KeyframeEffectReadOnly::CanAnimateTransformOnCompositor(
   return true;
 }
 
+/* static */ bool
+KeyframeEffectReadOnly::CanAnimatePropertyOnCompositor(
+  const nsIFrame* aFrame,
+  nsCSSProperty aProperty)
+{
+  bool shouldLog = nsLayoutUtils::IsAnimationLoggingEnabled();
+
+  if (IsGeometricProperty(aProperty)) {
+    if (shouldLog) {
+      nsCString message;
+      message.AppendLiteral("Performance warning: Async animation of "
+        "'transform' or 'opacity' not possible due to animation of geometric"
+        "properties on the same element");
+      AnimationCollection::LogAsyncAnimationFailure(message,
+                                                    aFrame->GetContent());
+    }
+    return false;
+  }
+  if (aProperty == eCSSProperty_transform) {
+    if (!CanAnimateTransformOnCompositor(aFrame,
+          shouldLog ? aFrame->GetContent() : nullptr)) {
+      return false;
+    }
+  }
+  return true;
+}
+
 } // namespace dom
 } // namespace mozilla
