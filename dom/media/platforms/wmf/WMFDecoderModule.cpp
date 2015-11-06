@@ -22,6 +22,7 @@
 #include "MediaInfo.h"
 #include "prsystem.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/StaticMutex.h"
 
 namespace mozilla {
 
@@ -153,6 +154,8 @@ template<const GUID& aGuid>
 static bool
 CanCreateWMFDecoder()
 {
+  static StaticMutex sMutex;
+  StaticMutexAutoLock lock(sMutex);
   static Maybe<bool> result;
   if (result.isNothing()) {
     result.emplace(CanCreateMFTDecoder(aGuid));
