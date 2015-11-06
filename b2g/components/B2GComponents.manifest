@@ -75,9 +75,11 @@ component {920400b1-cf8f-4760-a9c4-441417b15134} B2GAboutRedirector.js
 contract @mozilla.org/network/protocol/about;1?what=certerror {920400b1-cf8f-4760-a9c4-441417b15134}
 contract @mozilla.org/network/protocol/about;1?what=neterror {920400b1-cf8f-4760-a9c4-441417b15134}
 
+#ifndef MOZ_GRAPHENE
 # FilePicker.js
 component {436ff8f9-0acc-4b11-8ec7-e293efba3141} FilePicker.js
 contract @mozilla.org/filepicker;1 {436ff8f9-0acc-4b11-8ec7-e293efba3141}
+#endif
 
 # WebappsUpdateTimer.js
 component {637b0f77-2429-49a0-915f-abf5d0db8b9a} WebappsUpdateTimer.js
