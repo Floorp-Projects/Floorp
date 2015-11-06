@@ -6,14 +6,14 @@
 
 interface nsIChannel;
 interface nsIStreamListener;
+interface nsIURI;
 
 /**
  * nsIContentSecurityManager
- * Describes an XPCOM component used to perform security checks
- * right before opnening a channel.
+ * Describes an XPCOM component used to perform security checks.
  */
 
-[scriptable, uuid(70eaa956-1077-41f6-bef8-d722cea31245)]
+[scriptable, uuid(ec955006-747d-4151-aeec-70bd0edc3341)]
 interface nsIContentSecurityManager : nsISupports
 {
   /**
@@ -40,4 +40,15 @@ interface nsIContentSecurityManager : nsISupports
    */
    nsIStreamListener performSecurityCheck(in nsIChannel aChannel,
                                           in nsIStreamListener aStreamListener);
+
+  /**
+   * Implementation of
+   * https://w3c.github.io/webappsec-secure-contexts/#is-origin-trustworthy
+   *
+   * This method should only be used when the context of the URI isn't available
+   * since isSecureContext is preffered as it handles parent contexts.
+   *
+   * This method returns false instead of throwing upon errors.
+   */
+  boolean isURIPotentiallyTrustworthy(in nsIURI aURI);
 };
