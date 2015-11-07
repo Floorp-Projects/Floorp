@@ -45,28 +45,10 @@ function assertNodeSelected(inspector, tagName) {
 }
 
 function* selectWithBrowserMenu(inspector) {
-  // This test can't use BrowserTestUtils.synthesizeMouseAtCenter()
-  // method (see below) since it causes intermittent test failures.
-  // So, we are introducing a new "Test:MarkupView:SynthesizeMouse" event
-  // that is handled in the content scope. The main difference between
-  // this new event and BrowserTestUtils library is EventUtils library.
-  // While BrowserTestUtils is using:
-  // chrome://mochikit/content/tests/SimpleTest/EventUtils.js
-  // (see: AsyncUtilsContent.js)
-  // ... this test requires:
-  // chrome://marionette/content/EventUtils.js
-  // (see markupview/test/frame-script-utils.js)
-  // See also: https://bugzilla.mozilla.org/show_bug.cgi?id=1199180
-  yield executeInContent("Test:MarkupView:SynthesizeMouse", {
-    center: true,
-    selector: "div",
-    options: {type: "contextmenu", button: 2}
-  });
-
-  //yield BrowserTestUtils.synthesizeMouseAtCenter("div", {
-  //  type: "contextmenu",
-  //  button: 2
-  //}, gBrowser.selectedBrowser);
+  yield BrowserTestUtils.synthesizeMouseAtCenter("div", {
+    type: "contextmenu",
+    button: 2
+  }, gBrowser.selectedBrowser);
 
   // nsContextMenu also requires the popupNode to be set, but we can't set it to
   // node under e10s as it's a CPOW, not a DOM node. But under e10s,
@@ -89,16 +71,9 @@ function* selectWithBrowserMenu(inspector) {
 function* selectWithElementPicker(inspector) {
   yield inspector.toolbox.highlighterUtils.startPicker();
 
-  yield executeInContent("Test:MarkupView:SynthesizeMouse", {
-    center: true,
-    selector: "div",
-    options: {type: "mousemove"}
-  });
-
-  // Read comment in selectWithBrowserMenu() method.
-  //yield BrowserTestUtils.synthesizeMouseAtCenter("div", {
-  //  type: "mousemove",
-  //}, gBrowser.selectedBrowser);
+  yield BrowserTestUtils.synthesizeMouseAtCenter("div", {
+    type: "mousemove",
+  }, gBrowser.selectedBrowser);
 
   executeInContent("Test:SynthesizeKey", {
     key: "VK_RETURN",
