@@ -1378,7 +1378,7 @@ public class BrowserApp extends GeckoApp
     }
 
     private void setToolbarMargin(int margin) {
-        ((RelativeLayout.LayoutParams) mGeckoLayout.getLayoutParams()).topMargin = margin;
+        ((ViewGroup.MarginLayoutParams) mGeckoLayout.getLayoutParams()).topMargin = margin;
         mGeckoLayout.requestLayout();
     }
 
