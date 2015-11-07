@@ -1928,7 +1928,7 @@ protected:
       // case of a scrollable frame with the event regions and clip. This lets
       // us exercise the hit-testing code in APZCTreeManager
       EventRegions er = aLayer->GetEventRegions();
-      IntRect scrollRect = LayerIntRect::ToUntyped(RoundedToInt(aScrollableRect * metrics.LayersPixelsPerCSSPixel()));
+      IntRect scrollRect = RoundedToInt(aScrollableRect * metrics.LayersPixelsPerCSSPixel()).ToUnknownRect();
       er.mHitRegion = nsIntRegion(IntRect(layerBound.TopLeft(), scrollRect.Size()));
       aLayer->SetEventRegions(er);
     }

@@ -238,7 +238,7 @@ nsResizerFrame::HandleEvent(nsPresContext* aPresContext,
         // direction, don't allow the new size to be less that the resizer's
         // size. This ensures that content isn't resized too small as to make
         // the resizer invisible.
-        nsRect appUnitsRect = ToAppUnits(LayoutDevicePixel::ToUntyped(rect), aPresContext->AppUnitsPerDevPixel());
+        nsRect appUnitsRect = ToAppUnits(rect.ToUnknownRect(), aPresContext->AppUnitsPerDevPixel());
         if (appUnitsRect.width < mRect.width && mouseMove.x)
           appUnitsRect.width = mRect.width;
         if (appUnitsRect.height < mRect.height && mouseMove.y)

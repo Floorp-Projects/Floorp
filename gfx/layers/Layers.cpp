@@ -1041,7 +1041,7 @@ Layer::GetVisibleRegionRelativeToRootLayer(nsIntRegion& aResult,
     // If the parent layer clips its lower layers, clip the visible region
     // we're accumulating.
     if (layer->GetEffectiveClipRect()) {
-      aResult.AndWith(ParentLayerIntRect::ToUntyped(*layer->GetEffectiveClipRect()));
+      aResult.AndWith(layer->GetEffectiveClipRect()->ToUnknownRect());
     }
 
     // Now we need to walk across the list of siblings for this parent layer,
@@ -1067,7 +1067,7 @@ Layer::GetVisibleRegionRelativeToRootLayer(nsIntRegion& aResult,
       // Layer clip rects are not affected by the layer's transform.
       Maybe<ParentLayerIntRect> clipRect = sibling->GetEffectiveClipRect();
       if (clipRect) {
-        siblingVisibleRegion.AndWith(ParentLayerIntRect::ToUntyped(*clipRect));
+        siblingVisibleRegion.AndWith(clipRect->ToUnknownRect());
       }
       // Subtract the sibling visible region from the visible region of |this|.
       aResult.SubOut(siblingVisibleRegion);

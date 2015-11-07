@@ -3961,7 +3961,7 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
       itemContent.IntersectRect(itemContent, itemClip.GetClipRect());
       clipRect = ViewAs<ParentLayerPixel>(ScaleToNearestPixels(itemClip.GetClipRect()));
       if (!prerenderedTransform) {
-        itemDrawRect.IntersectRect(itemDrawRect, ParentLayerIntRect::ToUntyped(clipRect));
+        itemDrawRect.IntersectRect(itemDrawRect, clipRect.ToUnknownRect());
       }
       clipRect.MoveBy(ViewAs<ParentLayerPixel>(mParameters.mOffset));
     }
@@ -4048,7 +4048,7 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
       if (layerClip.HasClip()) {
         layerClipRect = ViewAs<ParentLayerPixel>(
           ScaleToNearestPixels(layerClip.GetClipRect()) + mParameters.mOffset);
-        clipRectUntyped = ParentLayerIntRect::ToUntyped(layerClipRect);
+        clipRectUntyped = layerClipRect.ToUnknownRect();
         clipPtr = &clipRectUntyped;
       }
       if (animatedGeometryRoot == item->Frame() &&
@@ -4888,7 +4888,7 @@ ContainerState::PostprocessRetainedLayers(nsIntRegion* aOpaqueRegionForContainer
     } else if (!e->mLayer->IsScrollbarContainer()) {
       const Maybe<ParentLayerIntRect>& clipRect = GetStationaryClipInContainer(e->mLayer);
       if (clipRect && opaqueRegionForContainer >= 0 &&
-          opaqueRegions[opaqueRegionForContainer].mOpaqueRegion.Contains(ParentLayerIntRect::ToUntyped(*clipRect))) {
+          opaqueRegions[opaqueRegionForContainer].mOpaqueRegion.Contains(clipRect->ToUnknownRect())) {
         e->mVisibleRegion.SetEmpty();
       } else if (data) {
         e->mVisibleRegion.Sub(e->mVisibleRegion, data->mOpaqueRegion);
@@ -4929,7 +4929,7 @@ ContainerState::PostprocessRetainedLayers(nsIntRegion* aOpaqueRegionForContainer
       nsIntRegion clippedOpaque = e->mOpaqueRegion;
       Maybe<ParentLayerIntRect> clipRect = e->mLayer->GetCombinedClipRect();
       if (clipRect) {
-        clippedOpaque.AndWith(ParentLayerIntRect::ToUntyped(*clipRect));
+        clippedOpaque.AndWith(clipRect->ToUnknownRect());
       }
       if (e->mLayer->GetIsFixedPosition() && !e->mLayer->IsClipFixed()) {
         // The clip can move asynchronously, so we can't rely on opaque parts
