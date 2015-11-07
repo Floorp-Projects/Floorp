@@ -200,7 +200,7 @@ public class ZoomedView extends FrameLayout implements LayerView.DynamicToolbarL
         }
 
         private boolean moveZoomedView(MotionEvent event) {
-            RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) ZoomedView.this.getLayoutParams();
+            final MarginLayoutParams params = (MarginLayoutParams) ZoomedView.this.getLayoutParams();
             if ((!dragged) && (Math.abs((int) (event.getRawX() - originRawX)) < PanZoomController.CLICK_THRESHOLD)
                     && (Math.abs((int) (event.getRawY() - originRawY)) < PanZoomController.CLICK_THRESHOLD)) {
                 // When the user just touches the screen ACTION_MOVE can be detected for a very small delta on position.
@@ -315,7 +315,7 @@ public class ZoomedView extends FrameLayout implements LayerView.DynamicToolbarL
         ImmutableViewportMetrics metrics = layerView.getViewportMetrics();
         final float parentWidth = metrics.getWidth();
         final float parentHeight = metrics.getHeight();
-        RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) getLayoutParams();
+        final MarginLayoutParams params = (MarginLayoutParams) getLayoutParams();
 
         // The number of unzoomed content pixels that can be displayed in the
         // zoomed area.
@@ -382,7 +382,7 @@ public class ZoomedView extends FrameLayout implements LayerView.DynamicToolbarL
 
     private void moveZoomedView(ImmutableViewportMetrics metrics, float newLeftMargin, float newTopMargin,
             StartPointUpdate animateStartPoint) {
-        RelativeLayout.LayoutParams newLayoutParams = (RelativeLayout.LayoutParams) getLayoutParams();
+        final MarginLayoutParams newLayoutParams = (MarginLayoutParams) getLayoutParams();
         newLayoutParams.leftMargin = (int) newLeftMargin;
         newLayoutParams.topMargin = (int) newTopMargin;
         int topMarginMin = (int)(layerView.getSurfaceTranslation() + dynamicToolbarOverlap);
@@ -478,7 +478,7 @@ public class ZoomedView extends FrameLayout implements LayerView.DynamicToolbarL
             return;
         }
 
-        RelativeLayout.LayoutParams params = (RelativeLayout.LayoutParams) getLayoutParams();
+        final MarginLayoutParams params = (MarginLayoutParams) getLayoutParams();
         setCapturedSize(viewport);
         moveZoomedView(viewport, params.leftMargin, params.topMargin, StartPointUpdate.NO_CHANGE);
     }
