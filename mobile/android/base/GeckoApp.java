@@ -173,7 +173,7 @@ public abstract class GeckoApp
     protected View mRootLayout;
     protected RelativeLayout mMainLayout;
 
-    protected RelativeLayout mGeckoLayout;
+    protected View mGeckoLayout;
     private View mCameraView;
     private OrientationEventListener mCameraOrientationEventListener;
     public List<GeckoAppShell.AppStateListener> mAppStateListeners = new LinkedList<GeckoAppShell.AppStateListener>();
@@ -1386,7 +1386,7 @@ public abstract class GeckoApp
 
         // Set up Gecko layout.
         mRootLayout = findViewById(android.R.id.content);
-        mGeckoLayout = (RelativeLayout) findViewById(R.id.gecko_layout);
+        mGeckoLayout = findViewById(R.id.gecko_layout);
         mMainLayout = (RelativeLayout) findViewById(R.id.main_layout);
         mLayerView = (LayerView) findViewById(R.id.layer_view);
 
