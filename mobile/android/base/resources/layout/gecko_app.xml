@@ -16,11 +16,11 @@
          android:layout_height="match_parent"
          android:background="@android:color/transparent">
 
-        <RelativeLayout android:id="@+id/gecko_layout"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:layout_below="@+id/tablet_tab_strip"
-                        android:layout_above="@+id/find_in_page">
+        <FrameLayout android:id="@+id/gecko_layout"
+                     android:layout_width="match_parent"
+                     android:layout_height="match_parent"
+                     android:layout_below="@+id/tablet_tab_strip"
+                     android:layout_above="@+id/find_in_page">
 
             <include layout="@layout/shared_ui_components"/>
 
@@ -61,7 +61,7 @@
                   android:alpha="0"
                   android:layerType="hardware"/>
 
-        </RelativeLayout>
+        </FrameLayout>
 
         <org.mozilla.gecko.FindInPageBar android:id="@+id/find_in_page"
                                          android:layout_width="match_parent"
