@@ -20,10 +20,7 @@ add_task(function*() {
 
   info("Press arrowUp to focus <body> " +
        "(which works if the node was focused properly)");
-  let onNodeHighlighted = toolbox.once("node-highlight");
-  EventUtils.synthesizeKey("VK_UP", {});
-  yield waitForChildrenUpdated(inspector);
-  yield onNodeHighlighted;
+  yield selectPreviousNodeWithArrowUp(inspector);
   assertNodeSelected(inspector, "body");
 
   info("Select the test node with the element picker");
@@ -32,16 +29,20 @@ add_task(function*() {
 
   info("Press arrowUp to focus <body> " +
        "(which works if the node was focused properly)");
-  onNodeHighlighted = toolbox.once("node-highlight");
-  EventUtils.synthesizeKey("VK_UP", {});
-  yield waitForChildrenUpdated(inspector);
-  yield onNodeHighlighted;
+  yield selectPreviousNodeWithArrowUp(inspector);
   assertNodeSelected(inspector, "body");
 });
 
 function assertNodeSelected(inspector, tagName) {
   is(inspector.selection.nodeFront.tagName.toLowerCase(), tagName,
     `The <${tagName}> node is selected`);
+}
+
+function selectPreviousNodeWithArrowUp(inspector) {
+  let onNodeHighlighted = inspector.toolbox.once("node-highlight");
+  let onUpdated = inspector.once("inspector-updated");
+  EventUtils.synthesizeKey("VK_UP", {});
+  return Promise.all([onUpdated, onNodeHighlighted]);
 }
 
 function* selectWithBrowserMenu(inspector) {
