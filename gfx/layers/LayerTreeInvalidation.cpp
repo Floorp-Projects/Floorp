@@ -224,7 +224,7 @@ struct LayerPropertiesBase : public LayerProperties
       if (!mClipRect.IsEqualInterior(*otherClip)) {
         aGeometryChanged = true;
         nsIntRegion tmp; 
-        tmp.Xor(ParentLayerIntRect::ToUntyped(mClipRect), ParentLayerIntRect::ToUntyped(*otherClip)); 
+        tmp.Xor(mClipRect.ToUnknownRect(), otherClip->ToUnknownRect());
         AddRegion(result, tmp);
       }
     }

@@ -409,7 +409,7 @@ ContainerPrepare(ContainerT* aContainer,
         surface = CreateOrRecycleTarget(aContainer, aManager);
 
         MOZ_PERFORMANCE_WARNING("gfx", "[%p] Container layer requires intermediate surface rendering\n", aContainer);
-        RenderIntermediate(aContainer, aManager, RenderTargetPixel::ToUntyped(aClipRect), surface);
+        RenderIntermediate(aContainer, aManager, aClipRect.ToUnknownRect(), surface);
         aContainer->SetChildrenChanged(false);
       }
 
@@ -561,7 +561,7 @@ RenderLayers(ContainerT* aContainer,
         layerToRender->SetClearRect(gfx::IntRect(0, 0, 0, 0));
       }
     } else {
-      layerToRender->RenderLayer(RenderTargetPixel::ToUntyped(clipRect));
+      layerToRender->RenderLayer(clipRect.ToUnknownRect());
     }
 
     if (gfxPrefs::UniformityInfo()) {

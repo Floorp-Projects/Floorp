@@ -247,7 +247,7 @@ LayerManagerComposite::ApplyOcclusionCulling(Layer* aLayer, nsIntRegion& aOpaque
     localOpaque.MoveBy(transform2d._31, transform2d._32);
     const Maybe<ParentLayerIntRect>& clip = aLayer->GetEffectiveClipRect();
     if (clip) {
-      localOpaque.And(localOpaque, ParentLayerIntRect::ToUntyped(*clip));
+      localOpaque.And(localOpaque, clip->ToUnknownRect());
     }
     aOpaqueRegion.Or(aOpaqueRegion, localOpaque);
   }
@@ -793,7 +793,7 @@ LayerManagerComposite::Render(const nsIntRegion& aInvalidRegion)
 
   // Render our layers.
   RootLayer()->Prepare(ViewAs<RenderTargetPixel>(clipRect, PixelCastJustification::RenderTargetIsParentLayerForRoot));
-  RootLayer()->RenderLayer(ParentLayerIntRect::ToUntyped(clipRect));
+  RootLayer()->RenderLayer(clipRect.ToUnknownRect());
 
   if (!mRegionToClear.IsEmpty()) {
     nsIntRegionRectIterator iter(mRegionToClear);
@@ -805,7 +805,7 @@ LayerManagerComposite::Render(const nsIntRegion& aInvalidRegion)
 
   if (mTwoPassTmpTarget) {
     MOZ_ASSERT(haveLayerEffects);
-    PopGroupForLayerEffects(previousTarget, ParentLayerIntRect::ToUntyped(clipRect),
+    PopGroupForLayerEffects(previousTarget, clipRect.ToUnknownRect(),
                             grayscaleVal, invertVal, contrastVal);
   }
 

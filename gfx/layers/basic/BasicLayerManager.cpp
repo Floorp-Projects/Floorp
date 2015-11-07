@@ -401,7 +401,7 @@ MarkLayersHidden(Layer* aLayer, const IntRect& aClipRect,
   {
     const Maybe<ParentLayerIntRect>& clipRect = aLayer->GetEffectiveClipRect();
     if (clipRect) {
-      IntRect cr = ParentLayerIntRect::ToUntyped(*clipRect);
+      IntRect cr = clipRect->ToUnknownRect();
       // clipRect is in the container's coordinate system. Get it into the
       // global coordinate system.
       if (aLayer->GetParent()) {
@@ -481,7 +481,7 @@ ApplyDoubleBuffering(Layer* aLayer, const IntRect& aVisibleRect)
   {
     const Maybe<ParentLayerIntRect>& clipRect = aLayer->GetEffectiveClipRect();
     if (clipRect) {
-      IntRect cr = ParentLayerIntRect::ToUntyped(*clipRect);
+      IntRect cr = clipRect->ToUnknownRect();
       // clipRect is in the container's coordinate system. Get it into the
       // global coordinate system.
       if (aLayer->GetParent()) {
