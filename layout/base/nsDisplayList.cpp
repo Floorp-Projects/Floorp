@@ -1190,9 +1190,9 @@ nsDisplayListBuilder::AdjustWindowDraggingRegion(nsIFrame* aFrame)
     if (transformedDevPixelBorderBox.ToIntRect(&transformedDevPixelBorderBoxInt)) {
       const nsStyleUserInterface* styleUI = aFrame->StyleUserInterface();
       if (styleUI->mWindowDragging == NS_STYLE_WINDOW_DRAGGING_DRAG) {
-        mWindowDraggingRegion.OrWith(LayoutDevicePixel::ToUntyped(transformedDevPixelBorderBoxInt));
+        mWindowDraggingRegion.OrWith(transformedDevPixelBorderBoxInt.ToUnknownRect());
       } else {
-        mWindowDraggingRegion.SubOut(LayoutDevicePixel::ToUntyped(transformedDevPixelBorderBoxInt));
+        mWindowDraggingRegion.SubOut(transformedDevPixelBorderBoxInt.ToUnknownRect());
       }
     }
   }

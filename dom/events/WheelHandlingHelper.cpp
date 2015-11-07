@@ -338,8 +338,8 @@ WheelTransaction::GetScreenPoint(WidgetGUIEvent* aEvent)
 {
   NS_ASSERTION(aEvent, "aEvent is null");
   NS_ASSERTION(aEvent->widget, "aEvent-widget is null");
-  return LayoutDeviceIntPoint::ToUntyped(aEvent->refPoint +
-           aEvent->widget->WidgetToScreenOffset());
+  return (aEvent->refPoint + aEvent->widget->WidgetToScreenOffset())
+      .ToUnknownPoint();
 }
 
 /* static */ uint32_t

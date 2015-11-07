@@ -239,16 +239,8 @@ struct LayoutDevicePixel {
     return LayoutDeviceIntPoint(aPoint.x, aPoint.y);
   }
 
-  static nsIntPoint ToUntyped(const LayoutDeviceIntPoint& aPoint) {
-    return nsIntPoint(aPoint.x, aPoint.y);
-  }
-
   static LayoutDeviceIntRect FromUntyped(const nsIntRect& aRect) {
     return LayoutDeviceIntRect(aRect.x, aRect.y, aRect.width, aRect.height);
-  }
-
-  static nsIntRect ToUntyped(const LayoutDeviceIntRect& aRect) {
-    return nsIntRect(aRect.x, aRect.y, aRect.width, aRect.height);
   }
 
   static LayoutDeviceRect FromAppUnits(const nsRect& aRect, nscoord aAppUnitsPerDevPixel) {
@@ -322,14 +314,6 @@ struct LayoutDevicePixel {
  * 4) rasterizing at a different scale in the presence of some CSS transforms
  */
 struct LayerPixel {
-  static nsIntRect ToUntyped(const LayerIntRect& aRect) {
-    return nsIntRect(aRect.x, aRect.y, aRect.width, aRect.height);
-  }
-
-  static nsIntPoint ToUntyped(const LayerIntPoint& aPoint) {
-    return nsIntPoint(aPoint.x, aPoint.y);
-  }
-
   static gfx::IntRect ToUnknown(const LayerIntRect& aRect) {
     return gfx::IntRect(aRect.x, aRect.y, aRect.width, aRect.height);
   }
@@ -355,14 +339,6 @@ struct LayerPixel {
  * have RenderTargetPixel == LayerPixel.
  */
 struct RenderTargetPixel {
-  static nsIntPoint ToUntyped(const RenderTargetIntPoint& aPoint) {
-    return nsIntPoint(aPoint.x, aPoint.y);
-  }
-
-  static nsIntRect ToUntyped(const RenderTargetIntRect& aRect) {
-    return nsIntRect(aRect.x, aRect.y, aRect.width, aRect.height);
-  }
-
   static gfx::IntRect ToUnknown(const RenderTargetIntRect& aRect) {
     return gfx::IntRect(aRect.x, aRect.y, aRect.width, aRect.height);
   }
@@ -390,10 +366,6 @@ struct RenderTargetPixel {
  * generally be represented in ScreenPixel units.
  */
 struct ScreenPixel {
-  static nsIntSize ToUntyped(const ScreenIntSize& aSize) {
-    return nsIntSize(aSize.width, aSize.height);
-  }
-
   static ScreenIntPoint FromUntyped(const nsIntPoint& aPoint) {
     return ScreenIntPoint(aPoint.x, aPoint.y);
   }
@@ -412,9 +384,6 @@ struct ScreenPixel {
  * to get a picture of how the various coordinate systems relate to each other.
  */
 struct ParentLayerPixel {
-  static nsIntRect ToUntyped(const ParentLayerIntRect& aRect) {
-    return nsIntRect(aRect.x, aRect.y, aRect.width, aRect.height);
-  }
 };
 
 // Operators to apply ScaleFactors directly to Coords, Points, Rects, Sizes and Margins
