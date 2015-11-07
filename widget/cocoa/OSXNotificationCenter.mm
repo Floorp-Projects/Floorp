@@ -247,9 +247,9 @@ OSXNotificationCenter::ShowAlertNotification(const nsAString & aImageUrl, const 
   nsAlertsUtils::GetSourceHostPort(aPrincipal, hostPort);
   nsCOMPtr<nsIStringBundle> bundle;
   nsCOMPtr<nsIStringBundleService> sbs = do_GetService(NS_STRINGBUNDLE_CONTRACTID);
-  nsresult rv = sbs->CreateBundle("chrome://alerts/locale/alert.properties", getter_AddRefs(bundle));
+  sbs->CreateBundle("chrome://alerts/locale/alert.properties", getter_AddRefs(bundle));
 
-  if (!hostPort.IsEmpty()) {
+  if (!hostPort.IsEmpty() && bundle) {
     const char16_t* formatStrings[] = { hostPort.get() };
     nsXPIDLString notificationSource;
     bundle->FormatStringFromName(MOZ_UTF16("source.label"),
@@ -265,7 +265,7 @@ OSXNotificationCenter::ShowAlertNotification(const nsAString & aImageUrl, const 
 
   // If this is not an application/extension alert, show additional actions dealing with permissions.
   if (nsAlertsUtils::IsActionablePrincipal(aPrincipal)) {
-    if (NS_SUCCEEDED(rv)) {
+    if (bundle) {
       nsXPIDLString closeButtonTitle, actionButtonTitle, disableButtonTitle, settingsButtonTitle;
       bundle->GetStringFromName(MOZ_UTF16("closeButton.title"),
                                 getter_Copies(closeButtonTitle));
