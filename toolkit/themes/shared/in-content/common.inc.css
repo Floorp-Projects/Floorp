@@ -210,7 +210,6 @@ html|button:disabled,
 xul|button[disabled="true"],
 xul|colorpicker[type="button"][disabled="true"],
 xul|menulist[disabled="true"] {
-  cursor: not-allowed;
   opacity: 0.5;
 }
 
