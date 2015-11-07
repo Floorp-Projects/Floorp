@@ -177,53 +177,6 @@ class MacroAssemblerMIPSShared : public Assembler
     void moveFromFloat32(FloatRegister src, Register dest) {
         as_mfc1(dest, src);
     }
-
-  private:
-    void atomicEffectOpMIPSr2(int nbytes, AtomicOp op, const Register& value, const Register& addr,
-                              Register flagTemp, Register valueTemp, Register offsetTemp, Register maskTemp);
-    void atomicFetchOpMIPSr2(int nbytes, bool signExtend, AtomicOp op, const Register& value, const Register& addr,
-                             Register flagTemp, Register valueTemp, Register offsetTemp, Register maskTemp,
-                             Register output);
-    void compareExchangeMIPSr2(int nbytes, bool signExtend, const Register& addr, Register oldval,
-                               Register newval, Register flagTemp, Register valueTemp, Register offsetTemp,
-                               Register maskTemp, Register output);
-
-  protected:
-    void atomicEffectOp(int nbytes, AtomicOp op, const Imm32& value, const Address& address,
-                        Register flagTemp, Register valueTemp, Register offsetTemp, Register maskTemp);
-    void atomicEffectOp(int nbytes, AtomicOp op, const Imm32& value, const BaseIndex& address,
-                        Register flagTemp, Register valueTemp, Register offsetTemp, Register maskTemp);
-    void atomicEffectOp(int nbytes, AtomicOp op, const Register& value, const Address& address,
-                        Register flagTemp, Register valueTemp, Register offsetTemp, Register maskTemp);
-    void atomicEffectOp(int nbytes, AtomicOp op, const Register& value, const BaseIndex& address,
-                        Register flagTemp, Register valueTemp, Register offsetTemp, Register maskTemp);
-
-    void atomicFetchOp(int nbytes, bool signExtend, AtomicOp op, const Imm32& value,
-                       const Address& address, Register flagTemp, Register valueTemp,
-                       Register offsetTemp, Register maskTemp, Register output);
-    void atomicFetchOp(int nbytes, bool signExtend, AtomicOp op, const Imm32& value,
-                       const BaseIndex& address, Register flagTemp, Register valueTemp,
-                       Register offsetTemp, Register maskTemp, Register output);
-    void atomicFetchOp(int nbytes, bool signExtend, AtomicOp op, const Register& value,
-                       const Address& address, Register flagTemp, Register valueTemp,
-                       Register offsetTemp, Register maskTemp, Register output);
-    void atomicFetchOp(int nbytes, bool signExtend, AtomicOp op, const Register& value,
-                       const BaseIndex& address, Register flagTemp, Register valueTemp,
-                       Register offsetTemp, Register maskTemp, Register output);
-
-    void compareExchange(int nbytes, bool signExtend, const Address& address, Register oldval,
-                         Register newval, Register valueTemp, Register offsetTemp, Register maskTemp,
-                         Register output);
-    void compareExchange(int nbytes, bool signExtend, const BaseIndex& address, Register oldval,
-                         Register newval, Register valueTemp, Register offsetTemp, Register maskTemp,
-                         Register output);
-
-    void atomicExchange(int nbytes, bool signExtend, const Address& address, Register value,
-                        Register valueTemp, Register offsetTemp, Register maskTemp,
-                        Register output);
-    void atomicExchange(int nbytes, bool signExtend, const BaseIndex& address, Register value,
-                        Register valueTemp, Register offsetTemp, Register maskTemp,
-                        Register output);
 };
 
 } // namespace jit
