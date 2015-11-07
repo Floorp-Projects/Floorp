@@ -61,17 +61,6 @@ toolbar[brighttext] #downloads-button[attention] > #downloads-indicator-anchor >
   -moz-image-region: auto;
 }
 
-%ifdef WINDOWS_AERO
-@media (-moz-os-version: windows-vista),
-       (-moz-os-version: windows-win7) {
-%endif
-  #downloads-button[cui-areatype="menu-panel"][attention] {
-    list-style-image: url("chrome://browser/skin/downloads/download-glow-menuPanel-XPVista7.png");
-  }
-%ifdef WINDOWS_AERO
-}
-%endif
-
 /* In the next few rules, we use :not([counter]) as a shortcut that is
    equivalent to -moz-any([progress], [paused]). */
 
