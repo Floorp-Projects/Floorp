@@ -663,14 +663,15 @@ ia2Accessible::get_accessibleWithCaret(IUnknown** aAccessible,
     return S_FALSE;
 
   Accessible* child = accWithCaret;
-  while (child != acc)
+  while (!child->IsDoc() && child != acc)
     child = child->Parent();
 
-  if (!child)
+  if (child != acc)
     return S_FALSE;
 
   *aAccessible =  static_cast<IAccessible2*>(
     static_cast<AccessibleWrap*>(accWithCaret));
+  (*aAccessible)->AddRef();
   *aCaretOffset = caretOffset;
   return S_OK;
 
