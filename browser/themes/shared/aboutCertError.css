@@ -53,13 +53,6 @@ body {
   flex: 1;
 }
 
-/* Pressing the retry button will cause the cursor to flicker from a pointer to
- * not-allowed. Override the disabled cursor behaviour since we will never show
- * the button disabled as the initial state. Remove this in Bug 1219861. */
-button:disabled {
-  cursor: pointer;
-}
-
 #returnButton {
   background-color: var(--in-content-primary-button-background);
   border: none;
