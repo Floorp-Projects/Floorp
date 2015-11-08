@@ -1597,6 +1597,16 @@ HasTerminalNewline(const nsTextFrame* aFrame)
   return frag->CharAt(aFrame->GetContentEnd() - 1) == '\n';
 }
 
+static gfxFont::Metrics
+GetFirstFontMetrics(gfxFontGroup* aFontGroup, bool aVerticalMetrics)
+{
+  if (!aFontGroup)
+    return gfxFont::Metrics();
+  gfxFont* font = aFontGroup->GetFirstValidFont();
+  return font->GetMetrics(aVerticalMetrics ? gfxFont::eVertical
+                                           : gfxFont::eHorizontal);
+}
+
 static nscoord
 LetterSpacing(nsIFrame* aFrame, const nsStyleText* aStyleText = nullptr)
 {
@@ -1824,16 +1834,6 @@ GetHyphenTextRun(gfxTextRun* aTextRun, gfxContext* aContext, nsTextFrame* aTextF
 
   return aTextRun->GetFontGroup()->
     MakeHyphenTextRun(ctx, aTextRun->GetAppUnitsPerDevUnit());
-}
-
-static gfxFont::Metrics
-GetFirstFontMetrics(gfxFontGroup* aFontGroup, bool aVerticalMetrics)
-{
-  if (!aFontGroup)
-    return gfxFont::Metrics();
-  gfxFont* font = aFontGroup->GetFirstValidFont();
-  return font->GetMetrics(aVerticalMetrics ? gfxFont::eVertical
-                                           : gfxFont::eHorizontal);
 }
 
 PR_STATIC_ASSERT(NS_STYLE_WHITESPACE_NORMAL == 0);
