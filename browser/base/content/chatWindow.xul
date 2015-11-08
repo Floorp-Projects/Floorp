@@ -131,11 +131,6 @@ chatBrowserAccess.prototype = {
   isTabContentWindow: function (aWindow) {
     return this.contentWindow == aWindow;
   },
-
-  canClose() {
-    let {BrowserUtils} = Cu.import("resource://gre/modules/BrowserUtils.jsm", {});
-    return BrowserUtils.canCloseWindow(window);
-  },
 };
 
 </script>
