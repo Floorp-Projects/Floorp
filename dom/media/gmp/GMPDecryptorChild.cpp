@@ -61,7 +61,7 @@ GMPDecryptorChild::CallOnGMPThread(MethodType aMethod, ParamType&&... aParams)
     // Use const reference when we have to.
     auto m = &GMPDecryptorChild::CallMethod<
         decltype(aMethod), typename AddConstReference<ParamType>::Type...>;
-    auto t = NewRunnableMethod(this, m, aMethod, Forward<ParamType>(aParams)...);
+    auto t = NewRunnableMethod(this, m, aMethod, aParams...);
     mPlugin->GMPMessageLoop()->PostTask(FROM_HERE, t);
   }
 }
@@ -116,7 +116,7 @@ GMPDecryptorChild::SessionMessage(const char* aSessionId,
   msg.AppendElements(aMessage, aMessageLength);
   CALL_ON_GMP_THREAD(SendSessionMessage,
                      nsAutoCString(aSessionId, aSessionIdLength),
-                     aMessageType, Move(msg));
+                     aMessageType, msg);
 }
 
 void
