@@ -1645,6 +1645,26 @@ WordSpacing(nsIFrame* aFrame, const nsStyleText* aStyleText = nullptr)
   return 0;
 }
 
+// Returns gfxTextRunFactory::TEXT_ENABLE_SPACING if non-standard
+// letter-spacing or word-spacing is present.
+static uint32_t
+GetSpacingFlags(nsIFrame* aFrame, const nsStyleText* aStyleText = nullptr)
+{
+  if (aFrame->IsSVGText()) {
+    return 0;
+  }
+
+  const nsStyleText* styleText = aFrame->StyleText();
+  const nsStyleCoord& ls = styleText->mLetterSpacing;
+  const nsStyleCoord& ws = styleText->mWordSpacing;
+
+  bool nonStandardSpacing =
+    (eStyleUnit_Coord == ls.GetUnit() && ls.GetCoordValue() != 0) ||
+    (eStyleUnit_Coord == ws.GetUnit() && ws.GetCoordValue() != 0);
+
+  return nonStandardSpacing ? gfxTextRunFactory::TEXT_ENABLE_SPACING : 0;
+}
+
 bool
 BuildTextRunsScanner::ContinueTextRunAcrossFrames(nsTextFrame* aFrame1, nsTextFrame* aFrame2)
 {
@@ -1794,12 +1814,6 @@ BuildTextRunsScanner::GetNextBreakBeforeFrame(uint32_t* aIndex)
     return nullptr;
   *aIndex = index + 1;
   return static_cast<nsTextFrame*>(mLineBreakBeforeFrames.ElementAt(index));
-}
-
-static uint32_t
-GetSpacingFlags(nscoord spacing)
-{
-  return spacing ? gfxTextRunFactory::TEXT_ENABLE_SPACING : 0;
 }
 
 static gfxFontGroup*
@@ -1957,8 +1971,7 @@ BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
     if (NS_STYLE_TEXT_TRANSFORM_NONE != textStyle->mTextTransform) {
       anyTextTransformStyle = true;
     }
-    textFlags |= GetSpacingFlags(LetterSpacing(f));
-    textFlags |= GetSpacingFlags(WordSpacing(f));
+    textFlags |= GetSpacingFlags(f);
     nsTextFrameUtils::CompressionMode compression =
       GetCSSWhitespaceToCompressionMode(f, textStyle);
     if ((enabledJustification || f->ShouldSuppressLineBreak()) &&
