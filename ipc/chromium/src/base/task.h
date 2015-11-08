@@ -1,4 +1,3 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 // Copyright (c) 2006-2008 The Chromium Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
@@ -10,50 +9,6 @@
 #include "base/revocable_store.h"
 #include "base/tracked.h"
 #include "base/tuple.h"
-#include "mozilla/IndexSequence.h"
-#include "mozilla/Tuple.h"
-
-// Helper functions so that we can call a function a pass it arguments that come
-// from a Tuple.
-
-namespace details {
-
-// Call the given method on the given object. Arguments are passed by move
-// semantics from the given tuple. If the tuple has length N, the sequence must
-// be IndexSequence<0, 1, ..., N-1>.
-template<size_t... Indices, class ObjT, class Method, typename... Args>
-void CallMethod(mozilla::IndexSequence<Indices...>, ObjT* obj, Method method,
-                mozilla::Tuple<Args...>& arg)
-{
-  (obj->*method)(mozilla::Move(mozilla::Get<Indices>(arg))...);
-}
-
-// Same as above, but call a function.
-template<size_t... Indices, typename Function, typename... Args>
-void CallFunction(mozilla::IndexSequence<Indices...>, Function function,
-                  mozilla::Tuple<Args...>& arg)
-{
-  (*function)(mozilla::Move(mozilla::Get<Indices>(arg))...);
-}
-
-} // namespace details
-
-// Call a method on the given object. Arguments are passed by move semantics
-// from the given tuple.
-template<class ObjT, class Method, typename... Args>
-void DispatchTupleToMethod(ObjT* obj, Method method, mozilla::Tuple<Args...>& arg)
-{
-  details::CallMethod(typename mozilla::IndexSequenceFor<Args...>::Type(),
-                      obj, method, arg);
-}
-
-// Same as above, but call a function.
-template<typename Function, typename... Args>
-void DispatchTupleToFunction(Function function, mozilla::Tuple<Args...>& arg)
-{
-  details::CallFunction(typename mozilla::IndexSequenceFor<Args...>::Type(),
-                        function, arg);
-}
 
 // Task ------------------------------------------------------------------------
 //
@@ -155,14 +110,75 @@ class ScopedRunnableMethodFactory : public RevocableStore {
  public:
   explicit ScopedRunnableMethodFactory(T* object) : object_(object) { }
 
-  template <class Method, typename... Elements>
-  inline Task* NewRunnableMethod(Method method, Elements&&... elements) {
-    typedef mozilla::Tuple<typename mozilla::Decay<Elements>::Type...> ArgsTuple;
-    typedef RunnableMethod<Method, ArgsTuple> Runnable;
-    typedef typename ScopedTaskFactory<Runnable>::TaskWrapper TaskWrapper;
+  template <class Method>
+  inline Task* NewRunnableMethod(Method method) {
+    typedef typename ScopedTaskFactory<RunnableMethod<
+        Method, Tuple0> >::TaskWrapper TaskWrapper;
 
     TaskWrapper* task = new TaskWrapper(this);
-    task->Init(object_, method, mozilla::MakeTuple(mozilla::Forward<Elements>(elements)...));
+    task->Init(object_, method, base::MakeTuple());
+    return task;
+  }
+
+  template <class Method, class A>
+  inline Task* NewRunnableMethod(Method method, const A& a) {
+    typedef typename ScopedTaskFactory<RunnableMethod<
+        Method, Tuple1<A> > >::TaskWrapper TaskWrapper;
+
+    TaskWrapper* task = new TaskWrapper(this);
+    task->Init(object_, method, base::MakeTuple(a));
+    return task;
+  }
+
+  template <class Method, class A, class B>
+  inline Task* NewRunnableMethod(Method method, const A& a, const B& b) {
+    typedef typename ScopedTaskFactory<RunnableMethod<
+        Method, Tuple2<A, B> > >::TaskWrapper TaskWrapper;
+
+    TaskWrapper* task = new TaskWrapper(this);
+    task->Init(object_, method, base::MakeTuple(a, b));
+    return task;
+  }
+
+  template <class Method, class A, class B, class C>
+  inline Task* NewRunnableMethod(Method method,
+                                 const A& a,
+                                 const B& b,
+                                 const C& c) {
+    typedef typename ScopedTaskFactory<RunnableMethod<
+        Method, Tuple3<A, B, C> > >::TaskWrapper TaskWrapper;
+
+    TaskWrapper* task = new TaskWrapper(this);
+    task->Init(object_, method, base::MakeTuple(a, b, c));
+    return task;
+  }
+
+  template <class Method, class A, class B, class C, class D>
+  inline Task* NewRunnableMethod(Method method,
+                                 const A& a,
+                                 const B& b,
+                                 const C& c,
+                                 const D& d) {
+    typedef typename ScopedTaskFactory<RunnableMethod<
+        Method, Tuple4<A, B, C, D> > >::TaskWrapper TaskWrapper;
+
+    TaskWrapper* task = new TaskWrapper(this);
+    task->Init(object_, method, base::MakeTuple(a, b, c, d));
+    return task;
+  }
+
+  template <class Method, class A, class B, class C, class D, class E>
+  inline Task* NewRunnableMethod(Method method,
+                                 const A& a,
+                                 const B& b,
+                                 const C& c,
+                                 const D& d,
+                                 const E& e) {
+    typedef typename ScopedTaskFactory<RunnableMethod<
+        Method, Tuple5<A, B, C, D, E> > >::TaskWrapper TaskWrapper;
+
+    TaskWrapper* task = new TaskWrapper(this);
+    task->Init(object_, method, base::MakeTuple(a, b, c, d, e));
     return task;
   }
 
@@ -172,13 +188,13 @@ class ScopedRunnableMethodFactory : public RevocableStore {
    public:
     RunnableMethod() { }
 
-    void Init(T* obj, Method meth, Params&& params) {
+    void Init(T* obj, Method meth, const Params& params) {
       obj_ = obj;
       meth_ = meth;
-      params_ = mozilla::Forward<Params>(params);
+      params_ = params;
     }
 
-    virtual void Run() { DispatchTupleToMethod(obj_, meth_, params_); }
+    virtual void Run() { DispatchToMethod(obj_, meth_, params_); }
 
    private:
     T* MOZ_UNSAFE_REF("The validity of this pointer must be enforced by "
@@ -294,8 +310,8 @@ template <class T, class Method, class Params>
 class RunnableMethod : public CancelableTask,
                        public RunnableMethodTraits<T> {
  public:
-  RunnableMethod(T* obj, Method meth, Params&& params)
-      : obj_(obj), meth_(meth), params_(mozilla::Forward<Params>(params)) {
+  RunnableMethod(T* obj, Method meth, const Params& params)
+      : obj_(obj), meth_(meth), params_(params) {
     this->RetainCallee(obj_);
   }
   ~RunnableMethod() {
@@ -304,7 +320,7 @@ class RunnableMethod : public CancelableTask,
 
   virtual void Run() {
     if (obj_)
-      DispatchTupleToMethod(obj_, meth_, params_);
+      DispatchToMethod(obj_, meth_, params_);
   }
 
   virtual void Cancel() {
@@ -315,7 +331,7 @@ class RunnableMethod : public CancelableTask,
   void ReleaseCallee() {
     if (obj_) {
       RunnableMethodTraits<T>::ReleaseCallee(obj_);
-      obj_ = nullptr;
+      obj_ = NULL;
     }
   }
 
@@ -326,11 +342,78 @@ class RunnableMethod : public CancelableTask,
   Params params_;
 };
 
-template <class T, class Method, typename... Args>
-inline CancelableTask* NewRunnableMethod(T* object, Method method, Args&&... args) {
-  typedef mozilla::Tuple<typename mozilla::Decay<Args>::Type...> ArgsTuple;
-  return new RunnableMethod<T, Method, ArgsTuple>(
-      object, method, mozilla::MakeTuple(mozilla::Forward<Args>(args)...));
+template <class T, class Method>
+inline CancelableTask* NewRunnableMethod(T* object, Method method) {
+  return new RunnableMethod<T, Method, Tuple0>(object, method, base::MakeTuple());
+}
+
+template <class T, class Method, class A>
+inline CancelableTask* NewRunnableMethod(T* object, Method method, const A& a) {
+  return new RunnableMethod<T, Method, Tuple1<A> >(object,
+                                                   method,
+                                                   base::MakeTuple(a));
+}
+
+template <class T, class Method, class A, class B>
+inline CancelableTask* NewRunnableMethod(T* object, Method method,
+const A& a, const B& b) {
+  return new RunnableMethod<T, Method, Tuple2<A, B> >(object, method,
+                                                      base::MakeTuple(a, b));
+}
+
+template <class T, class Method, class A, class B, class C>
+inline CancelableTask* NewRunnableMethod(T* object, Method method,
+                                          const A& a, const B& b, const C& c) {
+  return new RunnableMethod<T, Method, Tuple3<A, B, C> >(object, method,
+                                                         base::MakeTuple(a, b, c));
+}
+
+template <class T, class Method, class A, class B, class C, class D>
+inline CancelableTask* NewRunnableMethod(T* object, Method method,
+                                          const A& a, const B& b,
+                                          const C& c, const D& d) {
+  return new RunnableMethod<T, Method, Tuple4<A, B, C, D> >(object, method,
+                                                            base::MakeTuple(a, b,
+                                                                      c, d));
+}
+
+template <class T, class Method, class A, class B, class C, class D, class E>
+inline CancelableTask* NewRunnableMethod(T* object, Method method,
+                                          const A& a, const B& b,
+                                          const C& c, const D& d, const E& e) {
+  return new RunnableMethod<T,
+                            Method,
+                            Tuple5<A, B, C, D, E> >(object,
+                                                    method,
+                                                    base::MakeTuple(a, b, c, d, e));
+}
+
+template <class T, class Method, class A, class B, class C, class D, class E,
+          class F>
+inline CancelableTask* NewRunnableMethod(T* object, Method method,
+                                          const A& a, const B& b,
+                                          const C& c, const D& d, const E& e,
+                                          const F& f) {
+  return new RunnableMethod<T,
+                            Method,
+                            Tuple6<A, B, C, D, E, F> >(object,
+                                                       method,
+                                                       base::MakeTuple(a, b, c, d, e,
+                                                                 f));
+}
+
+template <class T, class Method, class A, class B, class C, class D, class E,
+          class F, class G>
+inline CancelableTask* NewRunnableMethod(T* object, Method method,
+                                         const A& a, const B& b,
+                                         const C& c, const D& d, const E& e,
+                                         const F& f, const G& g) {
+  return new RunnableMethod<T,
+                            Method,
+                            Tuple7<A, B, C, D, E, F, G> >(object,
+                                                          method,
+                                                          base::MakeTuple(a, b, c, d,
+                                                                    e, f, g));
 }
 
 // RunnableFunction and NewRunnableFunction implementation ---------------------
@@ -338,8 +421,8 @@ inline CancelableTask* NewRunnableMethod(T* object, Method method, Args&&... arg
 template <class Function, class Params>
 class RunnableFunction : public CancelableTask {
  public:
-  RunnableFunction(Function function, Params&& params)
-      : function_(function), params_(mozilla::Forward<Params>(params)) {
+  RunnableFunction(Function function, const Params& params)
+      : function_(function), params_(params) {
   }
 
   ~RunnableFunction() {
@@ -347,22 +430,260 @@ class RunnableFunction : public CancelableTask {
 
   virtual void Run() {
     if (function_)
-      DispatchTupleToFunction(function_, params_);
+      DispatchToFunction(function_, params_);
   }
 
   virtual void Cancel() {
-    function_ = nullptr;
+    function_ = NULL;
   }
 
+ private:
   Function function_;
   Params params_;
 };
 
-template <class Function, typename... Args>
-inline CancelableTask* NewRunnableFunction(Function function, Args&&... args) {
-  typedef mozilla::Tuple<typename mozilla::Decay<Args>::Type...> ArgsTuple;
-  return new RunnableFunction<Function, ArgsTuple>(
-      function, mozilla::MakeTuple(mozilla::Forward<Args>(args)...));
+template <class Function>
+inline CancelableTask* NewRunnableFunction(Function function) {
+  return new RunnableFunction<Function, Tuple0>(function, base::MakeTuple());
 }
+
+template <class Function, class A>
+inline CancelableTask* NewRunnableFunction(Function function, const A& a) {
+  return new RunnableFunction<Function, Tuple1<A> >(function, base::MakeTuple(a));
+}
+
+template <class Function, class A, class B>
+inline CancelableTask* NewRunnableFunction(Function function,
+                                           const A& a, const B& b) {
+  return new RunnableFunction<Function, Tuple2<A, B> >(function,
+                                                       base::MakeTuple(a, b));
+}
+
+template <class Function, class A, class B, class C>
+inline CancelableTask* NewRunnableFunction(Function function,
+                                           const A& a, const B& b,
+                                           const C& c) {
+  return new RunnableFunction<Function, Tuple3<A, B, C> >(function,
+                                                          base::MakeTuple(a, b, c));
+}
+
+template <class Function, class A, class B, class C, class D>
+inline CancelableTask* NewRunnableFunction(Function function,
+                                           const A& a, const B& b,
+                                           const C& c, const D& d) {
+  return new RunnableFunction<Function, Tuple4<A, B, C, D> >(function,
+                                                             base::MakeTuple(a, b,
+                                                                       c, d));
+}
+
+template <class Function, class A, class B, class C, class D, class E>
+inline CancelableTask* NewRunnableFunction(Function function,
+                                           const A& a, const B& b,
+                                           const C& c, const D& d,
+                                           const E& e) {
+  return new RunnableFunction<Function, Tuple5<A, B, C, D, E> >(function,
+                                                                base::MakeTuple(a, b,
+                                                                          c, d,
+                                                                          e));
+}
+
+// Callback --------------------------------------------------------------------
+//
+// A Callback is like a Task but with unbound parameters. It is basically an
+// object-oriented function pointer.
+//
+// Callbacks are designed to work with Tuples.  A set of helper functions and
+// classes is provided to hide the Tuple details from the consumer.  Client
+// code will generally work with the CallbackRunner base class, which merely
+// provides a Run method and is returned by the New* functions. This allows
+// users to not care which type of class implements the callback, only that it
+// has a certain number and type of arguments.
+//
+// The implementation of this is done by CallbackImpl, which inherits
+// CallbackStorage to store the data. This allows the storage of the data
+// (requiring the class type T) to be hidden from users, who will want to call
+// this regardless of the implementor's type T.
+//
+// Note that callbacks currently have no facility for cancelling or abandoning
+// them. We currently handle this at a higher level for cases where this is
+// necessary. The pointer in a callback must remain valid until the callback
+// is made.
+//
+// Like Task, the callback executor is responsible for deleting the callback
+// pointer once the callback has executed.
+//
+// Example client usage:
+//   void Object::DoStuff(int, string);
+//   Callback2<int, string>::Type* callback =
+//       NewCallback(obj, &Object::DoStuff);
+//   callback->Run(5, string("hello"));
+//   delete callback;
+// or, equivalently, using tuples directly:
+//   CallbackRunner<Tuple2<int, string> >* callback =
+//       NewCallback(obj, &Object::DoStuff);
+//   callback->RunWithParams(base::MakeTuple(5, string("hello")));
+
+// Base for all Callbacks that handles storage of the pointers.
+template <class T, typename Method>
+class CallbackStorage {
+ public:
+  CallbackStorage(T* obj, Method meth) : obj_(obj), meth_(meth) {
+  }
+
+ protected:
+  T* MOZ_UNSAFE_REF("The validity of this pointer must be enforced by "
+                    "external factors.") obj_;
+  Method meth_;
+};
+
+// Interface that is exposed to the consumer, that does the actual calling
+// of the method.
+template <typename Params>
+class CallbackRunner {
+ public:
+  typedef Params TupleType;
+
+  virtual ~CallbackRunner() {}
+  virtual void RunWithParams(const Params& params) = 0;
+
+  // Convenience functions so callers don't have to deal with Tuples.
+  inline void Run() {
+    RunWithParams(Tuple0());
+  }
+
+  template <typename Arg1>
+  inline void Run(const Arg1& a) {
+    RunWithParams(Params(a));
+  }
+
+  template <typename Arg1, typename Arg2>
+  inline void Run(const Arg1& a, const Arg2& b) {
+    RunWithParams(Params(a, b));
+  }
+
+  template <typename Arg1, typename Arg2, typename Arg3>
+  inline void Run(const Arg1& a, const Arg2& b, const Arg3& c) {
+    RunWithParams(Params(a, b, c));
+  }
+
+  template <typename Arg1, typename Arg2, typename Arg3, typename Arg4>
+  inline void Run(const Arg1& a, const Arg2& b, const Arg3& c, const Arg4& d) {
+    RunWithParams(Params(a, b, c, d));
+  }
+
+  template <typename Arg1, typename Arg2, typename Arg3,
+            typename Arg4, typename Arg5>
+  inline void Run(const Arg1& a, const Arg2& b, const Arg3& c,
+                  const Arg4& d, const Arg5& e) {
+    RunWithParams(Params(a, b, c, d, e));
+  }
+};
+
+template <class T, typename Method, typename Params>
+class CallbackImpl : public CallbackStorage<T, Method>,
+                     public CallbackRunner<Params> {
+ public:
+  CallbackImpl(T* obj, Method meth) : CallbackStorage<T, Method>(obj, meth) {
+  }
+  virtual void RunWithParams(const Params& params) {
+    // use "this->" to force C++ to look inside our templatized base class; see
+    // Effective C++, 3rd Ed, item 43, p210 for details.
+    DispatchToMethod(this->obj_, this->meth_, params);
+  }
+};
+
+// 0-arg implementation
+struct Callback0 {
+  typedef CallbackRunner<Tuple0> Type;
+};
+
+template <class T>
+typename Callback0::Type* NewCallback(T* object, void (T::*method)()) {
+  return new CallbackImpl<T, void (T::*)(), Tuple0 >(object, method);
+}
+
+// 1-arg implementation
+template <typename Arg1>
+struct Callback1 {
+  typedef CallbackRunner<Tuple1<Arg1> > Type;
+};
+
+template <class T, typename Arg1>
+typename Callback1<Arg1>::Type* NewCallback(T* object,
+                                            void (T::*method)(Arg1)) {
+  return new CallbackImpl<T, void (T::*)(Arg1), Tuple1<Arg1> >(object, method);
+}
+
+// 2-arg implementation
+template <typename Arg1, typename Arg2>
+struct Callback2 {
+  typedef CallbackRunner<Tuple2<Arg1, Arg2> > Type;
+};
+
+template <class T, typename Arg1, typename Arg2>
+typename Callback2<Arg1, Arg2>::Type* NewCallback(
+    T* object,
+    void (T::*method)(Arg1, Arg2)) {
+  return new CallbackImpl<T, void (T::*)(Arg1, Arg2),
+      Tuple2<Arg1, Arg2> >(object, method);
+}
+
+// 3-arg implementation
+template <typename Arg1, typename Arg2, typename Arg3>
+struct Callback3 {
+  typedef CallbackRunner<Tuple3<Arg1, Arg2, Arg3> > Type;
+};
+
+template <class T, typename Arg1, typename Arg2, typename Arg3>
+typename Callback3<Arg1, Arg2, Arg3>::Type* NewCallback(
+    T* object,
+    void (T::*method)(Arg1, Arg2, Arg3)) {
+  return new CallbackImpl<T,  void (T::*)(Arg1, Arg2, Arg3),
+      Tuple3<Arg1, Arg2, Arg3> >(object, method);
+}
+
+// 4-arg implementation
+template <typename Arg1, typename Arg2, typename Arg3, typename Arg4>
+struct Callback4 {
+  typedef CallbackRunner<Tuple4<Arg1, Arg2, Arg3, Arg4> > Type;
+};
+
+template <class T, typename Arg1, typename Arg2, typename Arg3, typename Arg4>
+typename Callback4<Arg1, Arg2, Arg3, Arg4>::Type* NewCallback(
+    T* object,
+    void (T::*method)(Arg1, Arg2, Arg3, Arg4)) {
+  return new CallbackImpl<T, void (T::*)(Arg1, Arg2, Arg3, Arg4),
+      Tuple4<Arg1, Arg2, Arg3, Arg4> >(object, method);
+}
+
+// 5-arg implementation
+template <typename Arg1, typename Arg2, typename Arg3,
+          typename Arg4, typename Arg5>
+struct Callback5 {
+  typedef CallbackRunner<Tuple5<Arg1, Arg2, Arg3, Arg4, Arg5> > Type;
+};
+
+template <class T, typename Arg1, typename Arg2,
+          typename Arg3, typename Arg4, typename Arg5>
+typename Callback5<Arg1, Arg2, Arg3, Arg4, Arg5>::Type* NewCallback(
+    T* object,
+    void (T::*method)(Arg1, Arg2, Arg3, Arg4, Arg5)) {
+  return new CallbackImpl<T, void (T::*)(Arg1, Arg2, Arg3, Arg4, Arg5),
+      Tuple5<Arg1, Arg2, Arg3, Arg4, Arg5> >(object, method);
+}
+
+// An UnboundMethod is a wrapper for a method where the actual object is
+// provided at Run dispatch time.
+template <class T, class Method, class Params>
+class UnboundMethod {
+ public:
+  UnboundMethod(Method m, Params p) : m_(m), p_(p) {}
+  void Run(T* obj) const {
+    DispatchToMethod(obj, m_, p_);
+  }
+ private:
+  Method m_;
+  Params p_;
+};
 
 #endif  // BASE_TASK_H_
