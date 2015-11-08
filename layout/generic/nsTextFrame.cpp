@@ -1579,15 +1579,6 @@ void BuildTextRunsScanner::AccumulateRunInfo(nsTextFrame* aFrame)
   }
 }
 
-static nscoord StyleToCoord(const nsStyleCoord& aCoord)
-{
-  if (eStyleUnit_Coord == aCoord.GetUnit()) {
-    return aCoord.GetCoordValue();
-  } else {
-    return 0;
-  }
-}
-
 static bool
 HasTerminalNewline(const nsTextFrame* aFrame)
 {
@@ -1629,7 +1620,12 @@ LetterSpacing(nsIFrame* aFrame, const nsStyleText* aStyleText = nullptr)
   if (!aStyleText) {
     aStyleText = aFrame->StyleText();
   }
-  return StyleToCoord(aStyleText->mLetterSpacing);
+
+  const nsStyleCoord& coord = aStyleText->mLetterSpacing;
+  if (eStyleUnit_Coord == coord.GetUnit()) {
+    return coord.GetCoordValue();
+  }
+  return 0;
 }
 
 static nscoord
@@ -1641,7 +1637,12 @@ WordSpacing(nsIFrame* aFrame, const nsStyleText* aStyleText = nullptr)
   if (!aStyleText) {
     aStyleText = aFrame->StyleText();
   }
-  return StyleToCoord(aStyleText->mWordSpacing);
+
+  const nsStyleCoord& coord = aStyleText->mWordSpacing;
+  if (eStyleUnit_Coord == coord.GetUnit()) {
+    return coord.GetCoordValue();
+  }
+  return 0;
 }
 
 bool
