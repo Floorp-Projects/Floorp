@@ -789,6 +789,270 @@ MacroAssemblerMIPSShared::asMasm() const
     return *static_cast<const MacroAssembler*>(this);
 }
 
+void
+MacroAssemblerMIPSShared::atomicEffectOpMIPSr2(int nbytes, AtomicOp op,
+                                               const Register& value, const Register& addr,
+                                               Register flagTemp, Register valueTemp,
+                                               Register offsetTemp, Register maskTemp)
+{
+    atomicFetchOpMIPSr2(nbytes, false, op, value, addr, flagTemp,
+                        valueTemp, offsetTemp, maskTemp, InvalidReg);
+}
+
+void
+MacroAssemblerMIPSShared::atomicFetchOpMIPSr2(int nbytes, bool signExtend, AtomicOp op, const Register& value,
+                                              const Register& addr, Register flagTemp, Register valueTemp,
+                                              Register offsetTemp, Register maskTemp, Register output)
+{
+    Label again;
+
+    as_andi(offsetTemp, addr, 3);
+    asMasm().subPtr(offsetTemp, addr);
+    as_sll(offsetTemp, offsetTemp, 3);
+    ma_li(maskTemp, Imm32(UINT32_MAX >> ((4 - nbytes) * 8)));
+    as_sllv(maskTemp, maskTemp, offsetTemp);
+
+    bind(&again);
+
+    as_sync(16);
+
+    as_ll(flagTemp, addr, 0);
+
+    as_sllv(valueTemp, value, offsetTemp);
+    if (output != InvalidReg) {
+        as_and(output, flagTemp, maskTemp);
+        as_srlv(output, output, offsetTemp);
+        if (signExtend) {
+            switch (nbytes) {
+            case 1:
+                as_seb(output, output);
+                break;
+            case 2:
+                as_seh(output, output);
+                break;
+            case 4:
+                break;
+            default:
+                MOZ_CRASH("NYI");
+            }
+        }
+    }
+
+    switch (op) {
+    case AtomicFetchAddOp:
+        as_addu(valueTemp, flagTemp, valueTemp);
+        break;
+    case AtomicFetchSubOp:
+        as_subu(valueTemp, flagTemp, valueTemp);
+        break;
+    case AtomicFetchAndOp:
+        as_and(valueTemp, flagTemp, valueTemp);
+        break;
+    case AtomicFetchOrOp:
+        as_or(valueTemp, flagTemp, valueTemp);
+        break;
+    case AtomicFetchXorOp:
+        as_xor(valueTemp, flagTemp, valueTemp);
+        break;
+    default:
+        MOZ_CRASH("NYI");
+    }
+
+    as_and(valueTemp, valueTemp, maskTemp);
+    as_or(flagTemp, flagTemp, maskTemp);
+    as_xor(flagTemp, flagTemp, maskTemp);
+    as_or(flagTemp, flagTemp, valueTemp);
+
+    as_sc(flagTemp, addr, 0);
+
+    ma_b(flagTemp, flagTemp, &again, Zero, ShortJump);
+
+    as_sync(0);
+}
+
+void
+MacroAssemblerMIPSShared::atomicEffectOp(int nbytes, AtomicOp op, const Imm32& value,
+                                         const Address& address, Register flagTemp,
+                                         Register valueTemp, Register offsetTemp, Register maskTemp)
+{
+    ma_li(SecondScratchReg, value);
+    asMasm().computeEffectiveAddress(address, ScratchRegister);
+    atomicEffectOpMIPSr2(nbytes, op, SecondScratchReg, ScratchRegister,
+                         flagTemp, valueTemp, offsetTemp, maskTemp);
+}
+
+void
+MacroAssemblerMIPSShared::atomicEffectOp(int nbytes, AtomicOp op, const Imm32& value,
+                                         const BaseIndex& address, Register flagTemp,
+                                         Register valueTemp, Register offsetTemp, Register maskTemp)
+{
+    ma_li(SecondScratchReg, value);
+    asMasm().computeEffectiveAddress(address, ScratchRegister);
+    atomicEffectOpMIPSr2(nbytes, op, SecondScratchReg, ScratchRegister,
+                         flagTemp, valueTemp, offsetTemp, maskTemp);
+}
+
+void
+MacroAssemblerMIPSShared::atomicEffectOp(int nbytes, AtomicOp op, const Register& value,
+                                         const Address& address, Register flagTemp,
+                                         Register valueTemp, Register offsetTemp, Register maskTemp)
+{
+    asMasm().computeEffectiveAddress(address, ScratchRegister);
+    atomicEffectOpMIPSr2(nbytes, op, value, ScratchRegister,
+                         flagTemp, valueTemp, offsetTemp, maskTemp);
+}
+
+void
+MacroAssemblerMIPSShared::atomicEffectOp(int nbytes, AtomicOp op, const Register& value,
+                                         const BaseIndex& address, Register flagTemp,
+                                         Register valueTemp, Register offsetTemp, Register maskTemp)
+{
+    asMasm().computeEffectiveAddress(address, ScratchRegister);
+    atomicEffectOpMIPSr2(nbytes, op, value, ScratchRegister,
+                         flagTemp, valueTemp, offsetTemp, maskTemp);
+}
+
+void
+MacroAssemblerMIPSShared::atomicFetchOp(int nbytes, bool signExtend, AtomicOp op, const Imm32& value,
+                                        const Address& address, Register flagTemp, Register valueTemp,
+                                        Register offsetTemp, Register maskTemp, Register output)
+{
+    ma_li(SecondScratchReg, value);
+    asMasm().computeEffectiveAddress(address, ScratchRegister);
+    atomicFetchOpMIPSr2(nbytes, signExtend, op, SecondScratchReg, ScratchRegister,
+                        flagTemp, valueTemp, offsetTemp, maskTemp, output);
+}
+
+void
+MacroAssemblerMIPSShared::atomicFetchOp(int nbytes, bool signExtend, AtomicOp op, const Imm32& value,
+                                        const BaseIndex& address, Register flagTemp, Register valueTemp,
+                                        Register offsetTemp, Register maskTemp, Register output)
+{
+    ma_li(SecondScratchReg, value);
+    asMasm().computeEffectiveAddress(address, ScratchRegister);
+    atomicFetchOpMIPSr2(nbytes, signExtend, op, SecondScratchReg, ScratchRegister,
+                        flagTemp, valueTemp, offsetTemp, maskTemp, output);
+}
+
+void
+MacroAssemblerMIPSShared::atomicFetchOp(int nbytes, bool signExtend, AtomicOp op, const Register& value,
+                                        const Address& address, Register flagTemp, Register valueTemp,
+                                        Register offsetTemp, Register maskTemp, Register output)
+{
+    asMasm().computeEffectiveAddress(address, ScratchRegister);
+    atomicFetchOpMIPSr2(nbytes, signExtend, op, value, ScratchRegister,
+                        flagTemp, valueTemp, offsetTemp, maskTemp, output);
+}
+
+void
+MacroAssemblerMIPSShared::atomicFetchOp(int nbytes, bool signExtend, AtomicOp op, const Register& value,
+                                        const BaseIndex& address, Register flagTemp, Register valueTemp,
+                                        Register offsetTemp, Register maskTemp, Register output)
+{
+    asMasm().computeEffectiveAddress(address, ScratchRegister);
+    atomicFetchOpMIPSr2(nbytes, signExtend, op, value, ScratchRegister,
+                        flagTemp, valueTemp, offsetTemp, maskTemp, output);
+}
+
+void
+MacroAssemblerMIPSShared::compareExchangeMIPSr2(int nbytes, bool signExtend, const Register& addr,
+                                                Register oldval, Register newval, Register flagTemp,
+                                                Register valueTemp, Register offsetTemp, Register maskTemp,
+                                                Register output)
+{
+    Label again, end;
+
+    as_andi(offsetTemp, addr, 3);
+    asMasm().subPtr(offsetTemp, addr);
+    as_sll(offsetTemp, offsetTemp, 3);
+    ma_li(maskTemp, Imm32(UINT32_MAX >> ((4 - nbytes) * 8)));
+    as_sllv(maskTemp, maskTemp, offsetTemp);
+
+    bind(&again);
+
+    as_sync(16);
+
+    as_ll(flagTemp, addr, 0);
+
+    as_and(output, flagTemp, maskTemp);
+    // If oldval is valid register, do compareExchange
+    if (InvalidReg != oldval) {
+        as_sllv(valueTemp, oldval, offsetTemp);
+        as_and(valueTemp, valueTemp, maskTemp);
+        ma_b(output, valueTemp, &end, NotEqual, ShortJump);
+    }
+
+    as_sllv(valueTemp, newval, offsetTemp);
+    as_and(valueTemp, valueTemp, maskTemp);
+    as_or(flagTemp, flagTemp, maskTemp);
+    as_xor(flagTemp, flagTemp, maskTemp);
+    as_or(flagTemp, flagTemp, valueTemp);
+
+    as_sc(flagTemp, addr, 0);
+
+    ma_b(flagTemp, flagTemp, &again, Zero, ShortJump);
+
+    as_sync(0);
+
+    bind(&end);
+
+    as_srlv(output, output, offsetTemp);
+    if (signExtend) {
+        switch (nbytes) {
+        case 1:
+            as_seb(output, output);
+            break;
+        case 2:
+            as_seh(output, output);
+            break;
+        case 4:
+            break;
+        default:
+            MOZ_CRASH("NYI");
+        }
+    }
+}
+
+void
+MacroAssemblerMIPSShared::compareExchange(int nbytes, bool signExtend, const Address& address,
+                                          Register oldval, Register newval, Register valueTemp,
+                                          Register offsetTemp, Register maskTemp, Register output)
+{
+    asMasm().computeEffectiveAddress(address, ScratchRegister);
+    compareExchangeMIPSr2(nbytes, signExtend, ScratchRegister, oldval, newval, SecondScratchReg,
+                          valueTemp, offsetTemp, maskTemp, output);
+}
+
+void
+MacroAssemblerMIPSShared::compareExchange(int nbytes, bool signExtend, const BaseIndex& address,
+                                          Register oldval, Register newval, Register valueTemp,
+                                          Register offsetTemp, Register maskTemp, Register output)
+{
+    asMasm().computeEffectiveAddress(address, ScratchRegister);
+    compareExchangeMIPSr2(nbytes, signExtend, ScratchRegister, oldval, newval, SecondScratchReg,
+                          valueTemp, offsetTemp, maskTemp, output);
+}
+
+void
+MacroAssemblerMIPSShared::atomicExchange(int nbytes, bool signExtend, const Address& address,
+                                         Register value, Register valueTemp, Register offsetTemp,
+                                         Register maskTemp, Register output)
+{
+    asMasm().computeEffectiveAddress(address, ScratchRegister);
+    compareExchangeMIPSr2(nbytes, signExtend, ScratchRegister, InvalidReg, value, SecondScratchReg,
+                          valueTemp, offsetTemp, maskTemp, output);
+}
+
+void
+MacroAssemblerMIPSShared::atomicExchange(int nbytes, bool signExtend, const BaseIndex& address,
+                                         Register value, Register valueTemp, Register offsetTemp,
+                                         Register maskTemp, Register output)
+{
+    asMasm().computeEffectiveAddress(address, ScratchRegister);
+    compareExchangeMIPSr2(nbytes, signExtend, ScratchRegister, InvalidReg, value, SecondScratchReg,
+                          valueTemp, offsetTemp, maskTemp, output);
+}
+
 //{{{ check_macroassembler_style
 // ===============================================================
 // Stack manipulation functions.
