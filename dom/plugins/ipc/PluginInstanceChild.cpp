@@ -2564,7 +2564,7 @@ PluginInstanceChild::RecvAsyncSetWindow(const gfxSurfaceType& aSurfaceType,
     mCurrentAsyncSetWindowTask =
         NewRunnableMethod<PluginInstanceChild,
                           void (PluginInstanceChild::*)(const gfxSurfaceType&, const NPRemoteWindow&, bool),
-                          const gfxSurfaceType&, const NPRemoteWindow&, bool>
+                          gfxSurfaceType, NPRemoteWindow, bool>
         (this, &PluginInstanceChild::DoAsyncSetWindow,
          aSurfaceType, aWindow, true);
     MessageLoop::current()->PostTask(FROM_HERE, mCurrentAsyncSetWindowTask);
