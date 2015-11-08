@@ -24,7 +24,7 @@ var gGlobalScope = this;
 function loadAddonManager() {
   let ns = {};
   Cu.import("resource://gre/modules/Services.jsm", ns);
-  let head = "../../../mozapps/extensions/test/xpcshell/head_addons.js";
+  let head = "../../../../mozapps/extensions/test/xpcshell/head_addons.js";
   let file = do_get_file(head);
   let uri = ns.Services.io.newFileURI(file);
   ns.Services.scriptloader.loadSubScript(uri.spec, gGlobalScope);
