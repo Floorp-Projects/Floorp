@@ -331,6 +331,7 @@ browser.jar:
 % override chrome://browser/skin/toolbarbutton-dropdown-arrow.png     chrome://browser/skin/toolbarbutton-dropdown-arrow-XPVista7.png   os=WINNT osversion<=6.1
 % override chrome://browser/skin/urlbar-history-dropmarker.png        chrome://browser/skin/urlbar-history-dropmarker-XPVista7.png      os=WINNT osversion<=6.1
 % override chrome://browser/skin/urlbar-history-dropmarker@2x.png     chrome://browser/skin/urlbar-history-dropmarker-XPVista7@2x.png   os=WINNT osversion<=6.1
+% override chrome://browser/skin/downloads/download-glow-menuPanel.png  chrome://browser/skin/downloads/download-glow-menuPanel-XPVista7.png os=WINNT osversion<=6.1
 % override chrome://browser/skin/places/autocomplete-star.png         chrome://browser/skin/places/autocomplete-star-XPVista7.png       os=WINNT osversion<=6.1
 % override chrome://browser/skin/tabbrowser/newtab.png                chrome://browser/skin/tabbrowser/newtab-XPVista7.png              os=WINNT osversion<=6.1
 % override chrome://browser/skin/tabbrowser/newtab@2x.png             chrome://browser/skin/tabbrowser/newtab-XPVista7@2x.png           os=WINNT osversion<=6.1
