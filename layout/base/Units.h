@@ -235,14 +235,6 @@ struct CSSPixel {
  * 2) the "widget scale" (see nsIWidget::GetDefaultScale)
  */
 struct LayoutDevicePixel {
-  static LayoutDeviceIntPoint FromUntyped(const nsIntPoint& aPoint) {
-    return LayoutDeviceIntPoint(aPoint.x, aPoint.y);
-  }
-
-  static LayoutDeviceIntRect FromUntyped(const nsIntRect& aRect) {
-    return LayoutDeviceIntRect(aRect.x, aRect.y, aRect.width, aRect.height);
-  }
-
   static LayoutDeviceRect FromAppUnits(const nsRect& aRect, nscoord aAppUnitsPerDevPixel) {
     return LayoutDeviceRect(NSAppUnitsToFloatPixels(aRect.x, float(aAppUnitsPerDevPixel)),
                             NSAppUnitsToFloatPixels(aRect.y, float(aAppUnitsPerDevPixel)),
@@ -268,11 +260,11 @@ struct LayoutDevicePixel {
   }
 
   static LayoutDeviceIntPoint FromAppUnitsToNearest(const nsPoint& aPoint, nscoord aAppUnitsPerDevPixel) {
-    return FromUntyped(aPoint.ToNearestPixels(aAppUnitsPerDevPixel));
+    return LayoutDeviceIntPoint::FromUnknownPoint(aPoint.ToNearestPixels(aAppUnitsPerDevPixel));
   }
 
   static LayoutDeviceIntRect FromAppUnitsToNearest(const nsRect& aRect, nscoord aAppUnitsPerDevPixel) {
-    return FromUntyped(aRect.ToNearestPixels(aAppUnitsPerDevPixel));
+    return LayoutDeviceIntRect::FromUnknownRect(aRect.ToNearestPixels(aAppUnitsPerDevPixel));
   }
 
   static LayoutDeviceIntSize FromAppUnitsRounded(const nsSize& aSize, nscoord aAppUnitsPerDevPixel) {
@@ -321,14 +313,6 @@ struct LayerPixel {
   static gfx::Rect ToUnknown(const LayerRect& aRect) {
     return gfx::Rect(aRect.x, aRect.y, aRect.width, aRect.height);
   }
-
-  static LayerIntRect FromUntyped(const nsIntRect& aRect) {
-    return LayerIntRect(aRect.x, aRect.y, aRect.width, aRect.height);
-  }
-
-  static LayerIntPoint FromUntyped(const nsIntPoint& aPoint) {
-    return LayerIntPoint(aPoint.x, aPoint.y);
-  }
 };
 
 /*
@@ -350,10 +334,6 @@ struct RenderTargetPixel {
   static RenderTargetRect FromUnknown(const gfx::Rect& aRect) {
     return RenderTargetRect(aRect.x, aRect.y, aRect.width, aRect.height);
   }
-
-  static RenderTargetIntRect FromUntyped(const nsIntRect& aRect) {
-    return RenderTargetIntRect(aRect.x, aRect.y, aRect.width, aRect.height);
-  }
 };
 
 /*
@@ -366,9 +346,6 @@ struct RenderTargetPixel {
  * generally be represented in ScreenPixel units.
  */
 struct ScreenPixel {
-  static ScreenIntPoint FromUntyped(const nsIntPoint& aPoint) {
-    return ScreenIntPoint(aPoint.x, aPoint.y);
-  }
 };
 
 /* The layer coordinates of the parent frame.
