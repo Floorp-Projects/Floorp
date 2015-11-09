@@ -1395,33 +1395,6 @@ StyleRule::StyleRule(const StyleRule& aCopy)
   // rest is constructed lazily on existing data
 }
 
-// for |SetCSSDeclaration|
-StyleRule::StyleRule(StyleRule& aCopy,
-                     Declaration* aDeclaration)
-  : Rule(aCopy),
-    mSelector(aCopy.mSelector),
-    mDeclaration(aDeclaration),
-    mDOMRule(aCopy.mDOMRule.forget())
-{
-  // The DOM rule is replacing |aCopy| with |this|, so transfer
-  // the reverse pointer as well (and transfer ownership).
-
-  // Similarly for the selector.
-  aCopy.mSelector = nullptr;
-
-  // We are probably replacing the old declaration with |aDeclaration|
-  // instead of taking ownership of the old declaration; only null out
-  // aCopy.mDeclaration if we are taking ownership.
-  if (mDeclaration == aCopy.mDeclaration) {
-    // This should only ever happen if the declaration was modifiable.
-    mDeclaration->AssertMutable();
-    aCopy.mDeclaration = nullptr;
-    mDeclaration->SetOwningRule(nullptr);
-  }
-
-  mDeclaration->SetOwningRule(this);
-}
-
 StyleRule::~StyleRule()
 {
   delete mSelector;
