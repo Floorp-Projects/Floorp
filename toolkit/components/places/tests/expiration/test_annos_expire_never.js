@@ -22,7 +22,7 @@ function run_test() {
   run_next_test();
 }
 
-add_task(function test_annos_expire_never() {
+add_task(function* test_annos_expire_never() {
   // Set interval to a large value so we don't expire on it.
   setInterval(3600); // 1h
 

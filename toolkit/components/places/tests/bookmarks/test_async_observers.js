@@ -72,7 +72,7 @@ var observer = {
 };
 PlacesUtils.bookmarks.addObserver(observer, false);
 
-add_task(function test_add_visit()
+add_task(function* test_add_visit()
 {
   let observerPromise = observer.setupCompletionPromise();
 
@@ -102,7 +102,7 @@ add_task(function test_add_visit()
   do_check_eq(observer.observedVisitId, visitId);
 });
 
-add_task(function test_add_icon()
+add_task(function* test_add_icon()
 {
   let observerPromise = observer.setupCompletionPromise();
   PlacesUtils.favicons.setAndFetchFaviconForPage(NetUtil.newURI("http://book.ma.rk/"),
@@ -111,7 +111,7 @@ add_task(function test_add_icon()
   yield observerPromise;
 });
 
-add_task(function test_remove_page()
+add_task(function* test_remove_page()
 {
   let observerPromise = observer.setupCompletionPromise();
   PlacesUtils.history.removePage(NetUtil.newURI("http://book.ma.rk/"));
@@ -123,7 +123,7 @@ add_task(function cleanup()
   PlacesUtils.bookmarks.removeObserver(observer, false);
 });
 
-add_task(function shutdown()
+add_task(function* shutdown()
 {
   // Check that async observers don't try to create async statements after
   // shutdown.  That would cause assertions, since the async thread is gone

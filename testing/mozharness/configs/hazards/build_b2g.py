@@ -14,8 +14,7 @@ config = {
       'setup-analysis',
       'run-analysis',
       'collect-analysis-output',
-      # Temporarily disabled - see bug 1211402
-      #'upload-analysis',
+      'upload-analysis',
       'check-expectations',
    ],
 

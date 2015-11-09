@@ -21,6 +21,7 @@
 #include "prio.h"
 #include "plstr.h"
 #include "mozilla/Logging.h"
+#include "mozilla/UniquePtrExtensions.h"
 #include "stdlib.h"
 #include "nsWildCard.h"
 #include "nsZipArchive.h"
@@ -1194,13 +1195,13 @@ nsZipItemPtr_base::nsZipItemPtr_base(nsZipArchive *aZip,
   uint32_t size = 0;
   if (item->Compression() == DEFLATED) {
     size = item->RealSize();
-    mAutoBuf = new (fallible) uint8_t[size];
+    mAutoBuf = MakeUniqueFallible<uint8_t[]>(size);
     if (!mAutoBuf) {
       return;
     }
   }
 
-  nsZipCursor cursor(item, aZip, mAutoBuf, size, doCRC);
+  nsZipCursor cursor(item, aZip, mAutoBuf.get(), size, doCRC);
   mReturnBuf = cursor.Read(&mReadlen);
   if (!mReturnBuf) {
     return;

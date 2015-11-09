@@ -344,7 +344,7 @@ const Class ModuleEnvironmentObject::class_ = {
         nullptr, nullptr,                                    /* watch/unwatch */
         nullptr,                                             /* getElements */
         ModuleEnvironmentObject::enumerate,
-        ModuleEnvironmentObject::thisValue
+        nullptr
     }
 };
 
@@ -519,13 +519,6 @@ ModuleEnvironmentObject::enumerate(JSContext* cx, HandleObject obj, AutoIdVector
     return true;
 }
 
-/* static */ bool
-ModuleEnvironmentObject::thisValue(JSContext* cx, HandleObject obj, MutableHandleValue vp)
-{
-    vp.setUndefined();
-    return true;
-}
-
 /*****************************************************************************/
 
 const Class DeclEnvObject::class_ = {
@@ -633,9 +626,7 @@ DynamicWithObject::create(JSContext* cx, HandleObject object, HandleObject enclo
     if (!obj)
         return nullptr;
 
-    RootedValue thisv(cx);
-    if (!GetThisValue(cx, object, &thisv))
-        return nullptr;
+    Value thisv = GetThisValue(object);
 
     obj->setEnclosingScope(enclosing);
     obj->setFixedSlot(OBJECT_SLOT, ObjectValue(*object));
@@ -705,13 +696,6 @@ with_DeleteProperty(JSContext* cx, HandleObject obj, HandleId id, ObjectOpResult
     return DeleteProperty(cx, actual, id, result);
 }
 
-static bool
-with_ThisValue(JSContext* cx, HandleObject obj, MutableHandleValue vp)
-{
-    vp.set(obj->as<DynamicWithObject>().withThis());
-    return true;
-}
-
 const Class StaticWithObject::class_ = {
     "WithTemplate",
     JSCLASS_HAS_RESERVED_SLOTS(StaticWithObject::RESERVED_SLOTS) |
@@ -747,7 +731,7 @@ const Class DynamicWithObject::class_ = {
         nullptr, nullptr,    /* watch/unwatch */
         nullptr,             /* getElements */
         nullptr,             /* enumerate (native enumeration of target doesn't work) */
-        with_ThisValue,
+        nullptr,
     }
 };
 
@@ -1013,17 +997,14 @@ StaticBlockObject::addVar(ExclusiveContext* cx, Handle<StaticBlockObject*> block
                                              /* allowDictionary = */ false);
 }
 
-static bool
-block_ThisValue(JSContext* cx, HandleObject obj, MutableHandleValue vp)
+Value
+ClonedBlockObject::thisValue()
 {
-    // No other block objects should ever get passed to the 'this' object
-    // hook except the global lexical scope and non-syntactic ones.
-    MOZ_ASSERT(obj->as<ClonedBlockObject>().isGlobal() ||
-               !obj->as<ClonedBlockObject>().isSyntactic());
-    MOZ_ASSERT_IF(obj->as<ClonedBlockObject>().isGlobal(),
-                  obj->enclosingScope() == cx->global());
-    RootedObject enclosing(cx, obj->enclosingScope());
-    return GetThisValue(cx, enclosing, vp);
+    // No other block objects should ever get passed to GetThisValue
+    // except the global lexical scope and non-syntactic ones.
+    MOZ_ASSERT(isGlobal() || !isSyntactic());
+    MOZ_ASSERT_IF(isGlobal(), enclosingScope() == JSObject::global());
+    return GetThisValue(&enclosingScope());
 }
 
 const Class BlockObject::class_ = {
@@ -1055,7 +1036,7 @@ const Class BlockObject::class_ = {
         nullptr, nullptr, /* watch/unwatch */
         nullptr,          /* getElements */
         nullptr,          /* enumerate (native enumeration of target doesn't work) */
-        block_ThisValue,
+        nullptr,
     }
 };
 

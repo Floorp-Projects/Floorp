@@ -27,7 +27,7 @@ function run_test() {
   run_next_test();
 }
 
-add_task(function test() {
+add_task(function* test() {
   let testFolder = PlacesUtils.bookmarks.createFolder(
     PlacesUtils.bookmarks.placesRoot,
     "Result-sort functionality tests root",

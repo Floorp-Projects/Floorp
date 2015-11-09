@@ -13,6 +13,7 @@
 #include "jit/JitCompartment.h"
 #include "jit/JitFrames.h"
 #include "jit/mips32/Simulator-mips32.h"
+#include "jit/mips64/Simulator-mips64.h"
 #include "vm/ArrayObject.h"
 #include "vm/Debugger.h"
 #include "vm/Interpreter.h"

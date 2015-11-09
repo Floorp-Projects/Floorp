@@ -36,7 +36,7 @@ function run_test()
   run_next_test();
 }
 
-add_task(function test_results_as_visit()
+add_task(function* test_results_as_visit()
 {
    createTestData();
    yield task_populateDB(testData);
