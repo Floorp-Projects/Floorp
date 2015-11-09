@@ -107,9 +107,6 @@ if test "$NIGHTLY_BUILD"; then
   MOZ_ANDROID_GCM=1
 fi
 
-# Enable Firefox Account avatars.
-MOZ_ANDROID_FIREFOX_ACCOUNT_PROFILES=1
-
 # Enable checking that add-ons are signed by the trusted root
 MOZ_ADDON_SIGNING=1
 
