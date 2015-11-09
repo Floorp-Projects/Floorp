@@ -516,7 +516,7 @@ XDRLazyFreeVariables(XDRState<mode>* xdr, MutableHandle<LazyScript*> lazy)
 template<XDRMode mode>
 static bool
 XDRRelazificationInfo(XDRState<mode>* xdr, HandleFunction fun, HandleScript script,
-                      HandleObject funScope, MutableHandle<LazyScript*> lazy)
+                      Handle<StaticFunctionScope*> funScope, MutableHandle<LazyScript*> lazy)
 {
     MOZ_ASSERT_IF(mode == XDR_ENCODE, script->isRelazifiable() && script->maybeLazyScript());
     MOZ_ASSERT_IF(mode == XDR_ENCODE, !lazy->numInnerFunctions());
@@ -546,8 +546,8 @@ XDRRelazificationInfo(XDRState<mode>* xdr, HandleFunction fun, HandleScript scri
             return false;
 
         if (mode == XDR_DECODE) {
-            lazy.set(LazyScript::Create(cx, fun, script, funScope.as<StaticFunctionScope>(),
-                                        script, packedFields, begin, end, lineno, column));
+            lazy.set(LazyScript::Create(cx, fun, script, funScope, script, packedFields,
+                                        begin, end, lineno, column));
 
             // As opposed to XDRLazyScript, we need to restore the runtime bits
             // of the script, as we are trying to match the fact this function
@@ -592,8 +592,8 @@ enum XDRClassKind {
 
 template<XDRMode mode>
 bool
-js::XDRScript(XDRState<mode>* xdr, HandleObject enclosingScopeArg, HandleScript enclosingScript,
-              HandleFunction fun, MutableHandleScript scriptp)
+js::XDRScript(XDRState<mode>* xdr, Handle<StaticScope*> enclosingScopeArg,
+              HandleScript enclosingScript, HandleFunction fun, MutableHandleScript scriptp)
 {
     /* NB: Keep this in sync with CopyScript. */
 
@@ -637,7 +637,7 @@ js::XDRScript(XDRState<mode>* xdr, HandleObject enclosingScopeArg, HandleScript 
 
     JSContext* cx = xdr->cx();
     RootedScript script(cx);
-    RootedObject enclosingScope(cx, enclosingScopeArg);
+    Rooted<StaticScope*> enclosingScope(cx, enclosingScopeArg);
     natoms = nsrcnotes = 0;
     nconsts = nobjects = nregexps = ntrynotes = nblockscopes = nyieldoffsets = 0;
 
@@ -850,8 +850,7 @@ js::XDRScript(XDRState<mode>* xdr, HandleObject enclosingScopeArg, HandleScript 
         }
 
         if (fun) {
-            enclosingScope = StaticFunctionScope::create(cx, fun,
-                                                         enclosingScope.as<StaticScope>());
+            enclosingScope = StaticFunctionScope::create(cx, fun, enclosingScope);
             if (!enclosingScope)
                 return false;
         }
@@ -1052,11 +1051,12 @@ js::XDRScript(XDRState<mode>* xdr, HandleObject enclosingScopeArg, HandleScript 
             }
             if (!xdr->codeUint32(&enclosingStaticScopeIndex))
                 return false;
-            Rooted<JSObject*> enclosingStaticScope(cx);
+            Rooted<StaticScope*> enclosingStaticScope(cx);
             if (mode == XDR_DECODE) {
                 if (enclosingStaticScopeIndex != UINT32_MAX) {
                     MOZ_ASSERT(enclosingStaticScopeIndex < i);
-                    enclosingStaticScope = script->objects()->vector[enclosingStaticScopeIndex];
+                    enclosingStaticScope = &script->objects()->vector[enclosingStaticScopeIndex]
+                                                             ->as<StaticScope>();
                 } else {
                     // This is not ternary because MSVC can't typecheck the
                     // ternary.
@@ -1068,12 +1068,16 @@ js::XDRScript(XDRState<mode>* xdr, HandleObject enclosingScopeArg, HandleScript 
             }
 
             if (classk == CK_BlockObject) {
-                Rooted<StaticBlockScope*> tmp(cx, static_cast<StaticBlockScope*>(objp->get()));
+                Rooted<StaticBlockScope*> tmp(cx);
+                if (mode == XDR_ENCODE)
+                    tmp = &(*objp)->as<StaticBlockScope>();
                 if (!XDRStaticBlockScope(xdr, enclosingStaticScope, &tmp))
                     return false;
                 *objp = tmp;
             } else {
-                Rooted<StaticWithScope*> tmp(cx, static_cast<StaticWithScope*>(objp->get()));
+                Rooted<StaticWithScope*> tmp(cx);
+                if (mode == XDR_ENCODE)
+                    tmp = &(*objp)->as<StaticWithScope>();
                 if (!XDRStaticWithScope(xdr, enclosingStaticScope, &tmp))
                     return false;
                 *objp = tmp;
@@ -1084,7 +1088,7 @@ js::XDRScript(XDRState<mode>* xdr, HandleObject enclosingScopeArg, HandleScript 
           case CK_JSFunction: {
             /* Code the nested function's enclosing scope. */
             uint32_t funEnclosingScopeIndex = 0;
-            RootedObject funEnclosingScope(cx);
+            Rooted<StaticScope*> funEnclosingScope(cx);
             if (mode == XDR_ENCODE) {
                 RootedFunction function(cx, &(*objp)->as<JSFunction>());
 
@@ -1136,7 +1140,8 @@ js::XDRScript(XDRState<mode>* xdr, HandleObject enclosingScopeArg, HandleScript 
                         funEnclosingScope = enclosingScope;
                 } else {
                     MOZ_ASSERT(funEnclosingScopeIndex < i);
-                    funEnclosingScope = script->objects()->vector[funEnclosingScopeIndex];
+                    funEnclosingScope = &script->objects()->vector[funEnclosingScopeIndex]
+                                                          .get()->as<StaticScope>();
                 }
             }
 
@@ -1213,7 +1218,10 @@ js::XDRScript(XDRState<mode>* xdr, HandleObject enclosingScopeArg, HandleScript 
         if (mode == XDR_ENCODE)
             lazy = script->maybeLazyScript();
 
-        if (!XDRRelazificationInfo(xdr, fun, script, enclosingScope, &lazy))
+        Rooted<StaticFunctionScope*> lazyScope(cx, mode == XDR_DECODE
+                                                   ? &enclosingScope->as<StaticFunctionScope>()
+                                                   : nullptr);
+        if (!XDRRelazificationInfo(xdr, fun, script, lazyScope, &lazy))
             return false;
 
         if (mode == XDR_DECODE)
@@ -1232,17 +1240,18 @@ js::XDRScript(XDRState<mode>* xdr, HandleObject enclosingScopeArg, HandleScript 
 }
 
 template bool
-js::XDRScript(XDRState<XDR_ENCODE>*, HandleObject, HandleScript, HandleFunction,
+js::XDRScript(XDRState<XDR_ENCODE>*, Handle<StaticScope*>, HandleScript, HandleFunction,
               MutableHandleScript);
 
 template bool
-js::XDRScript(XDRState<XDR_DECODE>*, HandleObject, HandleScript, HandleFunction,
+js::XDRScript(XDRState<XDR_DECODE>*, Handle<StaticScope*>, HandleScript, HandleFunction,
               MutableHandleScript);
 
 template<XDRMode mode>
 bool
-js::XDRLazyScript(XDRState<mode>* xdr, HandleObject enclosingScope, HandleScript enclosingScript,
-                  HandleFunction fun, MutableHandle<LazyScript*> lazy)
+js::XDRLazyScript(XDRState<mode>* xdr, Handle<StaticScope*> enclosingScope,
+                  HandleScript enclosingScript, HandleFunction fun,
+                  MutableHandle<LazyScript*> lazy)
 {
     JSContext* cx = xdr->cx();
 
@@ -1275,9 +1284,8 @@ js::XDRLazyScript(XDRState<mode>* xdr, HandleObject enclosingScope, HandleScript
         }
 
         if (mode == XDR_DECODE) {
-            Rooted<StaticScope*> enclosingStaticScope(cx, &enclosingScope->as<StaticScope>());
             Rooted<StaticFunctionScope*> funScope(cx,
-                StaticFunctionScope::create(cx, fun, enclosingStaticScope));
+                StaticFunctionScope::create(cx, fun, enclosingScope));
             if (!funScope)
                 return false;
             lazy.set(LazyScript::Create(cx, fun, nullptr, funScope, enclosingScript,
@@ -1314,11 +1322,11 @@ js::XDRLazyScript(XDRState<mode>* xdr, HandleObject enclosingScope, HandleScript
 }
 
 template bool
-js::XDRLazyScript(XDRState<XDR_ENCODE>*, HandleObject, HandleScript,
+js::XDRLazyScript(XDRState<XDR_ENCODE>*, Handle<StaticScope*>, HandleScript,
                   HandleFunction, MutableHandle<LazyScript*>);
 
 template bool
-js::XDRLazyScript(XDRState<XDR_DECODE>*, HandleObject, HandleScript,
+js::XDRLazyScript(XDRState<XDR_DECODE>*, Handle<StaticScope*>, HandleScript,
                   HandleFunction, MutableHandle<LazyScript*>);
 
 void
@@ -2760,7 +2768,7 @@ JSScript::initCompartment(ExclusiveContext* cx)
 }
 
 /* static */ JSScript*
-JSScript::Create(ExclusiveContext* cx, HandleObject staticScope, bool savedCallerFun,
+JSScript::Create(ExclusiveContext* cx, Handle<StaticScope*> staticScope, bool savedCallerFun,
                  const ReadOnlyCompileOptions& options, HandleObject sourceObject,
                  uint32_t bufStart, uint32_t bufEnd)
 {
@@ -2773,7 +2781,7 @@ JSScript::Create(ExclusiveContext* cx, HandleObject staticScope, bool savedCalle
     PodZero(script.get());
     new (&script->bindings) Bindings;
 
-    script->staticScope_ = staticScope ? &staticScope->as<StaticScope>() : nullptr;
+    script->staticScope_ = staticScope;
     script->savedCallerFun_ = savedCallerFun;
     script->initCompartment(cx);
 
@@ -2784,9 +2792,9 @@ JSScript::Create(ExclusiveContext* cx, HandleObject staticScope, bool savedCalle
     // Compute whether this script is under a non-syntactic scope, passing
     // staticScope->enclosingScope() in a case where staticScope itself is not
     // a non-syntactic scope and may not be fully initialized yet.
-    RootedObject enclosingScope(cx, staticScope);
+    Rooted<StaticScope*> enclosingScope(cx, staticScope);
     if (staticScope && staticScope->is<StaticFunctionScope>())
-        enclosingScope = staticScope->as<StaticScope>().enclosingScope();
+        enclosingScope = staticScope->enclosingScope();
     script->hasNonSyntacticScope_ = HasNonSyntacticStaticScopeChain(enclosingScope);
 
     script->version = options.version;
@@ -3429,7 +3437,8 @@ Rebase(JSScript* dst, JSScript* src, T* srcp)
 }
 
 static JSObject*
-CloneInnerInterpretedFunction(JSContext* cx, HandleObject enclosingScope, HandleFunction srcFun)
+CloneInnerInterpretedFunction(JSContext* cx, Handle<StaticScope*> enclosingScope,
+                              HandleFunction srcFun)
 {
     /* NB: Keep this in sync with XDRInterpretedFunction. */
     RootedObject cloneProto(cx);
@@ -3469,7 +3478,7 @@ CloneInnerInterpretedFunction(JSContext* cx, HandleObject enclosingScope, Handle
 }
 
 bool
-js::detail::CopyScript(JSContext* cx, HandleObject scriptStaticScope, HandleScript src,
+js::detail::CopyScript(JSContext* cx, Handle<StaticScope*> scriptStaticScope, HandleScript src,
                        HandleScript dst)
 {
     if (src->treatAsRunOnce() && !src->functionNonDelazifying()) {
@@ -3516,14 +3525,15 @@ js::detail::CopyScript(JSContext* cx, HandleObject scriptStaticScope, HandleScri
             if (obj->is<NestedStaticScope>()) {
                 Rooted<NestedStaticScope*> innerBlock(cx, &obj->as<NestedStaticScope>());
 
-                RootedObject enclosingScope(cx);
+                Rooted<StaticScope*> enclosingScope(cx);
                 if (NestedStaticScope* enclosingBlock = innerBlock->enclosingNestedScope()) {
                     if (IsStaticGlobalLexicalScope(enclosingBlock)) {
                         MOZ_ASSERT(IsStaticGlobalLexicalScope(scriptStaticScope) ||
                                    scriptStaticScope->is<StaticNonSyntacticScope>());
                         enclosingScope = scriptStaticScope;
                     } else {
-                        enclosingScope = objects[FindScopeObjectIndex(src, *enclosingBlock)];
+                        enclosingScope = &objects[FindScopeObjectIndex(src, *enclosingBlock)]
+                                                 .get()->as<StaticScope>();
                     }
                 } else {
                     enclosingScope = scriptStaticScope;
@@ -3545,9 +3555,10 @@ js::detail::CopyScript(JSContext* cx, HandleObject scriptStaticScope, HandleScri
                         if (!innerFun->getOrCreateScript(cx))
                             return false;
                     }
-                    RootedObject staticScope(cx, innerFun->nonLazyScript()->enclosingStaticScope());
+                    Rooted<StaticScope*> staticScope(cx, innerFun->nonLazyScript()
+                                                                 ->enclosingStaticScope());
                     StaticScopeIter<CanGC> ssi(cx, staticScope);
-                    RootedObject enclosingScope(cx);
+                    Rooted<StaticScope*> enclosingScope(cx);
                     if (ssi.done() || ssi.type() == StaticScopeIter<CanGC>::NonSyntactic) {
                         enclosingScope = scriptStaticScope;
                     } else if (ssi.type() == StaticScopeIter<CanGC>::Function) {
@@ -3559,10 +3570,12 @@ js::detail::CopyScript(JSContext* cx, HandleObject scriptStaticScope, HandleScri
                                        scriptStaticScope->is<StaticNonSyntacticScope>());
                             enclosingScope = scriptStaticScope;
                         } else {
-                            enclosingScope = objects[FindScopeObjectIndex(src, ssi.block())];
+                            enclosingScope = &objects[FindScopeObjectIndex(src, ssi.block())]
+                                                     .get()->as<StaticBlockScope>();
                         }
                     } else {
-                        enclosingScope = objects[FindScopeObjectIndex(src, ssi.staticWith())];
+                        enclosingScope = &objects[FindScopeObjectIndex(src, ssi.staticWith())]
+                                                 .get()->as<StaticWithScope>();
                     }
 
                     clone = CloneInnerInterpretedFunction(cx, enclosingScope, innerFun);
@@ -3676,7 +3689,7 @@ js::detail::CopyScript(JSContext* cx, HandleObject scriptStaticScope, HandleScri
 }
 
 static JSScript*
-CreateEmptyScriptForClone(JSContext* cx, HandleObject enclosingScope, HandleScript src)
+CreateEmptyScriptForClone(JSContext* cx, Handle<StaticScope*> enclosingScope, HandleScript src)
 {
     /*
      * Wrap the script source object as needed. Self-hosted scripts may be
@@ -3728,13 +3741,13 @@ js::CloneGlobalScript(JSContext* cx, Handle<StaticScope*> enclosingScope, Handle
 }
 
 JSScript*
-js::CloneScriptIntoFunction(JSContext* cx, HandleObject enclosingScope, HandleFunction fun,
+js::CloneScriptIntoFunction(JSContext* cx, Handle<StaticScope*> enclosingScope, HandleFunction fun,
                             HandleScript src)
 {
     MOZ_ASSERT(fun->isInterpreted());
 
-    Rooted<StaticScope*> enclosing(cx, &enclosingScope->as<StaticScope>());
-    Rooted<StaticFunctionScope*> funScope(cx, StaticFunctionScope::create(cx, fun, enclosing));
+    Rooted<StaticFunctionScope*> funScope(cx, StaticFunctionScope::create(cx, fun,
+                                                                          enclosingScope));
     if (!funScope)
         return nullptr;
 
@@ -4108,18 +4121,18 @@ JSScript::getStaticBlockScope(jsbytecode* pc)
     return blockChain;
 }
 
-JSObject*
+StaticScope*
 JSScript::innermostStaticScopeInScript(jsbytecode* pc)
 {
-    if (JSObject* scope = getStaticBlockScope(pc))
+    if (NestedStaticScope* scope = getStaticBlockScope(pc))
         return scope;
     return staticScope_;
 }
 
-JSObject*
+StaticScope*
 JSScript::innermostStaticScope(jsbytecode* pc)
 {
-    if (JSObject* scope = innermostStaticScopeInScript(pc))
+    if (StaticScope* scope = innermostStaticScopeInScript(pc))
         return scope;
     return enclosingStaticScope();
 }
@@ -4164,8 +4177,13 @@ js::SetFrameArgumentsObject(JSContext* cx, AbstractFramePtr frame,
         // Note that here and below, it is insufficient to only check for
         // JS_OPTIMIZED_ARGUMENTS, as Ion could have optimized out the
         // arguments slot.
-        if (IsOptimizedPlaceholderMagicValue(frame.callObj().as<ScopeObject>().aliasedVar(ScopeCoordinate(pc))))
-            frame.callObj().as<ScopeObject>().setAliasedVar(cx, ScopeCoordinate(pc), cx->names().arguments, ObjectValue(*argsobj));
+        if (IsOptimizedPlaceholderMagicValue(frame.callObj().as<ScopeObject>()
+                                                  .aliasedVar(ScopeCoordinate(pc))))
+        {
+            frame.callObj().as<ScopeObject>().setAliasedVar(cx, ScopeCoordinate(pc),
+                                                            cx->names().arguments,
+                                                            ObjectValue(*argsobj));
+        }
     } else {
         if (IsOptimizedPlaceholderMagicValue(frame.unaliasedLocal(bi.frameIndex())))
             frame.unaliasedLocal(bi.frameIndex()) = ObjectValue(*argsobj);

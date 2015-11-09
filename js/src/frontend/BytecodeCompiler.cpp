@@ -72,7 +72,7 @@ class MOZ_STACK_CLASS BytecodeCompiler
     bool canLazilyParse();
     bool createParser();
     bool createSourceAndParser();
-    bool createScript(HandleObject staticScope, bool savedCallerFun = false);
+    bool createScript(Handle<StaticScope*> staticScope, bool savedCallerFun = false);
     bool createEmitter(SharedContext* sharedContext, HandleScript evalCaller = nullptr,
                        bool insideNonGlobalEval = false);
     bool isEvalCompilationUnit();
@@ -255,7 +255,7 @@ BytecodeCompiler::createSourceAndParser()
 }
 
 bool
-BytecodeCompiler::createScript(HandleObject staticScope, bool savedCallerFun)
+BytecodeCompiler::createScript(Handle<StaticScope*> staticScope, bool savedCallerFun)
 {
     script = JSScript::Create(cx, staticScope, savedCallerFun, options,
                               sourceObject, /* sourceStart = */ 0, sourceBuffer.length());
@@ -284,11 +284,8 @@ BytecodeCompiler::isEvalCompilationUnit()
 bool
 BytecodeCompiler::isNonGlobalEvalCompilationUnit()
 {
-    if (!isEvalCompilationUnit())
-        return false;
-    StaticEvalScope& eval = enclosingStaticScope->as<StaticEvalScope>();
-    JSObject* enclosing = eval.enclosingScopeForStaticScopeIter();
-    return !IsStaticGlobalLexicalScope(enclosing);
+    return isEvalCompilationUnit() &&
+           !IsStaticGlobalLexicalScope(enclosingStaticScope->enclosingScope());
 }
 
 bool
@@ -653,7 +650,7 @@ BytecodeCompiler::compileFunctionBody(MutableHandleFunction fun,
     if (fn->pn_funbox->function()->isInterpreted()) {
         MOZ_ASSERT(fun == fn->pn_funbox->function());
 
-        RootedObject scope(cx, fn->pn_funbox->staticScope());
+        Rooted<StaticScope*> scope(cx, fn->pn_funbox->staticScope());
         if (!createScript(scope))
             return false;
 
@@ -806,7 +803,7 @@ frontend::CompileLazyFunction(JSContext* cx, Handle<LazyScript*> lazy, const cha
     if (!NameFunctions(cx, pn))
         return false;
 
-    RootedObject staticScope(cx, pn->pn_funbox->staticScope());
+    Rooted<StaticScope*> staticScope(cx, pn->pn_funbox->staticScope());
     MOZ_ASSERT(staticScope);
     RootedScriptSource sourceObject(cx, lazy->sourceObject());
     MOZ_ASSERT(sourceObject);

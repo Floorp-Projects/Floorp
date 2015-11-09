@@ -82,13 +82,11 @@ class StaticScope : public NativeObject
     static const uint32_t ENCLOSING_SCOPE_SLOT = 0;
     static const unsigned RESERVED_SLOTS = ENCLOSING_SCOPE_SLOT + 1;
 
-    inline JSObject* enclosingScope() const {
-        return getFixedSlot(ENCLOSING_SCOPE_SLOT).toObjectOrNull();
-    }
+    inline StaticScope* enclosingScope() const;
 
-    void initEnclosingScope(JSObject* obj) {
+    void initEnclosingScope(StaticScope* scope) {
         MOZ_ASSERT(getReservedSlot(ENCLOSING_SCOPE_SLOT).isUndefined());
-        setReservedSlot(ENCLOSING_SCOPE_SLOT, ObjectOrNullValue(obj));
+        setReservedSlot(ENCLOSING_SCOPE_SLOT, ObjectOrNullValue(scope));
     }
 
     void setEnclosingScope(JSObject* obj);
@@ -109,7 +107,7 @@ class NestedStaticScope : public StaticScope
      * called separately in the emitter. 'reset' is just for asserting
      * stackiness.
      */
-    void initEnclosingScopeFromParser(JSObject* prev) {
+    void initEnclosingScopeFromParser(StaticScope* prev) {
         setReservedSlot(ENCLOSING_SCOPE_SLOT, ObjectOrNullValue(prev));
     }
 
@@ -162,11 +160,6 @@ class StaticBlockScope : public NestedStaticScope
      * (Non-syntactic scopes and some function scopes are also extensible.)
      */
     bool isExtensible() const;
-
-    /* See StaticScopeIter comment. */
-    JSObject* enclosingStaticScope() const {
-        return getFixedSlot(ENCLOSING_SCOPE_SLOT).toObjectOrNull();
-    }
 
     /*
      * Return the index (in the range [0, numVariables()) corresponding to the
@@ -353,7 +346,7 @@ class StaticWithScope : public NestedStaticScope
 
 template <XDRMode mode>
 bool
-XDRStaticWithScope(XDRState<mode>* xdr, HandleObject enclosingScope,
+XDRStaticWithScope(XDRState<mode>* xdr, Handle<StaticScope*> enclosingScope,
                    MutableHandle<StaticWithScope*> objp);
 
 /*
@@ -370,10 +363,6 @@ class StaticEvalScope : public StaticScope
     static const Class class_;
 
     static StaticEvalScope* create(JSContext* cx, HandleObject enclosing);
-
-    JSObject* enclosingScopeForStaticScopeIter() {
-        return getReservedSlot(ENCLOSING_SCOPE_SLOT).toObjectOrNull();
-    }
 
     void setStrict() {
         setReservedSlot(STRICT_SLOT, BooleanValue(true));
@@ -500,16 +489,12 @@ class StaticNonSyntacticScope : public StaticScope
     static const Class class_;
 
     static StaticNonSyntacticScope* create(JSContext* cx, HandleObject enclosing);
-
-    JSObject* enclosingScopeForStaticScopeIter() {
-        return getReservedSlot(ENCLOSING_SCOPE_SLOT).toObjectOrNull();
-    }
 };
 
 template <AllowGC allowGC>
 class StaticScopeIter
 {
-    typename MaybeRooted<JSObject*, allowGC>::RootType obj;
+    typename MaybeRooted<StaticScope*, allowGC>::RootType scope;
     bool onNamedLambda;
 
     static bool IsStaticScope(JSObject* obj) {
@@ -522,42 +507,42 @@ class StaticScopeIter
     }
 
   public:
-    StaticScopeIter(ExclusiveContext* cx, JSObject* obj)
-      : obj(cx, obj), onNamedLambda(false)
+    StaticScopeIter(ExclusiveContext* cx, StaticScope* scope)
+      : scope(cx, scope), onNamedLambda(false)
     {
         static_assert(allowGC == CanGC,
                       "the context-accepting constructor should only be used "
                       "in CanGC code");
-        MOZ_ASSERT_IF(obj, IsStaticScope(obj));
+        MOZ_ASSERT_IF(scope, IsStaticScope(scope));
     }
 
     StaticScopeIter(ExclusiveContext* cx, const StaticScopeIter<CanGC>& ssi)
-      : obj(cx, ssi.obj), onNamedLambda(ssi.onNamedLambda)
+      : scope(cx, ssi.scope), onNamedLambda(ssi.onNamedLambda)
     {
         JS_STATIC_ASSERT(allowGC == CanGC);
     }
 
-    explicit StaticScopeIter(JSObject* obj)
-      : obj((ExclusiveContext*) nullptr, obj), onNamedLambda(false)
+    explicit StaticScopeIter(StaticScope* scope)
+      : scope((ExclusiveContext*) nullptr, scope), onNamedLambda(false)
     {
         static_assert(allowGC == NoGC,
                       "the constructor not taking a context should only be "
                       "used in NoGC code");
-        MOZ_ASSERT_IF(obj, IsStaticScope(obj));
+        MOZ_ASSERT_IF(scope, IsStaticScope(scope));
     }
 
     explicit StaticScopeIter(const StaticScopeIter<NoGC>& ssi)
-      : obj((ExclusiveContext*) nullptr, ssi.obj), onNamedLambda(ssi.onNamedLambda)
+      : scope((ExclusiveContext*) nullptr, ssi.scope), onNamedLambda(ssi.onNamedLambda)
     {
         static_assert(allowGC == NoGC,
                       "the constructor not taking a context should only be "
                       "used in NoGC code");
     }
 
-    bool done() const { return !obj; }
+    bool done() const { return !scope; }
     void operator++(int);
 
-    JSObject* staticScope() const { MOZ_ASSERT(!done()); return obj; }
+    StaticScope* staticScope() const { MOZ_ASSERT(!done()); return scope; }
 
     // Return whether this static scope will have a syntactic scope (i.e. a
     // ScopeObject that isn't a non-syntactic With or
@@ -921,8 +906,8 @@ class DynamicWithObject : public NestedScopeObject
     };
 
     static DynamicWithObject*
-    create(JSContext* cx, HandleObject object, HandleObject enclosing, HandleObject staticWith,
-           WithKind kind = SyntacticWith);
+    create(JSContext* cx, HandleObject object, HandleObject enclosing,
+           Handle<StaticWithScope*> staticWith, WithKind kind = SyntacticWith);
 
     StaticWithScope& staticWith() const {
         return getProto()->as<StaticWithScope>();
@@ -975,7 +960,8 @@ class ClonedBlockObject : public NestedScopeObject
 
     static ClonedBlockObject* createGlobal(JSContext* cx, Handle<GlobalObject*> global);
 
-    static ClonedBlockObject* createNonSyntactic(JSContext* cx, HandleObject enclosingStatic,
+    static ClonedBlockObject* createNonSyntactic(JSContext* cx,
+                                                 Handle<StaticNonSyntacticScope*> enclosingStatic,
                                                  HandleObject enclosingScope);
 
     static ClonedBlockObject* createHollowForDebug(JSContext* cx,
@@ -1082,11 +1068,11 @@ class RuntimeLexicalErrorObject : public ScopeObject
 
 template<XDRMode mode>
 bool
-XDRStaticBlockScope(XDRState<mode>* xdr, HandleObject enclosingScope,
+XDRStaticBlockScope(XDRState<mode>* xdr, Handle<StaticScope*> enclosingScope,
                     MutableHandle<StaticBlockScope*> objp);
 
-extern JSObject*
-CloneNestedScopeObject(JSContext* cx, HandleObject enclosingScope,
+extern NestedStaticScope*
+CloneNestedScopeObject(JSContext* cx, Handle<StaticScope*> enclosingScope,
                        Handle<NestedStaticScope*> src);
 
 
@@ -1117,7 +1103,7 @@ class MOZ_RAII ScopeIter
 
     // Constructing from a dynamic scope, static scope pair. All scopes are
     // considered not to be withinInitialFrame, since no frame is given.
-    ScopeIter(JSContext* cx, JSObject* scope, JSObject* staticScope
+    ScopeIter(JSContext* cx, JSObject* scope, StaticScope* staticScope
               MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
 
     // Constructing from a frame. Places the ScopeIter on the innermost scope
@@ -1141,7 +1127,7 @@ class MOZ_RAII ScopeIter
     inline bool canHaveSyntacticScopeObject() const;
     ScopeObject& scope() const;
 
-    JSObject* maybeStaticScope() const;
+    StaticScope* maybeStaticScope() const;
     StaticBlockScope& staticBlock() const { return ssi_.block(); }
     StaticModuleScope& module() const { return ssi_.module(); }
     StaticWithScope& staticWith() const { return ssi_.staticWith(); }
@@ -1173,7 +1159,7 @@ class MissingScopeKey
     friend class LiveScopeVal;
 
     AbstractFramePtr frame_;
-    JSObject* staticScope_;
+    StaticScope* staticScope_;
 
   public:
     explicit MissingScopeKey(const ScopeIter& si)
@@ -1182,9 +1168,9 @@ class MissingScopeKey
     { }
 
     AbstractFramePtr frame() const { return frame_; }
-    JSObject* staticScope() const { return staticScope_; }
+    StaticScope* staticScope() const { return staticScope_; }
 
-    void updateStaticScope(JSObject* obj) { staticScope_ = obj; }
+    void updateStaticScope(StaticScope* scope) { staticScope_ = scope; }
     void updateFrame(AbstractFramePtr frame) { frame_ = frame; }
 
     // For use as hash policy.
@@ -1206,7 +1192,7 @@ class LiveScopeVal
     friend class MissingScopeKey;
 
     AbstractFramePtr frame_;
-    RelocatablePtrObject staticScope_;
+    RelocatablePtr<StaticScope*> staticScope_;
 
     static void staticAsserts();
 
@@ -1217,7 +1203,7 @@ class LiveScopeVal
     { }
 
     AbstractFramePtr frame() const { return frame_; }
-    JSObject* staticScope() const { return staticScope_; }
+    StaticScope* staticScope() const { return staticScope_; }
 
     void updateFrame(AbstractFramePtr frame) { frame_ = frame; }
 
@@ -1492,6 +1478,13 @@ IsGlobalLexicalScope(JSObject* scope)
     return scope->is<ClonedBlockObject>() && scope->as<ClonedBlockObject>().isGlobal();
 }
 
+inline js::StaticScope*
+js::StaticScope::enclosingScope() const
+{
+    JSObject *obj = getFixedSlot(ENCLOSING_SCOPE_SLOT).toObjectOrNull();
+    return obj ? &obj->as<StaticScope>() : nullptr;
+}
+
 inline NestedStaticScope*
 NestedStaticScope::enclosingNestedScope() const
 {
@@ -1608,8 +1601,8 @@ CreateScopeObjectsForScopeChain(JSContext* cx, AutoObjectVector& scopeChain,
                                 HandleObject dynamicTerminatingScope,
                                 MutableHandleObject dynamicScopeObj);
 
-bool HasNonSyntacticStaticScopeChain(JSObject* staticScope);
-uint32_t StaticScopeChainLength(JSObject* staticScope);
+bool HasNonSyntacticStaticScopeChain(StaticScope* staticScope);
+uint32_t StaticScopeChainLength(StaticScope* staticScope);
 
 ModuleEnvironmentObject* GetModuleEnvironmentForScript(JSScript* script);
 
@@ -1631,7 +1624,7 @@ bool CheckEvalDeclarationConflicts(JSContext* cx, HandleScript script,
 
 #ifdef DEBUG
 void DumpStaticScopeChain(JSScript* script);
-void DumpStaticScopeChain(JSObject* staticScope);
+void DumpStaticScopeChain(StaticScope* staticScope);
 bool
 AnalyzeEntrainedVariables(JSContext* cx, HandleScript script);
 #endif
