@@ -90,6 +90,10 @@ public:
     bool operator!=(const CalcValue& aOther) const {
       return !(*this == aOther);
     }
+
+    // If this returns true the value is definitely zero. It it returns false
+    // it might be zero. So it's best used for conservative optimization.
+    bool IsDefinitelyZero() const { return mLength == 0 && mPercent == 0; }
   };
 
   // Reference counted calc() value.  This is the type that is used to store
