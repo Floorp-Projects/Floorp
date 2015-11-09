@@ -35,7 +35,7 @@ add_task(function* test_experiment() {
   Assert.equal(addon.updateURL, null, "No updateURL for experiments.");
   Assert.equal(addon.applyBackgroundUpdates, AddonManager.AUTOUPDATE_DISABLE,
                "Background updates are disabled.");
-  Assert.equal(addon.permissions, AddonManager.PERM_CAN_UNINSTALL,
+  Assert.equal(addon.permissions, AddonManager.PERM_CAN_UNINSTALL + AddonManager.PERM_CAN_ENABLE,
                "Permissions are minimal.");
   Assert.ok(!(addon.pendingOperations & AddonManager.PENDING_ENABLE),
             "Should not be pending enable");
