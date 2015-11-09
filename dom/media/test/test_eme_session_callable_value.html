@@ -1,0 +1,35 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test Encrypted Media Extensions</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+  <script type="text/javascript" src="eme.js"></script>
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+function Test() {
+  navigator.requestMediaKeySystemAccess('org.w3.clearkey', [{ initDataTypes: ['cenc'] }])
+  .then(access => access.createMediaKeys())
+  .then(mediaKeys => {
+    var initData = (new TextEncoder()).encode( 'this is an invalid license, and that is ok');
+    var s = mediaKeys.createSession("temporary");
+    s.generateRequest("cenc", initData); // ignore result.
+    // "update()" call should fail, because MediaKeySession is "not callable"
+    // yet, since CDM won't have had a chance to set the sessionId on MediaKeySession.
+    return s.update(initData);
+  })
+  .then(()=>{ok(false, "An exception should be thrown; MediaKeySession should be not callable."); SimpleTest.finish();},
+        ()=>{ok(true,  "We expect this to fail; MediaKeySession should be not callable."); SimpleTest.finish();});
+}
+
+SimpleTest.waitForExplicitFinish();
+SetupEMEPref(Test);
+
+</script>
+</pre>
+</body>
+</html>
