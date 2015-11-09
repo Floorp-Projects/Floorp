@@ -20,7 +20,7 @@ struct MiscContainer final
 
   ValueType mType;
   // mStringBits points to either nsIAtom* or nsStringBuffer* and is used when
-  // mType isn't mCSSStyleRule.
+  // mType isn't eCSSDeclaration.
   // Note eStringBase and eAtomBase is used also to handle the type of
   // mStringBits.
   uintptr_t mStringBits;
@@ -31,7 +31,7 @@ struct MiscContainer final
         nscolor mColor;
         uint32_t mEnumValue;
         int32_t mPercent;
-        mozilla::css::StyleRule* mCSSStyleRule;
+        mozilla::css::Declaration* mCSSDeclaration;
         mozilla::css::URLValue* mURL;
         mozilla::css::ImageValue* mImage;
         nsAttrValue::AtomArray* mAtomArray;
@@ -86,7 +86,7 @@ public:
     // Nothing stops us from refcounting (and sharing) other types of
     // MiscContainer (except eDoubleValue types) but there's no compelling
     // reason to 
-    return mType == nsAttrValue::eCSSStyleRule;
+    return mType == nsAttrValue::eCSSDeclaration;
   }
 
   inline int32_t AddRef() {
@@ -146,11 +146,11 @@ nsAttrValue::GetAtomArrayValue() const
   return GetMiscContainer()->mValue.mAtomArray;
 }
 
-inline mozilla::css::StyleRule*
-nsAttrValue::GetCSSStyleRuleValue() const
+inline mozilla::css::Declaration*
+nsAttrValue::GetCSSDeclarationValue() const
 {
-  NS_PRECONDITION(Type() == eCSSStyleRule, "wrong type");
-  return GetMiscContainer()->mValue.mCSSStyleRule;
+  NS_PRECONDITION(Type() == eCSSDeclaration, "wrong type");
+  return GetMiscContainer()->mValue.mCSSDeclaration;
 }
 
 inline mozilla::css::URLValue*
@@ -198,7 +198,7 @@ nsAttrValue::StoresOwnData() const
     return true;
   }
   ValueType t = Type();
-  return t != eCSSStyleRule && !IsSVGType(t);
+  return t != eCSSDeclaration && !IsSVGType(t);
 }
 
 inline void

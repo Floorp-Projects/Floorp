@@ -93,11 +93,11 @@ public:
   // Parse HTML style attribute or its equivalent in other markup
   // languages.  aBaseURL is the base url to use for relative links in
   // the declaration.
-  nsresult ParseStyleAttribute(const nsAString&  aAttributeValue,
+  already_AddRefed<mozilla::css::Declaration>
+           ParseStyleAttribute(const nsAString&  aAttributeValue,
                                nsIURI*           aDocURL,
                                nsIURI*           aBaseURL,
-                               nsIPrincipal*     aNodePrincipal,
-                               mozilla::css::StyleRule** aResult);
+                               nsIPrincipal*     aNodePrincipal);
 
   // Parse the body of a declaration block.  Very similar to
   // ParseStyleAttribute, but used under different circumstances.
