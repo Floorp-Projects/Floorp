@@ -45,10 +45,9 @@ ImportantStyleData::List(FILE* out, int32_t aIndent) const
 #endif
 
 Declaration::Declaration()
-  : mOwningRule(nullptr)
-  , mHTMLCSSStyleSheet(nullptr)
-  , mImmutable(false)
+  : mImmutable(false)
 {
+  mContainer.mRaw = uintptr_t(0);
 }
 
 Declaration::Declaration(const Declaration& aCopy)
@@ -63,10 +62,9 @@ Declaration::Declaration(const Declaration& aCopy)
     mImportantVariables(aCopy.mImportantVariables ?
         new CSSVariableDeclarations(*aCopy.mImportantVariables) :
         nullptr),
-    mOwningRule(nullptr),
-    mHTMLCSSStyleSheet(nullptr),
     mImmutable(false)
 {
+  mContainer.mRaw = uintptr_t(0);
 }
 
 Declaration::~Declaration()
