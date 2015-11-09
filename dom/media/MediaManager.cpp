@@ -1415,25 +1415,22 @@ MediaManager::EnumerateRawDevices(uint64_t aWindowId,
   RefPtr<PledgeSourceSet> p = new PledgeSourceSet();
   uint32_t id = mOutstandingPledges.Append(*p);
 
-  // Check if the preference for using audio/video loopback devices is
-  // enabled. This is currently used for automated media tests only.
-  //
-  // If present (and we're doing non-exotic cameras and microphones) use them
-  // instead of our built-in fake devices, except if fake tracks are requested
-  // (a feature of the built-in ones only).
-
   nsAdoptingCString audioLoopDev, videoLoopDev;
-  if (!aFakeTracks) {
-    if (aVideoType == dom::MediaSourceEnum::Camera) {
-      audioLoopDev = Preferences::GetCString("media.audio_loopback_dev");
+  if (!aFake) {
+    // Fake stream not requested. The entire device stack is available.
+    // Loop in loopback devices if they are set, and their respective type is
+    // requested. This is currently used for automated media tests only.
+    if (aVideoType == MediaSourceEnum::Camera) {
       videoLoopDev = Preferences::GetCString("media.video_loopback_dev");
-
-      if (aFake && !audioLoopDev.IsEmpty() && !videoLoopDev.IsEmpty()) {
-        aFake = false;
-      }
-    } else {
-      aFake = false;
     }
+    if (aAudioType == MediaSourceEnum::Microphone) {
+      audioLoopDev = Preferences::GetCString("media.audio_loopback_dev");
+    }
+  }
+
+  if (!aFake) {
+    // Fake tracks only make sense when we have a fake stream.
+    aFakeTracks = false;
   }
 
   MediaManager::PostTask(FROM_HERE, NewTaskFrom([id, aWindowId, audioLoopDev,
