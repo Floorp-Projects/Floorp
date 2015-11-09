@@ -132,7 +132,7 @@ static bool LockD3DTexture(T* aTexture)
   if (mutex) {
     HRESULT hr = mutex->AcquireSync(0, 10000);
     if (hr == WAIT_TIMEOUT) {
-      MOZ_CRASH();
+      gfxDevCrash(LogReason::D3DLockTimeout) << "D3D lock mutex timeout";
     }
 
     if (FAILED(hr)) {
@@ -1245,7 +1245,7 @@ SyncObjectD3D11::FinalizeFrame()
         return;
       }
 
-      MOZ_CRASH();
+      gfxDevCrash(LogReason::D3D10FinalizeFrame) << "Without device reset: " << hexa(hr);
     }
 
     // test QI
@@ -1253,8 +1253,10 @@ SyncObjectD3D11::FinalizeFrame()
     hr = mD3D10Texture->QueryInterface((IDXGIKeyedMutex**)getter_AddRefs(mutex));
 
     if (FAILED(hr) || !mutex) {
+      // Leave both the critical error and MOZ_CRASH for now; the critical error lets
+      // us "save" the hr value.  We will probably eventuall replace this with gfxDevCrash.
       gfxCriticalError() << "Failed to get KeyedMutex: " << hexa(hr);
-      MOZ_CRASH();
+      MOZ_CRASH("GFX: Cannot get D3D10 KeyedMutex");
     }
   }
 
@@ -1270,7 +1272,7 @@ SyncObjectD3D11::FinalizeFrame()
         return;
       }
 
-      MOZ_CRASH();
+      gfxDevCrash(LogReason::D3D11FinalizeFrame) << "Without device reset: " << hexa(hr);
     }
 
     // test QI
@@ -1278,8 +1280,10 @@ SyncObjectD3D11::FinalizeFrame()
     hr = mD3D11Texture->QueryInterface((IDXGIKeyedMutex**)getter_AddRefs(mutex));
 
     if (FAILED(hr) || !mutex) {
+      // Leave both the critical error and MOZ_CRASH for now; the critical error lets
+      // us "save" the hr value.  We will probably eventuall replace this with gfxDevCrash.
       gfxCriticalError() << "Failed to get KeyedMutex: " << hexa(hr);
-      MOZ_CRASH();
+      MOZ_CRASH("GFX: Cannot get D3D11 KeyedMutex");
     }
   }
 
@@ -1293,7 +1297,7 @@ SyncObjectD3D11::FinalizeFrame()
         gfxWarning() << "AcquireSync timed out because of device reset.";
         return;
       }
-      MOZ_CRASH();
+      gfxDevCrash(LogReason::D3D10SyncLock) << "Timeout on the D3D10 sync lock";
     }
 
     D3D10_BOX box;
@@ -1321,7 +1325,7 @@ SyncObjectD3D11::FinalizeFrame()
         gfxWarning() << "AcquireSync timed out because of device reset.";
         return;
       }
-      MOZ_CRASH();
+      gfxDevCrash(LogReason::D3D11SyncLock) << "Timeout on the D3D11 sync lock";
     }
 
     D3D11_BOX box;
@@ -1334,7 +1338,7 @@ SyncObjectD3D11::FinalizeFrame()
       if (gfxWindowsPlatform::GetPlatform()->DidRenderingDeviceReset()) {
         return;
       }
-      MOZ_CRASH();
+      MOZ_CRASH("GFX: Invalid D3D11 content device");
     }
 
     RefPtr<ID3D11DeviceContext> ctx;
