@@ -20,10 +20,10 @@
 
     </LinearLayout>
 
-    <RelativeLayout android:id="@+id/gecko_layout"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:layout_below="@+id/webapp_titlebar">
+    <FrameLayout android:id="@+id/gecko_layout"
+                 android:layout_width="match_parent"
+                 android:layout_height="match_parent"
+                 android:layout_below="@+id/webapp_titlebar">
 
         <include layout="@layout/shared_ui_components"/>
 
@@ -50,7 +50,7 @@
 
         </RelativeLayout>
 
-    </RelativeLayout>
+    </FrameLayout>
 
     <ViewStub android:id="@+id/toast_stub"
               android:layout="@layout/button_toast"
