@@ -33,6 +33,8 @@
 { 0xfeec07b8, 0x3fe6, 0x491e, \
   { 0x90, 0xd5, 0xcc, 0x93, 0xf8, 0x53, 0xe0, 0x48 } }
 
+class nsHTMLCSSStyleSheet;
+
 namespace mozilla {
 namespace css {
 
@@ -321,6 +323,14 @@ public:
 
   Rule* GetOwningRule() { return mOwningRule; }
 
+  void SetHTMLCSSStyleSheet(nsHTMLCSSStyleSheet* aHTMLCSSStyleSheet) {
+    MOZ_ASSERT(!mHTMLCSSStyleSheet || !aHTMLCSSStyleSheet,
+               "should never overwrite one sheet with another");
+    mHTMLCSSStyleSheet = aHTMLCSSStyleSheet;
+  }
+
+  nsHTMLCSSStyleSheet* GetHTMLCSSStyleSheet() { return mHTMLCSSStyleSheet; }
+
   ImportantStyleData* GetImportantStyleData() {
     if (HasImportantData()) {
       return &mImportantStyleData;
@@ -405,6 +415,10 @@ private:
 
   // The style rule that owns this declaration.  May be null.
   Rule* mOwningRule;
+
+  // The nsHTMLCSSStyleSheet that is responsible for this declaration.
+  // Only non-null for style attributes.
+  nsHTMLCSSStyleSheet* mHTMLCSSStyleSheet;
 
   friend class ImportantStyleData;
   ImportantStyleData mImportantStyleData;
