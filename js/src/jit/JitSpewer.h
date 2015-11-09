@@ -8,6 +8,7 @@
 #define jit_JitSpewer_h
 
 #include "mozilla/DebugOnly.h"
+#include "mozilla/IntegerPrintfMacros.h"
 
 #include <stdarg.h>
 
