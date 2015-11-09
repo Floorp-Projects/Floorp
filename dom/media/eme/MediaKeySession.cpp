@@ -55,6 +55,7 @@ MediaKeySession::MediaKeySession(JSContext* aCx,
   , mIsClosed(false)
   , mUninitialized(true)
   , mKeyStatusMap(new MediaKeyStatusMap(aCx, aParent, aRv))
+  , mExpiration(JS::GenericNaN())
 {
   EME_LOG("MediaKeySession[%p,''] session Id set", this);
 
@@ -114,7 +115,7 @@ MediaKeySession::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 double
 MediaKeySession::Expiration() const
 {
-  return JS::GenericNaN();
+  return mExpiration;
 }
 
 Promise*
@@ -435,6 +436,16 @@ MediaKeySession::MakePromise(ErrorResult& aRv, const nsACString& aName)
     return nullptr;
   }
   return DetailedPromise::Create(global, aRv, aName);
+}
+
+void
+MediaKeySession::SetExpiration(double aExpiration)
+{
+  EME_LOG("MediaKeySession[%p,'%s'] SetExpiry(%lf)",
+          this,
+          NS_ConvertUTF16toUTF8(mSessionId).get(),
+          aExpiration);
+  mExpiration = aExpiration;
 }
 
 } // namespace dom
