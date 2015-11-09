@@ -434,10 +434,6 @@ size. -->
 <!ENTITY doorhanger_login_select_action_text "Select another login">
 <!ENTITY doorhanger_login_select_title "Copy password from">
 
-<!ENTITY pref_titlebar_mode2 "URL bar">
-<!ENTITY pref_titlebar_mode_title "Show page title">
-<!ENTITY pref_titlebar_mode_url "Show page address">
-
 <!-- Localization note (pref_prevent_magnifying_glass): Label for setting that controls
      whether or not the magnifying glass is disabled. -->
 <!ENTITY pref_magnifying_glass_enabled "Magnify small areas">
