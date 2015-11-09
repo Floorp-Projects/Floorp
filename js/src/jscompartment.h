@@ -32,6 +32,7 @@ template<class Node> class ComponentFinder;
 
 struct NativeIterator;
 class ClonedBlockObject;
+class StaticNonSyntacticScope;
 
 /*
  * A single-entry cache for some base-10 double-to-string conversions. This
@@ -529,9 +530,10 @@ struct JSCompartment
         explicit WrapperEnum(JSCompartment* c) : js::WrapperMap::Enum(c->crossCompartmentWrappers) {}
     };
 
-    js::ClonedBlockObject* getOrCreateNonSyntacticLexicalScope(JSContext* cx,
-                                                               js::HandleObject enclosingStatic,
-                                                               js::HandleObject enclosingScope);
+    js::ClonedBlockObject* getOrCreateNonSyntacticLexicalScope(
+        JSContext* cx,
+        js::Handle<js::StaticNonSyntacticScope*> enclosingStatic,
+        js::HandleObject enclosingScope);
     js::ClonedBlockObject* getNonSyntacticLexicalScope(JSObject* enclosingScope) const;
 
     /*

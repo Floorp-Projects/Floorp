@@ -105,7 +105,7 @@ AssertDynamicScopeMatchesStaticScope(JSContext* cx, JSScript* script, JSObject* 
 {
 #ifdef DEBUG
     RootedObject originalScope(cx, scope);
-    RootedObject enclosingScope(cx, script->enclosingStaticScope());
+    Rooted<StaticScope*> enclosingScope(cx, script->enclosingStaticScope());
     for (StaticScopeIter<NoGC> i(enclosingScope); !i.done(); i++) {
         if (i.type() == StaticScopeIter<NoGC>::NonSyntactic) {
             while (scope->is<DynamicWithObject>() ||

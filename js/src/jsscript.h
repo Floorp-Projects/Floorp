@@ -67,7 +67,8 @@ namespace detail {
 // Do not call this directly! It is exposed for the friend declarations in
 // this file.
 bool
-CopyScript(JSContext* cx, HandleObject scriptStaticScope, HandleScript src, HandleScript dst);
+CopyScript(JSContext* cx, Handle<StaticScope*> scriptStaticScope, HandleScript src,
+           HandleScript dst);
 
 } // namespace detail
 
@@ -147,7 +148,7 @@ struct BlockScopeArray {
 
 class YieldOffsetArray {
     friend bool
-    detail::CopyScript(JSContext* cx, HandleObject scriptStaticScope, HandleScript src,
+    detail::CopyScript(JSContext* cx, Handle<StaticScope*> scriptStaticScope, HandleScript src,
                        HandleScript dst);
 
     uint32_t*       vector_;   // Array of bytecode offsets.
@@ -921,20 +922,20 @@ GeneratorKindFromBits(unsigned val) {
  * subsequent set-up of owning function or script object and then call
  * CallNewScriptHook.
  */
-template<XDRMode mode>
+template <XDRMode mode>
 bool
-XDRScript(XDRState<mode>* xdr, HandleObject enclosingScope, HandleScript enclosingScript,
-          HandleFunction fun, MutableHandleScript scriptp);
+XDRScript(XDRState<mode>* xdr, Handle<StaticScope*> enclosingScope,
+          HandleScript enclosingScript, HandleFunction fun, MutableHandleScript scriptp);
 
-template<XDRMode mode>
+template <XDRMode mode>
 bool
-XDRLazyScript(XDRState<mode>* xdr, HandleObject enclosingScope, HandleScript enclosingScript,
-              HandleFunction fun, MutableHandle<LazyScript*> lazy);
+XDRLazyScript(XDRState<mode>* xdr, Handle<StaticScope*> enclosingScope,
+              HandleScript enclosingScript, HandleFunction fun, MutableHandle<LazyScript*> lazy);
 
 /*
  * Code any constant value.
  */
-template<XDRMode mode>
+template <XDRMode mode>
 bool
 XDRScriptConst(XDRState<mode>* xdr, MutableHandleValue vp);
 
@@ -945,13 +946,13 @@ class JSScript : public js::gc::TenuredCell
     template <js::XDRMode mode>
     friend
     bool
-    js::XDRScript(js::XDRState<mode>* xdr, js::HandleObject enclosingScope,
+    js::XDRScript(js::XDRState<mode>* xdr, js::Handle<js::StaticScope*> enclosingScope,
                   js::HandleScript enclosingScript,
                   js::HandleFunction fun, js::MutableHandleScript scriptp);
 
     friend bool
-    js::detail::CopyScript(JSContext* cx, js::HandleObject scriptStaticScope, js::HandleScript src,
-                           js::HandleScript dst);
+    js::detail::CopyScript(JSContext* cx, js::Handle<js::StaticScope*> scriptStaticScope,
+                           js::HandleScript src, js::HandleScript dst);
 
   public:
     //
@@ -1229,7 +1230,7 @@ class JSScript : public js::gc::TenuredCell
 
   public:
     static JSScript* Create(js::ExclusiveContext* cx,
-                            js::HandleObject staticScope, bool savedCallerFun,
+                            js::Handle<js::StaticScope*> staticScope, bool savedCallerFun,
                             const JS::ReadOnlyCompileOptions& options,
                             js::HandleObject sourceObject, uint32_t sourceStart,
                             uint32_t sourceEnd);
@@ -1720,7 +1721,7 @@ class JSScript : public js::gc::TenuredCell
      * The static scope this script runs in, skipping the StaticFunctionScope
      * if this is a non-eval function script.
      */
-    inline JSObject* enclosingStaticScope() const;
+    inline js::StaticScope* enclosingStaticScope() const;
 
     // Switch the script over from the off-thread compartment's static
     // global lexical scope to the main thread compartment's.
@@ -1891,13 +1892,13 @@ class JSScript : public js::gc::TenuredCell
 
     // Returns the innermost static scope at pc if it falls within the extent
     // of the script. Returns nullptr otherwise.
-    JSObject* innermostStaticScopeInScript(jsbytecode* pc);
+    js::StaticScope* innermostStaticScopeInScript(jsbytecode* pc);
 
     // As innermostStaticScopeInScript, but returns the enclosing static scope
     // if the innermost static scope falls without the extent of the script.
-    JSObject* innermostStaticScope(jsbytecode* pc);
+    js::StaticScope* innermostStaticScope(jsbytecode* pc);
 
-    JSObject* innermostStaticScope() { return innermostStaticScope(main()); }
+    js::StaticScope* innermostStaticScope() { return innermostStaticScope(main()); }
 
     /*
      * The isEmpty method tells whether this script has code that computes any
@@ -2271,7 +2272,7 @@ class LazyScript : public gc::TenuredCell
     }
 
     StaticFunctionScope* staticScope() const { return staticScope_; }
-    JSObject* enclosingScope() const;
+    StaticScope* enclosingScope() const;
 
     // Switch the script over from the off-thread compartment's static
     // global lexical scope to the main thread compartment's.
@@ -2550,7 +2551,7 @@ DescribeScriptedCallerForCompilation(JSContext* cx, MutableHandleScript maybeScr
                                      LineOption opt = NOT_CALLED_FROM_JSOP_EVAL);
 
 JSScript*
-CloneScriptIntoFunction(JSContext* cx, HandleObject enclosingScope, HandleFunction fun,
+CloneScriptIntoFunction(JSContext* cx, Handle<StaticScope*> enclosingScope, HandleFunction fun,
                         HandleScript src);
 
 JSScript*
@@ -2562,7 +2563,7 @@ CloneGlobalScript(JSContext* cx, Handle<StaticScope*> enclosingScope, HandleScri
 // with no associated compartment.
 namespace JS {
 namespace ubi {
-template<>
+template <>
 struct Concrete<js::LazyScript> : TracerConcrete<js::LazyScript> {
     CoarseType coarseType() const final { return CoarseType::Script; }
     Size size(mozilla::MallocSizeOf mallocSizeOf) const override;

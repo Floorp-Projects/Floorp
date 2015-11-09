@@ -505,7 +505,7 @@ JSCompartment::wrap(JSContext* cx, MutableHandle<PropertyDescriptor> desc)
 
 ClonedBlockObject*
 JSCompartment::getOrCreateNonSyntacticLexicalScope(JSContext* cx,
-                                                   HandleObject enclosingStatic,
+                                                   Handle<StaticNonSyntacticScope*> enclosingStatic,
                                                    HandleObject enclosingScope)
 {
     if (!nonSyntacticLexicalScopes_) {
