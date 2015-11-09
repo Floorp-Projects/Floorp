@@ -184,11 +184,10 @@ this.PushServiceWebSocket = {
           // also made to fail, since we are going to be disconnecting the
           // socket.
           if (requestTimedOut || duration > this._requestTimeout) {
-            console.debug("observe: Register request timed out for channel",
-              channelID);
             requestTimedOut = true;
             this._registerRequests[channelID]
-              .reject({status: 0, error: "TimeoutError"});
+              .reject(new Error("Register request timed out for channel ID " +
+                  channelID));
 
             delete this._registerRequests[channelID];
           }
@@ -873,10 +872,7 @@ this.PushServiceWebSocket = {
         Services.io.newURI(reply.pushEndpoint, null, null);
       }
       catch (e) {
-        console.error("handleRegisterReply: Invalid pushEndpoint",
-          reply.pushEndpoint);
-        tmp.reject({state: 0, error: "Invalid pushEndpoint " +
-                                     reply.pushEndpoint});
+        tmp.reject(new Error("Invalid push endpoint: " + reply.pushEndpoint));
         return;
       }
 
@@ -892,7 +888,9 @@ this.PushServiceWebSocket = {
       Services.telemetry.getHistogramById("PUSH_API_SUBSCRIBE_WS_TIME").add(Date.now() - tmp.ctime);
       tmp.resolve(record);
     } else {
-      tmp.reject(reply);
+      console.error("handleRegisterReply: Unexpected server response", reply);
+      tmp.reject(new Error("Wrong status code for register reply: " +
+        reply.status));
     }
   },
 
@@ -1274,7 +1272,7 @@ this.PushServiceWebSocket = {
     for (let channelID in this._registerRequests) {
       let request = this._registerRequests[channelID];
       delete this._registerRequests[channelID];
-      request.reject({status: 0, error: "AbortError"});
+      request.reject(new Error("Register request aborted"));
     }
   },
 

@@ -60,22 +60,14 @@ add_task(function* test_register_success() {
     'https://example.org/1',
     ChromeUtils.originAttributesToSuffix({ appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inBrowser: false })
   );
-  equal(newRecord.channelID, channelID,
-    'Wrong channel ID in registration record');
   equal(newRecord.pushEndpoint, 'https://example.com/update/1',
     'Wrong push endpoint in registration record');
-  equal(newRecord.scope, 'https://example.org/1',
-    'Wrong scope in registration record');
-  equal(newRecord.quota, Infinity,
-    'Wrong quota in registration record');
 
   let record = yield db.getByKeyID(channelID);
   equal(record.channelID, channelID,
     'Wrong channel ID in database record');
   equal(record.pushEndpoint, 'https://example.com/update/1',
     'Wrong push endpoint in database record');
-  equal(record.scope, 'https://example.org/1',
-    'Wrong scope in database record');
   equal(record.quota, Infinity,
     'Wrong quota in database record');
 });

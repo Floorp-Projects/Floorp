@@ -100,6 +100,10 @@ PushClient.prototype = {
   },
 
   _deliverPushEndpoint: function(request, registration) {
+    if (!registration) {
+      request.onPushEndpoint(Cr.NS_OK, "", 0, null);
+      return;
+    }
     if (registration.p256dhKey) {
       let key = new Uint8Array(registration.p256dhKey);
       request.onPushEndpoint(Cr.NS_OK,
@@ -125,24 +129,15 @@ PushClient.prototype = {
 
     switch (aMessage.name) {
       case "PushService:Register:OK":
-        this._deliverPushEndpoint(request, json);
-        break;
-      case "PushService:Register:KO":
-        request.onPushEndpoint(Cr.NS_ERROR_FAILURE, "", 0, null);
-        break;
       case "PushService:Registration:OK":
-      {
-        let endpoint = "";
-        if (!json.registration) {
-          request.onPushEndpoint(Cr.NS_OK, "", 0, null);
-        } else {
-          this._deliverPushEndpoint(request, json.registration);
-        }
+        this._deliverPushEndpoint(request, json.result);
         break;
-      }
+
+      case "PushService:Register:KO":
       case "PushService:Registration:KO":
         request.onPushEndpoint(Cr.NS_ERROR_FAILURE, "", 0, null);
         break;
+
       case "PushService:Unregister:OK":
         if (typeof json.result !== "boolean") {
           console.error("receiveMessage: Expected boolean for unregister response",

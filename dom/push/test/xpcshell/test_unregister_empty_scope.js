@@ -31,9 +31,6 @@ add_task(function* test_unregister_empty_scope() {
   yield rejects(
     PushNotificationService.unregister('',
       ChromeUtils.originAttributesToSuffix({ appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inBrowser: false })),
-    function(error) {
-      return error.error == 'NotFoundError';
-    },
-    'Wrong error for empty endpoint'
+    'Expected error for empty endpoint'
   );
 });

@@ -227,7 +227,7 @@ PushServiceDelete.prototype = {
     if (Components.isSuccessCode(aStatusCode)) {
        this._resolve();
     } else {
-       this._reject({status: 0, error: "NetworkError"});
+       this._reject(new Error("Error removing subscription: " + aStatusCode));
     }
   }
 };
@@ -269,12 +269,12 @@ SubscriptionListener.prototype = {
 
     // Check if pushService is still active.
     if (!this._service.hasmainPushService()) {
-      this._reject({error: "Service deactivated"});
+      this._reject(new Error("Push service unavailable"));
       return;
     }
 
     if (!Components.isSuccessCode(aStatus)) {
-      this._reject({error: "Error status" + aStatus});
+      this._reject(new Error("Error listening for messages: " + aStatus));
       return;
     }
 
@@ -291,11 +291,11 @@ SubscriptionListener.prototype = {
           }),
           retryAfter);
       } else {
-        this._reject({error: "Error response code: " + statusCode });
+        this._reject(new Error("Unexpected server response: " + statusCode));
       }
       return;
     } else if (statusCode != 201) {
-      this._reject({error: "Error response code: " + statusCode });
+      this._reject(new Error("Unexpected server response: " + statusCode));
       return;
     }
 
@@ -303,7 +303,7 @@ SubscriptionListener.prototype = {
     try {
       subscriptionUri = aRequest.getResponseHeader("location");
     } catch (err) {
-      this._reject({error: "Return code 201, but the answer is bogus"});
+      this._reject(new Error("Missing Location header"));
       return;
     }
 
@@ -313,19 +313,20 @@ SubscriptionListener.prototype = {
     try {
       linkList = aRequest.getResponseHeader("link");
     } catch (err) {
-      this._reject({error: "Return code 201, but the answer is bogus"});
+      this._reject(new Error("Missing Link header"));
       return;
     }
 
-    var linkParserResult = linkParser(linkList, this._serverURI);
-    if (linkParserResult.error) {
-      this._reject(linkParserResult);
+    var linkParserResult;
+    try {
+      linkParserResult = linkParser(linkList, this._serverURI);
+    } catch (e) {
+      this._reject(e);
       return;
     }
 
     if (!subscriptionUri) {
-      this._reject({error: "Return code 201, but the answer is bogus," +
-                           " missing subscriptionUri"});
+      this._reject(new Error("Invalid Location header"));
       return;
     }
     try {
@@ -333,8 +334,8 @@ SubscriptionListener.prototype = {
     } catch (e) {
       console.error("onStopRequest: Invalid subscription URI",
         subscriptionUri);
-      this._reject({error: "Return code 201, but URI is bogus. " +
-                    subscriptionUri});
+      this._reject(new Error("Invalid subscription endpoint: " +
+        subscriptionUri));
       return;
     }
 
@@ -372,7 +373,7 @@ function linkParser(linkHeader, serverURI) {
 
   var linkList = linkHeader.split(',');
   if ((linkList.length < 1)) {
-    return {error: "Return code 201, but the answer is bogus"};
+    throw new Error("Invalid Link header");
   }
 
   var pushEndpoint;
@@ -397,28 +398,19 @@ function linkParser(linkHeader, serverURI) {
   console.debug("linkParser: pushReceiptEndpoint", pushReceiptEndpoint);
   // Missing pushReceiptEndpoint is allowed.
   if (!pushEndpoint) {
-    return {error: "Return code 201, but the answer is bogus, missing" +
-                   " pushEndpoint"};
+    throw new Error("Missing push endpoint");
   }
 
-  var uri;
-  var resUri = [];
-  try {
-    [pushEndpoint, pushReceiptEndpoint].forEach(u => {
-      if (u) {
-        uri = u;
-        resUri[u] = Services.io.newURI(uri, null, serverURI);
-      }
-    });
-  } catch (e) {
-    console.debug("linkParser: Invalid URI", uri);
-    return {error: "Return code 201, but URI is bogus. " + uri};
+  var pushURI = Services.io.newURI(pushEndpoint, null, serverURI);
+  var pushReceiptURI;
+  if (pushReceiptEndpoint) {
+    pushReceiptURI = Services.io.newURI(pushReceiptEndpoint, null,
+                                        serverURI);
   }
 
   return {
-    pushEndpoint: resUri[pushEndpoint].spec,
-    pushReceiptEndpoint: (pushReceiptEndpoint) ? resUri[pushReceiptEndpoint].spec
-                                               : ""
+    pushEndpoint: pushURI.spec,
+    pushReceiptEndpoint: (pushReceiptURI) ? pushReceiptURI.spec : "",
   };
 }
 
@@ -544,11 +536,7 @@ this.PushServiceHttp2 = {
 
       var chan = this._makeChannel(this._serverURI.spec);
       chan.requestMethod = "POST";
-      try {
-        chan.asyncOpen(listener, null);
-      } catch(e) {
-        reject({status: 0, error: "NetworkError"});
-      }
+      chan.asyncOpen(listener, null);
     })
     .catch(err => {
       if ("retry" in err) {
@@ -564,11 +552,7 @@ this.PushServiceHttp2 = {
     return new Promise((resolve,reject) => {
       var chan = this._makeChannel(aUri);
       chan.requestMethod = "DELETE";
-      try {
-        chan.asyncOpen(new PushServiceDelete(resolve, reject), null);
-      } catch(err) {
-        reject({status: 0, error: "NetworkError"});
-      }
+      chan.asyncOpen(new PushServiceDelete(resolve, reject), null);
     });
   },
 
