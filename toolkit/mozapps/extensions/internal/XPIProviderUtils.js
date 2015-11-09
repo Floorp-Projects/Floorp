@@ -357,45 +357,48 @@ function DBAddonInternal(aLoaded) {
     });
 }
 
-function DBAddonInternalPrototype()
-{
-  this.applyCompatibilityUpdate =
-    function(aUpdate, aSyncCompatibility) {
-      let wasCompatible = this.isCompatible;
+DBAddonInternal.prototype = Object.create(AddonInternal.prototype);
+Object.assign(DBAddonInternal.prototype, {
+  applyCompatibilityUpdate: function(aUpdate, aSyncCompatibility) {
+    let wasCompatible = this.isCompatible;
 
-      this.targetApplications.forEach(function(aTargetApp) {
-        aUpdate.targetApplications.forEach(function(aUpdateTarget) {
-          if (aTargetApp.id == aUpdateTarget.id && (aSyncCompatibility ||
-              Services.vc.compare(aTargetApp.maxVersion, aUpdateTarget.maxVersion) < 0)) {
-            aTargetApp.minVersion = aUpdateTarget.minVersion;
-            aTargetApp.maxVersion = aUpdateTarget.maxVersion;
-            XPIDatabase.saveChanges();
-          }
-        });
+    this.targetApplications.forEach(function(aTargetApp) {
+      aUpdate.targetApplications.forEach(function(aUpdateTarget) {
+        if (aTargetApp.id == aUpdateTarget.id && (aSyncCompatibility ||
+            Services.vc.compare(aTargetApp.maxVersion, aUpdateTarget.maxVersion) < 0)) {
+          aTargetApp.minVersion = aUpdateTarget.minVersion;
+          aTargetApp.maxVersion = aUpdateTarget.maxVersion;
+          XPIDatabase.saveChanges();
+        }
       });
-      if (aUpdate.multiprocessCompatible !== undefined &&
-          aUpdate.multiprocessCompatible != this.multiprocessCompatible) {
-        this.multiprocessCompatible = aUpdate.multiprocessCompatible;
-        XPIDatabase.saveChanges();
-      }
+    });
+    if (aUpdate.multiprocessCompatible !== undefined &&
+        aUpdate.multiprocessCompatible != this.multiprocessCompatible) {
+      this.multiprocessCompatible = aUpdate.multiprocessCompatible;
+      XPIDatabase.saveChanges();
+    }
 
-      if (wasCompatible != this.isCompatible)
-        XPIProvider.updateAddonDisabledState(this);
-    };
+    if (wasCompatible != this.isCompatible)
+      XPIProvider.updateAddonDisabledState(this);
+  },
 
-  this.toJSON =
-    function() {
-      return copyProperties(this, PROP_JSON_FIELDS);
-    };
+  toJSON: function() {
+    let jsonData = copyProperties(this, PROP_JSON_FIELDS);
 
-  Object.defineProperty(this, "inDatabase",
-                        { get: function() { return true; },
-                          enumerable: true,
-                          configurable: true });
-}
-DBAddonInternalPrototype.prototype = AddonInternal.prototype;
+    // Experiments are serialized as disabled so they aren't run on the next
+    // startup.
+    if (this.type == "experiment") {
+      jsonData.userDisabled = true;
+      jsonData.active = false;
+    }
 
-DBAddonInternal.prototype = new DBAddonInternalPrototype();
+    return jsonData;
+  },
+
+  get inDatabase() {
+    return true;
+  }
+});
 
 /**
  * Internal interface: find an addon from an already loaded addonDB
