@@ -600,20 +600,8 @@ nsresult NS_ReadInputStreamToString(nsIInputStream *aInputStream,
 #endif
 
 nsresult
-NS_LoadPersistentPropertiesFromURI(nsIPersistentProperties **outResult,
-                                   nsIURI                   *aUri,
-                                   nsIPrincipal             *aLoadingPrincipal,
-                                   nsContentPolicyType       aContentPolicyType,
-                                   nsIIOService             *aIoService = nullptr);
-
-nsresult
 NS_LoadPersistentPropertiesFromURISpec(nsIPersistentProperties **outResult,
-                                       const nsACString         &aSpec,
-                                       nsIPrincipal             *aLoadingPrincipal,
-                                       nsContentPolicyType       aContentPolicyType,
-                                       const char               *aCharset = nullptr,
-                                       nsIURI                   *aBaseURI = nullptr,
-                                       nsIIOService             *aIoService = nullptr);
+                                       const nsACString         &aSpec);
 
 /**
  * NS_QueryNotificationCallbacks implements the canonical algorithm for
