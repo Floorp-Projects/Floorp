@@ -11427,12 +11427,10 @@ class MCallGetProperty
 {
     CompilerPropertyName name_;
     bool idempotent_;
-    bool callprop_;
 
-    MCallGetProperty(MDefinition* value, PropertyName* name, bool callprop)
+    MCallGetProperty(MDefinition* value, PropertyName* name)
       : MUnaryInstruction(value), name_(name),
-        idempotent_(false),
-        callprop_(callprop)
+        idempotent_(false)
     {
         setResultType(MIRType_Value);
     }
@@ -11440,19 +11438,15 @@ class MCallGetProperty
   public:
     INSTRUCTION_HEADER(CallGetProperty)
 
-    static MCallGetProperty* New(TempAllocator& alloc, MDefinition* value, PropertyName* name,
-                                 bool callprop)
+    static MCallGetProperty* New(TempAllocator& alloc, MDefinition* value, PropertyName* name)
     {
-        return new(alloc) MCallGetProperty(value, name, callprop);
+        return new(alloc) MCallGetProperty(value, name);
     }
     MDefinition* value() const {
         return getOperand(0);
     }
     PropertyName* name() const {
         return name_;
-    }
-    bool callprop() const {
-        return callprop_;
     }
 
     // Constructors need to perform a GetProp on the function prototype.

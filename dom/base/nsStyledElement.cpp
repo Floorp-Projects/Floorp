@@ -14,7 +14,7 @@
 #include "nsDOMCSSAttrDeclaration.h"
 #include "nsServiceManagerUtils.h"
 #include "nsIDocument.h"
-#include "mozilla/css/StyleRule.h"
+#include "mozilla/css/Declaration.h"
 #include "nsCSSParser.h"
 #include "mozilla/css/Loader.h"
 #include "nsIDOMMutationEvent.h"
@@ -45,9 +45,9 @@ nsStyledElementNotElementCSSInlineStyle::ParseAttribute(int32_t aNamespaceID,
 }
 
 nsresult
-nsStyledElementNotElementCSSInlineStyle::SetInlineStyleRule(css::StyleRule* aStyleRule,
-                                                            const nsAString* aSerialized,
-                                                            bool aNotify)
+nsStyledElementNotElementCSSInlineStyle::SetInlineStyleDeclaration(css::Declaration* aDeclaration,
+                                                                   const nsAString* aSerialized,
+                                                                   bool aNotify)
 {
   SetMayHaveStyle();
   bool modification = false;
@@ -77,7 +77,7 @@ nsStyledElementNotElementCSSInlineStyle::SetInlineStyleRule(css::StyleRule* aSty
     modification = !!mAttrsAndChildren.GetAttr(nsGkAtoms::style);
   }
 
-  nsAttrValue attrValue(aStyleRule, aSerialized);
+  nsAttrValue attrValue(aDeclaration, aSerialized);
 
   // XXXbz do we ever end up with ADDITION here?  I doubt it.
   uint8_t modType = modification ?
@@ -89,16 +89,16 @@ nsStyledElementNotElementCSSInlineStyle::SetInlineStyleRule(css::StyleRule* aSty
                           aNotify, kDontCallAfterSetAttr);
 }
 
-css::StyleRule*
-nsStyledElementNotElementCSSInlineStyle::GetInlineStyleRule()
+css::Declaration*
+nsStyledElementNotElementCSSInlineStyle::GetInlineStyleDeclaration()
 {
   if (!MayHaveStyle()) {
     return nullptr;
   }
   const nsAttrValue* attrVal = mAttrsAndChildren.GetAttr(nsGkAtoms::style);
 
-  if (attrVal && attrVal->Type() == nsAttrValue::eCSSStyleRule) {
-    return attrVal->GetCSSStyleRuleValue();
+  if (attrVal && attrVal->Type() == nsAttrValue::eCSSDeclaration) {
+    return attrVal->GetCSSDeclarationValue();
   }
 
   return nullptr;
@@ -131,13 +131,13 @@ nsStyledElementNotElementCSSInlineStyle::ReparseStyleAttribute(bool aForceInData
   }
   const nsAttrValue* oldVal = mAttrsAndChildren.GetAttr(nsGkAtoms::style);
   
-  if (oldVal && oldVal->Type() != nsAttrValue::eCSSStyleRule) {
+  if (oldVal && oldVal->Type() != nsAttrValue::eCSSDeclaration) {
     nsAttrValue attrValue;
     nsAutoString stringValue;
     oldVal->ToString(stringValue);
     ParseStyleAttribute(stringValue, attrValue, aForceInDataDoc);
-    // Don't bother going through SetInlineStyleRule, we don't want to fire off
-    // mutation events or document notifications anyway
+    // Don't bother going through SetInlineStyleDeclaration; we don't
+    // want to fire off mutation events or document notifications anyway
     nsresult rv = mAttrsAndChildren.SetAndSwapAttr(nsGkAtoms::style, attrValue);
     NS_ENSURE_SUCCESS(rv, rv);
   }

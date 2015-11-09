@@ -80,7 +80,7 @@ function run_test() {
   run_next_test();
 }
 
-add_task(function test_bookmarks() {
+add_task(function* test_bookmarks() {
   bs.addObserver(bookmarksObserver, false);
 
   // test special folders

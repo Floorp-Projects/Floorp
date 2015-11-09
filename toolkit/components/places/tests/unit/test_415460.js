@@ -34,7 +34,7 @@ function run_test()
   run_next_test();
 }
 
-add_task(function test_execute()
+add_task(function* test_execute()
 {
   const SEARCH_TERM = "ユニコード";
   const TEST_URL = "http://example.com/" + SEARCH_TERM + "/";

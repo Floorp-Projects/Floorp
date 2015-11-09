@@ -17,6 +17,7 @@
 #include "nsIPrefBranch.h"
 #include "nsServiceManagerUtils.h"
 #include "nsIObserverService.h"
+#include "mozilla/Atomics.h"
 #include "mozilla/Services.h"
 #include "mozilla/Likely.h"
 #include "mozilla/PublicSSL.h"
@@ -33,7 +34,7 @@ LazyLogModule gSocketTransportLog("nsSocketTransport");
 LazyLogModule gUDPSocketLog("UDPSocket");
 
 nsSocketTransportService *gSocketTransportService = nullptr;
-PRThread                 *gSocketThread           = nullptr;
+Atomic<PRThread*, Relaxed> gSocketThread;
 
 #define SEND_BUFFER_PREF "network.tcp.sendbuffer"
 #define KEEPALIVE_ENABLED_PREF "network.tcp.keepalive.enabled"

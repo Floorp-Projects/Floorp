@@ -3737,10 +3737,11 @@ var gCSSProperties = {
     initial_values: [ "normal", "0", "0px", "-0em",
       "calc(-0px)", "calc(0em)"
     ],
-    other_values: [ "1em", "2px", "-3px",
+    other_values: [ "1em", "2px", "-3px", "0%", "50%", "-120%",
       "calc(1em)", "calc(1em + 3px)",
       "calc(15px / 2)", "calc(15px/2)",
-      "calc(-2em)"
+      "calc(-2em)", "calc(0% + 0px)",
+      "calc(-10%/2 - 1em)"
     ],
     invalid_values: [],
     quirks_values: { "5": "5px" },

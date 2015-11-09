@@ -623,7 +623,7 @@ nsXPConnect::GetWrappedNativeOfJSObject(JSContext * aJSContext,
     MOZ_ASSERT(_retval, "bad param");
 
     RootedObject aJSObj(aJSContext, aJSObjArg);
-    aJSObj = js::CheckedUnwrap(aJSObj, /* stopAtOuter = */ false);
+    aJSObj = js::CheckedUnwrap(aJSObj, /* stopAtWindowProxy = */ false);
     if (!aJSObj || !IS_WN_REFLECTOR(aJSObj)) {
         *_retval = nullptr;
         return NS_ERROR_FAILURE;
@@ -638,7 +638,7 @@ nsISupports*
 xpc::UnwrapReflectorToISupports(JSObject* reflector)
 {
     // Unwrap security wrappers, if allowed.
-    reflector = js::CheckedUnwrap(reflector, /* stopAtOuter = */ false);
+    reflector = js::CheckedUnwrap(reflector, /* stopAtWindowProxy = */ false);
     if (!reflector)
         return nullptr;
 

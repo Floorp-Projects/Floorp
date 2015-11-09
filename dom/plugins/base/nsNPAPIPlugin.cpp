@@ -1350,10 +1350,8 @@ _evaluate(NPP npp, NPObject* npobj, NPString *script, NPVariant *result)
     return false;
   }
 
-  obj = JS_ObjectToInnerObject(cx, obj);
-  MOZ_ASSERT(obj,
-             "JS_ObjectToInnerObject should never return null with non-null "
-             "input.");
+  obj = js::ToWindowIfWindowProxy(obj);
+  MOZ_ASSERT(obj, "ToWindowIfWindowProxy should never return null");
 
   if (result) {
     // Initialize the out param to void

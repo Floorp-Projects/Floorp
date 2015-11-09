@@ -55,7 +55,11 @@ ValidateAsmJS(ExclusiveContext* cx, AsmJSParser& parser, frontend::ParseNode* st
 const size_t AsmJSMinHeapLength = 64 * 1024;
 
 // The assumed page size; dynamically checked in ValidateAsmJS.
+#ifdef _MIPS_ARCH_LOONGSON3A
+const size_t AsmJSPageSize = 16384;
+#else
 const size_t AsmJSPageSize = 4096;
+#endif
 
 static_assert(AsmJSMinHeapLength % AsmJSPageSize == 0, "Invalid page size");
 

@@ -142,7 +142,7 @@ IsFrameId(JSContext* cx, JSObject* obj, jsid idArg)
 CrossOriginObjectType
 IdentifyCrossOriginObject(JSObject* obj)
 {
-    obj = js::UncheckedUnwrap(obj, /* stopAtOuter = */ false);
+    obj = js::UncheckedUnwrap(obj, /* stopAtWindowProxy = */ false);
     const js::Class* clasp = js::GetObjectClass(obj);
     MOZ_ASSERT(!XrayUtils::IsXPCWNHolderClass(Jsvalify(clasp)), "shouldn't have a holder here");
 
@@ -171,7 +171,7 @@ AccessCheck::isCrossOriginAccessPermitted(JSContext* cx, HandleObject wrapper, H
                isCrossOriginAccessPermitted(cx, wrapper, id, Wrapper::SET);
     }
 
-    RootedObject obj(cx, js::UncheckedUnwrap(wrapper, /* stopAtOuter = */ false));
+    RootedObject obj(cx, js::UncheckedUnwrap(wrapper, /* stopAtWindowProxy = */ false));
     CrossOriginObjectType type = IdentifyCrossOriginObject(obj);
     if (JSID_IS_STRING(id)) {
         if (IsPermitted(type, JSID_TO_FLAT_STRING(id), act == Wrapper::SET))

@@ -1,4 +1,5 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -1579,15 +1580,6 @@ void BuildTextRunsScanner::AccumulateRunInfo(nsTextFrame* aFrame)
   }
 }
 
-static nscoord StyleToCoord(const nsStyleCoord& aCoord)
-{
-  if (eStyleUnit_Coord == aCoord.GetUnit()) {
-    return aCoord.GetCoordValue();
-  } else {
-    return 0;
-  }
-}
-
 static bool
 HasTerminalNewline(const nsTextFrame* aFrame)
 {
@@ -1595,6 +1587,29 @@ HasTerminalNewline(const nsTextFrame* aFrame)
     return false;
   const nsTextFragment* frag = aFrame->GetContent()->GetText();
   return frag->CharAt(aFrame->GetContentEnd() - 1) == '\n';
+}
+
+static gfxFont::Metrics
+GetFirstFontMetrics(gfxFontGroup* aFontGroup, bool aVerticalMetrics)
+{
+  if (!aFontGroup)
+    return gfxFont::Metrics();
+  gfxFont* font = aFontGroup->GetFirstValidFont();
+  return font->GetMetrics(aVerticalMetrics ? gfxFont::eVertical
+                                           : gfxFont::eHorizontal);
+}
+
+static gfxFloat
+GetSpaceWidthAppUnits(gfxTextRun* aTextRun)
+{
+  // Round the space width when converting to appunits the same way textruns
+  // do.
+  gfxFloat spaceWidthAppUnits =
+    NS_round(GetFirstFontMetrics(aTextRun->GetFontGroup(),
+                                 aTextRun->UseCenterBaseline()).spaceWidth *
+             aTextRun->GetAppUnitsPerDevUnit());
+
+  return spaceWidthAppUnits;
 }
 
 static nscoord
@@ -1606,11 +1621,18 @@ LetterSpacing(nsIFrame* aFrame, const nsStyleText* aStyleText = nullptr)
   if (!aStyleText) {
     aStyleText = aFrame->StyleText();
   }
-  return StyleToCoord(aStyleText->mLetterSpacing);
+
+  const nsStyleCoord& coord = aStyleText->mLetterSpacing;
+  if (eStyleUnit_Coord == coord.GetUnit()) {
+    return coord.GetCoordValue();
+  }
+  return 0;
 }
 
+// This function converts non-coord values (e.g. percentages) to nscoord.
 static nscoord
-WordSpacing(nsIFrame* aFrame, const nsStyleText* aStyleText = nullptr)
+WordSpacing(nsIFrame* aFrame, gfxTextRun* aTextRun,
+            const nsStyleText* aStyleText = nullptr)
 {
   if (aFrame->IsSVGText()) {
     return 0;
@@ -1618,7 +1640,39 @@ WordSpacing(nsIFrame* aFrame, const nsStyleText* aStyleText = nullptr)
   if (!aStyleText) {
     aStyleText = aFrame->StyleText();
   }
-  return StyleToCoord(aStyleText->mWordSpacing);
+
+  const nsStyleCoord& coord = aStyleText->mWordSpacing;
+  if (coord.IsCoordPercentCalcUnit()) {
+    nscoord pctBasis = coord.HasPercent() ? GetSpaceWidthAppUnits(aTextRun) : 0;
+    return nsRuleNode::ComputeCoordPercentCalc(coord, pctBasis);
+  }
+  return 0;
+}
+
+// Returns gfxTextRunFactory::TEXT_ENABLE_SPACING if non-standard
+// letter-spacing or word-spacing is present.
+static uint32_t
+GetSpacingFlags(nsIFrame* aFrame, const nsStyleText* aStyleText = nullptr)
+{
+  if (aFrame->IsSVGText()) {
+    return 0;
+  }
+
+  const nsStyleText* styleText = aFrame->StyleText();
+  const nsStyleCoord& ls = styleText->mLetterSpacing;
+  const nsStyleCoord& ws = styleText->mWordSpacing;
+
+  // It's possible to have a calc() value that computes to zero but for which
+  // IsDefinitelyZero() is false, in which case we'll return
+  // TEXT_ENABLE_SPACING unnecessarily. That's ok because such cases are likely
+  // to be rare, and avoiding TEXT_ENABLE_SPACING is just an optimization.
+  bool nonStandardSpacing =
+    (eStyleUnit_Coord == ls.GetUnit() && ls.GetCoordValue() != 0) ||
+    (eStyleUnit_Coord == ws.GetUnit() && ws.GetCoordValue() != 0) ||
+    (eStyleUnit_Percent == ws.GetUnit() && ws.GetPercentValue() != 0) ||
+    (eStyleUnit_Calc == ws.GetUnit() && !ws.GetCalcValue()->IsDefinitelyZero());
+
+  return nonStandardSpacing ? gfxTextRunFactory::TEXT_ENABLE_SPACING : 0;
 }
 
 bool
@@ -1772,12 +1826,6 @@ BuildTextRunsScanner::GetNextBreakBeforeFrame(uint32_t* aIndex)
   return static_cast<nsTextFrame*>(mLineBreakBeforeFrames.ElementAt(index));
 }
 
-static uint32_t
-GetSpacingFlags(nscoord spacing)
-{
-  return spacing ? gfxTextRunFactory::TEXT_ENABLE_SPACING : 0;
-}
-
 static gfxFontGroup*
 GetFontGroupForFrame(nsIFrame* aFrame, float aFontSizeInflation,
                      nsFontMetrics** aOutFontMetrics = nullptr)
@@ -1824,16 +1872,6 @@ GetHyphenTextRun(gfxTextRun* aTextRun, gfxContext* aContext, nsTextFrame* aTextF
 
   return aTextRun->GetFontGroup()->
     MakeHyphenTextRun(ctx, aTextRun->GetAppUnitsPerDevUnit());
-}
-
-static gfxFont::Metrics
-GetFirstFontMetrics(gfxFontGroup* aFontGroup, bool aVerticalMetrics)
-{
-  if (!aFontGroup)
-    return gfxFont::Metrics();
-  gfxFont* font = aFontGroup->GetFirstValidFont();
-  return font->GetMetrics(aVerticalMetrics ? gfxFont::eVertical
-                                           : gfxFont::eHorizontal);
 }
 
 PR_STATIC_ASSERT(NS_STYLE_WHITESPACE_NORMAL == 0);
@@ -1943,8 +1981,7 @@ BuildTextRunsScanner::BuildTextRunForFrames(void* aTextBuffer)
     if (NS_STYLE_TEXT_TRANSFORM_NONE != textStyle->mTextTransform) {
       anyTextTransformStyle = true;
     }
-    textFlags |= GetSpacingFlags(LetterSpacing(f));
-    textFlags |= GetSpacingFlags(WordSpacing(f));
+    textFlags |= GetSpacingFlags(f);
     nsTextFrameUtils::CompressionMode compression =
       GetCSSWhitespaceToCompressionMode(f, textStyle);
     if ((enabledJustification || f->ShouldSuppressLineBreak()) &&
@@ -2875,7 +2912,7 @@ public:
       mFrame(aFrame), mStart(aStart), mTempIterator(aStart),
       mTabWidths(nullptr), mTabWidthsAnalyzedLimit(0),
       mLength(aLength),
-      mWordSpacing(WordSpacing(aFrame, aTextStyle)),
+      mWordSpacing(WordSpacing(aFrame, mTextRun, aTextStyle)),
       mLetterSpacing(LetterSpacing(aFrame, aTextStyle)),
       mHyphenWidth(-1),
       mOffsetFromBlockOriginForTabs(aOffsetFromBlockOriginForTabs),
@@ -2900,7 +2937,7 @@ public:
       mFrame(aFrame), mStart(aStart), mTempIterator(aStart),
       mTabWidths(nullptr), mTabWidthsAnalyzedLimit(0),
       mLength(aFrame->GetContentLength()),
-      mWordSpacing(WordSpacing(aFrame)),
+      mWordSpacing(WordSpacing(aFrame, mTextRun)),
       mLetterSpacing(LetterSpacing(aFrame)),
       mHyphenWidth(-1),
       mOffsetFromBlockOriginForTabs(0),
@@ -3225,14 +3262,8 @@ ComputeTabWidthAppUnits(nsIFrame* aFrame, gfxTextRun* aTextRun)
 {
   // Get the number of spaces from CSS -moz-tab-size
   const nsStyleText* textStyle = aFrame->StyleText();
-  
-  // Round the space width when converting to appunits the same way
-  // textruns do
-  gfxFloat spaceWidthAppUnits =
-    NS_round(GetFirstFontMetrics(aTextRun->GetFontGroup(),
-                                 aTextRun->UseCenterBaseline()).spaceWidth *
-             aTextRun->GetAppUnitsPerDevUnit());
-  return textStyle->mTabSize * spaceWidthAppUnits;
+
+  return textStyle->mTabSize * GetSpaceWidthAppUnits(aTextRun);
 }
 
 // aX and the result are in whole appunits.

@@ -60,7 +60,7 @@ function run_test()
   run_next_test();
 }
 
-add_task(function test_searchterms_domain()
+add_task(function* test_searchterms_domain()
 {
   yield task_populateDB(testData);
   var query = PlacesUtils.history.getNewQuery();

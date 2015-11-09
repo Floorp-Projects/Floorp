@@ -342,7 +342,9 @@ public:
     // - mDestination (probably)
     size_t amount = AudioNodeEngine::SizeOfExcludingThis(aMallocSizeOf);
     amount += mSharedBuffers->SizeOfIncludingThis(aMallocSizeOf);
-    amount += mInputBuffer->SizeOfIncludingThis(aMallocSizeOf);
+    if (mInputBuffer) {
+      amount += mInputBuffer->SizeOfIncludingThis(aMallocSizeOf);
+    }
 
     return amount;
   }

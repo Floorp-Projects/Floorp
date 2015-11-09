@@ -6,7 +6,7 @@ function run_test()
   run_next_test();
 }
 
-add_task(function test_execute()
+add_task(function* test_execute()
 {
   PlacesUtils.bookmarks.insertBookmark(
     PlacesUtils.unfiledBookmarksFolderId, NetUtil.newURI("http://1.moz.org/"),
