@@ -335,20 +335,6 @@ nsIdentifierMapEntry::RemoveContentChangeCallback(nsIDocument::IDTargetObserver 
 namespace mozilla {
 namespace dom {
 
-static PLDHashOperator
-CandidatesTraverse(CustomElementHashKey* aKey,
-                   nsTArray<RefPtr<Element>>* aData,
-                   void* aArg)
-{
-  nsCycleCollectionTraversalCallback *cb =
-    static_cast<nsCycleCollectionTraversalCallback*>(aArg);
-  for (size_t i = 0; i < aData->Length(); ++i) {
-    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(*cb, "mCandidatesMap->Element");
-    cb->NoteXPCOMChild(aData->ElementAt(i));
-  }
-  return PL_DHASH_NEXT;
-}
-
 NS_IMPL_CYCLE_COLLECTION_CLASS(Registry)
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(Registry)
@@ -387,7 +373,13 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(Registry)
       cb.NoteXPCOMChild(callbacks->mDetachedCallback.Value());
     }
   }
-  tmp->mCandidatesMap.EnumerateRead(CandidatesTraverse, &cb);
+  for (auto iter = tmp->mCandidatesMap.Iter(); !iter.Done(); iter.Next()) {
+    nsTArray<RefPtr<Element>>* elems = iter.UserData();
+    for (size_t i = 0; i < elems->Length(); ++i) {
+      NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mCandidatesMap->Element");
+      cb.NoteXPCOMChild(elems->ElementAt(i));
+    }
+  }
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
@@ -962,21 +954,15 @@ nsExternalResourceMap::HideViewers()
   }
 }
 
-static PLDHashOperator
-ExternalResourceShower(nsIURI* aKey,
-                       nsExternalResourceMap::ExternalResource* aData,
-                       void* aClosure)
-{
-  if (aData->mViewer) {
-    aData->mViewer->Show();
-  }
-  return PL_DHASH_NEXT;
-}
-
 void
 nsExternalResourceMap::ShowViewers()
 {
-  mMap.EnumerateRead(ExternalResourceShower, nullptr);
+  for (auto iter = mMap.Iter(); !iter.Done(); iter.Next()) {
+    nsCOMPtr<nsIContentViewer> viewer = iter.UserData()->mViewer;
+    if (viewer) {
+      viewer->Show();
+    }
+  }
 }
 
 void
