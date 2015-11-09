@@ -306,13 +306,6 @@ struct LayoutDevicePixel {
  * 4) rasterizing at a different scale in the presence of some CSS transforms
  */
 struct LayerPixel {
-  static gfx::IntRect ToUnknown(const LayerIntRect& aRect) {
-    return gfx::IntRect(aRect.x, aRect.y, aRect.width, aRect.height);
-  }
-
-  static gfx::Rect ToUnknown(const LayerRect& aRect) {
-    return gfx::Rect(aRect.x, aRect.y, aRect.width, aRect.height);
-  }
 };
 
 /*
@@ -323,17 +316,6 @@ struct LayerPixel {
  * have RenderTargetPixel == LayerPixel.
  */
 struct RenderTargetPixel {
-  static gfx::IntRect ToUnknown(const RenderTargetIntRect& aRect) {
-    return gfx::IntRect(aRect.x, aRect.y, aRect.width, aRect.height);
-  }
-
-  static gfx::Rect ToUnknown(const RenderTargetRect& aRect) {
-    return gfx::Rect(aRect.x, aRect.y, aRect.width, aRect.height);
-  }
-
-  static RenderTargetRect FromUnknown(const gfx::Rect& aRect) {
-    return RenderTargetRect(aRect.x, aRect.y, aRect.width, aRect.height);
-  }
 };
 
 /*
