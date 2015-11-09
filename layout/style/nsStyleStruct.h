@@ -2374,6 +2374,10 @@ struct nsStyleDisplay {
            mOverflowX != NS_STYLE_OVERFLOW_CLIP;
   }
 
+  bool IsContainPaint() const {
+    return NS_STYLE_CONTAIN_PAINT & mContain;
+  }
+
   /* Returns whether the element has the -moz-transform property
    * or a related property. */
   bool HasTransformStyle() const {

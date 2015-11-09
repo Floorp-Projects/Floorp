@@ -2568,7 +2568,7 @@ var gCSSProperties = {
     type: CSS_TYPE_LONGHAND,
     initial_values: [ "inline" ],
     /* XXX none will really mess with other properties */
-    prerequisites: { "float": "none", "position": "static" },
+    prerequisites: { "float": "none", "position": "static", "contain": "none" },
     other_values: [
       "block",
       "flex",
@@ -3226,7 +3226,7 @@ var gCSSProperties = {
     domProp: "overflow",
     inherited: false,
     type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
-    prerequisites: { "display": "block" },
+    prerequisites: { "display": "block", "contain": "none" },
     subproperties: [ "overflow-x", "overflow-y" ],
     initial_values: [ "visible" ],
     other_values: [ "auto", "scroll", "hidden", "-moz-hidden-unscrollable", "-moz-scrollbars-none" ],
@@ -3236,7 +3236,7 @@ var gCSSProperties = {
     domProp: "overflowX",
     inherited: false,
     type: CSS_TYPE_LONGHAND,
-    prerequisites: { "display": "block", "overflow-y": "visible" },
+    prerequisites: { "display": "block", "overflow-y": "visible", "contain": "none" },
     initial_values: [ "visible" ],
     other_values: [ "auto", "scroll", "hidden", "-moz-hidden-unscrollable" ],
     invalid_values: []
@@ -3245,7 +3245,7 @@ var gCSSProperties = {
     domProp: "overflowY",
     inherited: false,
     type: CSS_TYPE_LONGHAND,
-    prerequisites: { "display": "block", "overflow-x": "visible" },
+    prerequisites: { "display": "block", "overflow-x": "visible", "contain": "none" },
     initial_values: [ "visible" ],
     other_values: [ "auto", "scroll", "hidden", "-moz-hidden-unscrollable" ],
     invalid_values: []
