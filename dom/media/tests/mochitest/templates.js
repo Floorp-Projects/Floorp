@@ -464,26 +464,30 @@ var commandsPeerConnectionOfferAnswer = [
     return checkAllTrackStats(test.pcRemote);
   },
   function PC_LOCAL_VERIFY_SDP_AFTER_END_OF_TRICKLE(test) {
-    /* In case the endOfTrickleSdp promise is resolved already it will win the
-     * race because it gets evaluated first. But if endOfTrickleSdp is still
-     * pending the rejection will win the race. */
-    return Promise.race([
-      test.pcLocal.endOfTrickleSdp,
-      Promise.reject("No SDP")
-    ])
-    .then(sdp => sdputils.checkSdpAfterEndOfTrickle(sdp, test.testOptions, test.pcLocal.label),
-          () => info("pcLocal: Gathering is not complete yet, skipping post-gathering SDP check"));
+    if (test.pcLocal.endOfTrickleSdp) {
+      /* In case the endOfTrickleSdp promise is resolved already it will win the
+       * race because it gets evaluated first. But if endOfTrickleSdp is still
+       * pending the rejection will win the race. */
+      return Promise.race([
+        test.pcLocal.endOfTrickleSdp,
+        Promise.reject("No SDP")
+      ])
+      .then(sdp => sdputils.checkSdpAfterEndOfTrickle(sdp, test.testOptions, test.pcLocal.label),
+            () => info("pcLocal: Gathering is not complete yet, skipping post-gathering SDP check"));
+    }
   },
   function PC_REMOTE_VERIFY_SDP_AFTER_END_OF_TRICKLE(test) {
-    /* In case the endOfTrickleSdp promise is resolved already it will win the
-     * race because it gets evaluated first. But if endOfTrickleSdp is still
-     * pending the rejection will win the race. */
-    return Promise.race([
-      test.pcRemote.endOfTrickleSdp,
-      Promise.reject("No SDP")
-    ])
-    .then(sdp => sdputils.checkSdpAfterEndOfTrickle(sdp, test.testOptions, test.pcRemote.label),
-          () => info("pcRemote: Gathering is not complete yet, skipping post-gathering SDP check"));
+    if (test.pcRemote.endOfTrickelSdp) {
+      /* In case the endOfTrickleSdp promise is resolved already it will win the
+       * race because it gets evaluated first. But if endOfTrickleSdp is still
+       * pending the rejection will win the race. */
+      return Promise.race([
+        test.pcRemote.endOfTrickleSdp,
+        Promise.reject("No SDP")
+      ])
+      .then(sdp => sdputils.checkSdpAfterEndOfTrickle(sdp, test.testOptions, test.pcRemote.label),
+            () => info("pcRemote: Gathering is not complete yet, skipping post-gathering SDP check"));
+    }
   }
 ];
 

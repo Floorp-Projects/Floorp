@@ -86,9 +86,7 @@ public abstract class RemoteTabsBaseFragment extends HomeFragment implements Rem
     public void onViewCreated(View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         mRefreshLayout = (SwipeRefreshLayout) view.findViewById(R.id.remote_tabs_refresh_layout);
-        mRefreshLayout.setColorScheme(
-                R.color.swipe_refresh_orange, R.color.swipe_refresh_white,
-                R.color.swipe_refresh_orange, R.color.swipe_refresh_white);
+        mRefreshLayout.setColorSchemeResources(R.color.fennec_ui_orange, R.color.action_orange);
         mRefreshLayout.setOnRefreshListener(new RemoteTabsRefreshListener());
 
         mSyncStatusListener = new RemoteTabsSyncListener();

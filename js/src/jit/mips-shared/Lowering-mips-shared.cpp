@@ -379,35 +379,171 @@ LIRGeneratorMIPSShared::visitSimdValueX4(MSimdValueX4* ins)
 void
 LIRGeneratorMIPSShared::visitCompareExchangeTypedArrayElement(MCompareExchangeTypedArrayElement* ins)
 {
-    MOZ_CRASH("NYI");
+    MOZ_ASSERT(ins->arrayType() != Scalar::Float32);
+    MOZ_ASSERT(ins->arrayType() != Scalar::Float64);
+
+    MOZ_ASSERT(ins->elements()->type() == MIRType_Elements);
+    MOZ_ASSERT(ins->index()->type() == MIRType_Int32);
+
+    const LUse elements = useRegister(ins->elements());
+    const LAllocation index = useRegisterOrConstant(ins->index());
+
+    // If the target is a floating register then we need a temp at the
+    // CodeGenerator level for creating the result.
+
+    const LAllocation newval = useRegister(ins->newval());
+    const LAllocation oldval = useRegister(ins->oldval());
+    LDefinition uint32Temp = LDefinition::BogusTemp();
+    if (ins->arrayType() == Scalar::Uint32 && IsFloatingPointType(ins->type()))
+        uint32Temp = temp();
+
+    LCompareExchangeTypedArrayElement* lir =
+        new(alloc()) LCompareExchangeTypedArrayElement(elements, index, oldval, newval, uint32Temp,
+                                                       /* valueTemp= */ temp(), /* offsetTemp= */ temp(),
+                                                       /* maskTemp= */ temp());
+
+    define(lir, ins);
 }
 
 void
 LIRGeneratorMIPSShared::visitAtomicExchangeTypedArrayElement(MAtomicExchangeTypedArrayElement* ins)
 {
-    MOZ_CRASH("NYI");
+    MOZ_ASSERT(ins->arrayType() <= Scalar::Uint32);
+
+    MOZ_ASSERT(ins->elements()->type() == MIRType_Elements);
+    MOZ_ASSERT(ins->index()->type() == MIRType_Int32);
+
+    const LUse elements = useRegister(ins->elements());
+    const LAllocation index = useRegisterOrConstant(ins->index());
+
+    // If the target is a floating register then we need a temp at the
+    // CodeGenerator level for creating the result.
+
+    const LAllocation value = useRegister(ins->value());
+    LDefinition uint32Temp = LDefinition::BogusTemp();
+    if (ins->arrayType() == Scalar::Uint32) {
+        MOZ_ASSERT(ins->type() == MIRType_Double);
+        uint32Temp = temp();
+    }
+
+    LAtomicExchangeTypedArrayElement* lir =
+        new(alloc()) LAtomicExchangeTypedArrayElement(elements, index, value, uint32Temp,
+                                                      /* valueTemp= */ temp(), /* offsetTemp= */ temp(),
+                                                      /* maskTemp= */ temp());
+
+    define(lir, ins);
 }
 
 void
 LIRGeneratorMIPSShared::visitAsmJSCompareExchangeHeap(MAsmJSCompareExchangeHeap* ins)
 {
-    MOZ_CRASH("NYI");
+    MOZ_ASSERT(ins->accessType() < Scalar::Float32);
+
+    MDefinition* ptr = ins->ptr();
+    MOZ_ASSERT(ptr->type() == MIRType_Int32);
+
+    LAsmJSCompareExchangeHeap* lir =
+        new(alloc()) LAsmJSCompareExchangeHeap(useRegister(ptr),
+                                               useRegister(ins->oldValue()),
+                                               useRegister(ins->newValue()),
+                                               /* valueTemp= */ temp(),
+                                               /* offsetTemp= */ temp(),
+                                               /* maskTemp= */ temp());
+
+    define(lir, ins);
 }
 
 void
 LIRGeneratorMIPSShared::visitAsmJSAtomicExchangeHeap(MAsmJSAtomicExchangeHeap* ins)
 {
-    MOZ_CRASH("NYI");
+    MOZ_ASSERT(ins->ptr()->type() == MIRType_Int32);
+
+    const LAllocation ptr = useRegister(ins->ptr());
+    const LAllocation value = useRegister(ins->value());
+
+    // The output may not be used but will be clobbered regardless,
+    // so ignore the case where we're not using the value and just
+    // use the output register as a temp.
+
+    LAsmJSAtomicExchangeHeap* lir =
+        new(alloc()) LAsmJSAtomicExchangeHeap(ptr, value,
+                                              /* valueTemp= */ temp(),
+                                              /* offsetTemp= */ temp(),
+                                              /* maskTemp= */ temp());
+    define(lir, ins);
 }
 
 void
 LIRGeneratorMIPSShared::visitAsmJSAtomicBinopHeap(MAsmJSAtomicBinopHeap* ins)
 {
-    MOZ_CRASH("NYI");
+    MOZ_ASSERT(ins->accessType() < Scalar::Float32);
+
+    MDefinition* ptr = ins->ptr();
+    MOZ_ASSERT(ptr->type() == MIRType_Int32);
+
+    if (!ins->hasUses()) {
+        LAsmJSAtomicBinopHeapForEffect* lir =
+            new(alloc()) LAsmJSAtomicBinopHeapForEffect(useRegister(ptr),
+                                                        useRegister(ins->value()),
+                                                        /* flagTemp= */ temp(),
+                                                        /* valueTemp= */ temp(),
+                                                        /* offsetTemp= */ temp(),
+                                                        /* maskTemp= */ temp());
+        add(lir, ins);
+        return;
+    }
+
+    LAsmJSAtomicBinopHeap* lir =
+        new(alloc()) LAsmJSAtomicBinopHeap(useRegister(ptr),
+                                           useRegister(ins->value()),
+                                           /* temp= */ LDefinition::BogusTemp(),
+                                           /* flagTemp= */ temp(),
+                                           /* valueTemp= */ temp(),
+                                           /* offsetTemp= */ temp(),
+                                           /* maskTemp= */ temp());
+
+    define(lir, ins);
 }
 
 void
 LIRGeneratorMIPSShared::visitAtomicTypedArrayElementBinop(MAtomicTypedArrayElementBinop* ins)
 {
-    MOZ_CRASH("NYI");
+    MOZ_ASSERT(ins->arrayType() != Scalar::Uint8Clamped);
+    MOZ_ASSERT(ins->arrayType() != Scalar::Float32);
+    MOZ_ASSERT(ins->arrayType() != Scalar::Float64);
+
+    MOZ_ASSERT(ins->elements()->type() == MIRType_Elements);
+    MOZ_ASSERT(ins->index()->type() == MIRType_Int32);
+
+    const LUse elements = useRegister(ins->elements());
+    const LAllocation index = useRegisterOrConstant(ins->index());
+    const LAllocation value = useRegister(ins->value());
+
+    if (!ins->hasUses()) {
+        LAtomicTypedArrayElementBinopForEffect* lir =
+            new(alloc()) LAtomicTypedArrayElementBinopForEffect(elements, index, value,
+                                                                /* flagTemp= */ temp(),
+                                                                /* valueTemp= */ temp(),
+                                                                /* offsetTemp= */ temp(),
+                                                                /* maskTemp= */ temp());
+        add(lir, ins);
+        return;
+    }
+
+    // For a Uint32Array with a known double result we need a temp for
+    // the intermediate output.
+
+    LDefinition flagTemp = temp();
+    LDefinition outTemp = LDefinition::BogusTemp();
+
+    if (ins->arrayType() == Scalar::Uint32 && IsFloatingPointType(ins->type()))
+        outTemp = temp();
+
+    // On mips, map flagTemp to temp1 and outTemp to temp2, at least for now.
+
+    LAtomicTypedArrayElementBinop* lir =
+        new(alloc()) LAtomicTypedArrayElementBinop(elements, index, value, flagTemp, outTemp,
+                                                   /* valueTemp= */ temp(), /* offsetTemp= */ temp(),
+                                                   /* maskTemp= */ temp());
+    define(lir, ins);
 }

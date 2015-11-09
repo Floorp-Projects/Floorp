@@ -23,7 +23,7 @@ var ps = Cc["@mozilla.org/preferences-service;1"].
  * @param aDayOffset
  *        number of days to add, pass a negative value to subtract them.
  */
-function task_add_normalized_visit(aURI, aTime, aDayOffset) {
+function* task_add_normalized_visit(aURI, aTime, aDayOffset) {
   var dateObj = new Date(aTime);
   // Normalize to midnight
   dateObj.setHours(0);
@@ -79,7 +79,7 @@ var visibleContainers = containers.filter(
 /**
  * Asynchronous task that fills history and checks containers' labels.
  */
-function task_fill_history() {
+function* task_fill_history() {
   print("\n\n*** TEST Fill History\n");
   // We can't use "now" because our hardcoded offsets would be invalid for some
   // date.  So we hardcode a date.
@@ -352,7 +352,7 @@ function test_RESULTS_AS_SITE_QUERY() {
 /**
  * Checks that queries grouped by date do liveupdate correctly.
  */
-function task_test_date_liveupdate(aResultType) {
+function* task_test_date_liveupdate(aResultType) {
   var midnight = nowObj;
   midnight.setHours(0);
   midnight.setMinutes(0);
@@ -422,7 +422,7 @@ function run_test()
   run_next_test();
 }
 
-add_task(function test_history_sidebar()
+add_task(function* test_history_sidebar()
 {
   // If we're dangerously close to a date change, just bail out.
   if (nowObj.getHours() == 23 && nowObj.getMinutes() >= 50) {

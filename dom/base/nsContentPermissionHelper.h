@@ -108,6 +108,12 @@ public:
 
   static void
   NotifyRemoveContentPermissionRequestParent(PContentPermissionRequestParent* aParent);
+
+  static nsTArray<PContentPermissionRequestChild*>
+  GetContentPermissionRequestChildById(const TabId& aTabId);
+
+  static void
+  NotifyRemoveContentPermissionRequestChild(PContentPermissionRequestChild* aChild);
 };
 
 class nsContentPermissionRequester final : public nsIContentPermissionRequester
@@ -188,8 +194,8 @@ public:
                           nsPIDOMWindow* aWindow);
 
   // It will be called when prompt dismissed.
-  virtual bool Recv__delete__(const bool &aAllow,
-                              InfallibleTArray<PermissionChoice>&& aChoices) override;
+  virtual bool RecvNotifyResult(const bool &aAllow,
+                                InfallibleTArray<PermissionChoice>&& aChoices) override;
 
   virtual bool RecvGetVisibility() override;
 
@@ -205,6 +211,10 @@ public:
     Release();
   }
 
+  void Destroy();
+
+  bool IPCOpen() const { return mIPCOpen && !mDestroyed; }
+
 private:
   virtual ~RemotePermissionRequest()
   {
@@ -217,6 +227,7 @@ private:
   nsCOMPtr<nsIContentPermissionRequest> mRequest;
   nsCOMPtr<nsPIDOMWindow>               mWindow;
   bool                                  mIPCOpen;
+  bool                                  mDestroyed;
   RefPtr<VisibilityChangeListener>    mListener;
 };
 

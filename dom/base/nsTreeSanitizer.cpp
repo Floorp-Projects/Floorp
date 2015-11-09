@@ -1066,17 +1066,12 @@ nsTreeSanitizer::MustPrune(int32_t aNamespace,
 }
 
 bool
-nsTreeSanitizer::SanitizeStyleRule(mozilla::css::StyleRule *aRule,
-                                   nsAutoString &aRuleText)
+nsTreeSanitizer::SanitizeStyleDeclaration(mozilla::css::Declaration* aDeclaration,
+                                          nsAutoString& aRuleText)
 {
-  bool didSanitize = false;
-  aRuleText.Truncate();
-  mozilla::css::Declaration* style = aRule->GetDeclaration();
-  if (style) {
-    didSanitize = style->HasProperty(eCSSProperty_binding);
-    style->RemoveProperty(eCSSProperty_binding);
-    style->ToString(aRuleText);
-  }
+  bool didSanitize = aDeclaration->HasProperty(eCSSProperty_binding);
+  aDeclaration->RemoveProperty(eCSSProperty_binding);
+  aDeclaration->ToString(aRuleText);
   return didSanitize;
 }
 
@@ -1135,7 +1130,8 @@ nsTreeSanitizer::SanitizeStyleSheet(const nsAString& aOriginal,
         RefPtr<mozilla::css::StyleRule> styleRule = do_QueryObject(rule);
         NS_ASSERTION(styleRule, "Must be a style rule");
         nsAutoString decl;
-        bool sanitized = SanitizeStyleRule(styleRule, decl);
+        bool sanitized =
+          SanitizeStyleDeclaration(styleRule->GetDeclaration(), decl);
         didSanitize = sanitized || didSanitize;
         if (!sanitized) {
           styleRule->GetCssText(decl);
@@ -1157,10 +1153,7 @@ nsTreeSanitizer::SanitizeAttributes(mozilla::dom::Element* aElement,
 {
   uint32_t ac = aElement->GetAttrCount();
 
-  nsresult rv;
-
   for (int32_t i = ac - 1; i >= 0; --i) {
-    rv = NS_OK;
     const nsAttrName* attrName = aElement->GetAttrNameAt(i);
     int32_t attrNs = attrName->NamespaceID();
     nsCOMPtr<nsIAtom> attrLocal = attrName->LocalName();
@@ -1172,17 +1165,14 @@ nsTreeSanitizer::SanitizeAttributes(mozilla::dom::Element* aElement,
         // Pass the CSS Loader object to the parser, to allow parser error
         // reports to include the outer window ID.
         nsCSSParser parser(document->CSSLoader());
-        RefPtr<mozilla::css::StyleRule> rule;
         nsAutoString value;
         aElement->GetAttr(attrNs, attrLocal, value);
-        rv = parser.ParseStyleAttribute(value,
-                                        document->GetDocumentURI(),
-                                        baseURI,
-                                        document->NodePrincipal(),
-                                        getter_AddRefs(rule));
-        if (NS_SUCCEEDED(rv)) {
+        RefPtr<mozilla::css::Declaration> decl =
+          parser.ParseStyleAttribute(value, document->GetDocumentURI(),
+                                     baseURI, document->NodePrincipal());
+        if (decl) {
           nsAutoString cleanValue;
-          if (SanitizeStyleRule(rule, cleanValue)) {
+          if (SanitizeStyleDeclaration(decl, cleanValue)) {
             aElement->SetAttr(kNameSpaceID_None,
                               nsGkAtoms::style,
                               cleanValue,

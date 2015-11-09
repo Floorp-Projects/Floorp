@@ -159,14 +159,12 @@ public:
 
   // XXX do these belong here or are they generic?
   void AppendStyleRule(css::Rule* aRule);
-  void ReplaceStyleRule(css::Rule* aOld, css::Rule* aNew);
 
   int32_t StyleRuleCount() const;
   css::Rule* GetStyleRuleAt(int32_t aIndex) const;
 
   nsresult DeleteRuleFromGroup(css::GroupRule* aGroup, uint32_t aIndex);
   nsresult InsertRuleIntoGroup(const nsAString& aRule, css::GroupRule* aGroup, uint32_t aIndex, uint32_t* _retval);
-  nsresult ReplaceRuleInGroup(css::GroupRule* aGroup, css::Rule* aOld, css::Rule* aNew);
 
   /**
    * SetURIs must be called on all sheets before parsing into them.
@@ -313,6 +311,12 @@ public:
   }
   virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
+  // Changes to sheets should be inside of a WillDirty-DidDirty pair.
+  // However, the calls do not need to be matched; it's ok to call
+  // WillDirty and then make no change and skip the DidDirty call.
+  void WillDirty();
+  void DidDirty();
+
 private:
   CSSStyleSheet(const CSSStyleSheet& aCopy,
                 CSSStyleSheet* aParentToUse,
@@ -327,9 +331,6 @@ protected:
   virtual ~CSSStyleSheet();
 
   void ClearRuleCascades();
-
-  void     WillDirty();
-  void     DidDirty();
 
   // Return success if the subject principal subsumes the principal of our
   // inner, error otherwise.  This will also succeed if the subject has
