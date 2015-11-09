@@ -1513,7 +1513,7 @@ CompositorD3D11::HandleError(HRESULT hr, Severity aSeverity)
 
   // Crash if we are making invalid calls outside of device removal
   if (hr == DXGI_ERROR_INVALID_CALL) {
-    gfxCrash(deviceRemoved ? LogReason::D3D11InvalidCallDeviceRemoved : LogReason::D3D11InvalidCall) << "Invalid D3D11 api call";
+    gfxDevCrash(deviceRemoved ? LogReason::D3D11InvalidCallDeviceRemoved : LogReason::D3D11InvalidCall) << "Invalid D3D11 api call";
   }
 
   if (aSeverity == Recoverable) {
