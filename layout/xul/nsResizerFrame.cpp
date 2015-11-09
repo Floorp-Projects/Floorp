@@ -230,7 +230,7 @@ nsResizerFrame::HandleEvent(nsPresContext* aPresContext,
         // than be too large. If the popup is too large it could get flipped
         // to the opposite side of the anchor point while resizing.
         nsIntRect screenRectPixels = screenRect.ToInsidePixels(aPresContext->AppUnitsPerDevPixel());
-        rect.IntersectRect(rect, LayoutDevicePixel::FromUntyped(screenRectPixels));
+        rect.IntersectRect(rect, LayoutDeviceIntRect::FromUnknownRect(screenRectPixels));
       }
 
       if (contentToResize) {

@@ -1038,7 +1038,7 @@ LayerManagerComposite::RenderToPresentationSurface()
 
   const IntRect clipRect = IntRect(0, 0, actualWidth, actualHeight);
 
-  RootLayer()->Prepare(RenderTargetPixel::FromUntyped(clipRect));
+  RootLayer()->Prepare(RenderTargetIntRect::FromUnknownRect(clipRect));
   RootLayer()->RenderLayer(clipRect);
 
   mCompositor->EndFrame();
