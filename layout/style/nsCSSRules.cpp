@@ -507,19 +507,6 @@ GroupRule::InsertStyleRuleAt(uint32_t aIndex, Rule* aRule)
   return NS_OK;
 }
 
-nsresult
-GroupRule::ReplaceStyleRule(Rule* aOld, Rule* aNew)
-{
-  int32_t index = mRules.IndexOf(aOld);
-  NS_ENSURE_TRUE(index != -1, NS_ERROR_UNEXPECTED);
-  mRules.ReplaceObjectAt(aNew, index);
-  aNew->SetStyleSheet(GetStyleSheet());
-  aNew->SetParentRule(this);
-  aOld->SetStyleSheet(nullptr);
-  aOld->SetParentRule(nullptr);
-  return NS_OK;
-}
-
 void
 GroupRule::AppendRulesToCssText(nsAString& aCssText)
 {
