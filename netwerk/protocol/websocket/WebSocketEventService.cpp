@@ -501,7 +501,7 @@ WebSocketEventService::ShutdownActorListener(WindowListener* aListener)
   aListener->mActor = nullptr;
 }
 
-WebSocketFrame*
+already_AddRefed<WebSocketFrame>
 WebSocketEventService::CreateFrameIfNeeded(bool aFinBit, bool aRsvBit1,
                                            bool aRsvBit2, bool aRsvBit3,
                                            uint8_t aOpCode, bool aMaskBit,
@@ -512,11 +512,11 @@ WebSocketEventService::CreateFrameIfNeeded(bool aFinBit, bool aRsvBit1,
     return nullptr;
   }
 
-  return new WebSocketFrame(aFinBit, aRsvBit1, aRsvBit2, aRsvBit3, aOpCode,
-                            aMaskBit, aMask, aPayload);
+  return MakeAndAddRef<WebSocketFrame>(aFinBit, aRsvBit1, aRsvBit2, aRsvBit3,
+                                       aOpCode, aMaskBit, aMask, aPayload);
 }
 
-WebSocketFrame*
+already_AddRefed<WebSocketFrame>
 WebSocketEventService::CreateFrameIfNeeded(bool aFinBit, bool aRsvBit1,
                                            bool aRsvBit2, bool aRsvBit3,
                                            uint8_t aOpCode, bool aMaskBit,
@@ -533,11 +533,11 @@ WebSocketEventService::CreateFrameIfNeeded(bool aFinBit, bool aRsvBit1,
     return nullptr;
   }
 
-  return new WebSocketFrame(aFinBit, aRsvBit1, aRsvBit2, aRsvBit3, aOpCode,
-                            aMaskBit, aMask, payloadStr);
+  return MakeAndAddRef<WebSocketFrame>(aFinBit, aRsvBit1, aRsvBit2, aRsvBit3,
+                                       aOpCode, aMaskBit, aMask, payloadStr);
 }
 
-WebSocketFrame*
+already_AddRefed<WebSocketFrame>
 WebSocketEventService::CreateFrameIfNeeded(bool aFinBit, bool aRsvBit1,
                                            bool aRsvBit2, bool aRsvBit3,
                                            uint8_t aOpCode, bool aMaskBit,
@@ -570,8 +570,8 @@ WebSocketEventService::CreateFrameIfNeeded(bool aFinBit, bool aRsvBit1,
     return nullptr;
   }
 
-  return new WebSocketFrame(aFinBit, aRsvBit1, aRsvBit2, aRsvBit3, aOpCode,
-                            aMaskBit, aMask, payloadStr);
+  return MakeAndAddRef<WebSocketFrame>(aFinBit, aRsvBit1, aRsvBit2, aRsvBit3,
+                                       aOpCode, aMaskBit, aMask, payloadStr);
 }
 
 } // net namespace
