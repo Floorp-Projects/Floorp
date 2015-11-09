@@ -1006,9 +1006,8 @@ RenderTargetRect
 Layer::TransformRectToRenderTarget(const LayerIntRect& aRect)
 {
   LayerRect rect(aRect);
-  RenderTargetRect quad = RenderTargetRect::FromUnknown(
-    GetEffectiveTransform().TransformBounds(
-      LayerPixel::ToUnknown(rect)));
+  RenderTargetRect quad = RenderTargetRect::FromUnknownRect(
+    GetEffectiveTransform().TransformBounds(rect.ToUnknownRect()));
   return quad;
 }
 
