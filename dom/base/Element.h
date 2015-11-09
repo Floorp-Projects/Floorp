@@ -222,31 +222,31 @@ public:
   void ClearStyleStateLocks();
 
   /**
-   * Get the inline style rule, if any, for this element.
+   * Get the inline style declaration, if any, for this element.
    */
-  virtual css::StyleRule* GetInlineStyleRule();
+  virtual css::Declaration* GetInlineStyleDeclaration();
 
   /**
-   * Set the inline style rule for this element. This will send an appropriate
-   * AttributeChanged notification if aNotify is true.
+   * Set the inline style declaration for this element. This will send
+   * an appropriate AttributeChanged notification if aNotify is true.
    */
-  virtual nsresult SetInlineStyleRule(css::StyleRule* aStyleRule,
-                                      const nsAString* aSerialized,
-                                      bool aNotify);
+  virtual nsresult SetInlineStyleDeclaration(css::Declaration* aDeclaration,
+                                             const nsAString* aSerialized,
+                                             bool aNotify);
 
   /**
-   * Get the SMIL override style rule for this element. If the rule hasn't been
-   * created, this method simply returns null.
+   * Get the SMIL override style declaration for this element. If the
+   * rule hasn't been created, this method simply returns null.
    */
-  virtual css::StyleRule* GetSMILOverrideStyleRule();
+  virtual css::Declaration* GetSMILOverrideStyleDeclaration();
 
   /**
-   * Set the SMIL override style rule for this element. If aNotify is true, this
-   * method will notify the document's pres context, so that the style changes
-   * will be noticed.
+   * Set the SMIL override style declaration for this element. If
+   * aNotify is true, this method will notify the document's pres
+   * context, so that the style changes will be noticed.
    */
-  virtual nsresult SetSMILOverrideStyleRule(css::StyleRule* aStyleRule,
-                                            bool aNotify);
+  virtual nsresult SetSMILOverrideStyleDeclaration(css::Declaration* aDeclaration,
+                                                   bool aNotify);
 
   /**
    * Returns a new nsISMILAttr that allows the caller to animate the given
