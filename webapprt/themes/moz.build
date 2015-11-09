@@ -17,6 +17,6 @@ if toolkit == 'cocoa':
     DIRS += ['osx']
 elif toolkit in ('gtk2', 'gtk3', 'qt'):
     DIRS += ['linux']
-elif:
+else:
     DIRS += ['windows']
 
