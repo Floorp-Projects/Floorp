@@ -1498,13 +1498,19 @@ nsDocument::nsDocument(const char* aContentType)
   }
 }
 
-static PLDHashOperator
-ClearAllBoxObjects(nsIContent* aKey, nsPIBoxObject* aBoxObject, void* aUserArg)
+void
+nsDocument::ClearAllBoxObjects()
 {
-  if (aBoxObject) {
-    aBoxObject->Clear();
+  if (mBoxObjectTable) {
+    for (auto iter = mBoxObjectTable->Iter(); !iter.Done(); iter.Next()) {
+      nsPIBoxObject* boxObject = iter.UserData();
+      if (boxObject) {
+        boxObject->Clear();
+      }
+    }
+    delete mBoxObjectTable;
+    mBoxObjectTable = nullptr;
   }
-  return PL_DHASH_NEXT;
 }
 
 nsIDocument::~nsIDocument()
@@ -1653,10 +1659,7 @@ nsDocument::~nsDocument()
 
   delete mHeaderData;
 
-  if (mBoxObjectTable) {
-    mBoxObjectTable->EnumerateRead(ClearAllBoxObjects, nullptr);
-    delete mBoxObjectTable;
-  }
+  ClearAllBoxObjects();
 
   mPendingTitleChangeEvent.Revoke();
 
@@ -1981,12 +1984,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsDocument)
 
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mPreloadingImages)
 
-
-  if (tmp->mBoxObjectTable) {
-   tmp->mBoxObjectTable->EnumerateRead(ClearAllBoxObjects, nullptr);
-   delete tmp->mBoxObjectTable;
-   tmp->mBoxObjectTable = nullptr;
- }
+  tmp->ClearAllBoxObjects();
 
   if (tmp->mListenerManager) {
     tmp->mListenerManager->Disconnect();

@@ -1767,6 +1767,8 @@ private:
   // requestAnimationFrame, if it's OK to do so.
   void MaybeRescheduleAnimationFrameNotifications();
 
+  void ClearAllBoxObjects();
+
   // Returns true if the scheme for the url for this document is "about"
   bool IsAboutPage();
 
