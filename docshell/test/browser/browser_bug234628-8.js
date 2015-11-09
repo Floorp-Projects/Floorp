@@ -1,23 +1,11 @@
 function test() {
-  waitForExplicitFinish();
-
   var rootDir = "http://mochi.test:8888/browser/docshell/test/browser/";
-  gBrowser.selectedTab = gBrowser.addTab(rootDir + "file_bug234628-8.html");
-  gBrowser.selectedBrowser.addEventListener("load", afterOpen, true);
+  runCharsetTest(rootDir + "file_bug234628-8.html", afterOpen);
 }
 
-function afterOpen(event) {
-  if (event.target != gBrowser.contentDocument) {
-    return;
-  }
+function afterOpen() {
+  is(content.document.documentElement.textContent.indexOf('\u0402'), 156, "Parent doc should be windows-1251");
 
-  gBrowser.selectedBrowser.removeEventListener("load", afterOpen, true);
-
-  is(gBrowser.contentDocument.documentElement.textContent.indexOf('\u0402'), 156, "Parent doc should be windows-1251");
-
-  is(gBrowser.contentDocument.getElementsByTagName("iframe")[0].contentDocument.documentElement.textContent.indexOf('\u0402'), 99, "Child doc should be windows-1251");
-
-  gBrowser.removeCurrentTab();
-  finish();
+  is(content.frames[0].document.documentElement.textContent.indexOf('\u0402'), 99, "Child doc should be windows-1251");
 }
 
