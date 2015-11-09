@@ -166,6 +166,8 @@ const PanelUI = {
         document.getAnonymousElementByAttribute(anchor, "class",
                                                 "toolbarbutton-icon");
       this.panel.openPopup(iconAnchor || anchor);
+    }, (reason) => {
+      console.error("Error showing the PanelUI menu", reason);
     });
 
     return deferred.promise;
