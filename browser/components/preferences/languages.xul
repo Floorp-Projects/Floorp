@@ -17,7 +17,10 @@
             title="&languages.customize.Header;"
             dlgbuttons="accept,cancel,help"
             ondialoghelp="openPrefsHelp()"
-            style="width: &window.width;;">
+            style="width: &window.width;"
+# hack around XUL bug 1194844 by triggering extra reflow (see bug 1194346):
+            onfocus="gLanguagesDialog.forceReflow()"
+            onresize="gLanguagesDialog.forceReflow()">
 
   <script type="application/javascript" src="chrome://browser/content/utilityOverlay.js"/>
 

@@ -1298,6 +1298,10 @@ AssemblerMIPSShared::bind(Label* label, BufferOffset boff)
         // A used label holds a link to branch that uses it.
         BufferOffset b(label);
         do {
+            // Even a 0 offset may be invalid if we're out of memory.
+            if (oom())
+                return;
+
             Instruction* inst = editSrc(b);
 
             // Second word holds a pointer to the next branch in label's chain.
@@ -1313,7 +1317,7 @@ AssemblerMIPSShared::bind(Label* label, BufferOffset boff)
 void
 AssemblerMIPSShared::retarget(Label* label, Label* target)
 {
-    if (label->used()) {
+    if (label->used() && !oom()) {
         if (target->bound()) {
             bind(label, BufferOffset(target));
         } else if (target->used()) {

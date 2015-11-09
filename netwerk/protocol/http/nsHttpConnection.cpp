@@ -33,11 +33,6 @@
 #include "sslt.h"
 #include "TunnelUtils.h"
 
-#ifdef DEBUG
-// defined by the socket transport service while active
-extern PRThread *gSocketThread;
-#endif
-
 namespace mozilla {
 namespace net {
 

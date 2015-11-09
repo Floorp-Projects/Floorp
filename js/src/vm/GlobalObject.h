@@ -117,6 +117,7 @@ class GlobalObject : public NativeObject
         INT32X4_TYPE_DESCR,
         FOR_OF_PIC_CHAIN,
         MODULE_RESOLVE_HOOK,
+        WINDOW_PROXY,
 
         /* Total reserved-slot count for global objects. */
         RESERVED_SLOTS
@@ -746,6 +747,18 @@ class GlobalObject : public NativeObject
         return &forOfPIC.toObject().as<NativeObject>();
     }
     static NativeObject* getOrCreateForOfPICObject(JSContext* cx, Handle<GlobalObject*> global);
+
+    JSObject* windowProxy() const {
+        return &getReservedSlot(WINDOW_PROXY).toObject();
+    }
+    JSObject* maybeWindowProxy() const {
+        Value v = getReservedSlot(WINDOW_PROXY);
+        MOZ_ASSERT(v.isObject() || v.isUndefined());
+        return v.isObject() ? &v.toObject() : nullptr;
+    }
+    void setWindowProxy(JSObject* windowProxy) {
+        setReservedSlot(WINDOW_PROXY, ObjectValue(*windowProxy));
+    }
 
     void setModuleResolveHook(HandleFunction hook) {
         MOZ_ASSERT(hook);

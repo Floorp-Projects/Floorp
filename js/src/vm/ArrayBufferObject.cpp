@@ -118,8 +118,6 @@ const Class ArrayBufferObject::class_ = {
     ArrayBufferObject::trace,
     JS_NULL_CLASS_SPEC,
     {
-        nullptr,    /* outerObject */
-        nullptr,    /* innerObject */
         false,      /* isWrappedNative */
         nullptr,    /* weakmapKeyDelegateOp */
         ArrayBufferObject::objectMoved

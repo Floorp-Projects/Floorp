@@ -20,7 +20,7 @@
 #include "nsQueryObject.h"
 #include "nsIContentInlines.h"
 #include "nsIContentViewer.h"
-#include "mozilla/css/StyleRule.h"
+#include "mozilla/css/Declaration.h"
 #include "nsIDocument.h"
 #include "nsIDocumentEncoder.h"
 #include "nsIDOMHTMLDocument.h"
@@ -35,7 +35,6 @@
 #include "nsHTMLStyleSheet.h"
 #include "nsIHTMLDocument.h"
 #include "nsPIDOMWindow.h"
-#include "nsIStyleRule.h"
 #include "nsIURL.h"
 #include "nsEscape.h"
 #include "nsIFrameInlines.h"
@@ -226,15 +225,14 @@ nsGenericHTMLElement::CopyInnerTo(Element* aDst)
     value->ToString(valStr);
 
     if (name->Equals(nsGkAtoms::style, kNameSpaceID_None) &&
-        value->Type() == nsAttrValue::eCSSStyleRule) {
+        value->Type() == nsAttrValue::eCSSDeclaration) {
       // We can't just set this as a string, because that will fail
       // to reparse the string into style data until the node is
       // inserted into the document.  Clone the Rule instead.
-      RefPtr<mozilla::css::Rule> ruleClone = value->GetCSSStyleRuleValue()->Clone();
-      RefPtr<mozilla::css::StyleRule> styleRule = do_QueryObject(ruleClone);
-      NS_ENSURE_TRUE(styleRule, NS_ERROR_UNEXPECTED);
+      RefPtr<css::Declaration> declClone =
+        new css::Declaration(*value->GetCSSDeclarationValue());
 
-      rv = aDst->SetInlineStyleRule(styleRule, &valStr, false);
+      rv = aDst->SetInlineStyleDeclaration(declClone, &valStr, false);
       NS_ENSURE_SUCCESS(rv, rv);
 
       continue;

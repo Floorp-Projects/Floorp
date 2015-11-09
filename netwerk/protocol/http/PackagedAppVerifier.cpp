@@ -384,6 +384,12 @@ PackagedAppVerifier::OnManifestVerified(bool aSuccess)
     LOG(("PackageIdentifer is: %s", mPackageIdentifer.get()));
   }
 
+  // If the signature verification failed, doom the package cache to
+  // make its subresources unavailable in the subsequent requests.
+  if (!aSuccess && mPackageCacheEntry) {
+    mPackageCacheEntry->AsyncDoom(nullptr);
+  }
+
   // If the package is signed, add related info to the package cache.
   if (mIsPackageSigned && mPackageCacheEntry) {
     LOG(("This package is signed. Add this info to the cache channel."));

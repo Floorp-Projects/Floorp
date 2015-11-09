@@ -20,7 +20,7 @@ function run_test()
   run_next_test();
 }
 
-add_task(function test_autocomplete_on_value_removed()
+add_task(function* test_autocomplete_on_value_removed()
 {
   // QI to nsIAutoCompleteSimpleResultListener
   var listener = Cc["@mozilla.org/autocomplete/search;1?name=history"].
@@ -44,7 +44,7 @@ add_task(function test_autocomplete_on_value_removed()
   queryRes.root.containerOpen = true;
   // debug queries
   // dump_table("moz_places");
-  do_check_eq(queryRes.root.childCount, 1);  
+  do_check_eq(queryRes.root.childCount, 1);
   // call the untested code path
   listener.onValueRemoved(null, testUri.spec, true);
   // make sure it is GONE from the DB

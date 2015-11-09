@@ -221,6 +221,10 @@ is enabled."""
         table_dispatch(definition['kind'], table,
                        lambda allowed_keys: Histogram.check_keys(name, definition, allowed_keys))
 
+        if ('alert_emails' in definition
+            and not isinstance(definition['alert_emails'], list)):
+            raise KeyError, 'alert_emails must be an array if present (in Histogram %s)' % name
+
         Histogram.check_expiration(name, definition)
         Histogram.check_bug_numbers(name, definition)
 

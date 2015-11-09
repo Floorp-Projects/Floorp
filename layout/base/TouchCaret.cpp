@@ -36,8 +36,8 @@
 
 using namespace mozilla;
 
-static PRLogModuleInfo* gTouchCaretLog;
 static const char* kTouchCaretLogModuleName = "TouchCaret";
+static mozilla::LazyLogModule gTouchCaretLog(kTouchCaretLogModuleName);
 
 // To enable all the TOUCHCARET_LOG print statements, set the environment
 // variable NSPR_LOG_MODULES=TouchCaret:5
@@ -78,10 +78,6 @@ TouchCaret::TouchCaret(nsIPresShell* aPresShell)
     mActionBarViewID(0)
 {
   MOZ_ASSERT(NS_IsMainThread());
-
-  if (!gTouchCaretLog) {
-    gTouchCaretLog = PR_NewLogModule(kTouchCaretLogModuleName);
-  }
 
   TOUCHCARET_LOG("Constructor, PresShell=%p", aPresShell);
 

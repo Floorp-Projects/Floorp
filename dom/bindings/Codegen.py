@@ -418,8 +418,6 @@ class CGDOMJSClass(CGThing):
         classExtensionAndObjectOps = fill(
             """
             {
-              nullptr, /* outerObject */
-              nullptr, /* innerObject */
               false,   /* isWrappedNative */
               nullptr, /* weakmapKeyDelegateOp */
               ${objectMoved} /* objectMovedOp */
@@ -435,8 +433,6 @@ class CGDOMJSClass(CGThing):
                 classExtensionAndObjectOps = fill(
                     """
                     {
-                      nsGlobalWindow::OuterObject, /* outerObject */
-                      nullptr, /* innerObject */
                       false,   /* isWrappedNative */
                       nullptr, /* weakmapKeyDelegateOp */
                       ${objectMoved} /* objectMovedOp */
@@ -453,7 +449,6 @@ class CGDOMJSClass(CGThing):
                       nullptr, /* unwatch */
                       nullptr, /* getElements */
                       nullptr, /* enumerate */
-                      mozilla::dom::ObjectToOuterObjectValue, /* thisValue */
                       nullptr, /* funToString */
                     }
                     """,
@@ -541,9 +536,7 @@ class CGDOMProxyJSClass(CGThing):
             static const DOMJSClass Class = {
               PROXY_CLASS_WITH_EXT("${name}",
                                    ${flags},
-                                   PROXY_MAKE_EXT(nullptr, /* outerObject */
-                                                  nullptr, /* innerObject */
-                                                  false,   /* isWrappedNative */
+                                   PROXY_MAKE_EXT(false,   /* isWrappedNative */
                                                   ${objectMoved})),
               $*{descriptor}
             };
@@ -743,7 +736,6 @@ class CGInterfaceObjectJSClass(CGThing):
                   nullptr, /* unwatch */
                   nullptr, /* getElements */
                   nullptr, /* enumerate */
-                  nullptr, /* thisValue */
                   InterfaceObjectToString, /* funToString */
                 }
               },
@@ -1861,7 +1853,7 @@ class CGClassHasInstanceHook(CGAbstractStaticMethod):
                     // FIXME Limit this to chrome by checking xpc::AccessCheck::isChrome(obj).
                     nsISupports* native =
                       nsContentUtils::XPConnect()->GetNativeOfWrapper(cx,
-                                                                      js::UncheckedUnwrap(instance, /* stopAtOuter = */ false));
+                                                                      js::UncheckedUnwrap(instance, /* stopAtWindowProxy = */ false));
                     nsCOMPtr<nsIDOM${name}> qiResult = do_QueryInterface(native);
                     *bp = !!qiResult;
                     return true;
@@ -1871,7 +1863,7 @@ class CGClassHasInstanceHook(CGAbstractStaticMethod):
 
         hasInstanceCode = dedent("""
 
-            const DOMJSClass* domClass = GetDOMClass(js::UncheckedUnwrap(instance, /* stopAtOuter = */ false));
+            const DOMJSClass* domClass = GetDOMClass(js::UncheckedUnwrap(instance, /* stopAtWindowProxy = */ false));
             *bp = false;
             if (!domClass) {
               // Not a DOM object, so certainly not an instance of this interface
@@ -1879,7 +1871,7 @@ class CGClassHasInstanceHook(CGAbstractStaticMethod):
             }
             """)
         if self.descriptor.interface.identifier.name == "ChromeWindow":
-            setBp = "*bp = UnwrapDOMObject<nsGlobalWindow>(js::UncheckedUnwrap(instance, /* stopAtOuter = */ false))->IsChromeWindow()"
+            setBp = "*bp = UnwrapDOMObject<nsGlobalWindow>(js::UncheckedUnwrap(instance, /* stopAtWindowProxy = */ false))->IsChromeWindow()"
         else:
             setBp = "*bp = true"
         # Sort interaces implementing self by name so we get stable output.
@@ -8384,7 +8376,7 @@ class CGSpecializedGetter(CGAbstractStaticMethod):
                 // Safe to do an unchecked unwrap, since we've gotten this far.
                 // Also make sure to unwrap outer windows, since we want the
                 // real DOM object.
-                reflector = IsDOMObject(obj) ? obj : js::UncheckedUnwrap(obj, /* stopAtOuter = */ false);
+                reflector = IsDOMObject(obj) ? obj : js::UncheckedUnwrap(obj, /* stopAtWindowProxy = */ false);
                 {
                   // Scope for cachedVal
                   JS::Value cachedVal = js::GetReservedSlot(reflector, ${slot});
@@ -15395,7 +15387,7 @@ class CGMaplikeOrSetlikeHelperFunctionGenerator(CallbackMember):
             // This is a reflector, but due to trying to name things
             // similarly across method generators, it's called obj here.
             JS::Rooted<JSObject*> obj(cx);
-            obj = js::UncheckedUnwrap(&v.toObject(), /* stopAtOuter = */ false);
+            obj = js::UncheckedUnwrap(&v.toObject(), /* stopAtWindowProxy = */ false);
             JSAutoCompartment reflectorCompartment(cx, obj);
             """ % self.getDefaultRetval())
 

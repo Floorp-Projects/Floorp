@@ -6081,8 +6081,7 @@ IonBuilder::createThisScripted(MDefinition* callee, MDefinition* newTarget)
         getPropCache->setIdempotent();
         getProto = getPropCache;
     } else {
-        MCallGetProperty* callGetProp = MCallGetProperty::New(alloc(), newTarget, names().prototype,
-                                                              /* callprop = */ false);
+        MCallGetProperty* callGetProp = MCallGetProperty::New(alloc(), newTarget, names().prototype);
         callGetProp->setIdempotent();
         getProto = callGetProp;
     }
@@ -10812,7 +10811,7 @@ IonBuilder::jsop_getprop(PropertyName* name)
             trackOptimizationOutcome(TrackedOutcome::NoTypeInfo);
         }
 
-        MCallGetProperty* call = MCallGetProperty::New(alloc(), obj, name, *pc == JSOP_CALLPROP);
+        MCallGetProperty* call = MCallGetProperty::New(alloc(), obj, name);
         current->add(call);
 
         // During the definite properties analysis we can still try to bake in
@@ -10879,7 +10878,7 @@ IonBuilder::jsop_getprop(PropertyName* name)
         return emitted;
 
     // Emit a call.
-    MCallGetProperty* call = MCallGetProperty::New(alloc(), obj, name, *pc == JSOP_CALLPROP);
+    MCallGetProperty* call = MCallGetProperty::New(alloc(), obj, name);
     current->add(call);
     current->push(call);
     if (!resumeAfter(call))
@@ -11848,11 +11847,14 @@ IonBuilder::tryInnerizeWindow(MDefinition* obj)
     if (!singleton)
         return obj;
 
-    JSObject* inner = GetInnerObject(singleton);
-    if (inner == singleton || inner != &script()->global())
+    if (!IsWindowProxy(singleton))
         return obj;
 
-    // When we navigate, the outer object is brain transplanted and we'll mark
+    // This must be a WindowProxy for the current Window/global. Else it'd be
+    // a cross-compartment wrapper and IsWindowProxy returns false for those.
+    MOZ_ASSERT(ToWindowIfWindowProxy(singleton) == &script()->global());
+
+    // When we navigate, the WindowProxy is brain transplanted and we'll mark
     // its ObjectGroup as having unknown properties. The type constraint we add
     // here will invalidate JIT code when this happens.
     TypeSet::ObjectKey* key = TypeSet::ObjectKey::get(singleton);

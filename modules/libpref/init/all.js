@@ -4934,10 +4934,6 @@ pref("dom.presentation.discoverable", false);
 // Use raw ICU instead of CoreServices API in Unicode collation
 pref("intl.collation.mac.use_icu", true);
 
-// Enable NSTextInput protocol for use with IMEs that have not
-// been updated to use the NSTextInputClient protocol.
-pref("intl.ime.nstextinput.enable", false);
-
 #if !defined(RELEASE_BUILD) || defined(DEBUG)
 // In non-release builds we crash by default on insecure text input (when a
 // password editor has focus but secure event input isn't enabled).  The

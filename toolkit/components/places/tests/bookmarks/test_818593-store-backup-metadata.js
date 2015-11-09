@@ -10,7 +10,7 @@ function run_test() {
   run_next_test();
 }
 
-add_task(function test_saveBookmarksToJSONFile_and_create()
+add_task(function* test_saveBookmarksToJSONFile_and_create()
 {
   // Add a bookmark
   let uri = NetUtil.newURI("http://getfirefox.com/");

@@ -537,9 +537,8 @@ JavaScriptShared::findObjectById(JSContext* cx, const ObjectId& objId)
     if (objId.hasXrayWaiver()) {
         {
             JSAutoCompartment ac2(cx, obj);
-            obj = JS_ObjectToOuterObject(cx, obj);
-            if (!obj)
-                return nullptr;
+            obj = js::ToWindowProxyIfWindow(obj);
+            MOZ_ASSERT(obj);
         }
         if (!xpc::WrapperFactory::WaiveXrayAndWrap(cx, &obj))
             return nullptr;

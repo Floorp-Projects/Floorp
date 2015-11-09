@@ -614,7 +614,7 @@ FragmentOrElement::nsDOMSlots::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) c
   // - mStyle
   // - mDataSet
   // - mSMILOverrideStyle
-  // - mSMILOverrideStyleRule
+  // - mSMILOverrideStyleDeclaration
   // - mChildrenList
   // - mClassList
 

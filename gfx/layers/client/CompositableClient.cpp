@@ -17,6 +17,7 @@
 #include "mozilla/layers/TextureD3D9.h"
 #endif
 #include "gfxUtils.h"
+#include "IPDLActor.h"
 
 namespace mozilla {
 namespace layers {
@@ -29,7 +30,7 @@ using namespace mozilla::gfx;
  *
  * CompositableChild is owned by a CompositableClient.
  */
-class CompositableChild : public PCompositableChild
+class CompositableChild : public ChildActor<PCompositableChild>
                         , public AsyncTransactionTrackersHolder
 {
 public:
@@ -128,7 +129,6 @@ CompositableClient::CompositableClient(CompositableForwarder* aForwarder,
 : mCompositableChild(nullptr)
 , mForwarder(aForwarder)
 , mTextureFlags(aTextureFlags)
-, mDestroyed(false)
 {
   MOZ_COUNT_CTOR(CompositableClient);
 }
@@ -160,6 +160,7 @@ CompositableClient::GetIPDLActor() const
 bool
 CompositableClient::Connect(ImageContainer* aImageContainer)
 {
+  MOZ_ASSERT(!mCompositableChild);
   if (!GetForwarder() || GetIPDLActor()) {
     return false;
   }
@@ -167,20 +168,24 @@ CompositableClient::Connect(ImageContainer* aImageContainer)
   return true;
 }
 
+bool
+CompositableClient::IsConnected() const
+{
+  return mCompositableChild && mCompositableChild->CanSend();
+}
+
 void
 CompositableClient::Destroy()
 {
-  mDestroyed = true;
-
-  if (!mCompositableChild) {
+  if (!IsConnected()) {
     return;
   }
   // Send pending AsyncMessages before deleting CompositableChild.
   // They might have dependency to the mCompositableChild.
   mForwarder->SendPendingAsyncMessges();
-  // Delete CompositableChild.
+  // Destroy CompositableChild.
   mCompositableChild->mCompositableClient = nullptr;
-  PCompositableChild::Send__delete__(mCompositableChild);
+  mCompositableChild->Destroy();
   mCompositableChild = nullptr;
 }
 
@@ -279,7 +284,7 @@ CompositableClient::DumpTextureClient(std::stringstream& aStream,
 AutoRemoveTexture::~AutoRemoveTexture()
 {
 #if defined(MOZ_WIDGET_GONK) && ANDROID_VERSION >= 17
-  if (mCompositable && mTexture && mCompositable->GetForwarder()) {
+  if (mCompositable && mTexture && mCompositable->IsConnected()) {
     // remove old buffer from CompositableHost
     RefPtr<AsyncTransactionWaiter> waiter = new AsyncTransactionWaiter();
     RefPtr<AsyncTransactionTracker> tracker =

@@ -15,6 +15,8 @@
 #define ZIP_METHOD_STORE 0
 #define ZIP_METHOD_DEFLATE 8
 
+using namespace mozilla;
+
 /**
  * nsZipDataStream handles the writing an entry's into the zip file.
  * It is set up to wither write the data as is, or in the event that compression
@@ -68,7 +70,7 @@ NS_IMETHODIMP nsZipDataStream::OnDataAvailable(nsIRequest *aRequest,
     if (!mOutput)
         return NS_ERROR_NOT_INITIALIZED;
 
-    nsAutoArrayPtr<char> buffer(new char[aCount]);
+    auto buffer = MakeUnique<char[]>(aCount);
     NS_ENSURE_TRUE(buffer, NS_ERROR_OUT_OF_MEMORY);
 
     nsresult rv = ZW_ReadData(aInputStream, buffer.get(), aCount);
@@ -152,7 +154,7 @@ nsresult nsZipDataStream::ReadStream(nsIInputStream *aStream)
     nsresult rv = OnStartRequest(nullptr, nullptr);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsAutoArrayPtr<char> buffer(new char[4096]);
+    auto buffer = MakeUnique<char[]>(4096);
     NS_ENSURE_TRUE(buffer, NS_ERROR_OUT_OF_MEMORY);
 
     uint32_t read = 0;

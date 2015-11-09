@@ -55,6 +55,7 @@
 #include "mozilla/StaticMutex.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/TimeStamp.h"
+#include "nsSocketTransportService2.h"
 
 #include "plbase64.h"
 #include "prmem.h"
@@ -69,8 +70,6 @@
 // rather than slurp up all of nsIWebSocket.idl, which lives outside necko, just
 // dupe one constant we need from it
 #define CLOSE_GOING_AWAY 1001
-
-extern PRThread *gSocketThread;
 
 using namespace mozilla;
 using namespace mozilla::net;

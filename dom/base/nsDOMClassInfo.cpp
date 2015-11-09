@@ -1513,7 +1513,7 @@ nsDOMConstructor::HasInstance(nsIXPConnectWrappedNative *wrapper,
   NS_ASSERTION(dom_obj, "nsDOMConstructor::HasInstance couldn't get object");
 
   // This might not be the right object, if there are wrappers. Unwrap if we can.
-  JSObject *wrapped_obj = js::CheckedUnwrap(dom_obj, /* stopAtOuter = */ false);
+  JSObject *wrapped_obj = js::CheckedUnwrap(dom_obj, /* stopAtWindowProxy = */ false);
   if (wrapped_obj)
       dom_obj = wrapped_obj;
 
@@ -2042,7 +2042,7 @@ nsWindowSH::GlobalResolve(nsGlobalWindow *aWin, JSContext *cx,
       // way the callee can decide whether to allow access based on the caller
       // or the window being touched.
       JS::Rooted<JSObject*> global(cx,
-        js::CheckedUnwrap(obj, /* stopAtOuter = */ false));
+        js::CheckedUnwrap(obj, /* stopAtWindowProxy = */ false));
       if (!global) {
         return NS_ERROR_DOM_SECURITY_ERR;
       }

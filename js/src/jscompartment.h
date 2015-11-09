@@ -274,7 +274,6 @@ struct JSCompartment
   public:
     bool                         isSelfHosting;
     bool                         marked;
-    bool                         warnedAboutNoSuchMethod;
     bool                         warnedAboutFlagsArgument;
     bool                         warnedAboutExprClosure;
 
@@ -752,7 +751,7 @@ struct JSCompartment
         DeprecatedExpressionClosure = 3,    // Added in JS 1.8
         // NO LONGER USING 4
         // NO LONGER USING 5
-        DeprecatedNoSuchMethod = 6,         // JS 1.7+
+        // NO LONGER USING 6
         DeprecatedFlagsArgument = 7,        // JS 1.3 or older
         // NO LONGER USING 8
         DeprecatedRestoredRegExpStatics = 9,// Unknown

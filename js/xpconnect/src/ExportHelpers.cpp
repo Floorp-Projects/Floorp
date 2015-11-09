@@ -31,7 +31,7 @@ namespace xpc {
 bool
 IsReflector(JSObject* obj)
 {
-    obj = CheckedUnwrap(obj, /* stopAtOuter = */ false);
+    obj = CheckedUnwrap(obj, /* stopAtWindowProxy = */ false);
     if (!obj)
         return false;
     return IS_WN_REFLECTOR(obj) || dom::IsDOMObject(obj);

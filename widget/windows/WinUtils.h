@@ -460,7 +460,7 @@ public:
 
   // Warning: AsyncEncodeAndWriteIcon assumes ownership of the aData buffer passed in
   AsyncEncodeAndWriteIcon(const nsAString &aIconPath,
-                          UniquePtr<uint8_t[]> aData, uint32_t aDataLen,
+                          UniquePtr<uint8_t[]> aData,
                           uint32_t aStride, uint32_t aWidth, uint32_t aHeight,
                           const bool aURLShortcut);
 
@@ -469,8 +469,6 @@ private:
 
   nsAutoString mIconPath;
   UniquePtr<uint8_t[]> mBuffer;
-  HMODULE sDwmDLL;
-  uint32_t mBufferLength;
   uint32_t mStride;
   uint32_t mWidth;
   uint32_t mHeight;

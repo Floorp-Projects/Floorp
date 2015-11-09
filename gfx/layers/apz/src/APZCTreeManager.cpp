@@ -130,17 +130,6 @@ APZCTreeManager::SetAllowedTouchBehavior(uint64_t aInputBlockId,
   mInputQueue->SetAllowedTouchBehavior(aInputBlockId, aValues);
 }
 
-/* Flatten the tree of nodes into the given nsTArray */
-static void
-Collect(HitTestingTreeNode* aNode, nsTArray<RefPtr<HitTestingTreeNode>>* aCollection)
-{
-  if (aNode) {
-    aCollection->AppendElement(aNode);
-    Collect(aNode->GetLastChild(), aCollection);
-    Collect(aNode->GetPrevSibling(), aCollection);
-  }
-}
-
 void
 APZCTreeManager::UpdateHitTestingTree(CompositorParent* aCompositor,
                                       Layer* aRoot,
@@ -177,7 +166,12 @@ APZCTreeManager::UpdateHitTestingTree(CompositorParent* aCompositor,
   // we are sure that the layer was removed and not just transplanted elsewhere. Doing that
   // as part of a recursive tree walk is hard and so maintaining a list and removing
   // APZCs that are still alive is much simpler.
-  Collect(mRootNode, &state.mNodesToDestroy);
+  ForEachNode(mRootNode.get(),
+      [&state] (HitTestingTreeNode* aNode)
+      {
+        state.mNodesToDestroy.AppendElement(aNode);
+        return TraversalFlag::Continue;
+      });
   mRootNode = nullptr;
 
   if (aRoot) {
@@ -665,7 +659,20 @@ APZCTreeManager::FlushApzRepaints(uint64_t aLayersId)
   APZCTM_LOG("Flushing repaints for layers id %" PRIu64, aLayersId);
   { // scope lock
     MonitorAutoLock lock(mTreeLock);
-    FlushPendingRepaintRecursively(mRootNode, aLayersId);
+    mTreeLock.AssertCurrentThreadOwns();
+
+    ForEachNode(mRootNode.get(),
+        [aLayersId](HitTestingTreeNode* aNode)
+        {
+          if (aNode->IsPrimaryHolder()) {
+            AsyncPanZoomController* apzc = aNode->GetApzc();
+            MOZ_ASSERT(apzc);
+            if (apzc->GetGuid().mLayersId == aLayersId) {
+              apzc->FlushRepaintIfPending();
+            }
+          }
+	  return TraversalFlag::Continue;
+        });
   }
   const CompositorParent::LayerTreeState* state = CompositorParent::GetIndirectShadowTree(aLayersId);
   MOZ_ASSERT(state && state->mController);
@@ -1211,30 +1218,23 @@ APZCTreeManager::UpdateZoomConstraints(const ScrollableLayerGuid& aGuid,
     mZoomConstraints.erase(aGuid);
   }
   if (node && aConstraints) {
-    UpdateZoomConstraintsRecursively(node.get(), aConstraints.ref());
-  }
-}
-
-void
-APZCTreeManager::UpdateZoomConstraintsRecursively(HitTestingTreeNode* aNode,
-                                                  const ZoomConstraints& aConstraints)
-{
-  mTreeLock.AssertCurrentThreadOwns();
-
-  if (aNode->IsPrimaryHolder()) {
-    MOZ_ASSERT(aNode->GetApzc());
-    aNode->GetApzc()->UpdateZoomConstraints(aConstraints);
-  }
-  for (HitTestingTreeNode* child = aNode->GetLastChild(); child; child = child->GetPrevSibling()) {
-    if (AsyncPanZoomController* childApzc = child->GetApzc()) {
-      // We can have subtrees with their own zoom constraints or separate layers
-      // id - leave those alone.
-      if (childApzc->HasNoParentWithSameLayersId() ||
-          mZoomConstraints.find(childApzc->GetGuid()) != mZoomConstraints.end()) {
-        continue;
-      }
-    }
-    UpdateZoomConstraintsRecursively(child, aConstraints);
+    ForEachNode(node.get(),
+        [&aConstraints, this](HitTestingTreeNode* aNode)
+        {
+          if (AsyncPanZoomController* childApzc = aNode->GetApzc()) {
+            // We can have subtrees with their own zoom constraints or separate layers
+            // id - leave these alone.
+            if (childApzc->HasNoParentWithSameLayersId() ||
+                this->mZoomConstraints.find(childApzc->GetGuid()) != this->mZoomConstraints.end()) {
+              return TraversalFlag::Skip;
+            }
+          }
+          if (aNode->IsPrimaryHolder()) {
+            MOZ_ASSERT(aNode->GetApzc());
+            aNode->GetApzc()->UpdateZoomConstraints(aConstraints.ref());
+          }
+          return TraversalFlag::Continue;
+        });
   }
 }
 
@@ -1261,38 +1261,17 @@ APZCTreeManager::FlushRepaintsToClearScreenToGeckoTransform()
   // pending repaint requests, which makes all of the untransforms empty (and
   // therefore equal).
   MonitorAutoLock lock(mTreeLock);
-  FlushRepaintsRecursively(mRootNode);
-}
-
-void
-APZCTreeManager::FlushRepaintsRecursively(HitTestingTreeNode* aNode)
-{
   mTreeLock.AssertCurrentThreadOwns();
 
-  for (HitTestingTreeNode* node = aNode; node; node = node->GetPrevSibling()) {
-    if (node->IsPrimaryHolder()) {
-      MOZ_ASSERT(node->GetApzc());
-      node->GetApzc()->FlushRepaintForNewInputBlock();
-    }
-    FlushRepaintsRecursively(node->GetLastChild());
-  }
-}
-
-void
-APZCTreeManager::FlushPendingRepaintRecursively(HitTestingTreeNode* aNode, uint64_t aLayersId)
-{
-  mTreeLock.AssertCurrentThreadOwns();
-
-  for (HitTestingTreeNode* node = aNode; node; node = node->GetPrevSibling()) {
-    if (node->IsPrimaryHolder()) {
-      AsyncPanZoomController* apzc = node->GetApzc();
-      MOZ_ASSERT(apzc);
-      if (apzc->GetGuid().mLayersId == aLayersId) {
-        apzc->FlushRepaintIfPending();
-      }
-    }
-    FlushPendingRepaintRecursively(node->GetLastChild(), aLayersId);
-  }
+  ForEachNode(mRootNode.get(),
+      [](HitTestingTreeNode* aNode)
+      {
+        if (aNode->IsPrimaryHolder()) {
+          MOZ_ASSERT(aNode->GetApzc());
+          aNode->GetApzc()->FlushRepaintForNewInputBlock();
+        }
+	return TraversalFlag::Continue;
+      });
 }
 
 void
@@ -1315,11 +1294,18 @@ APZCTreeManager::ClearTree()
 
   MonitorAutoLock lock(mTreeLock);
 
-  // This can be done as part of a tree walk but it's easier to
-  // just re-use the Collect method that we need in other places.
-  // If this is too slow feel free to change it to a recursive walk.
+  // Collect the nodes into a list, and then destroy each one.
+  // We can't destroy them as we collect them, because ForEachNode()
+  // does a pre-order traversal of the tree, and Destroy() nulls out
+  // the fields needed to reach the children of the node.
   nsTArray<RefPtr<HitTestingTreeNode>> nodesToDestroy;
-  Collect(mRootNode, &nodesToDestroy);
+  ForEachNode(mRootNode.get(),
+      [&nodesToDestroy](HitTestingTreeNode* aNode)
+      {
+        nodesToDestroy.AppendElement(aNode);
+        return TraversalFlag::Continue;
+      });
+
   for (size_t i = 0; i < nodesToDestroy.Length(); i++) {
     nodesToDestroy[i]->Destroy();
   }
@@ -1656,27 +1642,10 @@ APZCTreeManager::FindScrollNode(const AsyncDragMetrics& aDragMetrics)
 {
   MonitorAutoLock lock(mTreeLock);
 
-  return FindScrollNode(mRootNode, aDragMetrics);
-}
-
-HitTestingTreeNode*
-APZCTreeManager::FindScrollNode(HitTestingTreeNode* aNode,
-                                const AsyncDragMetrics& aDragMetrics)
-{
-  mTreeLock.AssertCurrentThreadOwns();
-
-  for (HitTestingTreeNode* node = aNode; node; node = node->GetPrevSibling()) {
-    if (node->MatchesScrollDragMetrics(aDragMetrics)) {
-      return node;
-    }
-
-    HitTestingTreeNode* match = FindScrollNode(node->GetLastChild(), aDragMetrics);
-    if (match) {
-      return match;
-    }
-  }
-
-  return nullptr;
+  return DepthFirstSearch(mRootNode.get(),
+      [&aDragMetrics](HitTestingTreeNode* aNode) {
+        return aNode->MatchesScrollDragMetrics(aDragMetrics);
+      });
 }
 
 AsyncPanZoomController*
@@ -1743,8 +1712,8 @@ APZCTreeManager::FindRootApzcForLayersId(uint64_t aLayersId) const
 {
   mTreeLock.AssertCurrentThreadOwns();
 
-  const HitTestingTreeNode* resultNode = BreadthFirstSearch(mRootNode.get(),
-      [aLayersId](const HitTestingTreeNode* aNode) {
+  HitTestingTreeNode* resultNode = BreadthFirstSearch(mRootNode.get(),
+      [aLayersId](HitTestingTreeNode* aNode) {
         AsyncPanZoomController* apzc = aNode->GetApzc();
         return apzc
             && apzc->GetLayersId() == aLayersId
@@ -1758,8 +1727,8 @@ APZCTreeManager::FindRootContentApzcForLayersId(uint64_t aLayersId) const
 {
   mTreeLock.AssertCurrentThreadOwns();
 
-  const HitTestingTreeNode* resultNode = BreadthFirstSearch(mRootNode.get(),
-      [aLayersId](const HitTestingTreeNode* aNode) {
+  HitTestingTreeNode* resultNode = BreadthFirstSearch(mRootNode.get(),
+      [aLayersId](HitTestingTreeNode* aNode) {
         AsyncPanZoomController* apzc = aNode->GetApzc();
         return apzc
             && apzc->GetLayersId() == aLayersId

@@ -42,7 +42,7 @@ function run_test()
   gRunner.next();
 }
 
-function step()
+function* step()
 {
   let history = Cc["@mozilla.org/browser/history;1"]
                   .getService(Ci.mozIAsyncHistory);

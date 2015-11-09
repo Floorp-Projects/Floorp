@@ -124,7 +124,7 @@ function run_test() {
   run_next_test();
 }
 
-add_task(function () {
+add_task(function* () {
   // make json file
   let jsonFile = OS.Path.join(OS.Constants.Path.profileDir, "bookmarks.json");
 

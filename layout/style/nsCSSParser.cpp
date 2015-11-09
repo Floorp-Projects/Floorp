@@ -140,11 +140,11 @@ public:
                       SheetParsingMode aParsingMode,
                       LoaderReusableStyleSheets* aReusableSheets);
 
-  nsresult ParseStyleAttribute(const nsAString&  aAttributeValue,
+  already_AddRefed<css::Declaration>
+           ParseStyleAttribute(const nsAString&  aAttributeValue,
                                nsIURI*           aDocURL,
                                nsIURI*           aBaseURL,
-                               nsIPrincipal*     aNodePrincipal,
-                               css::StyleRule**  aResult);
+                               nsIPrincipal*     aNodePrincipal);
 
   nsresult ParseDeclarations(const nsAString&  aBuffer,
                              nsIURI*           aSheetURL,
@@ -1627,7 +1627,6 @@ CSSParserImpl::ParseSheet(const nsAString& aInput,
   mIsChrome = false;
   mReusableSheets = nullptr;
 
-  // XXX check for low level errors
   return NS_OK;
 }
 
@@ -1644,12 +1643,11 @@ NonMozillaVendorIdentifier(const nsAString& ident)
 
 }
 
-nsresult
+already_AddRefed<css::Declaration>
 CSSParserImpl::ParseStyleAttribute(const nsAString& aAttributeValue,
                                    nsIURI*          aDocURI,
                                    nsIURI*          aBaseURI,
-                                   nsIPrincipal*    aNodePrincipal,
-                                   css::StyleRule** aResult)
+                                   nsIPrincipal*    aNodePrincipal)
 {
   NS_PRECONDITION(aNodePrincipal, "Must have principal here!");
   NS_PRECONDITION(aBaseURI, "need base URI");
@@ -1664,17 +1662,10 @@ CSSParserImpl::ParseStyleAttribute(const nsAString& aAttributeValue,
   uint32_t parseFlags = eParseDeclaration_AllowImportant;
 
   RefPtr<css::Declaration> declaration = ParseDeclarationBlock(parseFlags);
-  if (declaration) {
-    // Create a style rule for the declaration
-    NS_ADDREF(*aResult = new css::StyleRule(nullptr, declaration, 0, 0));
-  } else {
-    *aResult = nullptr;
-  }
 
   ReleaseScanner();
 
-  // XXX check for low level errors
-  return NS_OK;
+  return declaration.forget();
 }
 
 nsresult
@@ -16257,16 +16248,14 @@ nsCSSParser::ParseSheet(const nsAString& aInput,
                aParsingMode, aReusableSheets);
 }
 
-nsresult
+already_AddRefed<css::Declaration>
 nsCSSParser::ParseStyleAttribute(const nsAString&  aAttributeValue,
                                  nsIURI*           aDocURI,
                                  nsIURI*           aBaseURI,
-                                 nsIPrincipal*     aNodePrincipal,
-                                 css::StyleRule**  aResult)
+                                 nsIPrincipal*     aNodePrincipal)
 {
   return static_cast<CSSParserImpl*>(mImpl)->
-    ParseStyleAttribute(aAttributeValue, aDocURI, aBaseURI,
-                        aNodePrincipal, aResult);
+    ParseStyleAttribute(aAttributeValue, aDocURI, aBaseURI, aNodePrincipal);
 }
 
 nsresult

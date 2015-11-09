@@ -405,3 +405,36 @@ nsContentSecurityManager::PerformSecurityCheck(nsIChannel* aChannel,
   inAndOutListener.forget(outStreamListener);
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsContentSecurityManager::IsURIPotentiallyTrustworthy(nsIURI* aURI, bool* aIsTrustWorthy)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  NS_ENSURE_ARG_POINTER(aURI);
+  NS_ENSURE_ARG_POINTER(aIsTrustWorthy);
+
+  *aIsTrustWorthy = false;
+  nsAutoCString scheme;
+  nsresult rv = aURI->GetScheme(scheme);
+  NS_ENSURE_SUCCESS(rv, NS_OK);
+
+  if (scheme.EqualsLiteral("https") ||
+      scheme.EqualsLiteral("file") ||
+      scheme.EqualsLiteral("app")) {
+    *aIsTrustWorthy = true;
+    return NS_OK;
+  }
+
+  nsAutoCString host;
+  rv = aURI->GetHost(host);
+  NS_ENSURE_SUCCESS(rv, NS_OK);
+
+  if (host.Equals("127.0.0.1") ||
+      host.Equals("localhost") ||
+      host.Equals("::1")) {
+    *aIsTrustWorthy = true;
+    return NS_OK;
+  }
+
+  return NS_OK;
+}

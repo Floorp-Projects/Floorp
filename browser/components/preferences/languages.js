@@ -15,7 +15,15 @@ var gLanguagesDialog = {
     if (!this._availableLanguagesList.length)
       this._loadAvailableLanguages();
   },
-  
+
+  // Ugly hack used to trigger extra reflow in order to work around XUL bug 1194844;
+  // see bug 1194346.
+  forceReflow: function ()
+  {
+    this._activeLanguages.style.fontKerning = "none";
+    setTimeout("gLanguagesDialog._activeLanguages.style.removeProperty('font-kerning')", 0);
+  },
+
   get _activeLanguages()
   {
     return document.getElementById("activeLanguages");
