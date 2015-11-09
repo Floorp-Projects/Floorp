@@ -541,11 +541,9 @@ public class FxAccountSyncAdapter extends AbstractThreadedSyncAdapter {
             final String clientState = married.getClientState();
             syncWithAssertion(audience, assertion, tokenServerEndpointURI, tokenBackoffHandler, sharedPrefs, syncKeyBundle, clientState, sessionCallback, extras, fxAccount);
 
-            if (AppConstants.MOZ_ANDROID_FIREFOX_ACCOUNT_PROFILES) {
-              // Force fetch the profile avatar information.
-              Logger.info(LOG_TAG, "Fetching profile avatar information.");
-              fxAccount.fetchProfileJSON();
-            }
+            // Force fetch the profile avatar information.
+            Logger.info(LOG_TAG, "Fetching profile avatar information.");
+            fxAccount.fetchProfileJSON();
           } catch (Exception e) {
             syncDelegate.handleError(e);
             return;

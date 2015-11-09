@@ -90,9 +90,7 @@ public class AndroidFxAccount {
     if (AppConstants.MOZ_ANDROID_READING_LIST_SERVICE) {
       list.add(ReadingListConstants.AUTH_TOKEN_TYPE);
     }
-    if (AppConstants.MOZ_ANDROID_FIREFOX_ACCOUNT_PROFILES) {
-      list.add(PROFILE_OAUTH_TOKEN_TYPE);
-    }
+    list.add(PROFILE_OAUTH_TOKEN_TYPE);
     KNOWN_OAUTH_TOKEN_TYPES = Collections.unmodifiableList(list);
   }
 
