@@ -4,7 +4,6 @@
 
 package org.mozilla.gecko;
 
-import android.view.ViewGroup;
 import org.mozilla.gecko.animation.ViewHelper;
 import org.mozilla.gecko.gfx.ImmutableViewportMetrics;
 import org.mozilla.gecko.gfx.LayerView;
@@ -20,6 +19,7 @@ import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.ImageView;
+import android.widget.RelativeLayout;
 
 /**
  * Text selection handles enable a user to change position of selected text in
@@ -57,7 +57,7 @@ class TextSelectionHandle extends ImageView implements View.OnTouchListener {
     private PointF mGeckoPoint;
     private PointF mTouchStart;
 
-    private ViewGroup.MarginLayoutParams mLayoutParams;
+    private RelativeLayout.LayoutParams mLayoutParams;
 
     private static final int IMAGE_LEVEL_LTR = 0;
     private static final int IMAGE_LEVEL_RTL = 1;
@@ -204,7 +204,7 @@ class TextSelectionHandle extends ImageView implements View.OnTouchListener {
 
     private void setLayoutPosition() {
         if (mLayoutParams == null) {
-            mLayoutParams = (ViewGroup.MarginLayoutParams) getLayoutParams();
+            mLayoutParams = (RelativeLayout.LayoutParams) getLayoutParams();
             // Set negative right/bottom margins so that the handles can be dragged outside of
             // the content area (if they are dragged to the left/top, the dyanmic margins set
             // below will take care of that).

@@ -170,10 +170,10 @@ public abstract class GeckoApp
     // after a version upgrade.
     private static final int CLEANUP_DEFERRAL_SECONDS = 15;
 
-    protected View mRootLayout;
+    protected RelativeLayout mRootLayout;
     protected RelativeLayout mMainLayout;
 
-    protected View mGeckoLayout;
+    protected RelativeLayout mGeckoLayout;
     private View mCameraView;
     private OrientationEventListener mCameraOrientationEventListener;
     public List<GeckoAppShell.AppStateListener> mAppStateListeners = new LinkedList<GeckoAppShell.AppStateListener>();
@@ -1385,8 +1385,8 @@ public abstract class GeckoApp
         setContentView(getLayout());
 
         // Set up Gecko layout.
-        mRootLayout = findViewById(android.R.id.content);
-        mGeckoLayout = findViewById(R.id.gecko_layout);
+        mRootLayout = (RelativeLayout) findViewById(R.id.root_layout);
+        mGeckoLayout = (RelativeLayout) findViewById(R.id.gecko_layout);
         mMainLayout = (RelativeLayout) findViewById(R.id.main_layout);
         mLayerView = (LayerView) findViewById(R.id.layer_view);
 
