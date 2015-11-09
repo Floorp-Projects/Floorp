@@ -4,14 +4,6 @@
 
 "use strict";
 
-// Don't modify this, instead set dom.push.debug.
-var gDebuggingEnabled = false;
-
-function debug(s) {
-  if (gDebuggingEnabled)
-    dump("-*- PushClient.js: " + s + "\n");
-}
-
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cu = Components.utils;
@@ -20,7 +12,13 @@ const Cr = Components.results;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
-gDebuggingEnabled = Services.prefs.getBoolPref("dom.push.debug");
+XPCOMUtils.defineLazyGetter(this, "console", () => {
+  let {ConsoleAPI} = Cu.import("resource://gre/modules/Console.jsm", {});
+  return new ConsoleAPI({
+    maxLogLevelPref: "dom.push.loglevel",
+    prefix: "PushClient",
+  });
+});
 
 const kMessages = [
   "PushService:Register:OK",
@@ -32,7 +30,7 @@ const kMessages = [
 ];
 
 this.PushClient = function PushClient() {
-  debug("PushClient created!");
+  console.debug("PushClient()");
   this._cpmm = Cc["@mozilla.org/childprocessmessagemanager;1"]
                  .getService(Ci.nsISyncMessageSender);
   this._requests = {};
@@ -73,7 +71,7 @@ PushClient.prototype = {
   },
 
   subscribe: function(scope, principal, callback) {
-    debug("subscribe() " + scope);
+    console.debug("subscribe()", scope);
     let requestId = this.addRequest(callback);
     this._cpmm.sendAsyncMessage("Push:Register", {
                                 scope: scope,
@@ -82,7 +80,7 @@ PushClient.prototype = {
   },
 
   unsubscribe: function(scope, principal, callback) {
-    debug("unsubscribe() " + scope);
+    console.debug("unsubscribe()", scope);
     let requestId = this.addRequest(callback);
     this._cpmm.sendAsyncMessage("Push:Unregister", {
                                 scope: scope,
@@ -91,9 +89,10 @@ PushClient.prototype = {
   },
 
   getSubscription: function(scope, principal, callback) {
-    debug("getSubscription()" + scope);
+    console.debug("getSubscription()", scope);
     let requestId = this.addRequest(callback);
-    debug("Going to send  " + scope + " " + principal + " " + requestId);
+    console.debug("getSubscription: Going to send", scope, principal,
+      requestId);
     this._cpmm.sendAsyncMessage("Push:Registration", {
                                 scope: scope,
                                 requestID: requestId,
@@ -114,15 +113,16 @@ PushClient.prototype = {
   },
 
   receiveMessage: function(aMessage) {
+    console.debug("receiveMessage()", aMessage);
 
     let json = aMessage.data;
     let request = this.takeRequest(json.requestID);
 
     if (!request) {
+      console.error("receiveMessage: Unknown request ID", json.requestID);
       return;
     }
 
-    debug("receiveMessage(): " + JSON.stringify(aMessage))
     switch (aMessage.name) {
       case "PushService:Register:OK":
         this._deliverPushEndpoint(request, json);
@@ -145,7 +145,8 @@ PushClient.prototype = {
         break;
       case "PushService:Unregister:OK":
         if (typeof json.result !== "boolean") {
-          debug("Expected boolean result from PushService!");
+          console.error("receiveMessage: Expected boolean for unregister response",
+            json.result);
           request.onUnsubscribe(Cr.NS_ERROR_FAILURE, false);
           return;
         }
@@ -156,7 +157,7 @@ PushClient.prototype = {
         request.onUnsubscribe(Cr.NS_ERROR_FAILURE, false);
         break;
       default:
-        debug("NOT IMPLEMENTED! receiveMessage for " + aMessage.name);
+        console.error("receiveMessage: NOT IMPLEMENTED!", aMessage.name);
     }
   },
 };
