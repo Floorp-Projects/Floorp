@@ -33,8 +33,8 @@ public:
   // will be queued for later re-send.
   nsresult Input(MediaRawData* aSample);
 
-  // Flush the queued sample.
-  virtual nsresult Flush();
+  // Flush the queued samples and signal decoder to throw all pending input/output away.
+  nsresult Flush();
 
   // Shutdown decoder and rejects the init promise.
   virtual nsresult Shutdown();
@@ -74,7 +74,7 @@ protected:
   int32_t ProcessQueuedSamples();
 
   void ProcessInput(bool aEndOfStream);
-  void ProcessFlush();
+  virtual void ProcessFlush();
   void ProcessToDo(bool aEndOfStream);
 
   RefPtr<MediaByteBuffer> mCodecSpecificData;

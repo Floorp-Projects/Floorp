@@ -31,7 +31,7 @@ public:
   nsresult Output(int64_t aStreamOffset,
                           RefPtr<MediaData>& aOutput) override;
 
-  virtual nsresult Flush() override;
+  void ProcessFlush() override;
 
 private:
   bool InitMediaCodecProxy();
