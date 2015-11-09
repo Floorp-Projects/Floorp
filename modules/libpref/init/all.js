@@ -588,6 +588,7 @@ pref("apz.printtree", false);
 
 pref("apz.test.logging_enabled", false);
 pref("apz.touch_start_tolerance", "0.2222222");  // 0.2222222 came from 1.0/4.5
+pref("apz.touch_move_tolerance", "0.0");
 pref("apz.use_paint_duration", true);
 pref("apz.velocity_bias", "1.0");
 pref("apz.velocity_relevance_time_ms", 150);
