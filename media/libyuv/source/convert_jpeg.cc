@@ -218,7 +218,7 @@ int MJPGToI420(const uint8* sample,
       return 1;
     }
   }
-  return 0;
+  return ret ? 0 : -1;
 }
 
 #ifdef HAVE_JPEG
@@ -380,7 +380,7 @@ int MJPGToARGB(const uint8* sample,
       return 1;
     }
   }
-  return 0;
+  return ret ? 0 : -1;
 }
 #endif
 
