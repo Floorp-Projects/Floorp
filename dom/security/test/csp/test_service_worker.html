@@ -19,7 +19,7 @@ SimpleTest.waitForExplicitFinish();
 
 var tests = [
   {
-    policy: "default-src 'self'; script-src test1.example.com 'unsafe-inline'",
+    policy: "default-src 'self'; script-src 'unsafe-inline'; child-src test1.example.com;",
     expected: "blocked"
   },
 ];
