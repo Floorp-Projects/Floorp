@@ -8,6 +8,7 @@
 const Cu = Components.utils;
 Cu.import("resource://gre/modules/IndexedDBHelper.jsm");
 Cu.import("resource://gre/modules/Preferences.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.importGlobalProperties(["indexedDB"]);
 
 this.EXPORTED_SYMBOLS = ["PushDB"];

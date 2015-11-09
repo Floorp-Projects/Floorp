@@ -47,7 +47,7 @@ add_task(function* test_reconnect_retry() {
           this.serverSendMsg(JSON.stringify({
             messageType: 'register',
             channelID: request.channelID,
-            pushEndpoint: 'https://example.org/push/' + registers,
+            pushEndpoint: 'https://example.org/push/' + request.channelID,
             status: 200,
           }));
         }
@@ -59,13 +59,14 @@ add_task(function* test_reconnect_retry() {
     'https://example.com/page/1',
     ChromeUtils.originAttributesToSuffix({ appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inBrowser: false })
   );
-  equal(registration.channelID, channelID, 'Wrong channel ID for retried request');
+  let retryEndpoint = 'https://example.org/push/' + channelID;
+  equal(registration.pushEndpoint, retryEndpoint, 'Wrong endpoint for retried request');
 
   registration = yield PushNotificationService.register(
     'https://example.com/page/2',
     ChromeUtils.originAttributesToSuffix({ appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inBrowser: false })
   );
-  notEqual(registration.channelID, channelID, 'Wrong channel ID for new request');
+  notEqual(registration.pushEndpoint, retryEndpoint, 'Wrong endpoint for new request')
 
   equal(registers, 3, 'Wrong registration count');
 });

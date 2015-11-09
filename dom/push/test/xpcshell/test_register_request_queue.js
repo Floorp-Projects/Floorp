@@ -55,12 +55,8 @@ add_task(function* test_register_request_queue() {
   );
 
   yield waitForPromise(Promise.all([
-    rejects(firstRegister, function(error) {
-      return error == 'TimeoutError';
-    }, 'Should time out the first request'),
-    rejects(secondRegister, function(error) {
-      return error == 'TimeoutError';
-    }, 'Should time out the second request')
+    rejects(firstRegister, 'Should time out the first request'),
+    rejects(secondRegister, 'Should time out the second request')
   ]), DEFAULT_TIMEOUT, 'Queued requests did not time out');
 
   yield waitForPromise(helloPromise, DEFAULT_TIMEOUT,
