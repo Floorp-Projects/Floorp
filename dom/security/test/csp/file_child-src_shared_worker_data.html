@@ -1,0 +1,32 @@
+
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <title>Bug 1045891</title>
+  </head>
+  <body>
+  <script type="text/javascript">
+    var page_id = window.location.hash.substring(1);
+    var shared_worker = "onconnect = function(e) { " +
+                        "var port = e.ports[0];" +
+                        "port.addEventListener('message'," +
+                        "function(e) { port.postMessage('success'); });" +
+                        "port.start(); }";
+    
+    try {
+      var worker = new SharedWorker('data:application/javascript;charset=UTF-8,'+
+          escape(shared_worker), page_id);
+      worker.port.start();
+
+      worker.port.onmessage = function(ev) {
+        window.parent.postMessage({id:page_id, message:"allowed"}, 'http://mochi.test:8888');
+      };
+      
+      worker.port.postMessage('foo');
+    }
+    catch (e) {
+      window.parent.postMessage({id:page_id, message:"blocked"}, 'http://mochi.test:8888');
+    }
+  </script>
+  </body>
+</html>
