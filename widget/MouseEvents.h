@@ -94,7 +94,6 @@ public:
   virtual WidgetEvent* Duplicate() const override
   {
     MOZ_CRASH("WidgetMouseEventBase must not be most-subclass");
-    return nullptr;
   }
 
   /// The possible related target
