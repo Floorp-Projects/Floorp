@@ -565,7 +565,7 @@ typedef Log<LOG_CRITICAL, CriticalLogger> CriticalLog;
 //
 // You should create a (new) enum in the LogReason and use it for the reason
 // parameter to ensure uniqueness.
-#define gfxCrash(reason) gfxCriticalError(int(LogOptions::AutoPrefix) | int(LogOptions::AssertOnCall) | int(LogOptions::CrashAction), (reason))
+#define gfxDevCrash(reason) gfxCriticalError(int(LogOptions::AutoPrefix) | int(LogOptions::AssertOnCall) | int(LogOptions::CrashAction), (reason))
 
 // See nsDebug.h and the NS_WARN_IF macro
 
