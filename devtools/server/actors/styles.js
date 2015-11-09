@@ -2084,6 +2084,13 @@ function getRuleText(initialText, line, column) {
   if (startOffset === undefined) {
     return {offset: 0, text: ""};
   }
+  // If the input didn't have any tokens between the braces (e.g.,
+  // "div {}"), then the endOffset won't have been set yet; so account
+  // for that here.
+  if (endOffset === undefined) {
+    endOffset = startOffset;
+  }
+
   // Note that this approach will preserve comments, despite the fact
   // that cssTokenizer skips them.
   return {offset: textOffset + startOffset,
