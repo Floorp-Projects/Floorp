@@ -34,6 +34,8 @@ public class MediaCastingBar extends RelativeLayout implements View.OnClickListe
 
         EventDispatcher.getInstance().registerGeckoThreadListener(this,
             "Casting:Started",
+            "Casting:Paused",
+            "Casting:Playing",
             "Casting:Stopped");
     }
 
@@ -71,6 +73,8 @@ public class MediaCastingBar extends RelativeLayout implements View.OnClickListe
     public void onDestroy() {
         EventDispatcher.getInstance().unregisterGeckoThreadListener(this,
             "Casting:Started",
+            "Casting:Paused",
+            "Casting:Playing",
             "Casting:Stopped");
     }
 
@@ -109,6 +113,12 @@ public class MediaCastingBar extends RelativeLayout implements View.OnClickListe
                         mCastingTo.setText("");
                         Log.d(LOGTAG, "Device name is empty.");
                     }
+                    mMediaPlay.setVisibility(GONE);
+                    mMediaPause.setVisibility(VISIBLE);
+                } else if (event.equals("Casting:Paused")) {
+                    mMediaPause.setVisibility(GONE);
+                    mMediaPlay.setVisibility(VISIBLE);
+                } else if (event.equals("Casting:Playing")) {
                     mMediaPlay.setVisibility(GONE);
                     mMediaPause.setVisibility(VISIBLE);
                 } else if (event.equals("Casting:Stopped")) {
