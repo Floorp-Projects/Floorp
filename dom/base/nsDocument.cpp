@@ -1750,27 +1750,6 @@ NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_THIS_BEGIN(nsDocument)
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_THIS_END
 
 static PLDHashOperator
-RadioGroupsTraverser(const nsAString& aKey, nsRadioGroupStruct* aData,
-                     void* aClosure)
-{
-  nsCycleCollectionTraversalCallback *cb =
-    static_cast<nsCycleCollectionTraversalCallback*>(aClosure);
-
-  NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(*cb,
-                                   "mRadioGroups entry->mSelectedRadioButton");
-  cb->NoteXPCOMChild(ToSupports(aData->mSelectedRadioButton));
-
-  uint32_t i, count = aData->mRadioButtons.Count();
-  for (i = 0; i < count; ++i) {
-    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(*cb,
-                                       "mRadioGroups entry->mRadioButtons[i]");
-    cb->NoteXPCOMChild(aData->mRadioButtons[i]);
-  }
-
-  return PL_DHASH_NEXT;
-}
-
-static PLDHashOperator
 BoxObjectTraverser(nsIContent* key, nsPIBoxObject* boxObject, void* userArg)
 {
   nsCycleCollectionTraversalCallback *cb =
@@ -1858,7 +1837,19 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsDocument)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mMasterDocument)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mImportManager)
 
-  tmp->mRadioGroups.EnumerateRead(RadioGroupsTraverser, &cb);
+  for (auto iter = tmp->mRadioGroups.Iter(); !iter.Done(); iter.Next()) {
+    nsRadioGroupStruct* radioGroup = iter.UserData();
+    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(
+      cb, "mRadioGroups entry->mSelectedRadioButton");
+    cb.NoteXPCOMChild(ToSupports(radioGroup->mSelectedRadioButton));
+
+    uint32_t i, count = radioGroup->mRadioButtons.Count();
+    for (i = 0; i < count; ++i) {
+      NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(
+        cb, "mRadioGroups entry->mRadioButtons[i]");
+      cb.NoteXPCOMChild(radioGroup->mRadioButtons[i]);
+    }
+  }
 
   // The boxobject for an element will only exist as long as it's in the
   // document, so we'll traverse the table here instead of from the element.
@@ -10565,23 +10556,6 @@ nsDocument::NotifyMediaFeatureValuesChanged()
   }
 }
 
-PLDHashOperator LockEnumerator(imgIRequest* aKey,
-                               uint32_t aData,
-                               void*    userArg)
-{
-  aKey->LockImage();
-  return PL_DHASH_NEXT;
-}
-
-PLDHashOperator UnlockEnumerator(imgIRequest* aKey,
-                                 uint32_t aData,
-                                 void*    userArg)
-{
-  aKey->UnlockImage();
-  return PL_DHASH_NEXT;
-}
-
-
 nsresult
 nsDocument::SetImageLockingState(bool aLocked)
 {
@@ -10595,9 +10569,14 @@ nsDocument::SetImageLockingState(bool aLocked)
     return NS_OK;
 
   // Otherwise, iterate over our images and perform the appropriate action.
-  mImageTracker.EnumerateRead(aLocked ? LockEnumerator
-                                      : UnlockEnumerator,
-                              nullptr);
+  for (auto iter = mImageTracker.Iter(); !iter.Done(); iter.Next()) {
+    imgIRequest* image = iter.Key();
+    if (aLocked) {
+      image->LockImage();
+    } else {
+      image->UnlockImage();
+    }
+  }
 
   // Update state.
   mLockingImages = aLocked;
