@@ -13,8 +13,7 @@ const {setTimeout, clearTimeout} =
 const {CssLogic} = require("devtools/shared/styleinspector/css-logic");
 const {InplaceEditor, editableField, editableItem} =
       require("devtools/client/shared/inplace-editor");
-const {ELEMENT_STYLE, PSEUDO_ELEMENTS} =
-      require("devtools/server/actors/styles");
+const {ELEMENT_STYLE} = require("devtools/server/actors/styles");
 const {OutputParser} = require("devtools/shared/output-parser");
 const {PrefObserver, PREF_ORIG_SOURCES} = require("devtools/client/styleeditor/utils");
 const {
@@ -4058,4 +4057,8 @@ XPCOMUtils.defineLazyGetter(this, "domUtils", function() {
 
 loader.lazyGetter(this, "AutocompletePopup", function() {
   return require("devtools/client/shared/autocomplete-popup").AutocompletePopup;
+});
+
+loader.lazyGetter(this, "PSEUDO_ELEMENTS", () => {
+  return domUtils.getCSSPseudoElementNames();
 });
