@@ -65,7 +65,7 @@ var fakeRooms = [
   {
     "roomToken": "fjdkreFJDer",
     "decryptedContext": {
-      "roomName": "Forth Room Name"
+      "roomName": "Fourth Room Name"
     },
     "roomUrl": "http://localhost:3000/rooms/fjdkreFJDer",
     "roomOwner": "Alexis",
@@ -91,7 +91,7 @@ var fakeRooms = [
   {
     "roomToken": "preFLighdf",
     "decryptedContext": {
-      "roomName": "Sixth Room Name"
+      "roomName": "Sixth Room Name is a little longer to check the ellipsis"
     },
     "roomUrl": "http://localhost:3000/rooms/preFLighdf",
     "roomOwner": "Alexis",

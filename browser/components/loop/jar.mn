@@ -108,9 +108,9 @@ browser.jar:
 
   # Shared libs
 #ifdef DEBUG
-  content/browser/loop/shared/libs/react-0.12.2.js    (content/shared/libs/react-0.12.2.js)
+  content/browser/loop/shared/libs/react-0.13.3.js    (content/shared/libs/react-0.13.3.js)
 #else
-  content/browser/loop/shared/libs/react-0.12.2.js    (content/shared/libs/react-0.12.2-prod.js)
+  content/browser/loop/shared/libs/react-0.13.3.js    (content/shared/libs/react-0.13.3-prod.js)
 #endif
   content/browser/loop/shared/libs/lodash-3.9.3.js    (content/shared/libs/lodash-3.9.3.js)
   content/browser/loop/shared/libs/backbone-1.2.1.js  (content/shared/libs/backbone-1.2.1.js)

@@ -22,8 +22,8 @@ if (typeof PDFJS === 'undefined') {
   (typeof window !== 'undefined' ? window : this).PDFJS = {};
 }
 
-PDFJS.version = '1.1.551';
-PDFJS.build = '2a5616c';
+PDFJS.version = '1.2.68';
+PDFJS.build = '8079bdd';
 
 (function pdfjsWrapper() {
   // Use strict in our context only - users might not want it
@@ -1326,6 +1326,8 @@ function loadJpegStream(id, imageUrl, objs) {
 }
 
 
+var DEFAULT_RANGE_CHUNK_SIZE = 65536; // 2^16 = 65536
+
 /**
  * The maximum allowed image size in total pixels e.g. width * height. Images
  * above this value will not be drawn. Use -1 for no limit.
@@ -1520,6 +1522,9 @@ PDFJS.isEvalSupported = (PDFJS.isEvalSupported === undefined ?
  * @property {number}     length - The PDF file length. It's used for progress
  *   reports and range requests operations.
  * @property {PDFDataRangeTransport} range
+ * @property {number}     rangeChunkSize - Optional parameter to specify
+ *   maximum number of bytes fetched per range request. The default value is
+ *   2^16 = 65536.
  */
 
 /**
@@ -1628,6 +1633,8 @@ PDFJS.getDocument = function getDocument(src,
     }
     params[key] = source[key];
   }
+
+  params.rangeChunkSize = source.rangeChunkSize || DEFAULT_RANGE_CHUNK_SIZE;
 
   workerInitializedCapability = createPromiseCapability();
   transport = new WorkerTransport(workerInitializedCapability, source.range);
@@ -2526,6 +2533,9 @@ var WorkerTransport = (function WorkerTransportClosure() {
       }, this);
 
       messageHandler.on('StartRenderPage', function transportRender(data) {
+        if (this.destroyed) {
+          return; // Ignore any pending requests if the worker was terminated.
+        }
         var page = this.pageCache[data.pageIndex];
 
         page.stats.timeEnd('Page Request');
@@ -2533,12 +2543,19 @@ var WorkerTransport = (function WorkerTransportClosure() {
       }, this);
 
       messageHandler.on('RenderPageChunk', function transportRender(data) {
+        if (this.destroyed) {
+          return; // Ignore any pending requests if the worker was terminated.
+        }
         var page = this.pageCache[data.pageIndex];
 
         page._renderPageChunk(data.operatorList, data.intent);
       }, this);
 
       messageHandler.on('commonobj', function transportObj(data) {
+        if (this.destroyed) {
+          return; // Ignore any pending requests if the worker was terminated.
+        }
+
         var id = data[0];
         var type = data[1];
         if (this.commonObjs.hasData(id)) {
@@ -2575,6 +2592,10 @@ var WorkerTransport = (function WorkerTransportClosure() {
       }, this);
 
       messageHandler.on('obj', function transportObj(data) {
+        if (this.destroyed) {
+          return; // Ignore any pending requests if the worker was terminated.
+        }
+
         var id = data[0];
         var pageIndex = data[1];
         var type = data[2];
@@ -2606,6 +2627,10 @@ var WorkerTransport = (function WorkerTransportClosure() {
       }, this);
 
       messageHandler.on('DocProgress', function transportDocProgress(data) {
+        if (this.destroyed) {
+          return; // Ignore any pending requests if the worker was terminated.
+        }
+
         var loadingTask = this.loadingTask;
         if (loadingTask.onProgress) {
           loadingTask.onProgress({
@@ -2616,6 +2641,10 @@ var WorkerTransport = (function WorkerTransportClosure() {
       }, this);
 
       messageHandler.on('PageError', function transportError(data) {
+        if (this.destroyed) {
+          return; // Ignore any pending requests if the worker was terminated.
+        }
+
         var page = this.pageCache[data.pageNum - 1];
         var intentState = page.intentStates[data.intent];
         if (intentState.displayReadyCapability) {
@@ -2626,6 +2655,10 @@ var WorkerTransport = (function WorkerTransportClosure() {
       }, this);
 
       messageHandler.on('JpegDecode', function(data) {
+        if (this.destroyed) {
+          return Promise.reject('Worker was terminated');
+        }
+
         var imageUrl = data[0];
         var components = data[1];
         if (components !== 3 && components !== 1) {
@@ -2665,7 +2698,7 @@ var WorkerTransport = (function WorkerTransportClosure() {
           };
           img.src = imageUrl;
         });
-      });
+      }, this);
     },
 
     fetchDocument: function WorkerTransport_fetchDocument(loadingTask, source) {
@@ -4521,16 +4554,13 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
       var x = 0, i;
       for (i = 0; i < glyphsLength; ++i) {
         var glyph = glyphs[i];
-        if (glyph === null) {
-          // word break
-          x += fontDirection * wordSpacing;
-          continue;
-        } else if (isNum(glyph)) {
+        if (isNum(glyph)) {
           x += spacingDir * glyph * fontSize / 1000;
           continue;
         }
 
         var restoreNeeded = false;
+        var spacing = (glyph.isSpace ? wordSpacing : 0) + charSpacing;
         var character = glyph.fontChar;
         var accent = glyph.accent;
         var scaledX, scaledY, scaledAccentX, scaledAccentY;
@@ -4574,7 +4604,7 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
           }
         }
 
-        var charWidth = width * widthAdvanceScale + charSpacing * fontDirection;
+        var charWidth = width * widthAdvanceScale + spacing * fontDirection;
         x += charWidth;
 
         if (restoreNeeded) {
@@ -4619,18 +4649,14 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
 
       for (i = 0; i < glyphsLength; ++i) {
         glyph = glyphs[i];
-        if (glyph === null) {
-          // word break
-          this.ctx.translate(wordSpacing, 0);
-          current.x += wordSpacing * textHScale;
-          continue;
-        } else if (isNum(glyph)) {
+        if (isNum(glyph)) {
           spacingLength = spacingDir * glyph * fontSize / 1000;
           this.ctx.translate(spacingLength, 0);
           current.x += spacingLength * textHScale;
           continue;
         }
 
+        var spacing = (glyph.isSpace ? wordSpacing : 0) + charSpacing;
         var operatorList = font.charProcOperatorList[glyph.operatorListId];
         if (!operatorList) {
           warn('Type3 character \"' + glyph.operatorListId +
@@ -4645,7 +4671,7 @@ var CanvasGraphics = (function CanvasGraphicsClosure() {
         this.restore();
 
         var transformed = Util.applyTransform([glyph.width, 0], fontMatrix);
-        width = transformed[0] * fontSize + charSpacing;
+        width = transformed[0] * fontSize + spacing;
 
         ctx.translate(width, 0);
         current.x += width * textHScale;
