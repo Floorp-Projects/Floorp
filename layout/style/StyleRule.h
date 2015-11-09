@@ -302,9 +302,6 @@ class StyleRule final : public Rule
 private:
   // for |Clone|
   StyleRule(const StyleRule& aCopy);
-  // for |DeclarationChanged|
-  StyleRule(StyleRule& aCopy,
-            Declaration *aDeclaration);
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_CSS_STYLE_RULE_IMPL_CID)
 
