@@ -17,7 +17,6 @@
 #include "nsIAtom.h"
 #include "nsUnicharUtils.h"
 #include "mozilla/MemoryReporting.h"
-#include "mozilla/css/StyleRule.h"
 #include "mozilla/css/Declaration.h"
 #include "nsContentUtils.h"
 #include "nsReadableUtils.h"
@@ -73,13 +72,13 @@ void
 MiscContainer::Cache()
 {
   // Not implemented for anything else yet.
-  MOZ_ASSERT(mType == nsAttrValue::eCSSStyleRule);
+  MOZ_ASSERT(mType == nsAttrValue::eCSSDeclaration);
   MOZ_ASSERT(IsRefCounted());
   MOZ_ASSERT(mValue.mRefCount > 0);
   MOZ_ASSERT(!mValue.mCached);
 
-  css::StyleRule* rule = mValue.mCSSStyleRule;
-  nsHTMLCSSStyleSheet* sheet = rule->GetHTMLCSSStyleSheet();
+  css::Declaration* declaration = mValue.mCSSDeclaration;
+  nsHTMLCSSStyleSheet* sheet = declaration->GetHTMLCSSStyleSheet();
   if (!sheet) {
     return;
   }
@@ -94,17 +93,14 @@ MiscContainer::Cache()
   mValue.mCached = 1;
 
   // This has to be immutable once it goes into the cache.
-  css::Declaration* decl = rule->GetDeclaration();
-  if (decl) {
-    decl->SetImmutable();
-  }
+  declaration->SetImmutable();
 }
 
 void
 MiscContainer::Evict()
 {
   // Not implemented for anything else yet.
-  MOZ_ASSERT(mType == nsAttrValue::eCSSStyleRule);
+  MOZ_ASSERT(mType == nsAttrValue::eCSSDeclaration);
   MOZ_ASSERT(IsRefCounted());
   MOZ_ASSERT(mValue.mRefCount == 0);
 
@@ -112,8 +108,8 @@ MiscContainer::Evict()
     return;
   }
 
-  css::StyleRule* rule = mValue.mCSSStyleRule;
-  nsHTMLCSSStyleSheet* sheet = rule->GetHTMLCSSStyleSheet();
+  css::Declaration* declaration = mValue.mCSSDeclaration;
+  nsHTMLCSSStyleSheet* sheet = declaration->GetHTMLCSSStyleSheet();
   MOZ_ASSERT(sheet);
 
   nsString str;
@@ -149,7 +145,7 @@ nsAttrValue::nsAttrValue(nsIAtom* aValue)
   SetTo(aValue);
 }
 
-nsAttrValue::nsAttrValue(css::StyleRule* aValue, const nsAString* aSerialized)
+nsAttrValue::nsAttrValue(css::Declaration* aValue, const nsAString* aSerialized)
     : mBits(0)
 {
   SetTo(aValue, aSerialized);
@@ -314,7 +310,7 @@ nsAttrValue::SetTo(const nsAttrValue& aOther)
       cont->mValue.mColor = otherCont->mValue.mColor;
       break;
     }
-    case eCSSStyleRule:
+    case eCSSDeclaration:
     {
       MOZ_CRASH("These should be refcounted!");
     }
@@ -421,12 +417,12 @@ nsAttrValue::SetTo(double aValue, const nsAString* aSerialized)
 }
 
 void
-nsAttrValue::SetTo(css::StyleRule* aValue, const nsAString* aSerialized)
+nsAttrValue::SetTo(css::Declaration* aValue, const nsAString* aSerialized)
 {
   MiscContainer* cont = EnsureEmptyMiscContainer();
   MOZ_ASSERT(cont->mValue.mRefCount == 0);
-  NS_ADDREF(cont->mValue.mCSSStyleRule = aValue);
-  cont->mType = eCSSStyleRule;
+  NS_ADDREF(cont->mValue.mCSSDeclaration = aValue);
+  cont->mType = eCSSDeclaration;
   NS_ADDREF(cont);
   SetMiscAtomOrString(aSerialized);
   MOZ_ASSERT(cont->mValue.mRefCount == 1);
@@ -639,12 +635,11 @@ nsAttrValue::ToString(nsAString& aResult) const
 
       break;
     }
-    case eCSSStyleRule:
+    case eCSSDeclaration:
     {
       aResult.Truncate();
       MiscContainer *container = GetMiscContainer();
-      css::Declaration *decl =
-        container->mValue.mCSSStyleRule->GetDeclaration();
+      css::Declaration *decl = container->mValue.mCSSDeclaration;
       if (decl) {
         decl->ToString(aResult);
       }
@@ -889,9 +884,9 @@ nsAttrValue::HashValue() const
     {
       return cont->mValue.mColor;
     }
-    case eCSSStyleRule:
+    case eCSSDeclaration:
     {
-      return NS_PTR_TO_INT32(cont->mValue.mCSSStyleRule);
+      return NS_PTR_TO_INT32(cont->mValue.mCSSDeclaration);
     }
     // Intentionally identical, so that loading the image does not change the
     // hash code.
@@ -998,9 +993,10 @@ nsAttrValue::Equals(const nsAttrValue& aOther) const
       }
       break;
     }
-    case eCSSStyleRule:
+    case eCSSDeclaration:
     {
-      return thisCont->mValue.mCSSStyleRule == otherCont->mValue.mCSSStyleRule;
+      return thisCont->mValue.mCSSDeclaration ==
+               otherCont->mValue.mCSSDeclaration;
     }
     case eURL:
     {
@@ -1690,13 +1686,12 @@ nsAttrValue::ParseStyleAttribute(const nsAString& aString,
   css::Loader* cssLoader = ownerDoc->CSSLoader();
   nsCSSParser cssParser(cssLoader);
 
-  RefPtr<css::StyleRule> rule;
-  cssParser.ParseStyleAttribute(aString, docURI, baseURI,
-                                aElement->NodePrincipal(),
-                                getter_AddRefs(rule));
-  if (rule) {
-    rule->SetHTMLCSSStyleSheet(sheet);
-    SetTo(rule, &aString);
+  RefPtr<css::Declaration> declaration =
+    cssParser.ParseStyleAttribute(aString, docURI, baseURI,
+                                  aElement->NodePrincipal());
+  if (declaration) {
+    declaration->SetHTMLCSSStyleSheet(sheet);
+    SetTo(declaration, &aString);
     if (cachingAllowed) {
       MiscContainer* cont = GetMiscContainer();
       cont->Cache();
@@ -1716,13 +1711,13 @@ nsAttrValue::SetMiscAtomOrString(const nsAString* aValue)
                "Trying to re-set atom or string!");
   if (aValue) {
     uint32_t len = aValue->Length();
-    // * We're allowing eCSSStyleRule attributes to store empty strings as it
+    // * We're allowing eCSSDeclaration attributes to store empty strings as it
     //   can be beneficial to store an empty style attribute as a parsed rule.
     // * We're allowing enumerated values because sometimes the empty
     //   string corresponds to a particular enumerated value, especially
     //   for enumerated values that are not limited enumerated.
     // Add other types as needed.
-    NS_ASSERTION(len || Type() == eCSSStyleRule || Type() == eEnum,
+    NS_ASSERTION(len || Type() == eCSSDeclaration || Type() == eEnum,
                  "Empty string?");
     MiscContainer* cont = GetMiscContainer();
     if (len <= NS_ATTRVALUE_MAX_STRINGLENGTH_ATOM) {
@@ -1786,12 +1781,12 @@ nsAttrValue::ClearMiscContainer()
     }
     else {
       switch (cont->mType) {
-        case eCSSStyleRule:
+        case eCSSDeclaration:
         {
           MOZ_ASSERT(cont->mValue.mRefCount == 1);
           cont->Release();
           cont->Evict();
-          NS_RELEASE(cont->mValue.mCSSStyleRule);
+          NS_RELEASE(cont->mValue.mCSSDeclaration);
           break;
         }
         case eURL:
@@ -1927,10 +1922,10 @@ nsAttrValue::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
         n += str ? str->SizeOfIncludingThisIfUnshared(aMallocSizeOf) : 0;
       }
 
-      if (Type() == eCSSStyleRule && container->mValue.mCSSStyleRule) {
-        // TODO: mCSSStyleRule might be owned by another object which would
+      if (Type() == eCSSDeclaration && container->mValue.mCSSDeclaration) {
+        // TODO: mCSSDeclaration might be owned by another object which would
         //       make us count them twice, bug 677493.
-        //n += container->mCSSStyleRule->SizeOfIncludingThis(aMallocSizeOf);
+        //n += container->mCSSDeclaration->SizeOfIncludingThis(aMallocSizeOf);
       } else if (Type() == eAtomArray && container->mValue.mAtomArray) {
         // Don't measure each nsIAtom, they are measured separatly.
         n += container->mValue.mAtomArray->ShallowSizeOfIncludingThis(aMallocSizeOf);

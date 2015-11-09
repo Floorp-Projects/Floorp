@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<style>
+.red { color: red; }
+</style>
+<script>
+document.onreadystatechange = function() {
+  if (document.readyState == "complete") {
+    var arr = ["s2","s3"];
+    arr.forEach(function(n) {
+      document.getElementById(n).className = "red";
+    });
+  }
+};
+</script>
+<div>
+  <span id="s1">test</span><br />
+  <span id="s2">test</span><br />
+  <span id="s3">test</span><br />
+  <span id="s4">test</span><br />
+</div>

@@ -5,6 +5,7 @@
 import argparse
 import os
 
+
 class _StopAction(argparse.Action):
     def __init__(self, option_strings, dest=argparse.SUPPRESS,
                  default=argparse.SUPPRESS, help=None):
@@ -18,6 +19,7 @@ class _StopAction(argparse.Action):
 
 class _ListTests(_StopAction):
     def __call__(self, parser, namespace, values, option_string=None):
+        from talos import test
         print 'Available tests:'
         print '================\n'
         test_class_names = [
@@ -35,6 +37,7 @@ class _ListTests(_StopAction):
 
 class _ListSuite(_StopAction):
     def __call__(self, parser, namespace, values, option_string=None):
+        from talos.config import suites_conf
         print 'Available suites:'
         for name in suites_conf():
             print ' ', name

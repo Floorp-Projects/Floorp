@@ -2001,10 +2001,9 @@ TEST_F(IceGatherTest, TestStunServerReturnsLoopbackAddrV6) {
 
 TEST_F(IceGatherTest, TestStunServerTrickle) {
   UseFakeStunUdpServerWithResponse("192.0.2.1", 3333);
-  TestStunServer::GetInstance(AF_INET)->SetActive(false);
+  TestStunServer::GetInstance(AF_INET)->SetDropInitialPackets(3);
   Gather(0);
   ASSERT_FALSE(StreamHasMatchingCandidate(0, "192.0.2.1"));
-  TestStunServer::GetInstance(AF_INET)->SetActive(true);
   WaitForGather();
   ASSERT_TRUE(StreamHasMatchingCandidate(0, "192.0.2.1"));
 }
@@ -2042,23 +2041,20 @@ TEST_F(IceGatherTest, TestFakeStunServerNoNatDefaultRouteOnly) {
 
 TEST_F(IceGatherTest, TestStunTcpServerTrickle) {
   UseFakeStunTcpServerWithResponse("192.0.3.1", 3333);
-  TestStunTcpServer::GetInstance(AF_INET)->SetActive(false);
+  TestStunServer::GetInstance(AF_INET)->SetDelay(500);
   Gather(0);
   ASSERT_FALSE(StreamHasMatchingCandidate(0, " 192.0.3.1 ", " tcptype "));
-  TestStunTcpServer::GetInstance(AF_INET)->SetActive(true);
   WaitForGather();
   ASSERT_TRUE(StreamHasMatchingCandidate(0, " 192.0.3.1 ", " tcptype "));
 }
 
 TEST_F(IceGatherTest, TestStunTcpAndUdpServerTrickle) {
   UseFakeStunUdpTcpServersWithResponse("192.0.2.1", 3333, "192.0.3.1", 3333);
-  TestStunServer::GetInstance(AF_INET)->SetActive(false);
-  TestStunTcpServer::GetInstance(AF_INET)->SetActive(false);
+  TestStunServer::GetInstance(AF_INET)->SetDropInitialPackets(3);
+  TestStunTcpServer::GetInstance(AF_INET)->SetDelay(500);
   Gather(0);
   ASSERT_FALSE(StreamHasMatchingCandidate(0, "192.0.2.1", "UDP"));
   ASSERT_FALSE(StreamHasMatchingCandidate(0, " 192.0.3.1 ", " tcptype "));
-  TestStunServer::GetInstance(AF_INET)->SetActive(true);
-  TestStunTcpServer::GetInstance(AF_INET)->SetActive(true);
   WaitForGather();
   ASSERT_TRUE(StreamHasMatchingCandidate(0, "192.0.2.1", "UDP"));
   ASSERT_TRUE(StreamHasMatchingCandidate(0, " 192.0.3.1 ", " tcptype "));

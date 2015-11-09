@@ -398,7 +398,7 @@ public:
     MOZ_ASSERT(aId);
 
     SelfType closure(aId, aName);
-    aEnumerable.EnumerateRead(Enumerate, &closure);
+    MatchHelper(aEnumerable, &closure);
 
     return closure.mMetadata;
   }
@@ -411,7 +411,7 @@ public:
     MOZ_ASSERT(aId);
 
     SelfType closure(aId);
-    aEnumerable.EnumerateRead(Enumerate, &closure);
+    MatchHelper(aEnumerable, &closure);
 
     return closure.mMetadata;
   }
@@ -436,25 +436,29 @@ private:
     MOZ_ASSERT(aId);
   }
 
-  static PLDHashOperator
-  Enumerate(const uint64_t& aKey, MetadataType* aValue, void* aClosure)
+  template <class Enumerable>
+  static void
+  MatchHelper(const Enumerable& aEnumerable, SelfType* aClosure)
   {
     AssertIsOnBackgroundThread();
-    MOZ_ASSERT(aKey);
-    MOZ_ASSERT(aValue);
     MOZ_ASSERT(aClosure);
 
-    auto* closure = static_cast<SelfType*>(aClosure);
+    for (auto iter = aEnumerable.ConstIter(); !iter.Done(); iter.Next()) {
+#ifdef DEBUG
+      const uint64_t key = iter.Key();
+#endif
+      MetadataType* value = iter.UserData();
+      MOZ_ASSERT(key != 0);
+      MOZ_ASSERT(value);
 
-    if (!aValue->mDeleted &&
-        (closure->mId == aValue->mCommonMetadata.id() ||
-         (closure->mCheckName &&
-          closure->mName == aValue->mCommonMetadata.name()))) {
-      closure->mMetadata = aValue;
-      return PL_DHASH_STOP;
+      if (!value->mDeleted &&
+          (aClosure->mId == value->mCommonMetadata.id() ||
+           (aClosure->mCheckName &&
+            aClosure->mName == value->mCommonMetadata.name()))) {
+        aClosure->mMetadata = value;
+        break;
+      }
     }
-
-    return PL_DHASH_NEXT;
   }
 };
 
@@ -15159,56 +15163,6 @@ VersionChangeTransaction::RecvDeleteObjectStore(const int64_t& aObjectStoreId)
 {
   AssertIsOnBackgroundThread();
 
-  class MOZ_STACK_CLASS Helper final
-  {
-    const int64_t mObjectStoreId;
-    bool mIsLastObjectStore;
-    DebugOnly<bool> mFoundTargetId;
-
-  public:
-    static bool
-    IsLastObjectStore(const FullDatabaseMetadata* aDatabaseMetadata,
-                      const int64_t aObjectStoreId)
-    {
-      AssertIsOnBackgroundThread();
-      MOZ_ASSERT(aDatabaseMetadata);
-      MOZ_ASSERT(aObjectStoreId);
-
-      Helper helper(aObjectStoreId);
-      aDatabaseMetadata->mObjectStores.EnumerateRead(&Enumerate, &helper);
-
-      MOZ_ASSERT_IF(helper.mIsLastObjectStore, helper.mFoundTargetId);
-
-      return helper.mIsLastObjectStore;
-    }
-
-  private:
-    explicit
-    Helper(const int64_t aObjectStoreId)
-      : mObjectStoreId(aObjectStoreId)
-      , mIsLastObjectStore(true)
-      , mFoundTargetId(false)
-    { }
-
-    static PLDHashOperator
-    Enumerate(const uint64_t& aKey,
-              FullObjectStoreMetadata* aValue,
-              void* aClosure)
-    {
-      auto* helper = static_cast<Helper*>(aClosure);
-      MOZ_ASSERT(helper);
-
-      if (uint64_t(helper->mObjectStoreId) == aKey) {
-        helper->mFoundTargetId = true;
-      } else if(!aValue->mDeleted) {
-        helper->mIsLastObjectStore = false;
-        return PL_DHASH_STOP;
-      }
-
-      return PL_DHASH_NEXT;
-    }
-  };
-
   if (NS_WARN_IF(!aObjectStoreId)) {
     ASSERT_UNLESS_FUZZING();
     return false;
@@ -15238,11 +15192,22 @@ VersionChangeTransaction::RecvDeleteObjectStore(const int64_t& aObjectStoreId)
 
   foundMetadata->mDeleted = true;
 
+  bool isLastObjectStore = true;
+  DebugOnly<bool> foundTargetId = false;
+  for (auto iter = dbMetadata->mObjectStores.Iter();
+       !iter.Done();
+       iter.Next()) {
+    if (uint64_t(aObjectStoreId) == iter.Key()) {
+      foundTargetId = true;
+    } else if (!iter.UserData()->mDeleted) {
+      isLastObjectStore = false;
+      break;
+    }
+  }
+  MOZ_ASSERT_IF(isLastObjectStore, foundTargetId);
+
   RefPtr<DeleteObjectStoreOp> op =
-    new DeleteObjectStoreOp(this,
-                            foundMetadata,
-                            Helper::IsLastObjectStore(dbMetadata,
-                                                      aObjectStoreId));
+    new DeleteObjectStoreOp(this, foundMetadata, isLastObjectStore);
 
   if (NS_WARN_IF(!op->Init(this))) {
     op->Cleanup();
@@ -15330,54 +15295,6 @@ VersionChangeTransaction::RecvDeleteIndex(const int64_t& aObjectStoreId,
 {
   AssertIsOnBackgroundThread();
 
-  class MOZ_STACK_CLASS Helper final
-  {
-    const int64_t mIndexId;
-    bool mIsLastIndex;
-    DebugOnly<bool> mFoundTargetId;
-
-  public:
-    static bool
-    IsLastIndex(const FullObjectStoreMetadata* aObjectStoreMetadata,
-                const int64_t aIndexId)
-    {
-      AssertIsOnBackgroundThread();
-      MOZ_ASSERT(aObjectStoreMetadata);
-      MOZ_ASSERT(aIndexId);
-
-      Helper helper(aIndexId);
-      aObjectStoreMetadata->mIndexes.EnumerateRead(&Enumerate, &helper);
-
-      MOZ_ASSERT_IF(helper.mIsLastIndex, helper.mFoundTargetId);
-
-      return helper.mIsLastIndex;
-    }
-
-  private:
-    explicit
-    Helper(const int64_t aIndexId)
-      : mIndexId(aIndexId)
-      , mIsLastIndex(true)
-      , mFoundTargetId(false)
-    { }
-
-    static PLDHashOperator
-    Enumerate(const uint64_t& aKey, FullIndexMetadata* aValue, void* aClosure)
-    {
-      auto* helper = static_cast<Helper*>(aClosure);
-      MOZ_ASSERT(helper);
-
-      if (uint64_t(helper->mIndexId) == aKey) {
-        helper->mFoundTargetId = true;
-      } else if (!aValue->mDeleted) {
-        helper->mIsLastIndex = false;
-        return PL_DHASH_STOP;
-      }
-
-      return PL_DHASH_NEXT;
-    }
-  };
-
   if (NS_WARN_IF(!aObjectStoreId)) {
     ASSERT_UNLESS_FUZZING();
     return false;
@@ -15426,12 +15343,26 @@ VersionChangeTransaction::RecvDeleteIndex(const int64_t& aObjectStoreId,
 
   foundIndexMetadata->mDeleted = true;
 
+  bool isLastIndex = true;
+  DebugOnly<bool> foundTargetId = false;
+  for (auto iter = foundObjectStoreMetadata->mIndexes.ConstIter();
+       !iter.Done();
+       iter.Next()) {
+    if (uint64_t(aIndexId) == iter.Key()) {
+      foundTargetId = true;
+    } else if (!iter.UserData()->mDeleted) {
+      isLastIndex = false;
+      break;
+    }
+  }
+  MOZ_ASSERT_IF(isLastIndex, foundTargetId);
+
   RefPtr<DeleteIndexOp> op =
     new DeleteIndexOp(this,
                       aObjectStoreId,
                       aIndexId,
                       foundIndexMetadata->mCommonMetadata.unique(),
-                      Helper::IsLastIndex(foundObjectStoreMetadata, aIndexId));
+                      isLastIndex);
 
   if (NS_WARN_IF(!op->Init(this))) {
     op->Cleanup();
@@ -18609,51 +18540,7 @@ DatabaseOperationBase::GetUniqueIndexTableForObjectStore(
   MOZ_ASSERT(aObjectStoreId);
   MOZ_ASSERT(aMaybeUniqueIndexTable.isNothing());
 
-  class MOZ_STACK_CLASS Helper final
-  {
-  public:
-    static nsresult
-    CopyUniqueValues(const IndexTable& aIndexes,
-                     Maybe<UniqueIndexTable>& aMaybeUniqueIndexTable)
-    {
-      const uint32_t indexCount = aIndexes.Count();
-      MOZ_ASSERT(indexCount);
-
-      aMaybeUniqueIndexTable.emplace();
-
-      aIndexes.EnumerateRead(Enumerate, aMaybeUniqueIndexTable.ptr());
-
-      if (NS_WARN_IF(aMaybeUniqueIndexTable.ref().Count() != indexCount)) {
-        IDB_REPORT_INTERNAL_ERR();
-        aMaybeUniqueIndexTable.reset();
-        return NS_ERROR_OUT_OF_MEMORY;
-      }
-
-#ifdef DEBUG
-      aMaybeUniqueIndexTable.ref().MarkImmutable();
-#endif
-      return NS_OK;
-    }
-
-  private:
-    static PLDHashOperator
-    Enumerate(const uint64_t& aKey, FullIndexMetadata* aValue, void* aClosure)
-    {
-      auto* uniqueIndexTable = static_cast<UniqueIndexTable*>(aClosure);
-      MOZ_ASSERT(uniqueIndexTable);
-      MOZ_ASSERT(!uniqueIndexTable->Get(aValue->mCommonMetadata.id()));
-
-      if (NS_WARN_IF(!uniqueIndexTable->Put(aValue->mCommonMetadata.id(),
-                                            aValue->mCommonMetadata.unique(),
-                                            fallible))) {
-        return PL_DHASH_STOP;
-      }
-
-      return PL_DHASH_NEXT;
-    }
-  };
-
-  const RefPtr<FullObjectStoreMetadata> objectStoreMetadata = 
+  const RefPtr<FullObjectStoreMetadata> objectStoreMetadata =
     aTransaction->GetMetadataForObjectStoreId(aObjectStoreId);
   MOZ_ASSERT(objectStoreMetadata);
 
@@ -18661,11 +18548,34 @@ DatabaseOperationBase::GetUniqueIndexTableForObjectStore(
     return NS_OK;
   }
 
-  nsresult rv = Helper::CopyUniqueValues(objectStoreMetadata->mIndexes,
-                                         aMaybeUniqueIndexTable);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+  const uint32_t indexCount = objectStoreMetadata->mIndexes.Count();
+  MOZ_ASSERT(indexCount > 0);
+
+  aMaybeUniqueIndexTable.emplace();
+  UniqueIndexTable* uniqueIndexTable = aMaybeUniqueIndexTable.ptr();
+  MOZ_ASSERT(uniqueIndexTable);
+
+  for (auto iter = objectStoreMetadata->mIndexes.Iter(); !iter.Done(); iter.Next()) {
+    FullIndexMetadata* value = iter.UserData();
+    MOZ_ASSERT(!uniqueIndexTable->Get(value->mCommonMetadata.id()));
+
+    if (NS_WARN_IF(!uniqueIndexTable->Put(value->mCommonMetadata.id(),
+                                          value->mCommonMetadata.unique(),
+                                          fallible))) {
+      break;
+    }
   }
+
+  if (NS_WARN_IF(aMaybeUniqueIndexTable.ref().Count() != indexCount)) {
+    IDB_REPORT_INTERNAL_ERR();
+    aMaybeUniqueIndexTable.reset();
+    NS_WARNING("out of memory");
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+#ifdef DEBUG
+  aMaybeUniqueIndexTable.ref().MarkImmutable();
+#endif
 
   return NS_OK;
 }

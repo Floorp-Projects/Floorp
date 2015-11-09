@@ -30,12 +30,12 @@
 #define NS_FRAME_TRACE_CHILD_REFLOW 0x4
 #define NS_FRAME_TRACE_NEW_FRAMES   0x8
 
-#define NS_FRAME_LOG_TEST(_lm,_bit) (int((_lm)->level) & (_bit))
+#define NS_FRAME_LOG_TEST(_lm,_bit) (int(((mozilla::LogModule*)_lm)->Level()) & (_bit))
 
 #ifdef DEBUG
 #define NS_FRAME_LOG(_bit,_args)                                \
   PR_BEGIN_MACRO                                                \
-    if (NS_FRAME_LOG_TEST(nsFrame::GetLogModuleInfo(),_bit)) {  \
+    if (NS_FRAME_LOG_TEST(nsFrame::sFrameLogModule,_bit)) {  \
       PR_LogPrint _args;                                        \
     }                                                           \
   PR_END_MACRO
@@ -52,14 +52,14 @@
 // XXX remove me
 #define NS_FRAME_TRACE_MSG(_bit,_args)                          \
   PR_BEGIN_MACRO                                                \
-    if (NS_FRAME_LOG_TEST(nsFrame::GetLogModuleInfo(),_bit)) {  \
+    if (NS_FRAME_LOG_TEST(nsFrame::sFrameLogModule,_bit)) {  \
       TraceMsg _args;                                           \
     }                                                           \
   PR_END_MACRO
 
 #define NS_FRAME_TRACE(_bit,_args)                              \
   PR_BEGIN_MACRO                                                \
-    if (NS_FRAME_LOG_TEST(nsFrame::GetLogModuleInfo(),_bit)) {  \
+    if (NS_FRAME_LOG_TEST(nsFrame::sFrameLogModule,_bit)) {  \
       TraceMsg _args;                                           \
     }                                                           \
   PR_END_MACRO
@@ -676,6 +676,9 @@ private:
 
   NS_IMETHODIMP RefreshSizeCache(nsBoxLayoutState& aState);
 
+  // Returns true if this frame has any kind of CSS animations.
+  bool HasCSSAnimations();
+
 #ifdef DEBUG_FRAME_DUMP
 public:
   /**
@@ -720,14 +723,7 @@ public:
    */
   static void SetVerifyStyleTreeEnable(bool aEnabled);
 
-  /**
-   * The frame class and related classes share an nspr log module
-   * for logging frame activity.
-   *
-   * Note: the log module is created during library initialization which
-   * means that you cannot perform logging before then.
-   */
-  static PRLogModuleInfo* GetLogModuleInfo();
+  static mozilla::LazyLogModule sFrameLogModule;
 
   // Show frame borders when rendering
   static void ShowFrameBorders(bool aEnable);

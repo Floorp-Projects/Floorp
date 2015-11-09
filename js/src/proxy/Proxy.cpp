@@ -261,12 +261,10 @@ Proxy::hasOwn(JSContext* cx, HandleObject proxy, HandleId id, bool* bp)
 }
 
 static Value
-OuterizeValue(JSContext* cx, HandleValue v)
+ValueToWindowProxyIfWindow(Value v)
 {
-    if (v.isObject()) {
-        RootedObject obj(cx, &v.toObject());
-        return ObjectValue(*GetOuterObject(cx, obj));
-    }
+    if (v.isObject())
+        return ObjectValue(*ToWindowProxyIfWindow(&v.toObject()));
     return v;
 }
 
@@ -281,9 +279,9 @@ Proxy::get(JSContext* cx, HandleObject proxy, HandleValue receiver_, HandleId id
     if (!policy.allowed())
         return policy.returnValue();
 
-    // Outerize the receiver. Proxy handlers shouldn't have to know about
-    // the Window/WindowProxy distinction.
-    RootedValue receiver(cx, OuterizeValue(cx, receiver_));
+    // Use the WindowProxy as receiver if receiver_ is a Window. Proxy handlers
+    // shouldn't have to know about the Window/WindowProxy distinction.
+    RootedValue receiver(cx, ValueToWindowProxyIfWindow(receiver_));
 
     if (handler->hasPrototype()) {
         bool own;
@@ -303,25 +301,6 @@ Proxy::get(JSContext* cx, HandleObject proxy, HandleValue receiver_, HandleId id
 }
 
 bool
-Proxy::callProp(JSContext* cx, HandleObject proxy, HandleValue receiver, HandleId id,
-                MutableHandleValue vp)
-{
-    // The inline caches need an access point for JSOP_CALLPROP sites that accounts
-    // for the possibility of __noSuchMethod__
-    if (!Proxy::get(cx, proxy, receiver, id, vp))
-        return false;
-
-#if JS_HAS_NO_SUCH_METHOD
-    if (MOZ_UNLIKELY(vp.isPrimitive())) {
-        if (!OnUnknownMethod(cx, proxy, IdToValue(id), vp))
-            return false;
-    }
-#endif
-
-    return true;
-}
-
-bool
 Proxy::set(JSContext* cx, HandleObject proxy, HandleId id, HandleValue v, HandleValue receiver_,
            ObjectOpResult& result)
 {
@@ -334,9 +313,9 @@ Proxy::set(JSContext* cx, HandleObject proxy, HandleId id, HandleValue v, Handle
         return result.succeed();
     }
 
-    // Outerize the receiver. Proxy handlers shouldn't have to know about
-    // the Window/WindowProxy distinction.
-    RootedValue receiver(cx, OuterizeValue(cx, receiver_));
+    // Use the WindowProxy as receiver if receiver_ is a Window. Proxy handlers
+    // shouldn't have to know about the Window/WindowProxy distinction.
+    RootedValue receiver(cx, ValueToWindowProxyIfWindow(receiver_));
 
     // Special case. See the comment on BaseProxyHandler::mHasPrototype.
     if (handler->hasPrototype())
@@ -554,12 +533,6 @@ Proxy::trace(JSTracer* trc, JSObject* proxy)
     handler->trace(trc, proxy);
 }
 
-JSObject*
-js::proxy_innerObject(JSObject* obj)
-{
-    return obj->as<ProxyObject>().private_().toObjectOrNull();
-}
-
 bool
 js::proxy_LookupProperty(JSContext* cx, HandleObject obj, HandleId id,
                          MutableHandleObject objp, MutableHandleShape propp)
@@ -766,7 +739,7 @@ ProxyObject::renew(JSContext* cx, const BaseProxyHandler* handler, Value priv)
 {
     MOZ_ASSERT_IF(IsCrossCompartmentWrapper(this), IsDeadProxyObject(this));
     MOZ_ASSERT(getClass() == &ProxyObject::class_);
-    MOZ_ASSERT(!getClass()->ext.innerObject);
+    MOZ_ASSERT(!IsWindowProxy(this));
     MOZ_ASSERT(hasLazyPrototype());
 
     setHandler(handler);

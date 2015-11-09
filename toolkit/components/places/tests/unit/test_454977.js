@@ -8,25 +8,28 @@
 var visit_count = 0;
 
 // Returns the Place ID corresponding to an added visit.
-function task_add_visit(aURI, aVisitType)
+function* task_add_visit(aURI, aVisitType)
 {
   // Add the visit asynchronously, and save its visit ID.
-  let deferUpdatePlaces = Promise.defer();
-  PlacesUtils.asyncHistory.updatePlaces({
-    uri: aURI,
-    visits: [{ transitionType: aVisitType, visitDate: Date.now() * 1000 }]
-  }, {
-    handleError: function TAV_handleError() {
-      deferUpdatePlaces.reject(new Error("Unexpected error in adding visit."));
-    },
-    handleResult: function (aPlaceInfo) {
-      this.visitId = aPlaceInfo.visits[0].visitId;
-    },
-    handleCompletion: function TAV_handleCompletion() {
-      deferUpdatePlaces.resolve(this.visitId);
-    }
+  let deferUpdatePlaces = new Promise((resolve, reject) =>
+  {
+    PlacesUtils.asyncHistory.updatePlaces({
+      uri: aURI,
+      visits: [{ transitionType: aVisitType, visitDate: Date.now() * 1000 }]
+    }, {
+      handleError: function TAV_handleError() {
+        reject(new Error("Unexpected error in adding visit."));
+      },
+      handleResult: function (aPlaceInfo) {
+        this.visitId = aPlaceInfo.visits[0].visitId;
+      },
+      handleCompletion: function TAV_handleCompletion() {
+        resolve(this.visitId);
+      }
+    });
   });
-  let visitId = yield deferUpdatePlaces.promise;
+
+  let visitId = yield deferUpdatePlaces;
 
   // Increase visit_count if applicable
   if (aVisitType != 0 &&
@@ -45,9 +48,9 @@ function task_add_visit(aURI, aVisitType)
     let placeId = stmt.getInt64(0);
     stmt.finalize();
     do_check_true(placeId > 0);
-    throw new Task.Result(placeId);
+    return placeId;
   }
-  throw new Task.Result(0);
+  return 0;
 }
 
 /**
@@ -87,7 +90,7 @@ function run_test()
   run_next_test();
 }
 
-add_task(function test_execute()
+add_task(function* test_execute()
 {
   const TEST_URI = uri("http://test.mozilla.org/");
 

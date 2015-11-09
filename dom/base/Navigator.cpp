@@ -2253,7 +2253,7 @@ Navigator::DoResolve(JSContext* aCx, JS::Handle<JSObject*> aObject,
 
   JS::Rooted<JSObject*> naviObj(aCx,
                                 js::CheckedUnwrap(aObject,
-                                                  /* stopAtOuter = */ false));
+                                                  /* stopAtWindowProxy = */ false));
   if (!naviObj) {
     return Throw(aCx, NS_ERROR_DOM_SECURITY_ERR);
   }

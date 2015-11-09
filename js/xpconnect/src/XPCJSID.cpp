@@ -463,7 +463,7 @@ FindObjectForHasInstance(JSContext* cx, HandleObject objArg)
            !IsDOMObject(obj) && !mozilla::jsipc::IsCPOW(obj))
     {
         if (js::IsWrapper(obj)) {
-            obj = js::CheckedUnwrap(obj, /* stopAtOuter = */ false);
+            obj = js::CheckedUnwrap(obj, /* stopAtWindowProxy = */ false);
             continue;
         }
         if (!js::GetObjectProto(cx, obj, &proto))

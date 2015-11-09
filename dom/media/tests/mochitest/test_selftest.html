@@ -1,0 +1,38 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="pc.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript;version=1.8">
+  createHTML({
+    title: "Self-test of harness functions",
+    visible: true
+  });
+
+function TEST(test) {}
+
+var catcher = func => {
+  try {
+    func();
+    return null;
+  } catch (e) {
+    return e.message;
+  }
+};
+
+runNetworkTest(() => {
+  var test = new PeerConnectionTest();
+  test.setMediaConstraints([{video: true}], [{video: true}]);
+  is(catcher(() => test.chain.replace("PC_LOCAL_SET_LOCAL_DESCRIPTION", TEST)),
+     null, "test.chain.replace works");
+  is(catcher(() => test.chain.replace("FOO", TEST)),
+     "Unknown test: FOO", "test.chain.replace catches typos");
+  networkTestFinished();
+});
+
+</script>
+</pre>
+</body>
+</html>

@@ -15,7 +15,7 @@ function run_test() {
   run_next_test();
 }
 
-add_task(function test_getBookmarkedURIFor() {
+add_task(function* test_getBookmarkedURIFor() {
   let now = Date.now() * 1000;
   const sourceURI = uri("http://test.mozilla.org/");
   // Add a visit and a bookmark.

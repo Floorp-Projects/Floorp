@@ -1552,27 +1552,6 @@ CSSStyleSheet::AppendStyleRule(css::Rule* aRule)
   }
 }
 
-void
-CSSStyleSheet::ReplaceStyleRule(css::Rule* aOld, css::Rule* aNew)
-{
-  NS_PRECONDITION(mInner->mOrderedRules.Count() != 0, "can't have old rule");
-  NS_PRECONDITION(mInner->mComplete, "No replacing in an incomplete sheet!");
-
-  WillDirty();
-  int32_t index = mInner->mOrderedRules.IndexOf(aOld);
-  if (MOZ_UNLIKELY(index == -1)) {
-    NS_NOTREACHED("Couldn't find old rule");
-    return;
-  }
-  mInner->mOrderedRules.ReplaceObjectAt(aNew, index);
-
-  aNew->SetStyleSheet(this);
-  aOld->SetStyleSheet(nullptr);
-  DidDirty();
-  NS_ASSERTION(css::Rule::NAMESPACE_RULE != aNew->GetType(), "not yet implemented");
-  NS_ASSERTION(css::Rule::NAMESPACE_RULE != aOld->GetType(), "not yet implemented");
-}
-
 int32_t
 CSSStyleSheet::StyleRuleCount() const
 {
@@ -2200,20 +2179,6 @@ CSSStyleSheet::InsertRuleIntoGroup(const nsAString & aRule,
 
   *_retval = aIndex;
   return NS_OK;
-}
-
-nsresult
-CSSStyleSheet::ReplaceRuleInGroup(css::GroupRule* aGroup,
-                                  css::Rule* aOld, css::Rule* aNew)
-{
-  NS_PRECONDITION(mInner->mComplete, "No replacing in an incomplete sheet!");
-  NS_ASSERTION(this == aGroup->GetStyleSheet(), "group doesn't belong to this sheet");
-
-  WillDirty();
-
-  nsresult result = aGroup->ReplaceStyleRule(aOld, aNew);
-  DidDirty();
-  return result;
 }
 
 // nsICSSLoaderObserver implementation

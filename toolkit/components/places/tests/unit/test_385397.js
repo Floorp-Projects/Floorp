@@ -11,7 +11,7 @@ function run_test()
   run_next_test();
 }
 
-add_task(function test_execute()
+add_task(function* test_execute()
 {
   let now = Date.now() * 1000;
 

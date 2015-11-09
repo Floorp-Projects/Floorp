@@ -288,7 +288,6 @@ class Preprocessor:
         #  2: #else found
         self.ifStates = []
         self.checkLineNumbers = False
-        self.writtenLines = 0
         self.filters = []
         self.cmds = {}
         for cmd, level in {'define': 0,
@@ -403,6 +402,11 @@ class Preprocessor:
             aLine = f[1](aLine)
         return aLine
 
+    def noteLineInfo(self):
+        # Record the current line and file. Called once before transitioning
+        # into or out of an included file and after writing each line.
+        self.line_info = self.context['FILE'], self.context['LINE']
+
     def write(self, aLine):
         """
         Internal method for handling output.
@@ -410,13 +414,16 @@ class Preprocessor:
         if not self.out:
             return
 
+        next_line, next_file = self.context['LINE'], self.context['FILE']
         if self.checkLineNumbers:
-            self.writtenLines += 1
-            ln = self.context['LINE']
-            if self.writtenLines != ln:
-                self.out.write('//@line {line} "{file}"\n'.format(line=ln,
-                                                                  file=self.context['FILE']))
-                self.writtenLines = ln
+            expected_file, expected_line = self.line_info
+            expected_line += 1
+            if (expected_line != next_line or
+                expected_file and expected_file != next_file):
+                self.out.write('//@line {line} "{file}"\n'.format(line=next_line,
+                                                                  file=next_file))
+        self.noteLineInfo()
+
         filteredLine = self.applyFilters(aLine)
         if filteredLine != aLine:
             self.actionLevel = 2
@@ -541,7 +548,6 @@ class Preprocessor:
                 self.actionLevel = 2
         elif self.disableLevel == 0 and not self.comment.match(aLine):
             self.write(aLine)
-        pass
 
     # Instruction handlers
     # These are named do_'instruction name' and take one argument
@@ -730,7 +736,6 @@ class Preprocessor:
         Files should be opened, and will be closed after processing.
         """
         isName = type(args) == str or type(args) == unicode
-        oldWrittenLines = self.writtenLines
         oldCheckLineNumbers = self.checkLineNumbers
         self.checkLineNumbers = False
         if isName:
@@ -749,6 +754,8 @@ class Preprocessor:
         oldFile = self.context['FILE']
         oldLine = self.context['LINE']
         oldDir = self.context['DIRECTORY']
+        self.noteLineInfo()
+
         if args.isatty():
             # we're stdin, use '-' and '' for file and dir
             self.context['FILE'] = '-'
@@ -759,15 +766,15 @@ class Preprocessor:
             self.context['FILE'] = abspath
             self.context['DIRECTORY'] = os.path.dirname(abspath)
         self.context['LINE'] = 0
-        self.writtenLines = 0
+
         for l in args:
             self.context['LINE'] += 1
             self.handleLine(l)
         if isName:
             args.close()
+
         self.context['FILE'] = oldFile
         self.checkLineNumbers = oldCheckLineNumbers
-        self.writtenLines = oldWrittenLines
         self.context['LINE'] = oldLine
         self.context['DIRECTORY'] = oldDir
     def do_includesubst(self, args):

@@ -2695,6 +2695,9 @@ public class GeckoAppShell
             systemType = Environment.DIRECTORY_MOVIES;
         } else if ("music".equals(type)) {
             systemType = Environment.DIRECTORY_MUSIC;
+        } else if ("apps".equals(type)) {
+            File appInternalStorageDirectory = getContext().getFilesDir();
+            return new File(appInternalStorageDirectory, "mozilla").getAbsolutePath();
         } else {
             return null;
         }

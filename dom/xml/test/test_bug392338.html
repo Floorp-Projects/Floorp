@@ -12,67 +12,26 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=392338
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=392338">Mozilla Bug 392338</a>
 <p id="display"></p>
 <div id="content" style="display: none">
-  
+
 </div>
 <pre id="test">
 <script class="testbody" type="text/javascript">
 
 /** Test for Bug 392338 **/
-function obs () {
-  SpecialPowers.addObserver(this, "http-on-modify-request", false);
-  this.window = window;
-}
-
-obs.prototype = {
-  observe: function obs_observe (theSubject, theTopic, theData)
-  {
-    this.timeToFinish = true;
-    try{
-      var ir = theSubject.QueryInterface(this.window.SpecialPowers.Ci
-                                             .nsIChannel).notificationCallbacks;
-      if (!ir) {
-        this.timeToFinish = false;
-        return;
-      }
-      this.window.ok(true, "No exception thrown");
-
-      this.window.is(ir.toString().indexOf(this.window.SpecialPowers.Ci.nsIInterfaceRequestor) != -1,
-                     true, "Must be an interface requestor");
-
-      if (ir instanceof this.window.SpecialPowers.Ci.nsIClassInfo) {
-        var count = {};
-        var interfaces = ir.
-                     QueryInterface(this.window.SpecialPowers.Ci.nsIClassInfo).
-                     getInterfaces(count).
-                     map(function(id) {
-                                return this.window.SpecialPowers.CiByID[id].toString();
-                         });
-        this.window.isnot(interfaces.indexOf("nsIInterfaceRequestor"), -1,
-                          "Must have interface requestor classinfo");
-      }
-    } catch(ex) {
-      this.window.is(true, false, "Exception thrown " + ex);
-    } finally {
-      if (this.timeToFinish) {
-        this.remove();
-        this.window.SimpleTest.finish();
-        this.window = null;
-      }
-    }
-  },
-
-  remove: function obs_remove()
-  {
-    SpecialPowers.removeObserver(this, "http-on-modify-request");
-  }
-}
-
-var o;
 
 SimpleTest.waitForExplicitFinish();
 addLoadEvent(function() {
   var doc = document.implementation.createDocument("", "", null);
-  o = new obs();
+
+  var chromeScriptUrl = SimpleTest.getTestFileURL("file_bug392338.js");
+  var script = SpecialPowers.loadChromeScript(chromeScriptUrl);
+
+  script.addMessageListener('modify-request-completed', function ml(data) {
+    ok(data, "XMLDocument should have notificationCallbacks");
+    script.removeMessageListener('modify-request-completed', ml);
+    SimpleTest.finish();
+  });
+
   doc.load(window.location.href);
 });
 

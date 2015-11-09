@@ -13,6 +13,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/MemoryReporting.h"
 
+#include "nsCSSPseudoElements.h"
 #include "nsDataHashtable.h"
 #include "nsIStyleRuleProcessor.h"
 

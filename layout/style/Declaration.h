@@ -33,6 +33,8 @@
 { 0xfeec07b8, 0x3fe6, 0x491e, \
   { 0x90, 0xd5, 0xcc, 0x93, 0xf8, 0x53, 0xe0, 0x48 } }
 
+class nsHTMLCSSStyleSheet;
+
 namespace mozilla {
 namespace css {
 
@@ -314,12 +316,35 @@ public:
   }
 
   void SetOwningRule(Rule* aRule) {
-    MOZ_ASSERT(!mOwningRule || !aRule,
+    MOZ_ASSERT(!mContainer.mOwningRule || !aRule,
                "should never overwrite one rule with another");
-    mOwningRule = aRule;
+    mContainer.mOwningRule = aRule;
   }
 
-  Rule* GetOwningRule() { return mOwningRule; }
+  Rule* GetOwningRule() {
+    if (mContainer.mRaw & 0x1) {
+      return nullptr;
+    }
+    return mContainer.mOwningRule;
+  }
+
+  void SetHTMLCSSStyleSheet(nsHTMLCSSStyleSheet* aHTMLCSSStyleSheet) {
+    MOZ_ASSERT(!mContainer.mHTMLCSSStyleSheet || !aHTMLCSSStyleSheet,
+               "should never overwrite one sheet with another");
+    mContainer.mHTMLCSSStyleSheet = aHTMLCSSStyleSheet;
+    if (aHTMLCSSStyleSheet) {
+      mContainer.mRaw |= uintptr_t(1);
+    }
+  }
+
+  nsHTMLCSSStyleSheet* GetHTMLCSSStyleSheet() {
+    if (!(mContainer.mRaw & 0x1)) {
+      return nullptr;
+    }
+    auto c = mContainer;
+    c.mRaw &= ~uintptr_t(1);
+    return c.mHTMLCSSStyleSheet;
+  }
 
   ImportantStyleData* GetImportantStyleData() {
     if (HasImportantData()) {
@@ -403,8 +428,22 @@ private:
   // may be null
   nsAutoPtr<CSSVariableDeclarations> mImportantVariables;
 
-  // The style rule that owns this declaration.  May be null.
-  Rule* mOwningRule;
+  union {
+    // We only ever have one of these since we have an
+    // nsHTMLCSSStyleSheet only for style attributes, and style
+    // attributes never have an owning rule.
+
+    // It's an nsHTMLCSSStyleSheet if the low bit is set.
+
+    uintptr_t mRaw;
+
+    // The style rule that owns this declaration.  May be null.
+    Rule* mOwningRule;
+
+    // The nsHTMLCSSStyleSheet that is responsible for this declaration.
+    // Only non-null for style attributes.
+    nsHTMLCSSStyleSheet* mHTMLCSSStyleSheet;
+  } mContainer;
 
   friend class ImportantStyleData;
   ImportantStyleData mImportantStyleData;

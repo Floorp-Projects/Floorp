@@ -11,6 +11,7 @@
 #include "nsNetUtil.inl"
 #include "mozIApplicationClearPrivateDataParams.h"
 #include "nsCategoryCache.h"
+#include "nsContentUtils.h"
 #include "nsHashKeys.h"
 #include "nsHttp.h"
 #include "nsIAsyncStreamCopier.h"
@@ -1153,25 +1154,22 @@ NS_ReadInputStreamToString(nsIInputStream *aInputStream,
 #endif
 
 nsresult
-NS_LoadPersistentPropertiesFromURI(nsIPersistentProperties **outResult,
-                                   nsIURI                   *aUri,
-                                   nsIPrincipal             *aLoadingPrincipal,
-                                   nsContentPolicyType       aContentPolicyType,
-                                   nsIIOService             *aIoService /* = nullptr */)
+NS_LoadPersistentPropertiesFromURISpec(nsIPersistentProperties **outResult,
+                                       const nsACString         &aSpec)
 {
+    nsCOMPtr<nsIURI> uri;
+    nsresult rv = NS_NewURI(getter_AddRefs(uri), aSpec);
+    NS_ENSURE_SUCCESS(rv, rv);
+
     nsCOMPtr<nsIChannel> channel;
-    nsresult rv = NS_NewChannel(getter_AddRefs(channel),
-                                aUri,
-                                aLoadingPrincipal,
-                                nsILoadInfo::SEC_NORMAL,
-                                aContentPolicyType,
-                                nullptr,     // aLoadGroup
-                                nullptr,     // aCallbacks
-                                nsIRequest::LOAD_NORMAL,
-                                aIoService);
+    rv = NS_NewChannel(getter_AddRefs(channel),
+                       uri,
+                       nsContentUtils::GetSystemPrincipal(),
+                       nsILoadInfo::SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
+                       nsIContentPolicy::TYPE_OTHER);
     NS_ENSURE_SUCCESS(rv, rv);
     nsCOMPtr<nsIInputStream> in;
-    rv = channel->Open(getter_AddRefs(in));
+    rv = channel->Open2(getter_AddRefs(in));
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr<nsIPersistentProperties> properties =
@@ -1182,30 +1180,6 @@ NS_LoadPersistentPropertiesFromURI(nsIPersistentProperties **outResult,
 
     properties.swap(*outResult);
     return NS_OK;
- }
-
-nsresult
-NS_LoadPersistentPropertiesFromURISpec(nsIPersistentProperties **outResult,
-                                       const nsACString         &aSpec,
-                                       nsIPrincipal             *aLoadingPrincipal,
-                                       nsContentPolicyType       aContentPolicyType,
-                                       const char               *aCharset /* = nullptr */,
-                                       nsIURI                   *aBaseURI /* = nullptr */,
-                                       nsIIOService             *aIoService /* = nullptr */)
-{
-    nsCOMPtr<nsIURI> uri;
-    nsresult rv = NS_NewURI(getter_AddRefs(uri),
-                            aSpec,
-                            aCharset,
-                            aBaseURI,
-                            aIoService);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    return NS_LoadPersistentPropertiesFromURI(outResult,
-                                              uri,
-                                              aLoadingPrincipal,
-                                              aContentPolicyType,
-                                              aIoService);
 }
 
 bool

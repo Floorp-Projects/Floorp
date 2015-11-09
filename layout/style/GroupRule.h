@@ -65,7 +65,6 @@ public:
    */
   nsresult DeleteStyleRuleAt(uint32_t aIndex);
   nsresult InsertStyleRuleAt(uint32_t aIndex, Rule* aRule);
-  nsresult ReplaceStyleRule(Rule *aOld, Rule *aNew);
 
   virtual bool UseForPresentation(nsPresContext* aPresContext,
                                     nsMediaQueryResultCacheKey& aKey) = 0;

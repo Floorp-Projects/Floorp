@@ -516,15 +516,15 @@ nsHTMLCSSUtils::GetCSSInlinePropertyBase(nsINode* aNode, nsIAtom* aProperty,
   }
 
   MOZ_ASSERT(aStyleType == eSpecified);
-  RefPtr<css::StyleRule> rule = element->GetInlineStyleRule();
-  if (!rule) {
+  RefPtr<css::Declaration> decl = element->GetInlineStyleDeclaration();
+  if (!decl) {
     return NS_OK;
   }
   nsCSSProperty prop =
     nsCSSProps::LookupProperty(nsDependentAtomString(aProperty),
                                nsCSSProps::eEnabledForAllContent);
   MOZ_ASSERT(prop != eCSSProperty_UNKNOWN);
-  rule->GetDeclaration()->GetValue(prop, aValue);
+  decl->GetValue(prop, aValue);
 
   return NS_OK;
 }

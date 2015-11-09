@@ -12,7 +12,6 @@ var expect = '';
 
 
 //-----------------------------------------------------------------------------
-enableNoSuchMethod();
 test();
 //-----------------------------------------------------------------------------
 
@@ -83,46 +82,6 @@ function test()
     s = e + "";
   }
   expect("hello", s);
-
-/*
- * __noSuchMethod__
- */
-  o = {};
-  s = "no exception";
-  try {
-    o.hello();
-  } catch (e) {
-    s = e + "";
-  }
-  expect("TypeError: o.hello is not a function", s);
-  o.__noSuchMethod__ = (function() { return "world"; });
-  expect("world", o.hello());
-  o.__noSuchMethod__ = 1;
-  s = "no exception";
-  try {
-    o.hello();
-  } catch (e) {
-    s = e + "";
-  }
-  expect("TypeError: o.hello is not a function", s);
-  o.__noSuchMethod__ = {};
-  s = "no exception";
-  try {
-    o.hello();
-  } catch (e) {
-    s = e + "";
-  }
-  expect("TypeError: ({}) is not a function", s);
-  s = "no exception";
-  try {
-    eval("o.hello()");
-  } catch (e) {
-    s = e + "";
-  }
-  expect("TypeError: ({}) is not a function", s);
-  s = "no exception";
-  try { [2, 3, 0].sort({}); } catch (e) { s = e + ""; }
-  expect("TypeError: ({}) is not a function", s);
 
 /*
  * Generator expressions.

@@ -123,7 +123,7 @@ add_test(function test_savedsearches_bookmarks() {
   run_next_test();
 });
 
-add_task(function test_savedsearches_history() {
+add_task(function* test_savedsearches_history() {
   // add a visit that matches the search term
   var testURI = uri("http://" + searchTerm + ".com");
   yield PlacesTestUtils.addVisits({ uri: testURI, title: searchTerm });

@@ -13,6 +13,7 @@
 #include "nsISSLStatus.h"
 #include "nsISocketProvider.h"
 #include "nsIURI.h"
+#include "nsIX509Cert.h"
 #include "nsNetUtil.h"
 #include "nsNSSComponent.h"
 #include "nsSecurityHeaderParser.h"

@@ -719,7 +719,7 @@ nsSMILAnimationController::AddStyleUpdatesTo(RestyleTracker& aTracker)
     }
 
     // mIsCSS true means that the rules are the ones returned from
-    // Element::GetSMILOverrideStyleRule (via nsSMILCSSProperty objects),
+    // Element::GetSMILOverrideStyleDeclaration (via nsSMILCSSProperty objects),
     // and mIsCSS false means the rules are nsSMILMappedAttribute objects
     // returned from nsSVGElement::GetAnimatedContentStyleRule.
     nsRestyleHint rshint = key.mIsCSS ? eRestyle_StyleAttribute_Animations

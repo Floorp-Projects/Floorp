@@ -112,6 +112,12 @@ SoftwareDisplay::NotifyVsync(mozilla::TimeStamp aVsyncTimestamp)
   ScheduleNextVsync(aVsyncTimestamp);
 }
 
+mozilla::TimeDuration
+SoftwareDisplay::GetVsyncRate()
+{
+  return mVsyncRate;
+}
+
 void
 SoftwareDisplay::ScheduleNextVsync(mozilla::TimeStamp aVsyncTimestamp)
 {

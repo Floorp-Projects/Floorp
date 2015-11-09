@@ -12,8 +12,7 @@
 #include "mozilla/StaticPtr.h"
 #include "nsISupportsPrimitives.h"
 #include "nsXULAppAPI.h"
-
-extern PRThread *gSocketThread;
+#include "nsSocketTransportService2.h"
 
 namespace mozilla {
 namespace net {
