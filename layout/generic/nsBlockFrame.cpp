@@ -6759,8 +6759,11 @@ nsBlockFrame::Init(nsIContent*       aContent,
   //   If the box is a block container, then it establishes a new block
   //   formatting context.
   // (http://dev.w3.org/csswg/css-writing-modes/#block-flow)
-  if (GetParent() && StyleVisibility()->mWritingMode !=
-                     GetParent()->StyleVisibility()->mWritingMode) {
+  // If the box has contain: paint (or contain: strict), then it should also
+  // establish a formatting context.
+  if ((GetParent() && StyleVisibility()->mWritingMode !=
+                      GetParent()->StyleVisibility()->mWritingMode) ||
+      StyleDisplay()->IsContainPaint()) {
     AddStateBits(NS_BLOCK_FLOAT_MGR | NS_BLOCK_MARGIN_ROOT);
   }
 
