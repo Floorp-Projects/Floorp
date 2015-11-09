@@ -9,6 +9,7 @@
 #include "media/stagefright/MetaData.h"
 #include "mozilla/Logging.h"
 #include "mozilla/Monitor.h"
+#include "mozilla/Telemetry.h"
 #include "mp4_demuxer/MoofParser.h"
 #include "mp4_demuxer/MP4Metadata.h"
 
@@ -142,7 +143,9 @@ MP4Metadata::GetNumberTracks(mozilla::TrackInfo::TrackType aType) const
 {
 #ifdef MOZ_RUST_MP4PARSE
   // Try in rust first.
-  try_rust(mSource);
+  bool rust_mp4parse_success = try_rust(mSource);
+  Telemetry::Accumulate(Telemetry::MEDIA_RUST_MP4PARSE_SUCCESS,
+                        rust_mp4parse_success);
 #endif
   size_t tracks = mPrivate->mMetadataExtractor->countTracks();
   uint32_t total = 0;
