@@ -315,17 +315,7 @@ public:
 
   Declaration* GetDeclaration() const { return mDeclaration; }
 
-  /**
-   * Return a new |nsIStyleRule| instance that replaces the current
-   * one, with |aDecl| replacing the previous declaration. Due to the
-   * |nsIStyleRule| contract of immutability, this must be called if
-   * the declaration is modified.
-   *
-   * |DeclarationChanged| handles replacing the object in the container
-   * sheet or group rule if |aHandleContainer| is true.
-   */
-  already_AddRefed<StyleRule>
-  DeclarationChanged(Declaration* aDecl, bool aHandleContainer);
+  void SetDeclaration(Declaration* aDecl);
 
   // hooks for DOM rule
   void GetCssText(nsAString& aCssText);

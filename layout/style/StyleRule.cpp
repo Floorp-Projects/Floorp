@@ -1164,6 +1164,12 @@ css::Declaration*
 DOMCSSDeclarationImpl::GetCSSDeclaration(Operation aOperation)
 {
   if (mRule) {
+    if (aOperation != eOperation_Read) {
+      RefPtr<CSSStyleSheet> sheet = mRule->GetStyleSheet();
+      if (sheet) {
+        sheet->WillDirty();
+      }
+    }
     return mRule->GetDeclaration();
   } else {
     return nullptr;
@@ -1197,26 +1203,21 @@ DOMCSSDeclarationImpl::SetCSSDeclaration(css::Declaration* aDecl)
          "can only be called when |GetCSSDeclaration| returned a declaration");
 
   nsCOMPtr<nsIDocument> owningDoc;
-  nsCOMPtr<nsIStyleSheet> sheet = mRule->GetStyleSheet();
+  RefPtr<CSSStyleSheet> sheet = mRule->GetStyleSheet();
   if (sheet) {
     owningDoc = sheet->GetOwningDocument();
   }
 
   mozAutoDocUpdate updateBatch(owningDoc, UPDATE_STYLE, true);
 
-  RefPtr<css::StyleRule> oldRule = mRule;
-  mRule = oldRule->DeclarationChanged(aDecl, true).take();
-  if (!mRule)
-    return NS_ERROR_OUT_OF_MEMORY;
-  nsrefcnt cnt = mRule->Release();
-  if (cnt == 0) {
-    NS_NOTREACHED("container didn't take ownership");
-    mRule = nullptr;
-    return NS_ERROR_UNEXPECTED;
+  mRule->SetDeclaration(aDecl);
+
+  if (sheet) {
+    sheet->DidDirty();
   }
 
   if (owningDoc) {
-    owningDoc->StyleRuleChanged(sheet, oldRule, mRule);
+    owningDoc->StyleRuleChanged(sheet, mRule, mRule);
   }
   return NS_OK;
 }
@@ -1481,26 +1482,15 @@ StyleRule::GetExistingDOMRule()
   return mDOMRule;
 }
 
-/* virtual */ already_AddRefed<StyleRule>
-StyleRule::DeclarationChanged(Declaration* aDecl,
-                              bool aHandleContainer)
+void
+StyleRule::SetDeclaration(Declaration* aDecl)
 {
-  RefPtr<StyleRule> clone = new StyleRule(*this, aDecl);
-
-  if (aHandleContainer) {
-    CSSStyleSheet* sheet = GetStyleSheet();
-    if (mParentRule) {
-      if (sheet) {
-        sheet->ReplaceRuleInGroup(mParentRule, this, clone);
-      } else {
-        mParentRule->ReplaceStyleRule(this, clone);
-      }
-    } else if (sheet) {
-      sheet->ReplaceStyleRule(this, clone);
-    }
+  if (aDecl == mDeclaration) {
+    return;
   }
-
-  return clone.forget();
+  mDeclaration->SetOwningRule(nullptr);
+  mDeclaration = aDecl;
+  mDeclaration->SetOwningRule(this);
 }
 
 #ifdef DEBUG
