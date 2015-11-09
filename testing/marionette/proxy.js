@@ -114,7 +114,7 @@ ContentSender.prototype.send = function(name, args) {
       let rmFn = msg => {
         if (this.curId !== msg.json.command_id) {
           logger.warn("Skipping out-of-sync response from listener: " +
-              `Expected response to \`${name}' with ID ${this.curId}, ` +
+              `Expected response to ${name} with ID ${this.curId}, ` +
               "but got: " + msg.name + msg.json.toSource());
           return;
         }
