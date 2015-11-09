@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html reftest-async-scroll
+      reftest-displayport-x="0" reftest-displayport-y="0"
+      reftest-displayport-w="800" reftest-displayport-h="2000"
+      reftest-async-scroll-x="0" reftest-async-scroll-y="50.23">
+<style>
+
+body {
+  margin: 0px;
+  position: relative;
+  height: 1200.23px;
+  overflow: hidden;
+}
+
+.fixed-background {
+  position: absolute;
+  top: 0px;
+  bottom: 0px;
+  width: 100px;
+  background: linear-gradient(blue, blue) no-repeat fixed 0px 200px;
+  background-size: 100px 100px;
+  opacity: 0.5;
+}
+
+</style>
+<div style="overflow: hidden;" class="fixed-background"></div>
+</html>
