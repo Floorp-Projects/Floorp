@@ -17,6 +17,8 @@
 # include "jit/arm64/LOpcodes-arm64.h"
 #elif defined(JS_CODEGEN_MIPS32)
 # include "jit/mips32/LOpcodes-mips32.h"
+#elif defined(JS_CODEGEN_MIPS64)
+# include "jit/mips64/LOpcodes-mips64.h"
 #elif defined(JS_CODEGEN_NONE)
 # include "jit/none/LOpcodes-none.h"
 #else

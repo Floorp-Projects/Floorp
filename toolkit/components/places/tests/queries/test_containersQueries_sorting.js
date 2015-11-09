@@ -389,7 +389,7 @@ function run_test()
   run_next_test();
 }
 
-add_task(function test_containersQueries_sorting()
+add_task(function* test_containersQueries_sorting()
 {
   // Add visits, bookmarks and tags to our database.
   var timeInMilliseconds = Date.now();

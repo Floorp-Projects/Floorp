@@ -15,30 +15,33 @@ from mozrunner import Runner
 
 class GeckoInstance(object):
 
-    required_prefs = {"marionette.defaultPrefs.enabled": True,
-                      "marionette.logging": True,
-                      "browser.displayedE10SPrompt": 5,
-                      "browser.displayedE10SPrompt.1": 5,
-                      "browser.displayedE10SPrompt.2": 5,
-                      "browser.displayedE10SPrompt.3": 5,
-                      "browser.displayedE10SPrompt.4": 5,
-                      "browser.sessionstore.resume_from_crash": False,
-                      "browser.shell.checkDefaultBrowser": False,
-                      "browser.startup.page": 0,
-                      "browser.tabs.remote.autostart": False,
-                      "browser.tabs.remote.autostart.1": False,
-                      "browser.tabs.remote.autostart.2": False,
-                      "browser.urlbar.userMadeSearchSuggestionsChoice": True,
-                      "browser.warnOnQuit": False,
-                      "dom.ipc.reportProcessHangs": False,
-                      "datareporting.healthreport.service.enabled": False,
-                      "datareporting.healthreport.uploadEnabled": False,
-                      "datareporting.healthreport.service.firstRun": False,
-                      "datareporting.healthreport.logging.consoleEnabled": False,
-                      "datareporting.policy.dataSubmissionEnabled": False,
-                      "datareporting.policy.dataSubmissionPolicyAccepted": False,
-                      "focusmanager.testmode": True,
-                      "startup.homepage_welcome_url": "about:blank"}
+    required_prefs = {
+        "marionette.defaultPrefs.enabled": True,
+        "marionette.logging": True,
+        "browser.displayedE10SPrompt": 5,
+        "browser.displayedE10SPrompt.1": 5,
+        "browser.displayedE10SPrompt.2": 5,
+        "browser.displayedE10SPrompt.3": 5,
+        "browser.displayedE10SPrompt.4": 5,
+        "browser.sessionstore.resume_from_crash": False,
+        "browser.shell.checkDefaultBrowser": False,
+        "browser.startup.page": 0,
+        "browser.tabs.remote.autostart": False,
+        "browser.tabs.remote.autostart.1": False,
+        "browser.tabs.remote.autostart.2": False,
+        "browser.urlbar.userMadeSearchSuggestionsChoice": True,
+        "browser.warnOnQuit": False,
+        "dom.ipc.reportProcessHangs": False,
+        "datareporting.healthreport.service.enabled": False,
+        "datareporting.healthreport.uploadEnabled": False,
+        "datareporting.healthreport.service.firstRun": False,
+        "datareporting.healthreport.logging.consoleEnabled": False,
+        "datareporting.policy.dataSubmissionEnabled": False,
+        "datareporting.policy.dataSubmissionPolicyAccepted": False,
+        "focusmanager.testmode": True,
+        "startup.homepage_welcome_url": "about:blank",
+        "toolkit.telemetry.enabled": False,
+    }
 
     def __init__(self, host, port, bin, profile=None, addons=None,
                  app_args=None, symbols_path=None, gecko_log=None, prefs=None):
@@ -163,10 +166,54 @@ class B2GDesktopInstance(GeckoInstance):
         self.prefs["focusmanager.testmode"] = True
         self.app_args += ['-chrome', 'chrome://b2g/content/shell.html']
 
+
+class DesktopInstance(GeckoInstance):
+    desktop_prefs = {
+        'app.update.auto': False,
+        'app.update.enabled': False,
+        'browser.dom.window.dump.enabled': True,
+        # Bug 1145668 - Has to be reverted to about:blank once Marionette
+        # can correctly handle error pages
+        'browser.newtab.url': 'about:newtab',
+        'browser.newtabpage.enabled': False,
+        'browser.reader.detectedFirstArticle': True,
+        'browser.safebrowsing.enabled': False,
+        'browser.safebrowsing.malware.enabled': False,
+        'browser.search.update': False,
+        'browser.tabs.animate': False,
+        'browser.tabs.warnOnClose': False,
+        'browser.tabs.warnOnOpen': False,
+        'browser.uitour.enabled': False,
+        'dom.report_all_js_exceptions': True,
+        'extensions.enabledScopes': 5,
+        'extensions.autoDisableScopes': 10,
+        'extensions.getAddons.cache.enabled': False,
+        'extensions.installDistroAddons': False,
+        'extensions.logging.enabled': True,
+        'extensions.showMismatchUI': False,
+        'extensions.update.enabled': False,
+        'extensions.update.notifyUser': False,
+        'geo.provider.testing': True,
+        'javascript.options.showInConsole': True,
+        # See Bug 1221187 - marionette logging is too verbose, especially for
+        # long-running tests.
+        'marionette.logging': False,
+        'security.notification_enable_delay': 0,
+        'signon.rememberSignons': False,
+        'toolkit.startup.max_resumed_crashes': -1,
+    }
+
+    def __init__(self, *args, **kwargs):
+        super(DesktopInstance, self).__init__(*args, **kwargs)
+        self.required_prefs.update(DesktopInstance.desktop_prefs)
+
 class NullOutput(object):
     def __call__(self, line):
         pass
 
 
-apps = {'b2g': B2GDesktopInstance,
-        'b2gdesktop': B2GDesktopInstance}
+apps = {
+    'b2g': B2GDesktopInstance,
+    'b2gdesktop': B2GDesktopInstance,
+    'fxdesktop': DesktopInstance,
+}

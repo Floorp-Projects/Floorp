@@ -10,7 +10,7 @@ function run_test() {
   run_next_test();
 }
 
-add_task(function() {
+add_task(function*() {
   // Create a backup for yesterday in the backups folder.
   let backupFolder = yield PlacesBackups.getBackupFolder();
   let dateObj = new Date();

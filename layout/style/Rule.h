@@ -33,7 +33,7 @@ class GroupRule;
 class Rule : public nsISupports {
 protected:
   Rule(uint32_t aLineNumber, uint32_t aColumnNumber)
-    : mSheet(0),
+    : mSheet(nullptr),
       mParentRule(nullptr),
       mLineNumber(aLineNumber),
       mColumnNumber(aColumnNumber)
@@ -80,8 +80,7 @@ public:
 
   virtual int32_t GetType() const = 0;
 
-  CSSStyleSheet* GetStyleSheet() const;
-  nsHTMLCSSStyleSheet* GetHTMLCSSStyleSheet() const;
+  CSSStyleSheet* GetStyleSheet() const { return mSheet; }
 
   // Return the document the rule lives in, if any
   nsIDocument* GetDocument() const
@@ -91,9 +90,6 @@ public:
   }
 
   virtual void SetStyleSheet(CSSStyleSheet* aSheet);
-  // This does not need to be virtual, because GroupRule and MediaRule are not
-  // used for inline style.
-  void SetHTMLCSSStyleSheet(nsHTMLCSSStyleSheet* aSheet);
 
   void SetParentRule(GroupRule* aRule) {
     // We don't reference count this up reference. The group rule
@@ -133,9 +129,8 @@ public:
                                                    void* aData);
 
 protected:
-  // This is either a CSSStyleSheet* or an nsHTMLStyleSheet*.  The former
-  // if the low bit is 0, the latter if the low bit is 1.
-  uintptr_t         mSheet;
+  // This is sometimes null (e.g., for style attributes).
+  CSSStyleSheet*    mSheet;
   // When the parent GroupRule is destroyed, it will call SetParentRule(nullptr)
   // on this object. (Through SetParentRuleReference);
   GroupRule* MOZ_NON_OWNING_REF mParentRule;

@@ -519,10 +519,15 @@ elif CONFIG['JS_CODEGEN_MIPS32'] or CONFIG['JS_CODEGEN_MIPS64']:
             'jit/mips64/BaselineIC-mips64.cpp',
             'jit/mips64/CodeGenerator-mips64.cpp',
             'jit/mips64/Lowering-mips64.cpp',
+            'jit/mips64/MacroAssembler-mips64.cpp',
             'jit/mips64/MoveEmitter-mips64.cpp',
             'jit/mips64/SharedIC-mips64.cpp',
             'jit/mips64/Trampoline-mips64.cpp',
         ]
+        if CONFIG['JS_SIMULATOR_MIPS64']:
+            UNIFIED_SOURCES += [
+                'jit/mips64/Simulator-mips64.cpp'
+            ]
 
 if CONFIG['OS_ARCH'] == 'WINNT':
     SOURCES += [
@@ -669,3 +674,32 @@ if not CONFIG['GNU_CXX']:
 NO_EXPAND_LIBS = True
 
 DIST_INSTALL = True
+
+# Prepare self-hosted JS code for embedding
+GENERATED_FILES += ['selfhosted.out.h']
+selfhosted = GENERATED_FILES['selfhosted.out.h']
+selfhosted.script = 'builtin/embedjs.py:generate_selfhosted'
+selfhosted.inputs = [
+    'js.msg',
+    'builtin/TypedObjectConstants.h',
+    'builtin/SelfHostingDefines.h',
+    'builtin/Utilities.js',
+    'builtin/Array.js',
+    'builtin/Date.js',
+    'builtin/Error.js',
+    'builtin/Generator.js',
+    'builtin/Intl.js',
+    'builtin/IntlData.js',
+    'builtin/Iterator.js',
+    'builtin/Map.js',
+    'builtin/Module.js',
+    'builtin/Number.js',
+    'builtin/Object.js',
+    'builtin/Reflect.js',
+    'builtin/RegExp.js',
+    'builtin/String.js',
+    'builtin/Set.js',
+    'builtin/TypedArray.js',
+    'builtin/TypedObject.js',
+    'builtin/WeakSet.js'
+]

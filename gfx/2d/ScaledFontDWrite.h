@@ -19,8 +19,8 @@ class ScaledFontDWrite final : public ScaledFontBase
 public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(ScaledFontDwrite)
   ScaledFontDWrite(IDWriteFontFace *aFont, Float aSize)
-    : mFontFace(aFont)
-    , ScaledFontBase(aSize)
+    : ScaledFontBase(aSize)
+    , mFontFace(aFont)
   {}
   ScaledFontDWrite(uint8_t *aData, uint32_t aSize, uint32_t aIndex, Float aGlyphSize);
 

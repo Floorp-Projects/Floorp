@@ -415,7 +415,6 @@ class ModuleEnvironmentObject : public LexicalScopeBase
                                ObjectOpResult& result);
     static bool enumerate(JSContext* cx, HandleObject obj, AutoIdVector& properties,
                           bool enumerableOnly);
-    static bool thisValue(JSContext* cx, HandleObject obj, MutableHandleValue vp);
 };
 
 typedef Rooted<ModuleEnvironmentObject*> RootedModuleEnvironmentObject;
@@ -688,11 +687,9 @@ class DynamicWithObject : public NestedScopeObject
         return getReservedSlot(OBJECT_SLOT).toObject();
     }
 
-    /* Return object for the 'this' class hook. */
-    Value withThis() const {
-        Value thisValue = getReservedSlot(THIS_SLOT);
-        MOZ_ASSERT(thisValue.isObject());
-        return thisValue;
+    /* Return object for GetThisValue. */
+    JSObject* withThis() const {
+        return &getReservedSlot(THIS_SLOT).toObject();
     }
 
     /*
@@ -927,6 +924,8 @@ class ClonedBlockObject : public BlockObject
      * variable values as this.
      */
     static ClonedBlockObject* clone(JSContext* cx, Handle<ClonedBlockObject*> block);
+
+    Value thisValue();
 };
 
 // Internal scope object used by JSOP_BINDNAME upon encountering an

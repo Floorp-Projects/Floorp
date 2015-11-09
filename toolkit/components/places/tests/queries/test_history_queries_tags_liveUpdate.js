@@ -57,7 +57,7 @@ function run_test()
   run_next_test();
 }
 
-add_task(function test_initialize()
+add_task(function* test_initialize()
 {
   yield task_populateDB(gTestData);
 });

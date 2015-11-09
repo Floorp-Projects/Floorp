@@ -64,7 +64,7 @@ public:
     XrayTraits() {}
 
     static JSObject* getTargetObject(JSObject* wrapper) {
-        return js::UncheckedUnwrap(wrapper, /* stopAtOuter = */ false);
+        return js::UncheckedUnwrap(wrapper, /* stopAtWindowProxy = */ false);
     }
 
     virtual bool resolveNativeProperty(JSContext* cx, JS::HandleObject wrapper,

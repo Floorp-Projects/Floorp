@@ -274,9 +274,10 @@ describe("loop.panel", function() {
         expect(node.textContent).to.eql("reallyreallylongtext@exa…");
       });
 
-      it("should throw an error when user profile is different from {} or null",
+      it("should warn when user profile is different from {} or null",
          function() {
           var warnstub = sandbox.stub(console, "warn");
+
           var view = TestUtils.renderIntoDocument(React.createElement(
             loop.panel.AccountLink, {
               fxAEnabled: false,
@@ -285,21 +286,21 @@ describe("loop.panel", function() {
           ));
 
           sinon.assert.calledOnce(warnstub);
-          sinon.assert.calledWithExactly(warnstub, "Warning: Required prop `userProfile` was not correctly specified in `AccountLink`.");
+          sinon.assert.calledWithMatch(warnstub, "Required prop `userProfile` was not correctly specified in `AccountLink`.");
       });
 
-      it("should throw an error when user profile is different from {} or null",
+      it("should not warn when user profile is an object",
          function() {
           var warnstub = sandbox.stub(console, "warn");
+
           var view = TestUtils.renderIntoDocument(React.createElement(
             loop.panel.AccountLink, {
               fxAEnabled: false,
-              userProfile: function() {}
+              userProfile: {}
             }
           ));
 
-          sinon.assert.calledOnce(warnstub);
-          sinon.assert.calledWithExactly(warnstub, "Warning: Required prop `userProfile` was not correctly specified in `AccountLink`.");
+          sinon.assert.notCalled(warnstub);
       });
     });
 

@@ -70,6 +70,64 @@ test(function(t) {
 }, 'Animation starts playing when its parent element is shown from ' +
    '"display:none" state');
 
+test(function(t) {
+  var div = addDiv(t, { style: 'animation: move 100s forwards' });
+  assert_equals(div.getAnimations().length, 1,
+                'display:initial element has animations');
+
+  var animation = div.getAnimations()[0];
+  animation.finish();
+  assert_equals(div.getAnimations().length, 1,
+                'Element has finished animation if the animation ' +
+                'fill-mode is forwards');
+
+  div.style.display = 'none';
+  assert_equals(animation.playState, 'idle',
+                'The animation.playState should be idle');
+
+  assert_equals(div.getAnimations().length, 0,
+                'display:none element has no animations');
+
+  div.style.display = '';
+  assert_equals(div.getAnimations().length, 1,
+                'Element which is no longer display:none has animations ' +
+                'again');
+  assert_not_equals(div.getAnimations()[0], animation,
+                    'Restarted animation is a newly-generated animation');
+
+}, 'Animation which has already finished starts playing when the element ' +
+   'gets shown from "display:none" state');
+
+test(function(t) {
+  var parentElement = addDiv(t);
+  var div = addDiv(t, { style: 'animation: move 100s forwards' });
+  parentElement.appendChild(div);
+  assert_equals(div.getAnimations().length, 1,
+                'display:initial element has animations');
+
+  var animation = div.getAnimations()[0];
+  animation.finish();
+  assert_equals(div.getAnimations().length, 1,
+                'Element has finished animation if the animation ' +
+                'fill-mode is forwards');
+
+  parentElement.style.display = 'none';
+  assert_equals(animation.playState, 'idle',
+                'The animation.playState should be idle');
+  assert_equals(div.getAnimations().length, 0,
+                'Element in display:none subtree has no animations');
+
+  parentElement.style.display = '';
+  assert_equals(div.getAnimations().length, 1,
+                'Element which is no longer in display:none subtree has ' +
+                'animations again');
+
+  assert_not_equals(div.getAnimations()[0], animation,
+                    'Restarted animation is a newly-generated animation');
+
+}, 'Animation which has already finished starts playing when its parent ' +
+   'element is shown from "display:none" state');
+
 done();
 </script>
 </body>

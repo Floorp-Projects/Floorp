@@ -21,7 +21,7 @@
     "expose-loader": "0.7.x",
     "express": "4.x",
     "imports-loader": "0.6.x",
-    "react": "0.12.x",
+    "react": "0.13.3",
     "script-loader": "0.6.x",
     "webpack": "1.12.x"
   },

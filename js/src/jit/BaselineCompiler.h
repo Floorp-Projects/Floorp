@@ -18,6 +18,8 @@
 # include "jit/arm64/BaselineCompiler-arm64.h"
 #elif defined(JS_CODEGEN_MIPS32)
 # include "jit/mips32/BaselineCompiler-mips32.h"
+#elif defined(JS_CODEGEN_MIPS64)
+# include "jit/mips64/BaselineCompiler-mips64.h"
 #elif defined(JS_CODEGEN_NONE)
 # include "jit/none/BaselineCompiler-none.h"
 #else

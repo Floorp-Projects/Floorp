@@ -538,7 +538,7 @@ nsDisplayListBuilder::AddAnimationsAndTransitionsToLayer(Layer* aLayer,
     // AnimationManager or TransitionManager need to know that we refused to
     // run this animation asynchronously so that they will not throttle the
     // main thread animation.
-    aFrame->Properties().Set(nsIFrame::RefusedAsyncAnimation(),
+    aFrame->Properties().Set(nsIFrame::RefusedAsyncAnimationProperty(),
                             reinterpret_cast<void*>(intptr_t(true)));
 
     // We need to schedule another refresh driver run so that AnimationManager

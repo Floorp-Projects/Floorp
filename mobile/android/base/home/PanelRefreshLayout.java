@@ -59,8 +59,7 @@ class PanelRefreshLayout extends SwipeRefreshLayout implements DatasetBacked {
         addView(childView);
 
         // Must be called after the child view has been added.
-        setColorSchemeResources(R.color.swipe_refresh_orange, R.color.swipe_refresh_white,
-                R.color.swipe_refresh_orange, R.color.swipe_refresh_white);
+        setColorSchemeResources(R.color.fennec_ui_orange, R.color.action_orange);
     }
 
     @Override
