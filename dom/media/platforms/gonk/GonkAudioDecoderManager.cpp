@@ -244,13 +244,13 @@ GonkAudioDecoderManager::Output(int64_t aStreamOffset,
   return NS_ERROR_NOT_AVAILABLE;
 }
 
-nsresult
-GonkAudioDecoderManager::Flush()
+void
+GonkAudioDecoderManager::ProcessFlush()
 {
   GADM_LOG("FLUSH<<<");
   mAudioQueue.Reset();
   GADM_LOG(">>>FLUSH");
-  return GonkDecoderManager::Flush();
+  GonkDecoderManager::ProcessFlush();
 }
 
 } // namespace mozilla
