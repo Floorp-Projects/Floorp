@@ -620,7 +620,7 @@ nsHTMLReflowState::InitResizeFlags(nsPresContext* aPresContext, nsIAtom* aFrameT
     // mCBReflowState->IsBResize() is set correctly below when
     // reflowing descendant.
     SetBResize(true);
-  } else if (mCBReflowState && frame->IsBlockWrapper()) {
+  } else if (mCBReflowState && !nsLayoutUtils::IsNonWrapperBlock(frame)) {
     // XXX Is this problematic for relatively positioned inlines acting
     // as containing block for absolutely positioned elements?
     // Possibly; in that case we should at least be checking
