@@ -59,7 +59,7 @@
       var playback = new LocalMediaStreamPlayback(testVideo, stream);
         return playback.playMediaWithDeprecatedStreamStop(false);
       })
-      .then(() => getUserMedia({video: videoConstraints[0]}))
+      .then(() => getUserMedia({video: videoConstraints[0], fake: false}))
       .then(stream => {
         var playback = new LocalMediaStreamPlayback(testVideo, stream);
         playback.startMedia(false);
