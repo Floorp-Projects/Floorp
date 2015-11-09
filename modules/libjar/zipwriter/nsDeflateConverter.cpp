@@ -9,12 +9,14 @@
 #include "nsIInputStreamPump.h"
 #include "nsComponentManagerUtils.h"
 #include "nsMemory.h"
-#include "nsAutoPtr.h"
 #include "plstr.h"
+#include "mozilla/UniquePtr.h"
 
 #define ZLIB_TYPE "deflate"
 #define GZIP_TYPE "gzip"
 #define X_GZIP_TYPE "x-gzip"
+
+using namespace mozilla;
 
 /**
  * nsDeflateConverter is a stream converter applies the deflate compression
@@ -104,7 +106,7 @@ NS_IMETHODIMP nsDeflateConverter::OnDataAvailable(nsIRequest *aRequest,
     if (!mListener)
         return NS_ERROR_NOT_INITIALIZED;
 
-    nsAutoArrayPtr<char> buffer(new char[aCount]);
+    auto buffer = MakeUnique<char[]>(aCount);
     NS_ENSURE_TRUE(buffer, NS_ERROR_OUT_OF_MEMORY);
 
     nsresult rv = ZW_ReadData(aInputStream, buffer.get(), aCount);

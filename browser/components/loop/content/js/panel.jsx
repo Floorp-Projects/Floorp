@@ -620,7 +620,7 @@ loop.panel = (function(_, mozL10n) {
 
   /**
    * User profile prop can be either an object or null as per mozLoopAPI
-   * and there is no way to express this with React 0.12.2
+   * and there is no way to express this with React 0.13.3
    */
   function userProfileValidator(props, propName, componentName) {
     if (Object.prototype.toString.call(props[propName]) !== "[object Object]" &&

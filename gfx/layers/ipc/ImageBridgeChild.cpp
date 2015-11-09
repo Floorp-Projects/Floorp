@@ -114,6 +114,7 @@ ImageBridgeChild::UseTextures(CompositableClient* aCompositable,
 {
   MOZ_ASSERT(aCompositable);
   MOZ_ASSERT(aCompositable->GetIPDLActor());
+  MOZ_ASSERT(aCompositable->IsConnected());
 
   nsAutoTArray<TimedTexture,4> textures;
 
@@ -143,7 +144,7 @@ ImageBridgeChild::UseComponentAlphaTextures(CompositableClient* aCompositable,
   MOZ_ASSERT(aCompositable);
   MOZ_ASSERT(aTextureOnWhite);
   MOZ_ASSERT(aTextureOnBlack);
-  MOZ_ASSERT(aCompositable->GetIPDLActor());
+  MOZ_ASSERT(aCompositable->IsConnected());
   MOZ_ASSERT(aTextureOnWhite->GetIPDLActor());
   MOZ_ASSERT(aTextureOnBlack->GetIPDLActor());
   MOZ_ASSERT(aTextureOnBlack->GetSize() == aTextureOnWhite->GetSize());
@@ -159,6 +160,7 @@ ImageBridgeChild::UseOverlaySource(CompositableClient* aCompositable,
                                    const nsIntRect& aPictureRect)
 {
   MOZ_ASSERT(aCompositable);
+  MOZ_ASSERT(aCompositable->IsConnected());
   mTxn->AddEdit(OpUseOverlaySource(nullptr, aCompositable->GetIPDLActor(),
       aOverlay, aPictureRect));
 }
@@ -1095,7 +1097,8 @@ ImageBridgeChild::RemoveTextureFromCompositable(CompositableClient* aCompositabl
   MOZ_ASSERT(!mShuttingDown);
   MOZ_ASSERT(aTexture);
   MOZ_ASSERT(aTexture->IsSharedWithCompositor());
-  if (!aTexture || !aTexture->IsSharedWithCompositor()) {
+  MOZ_ASSERT(aCompositable->IsConnected());
+  if (!aTexture || !aTexture->IsSharedWithCompositor() || !aCompositable->IsConnected()) {
     return;
   }
   if (aTexture->GetFlags() & TextureFlags::DEALLOCATE_CLIENT) {
@@ -1117,7 +1120,8 @@ ImageBridgeChild::RemoveTextureFromCompositableAsync(AsyncTransactionTracker* aA
   MOZ_ASSERT(!mShuttingDown);
   MOZ_ASSERT(aTexture);
   MOZ_ASSERT(aTexture->IsSharedWithCompositor());
-  if (!aTexture || !aTexture->IsSharedWithCompositor()) {
+  MOZ_ASSERT(aCompositable->IsConnected());
+  if (!aTexture || !aTexture->IsSharedWithCompositor() || !aCompositable->IsConnected()) {
     return;
   }
   mTxn->AddNoSwapEdit(OpRemoveTextureAsync(CompositableClient::GetTrackersHolderId(aCompositable->GetIPDLActor()),

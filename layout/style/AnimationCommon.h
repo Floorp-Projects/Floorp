@@ -37,8 +37,6 @@ namespace mozilla {
 class RestyleTracker;
 struct AnimationCollection;
 
-bool IsGeometricProperty(nsCSSProperty aProperty);
-
 class CommonAnimationManager : public nsIStyleRuleProcessor {
 public:
   explicit CommonAnimationManager(nsPresContext *aPresContext);
@@ -242,14 +240,6 @@ struct AnimationCollection : public LinkedListElement<AnimationCollection>
 
   void EnsureStyleRuleFor(TimeStamp aRefreshTime);
 
-  enum CanAnimateFlags {
-    // Testing for width, height, top, right, bottom, or left.
-    CanAnimate_HasGeometricProperty = 1,
-    // Allow the case where OMTA is allowed in general, but not for the
-    // specified property.
-    CanAnimate_AllowPartial = 2
-  };
-
   enum class RestyleType {
     // Animation style has changed but the compositor is applying the same
     // change so we might be able to defer updating the main thread until it
@@ -269,36 +259,18 @@ struct AnimationCollection : public LinkedListElement<AnimationCollection>
   void RequestRestyle(RestyleType aRestyleType);
   void ClearIsRunningOnCompositor(nsCSSProperty aProperty);
 
-private:
-  static bool
-  CanAnimatePropertyOnCompositor(const dom::Element *aElement,
-                                 nsCSSProperty aProperty,
-                                 CanAnimateFlags aFlags);
-
-  bool CanThrottleAnimation(TimeStamp aTime);
-  bool CanThrottleTransformChanges(TimeStamp aTime);
-
 public:
-  static bool IsCompositorAnimationDisabledForFrame(nsIFrame* aFrame);
-
   // True if this animation can be performed on the compositor thread.
   //
-  // If aFlags contains CanAnimate_AllowPartial, returns whether the
-  // state of this element's animations at the current refresh driver
-  // time contains animation data that can be done on the compositor
-  // thread.  (This is useful for determining whether a layer should be
-  // active, or whether to send data to the layer.)
-  //
-  // If aFlags does not contain CanAnimate_AllowPartial, returns whether
-  // the state of this element's animations at the current refresh driver
-  // time can be fully represented by data sent to the compositor.
-  // (This is useful for determining whether throttle the animation
-  // (suppress main-thread style updates).)
+  // Returns whether the state of this element's animations at the current
+  // refresh driver time contains animation data that can be done on the
+  // compositor thread.  (This is used for determining whether a layer
+  // should be active, or whether to send data to the layer.)
   //
   // Note that this does not test whether the element's layer uses
   // off-main-thread compositing, although it does check whether
   // off-main-thread compositing is enabled as a whole.
-  bool CanPerformOnCompositorThread(CanAnimateFlags aFlags) const;
+  bool CanPerformOnCompositorThread(const nsIFrame* aFrame) const;
 
   bool HasCurrentAnimationOfProperty(nsCSSProperty aProperty) const;
 

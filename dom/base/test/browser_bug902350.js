@@ -31,24 +31,26 @@ function test() {
   gTestBrowser = gBrowser.selectedBrowser;
   newTab.linkedBrowser.stop()
 
-  gTestBrowser.addEventListener("load", MixedTest1A, true);
+  BrowserTestUtils.browserLoaded(gTestBrowser, true /*includeSubFrames*/).then(MixedTest1A);
   var url = gHttpTestRoot + "file_bug902350.html";
-  gTestBrowser.contentWindow.location = url;
+  gTestBrowser.loadURI(url);
 }
 
 // Need to capture 2 loads, one for the main page and one for the iframe
 function MixedTest1A() {
-  gTestBrowser.removeEventListener("load", MixedTest1A, true);
-  gTestBrowser.addEventListener("load", MixedTest1B, true);
+  dump("XYZ\n");
+  BrowserTestUtils.browserLoaded(gTestBrowser, true /*includeSubFrames*/).then(MixedTest1B);
 }
 
 // Find the iframe and click the link in it
 function MixedTest1B() {
-  gTestBrowser.removeEventListener("load", MixedTest1B, true);
-  gTestBrowser.addEventListener("load", MixedTest1C, true);
-  var frame = content.document.getElementById("testing_frame");
-  var topTarget = frame.contentWindow.document.getElementById("topTarget");
-  topTarget.click();
+  BrowserTestUtils.browserLoaded(gTestBrowser).then(MixedTest1C);
+
+  ContentTask.spawn(gTestBrowser, null, function() {
+    var frame = content.document.getElementById("testing_frame");
+    var topTarget = frame.contentWindow.document.getElementById("topTarget");
+    topTarget.click();
+  });
 
   // The link click should have caused a load and should not invoke the Mixed Content Blocker
   let {gIdentityHandler} = gTestBrowser.ownerGlobal;
@@ -57,9 +59,12 @@ function MixedTest1B() {
 }
 
 function MixedTest1C() {
-  gTestBrowser.removeEventListener("load", MixedTest1C, true);
-  ok(gTestBrowser.contentWindow.location == "http://example.com/", "Navigating to insecure domain through target='_top' failed.")
-  MixedTestsCompleted();
+  ContentTask.spawn(gTestBrowser, null, function() {
+    return content.location.href;
+  }).then(url => {
+    ok(gTestBrowser.contentWindow.location == "http://example.com/", "Navigating to insecure domain through target='_top' failed.")
+    MixedTestsCompleted();
+  });
 }
 
 

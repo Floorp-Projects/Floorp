@@ -14,42 +14,46 @@
   <script type="application/javascript">
 
     function prefStart() {
+      AccessFuTest.once_log("AccessFu:Enabled", () =>
+        ok(AccessFu._enabled, "AccessFu was enabled again."));
+      AccessFuTest.once_log("EventManager.start", AccessFuTest.nextTest);
       // Start AccessFu via pref.
       SpecialPowers.setIntPref("accessibility.accessfu.activate", 1);
-      AccessFuTest.once_log("EventManager.start", AccessFuTest.nextTest);
     }
 
     // Listen for 'EventManager.stop' and enable AccessFu again.
     function settingsStart() {
-      ok(true, "EventManager was stopped.");
       isnot(AccessFu._enabled, true, "AccessFu was disabled.");
-      AccessFuTest.once({
-        "eventType": "announcement",
-        "data": [{string: "screenReaderStarted"}]
-      }, AccessFuTest.nextTest);
       // XXX: Bug 978076 - test start with SettingsManager.
       //navigator.mozSettings.createLock().set(
       //  {'accessibility.screenreader': false});
-      AccessFu._enable()
+      AccessFuTest.once_log("EventManager.start", () => {
+        ok(AccessFu._enabled, "AccessFu was enabled again.");
+        AccessFuTest.nextTest();
+      });
+      AccessFu._enable();
     }
 
     // Make sure EventManager is started again.
     function settingsStop() {
       ok(AccessFu._enabled, "AccessFu was enabled again.");
-      AccessFuTest.once({
-        "eventType": "announcement",
-        "data": [{string: "screenReaderStopped"}]
-      }, AccessFuTest.finish);
       // XXX: Bug 978076 - test stop with SettingsManager.
       //navigator.mozSettings.createLock().set(
       //  {'accessibility.screenreader': false});
+      AccessFuTest.once_log("EventManager.stop", () => {
+        isnot(AccessFu._enabled, "AccessFu was disabled.");
+        AccessFuTest.finish();
+      });
       AccessFu._disable();
     }
 
     // Listen for initial 'EventManager.start' and disable AccessFu.
     function prefStop() {
       ok(AccessFu._enabled, "AccessFu was started via preference.");
+      AccessFuTest.once_log("AccessFu:Disabled", () =>
+        isnot(AccessFu._enabled, true, "AccessFu was disabled."));
       AccessFuTest.once_log("EventManager.stop", AccessFuTest.nextTest);
+
       SpecialPowers.setIntPref("accessibility.accessfu.activate", 0);
     }
 

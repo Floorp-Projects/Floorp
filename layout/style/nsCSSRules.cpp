@@ -55,43 +55,13 @@ IMPL_STYLE_RULE_INHERIT_GET_DOM_RULE_WEAK(class_, super_)
 namespace mozilla {
 namespace css {
 
-CSSStyleSheet*
-Rule::GetStyleSheet() const
-{
-  if (!(mSheet & 0x1)) {
-    return reinterpret_cast<CSSStyleSheet*>(mSheet);
-  }
-
-  return nullptr;
-}
-
-nsHTMLCSSStyleSheet*
-Rule::GetHTMLCSSStyleSheet() const
-{
-  if (mSheet & 0x1) {
-    return reinterpret_cast<nsHTMLCSSStyleSheet*>(mSheet & ~uintptr_t(0x1));
-  }
-
-  return nullptr;
-}
-
 /* virtual */ void
 Rule::SetStyleSheet(CSSStyleSheet* aSheet)
 {
   // We don't reference count this up reference. The style sheet
   // will tell us when it's going away or when we're detached from
   // it.
-  mSheet = reinterpret_cast<uintptr_t>(aSheet);
-}
-
-void
-Rule::SetHTMLCSSStyleSheet(nsHTMLCSSStyleSheet* aSheet)
-{
-  // We don't reference count this up reference. The style sheet
-  // will tell us when it's going away or when we're detached from
-  // it.
-  mSheet = reinterpret_cast<uintptr_t>(aSheet);
-  mSheet |= 0x1;
+  mSheet = aSheet;
 }
 
 nsresult
@@ -534,19 +504,6 @@ GroupRule::InsertStyleRuleAt(uint32_t aIndex, Rule* aRule)
   if (! mRules.InsertObjectAt(aRule, aIndex)) {
     return NS_ERROR_FAILURE;
   }
-  return NS_OK;
-}
-
-nsresult
-GroupRule::ReplaceStyleRule(Rule* aOld, Rule* aNew)
-{
-  int32_t index = mRules.IndexOf(aOld);
-  NS_ENSURE_TRUE(index != -1, NS_ERROR_UNEXPECTED);
-  mRules.ReplaceObjectAt(aNew, index);
-  aNew->SetStyleSheet(GetStyleSheet());
-  aNew->SetParentRule(this);
-  aOld->SetStyleSheet(nullptr);
-  aOld->SetParentRule(nullptr);
   return NS_OK;
 }
 
