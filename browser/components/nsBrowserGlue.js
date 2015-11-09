@@ -1326,6 +1326,21 @@ BrowserGlue.prototype = {
       }
     }
 
+    if (this._mayNeedToWarnAboutTabGroups) {
+      let haveTabGroups = false;
+      let wins = Services.wm.getEnumerator("navigator:browser");
+      while (wins.hasMoreElements()) {
+        let win = wins.getNext();
+        if (win.TabView._tabBrowserHasHiddenTabs() && win.TabView.firstUseExperienced()) {
+          haveTabGroups = true;
+          break;
+        }
+      }
+      if (haveTabGroups) {
+        this._showTabGroupsDeprecationNotification();
+      }
+    }
+
 #ifdef E10S_TESTING_ONLY
     E10SUINotification.checkStatus();
 #endif
@@ -1363,6 +1378,27 @@ BrowserGlue.prototype = {
     }
   },
 #endif
+
+  _showTabGroupsDeprecationNotification() {
+    let brandShortName = gBrandBundle.GetStringFromName("brandShortName");
+    let text = gBrowserBundle.formatStringFromName("tabgroups.deprecationwarning.description",
+                                                   [brandShortName], 1);
+    let learnMore = gBrowserBundle.GetStringFromName("tabgroups.deprecationwarning.learnMore.label");
+    let learnMoreKey = gBrowserBundle.GetStringFromName("tabgroups.deprecationwarning.learnMore.accesskey");
+
+    let win = RecentWindow.getMostRecentBrowserWindow();
+    let notifyBox = win.document.getElementById("high-priority-global-notificationbox");
+    let button = {
+      label: learnMore,
+      accessKey: learnMoreKey,
+      callback: function(aNotificationBar, aButton) {
+        win.openUILinkIn("https://support.mozilla.org/kb/tab-groups-removal", "tab");
+      },
+    };
+
+    notifyBox.appendNotification(text, "tabgroups-removal-notification", null,
+                                 notifyBox.PRIORITY_WARNING_MEDIUM, [button]);
+  },
 
   _onQuitRequest: function BG__onQuitRequest(aCancelQuit, aQuitType) {
     // If user has already dismissed quit request, then do nothing
@@ -1871,7 +1907,7 @@ BrowserGlue.prototype = {
   },
 
   _migrateUI: function BG__migrateUI() {
-    const UI_VERSION = 32;
+    const UI_VERSION = 33;
     const BROWSER_DOCURL = "chrome://browser/content/browser.xul";
     let currentUIVersion = 0;
     try {
@@ -2214,6 +2250,11 @@ BrowserGlue.prototype = {
 
     if (currentUIVersion < 32) {
       this._notifyNotificationsUpgrade();
+    }
+
+    if (currentUIVersion < 33) {
+      // We'll do something once windows are open:
+      this._mayNeedToWarnAboutTabGroups = true;
     }
 
     // Update the migration version.

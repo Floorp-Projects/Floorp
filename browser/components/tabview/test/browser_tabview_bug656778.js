@@ -32,12 +32,12 @@ function test() {
 
   let assertNotificationBannerVisible = function (win) {
     let cw = win.TabView.getContentWindow();
-    is(cw.iQ(".banner").length, 1, "notification banner is visible");
+    is(cw.iQ(".banner").length, 2, "notification banner is visible");
   };
 
   let assertNotificationBannerNotVisible = function (win) {
     let cw = win.TabView.getContentWindow();
-    is(cw.iQ(".banner").length, 0, "notification banner is not visible");
+    is(cw.iQ(".banner").length, 1, "notification banner is not visible");
   };
 
   let next = function () {
