@@ -59,7 +59,7 @@
     test = new PeerConnectionTest();
     test.audioCtx = new AudioContext();
     test.setMediaConstraints([{video: true, audio: true}], [{video: true}]);
-    test.chain.removeAfter("PC_REMOTE_CHECK_MEDIA_FLOW_PRESENT");
+    test.chain.removeAfter("PC_REMOTE_WAIT_FOR_MEDIA_FLOW");
 
     // Test replaceTrack on pcRemote separately since it's video only.
     test.chain.append([

@@ -15,10 +15,12 @@ protocol PContentPermissionRequest
 parent:
   prompt();
   NotifyVisibility(bool visibility);
+  Destroy();
 
 child:
   GetVisibility();
-  __delete__(bool allow, PermissionChoice[] choices);
+  NotifyResult(bool allow, PermissionChoice[] choices);
+  __delete__();
 };
 
 

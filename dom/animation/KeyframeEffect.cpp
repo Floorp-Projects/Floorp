@@ -9,8 +9,10 @@
 #include "mozilla/dom/KeyframeEffectBinding.h"
 #include "mozilla/dom/PropertyIndexedKeyframesBinding.h"
 #include "mozilla/FloatingPoint.h"
+#include "mozilla/LookAndFeel.h" // For LookAndFeel::GetInt
 #include "mozilla/StyleAnimationValue.h"
 #include "AnimationCommon.h"
+#include "Layers.h" // For Layer
 #include "nsCSSParser.h"
 #include "nsCSSPropertySet.h"
 #include "nsCSSProps.h" // For nsCSSProps::PropHasFlags
@@ -464,6 +466,19 @@ KeyframeEffectReadOnly::ComposeStyle(RefPtr<AnimValuesStyleRule>& aStyleRule,
                                        valuePosition, *val);
     MOZ_ASSERT(result, "interpolate must succeed now");
   }
+}
+
+bool
+KeyframeEffectReadOnly::IsPropertyRunningOnCompositor(
+  nsCSSProperty aProperty) const
+{
+  const auto& info = LayerAnimationInfo::sRecords;
+  for (size_t i = 0; i < ArrayLength(mIsPropertyRunningOnCompositor); i++) {
+    if (info[i].mProperty == aProperty) {
+      return mIsPropertyRunningOnCompositor[i];
+    }
+  }
+  return false;
 }
 
 bool
@@ -1708,6 +1723,273 @@ KeyframeEffectReadOnly::GetFrames(JSContext*& aCx,
 
     aResult.AppendElement(keyframe);
   }
+}
+
+/* static */ const TimeDuration
+KeyframeEffectReadOnly::OverflowRegionRefreshInterval()
+{
+  // The amount of time we can wait between updating throttled animations
+  // on the main thread that influence the overflow region.
+  static const TimeDuration kOverflowRegionRefreshInterval =
+    TimeDuration::FromMilliseconds(200);
+
+  return kOverflowRegionRefreshInterval;
+}
+
+bool
+KeyframeEffectReadOnly::CanThrottle() const
+{
+  // Animation::CanThrottle checks for not in effect animations
+  // before calling this.
+  MOZ_ASSERT(IsInEffect(), "Effect should be in effect");
+
+  // Unthrottle if this animation is not current (i.e. it has passed the end).
+  // In future we may be able to throttle this case too, but we should only get
+  // occasional ticks while the animation is in this state so it doesn't matter
+  // too much.
+  if (!IsCurrent()) {
+    return false;
+  }
+
+  nsIFrame* frame = GetAnimationFrame();
+  if (!frame) {
+    // There are two possible cases here.
+    // a) No target element
+    // b) The target element has no frame, e.g. because it is in a display:none
+    //    subtree.
+    // In either case we can throttle the animation because there is no
+    // need to update on the main thread.
+    return true;
+  }
+
+  // First we need to check layer generation and transform overflow
+  // prior to the IsPropertyRunningOnCompositor check because we should
+  // occasionally unthrottle these animations even if the animations are
+  // already running on compositor.
+  for (const LayerAnimationInfo::Record& record :
+        LayerAnimationInfo::sRecords) {
+    // Skip properties that are overridden in the cascade.
+    // (GetAnimationOfProperty, as called by HasAnimationOfProperty,
+    // only returns an animation if it currently wins in the cascade.)
+    if (!HasAnimationOfProperty(record.mProperty)) {
+      continue;
+    }
+
+    AnimationCollection* collection = GetCollection();
+    MOZ_ASSERT(collection,
+      "CanThrottle should be called on an effect associated with an animation");
+    layers::Layer* layer =
+      FrameLayerBuilder::GetDedicatedLayer(frame, record.mLayerType);
+    // Unthrottle if the layer needs to be brought up to date with the animation.
+    if (!layer ||
+        collection->mAnimationGeneration > layer->GetAnimationGeneration()) {
+      return false;
+    }
+
+    // If this is a transform animation that affects the overflow region,
+    // we should unthrottle the animation periodically.
+    if (record.mProperty == eCSSProperty_transform &&
+        !CanThrottleTransformChanges(*frame)) {
+      return false;
+    }
+  }
+
+  for (const AnimationProperty& property : mProperties) {
+    if (!IsPropertyRunningOnCompositor(property.mProperty)) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+bool
+KeyframeEffectReadOnly::CanThrottleTransformChanges(nsIFrame& aFrame) const
+{
+  // If we know that the animation cannot cause overflow,
+  // we can just disable flushes for this animation.
+
+  // If we don't show scrollbars, we don't care about overflow.
+  if (LookAndFeel::GetInt(LookAndFeel::eIntID_ShowHideScrollbars) == 0) {
+    return true;
+  }
+
+  nsPresContext* presContext = GetPresContext();
+  // CanThrottleTransformChanges is only called as part of a refresh driver tick
+  // in which case we expect to has a pres context.
+  MOZ_ASSERT(presContext);
+
+  TimeStamp now =
+    presContext->RefreshDriver()->MostRecentRefresh();
+
+  AnimationCollection* collection = GetCollection();
+  MOZ_ASSERT(collection,
+    "CanThrottleTransformChanges should be involved with animation collection");
+  TimeStamp styleRuleRefreshTime = collection->mStyleRuleRefreshTime;
+  // If this animation can cause overflow, we can throttle some of the ticks.
+  if (!styleRuleRefreshTime.IsNull() &&
+      (now - styleRuleRefreshTime) < OverflowRegionRefreshInterval()) {
+    return true;
+  }
+
+  // If the nearest scrollable ancestor has overflow:hidden,
+  // we don't care about overflow.
+  nsIScrollableFrame* scrollable =
+    nsLayoutUtils::GetNearestScrollableFrame(&aFrame);
+  if (!scrollable) {
+    return true;
+  }
+
+  ScrollbarStyles ss = scrollable->GetScrollbarStyles();
+  if (ss.mVertical == NS_STYLE_OVERFLOW_HIDDEN &&
+      ss.mHorizontal == NS_STYLE_OVERFLOW_HIDDEN &&
+      scrollable->GetLogicalScrollPosition() == nsPoint(0, 0)) {
+    return true;
+  }
+
+  return false;
+}
+
+nsIFrame*
+KeyframeEffectReadOnly::GetAnimationFrame() const
+{
+  if (!mTarget) {
+    return nullptr;
+  }
+
+  nsIFrame* frame = mTarget->GetPrimaryFrame();
+  if (!frame) {
+    return nullptr;
+  }
+
+  if (mPseudoType == nsCSSPseudoElements::ePseudo_before) {
+    frame = nsLayoutUtils::GetBeforeFrame(frame);
+  } else if (mPseudoType == nsCSSPseudoElements::ePseudo_after) {
+    frame = nsLayoutUtils::GetAfterFrame(frame);
+  } else {
+    MOZ_ASSERT(mPseudoType == nsCSSPseudoElements::ePseudo_NotPseudoElement,
+               "unknown mPseudoType");
+  }
+  if (!frame) {
+    return nullptr;
+  }
+
+  return nsLayoutUtils::GetStyleFrame(frame);
+}
+
+nsIDocument*
+KeyframeEffectReadOnly::GetRenderedDocument() const
+{
+  if (!mTarget) {
+    return nullptr;
+  }
+  return mTarget->GetComposedDoc();
+}
+
+nsPresContext*
+KeyframeEffectReadOnly::GetPresContext() const
+{
+  nsIDocument* doc = GetRenderedDocument();
+  if (!doc) {
+    return nullptr;
+  }
+  nsIPresShell* shell = doc->GetShell();
+  if (!shell) {
+    return nullptr;
+  }
+  return shell->GetPresContext();
+}
+
+AnimationCollection *
+KeyframeEffectReadOnly::GetCollection() const
+{
+  return mAnimation ? mAnimation->GetCollection() : nullptr;
+}
+
+/* static */ bool
+KeyframeEffectReadOnly::IsGeometricProperty(
+  const nsCSSProperty aProperty)
+{
+  switch (aProperty) {
+    case eCSSProperty_bottom:
+    case eCSSProperty_height:
+    case eCSSProperty_left:
+    case eCSSProperty_right:
+    case eCSSProperty_top:
+    case eCSSProperty_width:
+      return true;
+    default:
+      return false;
+  }
+}
+
+/* static */ bool
+KeyframeEffectReadOnly::CanAnimateTransformOnCompositor(
+  const nsIFrame* aFrame,
+  const nsIContent* aContent)
+{
+  if (aFrame->Combines3DTransformWithAncestors() ||
+      aFrame->Extend3DContext()) {
+    if (aContent) {
+      nsCString message;
+      message.AppendLiteral("Gecko bug: Async animation of 'preserve-3d' "
+        "transforms is not supported.  See bug 779598");
+      AnimationCollection::LogAsyncAnimationFailure(message, aContent);
+    }
+    return false;
+  }
+  // Note that testing BackfaceIsHidden() is not a sufficient test for
+  // what we need for animating backface-visibility correctly if we
+  // remove the above test for Extend3DContext(); that would require
+  // looking at backface-visibility on descendants as well.
+  if (aFrame->StyleDisplay()->BackfaceIsHidden()) {
+    if (aContent) {
+      nsCString message;
+      message.AppendLiteral("Gecko bug: Async animation of "
+        "'backface-visibility: hidden' transforms is not supported."
+        "  See bug 1186204.");
+      AnimationCollection::LogAsyncAnimationFailure(message, aContent);
+    }
+    return false;
+  }
+  if (aFrame->IsSVGTransformed()) {
+    if (aContent) {
+      nsCString message;
+      message.AppendLiteral("Gecko bug: Async 'transform' animations of "
+        "aFrames with SVG transforms is not supported.  See bug 779599");
+      AnimationCollection::LogAsyncAnimationFailure(message, aContent);
+    }
+    return false;
+  }
+
+  return true;
+}
+
+/* static */ bool
+KeyframeEffectReadOnly::CanAnimatePropertyOnCompositor(
+  const nsIFrame* aFrame,
+  nsCSSProperty aProperty)
+{
+  bool shouldLog = nsLayoutUtils::IsAnimationLoggingEnabled();
+
+  if (IsGeometricProperty(aProperty)) {
+    if (shouldLog) {
+      nsCString message;
+      message.AppendLiteral("Performance warning: Async animation of "
+        "'transform' or 'opacity' not possible due to animation of geometric"
+        "properties on the same element");
+      AnimationCollection::LogAsyncAnimationFailure(message,
+                                                    aFrame->GetContent());
+    }
+    return false;
+  }
+  if (aProperty == eCSSProperty_transform) {
+    if (!CanAnimateTransformOnCompositor(aFrame,
+          shouldLog ? aFrame->GetContent() : nullptr)) {
+      return false;
+    }
+  }
+  return true;
 }
 
 } // namespace dom

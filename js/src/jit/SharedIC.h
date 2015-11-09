@@ -726,13 +726,6 @@ class ICStub
           // pushed during the bailout.
           case GetProp_Fallback:
           case SetProp_Fallback:
-#if JS_HAS_NO_SUCH_METHOD
-          case GetElem_Dense:
-          case GetElem_Arguments:
-          case GetProp_NativePrototype:
-          case GetProp_Native:
-          case GetName_Global:
-#endif
             return true;
           default:
             return false;
@@ -1033,7 +1026,7 @@ class ICStubCompiler
         MOZ_ASSERT(!regs.has(BaselineStackReg));
         MOZ_ASSERT(!regs.has(ICTailCallReg));
         regs.take(BaselineSecondScratchReg);
-#elif defined(JS_CODEGEN_MIPS32)
+#elif defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
         MOZ_ASSERT(!regs.has(BaselineStackReg));
         MOZ_ASSERT(!regs.has(ICTailCallReg));
         MOZ_ASSERT(!regs.has(BaselineSecondScratchReg));

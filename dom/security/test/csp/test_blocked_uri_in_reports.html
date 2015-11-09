@@ -34,71 +34,32 @@ const reportURI = "http://mochi.test:8888/foo.sjs";
 const policy = "script-src http://example.com; report-uri " + reportURI;
 const testfile = "tests/dom/security/test/csp/file_path_matching_redirect.html";
 
-// This is used to watch requests go out so we can see if the report is
-// sent correctly
-function examiner() {
-  SpecialPowers.addObserver(this, "http-on-opening-request", false);
-}
-examiner.prototype  = {
-  observe: function(subject, topic, data) {
-    // subject should be an nsURI
-    if (!SpecialPowers.can_QI(subject))
-      return;
+var chromeScriptUrl = SimpleTest.getTestFileURL("file_report_chromescript.js");
+var script = SpecialPowers.loadChromeScript(chromeScriptUrl);
 
-    if (topic === "http-on-opening-request") {
-      var asciiSpec = SpecialPowers.getPrivilegedProps(SpecialPowers.do_QueryInterface(subject, "nsIHttpChannel"), "URI.asciiSpec");
-      if (asciiSpec !== reportURI) return;
-
-      try {
-        // Verify that the report was properly formatted.
-        // We'll parse the report text as JSON and verify that the properties
-        // have expected values.
-        var reportText = "{}";
-        var uploadStream = SpecialPowers.wrap(SpecialPowers.do_QueryInterface(subject, "nsIUploadChannel")).uploadStream;
-
-        if (uploadStream) {
-          // get the bytes from the request body
-          var binstream = SpecialPowers.Cc["@mozilla.org/binaryinputstream;1"]
-                                          .createInstance(SpecialPowers.Ci.nsIBinaryInputStream);
-          binstream.setInputStream(uploadStream);
-
-          var segments = [];
-          for (var count = uploadStream.available(); count; count = uploadStream.available()) {
-            var data = binstream.readBytes(count);
-            segments.push(data);
-          }
-
-          var reportText = segments.join("");
-          // rewind stream as we are supposed to - there will be an assertion later if we don't.
-          SpecialPowers.do_QueryInterface(uploadStream, "nsISeekableStream").seek(SpecialPowers.Ci.nsISeekableStream.NS_SEEK_SET, 0);
-        }
-        try {
-          var reportObj = JSON.parse(reportText);
-        }
-        catch (e) {
-          ok(false, "Could not parse JSON (exception: " + e + ")");
-        }
-        var cspReport = reportObj["csp-report"];
-        // blocked-uri should only be the asciiHost instead of:
-        // http://test1.example.com/tests/dom/security/test/csp/file_path_matching.js
-        is(cspReport["blocked-uri"], "http://test1.example.com", "Incorrect blocked-uri");
-      }
-      catch (e) {
-        ok(false, "Could not query report (exception: " + e + ")");
-      }
-
-      // finish up
-      window.examiner.remove();
-      SimpleTest.finish();
+script.addMessageListener('opening-request-completed', function ml(msg) {
+  if (msg.error) {
+    ok(false, "Could not query report (exception: " + msg.error + ")");
+  } else {
+    try {
+      var reportObj = JSON.parse(msg.report);
+    } catch (e) {
+      ok(false, "Could not parse JSON (exception: " + e + ")");
     }
-  },
-
-  // remove the listener
-  remove: function() {
-    SpecialPowers.removeObserver(this, "http-on-opening-request");
+    try {
+      var cspReport = reportObj["csp-report"];
+      // blocked-uri should only be the asciiHost instead of:
+      // http://test1.example.com/tests/dom/security/test/csp/file_path_matching.js
+      is(cspReport["blocked-uri"], "http://test1.example.com", "Incorrect blocked-uri");
+    } catch (e) {
+      ok(false, "Could not query report (exception: " + e + ")");
+    }
   }
-}
-window.examiner = new examiner();
+
+  script.removeMessageListener('opening-request-completed', ml);
+  SimpleTest.finish();
+});
+
 SimpleTest.waitForExplicitFinish();
 
 function runTest() {

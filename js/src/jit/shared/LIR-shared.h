@@ -5178,7 +5178,7 @@ class LAtomicIsLockFree : public LInstructionHelper<1, 1, 0>
     }
 };
 
-class LCompareExchangeTypedArrayElement : public LInstructionHelper<1, 4, 1>
+class LCompareExchangeTypedArrayElement : public LInstructionHelper<1, 4, 4>
 {
   public:
     LIR_HEADER(CompareExchangeTypedArrayElement)
@@ -5192,6 +5192,20 @@ class LCompareExchangeTypedArrayElement : public LInstructionHelper<1, 4, 1>
         setOperand(2, oldval);
         setOperand(3, newval);
         setTemp(0, temp);
+    }
+    LCompareExchangeTypedArrayElement(const LAllocation& elements, const LAllocation& index,
+                                      const LAllocation& oldval, const LAllocation& newval,
+                                      const LDefinition& temp, const LDefinition& valueTemp,
+                                      const LDefinition& offsetTemp, const LDefinition& maskTemp)
+    {
+        setOperand(0, elements);
+        setOperand(1, index);
+        setOperand(2, oldval);
+        setOperand(3, newval);
+        setTemp(0, temp);
+        setTemp(1, valueTemp);
+        setTemp(2, offsetTemp);
+        setTemp(3, maskTemp);
     }
 
     const LAllocation* elements() {
@@ -5210,12 +5224,23 @@ class LCompareExchangeTypedArrayElement : public LInstructionHelper<1, 4, 1>
         return getTemp(0);
     }
 
+    // Temp that may be used on LL/SC platforms for extract/insert bits of word.
+    const LDefinition* valueTemp() {
+        return getTemp(1);
+    }
+    const LDefinition* offsetTemp() {
+        return getTemp(2);
+    }
+    const LDefinition* maskTemp() {
+        return getTemp(3);
+    }
+
     const MCompareExchangeTypedArrayElement* mir() const {
         return mir_->toCompareExchangeTypedArrayElement();
     }
 };
 
-class LAtomicExchangeTypedArrayElement : public LInstructionHelper<1, 3, 1>
+class LAtomicExchangeTypedArrayElement : public LInstructionHelper<1, 3, 4>
 {
   public:
     LIR_HEADER(AtomicExchangeTypedArrayElement)
@@ -5227,6 +5252,19 @@ class LAtomicExchangeTypedArrayElement : public LInstructionHelper<1, 3, 1>
         setOperand(1, index);
         setOperand(2, value);
         setTemp(0, temp);
+    }
+    LAtomicExchangeTypedArrayElement(const LAllocation& elements, const LAllocation& index,
+                                     const LAllocation& value, const LDefinition& temp,
+                                     const LDefinition& valueTemp, const LDefinition& offsetTemp,
+                                     const LDefinition& maskTemp)
+    {
+        setOperand(0, elements);
+        setOperand(1, index);
+        setOperand(2, value);
+        setTemp(0, temp);
+        setTemp(1, valueTemp);
+        setTemp(2, offsetTemp);
+        setTemp(3, maskTemp);
     }
 
     const LAllocation* elements() {
@@ -5242,12 +5280,23 @@ class LAtomicExchangeTypedArrayElement : public LInstructionHelper<1, 3, 1>
         return getTemp(0);
     }
 
+    // Temp that may be used on LL/SC platforms for extract/insert bits of word.
+    const LDefinition* valueTemp() {
+        return getTemp(1);
+    }
+    const LDefinition* offsetTemp() {
+        return getTemp(2);
+    }
+    const LDefinition* maskTemp() {
+        return getTemp(3);
+    }
+
     const MAtomicExchangeTypedArrayElement* mir() const {
         return mir_->toAtomicExchangeTypedArrayElement();
     }
 };
 
-class LAtomicTypedArrayElementBinop : public LInstructionHelper<1, 3, 2>
+class LAtomicTypedArrayElementBinop : public LInstructionHelper<1, 3, 5>
 {
   public:
     LIR_HEADER(AtomicTypedArrayElementBinop)
@@ -5263,6 +5312,20 @@ class LAtomicTypedArrayElementBinop : public LInstructionHelper<1, 3, 2>
         setOperand(2, value);
         setTemp(0, temp1);
         setTemp(1, temp2);
+    }
+    LAtomicTypedArrayElementBinop(const LAllocation& elements, const LAllocation& index,
+                                  const LAllocation& value, const LDefinition& temp1,
+                                  const LDefinition& temp2, const LDefinition& valueTemp,
+                                  const LDefinition& offsetTemp, const LDefinition& maskTemp)
+    {
+        setOperand(0, elements);
+        setOperand(1, index);
+        setOperand(2, value);
+        setTemp(0, temp1);
+        setTemp(1, temp2);
+        setTemp(2, valueTemp);
+        setTemp(3, offsetTemp);
+        setTemp(4, maskTemp);
     }
 
     const LAllocation* elements() {
@@ -5282,13 +5345,24 @@ class LAtomicTypedArrayElementBinop : public LInstructionHelper<1, 3, 2>
         return getTemp(1);
     }
 
+    // Temp that may be used on LL/SC platforms for extract/insert bits of word.
+    const LDefinition* valueTemp() {
+        return getTemp(2);
+    }
+    const LDefinition* offsetTemp() {
+        return getTemp(3);
+    }
+    const LDefinition* maskTemp() {
+        return getTemp(4);
+    }
+
     const MAtomicTypedArrayElementBinop* mir() const {
         return mir_->toAtomicTypedArrayElementBinop();
     }
 };
 
 // Atomic binary operation where the result is discarded.
-class LAtomicTypedArrayElementBinopForEffect : public LInstructionHelper<0, 3, 1>
+class LAtomicTypedArrayElementBinopForEffect : public LInstructionHelper<0, 3, 4>
 {
   public:
     LIR_HEADER(AtomicTypedArrayElementBinopForEffect)
@@ -5301,6 +5375,19 @@ class LAtomicTypedArrayElementBinopForEffect : public LInstructionHelper<0, 3, 1
         setOperand(1, index);
         setOperand(2, value);
         setTemp(0, flagTemp);
+    }
+    LAtomicTypedArrayElementBinopForEffect(const LAllocation& elements, const LAllocation& index,
+                                           const LAllocation& value, const LDefinition& flagTemp,
+                                           const LDefinition& valueTemp, const LDefinition& offsetTemp,
+                                           const LDefinition& maskTemp)
+    {
+        setOperand(0, elements);
+        setOperand(1, index);
+        setOperand(2, value);
+        setTemp(0, flagTemp);
+        setTemp(1, valueTemp);
+        setTemp(2, offsetTemp);
+        setTemp(3, maskTemp);
     }
 
     const LAllocation* elements() {
@@ -5316,6 +5403,16 @@ class LAtomicTypedArrayElementBinopForEffect : public LInstructionHelper<0, 3, 1
     // Temp that may be used on LL/SC platforms for the flag result of the store.
     const LDefinition* flagTemp() {
         return getTemp(0);
+    }
+    // Temp that may be used on LL/SC platforms for extract/insert bits of word.
+    const LDefinition* valueTemp() {
+        return getTemp(1);
+    }
+    const LDefinition* offsetTemp() {
+        return getTemp(2);
+    }
+    const LDefinition* maskTemp() {
+        return getTemp(3);
     }
 
     const MAtomicTypedArrayElementBinop* mir() const {
@@ -6553,7 +6650,7 @@ class LAsmJSStoreHeap : public LInstructionHelper<0, 2, 0>
     }
 };
 
-class LAsmJSCompareExchangeHeap : public LInstructionHelper<1, 3, 1>
+class LAsmJSCompareExchangeHeap : public LInstructionHelper<1, 3, 4>
 {
   public:
     LIR_HEADER(AsmJSCompareExchangeHeap);
@@ -6565,6 +6662,18 @@ class LAsmJSCompareExchangeHeap : public LInstructionHelper<1, 3, 1>
         setOperand(1, oldValue);
         setOperand(2, newValue);
         setTemp(0, LDefinition::BogusTemp());
+    }
+    LAsmJSCompareExchangeHeap(const LAllocation& ptr, const LAllocation& oldValue,
+                              const LAllocation& newValue, const LDefinition& valueTemp,
+                              const LDefinition& offsetTemp, const LDefinition& maskTemp)
+    {
+        setOperand(0, ptr);
+        setOperand(1, oldValue);
+        setOperand(2, newValue);
+        setTemp(0, LDefinition::BogusTemp());
+        setTemp(1, valueTemp);
+        setTemp(2, offsetTemp);
+        setTemp(3, maskTemp);
     }
 
     const LAllocation* ptr() {
@@ -6584,12 +6693,23 @@ class LAsmJSCompareExchangeHeap : public LInstructionHelper<1, 3, 1>
         setTemp(0, addrTemp);
     }
 
+    // Temp that may be used on LL/SC platforms for extract/insert bits of word.
+    const LDefinition* valueTemp() {
+        return getTemp(1);
+    }
+    const LDefinition* offsetTemp() {
+        return getTemp(2);
+    }
+    const LDefinition* maskTemp() {
+        return getTemp(3);
+    }
+
     MAsmJSCompareExchangeHeap* mir() const {
         return mir_->toAsmJSCompareExchangeHeap();
     }
 };
 
-class LAsmJSAtomicExchangeHeap : public LInstructionHelper<1, 2, 1>
+class LAsmJSAtomicExchangeHeap : public LInstructionHelper<1, 2, 4>
 {
   public:
     LIR_HEADER(AsmJSAtomicExchangeHeap);
@@ -6599,6 +6719,17 @@ class LAsmJSAtomicExchangeHeap : public LInstructionHelper<1, 2, 1>
         setOperand(0, ptr);
         setOperand(1, value);
         setTemp(0, LDefinition::BogusTemp());
+    }
+    LAsmJSAtomicExchangeHeap(const LAllocation& ptr, const LAllocation& value,
+                             const LDefinition& valueTemp, const LDefinition& offsetTemp,
+                             const LDefinition& maskTemp)
+    {
+        setOperand(0, ptr);
+        setOperand(1, value);
+        setTemp(0, LDefinition::BogusTemp());
+        setTemp(1, valueTemp);
+        setTemp(2, offsetTemp);
+        setTemp(3, maskTemp);
     }
 
     const LAllocation* ptr() {
@@ -6615,12 +6746,23 @@ class LAsmJSAtomicExchangeHeap : public LInstructionHelper<1, 2, 1>
         setTemp(0, addrTemp);
     }
 
+    // Temp that may be used on LL/SC platforms for extract/insert bits of word.
+    const LDefinition* valueTemp() {
+        return getTemp(1);
+    }
+    const LDefinition* offsetTemp() {
+        return getTemp(2);
+    }
+    const LDefinition* maskTemp() {
+        return getTemp(3);
+    }
+
     MAsmJSAtomicExchangeHeap* mir() const {
         return mir_->toAsmJSAtomicExchangeHeap();
     }
 };
 
-class LAsmJSAtomicBinopHeap : public LInstructionHelper<1, 2, 3>
+class LAsmJSAtomicBinopHeap : public LInstructionHelper<1, 2, 6>
 {
   public:
     LIR_HEADER(AsmJSAtomicBinopHeap);
@@ -6636,6 +6778,20 @@ class LAsmJSAtomicBinopHeap : public LInstructionHelper<1, 2, 3>
         setTemp(0, temp);
         setTemp(1, LDefinition::BogusTemp());
         setTemp(2, flagTemp);
+    }
+    LAsmJSAtomicBinopHeap(const LAllocation& ptr, const LAllocation& value,
+                          const LDefinition& temp, const LDefinition& flagTemp,
+                          const LDefinition& valueTemp, const LDefinition& offsetTemp,
+                          const LDefinition& maskTemp)
+    {
+        setOperand(0, ptr);
+        setOperand(1, value);
+        setTemp(0, temp);
+        setTemp(1, LDefinition::BogusTemp());
+        setTemp(2, flagTemp);
+        setTemp(3, valueTemp);
+        setTemp(4, offsetTemp);
+        setTemp(5, maskTemp);
     }
     const LAllocation* ptr() {
         return getOperand(0);
@@ -6660,6 +6816,16 @@ class LAsmJSAtomicBinopHeap : public LInstructionHelper<1, 2, 3>
     const LDefinition* flagTemp() {
         return getTemp(2);
     }
+    // Temp that may be used on LL/SC platforms for extract/insert bits of word.
+    const LDefinition* valueTemp() {
+        return getTemp(3);
+    }
+    const LDefinition* offsetTemp() {
+        return getTemp(4);
+    }
+    const LDefinition* maskTemp() {
+        return getTemp(5);
+    }
 
     MAsmJSAtomicBinopHeap* mir() const {
         return mir_->toAsmJSAtomicBinopHeap();
@@ -6667,7 +6833,7 @@ class LAsmJSAtomicBinopHeap : public LInstructionHelper<1, 2, 3>
 };
 
 // Atomic binary operation where the result is discarded.
-class LAsmJSAtomicBinopHeapForEffect : public LInstructionHelper<0, 2, 2>
+class LAsmJSAtomicBinopHeapForEffect : public LInstructionHelper<0, 2, 5>
 {
   public:
     LIR_HEADER(AsmJSAtomicBinopHeapForEffect);
@@ -6678,6 +6844,18 @@ class LAsmJSAtomicBinopHeapForEffect : public LInstructionHelper<0, 2, 2>
         setOperand(1, value);
         setTemp(0, LDefinition::BogusTemp());
         setTemp(1, flagTemp);
+    }
+    LAsmJSAtomicBinopHeapForEffect(const LAllocation& ptr, const LAllocation& value,
+                                   const LDefinition& flagTemp, const LDefinition& valueTemp,
+                                   const LDefinition& offsetTemp, const LDefinition& maskTemp)
+    {
+        setOperand(0, ptr);
+        setOperand(1, value);
+        setTemp(0, LDefinition::BogusTemp());
+        setTemp(1, flagTemp);
+        setTemp(2, valueTemp);
+        setTemp(3, offsetTemp);
+        setTemp(4, maskTemp);
     }
     const LAllocation* ptr() {
         return getOperand(0);
@@ -6697,6 +6875,16 @@ class LAsmJSAtomicBinopHeapForEffect : public LInstructionHelper<0, 2, 2>
     // Temp that may be used on LL/SC platforms for the flag result of the store.
     const LDefinition* flagTemp() {
         return getTemp(1);
+    }
+    // Temp that may be used on LL/SC platforms for extract/insert bits of word.
+    const LDefinition* valueTemp() {
+        return getTemp(2);
+    }
+    const LDefinition* offsetTemp() {
+        return getTemp(3);
+    }
+    const LDefinition* maskTemp() {
+        return getTemp(4);
     }
 
     MAsmJSAtomicBinopHeap* mir() const {

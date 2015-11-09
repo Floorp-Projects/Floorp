@@ -237,7 +237,7 @@ CallbackObject::CallSetup::ShouldRethrowException(JS::Handle<JS::Value> aExcepti
   }
 
   JS::Rooted<JSObject*> obj(mCx, &aException.toObject());
-  obj = js::UncheckedUnwrap(obj, /* stopAtOuter = */ false);
+  obj = js::UncheckedUnwrap(obj, /* stopAtWindowProxy = */ false);
   return js::GetObjectCompartment(obj) == mCompartment;
 }
 

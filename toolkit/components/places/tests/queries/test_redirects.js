@@ -185,7 +185,7 @@ function run_test()
  * We will generate visit-chains like:
  *   visit -> redirect_temp -> redirect_perm
  */
-add_task(function test_add_visits_to_database()
+add_task(function* test_add_visits_to_database()
 {
   yield PlacesUtils.bookmarks.eraseEverything();
 
@@ -280,7 +280,7 @@ add_task(function test_add_visits_to_database()
   yield task_populateDB(visits);
 });
 
-add_task(function test_redirects()
+add_task(function* test_redirects()
 {
   // Frecency and hidden are updated asynchronously, wait for them.
   yield PlacesTestUtils.promiseAsyncUpdates();

@@ -35,7 +35,7 @@ function run_test()
   run_next_test();
 }
 
-add_task(function test_execute()
+add_task(function* test_execute()
 {
   // we have a new profile, so we should have imported bookmarks
   do_check_eq(histsvc.databaseStatus, histsvc.DATABASE_STATUS_CREATE);

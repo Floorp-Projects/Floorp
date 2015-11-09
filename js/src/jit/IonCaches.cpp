@@ -505,17 +505,6 @@ IsCacheableNoProperty(JSObject* obj, JSObject* holder, Shape* shape, jsbytecode*
     if (!pc)
         return false;
 
-#if JS_HAS_NO_SUCH_METHOD
-    // The __noSuchMethod__ hook may substitute in a valid method.  Since,
-    // if o.m is missing, o.m() will probably be an error, just mark all
-    // missing callprops as uncacheable.
-    if (JSOp(*pc) == JSOP_CALLPROP ||
-        JSOp(*pc) == JSOP_CALLELEM)
-    {
-        return false;
-    }
-#endif
-
     // TI has not yet monitored an Undefined value. The fallback path will
     // monitor and invalidate the script.
     if (!output.hasValue())
@@ -578,10 +567,10 @@ IsCacheableGetPropCallNative(JSObject* obj, JSObject* holder, Shape* shape)
     if (getter.jitInfo() && !getter.jitInfo()->needsOuterizedThisObject())
         return true;
 
-    // For getters that need an outerized this object, don't cache if
-    // obj has an outerObject hook, since our cache will pass obj
-    // itself without outerizing.
-    return !obj->getClass()->ext.outerObject;
+    // For getters that need the WindowProxy (instead of the Window) as this
+    // object, don't cache if obj is the Window, since our cache will pass that
+    // instead of the WindowProxy.
+    return !IsWindow(obj);
 }
 
 static bool
@@ -601,7 +590,7 @@ IsCacheableGetPropCallScripted(JSObject* obj, JSObject* holder, Shape* shape)
         return false;
 
     // See IsCacheableGetPropCallNative.
-    return !obj->getClass()->ext.outerObject;
+    return !IsWindow(obj);
 }
 
 static bool
@@ -1676,13 +1665,6 @@ ProxyGetProperty(JSContext* cx, HandleObject proxy, HandleId id, MutableHandleVa
 }
 
 static bool
-ProxyCallProperty(JSContext* cx, HandleObject proxy, HandleId id, MutableHandleValue vp)
-{
-    RootedValue receiver(cx, ObjectValue(*proxy));
-    return Proxy::callProp(cx, proxy, receiver, id, vp);
-}
-
-static bool
 EmitCallProxyGet(JSContext* cx, MacroAssembler& masm, IonCache::StubAttacher& attacher,
                  jsid id, LiveRegisterSet liveRegs, Register object, TypedOrValueRegister output,
                  jsbytecode* pc, void* returnAddr)
@@ -1703,10 +1685,6 @@ EmitCallProxyGet(JSContext* cx, MacroAssembler& masm, IonCache::StubAttacher& at
     Register argVpReg        = regSet.takeAnyGeneral();
 
     Register scratch         = regSet.takeAnyGeneral();
-
-    void* getFunction = JSOp(*pc) == JSOP_CALLPROP                        ?
-                            JS_FUNC_TO_DATA_PTR(void*, ProxyCallProperty) :
-                            JS_FUNC_TO_DATA_PTR(void*, ProxyGetProperty);
 
     // Push stubCode for marking.
     attacher.pushStubCodePointer(masm);
@@ -1734,7 +1712,7 @@ EmitCallProxyGet(JSContext* cx, MacroAssembler& masm, IonCache::StubAttacher& at
     masm.passABIArg(argProxyReg);
     masm.passABIArg(argIdReg);
     masm.passABIArg(argVpReg);
-    masm.callWithABI(getFunction);
+    masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, ProxyGetProperty));
 
     // Test for failure.
     masm.branchIfFalseBool(ReturnReg, masm.exceptionLabel());
@@ -2196,17 +2174,6 @@ GetPropertyIC::update(JSContext* cx, HandleScript outerScript, size_t cacheIndex
         RootedScript script(cx);
         jsbytecode* pc;
         cache.getScriptedLocation(&script, &pc);
-
-        // If the cache is idempotent, the property exists so we don't have to
-        // call __noSuchMethod__.
-
-#if JS_HAS_NO_SUCH_METHOD
-        // Handle objects with __noSuchMethod__.
-        if (JSOp(*pc) == JSOP_CALLPROP && MOZ_UNLIKELY(vp.isUndefined())) {
-            if (!OnUnknownMethod(cx, obj, idval, vp))
-                return false;
-        }
-#endif
 
         // Monitor changes to cache entry.
         if (!cache.monitoredResult())
@@ -4678,12 +4645,8 @@ BindNameIC::update(JSContext* cx, HandleScript outerScript, size_t cacheIndex,
     HandlePropertyName name = cache.name();
 
     RootedObject holder(cx);
-    if (scopeChain->is<GlobalObject>()) {
-        holder = scopeChain;
-    } else {
-        if (!LookupNameUnqualified(cx, name, scopeChain, &holder))
-            return nullptr;
-    }
+    if (!LookupNameUnqualified(cx, name, scopeChain, &holder))
+        return nullptr;
 
     // Stop generating new stubs once we hit the stub count limit, see
     // GetPropertyCache.

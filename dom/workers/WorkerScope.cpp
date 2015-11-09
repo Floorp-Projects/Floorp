@@ -780,8 +780,6 @@ const js::Class workerdebuggersandbox_class = {
     nullptr,
     JS_GlobalObjectTraceHook,
     JS_NULL_CLASS_SPEC, {
-      nullptr,
-      nullptr,
       false,
       nullptr,
       workerdebuggersandbox_moved

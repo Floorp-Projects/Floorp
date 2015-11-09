@@ -29,9 +29,10 @@ ClearAttrCache(const nsAString& aKey, MiscContainer*& aValue, void*)
 {
   // Ideally we'd just call MiscContainer::Evict, but we can't do that since
   // we're iterating the hashtable.
-  MOZ_ASSERT(aValue->mType == nsAttrValue::eCSSStyleRule);
+  MOZ_ASSERT(aValue->mType == nsAttrValue::eCSSDeclaration);
 
-  aValue->mValue.mCSSStyleRule->SetHTMLCSSStyleSheet(nullptr);
+  css::Declaration* declaration = aValue->mValue.mCSSDeclaration;
+  declaration->SetHTMLCSSStyleSheet(nullptr);
   aValue->mValue.mCached = 0;
 
   return PL_DHASH_REMOVE;
@@ -65,20 +66,18 @@ nsHTMLCSSStyleSheet::ElementRulesMatching(nsPresContext* aPresContext,
                                           nsRuleWalker* aRuleWalker)
 {
   // just get the one and only style rule from the content's STYLE attribute
-  css::StyleRule* rule = aElement->GetInlineStyleRule();
-  if (rule) {
-    css::Declaration* declaration = rule->GetDeclaration();
+  css::Declaration* declaration = aElement->GetInlineStyleDeclaration();
+  if (declaration) {
     declaration->SetImmutable();
     aRuleWalker->Forward(declaration);
   }
 
-  rule = aElement->GetSMILOverrideStyleRule();
-  if (rule) {
+  declaration = aElement->GetSMILOverrideStyleDeclaration();
+  if (declaration) {
     RestyleManager* restyleManager = aPresContext->RestyleManager();
     if (!restyleManager->SkipAnimationRules()) {
       // Animation restyle (or non-restyle traversal of rules)
       // Now we can walk SMIL overrride style, without triggering transitions.
-      css::Declaration* declaration = rule->GetDeclaration();
       declaration->SetImmutable();
       aRuleWalker->Forward(declaration);
     }
@@ -96,9 +95,8 @@ nsHTMLCSSStyleSheet::PseudoElementRulesMatching(Element* aPseudoElement,
   MOZ_ASSERT(aPseudoElement);
 
   // just get the one and only style rule from the content's STYLE attribute
-  css::StyleRule* rule = aPseudoElement->GetInlineStyleRule();
-  if (rule) {
-    css::Declaration* declaration = rule->GetDeclaration();
+  css::Declaration* declaration = aPseudoElement->GetInlineStyleDeclaration();
+  if (declaration) {
     declaration->SetImmutable();
     aRuleWalker->Forward(declaration);
   }

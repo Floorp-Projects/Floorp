@@ -94,12 +94,12 @@ IsJSXraySupported(JSProtoKey key)
 XrayType
 GetXrayType(JSObject* obj)
 {
-    obj = js::UncheckedUnwrap(obj, /* stopAtOuter = */ false);
+    obj = js::UncheckedUnwrap(obj, /* stopAtWindowProxy = */ false);
     if (mozilla::dom::UseDOMXray(obj))
         return XrayForDOMObject;
 
     const js::Class* clasp = js::GetObjectClass(obj);
-    if (IS_WN_CLASS(clasp) || clasp->ext.innerObject)
+    if (IS_WN_CLASS(clasp) || js::IsWindowProxy(obj))
         return XrayForWrappedNative;
 
     JSProtoKey standardProto = IdentifyStandardInstanceOrPrototype(obj);
