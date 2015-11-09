@@ -1192,6 +1192,29 @@ GetStatesForPseudoClass(const nsAString& aStatePseudo)
 }
 
 NS_IMETHODIMP
+inDOMUtils::GetCSSPseudoElementNames(uint32_t* aLength, char16_t*** aNames)
+{
+  nsTArray<nsIAtom*> array;
+
+  for (int i = 0; i < nsCSSPseudoElements::ePseudo_PseudoElementCount; ++i) {
+    nsCSSPseudoElements::Type type = static_cast<nsCSSPseudoElements::Type>(i);
+    if (!nsCSSPseudoElements::PseudoElementIsUASheetOnly(type)) {
+      nsIAtom* atom = nsCSSPseudoElements::GetPseudoAtom(type);
+      array.AppendElement(atom);
+    }
+  }
+
+  *aLength = array.Length();
+  char16_t** ret =
+    static_cast<char16_t**>(moz_xmalloc(*aLength * sizeof(char16_t*)));
+  for (uint32_t i = 0; i < *aLength; ++i) {
+    ret[i] = ToNewUnicode(nsDependentAtomString(array[i]));
+  }
+  *aNames = ret;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 inDOMUtils::AddPseudoClassLock(nsIDOMElement *aElement,
                                const nsAString &aPseudoClass)
 {
