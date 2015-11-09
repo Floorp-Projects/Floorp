@@ -135,7 +135,6 @@ public:
     , mThread(aThread)
     , mCapIndex(aIndex)
     , mChannel(-1)
-    , mNrAllocations(0)
     , mInitDone(false)
     , mStarted(false)
     , mEchoOn(false), mAgcOn(false), mNoiseOn(false)
@@ -215,11 +214,10 @@ private:
   // from kStarted to kStopped (which are combined with EndTrack()).
   // mSources[] is accessed from webrtc threads.
   Monitor mMonitor;
-  nsTArray<nsRefPtr<SourceMediaStream>> mSources;
+  nsTArray<nsRefPtr<SourceMediaStream>> mSources; // When this goes empty, we shut down HW
   nsCOMPtr<nsIThread> mThread;
   int mCapIndex;
   int mChannel;
-  int mNrAllocations; // When this becomes 0, we shut down HW
   TrackID mTrackID;
   bool mInitDone;
   bool mStarted;
