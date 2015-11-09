@@ -4,3 +4,5 @@
 == text-align-match-parent-04.html text-align-match-parent-ref.html
 == text-align-match-parent-root-ltr.html text-align-match-parent-root-ltr-ref.html
 == text-align-match-parent-root-rtl.html text-align-match-parent-root-rtl-ref.html
+
+== text-word-spacing-001.html text-word-spacing-ref.html
