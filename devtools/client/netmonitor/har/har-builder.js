@@ -312,6 +312,7 @@ HarBuilder.prototype = {
     let responseContent = file.responseContent;
     if (responseContent && responseContent.content) {
       content.size = responseContent.content.size;
+      content.encoding = responseContent.content.encoding;
     }
 
     let includeBodies = this._options.includeResponseBodies;
