@@ -570,7 +570,10 @@ CDMProxy::OnExpirationChange(const nsAString& aSessionId,
                              GMPTimestamp aExpiryTime)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  NS_WARNING("CDMProxy::OnExpirationChange() not implemented");
+  RefPtr<dom::MediaKeySession> session(mKeys->GetSession(aSessionId));
+  if (session) {
+    session->SetExpiration(static_cast<double>(aExpiryTime));
+  }
 }
 
 void

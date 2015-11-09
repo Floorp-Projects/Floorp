@@ -92,6 +92,8 @@ public:
 
   bool IsClosed() const;
 
+  void SetExpiration(double aExpiry);
+
   // Process-unique identifier.
   uint32_t Token() const;
 
@@ -114,6 +116,7 @@ private:
   bool mIsClosed;
   bool mUninitialized;
   RefPtr<MediaKeyStatusMap> mKeyStatusMap;
+  double mExpiration;
 };
 
 } // namespace dom
