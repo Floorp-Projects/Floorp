@@ -235,6 +235,7 @@ GonkDecoderManager::ProcessToDo(bool aEndOfStream)
     WaitOutputInfo wait = mWaitOutput.ElementAt(0);
     nsresult rv = Output(wait.mOffset, output);
     if (rv == NS_OK) {
+      MOZ_ASSERT(output);
       mDecodeCallback->Output(output);
       UpdateWaitingList(output->mTime);
     } else if (rv == NS_ERROR_ABORT) {
