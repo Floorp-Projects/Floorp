@@ -82,7 +82,7 @@ WebSocketEventListenerChild::RecvFrameReceived(const uint32_t& aWebSocketSerialI
 {
   if (mService) {
     RefPtr<WebSocketFrame> frame = new WebSocketFrame(aFrameData);
-    mService->FrameReceived(aWebSocketSerialID, mInnerWindowID, frame);
+    mService->FrameReceived(aWebSocketSerialID, mInnerWindowID, frame.forget());
   }
 
   return true;
@@ -94,7 +94,7 @@ WebSocketEventListenerChild::RecvFrameSent(const uint32_t& aWebSocketSerialID,
 {
   if (mService) {
     RefPtr<WebSocketFrame> frame = new WebSocketFrame(aFrameData);
-    mService->FrameSent(aWebSocketSerialID, mInnerWindowID, frame);
+    mService->FrameSent(aWebSocketSerialID, mInnerWindowID, frame.forget());
   }
 
   return true;
