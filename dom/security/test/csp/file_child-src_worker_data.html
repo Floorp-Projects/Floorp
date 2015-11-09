@@ -1,0 +1,26 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <title>Bug 1045891</title>
+  </head>
+  <body>
+  <script type="text/javascript">
+    page_id = window.location.hash.substring(1);
+    try {
+      worker = new Worker('data:application/javascript;charset=UTF-8,'+escape('onmessage = function(e) { postMessage("worker"); };'));
+      worker.onmessage = function(ev) {
+        window.parent.postMessage({id:page_id, message:"allowed"}, 'http://mochi.test:8888');
+      };
+      worker.postMessage('foo');
+    }
+    catch (e) {
+      if (e.message.match(/Failed to load script/)) {
+        window.parent.postMessage({id:page_id, message:"blocked"}, 'http://mochi.test:8888');
+      } else {
+        console.log(e);
+        window.parent.postMessage({id:page_id, message:"exception"}, 'http://mochi.test:8888');
+      }
+    }
+  </script>
+  </body>
+</html>
