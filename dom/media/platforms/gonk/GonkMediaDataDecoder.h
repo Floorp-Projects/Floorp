@@ -70,7 +70,7 @@ protected:
                           RefPtr<MediaData>& aOutput) = 0;
 
   // Send queued samples to OMX. It returns how many samples are still in
-  // queue after processing, or negtive error code if failed.
+  // queue after processing, or negative error code if failed.
   int32_t ProcessQueuedSamples();
 
   void ProcessInput(bool aEndOfStream);
@@ -88,6 +88,7 @@ protected:
   // Looper to run decode tasks such as processing input, output, flush, and
   // recycling output buffers.
   android::sp<android::ALooper> mTaskLooper;
+  // Message codes for tasks running on mTaskLooper.
   enum {
     // Decoder will send this to indicate internal state change such as input or
     // output buffers availability. Used to run pending input & output tasks.
@@ -96,6 +97,9 @@ protected:
     kNotifyProcessFlush = 'npf ',
     // Used to process queued samples when there is new input.
     kNotifyProcessInput = 'npi ',
+#ifdef DEBUG
+    kNotifyFindLooperId = 'nfli',
+#endif
   };
 
   MozPromiseHolder<InitPromise> mInitPromise;
@@ -106,10 +110,11 @@ protected:
   // Samples are queued in caller's thread and dequeued in mTaskLooper.
   nsTArray<RefPtr<MediaRawData>> mQueuedSamples;
 
-  int64_t mLastTime;  // The last decoded frame presentation time.
+  // The last decoded frame presentation time. Only accessed on mTaskLooper.
+  int64_t mLastTime;
 
   Monitor mFlushMonitor; // Waits for flushing to complete.
-  bool mIsFlushing;
+  bool mIsFlushing; // Protected by mFlushMonitor.
 
   // Remembers the notification that is currently waiting for the decoder event
   // to avoid requesting more than one notification at the time, which is
@@ -134,6 +139,13 @@ protected:
 
 private:
   void UpdateWaitingList(int64_t aForgetUpTo);
+
+#ifdef DEBUG
+  typedef void* LooperId;
+
+  bool OnTaskLooper();
+  LooperId mTaskLooperId;
+#endif
 };
 
 class AutoReleaseMediaBuffer
