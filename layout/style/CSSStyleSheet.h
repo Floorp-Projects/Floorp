@@ -313,6 +313,12 @@ public:
   }
   virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
+  // Changes to sheets should be inside of a WillDirty-DidDirty pair.
+  // However, the calls do not need to be matched; it's ok to call
+  // WillDirty and then make no change and skip the DidDirty call.
+  void WillDirty();
+  void DidDirty();
+
 private:
   CSSStyleSheet(const CSSStyleSheet& aCopy,
                 CSSStyleSheet* aParentToUse,
@@ -327,9 +333,6 @@ protected:
   virtual ~CSSStyleSheet();
 
   void ClearRuleCascades();
-
-  void     WillDirty();
-  void     DidDirty();
 
   // Return success if the subject principal subsumes the principal of our
   // inner, error otherwise.  This will also succeed if the subject has
