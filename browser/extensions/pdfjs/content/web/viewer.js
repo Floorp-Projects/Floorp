@@ -31,7 +31,6 @@ var DEFAULT_URL = 'compressed.tracemonkey-pldi-09.pdf';
 var DEFAULT_SCALE_DELTA = 1.1;
 var MIN_SCALE = 0.25;
 var MAX_SCALE = 10.0;
-var VIEW_HISTORY_MEMORY = 20;
 var SCALE_SELECT_CONTAINER_PADDING = 8;
 var SCALE_SELECT_PADDING = 22;
 var PAGE_NUMBER_LOADING_INDICATOR = 'visiblePageIsLoading';
@@ -264,6 +263,55 @@ function binarySearchFirstItem(items, condition) {
     }
   }
   return minIndex; /* === maxIndex */
+}
+
+/**
+ *  Approximates float number as a fraction using Farey sequence (max order
+ *  of 8).
+ *  @param {number} x - Positive float number.
+ *  @returns {Array} Estimated fraction: the first array item is a numerator,
+ *                   the second one is a denominator.
+ */
+function approximateFraction(x) {
+  // Fast paths for int numbers or their inversions.
+  if (Math.floor(x) === x) {
+    return [x, 1];
+  }
+  var xinv = 1 / x;
+  var limit = 8;
+  if (xinv > limit) {
+    return [1, limit];
+  } else  if (Math.floor(xinv) === xinv) {
+    return [1, xinv];
+  }
+
+  var x_ = x > 1 ? xinv : x;
+  // a/b and c/d are neighbours in Farey sequence.
+  var a = 0, b = 1, c = 1, d = 1;
+  // Limiting search to order 8.
+  while (true) {
+    // Generating next term in sequence (order of q).
+    var p = a + c, q = b + d;
+    if (q > limit) {
+      break;
+    }
+    if (x_ <= p / q) {
+      c = p; d = q;
+    } else {
+      a = p; b = q;
+    }
+  }
+  // Select closest of the neighbours to x.
+  if (x_ - a / b < c / d - x_) {
+    return x_ === x ? [a, b] : [b, a];
+  } else {
+    return x_ === x ? [c, d] : [d, c];
+  }
+}
+
+function roundToDivide(x, div) {
+  var r = x % div;
+  return r === 0 ? x : Math.round(x - r + div);
 }
 
 /**
@@ -733,6 +781,8 @@ Preferences._readFromStorage = function (prefObj) {
 
 
 
+var DEFAULT_VIEW_HISTORY_CACHE_SIZE = 20;
+
 /**
  * View History - This is a utility for saving various view parameters for
  *                recently opened files.
@@ -743,8 +793,9 @@ Preferences._readFromStorage = function (prefObj) {
  *  - GENERIC or CHROME     - uses localStorage, if it is available.
  */
 var ViewHistory = (function ViewHistoryClosure() {
-  function ViewHistory(fingerprint) {
+  function ViewHistory(fingerprint, cacheSize) {
     this.fingerprint = fingerprint;
+    this.cacheSize = cacheSize || DEFAULT_VIEW_HISTORY_CACHE_SIZE;
     this.isInitializedPromiseResolved = false;
     this.initializedPromise =
         this._readFromStorage().then(function (databaseStr) {
@@ -754,7 +805,7 @@ var ViewHistory = (function ViewHistoryClosure() {
       if (!('files' in database)) {
         database.files = [];
       }
-      if (database.files.length >= VIEW_HISTORY_MEMORY) {
+      if (database.files.length >= this.cacheSize) {
         database.files.shift();
       }
       var index;
@@ -836,6 +887,7 @@ var PDFFindBar = (function PDFFindBarClosure() {
     this.highlightAll = options.highlightAllCheckbox || null;
     this.caseSensitive = options.caseSensitiveCheckbox || null;
     this.findMsg = options.findMsg || null;
+    this.findResultsCount = options.findResultsCount || null;
     this.findStatusIcon = options.findStatusIcon || null;
     this.findPreviousButton = options.findPreviousButton || null;
     this.findNextButton = options.findNextButton || null;
@@ -898,7 +950,8 @@ var PDFFindBar = (function PDFFindBarClosure() {
       return window.dispatchEvent(event);
     },
 
-    updateUIState: function PDFFindBar_updateUIState(state, previous) {
+    updateUIState:
+        function PDFFindBar_updateUIState(state, previous, matchCount) {
       var notFound = false;
       var findMsg = '';
       var status = '';
@@ -935,6 +988,26 @@ var PDFFindBar = (function PDFFindBarClosure() {
 
       this.findField.setAttribute('data-status', status);
       this.findMsg.textContent = findMsg;
+
+      this.updateResultsCount(matchCount);
+    },
+
+    updateResultsCount: function(matchCount) {
+      if (!this.findResultsCount) {
+        return; // no UI control is provided
+      }
+
+      // If there are no matches, hide the counter
+      if (!matchCount) {
+        this.findResultsCount.classList.add('hidden');
+        return;
+      }
+
+      // Create the match counter
+      this.findResultsCount.textContent = matchCount.toLocaleString();
+
+      // Show the counter
+      this.findResultsCount.classList.remove('hidden');
     },
 
     open: function PDFFindBar_open() {
@@ -991,6 +1064,7 @@ var PDFFindController = (function PDFFindControllerClosure() {
     this.active = false; // If active, find results will be highlighted.
     this.pageContents = []; // Stores the text for each page.
     this.pageMatches = [];
+    this.matchCount = 0;
     this.selected = { // Currently selected match.
       pageIdx: -1,
       matchIdx: -1
@@ -1068,7 +1142,8 @@ var PDFFindController = (function PDFFindControllerClosure() {
       var queryLen = query.length;
 
       if (queryLen === 0) {
-        return; // Do nothing: the matches should be wiped out already.
+        // Do nothing: the matches should be wiped out already.
+        return;
       }
 
       if (!caseSensitive) {
@@ -1090,6 +1165,12 @@ var PDFFindController = (function PDFFindControllerClosure() {
       if (this.resumePageIdx === pageIndex) {
         this.resumePageIdx = null;
         this.nextPageMatch();
+      }
+
+      // Update the matches count
+      if (matches.length > 0) {
+        this.matchCount += matches.length;
+        this.updateUIResultsCount();
       }
     },
 
@@ -1182,6 +1263,7 @@ var PDFFindController = (function PDFFindControllerClosure() {
         this.hadMatch = false;
         this.resumePageIdx = null;
         this.pageMatches = [];
+        this.matchCount = 0;
         var self = this;
 
         for (var i = 0; i < numPages; i++) {
@@ -1338,6 +1420,15 @@ var PDFFindController = (function PDFFindControllerClosure() {
       }
     },
 
+    updateUIResultsCount:
+        function PDFFindController_updateUIResultsCount() {
+      if (this.findBar === null) {
+        throw new Error('PDFFindController is not initialized with a ' +
+          'PDFFindBar instance.');
+      }
+      this.findBar.updateResultsCount(this.matchCount);
+    },
+
     updateUIState: function PDFFindController_updateUIState(state, previous) {
       if (this.integratedFind) {
         FirefoxCom.request('updateFindControlState',
@@ -1348,7 +1439,7 @@ var PDFFindController = (function PDFFindControllerClosure() {
         throw new Error('PDFFindController is not initialized with a ' +
                         'PDFFindBar instance.');
       }
-      this.findBar.updateUIState(state, previous);
+      this.findBar.updateUIState(state, previous, this.matchCount);
     }
   };
   return PDFFindController;
@@ -3705,7 +3796,7 @@ var PDFPageView = (function PDFPageViewClosure() {
       var outputScale = getOutputScale(ctx);
 
       if (PDFJS.useOnlyCssZoom) {
-        var actualSizeViewport = viewport.clone({ scale: CSS_UNITS });
+        var actualSizeViewport = viewport.clone({scale: CSS_UNITS});
         // Use a scale that will make the canvas be the original intended size
         // of the page.
         outputScale.sx *= actualSizeViewport.width / viewport.width;
@@ -3726,10 +3817,12 @@ var PDFPageView = (function PDFPageViewClosure() {
         }
       }
 
-      canvas.width = (Math.floor(viewport.width) * outputScale.sx) | 0;
-      canvas.height = (Math.floor(viewport.height) * outputScale.sy) | 0;
-      canvas.style.width = Math.floor(viewport.width) + 'px';
-      canvas.style.height = Math.floor(viewport.height) + 'px';
+      var sfx = approximateFraction(outputScale.sx);
+      var sfy = approximateFraction(outputScale.sy);
+      canvas.width = roundToDivide(viewport.width * outputScale.sx, sfx[0]);
+      canvas.height = roundToDivide(viewport.height * outputScale.sy, sfy[0]);
+      canvas.style.width = roundToDivide(viewport.width, sfx[1]) + 'px';
+      canvas.style.height = roundToDivide(viewport.height, sfy[1]) + 'px';
       // Add the viewport so it's known what it was originally drawn with.
       canvas._viewport = viewport;
 
@@ -3969,11 +4062,16 @@ var TextLayerBuilder = (function TextLayerBuilderClosure() {
     this.viewport = options.viewport;
     this.textDivs = [];
     this.findController = options.findController || null;
+    this._bindMouse();
   }
 
   TextLayerBuilder.prototype = {
     _finishRendering: function TextLayerBuilder_finishRendering() {
       this.renderingDone = true;
+
+      var endOfContent = document.createElement('div');
+      endOfContent.className = 'endOfContent';
+      this.textLayerDiv.appendChild(endOfContent);
 
       var event = document.createEvent('CustomEvent');
       event.initCustomEvent('textlayerrendered', true, true, {
@@ -4310,7 +4408,30 @@ var TextLayerBuilder = (function TextLayerBuilderClosure() {
       this.matches = this.convertMatches(this.findController === null ?
         [] : (this.findController.pageMatches[this.pageIdx] || []));
       this.renderMatches(this.matches);
-    }
+    },
+
+    /**
+     * Fixes text selection: adds additional div where mouse was clicked.
+     * This reduces flickering of the content if mouse slowly dragged down/up.
+     * @private
+     */
+    _bindMouse: function TextLayerBuilder_bindMouse() {
+      var div = this.textLayerDiv;
+      div.addEventListener('mousedown', function (e) {
+        var end = div.querySelector('.endOfContent');
+        if (!end) {
+          return;
+        }
+        end.classList.add('active');
+      });
+      div.addEventListener('mouseup', function (e) {
+        var end = div.querySelector('.endOfContent');
+        if (!end) {
+          return;
+        }
+        end.classList.remove('active');
+      });
+    },
   };
   return TextLayerBuilder;
 })();
@@ -4930,6 +5051,10 @@ var PDFViewer = (function pdfViewer() {
      */
     scrollPageIntoView: function PDFViewer_scrollPageIntoView(pageNumber,
                                                               dest) {
+      if (!this.pdfDocument) {
+        return;
+      }
+      
       var pageView = this._pages[pageNumber - 1];
 
       if (this.isInPresentationMode) {
@@ -6111,6 +6236,7 @@ var PDFViewerApplication = {
       highlightAllCheckbox: document.getElementById('findHighlightAll'),
       caseSensitiveCheckbox: document.getElementById('findMatchCase'),
       findMsg: document.getElementById('findMsg'),
+      findResultsCount: document.getElementById('findResultsCount'),
       findStatusIcon: document.getElementById('findStatusIcon'),
       findPreviousButton: document.getElementById('findPrevious'),
       findNextButton: document.getElementById('findNext'),
@@ -6336,6 +6462,16 @@ var PDFViewerApplication = {
     var bar = new ProgressBar('#loadingBar', {});
 
     return PDFJS.shadow(this, 'loadingBar', bar);
+  },
+
+  get supportedMouseWheelZoomModifierKeys() {
+    var support = {
+      ctrlKey: true,
+      metaKey: true,
+    };
+    support = FirefoxCom.requestSync('supportedMouseWheelZoomModifierKeys');
+
+    return PDFJS.shadow(this, 'supportedMouseWheelZoomModifierKeys', support);
   },
 
   initPassiveLoading: function pdfViewInitPassiveLoading() {
@@ -7624,6 +7760,11 @@ function handleMouseWheel(evt) {
     PDFViewerApplication.scrollPresentationMode(ticks *
                                                 MOUSE_WHEEL_DELTA_FACTOR);
   } else if (evt.ctrlKey || evt.metaKey) {
+    var support = PDFViewerApplication.supportedMouseWheelZoomModifierKeys;
+    if ((evt.ctrlKey && !support.ctrlKey) ||
+        (evt.metaKey && !support.metaKey)) {
+      return;
+    }
     // Only zoom the pages, not the entire viewer.
     evt.preventDefault();
 

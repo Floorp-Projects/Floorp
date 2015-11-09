@@ -368,6 +368,12 @@ ChromeActions.prototype = {
     }
     return true;
   },
+  supportedMouseWheelZoomModifierKeys: function() {
+    return {
+      ctrlKey: getIntPref('mousewheel.with_control.action', 3) === 3,
+      metaKey: getIntPref('mousewheel.with_meta.action', 1) === 3,
+    };
+  },
   reportTelemetry: function (data) {
     var probeInfo = JSON.parse(data);
     switch (probeInfo.type) {
@@ -772,7 +778,7 @@ RequestListener.prototype.receive = function(event) {
   var response;
   if (sync) {
     response = actions[action].call(this.actions, data);
-    event.detail.response = response;
+    event.detail.response = makeContentReadable(response, doc.defaultView);
   } else {
     if (!event.detail.responseExpected) {
       doc.documentElement.removeChild(message);
