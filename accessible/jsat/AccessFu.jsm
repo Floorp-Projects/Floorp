@@ -88,8 +88,6 @@ this.AccessFu = { // jshint ignore:line
     Cu.import('resource://gre/modules/accessibility/PointerAdapter.jsm');
     Cu.import('resource://gre/modules/accessibility/Presentation.jsm');
 
-    Logger.info('Enabled');
-
     for (let mm of Utils.AllMessageManagers) {
       this._addMessageListeners(mm);
       this._loadFrameScript(mm);
@@ -146,9 +144,7 @@ this.AccessFu = { // jshint ignore:line
       delete this.readyCallback;
     }
 
-    if (Utils.MozBuildApp !== 'mobile/android') {
-      this.announce('screenReaderStarted');
-    }
+    Logger.info('AccessFu:Enabled');
   },
 
   /**
@@ -161,13 +157,7 @@ this.AccessFu = { // jshint ignore:line
 
     this._enabled = false;
 
-    Logger.info('Disabled');
-
     Utils.win.document.removeChild(this.stylesheet.get());
-
-    if (Utils.MozBuildApp !== 'mobile/android') {
-      this.announce('screenReaderStopped');
-    }
 
     for (let mm of Utils.AllMessageManagers) {
       mm.sendAsyncMessage('AccessFu:Stop');
@@ -200,6 +190,8 @@ this.AccessFu = { // jshint ignore:line
       this.doneCallback();
       delete this.doneCallback;
     }
+
+    Logger.info('AccessFu:Disabled');
   },
 
   _enableOrDisable: function _enableOrDisable() {
