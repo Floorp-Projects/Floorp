@@ -102,11 +102,6 @@ fi
 # Use the low-memory GC tuning.
 export JS_GC_SMALL_CHUNK_SIZE=1
 
-# Enable FxAccount Avatar
-if test "$NIGHTLY_BUILD"; then
-  MOZ_ANDROID_FIREFOX_ACCOUNT_PROFILES=1
-fi
-
 # Enable checking that add-ons are signed by the trusted root
 MOZ_ADDON_SIGNING=1
 if test "$MOZ_OFFICIAL_BRANDING"; then
