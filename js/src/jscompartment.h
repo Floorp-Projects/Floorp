@@ -149,10 +149,10 @@ typedef HashMap<CrossCompartmentKey, ReadBarrieredValue,
 //                  set.
 //
 // * PendingMetadata: This object has been allocated and is still pending its
-//                    metadata. This should never be the case in an allocation
-//                    path, as a constructor function was supposed to have set
-//                    the metadata of the previous object *before* allocating
-//                    another object.
+//                    metadata. This should never be the case when we begin an
+//                    allocation, as a constructor function was supposed to have
+//                    set the metadata of the previous object *before*
+//                    allocating another object.
 //
 // The js::AutoSetNewObjectMetadata RAII class provides an ergonomic way for
 // constructor functions to navigate state transitions, and its instances
