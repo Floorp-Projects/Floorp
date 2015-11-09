@@ -11,7 +11,7 @@
 /**
  * Retrieves the log module to use for layout logging.
  */
-PRLogModuleInfo* GetLayoutLog();
+static mozilla::LazyLogModule sLayoutLog("layout");
 
 /**
  * Use the layout log to warn if a given condition is false.
@@ -22,7 +22,7 @@ PRLogModuleInfo* GetLayoutLog();
 #ifdef DEBUG
 #define LAYOUT_WARN_IF_FALSE(_cond, _msg)                                  \
   PR_BEGIN_MACRO                                                           \
-    if (MOZ_LOG_TEST(GetLayoutLog(), mozilla::LogLevel::Warning) &&        \
+    if (MOZ_LOG_TEST(sLayoutLog, mozilla::LogLevel::Warning) &&        \
         !(_cond)) {                                                        \
       mozilla::detail::LayoutLogWarning(_msg, #_cond, __FILE__, __LINE__); \
     }                                                                      \
@@ -42,7 +42,7 @@ PRLogModuleInfo* GetLayoutLog();
 #ifdef DEBUG
 #define LAYOUT_WARNING(_msg)                                                \
   PR_BEGIN_MACRO                                                            \
-    if (MOZ_LOG_TEST(GetLayoutLog(), mozilla::LogLevel::Warning)) {         \
+    if (MOZ_LOG_TEST(sLayoutLog, mozilla::LogLevel::Warning)) {         \
       mozilla::detail::LayoutLogWarning(_msg, nullptr, __FILE__, __LINE__); \
     }                                                                       \
   PR_END_MACRO

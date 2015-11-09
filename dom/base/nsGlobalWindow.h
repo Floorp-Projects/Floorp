@@ -359,8 +359,6 @@ public:
 
   virtual bool IsBlackForCC(bool aTracingNeeded = true) override;
 
-  static JSObject* OuterObject(JSContext* aCx, JS::Handle<JSObject*> aObj);
-
   // nsIScriptObjectPrincipal
   virtual nsIPrincipal* GetPrincipal() override;
 

@@ -70,11 +70,6 @@ class Proxy
                             ElementAdder* adder);
 
     static void trace(JSTracer* trc, JSObject* obj);
-
-    /* IC entry path for handling __noSuchMethod__ on access. */
-    static bool callProp(JSContext* cx, HandleObject proxy, HandleValue reveiver, HandleId id,
-                         MutableHandleValue vp);
-
 };
 
 } /* namespace js */

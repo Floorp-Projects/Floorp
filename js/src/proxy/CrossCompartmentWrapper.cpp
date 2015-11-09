@@ -474,8 +474,10 @@ js::NukeCrossCompartmentWrappers(JSContext* cx,
             JSObject* wrapped = UncheckedUnwrap(wobj);
 
             if (nukeReferencesToWindow == DontNukeWindowReferences &&
-                wrapped->getClass()->ext.innerObject)
+                IsWindowProxy(wrapped))
+            {
                 continue;
+            }
 
             if (targetFilter.match(wrapped->compartment())) {
                 // We found a wrapper to nuke.

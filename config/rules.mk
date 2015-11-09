@@ -504,10 +504,8 @@ endif
 
 ifeq (_WINNT,$(GNU_CC)_$(OS_ARCH))
 OUTOPTION = -Fo# eol
-PREPROCESS_OPTION = -P -Fi# eol
 else
 OUTOPTION = -o # eol
-PREPROCESS_OPTION = -E -o #eol
 endif # WINNT && !GNU_CC
 
 ifneq (,$(filter ml%,$(AS)))

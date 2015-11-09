@@ -1,5 +1,3 @@
-enableNoSuchMethod();
-
 function testStuff(x, y) {
     for (var i = 0; i < 60; i++) {
         x[y]();
@@ -21,5 +19,4 @@ function testNoSuchMethod(x, y) {
 }
 
 testNoSuchMethod(o, "f");
-testNoSuchMethod(o, "g");
-assertEq(o.res, 480);
+assertEq(o.res, 180);

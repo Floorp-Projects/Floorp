@@ -74,7 +74,7 @@ var test_bookmarks = {
 // Exported bookmarks file pointer.
 var bookmarksExportedFile;
 
-add_task(function test_import_bookmarks() {
+add_task(function* test_import_bookmarks() {
   let bookmarksFile = OS.Path.join(do_get_cwd().path, "bookmarks.json");
 
   yield BookmarkJSONUtils.importFromFile(bookmarksFile, true);
@@ -82,21 +82,21 @@ add_task(function test_import_bookmarks() {
   yield testImportedBookmarks();
 });
 
-add_task(function test_export_bookmarks() {
+add_task(function* test_export_bookmarks() {
   bookmarksExportedFile = OS.Path.join(OS.Constants.Path.profileDir,
                                        "bookmarks.exported.json");
   yield BookmarkJSONUtils.exportToFile(bookmarksExportedFile);
   yield PlacesTestUtils.promiseAsyncUpdates();
 });
 
-add_task(function test_import_exported_bookmarks() {
+add_task(function* test_import_exported_bookmarks() {
   yield PlacesUtils.bookmarks.eraseEverything();
   yield BookmarkJSONUtils.importFromFile(bookmarksExportedFile, true);
   yield PlacesTestUtils.promiseAsyncUpdates();
   yield testImportedBookmarks();
 });
 
-add_task(function test_import_ontop() {
+add_task(function* test_import_ontop() {
   yield PlacesUtils.bookmarks.eraseEverything();
   yield BookmarkJSONUtils.importFromFile(bookmarksExportedFile, true);
   yield PlacesTestUtils.promiseAsyncUpdates();
@@ -107,11 +107,11 @@ add_task(function test_import_ontop() {
   yield testImportedBookmarks();
 });
 
-add_task(function test_clean() {
+add_task(function* test_clean() {
   yield PlacesUtils.bookmarks.eraseEverything();
 });
 
-function testImportedBookmarks() {
+function* testImportedBookmarks() {
   for (let group in test_bookmarks) {
     do_print("[testImportedBookmarks()] Checking group '" + group + "'");
 
@@ -142,7 +142,7 @@ function testImportedBookmarks() {
   }
 }
 
-function checkItem(aExpected, aNode) {
+function* checkItem(aExpected, aNode) {
   let id = aNode.itemId;
 
   return Task.spawn(function() {

@@ -22,8 +22,8 @@
 #include "nsIPrintSettings.h"
 
 #include "mozilla/Logging.h"
-extern PRLogModuleInfo *GetLayoutPrintingLog();
-#define PR_PL(_p1)  MOZ_LOG(GetLayoutPrintingLog(), mozilla::LogLevel::Debug, _p1)
+extern mozilla::LazyLogModule gLayoutPrintingLog;
+#define PR_PL(_p1)  MOZ_LOG(gLayoutPrintingLog, mozilla::LogLevel::Debug, _p1)
 
 using namespace mozilla;
 using namespace mozilla::gfx;

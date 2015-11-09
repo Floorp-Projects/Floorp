@@ -13,12 +13,8 @@
 #include "nsIEntropyCollector.h"
 #include "nsIStringBundle.h"
 #include "nsIObserver.h"
-#include "nsIObserverService.h"
-#include "nsINSSErrorsService.h"
 #include "nsNSSCallbacks.h"
 #include "SharedCertVerifier.h"
-#include "nsNSSHelper.h"
-#include "nsClientAuthRemember.h"
 #include "prerror.h"
 #include "sslt.h"
 
@@ -40,13 +36,9 @@ MOZ_WARN_UNUSED_RESULT
 
 #define PSM_COMPONENT_CONTRACTID "@mozilla.org/psm;1"
 
-//Define an interface that we can use to look up from the
-//callbacks passed to NSS.
-
-#define NS_INSSCOMPONENT_IID_STR "e60602a8-97a3-4fe7-b5b7-56bc6ce87ab4"
 #define NS_INSSCOMPONENT_IID \
-  { 0xe60602a8, 0x97a3, 0x4fe7, \
-    { 0xb5, 0xb7, 0x56, 0xbc, 0x6c, 0xe8, 0x7a, 0xb4 } }
+  { 0xa0a8f52b, 0xea18, 0x4abc, \
+    { 0xa3, 0xca, 0xec, 0xcf, 0x70, 0x4f, 0xfe, 0x63 } }
 
 enum EnsureNSSOperator
 {
@@ -63,10 +55,9 @@ extern bool EnsureNSSInitializedChromeOrContent();
 
 extern bool EnsureNSSInitialized(EnsureNSSOperator op);
 
-class nsNSSComponent;
-
-class NS_NO_VTABLE nsINSSComponent : public nsISupports {
- public:
+class NS_NO_VTABLE nsINSSComponent : public nsISupports
+{
+public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_INSSCOMPONENT_IID)
 
   NS_IMETHOD ShowAlertFromStringBundle(const char* messageID) = 0;
@@ -80,10 +71,6 @@ class NS_NO_VTABLE nsINSSComponent : public nsISupports {
 
   NS_IMETHOD GetNSSBundleString(const char* name,
                                 nsAString& outString) = 0;
-  NS_IMETHOD NSSBundleFormatStringFromName(const char* name,
-                                           const char16_t** params,
-                                           uint32_t numParams,
-                                           nsAString& outString) = 0;
 
   NS_IMETHOD LogoutAuthenticatedPK11() = 0;
 
@@ -105,13 +92,10 @@ class nsNSSShutDownList;
 class nsCertVerificationThread;
 
 // Implementation of the PSM component interface.
-class nsNSSComponent final : public nsIEntropyCollector,
-                             public nsINSSComponent,
-                             public nsIObserver,
-                             public nsSupportsWeakReference
+class nsNSSComponent final : public nsIEntropyCollector
+                           , public nsINSSComponent
+                           , public nsIObserver
 {
-  typedef mozilla::Mutex Mutex;
-
 public:
   NS_DEFINE_STATIC_CID_ACCESSOR( NS_NSSCOMPONENT_CID )
 
@@ -121,7 +105,7 @@ public:
   NS_DECL_NSIENTROPYCOLLECTOR
   NS_DECL_NSIOBSERVER
 
-  NS_METHOD Init();
+  nsresult Init();
 
   static nsresult GetNewPrompter(nsIPrompt** result);
   static nsresult ShowAlertWithConstructedString(const nsString& message);
@@ -134,10 +118,6 @@ public:
                                            uint32_t numParams,
                                            nsAString& outString) override;
   NS_IMETHOD GetNSSBundleString(const char* name, nsAString& outString) override;
-  NS_IMETHOD NSSBundleFormatStringFromName(const char* name,
-                                           const char16_t** params,
-                                           uint32_t numParams,
-                                           nsAString& outString) override;
   NS_IMETHOD LogoutAuthenticatedPK11() override;
 
 #ifndef MOZ_NO_SMART_CARDS
@@ -179,7 +159,6 @@ private:
   nsresult InitializePIPNSSBundle();
   nsresult ConfigureInternalPKCS11Token();
   nsresult RegisterObservers();
-  nsresult DeregisterObservers();
 
   // Methods that we use to handle the profile change notifications (and to
   // synthesize a full profile change when we're just doing a profile startup):
@@ -187,12 +166,11 @@ private:
   void DoProfileBeforeChange(nsISupports* aSubject);
   void DoProfileChangeNetRestore();
 
-  Mutex mutex;
+  mozilla::Mutex mutex;
 
   nsCOMPtr<nsIStringBundle> mPIPNSSBundle;
   nsCOMPtr<nsIStringBundle> mNSSErrorsBundle;
   bool mNSSInitialized;
-  bool mObserversRegistered;
   static int mInstanceCount;
   nsNSSShutDownList* mShutdownObjectList;
 #ifndef MOZ_NO_SMART_CARDS
@@ -218,15 +196,6 @@ public:
   static nsresult getErrorMessageFromCode(PRErrorCode err,
                                           nsINSSComponent* component,
                                           nsString& returnedMessage);
-};
-
-class nsPSMInitPanic
-{
-private:
-  static bool isPanic;
-public:
-  static void SetPanic() {isPanic = true;}
-  static bool GetPanic() {return isPanic;}
 };
 
 #endif // _nsNSSComponent_h_

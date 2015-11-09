@@ -335,7 +335,7 @@ public:
   virtual void VerifyStyleTree() override;
 #endif
 
-  static PRLogModuleInfo* gLog;
+  static mozilla::LazyLogModule gLog;
 
   virtual void DisableNonTestMouseEvents(bool aDisable) override;
 

@@ -286,9 +286,9 @@ public:
     nsCOMPtr<nsICSSDeclaration> mSMILOverrideStyle;
 
     /**
-     * Holds any SMIL override style rules for this element.
+     * Holds any SMIL override style declaration for this element.
      */
-    RefPtr<mozilla::css::StyleRule> mSMILOverrideStyleRule;
+    RefPtr<mozilla::css::Declaration> mSMILOverrideStyleDeclaration;
 
     /**
      * An object implementing nsIDOMMozNamedAttrMap for this content (attributes)

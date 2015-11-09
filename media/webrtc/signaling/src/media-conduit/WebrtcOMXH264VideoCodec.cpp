@@ -1003,7 +1003,7 @@ WebrtcOMXH264VideoEncoder::Encode(const webrtc::I420VideoFrame& aInputImage,
                                    (yuvData.mYSize.height + 1) / 2);
   yuvData.mPicSize = yuvData.mYSize;
   yuvData.mStereoMode = StereoMode::MONO;
-  layers::PlanarYCbCrImage img(nullptr);
+  layers::RecyclingPlanarYCbCrImage img(nullptr);
   // SetDataNoCopy() doesn't need AllocateAndGetNewBuffer(); OMXVideoEncoder is ok with this
   img.SetDataNoCopy(yuvData);
 

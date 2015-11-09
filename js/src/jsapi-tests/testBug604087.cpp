@@ -19,8 +19,6 @@ const js::Class OuterWrapperClass =
         "Proxy",
         0, /* additional class flags */
         PROXY_MAKE_EXT(
-            nullptr, /* outerObject */
-            js::proxy_innerObject,
             false,   /* isWrappedNative */
             nullptr  /* objectMoved */
         ));
@@ -56,6 +54,8 @@ static const JSWrapObjectCallbacks WrapObjectCallbacks = {
 
 BEGIN_TEST(testBug604087)
 {
+    js::SetWindowProxyClass(cx->runtime(), &OuterWrapperClass);
+
     js::WrapperOptions options;
     options.setClass(&OuterWrapperClass);
     options.setSingleton(true);

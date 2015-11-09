@@ -7,7 +7,7 @@
 function run_test() {
   do_test_pending();
 
-  Task.spawn(function() {
+  Task.spawn(function*() {
     let backupFolder = yield PlacesBackups.getBackupFolder();
     let bookmarksBackupDir = new FileUtils.File(backupFolder);
     // Remove all files from backups folder.

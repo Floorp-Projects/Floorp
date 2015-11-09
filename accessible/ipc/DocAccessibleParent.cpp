@@ -206,6 +206,7 @@ DocAccessibleParent::RecvBindChildDoc(PDocAccessibleParent* aChildDoc, const uin
   MOZ_DIAGNOSTIC_ASSERT(CheckDocTree());
 
   auto childDoc = static_cast<DocAccessibleParent*>(aChildDoc);
+  childDoc->Unbind();
   bool result = AddChildDoc(childDoc, aID, false);
   MOZ_ASSERT(result);
   MOZ_DIAGNOSTIC_ASSERT(CheckDocTree());

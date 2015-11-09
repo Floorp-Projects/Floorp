@@ -1164,6 +1164,12 @@ css::Declaration*
 DOMCSSDeclarationImpl::GetCSSDeclaration(Operation aOperation)
 {
   if (mRule) {
+    if (aOperation != eOperation_Read) {
+      RefPtr<CSSStyleSheet> sheet = mRule->GetStyleSheet();
+      if (sheet) {
+        sheet->WillDirty();
+      }
+    }
     return mRule->GetDeclaration();
   } else {
     return nullptr;
@@ -1197,26 +1203,21 @@ DOMCSSDeclarationImpl::SetCSSDeclaration(css::Declaration* aDecl)
          "can only be called when |GetCSSDeclaration| returned a declaration");
 
   nsCOMPtr<nsIDocument> owningDoc;
-  nsCOMPtr<nsIStyleSheet> sheet = mRule->GetStyleSheet();
+  RefPtr<CSSStyleSheet> sheet = mRule->GetStyleSheet();
   if (sheet) {
     owningDoc = sheet->GetOwningDocument();
   }
 
   mozAutoDocUpdate updateBatch(owningDoc, UPDATE_STYLE, true);
 
-  RefPtr<css::StyleRule> oldRule = mRule;
-  mRule = oldRule->DeclarationChanged(aDecl, true).take();
-  if (!mRule)
-    return NS_ERROR_OUT_OF_MEMORY;
-  nsrefcnt cnt = mRule->Release();
-  if (cnt == 0) {
-    NS_NOTREACHED("container didn't take ownership");
-    mRule = nullptr;
-    return NS_ERROR_UNEXPECTED;
+  mRule->SetDeclaration(aDecl);
+
+  if (sheet) {
+    sheet->DidDirty();
   }
 
   if (owningDoc) {
-    owningDoc->StyleRuleChanged(sheet, oldRule, mRule);
+    owningDoc->StyleRuleChanged(sheet, mRule, mRule);
   }
   return NS_OK;
 }
@@ -1394,33 +1395,6 @@ StyleRule::StyleRule(const StyleRule& aCopy)
   // rest is constructed lazily on existing data
 }
 
-// for |SetCSSDeclaration|
-StyleRule::StyleRule(StyleRule& aCopy,
-                     Declaration* aDeclaration)
-  : Rule(aCopy),
-    mSelector(aCopy.mSelector),
-    mDeclaration(aDeclaration),
-    mDOMRule(aCopy.mDOMRule.forget())
-{
-  // The DOM rule is replacing |aCopy| with |this|, so transfer
-  // the reverse pointer as well (and transfer ownership).
-
-  // Similarly for the selector.
-  aCopy.mSelector = nullptr;
-
-  // We are probably replacing the old declaration with |aDeclaration|
-  // instead of taking ownership of the old declaration; only null out
-  // aCopy.mDeclaration if we are taking ownership.
-  if (mDeclaration == aCopy.mDeclaration) {
-    // This should only ever happen if the declaration was modifiable.
-    mDeclaration->AssertMutable();
-    aCopy.mDeclaration = nullptr;
-    mDeclaration->SetOwningRule(nullptr);
-  }
-
-  mDeclaration->SetOwningRule(this);
-}
-
 StyleRule::~StyleRule()
 {
   delete mSelector;
@@ -1481,26 +1455,15 @@ StyleRule::GetExistingDOMRule()
   return mDOMRule;
 }
 
-/* virtual */ already_AddRefed<StyleRule>
-StyleRule::DeclarationChanged(Declaration* aDecl,
-                              bool aHandleContainer)
+void
+StyleRule::SetDeclaration(Declaration* aDecl)
 {
-  RefPtr<StyleRule> clone = new StyleRule(*this, aDecl);
-
-  if (aHandleContainer) {
-    CSSStyleSheet* sheet = GetStyleSheet();
-    if (mParentRule) {
-      if (sheet) {
-        sheet->ReplaceRuleInGroup(mParentRule, this, clone);
-      } else {
-        mParentRule->ReplaceStyleRule(this, clone);
-      }
-    } else if (sheet) {
-      sheet->ReplaceStyleRule(this, clone);
-    }
+  if (aDecl == mDeclaration) {
+    return;
   }
-
-  return clone.forget();
+  mDeclaration->SetOwningRule(nullptr);
+  mDeclaration = aDecl;
+  mDeclaration->SetOwningRule(this);
 }
 
 #ifdef DEBUG

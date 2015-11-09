@@ -4007,7 +4007,10 @@ nsCSSFrameConstructor::GetAnonymousContent(nsIContent* aParent,
     return NS_OK;
 
   nsresult rv = creator->CreateAnonymousContent(aContent);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_FAILED(rv)) {
+    // CreateAnonymousContent failed, e.g. because the page has a <use> loop.
+    return rv;
+  }
 
   uint32_t count = aContent.Length();
   for (uint32_t i=0; i < count; i++) {

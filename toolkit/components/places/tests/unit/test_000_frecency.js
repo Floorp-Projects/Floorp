@@ -52,7 +52,7 @@ var matchCount = 0;
 var now = Date.now();
 var prefPrefix = "places.frecency.";
 
-function task_initializeBucket(bucket) {
+function* task_initializeBucket(bucket) {
   let [cutoffName, weightName] = bucket;
   // get pref values
   var weight = 0, cutoff = 0, bonus = 0;
@@ -202,9 +202,9 @@ function run_test()
   run_next_test();
 }
 
-add_task(function test_frecency()
+add_task(function* test_frecency()
 {
-  for (let [, bucket] in Iterator(bucketPrefs)) {
+  for (let bucket of bucketPrefs) {
     yield task_initializeBucket(bucket);
   }
 

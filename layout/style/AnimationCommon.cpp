@@ -17,9 +17,7 @@
 #include "nsStyleContext.h"
 #include "nsIFrame.h"
 #include "nsLayoutUtils.h"
-#include "mozilla/LookAndFeel.h"
 #include "LayerAnimationInfo.h" // For LayerAnimationInfo::sRecords
-#include "Layers.h"
 #include "FrameLayerBuilder.h"
 #include "nsDisplayList.h"
 #include "mozilla/MemoryReporting.h"
@@ -29,27 +27,10 @@
 #include "nsStyleSet.h"
 #include "nsStyleChangeList.h"
 
-using mozilla::layers::Layer;
 using mozilla::dom::Animation;
 using mozilla::dom::KeyframeEffectReadOnly;
 
 namespace mozilla {
-
-/* static */ bool
-IsGeometricProperty(nsCSSProperty aProperty)
-{
-  switch (aProperty) {
-    case eCSSProperty_bottom:
-    case eCSSProperty_height:
-    case eCSSProperty_left:
-    case eCSSProperty_right:
-    case eCSSProperty_top:
-    case eCSSProperty_width:
-      return true;
-    default:
-      return false;
-  }
-}
 
 CommonAnimationManager::CommonAnimationManager(nsPresContext *aPresContext)
   : mPresContext(aPresContext)
@@ -126,8 +107,7 @@ CommonAnimationManager::GetAnimationsForCompositor(const nsIFrame* aFrame,
   AnimationCollection* collection = GetAnimationCollection(aFrame);
   if (!collection ||
       !collection->HasCurrentAnimationOfProperty(aProperty) ||
-      !collection->CanPerformOnCompositorThread(
-        AnimationCollection::CanAnimate_AllowPartial)) {
+      !collection->CanPerformOnCompositorThread(aFrame)) {
     return nullptr;
   }
 
@@ -441,101 +421,18 @@ AnimValuesStyleRule::List(FILE* out, int32_t aIndent) const
 #endif
 
 bool
-AnimationCollection::CanAnimatePropertyOnCompositor(
-  const dom::Element *aElement,
-  nsCSSProperty aProperty,
-  CanAnimateFlags aFlags)
+AnimationCollection::CanPerformOnCompositorThread(const nsIFrame* aFrame) const
 {
-  bool shouldLog = nsLayoutUtils::IsAnimationLoggingEnabled();
-  if (!gfxPlatform::OffMainThreadCompositingEnabled()) {
-    if (shouldLog) {
+  if (!nsLayoutUtils::AreAsyncAnimationsEnabled()) {
+    if (nsLayoutUtils::IsAnimationLoggingEnabled()) {
       nsCString message;
-      message.AppendLiteral("Performance warning: Compositor disabled");
+      message.AppendLiteral("Performance warning: Async animations are disabled");
       LogAsyncAnimationFailure(message);
     }
     return false;
   }
 
-  nsIFrame* frame = nsLayoutUtils::GetStyleFrame(aElement);
-  if (IsGeometricProperty(aProperty)) {
-    if (shouldLog) {
-      nsCString message;
-      message.AppendLiteral("Performance warning: Async animation of geometric property '");
-      message.Append(nsCSSProps::GetStringValue(aProperty));
-      message.AppendLiteral("' is disabled");
-      LogAsyncAnimationFailure(message, aElement);
-    }
-    return false;
-  }
-  if (aProperty == eCSSProperty_transform) {
-    if (frame->Combines3DTransformWithAncestors() ||
-        frame->Extend3DContext()) {
-      if (shouldLog) {
-        nsCString message;
-        message.AppendLiteral("Gecko bug: Async animation of 'preserve-3d' transforms is not supported.  See bug 779598");
-        LogAsyncAnimationFailure(message, aElement);
-      }
-      return false;
-    }
-    // Note that testing BackfaceIsHidden() is not a sufficient test for
-    // what we need for animating backface-visibility correctly if we
-    // remove the above test for Extend3DContext(); that would require
-    // looking at backface-visibility on descendants as well.
-    if (frame->StyleDisplay()->BackfaceIsHidden()) {
-      if (shouldLog) {
-        nsCString message;
-        message.AppendLiteral("Gecko bug: Async animation of 'backface-visibility: hidden' transforms is not supported.  See bug 1186204.");
-        LogAsyncAnimationFailure(message, aElement);
-      }
-      return false;
-    }
-    if (frame->IsSVGTransformed()) {
-      if (shouldLog) {
-        nsCString message;
-        message.AppendLiteral("Gecko bug: Async 'transform' animations of frames with SVG transforms is not supported.  See bug 779599");
-        LogAsyncAnimationFailure(message, aElement);
-      }
-      return false;
-    }
-    if (aFlags & CanAnimate_HasGeometricProperty) {
-      if (shouldLog) {
-        nsCString message;
-        message.AppendLiteral("Performance warning: Async animation of 'transform' not possible due to presence of geometric properties");
-        LogAsyncAnimationFailure(message, aElement);
-      }
-      return false;
-    }
-  }
-  bool enabled = nsLayoutUtils::AreAsyncAnimationsEnabled();
-  if (!enabled && shouldLog) {
-    nsCString message;
-    message.AppendLiteral("Performance warning: Async animations are disabled");
-    LogAsyncAnimationFailure(message);
-  }
-  bool propertyAllowed = (aProperty == eCSSProperty_transform) ||
-                         (aProperty == eCSSProperty_opacity) ||
-                         (aFlags & CanAnimate_AllowPartial);
-  return enabled && propertyAllowed;
-}
-
-/* static */ bool
-AnimationCollection::IsCompositorAnimationDisabledForFrame(
-  nsIFrame* aFrame)
-{
-  void* prop = aFrame->Properties().Get(nsIFrame::RefusedAsyncAnimation());
-  return bool(reinterpret_cast<intptr_t>(prop));
-}
-
-bool
-AnimationCollection::CanPerformOnCompositorThread(
-  CanAnimateFlags aFlags) const
-{
-  dom::Element* element = GetElementToRestyle();
-  if (!element) {
-    return false;
-  }
-  nsIFrame* frame = nsLayoutUtils::GetStyleFrame(element);
-  if (!frame) {
+  if (aFrame->RefusedAsyncAnimation()) {
     return false;
   }
 
@@ -547,43 +444,16 @@ AnimationCollection::CanPerformOnCompositorThread(
 
     const KeyframeEffectReadOnly* effect = anim->GetEffect();
     MOZ_ASSERT(effect, "A playing animation should have an effect");
-
-    for (size_t propIdx = 0, propEnd = effect->Properties().Length();
-         propIdx != propEnd; ++propIdx) {
-      if (IsGeometricProperty(effect->Properties()[propIdx].mProperty)) {
-        aFlags = CanAnimateFlags(aFlags | CanAnimate_HasGeometricProperty);
-        break;
-      }
-    }
-  }
-
-  bool existsProperty = false;
-  for (size_t animIdx = mAnimations.Length(); animIdx-- != 0; ) {
-    const Animation* anim = mAnimations[animIdx];
-    if (!anim->IsPlaying()) {
-      continue;
-    }
-
-    const KeyframeEffectReadOnly* effect = anim->GetEffect();
-    MOZ_ASSERT(effect, "A playing animation should have an effect");
-
-    existsProperty = existsProperty || effect->Properties().Length() > 0;
 
     for (size_t propIdx = 0, propEnd = effect->Properties().Length();
          propIdx != propEnd; ++propIdx) {
       const AnimationProperty& prop = effect->Properties()[propIdx];
-      if (!CanAnimatePropertyOnCompositor(element,
-                                          prop.mProperty,
-                                          aFlags) ||
-          IsCompositorAnimationDisabledForFrame(frame)) {
+      if (!KeyframeEffectReadOnly::CanAnimatePropertyOnCompositor(
+            aFrame,
+            prop.mProperty)) {
         return false;
       }
     }
-  }
-
-  // No properties to animate
-  if (!existsProperty) {
-    return false;
   }
 
   return true;
@@ -730,91 +600,6 @@ AnimationCollection::EnsureStyleRuleFor(TimeStamp aRefreshTime)
   }
 }
 
-bool
-AnimationCollection::CanThrottleTransformChanges(TimeStamp aTime)
-{
-  if (!nsLayoutUtils::AreAsyncAnimationsEnabled()) {
-    return false;
-  }
-
-  // If we know that the animation cannot cause overflow,
-  // we can just disable flushes for this animation.
-
-  // If we don't show scrollbars, we don't care about overflow.
-  if (LookAndFeel::GetInt(LookAndFeel::eIntID_ShowHideScrollbars) == 0) {
-    return true;
-  }
-
-  // If this animation can cause overflow, we can throttle some of the ticks.
-  if (!mStyleRuleRefreshTime.IsNull() &&
-      (aTime - mStyleRuleRefreshTime) < TimeDuration::FromMilliseconds(200)) {
-    return true;
-  }
-
-  dom::Element* element = GetElementToRestyle();
-  if (!element) {
-    return false;
-  }
-
-  // If the nearest scrollable ancestor has overflow:hidden,
-  // we don't care about overflow.
-  nsIScrollableFrame* scrollable = nsLayoutUtils::GetNearestScrollableFrame(
-                                     nsLayoutUtils::GetStyleFrame(element));
-  if (!scrollable) {
-    return true;
-  }
-
-  ScrollbarStyles ss = scrollable->GetScrollbarStyles();
-  if (ss.mVertical == NS_STYLE_OVERFLOW_HIDDEN &&
-      ss.mHorizontal == NS_STYLE_OVERFLOW_HIDDEN &&
-      scrollable->GetLogicalScrollPosition() == nsPoint(0, 0)) {
-    return true;
-  }
-
-  return false;
-}
-
-bool
-AnimationCollection::CanThrottleAnimation(TimeStamp aTime)
-{
-  dom::Element* element = GetElementToRestyle();
-  if (!element) {
-    return false;
-  }
-  nsIFrame* frame = nsLayoutUtils::GetStyleFrame(element);
-  if (!frame) {
-    return false;
-  }
-
-  for (const LayerAnimationInfo::Record& record :
-        LayerAnimationInfo::sRecords) {
-    // We only need to worry about *current* animations here.
-    // - If we have a newly-finished animation, Animation::CanThrottle will
-    //   detect that and force an unthrottled sample.
-    // - If we have a newly-idle animation, then whatever caused the animation
-    //   to be idle will update the animation generation so we'll return false
-    //   from the layer generation check below for any other running compositor
-    //   animations (and if no other compositor animations exist we won't get
-    //   this far).
-    if (!HasCurrentAnimationOfProperty(record.mProperty)) {
-      continue;
-    }
-
-    Layer* layer = FrameLayerBuilder::GetDedicatedLayer(
-                     frame, record.mLayerType);
-    if (!layer || mAnimationGeneration > layer->GetAnimationGeneration()) {
-      return false;
-    }
-
-    if (record.mProperty == eCSSProperty_transform &&
-        !CanThrottleTransformChanges(aTime)) {
-      return false;
-    }
-  }
-
-  return true;
-}
-
 void
 AnimationCollection::ClearIsRunningOnCompositor(nsCSSProperty aProperty)
 {
@@ -854,16 +639,6 @@ AnimationCollection::RequestRestyle(RestyleType aRestyleType)
 
   if (mHasPendingAnimationRestyle) {
     return;
-  }
-
-  // Upgrade throttled restyles if other factors prevent
-  // throttling (e.g. async animations are not enabled).
-  if (aRestyleType == RestyleType::Throttled) {
-    TimeStamp now = presContext->RefreshDriver()->MostRecentRefresh();
-    if (!CanPerformOnCompositorThread(CanAnimateFlags(0)) ||
-        !CanThrottleAnimation(now)) {
-      aRestyleType = RestyleType::Standard;
-    }
   }
 
   if (aRestyleType >= RestyleType::Standard) {

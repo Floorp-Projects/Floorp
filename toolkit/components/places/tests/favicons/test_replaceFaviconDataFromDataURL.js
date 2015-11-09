@@ -62,7 +62,7 @@ function run_test() {
   run_next_test();
 };
 
-add_task(function test_replaceFaviconDataFromDataURL_validHistoryURI() {
+add_task(function* test_replaceFaviconDataFromDataURL_validHistoryURI() {
   do_print("test replaceFaviconDataFromDataURL for valid history uri");
 
   let pageURI = uri("http://test1.bar/");
@@ -88,7 +88,7 @@ add_task(function test_replaceFaviconDataFromDataURL_validHistoryURI() {
   yield PlacesTestUtils.clearHistory();
 });
 
-add_task(function test_replaceFaviconDataFromDataURL_overrideDefaultFavicon() {
+add_task(function* test_replaceFaviconDataFromDataURL_overrideDefaultFavicon() {
   do_print("test replaceFaviconDataFromDataURL to override a later setAndFetchFaviconForPage");
 
   let pageURI = uri("http://test2.bar/");
@@ -118,7 +118,7 @@ add_task(function test_replaceFaviconDataFromDataURL_overrideDefaultFavicon() {
   yield PlacesTestUtils.clearHistory();
 });
 
-add_task(function test_replaceFaviconDataFromDataURL_replaceExisting() {
+add_task(function* test_replaceFaviconDataFromDataURL_replaceExisting() {
   do_print("test replaceFaviconDataFromDataURL to override a previous setAndFetchFaviconForPage");
 
   let pageURI = uri("http://test3.bar");
@@ -151,7 +151,7 @@ add_task(function test_replaceFaviconDataFromDataURL_replaceExisting() {
   yield PlacesTestUtils.clearHistory();
 });
 
-add_task(function test_replaceFaviconDataFromDataURL_unrelatedReplace() {
+add_task(function* test_replaceFaviconDataFromDataURL_unrelatedReplace() {
   do_print("test replaceFaviconDataFromDataURL to not make unrelated changes");
 
   let pageURI = uri("http://test4.bar/");
@@ -181,7 +181,7 @@ add_task(function test_replaceFaviconDataFromDataURL_unrelatedReplace() {
   yield PlacesTestUtils.clearHistory();
 });
 
-add_task(function test_replaceFaviconDataFromDataURL_badInputs() {
+add_task(function* test_replaceFaviconDataFromDataURL_badInputs() {
   do_print("test replaceFaviconDataFromDataURL to throw on bad inputs");
 
   let favicon = createFavicon("favicon8.png");
@@ -209,7 +209,7 @@ add_task(function test_replaceFaviconDataFromDataURL_badInputs() {
   yield PlacesTestUtils.clearHistory();
 });
 
-add_task(function test_replaceFaviconDataFromDataURL_twiceReplace() {
+add_task(function* test_replaceFaviconDataFromDataURL_twiceReplace() {
   do_print("test replaceFaviconDataFromDataURL on multiple replacements");
 
   let pageURI = uri("http://test5.bar/");
@@ -240,7 +240,7 @@ add_task(function test_replaceFaviconDataFromDataURL_twiceReplace() {
   yield PlacesTestUtils.clearHistory();
 });
 
-add_task(function test_replaceFaviconDataFromDataURL_afterRegularAssign() {
+add_task(function* test_replaceFaviconDataFromDataURL_afterRegularAssign() {
   do_print("test replaceFaviconDataFromDataURL after replaceFaviconData");
 
   let pageURI = uri("http://test6.bar/");
@@ -273,7 +273,7 @@ add_task(function test_replaceFaviconDataFromDataURL_afterRegularAssign() {
   yield PlacesTestUtils.clearHistory();
 });
 
-add_task(function test_replaceFaviconDataFromDataURL_beforeRegularAssign() {
+add_task(function* test_replaceFaviconDataFromDataURL_beforeRegularAssign() {
   do_print("test replaceFaviconDataFromDataURL before replaceFaviconData");
 
   let pageURI = uri("http://test7.bar/");

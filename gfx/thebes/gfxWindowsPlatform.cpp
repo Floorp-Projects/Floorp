@@ -1770,7 +1770,6 @@ bool DoesRenderTargetViewNeedsRecreating(ID3D11Device *device)
         gfxCriticalNote << "DoesRecreatingKeyedMutexFailed";
         return false;
     }
-
     D3D11_RENDER_TARGET_VIEW_DESC offscreenRTVDesc;
     offscreenRTVDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
     offscreenRTVDesc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
@@ -1834,6 +1833,22 @@ bool DoesRenderTargetViewNeedsRecreating(ID3D11Device *device)
     return result;
 }
 
+static bool TryCreateTexture2D(ID3D11Device *device,
+                               D3D11_TEXTURE2D_DESC* desc,
+                               D3D11_SUBRESOURCE_DATA* data,
+                               RefPtr<ID3D11Texture2D>& texture)
+{
+  // Older Intel driver version (see bug 1221348 for version #s) crash when
+  // creating a texture with shared keyed mutex and data.
+  MOZ_SEH_TRY {
+    return !FAILED(device->CreateTexture2D(desc, data, getter_AddRefs(texture)));
+  } MOZ_SEH_EXCEPT(EXCEPTION_EXECUTE_HANDLER) {
+    // For now we want to aggregrate all the crash signature to a known crash.
+    MOZ_CRASH("Crash creating texture. See bug 1221348.");
+    return false;
+  }
+}
+
 
 // See bug 1083071. On some drivers, Direct3D 11 CreateShaderResourceView fails
 // with E_OUTOFMEMORY.
@@ -1885,12 +1900,30 @@ bool DoesD3D11TextureSharingWorkInternal(ID3D11Device *device, DXGI_FORMAT forma
   for (size_t i = 0; i < sizeof(color)/sizeof(color[0]); i++) {
     color[i] = 0xff00ffff;
   }
-  // We're going to check that sharing actually works with this format
-  D3D11_SUBRESOURCE_DATA data;
-  data.pSysMem = color;
-  data.SysMemPitch = texture_size * 4;
-  data.SysMemSlicePitch = 0;
-  if (FAILED(device->CreateTexture2D(&desc, &data, getter_AddRefs(texture)))) {
+  // XXX If we pass the data directly at texture creation time we
+  //     get a crash on Intel 8.5.10.[18xx-1994] drivers.
+  //     We can work around this issue by doing UpdateSubresource.
+  if (!TryCreateTexture2D(device, &desc, nullptr, texture)) {
+    gfxCriticalError() << "DoesD3D11TextureSharingWork_TryCreateTextureFailure";
+    return false;
+  }
+
+  RefPtr<IDXGIKeyedMutex> sourceSharedMutex;
+  texture->QueryInterface(__uuidof(IDXGIKeyedMutex), (void**)getter_AddRefs(sourceSharedMutex));
+  if (FAILED(sourceSharedMutex->AcquireSync(0, 30*1000))) {
+    gfxCriticalError() << "DoesD3D11TextureSharingWork_SourceMutexTimeout";
+    // only wait for 30 seconds
+    return false;
+  }
+
+  RefPtr<ID3D11DeviceContext> deviceContext;
+  device->GetImmediateContext(getter_AddRefs(deviceContext));
+
+  int stride = texture_size * 4;
+  deviceContext->UpdateSubresource(texture, 0, nullptr, color, stride, stride * texture_size);
+
+  if (FAILED(sourceSharedMutex->ReleaseSync(0))) {
+    gfxCriticalError() << "DoesD3D11TextureSharingWork_SourceReleaseSyncTimeout";
     return false;
   }
 
@@ -1899,10 +1932,12 @@ bool DoesD3D11TextureSharingWorkInternal(ID3D11Device *device, DXGI_FORMAT forma
   if (FAILED(texture->QueryInterface(__uuidof(IDXGIResource),
                                      getter_AddRefs(otherResource))))
   {
+    gfxCriticalError() << "DoesD3D11TextureSharingWork_GetResourceFailure";
     return false;
   }
 
   if (FAILED(otherResource->GetSharedHandle(&shareHandle))) {
+    gfxCriticalError() << "DoesD3D11TextureSharingWork_GetSharedTextureFailure";
     return false;
   }
 
@@ -1918,6 +1953,7 @@ bool DoesD3D11TextureSharingWorkInternal(ID3D11Device *device, DXGI_FORMAT forma
   if (FAILED(sharedResource->QueryInterface(__uuidof(ID3D11Texture2D),
                                             getter_AddRefs(sharedTexture))))
   {
+    gfxCriticalError() << "DoesD3D11TextureSharingWork_GetSharedTextureFailure";
     return false;
   }
 
@@ -1928,13 +1964,12 @@ bool DoesD3D11TextureSharingWorkInternal(ID3D11Device *device, DXGI_FORMAT forma
   desc.MiscFlags = 0;
   desc.BindFlags = 0;
   if (FAILED(device->CreateTexture2D(&desc, nullptr, getter_AddRefs(cpuTexture)))) {
+    gfxCriticalError() << "DoesD3D11TextureSharingWork_CreateTextureFailure";
     return false;
   }
 
   RefPtr<IDXGIKeyedMutex> sharedMutex;
-  RefPtr<ID3D11DeviceContext> deviceContext;
   sharedResource->QueryInterface(__uuidof(IDXGIKeyedMutex), (void**)getter_AddRefs(sharedMutex));
-  device->GetImmediateContext(getter_AddRefs(deviceContext));
   if (FAILED(sharedMutex->AcquireSync(0, 30*1000))) {
     gfxCriticalError() << "DoesD3D11TextureSharingWork_AcquireSyncTimeout";
     // only wait for 30 seconds
@@ -2664,6 +2699,29 @@ public:
         const double rate = 1000 / 60.0;
         mSoftwareVsyncRate = TimeDuration::FromMilliseconds(rate);
         MOZ_RELEASE_ASSERT(mVsyncThread->Start(), "Could not start Windows vsync thread");
+        SetVsyncRate();
+      }
+
+      void SetVsyncRate()
+      {
+        if (!DwmCompositionEnabled()) {
+          mVsyncRate = TimeDuration::FromMilliseconds(1000.0 / 60.0);
+          return;
+        }
+
+        DWM_TIMING_INFO vblankTime;
+        // Make sure to init the cbSize, otherwise GetCompositionTiming will fail
+        vblankTime.cbSize = sizeof(DWM_TIMING_INFO);
+        HRESULT hr = WinUtils::dwmGetCompositionTimingInfoPtr(0, &vblankTime);
+        if (SUCCEEDED(hr)) {
+          UNSIGNED_RATIO refreshRate = vblankTime.rateRefresh;
+          // We get the rate in hertz / time, but we want the rate in ms.
+          float rate = ((float) refreshRate.uiDenominator
+                       / (float) refreshRate.uiNumerator) * 1000;
+          mVsyncRate = TimeDuration::FromMilliseconds(rate);
+        } else {
+          mVsyncRate = TimeDuration::FromMilliseconds(1000.0 / 60.0);
+        }
       }
 
       virtual void EnableVsync() override
@@ -2699,6 +2757,11 @@ public:
         MOZ_ASSERT(NS_IsMainThread());
         MonitorAutoLock lock(mVsyncEnabledLock);
         return mVsyncEnabled;
+      }
+
+      virtual TimeDuration GetVsyncRate() override
+      {
+        return mVsyncRate;
       }
 
       void ScheduleSoftwareVsync(TimeStamp aVsyncTimestamp)
@@ -2826,6 +2889,7 @@ public:
       TimeStamp mPrevVsync; // Only used on Windows 10
       Monitor mVsyncEnabledLock;
       base::Thread* mVsyncThread;
+      TimeDuration mVsyncRate;
       bool mVsyncEnabled;
   }; // end d3dvsyncdisplay
 

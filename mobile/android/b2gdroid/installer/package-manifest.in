@@ -563,6 +563,8 @@
 
 #ifndef MOZ_ANDROID_EXCLUDE_FONTS
 @BINPATH@/res/fonts/*
+#else
+@BINPATH@/res/fonts/*.properties
 #endif
 
 ; svg

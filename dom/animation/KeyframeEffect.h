@@ -25,9 +25,14 @@
 
 struct JSContext;
 class nsCSSPropertySet;
+class nsIContent;
+class nsIDocument;
+class nsIFrame;
+class nsPresContext;
 
 namespace mozilla {
 
+struct AnimationCollection;
 class AnimValuesStyleRule;
 
 namespace dom {
@@ -273,8 +278,21 @@ public:
   // Any updated properties are added to |aSetProperties|.
   void ComposeStyle(RefPtr<AnimValuesStyleRule>& aStyleRule,
                     nsCSSPropertySet& aSetProperties);
+  // Returns true if |aProperty| is currently being animated on compositor.
+  bool IsPropertyRunningOnCompositor(nsCSSProperty aProperty) const;
+  // Returns true if at least one property is being animated on compositor.
   bool IsRunningOnCompositor() const;
   void SetIsRunningOnCompositor(nsCSSProperty aProperty, bool aIsRunning);
+
+  bool CanThrottle() const;
+
+  // Returns true |aProperty| can be run on compositor for |aFrame|.
+  static bool CanAnimatePropertyOnCompositor(const nsIFrame* aFrame,
+                                             nsCSSProperty aProperty);
+  nsIDocument* GetRenderedDocument() const;
+  nsPresContext* GetPresContext() const;
+
+  inline AnimationCollection* GetCollection() const;
 
 protected:
   virtual ~KeyframeEffectReadOnly();
@@ -307,6 +325,21 @@ protected:
   // restyle is performed, this member may temporarily become false even if
   // the animation remains on the layer after the restyle.
   bool mIsPropertyRunningOnCompositor[LayerAnimationInfo::kRecords];
+
+private:
+  nsIFrame* GetAnimationFrame() const;
+
+  bool CanThrottleTransformChanges(nsIFrame& aFrame) const;
+
+  // Returns true unless Gecko limitations prevent performing transform
+  // animations for |aFrame|. Any limitations that are encountered are
+  // logged using |aContent| to describe the affected content.
+  // If |aContent| is nullptr, no logging is performed
+  static bool CanAnimateTransformOnCompositor(const nsIFrame* aFrame,
+                                              const nsIContent* aContent);
+  static bool IsGeometricProperty(const nsCSSProperty aProperty);
+
+  static const TimeDuration OverflowRegionRefreshInterval();
 };
 
 } // namespace dom

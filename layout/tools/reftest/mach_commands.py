@@ -236,7 +236,7 @@ class ReftestRunner(MozbuildObject):
             kwargs["tests"] = [os.path.join(*default_manifest[kwargs["suite"]])]
 
         kwargs["extraProfileFiles"].append(
-            os.path.join(self.topobjdir, "dist", "bin", "res", "fonts"))
+            os.path.join(self.topsrcdir, "mobile", "android", "fonts"))
 
         if not kwargs["httpdPath"]:
             kwargs["httpdPath"] = os.path.join(self.tests_dir, "modules")
