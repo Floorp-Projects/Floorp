@@ -60,11 +60,11 @@ public:
 
   void FrameReceived(uint32_t aWebSocketSerialID,
                      uint64_t aInnerWindowID,
-                     WebSocketFrame* aFrame);
+                     already_AddRefed<WebSocketFrame> aFrame);
 
   void  FrameSent(uint32_t aWebSocketSerialID,
                   uint64_t aInnerWindowID,
-                  WebSocketFrame* aFrame);
+                  already_AddRefed<WebSocketFrame> aFrame);
 
   already_AddRefed<WebSocketFrame>
   CreateFrameIfNeeded(bool aFinBit, bool aRsvBit1, bool aRsvBit2, bool aRsvBit3,
