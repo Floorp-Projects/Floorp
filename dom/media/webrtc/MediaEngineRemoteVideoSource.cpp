@@ -97,12 +97,7 @@ MediaEngineRemoteVideoSource::Allocate(const dom::MediaTrackConstraints& aConstr
 {
   LOG((__PRETTY_FUNCTION__));
 
-  if (!mInitDone) {
-    LOG(("Init not done"));
-    return NS_ERROR_FAILURE;
-  }
-
-  if (mState == kReleased) {
+  if (mState == kReleased && mInitDone) {
     // Note: if shared, we don't allow a later opener to affect the resolution.
     // (This may change depending on spec changes for Constraints/settings)
 
@@ -126,20 +121,19 @@ MediaEngineRemoteVideoSource::Allocate(const dom::MediaTrackConstraints& aConstr
     }
   }
 
-  ++mNrAllocations;
-
   return NS_OK;
 }
 
 nsresult
 MediaEngineRemoteVideoSource::Deallocate()
 {
-  LOG((__PRETTY_FUNCTION__));
-
-  --mNrAllocations;
-  MOZ_ASSERT(mNrAllocations >= 0, "Double-deallocations are prohibited");
-
-  if (mNrAllocations == 0) {
+  LOG((__FUNCTION__));
+  bool empty;
+  {
+    MonitorAutoLock lock(mMonitor);
+    empty = mSources.IsEmpty();
+  }
+  if (empty) {
     if (mState != kStopped && mState != kAllocated) {
       return NS_ERROR_FAILURE;
     }

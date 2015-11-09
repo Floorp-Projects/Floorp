@@ -127,8 +127,6 @@ public:
     : mMediaThread(aThread)
     , mWindowID(aWindowID)
     , mStopped(false)
-    , mAudioStopped(false)
-    , mVideoStopped(false)
     , mFinished(false)
     , mLock("mozilla::GUMCMSL")
     , mRemoved(false) {}
@@ -222,6 +220,11 @@ public:
            mVideoDevice->GetMediaSource() == dom::MediaSourceEnum::Browser;
   }
 
+  void SetStopped()
+  {
+    mStopped = true;
+  }
+
   // implement in .cpp to avoid circular dependency with MediaOperationTask
   // Can be invoked from EITHER MainThread or MSG thread
   void Invalidate();
@@ -302,14 +305,6 @@ private:
   uint64_t mWindowID;
 
   bool mStopped; // MainThread only
-
-  // true if we have sent MEDIA_STOP or MEDIA_STOP_TRACK for mAudioDevice.
-  // MainThread only.
-  bool mAudioStopped;
-
-  // true if we have sent MEDIA_STOP or MEDIA_STOP_TRACK for mAudioDevice.
-  // MainThread only.
-  bool mVideoStopped;
 
   // Set at Activate on MainThread
 
@@ -469,7 +464,6 @@ public:
   static bool IsPrivateBrowsing(nsPIDOMWindow *window);
 private:
   typedef media::Pledge<SourceSet*, dom::MediaStreamError*> PledgeSourceSet;
-  typedef media::Pledge<const char*, dom::MediaStreamError*> PledgeChar;
 
   static bool IsPrivileged();
   static bool IsLoop(nsIURI* aDocURI);
@@ -489,10 +483,6 @@ private:
                        dom::MediaSourceEnum aVideoSrcType,
                        dom::MediaSourceEnum aAudioSrcType,
                        bool aFake = false, bool aFakeTracks = false);
-  already_AddRefed<PledgeChar>
-  SelectSettings(
-      dom::MediaStreamConstraints& aConstraints,
-      nsRefPtr<media::Refcountable<ScopedDeletePtr<SourceSet>>>& aSources);
 
   StreamListeners* AddWindowID(uint64_t aWindowId);
   WindowTable *GetActiveWindows() {
@@ -533,7 +523,6 @@ private:
   static StaticRefPtr<MediaManager> sSingleton;
 
   media::CoatCheck<PledgeSourceSet> mOutstandingPledges;
-  media::CoatCheck<PledgeChar> mOutstandingCharPledges;
   media::CoatCheck<GetUserMediaCallbackMediaStreamListener::PledgeVoid> mOutstandingVoidPledges;
 #if defined(MOZ_B2G_CAMERA) && defined(MOZ_WIDGET_GONK)
   nsRefPtr<nsDOMCameraManager> mCameraManager;

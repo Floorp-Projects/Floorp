@@ -306,16 +306,18 @@ MediaEngineWebRTCMicrophoneSource::Allocate(const dom::MediaTrackConstraints &aC
       LOG(("Audio device %d allocated shared", mCapIndex));
     }
   }
-  ++mNrAllocations;
   return NS_OK;
 }
 
 nsresult
 MediaEngineWebRTCMicrophoneSource::Deallocate()
 {
-  --mNrAllocations;
-  MOZ_ASSERT(mNrAllocations >= 0, "Double-deallocations are prohibited");
-  if (mNrAllocations == 0) {
+  bool empty;
+  {
+    MonitorAutoLock lock(mMonitor);
+    empty = mSources.IsEmpty();
+  }
+  if (empty) {
     // If empty, no callbacks to deliver data should be occuring
     if (mState != kStopped && mState != kAllocated) {
       return NS_ERROR_FAILURE;
