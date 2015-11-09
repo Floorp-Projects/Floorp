@@ -1643,7 +1643,7 @@ double
 gfxFont::CalcXScale(gfxContext *aContext)
 {
     // determine magnitude of a 1px x offset in device space
-    gfxSize t = aContext->UserToDevice(gfxSize(1.0, 0.0));
+    Size t = aContext->UserToDevice(Size(1.0, 0.0));
     if (t.width == 1.0 && t.height == 0.0) {
         // short-circuit the most common case to avoid sqrt() and division
         return 1.0;
