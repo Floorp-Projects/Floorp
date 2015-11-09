@@ -36,7 +36,7 @@ android {
         }
 
         androidTest {
-            manifest.srcFile "${topobjdir}/build/mobile/robocop/AndroidManifest.xml"
+            manifest.srcFile "${topobjdir}/mobile/android/tests/browser/robocop/AndroidManifest.xml"
             java {
                 srcDir "${topsrcdir}/mobile/android/tests/browser/robocop/src"
                 srcDir "${topsrcdir}/mobile/android/tests/background/junit3/src"
@@ -44,7 +44,7 @@ android {
                 srcDir "${topsrcdir}/mobile/android/tests/javaddons/src"
             }
             res {
-                srcDir "${topsrcdir}/build/mobile/robocop/res"
+                srcDir "${topsrcdir}/mobile/android/tests/browser/robocop/res"
             }
             assets {
                 srcDir "${topsrcdir}/mobile/android/tests/browser/robocop/assets"
