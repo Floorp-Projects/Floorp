@@ -733,7 +733,7 @@ BytecodeEmitter::pushLoopStatement(LoopStmtInfo* stmt, StmtType type, ptrdiff_t 
     }
 }
 
-JSObject*
+StaticScope*
 BytecodeEmitter::innermostStaticScope() const
 {
     if (StmtInfoBCE* stmt = innermostScopeStmt())
@@ -1362,9 +1362,7 @@ BytecodeEmitter::atBodyLevel(StmtInfoBCE* stmt) const
     if (sc->staticScope()->is<StaticEvalScope>()) {
         bool bl = !stmt->enclosing;
         MOZ_ASSERT_IF(bl, stmt->type == StmtType::BLOCK);
-        MOZ_ASSERT_IF(bl, stmt->staticScope
-                              ->as<StaticBlockScope>()
-                              .enclosingStaticScope() == sc->staticScope());
+        MOZ_ASSERT_IF(bl, stmt->staticScope->enclosingScope() == sc->staticScope());
         return bl;
     }
     return !stmt;
@@ -3541,9 +3539,9 @@ BytecodeEmitter::emitSetThis(ParseNode* pn)
 }
 
 static bool
-IsModuleOnScopeChain(JSObject* obj)
+IsModuleOnScopeChain(StaticScope* scope)
 {
-    for (StaticScopeIter<NoGC> ssi(obj); !ssi.done(); ssi++) {
+    for (StaticScopeIter<NoGC> ssi(scope); !ssi.done(); ssi++) {
         if (ssi.type() == StaticScopeIter<NoGC>::Module)
             return true;
     }
@@ -6399,9 +6397,8 @@ BytecodeEmitter::emitFunction(ParseNode* pn, bool needsProto)
                 // the first block-scoped declaration is found; (2) legacy
                 // comprehension expression transplantation. The
                 // setEnclosingScope call below fixes these cases.
-                Rooted<StaticScope*> funScope(cx, fun->lazyScript()->staticScope());
-                RootedObject enclosingScope(cx, innermostStaticScope());
-                funScope->setEnclosingScope(enclosingScope);
+                Rooted<StaticScope*> enclosingScope(cx, innermostStaticScope());
+                fun->lazyScript()->staticScope()->setEnclosingScope(enclosingScope);
 
                 JSObject* source = script->sourceObject();
                 fun->lazyScript()->initSource(&source->as<ScriptSourceObject>());
@@ -6422,8 +6419,8 @@ BytecodeEmitter::emitFunction(ParseNode* pn, bool needsProto)
             CompileOptions options(cx, transitiveOptions);
 
             // See comment above regarding funScope->setEnclosingScope().
-            Rooted<StaticScope*> funScope(cx, &funbox->staticScope()->as<StaticScope>());
-            RootedObject enclosingScope(cx, innermostStaticScope());
+            Rooted<StaticScope*> funScope(cx, funbox->staticScope());
+            Rooted<StaticScope*> enclosingScope(cx, innermostStaticScope());
             funScope->setEnclosingScope(enclosingScope);
 
             Rooted<JSObject*> sourceObject(cx, script->sourceObject());

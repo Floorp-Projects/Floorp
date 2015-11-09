@@ -119,7 +119,7 @@ MarkUsesAsHoistedLexical(ParseNode* pn)
 }
 
 void
-SharedContext::computeAllowSyntax(JSObject* staticScope)
+SharedContext::computeAllowSyntax(StaticScope* staticScope)
 {
     for (StaticScopeIter<CanGC> it(context, staticScope); !it.done(); it++) {
         if (it.type() == StaticScopeIter<CanGC>::Function && !it.fun().function().isArrow()) {
@@ -138,7 +138,7 @@ SharedContext::computeAllowSyntax(JSObject* staticScope)
 }
 
 void
-SharedContext::computeThisBinding(JSObject* staticScope)
+SharedContext::computeThisBinding(StaticScope* staticScope)
 {
     for (StaticScopeIter<CanGC> it(context, staticScope); !it.done(); it++) {
         if (it.type() == StaticScopeIter<CanGC>::Module) {
@@ -177,7 +177,7 @@ SharedContext::computeThisBinding(JSObject* staticScope)
 }
 
 void
-SharedContext::computeInWith(JSObject* staticScope)
+SharedContext::computeInWith(StaticScope* staticScope)
 {
     for (StaticScopeIter<CanGC> it(context, staticScope); !it.done(); it++) {
         if (it.type() == StaticScopeIter<CanGC>::With) {
@@ -784,10 +784,10 @@ FunctionBox::FunctionBox(ExclusiveContext* cx, ObjectBox* traceListHead, JSFunct
 }
 
 bool
-FunctionBox::initStaticScope(JSObject* enclosingStaticScope)
+FunctionBox::initStaticScope(StaticScope* enclosingStaticScope)
 {
     RootedFunction fun(context, function());
-    Rooted<StaticScope*> enclosing(context, &enclosingStaticScope->as<StaticScope>());
+    Rooted<StaticScope*> enclosing(context, enclosingStaticScope);
     staticScope_ = StaticFunctionScope::create(context, fun, enclosing);
     return staticScope_ != nullptr;
 }
@@ -798,7 +798,7 @@ Parser<ParseHandler>::newFunctionBox(Node fn, JSFunction* fun,
                                      ParseContext<ParseHandler>* outerpc,
                                      Directives inheritedDirectives,
                                      GeneratorKind generatorKind,
-                                     JSObject* enclosingStaticScope)
+                                     StaticScope* enclosingStaticScope)
 {
     MOZ_ASSERT_IF(outerpc, enclosingStaticScope == outerpc->innermostStaticScope());
     MOZ_ASSERT(fun);
@@ -1170,7 +1170,7 @@ Parser<FullParseHandler>::standaloneFunctionBody(HandleFunction fun,
                                                  GeneratorKind generatorKind,
                                                  Directives inheritedDirectives,
                                                  Directives* newDirectives,
-                                                 HandleObject enclosingStaticScope)
+                                                 Handle<StaticScope*> enclosingStaticScope)
 {
     MOZ_ASSERT(checkOptionsCalled);
 
@@ -2856,7 +2856,7 @@ Parser<SyntaxParseHandler>::finishFunctionDefinition(Node pn, FunctionBox* funbo
     size_t numInnerFunctions = pc->innerFunctions.length();
 
     RootedFunction fun(context, funbox->function());
-    Rooted<StaticFunctionScope*> funScope(context, &funbox->staticScope()->as<StaticFunctionScope>());
+    Rooted<StaticFunctionScope*> funScope(context, funbox->staticScope());
     LazyScript* lazy = LazyScript::CreateRaw(context, fun, funScope,
                                              numFreeVariables, numInnerFunctions,
                                              versionNumber(), funbox->bufStart, funbox->bufEnd,
@@ -3061,7 +3061,7 @@ Parser<FullParseHandler>::standaloneLazyFunction(HandleFunction fun, bool strict
     if (!tokenStream.peekTokenPos(&pn->pn_pos))
         return null();
 
-    RootedObject enclosing(context, fun->lazyScript()->enclosingScope());
+    Rooted<StaticScope*> enclosing(context, fun->lazyScript()->enclosingScope());
     Directives directives(/* strict = */ strict);
     FunctionBox* funbox = newFunctionBox(pn, fun, directives, generatorKind, enclosing);
     if (!funbox)

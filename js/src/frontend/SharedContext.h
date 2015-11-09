@@ -229,10 +229,10 @@ class SharedContext
     // GlobalSharedContexts are stack allocated and thus may use RootedObject
     // for the static scope. FunctionBoxes are LifoAlloc'd and need to
     // manually trace their static scope.
-    virtual JSObject* staticScope() const = 0;
-    void computeAllowSyntax(JSObject* staticScope);
-    void computeInWith(JSObject* staticScope);
-    void computeThisBinding(JSObject* staticScope);
+    virtual StaticScope* staticScope() const = 0;
+    void computeAllowSyntax(StaticScope* staticScope);
+    void computeInWith(StaticScope* staticScope);
+    void computeThisBinding(StaticScope* staticScope);
 
     virtual ObjectBox* toObjectBox() { return nullptr; }
     bool isObjectBox() { return toObjectBox() != nullptr; }
@@ -305,7 +305,7 @@ class MOZ_STACK_CLASS GlobalSharedContext : public SharedContext
             computeThisBinding(staticScope);
     }
 
-    JSObject* staticScope() const override { return staticScope_; }
+    StaticScope* staticScope() const override { return staticScope_; }
 };
 
 class FunctionBox : public ObjectBox, public SharedContext
@@ -338,12 +338,12 @@ class FunctionBox : public ObjectBox, public SharedContext
                 ParseContext<ParseHandler>* pc, Directives directives, bool extraWarnings,
                 GeneratorKind generatorKind);
 
-    bool initStaticScope(JSObject* enclosingStaticScope);
+    bool initStaticScope(StaticScope* enclosingStaticScope);
 
     ObjectBox* toObjectBox() override { return this; }
     JSFunction* function() const { return &object->as<JSFunction>(); }
-    JSObject* staticScope() const override { return staticScope_; }
-    JSObject* enclosingStaticScope() const { return staticScope_->enclosingScope(); }
+    StaticFunctionScope* staticScope() const override { return staticScope_; }
+    StaticScope* enclosingStaticScope() const { return staticScope_->enclosingScope(); }
 
     GeneratorKind generatorKind() const { return GeneratorKindFromBits(generatorKindBits_); }
     bool isGenerator() const { return generatorKind() != NotGenerator; }
@@ -429,7 +429,7 @@ class ModuleBox : public ObjectBox, public SharedContext
 
     ObjectBox* toObjectBox() override { return this; }
     ModuleObject* module() const { return &object->as<ModuleObject>(); }
-    JSObject* staticScope() const override { return module()->staticScope(); }
+    StaticModuleScope* staticScope() const override { return module()->staticScope(); }
 
     void trace(JSTracer* trc) override;
 };
