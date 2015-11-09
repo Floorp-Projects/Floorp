@@ -55,10 +55,7 @@ add_task(function* test_register_no_id() {
   yield rejects(
     PushNotificationService.register('https://example.com/incomplete',
       ChromeUtils.originAttributesToSuffix({ appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inBrowser: false })),
-    function(error) {
-      return error == 'TimeoutError';
-    },
-    'Wrong error for incomplete register response'
+    'Expected error for incomplete register response'
   );
 
   yield waitForPromise(helloPromise, DEFAULT_TIMEOUT,

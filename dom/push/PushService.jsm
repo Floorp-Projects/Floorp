@@ -117,7 +117,7 @@ this.PushService = {
   _activated: null,
   _checkActivated: function() {
     if (this._state < PUSH_SERVICE_ACTIVATING) {
-      return Promise.reject({state: 0, error: "Service not active"});
+      return Promise.reject(new Error("Push service not active"));
     } else if (this._state > PUSH_SERVICE_ACTIVATING) {
       return Promise.resolve();
     } else {
@@ -161,7 +161,7 @@ this.PushService = {
       this._state = aNewState;
       if (this._notifyActivated) {
         if (aNewState < PUSH_SERVICE_ACTIVATING) {
-          this._notifyActivated.reject({state: 0, error: "Service not active"});
+          this._notifyActivated.reject(new Error("Push service not active"));
         } else {
           this._notifyActivated.resolve();
         }
@@ -912,12 +912,12 @@ this.PushService = {
 
   _sendRequest: function(action, aRecord) {
     if (this._state == PUSH_SERVICE_CONNECTION_DISABLE) {
-      return Promise.reject({state: 0, error: "Service not active"});
+      return Promise.reject(new Error("Push service disabled"));
     } else if (this._state == PUSH_SERVICE_ACTIVE_OFFLINE) {
       if (this._service.serviceType() == "WebSocket" && action == "unregister") {
         return Promise.resolve();
       }
-      return Promise.reject({state: 0, error: "NetworkError"});
+      return Promise.reject(new Error("Push service offline"));
     }
     return this._service.request(action, aRecord);
   },
@@ -935,40 +935,11 @@ this.PushService = {
             err => this._onRegisterError(err))
       .then(record => {
         this._deletePendingRequest(aPageRecord);
-        return record;
+        return record.toRegister();
       }, err => {
         this._deletePendingRequest(aPageRecord);
         throw err;
      });
-  },
-
-  _register: function(aPageRecord) {
-    console.debug("_register()");
-    if (!aPageRecord.scope || aPageRecord.originAttributes === undefined) {
-      return Promise.reject({state: 0, error: "NotFoundError"});
-    }
-
-    return this._checkActivated()
-      .then(_ => this._db.getByIdentifiers(aPageRecord))
-      .then(record => {
-        if (!record) {
-          return this._lookupOrPutPendingRequest(aPageRecord);
-        }
-        if (record.isExpired()) {
-          return record.quotaChanged().then(isChanged => {
-            if (isChanged) {
-              // If the user revisited the site, drop the expired push
-              // registration and re-register.
-              return this._db.delete(record.keyID);
-            }
-            throw {state: 0, error: "NotFoundError"};
-          }).then(_ => this._lookupOrPutPendingRequest(aPageRecord));
-        }
-        return record;
-      }, error => {
-        console.error("register: getByIdentifiers failed", error);
-        throw error;
-      });
   },
 
   _sendUnregister: function(aRecord) {
@@ -1050,51 +1021,67 @@ this.PushService = {
     }
 
     let mm = aMessage.target.QueryInterface(Ci.nsIMessageSender);
-    let pageRecord = aMessage.data;
 
+    let name = aMessage.name.slice("Push:".length);
+    Promise.resolve().then(_ => {
+      let pageRecord = this._validatePageRecord(aMessage);
+      return this[name.toLowerCase()](pageRecord);
+    }).then(result => {
+      mm.sendAsyncMessage("PushService:" + name + ":OK", {
+        requestID: aMessage.data.requestID,
+        result: result,
+      });
+    }, error => {
+      console.error("receiveMessage: Error handling message", aMessage, error);
+      mm.sendAsyncMessage("PushService:" + name + ":KO", {
+        requestID: aMessage.data.requestID,
+      });
+    }).catch(error => {
+      console.error("receiveMessage: Error sending reply", error);
+    });
+  },
+
+  _validatePageRecord: function(aMessage) {
     let principal = aMessage.principal;
     if (!principal) {
-      console.debug("receiveMessage: No principal passed",
-        pageRecord.requestID);
-      let message = {
-        requestID: pageRecord.requestID,
-        error: "SecurityError"
-      };
-      mm.sendAsyncMessage("PushService:Register:KO", message);
-      return;
+      throw new Error("Missing message principal");
+    }
+
+    let pageRecord = aMessage.data;
+    if (!pageRecord.scope) {
+      throw new Error("Missing page record scope");
     }
 
     pageRecord.originAttributes =
       ChromeUtils.originAttributesToSuffix(principal.originAttributes);
 
-    if (!pageRecord.scope || pageRecord.originAttributes === undefined) {
-      console.debug("receiveMessage: Incorrect identifier values set",
-        pageRecord);
-      let message = {
-        requestID: pageRecord.requestID,
-        error: "SecurityError"
-      };
-      mm.sendAsyncMessage("PushService:Register:KO", message);
-      return;
-    }
-
-    this[aMessage.name.slice("Push:".length).toLowerCase()](pageRecord, mm);
+    return pageRecord;
   },
 
-  register: function(aPageRecord, aMessageManager) {
+  register: function(aPageRecord) {
     console.debug("register()", aPageRecord);
 
-    this._register(aPageRecord)
+    if (!aPageRecord.scope || aPageRecord.originAttributes === undefined) {
+      return Promise.reject(new Error("Invalid page record"));
+    }
+
+    return this._checkActivated()
+      .then(_ => this._db.getByIdentifiers(aPageRecord))
       .then(record => {
-        let message = record.toRegister();
-        message.requestID = aPageRecord.requestID;
-        aMessageManager.sendAsyncMessage("PushService:Register:OK", message);
-      }, error => {
-        let message = {
-          requestID: aPageRecord.requestID,
-          error
-        };
-        aMessageManager.sendAsyncMessage("PushService:Register:KO", message);
+        if (!record) {
+          return this._lookupOrPutPendingRequest(aPageRecord);
+        }
+        if (record.isExpired()) {
+          return record.quotaChanged().then(isChanged => {
+            if (isChanged) {
+              // If the user revisited the site, drop the expired push
+              // registration and re-register.
+              return this._db.delete(record.keyID);
+            }
+            throw new Error("Push subscription expired");
+          }).then(_ => this._lookupOrPutPendingRequest(aPageRecord));
+        }
+        return record.toRegister();
       });
   },
 
@@ -1123,10 +1110,11 @@ this.PushService = {
    * client acknowledge. On a server, data is cheap, reliable notification is
    * not.
    */
-  _unregister: function(aPageRecord) {
-    console.debug("_unregister()");
+  unregister: function(aPageRecord) {
+    console.debug("unregister()", aPageRecord);
+
     if (!aPageRecord.scope || aPageRecord.originAttributes === undefined) {
-      return Promise.reject({state: 0, error: "NotFoundError"});
+      return Promise.reject(new Error("Invalid page record"));
     }
 
     return this._checkActivated()
@@ -1141,24 +1129,6 @@ this.PushService = {
           this._db.delete(record.keyID),
         ]).then(() => true);
       });
-  },
-
-  unregister: function(aPageRecord, aMessageManager) {
-    console.debug("unregister()", aPageRecord);
-
-    this._unregister(aPageRecord)
-      .then(result => {
-          aMessageManager.sendAsyncMessage("PushService:Unregister:OK", {
-            requestID: aPageRecord.requestID,
-            result: result,
-          })
-        }, error => {
-          console.debug("unregister: Error removing registration", error);
-          aMessageManager.sendAsyncMessage("PushService:Unregister:KO", {
-            requestID: aPageRecord.requestID,
-          })
-        }
-      );
   },
 
   _clearAll: function _clearAll() {
@@ -1209,13 +1179,10 @@ this.PushService = {
       });
   },
 
-  /**
-   * Called on message from the child process
-   */
-  _registration: function(aPageRecord) {
-    console.debug("_registration()");
+  registration: function(aPageRecord) {
+    console.debug("registration()");
     if (!aPageRecord.scope || aPageRecord.originAttributes === undefined) {
-      return Promise.reject({state: 0, error: "NotFoundError"});
+      return Promise.reject(new Error("Invalid page record"));
     }
 
     return this._checkActivated()
@@ -1234,22 +1201,6 @@ this.PushService = {
         }
         return record.toRegistration();
       });
-  },
-
-  registration: function(aPageRecord, aMessageManager) {
-    console.debug("registration()");
-
-    return this._registration(aPageRecord)
-      .then(registration =>
-        aMessageManager.sendAsyncMessage("PushService:Registration:OK", {
-          requestID: aPageRecord.requestID,
-          registration
-        }), error =>
-        aMessageManager.sendAsyncMessage("PushService:Registration:KO", {
-          requestID: aPageRecord.requestID,
-          error
-        })
-      );
   },
 
   _dropExpiredRegistrations: function() {
