@@ -1696,6 +1696,7 @@ nsAttrValue::ParseStyleAttribute(const nsAString& aString,
                                 getter_AddRefs(rule));
   if (rule) {
     rule->SetHTMLCSSStyleSheet(sheet);
+    rule->GetDeclaration()->SetHTMLCSSStyleSheet(sheet);
     SetTo(rule, &aString);
     if (cachingAllowed) {
       MiscContainer* cont = GetMiscContainer();

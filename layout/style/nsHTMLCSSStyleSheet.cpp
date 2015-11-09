@@ -31,7 +31,12 @@ ClearAttrCache(const nsAString& aKey, MiscContainer*& aValue, void*)
   // we're iterating the hashtable.
   MOZ_ASSERT(aValue->mType == nsAttrValue::eCSSStyleRule);
 
-  aValue->mValue.mCSSStyleRule->SetHTMLCSSStyleSheet(nullptr);
+  css::StyleRule* styleRule = aValue->mValue.mCSSStyleRule;
+  styleRule->SetHTMLCSSStyleSheet(nullptr);
+  css::Declaration* declaration = styleRule->GetDeclaration();
+  if (declaration) {
+    declaration->SetHTMLCSSStyleSheet(nullptr);
+  }
   aValue->mValue.mCached = 0;
 
   return PL_DHASH_REMOVE;
