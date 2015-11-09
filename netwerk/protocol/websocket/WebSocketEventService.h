@@ -7,6 +7,7 @@
 #ifndef mozilla_net_WebSocketEventService_h
 #define mozilla_net_WebSocketEventService_h
 
+#include "mozilla/AlreadyAddRefed.h"
 #include "mozilla/Atomics.h"
 #include "nsIWebSocketEventService.h"
 #include "nsAutoPtr.h"
@@ -65,17 +66,17 @@ public:
                   uint64_t aInnerWindowID,
                   WebSocketFrame* aFrame);
 
-  WebSocketFrame*
+  already_AddRefed<WebSocketFrame>
   CreateFrameIfNeeded(bool aFinBit, bool aRsvBit1, bool aRsvBit2, bool aRsvBit3,
                       uint8_t aOpCode, bool aMaskBit, uint32_t aMask,
                       const nsCString& aPayload);
 
-  WebSocketFrame*
+  already_AddRefed<WebSocketFrame>
   CreateFrameIfNeeded(bool aFinBit, bool aRsvBit1, bool aRsvBit2, bool aRsvBit3,
                       uint8_t aOpCode, bool aMaskBit, uint32_t aMask,
                       uint8_t* aPayload, uint32_t aPayloadLength);
 
-  WebSocketFrame*
+  already_AddRefed<WebSocketFrame>
   CreateFrameIfNeeded(bool aFinBit, bool aRsvBit1, bool aRsvBit2, bool aRsvBit3,
                       uint8_t aOpCode, bool aMaskBit, uint32_t aMask,
                       uint8_t* aPayloadInHdr, uint32_t aPayloadInHdrLength,
