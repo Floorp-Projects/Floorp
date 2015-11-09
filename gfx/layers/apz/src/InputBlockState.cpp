@@ -831,7 +831,8 @@ TouchBlockState::TouchActionAllowsPanningXY() const
 }
 
 bool
-TouchBlockState::UpdateSlopState(const MultiTouchInput& aInput)
+TouchBlockState::UpdateSlopState(const MultiTouchInput& aInput,
+                                 bool aApzcCanConsumeEvents)
 {
   if (aInput.mType == MultiTouchInput::MULTITOUCH_START) {
     // this is by definition the first event in this block. If it's the first
@@ -844,10 +845,12 @@ TouchBlockState::UpdateSlopState(const MultiTouchInput& aInput)
     return false;
   }
   if (mInSlop) {
+    ScreenCoord threshold = aApzcCanConsumeEvents
+        ? AsyncPanZoomController::GetTouchStartTolerance()
+        : ScreenCoord(gfxPrefs::APZTouchMoveTolerance() * APZCTreeManager::GetDPI());
     bool stayInSlop = (aInput.mType == MultiTouchInput::MULTITOUCH_MOVE) &&
         (aInput.mTouches.Length() == 1) &&
-        ((aInput.mTouches[0].mScreenPoint - mSlopOrigin).Length() <
-            AsyncPanZoomController::GetTouchStartTolerance());
+        ((aInput.mTouches[0].mScreenPoint - mSlopOrigin).Length() < threshold);
     if (!stayInSlop) {
       // we're out of the slop zone, and will stay out for the remainder of
       // this block
