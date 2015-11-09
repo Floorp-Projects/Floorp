@@ -39,7 +39,7 @@ def run_marionette(tests, b2g_path=None, emulator=None, testtype=None,
     from marionette.runtests import (
         MarionetteTestRunner,
         BaseMarionetteArguments,
-        startTestRunner
+        MarionetteHarness
     )
 
     parser = BaseMarionetteArguments()
@@ -68,11 +68,12 @@ def run_marionette(tests, b2g_path=None, emulator=None, testtype=None,
                                             args,
                                             {"mach": sys.stdout})
 
-    runner = startTestRunner(MarionetteTestRunner, args)
-    if runner.failed > 0:
-        return 1
+    results = MarionetteHarness(MarionetteTestRunner, args=args).run()
 
-    return 0
+    if results.failed > 0:
+        return 1
+    else:
+        return 0
 
 @CommandProvider
 class B2GCommands(MachCommandBase):
