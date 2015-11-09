@@ -46,6 +46,7 @@ ImportantStyleData::List(FILE* out, int32_t aIndent) const
 
 Declaration::Declaration()
   : mOwningRule(nullptr)
+  , mHTMLCSSStyleSheet(nullptr)
   , mImmutable(false)
 {
 }
@@ -63,6 +64,7 @@ Declaration::Declaration(const Declaration& aCopy)
         new CSSVariableDeclarations(*aCopy.mImportantVariables) :
         nullptr),
     mOwningRule(nullptr),
+    mHTMLCSSStyleSheet(nullptr),
     mImmutable(false)
 {
 }
