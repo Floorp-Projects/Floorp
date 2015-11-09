@@ -20,7 +20,13 @@ const TELEMETRY_SHOW_IMAGE_SIZE = "TAP_TO_LOAD_IMAGE_SIZE";
 const TOPIC_GATHER_TELEMETRY = "gather-telemetry";
 
 //// Gecko preference
-const PREF_IMAGEBLOCKING_ENABLED = "browser.image_blocking.enabled"
+const PREF_IMAGEBLOCKING_ENABLED = "browser.image_blocking.enabled";
+
+//// Enabled options
+const OPTION_NEVER = 0;
+const OPTION_ALWAYS = 1;
+const OPTION_WIFI_ONLY = 2;
+
 
 /**
  * Content policy for blocking images
@@ -39,7 +45,7 @@ ImageBlockingPolicy.prototype = {
   // nsIContentPolicy interface implementation
   shouldLoad: function(contentType, contentLocation, requestOrigin, node, mimeTypeGuess, extra) {
     // When enabled or when on cellular, and option for cellular-only is selected
-    if (this._enabled() == 1 || (this._enabled() == 2 && this._usingCellular())) {
+    if (this._enabled() == OPTION_ALWAYS || (this._enabled() == OPTION_WIFI_ONLY && this._usingCellular())) {
       if (contentType === Ci.nsIContentPolicy.TYPE_IMAGE || contentType === Ci.nsIContentPolicy.TYPE_IMAGESET) {
         // Accept any non-http(s) image URLs
         if (!contentLocation.schemeIs("http") && !contentLocation.schemeIs("https")) {
