@@ -124,6 +124,7 @@ Vibrate(const nsTArray<uint32_t>& pattern, const WindowIdentifier &id)
 {
   AssertMainThread();
 
+#if !defined(MOZ_WIDGET_GONK)
   // Only active windows may start vibrations.  If |id| hasn't gone
   // through the IPC layer -- that is, if our caller is the outside
   // world, not hal_proxy -- check whether the window is active.  If
@@ -134,6 +135,7 @@ Vibrate(const nsTArray<uint32_t>& pattern, const WindowIdentifier &id)
     HAL_LOG("Vibrate: Window is inactive, dropping vibrate.");
     return;
   }
+#endif // !defined(MOZ_WIDGET_GONK)
 
   if (!InSandbox()) {
     if (!gLastIDToVibrate) {
