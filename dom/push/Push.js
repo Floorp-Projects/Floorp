@@ -4,14 +4,6 @@
 
 "use strict";
 
-// Don't modify this, instead set dom.push.debug.
-var gDebuggingEnabled = false;
-
-function debug(s) {
-  if (gDebuggingEnabled)
-    dump("-*- Push.js: " + s + "\n");
-}
-
 const Cc = Components.classes;
 const Ci = Components.interfaces;
 const Cu = Components.utils;
@@ -21,6 +13,14 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/DOMRequestHelper.jsm");
 
+XPCOMUtils.defineLazyGetter(this, "console", () => {
+  let {ConsoleAPI} = Cu.import("resource://gre/modules/Console.jsm", {});
+  return new ConsoleAPI({
+    maxLogLevelPref: "dom.push.loglevel",
+    prefix: "Push",
+  });
+});
+
 const PUSH_CID = Components.ID("{cde1d019-fad8-4044-b141-65fb4fb7a245}");
 
 /**
@@ -29,7 +29,7 @@ const PUSH_CID = Components.ID("{cde1d019-fad8-4044-b141-65fb4fb7a245}");
  * one actually performing all operations.
  */
 function Push() {
-  debug("Push Constructor");
+  console.debug("Push()");
 }
 
 Push.prototype = {
@@ -44,11 +44,7 @@ Push.prototype = {
                                           Ci.nsIObserver]),
 
   init: function(aWindow) {
-    // Set debug first so that all debugging actually works.
-    // NOTE: We don't add an observer here like in PushService. Flipping the
-    // pref will require a reload of the app/page, which seems acceptable.
-    gDebuggingEnabled = Services.prefs.getBoolPref("dom.push.debug");
-    debug("init()");
+    console.debug("init()");
 
     this._window = aWindow;
 
@@ -60,12 +56,12 @@ Push.prototype = {
   },
 
   setScope: function(scope){
-    debug('setScope ' + scope);
+    console.debug("setScope()", scope);
     this._scope = scope;
   },
 
   askPermission: function (aAllowCallback, aCancelCallback) {
-    debug("askPermission");
+    console.debug("askPermission()");
 
     return this.createPromise((resolve, reject) => {
       let permissionDenied = () => {
@@ -94,7 +90,7 @@ Push.prototype = {
   },
 
   subscribe: function() {
-    debug("subscribe()");
+    console.debug("subscribe()", this._scope);
 
     let histogram = Services.telemetry.getHistogramById("PUSH_API_USED");
     histogram.add(true);
@@ -107,7 +103,7 @@ Push.prototype = {
   },
 
   getSubscription: function() {
-    debug("getSubscription()" + this._scope);
+    console.debug("getSubscription()", this._scope);
 
     return this.createPromise((resolve, reject) => {
       let callback = new PushEndpointCallback(this, resolve, reject);
@@ -116,7 +112,7 @@ Push.prototype = {
   },
 
   permissionState: function() {
-    debug("permissionState()" + this._scope);
+    console.debug("permissionState()", this._scope);
 
     return this.createPromise((resolve, reject) => {
       let permission = Ci.nsIPermissionManager.UNKNOWN_ACTION;

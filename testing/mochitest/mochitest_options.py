@@ -1139,7 +1139,8 @@ class AndroidArguments(ArgumentContainer):
             options.robocopIni = os.path.abspath(options.robocopIni)
 
             if not options.robocopApk and build_obj:
-                options.robocopApk = os.path.join(build_obj.topobjdir, 'build', 'mobile',
+                options.robocopApk = os.path.join(build_obj.topobjdir, 'mobile', 'android',
+                                                  'tests', 'browser',
                                                   'robocop', 'robocop-debug.apk')
 
         if options.robocopApk != "":

@@ -53,8 +53,6 @@ protected:
 
   // weak link, because the pres shell owns us
   nsIPresShell* MOZ_NON_OWNING_REF mPresShell;
-  // the pres shell owns the style set
-  nsStyleSet*                     mStyleSet;
   nsIFrame*                       mRootFrame;
   PLDHashTable                    mPlaceholderMap;
   UndisplayedMap*                 mUndisplayedMap;
