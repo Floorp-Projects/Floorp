@@ -164,6 +164,8 @@ class SavedStacks {
     bool     init();
     bool     initialized() const { return frames.initialized(); }
     bool     saveCurrentStack(JSContext* cx, MutableHandleSavedFrame frame, unsigned maxFrameCount = 0);
+    bool     copyAsyncStack(JSContext* cx, HandleObject asyncStack, HandleString asyncCause,
+                            MutableHandleSavedFrame adoptedStack, unsigned maxFrameCount = 0);
     void     sweep(JSRuntime* rt);
     void     trace(JSTracer* trc);
     uint32_t count();
