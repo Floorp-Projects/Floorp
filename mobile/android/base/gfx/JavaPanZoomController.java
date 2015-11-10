@@ -1339,6 +1339,7 @@ class JavaPanZoomController
      * MotionEventHelper dragAsync() robocop tests can have us suppress
      * longpress events that are spuriously created on slower test devices.
      */
+    @Override
     public void setIsLongpressEnabled(boolean isLongpressEnabled) {
         this.isLongpressEnabled = isLongpressEnabled;
     }

@@ -33,6 +33,7 @@
 #include "TreeTraversal.h"              // for generic tree traveral algorithms
 #include "LayersLogging.h"              // for Stringify
 #include "Units.h"                      // for ParentlayerPixel
+#include "GestureEventListener.h"       // for GestureEventListener::setLongTapEnabled
 
 #define ENABLE_APZCTM_LOGGING 0
 // #define ENABLE_APZCTM_LOGGING 1
@@ -1605,6 +1606,13 @@ APZCTreeManager::BuildOverscrollHandoffChain(const RefPtr<AsyncPanZoomController
   }
 
   return result;
+}
+
+/* static */ void
+APZCTreeManager::SetLongTapEnabled(bool aLongTapEnabled)
+{
+  APZThreadUtils::RunOnControllerThread(
+    NewRunnableFunction(GestureEventListener::SetLongTapEnabled, aLongTapEnabled));
 }
 
 HitTestingTreeNode*
