@@ -3413,6 +3413,13 @@ CSSParserImpl::ParseMediaQueryExpression(nsMediaQuery* aQuery)
   nsDependentString featureString(mToken.mIdent, 0);
   uint8_t satisfiedReqFlags = 0;
 
+  // Strip off "-webkit-" prefix from featureString:
+  if (sWebkitPrefixedAliasesEnabled &&
+      StringBeginsWith(featureString, NS_LITERAL_STRING("-webkit-"))) {
+    satisfiedReqFlags |= nsMediaFeature::eHasWebkitPrefix;
+    featureString.Rebind(featureString, 8);
+  }
+
   // Strip off "min-"/"max-" prefix from featureString:
   if (StringBeginsWith(featureString, NS_LITERAL_STRING("min-"))) {
     expr->mRange = nsMediaExpression::eMin;
