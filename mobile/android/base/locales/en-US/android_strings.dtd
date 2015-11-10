@@ -213,8 +213,10 @@
 <!ENTITY pref_cookies_not_accept_foreign "Enabled, excluding 3rd party">
 <!ENTITY pref_cookies_disabled "Disabled">
 
-<!ENTITY pref_tap_to_load_images_title "Tap-to-load images">
-<!ENTITY pref_tap_to_load_images_summary2 "Load images only when you long press them">
+<!ENTITY pref_tap_to_load_images_title2 "Show images">
+<!ENTITY pref_tap_to_load_images_enabled "Always">
+<!ENTITY pref_tap_to_load_images_data "Only over Wi-Fi">
+<!ENTITY pref_tap_to_load_images_disabled "Never">
 
 <!ENTITY pref_tracking_protection_title "Tracking protection">
 <!ENTITY pref_tracking_protection_summary3 "Enabled in Private Browsing">
@@ -289,7 +291,7 @@ size. -->
 <!ENTITY pref_qrcode_enabled_summary2 "Allow QR scanner in the URL bar">
 
 <!ENTITY pref_use_master_password "Use master password">
-<!ENTITY pref_sync "Sync">
+<!ENTITY pref_sync2 "Sign in">
 <!ENTITY pref_sync_summary2 "Sync your tabs, bookmarks, logins, history">
 <!ENTITY pref_search_suggestions "Show search suggestions">
 <!ENTITY pref_history_search_suggestions "Show search history">
@@ -726,16 +728,13 @@ just addresses the organization to follow, e.g. "This site is run by " -->
 <!-- Restrictions -->
 <!-- Localization note: These are restrictions the device owner (e.g. parent) can enable for
      a restricted profile (e.g. child). Used inside the Android settings UI. -->
-<!ENTITY restriction_disallow_import_settings_title2 "Disable \'Import from Android\'">
 <!ENTITY restriction_disallow_addons_title2 "Disable add-on installation">
-<!ENTITY restriction_disallow_devtools_title2 "Disable developer tools">
-<!ENTITY restriction_disallow_customize_home_title2 "Disable Home customization">
 <!ENTITY restriction_disallow_private_browsing_title2 "Disable Private Browsing">
 <!ENTITY restriction_disallow_location_services_title2 "Disable Location Services">
-<!ENTITY restriction_disallow_display_settings_title2 "Disable Display settings">
 <!ENTITY restriction_disallow_clear_history_title2 "Disable \'Clear browsing history\'">
 <!ENTITY restriction_disallow_master_password_title2 "Disable master password">
 <!ENTITY restriction_disallow_guest_browsing_title2 "Disable Guest Browsing">
+<!ENTITY restriction_disallow_advanced_settings_title "Disable Advanced Settings">
 
 <!-- Default Bookmarks titles-->
 <!-- LOCALIZATION NOTE (bookmarks_about_browser): link title for about:fennec -->

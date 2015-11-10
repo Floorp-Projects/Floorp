@@ -6,22 +6,25 @@
 
 # Theme Selection
 #
+# Shared (toolkit/themes/shared/) is always included.
+#
 # MacOS X                 osx (toolkit/themes/osx)
-# Windows                 windows (toolkit/themes/windows)
-# GNOME/Linux             windows (toolkit/themes/windows) + 
-#                         linux overrides (toolkit/themes/linux)
+# Windows                 windows (toolkit/themes/windows) +
+#                         non-mac (toolkit/themes/shared/non-mac)
+# GNOME/Linux             linux (toolkit/themes/linux)
+#                         non-mac (toolkit/themes/shared/non-mac)
 # faststripe              windows + faststripe (no native theme components)
 
 toolkit = CONFIG['MOZ_WIDGET_TOOLKIT']
 
 if toolkit == 'cocoa':
     DIRS += ['osx']
+elif toolkit in ('gtk2', 'gtk3', 'qt'):
+    DIRS += ['linux']
 else:
     DIRS += ['windows']
 
-    if toolkit in ('gtk2', 'gtk3', 'qt'):
-        DIRS += ['linux']
-    elif CONFIG['MOZ_THEME_FASTSTRIPE']:
+    if CONFIG['MOZ_THEME_FASTSTRIPE']:
         DIRS += ['faststripe/global']
 
 with Files('**'):

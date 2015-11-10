@@ -54,8 +54,8 @@ function testScriptSrc(aCallback) {
 
 /** <img src=""> tests **/
 var img_global = "chrome://global/skin/icons/Error.png";
-var img_mozapps = "chrome://mozapps/skin/passwordmgr/key.png";
-var res_mozapps = "resource://gre/chrome/toolkit/skin/classic/mozapps/passwordmgr/key.png";
+var img_mozapps = "chrome://mozapps/skin/passwordmgr/key-16.png";
+var res_mozapps = "resource://gre/chrome/toolkit/skin/classic/mozapps/passwordmgr/key-16.png";
 
 var imgTests = [[img_global, "success"],
                 [img_mozapps, "fail"],
@@ -74,14 +74,14 @@ function finishTest() {
 }
 
 function fail(event) {
-    is(event.target.expected, "fail",
+    is("fail", event.target.expected,
        "content should not be allowed to load "+event.target.src);
     if (event.target.callback)
       event.target.callback();
 }
 
 function success(event) {
-    is(event.target.expected, "success",
+    is("success", event.target.expected,
        "content should be able to load "+event.target.src);
     if (event.target.callback)
       event.target.callback();

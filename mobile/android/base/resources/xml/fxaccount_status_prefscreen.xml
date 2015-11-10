@@ -14,11 +14,6 @@
             android:title="" />
         <Preference
             android:editable="false"
-            android:key="email"
-            android:persistent="false"
-            android:title="@string/fxaccount_email_hint" />
-        <Preference
-            android:editable="false"
             android:key="manage_account"
             android:persistent="false"
             android:title="@string/fxaccount_status_manage_account" />

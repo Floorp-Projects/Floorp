@@ -6,17 +6,15 @@
 
 DEFINES['ANDROID_PACKAGE_NAME'] = CONFIG['ANDROID_PACKAGE_NAME']
 
-base = '/mobile/android/tests/browser/robocop/'
-
 ANDROID_APK_NAME = 'robocop-debug'
 ANDROID_APK_PACKAGE = 'org.mozilla.roboexample.test'
-ANDROID_ASSETS_DIRS += [base + 'assets']
+ANDROID_ASSETS_DIRS += ['assets']
 
 TEST_HARNESS_FILES.testing.mochitest += [
-    base + 'robocop.ini',
-    base + 'robocop_autophone.ini',
+    'robocop.ini',
+    'robocop_autophone.ini',
 ]
-TEST_HARNESS_FILES.testing.mochitest.tests.robocop += [base + x for x in [
+TEST_HARNESS_FILES.testing.mochitest.tests.robocop += [
     '*.html',
     '*.jpg',
     '*.mp4',
@@ -25,8 +23,7 @@ TEST_HARNESS_FILES.testing.mochitest.tests.robocop += [base + x for x in [
     '*.swf',
     '*.webm',
     '*.xml',
+    'reader_mode_pages/**', # The ** preserves directory structure.
     'robocop*.js',
     'test*.js',
-]]
-# The ** below preserves directory structure.
-TEST_HARNESS_FILES.testing.mochitest.tests.robocop.reader_mode_pages += [base + 'reader_mode_pages/**']
+]
