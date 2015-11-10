@@ -2,10 +2,10 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-TESTPATH     := $(topsrcdir)/mobile/android/tests/browser/robocop/src/org/mozilla/gecko/tests
+TESTPATH := $(srcdir)/src/org/mozilla/gecko/tests
 
 ANDROID_EXTRA_JARS += \
-  $(srcdir)/robotium-solo-4.3.1.jar \
+  $(srcdir)/libs/robotium-solo-4.3.1.jar \
   $(NULL)
 
 _JAVA_HARNESS := \
@@ -28,7 +28,7 @@ _JAVA_HARNESS := \
   StructuredLogger.java \
   $(NULL)
 
-java-harness := $(addprefix $(topsrcdir)/mobile/android/tests/browser/robocop/src/org/mozilla/gecko/,$(_JAVA_HARNESS))
+java-harness := $(addprefix $(srcdir)/src/org/mozilla/gecko/,$(_JAVA_HARNESS))
 java-tests   := \
   $(wildcard $(TESTPATH)/*.java) \
   $(wildcard $(TESTPATH)/components/*.java) \

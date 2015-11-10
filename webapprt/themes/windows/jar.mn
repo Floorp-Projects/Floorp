@@ -10,5 +10,5 @@ webapprt.jar:
         skin/classic/webapprt/downloads/downloadIcon-XP.png         (downloads/downloadIcon-XP.png)
         skin/classic/webapprt/downloads/downloads.css               (downloads/downloads.css)
 
-% override chrome://webapprt/skin/downloads/downloadButtons.png     chrome://webapprt/skin/downloads/downloadButtons-XP.png  os=WINNT osversion<6
-% override chrome://webapprt/skin/downloads/downloadIcon.png        chrome://webapprt/skin/downloads/downloadIcon-XP.png     os=WINNT osversion<6
+% override chrome://webapprt/skin/downloads/downloadButtons.png     chrome://webapprt/skin/downloads/downloadButtons-XP.png  osversion<6
+% override chrome://webapprt/skin/downloads/downloadIcon.png        chrome://webapprt/skin/downloads/downloadIcon-XP.png     osversion<6

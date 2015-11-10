@@ -38,25 +38,21 @@ public enum Restriction {
 
     DISALLOW_REMOTE_DEBUGGING(10, "no_remote_debugging", 0),
 
-    DISALLOW_IMPORT_SETTINGS(11, "no_import_settings", R.string.restriction_disallow_import_settings_title),
+    DISALLOW_IMPORT_SETTINGS(11, "no_import_settings", 0),
 
-    DISALLOW_DEVELOPER_TOOLS(12, "no_developer_tools", R.string.restriction_disallow_devtools_title),
+    DISALLOW_PRIVATE_BROWSING(12, "no_private_browsing", R.string.restriction_disallow_private_browsing_title),
 
-    DISALLOW_CUSTOMIZE_HOME(13, "no_customize_home", R.string.restriction_disallow_customize_home_title),
+    DISALLOW_LOCATION_SERVICE(13, "no_location_service", R.string.restriction_disallow_location_services_title),
 
-    DISALLOW_PRIVATE_BROWSING(14, "no_private_browsing", R.string.restriction_disallow_private_browsing_title),
+    DISALLOW_CLEAR_HISTORY(14, "no_clear_history", R.string.restriction_disallow_clear_history_title),
 
-    DISALLOW_LOCATION_SERVICE(15, "no_location_service", R.string.restriction_disallow_location_services_title),
+    DISALLOW_MASTER_PASSWORD(15, "no_master_password", R.string.restriction_disallow_master_password_title),
 
-    DISALLOW_DISPLAY_SETTINGS(16, "no_display_settings", R.string.restriction_disallow_display_settings_title),
+    DISALLOW_GUEST_BROWSING(16, "no_guest_browsing",  R.string.restriction_disallow_guest_browsing_title),
 
-    DISALLOW_CLEAR_HISTORY(17, "no_clear_history", R.string.restriction_disallow_clear_history_title),
+    DISALLOW_DEFAULT_THEME(17, "no_default_theme", 0),
 
-    DISALLOW_MASTER_PASSWORD(18, "no_master_password", R.string.restriction_disallow_master_password_title),
-
-    DISALLOW_GUEST_BROWSING(19, "no_guest_browsing",  R.string.restriction_disallow_guest_browsing_title),
-
-    DISALLOW_DEFAULT_THEME(20, "no_default_theme", 0);
+    DISALLOW_ADVANCED_SETTINGS(18, "no_advanced_settings", R.string.restriction_disallow_advanced_settings_title);
 
     public final int id;
     public final String name;
