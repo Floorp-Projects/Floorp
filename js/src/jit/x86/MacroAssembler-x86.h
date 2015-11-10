@@ -16,6 +16,9 @@
 namespace js {
 namespace jit {
 
+struct MacroAssemblerX86Shared::PlatformSpecificLabel : public AbsoluteLabel
+{};
+
 class MacroAssemblerX86 : public MacroAssemblerX86Shared
 {
   private:
@@ -23,37 +26,9 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     MacroAssembler& asMasm();
     const MacroAssembler& asMasm() const;
 
-  private:
-    struct Double {
-        double value;
-        AbsoluteLabel uses;
-        Double(double value) : value(value) {}
-    };
-    Vector<Double, 0, SystemAllocPolicy> doubles_;
-    struct Float {
-        float value;
-        AbsoluteLabel uses;
-        Float(float value) : value(value) {}
-    };
-    Vector<Float, 0, SystemAllocPolicy> floats_;
-    struct SimdData {
-        SimdConstant value;
-        AbsoluteLabel uses;
-        SimdData(const SimdConstant& v) : value(v) {}
-        SimdConstant::Type type() { return value.type(); }
-    };
-    Vector<SimdData, 0, SystemAllocPolicy> simds_;
-
-    typedef HashMap<double, size_t, DefaultHasher<double>, SystemAllocPolicy> DoubleMap;
-    DoubleMap doubleMap_;
-    typedef HashMap<float, size_t, DefaultHasher<float>, SystemAllocPolicy> FloatMap;
-    FloatMap floatMap_;
-    typedef HashMap<SimdConstant, size_t, SimdConstant, SystemAllocPolicy> SimdMap;
-    SimdMap simdMap_;
-
-    Double* getDouble(double d);
-    Float* getFloat(float f);
-    SimdData* getSimdData(const SimdConstant& v);
+    typedef MacroAssemblerX86Shared::Double<> Double;
+    typedef MacroAssemblerX86Shared::Float<> Float;
+    typedef MacroAssemblerX86Shared::SimdData<> SimdData;
 
   protected:
     MoveResolver moveResolver_;
@@ -64,8 +39,7 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
         // first push.
         if (address.base == StackPointer)
             return Operand(address.base, address.offset + 4);
-        else 
-            return payloadOf(address);
+        return payloadOf(address);
     }
     Operand payloadOf(const Address& address) {
         return Operand(address.base, address.offset);

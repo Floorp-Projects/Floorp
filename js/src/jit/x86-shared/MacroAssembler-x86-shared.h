@@ -45,6 +45,50 @@ class MacroAssemblerX86Shared : public Assembler
     MacroAssembler& asMasm();
     const MacroAssembler& asMasm() const;
 
+  protected:
+    struct PlatformSpecificLabel;
+
+    template<class LabelType = PlatformSpecificLabel>
+    struct Double {
+        double value;
+        LabelType uses;
+        explicit Double(double value) : value(value) {}
+    };
+
+    // These use SystemAllocPolicy since asm.js releases memory after each
+    // function is compiled, and these need to live until after all functions
+    // are compiled.
+    Vector<Double<PlatformSpecificLabel>, 0, SystemAllocPolicy> doubles_;
+    typedef HashMap<double, size_t, DefaultHasher<double>, SystemAllocPolicy> DoubleMap;
+    DoubleMap doubleMap_;
+
+    template<class LabelType = PlatformSpecificLabel>
+    struct Float {
+        float value;
+        LabelType uses;
+        explicit Float(float value) : value(value) {}
+    };
+
+    Vector<Float<PlatformSpecificLabel>, 0, SystemAllocPolicy> floats_;
+    typedef HashMap<float, size_t, DefaultHasher<float>, SystemAllocPolicy> FloatMap;
+    FloatMap floatMap_;
+
+    template<class LabelType = PlatformSpecificLabel>
+    struct SimdData {
+        SimdConstant value;
+        LabelType uses;
+        explicit SimdData(const SimdConstant& v) : value(v) {}
+        SimdConstant::Type type() { return value.type(); }
+    };
+
+    Vector<SimdData<PlatformSpecificLabel>, 0, SystemAllocPolicy> simds_;
+    typedef HashMap<SimdConstant, size_t, SimdConstant, SystemAllocPolicy> SimdMap;
+    SimdMap simdMap_;
+
+    Float<>* getFloat(float f);
+    Double<>* getDouble(double d);
+    SimdData<>* getSimdData(const SimdConstant& v);
+
   public:
     using Assembler::call;
 
