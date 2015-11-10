@@ -110,7 +110,7 @@ FormAutoCompleteResult.prototype = {
 
   getLabelAt: function(index) {
     this._checkIndexBounds(index);
-    return this._labels[index];
+    return this._labels[index] || this._values[index];
   },
 
   /**

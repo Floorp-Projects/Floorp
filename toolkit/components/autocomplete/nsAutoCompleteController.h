@@ -123,10 +123,8 @@ protected:
   nsCOMPtr<nsIAutoCompleteInput> mInput;
 
   nsCOMArray<nsIAutoCompleteSearch> mSearches;
+  // This is used as a sparse array, always use SafeObjectAt to access it.
   nsCOMArray<nsIAutoCompleteResult> mResults;
-  // Caches the match counts for the current ongoing results to allow
-  // incremental results to keep the rowcount up to date.
-  nsTArray<uint32_t> mMatchCounts;
   // Temporarily keeps the results alive while invoking startSearch() for each
   // search.  This is needed to allow the searches to reuse the previous result,
   // since otherwise the first search clears mResults.

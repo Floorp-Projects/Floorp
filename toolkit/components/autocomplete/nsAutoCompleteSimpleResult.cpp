@@ -22,12 +22,14 @@ struct AutoCompleteSimpleResultMatch
                                 const nsAString& aComment,
                                 const nsAString& aImage,
                                 const nsAString& aStyle,
-                                const nsAString& aFinalCompleteValue)
+                                const nsAString& aFinalCompleteValue,
+                                const nsAString& aLabel)
     : mValue(aValue)
     , mComment(aComment)
     , mImage(aImage)
     , mStyle(aStyle)
     , mFinalCompleteValue(aFinalCompleteValue)
+    , mLabel(aLabel)
   {
   }
 
@@ -36,6 +38,7 @@ struct AutoCompleteSimpleResultMatch
   nsString mImage;
   nsString mStyle;
   nsString mFinalCompleteValue;
+  nsString mLabel;
 };
 
 nsAutoCompleteSimpleResult::nsAutoCompleteSimpleResult() :
@@ -43,6 +46,74 @@ nsAutoCompleteSimpleResult::nsAutoCompleteSimpleResult() :
   mSearchResult(RESULT_NOMATCH),
   mTypeAheadResult(false)
 {
+}
+
+nsresult
+nsAutoCompleteSimpleResult::AppendResult(nsIAutoCompleteResult* aResult)
+{
+  nsAutoString searchString;
+  nsresult rv = aResult->GetSearchString(searchString);
+  NS_ENSURE_SUCCESS(rv, rv);
+  mSearchString = searchString;
+
+  uint16_t searchResult;
+  rv = aResult->GetSearchResult(&searchResult);
+  NS_ENSURE_SUCCESS(rv, rv);
+  mSearchResult = searchResult;
+
+  nsAutoString errorDescription;
+  if (NS_SUCCEEDED(aResult->GetErrorDescription(errorDescription)) &&
+      !errorDescription.IsEmpty()) {
+    mErrorDescription = errorDescription;
+  }
+
+  bool typeAheadResult = false;
+  if (NS_SUCCEEDED(aResult->GetTypeAheadResult(&typeAheadResult)) &&
+      typeAheadResult) {
+    mTypeAheadResult = typeAheadResult;
+  }
+
+  int32_t defaultIndex = -1;
+  if (NS_SUCCEEDED(aResult->GetDefaultIndex(&defaultIndex)) &&
+      defaultIndex >= 0) {
+    mDefaultIndex = defaultIndex;
+  }
+
+  nsCOMPtr<nsIAutoCompleteSimpleResult> simpleResult =
+    do_QueryInterface(aResult);
+  if (simpleResult) {
+    nsCOMPtr<nsIAutoCompleteSimpleResultListener> listener;
+    if (NS_SUCCEEDED(simpleResult->GetListener(getter_AddRefs(listener))) &&
+        listener) {
+      listener.swap(mListener);
+    }
+  }
+
+  // Copy matches.
+  uint32_t matchCount = 0;
+  rv = aResult->GetMatchCount(&matchCount);
+  NS_ENSURE_SUCCESS(rv, rv);
+  for (size_t i = 0; i < matchCount; ++i) {
+    nsAutoString value, comment, image, style, finalCompleteValue, label;
+
+    rv = aResult->GetValueAt(i, value);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = aResult->GetCommentAt(i, comment);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = aResult->GetImageAt(i, image);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = aResult->GetStyleAt(i, style);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = aResult->GetFinalCompleteValueAt(i, finalCompleteValue);
+    NS_ENSURE_SUCCESS(rv, rv);
+    rv = aResult->GetLabelAt(i, label);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = AppendMatch(value, comment, image, style, finalCompleteValue, label);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  return NS_OK;
 }
 
 // searchString
@@ -122,11 +193,12 @@ nsAutoCompleteSimpleResult::InsertMatchAt(int32_t aIndex,
                                           const nsAString& aComment,
                                           const nsAString& aImage,
                                           const nsAString& aStyle,
-                                          const nsAString& aFinalCompleteValue)
+                                          const nsAString& aFinalCompleteValue,
+                                          const nsAString& aLabel)
 {
   CHECK_MATCH_INDEX(aIndex, true);
 
-  AutoCompleteSimpleResultMatch match(aValue, aComment, aImage, aStyle, aFinalCompleteValue);
+  AutoCompleteSimpleResultMatch match(aValue, aComment, aImage, aStyle, aFinalCompleteValue, aLabel);
 
   if (!mMatches.InsertElementAt(aIndex, match)) {
     return NS_ERROR_OUT_OF_MEMORY;
@@ -140,10 +212,11 @@ nsAutoCompleteSimpleResult::AppendMatch(const nsAString& aValue,
                                         const nsAString& aComment,
                                         const nsAString& aImage,
                                         const nsAString& aStyle,
-                                        const nsAString& aFinalCompleteValue)
+                                        const nsAString& aFinalCompleteValue,
+                                        const nsAString& aLabel)
 {
   return InsertMatchAt(mMatches.Length(), aValue, aComment, aImage, aStyle,
-                       aFinalCompleteValue);
+                       aFinalCompleteValue, aLabel);
 }
 
 NS_IMETHODIMP
@@ -164,7 +237,12 @@ nsAutoCompleteSimpleResult::GetValueAt(int32_t aIndex, nsAString& _retval)
 NS_IMETHODIMP
 nsAutoCompleteSimpleResult::GetLabelAt(int32_t aIndex, nsAString& _retval)
 {
-  return GetValueAt(aIndex, _retval);
+  CHECK_MATCH_INDEX(aIndex, false);
+  _retval = mMatches[aIndex].mLabel;
+  if (_retval.IsEmpty()) {
+    _retval = mMatches[aIndex].mValue;
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -197,8 +275,9 @@ nsAutoCompleteSimpleResult::GetFinalCompleteValueAt(int32_t aIndex,
 {
   CHECK_MATCH_INDEX(aIndex, false);
   _retval = mMatches[aIndex].mFinalCompleteValue;
-  if (_retval.Length() == 0)
+  if (_retval.IsEmpty()) {
     _retval = mMatches[aIndex].mValue;
+  }
   return NS_OK;
 }
 
@@ -206,6 +285,14 @@ NS_IMETHODIMP
 nsAutoCompleteSimpleResult::SetListener(nsIAutoCompleteSimpleResultListener* aListener)
 {
   mListener = aListener;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsAutoCompleteSimpleResult::GetListener(nsIAutoCompleteSimpleResultListener** aListener)
+{
+  nsCOMPtr<nsIAutoCompleteSimpleResultListener> listener(mListener);
+  listener.forget(aListener);
   return NS_OK;
 }
 
@@ -218,8 +305,9 @@ nsAutoCompleteSimpleResult::RemoveValueAt(int32_t aRowIndex,
   nsString value = mMatches[aRowIndex].mValue;
   mMatches.RemoveElementAt(aRowIndex);
 
-  if (mListener)
+  if (mListener) {
     mListener->OnValueRemoved(this, value, aRemoveFromDb);
+  }
 
   return NS_OK;
 }
