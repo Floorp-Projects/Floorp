@@ -227,6 +227,7 @@ struct ReplyToSetMessageStatusRequest
 struct ReplyToSendMessageRequest
 {
   uint16_t masId;
+  nsString handleId;
   bool messageStatus;
 };
 

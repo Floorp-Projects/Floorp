@@ -388,7 +388,8 @@ public:
 
   virtual void
   ReplyToMapSendMessage(
-    long aMasId, bool aStatus, BluetoothReplyRunnable* aRunnable) = 0;
+    long aMasId, const nsAString& aHandleId, bool aStatus,
+    BluetoothReplyRunnable* aRunnable) = 0;
 
   virtual void
   ReplyToMapMessageUpdate(

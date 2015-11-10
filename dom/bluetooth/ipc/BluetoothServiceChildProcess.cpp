@@ -506,11 +506,12 @@ BluetoothServiceChildProcess::ReplyToMapSetMessageStatus(long aMasId,
 
 void
 BluetoothServiceChildProcess::ReplyToMapSendMessage(long aMasId,
+  const nsAString& aHandleId,
   bool aStatus,
   BluetoothReplyRunnable* aRunnable)
 {
   SendRequest(aRunnable,
-    ReplyToSendMessageRequest(aMasId, aStatus));
+    ReplyToSendMessageRequest(aMasId, nsString(aHandleId), aStatus));
 }
 
 void
