@@ -208,11 +208,6 @@ nsSVGImageFrame::AttributeChanged(int32_t         aNameSpaceID,
   }
   if (aNameSpaceID == kNameSpaceID_XLink &&
       aAttribute == nsGkAtoms::href) {
-
-    // Prevent setting image.src by exiting early
-    if (nsContentUtils::IsImageSrcSetDisabled()) {
-      return NS_OK;
-    }
     SVGImageElement *element = static_cast<SVGImageElement*>(mContent);
 
     if (element->mStringAttributes[SVGImageElement::HREF].IsExplicitlySet()) {
