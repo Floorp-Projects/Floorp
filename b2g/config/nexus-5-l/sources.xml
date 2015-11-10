@@ -123,7 +123,7 @@
   <project name="platform/libcore" path="libcore" revision="bdec7d684c083760bef7bc4ba2429cceccaaf7d0"/>
   <project name="platform/libnativehelper" path="libnativehelper" revision="27bcc086236cedd31c056303e255c6d0ea3d4a50"/>
   <project name="platform/ndk" path="ndk" revision="42e85f81cc6c74af145056ee80b06e520cccb9a7"/>
-  <project name="platform_prebuilts_misc" path="prebuilts/misc" remote="b2g" revision="f105a2d852c988fb1aa16a1e758ca7f93dd54fe9"/>
+  <project name="platform_prebuilts_misc" path="prebuilts/misc" remote="b2g" revision="179d485578c6907c0daf343a3bd7bc53b5e137a1"/>
   <project name="platform/prebuilts/ndk" path="prebuilts/ndk" revision="1d080491f26dfdfd76d5bbc3e6b40c660e8565af"/>
   <project name="platform/prebuilts/sdk" path="prebuilts/sdk" revision="61a10cbd19d6b7fc052a8cb92dfa1b37b93754f3"/>
   <project name="platform/prebuilts/tools" path="prebuilts/tools" revision="9e892a67a01671f312c76b0880dedaa6ba478148"/>
