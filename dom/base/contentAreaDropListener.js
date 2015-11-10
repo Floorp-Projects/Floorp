@@ -22,21 +22,54 @@ ContentAreaDropListener.prototype =
   classID:          Components.ID("{1f34bc80-1bc7-11d6-a384-d705dd0746fc}"),
   QueryInterface:   XPCOMUtils.generateQI([Ci.nsIDroppedLinkHandler, Ci.nsISupports]),
 
-  _getDropURL : function (dt)
+  _addLink : function(links, url, name, type)
+   {
+    links.push({ url, name, type });
+  },
+
+  _addLinksFromItem: function(links, dt, i)
   {
-    let types = dt.types;
-    for (let t = 0; t < types.length; t++) {
-      let type = types[t];
-      switch (type) {
-        case "text/uri-list":
-          var url = dt.getData("URL").replace(/^\s+|\s+$/g, "");
-          return [url, url];
-        case "text/plain":
-        case "text/x-moz-text-internal":
-          var url = dt.getData(type).replace(/^\s+|\s+$/g, "");
-          return [url, url];
-        case "text/x-moz-url":
-          return dt.getData(type).split("\n");
+    let types = dt.mozTypesAt(i);
+    let type, data;
+
+    type = "text/uri-list";
+    if (types.contains(type)) {
+      data = dt.mozGetDataAt(type, i);
+      if (data) {
+        let urls = data.split("\n");
+        for (let url of urls) {
+          // lines beginning with # are comments
+          if (url.startsWith("#"))
+            continue;
+          url = url.replace(/^\s+|\s+$/g, "");
+          this._addLink(links, url, url, type);
+        }
+        return;
+      }
+    }
+
+    type = "text/x-moz-url";
+    if (types.contains(type)) {
+      data = dt.mozGetDataAt(type, i);
+      if (data) {
+        let lines = data.split("\n");
+        for (let i = 0, length = lines.length; i < length; i += 2) {
+          this._addLink(links, lines[i], lines[i + 1], type);
+        }
+        return;
+      }
+    }
+
+    for (let type of ["text/plain", "text/x-moz-text-internal"]) {
+      if (types.contains(type)) {
+        data = dt.mozGetDataAt(type, i);
+        if (data) {
+          let lines = data.replace(/^\s+|\s+$/mg, "").split("\n");
+          for (let line of lines) {
+            this._addLink(links, line, line, type);
+          }
+          return;
+        }
       }
     }
 
@@ -44,11 +77,19 @@ ContentAreaDropListener.prototype =
     // url pointed to in one of the url types is found first before the file
     // type, which points to the actual file.
     let files = dt.files;
-    if (files && files.length) {
-      return [OS.Path.toFileURI(files[0].mozFullPath), files[0].name];
+    if (files && i < files.length) {
+      this._addLink(links, OS.Path.toFileURI(files[i].mozFullPath),
+                    files[i].name, "application/x-moz-file");
     }
+  },
 
-    return [ ];
+  _getDropLinks : function (dt)
+  {
+    let links = [];
+    for (let i = 0; i < dt.mozItemCount; i++) {
+      this._addLinksFromItem(links, dt, i);
+    }
+    return links;
   },
 
   _validateURI: function(dataTransfer, uriString, disallowInherit)
@@ -133,24 +174,41 @@ ContentAreaDropListener.prototype =
   dropLink: function(aEvent, aName, aDisallowInherit)
   {
     aName.value = "";
-    if (this._eventTargetIsDisabled(aEvent))
-      return "";
-
-    let dataTransfer = aEvent.dataTransfer;
-    let [url, name] = this._getDropURL(dataTransfer);
-
-    try {
-      url = this._validateURI(dataTransfer, url, aDisallowInherit);
-    } catch (ex) {
-      aEvent.stopPropagation();
-      aEvent.preventDefault();
-      throw ex;
+    let links = this.dropLinks(aEvent, aDisallowInherit);
+    let url = "";
+    if (links.length > 0) {
+      url = links[0].url;
+      let name = links[0].name;
+      if (name)
+        aName.value = name;
     }
 
-    if (name)
-      aName.value = name;
-
     return url;
+  },
+
+  dropLinks: function(aEvent, aDisallowInherit, aCount)
+  {
+    if (aEvent && this._eventTargetIsDisabled(aEvent))
+      return [];
+
+    let dataTransfer = aEvent.dataTransfer;
+    let links = this._getDropLinks(dataTransfer);
+
+    for (let link of links) {
+      try {
+        link.url = this._validateURI(dataTransfer, link.url, aDisallowInherit);
+      } catch (ex) {
+        // Prevent the drop entirely if any of the links are invalid even if
+        // one of them is valid.
+        aEvent.stopPropagation();
+        aEvent.preventDefault();
+        throw ex;
+      }
+    }
+    if (aCount)
+      aCount.value = links.length;
+
+    return links;
   },
 
   _eventTargetIsDisabled: function(aEvent)
