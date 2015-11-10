@@ -1,4 +1,4 @@
-marionette-driver >= 1.1.0
+marionette-driver >= 1.1.1
 browsermob-proxy >= 0.6.0
 manifestparser >= 1.1
 mozhttpd >= 0.7
