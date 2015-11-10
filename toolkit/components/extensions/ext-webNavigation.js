@@ -68,7 +68,7 @@ extensions.registerPrivilegedAPI("webNavigation", (extension, context) => {
       onCompleted: new WebNavigationEventManager(context, "onCompleted").api(),
       onErrorOccurred: new WebNavigationEventManager(context, "onErrorOccurred").api(),
       onReferenceFragmentUpdated: new WebNavigationEventManager(context, "onReferenceFragmentUpdated").api(),
-      onCreatedNavigationTarget: ignoreEvent(),
+      onCreatedNavigationTarget: ignoreEvent(context, "webNavigation.onCreatedNavigationTarget"),
     },
   };
 });
