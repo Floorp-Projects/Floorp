@@ -1,9 +1,13 @@
 var { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
+XPCOMUtils.defineLazyModuleGetter(this, "AppConstants",
+                                  "resource://gre/modules/AppConstants.jsm");
+
 Cu.import("resource://gre/modules/ExtensionUtils.jsm");
 var {
   EventManager,
   ignoreEvent,
+  runSafe,
 } = ExtensionUtils;
 
 function processRuntimeConnectParams(win, ...args) {
@@ -73,6 +77,24 @@ extensions.registerAPI((extension, context) => {
 
       getURL: function(url) {
         return extension.baseURI.resolve(url);
+      },
+
+      getPlatformInfo: function(callback) {
+        let os = AppConstants.platform;
+        if (os == "macosx") {
+          os = "mac";
+        }
+
+        let abi = Services.appinfo.XPCOMABI;
+        let [arch, compiler] = abi.split("-");
+        if (arch == "x86") {
+          arch = "x86-32";
+        } else if (arch == "x86_64") {
+          arch = "x86-64";
+        }
+
+        let info = {os, arch};
+        runSafe(context, callback, info);
       },
     },
   };
