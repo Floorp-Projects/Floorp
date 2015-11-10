@@ -71,6 +71,8 @@ protected:
 
   friend class AndroidDecoderModule;
 
+  static const char* ModuleStateStr(ModuleState aState);
+
   virtual nsresult InitDecoder(widget::sdk::Surface::Param aSurface);
 
   virtual nsresult Output(widget::sdk::BufferInfo::Param aInfo, void* aBuffer,
