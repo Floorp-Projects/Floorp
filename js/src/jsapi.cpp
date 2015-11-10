@@ -47,6 +47,7 @@
 #include "builtin/Eval.h"
 #include "builtin/Intl.h"
 #include "builtin/MapObject.h"
+#include "builtin/Promise.h"
 #include "builtin/RegExp.h"
 #include "builtin/SymbolObject.h"
 #ifdef ENABLE_SIMD
@@ -78,6 +79,7 @@
 #include "vm/Runtime.h"
 #include "vm/SavedStacks.h"
 #include "vm/ScopeObject.h"
+#include "vm/SelfHosting.h"
 #include "vm/Shape.h"
 #include "vm/StopIterationObject.h"
 #include "vm/StringBuffer.h"
@@ -4628,6 +4630,185 @@ JS_PUBLIC_API(JSInterruptCallback)
 JS_GetInterruptCallback(JSRuntime* rt)
 {
     return rt->interruptCallback;
+}
+
+/************************************************************************/
+
+/*
+ * Promises.
+ */
+
+JS_PUBLIC_API(void)
+JS::SetEnqueuePromiseJobCallback(JSRuntime* rt, JSEnqueuePromiseJobCallback callback,
+                                 void* data /* = nullptr */)
+{
+    rt->enqueuePromiseJobCallback = callback;
+    rt->enqueuePromiseJobCallbackData = data;
+}
+
+JS_PUBLIC_API(JSObject*)
+JS::NewPromiseObject(JSContext* cx, HandleObject executor, HandleObject proto /* = nullptr */)
+{
+    MOZ_ASSERT(!cx->runtime()->isAtomsCompartment(cx->compartment()));
+    MOZ_ASSERT(IsCallable(executor));
+    AssertHeapIsIdle(cx);
+    CHECK_REQUEST(cx);
+
+    return PromiseObject::create(cx, executor, proto);
+}
+
+JS_PUBLIC_API(bool)
+JS::IsPromiseObject(JS::HandleObject obj)
+{
+    JSObject* object = CheckedUnwrap(obj);
+    return object && object->is<PromiseObject>();
+}
+
+JS_PUBLIC_API(JSObject*)
+JS::GetPromiseConstructor(JSContext* cx)
+{
+    CHECK_REQUEST(cx);
+    Rooted<GlobalObject*> global(cx, cx->global());
+    return GlobalObject::getOrCreatePromiseConstructor(cx, global);
+}
+
+JS_PUBLIC_API(JSObject*)
+JS::GetPromisePrototype(JSContext* cx)
+{
+    CHECK_REQUEST(cx);
+    Rooted<GlobalObject*> global(cx, cx->global());
+    return GlobalObject::getOrCreatePromisePrototype(cx, global);
+}
+
+JS_PUBLIC_API(JS::PromiseState)
+JS::GetPromiseState(JS::HandleObject obj)
+{
+    JSObject* promise = CheckedUnwrap(obj);
+    return promise->as<PromiseObject>().state();
+}
+
+JS_PUBLIC_API(JSObject*)
+JS::CallOriginalPromiseResolve(JSContext* cx, JS::HandleValue resolutionValue)
+{
+    InvokeArgs args(cx);
+    if (!args.init(1))
+        return nullptr;
+    RootedObject promiseCtor(cx, GetPromiseConstructor(cx));
+    if (!promiseCtor)
+        return nullptr;
+    args.setThis(ObjectValue(*promiseCtor));
+    args[0].set(resolutionValue);
+
+    if (!CallSelfHostedFunction(cx, "Promise_static_resolve", args))
+        return nullptr;
+    MOZ_ASSERT(args.rval().isObject());
+    JSObject* obj = &args.rval().toObject();
+    MOZ_ASSERT(obj->is<PromiseObject>());
+    return obj;
+}
+
+JS_PUBLIC_API(JSObject*)
+JS::CallOriginalPromiseReject(JSContext* cx, JS::HandleValue rejectionValue)
+{
+    InvokeArgs args(cx);
+    if (!args.init(1))
+        return nullptr;
+    RootedObject promiseCtor(cx, GetPromiseConstructor(cx));
+    if (!promiseCtor)
+        return nullptr;
+    args.setThis(ObjectValue(*promiseCtor));
+    args[0].set(rejectionValue);
+
+    if (!CallSelfHostedFunction(cx, "Promise_static_reject", args))
+        return nullptr;
+    MOZ_ASSERT(args.rval().isObject());
+    JSObject* obj = &args.rval().toObject();
+    MOZ_ASSERT(obj->is<PromiseObject>());
+    return obj;
+}
+
+JS_PUBLIC_API(bool)
+JS::ResolvePromise(JSContext* cx, JS::HandleObject promise, JS::HandleValue resolutionValue)
+{
+    MOZ_ASSERT(promise->is<PromiseObject>());
+    return promise->as<PromiseObject>().resolve(cx, resolutionValue);
+}
+
+JS_PUBLIC_API(bool)
+JS::RejectPromise(JSContext* cx, JS::HandleObject promise, JS::HandleValue rejectionValue)
+{
+    MOZ_ASSERT(promise->is<PromiseObject>());
+    return promise->as<PromiseObject>().reject(cx, rejectionValue);
+}
+
+JS_PUBLIC_API(JSObject*)
+JS::CallOriginalPromiseThen(JSContext* cx, JS::HandleObject promise,
+                            JS::HandleObject onResolve, JS::HandleObject onReject)
+{
+    MOZ_ASSERT(promise->is<PromiseObject>());
+    MOZ_ASSERT(onResolve == nullptr || IsCallable(onResolve));
+    MOZ_ASSERT(onReject == nullptr || IsCallable(onReject));
+    InvokeArgs args(cx);
+    if (!args.init(2))
+        return nullptr;
+    args.setThis(ObjectValue(*promise));
+    args[0].setObjectOrNull(onResolve);
+    args[1].setObjectOrNull(onReject);
+
+    if (!CallSelfHostedFunction(cx, "Promise_then", args))
+        return nullptr;
+    MOZ_ASSERT(args.rval().isObject());
+    JSObject* obj = &args.rval().toObject();
+    MOZ_ASSERT(obj->is<PromiseObject>());
+    return obj;
+}
+
+JS_PUBLIC_API(bool)
+JS::AddPromiseReactions(JSContext* cx, JS::HandleObject promise,
+                        JS::HandleObject onResolve, JS::HandleObject onReject)
+{
+    MOZ_ASSERT(promise->is<PromiseObject>());
+    MOZ_ASSERT(IsCallable(onResolve));
+    MOZ_ASSERT(IsCallable(onReject));
+    InvokeArgs args(cx);
+    if (!args.init(4))
+        return false;
+    args[0].setObject(*promise);
+    args[1].setNull();
+    args[2].setObject(*onResolve);
+    args[3].setObject(*onReject);
+
+    return js::CallSelfHostedFunction(cx, "EnqueuePromiseReactions", args);
+}
+
+JS_PUBLIC_API(JSObject*)
+JS::GetWaitForAllPromise(JSContext* cx, const JS::AutoObjectVector& promises)
+{
+    RootedArrayObject arr(cx, NewDenseFullyAllocatedArray(cx, promises.length()));
+    if (!arr)
+        return nullptr;
+    arr->ensureDenseInitializedLength(cx, 0, promises.length());
+    for (size_t i = 0, len = promises.length(); i < len; i++) {
+#ifdef DEBUG
+        JSObject* obj = promises[i];
+        if (IsWrapper(obj))
+            obj = UncheckedUnwrap(obj);
+        MOZ_ASSERT(obj->is<PromiseObject>());
+#endif
+        arr->setDenseElement(i, ObjectValue(*promises[i]));
+    }
+
+    InvokeArgs args(cx);
+    if (!args.init(1))
+        return nullptr;
+    args[0].setObject(*arr);
+
+    if (!js::CallSelfHostedFunction(cx, "GetWaitForAllPromise", args))
+        return nullptr;
+    MOZ_ASSERT(args.rval().isObject());
+    JSObject* obj = &args.rval().toObject();
+    MOZ_ASSERT(obj->is<PromiseObject>());
+    return obj;
 }
 
 JS_PUBLIC_API(void)

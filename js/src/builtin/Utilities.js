@@ -183,9 +183,8 @@ function SpeciesConstructor(obj, defaultConstructor) {
     if (!IsObject(ctor))
         ThrowTypeError(JSMSG_NOT_NONNULL_OBJECT, "object's 'constructor' property");
 
-    // Steps 6-7.  We don't yet implement @@species and Symbol.species, so we
-    // don't implement this correctly right now.  Somebody fix this!
-    var s = /* ctor[Symbol.species] */ undefined;
+    // Steps 6-7.
+    var s = ctor[std_species];
 
     // Step 8.
     if (s === undefined || s === null)
@@ -198,6 +197,18 @@ function SpeciesConstructor(obj, defaultConstructor) {
     // Step 10.
     ThrowTypeError(JSMSG_NOT_CONSTRUCTOR, "@@species property of object's constructor");
 }
+
+function GetTypeError(msg) {
+    try {
+        FUN_APPLY(ThrowTypeError, undefined, arguments);
+    } catch (e) {
+        return e;
+    }
+    assert(false, "the catch block should've returned from this function.");
+}
+
+// To be used when a function is required but calling it shouldn't do anything.
+function NullFunction() {}
 
 /*************************************** Testing functions ***************************************/
 function outer() {
