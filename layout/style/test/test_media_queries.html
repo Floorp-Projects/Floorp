@@ -114,6 +114,29 @@ function run() {
        "expression " + e + " should not be parseable");
   }
 
+  // Helper to share code between -moz & -webkit device-pixel-ratio versions:
+  function test_device_pixel_ratio(equal_name, min_name, max_name) {
+    var real_dpr = 1.0 * getScreenPixelsPerCSSPixel();
+    var high_dpr = 1.1 * getScreenPixelsPerCSSPixel();
+    var low_dpr = 0.9 * getScreenPixelsPerCSSPixel();
+    should_apply("all and (" + max_name + ": " + real_dpr + ")");
+    should_apply("all and (" + min_name + ": " + real_dpr + ")");
+    should_not_apply("not all and (" + max_name + ": " + real_dpr + ")");
+    should_not_apply("not all and (" + min_name + ": " + real_dpr + ")");
+    should_apply("all and (" + min_name + ": " + low_dpr + ")");
+    should_apply("all and (" + max_name + ": " + high_dpr + ")");
+    should_not_apply("all and (" + max_name + ": " + low_dpr + ")");
+    should_not_apply("all and (" + min_name + ": " + high_dpr + ")");
+    should_apply("not all and (" + max_name + ": " + low_dpr + ")");
+    should_apply("not all and (" + min_name + ": " + high_dpr + ")");
+    should_apply("(" + equal_name + ": " + real_dpr + ")");
+    should_not_apply("(" + equal_name + ": " + high_dpr + ")");
+    should_not_apply("(" + equal_name + ": " + low_dpr + ")");
+    should_apply("(" + equal_name + ")");
+    expression_should_not_be_parseable(min_name);
+    expression_should_not_be_parseable(max_name);
+  }
+
   function test_serialization(q, test_application, should_apply) {
     style.setAttribute("media", q);
     var ser1 = style.sheet.media.mediaText;
@@ -399,25 +422,23 @@ function run() {
   should_apply("not all and (max-device-aspect-ratio: " + low_dar_2 + ")");
   expression_should_not_be_parseable("max-device-aspect-ratio");
 
-  var real_dpr = 1.0 * getScreenPixelsPerCSSPixel();
-  var high_dpr = 1.1 * getScreenPixelsPerCSSPixel();
-  var low_dpr = 0.9 * getScreenPixelsPerCSSPixel();
-  should_apply("all and (max--moz-device-pixel-ratio: " + real_dpr + ")");
-  should_apply("all and (min--moz-device-pixel-ratio: " + real_dpr + ")");
-  should_not_apply("not all and (max--moz-device-pixel-ratio: " + real_dpr + ")");
-  should_not_apply("not all and (min--moz-device-pixel-ratio: " + real_dpr + ")");
-  should_apply("all and (min--moz-device-pixel-ratio: " + low_dpr + ")");
-  should_apply("all and (max--moz-device-pixel-ratio: " + high_dpr + ")");
-  should_not_apply("all and (max--moz-device-pixel-ratio: " + low_dpr + ")");
-  should_not_apply("all and (min--moz-device-pixel-ratio: " + high_dpr + ")");
-  should_apply("not all and (max--moz-device-pixel-ratio: " + low_dpr + ")");
-  should_apply("not all and (min--moz-device-pixel-ratio: " + high_dpr + ")");
-  should_apply("(-moz-device-pixel-ratio: " + real_dpr + ")");
-  should_not_apply("(-moz-device-pixel-ratio: " + high_dpr + ")");
-  should_not_apply("(-moz-device-pixel-ratio: " + low_dpr + ")");
-  should_apply("(-moz-device-pixel-ratio)");
-  expression_should_not_be_parseable("min--moz-device-pixel-ratio");
-  expression_should_not_be_parseable("max--moz-device-pixel-ratio");
+  // Tests for -moz- & -webkit versions of "device-pixel-ratio"
+  // (Note that the vendor prefixes go in different places.)
+  test_device_pixel_ratio("-moz-device-pixel-ratio",
+                          "min--moz-device-pixel-ratio",
+                          "max--moz-device-pixel-ratio");
+  test_device_pixel_ratio("-webkit-device-pixel-ratio",
+                          "-webkit-min-device-pixel-ratio",
+                          "-webkit-max-device-pixel-ratio");
+
+  // Make sure that we don't accidentally start accepting *unprefixed*
+  // "device-pixel-ratio" expressions:
+  expression_should_be_parseable("-webkit-device-pixel-ratio: 1.0");
+  expression_should_not_be_parseable("device-pixel-ratio: 1.0");
+  expression_should_be_parseable("-webkit-min-device-pixel-ratio: 1.0");
+  expression_should_not_be_parseable("min-device-pixel-ratio: 1.0");
+  expression_should_be_parseable("-webkit-max-device-pixel-ratio: 1.0");
+  expression_should_not_be_parseable("max-device-pixel-ratio: 1.0");
 
   features = [ "max-aspect-ratio", "device-aspect-ratio" ];
   for (i in features) {
