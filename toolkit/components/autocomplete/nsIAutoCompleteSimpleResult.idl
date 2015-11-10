@@ -14,7 +14,7 @@ interface nsIAutoCompleteSimpleResultListener;
  * an array.
  */
 
-[scriptable, uuid(457ce8da-9631-45c5-b3b0-293ab0928df1)]
+[scriptable, uuid(23de9c96-becb-4d0d-a9bb-1d131ce361b5)]
 interface nsIAutoCompleteSimpleResult : nsIAutoCompleteResult
 {
   /**
@@ -69,7 +69,8 @@ interface nsIAutoCompleteSimpleResult : nsIAutoCompleteResult
                      in AString aComment,
                      [optional] in AString aImage,
                      [optional] in AString aStyle,
-                     [optional] in AString aFinalCompleteValue);
+                     [optional] in AString aFinalCompleteValue,
+                     [optional] in AString aLabel);
 
   /**
    * Appends a match consisting of the given value, comment, image, style and
@@ -90,7 +91,13 @@ interface nsIAutoCompleteSimpleResult : nsIAutoCompleteResult
                    in AString aComment,
                    [optional] in AString aImage,
                    [optional] in AString aStyle,
-                   [optional] in AString aFinalCompleteValue);
+                   [optional] in AString aFinalCompleteValue,
+                   [optional] in AString aLabel);
+
+  /**
+   * Gets the listener for changes in the result.
+   */
+  nsIAutoCompleteSimpleResultListener getListener();
 
   /**
    * Sets a listener for changes in the result.

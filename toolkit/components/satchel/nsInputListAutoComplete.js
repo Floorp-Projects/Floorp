@@ -16,12 +16,12 @@ InputListAutoComplete.prototype = {
 
   autoCompleteSearch : function (aUntrimmedSearchString, aField) {
     let [values, labels] = this.getListSuggestions(aField);
-    if (values.length === 0)
-      return null;
+    let searchResult = values.length > 0 ? Ci.nsIAutoCompleteResult.RESULT_SUCCESS
+                                         : Ci.nsIAutoCompleteResult.RESULT_NOMATCH;
+    let defaultIndex = values.length > 0 ? 0 : -1;
     return new FormAutoCompleteResult(aUntrimmedSearchString,
-                                      Ci.nsIAutoCompleteResult.RESULT_SUCCESS,
-                                      0, "", values, labels,
-                                      [], null);
+                                      searchResult, defaultIndex, "",
+                                      values, labels, [], null);
   },
 
   getListSuggestions : function (aField) {
