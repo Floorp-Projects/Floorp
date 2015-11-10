@@ -366,7 +366,6 @@ protected:
   MozPromiseRequestHolder<MediaTimerPromise> mThrottledNotify;
   const TimeDuration mThrottleDuration;
   TimeStamp mLastThrottledNotify;
-  Maybe<media::Interval<int64_t>> mThrottledInterval;
 
   // Whether we should accept media that we know we can't play
   // directly, because they have a number of channel higher than
