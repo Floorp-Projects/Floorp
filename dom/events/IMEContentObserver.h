@@ -184,6 +184,60 @@ private:
   nsCOMPtr<nsIEditor> mEditor;
 
   /**
+   * Helper classes to notify IME.
+   */
+
+  class AChangeEvent: public nsRunnable
+  {
+  protected:
+    enum ChangeEventType
+    {
+      eChangeEventType_Focus,
+      eChangeEventType_Selection,
+      eChangeEventType_Text,
+      eChangeEventType_Position,
+      eChangeEventType_FlushPendingEvents
+    };
+
+    explicit AChangeEvent(IMEContentObserver* aIMEContentObserver)
+      : mIMEContentObserver(aIMEContentObserver)
+    {
+      MOZ_ASSERT(mIMEContentObserver);
+    }
+
+    RefPtr<IMEContentObserver> mIMEContentObserver;
+
+    /**
+     * CanNotifyIME() checks if mIMEContentObserver can and should notify IME.
+     */
+    bool CanNotifyIME(ChangeEventType aChangeEventType) const;
+
+    /**
+     * IsSafeToNotifyIME() checks if it's safe to noitify IME.
+     */
+    bool IsSafeToNotifyIME(ChangeEventType aChangeEventType) const;
+  };
+
+  class IMENotificationSender: public AChangeEvent
+  {
+  public:
+    explicit IMENotificationSender(IMEContentObserver* aIMEContentObserver)
+      : AChangeEvent(aIMEContentObserver)
+    {
+    }
+    NS_IMETHOD Run() override;
+
+  private:
+    void SendFocusSet();
+    void SendSelectionChange();
+    void SendTextChange();
+    void SendPositionChange();
+  };
+
+  // mQueuedSender is, it was put into the event queue but not run yet.
+  RefPtr<IMENotificationSender> mQueuedSender;
+
+  /**
    * FlatTextCache stores flat text length from start of the content to
    * mNodeOffset of mContainerNode.
    */
@@ -262,78 +316,9 @@ private:
   bool mNeedsToNotifyIMEOfTextChange;
   bool mNeedsToNotifyIMEOfSelectionChange;
   bool mNeedsToNotifyIMEOfPositionChange;
-  // mIsFlushingPendingNotifications is true between
-  // FlushMergeableNotifications() creates IMENotificationSender and
-  // IMENotificationSender sent all pending notifications.
-  // Note this may false even after an AsyncMergeableNotificationsFlusher is
-  // queued into the event loop.  Don't be confused by these difference.
-  bool mIsFlushingPendingNotifications;
   // mIsHandlingQueryContentEvent is true when IMEContentObserver is handling
   // WidgetQueryContentEvent with ContentEventHandler.
   bool mIsHandlingQueryContentEvent;
-
-
-  /**
-   * Helper classes to notify IME.
-   */
-
-  class AChangeEvent: public nsRunnable
-  {
-  protected:
-    enum ChangeEventType
-    {
-      eChangeEventType_Focus,
-      eChangeEventType_Selection,
-      eChangeEventType_Text,
-      eChangeEventType_Position,
-      eChangeEventType_FlushPendingEvents
-    };
-
-    explicit AChangeEvent(IMEContentObserver* aIMEContentObserver)
-      : mIMEContentObserver(aIMEContentObserver)
-    {
-      MOZ_ASSERT(mIMEContentObserver);
-    }
-
-    RefPtr<IMEContentObserver> mIMEContentObserver;
-
-    /**
-     * CanNotifyIME() checks if mIMEContentObserver can and should notify IME.
-     */
-    bool CanNotifyIME(ChangeEventType aChangeEventType) const;
-
-    /**
-     * IsSafeToNotifyIME() checks if it's safe to noitify IME.
-     */
-    bool IsSafeToNotifyIME(ChangeEventType aChangeEventType) const;
-  };
-
-  class IMENotificationSender: public AChangeEvent
-  {
-  public:
-    explicit IMENotificationSender(IMEContentObserver* aIMEContentObserver)
-      : AChangeEvent(aIMEContentObserver)
-    {
-    }
-    NS_IMETHOD Run() override;
-
-  private:
-    void SendFocusSet();
-    void SendSelectionChange();
-    void SendTextChange();
-    void SendPositionChange();
-  };
-
-  class AsyncMergeableNotificationsFlusher : public AChangeEvent
-  {
-  public:
-    explicit AsyncMergeableNotificationsFlusher(
-      IMEContentObserver* aIMEContentObserver)
-      : AChangeEvent(aIMEContentObserver)
-    {
-    }
-    NS_IMETHOD Run() override;
-  };
 };
 
 } // namespace mozilla
