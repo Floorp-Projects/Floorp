@@ -13,7 +13,7 @@ namespace mozilla {
 namespace dom {
 namespace cache {
 
-using mozilla::dom::workers::Canceling;
+using mozilla::dom::workers::Terminating;
 using mozilla::dom::workers::Status;
 using mozilla::dom::workers::WorkerPrivate;
 
@@ -73,7 +73,9 @@ Feature::Notify(JSContext* aCx, Status aStatus)
 {
   NS_ASSERT_OWNINGTHREAD(Feature);
 
-  if (aStatus < Canceling || mNotified) {
+  // When the service worker thread is stopped we will get Terminating,
+  // but nothing higher than that.  We must shut things down at Terminating.
+  if (aStatus < Terminating || mNotified) {
     return true;
   }
 
