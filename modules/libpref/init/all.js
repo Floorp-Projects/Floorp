@@ -4170,6 +4170,9 @@ pref("gl.msaa-level", 0);
 pref("gl.msaa-level", 2);
 #endif
 pref("gl.require-hardware", false);
+#ifdef XP_MACOSX
+pref("gl.multithreaded", false);
+#endif
 
 pref("webgl.force-enabled", false);
 pref("webgl.disabled", false);
