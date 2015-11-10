@@ -6,6 +6,8 @@
 <!DOCTYPE window [
   <!ENTITY % inspectorDTD SYSTEM "chrome://devtools/locale/styleinspector.dtd">
   %inspectorDTD;
+  <!ENTITY % globalDTD SYSTEM "chrome://global/locale/global.dtd">
+  %globalDTD;
 ]>
 
 <html xmlns="http://www.w3.org/1999/xhtml"
@@ -31,7 +33,7 @@
       }
     </script>
   </head>
-  <body>
+  <body dir="&locale.dir;">
     <div id="root" class="devtools-monospace">
       <div id="ruleview-toolbar" class="devtools-toolbar">
         <div class="devtools-searchbox">
