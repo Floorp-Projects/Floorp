@@ -9,6 +9,11 @@ var gift = require('gift'),
         alias: 'dir',
         describe: 'Path to WebVTT directory.'
       })
+      .options('r', {
+        alias: 'rev',
+        describe: 'Revision to update to.',
+        default: 'master'
+      })
       .options('w', {
         alias: 'write',
         describe: 'Path to file to write to.',
@@ -22,8 +27,8 @@ repo.status(function(err, status) {
     console.log("The repository's working directory is not clean. Aborting.");
     process.exit(1);
   }
-  repo.checkout("master", function() {
-    repo.commits("master", 1, function(err, commits) {
+  repo.checkout(argv.r, function() {
+    repo.commits(argv.r, 1, function(err, commits) {
       var vttjs = fs.readFileSync(argv.d + "/lib/vtt.js", 'utf8');
 
       // Remove settings for VIM and Emacs.

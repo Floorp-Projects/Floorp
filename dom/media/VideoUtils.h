@@ -154,9 +154,9 @@ nsresult SecondsToUsecs(double aSeconds, int64_t& aOutUsecs);
 // The maximum height and width of the video. Used for
 // sanitizing the memory allocation of the RGB buffer.
 // The maximum resolution we anticipate encountering in the
-// wild is 2160p - 3840x2160 pixels.
-static const int32_t MAX_VIDEO_WIDTH = 4000;
-static const int32_t MAX_VIDEO_HEIGHT = 3000;
+// wild is 2160p (UHD "4K") or 4320p - 7680x4320 pixels for VR.
+static const int32_t MAX_VIDEO_WIDTH = 8192;
+static const int32_t MAX_VIDEO_HEIGHT = 4608;
 
 // Scales the display rect aDisplay by aspect ratio aAspectRatio.
 // Note that aDisplay must be validated by IsValidVideoRegion()

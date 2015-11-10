@@ -55,6 +55,7 @@ MediaKeySession::MediaKeySession(JSContext* aCx,
   , mIsClosed(false)
   , mUninitialized(true)
   , mKeyStatusMap(new MediaKeyStatusMap(aCx, aParent, aRv))
+  , mExpiration(JS::GenericNaN())
 {
   EME_LOG("MediaKeySession[%p,''] session Id set", this);
 
@@ -114,7 +115,7 @@ MediaKeySession::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 double
 MediaKeySession::Expiration() const
 {
-  return JS::GenericNaN();
+  return mExpiration;
 }
 
 Promise*
@@ -263,6 +264,16 @@ MediaKeySession::Update(const ArrayBufferViewOrArrayBuffer& aResponse, ErrorResu
   if (aRv.Failed()) {
     return nullptr;
   }
+
+  if (!IsCallable()) {
+    // If this object's callable value is false, return a promise rejected
+    // with a new DOMException whose name is InvalidStateError.
+    EME_LOG("MediaKeySession[%p,''] Update() called before sessionId set by CDM", this);
+    promise->MaybeReject(NS_ERROR_DOM_INVALID_STATE_ERR,
+      NS_LITERAL_CSTRING("MediaKeySession.Update() called before sessionId set by CDM"));
+    return promise.forget();
+  }
+
   nsTArray<uint8_t> data;
   if (IsClosed() || !mKeys->GetCDMProxy()) {
     promise->MaybeReject(NS_ERROR_DOM_INVALID_STATE_ERR,
@@ -308,6 +319,14 @@ MediaKeySession::Close(ErrorResult& aRv)
   if (aRv.Failed()) {
     return nullptr;
   }
+  if (!IsCallable()) {
+    // If this object's callable value is false, return a promise rejected
+    // with a new DOMException whose name is InvalidStateError.
+    EME_LOG("MediaKeySession[%p,''] Close() called before sessionId set by CDM", this);
+    promise->MaybeReject(NS_ERROR_DOM_INVALID_STATE_ERR,
+      NS_LITERAL_CSTRING("MediaKeySession.Close() called before sessionId set by CDM"));
+    return promise.forget();
+  }
   if (IsClosed() || !mKeys->GetCDMProxy()) {
     EME_LOG("MediaKeySession[%p,'%s'] Close() already closed",
             this, NS_ConvertUTF16toUTF8(mSessionId).get());
@@ -350,6 +369,14 @@ MediaKeySession::Remove(ErrorResult& aRv)
     NS_LITERAL_CSTRING("MediaKeySession.remove")));
   if (aRv.Failed()) {
     return nullptr;
+  }
+  if (!IsCallable()) {
+    // If this object's callable value is false, return a promise rejected
+    // with a new DOMException whose name is InvalidStateError.
+    EME_LOG("MediaKeySession[%p,''] Remove() called before sessionId set by CDM", this);
+    promise->MaybeReject(NS_ERROR_DOM_INVALID_STATE_ERR,
+      NS_LITERAL_CSTRING("MediaKeySession.Remove() called before sessionId set by CDM"));
+    return promise.forget();
   }
   if (mSessionType != SessionType::Persistent) {
     promise->MaybeReject(NS_ERROR_DOM_INVALID_ACCESS_ERR,
@@ -435,6 +462,16 @@ MediaKeySession::MakePromise(ErrorResult& aRv, const nsACString& aName)
     return nullptr;
   }
   return DetailedPromise::Create(global, aRv, aName);
+}
+
+void
+MediaKeySession::SetExpiration(double aExpiration)
+{
+  EME_LOG("MediaKeySession[%p,'%s'] SetExpiry(%lf)",
+          this,
+          NS_ConvertUTF16toUTF8(mSessionId).get(),
+          aExpiration);
+  mExpiration = aExpiration;
 }
 
 } // namespace dom

@@ -3410,22 +3410,35 @@ CSSParserImpl::ParseMediaQueryExpression(nsMediaQuery* aQuery)
 
   // case insensitive from CSS - must be lower cased
   nsContentUtils::ASCIIToLower(mToken.mIdent);
-  const char16_t *featureString;
-  if (StringBeginsWith(mToken.mIdent, NS_LITERAL_STRING("min-"))) {
+  nsDependentString featureString(mToken.mIdent, 0);
+  uint8_t satisfiedReqFlags = 0;
+
+  // Strip off "-webkit-" prefix from featureString:
+  if (sWebkitPrefixedAliasesEnabled &&
+      StringBeginsWith(featureString, NS_LITERAL_STRING("-webkit-"))) {
+    satisfiedReqFlags |= nsMediaFeature::eHasWebkitPrefix;
+    featureString.Rebind(featureString, 8);
+  }
+
+  // Strip off "min-"/"max-" prefix from featureString:
+  if (StringBeginsWith(featureString, NS_LITERAL_STRING("min-"))) {
     expr->mRange = nsMediaExpression::eMin;
-    featureString = mToken.mIdent.get() + 4;
-  } else if (StringBeginsWith(mToken.mIdent, NS_LITERAL_STRING("max-"))) {
+    featureString.Rebind(featureString, 4);
+  } else if (StringBeginsWith(featureString, NS_LITERAL_STRING("max-"))) {
     expr->mRange = nsMediaExpression::eMax;
-    featureString = mToken.mIdent.get() + 4;
+    featureString.Rebind(featureString, 4);
   } else {
     expr->mRange = nsMediaExpression::eEqual;
-    featureString = mToken.mIdent.get();
   }
 
   nsCOMPtr<nsIAtom> mediaFeatureAtom = do_GetAtom(featureString);
   const nsMediaFeature *feature = nsMediaFeatures::features;
   for (; feature->mName; ++feature) {
-    if (*(feature->mName) == mediaFeatureAtom) {
+    // See if name matches & all requirement flags are satisfied:
+    // (We check requirements by turning off all of the flags that have been
+    // satisfied, and then see if the result is 0.)
+    if (*(feature->mName) == mediaFeatureAtom &&
+        !(feature->mReqFlags & ~satisfiedReqFlags)) {
       break;
     }
   }

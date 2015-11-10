@@ -77,10 +77,7 @@ add_task(function* test_register_rollback() {
   yield rejects(
     PushNotificationService.register('https://example.com/storage-error',
       ChromeUtils.originAttributesToSuffix({ appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inBrowser: false })),
-    function(error) {
-      return error == 'universe has imploded';
-    },
-    'Wrong error for unregister database failure'
+    'Expected error for unregister database failure'
   );
 
   // Should send an out-of-band unregister request.

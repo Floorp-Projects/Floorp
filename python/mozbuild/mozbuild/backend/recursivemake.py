@@ -874,8 +874,8 @@ class RecursiveMakeBackend(CommonBackend):
         if isinstance(path, SourcePath):
             if path.full_path.startswith(backend_file.srcdir):
                 return '$(srcdir)' + path.full_path[len(backend_file.srcdir):]
-            if path.full_path.startswith(self.environment.topsrcdir):
-                return '$(topsrcdir)' + path.full_path[len(self.environment.topsrcdir):]
+            if path.full_path.startswith(backend_file.topsrcdir):
+                return '$(topsrcdir)' + path.full_path[len(backend_file.topsrcdir):]
         elif isinstance(path, ObjDirPath):
             if path.full_path.startswith(backend_file.objdir):
                 return path.full_path[len(backend_file.objdir) + 1:]

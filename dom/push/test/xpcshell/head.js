@@ -194,7 +194,7 @@ function disableServiceWorkerEvents(...scopes) {
  */
 function setPrefs(prefs = {}) {
   let defaultPrefs = Object.assign({
-    debug: true,
+    loglevel: 'all',
     serverURL: 'wss://push.example.org',
     'connection.enabled': true,
     userAgentID: '',
