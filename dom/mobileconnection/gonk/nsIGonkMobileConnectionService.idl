@@ -9,7 +9,7 @@
         "@mozilla.org/mobileconnection/gonkmobileconnectionservice;1"
 %}
 
-[scriptable, uuid(3a7b8d47-d1c6-44c3-a312-df73fda1161e)]
+[scriptable, uuid(3c306f88-86bf-11e5-91af-3b2233acec65)]
 interface nsIGonkMobileConnectionService : nsIMobileConnectionService
 {
   void notifyNetworkInfoChanged(in unsigned long clientId, in jsval networkInfo);
@@ -248,4 +248,27 @@ interface nsIGonkMobileConnectionService : nsIMobileConnectionService
   void notifyCdmaInfoRecAudioControl(in unsigned long clientId,
                                      in short upLink,
                                      in short downLink);
+
+  /**
+   * Notify Device Identities.
+   *
+   * @param aClientId
+   *        The ID of radioInterface where this info is notified from.
+   * @param aImei
+   *        Device IMEI, valid if GSM subscription is available.
+   * @param aImeisv
+   *        Device IMEISV, valid if GSM subscription is available.
+   * @param aEsn
+   *        Device ESN, valid if CDMA subscription is available.
+   * @param aMeid
+   *        Device MEID, valid if CDMA subscription is available.
+   *
+   * Note: The value might be dummy like "000..." from modem
+   *       if the corresponding subscription is not available.
+   */
+  void notifyDeviceIdentitiesChanged(in unsigned long aClientId,
+                                     in DOMString aImei,
+                                     in DOMString aImeisv,
+                                     in DOMString aEsn,
+                                     in DOMString aMeid);
 };
