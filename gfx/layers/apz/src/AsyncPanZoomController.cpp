@@ -290,11 +290,19 @@ using mozilla::gfx::PointTyped;
  * \li\b apz.test.logging_enabled
  * Enable logging of APZ test data (see bug 961289).
  *
+ * \li\b apz.touch_move_tolerance
+ * See the description for apz.touch_start_tolerance below. This is a similar
+ * threshold, except it is used to suppress touchmove events from being delivered
+ * to content for NON-scrollable frames (or more precisely, for APZCs where
+ * ArePointerEventsConsumable returns false).\n
+ * Units: (real-world, i.e. screen) inches
+ *
  * \li\b apz.touch_start_tolerance
  * Constant describing the tolerance in distance we use, multiplied by the
  * device DPI, before we start panning the screen. This is to prevent us from
  * accidentally processing taps as touch moves, and from very short/accidental
- * touches moving the screen.\n
+ * touches moving the screen. touchmove events are also not delivered to content
+ * within this distance on scrollable frames.\n
  * Units: (real-world, i.e. screen) inches
  *
  * \li\b apz.use_paint_duration

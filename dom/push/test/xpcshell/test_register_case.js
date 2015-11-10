@@ -54,12 +54,8 @@ add_task(function* test_register_case() {
   );
   equal(newRecord.pushEndpoint, 'https://example.com/update/case',
     'Wrong push endpoint in registration record');
-  equal(newRecord.scope, 'https://example.net/case',
-    'Wrong scope in registration record');
 
-  let record = yield db.getByKeyID(newRecord.channelID);
-  equal(record.pushEndpoint, 'https://example.com/update/case',
-    'Wrong push endpoint in database record');
+  let record = yield db.getByPushEndpoint('https://example.com/update/case');
   equal(record.scope, 'https://example.net/case',
     'Wrong scope in database record');
 });

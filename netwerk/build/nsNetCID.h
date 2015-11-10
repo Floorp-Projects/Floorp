@@ -283,17 +283,6 @@
     {0x8b, 0x06, 0x8a, 0xaf, 0xe1, 0x86, 0x9b, 0xd8} \
 }
 
-// component implementing nsIURIChecker.
-#define NS_URICHECKER_CONTRACT_ID \
-    "@mozilla.org/network/urichecker;1"
-#define NS_URICHECKER_CID \
-{ /* cf3a0e06-1dd1-11b2-a904-ac1d6da77a02 */         \
-    0xcf3a0e06,                                      \
-    0x1dd1,                                          \
-    0x11b2,                                          \
-    {0xa9, 0x04, 0xac, 0x1d, 0x6d, 0xa7, 0x7a, 0x02} \
-}
-
 // component implementing nsIIncrementalDownload.
 #define NS_INCREMENTALDOWNLOAD_CONTRACTID \
     "@mozilla.org/network/incremental-download;1"
