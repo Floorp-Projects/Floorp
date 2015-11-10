@@ -112,15 +112,13 @@ class MachCommands(MachCommandBase):
         srcdir('omnijar/src/main/java/themes', 'mobile/android/themes')
 
         srcdir('app/build.gradle', 'mobile/android/gradle/app/build.gradle')
-        srcdir('app/src/androidTest/res', 'build/mobile/robocop/res')
+        srcdir('app/src/androidTest/res', 'mobile/android/tests/browser/robocop/res')
         srcdir('app/src/androidTest/assets', 'mobile/android/tests/browser/robocop/assets')
         # Test code.
         srcdir('app/src/robocop', 'mobile/android/tests/browser/robocop/src')
         srcdir('app/src/background', 'mobile/android/tests/background/junit3/src')
         srcdir('app/src/browser', 'mobile/android/tests/browser/junit3/src')
         srcdir('app/src/javaaddons', 'mobile/android/tests/javaaddons/src')
-        # Test libraries.
-        srcdir('app/libs', 'build/mobile/robocop')
 
         srcdir('base/build.gradle', 'mobile/android/gradle/base/build.gradle')
         srcdir('base/lint.xml', 'mobile/android/gradle/base/lint.xml')

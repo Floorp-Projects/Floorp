@@ -2,54 +2,58 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include ../../shared/non-mac.jar.inc.mn
+
 toolkit.jar:
-+  skin/classic/global/autocomplete.css
-+  skin/classic/global/button.css
-+  skin/classic/global/checkbox.css
-+  skin/classic/global/colorpicker.css
-+  skin/classic/global/commonDialog.css
-+  skin/classic/global/dropmarker.css
-+  skin/classic/global/filepicker.css
-+  skin/classic/global/Filepicker.png                          (filepicker/Filepicker.png)
-+  skin/classic/global/findBar.css
-+  skin/classic/global/global.css
-+  skin/classic/global/groupbox.css
-+  skin/classic/global/listbox.css
-+  skin/classic/global/menu.css
-+  skin/classic/global/menulist.css
-+  skin/classic/global/netError.css
-+  skin/classic/global/notification.css
-+  skin/classic/global/numberbox.css
-+  skin/classic/global/popup.css
-+  skin/classic/global/preferences.css
-+  skin/classic/global/printPageSetup.css
-+  skin/classic/global/printPreview.css
-+  skin/classic/global/radio.css
-+  skin/classic/global/scrollbox.css
-+  skin/classic/global/splitter.css
-+  skin/classic/global/tabbox.css
-+  skin/classic/global/textbox.css
-+  skin/classic/global/toolbar.css
-+  skin/classic/global/toolbarbutton.css
-+  skin/classic/global/tree.css
-+  skin/classic/global/alerts/alert.css                        (alerts/alert.css)
-+  skin/classic/global/console/console.css                     (console/console.css)
-+  skin/classic/global/console/console.png                     (console/console.png)
-+  skin/classic/global/console/console-toolbar.png             (console/console-toolbar.png)
-+  skin/classic/global/dirListing/remote.png                   (dirListing/remote.png)
-+  skin/classic/global/icons/autocomplete-search.svg           (icons/autocomplete-search.svg)
-+  skin/classic/global/icons/Authentication.png                (icons/Authentication.png)
-+  skin/classic/global/icons/autoscroll.png                    (icons/autoscroll.png)
-+  skin/classic/global/icons/blacklist_favicon.png             (icons/blacklist_favicon.png)
-+  skin/classic/global/icons/blacklist_large.png               (icons/blacklist_large.png)
-+  skin/classic/global/icons/close.svg                         (icons/close.svg)
-+  skin/classic/global/icons/loading_16.png                    (icons/loading_16.png)
-+  skin/classic/global/icons/panelarrow-horizontal.svg         (icons/panelarrow-horizontal.svg)
-+  skin/classic/global/icons/panelarrow-vertical.svg           (icons/panelarrow-vertical.svg)
-+  skin/classic/global/icons/resizer.png                       (icons/resizer.png)
-+  skin/classic/global/icons/sslWarning.png                    (icons/sslWarning.png)
-+  skin/classic/global/icons/webapps-16.png                    (icons/webapps-16.png)
-+  skin/classic/global/icons/webapps-64.png                    (icons/webapps-64.png)
+   skin/classic/global/autocomplete.css
+   skin/classic/global/button.css
+   skin/classic/global/checkbox.css
+   skin/classic/global/colorpicker.css
+   skin/classic/global/commonDialog.css
+   skin/classic/global/dropmarker.css
+   skin/classic/global/filepicker.css
+   skin/classic/global/Filepicker.png                          (filepicker/Filepicker.png)
+   skin/classic/global/findBar.css
+   skin/classic/global/global.css
+   skin/classic/global/groupbox.css
+   skin/classic/global/listbox.css
+   skin/classic/global/menu.css
+   skin/classic/global/menulist.css
+   skin/classic/global/netError.css
+   skin/classic/global/notification.css
+   skin/classic/global/numberbox.css
+   skin/classic/global/popup.css
+   skin/classic/global/preferences.css
+   skin/classic/global/printPageSetup.css
+   skin/classic/global/printPreview.css
+   skin/classic/global/radio.css
+   skin/classic/global/scrollbox.css
+   skin/classic/global/splitter.css
+   skin/classic/global/tabbox.css
+   skin/classic/global/textbox.css
+   skin/classic/global/toolbar.css
+   skin/classic/global/toolbarbutton.css
+   skin/classic/global/tree.css
+   skin/classic/global/alerts/alert.css                        (alerts/alert.css)
+   skin/classic/global/console/console.css                     (console/console.css)
+   skin/classic/global/console/console.png                     (console/console.png)
+   skin/classic/global/console/console-toolbar.png             (console/console-toolbar.png)
+   skin/classic/global/dirListing/remote.png                   (dirListing/remote.png)
+
+   skin/classic/global/icons/Authentication.png                (icons/Authentication.png)
+   skin/classic/global/icons/autocomplete-search.svg           (icons/autocomplete-search.svg)
+   skin/classic/global/icons/autoscroll.png                    (icons/autoscroll.png)
+   skin/classic/global/icons/blacklist_favicon.png             (icons/blacklist_favicon.png)
+   skin/classic/global/icons/blacklist_large.png               (icons/blacklist_large.png)
+   skin/classic/global/icons/close.svg                         (icons/close.svg)
+   skin/classic/global/icons/loading_16.png                    (icons/loading_16.png)
+   skin/classic/global/icons/panelarrow-horizontal.svg         (icons/panelarrow-horizontal.svg)
+   skin/classic/global/icons/panelarrow-vertical.svg           (icons/panelarrow-vertical.svg)
+   skin/classic/global/icons/resizer.png                       (icons/resizer.png)
+   skin/classic/global/icons/sslWarning.png                    (icons/sslWarning.png)
+   skin/classic/global/icons/webapps-16.png                    (icons/webapps-16.png)
+   skin/classic/global/icons/webapps-64.png                    (icons/webapps-64.png)
+
 *  skin/classic/global/in-content/common.css                   (in-content/common.css)
 *  skin/classic/global/in-content/info-pages.css               (in-content/info-pages.css)
-+  skin/classic/global/toolbar/spring.png                      (toolbar/spring.png)
+   skin/classic/global/toolbar/spring.png                      (toolbar/spring.png)

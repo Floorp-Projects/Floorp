@@ -2,9 +2,9 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-toolkit.jar:
-% skin global classic/1.0 %skin/classic/global/
 #include ../../shared/jar.inc.mn
+
+toolkit.jar:
   skin/classic/global/10pct_transparent_grey.png
   skin/classic/global/50pct_transparent_grey.png
   skin/classic/global/arrow.css

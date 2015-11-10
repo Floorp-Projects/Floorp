@@ -3,7 +3,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 toolkit.jar:
-% skin help classic/1.0 %skin/classic/help/
   skin/classic/help/dropmark-nav.png
   skin/classic/help/help.css
   skin/classic/help/Toolbar.png
