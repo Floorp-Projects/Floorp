@@ -142,6 +142,50 @@ class Test1BrowserCall(MarionetteTestCase):
         self.switch_to_chatbox()
         self.check_video(".remote-video")
 
+    def send_chat_message(self, text):
+        """
+        Sends a chat message using the current context.
+
+        :param text: The text to send.
+        """
+        chatbox = self.wait_for_element_displayed(By.CSS_SELECTOR,
+                                                  ".text-chat-box > form > input")
+
+        chatbox.send_keys(text + "\n")
+
+    def check_received_message(self, expectedText):
+        """
+        Checks a chat message has been received in the current context. The
+        test assumes only one chat message will be received during the tests.
+
+        :param expectedText: The expected text of the chat message.
+        """
+        text_entry = self.wait_for_element_displayed(By.CSS_SELECTOR,
+                                                     ".text-chat-entry.received > p > span")
+
+        self.assertEqual(text_entry.text, expectedText,
+                         "should have received the correct message")
+
+    def check_text_messaging(self):
+        """
+        Checks text messaging between the generator and clicker in a bi-directional
+        fashion.
+        """
+        # Send a message using the link generator.
+        self.switch_to_chatbox()
+        self.send_chat_message("test1")
+
+        # Now check the result on the link clicker.
+        self.switch_to_standalone()
+        self.check_received_message("test1")
+
+        # Then send a message using the standalone.
+        self.send_chat_message("test2")
+
+        # Finally check the link generator got it.
+        self.switch_to_chatbox()
+        self.check_received_message("test2")
+
     def local_enable_screenshare(self):
         self.switch_to_chatbox()
         button = self.marionette.find_element(By.CLASS_NAME, "btn-screen-share")
@@ -241,6 +285,9 @@ class Test1BrowserCall(MarionetteTestCase):
         # Check we get the video streams
         self.standalone_check_remote_video()
         self.local_check_remote_video()
+
+        # Check text messaging
+        self.check_text_messaging()
 
         # since bi-directional media is connected, make sure we've set
         # the start time
