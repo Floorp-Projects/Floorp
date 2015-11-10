@@ -5461,7 +5461,11 @@ PanGestureTypeForEvent(NSEvent* aEvent)
 
 - (void)insertNewline:(id)sender
 {
-  [self insertText:@"\n"];
+  if (mTextInputHandler) {
+    NSAttributedString *attrStr = [[NSAttributedString alloc] initWithString:@"\n"];
+    mTextInputHandler->InsertText(attrStr);
+    [attrStr release];
+  }
 }
 
 - (void)flagsChanged:(NSEvent*)theEvent
