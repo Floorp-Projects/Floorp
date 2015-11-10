@@ -62,7 +62,8 @@ public:
 
     void OnSizeChanged(const mozilla::gfx::IntSize& aSize);
 
-    void InitEvent(mozilla::WidgetGUIEvent& event, nsIntPoint* aPoint = 0);
+    void InitEvent(mozilla::WidgetGUIEvent& event,
+                   mozilla::LayoutDeviceIntPoint* aPoint = 0);
 
     //
     // nsIWidget
