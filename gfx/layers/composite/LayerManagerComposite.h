@@ -169,11 +169,14 @@ public:
   virtual const char* Name() const override { return ""; }
 
   /**
-   * Restricts the shadow visible region of layers that are covered with
-   * opaque content. aOpaqueRegion is the region already known to be covered
-   * with opaque content, in the post-transform coordinate space of aLayer.
+   * Post-processes layers before composition. This performs the following:
+   *
+   *   - Applies occlusion culling. This restricts the shadow visible region
+   *     of layers that are covered with opaque content.
+   *     |aOpaqueRegion| is the region already known to be covered with opaque
+   *     content, in the post-transform coordinate space of aLayer.
    */
-  void ApplyOcclusionCulling(Layer* aLayer, nsIntRegion& aOpaqueRegion);
+  void PostProcessLayers(Layer* aLayer, nsIntRegion& aOpaqueRegion);
 
   /**
    * RAII helper class to add a mask effect with the compositable from aMaskLayer
