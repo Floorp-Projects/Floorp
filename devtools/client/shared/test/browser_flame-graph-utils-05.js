@@ -6,7 +6,7 @@
 var {FlameGraphUtils} = require("devtools/client/shared/widgets/FlameGraph");
 
 add_task(function*() {
-  yield promiseTab("about:blank");
+  yield addTab("about:blank");
   yield performTest();
   gBrowser.removeCurrentTab();
 });

@@ -7,7 +7,7 @@ const TEST_DATA = [];
 var LineGraphWidget = require("devtools/client/shared/widgets/LineGraphWidget");
 
 add_task(function*() {
-  yield promiseTab("about:blank");
+  yield addTab("about:blank");
   yield performTest();
   gBrowser.removeCurrentTab();
 });

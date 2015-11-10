@@ -14,7 +14,7 @@ const SLOW_VALUE_MULTIPLIER = 0.1;
 const DEFAULT_VALUE_MULTIPLIER = 1;
 
 add_task(function*() {
-  yield promiseTab("about:blank");
+  yield addTab("about:blank");
   let [host, win, doc] = yield createHost("bottom", TEST_URI);
 
   const container = doc.querySelector("#container");

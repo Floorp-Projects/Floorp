@@ -5,12 +5,11 @@
 "use strict";
 
 var {editableField, getInplaceEditorForSpan: inplaceEditor} = require("devtools/client/shared/inplace-editor");
-var promise = require("promise");
 
 // Test that the trimOutput option for the inplace editor works correctly.
 
 add_task(function*() {
-  yield promiseTab("data:text/html;charset=utf-8,inline editor tests");
+  yield addTab("data:text/html;charset=utf-8,inline editor tests");
   let [host, win, doc] = yield createHost();
 
   yield testNonTrimmed(doc);

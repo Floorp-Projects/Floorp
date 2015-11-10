@@ -6,12 +6,12 @@
 
 var {getColor, getTheme, setTheme} = require("devtools/client/shared/theme");
 
-function test() {
+add_task(function* () {
   testGetTheme();
   testSetTheme();
   testGetColor();
   testColorExistence();
-}
+});
 
 function testGetTheme () {
   let originalTheme = getTheme();

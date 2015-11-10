@@ -12,7 +12,7 @@ const GRAYSCALE_MAX = 100;
 const INVERT_MIN = 0;
 
 add_task(function*() {
-  yield promiseTab("about:blank");
+  yield addTab("about:blank");
   let [host, win, doc] = yield createHost("bottom", TEST_URI);
 
   const container = doc.querySelector("#container");
