@@ -952,7 +952,7 @@ nsWindow::BringToFront()
 }
 
 NS_IMETHODIMP
-nsWindow::GetScreenBounds(nsIntRect &aRect)
+nsWindow::GetScreenBoundsUntyped(nsIntRect &aRect)
 {
     LayoutDeviceIntPoint p = WidgetToScreenOffset();
 

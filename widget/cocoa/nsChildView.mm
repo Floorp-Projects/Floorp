@@ -906,7 +906,7 @@ NS_IMETHODIMP nsChildView::SetCursor(imgIContainer* aCursor,
 #pragma mark -
 
 // Get this component dimension
-NS_IMETHODIMP nsChildView::GetBounds(nsIntRect &aRect)
+NS_IMETHODIMP nsChildView::GetBoundsUntyped(nsIntRect &aRect)
 {
   if (!mView) {
     aRect = mBounds;
@@ -916,9 +916,9 @@ NS_IMETHODIMP nsChildView::GetBounds(nsIntRect &aRect)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsChildView::GetClientBounds(nsIntRect &aRect)
+NS_IMETHODIMP nsChildView::GetClientBoundsUntyped(nsIntRect &aRect)
 {
-  GetBounds(aRect);
+  GetBoundsUntyped(aRect);
   if (!mParentWidget) {
     // For top level widgets we want the position on screen, not the position
     // of this view inside the window.
@@ -927,9 +927,9 @@ NS_IMETHODIMP nsChildView::GetClientBounds(nsIntRect &aRect)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsChildView::GetScreenBounds(nsIntRect &aRect)
+NS_IMETHODIMP nsChildView::GetScreenBoundsUntyped(nsIntRect &aRect)
 {
-  GetBounds(aRect);
+  GetBoundsUntyped(aRect);
   aRect.MoveTo(WidgetToScreenOffsetUntyped());
   return NS_OK;
 }
@@ -3672,7 +3672,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
     return;
 
 #ifdef DEBUG_UPDATE
-  nsIntRect geckoBounds;
+  LayoutDeviceIntRect geckoBounds;
   mGeckoChild->GetBounds(geckoBounds);
 
   fprintf (stderr, "---- Update[%p][%p] [%f %f %f %f] cgc: %p\n  gecko bounds: [%d %d %d %d]\n",
@@ -3821,7 +3821,7 @@ NSEvent* gLastDragMouseDownEvent = nil;
   mWaitingForPaint = NO;
 
   nsIntRect geckoBounds;
-  mGeckoChild->GetBounds(geckoBounds);
+  mGeckoChild->GetBoundsUntyped(geckoBounds);
   nsIntRegion region(geckoBounds);
 
   mGeckoChild->PaintWindow(region);
