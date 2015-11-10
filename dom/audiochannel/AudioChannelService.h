@@ -19,6 +19,7 @@
 
 class nsIRunnable;
 class nsPIDOMWindow;
+struct PRLogModuleInfo;
 
 namespace mozilla {
 namespace dom {
@@ -44,6 +45,8 @@ public:
   static already_AddRefed<AudioChannelService> GetOrCreate();
 
   static bool IsAudioChannelMutedByDefault();
+
+  static PRLogModuleInfo* GetAudioChannelLog();
 
   /**
    * Any audio channel agent that starts playing should register itself to
