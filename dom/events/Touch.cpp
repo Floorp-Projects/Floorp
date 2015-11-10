@@ -48,7 +48,7 @@ Touch::Touch(EventTarget* aTarget,
 
 Touch::Touch(int32_t aIdentifier,
              LayoutDeviceIntPoint aPoint,
-             nsIntPoint aRadius,
+             LayoutDeviceIntPoint aRadius,
              float aRotationAngle,
              float aForce)
 {
