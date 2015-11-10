@@ -1202,7 +1202,7 @@ void
 CompositorD3D11::EnsureSize()
 {
   IntRect rect;
-  mWidget->GetClientBounds(rect);
+  mWidget->GetClientBoundsUntyped(rect);
 
   mSize = rect.Size();
 }
