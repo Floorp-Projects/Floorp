@@ -3411,7 +3411,8 @@ nsWindow::OnTouchEvent(GdkEventTouch* aEvent)
         id = ++gLastTouchID & 0x7FFFFFFF;
     }
 
-    touch = new dom::Touch(id, touchPoint, nsIntPoint(1,1), 0.0f, 0.0f);
+    touch = new dom::Touch(id, touchPoint, LayoutDeviceIntPoint(1, 1),
+                           0.0f, 0.0f);
 
     WidgetTouchEvent event(true, msg, this);
     KeymapWrapper::InitInputEvent(event, aEvent->state);
