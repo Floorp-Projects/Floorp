@@ -86,16 +86,21 @@ public:
    * Event Handlers
    ***************************************************************************/
   IMPL_EVENT_HANDLER(attributechanged);
+  // PAIRING
   IMPL_EVENT_HANDLER(devicepaired);
   IMPL_EVENT_HANDLER(deviceunpaired);
   IMPL_EVENT_HANDLER(pairingaborted);
+  // HFP/A2DP/AVRCP
   IMPL_EVENT_HANDLER(a2dpstatuschanged);
   IMPL_EVENT_HANDLER(hfpstatuschanged);
+  IMPL_EVENT_HANDLER(scostatuschanged);
+  IMPL_EVENT_HANDLER(requestmediaplaystatus);
+  // PBAP
+  IMPL_EVENT_HANDLER(obexpasswordreq);
   IMPL_EVENT_HANDLER(pullphonebookreq);
   IMPL_EVENT_HANDLER(pullvcardentryreq);
   IMPL_EVENT_HANDLER(pullvcardlistingreq);
-  IMPL_EVENT_HANDLER(requestmediaplaystatus);
-  IMPL_EVENT_HANDLER(scostatuschanged);
+  // MAP
   IMPL_EVENT_HANDLER(mapfolderlistingreq);
   IMPL_EVENT_HANDLER(mapmessageslistingreq);
   IMPL_EVENT_HANDLER(mapgetmessagereq);
@@ -308,7 +313,7 @@ private:
    *                    - uint32_t   'maxListCount'
    *                    - uint32_t   'listStartOffset'
    *                    - uint32_t[] 'vCardSelector_AND'
-   *                    - uint32_t[] 'vCardSelector_AND'
+   *                    - uint32_t[] 'vCardSelector_OR'
    */
   void HandlePullPhonebookReq(const BluetoothValue& aValue);
 
@@ -335,9 +340,18 @@ private:
    *                    - uint32_t   'maxListCount'
    *                    - uint32_t   'listStartOffset'
    *                    - uint32_t[] 'vCardSelector_AND'
-   *                    - uint32_t[] 'vCardSelector_AND'
+   *                    - uint32_t[] 'vCardSelector_OR'
    */
   void HandlePullVCardListingReq(const BluetoothValue& aValue);
+
+  /**
+   * Handle OBEX_PASSWORD_REQ_ID bluetooth signal.
+   *
+   * @param aValue [in] Properties array of the PBAP request.
+   *                    The array may contain the property:
+   *                    - nsString   'userId'
+   */
+  void HandleObexPasswordReq(const BluetoothValue& aValue);
 
   /**
    * Get a Sequence of vCard properies from a BluetoothValue. The name of
@@ -542,7 +556,7 @@ private:
   nsTArray<RefPtr<BluetoothDiscoveryHandle> > mLeScanHandleArray;
 
   /**
-   * nsRefPtr array of BluetoothDevices created by this adapter. The array is
+   * RefPtr array of BluetoothDevices created by this adapter. The array is
    * empty when adapter state is Disabled.
    *
    * Devices will be appended when
