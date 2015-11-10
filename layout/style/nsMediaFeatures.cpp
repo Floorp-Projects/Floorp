@@ -521,6 +521,17 @@ nsMediaFeatures::features[] = {
         GetGrid
     },
 
+    // Webkit extensions that we support for de-facto web compatibility
+    // -webkit-{min|max}-device-pixel-ratio:
+    {
+        &nsGkAtoms::devicePixelRatio,
+        nsMediaFeature::eMinMaxAllowed,
+        nsMediaFeature::eFloat,
+        nsMediaFeature::eHasWebkitPrefix,
+        { nullptr },
+        GetDevicePixelRatio
+    },
+
     // Mozilla extensions
     {
         &nsGkAtoms::_moz_device_pixel_ratio,
