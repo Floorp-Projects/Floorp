@@ -285,7 +285,7 @@ FormAutoComplete.prototype = {
                     result.entries = aEntries;
                 }
 
-                if (aDatalistResult) {
+                if (aDatalistResult && aDatalistResult.matchCount > 0) {
                     result = this.mergeResults(result, aDatalistResult);
                 }
 

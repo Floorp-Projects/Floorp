@@ -146,6 +146,7 @@ AutoCompleteResult.prototype = {
  */
 function AutoCompleteSearch(aName, aResult) {
   this.name = aName;
+  this._result = aResult;
 }
 AutoCompleteSearch.prototype = {
   constructor: AutoCompleteSearch,
@@ -154,7 +155,7 @@ AutoCompleteSearch.prototype = {
   name: null,
 
   // AutoCompleteResult
-  _result:null,  
+  _result: null,
   
   
   /**

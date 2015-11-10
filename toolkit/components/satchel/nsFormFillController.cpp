@@ -727,11 +727,12 @@ public:
     : mObserver(aObserver)
     , mSearch(aSearch)
     , mResult(aResult)
-  {}
+  {
+    MOZ_ASSERT(mResult, "Should have a valid result");
+    MOZ_ASSERT(mObserver, "You shouldn't call this runnable with a null observer!");
+  }
 
   NS_IMETHOD Run() {
-    NS_ASSERTION(mObserver, "You shouldn't call this runnable with a null observer!");
-
     mObserver->OnUpdateSearchResult(mSearch, mResult);
     return NS_OK;
   }
