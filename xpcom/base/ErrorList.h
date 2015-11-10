@@ -530,6 +530,12 @@
      a DOMException */
   ERROR(NS_ERROR_DOM_DOMEXCEPTION,                 FAILURE(1017)),
 
+  /* An nsresult value to use in ErrorResult to indicate that we
+   * should just rethrow whatever is on the JSContext (which might be
+   * nothing if an uncatchable exception was thrown).
+   */
+  ERROR(NS_ERROR_DOM_EXCEPTION_ON_JSCONTEXT,       FAILURE(1018)),
+
   /* May be used to indicate when e.g. setting a property value didn't
    * actually change the value, like for obj.foo = "bar"; obj.foo = "bar";
    * the second assignment throws NS_SUCCESS_DOM_NO_OPERATION.
