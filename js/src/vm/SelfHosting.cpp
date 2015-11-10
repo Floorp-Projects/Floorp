@@ -25,6 +25,7 @@
 #include "builtin/MapObject.h"
 #include "builtin/ModuleObject.h"
 #include "builtin/Object.h"
+#include "builtin/Promise.h"
 #include "builtin/Reflect.h"
 #include "builtin/SelfHostingDefines.h"
 #include "builtin/SIMD.h"
@@ -1493,6 +1494,27 @@ CallSelfHostedNonGenericMethod(JSContext* cx, const CallArgs& args)
     return true;
 }
 
+bool
+js::CallSelfHostedFunction(JSContext* cx, const char* name, InvokeArgs& args)
+{
+    RootedAtom funAtom(cx, Atomize(cx, name, strlen(name)));
+    if (!funAtom)
+        return false;
+    RootedPropertyName funName(cx, funAtom->asPropertyName());
+    return CallSelfHostedFunction(cx, funName, args);
+}
+
+bool
+js::CallSelfHostedFunction(JSContext* cx, HandlePropertyName name, InvokeArgs& args)
+{
+    RootedValue fun(cx);
+    if (!GlobalObject::getIntrinsicValue(cx, cx->global(), name, &fun))
+        return false;
+    MOZ_ASSERT(fun.toObject().is<JSFunction>());
+    args.setCallee(fun);
+    return Invoke(cx, args);
+}
+
 template<typename T>
 bool
 Is(HandleValue v)
@@ -1550,6 +1572,21 @@ js::ReportIncompatibleSelfHostedMethod(JSContext* cx, const CallArgs& args)
     return false;
 }
 
+// ES6, 25.4.1.6.
+static bool
+intrinsic_EnqueuePromiseJob(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    MOZ_ASSERT(args.length() == 1);
+    MOZ_ASSERT(args[0].isObject());
+    MOZ_ASSERT(args[0].toObject().is<JSFunction>());
+
+    RootedFunction job(cx, &args[0].toObject().as<JSFunction>());
+    if (!cx->runtime()->enqueuePromiseJob(cx, job))
+        return false;
+    args.rval().setUndefined();
+    return true;
+}
 
 /**
  * Returns the default locale as a well-formed, but not necessarily canonicalized,
@@ -1666,6 +1703,33 @@ intrinsic_ConstructorForTypedArray(JSContext* cx, unsigned argc, Value* vp)
         return false;
 
     args.rval().setObject(*ctor);
+    return true;
+}
+
+static bool
+intrinsic_OriginalPromiseConstructor(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    MOZ_ASSERT(args.length() == 0);
+
+    JSObject* obj = GlobalObject::getOrCreatePromiseConstructor(cx, cx->global());
+    if (!obj)
+        return false;
+
+    args.rval().setObject(*obj);
+    return true;
+}
+
+static bool
+intrinsic_IsWrappedPromiseObject(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    MOZ_ASSERT(args.length() == 1);
+
+    RootedObject obj(cx, &args[0].toObject());
+    MOZ_ASSERT(!obj->is<PromiseObject>(),
+               "Unwrapped promises should be filtered out in inlineable code");
+    args.rval().setBoolean(JS::IsPromiseObject(obj));
     return true;
 }
 
@@ -2061,6 +2125,13 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("IsWeakSet", intrinsic_IsInstanceOfBuiltin<WeakSetObject>, 1,0),
     JS_FN("CallWeakSetMethodIfWrapped",
           CallNonGenericSelfhostedMethod<Is<WeakSetObject>>, 2, 0),
+
+    JS_FN("IsPromise",                      intrinsic_IsInstanceOfBuiltin<PromiseObject>, 1,0),
+    JS_FN("IsWrappedPromise",               intrinsic_IsWrappedPromiseObject,     1, 0),
+    JS_FN("_EnqueuePromiseJob",             intrinsic_EnqueuePromiseJob,          1, 0),
+    JS_FN("_GetOriginalPromiseConstructor", intrinsic_OriginalPromiseConstructor, 0, 0),
+    JS_FN("CallPromiseMethodIfWrapped",
+          CallNonGenericSelfhostedMethod<Is<PromiseObject>>,      2,0),
 
     // See builtin/TypedObject.h for descriptors of the typedobj functions.
     JS_FN("NewOpaqueTypedObject",           js::NewOpaqueTypedObject, 1, 0),
