@@ -136,14 +136,14 @@ this.GeckoDriver = function(appName, device, emulator) {
   this.actions = new ActionChain(utils);
 
   this.sessionCapabilities = {
-    // mandated capabilities
-    "browserName": Services.appinfo.name,
+    // Mandated capabilities
+    "browserName": this.appName,
     "browserVersion": Services.appinfo.version,
-    "platformName": Services.sysinfo.getProperty("name"),
-    "platformVersion": Services.sysinfo.getProperty("version"),
+    "platformName": Services.appinfo.OS.toUpperCase(),
+    "platformVersion": Services.appinfo.platformVersion,
     "specificationLevel": "1",
 
-    // supported features
+    // Supported features
     "raisesAccessibilityExceptions": false,
     "rotatable": this.appName == "B2G",
     "acceptSslCerts": false,
@@ -152,13 +152,13 @@ this.GeckoDriver = function(appName, device, emulator) {
     "proxy": {},
 
     // Selenium 2 compat
-    "platform": Services.sysinfo.getProperty("name").toUpperCase(),
+    "platform": Services.appinfo.OS.toUpperCase(),
 
-    // proprietary extensions
+    // Proprietary extensions
     "XULappId" : Services.appinfo.ID,
     "appBuildId" : Services.appinfo.appBuildID,
     "device": device,
-    "version": Services.appinfo.version,
+    "version": Services.appinfo.version
   };
 
   this.mm = globalMessageManager;
