@@ -1137,12 +1137,16 @@ MacroAssembler::call(Label* label)
 CodeOffsetLabel
 MacroAssembler::callWithPatch()
 {
-    MOZ_CRASH("NYI");
+    addLongJump(nextOffset());
+    ma_liPatchable(ScratchRegister, ImmWord(0));
+    return call(ScratchRegister);
 }
+
 void
 MacroAssembler::patchCall(uint32_t callerOffset, uint32_t calleeOffset)
 {
-    MOZ_CRASH("NYI");
+    BufferOffset li(callerOffset - 6 * sizeof(uint32_t));
+    Assembler::UpdateLoad64Value(editSrc(li), calleeOffset);
 }
 
 void
