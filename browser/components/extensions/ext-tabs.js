@@ -230,7 +230,7 @@ extensions.registerAPI((extension, context) => {
         };
       }).api(),
 
-      onReplaced: ignoreEvent(),
+      onReplaced: ignoreEvent(context, "tabs.onReplaced"),
 
       onRemoved: new EventManager(context, "tabs.onRemoved", fire => {
         let tabListener = event => {
