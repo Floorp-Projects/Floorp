@@ -352,7 +352,7 @@ class B2GBuild(LocalesMixin, PurgeMixin,
         # ourselves. Let's detect when the URL does not ends with ".mar" and in
         # this case, we append the MAR file we just collected
         if not mar_url.endswith(".mar"):
-            if marfile is not None:
+            if marfile is None:
                 self.fatal("URL does not contains a MAR file and none found")
             mar_url = os.path.join(mar_url, os.path.basename(marfile))
 
