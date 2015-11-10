@@ -359,21 +359,6 @@ static struct nsMyTrustedEVInfo myTrustedEVInfos[] = {
     nullptr
   },
   {
-    // CN=UTN - DATACorp SGC,OU=http://www.usertrust.com,O=The USERTRUST Network,L=Salt Lake City,ST=UT,C=US
-    "1.3.6.1.4.1.6449.1.2.1.5.1",
-    "Comodo EV OID",
-    SEC_OID_UNKNOWN,
-    { 0x85, 0xFB, 0x2F, 0x91, 0xDD, 0x12, 0x27, 0x5A, 0x01, 0x45, 0xB6,
-      0x36, 0x53, 0x4F, 0x84, 0x02, 0x4A, 0xD6, 0x8B, 0x69, 0xB8, 0xEE,
-      0x88, 0x68, 0x4F, 0xF7, 0x11, 0x37, 0x58, 0x05, 0xB3, 0x48 },
-    "MIGTMQswCQYDVQQGEwJVUzELMAkGA1UECBMCVVQxFzAVBgNVBAcTDlNhbHQgTGFr"
-    "ZSBDaXR5MR4wHAYDVQQKExVUaGUgVVNFUlRSVVNUIE5ldHdvcmsxITAfBgNVBAsT"
-    "GGh0dHA6Ly93d3cudXNlcnRydXN0LmNvbTEbMBkGA1UEAxMSVVROIC0gREFUQUNv"
-    "cnAgU0dD",
-    "RL4Mi1AAIbQR0ypoBqmtaQ==",
-    nullptr
-  },
-  {
     // CN=UTN-USERFirst-Hardware,OU=http://www.usertrust.com,O=The USERTRUST Network,L=Salt Lake City,ST=UT,C=US
     "1.3.6.1.4.1.6449.1.2.1.5.1",
     "Comodo EV OID",
@@ -597,20 +582,6 @@ static struct nsMyTrustedEVInfo myTrustedEVInfos[] = {
     nullptr
   },
   {
-    // CN=TC TrustCenter Universal CA III,OU=TC TrustCenter Universal CA,O=TC TrustCenter GmbH,C=DE
-    "1.2.276.0.44.1.1.1.4",
-    "TC TrustCenter EV OID",
-    SEC_OID_UNKNOWN,
-    { 0x30, 0x9B, 0x4A, 0x87, 0xF6, 0xCA, 0x56, 0xC9, 0x31, 0x69, 0xAA,
-      0xA9, 0x9C, 0x6D, 0x98, 0x88, 0x54, 0xD7, 0x89, 0x2B, 0xD5, 0x43,
-      0x7E, 0x2D, 0x07, 0xB2, 0x9C, 0xBE, 0xDA, 0x55, 0xD3, 0x5D },
-    "MHsxCzAJBgNVBAYTAkRFMRwwGgYDVQQKExNUQyBUcnVzdENlbnRlciBHbWJIMSQw"
-    "IgYDVQQLExtUQyBUcnVzdENlbnRlciBVbml2ZXJzYWwgQ0ExKDAmBgNVBAMTH1RD"
-    "IFRydXN0Q2VudGVyIFVuaXZlcnNhbCBDQSBJSUk=",
-    "YyUAAQACFI0zFQLkbPQ=",
-    nullptr
-  },
-  {
     // CN=AffirmTrust Commercial,O=AffirmTrust,C=US
     "1.3.6.1.4.1.34697.2.1",
     "AffirmTrust EV OID a",
@@ -700,20 +671,6 @@ static struct nsMyTrustedEVInfo myTrustedEVInfos[] = {
     "MDgxCzAJBgNVBAYTAkVTMRQwEgYDVQQKDAtJWkVOUEUgUy5BLjETMBEGA1UEAwwK"
     "SXplbnBlLmNvbQ==",
     "ALC3WhZIX7/hy/WL1xnmfQ==",
-    nullptr
-  },
-  {
-    // CN=A-Trust-nQual-03,OU=A-Trust-nQual-03,O=A-Trust Ges. f. Sicherheitssysteme im elektr. Datenverkehr GmbH,C=AT
-    "1.2.40.0.17.1.22",
-    "A-Trust EV OID",
-    SEC_OID_UNKNOWN,
-    { 0x79, 0x3C, 0xBF, 0x45, 0x59, 0xB9, 0xFD, 0xE3, 0x8A, 0xB2, 0x2D,
-      0xF1, 0x68, 0x69, 0xF6, 0x98, 0x81, 0xAE, 0x14, 0xC4, 0xB0, 0x13,
-      0x9A, 0xC7, 0x88, 0xA7, 0x8A, 0x1A, 0xFC, 0xCA, 0x02, 0xFB },
-    "MIGNMQswCQYDVQQGEwJBVDFIMEYGA1UECgw/QS1UcnVzdCBHZXMuIGYuIFNpY2hl"
-    "cmhlaXRzc3lzdGVtZSBpbSBlbGVrdHIuIERhdGVudmVya2VociBHbWJIMRkwFwYD"
-    "VQQLDBBBLVRydXN0LW5RdWFsLTAzMRkwFwYDVQQDDBBBLVRydXN0LW5RdWFsLTAz",
-    "AWwe",
     nullptr
   },
   {
