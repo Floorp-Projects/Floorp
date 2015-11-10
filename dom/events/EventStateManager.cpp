@@ -473,6 +473,14 @@ EventStateManager::OnStopObservingContent(
   mIMEContentObserver = nullptr;
 }
 
+void
+EventStateManager::TryToFlushPendingNotificationsToIME()
+{
+  if (mIMEContentObserver) {
+    mIMEContentObserver->TryToFlushPendingNotifications();
+  }
+}
+
 nsresult
 EventStateManager::PreHandleEvent(nsPresContext* aPresContext,
                                   WidgetEvent* aEvent,

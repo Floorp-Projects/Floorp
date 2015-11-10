@@ -51,10 +51,7 @@ add_task(function* test_register_invalid_json() {
   yield rejects(
     PushNotificationService.register('https://example.net/page/invalid-json',
       ChromeUtils.originAttributesToSuffix({ appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inBrowser: false })),
-    function(error) {
-      return error == 'TimeoutError';
-    },
-    'Wrong error for invalid JSON response'
+    'Expected error for invalid JSON response'
   );
 
   yield waitForPromise(helloPromise, DEFAULT_TIMEOUT,

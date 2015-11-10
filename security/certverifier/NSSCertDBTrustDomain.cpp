@@ -975,7 +975,7 @@ nss_addEscape(const char* string, char quote)
 } // unnamed namespace
 
 SECStatus
-InitializeNSS(const char* dir, bool readOnly)
+InitializeNSS(const char* dir, bool readOnly, bool loadPKCS11Modules)
 {
   // The NSS_INIT_NOROOTINIT flag turns off the loading of the root certs
   // module by NSS_Initialize because we will load it in InstallLoadableRoots
@@ -985,6 +985,9 @@ InitializeNSS(const char* dir, bool readOnly)
   uint32_t flags = NSS_INIT_NOROOTINIT | NSS_INIT_OPTIMIZESPACE;
   if (readOnly) {
     flags |= NSS_INIT_READONLY;
+  }
+  if (!loadPKCS11Modules) {
+    flags |= NSS_INIT_NOMODDB;
   }
   return ::NSS_Initialize(dir, "", "", SECMOD_DB, flags);
 }

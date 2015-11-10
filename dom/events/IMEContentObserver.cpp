@@ -202,7 +202,6 @@ IMEContentObserver::IMEContentObserver()
   , mNeedsToNotifyIMEOfTextChange(false)
   , mNeedsToNotifyIMEOfSelectionChange(false)
   , mNeedsToNotifyIMEOfPositionChange(false)
-  , mIsFlushingPendingNotifications(false)
   , mIsHandlingQueryContentEvent(false)
 {
 #ifdef DEBUG
@@ -251,25 +250,55 @@ IMEContentObserver::Init(nsIWidget* aWidget,
   }
 
   if (firstInitialization) {
+    // Now, try to send NOTIFY_IME_OF_FOCUS to IME via the widget.
     MaybeNotifyIMEOfFocusSet();
-
-    // While Init() notifies IME of focus, pending layout may be flushed
-    // because the notification may cause querying content.  Then, recursive
-    // call of Init() with the latest content may be occur.  In such case, we
-    // shouldn't keep first initialization.
-    if (GetState() != eState_Initializing) {
-      return;
-    }
-
-    // NOTIFY_IME_OF_FOCUS might cause recreating IMEContentObserver
-    // instance via IMEStateManager::UpdateIMEState().  So, this
-    // instance might already have been destroyed, check it.
-    if (!mRootContent) {
-      return;
-    }
+    // When this is called first time, IME has not received NOTIFY_IME_OF_FOCUS
+    // yet since NOTIFY_IME_OF_FOCUS will be sent to widget asynchronously.
+    // So, we need to do nothing here.  After NOTIFY_IME_OF_FOCUS has been
+    // sent, OnIMEReceivedFocus() will be called and content, selection and/or
+    // position changes will be observed
+    return;
   }
 
+  // When this is called after editor reframing (i.e., the root editable node
+  // is also recreated), IME has usually received NOTIFY_IME_OF_FOCUS.  In this
+  // case, we need to restart to observe content, selection and/or position
+  // changes in new root editable node.
   ObserveEditableNode();
+
+  if (!NeedsToNotifyIMEOfSomething()) {
+    return;
+  }
+
+  // Some change events may wait to notify IME because this was being
+  // initialized.  It is the time to flush them.
+  FlushMergeableNotifications();
+}
+
+void
+IMEContentObserver::OnIMEReceivedFocus()
+{
+  // While Init() notifies IME of focus, pending layout may be flushed
+  // because the notification may cause querying content.  Then, recursive
+  // call of Init() with the latest content may occur.  In such case, we
+  // shouldn't keep first initialization which notified IME of focus.
+  if (GetState() != eState_Initializing) {
+    return;
+  }
+
+  // NOTIFY_IME_OF_FOCUS might cause recreating IMEContentObserver
+  // instance via IMEStateManager::UpdateIMEState().  So, this
+  // instance might already have been destroyed, check it.
+  if (!mRootContent) {
+    return;
+  }
+
+  // Start to observe which is needed by IME when IME actually has focus.
+  ObserveEditableNode();
+
+  if (!NeedsToNotifyIMEOfSomething()) {
+    return;
+  }
 
   // Some change events may wait to notify IME because this was being
   // initialized.  It is the time to flush them.
@@ -403,6 +432,18 @@ IMEContentObserver::ObserveEditableNode()
   MOZ_RELEASE_ASSERT(mSelection);
   MOZ_RELEASE_ASSERT(mRootContent);
   MOZ_RELEASE_ASSERT(GetState() != eState_Observing);
+
+  // If this is called before sending NOTIFY_IME_OF_FOCUS (it's possible when
+  // the editor is reframed before sending NOTIFY_IME_OF_FOCUS asynchronously),
+  // the update preference of mWidget may be different from after the widget
+  // receives NOTIFY_IME_OF_FOCUS.   So, this should be called again by
+  // OnIMEReceivedFocus() which is called after sending NOTIFY_IME_OF_FOCUS.
+  if (!mIMEHasFocus) {
+    MOZ_ASSERT(!mWidget || mNeedsToNotifyIMEOfFocusSet ||
+               mSendingNotification == NOTIFY_IME_OF_FOCUS,
+               "Wow, OnIMEReceivedFocus() won't be called?");
+    return;
+  }
 
   mIsObserving = true;
   if (mEditor) {
@@ -668,9 +709,14 @@ nsresult
 IMEContentObserver::HandleQueryContentEvent(WidgetQueryContentEvent* aEvent)
 {
   // If the instance has cache, it should use the cached selection which was
-  // sent to the widget.
+  // sent to the widget.  However, if this instance has already received new
+  // selection change notification but hasn't updated the cache yet (i.e.,
+  // not sending selection change notification to IME, don't use the cached
+  // value.  Note that don't update selection cache here since if you update
+  // selection cache here, IMENotificationSender won't notify IME of selection
+  // change because it looks like that the selection isn't actually changed.
   if (aEvent->mMessage == eQuerySelectedText && aEvent->mUseNativeLineBreak &&
-      mSelectionData.IsValid()) {
+      mSelectionData.IsValid() && !mNeedsToNotifyIMEOfSelectionChange) {
     aEvent->mReply.mContentsRoot = mRootContent;
     aEvent->mReply.mHasSelection = !mSelectionData.IsCollapsed();
     aEvent->mReply.mOffset = mSelectionData.mOffset;
@@ -1314,7 +1360,7 @@ IMEContentObserver::FlushMergeableNotifications()
   // event. Then, it causes flushing layout which may cause another layout
   // change notification.
 
-  if (mIsFlushingPendingNotifications) {
+  if (mQueuedSender) {
     // So, if this is already called, this should do nothing.
     MOZ_LOG(sIMECOLog, LogLevel::Debug,
       ("IMECO: 0x%p   IMEContentObserver::FlushMergeableNotifications(), "
@@ -1336,12 +1382,30 @@ IMEContentObserver::FlushMergeableNotifications()
     ("IMECO: 0x%p IMEContentObserver::FlushMergeableNotifications(), "
      "creating IMENotificationSender...", this));
 
-  mIsFlushingPendingNotifications = true;
-  nsContentUtils::AddScriptRunner(new IMENotificationSender(this));
+  // If contents in selection range is modified, the selection range still
+  // has removed node from the tree.  In such case, nsContentIterator won't
+  // work well.  Therefore, we shouldn't use AddScriptRunnder() here since
+  // it may kick runnable event immediately after DOM tree is changed but
+  // the selection range isn't modified yet.
+  mQueuedSender = new IMENotificationSender(this);
+  NS_DispatchToCurrentThread(mQueuedSender);
 
   MOZ_LOG(sIMECOLog, LogLevel::Debug,
     ("IMECO: 0x%p IMEContentObserver::FlushMergeableNotifications(), "
      "finished", this));
+}
+
+void
+IMEContentObserver::TryToFlushPendingNotifications()
+{
+  if (!mQueuedSender || mSendingNotification != NOTIFY_IME_OF_NOTHING) {
+    return;
+  }
+
+  MOZ_LOG(sIMECOLog, LogLevel::Debug,
+    ("IMECO: 0x%p IMEContentObserver::TryToFlushPendingNotifications(), "
+     "performing queued IMENotificationSender forcibly", this));
+  mQueuedSender->Run();
 }
 
 /******************************************************************************
@@ -1410,7 +1474,20 @@ IMEContentObserver::AChangeEvent::IsSafeToNotifyIME(
 NS_IMETHODIMP
 IMEContentObserver::IMENotificationSender::Run()
 {
-  MOZ_ASSERT(mIMEContentObserver->mIsFlushingPendingNotifications);
+  if (NS_WARN_IF(mIsRunning)) {
+    MOZ_LOG(sIMECOLog, LogLevel::Error,
+      ("IMECO: 0x%p IMEContentObserver::IMENotificationSender::Run(), FAILED, "
+       "called recursively", this));
+    return NS_OK;
+  }
+
+  AutoRestore<bool> running(mIsRunning);
+  mIsRunning = true;
+
+  // This instance was already performed forcibly.
+  if (mIMEContentObserver->mQueuedSender != this) {
+    return NS_OK;
+  }
 
   // NOTE: Reset each pending flag because sending notification may cause
   //       another change.
@@ -1418,10 +1495,25 @@ IMEContentObserver::IMENotificationSender::Run()
   if (mIMEContentObserver->mNeedsToNotifyIMEOfFocusSet) {
     mIMEContentObserver->mNeedsToNotifyIMEOfFocusSet = false;
     SendFocusSet();
+    mIMEContentObserver->mQueuedSender = nullptr;
+    // If it's not safe to notify IME of focus, SendFocusSet() sets
+    // mNeedsToNotifyIMEOfFocusSet true again.  For guaranteeing to send the
+    // focus notification later,  we should put a new sender into the queue but
+    // this case must be rare.  Note that if mIMEContentObserver is already
+    // destroyed, mNeedsToNotifyIMEOfFocusSet is never set true again.
+    if (mIMEContentObserver->mNeedsToNotifyIMEOfFocusSet) {
+      MOZ_ASSERT(!mIMEContentObserver->mIMEHasFocus);
+      MOZ_LOG(sIMECOLog, LogLevel::Debug,
+        ("IMECO: 0x%p IMEContentObserver::IMENotificationSender::Run(), "
+         "posting IMENotificationSender to current thread", this));
+      mIMEContentObserver->mQueuedSender =
+        new IMENotificationSender(mIMEContentObserver);
+      NS_DispatchToCurrentThread(mIMEContentObserver->mQueuedSender);
+      return NS_OK;
+    }
     // This is the first notification to IME. So, we don't need to notify
     // anymore since IME starts to query content after it gets focus.
     mIMEContentObserver->ClearPendingNotifications();
-    mIMEContentObserver->mIsFlushingPendingNotifications = false;
     return NS_OK;
   }
 
@@ -1454,16 +1546,16 @@ IMEContentObserver::IMENotificationSender::Run()
     }
   }
 
+  mIMEContentObserver->mQueuedSender = nullptr;
+
   // If notifications caused some new change, we should notify them now.
-  mIMEContentObserver->mIsFlushingPendingNotifications =
-    mIMEContentObserver->NeedsToNotifyIMEOfSomething();
-  if (mIMEContentObserver->mIsFlushingPendingNotifications) {
+  if (mIMEContentObserver->NeedsToNotifyIMEOfSomething()) {
     MOZ_LOG(sIMECOLog, LogLevel::Debug,
       ("IMECO: 0x%p IMEContentObserver::IMENotificationSender::Run(), "
-       "posting AsyncMergeableNotificationsFlusher to current thread", this));
-    RefPtr<AsyncMergeableNotificationsFlusher> asyncFlusher =
-      new AsyncMergeableNotificationsFlusher(mIMEContentObserver);
-    NS_DispatchToCurrentThread(asyncFlusher);
+       "posting IMENotificationSender to current thread", this));
+    mIMEContentObserver->mQueuedSender =
+      new IMENotificationSender(mIMEContentObserver);
+    NS_DispatchToCurrentThread(mIMEContentObserver->mQueuedSender);
   }
   return NS_OK;
 }
@@ -1504,6 +1596,12 @@ IMEContentObserver::IMENotificationSender::SendFocusSet()
   IMEStateManager::NotifyIME(IMENotification(NOTIFY_IME_OF_FOCUS),
                              mIMEContentObserver->mWidget);
   mIMEContentObserver->mSendingNotification = NOTIFY_IME_OF_NOTHING;
+
+  // nsIMEUpdatePreference referred by ObserveEditableNode() may be different
+  // before or after widget receives NOTIFY_IME_OF_FOCUS.  Therefore, we need
+  // to guarantee to call ObserveEditableNode() after sending
+  // NOTIFY_IME_OF_FOCUS.
+  mIMEContentObserver->OnIMEReceivedFocus();
 
   MOZ_LOG(sIMECOLog, LogLevel::Debug,
     ("IMECO: 0x%p IMEContentObserver::IMENotificationSender::"
@@ -1666,33 +1764,6 @@ IMEContentObserver::IMENotificationSender::SendPositionChange()
   MOZ_LOG(sIMECOLog, LogLevel::Debug,
     ("IMECO: 0x%p IMEContentObserver::IMENotificationSender::"
      "SendPositionChange(), sent NOTIFY_IME_OF_POSITION_CHANGE", this));
-}
-
-/******************************************************************************
- * mozilla::IMEContentObserver::AsyncMergeableNotificationsFlusher
- ******************************************************************************/
-
-NS_IMETHODIMP
-IMEContentObserver::AsyncMergeableNotificationsFlusher::Run()
-{
-  if (!CanNotifyIME(eChangeEventType_FlushPendingEvents)) {
-    MOZ_LOG(sIMECOLog, LogLevel::Debug,
-      ("IMECO: 0x%p IMEContentObserver::AsyncMergeableNotificationsFlusher::"
-       "Run(), FAILED, due to impossible to flush pending notifications",
-       this));
-    return NS_OK;
-  }
-
-  MOZ_LOG(sIMECOLog, LogLevel::Info,
-    ("IMECO: 0x%p IMEContentObserver::AsyncMergeableNotificationsFlusher::"
-     "Run(), calling FlushMergeableNotifications()...", this));
-
-  mIMEContentObserver->FlushMergeableNotifications();
-
-  MOZ_LOG(sIMECOLog, LogLevel::Debug,
-    ("IMECO: 0x%p IMEContentObserver::AsyncMergeableNotificationsFlusher::"
-     "Run(), called FlushMergeableNotifications()", this));
-  return NS_OK;
 }
 
 } // namespace mozilla

@@ -35,7 +35,7 @@ extern PRLogModuleInfo* sCocoaLog;
 
 extern void EnsureLogInitialized();
 
-extern NSPasteboardWrapper* globalDragPboard;
+extern NSPasteboard* globalDragPboard;
 extern NSView* gLastDragView;
 extern NSEvent* gLastDragMouseDownEvent;
 extern bool gUserCancelledDrag;
@@ -48,46 +48,7 @@ NSString* const kWildcardPboardType = @"MozillaWildcard";
 NSString* const kCorePboardType_url  = @"CorePasteboardFlavorType 0x75726C20"; // 'url '  url
 NSString* const kCorePboardType_urld = @"CorePasteboardFlavorType 0x75726C64"; // 'urld'  desc
 NSString* const kCorePboardType_urln = @"CorePasteboardFlavorType 0x75726C6E"; // 'urln'  title
-
-@implementation NSPasteboardWrapper
-- (id)initWithPasteboard:(NSPasteboard*)aPasteboard
-{
-  if ((self = [super init])) {
-    mPasteboard = [aPasteboard retain];
-    mFilenames = nil;
-  }
-  return self;
-}
-
-- (id)propertyListForType:(NSString *)aType
-{
-  if (![aType isEqualToString:NSFilenamesPboardType]) {
-    return [mPasteboard propertyListForType:aType];
-  }
-
-  if (!mFilenames) {
-    mFilenames = [[mPasteboard propertyListForType:aType] retain];
-  }
-
-  return mFilenames;
-}
-
-- (NSPasteboard*) pasteboard
-{
-  return mPasteboard;
-}
-
-- (void)dealloc
-{
-  [mPasteboard release];
-  mPasteboard = nil;
-
-  [mFilenames release];
-  mFilenames = nil;
-
-  [super dealloc];
-}
-@end
+NSString* const kUTTypeURLName = @"public.url-name";
 
 nsDragService::nsDragService()
 {
@@ -270,6 +231,78 @@ nsDragService::ConstructDragImage(nsIDOMNode* aDOMNode,
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
+bool
+nsDragService::IsValidType(NSString* availableType, bool allowFileURL)
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
+  // Prevent exposing fileURL for non-fileURL type.
+  // We need URL provided by dropped webloc file, but don't need file's URL.
+  // kUTTypeFileURL is returned by [NSPasteboard availableTypeFromArray:] for
+  // kUTTypeURL, since it conforms to kUTTypeURL.
+  if (!allowFileURL && [availableType isEqualToString:(id)kUTTypeFileURL]) {
+    return false;
+  }
+
+  return true;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK(false);
+}
+
+NSString*
+nsDragService::GetStringForType(NSPasteboardItem* item, const NSString* type,
+                                bool allowFileURL)
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+
+  NSString* availableType = [item availableTypeFromArray:[NSArray arrayWithObjects:(id)type, nil]];
+  if (availableType && IsValidType(availableType, allowFileURL)) {
+    return [item stringForType:(id)availableType];
+  }
+
+  return nil;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
+}
+
+NSString*
+nsDragService::GetTitleForURL(NSPasteboardItem* item)
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+
+  NSString* name = GetStringForType(item, (const NSString*)kUTTypeURLName);
+  if (name) {
+    return name;
+  }
+
+  NSString* filePath = GetFilePath(item);
+  if (filePath) {
+    return [filePath lastPathComponent];
+  }
+
+  return nil;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
+}
+
+NSString*
+nsDragService::GetFilePath(NSPasteboardItem* item)
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
+
+  NSString* urlString = GetStringForType(item, (const NSString*)kUTTypeFileURL, true);
+  if (urlString) {
+    NSURL* url = [NSURL URLWithString:urlString];
+    if (url) {
+      return [url path];
+    }
+  }
+
+  return nil;
+
+  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
+}
+
 // We can only invoke NSView's 'dragImage:at:offset:event:pasteboard:source:slideBack:' from
 // within NSView's 'mouseDown:' or 'mouseDragged:'. Luckily 'mouseDragged' is always on the
 // stack when InvokeDragSession gets called.
@@ -403,12 +436,23 @@ nsDragService::GetData(nsITransferable* aTransferable, uint32_t aItemIndex)
 
     MOZ_LOG(sCocoaLog, LogLevel::Info, ("nsDragService::GetData: looking for clipboard data of type %s\n", flavorStr.get()));
 
-    if (flavorStr.EqualsLiteral(kFileMime)) {
-      NSArray* pFiles = [globalDragPboard propertyListForType:NSFilenamesPboardType];
-      if (!pFiles || [pFiles count] < (aItemIndex + 1))
-        continue;
+    NSArray* droppedItems = [globalDragPboard pasteboardItems];
+    if (!droppedItems) {
+      continue;
+    }
 
-      NSString* filePath = [pFiles objectAtIndex:aItemIndex];
+    uint32_t itemCount = [droppedItems count];
+    if (aItemIndex >= itemCount) {
+      continue;
+    }
+
+    NSPasteboardItem* item = [droppedItems objectAtIndex:aItemIndex];
+    if (!item) {
+      continue;
+    }
+
+    if (flavorStr.EqualsLiteral(kFileMime)) {
+      NSString* filePath = GetFilePath(item);
       if (!filePath)
         continue;
 
@@ -431,16 +475,26 @@ nsDragService::GetData(nsITransferable* aTransferable, uint32_t aItemIndex)
       break;
     }
 
-    NSString *pboardType = NSStringPboardType;
-
-    if (nsClipboard::IsStringType(flavorStr, &pboardType) ||
-        flavorStr.EqualsLiteral(kURLMime) ||
-        flavorStr.EqualsLiteral(kURLDataMime) ||
-        flavorStr.EqualsLiteral(kURLDescriptionMime)) {
-      NSString* pString = [[globalDragPboard pasteboard] stringForType:pboardType];
-      if (!pString)
-        continue;
-
+    NSString* pString = nil;
+    if (flavorStr.EqualsLiteral(kUnicodeMime)) {
+      pString = GetStringForType(item, (const NSString*)kUTTypeUTF8PlainText);
+    } else if (flavorStr.EqualsLiteral(kHTMLMime)) {
+      pString = GetStringForType(item, (const NSString*)kUTTypeHTML);
+    } else if (flavorStr.EqualsLiteral(kURLMime)) {
+      pString = GetStringForType(item, (const NSString*)kUTTypeURL);
+      if (pString) {
+        NSString* title = GetTitleForURL(item);
+        if (!title) {
+          title = pString;
+        }
+        pString = [NSString stringWithFormat:@"%@\n%@", pString, title];
+      }
+    } else if (flavorStr.EqualsLiteral(kURLDataMime)) {
+      pString = GetStringForType(item, (const NSString*)kUTTypeURL);
+    } else if (flavorStr.EqualsLiteral(kURLDescriptionMime)) {
+      pString = GetTitleForURL(item);
+    }
+    if (pString) {
       NSData* stringData = [pString dataUsingEncoding:NSUnicodeStringEncoding];
       unsigned int dataLength = [stringData length];
       void* clipboardDataPtr = malloc(dataLength);
@@ -533,22 +587,24 @@ nsDragService::IsDataFlavorSupported(const char *aDataFlavor, bool *_retval)
     }
   }
 
-  NSString *pboardType = nil;
-
+  const NSString* type = nil;
+  bool allowFileURL = false;
   if (dataFlavor.EqualsLiteral(kFileMime)) {
-    NSString* availableType = [[globalDragPboard pasteboard] availableTypeFromArray:[NSArray arrayWithObject:NSFilenamesPboardType]];
-    if (availableType && [availableType isEqualToString:NSFilenamesPboardType])
-      *_retval = true;
+    type = (const NSString*)kUTTypeFileURL;
+    allowFileURL = true;
+  } else if (dataFlavor.EqualsLiteral(kUnicodeMime)) {
+    type = (const NSString*)kUTTypeUTF8PlainText;
+  } else if (dataFlavor.EqualsLiteral(kHTMLMime)) {
+    type = (const NSString*)kUTTypeHTML;
+  } else if (dataFlavor.EqualsLiteral(kURLMime) ||
+             dataFlavor.EqualsLiteral(kURLDataMime)) {
+    type = (const NSString*)kUTTypeURL;
+  } else if (dataFlavor.EqualsLiteral(kURLDescriptionMime)) {
+    type = (const NSString*)kUTTypeURLName;
   }
-  else if (dataFlavor.EqualsLiteral(kURLMime)) {
-    NSString* availableType = [[globalDragPboard pasteboard] availableTypeFromArray:[NSArray arrayWithObject:kCorePboardType_url]];
-    if (availableType && [availableType isEqualToString:kCorePboardType_url])
-      *_retval = true;
-  }
-  else if (nsClipboard::IsStringType(dataFlavor, &pboardType)) {
-    NSString* availableType = [[globalDragPboard pasteboard] availableTypeFromArray:[NSArray arrayWithObject:pboardType]];
-    if (availableType && [availableType isEqualToString:pboardType])
-      *_retval = true;
+  NSString* availableType = [globalDragPboard availableTypeFromArray:[NSArray arrayWithObjects:(id)type, nil]];
+  if (availableType && IsValidType(availableType, allowFileURL)) {
+    *_retval = true;
   }
 
   return NS_OK;
@@ -569,18 +625,11 @@ nsDragService::GetNumDropItems(uint32_t* aNumItems)
     return NS_OK;
   }
 
-  // if there is a clipboard and there is something on it, then there is at least 1 item
-  NSArray* clipboardTypes = [[globalDragPboard pasteboard] types];
-  if (globalDragPboard && [clipboardTypes count] > 0)
-    *aNumItems = 1;
-  else 
-    return NS_OK;
-  
-  // if there is a list of files, send the number of files in that list
-  NSArray* fileNames = [globalDragPboard propertyListForType:NSFilenamesPboardType];
-  if (fileNames)
-    *aNumItems = [fileNames count];
-  
+  NSArray* droppedItems = [globalDragPboard pasteboardItems];
+  if (droppedItems) {
+    *aNumItems = [droppedItems count];
+  }
+
   return NS_OK;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;

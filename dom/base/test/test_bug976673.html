@@ -26,6 +26,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=976673
 
 SimpleTest.waitForExplicitFinish();
 
+// In e10s mode, ContentCacheInChild tries to retrieve selected text and
+// caret position when IMEContentObserver notifies IME of focus.  At this time,
+// we hit assertion in nsContentIterator.
+SimpleTest.expectAssertions(0, 6);
+
 window.addEventListener("mousedown", function (aEvent) { aEvent.preventDefault(); }, false);
 
 function testSetFocus(aEventType, aCallback)
