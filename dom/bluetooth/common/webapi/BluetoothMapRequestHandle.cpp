@@ -202,6 +202,7 @@ BluetoothMapRequestHandle::ReplyToSetMessageStatus(long aMasId,
 
 already_AddRefed<Promise>
 BluetoothMapRequestHandle::ReplyToSendMessage(long aMasId,
+                                              const nsAString& aHandleId,
                                               bool aStatus,
                                               ErrorResult& aRv)
 {
@@ -220,7 +221,7 @@ BluetoothMapRequestHandle::ReplyToSendMessage(long aMasId,
     return nullptr;
   }
 
-  bs->ReplyToMapSendMessage(aMasId, aStatus,
+  bs->ReplyToMapSendMessage(aMasId, aHandleId, aStatus,
     new BluetoothVoidReplyRunnable(nullptr, promise));
 
   return promise.forget();
