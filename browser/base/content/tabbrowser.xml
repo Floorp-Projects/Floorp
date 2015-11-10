@@ -4001,8 +4001,8 @@
               break;
             case "sizemodechange":
               if (aEvent.target == window) {
-                this.mCurrentBrowser.docShellIsActive =
-                  (window.windowState != window.STATE_MINIMIZED);
+                this.mCurrentBrowser.setDocShellIsActiveAndForeground(
+                  window.windowState != window.STATE_MINIMIZED);
               }
               break;
           }
