@@ -1480,7 +1480,6 @@ DrawTargetD2D1::CreateBrushForPattern(const Pattern &aPattern, Float aAlpha)
       return CreateTransparentBlackBrush();
     }
 
-    bool useSamplingRect = false;
     if (pat->mSamplingRect.IsEmpty()) {
       RefPtr<ID2D1Bitmap> bitmap;
       image->QueryInterface((ID2D1Bitmap**)getter_AddRefs(bitmap));

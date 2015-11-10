@@ -336,18 +336,6 @@ namespace mozilla {
 namespace detail {
 
 template<typename T>
-struct IsFunction
-{
-  static const bool value = false;
-};
-
-template<typename R, typename... A>
-struct IsFunction<R(A...)>
-{
-  static const bool value = true;
-};
-
-template<typename T>
 struct AssertionConditionType
 {
   typedef typename RemoveReference<T>::Type ValueT;
