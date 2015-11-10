@@ -195,6 +195,9 @@ PushRecord.prototype = {
   },
 
   quotaChanged() {
+    if (!this.hasPermission()) {
+      return Promise.resolve(false);
+    }
     return this.getLastVisit()
       .then(lastVisit => lastVisit > this.lastPush);
   },
@@ -207,18 +210,11 @@ PushRecord.prototype = {
     return this.quota === 0;
   },
 
-  toRegistration() {
+  toSubscription() {
     return {
       pushEndpoint: this.pushEndpoint,
       lastPush: this.lastPush,
       pushCount: this.pushCount,
-      p256dhKey: this.p256dhPublicKey,
-    };
-  },
-
-  toRegister() {
-    return {
-      pushEndpoint: this.pushEndpoint,
       p256dhKey: this.p256dhPublicKey,
     };
   },
