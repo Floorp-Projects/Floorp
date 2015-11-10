@@ -3411,6 +3411,7 @@ CSSParserImpl::ParseMediaQueryExpression(nsMediaQuery* aQuery)
   // case insensitive from CSS - must be lower cased
   nsContentUtils::ASCIIToLower(mToken.mIdent);
   nsDependentString featureString(mToken.mIdent, 0);
+  uint8_t satisfiedReqFlags = 0;
 
   // Strip off "min-"/"max-" prefix from featureString:
   if (StringBeginsWith(featureString, NS_LITERAL_STRING("min-"))) {
@@ -3426,7 +3427,11 @@ CSSParserImpl::ParseMediaQueryExpression(nsMediaQuery* aQuery)
   nsCOMPtr<nsIAtom> mediaFeatureAtom = do_GetAtom(featureString);
   const nsMediaFeature *feature = nsMediaFeatures::features;
   for (; feature->mName; ++feature) {
-    if (*(feature->mName) == mediaFeatureAtom) {
+    // See if name matches & all requirement flags are satisfied:
+    // (We check requirements by turning off all of the flags that have been
+    // satisfied, and then see if the result is 0.)
+    if (*(feature->mName) == mediaFeatureAtom &&
+        !(feature->mReqFlags & ~satisfiedReqFlags)) {
       break;
     }
   }
