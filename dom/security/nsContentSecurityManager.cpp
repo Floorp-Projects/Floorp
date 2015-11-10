@@ -425,7 +425,8 @@ nsContentSecurityManager::IsURIPotentiallyTrustworthy(nsIURI* aURI, bool* aIsTru
 
   if (scheme.EqualsLiteral("https") ||
       scheme.EqualsLiteral("file") ||
-      scheme.EqualsLiteral("app")) {
+      scheme.EqualsLiteral("app") ||
+      scheme.EqualsLiteral("wss")) {
     *aIsTrustWorthy = true;
     return NS_OK;
   }

@@ -203,26 +203,8 @@ this.PushServiceWebSocket = {
     }
   },
 
-  checkServerURI: function(serverURL) {
-    if (!serverURL) {
-      console.warn("checkServerURI: No dom.push.serverURL found");
-      return;
-    }
-
-    let uri;
-    try {
-      uri = Services.io.newURI(serverURL, null, null);
-    } catch(e) {
-      console.warn("checkServerURI: Error creating valid URI from",
-        "dom.push.serverURL", serverURL);
-      return null;
-    }
-
-    if (uri.scheme !== "wss") {
-      console.warn("checkServerURI: Unsupported websocket scheme", uri.scheme);
-      return null;
-    }
-    return uri;
+  validServerURI: function(serverURI) {
+    return serverURI.scheme == "ws" || serverURI.scheme == "wss";
   },
 
   get _UAID() {
