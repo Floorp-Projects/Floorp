@@ -88,6 +88,8 @@ public:
     {
       return mLastDevices;
     }
+    bool IsVolumeIndexesChanged();
+    void ClearVolumeIndexesChanged();
     void InitStreamVolume();
     uint32_t GetMaxIndex();
     uint32_t GetDefaultIndex();
@@ -111,6 +113,7 @@ public:
     const int32_t mStreamType;
     uint32_t mLastDevices;
     bool mIsDevicesChanged;
+    bool mIsVolumeIndexesChanged;
     nsDataHashtable<nsUint32HashKey, uint32_t> mVolumeIndexes;
   };
 
