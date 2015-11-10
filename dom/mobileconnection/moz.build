@@ -27,6 +27,7 @@ XPIDL_SOURCES += [
     'interfaces/nsIMobileCellInfo.idl',
     'interfaces/nsIMobileConnectionInfo.idl',
     'interfaces/nsIMobileConnectionService.idl',
+    'interfaces/nsIMobileDeviceIdentities.idl',
     'interfaces/nsIMobileNetworkInfo.idl',
     'interfaces/nsINeighboringCellInfo.idl',
 ]
