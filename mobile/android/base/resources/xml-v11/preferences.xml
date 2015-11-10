@@ -13,6 +13,7 @@
 
     <org.mozilla.gecko.preferences.SyncPreference android:key="android.not_a_preference.sync"
                                                   android:title="@string/pref_sync"
+                                                  android:icon="@drawable/sync_avatar_default"
                                                   android:summary="@string/pref_sync_summary"
                                                   android:persistent="false" />
 
@@ -41,8 +42,7 @@
 
     <PreferenceScreen android:title="@string/pref_category_accessibility"
                       android:summary="@string/pref_category_accessibility_summary"
-                      android:fragment="org.mozilla.gecko.preferences.GeckoPreferenceFragment"
-                      android:key="android.not_a_preference.accessibility.enabled" >
+                      android:fragment="org.mozilla.gecko.preferences.GeckoPreferenceFragment" >
         <extra android:name="resource"
                android:value="preferences_accessibility" />
     </PreferenceScreen>
@@ -50,7 +50,7 @@
     <PreferenceScreen android:title="@string/pref_category_advanced"
                       android:summary="@string/pref_category_advanced_summary"
                       android:fragment="org.mozilla.gecko.preferences.GeckoPreferenceFragment"
-                      android:key="android.not_a_preference.advanced.enabled" >
+                      android:key="android.not_a_preference.advanced_screen" >
         <extra android:name="resource"
                android:value="preferences_advanced"/>
     </PreferenceScreen>
