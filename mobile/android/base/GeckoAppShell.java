@@ -1224,7 +1224,7 @@ public class GeckoAppShell
 
         // Have a special handling for SMS, as the message body
         // is not extracted from the URI automatically.
-        if (!"sms".equals(scheme)) {
+        if (!"sms".equals(scheme) && !"smsto".equals(scheme)) {
             return intent;
         }
 
