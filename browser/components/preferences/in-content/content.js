@@ -74,7 +74,8 @@ var gContentPane = {
     setEventListener("notificationsDoNotDisturb", "command",
       gContentPane.toggleDoNotDisturbNotifications);
 
-    let notificationInfoURL = Services.urlFormatter.formatURLPref("browser.push.warning.infoURL");
+    let notificationInfoURL =
+      Services.urlFormatter.formatURLPref("app.support.baseURL") + "push";
     document.getElementById("notificationsPolicyLearnMore").setAttribute("href",
                                                                          notificationInfoURL);
 

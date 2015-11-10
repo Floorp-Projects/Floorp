@@ -2287,7 +2287,8 @@ BrowserGlue.prototype = {
                    "chrome://branding/content/about-logo.png";
     let title = gBrowserBundle.GetStringFromName("webNotifications.upgradeTitle");
     let text = gBrowserBundle.GetStringFromName("webNotifications.upgradeBody");
-    let url = Services.urlFormatter.formatURLPref("browser.push.warning.migrationURL");
+    let url = Services.urlFormatter.formatURLPref("app.support.baseURL") +
+      "push#w_upgraded-notifications";
 
     AlertsService.showAlertNotification(imageURL, title, text,
                                         true, url, clickCallback);
@@ -2765,7 +2766,8 @@ ContentPermissionPrompt.prototype = {
     }
 
     var options = {
-      learnMoreURL: Services.urlFormatter.formatURLPref("browser.push.warning.infoURL"),
+      learnMoreURL:
+        Services.urlFormatter.formatURLPref("app.support.baseURL") + "push",
     };
 
     this._showPrompt(aRequest, message, "desktop-notification", actions,

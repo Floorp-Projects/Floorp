@@ -116,8 +116,7 @@ user_pref("network.sntp.pools", "%(server)s");
 user_pref("network.sntp.maxRetryCount", 1);
 
 // Make sure the notification permission migration test doesn't hit the network.
-user_pref("browser.push.warning.infoURL", "http://%(server)s/alerts-dummy/infoURL");
-user_pref("browser.push.warning.migrationURL", "http://%(server)s/alerts-dummy/migrationURL");
+user_pref("app.support.baseURL", "http://%(server)s/support-dummy/");
 
 // Existing tests don't wait for the notification button security delay
 user_pref("security.notification_enable_delay", 0);
