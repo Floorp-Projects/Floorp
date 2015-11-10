@@ -17,7 +17,7 @@
   </project>
   <project name="rilproxy" path="rilproxy" remote="b2g" revision="5ef30994f4778b4052e58a4383dbe7890048c87e"/>
   <project name="fake-libdvm" path="dalvik" remote="b2g" revision="d50ae982b19f42f0b66d08b9eb306be81687869f"/>
-  <project name="gaia" path="gaia" remote="mozillaorg" revision="23cab7ea0fcecab7689d340baf604e024e88f9a3"/>
+  <project name="gaia" path="gaia" remote="mozillaorg" revision="cf650aa1521151d5e4ac6d04188f911712271ec1"/>
   <project name="gonk-misc" path="gonk-misc" remote="b2g" revision="956700d9754349b630a34551750ae6353614b6aa"/>
   <project name="moztt" path="external/moztt" remote="b2g" revision="aa5b7b7f6ed207ea1adc4df11d1d8bdaeabadd85"/>
   <project name="apitrace" path="external/apitrace" remote="apitrace" revision="e76ff4b6b6357cf5c54dfafefbef8d1f2692db85"/>
@@ -31,7 +31,7 @@
   <project groups="linux" name="platform/prebuilts/gcc/linux-x86/host/x86_64-linux-glibc2.7-4.6" path="prebuilts/gcc/linux-x86/host/x86_64-linux-glibc2.7-4.6" revision="b89fda71fcd0fa0cf969310e75be3ea33e048b44"/>
   <project groups="linux,arm" name="platform/prebuilts/gcc/linux-x86/arm/arm-eabi-4.7" path="prebuilts/gcc/linux-x86/arm/arm-eabi-4.7" revision="2e7d5348f35575870b3c7e567a9a9f6d66f8d6c5"/>
   <project groups="linux,arm" name="platform/prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-4.7" path="prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-4.7" revision="1342fd7b4b000ac3e76a5dfe111a0de9d710b4c8"/>
-  <project groups="linux,arm" name="platform/prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-4.9" path="prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-4.9" revision="788ff6cb8bf486ed7564c26111ee6ca7150f634b"/>
+  <project groups="linux,arm" name="platform/prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-4.9" path="prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-4.9" revision="66012bd0f0e9917a2e1d933305d0c9265a1f7147"/>
   <project groups="linux,x86" name="platform/prebuilts/gcc/linux-x86/x86/i686-linux-android-4.7" path="prebuilts/gcc/linux-x86/x86/i686-linux-android-4.7" revision="1b26ad444462ccbd97f6319565b4735f7bd779e5"/>
   <project name="device/common" path="device/common" revision="4e1a38704dcfadef60ed2da3cfeba02a56b069d2"/>
   <project name="device/sample" path="device/sample" revision="b045905b46c8b4ee630d0c2aee7db63eaec722d9"/>

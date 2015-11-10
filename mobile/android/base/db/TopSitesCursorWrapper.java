@@ -486,7 +486,7 @@ public class TopSitesCursorWrapper implements Cursor {
         throw new UnsupportedOperationException();
     }
 
-    // @Override - Method has been introduced in Android M. Add @Override annotation as soon as we are building with the M SDK - Bug 1193205
+    @Override
     public void setExtras(Bundle extras) {
         throw new UnsupportedOperationException();
     }
