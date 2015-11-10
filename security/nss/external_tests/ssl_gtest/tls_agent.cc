@@ -405,7 +405,7 @@ void TlsAgent::EnableExtendedMasterSecret() {
 }
 
 void TlsAgent::CheckExtendedMasterSecret(bool expected) {
-  ASSERT_EQ(expected, info_.extendedMasterSecretUsed != PR_FALSE)
+  ASSERT_EQ(expected, static_cast<bool>(info_.extendedMasterSecretUsed))
       << "unexpected extended master secret state for " << name_;
 }
 

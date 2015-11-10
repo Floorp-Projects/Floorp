@@ -4,7 +4,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 include $(CORE_DEPTH)/coreconf/UNIX.mk
-include $(CORE_DEPTH)/coreconf/Werror.mk
 
 #
 # The default implementation strategy for Linux is now pthreads
@@ -133,15 +132,69 @@ endif
 endif
 
 ifndef COMPILER_TAG
-COMPILER_TAG := _$(CC_NAME)
+COMPILER_TAG = _$(shell $(CC) -? 2>&1 >/dev/null | sed -e 's/:.*//;1q')
+CCC_COMPILER_TAG = _$(shell $(CCC) -? 2>&1 >/dev/null | sed -e 's/:.*//;1q')
 endif
 
 ifeq ($(USE_PTHREADS),1)
 OS_PTHREAD = -lpthread 
 endif
 
-OS_CFLAGS		= $(DSO_CFLAGS) $(OS_REL_CFLAGS) $(ARCHFLAG) $(WARNING_CFLAGS) -pipe -ffunction-sections -fdata-sections -DLINUX -Dlinux -DHAVE_STRERROR
+OS_CFLAGS		= $(DSO_CFLAGS) $(OS_REL_CFLAGS) $(ARCHFLAG) -Wall -pipe -ffunction-sections -fdata-sections -DLINUX -Dlinux -DHAVE_STRERROR
 OS_LIBS			= $(OS_PTHREAD) -ldl -lc
+
+# This tests to see if enabling the warning is possible before
+# setting an option to disable it.
+disable_warning=$(shell $(CC) -x c -E -Werror -W$(1) /dev/null >/dev/null 2>&1 && echo -Wno-$(1))
+
+ifeq ($(COMPILER_TAG),_clang)
+  # -Qunused-arguments : clang objects to arguments that it doesn't understand
+  #    and fixing this would require rearchitecture
+  OS_CFLAGS += -Qunused-arguments
+  # -Wno-parentheses-equality : because clang warns about macro expansions
+  OS_CFLAGS += $(call disable_warning,parentheses-equality)
+  ifdef BUILD_OPT
+    # clang is unable to handle glib's expansion of strcmp and similar for optimized
+    # builds, so ignore the resulting errors.
+    # See https://llvm.org/bugs/show_bug.cgi?id=20144
+    OS_CFLAGS += $(call disable_warning,array-bounds)
+    OS_CFLAGS += $(call disable_warning,unevaluated-expression)
+  endif
+endif
+
+ifndef NSS_ENABLE_WERROR
+  ifneq ($(OS_TARGET),Android)
+    # Android lollipop generates the following warning:
+    # error: call to 'sprintf' declared with attribute warning:
+    #   sprintf is often misused; please use snprintf [-Werror]
+    # So, just suppress -Werror entirely on Android
+    NSS_ENABLE_WERROR = 0
+    $(warning !!! OS_TARGET is Android, disabling -Werror)
+  else
+    ifeq ($(COMPILER_TAG),_clang)
+      # Clang reports its version as an older gcc, but it's OK
+      NSS_ENABLE_WERROR = 1
+    else
+      NSS_ENABLE_WERROR := $(shell \
+        [ `$(CC) -dumpversion | cut -f 1 -d . -` -eq 4 -a \
+          `$(CC) -dumpversion | cut -f 2 -d . -` -ge 8 -o \
+          `$(CC) -dumpversion | cut -f 1 -d . -` -ge 5 ] && \
+        echo 1 || echo 0)
+      ifneq ($(NSS_ENABLE_WERROR),1)
+        $(warning !!! Unable to find gcc 4.8 or greater, disabling -Werror)
+      endif
+    endif
+  endif
+  export NSS_ENABLE_WERROR
+endif
+
+ifeq (1,$(NSS_ENABLE_WERROR))
+  OS_CFLAGS += -Werror
+else
+  # Old versions of gcc (< 4.8) don't support #pragma diagnostic in functions.
+  # Use this to disable use of that #pragma and the warnings it suppresses.
+  OS_CFLAGS += -DNSS_NO_GCC48
+endif
 
 ifdef USE_PTHREADS
 	DEFINES		+= -D_REENTRANT
