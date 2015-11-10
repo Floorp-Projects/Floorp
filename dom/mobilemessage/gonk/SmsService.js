@@ -1410,7 +1410,9 @@ SmsSendingScheduler.prototype = {
   notifyClirModeChanged: function(mode) {},
   notifyLastKnownNetworkChanged: function() {},
   notifyLastKnownHomeNetworkChanged: function() {},
-  notifyNetworkSelectionModeChanged: function() {}
+  notifyNetworkSelectionModeChanged: function() {},
+  notifyDeviceIdentitiesChanged: function() {}
+
 };
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([SmsService]);

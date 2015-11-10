@@ -462,6 +462,22 @@ CdmaCellInfo.prototype = {
   evdoSnr: UNKNOWN_VALUE
 };
 
+function MobileDeviceIdentities(aImei, aImeisv, aEsn, aMeid) {
+  this.imei = aImei;
+  this.imeisv = aImeisv;
+  this.esn = aEsn;
+  this.meid = aMeid;
+}
+MobileDeviceIdentities.prototype = {
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIMobileDeviceIdentities]),
+
+  // nsIMobileDeviceIdentities
+  imei: null,
+  imeisv: null,
+  esn: null,
+  meid: null
+};
+
 function MobileConnectionProvider(aClientId, aRadioInterface) {
   this._clientId = aClientId;
   this._radioInterface = aRadioInterface;
@@ -501,6 +517,7 @@ MobileConnectionProvider.prototype = {
   lastKnownNetwork: null,
   lastKnownHomeNetwork: null,
   supportedNetworkTypes: null,
+  deviceIdentities: null,
 
   /**
    * A utility function to dump debug message.
@@ -959,6 +976,17 @@ MobileConnectionProvider.prototype = {
     this.deliverListenerEvent("notifyCFStateChanged",
                               [aAction, aReason, aNumber, aTimeSeconds,
                                aServiceClass]);
+  },
+
+  notifyDeviceIdentitiesChanged: function(aImei, aImeisv, aEsn, aMeid) {
+    if (this.deviceIdentities) {
+      if (DEBUG) this._debug("deviceIdentities shall not be changed once being updated.");
+      return;
+    }
+
+    this.deviceIdentities =
+      new MobileDeviceIdentities(aImei, aImeisv, aEsn, aMeid);
+    this.deliverListenerEvent("notifyDeviceIdentitiesChanged");
   },
 
   getSupportedNetworkTypes: function(aTypes) {
@@ -1691,6 +1719,12 @@ MobileConnectionService.prototype = {
   notifyCdmaInfoRecAudioControl: function(aClientId, aUpLink, aDownLink) {
     gMobileConnectionMessenger
       .notifyCdmaInfoRecAudioControl(aClientId, aUpLink, aDownLink);
+  },
+
+  notifyDeviceIdentitiesChanged: function(aClientId, aImei, aImeisv,
+                                          aEsn, aMeid) {
+    this.getItemByServiceId(aClientId)
+      .notifyDeviceIdentitiesChanged(aImei, aImeisv, aEsn, aMeid);
   },
 
   /**

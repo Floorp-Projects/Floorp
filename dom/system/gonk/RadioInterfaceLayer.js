@@ -768,6 +768,13 @@ RadioInterface.prototype = {
       case "otastatuschange":
         gMobileConnectionService.notifyOtaStatusChanged(this.clientId, message.status);
         break;
+      case "deviceidentitieschange":
+        gMobileConnectionService.notifyDeviceIdentitiesChanged(this.clientId,
+                                                               message.deviceIdentities.imei,
+                                                               message.deviceIdentities.imeisv,
+                                                               message.deviceIdentities.esn,
+                                                               message.deviceIdentities.meid);
+        break;
       case "radiostatechange":
         // gRadioEnabledController should know the radio state for each client,
         // so notify gRadioEnabledController here.
