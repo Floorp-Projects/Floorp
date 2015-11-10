@@ -39,3 +39,8 @@ Built-in Conditions
 ^^^^^^^^^^^^^^^^^^^
 .. automodule:: marionette_driver.expected
    :members:
+
+Addons
+------
+.. autoclass:: marionette_driver.addons.Addons
+   :members:

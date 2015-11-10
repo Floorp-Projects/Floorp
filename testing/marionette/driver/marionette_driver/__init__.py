@@ -5,6 +5,7 @@
 __version__ = '1.1.0'
 
 from marionette_driver import (
+    addons,
     by,
     date_time_value,
     decorators,
