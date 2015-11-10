@@ -11,7 +11,7 @@ public class HealthReportConstants {
   public static final String HEALTH_AUTHORITY = AppConstants.ANDROID_PACKAGE_NAME + ".health";
   public static final String GLOBAL_LOG_TAG = "GeckoHealth";
 
-  public static final String USER_AGENT = "Firefox-Android-HealthReport/" + AppConstants.MOZ_APP_VERSION + " (" + AppConstants.MOZ_APP_DISPLAYNAME + ")";
+  public static final String USER_AGENT = "Firefox-Android-HealthReport/" + AppConstants.MOZ_APP_VERSION + " (" + AppConstants.MOZ_APP_UA_NAME + ")";
 
   /**
    * The earliest allowable value for the last ping time, corresponding to May 2nd 2013.

@@ -14,6 +14,7 @@
     <org.mozilla.gecko.preferences.SyncPreference android:key="android.not_a_preference.sync"
                                                   android:title="@string/pref_sync"
                                                   android:summary="@string/pref_sync_summary"
+                                                  android:icon="@drawable/sync_avatar_default"
                                                   android:persistent="false" />
 
     <PreferenceScreen android:title="@string/pref_category_general"

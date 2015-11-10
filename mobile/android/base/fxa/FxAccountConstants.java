@@ -37,7 +37,7 @@ public class FxAccountConstants {
   // You must wait 15 minutes after failing an age check before trying to create a different account.
   public static final long MINIMUM_TIME_TO_WAIT_AFTER_AGE_CHECK_FAILED_IN_MILLISECONDS = 15 * 60 * 1000;
 
-  public static final String USER_AGENT = "Firefox-Android-FxAccounts/" + AppConstants.MOZ_APP_VERSION + " (" + AppConstants.MOZ_APP_DISPLAYNAME + ")";
+  public static final String USER_AGENT = "Firefox-Android-FxAccounts/" + AppConstants.MOZ_APP_VERSION + " (" + AppConstants.MOZ_APP_UA_NAME + ")";
 
   public static final String ACCOUNT_PICKLE_FILENAME = "fxa.account.json";
 

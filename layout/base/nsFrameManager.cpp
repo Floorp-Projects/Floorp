@@ -78,7 +78,6 @@ static const PLDHashTableOps PlaceholderMapOps = {
 
 nsFrameManagerBase::nsFrameManagerBase()
   : mPresShell(nullptr)
-  , mStyleSet(nullptr)
   , mRootFrame(nullptr)
   , mPlaceholderMap(&PlaceholderMapOps, sizeof(PlaceholderMapEntry))
   , mUndisplayedMap(nullptr)

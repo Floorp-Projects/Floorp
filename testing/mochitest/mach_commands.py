@@ -613,8 +613,9 @@ class RobocopCommands(MachCommandBase):
                                                 'mochitest', 'robocop.ini')
 
         if not kwargs.get('robocopApk'):
-            kwargs['robocopApk'] = os.path.join(self.topobjdir, 'build', 'mobile',
-                                                'robocop', 'robocop-debug.apk')
+            kwargs['robocopApk'] = os.path.join(self.topobjdir, 'mobile', 'android',
+                                                'tests', 'browser', 'robocop',
+                                                'robocop-debug.apk')
 
         from mozbuild.controller.building import BuildDriver
         self._ensure_state_subdir_exists('.')
