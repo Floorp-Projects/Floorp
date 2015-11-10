@@ -17,6 +17,9 @@ add_task(function* test_notifications() {
 
     var opts = {title: "Testing Notification", message: "Carry on"};
 
+    // Test an unimplemented listener.
+    browser.notifications.onClicked.addListener(function() {});
+
     browser.notifications.create("5", opts, function(id) {
       browser.test.sendMessage("running", id);
       browser.test.notifyPass("background test passed");
