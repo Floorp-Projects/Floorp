@@ -135,6 +135,7 @@ using namespace mozilla::gfx;
 #define STICKY_ENABLED_PREF_NAME "layout.css.sticky.enabled"
 #define DISPLAY_CONTENTS_ENABLED_PREF_NAME "layout.css.display-contents.enabled"
 #define TEXT_ALIGN_TRUE_ENABLED_PREF_NAME "layout.css.text-align-true-value.enabled"
+#define FLOAT_LOGICAL_VALUES_ENABLED_PREF_NAME "layout.css.float-logical-values.enabled"
 
 #ifdef DEBUG
 // TODO: remove, see bug 598468.
@@ -382,6 +383,61 @@ TextAlignTrueEnabledPrefChangeCallback(const char* aPrefName, void* aClosure)
   MOZ_ASSERT(sIndexOfTrueInTextAlignLastTable >= 0);
   nsCSSProps::kTextAlignLastKTable[sIndexOfTrueInTextAlignLastTable] =
     isTextAlignTrueEnabled ? eCSSKeyword_true : eCSSKeyword_UNKNOWN;
+}
+
+// When the pref "layout.css.float-logical-values.enabled" changes, this
+// function is called to let us update kFloatKTable & kClearKTable,
+// to selectively disable or restore the entries for logical values
+// (inline-start and inline-end) in those tables.
+static void
+FloatLogicalValuesEnabledPrefChangeCallback(const char* aPrefName,
+                                            void* aClosure)
+{
+  NS_ASSERTION(strcmp(aPrefName, FLOAT_LOGICAL_VALUES_ENABLED_PREF_NAME) == 0,
+               "Did you misspell " FLOAT_LOGICAL_VALUES_ENABLED_PREF_NAME " ?");
+
+  static bool sIsInitialized;
+  static int32_t sIndexOfInlineStartInFloatTable;
+  static int32_t sIndexOfInlineEndInFloatTable;
+  static int32_t sIndexOfInlineStartInClearTable;
+  static int32_t sIndexOfInlineEndInClearTable;
+  bool isFloatLogicalValuesEnabled =
+    Preferences::GetBool(FLOAT_LOGICAL_VALUES_ENABLED_PREF_NAME, false);
+
+  if (!sIsInitialized) {
+    // First run: find the position of "inline-start" in kFloatKTable.
+    sIndexOfInlineStartInFloatTable =
+      nsCSSProps::FindIndexOfKeyword(eCSSKeyword_inline_start,
+                                     nsCSSProps::kFloatKTable);
+    // First run: find the position of "inline-end" in kFloatKTable.
+    sIndexOfInlineEndInFloatTable =
+      nsCSSProps::FindIndexOfKeyword(eCSSKeyword_inline_end,
+                                     nsCSSProps::kFloatKTable);
+    // First run: find the position of "inline-start" in kClearKTable.
+    sIndexOfInlineStartInClearTable =
+      nsCSSProps::FindIndexOfKeyword(eCSSKeyword_inline_start,
+                                     nsCSSProps::kClearKTable);
+    // First run: find the position of "inline-end" in kClearKTable.
+    sIndexOfInlineEndInClearTable =
+      nsCSSProps::FindIndexOfKeyword(eCSSKeyword_inline_end,
+                                     nsCSSProps::kClearKTable);
+    sIsInitialized = true;
+  }
+
+  // OK -- now, stomp on or restore the logical entries in the keyword tables,
+  // depending on whether the pref is enabled vs. disabled.
+  MOZ_ASSERT(sIndexOfInlineStartInFloatTable >= 0);
+  nsCSSProps::kFloatKTable[sIndexOfInlineStartInFloatTable] =
+    isFloatLogicalValuesEnabled ? eCSSKeyword_inline_start : eCSSKeyword_UNKNOWN;
+  MOZ_ASSERT(sIndexOfInlineEndInFloatTable >= 0);
+  nsCSSProps::kFloatKTable[sIndexOfInlineEndInFloatTable] =
+    isFloatLogicalValuesEnabled ? eCSSKeyword_inline_end : eCSSKeyword_UNKNOWN;
+  MOZ_ASSERT(sIndexOfInlineStartInClearTable >= 0);
+  nsCSSProps::kClearKTable[sIndexOfInlineStartInClearTable] =
+    isFloatLogicalValuesEnabled ? eCSSKeyword_inline_start : eCSSKeyword_UNKNOWN;
+  MOZ_ASSERT(sIndexOfInlineEndInClearTable >= 0);
+  nsCSSProps::kClearKTable[sIndexOfInlineEndInClearTable] =
+    isFloatLogicalValuesEnabled ? eCSSKeyword_inline_end : eCSSKeyword_UNKNOWN;
 }
 
 bool
@@ -7369,6 +7425,10 @@ nsLayoutUtils::Initialize()
                                            nullptr);
   TextAlignTrueEnabledPrefChangeCallback(TEXT_ALIGN_TRUE_ENABLED_PREF_NAME,
                                          nullptr);
+  Preferences::RegisterCallback(FloatLogicalValuesEnabledPrefChangeCallback,
+                                FLOAT_LOGICAL_VALUES_ENABLED_PREF_NAME);
+  FloatLogicalValuesEnabledPrefChangeCallback(FLOAT_LOGICAL_VALUES_ENABLED_PREF_NAME,
+                                              nullptr);
 
   nsComputedDOMStyle::RegisterPrefChangeCallbacks();
 }
