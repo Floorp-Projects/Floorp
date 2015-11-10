@@ -3410,16 +3410,17 @@ CSSParserImpl::ParseMediaQueryExpression(nsMediaQuery* aQuery)
 
   // case insensitive from CSS - must be lower cased
   nsContentUtils::ASCIIToLower(mToken.mIdent);
-  const char16_t *featureString;
-  if (StringBeginsWith(mToken.mIdent, NS_LITERAL_STRING("min-"))) {
+  nsDependentString featureString(mToken.mIdent, 0);
+
+  // Strip off "min-"/"max-" prefix from featureString:
+  if (StringBeginsWith(featureString, NS_LITERAL_STRING("min-"))) {
     expr->mRange = nsMediaExpression::eMin;
-    featureString = mToken.mIdent.get() + 4;
-  } else if (StringBeginsWith(mToken.mIdent, NS_LITERAL_STRING("max-"))) {
+    featureString.Rebind(featureString, 4);
+  } else if (StringBeginsWith(featureString, NS_LITERAL_STRING("max-"))) {
     expr->mRange = nsMediaExpression::eMax;
-    featureString = mToken.mIdent.get() + 4;
+    featureString.Rebind(featureString, 4);
   } else {
     expr->mRange = nsMediaExpression::eEqual;
-    featureString = mToken.mIdent.get();
   }
 
   nsCOMPtr<nsIAtom> mediaFeatureAtom = do_GetAtom(featureString);
