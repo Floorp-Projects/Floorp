@@ -148,6 +148,13 @@ public:
   IsScoConnected(BluetoothReplyRunnable* aRunnable);
 
   virtual void
+  SetObexPassword(const nsAString& aPassword,
+                  BluetoothReplyRunnable* aRunnable);
+
+  virtual void
+  RejectObexAuth(BluetoothReplyRunnable* aRunnable);
+
+  virtual void
   ReplyTovCardPulling(BlobParent* aBlobParent,
                       BlobChild* aBlobChild,
                       BluetoothReplyRunnable* aRunnable);
