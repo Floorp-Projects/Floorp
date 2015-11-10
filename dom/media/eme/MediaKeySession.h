@@ -92,6 +92,8 @@ public:
 
   bool IsClosed() const;
 
+  void SetExpiration(double aExpiry);
+
   // Process-unique identifier.
   uint32_t Token() const;
 
@@ -99,6 +101,14 @@ private:
   ~MediaKeySession();
 
   void UpdateKeyStatusMap();
+
+  bool IsCallable() const {
+    // The EME spec sets the "callable value" to true whenever the CDM sets
+    // the sessionId. When the session is initialized, sessionId is empty and
+    // callable is thus false.
+    return !mSessionId.IsEmpty();
+  }
+
   already_AddRefed<DetailedPromise> MakePromise(ErrorResult& aRv,
                                                 const nsACString& aName);
 
@@ -114,6 +124,7 @@ private:
   bool mIsClosed;
   bool mUninitialized;
   RefPtr<MediaKeyStatusMap> mKeyStatusMap;
+  double mExpiration;
 };
 
 } // namespace dom

@@ -61,10 +61,7 @@ add_task(function* test_register_wrong_id() {
   yield rejects(
     PushNotificationService.register('https://example.com/mismatched',
       ChromeUtils.originAttributesToSuffix({ appId: Ci.nsIScriptSecurityManager.NO_APP_ID, inBrowser: false })),
-    function(error) {
-      return error == 'TimeoutError';
-    },
-    'Wrong error for mismatched register reply'
+    'Expected error for mismatched register reply'
   );
 
   yield waitForPromise(helloPromise, DEFAULT_TIMEOUT,

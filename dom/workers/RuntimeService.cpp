@@ -1590,7 +1590,6 @@ RuntimeService::RemoveSharedWorker(WorkerDomainInfo* aDomainInfo,
     SharedWorkerInfo* data = iter.UserData();
     if (data->mWorkerPrivate == aWorkerPrivate) {
 #ifdef DEBUG
-      fprintf(stderr, "njn: RemoveSharedWorker\n");
       nsAutoCString key;
       GenerateSharedWorkerKey(data->mScriptSpec, data->mName,
                               aWorkerPrivate->IsInPrivateBrowsing(), key);

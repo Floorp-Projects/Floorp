@@ -28,17 +28,15 @@ const {
 
 this.EXPORTED_SYMBOLS = ["PushServiceHttp2"];
 
+XPCOMUtils.defineLazyGetter(this, "console", () => {
+  let {ConsoleAPI} = Cu.import("resource://gre/modules/Console.jsm", {});
+  return new ConsoleAPI({
+    maxLogLevelPref: "dom.push.loglevel",
+    prefix: "PushServiceHttp2",
+  });
+});
+
 const prefs = new Preferences("dom.push.");
-
-// Don't modify this, instead set dom.push.debug.
-// Set debug first so that all debugging actually works.
-var gDebuggingEnabled = prefs.get("debug");
-
-function debug(s) {
-  if (gDebuggingEnabled) {
-    dump("-*- PushServiceHttp2.jsm: " + s + "\n");
-  }
-}
 
 const kPUSHHTTP2DB_DB_NAME = "pushHttp2";
 const kPUSHHTTP2DB_DB_VERSION = 5; // Change this if the IndexedDB format changes
@@ -53,7 +51,7 @@ const kPUSHHTTP2DB_STORE_NAME = "pushHttp2";
  * It's easier to stop listening than to have checks at specific points.
  */
 var PushSubscriptionListener = function(pushService, uri) {
-  debug("Creating a new pushSubscription listener.");
+  console.debug("PushSubscriptionListener()");
   this._pushService = pushService;
   this.uri = uri;
 };
@@ -73,12 +71,12 @@ PushSubscriptionListener.prototype = {
   },
 
   onStartRequest: function(aRequest, aContext) {
-    debug("PushSubscriptionListener onStartRequest()");
+    console.debug("PushSubscriptionListener: onStartRequest()");
     // We do not do anything here.
   },
 
   onDataAvailable: function(aRequest, aContext, aStream, aOffset, aCount) {
-    debug("PushSubscriptionListener onDataAvailable()");
+    console.debug("PushSubscriptionListener: onDataAvailable()");
     // Nobody should send data, but just to be sure, otherwise necko will
     // complain.
     if (aCount === 0) {
@@ -93,7 +91,7 @@ PushSubscriptionListener.prototype = {
   },
 
   onStopRequest: function(aRequest, aContext, aStatusCode) {
-    debug("PushSubscriptionListener onStopRequest()");
+    console.debug("PushSubscriptionListener: onStopRequest()");
     if (!this._pushService) {
         return;
     }
@@ -104,7 +102,7 @@ PushSubscriptionListener.prototype = {
   },
 
   onPush: function(associatedChannel, pushChannel) {
-    debug("PushSubscriptionListener onPush()");
+    console.debug("PushSubscriptionListener: onPush()");
     var pushChannelListener = new PushChannelListener(this);
     pushChannel.asyncOpen(pushChannelListener, pushChannel);
   },
@@ -119,7 +117,7 @@ PushSubscriptionListener.prototype = {
  * OnDataAvailable and send to the app in OnStopRequest.
  */
 var PushChannelListener = function(pushSubscriptionListener) {
-  debug("Creating a new push channel listener.");
+  console.debug("PushChannelListener()");
   this._mainListener = pushSubscriptionListener;
   this._message = [];
   this._ackUri = null;
@@ -132,7 +130,7 @@ PushChannelListener.prototype = {
   },
 
   onDataAvailable: function(aRequest, aContext, aStream, aOffset, aCount) {
-    debug("push channel listener onDataAvailable()");
+    console.debug("PushChannelListener: onDataAvailable()");
 
     if (aCount === 0) {
       return;
@@ -148,7 +146,8 @@ PushChannelListener.prototype = {
   },
 
   onStopRequest: function(aRequest, aContext, aStatusCode) {
-    debug("push channel listener onStopRequest()  status code:" + aStatusCode);
+    console.debug("PushChannelListener: onStopRequest()", "status code",
+      aStatusCode);
     if (Components.isSuccessCode(aStatusCode) &&
         this._mainListener &&
         this._mainListener._pushService) {
@@ -228,14 +227,14 @@ PushServiceDelete.prototype = {
     if (Components.isSuccessCode(aStatusCode)) {
        this._resolve();
     } else {
-       this._reject({status: 0, error: "NetworkError"});
+       this._reject(new Error("Error removing subscription: " + aStatusCode));
     }
   }
 };
 
 var SubscriptionListener = function(aSubInfo, aResolve, aReject,
                                     aServerURI, aPushServiceHttp2) {
-  debug("Creating a new subscription listener.");
+  console.debug("SubscriptionListener()");
   this._subInfo = aSubInfo;
   this._resolve = aResolve;
   this._reject = aReject;
@@ -250,7 +249,7 @@ SubscriptionListener.prototype = {
   onStartRequest: function(aRequest, aContext) {},
 
   onDataAvailable: function(aRequest, aContext, aStream, aOffset, aCount) {
-    debug("subscription listener onDataAvailable()");
+    console.debug("SubscriptionListener: onDataAvailable()");
 
     // We do not expect any data, but necko will complain if we do not consume
     // it.
@@ -266,16 +265,16 @@ SubscriptionListener.prototype = {
   },
 
   onStopRequest: function(aRequest, aContext, aStatus) {
-    debug("subscription listener onStopRequest()");
+    console.debug("SubscriptionListener: onStopRequest()");
 
     // Check if pushService is still active.
     if (!this._service.hasmainPushService()) {
-      this._reject({error: "Service deactivated"});
+      this._reject(new Error("Push service unavailable"));
       return;
     }
 
     if (!Components.isSuccessCode(aStatus)) {
-      this._reject({error: "Error status" + aStatus});
+      this._reject(new Error("Error listening for messages: " + aStatus));
       return;
     }
 
@@ -292,11 +291,11 @@ SubscriptionListener.prototype = {
           }),
           retryAfter);
       } else {
-        this._reject({error: "Error response code: " + statusCode });
+        this._reject(new Error("Unexpected server response: " + statusCode));
       }
       return;
     } else if (statusCode != 201) {
-      this._reject({error: "Error response code: " + statusCode });
+      this._reject(new Error("Unexpected server response: " + statusCode));
       return;
     }
 
@@ -304,37 +303,39 @@ SubscriptionListener.prototype = {
     try {
       subscriptionUri = aRequest.getResponseHeader("location");
     } catch (err) {
-      this._reject({error: "Return code 201, but the answer is bogus"});
+      this._reject(new Error("Missing Location header"));
       return;
     }
 
-    debug("subscriptionUri: " + subscriptionUri);
+    console.debug("onStopRequest: subscriptionUri", subscriptionUri);
 
     var linkList;
     try {
       linkList = aRequest.getResponseHeader("link");
     } catch (err) {
-      this._reject({error: "Return code 201, but the answer is bogus"});
+      this._reject(new Error("Missing Link header"));
       return;
     }
 
-    var linkParserResult = linkParser(linkList, this._serverURI);
-    if (linkParserResult.error) {
-      this._reject(linkParserResult);
+    var linkParserResult;
+    try {
+      linkParserResult = linkParser(linkList, this._serverURI);
+    } catch (e) {
+      this._reject(e);
       return;
     }
 
     if (!subscriptionUri) {
-      this._reject({error: "Return code 201, but the answer is bogus," +
-                           " missing subscriptionUri"});
+      this._reject(new Error("Invalid Location header"));
       return;
     }
     try {
       let uriTry = Services.io.newURI(subscriptionUri, null, null);
     } catch (e) {
-      debug("Invalid URI " + subscriptionUri);
-      this._reject({error: "Return code 201, but URI is bogus. " +
-                    subscriptionUri});
+      console.error("onStopRequest: Invalid subscription URI",
+        subscriptionUri);
+      this._reject(new Error("Invalid subscription endpoint: " +
+        subscriptionUri));
       return;
     }
 
@@ -372,7 +373,7 @@ function linkParser(linkHeader, serverURI) {
 
   var linkList = linkHeader.split(',');
   if ((linkList.length < 1)) {
-    return {error: "Return code 201, but the answer is bogus"};
+    throw new Error("Invalid Link header");
   }
 
   var pushEndpoint;
@@ -393,32 +394,23 @@ function linkParser(linkHeader, serverURI) {
     }
   });
 
-  debug("pushEndpoint: " + pushEndpoint);
-  debug("pushReceiptEndpoint: " + pushReceiptEndpoint);
+  console.debug("linkParser: pushEndpoint", pushEndpoint);
+  console.debug("linkParser: pushReceiptEndpoint", pushReceiptEndpoint);
   // Missing pushReceiptEndpoint is allowed.
   if (!pushEndpoint) {
-    return {error: "Return code 201, but the answer is bogus, missing" +
-                   " pushEndpoint"};
+    throw new Error("Missing push endpoint");
   }
 
-  var uri;
-  var resUri = [];
-  try {
-    [pushEndpoint, pushReceiptEndpoint].forEach(u => {
-      if (u) {
-        uri = u;
-        resUri[u] = Services.io.newURI(uri, null, serverURI);
-      }
-    });
-  } catch (e) {
-    debug("Invalid URI " + uri);
-    return {error: "Return code 201, but URI is bogus. " + uri};
+  var pushURI = Services.io.newURI(pushEndpoint, null, serverURI);
+  var pushReceiptURI;
+  if (pushReceiptEndpoint) {
+    pushReceiptURI = Services.io.newURI(pushReceiptEndpoint, null,
+                                        serverURI);
   }
 
   return {
-    pushEndpoint: resUri[pushEndpoint].spec,
-    pushReceiptEndpoint: (pushReceiptEndpoint) ? resUri[pushReceiptEndpoint].spec
-                                               : ""
+    pushEndpoint: pushURI.spec,
+    pushReceiptEndpoint: (pushReceiptURI) ? pushReceiptURI.spec : "",
   };
 }
 
@@ -451,7 +443,7 @@ this.PushServiceHttp2 = {
 
   checkServerURI: function(serverURL) {
     if (!serverURL) {
-      debug("No dom.push.serverURL found!");
+      console.warn("checkServerURI: No dom.push.serverURL found");
       return;
     }
 
@@ -459,24 +451,16 @@ this.PushServiceHttp2 = {
     try {
       uri = Services.io.newURI(serverURL, null, null);
     } catch(e) {
-      debug("Error creating valid URI from dom.push.serverURL (" +
-            serverURL + ")");
+      console.warn("checkServerURI: Error creating valid URI from",
+        "dom.push.serverURL", serverURL);
       return null;
     }
 
     if (uri.scheme !== "https") {
-      debug("Unsupported websocket scheme " + uri.scheme);
+      console.warn("checkServerURI: Unsupported scheme", uri.scheme);
       return null;
     }
     return uri;
-  },
-
-  observe: function(aSubject, aTopic, aData) {
-    if (aTopic == "nsPref:changed") {
-      if (aData == "dom.push.debug") {
-        gDebuggingEnabled = prefs.get("debug");
-      }
-    }
   },
 
   connect: function(subscriptions) {
@@ -516,7 +500,7 @@ this.PushServiceHttp2 = {
    * Subscribe new resource.
    */
   _subscribeResource: function(aRecord) {
-    debug("subscribeResource()");
+    console.debug("subscribeResource()");
 
     return this._subscribeResourceInternal({
       record: aRecord,
@@ -541,7 +525,7 @@ this.PushServiceHttp2 = {
   },
 
   _subscribeResourceInternal: function(aSubInfo) {
-    debug("subscribeResourceInternal()");
+    console.debug("subscribeResourceInternal()");
 
     return new Promise((resolve, reject) => {
       var listener = new SubscriptionListener(aSubInfo,
@@ -552,11 +536,7 @@ this.PushServiceHttp2 = {
 
       var chan = this._makeChannel(this._serverURI.spec);
       chan.requestMethod = "POST";
-      try {
-        chan.asyncOpen(listener, null);
-      } catch(e) {
-        reject({status: 0, error: "NetworkError"});
-      }
+      chan.asyncOpen(listener, null);
     })
     .catch(err => {
       if ("retry" in err) {
@@ -572,11 +552,7 @@ this.PushServiceHttp2 = {
     return new Promise((resolve,reject) => {
       var chan = this._makeChannel(aUri);
       chan.requestMethod = "DELETE";
-      try {
-        chan.asyncOpen(new PushServiceDelete(resolve, reject), null);
-      } catch(err) {
-        reject({status: 0, error: "NetworkError"});
-      }
+      chan.asyncOpen(new PushServiceDelete(resolve, reject), null);
     });
   },
 
@@ -585,7 +561,7 @@ this.PushServiceHttp2 = {
    * We can't do anything about it if it fails, so we don't listen for response.
    */
   _unsubscribeResource: function(aSubscriptionUri) {
-    debug("unsubscribeResource()");
+    console.debug("unsubscribeResource()");
 
     return this._deleteResource(aSubscriptionUri);
   },
@@ -594,9 +570,10 @@ this.PushServiceHttp2 = {
    * Start listening for messages.
    */
   _listenForMsgs: function(aSubscriptionUri) {
-    debug("listenForMsgs() " + aSubscriptionUri);
+    console.debug("listenForMsgs()", aSubscriptionUri);
     if (!this._conns[aSubscriptionUri]) {
-      debug("We do not have this subscription " + aSubscriptionUri);
+      console.warn("listenForMsgs: We do not have this subscription",
+        aSubscriptionUri);
       return;
     }
 
@@ -611,7 +588,8 @@ this.PushServiceHttp2 = {
     try {
       chan.asyncOpen(listener, chan);
     } catch (e) {
-      debug("Error connecting to push server. asyncOpen failed!");
+      console.error("listenForMsgs: Error connecting to push server.",
+        "asyncOpen failed", e);
       conn.listener.disconnect();
       chan.cancel(Cr.NS_ERROR_ABORT);
       this._retryAfterBackoff(aSubscriptionUri, -1);
@@ -625,22 +603,20 @@ this.PushServiceHttp2 = {
   },
 
   _ackMsgRecv: function(aAckUri) {
-    debug("ackMsgRecv() " + aAckUri);
+    console.debug("ackMsgRecv()", aAckUri);
     // We can't do anything about it if it fails,
     // so we don't listen for response.
     this._deleteResource(aAckUri);
   },
 
   init: function(aOptions, aMainPushService, aServerURL) {
-    debug("init()");
+    console.debug("init()");
     this._mainPushService = aMainPushService;
     this._serverURI = aServerURL;
-    gDebuggingEnabled = prefs.get("debug");
-    prefs.observe("debug", this);
   },
 
   _retryAfterBackoff: function(aSubscriptionUri, retryAfter) {
-    debug("retryAfterBackoff()");
+    console.debug("retryAfterBackoff()");
 
     var resetRetryCount = prefs.get("http2.reset_retry_count_after_ms");
     // If it was running for some time, reset retry counter.
@@ -680,12 +656,13 @@ this.PushServiceHttp2 = {
       this._conns[aSubscriptionUri].waitingForAlarm = true;
       this._mainPushService.setAlarm(retryAfter);
     }
-      debug("Retry in " + retryAfter);
+
+    console.debug("retryAfterBackoff: Retry in", retryAfter);
   },
 
   // Close connections.
   _shutdownConnections: function(deleteInfo) {
-    debug("shutdownConnections()");
+    console.debug("shutdownConnections()");
 
     for (let subscriptionUri in this._conns) {
       if (this._conns[subscriptionUri]) {
@@ -710,20 +687,21 @@ this.PushServiceHttp2 = {
 
   // Start listening if subscriptions present.
   startConnections: function(aSubscriptions) {
-    debug("startConnections() " + aSubscriptions.length);
+    console.debug("startConnections()", aSubscriptions.length);
 
     for (let i = 0; i < aSubscriptions.length; i++) {
       let record = aSubscriptions[i];
       this._mainPushService.ensureP256dhKey(record).then(record => {
         this._startSingleConnection(record);
       }, error => {
-        debug("startConnections: Error updating record " + record.keyID);
+        console.error("startConnections: Error updating record",
+          record.keyID, error);
       });
     }
   },
 
   _startSingleConnection: function(record) {
-    debug("_startSingleConnection()");
+    console.debug("_startSingleConnection()");
     if (typeof this._conns[record.subscriptionUri] != "object") {
       this._conns[record.subscriptionUri] = {channel: null,
                                              listener: null,
@@ -738,7 +716,7 @@ this.PushServiceHttp2 = {
 
   // Start listening if subscriptions present.
   _startConnectionsWaitingForAlarm: function() {
-    debug("startConnectionsWaitingForAlarm()");
+    console.debug("startConnectionsWaitingForAlarm()");
     for (let subscriptionUri in this._conns) {
       if ((this._conns[subscriptionUri]) &&
           !this._conns[subscriptionUri].conn &&
@@ -751,7 +729,7 @@ this.PushServiceHttp2 = {
 
   // Close connection and notify apps that subscription are gone.
   _shutdownSubscription: function(aSubscriptionUri) {
-    debug("shutdownSubscriptions()");
+    console.debug("shutdownSubscriptions()");
 
     if (typeof this._conns[aSubscriptionUri] == "object") {
       if (this._conns[aSubscriptionUri].listener) {
@@ -768,7 +746,7 @@ this.PushServiceHttp2 = {
   },
 
   uninit: function() {
-    debug("uninit()");
+    console.debug("uninit()");
     this._shutdownConnections(true);
     this._mainPushService = null;
   },
@@ -777,11 +755,12 @@ this.PushServiceHttp2 = {
   request: function(action, aRecord) {
     switch (action) {
       case "register":
-        debug("register");
         return this._subscribeResource(aRecord);
      case "unregister":
         this._shutdownSubscription(aRecord.subscriptionUri);
         return this._unsubscribeResource(aRecord.subscriptionUri);
+      default:
+        return Promise.reject(new Error("Unknown request type: " + action));
     }
   },
 
@@ -809,7 +788,7 @@ this.PushServiceHttp2 = {
 
   connOnStop: function(aRequest, aSuccess,
                        aSubscriptionUri) {
-    debug("connOnStop() succeeded: " + aSuccess);
+    console.debug("connOnStop() succeeded", aSuccess);
 
     var conn = this._conns[aSubscriptionUri];
     if (!conn) {
@@ -840,7 +819,7 @@ this.PushServiceHttp2 = {
   },
 
   _pushChannelOnStop: function(aUri, aAckUri, aMessage, dh, salt, rs) {
-    debug("pushChannelOnStop() ");
+    console.debug("pushChannelOnStop()");
 
     let cryptoParams = {
       dh: dh,
@@ -855,7 +834,8 @@ this.PushServiceHttp2 = {
     )
     .then(_ => this._ackMsgRecv(aAckUri))
     .catch(err => {
-      debug("Error receiving message: " + err);
+      console.error("pushChannelOnStop: Error receiving message",
+        err);
     });
   },
 

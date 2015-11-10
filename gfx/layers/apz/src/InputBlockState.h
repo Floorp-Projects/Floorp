@@ -434,11 +434,13 @@ public:
    * Notifies the input block of an incoming touch event so that the block can
    * update its internal slop state. "Slop" refers to the area around the
    * initial touchstart where we drop touchmove events so that content doesn't
-   * see them.
+   * see them. The |aApzcCanConsumeEvents| parameter is factored into how large
+   * the slop area is - if this is true the slop area is larger.
    * @return true iff the provided event is a touchmove in the slop area and
    *         so should not be sent to content.
    */
-  bool UpdateSlopState(const MultiTouchInput& aInput);
+  bool UpdateSlopState(const MultiTouchInput& aInput,
+                       bool aApzcCanConsumeEvents);
 
   bool HasEvents() const override;
   void DropEvents() override;
