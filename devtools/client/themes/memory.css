@@ -100,6 +100,11 @@ html, body, #app, #memory-tool {
   flex: 1;
 }
 
+#filter {
+  align-self: stretch;
+  margin: 2px;
+}
+
 /**
  * TODO bug 1213100
  * Once we figure out how to store invertable buttons (pseudo element like in
