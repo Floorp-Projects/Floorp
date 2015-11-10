@@ -18,7 +18,23 @@
 #include "nsAutoPtr.h"
 #include "nsPromiseFlatString.h"
 
+#include "prlog.h"
+
 #include <jni.h>
+
+static PRLogModuleInfo* AndroidDecoderModuleLog()
+{
+  static PRLogModuleInfo* sLogModule = nullptr;
+  if (!sLogModule) {
+    sLogModule = PR_NewLogModule("AndroidDecoderModule");
+  }
+  return sLogModule;
+}
+
+#undef LOG
+#define LOG(arg, ...) MOZ_LOG(AndroidDecoderModuleLog(), \
+    mozilla::LogLevel::Debug, ("AndroidDecoderModule(%p)::%s: " arg, \
+      this, __func__, ##__VA_ARGS__))
 
 using namespace mozilla;
 using namespace mozilla::gl;
@@ -680,6 +696,17 @@ MediaCodecDataDecoder::DecoderLoop()
   mMonitor.Notify();
 }
 
+const char*
+MediaCodecDataDecoder::ModuleStateStr(ModuleState aState) {
+  static const char* kStr[] = {
+    "Decoding", "Flushing", "DrainQueue", "DrainDecoder", "DrainWaitEOS",
+    "Stopping", "Shutdown"
+  };
+
+  MOZ_ASSERT(aState < sizeof(kStr) / sizeof(kStr[0]));
+  return kStr[aState];
+}
+
 MediaCodecDataDecoder::ModuleState
 MediaCodecDataDecoder::State() const
 {
@@ -689,6 +716,8 @@ MediaCodecDataDecoder::State() const
 void
 MediaCodecDataDecoder::State(ModuleState aState)
 {
+  LOG("%s -> %s", ModuleStateStr(mState), ModuleStateStr(aState));
+
   if (aState == kDrainDecoder) {
     MOZ_ASSERT(mState == kDrainQueue);
   } else if (aState == kDrainWaitEOS) {
