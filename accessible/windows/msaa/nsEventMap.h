@@ -97,7 +97,7 @@ static const uint32_t gWinEventMap[] = {
   IA2_EVENT_HYPERTEXT_CHANGED,                       // nsIAccessibleEvent::EVENT_HYPERTEXT_CHANGED
   IA2_EVENT_HYPERTEXT_NLINKS_CHANGED,                // nsIAccessibleEvent::EVENT_HYPERTEXT_NLINKS_CHANGED
   IA2_EVENT_OBJECT_ATTRIBUTE_CHANGED,                // nsIAccessibleEvent::EVENT_OBJECT_ATTRIBUTE_CHANGED
-  kEVENT_WIN_UNKNOWN                                 // nsIAccessibleEvent::EVENT_VIRTUALCURSOR_CHANGED
-  EVENT_OBJECT_VALUECHANGE,                          // nsIAccessibleEvent::EVENT_TEXT_VALUE_CHANGE
+  kEVENT_WIN_UNKNOWN,                                 // nsIAccessibleEvent::EVENT_VIRTUALCURSOR_CHANGED
+  EVENT_OBJECT_VALUECHANGE                          // nsIAccessibleEvent::EVENT_TEXT_VALUE_CHANGE
 };
 
