@@ -580,7 +580,7 @@ protected:
     mCurrentEventContent = aTarget;
     nsresult rv = NS_OK;
     if (GetCurrentEventFrame()) {
-      rv = HandleEventInternal(aEvent, aStatus);
+      rv = HandleEventInternal(aEvent, aStatus, true);
     }
     PopCurrentEventInfo();
     return rv;
@@ -669,8 +669,14 @@ protected:
                                  nsEventStatus* aEventStatus);
   void PushCurrentEventInfo(nsIFrame* aFrame, nsIContent* aContent);
   void PopCurrentEventInfo();
+  /**
+   * @param aIsHandlingNativeEvent      true when the caller (perhaps) handles
+   *                                    an event which is caused by native
+   *                                    event.  Otherwise, false.
+   */
   nsresult HandleEventInternal(mozilla::WidgetEvent* aEvent,
-                               nsEventStatus* aStatus);
+                               nsEventStatus* aStatus,
+                               bool aIsHandlingNativeEvent);
   nsresult HandlePositionedEvent(nsIFrame* aTargetFrame,
                                  mozilla::WidgetGUIEvent* aEvent,
                                  nsEventStatus* aEventStatus);
