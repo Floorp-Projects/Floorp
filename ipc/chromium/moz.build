@@ -167,6 +167,8 @@ if '86' not in ost and 'arm' not in ost and 'mips' not in ost:
         'src/base/atomicops_internals_mutex.cc',
     ]
 
+CXXFLAGS += CONFIG['TK_CFLAGS']
+
 include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'xul'
