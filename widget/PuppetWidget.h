@@ -132,7 +132,8 @@ public:
   virtual mozilla::LayoutDeviceIntPoint WidgetToScreenOffset() override
   { return LayoutDeviceIntPoint::FromUntyped(GetWindowPosition() + GetChromeDimensions()); }
 
-  void InitEvent(WidgetGUIEvent& aEvent, nsIntPoint* aPoint = nullptr);
+  void InitEvent(WidgetGUIEvent& aEvent,
+                 mozilla::LayoutDeviceIntPoint* aPoint = nullptr);
 
   NS_IMETHOD DispatchEvent(WidgetGUIEvent* aEvent, nsEventStatus& aStatus) override;
   nsEventStatus DispatchAPZAwareEvent(WidgetInputEvent* aEvent) override;
