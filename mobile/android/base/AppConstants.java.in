@@ -352,4 +352,9 @@ public class AppConstants {
 //#else
     false;
 //#endif
+
+    /**
+     * Target CPU architecture: "armeabi-v7a", "x86, "mips", ..
+     */
+    public static final String ANDROID_CPU_ARCH = "@ANDROID_CPU_ARCH@";
 }
