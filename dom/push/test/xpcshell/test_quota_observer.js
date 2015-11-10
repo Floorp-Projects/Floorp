@@ -7,6 +7,8 @@ const {PushDB, PushService, PushServiceWebSocket} = serviceExports;
 
 const userAgentID = '28cd09e2-7506-42d8-9e50-b02785adc7ef';
 
+var db;
+
 function run_test() {
   do_get_profile();
   setPrefs({
@@ -15,12 +17,24 @@ function run_test() {
   run_next_test();
 }
 
+let putRecord = Task.async(function* (perm, record) {
+  let uri = Services.io.newURI(record.scope, null, null);
+
+  Services.perms.add(uri, 'desktop-notification',
+    Ci.nsIPermissionManager[perm]);
+  do_register_cleanup(() => {
+    Services.perms.remove(uri, 'desktop-notification');
+  });
+
+  yield db.put(record);
+});
+
 add_task(function* test_expiration_history_observer() {
-  let db = PushServiceWebSocket.newPushDB();
+  db = PushServiceWebSocket.newPushDB();
   do_register_cleanup(() => db.drop().then(_ => db.close()));
 
   // A registration that we'll expire...
-  yield db.put({
+  yield putRecord('ALLOW_ACTION', {
     channelID: '379c0668-8323-44d2-a315-4ee83f1a9ee9',
     pushEndpoint: 'https://example.org/push/1',
     scope: 'https://example.com/deals',
@@ -32,7 +46,7 @@ add_task(function* test_expiration_history_observer() {
   });
 
   // ...And a registration that we'll evict on startup.
-  yield db.put({
+  yield putRecord('ALLOW_ACTION', {
     channelID: '4cb6e454-37cf-41c4-a013-4e3a7fdd0bf1',
     pushEndpoint: 'https://example.org/push/3',
     scope: 'https://example.com/stuff',
@@ -101,7 +115,7 @@ add_task(function* test_expiration_history_observer() {
   });
 
   // Add an expired registration that we'll revive later.
-  yield db.put({
+  yield putRecord('ALLOW_ACTION', {
     channelID: 'eb33fc90-c883-4267-b5cb-613969e8e349',
     pushEndpoint: 'https://example.org/push/2',
     scope: 'https://example.com/auctions',
