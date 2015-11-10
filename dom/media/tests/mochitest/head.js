@@ -33,6 +33,9 @@ function AudioStreamAnalyser(ac, stream) {
   this.stream = stream;
   this.sourceNode = this.audioContext.createMediaStreamSource(this.stream);
   this.analyser = this.audioContext.createAnalyser();
+  // Setting values lower than default for speedier testing on emulators
+  this.analyser.smoothingTimeConstant = 0.2;
+  this.analyser.fftSize = 1024;
   this.sourceNode.connect(this.analyser);
   this.data = new Uint8Array(this.analyser.frequencyBinCount);
 }
@@ -58,17 +61,18 @@ AudioStreamAnalyser.prototype = {
 
     // Easy: 1px per bin
     cvs.width = this.analyser.frequencyBinCount;
-    cvs.height = 256;
+    cvs.height = 128;
     cvs.style.border = "1px solid red";
 
     var c = cvs.getContext('2d');
+    c.fillStyle = 'black';
 
     var self = this;
     function render() {
       c.clearRect(0, 0, cvs.width, cvs.height);
       var array = self.getByteFrequencyData();
       for (var i = 0; i < array.length; i++) {
-        c.fillRect(i, (256 - (array[i])), 1, 256);
+        c.fillRect(i, (cvs.height - (array[i])), 1, cvs.height);
       }
       if (!cvs.stopDrawing) {
         requestAnimationFrame(render);
