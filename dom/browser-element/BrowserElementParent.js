@@ -23,6 +23,10 @@ XPCOMUtils.defineLazyGetter(this, "DOMApplicationRegistry", function () {
   return DOMApplicationRegistry;
 });
 
+XPCOMUtils.defineLazyServiceGetter(this, "systemMessenger",
+                                   "@mozilla.org/system-message-internal;1",
+                                   "nsISystemMessagesInternal");
+
 function debug(msg) {
   //dump("BrowserElementParent - " + msg + "\n");
 }
@@ -1207,6 +1211,26 @@ BrowserElementParent.prototype = {
   isAudioChannelActive: function(aAudioChannel) {
     return this._sendDOMRequest('get-is-audio-channel-active',
                                 {audioChannel: aAudioChannel});
+  },
+
+  notifyChannel: function(aEvent, aManifest, aAudioChannel) {
+    var self = this;
+    var req = Services.DOMRequest.createRequest(self._window);
+
+    // Since the pageURI of the app has been registered to the system messager,
+    // when the app was installed. The system messager can only use the manifest
+    // to send the message to correct page.
+    let manifestURL = Services.io.newURI(aManifest, null, null);
+    systemMessenger.sendMessage(aEvent, aAudioChannel, null, manifestURL)
+      .then(function() {
+        Services.DOMRequest.fireSuccess(req,
+          Cu.cloneInto(true, self._window));
+      }, function() {
+        debug("Error : NotifyChannel fail.");
+        Services.DOMRequest.fireErrorAsync(req,
+          Cu.cloneInto("NotifyChannel fail.", self._window));
+      });
+    return req;
   },
 
   getStructuredData: defineDOMRequestMethod('get-structured-data'),
