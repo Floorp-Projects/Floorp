@@ -205,51 +205,51 @@ LayerManagerComposite::BeginTransactionWithDrawTarget(DrawTarget* aTarget, const
 }
 
 void
-LayerManagerComposite::ApplyOcclusionCulling(Layer* aLayer, nsIntRegion& aOpaqueRegion)
+LayerManagerComposite::PostProcessLayers(Layer* aLayer, nsIntRegion& aOpaqueRegion)
 {
   nsIntRegion localOpaque;
   Matrix transform2d;
-  bool isTranslation = false;
+  Maybe<nsIntPoint> integerTranslation;
   // If aLayer has a simple transform (only an integer translation) then we
   // can easily convert aOpaqueRegion into pre-transform coordinates and include
   // that region.
   if (aLayer->GetLocalTransform().Is2D(&transform2d)) {
     if (transform2d.IsIntegerTranslation()) {
-      isTranslation = true;
+      integerTranslation = Some(TruncatedToInt(transform2d.GetTranslation()));
       localOpaque = aOpaqueRegion;
-      localOpaque.MoveBy(-transform2d._31, -transform2d._32);
+      localOpaque.MoveBy(-*integerTranslation);
     }
   }
 
   // Subtract any areas that we know to be opaque from our
   // visible region.
-  LayerComposite *composite = aLayer->AsLayerComposite();
+  LayerComposite* composite = aLayer->AsLayerComposite();
   if (!localOpaque.IsEmpty()) {
     nsIntRegion visible = composite->GetShadowVisibleRegion();
-    visible.Sub(visible, localOpaque);
+    visible.SubOut(localOpaque);
     composite->SetShadowVisibleRegion(visible);
   }
 
   // Compute occlusions for our descendants (in front-to-back order) and allow them to
   // contribute to localOpaque.
   for (Layer* child = aLayer->GetLastChild(); child; child = child->GetPrevSibling()) {
-    ApplyOcclusionCulling(child, localOpaque);
+    PostProcessLayers(child, localOpaque);
   }
 
   // If we have a simple transform, then we can add our opaque area into
   // aOpaqueRegion.
-  if (isTranslation &&
+  if (integerTranslation &&
       !aLayer->HasMaskLayers() &&
       aLayer->IsOpaqueForVisibility()) {
     if (aLayer->GetContentFlags() & Layer::CONTENT_OPAQUE) {
-      localOpaque.Or(localOpaque, composite->GetFullyRenderedRegion());
+      localOpaque.OrWith(composite->GetFullyRenderedRegion());
     }
-    localOpaque.MoveBy(transform2d._31, transform2d._32);
+    localOpaque.MoveBy(*integerTranslation);
     const Maybe<ParentLayerIntRect>& clip = aLayer->GetEffectiveClipRect();
     if (clip) {
-      localOpaque.And(localOpaque, clip->ToUnknownRect());
+      localOpaque.AndWith(clip->ToUnknownRect());
     }
-    aOpaqueRegion.Or(aOpaqueRegion, localOpaque);
+    aOpaqueRegion.OrWith(localOpaque);
   }
 }
 
@@ -361,7 +361,7 @@ LayerManagerComposite::UpdateAndRender()
   }
 
   nsIntRegion opaque;
-  ApplyOcclusionCulling(mRoot, opaque);
+  PostProcessLayers(mRoot, opaque);
 
   Render(invalid);
 #if defined(MOZ_WIDGET_ANDROID) || defined(MOZ_WIDGET_GONK)
@@ -1020,7 +1020,7 @@ LayerManagerComposite::RenderToPresentationSurface()
 
   mRoot->ComputeEffectiveTransforms(matrix);
   nsIntRegion opaque;
-  ApplyOcclusionCulling(mRoot, opaque);
+  PostProcessLayers(mRoot, opaque);
 
   nsIntRegion invalid;
   Rect bounds(0.0f, 0.0f, scale * pageWidth, (float)actualHeight);
