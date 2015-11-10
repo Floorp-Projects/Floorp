@@ -199,7 +199,7 @@ this.Keyboard = {
       }
       if (!Utils.checkPermissionForMM(mm, permName)) {
         dump("Keyboard.jsm: Message " + msg.name +
-          " from a content process with no '" + permName + "' privileges.");
+          " from a content process with no '" + permName + "' privileges.\n");
         return;
       }
     }
