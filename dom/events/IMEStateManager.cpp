@@ -515,6 +515,13 @@ IMEStateManager::OnChangeFocusInternal(nsPresContext* aPresContext,
   // editor.
   if (newState.mEnabled == IMEState::PLUGIN) {
     CreateIMEContentObserver(nullptr);
+    if (sActiveIMEContentObserver) {
+      MOZ_LOG(sISMLog, LogLevel::Debug,
+        ("ISM:   IMEStateManager::OnChangeFocusInternal(), an "
+         "IMEContentObserver instance is created for plugin and trying to "
+         "flush its pending notifications..."));
+      sActiveIMEContentObserver->TryToFlushPendingNotifications();
+    }
   }
 
   return NS_OK;
@@ -684,6 +691,14 @@ IMEStateManager::OnFocusInEditor(nsPresContext* aPresContext,
   }
 
   CreateIMEContentObserver(aEditor);
+
+  // Let's flush the focus notification now.
+  if (sActiveIMEContentObserver) {
+    MOZ_LOG(sISMLog, LogLevel::Debug,
+      ("ISM:   IMEStateManager::OnFocusInEditor(), new IMEContentObserver is "
+       "created, trying to flush pending notifications..."));
+    sActiveIMEContentObserver->TryToFlushPendingNotifications();
+  }
 }
 
 // static
@@ -797,6 +812,9 @@ IMEStateManager::UpdateIMEState(const IMEState& aNewIMEState,
   }
 
   if (createTextStateManager) {
+    // XXX In this case, it might not be enough safe to notify IME of anything.
+    //     So, don't try to flush pending notifications of IMEContentObserver
+    //     here.
     CreateIMEContentObserver(aEditor);
   }
 }
