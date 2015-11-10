@@ -202,7 +202,6 @@ IMEContentObserver::IMEContentObserver()
   , mNeedsToNotifyIMEOfTextChange(false)
   , mNeedsToNotifyIMEOfSelectionChange(false)
   , mNeedsToNotifyIMEOfPositionChange(false)
-  , mIsFlushingPendingNotifications(false)
   , mIsHandlingQueryContentEvent(false)
 {
 #ifdef DEBUG
@@ -710,9 +709,14 @@ nsresult
 IMEContentObserver::HandleQueryContentEvent(WidgetQueryContentEvent* aEvent)
 {
   // If the instance has cache, it should use the cached selection which was
-  // sent to the widget.
+  // sent to the widget.  However, if this instance has already received new
+  // selection change notification but hasn't updated the cache yet (i.e.,
+  // not sending selection change notification to IME, don't use the cached
+  // value.  Note that don't update selection cache here since if you update
+  // selection cache here, IMENotificationSender won't notify IME of selection
+  // change because it looks like that the selection isn't actually changed.
   if (aEvent->mMessage == eQuerySelectedText && aEvent->mUseNativeLineBreak &&
-      mSelectionData.IsValid()) {
+      mSelectionData.IsValid() && !mNeedsToNotifyIMEOfSelectionChange) {
     aEvent->mReply.mContentsRoot = mRootContent;
     aEvent->mReply.mHasSelection = !mSelectionData.IsCollapsed();
     aEvent->mReply.mOffset = mSelectionData.mOffset;
@@ -1356,7 +1360,7 @@ IMEContentObserver::FlushMergeableNotifications()
   // event. Then, it causes flushing layout which may cause another layout
   // change notification.
 
-  if (mIsFlushingPendingNotifications) {
+  if (mQueuedSender) {
     // So, if this is already called, this should do nothing.
     MOZ_LOG(sIMECOLog, LogLevel::Debug,
       ("IMECO: 0x%p   IMEContentObserver::FlushMergeableNotifications(), "
@@ -1378,8 +1382,13 @@ IMEContentObserver::FlushMergeableNotifications()
     ("IMECO: 0x%p IMEContentObserver::FlushMergeableNotifications(), "
      "creating IMENotificationSender...", this));
 
-  mIsFlushingPendingNotifications = true;
-  nsContentUtils::AddScriptRunner(new IMENotificationSender(this));
+  // If contents in selection range is modified, the selection range still
+  // has removed node from the tree.  In such case, nsContentIterator won't
+  // work well.  Therefore, we shouldn't use AddScriptRunnder() here since
+  // it may kick runnable event immediately after DOM tree is changed but
+  // the selection range isn't modified yet.
+  mQueuedSender = new IMENotificationSender(this);
+  NS_DispatchToCurrentThread(mQueuedSender);
 
   MOZ_LOG(sIMECOLog, LogLevel::Debug,
     ("IMECO: 0x%p IMEContentObserver::FlushMergeableNotifications(), "
@@ -1452,7 +1461,7 @@ IMEContentObserver::AChangeEvent::IsSafeToNotifyIME(
 NS_IMETHODIMP
 IMEContentObserver::IMENotificationSender::Run()
 {
-  MOZ_ASSERT(mIMEContentObserver->mIsFlushingPendingNotifications);
+  MOZ_ASSERT(mIMEContentObserver->mQueuedSender);
 
   // NOTE: Reset each pending flag because sending notification may cause
   //       another change.
@@ -1460,7 +1469,7 @@ IMEContentObserver::IMENotificationSender::Run()
   if (mIMEContentObserver->mNeedsToNotifyIMEOfFocusSet) {
     mIMEContentObserver->mNeedsToNotifyIMEOfFocusSet = false;
     SendFocusSet();
-    mIMEContentObserver->mIsFlushingPendingNotifications = false;
+    mIMEContentObserver->mQueuedSender = nullptr;
     // If it's not safe to notify IME of focus, SendFocusSet() sets
     // mNeedsToNotifyIMEOfFocusSet true again.  For guaranteeing to send the
     // focus notification later,  we should put a new sender into the queue but
@@ -1470,10 +1479,10 @@ IMEContentObserver::IMENotificationSender::Run()
       MOZ_ASSERT(!mIMEContentObserver->mIMEHasFocus);
       MOZ_LOG(sIMECOLog, LogLevel::Debug,
         ("IMECO: 0x%p IMEContentObserver::IMENotificationSender::Run(), "
-         "posting AsyncMergeableNotificationsFlusher to current thread", this));
-      RefPtr<AsyncMergeableNotificationsFlusher> asyncFlusher =
-        new AsyncMergeableNotificationsFlusher(mIMEContentObserver);
-      NS_DispatchToCurrentThread(asyncFlusher);
+         "posting IMENotificationSender to current thread", this));
+      mIMEContentObserver->mQueuedSender =
+        new IMENotificationSender(mIMEContentObserver);
+      NS_DispatchToCurrentThread(mIMEContentObserver->mQueuedSender);
       return NS_OK;
     }
     // This is the first notification to IME. So, we don't need to notify
@@ -1511,16 +1520,16 @@ IMEContentObserver::IMENotificationSender::Run()
     }
   }
 
-  mIMEContentObserver->mIsFlushingPendingNotifications = false;
+  mIMEContentObserver->mQueuedSender = nullptr;
 
   // If notifications caused some new change, we should notify them now.
   if (mIMEContentObserver->NeedsToNotifyIMEOfSomething()) {
     MOZ_LOG(sIMECOLog, LogLevel::Debug,
       ("IMECO: 0x%p IMEContentObserver::IMENotificationSender::Run(), "
-       "posting AsyncMergeableNotificationsFlusher to current thread", this));
-    RefPtr<AsyncMergeableNotificationsFlusher> asyncFlusher =
-      new AsyncMergeableNotificationsFlusher(mIMEContentObserver);
-    NS_DispatchToCurrentThread(asyncFlusher);
+       "posting IMENotificationSender to current thread", this));
+    mIMEContentObserver->mQueuedSender =
+      new IMENotificationSender(mIMEContentObserver);
+    NS_DispatchToCurrentThread(mIMEContentObserver->mQueuedSender);
   }
   return NS_OK;
 }
@@ -1729,45 +1738,6 @@ IMEContentObserver::IMENotificationSender::SendPositionChange()
   MOZ_LOG(sIMECOLog, LogLevel::Debug,
     ("IMECO: 0x%p IMEContentObserver::IMENotificationSender::"
      "SendPositionChange(), sent NOTIFY_IME_OF_POSITION_CHANGE", this));
-}
-
-/******************************************************************************
- * mozilla::IMEContentObserver::AsyncMergeableNotificationsFlusher
- ******************************************************************************/
-
-NS_IMETHODIMP
-IMEContentObserver::AsyncMergeableNotificationsFlusher::Run()
-{
-  // When this is performed, another sender may already have been performed
-  // with nsContentUtils::AddScriptRunner().
-  if (!mIMEContentObserver->NeedsToNotifyIMEOfSomething()) {
-    NS_ASSERTION(!mIMEContentObserver->mIsFlushingPendingNotifications,
-      "It shouldn't be flushing pending notifications now");
-    MOZ_LOG(sIMECOLog, LogLevel::Debug,
-      ("IMECO: 0x%p IMEContentObserver::AsyncMergeableNotificationsFlusher::"
-       "Run(), does nothing, due to already flushed the pending notifications",
-       this));
-    return NS_OK;
-  }
-
-  if (!CanNotifyIME(eChangeEventType_FlushPendingEvents)) {
-    MOZ_LOG(sIMECOLog, LogLevel::Debug,
-      ("IMECO: 0x%p IMEContentObserver::AsyncMergeableNotificationsFlusher::"
-       "Run(), FAILED, due to impossible to flush pending notifications",
-       this));
-    return NS_OK;
-  }
-
-  MOZ_LOG(sIMECOLog, LogLevel::Info,
-    ("IMECO: 0x%p IMEContentObserver::AsyncMergeableNotificationsFlusher::"
-     "Run(), calling FlushMergeableNotifications()...", this));
-
-  mIMEContentObserver->FlushMergeableNotifications();
-
-  MOZ_LOG(sIMECOLog, LogLevel::Debug,
-    ("IMECO: 0x%p IMEContentObserver::AsyncMergeableNotificationsFlusher::"
-     "Run(), called FlushMergeableNotifications()", this));
-  return NS_OK;
 }
 
 } // namespace mozilla
