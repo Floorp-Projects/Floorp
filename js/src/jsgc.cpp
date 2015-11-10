@@ -4289,11 +4289,25 @@ js::gc::MarkingValidator::nonIncrementalMark()
     if (!markedWeakMaps.init())
         return;
 
+    /*
+     * For saving, smush all of the keys into one big table and split them back
+     * up into per-zone tables when restoring.
+     */
+    gc::WeakKeyTable savedWeakKeys;
+    if (!savedWeakKeys.init())
+        return;
+
     for (GCZonesIter zone(runtime); !zone.done(); zone.next()) {
         if (!WeakMapBase::saveZoneMarkedWeakMaps(zone, markedWeakMaps))
             return;
-        MOZ_ASSERT(zone->gcSavedWeakKeys.count() == 0);
-        mozilla::Swap(zone->gcSavedWeakKeys, zone->gcWeakKeys);
+
+        for (gc::WeakKeyTable::Range r = zone->gcWeakKeys.all(); !r.empty(); r.popFront()) {
+            AutoEnterOOMUnsafeRegion oomUnsafe;
+            if (!savedWeakKeys.put(Move(r.front().key), Move(r.front().value)))
+                oomUnsafe.crash("saving weak keys table for validator");
+        }
+
+        zone->gcWeakKeys.clear();
     }
 
     /*
@@ -4364,11 +4378,18 @@ js::gc::MarkingValidator::nonIncrementalMark()
 
     for (GCZonesIter zone(runtime); !zone.done(); zone.next()) {
         WeakMapBase::unmarkZone(zone);
-        Swap(zone->gcWeakKeys, zone->gcSavedWeakKeys);
-        zone->gcSavedWeakKeys.clear();
+        zone->gcWeakKeys.clear();
     }
 
     WeakMapBase::restoreMarkedWeakMaps(markedWeakMaps);
+
+    for (gc::WeakKeyTable::Range r = savedWeakKeys.all(); !r.empty(); r.popFront()) {
+        AutoEnterOOMUnsafeRegion oomUnsafe;
+        Zone* zone = gc::TenuredCell::fromPointer(r.front().key.asCell())->zone();
+        if (!zone->gcWeakKeys.put(Move(r.front().key), Move(r.front().value)))
+            oomUnsafe.crash("restoring weak keys table for validator");
+    }
+
     gc->incrementalState = state;
 }
 
