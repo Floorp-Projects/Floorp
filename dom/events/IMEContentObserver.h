@@ -117,6 +117,7 @@ private:
                       nsIEditor* aEditor);
   bool InitWithPlugin(nsPresContext* aPresContext, nsIContent* aContent);
   bool IsInitializedWithPlugin() const { return !mEditor; }
+  void OnIMEReceivedFocus();
   void Clear();
   bool IsObservingContent(nsPresContext* aPresContext,
                           nsIContent* aContent) const;
@@ -264,6 +265,8 @@ private:
   // mIsFlushingPendingNotifications is true between
   // FlushMergeableNotifications() creates IMENotificationSender and
   // IMENotificationSender sent all pending notifications.
+  // Note this may false even after an AsyncMergeableNotificationsFlusher is
+  // queued into the event loop.  Don't be confused by these difference.
   bool mIsFlushingPendingNotifications;
   // mIsHandlingQueryContentEvent is true when IMEContentObserver is handling
   // WidgetQueryContentEvent with ContentEventHandler.
