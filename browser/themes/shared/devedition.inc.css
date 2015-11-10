@@ -164,11 +164,8 @@
 .browserContainer > findbar,
 #browser-bottombox {
   background-color: var(--chrome-secondary-background-color) !important;
+  background-image: none !important;
   color: var(--chrome-color);
-}
-
-.browserContainer > findbar {
-  background-image: none;
 }
 
 .browserContainer > .findbar-textbox {
@@ -245,7 +242,6 @@ window:not([chromehidden~="toolbar"]) #urlbar-wrapper {
   border-bottom: none !important;
   border-radius: 0 !important;
   box-shadow: 0 -1px var(--chrome-nav-bar-separator-color) !important;
-  background-image: none !important;
 }
 
 /* No extra vertical padding for nav bar */
