@@ -310,7 +310,6 @@ SourceBuffer::SourceBuffer(MediaSource* aMediaSource, const nsACString& aType)
   , mUpdating(false)
   , mActive(false)
   , mUpdateID(0)
-  , mReportedOffset(0)
   , mType(aType)
 {
   MOZ_ASSERT(NS_IsMainThread());
