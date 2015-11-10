@@ -706,6 +706,8 @@ InitFromBailout(JSContext* cx, HandleScript caller, jsbytecode* callerPC,
                 {
                     scopeChain = fun->environment();
                 }
+            } else if (script->module()) {
+                scopeChain = script->module()->environment();
             } else {
                 // For global scripts without a non-syntactic scope the scope
                 // chain is the script's global lexical scope (Ion does not
