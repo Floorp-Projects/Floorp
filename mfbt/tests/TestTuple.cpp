@@ -236,7 +236,7 @@ TestGet()
   CHECK(y == 42);
 }
 
-static bool
+static void
 TestMakeTuple()
 {
   auto tuple = MakeTuple(42, 0.5f, 'c');
@@ -244,7 +244,13 @@ TestMakeTuple()
   CHECK(Get<0>(tuple) == 42);
   CHECK(Get<1>(tuple) == 0.5f);
   CHECK(Get<2>(tuple) == 'c');
-  return true;
+
+  // Make sure we don't infer the type to be Tuple<int&>.
+  int x = 1;
+  auto tuple2 = MakeTuple(x);
+  CHECK_TYPE(tuple2, Tuple<int>);
+  x = 2;
+  CHECK(Get<0>(tuple2) == 1);
 }
 
 static bool
