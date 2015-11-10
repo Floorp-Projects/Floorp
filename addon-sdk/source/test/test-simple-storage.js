@@ -286,7 +286,7 @@ exports.testSetNoSetRead = function (assert, done) {
 
 
 function setGetRoot(assert, done, val, compare) {
-  compare = compare || (a, b) => a === b;
+  compare = compare || ((a, b) => a === b);
 
   // Load the module once, set a value.
   let loader = Loader(module);
