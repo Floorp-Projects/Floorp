@@ -58,7 +58,7 @@ class TestTyping(MarionetteTestCase):
     @skip_if_b2g
     def testCutAndPasteShortcuts(self):
         # Test that modifier keys work via copy/paste shortcuts.
-        if self.marionette.session_capabilities['platformName'] == 'DARWIN':
+        if self.marionette.session_capabilities['platformName'] == 'Darwin':
             mod_key = Keys.META
         else:
             mod_key = Keys.CONTROL
