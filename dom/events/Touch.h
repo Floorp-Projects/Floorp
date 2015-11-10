@@ -42,7 +42,7 @@ public:
         float aForce);
   Touch(int32_t aIdentifier,
         LayoutDeviceIntPoint aPoint,
-        nsIntPoint aRadius,
+        LayoutDeviceIntPoint aRadius,
         float aRotationAngle,
         float aForce);
   Touch(const Touch& aOther);
@@ -82,7 +82,7 @@ public:
   CSSIntPoint mPagePoint;
   CSSIntPoint mClientPoint;
   LayoutDeviceIntPoint mScreenPoint;
-  nsIntPoint mRadius;
+  LayoutDeviceIntPoint mRadius;
   float mRotationAngle;
   float mForce;
 protected:

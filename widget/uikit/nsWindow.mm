@@ -173,6 +173,7 @@ private:
     event.touches.SetCapacity(aTouches.count);
     for (UITouch* touch in aTouches) {
         LayoutDeviceIntPoint loc = UIKitPointsToDevPixels([touch locationInView:self], [self contentScaleFactor]);
+        LayoutDeviceIntPoint radius = UIKitPointsToDevPixels([touch majorRadius], [touch majorRadius]);
         void* value;
         if (!CFDictionaryGetValueIfPresent(mTouches, touch, (const void**)&value)) {
             // This shouldn't happen.
@@ -180,11 +181,7 @@ private:
             continue;
         }
         int id = reinterpret_cast<int>(value);
-        RefPtr<Touch> t = new Touch(id,
-                                      loc,
-                                      nsIntPoint([touch majorRadius], [touch majorRadius]),
-                                      0.0f,
-                                      1.0f);
+        RefPtr<Touch> t = new Touch(id, loc, radius, 0.0f, 1.0f);
         event.refPoint = loc;
         event.touches.AppendElement(t);
     }
