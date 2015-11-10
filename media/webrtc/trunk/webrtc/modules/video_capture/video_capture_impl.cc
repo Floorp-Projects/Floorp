@@ -313,7 +313,7 @@ int32_t VideoCaptureImpl::IncomingFrame(
                                                    videoFrameLength,
                                                    _rotateFrame,
                                                    &_captureFrame);
-        if (conversionResult < 0)
+        if (conversionResult != 0)
         {
           LOG(LS_ERROR) << "Failed to convert capture frame from type "
                         << frameInfo.rawType << "to I420.";
