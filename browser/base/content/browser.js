@@ -5654,9 +5654,14 @@ function handleDroppedLink(event, urlOrLinks, name)
 
   let userContextId = gBrowser.selectedBrowser.getAttribute("usercontextid");
 
-  let inBackground = Services.prefs.getBoolPref("browser.tabs.loadInBackground");
-  if (event.shiftKey)
-    inBackground = !inBackground;
+  // event is null if links are dropped in content process.
+  // inBackground should be false, as it's loading into current browser.
+  let inBackground = false;
+  if (event) {
+    let inBackground = Services.prefs.getBoolPref("browser.tabs.loadInBackground");
+    if (event.shiftKey)
+      inBackground = !inBackground;
+  }
 
   Task.spawn(function*() {
     let urls = [];
@@ -5677,9 +5682,13 @@ function handleDroppedLink(event, urlOrLinks, name)
     }
   });
 
-  // Keep the event from being handled by the dragDrop listeners
-  // built-in to gecko if they happen to be above us.
-  event.preventDefault();
+  // If links are dropped in content process, event.preventDefault() should be
+  // called in content process.
+  if (event) {
+    // Keep the event from being handled by the dragDrop listeners
+    // built-in to gecko if they happen to be above us.
+    event.preventDefault();
+  }
 }
 
 function BrowserSetForcedCharacterSet(aCharset)

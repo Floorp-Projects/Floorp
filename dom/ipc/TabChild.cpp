@@ -953,6 +953,37 @@ TabChild::RemoteSizeShellTo(int32_t aWidth, int32_t aHeight,
 }
 
 NS_IMETHODIMP
+TabChild::RemoteDropLinks(uint32_t aLinksCount, nsIDroppedLinkItem** aLinks)
+{
+  nsTArray<nsString> linksArray;
+  nsresult rv = NS_OK;
+  for (uint32_t i = 0; i < aLinksCount; i++) {
+    nsString tmp;
+    rv = aLinks[i]->GetUrl(tmp);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    linksArray.AppendElement(tmp);
+
+    rv = aLinks[i]->GetName(tmp);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    linksArray.AppendElement(tmp);
+
+    rv = aLinks[i]->GetType(tmp);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+    linksArray.AppendElement(tmp);
+  }
+
+  bool sent = SendDropLinks(linksArray);
+
+  return sent ? NS_OK : NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
 TabChild::SizeBrowserTo(int32_t aWidth, int32_t aHeight)
 {
   NS_WARNING("TabChild::SizeBrowserTo not supported in TabChild");

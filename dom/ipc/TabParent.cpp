@@ -49,6 +49,7 @@
 #include "nsFocusManager.h"
 #include "nsFrameLoader.h"
 #include "nsIBaseWindow.h"
+#include "nsIBrowser.h"
 #include "nsIContent.h"
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeOwner.h"
@@ -694,6 +695,21 @@ TabParent::RecvSizeShellTo(const uint32_t& aFlags, const int32_t& aWidth, const 
   NS_ENSURE_TRUE(xulWin, true);
   xulWin->SizeShellToWithLimit(width, height, aShellItemWidth, aShellItemHeight);
 
+  return true;
+}
+
+bool
+TabParent::RecvDropLinks(nsTArray<nsString>&& aLinks)
+{
+  nsCOMPtr<nsIBrowser> browser = do_QueryInterface(mFrameElement);
+  if (browser) {
+    UniquePtr<const char16_t*[]> links;
+    links = MakeUnique<const char16_t*[]>(aLinks.Length());
+    for (uint32_t i = 0; i < aLinks.Length(); i++) {
+      links[i] = aLinks[i].get();
+    }
+    browser->DropLinks(aLinks.Length(), links.get());
+  }
   return true;
 }
 
