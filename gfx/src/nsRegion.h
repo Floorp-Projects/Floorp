@@ -836,6 +836,8 @@ class IntRegionTyped :
   template <typename OtherUnits>
   friend class IntRegionTyped;
 
+  static_assert(IsPixel<units>::value, "'units' must be a coordinate system tag");
+
 public:
   // Forward constructors.
   IntRegionTyped() {}
