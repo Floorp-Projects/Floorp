@@ -76,24 +76,20 @@ struct MediaCodecInterfaceWrapper
 sp<MediaCodecProxy>
 MediaCodecProxy::CreateByType(sp<ALooper> aLooper,
                               const char *aMime,
-                              bool aEncoder,
-                              wp<CodecResourceListener> aListener)
+                              bool aEncoder)
 {
   sp<MediaCodecProxy> codec = new MediaCodecProxy(aLooper,
                                                   aMime,
-                                                  aEncoder,
-                                                  aListener);
+                                                  aEncoder);
   return codec;
 }
 
 MediaCodecProxy::MediaCodecProxy(sp<ALooper> aLooper,
                                  const char *aMime,
-                                 bool aEncoder,
-                                 wp<CodecResourceListener> aListener)
+                                 bool aEncoder)
   : mCodecLooper(aLooper)
   , mCodecMime(aMime)
   , mCodecEncoder(aEncoder)
-  , mListener(aListener)
   , mMediaCodecLock("MediaCodecProxy::mMediaCodecLock")
   , mPendingRequestMediaResource(false)
 {
@@ -120,15 +116,15 @@ MediaCodecProxy::AllocateAudioMediaCodec()
   return false;
 }
 
-bool
+RefPtr<MediaCodecProxy::CodecPromise>
 MediaCodecProxy::AsyncAllocateVideoMediaCodec()
 {
   if (mResourceClient || mCodec.get()) {
-    return false;
+    return CodecPromise::CreateAndReject(true, __func__);
   }
 
   if (strncasecmp(mCodecMime.get(), "video/", 6) != 0) {
-    return false;
+    return CodecPromise::CreateAndReject(true, __func__);
   }
   // request video codec
   mozilla::MediaSystemResourceType type =
@@ -138,12 +134,14 @@ MediaCodecProxy::AsyncAllocateVideoMediaCodec()
   mResourceClient->SetListener(this);
   mResourceClient->Acquire();
 
-  return true;
+  RefPtr<CodecPromise> p = mCodecPromise.Ensure(__func__);
+  return p.forget();
 }
 
 void
 MediaCodecProxy::ReleaseMediaCodec()
 {
+  mCodecPromise.RejectIfExists(true, __func__);
   releaseCodec();
 
   if (!mResourceClient) {
@@ -478,11 +476,7 @@ MediaCodecProxy::ResourceReserved()
   // Create MediaCodec
   if (!allocateCodec()) {
     ReleaseMediaCodec();
-    // Notification
-    sp<CodecResourceListener> listener = mListener.promote();
-    if (listener != nullptr) {
-      listener->codecCanceled();
-    }
+    mCodecPromise.RejectIfExists(true, __func__);
     return;
   }
 
@@ -491,11 +485,7 @@ MediaCodecProxy::ResourceReserved()
   mPendingRequestMediaResource = false;
   mon.NotifyAll();
 
-  // Notification
-  sp<CodecResourceListener> listener = mListener.promote();
-  if (listener != nullptr) {
-    listener->codecReserved();
-  }
+  mCodecPromise.ResolveIfExists(true, __func__);
 }
 
 // Called on ImageBridge thread
@@ -503,11 +493,7 @@ void
 MediaCodecProxy::ResourceReserveFailed()
 {
   ReleaseMediaCodec();
-  // Notification
-  sp<CodecResourceListener> listener = mListener.promote();
-  if (listener != nullptr) {
-    listener->codecCanceled();
-  }
+  mCodecPromise.RejectIfExists(true, __func__);
 }
 
 bool MediaCodecProxy::Prepare()

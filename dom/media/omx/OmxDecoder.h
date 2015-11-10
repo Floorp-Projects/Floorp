@@ -20,7 +20,7 @@ class OmxDecoder;
 
 namespace android {
 
-class OmxDecoder : public OMXCodecProxy::CodecResourceListener {
+class OmxDecoder : public RefBase {
   typedef MPAPI::AudioFrame AudioFrame;
   typedef MPAPI::VideoFrame VideoFrame;
   typedef mozilla::MP3FrameParser MP3FrameParser;
@@ -119,6 +119,9 @@ class OmxDecoder : public OMXCodecProxy::CodecResourceListener {
   // 'true' if a read from the audio stream was done while reading the metadata
   bool mAudioMetadataRead;
 
+  RefPtr<mozilla::TaskQueue> mTaskQueue;
+
+  mozilla::MozPromiseRequestHolder<OMXCodecProxy::CodecPromise> mVideoCodecRequest;
   mozilla::MozPromiseHolder<MediaResourcePromise> mMediaResourcePromise;
 
   void ReleaseVideoBuffer();
@@ -138,13 +141,14 @@ class OmxDecoder : public OMXCodecProxy::CodecResourceListener {
   bool mAudioPaused;
   bool mVideoPaused;
 
-public:
-  explicit OmxDecoder(AbstractMediaDecoder *aDecoder);
-  ~OmxDecoder();
+  mozilla::TaskQueue* OwnerThread() const
+  {
+    return mTaskQueue;
+  }
 
-  // OMXCodecProxy::CodecResourceListener
-  virtual void codecReserved();
-  virtual void codecCanceled();
+public:
+  explicit OmxDecoder(AbstractMediaDecoder *aDecoder, mozilla::TaskQueue* aTaskQueue);
+  ~OmxDecoder();
 
   // The MediaExtractor provides essential information for creating OMXCodec
   // instance. Such as video/audio codec, we can retrieve them through the

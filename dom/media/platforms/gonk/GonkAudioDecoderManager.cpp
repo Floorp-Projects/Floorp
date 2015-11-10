@@ -70,7 +70,7 @@ GonkAudioDecoderManager::InitMediaCodecProxy()
     return false;
   }
 
-  mDecoder = MediaCodecProxy::CreateByType(mDecodeLooper, mMimeType.get(), false, nullptr);
+  mDecoder = MediaCodecProxy::CreateByType(mDecodeLooper, mMimeType.get(), false);
   if (!mDecoder.get()) {
     return false;
   }
