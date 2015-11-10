@@ -5,13 +5,23 @@
 from marionette import MarionetteTestCase
 from marionette_driver.errors import SessionNotCreatedException
 
+
 class TestCapabilities(MarionetteTestCase):
+
     def setUp(self):
         super(TestCapabilities, self).setUp()
         self.caps = self.marionette.session_capabilities
-        self.marionette.set_context("chrome")
-        self.appinfo = self.marionette.execute_script(
-            "return Services.appinfo")
+        with self.marionette.using_context("chrome"):
+            self.appinfo = self.marionette.execute_script(
+                "return Services.appinfo")
+            self.os_name = self.marionette.execute_script(
+                "return Services.sysinfo.getProperty('name')")
+            self.os_version = self.marionette.execute_script(
+                "return Services.sysinfo.getProperty('version')")
+
+    @property
+    def is_b2g(self):
+        return self.appinfo["name"] == "B2G"
 
     def test_mandates_capabilities(self):
         self.assertIn("browserName", self.caps)
@@ -22,9 +32,8 @@ class TestCapabilities(MarionetteTestCase):
 
         self.assertEqual(self.caps["browserName"], self.appinfo["name"])
         self.assertEqual(self.caps["browserVersion"], self.appinfo["version"])
-        self.assertEqual(self.caps["platformName"], self.appinfo["OS"].upper())
-        self.assertEqual(self.caps["platformVersion"],
-                         self.appinfo["platformVersion"])
+        self.assertEqual(self.caps["platformName"], self.os_name)
+        self.assertEqual(self.caps["platformVersion"], self.os_version)
 
     def test_supported_features(self):
         self.assertIn("rotatable", self.caps)
@@ -32,14 +41,14 @@ class TestCapabilities(MarionetteTestCase):
         self.assertIn("takesElementScreenshot", self.caps)
         self.assertIn("takesScreenshot", self.caps)
 
-        self.assertEqual(self.caps["rotatable"], self.appinfo["name"] == "B2G")
+        self.assertEqual(self.caps["rotatable"], self.is_b2g)
         self.assertFalse(self.caps["acceptSslCerts"])
         self.assertTrue(self.caps["takesElementScreenshot"])
         self.assertTrue(self.caps["takesScreenshot"])
 
     def test_selenium2_compat(self):
         self.assertIn("platform", self.caps)
-        self.assertEqual(self.caps["platform"], self.caps["platformName"])
+        self.assertEqual(self.caps["platform"], self.caps["platformName"].upper())
 
     def test_extensions(self):
         self.assertIn("XULappId", self.caps)
@@ -53,14 +62,14 @@ class TestCapabilities(MarionetteTestCase):
 
     def test_we_can_pass_in_capabilities_on_session_start(self):
         self.marionette.delete_session()
-        capabilities = { "desiredCapabilities": {"somethingAwesome": "cake"}}
+        capabilities = {"desiredCapabilities": {"somethingAwesome": "cake"}}
         self.marionette.start_session(capabilities)
         caps = self.marionette.session_capabilities
         self.assertIn("somethingAwesome", caps)
 
     def test_we_dont_overwrite_server_capabilities(self):
         self.marionette.delete_session()
-        capabilities = { "desiredCapabilities": {"browserName": "ChocolateCake"}}
+        capabilities = {"desiredCapabilities": {"browserName": "ChocolateCake"}}
         self.marionette.start_session(capabilities)
         caps = self.marionette.session_capabilities
         self.assertEqual(caps["browserName"], self.appinfo["name"],
@@ -68,14 +77,14 @@ class TestCapabilities(MarionetteTestCase):
 
     def test_we_can_pass_in_required_capabilities_on_session_start(self):
         self.marionette.delete_session()
-        capabilities = { "requiredCapabilities": {"browserName": self.appinfo["name"]}}
+        capabilities = {"requiredCapabilities": {"browserName": self.appinfo["name"]}}
         self.marionette.start_session(capabilities)
         caps = self.marionette.session_capabilities
         self.assertIn("browserName", caps)
 
     def test_we_pass_in_required_capability_we_cant_fulfil_raises_exception(self):
         self.marionette.delete_session()
-        capabilities = { "requiredCapabilities": {"browserName": "CookiesAndCream"}}
+        capabilities = {"requiredCapabilities": {"browserName": "CookiesAndCream"}}
         try:
             self.marionette.start_session(capabilities)
             self.fail("Marionette Should have throw an exception")
@@ -87,6 +96,6 @@ class TestCapabilities(MarionetteTestCase):
         # same state it was before it started the test
         self.marionette.start_session()
 
-    def test_we_get_valid_uuid_4_when_creating_a_session(self):
-        self.assertNotIn("{", self.marionette.session_id, 'Session ID has {} in it. %s ' \
-                         % self.marionette.session_id)
+    def test_we_get_valid_uuid4_when_creating_a_session(self):
+        self.assertNotIn("{", self.marionette.session_id,
+                         "Session ID has {} in it: %s" % self.marionette.session_id)
