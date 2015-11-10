@@ -563,9 +563,6 @@ nsBrowserElement::GetAllowedAudioChannels(
       return;
     }
 
-    MOZ_LOG(AudioChannelService::GetAudioChannelLog(), LogLevel::Debug,
-            ("nsBrowserElement, GetAllowedAudioChannels, this = %p\n", this));
-
     GenerateAllowedAudioChannels(window, frameLoader, mBrowserElementAPI,
                                  manifestURL, mBrowserElementAudioChannels,
                                  aRv);

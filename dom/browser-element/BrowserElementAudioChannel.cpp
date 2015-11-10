@@ -68,10 +68,6 @@ BrowserElementAudioChannel::Create(nsPIDOMWindow* aWindow,
     return nullptr;
   }
 
-  MOZ_LOG(AudioChannelService::GetAudioChannelLog(), LogLevel::Debug,
-         ("BrowserElementAudioChannel, Create, channel = %p, type = %d\n",
-          ac.get(), aAudioChannel));
-
   return ac.forget();
 }
 
@@ -612,10 +608,6 @@ BrowserElementAudioChannel::Observe(nsISupports* aSubject, const char* aTopic,
 void
 BrowserElementAudioChannel::ProcessStateChanged(const char16_t* aData)
 {
-  MOZ_LOG(AudioChannelService::GetAudioChannelLog(), LogLevel::Debug,
-         ("BrowserElementAudioChannel, ProcessStateChanged, this = %p, "
-          "type = %d\n", this, mAudioChannel));
-
   nsAutoString value(aData);
   mState = value.EqualsASCII("active") ? eStateActive : eStateInactive;
   DispatchTrustedEvent(NS_LITERAL_STRING("activestatechanged"));
