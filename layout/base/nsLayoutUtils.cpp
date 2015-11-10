@@ -2889,9 +2889,9 @@ static LayoutDeviceIntPoint GetWidgetOffset(nsIWidget* aWidget, nsIWidget*& aRoo
     if (!parent) {
       break;
     }
-    nsIntRect bounds;
+    LayoutDeviceIntRect bounds;
     aWidget->GetBounds(bounds);
-    offset += LayoutDeviceIntPoint::FromUntyped(bounds.TopLeft());
+    offset += bounds.TopLeft();
     aWidget = parent;
   }
   aRootWidget = aWidget;
@@ -7979,7 +7979,7 @@ UpdateCompositionBoundsForRCDRSF(ParentLayerRect& aCompBounds,
 
   if (widget) {
     nsIntRect widgetBounds;
-    widget->GetBounds(widgetBounds);
+    widget->GetBoundsUntyped(widgetBounds);
     widgetBounds.MoveTo(0, 0);
     aCompBounds = ParentLayerRect(ViewAs<ParentLayerPixel>(widgetBounds));
     return true;
@@ -8104,7 +8104,7 @@ nsLayoutUtils::CalculateRootCompositionSize(nsIFrame* aFrame,
   } else {
     nsIWidget* widget = aFrame->GetNearestWidget();
     nsIntRect widgetBounds;
-    widget->GetBounds(widgetBounds);
+    widget->GetBoundsUntyped(widgetBounds);
     rootCompositionSize = ScreenSize(ViewAs<ScreenPixel>(widgetBounds.Size()));
   }
 

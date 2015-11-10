@@ -175,7 +175,7 @@ nsresult nsWebShellWindow::Initialize(nsIXULWindow* aParent,
                   nullptr,                            // Native parent widget
                   r,                                  // Widget dimensions
                   &widgetInitData);                   // Widget initialization data
-  mWindow->GetClientBounds(r);
+  mWindow->GetClientBoundsUntyped(r);
   // Match the default background color of content. Important on windows
   // since we no longer use content child widgets.
   mWindow->SetBackgroundColor(NS_RGB(255,255,255));

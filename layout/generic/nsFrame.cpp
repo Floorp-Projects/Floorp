@@ -5056,11 +5056,12 @@ nsIFrame::GetTransformMatrix(const nsIFrame* aStopAtAncestor,
     if (widget && rootPresContext) {
       nsIWidget* toplevel = rootPresContext->GetNearestWidget();
       if (toplevel) {
-        nsIntRect screenBounds;
+        LayoutDeviceIntRect screenBounds;
         widget->GetClientBounds(screenBounds);
-        nsIntRect toplevelScreenBounds;
+        LayoutDeviceIntRect toplevelScreenBounds;
         toplevel->GetClientBounds(toplevelScreenBounds);
-        nsIntPoint translation = screenBounds.TopLeft() - toplevelScreenBounds.TopLeft();
+        LayoutDeviceIntPoint translation =
+          screenBounds.TopLeft() - toplevelScreenBounds.TopLeft();
 
         Matrix4x4 transformToTop;
         transformToTop._41 = translation.x;

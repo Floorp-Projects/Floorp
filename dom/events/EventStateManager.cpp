@@ -4144,7 +4144,7 @@ GetWindowInnerRectCenter(nsPIDOMWindow* aWindow,
   int32_t innerHeight = window->GetInnerHeightOuter(dummy);
   dummy.SuppressException();
 
-  nsIntRect screen;
+  LayoutDeviceIntRect screen;
   aWidget->GetScreenBounds(screen);
 
   int32_t cssScreenX = aContext->DevPixelsToIntCSSPixels(screen.x);
