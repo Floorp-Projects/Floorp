@@ -60,6 +60,14 @@ public:
    */
   int32_t GetLastTouchIdentifier() const;
 
+  /**
+   * Function used to disable long tap gestures.
+   *
+   * On slow running tests, drags and touch events can be misinterpreted
+   * as a long tap. This allows tests to disable long tap gesture detection.
+   */
+  static void SetLongTapEnabled(bool aLongTapEnabled);
+
 private:
   // Private destructor, to discourage deletion outside of Release():
   ~GestureEventListener();
@@ -222,7 +230,6 @@ private:
   CancelableTask *mMaxTapTimeoutTask;
   void CancelMaxTapTimeoutTask();
   void CreateMaxTapTimeoutTask();
-
 };
 
 } // namespace layers

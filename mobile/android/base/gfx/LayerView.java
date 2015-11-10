@@ -145,7 +145,7 @@ public class LayerView extends ScrollView implements Tabs.OnTabsChangedListener 
      * PanZoomController not to generate longpress events.
      */
     public void setIsLongpressEnabled(boolean isLongpressEnabled) {
-        ((JavaPanZoomController) mPanZoomController).setIsLongpressEnabled(isLongpressEnabled);
+        mPanZoomController.setIsLongpressEnabled(isLongpressEnabled);
     }
 
     private static Point getEventRadius(MotionEvent event) {
