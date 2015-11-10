@@ -359,12 +359,16 @@ class MOZ_STACK_CLASS AutoEntryMonitor {
     // We have begun executing |function|. Note that |function| may not be the
     // actual closure we are running, but only the canonical function object to
     // which the script refers.
-    virtual void Entry(JSContext* cx, JSFunction* function) = 0;
+    virtual void Entry(JSContext* cx, JSFunction* function,
+                       HandleValue asyncStack,
+                       HandleString asyncCause) = 0;
 
     // Execution has begun at the entry point of |script|, which is not a
     // function body. (This is probably being executed by 'eval' or some
     // JSAPI equivalent.)
-    virtual void Entry(JSContext* cx, JSScript* script) = 0;
+    virtual void Entry(JSContext* cx, JSScript* script,
+                       HandleValue asyncStack,
+                       HandleString asyncCause) = 0;
 
     // Execution of the function or script has ended.
     virtual void Exit(JSContext* cx) { }
