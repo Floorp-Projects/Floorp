@@ -3,12 +3,7 @@
 # see <gecko>/testing/taskcluster/tasks/branches/base_job_flags.yml
 
 $inherits:
-  from: tasks/branches/base_jobs.yml
-
-# Flags specific to this branch
-flags:
-  post-build:
-    - simulator
+  from: tasks/branches/base_job_flags.yml
 
 builds:
   aries-dogfood:
@@ -21,14 +16,14 @@ builds:
     platforms:
       - b2g
     types:
-      opt:
-        task: tasks/builds/b2g_flame_kk_ota_opt.yml
       debug:
         task: tasks/builds/b2g_flame_kk_ota_debug.yml
 
 # Just needed for parser sake
-post-build:
-  simulator:
+tests:
+  cppunit:
     allowed_build_tasks:
-      - tasks/builds/mulet_linux.yml
-    task: tasks/post-builds/mulet_simulator.yml
+      tasks/builds/b2g_emulator_x86_kk_opt.yml:
+        task: tasks/tests/b2g_emulator_cpp_unit.yml
+      tasks/builds/b2g_emulator_x86_kk_debug.yml:
+        task: tasks/tests/b2g_emulator_cpp_unit.yml
