@@ -165,6 +165,40 @@ struct IsArray : detail::IsArrayHelper<typename RemoveCV<T>::Type>
 namespace detail {
 
 template<typename T>
+struct IsFunPtr;
+
+template<typename>
+struct IsFunPtr
+  : public FalseType
+{};
+
+template<typename Result, typename... ArgTypes>
+struct IsFunPtr<Result(*)(ArgTypes...)>
+  : public TrueType
+{};
+
+}; // namespace detail
+
+/**
+ * IsFunction determines whether a type is a function type. Function pointers
+ * don't qualify here--only the type of an actual function symbol. We do not
+ * correctly handle varags function types because of a bug in MSVC.
+ *
+ * Given the function:
+ *   void f(int) {}
+ *
+ * mozilla::IsFunction<void(int)> is true;
+ * mozilla::IsFunction<void(*)(int)> is false;
+ * mozilla::IsFunction<decltype(f)> is true.
+ */
+template<typename T>
+struct IsFunction
+  : public detail::IsFunPtr<typename RemoveCV<T>::Type *>
+{};
+
+namespace detail {
+
+template<typename T>
 struct IsPointerHelper : FalseType {};
 
 template<typename T>
@@ -1063,6 +1097,22 @@ struct RemovePointer
   : detail::RemovePointerHelper<T, typename RemoveCV<T>::Type>
 {};
 
+/**
+ * Converts T& to T*. Otherwise returns T* given T. Note that C++17 wants
+ * std::add_pointer to work differently for function types. We don't implement
+ * that behavior here.
+ *
+ * mozilla::AddPointer<int> is int*;
+ * mozilla::AddPointer<int*> is int**;
+ * mozilla::AddPointer<int&> is int*;
+ * mozilla::AddPointer<int* const> is int** const.
+ */
+template<typename T>
+struct AddPointer
+{
+  typedef typename RemoveReference<T>::Type* Type;
+};
+
 /* 20.9.7.6 Other transformations [meta.trans.other] */
 
 /**
@@ -1109,6 +1159,51 @@ template<class A, class B>
 struct Conditional<false, A, B>
 {
   typedef B Type;
+};
+
+namespace detail {
+
+template<typename U,
+         bool IsArray = IsArray<U>::value,
+         bool IsFunction = IsFunction<U>::value>
+struct DecaySelector;
+
+template<typename U>
+struct DecaySelector<U, false, false>
+{
+  typedef typename RemoveCV<U>::Type Type;
+};
+
+template<typename U>
+struct DecaySelector<U, true, false>
+{
+  typedef typename RemoveExtent<U>::Type* Type;
+};
+
+template<typename U>
+struct DecaySelector<U, false, true>
+{
+  typedef typename AddPointer<U>::Type Type;
+};
+
+}; // namespace detail
+
+/**
+ * Strips const/volatile off a type and decays it from an lvalue to an
+ * rvalue. So function types are converted to function pointers, arrays to
+ * pointers, and references are removed.
+ *
+ * mozilla::Decay<int>::Type is int
+ * mozilla::Decay<int&>::Type is int
+ * mozilla::Decay<int&&>::Type is int
+ * mozilla::Decay<const int&>::Type is int
+ * mozilla::Decay<int[2]>::Type is int*
+ * mozilla::Decay<int(int)>::Type is int(*)(int)
+ */
+template<typename T>
+class Decay
+  : public detail::DecaySelector<typename RemoveReference<T>::Type>
+{
 };
 
 } /* namespace mozilla */

@@ -1566,7 +1566,7 @@ class CGAddPropertyHook(CGAbstractClassHook):
 
 
 def finalizeHook(descriptor, hookName, freeOp):
-    finalize = "JSBindingFinalized<%s>::Finalized(self);\n" % descriptor.nativeType
+    finalize = ""
     if descriptor.wrapperCache:
         finalize += "ClearWrapper(self, self);\n"
     if descriptor.interface.getExtendedAttribute('OverrideBuiltins'):

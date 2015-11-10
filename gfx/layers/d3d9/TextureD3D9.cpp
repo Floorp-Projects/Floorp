@@ -120,7 +120,7 @@ CompositingRenderTargetD3D9::CompositingRenderTargetD3D9(IDirect3DTexture9* aTex
   MOZ_ASSERT(aTexture);
 
   mTexture = aTexture;
-  HRESULT hr = mTexture->GetSurfaceLevel(0, getter_AddRefs(mSurface));
+  mTexture->GetSurfaceLevel(0, getter_AddRefs(mSurface));
   NS_ASSERTION(mSurface, "Couldn't create surface for texture");
   TextureSourceD3D9::SetSize(aRect.Size());
 }
@@ -278,8 +278,8 @@ DataTextureSourceD3D9::DataTextureSourceD3D9(gfx::SurfaceFormat aFormat,
                                              CompositorD3D9* aCompositor,
                                              TextureFlags aFlags,
                                              StereoMode aStereoMode)
-  : mFormat(aFormat)
-  , mCompositor(aCompositor)
+  : mCompositor(aCompositor)
+  , mFormat(aFormat)
   , mCurrentTile(0)
   , mFlags(aFlags)
   , mIsTiled(false)
@@ -294,8 +294,8 @@ DataTextureSourceD3D9::DataTextureSourceD3D9(gfx::SurfaceFormat aFormat,
                                              CompositorD3D9* aCompositor,
                                              IDirect3DTexture9* aTexture,
                                              TextureFlags aFlags)
-  : mFormat(aFormat)
-  , mCompositor(aCompositor)
+  : mCompositor(aCompositor)
+  , mFormat(aFormat)
   , mCurrentTile(0)
   , mFlags(aFlags)
   , mIsTiled(false)
