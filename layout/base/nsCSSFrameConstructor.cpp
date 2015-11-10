@@ -1453,10 +1453,9 @@ MoveChildrenTo(nsPresContext* aPresContext,
 
 //----------------------------------------------------------------------
 
-nsCSSFrameConstructor::nsCSSFrameConstructor(nsIDocument *aDocument,
-                                             nsIPresShell *aPresShell,
-                                             nsStyleSet* aStyleSet)
-  : nsFrameManager(aPresShell, aStyleSet)
+nsCSSFrameConstructor::nsCSSFrameConstructor(nsIDocument* aDocument,
+                                             nsIPresShell* aPresShell)
+  : nsFrameManager(aPresShell)
   , mDocument(aDocument)
   , mRootElementFrame(nullptr)
   , mRootElementStyleFrame(nullptr)

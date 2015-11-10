@@ -82,11 +82,9 @@ class nsFrameManager : public nsFrameManagerBase
   typedef mozilla::layout::FrameChildListID ChildListID;
 
 public:
-  nsFrameManager(nsIPresShell *aPresShell, nsStyleSet* aStyleSet) {
+  explicit nsFrameManager(nsIPresShell* aPresShell) {
     mPresShell = aPresShell;
-    mStyleSet = aStyleSet;
     MOZ_ASSERT(mPresShell, "need a pres shell");
-    MOZ_ASSERT(mStyleSet, "need a style set");
   }
   ~nsFrameManager();
 
