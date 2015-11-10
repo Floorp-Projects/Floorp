@@ -24,7 +24,9 @@ add_task(function* test_permissionMigration() {
   let alertWindow = yield alertWindowPromise;
 
   info("Clicking on notification");
-  let url = Services.urlFormatter.formatURLPref("browser.push.warning.migrationURL");
+  let url =
+    Services.urlFormatter.formatURLPref("app.support.baseURL") +
+    "push#w_upgraded-notifications";
   let closePromise = promiseWindowClosed(alertWindow);
   let tabPromise = BrowserTestUtils.waitForNewTab(gBrowser, url);
   EventUtils.synthesizeMouseAtCenter(alertWindow.document.getElementById("alertTitleLabel"), {}, alertWindow);
