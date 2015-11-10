@@ -10,7 +10,7 @@ class TestKeyActions(MarionetteTestCase):
 
     def setUp(self):
         MarionetteTestCase.setUp(self)
-        if self.marionette.session_capabilities['platformName'] == 'DARWIN':
+        if self.marionette.session_capabilities['platformName'] == 'Darwin':
             self.mod_key = Keys.META
         else:
             self.mod_key = Keys.CONTROL
