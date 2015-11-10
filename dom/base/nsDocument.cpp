@@ -1498,13 +1498,19 @@ nsDocument::nsDocument(const char* aContentType)
   }
 }
 
-static PLDHashOperator
-ClearAllBoxObjects(nsIContent* aKey, nsPIBoxObject* aBoxObject, void* aUserArg)
+void
+nsDocument::ClearAllBoxObjects()
 {
-  if (aBoxObject) {
-    aBoxObject->Clear();
+  if (mBoxObjectTable) {
+    for (auto iter = mBoxObjectTable->Iter(); !iter.Done(); iter.Next()) {
+      nsPIBoxObject* boxObject = iter.UserData();
+      if (boxObject) {
+        boxObject->Clear();
+      }
+    }
+    delete mBoxObjectTable;
+    mBoxObjectTable = nullptr;
   }
-  return PL_DHASH_NEXT;
 }
 
 nsIDocument::~nsIDocument()
@@ -1653,10 +1659,7 @@ nsDocument::~nsDocument()
 
   delete mHeaderData;
 
-  if (mBoxObjectTable) {
-    mBoxObjectTable->EnumerateRead(ClearAllBoxObjects, nullptr);
-    delete mBoxObjectTable;
-  }
+  ClearAllBoxObjects();
 
   mPendingTitleChangeEvent.Revoke();
 
@@ -1746,39 +1749,6 @@ NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_THIS_BEGIN(nsDocument)
   return Element::CanSkipThis(tmp);
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_THIS_END
 
-static PLDHashOperator
-RadioGroupsTraverser(const nsAString& aKey, nsRadioGroupStruct* aData,
-                     void* aClosure)
-{
-  nsCycleCollectionTraversalCallback *cb =
-    static_cast<nsCycleCollectionTraversalCallback*>(aClosure);
-
-  NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(*cb,
-                                   "mRadioGroups entry->mSelectedRadioButton");
-  cb->NoteXPCOMChild(ToSupports(aData->mSelectedRadioButton));
-
-  uint32_t i, count = aData->mRadioButtons.Count();
-  for (i = 0; i < count; ++i) {
-    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(*cb,
-                                       "mRadioGroups entry->mRadioButtons[i]");
-    cb->NoteXPCOMChild(aData->mRadioButtons[i]);
-  }
-
-  return PL_DHASH_NEXT;
-}
-
-static PLDHashOperator
-BoxObjectTraverser(nsIContent* key, nsPIBoxObject* boxObject, void* userArg)
-{
-  nsCycleCollectionTraversalCallback *cb =
-    static_cast<nsCycleCollectionTraversalCallback*>(userArg);
-
-  NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(*cb, "mBoxObjectTable entry");
-  cb->NoteXPCOMChild(boxObject);
-
-  return PL_DHASH_NEXT;
-}
-
 static const char* kNSURIs[] = {
   "([none])",
   "(xmlns)",
@@ -1855,12 +1825,27 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsDocument)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mMasterDocument)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mImportManager)
 
-  tmp->mRadioGroups.EnumerateRead(RadioGroupsTraverser, &cb);
+  for (auto iter = tmp->mRadioGroups.Iter(); !iter.Done(); iter.Next()) {
+    nsRadioGroupStruct* radioGroup = iter.UserData();
+    NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(
+      cb, "mRadioGroups entry->mSelectedRadioButton");
+    cb.NoteXPCOMChild(ToSupports(radioGroup->mSelectedRadioButton));
+
+    uint32_t i, count = radioGroup->mRadioButtons.Count();
+    for (i = 0; i < count; ++i) {
+      NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(
+        cb, "mRadioGroups entry->mRadioButtons[i]");
+      cb.NoteXPCOMChild(radioGroup->mRadioButtons[i]);
+    }
+  }
 
   // The boxobject for an element will only exist as long as it's in the
   // document, so we'll traverse the table here instead of from the element.
   if (tmp->mBoxObjectTable) {
-    tmp->mBoxObjectTable->EnumerateRead(BoxObjectTraverser, &cb);
+    for (auto iter = tmp->mBoxObjectTable->Iter(); !iter.Done(); iter.Next()) {
+      NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "mBoxObjectTable entry");
+      cb.NoteXPCOMChild(iter.UserData());
+    }
   }
 
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mChannel)
@@ -1981,12 +1966,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsDocument)
 
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mPreloadingImages)
 
-
-  if (tmp->mBoxObjectTable) {
-   tmp->mBoxObjectTable->EnumerateRead(ClearAllBoxObjects, nullptr);
-   delete tmp->mBoxObjectTable;
-   tmp->mBoxObjectTable = nullptr;
- }
+  tmp->ClearAllBoxObjects();
 
   if (tmp->mListenerManager) {
     tmp->mListenerManager->Disconnect();
@@ -3787,14 +3767,6 @@ nsIDocument::ShouldThrottleFrameRequests()
   return false;
 }
 
-PLDHashOperator RequestDiscardEnumerator(imgIRequest* aKey,
-                                         uint32_t aData,
-                                         void* userArg)
-{
-  aKey->RequestDiscard();
-  return PL_DHASH_NEXT;
-}
-
 void
 nsDocument::DeleteShell()
 {
@@ -3809,7 +3781,9 @@ nsDocument::DeleteShell()
   // When our shell goes away, request that all our images be immediately
   // discarded, so we don't carry around decoded image data for a document we
   // no longer intend to paint.
-  mImageTracker.EnumerateRead(RequestDiscardEnumerator, nullptr);
+  for (auto iter = mImageTracker.Iter(); !iter.Done(); iter.Next()) {
+    iter.Key()->RequestDiscard();
+  }
 
   // Now that we no longer have a shell, we need to forget about any FontFace
   // objects for @font-face rules that came from the style set.
@@ -10567,23 +10541,6 @@ nsDocument::NotifyMediaFeatureValuesChanged()
   }
 }
 
-PLDHashOperator LockEnumerator(imgIRequest* aKey,
-                               uint32_t aData,
-                               void*    userArg)
-{
-  aKey->LockImage();
-  return PL_DHASH_NEXT;
-}
-
-PLDHashOperator UnlockEnumerator(imgIRequest* aKey,
-                                 uint32_t aData,
-                                 void*    userArg)
-{
-  aKey->UnlockImage();
-  return PL_DHASH_NEXT;
-}
-
-
 nsresult
 nsDocument::SetImageLockingState(bool aLocked)
 {
@@ -10597,30 +10554,19 @@ nsDocument::SetImageLockingState(bool aLocked)
     return NS_OK;
 
   // Otherwise, iterate over our images and perform the appropriate action.
-  mImageTracker.EnumerateRead(aLocked ? LockEnumerator
-                                      : UnlockEnumerator,
-                              nullptr);
+  for (auto iter = mImageTracker.Iter(); !iter.Done(); iter.Next()) {
+    imgIRequest* image = iter.Key();
+    if (aLocked) {
+      image->LockImage();
+    } else {
+      image->UnlockImage();
+    }
+  }
 
   // Update state.
   mLockingImages = aLocked;
 
   return NS_OK;
-}
-
-PLDHashOperator IncrementAnimationEnumerator(imgIRequest* aKey,
-                                             uint32_t aData,
-                                             void*    userArg)
-{
-  aKey->IncrementAnimationConsumers();
-  return PL_DHASH_NEXT;
-}
-
-PLDHashOperator DecrementAnimationEnumerator(imgIRequest* aKey,
-                                             uint32_t aData,
-                                             void*    userArg)
-{
-  aKey->DecrementAnimationConsumers();
-  return PL_DHASH_NEXT;
 }
 
 void
@@ -10631,9 +10577,14 @@ nsDocument::SetImagesNeedAnimating(bool aAnimating)
     return;
 
   // Otherwise, iterate over our images and perform the appropriate action.
-  mImageTracker.EnumerateRead(aAnimating ? IncrementAnimationEnumerator
-                                         : DecrementAnimationEnumerator,
-                              nullptr);
+  for (auto iter = mImageTracker.Iter(); !iter.Done(); iter.Next()) {
+    imgIRequest* image = iter.Key();
+    if (aAnimating) {
+      image->IncrementAnimationConsumers();
+    } else {
+      image->DecrementAnimationConsumers();
+    }
+  }
 
   // Update state.
   mAnimatingImages = aAnimating;

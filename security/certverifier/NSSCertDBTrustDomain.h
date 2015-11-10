@@ -19,7 +19,7 @@ enum class ValidityCheckingMode {
   CheckForEV = 1,
 };
 
-SECStatus InitializeNSS(const char* dir, bool readOnly);
+SECStatus InitializeNSS(const char* dir, bool readOnly, bool loadPKCS11Modules);
 
 void DisableMD5();
 

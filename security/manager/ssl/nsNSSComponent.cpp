@@ -29,6 +29,7 @@
 #include "nsISiteSecurityService.h"
 #include "nsITokenPasswordDialogs.h"
 #include "nsIWindowWatcher.h"
+#include "nsIXULRuntime.h"
 #include "nsNSSHelper.h"
 #include "nsNSSShutDown.h"
 #include "nsServiceManagerUtils.h"
@@ -989,14 +990,27 @@ nsNSSComponent::InitializeNSS()
 
   SECStatus init_rv = SECFailure;
   bool nocertdb = Preferences::GetBool("security.nocertdb", false);
+  bool inSafeMode = true;
+  nsCOMPtr<nsIXULRuntime> runtime(do_GetService("@mozilla.org/xre/runtime;1"));
+  // There might not be an nsIXULRuntime in embedded situations. This will
+  // default to assuming we are in safe mode (as a result, no external PKCS11
+  // modules will be loaded).
+  if (runtime) {
+    rv = runtime->GetInSafeMode(&inSafeMode);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+  }
+  MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("inSafeMode: %u\n", inSafeMode));
 
   if (!nocertdb && !profileStr.IsEmpty()) {
     // First try to initialize the NSS DB in read/write mode.
-    init_rv = ::mozilla::psm::InitializeNSS(profileStr.get(), false);
+    // Only load PKCS11 modules if we're not in safe mode.
+    init_rv = ::mozilla::psm::InitializeNSS(profileStr.get(), false, !inSafeMode);
     // If that fails, attempt read-only mode.
     if (init_rv != SECSuccess) {
       MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("could not init NSS r/w in %s\n", profileStr.get()));
-      init_rv = ::mozilla::psm::InitializeNSS(profileStr.get(), true);
+      init_rv = ::mozilla::psm::InitializeNSS(profileStr.get(), true, !inSafeMode);
     }
     if (init_rv != SECSuccess) {
       MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("could not init in r/o either\n"));
