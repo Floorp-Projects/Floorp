@@ -471,13 +471,16 @@ nsMediaQuery::AppendToString(nsAString& aString) const
     aString.Append('(');
 
     const nsMediaExpression &expr = mExpressions[i];
+    const nsMediaFeature *feature = expr.mFeature;
+    if (feature->mReqFlags & nsMediaFeature::eHasWebkitPrefix) {
+      aString.AppendLiteral("-webkit-");
+    }
     if (expr.mRange == nsMediaExpression::eMin) {
       aString.AppendLiteral("min-");
     } else if (expr.mRange == nsMediaExpression::eMax) {
       aString.AppendLiteral("max-");
     }
 
-    const nsMediaFeature *feature = expr.mFeature;
     aString.Append(nsDependentAtomString(*feature->mName));
 
     if (expr.mValue.GetUnit() != eCSSUnit_Null) {
