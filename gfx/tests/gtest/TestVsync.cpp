@@ -195,3 +195,12 @@ TEST_F(VsyncTester, ChildRefreshDriverGetVsyncNotifications)
   vsyncDispatcher = nullptr;
   testVsyncObserver = nullptr;
 }
+
+// Test that we can read the vsync rate
+TEST_F(VsyncTester, VsyncSourceHasVsyncRate)
+{
+  VsyncSource::Display& globalDisplay = mVsyncSource->GetGlobalDisplay();
+  TimeDuration vsyncRate = globalDisplay.GetVsyncRate();
+  ASSERT_NE(vsyncRate, TimeDuration::Forever());
+  ASSERT_GT(vsyncRate.ToMilliseconds(), 0);
+}

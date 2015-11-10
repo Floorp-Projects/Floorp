@@ -3,5 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 webapprt.jar:
-+ skin/classic/webapprt/downloads/downloadIcon.png          (downloads/downloadIcon.png)
-+ skin/classic/webapprt/downloads/downloads.css             (downloads/downloads.css)
+% skin webapprt classic/1.0 %skin/classic/webapprt/
+  skin/classic/webapprt/downloads/downloadButtons.png       (../windows/downloads/downloadButtons.png)
+  skin/classic/webapprt/downloads/downloadIcon.png          (downloads/downloadIcon.png)
+  skin/classic/webapprt/downloads/downloads.css             (downloads/downloads.css)

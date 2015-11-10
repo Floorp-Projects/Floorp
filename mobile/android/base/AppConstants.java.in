@@ -103,6 +103,8 @@ public class AppConstants {
     public static final String MOZ_APP_VENDOR = "@MOZ_APP_VENDOR@";
     public static final String MOZ_APP_VERSION = "@MOZ_APP_VERSION@";
     public static final String MOZ_APP_DISPLAYNAME = "@MOZ_APP_DISPLAYNAME@";
+    // MOZ_APP_UA_NAME is already quoted when it gets substituted, like MOZILLA_VERSION.
+    public static final String MOZ_APP_UA_NAME = @MOZ_APP_UA_NAME@;
 
     // MOZILLA_VERSION is already quoted when it gets substituted in. If we
     // add additional quotes we end up with ""x.y"", which is a syntax error.
@@ -194,13 +196,6 @@ public class AppConstants {
 
     public static final boolean MOZ_ANDROID_READING_LIST_SERVICE =
 //#ifdef MOZ_ANDROID_READING_LIST_SERVICE
-    true;
-//#else
-    false;
-//#endif
-
-    public static final boolean MOZ_ANDROID_FIREFOX_ACCOUNT_PROFILES =
-//#ifdef MOZ_ANDROID_FIREFOX_ACCOUNT_PROFILES
     true;
 //#else
     false;

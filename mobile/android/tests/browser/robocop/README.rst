@@ -1,6 +1,9 @@
 Robocop Mochitest
 =================
 
+*Robocop Mochitest* is a Mozilla project which uses Robotium to test
+ Firefox on Android devices.
+
 *Robocop Mochitest* tests run on Native Android builds marked with an
 'rc' in TBPL.  These are Java based tests which run from the mochitest
 harness and generate similar log files.  These are designed for
@@ -45,3 +48,14 @@ As always, changes to ``mobile/android/base``, ``mobile/android/chrome``,
     mach build mobile/android/base && mach package && mach install
 
 as usual.
+
+Licensing
+---------
+
+Robotium is an open source tool licensed under the Apache 2.0 license and the original
+source can be found here:
+http://code.google.com/p/robotium/
+
+We are including robotium-solo-4.3.1.jar as a binary and are not modifying it in any way
+from the original download found at:
+http://code.google.com/p/robotium/
