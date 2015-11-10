@@ -15,8 +15,8 @@ SourceSurfaceD2D1::SourceSurfaceD2D1(ID2D1Image *aImage, ID2D1DeviceContext *aDC
                                      DrawTargetD2D1 *aDT)
   : mImage(aImage)
   , mDC(aDC)
-  , mDrawTarget(aDT)
   , mDevice(Factory::GetD2D1Device())
+  , mDrawTarget(aDT)
 {
   aImage->QueryInterface((ID2D1Bitmap1**)getter_AddRefs(mRealizedBitmap));
 

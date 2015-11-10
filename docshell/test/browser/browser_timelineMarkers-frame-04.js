@@ -31,4 +31,50 @@ var TESTS = [{
   }
 }];
 
+if (Services.prefs.getBoolPref("javascript.options.asyncstack")) {
+  TESTS.push({
+    desc: "Async stack trace on Javascript marker",
+    searchFor: (markers) => {
+      return markers.some(m => (m.name == "Javascript" &&
+                                m.causeName == "promise callback"));
+    },
+    setup: function(docShell) {
+      content.dispatchEvent(new content.Event("promisetest"));
+    },
+    check: function(markers) {
+      markers = markers.filter(m => (m.name == "Javascript" &&
+                                     m.causeName == "promise callback"));
+      ok(markers.length > 0, "Found a Javascript marker");
+
+      let frame = markers[0].stack;
+      ok(frame.asyncParent !== null, "Parent frame has async parent");
+      is(frame.asyncParent.asyncCause, "promise callback",
+         "Async parent has correct cause");
+      is(frame.asyncParent.functionDisplayName, "do_promise",
+         "Async parent has correct function name");
+    }
+  }, {
+    desc: "Async stack trace on Javascript marker with script",
+    searchFor: (markers) => {
+      return markers.some(m => (m.name == "Javascript" &&
+                                m.causeName == "promise callback"));
+    },
+    setup: function(docShell) {
+      content.dispatchEvent(new content.Event("promisescript"));
+    },
+    check: function(markers) {
+      markers = markers.filter(m => (m.name == "Javascript" &&
+                                     m.causeName == "promise callback"));
+      ok(markers.length > 0, "Found a Javascript marker");
+
+      let frame = markers[0].stack;
+      ok(frame.asyncParent !== null, "Parent frame has async parent");
+      is(frame.asyncParent.asyncCause, "promise callback",
+         "Async parent has correct cause");
+      is(frame.asyncParent.functionDisplayName, "do_promise_script",
+         "Async parent has correct function name");
+    }
+  });
+}
+
 timelineContentTest(TESTS);

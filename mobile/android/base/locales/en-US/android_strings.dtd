@@ -102,7 +102,7 @@
 <!ENTITY settings "Settings">
 <!ENTITY settings_title "Settings">
 <!ENTITY pref_category_general "General">
-<!ENTITY pref_category_general_summary "Home, language, zoom, full-screen browsing">
+<!ENTITY pref_category_general_summary2 "Home, language, URL bar">
 
 <!-- Localization note (pref_category_language) : This is the preferences
      section in which the user picks the locale in which to display Firefox
@@ -151,11 +151,11 @@
 <!ENTITY pref_category_search3 "Search">
 <!ENTITY pref_category_search_summary "Customize your search providers">
 <!ENTITY pref_category_accessibility "Accessibility">
-<!ENTITY pref_category_accessibility_summary "Text size, voice input">
+<!ENTITY pref_category_accessibility_summary2 "Text size, zoom, voice input">
 <!ENTITY pref_category_privacy_short "Privacy">
-<!ENTITY pref_category_privacy_summary2 "Control logins, cookies, tracking, data">
-<!ENTITY pref_category_vendor "&vendorShortName;">
-<!ENTITY pref_category_vendor_summary "About &brandShortName;, FAQs, data choices">
+<!ENTITY pref_category_privacy_summary3 "Tracking, cookies, data choices">
+<!ENTITY pref_category_vendor2 "&vendorShortName; &brandShortName;">
+<!ENTITY pref_category_vendor_summary2 "About &brandShortName;, FAQs, feedback">
 <!ENTITY pref_category_datareporting "Data choices">
 <!ENTITY pref_learn_more "Learn more">
 <!ENTITY pref_category_installed_search_engines "Installed search engines">
@@ -170,7 +170,7 @@
      it is applicable. -->
 <!ENTITY pref_search_hint "TIP: Add any website to your list of search providers by long-pressing on its search field and then tapping the &formatI; icon.">
 <!ENTITY pref_category_advanced "Advanced">
-<!ENTITY pref_category_advanced_summary "Import, plugins, developer tools">
+<!ENTITY pref_category_advanced_summary2 "Restore tabs, plugins, developer tools">
 <!ENTITY pref_developer_remotedebugging "Remote debugging">
 <!ENTITY pref_developer_remotedebugging_usb "Remote debugging via USB">
 <!ENTITY pref_developer_remotedebugging_wifi "Remote debugging via Wi-Fi">
@@ -250,8 +250,8 @@
 <!ENTITY pref_char_encoding "Character encoding">
 <!ENTITY pref_char_encoding_on "Show menu">
 <!ENTITY pref_char_encoding_off "Don\'t show menu">
-<!ENTITY pref_clear_private_data_now "Clear private data now">
-<!ENTITY pref_clear_on_exit_title2 "Clear on exit">
+<!ENTITY pref_clear_private_data "Clear Private Data">
+<!ENTITY pref_clear_on_exit_title3 "Clear private data on exit">
 <!ENTITY pref_clear_on_exit_summary2 "&brandShortName; will automatically clear your data whenever you select \u0022Quit\u0022 from the main menu">
 <!ENTITY pref_clear_on_exit_dialog_title "Select which data to clear">
 <!ENTITY pref_plugins "Plugins">
@@ -259,7 +259,7 @@
 <!ENTITY pref_plugins_tap_to_play "Tap to play">
 <!ENTITY pref_plugins_disabled "Disabled">
 <!ENTITY pref_text_size "Text size">
-<!ENTITY pref_restore "Tabs">
+<!ENTITY pref_restore_tabs "Restore tabs">
 <!ENTITY pref_restore_always "Always restore">
 <!ENTITY pref_restore_quit "Don\'t restore after quitting &brandShortName;">
 <!ENTITY pref_font_size_tiny "Tiny">
@@ -284,16 +284,16 @@ size. -->
 <!ENTITY pref_zoom_force_enabled "Always enable zoom">
 <!ENTITY pref_zoom_force_enabled_summary "Force override so you can zoom any page">
 <!ENTITY pref_voice_input "Voice input">
-<!ENTITY pref_voice_input_summary "Allow voice dictation in the title bar">
+<!ENTITY pref_voice_input_summary2 "Allow voice dictation in the URL bar">
 <!ENTITY pref_qrcode_enabled "QR code reader">
-<!ENTITY pref_qrcode_enabled_summary "Allow QR scanner in the title bar">
+<!ENTITY pref_qrcode_enabled_summary2 "Allow QR scanner in the URL bar">
 
 <!ENTITY pref_use_master_password "Use master password">
 <!ENTITY pref_sync "Sync">
 <!ENTITY pref_sync_summary2 "Sync your tabs, bookmarks, logins, history">
 <!ENTITY pref_search_suggestions "Show search suggestions">
 <!ENTITY pref_history_search_suggestions "Show search history">
-<!ENTITY pref_import_android "Import from Android">
+<!ENTITY pref_import_options "Import options">
 <!ENTITY pref_import_android_summary "Import bookmarks and history from the native browser">
 <!ENTITY pref_private_data_history2 "Browsing history">
 <!ENTITY pref_private_data_searchHistory "Search history">
@@ -350,7 +350,7 @@ size. -->
 <!-- Localization note (pref_update_autodownload2) : This should mention downloading
      specifically, since the pref only prevents automatic downloads and not the
      actual notification that an update is available. -->
-<!ENTITY pref_update_autodownload2 "Download updates automatically">
+<!ENTITY pref_update_autodownload3 "Automatic updates">
 <!ENTITY pref_update_autodownload_wifi "Only over Wi-Fi">
 <!ENTITY pref_update_autodownload_never "Never">
 <!ENTITY pref_update_autodownload_always "Always">
@@ -432,7 +432,7 @@ size. -->
 <!ENTITY doorhanger_login_select_action_text "Select another login">
 <!ENTITY doorhanger_login_select_title "Copy password from">
 
-<!ENTITY pref_titlebar_mode "Title bar">
+<!ENTITY pref_titlebar_mode2 "URL bar">
 <!ENTITY pref_titlebar_mode_title "Show page title">
 <!ENTITY pref_titlebar_mode_url "Show page address">
 
@@ -444,7 +444,7 @@ size. -->
 <!-- Localization note (pref_scroll_title_bar2): Label for setting that controls
      whether or not the dynamic toolbar is enabled. -->
 <!ENTITY pref_scroll_title_bar2 "Full-screen browsing">
-<!ENTITY pref_scroll_title_bar_summary "Hide the &brandShortName; title bar when scrolling down a page">
+<!ENTITY pref_scroll_title_bar_summary2 "Hide the &brandShortName; toolbar when scrolling down a page">
 
 <!ENTITY pref_tab_queue_title2 "Open multiple links">
 <!ENTITY pref_tab_queue_summary3 "Save them until the next time you open &brandShortName;">
@@ -520,14 +520,14 @@ size. -->
      The placeholders &formatS1; and &formatS2; are used to mark the location of text underlining. -->
 <!ENTITY home_most_recent_emptyhint2 "Psst: using a &formatS1;New Private Tab&formatS2; won\'t save your history.">
 <!ENTITY home_reading_list_empty "Articles you save for later show up here.">
-<!-- Localization note (home_reading_list_hint): The "TIP" string is synonymous to "hint", "clue", etc. This string is displayed
+<!-- Localization note (home_reading_list_hint3): The "TIP" string is synonymous to "hint", "clue", etc. This string is displayed
      as an advisory message on how to add content to the reading list when the reading list empty.
      The placeholder &formatI; will be replaced by a small image of the icon described, and can be moved to wherever
      it is applicable. -->
-<!ENTITY home_reading_list_hint2 "TIP: Save articles to your reading list by long pressing the &formatI; icon when it appears in the title bar.">
-<!-- Localization note (home_reading_list_hint_accessible): This string is used
+<!ENTITY home_reading_list_hint3 "TIP: Save articles to your reading list by long pressing the &formatI; icon when it appears in the URL bar.">
+<!-- Localization note (home_reading_list_hint_accessible2): This string is used
      as alternate text for accessibility. It is not visible in the UI. -->
-<!ENTITY home_reading_list_hint_accessible "TIP: Save articles to your reading list by long pressing the reader mode button when it appears in the title bar.">
+<!ENTITY home_reading_list_hint_accessible2 "TIP: Save articles to your reading list by long pressing the reader mode button when it appears in the URL bar.">
 
 <!-- Localization note (home_default_empty): This string is used as the default text when there
      is no data to show in an about:home panel that was created by an add-on. -->

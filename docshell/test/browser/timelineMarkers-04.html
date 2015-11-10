@@ -21,6 +21,33 @@
     }
 
     window.addEventListener("dog", do_xhr, true);
+
+    function do_promise() {
+      new Promise(function(resolve, reject) {
+	console.time("Bob");
+	window.setTimeout(function() {
+          resolve(23);
+	}, 10);
+      }).then(function (val) {
+        console.timeEnd("Bob");
+      });
+    }
+
+    window.addEventListener("promisetest", do_promise, true);
+
+    var globalResolver;
+    function do_promise_script() {
+      new Promise(function(resolve, reject) {
+	console.time("Bob");
+        globalResolver = resolve;
+	window.setTimeout("globalResolver(23);", 10);
+      }).then(function (val) {
+        console.timeEnd("Bob");
+      });
+    }
+
+    window.addEventListener("promisescript", do_promise_script, true);
+
   </script>
 
 </body>

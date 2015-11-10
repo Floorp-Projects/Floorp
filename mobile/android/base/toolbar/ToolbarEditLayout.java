@@ -89,7 +89,7 @@ public class ToolbarEditLayout extends ThemedLinearLayout {
                 if (mFocusChangeListener != null) {
                     mFocusChangeListener.onFocusChange(ToolbarEditLayout.this, hasFocus);
 
-                    // Checking if voice and QR code input are enabled each time the user taps on the title bar
+                    // Checking if voice and QR code input are enabled each time the user taps on the URL bar
                     if (hasFocus) {
                         if (voiceIsEnabled(getContext(), getResources().getString(R.string.voicesearch_prompt))) {
                             mVoiceInput.setVisibility(View.VISIBLE);
