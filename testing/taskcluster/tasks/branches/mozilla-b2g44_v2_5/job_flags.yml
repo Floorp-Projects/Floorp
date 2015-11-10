@@ -1,0 +1,34 @@
+---
+# For complete sample of all build and test jobs,
+# see <gecko>/testing/taskcluster/tasks/branches/base_job_flags.yml
+
+$inherits:
+  from: tasks/branches/base_jobs.yml
+
+# Flags specific to this branch
+flags:
+  post-build:
+    - simulator
+
+builds:
+  aries-dogfood:
+    platforms:
+      - b2g
+    types:
+      opt:
+        task: tasks/builds/b2g_aries_spark_dogfood.yml
+  flame-kk-ota:
+    platforms:
+      - b2g
+    types:
+      opt:
+        task: tasks/builds/b2g_flame_kk_ota_opt.yml
+      debug:
+        task: tasks/builds/b2g_flame_kk_ota_debug.yml
+
+# Just needed for parser sake
+post-build:
+  simulator:
+    allowed_build_tasks:
+      - tasks/builds/mulet_linux.yml
+    task: tasks/post-builds/mulet_simulator.yml
