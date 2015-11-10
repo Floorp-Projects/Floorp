@@ -1087,6 +1087,8 @@ describe("loop.OTSdkDriver", function() {
             fakeChannel = _.extend({}, Backbone.Events);
             fakeStream.connection = fakeConnection;
             driver._useDataChannels = true;
+
+            sandbox.stub(console, "error");
           });
 
           it("should trigger a readyForDataChannel signal after subscribe is complete", function() {
@@ -1120,6 +1122,33 @@ describe("loop.OTSdkDriver", function() {
             session.trigger("streamCreated", { stream: fakeStream });
 
             sinon.assert.notCalled(fakeSubscriberObject._.getDataChannel);
+          });
+
+          it("should log an error if the data channel couldn't be obtained", function() {
+            var err = new Error("fakeError");
+
+            fakeSubscriberObject._.getDataChannel.callsArgWith(2, err);
+
+            session.trigger("streamCreated", { stream: fakeStream });
+
+            sinon.assert.calledOnce(console.error);
+            sinon.assert.calledWithMatch(console.error, err);
+          });
+
+          it("should dispatch ConnectionStatus if the data channel couldn't be obtained", function() {
+            fakeSubscriberObject._.getDataChannel.callsArgWith(2, new Error("fakeError"));
+
+            session.trigger("streamCreated", { stream: fakeStream });
+
+            sinon.assert.called(dispatcher.dispatch);
+            sinon.assert.calledWithExactly(dispatcher.dispatch,
+              new sharedActions.ConnectionStatus({
+                connections: 0,
+                event: "sdk.datachannel.sub.fakeError",
+                sendStreams: 0,
+                state: "receiving",
+                recvStreams: 1
+              }));
           });
 
           it("should dispatch `DataChannelsAvailable` if the publisher channel is setup", function() {
@@ -1549,6 +1578,7 @@ describe("loop.OTSdkDriver", function() {
       beforeEach(function() {
         driver.subscriber = subscriber;
         driver._useDataChannels = true;
+        sandbox.stub(console, "error");
       });
 
       it("should not do anything if data channels are not wanted", function() {
@@ -1564,6 +1594,33 @@ describe("loop.OTSdkDriver", function() {
         session.trigger("signal:readyForDataChannel");
 
         sinon.assert.calledOnce(publisher._.getDataChannel);
+      });
+
+      it("should log an error if the data channel couldn't be obtained", function() {
+        var err = new Error("fakeError");
+
+        publisher._.getDataChannel.callsArgWith(2, err);
+
+        session.trigger("signal:readyForDataChannel");
+
+        sinon.assert.calledOnce(console.error);
+        sinon.assert.calledWithMatch(console.error, err);
+      });
+
+      it("should dispatch ConnectionStatus if the data channel couldn't be obtained", function() {
+        publisher._.getDataChannel.callsArgWith(2, new Error("fakeError"));
+
+        session.trigger("signal:readyForDataChannel");
+
+        sinon.assert.calledOnce(dispatcher.dispatch);
+        sinon.assert.calledWithExactly(dispatcher.dispatch,
+          new sharedActions.ConnectionStatus({
+            connections: 0,
+            event: "sdk.datachannel.pub.fakeError",
+            sendStreams: 0,
+            state: "starting",
+            recvStreams: 0
+          }));
       });
 
       it("should dispatch `DataChannelsAvailable` if the subscriber channel is setup", function() {
