@@ -208,8 +208,10 @@
   <string name="pref_cookies_not_accept_foreign">&pref_cookies_not_accept_foreign;</string>
   <string name="pref_cookies_disabled">&pref_cookies_disabled;</string>
 
-  <string name="pref_tap_to_load_images_title">&pref_tap_to_load_images_title;</string>
-  <string name="pref_tap_to_load_images_summary2">&pref_tap_to_load_images_summary2;</string>
+  <string name="pref_tap_to_load_images_title2">&pref_tap_to_load_images_title2;</string>
+  <string name="pref_tap_to_load_images_enabled">&pref_tap_to_load_images_enabled;</string>
+  <string name="pref_tap_to_load_images_data">&pref_tap_to_load_images_data;</string>
+  <string name="pref_tap_to_load_images_disabled">&pref_tap_to_load_images_disabled;</string>
 
   <string name="pref_tracking_protection_title">&pref_tracking_protection_title;</string>
   <string name="pref_tracking_protection_summary">&pref_tracking_protection_summary3;</string>
@@ -251,7 +253,7 @@
   <string name="pref_restore">&pref_restore_tabs;</string>
   <string name="pref_restore_always">&pref_restore_always;</string>
   <string name="pref_restore_quit">&pref_restore_quit;</string>
-  <string name="pref_sync">&pref_sync;</string>
+  <string name="pref_sync">&pref_sync2;</string>
   <string name="pref_sync_summary">&pref_sync_summary2;</string>
   <string name="pref_search_suggestions">&pref_search_suggestions;</string>
   <string name="pref_history_search_suggestions">&pref_history_search_suggestions;</string>
@@ -570,16 +572,13 @@
   <string name="voicesearch_prompt">&voicesearch_prompt;</string>
 
   <!-- Restrictions -->
-  <string name="restriction_disallow_import_settings_title">&restriction_disallow_import_settings_title2;</string>
   <string name="restriction_disallow_addons_title">&restriction_disallow_addons_title2;</string>
-  <string name="restriction_disallow_devtools_title">&restriction_disallow_devtools_title2;</string>
-  <string name="restriction_disallow_customize_home_title">&restriction_disallow_customize_home_title2;</string>
   <string name="restriction_disallow_private_browsing_title">&restriction_disallow_private_browsing_title2;</string>
   <string name="restriction_disallow_location_services_title">&restriction_disallow_location_services_title2;</string>
-  <string name="restriction_disallow_display_settings_title">&restriction_disallow_display_settings_title2;</string>
   <string name="restriction_disallow_clear_history_title">&restriction_disallow_clear_history_title2;</string>
   <string name="restriction_disallow_master_password_title">&restriction_disallow_master_password_title2;</string>
   <string name="restriction_disallow_guest_browsing_title">&restriction_disallow_guest_browsing_title2;</string>
+  <string name="restriction_disallow_advanced_settings_title">&restriction_disallow_advanced_settings_title;</string>
 
   <!-- Miscellaneous -->
   <string name="ellipsis">&ellipsis;</string>

@@ -95,7 +95,6 @@ public class FxAccountStatusFragment
 
   protected PreferenceCategory accountCategory;
   protected Preference profilePreference;
-  protected Preference emailPreference;
   protected Preference manageAccountPreference;
   protected Preference authServerPreference;
   protected Preference removeAccountPreference;
@@ -167,12 +166,6 @@ public class FxAccountStatusFragment
 
     accountCategory = (PreferenceCategory) ensureFindPreference("signed_in_as_category");
     profilePreference = ensureFindPreference("profile");
-    emailPreference = ensureFindPreference("email");
-    if (AppConstants.MOZ_ANDROID_FIREFOX_ACCOUNT_PROFILES) {
-      accountCategory.removePreference(emailPreference);
-    } else {
-      accountCategory.removePreference(profilePreference);
-    }
     manageAccountPreference = ensureFindPreference("manage_account");
     if (AppConstants.MOZ_ANDROID_NATIVE_ACCOUNT_UI) {
       accountCategory.removePreference(manageAccountPreference);
@@ -201,11 +194,7 @@ public class FxAccountStatusFragment
       ALWAYS_SHOW_SYNC_SERVER = true;
     }
 
-    if (AppConstants.MOZ_ANDROID_FIREFOX_ACCOUNT_PROFILES) {
-      profilePreference.setOnPreferenceClickListener(this);
-    } else {
-      emailPreference.setOnPreferenceClickListener(this);
-    }
+    profilePreference.setOnPreferenceClickListener(this);
     manageAccountPreference.setOnPreferenceClickListener(this);
     removeAccountPreference.setOnPreferenceClickListener(this);
 
@@ -496,17 +485,15 @@ public class FxAccountStatusFragment
     // register/unregister calls.
     FxAccountSyncStatusHelper.getInstance().startObserving(syncStatusDelegate);
 
-    if (AppConstants.MOZ_ANDROID_FIREFOX_ACCOUNT_PROFILES) {
-      // Register a local broadcast receiver to get profile cached notification.
-      final IntentFilter intentFilter = new IntentFilter();
-      intentFilter.addAction(FxAccountConstants.ACCOUNT_PROFILE_JSON_UPDATED_ACTION);
-      accountProfileInformationReceiver = new FxAccountProfileInformationReceiver();
-      LocalBroadcastManager.getInstance(getActivity()).registerReceiver(accountProfileInformationReceiver, intentFilter);
+    // Register a local broadcast receiver to get profile cached notification.
+    final IntentFilter intentFilter = new IntentFilter();
+    intentFilter.addAction(FxAccountConstants.ACCOUNT_PROFILE_JSON_UPDATED_ACTION);
+    accountProfileInformationReceiver = new FxAccountProfileInformationReceiver();
+    LocalBroadcastManager.getInstance(getActivity()).registerReceiver(accountProfileInformationReceiver, intentFilter);
 
-      // profilePreference is set during onCreate, so it's definitely not null here.
-      final float cornerRadius = getResources().getDimension(R.dimen.fxaccount_profile_image_width) / 2;
-      profileAvatarTarget = new PicassoPreferenceIconTarget(getResources(), profilePreference, cornerRadius);
-    }
+    // profilePreference is set during onCreate, so it's definitely not null here.
+    final float cornerRadius = getResources().getDimension(R.dimen.fxaccount_profile_image_width) / 2;
+    profileAvatarTarget = new PicassoPreferenceIconTarget(getResources(), profilePreference, cornerRadius);
 
     refresh();
   }
@@ -624,11 +611,6 @@ public class FxAccountStatusFragment
   }
 
   private void updateProfileInformation() {
-    if (!AppConstants.MOZ_ANDROID_FIREFOX_ACCOUNT_PROFILES) {
-      // Life is so much simpler.
-      emailPreference.setTitle(fxAccount.getEmail());
-      return;
-    }
 
     final ExtendedJSONObject profileJSON = fxAccount.getProfileJSON();
     if (profileJSON == null) {

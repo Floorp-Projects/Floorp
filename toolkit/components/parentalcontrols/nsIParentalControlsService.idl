@@ -11,7 +11,7 @@ interface nsIFile;
 interface nsIInterfaceRequestor;
 interface nsIArray;
 
-[scriptable, uuid(f9962e65-5369-4346-8c44-84d5319abfc2)]
+[scriptable, uuid(8c4962aa-e0e0-482e-b1db-7846cb78b3d6)]
 interface nsIParentalControlsService : nsISupports
 {
   /**
@@ -28,15 +28,13 @@ interface nsIParentalControlsService : nsISupports
   const short MODIFY_ACCOUNTS = 9; // Modifying system accounts
   const short REMOTE_DEBUGGING = 10; // Remote debugging
   const short IMPORT_SETTINGS = 11; // Importing settings from other apps
-  const short DEVELOPER_TOOLS = 12; // Web developer tools
-  const short CUSTOMIZE_HOME = 13; // Customizing home panels
-  const short PRIVATE_BROWSING = 14; // Disallow usage of private browsing
-  const short LOCATION_SERVICE = 15; // Sharing of location data to location service
-  const short DISPLAY_SETTINGS = 16; // Website display settings
-  const short CLEAR_HISTORY = 17; // Clear browsing history
-  const short MASTER_PASSWORD = 18; // Setting master password for logins
-  const short GUEST_BROWSING = 19; // Disallow usage of guest browsing
-  const short DEFAULT_THEME = 20; // Use default theme or a special parental controls theme
+  const short PRIVATE_BROWSING = 12; // Disallow usage of private browsing
+  const short LOCATION_SERVICE = 13; // Sharing of location data to location service
+  const short CLEAR_HISTORY = 14; // Clear browsing history
+  const short MASTER_PASSWORD = 15; // Setting master password for logins
+  const short GUEST_BROWSING = 16; // Disallow usage of guest browsing
+  const short DEFAULT_THEME = 17; // Use default theme or a special parental controls theme
+  const short ADVANCED_SETTINGS = 18; // Advanced settings
 
   /**
    * @returns true if the current user account has parental controls

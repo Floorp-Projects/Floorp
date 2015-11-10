@@ -70,7 +70,7 @@
                          xbl:inherits="disabled,crop,image,label,accesskey,command,wrap,badge,
                                        align,dir,pack,orient,tooltiptext=buttontooltiptext"/>
       <xul:dropmarker type="menu-button" class="toolbarbutton-menubutton-dropmarker"
-                      anonid="dropmarker" xbl:inherits="align,dir,pack,orient,disabled,label,open"/>
+                      anonid="dropmarker" xbl:inherits="align,dir,pack,orient,disabled,label,open,consumeanchor"/>
     </content>
   </binding>
 
@@ -86,7 +86,7 @@
     <content>
       <children includes="observes|template|menupopup|panel|tooltip"/>
       <xul:stack class="toolbarbutton-badge-stack">
-        <xul:image class="toolbarbutton-icon" xbl:inherits="validate,src=image,label"/>
+        <xul:image class="toolbarbutton-icon" xbl:inherits="validate,src=image,label,consumeanchor"/>
         <xul:label class="toolbarbutton-badge" xbl:inherits="value=badge" top="0" end="0"/>
       </xul:stack>
       <xul:label class="toolbarbutton-text" crop="right" flex="1"
@@ -101,7 +101,7 @@
     <content>
       <children includes="observes|template|menupopup|panel|tooltip"/>
       <xul:stack class="toolbarbutton-badge-stack">
-        <xul:image class="toolbarbutton-icon" xbl:inherits="validate,src=image,label"/>
+        <xul:image class="toolbarbutton-icon" xbl:inherits="validate,src=image,label,consumeanchor"/>
         <xul:label class="toolbarbutton-badge" xbl:inherits="value=badge" top="0" end="0"/>
       </xul:stack>
       <xul:label class="toolbarbutton-text" crop="right" flex="1"
