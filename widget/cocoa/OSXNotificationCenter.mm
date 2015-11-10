@@ -104,10 +104,14 @@ enum {
 - (void)userNotificationCenter:(id<FakeNSUserNotificationCenter>)center
        didActivateNotification:(id<FakeNSUserNotification>)notification
 {
-  NSNumber *alternateActionIndex = [(NSObject*)notification valueForKey:@"_alternateActionIndex"];
+  unsigned long long additionalActionIndex = ULLONG_MAX;
+  if ([notification respondsToSelector:@selector(get_alternateActionIndex:)]) {
+    NSNumber *alternateActionIndex = [(NSObject*)notification valueForKey:@"_alternateActionIndex"];
+    additionalActionIndex = [alternateActionIndex unsignedLongLongValue];
+  }
   mOSXNC->OnActivate([[notification userInfo] valueForKey:@"name"],
                      notification.activationType,
-                     [alternateActionIndex unsignedLongLongValue]);
+                     additionalActionIndex);
 }
 
 - (BOOL)userNotificationCenter:(id<FakeNSUserNotificationCenter>)center
@@ -281,16 +285,26 @@ OSXNotificationCenter::ShowAlertNotification(const nsAString & aImageUrl, const 
       bundle->GetStringFromName(MOZ_UTF16("webActions.settings.label"),
                                 getter_Copies(settingsButtonTitle));
 
-      notification.hasActionButton = YES;
       notification.otherButtonTitle = nsCocoaUtils::ToNSString(closeButtonTitle);
-      notification.actionButtonTitle = nsCocoaUtils::ToNSString(actionButtonTitle);
-      [(NSObject*)notification setValue:@(YES) forKey:@"_showsButtons"];
-      [(NSObject*)notification setValue:@(YES) forKey:@"_alwaysShowAlternateActionMenu"];
-      [(NSObject*)notification setValue:@[
-                                          nsCocoaUtils::ToNSString(disableButtonTitle),
-                                          nsCocoaUtils::ToNSString(settingsButtonTitle)
-                                          ]
-                               forKey:@"_alternateActionButtonTitles"];
+
+      // OS X 10.8 only shows action buttons if the "Alerts" style is set in
+      // Notification Center preferences, and doesn't support the alternate
+      // action menu.
+      if ([notification respondsToSelector:@selector(set_showsButtons:)] &&
+          [notification respondsToSelector:@selector(set_alwaysShowAlternateActionMenu:)] &&
+          [notification respondsToSelector:@selector(set_alternateActionButtonTitles:)]) {
+
+        notification.hasActionButton = YES;
+        notification.actionButtonTitle = nsCocoaUtils::ToNSString(actionButtonTitle);
+
+        [(NSObject*)notification setValue:@(YES) forKey:@"_showsButtons"];
+        [(NSObject*)notification setValue:@(YES) forKey:@"_alwaysShowAlternateActionMenu"];
+        [(NSObject*)notification setValue:@[
+                                            nsCocoaUtils::ToNSString(disableButtonTitle),
+                                            nsCocoaUtils::ToNSString(settingsButtonTitle)
+                                            ]
+                                 forKey:@"_alternateActionButtonTitles"];
+      }
     }
   }
   NSString *alertName = nsCocoaUtils::ToNSString(aAlertName);
