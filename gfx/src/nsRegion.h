@@ -729,6 +729,10 @@ public:
     return This();
   }
 
+  // Prefer using TransformTo<TargetUnits>(region) from UnitTransforms.h,
+  // as applying the transform should typically change the unit system.
+  // TODO(botond): Move this to IntRegionTyped and disable it for
+  //               unit != UnknownUnits.
   Derived& Transform (const mozilla::gfx::Matrix4x4 &aTransform)
   {
     mImpl.Transform(aTransform);
