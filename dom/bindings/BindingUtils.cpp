@@ -135,6 +135,12 @@ ThrowMethodFailed(JSContext* cx, ErrorResult& rv)
     // uncatchable exception.
     return false;
   }
+  if (rv.IsJSContextException()) {
+    // Whatever we need to throw is on the JSContext already.  We
+    // can't assert that there is a pending exception on it, though,
+    // because in the uncatchable exception case there won't be one.
+    return false;
+  }
   if (rv.IsErrorWithMessage()) {
     rv.ReportErrorWithMessage(cx);
     return false;

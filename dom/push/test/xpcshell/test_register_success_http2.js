@@ -64,15 +64,11 @@ add_task(function* test_pushSubscriptionSuccess() {
   var subscriptionUri = serverURL + '/pushSubscriptionSuccesss';
   var pushEndpoint = serverURL + '/pushEndpointSuccess';
   var pushReceiptEndpoint = serverURL + '/receiptPushEndpointSuccess';
-  equal(newRecord.subscriptionUri, subscriptionUri,
-    'Wrong subscription ID in registration record');
   equal(newRecord.pushEndpoint, pushEndpoint,
     'Wrong push endpoint in registration record');
 
   equal(newRecord.pushReceiptEndpoint, pushReceiptEndpoint,
     'Wrong push endpoint receipt in registration record');
-  equal(newRecord.scope, 'https://example.org/1',
-    'Wrong scope in registration record');
 
   let record = yield db.getByKeyID(subscriptionUri);
   equal(record.subscriptionUri, subscriptionUri,
@@ -107,15 +103,11 @@ add_task(function* test_pushSubscriptionMissingLink2() {
   var subscriptionUri = serverURL + '/subscriptionMissingLink2';
   var pushEndpoint = serverURL + '/pushEndpointMissingLink2';
   var pushReceiptEndpoint = '';
-  equal(newRecord.subscriptionUri, subscriptionUri,
-    'Wrong subscription ID in registration record');
   equal(newRecord.pushEndpoint, pushEndpoint,
     'Wrong push endpoint in registration record');
 
   equal(newRecord.pushReceiptEndpoint, pushReceiptEndpoint,
     'Wrong push endpoint receipt in registration record');
-  equal(newRecord.scope, 'https://example.org/no_receiptEndpoint',
-    'Wrong scope in registration record');
 
   let record = yield db.getByKeyID(subscriptionUri);
   equal(record.subscriptionUri, subscriptionUri,

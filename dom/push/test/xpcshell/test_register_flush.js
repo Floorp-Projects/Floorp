@@ -80,8 +80,6 @@ add_task(function* test_register_flush() {
     'https://example.com/page/2', '');
   equal(newRecord.pushEndpoint, 'https://example.org/update/2',
     'Wrong push endpoint in record');
-  equal(newRecord.scope, 'https://example.com/page/2',
-    'Wrong scope in record');
 
   let {data: scope} = yield waitForPromise(notifyPromise, DEFAULT_TIMEOUT,
     'Timed out waiting for notification');
@@ -97,8 +95,6 @@ add_task(function* test_register_flush() {
   strictEqual(prevRecord.version, 3,
     'Should record version updates sent before register responses');
 
-  let registeredRecord = yield db.getByKeyID(newRecord.channelID);
-  equal(registeredRecord.pushEndpoint, 'https://example.org/update/2',
-    'Wrong new push endpoint');
+  let registeredRecord = yield db.getByPushEndpoint('https://example.org/update/2');
   ok(!registeredRecord.version, 'Should not record premature updates');
 });
