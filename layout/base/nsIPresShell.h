@@ -140,10 +140,10 @@ typedef struct CapturingContentInfo {
   mozilla::StaticRefPtr<nsIContent> mContent;
 } CapturingContentInfo;
 
-// 0ff43c2e-5688-464f-a23f-a3de223df684
+// ae50e013-b2f1-4d4e-94c7-77cbcdab1c23
 #define NS_IPRESSHELL_IID \
-{ 0x0ff43c2e, 0x5688, 0x464f, \
-  { 0xa2, 0x3f, 0xa3, 0xde, 0x22, 0x3d, 0xf6, 0x84 } }
+{ 0xae50e013, 0xb2f1, 0x4d4e, \
+  { 0x94, 0xc7, 0x77, 0xcb, 0xcd, 0xab, 0x1c, 0x23 } }
 
 // debug VerifyReflow flags
 #define VERIFY_REFLOW_ON                    0x01
@@ -1247,7 +1247,7 @@ public:
     return mObservesMutationsForPrint;
   }
 
-  virtual nsresult SetIsActive(bool aIsActive) = 0;
+  virtual nsresult SetIsActive(bool aIsActive, bool aIsHidden = true) = 0;
 
   bool IsActive()
   {

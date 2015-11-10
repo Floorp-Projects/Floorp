@@ -290,6 +290,15 @@
         </setter>
       </property>
 
+      <method name="setDocShellIsActiveAndForeground">
+        <parameter name="isActive"/>
+        <body>
+          <![CDATA[
+            this.docShell && this.docShell.setIsActiveAndForeground(isActive);
+          ]]>
+        </body>
+      </method>
+
       <property name="imageDocument"
                 readonly="true">
         <getter>

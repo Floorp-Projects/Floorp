@@ -2299,11 +2299,15 @@ TabChild::RecvSetUpdateHitRegion(const bool& aEnabled)
 }
 
 bool
-TabChild::RecvSetDocShellIsActive(const bool& aIsActive)
+TabChild::RecvSetDocShellIsActive(const bool& aIsActive, const bool& aIsHidden)
 {
     nsCOMPtr<nsIDocShell> docShell = do_GetInterface(WebNavigation());
     if (docShell) {
-      docShell->SetIsActive(aIsActive);
+      if (aIsHidden) {
+        docShell->SetIsActive(aIsActive);
+      } else {
+        docShell->SetIsActiveAndForeground(aIsActive);
+      }
     }
     return true;
 }
