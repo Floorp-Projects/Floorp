@@ -669,31 +669,53 @@ public:
       return false;
     }
 
-    RefPtr<MessageEvent> event = new MessageEvent(aTarget, nullptr, nullptr);
-    rv = event->InitMessageEvent(NS_LITERAL_STRING("message"),
-                                 false /* non-bubbling */,
-                                 false /* cancelable */,
-                                 messageData,
-                                 EmptyString(),
-                                 EmptyString(),
-                                 nullptr);
+    nsTArray<RefPtr<MessagePort>> ports = TakeTransferredPorts();
+
+    nsCOMPtr<nsIDOMEvent> domEvent;
+    // For messages dispatched to service worker, use ExtendableMessageEvent
+    // https://slightlyoff.github.io/ServiceWorker/spec/service_worker/index.html#extendablemessage-event-section
     if (mEventSource) {
       RefPtr<ServiceWorkerClient> client =
         new ServiceWorkerWindowClient(aTarget, *mEventSource);
+
+      RootedDictionary<ExtendableMessageEventInit> init(aCx);
+
+      init.mBubbles = false;
+      init.mCancelable = false;
+
+      init.mData = messageData;
+      init.mPorts.Construct();
+      init.mPorts.Value().SetNull();
+
+      ErrorResult rv;
+      RefPtr<ExtendableMessageEvent> event = ExtendableMessageEvent::Constructor(
+        aTarget, NS_LITERAL_STRING("message"), init, rv);
+      if (NS_WARN_IF(rv.Failed())) {
+        return false;
+      }
       event->SetSource(client);
+      event->SetPorts(new MessagePortList(static_cast<dom::Event*>(event.get()),
+                                          ports));
+      domEvent = do_QueryObject(event);
+    } else {
+      RefPtr<MessageEvent> event = new MessageEvent(aTarget, nullptr, nullptr);
+      nsresult rv = event->InitMessageEvent(NS_LITERAL_STRING("message"),
+                                            false /* non-bubbling */,
+                                            false /* cancelable */,
+                                            messageData,
+                                            EmptyString(),
+                                            EmptyString(),
+                                            nullptr);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        xpc::Throw(aCx, rv);
+        return false;
+      }
+      event->SetPorts(new MessagePortList(static_cast<dom::Event*>(event.get()),
+                                          ports));
+      domEvent = do_QueryObject(event);
     }
 
-    if (NS_WARN_IF(rv.Failed())) {
-      xpc::Throw(aCx, rv.StealNSResult());
-      return false;
-    }
-
-    nsTArray<RefPtr<MessagePort>> ports = TakeTransferredPorts();
-
-    event->SetTrusted(true);
-    event->SetPorts(new MessagePortList(static_cast<dom::Event*>(event.get()),
-                                        ports));
-    nsCOMPtr<nsIDOMEvent> domEvent = do_QueryObject(event);
+    domEvent->SetTrusted(true);
 
     nsEventStatus dummy = nsEventStatus_eIgnore;
     aTarget->DispatchDOMEvent(nullptr, domEvent, nullptr, &dummy);

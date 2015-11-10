@@ -9,6 +9,7 @@
 
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/ExtendableEventBinding.h"
+#include "mozilla/dom/ExtendableMessageEventBinding.h"
 #include "mozilla/dom/FetchEventBinding.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/Response.h"
@@ -28,6 +29,8 @@ class nsIInterceptedChannel;
 namespace mozilla {
 namespace dom {
 class Blob;
+class MessagePort;
+class MessagePortList;
 class Request;
 class ResponseOrPromise;
 } // namespace dom
@@ -246,5 +249,71 @@ public:
 };
 #endif /* ! MOZ_SIMPLEPUSH */
 
+class ExtendableMessageEvent final : public ExtendableEvent
+{
+  JS::Heap<JS::Value> mData;
+  nsString mOrigin;
+  nsString mLastEventId;
+  RefPtr<ServiceWorkerClient> mClient;
+  RefPtr<ServiceWorker> mServiceWorker;
+  RefPtr<MessagePort> mMessagePort;
+  RefPtr<MessagePortList> mPorts;
+
+protected:
+  explicit ExtendableMessageEvent(EventTarget* aOwner);
+  ~ExtendableMessageEvent();
+
+public:
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(ExtendableMessageEvent,
+                                                         ExtendableEvent)
+
+  NS_FORWARD_TO_EVENT
+
+  virtual JSObject* WrapObjectInternal(
+    JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override
+  {
+    return mozilla::dom::ExtendableMessageEventBinding::Wrap(aCx, this, aGivenProto);
+  }
+
+  static already_AddRefed<ExtendableMessageEvent>
+  Constructor(mozilla::dom::EventTarget* aOwner,
+              const nsAString& aType,
+              const ExtendableMessageEventInit& aOptions,
+              ErrorResult& aRv);
+
+  static already_AddRefed<ExtendableMessageEvent>
+  Constructor(const GlobalObject& aGlobal,
+              const nsAString& aType,
+              const ExtendableMessageEventInit& aOptions,
+              ErrorResult& aRv);
+
+  void GetData(JSContext* aCx, JS::MutableHandle<JS::Value> aData,
+               ErrorResult& aRv);
+
+  void GetSource(Nullable<OwningClientOrServiceWorkerOrMessagePort>& aValue) const;
+
+  NS_IMETHOD GetOrigin(nsAString& aOrigin)
+  {
+    aOrigin = mOrigin;
+    return NS_OK;
+  }
+
+  NS_IMETHOD GetLastEventId(nsAString& aLastEventId)
+  {
+    aLastEventId = mLastEventId;
+    return NS_OK;
+  }
+
+  MessagePortList* GetPorts() const;
+
+  void SetPorts(MessagePortList* aPorts);
+
+  void SetSource(ServiceWorkerClient* aClient);
+
+  void SetSource(ServiceWorker* aServiceWorker);
+};
+
 END_WORKERS_NAMESPACE
+
 #endif /* mozilla_dom_workers_serviceworkerevents_h__ */
