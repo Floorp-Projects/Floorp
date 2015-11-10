@@ -14,9 +14,6 @@
 #include "jsapi.h"
 #include "nsGlobalWindow.h" // So we can assign an nsGlobalWindow* to mWindowSource
 
-#include "ServiceWorker.h"
-#include "ServiceWorkerClient.h"
-
 namespace mozilla {
 namespace dom {
 
@@ -107,14 +104,12 @@ MessageEvent::GetSource(nsIDOMWindow** aSource)
 }
 
 void
-MessageEvent::GetSource(Nullable<OwningWindowProxyOrMessagePortOrClient>& aValue) const
+MessageEvent::GetSource(Nullable<OwningWindowProxyOrMessagePort>& aValue) const
 {
   if (mWindowSource) {
     aValue.SetValue().SetAsWindowProxy() = mWindowSource;
   } else if (mPortSource) {
     aValue.SetValue().SetAsMessagePort() = mPortSource;
-  } else if (mClientSource) {
-    aValue.SetValue().SetAsClient() = mClientSource;
   }
 }
 
@@ -253,12 +248,6 @@ void
 MessageEvent::SetSource(mozilla::dom::MessagePort* aPort)
 {
   mPortSource = aPort;
-}
-
-void
-MessageEvent::SetSource(mozilla::dom::workers::ServiceWorkerClient* aClient)
-{
-  mClientSource = aClient;
 }
 
 } // namespace dom
