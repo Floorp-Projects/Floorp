@@ -3,13 +3,12 @@
 
 "use strict";
 
-var {Services} = Cu.import("resource://gre/modules/Services.jsm", {});
 var {Loader} = Cu.import("resource://gre/modules/commonjs/toolkit/loader.js",
                          {});
 var {OutputParser} = require("devtools/shared/output-parser");
 
 add_task(function*() {
-  yield promiseTab("about:blank");
+  yield addTab("about:blank");
   yield performTest();
   gBrowser.removeCurrentTab();
 });
