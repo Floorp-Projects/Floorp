@@ -46,6 +46,13 @@ struct nsMediaFeature {
     };
     ValueType mValueType;
 
+    enum RequirementFlags : uint8_t {
+      // Bitfield of requirements that must be satisfied in order for this
+      // media feature to be active.
+      eNoRequirements = 0
+    };
+    uint8_t mReqFlags;
+
     union {
       // In static arrays, it's the first member that's initialized.  We
       // need that to be void* so we can initialize both other types.
