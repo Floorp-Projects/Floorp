@@ -167,7 +167,7 @@ class AntivirusScan(BaseScript, VirtualenvMixin):
                 if self._matches_exclude(keyname):
                     self.debug("Excluding {}".format(keyname))
                 else:
-                    destination = self.dest_dir + keyname.replace(candidates_prefix, '')
+                    destination = os.path.join(self.dest_dir, keyname.replace(candidates_prefix, ''))
                     dest_dir = os.path.dirname(destination)
                     if not os.path.isdir(dest_dir):
                         os.makedirs(dest_dir)
