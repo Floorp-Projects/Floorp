@@ -69,6 +69,7 @@ exports.devtoolsModules = [
   "devtools/shared/gcli/commands/media",
   "devtools/shared/gcli/commands/pagemod",
   "devtools/shared/gcli/commands/paintflashing",
+  "devtools/shared/gcli/commands/qsa",
   "devtools/shared/gcli/commands/restart",
   "devtools/shared/gcli/commands/rulers",
   "devtools/shared/gcli/commands/screenshot",
