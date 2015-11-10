@@ -35,17 +35,18 @@ function test1() {
 
 function test2() {
   // ...and once with privileges.
-  SpecialPowers.addPermission("systemXHR", true, document);
-
-  var worker = new Worker("test_xhr_parameters.js");
-  worker.onmessage = message;
-  worker.postMessage(true);
+  SpecialPowers.pushPermissions([{type: "systemXHR", allow: true, context: document}],
+    function () {
+      var worker = new Worker("test_xhr_parameters.js");
+      worker.onmessage = message;
+      worker.postMessage(true);
+    }
+  );
 }
 
 var tests = [ test1, test2 ];
 function run() {
   if (!tests.length) {
-    SpecialPowers.removePermission("systemXHR", document);
     SimpleTest.finish();
     return;
   }
