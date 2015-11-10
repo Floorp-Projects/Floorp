@@ -699,13 +699,6 @@ OnSharedPreferenceChangeListener
                         i--;
                         continue;
                     }
-                } else if (PREFS_ZOOMED_VIEW_ENABLED.equals(key)) {
-                    // Only enable the ZoomedView / magnifying pref on Nightly.
-                    if (!AppConstants.NIGHTLY_BUILD) {
-                        preferences.removePreference(pref);
-                        i--;
-                        continue;
-                    }
                 } else if (PREFS_OPEN_URLS_IN_PRIVATE.equals(key)) {
                     // Remove UI for opening external links in private browsing on non-Nightly builds.
                     if (!AppConstants.NIGHTLY_BUILD || !RestrictedProfiles.isAllowed(this, Restriction.DISALLOW_PRIVATE_BROWSING)) {
