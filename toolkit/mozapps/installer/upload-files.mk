@@ -334,7 +334,7 @@ UPLOAD_EXTRA_FILES += ../embedding/android/geckoview_example/geckoview_example.a
 # Robocop/Robotium tests, Android Background tests, and Fennec need to
 # be signed with the same key, which means release signing them all.
 
-ROBOCOP_PATH = $(abspath $(_ABS_DIST)/../build/mobile/robocop)
+ROBOCOP_PATH = $(abspath $(DEPTH)/mobile/android/tests/browser/robocop)
 # Normally, $(NSINSTALL) would be used instead of cp, but INNER_ROBOCOP_PACKAGE
 # is used in a series of commands that run under a "cd something", while
 # $(NSINSTALL) is relative.

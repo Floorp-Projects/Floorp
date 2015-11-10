@@ -16,7 +16,7 @@ public class SyncConstants {
 
   public static final String USER_AGENT = "Firefox AndroidSync " +
                                           SYNC_VERSION_STRING + " (" +
-                                          AppConstants.MOZ_APP_DISPLAYNAME + ")";
+                                          AppConstants.MOZ_APP_UA_NAME + ")";
 
   public static final String ACCOUNTTYPE_SYNC = AppConstants.MOZ_ANDROID_SHARED_ACCOUNT_TYPE;
 

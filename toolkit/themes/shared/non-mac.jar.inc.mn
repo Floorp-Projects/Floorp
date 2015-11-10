@@ -1,0 +1,183 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# This is not a complete / proper jar manifest. It is conditionally included
+# by the shared jar manifest, which in turn is included by the os-specific
+# manifests.
+# As a result, the source file paths are relative to the location of the
+# actual manifests.
+
+#include jar.inc.mn
+
+  skin/classic/global/arrow.css                            (../../windows/global/arrow.css)
+  skin/classic/global/customizeToolbar.css                 (../../windows/global/customizeToolbar.css)
+  skin/classic/global/datetimepicker.css                   (../../windows/global/datetimepicker.css)
+  skin/classic/global/dialog.css                           (../../windows/global/dialog.css)
+  skin/classic/global/expander.css                         (../../windows/global/expander.css)
+  skin/classic/global/filefield.css                        (../../windows/global/filefield.css)
+  skin/classic/global/globalBindings.xml                   (../../windows/global/globalBindings.xml)
+  skin/classic/global/linkTree.css                         (../../windows/global/linkTree.css)
+  skin/classic/global/passwordmgr.css                      (../../windows/global/passwordmgr.css)
+  skin/classic/global/progressmeter.css                    (../../windows/global/progressmeter.css)
+  skin/classic/global/resizer.css                          (../../windows/global/resizer.css)
+  skin/classic/global/richlistbox.css                      (../../windows/global/richlistbox.css)
+  skin/classic/global/scale.css                            (../../windows/global/scale.css)
+  skin/classic/global/scrollbars.css                       (../../windows/global/xulscrollbars.css)
+  skin/classic/global/spinbuttons.css                      (../../windows/global/spinbuttons.css)
+  skin/classic/global/tabprompts.css                       (../../windows/global/tabprompts.css)
+  skin/classic/global/wizard.css                           (../../windows/global/wizard.css)
+
+  skin/classic/global/arrow/arrow-dn.gif                   (../../windows/global/arrow/arrow-dn.gif)
+  skin/classic/global/arrow/arrow-dn-dis.gif               (../../windows/global/arrow/arrow-dn-dis.gif)
+  skin/classic/global/arrow/arrow-dn-hov.gif               (../../windows/global/arrow/arrow-dn-hov.gif)
+  skin/classic/global/arrow/arrow-dn-sharp.gif             (../../windows/global/arrow/arrow-dn-sharp.gif)
+  skin/classic/global/arrow/arrow-down.png                 (../../windows/global/arrow/arrow-down.png)
+  skin/classic/global/arrow/arrow-lft.gif                  (../../windows/global/arrow/arrow-lft.gif)
+  skin/classic/global/arrow/arrow-lft-dis.gif              (../../windows/global/arrow/arrow-lft-dis.gif)
+  skin/classic/global/arrow/arrow-lft-sharp.gif            (../../windows/global/arrow/arrow-lft-sharp.gif)
+  skin/classic/global/arrow/arrow-lft-sharp-end.gif        (../../windows/global/arrow/arrow-lft-sharp-end.gif)
+  skin/classic/global/arrow/arrow-rit.gif                  (../../windows/global/arrow/arrow-rit.gif)
+  skin/classic/global/arrow/arrow-rit-dis.gif              (../../windows/global/arrow/arrow-rit-dis.gif)
+  skin/classic/global/arrow/arrow-rit-sharp.gif            (../../windows/global/arrow/arrow-rit-sharp.gif)
+  skin/classic/global/arrow/arrow-rit-sharp-end.gif        (../../windows/global/arrow/arrow-rit-sharp-end.gif)
+  skin/classic/global/arrow/arrow-up.gif                   (../../windows/global/arrow/arrow-up.gif)
+  skin/classic/global/arrow/arrow-up-dis.gif               (../../windows/global/arrow/arrow-up-dis.gif)
+  skin/classic/global/arrow/arrow-up-hov.gif               (../../windows/global/arrow/arrow-up-hov.gif)
+  skin/classic/global/arrow/arrow-up-sharp.gif             (../../windows/global/arrow/arrow-up-sharp.gif)
+  skin/classic/global/arrow/panelarrow-horizontal.svg      (../../windows/global/arrow/panelarrow-horizontal.svg)
+  skin/classic/global/arrow/panelarrow-vertical.svg        (../../windows/global/arrow/panelarrow-vertical.svg)
+  skin/classic/global/arrow/panelarrow-horizontal-themed.svg (../../windows/global/arrow/panelarrow-horizontal-themed.svg)
+  skin/classic/global/arrow/panelarrow-vertical-themed.svg   (../../windows/global/arrow/panelarrow-vertical-themed.svg)
+
+  skin/classic/global/checkbox/cbox-check.gif              (../../windows/global/checkbox/cbox-check.gif)
+  skin/classic/global/checkbox/cbox-check-dis.gif          (../../windows/global/checkbox/cbox-check-dis.gif)
+  skin/classic/global/console/console-error-caret.gif      (../../windows/global/console/console-error-caret.gif)
+  skin/classic/global/console/console-error-dash.gif       (../../windows/global/console/console-error-dash.gif)
+  skin/classic/global/console/itemSelected.png             (../../windows/global/console/itemSelected.png)
+* skin/classic/global/dirListing/dirListing.css            (../../windows/global/dirListing/dirListing.css)
+  skin/classic/global/dirListing/folder.png                (../../windows/global/dirListing/folder.png)
+  skin/classic/global/dirListing/local.png                 (../../windows/global/dirListing/local.png)
+  skin/classic/global/dirListing/up.png                    (../../windows/global/dirListing/up.png)
+  skin/classic/global/icons/Close.gif                      (../../windows/global/icons/Close.gif)
+  skin/classic/global/icons/close.png                      (../../windows/global/icons/close.png)
+  skin/classic/global/icons/close@2x.png                   (../../windows/global/icons/close@2x.png)
+  skin/classic/global/icons/close-inverted.png             (../../windows/global/icons/close-inverted.png)
+  skin/classic/global/icons/close-inverted@2x.png          (../../windows/global/icons/close-inverted@2x.png)
+  skin/classic/global/icons/collapse.png                   (../../windows/global/icons/collapse.png)
+  skin/classic/global/icons/Error.png                      (../../windows/global/icons/Error.png)
+  skin/classic/global/icons/error-16.png                   (../../windows/global/icons/error-16.png)
+  skin/classic/global/icons/error-64.png                   (../../windows/global/icons/error-64.png)
+  skin/classic/global/icons/expand.png                     (../../windows/global/icons/expand.png)
+  skin/classic/global/icons/find-arrows.png                (../../windows/global/icons/find-arrows.png)
+  skin/classic/global/icons/folder-item.png                (../../windows/global/icons/folder-item.png)
+  skin/classic/global/icons/information-16.png             (../../windows/global/icons/information-16.png)
+  skin/classic/global/icons/information-24.png             (../../windows/global/icons/information-24.png)
+  skin/classic/global/icons/information-32.png             (../../windows/global/icons/information-32.png)
+  skin/classic/global/icons/Minimize.gif                   (../../windows/global/icons/Minimize.gif)
+  skin/classic/global/icons/Print-preview.png              (../../windows/global/icons/Print-preview.png)
+  skin/classic/global/icons/Portrait.png                   (../../windows/global/icons/Portrait.png)
+  skin/classic/global/icons/Landscape.png                  (../../windows/global/icons/Landscape.png)
+  skin/classic/global/icons/Question.png                   (../../windows/global/icons/Question.png)
+  skin/classic/global/icons/question-16.png                (../../windows/global/icons/question-16.png)
+  skin/classic/global/icons/question-64.png                (../../windows/global/icons/question-64.png)
+  skin/classic/global/icons/resizer-rtl.png                (../../windows/global/icons/resizer-rtl.png)
+  skin/classic/global/icons/Restore.gif                    (../../windows/global/icons/Restore.gif)
+  skin/classic/global/icons/Search-close.png               (../../windows/global/icons/Search-close.png)
+  skin/classic/global/icons/Search-glass.png               (../../windows/global/icons/Search-glass.png)
+  skin/classic/global/icons/tabprompts-bgtexture.png       (../../windows/global/icons/tabprompts-bgtexture.png)
+  skin/classic/global/icons/Warning.png                    (../../windows/global/icons/Warning.png)
+  skin/classic/global/icons/warning-large.png              (../../windows/global/icons/warning-large.png)
+  skin/classic/global/icons/warning-16.png                 (../../windows/global/icons/warning-16.png)
+  skin/classic/global/icons/warning-64.png                 (../../windows/global/icons/warning-64.png)
+  skin/classic/global/icons/windowControls.png             (../../windows/global/icons/windowControls.png)
+  skin/classic/global/media/TopLevelImageDocument.css      (../../windows/global/media/TopLevelImageDocument.css)
+  skin/classic/global/media/TopLevelVideoDocument.css      (../../windows/global/media/TopLevelVideoDocument.css)
+  skin/classic/global/media/imagedoc-lightnoise.png        (../../windows/global/media/imagedoc-lightnoise.png)
+  skin/classic/global/media/imagedoc-darknoise.png         (../../windows/global/media/imagedoc-darknoise.png)
+  skin/classic/global/media/videocontrols.css              (../../windows/global/media/videocontrols.css)
+  skin/classic/global/media/pauseButton.png                (../../windows/global/media/pauseButton.png)
+  skin/classic/global/media/playButton.png                 (../../windows/global/media/playButton.png)
+  skin/classic/global/media/muteButton.png                 (../../windows/global/media/muteButton.png)
+  skin/classic/global/media/unmuteButton.png               (../../windows/global/media/unmuteButton.png)
+  skin/classic/global/media/noAudio.png                    (../../windows/global/media/noAudio.png)
+  skin/classic/global/media/fullscreenButton.png           (../../windows/global/media/fullscreenButton.png)
+  skin/classic/global/media/scrubberThumb.png              (../../windows/global/media/scrubberThumb.png)
+  skin/classic/global/media/scrubberThumbWide.png          (../../windows/global/media/scrubberThumbWide.png)
+  skin/classic/global/media/throbber.png                   (../../windows/global/media/throbber.png)
+  skin/classic/global/media/stalled.png                    (../../windows/global/media/stalled.png)
+  skin/classic/global/media/volume-empty.png               (../../windows/global/media/volume-empty.png)
+  skin/classic/global/media/volume-full.png                (../../windows/global/media/volume-full.png)
+  skin/classic/global/media/error.png                      (../../windows/global/media/error.png)
+  skin/classic/global/media/clicktoplay-bgtexture.png      (../../windows/global/media/clicktoplay-bgtexture.png)
+  skin/classic/global/media/videoClickToPlayButton.svg     (../../windows/global/media/videoClickToPlayButton.svg)
+  skin/classic/global/printpreview/arrow-left.png          (../../windows/global/printpreview/arrow-left.png)
+  skin/classic/global/printpreview/arrow-left-end.png      (../../windows/global/printpreview/arrow-left-end.png)
+  skin/classic/global/printpreview/arrow-right.png         (../../windows/global/printpreview/arrow-right.png)
+  skin/classic/global/printpreview/arrow-right-end.png     (../../windows/global/printpreview/arrow-right-end.png)
+  skin/classic/global/radio/radio-check.gif                (../../windows/global/radio/radio-check.gif)
+  skin/classic/global/radio/radio-check-dis.gif            (../../windows/global/radio/radio-check-dis.gif)
+  skin/classic/global/scrollbar/slider.gif                 (../../windows/global/scrollbar/slider.gif)
+  skin/classic/global/splitter/grip-bottom.gif             (../../windows/global/splitter/grip-bottom.gif)
+  skin/classic/global/splitter/grip-top.gif                (../../windows/global/splitter/grip-top.gif)
+  skin/classic/global/splitter/grip-left.gif               (../../windows/global/splitter/grip-left.gif)
+  skin/classic/global/splitter/grip-right.gif              (../../windows/global/splitter/grip-right.gif)
+  skin/classic/global/toolbar/chevron.gif                  (../../windows/global/toolbar/chevron.gif)
+  skin/classic/global/toolbar/chevron-inverted.png         (../../windows/global/toolbar/chevron-inverted.png)
+  skin/classic/global/tree/columnpicker.gif                (../../windows/global/tree/columnpicker.gif)
+  skin/classic/global/tree/sort-asc.png                    (../../windows/global/tree/sort-asc.png)
+  skin/classic/global/tree/sort-dsc.png                    (../../windows/global/tree/sort-dsc.png)
+  skin/classic/global/tree/sort-asc-classic.png            (../../windows/global/tree/sort-asc-classic.png)
+  skin/classic/global/tree/sort-dsc-classic.png            (../../windows/global/tree/sort-dsc-classic.png)
+  skin/classic/global/tree/twisty-clsd.png                 (../../windows/global/tree/twisty-clsd.png)
+  skin/classic/global/tree/twisty-clsd-rtl.png             (../../windows/global/tree/twisty-clsd-rtl.png)
+  skin/classic/global/tree/twisty-clsd-hover.png           (../../windows/global/tree/twisty-clsd-hover.png)
+  skin/classic/global/tree/twisty-clsd-hover-rtl.png       (../../windows/global/tree/twisty-clsd-hover-rtl.png)
+  skin/classic/global/tree/twisty-open.png                 (../../windows/global/tree/twisty-open.png)
+  skin/classic/global/tree/twisty-open-rtl.png             (../../windows/global/tree/twisty-open-rtl.png)
+  skin/classic/global/tree/twisty-open-hover.png           (../../windows/global/tree/twisty-open-hover.png)
+  skin/classic/global/tree/twisty-open-hover-rtl.png       (../../windows/global/tree/twisty-open-hover-rtl.png)
+
+  skin/classic/help/Toolbar.png                            (../../windows/help/Toolbar.png)
+  skin/classic/help/Toolbar-rtl.png                        (../../windows/help/Toolbar-rtl.png)
+  skin/classic/help/helpFileLayout.css                     (../../windows/help/helpFileLayout.css)
+  skin/classic/help/Weblink.png                            (../../windows/help/Weblink.png)
+  skin/classic/help/Weblink-rtl.png                        (../../windows/help/Weblink-rtl.png)
+
+  skin/classic/mozapps/downloads/downloadButtons.png         (../../windows/mozapps/downloads/downloadButtons.png)
+  skin/classic/mozapps/downloads/unknownContentType.css      (../../windows/mozapps/downloads/unknownContentType.css)
+  skin/classic/mozapps/extensions/about.css                  (../../windows/mozapps/extensions/about.css)
+  skin/classic/mozapps/extensions/blocklist.css              (../../windows/mozapps/extensions/blocklist.css)
+  skin/classic/mozapps/extensions/update.css                 (../../windows/mozapps/extensions/update.css)
+  skin/classic/mozapps/extensions/discover-logo.png          (../../windows/mozapps/extensions/discover-logo.png)
+  skin/classic/mozapps/extensions/experimentGeneric.png      (../../windows/mozapps/extensions/experimentGeneric.png)
+  skin/classic/mozapps/extensions/rating-won.png             (../../windows/mozapps/extensions/rating-won.png)
+  skin/classic/mozapps/extensions/rating-not-won.png         (../../windows/mozapps/extensions/rating-not-won.png)
+  skin/classic/mozapps/extensions/cancel.png                 (../../windows/mozapps/extensions/cancel.png)
+  skin/classic/mozapps/extensions/eula.css                   (../../windows/mozapps/extensions/eula.css)
+  skin/classic/mozapps/handling/handling.css                 (../../windows/mozapps/handling/handling.css)
+#ifdef MOZ_PLACES
+  skin/classic/mozapps/places/defaultFavicon@2x.png          (../../windows/mozapps/places/defaultFavicon@2x.png)
+#endif
+  skin/classic/mozapps/plugins/pluginBlocked-64.png          (../../windows/mozapps/plugins/pluginBlocked-64.png)
+  skin/classic/mozapps/plugins/pluginHelp-16.png             (../../windows/mozapps/plugins/pluginHelp-16.png)
+  skin/classic/mozapps/profile/profileSelection.css          (../../windows/mozapps/profile/profileSelection.css)
+  skin/classic/mozapps/update/downloadButtons.png            (../../windows/mozapps/update/downloadButtons.png)
+* skin/classic/mozapps/xpinstall/xpinstallConfirm.css        (../../windows/mozapps/extensions/xpinstallConfirm.css)
+
+#if MOZ_BUILD_APP == browser
+[browser/extensions/{972ce4c6-7e08-4474-a285-3208198ce6fd}] chrome.jar:
+#elif MOZ_SEPARATE_MANIFEST_FOR_THEME_OVERRIDES
+[extensions/{972ce4c6-7e08-4474-a285-3208198ce6fd}] chrome.jar:
+#endif
+% override chrome://global/skin/arrow/arrow-lft-hov.gif           chrome://global/skin/arrow/arrow-lft.gif
+% override chrome://global/skin/arrow/arrow-rit-hov.gif           chrome://global/skin/arrow/arrow-rit.gif
+% override chrome://mozapps/skin/extensions/category-dictionaries.png     chrome://mozapps/skin/extensions/dictionaryGeneric.png
+% override chrome://mozapps/skin/extensions/category-experiments.png      chrome://mozapps/skin/extensions/experimentGeneric.png
+% override chrome://mozapps/skin/extensions/category-extensions.svg       chrome://mozapps/skin/extensions/extensionGeneric.svg
+% override chrome://mozapps/skin/extensions/category-languages.png        chrome://mozapps/skin/extensions/localeGeneric.png
+% override chrome://mozapps/skin/extensions/category-themes.png           chrome://mozapps/skin/extensions/themeGeneric.png
+% override chrome://mozapps/skin/plugins/notifyPluginCrashed.png          chrome://mozapps/skin/plugins/pluginGeneric-16.png
+% override chrome://mozapps/skin/plugins/notifyPluginGeneric.png          chrome://mozapps/skin/plugins/pluginGeneric-16.png
+% override chrome://mozapps/skin/xpinstall/xpinstallItemGeneric.png       chrome://mozapps/skin/extensions/extensionGeneric.png
+

@@ -10,3 +10,8 @@ TEST_DIRS += [
     'junit3',
     'robocop/roboextender',
 ]
+
+if not CONFIG['MOZ_B2GDROID']:
+    TEST_DIRS += [
+        'robocop',
+    ]
