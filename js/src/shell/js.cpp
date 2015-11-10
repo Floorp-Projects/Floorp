@@ -55,6 +55,7 @@
 # include "jswin.h"
 #endif
 #include "jswrapper.h"
+#include "shellmoduleloader.out.h"
 
 #include "builtin/ModuleObject.h"
 #include "builtin/TestingFunctions.h"
@@ -74,11 +75,13 @@
 #include "shell/jsoptparse.h"
 #include "shell/OSObject.h"
 #include "vm/ArgumentsObject.h"
+#include "vm/Compression.h"
 #include "vm/Debugger.h"
 #include "vm/HelperThreads.h"
 #include "vm/Monitor.h"
 #include "vm/Shape.h"
 #include "vm/SharedArrayObject.h"
+#include "vm/StringBuffer.h"
 #include "vm/Time.h"
 #include "vm/TypedArrayObject.h"
 #include "vm/WrapperObject.h"
@@ -177,6 +180,8 @@ static bool reportWarnings = true;
 static bool compileOnly = false;
 static bool fuzzingSafe = false;
 static bool disableOOMFunctions = false;
+static const char* moduleLoadPath = ".";
+
 #ifdef DEBUG
 static bool dumpEntrainedVariables = false;
 static bool OOM_printAllocationCount = false;
@@ -518,6 +523,93 @@ RunFile(JSContext* cx, const char* filename, FILE* file, bool compileOnly)
 }
 
 static bool
+InitModuleLoader(JSContext* cx)
+{
+    // Decompress and evaluate the embedded module loader source to initialize
+    // the module loader for the current compartment.
+
+    uint32_t srcLen = moduleloader::GetRawScriptsSize();
+    ScopedJSFreePtr<char> src(cx->pod_malloc<char>(srcLen));
+    if (!src || !DecompressString(moduleloader::compressedSources, moduleloader::GetCompressedSize(),
+                                  reinterpret_cast<unsigned char*>(src.get()), srcLen))
+    {
+        return false;
+    }
+
+    CompileOptions options(cx);
+    options.setIntroductionType("shell module loader");
+    options.setFileAndLine("shell/ModuleLoader.js", 1);
+    options.setSelfHostingMode(false);
+    options.setCanLazilyParse(false);
+    options.setVersion(JSVERSION_LATEST);
+    options.werrorOption = true;
+    options.strictOption = true;
+
+    RootedValue rv(cx);
+    return Evaluate(cx, options, src, srcLen, &rv);
+}
+
+static bool
+GetLoaderObject(JSContext* cx, MutableHandleObject resultOut)
+{
+    // Look up the |Reflect.Loader| object that has been defined by the module
+    // loader.
+
+    RootedObject object(cx, cx->global());
+    RootedValue value(cx);
+    if (!JS_GetProperty(cx, object, "Reflect", &value) || !value.isObject())
+        return false;
+
+    object = &value.toObject();
+    if (!JS_GetProperty(cx, object, "Loader", &value) || !value.isObject())
+        return false;
+
+    resultOut.set(&value.toObject());
+    return true;
+}
+
+static bool
+GetImportMethod(JSContext* cx, HandleObject loader, MutableHandleFunction resultOut)
+{
+    // Look up the module loader's |import| method.
+
+    RootedValue value(cx);
+    if (!JS_GetProperty(cx, loader, "import", &value) || !value.isObject())
+        return false;
+
+    RootedObject object(cx, &value.toObject());
+    if (!object->is<JSFunction>())
+        return false;
+
+    resultOut.set(&object->as<JSFunction>());
+    return true;
+}
+
+static void
+RunModule(JSContext* cx, const char* filename, FILE* file, bool compileOnly)
+{
+    // Exectute a module by calling |Reflect.Loader.import(filename)|.
+
+    ShellRuntime* sr = GetShellRuntime(cx);
+
+    RootedObject loaderObj(cx);
+    MOZ_ALWAYS_TRUE(GetLoaderObject(cx, &loaderObj));
+
+    RootedFunction importFun(cx);
+    MOZ_ALWAYS_TRUE(GetImportMethod(cx, loaderObj, &importFun));
+
+    AutoValueArray<2> args(cx);
+    args[0].setString(JS_NewStringCopyZ(cx, filename));
+    args[1].setUndefined();
+
+    RootedValue value(cx);
+    if (!JS_CallFunction(cx, loaderObj, importFun, args, &value)) {
+        sr->exitCode = EXITCODE_RUNTIME_ERROR;
+        return;
+    }
+}
+
+static bool
 EvalAndPrint(JSContext* cx, const char* bytes, size_t length,
              int lineno, bool compileOnly, FILE* out)
 {
@@ -608,8 +700,14 @@ ReadEvalPrintLoop(JSContext* cx, FILE* in, FILE* out, bool compileOnly)
     fprintf(out, "\n");
 }
 
+enum FileKind
+{
+    FileScript,
+    FileModule
+};
+
 static void
-Process(JSContext* cx, const char* filename, bool forceTTY)
+Process(JSContext* cx, const char* filename, bool forceTTY, FileKind kind = FileScript)
 {
     FILE* file;
     if (forceTTY || !filename || strcmp(filename, "-") == 0) {
@@ -626,9 +724,13 @@ Process(JSContext* cx, const char* filename, bool forceTTY)
 
     if (!forceTTY && !isatty(fileno(file))) {
         // It's not interactive - just execute it.
-        RunFile(cx, filename, file, compileOnly);
+        if (kind == FileScript)
+            RunFile(cx, filename, file, compileOnly);
+        else
+            RunModule(cx, filename, file, compileOnly);
     } else {
         // It's an interactive filehandle; drop into read-eval-print loop.
+        MOZ_ASSERT(kind == FileScript);
         ReadEvalPrintLoop(cx, file, gOutFile, compileOnly);
     }
 }
@@ -3167,11 +3269,12 @@ static bool
 ParseModule(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    if (args.length() < 1) {
+    if (args.length() == 0) {
         JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
                              JSMSG_MORE_ARGS_NEEDED, "parseModule", "0", "s");
         return false;
     }
+
     if (!args[0].isString()) {
         const char* typeName = InformalValueTypeName(args[0]);
         JS_ReportError(cx, "expected string to compile, got %s", typeName);
@@ -3183,8 +3286,24 @@ ParseModule(JSContext* cx, unsigned argc, Value* vp)
     if (!scriptContents)
         return false;
 
+    mozilla::UniquePtr<char, JS::FreePolicy> filename;
     CompileOptions options(cx);
-    options.setFileAndLine("<string>", 1);
+    if (args.length() > 1) {
+        if (!args[1].isString()) {
+            JS_ReportError(cx, "expected filename string, got %s",
+                           JS_TypeOfValue(cx, args[1]));
+            return false;
+        }
+
+        RootedString str(cx, args[1].toString());
+        filename.reset(JS_EncodeString(cx, str));
+        if (!filename)
+            return false;
+
+        options.setFileAndLine(filename.get(), 1);
+    } else {
+        options.setFileAndLine("<string>", 1);
+    }
 
     AutoStableStringChars stableChars(cx);
     if (!stableChars.initTwoByte(cx, scriptContents))
@@ -3222,6 +3341,14 @@ SetModuleResolveHook(JSContext* cx, unsigned argc, Value* vp)
     Rooted<GlobalObject*> global(cx, cx->global());
     global->setModuleResolveHook(hook);
     args.rval().setUndefined();
+    return true;
+}
+
+static bool
+GetModuleLoadPath(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    args.rval().setString(JS_NewStringCopyZ(cx, moduleLoadPath));
     return true;
 }
 
@@ -4797,6 +4924,11 @@ static const JSFunctionSpecWithHelp shell_functions[] = {
 "  This hook is used to look up a previously loaded module object.  It should\n"
 "  be implemented by the module loader."),
 
+    JS_FN_HELP("getModuleLoadPath", GetModuleLoadPath, 0, 0,
+"getModuleLoadPath()",
+"  Return any --module-load-path argument passed to the shell.  Used by the\n"
+"  module loader.\n"),
+
     JS_FN_HELP("parse", Parse, 1, 0,
 "parse(code)",
 "  Parses a string, potentially throwing."),
@@ -5982,22 +6114,35 @@ ProcessArgs(JSContext* cx, OptionParser* op)
 
     MultiStringRange filePaths = op->getMultiStringOption('f');
     MultiStringRange codeChunks = op->getMultiStringOption('e');
+    MultiStringRange modulePaths = op->getMultiStringOption('m');
 
-    if (filePaths.empty() && codeChunks.empty() && !op->getStringArg("script")) {
+    if (filePaths.empty() &&
+        codeChunks.empty() &&
+        modulePaths.empty() &&
+        !op->getStringArg("script"))
+    {
         Process(cx, nullptr, true); /* Interactive. */
         return sr->exitCode;
     }
 
-    while (!filePaths.empty() || !codeChunks.empty()) {
-        size_t fpArgno = filePaths.empty() ? -1 : filePaths.argno();
-        size_t ccArgno = codeChunks.empty() ? -1 : codeChunks.argno();
-        if (fpArgno < ccArgno) {
+    if (const char* path = op->getStringOption("module-load-path"))
+        moduleLoadPath = path;
+
+    if (!modulePaths.empty() && !InitModuleLoader(cx))
+        return EXIT_FAILURE;
+
+    while (!filePaths.empty() || !codeChunks.empty() || !modulePaths.empty()) {
+        size_t fpArgno = filePaths.empty() ? SIZE_MAX : filePaths.argno();
+        size_t ccArgno = codeChunks.empty() ? SIZE_MAX : codeChunks.argno();
+        size_t mpArgno = modulePaths.empty() ? SIZE_MAX : modulePaths.argno();
+
+        if (fpArgno < ccArgno && fpArgno < mpArgno) {
             char* path = filePaths.front();
-            Process(cx, path, false);
+            Process(cx, path, false, FileScript);
             if (sr->exitCode)
                 return sr->exitCode;
             filePaths.popFront();
-        } else {
+        } else if (ccArgno < fpArgno && ccArgno < mpArgno) {
             const char* code = codeChunks.front();
             RootedValue rval(cx);
             JS::CompileOptions opts(cx);
@@ -6007,6 +6152,13 @@ ProcessArgs(JSContext* cx, OptionParser* op)
             codeChunks.popFront();
             if (sr->quitting)
                 break;
+        } else {
+            MOZ_ASSERT(mpArgno < fpArgno && mpArgno < ccArgno);
+            char* path = modulePaths.front();
+            Process(cx, path, false, FileModule);
+            if (sr->exitCode)
+                return sr->exitCode;
+            modulePaths.popFront();
         }
     }
 
@@ -6401,6 +6553,7 @@ main(int argc, char** argv, char** envp)
     op.setVersion(JS_GetImplementationVersion());
 
     if (!op.addMultiStringOption('f', "file", "PATH", "File path to run")
+        || !op.addMultiStringOption('m', "module", "PATH", "Module path to run")
         || !op.addMultiStringOption('e', "execute", "CODE", "Inline code to run")
         || !op.addBoolOption('i', "shell", "Enter prompt after running code")
         || !op.addBoolOption('c', "compileonly", "Only compile, don't run (syntax checking mode)")
@@ -6537,6 +6690,7 @@ main(int argc, char** argv, char** envp)
 #ifdef JS_GC_ZEAL
         || !op.addStringOption('z', "gc-zeal", "LEVEL[,N]", gc::ZealModeHelpText)
 #endif
+        || !op.addStringOption('\0', "module-load-path", "DIR", "Set directory to load modules from")
     )
     {
         return EXIT_FAILURE;
