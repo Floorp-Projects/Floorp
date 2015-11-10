@@ -265,7 +265,6 @@ CompositorD3D9::DrawQuad(const gfx::Rect &aRect,
                                                           aRect.width,
                                                           aRect.height),
                                        1);
-  bool target = false;
 
   if (aEffectChain.mPrimaryEffect->mType != EffectTypes::SOLID_COLOR) {
     float opacity[4];
@@ -479,7 +478,7 @@ CompositorD3D9::DrawQuad(const gfx::Rect &aRect,
     d3d9Device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_SRCALPHA);
   }
 
-  HRESULT hr = d3d9Device->DrawPrimitive(D3DPT_TRIANGLESTRIP, 0, 2);
+  d3d9Device->DrawPrimitive(D3DPT_TRIANGLESTRIP, 0, 2);
 
   if (!isPremultiplied) {
     d3d9Device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_ONE);

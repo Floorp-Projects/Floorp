@@ -31,10 +31,11 @@ class MarionetteArguments(BaseMarionetteArguments):
 class MarionetteHarness(object):
     def __init__(self,
                  runner_class=MarionetteTestRunner,
-                 parser_class=MarionetteArguments):
+                 parser_class=MarionetteArguments,
+                 args=None):
         self._runner_class = runner_class
         self._parser_class = parser_class
-        self.args = self.parse_args()
+        self.args = args or self.parse_args()
 
     def parse_args(self, logger_defaults=None):
         parser = self._parser_class(
@@ -68,13 +69,11 @@ class MarionetteHarness(object):
             tests = args_dict.pop('tests')
             runner = self._runner_class(**args_dict)
             runner.run_tests(tests)
-            if runner.failed > 0:
-                sys.exit(10)
+            return runner
         except Exception:
             self.args.logger.error('Failure during test execution.',
                                    exc_info=True)
             sys.exit(1)
-
 
 def cli(runner_class=MarionetteTestRunner, parser_class=MarionetteArguments):
     MarionetteHarness(runner_class, parser_class).run()
