@@ -558,7 +558,10 @@ function checkTheme(data) {
 }
 
 function checkActiveGMPlugin(data) {
-  Assert.equal(typeof data.version, "string");
+  // GMP plugin version defaults to null until GMPDownloader runs to update it.
+  if (data.version) {
+    Assert.equal(typeof data.version, "string");
+  }
   Assert.equal(typeof data.userDisabled, "boolean");
   Assert.equal(typeof data.applyBackgroundUpdates, "number");
 }

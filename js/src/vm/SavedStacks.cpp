@@ -1017,6 +1017,21 @@ SavedStacks::saveCurrentStack(JSContext* cx, MutableHandleSavedFrame frame, unsi
     return insertFrames(cx, iter, frame, maxFrameCount);
 }
 
+bool
+SavedStacks::copyAsyncStack(JSContext* cx, HandleObject asyncStack, HandleString asyncCause,
+                            MutableHandleSavedFrame adoptedStack, unsigned maxFrameCount)
+{
+    MOZ_ASSERT(initialized());
+    assertSameCompartment(cx, this);
+
+    RootedObject asyncStackObj(cx, CheckedUnwrap(asyncStack));
+    MOZ_ASSERT(asyncStackObj);
+    MOZ_ASSERT(js::SavedFrame::isSavedFrameAndNotProto(*asyncStackObj));
+    RootedSavedFrame frame(cx, &asyncStackObj->as<js::SavedFrame>());
+
+    return adoptAsyncStack(cx, frame, asyncCause, adoptedStack, maxFrameCount);
+}
+
 void
 SavedStacks::sweep(JSRuntime* rt)
 {

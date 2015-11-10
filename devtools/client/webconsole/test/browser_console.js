@@ -12,6 +12,9 @@ const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
 
 const TEST_XHR_ERROR_URI = `http://example.com/404.html?${Date.now()}`;
 
+const TEST_IMAGE = "http://example.com/browser/devtools/client/webconsole/" +
+                   "test/test-image.png";
+
 "use strict";
 
 var test = asyncTest(function*() {
@@ -61,6 +64,9 @@ function consoleOpened(hud) {
   xhrErr.open("get", TEST_XHR_ERROR_URI, true);
   xhrErr.send();
 
+  // Check that Fetch requests are categorized as "XHR".
+  fetch(TEST_IMAGE).then(() => { console.log("fetch loaded"); });
+
   return waitForMessages({
     webconsole: hud,
     messages: [
@@ -100,6 +106,13 @@ function consoleOpened(hud) {
         text: "404.html",
         category: CATEGORY_NETWORK,
         severity: SEVERITY_ERROR,
+        isXhr: true,
+      },
+      {
+        name: "network message",
+        text: "test-image.png",
+        category: CATEGORY_NETWORK,
+        severity: SEVERITY_INFO,
         isXhr: true,
       },
     ],

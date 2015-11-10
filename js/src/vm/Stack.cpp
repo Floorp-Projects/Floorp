@@ -1498,10 +1498,14 @@ jit::JitActivation::JitActivation(JSContext* cx, CalleeToken entryPoint, bool ac
     if (entryMonitor_) {
         MOZ_ASSERT(entryPoint);
 
+        RootedValue stack(cx_);
+        stack.setObjectOrNull(asyncStack_.get());
+        if (!cx_->compartment()->wrap(cx_, &stack))
+            stack.setUndefined();
         if (CalleeTokenIsFunction(entryPoint))
-            entryMonitor_->Entry(cx_, CalleeTokenToFunction(entryPoint));
+            entryMonitor_->Entry(cx_, CalleeTokenToFunction(entryPoint), stack, asyncCause_);
         else
-            entryMonitor_->Entry(cx_, CalleeTokenToScript(entryPoint));
+            entryMonitor_->Entry(cx_, CalleeTokenToScript(entryPoint), stack, asyncCause_);
     }
 }
 

@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>keyframe line numbers test</title>
+  <style type="text/css">
+div {
+  animation-duration: 1s;
+  animation-iteration-count: infinite;
+  animation-direction: alternate;
+  animation-name: CC;
+}
+
+span {
+  animation-duration: 3s;
+  animation-iteration-count: infinite;
+  animation-direction: alternate;
+  animation-name: DD;
+}
+
+@keyframes CC {
+  from {
+    background: #ffffff;
+  }
+  to {
+    background: #f0c;
+  }
+}
+
+@keyframes DD {
+  from {
+    background: seagreen;
+  }
+  to {
+    background: chartreuse;
+  }
+}
+  </style>
+</head>
+<body>
+  <div id="outer">
+    <span id="inner">lizards</div>
+  </div>
+</body>
+</html>
