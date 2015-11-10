@@ -693,6 +693,9 @@ TabChild::Observe(nsISupports *aSubject,
     // In theory a tabChild should contain just 1 top window, but let's double
     // check it comparing the windowID.
     if (window->WindowID() != windowID) {
+      MOZ_LOG(AudioChannelService::GetAudioChannelLog(), LogLevel::Debug,
+              ("TabChild, Observe, different windowID, owner ID = %lld, "
+               "ID from wrapper = %lld", window->WindowID(), windowID));
       return NS_OK;
     }
 
