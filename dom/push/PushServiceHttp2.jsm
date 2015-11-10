@@ -858,14 +858,8 @@ PushRecordHttp2.prototype = Object.create(PushRecord.prototype, {
   },
 });
 
-PushRecordHttp2.prototype.toRegistration = function() {
-  let registration = PushRecord.prototype.toRegistration.call(this);
-  registration.pushReceiptEndpoint = this.pushReceiptEndpoint;
-  return registration;
-};
-
-PushRecordHttp2.prototype.toRegister = function() {
-  let register = PushRecord.prototype.toRegister.call(this);
-  register.pushReceiptEndpoint = this.pushReceiptEndpoint;
-  return register;
+PushRecordHttp2.prototype.toSubscription = function() {
+  let subscription = PushRecord.prototype.toSubscription.call(this);
+  subscription.pushReceiptEndpoint = this.pushReceiptEndpoint;
+  return subscription;
 };
