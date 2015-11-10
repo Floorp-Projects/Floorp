@@ -27,6 +27,10 @@ const CONNECTION_PROTOCOLS = [PushServiceWebSocket, PushServiceHttp2];
 XPCOMUtils.defineLazyModuleGetter(this, "AlarmService",
                                   "resource://gre/modules/AlarmService.jsm");
 
+XPCOMUtils.defineLazyServiceGetter(this, "gContentSecurityManager",
+                                   "@mozilla.org/contentsecuritymanager;1",
+                                   "nsIContentSecurityManager");
+
 this.EXPORTED_SYMBOLS = ["PushService"];
 
 XPCOMUtils.defineLazyGetter(this, "console", () => {
@@ -327,16 +331,34 @@ this.PushService = {
     }
   },
 
-  _findService: function(serverURI) {
-    var uri;
-    var service;
-    if (serverURI) {
-      for (let connProtocol of CONNECTION_PROTOCOLS) {
-        uri = connProtocol.checkServerURI(serverURI);
-        if (uri) {
-          service = connProtocol;
-          break;
-        }
+  _findService: function(serverURL) {
+    console.debug("findService()");
+
+    let uri;
+    let service;
+
+    if (!serverURL) {
+      console.warn("findService: No dom.push.serverURL found");
+      return [];
+    }
+
+    try {
+      uri = Services.io.newURI(serverURL, null, null);
+    } catch (e) {
+      console.warn("findService: Error creating valid URI from",
+        "dom.push.serverURL", serverURL);
+      return [];
+    }
+
+    if (!gContentSecurityManager.isURIPotentiallyTrustworthy(uri)) {
+      console.warn("findService: Untrusted server URI", uri.spec);
+      return [];
+    }
+
+    for (let connProtocol of CONNECTION_PROTOCOLS) {
+      if (connProtocol.validServerURI(uri)) {
+        service = connProtocol;
+        break;
       }
     }
     return [service, uri];
@@ -428,22 +450,7 @@ this.PushService = {
     if (options.serverURI) {
       // this is use for xpcshell test.
 
-      var uri;
-      var service;
-      if (!options.service) {
-        for (let connProtocol of CONNECTION_PROTOCOLS) {
-          uri = connProtocol.checkServerURI(options.serverURI);
-          if (uri) {
-            service = connProtocol;
-            break;
-          }
-        }
-      } else {
-        try {
-          uri  = Services.io.newURI(options.serverURI, null, null);
-          service = options.service;
-        } catch(e) {}
-      }
+      let [service, uri] = this._findService(options.serverURI);
       if (!service) {
         this._setState(PUSH_SERVICE_INIT);
         return;

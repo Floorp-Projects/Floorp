@@ -79,7 +79,6 @@ add_task(function* test1() {
 
   PushService.init({
     serverURI: serverURL + "/subscribe5xxCode",
-    service: PushServiceHttp2,
     db
   });
 
