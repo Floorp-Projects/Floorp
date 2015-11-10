@@ -918,7 +918,8 @@ add_task(function* test_dailyDuplication() {
     return;
   }
 
-  clearPendingPings();
+  yield TelemetrySend.reset();
+  yield clearPendingPings();
   PingServer.clearRequests();
 
   let schedulerTickCallback = null;
@@ -961,8 +962,8 @@ add_task(function* test_dailyDuplication() {
   yield schedulerTickCallback();
 
   // Shutdown to cleanup the aborted-session if it gets created.
-  yield TelemetrySession.shutdown();
   PingServer.resetPingHandler();
+  yield TelemetrySession.shutdown();
 });
 
 add_task(function* test_dailyOverdue() {
@@ -1025,7 +1026,7 @@ add_task(function* test_environmentChange() {
   let timerCallback = null;
   let timerDelay = null;
 
-  clearPendingPings();
+  yield clearPendingPings();
   yield TelemetrySend.reset();
   PingServer.clearRequests();
 
@@ -1101,6 +1102,8 @@ add_task(function* test_savedPingsOnShutdown() {
   const dir = TelemetryStorage.pingDirectoryPath;
   yield OS.File.removeDir(dir, {ignoreAbsent: true});
   yield OS.File.makeDir(dir);
+  // TODO: Remove the TelemetrySend manual shutdown when bug 1145188 lands.
+  yield TelemetrySend.shutdown();
   yield TelemetrySession.shutdown();
 
   PingServer.clearRequests();
@@ -1339,6 +1342,8 @@ add_task(function* test_abortedSession() {
   Assert.notEqual(abortedSessionPing.id, updatedAbortedSessionPing.id);
   Assert.notEqual(abortedSessionPing.creationDate, updatedAbortedSessionPing.creationDate);
 
+  // TODO: Remove the TelemetrySend manual shutdown when bug 1145188 lands.
+  yield TelemetrySend.shutdown();
   yield TelemetrySession.shutdown();
   Assert.ok(!(yield OS.File.exists(ABORTED_FILE)),
             "No aborted session ping must be available after a shutdown.");
@@ -1349,6 +1354,8 @@ add_task(function* test_abortedSession() {
 
   yield clearPendingPings();
   PingServer.clearRequests();
+  // TODO: Remove the TelemetrySend manual setup when bug 1145188 lands.
+  yield TelemetrySend.setup(true);
   yield TelemetrySession.reset();
   yield TelemetryController.reset();
 
@@ -1360,6 +1367,8 @@ add_task(function* test_abortedSession() {
   Assert.equal(receivedPing.type, PING_TYPE_MAIN, "Should have the correct type");
   Assert.equal(receivedPing.payload.info.reason, REASON_ABORTED_SESSION, "Ping should have the correct reason");
 
+  // TODO: Remove the TelemetrySend manual shutdown when bug 1145188 lands.
+  yield TelemetrySend.shutdown();
   yield TelemetrySession.shutdown();
 });
 
@@ -1375,6 +1384,9 @@ add_task(function* test_abortedSession_Shutdown() {
   let now = fakeNow(2040, 1, 1, 0, 0, 0);
   // Fake scheduler functions to control aborted-session flow in tests.
   fakeSchedulerTimer(callback => schedulerTickCallback = callback, () => {});
+  // TODO: Remove the TelemetrySend manual setup/reset when bug 1145188 lands.
+  yield TelemetrySend.setup(true);
+  yield TelemetrySend.reset();
   yield TelemetrySession.reset();
 
   Assert.ok((yield OS.File.exists(DATAREPORTING_PATH)),
@@ -1393,6 +1405,8 @@ add_task(function* test_abortedSession_Shutdown() {
   // not found) do not compromise the shutdown.
   yield OS.File.remove(ABORTED_FILE);
 
+  // TODO: Remove the TelemetrySend manual shutdown when bug 1145188 lands.
+  yield TelemetrySend.shutdown();
   yield TelemetrySession.shutdown();
 });
 
@@ -1415,6 +1429,9 @@ add_task(function* test_abortedDailyCoalescing() {
 
   // Fake scheduler functions to control aborted-session flow in tests.
   fakeSchedulerTimer(callback => schedulerTickCallback = callback, () => {});
+  // TODO: Remove the TelemetrySend manual setup/reset when bug 1145188 lands.
+  yield TelemetrySend.setup(true);
+  yield TelemetrySend.reset();
   yield TelemetrySession.reset();
 
   Assert.ok((yield OS.File.exists(DATAREPORTING_PATH)),
@@ -1444,6 +1461,8 @@ add_task(function* test_abortedDailyCoalescing() {
   Assert.equal(abortedSessionPing.payload.info.sessionId, dailyPing.payload.info.sessionId);
   Assert.equal(abortedSessionPing.payload.info.subsessionId, dailyPing.payload.info.subsessionId);
 
+  // TODO: Remove the TelemetrySend manual shutdown when bug 1145188 lands.
+  yield TelemetrySend.shutdown();
   yield TelemetrySession.shutdown();
 });
 
@@ -1456,6 +1475,8 @@ add_task(function* test_schedulerComputerSleep() {
   const ABORTED_FILE = OS.Path.join(DATAREPORTING_PATH, ABORTED_PING_FILE_NAME);
 
   clearPendingPings();
+  // TODO: Remove the TelemetrySend manual setup when bug 1145188 lands.
+  yield TelemetrySend.setup(true);
   yield TelemetrySend.reset();
   PingServer.clearRequests();
 
@@ -1482,6 +1503,8 @@ add_task(function* test_schedulerComputerSleep() {
   Assert.ok((yield OS.File.exists(ABORTED_FILE)),
             "There must be an aborted session ping.");
 
+  // TODO: Remove the TelemetrySend manual shutdown when bug 1145188 lands.
+  yield TelemetrySend.shutdown();
   yield TelemetrySession.shutdown();
 });
 
@@ -1500,6 +1523,9 @@ add_task(function* test_schedulerEnvironmentReschedules() {
 
   yield clearPendingPings();
   PingServer.clearRequests();
+  // TODO: Remove the TelemetrySend manual setup/reset when bug 1145188 lands.
+  yield TelemetrySend.setup(true);
+  yield TelemetrySend.reset();
 
   // Set a fake current date and start Telemetry.
   let nowDate = new Date(2060, 10, 18, 0, 0, 0);
@@ -1528,6 +1554,8 @@ add_task(function* test_schedulerEnvironmentReschedules() {
   Assert.ok(!!schedulerTickCallback);
   yield schedulerTickCallback();
 
+  // TODO: Remove the TelemetrySend manual shutdown when bug 1145188 lands.
+  yield TelemetrySend.shutdown();
   yield TelemetrySession.shutdown();
 });
 
@@ -1542,6 +1570,9 @@ add_task(function* test_schedulerNothingDue() {
   // Remove any aborted-session ping from the previous tests.
   yield OS.File.removeDir(DATAREPORTING_PATH, { ignoreAbsent: true });
   yield clearPendingPings();
+  // TODO: Remove the TelemetrySend manual setup/reset when bug 1145188 lands.
+  yield TelemetrySend.setup(true);
+  yield TelemetrySend.reset();
 
   // We don't expect to receive any ping in this test, so assert if we do.
   PingServer.registerPingHandler((req, res) => {
@@ -1566,6 +1597,8 @@ add_task(function* test_schedulerNothingDue() {
   // Check that no aborted session ping was written to disk.
   Assert.ok(!(yield OS.File.exists(ABORTED_FILE)));
 
+  // TODO: Remove the TelemetrySend manual shutdown when bug 1145188 lands.
+  yield TelemetrySend.shutdown();
   yield TelemetrySession.shutdown();
   PingServer.resetPingHandler();
 });
@@ -1581,6 +1614,9 @@ add_task(function* test_pingExtendedStats() {
 
   yield clearPendingPings();
   PingServer.clearRequests();
+  // TODO: Remove the TelemetrySend manual setup/reset when bug 1145188 lands.
+  yield TelemetrySend.setup(true);
+  yield TelemetrySend.reset();
   yield TelemetrySession.reset();
   yield sendPing();
 
@@ -1666,6 +1702,8 @@ add_task(function* test_schedulerUserIdle() {
   fakeIdleNotification("idle");
   Assert.equal(schedulerTimeout, 10 * 60 * 1000);
 
+  // TODO: Remove the TelemetrySend manual shutdown when bug 1145188 lands.
+  yield TelemetrySend.shutdown();
   yield TelemetrySession.shutdown();
 });
 
@@ -1676,8 +1714,11 @@ add_task(function* test_DailyDueAndIdle() {
   }
 
   yield TelemetrySession.reset();
-  clearPendingPings();
+  yield clearPendingPings();
   PingServer.clearRequests();
+  // TODO: Remove the TelemetrySend setup when bug 1145188 lands.
+  yield TelemetrySend.setup(true);
+  yield TelemetrySend.reset();
 
   let receivedPingRequest = null;
   // Register a ping handler that will assert when receiving multiple daily pings.
@@ -1716,6 +1757,8 @@ add_task(function* test_DailyDueAndIdle() {
   checkPingFormat(receivedPing, PING_TYPE_MAIN, true, true);
   Assert.equal(receivedPing.payload.info.reason, REASON_DAILY);
 
+  // TODO: Remove the TelemetrySend manual shutdown when bug 1145188 lands.
+  yield TelemetrySend.shutdown();
   yield TelemetrySession.shutdown();
 });
 
@@ -1726,8 +1769,11 @@ add_task(function* test_userIdleAndSchedlerTick() {
   }
 
   yield TelemetrySession.reset();
-  clearPendingPings();
+  yield clearPendingPings();
   PingServer.clearRequests();
+  // TODO: Remove the TelemetrySend setup when bug 1145188 lands.
+  yield TelemetrySend.setup(true);
+  yield TelemetrySend.reset();
 
   let receivedPingRequest = null;
   // Register a ping handler that will assert when receiving multiple daily pings.
@@ -1766,6 +1812,8 @@ add_task(function* test_userIdleAndSchedlerTick() {
   checkPingFormat(receivedPing, PING_TYPE_MAIN, true, true);
   Assert.equal(receivedPing.payload.info.reason, REASON_DAILY);
 
+  // TODO: Remove the TelemetrySend manual shutdown when bug 1145188 lands.
+  yield TelemetrySend.shutdown();
   yield TelemetrySession.shutdown();
 });
 
