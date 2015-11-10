@@ -69,14 +69,30 @@ class MarionetteHarness(object):
             tests = args_dict.pop('tests')
             runner = self._runner_class(**args_dict)
             runner.run_tests(tests)
-            return runner
+            return runner.failed
         except Exception:
             self.args.logger.error('Failure during test execution.',
                                    exc_info=True)
-            sys.exit(1)
+            raise
 
-def cli(runner_class=MarionetteTestRunner, parser_class=MarionetteArguments):
-    MarionetteHarness(runner_class, parser_class).run()
+
+def cli(runner_class=MarionetteTestRunner, parser_class=MarionetteArguments,
+        harness_class=MarionetteHarness):
+    """
+    Call the harness to parse args and run tests.
+
+    The following exit codes are expected:
+    - Test failures: 10
+    - Harness/other failures: 1
+    - Success: 0
+    """
+    try:
+        failed = harness_class(runner_class, parser_class).run()
+        if failed > 0:
+            sys.exit(10)
+    except Exception:
+        sys.exit(1)
+    sys.exit(0)
 
 if __name__ == "__main__":
     cli()
