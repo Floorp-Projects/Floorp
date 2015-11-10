@@ -7,15 +7,15 @@
 /* Copyright(c) 2013, Intel Corp.                                             */
 /******************************************************************************/
 /* Reference:                                                                 */
-/* [1] Shay Gueron, Michael E. Kounavis: Intel(R) Carry-Less Multiplication   */
+/* [1] Shay Gueron, Michael E. Kounavis: Intel® Carry-Less Multiplication     */
 /*     Instruction and its Usage for Computing the GCM Mode (Rev. 2.01)       */
 /*     http://software.intel.com/sites/default/files/article/165685/clmul-wp-r*/
 /*ev-2.01-2012-09-21.pdf                                                      */
 /* [2] S. Gueron, M. E. Kounavis: Efficient Implementation of the Galois      */
 /*     Counter Mode Using a Carry-less Multiplier and a Fast Reduction        */
-/*     Algorithm. Information Processing Letters 110: 549-553 (2010).         */
-/* [3] S. Gueron: AES Performance on the 2nd Generation Intel(R) Core(TM)     */
-/*     Processor Family (to be posted) (2012).                                */
+/*     Algorithm. Information Processing Letters 110: 549–553 (2010).         */
+/* [3] S. Gueron: AES Performance on the 2nd Generation Intel® Core™ Processor*/
+/*     Family (to be posted) (2012).                                          */
 /* [4] S. Gueron: Fast GHASH computations for speeding up AES-GCM (to be      */
 /*     published) (2012).                                                     */
 
@@ -41,9 +41,9 @@ SECStatus intel_AES_GCM_DecryptUpdate(intel_AES_GCMContext *gcm, unsigned char *
 			const unsigned char *inbuf, unsigned int inlen,
 			unsigned int blocksize);
 
-/* Prototypes of functions in the assembler file for fast AES-GCM, using 
+/* Prorotypes of functions in the assembler file for fast AES-GCM, using 
    Intel AES-NI and CLMUL-NI, as described in [1]
-   [1] Shay Gueron, Michael E. Kounavis: Intel(R) Carry-Less Multiplication
+   [1] Shay Gueron, Michael E. Kounavis: Intel® Carry-Less Multiplication 
        Instruction and its Usage for Computing the GCM Mode                */
        
 /* Prepares the constants used in the aggregated reduction method */
