@@ -161,11 +161,6 @@ protected:
   // Called on MediaCodecReader::mLooper thread.
   void onMessageReceived(const android::sp<android::AMessage>& aMessage);
 
-  // Receive a notify from ResourceListener.
-  // Called on Binder thread.
-  virtual void VideoCodecReserved();
-  virtual void VideoCodecCanceled();
-
   virtual bool CreateExtractor();
 
   virtual void HandleResourceAllocated();
@@ -177,30 +172,11 @@ protected:
   MozPromiseRequestHolder<MediaResourcePromise> mMediaResourceRequest;
   MozPromiseHolder<MediaResourcePromise> mMediaResourcePromise;
 
+  MozPromiseRequestHolder<android::MediaCodecProxy::CodecPromise> mVideoCodecRequest;
+
 private:
   virtual bool HasAudio() override;
   virtual bool HasVideo() override;
-
-  // An intermediary class that can be managed by android::sp<T>.
-  // Redirect codecReserved() and codecCanceled() to MediaCodecReader.
-  class VideoResourceListener : public android::MediaCodecProxy::CodecResourceListener
-  {
-  public:
-    VideoResourceListener(MediaCodecReader* aReader);
-    ~VideoResourceListener();
-
-    virtual void codecReserved();
-    virtual void codecCanceled();
-
-  private:
-    // Forbidden
-    VideoResourceListener() = delete;
-    VideoResourceListener(const VideoResourceListener& rhs) = delete;
-    const VideoResourceListener& operator=(const VideoResourceListener& rhs) = delete;
-
-    MediaCodecReader* mReader;
-  };
-  friend class VideoResourceListener;
 
   class VorbisInputCopier : public TrackInputCopier
   {
@@ -338,10 +314,9 @@ private:
   void DestroyMediaSources();
 
   RefPtr<MediaResourcePromise> CreateMediaCodecs();
-  static bool CreateMediaCodec(android::sp<android::ALooper>& aLooper,
-                               Track& aTrack,
-                               bool& aIsWaiting,
-                               android::wp<android::MediaCodecProxy::CodecResourceListener> aListener);
+  bool CreateMediaCodec(android::sp<android::ALooper>& aLooper,
+                        Track& aTrack,
+                        bool& aIsWaiting);
   static bool ConfigureMediaCodec(Track& aTrack);
   void DestroyMediaCodecs();
   static void DestroyMediaCodec(Track& aTrack);
@@ -395,8 +370,6 @@ private:
   void ReleaseRecycledTextureClients();
 
   void ReleaseAllTextureClients();
-
-  android::sp<VideoResourceListener> mVideoListener;
 
   android::sp<android::ALooper> mLooper;
   android::sp<android::MetaData> mMetaData;

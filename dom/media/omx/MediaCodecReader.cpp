@@ -68,33 +68,6 @@ IsValidTimestampUs(int64_t aTimestamp)
   return aTimestamp >= INT64_C(0);
 }
 
-MediaCodecReader::VideoResourceListener::VideoResourceListener(
-  MediaCodecReader* aReader)
-  : mReader(aReader)
-{
-}
-
-MediaCodecReader::VideoResourceListener::~VideoResourceListener()
-{
-  mReader = nullptr;
-}
-
-void
-MediaCodecReader::VideoResourceListener::codecReserved()
-{
-  if (mReader) {
-    mReader->VideoCodecReserved();
-  }
-}
-
-void
-MediaCodecReader::VideoResourceListener::codecCanceled()
-{
-  if (mReader) {
-    mReader->VideoCodecCanceled();
-  }
-}
-
 MediaCodecReader::TrackInputCopier::~TrackInputCopier()
 {
 }
@@ -276,7 +249,6 @@ MediaCodecReader::MediaCodecReader(AbstractMediaDecoder* aDecoder)
   , mNextParserPosition(INT64_C(0))
   , mParsedDataLength(INT64_C(0))
 {
-  mVideoListener = new VideoResourceListener(this);
 }
 
 MediaCodecReader::~MediaCodecReader()
@@ -1111,6 +1083,7 @@ MediaCodecReader::ReleaseCriticalResources()
   mMediaResourceRequest.DisconnectIfExists();
   mMediaResourcePromise.RejectIfExists(true, __func__);
   mMetadataPromise.RejectIfExists(ReadMetadataFailureReason::METADATA_ERROR, __func__);
+  mVideoCodecRequest.DisconnectIfExists();
 
   ResetDecode();
   // Before freeing a video codec, all video buffers needed to be released
@@ -1313,12 +1286,12 @@ MediaCodecReader::CreateMediaCodecs()
   bool isWaiting = false;
   RefPtr<MediaResourcePromise> p = mMediaResourcePromise.Ensure(__func__);
 
-  if (!CreateMediaCodec(mLooper, mAudioTrack, isWaiting, nullptr)) {
+  if (!CreateMediaCodec(mLooper, mAudioTrack, isWaiting)) {
     mMediaResourcePromise.Reject(true, __func__);
     return p;
   }
 
-  if (!CreateMediaCodec(mLooper, mVideoTrack, isWaiting, mVideoListener)) {
+  if (!CreateMediaCodec(mLooper, mVideoTrack, isWaiting)) {
     mMediaResourcePromise.Reject(true, __func__);
     return p;
   }
@@ -1334,15 +1307,14 @@ MediaCodecReader::CreateMediaCodecs()
 bool
 MediaCodecReader::CreateMediaCodec(sp<ALooper>& aLooper,
                                    Track& aTrack,
-                                   bool& aIsWaiting,
-                                   wp<MediaCodecProxy::CodecResourceListener> aListener)
+                                   bool& aIsWaiting)
 {
   if (aTrack.mSource != nullptr && aTrack.mCodec == nullptr) {
     sp<MetaData> sourceFormat = aTrack.mSource->getFormat();
 
     const char* mime;
     if (sourceFormat->findCString(kKeyMIMEType, &mime)) {
-      aTrack.mCodec = MediaCodecProxy::CreateByType(aLooper, mime, false, aListener);
+      aTrack.mCodec = MediaCodecProxy::CreateByType(aLooper, mime, false);
     }
 
     if (aTrack.mCodec == nullptr) {
@@ -1380,13 +1352,17 @@ MediaCodecReader::CreateMediaCodec(sp<ALooper>& aLooper,
         return false;
       }
     } else if (aTrack.mType == Track::kVideo) {
-      if (aTrack.mCodec->AsyncAllocateVideoMediaCodec()) {
-        aIsWaiting = true;
-      } else {
-        NS_WARNING("Couldn't request MediaCodec asynchronously");
-        DestroyMediaCodec(aTrack);
-        return false;
-      }
+      aIsWaiting = true;
+      RefPtr<MediaCodecReader> self = this;
+      mVideoCodecRequest.Begin(aTrack.mCodec->AsyncAllocateVideoMediaCodec()
+        ->Then(OwnerThread(), __func__,
+          [self] (bool) -> void {
+            self->mVideoCodecRequest.Complete();
+            self->mMediaResourcePromise.ResolveIfExists(true, __func__);
+          }, [self] (bool) -> void {
+            self->mVideoCodecRequest.Complete();
+            self->mMediaResourcePromise.RejectIfExists(true, __func__);
+          }));
     }
   }
 
@@ -1948,18 +1924,5 @@ MediaCodecReader::ClearColorConverterBuffer()
   mColorConverterBufferSize = 0;
 }
 
-// Called on Binder thread.
-void
-MediaCodecReader::VideoCodecReserved()
-{
-  mMediaResourcePromise.ResolveIfExists(true, __func__);
-}
-
-// Called on Binder thread.
-void
-MediaCodecReader::VideoCodecCanceled()
-{
-  mMediaResourcePromise.RejectIfExists(true, __func__);
-}
 
 } // namespace mozilla
