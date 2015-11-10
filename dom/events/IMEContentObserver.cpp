@@ -1395,6 +1395,19 @@ IMEContentObserver::FlushMergeableNotifications()
      "finished", this));
 }
 
+void
+IMEContentObserver::TryToFlushPendingNotifications()
+{
+  if (!mQueuedSender || mSendingNotification != NOTIFY_IME_OF_NOTHING) {
+    return;
+  }
+
+  MOZ_LOG(sIMECOLog, LogLevel::Debug,
+    ("IMECO: 0x%p IMEContentObserver::TryToFlushPendingNotifications(), "
+     "performing queued IMENotificationSender forcibly", this));
+  mQueuedSender->Run();
+}
+
 /******************************************************************************
  * mozilla::IMEContentObserver::AChangeEvent
  ******************************************************************************/
@@ -1461,7 +1474,20 @@ IMEContentObserver::AChangeEvent::IsSafeToNotifyIME(
 NS_IMETHODIMP
 IMEContentObserver::IMENotificationSender::Run()
 {
-  MOZ_ASSERT(mIMEContentObserver->mQueuedSender);
+  if (NS_WARN_IF(mIsRunning)) {
+    MOZ_LOG(sIMECOLog, LogLevel::Error,
+      ("IMECO: 0x%p IMEContentObserver::IMENotificationSender::Run(), FAILED, "
+       "called recursively", this));
+    return NS_OK;
+  }
+
+  AutoRestore<bool> running(mIsRunning);
+  mIsRunning = true;
+
+  // This instance was already performed forcibly.
+  if (mIMEContentObserver->mQueuedSender != this) {
+    return NS_OK;
+  }
 
   // NOTE: Reset each pending flag because sending notification may cause
   //       another change.

@@ -103,6 +103,12 @@ public:
   nsresult GetSelectionAndRoot(nsISelection** aSelection,
                                nsIContent** aRoot) const;
 
+  /**
+   * TryToFlushPendingNotifications() should be called when pending events
+   * should be flushed.  This tries to run the queued IMENotificationSender.
+   */
+  void TryToFlushPendingNotifications();
+
 private:
   ~IMEContentObserver() {}
 
@@ -223,6 +229,7 @@ private:
   public:
     explicit IMENotificationSender(IMEContentObserver* aIMEContentObserver)
       : AChangeEvent(aIMEContentObserver)
+      , mIsRunning(false)
     {
     }
     NS_IMETHOD Run() override;
@@ -232,6 +239,8 @@ private:
     void SendSelectionChange();
     void SendTextChange();
     void SendPositionChange();
+
+    bool mIsRunning;
   };
 
   // mQueuedSender is, it was put into the event queue but not run yet.
