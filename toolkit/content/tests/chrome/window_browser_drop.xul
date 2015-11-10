@@ -14,123 +14,204 @@
 
 Components.utils.import("resource://testing-common/ContentTask.jsm");
 
-function doDropAndStopLoad(browser, data, shouldExpectStateChange) {
+function dropOnRemoteBrowserAsync(browser, data, shouldExpectStateChange) {
   ContentTask.setTestScope(window); // Need this so is/isnot/ok are available inside the contenttask
   return ContentTask.spawn(browser, {data, shouldExpectStateChange}, function*({data, shouldExpectStateChange}) {
     let { interfaces: Ci, utils: Cu } = Components;
     Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-    let nameReturned = "";
-    let uri = "";
-    let gotLoad = false;
-    function stopContent(uriLoaded) {
-      content.stop();
-      gotLoad = true;
-      uri = uriLoaded;
+    if (!content.document.documentElement) {
+      // Wait until the testing document gets loaded.
+      yield new Promise(resolve => {
+        let onload = function() {
+          content.window.removeEventListener("load", onload);
+          resolve();
+        };
+        content.window.addEventListener("load", onload);
+      });
     }
 
-    let wp = docShell.QueryInterface(Ci.nsIWebProgress);
-    let progressListener = {
-      onStateChange: function (webProgress, req, flags, status) {
-        info("waitForDocLoadAndStopIt: onStateChange " + flags.toString(16) + ": " + req.name + "\n");
-
-        if (webProgress.isTopLevel &&
-            flags & Ci.nsIWebProgressListener.STATE_START) {
-          wp.removeProgressListener(progressListener);
-
-          let chan = req.QueryInterface(Ci.nsIChannel);
-          info(`waitForDocLoadAndStopIt: Document start: ${chan.URI.spec}\n`);
-
-          stopContent(chan.originalURI.spec);
-        }
-      },
-      QueryInterface: XPCOMUtils.generateQI(["nsISupportsWeakReference"])
-    };
-    wp.addProgressListener(progressListener, wp.NOTIFY_STATE_WINDOW);
-
     let dataTransfer = new content.DataTransfer("dragstart", false);
-    dataTransfer.mozSetDataAt(data.type, data.data, 0);
+    for (let i = 0; i < data.length; i++) {
+      let types = data[i];
+      for (let j = 0; j < types.length; j++) {
+        dataTransfer.mozSetDataAt(types[j].type, types[j].data, i);
+      }
+    }
     let event = content.document.createEvent("DragEvent");
     event.initDragEvent("drop", true, true, content, 0, 0, 0, 0, 0,
                         false, false, false, false, 0, null, dataTransfer);
     content.document.body.dispatchEvent(event);
-    let nameGetter = {};
+
+    let links = [];
     try {
-      Services.droppedLinkHandler.dropLink(event, nameGetter, true);
-      nameReturned = nameGetter.value;
+      links = Services.droppedLinkHandler.dropLinks(event, true);
     } catch (ex) {
       if (shouldExpectStateChange) {
         ok(false, "Should not have gotten an exception from the dropped link handler, but got: " + ex);
         Cu.reportError(ex);
       }
     }
-    is(shouldExpectStateChange, gotLoad, "Should have gotten a load only if we expected it.");
-    if (!gotLoad) {
-      wp.removeProgressListener(progressListener);
-    }
-    return [uri, nameReturned];
+
+    return links;
   });
 }
 
-function expectLink(browser, expectedLink, expectedName, data, testid, onbody=false) {
-  let lastLink = "";
-  let lastLinkName = "";
-  function dropOnBrowserSync() {
-    browser.droppedLinkHandler = function(event, link, linkname) {
-      info(`droppedLinkHandler called, received link ${link} and linkname ${linkname}`);
-      if (!expectedLink && !expectedName) {
-        ok(false, "droppedLinkHandler called for URI " + link + " which we didn't expect.");
+function* expectLink(browser, expectedLinks, data, testid, onbody=false) {
+  let lastLinks = [];
+  let lastLinksPromise = new Promise(resolve => {
+    browser.droppedLinkHandler = function(event, links) {
+      info(`droppedLinkHandler called, received links ${JSON.stringify(links)}`);
+      if (expectedLinks.length == 0) {
+        ok(false, `droppedLinkHandler called for ${JSON.stringify(links)} which we didn't expect.`);
       }
-      lastLink = link;
-      lastLinkName = linkname;
+      lastLinks = links;
+      resolve(links);
     };
+  });
 
+  function dropOnBrowserSync() {
     let dropEl = onbody ? browser.contentDocument.body : browser;
     synthesizeDrop(dropEl, dropEl, data, "", dropEl.ownerDocument.defaultView);
-    return Promise.resolve([lastLink, lastLinkName]);
   }
-  let dropInfoReceived;
+  let links;
   if (browser.isRemoteBrowser) {
-    dropInfoReceived = doDropAndStopLoad(browser, data[0][0], !!expectedLink);
+    let remoteLinks = yield dropOnRemoteBrowserAsync(browser, data, expectedLinks.length != 0);
+    is(remoteLinks.length, expectedLinks.length, testid + " remote links length");
+    for (let i = 0, length = remoteLinks.length; i < length; i++) {
+      is(remoteLinks[i].url, expectedLinks[i].url, testid + "[" + i + "] remote link");
+      is(remoteLinks[i].name, expectedLinks[i].name, testid + "[" + i + "] remote name");
+    }
+
+    if (expectedLinks.length == 0) {
+      // There is no way to check if nothing happens asynchronously.
+      return;
+    }
+
+    links = yield lastLinksPromise;
   } else {
-    dropInfoReceived = dropOnBrowserSync();
+    dropOnBrowserSync();
+    links = lastLinks;
   }
-  return dropInfoReceived.then(([uri, linkname]) => {
-    is(uri, expectedLink, testid + " link");
-    is(linkname, expectedName, testid + " name");
-  });
-}
+
+  is(links.length, expectedLinks.length, testid + " links length");
+  for (let i = 0, length = links.length; i < length; i++) {
+    is(links[i].url, expectedLinks[i].url, testid + "[" + i + "] link");
+    is(links[i].name, expectedLinks[i].name, testid + "[" + i + "] name");
+  }
+};
 
 function* dropLinksOnBrowser(browser, type) {
-  yield expectLink(browser, "http://www.mozilla.org/", "http://www.mozilla.org/",
-                   [ [ { type: "text/plain", data: "http://www.mozilla.org/" } ] ],
-                   "text/plain drop on browser " + type);
-  yield expectLink(browser, "", "",
-                   [ [ { type: "text/link", data: "http://www.mozilla.org/" } ] ],
-                   "text/link drop on browser " + type);
-  yield expectLink(browser, "http://www.example.com/", "http://www.example.com/",
-                   [ [ { type: "text/uri-list", data: "http://www.example.com/\nhttp://www.mozilla.org" } ] ],
-                   "text/uri-list drop on browser " + type);
-  yield expectLink(browser, "http://www.example.com/", "Example.com",
-                   [ [ { type: "text/x-moz-url", data: "http://www.example.com/\nExample.com" } ] ],
-                   "text/x-moz-url drop on browser " + type);
+  // Dropping single text/plain item with single link should open single
+  // page.
+  yield* expectLink(browser,
+                    [ { url: "http://www.mozilla.org/",
+                        name: "http://www.mozilla.org/" } ],
+                    [ [ { type: "text/plain",
+                          data: "http://www.mozilla.org/" } ] ],
+                    "text/plain drop on browser " + type);
+
+  // Dropping single text/plain item with multiple links should open
+  // multiple pages.
+  yield* expectLink(browser,
+                    [ { url: "http://www.mozilla.org/",
+                        name: "http://www.mozilla.org/" },
+                      { url: "http://www.example.com/",
+                        name: "http://www.example.com/" } ],
+                    [ [ { type: "text/plain",
+                          data: "http://www.mozilla.org/\nhttp://www.example.com/" } ] ],
+                    "text/plain with 2 URLs drop on browser " + type);
+
+  // Dropping sinlge unsupported type item should not open anything.
+  yield* expectLink(browser,
+                    [],
+                    [ [ { type: "text/link",
+                          data: "http://www.mozilla.org/" } ] ],
+                    "text/link drop on browser " + type);
+
+  // Dropping single text/uri-list item with single link should open single
+  // page.
+  yield* expectLink(browser,
+                    [ { url: "http://www.example.com/",
+                        name: "http://www.example.com/" } ],
+                    [ [ { type: "text/uri-list",
+                          data: "http://www.example.com/" } ] ],
+                    "text/uri-list drop on browser " + type);
+
+  // Dropping single text/uri-list item with multiple links should open
+  // multiple pages.
+  yield* expectLink(browser,
+                    [ { url: "http://www.example.com/",
+                        name: "http://www.example.com/" },
+                      { url: "http://www.mozilla.org/",
+                        name: "http://www.mozilla.org/" }],
+                    [ [ { type: "text/uri-list",
+                          data: "http://www.example.com/\nhttp://www.mozilla.org/" } ] ],
+                    "text/uri-list with 2 URLs drop on browser " + type);
+
+  // Name in text/x-moz-url should be handled.
+  yield* expectLink(browser,
+                    [ { url: "http://www.example.com/",
+                        name: "Example.com" } ],
+                    [ [ { type: "text/x-moz-url",
+                          data: "http://www.example.com/\nExample.com" } ] ],
+                    "text/x-moz-url drop on browser " + type);
+
+  yield* expectLink(browser,
+                    [ { url: "http://www.mozilla.org/",
+                        name: "Mozilla.org" },
+                      { url: "http://www.example.com/",
+                        name: "Example.com" } ],
+                    [ [ { type: "text/x-moz-url",
+                          data: "http://www.mozilla.org/\nMozilla.org\nhttp://www.example.com/\nExample.com" } ] ],
+                    "text/x-moz-url with 2 URLs drop on browser " + type);
+
+  // Dropping multiple items should open multiple pages.
+  yield* expectLink(browser,
+                    [ { url: "http://www.example.com/",
+                        name: "Example.com" },
+                      { url: "http://www.mozilla.org/",
+                        name: "http://www.mozilla.org/" }],
+                    [ [ { type: "text/x-moz-url",
+                          data: "http://www.example.com/\nExample.com" } ],
+                      [ { type: "text/plain",
+                          data: "http://www.mozilla.org/" } ] ],
+                    "text/x-moz-url and text/plain drop on browser " + type);
+
+  // Dropping single item with multiple types should open single page.
+  yield* expectLink(browser,
+                    [ { url: "http://www.example.org/",
+                        name: "Example.com" } ],
+                    [ [ { type: "text/plain",
+                          data: "http://www.mozilla.org/" },
+                        { type: "text/x-moz-url",
+                          data: "http://www.example.org/\nExample.com" } ] ],
+                    "text/plain and text/x-moz-url drop on browser " + type);
 
   // Dropping javascript or data: URLs should fail:
-  yield expectLink(browser, "", "",
-                   [ [ { type: "text/plain", data: "javascript:'bad'" } ] ],
-                   "text/plain javascript url drop on browser " + type);
-  yield expectLink(browser, "", "",
-                   [ [ { type: "text/plain", data: "jAvascript:'also bad'" } ] ],
-                   "text/plain mixed-case javascript url drop on browser " + type);
-  yield expectLink(browser, "", "",
-                   [ [ { type: "text/plain", data: "data:text/html,bad" } ] ],
-                   "text/plain data url drop on browser " + type);
+  yield* expectLink(browser,
+                    [],
+                    [ [ { type: "text/plain",
+                          data: "javascript:'bad'" } ] ],
+                    "text/plain javascript url drop on browser " + type);
+  yield* expectLink(browser,
+                    [],
+                    [ [ { type: "text/plain",
+                          data: "jAvascript:'also bad'" } ] ],
+                    "text/plain mixed-case javascript url drop on browser " + type);
+  yield* expectLink(browser,
+                    [],
+                    [ [ { type: "text/plain",
+                          data: "data:text/html,bad" } ] ],
+                    "text/plain data url drop on browser " + type);
 
-  // dropping a chrome url should fail as we don't have a source node set,
+  // Dropping a chrome url should fail as we don't have a source node set,
   // defaulting to a source of file:///
-  yield expectLink(browser, "", "",
-                   [ [ { type: "text/x-moz-url", data: "chrome://browser/content/browser.xul" } ] ],
-                   "text/x-moz-url chrome url drop on browser " + type);
+  yield* expectLink(browser,
+                    [],
+                    [ [ { type: "text/x-moz-url",
+                          data: "chrome://browser/content/browser.xul" } ] ],
+                    "text/x-moz-url chrome url drop on browser " + type);
 
   if (browser.type == "content") {
     yield ContentTask.spawn(browser, null, function() {
@@ -138,18 +219,22 @@ function* dropLinksOnBrowser(browser, type) {
     });
 
     // stopPropagation should not prevent the browser link handling from occuring
-    yield expectLink(browser, "http://www.mozilla.org/", "http://www.mozilla.org/",
-                     [ [ { type: "text/uri-list", data: "http://www.mozilla.org/" } ] ],
-                     "text/x-moz-url drop on browser with stopPropagation drop event", true);
+    yield* expectLink(browser,
+                      [ { url: "http://www.mozilla.org/",
+                          name: "http://www.mozilla.org/" } ],
+                      [ [ { type: "text/uri-list",
+                            data: "http://www.mozilla.org/" } ] ],
+                      "text/x-moz-url drop on browser with stopPropagation drop event", true);
 
     yield ContentTask.spawn(browser, null, function() {
       content.window.cancelMode = true;
     });
 
-    // canceling the event, however, should prevent the link from being handled
-    yield expectLink(browser, "", "",
-                     [ [ { type: "text/uri-list", data: "http://www.mozilla.org/" } ] ],
-                     "text/x-moz-url drop on browser with cancelled drop event", true);
+    // Canceling the event, however, should prevent the link from being handled.
+    yield* expectLink(browser,
+                      [],
+                      [ [ { type: "text/uri-list", data: "http://www.mozilla.org/" } ] ],
+                      "text/x-moz-url drop on browser with cancelled drop event", true);
   }
 }
 
