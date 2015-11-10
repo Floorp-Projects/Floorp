@@ -1970,6 +1970,7 @@ BluetoothServiceBluedroid:: ReplyToMapSetMessageStatus(
 void
 BluetoothServiceBluedroid:: ReplyToMapSendMessage(
   long aMasId,
+  const nsAString& aHandleId,
   bool aStatus,
   BluetoothReplyRunnable* aRunnable)
 {
@@ -1980,7 +1981,7 @@ BluetoothServiceBluedroid:: ReplyToMapSendMessage(
     return;
   }
 
-  map->ReplyToSendMessage(aMasId, aStatus);
+  map->ReplyToSendMessage(aMasId, aHandleId, aStatus);
   DispatchReplySuccess(aRunnable);
 }
 

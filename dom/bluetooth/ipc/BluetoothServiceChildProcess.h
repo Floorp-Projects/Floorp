@@ -235,8 +235,10 @@ public:
                              BluetoothReplyRunnable* aRunnable) override;
 
   virtual void
-  ReplyToMapSendMessage(
-    long aMasId, bool aStatus, BluetoothReplyRunnable* aRunnable) override;
+  ReplyToMapSendMessage(long aMasId,
+                        const nsAString& aHandleId,
+                        bool aStatus,
+                        BluetoothReplyRunnable* aRunnable) override;
 
   virtual void
   ReplyToMapMessageUpdate(

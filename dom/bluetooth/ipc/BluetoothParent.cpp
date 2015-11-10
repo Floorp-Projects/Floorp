@@ -874,6 +874,7 @@ BluetoothRequestParent::DoRequest(const ReplyToSendMessageRequest& aRequest)
   MOZ_ASSERT(mRequestType == Request::TReplyToSendMessageRequest);
 
   mService->ReplyToMapSendMessage(aRequest.masId(),
+                                  aRequest.handleId(),
                                   aRequest.messageStatus(),
                                   mReplyRunnable.get());
   return true;
