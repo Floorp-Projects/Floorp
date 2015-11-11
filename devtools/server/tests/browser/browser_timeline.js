@@ -29,7 +29,7 @@ add_task(function*() {
   let forceSyncReflow = doc.body.innerHeight;
 
   info("Start recording");
-  yield front.start();
+  yield front.start({ withMarkers: true });
 
   isActive = yield front.isRecording();
   ok(isActive, "The TimelineFront is now recording");
