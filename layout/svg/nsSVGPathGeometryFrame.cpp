@@ -153,9 +153,9 @@ nsSVGPathGeometryFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
   nsSVGPathGeometryFrameBase::DidSetStyleContext(aOldStyleContext);
 
   if (aOldStyleContext) {
-    float oldOpacity = aOldStyleContext->PeekStyleDisplay()->mOpacity;
-    float newOpacity = StyleDisplay()->mOpacity;
-    if (newOpacity != oldOpacity &&
+    auto oldStyleDisplay = aOldStyleContext->PeekStyleDisplay();
+    if (oldStyleDisplay &&
+        StyleDisplay()->mOpacity != oldStyleDisplay->mOpacity &&
         nsSVGUtils::CanOptimizeOpacity(this)) {
       // nsIFrame::BuildDisplayListForStackingContext() is not going to create an
       // nsDisplayOpacity display list item, so DLBI won't invalidate for us.
@@ -165,10 +165,9 @@ nsSVGPathGeometryFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
     nsSVGPathGeometryElement* element =
       static_cast<nsSVGPathGeometryElement*>(mContent);
 
-    if (aOldStyleContext->PeekStyleSVG() &&
-        !SVGContentUtils::ShapeTypeHasNoCorners(mContent)) {
-      if ((StyleSVG()->mStrokeLinecap !=
-             aOldStyleContext->PeekStyleSVG()->mStrokeLinecap) &&
+    auto oldStyleSVG = aOldStyleContext->PeekStyleSVG();
+    if (oldStyleSVG && !SVGContentUtils::ShapeTypeHasNoCorners(mContent)) {
+      if (StyleSVG()->mStrokeLinecap != oldStyleSVG->mStrokeLinecap &&
           element->IsSVGElement(nsGkAtoms::path)) {
         // If the stroke-linecap changes to or from "butt" then our element
         // needs to update its cached Moz2D Path, since SVGPathData::BuildPath
@@ -176,15 +175,13 @@ nsSVGPathGeometryFrame::DidSetStyleContext(nsStyleContext* aOldStyleContext)
         // length subpaths base on that property.
         element->ClearAnyCachedPath();
       } else if (GetStateBits() & NS_STATE_SVG_CLIPPATH_CHILD) {
-        if (StyleSVG()->mClipRule !=
-              aOldStyleContext->PeekStyleSVG()->mClipRule) {
+        if (StyleSVG()->mClipRule != oldStyleSVG->mClipRule) {
           // Moz2D Path objects are fill-rule specific.
           // For clipPath we use clip-rule as the path's fill-rule.
           element->ClearAnyCachedPath();
         }
       } else {
-        if (StyleSVG()->mFillRule !=
-              aOldStyleContext->PeekStyleSVG()->mFillRule) {
+        if (StyleSVG()->mFillRule != oldStyleSVG->mFillRule) {
           // Moz2D Path objects are fill-rule specific.
           element->ClearAnyCachedPath();
         }
