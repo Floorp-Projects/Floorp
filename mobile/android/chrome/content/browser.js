@@ -711,9 +711,8 @@ var BrowserApp = {
           let newtabStrings = Strings.browser.GetStringFromName("newprivatetabpopup.opened");
           let label = PluralForm.get(1, newtabStrings).replace("#1", 1);
           let buttonLabel = Strings.browser.GetStringFromName("newtabpopup.switch");
-          NativeWindow.toast.show(label, "long", {
-            button: {
-              icon: "drawable://switch_button_icon",
+          Snackbars.show(label, Snackbars.LENGTH_LONG, {
+            action: {
               label: buttonLabel,
               callback: () => { BrowserApp.selectTab(tab); },
             }
