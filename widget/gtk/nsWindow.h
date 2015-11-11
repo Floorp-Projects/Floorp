@@ -357,6 +357,7 @@ protected:
     void DispatchActivateEvent(void);
     void DispatchDeactivateEvent(void);
     void DispatchResized();
+    void MaybeDispatchResized();
 
     // Helper for SetParent and ReparentNativeWidget.
     void ReparentNativeWidgetInternal(nsIWidget* aNewParent,
@@ -377,6 +378,8 @@ protected:
 
     // Should we send resize events on all resizes?
     bool                mListenForResizes;
+    // Does WindowResized need to be called on listeners?
+    bool                mNeedsDispatchResized;
     // This flag tracks if we're hidden or shown.
     bool                mIsShown;
     bool                mNeedsShow;
