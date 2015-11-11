@@ -1094,7 +1094,7 @@ BasicLayerManager::PaintLayer(gfxContext* aTarget,
 #endif
     Matrix4x4 effectiveTransform = aLayer->GetEffectiveTransform();
     RefPtr<gfxASurface> result =
-      Transform3D(untransformedDT->Snapshot(), aTarget, bounds,
+      Transform3D(untransformedDT->Snapshot(), aTarget, ThebesRect(bounds),
                   effectiveTransform, destRect);
 
     if (result) {
