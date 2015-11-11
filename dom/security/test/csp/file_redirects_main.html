@@ -11,18 +11,17 @@ var thisSite = "http://mochi.test:8888";
 var otherSite = "http://example.com";
 var page = "/tests/dom/security/test/csp/file_redirects_page.sjs";
 
-var tests = { "font-src": thisSite+page+"?testid=font-src",
-              "frame-src": thisSite+page+"?testid=frame-src",
-              "img-src":  thisSite+page+"?testid=img-src",
-              "media-src":  thisSite+page+"?testid=media-src",
-              "object-src":  thisSite+page+"?testid=object-src",
-              "script-src":  thisSite+page+"?testid=script-src",
-              "style-src":  thisSite+page+"?testid=style-src",
-              "worker":  thisSite+page+"?testid=worker",
-              "xhr-src":  thisSite+page+"?testid=xhr-src",
-              "from-worker": thisSite+page+"?testid=from-worker",
-              "from-blob-worker": thisSite+page+"?testid=from-blob-worker",
-              "img-src-from-css":  thisSite+page+"?testid=img-src-from-css",
+var tests = { "font-src": thisSite+page+"?testid=font-src&csp=1",
+              "frame-src": thisSite+page+"?testid=frame-src&csp=1",
+              "img-src":  thisSite+page+"?testid=img-src&csp=1",
+              "media-src":  thisSite+page+"?testid=media-src&csp=1",
+              "object-src":  thisSite+page+"?testid=object-src&csp=1",
+              "script-src":  thisSite+page+"?testid=script-src&csp=1",
+              "style-src":  thisSite+page+"?testid=style-src&csp=1",
+              "worker":  thisSite+page+"?testid=worker&csp=1",
+              "xhr-src":  thisSite+page+"?testid=xhr-src&csp=1",
+              "script-src-from-worker": thisSite+page+"?testid=script-src-from-worker&csp=1",
+              "img-src-from-css":  thisSite+page+"?testid=img-src-from-css&csp=1",
             };
 
 var container = document.getElementById("container");
