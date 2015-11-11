@@ -23,7 +23,7 @@ ResourceCleaner.prototype = {
     return v;
   },
   cleanup: function ResourceCleaner_cleanup() {
-    let keys = Components.utils.nondeterministicGetWeakMapKeys(this._map);
+    let keys = ThreadSafeChromeUtils.nondeterministicGetWeakMapKeys(this._map);
     keys.forEach((function cleaner(k) {
       try {
         k.dispose();

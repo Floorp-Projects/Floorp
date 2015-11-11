@@ -35,6 +35,11 @@ public:
                                                                    JSContext* cx,
                                                                    const nsAString& filePath,
                                                                    ErrorResult& rv);
+
+  static void NondeterministicGetWeakMapKeys(GlobalObject& aGlobal,
+                                             JS::Handle<JS::Value> aMap,
+                                             JS::MutableHandle<JS::Value> aRetval,
+                                             ErrorResult& aRv);
 };
 
 class ChromeUtils : public ThreadSafeChromeUtils

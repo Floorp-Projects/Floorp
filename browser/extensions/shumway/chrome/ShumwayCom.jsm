@@ -349,7 +349,7 @@ var ShumwayCom = {
       },
 
       getWeakMapKeys: function (weakMap) {
-        var keys = Components.utils.nondeterministicGetWeakMapKeys(weakMap);
+        var keys = ThreadSafeChromeUtils.nondeterministicGetWeakMapKeys(weakMap);
         var result = new content.Array();
         keys.forEach(function (key) {
           result.push(key);

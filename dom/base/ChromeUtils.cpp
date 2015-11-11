@@ -11,6 +11,26 @@ namespace mozilla {
 namespace dom {
 
 /* static */ void
+ThreadSafeChromeUtils::NondeterministicGetWeakMapKeys(GlobalObject& aGlobal,
+                                                      JS::Handle<JS::Value> aMap,
+                                                      JS::MutableHandle<JS::Value> aRetval,
+                                                      ErrorResult& aRv)
+{
+  if (!aMap.isObject()) {
+    aRetval.setUndefined();
+  } else {
+    JSContext* cx = aGlobal.Context();
+    JS::Rooted<JSObject*> objRet(cx);
+    JS::Rooted<JSObject*> mapObj(cx, &aMap.toObject());
+    if (!JS_NondeterministicGetWeakMapKeys(cx, mapObj, &objRet)) {
+      aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+    } else {
+      aRetval.set(objRet ? JS::ObjectValue(*objRet) : JS::UndefinedValue());
+    }
+  }
+}
+
+  /* static */ void
 ChromeUtils::OriginAttributesToSuffix(dom::GlobalObject& aGlobal,
                                       const dom::OriginAttributesDictionary& aAttrs,
                                       nsCString& aSuffix)
