@@ -19,7 +19,7 @@ bool
 SetupBridge(uint32_t aPluginId, dom::ContentParent* aContentParent,
             bool aForceBridgeNow, nsresult* aResult, uint32_t* aRunID);
 
-bool
+nsresult
 FindPluginsForContent(uint32_t aPluginEpoch,
                       nsTArray<PluginTag>* aPlugins,
                       uint32_t* aNewPluginEpoch);
