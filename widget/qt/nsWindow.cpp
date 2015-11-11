@@ -601,11 +601,13 @@ nsWindow::ConfigureChildren(const nsTArray<nsIWidget::Configuration>& aConfigura
         NS_ASSERTION(w->GetParent() == this,
                      "Configured widget is not a child");
 
-        if (w->mBounds.Size() != configuration.mBounds.Size()) {
+        LayoutDeviceIntRect wBounds =
+            LayoutDeviceIntRect::FromUnknownRect(w->mBounds);
+        if (wBounds.Size() != configuration.mBounds.Size()) {
             w->Resize(configuration.mBounds.x, configuration.mBounds.y,
                       configuration.mBounds.width, configuration.mBounds.height,
                       true);
-        } else if (w->mBounds.TopLeft() != configuration.mBounds.TopLeft()) {
+        } else if (wBounds.TopLeft() != configuration.mBounds.TopLeft()) {
             w->Move(configuration.mBounds.x, configuration.mBounds.y);
         }
     }

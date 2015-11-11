@@ -1008,7 +1008,7 @@ class nsIWidget : public nsISupports {
         nsCOMPtr<nsIWidget> mChild;
         uintptr_t mWindowID; // e10s specific, the unique plugin port id
         bool mVisible; // e10s specific, widget visibility
-        nsIntRect mBounds;
+        mozilla::LayoutDeviceIntRect mBounds;
         nsTArray<nsIntRect> mClipRegion;
     };
 

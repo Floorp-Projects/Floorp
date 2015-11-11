@@ -6530,8 +6530,8 @@ nsWindow::ConfigureChildren(const nsTArray<Configuration>& aConfigurations)
                  "Configured widget is not a child");
     nsresult rv = w->SetWindowClipRegion(configuration.mClipRegion, true);
     NS_ENSURE_SUCCESS(rv, rv);
-    nsIntRect bounds;
-    w->GetBoundsUntyped(bounds);
+    LayoutDeviceIntRect bounds;
+    w->GetBounds(bounds);
     if (bounds.Size() != configuration.mBounds.Size()) {
       w->Resize(configuration.mBounds.x, configuration.mBounds.y,
                 configuration.mBounds.width, configuration.mBounds.height,
@@ -6547,7 +6547,7 @@ nsWindow::ConfigureChildren(const nsTArray<Configuration>& aConfigurations)
         // plugin window that might be touched by moving content somehow. The
         // underlying problem should be found and fixed!
         nsIntRegion r;
-        r.Sub(bounds, configuration.mBounds);
+        r.Sub(bounds.ToUnknownRect(), configuration.mBounds.ToUnknownRect());
         r.MoveBy(-bounds.x,
                  -bounds.y);
         nsIntRect toInvalidate = r.GetBounds();
