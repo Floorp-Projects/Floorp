@@ -19,9 +19,9 @@ function test() {
   });
 
   ignoreAllUncaughtExceptions();
-  addTab(TEST_URI, openToolbar);
+  addTab(TEST_URI).then(openToolbar);
 
-  function openToolbar(browser, tab) {
+  function openToolbar(tab) {
     tab1 = tab;
     ignoreAllUncaughtExceptions(false);
 
@@ -62,12 +62,12 @@ function test() {
       warnings: 1,
       callback: () => {
         ignoreAllUncaughtExceptions();
-        addTab(TEST_URI, onOpenSecondTab);
+        addTab(TEST_URI).then(onOpenSecondTab);
       },
     });
   }
 
-  function onOpenSecondTab(browser, tab) {
+  function onOpenSecondTab(tab) {
     tab2 = tab;
 
     ignoreAllUncaughtExceptions(false);

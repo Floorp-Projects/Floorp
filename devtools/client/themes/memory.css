@@ -153,12 +153,22 @@ html, body, #app, #memory-tool {
   color: var(--theme-body-color);
   border-bottom: 1px solid rgba(128,128,128,0.15);
   padding: 8px;
-  cursor: pointer;
 }
 
 .snapshot-list-item.selected {
   background-color: var(--theme-selection-background);
   color: var(--theme-selection-color);
+}
+
+.snapshot-list-item .snapshot-info {
+  display: flex;
+  justify-content: space-between;
+  font-size: 90%;
+}
+
+.snapshot-list-item .save {
+  text-decoration: underline;
+  cursor: pointer;
 }
 
 .snapshot-list-item > .snapshot-title {

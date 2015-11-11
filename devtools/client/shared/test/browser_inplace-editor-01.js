@@ -4,13 +4,12 @@
 
 "use strict";
 
-var promise = require("promise");
 var {editableField, getInplaceEditorForSpan: inplaceEditor} = require("devtools/client/shared/inplace-editor");
 
 // Test the inplace-editor behavior.
 
 add_task(function*() {
-  yield promiseTab("data:text/html;charset=utf-8,inline editor tests");
+  yield addTab("data:text/html;charset=utf-8,inline editor tests");
   let [host, win, doc] = yield createHost();
 
   yield testMultipleInitialization(doc);

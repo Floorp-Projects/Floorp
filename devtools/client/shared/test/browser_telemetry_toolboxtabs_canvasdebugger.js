@@ -13,7 +13,7 @@ add_task(function*() {
   let originalPref = Services.prefs.getBoolPref("devtools.canvasdebugger.enabled");
   Services.prefs.setBoolPref("devtools.canvasdebugger.enabled", true);
 
-  yield promiseTab(TEST_URI);
+  yield addTab(TEST_URI);
   let Telemetry = loadTelemetryAndRecordLogs();
 
   yield openAndCloseToolbox(2, TOOL_DELAY, "canvasdebugger");

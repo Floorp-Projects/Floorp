@@ -58,6 +58,7 @@
           <input type="radio" id="ping-source-archive" name="choose-ping-source" value="archive" />
           &aboutTelemetry.showArchivedPingData;<br />
         </div>
+        <button id="show-raw-ping" type="button">&aboutTelemetry.rawPingData;</button>
         <div id="current-ping-picker">
           <input id="show-subsession-data" type="checkbox" />&aboutTelemetry.showSubsessionData;
         </div>
@@ -95,6 +96,11 @@
         </table>
       </div>
     </header>
+
+    <div id="raw-ping-data-section" class="hidden">
+      <div id="hide-raw-ping">&#10006;</div>
+      <pre id="raw-ping-data"></pre>
+    </div>
 
     <section id="general-data-section" class="data-section">
       <input type="checkbox" class="statebox"/>

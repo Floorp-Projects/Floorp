@@ -12,7 +12,7 @@ const {TreeWidget} = require("devtools/client/shared/widgets/TreeWidget");
 const Promise = require("promise");
 
 add_task(function*() {
-  yield promiseTab("about:blank");
+  yield addTab("about:blank");
   let [host, win, doc] = yield createHost("bottom", TEST_URI);
 
   let tree = new TreeWidget(doc.querySelector("div"), {
