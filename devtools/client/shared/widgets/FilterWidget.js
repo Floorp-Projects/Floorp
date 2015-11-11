@@ -716,7 +716,7 @@ CSSFilterEditorWidget.prototype = {
       return;
     }
 
-    for (let {name, value} of tokenizeFilterValue(cssValue)) {
+    for (let {name, value, quote} of tokenizeFilterValue(cssValue)) {
       // If the specified value is invalid, replace it with the
       // default.
       if (name !== "url") {
@@ -725,7 +725,7 @@ CSSFilterEditorWidget.prototype = {
         }
       }
 
-      this.add(name, value);
+      this.add(name, value, quote);
     }
 
     this.emit("updated", this.getCssValue());
@@ -740,10 +740,13 @@ CSSFilterEditorWidget.prototype = {
     * @param {String} value
     *        value of the filter (e.g. 30px, 20%)
     *        If this is |null|, then a default value may be supplied.
+    * @param {String} quote
+    *        For a url filter, the quoting style.  This can be a
+    *        single quote, a double quote, or empty.
     * @return {Number}
     *        The index of the new filter in the current list of filters
     */
-  add: function(name, value) {
+  add: function(name, value, quote) {
     const def = this._definition(name);
     if (!def) {
       return false;
@@ -761,6 +764,11 @@ CSSFilterEditorWidget.prototype = {
         value = "";
       } else {
         value = def.range[0] + unitLabel;
+      }
+
+      if (name === "url") {
+        // Default quote.
+        quote = "\"";
       }
     }
 
@@ -785,7 +793,7 @@ CSSFilterEditorWidget.prototype = {
       }
     }
 
-    const index = this.filters.push({value, unit, name}) - 1;
+    const index = this.filters.push({value, unit, name, quote}) - 1;
     this.emit("updated", this.getCssValue());
 
     return index;
@@ -805,9 +813,22 @@ CSSFilterEditorWidget.prototype = {
       return null;
     }
 
-    const {value, unit} = filter;
+    // Just return the value+unit for non-url functions.
+    if (filter.name !== "url") {
+      return filter.value + filter.unit;
+    }
 
-    return value + unit;
+    // url values need to be quoted and escaped.
+    if (filter.quote === "'") {
+      return "'" + filter.value.replace(/\'/g, "\\'") + "'";
+    } else if (filter.quote === "\"") {
+      return "\"" + filter.value.replace(/\"/g, "\\\"") + "\"";
+    }
+
+    // Unquoted.  This approach might change the original input -- for
+    // example the original might be over-quoted.  But, this is
+    // correct and probably good enough.
+    return filter.value.replace(/[ \t(){};]/g, "\\$&");
   },
 
   removeAt: function(index) {
@@ -926,7 +947,11 @@ function tokenizeFilterValue(css) {
           state = "function";
           depth = 1;
         } else if (token.tokenType === "url" || token.tokenType === "bad_url") {
-          filters.push({name: "url", value: token.text.trim()});
+          // Extract the quoting style from the url.
+          let originalText = css.substring(token.startOffset, token.endOffset);
+          let [, quote] = /^url\([ \t\r\n\f]*(["']?)/i.exec(originalText);
+
+          filters.push({name: "url", value: token.text.trim(), quote: quote});
           // Leave state as "initial" because the URL token includes
           // the trailing close paren.
         }
