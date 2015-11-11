@@ -430,8 +430,6 @@ public:
     /**
      * Groups
      */
-    void PushGroup(gfxContentType content = gfxContentType::COLOR);
-
     void PushGroupForBlendBack(gfxContentType content, mozilla::gfx::Float aOpacity = 1.0f,
                                mozilla::gfx::SourceSurface* aMask = nullptr,
                                const mozilla::gfx::Matrix& aMaskTransform = mozilla::gfx::Matrix());
@@ -449,12 +447,7 @@ public:
                                     mozilla::gfx::Float aOpacity = 1.0f,
                                     mozilla::gfx::SourceSurface* aMask = nullptr,
                                     const mozilla::gfx::Matrix& aMaskTransform = mozilla::gfx::Matrix());
-    already_AddRefed<gfxPattern> PopGroup();
-    void PopGroupToSource();
     void PopGroupAndBlend();
-
-    already_AddRefed<mozilla::gfx::SourceSurface>
-    PopGroupToSurface(mozilla::gfx::Matrix* aMatrix);
 
     mozilla::gfx::Point GetDeviceOffset() const;
 
