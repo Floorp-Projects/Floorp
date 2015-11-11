@@ -668,6 +668,7 @@ SSL_SetStapledOCSPResponses
 SSL_SetURL
 SSL_SNISocketConfigHook
 SSL_VersionRangeGet
+SSL_VersionRangeGetDefault
 SSL_VersionRangeGetSupported
 SSL_VersionRangeSet
 SSL_VersionRangeSetDefault
