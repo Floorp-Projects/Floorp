@@ -83,7 +83,9 @@ bool VerifyObject(JS::HandleObject obj, uint32_t offset, uint32_t length, const 
         CHECK(JS_IsMappedArrayBufferObject(obj));
     else
         CHECK(!JS_IsMappedArrayBufferObject(obj));
-    const char* data = reinterpret_cast<const char*>(JS_GetArrayBufferData(obj, nogc));
+    bool sharedDummy;
+    const char* data =
+        reinterpret_cast<const char*>(JS_GetArrayBufferData(obj, &sharedDummy, nogc));
     CHECK(data);
     CHECK(memcmp(data, test_data + offset, length) == 0);
 
