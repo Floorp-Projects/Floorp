@@ -246,6 +246,10 @@ BluetoothParent::RecvPBluetoothRequestConstructor(
       return actor->DoRequest(aRequest.get_DisconnectScoRequest());
     case Request::TIsScoConnectedRequest:
       return actor->DoRequest(aRequest.get_IsScoConnectedRequest());
+    case Request::TSetObexPasswordRequest:
+      return actor->DoRequest(aRequest.get_SetObexPasswordRequest());
+    case Request::TRejectObexAuthRequest:
+      return actor->DoRequest(aRequest.get_RejectObexAuthRequest());
     case Request::TReplyTovCardPullingRequest:
       return actor->DoRequest(aRequest.get_ReplyTovCardPullingRequest());
     case Request::TReplyToPhonebookPullingRequest:
@@ -751,6 +755,28 @@ BluetoothRequestParent::DoRequest(const IsScoConnectedRequest& aRequest)
 }
 
 bool
+BluetoothRequestParent::DoRequest(const SetObexPasswordRequest& aRequest)
+{
+  MOZ_ASSERT(mService);
+  MOZ_ASSERT(mRequestType == Request::TSetObexPasswordRequest);
+
+  mService->SetObexPassword(aRequest.password(), mReplyRunnable.get());
+
+  return true;
+}
+
+bool
+BluetoothRequestParent::DoRequest(const RejectObexAuthRequest& aRequest)
+{
+  MOZ_ASSERT(mService);
+  MOZ_ASSERT(mRequestType == Request::TRejectObexAuthRequest);
+
+  mService->RejectObexAuth(mReplyRunnable.get());
+
+  return true;
+}
+
+bool
 BluetoothRequestParent::DoRequest(const ReplyTovCardPullingRequest& aRequest)
 {
   MOZ_ASSERT(mService);
@@ -848,6 +874,7 @@ BluetoothRequestParent::DoRequest(const ReplyToSendMessageRequest& aRequest)
   MOZ_ASSERT(mRequestType == Request::TReplyToSendMessageRequest);
 
   mService->ReplyToMapSendMessage(aRequest.masId(),
+                                  aRequest.handleId(),
                                   aRequest.messageStatus(),
                                   mReplyRunnable.get());
   return true;

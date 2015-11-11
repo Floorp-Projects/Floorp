@@ -12,7 +12,7 @@ var {FLAME_GRAPH_BLOCK_TEXT_FONT_FAMILY} = require("devtools/client/shared/widge
 var L10N = new ViewHelpers.L10N();
 
 add_task(function*() {
-  yield promiseTab("about:blank");
+  yield addTab("about:blank");
   yield performTest();
   gBrowser.removeCurrentTab();
 });

@@ -311,6 +311,13 @@ public:
   IsScoConnected(BluetoothReplyRunnable* aRunnable) = 0;
 
   virtual void
+  SetObexPassword(const nsAString& aPassword,
+                  BluetoothReplyRunnable* aRunnable) = 0;
+
+  virtual void
+  RejectObexAuth(BluetoothReplyRunnable* aRunnable) = 0;
+
+  virtual void
   ReplyTovCardPulling(BlobParent* aBlobParent,
                       BlobChild* aBlobChild,
                       BluetoothReplyRunnable* aRunnable) = 0;
@@ -381,7 +388,8 @@ public:
 
   virtual void
   ReplyToMapSendMessage(
-    long aMasId, bool aStatus, BluetoothReplyRunnable* aRunnable) = 0;
+    long aMasId, const nsAString& aHandleId, bool aStatus,
+    BluetoothReplyRunnable* aRunnable) = 0;
 
   virtual void
   ReplyToMapMessageUpdate(

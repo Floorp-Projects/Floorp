@@ -124,6 +124,18 @@ enum ObexResponseCode {
   DatabaseLocked = 0xE1,
 };
 
+enum ObexDigestChallenge {
+  Nonce = 0x00,
+  Options = 0x01,
+  Realm = 0x02
+};
+
+enum ObexDigestResponse {
+  ReqDigest = 0x00,
+  UserId = 0x01,
+  NonceChallenged = 0x02
+};
+
 class ObexHeader
 {
 public:
@@ -253,6 +265,21 @@ public:
     }
   }
 
+  void GetAuthChallenge(nsAutoArrayPtr<uint8_t>& aRetData,
+                        int* aRetDataLength) const
+  {
+    *aRetDataLength = 0;
+
+    for (uint8_t i = 0; i < mHeaders.Length(); ++i) {
+      if (mHeaders[i]->mId == ObexHeaderId::AuthChallenge) {
+        aRetData = new uint8_t[mHeaders[i]->mDataLength];
+        memcpy(aRetData, mHeaders[i]->mData, mHeaders[i]->mDataLength);
+        *aRetDataLength = mHeaders[i]->mDataLength;
+        return;
+      }
+    }
+  }
+
   uint32_t GetConnectionId() const
   {
     int length = mHeaders.Length();
@@ -345,6 +372,8 @@ int AppendHeaderTarget(uint8_t* aRetBuf, int aBufferSize, const uint8_t* aTarget
                        int aLength);
 int AppendHeaderWho(uint8_t* aRetBuf, int aBufferSize, const uint8_t* aWho,
                     int aLength);
+int AppendAuthResponse(uint8_t* aRetBuf, int aBufferSize,
+                       const uint8_t* aDigest, int aLength);
 int AppendHeaderAppParameters(uint8_t* aRetBuf, int aBufferSize,
                               const uint8_t* aAppParameters, int aLength);
 int AppendAppParameter(uint8_t* aRetBuf, int aBufferSize, const uint8_t aTagId,

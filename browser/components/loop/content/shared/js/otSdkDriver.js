@@ -507,7 +507,9 @@ loop.OTSdkDriver = (function() {
         case "Session.forceDisconnected":
           break;
         default:
-          if (eventName.indexOf("sdk.exception") === -1) {
+          // We don't want unexpected events being sent to the server, so
+          // filter out the unexpected, and let the known ones through.
+          if (!/^sdk\.(exception|datachannel)/.test(eventName)) {
             console.error("Unexpected event name", eventName);
             return;
           }
@@ -620,7 +622,7 @@ loop.OTSdkDriver = (function() {
         this.dispatcher.dispatch(new sharedActions.MediaConnected());
       }
 
-      this._setupDataChannelIfNeeded(sdkSubscriberObject.stream.connection);
+      this._setupDataChannelIfNeeded(sdkSubscriberObject);
     },
 
     /**
@@ -655,64 +657,28 @@ loop.OTSdkDriver = (function() {
      * channel set-up routines. A data channel cannot be requested before this
      * time as the peer connection is not set up.
      *
-     * @param {OT.Connection} connection The OT connection class object.paul
-     * sched
+     * @param {OT.Subscriber} sdkSubscriberObject The subscriber object for the stream.
      *
      */
-    _setupDataChannelIfNeeded: function(connection) {
-      if (this._useDataChannels) {
-        this.session.signal({
-          type: "readyForDataChannel",
-          to: connection
-        }, function(signalError) {
-          if (signalError) {
-            console.error(signalError);
-          }
-        });
-      }
-    },
-
-    /**
-     * Handles receiving the signal that the other end of the connection
-     * has subscribed to the stream and we're ready to setup the data channel.
-     *
-     * We get data channels for both the publisher and subscriber on reception
-     * of the signal, as it means that a) the remote client is setup for data
-     * channels, and b) that subscribing of streams has definitely completed
-     * for both clients.
-     *
-     * @param {OT.SignalEvent} event Details of the signal received.
-     */
-    _onReadyForDataChannel: function(event) {
-      // If we don't want data channels, just ignore the message. We haven't
-      // send the other side a message, so it won't display anything.
+    _setupDataChannelIfNeeded: function(sdkSubscriberObject) {
       if (!this._useDataChannels) {
         return;
       }
 
-      // This won't work until a subscriber exists for this publisher
-      this.publisher._.getDataChannel("text", {}, function(err, channel) {
-        if (err) {
-          console.error(err);
-          return;
+      this.session.signal({
+        type: "readyForDataChannel",
+        to: sdkSubscriberObject.stream.connection
+      }, function(signalError) {
+        if (signalError) {
+          console.error(signalError);
         }
+      });
 
-        this._publisherChannel = channel;
-
-        channel.on({
-          close: function(e) {
-            // XXX We probably want to dispatch and handle this somehow.
-            console.log("Published data channel closed!");
-          }
-        });
-
-        this._checkDataChannelsAvailable();
-      }.bind(this));
-
-      this.subscriber._.getDataChannel("text", {}, function(err, channel) {
+      sdkSubscriberObject._.getDataChannel("text", {}, function(err, channel) {
         // Sends will queue until the channel is fully open.
         if (err) {
           console.error(err);
+          this._notifyMetricsEvent("sdk.datachannel.sub." + err.message);
           return;
         }
 
@@ -737,6 +703,45 @@ loop.OTSdkDriver = (function() {
         });
 
         this._subscriberChannel = channel;
+        this._checkDataChannelsAvailable();
+      }.bind(this));
+    },
+
+    /**
+     * Handles receiving the signal that the other end of the connection
+     * has subscribed to the stream and we're ready to setup the data channel.
+     *
+     * We create the publisher data channel when we get the signal as it means
+     * that the remote client is setup for data
+     * channels. Getting the data channel for the subscriber is handled
+     * separately when the subscription completes.
+     *
+     * @param {OT.SignalEvent} event Details of the signal received.
+     */
+    _onReadyForDataChannel: function(event) {
+      // If we don't want data channels, just ignore the message. We haven't
+      // send the other side a message, so it won't display anything.
+      if (!this._useDataChannels) {
+        return;
+      }
+
+      // This won't work until a subscriber exists for this publisher
+      this.publisher._.getDataChannel("text", {}, function(err, channel) {
+        if (err) {
+          console.error(err);
+          this._notifyMetricsEvent("sdk.datachannel.pub." + err.message);
+          return;
+        }
+
+        this._publisherChannel = channel;
+
+        channel.on({
+          close: function(e) {
+            // XXX We probably want to dispatch and handle this somehow.
+            console.log("Published data channel closed!");
+          }
+        });
+
         this._checkDataChannelsAvailable();
       }.bind(this));
     },
