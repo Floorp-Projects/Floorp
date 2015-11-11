@@ -1116,20 +1116,20 @@ constexpr char PrefsHelper::GetPrefsById_t::signature[];
 constexpr char PrefsHelper::RemovePrefsObserver_t::name[];
 constexpr char PrefsHelper::RemovePrefsObserver_t::signature[];
 
-constexpr char RestrictedProfiles::name[];
+constexpr char Restrictions::name[];
 
-constexpr char RestrictedProfiles::IsAllowed_t::name[];
-constexpr char RestrictedProfiles::IsAllowed_t::signature[];
+constexpr char Restrictions::IsAllowed_t::name[];
+constexpr char Restrictions::IsAllowed_t::signature[];
 
-auto RestrictedProfiles::IsAllowed(int32_t a0, mozilla::jni::String::Param a1) -> bool
+auto Restrictions::IsAllowed(int32_t a0, mozilla::jni::String::Param a1) -> bool
 {
     return mozilla::jni::Method<IsAllowed_t>::Call(nullptr, nullptr, a0, a1);
 }
 
-constexpr char RestrictedProfiles::IsUserRestricted_t::name[];
-constexpr char RestrictedProfiles::IsUserRestricted_t::signature[];
+constexpr char Restrictions::IsUserRestricted_t::name[];
+constexpr char Restrictions::IsUserRestricted_t::signature[];
 
-auto RestrictedProfiles::IsUserRestricted() -> bool
+auto Restrictions::IsUserRestricted() -> bool
 {
     return mozilla::jni::Method<IsUserRestricted_t>::Call(nullptr, nullptr);
 }

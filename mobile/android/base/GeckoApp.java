@@ -2081,7 +2081,7 @@ public abstract class GeckoApp
             }
         });
 
-        RestrictedProfiles.update(this);
+        Restrictions.update(this);
     }
 
     @Override

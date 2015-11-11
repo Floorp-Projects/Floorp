@@ -9,7 +9,7 @@ import org.mozilla.gecko.AppConstants.Versions;
 import org.mozilla.gecko.GeckoApp;
 import org.mozilla.gecko.GeckoApplication;
 import org.mozilla.gecko.R;
-import org.mozilla.gecko.RestrictedProfiles;
+import org.mozilla.gecko.Restrictions;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.animation.PropertyAnimator;
@@ -144,7 +144,7 @@ public class TabsPanel extends LinearLayout
                 (ThemedImageButton) mTabWidget.addTab(R.drawable.tabs_private, R.string.tabs_private);
         privateTabsPanel.setPrivateMode(true);
 
-        if (!RestrictedProfiles.isAllowed(mContext, Restriction.DISALLOW_PRIVATE_BROWSING)) {
+        if (!Restrictions.isAllowed(mContext, Restriction.DISALLOW_PRIVATE_BROWSING)) {
             mTabWidget.setVisibility(View.GONE);
         }
 
@@ -173,7 +173,7 @@ public class TabsPanel extends LinearLayout
         // Each panel has a "+" shortcut button, so don't show it for that panel.
         menu.findItem(R.id.new_tab).setVisible(mCurrentPanel != Panel.NORMAL_TABS);
         menu.findItem(R.id.new_private_tab).setVisible(mCurrentPanel != Panel.PRIVATE_TABS
-                && RestrictedProfiles.isAllowed(mContext, Restriction.DISALLOW_PRIVATE_BROWSING));
+                && Restrictions.isAllowed(mContext, Restriction.DISALLOW_PRIVATE_BROWSING));
 
         // Only show "Clear * tabs" for current panel.
         menu.findItem(R.id.close_all_tabs).setVisible(mCurrentPanel == Panel.NORMAL_TABS);

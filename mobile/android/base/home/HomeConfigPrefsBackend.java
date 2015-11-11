@@ -15,7 +15,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.mozilla.gecko.GeckoSharedPrefs;
-import org.mozilla.gecko.RestrictedProfiles;
+import org.mozilla.gecko.Restrictions;
 import org.mozilla.gecko.home.HomeConfig.HomeConfigBackend;
 import org.mozilla.gecko.home.HomeConfig.OnReloadListener;
 import org.mozilla.gecko.home.HomeConfig.PanelConfig;
@@ -77,7 +77,7 @@ class HomeConfigPrefsBackend implements HomeConfigBackend {
         panelConfigs.add(createBuiltinPanelConfig(mContext, PanelType.HISTORY));
 
         // We disable Synced Tabs for guest mode / restricted profiles.
-        if (RestrictedProfiles.isAllowed(mContext, Restriction.DISALLOW_MODIFY_ACCOUNTS)) {
+        if (Restrictions.isAllowed(mContext, Restriction.DISALLOW_MODIFY_ACCOUNTS)) {
             panelConfigs.add(createBuiltinPanelConfig(mContext, PanelType.REMOTE_TABS));
         }
 
