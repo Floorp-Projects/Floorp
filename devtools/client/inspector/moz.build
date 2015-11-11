@@ -6,7 +6,7 @@ DevToolsModules(
     'breadcrumbs.js',
     'inspector-commands.js',
     'inspector-panel.js',
-    'selector-search.js'
+    'inspector-search.js'
 )
 
 BROWSER_CHROME_MANIFESTS += ['test/browser.ini']

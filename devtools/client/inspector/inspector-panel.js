@@ -16,7 +16,7 @@ var {HostType} = require("devtools/client/framework/toolbox").Toolbox;
 loader.lazyGetter(this, "MarkupView", () => require("devtools/client/markupview/markup-view").MarkupView);
 loader.lazyGetter(this, "HTMLBreadcrumbs", () => require("devtools/client/inspector/breadcrumbs").HTMLBreadcrumbs);
 loader.lazyGetter(this, "ToolSidebar", () => require("devtools/client/framework/sidebar").ToolSidebar);
-loader.lazyGetter(this, "SelectorSearch", () => require("devtools/client/inspector/selector-search").SelectorSearch);
+loader.lazyGetter(this, "InspectorSearch", () => require("devtools/client/inspector/inspector-search").InspectorSearch);
 
 loader.lazyGetter(this, "strings", () => {
   return Services.strings.createBundle("chrome://devtools/locale/inspector.properties");
@@ -78,7 +78,20 @@ function InspectorPanel(iframeWindow, toolbox) {
   this.panelWin.inspector = this;
 
   this.nodeMenuTriggerInfo = null;
+
   this._onBeforeNavigate = this._onBeforeNavigate.bind(this);
+  this.onNewRoot = this.onNewRoot.bind(this);
+  this._setupNodeMenu = this._setupNodeMenu.bind(this);
+  this._resetNodeMenu = this._resetNodeMenu.bind(this);
+  this._updateSearchResultsLabel = this._updateSearchResultsLabel.bind(this);
+  this.onNewSelection = this.onNewSelection.bind(this);
+  this.onBeforeNewSelection = this.onBeforeNewSelection.bind(this);
+  this.onDetached = this.onDetached.bind(this);
+  this.onToolboxHostChanged = this.onToolboxHostChanged.bind(this);
+  this.scheduleLayoutChange = this.scheduleLayoutChange.bind(this);
+  this.onPaneToggleButtonClicked = this.onPaneToggleButtonClicked.bind(this);
+  this._onMarkupFrameLoad = this._onMarkupFrameLoad.bind(this);
+
   this._target.on("will-navigate", this._onBeforeNavigate);
 
   EventEmitter.decorate(this);
@@ -139,31 +152,23 @@ InspectorPanel.prototype = {
   _deferredOpen: function(defaultSelection) {
     let deferred = promise.defer();
 
-    this.onNewRoot = this.onNewRoot.bind(this);
     this.walker.on("new-root", this.onNewRoot);
 
     this.nodemenu = this.panelDoc.getElementById("inspector-node-popup");
     this.lastNodemenuItem = this.nodemenu.lastChild;
-    this._setupNodeMenu = this._setupNodeMenu.bind(this);
-    this._resetNodeMenu = this._resetNodeMenu.bind(this);
     this.nodemenu.addEventListener("popupshowing", this._setupNodeMenu, true);
     this.nodemenu.addEventListener("popuphiding", this._resetNodeMenu, true);
 
-    this.onNewSelection = this.onNewSelection.bind(this);
     this.selection.on("new-node-front", this.onNewSelection);
-    this.onBeforeNewSelection = this.onBeforeNewSelection.bind(this);
     this.selection.on("before-new-node-front", this.onBeforeNewSelection);
-    this.onDetached = this.onDetached.bind(this);
     this.selection.on("detached-front", this.onDetached);
 
     this.breadcrumbs = new HTMLBreadcrumbs(this);
 
-    this.onToolboxHostChanged = this.onToolboxHostChanged.bind(this);
     this._toolbox.on("host-changed", this.onToolboxHostChanged);
 
     if (this.target.isLocalTab) {
       this.browser = this.target.tab.linkedBrowser;
-      this.scheduleLayoutChange = this.scheduleLayoutChange.bind(this);
       this.browser.addEventListener("resize", this.scheduleLayoutChange, true);
 
       // Show a warning when the debugger is paused.
@@ -309,13 +314,31 @@ InspectorPanel.prototype = {
    * Hooks the searchbar to show result and auto completion suggestions.
    */
   setupSearchBox: function() {
-    // Initiate the selectors search object.
-    if (this.searchSuggestions) {
-      this.searchSuggestions.destroy();
-      this.searchSuggestions = null;
-    }
     this.searchBox = this.panelDoc.getElementById("inspector-searchbox");
-    this.searchSuggestions = new SelectorSearch(this, this.searchBox);
+    this.searchResultsLabel = this.panelDoc.getElementById("inspector-searchlabel");
+
+    this.search = new InspectorSearch(this, this.searchBox);
+    this.search.on("search-cleared", this._updateSearchResultsLabel);
+    this.search.on("search-result", this._updateSearchResultsLabel);
+  },
+
+  get searchSuggestions() {
+    return this.search.autocompleter;
+  },
+
+  _updateSearchResultsLabel: function(event, result) {
+    let str = "";
+    if (event !== "search-cleared") {
+      if (result) {
+        str = strings.formatStringFromName(
+          "inspector.searchResultsCount2",
+          [result.resultsIndex + 1, result.resultsLength], 2);
+      } else {
+        str = strings.GetStringFromName("inspector.searchResultsNone");
+      }
+    }
+
+    this.searchResultsLabel.textContent = str;
   },
 
   /**
@@ -369,7 +392,6 @@ InspectorPanel.prototype = {
    */
   setupSidebarToggle: function() {
     this._paneToggleButton = this.panelDoc.getElementById("inspector-pane-toggle");
-    this.onPaneToggleButtonClicked = this.onPaneToggleButtonClicked.bind(this);
     this._paneToggleButton.addEventListener("mousedown",
       this.onPaneToggleButtonClicked);
     this.updatePaneToggleButton();
@@ -399,7 +421,6 @@ InspectorPanel.prototype = {
           return;
         }
         this.markup.expandNode(this.selection.nodeFront);
-        this.setupSearchBox();
         this.emit("new-root");
       });
     };
@@ -590,8 +611,6 @@ InspectorPanel.prototype = {
     this._paneToggleButton.removeEventListener("mousedown",
       this.onPaneToggleButtonClicked);
     this._paneToggleButton = null;
-    this.searchSuggestions.destroy();
-    this.searchBox = null;
     this.selection.off("new-node-front", this.onNewSelection);
     this.selection.off("before-new-node", this.onBeforeNewSelection);
     this.selection.off("before-new-node-front", this.onBeforeNewSelection);
@@ -602,10 +621,12 @@ InspectorPanel.prototype = {
     this.panelDoc = null;
     this.panelWin = null;
     this.breadcrumbs = null;
-    this.searchSuggestions = null;
     this.lastNodemenuItem = null;
     this.nodemenu = null;
     this._toolbox = null;
+    this.search.destroy();
+    this.search = null;
+    this.searchBox = null;
 
     this._panelDestroyer = promise.all([
       sidebarDestroyer,
@@ -914,8 +935,7 @@ InspectorPanel.prototype = {
     this._markupFrame.setAttribute("context", "inspector-node-popup");
 
     // This is needed to enable tooltips inside the iframe document.
-    this._boundMarkupFrameLoad = this._onMarkupFrameLoad.bind(this);
-    this._markupFrame.addEventListener("load", this._boundMarkupFrameLoad, true);
+    this._markupFrame.addEventListener("load", this._onMarkupFrameLoad, true);
 
     this._markupBox.setAttribute("collapsed", true);
     this._markupBox.appendChild(this._markupFrame);
@@ -924,8 +944,7 @@ InspectorPanel.prototype = {
   },
 
   _onMarkupFrameLoad: function() {
-    this._markupFrame.removeEventListener("load", this._boundMarkupFrameLoad, true);
-    delete this._boundMarkupFrameLoad;
+    this._markupFrame.removeEventListener("load", this._onMarkupFrameLoad, true);
 
     this._markupFrame.contentWindow.focus();
 
@@ -940,9 +959,8 @@ InspectorPanel.prototype = {
   _destroyMarkup: function() {
     let destroyPromise;
 
-    if (this._boundMarkupFrameLoad) {
-      this._markupFrame.removeEventListener("load", this._boundMarkupFrameLoad, true);
-      this._boundMarkupFrameLoad = null;
+    if (this._markupFrame) {
+      this._markupFrame.removeEventListener("load", this._onMarkupFrameLoad, true);
     }
 
     if (this.markup) {
