@@ -17,7 +17,7 @@
 
 namespace mozilla {
 
-LazyLogModule gVP8TrackEncoderLog("VP8TrackEncoder");
+PRLogModuleInfo* gVP8TrackEncoderLog;
 #define VP8LOG(msg, ...) MOZ_LOG(gVP8TrackEncoderLog, mozilla::LogLevel::Debug, \
                                   (msg, ##__VA_ARGS__))
 // Debug logging macro with object pointer and class name.
@@ -37,6 +37,9 @@ VP8TrackEncoder::VP8TrackEncoder()
   , mVPXImageWrapper(new vpx_image_t())
 {
   MOZ_COUNT_CTOR(VP8TrackEncoder);
+  if (!gVP8TrackEncoderLog) {
+    gVP8TrackEncoderLog = PR_NewLogModule("VP8TrackEncoder");
+  }
 }
 
 VP8TrackEncoder::~VP8TrackEncoder()

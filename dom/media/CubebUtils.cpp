@@ -40,7 +40,7 @@ uint32_t sPreferredSampleRate;
 
 } // namespace
 
-extern LazyLogModule gAudioStreamLog;
+extern PRLogModuleInfo* gAudioStreamLog;
 
 static const uint32_t CUBEB_NORMAL_LATENCY_MS = 100;
 
@@ -126,6 +126,7 @@ bool CubebLatencyPrefSet()
 
 void InitLibrary()
 {
+  gAudioStreamLog = PR_NewLogModule("AudioStream");
   PrefChanged(PREF_VOLUME_SCALE, nullptr);
   Preferences::RegisterCallback(PrefChanged, PREF_VOLUME_SCALE);
   PrefChanged(PREF_CUBEB_LATENCY, nullptr);

@@ -9,7 +9,7 @@
 
 namespace mozilla {
 
-extern LazyLogModule gMediaStreamGraphLog;
+extern PRLogModuleInfo* gMediaStreamGraphLog;
 #define STREAM_LOG(type, msg) MOZ_LOG(gMediaStreamGraphLog, type, msg)
 
 #ifdef DEBUG

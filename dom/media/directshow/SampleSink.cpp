@@ -14,7 +14,7 @@ using namespace mozilla::media;
 
 namespace mozilla {
 
-extern LogModule* GetDirectShowLog();
+PRLogModuleInfo* GetDirectShowLog();
 #define LOG(...) MOZ_LOG(GetDirectShowLog(), mozilla::LogLevel::Debug, (__VA_ARGS__))
 
 SampleSink::SampleSink()

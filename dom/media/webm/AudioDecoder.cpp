@@ -28,7 +28,7 @@
 
 namespace mozilla {
 
-extern LazyLogModule gMediaDecoderLog;
+extern PRLogModuleInfo* gMediaDecoderLog;
 
 ogg_packet InitOggPacket(const unsigned char* aData, size_t aLength,
                          bool aBOS, bool aEOS,

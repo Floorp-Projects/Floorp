@@ -36,15 +36,21 @@
 struct JSContext;
 class JSObject;
 
-mozilla::LogModule* GetMediaSourceLog()
+PRLogModuleInfo* GetMediaSourceLog()
 {
-  static mozilla::LazyLogModule sLogModule("MediaSource");
+  static PRLogModuleInfo* sLogModule = nullptr;
+  if (!sLogModule) {
+    sLogModule = PR_NewLogModule("MediaSource");
+  }
   return sLogModule;
 }
 
-mozilla::LogModule* GetMediaSourceAPILog()
+PRLogModuleInfo* GetMediaSourceAPILog()
 {
-  static mozilla::LazyLogModule sLogModule("MediaSource");
+  static PRLogModuleInfo* sLogModule = nullptr;
+  if (!sLogModule) {
+    sLogModule = PR_NewLogModule("MediaSource");
+  }
   return sLogModule;
 }
 

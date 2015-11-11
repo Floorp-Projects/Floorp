@@ -11,7 +11,7 @@
 #include "AppleATDecoder.h"
 #include "mozilla/Logging.h"
 
-extern mozilla::LogModule* GetPDMLog();
+extern PRLogModuleInfo* GetPDMLog();
 #define LOG(...) MOZ_LOG(GetPDMLog(), mozilla::LogLevel::Debug, (__VA_ARGS__))
 #define FourCC2Str(n) ((char[5]){(char)(n >> 24), (char)(n >> 16), (char)(n >> 8), (char)(n), 0})
 

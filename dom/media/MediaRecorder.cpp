@@ -31,7 +31,7 @@
 #undef LOG
 #endif
 
-mozilla::LazyLogModule gMediaRecorderLog("MediaRecorder");
+PRLogModuleInfo* gMediaRecorderLog;
 #define LOG(type, msg) MOZ_LOG(gMediaRecorderLog, type, msg)
 
 namespace mozilla {
@@ -776,7 +776,9 @@ MediaRecorder::MediaRecorder(DOMMediaStream& aSourceMediaStream,
   MOZ_ASSERT(aOwnerWindow);
   MOZ_ASSERT(aOwnerWindow->IsInnerWindow());
   mDOMStream = &aSourceMediaStream;
-
+  if (!gMediaRecorderLog) {
+    gMediaRecorderLog = PR_NewLogModule("MediaRecorder");
+  }
   RegisterActivityObserver();
 }
 
@@ -807,7 +809,9 @@ MediaRecorder::MediaRecorder(AudioNode& aSrcAudioNode,
     }
   }
   mAudioNode = &aSrcAudioNode;
-
+  if (!gMediaRecorderLog) {
+    gMediaRecorderLog = PR_NewLogModule("MediaRecorder");
+  }
   RegisterActivityObserver();
 }
 

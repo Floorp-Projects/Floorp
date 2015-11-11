@@ -14,7 +14,7 @@
 #include <algorithm>
 
 #undef LOG
-extern mozilla::LogModule* GetPDMLog();
+extern PRLogModuleInfo* GetPDMLog();
 #define LOG(arg, ...) MOZ_LOG(GetPDMLog(), mozilla::LogLevel::Debug, ("VPXDecoder(%p)::%s: " arg, this, __func__, ##__VA_ARGS__))
 
 namespace mozilla {

@@ -18,9 +18,12 @@
 
 namespace mozilla {
 
-LogModule* GetICLog()
+PRLogModuleInfo* GetICLog()
 {
-  static LazyLogModule log("ImageCapture");
+  static PRLogModuleInfo* log = nullptr;
+  if (!log) {
+    log = PR_NewLogModule("ImageCapture");
+  }
   return log;
 }
 

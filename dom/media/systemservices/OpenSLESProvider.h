@@ -28,7 +28,7 @@ SLresult mozilla_realize_sles_engine(SLObjectItf aObjectm);
 #ifdef __cplusplus
 #include "mozilla/Mutex.h"
 
-extern mozilla::LazyLogModule gOpenSLESProviderLog;
+extern PRLogModuleInfo *gOpenSLESProviderLog;
 
 namespace mozilla {
 
