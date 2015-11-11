@@ -437,7 +437,7 @@ public:
                                const mozilla::gfx::Matrix& aMaskTransform = mozilla::gfx::Matrix());
 
     /**
-     * Like PushGroup, but if the current surface is gfxContentType::COLOR and
+     * Like PushGroupForBlendBack, but if the current surface is gfxContentType::COLOR and
      * content is gfxContentType::COLOR_ALPHA, makes the pushed surface gfxContentType::COLOR
      * instead and copies the contents of the current surface to the pushed
      * surface. This is good for pushing opacity groups, since blending the
@@ -445,7 +445,10 @@ public:
      * the correct results and using an opaque pushed surface gives better
      * quality and performance.
      */
-    void PushGroupAndCopyBackground(gfxContentType content = gfxContentType::COLOR);
+    void PushGroupAndCopyBackground(gfxContentType content = gfxContentType::COLOR,
+                                    mozilla::gfx::Float aOpacity = 1.0f,
+                                    mozilla::gfx::SourceSurface* aMask = nullptr,
+                                    const mozilla::gfx::Matrix& aMaskTransform = mozilla::gfx::Matrix());
     already_AddRefed<gfxPattern> PopGroup();
     void PopGroupToSource();
     void PopGroupAndBlend();
