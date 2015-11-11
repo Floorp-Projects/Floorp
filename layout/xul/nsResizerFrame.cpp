@@ -245,7 +245,7 @@ nsResizerFrame::HandleEvent(nsPresContext* aPresContext,
           appUnitsRect.height = mRect.height;
         nsIntRect cssRect = appUnitsRect.ToInsidePixels(nsPresContext::AppUnitsPerCSSPixel());
 
-        nsIntRect oldRect;
+        LayoutDeviceIntRect oldRect;
         nsWeakFrame weakFrame(menuPopupFrame);
         if (menuPopupFrame) {
           nsCOMPtr<nsIWidget> widget = menuPopupFrame->GetWidget();

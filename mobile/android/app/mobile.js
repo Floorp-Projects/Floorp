@@ -350,9 +350,9 @@ pref("browser.link.open_newwindow", 3);
 // 0=force all new windows to tabs, 1=don't force, 2=only force those with no features set
 pref("browser.link.open_newwindow.restriction", 0);
 
-// image blocking policy
-// 0=disabled, 1=enabled, 2=cellular-only
-pref("browser.image_blocking", 0);
+// show images option
+// 0=never, 1=always, 2=cellular-only
+pref("browser.image_blocking", 1);
 
 // controls which bits of private data to clear. by default we clear them all.
 pref("privacy.item.cache", true);
@@ -553,6 +553,7 @@ pref("layers.offmainthreadcomposition.enabled", true);
 pref("layers.async-video.enabled", true);
 #ifdef MOZ_ANDROID_APZ
 pref("layers.async-pan-zoom.enabled", true);
+pref("apz.axis_lock.mode", 1);
 #endif
 pref("apz.allow_zooming", true);
 pref("layers.progressive-paint", true);

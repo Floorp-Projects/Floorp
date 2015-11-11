@@ -34,3 +34,12 @@ OS_LIBS += CONFIG['MOZ_ZLIB_LIBS']
 
 if not CONFIG['GNU_CXX']:
     ALLOW_COMPILER_WARNINGS = True
+
+# Prepare module loader JS code for embedding
+GENERATED_FILES += ['shellmoduleloader.out.h']
+shellmoduleloader = GENERATED_FILES['shellmoduleloader.out.h']
+shellmoduleloader.script = '../builtin/embedjs.py:generate_shellmoduleloader'
+shellmoduleloader.inputs = [
+    '../js.msg',
+    'ModuleLoader.js',
+]

@@ -8,7 +8,7 @@
 /**
  * Fired when a accessible and its subtree are removed from the tree.
  */
-[scriptable, builtinclass, uuid(a2bd2eca-3afa-489b-afb2-f93ef32ad99c)]
+[scriptable, builtinclass, uuid(2051709a-4e0d-4be5-873d-b49d1dee35fa)]
 interface nsIAccessibleHideEvent: nsIAccessibleEvent
 {
   /**

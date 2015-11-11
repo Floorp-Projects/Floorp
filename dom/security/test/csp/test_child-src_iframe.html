@@ -1,0 +1,114 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 1045891</title>
+  <!-- Including SimpleTest.js so we can use waitForExplicitFinish !-->
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+  <p id="display"></p>
+  <div id="content" style="visibility: hidden">
+  </div>
+
+<script class="testbody" type="text/javascript">
+
+/*
+ * Description of the test:
+ *   We load a page with a given CSP and verify that child frames and workers are correctly
+ *   evaluated through the "child-src" directive.
+ */
+
+SimpleTest.waitForExplicitFinish();
+
+var IFRAME_SRC="file_child-src_iframe.html"
+
+var tests = {
+  'same-src': {
+    id: "same-src",
+    file: IFRAME_SRC,
+    result : "allowed",
+    policy : "default-src 'none'; script-src 'unsafe-inline'; child-src http://mochi.test:8888"
+  },
+  'star-src': {
+    id: "star-src",
+    file: IFRAME_SRC,
+    result : "allowed",
+    policy : "default-src 'none'; script-src 'unsafe-inline'; child-src *"
+  },
+  'other-src': {
+    id: "other-src",
+    file: IFRAME_SRC,
+    result : "blocked",
+    policy : "default-src http://mochi.test:8888; script-src 'unsafe-inline'; child-src http://www.example.com"
+  },
+  'same-src-by-frame-src': {
+    id: "same-src-by-frame-src",
+    file: IFRAME_SRC,
+    result : "allowed",
+    policy : "default-src 'none'; script-src 'unsafe-inline'; child-src 'none'; frame-src http://mochi.test:8888"
+  },
+  'star-src-by-frame-src': {
+    id: "star-src-by-frame-src",
+    file: IFRAME_SRC,
+    result : "allowed",
+    policy : "default-src 'none'; script-src 'unsafe-inline'; child-src 'none'; frame-src *"
+  },
+  'other-src-by-frame-src': {
+    id: "other-src-by-frame-src",
+    file: IFRAME_SRC,
+    result : "blocked",
+    policy : "default-src 'none'; script-src 'unsafe-inline'; child-src http://mochi.test:8888; frame-src http://www.example.com"
+  },
+  'none-src-by-frame-src': {
+    id: "none-src-by-frame-src",
+    file: "file_child-src_iframe.html",
+    file: IFRAME_SRC,
+    result : "blocked",
+    policy : "default-src 'none'; script-src 'unsafe-inline'; child-src http://mochi.test:8888; frame-src 'none'"
+  }
+};
+
+finished = {};
+
+function checkFinished() {
+  if (Object.keys(finished).length == Object.keys(tests).length) {
+    window.removeEventListener('message', recvMessage);
+    SimpleTest.finish();
+  }
+}
+
+function recvMessage(ev) {
+  is(ev.data.message, tests[ev.data.id].result, "CSP child-src test " + ev.data.id);
+  finished[ev.data.id] = ev.data.message;
+
+  checkFinished();
+}
+
+window.addEventListener('message', recvMessage, false);
+
+function loadNextTest() {
+  for (item in tests) {
+    test = tests[item];
+    var src = "file_testserver.sjs";
+    // append the file that should be served
+    src += "?file=" + escape("tests/dom/security/test/csp/" + test.file);
+    // append the CSP that should be used to serve the file
+    src += "&csp=" + escape(test.policy);
+    // add our identifier
+    src += "#" + escape(test.id);
+
+    content = document.getElementById('content');
+    testframe = document.createElement("iframe");
+    testframe.setAttribute('id', test.id);
+    content.appendChild(testframe);
+    testframe.src = src;
+  }
+}
+
+// start running the tests
+loadNextTest();
+
+</script>
+</body>
+</html>

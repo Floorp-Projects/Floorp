@@ -9,10 +9,9 @@
 
 #include "ds/Fifo.h"
 #include "js/RootingAPI.h"
+#include "js/TracingAPI.h"
 
 namespace js {
-
-template <typename> struct DefaultTracer;
 
 // A TraceableFifo is a Fifo with an additional trace method that knows how to
 // visit all of the items stored in the Fifo. For Fifos that contain GC things,
@@ -21,8 +20,10 @@ template <typename> struct DefaultTracer;
 //
 // Most types of GC pointers as keys and values can be traced with no extra
 // infrastructure. For structs and non-gc-pointer members, ensure that there is
-// a specialization of DefaultTracer<T> with an appropriate trace method
-// available to handle the custom type.
+// a specialization of DefaultGCPolicy<T> with an appropriate trace method
+// available to handle the custom type. Generic helpers can be found in
+// js/public/TracingAPI.h. Generic helpers can be found in
+// js/public/TracingAPI.h.
 //
 // Note that although this Fifo's trace will deal correctly with moved items, it
 // does not itself know when to barrier or trace items. To function properly it
@@ -30,7 +31,7 @@ template <typename> struct DefaultTracer;
 template <typename T,
           size_t MinInlineCapacity = 0,
           typename AllocPolicy = TempAllocPolicy,
-          typename TraceFunc = DefaultTracer<T>>
+          typename GCPolicy = DefaultGCPolicy<T>>
 class TraceableFifo
   : public js::Fifo<T, MinInlineCapacity, AllocPolicy>,
     public JS::Traceable
@@ -48,16 +49,16 @@ class TraceableFifo
 
     static void trace(TraceableFifo* tf, JSTracer* trc) {
         for (size_t i = 0; i < tf->front_.length(); ++i)
-            TraceFunc::trace(trc, &tf->front_[i], "fifo element");
+            GCPolicy::trace(trc, &tf->front_[i], "fifo element");
         for (size_t i = 0; i < tf->rear_.length(); ++i)
-            TraceFunc::trace(trc, &tf->rear_[i], "fifo element");
+            GCPolicy::trace(trc, &tf->rear_[i], "fifo element");
     }
 };
 
-template <typename Outer, typename T, size_t Capacity, typename AllocPolicy, typename TraceFunc>
+template <typename Outer, typename T, size_t Capacity, typename AllocPolicy, typename GCPolicy>
 class TraceableFifoOperations
 {
-    using TF = TraceableFifo<T, Capacity, AllocPolicy, TraceFunc>;
+    using TF = TraceableFifo<T, Capacity, AllocPolicy, GCPolicy>;
     const TF& fifo() const { return static_cast<const Outer*>(this)->extract(); }
 
   public:
@@ -66,11 +67,11 @@ class TraceableFifoOperations
     const T& front() const { return fifo().front(); }
 };
 
-template <typename Outer, typename T, size_t Capacity, typename AllocPolicy, typename TraceFunc>
+template <typename Outer, typename T, size_t Capacity, typename AllocPolicy, typename GCPolicy>
 class MutableTraceableFifoOperations
-  : public TraceableFifoOperations<Outer, T, Capacity, AllocPolicy, TraceFunc>
+  : public TraceableFifoOperations<Outer, T, Capacity, AllocPolicy, GCPolicy>
 {
-    using TF = TraceableFifo<T, Capacity, AllocPolicy, TraceFunc>;
+    using TF = TraceableFifo<T, Capacity, AllocPolicy, GCPolicy>;
     TF& fifo() { return static_cast<Outer*>(this)->extract(); }
 
   public:

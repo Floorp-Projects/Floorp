@@ -76,8 +76,16 @@ public:
     nsTArray<ImageMemoryCounter> uncached;
 
     for (uint32_t i = 0; i < mKnownLoaders.Length(); i++) {
-      mKnownLoaders[i]->mChromeCache.EnumerateRead(DoRecordCounter, &chrome);
-      mKnownLoaders[i]->mCache.EnumerateRead(DoRecordCounter, &content);
+      for (auto iter = mKnownLoaders[i]->mChromeCache.Iter(); !iter.Done(); iter.Next()) {
+        imgCacheEntry* entry = iter.UserData();
+        RefPtr<imgRequest> req = entry->GetRequest();
+        RecordCounterForRequest(req, &chrome, !entry->HasNoProxies());
+      }
+      for (auto iter = mKnownLoaders[i]->mCache.Iter(); !iter.Done(); iter.Next()) {
+        imgCacheEntry* entry = iter.UserData();
+        RefPtr<imgRequest> req = entry->GetRequest();
+        RecordCounterForRequest(req, &content, !entry->HasNoProxies());
+      }
       MutexAutoLock lock(mKnownLoaders[i]->mUncachedImagesMutex);
       for (auto iter = mKnownLoaders[i]->mUncachedImages.Iter();
            !iter.Done();
@@ -110,8 +118,29 @@ public:
     size_t n = 0;
     for (uint32_t i = 0; i < imgLoader::sMemReporter->mKnownLoaders.Length();
          i++) {
-      imgLoader::sMemReporter->mKnownLoaders[i]->
-        mCache.EnumerateRead(DoRecordCounterUsedDecoded, &n);
+      for (auto iter = imgLoader::sMemReporter->mKnownLoaders[i]->mCache.Iter();
+           !iter.Done();
+           iter.Next()) {
+        imgCacheEntry* entry = iter.UserData();
+        if (entry->HasNoProxies()) {
+          continue;
+        }
+
+        RefPtr<imgRequest> req = entry->GetRequest();
+        RefPtr<Image> image = req->GetImage();
+        if (!image) {
+          continue;
+        }
+
+        // Both this and EntryImageSizes measure images/content/raster/used/decoded
+        // memory.  This function's measurement is secondary -- the result doesn't
+        // go in the "explicit" tree -- so we use moz_malloc_size_of instead of
+        // ImagesMallocSizeOf to prevent DMD from seeing it reported twice.
+        ImageMemoryCounter counter(image, moz_malloc_size_of, /* aIsUsed = */ true);
+
+        n += counter.Values().DecodedHeap();
+        n += counter.Values().DecodedNonHeap();
+      }
     }
     return n;
   }
@@ -406,17 +435,6 @@ private:
                                    aValue, desc, aData);
   }
 
-  static PLDHashOperator DoRecordCounter(const ImageCacheKey&,
-                                         imgCacheEntry* aEntry,
-                                         void* aUserArg)
-  {
-    RefPtr<imgRequest> req = aEntry->GetRequest();
-    RecordCounterForRequest(req,
-                           static_cast<nsTArray<ImageMemoryCounter>*>(aUserArg),
-                           !aEntry->HasNoProxies());
-    return PL_DHASH_NEXT;
-  }
-
   static void RecordCounterForRequest(imgRequest* aRequest,
                                       nsTArray<ImageMemoryCounter>* aArray,
                                       bool aIsUsed)
@@ -429,33 +447,6 @@ private:
     ImageMemoryCounter counter(image, ImagesMallocSizeOf, aIsUsed);
 
     aArray->AppendElement(Move(counter));
-  }
-
-  static PLDHashOperator DoRecordCounterUsedDecoded(const ImageCacheKey&,
-                                                    imgCacheEntry* aEntry,
-                                                    void* aUserArg)
-  {
-    if (aEntry->HasNoProxies()) {
-      return PL_DHASH_NEXT;
-    }
-
-    RefPtr<imgRequest> req = aEntry->GetRequest();
-    RefPtr<Image> image = req->GetImage();
-    if (!image) {
-      return PL_DHASH_NEXT;
-    }
-
-    // Both this and EntryImageSizes measure images/content/raster/used/decoded
-    // memory.  This function's measurement is secondary -- the result doesn't
-    // go in the "explicit" tree -- so we use moz_malloc_size_of instead of
-    // ImagesMallocSizeOf to prevent DMD from seeing it reported twice.
-    ImageMemoryCounter counter(image, moz_malloc_size_of, /* aIsUsed = */ true);
-
-    auto n = static_cast<size_t*>(aUserArg);
-    *n += counter.Values().DecodedHeap();
-    *n += counter.Values().DecodedNonHeap();
-
-    return PL_DHASH_NEXT;
   }
 };
 
@@ -1903,19 +1894,6 @@ imgLoader::RemoveFromCache(imgCacheEntry* entry)
   return false;
 }
 
-static PLDHashOperator
-EnumEvictEntries(const ImageCacheKey&,
-                 RefPtr<imgCacheEntry>& aData,
-                 void* data)
-{
-  nsTArray<RefPtr<imgCacheEntry> >* entries =
-    reinterpret_cast<nsTArray<RefPtr<imgCacheEntry> > *>(data);
-
-  entries->AppendElement(aData);
-
-  return PL_DHASH_NEXT;
-}
-
 nsresult
 imgLoader::EvictEntries(imgCacheTable& aCacheToClear)
 {
@@ -1924,7 +1902,10 @@ imgLoader::EvictEntries(imgCacheTable& aCacheToClear)
   // We have to make a temporary, since RemoveFromCache removes the element
   // from the queue, invalidating iterators.
   nsTArray<RefPtr<imgCacheEntry> > entries;
-  aCacheToClear.Enumerate(EnumEvictEntries, &entries);
+  for (auto iter = aCacheToClear.Iter(); !iter.Done(); iter.Next()) {
+    RefPtr<imgCacheEntry>& data = iter.Data();
+    entries.AppendElement(data);
+  }
 
   for (uint32_t i = 0; i < entries.Length(); ++i) {
     if (!RemoveFromCache(entries[i])) {

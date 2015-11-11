@@ -74,7 +74,7 @@ private:
    */
   static void InitEvent(nsWindowBase* aWidget,
                         WidgetGUIEvent& aEvent,
-                        nsIntPoint* aPoint = nullptr);
+                        LayoutDeviceIntPoint* aPoint = nullptr);
 
   /**
    * GetModifierKeyState() returns current modifier key state.

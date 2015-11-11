@@ -969,7 +969,7 @@ LayerManagerComposite::RenderToPresentationSurface()
   }
   GLContext* gl = compositor->gl();
   GLContextEGL* egl = GLContextEGL::Cast(gl);
-  const IntSize windowSize = mirrorScreen->GetNaturalBounds().Size();
+  const IntSize windowSize = mirrorScreen->GetNaturalBoundsUntyped().Size();
 #endif
 
   if ((windowSize.width <= 0) || (windowSize.height <= 0)) {
