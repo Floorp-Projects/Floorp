@@ -1068,7 +1068,7 @@ SubtractTransformedRegion(nsIntRegion& aRegion,
   // subtract it from the screen region.
   nsIntRegionRectIterator it(aRegionToSubtract);
   while (const IntRect* rect = it.Next()) {
-    Rect incompleteRect = aTransform.TransformAndClipBounds(ToRect(*rect),
+    Rect incompleteRect = aTransform.TransformAndClipBounds(IntRectToRect(*rect),
                                                             Rect::MaxIntRect());
     aRegion.Sub(aRegion, IntRect(incompleteRect.x,
                                    incompleteRect.y,
