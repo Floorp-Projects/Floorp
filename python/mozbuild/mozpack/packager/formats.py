@@ -256,7 +256,7 @@ class OmniJarFormatter(JarFormatter):
 
     def contains(self, path):
         assert '*' not in path
-        if self.copier.contains(path):
+        if JarFormatter.contains(self, path):
             return True
         for base, copier in self.omnijars.iteritems():
             if copier.contains(mozpath.relpath(path, base)):

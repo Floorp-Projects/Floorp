@@ -302,12 +302,19 @@ class TestFormatters(unittest.TestCase):
         self.assertEqual(formatter._get_base('addon0/install.rdf'),
                          'addon0')
 
+    def do_test_contents(self, formatter, contents):
+        for f in contents['files']:
+            # .xpt files are merged, so skip them.
+            if not f.endswith('.xpt'):
+                self.assertTrue(formatter.contains(f))
+
     def test_flat_formatter(self):
         registry = FileRegistry()
         formatter = FlatFormatter(registry)
 
         fill_formatter(formatter, CONTENTS)
         self.assertEqual(get_contents(registry), RESULT_FLAT)
+        self.do_test_contents(formatter, CONTENTS)
 
     def test_jar_formatter(self):
         registry = FileRegistry()
@@ -315,6 +322,7 @@ class TestFormatters(unittest.TestCase):
 
         fill_formatter(formatter, CONTENTS)
         self.assertEqual(get_contents(registry), RESULT_JAR)
+        self.do_test_contents(formatter, CONTENTS)
 
     def test_omnijar_formatter(self):
         registry = FileRegistry()
@@ -322,6 +330,7 @@ class TestFormatters(unittest.TestCase):
 
         fill_formatter(formatter, CONTENTS)
         self.assertEqual(get_contents(registry), RESULT_OMNIJAR)
+        self.do_test_contents(formatter, CONTENTS)
 
     def test_flat_formatter_with_base(self):
         registry = FileRegistry()
@@ -329,6 +338,7 @@ class TestFormatters(unittest.TestCase):
 
         fill_formatter(formatter, CONTENTS_WITH_BASE)
         self.assertEqual(get_contents(registry), RESULT_FLAT_WITH_BASE)
+        self.do_test_contents(formatter, CONTENTS_WITH_BASE)
 
     def test_jar_formatter_with_base(self):
         registry = FileRegistry()
@@ -336,17 +346,15 @@ class TestFormatters(unittest.TestCase):
 
         fill_formatter(formatter, CONTENTS_WITH_BASE)
         self.assertEqual(get_contents(registry), RESULT_JAR_WITH_BASE)
+        self.do_test_contents(formatter, CONTENTS_WITH_BASE)
 
     def test_omnijar_formatter_with_base(self):
         registry = FileRegistry()
         formatter = OmniJarFormatter(registry, 'omni.foo')
 
         fill_formatter(formatter, CONTENTS_WITH_BASE)
-        result = {
-            mozpath.join('base/root', p): v
-            for p, v in RESULT_OMNIJAR.iteritems()
-        }
         self.assertEqual(get_contents(registry), RESULT_OMNIJAR_WITH_BASE)
+        self.do_test_contents(formatter, CONTENTS_WITH_BASE)
 
     def test_omnijar_is_resource(self):
         def is_resource(base, path):
