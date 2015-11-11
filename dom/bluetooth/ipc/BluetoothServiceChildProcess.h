@@ -130,22 +130,22 @@ public:
              BluetoothReplyRunnable* aRunnable) override;
 
   virtual void
-  SendFile(const nsAString& aDeviceAddress,
+  SendFile(const BluetoothAddress& aDeviceAddress,
            BlobParent* aBlobParent,
            BlobChild* aBlobChild,
            BluetoothReplyRunnable* aRunnable) override;
 
   virtual void
-  SendFile(const nsAString& aDeviceAddress,
+  SendFile(const BluetoothAddress& aDeviceAddress,
            Blob* aBlob,
            BluetoothReplyRunnable* aRunnable) override;
 
   virtual void
-  StopSendingFile(const nsAString& aDeviceAddress,
+  StopSendingFile(const BluetoothAddress& aDeviceAddress,
                   BluetoothReplyRunnable* aRunnable) override;
 
   virtual void
-  ConfirmReceivingFile(const nsAString& aDeviceAddress,
+  ConfirmReceivingFile(const BluetoothAddress& aDeviceAddress,
                        bool aConfirm,
                        BluetoothReplyRunnable* aRunnable) override;
 
