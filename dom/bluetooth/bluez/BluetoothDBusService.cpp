@@ -3778,20 +3778,26 @@ BluetoothDBusService::UpdateSdpRecords(const BluetoothAddress& aDeviceAddress,
 }
 
 void
-BluetoothDBusService::SendFile(const BluetoothAddress& aDeviceAddress,
+BluetoothDBusService::SendFile(const nsAString& aDeviceAddress,
                                BlobParent* aBlobParent,
                                BlobChild* aBlobChild,
                                BluetoothReplyRunnable* aRunnable)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
+  BluetoothAddress deviceAddress;
+  if (NS_FAILED(StringToAddress(aDeviceAddress, deviceAddress))) {
+    DispatchReplyError(aRunnable, STATUS_PARM_INVALID);
+    return;
+  }
+
   // Currently we only support one device sending one file at a time,
   // so we don't need aDeviceAddress here because the target device
   // has been determined when calling 'Connect()'. Nevertheless, keep
   // it for future use.
   BluetoothOppManager* opp = BluetoothOppManager::Get();
   nsAutoString errorStr;
-  if (!opp || !opp->SendFile(aDeviceAddress, aBlobParent)) {
+  if (!opp || !opp->SendFile(deviceAddress, aBlobParent)) {
     errorStr.AssignLiteral("Calling SendFile() failed");
   }
 
@@ -3799,19 +3805,25 @@ BluetoothDBusService::SendFile(const BluetoothAddress& aDeviceAddress,
 }
 
 void
-BluetoothDBusService::SendFile(const BluetoothAddress& aDeviceAddress,
+BluetoothDBusService::SendFile(const nsAString& aDeviceAddress,
                                Blob* aBlob,
                                BluetoothReplyRunnable* aRunnable)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
+  BluetoothAddress deviceAddress;
+  if (NS_FAILED(StringToAddress(aDeviceAddress, deviceAddress))) {
+    DispatchReplyError(aRunnable, STATUS_PARM_INVALID);
+    return;
+  }
+
   // Currently we only support one device sending one file at a time,
   // so we don't need aDeviceAddress here because the target device
   // has been determined when calling 'Connect()'. Nevertheless, keep
   // it for future use.
   BluetoothOppManager* opp = BluetoothOppManager::Get();
   nsAutoString errorStr;
-  if (!opp || !opp->SendFile(aDeviceAddress, aBlob)) {
+  if (!opp || !opp->SendFile(deviceAddress, aBlob)) {
     errorStr.AssignLiteral("Calling SendFile() failed");
   }
 
@@ -3819,7 +3831,7 @@ BluetoothDBusService::SendFile(const BluetoothAddress& aDeviceAddress,
 }
 
 void
-BluetoothDBusService::StopSendingFile(const BluetoothAddress& aDeviceAddress,
+BluetoothDBusService::StopSendingFile(const nsAString& aDeviceAddress,
                                       BluetoothReplyRunnable* aRunnable)
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -3838,10 +3850,9 @@ BluetoothDBusService::StopSendingFile(const BluetoothAddress& aDeviceAddress,
 }
 
 void
-BluetoothDBusService::ConfirmReceivingFile(
-  const BluetoothAddress& aDeviceAddress,
-  bool aConfirm,
-  BluetoothReplyRunnable* aRunnable)
+BluetoothDBusService::ConfirmReceivingFile(const nsAString& aDeviceAddress,
+                                           bool aConfirm,
+                                           BluetoothReplyRunnable* aRunnable)
 {
   MOZ_ASSERT(NS_IsMainThread(), "Must be called from main thread!");
 

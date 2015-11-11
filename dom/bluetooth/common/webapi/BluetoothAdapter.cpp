@@ -1748,13 +1748,6 @@ BluetoothAdapter::SendFile(const nsAString& aDeviceAddress,
   RefPtr<BluetoothVoidReplyRunnable> results =
     new BluetoothVoidReplyRunnable(request);
 
-  BluetoothAddress deviceAddress;
-  auto rv = StringToAddress(aDeviceAddress, deviceAddress);
-  if (NS_FAILED(rv)) {
-    aRv.Throw(rv);
-    return nullptr;
-  }
-
   BluetoothService* bs = BluetoothService::Get();
   if (!bs) {
     aRv.Throw(NS_ERROR_FAILURE);
@@ -1763,7 +1756,7 @@ BluetoothAdapter::SendFile(const nsAString& aDeviceAddress,
 
   if (XRE_IsParentProcess()) {
     // In-process transfer
-    bs->SendFile(deviceAddress, &aBlob, results);
+    bs->SendFile(aDeviceAddress, &aBlob, results);
   } else {
     ContentChild *cc = ContentChild::GetSingleton();
     if (!cc) {
@@ -1777,7 +1770,7 @@ BluetoothAdapter::SendFile(const nsAString& aDeviceAddress,
       return nullptr;
     }
 
-    bs->SendFile(deviceAddress, nullptr, actor, results);
+    bs->SendFile(aDeviceAddress, nullptr, actor, results);
   }
 
   return request.forget();
@@ -1797,19 +1790,12 @@ BluetoothAdapter::StopSendingFile(
   RefPtr<BluetoothVoidReplyRunnable> results =
     new BluetoothVoidReplyRunnable(request);
 
-  BluetoothAddress deviceAddress;
-  auto rv = StringToAddress(aDeviceAddress, deviceAddress);
-  if (NS_FAILED(rv)) {
-    aRv.Throw(rv);
-    return nullptr;
-  }
-
   BluetoothService* bs = BluetoothService::Get();
   if (!bs) {
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
   }
-  bs->StopSendingFile(deviceAddress, results);
+  bs->StopSendingFile(aDeviceAddress, results);
 
   return request.forget();
 }
@@ -1828,19 +1814,12 @@ BluetoothAdapter::ConfirmReceivingFile(const nsAString& aDeviceAddress,
   RefPtr<BluetoothVoidReplyRunnable> results =
     new BluetoothVoidReplyRunnable(request);
 
-  BluetoothAddress deviceAddress;
-  auto rv = StringToAddress(aDeviceAddress, deviceAddress);
-  if (NS_FAILED(rv)) {
-    aRv.Throw(rv);
-    return nullptr;
-  }
-
   BluetoothService* bs = BluetoothService::Get();
   if (!bs) {
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
   }
-  bs->ConfirmReceivingFile(deviceAddress, aConfirmation, results);
+  bs->ConfirmReceivingFile(aDeviceAddress, aConfirmation, results);
 
   return request.forget();
 }
