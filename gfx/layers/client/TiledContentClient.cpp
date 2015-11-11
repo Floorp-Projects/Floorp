@@ -601,7 +601,8 @@ CopyFrontToBack(TextureClient* aFront,
                 TextureClient* aBack,
                 const gfx::IntRect& aRectToCopy)
 {
-  if (!aFront->Lock(OpenMode::OPEN_READ)) {
+  TextureClientAutoLock frontLock(aFront, OpenMode::OPEN_READ);
+  if (!frontLock.Succeeded()) {
     gfxCriticalError() << "[Tiling:Client] Failed to lock the tile's front buffer";
     return false;
   }
@@ -613,8 +614,6 @@ CopyFrontToBack(TextureClient* aFront,
 
   gfx::IntPoint rectToCopyTopLeft = aRectToCopy.TopLeft();
   aFront->CopyToTextureClient(aBack, &aRectToCopy, &rectToCopyTopLeft);
-
-  aFront->Unlock();
   return true;
 }
 
