@@ -145,23 +145,23 @@ struct DisconnectRequest
 
 struct SendFileRequest
 {
-  BluetoothAddress address;
+  nsString devicePath;
   PBlob blob;
 };
 
 struct StopSendingFileRequest
 {
-  BluetoothAddress address;
+  nsString devicePath;
 };
 
 struct ConfirmReceivingFileRequest
 {
-  BluetoothAddress address;
+  nsString devicePath;
 };
 
 struct DenyReceivingFileRequest
 {
-  BluetoothAddress address;
+  nsString devicePath;
 };
 
 struct ConnectScoRequest
