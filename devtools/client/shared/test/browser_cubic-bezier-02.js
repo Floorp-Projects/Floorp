@@ -12,7 +12,7 @@ const {CubicBezierWidget} =
 const {PREDEFINED} = require("devtools/client/shared/widgets/CubicBezierPresets");
 
 add_task(function*() {
-  yield promiseTab("about:blank");
+  yield addTab("about:blank");
   let [host, win, doc] = yield createHost("bottom", TEST_URI);
 
   // Required or widget will be clipped inside of 'bottom'

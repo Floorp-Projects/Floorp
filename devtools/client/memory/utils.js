@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const { Cu } = require("chrome");
+const { Cu, Cc, Ci } = require("chrome");
 
 Cu.import("resource://devtools/client/shared/widgets/ViewHelpers.jsm");
 const STRINGS_URI = "chrome://devtools/locale/memory.properties"
@@ -313,4 +313,41 @@ exports.parseSource = function (source) {
   }
 
   return { short, long, host };
+};
+
+/**
+ * Takes some configurations and opens up a file picker and returns
+ * a promise to the chosen file if successful.
+ *
+ * @param {String} .title
+ *        The title displayed in the file picker window.
+ * @param {Array<Array<String>>} .filters
+ *        An array of filters to display in the file picker. Each filter in the array
+ *        is a duple of two strings, one a name for the filter, and one the filter itself
+ *        (like "*.json").
+ * @param {String} .defaultName
+ *        The default name chosen by the file picker window.
+ * @return {Promise<?nsILocalFile>}
+ *        The file selected by the user, or null, if cancelled.
+ */
+exports.openFilePicker = function({ title, filters, defaultName }) {
+  let fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
+  fp.init(window, title, Ci.nsIFilePicker.modeSave);
+
+  for (let filter of (filters || [])) {
+    fp.appendFilter(filter[0], filter[1]);
+  }
+  fp.defaultString = defaultName;
+
+  return new Promise(resolve => {
+    fp.open({
+      done: result => {
+        if (result === Ci.nsIFilePicker.returnCancel) {
+          resolve(null);
+          return;
+        }
+        resolve(fp.file);
+      }
+    });
+  });
 };

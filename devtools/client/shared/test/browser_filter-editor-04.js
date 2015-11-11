@@ -10,7 +10,7 @@ const {CSSFilterEditorWidget} = require("devtools/client/shared/widgets/FilterWi
 const LIST_ITEM_HEIGHT = 32;
 
 add_task(function*() {
-  yield promiseTab("about:blank");
+  yield addTab("about:blank");
   let [host, win, doc] = yield createHost("bottom", TEST_URI);
 
   const container = doc.querySelector("#container");

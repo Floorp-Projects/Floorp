@@ -9,28 +9,27 @@ var {getAdjustedQuads} = require("devtools/shared/layout/utils");
 
 const TEST_URI = TEST_URI_ROOT + "browser_layoutHelpers-getBoxQuads.html";
 
-function test() {
-  addTab(TEST_URI, function(browser, tab) {
-    let doc = browser.contentDocument;
+add_task(function* () {
 
-    ok(typeof getAdjustedQuads === "function", "getAdjustedQuads is defined");
+  let tab = yield addTab(TEST_URI);
+  let doc = tab.linkedBrowser.contentDocument;
 
-    info("Running tests");
+  ok(typeof getAdjustedQuads === "function", "getAdjustedQuads is defined");
 
-    returnsTheRightDataStructure(doc);
-    isEmptyForMissingNode(doc);
-    isEmptyForHiddenNodes(doc);
-    defaultsToBorderBoxIfNoneProvided(doc);
-    returnsLikeGetBoxQuadsInSimpleCase(doc);
-    takesIframesOffsetsIntoAccount(doc);
-    takesScrollingIntoAccount(doc);
-    takesZoomIntoAccount(doc);
-    returnsMultipleItemsForWrappingInlineElements(doc);
+  info("Running tests");
 
-    gBrowser.removeCurrentTab();
-    finish();
-  });
-}
+  returnsTheRightDataStructure(doc);
+  isEmptyForMissingNode(doc);
+  isEmptyForHiddenNodes(doc);
+  defaultsToBorderBoxIfNoneProvided(doc);
+  returnsLikeGetBoxQuadsInSimpleCase(doc);
+  takesIframesOffsetsIntoAccount(doc);
+  takesScrollingIntoAccount(doc);
+  takesZoomIntoAccount(doc);
+  returnsMultipleItemsForWrappingInlineElements(doc);
+
+  gBrowser.removeCurrentTab();
+});
 
 function returnsTheRightDataStructure(doc) {
   info("Checks that the returned data contains bounds and 4 points");

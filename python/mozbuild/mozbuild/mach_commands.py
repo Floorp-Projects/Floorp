@@ -274,6 +274,26 @@ class Build(MachCommandBase):
         help='Verbose output for what commands the build is running.')
     def build(self, what=None, disable_extra_make_dependencies=None, jobs=0,
         directory=None, verbose=False):
+        """Build the source tree.
+
+        With no arguments, this will perform a full build.
+
+        Positional arguments define targets to build. These can be make targets
+        or patterns like "<dir>/<target>" to indicate a make target within a
+        directory.
+
+        There are a few special targets that can be used to perform a partial
+        build faster than what `mach build` would perform:
+
+        * binaries - compiles and links all C/C++ sources and produces shared
+          libraries and executables (binaries).
+
+        * faster - builds JavaScript, XUL, CSS, etc files.
+
+        "binaries" and "faster" almost fully complement each other. However,
+        there are build actions not captured by either. If things don't appear to
+        be rebuilding, perform a vanilla `mach build` to rebuild the world.
+        """
         import which
         from mozbuild.controller.building import BuildMonitor
         from mozbuild.util import resolve_target_to_make
