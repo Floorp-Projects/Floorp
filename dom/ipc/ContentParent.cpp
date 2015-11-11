@@ -1222,10 +1222,12 @@ ContentParent::RecvGetBlocklistState(const uint32_t& aPluginId,
 
 bool
 ContentParent::RecvFindPlugins(const uint32_t& aPluginEpoch,
+                               nsresult* aRv,
                                nsTArray<PluginTag>* aPlugins,
                                uint32_t* aNewPluginEpoch)
 {
-    return mozilla::plugins::FindPluginsForContent(aPluginEpoch, aPlugins, aNewPluginEpoch);
+    *aRv = mozilla::plugins::FindPluginsForContent(aPluginEpoch, aPlugins, aNewPluginEpoch);
+    return true;
 }
 
 /*static*/ TabParent*
