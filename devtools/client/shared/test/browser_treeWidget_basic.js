@@ -11,7 +11,7 @@ const TEST_URI = "data:text/html;charset=utf-8,<head><link rel='stylesheet' " +
 const {TreeWidget} = require("devtools/client/shared/widgets/TreeWidget");
 
 add_task(function*() {
-  yield promiseTab("about:blank");
+  yield addTab("about:blank");
   let [host, win, doc] = yield createHost("bottom", TEST_URI);
 
   let tree = new TreeWidget(doc.querySelector("div"), {

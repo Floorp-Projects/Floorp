@@ -70,10 +70,10 @@ class WebSocketFrameRunnable final : public WebSocketBaseRunnable
 public:
   WebSocketFrameRunnable(uint32_t aWebSocketSerialID,
                          uint64_t aInnerWindowID,
-                         WebSocketFrame* aFrame,
+                         already_AddRefed<WebSocketFrame> aFrame,
                          bool aFrameSent)
     : WebSocketBaseRunnable(aWebSocketSerialID, aInnerWindowID)
-    , mFrame(aFrame)
+    , mFrame(Move(aFrame))
     , mFrameSent(aFrameSent)
   {}
 
@@ -315,9 +315,10 @@ WebSocketEventService::WebSocketClosed(uint32_t aWebSocketSerialID,
 void
 WebSocketEventService::FrameReceived(uint32_t aWebSocketSerialID,
                                      uint64_t aInnerWindowID,
-                                     WebSocketFrame* aFrame)
+                                     already_AddRefed<WebSocketFrame> aFrame)
 {
-  MOZ_ASSERT(aFrame);
+  RefPtr<WebSocketFrame> frame(Move(aFrame));
+  MOZ_ASSERT(frame);
 
   // Let's continue only if we have some listeners.
   if (!HasListeners()) {
@@ -326,7 +327,7 @@ WebSocketEventService::FrameReceived(uint32_t aWebSocketSerialID,
 
   RefPtr<WebSocketFrameRunnable> runnable =
     new WebSocketFrameRunnable(aWebSocketSerialID, aInnerWindowID,
-                               aFrame, false /* frameSent */);
+                               frame.forget(), false /* frameSent */);
   nsresult rv = NS_DispatchToMainThread(runnable);
   NS_WARN_IF(NS_FAILED(rv));
 }
@@ -334,9 +335,10 @@ WebSocketEventService::FrameReceived(uint32_t aWebSocketSerialID,
 void
 WebSocketEventService::FrameSent(uint32_t aWebSocketSerialID,
                                  uint64_t aInnerWindowID,
-                                 WebSocketFrame* aFrame)
+                                 already_AddRefed<WebSocketFrame> aFrame)
 {
-  MOZ_ASSERT(aFrame);
+  RefPtr<WebSocketFrame> frame(Move(aFrame));
+  MOZ_ASSERT(frame);
 
   // Let's continue only if we have some listeners.
   if (!HasListeners()) {
@@ -345,7 +347,7 @@ WebSocketEventService::FrameSent(uint32_t aWebSocketSerialID,
 
   RefPtr<WebSocketFrameRunnable> runnable =
     new WebSocketFrameRunnable(aWebSocketSerialID, aInnerWindowID,
-                               aFrame, true /* frameSent */);
+                               frame.forget(), true /* frameSent */);
 
   nsresult rv = NS_DispatchToMainThread(runnable);
   NS_WARN_IF(NS_FAILED(rv));
@@ -501,7 +503,7 @@ WebSocketEventService::ShutdownActorListener(WindowListener* aListener)
   aListener->mActor = nullptr;
 }
 
-WebSocketFrame*
+already_AddRefed<WebSocketFrame>
 WebSocketEventService::CreateFrameIfNeeded(bool aFinBit, bool aRsvBit1,
                                            bool aRsvBit2, bool aRsvBit3,
                                            uint8_t aOpCode, bool aMaskBit,
@@ -512,11 +514,11 @@ WebSocketEventService::CreateFrameIfNeeded(bool aFinBit, bool aRsvBit1,
     return nullptr;
   }
 
-  return new WebSocketFrame(aFinBit, aRsvBit1, aRsvBit2, aRsvBit3, aOpCode,
-                            aMaskBit, aMask, aPayload);
+  return MakeAndAddRef<WebSocketFrame>(aFinBit, aRsvBit1, aRsvBit2, aRsvBit3,
+                                       aOpCode, aMaskBit, aMask, aPayload);
 }
 
-WebSocketFrame*
+already_AddRefed<WebSocketFrame>
 WebSocketEventService::CreateFrameIfNeeded(bool aFinBit, bool aRsvBit1,
                                            bool aRsvBit2, bool aRsvBit3,
                                            uint8_t aOpCode, bool aMaskBit,
@@ -533,11 +535,11 @@ WebSocketEventService::CreateFrameIfNeeded(bool aFinBit, bool aRsvBit1,
     return nullptr;
   }
 
-  return new WebSocketFrame(aFinBit, aRsvBit1, aRsvBit2, aRsvBit3, aOpCode,
-                            aMaskBit, aMask, payloadStr);
+  return MakeAndAddRef<WebSocketFrame>(aFinBit, aRsvBit1, aRsvBit2, aRsvBit3,
+                                       aOpCode, aMaskBit, aMask, payloadStr);
 }
 
-WebSocketFrame*
+already_AddRefed<WebSocketFrame>
 WebSocketEventService::CreateFrameIfNeeded(bool aFinBit, bool aRsvBit1,
                                            bool aRsvBit2, bool aRsvBit3,
                                            uint8_t aOpCode, bool aMaskBit,
@@ -570,8 +572,8 @@ WebSocketEventService::CreateFrameIfNeeded(bool aFinBit, bool aRsvBit1,
     return nullptr;
   }
 
-  return new WebSocketFrame(aFinBit, aRsvBit1, aRsvBit2, aRsvBit3, aOpCode,
-                            aMaskBit, aMask, payloadStr);
+  return MakeAndAddRef<WebSocketFrame>(aFinBit, aRsvBit1, aRsvBit2, aRsvBit3,
+                                       aOpCode, aMaskBit, aMask, payloadStr);
 }
 
 } // net namespace

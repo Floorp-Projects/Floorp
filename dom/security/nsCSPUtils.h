@@ -70,24 +70,25 @@ void CSP_LogMessage(const nsAString& aMessage,
 // Order of elements below important! Make sure it matches the order as in
 // nsIContentSecurityPolicy.idl
 static const char* CSPStrDirectives[] = {
-  "-error-",                  // NO_DIRECTIVE
-  "default-src",              // DEFAULT_SRC_DIRECTIVE
-  "script-src",               // SCRIPT_SRC_DIRECTIVE
-  "object-src",               // OBJECT_SRC_DIRECTIVE
-  "style-src",                // STYLE_SRC_DIRECTIVE
-  "img-src",                  // IMG_SRC_DIRECTIVE
-  "media-src",                // MEDIA_SRC_DIRECTIVE
-  "frame-src",                // FRAME_SRC_DIRECTIVE
-  "font-src",                 // FONT_SRC_DIRECTIVE
-  "connect-src",              // CONNECT_SRC_DIRECTIVE
-  "report-uri",               // REPORT_URI_DIRECTIVE
-  "frame-ancestors",          // FRAME_ANCESTORS_DIRECTIVE
-  "reflected-xss",            // REFLECTED_XSS_DIRECTIVE
-  "base-uri",                 // BASE_URI_DIRECTIVE
-  "form-action",              // FORM_ACTION_DIRECTIVE
-  "referrer",                 // REFERRER_DIRECTIVE
-  "manifest-src",             // MANIFEST_SRC_DIRECTIVE
-  "upgrade-insecure-requests" // UPGRADE_IF_INSECURE_DIRECTIVE
+  "-error-",                   // NO_DIRECTIVE
+  "default-src",               // DEFAULT_SRC_DIRECTIVE
+  "script-src",                // SCRIPT_SRC_DIRECTIVE
+  "object-src",                // OBJECT_SRC_DIRECTIVE
+  "style-src",                 // STYLE_SRC_DIRECTIVE
+  "img-src",                   // IMG_SRC_DIRECTIVE
+  "media-src",                 // MEDIA_SRC_DIRECTIVE
+  "frame-src",                 // FRAME_SRC_DIRECTIVE
+  "font-src",                  // FONT_SRC_DIRECTIVE
+  "connect-src",               // CONNECT_SRC_DIRECTIVE
+  "report-uri",                // REPORT_URI_DIRECTIVE
+  "frame-ancestors",           // FRAME_ANCESTORS_DIRECTIVE
+  "reflected-xss",             // REFLECTED_XSS_DIRECTIVE
+  "base-uri",                  // BASE_URI_DIRECTIVE
+  "form-action",               // FORM_ACTION_DIRECTIVE
+  "referrer",                  // REFERRER_DIRECTIVE
+  "manifest-src",              // MANIFEST_SRC_DIRECTIVE
+  "upgrade-insecure-requests", // UPGRADE_IF_INSECURE_DIRECTIVE
+  "child-src"                  // CHILD_SRC_DIRECTIVE
 };
 
 inline const char* CSP_CSPDirectiveToString(CSPDirective aDir)
@@ -303,19 +304,43 @@ class nsCSPDirective {
     virtual void addSrcs(const nsTArray<nsCSPBaseSrc*>& aSrcs)
       { mSrcs = aSrcs; }
 
-    bool restrictsContentType(nsContentPolicyType aContentType) const;
+    virtual bool restrictsContentType(nsContentPolicyType aContentType) const;
 
     inline bool isDefaultDirective() const
      { return mDirective == nsIContentSecurityPolicy::DEFAULT_SRC_DIRECTIVE; }
 
-    inline bool equals(CSPDirective aDirective) const
-      { return (mDirective == aDirective); }
+    virtual bool equals(CSPDirective aDirective) const;
 
     void getReportURIs(nsTArray<nsString> &outReportURIs) const;
 
   private:
     CSPDirective            mDirective;
     nsTArray<nsCSPBaseSrc*> mSrcs;
+};
+
+/* =============== nsCSPChildSrcDirective ============= */
+
+/*
+ * In CSP 2, the child-src directive covers both workers and
+ * subdocuments (i.e., frames and iframes). Workers were removed
+ * from script-src, but frames can be controlled by either child-src
+ * or frame-src directives, so child-src needs to know whether it should
+ * also restrict frames. When both are present the frame-src directive
+ * takes precedent.
+ */
+class nsCSPChildSrcDirective : public nsCSPDirective {
+  public:
+    explicit nsCSPChildSrcDirective(CSPDirective aDirective);
+    virtual ~nsCSPChildSrcDirective();
+
+    void setHandleFrameSrc();
+
+    virtual bool restrictsContentType(nsContentPolicyType aContentType) const;
+
+    virtual bool equals(CSPDirective aDirective) const;
+
+  private:
+    bool mHandleFrameSrc;
 };
 
 /* =============== nsUpgradeInsecureDirective === */

@@ -7,7 +7,7 @@ const TEST_URI = "data:text/html;charset=utf-8," +
 var {EyedropperManager} = require("devtools/client/eyedropper/eyedropper");
 
 add_task(function*() {
-  yield promiseTab(TEST_URI);
+  yield addTab(TEST_URI);
   let Telemetry = loadTelemetryAndRecordLogs();
 
   let target = TargetFactory.forTab(gBrowser.selectedTab);

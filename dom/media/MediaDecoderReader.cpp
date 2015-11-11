@@ -183,21 +183,10 @@ MediaDecoderReader::UpdateBuffered()
 }
 
 void
-MediaDecoderReader::ThrottledNotifyDataArrived(const Interval<int64_t>& aInterval)
+MediaDecoderReader::ThrottledNotifyDataArrived()
 {
   MOZ_ASSERT(OnTaskQueue());
   NS_ENSURE_TRUE_VOID(!mShutdown);
-
-  if (mThrottledInterval.isNothing()) {
-    mThrottledInterval.emplace(aInterval);
-  } else if (mThrottledInterval.ref().Contains(aInterval)) {
-    return;
-  } else if (!mThrottledInterval.ref().Contiguous(aInterval)) {
-    DoThrottledNotify();
-    mThrottledInterval.emplace(aInterval);
-  } else {
-    mThrottledInterval = Some(mThrottledInterval.ref().Span(aInterval));
-  }
 
   // If it's been long enough since our last update, do it.
   if (TimeStamp::Now() - mLastThrottledNotify > mThrottleDuration) {
@@ -227,9 +216,7 @@ MediaDecoderReader::DoThrottledNotify()
   MOZ_ASSERT(OnTaskQueue());
   mLastThrottledNotify = TimeStamp::Now();
   mThrottledNotify.DisconnectIfExists();
-  Interval<int64_t> interval = mThrottledInterval.ref();
-  mThrottledInterval.reset();
-  NotifyDataArrived(interval);
+  NotifyDataArrived();
 }
 
 media::TimeIntervals

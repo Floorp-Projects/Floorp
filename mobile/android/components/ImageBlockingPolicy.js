@@ -45,7 +45,7 @@ ImageBlockingPolicy.prototype = {
   // nsIContentPolicy interface implementation
   shouldLoad: function(contentType, contentLocation, requestOrigin, node, mimeTypeGuess, extra) {
     // When enabled or when on cellular, and option for cellular-only is selected
-    if (this._enabled() == OPTION_ALWAYS || (this._enabled() == OPTION_WIFI_ONLY && this._usingCellular())) {
+    if (this._enabled() == OPTION_NEVER || (this._enabled() == OPTION_WIFI_ONLY && this._usingCellular())) {
       if (contentType === Ci.nsIContentPolicy.TYPE_IMAGE || contentType === Ci.nsIContentPolicy.TYPE_IMAGESET) {
         // Accept any non-http(s) image URLs
         if (!contentLocation.schemeIs("http") && !contentLocation.schemeIs("https")) {

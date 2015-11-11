@@ -14,7 +14,7 @@ const template = Cu.import("resource://devtools/shared/gcli/Templater.jsm", {}).
 const TEST_URI = TEST_URI_ROOT + "browser_templater_basic.html";
 
 var test = Task.async(function*() {
-  yield promiseTab("about:blank");
+  yield addTab("about:blank");
   let [host, win, doc] = yield createHost("bottom", TEST_URI);
 
   info("Starting DOM Templater Tests");

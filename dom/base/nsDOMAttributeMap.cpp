@@ -124,22 +124,13 @@ NS_INTERFACE_MAP_END
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsDOMAttributeMap)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(nsDOMAttributeMap)
 
-PLDHashOperator
-SetOwnerDocumentFunc(nsAttrHashKey::KeyType aKey,
-                     RefPtr<Attr>& aData,
-                     void* aUserArg)
-{
-  nsresult rv = aData->SetOwnerDocument(static_cast<nsIDocument*>(aUserArg));
-
-  return NS_FAILED(rv) ? PL_DHASH_STOP : PL_DHASH_NEXT;
-}
-
 nsresult
 nsDOMAttributeMap::SetOwnerDocument(nsIDocument* aDocument)
 {
-  uint32_t n = mAttributeCache.Enumerate(SetOwnerDocumentFunc, aDocument);
-  NS_ENSURE_TRUE(n == mAttributeCache.Count(), NS_ERROR_FAILURE);
-
+  for (auto iter = mAttributeCache.Iter(); !iter.Done(); iter.Next()) {
+    nsresult rv = iter.Data()->SetOwnerDocument(aDocument);
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
+  }
   return NS_OK;
 }
 

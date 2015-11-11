@@ -8,7 +8,7 @@ const TEST_REGIONS = [{ start: 320, end: 460 }, { start: 780, end: 860 }];
 var LineGraphWidget = require("devtools/client/shared/widgets/LineGraphWidget");
 
 add_task(function*() {
-  yield promiseTab("about:blank");
+  yield addTab("about:blank");
   yield performTest();
   gBrowser.removeCurrentTab();
 });

@@ -32,6 +32,7 @@ const DATAREPORTING_DIR = "datareporting";
 const PINGS_ARCHIVE_DIR = "archived";
 const ABORTED_SESSION_FILE_NAME = "aborted-session-ping";
 const DELETION_PING_FILE_NAME = "pending-deletion-ping";
+const SESSION_STATE_FILE_NAME = "session-state.json";
 
 XPCOMUtils.defineLazyGetter(this, "gDataReportingDir", function() {
   return OS.Path.join(OS.Constants.Path.profileDir, DATAREPORTING_DIR);
@@ -45,7 +46,8 @@ XPCOMUtils.defineLazyGetter(this, "gAbortedSessionFilePath", function() {
 XPCOMUtils.defineLazyGetter(this, "gDeletionPingFilePath", function() {
   return OS.Path.join(gDataReportingDir, DELETION_PING_FILE_NAME);
 });
-
+XPCOMUtils.defineLazyModuleGetter(this, "CommonUtils",
+                                  "resource://services-common/utils.js");
 // Maxmimum time, in milliseconds, archive pings should be retained.
 const MAX_ARCHIVED_PINGS_RETENTION_MS = 180 * 24 * 60 * 60 * 1000;  // 180 days
 
@@ -226,6 +228,23 @@ this.TelemetryStorage = {
    */
   savePendingPing: function(ping) {
     return TelemetryStorageImpl.savePendingPing(ping);
+  },
+
+  /**
+   * Saves session data to disk.
+   * @param {Object}  sessionData The session data.
+   * @return {Promise} Resolved when the data was saved.
+   */
+  saveSessionData: function(sessionData) {
+    return TelemetryStorageImpl.saveSessionData(sessionData);
+  },
+
+  /**
+   * Loads session data from a session data file.
+   * @return {Promise<object>} Resolved with the session data in object form.
+   */
+  loadSessionData: function() {
+    return TelemetryStorageImpl.loadSessionData();
   },
 
   /**
@@ -516,6 +535,8 @@ var TelemetryStorageImpl = {
   _abortedSessionSerializer: new SaveSerializer(),
   // Used to serialize deletion ping writes to disk.
   _deletionPingSerializer: new SaveSerializer(),
+  // Used to serialize session state writes to disk.
+  _stateSaveSerializer: new SaveSerializer(),
 
   // Tracks the archived pings in a Map of (id -> {timestampCreated, type}).
   // We use this to cache info on archived pings to avoid scanning the disk more than once.
@@ -677,6 +698,59 @@ var TelemetryStorageImpl = {
       yield* checkSize(path);
       return yield this.loadPingFile(path, /*compressed*/ false);
     }
+  }),
+
+  /**
+   * Saves session data to disk.
+   */
+  saveSessionData: function(sessionData) {
+    return this._stateSaveSerializer.enqueueTask(() => this._saveSessionData(sessionData));
+  },
+
+  _saveSessionData: Task.async(function* (sessionData) {
+    let dataDir = OS.Path.join(OS.Constants.Path.profileDir, DATAREPORTING_DIR);
+    yield OS.File.makeDir(dataDir);
+
+    let filePath = OS.Path.join(gDataReportingDir, SESSION_STATE_FILE_NAME);
+    try {
+      yield CommonUtils.writeJSON(sessionData, filePath);
+    } catch(e) {
+      this._log.error("_saveSessionData - Failed to write session data to " + filePath, e);
+      Telemetry.getHistogramById("TELEMETRY_SESSIONDATA_FAILED_SAVE").add(1);
+    }
+  }),
+
+  /**
+   * Loads session data from the session data file.
+   * @return {Promise<Object>} A promise resolved with an object on success,
+   *                           with null otherwise.
+   */
+  loadSessionData: function() {
+    return this._stateSaveSerializer.enqueueTask(() => this._loadSessionData());
+  },
+
+  _loadSessionData: Task.async(function* () {
+    const dataFile = OS.Path.join(OS.Constants.Path.profileDir, DATAREPORTING_DIR,
+                                  SESSION_STATE_FILE_NAME);
+    let content;
+    try {
+      content = yield OS.File.read(dataFile, { encoding: "utf-8" });
+    } catch (ex) {
+      this._log.info("_loadSessionData - can not load session data file", ex);
+      Telemetry.getHistogramById("TELEMETRY_SESSIONDATA_FAILED_LOAD").add(1);
+      return null;
+    }
+
+    let data;
+    try {
+      data = JSON.parse(content);
+    } catch (ex) {
+      this._log.error("_loadSessionData - failed to parse session data", ex);
+      Telemetry.getHistogramById("TELEMETRY_SESSIONDATA_FAILED_PARSE").add(1);
+      return null;
+    }
+
+    return data;
   }),
 
   /**

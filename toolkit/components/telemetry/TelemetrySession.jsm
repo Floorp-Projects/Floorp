@@ -63,8 +63,6 @@ const MESSAGE_TELEMETRY_GET_CHILD_PAYLOAD = "Telemetry:GetChildPayload";
 const DATAREPORTING_DIRECTORY = "datareporting";
 const ABORTED_SESSION_FILE_NAME = "aborted-session-ping";
 
-const SESSION_STATE_FILE_NAME = "session-state.json";
-
 // Whether the FHR/Telemetry unification features are enabled.
 // Changing this pref requires a restart.
 const IS_UNIFIED_TELEMETRY = Preferences.get(PREF_UNIFIED, false);
@@ -142,8 +140,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "UITelemetry",
                                   "resource://gre/modules/UITelemetry.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "TelemetryEnvironment",
                                   "resource://gre/modules/TelemetryEnvironment.jsm");
-XPCOMUtils.defineLazyModuleGetter(this, "CommonUtils",
-                                  "resource://services-common/utils.js");
 
 function generateUUID() {
   let str = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator).generateUUID().toString();
@@ -261,97 +257,6 @@ var processInfo = {
       return null;
     return [parseInt(io.readBytes), parseInt(io.writeBytes)];
   }
-};
-
-/**
- * This object allows the serialisation of asynchronous tasks. This is particularly
- * useful to serialise write access to the disk in order to prevent race conditions
- * to corrupt the data being written.
- * We are using this to synchronize saving to the file that TelemetrySession persists
- * its state in.
- */
-function SaveSerializer() {
-  this._queuedOperations = [];
-  this._queuedInProgress = false;
-  this._log = Log.repository.getLoggerWithMessagePrefix(LOGGER_NAME, LOGGER_PREFIX);
-}
-
-SaveSerializer.prototype = {
-  /**
-   * Enqueues an operation to a list to serialise their execution in order to prevent race
-   * conditions. Useful to serialise access to disk.
-   *
-   * @param {Function} aFunction The task function to enqueue. It must return a promise.
-   * @return {Promise} A promise resolved when the enqueued task completes.
-   */
-  enqueueTask: function (aFunction) {
-    let promise = new Promise((resolve, reject) =>
-      this._queuedOperations.push([aFunction, resolve, reject]));
-
-    if (this._queuedOperations.length == 1) {
-      this._popAndPerformQueuedOperation();
-    }
-    return promise;
-  },
-
-  /**
-   * Make sure to flush all the pending operations.
-   * @return {Promise} A promise resolved when all the pending operations have completed.
-   */
-  flushTasks: function () {
-    let dummyTask = () => new Promise(resolve => resolve());
-    return this.enqueueTask(dummyTask);
-  },
-
-  /**
-   * Pop a task from the queue, executes it and continue to the next one.
-   * This function recursively pops all the tasks.
-   */
-  _popAndPerformQueuedOperation: function () {
-    if (!this._queuedOperations.length || this._queuedInProgress) {
-      return;
-    }
-
-    this._log.trace("_popAndPerformQueuedOperation - Performing queued operation.");
-    let [func, resolve, reject] = this._queuedOperations.shift();
-    let promise;
-
-    try {
-      this._queuedInProgress = true;
-      promise = func();
-    } catch (ex) {
-      this._log.warn("_popAndPerformQueuedOperation - Queued operation threw during execution. ",
-                     ex);
-      this._queuedInProgress = false;
-      reject(ex);
-      this._popAndPerformQueuedOperation();
-      return;
-    }
-
-    if (!promise || typeof(promise.then) != "function") {
-      let msg = "Queued operation did not return a promise: " + func;
-      this._log.warn("_popAndPerformQueuedOperation - " + msg);
-
-      this._queuedInProgress = false;
-      reject(new Error(msg));
-      this._popAndPerformQueuedOperation();
-      return;
-    }
-
-    promise.then(result => {
-        this._log.trace("_popAndPerformQueuedOperation - Queued operation completed.");
-        this._queuedInProgress = false;
-        resolve(result);
-        this._popAndPerformQueuedOperation();
-      },
-      error => {
-        this._log.warn("_popAndPerformQueuedOperation - Failure when performing queued operation.",
-                       error);
-        this._queuedInProgress = false;
-        reject(error);
-        this._popAndPerformQueuedOperation();
-      });
-  },
 };
 
 /**
@@ -762,8 +667,6 @@ var Impl = {
   _delayedInitTask: null,
   // The deferred promise resolved when the initialization task completes.
   _delayedInitTaskDeferred: null,
-  // Used to serialize session state writes to disk.
-  _stateSaveSerializer: new SaveSerializer(),
 
   get _log() {
     if (!this._logger) {
@@ -1332,7 +1235,7 @@ var Impl = {
       this.startNewSubsession();
       // Persist session data to disk (don't wait until it completes).
       let sessionData = this._getSessionDataObject();
-      this._stateSaveSerializer.enqueueTask(() => this._saveSessionData(sessionData));
+      TelemetryStorage.saveSessionData(sessionData);
     }
 
     return payload;
@@ -1446,7 +1349,7 @@ var Impl = {
         yield this._loadSessionData();
         // Update the session data to keep track of new subsessions created before
         // the initialization.
-        yield this._saveSessionData(this._getSessionDataObject());
+        yield TelemetryStorage.saveSessionData(this._getSessionDataObject());
 
         this.attachObservers();
         this.gatherMemory();
@@ -1796,7 +1699,6 @@ var Impl = {
       if (Telemetry.isOfficialTelemetry || testing) {
         return Task.spawn(function*() {
           yield this.saveShutdownPings();
-          yield this._stateSaveSerializer.flushTasks();
 
           if (IS_UNIFIED_TELEMETRY) {
             yield TelemetryController.removeAbortedSessionPing();
@@ -1857,40 +1759,23 @@ var Impl = {
     return promise;
   },
 
-  /**
-   * Loads session data from the session data file.
-   * @return {Promise<boolean>} A promise which is resolved with a true argument when
-   *                            loading has completed, with false otherwise.
+  /** Loads session data from the session data file.
+   * @return {Promise<object>} A promise which is resolved with an object when
+   *                            loading has completed, with null otherwise.
    */
   _loadSessionData: Task.async(function* () {
-    const dataFile = OS.Path.join(OS.Constants.Path.profileDir, DATAREPORTING_DIRECTORY,
-                                  SESSION_STATE_FILE_NAME);
+    let data = yield TelemetryStorage.loadSessionData();
 
-    let content;
-    try {
-      content = yield OS.File.read(dataFile, { encoding: "utf-8" });
-    } catch (ex) {
-      this._log.info("_loadSessionData - can not load session data file", ex);
-      Telemetry.getHistogramById("TELEMETRY_SESSIONDATA_FAILED_LOAD").add(1);
-      return false;
+    if (!data) {
+      return null;
     }
 
-    let data;
-    try {
-      data = JSON.parse(content);
-    } catch (ex) {
-      this._log.error("_loadSessionData - failed to parse session data", ex);
-      Telemetry.getHistogramById("TELEMETRY_SESSIONDATA_FAILED_PARSE").add(1);
-      return false;
-    }
-
-    if (!data ||
-        !("profileSubsessionCounter" in data) ||
+    if (!("profileSubsessionCounter" in data) ||
         !(typeof(data.profileSubsessionCounter) == "number") ||
         !("subsessionId" in data) || !("sessionId" in data)) {
       this._log.error("_loadSessionData - session data is invalid");
       Telemetry.getHistogramById("TELEMETRY_SESSIONDATA_FAILED_VALIDATION").add(1);
-      return false;
+      return null;
     }
 
     this._previousSessionId = data.sessionId;
@@ -1900,8 +1785,7 @@ var Impl = {
     // 1 - the current subsessions.
     this._profileSubsessionCounter = data.profileSubsessionCounter +
                                      this._subsessionCounter;
-
-    return true;
+    return data;
   }),
 
   /**
@@ -1914,22 +1798,6 @@ var Impl = {
       profileSubsessionCounter: this._profileSubsessionCounter,
     };
   },
-
-  /**
-   * Saves session data to disk.
-   */
-  _saveSessionData: Task.async(function* (sessionData) {
-    let dataDir = OS.Path.join(OS.Constants.Path.profileDir, DATAREPORTING_DIRECTORY);
-    yield OS.File.makeDir(dataDir);
-
-    let filePath = OS.Path.join(dataDir, SESSION_STATE_FILE_NAME);
-    try {
-      yield CommonUtils.writeJSON(sessionData, filePath);
-    } catch(e) {
-      this._log.error("_saveSessionData - Failed to write session data to " + filePath, e);
-      Telemetry.getHistogramById("TELEMETRY_SESSIONDATA_FAILED_SAVE").add(1);
-    }
-  }),
 
   _onEnvironmentChange: function(reason, oldEnvironment) {
     this._log.trace("_onEnvironmentChange", reason);
