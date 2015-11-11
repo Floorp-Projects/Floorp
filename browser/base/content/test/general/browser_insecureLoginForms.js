@@ -2,8 +2,7 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 // Load directly from the browser-chrome support files of login tests.
-const testUrlPath =
-      "://example.com/browser/toolkit/components/passwordmgr/test/browser/";
+const TEST_URL_PATH = "/browser/toolkit/components/passwordmgr/test/browser/";
 
 /**
  * Waits for the given number of occurrences of InsecureLoginFormsStateChange
@@ -22,8 +21,13 @@ add_task(function* test_simple() {
     "set": [["security.insecure_password.ui.enabled", true]],
   }, resolve));
 
-  for (let scheme of ["http", "https"]) {
-    let tab = gBrowser.addTab(scheme + testUrlPath + "form_basic.html");
+  for (let [origin, expectWarning] of [
+    ["http://example.com", true],
+    ["http://127.0.0.1", false],
+    ["https://example.com", false],
+  ]) {
+    let testUrlPath = origin + TEST_URL_PATH;
+    let tab = gBrowser.addTab(testUrlPath + "form_basic.html");
     let browser = tab.linkedBrowser;
     yield Promise.all([
       BrowserTestUtils.switchTab(gBrowser, tab),
@@ -36,7 +40,7 @@ add_task(function* test_simple() {
     gIdentityHandler._identityBox.click();
     document.getElementById("identity-popup-security-expander").click();
 
-    if (scheme == "http") {
+    if (expectWarning) {
       let identityBoxImage = gBrowser.ownerGlobal
             .getComputedStyle(document.getElementById("page-proxy-favicon"), "")
             .getPropertyValue("list-style-image");
@@ -64,8 +68,8 @@ add_task(function* test_simple() {
     // the scheme is HTTPS.
     is(Array.every(document.querySelectorAll("[when-loginforms=insecure]"),
                    element => !is_hidden(element)),
-       scheme == "http",
-       "The relevant messages should visible or hidden.");
+       expectWarning,
+       "The relevant messages should be visible or hidden.");
 
     gIdentityHandler._identityPopup.hidden = true;
     gBrowser.removeTab(tab);
@@ -82,6 +86,7 @@ add_task(function* test_mixedcontent() {
   }, resolve));
 
   // Load the page with the subframe in a new tab.
+  let testUrlPath = "://example.com" + TEST_URL_PATH;
   let tab = gBrowser.addTab("https" + testUrlPath + "insecure_test.html");
   let browser = tab.linkedBrowser;
   yield Promise.all([
