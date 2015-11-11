@@ -370,7 +370,7 @@ var PlacesCommandHook = {
 
     // Try to dock the panel to:
     // 1. the bookmarks menu button
-    // 2. the page-proxy-favicon
+    // 2. the identity icon
     // 3. the content area
     if (BookmarkingUI.anchor) {
       StarUI.showEditBookmarkPopup(itemId, BookmarkingUI.anchor,
@@ -378,9 +378,9 @@ var PlacesCommandHook = {
       return;
     }
 
-    let pageProxyFavicon = document.getElementById("page-proxy-favicon");
-    if (isElementVisible(pageProxyFavicon)) {
-      StarUI.showEditBookmarkPopup(itemId, pageProxyFavicon,
+    let identityIcon = document.getElementById("identity-icon");
+    if (isElementVisible(identityIcon)) {
+      StarUI.showEditBookmarkPopup(itemId, identityIcon,
                                    "bottomcenter topright");
     } else {
       StarUI.showEditBookmarkPopup(itemId, aBrowser, "overlap");
@@ -446,7 +446,7 @@ var PlacesCommandHook = {
 
     // Try to dock the panel to:
     // 1. the bookmarks menu button
-    // 2. the page-proxy-favicon
+    // 2. the identity icon
     // 3. the content area
     if (BookmarkingUI.anchor) {
       StarUI.showEditBookmarkPopup(node, BookmarkingUI.anchor,
@@ -454,9 +454,9 @@ var PlacesCommandHook = {
       return;
     }
 
-    let pageProxyFavicon = document.getElementById("page-proxy-favicon");
-    if (isElementVisible(pageProxyFavicon)) {
-      StarUI.showEditBookmarkPopup(node, pageProxyFavicon,
+    let identityIcon = document.getElementById("identity-icon");
+    if (isElementVisible(identityIcon)) {
+      StarUI.showEditBookmarkPopup(node, identityIcon,
                                    "bottomcenter topright");
     } else {
       StarUI.showEditBookmarkPopup(node, aBrowser, "overlap");

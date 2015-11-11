@@ -781,7 +781,8 @@ function assertMixedContentBlockingState(tabbrowser, states = {}) {
   let doc = tabbrowser.ownerDocument;
   let identityBox = gIdentityHandler._identityBox;
   let classList = identityBox.classList;
-  let identityBoxImage = tabbrowser.ownerGlobal.getComputedStyle(doc.getElementById("page-proxy-favicon"), "").
+  let connectionIcon = doc.getElementById("connection-icon");
+  let connectionIconImage = tabbrowser.ownerGlobal.getComputedStyle(connectionIcon, "").
                          getPropertyValue("list-style-image");
 
   let stateSecure = gIdentityHandler._state & Ci.nsIWebProgressListener.STATE_IS_SECURE;
@@ -799,7 +800,7 @@ function assertMixedContentBlockingState(tabbrowser, states = {}) {
     // HTTP request, there should be no MCB classes for the identity box and the non secure icon
     // should always be visible regardless of MCB state.
     ok(classList.contains("unknownIdentity"), "unknownIdentity on HTTP page");
-    is(identityBoxImage, "url(\"chrome://browser/skin/identity-not-secure.svg\")", "Using 'non-secure' icon");
+    is_element_hidden(connectionIcon);
 
     ok(!classList.contains("mixedActiveContent"), "No MCB icon on HTTP page");
     ok(!classList.contains("mixedActiveBlocked"), "No MCB icon on HTTP page");
@@ -816,20 +817,21 @@ function assertMixedContentBlockingState(tabbrowser, states = {}) {
     is(classList.contains("mixedDisplayContentLoadedActiveBlocked"), passiveLoaded && activeBlocked,
        "identityBox has expected class for passiveLoaded && activeBlocked");
 
+    is_element_visible(connectionIcon);
     if (activeLoaded) {
-      is(identityBoxImage, "url(\"chrome://browser/skin/identity-mixed-active-loaded.svg\")",
+      is(connectionIconImage, "url(\"chrome://browser/skin/identity-mixed-active-loaded.svg\")",
         "Using active loaded icon");
     }
     if (activeBlocked && !passiveLoaded) {
-      is(identityBoxImage, "url(\"chrome://browser/skin/identity-mixed-active-blocked.svg\")",
+      is(connectionIconImage, "url(\"chrome://browser/skin/identity-mixed-active-blocked.svg\")",
         "Using active blocked icon");
     }
     if (passiveLoaded && !(activeLoaded || activeBlocked)) {
-      is(identityBoxImage, "url(\"chrome://browser/skin/identity-mixed-passive-loaded.svg\")",
+      is(connectionIconImage, "url(\"chrome://browser/skin/identity-mixed-passive-loaded.svg\")",
         "Using passive loaded icon");
     }
     if (passiveLoaded && activeBlocked) {
-      is(identityBoxImage, "url(\"chrome://browser/skin/identity-mixed-passive-loaded.svg\")",
+      is(connectionIconImage, "url(\"chrome://browser/skin/identity-mixed-passive-loaded.svg\")",
         "Using active blocked and passive loaded icon");
     }
   }
