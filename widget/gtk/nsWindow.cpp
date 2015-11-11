@@ -2212,24 +2212,22 @@ nsWindow::OnExposeEvent(cairo_t *cr)
     if(!dt) {
         return FALSE;
     }
-    RefPtr<gfxContext> ctx = new gfxContext(dt);
+    RefPtr<gfxContext> ctx;
 
 #ifdef MOZ_X11
     nsIntRect boundsRect; // for shaped only
 
-    ctx->NewPath();
     if (shaped) {
         // Collapse update area to the bounding box. This is so we only have to
         // call UpdateTranslucentWindowAlpha once. After we have dropped
         // support for non-Thebes graphics, UpdateTranslucentWindowAlpha will be
         // our private interface so we can rework things to avoid this.
         boundsRect = region.GetBounds();
-        ctx->Rectangle(gfxRect(boundsRect.x, boundsRect.y,
-                               boundsRect.width, boundsRect.height));
+        dt->PushClipRect(Rect(boundsRect.x, boundsRect.y,
+                              boundsRect.width, boundsRect.height));
     } else {
-        gfxUtils::PathFromRegion(ctx, region);
+        gfxUtils::ClipToRegion(dt, region);
     }
-    ctx->Clip();
 
     BufferMode layerBuffering;
     if (shaped) {
@@ -2237,15 +2235,19 @@ nsWindow::OnExposeEvent(cairo_t *cr)
         // (The shape mask won't be necessary when a visual with an alpha
         // channel is used on compositing window managers.)
         layerBuffering = mozilla::layers::BufferMode::BUFFER_NONE;
-        ctx->PushGroup(gfxContentType::COLOR_ALPHA);
+        RefPtr<DrawTarget> destDT = dt->CreateSimilarDrawTarget(IntSize(boundsRect.width, boundsRect.height), SurfaceFormat::B8G8R8A8);
+        ctx = new gfxContext(destDT, Point(boundsRect.x, boundsRect.y));
 #ifdef MOZ_HAVE_SHMIMAGE
-    } else if (nsShmImage::UseShm()) {
-        // We're using an xshm mapping as a back buffer.
-        layerBuffering = mozilla::layers::BufferMode::BUFFER_NONE;
-#endif // MOZ_HAVE_SHMIMAGE
     } else {
-        // Get the layer manager to do double buffering (if necessary).
-        layerBuffering = mozilla::layers::BufferMode::BUFFERED;
+        if (nsShmImage::UseShm()) {
+            // We're using an xshm mapping as a back buffer.
+            layerBuffering = mozilla::layers::BufferMode::BUFFER_NONE;
+#endif // MOZ_HAVE_SHMIMAGE
+        } else {
+            // Get the layer manager to do double buffering (if necessary).
+            layerBuffering = mozilla::layers::BufferMode::BUFFERED;
+        }
+        ctx = new gfxContext(dt);
     }
 
 #if 0
@@ -2275,16 +2277,20 @@ nsWindow::OnExposeEvent(cairo_t *cr)
     if (shaped) {
         if (MOZ_LIKELY(!mIsDestroyed)) {
             if (painted) {
-                RefPtr<gfxPattern> pattern = ctx->PopGroup();
+                RefPtr<SourceSurface> surf = ctx->GetDrawTarget()->Snapshot();
 
-                UpdateAlpha(pattern, boundsRect);
+                UpdateAlpha(surf, boundsRect);
 
-                ctx->SetOp(CompositionOp::OP_SOURCE);
-                ctx->SetPattern(pattern);
-                ctx->Paint();
+                dt->DrawSurface(surf, Rect(boundsRect.x, boundsRect.y, boundsRect.width, boundsRect.height),
+                                Rect(0, 0, boundsRect.width, boundsRect.height),
+                                DrawSurfaceOptions(Filter::POINT), DrawOptions(1.0f, CompositionOp::OP_SOURCE));
             }
         }
     }
+
+    ctx = nullptr;
+    dt->PopClip();
+
 #  ifdef MOZ_HAVE_SHMIMAGE
     if (mShmImage && MOZ_LIKELY(!mIsDestroyed)) {
       mShmImage->Put(mXDisplay, mXWindow, region);
@@ -2324,17 +2330,16 @@ nsWindow::UpdateAlpha(gfxPattern* aPattern, nsIntRect aBoundsRect)
                                          aBoundsRect.width);
     int32_t bufferSize = stride * aBoundsRect.height;
     auto imageBuffer = MakeUniqueFallible<uint8_t[]>(bufferSize);
-    RefPtr<DrawTarget> drawTarget = gfxPlatform::GetPlatform()->
-        CreateDrawTargetForData(imageBuffer.get(), aBoundsRect.Size(),
-                                stride, SurfaceFormat::A8);
+    {
+        RefPtr<DrawTarget> drawTarget = gfxPlatform::GetPlatform()->
+            CreateDrawTargetForData(imageBuffer, aBoundsRect.Size(),
+                                    stride, SurfaceFormat::A8);
 
-    if (drawTarget) {
-        Matrix transform = Matrix::Translation(-aBoundsRect.x, -aBoundsRect.y);
-        drawTarget->SetTransform(transform);
-
-        drawTarget->FillRect(Rect(aBoundsRect.x, aBoundsRect.y, aBoundsRect.width, aBoundsRect.height),
-                             *aPattern->GetPattern(drawTarget),
-                             DrawOptions(1.0, CompositionOp::OP_SOURCE));
+        if (drawTarget) {
+            drawTarget->DrawSurface(aSourceSurface, Rect(aBoundsRect.x, aBoundsRect.y, aBoundsRect.width, aBoundsRect.height),
+                                    Rect(0, 0, aSourceSurface->GetSize().width, aSourceSurface->GetSize().height),
+                                    DrawSurfaceOptions(Filter::POINT), DrawOptions(1.0f, CompositionOp::OP_SOURCE));
+        }
     }
     UpdateTranslucentWindowAlphaInternal(aBoundsRect, imageBuffer.get(), stride);
 }
