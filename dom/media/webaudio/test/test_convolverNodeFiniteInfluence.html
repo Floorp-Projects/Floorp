@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<title>Test convolution effect has finite duration</title>
+<script src="/resources/testharness.js"></script>
+<script src="/resources/testharnessreport.js"></script>
+<script>
+promise_test(function() {
+
+  const responseLength = 256;
+  // Accept an influence period of twice the responseLength to accept FFT
+  // implementations.
+  const tolerancePeriod = 2 * responseLength;
+  const totalSize = tolerancePeriod + responseLength;
+
+  var context = new OfflineAudioContext(1, totalSize, 48000);
+
+  var responseBuffer =
+    context.createBuffer(1, responseLength, context.sampleRate);
+  var responseChannelData = responseBuffer.getChannelData(0);
+  responseChannelData[0] = 1;
+  responseChannelData[responseLength - 1] = 1;
+  var convolver = context.createConvolver();
+  convolver.buffer = responseBuffer;
+  convolver.connect(context.destination);
+
+  var sourceBuffer = context.createBuffer(1, totalSize, context.sampleRate);
+  sourceBuffer.getChannelData(0)[0] = NaN;
+  var source = context.createBufferSource();
+  source.buffer = sourceBuffer;
+  source.connect(convolver);
+  source.start();
+
+  return context.startRendering().
+    then((buffer) => {
+      var convolverOutput = buffer.getChannelData(0);
+      // There should be no non-zeros after the tolerance period.
+      var testIndex = tolerancePeriod;
+      for (;
+           testIndex < buffer.length - 1 && convolverOutput[testIndex] == 0;
+           ++testIndex) {
+      }
+      assert_equals(convolverOutput[testIndex], 0, "output at " + testIndex);
+    });
+});
+</script>
