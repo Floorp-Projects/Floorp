@@ -64,7 +64,7 @@ class UnpackFinder(FileFinder):
                 if 'chrome.manifest' in jar:
                     self.kind = 'omni'
                     self.omnijar = mozpath.basename(p)
-                    self._fill_with_omnijar(base, jar)
+                    self._fill_with_jar(base, jar)
                     continue
             # If the file is a manifest, scan its entries for some referencing
             # jar: urls. If there are some, the files contained in the jar they
@@ -77,10 +77,15 @@ class UnpackFinder(FileFinder):
                 if self.files.contains(p):
                     continue
                 f = m
+            # If the file is a packed addon, unpack it under a directory named
+            # after the xpi.
+            if p.endswith('.xpi') and self._maybe_zip(f):
+                self._fill_with_jar(p[:-4], self._open_jar(p, f))
+                continue
             if not p in jars:
                 self.files.add(p, f)
 
-    def _fill_with_omnijar(self, base, jar):
+    def _fill_with_jar(self, base, jar):
         for j in jar:
             path = mozpath.join(base, j.filename)
             if is_manifest(j.filename):

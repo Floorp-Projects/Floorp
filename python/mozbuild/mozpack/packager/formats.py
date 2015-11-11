@@ -187,9 +187,14 @@ class JarFormatter(PiecemealFormatter):
         self._optimize=optimize
 
     def _add_base(self, base, addon=False):
-        self._sub_formatter[base] = JarSubFormatter(
-            FileRegistrySubtree(base, self.copier),
-            self._compress, self._optimize)
+        if addon is True:
+            jarrer = Jarrer(self._compress, self._optimize)
+            self.copier.add(base + '.xpi', jarrer)
+            self._sub_formatter[base] = FlatSubFormatter(jarrer)
+        else:
+            self._sub_formatter[base] = JarSubFormatter(
+                FileRegistrySubtree(base, self.copier),
+                self._compress, self._optimize)
 
 
 class JarSubFormatter(PiecemealFormatter):
