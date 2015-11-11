@@ -140,7 +140,6 @@
     <FrameLayout android:id="@+id/tab_history_panel"
                  android:layout_width="match_parent"
                  android:layout_height="match_parent"
-                 android:layout_alignParentBottom="true"
                  android:visibility="gone" />
 
     <ViewStub android:id="@+id/toast_stub"
