@@ -866,10 +866,8 @@ gfxContext::Paint(gfxFloat alpha)
                 DrawOptions(Float(alpha), GetOp()));
 }
 
-// groups
-
 void
-gfxContext::PushGroup(gfxContentType content)
+gfxContext::PushGroupForBlendBack(gfxContentType content, Float aOpacity, SourceSurface* aMask, const Matrix& aMaskTransform)
 {
   DrawTarget* oldDT = mDT;
 
@@ -879,12 +877,7 @@ gfxContext::PushGroup(gfxContentType content)
     PushClipsToDT(mDT);
   }
   mDT->SetTransform(GetDTTransform());
-}
 
-void
-gfxContext::PushGroupForBlendBack(gfxContentType content, Float aOpacity, SourceSurface* aMask, const Matrix& aMaskTransform)
-{
-  PushGroup(content);
   CurrentState().mBlendOpacity = aOpacity;
   CurrentState().mBlendMask = aMask;
   CurrentState().mWasPushedForBlendBack = true;
@@ -962,51 +955,29 @@ gfxContext::PushGroupAndCopyBackground(gfxContentType content, Float aOpacity, S
     mDT->SetTransform(GetDTTransform());
     return;
   }
-  PushGroup(content);
+  DrawTarget* oldDT = mDT;
+
+  PushNewDT(content);
+
+  if (oldDT != mDT) {
+    PushClipsToDT(mDT);
+  }
+
+  mDT->SetTransform(GetDTTransform());
   CurrentState().mBlendOpacity = aOpacity;
   CurrentState().mBlendMask = aMask;
   CurrentState().mWasPushedForBlendBack = true;
   CurrentState().mBlendMaskTransform = aMaskTransform;
 }
 
-already_AddRefed<gfxPattern>
-gfxContext::PopGroup()
-{
-  RefPtr<SourceSurface> src = mDT->Snapshot();
-  Point deviceOffset = CurrentState().deviceOffset;
-
-  Restore();
-
-  Matrix mat = mTransform;
-  mat.Invert();
-  mat.PreTranslate(deviceOffset.x, deviceOffset.y); // device offset translation
-
-  RefPtr<gfxPattern> pat = new gfxPattern(src, mat);
-
-  return pat.forget();
-}
-
-already_AddRefed<SourceSurface>
-gfxContext::PopGroupToSurface(Matrix* aTransform)
-{
-  RefPtr<SourceSurface> src = mDT->Snapshot();
-  Point deviceOffset = CurrentState().deviceOffset;
-
-  Restore();
-
-  Matrix mat = mTransform;
-  mat.Invert();
-
-  Matrix deviceOffsetTranslation;
-  deviceOffsetTranslation.PreTranslate(deviceOffset.x, deviceOffset.y);
-
-  *aTransform = deviceOffsetTranslation * mat;
-  return src.forget();
-}
-
 void
-gfxContext::PopGroupToSource()
+gfxContext::PopGroupAndBlend()
 {
+  MOZ_ASSERT(CurrentState().mWasPushedForBlendBack);
+  Float opacity = CurrentState().mBlendOpacity;
+  RefPtr<SourceSurface> mask = CurrentState().mBlendMask;
+  Matrix maskTransform = CurrentState().mBlendMaskTransform;
+
   RefPtr<SourceSurface> src = mDT->Snapshot();
   Point deviceOffset = CurrentState().deviceOffset;
   Restore();
@@ -1021,17 +992,6 @@ gfxContext::PopGroupToSource()
   mat.PreTranslate(deviceOffset.x, deviceOffset.y); // device offset translation
 
   CurrentState().surfTransform = mat;
-}
-
-void
-gfxContext::PopGroupAndBlend()
-{
-  MOZ_ASSERT(CurrentState().mWasPushedForBlendBack);
-  Float opacity = CurrentState().mBlendOpacity;
-  RefPtr<SourceSurface> mask = CurrentState().mBlendMask;
-  Matrix maskTransform = CurrentState().mBlendMaskTransform;
-
-  PopGroupToSource();
 
   CompositionOp oldOp = GetOp();
   SetOp(CompositionOp::OP_OVER);
