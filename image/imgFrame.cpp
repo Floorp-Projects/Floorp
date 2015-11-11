@@ -304,7 +304,7 @@ imgFrame::InitWithDrawable(gfxDrawable* aDrawable,
   nsIntRect imageRect(0, 0, mSize.width, mSize.height);
   RefPtr<gfxContext> ctx = new gfxContext(target);
   gfxUtils::DrawPixelSnapped(ctx, aDrawable, mSize,
-                             ImageRegion::Create(imageRect),
+                             ImageRegion::Create(ThebesRect(imageRect)),
                              mFormat, aFilter, aImageFlags);
 
   if (canUseDataSurface && !mImageSurface) {

@@ -5885,7 +5885,7 @@ FrameLayerBuilder::DrawPaintedLayer(PaintedLayer* aLayer,
     while (const nsIntRect* iterRect = it.Next()) {
       gfxContextAutoSaveRestore save(aContext);
       aContext->NewPath();
-      aContext->Rectangle(*iterRect);
+      aContext->Rectangle(ThebesRect(*iterRect));
       aContext->Clip();
 
       DrawForcedBackgroundColor(aDrawTarget, aLayer,

@@ -226,9 +226,11 @@ ContainerRenderVR(ContainerT* aContainer,
       // proper bounds here (visible region bounds are 0,0,0,0)
       // and I'm not sure if this is the bounds we want anyway.
       if (layer->GetType() == Layer::TYPE_CANVAS) {
-        layerBounds = ToRect(static_cast<CanvasLayer*>(layer)->GetBounds());
+        layerBounds =
+          IntRectToRect(static_cast<CanvasLayer*>(layer)->GetBounds());
       } else {
-        layerBounds = ToRect(layer->GetEffectiveVisibleRegion().GetBounds());
+        layerBounds =
+          IntRectToRect(layer->GetEffectiveVisibleRegion().GetBounds());
       }
       const gfx::Matrix4x4 childTransform = layer->GetEffectiveTransform();
       layerBounds = childTransform.TransformBounds(layerBounds);
