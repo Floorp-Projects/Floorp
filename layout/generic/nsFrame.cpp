@@ -4614,12 +4614,13 @@ nsFrame::ReflowAbsoluteFrames(nsPresContext*           aPresContext,
     // child frames that need to be reflowed
 
     // The containing block for the abs pos kids is formed by our padding edge.
-    nsMargin computedBorder =
-      aReflowState.ComputedPhysicalBorderPadding() - aReflowState.ComputedPhysicalPadding();
+    nsMargin usedBorder = GetUsedBorder();
     nscoord containingBlockWidth =
-      aDesiredSize.Width() - computedBorder.LeftRight();
+      aDesiredSize.Width() - usedBorder.LeftRight();
+    MOZ_ASSERT(containingBlockWidth >= 0);
     nscoord containingBlockHeight =
-      aDesiredSize.Height() - computedBorder.TopBottom();
+      aDesiredSize.Height() - usedBorder.TopBottom();
+    MOZ_ASSERT(containingBlockHeight >= 0);
 
     nsContainerFrame* container = do_QueryFrame(this);
     NS_ASSERTION(container, "Abs-pos children only supported on container frames for now");
