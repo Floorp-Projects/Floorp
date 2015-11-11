@@ -59,6 +59,7 @@
   skin/classic/browser/heartbeat-icon.svg                      (../shared/heartbeat-icon.svg)
   skin/classic/browser/heartbeat-star-lit.svg                  (../shared/heartbeat-star-lit.svg)
   skin/classic/browser/heartbeat-star-off.svg                  (../shared/heartbeat-star-off.svg)
+  skin/classic/browser/identity-icon.svg                       (../shared/identity-block/identity-icon.svg)
   skin/classic/browser/identity-not-secure.svg                 (../shared/identity-block/identity-not-secure.svg)
   skin/classic/browser/identity-secure.svg                     (../shared/identity-block/identity-secure.svg)
   skin/classic/browser/identity-mixed-active-blocked.svg       (../shared/identity-block/identity-mixed-active-blocked.svg)

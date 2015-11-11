@@ -41,8 +41,9 @@ add_task(function* test_simple() {
     document.getElementById("identity-popup-security-expander").click();
 
     if (expectWarning) {
-      let identityBoxImage = gBrowser.ownerGlobal
-            .getComputedStyle(document.getElementById("page-proxy-favicon"), "")
+      is_element_visible(document.getElementById("connection-icon"));
+      let connectionIconImage = gBrowser.ownerGlobal
+            .getComputedStyle(document.getElementById("connection-icon"), "")
             .getPropertyValue("list-style-image");
       let securityViewBG = gBrowser.ownerGlobal
             .getComputedStyle(document.getElementById("identity-popup-securityView"), "")
@@ -50,7 +51,7 @@ add_task(function* test_simple() {
       let securityContentBG = gBrowser.ownerGlobal
             .getComputedStyle(document.getElementById("identity-popup-security-content"), "")
             .getPropertyValue("background-image");
-      is(identityBoxImage,
+      is(connectionIconImage,
          "url(\"chrome://browser/skin/identity-mixed-active-loaded.svg\")",
          "Using expected icon image in the identity block");
       is(securityViewBG,
