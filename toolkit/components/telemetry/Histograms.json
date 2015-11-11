@@ -4222,14 +4222,13 @@
     "releaseChannelCollection": "opt-out",
     "description": "Whether the homepage was imported during browser migration. Only available on release builds during firstrun."
   },
-  "EVENTLOOP_UI_LAG_EXP_MS": {
+  "EVENTLOOP_UI_ACTIVITY_EXP_MS": {
     "alert_emails": ["perf-telemetry-alerts@mozilla.com"],
+    "bug_numbers": [1198196],
     "expires_in_version": "never",
     "kind": "exponential",
-    "low": 50,
     "high": "60000",
-    "n_buckets": 20,
-    "extended_statistics_ok": true,
+    "n_buckets": 50,
     "description": "Widget: Time it takes for the message before a UI message (ms)"
   },
   "FX_SESSION_RESTORE_STARTUP_INIT_SESSION_MS": {
