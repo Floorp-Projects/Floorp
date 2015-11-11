@@ -739,12 +739,35 @@
 }
 
 /* Variables and properties editing */
-
-.variables-view-delete {
-  background: url("chrome://devtools/skin/images/vview-delete.png");
-  background-size: cover;
+.variables-view-delete,
+.variables-view-edit,
+.variables-view-open-inspector {
   width: 16px;
   height: 16px;
+  background-size: cover;
+  cursor: pointer;
+}
+
+.variables-view-delete:hover,
+.variables-view-edit:hover,
+.variables-view-open-inspector:hover {
+  filter: url(images/filters.svg#checked-icon-state);
+}
+
+.variables-view-delete:active,
+.variables-view-edit:active,
+.variables-view-open-inspector:active {
+  filter: url(images/filters.svg#checked-icon-state) brightness(0.9);
+}
+
+.variable-or-property:focus > .title > .variables-view-delete,
+.variable-or-property:focus > .title > .variables-view-edit,
+.variable-or-property:focus > .title > .variables-view-open-inspector {
+  filter: none;
+}
+
+.variables-view-delete {
+  background-image: url("chrome://devtools/skin/images/vview-delete.png");
 }
 
 @media (min-resolution: 1.1dppx) {
@@ -753,24 +776,8 @@
   }
 }
 
-.variables-view-delete:hover {
-  background-position: 16px;
-}
-
-.variables-view-delete:active {
-  background-position: 32px;
-}
-
-.variable-or-property:focus > .title > .variables-view-delete {
-  background-position: 0px;
-}
-
 .variables-view-edit {
-  background: url("chrome://devtools/skin/images/vview-edit.png");
-  background-size: cover;
-  width: 16px;
-  height: 16px;
-  cursor: pointer;
+  background-image: url("chrome://devtools/skin/images/vview-edit.png");
 }
 
 @media (min-resolution: 1.1dppx) {
@@ -779,24 +786,8 @@
   }
 }
 
-.variables-view-edit:hover {
-  background-position: 16px;
-}
-
-.variables-view-edit:active {
-  background-position: 32px;
-}
-
-.variable-or-property:focus > .title > .variables-view-edit {
-  background-position: 0px;
-}
-
 .variables-view-open-inspector {
-  background: url("chrome://devtools/skin/images/vview-open-inspector.png");
-  background-size: cover;
-  width: 16px;
-  height: 16px;
-  cursor: pointer;
+  background-image: url("chrome://devtools/skin/images/vview-open-inspector.png");
 }
 
 @media (min-resolution: 1.1dppx) {
@@ -805,17 +796,6 @@
   }
 }
 
-.variables-view-open-inspector:hover {
-  background-position: 16px;
-}
-
-.variables-view-open-inspector:active {
-  background-position: 32px;
-}
-
-.variable-or-property:focus > .title > .variables-view-open-inspector {
-  background-position: 0px;
-}
 
 /* Variables and properties input boxes */
 
