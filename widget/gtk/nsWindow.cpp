@@ -2322,7 +2322,7 @@ nsWindow::OnExposeEvent(cairo_t *cr)
 }
 
 void
-nsWindow::UpdateAlpha(gfxPattern* aPattern, nsIntRect aBoundsRect)
+nsWindow::UpdateAlpha(SourceSurface* aSourceSurface, nsIntRect aBoundsRect)
 {
     // We need to create our own buffer to force the stride to match the
     // expected stride.
