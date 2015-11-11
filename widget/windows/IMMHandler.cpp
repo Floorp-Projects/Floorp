@@ -1251,7 +1251,7 @@ IMMHandler::HandleStartComposition(nsWindow* aWindow,
   mCursorPosition = NO_IME_CARET;
 
   WidgetCompositionEvent event(true, eCompositionStart, aWindow);
-  nsIntPoint point(0, 0);
+  LayoutDeviceIntPoint point(0, 0);
   aWindow->InitEvent(event, &point);
   aWindow->DispatchWindowEvent(&event);
 
@@ -1527,7 +1527,7 @@ IMMHandler::HandleEndComposition(nsWindow* aWindow,
   EventMessage message =
     aCommitString ? eCompositionCommit : eCompositionCommitAsIs;
   WidgetCompositionEvent compositionCommitEvent(true, message, aWindow);
-  nsIntPoint point(0, 0);
+  LayoutDeviceIntPoint point(0, 0);
   aWindow->InitEvent(compositionCommitEvent, &point);
   if (aCommitString) {
     compositionCommitEvent.mData = *aCommitString;
@@ -1693,7 +1693,7 @@ IMMHandler::HandleDocumentFeed(nsWindow* aWindow,
   *oResult = 0;
   RECONVERTSTRING* pReconv = reinterpret_cast<RECONVERTSTRING*>(lParam);
 
-  nsIntPoint point(0, 0);
+  LayoutDeviceIntPoint point(0, 0);
 
   bool hasCompositionString =
     mIsComposing && ShouldDrawCompositionStringOurselves();
@@ -1895,7 +1895,7 @@ IMMHandler::DispatchCompositionChangeEvent(nsWindow* aWindow,
 
   RefPtr<nsWindow> kungFuDeathGrip(aWindow);
 
-  nsIntPoint point(0, 0);
+  LayoutDeviceIntPoint point(0, 0);
 
   WidgetCompositionEvent event(true, eCompositionChange, aWindow);
 
@@ -2098,7 +2098,7 @@ IMMHandler::GetCharacterRectOfSelectedTextAt(nsWindow* aWindow,
                                              nsIntRect& aCharRect,
                                              WritingMode* aWritingMode)
 {
-  nsIntPoint point(0, 0);
+  LayoutDeviceIntPoint point(0, 0);
 
   Selection& selection = GetSelection();
   if (!selection.EnsureValidSelection(aWindow)) {
@@ -2192,7 +2192,7 @@ IMMHandler::GetCaretRect(nsWindow* aWindow,
                          nsIntRect& aCaretRect,
                          WritingMode* aWritingMode)
 {
-  nsIntPoint point(0, 0);
+  LayoutDeviceIntPoint point(0, 0);
 
   Selection& selection = GetSelection();
   if (!selection.EnsureValidSelection(aWindow)) {
@@ -2391,7 +2391,7 @@ IMMHandler::SetIMERelatedWindowsPosOnPlugin(nsWindow* aWindow,
   nsWindow* toplevelWindow = aWindow->GetTopLevelWindow(false);
   LayoutDeviceIntRect pluginRectInScreen =
     editorRectEvent.mReply.mRect + toplevelWindow->WidgetToScreenOffset();
-  nsIntRect winRectInScreen;
+  LayoutDeviceIntRect winRectInScreen;
   aWindow->GetClientBounds(winRectInScreen);
   // composition window cannot be positioned on the edge of client area.
   winRectInScreen.width--;
@@ -2753,7 +2753,7 @@ IMMHandler::Selection::Init(nsWindow* aWindow)
   Clear();
 
   WidgetQueryContentEvent selection(true, eQuerySelectedText, aWindow);
-  nsIntPoint point(0, 0);
+  LayoutDeviceIntPoint point(0, 0);
   aWindow->InitEvent(selection, &point);
   aWindow->DispatchWindowEvent(&selection);
   if (NS_WARN_IF(!selection.mSucceeded)) {

@@ -1,0 +1,126 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <title>Bug 1045891</title>
+    <!-- Including SimpleTest.js so we can use waitForExplicitFinish !-->
+    <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  </head>
+  <body>
+    <p id="display"></p>
+    <div id="content" style="visibility: hidden">
+    </div>
+
+    <script class="testbody" type="text/javascript">
+      /*
+       * Description of the test:
+       *   We load a page with a given CSP and verify that child frames and workers are correctly
+       *   evaluated through the "child-src" directive.
+       */
+
+      SimpleTest.waitForExplicitFinish();
+
+      var WORKER_TEST_FILE = "file_child-src_worker_data.html";
+      var SHARED_WORKER_TEST_FILE = "file_child-src_shared_worker_data.html";
+
+      var tests = {
+        'same-src-worker-no-data': {
+          id: "same-src-worker-no-data",
+          file: WORKER_TEST_FILE,
+          result : "blocked",
+          policy : "default-src 'none'; script-src 'unsafe-inline'; child-src 'self'"
+        },
+        'same-src-worker': {
+          id: "same-src-worker",
+          file: WORKER_TEST_FILE,
+          result : "allowed",
+          policy : "default-src 'none'; script-src 'unsafe-inline'; child-src 'self' data:"
+        },
+        'same-src-shared_worker-no-data': {
+          id: "same-src-shared_worker-no-data",
+          file: SHARED_WORKER_TEST_FILE,
+          result : "blocked",
+          policy : "default-src 'none'; script-src 'unsafe-inline'; child-src 'self'"
+        },
+        'same-src-shared_worker': {
+          id: "same-src-shared_worker",
+          file: SHARED_WORKER_TEST_FILE,
+          result : "allowed",
+          policy : "default-src 'none'; script-src 'unsafe-inline'; child-src 'self' data:"
+        },
+        'star-src-worker': {
+          id: "star-src-worker",
+          file: WORKER_TEST_FILE,
+          result : "allowed",
+          policy : "default-src 'none'; script-src 'unsafe-inline'; child-src * data:"
+        },
+        'star-src-worker-no-data': {
+          id: "star-src-worker-no-data",
+          file: WORKER_TEST_FILE,
+          result : "blocked",
+          policy : "default-src 'none'; script-src 'unsafe-inline'; child-src *"
+        },
+        'star-src-shared_worker-no-data': {
+          id: "star-src-shared_worker-no-data",
+          file: SHARED_WORKER_TEST_FILE,
+          result : "blocked",
+          policy : "default-src 'none'; script-src 'unsafe-inline'; child-src *"
+        },
+        'star-src-shared_worker': {
+          id: "star-src-shared_worker",
+          file: SHARED_WORKER_TEST_FILE,
+          result : "allowed",
+          policy : "default-src 'none'; script-src 'unsafe-inline'; child-src * data:"
+        },
+        'other-src-worker-no-data': {
+          id: "other-src-worker-no-data",
+          file: WORKER_TEST_FILE,
+          result : "blocked",
+          policy : "default-src 'none'; script-src 'unsafe-inline'; child-src https://www.example.org"
+        },
+        'other-src-shared_worker-no-data': {
+          id: "other-src-shared_worker-no-data",
+          file: SHARED_WORKER_TEST_FILE,
+          result : "blocked",
+          policy : "default-src 'none'; script-src 'unsafe-inline'; child-src https://www.example.org"
+        },
+      };
+
+      finished = {};
+
+      function recvMessage(ev) {
+        is(ev.data.message, tests[ev.data.id].result, "CSP child-src worker test " + ev.data.id);
+        finished[ev.data.id] = ev.data.message;
+
+        if (Object.keys(finished).length == Object.keys(tests).length) {
+          window.removeEventListener('message', recvMessage);
+          SimpleTest.finish();
+        }
+      }
+
+      window.addEventListener('message', recvMessage, false);
+
+      function loadNextTest() {
+        for (item in tests) {
+          test = tests[item];
+          var src = "file_testserver.sjs";
+          // append the file that should be served
+          src += "?file=" + escape("tests/dom/security/test/csp/" + test.file);
+          // append the CSP that should be used to serve the file
+          src += "&csp=" + escape(test.policy);
+          // add our identifier
+          src += "#" + escape(test.id);
+
+          content = document.getElementById('content');
+          testframe = document.createElement("iframe");
+          testframe.setAttribute('id', test.id);
+          content.appendChild(testframe);
+          testframe.src = src;
+        }
+      }
+
+      // start running the tests
+      loadNextTest();
+    </script>
+  </body>
+</html>

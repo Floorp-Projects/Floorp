@@ -65,7 +65,7 @@ runNetworkTest(function() {
   is(v2.currentTime, 0, "v2.currentTime is zero at outset");
 
   // not testing legacy gUM here
-  navigator.mediaDevices.getUserMedia({ fake: true, video: true, audio: true })
+  navigator.mediaDevices.getUserMedia({ video: true, audio: true })
     .then(stream => pc1.addStream(v1.mozSrcObject = stream))
     .then(() => pcall(pc1, pc1.createOffer))
     .then(offer => pcall(pc1, pc1.setLocalDescription, offer))

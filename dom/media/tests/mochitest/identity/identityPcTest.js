@@ -20,7 +20,6 @@ function identityPcTest(remoteOptions) {
   }], [remoteOptions || {
     audio: true,
     video: true,
-    fake: true,
     peerIdentity: id1
   }]);
   test.pcLocal.setIdentityProvider('test1.example.com', 'idp.js');

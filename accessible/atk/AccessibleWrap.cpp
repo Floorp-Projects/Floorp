@@ -1245,6 +1245,7 @@ AccessibleWrap::HandleAccEvent(AccEvent* aEvent)
       }
 
   case nsIAccessibleEvent::EVENT_VALUE_CHANGE:
+  case nsIAccessibleEvent::EVENT_TEXT_VALUE_CHANGE:
     if (accessible->HasNumericValue()) {
       // Make sure this is a numeric value. Don't fire for string value changes
       // (e.g. text editing) ATK values are always numeric.
@@ -1474,6 +1475,9 @@ a11y::ProxyEvent(ProxyAccessible* aTarget, uint32_t aEventType)
   case nsIAccessibleEvent::EVENT_ALERT:
     // A hack using state change showing events as alert events.
     atk_object_notify_state_change(wrapper, ATK_STATE_SHOWING, true);
+    break;
+  case nsIAccessibleEvent::EVENT_VALUE_CHANGE:
+    g_object_notify((GObject*)wrapper, "accessible-value");
     break;
   }
 }

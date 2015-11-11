@@ -2296,6 +2296,14 @@ pref("layout.css.unicode-range.enabled", true);
 // Is support for CSS "text-align: true X" enabled?
 pref("layout.css.text-align-true-value.enabled", false);
 
+// Is support for CSS "float: inline-{start,end}" and
+// "clear: inline-{start,end}" enabled?
+#if defined(MOZ_B2G) || defined(NIGHTLY_BUILD)
+pref("layout.css.float-logical-values.enabled", true);
+#else
+pref("layout.css.float-logical-values.enabled", false);
+#endif
+
 // Is support for the CSS4 image-orientation property enabled?
 pref("layout.css.image-orientation.enabled", true);
 

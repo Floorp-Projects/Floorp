@@ -367,6 +367,20 @@ BluetoothServiceChildProcess::IsScoConnected(BluetoothReplyRunnable* aRunnable)
 }
 
 void
+BluetoothServiceChildProcess::SetObexPassword(
+  const nsAString& aPassword,
+  BluetoothReplyRunnable* aRunnable)
+{
+  SendRequest(aRunnable, SetObexPasswordRequest(nsString(aPassword)));
+}
+
+void
+BluetoothServiceChildProcess::RejectObexAuth(BluetoothReplyRunnable* aRunnable)
+{
+  SendRequest(aRunnable, RejectObexAuthRequest());
+}
+
+void
 BluetoothServiceChildProcess::ReplyTovCardPulling(
   BlobParent* aBlobParent,
   BlobChild* aBlobChild,
@@ -492,11 +506,12 @@ BluetoothServiceChildProcess::ReplyToMapSetMessageStatus(long aMasId,
 
 void
 BluetoothServiceChildProcess::ReplyToMapSendMessage(long aMasId,
+  const nsAString& aHandleId,
   bool aStatus,
   BluetoothReplyRunnable* aRunnable)
 {
   SendRequest(aRunnable,
-    ReplyToSendMessageRequest(aMasId, aStatus));
+    ReplyToSendMessageRequest(aMasId, nsString(aHandleId), aStatus));
 }
 
 void

@@ -270,7 +270,6 @@ private:
   // This allows for a queued AppendData task to identify if it was earlier
   // aborted and another AppendData queued.
   uint32_t mUpdateID;
-  int64_t mReportedOffset;
 
   MozPromiseRequestHolder<SourceBufferContentManager::AppendPromise> mPendingAppend;
   const nsCString mType;

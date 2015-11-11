@@ -8044,6 +8044,33 @@ nsContentUtils::InternalContentPolicyTypeToExternalOrPreload(nsContentPolicyType
   return InternalContentPolicyTypeToExternal(aType);
 }
 
+
+/* static */
+nsContentPolicyType
+nsContentUtils::InternalContentPolicyTypeToExternalOrWorker(nsContentPolicyType aType)
+{
+  switch (aType) {
+  case nsIContentPolicy::TYPE_INTERNAL_WORKER:
+  case nsIContentPolicy::TYPE_INTERNAL_SHARED_WORKER:
+  case nsIContentPolicy::TYPE_INTERNAL_SERVICE_WORKER:
+    return aType;
+
+  default:
+    return InternalContentPolicyTypeToExternal(aType);
+  }
+}
+
+/* static */
+nsContentPolicyType
+nsContentUtils::InternalContentPolicyTypeToExternalOrCSPInternal(nsContentPolicyType aType)
+{
+  if (aType == InternalContentPolicyTypeToExternalOrWorker(aType) ||
+      aType == InternalContentPolicyTypeToExternalOrPreload(aType)) {
+    return aType;
+  }
+  return InternalContentPolicyTypeToExternal(aType);
+}
+
 nsresult
 nsContentUtils::SetFetchReferrerURIWithPolicy(nsIPrincipal* aPrincipal,
                                               nsIDocument* aDoc,

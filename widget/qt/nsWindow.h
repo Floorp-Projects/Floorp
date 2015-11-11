@@ -202,7 +202,7 @@ public:
                                    nsIWidget                  *aWidget,
                                    bool                        aActivate);
     NS_IMETHOD         SetSizeMode(nsSizeMode aMode);
-    NS_IMETHOD         GetScreenBounds(nsIntRect &aRect);
+    NS_IMETHOD         GetScreenBoundsUntyped(nsIntRect &aRect);
     NS_IMETHOD         SetHasTransparentBackground(bool aTransparent);
     NS_IMETHOD         GetHasTransparentBackground(bool& aTransparent);
     NS_IMETHOD         HideWindowChrome(bool aShouldHide);

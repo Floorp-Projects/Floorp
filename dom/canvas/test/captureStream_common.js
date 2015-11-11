@@ -25,6 +25,7 @@ function CaptureStreamTestHelper(width, height) {
 CaptureStreamTestHelper.prototype = {
   /* Predefined colors for use in the methods below. */
   black: { data: [0, 0, 0, 255], name: "black" },
+  blackTransparent: { data: [0, 0, 0, 0], name: "blackTransparent" },
   green: { data: [0, 255, 0, 255], name: "green" },
   red: { data: [255, 0, 0, 255], name: "red" },
 
@@ -52,55 +53,90 @@ CaptureStreamTestHelper.prototype = {
     video.srcObject.requestFrame();
   },
 
-  /* Tests the top left pixel of |video| against |refData|. Format [R,G,B,A]. */
-  testPixel: function (video, refData, threshold) {
+  /*
+   * Returns the pixel at (|offsetX|, |offsetY|) (from top left corner) of
+   * |video| as an array of the pixel's color channels: [R,G,B,A].
+   */
+  getPixel: function (video, offsetX, offsetY) {
+    offsetX = offsetX || 0; // Set to 0 if not passed in.
+    offsetY = offsetY || 0; // Set to 0 if not passed in.
     var ctxout = this.cout.getContext('2d');
     ctxout.drawImage(video, 0, 0);
-    var pixel = ctxout.getImageData(0, 0, 1, 1).data;
-    return pixel.every((val, i) => Math.abs(val - refData[i]) <= threshold);
+    return ctxout.getImageData(offsetX, offsetY, 1, 1).data;
   },
 
   /*
-   * Returns a promise that resolves when the pixel matches. Use |threshold|
-   * for fuzzy matching the color on each channel, in the range [0,255].
+   * Returns true if px lies within the per-channel |threshold| of the
+   * referenced color for all channels. px is on the form of an array of color
+   * channels, [R,G,B,A]. Each channel is in the range [0, 255].
    */
-  waitForPixel: function (video, refColor, threshold, infoString) {
+  isPixel: function (px, refColor, threshold) {
+    threshold = threshold || 0; // Default to 0 (exact match) if not passed in.
+    return px.every((ch, i) => Math.abs(ch - refColor.data[i]) <= threshold);
+  },
+
+  /*
+   * Returns true if px lies further away than |threshold| of the
+   * referenced color for any channel. px is on the form of an array of color
+   * channels, [R,G,B,A]. Each channel is in the range [0, 255].
+   */
+  isPixelNot: function (px, refColor, threshold) {
+    if (threshold === undefined) {
+      // Default to 127 (should be sufficiently far away) if not passed in.
+      threshold = 127;
+    }
+    return px.some((ch, i) => Math.abs(ch - refColor.data[i]) > threshold);
+  },
+
+  /*
+   * Returns a promise that resolves when the provided function |test|
+   * returns true.
+   */
+  waitForPixel: function (video, offsetX, offsetY, test, timeout) {
     return new Promise(resolve => {
-      info("Testing " + video.id + " against [" + refColor.data.join(',') + "]");
+      const startTime = video.currentTime;
       CaptureStreamTestHelper2D.prototype.clear.call(this, this.cout);
-      video.ontimeupdate = () => {
-        if (this.testPixel(video, refColor.data, threshold)) {
-          ok(true, video.id + " " + infoString);
-          video.ontimeupdate = null;
-          resolve();
+      var ontimeupdate = () => {
+        const pixelMatch = test(this.getPixel(video, offsetX, offsetY));
+        if (!pixelMatch &&
+            (!timeout || video.currentTime < startTime + (timeout / 1000.0))) {
+          // No match yet and,
+          // No timeout (waiting indefinitely) or |timeout| has not passed yet.
+          return;
         }
+        video.removeEventListener("timeupdate", ontimeupdate);
+        resolve(pixelMatch);
       };
+      video.addEventListener("timeupdate", ontimeupdate);
     });
   },
 
   /*
-   * Returns a promise that resolves after |timeout| ms of playback or when a
-   * pixel of |video| becomes the color |refData|. The test is failed if the
+   * Returns a promise that resolves when the top left pixel of |video| matches
+   * on all channels. Use |threshold| for fuzzy matching the color on each
+   * channel, in the range [0,255].
+   */
+  waitForPixelColor: function (video, refColor, threshold, infoString) {
+    info("Waiting for video " + video.id + " to match [" +
+         refColor.data.join(',') + "] - " + refColor.name +
+         " (" + infoString + ")");
+    return this.waitForPixel(video, 0, 0,
+                             px => this.isPixel(px, refColor, threshold))
+      .then(() => ok(true, video.id + " " + infoString));
+  },
+
+  /*
+   * Returns a promise that resolves after |timeout| ms of playback or when the
+   * top left pixel of |video| becomes |refColor|. The test is failed if the
    * timeout is not reached.
    */
-  waitForPixelToTimeout: function (video, refColor, threshold, timeout, infoString) {
-    return new Promise(resolve => {
-      info("Waiting for " + video.id + " to time out after " + timeout +
-           "ms against [" + refColor.data.join(',') + "] - " + refColor.name);
-      CaptureStreamTestHelper2D.prototype.clear.call(this, this.cout);
-      var startTime = video.currentTime;
-      video.ontimeupdate = () => {
-        if (this.testPixel(video, refColor.data, threshold)) {
-          ok(false, video.id + " " + infoString);
-          video.ontimeupdate = null;
-          resolve();
-        } else if (video.currentTime > startTime + (timeout / 1000.0)) {
-          ok(true, video.id + " " + infoString);
-          video.ontimeupdate = null;
-          resolve();
-        }
-      };
-    });
+  waitForPixelColorTimeout: function (video, refColor, threshold, timeout, infoString) {
+    info("Waiting for " + video.id + " to time out after " + timeout +
+         "ms against [" + refColor.data.join(',') + "] - " + refColor.name);
+    return this.waitForPixel(video, 0, 0,
+                             px => this.isPixel(px, refColor, threshold),
+                             timeout)
+      .then(result => ok(!result, video.id + " " + infoString));
   },
 
   /* Create an element of type |type| with id |id| and append it to the body. */

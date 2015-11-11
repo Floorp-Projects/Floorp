@@ -943,14 +943,14 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
 };
 
 template<>
-struct DefaultTracer<Debugger::TenurePromotionsLogEntry> {
+struct DefaultGCPolicy<Debugger::TenurePromotionsLogEntry> {
     static void trace(JSTracer* trc, Debugger::TenurePromotionsLogEntry* e, const char*) {
         Debugger::TenurePromotionsLogEntry::trace(e, trc);
     }
 };
 
 template<>
-struct DefaultTracer<Debugger::AllocationsLogEntry> {
+struct DefaultGCPolicy<Debugger::AllocationsLogEntry> {
     static void trace(JSTracer* trc, Debugger::AllocationsLogEntry* e, const char*) {
         Debugger::AllocationsLogEntry::trace(e, trc);
     }

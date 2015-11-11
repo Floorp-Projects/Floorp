@@ -37,11 +37,11 @@
 
 var tests = [
   {
-    policy: "default-src 'self'; script-src 'self' 'unsafe-eval' http://test1.example.com;",
+    policy: "default-src 'self'; script-src 'self' 'unsafe-eval'; child-src 'self' http://test1.example.com;",
     expected: "allowed"
   },
   {
-    policy: "default-src 'self'; script-src 'self' 'unsafe-eval';",
+    policy: "default-src 'self'; script-src 'self' 'unsafe-eval'; child-src 'self';",
     expected: "blocked",
   },
 ];

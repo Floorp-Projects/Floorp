@@ -452,8 +452,10 @@ RootAccessible::ProcessDOMEvent(nsIDOMEvent* aDOMEvent)
   }
   else if (accessible->NeedsDOMUIEvent() &&
            eventType.EqualsLiteral("ValueChange")) {
-     targetDocument->FireDelayedEvent(nsIAccessibleEvent::EVENT_VALUE_CHANGE,
-                                      accessible);
+    uint32_t event = accessible->HasNumericValue()
+      ? nsIAccessibleEvent::EVENT_VALUE_CHANGE
+      : nsIAccessibleEvent::EVENT_TEXT_VALUE_CHANGE;
+     targetDocument->FireDelayedEvent(event, accessible);
   }
 #ifdef DEBUG_DRAGDROPSTART
   else if (eventType.EqualsLiteral("mouseover")) {

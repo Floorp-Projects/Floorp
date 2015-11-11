@@ -133,9 +133,9 @@ public:
                                    WidgetEvent* aEvent,
                                    LayoutDeviceIntPoint aPoint,
                                    CSSIntPoint aDefaultPoint);
-  static LayoutDeviceIntPoint GetScreenCoords(nsPresContext* aPresContext,
-                                              WidgetEvent* aEvent,
-                                              LayoutDeviceIntPoint aPoint);
+  static CSSIntPoint GetScreenCoords(nsPresContext* aPresContext,
+                                     WidgetEvent* aEvent,
+                                     LayoutDeviceIntPoint aPoint);
   static CSSIntPoint GetOffsetCoords(nsPresContext* aPresContext,
                                      WidgetEvent* aEvent,
                                      LayoutDeviceIntPoint aPoint,

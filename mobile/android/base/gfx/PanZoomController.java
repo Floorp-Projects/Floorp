@@ -49,4 +49,6 @@ public interface PanZoomController {
     public int getOverScrollMode();
 
     public void setOverscrollHandler(final Overscroll controller);
+
+    public void setIsLongpressEnabled(boolean isLongpressEnabled);
 }

@@ -1,0 +1,131 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <title>Bug 1045891</title>
+    <!-- Including SimpleTest.js so we can use waitForExplicitFinish !-->
+    <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  </head>
+  <body>
+    <p id="display"></p>
+    <div id="content" style="visibility: hidden">
+    </div>
+
+    <script class="testbody" type="text/javascript">
+      /*
+       * Description of the test:
+       *   We load a page with a given CSP and verify that child frames and workers are correctly
+       *   evaluated through the "child-src" directive.
+       */
+
+      SimpleTest.waitForExplicitFinish();
+
+      var WORKER_TEST_FILE = "file_child-src_worker.html";
+      var SERVICE_WORKER_TEST_FILE = "file_child-src_service_worker.html";
+      var SHARED_WORKER_TEST_FILE = "file_child-src_shared_worker.html";
+
+      var tests = {
+        'same-src-worker': {
+          id: "same-src-worker",
+          file: WORKER_TEST_FILE,
+          result : "allowed",
+          policy : "default-src 'none'; script-src 'unsafe-inline'; child-src http://mochi.test:8888"
+        },
+        'same-src-service_worker': {
+          id: "same-src-service_worker",
+          file: SERVICE_WORKER_TEST_FILE,
+          result : "allowed",
+          policy : "default-src 'none'; script-src 'unsafe-inline'; child-src http://mochi.test:8888"
+        },
+        'same-src-shared_worker': {
+          id: "same-src-shared_worker",
+          file: SHARED_WORKER_TEST_FILE,
+          result : "allowed",
+          policy : "default-src 'none'; script-src 'unsafe-inline'; child-src http://mochi.test:8888"
+        },
+        'star-src-worker': {
+          id: "star-src-worker",
+          file: WORKER_TEST_FILE,
+          result : "allowed",
+          policy : "default-src 'none'; script-src 'unsafe-inline'; child-src *"
+        },
+        'star-src-service_worker': {
+          id: "star-src-service_worker",
+          file: SERVICE_WORKER_TEST_FILE,
+          result : "allowed",
+          policy : "default-src 'none'; script-src 'unsafe-inline'; child-src *"
+        },
+        'star-src-shared_worker': {
+          id: "star-src-shared_worker",
+          file: SHARED_WORKER_TEST_FILE,
+          result : "allowed",
+          policy : "default-src 'none'; script-src 'unsafe-inline'; child-src *"
+        },
+        'other-src-worker': {
+          id: "other-src-worker",
+          file: WORKER_TEST_FILE,
+          result : "blocked",
+          policy : "default-src 'none'; script-src 'unsafe-inline'; child-src https://www.example.org"
+        },
+        'other-src-service_worker': {
+          id: "other-src-service_worker",
+          file: SERVICE_WORKER_TEST_FILE,
+          result : "blocked",
+          policy : "default-src 'none'; script-src 'unsafe-inline'; child-src https://www.example.org"
+        },
+        'other-src-shared_worker': {
+          id: "other-src-shared_worker",
+          file: SHARED_WORKER_TEST_FILE,
+          result : "blocked",
+          policy : "default-src 'none'; script-src 'unsafe-inline'; child-src https://www.example.org"
+        },
+      };
+
+      finished = {};
+
+      function recvMessage(ev) {
+        is(ev.data.message, tests[ev.data.id].result, "CSP child-src worker test " + ev.data.id);
+        finished[ev.data.id] = ev.data.message;
+
+        if (Object.keys(finished).length == Object.keys(tests).length) {
+          window.removeEventListener('message', recvMessage);
+          SimpleTest.finish();
+        }
+      }
+
+      window.addEventListener('message', recvMessage, false);
+
+      function loadNextTest() {
+        for (item in tests) {
+          test = tests[item];
+          var src = "file_testserver.sjs";
+          // append the file that should be served
+          src += "?file=" + escape("tests/dom/security/test/csp/" + test.file);
+          // append the CSP that should be used to serve the file
+          src += "&csp=" + escape(test.policy);
+          // add our identifier
+          src += "#" + escape(test.id);
+
+          content = document.getElementById('content');
+          testframe = document.createElement("iframe");
+          testframe.setAttribute('id', test.id);
+          content.appendChild(testframe);
+          testframe.src = src;
+        }
+      }
+
+      onload = function() {
+        SpecialPowers.pushPrefEnv({"set": [
+          ["dom.serviceWorkers.exemptFromPerDomainMax", true],
+          ["dom.serviceWorkers.interception.enabled", true],
+          ["dom.serviceWorkers.enabled", true],
+          ["dom.serviceWorkers.testing.enabled", true],
+          ["dom.caches.enabled", true]
+        ]}, loadNextTest);
+      };
+
+      // start running the tests
+      //loadNextTest();
+    </script>
+  </body>
+</html>

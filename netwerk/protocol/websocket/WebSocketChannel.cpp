@@ -1698,7 +1698,7 @@ WebSocketChannel::ProcessInput(uint8_t *buffer, uint32_t count)
                                         opcode, maskBit, mask, utf8Data);
 
         if (frame) {
-          mService->FrameReceived(mSerial, mInnerWindowID, frame);
+          mService->FrameReceived(mSerial, mInnerWindowID, frame.forget());
         }
 
         mTargetThread->Dispatch(new CallOnMessageAvailable(this, utf8Data, -1),
@@ -1757,8 +1757,7 @@ WebSocketChannel::ProcessInput(uint8_t *buffer, uint32_t count)
         if (frame) {
           // We send the frame immediately becuase we want to have it dispatched
           // before the CallOnServerClose.
-          mService->FrameReceived(mSerial, mInnerWindowID, frame);
-          frame = nullptr;
+          mService->FrameReceived(mSerial, mInnerWindowID, frame.forget());
         }
 
         if (mListenerMT) {
@@ -1797,7 +1796,7 @@ WebSocketChannel::ProcessInput(uint8_t *buffer, uint32_t count)
       }
 
       if (frame) {
-        mService->FrameReceived(mSerial, mInnerWindowID, frame);
+        mService->FrameReceived(mSerial, mInnerWindowID, frame.forget());
       }
     } else if (opcode == nsIWebSocketFrame::OPCODE_BINARY) {
       bool isDeflated = mPMCECompressor && mPMCECompressor->IsMessageDeflated();
@@ -1826,7 +1825,7 @@ WebSocketChannel::ProcessInput(uint8_t *buffer, uint32_t count)
           mService->CreateFrameIfNeeded(finBit, rsvBit1, rsvBit2, rsvBit3,
                                         opcode, maskBit, mask, binaryData);
         if (frame) {
-          mService->FrameReceived(mSerial, mInnerWindowID, frame);
+          mService->FrameReceived(mSerial, mInnerWindowID, frame.forget());
         }
 
         mTargetThread->Dispatch(
@@ -2185,7 +2184,7 @@ WebSocketChannel::PrimeNewOutgoingMessage()
                            mCurrentOut->OrigLength());
 
   if (frame) {
-    mService->FrameSent(mSerial, mInnerWindowID, frame);
+    mService->FrameSent(mSerial, mInnerWindowID, frame.forget());
   }
 
   while (payload < (mOutHeader + mHdrOutToSend)) {

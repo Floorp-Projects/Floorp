@@ -69,7 +69,7 @@ public:
     float GetDpi();
     int32_t GetSurfaceFormat();
     ANativeWindow* GetNativeWindow();
-    nsIntRect GetNaturalBounds();
+    nsIntRect GetNaturalBoundsUntyped();
     uint32_t EffectiveScreenRotation();
     ScreenConfiguration GetConfiguration();
     bool IsPrimaryScreen();

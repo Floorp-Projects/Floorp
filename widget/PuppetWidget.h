@@ -132,7 +132,8 @@ public:
   virtual mozilla::LayoutDeviceIntPoint WidgetToScreenOffset() override
   { return LayoutDeviceIntPoint::FromUntyped(GetWindowPosition() + GetChromeDimensions()); }
 
-  void InitEvent(WidgetGUIEvent& aEvent, nsIntPoint* aPoint = nullptr);
+  void InitEvent(WidgetGUIEvent& aEvent,
+                 mozilla::LayoutDeviceIntPoint* aPoint = nullptr);
 
   NS_IMETHOD DispatchEvent(WidgetGUIEvent* aEvent, nsEventStatus& aStatus) override;
   nsEventStatus DispatchAPZAwareEvent(WidgetInputEvent* aEvent) override;
@@ -211,7 +212,7 @@ public:
   // Get the screen position of the application window.
   nsIntPoint GetWindowPosition();
 
-  NS_IMETHOD GetScreenBounds(nsIntRect &aRect) override;
+  NS_IMETHOD GetScreenBoundsUntyped(nsIntRect &aRect) override;
 
   NS_IMETHOD StartPluginIME(const mozilla::WidgetKeyboardEvent& aKeyboardEvent,
                             int32_t aPanelX, int32_t aPanelY,

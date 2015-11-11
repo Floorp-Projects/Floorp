@@ -34,11 +34,13 @@ public:
 
   NS_DECL_ISUPPORTS_INHERITED
 
-  NS_IMETHOD              GetClientBounds(IntRect &aRect) override {
+  NS_IMETHOD GetClientBoundsUntyped(IntRect &aRect) override {
     aRect = IntRect(0, 0, gCompWidth, gCompHeight);
     return NS_OK;
   }
-  NS_IMETHOD              GetBounds(IntRect &aRect) override { return GetClientBounds(aRect); }
+  NS_IMETHOD GetBoundsUntyped(IntRect &aRect) override {
+    return GetClientBoundsUntyped(aRect);
+  }
 
   void* GetNativeData(uint32_t aDataType) override {
     if (aDataType == NS_NATIVE_OPENGL_CONTEXT) {
