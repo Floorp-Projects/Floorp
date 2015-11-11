@@ -50,13 +50,13 @@ public class RestrictionProvider extends BroadcastReceiver {
     private ArrayList<RestrictionEntry> initRestrictions(Context context, Bundle oldRestrictions) {
         ArrayList<RestrictionEntry> entries = new ArrayList<RestrictionEntry>();
 
-        for (Restrictable restrictable : RestrictedProfileConfiguration.DEFAULT_RESTRICTIONS) {
-            if (restrictable == Restrictable.DISALLOW_LOCATION_SERVICE && !AppConstants.MOZ_STUMBLER_BUILD_TIME_ENABLED) {
+        for (Restrictable restrictable : RestrictedProfileConfiguration.DEFAULT_DISABLED_FEATURES) {
+            if (restrictable == Restrictable.LOCATION_SERVICE && !AppConstants.MOZ_STUMBLER_BUILD_TIME_ENABLED) {
                 continue;
             }
 
             RestrictionEntry entry = createRestrictionEntryWithDefaultValue(context, restrictable,
-                    oldRestrictions.getBoolean(restrictable.name, true));
+                    oldRestrictions.getBoolean(restrictable.name, false));
             entries.add(entry);
         }
 

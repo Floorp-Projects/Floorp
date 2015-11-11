@@ -4487,8 +4487,8 @@ Tab.prototype = {
       fixedURI = URIFixup.createExposableURI(aLocationURI);
     } catch (ex) { }
 
-    // In restricted profiles, we refuse to let you open any file urls.
-    if (!ParentalControls.isAllowed(ParentalControls.VISIT_FILE_URLS, fixedURI)) {
+    // In restricted profiles, we refuse to let you open various urls.
+    if (!ParentalControls.isAllowed(ParentalControls.BROWSE, fixedURI)) {
       aRequest.cancel(Cr.NS_BINDING_ABORTED);
 
       this.browser.docShell.displayLoadError(Cr.NS_ERROR_UNKNOWN_PROTOCOL, fixedURI, null);

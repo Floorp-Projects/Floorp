@@ -14,18 +14,18 @@ import java.util.List;
  * RestrictionConfiguration implementation for guest profiles.
  */
 public class GuestProfileConfiguration implements RestrictionConfiguration {
-    static List<Restrictable> DEFAULT_RESTRICTIONS = Arrays.asList(
-            Restrictable.DISALLOW_DOWNLOADS,
-            Restrictable.DISALLOW_INSTALL_EXTENSION,
-            Restrictable.DISALLOW_INSTALL_APPS,
-            Restrictable.DISALLOW_BROWSE_FILES,
-            Restrictable.DISALLOW_SHARE,
-            Restrictable.DISALLOW_BOOKMARK,
-            Restrictable.DISALLOW_ADD_CONTACTS,
-            Restrictable.DISALLOW_SET_IMAGE,
-            Restrictable.DISALLOW_MODIFY_ACCOUNTS,
-            Restrictable.DISALLOW_REMOTE_DEBUGGING,
-            Restrictable.DISALLOW_IMPORT_SETTINGS
+    static List<Restrictable> DISABLED_FEATURES = Arrays.asList(
+            Restrictable.DOWNLOAD,
+            Restrictable.INSTALL_EXTENSION,
+            Restrictable.INSTALL_APPS,
+            Restrictable.BROWSE,
+            Restrictable.SHARE,
+            Restrictable.BOOKMARK,
+            Restrictable.ADD_CONTACT,
+            Restrictable.SET_IMAGE,
+            Restrictable.MODIFY_ACCOUNTS,
+            Restrictable.REMOTE_DEBUGGING,
+            Restrictable.IMPORT_SETTINGS
     );
 
     @SuppressWarnings("serial")
@@ -44,7 +44,7 @@ public class GuestProfileConfiguration implements RestrictionConfiguration {
 
     @Override
     public boolean isAllowed(Restrictable restrictable) {
-        return !DEFAULT_RESTRICTIONS.contains(restrictable);
+        return !DISABLED_FEATURES.contains(restrictable);
     }
 
     @Override

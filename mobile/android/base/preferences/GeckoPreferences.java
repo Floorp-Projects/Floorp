@@ -463,7 +463,7 @@ OnSharedPreferenceChangeListener
             while (iterator.hasNext()) {
                 Header header = iterator.next();
 
-                if (header.id == R.id.pref_header_advanced && !Restrictions.isAllowed(this, Restrictable.DISALLOW_ADVANCED_SETTINGS)) {
+                if (header.id == R.id.pref_header_advanced && !Restrictions.isAllowed(this, Restrictable.ADVANCED_SETTINGS)) {
                     iterator.remove();
                 }
             }
@@ -678,7 +678,7 @@ OnSharedPreferenceChangeListener
                         continue;
                     }
                 } else if (PREFS_SCREEN_ADVANCED.equals(key) &&
-                        !Restrictions.isAllowed(this, Restrictable.DISALLOW_ADVANCED_SETTINGS)) {
+                        !Restrictions.isAllowed(this, Restrictable.ADVANCED_SETTINGS)) {
                     preferences.removePreference(pref);
                     i--;
                     continue;
@@ -694,7 +694,7 @@ OnSharedPreferenceChangeListener
                     }
                 } else if (PREFS_OPEN_URLS_IN_PRIVATE.equals(key)) {
                     // Remove UI for opening external links in private browsing on non-Nightly builds.
-                    if (!AppConstants.NIGHTLY_BUILD || !Restrictions.isAllowed(this, Restrictable.DISALLOW_PRIVATE_BROWSING)) {
+                    if (!AppConstants.NIGHTLY_BUILD || !Restrictions.isAllowed(this, Restrictable.PRIVATE_BROWSING)) {
                         preferences.removePreference(pref);
                         i--;
                         continue;
@@ -734,19 +734,19 @@ OnSharedPreferenceChangeListener
                     }
                 } else if (PREFS_GEO_REPORTING.equals(key) ||
                            PREFS_GEO_LEARN_MORE.equals(key)) {
-                    if (!AppConstants.MOZ_STUMBLER_BUILD_TIME_ENABLED || !Restrictions.isAllowed(this, Restrictable.DISALLOW_LOCATION_SERVICE)) {
+                    if (!AppConstants.MOZ_STUMBLER_BUILD_TIME_ENABLED || !Restrictions.isAllowed(this, Restrictable.LOCATION_SERVICE)) {
                         preferences.removePreference(pref);
                         i--;
                         continue;
                     }
                 } else if (PREFS_DEVTOOLS_REMOTE_USB_ENABLED.equals(key)) {
-                    if (!Restrictions.isAllowed(this, Restrictable.DISALLOW_REMOTE_DEBUGGING)) {
+                    if (!Restrictions.isAllowed(this, Restrictable.REMOTE_DEBUGGING)) {
                         preferences.removePreference(pref);
                         i--;
                         continue;
                     }
                 } else if (PREFS_DEVTOOLS_REMOTE_WIFI_ENABLED.equals(key)) {
-                    if (!Restrictions.isAllowed(this, Restrictable.DISALLOW_REMOTE_DEBUGGING)) {
+                    if (!Restrictions.isAllowed(this, Restrictable.REMOTE_DEBUGGING)) {
                         preferences.removePreference(pref);
                         i--;
                         continue;
@@ -759,7 +759,7 @@ OnSharedPreferenceChangeListener
                     }
                 } else if (PREFS_DEVTOOLS_REMOTE_LINK.equals(key)) {
                     // Remove the "Learn more" link if remote debugging is disabled
-                    if (!Restrictions.isAllowed(this, Restrictable.DISALLOW_REMOTE_DEBUGGING)) {
+                    if (!Restrictions.isAllowed(this, Restrictable.REMOTE_DEBUGGING)) {
                         preferences.removePreference(pref);
                         i--;
                         continue;
@@ -776,7 +776,7 @@ OnSharedPreferenceChangeListener
                     continue;
                 } else if (PREFS_SYNC.equals(key)) {
                     // Don't show sync prefs while in guest mode.
-                    if (!Restrictions.isAllowed(this, Restrictable.DISALLOW_MODIFY_ACCOUNTS)) {
+                    if (!Restrictions.isAllowed(this, Restrictable.MODIFY_ACCOUNTS)) {
                         preferences.removePreference(pref);
                         i--;
                         continue;
@@ -819,19 +819,19 @@ OnSharedPreferenceChangeListener
                         continue;
                     }
                 } else if (PREFS_TRACKING_PROTECTION_PRIVATE_BROWSING.equals(key)) {
-                    if (!Restrictions.isAllowed(this, Restrictable.DISALLOW_PRIVATE_BROWSING)) {
+                    if (!Restrictions.isAllowed(this, Restrictable.PRIVATE_BROWSING)) {
                         preferences.removePreference(pref);
                         i--;
                         continue;
                     }
                 } else if (PREFS_TRACKING_PROTECTION_LEARN_MORE.equals(key)) {
-                    if (!Restrictions.isAllowed(this, Restrictable.DISALLOW_PRIVATE_BROWSING)) {
+                    if (!Restrictions.isAllowed(this, Restrictable.PRIVATE_BROWSING)) {
                         preferences.removePreference(pref);
                         i--;
                         continue;
                     }
                 } else if (PREFS_MP_ENABLED.equals(key)) {
-                    if (!Restrictions.isAllowed(this, Restrictable.DISALLOW_MASTER_PASSWORD)) {
+                    if (!Restrictions.isAllowed(this, Restrictable.MASTER_PASSWORD)) {
                         preferences.removePreference(pref);
                         i--;
                         continue;
@@ -843,7 +843,7 @@ OnSharedPreferenceChangeListener
                         continue;
                     }
                 } else if (PREFS_CLEAR_PRIVATE_DATA.equals(key) || PREFS_CLEAR_PRIVATE_DATA_EXIT.equals(key)) {
-                    if (!Restrictions.isAllowed(this, Restrictable.DISALLOW_CLEAR_HISTORY)) {
+                    if (!Restrictions.isAllowed(this, Restrictable.CLEAR_HISTORY)) {
                         preferences.removePreference(pref);
                         i--;
                         continue;

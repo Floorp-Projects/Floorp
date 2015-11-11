@@ -153,7 +153,7 @@ public abstract class HomeFragment extends Fragment {
             menu.findItem(R.id.home_share).setVisible(false);
         }
 
-        if (!Restrictions.isAllowed(view.getContext(), Restrictable.DISALLOW_PRIVATE_BROWSING)) {
+        if (!Restrictions.isAllowed(view.getContext(), Restrictable.PRIVATE_BROWSING)) {
             menu.findItem(R.id.home_open_private_tab).setVisible(false);
         }
 
