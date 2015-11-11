@@ -12,5 +12,6 @@ DevToolsModules(
     'map-uri-to-addon-id.js',
     'ScriptStore.js',
     'stack.js',
-    'TabSources.js'
+    'TabSources.js',
+    'walker-search.js'
 )

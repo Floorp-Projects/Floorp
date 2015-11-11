@@ -16,14 +16,14 @@ const TEST_DATA = [
   {
     key: "d",
     suggestions: [
-      {label: "div", count: 4},
-      {label: "#d1", count: 1},
-      {label: "#d2", count: 1}
+      {label: "div"},
+      {label: "#d1"},
+      {label: "#d2"}
     ]
   },
   {
     key: "i",
-    suggestions: [{label: "div", count: 4}]
+    suggestions: [{label: "div"}]
   },
   {
     key: "v",
@@ -32,22 +32,22 @@ const TEST_DATA = [
   {
     key: " ",
     suggestions: [
-      {label: "div div", count: 2},
-      {label: "div span", count: 2}
+      {label: "div div"},
+      {label: "div span"}
     ]
   },
   {
     key: ">",
     suggestions: [
-      {label: "div >div", count: 2},
-      {label: "div >span", count: 2}
+      {label: "div >div"},
+      {label: "div >span"}
     ]
   },
   {
     key: "VK_BACK_SPACE",
     suggestions: [
-      {label: "div div", count: 2 },
-      {label: "div span", count: 2}
+      {label: "div div"},
+      {label: "div span"}
     ]
   },
   {
@@ -57,8 +57,8 @@ const TEST_DATA = [
   {
     key: "VK_BACK_SPACE",
     suggestions: [
-      {label: "div div", count: 2 },
-      {label: "div span", count: 2}
+      {label: "div div"},
+      {label: "div span"}
     ]
   },
   {
@@ -67,14 +67,14 @@ const TEST_DATA = [
   },
   {
     key: "VK_BACK_SPACE",
-    suggestions: [{label: "div", count: 4}]
+    suggestions: [{label: "div"}]
   },
   {
     key: "VK_BACK_SPACE",
     suggestions: [
-      {label: "div", count: 4},
-      {label: "#d1", count: 1},
-      {label: "#d2", count: 1}
+      {label: "div"},
+      {label: "#d1"},
+      {label: "#d2"}
     ]
   },
   {
@@ -83,7 +83,12 @@ const TEST_DATA = [
   },
   {
     key: "p",
-    suggestions: []
+    suggestions: [
+      {label: "p"},
+      {label: "#p1"},
+      {label: "#p2"},
+      {label: "#p3"},
+    ]
   },
   {
     key: " ",
@@ -153,14 +158,12 @@ add_task(function* () {
     for (let i = 0; i < suggestions.length; i++) {
       is(actualSuggestions[i].label, suggestions[i].label,
          "The suggestion at " + i + "th index is correct.");
-      is(actualSuggestions[i].count, suggestions[i].count || 1,
-         "The count for suggestion at " + i + "th index is correct.");
     }
   }
 });
 
 function formatSuggestions(suggestions) {
   return "[" + suggestions
-                .map(s => "'" + s.label + "' (" + (s.count || 1) + ")")
+                .map(s => "'" + s.label + "'")
                 .join(", ") + "]";
 }
