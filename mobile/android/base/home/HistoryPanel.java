@@ -26,7 +26,7 @@ import org.mozilla.gecko.db.BrowserContract.Combined;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.home.HomeContextMenuInfo.RemoveItemType;
 import org.mozilla.gecko.home.HomePager.OnUrlOpenListener;
-import org.mozilla.gecko.restrictions.Restriction;
+import org.mozilla.gecko.restrictions.Restrictable;
 import org.mozilla.gecko.util.ColorUtils;
 import org.mozilla.gecko.util.HardwareUtils;
 
@@ -224,7 +224,7 @@ public class HistoryPanel extends HomeFragment {
     public void onCreateContextMenu(ContextMenu menu, View view, ContextMenu.ContextMenuInfo menuInfo) {
         super.onCreateContextMenu(menu, view, menuInfo);
 
-        if (!Restrictions.isAllowed(getActivity(), Restriction.DISALLOW_CLEAR_HISTORY)) {
+        if (!Restrictions.isAllowed(getActivity(), Restrictable.DISALLOW_CLEAR_HISTORY)) {
             menu.findItem(R.id.home_remove).setVisible(false);
         }
     }
@@ -291,7 +291,7 @@ public class HistoryPanel extends HomeFragment {
 
     private void updateUiFromCursor(Cursor c) {
         if (c != null && c.getCount() > 0) {
-            if (Restrictions.isAllowed(getActivity(), Restriction.DISALLOW_CLEAR_HISTORY)) {
+            if (Restrictions.isAllowed(getActivity(), Restrictable.DISALLOW_CLEAR_HISTORY)) {
                 mClearHistoryButton.setVisibility(View.VISIBLE);
             }
             return;
@@ -322,7 +322,7 @@ public class HistoryPanel extends HomeFragment {
                 emptyHint.setVisibility(View.VISIBLE);
             }
 
-            if (!Restrictions.isAllowed(getActivity(), Restriction.DISALLOW_PRIVATE_BROWSING)) {
+            if (!Restrictions.isAllowed(getActivity(), Restrictable.DISALLOW_PRIVATE_BROWSING)) {
                 emptyHint.setVisibility(View.GONE);
             }
 

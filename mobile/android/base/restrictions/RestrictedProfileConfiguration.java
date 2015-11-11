@@ -20,15 +20,15 @@ import java.util.List;
 
 @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
 public class RestrictedProfileConfiguration implements RestrictionConfiguration {
-    static List<Restriction> DEFAULT_RESTRICTIONS = Arrays.asList(
-            Restriction.DISALLOW_INSTALL_EXTENSION,
-            Restriction.DISALLOW_PRIVATE_BROWSING,
-            Restriction.DISALLOW_LOCATION_SERVICE,
-            Restriction.DISALLOW_CLEAR_HISTORY,
-            Restriction.DISALLOW_MASTER_PASSWORD,
-            Restriction.DISALLOW_GUEST_BROWSING,
-            Restriction.DISALLOW_ADVANCED_SETTINGS,
-            Restriction.DISALLOW_CAMERA_MICROPHONE
+    static List<Restrictable> DEFAULT_RESTRICTIONS = Arrays.asList(
+            Restrictable.DISALLOW_INSTALL_EXTENSION,
+            Restrictable.DISALLOW_PRIVATE_BROWSING,
+            Restrictable.DISALLOW_LOCATION_SERVICE,
+            Restrictable.DISALLOW_CLEAR_HISTORY,
+            Restrictable.DISALLOW_MASTER_PASSWORD,
+            Restrictable.DISALLOW_GUEST_BROWSING,
+            Restrictable.DISALLOW_ADVANCED_SETTINGS,
+            Restrictable.DISALLOW_CAMERA_MICROPHONE
     );
 
     private Context context;
@@ -40,13 +40,13 @@ public class RestrictedProfileConfiguration implements RestrictionConfiguration 
     }
 
     @Override
-    public synchronized boolean isAllowed(Restriction restriction) {
+    public synchronized boolean isAllowed(Restrictable restrictable) {
         if (isCacheInvalid || !ThreadUtils.isOnUiThread()) {
             cachedRestrictions = readRestrictions();
             isCacheInvalid = false;
         }
 
-        return !cachedRestrictions.getBoolean(restriction.name, DEFAULT_RESTRICTIONS.contains(restriction));
+        return !cachedRestrictions.getBoolean(restrictable.name, DEFAULT_RESTRICTIONS.contains(restrictable));
     }
 
     private Bundle readRestrictions() {
@@ -66,11 +66,11 @@ public class RestrictedProfileConfiguration implements RestrictionConfiguration 
 
     @Override
     public boolean canLoadUrl(String url) {
-        if (!isAllowed(Restriction.DISALLOW_INSTALL_EXTENSION) && AboutPages.isAboutAddons(url)) {
+        if (!isAllowed(Restrictable.DISALLOW_INSTALL_EXTENSION) && AboutPages.isAboutAddons(url)) {
             return false;
         }
 
-        if (!isAllowed(Restriction.DISALLOW_PRIVATE_BROWSING) && AboutPages.isAboutPrivateBrowsing(url)) {
+        if (!isAllowed(Restrictable.DISALLOW_PRIVATE_BROWSING) && AboutPages.isAboutPrivateBrowsing(url)) {
             return false;
         }
 

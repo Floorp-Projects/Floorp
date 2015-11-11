@@ -12,7 +12,7 @@ public interface RestrictionConfiguration {
     /**
      * Is the user allowed to perform this action?
      */
-    boolean isAllowed(Restriction restriction);
+    boolean isAllowed(Restrictable restrictable);
 
     /**
      * Is the user allowed to load the given URL?

@@ -15,7 +15,7 @@ import android.support.annotation.StringRes;
  * Others are specific to us.
  * These constants should be in sync with the ones from toolkit/components/parentalcontrols/nsIParentalControlsService.idl
  */
-public enum Restriction {
+public enum Restrictable {
     DISALLOW_DOWNLOADS(1, "no_download_files", 0),
 
     DISALLOW_INSTALL_EXTENSION(2, "no_install_extensions", R.string.restriction_disallow_addons_title),
@@ -60,7 +60,7 @@ public enum Restriction {
     @StringRes
     public final int title;
 
-    Restriction(final int id, final String name, @StringRes int title) {
+    Restrictable(final int id, final String name, @StringRes int title) {
         this.id = id;
         this.name = name;
         this.title = title;

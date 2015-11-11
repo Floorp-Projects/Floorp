@@ -6,9 +6,6 @@
 package org.mozilla.gecko.restrictions;
 
 import org.mozilla.gecko.AppConstants;
-import org.mozilla.gecko.restrictions.RestrictedProfileConfiguration;
-import org.mozilla.gecko.restrictions.Restriction;
-import org.mozilla.gecko.sync.setup.Constants;
 
 import android.annotation.TargetApi;
 import android.app.Activity;
@@ -53,23 +50,23 @@ public class RestrictionProvider extends BroadcastReceiver {
     private ArrayList<RestrictionEntry> initRestrictions(Context context, Bundle oldRestrictions) {
         ArrayList<RestrictionEntry> entries = new ArrayList<RestrictionEntry>();
 
-        for (Restriction restriction : RestrictedProfileConfiguration.DEFAULT_RESTRICTIONS) {
-            if (restriction == Restriction.DISALLOW_LOCATION_SERVICE && !AppConstants.MOZ_STUMBLER_BUILD_TIME_ENABLED) {
+        for (Restrictable restrictable : RestrictedProfileConfiguration.DEFAULT_RESTRICTIONS) {
+            if (restrictable == Restrictable.DISALLOW_LOCATION_SERVICE && !AppConstants.MOZ_STUMBLER_BUILD_TIME_ENABLED) {
                 continue;
             }
 
-            RestrictionEntry entry = createRestrictionEntryWithDefaultValue(context, restriction,
-                    oldRestrictions.getBoolean(restriction.name, true));
+            RestrictionEntry entry = createRestrictionEntryWithDefaultValue(context, restrictable,
+                    oldRestrictions.getBoolean(restrictable.name, true));
             entries.add(entry);
         }
 
         return entries;
     }
 
-    private RestrictionEntry createRestrictionEntryWithDefaultValue(Context context, Restriction restriction, boolean defaultValue) {
-        RestrictionEntry entry = new RestrictionEntry(restriction.name, defaultValue);
+    private RestrictionEntry createRestrictionEntryWithDefaultValue(Context context, Restrictable restrictable, boolean defaultValue) {
+        RestrictionEntry entry = new RestrictionEntry(restrictable.name, defaultValue);
 
-        entry.setTitle(restriction.getTitle(context));
+        entry.setTitle(restrictable.getTitle(context));
 
         return entry;
     }
