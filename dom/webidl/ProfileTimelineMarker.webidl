@@ -51,6 +51,10 @@ dictionary ProfileTimelineMarker {
   DOMString type;
   unsigned short eventPhase;
 
+  /* For document::DOMContentLoaded and document::Load markers. Using this
+   * instead of the `start` and `end` timestamps is strongly discouraged. */
+  unsigned long long unixTime; // in microseconds
+
   /* For Paint markers.  */
   sequence<ProfileTimelineLayerRect> rectangles;
 
