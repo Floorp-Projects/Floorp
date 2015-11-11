@@ -3,13 +3,12 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
 <svg height="0" xmlns="http://www.w3.org/2000/svg">
-  <filter id="invert" x="0%" y="0%" width="100%" height="100%"
-          primitiveUnits="objectBoundingBox">
-    <feComponentTransfer>
-      <feFuncR type="table" tableValues=".1 0"/>
-      <feFuncG type="table" tableValues=".1 0"/>
-      <feFuncB type="table" tableValues=".1 0"/>
-    </feComponentTransfer>
+  <filter id="checked-icon-state">
+    <feColorMatrix in="SourceGraphic" type="matrix"
+      values="0 0 0 0 0.043
+              0 0 0 0 0.415
+              0 0 0 0 0.79
+              0 0 0 1 0"/>
   </filter>
 
   <!-- Web Audio Gradients -->
