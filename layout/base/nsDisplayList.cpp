@@ -4009,8 +4009,13 @@ nsDisplayOpacity::CanApplyOpacity() const
 bool
 nsDisplayOpacity::ShouldFlattenAway(nsDisplayListBuilder* aBuilder)
 {
-  if (NeedsActiveLayer(aBuilder))
+  if (NeedsActiveLayer(aBuilder) || mOpacity == 0.0) {
+    // If our opacity is zero then we'll discard all descendant display items
+    // except for layer event regions, so there's no point in doing this
+    // optimization (and if we do do it, then invalidations of those descendants
+    // might trigger repainting).
     return false;
+  }
 
   nsDisplayItem* child = mList.GetBottom();
   // Only try folding our opacity down if we have at most three children
