@@ -291,13 +291,14 @@ class TestFormatters(unittest.TestCase):
         formatter.add_base('browser')
         formatter.add_base('webapprt')
         formatter.add_base('addon0', addon=True)
-        self.assertEqual(formatter._get_base('platform.ini'), '')
+        self.assertEqual(formatter._get_base('platform.ini'),
+                         ('', 'platform.ini'))
         self.assertEqual(formatter._get_base('browser/application.ini'),
-                         'browser')
+                         ('browser', 'application.ini'))
         self.assertEqual(formatter._get_base('webapprt/webapprt.ini'),
-                         'webapprt')
+                         ('webapprt', 'webapprt.ini'))
         self.assertEqual(formatter._get_base('addon0/install.rdf'),
-                         'addon0')
+                         ('addon0', 'install.rdf'))
 
     def do_test_contents(self, formatter, contents):
         for f in contents['files']:
