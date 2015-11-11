@@ -307,11 +307,15 @@ var dataProviders = {
     data.numAcceleratedWindows = 0;
     let winEnumer = Services.ww.getWindowEnumerator();
     while (winEnumer.hasMoreElements()) {
-      data.numTotalWindows++;
       let winUtils = winEnumer.getNext().
                      QueryInterface(Ci.nsIInterfaceRequestor).
                      getInterface(Ci.nsIDOMWindowUtils);
       try {
+        // NOTE: windowless browser's windows should not be reported in the graphics troubleshoot report
+        if (winUtils.layerManagerType == "None") {
+          continue;
+        }
+        data.numTotalWindows++;
         data.windowLayerManagerType = winUtils.layerManagerType;
         data.windowLayerManagerRemote = winUtils.layerManagerRemote;
         data.supportsHardwareH264 = winUtils.supportsHardwareH264Decoding;
