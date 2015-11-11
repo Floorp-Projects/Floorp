@@ -421,7 +421,7 @@ public:
   virtual void
   SendPlayStatus(int64_t aDuration,
                  int64_t aPosition,
-                 const nsAString& aPlayStatus,
+                 ControlPlayStatus aPlayStatus,
                  BluetoothReplyRunnable* aRunnable) = 0;
 
   virtual void
