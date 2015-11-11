@@ -59,12 +59,11 @@ public:
     uint16_t aServiceUuid, BluetoothReplyRunnable* aRunnable) override;
 
   virtual nsresult
-  GetPairedDevicePropertiesInternal(
-    const nsTArray<BluetoothAddress>& aDeviceAddresses,
-    BluetoothReplyRunnable* aRunnable) override;
+  GetPairedDevicePropertiesInternal(const nsTArray<nsString>& aDeviceAddresses,
+                                    BluetoothReplyRunnable* aRunnable) override;
 
   virtual nsresult
-  FetchUuidsInternal(const BluetoothAddress& aDeviceAddress,
+  FetchUuidsInternal(const nsAString& aDeviceAddress,
                      BluetoothReplyRunnable* aRunnable) override;
 
   virtual void
@@ -88,48 +87,46 @@ public:
                    BluetoothProfileManagerBase* aManager) override;
 
   virtual nsresult
-  CreatePairedDeviceInternal(const BluetoothAddress& aDeviceAddress,
+  CreatePairedDeviceInternal(const nsAString& aDeviceAddress,
                              int aTimeout,
                              BluetoothReplyRunnable* aRunnable) override;
 
   virtual nsresult
-  RemoveDeviceInternal(const BluetoothAddress& aDeviceAddress,
+  RemoveDeviceInternal(const nsAString& aDeviceObjectPath,
                        BluetoothReplyRunnable* aRunnable) override;
 
   virtual void
-  PinReplyInternal(const BluetoothAddress& aDeviceAddress,
+  PinReplyInternal(const nsAString& aDeviceAddress,
                    bool aAccept,
                    const nsAString& aPinCode,
                    BluetoothReplyRunnable* aRunnable);
 
   virtual void
-  SspReplyInternal(const BluetoothAddress& aDeviceAddress,
+  SspReplyInternal(const nsAString& aDeviceAddress,
                    BluetoothSspVariant aVariant,
                    bool aAccept,
                    BluetoothReplyRunnable* aRunnable);
 
   virtual void
-  SetPinCodeInternal(const BluetoothAddress& aDeviceAddress,
-                     const nsAString& aPinCode,
+  SetPinCodeInternal(const nsAString& aDeviceAddress, const nsAString& aPinCode,
                      BluetoothReplyRunnable* aRunnable) override;
 
   virtual void
-  SetPasskeyInternal(const BluetoothAddress& aDeviceAddress, uint32_t aPasskey,
+  SetPasskeyInternal(const nsAString& aDeviceAddress, uint32_t aPasskey,
                      BluetoothReplyRunnable* aRunnable) override;
 
   virtual void
-  SetPairingConfirmationInternal(const BluetoothAddress& aDeviceAddress,
-                                 bool aConfirm,
+  SetPairingConfirmationInternal(const nsAString& aDeviceAddress, bool aConfirm,
                                  BluetoothReplyRunnable* aRunnable) override;
 
   virtual void
-  Connect(const BluetoothAddress& aDeviceAddress,
+  Connect(const nsAString& aDeviceAddress,
           uint32_t aCod,
           uint16_t aServiceUuid,
           BluetoothReplyRunnable* aRunnable) override;
 
   virtual void
-  Disconnect(const BluetoothAddress& aDeviceAddress, uint16_t aServiceUuid,
+  Disconnect(const nsAString& aDeviceAddress, uint16_t aServiceUuid,
              BluetoothReplyRunnable* aRunnable) override;
 
   virtual void
