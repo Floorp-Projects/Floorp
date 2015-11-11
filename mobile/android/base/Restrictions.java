@@ -123,7 +123,7 @@ public class Restrictions {
 
         final Context context = GeckoAppShell.getApplicationContext();
 
-        if (Restrictable.DISALLOW_BROWSE_FILES == restrictable) {
+        if (Restrictable.BROWSE == restrictable) {
             return canLoadUrl(context, url);
         } else {
             return isAllowed(context, restrictable);

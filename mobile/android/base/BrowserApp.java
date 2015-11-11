@@ -1793,7 +1793,7 @@ public class BrowserApp extends GeckoApp
                     }
                 }
 
-                if (AppConstants.MOZ_STUMBLER_BUILD_TIME_ENABLED && Restrictions.isAllowed(this, Restrictable.DISALLOW_LOCATION_SERVICE)) {
+                if (AppConstants.MOZ_STUMBLER_BUILD_TIME_ENABLED && Restrictions.isAllowed(this, Restrictable.LOCATION_SERVICE)) {
                     // Start (this acts as ping if started already) the stumbler lib; if the stumbler has queued data it will upload it.
                     // Stumbler operates on its own thread, and startup impact is further minimized by delaying work (such as upload) a few seconds.
                     // Avoid any potential startup CPU/thread contention by delaying the pref broadcast.
@@ -3084,11 +3084,11 @@ public class BrowserApp extends GeckoApp
         }
 
         // Disable share menuitem for about:, chrome:, file:, and resource: URIs
-        final boolean shareVisible = Restrictions.isAllowed(this, Restrictable.DISALLOW_SHARE);
+        final boolean shareVisible = Restrictions.isAllowed(this, Restrictable.SHARE);
         share.setVisible(shareVisible);
         final boolean shareEnabled = StringUtils.isShareableUrl(url) && shareVisible;
         share.setEnabled(shareEnabled);
-        MenuUtils.safeSetEnabled(aMenu, R.id.downloads, Restrictions.isAllowed(this, Restrictable.DISALLOW_DOWNLOADS));
+        MenuUtils.safeSetEnabled(aMenu, R.id.downloads, Restrictions.isAllowed(this, Restrictable.DOWNLOAD));
 
         // NOTE: Use MenuUtils.safeSetEnabled because some actions might
         // be on the BrowserToolbar context menu.
@@ -3151,7 +3151,7 @@ public class BrowserApp extends GeckoApp
             }
         }
 
-        final boolean privateTabVisible = Restrictions.isAllowed(this, Restrictable.DISALLOW_PRIVATE_BROWSING);
+        final boolean privateTabVisible = Restrictions.isAllowed(this, Restrictable.PRIVATE_BROWSING);
         MenuUtils.safeSetVisible(aMenu, R.id.new_private_tab, privateTabVisible);
 
         // Disable PDF generation (save and print) for about:home and xul pages.
@@ -3173,11 +3173,11 @@ public class BrowserApp extends GeckoApp
             enterGuestMode.setVisible(true);
         }
 
-        if (!Restrictions.isAllowed(this, Restrictable.DISALLOW_GUEST_BROWSING)) {
+        if (!Restrictions.isAllowed(this, Restrictable.GUEST_BROWSING)) {
             MenuUtils.safeSetVisible(aMenu, R.id.new_guest_session, false);
         }
 
-        if (!Restrictions.isAllowed(this, Restrictable.DISALLOW_INSTALL_EXTENSION)) {
+        if (!Restrictions.isAllowed(this, Restrictable.INSTALL_EXTENSION)) {
             MenuUtils.safeSetVisible(aMenu, R.id.addons, false);
         }
 
