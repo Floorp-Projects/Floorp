@@ -75,15 +75,12 @@ class PiecemealFormatter(object):
         assert isinstance(copier, (FileRegistry, FileRegistrySubtree))
         self.copier = copier
         self._sub_formatter = {}
-        self._addons = []
         self._frozen_bases = False
 
     def add_base(self, base, addon=False):
         # Only allow to add a base directory before calls to _get_base()
         assert not self._frozen_bases
         assert base not in self._sub_formatter
-        if addon and base not in self._addons:
-            self._addons.append(base)
         self._add_base(base, addon)
 
     def _get_base(self, path):
@@ -243,69 +240,56 @@ class OmniJarFormatter(JarFormatter):
     Formatter for the omnijar package format.
     '''
     def __init__(self, copier, omnijar_name, compress=True, optimize=True,
-                 non_resources=[]):
+                 non_resources=()):
         JarFormatter.__init__(self, copier, compress, optimize)
-        self.omnijars = {}
         self._omnijar_name = omnijar_name
         self._non_resources = non_resources
 
-    def _get_formatter(self, path, is_resource=None):
-        '''
-        Return the (sub)formatter corresponding to the given path, its base
-        directory and the path relative to that base.
-        '''
-        base, relpath = self._get_base(path)
-        use_omnijar = base not in self._addons
-        if use_omnijar:
-            if is_resource is None:
-                is_resource = self.is_resource(path, base)
-            use_omnijar = is_resource
-        if not use_omnijar:
-            return super(OmniJarFormatter, self), '', path
-        if not base in self.omnijars:
-            omnijar = Jarrer(self._compress, self._optimize)
-            self.omnijars[base] = FlatFormatter(omnijar)
-            self.omnijars[base].add_base('')
-            self.copier.add(mozpath.join(base, self._omnijar_name),
-                            omnijar)
-        return self.omnijars[base], base, mozpath.relpath(path, base)
+    def _add_base(self, base, addon=False):
+        if addon:
+            JarFormatter._add_base(self, base, addon)
+        else:
+            self._sub_formatter[base] = OmniJarSubFormatter(
+                FileRegistrySubtree(base, self.copier), self._omnijar_name,
+                self._compress, self._optimize, self._non_resources)
 
-    def add(self, path, content):
-        formatter, base, path = self._get_formatter(path)
-        formatter.add(path, content)
+
+class OmniJarSubFormatter(PiecemealFormatter):
+    '''
+    Sub-formatter for the omnijar package format. It is a PiecemealFormatter
+    that dispatches between a FlatSubFormatter for the resources data and
+    another FlatSubFormatter for the other files.
+    '''
+    def __init__(self, copier, omnijar_name, compress=True, optimize=True,
+                 non_resources=()):
+        PiecemealFormatter.__init__(self, copier)
+        self._omnijar_name = omnijar_name
+        self._compress = compress
+        self._optimize = optimize
+        self._non_resources = non_resources
+        self._sub_formatter[''] = FlatSubFormatter(copier)
+        jarrer = Jarrer(self._compress, self._optimize)
+        self._sub_formatter[omnijar_name] = FlatSubFormatter(jarrer)
+
+    def _get_base(self, path):
+        base = self._omnijar_name if self.is_resource(path) else ''
+        # Only add the omnijar file if something ends up in it.
+        if base and not self.copier.contains(base):
+            self.copier.add(base, self._sub_formatter[base].copier)
+        return base, path
 
     def add_manifest(self, entry):
-        if isinstance(entry, ManifestBinaryComponent):
-            formatter, base = super(OmniJarFormatter, self), ''
-        else:
-            formatter, base, path = self._get_formatter(entry.base,
-                                                        is_resource=True)
-        entry = entry.move(mozpath.relpath(entry.base, base))
-        formatter.add_manifest(entry)
+        base = ''
+        if not isinstance(entry, ManifestBinaryComponent):
+            base = self._omnijar_name
+        formatter = self._sub_formatter[base]
+        return formatter.add_manifest(entry)
 
-    def add_interfaces(self, path, content):
-        formatter, base, path = self._get_formatter(path)
-        formatter.add_interfaces(path, content)
-
-    def contains(self, path):
-        assert '*' not in path
-        if JarFormatter.contains(self, path):
-            return True
-        for base, copier in self.omnijars.iteritems():
-            if copier.contains(mozpath.relpath(path, base)):
-                return True
-        return False
-
-    def is_resource(self, path, base=None):
+    def is_resource(self, path):
         '''
         Return whether the given path corresponds to a resource to be put in an
         omnijar archive.
         '''
-        if base is None:
-            base, relpath = self._get_base(path)
-        if base is None:
-            return False
-        path = mozpath.relpath(path, base)
         if any(mozpath.match(path, p.replace('*', '**'))
                for p in self._non_resources):
             return False
