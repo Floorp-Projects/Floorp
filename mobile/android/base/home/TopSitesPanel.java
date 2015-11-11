@@ -343,7 +343,7 @@ public class TopSitesPanel extends HomeFragment {
             // can handle this.
             super.onCreateContextMenu(menu, view, menuInfo);
 
-            if (!Restrictions.isAllowed(view.getContext(), Restrictable.DISALLOW_CLEAR_HISTORY)) {
+            if (!Restrictions.isAllowed(view.getContext(), Restrictable.CLEAR_HISTORY)) {
                 menu.findItem(R.id.home_remove).setVisible(false);
             }
 
@@ -359,7 +359,7 @@ public class TopSitesPanel extends HomeFragment {
         // Hide unused menu items.
         menu.findItem(R.id.home_edit_bookmark).setVisible(false);
 
-        menu.findItem(R.id.home_remove).setVisible(Restrictions.isAllowed(context, Restrictable.DISALLOW_CLEAR_HISTORY));
+        menu.findItem(R.id.home_remove).setVisible(Restrictions.isAllowed(context, Restrictable.CLEAR_HISTORY));
 
         TopSitesGridContextMenuInfo info = (TopSitesGridContextMenuInfo) menuInfo;
         menu.setHeaderTitle(info.getDisplayTitle());
@@ -381,7 +381,7 @@ public class TopSitesPanel extends HomeFragment {
             menu.findItem(R.id.home_share).setVisible(false);
         }
 
-        if (!Restrictions.isAllowed(context, Restrictable.DISALLOW_PRIVATE_BROWSING)) {
+        if (!Restrictions.isAllowed(context, Restrictable.PRIVATE_BROWSING)) {
             menu.findItem(R.id.home_open_private_tab).setVisible(false);
         }
 

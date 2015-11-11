@@ -20,19 +20,20 @@ import java.util.List;
 
 @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR2)
 public class RestrictedProfileConfiguration implements RestrictionConfiguration {
-    static List<Restrictable> DEFAULT_RESTRICTIONS = Arrays.asList(
-            Restrictable.DISALLOW_INSTALL_EXTENSION,
-            Restrictable.DISALLOW_PRIVATE_BROWSING,
-            Restrictable.DISALLOW_LOCATION_SERVICE,
-            Restrictable.DISALLOW_CLEAR_HISTORY,
-            Restrictable.DISALLOW_MASTER_PASSWORD,
-            Restrictable.DISALLOW_GUEST_BROWSING,
-            Restrictable.DISALLOW_ADVANCED_SETTINGS,
-            Restrictable.DISALLOW_CAMERA_MICROPHONE
+    static List<Restrictable> DEFAULT_DISABLED_FEATURES = Arrays.asList(
+            Restrictable.INSTALL_EXTENSION,
+            Restrictable.PRIVATE_BROWSING,
+            Restrictable.LOCATION_SERVICE,
+            Restrictable.CLEAR_HISTORY,
+            Restrictable.MASTER_PASSWORD,
+            Restrictable.GUEST_BROWSING,
+            Restrictable.ADVANCED_SETTINGS,
+            Restrictable.CAMERA_MICROPHONE
     );
 
     private Context context;
-    private Bundle cachedRestrictions;
+    private Bundle cachedAppRestrictions;
+    private Bundle cachedUserRestrictions;
     private boolean isCacheInvalid = true;
 
     public RestrictedProfileConfiguration(Context context) {
@@ -42,23 +43,28 @@ public class RestrictedProfileConfiguration implements RestrictionConfiguration 
     @Override
     public synchronized boolean isAllowed(Restrictable restrictable) {
         if (isCacheInvalid || !ThreadUtils.isOnUiThread()) {
-            cachedRestrictions = readRestrictions();
+            readRestrictions();
             isCacheInvalid = false;
         }
 
-        return !cachedRestrictions.getBoolean(restrictable.name, DEFAULT_RESTRICTIONS.contains(restrictable));
+        // Special casing system/user restrictions
+        if (restrictable == Restrictable.INSTALL_APPS || restrictable == Restrictable.MODIFY_ACCOUNTS) {
+            return !cachedUserRestrictions.getBoolean(restrictable.name);
+        }
+
+        return cachedAppRestrictions.getBoolean(restrictable.name, !DEFAULT_DISABLED_FEATURES.contains(restrictable));
     }
 
-    private Bundle readRestrictions() {
+    private void readRestrictions() {
         final UserManager mgr = (UserManager) context.getSystemService(Context.USER_SERVICE);
 
         StrictMode.ThreadPolicy policy = StrictMode.allowThreadDiskReads();
 
         try {
-            Bundle restrictions = new Bundle();
-            restrictions.putAll(mgr.getApplicationRestrictions(context.getPackageName()));
-            restrictions.putAll(mgr.getUserRestrictions());
-            return restrictions;
+            cachedAppRestrictions = mgr.getApplicationRestrictions(context.getPackageName());
+            cachedUserRestrictions = mgr.getUserRestrictions();
+
+
         } finally {
             StrictMode.setThreadPolicy(policy);
         }
@@ -66,11 +72,11 @@ public class RestrictedProfileConfiguration implements RestrictionConfiguration 
 
     @Override
     public boolean canLoadUrl(String url) {
-        if (!isAllowed(Restrictable.DISALLOW_INSTALL_EXTENSION) && AboutPages.isAboutAddons(url)) {
+        if (!isAllowed(Restrictable.INSTALL_EXTENSION) && AboutPages.isAboutAddons(url)) {
             return false;
         }
 
-        if (!isAllowed(Restrictable.DISALLOW_PRIVATE_BROWSING) && AboutPages.isAboutPrivateBrowsing(url)) {
+        if (!isAllowed(Restrictable.PRIVATE_BROWSING) && AboutPages.isAboutPrivateBrowsing(url)) {
             return false;
         }
 

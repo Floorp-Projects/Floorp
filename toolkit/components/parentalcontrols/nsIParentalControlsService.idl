@@ -11,7 +11,7 @@ interface nsIFile;
 interface nsIInterfaceRequestor;
 interface nsIArray;
 
-[scriptable, uuid(c7713ad7-0804-4353-91d5-4d7f1376bded)]
+[scriptable, uuid(ec6ae96e-e161-481e-bb51-78b11fc1fdbe)]
 interface nsIParentalControlsService : nsISupports
 {
   /**
@@ -20,7 +20,7 @@ interface nsIParentalControlsService : nsISupports
   const short DOWNLOAD = 1; // Downloading files
   const short INSTALL_EXTENSION = 2; // Installing extensions
   const short INSTALL_APP = 3; // Installing webapps
-  const short VISIT_FILE_URLS = 4; // Opening file:/// urls
+  const short BROWSE = 4; // Opening specific urls
   const short SHARE = 5; // Sharing
   const short BOOKMARK = 6; // Creating bookmarks
   const short ADD_CONTACT = 7; // Add contacts to the system database
