@@ -76,3 +76,93 @@ add_task(function* () {
 
   yield BrowserTestUtils.closeWindow(win1);
 });
+
+function* do_test_update(background) {
+  let win1 = yield BrowserTestUtils.openNewBrowserWindow();
+
+  yield focusWindow(win1);
+
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      "permissions": ["tabs"]
+    },
+
+    background: background,
+  });
+
+  yield Promise.all([
+    yield extension.startup(),
+    yield extension.awaitFinish("finish")
+  ]);
+
+  yield extension.unload();
+
+  yield BrowserTestUtils.closeWindow(win1);
+}
+
+add_task(function* test_pinned() {
+  yield do_test_update(function background() {
+    // Create a new tab for testing update.
+    browser.tabs.create(null, function(tab) {
+      browser.tabs.onUpdated.addListener(function onUpdated(tabId, changeInfo) {
+        // Check callback
+        browser.test.assertEq(tabId, tab.id, "Check tab id");
+        browser.test.log("onUpdate: " + JSON.stringify(changeInfo));
+        if ("pinned" in changeInfo) {
+          browser.test.assertTrue(changeInfo.pinned, "Check changeInfo.pinned");
+          browser.tabs.onUpdated.removeListener(onUpdated);
+          // Remove created tab.
+          browser.tabs.remove(tabId);
+          browser.test.notifyPass("finish");
+          return;
+        }
+      });
+      browser.tabs.update(tab.id, {pinned: true});
+    });
+  });
+});
+
+add_task(function* test_unpinned() {
+  yield do_test_update(function background() {
+    // Create a new tab for testing update.
+    browser.tabs.create({pinned: true}, function(tab) {
+      browser.tabs.onUpdated.addListener(function onUpdated(tabId, changeInfo) {
+        // Check callback
+        browser.test.assertEq(tabId, tab.id, "Check tab id");
+        browser.test.log("onUpdate: " + JSON.stringify(changeInfo));
+        if ("pinned" in changeInfo) {
+          browser.test.assertFalse(changeInfo.pinned, "Check changeInfo.pinned");
+          browser.tabs.onUpdated.removeListener(onUpdated);
+          // Remove created tab.
+          browser.tabs.remove(tabId);
+          browser.test.notifyPass("finish");
+          return;
+        }
+      });
+      browser.tabs.update(tab.id, {pinned: false});
+    });
+  });
+});
+
+add_task(function* test_url() {
+  yield do_test_update(function background() {
+    // Create a new tab for testing update.
+    browser.tabs.create(null, function(tab) {
+      browser.tabs.onUpdated.addListener(function onUpdated(tabId, changeInfo) {
+        // Check callback
+        browser.test.assertEq(tabId, tab.id, "Check tab id");
+        browser.test.log("onUpdate: " + JSON.stringify(changeInfo));
+        if ("url" in changeInfo) {
+          browser.test.assertEq("about:preferences", changeInfo.url,
+                                "Check changeInfo.url");
+          browser.tabs.onUpdated.removeListener(onUpdated);
+          // Remove created tab.
+          browser.tabs.remove(tabId);
+          browser.test.notifyPass("finish");
+          return;
+        }
+      });
+      browser.tabs.update(tab.id, {url: "about:preferences"});
+    });
+  });
+});

@@ -11,7 +11,7 @@ add_task(function*() {
   info("Activating the storage inspector");
   Services.prefs.setBoolPref("devtools.storage.enabled", true);
 
-  yield promiseTab(TEST_URI);
+  yield addTab(TEST_URI);
   let Telemetry = loadTelemetryAndRecordLogs();
 
   yield openAndCloseToolbox(2, TOOL_DELAY, "storage");

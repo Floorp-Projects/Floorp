@@ -24,6 +24,8 @@ public:
   NS_DECL_NSIAUTOCOMPLETERESULT
   NS_DECL_NSIAUTOCOMPLETESIMPLERESULT
 
+  nsresult AppendResult(nsIAutoCompleteResult* aResult);
+
 private:
   ~nsAutoCompleteSimpleResult() {}
 

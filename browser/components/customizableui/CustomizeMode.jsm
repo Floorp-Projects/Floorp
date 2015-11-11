@@ -309,10 +309,12 @@ CustomizeMode.prototype = {
         this.exit();
       }
     }.bind(this)).then(null, function(e) {
-      ERROR(e);
+      ERROR("Error entering customize mode", e);
       // We should ensure this has been called, and calling it again doesn't hurt:
       window.PanelUI.endBatchUpdate();
       this._handler.isEnteringCustomizeMode = false;
+      // Exit customize mode to ensure proper clean-up when entering failed.
+      this.exit();
     }.bind(this));
   },
 
@@ -482,7 +484,7 @@ CustomizeMode.prototype = {
         this.enter();
       }
     }.bind(this)).then(null, function(e) {
-      ERROR(e);
+      ERROR("Error exiting customize mode", e);
       // We should ensure this has been called, and calling it again doesn't hurt:
       window.PanelUI.endBatchUpdate();
       this._handler.isExitingCustomizeMode = false;

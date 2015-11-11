@@ -13,7 +13,7 @@ const STRINGS_URI = "chrome://devtools/locale/filterwidget.properties";
 const L10N = new ViewHelpers.L10N(STRINGS_URI);
 
 add_task(function*() {
-  yield promiseTab("about:blank");
+  yield addTab("about:blank");
   let [host, win, doc] = yield createHost("bottom", TEST_URI);
 
   const TEST_DATA = [
