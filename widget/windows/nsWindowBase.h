@@ -43,7 +43,7 @@ public:
    * @param aPoint message position in physical coordinates.
    */
   virtual void InitEvent(mozilla::WidgetGUIEvent& aEvent,
-                         nsIntPoint* aPoint = nullptr) = 0;
+                         mozilla::LayoutDeviceIntPoint* aPoint = nullptr) = 0;
 
   /*
    * Dispatch a gecko event for this widget.

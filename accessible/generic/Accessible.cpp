@@ -535,7 +535,7 @@ Accessible::ChildAtPoint(int32_t aX, int32_t aY,
   nsIWidget* rootWidget = rootFrame->GetView()->GetNearestWidget(nullptr);
   NS_ENSURE_TRUE(rootWidget, nullptr);
 
-  nsIntRect rootRect;
+  LayoutDeviceIntRect rootRect;
   rootWidget->GetScreenBounds(rootRect);
 
   WidgetMouseEvent dummyEvent(true, eMouseMove, rootWidget,
