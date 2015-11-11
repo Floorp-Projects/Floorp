@@ -52,7 +52,6 @@ public:
   static const int DEFAULT_43_VIDEO_HEIGHT = 480;
   static const int DEFAULT_169_VIDEO_WIDTH = 1280;
   static const int DEFAULT_169_VIDEO_HEIGHT = 720;
-  static const int DEFAULT_AUDIO_TIMER_MS = 10;
 
 #ifndef MOZ_B2G
   static const int DEFAULT_SAMPLE_RATE = 32000;

@@ -13327,7 +13327,7 @@ nsGlobalWindow::NotifyDefaultButtonLoaded(Element& aDefaultButton,
     return;
   }
   nsIntRect widgetRect;
-  aError = widget->GetScreenBounds(widgetRect);
+  aError = widget->GetScreenBoundsUntyped(widgetRect);
   if (aError.Failed()) {
     return;
   }

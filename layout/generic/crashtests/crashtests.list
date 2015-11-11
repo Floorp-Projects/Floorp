@@ -588,6 +588,7 @@ load 1183431.html
 load 1221112-1.html
 load 1221112-2.html
 load 1221874-1.html
+load 1222783.xhtml
 load first-letter-638937-1.html
 load first-letter-638937-2.html
 pref(dom.meta-viewport.enabled,true) test-pref(font.size.inflation.emPerLine,15) asserts(1-100) load font-inflation-762332.html # bug 762332

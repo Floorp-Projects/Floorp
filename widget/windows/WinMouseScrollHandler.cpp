@@ -319,10 +319,10 @@ MouseScrollHandler::SynthesizeNativeMouseScrollEvent(nsWindowBase* aWidget,
 void
 MouseScrollHandler::InitEvent(nsWindowBase* aWidget,
                               WidgetGUIEvent& aEvent,
-                              nsIntPoint* aPoint)
+                              LayoutDeviceIntPoint* aPoint)
 {
   NS_ENSURE_TRUE_VOID(aWidget);
-  nsIntPoint point;
+  LayoutDeviceIntPoint point;
   if (aPoint) {
     point = *aPoint;
   } else {

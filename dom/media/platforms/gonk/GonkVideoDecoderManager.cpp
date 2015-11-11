@@ -62,8 +62,6 @@ GonkVideoDecoderManager::GonkVideoDecoderManager(
   nsIntSize frameSize(mVideoWidth, mVideoHeight);
   mPicture = pictureRect;
   mInitialFrame = frameSize;
-  mVideoListener = new VideoResourceListener();
-
 }
 
 GonkVideoDecoderManager::~GonkVideoDecoderManager()
@@ -119,7 +117,15 @@ GonkVideoDecoderManager::Init()
 
   RefPtr<InitPromise> p = mInitPromise.Ensure(__func__);
   android::sp<GonkVideoDecoderManager> self = this;
-  mVideoCodecRequest.Begin(mVideoListener->Init()
+  mDecoder = MediaCodecProxy::CreateByType(mDecodeLooper, mMimeType.get(), false);
+
+  uint32_t capability = MediaCodecProxy::kEmptyCapability;
+  if (mDecoder->getCapability(&capability) == OK && (capability &
+      MediaCodecProxy::kCanExposeGraphicBuffer)) {
+    mNativeWindow = new GonkNativeWindow();
+  }
+
+  mVideoCodecRequest.Begin(mDecoder->AsyncAllocateVideoMediaCodec()
     ->Then(mReaderTaskQueue, __func__,
       [self] (bool) -> void {
         self->mVideoCodecRequest.Complete();
@@ -128,15 +134,6 @@ GonkVideoDecoderManager::Init()
         self->mVideoCodecRequest.Complete();
         self->codecCanceled();
       }));
-  mDecoder = MediaCodecProxy::CreateByType(mDecodeLooper, mMimeType.get(), false, mVideoListener);
-
-  uint32_t capability = MediaCodecProxy::kEmptyCapability;
-  if (mDecoder->getCapability(&capability) == OK && (capability &
-      MediaCodecProxy::kCanExposeGraphicBuffer)) {
-    mNativeWindow = new GonkNativeWindow();
-  }
-
-  mDecoder->AsyncAllocateVideoMediaCodec();
 
   return p;
 }
@@ -652,26 +649,6 @@ GonkVideoDecoderManager::onMessageReceived(const sp<AMessage> &aMessage)
       break;
     }
   }
-}
-
-GonkVideoDecoderManager::VideoResourceListener::VideoResourceListener()
-{
-}
-
-GonkVideoDecoderManager::VideoResourceListener::~VideoResourceListener()
-{
-}
-
-void
-GonkVideoDecoderManager::VideoResourceListener::codecReserved()
-{
-  mVideoCodecPromise.Resolve(true, __func__);
-}
-
-void
-GonkVideoDecoderManager::VideoResourceListener::codecCanceled()
-{
-  mVideoCodecPromise.Reject(true, __func__);
 }
 
 uint8_t *

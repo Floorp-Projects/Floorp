@@ -32,7 +32,7 @@ Touch::Touch(EventTarget* aTarget,
   mTarget = aTarget;
   mIdentifier = aIdentifier;
   mPagePoint = CSSIntPoint(aPageX, aPageY);
-  mScreenPoint = LayoutDeviceIntPoint(aScreenX, aScreenY);
+  mScreenPoint = CSSIntPoint(aScreenX, aScreenY);
   mClientPoint = CSSIntPoint(aClientX, aClientY);
   mRefPoint = LayoutDeviceIntPoint(0, 0);
   mPointsInitialized = true;
@@ -48,13 +48,13 @@ Touch::Touch(EventTarget* aTarget,
 
 Touch::Touch(int32_t aIdentifier,
              LayoutDeviceIntPoint aPoint,
-             nsIntPoint aRadius,
+             LayoutDeviceIntPoint aRadius,
              float aRotationAngle,
              float aForce)
 {
   mIdentifier = aIdentifier;
   mPagePoint = CSSIntPoint(0, 0);
-  mScreenPoint = LayoutDeviceIntPoint(0, 0);
+  mScreenPoint = CSSIntPoint(0, 0);
   mClientPoint = CSSIntPoint(0, 0);
   mRefPoint = aPoint;
   mPointsInitialized = false;

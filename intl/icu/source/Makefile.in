@@ -139,6 +139,10 @@ $(LIBDIR) $(BINDIR):
 	-$(MKINSTALLDIRS) $@
 
 ## Recursive targets
+## Strictly speaking, the $(MAKEOVERRIDES) is not necessary when recursing, but
+## there is a bug in GNU make 3.82 that throws away the original overrides in
+## favor of RECURSIVE=YES when the submake in the subdirectory restarts itself
+## after dependency files have been created.
 all-recursive install-recursive clean-recursive distclean-recursive dist-recursive check-recursive check-exhaustive-recursive: $(LIBDIR) $(BINDIR)
 	@dot_seen=no; \
 	target=`echo $@ | sed s/-recursive//`; \
@@ -150,7 +154,7 @@ all-recursive install-recursive clean-recursive distclean-recursive dist-recursi
 	  else \
 	    local_target="$$target"; \
 	  fi; \
-	  (cd $$subdir && $(MAKE) RECURSIVE=YES $$local_target) || exit; \
+	  (cd $$subdir && $(MAKE) $(MAKEOVERRIDES) RECURSIVE=YES $$local_target) || exit; \
 	done; \
 	if test "$$dot_seen" = "no"; then \
 	  $(MAKE) "$$target-local" || exit; \

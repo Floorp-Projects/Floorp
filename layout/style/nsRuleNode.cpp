@@ -5705,6 +5705,21 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
       display->mOverflowY = NS_STYLE_OVERFLOW_AUTO;
   }
 
+  // When 'contain: paint', update overflow from 'visible' to 'clip'.
+  if (display->IsContainPaint()) {
+    // XXX This actually sets overflow-[x|y] to -moz-hidden-unscrollable.
+    if (display->mOverflowX == NS_STYLE_OVERFLOW_VISIBLE) {
+      // This uncacheability (and the one below) could be fixed by adding
+      // mOriginalOverflowX and mOriginalOverflowY fields, if necessary.
+      display->mOverflowX = NS_STYLE_OVERFLOW_CLIP;
+      conditions.SetUncacheable();
+    }
+    if (display->mOverflowY == NS_STYLE_OVERFLOW_VISIBLE) {
+      display->mOverflowY = NS_STYLE_OVERFLOW_CLIP;
+      conditions.SetUncacheable();
+    }
+  }
+
   SetDiscrete(*aRuleData->ValueForOverflowClipBox(), display->mOverflowClipBox,
               conditions,
               SETDSC_ENUMERATED | SETDSC_UNSET_INITIAL,
@@ -5846,6 +5861,18 @@ nsRuleNode::ComputeDisplayData(void* aStartStruct,
       // mOriginalDisplay, which we have carefully not changed.
     }
 
+    if (display->IsContainPaint()) {
+      // An element with contain:paint or contain:layout needs to "be a
+      // formatting context". For the purposes of the "display" property, that
+      // just means we need to promote "display:inline" to "inline-block".
+      // XXX We may also need to promote ruby display vals; see bug 1179349.
+
+      // It's okay to cache this change in the rule tree for the same
+      // reasons as floats in the previous condition.
+      if (display->mDisplay == NS_STYLE_DISPLAY_INLINE) {
+          display->mDisplay = NS_STYLE_DISPLAY_INLINE_BLOCK;
+      }
+    }
   }
 
   /* Convert the nsCSSValueList into an nsTArray<nsTransformFunction *>. */

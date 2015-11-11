@@ -3380,9 +3380,9 @@ TSFTextStore::GetACPFromPoint(TsViewCookie vcView,
     return TS_E_NOLAYOUT;
   }
 
-  nsIntPoint ourPt(pt->x, pt->y);
+  LayoutDeviceIntPoint ourPt(pt->x, pt->y);
   // Convert to widget relative coordinates from screen's.
-  ourPt -= mWidget->WidgetToScreenOffsetUntyped();
+  ourPt -= mWidget->WidgetToScreenOffset();
 
   // NOTE: Don't check if the point is in the widget since the point can be
   //       outside of the widget if focused editor is in a XUL <panel>.
@@ -3751,7 +3751,7 @@ TSFTextStore::GetScreenExtInternal(RECT& aScreenExt)
     return false;
   }
 
-  nsIntRect boundRect;
+  LayoutDeviceIntRect boundRect;
   if (NS_FAILED(refWindow->GetClientBounds(boundRect))) {
     MOZ_LOG(sTextStoreLog, LogLevel::Error,
            ("TSF: 0x%p   TSFTextStore::GetScreenExtInternal() FAILED due to "
@@ -3762,9 +3762,9 @@ TSFTextStore::GetScreenExtInternal(RECT& aScreenExt)
   boundRect.MoveTo(0, 0);
 
   // Clip frame rect to window rect
-  boundRect.IntersectRect(LayoutDevicePixel::ToUntyped(event.mReply.mRect), boundRect);
+  boundRect.IntersectRect(event.mReply.mRect, boundRect);
   if (!boundRect.IsEmpty()) {
-    boundRect.MoveBy(refWindow->WidgetToScreenOffsetUntyped());
+    boundRect.MoveBy(refWindow->WidgetToScreenOffset());
     ::SetRect(&aScreenExt, boundRect.x, boundRect.y,
               boundRect.XMost(), boundRect.YMost());
   } else {

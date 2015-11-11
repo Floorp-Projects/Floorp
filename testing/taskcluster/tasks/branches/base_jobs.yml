@@ -73,7 +73,7 @@ builds:
       - b2g
     types:
       opt:
-        task: tasks/builds/b2g_aries_spark_eng.yml
+        task: tasks/builds/b2g_aries_eng.yml
   flame-kk:
     platforms:
       - b2g

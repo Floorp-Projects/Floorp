@@ -125,6 +125,8 @@ nsCSPParser::nsCSPParser(cspTokens& aTokens,
                          uint64_t aInnerWindowID)
  : mHasHashOrNonce(false)
  , mUnsafeInlineKeywordSrc(nullptr)
+ , mChildSrc(nullptr)
+ , mFrameSrc(nullptr)
  , mTokens(aTokens)
  , mSelfURI(aSelfURI)
  , mInnerWindowID(aInnerWindowID)
@@ -994,6 +996,21 @@ nsCSPParser::directiveName()
     return new nsUpgradeInsecureDirective(CSP_StringToCSPDirective(mCurToken));
   }
 
+  // child-src has it's own class to handle frame-src if necessary
+  if (CSP_IsDirective(mCurToken, nsIContentSecurityPolicy::CHILD_SRC_DIRECTIVE)) {
+    mChildSrc = new nsCSPChildSrcDirective(CSP_StringToCSPDirective(mCurToken));
+    return mChildSrc;
+  }
+
+  // if we have a frame-src, cache it so we can decide whether to use child-src
+  if (CSP_IsDirective(mCurToken, nsIContentSecurityPolicy::FRAME_SRC_DIRECTIVE)) {
+    const char16_t* params[] = { mCurToken.get(), NS_LITERAL_STRING("child-src").get() };
+    logWarningErrorToConsole(nsIScriptError::warningFlag, "deprecatedDirective",
+                             params, ArrayLength(params));
+    mFrameSrc = new nsCSPDirective(CSP_StringToCSPDirective(mCurToken));
+    return mFrameSrc;
+  }
+
   return new nsCSPDirective(CSP_StringToCSPDirective(mCurToken));
 }
 
@@ -1086,6 +1103,12 @@ nsCSPParser::policy()
     mCurDir = mTokens[i];
     directive();
   }
+
+  if (mChildSrc && !mFrameSrc) {
+    // if we have a child-src, it handles frame-src too, unless frame-src is set
+    mChildSrc->setHandleFrameSrc();
+  }
+
   return mPolicy;
 }
 

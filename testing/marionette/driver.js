@@ -1639,6 +1639,8 @@ GeckoDriver.prototype.switchToParentFrame = function (cmd, resp) {
  *     or index of the frame to switch to.
  */
 GeckoDriver.prototype.switchToFrame = function(cmd, resp) {
+  let {id, element, focus} = cmd.parameters;
+
   let checkTimer = Cc["@mozilla.org/timer;1"].createInstance(Ci.nsITimer);
   let curWindow = this.getCurrentWindow();
 
@@ -1658,27 +1660,27 @@ GeckoDriver.prototype.switchToFrame = function(cmd, resp) {
   if (this.context == Context.CHROME) {
     let foundFrame = null;
 
-    // Bug 1158219: Python client sends id when it shouldn't,
-    // but we know that if it's null it wants us to switch to default
-    if (cmd.parameters.id == null && !cmd.parameters.hasOwnProperty("element")) {
+   // just focus
+   if (typeof id == "undefined" && typeof element == "undefined") {
       this.curFrame = null;
-      if (cmd.parameters.focus) {
+      if (focus) {
         this.mainFrame.focus();
       }
       checkTimer.initWithCallback(checkLoad.bind(this), 100, Ci.nsITimer.TYPE_ONE_SHOT);
       return;
     }
 
-    if (typeof cmd.parameters.element != "undefined") {
-      if (this.curBrowser.elementManager.seenItems[cmd.parameters.element]) {
+    // by element
+    if (typeof element != "undefined") {
+      if (this.curBrowser.elementManager.seenItems[element]) {
         // HTMLIFrameElement
         let wantedFrame = this.curBrowser.elementManager
-            .getKnownElement(cmd.parameters.element, { frame: curWindow });
+            .getKnownElement(element, {frame: curWindow});
         // Deal with an embedded xul:browser case
         if (wantedFrame.tagName == "xul:browser" || wantedFrame.tagName == "browser") {
           curWindow = wantedFrame.contentWindow;
           this.curFrame = curWindow;
-          if (cmd.parameters.focus) {
+          if (focus) {
             this.curFrame.focus();
           }
           checkTimer.initWithCallback(checkLoad.bind(this), 100, Ci.nsITimer.TYPE_ONE_SHOT);
@@ -1691,57 +1693,58 @@ GeckoDriver.prototype.switchToFrame = function(cmd, resp) {
           if (XPCNativeWrapper(frames[i]) == XPCNativeWrapper(wantedFrame)) {
             curWindow = frames[i].contentWindow;
             this.curFrame = curWindow;
-            if (cmd.parameters.focus) {
+            if (focus) {
               this.curFrame.focus();
             }
             checkTimer.initWithCallback(checkLoad.bind(this), 100, Ci.nsITimer.TYPE_ONE_SHOT);
             return;
+          }
         }
       }
     }
-  }
-  switch(typeof(cmd.parameters.id)) {
-    case "string" :
-      let foundById = null;
-      let frames = curWindow.document.getElementsByTagName("iframe");
-      let numFrames = frames.length;
-      for (let i = 0; i < numFrames; i++) {
-        //give precedence to name
-        let frame = frames[i];
-        if (frame.getAttribute("name") == cmd.parameters.id) {
-          foundFrame = i;
-          curWindow = frame.contentWindow;
-          break;
-        } else if ((foundById === null) && (frame.id == cmd.parameters.id)) {
-          foundById = i;
+
+    switch (typeof id) {
+      case "string" :
+        let foundById = null;
+        let frames = curWindow.document.getElementsByTagName("iframe");
+        let numFrames = frames.length;
+        for (let i = 0; i < numFrames; i++) {
+          //give precedence to name
+          let frame = frames[i];
+          if (frame.getAttribute("name") == id) {
+            foundFrame = i;
+            curWindow = frame.contentWindow;
+            break;
+          } else if (foundById === null && frame.id == id) {
+            foundById = i;
+          }
         }
-      }
-      if ((foundFrame === null) && (foundById !== null)) {
-        foundFrame = foundById;
-        curWindow = frames[foundById].contentWindow;
-      }
-      break;
-    case "number":
-      if (typeof curWindow.frames[cmd.parameters.id] != "undefined") {
-        foundFrame = cmd.parameters.id;
-        curWindow = curWindow.frames[foundFrame].frameElement.contentWindow;
-      }
-      break;
+        if (foundFrame === null && foundById !== null) {
+          foundFrame = foundById;
+          curWindow = frames[foundById].contentWindow;
+        }
+        break;
+      case "number":
+        if (typeof curWindow.frames[id] != "undefined") {
+          foundFrame = id;
+          curWindow = curWindow.frames[foundFrame].frameElement.contentWindow;
+        }
+        break;
     }
+
     if (foundFrame !== null) {
       this.curFrame = curWindow;
-      if (cmd.parameters.focus) {
+      if (focus) {
         this.curFrame.focus();
       }
       checkTimer.initWithCallback(checkLoad.bind(this), 100, Ci.nsITimer.TYPE_ONE_SHOT);
     } else {
-      throw new NoSuchFrameError(
-          `Unable to locate frame: ${cmd.parameters.id}`);
+      throw new NoSuchFrameError(`Unable to locate frame: ${id}`);
     }
-  }
-  else {
-    if ((!cmd.parameters.id) && (!cmd.parameters.element) &&
-        (this.curBrowser.frameManager.currentRemoteFrame !== null)) {
+
+  } else if (this.context == Context.CONTENT) {
+    if (!id && !element &&
+        this.curBrowser.frameManager.currentRemoteFrame !== null) {
       // We're currently using a ChromeMessageSender for a remote frame, so this
       // request indicates we need to switch back to the top-level (parent) frame.
       // We'll first switch to the parent's (global) ChromeMessageBroadcaster, so

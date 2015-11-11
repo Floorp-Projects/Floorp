@@ -53,6 +53,7 @@ class gfxContext final {
     typedef mozilla::gfx::Pattern Pattern;
     typedef mozilla::gfx::Rect Rect;
     typedef mozilla::gfx::RectCornerRadii RectCornerRadii;
+    typedef mozilla::gfx::Size Size;
 
     NS_INLINE_DECL_REFCOUNTING(gfxContext)
 
@@ -194,7 +195,7 @@ public:
      * Converts a size from device to user coordinates. This does not apply
      * translation components of the matrix.
      */
-    gfxSize DeviceToUser(const gfxSize& size) const;
+    Size DeviceToUser(const Size& size) const;
 
     /**
      * Converts a rectangle from device to user coordinates; this has the
@@ -213,7 +214,7 @@ public:
      * Converts a size from user to device coordinates. This does not apply
      * translation components of the matrix.
      */
-    gfxSize UserToDevice(const gfxSize& size) const;
+    Size UserToDevice(const Size& size) const;
 
     /**
      * Converts a rectangle from user to device coordinates.  The

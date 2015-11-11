@@ -31,12 +31,9 @@ interface MessageEvent : Event {
   readonly attribute DOMString lastEventId;
 
   /**
-   * The window, port or client which originated this event.
-   * FIXME(catalinb): Update this when the spec changes are implemented.
-   * https://www.w3.org/Bugs/Public/show_bug.cgi?id=28199
-   * https://bugzilla.mozilla.org/show_bug.cgi?id=1143717
+   * The window or port which originated this event.
    */
-  readonly attribute (WindowProxy or MessagePort or Client)? source;
+  readonly attribute (WindowProxy or MessagePort)? source;
 
   /**
    * Initializes this event with the given data, in a manner analogous to

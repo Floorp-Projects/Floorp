@@ -37,8 +37,6 @@ typedef android::MediaCodecProxy MediaCodecProxy;
 typedef mozilla::layers::TextureClient TextureClient;
 
 public:
-  typedef MozPromise<bool /* aIgnored */, bool /* aIgnored */, /* IsExclusive = */ true> MediaResourcePromise;
-
   GonkVideoDecoderManager(mozilla::layers::ImageContainer* aImageContainer,
                           const VideoInfo& aConfig);
 
@@ -51,17 +49,18 @@ public:
 
   nsresult Shutdown() override;
 
+  static void RecycleCallback(TextureClient* aClient, void* aClosure);
+
+protected:
   // Bug 1199809: workaround to avoid sending the graphic buffer by making a
   // copy of output buffer after calling flush(). Bug 1203859 was created to
   // reimplementing Gonk PDM on top of OpenMax IL directly. Its buffer
   // management will work better with Gecko and solve problems like this.
-  nsresult Flush() override
+  void ProcessFlush() override
   {
     mNeedsCopyBuffer = true;
-    return GonkDecoderManager::Flush();
+    GonkDecoderManager::ProcessFlush();
   }
-
-  static void RecycleCallback(TextureClient* aClient, void* aClosure);
 
 private:
   struct FrameInfo
@@ -78,29 +77,6 @@ private:
   };
 
   void onMessageReceived(const android::sp<android::AMessage> &aMessage) override;
-
-  class VideoResourceListener : public android::MediaCodecProxy::CodecResourceListener
-  {
-  public:
-    VideoResourceListener();
-    ~VideoResourceListener();
-
-    RefPtr<MediaResourcePromise> Init()
-    {
-      RefPtr<MediaResourcePromise> p = mVideoCodecPromise.Ensure(__func__);
-      return p.forget();
-    }
-
-    void codecReserved() override;
-    void codecCanceled() override;
-
-  private:
-    // Forbidden
-    VideoResourceListener(const VideoResourceListener &rhs) = delete;
-    const VideoResourceListener &operator=(const VideoResourceListener &rhs) = delete;
-
-    MozPromiseHolder<MediaResourcePromise> mVideoCodecPromise;
-  };
 
   bool SetVideoFormat();
 
@@ -131,8 +107,7 @@ private:
   RefPtr<layers::TextureClientRecycleAllocator> mCopyAllocator;
 
   MediaInfo mInfo;
-  android::sp<VideoResourceListener> mVideoListener;
-  MozPromiseRequestHolder<MediaResourcePromise> mVideoCodecRequest;
+  MozPromiseRequestHolder<android::MediaCodecProxy::CodecPromise> mVideoCodecRequest;
   FrameInfo mFrameInfo;
 
   // color converter

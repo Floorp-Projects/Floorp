@@ -1205,9 +1205,9 @@ class DebugScopes
      * removes scopes as they are popped). Thus, two consecutive debugger lazy
      * updates of liveScopes need only fill in the new scopes.
      */
-    typedef HashMap<ScopeObject*,
+    typedef HashMap<ReadBarriered<ScopeObject*>,
                     LiveScopeVal,
-                    DefaultHasher<ScopeObject*>,
+                    MovableCellHasher<ReadBarriered<ScopeObject*>>,
                     RuntimeAllocPolicy> LiveScopeMap;
     LiveScopeMap liveScopes;
     static MOZ_ALWAYS_INLINE void liveScopesPostWriteBarrier(JSRuntime* rt, LiveScopeMap* map,

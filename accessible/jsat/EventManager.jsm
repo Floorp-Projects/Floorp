@@ -302,6 +302,7 @@ this.EventManager.prototype = {
         break;
       }
       case Events.VALUE_CHANGE:
+      case Events.TEXT_VALUE_CHANGE:
       {
         let position = this.contentControl.vc.position;
         let target = aEvent.accessible;

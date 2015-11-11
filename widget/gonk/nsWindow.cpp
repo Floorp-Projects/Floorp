@@ -852,9 +852,9 @@ nsWindow::GetGLFrameBufferFormat()
 }
 
 nsIntRect
-nsWindow::GetNaturalBounds()
+nsWindow::GetNaturalBoundsUntyped()
 {
-    return mScreen->GetNaturalBounds();
+    return mScreen->GetNaturalBoundsUntyped();
 }
 
 nsScreenGonk*

@@ -46,27 +46,24 @@ runTest(() =>
   .then(() => mustSucceed("unknown plain deviceId on video",
                           () => navigator.mediaDevices.getUserMedia({
     video: { deviceId: "unknown9qHr8B0JIbcHlbl9xR+jMbZZ8WyoPfpCXPfc=" },
-    fake: true,
   })))
   .then(() => mustSucceed("unknown plain deviceId on audio",
                           () => navigator.mediaDevices.getUserMedia({
     audio: { deviceId: "unknown9qHr8B0JIbcHlbl9xR+jMbZZ8WyoPfpCXPfc=" },
-    fake: true,
   })))
   .then(() => mustFailWith("unknown exact deviceId on video",
                            "OverconstrainedError", "deviceId",
                            () => navigator.mediaDevices.getUserMedia({
     video: { deviceId: { exact: "unknown9qHr8B0JIbcHlbl9xR+jMbZZ8WyoPfpCXPfc=" } },
-    fake: true,
   })))
   .then(() => mustFailWith("unknown exact deviceId on audio",
                            "OverconstrainedError", "deviceId",
                            () => navigator.mediaDevices.getUserMedia({
     audio: { deviceId: { exact: "unknown9qHr8B0JIbcHlbl9xR+jMbZZ8WyoPfpCXPfc=" } },
-    fake: true,
   })))
-  // Check the special case of no devices found (these prefs override fake).
-  .then(() => pushPrefs(["media.audio_loopback_dev", "none"],
+  // Check the special case of no devices found.
+  .then(() => pushPrefs(["media.navigator.streams.fake", false],
+                        ["media.audio_loopback_dev", "none"],
                         ["media.video_loopback_dev", "none"]))
   .then(() => navigator.mediaDevices.enumerateDevices())
   .then(devices => ok(devices.length === 0, "No devices found")));

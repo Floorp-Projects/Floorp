@@ -580,7 +580,7 @@ GeckoInputReaderPolicy::setDisplayInfo()
     uint32_t rotation = nsIScreen::ROTATION_0_DEG;
     DebugOnly<nsresult> rv = screen->GetRotation(&rotation);
     MOZ_ASSERT(NS_SUCCEEDED(rv));
-    nsIntRect screenBounds = screen->GetNaturalBounds();
+    nsIntRect screenBounds = screen->GetNaturalBoundsUntyped();
 
     DisplayViewport viewport;
     viewport.displayId = 0;

@@ -5770,14 +5770,17 @@ BytecodeEmitter::emitCStyleFor(ParseNode* pn, ptrdiff_t top)
 bool
 BytecodeEmitter::emitFor(ParseNode* pn, ptrdiff_t top)
 {
+    if (pn->pn_left->isKind(PNK_FORHEAD))
+        return emitCStyleFor(pn, top);
+
+    if (!updateLineNumberNotes(pn->pn_pos.begin))
+        return false;
+
     if (pn->pn_left->isKind(PNK_FORIN))
         return emitForIn(pn, top);
 
-    if (pn->pn_left->isKind(PNK_FOROF))
-        return emitForOf(StmtType::FOR_OF_LOOP, pn, top);
-
-    MOZ_ASSERT(pn->pn_left->isKind(PNK_FORHEAD));
-    return emitCStyleFor(pn, top);
+    MOZ_ASSERT(pn->pn_left->isKind(PNK_FOROF));
+    return emitForOf(StmtType::FOR_OF_LOOP, pn, top);
 }
 
 MOZ_NEVER_INLINE bool
@@ -6021,6 +6024,20 @@ BytecodeEmitter::emitWhile(ParseNode* pn, ptrdiff_t top)
      *  . . .
      *  N    N*(ifeq-fail; goto); ifeq-pass  goto; N*ifne-pass; ifne-fail
      */
+
+    // If we have a single-line while, like "while (x) ;", we want to
+    // emit the line note before the initial goto, so that the
+    // debugger sees a single entry point.  This way, if there is a
+    // breakpoint on the line, it will only fire once; and "next"ing
+    // will skip the whole loop.  However, for the multi-line case we
+    // want to emit the line note after the initial goto, so that
+    // "cont" stops on each iteration -- but without a stop before the
+    // first iteration.
+    if (parser->tokenStream.srcCoords.lineNum(pn->pn_pos.begin) ==
+        parser->tokenStream.srcCoords.lineNum(pn->pn_pos.end) &&
+        !updateSourceCoordNotes(pn->pn_pos.begin))
+        return false;
+
     LoopStmtInfo stmtInfo(cx);
     pushLoopStatement(&stmtInfo, StmtType::WHILE_LOOP, top);
 
@@ -7547,8 +7564,11 @@ BytecodeEmitter::emitTree(ParseNode* pn)
     ptrdiff_t top = offset();
     pn->pn_offset = top;
 
-    /* Emit notes to tell the current bytecode's source line number. */
-    if (!updateLineNumberNotes(pn->pn_pos.begin))
+    /* Emit notes to tell the current bytecode's source line number.
+       However, a couple trees require special treatment; see the
+       relevant emitter functions for details. */
+    if (pn->getKind() != PNK_WHILE && pn->getKind() != PNK_FOR &&
+        !updateLineNumberNotes(pn->pn_pos.begin))
         return false;
 
     switch (pn->getKind()) {

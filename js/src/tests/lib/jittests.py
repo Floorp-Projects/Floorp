@@ -25,6 +25,7 @@ JS_DIR = os.path.dirname(os.path.dirname(TESTS_LIB_DIR))
 TOP_SRC_DIR = os.path.dirname(os.path.dirname(JS_DIR))
 TEST_DIR = os.path.join(JS_DIR, 'jit-test', 'tests')
 LIB_DIR = os.path.join(JS_DIR, 'jit-test', 'lib') + os.path.sep
+MODULE_DIR = os.path.join(JS_DIR, 'jit-test', 'modules') + os.path.sep
 JS_CACHE_DIR = os.path.join(JS_DIR, 'jit-test', '.js-cache')
 JS_TESTS_DIR = posixpath.join(JS_DIR, 'tests')
 
@@ -117,6 +118,7 @@ class JitTest:
         self.test_join = [] # List of other configurations to test with all existing variants.
         self.expect_error = '' # Errors to expect and consider passing
         self.expect_status = 0 # Exit status to expect from shell
+        self.is_module = False
 
         # Expected by the test runner. Always true for jit-tests.
         self.enable = True
@@ -136,6 +138,7 @@ class JitTest:
         t.expect_error = self.expect_error
         t.expect_status = self.expect_status
         t.enable = True
+        t.is_module = self.is_module
         return t
 
     def copy_and_extend_jitflags(self, variant):
@@ -220,6 +223,8 @@ class JitTest:
                         test.jitflags.append('--baseline-eager')
                     elif name == 'dump-bytecode':
                         test.jitflags.append('--dump-bytecode')
+                    elif name == 'module':
+                        test.is_module = True
                     elif name.startswith('--'):
                         # // |jit-test| --ion-gvn=off; --no-sse4
                         test.jitflags.append(name)
@@ -232,7 +237,7 @@ class JitTest:
 
         return test
 
-    def command(self, prefix, libdir, remote_prefix=None):
+    def command(self, prefix, libdir, moduledir, remote_prefix=None):
         path = self.path
         if remote_prefix:
             path = self.path.replace(TEST_DIR, remote_prefix)
@@ -257,7 +262,12 @@ class JitTest:
         # We may have specified '-a' or '-d' twice: once via --jitflags, once
         # via the "|jit-test|" line.  Remove dups because they are toggles.
         cmd = prefix + ['--js-cache', JitTest.CacheDir]
-        cmd += list(set(self.jitflags)) + ['-e', expr, '-f', path]
+        cmd += list(set(self.jitflags)) + ['-e', expr]
+        if self.is_module:
+            cmd += ['--module-load-path', moduledir]
+            cmd += ['--module', path]
+        else:
+            cmd += ['-f', path]
         if self.valgrind:
             cmd = self.VALGRIND_CMD + cmd
         return cmd
@@ -266,7 +276,7 @@ class JitTest:
     js_cmd_prefix = None
     def get_command(self, prefix):
         """Shim for the test runner."""
-        return self.command(prefix, LIB_DIR)
+        return self.command(prefix, LIB_DIR, MODULE_DIR)
 
 
 def find_tests(substring=None):
@@ -290,6 +300,7 @@ def find_tests(substring=None):
 def run_test_remote(test, device, prefix, options):
     cmd = test.command(prefix,
                        posixpath.join(options.remote_test_root, 'lib/'),
+                       posixpath.join(options.remote_test_root, 'modules/'),
                        posixpath.join(options.remote_test_root, 'tests'))
     if options.show_cmd:
         print(subprocess.list2cmdline(cmd))

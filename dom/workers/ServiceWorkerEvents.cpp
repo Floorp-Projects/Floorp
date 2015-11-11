@@ -25,6 +25,8 @@
 #include "mozilla/dom/DOMException.h"
 #include "mozilla/dom/DOMExceptionBinding.h"
 #include "mozilla/dom/FetchEventBinding.h"
+#include "mozilla/dom/MessagePort.h"
+#include "mozilla/dom/MessagePortList.h"
 #include "mozilla/dom/PromiseNativeHandler.h"
 #include "mozilla/dom/Request.h"
 #include "mozilla/dom/Response.h"
@@ -986,5 +988,150 @@ NS_INTERFACE_MAP_END_INHERITING(ExtendableEvent)
 NS_IMPL_CYCLE_COLLECTION_INHERITED(PushEvent, ExtendableEvent, mData)
 
 #endif /* ! MOZ_SIMPLEPUSH */
+
+ExtendableMessageEvent::ExtendableMessageEvent(EventTarget* aOwner)
+  : ExtendableEvent(aOwner)
+  , mData(JS::UndefinedValue())
+{
+  mozilla::HoldJSObjects(this);
+}
+
+ExtendableMessageEvent::~ExtendableMessageEvent()
+{
+  mData.setUndefined();
+  DropJSObjects(this);
+}
+
+void
+ExtendableMessageEvent::GetData(JSContext* aCx,
+                                JS::MutableHandle<JS::Value> aData,
+                                ErrorResult& aRv)
+{
+  JS::ExposeValueToActiveJS(mData);
+  aData.set(mData);
+  if (!JS_WrapValue(aCx, aData)) {
+    aRv.Throw(NS_ERROR_FAILURE);
+  }
+}
+
+void
+ExtendableMessageEvent::GetSource(Nullable<OwningClientOrServiceWorkerOrMessagePort>& aValue) const
+{
+  if (mClient) {
+    aValue.SetValue().SetAsClient() = mClient;
+  } else if (mServiceWorker) {
+    aValue.SetValue().SetAsServiceWorker() = mServiceWorker;
+  } else if (mMessagePort) {
+    aValue.SetValue().SetAsMessagePort() = mMessagePort;
+  } else {
+    MOZ_CRASH("Unexpected source value");
+  }
+}
+
+/* static */ already_AddRefed<ExtendableMessageEvent>
+ExtendableMessageEvent::Constructor(const GlobalObject& aGlobal,
+                                    const nsAString& aType,
+                                    const ExtendableMessageEventInit& aOptions,
+                                    ErrorResult& aRv)
+{
+  nsCOMPtr<EventTarget> t = do_QueryInterface(aGlobal.GetAsSupports());
+  return Constructor(t, aType, aOptions, aRv);
+}
+
+/* static */ already_AddRefed<ExtendableMessageEvent>
+ExtendableMessageEvent::Constructor(mozilla::dom::EventTarget* aEventTarget,
+                                    const nsAString& aType,
+                                    const ExtendableMessageEventInit& aOptions,
+                                    ErrorResult& aRv)
+{
+  RefPtr<ExtendableMessageEvent> event = new ExtendableMessageEvent(aEventTarget);
+
+  aRv = event->InitEvent(aType, aOptions.mBubbles, aOptions.mCancelable);
+  if (NS_WARN_IF(aRv.Failed())) {
+    return nullptr;
+  }
+
+  bool trusted = event->Init(aEventTarget);
+  event->SetTrusted(trusted);
+
+  event->mData = aOptions.mData;
+  event->mOrigin = aOptions.mOrigin;
+  event->mLastEventId = aOptions.mLastEventId;
+
+  if (aOptions.mSource.WasPassed() && !aOptions.mSource.Value().IsNull()) {
+    if (aOptions.mSource.Value().Value().IsClient()) {
+      event->mClient = aOptions.mSource.Value().Value().GetAsClient();
+    } else if (aOptions.mSource.Value().Value().IsServiceWorker()){
+      event->mServiceWorker = aOptions.mSource.Value().Value().GetAsServiceWorker();
+    } else if (aOptions.mSource.Value().Value().IsServiceWorker()){
+      event->mMessagePort = aOptions.mSource.Value().Value().GetAsMessagePort();
+    }
+    MOZ_ASSERT(event->mClient || event->mServiceWorker || event->mMessagePort);
+  }
+
+  if (aOptions.mPorts.WasPassed() && !aOptions.mPorts.Value().IsNull()) {
+    nsTArray<RefPtr<MessagePort>> ports;
+    const Sequence<OwningNonNull<MessagePort>>& portsParam =
+      aOptions.mPorts.Value().Value();
+    for (uint32_t i = 0, len = portsParam.Length(); i < len; ++i) {
+      ports.AppendElement(portsParam[i].get());
+    }
+    event->mPorts = new MessagePortList(static_cast<EventBase*>(event), ports);
+  }
+
+  return event.forget();
+}
+
+MessagePortList*
+ExtendableMessageEvent::GetPorts() const
+{
+  return mPorts;
+}
+
+void
+ExtendableMessageEvent::SetPorts(MessagePortList* aPorts)
+{
+  MOZ_ASSERT(!mPorts && aPorts);
+  mPorts = aPorts;
+}
+
+void
+ExtendableMessageEvent::SetSource(ServiceWorkerClient* aClient)
+{
+  mClient = aClient;
+}
+
+void
+ExtendableMessageEvent::SetSource(ServiceWorker* aServiceWorker)
+{
+  mServiceWorker = aServiceWorker;
+}
+
+NS_IMPL_CYCLE_COLLECTION_CLASS(ExtendableMessageEvent)
+
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(ExtendableMessageEvent, Event)
+  tmp->mData.setUndefined();
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mClient)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mServiceWorker)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mMessagePort)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mPorts)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_END
+
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(ExtendableMessageEvent, Event)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mClient)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mServiceWorker)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mMessagePort)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mPorts)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
+
+NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(ExtendableMessageEvent, Event)
+  NS_IMPL_CYCLE_COLLECTION_TRACE_JSVAL_MEMBER_CALLBACK(mData)
+NS_IMPL_CYCLE_COLLECTION_TRACE_END
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(ExtendableMessageEvent)
+NS_INTERFACE_MAP_END_INHERITING(Event)
+
+NS_IMPL_ADDREF_INHERITED(ExtendableMessageEvent, Event)
+NS_IMPL_RELEASE_INHERITED(ExtendableMessageEvent, Event)
 
 END_WORKERS_NAMESPACE

@@ -289,6 +289,11 @@ struct LayoutDevicePixel {
       NSAppUnitsToIntPixels(aSize.height, aAppUnitsPerDevPixel));
   }
 
+  static nsPoint ToAppUnits(const LayoutDeviceIntPoint& aPoint, nscoord aAppUnitsPerDevPixel) {
+    return nsPoint(aPoint.x * aAppUnitsPerDevPixel,
+                   aPoint.y * aAppUnitsPerDevPixel);
+  }
+
   static nsSize ToAppUnits(const LayoutDeviceIntSize& aSize, nscoord aAppUnitsPerDevPixel) {
     return nsSize(aSize.width * aAppUnitsPerDevPixel,
                   aSize.height * aAppUnitsPerDevPixel);

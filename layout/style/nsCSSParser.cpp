@@ -16227,27 +16227,6 @@ nsCSSParser::Shutdown()
 // Wrapper methods
 
 nsresult
-nsCSSParser::SetStyleSheet(CSSStyleSheet* aSheet)
-{
-  return static_cast<CSSParserImpl*>(mImpl)->
-    SetStyleSheet(aSheet);
-}
-
-nsresult
-nsCSSParser::SetQuirkMode(bool aQuirkMode)
-{
-  return static_cast<CSSParserImpl*>(mImpl)->
-    SetQuirkMode(aQuirkMode);
-}
-
-nsresult
-nsCSSParser::SetChildLoader(mozilla::css::Loader* aChildLoader)
-{
-  return static_cast<CSSParserImpl*>(mImpl)->
-    SetChildLoader(aChildLoader);
-}
-
-nsresult
 nsCSSParser::ParseSheet(const nsAString& aInput,
                         nsIURI*          aSheetURI,
                         nsIURI*          aBaseURI,
