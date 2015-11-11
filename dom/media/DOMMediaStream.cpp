@@ -27,12 +27,12 @@
 #undef LOG
 #endif
 
-static PRLogModuleInfo* gMediaStreamLog;
-#define LOG(type, msg) MOZ_LOG(gMediaStreamLog, type, msg)
-
 using namespace mozilla;
 using namespace mozilla::dom;
 using namespace mozilla::layers;
+
+static LazyLogModule gMediaStreamLog("MediaStream");
+#define LOG(type, msg) MOZ_LOG(gMediaStreamLog, type, msg)
 
 const TrackID TRACK_VIDEO_PRIMARY = 1;
 
@@ -317,10 +317,6 @@ DOMMediaStream::DOMMediaStream()
   nsresult rv;
   nsCOMPtr<nsIUUIDGenerator> uuidgen =
     do_GetService("@mozilla.org/uuid-generator;1", &rv);
-
-  if (!gMediaStreamLog) {
-    gMediaStreamLog = PR_NewLogModule("MediaStream");
-  }
 
   if (NS_SUCCEEDED(rv) && uuidgen) {
     nsID uuid;

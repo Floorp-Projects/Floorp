@@ -24,7 +24,7 @@ extern "C" {
 
 namespace mozilla {
 
-extern PRLogModuleInfo* gMediaDecoderLog;
+extern LazyLogModule gMediaDecoderLog;
 #define OPUS_LOG(type, msg) MOZ_LOG(gMediaDecoderLog, type, msg)
 
 OpusParser::OpusParser():

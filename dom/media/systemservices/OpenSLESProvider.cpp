@@ -14,7 +14,7 @@
 // NSPR_LOG_MODULES=OpenSLESProvider:5
 #undef LOG
 #undef LOG_ENABLED
-PRLogModuleInfo *gOpenSLESProviderLog;
+mozilla::LazyLogModule gOpenSLESProviderLog("OpenSLESProvider");
 #define LOG(args) MOZ_LOG(gOpenSLESProviderLog, mozilla::LogLevel::Debug, args)
 #define LOG_ENABLED() MOZ_LOG_TEST(gOpenSLESProviderLog, mozilla::LogLevel::Debug)
 
@@ -27,8 +27,6 @@ OpenSLESProvider::OpenSLESProvider()
     mIsRealized(false),
     mOpenSLESLib(nullptr)
 {
-  if (!gOpenSLESProviderLog)
-    gOpenSLESProviderLog = PR_NewLogModule("OpenSLESProvider");
   LOG(("OpenSLESProvider being initialized"));
 }
 
