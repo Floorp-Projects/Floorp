@@ -3882,6 +3882,13 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
       aList->SetNeedsTransparentSurface();
     }
 
+    nsDisplayItem::Type itemType = item->GetType();
+
+    if (mParameters.mForEventsOnly && !item->GetChildren() &&
+        itemType != nsDisplayItem::TYPE_LAYER_EVENT_REGIONS) {
+      continue;
+    }
+
     LayerState layerState = item->GetLayerState(mBuilder, mManager, mParameters);
     if (layerState == LAYER_INACTIVE &&
         nsDisplayItem::ForceActiveLayers()) {
@@ -3919,8 +3926,6 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
     if (!animatedGeometryRootForScrollMetadata) {
       animatedGeometryRootForScrollMetadata = animatedGeometryRoot;
     }
-
-    nsDisplayItem::Type itemType = item->GetType();
 
     if (animatedGeometryRoot != realAnimatedGeometryRootOfItem) {
       // Pick up any scroll clips that should apply to the item and apply them.
