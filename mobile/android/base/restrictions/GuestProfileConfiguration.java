@@ -14,18 +14,18 @@ import java.util.List;
  * RestrictionConfiguration implementation for guest profiles.
  */
 public class GuestProfileConfiguration implements RestrictionConfiguration {
-    static List<Restriction> DEFAULT_RESTRICTIONS = Arrays.asList(
-            Restriction.DISALLOW_DOWNLOADS,
-            Restriction.DISALLOW_INSTALL_EXTENSION,
-            Restriction.DISALLOW_INSTALL_APPS,
-            Restriction.DISALLOW_BROWSE_FILES,
-            Restriction.DISALLOW_SHARE,
-            Restriction.DISALLOW_BOOKMARK,
-            Restriction.DISALLOW_ADD_CONTACTS,
-            Restriction.DISALLOW_SET_IMAGE,
-            Restriction.DISALLOW_MODIFY_ACCOUNTS,
-            Restriction.DISALLOW_REMOTE_DEBUGGING,
-            Restriction.DISALLOW_IMPORT_SETTINGS
+    static List<Restrictable> DEFAULT_RESTRICTIONS = Arrays.asList(
+            Restrictable.DISALLOW_DOWNLOADS,
+            Restrictable.DISALLOW_INSTALL_EXTENSION,
+            Restrictable.DISALLOW_INSTALL_APPS,
+            Restrictable.DISALLOW_BROWSE_FILES,
+            Restrictable.DISALLOW_SHARE,
+            Restrictable.DISALLOW_BOOKMARK,
+            Restrictable.DISALLOW_ADD_CONTACTS,
+            Restrictable.DISALLOW_SET_IMAGE,
+            Restrictable.DISALLOW_MODIFY_ACCOUNTS,
+            Restrictable.DISALLOW_REMOTE_DEBUGGING,
+            Restrictable.DISALLOW_IMPORT_SETTINGS
     );
 
     @SuppressWarnings("serial")
@@ -43,8 +43,8 @@ public class GuestProfileConfiguration implements RestrictionConfiguration {
     );
 
     @Override
-    public boolean isAllowed(Restriction restriction) {
-        return !DEFAULT_RESTRICTIONS.contains(restriction);
+    public boolean isAllowed(Restrictable restrictable) {
+        return !DEFAULT_RESTRICTIONS.contains(restrictable);
     }
 
     @Override
