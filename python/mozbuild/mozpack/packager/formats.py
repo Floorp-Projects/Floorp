@@ -19,6 +19,7 @@ from mozpack.files import (
 )
 from mozpack.copier import (
     FileRegistry,
+    FileRegistrySubtree,
     Jarrer,
 )
 
@@ -65,31 +66,75 @@ data.
 '''
 
 
-class FlatFormatter(object):
+class PiecemealFormatter(object):
     '''
-    Formatter for the flat package format.
+    Generic formatter that dispatches across different sub-formatters
+    according to paths.
     '''
     def __init__(self, copier):
-        assert isinstance(copier, FileRegistry)
+        assert isinstance(copier, (FileRegistry, FileRegistrySubtree))
         self.copier = copier
-        self._bases = []
+        self._sub_formatter = {}
         self._addons = []
         self._frozen_bases = False
 
     def add_base(self, base, addon=False):
         # Only allow to add a base directory before calls to _get_base()
         assert not self._frozen_bases
-        if not base in self._bases:
-            self._bases.append(base)
+        assert base not in self._sub_formatter
         if addon and base not in self._addons:
             self._addons.append(base)
+        self._add_base(base, addon)
 
     def _get_base(self, path):
         '''
         Return the deepest base directory containing the given path.
         '''
         self._frozen_bases = True
-        return mozpath.basedir(path, self._bases)
+        base = mozpath.basedir(path, self._sub_formatter.keys())
+        relpath = mozpath.relpath(path, base) if base else path
+        return base, relpath
+
+    def add(self, path, content):
+        base, relpath = self._get_base(path)
+        if base is None:
+            return self.copier.add(relpath, content)
+        return self._sub_formatter[base].add(relpath, content)
+
+    def add_manifest(self, entry):
+        base, relpath = self._get_base(entry.base)
+        assert base is not None
+        return self._sub_formatter[base].add_manifest(entry.move(relpath))
+
+    def add_interfaces(self, path, content):
+        base, relpath = self._get_base(path)
+        assert base is not None
+        return self._sub_formatter[base].add_interfaces(relpath, content)
+
+    def contains(self, path):
+        assert '*' not in path
+        base, relpath = self._get_base(path)
+        if base is None:
+            return self.copier.contains(relpath)
+        return self._sub_formatter[base].contains(relpath)
+
+
+class FlatFormatter(PiecemealFormatter):
+    '''
+    Formatter for the flat package format.
+    '''
+    def _add_base(self, base, addon=False):
+        self._sub_formatter[base] = FlatSubFormatter(
+            FileRegistrySubtree(base, self.copier))
+
+
+class FlatSubFormatter(object):
+    '''
+    Sub-formatter for the flat package format.
+    '''
+    def __init__(self, copier):
+        assert isinstance(copier, (FileRegistry, FileRegistrySubtree))
+        self.copier = copier
 
     def add(self, path, content):
         self.copier.add(path, content)
@@ -98,24 +143,20 @@ class FlatFormatter(object):
         # Store manifest entries in a single manifest per directory, named
         # after their parent directory, except for root manifests, all named
         # chrome.manifest.
-        base = self._get_base(entry.base)
-        assert base is not None
-        if entry.base == base:
-            name = 'chrome'
-        else:
+        if entry.base:
             name = mozpath.basename(entry.base)
-        path = mozpath.normpath(mozpath.join(entry.base,
-                                                       '%s.manifest' % name))
+        else:
+            name = 'chrome'
+        path = mozpath.normpath(mozpath.join(entry.base, '%s.manifest' % name))
         if not self.copier.contains(path):
-            assert mozpath.basedir(entry.base, [base]) == base
             # Add a reference to the manifest file in the parent manifest, if
             # the manifest file is not a root manifest.
-            if len(entry.base) > len(base):
+            if entry.base:
                 parent = mozpath.dirname(entry.base)
                 relbase = mozpath.basename(entry.base)
                 relpath = mozpath.join(relbase,
                                             mozpath.basename(path))
-                FlatFormatter.add_manifest(self, Manifest(parent, relpath))
+                self.add_manifest(Manifest(parent, relpath))
             self.copier.add(path, ManifestFile(entry.base))
         self.copier[path].add(entry)
 
@@ -123,10 +164,10 @@ class FlatFormatter(object):
         # Interfaces in the same directory are all linked together in an
         # interfaces.xpt file.
         interfaces_path = mozpath.join(mozpath.dirname(path),
-                                            'interfaces.xpt')
+                                       'interfaces.xpt')
         if not self.copier.contains(interfaces_path):
-            FlatFormatter.add_manifest(self, ManifestInterfaces(
-                mozpath.dirname(path), 'interfaces.xpt'))
+            self.add_manifest(ManifestInterfaces(mozpath.dirname(path),
+                                                 'interfaces.xpt'))
             self.copier.add(interfaces_path, XPTFile())
         self.copier[interfaces_path].add(content)
 
@@ -223,7 +264,7 @@ class OmniJarFormatter(JarFormatter):
         Return the (sub)formatter corresponding to the given path, its base
         directory and the path relative to that base.
         '''
-        base = self._get_base(path)
+        base, relpath = self._get_base(path)
         use_omnijar = base not in self._addons
         if use_omnijar:
             if is_resource is None:
@@ -271,7 +312,7 @@ class OmniJarFormatter(JarFormatter):
         omnijar archive.
         '''
         if base is None:
-            base = self._get_base(path)
+            base, relpath = self._get_base(path)
         if base is None:
             return False
         path = mozpath.relpath(path, base)
