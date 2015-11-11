@@ -100,12 +100,12 @@ class nsCSPParser {
     static nsCSPPolicy* parseContentSecurityPolicy(const nsAString &aPolicyString,
                                                    nsIURI *aSelfURI,
                                                    bool aReportOnly,
-                                                   uint64_t aInnerWindowID);
+                                                   nsCSPContext* aCSPContext);
 
   private:
     nsCSPParser(cspTokens& aTokens,
                 nsIURI* aSelfURI,
-                uint64_t aInnerWindowID);
+                nsCSPContext* aCSPContext);
     ~nsCSPParser();
 
 
@@ -245,7 +245,7 @@ class nsCSPParser {
     cspTokens          mTokens;
     nsIURI*            mSelfURI;
     nsCSPPolicy*       mPolicy;
-    uint64_t           mInnerWindowID; // used for console reporting
+    nsCSPContext*      mCSPContext; // used for console logging
 };
 
 #endif /* nsCSPParser_h___ */
