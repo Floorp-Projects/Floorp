@@ -327,6 +327,7 @@ LayerTransactionParent::RecvUpdate(InfallibleTArray<Edit>&& cset,
       if (common.isFixedPosition()) {
         layer->SetFixedPositionData(common.fixedPositionScrollContainerId(),
                                     common.fixedPositionAnchor(),
+                                    common.fixedPositionSides(),
                                     common.isClipFixed());
       }
       if (common.isStickyPosition()) {
