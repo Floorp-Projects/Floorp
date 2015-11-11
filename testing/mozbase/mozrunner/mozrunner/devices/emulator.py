@@ -204,23 +204,6 @@ waitFor(
             pass
         print '...done'
 
-    # TODO this function is B2G specific and shouldn't live here
-    @uses_marionette
-    def wait_for_homescreen(self, marionette):
-        print 'waiting for homescreen...'
-
-        marionette.set_context(marionette.CONTEXT_CONTENT)
-        marionette.execute_async_script("""
-log('waiting for mozbrowserloadend');
-window.addEventListener('mozbrowserloadend', function loaded(aEvent) {
-  log('received mozbrowserloadend for ' + aEvent.target.src);
-  if (aEvent.target.src.indexOf('ftu') != -1 || aEvent.target.src.indexOf('homescreen') != -1 || aEvent.target.src.indexOf('verticalhome') != -1) {
-    window.removeEventListener('mozbrowserloadend', loaded);
-    marionetteScriptFinished();
-  }
-});""", script_timeout=300000)
-        print '...done'
-
     def _get_telnet_response(self, command=None):
         output = []
         assert(self.telnet)

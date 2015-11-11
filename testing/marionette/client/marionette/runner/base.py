@@ -780,8 +780,6 @@ setReq.onerror = function() {
         need_external_ip = True
         if not self.marionette:
             self.start_marionette()
-            if self.emulator:
-                self.marionette.emulator.wait_for_homescreen(self.marionette)
             # Retrieve capabilities for later use
             if not self._capabilities:
                 self.capabilities
