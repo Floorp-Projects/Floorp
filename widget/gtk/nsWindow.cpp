@@ -2332,7 +2332,7 @@ nsWindow::UpdateAlpha(SourceSurface* aSourceSurface, nsIntRect aBoundsRect)
     auto imageBuffer = MakeUniqueFallible<uint8_t[]>(bufferSize);
     {
         RefPtr<DrawTarget> drawTarget = gfxPlatform::GetPlatform()->
-            CreateDrawTargetForData(imageBuffer, aBoundsRect.Size(),
+            CreateDrawTargetForData(imageBuffer.get(), aBoundsRect.Size(),
                                     stride, SurfaceFormat::A8);
 
         if (drawTarget) {
