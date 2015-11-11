@@ -101,8 +101,9 @@ public class BrowserSearch extends HomeFragment
     // Timeout for the suggestion client to respond
     private static final int SUGGESTION_TIMEOUT = 3000;
 
-    // Maximum number of results returned by the suggestion client
-    private static final int SUGGESTION_MAX = 3;
+    // Maximum number of suggestions from the search engine's suggestion client. This impacts network traffic and device
+    // data consumption whereas R.integer.max_saved_suggestions controls how many suggestion to show in the UI.
+    private static final int NETWORK_SUGGESTION_MAX = 3;
 
     // The maximum number of rows deep in a search we'll dig
     // for an autocomplete result
@@ -670,7 +671,7 @@ public class BrowserSearch extends HomeFragment
             return;
         }
 
-        mSuggestClient = sSuggestClientFactory.getSuggestClient(getActivity(), suggestTemplate, SUGGESTION_TIMEOUT, SUGGESTION_MAX);
+        mSuggestClient = sSuggestClientFactory.getSuggestClient(getActivity(), suggestTemplate, SUGGESTION_TIMEOUT, NETWORK_SUGGESTION_MAX);
     }
 
     private void showSuggestionsOptIn() {
@@ -903,7 +904,11 @@ public class BrowserSearch extends HomeFragment
             String actualQuery = BrowserContract.SearchHistory.QUERY + " LIKE ?";
             String[] queryArgs = new String[] { '%' + mSearchTerm + '%' };
 
-            final int maxSavedSuggestions = getContext().getResources().getInteger(R.integer.max_saved_suggestions);
+            // For deduplication, the worst case is that all the first NETWORK_SUGGESTION_MAX history suggestions are duplicates
+            // of search engine suggestions, and the there is a duplicate for the search term itself. A duplicate of the
+            // search term  can occur if the user has previously searched for the same thing.
+            final int maxSavedSuggestions = NETWORK_SUGGESTION_MAX + 1 + getContext().getResources().getInteger(R.integer.max_saved_suggestions);
+
             final String sortOrderAndLimit = BrowserContract.SearchHistory.DATE +" DESC LIMIT " + maxSavedSuggestions;
             final Cursor result =  cr.query(BrowserContract.SearchHistory.CONTENT_URI, columns, actualQuery, queryArgs, sortOrderAndLimit);
 

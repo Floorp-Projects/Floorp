@@ -24,6 +24,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.graphics.drawable.Drawable;
 import android.graphics.Typeface;
+import android.support.annotation.Nullable;
 import android.text.style.StyleSpan;
 import android.text.Spannable;
 import android.text.SpannableStringBuilder;
@@ -36,6 +37,7 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
 
@@ -261,24 +263,28 @@ class SearchEngineRow extends AnimatedHeightLayout {
     /**
      * Displays search suggestions from previous searches.
      *
-     * @param savedSuggestions The List to iterate over for saved search suggestions to display
-     * @param suggestionCounter global index of where to start adding suggestion "buttons" in the search engine row
+     * @param savedSuggestions The List to iterate over for saved search suggestions to display. This function does not
+     *                         enforce a ui maximum or filter. It will show all the suggestions in this list.
+     * @param suggestionStartIndex global index of where to start adding suggestion "buttons" in the search engine row. Also
+     *                             acts as a counter for total number of suggestions visible.
      * @param animate whether or not to animate suggestions for visual polish
      * @param recycledSuggestionCount How many suggestion "button" views we could recycle from previous calls
      */
-    private void updateFromSavedSearches(List<String> savedSuggestions, boolean animate, int suggestionCounter, int recycledSuggestionCount) {
+    private void updateFromSavedSearches(List<String> savedSuggestions, boolean animate, int suggestionStartIndex, int recycledSuggestionCount) {
         if (savedSuggestions == null || savedSuggestions.isEmpty()) {
             return;
         }
 
-        final int historyStartIndex = suggestionCounter;
-        for (String suggestion : savedSuggestions) {
-            String telemetryTag = "history." + (suggestionCounter - historyStartIndex);
-            bindSuggestionView(suggestion, animate, recycledSuggestionCount, suggestionCounter, true, telemetryTag);
-            ++suggestionCounter;
+        final int numSavedSearches = savedSuggestions.size();
+        int indexOfPreviousSuggestion = 0;
+        for (int i = 0; i < numSavedSearches; i++) {
+            String telemetryTag = "history." + i;
+            final String suggestion = savedSuggestions.get(i);
+            indexOfPreviousSuggestion = suggestionStartIndex + i;
+            bindSuggestionView(suggestion, animate, recycledSuggestionCount, indexOfPreviousSuggestion, true, telemetryTag);
         }
 
-        hideRecycledSuggestions(suggestionCounter, recycledSuggestionCount);
+        hideRecycledSuggestions(indexOfPreviousSuggestion + 1, recycledSuggestionCount);
     }
 
     /**
@@ -289,33 +295,34 @@ class SearchEngineRow extends AnimatedHeightLayout {
      * @param savedSuggestionCount how many saved searches this searchTerm has
      * @return the global count of how many suggestions have been bound/shown in the search engine row
      */
-    private int updateFromSearchEngine(boolean animate, int recycledSuggestionCount, int savedSuggestionCount) {
+    private int updateFromSearchEngine(boolean animate, List<String> searchEngineSuggestions, int recycledSuggestionCount, int savedSuggestionCount) {
         int maxSuggestions = mMaxSearchSuggestions;
         // If there are less than max saved searches on phones, fill the space with more search engine suggestions
         if (!HardwareUtils.isTablet() && savedSuggestionCount < mMaxSavedSuggestions) {
             maxSuggestions += mMaxSavedSuggestions - savedSuggestionCount;
         }
 
-        int suggestionCounter = 0;
-        for (String suggestion : mSearchEngine.getSuggestions()) {
-            if (suggestionCounter == maxSuggestions) {
+        final int numSearchEngineSuggestions = searchEngineSuggestions.size();
+        int relativeIndex;
+        for (relativeIndex = 0; relativeIndex < numSearchEngineSuggestions; relativeIndex++) {
+            if (relativeIndex == maxSuggestions) {
                 break;
             }
 
-            // Since the search engine suggestions are listed first, we can use suggestionCounter to get their relative positions for telemetry
-            String telemetryTag = "engine." + suggestionCounter;
-            bindSuggestionView(suggestion, animate, recycledSuggestionCount, suggestionCounter, false, telemetryTag);
-            ++suggestionCounter;
+            // Since the search engine suggestions are listed first, their relative index is their global index
+            String telemetryTag = "engine." + relativeIndex;
+            final String suggestion = searchEngineSuggestions.get(relativeIndex);
+            bindSuggestionView(suggestion, animate, recycledSuggestionCount, relativeIndex, false, telemetryTag);
         }
 
-        hideRecycledSuggestions(suggestionCounter, recycledSuggestionCount);
+        hideRecycledSuggestions(relativeIndex + 1, recycledSuggestionCount);
 
         // Make sure mSelectedView is still valid.
         if (mSelectedView >= mSuggestionView.getChildCount()) {
             mSelectedView = mSuggestionView.getChildCount() - 1;
         }
 
-        return suggestionCounter;
+        return relativeIndex;
     }
 
     /**
@@ -327,10 +334,10 @@ class SearchEngineRow extends AnimatedHeightLayout {
      *
      * @param searchSuggestionsEnabled whether or not suggestions from the default search engine are enabled
      * @param searchEngine the search engine to use throughout the SearchEngineRow class
-     * @param searchHistorySuggestions search history suggestions
+     * @param rawSearchHistorySuggestions search history suggestions
      * @param animate whether or not to use animations
      **/
-    public void updateSuggestions(boolean searchSuggestionsEnabled, SearchEngine searchEngine, List<String> searchHistorySuggestions, boolean animate) {
+    public void updateSuggestions(boolean searchSuggestionsEnabled, SearchEngine searchEngine, @Nullable List<String> rawSearchHistorySuggestions, boolean animate) {
         mSearchEngine = searchEngine;
         // Set the search engine icon (e.g., Google) for the row.
         mIconView.updateAndScaleImage(mSearchEngine.getIcon(), mSearchEngine.getEngineIdentifier());
@@ -341,15 +348,31 @@ class SearchEngineRow extends AnimatedHeightLayout {
         final SharedPreferences prefs = GeckoSharedPrefs.forApp(getContext());
         final boolean savedSearchesEnabled = prefs.getBoolean(GeckoPreferences.PREFS_HISTORY_SAVED_SEARCH, true);
 
-        if (searchSuggestionsEnabled && savedSearchesEnabled) {
-            final int savedSearchCount = (searchHistorySuggestions != null) ? searchHistorySuggestions.size() : 0;
-            final int suggestionViewCount = updateFromSearchEngine(animate, recycledSuggestionCount, savedSearchCount);
-            updateFromSavedSearches(searchHistorySuggestions, animate, suggestionViewCount, recycledSuggestionCount);
+        // Remove duplicates of search engine suggestions from saved searches.
+        List<String> searchHistorySuggestions = (rawSearchHistorySuggestions != null) ? rawSearchHistorySuggestions : new ArrayList<String>();
+        List<String> searchEngineSuggestions = new ArrayList<String>();
+        for (String suggestion : searchEngine.getSuggestions()) {
+            searchHistorySuggestions.remove(suggestion);
+            searchEngineSuggestions.add(suggestion);
+        }
+        // Make sure the search term itself isn't duplicated. This is more important on phones than tablets where screen
+        // space is more precious.
+        searchHistorySuggestions.remove(getSuggestionTextFromView(mUserEnteredView));
 
+        // Trim the history suggestions down to the maximum allowed.
+        if (searchHistorySuggestions.size() >= mMaxSavedSuggestions) {
+            // The second index to subList() is exclusive, so this looks like an off by one error but it is not.
+            searchHistorySuggestions = searchHistorySuggestions.subList(0, mMaxSavedSuggestions);
+        }
+        final int searchHistoryCount = searchHistorySuggestions.size();
+
+        if (searchSuggestionsEnabled && savedSearchesEnabled) {
+            final int suggestionViewCount =  updateFromSearchEngine(animate, searchEngineSuggestions, recycledSuggestionCount, searchHistoryCount);
+            updateFromSavedSearches(searchHistorySuggestions, animate, suggestionViewCount, recycledSuggestionCount);
         } else if (savedSearchesEnabled) {
             updateFromSavedSearches(searchHistorySuggestions, animate, 0, recycledSuggestionCount);
         } else if (searchSuggestionsEnabled) {
-            updateFromSearchEngine(animate, recycledSuggestionCount, 0);
+            updateFromSearchEngine(animate, searchEngineSuggestions, recycledSuggestionCount, 0);
         }
     }
 
