@@ -286,18 +286,17 @@ BluetoothServiceChildProcess::Disconnect(
 
 void
 BluetoothServiceChildProcess::SendFile(
-  const nsAString& aDeviceAddress,
+  const BluetoothAddress& aDeviceAddress,
   BlobParent* aBlobParent,
   BlobChild* aBlobChild,
   BluetoothReplyRunnable* aRunnable)
 {
-  SendRequest(aRunnable,
-              SendFileRequest(nsString(aDeviceAddress), nullptr, aBlobChild));
+  SendRequest(aRunnable, SendFileRequest(aDeviceAddress, nullptr, aBlobChild));
 }
 
 void
 BluetoothServiceChildProcess::SendFile(
-  const nsAString& aDeviceAddress,
+  const BluetoothAddress& aDeviceAddress,
   Blob* aBlobChild,
   BluetoothReplyRunnable* aRunnable)
 {
@@ -307,27 +306,23 @@ BluetoothServiceChildProcess::SendFile(
 
 void
 BluetoothServiceChildProcess::StopSendingFile(
-  const nsAString& aDeviceAddress,
+  const BluetoothAddress& aDeviceAddress,
   BluetoothReplyRunnable* aRunnable)
 {
-  SendRequest(aRunnable,
-              StopSendingFileRequest(nsString(aDeviceAddress)));
+  SendRequest(aRunnable, StopSendingFileRequest(aDeviceAddress));
 }
 
 void
 BluetoothServiceChildProcess::ConfirmReceivingFile(
-  const nsAString& aDeviceAddress,
-  bool aConfirm,
+  const BluetoothAddress& aDeviceAddress, bool aConfirm,
   BluetoothReplyRunnable* aRunnable)
 {
   if(aConfirm) {
-    SendRequest(aRunnable,
-                ConfirmReceivingFileRequest(nsString(aDeviceAddress)));
+    SendRequest(aRunnable, ConfirmReceivingFileRequest(aDeviceAddress));
     return;
   }
 
-  SendRequest(aRunnable,
-              DenyReceivingFileRequest(nsString(aDeviceAddress)));
+  SendRequest(aRunnable, DenyReceivingFileRequest(aDeviceAddress));
 }
 
 void
