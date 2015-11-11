@@ -31,7 +31,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=668855
 
   /* Check to see if a weak reference is dead. */
   let weak_ref_dead = function (r) {
-    return Cu.nondeterministicGetWeakMapKeys(r).length == 0;
+    return ThreadSafeChromeUtils.nondeterministicGetWeakMapKeys(r).length == 0;
   }
 
   /* Deterministically grab an arbitrary DOM element. */
@@ -118,7 +118,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=668855
       "Live key should have the same value in live map.");
     is(live_map.get(black_key).my_key, 'live_black',
       "Black key should have the same value in live map.");
-    is(Cu.nondeterministicGetWeakMapKeys(live_map).length, 2,
+    is(ThreadSafeChromeUtils.nondeterministicGetWeakMapKeys(live_map).length, 2,
       "Live map should have two entries.");
 
     // check the live black map
@@ -126,7 +126,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=668855
       "Live key should have the same value in black map.");
     is(black_map.get(black_key).my_key, 'black_black',
       "Black key should have the same value in black map.");
-    is(Cu.nondeterministicGetWeakMapKeys(black_map).length, 2,
+    is(ThreadSafeChromeUtils.nondeterministicGetWeakMapKeys(black_map).length, 2,
       "Black map should have two entries.");    
 
   };
@@ -250,16 +250,16 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=668855
 
     check_nested_cc_maps();
 
-    is(Cu.nondeterministicGetWeakMapKeys(garbage_map).length, 0, "Chained garbage weak map entries should not leak.");
+    is(ThreadSafeChromeUtils.nondeterministicGetWeakMapKeys(garbage_map).length, 0, "Chained garbage weak map entries should not leak.");
 
     check_basic_unit();
 
     // fixed by Bug 680937
-    is(Cu.nondeterministicGetWeakMapKeys(wn_garbage_map).length, 0,
+    is(ThreadSafeChromeUtils.nondeterministicGetWeakMapKeys(wn_garbage_map).length, 0,
        "Chained garbage WN weak map entries should not leak.");
 
     // fixed by Bug 680937
-    is(Cu.nondeterministicGetWeakMapKeys(wn_live_map).length, 1,
+    is(ThreadSafeChromeUtils.nondeterministicGetWeakMapKeys(wn_live_map).length, 1,
        "Live weak map wrapped native key should not be removed.");
 
     ok(wn_live_map.has(get_live_dom()), "Live map should have live dom.");
