@@ -10,14 +10,13 @@ import org.mozilla.gecko.annotation.WrapForJNI;
 import org.mozilla.gecko.AppConstants.Versions;
 import org.mozilla.gecko.restrictions.DefaultConfiguration;
 import org.mozilla.gecko.restrictions.GuestProfileConfiguration;
+import org.mozilla.gecko.restrictions.Restrictable;
 import org.mozilla.gecko.restrictions.RestrictedProfileConfiguration;
-import org.mozilla.gecko.restrictions.Restriction;
 import org.mozilla.gecko.restrictions.RestrictionConfiguration;
 
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.os.Build;
-import android.os.Bundle;
 import android.os.UserManager;
 import android.util.Log;
 
@@ -83,8 +82,8 @@ public class Restrictions {
         getConfiguration(context).update();
     }
 
-    private static Restriction geckoActionToRestriction(int action) {
-        for (Restriction rest : Restriction.values()) {
+    private static Restrictable geckoActionToRestriction(int action) {
+        for (Restrictable rest : Restrictable.values()) {
             if (rest.id == action) {
                 return rest;
             }
@@ -106,15 +105,15 @@ public class Restrictions {
         return getConfiguration(context).isRestricted();
     }
 
-    public static boolean isAllowed(final Context context, final Restriction restriction) {
-        return getConfiguration(context).isAllowed(restriction);
+    public static boolean isAllowed(final Context context, final Restrictable restrictable) {
+        return getConfiguration(context).isAllowed(restrictable);
     }
 
     @WrapForJNI
     public static boolean isAllowed(int action, String url) {
-        final Restriction restriction;
+        final Restrictable restrictable;
         try {
-            restriction = geckoActionToRestriction(action);
+            restrictable = geckoActionToRestriction(action);
         } catch (IllegalArgumentException ex) {
             // Unknown actions represent a coding error, so we
             // refuse the action and log.
@@ -124,10 +123,10 @@ public class Restrictions {
 
         final Context context = GeckoAppShell.getApplicationContext();
 
-        if (Restriction.DISALLOW_BROWSE_FILES == restriction) {
+        if (Restrictable.DISALLOW_BROWSE_FILES == restrictable) {
             return canLoadUrl(context, url);
         } else {
-            return isAllowed(context, restriction);
+            return isAllowed(context, restrictable);
         }
     }
 }
