@@ -72,7 +72,7 @@ class FlatFormatter(object):
     def __init__(self, copier):
         assert isinstance(copier, FileRegistry)
         self.copier = copier
-        self._bases = ['']
+        self._bases = []
         self._addons = []
         self._frozen_bases = False
 
@@ -99,6 +99,7 @@ class FlatFormatter(object):
         # after their parent directory, except for root manifests, all named
         # chrome.manifest.
         base = self._get_base(entry.base)
+        assert base is not None
         if entry.base == base:
             name = 'chrome'
         else:
@@ -233,6 +234,7 @@ class OmniJarFormatter(JarFormatter):
         if not base in self.omnijars:
             omnijar = Jarrer(self._compress, self._optimize)
             self.omnijars[base] = FlatFormatter(omnijar)
+            self.omnijars[base].add_base('')
             self.copier.add(mozpath.join(base, self._omnijar_name),
                             omnijar)
         return self.omnijars[base], base, mozpath.relpath(path, base)
@@ -270,6 +272,8 @@ class OmniJarFormatter(JarFormatter):
         '''
         if base is None:
             base = self._get_base(path)
+        if base is None:
+            return False
         path = mozpath.relpath(path, base)
         if any(mozpath.match(path, p.replace('*', '**'))
                for p in self._non_resources):

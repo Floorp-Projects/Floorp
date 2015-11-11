@@ -33,6 +33,7 @@ import mozpack.path as mozpath
 CONTENTS = {
     'bases': {
         # base_path: is_addon?
+        '': False,
         'app': False,
         'addon0': True,
     },
@@ -214,7 +215,7 @@ RESULT_OMNIJAR['omni.foo'].update({
 
 CONTENTS_WITH_BASE = {
     'bases': {
-        mozpath.join('base/root', b): a
+        mozpath.join('base/root', b) if b else 'base/root': a
         for b, a in CONTENTS['bases'].iteritems()
     },
     'manifests': [
@@ -226,10 +227,6 @@ CONTENTS_WITH_BASE = {
         for p, f in CONTENTS['files'].iteritems()
     },
 }
-
-# There is no base for the top directory in CONTENTS,
-# and we want a specific base here.
-CONTENTS_WITH_BASE['bases']['base/root'] = False
 
 EXTRA_CONTENTS = {
     'extra/file': GeneratedFile('extra file'),
@@ -364,6 +361,7 @@ class TestFormatters(unittest.TestCase):
                 'defaults/foo/*',
                 '*/dummy',
             ])
+            f.add_base('')
             f.add_base('app')
             f.add(mozpath.join(base, path), GeneratedFile(''))
             if f.copier.contains(mozpath.join(base, path)):
