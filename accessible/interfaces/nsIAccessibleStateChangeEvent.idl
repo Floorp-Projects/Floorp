@@ -8,7 +8,7 @@
 /**
  * Fired when a state of an accessible changes.
  */
-[scriptable, builtinclass, uuid(0d2d77c5-7b16-4a15-8b20-c484ceb5ac0d)]
+[scriptable, builtinclass, uuid(58b74954-1835-46ed-9ccd-c906490106f6)]
 interface nsIAccessibleStateChangeEvent : nsIAccessibleEvent
 {
   /**

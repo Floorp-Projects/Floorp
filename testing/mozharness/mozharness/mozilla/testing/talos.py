@@ -198,59 +198,12 @@ class Talos(TestingMixin, MercurialScript, BlobUploadMixin):
         self.abs_dirs = abs_dirs
         return self.abs_dirs
 
-    def query_talos_json_url(self):
-        """Hacky, but I haven't figured out a better way to get the
-        talos json url before we install the build.
-
-        We can't get this information after we install the build, because
-        we have to create the virtualenv to use mozinstall, and talos_url
-        is specified in the talos json.
-        """
-        if self.talos_json_url:
-            return self.talos_json_url
-        self.info("Guessing talos json url...")
-        if not self.installer_url:
-            self.read_buildbot_config()
-            self.postflight_read_buildbot_config()
-            if not self.installer_url:
-                self.fatal("Can't figure out talos_json_url without an installer_url!")
-        for suffix in INSTALLER_SUFFIXES:
-            if self.installer_url.endswith(suffix):
-                build_txt_url = self.installer_url[:-len(suffix)] + '.txt'
-                break
-        else:
-            self.fatal("Can't figure out talos_json_url from installer_url %s!" % self.installer_url)
-        build_txt_file = self.download_file(build_txt_url, parent_dir=self.workdir)
-        if not build_txt_file:
-            self.fatal("Can't download %s to guess talos_json_url!" % build_txt_url)
-        # HG hardcode?
-        revision_re = re.compile(r'''([a-zA-Z]+://.+)/rev/([0-9a-fA-F]{10})''')
-        contents = self.read_from_file(build_txt_file, error_level=FATAL).splitlines()
-        for line in contents:
-            m = revision_re.match(line)
-            if m:
-                break
-        else:
-            self.fatal("Can't figure out talos_json_url from %s!" % build_txt_file)
-        self.talos_json_url = "%s/raw-file/%s/testing/talos/talos.json" % (m.group(1), m.group(2))
-        return self.talos_json_url
-
-    def download_talos_json(self):
-        talos_json_url = self.query_talos_json_url()
-        self.talos_json = self.download_file(talos_json_url,
-                                             parent_dir=self.workdir,
-                                             error_level=FATAL)
-
     def query_talos_json_config(self):
-        """Return the talos json config; download and read from the
-        talos_json_url if need be."""
+        """Return the talos json config."""
         if self.talos_json_config:
             return self.talos_json_config
         if not self.talos_json:
-            talos_json_url = self.query_talos_json_url()
-            if not talos_json_url:
-                self.fatal("Can't download talos_json without a talos_json_url!")
-            self.download_talos_json()
+            self.talos_json = os.path.join(self.talos_path, 'talos.json')
         self.talos_json_config = parse_config_file(self.talos_json)
         self.info(pprint.pformat(self.talos_json_config))
         return self.talos_json_config
@@ -303,12 +256,6 @@ class Talos(TestingMixin, MercurialScript, BlobUploadMixin):
         if 'talos_extra_options' in self.config:
             options += self.config['talos_extra_options']
         return options
-
-    def talos_conf_path(self, conf):
-        """return the full path for a talos .yml configuration file"""
-        if os.path.isabs(conf):
-            return conf
-        return os.path.join(self.workdir, conf)
 
     def populate_webroot(self):
         """Populate the production test slaves' webroots"""

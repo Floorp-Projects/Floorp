@@ -114,6 +114,7 @@ AccessibleWrap::HandleAccEvent(AccEvent* aEvent)
   // and document load complete events for now.
   if (eventType != nsIAccessibleEvent::EVENT_FOCUS &&
       eventType != nsIAccessibleEvent::EVENT_VALUE_CHANGE &&
+      eventType != nsIAccessibleEvent::EVENT_TEXT_VALUE_CHANGE &&
       eventType != nsIAccessibleEvent::EVENT_TEXT_CARET_MOVED &&
       eventType != nsIAccessibleEvent::EVENT_TEXT_SELECTION_CHANGED &&
       eventType != nsIAccessibleEvent::EVENT_DOCUMENT_LOAD_COMPLETE)
@@ -248,6 +249,7 @@ a11y::FireNativeEvent(mozAccessible* aNativeAcc, uint32_t aEventType)
       [aNativeAcc didReceiveFocus];
       break;
     case nsIAccessibleEvent::EVENT_VALUE_CHANGE:
+    case nsIAccessibleEvent::EVENT_TEXT_VALUE_CHANGE:
       [aNativeAcc valueDidChange];
       break;
     case nsIAccessibleEvent::EVENT_TEXT_CARET_MOVED:

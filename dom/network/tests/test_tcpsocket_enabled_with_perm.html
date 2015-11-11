@@ -17,10 +17,11 @@
   the tcp-socket permission has been granted.
 **/
 SimpleTest.waitForExplicitFinish();
-SpecialPowers.pushPrefEnv({"set": [['dom.mozTCPSocket.enabled', true]]}, runTest);
-function runTest() {
-  SpecialPowers.addPermission("tcp-socket", true, document);
+SpecialPowers.pushPrefEnv({"set": [['dom.mozTCPSocket.enabled', true]]}, function() {
+  SpecialPowers.pushPermissions([{type: "tcp-socket", allow: true, context: document}], runTest);
+});
 
+function runTest() {
   ok('TCPSocket' in this, "TCPSocket should be accessible if dom.mozTCPSocket.enabled is true");
 
   ok(new TCPSocket('localhost', 80), "TCPSocket constructor should work for content that has the tcp-socket permission");

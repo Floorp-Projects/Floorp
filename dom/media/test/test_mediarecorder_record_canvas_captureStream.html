@@ -56,7 +56,7 @@ function startTest() {
       SimpleTest.finish();
     };
     document.getElementById("content").appendChild(video);
-    helper.waitForPixel(video, helper.red, 128, "Should become red")
+    helper.waitForPixelColor(video, helper.red, 128, "Should become red")
       .then(SimpleTest.finish);
   };
 

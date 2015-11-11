@@ -4,7 +4,7 @@
 
 [Pref="dom.sysmsg.enabled",
  JSImplementation="@mozilla.org/dom/activities/request-handler;1",
- ChromeConstructor(DOMString id, optional ActivityOptions options),
+ ChromeConstructor(DOMString id, optional ActivityOptions options, optional boolean returnvalue),
  ChromeOnly]
 interface ActivityRequestHandler
 {

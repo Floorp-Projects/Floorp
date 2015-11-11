@@ -138,16 +138,22 @@ TraceCycleCollectorChildren(JS::CallbackTracer* trc, ObjectGroup* group);
 
 } // namespace gc
 
+// Define a default Policy for all pointer types. This may fail to link if this
+// policy gets used on a non-GC typed pointer by accident.
 template <typename T>
-struct DefaultTracer<T*>
+struct DefaultGCPolicy<T*>
 {
     static void trace(JSTracer* trc, T** t, const char* name) {
+        // If linking is failing here, it likely means that you need to define
+        // or use a non-default GC policy for your non-gc-pointer type.
         TraceManuallyBarrieredEdge(trc, t, name);
     }
 };
 
+// RelocatablePtr is only defined for GC pointer types, so this default policy
+// should work in all cases.
 template <typename T>
-struct DefaultTracer<RelocatablePtr<T*>>
+struct DefaultGCPolicy<RelocatablePtr<T*>>
 {
     static void trace(JSTracer* trc, RelocatablePtr<T*> t, const char* name) {
         TraceEdge(trc, t, name);

@@ -680,21 +680,6 @@ xpc_UnmarkSkippableJSHolders()
     }
 }
 
-template<class T> static void
-DoDeferredRelease(nsTArray<T>& array)
-{
-    while (1) {
-        uint32_t count = array.Length();
-        if (!count) {
-            array.Compact();
-            break;
-        }
-        T wrapper = array[count-1];
-        array.RemoveElementAt(count-1);
-        NS_RELEASE(wrapper);
-    }
-}
-
 /* static */ void
 XPCJSRuntime::GCSliceCallback(JSRuntime* rt,
                               JS::GCProgress progress,
@@ -746,10 +731,6 @@ XPCJSRuntime::FinalizeCallback(JSFreeOp* fop,
         {
             MOZ_ASSERT(self->mDoingFinalization, "bad state");
             self->mDoingFinalization = false;
-
-            // Release all the members whose JSObjects are now known
-            // to be dead.
-            DoDeferredRelease(self->mWrappedJSToReleaseArray);
 
             // Sweep scopes needing cleanup
             XPCWrappedNativeScope::KillDyingScopes();
@@ -945,7 +926,6 @@ XPCJSRuntime::WeakPointerZoneGroupCallback(JSRuntime* rt, void* data)
     // about to be finalized and update any pointers to moved GC things.
     XPCJSRuntime* self = static_cast<XPCJSRuntime*>(data);
 
-    MOZ_ASSERT(self->WrappedJSToReleaseArray().IsEmpty());
     self->mWrappedJSMap->UpdateWeakPointersAfterGC(self);
 
     XPCWrappedNativeScope::UpdateWeakPointersAfterGC(self);
@@ -3336,7 +3316,6 @@ XPCJSRuntime::XPCJSRuntime(nsXPConnect* aXPConnect)
    mDyingWrappedNativeProtoMap(XPCWrappedNativeProtoMap::newMap(XPC_DYING_NATIVE_PROTO_MAP_LENGTH)),
    mDetachedWrappedNativeProtoMap(XPCWrappedNativeProtoMap::newMap(XPC_DETACHED_NATIVE_PROTO_MAP_LENGTH)),
    mGCIsRunning(false),
-   mWrappedJSToReleaseArray(),
    mNativesToReleaseArray(),
    mDoingFinalization(false),
    mVariantRoots(nullptr),
@@ -3674,10 +3653,6 @@ XPCJSRuntime::DebugDump(int16_t depth)
     XPC_LOG_ALWAYS(("XPCJSRuntime @ %x", this));
         XPC_LOG_INDENT();
         XPC_LOG_ALWAYS(("mJSRuntime @ %x", Runtime()));
-
-        XPC_LOG_ALWAYS(("mWrappedJSToReleaseArray @ %x with %d wrappers(s)",
-                        &mWrappedJSToReleaseArray,
-                        mWrappedJSToReleaseArray.Length()));
 
         int cxCount = 0;
         JSContext* iter = nullptr;

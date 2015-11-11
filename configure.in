@@ -4019,14 +4019,14 @@ fi
 case "$MOZ_BUILD_APP" in
 browser)
   AC_DEFINE(MOZ_PHOENIX)
-
-  BUILD_BACKENDS="$BUILD_BACKENDS FasterMake"
   ;;
 
 xulrunner)
   AC_DEFINE(MOZ_XULRUNNER)
   ;;
 esac
+
+BUILD_BACKENDS="$BUILD_BACKENDS FasterMake"
 
 if test -n "$MOZ_B2G"; then
     AC_DEFINE(MOZ_B2G)

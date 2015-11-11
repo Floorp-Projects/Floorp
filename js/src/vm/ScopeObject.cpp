@@ -2187,13 +2187,6 @@ js::IsDebugScopeSlow(ProxyObject* proxy)
 
 /*****************************************************************************/
 
-/* static */ MOZ_ALWAYS_INLINE void
-DebugScopes::liveScopesPostWriteBarrier(JSRuntime* rt, LiveScopeMap* map, ScopeObject* key)
-{
-    if (key && IsInsideNursery(key))
-        rt->gc.storeBuffer.putGeneric(gc::HashKeyRef<LiveScopeMap, ScopeObject*>(map, key));
-}
-
 DebugScopes::DebugScopes(JSContext* cx)
  : proxiedScopes(cx),
    missingScopes(cx->runtime()),
@@ -2255,18 +2248,14 @@ DebugScopes::sweep(JSRuntime* rt)
     }
 
     for (LiveScopeMap::Enum e(liveScopes); !e.empty(); e.popFront()) {
-        ScopeObject* scope = e.front().key();
-
         e.front().value().sweep();
 
         /*
          * Scopes can be finalized when a debugger-synthesized ScopeObject is
          * no longer reachable via its DebugScopeObject.
          */
-        if (IsAboutToBeFinalizedUnbarriered(&scope))
+        if (IsAboutToBeFinalized(&e.front().mutableKey()))
             e.removeFront();
-        else if (scope != e.front().key())
-            e.rekeyFront(scope);
     }
 }
 
@@ -2399,7 +2388,6 @@ DebugScopes::addDebugScope(JSContext* cx, const ScopeIter& si, DebugScopeObject&
             ReportOutOfMemory(cx);
             return false;
         }
-        liveScopesPostWriteBarrier(cx->runtime(), &scopes->liveScopes, &debugScope.scope());
     }
 
     return true;
@@ -2595,7 +2583,6 @@ DebugScopes::updateLiveScopes(JSContext* cx)
                     return false;
                 if (!scopes->liveScopes.put(&si.scope(), LiveScopeVal(si)))
                     return false;
-                liveScopesPostWriteBarrier(cx->runtime(), &scopes->liveScopes, &si.scope());
             }
         }
 
