@@ -276,13 +276,13 @@ struct SendPlayStatusRequest
 struct ConnectGattClientRequest
 {
   nsString appUuid;
-  nsString deviceAddress;
+  BluetoothAddress deviceAddress;
 };
 
 struct DisconnectGattClientRequest
 {
   nsString appUuid;
-  nsString deviceAddress;
+  BluetoothAddress deviceAddress;
 };
 
 struct DiscoverGattServicesRequest
@@ -312,7 +312,7 @@ struct UnregisterGattClientRequest
 struct GattClientReadRemoteRssiRequest
 {
   int clientIf;
-  nsString deviceAddress;
+  BluetoothAddress deviceAddress;
 };
 
 struct GattClientReadCharacteristicValueRequest
@@ -351,13 +351,13 @@ struct GattClientWriteDescriptorValueRequest
 struct GattServerConnectPeripheralRequest
 {
   nsString appUuid;
-  nsString address;
+  BluetoothAddress address;
 };
 
 struct GattServerDisconnectPeripheralRequest
 {
   nsString appUuid;
-  nsString address;
+  BluetoothAddress address;
 };
 
 struct UnregisterGattServerRequest
@@ -418,7 +418,7 @@ struct GattServerStopServiceRequest
 struct GattServerSendResponseRequest
 {
   nsString appUuid;
-  nsString address;
+  BluetoothAddress address;
   uint16_t status;
   int32_t requestId;
   BluetoothGattResponse response;
@@ -427,7 +427,7 @@ struct GattServerSendResponseRequest
 struct GattServerSendIndicationRequest
 {
   nsString appUuid;
-  nsString address;
+  BluetoothAddress address;
   BluetoothAttributeHandle characteristicHandle;
   bool confirm;
   uint8_t[] value;
