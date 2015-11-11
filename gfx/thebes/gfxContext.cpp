@@ -902,7 +902,7 @@ GetRoundOutDeviceClipExtents(gfxContext* aCtx)
 }
 
 void
-gfxContext::PushGroupAndCopyBackground(gfxContentType content)
+gfxContext::PushGroupAndCopyBackground(gfxContentType content, Float aOpacity, SourceSurface* aMask, const Matrix& aMaskTransform)
 {
   IntRect clipExtents;
   if (mDT->GetFormat() != SurfaceFormat::B8G8R8X8) {
@@ -922,6 +922,11 @@ gfxContext::PushGroupAndCopyBackground(gfxContentType content)
       // Creating new DT failed.
       return;
     }
+
+    CurrentState().mBlendOpacity = aOpacity;
+    CurrentState().mBlendMask = aMask;
+    CurrentState().mWasPushedForBlendBack = true;
+    CurrentState().mBlendMaskTransform = aMaskTransform;
 
     Point offset = CurrentState().deviceOffset - oldDeviceOffset;
     Rect surfRect(0, 0, Float(mDT->GetSize().width), Float(mDT->GetSize().height));
@@ -958,6 +963,10 @@ gfxContext::PushGroupAndCopyBackground(gfxContentType content)
     return;
   }
   PushGroup(content);
+  CurrentState().mBlendOpacity = aOpacity;
+  CurrentState().mBlendMask = aMask;
+  CurrentState().mWasPushedForBlendBack = true;
+  CurrentState().mBlendMaskTransform = aMaskTransform;
 }
 
 already_AddRefed<gfxPattern>
