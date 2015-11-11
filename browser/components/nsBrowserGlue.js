@@ -1329,7 +1329,7 @@ BrowserGlue.prototype = {
       let wins = Services.wm.getEnumerator("navigator:browser");
       while (wins.hasMoreElements()) {
         let win = wins.getNext();
-        if (win.TabView._tabBrowserHasHiddenTabs() && win.TabView.firstUseExperienced()) {
+        if (win.TabView._tabBrowserHasHiddenTabs() && win.TabView.firstUseExperienced) {
           haveTabGroups = true;
           break;
         }
@@ -1905,7 +1905,7 @@ BrowserGlue.prototype = {
   },
 
   _migrateUI: function BG__migrateUI() {
-    const UI_VERSION = 33;
+    const UI_VERSION = 34;
     const BROWSER_DOCURL = "chrome://browser/content/browser.xul";
     let currentUIVersion = 0;
     try {
@@ -2250,7 +2250,7 @@ BrowserGlue.prototype = {
       this._notifyNotificationsUpgrade().catch(Cu.reportError);
     }
 
-    if (currentUIVersion < 33) {
+    if (currentUIVersion < 34) {
       // We'll do something once windows are open:
       this._mayNeedToWarnAboutTabGroups = true;
     }
