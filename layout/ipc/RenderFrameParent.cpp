@@ -201,25 +201,6 @@ public:
 
   void ClearRenderFrame() { mRenderFrame = nullptr; }
 
-  virtual void SendAsyncScrollDOMEvent(bool aIsRootContent,
-                                       const CSSRect& aContentRect,
-                                       const CSSSize& aContentSize) override
-  {
-    if (MessageLoop::current() != mUILoop) {
-      mUILoop->PostTask(
-        FROM_HERE,
-        NewRunnableMethod(this,
-                          &RemoteContentController::SendAsyncScrollDOMEvent,
-                          aIsRootContent, aContentRect, aContentSize));
-      return;
-    }
-    if (mRenderFrame && aIsRootContent) {
-      TabParent* browser = TabParent::GetFrom(mRenderFrame->Manager());
-      BrowserElementParent::DispatchAsyncScrollEvent(browser, aContentRect,
-                                                     aContentSize);
-    }
-  }
-
   virtual void PostDelayedTask(Task* aTask, int aDelayMs) override
   {
 #ifdef MOZ_ANDROID_APZ
