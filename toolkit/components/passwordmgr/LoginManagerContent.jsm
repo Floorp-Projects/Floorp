@@ -22,6 +22,10 @@ XPCOMUtils.defineLazyModuleGetter(this, "LoginRecipesContent",
 XPCOMUtils.defineLazyModuleGetter(this, "LoginHelper",
                                   "resource://gre/modules/LoginHelper.jsm");
 
+XPCOMUtils.defineLazyServiceGetter(this, "gContentSecurityManager",
+                                   "@mozilla.org/contentsecuritymanager;1",
+                                   "nsIContentSecurityManager");
+
 XPCOMUtils.defineLazyGetter(this, "log", () => {
   let logger = LoginHelper.createLogger("LoginManagerContent");
   return logger.log.bind(logger);
@@ -1135,7 +1139,9 @@ var LoginManagerContent = {
     let netutil = Cc["@mozilla.org/network/util;1"].getService(Ci.nsINetUtil);
     let ph = Ci.nsIProtocolHandler;
 
-    if (netutil.URIChainHasFlags(uri, ph.URI_IS_LOCAL_RESOURCE) ||
+    // Is the connection to localhost? Consider localhost safe for passwords.
+    if (gContentSecurityManager.isURIPotentiallyTrustworthy(uri) ||
+        netutil.URIChainHasFlags(uri, ph.URI_IS_LOCAL_RESOURCE) ||
         netutil.URIChainHasFlags(uri, ph.URI_DOES_NOT_RETURN_DATA) ||
         netutil.URIChainHasFlags(uri, ph.URI_INHERITS_SECURITY_CONTEXT) ||
         netutil.URIChainHasFlags(uri, ph.URI_SAFE_TO_LOAD_IN_SECURE_CONTEXT)) {

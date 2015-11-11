@@ -46,7 +46,7 @@ interface nsIContentSecurityManager : nsISupports
    * https://w3c.github.io/webappsec-secure-contexts/#is-origin-trustworthy
    *
    * This method should only be used when the context of the URI isn't available
-   * since isSecureContext is preffered as it handles parent contexts.
+   * since isSecureContext is preferred as it handles parent contexts.
    *
    * This method returns false instead of throwing upon errors.
    */
