@@ -1188,7 +1188,7 @@ function P2pStateMachine(aP2pCommand, aNetUtil) {
     enter: function() {
       this.groupOwner = {
         macAddress: _groupInfo.goAddress,
-        ipAddress:  _groupInfo.networkInterface.gateways[0],
+        ipAddress:  _groupInfo.networkInterface.info.gateways[0],
         passphrase: _groupInfo.passphrase,
         ssid:       _groupInfo.ssid,
         freq:       _groupInfo.freq,
@@ -1443,7 +1443,7 @@ function P2pStateMachine(aP2pCommand, aNetUtil) {
 
     debug("Client. Request IP from DHCP server on interface: " + _groupInfo.ifname);
 
-    aNetUtil.runDhcp(aInfo.ifname, function(dhcpData) {
+    aNetUtil.runDhcp(aInfo.ifname, 0, function(dhcpData) {
       if(!dhcpData || !dhcpData.info) {
         debug('Failed to run DHCP client');
         onFailure();
