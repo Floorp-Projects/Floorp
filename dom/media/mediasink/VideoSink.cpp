@@ -285,10 +285,9 @@ VideoSink::RenderVideoFrames(int32_t aMaxFrames,
   for (uint32_t i = 0; i < frames.Length(); ++i) {
     VideoData* frame = frames[i]->As<VideoData>();
 
-    bool valid = !frame->mImage || frame->mImage->IsValid();
     frame->mSentToCompositor = true;
 
-    if (!valid) {
+    if (!frame->mImage || !frame->mImage->IsValid()) {
       continue;
     }
 
