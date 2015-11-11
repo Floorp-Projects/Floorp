@@ -65,8 +65,10 @@ flags:
     - nexus-4
     - nexus-4-eng
     - nexus-4-kk
+    - nexus-4-kk-ota
     - nexus-4-kk-eng
     - nexus-5l
+    - nexus-5l-ota
     - nexus-5l-eng
     - dolphin
     - dolphin-eng

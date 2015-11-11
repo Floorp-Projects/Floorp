@@ -124,7 +124,7 @@ DocAccessible::MaybeNotifyOfValueChange(Accessible* aAccessible)
 {
   a11y::role role = aAccessible->Role();
   if (role == roles::ENTRY || role == roles::COMBOBOX)
-    FireDelayedEvent(nsIAccessibleEvent::EVENT_VALUE_CHANGE, aAccessible);
+    FireDelayedEvent(nsIAccessibleEvent::EVENT_TEXT_VALUE_CHANGE, aAccessible);
 }
 
 inline Accessible*

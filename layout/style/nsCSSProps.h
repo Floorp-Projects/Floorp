@@ -677,7 +677,9 @@ public:
   static const KTableValue kBoxShadowTypeKTable[];
   static const KTableValue kBoxSizingKTable[];
   static const KTableValue kCaptionSideKTable[];
-  static const KTableValue kClearKTable[];
+  // Not const because we modify its entries when the pref
+  // "layout.css.float-logical-values.enabled" changes:
+  static KTableValue kClearKTable[];
   static const KTableValue kColorKTable[];
   static const KTableValue kContentKTable[];
   static const KTableValue kControlCharacterVisibilityKTable[];
@@ -703,7 +705,9 @@ public:
   // ------------------------------------------------------------------
   static const KTableValue kFlexDirectionKTable[];
   static const KTableValue kFlexWrapKTable[];
-  static const KTableValue kFloatKTable[];
+  // Not const because we modify its entries when the pref
+  // "layout.css.float-logical-values.enabled" changes:
+  static KTableValue kFloatKTable[];
   static const KTableValue kFloatEdgeKTable[];
   static const KTableValue kFontKTable[];
   static const KTableValue kFontKerningKTable[];

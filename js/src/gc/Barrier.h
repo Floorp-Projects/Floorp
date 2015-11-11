@@ -492,7 +492,7 @@ class RelocatablePtr : public WriteBarrieredBase<T>
      * function that will be used for both lvalue and rvalue copies, so we can
      * simply omit the rvalue variant.
      */
-    RelocatablePtr(const RelocatablePtr<T>& v) : WriteBarrieredBase<T>(v) {
+    MOZ_IMPLICIT RelocatablePtr(const RelocatablePtr<T>& v) : WriteBarrieredBase<T>(v) {
         this->post(GCMethods<T>::initial(), this->value);
     }
 
@@ -559,11 +559,30 @@ class ReadBarriered : public ReadBarrieredBase<T>
 {
   public:
     ReadBarriered() : ReadBarrieredBase<T>(GCMethods<T>::initial()) {}
-    explicit ReadBarriered(const T& v) : ReadBarrieredBase<T>(v) {
+
+    MOZ_IMPLICIT ReadBarriered(const T& v) : ReadBarrieredBase<T>(v) {
         this->post(GCMethods<T>::initial(), v);
     }
+
+    explicit ReadBarriered(const ReadBarriered& v) : ReadBarrieredBase<T>(v) {
+        this->post(GCMethods<T>::initial(), v.get());
+    }
+
+    ReadBarriered(ReadBarriered&& v)
+      : ReadBarrieredBase<T>(mozilla::Forward<ReadBarriered<T>>(v))
+    {
+        this->post(GCMethods<T>::initial(), v.value);
+    }
+
     ~ReadBarriered() {
         this->post(this->value, GCMethods<T>::initial());
+    }
+
+    ReadBarriered& operator=(const ReadBarriered& v) {
+        T prior = this->value;
+        this->value = v.value;
+        this->post(prior, v.value);
+        return *this;
     }
 
     const T get() const {
@@ -772,9 +791,6 @@ class ImmutableTenuredPtr
 template <typename T>
 struct MovableCellHasher
 {
-    static_assert(mozilla::IsBaseOf<JSObject, typename mozilla::RemovePointer<T>::Type>::value,
-                  "MovableCellHasher's T must be a Cell type that may move");
-
     using Key = T;
     using Lookup = T;
 

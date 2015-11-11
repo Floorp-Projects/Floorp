@@ -8,7 +8,7 @@
 /**
  * Fired when an accessible's text changes.
  */
-[scriptable, builtinclass, uuid(21e0f8bd-5638-4964-870b-3c8e944ac4c4)]
+[scriptable, builtinclass, uuid(1fcc0dfa-93e6-48f4-bbd4-f80eb1d9f2e6)]
 interface nsIAccessibleTextChangeEvent : nsIAccessibleEvent
 {
   /**

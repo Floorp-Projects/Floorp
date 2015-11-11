@@ -404,6 +404,14 @@ public:
    */
   RefPtr<const OverscrollHandoffChain> BuildOverscrollHandoffChain(const RefPtr<AsyncPanZoomController>& aInitialTarget);
 
+  /**
+   * Function used to disable LongTap gestures.
+   *
+   * On slow running tests, drags and touch events can be misinterpreted
+   * as a long tap. This allows tests to disable long tap gesture detection.
+   */
+  static void SetLongTapEnabled(bool aTapGestureEnabled);
+
 protected:
   // Protected destructor, to discourage deletion outside of Release():
   virtual ~APZCTreeManager();

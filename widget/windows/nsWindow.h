@@ -81,7 +81,7 @@ public:
 
   // nsWindowBase
   virtual void InitEvent(mozilla::WidgetGUIEvent& aEvent,
-                         nsIntPoint* aPoint = nullptr) override;
+                         mozilla::LayoutDeviceIntPoint* aPoint = nullptr) override;
   virtual bool DispatchWindowEvent(mozilla::WidgetGUIEvent* aEvent) override;
   virtual bool DispatchKeyboardEvent(mozilla::WidgetKeyboardEvent* aEvent) override;
   virtual bool DispatchWheelEvent(mozilla::WidgetWheelEvent* aEvent) override;
@@ -116,10 +116,10 @@ public:
   NS_IMETHOD              Enable(bool aState);
   virtual bool            IsEnabled() const;
   NS_IMETHOD              SetFocus(bool aRaise);
-  NS_IMETHOD              GetBounds(nsIntRect &aRect);
-  NS_IMETHOD              GetScreenBounds(nsIntRect &aRect);
-  NS_IMETHOD              GetRestoredBounds(nsIntRect &aRect) override;
-  NS_IMETHOD              GetClientBounds(nsIntRect &aRect);
+  NS_IMETHOD              GetBoundsUntyped(nsIntRect &aRect);
+  NS_IMETHOD              GetScreenBoundsUntyped(nsIntRect &aRect);
+  NS_IMETHOD              GetRestoredBoundsUntyped(nsIntRect &aRect) override;
+  NS_IMETHOD              GetClientBoundsUntyped(nsIntRect &aRect);
   virtual nsIntPoint      GetClientOffset();
   void                    SetBackgroundColor(const nscolor &aColor);
   NS_IMETHOD              SetCursor(imgIContainer* aCursor,

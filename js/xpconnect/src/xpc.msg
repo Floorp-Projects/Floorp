@@ -156,6 +156,7 @@ XPC_MSG_DEF(NS_ERROR_ENTITY_CHANGED                 , "It was attempted to resum
 XPC_MSG_DEF(NS_ERROR_REDIRECT_LOOP                  , "The request failed as a result of a detected redirection loop")
 XPC_MSG_DEF(NS_ERROR_UNSAFE_CONTENT_TYPE            , "The request failed because the content type returned by the server was not a type expected by the channel")
 XPC_MSG_DEF(NS_ERROR_REMOTE_XUL                     , "Attempt to access remote XUL document that is not in website's whitelist")
+XPC_MSG_DEF(NS_ERROR_LOAD_SHOWED_ERRORPAGE          , "The load caused an error page to be displayed.")
 
 XPC_MSG_DEF(NS_ERROR_FTP_LOGIN                      , "FTP error while logging in")
 XPC_MSG_DEF(NS_ERROR_FTP_CWD                        , "FTP error while changing directory")

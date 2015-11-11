@@ -57,7 +57,7 @@ public:
 
   virtual MediaDecoderOwner* GetOwner() final override;
 
-  virtual void NotifyDataArrived(uint32_t, int64_t, bool) final override {};
+  virtual void NotifyDataArrived(bool) final override {};
 
 private:
   virtual ~BufferDecoder();

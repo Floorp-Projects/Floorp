@@ -118,6 +118,8 @@ var interfaceNamesInGlobalScope =
 // IMPORTANT: Do not change this list without review from a DOM peer!
     "ExtendableEvent",
 // IMPORTANT: Do not change this list without review from a DOM peer!
+    "ExtendableMessageEvent",
+// IMPORTANT: Do not change this list without review from a DOM peer!
     "FetchEvent",
 // IMPORTANT: Do not change this list without review from a DOM peer!
     "File",

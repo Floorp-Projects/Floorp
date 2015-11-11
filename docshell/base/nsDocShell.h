@@ -728,6 +728,14 @@ protected:
    */
   void MaybeInitTiming();
 
+  bool DisplayLoadError(nsresult aError, nsIURI* aURI, const char16_t* aURL,
+                        nsIChannel* aFailedChannel)
+  {
+    bool didDisplayLoadError = false;
+    DisplayLoadError(aError, aURI, aURL, aFailedChannel, &didDisplayLoadError);
+    return didDisplayLoadError;
+  }
+
 public:
   // Event type dispatched by RestorePresentation
   class RestorePresentationEvent : public nsRunnable

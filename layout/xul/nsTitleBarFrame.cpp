@@ -125,10 +125,10 @@ nsTitleBarFrame::HandleEvent(nsPresContext* aPresContext,
          if (parent) {
            nsMenuPopupFrame* menuPopupFrame = static_cast<nsMenuPopupFrame*>(parent);
            nsCOMPtr<nsIWidget> widget = menuPopupFrame->GetWidget();
-           nsIntRect bounds;
+           LayoutDeviceIntRect bounds;
            widget->GetScreenBounds(bounds);
 
-           CSSPoint cssPos = (LayoutDeviceIntPoint::FromUntyped(bounds.TopLeft()) + nsMoveBy)
+           CSSPoint cssPos = (bounds.TopLeft() + nsMoveBy)
                            / aPresContext->CSSToDevPixelScale();
            menuPopupFrame->MoveTo(RoundedToInt(cssPos), false);
          }

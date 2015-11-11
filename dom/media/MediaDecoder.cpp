@@ -1341,13 +1341,11 @@ void MediaDecoder::AddSizeOfResources(ResourceSizes* aSizes) {
 }
 
 void
-MediaDecoder::NotifyDataArrived(uint32_t aLength,
-                                int64_t aOffset,
-                                bool aThrottleUpdates) {
+MediaDecoder::NotifyDataArrived(bool aThrottleUpdates) {
   MOZ_ASSERT(NS_IsMainThread());
 
   if (mDecoderStateMachine) {
-    mDecoderStateMachine->DispatchNotifyDataArrived(aLength, aOffset, aThrottleUpdates);
+    mDecoderStateMachine->DispatchNotifyDataArrived(aThrottleUpdates);
   }
 
   // ReadyState computation depends on MediaDecoder::CanPlayThrough, which

@@ -477,9 +477,9 @@ nsTextBoxFrame::DrawText(nsRenderingContext& aRenderingContext,
     }
 
     RefPtr<gfxContext> ctx = aRenderingContext.ThebesContext();
-    gfxPoint pt(presContext->AppUnitsToGfxUnits(aTextRect.x),
-                presContext->AppUnitsToGfxUnits(aTextRect.y));
-    gfxFloat width = presContext->AppUnitsToGfxUnits(aTextRect.width);
+    Point pt(presContext->AppUnitsToGfxUnits(aTextRect.x),
+             presContext->AppUnitsToGfxUnits(aTextRect.y));
+    Float width = presContext->AppUnitsToGfxUnits(aTextRect.width);
     gfxFloat ascentPixel = presContext->AppUnitsToGfxUnits(ascent);
     Float xInFrame = Float(PresContext()->AppUnitsToGfxUnits(mTextDrawRect.x));
     gfxRect dirtyRect(presContext->AppUnitsToGfxUnits(aDirtyRect));
@@ -496,12 +496,12 @@ nsTextBoxFrame::DrawText(nsRenderingContext& aRenderingContext,
                        NS_FONT_DECORATION_UNDERLINE)) {
       fontMet->GetUnderline(offset, size);
       gfxFloat offsetPixel = presContext->AppUnitsToGfxUnits(offset);
-      gfxFloat sizePixel = presContext->AppUnitsToGfxUnits(size);
+      Float sizePixel = presContext->AppUnitsToGfxUnits(size);
       if ((decorations & NS_FONT_DECORATION_UNDERLINE) &&
           underStyle != NS_STYLE_TEXT_DECORATION_STYLE_NONE) {
         nsCSSRendering::PaintDecorationLine(this, *drawTarget,
                                             ToRect(dirtyRect), underColor,
-                          pt, xInFrame, gfxSize(width, sizePixel),
+                          pt, xInFrame, Size(width, sizePixel),
                           ascentPixel, offsetPixel,
                           NS_STYLE_TEXT_DECORATION_LINE_UNDERLINE, underStyle,
                           vertical);
@@ -510,7 +510,7 @@ nsTextBoxFrame::DrawText(nsRenderingContext& aRenderingContext,
           overStyle != NS_STYLE_TEXT_DECORATION_STYLE_NONE) {
         nsCSSRendering::PaintDecorationLine(this, *drawTarget,
                                             ToRect(dirtyRect), overColor,
-                          pt, xInFrame, gfxSize(width, sizePixel),
+                          pt, xInFrame, Size(width, sizePixel),
                           ascentPixel, ascentPixel,
                           NS_STYLE_TEXT_DECORATION_LINE_OVERLINE, overStyle,
                           vertical);
@@ -593,7 +593,7 @@ nsTextBoxFrame::DrawText(nsRenderingContext& aRenderingContext,
       gfxFloat sizePixel = presContext->AppUnitsToGfxUnits(size);
       nsCSSRendering::PaintDecorationLine(this, *drawTarget, ToRect(dirtyRect),
                                           strikeColor,
-                        pt, xInFrame, gfxSize(width, sizePixel), ascentPixel,
+                        pt, xInFrame, Size(width, sizePixel), ascentPixel,
                         offsetPixel, NS_STYLE_TEXT_DECORATION_LINE_LINE_THROUGH,
                         strikeStyle, vertical);
     }

@@ -96,7 +96,7 @@ private:
 
     while (mLength) {
       uint32_t length = std::min<uint64_t>(mLength, UINT32_MAX);
-      mOmxReader->NotifyDataArrived(Interval<int64_t>(mOffset, mOffset + length));
+      mOmxReader->NotifyDataArrived();
       mLength -= length;
       mOffset += length;
     }
@@ -200,7 +200,7 @@ nsresult MediaOmxReader::InitOmxDecoder()
     if (!mExtractor.get()) {
       return NS_ERROR_FAILURE;
     }
-    mOmxDecoder = new OmxDecoder(mDecoder);
+    mOmxDecoder = new OmxDecoder(mDecoder, OwnerThread());
     if (!mOmxDecoder->Init(mExtractor)) {
       return NS_ERROR_FAILURE;
     }

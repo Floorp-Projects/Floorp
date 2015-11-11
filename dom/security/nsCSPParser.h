@@ -233,6 +233,15 @@ class nsCSPParser {
     bool               mHasHashOrNonce; // false, if no hash or nonce is defined
     nsCSPKeywordSrc*   mUnsafeInlineKeywordSrc; // null, otherwise invlidate()
 
+    // cache variables for child-src and frame-src directive handling.
+    // frame-src is deprecated in favor of child-src, however if we
+    // see a frame-src directive, it takes precedence for frames and iframes.
+    // At the end of parsing, if we have a child-src directive, we need to
+    // decide whether it will handle frames, or if there is a frame-src we
+    // should honor instead.
+    nsCSPChildSrcDirective* mChildSrc;
+    nsCSPDirective*         mFrameSrc;
+
     cspTokens          mTokens;
     nsIURI*            mSelfURI;
     nsCSPPolicy*       mPolicy;

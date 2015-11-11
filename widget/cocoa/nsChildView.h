@@ -378,9 +378,9 @@ public:
   NS_IMETHOD              Enable(bool aState) override;
   virtual bool            IsEnabled() const override;
   NS_IMETHOD              SetFocus(bool aRaise) override;
-  NS_IMETHOD              GetBounds(nsIntRect &aRect) override;
-  NS_IMETHOD              GetClientBounds(nsIntRect &aRect) override;
-  NS_IMETHOD              GetScreenBounds(nsIntRect &aRect) override;
+  NS_IMETHOD              GetBoundsUntyped(nsIntRect &aRect) override;
+  NS_IMETHOD              GetClientBoundsUntyped(nsIntRect &aRect) override;
+  NS_IMETHOD              GetScreenBoundsUntyped(nsIntRect &aRect) override;
 
   // Returns the "backing scale factor" of the view's window, which is the
   // ratio of pixels in the window's backing store to Cocoa points. Prior to

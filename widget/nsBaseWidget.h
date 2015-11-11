@@ -187,10 +187,10 @@ public:
   NS_IMETHOD              MoveClient(double aX, double aY) override;
   NS_IMETHOD              ResizeClient(double aWidth, double aHeight, bool aRepaint) override;
   NS_IMETHOD              ResizeClient(double aX, double aY, double aWidth, double aHeight, bool aRepaint) override;
-  NS_IMETHOD              GetBounds(nsIntRect &aRect) override;
-  NS_IMETHOD              GetClientBounds(nsIntRect &aRect) override;
-  NS_IMETHOD              GetScreenBounds(nsIntRect &aRect) override;
-  NS_IMETHOD              GetRestoredBounds(nsIntRect &aRect) override;
+  NS_IMETHOD              GetBoundsUntyped(nsIntRect &aRect) override;
+  NS_IMETHOD              GetClientBoundsUntyped(nsIntRect &aRect) override;
+  NS_IMETHOD              GetScreenBoundsUntyped(nsIntRect &aRect) override;
+  NS_IMETHOD              GetRestoredBoundsUntyped(nsIntRect &aRect) override;
   NS_IMETHOD              GetNonClientMargins(nsIntMargin &margins) override;
   NS_IMETHOD              SetNonClientMargins(nsIntMargin &margins) override;
   virtual nsIntPoint      GetClientOffset() override;

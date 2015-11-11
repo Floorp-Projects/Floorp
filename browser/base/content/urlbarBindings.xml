@@ -397,6 +397,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
               try {
                 openUILinkIn(url, "current", {
                   allowThirdPartyFixup: true,
+                  indicateErrorPageLoad: true,
                   disallowInheritPrincipal: !mayInheritPrincipal,
                   allowPinnedTabHostChange: true,
                   postData: postData,
@@ -405,7 +406,9 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
               } catch (ex) {
                 // This load can throw an exception in certain cases, which means
                 // we'll want to replace the URL with the loaded URL:
-                this.handleRevert();
+                if (ex.result != Cr.NS_ERROR_LOAD_SHOWED_ERRORPAGE) {
+                  this.handleRevert();
+                }
               }
 
               // Ensure the start of the URL is visible for UX reasons:

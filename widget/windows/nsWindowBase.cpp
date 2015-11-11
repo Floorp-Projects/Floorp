@@ -24,7 +24,7 @@ nsWindowBase::DispatchPluginEvent(const MSG& aMsg)
     return false;
   }
   WidgetPluginEvent pluginEvent(true, ePluginInputEvent, this);
-  nsIntPoint point(0, 0);
+  LayoutDeviceIntPoint point(0, 0);
   InitEvent(pluginEvent, &point);
   NPEvent npEvent;
   npEvent.event = aMsg.message;

@@ -31,6 +31,10 @@
     function changeARIAValue(aNodeOrID, aValuenow, aValuetext)
     {
       this.DOMNode = getNode(aNodeOrID);
+      this.eventSeq = [ new invokerChecker(aValuetext ?
+                                           EVENT_TEXT_VALUE_CHANGE :
+                                           EVENT_VALUE_CHANGE, this.DOMNode)
+        ];
 
       this.invoke = function changeARIAValue_invoke() {
 
@@ -63,6 +67,9 @@
     function changeValue(aID, aValue)
     {
       this.DOMNode = getNode(aID);
+      this.eventSeq = [new invokerChecker(EVENT_TEXT_VALUE_CHANGE,
+                                          this.DOMNode)
+        ];
 
       this.invoke = function changeValue_invoke()
       {
@@ -84,6 +91,7 @@
     function changeProgressValue(aID, aValue)
     {
       this.DOMNode = getNode(aID);
+      this.eventSeq = [new invokerChecker(EVENT_VALUE_CHANGE, this.DOMNode)];
 
       this.invoke = function changeProgressValue_invoke()
       {
@@ -105,6 +113,7 @@
     function changeRangeValue(aID)
     {
       this.DOMNode = getNode(aID);
+      this.eventSeq = [new invokerChecker(EVENT_VALUE_CHANGE, this.DOMNode)];
 
       this.invoke = function changeRangeValue_invoke()
       {
@@ -134,7 +143,7 @@
       testValue("range", "6", 6, 0, 10, 1);
 
       // Test value change events
-      gQueue = new eventQueue(nsIAccessibleEvent.EVENT_VALUE_CHANGE);
+      gQueue = new eventQueue();
 
       gQueue.push(new changeARIAValue("slider_vn", "6", undefined));
       gQueue.push(new changeARIAValue("slider_vt", undefined, "hey!"));

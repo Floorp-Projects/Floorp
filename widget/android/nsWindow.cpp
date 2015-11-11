@@ -952,7 +952,7 @@ nsWindow::BringToFront()
 }
 
 NS_IMETHODIMP
-nsWindow::GetScreenBounds(nsIntRect &aRect)
+nsWindow::GetScreenBoundsUntyped(nsIntRect &aRect)
 {
     LayoutDeviceIntPoint p = WidgetToScreenOffset();
 
@@ -1228,11 +1228,10 @@ nsWindow::OnSizeChanged(const gfx::IntSize& aSize)
 }
 
 void
-nsWindow::InitEvent(WidgetGUIEvent& event, nsIntPoint* aPoint)
+nsWindow::InitEvent(WidgetGUIEvent& event, LayoutDeviceIntPoint* aPoint)
 {
     if (aPoint) {
-        event.refPoint.x = aPoint->x;
-        event.refPoint.y = aPoint->y;
+        event.refPoint = *aPoint;
     } else {
         event.refPoint.x = 0;
         event.refPoint.y = 0;

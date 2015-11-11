@@ -68,10 +68,10 @@ public:
   // Force double buffering in ContentClient
   DECL_GFX_ENV_LIVE("MOZ_FORCE_DOUBLE_BUFFERING", ForceDoubleBuffering);
 
-  // Force gfxCrash to use MOZ_CRASH in Beta and Release
-  DECL_GFX_ENV_ONCE("MOZ_GFX_CRASH_MOZ_CRASH", GfxCrashMozCrash);
-  // Force gfxCrash to use telemetry in Nightly and Aurora
-  DECL_GFX_ENV_ONCE("MOZ_GFX_CRASH_TELEMETRY", GfxCrashTelemetry);
+  // Force gfxDevCrash to use MOZ_CRASH in Beta and Release
+  DECL_GFX_ENV_ONCE("MOZ_GFX_CRASH_MOZ_CRASH", GfxDevCrashMozCrash);
+  // Force gfxDevCrash to use telemetry in Nightly and Aurora
+  DECL_GFX_ENV_ONCE("MOZ_GFX_CRASH_TELEMETRY", GfxDevCrashTelemetry);
 
   DECL_GFX_ENV_LIVE("MOZ_GFX_VR_NO_DISTORTION", VRNoDistortion);
 

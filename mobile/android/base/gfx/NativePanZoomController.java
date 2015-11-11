@@ -105,4 +105,7 @@ class NativePanZoomController implements PanZoomController, GeckoEventListener {
     @Override
     public void setOverscrollHandler(final Overscroll listener) {
     }
+
+    @Override
+    public native void setIsLongpressEnabled(boolean isLongpressEnabled);
 }

@@ -42,7 +42,9 @@ public:
 class nsTextFrame : public nsTextFrameBase {
   typedef mozilla::TextRangeStyle TextRangeStyle;
   typedef mozilla::gfx::DrawTarget DrawTarget;
+  typedef mozilla::gfx::Point Point;
   typedef mozilla::gfx::Rect Rect;
+  typedef mozilla::gfx::Size Size;
 
 public:
   NS_DECL_QUERYFRAME_TARGET(nsTextFrame)
@@ -739,7 +741,7 @@ protected:
                                 SelectionType aType,
                                 nsTextPaintStyle& aTextPaintStyle,
                                 const TextRangeStyle &aRangeStyle,
-                                const gfxPoint& aPt,
+                                const Point& aPt,
                                 gfxFloat aICoordInFrame,
                                 gfxFloat aWidth,
                                 gfxFloat aAscent,
@@ -757,9 +759,9 @@ protected:
                            const gfxRect& aDirtyRect,
                            nscolor aColor,
                            const nscolor* aOverrideColor,
-                           const gfxPoint& aPt,
+                           const Point& aPt,
                            gfxFloat aICoordInFrame,
-                           const gfxSize& aLineSize,
+                           const Size& aLineSize,
                            gfxFloat aAscent,
                            gfxFloat aOffset,
                            uint8_t aDecoration,

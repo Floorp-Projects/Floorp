@@ -49,8 +49,7 @@ public:
   virtual void NotifyDecodeError() {}
 
   // Notify that data arrives on the stream and is read into the cache.
-  virtual void NotifyDataArrived(
-    uint32_t aLength, int64_t aOffset, bool aThrottleUpdates) {}
+  virtual void NotifyDataArrived(bool aThrottleUpdates) {}
 
   // Notify that MediaResource has received some data.
   virtual void NotifyBytesDownloaded() {}
