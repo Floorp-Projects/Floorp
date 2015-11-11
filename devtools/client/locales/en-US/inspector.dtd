@@ -113,9 +113,8 @@
 <!ENTITY inspectorSearchHTML.label2          "Search with CSS Selectors">
 <!ENTITY inspectorSearchHTML.key            "F">
 
-<!-- LOCALIZATION NOTE (inspectorSearchHTML.label3): This is the label that will
-     be shown as the placeholder in the future, once the inspector search box
-     supports the full text HTML search in Bug 835896. -->
+<!-- LOCALIZATION NOTE (inspectorSearchHTML.label3): This is the label that is
+     shown as the placeholder for the markup view search in the inspector. -->
 <!ENTITY inspectorSearchHTML.label3 "Search HTML">
 
 <!-- LOCALIZATION NOTE (inspectorCopyImageDataUri.label): This is the label

@@ -162,6 +162,12 @@ Selection.prototype = {
   setNodeFront: function(value, reason="unknown") {
     this.reason = reason;
 
+    // If a singleTextChild text node is being set, then set it's parent instead.
+    let parentNode = value && value.parentNode();
+    if (value && parentNode && parentNode.singleTextChild === value) {
+      value = parentNode;
+    }
+
     // We used to return here if the node had not changed but we now need to
     // set the node even if it is already set otherwise it is not possible to
     // e.g. highlight the same node twice.
