@@ -2,49 +2,47 @@
  * Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
-msg = null;
-var errors = 5;
+var tests = 3;
 
-onerror = function(event) {
-  ok(true, msg);
-  if (!--errors) SimpleTest.finish();
-}
-
-msg = "No Eval allowed";
-worker = new Worker("csp_worker.js");
-worker.postMessage(0);
-worker.onmessage = function(event) {
-  ok(false, "Eval succeeded!");
-}
-
-msg = "No Eval allowed 2";
-worker = new Worker("csp_worker.js");
-worker.postMessage(4);
-worker.onmessage = function(event) {
-  ok(false, "Eval succeeded!");
-}
-
-msg = "ImportScripts data:";
-worker = new Worker("csp_worker.js");
-worker.postMessage(-1);
-worker.onmessage = function(event) {
-  ok(false, "Eval succeeded!");
-}
-
-msg = "ImportScripts javascript:";
-worker = new Worker("csp_worker.js");
-worker.postMessage(-2);
-worker.onmessage = function(event) {
-  ok(false, "Eval succeeded!");
-}
-
-msg = "Loading data:something";
-try {
-  worker = new Worker("data:application/javascript;base64,ZHVtcCgnaGVsbG8gd29ybGQnKQo=");
-  ok(false, "Should have thrown!");
-} catch (e) {
-  ok(true, "Threw as expected.");
-}
-
-worker = new Worker("javascript:dump(123);");
 SimpleTest.waitForExplicitFinish();
+
+testDone = function(event) {
+  if (!--tests) SimpleTest.finish();
+}
+
+// Workers don't inherit CSP
+worker = new Worker("csp_worker.js");
+worker.postMessage({ do: "eval" });
+worker.onmessage = function(event) {
+  is(event.data, 42, "Eval succeeded!");
+  testDone();
+}
+
+// blob: workers *do* inherit CSP
+xhr = new XMLHttpRequest;
+xhr.open("GET", "csp_worker.js");
+xhr.responseType = "blob";
+xhr.send();
+xhr.onload = (e) => {
+  uri = URL.createObjectURL(e.target.response);
+  worker = new Worker(uri);
+  worker.postMessage({ do: "eval" })
+  worker.onmessage = function(event) {
+    is(event.data, "Error: call to eval() blocked by CSP", "Eval threw");
+    testDone();
+  }
+}
+
+xhr = new XMLHttpRequest;
+xhr.open("GET", "csp_worker.js");
+xhr.responseType = "blob";
+xhr.send();
+xhr.onload = (e) => {
+  uri = URL.createObjectURL(e.target.response);
+  worker = new Worker(uri);
+  worker.postMessage({ do: "nest", uri: uri, level: 3 })
+  worker.onmessage = function(event) {
+    is(event.data, "Error: call to eval() blocked by CSP", "Eval threw in nested worker");
+    testDone();
+  }
+}

@@ -6614,22 +6614,6 @@ nsContentUtils::FindInternalContentViewer(const nsACString& aType,
   return nullptr;
 }
 
-bool
-nsContentUtils::GetContentSecurityPolicy(nsIContentSecurityPolicy** aCSP)
-{
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-
-  nsCOMPtr<nsIContentSecurityPolicy> csp;
-  nsresult rv = SubjectPrincipal()->GetCsp(getter_AddRefs(csp));
-  if (NS_FAILED(rv)) {
-    NS_ERROR("CSP: Failed to get CSP from principal.");
-    return false;
-  }
-
-  csp.forget(aCSP);
-  return true;
-}
-
 // static
 bool
 nsContentUtils::IsPatternMatching(nsAString& aValue, nsAString& aPattern,
