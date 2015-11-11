@@ -3409,6 +3409,16 @@ WorkerPrivateParent<Derived>::SetPrincipal(nsIPrincipal* aPrincipal,
      appStatus == nsIPrincipal::APP_STATUS_PRIVILEGED);
   mLoadInfo.mIsInCertifiedApp = (appStatus == nsIPrincipal::APP_STATUS_CERTIFIED);
 
+  aPrincipal->GetCsp(getter_AddRefs(mLoadInfo.mCSP));
+
+  if (mLoadInfo.mCSP) {
+    mLoadInfo.mCSP->GetAllowsEval(&mLoadInfo.mReportCSPViolations,
+                                  &mLoadInfo.mEvalAllowed);
+  } else {
+    mLoadInfo.mEvalAllowed = true;
+    mLoadInfo.mReportCSPViolations = false;
+  }
+
   mLoadInfo.mLoadGroup = aLoadGroup;
 
   mLoadInfo.mPrincipalInfo = new PrincipalInfo();
@@ -4333,20 +4343,6 @@ WorkerPrivate::GetLoadInfo(JSContext* aCx, nsPIDOMWindow* aWindow,
 
     MOZ_ASSERT(loadInfo.mPrincipal);
     MOZ_ASSERT(isChrome || !loadInfo.mDomain.IsEmpty());
-
-    if (!nsContentUtils::GetContentSecurityPolicy(getter_AddRefs(loadInfo.mCSP))) {
-      NS_WARNING("Failed to get CSP!");
-      return NS_ERROR_FAILURE;
-    }
-
-    if (loadInfo.mCSP) {
-      rv = loadInfo.mCSP->GetAllowsEval(&loadInfo.mReportCSPViolations,
-                                        &loadInfo.mEvalAllowed);
-      NS_ENSURE_SUCCESS(rv, rv);
-    } else {
-      loadInfo.mEvalAllowed = true;
-      loadInfo.mReportCSPViolations = false;
-    }
 
     if (!loadInfo.mLoadGroup || aLoadGroupBehavior == OverrideLoadGroup) {
       OverrideLoadInfoLoadGroup(loadInfo);
