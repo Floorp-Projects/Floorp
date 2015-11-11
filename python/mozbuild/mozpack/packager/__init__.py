@@ -10,6 +10,7 @@ import os
 from mozpack.errors import errors
 from mozpack.chrome.manifest import (
     Manifest,
+    ManifestBinaryComponent,
     ManifestChrome,
     ManifestInterfaces,
     is_manifest,
@@ -236,8 +237,9 @@ class SimplePackager(object):
         self._chrome_queue = CallDeque()
         # Queue for formatter.add() calls.
         self._file_queue = CallDeque()
-        # All paths containing addons.
-        self._addons = set()
+        # All paths containing addons. (key is path, value is whether it
+        # should be packed or unpacked)
+        self._addons = {}
         # All manifest paths imported.
         self._manifests = set()
         # All manifest paths included from some other manifest.
@@ -256,7 +258,7 @@ class SimplePackager(object):
         else:
             self._file_queue.append(self.formatter.add, path, file)
             if mozpath.basename(path) == 'install.rdf':
-                self._addons.add(mozpath.dirname(path))
+                self._addons[mozpath.dirname(path)] = True
 
     def _add_manifest_file(self, path, file):
         '''
@@ -278,6 +280,12 @@ class SimplePackager(object):
                                           e.move(e.base))
             elif not isinstance(e, (Manifest, ManifestInterfaces)):
                 self._queue.append(self.formatter.add_manifest, e.move(e.base))
+            # If a binary component is added to an addon, prevent the addon
+            # from being packed.
+            if isinstance(e, ManifestBinaryComponent):
+                addon = mozpath.basedir(e.base, self._addons)
+                if addon:
+                    self._addons[addon] = 'unpacked'
             if isinstance(e, Manifest):
                 if e.flags:
                     errors.fatal('Flags are not supported on ' +
@@ -294,11 +302,11 @@ class SimplePackager(object):
                         for m in self._manifests
                                  - set(self._included_manifests))
         if not addons:
-            all_bases -= self._addons
+            all_bases -= set(self._addons)
         else:
             # If for some reason some detected addon doesn't have a
             # non-included manifest.
-            all_bases |= self._addons
+            all_bases |= set(self._addons)
         return all_bases
 
     def close(self):
@@ -315,8 +323,8 @@ class SimplePackager(object):
             errors.fatal('"%s" is included from "%s", which is outside "%s"' %
                          (m, self._included_manifests[m],
                           mozpath.basedir(m, bases)))
-        for base in bases:
-            self.formatter.add_base(base, base in self._addons)
+        for base in sorted(bases):
+            self.formatter.add_base(base, self._addons.get(base, False))
         self._chrome_queue.execute()
         self._queue.execute()
         self._file_queue.execute()

@@ -46,8 +46,9 @@ The base interface provides the following methods:
         Register a base directory for an application or GRE, or an addon.
         Base directories usually contain a root manifest (manifests not
         included in any other manifest) named chrome.manifest.
-        The optional boolean addon argument tells whether the base directory
-        is that of an addon.
+        The optional addon argument tells whether the base directory
+        is that of a packed addon (True), unpacked addon ('unpacked') or
+        otherwise (False).
     - add(path, content)
         Add the given content (BaseFile instance) at the given virtual path
     - add_interfaces(path, content)
