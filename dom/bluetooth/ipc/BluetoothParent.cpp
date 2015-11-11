@@ -680,7 +680,7 @@ BluetoothRequestParent::DoRequest(const SendFileRequest& aRequest)
   MOZ_ASSERT(mService);
   MOZ_ASSERT(mRequestType == Request::TSendFileRequest);
 
-  mService->SendFile(aRequest.address(),
+  mService->SendFile(aRequest.devicePath(),
                      (BlobParent*)aRequest.blobParent(),
                      (BlobChild*)aRequest.blobChild(),
                      mReplyRunnable.get());
@@ -694,7 +694,7 @@ BluetoothRequestParent::DoRequest(const StopSendingFileRequest& aRequest)
   MOZ_ASSERT(mService);
   MOZ_ASSERT(mRequestType == Request::TStopSendingFileRequest);
 
-  mService->StopSendingFile(aRequest.address(),
+  mService->StopSendingFile(aRequest.devicePath(),
                             mReplyRunnable.get());
 
   return true;
@@ -706,7 +706,7 @@ BluetoothRequestParent::DoRequest(const ConfirmReceivingFileRequest& aRequest)
   MOZ_ASSERT(mService);
   MOZ_ASSERT(mRequestType == Request::TConfirmReceivingFileRequest);
 
-  mService->ConfirmReceivingFile(aRequest.address(),
+  mService->ConfirmReceivingFile(aRequest.devicePath(),
                                  true,
                                  mReplyRunnable.get());
   return true;
@@ -718,7 +718,7 @@ BluetoothRequestParent::DoRequest(const DenyReceivingFileRequest& aRequest)
   MOZ_ASSERT(mService);
   MOZ_ASSERT(mRequestType == Request::TDenyReceivingFileRequest);
 
-  mService->ConfirmReceivingFile(aRequest.address(),
+  mService->ConfirmReceivingFile(aRequest.devicePath(),
                                  false,
                                  mReplyRunnable.get());
   return true;
