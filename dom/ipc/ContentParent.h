@@ -191,6 +191,7 @@ public:
     virtual bool RecvConnectPluginBridge(const uint32_t& aPluginId, nsresult* aRv) override;
     virtual bool RecvGetBlocklistState(const uint32_t& aPluginId, uint32_t* aIsBlocklisted) override;
     virtual bool RecvFindPlugins(const uint32_t& aPluginEpoch,
+                                 nsresult* aRv,
                                  nsTArray<PluginTag>* aPlugins,
                                  uint32_t* aNewPluginEpoch) override;
 

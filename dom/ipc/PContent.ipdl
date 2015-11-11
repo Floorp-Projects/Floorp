@@ -763,7 +763,7 @@ parent:
      * process. |newPluginEpoch| is the current epoch in the chrome process. If
      * |pluginEpoch == newPluginEpoch|, then |plugins| will be left empty.
      */
-    sync FindPlugins(uint32_t pluginEpoch) returns (PluginTag[] plugins, uint32_t newPluginEpoch);
+    sync FindPlugins(uint32_t pluginEpoch) returns (nsresult aResult, PluginTag[] plugins, uint32_t newPluginEpoch);
 
     async PJavaScript();
 
