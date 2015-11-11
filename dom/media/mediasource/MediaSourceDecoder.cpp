@@ -85,7 +85,8 @@ MediaSourceDecoder::GetSeekable()
   } else if (duration > 0 && mozilla::IsInfinite(duration)) {
     media::TimeIntervals buffered = GetBuffered();
     if (buffered.Length()) {
-      seekable += media::TimeInterval(buffered.GetStart(), buffered.GetEnd());
+      seekable +=
+        media::TimeInterval(media::TimeUnit::FromSeconds(0), buffered.GetEnd());
     }
   } else {
     seekable += media::TimeInterval(media::TimeUnit::FromSeconds(0),
