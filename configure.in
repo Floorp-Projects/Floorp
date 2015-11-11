@@ -413,10 +413,6 @@ else
     fi
 fi
 
-if test -n "$MOZ_WINCONSOLE"; then
-    AC_DEFINE(MOZ_WINCONSOLE)
-fi
-
 MOZ_TOOL_VARIABLES
 
 MOZ_CHECK_COMPILER_WRAPPER
@@ -2554,6 +2550,15 @@ if test -z "$COMPILE_ENVIRONMENT"; then
 else
     MOZ_COMPILER_OPTS
 fi # COMPILE_ENVIRONMENT
+
+if test -n "$MOZ_DEBUG" -o -n "$MOZ_ASAN"; then
+  MOZ_WINCONSOLE=1
+fi
+
+if test -n "$MOZ_WINCONSOLE"; then
+    AC_DEFINE(MOZ_WINCONSOLE)
+fi
+AC_SUBST(MOZ_WINCONSOLE)
 
 if test -z "$SKIP_COMPILER_CHECKS"; then
 dnl Checks for typedefs, structures, and compiler characteristics.
