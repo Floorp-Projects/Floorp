@@ -21,6 +21,7 @@ SOURCES += [
 
 FINAL_TARGET_FILES += ['blocklist.xml']
 FINAL_TARGET_FILES.defaults.profile += ['profile/prefs.js']
+FINAL_TARGET_FILES.defaults += ['permissions']
 
 DEFINES['APP_VERSION'] = CONFIG['MOZ_APP_VERSION']
 
@@ -69,8 +70,6 @@ if CONFIG['MOZ_LINKER']:
 
 if CONFIG['HAVE_CLOCK_MONOTONIC']:
     OS_LIBS += CONFIG['REALTIME_LIBS']
-
-JAR_MANIFESTS += ['jar.mn']
 
 if CONFIG['GNU_CXX']:
     CXXFLAGS += ['-Wshadow']
