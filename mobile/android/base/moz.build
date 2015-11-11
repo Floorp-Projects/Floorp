@@ -478,7 +478,7 @@ gbjar.sources += [
     'RemoteClientsDialogFragment.java',
     'RemoteTabsExpandableListAdapter.java',
     'Restarter.java',
-    'RestrictedProfiles.java',
+    'Restrictions.java',
     'restrictions/DefaultConfiguration.java',
     'restrictions/GuestProfileConfiguration.java',
     'restrictions/RestrictedProfileConfiguration.java',

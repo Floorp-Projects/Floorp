@@ -22,7 +22,7 @@ import android.os.UserManager;
 import android.util.Log;
 
 @RobocopTarget
-public class RestrictedProfiles {
+public class Restrictions {
     private static final String LOGTAG = "GeckoRestrictedProfiles";
 
     private static RestrictionConfiguration configuration;

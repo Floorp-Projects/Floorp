@@ -13,7 +13,7 @@ import org.mozilla.gecko.GeckoEvent;
 import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.ReaderModeUtils;
-import org.mozilla.gecko.RestrictedProfiles;
+import org.mozilla.gecko.Restrictions;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.db.BrowserDB;
@@ -153,7 +153,7 @@ public abstract class HomeFragment extends Fragment {
             menu.findItem(R.id.home_share).setVisible(false);
         }
 
-        if (!RestrictedProfiles.isAllowed(view.getContext(), Restriction.DISALLOW_PRIVATE_BROWSING)) {
+        if (!Restrictions.isAllowed(view.getContext(), Restriction.DISALLOW_PRIVATE_BROWSING)) {
             menu.findItem(R.id.home_open_private_tab).setVisible(false);
         }
 

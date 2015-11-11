@@ -6,7 +6,6 @@
 package org.mozilla.gecko.db;
 
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.InputStream;
 import java.lang.IllegalAccessException;
 import java.lang.NoSuchFieldException;
@@ -25,22 +24,19 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.mozilla.gecko.AboutPages;
 import org.mozilla.gecko.annotation.RobocopTarget;
-import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.db.BrowserContract.Bookmarks;
 import org.mozilla.gecko.db.BrowserContract.Combined;
 import org.mozilla.gecko.db.BrowserContract.ExpirePriority;
 import org.mozilla.gecko.db.BrowserContract.Favicons;
 import org.mozilla.gecko.db.BrowserContract.History;
-import org.mozilla.gecko.db.BrowserContract.ReadingListItems;
-import org.mozilla.gecko.db.BrowserContract.SearchHistory;
 import org.mozilla.gecko.db.BrowserContract.SyncColumns;
 import org.mozilla.gecko.db.BrowserContract.Thumbnails;
 import org.mozilla.gecko.distribution.Distribution;
 import org.mozilla.gecko.favicons.decoders.FaviconDecoder;
 import org.mozilla.gecko.favicons.decoders.LoadFaviconResult;
 import org.mozilla.gecko.gfx.BitmapUtils;
-import org.mozilla.gecko.RestrictedProfiles;
+import org.mozilla.gecko.Restrictions;
 import org.mozilla.gecko.sync.Utils;
 import org.mozilla.gecko.util.GeckoJarReader;
 import org.mozilla.gecko.util.StringUtils;
@@ -225,7 +221,7 @@ public class LocalBrowserDB implements BrowserDB {
             }
 
             try {
-                if (RestrictedProfiles.isRestrictedProfile(context)) {
+                if (Restrictions.isRestrictedProfile(context)) {
                     // matching on variable name from strings.xml.in
                     final String addons = "bookmarkdefaults_title_addons";
                     final String regularSumo = "bookmarkdefaults_title_support";
@@ -233,7 +229,7 @@ public class LocalBrowserDB implements BrowserDB {
                         continue;
                     }
                 }
-                if (!RestrictedProfiles.isRestrictedProfile(context)) {
+                if (!Restrictions.isRestrictedProfile(context)) {
                     // if we're not in kidfox, skip the kidfox specific bookmark(s)
                     if (name.startsWith("bookmarkdefaults_title_restricted")) {
                         continue;
