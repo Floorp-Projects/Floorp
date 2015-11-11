@@ -21,7 +21,6 @@ function url_test(name, url) {
 }
 
 url_test('relative', 'resources/empty-worker.js');
-url_test('with-fragment', 'resources/empty-worker.js#ref');
 url_test('absolute', (new URL('./resources/empty-worker.js', window.location)).href);
 
 </script>
