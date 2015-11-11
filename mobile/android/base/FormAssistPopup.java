@@ -5,6 +5,7 @@
 
 package org.mozilla.gecko;
 
+import android.widget.FrameLayout;
 import org.mozilla.gecko.animation.ViewHelper;
 import org.mozilla.gecko.gfx.FloatSize;
 import org.mozilla.gecko.gfx.ImmutableViewportMetrics;
@@ -360,7 +361,7 @@ public class FormAssistPopup extends RelativeLayout implements GeckoEventListene
            }
         }
 
-        LayoutParams layoutParams = new LayoutParams(popupWidth, popupHeight);
+        final FrameLayout.LayoutParams layoutParams = new FrameLayout.LayoutParams(popupWidth, popupHeight);
         layoutParams.setMargins(popupLeft, popupTop, 0, 0);
         setLayoutParams(layoutParams);
         requestLayout();
