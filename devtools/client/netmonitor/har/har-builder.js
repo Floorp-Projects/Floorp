@@ -298,7 +298,15 @@ HarBuilder.prototype = {
 
     response.redirectURL = findValue(headers, "Location");
     response.headersSize = headersSize;
-    response.bodySize = file.transferredSize || -1;
+
+    // 'bodySize' is size of the received response body in bytes.
+    // Set to zero in case of responses coming from the cache (304).
+    // Set to -1 if the info is not available.
+    if (typeof file.transferredSize != "number") {
+      response.bodySize = (response.status == 304) ? 0 : -1;
+    } else {
+      response.bodySize = file.transferredSize;
+    }
 
     return response;
   },
