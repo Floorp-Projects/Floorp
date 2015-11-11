@@ -46,7 +46,8 @@ BEGIN_TEST(testArrayBuffer_bug720949_steal)
         // Modifying the underlying data should update the value returned through the view
         {
             JS::AutoCheckCannotGC nogc;
-            uint8_t* data = JS_GetArrayBufferData(obj, nogc);
+            bool sharedDummy;
+            uint8_t* data = JS_GetArrayBufferData(obj, &sharedDummy, nogc);
             CHECK(data != nullptr);
             *reinterpret_cast<uint32_t*>(data) = MAGIC_VALUE_2;
         }
@@ -77,7 +78,8 @@ BEGIN_TEST(testArrayBuffer_bug720949_steal)
         CHECK(JS_IsArrayBufferObject(dst));
         {
             JS::AutoCheckCannotGC nogc;
-            (void) JS_GetArrayBufferData(obj, nogc);
+            bool sharedDummy;
+            (void) JS_GetArrayBufferData(obj, &sharedDummy, nogc);
         }
 
         JS::RootedObject dstview(cx, JS_NewInt32ArrayWithBuffer(cx, dst, 0, -1));
@@ -86,7 +88,8 @@ BEGIN_TEST(testArrayBuffer_bug720949_steal)
         CHECK_EQUAL(JS_GetArrayBufferByteLength(dst), size);
         {
             JS::AutoCheckCannotGC nogc;
-            uint8_t* data = JS_GetArrayBufferData(dst, nogc);
+            bool sharedDummy;
+            uint8_t* data = JS_GetArrayBufferData(dst, &sharedDummy, nogc);
             CHECK(data != nullptr);
             CHECK_EQUAL(*reinterpret_cast<uint32_t*>(data), MAGIC_VALUE_2);
         }
