@@ -18,7 +18,7 @@
 #endif
 
 #undef LOG
-extern mozilla::LogModule* GetSpeechSynthLog();
+extern PRLogModuleInfo* GetSpeechSynthLog();
 #define LOG(type, msg) MOZ_LOG(GetSpeechSynthLog(), type, msg)
 
 #define AUDIO_TRACK 1

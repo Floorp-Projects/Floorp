@@ -16,7 +16,7 @@
 
 namespace mozilla {
 
-extern LazyLogModule gMediaDecoderLog;
+extern PRLogModuleInfo* gMediaDecoderLog;
 #define LOG(msg, ...) \
     MOZ_LOG(gMediaDecoderLog, LogLevel::Debug, ("GStreamerFormatHelper " msg, ##__VA_ARGS__))
 

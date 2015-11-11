@@ -35,7 +35,7 @@ class nsAutoRefTraits<SpeexResamplerState> : public nsPointerRefTraits<SpeexResa
 
 namespace mozilla {
 
-extern LazyLogModule gMediaStreamGraphLog;
+extern PRLogModuleInfo* gMediaStreamGraphLog;
 
 namespace dom {
   enum class AudioContextOperation;

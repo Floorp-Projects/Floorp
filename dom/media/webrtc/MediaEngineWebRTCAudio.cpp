@@ -35,7 +35,7 @@ namespace mozilla {
 #undef LOG
 #endif
 
-extern LogModule* GetMediaManagerLog();
+extern PRLogModuleInfo* GetMediaManagerLog();
 #define LOG(msg) MOZ_LOG(GetMediaManagerLog(), mozilla::LogLevel::Debug, msg)
 #define LOG_FRAMES(msg) MOZ_LOG(GetMediaManagerLog(), mozilla::LogLevel::Verbose, msg)
 

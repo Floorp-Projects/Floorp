@@ -43,7 +43,7 @@ namespace mozilla {
 #undef LOG
 #undef LOGD
 
-extern LogModule* GetGMPLog();
+extern PRLogModuleInfo* GetGMPLog();
 #define LOG(level, x, ...) MOZ_LOG(GetGMPLog(), (level), (x, ##__VA_ARGS__))
 #define LOGD(x, ...) LOG(mozilla::LogLevel::Debug, "GMPChild[pid=%d] " x, (int)base::GetCurrentProcId(), ##__VA_ARGS__)
 

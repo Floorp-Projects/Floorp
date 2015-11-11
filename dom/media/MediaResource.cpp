@@ -36,7 +36,7 @@
 
 using mozilla::media::TimeUnit;
 
-mozilla::LazyLogModule gMediaResourceLog("MediaResource");
+PRLogModuleInfo* gMediaResourceLog;
 #define RESOURCE_LOG(msg, ...) MOZ_LOG(gMediaResourceLog, mozilla::LogLevel::Debug, \
                                       (msg, ##__VA_ARGS__))
 // Debug logging macro with object pointer and class name.
@@ -79,6 +79,9 @@ ChannelMediaResource::ChannelMediaResource(MediaResourceCallback* aCallback,
     mIsTransportSeekable(true),
     mSuspendAgent(mChannel)
 {
+  if (!gMediaResourceLog) {
+    gMediaResourceLog = PR_NewLogModule("MediaResource");
+  }
 }
 
 ChannelMediaResource::~ChannelMediaResource()

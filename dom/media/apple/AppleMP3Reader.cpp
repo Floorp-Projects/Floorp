@@ -23,7 +23,7 @@ using namespace mozilla::media;
 
 namespace mozilla {
 
-extern LazyLogModule gMediaDecoderLog;
+extern PRLogModuleInfo* gMediaDecoderLog;
 #define LOGE(...) MOZ_LOG(gMediaDecoderLog, mozilla::LogLevel::Error, (__VA_ARGS__))
 #define LOGW(...) MOZ_LOG(gMediaDecoderLog, mozilla::LogLevel::Warning, (__VA_ARGS__))
 #define LOGD(...) MOZ_LOG(gMediaDecoderLog, mozilla::LogLevel::Debug, (__VA_ARGS__))

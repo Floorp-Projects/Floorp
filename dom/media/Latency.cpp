@@ -37,12 +37,16 @@ const char* LatencyLogIndex2Strings[] = {
 
 static StaticRefPtr<AsyncLatencyLogger> gAsyncLogger;
 
-LogModule*
+PRLogModuleInfo*
 GetLatencyLog()
 {
-  static LazyLogModule sLog("MediaLatency");
+  static PRLogModuleInfo* sLog;
+  if (!sLog) {
+    sLog = PR_NewLogModule("MediaLatency");
+  }
   return sLog;
 }
+
 
 class LogEvent : public nsRunnable
 {
@@ -107,8 +111,6 @@ void LogLatency(uint32_t aIndex, uint64_t aID, int64_t aValue)
 void AsyncLatencyLogger::InitializeStatics()
 {
   NS_ASSERTION(NS_IsMainThread(), "Main thread only");
-
-  //Make sure that the underlying logger is allocated.
   GetLatencyLog();
   gAsyncLogger = new AsyncLatencyLogger();
 }

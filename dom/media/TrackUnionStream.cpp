@@ -42,12 +42,15 @@ namespace mozilla {
 #undef STREAM_LOG
 #endif
 
-LazyLogModule gTrackUnionStreamLog("TrackUnionStream");
+PRLogModuleInfo* gTrackUnionStreamLog;
 #define STREAM_LOG(type, msg) MOZ_LOG(gTrackUnionStreamLog, type, msg)
 
 TrackUnionStream::TrackUnionStream(DOMMediaStream* aWrapper) :
   ProcessedMediaStream(aWrapper), mNextAvailableTrackID(1)
 {
+  if (!gTrackUnionStreamLog) {
+    gTrackUnionStreamLog = PR_NewLogModule("TrackUnionStream");
+  }
 }
 
   void TrackUnionStream::RemoveInput(MediaInputPort* aPort)

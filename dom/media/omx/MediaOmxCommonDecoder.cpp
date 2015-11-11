@@ -20,7 +20,7 @@ using namespace android;
 
 namespace mozilla {
 
-extern LazyLogModule gMediaDecoderLog;
+extern PRLogModuleInfo* gMediaDecoderLog;
 #define DECODER_LOG(type, msg) MOZ_LOG(gMediaDecoderLog, type, msg)
 
 MediaOmxCommonDecoder::MediaOmxCommonDecoder(MediaDecoderOwner* aOwner)

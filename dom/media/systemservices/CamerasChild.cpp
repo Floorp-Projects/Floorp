@@ -22,7 +22,7 @@
 
 #undef LOG
 #undef LOG_ENABLED
-mozilla::LazyLogModule gCamerasChildLog("CamerasChild");
+PRLogModuleInfo *gCamerasChildLog;
 #define LOG(args) MOZ_LOG(gCamerasChildLog, mozilla::LogLevel::Debug, args)
 #define LOG_ENABLED() MOZ_LOG_TEST(gCamerasChildLog, mozilla::LogLevel::Debug)
 
@@ -56,6 +56,9 @@ public:
     : mCamerasMutex("CamerasSingleton::mCamerasMutex"),
       mCameras(nullptr),
       mCamerasChildThread(nullptr) {
+    if (!gCamerasChildLog) {
+      gCamerasChildLog = PR_NewLogModule("CamerasChild");
+    }
     LOG(("CamerasSingleton: %p", this));
   }
 
@@ -141,6 +144,10 @@ Cameras() {
   OffTheBooksMutexAutoLock lock(CamerasSingleton::Mutex());
   if (!CamerasSingleton::Child()) {
     MOZ_ASSERT(!NS_IsMainThread(), "Should not be on the main Thread");
+    if (!gCamerasChildLog) {
+      gCamerasChildLog = PR_NewLogModule("CamerasChild");
+    }
+
     MOZ_ASSERT(!CamerasSingleton::Thread());
     LOG(("No sCameras, setting up IPC Thread"));
     nsresult rv = NS_NewNamedThread("Cameras IPC",
@@ -699,6 +706,10 @@ CamerasChild::CamerasChild()
     mRequestMutex("mozilla::cameras::CamerasChild::mRequestMutex"),
     mReplyMonitor("mozilla::cameras::CamerasChild::mReplyMonitor")
 {
+  if (!gCamerasChildLog) {
+    gCamerasChildLog = PR_NewLogModule("CamerasChild");
+  }
+
   LOG(("CamerasChild: %p", this));
 
   MOZ_COUNT_CTOR(CamerasChild);

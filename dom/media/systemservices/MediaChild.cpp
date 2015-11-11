@@ -13,7 +13,7 @@
 #include "nsQueryObject.h"
 
 #undef LOG
-mozilla::LazyLogModule gMediaChildLog("MediaChild");
+PRLogModuleInfo *gMediaChildLog;
 #define LOG(args) MOZ_LOG(gMediaChildLog, mozilla::LogLevel::Debug, args)
 
 namespace mozilla {
@@ -68,6 +68,9 @@ Child* Child::Get()
 Child::Child()
   : mActorDestroyed(false)
 {
+  if (!gMediaChildLog) {
+    gMediaChildLog = PR_NewLogModule("MediaChild");
+  }
   LOG(("media::Child: %p", this));
   MOZ_COUNT_CTOR(Child);
 }

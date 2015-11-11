@@ -14,7 +14,7 @@
 namespace mozilla {
 
 #ifndef IC_LOG
-LogModule* GetICLog();
+PRLogModuleInfo* GetICLog();
 #define IC_LOG(...) MOZ_LOG(GetICLog(), mozilla::LogLevel::Debug, (__VA_ARGS__))
 #endif
 

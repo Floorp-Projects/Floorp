@@ -25,7 +25,7 @@ using namespace mozilla::gfx;
 using namespace android;
 
 #undef LOG
-extern LogModule* GetMediaManagerLog();
+extern PRLogModuleInfo* GetMediaManagerLog();
 #define LOG(msg) MOZ_LOG(GetMediaManagerLog(), mozilla::LogLevel::Debug, msg)
 #define LOGFRAME(msg) MOZ_LOG(GetMediaManagerLog(), mozilla::LogLevel::Verbose, msg)
 

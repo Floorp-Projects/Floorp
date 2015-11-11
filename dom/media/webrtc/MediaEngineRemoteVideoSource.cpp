@@ -11,7 +11,7 @@
 #include "MediaTrackConstraints.h"
 #include "CamerasChild.h"
 
-extern mozilla::LogModule* GetMediaManagerLog();
+extern PRLogModuleInfo* GetMediaManagerLog();
 #define LOG(msg) MOZ_LOG(GetMediaManagerLog(), mozilla::LogLevel::Debug, msg)
 #define LOGFRAME(msg) MOZ_LOG(GetMediaManagerLog(), mozilla::LogLevel::Verbose, msg)
 

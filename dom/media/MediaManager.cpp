@@ -104,10 +104,12 @@ namespace mozilla {
 #undef LOG
 #endif
 
-LogModule*
+PRLogModuleInfo*
 GetMediaManagerLog()
 {
-  static LazyLogModule sLog("MediaManager");
+  static PRLogModuleInfo *sLog;
+  if (!sLog)
+    sLog = PR_NewLogModule("MediaManager");
   return sLog;
 }
 #define LOG(msg) MOZ_LOG(GetMediaManagerLog(), mozilla::LogLevel::Debug, msg)

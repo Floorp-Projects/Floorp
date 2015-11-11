@@ -24,7 +24,7 @@ template <class> struct already_AddRefed;
 
 namespace mozilla {
 
-extern LogModule* GetGMPLog();
+extern PRLogModuleInfo* GetGMPLog();
 
 namespace gmp {
 
