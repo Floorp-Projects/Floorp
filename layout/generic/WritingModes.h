@@ -1977,4 +1977,28 @@ nsStylePosition::MaxBSizeDependsOnContainer(mozilla::WritingMode aWM) const
                           : MaxHeightDependsOnContainer();
 }
 
+inline uint8_t
+nsStyleDisplay::PhysicalFloats(mozilla::WritingMode aWM) const
+{
+  if (mFloats == NS_STYLE_FLOAT_INLINE_START) {
+    return aWM.IsBidiLTR() ? NS_STYLE_FLOAT_LEFT : NS_STYLE_FLOAT_RIGHT;
+  }
+  if (mFloats == NS_STYLE_FLOAT_INLINE_END) {
+    return aWM.IsBidiLTR() ? NS_STYLE_FLOAT_RIGHT : NS_STYLE_FLOAT_LEFT;
+  }
+  return mFloats;
+}
+
+inline uint8_t
+nsStyleDisplay::PhysicalBreakType(mozilla::WritingMode aWM) const
+{
+  if (mBreakType == NS_STYLE_CLEAR_INLINE_START) {
+    return aWM.IsBidiLTR() ? NS_STYLE_CLEAR_LEFT : NS_STYLE_CLEAR_RIGHT;
+  }
+  if (mBreakType == NS_STYLE_CLEAR_INLINE_END) {
+    return aWM.IsBidiLTR() ? NS_STYLE_CLEAR_RIGHT : NS_STYLE_CLEAR_LEFT;
+  }
+  return mBreakType;
+}
+
 #endif // WritingModes_h_

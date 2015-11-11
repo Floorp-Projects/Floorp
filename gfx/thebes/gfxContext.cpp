@@ -324,12 +324,12 @@ gfxContext::DeviceToUser(const gfxPoint& point) const
   return ThebesPoint(matrix * ToPoint(point));
 }
 
-gfxSize
-gfxContext::DeviceToUser(const gfxSize& size) const
+Size
+gfxContext::DeviceToUser(const Size& size) const
 {
   Matrix matrix = mTransform;
   matrix.Invert();
-  return ThebesSize(matrix * ToSize(size));
+  return matrix * size;
 }
 
 gfxRect
@@ -346,12 +346,12 @@ gfxContext::UserToDevice(const gfxPoint& point) const
   return ThebesPoint(mTransform * ToPoint(point));
 }
 
-gfxSize
-gfxContext::UserToDevice(const gfxSize& size) const
+Size
+gfxContext::UserToDevice(const Size& size) const
 {
   const Matrix &matrix = mTransform;
 
-  gfxSize newSize;
+  Size newSize;
   newSize.width = size.width * matrix._11 + size.height * matrix._12;
   newSize.height = size.width * matrix._21 + size.height * matrix._22;
   return newSize;

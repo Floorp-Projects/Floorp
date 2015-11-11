@@ -6,7 +6,7 @@ var {colorUtils} = require("devtools/shared/css-color");
 var origColorUnit;
 
 add_task(function*() {
-  yield promiseTab("about:blank");
+  yield addTab("about:blank");
   let [host, win, doc] = yield createHost("bottom", TEST_URI);
 
   info("Creating a test canvas element to test colors");

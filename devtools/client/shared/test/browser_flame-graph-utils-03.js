@@ -8,7 +8,7 @@ var {PALLETTE_SIZE} = require("devtools/client/shared/widgets/FlameGraph");
 var {FrameNode} = require("devtools/client/performance/modules/logic/tree-model");
 
 add_task(function*() {
-  yield promiseTab("about:blank");
+  yield addTab("about:blank");
   yield performTest();
   gBrowser.removeCurrentTab();
 });

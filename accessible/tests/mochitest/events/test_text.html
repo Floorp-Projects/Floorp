@@ -180,7 +180,8 @@
     {
       this.__proto__ = new textRemoveInvoker(aID, aStart, aEnd, aText);
 
-      this.eventSeq.push(new invokerChecker(EVENT_VALUE_CHANGE, this.DOMNode));
+      this.eventSeq.push(new invokerChecker(EVENT_TEXT_VALUE_CHANGE,
+                                            this.DOMNode));
 
       this.invoke = function removeTextFromInput_invoke()
       {
@@ -207,7 +208,8 @@
     {
       this.__proto__ = new textInsertInvoker(aID, aStart, aEnd, aText);
 
-      this.eventSeq.push(new invokerChecker(EVENT_VALUE_CHANGE, this.DOMNode));
+      this.eventSeq.push(new invokerChecker(EVENT_TEXT_VALUE_CHANGE,
+                                            this.DOMNode));
 
       this.invoke = function insertTextIntoInput_invoke()
       {

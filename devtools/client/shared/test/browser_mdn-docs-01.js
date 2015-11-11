@@ -22,7 +22,6 @@
 
 const {CssDocsTooltip} = require("devtools/client/shared/widgets/Tooltip");
 const {setBaseCssDocsUrl, MdnDocsWidget} = require("devtools/client/shared/widgets/MdnDocsWidget");
-const promise = require("promise");
 
 // frame to load the tooltip into
 const MDN_DOCS_TOOLTIP_FRAME = "chrome://devtools/content/shared/widgets/mdn-docs-frame.xhtml";
@@ -51,7 +50,7 @@ const URI_PARAMS = "?utm_source=mozilla&utm_medium=firefox-inspector&utm_campaig
 add_task(function*() {
   setBaseCssDocsUrl(TEST_URI_ROOT);
 
-  yield promiseTab("about:blank");
+  yield addTab("about:blank");
   let [host, win, doc] = yield createHost("bottom", MDN_DOCS_TOOLTIP_FRAME);
   let widget = new MdnDocsWidget(win.document);
 

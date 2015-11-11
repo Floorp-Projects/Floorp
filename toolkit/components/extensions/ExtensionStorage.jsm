@@ -81,12 +81,7 @@ this.ExtensionStorage = {
         extData[prop] = items[prop];
       }
 
-      let listeners = this.listeners.get(extensionId);
-      if (listeners) {
-        for (let listener of listeners) {
-          listener(changes);
-        }
-      }
+      this.notifyListeners(extensionId, changes);
 
       return this.write(extensionId);
     });
@@ -106,12 +101,23 @@ this.ExtensionStorage = {
         delete extData[prop];
       }
 
-      let listeners = this.listeners.get(extensionId);
-      if (listeners) {
-        for (let listener of listeners) {
-          listener(changes);
+      this.notifyListeners(extensionId, changes);
+
+      return this.write(extensionId);
+    });
+  },
+
+  clear(extensionId) {
+    return this.read(extensionId).then(extData => {
+      let changes = {};
+      if (extData) {
+        for (let prop of Object.keys(extData)) {
+          changes[prop] = {oldValue: extData[prop]};
+          delete extData[prop];
         }
       }
+
+      this.notifyListeners(extensionId, changes);
 
       return this.write(extensionId);
     });
@@ -156,6 +162,15 @@ this.ExtensionStorage = {
   removeOnChangedListener(extensionId, listener) {
     let listeners = this.listeners.get(extensionId);
     listeners.delete(listener);
+  },
+
+  notifyListeners(extensionId, changes) {
+    let listeners = this.listeners.get(extensionId);
+    if (listeners) {
+      for (let listener of listeners) {
+        listener(changes);
+      }
+    }
   },
 
   init() {

@@ -24,7 +24,7 @@ nsresult RtspOmxReader::InitOmxDecoder()
     NS_ASSERTION(mDecoder->GetResource(),
                  "RtspOmxReader mDecoder->GetResource() is null.");
     mExtractor = new RtspExtractor(mRtspResource);
-    mOmxDecoder = new OmxDecoder(mDecoder);
+    mOmxDecoder = new OmxDecoder(mDecoder, OwnerThread());
     if (!mOmxDecoder->Init(mExtractor)) {
       return NS_ERROR_FAILURE;
     }

@@ -14,6 +14,7 @@
 
 #include "mozilla/media/MediaSystemResourceClient.h"
 #include "mozilla/Monitor.h"
+#include "mozilla/MozPromise.h"
 #include "mozilla/RefPtr.h"
 
 namespace android {
@@ -27,20 +28,7 @@ class MediaCodecProxy : public RefBase
                       , public mozilla::MediaSystemResourceReservationListener
 {
 public:
-  /* Codec resource notification listener.
-   * All functions are called on the Binder thread.
-   */
-  struct CodecResourceListener : public virtual RefBase {
-    /* The codec resource is reserved and can be granted.
-     * The client can allocate the requested resource.
-     */
-    virtual void codecReserved() = 0;
-    /* The codec resource is not reserved any more.
-     * The client should release the resource as soon as possible if the
-     * resource is still being held.
-     */
-    virtual void codecCanceled() = 0;
-  };
+  typedef mozilla::MozPromise<bool /* aIgnored */, bool /* aIgnored */, /* IsExclusive = */ true> CodecPromise;
 
   enum Capability {
     kEmptyCapability        = 0x00000000,
@@ -58,8 +46,7 @@ public:
   // Only support MediaCodec::CreateByType()
   static sp<MediaCodecProxy> CreateByType(sp<ALooper> aLooper,
                                           const char *aMime,
-                                          bool aEncoder,
-                                          wp<CodecResourceListener> aListener=nullptr);
+                                          bool aEncoder);
 
   // MediaCodec methods
   status_t configure(const sp<AMessage> &aFormat,
@@ -142,7 +129,7 @@ public:
   bool AllocateAudioMediaCodec();
 
   // It allocates video MediaCodec asynchronously.
-  bool AsyncAllocateVideoMediaCodec();
+  RefPtr<CodecPromise> AsyncAllocateVideoMediaCodec();
 
   // Free the OMX codec so others can allocate it.
   void ReleaseMediaCodec();
@@ -163,8 +150,7 @@ private:
   // Constructor for MediaCodecProxy::CreateByType
   MediaCodecProxy(sp<ALooper> aLooper,
                   const char *aMime,
-                  bool aEncoder,
-                  wp<CodecResourceListener> aListener);
+                  bool aEncoder);
 
   // Allocate Codec Resource
   bool allocateCodec();
@@ -176,8 +162,7 @@ private:
   nsCString mCodecMime;
   bool mCodecEncoder;
 
-  // Codec Resource Notification Listener
-  wp<CodecResourceListener> mListener;
+  mozilla::MozPromiseHolder<CodecPromise> mCodecPromise;
 
   // Media Resource Management
   RefPtr<mozilla::MediaSystemResourceClient> mResourceClient;

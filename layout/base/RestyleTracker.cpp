@@ -124,7 +124,7 @@ CollectRestyles(nsISupports* aElement,
                (element->GetFlattenedTreeParent() &&
                 (!element->GetFlattenedTreeParent()->GetPrimaryFrame() ||
                  element->GetFlattenedTreeParent()->GetPrimaryFrame()->IsLeaf() ||
-                 element->GetCurrentDoc()->GetShell()->FrameManager()
+                 element->GetCrossShadowCurrentDoc()->GetShell()->FrameManager()
                    ->GetDisplayContentsStyleFor(element))) ||
                // Or not reachable due to an async reinsert we have
                // pending?  If so, we'll have a reframe hint around.
