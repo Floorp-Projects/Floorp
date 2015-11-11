@@ -149,9 +149,8 @@ public:
    * @return NS_OK on success, NS_ERROR_FAILURE otherwise
    */
   virtual nsresult
-  GetPairedDevicePropertiesInternal(
-    const nsTArray<BluetoothAddress>& aDeviceAddresses,
-    BluetoothReplyRunnable* aRunnable) = 0;
+  GetPairedDevicePropertiesInternal(const nsTArray<nsString>& aDeviceAddresses,
+                                    BluetoothReplyRunnable* aRunnable) = 0;
 
   /**
    * Returns the properties of connected devices regarding to specific profile,
@@ -170,7 +169,7 @@ public:
    * @return NS_OK on success, NS_ERROR_FAILURE otherwise
    */
   virtual nsresult
-  FetchUuidsInternal(const BluetoothAddress& aDeviceAddress,
+  FetchUuidsInternal(const nsAString& aDeviceAddress,
                      BluetoothReplyRunnable* aRunnable) = 0;
 
   /**
@@ -214,12 +213,12 @@ public:
               BluetoothReplyRunnable* aRunnable) = 0;
 
   virtual nsresult
-  CreatePairedDeviceInternal(const BluetoothAddress& aDeviceAddress,
+  CreatePairedDeviceInternal(const nsAString& aAddress,
                              int aTimeout,
                              BluetoothReplyRunnable* aRunnable) = 0;
 
   virtual nsresult
-  RemoveDeviceInternal(const BluetoothAddress& aDeviceAddress,
+  RemoveDeviceInternal(const nsAString& aObjectPath,
                        BluetoothReplyRunnable* aRunnable) = 0;
 
   /**
@@ -242,13 +241,13 @@ public:
                    BluetoothProfileManagerBase* aManager) = 0;
 
   virtual void
-  PinReplyInternal(const BluetoothAddress& aDeviceAddress,
+  PinReplyInternal(const nsAString& aDeviceAddress,
                    bool aAccept,
                    const nsAString& aPinCode,
                    BluetoothReplyRunnable* aRunnable) = 0;
 
   virtual void
-  SspReplyInternal(const BluetoothAddress& aDeviceAddress,
+  SspReplyInternal(const nsAString& aDeviceAddress,
                    BluetoothSspVariant aVariant,
                    bool aAccept,
                    BluetoothReplyRunnable* aRunnable) = 0;
@@ -257,7 +256,7 @@ public:
    * Legacy method used by bluez only to reply pincode request.
    */
   virtual void
-  SetPinCodeInternal(const BluetoothAddress& aDeviceAddress,
+  SetPinCodeInternal(const nsAString& aDeviceAddress,
                      const nsAString& aPinCode,
                      BluetoothReplyRunnable* aRunnable) = 0;
 
@@ -265,24 +264,22 @@ public:
    * Legacy method used by bluez only to reply passkey entry request.
    */
   virtual void
-  SetPasskeyInternal(const BluetoothAddress& aDeviceAddress, uint32_t aPasskey,
+  SetPasskeyInternal(const nsAString& aDeviceAddress, uint32_t aPasskey,
                      BluetoothReplyRunnable* aRunnable) = 0;
 
   /**
    * Legacy method used by bluez only to reply pairing confirmation request.
    */
   virtual void
-  SetPairingConfirmationInternal(const BluetoothAddress& aDeviceAddress,
-                                 bool aConfirm,
+  SetPairingConfirmationInternal(const nsAString& aDeviceAddress, bool aConfirm,
                                  BluetoothReplyRunnable* aRunnable) = 0;
 
   virtual void
-  Connect(const BluetoothAddress& aDeviceAddress,
-          uint32_t aCod, uint16_t aServiceUuid,
+  Connect(const nsAString& aDeviceAddress, uint32_t aCod, uint16_t aServiceUuid,
           BluetoothReplyRunnable* aRunnable) = 0;
 
   virtual void
-  Disconnect(const BluetoothAddress& aDeviceAddress, uint16_t aServiceUuid,
+  Disconnect(const nsAString& aDeviceAddress, uint16_t aServiceUuid,
              BluetoothReplyRunnable* aRunnable) = 0;
 
   virtual void
