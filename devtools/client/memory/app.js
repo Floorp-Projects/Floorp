@@ -9,7 +9,7 @@ const { toggleRecordingAllocationStacks } = require("./actions/allocations");
 const { setBreakdownAndRefresh } = require("./actions/breakdown");
 const { toggleInvertedAndRefresh } = require("./actions/inverted");
 const { setFilterStringAndRefresh } = require("./actions/filter");
-const { pickFileAndExportSnapshot } = require("./actions/io");
+const { pickFileAndExportSnapshot, pickFileAndImportSnapshotAndCensus } = require("./actions/io");
 const { selectSnapshotAndRefresh, takeSnapshotAndCensus } = require("./actions/snapshot");
 const { breakdownNameToSpec, getBreakdownDisplayData } = require("./utils");
 const Toolbar = createFactory(require("./components/toolbar"));
@@ -61,6 +61,7 @@ const App = createClass({
 
         Toolbar({
           breakdowns: getBreakdownDisplayData(),
+          onImportClick: () => dispatch(pickFileAndImportSnapshotAndCensus(heapWorker)),
           onTakeSnapshotClick: () => dispatch(takeSnapshotAndCensus(front, heapWorker)),
           onBreakdownChange: breakdown =>
             dispatch(setBreakdownAndRefresh(heapWorker, breakdownNameToSpec(breakdown))),

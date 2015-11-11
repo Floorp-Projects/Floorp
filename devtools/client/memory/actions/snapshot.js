@@ -72,7 +72,7 @@ const takeSnapshot = exports.takeSnapshot = function (front) {
  */
 const readSnapshot = exports.readSnapshot = function readSnapshot (heapWorker, snapshot) {
   return function *(dispatch, getState) {
-    assert(snapshot.state === states.SAVED,
+    assert([states.SAVED, states.IMPORTING].includes(snapshot.state),
       `Should only read a snapshot once. Found snapshot in state ${snapshot.state}`);
 
     let creationTime;
