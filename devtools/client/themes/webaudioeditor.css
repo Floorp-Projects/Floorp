@@ -208,21 +208,6 @@ text {
   list-style-image: url(images/power.svg);
 }
 
-#audio-node-toolbar toolbarbutton[disabled] {
-  opacity: 0.5;
-  background-color: transparent;
-}
-
-#audio-node-toolbar toolbarbutton[checked] {
-  background-color: var(--theme-selection-background);
-}
-
-/* don't invert checked buttons so we can have white icons on light theme */
-#audio-node-toolbar toolbarbutton[checked] > .toolbarbutton-icon {
-  filter: none;
-}
-
-
 /**
  * Responsive Styles
  * `.devtools-responsive-container` takes care of most of

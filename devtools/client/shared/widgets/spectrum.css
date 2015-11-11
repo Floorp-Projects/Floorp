@@ -3,38 +3,17 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #eyedropper-button {
+  margin-inline-start: 5px;
+}
+
+#eyedropper-button::before {
   background-image: url("chrome://devtools/skin/images/command-eyedropper.png");
-  width: 16px;
-  height: 16px;
   background-size: 64px 16px;
   background-position: 0 center;
-  background-repeat: no-repeat;
-  -moz-margin-start: 5px;
-  border-radius: 2px;
-  cursor: pointer;
-}
-
-.theme-light #eyedropper-button {
-  filter: url(chrome://devtools/skin/images/filters.svg#invert);
-  border: 1px solid #AAA;
-}
-
-.theme-dark #eyedropper-button {
-  border: 1px solid #444;
-}
-
-#eyedropper-button:hover {
-  background-position: -16px center;
-}
-#eyedropper-button:hover:active {
-  background-position: -32px center;
-}
-#eyedropper-button[checked=true] {
-  background-position: -48px center;
 }
 
 @media (min-resolution: 1.1dppx) {
-  #eyedropper-button {
+  #eyedropper-button::before {
     background-image: url("chrome://devtools/skin/images/command-eyedropper@2x.png");
   }
 }

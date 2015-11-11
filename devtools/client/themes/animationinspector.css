@@ -133,11 +133,6 @@ body {
   background-image: url("images/rewind.png");
 }
 
-#element-picker[checked]::before {
-  background-position: -48px 0;
-  filter: none; /* Icon is blue when checked, don't invert for light theme */
-}
-
 .pause-button.paused::before {
   background-image: url("images/debugger-play.png");
 }
@@ -404,12 +399,12 @@ body {
 }
 
 .animation-target .node-highlighter:hover {
-  background-position: -32px 0;
+  filter: url(images/filters.svg#checked-icon-state);
 }
 
 .animation-target .node-highlighter:active,
 .animation-target .node-highlighter.selected {
-  background-position: -16px 0;
+  filter: url(images/filters.svg#checked-icon-state) brightness(0.9);
 }
 
 /* Animation title gutter, contains the name, duration, iteration */
