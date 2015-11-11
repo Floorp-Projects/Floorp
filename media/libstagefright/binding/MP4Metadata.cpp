@@ -102,7 +102,9 @@ MP4Metadata::MP4Metadata(Stream* aSource)
     mPrivate->mMetadataExtractor->flags() & MediaExtractor::CAN_SEEK;
   sp<MetaData> metaData = mPrivate->mMetadataExtractor->getMetaData();
 
-  UpdateCrypto(metaData.get());
+  if (metaData.get()) {
+    UpdateCrypto(metaData.get());
+  }
 }
 
 MP4Metadata::~MP4Metadata()
@@ -317,6 +319,9 @@ MP4Metadata::GetTrackNumber(mozilla::TrackID aTrackID)
   size_t numTracks = mPrivate->mMetadataExtractor->countTracks();
   for (size_t i = 0; i < numTracks; i++) {
     sp<MetaData> metaData = mPrivate->mMetadataExtractor->getTrackMetaData(i);
+    if (!metaData.get()) {
+      continue;
+    }
     int32_t value;
     if (metaData->findInt32(kKeyTrackID, &value) && value == aTrackID) {
       return i;
