@@ -11162,6 +11162,14 @@
         "url": "/IndexedDB/idbindex_get7.htm"
       },
       {
+        "path": "IndexedDB/idbindex_getAll.html",
+        "url": "/IndexedDB/idbindex_getAll.html"
+      },
+      {
+        "path": "IndexedDB/idbindex_getAllKeys.html",
+        "url": "/IndexedDB/idbindex_getAllKeys.html"
+      },
+      {
         "path": "IndexedDB/idbindex_getKey.htm",
         "url": "/IndexedDB/idbindex_getKey.htm"
       },
@@ -11426,6 +11434,14 @@
         "url": "/IndexedDB/idbobjectstore_get7.htm"
       },
       {
+        "path": "IndexedDB/idbobjectstore_getAll.html",
+        "url": "/IndexedDB/idbobjectstore_getAll.html"
+      },
+      {
+        "path": "IndexedDB/idbobjectstore_getAllKeys.html",
+        "url": "/IndexedDB/idbobjectstore_getAllKeys.html"
+      },
+      {
         "path": "IndexedDB/idbobjectstore_index.htm",
         "url": "/IndexedDB/idbobjectstore_index.htm"
       },
@@ -11436,6 +11452,10 @@
       {
         "path": "IndexedDB/idbobjectstore_openCursor_invalid.htm",
         "url": "/IndexedDB/idbobjectstore_openCursor_invalid.htm"
+      },
+      {
+        "path": "IndexedDB/idbobjectstore_openKeyCursor.htm",
+        "url": "/IndexedDB/idbobjectstore_openKeyCursor.htm"
       },
       {
         "path": "IndexedDB/idbobjectstore_put.htm",
@@ -11512,6 +11532,10 @@
       {
         "path": "IndexedDB/idbtransaction_abort.htm",
         "url": "/IndexedDB/idbtransaction_abort.htm"
+      },
+      {
+        "path": "IndexedDB/idbtransaction_objectStoreNames.html",
+        "url": "/IndexedDB/idbtransaction_objectStoreNames.html"
       },
       {
         "path": "IndexedDB/idbversionchangeevent.htm",
@@ -13282,8 +13306,12 @@
         "url": "/dom/collections/HTMLCollection-supported-property-names.html"
       },
       {
-        "path": "dom/collections/storage-supported-property-names.html",
-        "url": "/dom/collections/storage-supported-property-names.html"
+        "path": "dom/collections/domstringmap-supported-property-names.html",
+        "url": "/dom/collections/domstringmap-supported-property-names.html"
+      },
+      {
+        "path": "dom/collections/namednodemap-supported-property-names.html",
+        "url": "/dom/collections/namednodemap-supported-property-names.html"
       },
       {
         "path": "dom/events/Event-constants.html",
@@ -13710,6 +13738,10 @@
         "url": "/dom/nodes/Element-getElementsByClassName.html"
       },
       {
+        "path": "dom/nodes/Element-getElementsByTagName-change-document-HTMLNess.html",
+        "url": "/dom/nodes/Element-getElementsByTagName-change-document-HTMLNess.html"
+      },
+      {
         "path": "dom/nodes/Element-getElementsByTagName.html",
         "url": "/dom/nodes/Element-getElementsByTagName.html"
       },
@@ -13836,6 +13868,10 @@
       {
         "path": "dom/nodes/Node-contains.html",
         "url": "/dom/nodes/Node-contains.html"
+      },
+      {
+        "path": "dom/nodes/Node-contains.xml",
+        "url": "/dom/nodes/Node-contains.xml"
       },
       {
         "path": "dom/nodes/Node-insertBefore.html",
@@ -13972,6 +14008,14 @@
       {
         "path": "dom/nodes/getElementsByClassName-09.htm",
         "url": "/dom/nodes/getElementsByClassName-09.htm"
+      },
+      {
+        "path": "dom/nodes/getElementsByClassName-10.xml",
+        "url": "/dom/nodes/getElementsByClassName-10.xml"
+      },
+      {
+        "path": "dom/nodes/getElementsByClassName-11.xml",
+        "url": "/dom/nodes/getElementsByClassName-11.xml"
       },
       {
         "path": "dom/nodes/getElementsByClassName-12.htm",
@@ -17910,6 +17954,10 @@
         "url": "/html/semantics/forms/the-select-element/common-HTMLOptionsCollection.html"
       },
       {
+        "path": "html/semantics/forms/the-select-element/select-ask-for-reset.html",
+        "url": "/html/semantics/forms/the-select-element/select-ask-for-reset.html"
+      },
+      {
         "path": "html/semantics/forms/the-select-element/select-named-getter.html",
         "url": "/html/semantics/forms/the-select-element/select-named-getter.html"
       },
@@ -18474,6 +18522,10 @@
         "url": "/html/webappapis/animation-frames/callback-invoked.html"
       },
       {
+        "path": "html/webappapis/animation-frames/callback-multicalls.html",
+        "url": "/html/webappapis/animation-frames/callback-multicalls.html"
+      },
+      {
         "path": "html/webappapis/animation-frames/cancel-invoked.html",
         "url": "/html/webappapis/animation-frames/cancel-invoked.html"
       },
@@ -18496,6 +18548,10 @@
       {
         "path": "html/webappapis/scripting/events/body-onload.html",
         "url": "/html/webappapis/scripting/events/body-onload.html"
+      },
+      {
+        "path": "html/webappapis/scripting/events/event-handler-attributes-body-window.html",
+        "url": "/html/webappapis/scripting/events/event-handler-attributes-body-window.html"
       },
       {
         "path": "html/webappapis/scripting/events/event-handler-javascript.html",
@@ -26142,10 +26198,6 @@
         "url": "/shadow-dom/untriaged/user-interaction/ranges-and-selections/test-002.html"
       },
       {
-        "path": "subresource-integrity/subresource-integrity.html",
-        "url": "/subresource-integrity/subresource-integrity.html"
-      },
-      {
         "path": "touch-events/create-touch-touchlist.html",
         "url": "/touch-events/create-touch-touchlist.html"
       },
@@ -27616,6 +27668,10 @@
       {
         "path": "webstorage/storage_string_conversion.html",
         "url": "/webstorage/storage_string_conversion.html"
+      },
+      {
+        "path": "webstorage/storage_supported_property_names.html",
+        "url": "/webstorage/storage_supported_property_names.html"
       },
       {
         "path": "webvtt/interfaces.html",
@@ -29740,6 +29796,15 @@
     ],
     "wdspec": [
       {
+        "path": "webdriver/command_contexts/open_and_close_window_test.py"
+      },
+      {
+        "path": "webdriver/command_contexts/window_handle_test.py"
+      },
+      {
+        "path": "webdriver/command_contexts/window_size_test.py"
+      },
+      {
         "path": "webdriver/cookie/cookie_test.py"
       },
       {
@@ -29750,6 +29815,12 @@
       },
       {
         "path": "webdriver/element_state/method_test.py"
+      },
+      {
+        "path": "webdriver/element_state/properties.py"
+      },
+      {
+        "path": "webdriver/element_state/selected_test.py"
       },
       {
         "path": "webdriver/element_state/visibility_test.py"
@@ -29782,6 +29853,12 @@
         "path": "webdriver/navigation/refresh-page.py"
       },
       {
+        "path": "webdriver/navigation/refresh_page.py"
+      },
+      {
+        "path": "webdriver/screenshot/take_screenshot.py"
+      },
+      {
         "path": "webdriver/timeouts/implicit_waits_tests.py"
       },
       {
@@ -29789,21 +29866,24 @@
       },
       {
         "path": "webdriver/user_input/clear_test.py"
+      },
+      {
+        "path": "webdriver/user_input/click_test.py"
+      },
+      {
+        "path": "webdriver/user_input/sendkeys_test.py"
+      },
+      {
+        "path": "webdriver/windows/tabbing.py"
+      },
+      {
+        "path": "webdriver/windows/window_manipulation.py"
       }
     ]
   },
   "local_changes": {
     "deleted": [],
-    "items": {
-      "testharness": {
-        "dom/nodes/Element-getElementsByTagName-change-document-HTMLNess.html": [
-          {
-            "path": "dom/nodes/Element-getElementsByTagName-change-document-HTMLNess.html",
-            "url": "/dom/nodes/Element-getElementsByTagName-change-document-HTMLNess.html"
-          }
-        ]
-      }
-    },
+    "items": {},
     "reftest_nodes": {}
   },
   "reftest_nodes": {
@@ -31533,6 +31613,18 @@
           ]
         ],
         "url": "/html/rendering/bindings/the-textarea-element-0/rows-zero.html"
+      }
+    ],
+    "html/rendering/non-replaced-elements/flow-content-0/div-align-ref.html": [
+      {
+        "path": "html/rendering/non-replaced-elements/flow-content-0/div-align-ref.html",
+        "references": [
+          [
+            "/html/rendering/non-replaced-elements/flow-content-0/div-align-ref.html",
+            "=="
+          ]
+        ],
+        "url": "/html/rendering/non-replaced-elements/flow-content-0/div-align-ref.html"
       }
     ],
     "html/rendering/non-replaced-elements/flow-content-0/figure.html": [
@@ -35328,7 +35420,7 @@
       }
     ]
   },
-  "rev": "886dea2c3dbb79925360319a6a0f662ce196ab3c",
+  "rev": "a5f15d6bdbeeec010465dc906e542873d64797ec",
   "url_base": "/",
   "version": 2
 }
