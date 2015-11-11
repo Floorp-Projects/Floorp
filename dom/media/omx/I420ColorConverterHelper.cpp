@@ -10,7 +10,7 @@
 
 #include "mozilla/Logging.h"
 
-mozilla::LazyLogModule gI420ColorConverterHelperLog("I420ColorConverterHelper");
+PRLogModuleInfo *gI420ColorConverterHelperLog;
 #define LOG(msg...) MOZ_LOG(gI420ColorConverterHelperLog, mozilla::LogLevel::Warning, (msg))
 
 namespace android {
@@ -19,6 +19,9 @@ I420ColorConverterHelper::I420ColorConverterHelper()
   : mHandle(nullptr)
   , mConverter({nullptr, nullptr, nullptr, nullptr, nullptr})
 {
+  if (!gI420ColorConverterHelperLog) {
+    gI420ColorConverterHelperLog = PR_NewLogModule("I420ColorConverterHelper");
+  }
 }
 
 I420ColorConverterHelper::~I420ColorConverterHelper()

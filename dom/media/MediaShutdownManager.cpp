@@ -12,7 +12,7 @@
 
 namespace mozilla {
 
-extern LazyLogModule gMediaDecoderLog;
+extern PRLogModuleInfo* gMediaDecoderLog;
 #define DECODER_LOG(type, msg) MOZ_LOG(gMediaDecoderLog, type, msg)
 
 NS_IMPL_ISUPPORTS(MediaShutdownManager, nsIObserver)

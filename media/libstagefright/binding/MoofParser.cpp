@@ -11,7 +11,7 @@
 #include "mozilla/Logging.h"
 
 #if defined(MOZ_FMP4)
-extern mozilla::LogModule* GetDemuxerLog();
+extern PRLogModuleInfo* GetDemuxerLog();
 
 #define STRINGIFY(x) #x
 #define TOSTRING(x) STRINGIFY(x)

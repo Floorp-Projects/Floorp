@@ -10,7 +10,7 @@
 #include "MainThreadUtils.h"
 #include "nsDebug.h"
 
-extern mozilla::LogModule* GetPDMLog();
+extern PRLogModuleInfo* GetPDMLog();
 #define LOG(...) MOZ_LOG(GetPDMLog(), mozilla::LogLevel::Debug, (__VA_ARGS__))
 
 namespace mozilla {

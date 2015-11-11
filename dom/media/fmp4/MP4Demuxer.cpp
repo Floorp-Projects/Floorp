@@ -20,8 +20,11 @@
 #include "mp4_demuxer/AnnexB.h"
 #include "mp4_demuxer/H264.h"
 
-mozilla::LogModule* GetDemuxerLog() {
-  static mozilla::LazyLogModule log("MP4Demuxer");
+PRLogModuleInfo* GetDemuxerLog() {
+  static PRLogModuleInfo* log = nullptr;
+  if (!log) {
+    log = PR_NewLogModule("MP4Demuxer");
+  }
   return log;
 }
 

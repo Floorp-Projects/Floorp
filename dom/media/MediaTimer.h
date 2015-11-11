@@ -18,7 +18,7 @@
 
 namespace mozilla {
 
-extern LazyLogModule gMediaTimerLog;
+extern PRLogModuleInfo* gMediaTimerLog;
 
 #define TIMER_LOG(x, ...) \
   MOZ_ASSERT(gMediaTimerLog); \

@@ -11,7 +11,7 @@
 #include "mozilla/Monitor.h"
 #include "mozilla/Logging.h"
 
-extern mozilla::LogModule* GetMediaSourceLog();
+extern PRLogModuleInfo* GetMediaSourceLog();
 
 #define MSE_DEBUG(arg, ...) MOZ_LOG(GetMediaSourceLog(), mozilla::LogLevel::Debug, ("MediaSourceResource(%p:%s)::%s: " arg, this, mType.get(), __func__, ##__VA_ARGS__))
 

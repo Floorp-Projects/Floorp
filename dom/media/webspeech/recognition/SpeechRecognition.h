@@ -46,7 +46,7 @@ namespace dom {
 class GlobalObject;
 class SpeechEvent;
 
-LogModule* GetSpeechRecognitionLog();
+PRLogModuleInfo* GetSpeechRecognitionLog();
 #define SR_LOG(...) MOZ_LOG(GetSpeechRecognitionLog(), mozilla::LogLevel::Debug, (__VA_ARGS__))
 
 class SpeechRecognition final : public DOMEventTargetHelper,

@@ -24,7 +24,7 @@
 
 namespace mozilla {
 
-LazyLogModule gMediaCacheLog("MediaCache");
+PRLogModuleInfo* gMediaCacheLog;
 #define CACHE_LOG(type, msg) MOZ_LOG(gMediaCacheLog, type, msg)
 
 // Readahead blocks for non-seekable streams will be limited to this
@@ -579,6 +579,10 @@ MediaCache::Init()
   mFileCache = new FileBlockCache();
   rv = mFileCache->Open(fileDesc);
   NS_ENSURE_SUCCESS(rv,rv);
+
+  if (!gMediaCacheLog) {
+    gMediaCacheLog = PR_NewLogModule("MediaCache");
+  }
 
   MediaCacheFlusher::Init();
 

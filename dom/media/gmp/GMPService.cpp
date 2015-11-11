@@ -46,10 +46,12 @@ namespace mozilla {
 #undef LOG
 #endif
 
-LogModule*
+PRLogModuleInfo*
 GetGMPLog()
 {
-  static LazyLogModule sLog("GMP");
+  static PRLogModuleInfo *sLog;
+  if (!sLog)
+    sLog = PR_NewLogModule("GMP");
   return sLog;
 }
 

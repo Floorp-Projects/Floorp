@@ -13,10 +13,12 @@
 
 #include "mozilla/Logging.h"
 
-static mozilla::LogModule*
+static PRLogModuleInfo*
 GetUserMediaLog()
 {
-  static mozilla::LazyLogModule sLog("GetUserMedia");
+  static PRLogModuleInfo *sLog;
+  if (!sLog)
+    sLog = PR_NewLogModule("GetUserMedia");
   return sLog;
 }
 

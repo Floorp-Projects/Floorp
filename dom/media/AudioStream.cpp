@@ -25,7 +25,7 @@ namespace mozilla {
 #undef LOG
 #endif
 
-LazyLogModule gAudioStreamLog("AudioStream");
+PRLogModuleInfo* gAudioStreamLog = nullptr;
 // For simple logs
 #define LOG(x) MOZ_LOG(gAudioStreamLog, mozilla::LogLevel::Debug, x)
 

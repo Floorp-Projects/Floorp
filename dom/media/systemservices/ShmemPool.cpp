@@ -11,7 +11,7 @@
 
 #undef LOG
 #undef LOG_ENABLED
-extern mozilla::LazyLogModule gCamerasParentLog;
+extern PRLogModuleInfo *gCamerasParentLog;
 #define LOG(args) MOZ_LOG(gCamerasParentLog, mozilla::LogLevel::Debug, args)
 #define LOG_ENABLED() MOZ_LOG_TEST(gCamerasParentLog, mozilla::LogLevel::Debug)
 

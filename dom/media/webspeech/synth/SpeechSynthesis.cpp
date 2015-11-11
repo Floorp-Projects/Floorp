@@ -16,10 +16,14 @@
 #include "nsIDocument.h"
 
 #undef LOG
-mozilla::LogModule*
+PRLogModuleInfo*
 GetSpeechSynthLog()
 {
-  static mozilla::LazyLogModule sLog("SpeechSynthesis");
+  static PRLogModuleInfo* sLog = nullptr;
+
+  if (!sLog) {
+    sLog = PR_NewLogModule("SpeechSynthesis");
+  }
 
   return sLog;
 }
