@@ -143,14 +143,15 @@ public:
     uint32_t halfSize = mFFTSize / 2;
     // DFTs are not packed.
     MOZ_ASSERT(mOutputBuffer[0].i == 0);
-    MOZ_ASSERT(mOutputBuffer[halfSize].i == 0);
     MOZ_ASSERT(aFrame.mOutputBuffer[0].i == 0);
-    MOZ_ASSERT(aFrame.mOutputBuffer[halfSize].i == 0);
 
     BufferComplexMultiply(mOutputBuffer.Elements()->f,
                           aFrame.mOutputBuffer.Elements()->f,
                           mOutputBuffer.Elements()->f,
-                          halfSize + 1);
+                          halfSize);
+    mOutputBuffer[halfSize].r *= aFrame.mOutputBuffer[halfSize].r;
+    // This would have been set to NaN if either real component was NaN.
+    mOutputBuffer[0].i = 0.0f;
   }
 
   // Perform a forward FFT on |aData|, assuming zeros after dataSize samples,
