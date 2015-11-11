@@ -109,26 +109,6 @@ public:
                       const nsACString& aFeatures,
                       nsIDOMWindow** aReturnWindow);
 
-  /**
-   * Fire a mozbrowserasyncscroll CustomEvent on the given TabParent's frame element.
-   * This event's detail is an AsyncScrollEventDetail dictionary.
-   *
-   * @param aContentRect: The portion of the page which is currently visible
-   *                      onscreen in CSS pixels.
-   *
-   * @param aContentSize: The content width/height in CSS pixels.
-   *
-   * aContentRect.top + aContentRect.height may be larger than aContentSize.height.
-   * This indicates that the content is over-scrolled, which occurs when the
-   * page "rubber-bands" after being scrolled all the way to the bottom.
-   * Similarly, aContentRect.left + aContentRect.width may be greater than
-   * contentSize.width, and both left and top may be negative.
-   */
-  static bool
-  DispatchAsyncScrollEvent(dom::TabParent* aTabParent,
-                           const CSSRect& aContentRect,
-                           const CSSSize& aContentSize);
-
 private:
   static OpenWindowResult
   DispatchOpenWindowEvent(dom::Element* aOpenerFrameElement,

@@ -261,12 +261,6 @@ public:
     const ParentLayerPoint& aVelocity,
     double aEstimatedPaintDuration);
 
-  /**
-   * Send an mozbrowserasyncscroll event.
-   * *** The monitor must be held while calling this.
-   */
-  void SendAsyncScrollEvent();
-
   nsEventStatus HandleDragEvent(const MouseInput& aEvent,
                                 const AsyncDragMetrics& aDragMetrics);
 
@@ -618,14 +612,6 @@ protected:
   const RefPtr<InputQueue>& GetInputQueue() const;
 
   /**
-   * Timeout function for mozbrowserasyncscroll event. Because we throttle
-   * mozbrowserasyncscroll events in some conditions, this function ensures
-   * that the last mozbrowserasyncscroll event will be fired after a period of
-   * time.
-   */
-  void FireAsyncScrollOnTimeout();
-
-  /**
    * Convert ScreenPoint relative to the screen to CSSPoint relative
    * to the parent document. This excludes the transient compositor transform.
    * NOTE: This must be converted to CSSPoint relative to the child
@@ -731,19 +717,6 @@ private:
   // Stores the previous focus point if there is a pinch gesture happening. Used
   // to allow panning by moving multiple fingers (thus moving the focus point).
   ParentLayerPoint mLastZoomFocus;
-
-  // The last time and offset we fire the mozbrowserasyncscroll event when
-  // compositor has sampled the content transform for this frame.
-  TimeStamp mLastAsyncScrollTime;
-  CSSPoint mLastAsyncScrollOffset;
-
-  // The current offset drawn on the screen, it may not be sent since we have
-  // throttling policy for mozbrowserasyncscroll event.
-  CSSPoint mCurrentAsyncScrollOffset;
-
-  // The delay task triggered by the throttling mozbrowserasyncscroll event
-  // ensures the last mozbrowserasyncscroll event is always been fired.
-  CancelableTask* mAsyncScrollTimeoutTask;
 
   RefPtr<AsyncPanZoomAnimation> mAnimation;
 
