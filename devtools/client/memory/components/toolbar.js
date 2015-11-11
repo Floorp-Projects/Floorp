@@ -14,6 +14,7 @@ const Toolbar = module.exports = createClass({
       displayName: PropTypes.string.isRequired,
     })).isRequired,
     onTakeSnapshotClick: PropTypes.func.isRequired,
+    onImportClick: PropTypes.func.isRequired,
     onBreakdownChange: PropTypes.func.isRequired,
     onToggleRecordAllocationStacks: PropTypes.func.isRequired,
     allocations: models.allocations,
@@ -26,6 +27,7 @@ const Toolbar = module.exports = createClass({
   render() {
     let {
       onTakeSnapshotClick,
+      onImportClick,
       onBreakdownChange,
       breakdowns,
       onToggleRecordAllocationStacks,
@@ -44,6 +46,14 @@ const Toolbar = module.exports = createClass({
           onClick: onTakeSnapshotClick,
           title: L10N.getStr("take-snapshot")
         }),
+
+        dom.button({
+          id: "import-snapshot",
+          className: "devtools-toolbarbutton import-snapshot devtools-button",
+          onClick: onImportClick,
+          title: L10N.getStr("import-snapshot"),
+          "data-text-only": true,
+        }, L10N.getStr("import-snapshot")),
 
         dom.div({ className: "toolbar-group" },
           dom.label({ className: "breakdown-by" },

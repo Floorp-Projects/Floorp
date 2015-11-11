@@ -39,13 +39,15 @@ let snapshotModel = exports.snapshot = PropTypes.shape({
   filter: PropTypes.string,
   // If an error was thrown while processing this snapshot, the `Error` instance is attached here.
   error: PropTypes.object,
+  // Boolean indicating whether or not this snapshot was imported.
+  imported: PropTypes.bool.isRequired,
   // The creation time of the snapshot; required after the snapshot has been read.
   creationTime: PropTypes.number,
   // The current state the snapshot is in.
   // @see ./constants.js
   state: function (snapshot, propName) {
     let current = snapshot.state;
-    let shouldHavePath = [states.SAVED, states.READ, states.SAVING_CENSUS, states.SAVED_CENSUS];
+    let shouldHavePath = [states.IMPORTING, states.SAVED, states.READ, states.SAVING_CENSUS, states.SAVED_CENSUS];
     let shouldHaveCreationTime = [states.READ, states.SAVING_CENSUS, states.SAVED_CENSUS];
     let shouldHaveCensus = [states.SAVED_CENSUS];
 
