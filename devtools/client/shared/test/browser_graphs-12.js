@@ -8,7 +8,7 @@ var BarGraphWidget = require("devtools/client/shared/widgets/BarGraphWidget");
 var {CanvasGraphUtils} = require("devtools/client/shared/widgets/Graphs");
 
 add_task(function*() {
-  yield promiseTab("about:blank");
+  yield addTab("about:blank");
   yield performTest();
   gBrowser.removeCurrentTab();
 });

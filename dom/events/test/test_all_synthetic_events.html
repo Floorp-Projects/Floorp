@@ -76,6 +76,10 @@ const kEventConstructors = {
                                                           return new BluetoothLeDeviceEvent(aName, aProps);
                                                        },
                                              },
+  BluetoothObexAuthEvent:                    { create: function (aName, aProps) {
+                                                          return new BluetoothObexAuthEvent(aName, aProps);
+                                                       },
+                                             },
   BluetoothPairingEvent:                     { create: function (aName, aProps) {
                                                           return new BluetoothPairingEvent(aName, aProps);
                                                        },

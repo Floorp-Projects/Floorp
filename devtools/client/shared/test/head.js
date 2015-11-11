@@ -2,58 +2,15 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-var {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
-var {TargetFactory} = require("devtools/client/framework/target");
-var {console} = Cu.import("resource://gre/modules/Console.jsm", {});
-var {gDevTools} = Cu.import("resource://devtools/client/framework/gDevTools.jsm", {});
+// shared-head.js handles imports, constants, and utility functions
+Services.scriptloader.loadSubScript("chrome://mochitests/content/browser/devtools/client/framework/test/shared-head.js", this);
+
 const {DOMHelpers} = Cu.import("resource://devtools/client/shared/DOMHelpers.jsm", {});
 const {Hosts} = require("devtools/client/framework/toolbox-hosts");
 const {defer} = require("promise");
-const DevToolsUtils = require("devtools/shared/DevToolsUtils");
-
-DevToolsUtils.testing = true;
-SimpleTest.registerCleanupFunction(() => {
-  DevToolsUtils.testing = false;
-});
 
 const TEST_URI_ROOT = "http://example.com/browser/devtools/client/shared/test/";
 const OPTIONS_VIEW_URL = TEST_URI_ROOT + "doc_options-view.xul";
-
-/**
- * Open a new tab at a URL and call a callback on load
- */
-function addTab(aURL, aCallback)
-{
-  waitForExplicitFinish();
-
-  gBrowser.selectedTab = gBrowser.addTab();
-  let tab = gBrowser.selectedTab;
-  let browser = gBrowser.getBrowserForTab(tab);
-
-  let url = encodeURI(aURL);
-
-  BrowserTestUtils.browserLoaded(browser, false, url).then(() => {
-    aCallback(browser, tab, browser.contentDocument);
-  });
-
-  browser.loadURI(url);
-}
-
-function promiseTab(aURL) {
-  return new Promise(resolve =>
-    addTab(aURL, resolve));
-}
-
-registerCleanupFunction(function* tearDown() {
-  let target = TargetFactory.forTab(gBrowser.selectedTab);
-  yield gDevTools.closeToolbox(target);
-
-  while (gBrowser.tabs.length > 1) {
-    gBrowser.removeCurrentTab();
-  }
-
-  console = undefined;
-});
 
 function catchFail(func) {
   return function() {
@@ -136,11 +93,17 @@ function waitForValue(aOptions)
 }
 
 function oneTimeObserve(name, callback) {
-  var func = function() {
-    Services.obs.removeObserver(func, name);
-    callback();
-  };
-  Services.obs.addObserver(func, name, false);
+  return new Promise((resolve) => {
+
+    var func = function() {
+      Services.obs.removeObserver(func, name);
+      if (callback) {
+        callback();
+      }
+      resolve();
+    };
+    Services.obs.addObserver(func, name, false);
+  });
 }
 
 var createHost = Task.async(function*(type = "bottom", src = "data:text/html;charset=utf-8,") {

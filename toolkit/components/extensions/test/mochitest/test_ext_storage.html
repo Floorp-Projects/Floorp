@@ -31,6 +31,12 @@ function backgroundScript() {
     });
   }
 
+  function clear(items) {
+    return new Promise(resolve => {
+      browser.storage.local.clear(resolve);
+    });
+  }
+
   function check(prop, value) {
     return get(null).then(data => {
       browser.test.assertEq(data[prop], value, "null getter worked for " + prop);
@@ -103,6 +109,18 @@ function backgroundScript() {
     browser.test.assertEq(data["test-prop2"], "value2", "prop2 correct");
   }).then(() => {
     return remove(["test-prop1", "test-prop2"]);
+  }).then(() => {
+    checkChanges({"test-prop1": {oldValue: "value1"}, "test-prop2": {oldValue: "value2"}});
+    return get(["test-prop1", "test-prop2"]);
+  }).then(data => {
+    browser.test.assertFalse("test-prop1" in data, "prop1 absent");
+    browser.test.assertFalse("test-prop2" in data, "prop2 absent");
+
+  // test storage.clear
+  }).then(() => {
+    return set({"test-prop1": "value1", "test-prop2": "value2"});
+  }).then(() => {
+    return clear();
   }).then(() => {
     checkChanges({"test-prop1": {oldValue: "value1"}, "test-prop2": {oldValue: "value2"}});
     return get(["test-prop1", "test-prop2"]);

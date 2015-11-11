@@ -76,7 +76,7 @@ public:
                                               ErrorResult& aRv);
 
   /**
-   * Reply to get-message request
+   * Reply to set-message request
    *
    * @param aMasId         [in]  MAS ID.
    * @param aStatus        [in]  MAP set message result.
@@ -86,14 +86,15 @@ public:
                                                     ErrorResult& aRv);
 
   /**
-   * Reply to get-message request
+   * Reply to send-message request
    *
    * @param aMasId         [in]  MAS ID.
+   * @param aHandleId      [in]  Handle ID.
    * @param aStatus        [in]  MAP send message result.
    * @param aRv            [out] Error result to set in case of error.
    */
-  already_AddRefed<Promise> ReplyToSendMessage(long aMasId, bool aStatus,
-                                               ErrorResult& aRv);
+  already_AddRefed<Promise> ReplyToSendMessage(
+    long aMasId, const nsAString& aHandleId, bool aStatus, ErrorResult& aRv);
 
   /**
    * Reply to message update request

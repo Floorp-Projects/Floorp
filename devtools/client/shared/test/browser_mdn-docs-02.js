@@ -99,7 +99,7 @@ const TEST_DATA = [{
 add_task(function*() {
   setBaseCssDocsUrl(TEST_URI_ROOT);
 
-  yield promiseTab("about:blank");
+  yield addTab("about:blank");
   let [host, win, doc] = yield createHost("bottom", MDN_DOCS_TOOLTIP_FRAME);
   let widget = new MdnDocsWidget(win.document);
 

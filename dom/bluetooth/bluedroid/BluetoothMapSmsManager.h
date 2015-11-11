@@ -168,12 +168,14 @@ public:
    * Reply to the *in-process* 'sendmessage' request.
    *
    * @param aMasId [in]         MAS id
+   * @param aHandleId [in]      Handle id
    * @param aStatus [in]        success or failure
    *
    * @return true if the response packet has been packed correctly and started
    *         to be sent to the remote device; false otherwise.
    */
-  bool ReplyToSendMessage(long aMasId, bool aStatus);
+  bool ReplyToSendMessage(
+    long aMasId, const nsAString& aHandleId , bool aStatus);
 
   /**
    * Reply to the *in-process* 'messageupdate' request.
@@ -196,9 +198,17 @@ private:
 
   void ReplyToConnect();
   void ReplyToDisconnectOrAbort();
+
+  /*
+   * This function replies to Get request with Header Body, in case of a GET
+   * operation returning an object that is too big to fit in one response
+   * packet. If the operation requires multiple response packets to complete
+   * after the Final bit is set in the request.
+   */
+  bool ReplyToGetWithHeaderBody(uint8_t* aResponse, unsigned int aIndex);
   void ReplyToSetPath();
   void ReplyToPut();
-  void ReplyError(uint8_t aError);
+  void SendReply(uint8_t aResponse);
 
   void HandleNotificationRegistration(const ObexHeaderSet& aHeader);
   void HandleEventReport(const ObexHeaderSet& aHeader);
@@ -213,6 +223,7 @@ private:
     const Map::AppParametersTagId aTagId);
   void SendMasObexData(uint8_t* aData, uint8_t aOpcode, int aSize);
   void SendMnsObexData(uint8_t* aData, uint8_t aOpcode, int aSize);
+  bool StatusResponse(bool aStatus);
 
   uint8_t SetPath(uint8_t flags, const ObexHeaderSet& aHeader);
   bool CompareHeaderTarget(const ObexHeaderSet& aHeader);
@@ -224,6 +235,9 @@ private:
   void SendMnsDisconnectRequest();
   void MnsDataHandler(mozilla::ipc::UnixSocketBuffer* aMessage);
   void MasDataHandler(mozilla::ipc::UnixSocketBuffer* aMessage);
+  bool GetInputStreamFromBlob(Blob* aBlob);
+  InfallibleTArray<uint32_t> PackParameterMask(uint8_t* aData, int aSize);
+
   /*
    * Build mandatory folders
    */
@@ -238,11 +252,16 @@ private:
    * Record the last command
    */
   int mLastCommand;
+  // Whether header body is required for the current MessagesListing response.
+  bool mBodyRequired;
+  // Whether FractionDeliver is required for the current GetMessage response
+  bool mFractionDeliverRequired;
   // MAS OBEX session status. Set when MAS OBEX session is established.
   bool mMasConnected;
   // MNS OBEX session status. Set when MNS OBEX session is established.
   bool mMnsConnected;
   bool mNtfRequired;
+
   BluetoothAddress mDeviceAddress;
   unsigned int mRemoteMaxPacketLength;
 
@@ -261,6 +280,11 @@ private:
 
   int mBodySegmentLength;
   nsAutoArrayPtr<uint8_t> mBodySegment;
+
+  /**
+   * The bMessage/message-listing data stream for current processing response
+   */
+  nsCOMPtr<nsIInputStream> mDataStream;
 };
 
 END_BLUETOOTH_NAMESPACE

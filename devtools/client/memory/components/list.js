@@ -23,9 +23,9 @@ const List = module.exports = createClass({
 
     return (
       dom.ul({ className: "list" }, ...items.map((item, index) => {
-        return Item({
+        return Item(Object.assign({}, this.props, {
           key: index, item, index, onClick: () => onClick(item),
-        });
+        }));
       }))
     );
   }

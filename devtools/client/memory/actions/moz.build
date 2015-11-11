@@ -8,5 +8,6 @@ DevToolsModules(
     'breakdown.js',
     'filter.js',
     'inverted.js',
+    'io.js',
     'snapshot.js',
 )

@@ -19,7 +19,7 @@ registerCleanupFunction(() => {
 });
 
 add_task(function* showToolbar() {
-  yield promiseTab(TEST_URI);
+  yield addTab(TEST_URI);
 
   info("Starting browser_toolbar_tooltip.js");
 

@@ -4,7 +4,6 @@
 // Tests that options-view OptionsView responds to events correctly.
 
 const {OptionsView} = require("devtools/client/shared/options-view");
-const {Services} = require("resource://gre/modules/Services.jsm");
 
 const BRANCH = "devtools.debugger.";
 const BLACK_BOX_PREF = "auto-black-box";
@@ -19,7 +18,7 @@ add_task(function*() {
   Services.prefs.setBoolPref(BRANCH + PRETTY_PRINT_PREF, true);
 
   info("Opening a test tab and a toolbox host to create the options view in");
-  yield promiseTab("about:blank");
+  yield addTab("about:blank");
   let [host, win, doc] = yield createHost("bottom", OPTIONS_VIEW_URL);
 
   yield testOptionsView(win);

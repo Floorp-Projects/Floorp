@@ -244,6 +244,12 @@ extern bool gBluetoothDebugFlag;
 #define REQUEST_MEDIA_PLAYSTATUS_ID          "requestmediaplaystatus"
 
 /**
+ * When receiving an OBEX authenticate challenge request from a remote device,
+ * we'll dispatch an event.
+ */
+#define OBEX_PASSWORD_REQ_ID                 "obexpasswordreq"
+
+/**
  * When receiving a PBAP request from a remote device, we'll dispatch an event.
  */
 #define PULL_PHONEBOOK_REQ_ID                "pullphonebookreq"
