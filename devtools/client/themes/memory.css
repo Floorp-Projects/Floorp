@@ -88,8 +88,6 @@ html, body, #app, #memory-tool {
 
 .devtools-toolbar > .devtools-button.take-snapshot::before {
   background-image: url(images/command-screenshot.png);
-  background-size: 64px 16px;
-  background-position: 0 center;
 }
 @media (min-resolution: 1.1dppx) {
   .devtools-toolbar > .devtools-button.take-snapshot::before {
