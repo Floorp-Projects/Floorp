@@ -2008,13 +2008,6 @@ BluetoothAdapter::SendMediaMetaData(
     return nullptr;
   }
 
-  ControlPlayStatus playStatus;
-  auto rv = StringToControlPlayStatus(aMediaPlayStatus.mPlayStatus, playStatus);
-  if (NS_FAILED(rv)) {
-    aRv.Throw(rv);
-    return nullptr;
-  }
-
   RefPtr<DOMRequest> request = new DOMRequest(win);
   RefPtr<BluetoothReplyRunnable> results =
     new BluetoothVoidReplyRunnable(request);
@@ -2056,7 +2049,7 @@ BluetoothAdapter::SendMediaPlayStatus(
   }
   bs->SendPlayStatus(aMediaPlayStatus.mDuration,
                      aMediaPlayStatus.mPosition,
-                     playStatus,
+                     aMediaPlayStatus.mPlayStatus,
                      results);
 
   return request.forget();

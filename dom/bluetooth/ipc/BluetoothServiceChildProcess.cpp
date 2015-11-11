@@ -541,11 +541,12 @@ BluetoothServiceChildProcess::SendMetaData(const nsAString& aTitle,
 void
 BluetoothServiceChildProcess::SendPlayStatus(int64_t aDuration,
                                              int64_t aPosition,
-                                             ControlPlayStatus aPlayStatus,
+                                             const nsAString& aPlayStatus,
                                              BluetoothReplyRunnable* aRunnable)
 {
   SendRequest(aRunnable,
-              SendPlayStatusRequest(aDuration, aPosition, aPlayStatus));
+              SendPlayStatusRequest(aDuration, aPosition,
+                                    nsString(aPlayStatus)));
 }
 
 void
