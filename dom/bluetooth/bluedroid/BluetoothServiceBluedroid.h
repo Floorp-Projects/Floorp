@@ -50,11 +50,12 @@ public:
                                        BluetoothReplyRunnable* aRunnable);
 
   virtual nsresult
-  GetPairedDevicePropertiesInternal(const nsTArray<nsString>& aDeviceAddress,
-                                    BluetoothReplyRunnable* aRunnable);
+  GetPairedDevicePropertiesInternal(
+    const nsTArray<BluetoothAddress>& aDeviceAddress,
+    BluetoothReplyRunnable* aRunnable);
 
   virtual nsresult
-  FetchUuidsInternal(const nsAString& aDeviceAddress,
+  FetchUuidsInternal(const BluetoothAddress& aDeviceAddress,
                      BluetoothReplyRunnable* aRunnable) override;
 
   virtual void StartDiscoveryInternal(BluetoothReplyRunnable* aRunnable);
@@ -75,48 +76,48 @@ public:
                    BluetoothProfileManagerBase* aManager);
 
   virtual nsresult
-  CreatePairedDeviceInternal(const nsAString& aDeviceAddress,
+  CreatePairedDeviceInternal(const BluetoothAddress& aDeviceAddress,
                              int aTimeout,
                              BluetoothReplyRunnable* aRunnable);
 
   virtual nsresult
-  RemoveDeviceInternal(const nsAString& aDeviceObjectPath,
+  RemoveDeviceInternal(const BluetoothAddress& aDeviceAddress,
                        BluetoothReplyRunnable* aRunnable);
 
   virtual void
-  PinReplyInternal(const nsAString& aDeviceAddress,
+  PinReplyInternal(const BluetoothAddress& aDeviceAddress,
                    bool aAccept,
                    const nsAString& aPinCode,
                    BluetoothReplyRunnable* aRunnable);
 
   virtual void
-  SspReplyInternal(const nsAString& aDeviceAddress,
+  SspReplyInternal(const BluetoothAddress& aDeviceAddress,
                    BluetoothSspVariant aVariant,
                    bool aAccept,
                    BluetoothReplyRunnable* aRunnable);
   virtual void
-  SetPinCodeInternal(const nsAString& aDeviceAddress,
+  SetPinCodeInternal(const BluetoothAddress& aDeviceAddress,
                      const nsAString& aPinCode,
                      BluetoothReplyRunnable* aRunnable);
 
   virtual void
-  SetPasskeyInternal(const nsAString& aDeviceAddress,
+  SetPasskeyInternal(const BluetoothAddress& aDeviceAddress,
                      uint32_t aPasskey,
                      BluetoothReplyRunnable* aRunnable);
 
   virtual void
-  SetPairingConfirmationInternal(const nsAString& aDeviceAddress,
+  SetPairingConfirmationInternal(const BluetoothAddress& aDeviceAddress,
                                  bool aConfirm,
                                  BluetoothReplyRunnable* aRunnable);
 
   virtual void
-  Connect(const nsAString& aDeviceAddress,
+  Connect(const BluetoothAddress& aDeviceAddress,
           uint32_t aCod,
           uint16_t aServiceUuid,
           BluetoothReplyRunnable* aRunnable);
 
   virtual void
-  Disconnect(const nsAString& aDeviceAddress, uint16_t aServiceUuid,
+  Disconnect(const BluetoothAddress& aDeviceAddress, uint16_t aServiceUuid,
              BluetoothReplyRunnable* aRunnable);
 
   virtual void
@@ -489,7 +490,7 @@ protected:
     const nsAString& aPlayStatus);
 
   static void ConnectDisconnect(bool aConnect,
-                                const nsAString& aDeviceAddress,
+                                const BluetoothAddress& aDeviceAddress,
                                 BluetoothReplyRunnable* aRunnable,
                                 uint16_t aServiceUuid, uint32_t aCod = 0);
   static void NextBluetoothProfileController();
