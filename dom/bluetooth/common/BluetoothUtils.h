@@ -38,9 +38,6 @@ StringToAddress(const nsAString& aString, BluetoothAddress& aAddress);
 //
 
 nsresult
-PinCodeToString(const BluetoothPinCode& aPinCode, nsAString& aString);
-
-nsresult
 StringToPinCode(const nsAString& aString, BluetoothPinCode& aPinCode);
 
 //

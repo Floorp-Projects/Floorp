@@ -221,9 +221,12 @@ BluetoothServiceChildProcess::UpdateSdpRecords(const BluetoothAddress& aDeviceAd
 void
 BluetoothServiceChildProcess::PinReplyInternal(
   const BluetoothAddress& aDeviceAddress, bool aAccept,
-  const BluetoothPinCode& aPinCode, BluetoothReplyRunnable* aRunnable)
+  const nsAString& aPinCode, BluetoothReplyRunnable* aRunnable)
 {
-  SendRequest(aRunnable, PinReplyRequest(aDeviceAddress, aAccept, aPinCode));
+  SendRequest(aRunnable,
+              PinReplyRequest(aDeviceAddress,
+                              aAccept,
+                              nsString(aPinCode)));
 }
 
 void
@@ -238,10 +241,11 @@ BluetoothServiceChildProcess::SspReplyInternal(
 void
 BluetoothServiceChildProcess::SetPinCodeInternal(
   const BluetoothAddress& aDeviceAddress,
-  const BluetoothPinCode& aPinCode,
+  const nsAString& aPinCode,
   BluetoothReplyRunnable* aRunnable)
 {
-  SendRequest(aRunnable, SetPinCodeRequest(aDeviceAddress, aPinCode));
+  SendRequest(aRunnable,
+              SetPinCodeRequest(aDeviceAddress, nsString(aPinCode)));
 }
 
 void
