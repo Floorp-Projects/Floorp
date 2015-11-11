@@ -881,6 +881,16 @@ gfxContext::PushGroup(gfxContentType content)
   mDT->SetTransform(GetDTTransform());
 }
 
+void
+gfxContext::PushGroupForBlendBack(gfxContentType content, Float aOpacity, SourceSurface* aMask, const Matrix& aMaskTransform)
+{
+  PushGroup(content);
+  CurrentState().mBlendOpacity = aOpacity;
+  CurrentState().mBlendMask = aMask;
+  CurrentState().mWasPushedForBlendBack = true;
+  CurrentState().mBlendMaskTransform = aMaskTransform;
+}
+
 static gfxRect
 GetRoundOutDeviceClipExtents(gfxContext* aCtx)
 {
@@ -1002,6 +1012,33 @@ gfxContext::PopGroupToSource()
   mat.PreTranslate(deviceOffset.x, deviceOffset.y); // device offset translation
 
   CurrentState().surfTransform = mat;
+}
+
+void
+gfxContext::PopGroupAndBlend()
+{
+  MOZ_ASSERT(CurrentState().mWasPushedForBlendBack);
+  Float opacity = CurrentState().mBlendOpacity;
+  RefPtr<SourceSurface> mask = CurrentState().mBlendMask;
+  Matrix maskTransform = CurrentState().mBlendMaskTransform;
+
+  PopGroupToSource();
+
+  CompositionOp oldOp = GetOp();
+  SetOp(CompositionOp::OP_OVER);
+
+  if (mask) {
+    if (!maskTransform.HasNonTranslation()) {
+      Mask(mask, opacity, Point(maskTransform._31, maskTransform._32));
+    } else {
+      MOZ_ASSERT(opacity == 1.0f);
+      Mask(mask, maskTransform);
+    }
+  } else {
+    Paint(opacity);
+  }
+
+  SetOp(oldOp);
 }
 
 #ifdef MOZ_DUMP_PAINTING
