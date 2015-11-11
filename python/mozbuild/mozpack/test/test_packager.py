@@ -189,6 +189,7 @@ class TestSimplePackager(unittest.TestCase):
         # The formatter is expected to reorder the manifest entries so that
         # chrome entries appear before the others.
         self.assertEqual(formatter.log, [
+            (('dummy', 1), 'add_base', '', False),
             (('dummy', 1), 'add_base', 'qux', False),
             (('dummy', 1), 'add_base', 'addon', True),
             ((os.path.join(curdir, 'foo', 'bar.manifest'), 2),
@@ -293,6 +294,7 @@ class TestSimpleManifestSink(unittest.TestCase):
         self.assertEqual(formatter.log, [])
         parser.close()
         self.assertEqual(formatter.log, [
+            (None, 'add_base', '', False),
             (('foo/chrome.manifest', 1),
              'add_manifest', ManifestResource('foo', 'foo', 'foo/')),
             (None, 'add', 'foo/bar', foobar),

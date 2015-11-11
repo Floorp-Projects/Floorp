@@ -316,8 +316,7 @@ class SimplePackager(object):
                          (m, self._included_manifests[m],
                           mozpath.basedir(m, bases)))
         for base in bases:
-            if base:
-                self.formatter.add_base(base, base in self._addons)
+            self.formatter.add_base(base, base in self._addons)
         self._chrome_queue.execute()
         self._queue.execute()
         self._file_queue.execute()
