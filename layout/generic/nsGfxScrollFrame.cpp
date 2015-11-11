@@ -4726,9 +4726,15 @@ ScrollFrameHelper::FinishReflowForScrollbar(nsIContent* aContent,
 bool
 ScrollFrameHelper::ReflowFinished()
 {
-  nsAutoScriptBlocker scriptBlocker;
   mPostedReflowCallback = false;
 
+  if (NS_SUBTREE_DIRTY(mOuter)) {
+    // We will get another call after the next reflow and scrolling
+    // later is less janky.
+    return false;
+  }
+
+  nsAutoScriptBlocker scriptBlocker;
   ScrollToRestoredPosition();
 
   // Clamp current scroll position to new bounds. Normally this won't
@@ -4742,9 +4748,9 @@ ScrollFrameHelper::ReflowFinished()
     mDestination = GetScrollPosition();
   }
 
-  if (NS_SUBTREE_DIRTY(mOuter) || !mUpdateScrollbarAttributes)
+  if (!mUpdateScrollbarAttributes) {
     return false;
-
+  }
   mUpdateScrollbarAttributes = false;
 
   // Update scrollbar attributes.
