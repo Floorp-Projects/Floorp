@@ -102,29 +102,45 @@ function handleRequest(request, response)
 
   // script that loads an internal worker that uses importScripts on a redirect
   // to an external script.
-  if (query["res"] == "loadWorkerThatImports") {
+  if (query["res"] == "loadWorkerThatMakesRequests") {
     // this creates a worker (same origin) that imports a redirecting script.
-    let workerURL = thisSite + resource + '?res=importScriptWorker&id=' + query["id"];
+    let workerURL = thisSite + resource + '?res=makeRequestsWorker&id=' + query["id"];
     response.setHeader("Content-Type", "application/javascript", false);
-    response.write("var w=new Worker('" + workerURL + "'); w.onmessage=function(event){ alert(event.data); }");
+    response.write("new Worker('" + workerURL + "');");
+    return;
+  }
+
+  // script that loads an internal worker that uses importScripts on a redirect
+  // to an external script.
+  if (query["res"] == "loadBlobWorkerThatMakesRequests") {
+    // this creates a worker (same origin) that imports a redirecting script.
+    let workerURL = thisSite + resource + '?res=makeRequestsWorker&id=' + query["id"];
+    response.setHeader("Content-Type", "application/javascript", false);
+    response.write("var x = new XMLHttpRequest(); x.open('GET', '" + workerURL + "'); ");
+    response.write("x.responseType = 'blob'; x.send(); ");
+    response.write("x.onload = () => { new Worker(URL.createObjectURL(x.response)); };");
     return;
   }
 
   // source for a worker that simply calls importScripts on a script that
   // redirects.
-  if (query["res"] == "importScriptWorker") {
+  if (query["res"] == "makeRequestsWorker") {
     // this is code for a worker that imports a redirected script.
-    let scriptURL = thisSite + resource + "?redir=other&res=script&id=" + query["id"];
+    let scriptURL = thisSite + resource + "?redir=other&res=script&id=script-src-redir-" + query["id"];
+    let xhrURL = thisSite + resource + "?redir=other&res=xhr-resp&id=xhr-src-redir-" + query["id"];
+    let fetchURL = thisSite + resource + "?redir=other&res=xhr-resp&id=fetch-src-redir-" + query["id"];
     response.setHeader("Content-Type", "application/javascript", false);
-    response.write("importScripts('" + scriptURL + "');");
+    response.write("try { importScripts('" + scriptURL + "'); } catch(ex) {} ");
+    response.write("var x = new XMLHttpRequest(); x.open('GET', '" + xhrURL + "'); x.send();");
+    response.write("fetch('" + fetchURL + "');");
     return;
   }
 
   // script that invokes XHR
   if (query["res"] == "xhr") {
     response.setHeader("Content-Type", "application/javascript", false);
-    var resp = 'var x = new XMLHttpRequest();x.open("GET", "' + otherSite +
-               resource+'?res=xhr-resp&testid=xhr-src-redir", false);\n' +
+    var resp = 'var x = new XMLHttpRequest();x.open("GET", "' + thisSite +
+               resource+'?redir=other&res=xhr-resp&id=xhr-src-redir", false);\n' +
                'x.send(null);';
     response.write(resp);
     return;

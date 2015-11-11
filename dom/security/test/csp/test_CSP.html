@@ -25,6 +25,22 @@ window.tests = {
   script_bad: -1,
   xhr_good: -1,
   xhr_bad: -1,
+  fetch_good: -1,
+  fetch_bad: -1,
+  beacon_good: -1,
+  beacon_bad: -1,
+  worker_xhr_same_good: -1,
+  worker_xhr_cross_good: -1,
+  worker_fetch_same_good: -1,
+  worker_fetch_cross_good: -1,
+  worker_script_same_good: -1,
+  worker_script_cross_good: -1,
+  worker_inherited_xhr_good: -1,
+  worker_inherited_xhr_bad: -1,
+  worker_inherited_fetch_good: -1,
+  worker_inherited_fetch_bad: -1,
+  worker_inherited_script_good: -1,
+  worker_inherited_script_bad: -1,
   media_good: -1,
   media_bad: -1,
   font_good: -1,
@@ -81,10 +97,11 @@ examiner.prototype  = {
 window.examiner = new examiner();
 
 window.testResult = function(testname, result, msg) {
-  //test already complete.... forget it... remember the first result.
+  // test already complete.... forget it... remember the first result.
   if (window.tests[testname] != -1)
     return;
 
+  ok(testname in window.tests, "It's a real test");
   window.tests[testname] = result;
   is(result, true, testname + ' test: ' + msg);
 
