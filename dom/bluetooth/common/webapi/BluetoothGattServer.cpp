@@ -319,12 +319,18 @@ BluetoothGattServer::Connect(const nsAString& aAddress, ErrorResult& aRv)
   RefPtr<Promise> promise = Promise::Create(global, aRv);
   NS_ENSURE_TRUE(!aRv.Failed(), nullptr);
 
+  BluetoothAddress address;
+  BT_ENSURE_TRUE_REJECT(
+    NS_SUCCEEDED(StringToAddress(aAddress, address)),
+    promise,
+    NS_ERROR_INVALID_ARG);
+
   BT_ENSURE_TRUE_REJECT(mValid, promise, NS_ERROR_NOT_AVAILABLE);
   BluetoothService* bs = BluetoothService::Get();
   BT_ENSURE_TRUE_REJECT(bs, promise, NS_ERROR_NOT_AVAILABLE);
 
   bs->GattServerConnectPeripheralInternal(
-    mAppUuid, aAddress, new BluetoothVoidReplyRunnable(nullptr, promise));
+    mAppUuid, address, new BluetoothVoidReplyRunnable(nullptr, promise));
 
   return promise.forget();
 }
@@ -341,12 +347,18 @@ BluetoothGattServer::Disconnect(const nsAString& aAddress, ErrorResult& aRv)
   RefPtr<Promise> promise = Promise::Create(global, aRv);
   NS_ENSURE_TRUE(!aRv.Failed(), nullptr);
 
+  BluetoothAddress address;
+  BT_ENSURE_TRUE_REJECT(
+    NS_SUCCEEDED(StringToAddress(aAddress, address)),
+    promise,
+    NS_ERROR_INVALID_ARG);
+
   BT_ENSURE_TRUE_REJECT(mValid, promise, NS_ERROR_NOT_AVAILABLE);
   BluetoothService* bs = BluetoothService::Get();
   BT_ENSURE_TRUE_REJECT(bs, promise, NS_ERROR_NOT_AVAILABLE);
 
   bs->GattServerDisconnectPeripheralInternal(
-    mAppUuid, aAddress, new BluetoothVoidReplyRunnable(nullptr, promise));
+    mAppUuid, address, new BluetoothVoidReplyRunnable(nullptr, promise));
 
   return promise.forget();
 }
@@ -798,6 +810,12 @@ BluetoothGattServer::NotifyCharacteristicChanged(
 
   BT_ENSURE_TRUE_REJECT(mValid, promise, NS_ERROR_NOT_AVAILABLE);
 
+  BluetoothAddress address;
+  BT_ENSURE_TRUE_REJECT(
+    NS_SUCCEEDED(StringToAddress(aAddress, address)),
+    promise,
+    NS_ERROR_INVALID_ARG);
+
   BluetoothService* bs = BluetoothService::Get();
   BT_ENSURE_TRUE_REJECT(bs, promise, NS_ERROR_NOT_AVAILABLE);
 
@@ -808,7 +826,7 @@ BluetoothGattServer::NotifyCharacteristicChanged(
                         NS_ERROR_NOT_AVAILABLE);
 
   bs->GattServerSendIndicationInternal(
-    mAppUuid, aAddress, aCharacteristic.GetCharacteristicHandle(), aConfirm,
+    mAppUuid, address, aCharacteristic.GetCharacteristicHandle(), aConfirm,
     aCharacteristic.GetValue(),
     new BluetoothVoidReplyRunnable(nullptr, promise));
 
@@ -829,6 +847,12 @@ BluetoothGattServer::SendResponse(const nsAString& aAddress,
 
   RefPtr<Promise> promise = Promise::Create(global, aRv);
   NS_ENSURE_TRUE(!aRv.Failed(), nullptr);
+
+  BluetoothAddress address;
+  BT_ENSURE_TRUE_REJECT(
+    NS_SUCCEEDED(StringToAddress(aAddress, address)),
+    promise,
+    NS_ERROR_INVALID_ARG);
 
   BT_ENSURE_TRUE_REJECT(mValid, promise, NS_ERROR_NOT_AVAILABLE);
 
@@ -862,7 +886,7 @@ BluetoothGattServer::SendResponse(const nsAString& aAddress,
 
   bs->GattServerSendResponseInternal(
     mAppUuid,
-    aAddress,
+    address,
     aStatus,
     aRequestId,
     response,
