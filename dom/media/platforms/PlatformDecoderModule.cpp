@@ -6,10 +6,7 @@
 
 #include "PlatformDecoderModule.h"
 
-PRLogModuleInfo* GetPDMLog() {
-  static PRLogModuleInfo* log = nullptr;
-  if (!log) {
-    log = PR_NewLogModule("PlatformDecoderModule");
-  }
+mozilla::LogModule* GetPDMLog() {
+  static mozilla::LazyLogModule log("PlatformDecoderModule");
   return log;
 }

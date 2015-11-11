@@ -12,7 +12,7 @@
 #include "nsAutoPtr.h"
 
 #undef LOG
-extern PRLogModuleInfo* GetPDMLog();
+extern mozilla::LogModule* GetPDMLog();
 #define LOG(type, msg) MOZ_LOG(GetPDMLog(), type, msg)
 
 namespace mozilla {
