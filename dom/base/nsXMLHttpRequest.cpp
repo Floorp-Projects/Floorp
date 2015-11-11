@@ -1690,10 +1690,8 @@ nsXMLHttpRequest::Open(const nsACString& inMethod, const nsACString& url,
                nsILoadInfo::SEC_FORCE_INHERIT_PRINCIPAL;
   }
 
-  // If we have the document, use it. Unfortunately, for dedicated workers
-  // 'doc' ends up being the parent document, which is not the document
-  // that we want to use. So make sure to avoid using 'doc' in that situation.
-  if (doc && doc->NodePrincipal() == mPrincipal) {
+  // If we have the document, use it
+  if (doc) {
     rv = NS_NewChannel(getter_AddRefs(mChannel),
                        uri,
                        doc,
