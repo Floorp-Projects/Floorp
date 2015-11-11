@@ -54,7 +54,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=673468
 
     live_dom.xyzabc = {wrappee: wrappee, m: map, sb: sandbox};
 
-    let key = Cu.nondeterministicGetWeakMapKeys(map)[0];
+    let key = ThreadSafeChromeUtils.nondeterministicGetWeakMapKeys(map)[0];
     let value = map.get(key);
     is(value.children.length, 1, "children have wrong length");
   }
@@ -65,9 +65,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=673468
     let live_dom = window.eeeevent.data.dummy;
     let live_map = live_dom.xyzabc.m;
     let sandbox = live_dom.xyzabc.sb;
-    is(Cu.nondeterministicGetWeakMapKeys(live_map).length, 1,
+    is(ThreadSafeChromeUtils.nondeterministicGetWeakMapKeys(live_map).length, 1,
       "Map should not be empty.");
-    let key = Cu.nondeterministicGetWeakMapKeys(live_map)[0];
+    let key = ThreadSafeChromeUtils.nondeterministicGetWeakMapKeys(live_map)[0];
     let value = live_map.get(key);
     is(value.children.length, 1, "children have wrong length");
   }

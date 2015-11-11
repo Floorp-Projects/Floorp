@@ -31,6 +31,18 @@ interface ThreadSafeChromeUtils {
    */
   [Throws, NewObject]
   static HeapSnapshot readHeapSnapshot(DOMString filePath);
+
+  /**
+   * Return the keys in a weak map.  This operation is
+   * non-deterministic because it is affected by the scheduling of the
+   * garbage collector and the cycle collector.
+   *
+   * @param aMap weak map or other JavaScript value
+   * @returns If aMap is a weak map object, return the keys of the weak
+   *          map as an array.  Otherwise, return undefined.
+   */
+  [Throws, NewObject]
+  static any nondeterministicGetWeakMapKeys(any map);
 };
 
 /**
