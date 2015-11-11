@@ -90,11 +90,13 @@ SharedPlanarYCbCrImage::SetData(const PlanarYCbCrData& aData)
   }
 
   MOZ_ASSERT(mTextureClient->AsTextureClientYCbCr());
-  if (!mTextureClient->Lock(OpenMode::OPEN_WRITE_ONLY)) {
+
+  TextureClientAutoLock autoLock(mTextureClient, OpenMode::OPEN_WRITE_ONLY);
+  if (!autoLock.Succeeded()) {
     MOZ_ASSERT(false, "Failed to lock the texture.");
     return false;
   }
-  TextureClientAutoUnlock unlock(mTextureClient);
+
   if (!mTextureClient->AsTextureClientYCbCr()->UpdateYCbCr(aData)) {
     MOZ_ASSERT(false, "Failed to copy YCbCr data into the TextureClient");
     return false;
