@@ -2614,7 +2614,7 @@ const ScreenMargin AsyncPanZoomController::CalculatePendingDisplayPort(
                      (compositionSize.height - displayPort.height)/2.0f);
 
   // Make sure the displayport remains within the scrollable rect.
-  displayPort = displayPort.ForceInside(scrollableRect) - scrollOffset;
+  displayPort = displayPort.MoveInsideAndClamp(scrollableRect) - scrollOffset;
 
   APZC_LOG_FM(aFrameMetrics,
     "Calculated displayport as (%f %f %f %f) from velocity %s paint time %f metrics",
