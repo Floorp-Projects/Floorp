@@ -283,17 +283,21 @@ GetLayerFixedMarginsOffset(Layer* aLayer,
   // Because fixed layer margins are stored relative to the root scrollable
   // layer, we can just take the difference between these values.
   LayerPoint translation;
-  const LayerPoint& anchor = aLayer->GetFixedPositionAnchor();
+  int32_t sides = aLayer->GetFixedPositionSides();
 
-  if (anchor.x > 0) {
+  if ((sides & eSideBitsLeftRight) == eSideBitsLeftRight) {
+    translation.x += (aFixedLayerMargins.left - aFixedLayerMargins.right) / 2;
+  } else if (sides & eSideBitsRight) {
     translation.x -= aFixedLayerMargins.right;
-  } else {
+  } else if (sides & eSideBitsLeft) {
     translation.x += aFixedLayerMargins.left;
   }
 
-  if (anchor.y > 0) {
+  if ((sides & eSideBitsTopBottom) == eSideBitsTopBottom) {
+    translation.y += (aFixedLayerMargins.top - aFixedLayerMargins.bottom) / 2;
+  } else if (sides & eSideBitsBottom) {
     translation.y -= aFixedLayerMargins.bottom;
-  } else {
+  } else if (sides & eSideBitsTop) {
     translation.y += aFixedLayerMargins.top;
   }
 
