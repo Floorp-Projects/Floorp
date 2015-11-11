@@ -268,6 +268,7 @@ nsCSPContext::nsCSPContext()
   : mInnerWindowID(0)
   , mLoadingContext(nullptr)
   , mLoadingPrincipal(nullptr)
+  , mQueueUpMessages(true)
 {
   CSPCONTEXTLOG(("nsCSPContext::nsCSPContext"));
 }
@@ -360,7 +361,7 @@ nsCSPContext::AppendPolicy(const nsAString& aPolicyString,
 
   // Use the mSelfURI from setRequestContext, see bug 991474
   NS_ASSERTION(mSelfURI, "mSelfURI required for AppendPolicy, but not set");
-  nsCSPPolicy* policy = nsCSPParser::parseContentSecurityPolicy(aPolicyString, mSelfURI, aReportOnly, mInnerWindowID);
+  nsCSPPolicy* policy = nsCSPParser::parseContentSecurityPolicy(aPolicyString, mSelfURI, aReportOnly, this);
   if (policy) {
     mPolicies.AppendElement(policy);
     // reset cache since effective policy changes
@@ -605,16 +606,79 @@ nsCSPContext::SetRequestContext(nsIDOMDocument* aDOMDocument,
     mSelfURI = doc->GetDocumentURI();
     doc->GetReferrer(mReferrer);
     mInnerWindowID = doc->InnerWindowID();
+    // the innerWindowID is not available for CSPs delivered through the
+    // header at the time setReqeustContext is called - let's queue up
+    // console messages until it becomes available, see flushConsoleMessages
+    mQueueUpMessages = !mInnerWindowID;
     mCallingChannelLoadGroup = doc->GetDocumentLoadGroup();
   }
   else {
+    NS_WARNING("No Document in SetRequestContext; can not query loadgroup; sending reports may fail.");
     mLoadingPrincipal = aPrincipal;
     mLoadingPrincipal->GetURI(getter_AddRefs(mSelfURI));
-    NS_WARNING("No Document in SetRequestContext; can not query loadgroup; sending reports may fail.");
+    // if no document is available, then it also does not make sense to queue console messages
+    // sending messages to the browser conolse instead of the web console in that case.
+    mQueueUpMessages = false;
   }
 
   NS_ASSERTION(mSelfURI, "mSelfURI not available, can not translate 'self' into actual URI");
   return NS_OK;
+}
+
+struct ConsoleMsgQueueElem {
+  nsXPIDLString mMsg;
+  nsString      mSourceName;
+  nsString      mSourceLine;
+  uint32_t      mLineNumber;
+  uint32_t      mColumnNumber;
+  uint32_t      mSeverityFlag;
+};
+
+void
+nsCSPContext::flushConsoleMessages()
+{
+  // should flush messages even if doc is not available
+  nsCOMPtr<nsIDocument> doc = do_QueryReferent(mLoadingContext);
+  if (doc) {
+    mInnerWindowID = doc->InnerWindowID();
+  }
+  mQueueUpMessages = false;
+
+  for (uint32_t i = 0; i < mConsoleMsgQueue.Length(); i++) {
+    ConsoleMsgQueueElem &elem = mConsoleMsgQueue[i];
+    CSP_LogMessage(elem.mMsg, elem.mSourceName, elem.mSourceLine,
+                   elem.mLineNumber, elem.mColumnNumber,
+                   elem.mSeverityFlag, "CSP", mInnerWindowID);
+  }
+  mConsoleMsgQueue.Clear();
+}
+
+void
+nsCSPContext::logToConsole(const char16_t* aName,
+                           const char16_t** aParams,
+                           uint32_t aParamsLength,
+                           const nsAString& aSourceName,
+                           const nsAString& aSourceLine,
+                           uint32_t aLineNumber,
+                           uint32_t aColumnNumber,
+                           uint32_t aSeverityFlag)
+{
+  // let's check if we have to queue up console messages
+  if (mQueueUpMessages) {
+    nsXPIDLString msg;
+    CSP_GetLocalizedStr(aName, aParams, aParamsLength, getter_Copies(msg));
+    ConsoleMsgQueueElem &elem = *mConsoleMsgQueue.AppendElement();
+    elem.mMsg = msg;
+    elem.mSourceName = PromiseFlatString(aSourceName);
+    elem.mSourceLine = PromiseFlatString(aSourceLine);
+    elem.mLineNumber = aLineNumber;
+    elem.mColumnNumber = aColumnNumber;
+    elem.mSeverityFlag = aSeverityFlag;
+    return;
+  }
+  CSP_LogLocalizedStr(aName, aParams, aParamsLength, aSourceName,
+                      aSourceLine, aLineNumber, aColumnNumber,
+                      aSeverityFlag, "CSP", mInnerWindowID);
 }
 
 /**
@@ -754,10 +818,8 @@ nsCSPContext::SendReports(nsISupports* aBlockedContentSource,
       const char16_t* params[] = { reportURIs[r].get() };
       CSPCONTEXTLOG(("Could not create nsIURI for report URI %s",
                      reportURICstring.get()));
-      CSP_LogLocalizedStr(MOZ_UTF16("triedToSendReport"),
-                          params, ArrayLength(params),
-                          aSourceFile, aScriptSample, aLineNum, 0,
-                          nsIScriptError::errorFlag, "CSP", mInnerWindowID);
+      logToConsole(MOZ_UTF16("triedToSendReport"), params, ArrayLength(params),
+                   aSourceFile, aScriptSample, aLineNum, 0, nsIScriptError::errorFlag);
       continue; // don't return yet, there may be more URIs
     }
 
@@ -790,10 +852,8 @@ nsCSPContext::SendReports(nsISupports* aBlockedContentSource,
 
     if (!isHttpScheme) {
       const char16_t* params[] = { reportURIs[r].get() };
-      CSP_LogLocalizedStr(MOZ_UTF16("reportURInotHttpsOrHttp2"),
-                          params, ArrayLength(params),
-                          aSourceFile, aScriptSample, aLineNum, 0,
-                          nsIScriptError::errorFlag, "CSP", mInnerWindowID);
+      logToConsole(MOZ_UTF16("reportURInotHttpsOrHttp2"), params, ArrayLength(params),
+                   aSourceFile, aScriptSample, aLineNum, 0, nsIScriptError::errorFlag);
     }
 
     // make sure this is an anonymous request (no cookies) so in case the
@@ -849,10 +909,8 @@ nsCSPContext::SendReports(nsISupports* aBlockedContentSource,
     if (NS_FAILED(rv)) {
       const char16_t* params[] = { reportURIs[r].get() };
       CSPCONTEXTLOG(("AsyncOpen failed for report URI %s", params[0]));
-      CSP_LogLocalizedStr(MOZ_UTF16("triedToSendReport"),
-                          params, ArrayLength(params),
-                          aSourceFile, aScriptSample, aLineNum, 0,
-                          nsIScriptError::errorFlag, "CSP", mInnerWindowID);
+      logToConsole(MOZ_UTF16("triedToSendReport"), params, ArrayLength(params),
+                   aSourceFile, aScriptSample, aLineNum, 0, nsIScriptError::errorFlag);
     } else {
       CSPCONTEXTLOG(("Sent violation report to URI %s", reportURICstring.get()));
     }
@@ -875,7 +933,6 @@ class CSPReportSenderRunnable final : public nsRunnable
                             const nsAString& aSourceFile,
                             const nsAString& aScriptSample,
                             uint32_t aLineNum,
-                            uint64_t aInnerWindowID,
                             nsCSPContext* aCSPContext)
       : mBlockedContentSource(aBlockedContentSource)
       , mOriginalURI(aOriginalURI)
@@ -885,7 +942,6 @@ class CSPReportSenderRunnable final : public nsRunnable
       , mSourceFile(aSourceFile)
       , mScriptSample(aScriptSample)
       , mLineNum(aLineNum)
-      , mInnerWindowID(aInnerWindowID)
       , mCSPContext(aCSPContext)
     {
       NS_ASSERTION(!aViolatedDirective.IsEmpty(), "Can not send reports without a violated directive");
@@ -938,12 +994,10 @@ class CSPReportSenderRunnable final : public nsRunnable
         nsString blockedDataChar16 = NS_ConvertUTF8toUTF16(blockedDataStr);
         const char16_t* params[] = { mViolatedDirective.get(),
                                      blockedDataChar16.get() };
-
-        CSP_LogLocalizedStr(mReportOnlyFlag ? MOZ_UTF16("CSPROViolationWithURI") :
-                                              MOZ_UTF16("CSPViolationWithURI"),
-                            params, ArrayLength(params),
-                            mSourceFile, mScriptSample, mLineNum, 0,
-                            nsIScriptError::errorFlag, "CSP", mInnerWindowID);
+        mCSPContext->logToConsole(mReportOnlyFlag ? MOZ_UTF16("CSPROViolationWithURI") :
+                                                    MOZ_UTF16("CSPViolationWithURI"),
+                                  params, ArrayLength(params), mSourceFile, mScriptSample,
+                                  mLineNum, 0, nsIScriptError::errorFlag);
       }
       return NS_OK;
     }
@@ -958,8 +1012,7 @@ class CSPReportSenderRunnable final : public nsRunnable
     nsString                mSourceFile;
     nsString                mScriptSample;
     uint32_t                mLineNum;
-    uint64_t                mInnerWindowID;
-    RefPtr<nsCSPContext>  mCSPContext;
+    RefPtr<nsCSPContext>    mCSPContext;
 };
 
 /**
@@ -1008,7 +1061,6 @@ nsCSPContext::AsyncReportViolation(nsISupports* aBlockedContentSource,
                                                       aSourceFile,
                                                       aScriptSample,
                                                       aLineNum,
-                                                      mInnerWindowID,
                                                       this));
    return NS_OK;
 }
@@ -1316,7 +1368,7 @@ nsCSPContext::Read(nsIObjectInputStream* aStream)
     nsCSPPolicy* policy = nsCSPParser::parseContentSecurityPolicy(policyString,
                                                                   mSelfURI,
                                                                   reportOnly,
-                                                                  mInnerWindowID);
+                                                                  this);
     if (policy) {
       mPolicies.AppendElement(policy);
     }
