@@ -136,7 +136,8 @@ public:
                           TrackID aId,
                           StreamTime aDesiredTime) override
   {
-    NS_WARN_IF_FALSE(aDesiredTime <= aSource->GetEndOfAppendedData(aId),
+    NS_WARN_IF_FALSE(!aSource->FindTrack(aId) ||
+                     aDesiredTime <= aSource->GetEndOfAppendedData(aId),
                      "MediaEngineDefaultAudioSource data underrun");
   }
 
