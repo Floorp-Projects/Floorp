@@ -6396,6 +6396,8 @@ DrawImageInternal(gfxContext&            aContext,
                   const SVGImageContext* aSVGContext,
                   uint32_t               aImageFlags)
 {
+  DrawResult result = DrawResult::SUCCESS;
+
   if (aPresContext->Type() == nsPresContext::eContext_Print) {
     // We want vector images to be passed on as vector commands, not a raster
     // image.
@@ -6413,21 +6415,48 @@ DrawImageInternal(gfxContext&            aContext,
                                          aGraphicsFilter, aImageFlags);
 
   if (!params.shouldDraw) {
-    return DrawResult::SUCCESS;
+    return result;
   }
 
-  gfxContextMatrixAutoSaveRestore contextMatrixRestorer(&aContext);
-  aContext.SetMatrix(params.imageSpaceToDeviceSpace);
+  {
+    gfxContextMatrixAutoSaveRestore contextMatrixRestorer(&aContext);
 
-  Maybe<SVGImageContext> svgContext = ToMaybe(aSVGContext);
-  if (!svgContext) {
-    // Use the default viewport.
-    svgContext = Some(SVGImageContext(params.svgViewportSize, Nothing()));
+    RefPtr<gfxContext> destCtx = &aContext;
+
+    IntRect tmpDTRect;
+
+    if (destCtx->CurrentOp() != CompositionOp::OP_OVER) {
+      Rect imageRect = ToRect(params.imageSpaceToDeviceSpace.TransformBounds(params.region.Rect()));
+      imageRect.ToIntRect(&tmpDTRect);
+
+      RefPtr<DrawTarget> tempDT = destCtx->GetDrawTarget()->CreateSimilarDrawTarget(tmpDTRect.Size(), SurfaceFormat::B8G8R8A8);
+      destCtx = new gfxContext(tempDT, imageRect.TopLeft());
+    }
+    destCtx->SetMatrix(params.imageSpaceToDeviceSpace);
+
+    Maybe<SVGImageContext> svgContext = ToMaybe(aSVGContext);
+    if (!svgContext) {
+      // Use the default viewport.
+      svgContext = Some(SVGImageContext(params.svgViewportSize, Nothing()));
+    }
+
+    result = aImage->Draw(destCtx, params.size, params.region,
+                          imgIContainer::FRAME_CURRENT, aGraphicsFilter,
+                          svgContext, aImageFlags);
+
+    if (!tmpDTRect.IsEmpty()) {
+      DrawTarget* dt = aContext.GetDrawTarget();
+      RefPtr<SourceSurface> surf = destCtx->GetDrawTarget()->Snapshot();
+
+      dt->SetTransform(Matrix::Translation(-aContext.GetDeviceOffset()));
+      dt->DrawSurface(surf, Rect(tmpDTRect.x, tmpDTRect.y, tmpDTRect.width, tmpDTRect.height),
+                      Rect(0, 0, tmpDTRect.width, tmpDTRect.height),
+                      DrawSurfaceOptions(Filter::POINT),
+                      DrawOptions(1.0f, aContext.CurrentOp()));
+    }
   }
 
-  return aImage->Draw(&aContext, params.size, params.region,
-                      imgIContainer::FRAME_CURRENT, aGraphicsFilter,
-                      svgContext, aImageFlags);
+  return result;
 }
 
 /* static */ DrawResult
