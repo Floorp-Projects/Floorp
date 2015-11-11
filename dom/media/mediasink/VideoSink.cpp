@@ -8,7 +8,7 @@
 
 namespace mozilla {
 
-extern PRLogModuleInfo* gMediaDecoderLog;
+extern LazyLogModule gMediaDecoderLog;
 #define VSINK_LOG(msg, ...) \
   MOZ_LOG(gMediaDecoderLog, LogLevel::Debug, \
     ("VideoSink=%p " msg, this, ##__VA_ARGS__))

@@ -18,13 +18,9 @@ using namespace mozilla::media;
 
 namespace mozilla {
 
-
-PRLogModuleInfo*
+LogModule*
 GetDirectShowLog() {
-  static PRLogModuleInfo* log = nullptr;
-  if (!log) {
-    log = PR_NewLogModule("DirectShowDecoder");
-  }
+  static LazyLogModule log("DirectShowDecoder");
   return log;
 }
 
