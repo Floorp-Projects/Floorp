@@ -1009,12 +1009,6 @@ GetDisplayPortFromMarginsData(nsIContent* aContent,
     }
   }
 
-  // Inflate the rectangle by 1 so that we always push to the next tile
-  // boundary. This is desirable to stop from having a rectangle with a
-  // moving origin occasionally being smaller when it coincidentally lines
-  // up to tile boundaries.
-  screenRect.Inflate(1);
-
   ScreenPoint scrollPosScreen = LayoutDevicePoint::FromAppUnits(scrollPos, auPerDevPixel)
                               * res;
 

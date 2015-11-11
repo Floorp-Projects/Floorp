@@ -22,9 +22,6 @@ final class DisplayPortCalculator {
     private static final String LOGTAG = "GeckoDisplayPort";
     private static final PointF ZERO_VELOCITY = new PointF(0, 0);
 
-    // Keep this in sync with the TILEDLAYERBUFFER_TILE_SIZE defined in gfx/layers/TiledLayerBuffer.h
-    private static final int TILE_SIZE = 256;
-
     private static final String PREF_DISPLAYPORT_STRATEGY = "gfx.displayport.strategy";
     private static final String PREF_DISPLAYPORT_FM_MULTIPLIER = "gfx.displayport.strategy_fm.multiplier";
     private static final String PREF_DISPLAYPORT_FM_DANGER_X = "gfx.displayport.strategy_fm.danger_x";
@@ -173,20 +170,19 @@ final class DisplayPortCalculator {
     }
 
     /**
-     * Expand the given margins such that when they are applied on the viewport, the resulting rect
-     * does not have any partial tiles, except when it is clipped by the page bounds. This assumes
-     * the tiles are TILE_SIZE by TILE_SIZE and start at the origin, such that there will always be
-     * a tile at (0,0)-(TILE_SIZE,TILE_SIZE)).
+     * Calculate the display port by expanding the viewport by the specified
+     * margins, then clamping to the page size.
      */
-    private static DisplayPortMetrics getTileAlignedDisplayPortMetrics(RectF margins, float zoom, ImmutableViewportMetrics metrics) {
+    private static DisplayPortMetrics getPageClampedDisplayPortMetrics(RectF margins, float zoom, ImmutableViewportMetrics metrics) {
         float left = metrics.viewportRectLeft - margins.left;
         float top = metrics.viewportRectTop - margins.top;
         float right = metrics.viewportRectRight() + margins.right;
         float bottom = metrics.viewportRectBottom() + margins.bottom;
-        left = (float) Math.max(metrics.pageRectLeft, TILE_SIZE * Math.floor(left / TILE_SIZE));
-        top = (float) Math.max(metrics.pageRectTop, TILE_SIZE * Math.floor(top / TILE_SIZE));
-        right = (float) Math.min(metrics.pageRectRight, TILE_SIZE * Math.ceil(right / TILE_SIZE));
-        bottom = (float) Math.min(metrics.pageRectBottom, TILE_SIZE * Math.ceil(bottom / TILE_SIZE));
+        left = Math.max(metrics.pageRectLeft, left);
+        top = Math.max(metrics.pageRectTop, top);
+        right = Math.min(metrics.pageRectRight, right);
+        bottom = Math.min(metrics.pageRectBottom, bottom);
+
         return new DisplayPortMetrics(left, top, right, bottom, zoom);
     }
 
@@ -311,7 +307,7 @@ final class DisplayPortCalculator {
             margins.bottom = verticalBuffer - margins.top;
             margins = shiftMarginsForPageBounds(margins, metrics);
 
-            return getTileAlignedDisplayPortMetrics(margins, metrics.zoomFactor, metrics);
+            return getPageClampedDisplayPortMetrics(margins, metrics.zoomFactor, metrics);
         }
 
         @Override
@@ -422,7 +418,7 @@ final class DisplayPortCalculator {
             RectF margins = velocityBiasedMargins(horizontalBuffer, verticalBuffer, velocity);
             margins = shiftMarginsForPageBounds(margins, metrics);
 
-            return getTileAlignedDisplayPortMetrics(margins, metrics.zoomFactor, metrics);
+            return getPageClampedDisplayPortMetrics(margins, metrics.zoomFactor, metrics);
         }
 
         @Override
@@ -689,7 +685,7 @@ final class DisplayPortCalculator {
             if (velocity.length() < VELOCITY_THRESHOLD) {
                 // if we're going slow, expand the displayport to 9x viewport size
                 RectF margins = new RectF(width, height, width, height);
-                return getTileAlignedDisplayPortMetrics(margins, metrics.zoomFactor, metrics);
+                return getPageClampedDisplayPortMetrics(margins, metrics.zoomFactor, metrics);
             }
 
             // figure out how far we expect to be
@@ -714,7 +710,7 @@ final class DisplayPortCalculator {
                 -Math.min(minDy, maxDy),
                 Math.max(minDx, maxDx),
                 Math.max(minDy, maxDy));
-            return getTileAlignedDisplayPortMetrics(margins, metrics.zoomFactor, metrics);
+            return getPageClampedDisplayPortMetrics(margins, metrics.zoomFactor, metrics);
         }
 
         @Override
