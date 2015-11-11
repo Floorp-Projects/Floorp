@@ -1004,14 +1004,14 @@ var BrowserApp = {
         aTarget.setAttribute("data-ctv-show", "true");
         aTarget.setAttribute("src", aTarget.getAttribute("data-ctv-src"));
 
-        // Shows a toast to unblock all images if browser.image_blocking.enabled is enabled.
+        // Shows a snackbar to unblock all images if browser.image_blocking.enabled is enabled.
         let blockedImgs = aTarget.ownerDocument.querySelectorAll("[data-ctv-src]");
         if (blockedImgs.length == 0) {
           return;
         }
         let message = Strings.browser.GetStringFromName("imageblocking.downloadedImage");
-        NativeWindow.toast.show(message, "short", {
-          button: {
+        Snackbars.show(message, Snackbars.LENGTH_SHORT, {
+          action: {
             label: Strings.browser.GetStringFromName("imageblocking.showAllImages"),
             callback: () => {
               UITelemetry.addEvent("action.1", "toast", null, "web_show_all_image");
