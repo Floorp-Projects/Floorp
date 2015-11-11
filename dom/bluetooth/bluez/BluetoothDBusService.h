@@ -99,7 +99,7 @@ public:
   virtual void
   PinReplyInternal(const BluetoothAddress& aDeviceAddress,
                    bool aAccept,
-                   const BluetoothPinCode& aPinCode,
+                   const nsAString& aPinCode,
                    BluetoothReplyRunnable* aRunnable);
 
   virtual void
@@ -110,7 +110,7 @@ public:
 
   virtual void
   SetPinCodeInternal(const BluetoothAddress& aDeviceAddress,
-                     const BluetoothPinCode& aPinCode,
+                     const nsAString& aPinCode,
                      BluetoothReplyRunnable* aRunnable) override;
 
   virtual void
