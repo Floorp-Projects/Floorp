@@ -274,7 +274,7 @@ def main(argv):
             debug_cmd = options.debugger.split()
 
         with change_env(test_environment):
-            subprocess.call(debug_cmd + tc.command(prefix, jittests.LIB_DIR))
+            subprocess.call(debug_cmd + tc.command(prefix, jittests.LIB_DIR, jittests.MODULE_DIR))
             if options.debugger == 'rr':
                 subprocess.call(['rr', 'replay'])
         sys.exit()

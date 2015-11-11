@@ -241,7 +241,7 @@ PuppetWidget::ConfigureChildren(const nsTArray<Configuration>& aConfigurations)
                  "Configured widget is not a child");
     w->SetWindowClipRegion(configuration.mClipRegion, true);
     nsIntRect bounds;
-    w->GetBounds(bounds);
+    w->GetBoundsUntyped(bounds);
     if (bounds.Size() != configuration.mBounds.Size()) {
       w->Resize(configuration.mBounds.x, configuration.mBounds.y,
                 configuration.mBounds.width, configuration.mBounds.height,
@@ -287,16 +287,14 @@ PuppetWidget::Invalidate(const nsIntRect& aRect)
 }
 
 void
-PuppetWidget::InitEvent(WidgetGUIEvent& event, nsIntPoint* aPoint)
+PuppetWidget::InitEvent(WidgetGUIEvent& event, LayoutDeviceIntPoint* aPoint)
 {
   if (nullptr == aPoint) {
     event.refPoint.x = 0;
     event.refPoint.y = 0;
-  }
-  else {
+  } else {
     // use the point override if provided
-    event.refPoint.x = aPoint->x;
-    event.refPoint.y = aPoint->y;
+    event.refPoint = *aPoint;
   }
   event.time = PR_Now() / 1000;
 }
@@ -1173,8 +1171,8 @@ PuppetWidget::GetWindowPosition()
 }
 
 NS_METHOD
-PuppetWidget::GetScreenBounds(nsIntRect &aRect) {
-  aRect.MoveTo(LayoutDeviceIntPoint::ToUntyped(WidgetToScreenOffset()));
+PuppetWidget::GetScreenBoundsUntyped(nsIntRect &aRect) {
+  aRect.MoveTo(WidgetToScreenOffsetUntyped());
   aRect.SizeTo(mBounds.Size());
   return NS_OK;
 }

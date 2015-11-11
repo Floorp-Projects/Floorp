@@ -862,7 +862,7 @@ CompositorParent* nsBaseWidget::NewCompositorParent(int aSurfaceWidth,
 
 void nsBaseWidget::CreateCompositor()
 {
-  nsIntRect rect;
+  LayoutDeviceIntRect rect;
   GetBounds(rect);
   CreateCompositor(rect.width, rect.height);
 }
@@ -1259,7 +1259,7 @@ NS_METHOD nsBaseWidget::ResizeClient(double aWidth,
   NS_ASSERTION((aWidth >=0) , "Negative width passed to ResizeClient");
   NS_ASSERTION((aHeight >=0), "Negative height passed to ResizeClient");
 
-  nsIntRect clientBounds;
+  LayoutDeviceIntRect clientBounds;
   GetClientBounds(clientBounds);
 
   // GetClientBounds and mBounds are device pixels; scale back to display pixels
@@ -1283,7 +1283,7 @@ NS_METHOD nsBaseWidget::ResizeClient(double aX,
   NS_ASSERTION((aWidth >=0) , "Negative width passed to ResizeClient");
   NS_ASSERTION((aHeight >=0), "Negative height passed to ResizeClient");
 
-  nsIntRect clientBounds;
+  LayoutDeviceIntRect clientBounds;
   GetClientBounds(clientBounds);
 
   double scale = BoundsUseDisplayPixels() ? 1.0 / GetDefaultScale().scale : 1.0;
@@ -1307,16 +1307,16 @@ NS_METHOD nsBaseWidget::ResizeClient(double aX,
 * If the implementation of nsWindow supports borders this method MUST be overridden
 *
 **/
-NS_METHOD nsBaseWidget::GetClientBounds(nsIntRect &aRect)
+NS_METHOD nsBaseWidget::GetClientBoundsUntyped(nsIntRect &aRect)
 {
-  return GetBounds(aRect);
+  return GetBoundsUntyped(aRect);
 }
 
 /**
 * If the implementation of nsWindow supports borders this method MUST be overridden
 *
 **/
-NS_METHOD nsBaseWidget::GetBounds(nsIntRect &aRect)
+NS_METHOD nsBaseWidget::GetBoundsUntyped(nsIntRect &aRect)
 {
   aRect = mBounds;
   return NS_OK;
@@ -1327,17 +1327,17 @@ NS_METHOD nsBaseWidget::GetBounds(nsIntRect &aRect)
 * this method must be overridden
 *
 **/
-NS_METHOD nsBaseWidget::GetScreenBounds(nsIntRect &aRect)
+NS_METHOD nsBaseWidget::GetScreenBoundsUntyped(nsIntRect &aRect)
 {
-  return GetBounds(aRect);
+  return GetBoundsUntyped(aRect);
 }
 
-NS_METHOD nsBaseWidget::GetRestoredBounds(nsIntRect &aRect)
+NS_METHOD nsBaseWidget::GetRestoredBoundsUntyped(nsIntRect &aRect)
 {
   if (SizeMode() != nsSizeMode_Normal) {
     return NS_ERROR_FAILURE;
   }
-  return GetScreenBounds(aRect);
+  return GetScreenBoundsUntyped(aRect);
 }
 
 nsIntPoint nsBaseWidget::GetClientOffset()
@@ -1725,7 +1725,7 @@ nsIntRect
 nsBaseWidget::GetScaledScreenBounds()
 {
   nsIntRect bounds;
-  GetScreenBounds(bounds);
+  GetScreenBoundsUntyped(bounds);
   CSSToLayoutDeviceScale scale = GetDefaultScale();
   bounds.x = NSToIntRound(bounds.x / scale.scale);
   bounds.y = NSToIntRound(bounds.y / scale.scale);
@@ -1969,7 +1969,7 @@ nsIWidget::SnapshotWidgetOnScreen()
     return nullptr;
   }
 
-  nsIntRect bounds;
+  LayoutDeviceIntRect bounds;
   GetBounds(bounds);
   if (bounds.IsEmpty()) {
     return nullptr;

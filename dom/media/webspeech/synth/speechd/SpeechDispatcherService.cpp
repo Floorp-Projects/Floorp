@@ -344,6 +344,10 @@ SpeechDispatcherService::Init()
   }
 
   mSpeechdClient = spd_open("firefox", "web speech api", "who", SPD_MODE_THREADED);
+  if (!mSpeechdClient) {
+    NS_WARNING("Failed to call spd_open");
+    return;
+  }
 
   // Get all the voices from sapi and register in the SynthVoiceRegistry
   SPDVoice** list = spd_list_synthesis_voices(mSpeechdClient);

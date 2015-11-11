@@ -88,14 +88,9 @@ void
 JSObject2WrappedJSMap::UpdateWeakPointersAfterGC(XPCJSRuntime* runtime)
 {
     // Check all wrappers and update their JSObject pointer if it has been
-    // moved, or if it is about to be finalized queue the wrapper for
-    // destruction by adding it to an array held by the runtime.
-    // Note that we do not want to be changing the refcount of these wrappers.
-    // We add them to the array now and Release the array members later to avoid
-    // the posibility of doing any JS GCThing allocations during the gc cycle.
+    // moved. Release any wrappers whose weakly held JSObject has died.
 
-    nsTArray<nsXPCWrappedJS*>& dying = runtime->WrappedJSToReleaseArray();
-
+    nsTArray<RefPtr<nsXPCWrappedJS>> dying;
     for (Map::Enum e(mTable); !e.empty(); e.popFront()) {
         nsXPCWrappedJS* wrapper = e.front().value();
         MOZ_ASSERT(wrapper, "found a null JS wrapper!");
@@ -117,7 +112,7 @@ JSObject2WrappedJSMap::UpdateWeakPointersAfterGC(XPCJSRuntime* runtime)
             if (wrapper->IsSubjectToFinalization()) {
                 wrapper->UpdateObjectPointerAfterGC();
                 if (!wrapper->GetJSObjectPreserveColor())
-                    dying.AppendElement(wrapper);
+                    dying.AppendElement(dont_AddRef(wrapper));
             }
             wrapper = wrapper->GetNextWrapper();
         }

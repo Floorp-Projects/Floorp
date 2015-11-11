@@ -553,6 +553,7 @@ pref("layers.offmainthreadcomposition.enabled", true);
 pref("layers.async-video.enabled", true);
 #ifdef MOZ_ANDROID_APZ
 pref("layers.async-pan-zoom.enabled", true);
+pref("apz.axis_lock.mode", 1);
 #endif
 pref("apz.allow_zooming", true);
 pref("layers.progressive-paint", true);

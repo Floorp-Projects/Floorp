@@ -1470,7 +1470,7 @@ nsWindow::SetFocus(bool aRaise)
 }
 
 NS_IMETHODIMP
-nsWindow::GetScreenBounds(nsIntRect &aRect)
+nsWindow::GetScreenBoundsUntyped(nsIntRect &aRect)
 {
     if (mIsTopLevel && mContainer) {
         // use the point including window decorations
@@ -1486,7 +1486,7 @@ nsWindow::GetScreenBounds(nsIntRect &aRect)
     // frame bounds, but mBounds.Size() is returned here for consistency
     // with Resize.
     aRect.SizeTo(mBounds.Size());
-    LOG(("GetScreenBounds %d,%d | %dx%d\n",
+    LOG(("GetScreenBoundsUntyped %d,%d | %dx%d\n",
          aRect.x, aRect.y, aRect.width, aRect.height));
     return NS_OK;
 }
@@ -1498,12 +1498,12 @@ nsWindow::GetClientSize()
 }
 
 NS_IMETHODIMP
-nsWindow::GetClientBounds(nsIntRect &aRect)
+nsWindow::GetClientBoundsUntyped(nsIntRect &aRect)
 {
     // GetBounds returns a rect whose top left represents the top left of the
     // outer bounds, but whose width/height represent the size of the inner
     // bounds (which is messed up).
-    GetBounds(aRect);
+    GetBoundsUntyped(aRect);
     aRect.MoveBy(GetClientOffset());
 
     return NS_OK;
@@ -2187,7 +2187,7 @@ nsWindow::OnExposeEvent(cairo_t *cr)
                 nsAutoTArray<nsIntRect,1> clipRects;
                 kid->GetWindowClipRegion(&clipRects);
                 nsIntRect bounds;
-                kid->GetBounds(bounds);
+                kid->GetBoundsUntyped(bounds);
                 for (uint32_t i = 0; i < clipRects.Length(); ++i) {
                     nsIntRect r = clipRects[i] + bounds.TopLeft();
                     region.Sub(region, r);
@@ -2363,7 +2363,7 @@ nsWindow::OnConfigureEvent(GtkWidget *aWidget, GdkEventConfigure *aEvent)
          aEvent->x, aEvent->y, aEvent->width, aEvent->height));
 
     nsIntRect screenBounds;
-    GetScreenBounds(screenBounds);
+    GetScreenBoundsUntyped(screenBounds);
 
     if (mWindowType == eWindowType_toplevel || mWindowType == eWindowType_dialog) {
         // This check avoids unwanted rollup on spurious configure events from
@@ -3411,7 +3411,8 @@ nsWindow::OnTouchEvent(GdkEventTouch* aEvent)
         id = ++gLastTouchID & 0x7FFFFFFF;
     }
 
-    touch = new dom::Touch(id, touchPoint, nsIntPoint(1,1), 0.0f, 0.0f);
+    touch = new dom::Touch(id, touchPoint, LayoutDeviceIntPoint(1, 1),
+                           0.0f, 0.0f);
 
     WidgetTouchEvent event(true, msg, this);
     KeymapWrapper::InitInputEvent(event, aEvent->state);

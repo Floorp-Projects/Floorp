@@ -899,7 +899,8 @@ Event::Shutdown()
   }
 }
 
-LayoutDeviceIntPoint
+// static
+CSSIntPoint
 Event::GetScreenCoords(nsPresContext* aPresContext,
                        WidgetEvent* aEvent,
                        LayoutDeviceIntPoint aPoint)
@@ -907,8 +908,7 @@ Event::GetScreenCoords(nsPresContext* aPresContext,
   if (!nsContentUtils::LegacyIsCallerChromeOrNativeCode() &&
       nsContentUtils::ResistFingerprinting()) {
     // When resisting fingerprinting, return client coordinates instead.
-    CSSIntPoint clientCoords = GetClientCoords(aPresContext, aEvent, aPoint, CSSIntPoint(0, 0));
-    return LayoutDeviceIntPoint(clientCoords.x, clientCoords.y);
+    return GetClientCoords(aPresContext, aEvent, aPoint, CSSIntPoint(0, 0));
   }
 
   if (EventStateManager::sIsPointerLocked) {
@@ -923,19 +923,26 @@ Event::GetScreenCoords(nsPresContext* aPresContext,
         aEvent->mClass != eTouchEventClass &&
         aEvent->mClass != eDragEventClass &&
         aEvent->mClass != eSimpleGestureEventClass)) {
-    return LayoutDeviceIntPoint(0, 0);
+    return CSSIntPoint(0, 0);
   }
+
+  // Doing a straight conversion from LayoutDeviceIntPoint to CSSIntPoint
+  // seem incorrect, but it is needed to maintain legacy functionality.
+  if (!aPresContext) {
+    return CSSIntPoint(aPoint.x, aPoint.y);
+  }
+
+  LayoutDeviceIntPoint offset = aPoint;
 
   WidgetGUIEvent* guiEvent = aEvent->AsGUIEvent();
-  if (!guiEvent->widget) {
-    return aPoint;
+  if (guiEvent && guiEvent->widget) {
+    offset += guiEvent->widget->WidgetToScreenOffset();
   }
 
-  LayoutDeviceIntPoint offset = aPoint + guiEvent->widget->WidgetToScreenOffset();
-  nscoord factor =
-    aPresContext->DeviceContext()->AppUnitsPerDevPixelAtUnitFullZoom();
-  return LayoutDeviceIntPoint(nsPresContext::AppUnitsToIntCSSPixels(offset.x * factor),
-                              nsPresContext::AppUnitsToIntCSSPixels(offset.y * factor));
+  nsPoint pt =
+    LayoutDevicePixel::ToAppUnits(offset, aPresContext->DeviceContext()->AppUnitsPerDevPixelAtUnitFullZoom());
+
+  return CSSPixel::FromAppUnitsRounded(pt);
 }
 
 // static

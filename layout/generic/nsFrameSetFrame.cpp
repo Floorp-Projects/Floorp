@@ -819,7 +819,13 @@ nsHTMLFramesetFrame::Reflow(nsPresContext*           aPresContext,
   nscoord height = (aDesiredSize.Height() <= aReflowState.AvailableHeight())
     ? aDesiredSize.Height() : aReflowState.AvailableHeight();
 
-  bool firstTime = (GetStateBits() & NS_FRAME_FIRST_REFLOW) != 0;
+  // We might be reflowed more than once with NS_FRAME_FIRST_REFLOW;
+  // that's allowed.  (Though it will only happen for misuse of frameset
+  // that includes it within other content.)  So measure firstTime by
+  // what we care about, which is whether we've processed the data we
+  // process below if firstTime is true.
+  MOZ_ASSERT(!mChildFrameborder == !mChildBorderColors);
+  bool firstTime = !!mChildFrameborder;
 
   // subtract out the width of all of the potential borders. There are
   // only borders between <frame>s. There are none on the edges (e.g the

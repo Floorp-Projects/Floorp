@@ -908,7 +908,7 @@ nsWindow::resizeEvent(QResizeEvent* aEvent)
     nsIntRect rect;
 
     // Generate XPFE resize event
-    GetBounds(rect);
+    GetBoundsUntyped(rect);
 
     rect.width = aEvent->size().width();
     rect.height = aEvent->size().height();
@@ -1495,7 +1495,7 @@ void find_first_visible_parent(QWindow* aItem, QWindow*& aVisibleItem)
 }
 
 NS_IMETHODIMP
-nsWindow::GetScreenBounds(nsIntRect &aRect)
+nsWindow::GetScreenBoundsUntyped(nsIntRect &aRect)
 {
     aRect = gfx::IntRect(gfx::IntPoint(0, 0), mBounds.Size());
     if (mIsTopLevel) {

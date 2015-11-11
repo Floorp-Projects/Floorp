@@ -802,19 +802,37 @@ class nsIWidget : public nsISupports {
      * popup widgets the returned rect is in screen coordinates and not
      * relative to its parent widget.
      *
+     * The untyped version exists temporarily to ease conversion to typed
+     * coordinates.
+     *
      * @param aRect   On return it holds the  x, y, width and height of
      *                this widget.
      */
-    NS_IMETHOD GetBounds(nsIntRect &aRect) = 0;
+    NS_IMETHOD GetBounds(mozilla::LayoutDeviceIntRect &aRect) {
+      nsIntRect tmp;
+      nsresult rv = GetBoundsUntyped(tmp);
+      aRect = mozilla::LayoutDeviceIntRect::FromUnknownRect(tmp);
+      return rv;
+    }
+    NS_IMETHOD GetBoundsUntyped(nsIntRect &aRect) = 0;
 
     /**
      * Get this widget's outside dimensions in global coordinates. This
      * includes any title bar on the window.
      *
+     * The untyped version exists temporarily to ease conversion to typed
+     * coordinates.
+     *
      * @param aRect   On return it holds the  x, y, width and height of
      *                this widget.
      */
-    NS_IMETHOD GetScreenBounds(nsIntRect &aRect) = 0;
+    NS_IMETHOD GetScreenBounds(mozilla::LayoutDeviceIntRect &aRect) {
+      nsIntRect tmp;
+      nsresult rv = GetScreenBoundsUntyped(tmp);
+      aRect = mozilla::LayoutDeviceIntRect::FromUnknownRect(tmp);
+      return rv;
+    }
+    NS_IMETHOD GetScreenBoundsUntyped(nsIntRect &aRect) = 0;
 
     /**
      * Similar to GetScreenBounds except that this function will always
@@ -825,10 +843,19 @@ class nsIWidget : public nsISupports {
      * This method will always succeed if the current size mode is
      * nsSizeMode_Normal.
      *
+     * The untyped version exists temporarily to ease conversion to typed
+     * coordinates.
+     *
      * @param aRect   On return it holds the  x, y, width and height of
      *                this widget.
      */
-    NS_IMETHOD GetRestoredBounds(nsIntRect &aRect) = 0;
+    NS_IMETHOD GetRestoredBounds(mozilla::LayoutDeviceIntRect &aRect) {
+      nsIntRect tmp;
+      nsresult rv = GetRestoredBoundsUntyped(tmp);
+      aRect = mozilla::LayoutDeviceIntRect::FromUnknownRect(tmp);
+      return rv;
+    }
+    NS_IMETHOD GetRestoredBoundsUntyped(nsIntRect &aRect) = 0;
 
     /**
      * Get this widget's client area bounds, if the window has a 3D border
@@ -836,10 +863,19 @@ class nsIWidget : public nsISupports {
      * position of the client area relative to the client area of the parent
      * widget (for root widgets and popup widgets it is in screen coordinates).
      *
+     * The untyped version exists temporarily to ease conversion to typed
+     * coordinates.
+     *
      * @param aRect   On return it holds the  x. y, width and height of
      *                the client area of this widget.
      */
-    NS_IMETHOD GetClientBounds(nsIntRect &aRect) = 0;
+    NS_IMETHOD GetClientBounds(mozilla::LayoutDeviceIntRect &aRect) {
+      nsIntRect tmp;
+      nsresult rv = GetClientBoundsUntyped(tmp);
+      aRect = mozilla::LayoutDeviceIntRect::FromUnknownRect(tmp);
+      return rv;
+    }
+    NS_IMETHOD GetClientBoundsUntyped(nsIntRect &aRect) = 0;
 
     /**
      * Get the non-client area dimensions of the window.
@@ -876,7 +912,7 @@ class nsIWidget : public nsISupports {
     virtual mozilla::gfx::IntSize GetClientSize() {
       // Dependeing on the backend, overloading this method may be useful if
       // if requesting the client offset is expensive.
-      nsIntRect rect;
+      mozilla::LayoutDeviceIntRect rect;
       GetClientBounds(rect);
       return mozilla::gfx::IntSize(rect.width, rect.height);
     }
@@ -1917,7 +1953,7 @@ public:
        if (!IsVisible()) {
            return false;
        }
-       nsIntRect bounds;
+       mozilla::LayoutDeviceIntRect bounds;
        nsresult rv = GetBounds(bounds);
        NS_ENSURE_SUCCESS(rv, false);
        return !bounds.IsEmpty();
@@ -1934,10 +1970,17 @@ public:
      * No code outside of the composition pipeline should know or care
      * about this.  If you're not an agent of the compositor, you
      * probably shouldn't call this method.
+     *
+     * The untyped version exists temporarily to ease conversion to typed
+     * coordinates.
      */
-    virtual nsIntRect GetNaturalBounds() {
+    virtual mozilla::LayoutDeviceIntRect GetNaturalBounds() {
+        nsIntRect tmp = GetNaturalBoundsUntyped();
+        return mozilla::LayoutDeviceIntRect::FromUnknownRect(tmp);
+    }
+    virtual nsIntRect GetNaturalBoundsUntyped() {
         nsIntRect bounds;
-        GetBounds(bounds);
+        GetBoundsUntyped(bounds);
         return bounds;
     }
 
