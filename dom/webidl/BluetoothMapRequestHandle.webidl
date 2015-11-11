@@ -44,7 +44,7 @@ interface BluetoothMapRequestHandle
    * if the MAP request operation fails.
    */
   [NewObject, Throws, AvailableIn=CertifiedApps]
-  Promise<void> replyToSendMessage(long masId, boolean status);
+  Promise<void> replyToSendMessage(long masId, DOMString handleId, boolean status);
 
   /**
    * Reply Message-Update object to the MAP request. The Promise will be

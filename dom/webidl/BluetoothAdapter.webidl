@@ -69,6 +69,9 @@ interface BluetoothAdapter : EventTarget {
   // Fired when remote devices query current media play status
            attribute EventHandler   onrequestmediaplaystatus;
 
+  // Fired when remote devices request password for OBEX authentication
+           attribute EventHandler   onobexpasswordreq;
+
   // Fired when PBAP manager requests for 'pullphonebook'
            attribute EventHandler   onpullphonebookreq;
 

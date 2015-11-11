@@ -4450,6 +4450,17 @@ BluetoothDBusService::GattClientWriteDescriptorValueInternal(
 }
 
 void
+BluetoothDBusService::SetObexPassword(const nsAString& aPassword,
+                                      BluetoothReplyRunnable* aRunnable)
+{
+}
+
+void
+BluetoothDBusService::RejectObexAuth(BluetoothReplyRunnable* aRunnable)
+{
+}
+
+void
 BluetoothDBusService::ReplyTovCardPulling(
   BlobParent* aBlobParent,
   BlobChild* aBlobChild,
@@ -4549,7 +4560,9 @@ BluetoothDBusService::ReplyToMapSetMessageStatus(long aMasId,
 }
 
 void
-BluetoothDBusService::ReplyToMapSendMessage(long aMasId, bool aStatus,
+BluetoothDBusService::ReplyToMapSendMessage(long aMasId,
+  const nsAString& aHandleId,
+  bool aStatus,
   BluetoothReplyRunnable* aRunnable)
 {
 }

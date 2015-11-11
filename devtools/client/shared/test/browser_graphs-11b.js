@@ -12,7 +12,7 @@ const CATEGORIES = [
 ];
 
 add_task(function*() {
-  yield promiseTab("about:blank");
+  yield addTab("about:blank");
   yield performTest();
   gBrowser.removeCurrentTab();
 });

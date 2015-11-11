@@ -171,6 +171,15 @@ struct IsScoConnectedRequest
 {
 };
 
+struct SetObexPasswordRequest
+{
+  nsString password;
+};
+
+struct RejectObexAuthRequest
+{
+};
+
 struct ReplyTovCardPullingRequest
 {
   PBlob blob;
@@ -218,6 +227,7 @@ struct ReplyToSetMessageStatusRequest
 struct ReplyToSendMessageRequest
 {
   uint16_t masId;
+  nsString handleId;
   bool messageStatus;
 };
 
@@ -447,6 +457,8 @@ union Request
   ConnectScoRequest;
   DisconnectScoRequest;
   IsScoConnectedRequest;
+  SetObexPasswordRequest;
+  RejectObexAuthRequest;
   ReplyTovCardPullingRequest;
   ReplyToPhonebookPullingRequest;
   ReplyTovCardListingRequest;

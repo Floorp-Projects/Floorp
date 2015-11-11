@@ -5,26 +5,17 @@
 
 const TEST_URI = TEST_URI_ROOT + "browser_toolbar_basic.html";
 
-function test() {
-  addTab(TEST_URI, function(browser, tab) {
-    info("Starting browser_toolbar_basic.js");
-    runTest();
-  });
-}
+add_task(function*() {
+  info("Starting browser_toolbar_basic.js");
+  yield addTab(TEST_URI);
 
-function runTest() {
-  ok(!DeveloperToolbar.visible, "DeveloperToolbar is not visible in runTest");
+  ok(!DeveloperToolbar.visible, "DeveloperToolbar is not visible in to start");
 
-  oneTimeObserve(DeveloperToolbar.NOTIFICATIONS.SHOW, catchFail(checkOpen));
+  let shown = oneTimeObserve(DeveloperToolbar.NOTIFICATIONS.SHOW);
   document.getElementById("Tools:DevToolbar").doCommand();
-}
-
-function isChecked(b) {
-  return b.getAttribute("checked") == "true";
-}
-
-function checkOpen() {
+  yield shown;
   ok(DeveloperToolbar.visible, "DeveloperToolbar is visible in checkOpen");
+
   let close = document.getElementById("developer-toolbar-closebutton");
   ok(close, "Close button exists");
 
@@ -33,42 +24,35 @@ function checkOpen() {
   ok(!isChecked(toggleToolbox), "toggle toolbox button is not checked");
 
   let target = TargetFactory.forTab(gBrowser.selectedTab);
-  gDevTools.showToolbox(target, "inspector").then(function(toolbox) {
-    ok(isChecked(toggleToolbox), "toggle toolbox button is checked");
-
-    addTab("about:blank", function(browser, tab) {
-      info("Opened a new tab");
-
-      ok(!isChecked(toggleToolbox), "toggle toolbox button is not checked");
-
-      gBrowser.removeCurrentTab();
-
-      oneTimeObserve(DeveloperToolbar.NOTIFICATIONS.HIDE, catchFail(checkClosed));
-      document.getElementById("Tools:DevToolbar").doCommand();
-    });
-  });
-}
-
-function checkClosed() {
-  ok(!DeveloperToolbar.visible, "DeveloperToolbar is not visible in checkClosed");
-
-  oneTimeObserve(DeveloperToolbar.NOTIFICATIONS.SHOW, catchFail(checkReOpen));
-  document.getElementById("Tools:DevToolbar").doCommand();
-}
-
-function checkReOpen() {
-  ok(DeveloperToolbar.visible, "DeveloperToolbar is visible in checkReOpen");
-
-  let toggleToolbox =
-    document.getElementById("devtoolsMenuBroadcaster_DevToolbox");
+  let toolbox = yield gDevTools.showToolbox(target, "inspector");
   ok(isChecked(toggleToolbox), "toggle toolbox button is checked");
 
-  oneTimeObserve(DeveloperToolbar.NOTIFICATIONS.HIDE, catchFail(checkReClosed));
+  yield addTab("about:blank");
+  info("Opened a new tab");
+
+  ok(!isChecked(toggleToolbox), "toggle toolbox button is not checked");
+
+  gBrowser.removeCurrentTab();
+
+  let hidden = oneTimeObserve(DeveloperToolbar.NOTIFICATIONS.HIDE);
+  document.getElementById("Tools:DevToolbar").doCommand();
+  yield hidden;
+  ok(!DeveloperToolbar.visible, "DeveloperToolbar is not visible in hidden");
+
+  shown = oneTimeObserve(DeveloperToolbar.NOTIFICATIONS.SHOW);
+  document.getElementById("Tools:DevToolbar").doCommand();
+  yield shown;
+  ok(DeveloperToolbar.visible, "DeveloperToolbar is visible in after open");
+
+  ok(isChecked(toggleToolbox), "toggle toolbox button is checked");
+
+  hidden = oneTimeObserve(DeveloperToolbar.NOTIFICATIONS.HIDE);
   document.getElementById("developer-toolbar-closebutton").doCommand();
-}
+  yield hidden;
 
-function checkReClosed() {
-  ok(!DeveloperToolbar.visible, "DeveloperToolbar is not visible in checkReClosed");
+  ok(!DeveloperToolbar.visible, "DeveloperToolbar is not visible after re-close");
+});
 
-  finish();
+function isChecked(b) {
+  return b.getAttribute("checked") == "true";
 }

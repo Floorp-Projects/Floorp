@@ -23,6 +23,12 @@ actions.TAKE_CENSUS_END = "take-census-end";
 actions.TOGGLE_RECORD_ALLOCATION_STACKS_START = "toggle-record-allocation-stacks-start";
 actions.TOGGLE_RECORD_ALLOCATION_STACKS_END = "toggle-record-allocation-stacks-end";
 
+// When a heap snapshot is being saved to a user-specified
+// location on disk.
+actions.EXPORT_SNAPSHOT_START = "export-snapshot-start";
+actions.EXPORT_SNAPSHOT_END = "export-snapshot-end";
+actions.EXPORT_SNAPSHOT_ERROR = "export-snapshot-error";
+
 // Fired by UI to select a snapshot to view.
 actions.SELECT_SNAPSHOT = "select-snapshot";
 
