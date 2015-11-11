@@ -176,7 +176,7 @@ class FlatSubFormatter(object):
         return self.copier.contains(path)
 
 
-class JarFormatter(FlatFormatter):
+class JarFormatter(PiecemealFormatter):
     '''
     Formatter for the jar package format. Assumes manifest entries related to
     chrome are registered before the chrome data files are added. Also assumes
@@ -184,32 +184,29 @@ class JarFormatter(FlatFormatter):
     entries.
     '''
     def __init__(self, copier, compress=True, optimize=True):
-        FlatFormatter.__init__(self, copier)
-        self._chrome = set()
+        PiecemealFormatter.__init__(self, copier)
+        self._compress=compress
+        self._optimize=optimize
+
+    def _add_base(self, base, addon=False):
+        self._sub_formatter[base] = JarSubFormatter(
+            FileRegistrySubtree(base, self.copier),
+            self._compress, self._optimize)
+
+
+class JarSubFormatter(PiecemealFormatter):
+    '''
+    Sub-formatter for the jar package format. It is a PiecemealFormatter that
+    dispatches between further sub-formatter for each of the jar files it
+    dispatches the chrome data to, and a FlatSubFormatter for the non-chrome
+    files.
+    '''
+    def __init__(self, copier, compress=True, optimize=True):
+        PiecemealFormatter.__init__(self, copier)
         self._frozen_chrome = False
         self._compress = compress
         self._optimize = optimize
-
-    def _chromepath(self, path):
-        '''
-        Return the chrome base directory under which the given path is. Used to
-        detect under which .jar (if any) the path should go.
-        '''
-        self._frozen_chrome = True
-        return mozpath.basedir(path, self._chrome)
-
-    def add(self, path, content):
-        chrome = self._chromepath(path)
-        if chrome:
-            jar = chrome + '.jar'
-            if not self.copier.contains(jar):
-                self.copier.add(jar, Jarrer(self._compress, self._optimize))
-            if not self.copier[jar].contains(mozpath.relpath(path,
-                                                                  chrome)):
-                self.copier[jar].add(mozpath.relpath(path, chrome),
-                                     content)
-        else:
-            FlatFormatter.add(self, path, content)
+        self._sub_formatter[''] = FlatSubFormatter(copier)
 
     def _jarize(self, entry, relpath):
         '''
@@ -229,23 +226,16 @@ class JarFormatter(FlatFormatter):
                 not urlparse(entry.relpath).scheme:
             chromepath, entry = self._jarize(entry, entry.relpath)
             assert not self._frozen_chrome
-            self._chrome.add(chromepath)
+            if chromepath not in self._sub_formatter:
+                jarrer = Jarrer(self._compress, self._optimize)
+                self.copier.add(chromepath + '.jar', jarrer)
+                self._sub_formatter[chromepath] = FlatSubFormatter(jarrer)
         elif isinstance(entry, ManifestResource) and \
                 not urlparse(entry.target).scheme:
             chromepath, new_entry = self._jarize(entry, entry.target)
-            if chromepath in self._chrome:
+            if chromepath in self._sub_formatter:
                 entry = new_entry
-        FlatFormatter.add_manifest(self, entry)
-
-    def contains(self, path):
-        assert '*' not in path
-        chrome = self._chromepath(path)
-        if not chrome:
-            return self.copier.contains(path)
-        if not self.copier.contains(chrome + '.jar'):
-            return False
-        return self.copier[chrome + '.jar']. \
-            contains(mozpath.relpath(path, chrome))
+        PiecemealFormatter.add_manifest(self, entry)
 
 
 class OmniJarFormatter(JarFormatter):
