@@ -8,14 +8,16 @@
     <!--
         Base application theme. This could be overridden by GeckoBaseTheme
         in other res/values-XXX/themes.xml.
+
+        Bug 1215079: we inherit from android:* on GB but AppCompat in later versions.
+        Inheriting only from the AppCompat style but not extending AppCompat causes the
+        menu to be transparent and we can't correctly override the color on all devices
+        while also extending AppCompat disables the menu entirely due to a framework bug.
+        We're stuck until we always show the overflow menu (bug 1209967).
     -->
-    <style name="GeckoBase" parent="Theme.AppCompat.Light.DarkActionBar">
+    <style name="GeckoBase" parent="android:Theme.NoTitleBar">
         <item name="windowNoTitle">true</item>
         <item name="android:windowContentOverlay">@null</item>
-
-        <!-- AppCompat sets this to transparent by default:
-             http://stackoverflow.com/a/31777488 -->
-        <item name="android:panelBackground">@color/gingerbread_menu_background_color</item>
     </style>
 
     <style name="GeckoDialogBase" parent="@android:style/Theme.Dialog">
