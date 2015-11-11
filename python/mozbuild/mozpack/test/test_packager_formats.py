@@ -35,7 +35,8 @@ CONTENTS = {
         # base_path: is_addon?
         '': False,
         'app': False,
-        'addon0': True,
+        'addon0': 'unpacked',
+        'addon1': True,
     },
     'manifests': [
         ManifestContent('chrome/f', 'oo', 'oo/'),
@@ -45,6 +46,7 @@ CONTENTS = {
         ManifestContent('app/chrome', 'content', 'foo/'),
         ManifestComponent('app/components', '{foo-id}', 'foo.js'),
         ManifestContent('addon0/chrome', 'content', 'foo/bar/'),
+        ManifestContent('addon1/chrome', 'content', 'foo/bar/'),
     ],
     'files': {
         'chrome/f/oo/bar/baz': GeneratedFile('foobarbaz'),
@@ -59,6 +61,9 @@ CONTENTS = {
         'addon0/chrome/foo/bar/baz': GeneratedFile('foobarbaz'),
         'addon0/components/foo.xpt': foo2_xpt,
         'addon0/components/bar.xpt': bar_xpt,
+        'addon1/chrome/foo/bar/baz': GeneratedFile('foobarbaz'),
+        'addon1/components/foo.xpt': foo2_xpt,
+        'addon1/components/bar.xpt': bar_xpt,
     },
 }
 
@@ -102,22 +107,29 @@ RESULT_FLAT = {
         'component {foo-id} foo.js',
     ],
     'app/components/foo.js': FILES['app/components/foo.js'],
-    'addon0/chrome.manifest': [
-        'manifest chrome/chrome.manifest',
-        'manifest components/components.manifest',
-    ],
-    'addon0/chrome/chrome.manifest': [
-        'content content foo/bar/',
-    ],
-    'addon0/chrome/foo/bar/baz': FILES['addon0/chrome/foo/bar/baz'],
-    'addon0/components/components.manifest': [
-        'interfaces interfaces.xpt',
-    ],
-    'addon0/components/interfaces.xpt': {
-        'foo': read_interfaces(foo2_xpt.open())['foo'],
-        'bar': read_interfaces(bar_xpt.open())['bar'],
-    },
 }
+
+for addon in ('addon0', 'addon1'):
+    RESULT_FLAT.update({
+        mozpath.join(addon, p): f
+        for p, f in {
+            'chrome.manifest': [
+                'manifest chrome/chrome.manifest',
+                'manifest components/components.manifest',
+            ],
+            'chrome/chrome.manifest': [
+                'content content foo/bar/',
+            ],
+            'chrome/foo/bar/baz': FILES[mozpath.join(addon, 'chrome/foo/bar/baz')],
+            'components/components.manifest': [
+                'interfaces interfaces.xpt',
+            ],
+            'components/interfaces.xpt': {
+                'foo': read_interfaces(foo2_xpt.open())['foo'],
+                'bar': read_interfaces(bar_xpt.open())['bar'],
+            },
+        }.iteritems()
+    })
 
 RESULT_JAR = {
     p: RESULT_FLAT[p]
@@ -160,6 +172,11 @@ RESULT_JAR.update({
     'addon0/chrome/foo.jar': {
         'bar/baz': FILES['addon0/chrome/foo/bar/baz'],
     },
+    'addon1.xpi': {
+        mozpath.relpath(p, 'addon1'): f
+        for p, f in RESULT_FLAT.iteritems()
+        if p.startswith('addon1/')
+    },
 })
 
 RESULT_OMNIJAR = {
@@ -173,7 +190,7 @@ RESULT_OMNIJAR = {
 RESULT_OMNIJAR.update({
     p: RESULT_JAR[p]
     for p in RESULT_JAR
-    if p.startswith('addon0/')
+    if p.startswith('addon')
 })
 
 RESULT_OMNIJAR.update({
