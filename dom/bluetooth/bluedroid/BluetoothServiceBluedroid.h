@@ -283,12 +283,12 @@ public:
 
   virtual void
   ConnectGattClientInternal(const nsAString& aAppUuid,
-                            const nsAString& aDeviceAddress,
+                            const BluetoothAddress& aDeviceAddress,
                             BluetoothReplyRunnable* aRunnable) override;
 
   virtual void
   DisconnectGattClientInternal(const nsAString& aAppUuid,
-                               const nsAString& aDeviceAddress,
+                               const BluetoothAddress& aDeviceAddress,
                                BluetoothReplyRunnable* aRunnable) override;
 
   virtual void
@@ -315,7 +315,7 @@ public:
 
   virtual void
   GattClientReadRemoteRssiInternal(
-    int aClientIf, const nsAString& aDeviceAddress,
+    int aClientIf, const BluetoothAddress& aDeviceAddress,
     BluetoothReplyRunnable* aRunnable) override;
 
   virtual void
@@ -354,13 +354,13 @@ public:
   virtual void
   GattServerConnectPeripheralInternal(
     const nsAString& aAppUuid,
-    const nsAString& aAddress,
+    const BluetoothAddress& aAddress,
     BluetoothReplyRunnable* aRunnable) override;
 
   virtual void
   GattServerDisconnectPeripheralInternal(
     const nsAString& aAppUuid,
-    const nsAString& aAddress,
+    const BluetoothAddress& aAddress,
     BluetoothReplyRunnable* aRunnable) override;
 
   virtual void
@@ -420,7 +420,7 @@ public:
   virtual void
   GattServerSendResponseInternal(
     const nsAString& aAppUuid,
-    const nsAString& aAddress,
+    const BluetoothAddress& aAddress,
     uint16_t aStatus,
     int32_t aRequestId,
     const BluetoothGattResponse& aRsp,
@@ -429,7 +429,7 @@ public:
   virtual void
   GattServerSendIndicationInternal(
     const nsAString& aAppUuid,
-    const nsAString& aAddress,
+    const BluetoothAddress& aAddress,
     const BluetoothAttributeHandle& aCharacteristicHandle,
     bool aConfirm,
     const nsTArray<uint8_t>& aValue,
