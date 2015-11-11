@@ -444,8 +444,6 @@ public:
      * group back to the current surface with some alpha applied will give
      * the correct results and using an opaque pushed surface gives better
      * quality and performance.
-     * This API really only makes sense if you do a PopGroupToSource and
-     * immediate Paint with OP_OVER.
      */
     void PushGroupAndCopyBackground(gfxContentType content = gfxContentType::COLOR);
     already_AddRefed<gfxPattern> PopGroup();
