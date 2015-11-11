@@ -3460,6 +3460,9 @@ void HTMLMediaElement::FirstFrameLoaded()
 
 void HTMLMediaElement::NetworkError()
 {
+  if (mDecoder) {
+    ShutdownDecoder();
+  }
   Error(nsIDOMMediaError::MEDIA_ERR_NETWORK);
 }
 
