@@ -8459,11 +8459,9 @@ CGBlockScopeList::findEnclosingScope(uint32_t index)
             // scope contains POS, it should still be open, so its length should
             // be zero.
             return list[index].index;
-        } else {
-            // Conversely, if the length is not zero, it should not contain
-            // POS.
-            MOZ_ASSERT_IF(inPrologue == list[index].endInPrologue, list[index].end <= pos);
         }
+        // Conversely, if the length is not zero, it should not contain POS.
+        MOZ_ASSERT_IF(inPrologue == list[index].endInPrologue, list[index].end <= pos);
     }
 
     return BlockScopeNote::NoBlockScopeIndex;
