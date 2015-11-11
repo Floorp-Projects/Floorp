@@ -1854,17 +1854,22 @@ nsLayoutUtils::SetFixedPositionLayerData(Layer* aLayer,
   // defaulting to top-left.
   LayerPoint anchor(anchorRect.x, anchorRect.y);
 
+  int32_t sides = eSideBitsNone;
   if (aFixedPosFrame != aViewportFrame) {
     const nsStylePosition* position = aFixedPosFrame->StylePosition();
     if (position->mOffset.GetRightUnit() != eStyleUnit_Auto) {
+      sides |= eSideBitsRight;
       if (position->mOffset.GetLeftUnit() != eStyleUnit_Auto) {
+        sides |= eSideBitsLeft;
         anchor.x = anchorRect.x + anchorRect.width / 2.f;
       } else {
         anchor.x = anchorRect.XMost();
       }
     }
     if (position->mOffset.GetBottomUnit() != eStyleUnit_Auto) {
+      sides |= eSideBitsBottom;
       if (position->mOffset.GetTopUnit() != eStyleUnit_Auto) {
+        sides |= eSideBitsTop;
         anchor.y = anchorRect.y + anchorRect.height / 2.f;
       } else {
         anchor.y = anchorRect.YMost();
@@ -1878,7 +1883,7 @@ nsLayoutUtils::SetFixedPositionLayerData(Layer* aLayer,
       id = FindOrCreateIDFor(content);
     }
   }
-  aLayer->SetFixedPositionData(id, anchor, aIsClipFixed);
+  aLayer->SetFixedPositionData(id, anchor, sides, aIsClipFixed);
 }
 
 bool
