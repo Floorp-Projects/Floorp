@@ -790,14 +790,14 @@ gfxContext::GetFontSmoothingBackgroundColor()
 
 // masking
 void
-gfxContext::Mask(SourceSurface* aSurface, const Matrix& aTransform)
+gfxContext::Mask(SourceSurface* aSurface, Float aAlpha, const Matrix& aTransform)
 {
   Matrix old = mTransform;
   Matrix mat = aTransform * mTransform;
 
   ChangeTransform(mat);
   mDT->MaskSurface(PatternFromState(this), aSurface, Point(),
-                   DrawOptions(1.0f, CurrentState().op, CurrentState().aaMode));
+                   DrawOptions(aAlpha, CurrentState().op, CurrentState().aaMode));
   ChangeTransform(old);
 }
 
@@ -1000,8 +1000,7 @@ gfxContext::PopGroupAndBlend()
     if (!maskTransform.HasNonTranslation()) {
       Mask(mask, opacity, Point(maskTransform._31, maskTransform._32));
     } else {
-      MOZ_ASSERT(opacity == 1.0f);
-      Mask(mask, maskTransform);
+      Mask(mask, opacity, maskTransform);
     }
   } else {
     Paint(opacity);
