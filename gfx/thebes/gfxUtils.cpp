@@ -508,7 +508,7 @@ struct MOZ_STACK_CLASS AutoCairoPixmanBugWorkaround
         bounds.RoundOut();
         mContext->Clip(bounds);
         mContext->SetMatrix(currentMatrix);
-        mContext->PushGroup(gfxContentType::COLOR_ALPHA);
+        mContext->PushGroupForBlendBack(gfxContentType::COLOR_ALPHA);
         mContext->SetOp(CompositionOp::OP_OVER);
 
         mPushedGroup = true;
@@ -517,8 +517,7 @@ struct MOZ_STACK_CLASS AutoCairoPixmanBugWorkaround
     ~AutoCairoPixmanBugWorkaround()
     {
         if (mPushedGroup) {
-            mContext->PopGroupToSource();
-            mContext->Paint();
+            mContext->PopGroupAndBlend();
             mContext->Restore();
         }
     }
