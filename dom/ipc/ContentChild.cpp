@@ -2263,6 +2263,39 @@ ContentChild::RecvPreferenceUpdate(const PrefSetting& aPref)
 }
 
 bool
+ContentChild::RecvDataStoragePut(const nsString& aFilename,
+                                 const DataStorageItem& aItem)
+{
+    RefPtr<DataStorage> storage = DataStorage::GetIfExists(aFilename);
+    if (storage) {
+        storage->Put(aItem.key(), aItem.value(), aItem.type());
+    }
+    return true;
+}
+
+bool
+ContentChild::RecvDataStorageRemove(const nsString& aFilename,
+                                    const nsCString& aKey,
+                                    const DataStorageType& aType)
+{
+    RefPtr<DataStorage> storage = DataStorage::GetIfExists(aFilename);
+    if (storage) {
+        storage->Remove(aKey, aType);
+    }
+    return true;
+}
+
+bool
+ContentChild::RecvDataStorageClear(const nsString& aFilename)
+{
+    RefPtr<DataStorage> storage = DataStorage::GetIfExists(aFilename);
+    if (storage) {
+        storage->Clear();
+    }
+    return true;
+}
+
+bool
 ContentChild::RecvNotifyAlertsObserver(const nsCString& aType, const nsString& aData)
 {
     for (uint32_t i = 0; i < mAlertObservers.Length();

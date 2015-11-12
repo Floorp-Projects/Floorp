@@ -3,10 +3,9 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/
 
 from copy import deepcopy
-import errno
-import platform
 import os
 import sys
+import tempfile
 import time
 
 from mozprofile import Profile
@@ -44,10 +43,13 @@ class GeckoInstance(object):
     }
 
     def __init__(self, host, port, bin, profile=None, addons=None,
-                 app_args=None, symbols_path=None, gecko_log=None, prefs=None):
+                 app_args=None, symbols_path=None, gecko_log=None, prefs=None,
+                 workspace=None):
         self.marionette_host = host
         self.marionette_port = port
         self.bin = bin
+        # Alternative to default temporary directory
+        self.workspace = workspace
         # Check if it is a Profile object or a path to profile
         self.profile = None
         self.addons = addons
@@ -94,9 +96,20 @@ class GeckoInstance(object):
 
         if hasattr(self, "profile_path") and self.profile is None:
             if not self.profile_path:
+                if self.workspace:
+                    profile_args['profile'] = tempfile.mkdtemp(
+                        suffix='.mozrunner-{:.0f}'.format(time.time()),
+                        dir=self.workspace)
                 self.profile = Profile(**profile_args)
             else:
                 profile_args["path_from"] = self.profile_path
+                profile_name = '{}-{:.0f}'.format(
+                    os.path.basename(self.profile_path),
+                    time.time()
+                )
+                if self.workspace:
+                    profile_args["path_to"] = os.path.join(self.workspace,
+                                                           profile_name)
                 self.profile = Profile.clone(**profile_args)
 
         process_args = {

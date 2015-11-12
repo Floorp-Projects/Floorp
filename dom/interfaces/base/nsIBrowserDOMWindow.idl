@@ -17,7 +17,7 @@ interface nsIOpenURIInFrameParams : nsISupports
   attribute boolean isPrivate;
 };
 
-[scriptable, uuid(99f5a347-722c-4337-bd38-f14ec94801b3)]
+[scriptable, uuid(31da1ce2-aec4-4c26-ac66-d622935c3bf4)]
 
 /**
  * The C++ source has access to the browser script source through
@@ -99,6 +99,14 @@ interface nsIBrowserDOMWindow : nsISupports
    * @return whether the window is the main content window for any
    *         currently open tab in this toplevel browser window.
    */
-  boolean      isTabContentWindow(in nsIDOMWindow aWindow);
+  boolean isTabContentWindow(in nsIDOMWindow aWindow);
+
+  /**
+   * This function is responsible for calling
+   * nsIContentViewer::PermitUnload on each frame in the window. It
+   * returns true if closing the window is allowed. See canClose() in
+   * BrowserUtils.jsm for a simple implementation of this method.
+   */
+  boolean canClose();
 };
 

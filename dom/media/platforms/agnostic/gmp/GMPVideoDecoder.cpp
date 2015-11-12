@@ -247,6 +247,10 @@ GMPVideoDecoder::Input(MediaRawData* aSample)
   mAdapter->SetLastStreamOffset(sample->mOffset);
 
   GMPUniquePtr<GMPVideoEncodedFrame> frame = CreateFrame(sample);
+  if (!frame) {
+    mCallback->Error();
+    return NS_ERROR_FAILURE;
+  }
   nsTArray<uint8_t> info; // No codec specific per-frame info to pass.
   nsresult rv = mGMP->Decode(Move(frame), false, info, 0);
   if (NS_FAILED(rv)) {

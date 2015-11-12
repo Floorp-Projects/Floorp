@@ -540,8 +540,6 @@ pref("layout.event-regions.enabled", false);
 // gfx/layers/apz/src/AsyncPanZoomController.cpp.
 pref("apz.allow_checkerboarding", true);
 pref("apz.allow_zooming", false);
-pref("apz.asyncscroll.throttle", 100);
-pref("apz.asyncscroll.timeout", 300);
 
 // Whether to lock touch scrolling to one axis at a time
 // 0 = FREE (No locking at all)
@@ -4172,6 +4170,9 @@ pref("gl.msaa-level", 0);
 pref("gl.msaa-level", 2);
 #endif
 pref("gl.require-hardware", false);
+#ifdef XP_MACOSX
+pref("gl.multithreaded", false);
+#endif
 
 pref("webgl.force-enabled", false);
 pref("webgl.disabled", false);

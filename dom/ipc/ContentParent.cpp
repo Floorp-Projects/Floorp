@@ -35,6 +35,7 @@
 #include "imgIContainer.h"
 #include "mozIApplication.h"
 #include "mozilla/ClearOnShutdown.h"
+#include "mozilla/DataStorage.h"
 #include "mozilla/devtools/HeapSnapshotTempFileHelperParent.h"
 #include "mozilla/docshell/OfflineCacheUpdateParent.h"
 #include "mozilla/dom/DataStoreService.h"
@@ -1222,10 +1223,12 @@ ContentParent::RecvGetBlocklistState(const uint32_t& aPluginId,
 
 bool
 ContentParent::RecvFindPlugins(const uint32_t& aPluginEpoch,
+                               nsresult* aRv,
                                nsTArray<PluginTag>* aPlugins,
                                uint32_t* aNewPluginEpoch)
 {
-    return mozilla::plugins::FindPluginsForContent(aPluginEpoch, aPlugins, aNewPluginEpoch);
+    *aRv = mozilla::plugins::FindPluginsForContent(aPluginEpoch, aPlugins, aNewPluginEpoch);
+    return true;
 }
 
 /*static*/ TabParent*
@@ -2667,6 +2670,15 @@ ContentParent::RecvReadFontList(InfallibleTArray<FontListEntry>* retValue)
 #ifdef ANDROID
     gfxAndroidPlatform::GetPlatform()->GetSystemFontList(retValue);
 #endif
+    return true;
+}
+
+bool
+ContentParent::RecvReadDataStorageArray(const nsString& aFilename,
+                                        InfallibleTArray<DataStorageItem>* aValues)
+{
+    RefPtr<DataStorage> storage = DataStorage::Get(aFilename);
+    storage->GetAll(aValues);
     return true;
 }
 

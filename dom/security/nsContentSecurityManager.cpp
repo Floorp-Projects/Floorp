@@ -237,9 +237,14 @@ DoContentSecurityChecks(nsIURI* aURI, nsILoadInfo* aLoadInfo)
       break;
     }
 
-    case nsIContentPolicy::TYPE_WEBSOCKET:
-    case nsIContentPolicy::TYPE_CSP_REPORT: {
+    case nsIContentPolicy::TYPE_WEBSOCKET: {
       MOZ_ASSERT(false, "contentPolicyType not supported yet");
+      break;
+    }
+
+    case nsIContentPolicy::TYPE_CSP_REPORT: {
+      mimeTypeGuess = EmptyCString();
+      requestingContext = aLoadInfo->LoadingNode();
       break;
     }
 
@@ -420,7 +425,8 @@ nsContentSecurityManager::IsURIPotentiallyTrustworthy(nsIURI* aURI, bool* aIsTru
 
   if (scheme.EqualsLiteral("https") ||
       scheme.EqualsLiteral("file") ||
-      scheme.EqualsLiteral("app")) {
+      scheme.EqualsLiteral("app") ||
+      scheme.EqualsLiteral("wss")) {
     *aIsTrustWorthy = true;
     return NS_OK;
   }

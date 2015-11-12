@@ -695,7 +695,7 @@ child:
     /**
      * Update the child side docShell active (resource use) state.
      */
-    SetDocShellIsActive(bool aIsActive);
+    SetDocShellIsActive(bool aIsActive, bool aIsHidden);
 
     /**
      * Notify the child that it shouldn't paint the offscreen displayport.

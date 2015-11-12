@@ -89,7 +89,6 @@ function testApp(isValidWidget) {
     "mozbrowsertitlechange",
     "mozbrowseropenwindow",
     "mozbrowserscroll",
-    "mozbrowserasyncscroll"
   ].forEach( function(topic) {
     ifr.addEventListener(topic, function() {
       ok(false, topic + " should be hidden");
@@ -173,7 +172,7 @@ function checkIsWidgetScript(testMozbrowserEvent) {
     var win = content.window.open("about:blank"); /* test mozbrowseropenwindow */
     /*Close new window to avoid mochitest "unable to restore focus" failures.*/
     win.close();
-    content.window.scrollTo(4000, 4000); /* test mozbrowser(async)scroll */
+    content.window.scrollTo(4000, 4000); /* test mozbrowserscroll */
   }
 }
 

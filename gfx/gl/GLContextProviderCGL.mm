@@ -15,6 +15,8 @@
 #include "GeckoProfiler.h"
 #include "mozilla/gfx/MacIOSurface.h"
 
+#include <OpenGL/OpenGL.h>
+
 namespace mozilla {
 namespace gl {
 
@@ -296,6 +298,9 @@ CreateOffscreenFBOContext(CreateContextFlags flags)
     RefPtr<GLContextCGL> glContext = new GLContextCGL(dummyCaps, context,
                                                         true, profile);
 
+    if (gfxPrefs::GLMultithreaded()) {
+        CGLEnable(glContext->GetCGLContext(), kCGLCEMPEngine);
+    }
     return glContext.forget();
 }
 

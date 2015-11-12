@@ -1,0 +1,15 @@
+<!DOCTYPE HTML>
+<html class="reftest-wait">
+<body>
+<div style="opacity:0">
+  <div id="d" class="reftest-no-paint" style="height:50px; border:2px solid black"></div>
+</div>
+<script type="application/javascript">
+function doTest() {
+  d.style.border = "2px solid green";
+  document.documentElement.removeAttribute("class");
+}
+document.addEventListener("MozReftestInvalidate", doTest, false);
+</script>
+</body>
+</html>

@@ -136,23 +136,24 @@ add_test(function() {
 
 // Tests that clicking the buy button works from the list
 add_test(function() {
-  gBrowser.addEventListener("load", function(event) {
-    if (!(event.target instanceof Document) ||
-        event.target.location.href == "about:blank")
-      return;
-    gBrowser.removeEventListener("load", arguments.callee, true);
-
-    is(gBrowser.currentURI.spec, TESTROOT + "releaseNotes.xhtml?addon5", "Should have loaded the right page");
-
-    gBrowser.removeCurrentTab();
-
-    if (gUseInContentUI) {
-      is(gBrowser.currentURI.spec, "about:addons", "Should be back to the add-ons manager");
-      run_next_test();
+  gBrowser.tabContainer.addEventListener("TabOpen", function listener(event) {
+    gBrowser.tabContainer.removeEventListener("TabOpen", listener, true);
+    function wantLoad(url) {
+      return url != "about:blank";
     }
-    else {
-      waitForFocus(run_next_test, gManagerWindow);
-    }
+    BrowserTestUtils.browserLoaded(event.target.linkedBrowser, false, wantLoad).then(() => {
+      is(gBrowser.currentURI.spec, TESTROOT + "releaseNotes.xhtml?addon5", "Should have loaded the right page");
+
+      gBrowser.removeCurrentTab();
+
+      if (gUseInContentUI) {
+        is(gBrowser.currentURI.spec, "about:addons", "Should be back to the add-ons manager");
+        run_next_test();
+      }
+      else {
+        waitForFocus(run_next_test, gManagerWindow);
+      }
+    });
   }, true);
 
   var list = gManagerWindow.document.getElementById("search-list");
@@ -161,23 +162,24 @@ add_test(function() {
 
 // Tests that clicking the buy button from the details view works
 add_test(function() {
-  gBrowser.addEventListener("load", function(event) {
-    if (!(event.target instanceof Document) ||
-        event.target.location.href == "about:blank")
-      return;
-    gBrowser.removeEventListener("load", arguments.callee, true);
-
-    is(gBrowser.currentURI.spec, TESTROOT + "releaseNotes.xhtml?addon4", "Should have loaded the right page");
-
-    gBrowser.removeCurrentTab();
-
-    if (gUseInContentUI) {
-      is(gBrowser.currentURI.spec, "about:addons", "Should be back to the add-ons manager");
-      run_next_test();
+  gBrowser.tabContainer.addEventListener("TabOpen", function listener(event) {
+    gBrowser.tabContainer.removeEventListener("TabOpen", listener, true);
+    function wantLoad(url) {
+      return url != "about:blank";
     }
-    else {
-      waitForFocus(run_next_test, gManagerWindow);
-    }
+    BrowserTestUtils.browserLoaded(event.target.linkedBrowser, false, wantLoad).then(() => {
+      is(gBrowser.currentURI.spec, TESTROOT + "releaseNotes.xhtml?addon4", "Should have loaded the right page");
+
+      gBrowser.removeCurrentTab();
+
+      if (gUseInContentUI) {
+        is(gBrowser.currentURI.spec, "about:addons", "Should be back to the add-ons manager");
+        run_next_test();
+      }
+      else {
+        waitForFocus(run_next_test, gManagerWindow);
+      }
+    });
   }, true);
 
   var list = gManagerWindow.document.getElementById("search-list");

@@ -1871,7 +1871,7 @@ IMContextWrapper::SetCursorPosition(GtkIMContext* aContext)
     LayoutDeviceIntRect rect = charRect.mReply.mRect + root - owner;
     rect.width = 0;
     GdkRectangle area = rootWindow->DevicePixelsToGdkRectRoundOut(
-                            LayoutDeviceIntRect::ToUntyped(rect));
+                            rect.ToUnknownRect());
 
     gtk_im_context_set_cursor_location(aContext, &area);
 }

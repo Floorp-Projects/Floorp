@@ -790,14 +790,14 @@ gfxContext::GetFontSmoothingBackgroundColor()
 
 // masking
 void
-gfxContext::Mask(SourceSurface* aSurface, const Matrix& aTransform)
+gfxContext::Mask(SourceSurface* aSurface, Float aAlpha, const Matrix& aTransform)
 {
   Matrix old = mTransform;
   Matrix mat = aTransform * mTransform;
 
   ChangeTransform(mat);
   mDT->MaskSurface(PatternFromState(this), aSurface, Point(),
-                   DrawOptions(1.0f, CurrentState().op, CurrentState().aaMode));
+                   DrawOptions(aAlpha, CurrentState().op, CurrentState().aaMode));
   ChangeTransform(old);
 }
 
@@ -866,10 +866,8 @@ gfxContext::Paint(gfxFloat alpha)
                 DrawOptions(Float(alpha), GetOp()));
 }
 
-// groups
-
 void
-gfxContext::PushGroup(gfxContentType content)
+gfxContext::PushGroupForBlendBack(gfxContentType content, Float aOpacity, SourceSurface* aMask, const Matrix& aMaskTransform)
 {
   DrawTarget* oldDT = mDT;
 
@@ -879,6 +877,11 @@ gfxContext::PushGroup(gfxContentType content)
     PushClipsToDT(mDT);
   }
   mDT->SetTransform(GetDTTransform());
+
+  CurrentState().mBlendOpacity = aOpacity;
+  CurrentState().mBlendMask = aMask;
+  CurrentState().mWasPushedForBlendBack = true;
+  CurrentState().mBlendMaskTransform = aMaskTransform;
 }
 
 static gfxRect
@@ -892,7 +895,7 @@ GetRoundOutDeviceClipExtents(gfxContext* aCtx)
 }
 
 void
-gfxContext::PushGroupAndCopyBackground(gfxContentType content)
+gfxContext::PushGroupAndCopyBackground(gfxContentType content, Float aOpacity, SourceSurface* aMask, const Matrix& aMaskTransform)
 {
   IntRect clipExtents;
   if (mDT->GetFormat() != SurfaceFormat::B8G8R8X8) {
@@ -912,6 +915,11 @@ gfxContext::PushGroupAndCopyBackground(gfxContentType content)
       // Creating new DT failed.
       return;
     }
+
+    CurrentState().mBlendOpacity = aOpacity;
+    CurrentState().mBlendMask = aMask;
+    CurrentState().mWasPushedForBlendBack = true;
+    CurrentState().mBlendMaskTransform = aMaskTransform;
 
     Point offset = CurrentState().deviceOffset - oldDeviceOffset;
     Rect surfRect(0, 0, Float(mDT->GetSize().width), Float(mDT->GetSize().height));
@@ -947,47 +955,29 @@ gfxContext::PushGroupAndCopyBackground(gfxContentType content)
     mDT->SetTransform(GetDTTransform());
     return;
   }
-  PushGroup(content);
-}
+  DrawTarget* oldDT = mDT;
 
-already_AddRefed<gfxPattern>
-gfxContext::PopGroup()
-{
-  RefPtr<SourceSurface> src = mDT->Snapshot();
-  Point deviceOffset = CurrentState().deviceOffset;
+  PushNewDT(content);
 
-  Restore();
+  if (oldDT != mDT) {
+    PushClipsToDT(mDT);
+  }
 
-  Matrix mat = mTransform;
-  mat.Invert();
-  mat.PreTranslate(deviceOffset.x, deviceOffset.y); // device offset translation
-
-  RefPtr<gfxPattern> pat = new gfxPattern(src, mat);
-
-  return pat.forget();
-}
-
-already_AddRefed<SourceSurface>
-gfxContext::PopGroupToSurface(Matrix* aTransform)
-{
-  RefPtr<SourceSurface> src = mDT->Snapshot();
-  Point deviceOffset = CurrentState().deviceOffset;
-
-  Restore();
-
-  Matrix mat = mTransform;
-  mat.Invert();
-
-  Matrix deviceOffsetTranslation;
-  deviceOffsetTranslation.PreTranslate(deviceOffset.x, deviceOffset.y);
-
-  *aTransform = deviceOffsetTranslation * mat;
-  return src.forget();
+  mDT->SetTransform(GetDTTransform());
+  CurrentState().mBlendOpacity = aOpacity;
+  CurrentState().mBlendMask = aMask;
+  CurrentState().mWasPushedForBlendBack = true;
+  CurrentState().mBlendMaskTransform = aMaskTransform;
 }
 
 void
-gfxContext::PopGroupToSource()
+gfxContext::PopGroupAndBlend()
 {
+  MOZ_ASSERT(CurrentState().mWasPushedForBlendBack);
+  Float opacity = CurrentState().mBlendOpacity;
+  RefPtr<SourceSurface> mask = CurrentState().mBlendMask;
+  Matrix maskTransform = CurrentState().mBlendMaskTransform;
+
   RefPtr<SourceSurface> src = mDT->Snapshot();
   Point deviceOffset = CurrentState().deviceOffset;
   Restore();
@@ -1002,6 +992,21 @@ gfxContext::PopGroupToSource()
   mat.PreTranslate(deviceOffset.x, deviceOffset.y); // device offset translation
 
   CurrentState().surfTransform = mat;
+
+  CompositionOp oldOp = GetOp();
+  SetOp(CompositionOp::OP_OVER);
+
+  if (mask) {
+    if (!maskTransform.HasNonTranslation()) {
+      Mask(mask, opacity, Point(maskTransform._31, maskTransform._32));
+    } else {
+      Mask(mask, opacity, maskTransform);
+    }
+  } else {
+    Paint(opacity);
+  }
+
+  SetOp(oldOp);
 }
 
 #ifdef MOZ_DUMP_PAINTING
