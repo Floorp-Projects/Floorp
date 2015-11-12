@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<script>
+
+function boom()
+{
+    var sheet = document.createElement("style");
+    sheet.scoped = true;
+    document.documentElement.appendChild(sheet);
+}
+
+</script>
+</head>
+<body onload="boom();"></body>
+</html>
