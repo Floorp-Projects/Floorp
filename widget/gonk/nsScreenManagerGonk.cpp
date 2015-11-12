@@ -289,10 +289,10 @@ nsScreenGonk::SetRotation(uint32_t aRotation)
     return NS_OK;
 }
 
-nsIntRect
-nsScreenGonk::GetNaturalBoundsUntyped()
+LayoutDeviceIntRect
+nsScreenGonk::GetNaturalBounds()
 {
-    return mNaturalBounds;
+    return LayoutDeviceIntRect::FromUnknownRect(mNaturalBounds);
 }
 
 uint32_t
