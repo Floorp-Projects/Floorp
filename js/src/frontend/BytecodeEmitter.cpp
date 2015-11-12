@@ -6438,8 +6438,6 @@ BytecodeEmitter::emitFunction(ParseNode* pn, bool needsProto)
                                  insideNonGlobalEval, lineNum, emitterMode);
             if (!bce2.init())
                 return false;
-
-            /* We measured the max scope depth when we parsed the function. */
             if (!bce2.emitFunctionScript(pn->pn_body))
                 return false;
 
