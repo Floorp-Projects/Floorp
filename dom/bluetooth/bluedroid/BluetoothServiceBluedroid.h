@@ -255,7 +255,7 @@ public:
   virtual void
   SendPlayStatus(int64_t aDuration,
                  int64_t aPosition,
-                 const nsAString& aPlayStatus,
+                 ControlPlayStatus aPlayStatus,
                  BluetoothReplyRunnable* aRunnable) override;
 
   virtual void
@@ -485,9 +485,6 @@ public:
 protected:
   static nsresult StartGonkBluetooth();
   static nsresult StopGonkBluetooth();
-
-  static ControlPlayStatus PlayStatusStringToControlPlayStatus(
-    const nsAString& aPlayStatus);
 
   static void ConnectDisconnect(bool aConnect,
                                 const BluetoothAddress& aDeviceAddress,
