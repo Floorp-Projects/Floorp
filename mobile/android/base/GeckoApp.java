@@ -1280,6 +1280,7 @@ public abstract class GeckoApp
         // When that's fixed, `this` can change to
         // `(GeckoApplication) getApplication()` here.
         GeckoAppShell.setContextGetter(this);
+        GeckoAppShell.setApplicationContext(getApplicationContext());
         GeckoAppShell.setGeckoInterface(this);
 
         Tabs.getInstance().attachToContext(this);
