@@ -4309,14 +4309,14 @@ BluetoothDBusService::StopLeScanInternal(
 
 void
 BluetoothDBusService::ConnectGattClientInternal(
-  const nsAString& aAppUuid, const nsAString& aDeviceAddress,
+  const nsAString& aAppUuid, const BluetoothAddress& aDeviceAddress,
   BluetoothReplyRunnable* aRunnable)
 {
 }
 
 void
 BluetoothDBusService::DisconnectGattClientInternal(
-  const nsAString& aAppUuid, const nsAString& aDeviceAddress,
+  const nsAString& aAppUuid, const BluetoothAddress& aDeviceAddress,
   BluetoothReplyRunnable* aRunnable)
 {
 }
@@ -4349,7 +4349,7 @@ BluetoothDBusService::UnregisterGattClientInternal(
 
 void
 BluetoothDBusService::GattClientReadRemoteRssiInternal(
-  int aClientIf, const nsAString& aDeviceAddress,
+  int aClientIf, const BluetoothAddress& aDeviceAddress,
   BluetoothReplyRunnable* aRunnable)
 {
 }
@@ -4521,14 +4521,14 @@ BluetoothDBusService::ReplyToMapMessageUpdate(long aMasId, bool aStatus,
 
 void
 BluetoothDBusService::GattServerConnectPeripheralInternal(
-  const nsAString& aAppUuid, const nsAString& aAddress,
+  const nsAString& aAppUuid, const BluetoothAddress& aAddress,
   BluetoothReplyRunnable* aRunnable)
 {
 }
 
 void
 BluetoothDBusService::GattServerDisconnectPeripheralInternal(
-  const nsAString& aAppUuid, const nsAString& aAddress,
+  const nsAString& aAppUuid, const BluetoothAddress& aAddress,
   BluetoothReplyRunnable* aRunnable)
 {
 }
@@ -4606,7 +4606,7 @@ BluetoothDBusService::GattServerStopServiceInternal(
 void
 BluetoothDBusService::GattServerSendIndicationInternal(
   const nsAString& aAppUuid,
-  const nsAString& aAddress,
+  const BluetoothAddress& aAddress,
   const BluetoothAttributeHandle& aCharacteristicHandle,
   bool aConfirm,
   const nsTArray<uint8_t>& aValue,
@@ -4617,7 +4617,7 @@ BluetoothDBusService::GattServerSendIndicationInternal(
 void
 BluetoothDBusService::GattServerSendResponseInternal(
   const nsAString& aAppUuid,
-  const nsAString& aAddress,
+  const BluetoothAddress& aAddress,
   uint16_t aStatus,
   int32_t aRequestId,
   const BluetoothGattResponse& aRsp,
