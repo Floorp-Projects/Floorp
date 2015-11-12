@@ -188,8 +188,6 @@ ObjectWeakMap::add(JSContext* cx, JSObject* obj, JSObject* target)
         ReportOutOfMemory(cx);
         return false;
     }
-    if (IsInsideNursery(obj))
-        cx->runtime()->gc.storeBuffer.putGeneric(StoreBufferRef(&map, obj));
 
     return true;
 }
