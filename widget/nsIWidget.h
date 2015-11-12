@@ -879,9 +879,8 @@ class nsIWidget : public nsISupports {
 
     /**
      * Get the non-client area dimensions of the window.
-     * 
      */
-    NS_IMETHOD GetNonClientMargins(nsIntMargin &margins) = 0;
+    NS_IMETHOD GetNonClientMargins(mozilla::LayoutDeviceIntMargin &margins) = 0;
 
     /**
      * Sets the non-client area dimensions of the window. Pass -1 to restore
@@ -895,7 +894,7 @@ class nsIWidget : public nsISupports {
      *  dimensions between zero and size < system default.
      *
      */
-    NS_IMETHOD SetNonClientMargins(nsIntMargin &margins) = 0;
+    NS_IMETHOD SetNonClientMargins(mozilla::LayoutDeviceIntMargin &margins) = 0;
 
     /**
      * Get the client offset from the window origin.

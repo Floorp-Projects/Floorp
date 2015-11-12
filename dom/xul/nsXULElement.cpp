@@ -2007,7 +2007,7 @@ public:
     explicit MarginSetter(nsIWidget* aWidget) :
         mWidget(aWidget), mMargin(-1, -1, -1, -1)
     {}
-    MarginSetter(nsIWidget *aWidget, const nsIntMargin& aMargin) :
+    MarginSetter(nsIWidget *aWidget, const LayoutDeviceIntMargin& aMargin) :
         mWidget(aWidget), mMargin(aMargin)
     {}
 
@@ -2021,7 +2021,7 @@ public:
 
 private:
     nsCOMPtr<nsIWidget> mWidget;
-    nsIntMargin mMargin;
+    LayoutDeviceIntMargin mMargin;
 };
 
 void
@@ -2046,7 +2046,9 @@ nsXULElement::SetChromeMargins(const nsAttrValue* aValue)
         gotMargins = nsContentUtils::ParseIntMarginValue(tmp, margins);
     }
     if (gotMargins) {
-        nsContentUtils::AddScriptRunner(new MarginSetter(mainWidget, margins));
+        nsContentUtils::AddScriptRunner(
+            new MarginSetter(
+                mainWidget, LayoutDeviceIntMargin::FromUnknownMargin(margins)));
     }
 }
 
