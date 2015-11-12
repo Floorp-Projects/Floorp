@@ -37,9 +37,9 @@ addLoadEvent(function() {
   expectException(function() {
     ac.createPeriodicWave(new Float32Array(0), new Float32Array(0));
   }, DOMException.NOT_SUPPORTED_ERR);
-  expectException(function() {
+  expectNoException(function() {
     ac.createPeriodicWave(new Float32Array(4097), new Float32Array(4097));
-  }, DOMException.NOT_SUPPORTED_ERR);
+  });
 
   runTest();
 });

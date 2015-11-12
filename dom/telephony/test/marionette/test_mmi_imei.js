@@ -19,8 +19,12 @@ function testGettingIMEI() {
 }
 
 // Start test
-startTest(function() {
-  testGettingIMEI()
+startTestWithPermissions(['mobileconnection'], function() {
+  Promise.resolve()
+    .then(() => gSetRadioEnabledAll(false))
+    .then(() => testGettingIMEI())
+    .then(() => gSetRadioEnabledAll(true))
+    .then(() => testGettingIMEI())
     .catch(error => ok(false, "Promise reject: " + error))
     .then(finish);
 });

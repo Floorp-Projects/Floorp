@@ -166,12 +166,12 @@ struct ForOfPIC
      *
      *  Array.prototype's slot number for @@iterator (arrayProtoIteratorSlot_)
      *  Array.prototype's canonical value for @@iterator (canonicalIteratorFunc_)
-     *      To quickly retreive and ensure that the iterator constructor
+     *      To quickly retrieve and ensure that the iterator constructor
      *      stored in the slot has not changed.
      *
      *  ArrayIterator.prototype's slot number for 'next' (arrayIteratorProtoNextSlot_)
      *  ArrayIterator.prototype's canonical value for 'next' (canonicalNextFunc_)
-     *      To quickly retreive and ensure that the 'next' method for ArrayIterator
+     *      To quickly retrieve and ensure that the 'next' method for ArrayIterator
      *      objects has not changed.
      */
     class Chain : public BaseChain

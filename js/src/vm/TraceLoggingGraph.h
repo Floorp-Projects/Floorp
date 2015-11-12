@@ -28,7 +28,7 @@
  *            binary file.
  *  - treeFormat: The format used to encode the tree. By default "64,64,31,1,32".
  *                There are currently no other formats to save the tree.
- *     - 64,64,31,1,31 signifies how many bytes are used for the different
+ *     - 64,64,31,1,32 signifies how many bytes are used for the different
  *       parts of the tree.
  *       => 64 bits: Time Stamp Counter of start of event.
  *       => 64 bits: Time Stamp Counter of end of event.
