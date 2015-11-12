@@ -270,17 +270,21 @@ jit::EnsureHasScopeObjects(JSContext* cx, AbstractFramePtr fp)
 }
 
 bool
-jit::CheckFrequentBailouts(JSContext* cx, JSScript* script)
+jit::CheckFrequentBailouts(JSContext* cx, JSScript* script, BailoutKind bailoutKind)
 {
     if (script->hasIonScript()) {
         // Invalidate if this script keeps bailing out without invalidation. Next time
         // we compile this script LICM will be disabled.
         IonScript* ionScript = script->ionScript();
 
-        if (ionScript->numBailouts() >= js_JitOptions.frequentBailoutThreshold &&
-            !script->hadFrequentBailouts())
-        {
-            script->setHadFrequentBailouts();
+        if (ionScript->numBailouts() >= js_JitOptions.frequentBailoutThreshold) {
+            // If we bailout because of the first execution of a basic block,
+            // then we should record which basic block we are returning in,
+            // which should prevent this from happening again.  Also note that
+            // the first execution bailout can be related to an inlined script,
+            // so there is no need to penalize the caller.
+            if (bailoutKind != Bailout_FirstExecution && !script->hadFrequentBailouts())
+                script->setHadFrequentBailouts();
 
             JitSpew(JitSpew_IonInvalidate, "Invalidating due to too many bailouts");
 
