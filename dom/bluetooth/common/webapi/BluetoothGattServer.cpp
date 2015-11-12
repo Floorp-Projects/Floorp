@@ -319,6 +319,11 @@ BluetoothGattServer::Connect(const nsAString& aAddress, ErrorResult& aRv)
   RefPtr<Promise> promise = Promise::Create(global, aRv);
   NS_ENSURE_TRUE(!aRv.Failed(), nullptr);
 
+  BluetoothUuid appUuid;
+  BT_ENSURE_TRUE_REJECT(NS_SUCCEEDED(StringToUuid(mAppUuid, appUuid)),
+                        promise,
+                        NS_ERROR_DOM_OPERATION_ERR);
+
   BluetoothAddress address;
   BT_ENSURE_TRUE_REJECT(
     NS_SUCCEEDED(StringToAddress(aAddress, address)),
@@ -330,7 +335,7 @@ BluetoothGattServer::Connect(const nsAString& aAddress, ErrorResult& aRv)
   BT_ENSURE_TRUE_REJECT(bs, promise, NS_ERROR_NOT_AVAILABLE);
 
   bs->GattServerConnectPeripheralInternal(
-    mAppUuid, address, new BluetoothVoidReplyRunnable(nullptr, promise));
+    appUuid, address, new BluetoothVoidReplyRunnable(nullptr, promise));
 
   return promise.forget();
 }
@@ -347,6 +352,11 @@ BluetoothGattServer::Disconnect(const nsAString& aAddress, ErrorResult& aRv)
   RefPtr<Promise> promise = Promise::Create(global, aRv);
   NS_ENSURE_TRUE(!aRv.Failed(), nullptr);
 
+  BluetoothUuid appUuid;
+  BT_ENSURE_TRUE_REJECT(NS_SUCCEEDED(StringToUuid(mAppUuid, appUuid)),
+                        promise,
+                        NS_ERROR_DOM_OPERATION_ERR);
+
   BluetoothAddress address;
   BT_ENSURE_TRUE_REJECT(
     NS_SUCCEEDED(StringToAddress(aAddress, address)),
@@ -358,7 +368,7 @@ BluetoothGattServer::Disconnect(const nsAString& aAddress, ErrorResult& aRv)
   BT_ENSURE_TRUE_REJECT(bs, promise, NS_ERROR_NOT_AVAILABLE);
 
   bs->GattServerDisconnectPeripheralInternal(
-    mAppUuid, address, new BluetoothVoidReplyRunnable(nullptr, promise));
+    appUuid, address, new BluetoothVoidReplyRunnable(nullptr, promise));
 
   return promise.forget();
 }
@@ -384,8 +394,13 @@ public:
       return false;
     }
 
+    BluetoothUuid appUuid;
+    if (NS_FAILED(StringToUuid(mServer->mAppUuid, appUuid))) {
+      return false;
+    }
+
     bs->GattServerAddIncludedServiceInternal(
-      mServer->mAppUuid,
+      appUuid,
       mService->GetServiceHandle(),
       mIncludedService->GetServiceHandle(),
       GetReply());
@@ -420,10 +435,15 @@ public:
       return false;
     }
 
+    BluetoothUuid appUuid;
+    if (NS_FAILED(StringToUuid(mServer->mAppUuid, appUuid))) {
+      return false;
+    }
+
     BluetoothUuid uuid;
     mCharacteristic->GetUuid(uuid);
     bs->GattServerAddCharacteristicInternal(
-      mServer->mAppUuid,
+      appUuid,
       mService->GetServiceHandle(),
       uuid,
       mCharacteristic->GetPermissions(),
@@ -462,10 +482,15 @@ public:
       return false;
     }
 
+    BluetoothUuid appUuid;
+    if (NS_FAILED(StringToUuid(mServer->mAppUuid, appUuid))) {
+      return false;
+    }
+
     BluetoothUuid uuid;
     mDescriptor->GetUuid(uuid);
     bs->GattServerAddDescriptorInternal(
-      mServer->mAppUuid,
+      appUuid,
       mService->GetServiceHandle(),
       mCharacteristic->GetCharacteristicHandle(),
       uuid,
@@ -501,8 +526,13 @@ public:
       return false;
     }
 
+    BluetoothUuid appUuid;
+    if (NS_FAILED(StringToUuid(mServer->mAppUuid, appUuid))) {
+      return false;
+    }
+
     bs->GattServerStartServiceInternal(
-      mServer->mAppUuid,
+      appUuid,
       mService->GetServiceHandle(),
       GetReply());
 
@@ -628,8 +658,14 @@ private:
     BluetoothService* bs = BluetoothService::Get();
     BT_ENSURE_TRUE_REJECT_VOID(bs, mPromise, NS_ERROR_NOT_AVAILABLE);
 
+    BluetoothUuid appUuid;
+    BT_ENSURE_TRUE_REJECT_VOID(NS_SUCCEEDED(StringToUuid(mServer->mAppUuid,
+                                                         appUuid)),
+                               mPromise,
+                               NS_ERROR_DOM_OPERATION_ERR);
+
     bs->GattServerRemoveServiceInternal(
-      mServer->mAppUuid,
+      appUuid,
       mService->GetServiceHandle(),
       new CancelAddServiceTask(mServer, mService, mPromise));
   }
@@ -716,7 +752,12 @@ BluetoothGattServer::AddService(BluetoothGattService& aService,
 
   mPendingService = &aService;
 
-  bs->GattServerAddServiceInternal(mAppUuid,
+  BluetoothUuid appUuid;
+  if (NS_FAILED(StringToUuid(mAppUuid, appUuid))) {
+    return false;
+  }
+
+  bs->GattServerAddServiceInternal(appUuid,
                                    mPendingService->GetServiceId(),
                                    mPendingService->GetHandleCount(),
                                    new AddServiceTask(this,
@@ -784,8 +825,13 @@ BluetoothGattServer::RemoveService(BluetoothGattService& aService,
   BluetoothService* bs = BluetoothService::Get();
   BT_ENSURE_TRUE_REJECT(bs, promise, NS_ERROR_NOT_AVAILABLE);
 
+  BluetoothUuid appUuid;
+  BT_ENSURE_TRUE_REJECT(NS_SUCCEEDED(StringToUuid(mAppUuid, appUuid)),
+                        promise,
+                        NS_ERROR_DOM_OPERATION_ERR);
+
   bs->GattServerRemoveServiceInternal(
-    mAppUuid, aService.GetServiceHandle(), new RemoveServiceTask(this,
+    appUuid, aService.GetServiceHandle(), new RemoveServiceTask(this,
                                                                  &aService,
                                                                  promise));
 
@@ -810,6 +856,11 @@ BluetoothGattServer::NotifyCharacteristicChanged(
 
   BT_ENSURE_TRUE_REJECT(mValid, promise, NS_ERROR_NOT_AVAILABLE);
 
+  BluetoothUuid appUuid;
+  BT_ENSURE_TRUE_REJECT(NS_SUCCEEDED(StringToUuid(mAppUuid, appUuid)),
+                        promise,
+                        NS_ERROR_DOM_OPERATION_ERR);
+
   BluetoothAddress address;
   BT_ENSURE_TRUE_REJECT(
     NS_SUCCEEDED(StringToAddress(aAddress, address)),
@@ -826,7 +877,7 @@ BluetoothGattServer::NotifyCharacteristicChanged(
                         NS_ERROR_NOT_AVAILABLE);
 
   bs->GattServerSendIndicationInternal(
-    mAppUuid, address, aCharacteristic.GetCharacteristicHandle(), aConfirm,
+    appUuid, address, aCharacteristic.GetCharacteristicHandle(), aConfirm,
     aCharacteristic.GetValue(),
     new BluetoothVoidReplyRunnable(nullptr, promise));
 
@@ -847,6 +898,11 @@ BluetoothGattServer::SendResponse(const nsAString& aAddress,
 
   RefPtr<Promise> promise = Promise::Create(global, aRv);
   NS_ENSURE_TRUE(!aRv.Failed(), nullptr);
+
+  BluetoothUuid appUuid;
+  BT_ENSURE_TRUE_REJECT(NS_SUCCEEDED(StringToUuid(mAppUuid, appUuid)),
+                        promise,
+                        NS_ERROR_DOM_OPERATION_ERR);
 
   BluetoothAddress address;
   BT_ENSURE_TRUE_REJECT(
@@ -885,7 +941,7 @@ BluetoothGattServer::SendResponse(const nsAString& aAddress,
   BT_ENSURE_TRUE_REJECT(bs, promise, NS_ERROR_NOT_AVAILABLE);
 
   bs->GattServerSendResponseInternal(
-    mAppUuid,
+    appUuid,
     address,
     aStatus,
     aRequestId,
