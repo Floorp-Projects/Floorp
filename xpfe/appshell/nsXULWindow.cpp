@@ -1428,7 +1428,8 @@ void nsXULWindow::SyncAttributesToWidget()
   nsIntMargin margins;
   windowElement->GetAttribute(NS_LITERAL_STRING("chromemargin"), attr);
   if (nsContentUtils::ParseIntMarginValue(attr, margins)) {
-    mWindow->SetNonClientMargins(margins);
+    LayoutDeviceIntMargin tmp = LayoutDeviceIntMargin::FromUnknownMargin(margins);
+    mWindow->SetNonClientMargins(tmp);
   }
 
   // "windowtype" attribute

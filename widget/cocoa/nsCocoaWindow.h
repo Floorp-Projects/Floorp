@@ -340,7 +340,7 @@ public:
     virtual void SetWindowAnimationType(WindowAnimationType aType) override;
     virtual void SetDrawsTitle(bool aDrawTitle) override;
     virtual void SetUseBrightTitlebarForeground(bool aBrightForeground) override;
-    NS_IMETHOD SetNonClientMargins(nsIntMargin &margins) override;
+    NS_IMETHOD SetNonClientMargins(mozilla::LayoutDeviceIntMargin &margins) override;
     NS_IMETHOD SetWindowTitlebarColor(nscolor aColor, bool aActive) override;
     virtual void SetDrawsInTitlebar(bool aState) override;
     virtual void UpdateThemeGeometries(const nsTArray<ThemeGeometry>& aThemeGeometries) override;

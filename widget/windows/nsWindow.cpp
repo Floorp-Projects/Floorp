@@ -2018,17 +2018,17 @@ nsWindow::SetDrawsInTitlebar(bool aState)
 
   if (aState) {
     // top, right, bottom, left for nsIntMargin
-    nsIntMargin margins(0, -1, -1, -1);
+    LayoutDeviceIntMargin margins(0, -1, -1, -1);
     SetNonClientMargins(margins);
   }
   else {
-    nsIntMargin margins(-1, -1, -1, -1);
+    LayoutDeviceIntMargin margins(-1, -1, -1, -1);
     SetNonClientMargins(margins);
   }
 }
 
 NS_IMETHODIMP
-nsWindow::GetNonClientMargins(nsIntMargin &margins)
+nsWindow::GetNonClientMargins(LayoutDeviceIntMargin &margins)
 {
   nsWindow * window = GetTopLevelWindow(true);
   if (window && window != this) {
@@ -2303,7 +2303,7 @@ nsWindow::UpdateNonClientMargins(int32_t aSizeMode, bool aReflowWindow)
 }
 
 NS_IMETHODIMP
-nsWindow::SetNonClientMargins(nsIntMargin &margins)
+nsWindow::SetNonClientMargins(LayoutDeviceIntMargin &margins)
 {
   if (!mIsTopWidgetWindow ||
       mBorderStyle == eBorderStyle_none)

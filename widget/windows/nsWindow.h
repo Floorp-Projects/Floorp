@@ -195,8 +195,10 @@ public:
   virtual void            UpdateOpaqueRegion(const nsIntRegion& aOpaqueRegion);
 #endif // MOZ_XUL
   virtual nsIMEUpdatePreference GetIMEUpdatePreference();
-  NS_IMETHOD              GetNonClientMargins(nsIntMargin &margins);
-  NS_IMETHOD              SetNonClientMargins(nsIntMargin &margins);
+  NS_IMETHOD              GetNonClientMargins(
+                            mozilla::LayoutDeviceIntMargin &margins) override;
+  NS_IMETHOD              SetNonClientMargins(
+                            mozilla::LayoutDeviceIntMargin &margins) override;
   void                    SetDrawsInTitlebar(bool aState);
   already_AddRefed<mozilla::gfx::DrawTarget> StartRemoteDrawing() override;
   virtual void            EndRemoteDrawing() override;
@@ -517,9 +519,9 @@ protected:
   // Pre-calculated outward offset applied to default frames
   mozilla::LayoutDeviceIntMargin mNonClientOffset;
   // Margins set by the owner
-  nsIntMargin           mNonClientMargins;
+  mozilla::LayoutDeviceIntMargin mNonClientMargins;
   // Margins we'd like to set once chrome is reshown:
-  nsIntMargin           mFutureMarginsOnceChromeShows;
+  mozilla::LayoutDeviceIntMargin mFutureMarginsOnceChromeShows;
   // Indicates we need to apply margins once toggling chrome into showing:
   bool                  mFutureMarginsToUse;
 
