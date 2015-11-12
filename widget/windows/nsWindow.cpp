@@ -1967,10 +1967,10 @@ NS_METHOD nsWindow::GetScreenBoundsUntyped(nsIntRect &aRect)
   return NS_OK;
 }
 
-NS_METHOD nsWindow::GetRestoredBoundsUntyped(nsIntRect &aRect)
+NS_METHOD nsWindow::GetRestoredBounds(LayoutDeviceIntRect &aRect)
 {
   if (SizeMode() == nsSizeMode_Normal) {
-    return GetScreenBoundsUntyped(aRect);
+    return GetScreenBounds(aRect);
   }
   if (!mWnd) {
     return NS_ERROR_FAILURE;

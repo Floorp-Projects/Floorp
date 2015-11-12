@@ -843,19 +843,10 @@ class nsIWidget : public nsISupports {
      * This method will always succeed if the current size mode is
      * nsSizeMode_Normal.
      *
-     * The untyped version exists temporarily to ease conversion to typed
-     * coordinates.
-     *
      * @param aRect   On return it holds the  x, y, width and height of
      *                this widget.
      */
-    NS_IMETHOD GetRestoredBounds(mozilla::LayoutDeviceIntRect &aRect) {
-      nsIntRect tmp;
-      nsresult rv = GetRestoredBoundsUntyped(tmp);
-      aRect = mozilla::LayoutDeviceIntRect::FromUnknownRect(tmp);
-      return rv;
-    }
-    NS_IMETHOD GetRestoredBoundsUntyped(nsIntRect &aRect) = 0;
+    NS_IMETHOD GetRestoredBounds(mozilla::LayoutDeviceIntRect &aRect) = 0;
 
     /**
      * Get this widget's client area bounds, if the window has a 3D border
