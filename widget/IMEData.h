@@ -308,7 +308,9 @@ struct InputContextAction final
     // The cause is user's keyboard operation.
     CAUSE_KEY,
     // The cause is user's mouse operation.
-    CAUSE_MOUSE
+    CAUSE_MOUSE,
+    // The cause is user's touch operation (implies mouse)
+    CAUSE_TOUCH
   };
   Cause mCause;
 
