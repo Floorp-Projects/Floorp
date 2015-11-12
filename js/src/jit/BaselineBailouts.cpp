@@ -795,6 +795,16 @@ InitFromBailout(JSContext* cx, HandleScript caller, jsbytecode* callerPC,
     jsbytecode* pc = catchingException ? excInfo->resumePC() : script->offsetToPC(iter.pcOffset());
     bool resumeAfter = catchingException ? false : iter.resumeAfter();
 
+    // When pgo is enabled, increment the counter of the block in which we
+    // resume, as Ion does not keep track of the code coverage.
+    //
+    // We need to do that when pgo is enabled, as after a specific number of
+    // FirstExecution bailouts, we invalidate and recompile the script with
+    // IonMonkey. Failing to increment the counter of the current basic block
+    // might lead to repeated bailouts and invalidations.
+    if (!js_JitOptions.disablePgo && script->hasScriptCounts())
+        script->incHitCount(pc);
+
     JSOp op = JSOp(*pc);
 
     // Fixup inlined JSOP_FUNCALL, JSOP_FUNAPPLY, and accessors on the caller side.
