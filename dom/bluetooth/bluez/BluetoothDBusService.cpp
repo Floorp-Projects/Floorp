@@ -4044,6 +4044,27 @@ BluetoothDBusService::SendMetaData(const nsAString& aTitle,
                         aMediaNumber, aTotalMediaCount, aDuration);
 }
 
+static ControlPlayStatus
+PlayStatusStringToControlPlayStatus(const nsAString& aPlayStatus)
+{
+  ControlPlayStatus playStatus = ControlPlayStatus::PLAYSTATUS_UNKNOWN;
+  if (aPlayStatus.EqualsLiteral("STOPPED")) {
+    playStatus = ControlPlayStatus::PLAYSTATUS_STOPPED;
+  } else if (aPlayStatus.EqualsLiteral("PLAYING")) {
+    playStatus = ControlPlayStatus::PLAYSTATUS_PLAYING;
+  } else if (aPlayStatus.EqualsLiteral("PAUSED")) {
+    playStatus = ControlPlayStatus::PLAYSTATUS_PAUSED;
+  } else if (aPlayStatus.EqualsLiteral("FWD_SEEK")) {
+    playStatus = ControlPlayStatus::PLAYSTATUS_FWD_SEEK;
+  } else if (aPlayStatus.EqualsLiteral("REV_SEEK")) {
+    playStatus = ControlPlayStatus::PLAYSTATUS_REV_SEEK;
+  } else if (aPlayStatus.EqualsLiteral("ERROR")) {
+    playStatus = ControlPlayStatus::PLAYSTATUS_ERROR;
+  }
+
+  return playStatus;
+}
+
 class SendPlayStatusTask : public Task
 {
 public:
@@ -4098,7 +4119,7 @@ private:
 void
 BluetoothDBusService::SendPlayStatus(int64_t aDuration,
                                      int64_t aPosition,
-                                     ControlPlayStatus aPlayStatus,
+                                     const nsAString& aPlayStatus,
                                      BluetoothReplyRunnable* aRunnable)
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -4109,7 +4130,9 @@ BluetoothDBusService::SendPlayStatus(int64_t aDuration,
     return;
   }
 
-  if (aPlayStatus == ControlPlayStatus::PLAYSTATUS_UNKNOWN) {
+  ControlPlayStatus playStatus =
+    PlayStatusStringToControlPlayStatus(aPlayStatus);
+  if (playStatus == ControlPlayStatus::PLAYSTATUS_UNKNOWN) {
     DispatchBluetoothReply(aRunnable, BluetoothValue(),
                            NS_LITERAL_STRING("Invalid play status"));
     return;
@@ -4132,9 +4155,9 @@ BluetoothDBusService::SendPlayStatus(int64_t aDuration,
     return;
   }
 
-  if (aPlayStatus != avrcp->GetPlayStatus()) {
+  if (playStatus != avrcp->GetPlayStatus()) {
     UpdateNotification(ControlEventId::EVENT_PLAYBACK_STATUS_CHANGED,
-                       aPlayStatus);
+                       playStatus);
   } else if (aPosition != avrcp->GetPosition()) {
     UpdateNotification(ControlEventId::EVENT_PLAYBACK_POS_CHANGED, aPosition);
   }
@@ -4145,11 +4168,11 @@ BluetoothDBusService::SendPlayStatus(int64_t aDuration,
   Task* task = new SendPlayStatusTask(deviceAddress,
                                       aDuration,
                                       aPosition,
-                                      aPlayStatus,
+                                      playStatus,
                                       aRunnable);
   DispatchToDBusThread(task);
 
-  avrcp->UpdatePlayStatus(aDuration, aPosition, aPlayStatus);
+  avrcp->UpdatePlayStatus(aDuration, aPosition, playStatus);
 }
 
 static void

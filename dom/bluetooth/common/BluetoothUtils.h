@@ -44,14 +44,6 @@ nsresult
 StringToPinCode(const nsAString& aString, BluetoothPinCode& aPinCode);
 
 //
-// Play status/string conversion
-//
-
-nsresult
-StringToControlPlayStatus(const nsAString& aString,
-                          ControlPlayStatus& aPlayStatus);
-
-//
 // Property type/string conversion
 //
 
