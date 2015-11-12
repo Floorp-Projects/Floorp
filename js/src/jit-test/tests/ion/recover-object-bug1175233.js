@@ -1,4 +1,4 @@
-// |jit-test| test-join=--no-unboxed-objects
+// |jit-test| test-join=--no-unboxed-objects; --ion-pgo=on
 //
 // Unboxed object optimization might not trigger in all cases, thus we ensure
 // that Scalar Replacement optimization is working well independently of the
@@ -28,8 +28,11 @@ function f(j) {
       i: i,
       v: i + i
     };
-    assertRecoveredOnBailout(obj, false); // :TODO: Fixed by Bug 1165348
-    assertRecoveredOnBailout(obj.v, false); // :TODO: Fixed by Bug 1165348
+    // These can only be recovered on bailout iff either we have type
+    // information for the property access in the branch, or the branch is
+    // removed before scalar replacement.
+    assertRecoveredOnBailout(obj, true);
+    assertRecoveredOnBailout(obj.v, true);
     if (uceFault(j) || uceFault(j)) {
         // MObjectState::recover should neither fail,
         // nor coerce its result to an int32.

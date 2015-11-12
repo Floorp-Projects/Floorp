@@ -117,6 +117,9 @@ enum BailoutKind
     // Derived constructors must return object or undefined
     Bailout_BadDerivedConstructorReturn,
 
+    // We hit this code for the first time.
+    Bailout_FirstExecution,
+
     // END Normal bailouts
 
     // Bailouts caused by invalid assumptions based on Baseline code.
@@ -218,6 +221,8 @@ BailoutKindString(BailoutKind kind)
         return "Bailout_UninitializedThis";
       case Bailout_BadDerivedConstructorReturn:
         return "Bailout_BadDerivedConstructorReturn";
+      case Bailout_FirstExecution:
+        return "Bailout_FirstExecution";
 
       // Bailouts caused by invalid assumptions.
       case Bailout_OverflowInvalidate:
