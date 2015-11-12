@@ -338,7 +338,7 @@ class FunctionBox : public ObjectBox, public SharedContext
                 ParseContext<ParseHandler>* pc, Directives directives, bool extraWarnings,
                 GeneratorKind generatorKind);
 
-    bool initStaticScope(StaticScope* enclosingStaticScope);
+    bool initStaticScope(Handle<StaticScope*> enclosingScope);
 
     ObjectBox* toObjectBox() override { return this; }
     JSFunction* function() const { return &object->as<JSFunction>(); }
