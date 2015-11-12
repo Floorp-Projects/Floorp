@@ -1399,19 +1399,26 @@ private:
 void
 BluetoothServiceBluedroid::PinReplyInternal(
   const BluetoothAddress& aDeviceAddress, bool aAccept,
-  const BluetoothPinCode& aPinCode, BluetoothReplyRunnable* aRunnable)
+  const nsAString& aPinCode, BluetoothReplyRunnable* aRunnable)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
   ENSURE_BLUETOOTH_IS_READY_VOID(aRunnable);
 
-  sBtInterface->PinReply(aDeviceAddress, aAccept, aPinCode,
+  BluetoothPinCode pinCode;
+  auto rv = StringToPinCode(aPinCode, pinCode);
+  if (NS_FAILED(rv)) {
+    DispatchReplyError(aRunnable, STATUS_PARM_INVALID);
+    return;
+  }
+
+  sBtInterface->PinReply(aDeviceAddress, aAccept, pinCode,
                          new PinReplyResultHandler(aRunnable));
 }
 
 void
 BluetoothServiceBluedroid::SetPinCodeInternal(
-  const BluetoothAddress& aDeviceAddress, const BluetoothPinCode& aPinCode,
+  const BluetoothAddress& aDeviceAddress, const nsAString& aPinCode,
   BluetoothReplyRunnable* aRunnable)
 {
   // Legacy method used by BlueZ only.

@@ -3247,7 +3247,7 @@ class SetPinCodeTask : public Task
 {
 public:
   SetPinCodeTask(const BluetoothAddress& aDeviceAddress,
-                 const BluetoothPinCode& aPinCode,
+                 const nsACString& aPinCode,
                  BluetoothReplyRunnable* aRunnable)
     : mDeviceAddress(aDeviceAddress)
     , mPinCode(aPinCode)
@@ -3281,19 +3281,7 @@ public:
       return;
     }
 
-    nsAutoString pinCodeStr;
-    if (NS_FAILED(PinCodeToString(mPinCode, pinCodeStr))) {
-      BT_WARNING("%s: Cannot convert pin code to string.", __FUNCTION__);
-      dbus_message_unref(msg);
-      dbus_message_unref(reply);
-      errorStr.AssignLiteral("Cannot convert pin code to string.");
-      DispatchBluetoothReply(mRunnable, v, errorStr);
-      return;
-    }
-
-    auto utf8PinCodeStr = NS_ConvertUTF16toUTF8(pinCodeStr);
-
-    const char* pinCode = utf8PinCodeStr.get();
+    const char* pinCode = mPinCode.get();
 
     if (!dbus_message_append_args(reply,
                                   DBUS_TYPE_STRING, &pinCode,
@@ -3314,14 +3302,14 @@ public:
 
 private:
   const BluetoothAddress mDeviceAddress;
-  const BluetoothPinCode mPinCode;
+  const nsCString mPinCode;
   RefPtr<BluetoothReplyRunnable> mRunnable;
 };
 
 void
 BluetoothDBusService::PinReplyInternal(
   const BluetoothAddress& aDeviceAddress, bool aAccept,
-  const BluetoothPinCode& aPinCode, BluetoothReplyRunnable* aRunnable)
+  const nsAString& aPinCode, BluetoothReplyRunnable* aRunnable)
 {
   // Legacy interface used by Bluedroid only.
 }
@@ -3336,10 +3324,12 @@ BluetoothDBusService::SspReplyInternal(
 
 void
 BluetoothDBusService::SetPinCodeInternal(const BluetoothAddress& aDeviceAddress,
-                                         const BluetoothPinCode& aPinCode,
+                                         const nsAString& aPinCode,
                                          BluetoothReplyRunnable* aRunnable)
 {
-  Task* task = new SetPinCodeTask(aDeviceAddress, aPinCode, aRunnable);
+  Task* task = new SetPinCodeTask(aDeviceAddress,
+                                  NS_ConvertUTF16toUTF8(aPinCode),
+                                  aRunnable);
   DispatchToDBusThread(task);
 }
 
