@@ -44,19 +44,172 @@ CONTENTS = {
         ManifestComponent('app/components', '{foo-id}', 'foo.js'),
         ManifestContent('addon0/chrome', 'content', 'foo/bar/'),
     ],
-    'chrome/f/oo/bar/baz': GeneratedFile('foobarbaz'),
-    'chrome/f/oo/baz': GeneratedFile('foobaz'),
-    'chrome/f/oo/qux': GeneratedFile('fooqux'),
-    'components/foo.so': GeneratedFile('foo.so'),
-    'components/foo.xpt': foo_xpt,
-    'components/bar.xpt': bar_xpt,
-    'foo': GeneratedFile('foo'),
-    'app/chrome/foo/foo': GeneratedFile('appfoo'),
-    'app/components/foo.js': GeneratedFile('foo.js'),
-    'addon0/chrome/foo/bar/baz': GeneratedFile('foobarbaz'),
-    'addon0/components/foo.xpt': foo2_xpt,
-    'addon0/components/bar.xpt': bar_xpt,
+    'files': {
+        'chrome/f/oo/bar/baz': GeneratedFile('foobarbaz'),
+        'chrome/f/oo/baz': GeneratedFile('foobaz'),
+        'chrome/f/oo/qux': GeneratedFile('fooqux'),
+        'components/foo.so': GeneratedFile('foo.so'),
+        'components/foo.xpt': foo_xpt,
+        'components/bar.xpt': bar_xpt,
+        'foo': GeneratedFile('foo'),
+        'app/chrome/foo/foo': GeneratedFile('appfoo'),
+        'app/components/foo.js': GeneratedFile('foo.js'),
+        'addon0/chrome/foo/bar/baz': GeneratedFile('foobarbaz'),
+        'addon0/components/foo.xpt': foo2_xpt,
+        'addon0/components/bar.xpt': bar_xpt,
+    },
 }
+
+FILES = CONTENTS['files']
+
+RESULT_FLAT = {
+    'chrome.manifest': [
+        'manifest chrome/chrome.manifest',
+        'manifest components/components.manifest',
+    ],
+    'chrome/chrome.manifest': [
+        'manifest f/f.manifest',
+    ],
+    'chrome/f/f.manifest': [
+        'content oo oo/',
+        'content bar oo/bar/',
+        'resource foo resource://bar/',
+    ],
+    'chrome/f/oo/bar/baz': FILES['chrome/f/oo/bar/baz'],
+    'chrome/f/oo/baz': FILES['chrome/f/oo/baz'],
+    'chrome/f/oo/qux': FILES['chrome/f/oo/qux'],
+    'components/components.manifest': [
+        'binary-component foo.so',
+        'interfaces interfaces.xpt',
+    ],
+    'components/foo.so': FILES['components/foo.so'],
+    'components/interfaces.xpt': {
+        'foo': read_interfaces(foo_xpt.open())['foo'],
+        'bar': read_interfaces(bar_xpt.open())['bar'],
+    },
+    'foo': FILES['foo'],
+    'app/chrome.manifest': [
+        'manifest chrome/chrome.manifest',
+        'manifest components/components.manifest',
+    ],
+    'app/chrome/chrome.manifest': [
+        'content content foo/',
+    ],
+    'app/chrome/foo/foo': FILES['app/chrome/foo/foo'],
+    'app/components/components.manifest': [
+        'component {foo-id} foo.js',
+    ],
+    'app/components/foo.js': FILES['app/components/foo.js'],
+    'addon0/chrome.manifest': [
+        'manifest chrome/chrome.manifest',
+        'manifest components/components.manifest',
+    ],
+    'addon0/chrome/chrome.manifest': [
+        'content content foo/bar/',
+    ],
+    'addon0/chrome/foo/bar/baz': FILES['addon0/chrome/foo/bar/baz'],
+    'addon0/components/components.manifest': [
+        'interfaces interfaces.xpt',
+    ],
+    'addon0/components/interfaces.xpt': {
+        'foo': read_interfaces(foo2_xpt.open())['foo'],
+        'bar': read_interfaces(bar_xpt.open())['bar'],
+    },
+}
+
+RESULT_JAR = {
+    p: RESULT_FLAT[p]
+    for p in (
+        'chrome.manifest',
+        'chrome/chrome.manifest',
+        'components/components.manifest',
+        'components/foo.so',
+        'components/interfaces.xpt',
+        'foo',
+        'app/chrome.manifest',
+        'app/components/components.manifest',
+        'app/components/foo.js',
+        'addon0/chrome.manifest',
+        'addon0/components/components.manifest',
+        'addon0/components/interfaces.xpt',
+    )
+}
+
+RESULT_JAR.update({
+    'chrome/f/f.manifest': [
+        'content oo jar:oo.jar!/',
+        'content bar jar:oo.jar!/bar/',
+        'resource foo resource://bar/',
+    ],
+    'chrome/f/oo.jar': {
+        'bar/baz': FILES['chrome/f/oo/bar/baz'],
+        'baz': FILES['chrome/f/oo/baz'],
+        'qux': FILES['chrome/f/oo/qux'],
+    },
+    'app/chrome/chrome.manifest': [
+        'content content jar:foo.jar!/',
+    ],
+    'app/chrome/foo.jar': {
+        'foo': FILES['app/chrome/foo/foo'],
+    },
+    'addon0/chrome/chrome.manifest': [
+        'content content jar:foo.jar!/bar/',
+    ],
+    'addon0/chrome/foo.jar': {
+        'bar/baz': FILES['addon0/chrome/foo/bar/baz'],
+    },
+})
+
+RESULT_OMNIJAR = {
+    p: RESULT_FLAT[p]
+    for p in (
+        'components/foo.so',
+        'foo',
+    )
+}
+
+RESULT_OMNIJAR.update({
+    p: RESULT_JAR[p]
+    for p in RESULT_JAR
+    if p.startswith('addon0/')
+})
+
+RESULT_OMNIJAR.update({
+    'omni.foo': {
+        'components/components.manifest': [
+            'interfaces interfaces.xpt',
+        ],
+    },
+    'chrome.manifest': [
+        'manifest components/components.manifest',
+    ],
+    'components/components.manifest': [
+        'binary-component foo.so',
+    ],
+    'app/omni.foo': {
+        p: RESULT_FLAT['app/' + p]
+        for p in (
+            'chrome.manifest',
+            'chrome/chrome.manifest',
+            'chrome/foo/foo',
+            'components/components.manifest',
+            'components/foo.js',
+        )
+    },
+})
+
+RESULT_OMNIJAR['omni.foo'].update({
+    p: RESULT_FLAT[p]
+    for p in (
+        'chrome.manifest',
+        'chrome/chrome.manifest',
+        'chrome/f/f.manifest',
+        'chrome/f/oo/bar/baz',
+        'chrome/f/oo/baz',
+        'chrome/f/oo/qux',
+        'components/interfaces.xpt',
+    )
+})
 
 
 class MockDest(MockDest):
@@ -71,9 +224,7 @@ def fill_formatter(formatter, contents):
     for manifest in contents['manifests']:
         formatter.add_manifest(manifest)
 
-    for k, v in contents.iteritems():
-        if k in ('bases', 'manifests'):
-            continue
+    for k, v in contents['files'].iteritems():
         if k.endswith('.xpt'):
             formatter.add_interfaces(k, v)
         else:
@@ -118,205 +269,21 @@ class TestFormatters(unittest.TestCase):
         formatter = FlatFormatter(registry)
 
         fill_formatter(formatter, CONTENTS)
-
-        RESULT = {
-            'chrome.manifest': [
-                'manifest chrome/chrome.manifest',
-                'manifest components/components.manifest',
-            ],
-            'chrome/chrome.manifest': [
-                'manifest f/f.manifest',
-            ],
-            'chrome/f/f.manifest': [
-                'content oo oo/',
-                'content bar oo/bar/',
-                'resource foo resource://bar/',
-            ],
-            'chrome/f/oo/bar/baz': CONTENTS['chrome/f/oo/bar/baz'],
-            'chrome/f/oo/baz': CONTENTS['chrome/f/oo/baz'],
-            'chrome/f/oo/qux': CONTENTS['chrome/f/oo/qux'],
-            'components/components.manifest': [
-                'binary-component foo.so',
-                'interfaces interfaces.xpt',
-            ],
-            'components/foo.so': CONTENTS['components/foo.so'],
-            'components/interfaces.xpt': {
-                'foo': read_interfaces(foo_xpt.open())['foo'],
-                'bar': read_interfaces(bar_xpt.open())['bar'],
-            },
-            'foo': CONTENTS['foo'],
-            'app/chrome.manifest': [
-                'manifest chrome/chrome.manifest',
-                'manifest components/components.manifest',
-            ],
-            'app/chrome/chrome.manifest': [
-                'content content foo/',
-            ],
-            'app/chrome/foo/foo': CONTENTS['app/chrome/foo/foo'],
-            'app/components/components.manifest': [
-                'component {foo-id} foo.js',
-            ],
-            'app/components/foo.js': CONTENTS['app/components/foo.js'],
-            'addon0/chrome.manifest': [
-                'manifest chrome/chrome.manifest',
-                'manifest components/components.manifest',
-            ],
-            'addon0/chrome/chrome.manifest': [
-                'content content foo/bar/',
-            ],
-            'addon0/chrome/foo/bar/baz': CONTENTS['addon0/chrome/foo/bar/baz'],
-            'addon0/components/components.manifest': [
-                'interfaces interfaces.xpt',
-            ],
-            'addon0/components/interfaces.xpt': {
-                'foo': read_interfaces(foo2_xpt.open())['foo'],
-                'bar': read_interfaces(bar_xpt.open())['bar'],
-            },
-        }
-
-        self.assertEqual(get_contents(registry), RESULT)
+        self.assertEqual(get_contents(registry), RESULT_FLAT)
 
     def test_jar_formatter(self):
         registry = FileRegistry()
         formatter = JarFormatter(registry)
 
         fill_formatter(formatter, CONTENTS)
-
-        RESULT = {
-            'chrome.manifest': [
-                'manifest chrome/chrome.manifest',
-                'manifest components/components.manifest',
-            ],
-            'chrome/chrome.manifest': [
-                'manifest f/f.manifest',
-            ],
-            'chrome/f/f.manifest': [
-                'content oo jar:oo.jar!/',
-                'content bar jar:oo.jar!/bar/',
-                'resource foo resource://bar/',
-            ],
-            'chrome/f/oo.jar': {
-                'bar/baz': CONTENTS['chrome/f/oo/bar/baz'],
-                'baz': CONTENTS['chrome/f/oo/baz'],
-                'qux': CONTENTS['chrome/f/oo/qux'],
-            },
-            'components/components.manifest': [
-                'binary-component foo.so',
-                'interfaces interfaces.xpt',
-            ],
-            'components/foo.so': CONTENTS['components/foo.so'],
-            'components/interfaces.xpt': {
-                'foo': read_interfaces(foo_xpt.open())['foo'],
-                'bar': read_interfaces(bar_xpt.open())['bar'],
-            },
-            'foo': CONTENTS['foo'],
-            'app/chrome.manifest': [
-                'manifest chrome/chrome.manifest',
-                'manifest components/components.manifest',
-            ],
-            'app/chrome/chrome.manifest': [
-                'content content jar:foo.jar!/',
-            ],
-            'app/chrome/foo.jar': {
-                'foo': CONTENTS['app/chrome/foo/foo'],
-            },
-            'app/components/components.manifest': [
-                'component {foo-id} foo.js',
-            ],
-            'app/components/foo.js': CONTENTS['app/components/foo.js'],
-            'addon0/chrome.manifest': [
-                'manifest chrome/chrome.manifest',
-                'manifest components/components.manifest',
-            ],
-            'addon0/chrome/chrome.manifest': [
-                'content content jar:foo.jar!/bar/',
-            ],
-            'addon0/chrome/foo.jar': {
-                'bar/baz': CONTENTS['addon0/chrome/foo/bar/baz'],
-            },
-            'addon0/components/components.manifest': [
-                'interfaces interfaces.xpt',
-            ],
-            'addon0/components/interfaces.xpt': {
-                'foo': read_interfaces(foo2_xpt.open())['foo'],
-                'bar': read_interfaces(bar_xpt.open())['bar'],
-            },
-        }
-
-        self.assertEqual(get_contents(registry), RESULT)
+        self.assertEqual(get_contents(registry), RESULT_JAR)
 
     def test_omnijar_formatter(self):
         registry = FileRegistry()
         formatter = OmniJarFormatter(registry, 'omni.foo')
 
         fill_formatter(formatter, CONTENTS)
-
-        RESULT = {
-            'omni.foo': {
-                'chrome.manifest': [
-                    'manifest chrome/chrome.manifest',
-                    'manifest components/components.manifest',
-                ],
-                'chrome/chrome.manifest': [
-                    'manifest f/f.manifest',
-                ],
-                'chrome/f/f.manifest': [
-                    'content oo oo/',
-                    'content bar oo/bar/',
-                    'resource foo resource://bar/',
-                ],
-                'chrome/f/oo/bar/baz': CONTENTS['chrome/f/oo/bar/baz'],
-                'chrome/f/oo/baz': CONTENTS['chrome/f/oo/baz'],
-                'chrome/f/oo/qux': CONTENTS['chrome/f/oo/qux'],
-                'components/components.manifest': [
-                    'interfaces interfaces.xpt',
-                ],
-                'components/interfaces.xpt': {
-                    'foo': read_interfaces(foo_xpt.open())['foo'],
-                    'bar': read_interfaces(bar_xpt.open())['bar'],
-                },
-            },
-            'chrome.manifest': [
-                'manifest components/components.manifest',
-            ],
-            'components/components.manifest': [
-                'binary-component foo.so',
-            ],
-            'components/foo.so': CONTENTS['components/foo.so'],
-            'foo': CONTENTS['foo'],
-            'app/omni.foo': {
-                'chrome.manifest': [
-                    'manifest chrome/chrome.manifest',
-                    'manifest components/components.manifest',
-                ],
-                'chrome/chrome.manifest': [
-                    'content content foo/',
-                ],
-                'chrome/foo/foo': CONTENTS['app/chrome/foo/foo'],
-                'components/components.manifest': [
-                    'component {foo-id} foo.js',
-                ],
-                'components/foo.js': CONTENTS['app/components/foo.js'],
-            },
-            'addon0/chrome.manifest': [
-                'manifest chrome/chrome.manifest',
-                'manifest components/components.manifest',
-            ],
-            'addon0/chrome/chrome.manifest': [
-                'content content jar:foo.jar!/bar/',
-            ],
-            'addon0/chrome/foo.jar': {
-                'bar/baz': CONTENTS['addon0/chrome/foo/bar/baz'],
-            },
-            'addon0/components/components.manifest': [
-                'interfaces interfaces.xpt',
-            ],
-            'addon0/components/interfaces.xpt': {
-                'foo': read_interfaces(foo2_xpt.open())['foo'],
-                'bar': read_interfaces(bar_xpt.open())['bar'],
-            },
-        }
-        self.assertEqual(get_contents(registry), RESULT)
+        self.assertEqual(get_contents(registry), RESULT_OMNIJAR)
 
     def test_omnijar_is_resource(self):
         registry = FileRegistry()
