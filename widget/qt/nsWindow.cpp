@@ -1506,9 +1506,8 @@ nsWindow::GetScreenBoundsUntyped(nsIntRect &aRect)
     if (mIsTopLevel) {
         QPoint pos = mWidget->position();
         aRect.MoveTo(pos.x(), pos.y());
-    }
-    else {
-        aRect.MoveTo(WidgetToScreenOffsetUntyped());
+    } else {
+        aRect.MoveTo(WidgetToScreenOffset().ToUnknownPoint());
     }
     LOG(("GetScreenBounds %d %d | %d %d | %d %d\n",
          aRect.x, aRect.y,
