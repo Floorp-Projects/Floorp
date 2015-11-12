@@ -1015,7 +1015,7 @@ TelephonyService.prototype = {
 
     aCallback.notifyDialMMI(mmiServiceCode);
 
-    if (mmiServiceCode !== RIL.MMI_KS_SC_IMEI && !this._isRadioOn(aClientId)) {
+    if (mmiServiceCode !== MMI_KS_SC_IMEI && !this._isRadioOn(aClientId)) {
       aCallback.notifyDialMMIError(DIAL_ERROR_RADIO_NOT_AVAILABLE);
       return;
     }

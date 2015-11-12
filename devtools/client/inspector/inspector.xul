@@ -154,11 +154,12 @@
           class="breadcrumbs-widget-container"
           flex="1" orient="horizontal"
           clicktoscroll="true"/>
+        <box id="inspector-searchlabel" />
         <textbox id="inspector-searchbox"
           type="search"
           timeout="50"
           class="devtools-searchinput"
-          placeholder="&inspectorSearchHTML.label2;"/>
+          placeholder="&inspectorSearchHTML.label3;"/>
         <toolbarbutton id="inspector-pane-toggle"
           class="devtools-toolbarbutton"
           tabindex="0" />

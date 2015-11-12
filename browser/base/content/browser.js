@@ -2836,8 +2836,7 @@ var BrowserOnClick = {
                                    .getService(Ci.nsIWeakCryptoOverride);
         weakCryptoOverride.addWeakCryptoOverride(
           msg.data.location.hostname,
-          PrivateBrowsingUtils.isBrowserPrivate(gBrowser.selectedBrowser),
-          true /* temporary */);
+          PrivateBrowsingUtils.isBrowserPrivate(gBrowser.selectedBrowser));
       break;
     }
   },
@@ -7140,6 +7139,7 @@ var gIdentityHandler = {
     if (shouldHidePopup) {
       this._identityPopup.hidePopup();
     }
+    this.showWeakCryptoInfoBar();
 
     // NOTE: We do NOT update the identity popup (the control center) when
     // we receive a new security state on the existing page (i.e. from a
@@ -7286,6 +7286,55 @@ var gIdentityHandler = {
     this._identityIconLabel.parentNode.style.direction = icon_labels_dir;
     // Hide completely if the organization label is empty
     this._identityIconLabel.parentNode.collapsed = icon_label ? false : true;
+  },
+
+  /**
+   * Show the weak crypto notification bar.
+   */
+  showWeakCryptoInfoBar() {
+    if (!this._uriHasHost || !this._isBroken || !this._sslStatus.cipherName ||
+        this._sslStatus.cipherName.indexOf("_RC4_") < 0) {
+      return;
+    }
+
+    let notificationBox = gBrowser.getNotificationBox();
+    let notification = notificationBox.getNotificationWithValue("weak-crypto");
+    if (notification) {
+      return;
+    }
+
+    let brandBundle = document.getElementById("bundle_brand");
+    let brandShortName = brandBundle.getString("brandShortName");
+    let message = gNavigatorBundle.getFormattedString("weakCryptoOverriding.message",
+                                                      [brandShortName]);
+
+    let host = this._uri.host;
+    let port = 443;
+    try {
+      if (this._uri.port > 0) {
+        port = this._uri.port;
+      }
+    } catch (e) {}
+
+    let buttons = [{
+      label: gNavigatorBundle.getString("revokeOverride.label"),
+      accessKey: gNavigatorBundle.getString("revokeOverride.accesskey"),
+      callback: function (aNotification, aButton) {
+        try {
+          let weakCryptoOverride = Cc["@mozilla.org/security/weakcryptooverride;1"]
+                                     .getService(Ci.nsIWeakCryptoOverride);
+          weakCryptoOverride.removeWeakCryptoOverride(host, port,
+            PrivateBrowsingUtils.isBrowserPrivate(gBrowser.selectedBrowser));
+          BrowserReloadWithFlags(nsIWebNavigation.LOAD_FLAGS_BYPASS_CACHE);
+        } catch (e) {
+          Cu.reportError(e);
+        }
+      }
+    }];
+
+    const priority = notificationBox.PRIORITY_WARNING_MEDIUM;
+    notificationBox.appendNotification(message, "weak-crypto", null,
+                                       priority, buttons);
   },
 
   /**
