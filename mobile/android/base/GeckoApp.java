@@ -170,6 +170,8 @@ public abstract class GeckoApp
     // after a version upgrade.
     private static final int CLEANUP_DEFERRAL_SECONDS = 15;
 
+    private static boolean sAlreadyLoaded;
+
     protected RelativeLayout mRootLayout;
     protected RelativeLayout mMainLayout;
 
@@ -1301,7 +1303,7 @@ public abstract class GeckoApp
             return;
         }
 
-        if (GeckoThread.isLaunched()) {
+        if (sAlreadyLoaded) {
             // This happens when the GeckoApp activity is destroyed by Android
             // without killing the entire application (see Bug 769269).
             mIsRestoringActivity = true;
@@ -1310,6 +1312,7 @@ public abstract class GeckoApp
         } else {
             final String uri = getURIFromIntent(intent);
 
+            sAlreadyLoaded = true;
             GeckoThread.ensureInit(args, action,
                     /* debugging */ ACTION_DEBUG.equals(action));
 
