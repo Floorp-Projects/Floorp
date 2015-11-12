@@ -193,7 +193,7 @@ public:
   NS_IMETHOD              GetRestoredBoundsUntyped(nsIntRect &aRect) override;
   NS_IMETHOD              GetNonClientMargins(nsIntMargin &margins) override;
   NS_IMETHOD              SetNonClientMargins(nsIntMargin &margins) override;
-  virtual nsIntPoint      GetClientOffset() override;
+  virtual nsIntPoint      GetClientOffsetUntyped() override;
   NS_IMETHOD              EnableDragDrop(bool aEnable) override;
   NS_IMETHOD              GetAttention(int32_t aCycleCount) override;
   virtual bool            HasPendingInputEvent() override;

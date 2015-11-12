@@ -1520,7 +1520,7 @@ void nsChildView::ReportSizeEvent()
 
 #pragma mark -
 
-nsIntPoint nsChildView::GetClientOffset()
+nsIntPoint nsChildView::GetClientOffsetUntyped()
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
 

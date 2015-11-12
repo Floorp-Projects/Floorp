@@ -253,7 +253,7 @@ nsResizerFrame::HandleEvent(nsPresContext* aPresContext,
             widget->GetScreenBounds(oldRect);
 
           // convert the new rectangle into outer window coordinates
-          nsIntPoint clientOffset = widget->GetClientOffset();
+          LayoutDeviceIntPoint clientOffset = widget->GetClientOffset();
           rect.x -= clientOffset.x;
           rect.y -= clientOffset.y;
         }

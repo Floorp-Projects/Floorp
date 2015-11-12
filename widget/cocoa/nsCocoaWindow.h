@@ -271,7 +271,7 @@ public:
     virtual bool            IsVisible() const override;
     NS_IMETHOD              SetFocus(bool aState=false) override;
     virtual mozilla::LayoutDeviceIntPoint WidgetToScreenOffset() override;
-    virtual nsIntPoint GetClientOffset() override;
+    virtual nsIntPoint GetClientOffsetUntyped() override;
     virtual mozilla::LayoutDeviceIntSize
     ClientToWindowSize(const mozilla::LayoutDeviceIntSize& aClientSize) override;
 
