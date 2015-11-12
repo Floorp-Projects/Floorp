@@ -29,20 +29,14 @@ class JitContext;
 class DebugModeOSRVolatileJitFrameIterator;
 } // namespace jit
 
-typedef HashSet<JSObject*> ObjectSet;
 typedef HashSet<Shape*> ShapeSet;
 
 /* Detects cycles when traversing an object graph. */
 class MOZ_RAII AutoCycleDetector
 {
-    JSContext* cx;
-    RootedObject obj;
-    bool cyclic;
-    uint32_t hashsetGenerationAtInit;
-    ObjectSet::AddPtr hashsetAddPointer;
-    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
-
   public:
+    using Set = HashSet<JSObject*, MovableCellHasher<JSObject*>>;
+
     AutoCycleDetector(JSContext* cx, HandleObject objArg
                       MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
       : cx(cx), obj(cx, objArg), cyclic(true)
@@ -55,11 +49,19 @@ class MOZ_RAII AutoCycleDetector
     bool init();
 
     bool foundCycle() { return cyclic; }
+
+  private:
+    JSContext* cx;
+    RootedObject obj;
+    bool cyclic;
+    uint32_t hashsetGenerationAtInit;
+    Set::AddPtr hashsetAddPointer;
+    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
 /* Updates references in the cycle detection set if the GC moves them. */
 extern void
-TraceCycleDetectionSet(JSTracer* trc, ObjectSet& set);
+TraceCycleDetectionSet(JSTracer* trc, AutoCycleDetector::Set& set);
 
 struct AutoResolving;
 
@@ -349,7 +351,7 @@ struct JSContext : public js::ExclusiveContext,
 
   public:
     /* State for object and array toSource conversion. */
-    js::ObjectSet       cycleDetectorSet;
+    js::AutoCycleDetector::Set cycleDetectorSet;
 
     /* Client opaque pointers. */
     void*               data;

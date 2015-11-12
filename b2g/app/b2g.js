@@ -1015,7 +1015,6 @@ pref("apz.allow_zooming", true);
 
 // Gaia relies heavily on scroll events for now, so lets fire them
 // more often than the default value (100).
-pref("apz.asyncscroll.throttle", 40);
 pref("apz.pan_repaint_interval", 16);
 
 // APZ physics settings, tuned by UX designers

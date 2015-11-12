@@ -955,16 +955,17 @@ gfxAlphaBoxBlur::GetInsetBlur(IntMargin& aExtendDestBy,
   // When rendering inset box shadows, we respect the spread radius by changing
   //  the shape of the unblurred shadow, and can pass a spread radius of zero here.
   IntSize zeroSpread(0, 0);
-  gfxContext* minGfxContext = Init(ThebesRect(ToRect(outerRect)),
+  gfxContext* minGfxContext = Init(ThebesRect(outerRect),
                                    zeroSpread, aBlurRadius, nullptr, nullptr);
   if (!minGfxContext) {
     return nullptr;
   }
 
   DrawTarget* minDrawTarget = minGfxContext->GetDrawTarget();
-  RefPtr<Path> maskPath = GetBoxShadowInsetPath(minDrawTarget, ToRect(outerRect),
-                                                ToRect(innerRect), aHasBorderRadius,
-                                                aInnerClipRadii);
+  RefPtr<Path> maskPath =
+    GetBoxShadowInsetPath(minDrawTarget, IntRectToRect(outerRect),
+                          IntRectToRect(innerRect), aHasBorderRadius,
+                          aInnerClipRadii);
 
   Color black(0.f, 0.f, 0.f, 1.f);
   minGfxContext->SetColor(black);

@@ -191,6 +191,7 @@ public:
     virtual bool RecvConnectPluginBridge(const uint32_t& aPluginId, nsresult* aRv) override;
     virtual bool RecvGetBlocklistState(const uint32_t& aPluginId, uint32_t* aIsBlocklisted) override;
     virtual bool RecvFindPlugins(const uint32_t& aPluginEpoch,
+                                 nsresult* aRv,
                                  nsTArray<PluginTag>* aPlugins,
                                  uint32_t* aNewPluginEpoch) override;
 
@@ -741,6 +742,9 @@ private:
 
     virtual bool RecvReadPrefsArray(InfallibleTArray<PrefSetting>* aPrefs) override;
     virtual bool RecvReadFontList(InfallibleTArray<FontListEntry>* retValue) override;
+
+    virtual bool RecvReadDataStorageArray(const nsString& aFilename,
+                                          InfallibleTArray<DataStorageItem>* aValues) override;
 
     virtual bool RecvReadPermissions(InfallibleTArray<IPC::Permission>* aPermissions) override;
 
