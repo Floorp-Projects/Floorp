@@ -400,6 +400,7 @@ jit::CheckLogging()
             "  aborts     Compilation abort messages\n"
             "  scripts    Compiled scripts\n"
             "  mir        MIR information\n"
+            "  prune      Prune unused branches\n"
             "  escape     Escape analysis\n"
             "  alias      Alias analysis\n"
             "  gvn        Global Value Numbering\n"
@@ -440,6 +441,8 @@ jit::CheckLogging()
     }
     if (ContainsFlag(env, "aborts"))
         EnableChannel(JitSpew_IonAbort);
+    if (ContainsFlag(env, "prune"))
+        EnableChannel(JitSpew_Prune);
     if (ContainsFlag(env, "escape"))
         EnableChannel(JitSpew_Escape);
     if (ContainsFlag(env, "alias"))

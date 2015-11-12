@@ -37,6 +37,7 @@
     _(VM)                                             \
                                                       \
     /* Specific passes during ion compilation */      \
+    _(PruneUnusedBranches)                            \
     _(FoldTests)                                      \
     _(SplitCriticalEdges)                             \
     _(RenumberBlocks)                                 \
