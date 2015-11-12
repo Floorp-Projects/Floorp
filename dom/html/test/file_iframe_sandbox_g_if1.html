@@ -42,9 +42,14 @@
 
     // test loading with relative url - this should fail since we are
     // sandboxed and have a null principal
-    var worker_js = new Worker('file_iframe_sandbox_worker.js');
+    try {
+      var worker_js = new Worker('file_iframe_sandbox_worker.js');
+    } catch (e) {
+      ok(e.name === "SecurityError", "a worker in a sandboxed document should throw when loading from a relative URI");
+    }
+
     worker_js.onerror = function(error) {
-      ok(true, "a worker in a sandboxed document should tell the load error via error event");
+      ok(false, "a worker in a sandboxed document should not tell the load error via error event");
     }
 
     worker_js.addEventListener('message', function(event) {
