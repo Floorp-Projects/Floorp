@@ -7,8 +7,8 @@
 // Ion eager fails the test below because we have not yet created any
 // template object in baseline before running the content of the top-level
 // function.
-if (getJitCompilerOptions()["ion.warmup.trigger"] <= 30)
-    setJitCompilerOption("ion.warmup.trigger", 30);
+if (getJitCompilerOptions()["ion.warmup.trigger"] <= 90)
+    setJitCompilerOption("ion.warmup.trigger", 90);
 
 // This test checks that we are able to remove the getelem & setelem with scalar
 // replacement, so we should not force inline caches, as this would skip the
