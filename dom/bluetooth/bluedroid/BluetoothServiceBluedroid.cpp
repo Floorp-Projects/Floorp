@@ -363,7 +363,7 @@ BluetoothServiceBluedroid::StopLeScanInternal(
 
 void
 BluetoothServiceBluedroid::ConnectGattClientInternal(
-  const nsAString& aAppUuid, const BluetoothAddress& aDeviceAddress,
+  const nsAString& aAppUuid, const nsAString& aDeviceAddress,
   BluetoothReplyRunnable* aRunnable)
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -376,12 +376,18 @@ BluetoothServiceBluedroid::ConnectGattClientInternal(
   BluetoothUuid appUuid;
   StringToUuid(aAppUuid, appUuid);
 
-  gatt->Connect(appUuid, aDeviceAddress, aRunnable);
+  BluetoothAddress deviceAddress;
+  if (NS_FAILED(StringToAddress(aDeviceAddress, deviceAddress))) {
+    DispatchReplyError(aRunnable, STATUS_PARM_INVALID);
+    return;
+  }
+
+  gatt->Connect(appUuid, deviceAddress, aRunnable);
 }
 
 void
 BluetoothServiceBluedroid::DisconnectGattClientInternal(
-  const nsAString& aAppUuid, const BluetoothAddress& aDeviceAddress,
+  const nsAString& aAppUuid, const nsAString& aDeviceAddress,
   BluetoothReplyRunnable* aRunnable)
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -394,7 +400,13 @@ BluetoothServiceBluedroid::DisconnectGattClientInternal(
   BluetoothUuid appUuid;
   StringToUuid(aAppUuid, appUuid);
 
-  gatt->Disconnect(appUuid, aDeviceAddress, aRunnable);
+  BluetoothAddress deviceAddress;
+  if (NS_FAILED(StringToAddress(aDeviceAddress, deviceAddress))) {
+    DispatchReplyError(aRunnable, STATUS_PARM_INVALID);
+    return;
+  }
+
+  gatt->Disconnect(appUuid, deviceAddress, aRunnable);
 }
 
 void
@@ -466,7 +478,7 @@ BluetoothServiceBluedroid::UnregisterGattClientInternal(
 
 void
 BluetoothServiceBluedroid::GattClientReadRemoteRssiInternal(
-  int aClientIf, const BluetoothAddress& aDeviceAddress,
+  int aClientIf, const nsAString& aDeviceAddress,
   BluetoothReplyRunnable* aRunnable)
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -476,7 +488,13 @@ BluetoothServiceBluedroid::GattClientReadRemoteRssiInternal(
   BluetoothGattManager* gatt = BluetoothGattManager::Get();
   ENSURE_GATT_MGR_IS_READY_VOID(gatt, aRunnable);
 
-  gatt->ReadRemoteRssi(aClientIf, aDeviceAddress, aRunnable);
+  BluetoothAddress deviceAddress;
+  if (NS_FAILED(StringToAddress(aDeviceAddress, deviceAddress))) {
+    DispatchReplyError(aRunnable, STATUS_PARM_INVALID);
+    return;
+  }
+
+  gatt->ReadRemoteRssi(aClientIf, deviceAddress, aRunnable);
 }
 
 void
@@ -571,7 +589,7 @@ BluetoothServiceBluedroid::GattClientWriteDescriptorValueInternal(
 // GATT Server
 void
 BluetoothServiceBluedroid::GattServerConnectPeripheralInternal(
-  const nsAString& aAppUuid, const BluetoothAddress& aAddress,
+  const nsAString& aAppUuid, const nsAString& aAddress,
   BluetoothReplyRunnable* aRunnable)
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -584,12 +602,18 @@ BluetoothServiceBluedroid::GattServerConnectPeripheralInternal(
   BluetoothUuid appUuid;
   StringToUuid(aAppUuid, appUuid);
 
-  gatt->ConnectPeripheral(appUuid, aAddress, aRunnable);
+  BluetoothAddress address;
+  if (NS_FAILED(StringToAddress(aAddress, address))) {
+    DispatchReplyError(aRunnable, STATUS_PARM_INVALID);
+    return;
+  }
+
+  gatt->ConnectPeripheral(appUuid, address, aRunnable);
 }
 
 void
 BluetoothServiceBluedroid::GattServerDisconnectPeripheralInternal(
-  const nsAString& aAppUuid, const BluetoothAddress& aAddress,
+  const nsAString& aAppUuid, const nsAString& aAddress,
   BluetoothReplyRunnable* aRunnable)
 {
   MOZ_ASSERT(NS_IsMainThread());
@@ -602,7 +626,13 @@ BluetoothServiceBluedroid::GattServerDisconnectPeripheralInternal(
   BluetoothUuid appUuid;
   StringToUuid(aAppUuid, appUuid);
 
-  gatt->DisconnectPeripheral(appUuid, aAddress, aRunnable);
+  BluetoothAddress address;
+  if (NS_FAILED(StringToAddress(aAddress, address))) {
+    DispatchReplyError(aRunnable, STATUS_PARM_INVALID);
+    return;
+  }
+
+  gatt->DisconnectPeripheral(appUuid, address, aRunnable);
 }
 
 void
@@ -776,7 +806,7 @@ BluetoothServiceBluedroid::GattServerStopServiceInternal(
 void
 BluetoothServiceBluedroid::GattServerSendResponseInternal(
   const nsAString& aAppUuid,
-  const BluetoothAddress& aAddress,
+  const nsAString& aAddress,
   uint16_t aStatus,
   int32_t aRequestId,
   const BluetoothGattResponse& aRsp,
@@ -792,14 +822,20 @@ BluetoothServiceBluedroid::GattServerSendResponseInternal(
   BluetoothUuid appUuid;
   StringToUuid(aAppUuid, appUuid);
 
+  BluetoothAddress address;
+  if (NS_FAILED(StringToAddress(aAddress, address))) {
+    DispatchReplyError(aRunnable, STATUS_PARM_INVALID);
+    return;
+  }
+
   gatt->ServerSendResponse(
-    appUuid, aAddress, aStatus, aRequestId, aRsp, aRunnable);
+    appUuid, address, aStatus, aRequestId, aRsp, aRunnable);
 }
 
 void
 BluetoothServiceBluedroid::GattServerSendIndicationInternal(
   const nsAString& aAppUuid,
-  const BluetoothAddress& aAddress,
+  const nsAString& aAddress,
   const BluetoothAttributeHandle& aCharacteristicHandle,
   bool aConfirm,
   const nsTArray<uint8_t>& aValue,
@@ -815,8 +851,14 @@ BluetoothServiceBluedroid::GattServerSendIndicationInternal(
   BluetoothUuid appUuid;
   StringToUuid(aAppUuid, appUuid);
 
+  BluetoothAddress address;
+  if (NS_FAILED(StringToAddress(aAddress, address))) {
+    DispatchReplyError(aRunnable, STATUS_PARM_INVALID);
+    return;
+  }
+
   gatt->ServerSendIndication(appUuid,
-                             aAddress,
+                             address,
                              aCharacteristicHandle,
                              aConfirm,
                              aValue,
