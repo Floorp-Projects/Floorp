@@ -1067,12 +1067,6 @@ GetDisplayPortFromMarginsData(nsIContent* aContent,
     }
   }
 
-  // Inflate the rectangle by 1 so that we always push to the next tile
-  // boundary. This is desirable to stop from having a rectangle with a
-  // moving origin occasionally being smaller when it coincidentally lines
-  // up to tile boundaries.
-  screenRect.Inflate(1);
-
   ScreenPoint scrollPosScreen = LayoutDevicePoint::FromAppUnits(scrollPos, auPerDevPixel)
                               * res;
 
@@ -1956,6 +1950,25 @@ nsLayoutUtils::GetAnimatedGeometryRootFor(nsDisplayItem* aItem,
     nsIFrame* parent = nsLayoutUtils::GetCrossDocParentFrame(f);
     if (parent) {
       return GetAnimatedGeometryRootForFrame(aBuilder, parent);
+    }
+  }
+  return GetAnimatedGeometryRootForFrame(aBuilder, f);
+}
+
+nsIFrame*
+nsLayoutUtils::GetAnimatedGeometryRootForInit(nsDisplayItem* aItem,
+                                              nsDisplayListBuilder* aBuilder)
+{
+  nsIFrame* f = aItem->Frame();
+  if (aItem->ShouldFixToViewport(aBuilder)) {
+    // Make its active scrolled root be the active scrolled root of
+    // the enclosing viewport, since it shouldn't be scrolled by scrolled
+    // frames in its document. InvalidateFixedBackgroundFramesFromList in
+    // nsGfxScrollFrame will not repaint this item when scrolling occurs.
+    nsIFrame* viewportFrame =
+      nsLayoutUtils::GetClosestFrameOfType(f, nsGkAtoms::viewportFrame, aBuilder->RootReferenceFrame());
+    if (viewportFrame) {
+      return GetAnimatedGeometryRootForFrame(aBuilder, viewportFrame);
     }
   }
   return GetAnimatedGeometryRootForFrame(aBuilder, f);

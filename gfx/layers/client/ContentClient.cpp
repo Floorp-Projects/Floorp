@@ -14,6 +14,7 @@
 #include "gfxUtils.h"                   // for gfxUtils
 #include "ipc/ShadowLayers.h"           // for ShadowLayerForwarder
 #include "mozilla/ArrayUtils.h"         // for ArrayLength
+#include "mozilla/Maybe.h"
 #include "mozilla/gfx/2D.h"             // for DrawTarget, Factory
 #include "mozilla/gfx/BasePoint.h"      // for BasePoint
 #include "mozilla/gfx/BaseSize.h"       // for BaseSize
@@ -570,33 +571,30 @@ ContentClientDoubleBuffered::FinalizeFrame(const nsIntRegion& aRegionToDraw)
 
   // We need to ensure that we lock these two buffers in the same
   // order as the compositor to prevent deadlocks.
-  if (!mFrontClient->Lock(OpenMode::OPEN_READ_ONLY)) {
+  TextureClientAutoLock frontLock(mFrontClient, OpenMode::OPEN_READ_ONLY);
+  if (!frontLock.Succeeded()) {
     return;
   }
-  if (mFrontClientOnWhite &&
-      !mFrontClientOnWhite->Lock(OpenMode::OPEN_READ_ONLY)) {
-    mFrontClient->Unlock();
-    return;
-  }
-  {
-    // Restrict the DrawTargets and frontBuffer to a scope to make
-    // sure there is no more external references to the DrawTargets
-    // when we Unlock the TextureClients.
-    RefPtr<SourceSurface> surf = mFrontClient->BorrowDrawTarget()->Snapshot();
-    RefPtr<SourceSurface> surfOnWhite = mFrontClientOnWhite
-      ? mFrontClientOnWhite->BorrowDrawTarget()->Snapshot()
-      : nullptr;
-    SourceRotatedBuffer frontBuffer(surf,
-                                    surfOnWhite,
-                                    mFrontBufferRect,
-                                    mFrontBufferRotation);
-    UpdateDestinationFrom(frontBuffer, updateRegion);
+  Maybe<TextureClientAutoLock> frontOnWhiteLock;
+  if (mFrontClientOnWhite) {
+    frontOnWhiteLock.emplace(mFrontClientOnWhite, OpenMode::OPEN_READ_ONLY);
+    if (!frontOnWhiteLock->Succeeded()) {
+      return;
+    }
   }
 
-  mFrontClient->Unlock();
-  if (mFrontClientOnWhite) {
-    mFrontClientOnWhite->Unlock();
-  }
+  // Restrict the DrawTargets and frontBuffer to a scope to make
+  // sure there is no more external references to the DrawTargets
+  // when we Unlock the TextureClients.
+  RefPtr<SourceSurface> surf = mFrontClient->BorrowDrawTarget()->Snapshot();
+  RefPtr<SourceSurface> surfOnWhite = mFrontClientOnWhite
+    ? mFrontClientOnWhite->BorrowDrawTarget()->Snapshot()
+    : nullptr;
+  SourceRotatedBuffer frontBuffer(surf,
+                                  surfOnWhite,
+                                  mFrontBufferRect,
+                                  mFrontBufferRotation);
+  UpdateDestinationFrom(frontBuffer, updateRegion);
 }
 
 void
