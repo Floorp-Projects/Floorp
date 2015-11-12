@@ -39,6 +39,9 @@ namespace widget {
  ******************************************************************************/
 
 bool IMEHandler::sPluginHasFocus = false;
+InputContextAction::Cause IMEHandler::sLastContextActionCause =
+  InputContextAction::CAUSE_UNKNOWN;
+
 #ifdef NS_ENABLE_TSF
 bool IMEHandler::sIsInTSFMode = false;
 bool IMEHandler::sIsIMMEnabled = true;
@@ -349,6 +352,7 @@ IMEHandler::SetInputContext(nsWindow* aWindow,
                             InputContext& aInputContext,
                             const InputContextAction& aAction)
 {
+  sLastContextActionCause = aAction.mCause;
   // FYI: If there is no composition, this call will do nothing.
   NotifyIME(aWindow, IMENotification(REQUEST_TO_COMMIT_COMPOSITION));
 
@@ -690,6 +694,14 @@ IMEHandler::IsKeyboardPresentOnSlate()
   if (::GetSystemMetrics(SM_CONVERTIBLESLATEMODE) != 0) {
     Preferences::SetString(kOskDebugReason, L"IKPOS: ConvertibleSlateMode is non-zero");
     return true;
+  }
+
+  // Before we check for a keyboard, we should check if the last input was touch,
+  // in which case we ignore whether or not a keyboard is present:
+  if (sLastContextActionCause == InputContextAction::CAUSE_TOUCH) {
+    Preferences::SetString(kOskDebugReason,
+      L"IKPOS: Used touch to focus control, ignoring keyboard presence");
+    return false;
   }
 
   const GUID KEYBOARD_CLASS_GUID =
