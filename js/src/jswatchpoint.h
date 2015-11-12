@@ -20,6 +20,9 @@ struct WatchKey {
     WatchKey() {}
     WatchKey(JSObject* obj, jsid id) : object(obj), id(id) {}
     WatchKey(const WatchKey& key) : object(key.object.get()), id(key.id.get()) {}
+
+    // These are traced unconditionally during minor GC, so do not require
+    // post-barriers.
     PreBarrieredObject object;
     PreBarrieredId id;
 
@@ -40,14 +43,14 @@ struct Watchpoint {
       : handler(handler), closure(closure), held(held) {}
 };
 
-template <>
-struct DefaultHasher<WatchKey>
+struct WatchKeyHasher
 {
     typedef WatchKey Lookup;
     static inline js::HashNumber hash(const Lookup& key);
 
     static bool match(const WatchKey& k, const Lookup& l) {
-        return k.object == l.object && k.id.get() == l.id.get();
+        return MovableCellHasher<PreBarrieredObject>::match(k.object, l.object) &&
+               DefaultHasher<PreBarrieredId>::match(k.id, l.id);
     }
 
     static void rekey(WatchKey& k, const WatchKey& newKey) {
@@ -58,7 +61,7 @@ struct DefaultHasher<WatchKey>
 
 class WatchpointMap {
   public:
-    typedef HashMap<WatchKey, Watchpoint, DefaultHasher<WatchKey>, SystemAllocPolicy> Map;
+    typedef HashMap<WatchKey, Watchpoint, WatchKeyHasher, SystemAllocPolicy> Map;
 
     bool init();
     bool watch(JSContext* cx, HandleObject obj, HandleId id,
