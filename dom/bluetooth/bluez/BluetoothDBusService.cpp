@@ -4295,48 +4295,48 @@ BluetoothDBusService::UpdateNotification(ControlEventId aEventId,
 
 void
 BluetoothDBusService::StartLeScanInternal(
-  const nsTArray<BluetoothUuid>& aServiceUuids,
+  const nsTArray<nsString>& aServiceUuids,
   BluetoothReplyRunnable* aRunnable)
 {
 }
 
 void
 BluetoothDBusService::StopLeScanInternal(
-  const BluetoothUuid& aAppUuid,
+  const nsAString& aAppUuid,
   BluetoothReplyRunnable* aRunnable)
 {
 }
 
 void
 BluetoothDBusService::ConnectGattClientInternal(
-  const BluetoothUuid& aAppUuid, const BluetoothAddress& aDeviceAddress,
+  const nsAString& aAppUuid, const BluetoothAddress& aDeviceAddress,
   BluetoothReplyRunnable* aRunnable)
 {
 }
 
 void
 BluetoothDBusService::DisconnectGattClientInternal(
-  const BluetoothUuid& aAppUuid, const BluetoothAddress& aDeviceAddress,
+  const nsAString& aAppUuid, const BluetoothAddress& aDeviceAddress,
   BluetoothReplyRunnable* aRunnable)
 {
 }
 
 void
 BluetoothDBusService::DiscoverGattServicesInternal(
-  const BluetoothUuid& aAppUuid, BluetoothReplyRunnable* aRunnable)
+  const nsAString& aAppUuid, BluetoothReplyRunnable* aRunnable)
 {
 }
 
 void
 BluetoothDBusService::GattClientStartNotificationsInternal(
-  const BluetoothUuid& aAppUuid, const BluetoothGattServiceId& aServId,
+  const nsAString& aAppUuid, const BluetoothGattServiceId& aServId,
   const BluetoothGattId& aCharId, BluetoothReplyRunnable* aRunnable)
 {
 }
 
 void
 BluetoothDBusService::GattClientStopNotificationsInternal(
-  const BluetoothUuid& aAppUuid, const BluetoothGattServiceId& aServId,
+  const nsAString& aAppUuid, const BluetoothGattServiceId& aServId,
   const BluetoothGattId& aCharId, BluetoothReplyRunnable* aRunnable)
 {
 }
@@ -4356,7 +4356,7 @@ BluetoothDBusService::GattClientReadRemoteRssiInternal(
 
 void
 BluetoothDBusService::GattClientReadCharacteristicValueInternal(
-  const BluetoothUuid& aAppUuid,
+  const nsAString& aAppUuid,
   const BluetoothGattServiceId& aServiceId,
   const BluetoothGattId& aCharacteristicId,
   BluetoothReplyRunnable* aRunnable)
@@ -4365,7 +4365,7 @@ BluetoothDBusService::GattClientReadCharacteristicValueInternal(
 
 void
 BluetoothDBusService::GattClientWriteCharacteristicValueInternal(
-  const BluetoothUuid& aAppUuid,
+  const nsAString& aAppUuid,
   const BluetoothGattServiceId& aServiceId,
   const BluetoothGattId& aCharacteristicId,
   const BluetoothGattWriteType& aWriteType,
@@ -4376,7 +4376,7 @@ BluetoothDBusService::GattClientWriteCharacteristicValueInternal(
 
 void
 BluetoothDBusService::GattClientReadDescriptorValueInternal(
-  const BluetoothUuid& aAppUuid,
+  const nsAString& aAppUuid,
   const BluetoothGattServiceId& aServiceId,
   const BluetoothGattId& aCharacteristicId,
   const BluetoothGattId& aDescriptorId,
@@ -4386,7 +4386,7 @@ BluetoothDBusService::GattClientReadDescriptorValueInternal(
 
 void
 BluetoothDBusService::GattClientWriteDescriptorValueInternal(
-  const BluetoothUuid& aAppUuid,
+  const nsAString& aAppUuid,
   const BluetoothGattServiceId& aServiceId,
   const BluetoothGattId& aCharacteristicId,
   const BluetoothGattId& aDescriptorId,
@@ -4521,14 +4521,14 @@ BluetoothDBusService::ReplyToMapMessageUpdate(long aMasId, bool aStatus,
 
 void
 BluetoothDBusService::GattServerConnectPeripheralInternal(
-  const BluetoothUuid& aAppUuid, const BluetoothAddress& aAddress,
+  const nsAString& aAppUuid, const BluetoothAddress& aAddress,
   BluetoothReplyRunnable* aRunnable)
 {
 }
 
 void
 BluetoothDBusService::GattServerDisconnectPeripheralInternal(
-  const BluetoothUuid& aAppUuid, const BluetoothAddress& aAddress,
+  const nsAString& aAppUuid, const BluetoothAddress& aAddress,
   BluetoothReplyRunnable* aRunnable)
 {
 }
@@ -4541,7 +4541,7 @@ BluetoothDBusService::UnregisterGattServerInternal(
 
 void
 BluetoothDBusService::GattServerAddServiceInternal(
-  const BluetoothUuid& aAppUuid,
+  const nsAString& aAppUuid,
   const BluetoothGattServiceId& aServiceId,
   uint16_t aHandleCount,
   BluetoothReplyRunnable* aRunnable)
@@ -4550,7 +4550,7 @@ BluetoothDBusService::GattServerAddServiceInternal(
 
 void
 BluetoothDBusService::GattServerAddIncludedServiceInternal(
-  const BluetoothUuid& aAppUuid,
+  const nsAString& aAppUuid,
   const BluetoothAttributeHandle& aServiceHandle,
   const BluetoothAttributeHandle& aIncludedServiceHandle,
   BluetoothReplyRunnable* aRunnable)
@@ -4559,7 +4559,7 @@ BluetoothDBusService::GattServerAddIncludedServiceInternal(
 
 void
 BluetoothDBusService::GattServerAddCharacteristicInternal(
-  const BluetoothUuid& aAppUuid,
+  const nsAString& aAppUuid,
   const BluetoothAttributeHandle& aServiceHandle,
   const BluetoothUuid& aCharacteristicUuid,
   BluetoothGattAttrPerm aPermissions,
@@ -4570,7 +4570,7 @@ BluetoothDBusService::GattServerAddCharacteristicInternal(
 
 void
 BluetoothDBusService::GattServerAddDescriptorInternal(
-  const BluetoothUuid& aAppUuid,
+  const nsAString& aAppUuid,
   const BluetoothAttributeHandle& aServiceHandle,
   const BluetoothAttributeHandle& aCharacteristicHandle,
   const BluetoothUuid& aDescriptorUuid,
@@ -4581,7 +4581,7 @@ BluetoothDBusService::GattServerAddDescriptorInternal(
 
 void
 BluetoothDBusService::GattServerRemoveServiceInternal(
-  const BluetoothUuid& aAppUuid,
+  const nsAString& aAppUuid,
   const BluetoothAttributeHandle& aServiceHandle,
   BluetoothReplyRunnable* aRunnable)
 {
@@ -4589,7 +4589,7 @@ BluetoothDBusService::GattServerRemoveServiceInternal(
 
 void
 BluetoothDBusService::GattServerStartServiceInternal(
-  const BluetoothUuid& aAppUuid,
+  const nsAString& aAppUuid,
   const BluetoothAttributeHandle& aServiceHandle,
   BluetoothReplyRunnable* aRunnable)
 {
@@ -4597,7 +4597,7 @@ BluetoothDBusService::GattServerStartServiceInternal(
 
 void
 BluetoothDBusService::GattServerStopServiceInternal(
-  const BluetoothUuid& aAppUuid,
+  const nsAString& aAppUuid,
   const BluetoothAttributeHandle& aServiceHandle,
   BluetoothReplyRunnable* aRunnable)
 {
@@ -4605,7 +4605,7 @@ BluetoothDBusService::GattServerStopServiceInternal(
 
 void
 BluetoothDBusService::GattServerSendIndicationInternal(
-  const BluetoothUuid& aAppUuid,
+  const nsAString& aAppUuid,
   const BluetoothAddress& aAddress,
   const BluetoothAttributeHandle& aCharacteristicHandle,
   bool aConfirm,
@@ -4616,7 +4616,7 @@ BluetoothDBusService::GattServerSendIndicationInternal(
 
 void
 BluetoothDBusService::GattServerSendResponseInternal(
-  const BluetoothUuid& aAppUuid,
+  const nsAString& aAppUuid,
   const BluetoothAddress& aAddress,
   uint16_t aStatus,
   int32_t aRequestId,
