@@ -91,21 +91,19 @@ button.panel-item {
   cursor: default;
 }
 
-#refresh-tabs {
-  background-color: #FFF;
-  border-top: 1px solid #EDEDED;
+.refresh-icon {
+  background-image: url("chrome://devtools/skin/images/reload.svg");
+  height: 14px;
+  width: 14px;
+  border: 0;
+  opacity: 0.6;
   display: inline-block;
+  margin: 3px;
   float: right;
-  padding: 3px;
-  text-transform: none;
-  border-right: 1px solid #CCC;
-  width: auto;
-  margin: 0 4px 5px 5px;
 }
 
 .panel-item:not(:disabled):hover,
-button.panel-item:not(:disabled):hover,
-#refresh-tabs:hover {
+button.panel-item:not(:disabled):hover {
   background-color: #CCF0FD;
   border-top: 1px solid #EDEDED;
 }

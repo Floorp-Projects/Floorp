@@ -89,6 +89,7 @@
 <!ENTITY runtimePanel_installsimulator "Install Simulator">
 <!ENTITY runtimePanel_noadbhelper "Install ADB Helper">
 <!ENTITY runtimePanel_nousbdevice "Can't see your device?">
+<!ENTITY runtimePanel_refreshDevices_label "Refresh Devices">
 
 <!-- Lense -->
 <!ENTITY details_valid_header "valid">
