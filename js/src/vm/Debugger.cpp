@@ -1462,7 +1462,8 @@ Debugger::onTrap(JSContext* cx, MutableHandleValue vp)
          * global the script is running against.
          */
         Debugger* dbg = bp->debugger;
-        if (dbg->enabled && dbg->debuggees.lookup(scriptGlobal)) {
+        bool hasDebuggee = dbg->enabled && dbg->debuggees.has(scriptGlobal);
+        if (hasDebuggee) {
             Maybe<AutoCompartment> ac;
             ac.emplace(cx, dbg->object);
 
@@ -2536,13 +2537,8 @@ Debugger::markAll(JSTracer* trc)
 {
     JSRuntime* rt = trc->runtime();
     for (Debugger* dbg : rt->debuggerList) {
-        WeakGlobalObjectSet& debuggees = dbg->debuggees;
-        for (WeakGlobalObjectSet::Enum e(debuggees); !e.empty(); e.popFront()) {
-            GlobalObject* global = e.front().unbarrieredGet();
-            TraceManuallyBarrieredEdge(trc, &global, "Global Object");
-            if (global != e.front().unbarrieredGet())
-                e.rekeyFront(global, ReadBarrieredGlobalObject(global));
-        }
+        for (WeakGlobalObjectSet::Enum e(dbg->debuggees); !e.empty(); e.popFront())
+            TraceManuallyBarrieredEdge(trc, e.mutableFront().unsafeGet(), "Global Object");
 
         HeapPtrNativeObject& dbgobj = dbg->toJSObjectRef();
         TraceEdge(trc, &dbgobj, "Debugger Object");
