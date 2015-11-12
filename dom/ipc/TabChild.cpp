@@ -1115,149 +1115,19 @@ TabChild::ProvideWindow(nsIDOMWindow* aParent, uint32_t aChromeFlags,
     // Note that ProvideWindowCommon may return NS_ERROR_ABORT if the
     // open window call was canceled.  It's important that we pass this error
     // code back to our caller.
-    return ProvideWindowCommon(aParent,
-                               iframeMoz,
-                               aChromeFlags,
-                               aCalledFromJS,
-                               aPositionSpecified,
-                               aSizeSpecified,
-                               aURI,
-                               aName,
-                               aFeatures,
-                               aWindowIsNew,
-                               aReturn);
-}
-
-nsresult
-TabChild::ProvideWindowCommon(nsIDOMWindow* aOpener,
-                              bool aIframeMoz,
-                              uint32_t aChromeFlags,
-                              bool aCalledFromJS,
-                              bool aPositionSpecified,
-                              bool aSizeSpecified,
-                              nsIURI* aURI,
-                              const nsAString& aName,
-                              const nsACString& aFeatures,
-                              bool* aWindowIsNew,
-                              nsIDOMWindow** aReturn)
-{
-  *aReturn = nullptr;
-
-  ContentChild* cc = ContentChild::GetSingleton();
-  const TabId openerTabId = GetTabId();
-
-  // We must use PopupIPCTabContext here; ContentParent will not accept the
-  // result of this->AsIPCTabContext() (which will be a
-  // BrowserFrameIPCTabContext or an AppFrameIPCTabContext), for security
-  // reasons.
-  PopupIPCTabContext context;
-  context.opener() = openerTabId;
-  context.isBrowserElement() = IsBrowserElement();
-
-  IPCTabContext ipcContext(context);
-
-  TabId tabId;
-  cc->SendAllocateTabId(openerTabId,
-                        ipcContext,
-                        cc->GetID(),
-                        &tabId);
-
-  RefPtr<TabChild> newChild = new TabChild(ContentChild::GetSingleton(), tabId,
-                                             /* TabContext */ *this, aChromeFlags);
-  if (NS_FAILED(newChild->Init())) {
-    return NS_ERROR_ABORT;
-  }
-
-  context.opener() = this;
-  unused << Manager()->SendPBrowserConstructor(
-      // We release this ref in DeallocPBrowserChild
-      RefPtr<TabChild>(newChild).forget().take(),
-      tabId, IPCTabContext(context), aChromeFlags,
-      cc->GetID(), cc->IsForApp(), cc->IsForBrowser());
-
-  nsAutoCString url;
-  if (aURI) {
-    aURI->GetSpec(url);
-  } else {
-    // We can't actually send a nullptr up as the URI, since IPDL doesn't let us
-    // send nullptr's for primitives. We indicate that the nsString for the URI
-    // should be converted to a nullptr by voiding the string.
-    url.SetIsVoid(true);
-  }
-
-  nsString name(aName);
-  nsAutoCString features(aFeatures);
-  nsTArray<FrameScriptInfo> frameScripts;
-  nsCString urlToLoad;
-
-  if (aIframeMoz) {
-    newChild->SendBrowserFrameOpenWindow(this, NS_ConvertUTF8toUTF16(url), name,
-                                         NS_ConvertUTF8toUTF16(features),
-                                         aWindowIsNew);
-  } else {
-    nsCOMPtr<nsPIDOMWindow> opener = do_QueryInterface(aOpener);
-    nsCOMPtr<nsIDocument> doc = opener->GetDoc();
-    nsCOMPtr<nsIURI> baseURI = doc->GetDocBaseURI();
-    if (!baseURI) {
-      NS_ERROR("nsIDocument didn't return a base URI");
-      return NS_ERROR_FAILURE;
-    }
-
-    nsAutoCString baseURIString;
-    baseURI->GetSpec(baseURIString);
-
-    nsresult rv;
-
-    if (!SendCreateWindow(newChild,
-                          aChromeFlags, aCalledFromJS, aPositionSpecified,
-                          aSizeSpecified, url,
-                          name, features,
-                          baseURIString,
-                          &rv,
-                          aWindowIsNew,
-                          &frameScripts,
-                          &urlToLoad)) {
-      return NS_ERROR_NOT_AVAILABLE;
-    }
-
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-  }
-  if (!*aWindowIsNew) {
-    PBrowserChild::Send__delete__(newChild);
-    return NS_ERROR_ABORT;
-  }
-
-  TextureFactoryIdentifier textureFactoryIdentifier;
-  uint64_t layersId = 0;
-  PRenderFrameChild* renderFrame = newChild->SendPRenderFrameConstructor();
-  newChild->SendGetRenderFrameInfo(renderFrame,
-                                   &textureFactoryIdentifier,
-                                   &layersId);
-  if (layersId == 0) { // if renderFrame is invalid.
-    PRenderFrameChild::Send__delete__(renderFrame);
-    renderFrame = nullptr;
-  }
-
-  // Unfortunately we don't get a window unless we've shown the frame.  That's
-  // pretty bogus; see bug 763602.
-  newChild->DoFakeShow(textureFactoryIdentifier, layersId, renderFrame);
-
-  for (size_t i = 0; i < frameScripts.Length(); i++) {
-    FrameScriptInfo& info = frameScripts[i];
-    if (!newChild->RecvLoadRemoteScript(info.url(), info.runInGlobalScope())) {
-      MOZ_CRASH();
-    }
-  }
-
-  if (!urlToLoad.IsEmpty()) {
-    newChild->RecvLoadURL(urlToLoad, BrowserConfiguration());
-  }
-
-  nsCOMPtr<nsIDOMWindow> win = do_GetInterface(newChild->WebNavigation());
-  win.forget(aReturn);
-  return NS_OK;
+    ContentChild* cc = ContentChild::GetSingleton();
+    return cc->ProvideWindowCommon(this,
+                                   aParent,
+                                   iframeMoz,
+                                   aChromeFlags,
+                                   aCalledFromJS,
+                                   aPositionSpecified,
+                                   aSizeSpecified,
+                                   aURI,
+                                   aName,
+                                   aFeatures,
+                                   aWindowIsNew,
+                                   aReturn);
 }
 
 void
