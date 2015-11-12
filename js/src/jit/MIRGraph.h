@@ -46,7 +46,7 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
     };
 
   private:
-    MBasicBlock(MIRGraph& graph, CompileInfo& info, BytecodeSite* site, Kind kind);
+    MBasicBlock(MIRGraph& graph, const CompileInfo& info, BytecodeSite* site, Kind kind);
     bool init();
     void copySlots(MBasicBlock* from);
     bool inherit(TempAllocator& alloc, BytecodeAnalysis* analysis, MBasicBlock* pred,
@@ -106,18 +106,18 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
 
     // Creates a new basic block for a MIR generator. If |pred| is not nullptr,
     // its slots and stack depth are initialized from |pred|.
-    static MBasicBlock* New(MIRGraph& graph, BytecodeAnalysis* analysis, CompileInfo& info,
+    static MBasicBlock* New(MIRGraph& graph, BytecodeAnalysis* analysis, const CompileInfo& info,
                             MBasicBlock* pred, BytecodeSite* site, Kind kind);
-    static MBasicBlock* NewPopN(MIRGraph& graph, CompileInfo& info,
+    static MBasicBlock* NewPopN(MIRGraph& graph, const CompileInfo& info,
                                 MBasicBlock* pred, BytecodeSite* site, Kind kind, uint32_t popn);
-    static MBasicBlock* NewWithResumePoint(MIRGraph& graph, CompileInfo& info,
+    static MBasicBlock* NewWithResumePoint(MIRGraph& graph, const CompileInfo& info,
                                            MBasicBlock* pred, BytecodeSite* site,
                                            MResumePoint* resumePoint);
-    static MBasicBlock* NewPendingLoopHeader(MIRGraph& graph, CompileInfo& info,
+    static MBasicBlock* NewPendingLoopHeader(MIRGraph& graph, const CompileInfo& info,
                                              MBasicBlock* pred, BytecodeSite* site,
                                              unsigned loopStateSlots);
-    static MBasicBlock* NewSplitEdge(MIRGraph& graph, CompileInfo& info, MBasicBlock* pred);
-    static MBasicBlock* NewAsmJS(MIRGraph& graph, CompileInfo& info,
+    static MBasicBlock* NewSplitEdge(MIRGraph& graph, const CompileInfo& info, MBasicBlock* pred);
+    static MBasicBlock* NewAsmJS(MIRGraph& graph, const CompileInfo& info,
                                  MBasicBlock* pred, Kind kind);
 
     bool dominates(const MBasicBlock* other) const {
@@ -331,7 +331,7 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
     MIRGraph& graph() {
         return graph_;
     }
-    CompileInfo& info() const {
+    const CompileInfo& info() const {
         return info_;
     }
     jsbytecode* pc() const {
@@ -648,7 +648,7 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
 
   private:
     MIRGraph& graph_;
-    CompileInfo& info_; // Each block originates from a particular script.
+    const CompileInfo& info_; // Each block originates from a particular script.
     InlineList<MInstruction> instructions_;
     Vector<MBasicBlock*, 1, JitAllocPolicy> predecessors_;
     InlineList<MPhi> phis_;
