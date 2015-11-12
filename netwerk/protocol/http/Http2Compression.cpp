@@ -860,6 +860,9 @@ Http2Decompressor::DoLiteralInternal(nsACString &name, nsACString &value,
            value.BeginReading()));
       return NS_ERROR_ILLEGAL_VALUE;
     }
+    // Increment this to avoid always finding the same newline and looping
+    // forever
+    ++newline;
   }
 
   LOG(("Http2Decompressor::DoLiteralInternal value %s", value.BeginReading()));
