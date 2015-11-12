@@ -335,13 +335,13 @@ EvalKernel(JSContext* cx, const CallArgs& args, EvalType evalType, AbstractFrame
 
 bool
 js::DirectEvalStringFromIon(JSContext* cx,
-                            HandleObject scopeobj, HandleScript callerScript,
+                            HandleObject scopeObj, HandleScript callerScript,
                             HandleValue newTargetValue, HandleString str,
                             jsbytecode* pc, MutableHandleValue vp)
 {
-    AssertInnerizedScopeChain(cx, *scopeobj);
+    AssertInnerizedScopeChain(cx, *scopeObj);
 
-    Rooted<GlobalObject*> scopeObjGlobal(cx, &scopeobj->global());
+    Rooted<GlobalObject*> scopeObjGlobal(cx, &scopeObj->global());
     if (!GlobalObject::isRuntimeCodeGenEnabled(cx, scopeObjGlobal)) {
         JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_CSP_BLOCKED_EVAL);
         return false;
@@ -398,7 +398,7 @@ js::DirectEvalStringFromIon(JSContext* cx,
                                                   : SourceBufferHolder::NoOwnership;
         SourceBufferHolder srcBuf(chars, linearStr->length(), ownership);
         JSScript* compiled = frontend::CompileScript(cx, &cx->tempLifoAlloc(),
-                                                     scopeobj, staticScope, callerScript,
+                                                     scopeObj, staticScope, callerScript,
                                                      options, srcBuf, linearStr);
         if (!compiled)
             return false;
@@ -409,7 +409,7 @@ js::DirectEvalStringFromIon(JSContext* cx,
         esg.setNewScript(compiled);
     }
 
-    return ExecuteKernel(cx, esg.script(), *scopeobj, newTargetValue,
+    return ExecuteKernel(cx, esg.script(), *scopeObj, newTargetValue,
                          NullFramePtr() /* evalInFrame */, vp.address());
 }
 

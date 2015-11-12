@@ -4007,8 +4007,8 @@ JSScript::calculateLiveFixed(jsbytecode* pc)
         }
 
         if (staticScope && !IsStaticGlobalLexicalScope(staticScope)) {
-            StaticBlockScope& blockObj = staticScope->as<StaticBlockScope>();
-            nlivefixed = blockObj.localOffset() + blockObj.numVariables();
+            StaticBlockScope& blockScope = staticScope->as<StaticBlockScope>();
+            nlivefixed = blockScope.localOffset() + blockScope.numVariables();
         }
     }
 

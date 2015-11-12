@@ -3388,13 +3388,13 @@ static const VMFunction PushBlockScopeInfo = FunctionInfo<PushBlockScopeFn>(jit:
 bool
 BaselineCompiler::emit_JSOP_PUSHBLOCKSCOPE()
 {
-    StaticBlockScope& blockObj = script->getObject(pc)->as<StaticBlockScope>();
+    StaticBlockScope& blockScope = script->getObject(pc)->as<StaticBlockScope>();
 
     // Call a stub to push the block on the block chain.
     prepareVMCall();
     masm.loadBaselineFramePtr(BaselineFrameReg, R0.scratchReg());
 
-    pushArg(ImmGCPtr(&blockObj));
+    pushArg(ImmGCPtr(&blockScope));
     pushArg(R0.scratchReg());
 
     return callVM(PushBlockScopeInfo);
@@ -3472,7 +3472,7 @@ static const VMFunction EnterWithInfo = FunctionInfo<EnterWithFn>(jit::EnterWith
 bool
 BaselineCompiler::emit_JSOP_ENTERWITH()
 {
-    StaticWithScope& withObj = script->getObject(pc)->as<StaticWithScope>();
+    StaticWithScope& withScope = script->getObject(pc)->as<StaticWithScope>();
 
     // Pop "with" object to R0.
     frame.popRegsAndSync(1);
@@ -3481,7 +3481,7 @@ BaselineCompiler::emit_JSOP_ENTERWITH()
     prepareVMCall();
     masm.loadBaselineFramePtr(BaselineFrameReg, R1.scratchReg());
 
-    pushArg(ImmGCPtr(&withObj));
+    pushArg(ImmGCPtr(&withScope));
     pushArg(R0);
     pushArg(R1.scratchReg());
 

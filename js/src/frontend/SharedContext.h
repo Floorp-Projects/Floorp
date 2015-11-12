@@ -624,11 +624,11 @@ class MOZ_STACK_CLASS StmtInfoStack
         stmt->staticScope = &staticScope;
     }
 
-    void makeInnermostLexicalScope(StaticBlockScope& blockObj) {
+    void makeInnermostLexicalScope(StaticBlockScope& blockScope) {
         MOZ_ASSERT(!innermostStmt_->isBlockScope);
         MOZ_ASSERT(innermostStmt_->canBeBlockScope());
         innermostStmt_->isBlockScope = true;
-        linkAsInnermostScopeStmt(innermostStmt_, blockObj);
+        linkAsInnermostScopeStmt(innermostStmt_, blockScope);
     }
 };
 

@@ -3634,11 +3634,11 @@ END_CASE(JSOP_DEBUGGER)
 
 CASE(JSOP_PUSHBLOCKSCOPE)
 {
-    StaticBlockScope& blockObj = script->getObject(REGS.pc)->as<StaticBlockScope>();
+    StaticBlockScope& blockScope = script->getObject(REGS.pc)->as<StaticBlockScope>();
 
-    MOZ_ASSERT(blockObj.needsClone());
+    MOZ_ASSERT(blockScope.needsClone());
     // Clone block and push on scope chain.
-    if (!REGS.fp()->pushBlock(cx, blockObj))
+    if (!REGS.fp()->pushBlock(cx, blockScope))
         goto error;
 }
 END_CASE(JSOP_PUSHBLOCKSCOPE)
@@ -3649,8 +3649,8 @@ CASE(JSOP_POPBLOCKSCOPE)
     // Pop block from scope chain.
     NestedStaticScope* scope = script->getStaticBlockScope(REGS.pc);
     MOZ_ASSERT(scope && scope->is<StaticBlockScope>());
-    StaticBlockScope& blockObj = scope->as<StaticBlockScope>();
-    MOZ_ASSERT(blockObj.needsClone());
+    StaticBlockScope& blockScope = scope->as<StaticBlockScope>();
+    MOZ_ASSERT(blockScope.needsClone());
 #endif
 
     if (MOZ_UNLIKELY(cx->compartment()->isDebuggee()))
