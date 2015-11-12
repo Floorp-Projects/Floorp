@@ -1978,7 +1978,7 @@ LayoutDeviceIntPoint nsCocoaWindow::WidgetToScreenOffset()
   NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(LayoutDeviceIntPoint(0,0));
 }
 
-nsIntPoint nsCocoaWindow::GetClientOffset()
+nsIntPoint nsCocoaWindow::GetClientOffsetUntyped()
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
 

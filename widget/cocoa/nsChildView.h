@@ -551,7 +551,7 @@ public:
 
   bool IsPluginFocused() { return mPluginFocused; }
 
-  virtual nsIntPoint GetClientOffset() override;
+  virtual nsIntPoint GetClientOffsetUntyped() override;
 
   void DispatchAPZWheelInputEvent(mozilla::InputData& aEvent, bool aCanTriggerSwipe);
 
