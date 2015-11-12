@@ -92,7 +92,7 @@ StaticScopeIter<allowGC>::operator++(int)
     } else {
         onNamedLambda = true;
     }
-    MOZ_ASSERT_IF(scope, IsStaticScope(scope));
+    MOZ_ASSERT_IF(scope, scope->template is<StaticScope>());
     MOZ_ASSERT_IF(onNamedLambda, scope->template is<StaticFunctionScope>());
 }
 
