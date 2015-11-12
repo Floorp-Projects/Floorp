@@ -15,7 +15,7 @@
 #include "base/scoped_nsautorelease_pool.h"
 #include "base/time.h"
 #include "nsDependentSubstring.h"
-#include "third_party/libevent/event.h"
+#include "event.h"
 #include "mozilla/UniquePtr.h"
 
 // This macro checks that the _EVENT_SIZEOF_* constants defined in

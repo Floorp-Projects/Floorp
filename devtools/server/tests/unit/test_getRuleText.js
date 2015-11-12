@@ -100,6 +100,13 @@ const TEST_DATA = [
     column: 4,
     expected: {offset: 7, text: "border:1px solid red;content: '}';color:red;"}
   },
+  {
+    desc: "Rule contains no tokens",
+    input: "div{}",
+    line: 1,
+    column: 1,
+    expected: {offset: 4, text: ""}
+  },
 ];
 
 function run_test() {
