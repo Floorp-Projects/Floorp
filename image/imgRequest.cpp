@@ -17,7 +17,7 @@
 #include "RasterImage.h"
 
 #include "nsIChannel.h"
-#include "nsICachingChannel.h"
+#include "nsICacheInfoChannel.h"
 #include "nsIDocument.h"
 #include "nsIThreadRetargetableRequest.h"
 #include "nsIInputStream.h"
@@ -31,8 +31,6 @@
 #include "nsISupportsPrimitives.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsContentUtils.h"
-
-#include "nsICacheEntry.h"
 
 #include "plstr.h" // PL_strcasestr(...)
 #include "nsNetUtil.h"
@@ -586,22 +584,15 @@ imgRequest::SetCacheValidation(imgCacheEntry* aCacheEntry, nsIRequest* aRequest)
 {
   /* get the expires info */
   if (aCacheEntry) {
-    nsCOMPtr<nsICachingChannel> cacheChannel(do_QueryInterface(aRequest));
+    nsCOMPtr<nsICacheInfoChannel> cacheChannel(do_QueryInterface(aRequest));
     if (cacheChannel) {
-      nsCOMPtr<nsISupports> cacheToken;
-      cacheChannel->GetCacheToken(getter_AddRefs(cacheToken));
-      if (cacheToken) {
-        nsCOMPtr<nsICacheEntry> entryDesc(do_QueryInterface(cacheToken));
-        if (entryDesc) {
-          uint32_t expiration;
-          /* get the expiration time from the caching channel's token */
-          entryDesc->GetExpirationTime(&expiration);
-
-          // Expiration time defaults to 0. We set the expiration time on our
-          // entry if it hasn't been set yet.
-          if (aCacheEntry->GetExpiryTime() == 0) {
-            aCacheEntry->SetExpiryTime(expiration);
-          }
+      uint32_t expiration = 0;
+      /* get the expiration time from the caching channel's token */
+      if (NS_SUCCEEDED(cacheChannel->GetCacheTokenExpirationTime(&expiration))) {
+        // Expiration time defaults to 0. We set the expiration time on our
+        // entry if it hasn't been set yet.
+        if (aCacheEntry->GetExpiryTime() == 0) {
+          aCacheEntry->SetExpiryTime(expiration);
         }
       }
     }
