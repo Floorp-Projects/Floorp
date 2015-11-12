@@ -19,6 +19,7 @@ window.addEventListener("load", function onLoad() {
   document.getElementById("runtime-panel-installsimulator").onclick = ShowAddons;
   document.getElementById("runtime-panel-noadbhelper").onclick = ShowAddons;
   document.getElementById("runtime-panel-nousbdevice").onclick = ShowTroubleShooting;
+  document.getElementById("refresh-devices").onclick = RefreshScanners;
   runtimeList.update();
   runtimeList.updateCommands();
 }, true);
@@ -46,6 +47,10 @@ function ShowDevicePreferences() {
 
 function ShowSettings() {
   runtimeList.showSettings();
+}
+
+function RefreshScanners() {
+  runtimeList.refreshScanners();
 }
 
 function DisconnectRuntime() {

@@ -86,6 +86,10 @@ RuntimeList.prototype = {
     this._Cmds.showAddons();
   },
 
+  refreshScanners: function() {
+    RuntimeScanners.scan();
+  },
+
   updateCommands: function() {
     let doc = this._doc;
 
