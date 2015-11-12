@@ -20,9 +20,12 @@
 #include "nsIDOMChromeWindow.h"
 #include "nsIDOMWindow.h"
 #include "nsIWebNavigation.h"
-#include "nsIWindowMediator.h"
 #include "nsIWebProgress.h"
 #include "nsIWebProgressListener.h"
+#include "nsIWindowMediator.h"
+#include "nsIWindowWatcher.h"
+#include "nsPIWindowWatcher.h"
+#include "nsWindowWatcher.h"
 #include "nsWeakReference.h"
 
 using namespace mozilla;
@@ -498,6 +501,31 @@ private:
       return rv;
     }
 
+    if (XRE_IsContentProcess()) {
+      // ContentProcess
+      nsCOMPtr<nsIWindowWatcher> wwatch =
+        do_GetService(NS_WINDOWWATCHER_CONTRACTID, &rv);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+      nsCOMPtr<nsPIWindowWatcher> pwwatch(do_QueryInterface(wwatch));
+      NS_ENSURE_STATE(pwwatch);
+
+      nsCString spec;
+      uri->GetSpec(spec);
+
+      nsCOMPtr<nsIDOMWindow> newWindow;
+      pwwatch->OpenWindow2(nullptr,
+                           spec.get(),
+                           nullptr,
+                           nullptr,
+                           false, false, true, nullptr, nullptr,
+                           getter_AddRefs(newWindow));
+      nsCOMPtr<nsPIDOMWindow> pwindow = do_QueryInterface(newWindow);
+      pwindow.forget(aWindow);
+      return NS_OK;
+    }
+
     // Find the most recent browser window and open a new tab in it.
     nsCOMPtr<nsIDOMWindow> browserWindow;
     rv = wm->GetMostRecentWindow(MOZ_UTF16("navigator:browser"),
@@ -580,13 +608,6 @@ already_AddRefed<Promise>
 ServiceWorkerClients::OpenWindow(const nsAString& aUrl,
                                  ErrorResult& aRv)
 {
-  // XXXcatalinb: This works only on non-multiprocess for now, bail if we're
-  // running in a content process.
-  if (XRE_IsContentProcess()) {
-    aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
-    return nullptr;
-  }
-
   WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
   MOZ_ASSERT(workerPrivate);
 

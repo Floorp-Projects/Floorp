@@ -150,10 +150,9 @@ ContentProcessManager::AllocateTabId(const TabId& aOpenerTabId,
 
   struct RemoteFrameInfo info;
 
-  const IPCTabContextUnion& contextUnion = aContext.contextUnion();
   // If it's a PopupIPCTabContext, it's the case that a TabChild want to
   // open a new tab. aOpenerTabId has to be it's parent frame's opener id.
-  if (contextUnion.type() == IPCTabContextUnion::TPopupIPCTabContext) {
+  if (aContext.type() == IPCTabContext::TPopupIPCTabContext) {
     auto remoteFrameIter = iter->second.mRemoteFrames.find(aOpenerTabId);
     if (remoteFrameIter == iter->second.mRemoteFrames.end()) {
       ASSERT_UNLESS_FUZZING("Failed to find parent frame's opener id.");
@@ -162,7 +161,7 @@ ContentProcessManager::AllocateTabId(const TabId& aOpenerTabId,
 
     info.mOpenerTabId = remoteFrameIter->second.mOpenerTabId;
 
-    const PopupIPCTabContext &ipcContext = contextUnion.get_PopupIPCTabContext();
+    const PopupIPCTabContext &ipcContext = aContext.get_PopupIPCTabContext();
     MOZ_ASSERT(ipcContext.opener().type() == PBrowserOrId::TTabId);
 
     remoteFrameIter = iter->second.mRemoteFrames.find(ipcContext.opener().get_TabId());

@@ -232,10 +232,9 @@ MaybeInvalidTabContext::MaybeInvalidTabContext(const IPCTabContext& aParams)
   nsAutoCString originSuffix;
   nsAutoCString signedPkgOriginNoSuffix;
 
-  const IPCTabContextUnion& contextUnion = aParams.contextUnion();
-  switch(contextUnion.type()) {
-    case IPCTabContextUnion::TPopupIPCTabContext: {
-      const PopupIPCTabContext &ipcContext = contextUnion.get_PopupIPCTabContext();
+  switch(aParams.type()) {
+    case IPCTabContext::TPopupIPCTabContext: {
+      const PopupIPCTabContext &ipcContext = aParams.get_PopupIPCTabContext();
 
       TabContext *context;
       if (ipcContext.opener().type() == PBrowserOrId::TPBrowserParent) {
@@ -281,14 +280,31 @@ MaybeInvalidTabContext::MaybeInvalidTabContext(const IPCTabContext& aParams)
       }
       break;
     }
-    case IPCTabContextUnion::TFrameIPCTabContext: {
+    case IPCTabContext::TFrameIPCTabContext: {
       const FrameIPCTabContext &ipcContext =
-        contextUnion.get_FrameIPCTabContext();
+        aParams.get_FrameIPCTabContext();
 
       containingAppId = ipcContext.frameOwnerAppId();
       signedPkgOriginNoSuffix = ipcContext.signedPkgOriginNoSuffix();
       originSuffix = ipcContext.originSuffix();
       originAttributes.PopulateFromSuffix(originSuffix);
+      break;
+    }
+    case IPCTabContext::TUnsafeIPCTabContext: {
+      // XXXcatalinb: This used *only* by ServiceWorkerClients::OpenWindow.
+      // It is meant as a temporary solution until service workers can
+      // provide a TabChild equivalent. Don't allow this on b2g since
+      // it might be used to escalate privileges.
+#ifdef MOZ_B2G
+      mInvalidReason = "ServiceWorkerClients::OpenWindow is not supported.";
+      return;
+#endif
+      if (!Preferences::GetBool("dom.serviceWorkers.enabled", false)) {
+        mInvalidReason = "ServiceWorkers should be enabled.";
+        return;
+      }
+
+      containingAppId = NO_APP_ID;
       break;
     }
     default: {

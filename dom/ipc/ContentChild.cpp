@@ -775,34 +775,47 @@ ContentChild::ProvideWindowCommon(TabChild* aTabOpener,
                                   bool* aWindowIsNew,
                                   nsIDOMWindow** aReturn)
 {
-    MOZ_ASSERT(aTabOpener);
     *aReturn = nullptr;
 
-    const TabId openerTabId = aTabOpener->GetTabId();
+    nsAutoPtr<IPCTabContext> ipcContext;
+    TabId openerTabId = TabId(0);
 
-    PopupIPCTabContext context;
-    context.opener() = openerTabId;
-    context.isBrowserElement() = aTabOpener->IsBrowserElement();
+    if (aTabOpener) {
+        PopupIPCTabContext context;
+        openerTabId = aTabOpener->GetTabId();
+        context.opener() = openerTabId;
+        context.isBrowserElement() = aTabOpener->IsBrowserElement();
+        ipcContext = new IPCTabContext(context);
+    } else {
+        // It's possible to not have a TabChild opener in the case
+        // of ServiceWorker::OpenWindow.
+        UnsafeIPCTabContext unsafeTabContext;
+        ipcContext = new IPCTabContext(unsafeTabContext);
+    }
 
-    IPCTabContext ipcContext(context);
-
+    MOZ_ASSERT(ipcContext);
     TabId tabId;
     SendAllocateTabId(openerTabId,
-                      ipcContext,
+                      *ipcContext,
                       GetID(),
                       &tabId);
 
+    TabContext newTabContext = aTabOpener ? *aTabOpener : TabContext();
     RefPtr<TabChild> newChild = new TabChild(this, tabId,
-                                             *aTabOpener, aChromeFlags);
+                                             newTabContext, aChromeFlags);
     if (NS_FAILED(newChild->Init())) {
         return NS_ERROR_ABORT;
     }
 
-    context.opener() = aTabOpener;
+    if (aTabOpener) {
+        MOZ_ASSERT(ipcContext->type() == IPCTabContext::TPopupIPCTabContext);
+        ipcContext->get_PopupIPCTabContext().opener() = aTabOpener;
+    }
+
     unused << SendPBrowserConstructor(
         // We release this ref in DeallocPBrowserChild
         RefPtr<TabChild>(newChild).forget().take(),
-        tabId, IPCTabContext(context), aChromeFlags,
+        tabId, *ipcContext, aChromeFlags,
         GetID(), IsForApp(), IsForBrowser());
 
     nsAutoCString url;
@@ -826,16 +839,18 @@ ContentChild::ProvideWindowCommon(TabChild* aTabOpener,
                                              NS_ConvertUTF8toUTF16(features),
                                              aWindowIsNew);
     } else {
-        nsCOMPtr<nsPIDOMWindow> opener = do_QueryInterface(aParent);
-        nsCOMPtr<nsIDocument> doc = opener->GetDoc();
-        nsCOMPtr<nsIURI> baseURI = doc->GetDocBaseURI();
-        if (!baseURI) {
-            NS_ERROR("nsIDocument didn't return a base URI");
-            return NS_ERROR_FAILURE;
-        }
-
         nsAutoCString baseURIString;
-        baseURI->GetSpec(baseURIString);
+        if (aTabOpener) {
+            nsCOMPtr<nsPIDOMWindow> opener = do_QueryInterface(aParent);
+            nsCOMPtr<nsIDocument> doc = opener->GetDoc();
+            nsCOMPtr<nsIURI> baseURI = doc->GetDocBaseURI();
+            if (!baseURI) {
+                NS_ERROR("nsIDocument didn't return a base URI");
+                return NS_ERROR_FAILURE;
+            }
+
+            baseURI->GetSpec(baseURIString);
+        }
 
         nsresult rv;
         if (!SendCreateWindow(aTabOpener, newChild,

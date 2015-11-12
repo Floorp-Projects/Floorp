@@ -1113,7 +1113,7 @@ parent:
     sync GetGraphicsDeviceInitData()
         returns (DeviceInitData aData);
 
-    sync CreateWindow(PBrowser aThisTab,
+    sync CreateWindow(nullable PBrowser aThisTab,
                       PBrowser aNewTab,
                       uint32_t aChromeFlags,
                       bool aCalledFromJS,
