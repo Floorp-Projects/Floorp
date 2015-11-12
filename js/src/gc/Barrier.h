@@ -807,6 +807,17 @@ struct MovableCellHasher
 };
 
 template <typename T>
+struct MovableCellHasher<PreBarriered<T>>
+{
+    using Key = PreBarriered<T>;
+    using Lookup = T;
+
+    static HashNumber hash(const Lookup& l) { return MovableCellHasher<T>::hash(l); }
+    static bool match(const Key& k, const Lookup& l) { return MovableCellHasher<T>::match(k, l); }
+    static void rekey(Key& k, const Key& newKey) { k.unsafeSet(newKey); }
+};
+
+template <typename T>
 struct MovableCellHasher<RelocatablePtr<T>>
 {
     using Key = RelocatablePtr<T>;
