@@ -12,7 +12,10 @@ include BluetoothTypes;
 
 include "mozilla/dom/bluetooth/ipc/BluetoothMessageUtils.h";
 
-using mozilla::dom::bluetooth::BluetoothObjectType from "mozilla/dom/bluetooth/BluetoothCommon.h";
+using mozilla::dom::bluetooth::BluetoothAddress
+  from "mozilla/dom/bluetooth/BluetoothCommon.h";
+using mozilla::dom::bluetooth::BluetoothObjectType
+  from "mozilla/dom/bluetooth/BluetoothCommon.h";
 
 namespace mozilla {
 namespace dom {
@@ -42,7 +45,7 @@ struct SetPropertyRequest
 struct GetPropertyRequest
 {
   BluetoothObjectType type;
-  nsString path;
+  BluetoothAddress address;
 };
 
 struct StartDiscoveryRequest
@@ -65,54 +68,54 @@ struct StopLeScanRequest
 
 struct PairRequest
 {
-  nsString address;
+  BluetoothAddress address;
   uint32_t timeoutMS;
 };
 
 struct UnpairRequest
 {
-  nsString address;
+  BluetoothAddress address;
 };
 
 struct PinReplyRequest
 {
-  nsString address;
+  BluetoothAddress address;
   bool accept;
   nsString pinCode;
 };
 
 struct SspReplyRequest
 {
-  nsString address;
+  BluetoothAddress address;
   BluetoothSspVariant variant;
   bool accept;
 };
 
 struct SetPinCodeRequest
 {
-  nsString path;
+  BluetoothAddress address;
   nsString pincode;
 };
 
 struct SetPasskeyRequest
 {
-  nsString path;
+  BluetoothAddress address;
   uint32_t passkey;
 };
 
 struct ConfirmPairingConfirmationRequest
 {
-  nsString path;
+  BluetoothAddress address;
 };
 
 struct DenyPairingConfirmationRequest
 {
-  nsString path;
+  BluetoothAddress address;
 };
 
 struct PairedDevicePropertiesRequest
 {
-  nsString[] addresses;
+  BluetoothAddress[] addresses;
 };
 
 struct ConnectedDevicePropertiesRequest
@@ -122,19 +125,19 @@ struct ConnectedDevicePropertiesRequest
 
 struct FetchUuidsRequest
 {
-  nsString address;
+  BluetoothAddress address;
 };
 
 struct ConnectRequest
 {
-  nsString address;
+  BluetoothAddress address;
   uint32_t cod;
   uint16_t serviceUuid;
 };
 
 struct DisconnectRequest
 {
-  nsString address;
+  BluetoothAddress address;
   uint16_t serviceUuid;
 };
 

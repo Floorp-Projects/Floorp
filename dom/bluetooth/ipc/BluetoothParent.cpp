@@ -599,7 +599,7 @@ BluetoothRequestParent::DoRequest(const SetPinCodeRequest& aRequest)
   MOZ_ASSERT(mService);
   MOZ_ASSERT(mRequestType == Request::TSetPinCodeRequest);
 
-  mService->SetPinCodeInternal(aRequest.path(),
+  mService->SetPinCodeInternal(aRequest.address(),
                                aRequest.pincode(),
                                mReplyRunnable.get());
 
@@ -612,7 +612,7 @@ BluetoothRequestParent::DoRequest(const SetPasskeyRequest& aRequest)
   MOZ_ASSERT(mService);
   MOZ_ASSERT(mRequestType == Request::TSetPasskeyRequest);
 
-  mService->SetPasskeyInternal(aRequest.path(),
+  mService->SetPasskeyInternal(aRequest.address(),
                                aRequest.passkey(),
                                mReplyRunnable.get());
 
@@ -626,7 +626,7 @@ BluetoothRequestParent::DoRequest(const ConfirmPairingConfirmationRequest&
   MOZ_ASSERT(mService);
   MOZ_ASSERT(mRequestType == Request::TConfirmPairingConfirmationRequest);
 
-  mService->SetPairingConfirmationInternal(aRequest.path(),
+  mService->SetPairingConfirmationInternal(aRequest.address(),
                                            true,
                                            mReplyRunnable.get());
 
@@ -640,7 +640,7 @@ BluetoothRequestParent::DoRequest(const DenyPairingConfirmationRequest&
   MOZ_ASSERT(mService);
   MOZ_ASSERT(mRequestType == Request::TDenyPairingConfirmationRequest);
 
-  mService->SetPairingConfirmationInternal(aRequest.path(),
+  mService->SetPairingConfirmationInternal(aRequest.address(),
                                            false,
                                            mReplyRunnable.get());
 
