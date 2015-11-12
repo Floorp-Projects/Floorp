@@ -70,6 +70,32 @@ USING_BLUETOOTH_NAMESPACE
 static BluetoothInterface* sBtInterface;
 static nsTArray<RefPtr<BluetoothProfileController> > sControllerArray;
 
+/*
+ *  Static methods
+ */
+
+ControlPlayStatus
+BluetoothServiceBluedroid::PlayStatusStringToControlPlayStatus(
+  const nsAString& aPlayStatus)
+{
+  ControlPlayStatus playStatus = ControlPlayStatus::PLAYSTATUS_UNKNOWN;
+  if (aPlayStatus.EqualsLiteral("STOPPED")) {
+    playStatus = ControlPlayStatus::PLAYSTATUS_STOPPED;
+  } else if (aPlayStatus.EqualsLiteral("PLAYING")) {
+    playStatus = ControlPlayStatus::PLAYSTATUS_PLAYING;
+  } else if (aPlayStatus.EqualsLiteral("PAUSED")) {
+    playStatus = ControlPlayStatus::PLAYSTATUS_PAUSED;
+  } else if (aPlayStatus.EqualsLiteral("FWD_SEEK")) {
+    playStatus = ControlPlayStatus::PLAYSTATUS_FWD_SEEK;
+  } else if (aPlayStatus.EqualsLiteral("REV_SEEK")) {
+    playStatus = ControlPlayStatus::PLAYSTATUS_REV_SEEK;
+  } else if (aPlayStatus.EqualsLiteral("ERROR")) {
+    playStatus = ControlPlayStatus::PLAYSTATUS_ERROR;
+  }
+
+  return playStatus;
+}
+
 class BluetoothServiceBluedroid::EnableResultHandler final
   : public BluetoothResultHandler
 {
@@ -1926,12 +1952,15 @@ BluetoothServiceBluedroid::SendMetaData(const nsAString& aTitle,
 
 void
 BluetoothServiceBluedroid::SendPlayStatus(
-  int64_t aDuration, int64_t aPosition, ControlPlayStatus aPlayStatus,
+  int64_t aDuration, int64_t aPosition,
+  const nsAString& aPlayStatus,
   BluetoothReplyRunnable* aRunnable)
 {
   BluetoothAvrcpManager* avrcp = BluetoothAvrcpManager::Get();
   if (avrcp) {
-    avrcp->UpdatePlayStatus(aDuration, aPosition, aPlayStatus);
+    ControlPlayStatus playStatus =
+      PlayStatusStringToControlPlayStatus(aPlayStatus);
+    avrcp->UpdatePlayStatus(aDuration, aPosition, playStatus);
   }
   DispatchReplySuccess(aRunnable);
 }
