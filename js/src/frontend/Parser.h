@@ -393,7 +393,7 @@ class Parser : private JS::AutoGCRooter, public StrictModeGetter
         ~AutoPushStmtInfoPC();
 
         bool generateBlockId();
-        bool makeInnermostLexicalScope(StaticBlockScope& blockObj);
+        bool makeInnermostLexicalScope(StaticBlockScope& blockScope);
 
         StmtInfoPC& operator*() { return stmt_; }
         StmtInfoPC* operator->() { return &stmt_; }
@@ -670,14 +670,14 @@ class Parser : private JS::AutoGCRooter, public StrictModeGetter
                       ParseNodeKind* forHeadKind,
                       Node* forInitialPart,
                       mozilla::Maybe<AutoPushStmtInfoPC>& letStmt,
-                      MutableHandle<StaticBlockScope*> blockObj,
+                      MutableHandle<StaticBlockScope*> blockScope,
                       Node* forLetImpliedBlock,
                       Node* forInOrOfExpression);
     bool validateForInOrOfLHSExpression(Node target);
     Node expressionAfterForInOrOf(ParseNodeKind forHeadKind, YieldHandling yieldHandling);
 
     void assertCurrentLexicalStaticBlockIs(ParseContext<ParseHandler>* pc,
-                                           Handle<StaticBlockScope*> blockObj);
+                                           Handle<StaticBlockScope*> blockScope);
 
     Node switchStatement(YieldHandling yieldHandling);
     Node continueStatement(YieldHandling yieldHandling);
@@ -698,7 +698,7 @@ class Parser : private JS::AutoGCRooter, public StrictModeGetter
     // Declaration parsing.  The main entrypoint is Parser::declarationList,
     // with sub-functionality split out into the remaining methods.
 
-    // |blockObj| may be non-null only when |kind| corresponds to a lexical
+    // |blockScope| may be non-null only when |kind| corresponds to a lexical
     // declaration (that is, PNK_LET or PNK_CONST).
     //
     // The for* parameters, for normal declarations, should be null/ignored.
@@ -717,7 +717,7 @@ class Parser : private JS::AutoGCRooter, public StrictModeGetter
     // parsed into |*forInOrOfExpression|.
     Node declarationList(YieldHandling yieldHandling,
                          ParseNodeKind kind,
-                         StaticBlockScope* blockObj = nullptr,
+                         StaticBlockScope* blockScope = nullptr,
                          ParseNodeKind* forHeadKind = nullptr,
                          Node* forInOrOfExpression = nullptr);
 
@@ -884,8 +884,8 @@ class Parser : private JS::AutoGCRooter, public StrictModeGetter
     bool defineArg(Node funcpn, HandlePropertyName name,
                    bool disallowDuplicateArgs = false, Node* duplicatedArg = nullptr);
     Node pushLexicalScope(AutoPushStmtInfoPC& stmt);
-    Node pushLexicalScope(Handle<StaticBlockScope*> blockObj, AutoPushStmtInfoPC& stmt);
-    Node pushLetScope(Handle<StaticBlockScope*> blockObj, AutoPushStmtInfoPC& stmt);
+    Node pushLexicalScope(Handle<StaticBlockScope*> blockScope, AutoPushStmtInfoPC& stmt);
+    Node pushLetScope(Handle<StaticBlockScope*> blockScope, AutoPushStmtInfoPC& stmt);
     bool noteNameUse(HandlePropertyName name, Node pn);
     Node propertyName(YieldHandling yieldHandling, Node propList,
                       PropertyType* propType, MutableHandleAtom propAtom);

@@ -1257,11 +1257,11 @@ js::CloneNestedScopeObject(JSContext* cx, HandleObject enclosingScope,
                            Handle<NestedStaticScope*> srcBlock)
 {
     if (srcBlock->is<StaticBlockScope>()) {
-        Rooted<StaticBlockScope*> blockObj(cx, &srcBlock->as<StaticBlockScope>());
-        return CloneStaticBlockObject(cx, enclosingScope, blockObj);
+        Rooted<StaticBlockScope*> blockScope(cx, &srcBlock->as<StaticBlockScope>());
+        return CloneStaticBlockObject(cx, enclosingScope, blockScope);
     } else {
-        Rooted<StaticWithScope*> withObj(cx, &srcBlock->as<StaticWithScope>());
-        return CloneStaticWithObject(cx, enclosingScope, withObj);
+        Rooted<StaticWithScope*> withScope(cx, &srcBlock->as<StaticWithScope>());
+        return CloneStaticWithObject(cx, enclosingScope, withScope);
     }
 }
 

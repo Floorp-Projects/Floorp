@@ -1485,7 +1485,7 @@ struct ClassNode : public TernaryNode {
         MOZ_ASSERT(list->isKind(PNK_CLASSMETHODLIST));
         return list;
     }
-    ObjectBox* scopeObject() const {
+    ObjectBox* scopeObjectBox() const {
         MOZ_ASSERT(pn_kid3->is<LexicalScopeNode>());
         return pn_kid3->pn_objbox;
     }

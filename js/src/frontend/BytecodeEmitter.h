@@ -80,7 +80,7 @@ struct CGBlockScopeList {
     Vector<CGBlockScopeNote> list;
     explicit CGBlockScopeList(ExclusiveContext* cx) : list(cx) {}
 
-    bool append(uint32_t scopeObject, uint32_t offset, bool inPrologue, uint32_t parent);
+    bool append(uint32_t scopeObjectIndex, uint32_t offset, bool inPrologue, uint32_t parent);
     uint32_t findEnclosingScope(uint32_t index);
     void recordEnd(uint32_t index, uint32_t offset, bool inPrologue);
     size_t length() const { return list.length(); }
@@ -386,7 +386,7 @@ struct BytecodeEmitter
     bool enterBlockScope(StmtInfoBCE* stmtInfo, ObjectBox* objbox, JSOp initialValueOp,
                          unsigned alreadyPushed = 0);
 
-    bool computeAliasedSlots(Handle<StaticBlockScope*> blockObj);
+    bool computeAliasedSlots(Handle<StaticBlockScope*> blockScope);
 
     bool lookupAliasedName(HandleScript script, PropertyName* name, uint32_t* pslot,
                            ParseNode* pn = nullptr);
@@ -396,7 +396,7 @@ struct BytecodeEmitter
     // fixed part of a stack frame.  Outside a function, there are no fixed vars,
     // but block-scoped locals still form part of the fixed part of a stack frame
     // and are thus addressable via GETLOCAL and friends.
-    void computeLocalOffset(Handle<StaticBlockScope*> blockObj);
+    void computeLocalOffset(Handle<StaticBlockScope*> blockScope);
 
     bool flushPops(int* npops);
 
@@ -639,7 +639,7 @@ struct BytecodeEmitter
     bool emitLexicalInitialization(ParseNode* pn, JSOp globalDefOp);
 
     bool pushInitialConstants(JSOp op, unsigned n);
-    bool initializeBlockScopedLocalsFromStack(Handle<StaticBlockScope*> blockObj);
+    bool initializeBlockScopedLocalsFromStack(Handle<StaticBlockScope*> blockScope);
 
     // Emit bytecode for the spread operator.
     //

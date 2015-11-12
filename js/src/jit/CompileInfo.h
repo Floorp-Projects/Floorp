@@ -433,10 +433,10 @@ class CompileInfo
             for (; staticScope; staticScope = staticScope->enclosingNestedScope()) {
                 if (!staticScope->is<StaticBlockScope>())
                     continue;
-                StaticBlockScope& blockObj = staticScope->as<StaticBlockScope>();
-                if (blockObj.localOffset() < local) {
-                    if (local - blockObj.localOffset() < blockObj.numVariables())
-                        return blockObj.isAliased(local - blockObj.localOffset());
+                StaticBlockScope& blockScope = staticScope->as<StaticBlockScope>();
+                if (blockScope.localOffset() < local) {
+                    if (local - blockScope.localOffset() < blockScope.numVariables())
+                        return blockScope.isAliased(local - blockScope.localOffset());
                     return false;
                 }
             }
