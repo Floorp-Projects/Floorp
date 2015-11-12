@@ -39,8 +39,10 @@ worker.onmessage = function(event) {
 }
 
 msg = "Loading data:something";
-worker = new Worker("data:application/javascript;base64,ZHVtcCgnaGVsbG8gd29ybGQnKQo=");
-worker.onerror = function() {
+try {
+  worker = new Worker("data:application/javascript;base64,ZHVtcCgnaGVsbG8gd29ybGQnKQo=");
+  ok(false, "Should have thrown!");
+} catch (e) {
   ok(true, "Threw as expected.");
 }
 
