@@ -44,6 +44,9 @@ if CONFIG['MOZ_WEBSPEECH_POCKETSPHINX']:
         'media/pocketsphinx',
     ]
 
+if CONFIG['MOZ_FFVPX']:
+    external_dirs += ['media/ffvpx']
+
 external_dirs += [
     'media/kiss_fft',
     'media/libcubeb',
