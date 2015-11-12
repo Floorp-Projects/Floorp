@@ -511,7 +511,17 @@ GLLibraryEGL::InitExtensionsFromDisplay(EGLDisplay eglDisplay)
 {
     std::vector<nsCString> driverExtensionList;
 
-    const char* rawExts = (const char*)fQueryString(eglDisplay, LOCAL_EGL_EXTENSIONS);
+    bool canQueryStringWithNull = true;
+#ifdef ANDROID
+    canQueryStringWithNull = false;
+#endif
+
+    const char* rawExts = nullptr;
+
+    if (eglDisplay || canQueryStringWithNull) {
+        rawExts = (const char*)fQueryString(eglDisplay, LOCAL_EGL_EXTENSIONS);
+    }
+
     if (rawExts) {
         nsDependentCString exts(rawExts);
         SplitByChar(exts, ' ', &driverExtensionList);
