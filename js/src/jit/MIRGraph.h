@@ -57,8 +57,6 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
     // This block cannot be reached by any means.
     bool unreachable_;
 
-    MResumePoint* callerResumePoint_;
-
     // Pushes a copy of a local variable or argument.
     void pushVariable(uint32_t slot);
 
@@ -635,6 +633,11 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
     uint32_t numDominated_;
     jsbytecode* pc_;
     LBlock* lir_;
+
+    // Copy of a dominator block's outerResumePoint_ which holds the state of
+    // caller frame at the time of the call. If not null, this implies that this
+    // basic block corresponds to an inlined script.
+    MResumePoint* callerResumePoint_;
 
     // Resume point holding baseline-like frame for the PC corresponding to the
     // entry of this basic block.
