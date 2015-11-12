@@ -844,12 +844,12 @@ public:
     return Super::operator=(mozilla::Move(aRegion));
   }
 
-  static IntRegionTyped FromUntyped(const IntRegionTyped<UnknownUnits>& aRegion)
+  static IntRegionTyped FromUnknownRegion(const IntRegionTyped<UnknownUnits>& aRegion)
   {
     return IntRegionTyped(aRegion.Impl());
   }
 private:
-  // This is deliberately private, so calling code uses FromUntyped().
+  // This is deliberately private, so calling code uses FromUnknownRegion().
   explicit IntRegionTyped(const nsRegion& aRegion) : Super(aRegion) {}
 };
 

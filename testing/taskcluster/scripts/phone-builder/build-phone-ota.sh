@@ -40,6 +40,7 @@ $WORKSPACE/gecko/testing/mozharness/scripts/b2g_build.py \
   --repo=$WORKSPACE/gecko \
   --platform $PLATFORM \
   --gecko-objdir=$gecko_objdir \
+  --branch=$(basename $GECKO_HEAD_REPOSITORY) \
   --complete-mar-url https://queue.taskcluster.net/v1/task/$TASK_ID/runs/$RUN_ID/artifacts/public/build/
 
 . post-build.sh

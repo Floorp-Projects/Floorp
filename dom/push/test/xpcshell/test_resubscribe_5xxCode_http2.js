@@ -93,7 +93,6 @@ add_task(function* test1() {
 
   PushService.init({
     serverURI: serverURL + "/subscribe",
-    service: PushServiceHttp2,
     db
   });
 

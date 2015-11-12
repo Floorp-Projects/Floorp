@@ -338,6 +338,13 @@ public:
 
     virtual bool RecvPreferenceUpdate(const PrefSetting& aPref) override;
 
+    virtual bool RecvDataStoragePut(const nsString& aFilename,
+                                    const DataStorageItem& aItem) override;
+    virtual bool RecvDataStorageRemove(const nsString& aFilename,
+                                       const nsCString& aKey,
+                                       const DataStorageType& aType) override;
+    virtual bool RecvDataStorageClear(const nsString& aFilename) override;
+
     virtual bool RecvNotifyAlertsObserver(const nsCString& aType,
                                           const nsString& aData) override;
 

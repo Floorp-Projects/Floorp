@@ -64,8 +64,8 @@
       ok(false, "Should have thrown for bogus encoding label.");
     } catch (e) {
       ok(e instanceof RangeError, "Expected a RangeError");
-      finishTest();
     }
+    finishTest();
   }
 
   function testSteps()

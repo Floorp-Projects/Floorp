@@ -376,7 +376,7 @@ nsFilterInstance::BuildSourcePaint(SourceInfo *aSource,
       nsSVGUtils::MakeStrokePatternFor(mTargetFrame, gfx, &pattern);
     }
     if (pattern.GetPattern()) {
-      offscreenDT->FillRect(ToRect(FilterSpaceToUserSpace(neededRect)),
+      offscreenDT->FillRect(ToRect(FilterSpaceToUserSpace(ThebesRect(neededRect))),
                             pattern);
     }
     gfx->Restore();
@@ -422,7 +422,7 @@ nsFilterInstance::BuildSourceImage(DrawTarget* aTargetDT)
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  gfxRect r = FilterSpaceToUserSpace(neededRect);
+  gfxRect r = FilterSpaceToUserSpace(ThebesRect(neededRect));
   r.RoundOut();
   nsIntRect dirty;
   if (!gfxUtils::GfxRectToIntRect(r, &dirty))
@@ -484,7 +484,7 @@ nsFilterInstance::Render(gfxContext* aContext)
     return rv;
 
   FilterSupport::RenderFilterDescription(
-    dt, mFilterDescription, ToRect(filterRect),
+    dt, mFilterDescription, IntRectToRect(filterRect),
     mSourceGraphic.mSourceSurface, mSourceGraphic.mSurfaceRect,
     mFillPaint.mSourceSurface, mFillPaint.mSurfaceRect,
     mStrokePaint.mSourceSurface, mStrokePaint.mSurfaceRect,

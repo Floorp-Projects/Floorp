@@ -7,15 +7,6 @@
  * liability, trademark and document use rules apply.
  */
 
-dictionary AsyncScrollEventDetail {
-  float top = 0;
-  float left = 0;
-  float width = 0;
-  float height = 0;
-  float scrollWidth = 0;
-  float scrollHeight = 0;
-};
-
 dictionary OpenWindowEventDetail {
   DOMString url = "";
   DOMString name = "";

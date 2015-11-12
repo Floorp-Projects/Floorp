@@ -3882,6 +3882,13 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
       aList->SetNeedsTransparentSurface();
     }
 
+    nsDisplayItem::Type itemType = item->GetType();
+
+    if (mParameters.mForEventsOnly && !item->GetChildren() &&
+        itemType != nsDisplayItem::TYPE_LAYER_EVENT_REGIONS) {
+      continue;
+    }
+
     LayerState layerState = item->GetLayerState(mBuilder, mManager, mParameters);
     if (layerState == LAYER_INACTIVE &&
         nsDisplayItem::ForceActiveLayers()) {
@@ -3919,8 +3926,6 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
     if (!animatedGeometryRootForScrollMetadata) {
       animatedGeometryRootForScrollMetadata = animatedGeometryRoot;
     }
-
-    nsDisplayItem::Type itemType = item->GetType();
 
     if (animatedGeometryRoot != realAnimatedGeometryRootOfItem) {
       // Pick up any scroll clips that should apply to the item and apply them.
@@ -3961,7 +3966,7 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
       itemContent.IntersectRect(itemContent, itemClip.GetClipRect());
       clipRect = ViewAs<ParentLayerPixel>(ScaleToNearestPixels(itemClip.GetClipRect()));
       if (!prerenderedTransform) {
-        itemDrawRect.IntersectRect(itemDrawRect, ParentLayerIntRect::ToUntyped(clipRect));
+        itemDrawRect.IntersectRect(itemDrawRect, clipRect.ToUnknownRect());
       }
       clipRect.MoveBy(ViewAs<ParentLayerPixel>(mParameters.mOffset));
     }
@@ -4048,7 +4053,7 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
       if (layerClip.HasClip()) {
         layerClipRect = ViewAs<ParentLayerPixel>(
           ScaleToNearestPixels(layerClip.GetClipRect()) + mParameters.mOffset);
-        clipRectUntyped = ParentLayerIntRect::ToUntyped(layerClipRect);
+        clipRectUntyped = layerClipRect.ToUnknownRect();
         clipPtr = &clipRectUntyped;
       }
       if (animatedGeometryRoot == item->Frame() &&
@@ -4516,6 +4521,8 @@ FrameLayerBuilder::AddPaintedDisplayItem(PaintedLayerData* aLayerData,
 
       nsIntPoint offset = GetLastPaintOffset(layer) - GetTranslationForPaintedLayer(layer);
       props->MoveBy(-offset);
+      // Effective transforms are needed by ComputeDifferences().
+      tmpLayer->ComputeEffectiveTransforms(Matrix4x4());
       nsIntRegion invalid = props->ComputeDifferences(tmpLayer, nullptr);
       if (aLayerState == LAYER_SVG_EFFECTS) {
         invalid = nsSVGIntegrationUtils::AdjustInvalidAreaForSVGEffects(aItem->Frame(),
@@ -4886,7 +4893,7 @@ ContainerState::PostprocessRetainedLayers(nsIntRegion* aOpaqueRegionForContainer
     } else if (!e->mLayer->IsScrollbarContainer()) {
       const Maybe<ParentLayerIntRect>& clipRect = GetStationaryClipInContainer(e->mLayer);
       if (clipRect && opaqueRegionForContainer >= 0 &&
-          opaqueRegions[opaqueRegionForContainer].mOpaqueRegion.Contains(ParentLayerIntRect::ToUntyped(*clipRect))) {
+          opaqueRegions[opaqueRegionForContainer].mOpaqueRegion.Contains(clipRect->ToUnknownRect())) {
         e->mVisibleRegion.SetEmpty();
       } else if (data) {
         e->mVisibleRegion.Sub(e->mVisibleRegion, data->mOpaqueRegion);
@@ -4927,7 +4934,7 @@ ContainerState::PostprocessRetainedLayers(nsIntRegion* aOpaqueRegionForContainer
       nsIntRegion clippedOpaque = e->mOpaqueRegion;
       Maybe<ParentLayerIntRect> clipRect = e->mLayer->GetCombinedClipRect();
       if (clipRect) {
-        clippedOpaque.AndWith(ParentLayerIntRect::ToUntyped(*clipRect));
+        clippedOpaque.AndWith(clipRect->ToUnknownRect());
       }
       if (e->mLayer->GetIsFixedPosition() && !e->mLayer->IsClipFixed()) {
         // The clip can move asynchronously, so we can't rely on opaque parts
@@ -5878,7 +5885,7 @@ FrameLayerBuilder::DrawPaintedLayer(PaintedLayer* aLayer,
     while (const nsIntRect* iterRect = it.Next()) {
       gfxContextAutoSaveRestore save(aContext);
       aContext->NewPath();
-      aContext->Rectangle(*iterRect);
+      aContext->Rectangle(ThebesRect(*iterRect));
       aContext->Clip();
 
       DrawForcedBackgroundColor(aDrawTarget, aLayer,

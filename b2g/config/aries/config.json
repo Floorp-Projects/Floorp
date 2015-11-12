@@ -24,6 +24,8 @@
     "zip_files": [
         ["{workdir}/out/target/product/aries/*.img", "out/target/product/aries/"],
         "{workdir}/flash.sh",
+        "{workdir}/gecko/b2g/installer/flash.bat",
+        "{workdir}/prebuilts/misc/windows/win_flash_tools/*",
         "{workdir}/load-config.sh",
         "{workdir}/.config",
         "{workdir}/sources.xml",

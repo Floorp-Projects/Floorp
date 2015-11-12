@@ -1742,9 +1742,13 @@ nsStylePosition::ComputedJustifyContent(const nsStyleDisplay* aDisplay) const
   switch (aDisplay->mDisplay) {
     case NS_STYLE_DISPLAY_FLEX:
     case NS_STYLE_DISPLAY_INLINE_FLEX:
+      // For flex containers, css-align-3 says the justify-content value
+      // "'stretch' computes to 'flex-start'."
+      // https://drafts.csswg.org/css-align-3/#propdef-justify-content
       // XXX maybe map 'auto' too? (ISSUE 8 in the spec)
       // https://drafts.csswg.org/css-align-3/#content-distribution
-      if (mJustifyContent == NS_STYLE_JUSTIFY_STRETCH) {
+      if ((mJustifyContent & NS_STYLE_ALIGN_ALL_BITS) ==
+          NS_STYLE_JUSTIFY_STRETCH) {
         return NS_STYLE_JUSTIFY_FLEX_START;
       }
       break;

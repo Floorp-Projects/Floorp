@@ -95,7 +95,10 @@ nsSVGClipPathFrame::ApplyClipOrPaintClipMask(gfxContext& aContext,
     if (referencedClipIsTrivial) {
       clipPathFrame->ApplyClipOrPaintClipMask(aContext, aClippedFrame, aMatrix);
     } else {
-      aContext.PushGroup(gfxContentType::ALPHA);
+      Matrix maskTransform;
+      RefPtr<SourceSurface> mask = clipPathFrame->GetClipMask(aContext, aClippedFrame, aMatrix, &maskTransform);
+
+      aContext.PushGroupForBlendBack(gfxContentType::ALPHA, 1.0, mask, maskTransform);
     }
   }
 
@@ -121,7 +124,10 @@ nsSVGClipPathFrame::ApplyClipOrPaintClipMask(gfxContext& aContext,
         if (isTrivial) {
           clipPathFrame->ApplyClipOrPaintClipMask(aContext, aClippedFrame, aMatrix);
         } else {
-          aContext.PushGroup(gfxContentType::ALPHA);
+          Matrix maskTransform;
+          RefPtr<SourceSurface> mask = clipPathFrame->GetClipMask(aContext, aClippedFrame, aMatrix, &maskTransform);
+
+          aContext.PushGroupForBlendBack(gfxContentType::ALPHA, 1.0, mask, maskTransform);
         }
       }
 
@@ -138,17 +144,7 @@ nsSVGClipPathFrame::ApplyClipOrPaintClipMask(gfxContext& aContext,
 
       if (clipPathFrame) {
         if (!isTrivial) {
-          aContext.PopGroupToSource();
-
-          aContext.PushGroup(gfxContentType::ALPHA);
-
-          clipPathFrame->ApplyClipOrPaintClipMask(aContext, aClippedFrame, aMatrix);
-          Matrix maskTransform;
-          RefPtr<SourceSurface> clipMaskSurface = aContext.PopGroupToSurface(&maskTransform);
-
-          if (clipMaskSurface) {
-            aContext.Mask(clipMaskSurface, maskTransform);
-          }
+          aContext.PopGroupAndBlend();
         }
         aContext.Restore();
       }
@@ -157,22 +153,56 @@ nsSVGClipPathFrame::ApplyClipOrPaintClipMask(gfxContext& aContext,
 
   if (clipPathFrame) {
     if (!referencedClipIsTrivial) {
-      aContext.PopGroupToSource();
-
-      aContext.PushGroup(gfxContentType::ALPHA);
-
-      clipPathFrame->ApplyClipOrPaintClipMask(aContext, aClippedFrame, aMatrix);
-      Matrix maskTransform;
-      RefPtr<SourceSurface> clipMaskSurface = aContext.PopGroupToSurface(&maskTransform);
-
-      if (clipMaskSurface) {
-        aContext.Mask(clipMaskSurface, maskTransform);
-      }
+      aContext.PopGroupAndBlend();
     }
     aContext.Restore();
   }
 
   return NS_OK;
+}
+
+already_AddRefed<SourceSurface>
+nsSVGClipPathFrame::GetClipMask(gfxContext& aReferenceContext, nsIFrame* aClippedFrame,
+                                const gfxMatrix& aMatrix, Matrix* aMaskTransform,
+                                SourceSurface* aInputMask, const Matrix& aInputMaskTransform)
+{
+  if (IsTrivial()) {
+    return nullptr;
+  }
+
+  IntRect intRect;
+  {
+    gfxContextMatrixAutoSaveRestore autoRestoreMatrix(&aReferenceContext);
+
+    aReferenceContext.SetMatrix(gfxMatrix());
+    gfxRect rect = aReferenceContext.GetClipExtents();
+    intRect = RoundedOut(ToRect(rect));
+  }
+
+  RefPtr<DrawTarget> maskDT = aReferenceContext.GetDrawTarget()->CreateSimilarDrawTarget(intRect.Size(), SurfaceFormat::A8);
+
+  gfxMatrix mat =
+    aReferenceContext.CurrentMatrix() * gfxMatrix::Translation(-intRect.TopLeft());
+  {
+    RefPtr<gfxContext> ctx = new gfxContext(maskDT);
+    ctx->SetMatrix(mat);
+    ApplyClipOrPaintClipMask(*ctx, aClippedFrame, aMatrix);
+  }
+
+  mat.Invert();
+
+  if (aInputMask) {
+    MOZ_ASSERT(!aInputMaskTransform.HasNonTranslation());
+
+    RefPtr<SourceSurface> currentMask = maskDT->Snapshot();
+    maskDT->SetTransform(Matrix());
+    maskDT->ClearRect(Rect(0, 0, intRect.width, intRect.height));
+    maskDT->MaskSurface(SurfacePattern(currentMask, ExtendMode::CLAMP), aInputMask,
+                        Point(aInputMaskTransform._31 - intRect.x, aInputMaskTransform._32 - intRect.y));
+  }
+
+  *aMaskTransform = ToMatrix(mat);
+  return maskDT->Snapshot();
 }
 
 bool

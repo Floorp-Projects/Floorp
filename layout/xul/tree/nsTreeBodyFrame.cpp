@@ -3639,7 +3639,7 @@ nsTreeBodyFrame::PaintImage(int32_t              aRowIndex,
 
     gfxContext* ctx = aRenderingContext.ThebesContext();
     if (opacity != 1.0f) {
-      ctx->PushGroup(gfxContentType::COLOR_ALPHA);
+      ctx->PushGroupForBlendBack(gfxContentType::COLOR_ALPHA, opacity);
     }
 
     result &=
@@ -3649,8 +3649,7 @@ nsTreeBodyFrame::PaintImage(int32_t              aRowIndex,
         imgIContainer::FLAG_NONE);
 
     if (opacity != 1.0f) {
-      ctx->PopGroupToSource();
-      ctx->Paint(opacity);
+      ctx->PopGroupAndBlend();
     }
   }
 
@@ -3776,7 +3775,7 @@ nsTreeBodyFrame::PaintText(int32_t              aRowIndex,
 
   gfxContext* ctx = aRenderingContext.ThebesContext();
   if (opacity != 1.0f) {
-    ctx->PushGroup(gfxContentType::COLOR_ALPHA);
+    ctx->PushGroupForBlendBack(gfxContentType::COLOR_ALPHA, opacity);
   }
 
   ctx->SetColor(Color::FromABGR(textContext->StyleColor()->mColor));
@@ -3786,8 +3785,7 @@ nsTreeBodyFrame::PaintText(int32_t              aRowIndex,
                             cellContext);
 
   if (opacity != 1.0f) {
-    ctx->PopGroupToSource();
-    ctx->Paint(opacity);
+    ctx->PopGroupAndBlend();
   }
 
 }

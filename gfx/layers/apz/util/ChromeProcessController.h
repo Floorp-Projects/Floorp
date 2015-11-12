@@ -51,8 +51,6 @@ public:
   virtual void HandleLongTap(const mozilla::CSSPoint& aPoint, Modifiers aModifiers,
                                const ScrollableLayerGuid& aGuid,
                                uint64_t aInputBlockId) override;
-  virtual void SendAsyncScrollDOMEvent(bool aIsRootContent, const mozilla::CSSRect &aContentRect,
-                                       const mozilla::CSSSize &aScrollableSize) override {}
   virtual void NotifyAPZStateChange(const ScrollableLayerGuid& aGuid,
                                     APZStateChange aChange,
                                     int aArg) override;

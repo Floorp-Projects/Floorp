@@ -1973,7 +1973,7 @@ LayoutDeviceIntPoint nsCocoaWindow::WidgetToScreenOffset()
   }
   r = nsCocoaUtils::CocoaRectToGeckoRectDevPix(rect, BackingScaleFactor());
 
-  return LayoutDeviceIntPoint::FromUntyped(r.TopLeft());
+  return LayoutDeviceIntPoint::FromUnknownPoint(r.TopLeft());
 
   NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(LayoutDeviceIntPoint(0,0));
 }
