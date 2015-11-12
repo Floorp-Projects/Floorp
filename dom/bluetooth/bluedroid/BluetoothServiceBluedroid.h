@@ -121,22 +121,22 @@ public:
              BluetoothReplyRunnable* aRunnable);
 
   virtual void
-  SendFile(const BluetoothAddress& aDeviceAddress,
+  SendFile(const nsAString& aDeviceAddress,
            BlobParent* aBlobParent,
            BlobChild* aBlobChild,
            BluetoothReplyRunnable* aRunnable);
 
   virtual void
-  SendFile(const BluetoothAddress& aDeviceAddress,
+  SendFile(const nsAString& aDeviceAddress,
            Blob* aBlob,
            BluetoothReplyRunnable* aRunnable);
 
   virtual void
-  StopSendingFile(const BluetoothAddress& aDeviceAddress,
+  StopSendingFile(const nsAString& aDeviceAddress,
                   BluetoothReplyRunnable* aRunnable);
 
   virtual void
-  ConfirmReceivingFile(const BluetoothAddress& aDeviceAddress, bool aConfirm,
+  ConfirmReceivingFile(const nsAString& aDeviceAddress, bool aConfirm,
                        BluetoothReplyRunnable* aRunnable);
 
   virtual void
