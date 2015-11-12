@@ -317,9 +317,15 @@ HTMLButtonElement::PostHandleEvent(EventChainPostVisitor& aVisitor)
                 static_cast<EventStateManager*>(esm), this);
             }
             nsIFocusManager* fm = nsFocusManager::GetFocusManager();
-            if (fm)
-              fm->SetFocus(this, nsIFocusManager::FLAG_BYMOUSE |
-                                 nsIFocusManager::FLAG_NOSCROLL);
+            if (fm) {
+              uint32_t flags = nsIFocusManager::FLAG_BYMOUSE |
+                               nsIFocusManager::FLAG_NOSCROLL;
+              // If this was a touch-generated event, pass that information:
+              if (mouseEvent->inputSource == nsIDOMMouseEvent::MOZ_SOURCE_TOUCH) {
+                flags |= nsIFocusManager::FLAG_BYTOUCH;
+              }
+              fm->SetFocus(this, flags);
+            }
             mouseEvent->mFlags.mMultipleActionsPrevented = true;
           } else if (mouseEvent->button == WidgetMouseEvent::eMiddleButton ||
                      mouseEvent->button == WidgetMouseEvent::eRightButton) {
