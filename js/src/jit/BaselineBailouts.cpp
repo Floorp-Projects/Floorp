@@ -1890,6 +1890,12 @@ jit::FinishBailoutToBaseline(BaselineBailoutInfo* bailoutInfo)
         // Do nothing.
         break;
 
+      case Bailout_FirstExecution:
+        // Do not return directly, as this was not frequent in the first place,
+        // thus rely on the check for frequent bailouts to recompile the current
+        // script.
+        break;
+
       // Invalid assumption based on baseline code.
       case Bailout_OverflowInvalidate:
       case Bailout_NonStringInputInvalidate:
