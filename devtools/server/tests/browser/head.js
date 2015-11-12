@@ -185,7 +185,10 @@ function waitUntil(predicate, interval = 10) {
   });
 }
 
-function waitForMarkerType(front, types, predicate) {
+function waitForMarkerType(front, types, predicate,
+  unpackFun = (name, data) => data.markers,
+  eventName = "timeline-data")
+{
   types = [].concat(types);
   predicate = predicate || function(){ return true; };
   let filteredMarkers = [];
@@ -194,21 +197,21 @@ function waitForMarkerType(front, types, predicate) {
   info("Waiting for markers of type: " + types);
 
   function handler (name, data) {
-    if (name !== "markers") {
+    if (typeof name === "string" && name !== "markers") {
       return;
     }
 
-    let markers = data.markers;
+    let markers = unpackFun(name, data);
     info("Got markers: " + JSON.stringify(markers, null, 2));
 
     filteredMarkers = filteredMarkers.concat(markers.filter(m => types.indexOf(m.name) !== -1));
 
     if (types.every(t => filteredMarkers.some(m => m.name === t)) && predicate(filteredMarkers)) {
-      front.off("timeline-data", handler);
+      front.off(eventName, handler);
       resolve(filteredMarkers);
     }
   }
-  front.on("timeline-data", handler);
+  front.on(eventName, handler);
 
   return promise;
 }

@@ -119,6 +119,10 @@ class B2GBuild(LocalesMixin, PurgeMixin,
             "dest": "gecko_objdir",
             "help": "Specifies the gecko object directory.",
         }],
+        [["--branch"], {
+            "dest": "branch",
+            "help": "Specifies the branch name.",
+        }],
     ]
 
     def __init__(self, require_config_file=False, config={},
@@ -201,7 +205,7 @@ class B2GBuild(LocalesMixin, PurgeMixin,
         if self.buildbot_config and 'properties' in self.buildbot_config:
             return self.buildbot_config['properties']['branch']
         else:
-            return os.path.basename(self.query_repo().rstrip('/'))
+            return self.config.get('branch', os.path.basename(self.query_repo().rstrip('/')))
 
     def query_buildid(self):
         if self.buildid:

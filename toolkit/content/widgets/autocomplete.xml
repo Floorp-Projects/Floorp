@@ -1719,6 +1719,10 @@ extends="chrome://global/content/bindings/popup.xml#popup">
               displayUrl = action.params.url;
               let desc = this._stringBundle.GetStringFromName("switchToTab");
               this._setUpDescription(this._action, desc, true);
+            } else if (action.type == "remotetab") {
+              displayUrl = action.params.url;
+              let desc = action.params.deviceName;
+              this._setUpDescription(this._action, desc, true);
             } else if (action.type == "searchengine") {
               emphasiseUrl = false;
 

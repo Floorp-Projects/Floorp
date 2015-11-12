@@ -157,6 +157,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
           if (action) {
             switch (action.type) {
               case "switchtab": // Fall through.
+              case "remotetab": // Fall through.
               case "visiturl": {
                 returnValue = action.params.url;
                 break;
@@ -1490,6 +1491,7 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
                 ];
                 break;
               case "switchtab":
+              case "remotetab":
                 parts = [
                   item.getAttribute("title"),
                   action.params.url,

@@ -30,6 +30,8 @@ const REQUESTS_WATERFALL_BACKGROUND_TICKS_SPACING_MIN = 10; // px
 const REQUESTS_WATERFALL_BACKGROUND_TICKS_COLOR_RGB = [128, 136, 144];
 const REQUESTS_WATERFALL_BACKGROUND_TICKS_OPACITY_MIN = 32; // byte
 const REQUESTS_WATERFALL_BACKGROUND_TICKS_OPACITY_ADD = 32; // byte
+const REQUESTS_WATERFALL_DOMCONTENTLOADED_TICKS_COLOR_RGBA = [255, 0, 0, 128];
+const REQUESTS_WATERFALL_LOAD_TICKS_COLOR_RGBA = [0, 0, 255, 128];
 const REQUEST_TIME_DECIMALS = 2;
 const HEADERS_SIZE_DECIMALS = 3;
 const CONTENT_SIZE_DECIMALS = 2;
@@ -1086,6 +1088,7 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
    * Removes all network requests and closes the sidebar if open.
    */
   clear: function() {
+    NetMonitorController.NetworkEventsHandler.clearMarkers();
     NetMonitorView.Sidebar.toggle(false);
     $("#details-pane-toggle").disabled = true;
 
@@ -1960,6 +1963,19 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
         }
         alphaComponent += REQUESTS_WATERFALL_BACKGROUND_TICKS_OPACITY_ADD;
       }
+    }
+
+    {
+      let t = NetMonitorController.NetworkEventsHandler.firstDocumentDOMContentLoadedTimestamp;
+      let delta = Math.floor((t - this._firstRequestStartedMillis) * aScale);
+      let [r, g, b, a] = REQUESTS_WATERFALL_DOMCONTENTLOADED_TICKS_COLOR_RGBA;
+      view32bit[delta] = (a << 24) | (r << 16) | (g << 8) | b;
+    }
+    {
+      let t = NetMonitorController.NetworkEventsHandler.firstDocumentLoadTimestamp;
+      let delta = Math.floor((t - this._firstRequestStartedMillis) * aScale);
+      let [r, g, b, a] = REQUESTS_WATERFALL_LOAD_TICKS_COLOR_RGBA;
+      view32bit[delta] = (a << 24) | (r << 16) | (g << 8) | b;
     }
 
     // Flush the image data and cache the waterfall background.

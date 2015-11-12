@@ -119,6 +119,7 @@ import android.view.Surface;
 import android.view.SurfaceView;
 import android.view.TextureView;
 import android.view.View;
+import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
 import android.webkit.MimeTypeMap;
 import android.webkit.URLUtil;
@@ -141,7 +142,7 @@ public class GeckoAppShell
 
         @Override
         protected Context getAppContext() {
-            return sContextGetter != null ? getContext() : null;
+            return sContextGetter != null ? getApplicationContext() : null;
         }
 
         @Override
@@ -511,7 +512,7 @@ public class GeckoAppShell
         ThreadUtils.postToUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    LocationManager lm = getLocationManager(getContext());
+                    LocationManager lm = getLocationManager(getApplicationContext());
                     if (lm == null) {
                         return;
                     }
@@ -570,10 +571,11 @@ public class GeckoAppShell
     @WrapForJNI
     public static boolean setAlarm(int aSeconds, int aNanoSeconds) {
         AlarmManager am = (AlarmManager)
-            getContext().getSystemService(Context.ALARM_SERVICE);
+            getApplicationContext().getSystemService(Context.ALARM_SERVICE);
 
-        Intent intent = new Intent(getContext(), AlarmReceiver.class);
-        PendingIntent pi = PendingIntent.getBroadcast(getContext(), 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+        Intent intent = new Intent(getApplicationContext(), AlarmReceiver.class);
+        PendingIntent pi = PendingIntent.getBroadcast(
+                getApplicationContext(), 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
 
         // AlarmManager only supports millisecond precision
         long time = ((long)aSeconds * 1000) + ((long)aNanoSeconds/1_000_000L);
@@ -585,10 +587,11 @@ public class GeckoAppShell
     @WrapForJNI
     public static void disableAlarm() {
         AlarmManager am = (AlarmManager)
-            getContext().getSystemService(Context.ALARM_SERVICE);
+            getApplicationContext().getSystemService(Context.ALARM_SERVICE);
 
-        Intent intent = new Intent(getContext(), AlarmReceiver.class);
-        PendingIntent pi = PendingIntent.getBroadcast(getContext(), 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+        Intent intent = new Intent(getApplicationContext(), AlarmReceiver.class);
+        PendingIntent pi = PendingIntent.getBroadcast(
+                getApplicationContext(), 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
         am.cancel(pi);
     }
 
@@ -598,7 +601,7 @@ public class GeckoAppShell
         if (gi == null)
             return;
         SensorManager sm = (SensorManager)
-            getContext().getSystemService(Context.SENSOR_SERVICE);
+            getApplicationContext().getSystemService(Context.SENSOR_SERVICE);
 
         switch(aSensortype) {
         case GeckoHalDefines.SENSOR_ORIENTATION:
@@ -669,7 +672,7 @@ public class GeckoAppShell
             return;
 
         SensorManager sm = (SensorManager)
-            getContext().getSystemService(Context.SENSOR_SERVICE);
+            getApplicationContext().getSystemService(Context.SENSOR_SERVICE);
 
         switch (aSensortype) {
         case GeckoHalDefines.SENSOR_ORIENTATION:
@@ -764,7 +767,7 @@ public class GeckoAppShell
         // We have the favicon data (base64) decoded on the background thread, callback here, then
         // call the other createShortcut method with the decoded favicon.
         // This is slightly contrived, but makes the images available to the favicon cache.
-        Favicons.getSizedFavicon(getContext(), aURI, aIconData, Integer.MAX_VALUE, 0,
+        Favicons.getSizedFavicon(getApplicationContext(), aURI, aIconData, Integer.MAX_VALUE, 0,
             new OnFaviconLoadedListener() {
                 @Override
                 public void onFaviconLoaded(String url, String faviconURL, Bitmap favicon) {
@@ -808,13 +811,14 @@ public class GeckoAppShell
         intent.putExtra("duplicate", false);
 
         intent.setAction("com.android.launcher.action.INSTALL_SHORTCUT");
-        getContext().sendBroadcast(intent);
+        getApplicationContext().sendBroadcast(intent);
     }
 
     @JNITarget
     static public int getPreferredIconSize() {
         if (Versions.feature11Plus) {
-            ActivityManager am = (ActivityManager)getContext().getSystemService(Context.ACTIVITY_SERVICE);
+            ActivityManager am = (ActivityManager)
+                    getApplicationContext().getSystemService(Context.ACTIVITY_SERVICE);
             return am.getLauncherLargeIconSize();
         } else {
             switch (getDpi()) {
@@ -860,12 +864,12 @@ public class GeckoAppShell
         }
 
         // draw the overlay
-        Bitmap overlay = BitmapUtils.decodeResource(getContext(), R.drawable.home_bg);
+        Bitmap overlay = BitmapUtils.decodeResource(getApplicationContext(), R.drawable.home_bg);
         canvas.drawBitmap(overlay, null, new Rect(0, 0, size, size), null);
 
         // draw the favicon
         if (aSource == null)
-            aSource = BitmapUtils.decodeResource(getContext(), R.drawable.home_star);
+            aSource = BitmapUtils.decodeResource(getApplicationContext(), R.drawable.home_star);
 
         // by default, we scale the icon to this size
         int sWidth = insetSize / 2;
@@ -896,7 +900,7 @@ public class GeckoAppShell
         // aURL may contain the whole URL or just the protocol
         Uri uri = aURL.indexOf(':') >= 0 ? Uri.parse(aURL) : new Uri.Builder().scheme(aURL).build();
 
-        Intent intent = getOpenURIIntent(getContext(), uri.toString(), "",
+        Intent intent = getOpenURIIntent(getApplicationContext(), uri.toString(), "",
             TextUtils.isEmpty(aAction) ? Intent.ACTION_VIEW : aAction, "");
 
         return getHandlersForIntent(intent);
@@ -913,7 +917,7 @@ public class GeckoAppShell
     }
 
     static List<ResolveInfo> queryIntentActivities(Intent intent) {
-        final PackageManager pm = getContext().getPackageManager();
+        final PackageManager pm = getApplicationContext().getPackageManager();
 
         // Exclude any non-exported activities: we can't open them even if we want to!
         // Bug 1031569 has some details.
@@ -937,7 +941,7 @@ public class GeckoAppShell
     }
 
     static String[] getHandlersForIntent(Intent intent) {
-        final PackageManager pm = getContext().getPackageManager();
+        final PackageManager pm = getApplicationContext().getPackageManager();
         try {
             final List<ResolveInfo> list = queryIntentActivities(intent);
 
@@ -1050,7 +1054,7 @@ public class GeckoAppShell
                                           String action,
                                           String title,
                                           final boolean showPromptInPrivateBrowsing) {
-        final Context context = getContext();
+        final Context context = getApplicationContext();
         final Intent intent = getOpenURIIntent(context, targetURI,
                                                mimeType, action, title);
 
@@ -1347,7 +1351,7 @@ public class GeckoAppShell
     @WrapForJNI(stubName = "GetDpiWrapper")
     public static int getDpi() {
         if (sDensityDpi == 0) {
-            sDensityDpi = getContext().getResources().getDisplayMetrics().densityDpi;
+            sDensityDpi = getApplicationContext().getResources().getDisplayMetrics().densityDpi;
         }
 
         return sDensityDpi;
@@ -1355,7 +1359,7 @@ public class GeckoAppShell
 
     @WrapForJNI
     public static float getDensity() {
-        return getContext().getResources().getDisplayMetrics().density;
+        return getApplicationContext().getResources().getDisplayMetrics().density;
     }
 
     private static boolean isHighMemoryDevice() {
@@ -1371,7 +1375,9 @@ public class GeckoAppShell
         if (sScreenDepth == 0) {
             sScreenDepth = 16;
             PixelFormat info = new PixelFormat();
-            PixelFormat.getPixelFormatInfo(getGeckoInterface().getActivity().getWindowManager().getDefaultDisplay().getPixelFormat(), info);
+            final WindowManager wm = (WindowManager)
+                    getApplicationContext().getSystemService(Context.WINDOW_SERVICE);
+            PixelFormat.getPixelFormatInfo(wm.getDefaultDisplay().getPixelFormat(), info);
             if (info.bitsPerPixel >= 24 && isHighMemoryDevice()) {
                 sScreenDepth = 24;
             }
@@ -1408,8 +1414,7 @@ public class GeckoAppShell
     }
 
     private static Vibrator vibrator() {
-        LayerView layerView = getLayerView();
-        return (Vibrator) layerView.getContext().getSystemService(Context.VIBRATOR_SERVICE);
+        return (Vibrator) getApplicationContext().getSystemService(Context.VIBRATOR_SERVICE);
     }
 
     // Helper method to convert integer array to long array.
@@ -1423,7 +1428,8 @@ public class GeckoAppShell
 
     // Vibrate only if haptic feedback is enabled.
     public static void vibrateOnHapticFeedbackEnabled(int[] milliseconds) {
-        if (Settings.System.getInt(getContext().getContentResolver(), Settings.System.HAPTIC_FEEDBACK_ENABLED, 0) > 0) {
+        if (Settings.System.getInt(getApplicationContext().getContentResolver(),
+                                   Settings.System.HAPTIC_FEEDBACK_ENABLED, 0) > 0) {
             vibrate(convertIntToLongArray(milliseconds), -1);
         }
     }
@@ -1460,7 +1466,7 @@ public class GeckoAppShell
     @WrapForJNI
     public static void showInputMethodPicker() {
         InputMethodManager imm = (InputMethodManager)
-            getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+            getApplicationContext().getSystemService(Context.INPUT_METHOD_SERVICE);
         imm.showInputMethodPicker();
     }
 
@@ -1491,7 +1497,7 @@ public class GeckoAppShell
     @WrapForJNI
     public static boolean isNetworkLinkUp() {
         ConnectivityManager cm = (ConnectivityManager)
-           getContext().getSystemService(Context.CONNECTIVITY_SERVICE);
+           getApplicationContext().getSystemService(Context.CONNECTIVITY_SERVICE);
         try {
             NetworkInfo info = cm.getActiveNetworkInfo();
             if (info == null || !info.isConnected())
@@ -1505,7 +1511,7 @@ public class GeckoAppShell
     @WrapForJNI
     public static boolean isNetworkLinkKnown() {
         ConnectivityManager cm = (ConnectivityManager)
-            getContext().getSystemService(Context.CONNECTIVITY_SERVICE);
+            getApplicationContext().getSystemService(Context.CONNECTIVITY_SERVICE);
         try {
             if (cm.getActiveNetworkInfo() == null)
                 return false;
@@ -1518,7 +1524,7 @@ public class GeckoAppShell
     @WrapForJNI
     public static int networkLinkType() {
         ConnectivityManager cm = (ConnectivityManager)
-            getContext().getSystemService(Context.CONNECTIVITY_SERVICE);
+            getApplicationContext().getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo info = cm.getActiveNetworkInfo();
         if (info == null) {
             return LINK_TYPE_UNKNOWN;
@@ -1539,7 +1545,7 @@ public class GeckoAppShell
         }
 
         TelephonyManager tm = (TelephonyManager)
-            getContext().getSystemService(Context.TELEPHONY_SERVICE);
+            getApplicationContext().getSystemService(Context.TELEPHONY_SERVICE);
         if (tm == null) {
             Log.e(LOGTAG, "Telephony service does not exist");
             return LINK_TYPE_UNKNOWN;
@@ -1595,7 +1601,7 @@ public class GeckoAppShell
         int[] result = new int[attrsAppearance.length];
 
         final ContextThemeWrapper contextThemeWrapper =
-            new ContextThemeWrapper(getContext(), android.R.style.TextAppearance);
+            new ContextThemeWrapper(getApplicationContext(), android.R.style.TextAppearance);
 
         final TypedArray appearance = contextThemeWrapper.getTheme().obtainStyledAttributes(attrsAppearance);
 
@@ -1701,7 +1707,7 @@ public class GeckoAppShell
         int nameColumn = -1;
 
         try {
-            String filter = GeckoProfile.get(getContext()).getDir().toString();
+            String filter = GeckoProfile.get(getApplicationContext()).getDir().toString();
             Log.d(LOGTAG, "[OPENFILE] Filter: " + filter);
 
             // run lsof and parse its output
@@ -1750,7 +1756,7 @@ public class GeckoAppShell
             if (aExt != null && aExt.length() > 1 && aExt.charAt(0) == '.')
                 aExt = aExt.substring(1);
 
-            PackageManager pm = getContext().getPackageManager();
+            PackageManager pm = getApplicationContext().getPackageManager();
             Drawable icon = getDrawableForExtension(pm, aExt);
             if (icon == null) {
                 // Use a generic icon
@@ -1803,7 +1809,7 @@ public class GeckoAppShell
     public static boolean getShowPasswordSetting() {
         try {
             int showPassword =
-                Settings.System.getInt(getContext().getContentResolver(),
+                Settings.System.getInt(getApplicationContext().getContentResolver(),
                                        Settings.System.TEXT_SHOW_PASSWORD, 1);
             return (showPassword > 0);
         }
@@ -1876,7 +1882,7 @@ public class GeckoAppShell
         }
 
         ArrayList<String> directories = new ArrayList<String>();
-        PackageManager pm = getContext().getPackageManager();
+        PackageManager pm = getApplicationContext().getPackageManager();
         List<ResolveInfo> plugins = pm.queryIntentServices(new Intent(PLUGIN_ACTION),
                 PackageManager.GET_SERVICES | PackageManager.GET_META_DATA);
 
@@ -2020,7 +2026,7 @@ public class GeckoAppShell
 
     static Class<?> getPluginClass(String packageName, String className)
             throws NameNotFoundException, ClassNotFoundException {
-        Context pluginContext = getContext().createPackageContext(packageName,
+        Context pluginContext = getApplicationContext().createPackageContext(packageName,
                 Context.CONTEXT_INCLUDE_CODE |
                 Context.CONTEXT_IGNORE_SECURITY);
         ClassLoader pluginCL = pluginContext.getClassLoader();
@@ -2034,7 +2040,8 @@ public class GeckoAppShell
         try {
             final String packageName = getPluginPackage(libName);
             final int contextFlags = Context.CONTEXT_INCLUDE_CODE | Context.CONTEXT_IGNORE_SECURITY;
-            final Context pluginContext = getContext().createPackageContext(packageName, contextFlags);
+            final Context pluginContext = getApplicationContext().createPackageContext(
+                    packageName, contextFlags);
             return pluginContext.getClassLoader().loadClass(className);
         } catch (java.lang.ClassNotFoundException cnfe) {
             Log.w(LOGTAG, "Couldn't find plugin class " + className, cnfe);
@@ -2045,8 +2052,10 @@ public class GeckoAppShell
         }
     }
 
+    private static Context sApplicationContext;
     private static ContextGetter sContextGetter;
 
+    @Deprecated
     @WrapForJNI(allowMultithread = true)
     public static Context getContext() {
         return sContextGetter.getContext();
@@ -2054,6 +2063,14 @@ public class GeckoAppShell
 
     public static void setContextGetter(ContextGetter cg) {
         sContextGetter = cg;
+    }
+
+    public static Context getApplicationContext() {
+        return sApplicationContext;
+    }
+
+    public static void setApplicationContext(final Context context) {
+        sApplicationContext = context;
     }
 
     public static SharedPreferences getSharedPreferences() {
@@ -2255,7 +2272,7 @@ public class GeckoAppShell
 
     @WrapForJNI(stubName = "MarkURIVisited")
     static void markUriVisited(final String uri) {
-        final Context context = getContext();
+        final Context context = getApplicationContext();
         final BrowserDB db = GeckoProfile.get(context).getDB();
         ThreadUtils.postToBackgroundThread(new Runnable() {
             @Override
@@ -2267,7 +2284,7 @@ public class GeckoAppShell
 
     @WrapForJNI(stubName = "SetURITitle")
     static void setUriTitle(final String uri, final String title) {
-        final Context context = getContext();
+        final Context context = getApplicationContext();
         final BrowserDB db = GeckoProfile.get(context).getDB();
         ThreadUtils.postToBackgroundThread(new Runnable() {
             @Override
@@ -2641,7 +2658,7 @@ public class GeckoAppShell
                         return null;
                     }
                     final String pkg = splits[1];
-                    final PackageManager pm = getContext().getPackageManager();
+                    final PackageManager pm = getApplicationContext().getPackageManager();
                     final Drawable d = pm.getApplicationIcon(pkg);
                     final Bitmap bitmap = BitmapUtils.getBitmapFromDrawable(d);
                     return new BitmapConnection(bitmap);
@@ -2696,7 +2713,7 @@ public class GeckoAppShell
         } else if ("music".equals(type)) {
             systemType = Environment.DIRECTORY_MUSIC;
         } else if ("apps".equals(type)) {
-            File appInternalStorageDirectory = getContext().getFilesDir();
+            File appInternalStorageDirectory = getApplicationContext().getFilesDir();
             return new File(appInternalStorageDirectory, "mozilla").getAbsolutePath();
         } else {
             return null;
@@ -2706,7 +2723,7 @@ public class GeckoAppShell
 
     @WrapForJNI
     static int getMaxTouchPoints() {
-        PackageManager pm = getContext().getPackageManager();
+        PackageManager pm = getApplicationContext().getPackageManager();
         if (pm.hasSystemFeature(PackageManager.FEATURE_TOUCHSCREEN_MULTITOUCH_JAZZHAND)) {
             // at least, 5+ fingers.
             return 5;
@@ -2725,7 +2742,14 @@ public class GeckoAppShell
 
     @WrapForJNI
     static Rect getScreenSize() {
-        Display disp = getGeckoInterface().getActivity().getWindowManager().getDefaultDisplay();
+        final WindowManager wm = (WindowManager)
+                getApplicationContext().getSystemService(Context.WINDOW_SERVICE);
+        final Display disp = wm.getDefaultDisplay();
         return new Rect(0, 0, disp.getWidth(), disp.getHeight());
+    }
+
+    @JNITarget
+    static boolean isWebAppProcess() {
+        return GeckoProfile.get(getApplicationContext()).isWebAppProfile();
     }
 }
