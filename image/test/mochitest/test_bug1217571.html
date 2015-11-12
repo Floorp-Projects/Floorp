@@ -1,0 +1,44 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1217571
+-->
+<head>
+  <title>Test for Bug 1217571</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1217571">Mozilla Bug 1217571</a>
+<p id="display"></p>
+<iframe src="bug1217571-iframe.html"></iframe>
+<iframe src="bug1217571-iframe.html"></iframe>
+<pre id="test">
+<script type="application/javascript">
+/** Test for Bug 614392**/
+
+SimpleTest.waitForExplicitFinish();
+
+window.onload = function() {
+  // Each iframe loads the same image.  Both images should share the same
+  // container from the image cache.  Check that this holds true.
+  var iframes = document.getElementsByTagName("iframe");
+  var imgs = Array.from(iframes, function (f) {
+      return SpecialPowers.wrap(f.contentDocument.getElementsByTagName("img")[0]);
+  });
+  var containers = imgs.map(function (img) {
+      return img.QueryInterface(SpecialPowers.Ci.nsIImageLoadingContent)
+                .getRequest(SpecialPowers.Ci.nsIImageLoadingContent.CURRENT_REQUEST)
+                .image;
+  });
+
+  ok(SpecialPowers.compare(containers[0], containers[1]),
+     "containers for identical images in different iframes should be identical");
+
+  SimpleTest.finish();
+}
+
+</script>
+</pre>
+</body>
+</html>

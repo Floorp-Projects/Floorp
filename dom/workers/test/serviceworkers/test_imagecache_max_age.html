@@ -42,11 +42,8 @@
         case 2:
           is(e.data.url, "image-40px.png", "Correct url expected");
           is(e.data.url2, "image-40px.png", "Correct url expected");
-          // TODO: Uncomment this check when bug 1217571 gets fixed.
-          // Currently because of bug 1217571, the QI in imgCacheValidator::OnStartRequest()
-          // to nsICachingChannel fails, which causes the check below to fail in non-e10s.
-          //is(e.data.width, 40, "Correct width expected");
-          //is(e.data.width2, 40, "Correct width expected");
+          is(e.data.width, 40, "Correct width expected");
+          is(e.data.width2, 40, "Correct width expected");
           iframe.src = "/tests/dom/workers/test/serviceworkers/fetch/imagecache-maxage/unregister.html";
           break;
         default:
