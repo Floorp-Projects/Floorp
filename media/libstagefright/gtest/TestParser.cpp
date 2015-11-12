@@ -240,6 +240,8 @@ TEST(stagefright_MPEG4Metadata, test_case_mp4)
   }
 }
 
+// Bug 1224019: This test produces way to much output, disabling for now.
+#if 0
 TEST(stagefright_MPEG4Metadata, test_case_mp4_subsets)
 {
   static const size_t step = 1u;
@@ -275,6 +277,7 @@ TEST(stagefright_MPEG4Metadata, test_case_mp4_subsets)
     }
   }
 }
+#endif
 
 TEST(stagefright_MoofParser, test_case_mp4)
 {
@@ -305,6 +308,8 @@ TEST(stagefright_MoofParser, test_case_mp4)
   }
 }
 
+// Bug 1224019: This test produces way to much output, disabling for now.
+#if 0
 TEST(stagefright_MoofParser, test_case_mp4_subsets)
 {
   const size_t step = 1u;
@@ -348,6 +353,7 @@ TEST(stagefright_MoofParser, test_case_mp4_subsets)
     }
   }
 }
+#endif
 
 uint8_t media_libstagefright_gtest_video_init_mp4[] = {
   0x00, 0x00, 0x00, 0x18, 0x66, 0x74, 0x79, 0x70, 0x69, 0x73, 0x6f, 0x6d,

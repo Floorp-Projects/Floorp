@@ -5983,7 +5983,19 @@ nsDocShell::GetIsOffScreenBrowser(bool* aIsOffScreen)
 }
 
 NS_IMETHODIMP
+nsDocShell::SetIsActiveAndForeground(bool aIsActive)
+{
+  return SetIsActiveInternal(aIsActive, false);
+}
+
+NS_IMETHODIMP
 nsDocShell::SetIsActive(bool aIsActive)
+{
+  return SetIsActiveInternal(aIsActive, true);
+}
+
+nsresult
+nsDocShell::SetIsActiveInternal(bool aIsActive, bool aIsHidden)
 {
   // We disallow setting active on chrome docshells.
   if (mItemType == nsIDocShellTreeItem::typeChrome) {
@@ -5996,7 +6008,7 @@ nsDocShell::SetIsActive(bool aIsActive)
   // Tell the PresShell about it.
   nsCOMPtr<nsIPresShell> pshell = GetPresShell();
   if (pshell) {
-    pshell->SetIsActive(aIsActive);
+    pshell->SetIsActive(aIsActive, aIsHidden);
   }
 
   // Tell the window about it
@@ -6030,7 +6042,11 @@ nsDocShell::SetIsActive(bool aIsActive)
     }
 
     if (!docshell->GetIsBrowserOrApp()) {
-      docshell->SetIsActive(aIsActive);
+      if (aIsHidden) {
+        docshell->SetIsActive(aIsActive);
+      } else {
+        docshell->SetIsActiveAndForeground(aIsActive);
+      }
     }
   }
 
@@ -7789,7 +7805,7 @@ nsDocShell::CreateAboutBlankContentViewer(nsIPrincipal* aPrincipal,
     mTiming->NotifyBeforeUnload();
 
     bool okToUnload;
-    rv = mContentViewer->PermitUnload(false, &okToUnload);
+    rv = mContentViewer->PermitUnload(&okToUnload);
 
     if (NS_SUCCEEDED(rv) && !okToUnload) {
       // The user chose not to unload the page, interrupt the load.
@@ -10127,7 +10143,7 @@ nsDocShell::InternalLoad(nsIURI* aURI,
   // protocol handler deals with this for javascript: URLs.
   if (!isJavaScript && aFileName.IsVoid() && mContentViewer) {
     bool okToUnload;
-    rv = mContentViewer->PermitUnload(false, &okToUnload);
+    rv = mContentViewer->PermitUnload(&okToUnload);
 
     if (NS_SUCCEEDED(rv) && !okToUnload) {
       // The user chose not to unload the page, interrupt the

@@ -118,9 +118,9 @@ public:
   void GetPlugins(nsTArray<nsCOMPtr<nsIInternalPluginTag>>& aPluginArray,
                   bool aIncludeDisabled = false);
 
-  void FindPluginsForContent(uint32_t aPluginEpoch,
-                             nsTArray<mozilla::plugins::PluginTag>* aPlugins,
-                             uint32_t* aNewPluginEpoch);
+  nsresult FindPluginsForContent(uint32_t aPluginEpoch,
+                                 nsTArray<mozilla::plugins::PluginTag>* aPlugins,
+                                 uint32_t* aNewPluginEpoch);
 
   nsresult GetURL(nsISupports* pluginInst,
                   const char* url,

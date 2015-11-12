@@ -29,11 +29,6 @@ inline RectDouble ToRectDouble(const gfxRect &aRect)
   return RectDouble(aRect.x, aRect.y, aRect.width, aRect.height);
 }
 
-inline Rect ToRect(const IntRect &aRect)
-{
-  return Rect(aRect.x, aRect.y, aRect.width, aRect.height);
-}
-
 inline Matrix ToMatrix(const gfxMatrix &aMatrix)
 {
   return Matrix(Float(aMatrix._11), Float(aMatrix._12), Float(aMatrix._21),
@@ -67,6 +62,11 @@ inline gfxSize ThebesSize(const Size &aSize)
 }
 
 inline gfxRect ThebesRect(const Rect &aRect)
+{
+  return gfxRect(aRect.x, aRect.y, aRect.width, aRect.height);
+}
+
+inline gfxRect ThebesRect(const IntRect &aRect)
 {
   return gfxRect(aRect.x, aRect.y, aRect.width, aRect.height);
 }

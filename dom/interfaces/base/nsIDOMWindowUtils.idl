@@ -49,7 +49,7 @@ interface nsIJSRAIIHelper;
 interface nsIContentPermissionRequest;
 interface nsIObserver;
 
-[scriptable, uuid(a30a95ac-3b95-4251-88dc-8efa89ba9f9c)]
+[scriptable, uuid(3f3f2bf4-d411-44b2-b2f7-dee5948c4763)]
 interface nsIDOMWindowUtils : nsISupports {
 
   /**
@@ -1431,7 +1431,7 @@ interface nsIDOMWindowUtils : nsISupports {
    * with that offset if async scrolling is enabled, and then the offset
    * will be removed. Only call this while test-controlled refreshes is enabled.
    */
-  void setAsyncScrollOffset(in nsIDOMNode aNode, in int32_t aX, in int32_t aY);
+  void setAsyncScrollOffset(in nsIDOMNode aNode, in float aX, in float aY);
 
   /**
    * Set async zoom value. aRootElement should be the document element of our

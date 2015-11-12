@@ -44,6 +44,15 @@ var TimelineActor = exports.TimelineActor = protocol.ActorClass({
 
   events: {
     /**
+     * Events emitted when "DOMContentLoaded" and "Load" markers are received.
+     */
+    "doc-loading" : {
+      type: "doc-loading",
+      marker: Arg(0, "json"),
+      endTime: Arg(0, "number")
+    },
+
+    /**
      * The "markers" events emitted every DEFAULT_TIMELINE_DATA_PULL_TIMEOUT ms
      * at most, when profile markers are found. The timestamps on each marker
      * are relative to when recording was started.
@@ -139,8 +148,12 @@ var TimelineActor = exports.TimelineActor = protocol.ActorClass({
 
   start: actorBridge("start", {
     request: {
+      withMarkers: Option(0, "boolean"),
+      withTicks: Option(0, "boolean"),
       withMemory: Option(0, "boolean"),
-      withTicks: Option(0, "boolean")
+      withFrames: Option(0, "boolean"),
+      withGCEvents: Option(0, "boolean"),
+      withDocLoadingEvents: Option(0, "boolean")
     },
     response: {
       value: RetVal("number")

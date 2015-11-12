@@ -119,3 +119,12 @@ function isBreakdownType (census, type) {
       throw new Error(`isBreakdownType does not yet support ${type}`);
   }
 }
+
+function *createTempFile () {
+  let file = FileUtils.getFile("TmpD", ["tmp.fxsnapshot"]);
+  file.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, FileUtils.PERMS_FILE);
+  let destPath = file.path;
+  let stat = yield OS.File.stat(destPath);
+  ok(stat.size === 0, "new file is 0 bytes at start");
+  return destPath;
+}

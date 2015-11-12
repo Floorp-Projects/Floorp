@@ -286,7 +286,7 @@ nsWindow::SynthesizeNativeTouchPoint(uint32_t aPointerId,
         if (index >= 0) {
             // found an existing touch point, update it
             SingleTouchData& point = mSynthesizedTouchInput->mTouches[index];
-            point.mScreenPoint = ScreenIntPoint::FromUntyped(aPointerScreenPoint);
+            point.mScreenPoint = ScreenIntPoint::FromUnknownPoint(aPointerScreenPoint);
             point.mRotationAngle = (float)aPointerOrientation;
             point.mForce = (float)aPointerPressure;
             inputToDispatch.mType = MultiTouchInput::MULTITOUCH_MOVE;
@@ -294,7 +294,7 @@ nsWindow::SynthesizeNativeTouchPoint(uint32_t aPointerId,
             // new touch point, add it
             mSynthesizedTouchInput->mTouches.AppendElement(SingleTouchData(
                 (int32_t)aPointerId,
-                ScreenIntPoint::FromUntyped(aPointerScreenPoint),
+                ScreenIntPoint::FromUnknownPoint(aPointerScreenPoint),
                 ScreenSize(0, 0),
                 (float)aPointerOrientation,
                 (float)aPointerPressure));
@@ -312,7 +312,7 @@ nsWindow::SynthesizeNativeTouchPoint(uint32_t aPointerId,
             : MultiTouchInput::MULTITOUCH_CANCEL);
         inputToDispatch.mTouches.AppendElement(SingleTouchData(
             (int32_t)aPointerId,
-            ScreenIntPoint::FromUntyped(aPointerScreenPoint),
+            ScreenIntPoint::FromUnknownPoint(aPointerScreenPoint),
             ScreenSize(0, 0),
             (float)aPointerOrientation,
             (float)aPointerPressure));

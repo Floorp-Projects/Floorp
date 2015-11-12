@@ -1,39 +1,18 @@
 function test() {
-  waitForExplicitFinish();
-
   var rootDir = "http://mochi.test:8888/browser/docshell/test/browser/";
-  gBrowser.selectedTab = gBrowser.addTab(rootDir + "file_bug234628-11.html");
-  gBrowser.selectedBrowser.addEventListener("load", afterOpen, true);
+  runCharsetTest(rootDir + "file_bug234628-11.html", afterOpen, "windows-1251", afterChangeCharset);
 }
 
-function afterOpen(event) {
-  if (event.target != gBrowser.contentDocument) {
-    return;
-  }
+function afterOpen() {
+  is(content.document.documentElement.textContent.indexOf('\u20AC'), 193, "Parent doc should be windows-1252 initially");
 
-  gBrowser.selectedBrowser.removeEventListener("load", afterOpen, true);
-  gBrowser.selectedBrowser.addEventListener("load", afterChangeCharset, true);
-
-  is(gBrowser.contentDocument.documentElement.textContent.indexOf('\u20AC'), 193, "Parent doc should be windows-1252 initially");
-
-  is(gBrowser.contentDocument.getElementsByTagName("iframe")[0].contentDocument.documentElement.textContent.indexOf('\u20AC'), 107, "Child doc should be utf-8 initially");
-
-  BrowserSetForcedCharacterSet("windows-1251");
+  is(content.frames[0].document.documentElement.textContent.indexOf('\u20AC'), 107, "Child doc should be utf-8 initially");
 }
-  
-function afterChangeCharset(event) {
-  if (event.target != gBrowser.contentDocument) {
-    return;
-  }
 
-  gBrowser.selectedBrowser.removeEventListener("load", afterChangeCharset, true);
+function afterChangeCharset() {
+  is(content.document.documentElement.textContent.indexOf('\u0402'), 193, "Parent doc should decode as windows-1251 subsequently");
+  is(content.frames[0].document.documentElement.textContent.indexOf('\u20AC'), 107, "Child doc should decode as utf-8 subsequently");
 
-  is(gBrowser.contentDocument.documentElement.textContent.indexOf('\u0402'), 193, "Parent doc should decode as windows-1251 subsequently");
-  is(gBrowser.contentDocument.getElementsByTagName("iframe")[0].contentDocument.documentElement.textContent.indexOf('\u20AC'), 107, "Child doc should decode as utf-8 subsequently");  
-
-  is(gBrowser.contentDocument.characterSet, "windows-1251", "Parent doc should report windows-1251 subsequently");
-  is(gBrowser.contentDocument.getElementsByTagName("iframe")[0].contentDocument.characterSet, "UTF-8", "Child doc should report UTF-8 subsequently");
-
-  gBrowser.removeCurrentTab();
-  finish();
+  is(content.document.characterSet, "windows-1251", "Parent doc should report windows-1251 subsequently");
+  is(content.frames[0].document.characterSet, "UTF-8", "Child doc should report UTF-8 subsequently");
 }
