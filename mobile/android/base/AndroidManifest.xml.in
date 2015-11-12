@@ -245,6 +245,8 @@
             </intent-filter>
         </activity-alias>
 
+        <service android:name="org.mozilla.gecko.GeckoService" />
+
         <activity android:name="org.mozilla.gecko.trackingprotection.TrackingProtectionPrompt"
                   android:launchMode="singleTop"
                   android:theme="@style/OverlayActivity" />

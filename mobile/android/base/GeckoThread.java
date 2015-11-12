@@ -296,7 +296,7 @@ public class GeckoThread extends Thread implements GeckoEventListener {
     }
 
     private static String initGeckoEnvironment() {
-        final Context context = GeckoAppShell.getContext();
+        final Context context = GeckoAppShell.getApplicationContext();
         GeckoLoader.loadMozGlue(context);
         setState(State.MOZGLUE_READY);
 

@@ -32,12 +32,12 @@ function test() {
       ok(aMonitor.isReady,
         "The network monitor panel appears to be ready (" + aTag + ").");
 
-      ok(aMonitor._controller.client,
-        "There should be a client available at this point (" + aTag + ").");
       ok(aMonitor._controller.tabClient,
         "There should be a tabClient available at this point (" + aTag + ").");
       ok(aMonitor._controller.webConsoleClient,
         "There should be a webConsoleClient available at this point (" + aTag + ").");
+      ok(aMonitor._controller.timelineFront,
+        "There should be a timelineFront available at this point (" + aTag + ").");
     }
 
     function checkIfDestroyed(aTag) {
@@ -50,12 +50,12 @@ function test() {
       gOk(aMonitor._controller._shutdown,
         "The network monitor controller object still exists and is destroyed (" + aTag + ").");
 
-      gOk(!aMonitor._controller.client,
-        "There shouldn't be a client available after destruction (" + aTag + ").");
       gOk(!aMonitor._controller.tabClient,
         "There shouldn't be a tabClient available after destruction (" + aTag + ").");
       gOk(!aMonitor._controller.webConsoleClient,
         "There shouldn't be a webConsoleClient available after destruction (" + aTag + ").");
+      gOk(!aMonitor._controller.timelineFront,
+        "There shouldn't be a timelineFront available after destruction (" + aTag + ").");
     }
 
     executeSoon(() => {
