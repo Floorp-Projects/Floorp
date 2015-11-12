@@ -550,20 +550,20 @@ BluetoothServiceChildProcess::SendPlayStatus(int64_t aDuration,
 
 void
 BluetoothServiceChildProcess::ConnectGattClientInternal(
-  const nsAString& aAppUuid, const BluetoothAddress& aDeviceAddress,
+  const nsAString& aAppUuid, const nsAString& aDeviceAddress,
   BluetoothReplyRunnable* aRunnable)
 {
   SendRequest(aRunnable, ConnectGattClientRequest(nsString(aAppUuid),
-                                                  aDeviceAddress));
+                                                  nsString(aDeviceAddress)));
 }
 
 void
 BluetoothServiceChildProcess::DisconnectGattClientInternal(
-  const nsAString& aAppUuid, const BluetoothAddress& aDeviceAddress,
+  const nsAString& aAppUuid, const nsAString& aDeviceAddress,
   BluetoothReplyRunnable* aRunnable)
 {
   SendRequest(aRunnable,
-    DisconnectGattClientRequest(nsString(aAppUuid), aDeviceAddress));
+    DisconnectGattClientRequest(nsString(aAppUuid), nsString(aDeviceAddress)));
 }
 
 void
@@ -601,11 +601,12 @@ BluetoothServiceChildProcess::UnregisterGattClientInternal(
 
 void
 BluetoothServiceChildProcess::GattClientReadRemoteRssiInternal(
-  int aClientIf, const BluetoothAddress& aDeviceAddress,
+  int aClientIf, const nsAString& aDeviceAddress,
   BluetoothReplyRunnable* aRunnable)
 {
   SendRequest(aRunnable,
-              GattClientReadRemoteRssiRequest(aClientIf, aDeviceAddress));
+              GattClientReadRemoteRssiRequest(aClientIf,
+                                              nsString(aDeviceAddress)));
 }
 
 void
@@ -673,21 +674,23 @@ BluetoothServiceChildProcess::GattClientWriteDescriptorValueInternal(
 void
 BluetoothServiceChildProcess::GattServerConnectPeripheralInternal(
   const nsAString& aAppUuid,
-  const BluetoothAddress& aAddress,
+  const nsAString& aAddress,
   BluetoothReplyRunnable* aRunnable)
 {
   SendRequest(aRunnable,
-    GattServerConnectPeripheralRequest(nsString(aAppUuid), aAddress));
+    GattServerConnectPeripheralRequest(nsString(aAppUuid),
+                                       nsString(aAddress)));
 }
 
 void
 BluetoothServiceChildProcess::GattServerDisconnectPeripheralInternal(
   const nsAString& aAppUuid,
-  const BluetoothAddress& aAddress,
+  const nsAString& aAddress,
   BluetoothReplyRunnable* aRunnable)
 {
   SendRequest(aRunnable,
-    GattServerDisconnectPeripheralRequest(nsString(aAppUuid), aAddress));
+    GattServerDisconnectPeripheralRequest(nsString(aAppUuid),
+                                          nsString(aAddress)));
 }
 
 void
@@ -788,7 +791,7 @@ BluetoothServiceChildProcess::GattServerStopServiceInternal(
 void
 BluetoothServiceChildProcess::GattServerSendResponseInternal(
   const nsAString& aAppUuid,
-  const BluetoothAddress& aAddress,
+  const nsAString& aAddress,
   uint16_t aStatus,
   int32_t aRequestId,
   const BluetoothGattResponse& aRsp,
@@ -796,13 +799,13 @@ BluetoothServiceChildProcess::GattServerSendResponseInternal(
 {
   SendRequest(aRunnable,
     GattServerSendResponseRequest(
-      nsString(aAppUuid), aAddress, aStatus, aRequestId, aRsp));
+      nsString(aAppUuid), nsString(aAddress), aStatus, aRequestId, aRsp));
 }
 
 void
 BluetoothServiceChildProcess::GattServerSendIndicationInternal(
   const nsAString& aAppUuid,
-  const BluetoothAddress& aAddress,
+  const nsAString& aAddress,
   const BluetoothAttributeHandle& aCharacteristicHandle,
   bool aConfirm,
   const nsTArray<uint8_t>& aValue,
@@ -810,7 +813,7 @@ BluetoothServiceChildProcess::GattServerSendIndicationInternal(
 {
   SendRequest(aRunnable,
     GattServerSendIndicationRequest(nsString(aAppUuid),
-                                    aAddress,
+                                    nsString(aAddress),
                                     aCharacteristicHandle,
                                     aConfirm,
                                     aValue));
