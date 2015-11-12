@@ -18,7 +18,7 @@ using namespace js::jit;
 using mozilla::Swap;
 
 MIRGenerator::MIRGenerator(CompileCompartment* compartment, const JitCompileOptions& options,
-                           TempAllocator* alloc, MIRGraph* graph, CompileInfo* info,
+                           TempAllocator* alloc, MIRGraph* graph, const CompileInfo* info,
                            const OptimizationInfo* optimizationInfo,
                            Label* outOfBoundsLabel,
                            Label* conversionErrorLabel,
@@ -253,7 +253,7 @@ MIRGraph::unmarkBlocks()
 }
 
 MBasicBlock*
-MBasicBlock::New(MIRGraph& graph, BytecodeAnalysis* analysis, CompileInfo& info,
+MBasicBlock::New(MIRGraph& graph, BytecodeAnalysis* analysis, const CompileInfo& info,
                  MBasicBlock* pred, BytecodeSite* site, Kind kind)
 {
     MOZ_ASSERT(site->pc() != nullptr);
@@ -269,7 +269,7 @@ MBasicBlock::New(MIRGraph& graph, BytecodeAnalysis* analysis, CompileInfo& info,
 }
 
 MBasicBlock*
-MBasicBlock::NewPopN(MIRGraph& graph, CompileInfo& info,
+MBasicBlock::NewPopN(MIRGraph& graph, const CompileInfo& info,
                      MBasicBlock* pred, BytecodeSite* site, Kind kind, uint32_t popped)
 {
     MBasicBlock* block = new(graph.alloc()) MBasicBlock(graph, info, site, kind);
@@ -283,7 +283,7 @@ MBasicBlock::NewPopN(MIRGraph& graph, CompileInfo& info,
 }
 
 MBasicBlock*
-MBasicBlock::NewWithResumePoint(MIRGraph& graph, CompileInfo& info,
+MBasicBlock::NewWithResumePoint(MIRGraph& graph, const CompileInfo& info,
                                 MBasicBlock* pred, BytecodeSite* site,
                                 MResumePoint* resumePoint)
 {
@@ -305,7 +305,7 @@ MBasicBlock::NewWithResumePoint(MIRGraph& graph, CompileInfo& info,
 }
 
 MBasicBlock*
-MBasicBlock::NewPendingLoopHeader(MIRGraph& graph, CompileInfo& info,
+MBasicBlock::NewPendingLoopHeader(MIRGraph& graph, const CompileInfo& info,
                                   MBasicBlock* pred, BytecodeSite* site,
                                   unsigned stackPhiCount)
 {
@@ -322,7 +322,7 @@ MBasicBlock::NewPendingLoopHeader(MIRGraph& graph, CompileInfo& info,
 }
 
 MBasicBlock*
-MBasicBlock::NewSplitEdge(MIRGraph& graph, CompileInfo& info, MBasicBlock* pred)
+MBasicBlock::NewSplitEdge(MIRGraph& graph, const CompileInfo& info, MBasicBlock* pred)
 {
     return pred->pc()
            ? MBasicBlock::New(graph, nullptr, info, pred,
@@ -332,7 +332,7 @@ MBasicBlock::NewSplitEdge(MIRGraph& graph, CompileInfo& info, MBasicBlock* pred)
 }
 
 MBasicBlock*
-MBasicBlock::NewAsmJS(MIRGraph& graph, CompileInfo& info, MBasicBlock* pred, Kind kind)
+MBasicBlock::NewAsmJS(MIRGraph& graph, const CompileInfo& info, MBasicBlock* pred, Kind kind)
 {
     BytecodeSite* site = new(graph.alloc()) BytecodeSite();
     MBasicBlock* block = new(graph.alloc()) MBasicBlock(graph, info, site, kind);
@@ -385,7 +385,7 @@ MBasicBlock::NewAsmJS(MIRGraph& graph, CompileInfo& info, MBasicBlock* pred, Kin
     return block;
 }
 
-MBasicBlock::MBasicBlock(MIRGraph& graph, CompileInfo& info, BytecodeSite* site, Kind kind)
+MBasicBlock::MBasicBlock(MIRGraph& graph, const CompileInfo& info, BytecodeSite* site, Kind kind)
   : unreachable_(false),
     graph_(graph),
     info_(info),

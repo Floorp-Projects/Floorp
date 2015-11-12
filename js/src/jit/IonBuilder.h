@@ -1434,7 +1434,7 @@ class CallInfo
     }
 };
 
-bool NeedsPostBarrier(CompileInfo& info, MDefinition* value);
+bool NeedsPostBarrier(MDefinition* value);
 
 } // namespace jit
 } // namespace js
