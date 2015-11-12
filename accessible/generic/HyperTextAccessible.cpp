@@ -1494,34 +1494,34 @@ HyperTextAccessible::CaretLineNumber()
   return lineNumber;
 }
 
-nsIntRect
+LayoutDeviceIntRect
 HyperTextAccessible::GetCaretRect(nsIWidget** aWidget)
 {
   *aWidget = nullptr;
 
   RefPtr<nsCaret> caret = mDoc->PresShell()->GetCaret();
-  NS_ENSURE_TRUE(caret, nsIntRect());
+  NS_ENSURE_TRUE(caret, LayoutDeviceIntRect());
 
   bool isVisible = caret->IsVisible();
   if (!isVisible)
-    return nsIntRect();
+    return LayoutDeviceIntRect();
 
   nsRect rect;
   nsIFrame* frame = caret->GetGeometry(&rect);
   if (!frame || rect.IsEmpty())
-    return nsIntRect();
+    return LayoutDeviceIntRect();
 
   nsPoint offset;
   // Offset from widget origin to the frame origin, which includes chrome
   // on the widget.
   *aWidget = frame->GetNearestWidget(offset);
-  NS_ENSURE_TRUE(*aWidget, nsIntRect());
+  NS_ENSURE_TRUE(*aWidget, LayoutDeviceIntRect());
   rect.MoveBy(offset);
 
-  nsIntRect caretRect;
-  caretRect = rect.ToOutsidePixels(frame->PresContext()->AppUnitsPerDevPixel());
+  LayoutDeviceIntRect caretRect = LayoutDeviceIntRect::FromUnknownRect(
+    rect.ToOutsidePixels(frame->PresContext()->AppUnitsPerDevPixel()));
   // ((content screen origin) - (content offset in the widget)) = widget origin on the screen
-  caretRect.MoveBy((*aWidget)->WidgetToScreenOffsetUntyped() - (*aWidget)->GetClientOffsetUntyped());
+  caretRect.MoveBy((*aWidget)->WidgetToScreenOffset() - (*aWidget)->GetClientOffset());
 
   // Correct for character size, so that caret always matches the size of
   // the character. This is important for font size transitions, and is
