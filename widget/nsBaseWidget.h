@@ -190,7 +190,7 @@ public:
   NS_IMETHOD              GetBoundsUntyped(nsIntRect &aRect) override;
   NS_IMETHOD              GetClientBoundsUntyped(nsIntRect &aRect) override;
   NS_IMETHOD              GetScreenBoundsUntyped(nsIntRect &aRect) override;
-  NS_IMETHOD              GetRestoredBoundsUntyped(nsIntRect &aRect) override;
+  NS_IMETHOD              GetRestoredBounds(mozilla::LayoutDeviceIntRect &aRect) override;
   NS_IMETHOD              GetNonClientMargins(
                             mozilla::LayoutDeviceIntMargin &margins) override;
   NS_IMETHOD              SetNonClientMargins(

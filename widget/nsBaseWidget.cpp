@@ -1332,12 +1332,12 @@ NS_METHOD nsBaseWidget::GetScreenBoundsUntyped(nsIntRect &aRect)
   return GetBoundsUntyped(aRect);
 }
 
-NS_METHOD nsBaseWidget::GetRestoredBoundsUntyped(nsIntRect &aRect)
+NS_METHOD nsBaseWidget::GetRestoredBounds(LayoutDeviceIntRect &aRect)
 {
   if (SizeMode() != nsSizeMode_Normal) {
     return NS_ERROR_FAILURE;
   }
-  return GetScreenBoundsUntyped(aRect);
+  return GetScreenBounds(aRect);
 }
 
 nsIntPoint

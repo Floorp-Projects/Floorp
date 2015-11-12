@@ -118,7 +118,7 @@ public:
   NS_IMETHOD              SetFocus(bool aRaise);
   NS_IMETHOD              GetBoundsUntyped(nsIntRect &aRect);
   NS_IMETHOD              GetScreenBoundsUntyped(nsIntRect &aRect);
-  NS_IMETHOD              GetRestoredBoundsUntyped(nsIntRect &aRect) override;
+  NS_IMETHOD              GetRestoredBounds(mozilla::LayoutDeviceIntRect &aRect) override;
   NS_IMETHOD              GetClientBoundsUntyped(nsIntRect &aRect);
   virtual nsIntPoint      GetClientOffsetUntyped() override;
   void                    SetBackgroundColor(const nscolor &aColor);
