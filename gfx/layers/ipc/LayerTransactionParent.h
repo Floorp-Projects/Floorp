@@ -132,7 +132,7 @@ protected:
                                          MaybeTransform* aTransform)
                                          override;
   virtual bool RecvSetAsyncScrollOffset(const FrameMetrics::ViewID& aId,
-                                        const int32_t& aX, const int32_t& aY) override;
+                                        const float& aX, const float& aY) override;
   virtual bool RecvSetAsyncZoom(const FrameMetrics::ViewID& aId,
                                 const float& aValue) override;
   virtual bool RecvFlushApzRepaints() override;

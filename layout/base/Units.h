@@ -235,22 +235,6 @@ struct CSSPixel {
  * 2) the "widget scale" (see nsIWidget::GetDefaultScale)
  */
 struct LayoutDevicePixel {
-  static LayoutDeviceIntPoint FromUntyped(const nsIntPoint& aPoint) {
-    return LayoutDeviceIntPoint(aPoint.x, aPoint.y);
-  }
-
-  static nsIntPoint ToUntyped(const LayoutDeviceIntPoint& aPoint) {
-    return nsIntPoint(aPoint.x, aPoint.y);
-  }
-
-  static LayoutDeviceIntRect FromUntyped(const nsIntRect& aRect) {
-    return LayoutDeviceIntRect(aRect.x, aRect.y, aRect.width, aRect.height);
-  }
-
-  static nsIntRect ToUntyped(const LayoutDeviceIntRect& aRect) {
-    return nsIntRect(aRect.x, aRect.y, aRect.width, aRect.height);
-  }
-
   static LayoutDeviceRect FromAppUnits(const nsRect& aRect, nscoord aAppUnitsPerDevPixel) {
     return LayoutDeviceRect(NSAppUnitsToFloatPixels(aRect.x, float(aAppUnitsPerDevPixel)),
                             NSAppUnitsToFloatPixels(aRect.y, float(aAppUnitsPerDevPixel)),
@@ -276,11 +260,11 @@ struct LayoutDevicePixel {
   }
 
   static LayoutDeviceIntPoint FromAppUnitsToNearest(const nsPoint& aPoint, nscoord aAppUnitsPerDevPixel) {
-    return FromUntyped(aPoint.ToNearestPixels(aAppUnitsPerDevPixel));
+    return LayoutDeviceIntPoint::FromUnknownPoint(aPoint.ToNearestPixels(aAppUnitsPerDevPixel));
   }
 
   static LayoutDeviceIntRect FromAppUnitsToNearest(const nsRect& aRect, nscoord aAppUnitsPerDevPixel) {
-    return FromUntyped(aRect.ToNearestPixels(aAppUnitsPerDevPixel));
+    return LayoutDeviceIntRect::FromUnknownRect(aRect.ToNearestPixels(aAppUnitsPerDevPixel));
   }
 
   static LayoutDeviceIntSize FromAppUnitsRounded(const nsSize& aSize, nscoord aAppUnitsPerDevPixel) {
@@ -322,29 +306,6 @@ struct LayoutDevicePixel {
  * 4) rasterizing at a different scale in the presence of some CSS transforms
  */
 struct LayerPixel {
-  static nsIntRect ToUntyped(const LayerIntRect& aRect) {
-    return nsIntRect(aRect.x, aRect.y, aRect.width, aRect.height);
-  }
-
-  static nsIntPoint ToUntyped(const LayerIntPoint& aPoint) {
-    return nsIntPoint(aPoint.x, aPoint.y);
-  }
-
-  static gfx::IntRect ToUnknown(const LayerIntRect& aRect) {
-    return gfx::IntRect(aRect.x, aRect.y, aRect.width, aRect.height);
-  }
-
-  static gfx::Rect ToUnknown(const LayerRect& aRect) {
-    return gfx::Rect(aRect.x, aRect.y, aRect.width, aRect.height);
-  }
-
-  static LayerIntRect FromUntyped(const nsIntRect& aRect) {
-    return LayerIntRect(aRect.x, aRect.y, aRect.width, aRect.height);
-  }
-
-  static LayerIntPoint FromUntyped(const nsIntPoint& aPoint) {
-    return LayerIntPoint(aPoint.x, aPoint.y);
-  }
 };
 
 /*
@@ -355,29 +316,6 @@ struct LayerPixel {
  * have RenderTargetPixel == LayerPixel.
  */
 struct RenderTargetPixel {
-  static nsIntPoint ToUntyped(const RenderTargetIntPoint& aPoint) {
-    return nsIntPoint(aPoint.x, aPoint.y);
-  }
-
-  static nsIntRect ToUntyped(const RenderTargetIntRect& aRect) {
-    return nsIntRect(aRect.x, aRect.y, aRect.width, aRect.height);
-  }
-
-  static gfx::IntRect ToUnknown(const RenderTargetIntRect& aRect) {
-    return gfx::IntRect(aRect.x, aRect.y, aRect.width, aRect.height);
-  }
-
-  static gfx::Rect ToUnknown(const RenderTargetRect& aRect) {
-    return gfx::Rect(aRect.x, aRect.y, aRect.width, aRect.height);
-  }
-
-  static RenderTargetRect FromUnknown(const gfx::Rect& aRect) {
-    return RenderTargetRect(aRect.x, aRect.y, aRect.width, aRect.height);
-  }
-
-  static RenderTargetIntRect FromUntyped(const nsIntRect& aRect) {
-    return RenderTargetIntRect(aRect.x, aRect.y, aRect.width, aRect.height);
-  }
 };
 
 /*
@@ -390,13 +328,6 @@ struct RenderTargetPixel {
  * generally be represented in ScreenPixel units.
  */
 struct ScreenPixel {
-  static nsIntSize ToUntyped(const ScreenIntSize& aSize) {
-    return nsIntSize(aSize.width, aSize.height);
-  }
-
-  static ScreenIntPoint FromUntyped(const nsIntPoint& aPoint) {
-    return ScreenIntPoint(aPoint.x, aPoint.y);
-  }
 };
 
 /* The layer coordinates of the parent frame.
@@ -412,9 +343,6 @@ struct ScreenPixel {
  * to get a picture of how the various coordinate systems relate to each other.
  */
 struct ParentLayerPixel {
-  static nsIntRect ToUntyped(const ParentLayerIntRect& aRect) {
-    return nsIntRect(aRect.x, aRect.y, aRect.width, aRect.height);
-  }
 };
 
 // Operators to apply ScaleFactors directly to Coords, Points, Rects, Sizes and Margins

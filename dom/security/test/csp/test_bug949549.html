@@ -21,6 +21,7 @@
 
   SimpleTest.waitForExplicitFinish();
   var app;
+  var principal;
 
   function setupTest() {
     // We have to install an app in order for the app URL to be valid
@@ -37,21 +38,12 @@
   }
 
   function runTest() {
-    // We have to use a mochitest to test app:// urls,
-    // as app channels can't be instanciated in xpcshell.
-    // Because app protocol depends on webapps.jsm,
-    // which doesn't instanciate properly on xpcshell without many hacks
-    let appchan = SpecialPowers.Services.io.newChannel2(gManifestURL,
-                                                        null,
-                                                        null,
-                                                        null,      // aLoadingNode
-                                                        SpecialPowers.Services.scriptSecurityManager.getSystemPrincipal(),
-                                                        null,      // aTriggeringPrincipal
-                                                        SpecialPowers.Ci.nsILoadInfo.SEC_NORMAL,
-                                                        SpecialPowers.Ci.nsIContentPolicy.TYPE_OTHER);
-
     try {
-      csp.setRequestContext(null, null, appchan);
+      var secMan = SpecialPowers.Cc["@mozilla.org/scriptsecuritymanager;1"]
+                   .getService(SpecialPowers.Ci.nsIScriptSecurityManager);
+      var manifestURI = SpecialPowers.Services.io.newURI(gManifestURL, null, null);
+      principal = secMan.getSimpleCodebasePrincipal(manifestURI);
+      csp.setRequestContext(null, principal);
       ok(true, "setRequestContext hasn't thown");
     } catch(e) {
       ok(false, "setRequestContext throws");

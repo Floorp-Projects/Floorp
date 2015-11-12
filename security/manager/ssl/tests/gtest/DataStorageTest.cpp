@@ -24,7 +24,7 @@ protected:
     const ::testing::TestInfo* const testInfo =
       ::testing::UnitTest::GetInstance()->current_test_info();
     NS_ConvertUTF8toUTF16 testName(testInfo->name());
-    storage = new DataStorage(testName);
+    storage = DataStorage::Get(testName);
     storage->Init(dataWillPersist);
   }
 

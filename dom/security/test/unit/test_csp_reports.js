@@ -15,6 +15,8 @@ var httpServer = new HttpServer();
 httpServer.start(-1);
 var testsToFinish = 0;
 
+var principal;
+
 const REPORT_SERVER_PORT = httpServer.identity.primaryPort;
 const REPORT_SERVER_URI = "http://localhost";
 const REPORT_SERVER_PATH = "/report";
@@ -72,14 +74,13 @@ function makeTest(id, expectedJSON, useReportOnlyPolicy, callback) {
   var selfuri = NetUtil.newURI(REPORT_SERVER_URI +
                                ":" + REPORT_SERVER_PORT +
                                "/foo/self");
-  var selfchan = NetUtil.newChannel({
-    uri: selfuri,
-    loadUsingSystemPrincipal: true});
 
   dump("Created test " + id + " : " + policy + "\n\n");
 
-  // make the reports seem authentic by "binding" them to a channel.
-  csp.setRequestContext(selfuri, null, selfchan);
+  let ssm = Cc["@mozilla.org/scriptsecuritymanager;1"]
+              .getService(Ci.nsIScriptSecurityManager);
+  principal = ssm.getSimpleCodebasePrincipal(selfuri);
+  csp.setRequestContext(null, principal);
 
   // Load up the policy
   // set as report-only if that's the case
