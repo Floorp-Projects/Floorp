@@ -42,7 +42,7 @@ class Breakpoint;
 class DebuggerMemory;
 
 typedef HashSet<ReadBarrieredGlobalObject,
-                DefaultHasher<ReadBarrieredGlobalObject>,
+                MovableCellHasher<ReadBarrieredGlobalObject>,
                 SystemAllocPolicy> WeakGlobalObjectSet;
 
 /*
