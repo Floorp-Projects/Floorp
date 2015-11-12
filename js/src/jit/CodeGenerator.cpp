@@ -3619,7 +3619,7 @@ CodeGenerator::generateArgumentsChecks(bool bailout)
     // No registers are allocated yet, so it's safe to grab anything.
     Register temp = GeneralRegisterSet(EntryTempMask).getAny();
 
-    CompileInfo& info = gen->info();
+    const CompileInfo& info = gen->info();
 
     Label miss;
     for (uint32_t i = info.startArgSlot(); i < info.endArgSlot(); i++) {
@@ -3788,7 +3788,7 @@ CodeGenerator::maybeCreateScriptCounts()
 
     IonScriptCounts* counts = nullptr;
 
-    CompileInfo* outerInfo = &gen->info();
+    const CompileInfo* outerInfo = &gen->info();
     JSScript* script = outerInfo->script();
 
     counts = js_new<IonScriptCounts>();
@@ -4753,7 +4753,7 @@ CodeGenerator::visitNewDeclEnvObject(LNewDeclEnvObject* lir)
     Register objReg = ToRegister(lir->output());
     Register tempReg = ToRegister(lir->temp());
     DeclEnvObject* templateObj = lir->mir()->templateObj();
-    CompileInfo& info = lir->mir()->block()->info();
+    const CompileInfo& info = lir->mir()->block()->info();
 
     // If we have a template object, we can inline call object creation.
     OutOfLineCode* ool = oolCallVM(NewDeclEnvObjectInfo, lir,
