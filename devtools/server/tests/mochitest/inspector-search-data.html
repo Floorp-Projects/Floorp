@@ -1,0 +1,52 @@
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Inspector Search Test Data</title>
+  <style>
+    #pseudo {
+      display: block;
+      margin: 0;
+    }
+    #pseudo:before {
+      content: "before element";
+    }
+    #pseudo:after {
+      content: "after element";
+    }
+  </style>
+  <script type="text/javascript">
+    window.onload = function() {
+      window.opener.postMessage('ready', '*');
+    };
+  </script>
+</head>
+</body>
+  <!-- A comment
+       spread across multiple lines -->
+
+  <img width="100" height="100" src="large-image.jpg" />
+
+  <h1 id="pseudo">Heading 1</h1>
+  <p>A p tag with the text 'h1' inside of it.
+    <strong>A strong h1 result</strong>
+  </p>
+
+  <div id="arrows" northwest="↖" northeast="↗" southeast="↘" southwest="↙">
+    Unicode arrows
+  </div>
+
+  <h2>Heading 2</h2>
+  <h2>Heading 2</h2>
+  <h2>Heading 2</h2>
+
+  <h3>Heading 3</h3>
+  <h3>Heading 3</h3>
+  <h3>Heading 3</h3>
+
+  <h4>Heading 4</h4>
+  <h4>Heading 4</h4>
+  <h4>Heading 4</h4>
+
+  <div class="💩" id="💩" 💩="💩"></div>
+</body>
+</html>

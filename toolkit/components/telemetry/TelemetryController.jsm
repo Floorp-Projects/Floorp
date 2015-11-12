@@ -764,7 +764,6 @@ var Impl = {
         // task to complete, but TelemetryStorage blocks on it during shutdown.
         TelemetryStorage.runCleanPingArchiveTask();
 
-        Telemetry.asyncFetchTelemetryData(function () {});
         this._delayedInitTaskDeferred.resolve();
       } catch (e) {
         this._delayedInitTaskDeferred.reject(e);

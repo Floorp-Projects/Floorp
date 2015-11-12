@@ -11,7 +11,7 @@ interface nsIFile;
 interface nsIInterfaceRequestor;
 interface nsIArray;
 
-[scriptable, uuid(8c4962aa-e0e0-482e-b1db-7846cb78b3d6)]
+[scriptable, uuid(ca8eb4f8-89bc-4479-91c9-1f381e045ed7)]
 interface nsIParentalControlsService : nsISupports
 {
   /**
@@ -35,6 +35,7 @@ interface nsIParentalControlsService : nsISupports
   const short GUEST_BROWSING = 16; // Disallow usage of guest browsing
   const short DEFAULT_THEME = 17; // Use default theme or a special parental controls theme
   const short ADVANCED_SETTINGS = 18; // Advanced settings
+  const short CAMERA_MICROPHONE = 19; // Camera and microphone (WebRTC)
 
   /**
    * @returns true if the current user account has parental controls

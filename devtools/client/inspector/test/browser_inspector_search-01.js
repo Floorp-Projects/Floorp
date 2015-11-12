@@ -8,11 +8,6 @@
 
 const TEST_URL = TEST_URL_ROOT + "doc_inspector_search.html";
 
-// Indexes of the keys in the KEY_STATES array that should listen to "keypress"
-// event instead of "command". These are keys that don't change the content of
-// the search field and thus don't trigger command event.
-const LISTEN_KEYPRESS = [3,4,8,18,19,20,21,22];
-
 // The various states of the inspector: [key, id, isValid]
 // [
 //  what key to press,
@@ -20,35 +15,45 @@ const LISTEN_KEYPRESS = [3,4,8,18,19,20,21,22];
 //  is the searched text valid selector
 // ]
 const KEY_STATES = [
-  ["d", "b1", false],
-  ["i", "b1", false],
-  ["v", "d1", true],
-  ["VK_DOWN", "d2", true], // keypress
-  ["VK_RETURN", "d1", true], //keypress
-  [".", "d1", false],
-  ["c", "d1", false],
-  ["1", "d2", true],
-  ["VK_DOWN", "d2", true], // keypress
-  ["VK_BACK_SPACE", "d2", false],
-  ["VK_BACK_SPACE", "d2", false],
-  ["VK_BACK_SPACE", "d1", true],
-  ["VK_BACK_SPACE", "d1", false],
-  ["VK_BACK_SPACE", "d1", false],
-  ["VK_BACK_SPACE", "d1", true],
-  [".", "d1", false],
-  ["c", "d1", false],
-  ["1", "d2", true],
-  ["VK_DOWN", "s2", true], // keypress
-  ["VK_DOWN", "p1", true], // kepress
-  ["VK_UP", "s2", true], // keypress
-  ["VK_UP", "d2", true], // keypress
-  ["VK_UP", "p1", true],
-  ["VK_BACK_SPACE", "p1", false],
-  ["2", "p3", true],
-  ["VK_BACK_SPACE", "p3", false],
-  ["VK_BACK_SPACE", "p3", false],
-  ["VK_BACK_SPACE", "p3", true],
-  ["r", "p3", false],
+  ["#", "b1", true],                 // #
+  ["d", "b1", true],                 // #d
+  ["1", "b1", true],                 // #d1
+  ["VK_RETURN", "d1", true],         // #d1
+  ["VK_BACK_SPACE", "d1", true],     // #d
+  ["2", "d1", true],                 // #d2
+  ["VK_RETURN", "d2", true],         // #d2
+  ["2", "d2", true],                 // #d22
+  ["VK_RETURN", "d2", false],        // #d22
+  ["VK_BACK_SPACE", "d2", false],    // #d2
+  ["VK_RETURN", "d2", true],         // #d2
+  ["VK_BACK_SPACE", "d2", true],     // #d
+  ["1", "d2", true],                 // #d1
+  ["VK_RETURN", "d1", true],         // #d1
+  ["VK_BACK_SPACE", "d1", true],     // #d
+  ["VK_BACK_SPACE", "d1", true],     // #
+  ["VK_BACK_SPACE", "d1", true],     //
+  ["d", "d1", true],                 // d
+  ["i", "d1", true],                 // di
+  ["v", "d1", true],                 // div
+  [".", "d1", true],                 // div.
+  ["c", "d1", true],                 // div.c
+  ["VK_UP", "d1", true],             // div.c1
+  ["VK_TAB", "d1", true],            // div.c1
+  ["VK_RETURN", "d2", true],         // div.c1
+  ["VK_BACK_SPACE", "d2", true],     // div.c
+  ["VK_BACK_SPACE", "d2", true],     // div.
+  ["VK_BACK_SPACE", "d2", true],     // div
+  ["VK_BACK_SPACE", "d2", true],     // di
+  ["VK_BACK_SPACE", "d2", true],     // d
+  ["VK_BACK_SPACE", "d2", true],     //
+  [".", "d2", true],                 // .
+  ["c", "d2", true],                 // .c
+  ["1", "d2", true],                 // .c1
+  ["VK_RETURN", "d2", true],         // .c1
+  ["VK_RETURN", "s2", true],         // .c1
+  ["VK_RETURN", "p1", true],         // .c1
+  ["P", "p1", true],                 // .c1P
+  ["VK_RETURN", "p1", false],        // .c1P
 ];
 
 add_task(function* () {
@@ -60,14 +65,18 @@ add_task(function* () {
 
   let index = 0;
   for (let [ key, id, isValid ] of KEY_STATES) {
-    let event = (LISTEN_KEYPRESS.indexOf(index) !== -1) ? "keypress" : "command";
-    let eventHandled = once(searchBox, event, true);
-
-    info(index + ": Pressing key " + key + " to get id " + id);
+    info(index + ": Pressing key " + key + " to get id " + id + ".");
+    let done = inspector.searchSuggestions.once("processing-done");
     EventUtils.synthesizeKey(key, {}, inspector.panelWin);
-    yield eventHandled;
+    yield done;
+    info("Got processing-done event");
 
-    info("Got " + event + " event. Waiting for search query to complete");
+    if (key === "VK_RETURN") {
+      info ("Waiting for " + (isValid ? "NO " : "") + "results");
+      yield inspector.search.once("search-result");
+    }
+
+    info("Waiting for search query to complete");
     yield inspector.searchSuggestions._lastQuery;
 
     info(inspector.selection.nodeFront.id + " is selected with text " +

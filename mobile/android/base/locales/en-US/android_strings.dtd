@@ -735,6 +735,7 @@ just addresses the organization to follow, e.g. "This site is run by " -->
 <!ENTITY restriction_disallow_master_password_title2 "Disable master password">
 <!ENTITY restriction_disallow_guest_browsing_title2 "Disable Guest Browsing">
 <!ENTITY restriction_disallow_advanced_settings_title "Disable Advanced Settings">
+<!ENTITY restriction_disallow_camera_microphone_title "Block camera and microphone">
 
 <!-- Default Bookmarks titles-->
 <!-- LOCALIZATION NOTE (bookmarks_about_browser): link title for about:fennec -->

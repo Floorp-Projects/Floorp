@@ -185,17 +185,20 @@ ImageClientSingle::UpdateImage(ImageContainer* aContainer, uint32_t aContentFlag
           data->mYSize, data->mCbCrSize, data->mStereoMode,
           TextureFlags::DEFAULT | mTextureFlags
         );
-        if (!texture || !texture->Lock(OpenMode::OPEN_WRITE_ONLY)) {
+        if (!texture) {
           return false;
         }
+
+        TextureClientAutoLock autoLock(texture, OpenMode::OPEN_WRITE_ONLY);
+        if (!autoLock.Succeeded()) {
+          return false;
+        }
+
         bool status = texture->AsTextureClientYCbCr()->UpdateYCbCr(*data);
         MOZ_ASSERT(status);
-
-        texture->Unlock();
         if (!status) {
           return false;
         }
-
       } else if (image->GetFormat() == ImageFormat::SURFACE_TEXTURE ||
                  image->GetFormat() == ImageFormat::EGLIMAGE) {
         gfx::IntSize size = image->GetSize();

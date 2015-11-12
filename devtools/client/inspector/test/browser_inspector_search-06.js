@@ -14,8 +14,9 @@ add_task(function* () {
 
   info("Searching for test node #d1");
   yield focusSearchBoxUsingShortcut(inspector.panelWin);
-  yield synthesizeKeys(["#", "d", "1"], inspector);
+  yield synthesizeKeys(["#", "d", "1", "VK_RETURN"], inspector);
 
+  yield inspector.search.once("search-result");
   assertHasResult(inspector, true);
 
   info("Removing node #d1");
@@ -25,12 +26,15 @@ add_task(function* () {
   info("Pressing return button to search again for node #d1.");
   yield synthesizeKeys("VK_RETURN", inspector);
 
+  yield inspector.search.once("search-result");
   assertHasResult(inspector, false);
 
   info("Emptying the field and searching for a node that doesn't exist: #d3");
-  let keys = ["VK_BACK_SPACE", "VK_BACK_SPACE", "VK_BACK_SPACE", "#", "d", "3"];
+  let keys = ["VK_BACK_SPACE", "VK_BACK_SPACE", "VK_BACK_SPACE", "#", "d", "3",
+              "VK_RETURN"];
   yield synthesizeKeys(keys, inspector);
 
+  yield inspector.search.once("search-result");
   assertHasResult(inspector, false);
 
   info("Create the #d3 node in the page");
@@ -41,6 +45,7 @@ add_task(function* () {
   info("Pressing return button to search again for node #d3.");
   yield synthesizeKeys("VK_RETURN", inspector);
 
+  yield inspector.search.once("search-result");
   assertHasResult(inspector, true);
 
   // Catch-all event for remaining server requests when searching for the new
