@@ -833,15 +833,6 @@ public abstract class GeckoApp
         });
     }
 
-    public void showToast(final int resId, final int duration) {
-        ThreadUtils.postToUiThread(new Runnable() {
-            @Override
-            public void run() {
-                Toast.makeText(GeckoApp.this, resId, duration).show();
-            }
-        });
-    }
-
     public void showNormalToast(final String message, final String duration) {
         ThreadUtils.postToUiThread(new Runnable() {
             @Override
