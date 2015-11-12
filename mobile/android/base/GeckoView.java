@@ -139,6 +139,10 @@ public class GeckoView extends LayerView
 
     private void init(Context context, String url, boolean doInit) {
 
+        if (GeckoAppShell.getApplicationContext() == null) {
+            GeckoAppShell.setApplicationContext(context.getApplicationContext());
+        }
+
         // Set the GeckoInterface if the context is an activity and the GeckoInterface
         // has not already been set
         if (context instanceof Activity && getGeckoInterface() == null) {
