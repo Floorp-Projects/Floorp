@@ -7,6 +7,11 @@
 #ifndef vm_Stopwatch_h
 #define vm_Stopwatch_h
 
+#include "mozilla/RefPtr.h"
+#include "mozilla/Vector.h"
+
+#include "jsapi.h"
+
 /*
   An API for following in real-time the amount of CPU spent executing
   webpages, add-ons, etc.
