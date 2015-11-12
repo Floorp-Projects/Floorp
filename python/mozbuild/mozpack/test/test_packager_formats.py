@@ -27,6 +27,7 @@ from mozpack.test.test_files import (
     bar_xpt,
     read_interfaces,
 )
+import mozpack.path as mozpath
 
 
 CONTENTS = {
@@ -211,6 +212,43 @@ RESULT_OMNIJAR['omni.foo'].update({
     )
 })
 
+CONTENTS_WITH_BASE = {
+    'bases': {
+        mozpath.join('base/root', b): a
+        for b, a in CONTENTS['bases'].iteritems()
+    },
+    'manifests': [
+        m.move(mozpath.join('base/root', m.base))
+        for m in CONTENTS['manifests']
+    ],
+    'files': {
+        mozpath.join('base/root', p): f
+        for p, f in CONTENTS['files'].iteritems()
+    },
+}
+
+# There is no base for the top directory in CONTENTS,
+# and we want a specific base here.
+CONTENTS_WITH_BASE['bases']['base/root'] = False
+
+EXTRA_CONTENTS = {
+    'extra/file': GeneratedFile('extra file'),
+}
+
+CONTENTS_WITH_BASE['files'].update(EXTRA_CONTENTS)
+
+def result_with_base(results):
+    result = {
+        mozpath.join('base/root', p): v
+        for p, v in results.iteritems()
+    }
+    result.update(EXTRA_CONTENTS)
+    return result
+
+RESULT_FLAT_WITH_BASE = result_with_base(RESULT_FLAT)
+RESULT_JAR_WITH_BASE = result_with_base(RESULT_JAR)
+RESULT_OMNIJAR_WITH_BASE = result_with_base(RESULT_OMNIJAR)
+
 
 class MockDest(MockDest):
     def exists(self):
@@ -284,6 +322,31 @@ class TestFormatters(unittest.TestCase):
 
         fill_formatter(formatter, CONTENTS)
         self.assertEqual(get_contents(registry), RESULT_OMNIJAR)
+
+    def test_flat_formatter_with_base(self):
+        registry = FileRegistry()
+        formatter = FlatFormatter(registry)
+
+        fill_formatter(formatter, CONTENTS_WITH_BASE)
+        self.assertEqual(get_contents(registry), RESULT_FLAT_WITH_BASE)
+
+    def test_jar_formatter_with_base(self):
+        registry = FileRegistry()
+        formatter = JarFormatter(registry)
+
+        fill_formatter(formatter, CONTENTS_WITH_BASE)
+        self.assertEqual(get_contents(registry), RESULT_JAR_WITH_BASE)
+
+    def test_omnijar_formatter_with_base(self):
+        registry = FileRegistry()
+        formatter = OmniJarFormatter(registry, 'omni.foo')
+
+        fill_formatter(formatter, CONTENTS_WITH_BASE)
+        result = {
+            mozpath.join('base/root', p): v
+            for p, v in RESULT_OMNIJAR.iteritems()
+        }
+        self.assertEqual(get_contents(registry), RESULT_OMNIJAR_WITH_BASE)
 
     def test_omnijar_is_resource(self):
         registry = FileRegistry()
