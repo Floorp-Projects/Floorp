@@ -20,9 +20,6 @@ child-src 'none'; script-src 'self' 'unsafe-inline' 'unsafe-inline'; connect-src
             foo.onmessage = function(event) {
                 alert_assert("FAIL");
             };
-            foo.onerror = function(e) {
-                alert_assert("PASS");
-            }
         } catch (e) {
             alert_assert("PASS");
         }
