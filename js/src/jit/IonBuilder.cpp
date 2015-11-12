@@ -733,12 +733,9 @@ IonBuilder::analyzeNewLoopTypes(MBasicBlock* entry, jsbytecode* start, jsbytecod
 bool
 IonBuilder::pushLoop(CFGState::State initial, jsbytecode* stopAt, MBasicBlock* entry, bool osr,
                      jsbytecode* loopHead, jsbytecode* initialPc,
-                     jsbytecode* bodyStart, jsbytecode* bodyEnd, jsbytecode* exitpc,
-                     jsbytecode* continuepc)
+                     jsbytecode* bodyStart, jsbytecode* bodyEnd,
+                     jsbytecode* exitpc, jsbytecode* continuepc)
 {
-    if (!continuepc)
-        continuepc = entry->pc();
-
     ControlFlowInfo loop(cfgStack_.length(), continuepc);
     if (!loops_.append(loop))
         return false;
@@ -3224,10 +3221,11 @@ IonBuilder::whileOrForInLoop(jssrcnote* sn)
     jsbytecode* bodyStart = GetNextPc(loopHead);
     jsbytecode* bodyEnd = pc + GetJumpOffset(pc);
     jsbytecode* exitpc = GetNextPc(ifne);
+    jsbytecode* continuepc = pc;
     if (!analyzeNewLoopTypes(header, bodyStart, exitpc))
         return ControlStatus_Error;
     if (!pushLoop(CFGState::WHILE_LOOP_COND, ifne, header, osr,
-                  loopHead, bodyEnd, bodyStart, bodyEnd, exitpc))
+                  loopHead, bodyEnd, bodyStart, bodyEnd, exitpc, continuepc))
     {
         return ControlStatus_Error;
     }
