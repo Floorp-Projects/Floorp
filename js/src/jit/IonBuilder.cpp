@@ -3139,7 +3139,7 @@ IonBuilder::doWhileLoop(JSOp op, jssrcnote* sn)
     }
 
     unsigned stackPhiCount = 0;
-    MBasicBlock* header = newPendingLoopHeader(current, pc, osr, canOsr, stackPhiCount);
+    MBasicBlock* header = newPendingLoopHeader(current, loopEntry, osr, canOsr, stackPhiCount);
     if (!header)
         return ControlStatus_Error;
     current->end(MGoto::New(alloc(), header));
@@ -3211,7 +3211,7 @@ IonBuilder::whileOrForInLoop(jssrcnote* sn)
     else
         stackPhiCount = 0;
 
-    MBasicBlock* header = newPendingLoopHeader(current, pc, osr, canOsr, stackPhiCount);
+    MBasicBlock* header = newPendingLoopHeader(current, loopEntry, osr, canOsr, stackPhiCount);
     if (!header)
         return ControlStatus_Error;
     current->end(MGoto::New(alloc(), header));
@@ -3306,7 +3306,7 @@ IonBuilder::forLoop(JSOp op, jssrcnote* sn)
     }
 
     unsigned stackPhiCount = 0;
-    MBasicBlock* header = newPendingLoopHeader(current, pc, osr, canOsr, stackPhiCount);
+    MBasicBlock* header = newPendingLoopHeader(current, loopEntry, osr, canOsr, stackPhiCount);
     if (!header)
         return ControlStatus_Error;
     current->end(MGoto::New(alloc(), header));
