@@ -257,17 +257,42 @@ this.BrowserTestUtils = {
   }),
 
   /**
+   * @param win (optional)
+   *        The window we should wait to have "domwindowopened" sent through
+   *        the observer service for. If this is not supplied, we'll just
+   *        resolve when the first "domwindowopened" notification is seen.
    * @return {Promise}
    *         A Promise which resolves when a "domwindowopened" notification
    *         has been fired by the window watcher.
    */
-  domWindowOpened() {
+  domWindowOpened(win) {
     return new Promise(resolve => {
       function observer(subject, topic, data) {
-        if (topic != "domwindowopened") { return; }
+        if (topic == "domwindowopened" && (!win || subject === win)) {
+          Services.ww.unregisterNotification(observer);
+          resolve(subject.QueryInterface(Ci.nsIDOMWindow));
+        }
+      }
+      Services.ww.registerNotification(observer);
+    });
+  },
 
-        Services.ww.unregisterNotification(observer);
-        resolve(subject.QueryInterface(Ci.nsIDOMWindow));
+  /**
+   * @param win (optional)
+   *        The window we should wait to have "domwindowclosed" sent through
+   *        the observer service for. If this is not supplied, we'll just
+   *        resolve when the first "domwindowclosed" notification is seen.
+   * @return {Promise}
+   *         A Promise which resolves when a "domwindowclosed" notification
+   *         has been fired by the window watcher.
+   */
+  domWindowClosed(win) {
+    return new Promise((resolve) => {
+      function observer(subject, topic, data) {
+        if (topic == "domwindowclosed" && (!win || subject === win)) {
+          Services.ww.unregisterNotification(observer);
+          resolve(subject.QueryInterface(Ci.nsIDOMWindow));
+        }
       }
       Services.ww.registerNotification(observer);
     });
@@ -323,16 +348,24 @@ this.BrowserTestUtils = {
    *         messages have been sent up from all browser tabs.
    */
   closeWindow(win) {
-    let domWinClosedPromise = new Promise((resolve) => {
-      function observer(subject, topic, data) {
-        if (topic == "domwindowclosed" && subject === win) {
-          Services.ww.unregisterNotification(observer);
-          resolve();
-        }
-      }
-      Services.ww.registerNotification(observer);
-    });
+    let closedPromise = BrowserTestUtils.windowClosed(win);
+    win.close();
+    return closedPromise;
+  },
 
+  /**
+   * Returns a Promise that resolves when a window has finished closing.
+   *
+   * @param {Window}
+   *        The closing window.
+   *
+   * @return {Promise}
+   *        Resolves when the provided window has been fully closed. For
+   *        browser windows, the Promise will also wait until all final
+   *        SessionStore messages have been sent up from all browser tabs.
+   */
+  windowClosed(win)  {
+    let domWinClosedPromise = BrowserTestUtils.domWindowClosed(win);
     let promises = [domWinClosedPromise];
     let winType = win.document.documentElement.getAttribute("windowtype");
 
@@ -357,8 +390,6 @@ this.BrowserTestUtils = {
 
       promises.push(finalMsgsPromise);
     }
-
-    win.close();
 
     return Promise.all(promises);
   },
