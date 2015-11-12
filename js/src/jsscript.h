@@ -470,7 +470,7 @@ class ScriptCounts
 
     // PCCounts are stored at jump-target offsets. This function looks for the
     // previous PCCount which is in the same basic block as the current offset.
-    const PCCounts* getImmediatePrecedingPCCounts(size_t offset) const;
+    PCCounts* getImmediatePrecedingPCCounts(size_t offset);
 
     // Return the counter used to count the number of throws. Returns null if
     // the element is not found.
@@ -1684,6 +1684,7 @@ class JSScript : public js::gc::TenuredCell
     const js::PCCounts* maybeGetThrowCounts(jsbytecode* pc);
     js::PCCounts* getThrowCounts(jsbytecode* pc);
     uint64_t getHitCount(jsbytecode* pc);
+    void incHitCount(jsbytecode* pc); // Used when we bailout out of Ion.
     void addIonCounts(js::jit::IonScriptCounts* ionCounts);
     js::jit::IonScriptCounts* getIonCounts();
     void releaseScriptCounts(js::ScriptCounts* counts);
