@@ -602,6 +602,11 @@ MDefinition::justReplaceAllUsesWith(MDefinition* dom)
     MOZ_ASSERT(dom != nullptr);
     MOZ_ASSERT(dom != this);
 
+    // Carry over the fact the value has uses which are no longer inspectable
+    // with the graph.
+    if (isUseRemoved())
+        dom->setUseRemovedUnchecked();
+
     for (MUseIterator i(usesBegin()), e(usesEnd()); i != e; ++i)
         i->setProducerUnchecked(dom);
     dom->uses_.takeElements(uses_);
@@ -612,6 +617,11 @@ MDefinition::justReplaceAllUsesWithExcept(MDefinition* dom)
 {
     MOZ_ASSERT(dom != nullptr);
     MOZ_ASSERT(dom != this);
+
+    // Carry over the fact the value has uses which are no longer inspectable
+    // with the graph.
+    if (isUseRemoved())
+        dom->setUseRemovedUnchecked();
 
     // Move all uses to new dom. Save the use of the dominating instruction.
     MUse *exceptUse = nullptr;
