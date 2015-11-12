@@ -263,6 +263,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "Task",
                                   "resource://gre/modules/Task.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PlacesSearchAutocompleteProvider",
                                   "resource://gre/modules/PlacesSearchAutocompleteProvider.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "PlacesRemoteTabsAutocompleteProvider",
+                                  "resource://gre/modules/PlacesRemoteTabsAutocompleteProvider.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(this, "textURIService",
                                    "@mozilla.org/intl/texttosuburi;1",
@@ -586,6 +588,42 @@ function makeActionURL(action, params) {
 }
 
 /**
+ * Returns the key to be used for a URL in a map for the purposes of removing
+ * duplicate entries - any 2 URLs that should be considered the same should
+ * return the same key. For some moz-action URLs this will unwrap the params
+ * and return a key based on the wrapped URL.
+ */
+function makeKeyForURL(actionUrl) {
+  // At this stage we only consider moz-action URLs.
+  if (!actionUrl.startsWith("moz-action:")) {
+    return stripHttpAndTrim(actionUrl);
+  }
+  let [, type, params] = actionUrl.match(/^moz-action:([^,]+),(.*)$/);
+  try {
+    params = JSON.parse(params);
+  } catch (ex) {
+    // This is unexpected in this context, so just return the input.
+    return stripHttpAndTrim(actionUrl);
+  }
+  // For now we only handle these 2 action types and treat them as the same.
+  switch (type) {
+    case "remotetab":
+    case "switchtab":
+      if (params.url) {
+        return "moz-action:tab:" + stripHttpAndTrim(params.url);
+      }
+      break;
+      // TODO (bug 1222435) - "switchtab" should be handled as an "autofill"
+      // entry.
+    default:
+      // do nothing.
+      // TODO (bug 1222436) - extend this method so it can be used instead of
+      // the |placeId| that's also used to remove duplicate entries.
+  }
+  return stripHttpAndTrim(actionUrl);
+}
+
+/**
  * Returns whether the passed in string looks like a url.
  */
 function looksLikeUrl(str) {
@@ -864,6 +902,9 @@ Search.prototype = {
     yield this._matchFirstHeuristicResult(conn);
     this._addingHeuristicFirstMatch = false;
 
+    // We sleep a little between adding the heuristicFirstMatch and matching
+    // any other searches so we aren't kicking off potentially expensive
+    // searches on every keystroke.
     yield this._sleep(Prefs.delay);
     if (!this.pending)
       return;
@@ -874,6 +915,12 @@ Search.prototype = {
 
     for (let [query, params] of queries) {
       yield conn.executeCached(query, params, this._onResultRow.bind(this));
+      if (!this.pending)
+        return;
+    }
+
+    if (this._enableActions && this.hasBehavior("openpage")) {
+      yield this._matchRemoteTabs();
       if (!this.pending)
         return;
     }
@@ -1188,6 +1235,35 @@ Search.prototype = {
     });
   },
 
+  *_matchRemoteTabs() {
+    let matches = yield PlacesRemoteTabsAutocompleteProvider.getMatches(this._originalSearchString);
+    for (let {url, title, icon, deviceClass, deviceName} of matches) {
+      // It's rare that Sync supplies the icon for the page (but if it does, it
+      // is a string URL)
+      if (!icon) {
+        try {
+          let favicon = yield PlacesUtils.promiseFaviconLinkUrl(url);
+          if (favicon) {
+            icon = favicon.spec;
+          }
+        } catch (ex) {} // no favicon for this URL.
+      }
+
+      let match = {
+        // We include the deviceName in the action URL so we can render it in
+        // the URLBar.
+        value: makeActionURL("remotetab", { url, deviceName }),
+        comment: title || url,
+        style: "action",
+        // we want frecency > FRECENCY_DEFAULT so it doesn't get pushed out
+        // by "remote" matches.
+        frecency: FRECENCY_DEFAULT + 1,
+        icon,
+      }
+      this._addMatch(match);
+    }
+  },
+
   // TODO (bug 1054814): Use visited URLs to inform which scheme to use, if the
   // scheme isn't specificed.
   _matchUnknownUrl: function* () {
@@ -1307,7 +1383,7 @@ Search.prototype = {
       return;
 
     // Must check both id and url, cause keywords dynamically modify the url.
-    let urlMapKey = stripHttpAndTrim(match.value);
+    let urlMapKey = makeKeyForURL(match.value);
     if ((match.placeId && this._usedPlaceIds.has(match.placeId)) ||
         this._usedURLs.has(urlMapKey)) {
       return;

@@ -64,9 +64,10 @@ html, body, #app, #memory-tool {
   /**
    * We want this to be exactly at a --sidebar-width distance from the
    * toolbar's start boundary. A .devtools-toolbar has a 3px start padding
-   * and the preceeding .take-snapshot button is exactly 32px.
+   * and the preceeding .take-snapshot button is exactly 32px, and the import
+   * button 78px.
    */
-  margin-inline-start: calc(var(--sidebar-width) - 3px - 32px);
+  margin-inline-start: calc(var(--sidebar-width) - 3px - 32px - 78px);
   border-inline-start: 1px solid var(--theme-splitter-color);
   padding-inline-start: 5px;
 }
@@ -94,6 +95,14 @@ html, body, #app, #memory-tool {
   .devtools-toolbar > .devtools-button.take-snapshot::before {
     background-image: url(images/command-screenshot@2x.png);
   }
+}
+
+/**
+ * Due to toolbar styles of `.devtools-toolbarbutton:not([label])` which overrides
+ * .devtools-toolbarbutton's min-width of 78px, reset the min-width.
+ */
+#import-snapshot {
+  min-width: 78px;
 }
 
 .spacer {

@@ -99,7 +99,7 @@ public class RestrictedProfiles {
 
     @WrapForJNI
     public static boolean isUserRestricted() {
-        return isUserRestricted(GeckoAppShell.getContext());
+        return isUserRestricted(GeckoAppShell.getApplicationContext());
     }
 
     public static boolean isUserRestricted(final Context context) {
@@ -122,7 +122,7 @@ public class RestrictedProfiles {
             return false;
         }
 
-        final Context context = GeckoAppShell.getContext();
+        final Context context = GeckoAppShell.getApplicationContext();
 
         if (Restriction.DISALLOW_BROWSE_FILES == restriction) {
             return canLoadUrl(context, url);
