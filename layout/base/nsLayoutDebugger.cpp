@@ -162,9 +162,7 @@ PrintDisplayItemTo(nsDisplayListBuilder* aBuilder, nsDisplayItem* aItem,
   }
   bool snap;
   nsRect rect = aItem->GetBounds(aBuilder, &snap);
-  nsRect layerRect = rect -
-    nsLayoutUtils::GetAnimatedGeometryRootFor(aItem, aBuilder)->
-      GetOffsetToCrossDoc(aItem->ReferenceFrame());
+  nsRect layerRect = rect - aItem->AnimatedGeometryRoot()->GetOffsetToCrossDoc(aItem->ReferenceFrame());
   nscolor color;
   nsRect vis = aItem->GetVisibleRect();
   nsRect component = aItem->GetComponentAlphaBounds(aBuilder);
@@ -179,7 +177,7 @@ PrintDisplayItemTo(nsDisplayListBuilder* aBuilder, nsDisplayItem* aItem,
     aStream << nsPrintfCString("<a href=\"javascript:ViewImage('%s')\">", string.BeginReading());
   }
 #endif
-  aStream << nsPrintfCString("%s p=0x%p f=0x%p(%s) %sbounds(%d,%d,%d,%d) layerBounds(%d,%d,%d,%d) visible(%d,%d,%d,%d) componentAlpha(%d,%d,%d,%d) clip(%s) %s",
+  aStream << nsPrintfCString("%s p=0x%p f=0x%p(%s) %sbounds(%d,%d,%d,%d) layerBounds(%d,%d,%d,%d) visible(%d,%d,%d,%d) componentAlpha(%d,%d,%d,%d) clip(%s) %s ref=0x%p agr=0x%p",
           aItem->Name(), aItem, (void*)f, NS_ConvertUTF16toUTF8(contentData).get(),
           (aItem->ZIndex() ? nsPrintfCString("z=%d ", aItem->ZIndex()).get() : ""),
           rect.x, rect.y, rect.width, rect.height,
@@ -187,7 +185,8 @@ PrintDisplayItemTo(nsDisplayListBuilder* aBuilder, nsDisplayItem* aItem,
           vis.x, vis.y, vis.width, vis.height,
           component.x, component.y, component.width, component.height,
           clip.ToString().get(),
-          aItem->IsUniform(aBuilder, &color) ? " uniform" : "");
+          aItem->IsUniform(aBuilder, &color) ? " uniform" : "",
+          aItem->ReferenceFrame(), aItem->AnimatedGeometryRoot());
 
   nsRegionRectIterator iter(opaque);
   for (const nsRect* r = iter.Next(); r; r = iter.Next()) {

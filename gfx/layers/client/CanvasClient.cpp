@@ -98,22 +98,20 @@ CanvasClient2D::Update(gfx::IntSize aSize, ClientCanvasLayer* aLayer)
     bufferCreated = true;
   }
 
-  if (!mBuffer->Lock(OpenMode::OPEN_WRITE_ONLY)) {
-    mBuffer = nullptr;
-    return;
-  }
-
   bool updated = false;
   {
-    // Restrict drawTarget to a scope so that terminates before Unlock.
-    RefPtr<DrawTarget> target =
-      mBuffer->BorrowDrawTarget();
+    TextureClientAutoLock autoLock(mBuffer, OpenMode::OPEN_WRITE_ONLY);
+    if (!autoLock.Succeeded()) {
+      mBuffer = nullptr;
+      return;
+    }
+
+    RefPtr<DrawTarget> target = mBuffer->BorrowDrawTarget();
     if (target) {
       aLayer->UpdateTarget(target);
       updated = true;
     }
   }
-  mBuffer->Unlock();
 
   if (bufferCreated && !AddTextureClient(mBuffer)) {
     mBuffer = nullptr;
@@ -286,7 +284,9 @@ TexClientFromReadback(SharedSurface* src, ISurfaceAllocator* allocator,
         return nullptr;
 
     // With a texClient, we can lock for writing.
-    MOZ_ALWAYS_TRUE( texClient->Lock(OpenMode::OPEN_WRITE) );
+    TextureClientAutoLock autoLock(texClient, OpenMode::OPEN_WRITE);
+    DebugOnly<bool> succeeded = autoLock.Succeeded();
+    MOZ_ASSERT(succeeded, "texture should have locked");
 
     uint8_t* lockedBytes = texClient->GetLockedData();
 
@@ -318,8 +318,6 @@ TexClientFromReadback(SharedSurface* src, ISurfaceAllocator* allocator,
 
       texClient->RemoveFlags(TextureFlags::RB_SWAPPED);
     }
-
-    texClient->Unlock();
   }
 
   return texClient.forget();

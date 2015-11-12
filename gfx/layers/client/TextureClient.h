@@ -12,6 +12,7 @@
 #include "ImageTypes.h"                 // for StereoMode
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc
 #include "mozilla/Attributes.h"         // for override
+#include "mozilla/DebugOnly.h"
 #include "mozilla/RefPtr.h"             // for RefPtr, RefCounted
 #include "mozilla/gfx/2D.h"             // for DrawTarget
 #include "mozilla/gfx/Point.h"          // for IntSize
@@ -720,17 +721,39 @@ protected:
   size_t mBufSize;
 };
 
-struct TextureClientAutoUnlock
+// Automatically lock and unlock a texture. Since texture locking is fallible,
+// Succeeded() must be checked on the guard object before proceeding.
+class MOZ_RAII TextureClientAutoLock
 {
-  TextureClient* mTexture;
+  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER;
 
-  explicit TextureClientAutoUnlock(TextureClient* aTexture)
-  : mTexture(aTexture) {}
-
-  ~TextureClientAutoUnlock()
+public:
+  TextureClientAutoLock(TextureClient* aTexture, OpenMode aMode
+                        MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+   : mTexture(aTexture),
+     mSucceeded(false)
   {
-    mTexture->Unlock();
+    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+
+    mSucceeded = mTexture->Lock(aMode);
+    mChecked = false;
   }
+  ~TextureClientAutoLock() {
+    MOZ_ASSERT(mChecked);
+    if (mSucceeded) {
+      mTexture->Unlock();
+    }
+  }
+
+  bool Succeeded() {
+    mChecked = true;
+    return mSucceeded;
+  }
+
+private:
+  TextureClient* mTexture;
+  DebugOnly<bool> mChecked;
+  bool mSucceeded;
 };
 
 class KeepAlive
