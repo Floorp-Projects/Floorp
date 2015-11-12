@@ -268,8 +268,8 @@ class IonBuilder
     ControlStatus maybeLoop(JSOp op, jssrcnote* sn);
     bool pushLoop(CFGState::State state, jsbytecode* stopAt, MBasicBlock* entry, bool osr,
                   jsbytecode* loopHead, jsbytecode* initialPc,
-                  jsbytecode* bodyStart, jsbytecode* bodyEnd, jsbytecode* exitpc,
-                  jsbytecode* continuepc = nullptr);
+                  jsbytecode* bodyStart, jsbytecode* bodyEnd,
+                  jsbytecode* exitpc, jsbytecode* continuepc);
     bool analyzeNewLoopTypes(MBasicBlock* entry, jsbytecode* start, jsbytecode* end);
 
     MBasicBlock* addBlock(MBasicBlock* block, uint32_t loopDepth);
