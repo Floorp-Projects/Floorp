@@ -25,7 +25,7 @@
 #include "nsMimeTypes.h"
 #include "nsStreamUtils.h"
 #include "nsIHttpChannel.h"
-#include "nsICachingChannel.h"
+#include "nsICacheInfoChannel.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIProgressEventSink.h"
@@ -2365,7 +2365,7 @@ imgLoader::LoadImageWithChannel(nsIChannel* channel,
                         nullptr, imgIRequest::CORS_NONE)) {
         request = entry->GetRequest();
       } else {
-        nsCOMPtr<nsICachingChannel> cacheChan(do_QueryInterface(channel));
+        nsCOMPtr<nsICacheInfoChannel> cacheChan(do_QueryInterface(channel));
         bool bUseCacheCopy;
 
         if (cacheChan) {
@@ -2741,7 +2741,7 @@ imgCacheValidator::OnStartRequest(nsIRequest* aRequest, nsISupports* ctxt)
   // If this request is coming from cache and has the same URI as our
   // imgRequest, the request all our proxies are pointing at is valid, and all
   // we have to do is tell them to notify their listeners.
-  nsCOMPtr<nsICachingChannel> cacheChan(do_QueryInterface(aRequest));
+  nsCOMPtr<nsICacheInfoChannel> cacheChan(do_QueryInterface(aRequest));
   nsCOMPtr<nsIChannel> channel(do_QueryInterface(aRequest));
   if (cacheChan && channel && !mRequest->CacheChanged(aRequest)) {
     bool isFromCache = false;
