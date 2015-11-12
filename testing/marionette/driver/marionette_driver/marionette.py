@@ -671,6 +671,27 @@ class Marionette(object):
 
     @do_crash_check
     def _send_message(self, name, params=None, key=None):
+        """Send a blocking message to the server.
+
+        Marionette provides an asynchronous, non-blocking interface and
+        this attempts to paper over this by providing a synchronous API
+        to the user.
+
+        In particular, the Python client can be instructed to carry out
+        a sequence of instructions on the connected emulator.  For this
+        reason, if ``execute_script``, ``execute_js_script``, or
+        ``execute_async_script`` is called, it will loop until all
+        commands requested from the server have been exhausted, and we
+        receive our expected response.
+
+        :param name: Requested command key.
+        :param params: Optional dictionary of key/value arguments.
+        :param key: Optional key to extract from response.
+
+        :returns: Full response from the server, or if `key` is given,
+            the value of said key in the response.
+        """
+
         if not self.session_id and name != "newSession":
             raise errors.MarionetteException("Please start a session")
 
@@ -692,13 +713,16 @@ class Marionette(object):
                 returncode = self.instance.runner.wait(timeout=self.DEFAULT_STARTUP_TIMEOUT)
                 raise IOError("process died with returncode %s" % returncode)
             raise
+
         except socket.timeout:
             self.session = None
             self.window = None
             self.client.close()
             raise errors.TimeoutException("Connection timed out")
 
-        if isinstance(msg, transport.Command):
+        # support execution of commands on the client,
+        # loop until we receive our expected response
+        while isinstance(msg, transport.Command):
             if msg.name == "runEmulatorCmd":
                 self.emulator_callback_id = msg.params.get("id")
                 msg = self._emulator_cmd(msg.params["emulator_cmd"])

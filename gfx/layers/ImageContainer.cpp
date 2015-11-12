@@ -650,11 +650,10 @@ CairoImage::GetTextureClient(CompositableClient *aClient)
     return nullptr;
   }
 
-  if (!textureClient->Lock(OpenMode::OPEN_WRITE_ONLY)) {
+  TextureClientAutoLock autoLock(textureClient, OpenMode::OPEN_WRITE_ONLY);
+  if (!autoLock.Succeeded()) {
     return nullptr;
   }
-
-  TextureClientAutoUnlock autoUnlock(textureClient);
 
   textureClient->UpdateFromSurface(surface);
 

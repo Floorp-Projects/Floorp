@@ -51,9 +51,19 @@ inline Point ToPoint(const gfxPoint &aPoint)
   return Point(Float(aPoint.x), Float(aPoint.y));
 }
 
+inline Size ToSize(const gfxSize &aSize)
+{
+  return Size(Float(aSize.width), Float(aSize.height));
+}
+
 inline gfxPoint ThebesPoint(const Point &aPoint)
 {
   return gfxPoint(aPoint.x, aPoint.y);
+}
+
+inline gfxSize ThebesSize(const Size &aSize)
+{
+  return gfxSize(aSize.width, aSize.height);
 }
 
 inline gfxRect ThebesRect(const Rect &aRect)

@@ -12,30 +12,27 @@ class TestEmulatorContent(MarionetteTestCase):
     @skip_if_desktop
     def test_emulator_cmd(self):
         self.marionette.set_script_timeout(10000)
-        expected = ["<build>",
-                    "OK"]
-        result = self.marionette.execute_async_script("""
-        runEmulatorCmd("avd name", marionetteScriptFinished)
-        """);
-        self.assertEqual(result, expected)
+        expected = ["<build>", "OK"]
+        res = self.marionette.execute_async_script(
+            "runEmulatorCmd('avd name', marionetteScriptFinished)");
+        self.assertEqual(res, expected)
 
     @skip_if_desktop
     def test_emulator_shell(self):
         self.marionette.set_script_timeout(10000)
         expected = ["Hello World!"]
-        result = self.marionette.execute_async_script("""
-        runEmulatorShell(["echo", "Hello World!"], marionetteScriptFinished)
-        """);
-        self.assertEqual(result, expected)
+        res = self.marionette.execute_async_script(
+            "runEmulatorShell(['echo', 'Hello World!'], marionetteScriptFinished)")
+        self.assertEqual(res, expected)
 
     @skip_if_desktop
     def test_emulator_order(self):
         self.marionette.set_script_timeout(10000)
-        self.assertRaises(MarionetteException,
-                          self.marionette.execute_async_script,
-        """runEmulatorCmd("gsm status", function(result) {});
-           marionetteScriptFinished(true);
-        """);
+        with self.assertRaises(MarionetteException):
+            self.marionette.execute_async_script("""
+               runEmulatorCmd("gsm status", function(res) {});
+               marionetteScriptFinished(true);
+               """)
 
 
 class TestEmulatorChrome(TestEmulatorContent):
@@ -131,6 +128,24 @@ class TestEmulatorCallbacks(MarionetteTestCase):
         with self.marionette.using_context("chrome"):
             with self.assertRaisesRegexp(JavascriptException, "TypeError"):
                 self.marionette.execute_async_script("runEmulatorCmd()")
+
+    def test_multiple_callbacks(self):
+        res = self.marionette.execute_async_script("""
+            runEmulatorCmd("what");
+            runEmulatorCmd("ho");
+            marionetteScriptFinished("Frobisher");
+            """)
+        self.assertEqual("Frobisher", res)
+
+    # This should work, but requires work on emulator callbacks:
+    """
+    def test_multiple_nested_callbacks(self):
+        res = self.marionette.execute_async_script('''
+            runEmulatorCmd("what", function(res) {
+              runEmulatorCmd("ho", marionetteScriptFinished);
+            });''')
+        self.assertEqual("cmd response", res)
+    """
 
 
 def escape(word):
