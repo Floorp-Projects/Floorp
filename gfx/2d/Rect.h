@@ -229,6 +229,12 @@ IntRectTyped<units> RoundedOut(const RectTyped<units>& aRect)
                              int32_t(copy.height));
 }
 
+template<class units>
+RectTyped<units> IntRectToRect(const IntRectTyped<units>& aRect)
+{
+  return RectTyped<units>(aRect.x, aRect.y, aRect.width, aRect.height);
+}
+
 } // namespace gfx
 } // namespace mozilla
 

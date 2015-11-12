@@ -24,7 +24,7 @@ addMessageListener("content-task:spawn", function (msg) {
   function ok(condition, name, diag) {
     let stack = getStack(Components.stack.caller);
     sendAsyncMessage("content-task:test-result", {
-      id, condition, name, diag, stack
+      id, condition: !!condition, name, diag, stack
     });
   }
 

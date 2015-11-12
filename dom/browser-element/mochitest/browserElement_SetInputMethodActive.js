@@ -9,6 +9,27 @@ SimpleTest.waitForExplicitFinish();
 browserElementTestHelpers.setEnabledPref(true);
 browserElementTestHelpers.addPermission();
 
+// We'll need to get the appId from the current document,
+// it's either SpecialPowers.Ci.nsIScriptSecurityManager.NO_APP_ID when
+// we are not running inside an app (e.g. Firefox Desktop),
+// or the appId of Mochitest app when we are running inside that app
+// (e.g. Emulator).
+var currentAppId = SpecialPowers.wrap(document).nodePrincipal.appId;
+var inApp =
+  currentAppId !== SpecialPowers.Ci.nsIScriptSecurityManager.NO_APP_ID;
+// We will also need the manifest URL and set it on iframes.
+var currentAppManifestURL;
+
+if (inApp) {
+  let appsService = SpecialPowers.Cc["@mozilla.org/AppsService;1"]
+                      .getService(SpecialPowers.Ci.nsIAppsService);
+
+  currentAppManifestURL = appsService.getManifestURLByLocalId(currentAppId);
+};
+
+info('appId=' + currentAppId);
+info('manifestURL=' + currentAppManifestURL);
+
 function setup() {
   let appInfo = SpecialPowers.Cc['@mozilla.org/xre/app-info;1']
                 .getService(SpecialPowers.Ci.nsIXULAppInfo);
@@ -27,110 +48,134 @@ function tearDown() {
 }
 
 function runTest() {
-  let path = location.pathname;
-  let imeUrl = location.protocol + '//' + location.host +
-               path.substring(0, path.lastIndexOf('/')) +
-               '/file_inputmethod.html';
-  SpecialPowers.pushPermissions([{
-    type: 'input',
-    allow: true,
-    context: {
-      url: imeUrl,
-      originAttributes: {inBrowser: true}
-    }
-  }], SimpleTest.waitForFocus.bind(SimpleTest, createFrames));
+  createFrames();
 }
 
-var gFrames = [];
+var gInputMethodFrames = [];
 var gInputFrame;
 
 function createFrames() {
   // Create two input method iframes.
   let loadendCount = 0;
   let countLoadend = function() {
-    if (this === gInputFrame) {
-      // The frame script running in the frame where the input is hosted.
-      let appFrameScript = function appFrameScript() {
-        let input = content.document.body.firstElementChild;
-        input.oninput = function() {
-          sendAsyncMessage('test:InputMethod:oninput', {
-            from: 'input',
-            value: this.value
-          });
-        };
-
-        input.onblur = function() {
-          // "Expected" lost of focus since the test is finished.
-          if (input.value === '#0#1hello') {
-            return;
-          }
-
-          sendAsyncMessage('test:InputMethod:oninput', {
-            from: 'input',
-            error: true,
-            value: 'Unexpected lost of focus on the input frame!'
-          });
-        };
-
-        input.focus();
-      }
-
-      // Inject frame script to receive input.
-      let mm = SpecialPowers.getBrowserFrameMessageManager(gInputFrame);
-      mm.loadFrameScript('data:,(' + encodeURIComponent(appFrameScript.toString()) + ')();', false);
-      mm.addMessageListener("test:InputMethod:oninput", next);
-    } else {
-      ok(this.setInputMethodActive, 'Can access setInputMethodActive.');
-
-      // The frame script running in the input method frames.
-
-      let appFrameScript = function appFrameScript() {
-        content.addEventListener("message", function(evt) {
-          sendAsyncMessage('test:InputMethod:imFrameMessage', {
-            from: 'im',
-            value: evt.data
-          });
-        });
-      }
-
-      // Inject frame script to receive message.
-      let mm = SpecialPowers.getBrowserFrameMessageManager(this);
-      mm.loadFrameScript('data:,(' + appFrameScript.toString() + ')();', false);
-      mm.addMessageListener("test:InputMethod:imFrameMessage", next);
-    }
-
     loadendCount++;
     if (loadendCount === 3) {
-      startTest();
+      setPermissions();
+     }
+   };
+
+   // Create an input field to receive string from input method iframes.
+   gInputFrame = document.createElement('iframe');
+   gInputFrame.setAttribute('mozbrowser', 'true');
+   gInputFrame.src =
+     'data:text/html,<input autofocus value="hello" />' +
+     '<p>This is targetted mozbrowser frame.</p>';
+   document.body.appendChild(gInputFrame);
+   gInputFrame.addEventListener('mozbrowserloadend', countLoadend);
+
+   for (let i = 0; i < 2; i++) {
+    let frame = gInputMethodFrames[i] = document.createElement('iframe');
+    frame.setAttribute('mozbrowser', 'true');
+    if (currentAppManifestURL) {
+      frame.setAttribute('mozapp', currentAppManifestURL);
     }
-  };
+    frame.src = 'file_empty.html#' + i;
+     document.body.appendChild(frame);
+     frame.addEventListener('mozbrowserloadend', countLoadend);
+   }
+ }
 
-  // Create an input field to receive string from input method iframes.
-  gInputFrame = document.createElement('iframe');
-  gInputFrame.setAttribute('mozbrowser', 'true');
-  gInputFrame.src =
-    'data:text/html,<input autofocus value="hello" />' +
-    '<p>This is targetted mozbrowser frame.</p>';
-  document.body.appendChild(gInputFrame);
-  gInputFrame.addEventListener('mozbrowserloadend', countLoadend);
+function setPermissions() {
+  let permissions = [{
+    type: 'input',
+    allow: true,
+    context: {
+      url: SimpleTest.getTestFileURL('/file_empty.html'),
+      originAttributes: {
+        appId: currentAppId,
+        inBrowser: true
+      }
+    }
+  }];
 
-  for (let i = 0; i < 2; i++) {
-    let frame = gFrames[i] = document.createElement('iframe');
-    gFrames[i].setAttribute('mozbrowser', 'true');
-    // When the input method iframe is activated, it will send the URL
-    // hash to current focused element. We set different hash to each
-    // iframe so that iframes can be differentiated by their hash.
-    frame.src = 'file_inputmethod.html#' + i;
-    document.body.appendChild(frame);
-    frame.addEventListener('mozbrowserloadend', countLoadend);
+  if (inApp) {
+    // The current document would also need to be given access for IPC to
+    // recognize our permission (why)?
+    permissions.push({
+      type: 'input', allow: true, context: document });
   }
+
+  SpecialPowers.pushPermissions(permissions,
+    SimpleTest.waitForFocus.bind(SimpleTest, startTest));
 }
 
-function startTest() {
-  // Set focus to the input field and wait for input methods' inputting.
-  SpecialPowers.DOMWindowUtils.focus(gInputFrame);
+ function startTest() {
+  // The frame script running in the frame where the input is hosted.
+  let appFrameScript = function appFrameScript() {
+    let input = content.document.body.firstElementChild;
+    input.oninput = function() {
+      sendAsyncMessage('test:InputMethod:oninput', {
+        from: 'input',
+        value: this.value
+      });
+    };
 
-  let req0 = gFrames[0].setInputMethodActive(true);
+    input.onblur = function() {
+      // "Expected" lost of focus since the test is finished.
+      if (input.value === '#0#1hello') {
+        return;
+      }
+
+      sendAsyncMessage('test:InputMethod:oninput', {
+        from: 'input',
+        error: true,
+        value: 'Unexpected lost of focus on the input frame!'
+      });
+    };
+
+    input.focus();
+  };
+
+  // Inject frame script to receive input.
+  let mm = SpecialPowers.getBrowserFrameMessageManager(gInputFrame);
+  mm.loadFrameScript('data:,(' + encodeURIComponent(appFrameScript.toString()) + ')();', false);
+  mm.addMessageListener("test:InputMethod:oninput", next);
+
+  gInputMethodFrames.forEach((frame) => {
+    ok(frame.setInputMethodActive, 'Can access setInputMethodActive.');
+
+    // The frame script running in the input method frames.
+    let appFrameScript = function appFrameScript() {
+      let im = content.navigator.mozInputMethod;
+      im.oninputcontextchange = function() {
+        let ctx = im.inputcontext;
+        // Report back to parent frame on status of ctx gotten.
+        // (A setTimeout() here to ensure this always happens after
+        //  DOMRequest succeed.)
+        content.setTimeout(() => {
+          sendAsyncMessage('test:InputMethod:imFrameMessage', {
+            from: 'im',
+            value: content.location.hash + !!ctx
+          });
+        });
+
+        // If there is a context, send out the hash.
+        if (ctx) {
+          ctx.replaceSurroundingText(content.location.hash);
+        }
+      };
+    };
+
+    // Inject frame script to receive message.
+    let mm = SpecialPowers.getBrowserFrameMessageManager(frame);
+    mm.loadFrameScript('data:,(' + encodeURIComponent(appFrameScript.toString()) + ')();', false);
+    mm.addMessageListener("test:InputMethod:imFrameMessage", next);
+  });
+
+   // Set focus to the input field and wait for input methods' inputting.
+   SpecialPowers.DOMWindowUtils.focus(gInputFrame);
+
+  let req0 = gInputMethodFrames[0].setInputMethodActive(true);
   req0.onsuccess = function() {
     ok(true, 'setInputMethodActive succeeded (0).');
   };
@@ -203,14 +248,14 @@ function next(msg) {
 
       gCount++;
 
-      let req0 = gFrames[0].setInputMethodActive(false);
+      let req0 = gInputMethodFrames[0].setInputMethodActive(false);
       req0.onsuccess = function() {
         ok(true, 'setInputMethodActive succeeded (0).');
       };
       req0.onerror = function() {
         ok(false, 'setInputMethodActive failed (0): ' + this.error.name);
       };
-      let req1 = gFrames[1].setInputMethodActive(true);
+      let req1 = gInputMethodFrames[1].setInputMethodActive(true);
       req1.onsuccess = function() {
         ok(true, 'setInputMethodActive succeeded (1).');
       };
@@ -259,7 +304,7 @@ function next(msg) {
 
       // Receive the second input from the second iframe.
       // Deactive the second iframe.
-      let req3 = gFrames[1].setInputMethodActive(false);
+      let req3 = gInputMethodFrames[1].setInputMethodActive(false);
       req3.onsuccess = function() {
         ok(true, 'setInputMethodActive(false) succeeded (2).');
       };

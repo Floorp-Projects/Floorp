@@ -1257,6 +1257,7 @@ DrawTargetCairo::Mask(const Pattern &aSource,
   }
 
   cairo_set_source(mContext, source);
+  cairo_set_operator(mContext, GfxOpToCairoOp(aOptions.mCompositionOp));
   cairo_mask(mContext, mask);
 
   cairo_pattern_destroy(mask);

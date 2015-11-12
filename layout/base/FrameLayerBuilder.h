@@ -107,7 +107,7 @@ struct ContainerLayerParameters {
   nsIntPoint mOffset;
 
   LayerIntPoint Offset() const {
-    return LayerIntPoint::FromUntyped(mOffset);
+    return LayerIntPoint::FromUnknownPoint(mOffset);
   }
 
   nscolor mBackgroundColor;

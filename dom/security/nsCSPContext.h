@@ -26,6 +26,7 @@
   { 0xbf, 0xe0, 0x27, 0xce, 0xb9, 0x23, 0xd9, 0xac } }
 
 class nsINetworkInterceptController;
+struct ConsoleMsgQueueElem;
 
 class nsCSPContext : public nsIContentSecurityPolicy
 {
@@ -39,6 +40,22 @@ class nsCSPContext : public nsIContentSecurityPolicy
 
   public:
     nsCSPContext();
+
+    /**
+     * SetRequestContext() needs to be called before the innerWindowID
+     * is initialized on the document. Use this function to call back to
+     * flush queued up console messages and initalize the innerWindowID.
+     */
+    void flushConsoleMessages();
+
+    void logToConsole(const char16_t* aName,
+                      const char16_t** aParams,
+                      uint32_t aParamsLength,
+                      const nsAString& aSourceName,
+                      const nsAString& aSourceLine,
+                      uint32_t aLineNumber,
+                      uint32_t aColumnNumber,
+                      uint32_t aSeverityFlag);
 
     nsresult SendReports(nsISupports* aBlockedContentSource,
                          nsIURI* aOriginalURI,
@@ -56,6 +73,13 @@ class nsCSPContext : public nsIContentSecurityPolicy
                                   const nsAString& aSourceFile,
                                   const nsAString& aScriptSample,
                                   uint32_t aLineNum);
+
+    // Hands off! Don't call this method unless you know what you
+    // are doing. It's only supposed to be called from within
+    // the principal destructor to avoid a tangling pointer.
+    void clearLoadingPrincipal() {
+      mLoadingPrincipal = nullptr;
+    }
 
   private:
     bool permitsInternal(CSPDirective aDir,
@@ -76,13 +100,22 @@ class nsCSPContext : public nsIContentSecurityPolicy
                                uint32_t aViolatedPolicyIndex,
                                uint32_t aLineNumber);
 
-    nsCOMPtr<nsIURI>                           mReferrer;
+    nsString                                   mReferrer;
     uint64_t                                   mInnerWindowID; // used for web console logging
     nsTArray<nsCSPPolicy*>                     mPolicies;
     nsCOMPtr<nsIURI>                           mSelfURI;
     nsDataHashtable<nsCStringHashKey, int16_t> mShouldLoadCache;
     nsCOMPtr<nsILoadGroup>                     mCallingChannelLoadGroup;
     nsWeakPtr                                  mLoadingContext;
+    // The CSP hangs off the principal, so let's store a raw pointer of the principal
+    // to avoid memory leaks. Within the destructor of the principal we explicitly
+    // set mLoadingPrincipal to null.
+    nsIPrincipal*                              mLoadingPrincipal;
+
+    // helper members used to queue up web console messages till
+    // the windowID becomes available. see flushConsoleMessages()
+    nsTArray<ConsoleMsgQueueElem>              mConsoleMsgQueue;
+    bool                                       mQueueUpMessages;
 };
 
 // Class that listens to violation report transmission and logs errors.

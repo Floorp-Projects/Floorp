@@ -25,6 +25,7 @@
 #include "nsNetCID.h"
 #include "jswrapper.h"
 
+#include "mozilla/dom/nsCSPContext.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/HashFunctions.h"
@@ -76,7 +77,12 @@ nsPrincipal::nsPrincipal()
 { }
 
 nsPrincipal::~nsPrincipal()
-{ }
+{ 
+  // let's clear the principal within the csp to avoid a tangling pointer
+  if (mCSP) {
+    static_cast<nsCSPContext*>(mCSP.get())->clearLoadingPrincipal();
+  }
+}
 
 nsresult
 nsPrincipal::Init(nsIURI *aCodebase, const OriginAttributes& aOriginAttributes)
@@ -404,7 +410,7 @@ nsPrincipal::Read(nsIObjectInputStream* aStream)
   // need to link in the CSP context here (link in the URI of the protected
   // resource).
   if (csp) {
-    csp->SetRequestContext(codebase, nullptr, nullptr);
+    csp->SetRequestContext(nullptr, this);
   }
 
   SetDomain(domain);

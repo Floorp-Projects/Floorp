@@ -125,7 +125,7 @@ BasicContainerLayer::ChildrenPartitionVisibleRegion(const gfx::IntRect& aInRect)
     childRegion.MoveBy(int32_t(childTransform._31), int32_t(childTransform._32));
     childRegion.And(childRegion, rect);
     if (l->GetClipRect()) {
-      childRegion.And(childRegion, ParentLayerIntRect::ToUntyped(*l->GetClipRect()) + offset);
+      childRegion.And(childRegion, l->GetClipRect()->ToUnknownRect() + offset);
     }
     nsIntRegion intersection;
     intersection.And(covered, childRegion);

@@ -75,18 +75,15 @@ BasicPaintedLayer::PaintThebes(gfxContext* aContext,
 
       aContext->Save();
 
-      bool needsClipToVisibleRegion = GetClipToVisibleRegion();
       bool needsGroup = opacity != 1.0 ||
                         effectiveOperator != CompositionOp::OP_OVER ||
                         aMaskLayer;
       RefPtr<gfxContext> groupContext;
+      BasicLayerManager::PushedGroup group;
       if (needsGroup) {
-        groupContext =
-          BasicManager()->PushGroupForLayer(aContext, this, toDraw,
-                                            &needsClipToVisibleRegion);
-        if (effectiveOperator != CompositionOp::OP_OVER) {
-          needsClipToVisibleRegion = true;
-        }
+        group =
+          BasicManager()->PushGroupForLayer(aContext, this, toDraw);
+        groupContext = group.mGroupTarget;
       } else {
         groupContext = aContext;
       }
@@ -94,12 +91,7 @@ BasicPaintedLayer::PaintThebes(gfxContext* aContext,
       aCallback(this, groupContext, toDraw, toDraw,
                 DrawRegionClip::NONE, nsIntRegion(), aCallbackData);
       if (needsGroup) {
-        aContext->PopGroupToSource();
-        if (needsClipToVisibleRegion) {
-          gfxUtils::ClipToRegion(aContext, toDraw);
-        }
-        AutoSetOperator setOptimizedOperator(aContext, effectiveOperator);
-        PaintWithMask(aContext, opacity, aMaskLayer);
+        BasicManager()->PopGroupForLayer(group);
       }
 
       aContext->Restore();

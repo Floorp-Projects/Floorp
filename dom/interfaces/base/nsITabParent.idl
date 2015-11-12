@@ -5,7 +5,7 @@
 
 #include "domstubs.idl"
 
-[scriptable, uuid(3dd203e4-66ec-40fd-acde-43f0b35c98e9)]
+[scriptable, uuid(7615408c-1fb3-4128-8dd5-a3e2f3fa8842)]
 interface nsITabParent : nsISupports
 {
   void injectTouchEvent(in AString aType,
@@ -27,6 +27,17 @@ interface nsITabParent : nsISupports
     * Manages the docshell active state of the remote browser.
     */
   attribute boolean docShellIsActive;
+
+  /**
+    * As an optimisation, setting the docshell's active state to
+    * inactive also triggers a layer invalidation to free up some
+    * potentially unhelpful memory usage. This attribute should be
+    * used where callers would like to set the docshell's state
+    * without losing any layer data.
+    *
+    * Otherwise, this does the same as setting the attribute above.
+    */
+  void setDocShellIsActiveAndForeground(in boolean aIsActive);
 
   /**
    * During interactions where painting performance

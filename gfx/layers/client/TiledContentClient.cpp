@@ -1508,13 +1508,13 @@ ClientMultiTiledLayerBuffer::ComputeProgressiveUpdateRegion(const nsIntRegion& a
   // make the progressive paint more visible to the user while scrolling.
   // On B2G uploads are cheaper and we value coherency more, especially outside
   // the browser, so we always use the entire user-visible area.
-  IntRect coherentUpdateRect(LayerIntRect::ToUntyped(RoundedOut(
+  IntRect coherentUpdateRect(RoundedOut(
 #ifdef MOZ_WIDGET_ANDROID
     transformedCompositionBounds->Intersect(aPaintData->mCompositionBounds)
 #else
     *transformedCompositionBounds
 #endif
-  )));
+  ).ToUnknownRect());
 
   TILING_LOG("TILING %p: Progressive update final coherency rect %s\n", mPaintedLayer, Stringify(coherentUpdateRect).c_str());
 

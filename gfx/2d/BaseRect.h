@@ -530,11 +530,11 @@ struct BaseRect {
   }
 
   /**
-   * Clamp this rectangle to be inside aRect. The function returns a copy of
-   * this rect after it is forced inside the bounds of aRect. It will attempt to
-   * retain the size but will shrink the dimensions that don't fit.
+   * Translate this rectangle to be inside aRect. If it doesn't fit inside
+   * aRect then the dimensions that don't fit will be shrunk so that they
+   * do fit. The resulting rect is returned.
    */
-  MOZ_WARN_UNUSED_RESULT Sub ForceInside(const Sub& aRect) const
+  MOZ_WARN_UNUSED_RESULT Sub MoveInsideAndClamp(const Sub& aRect) const
   {
     Sub rect(std::max(aRect.x, x),
              std::max(aRect.y, y),
