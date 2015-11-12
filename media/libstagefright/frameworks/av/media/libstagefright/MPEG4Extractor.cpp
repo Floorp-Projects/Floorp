@@ -420,7 +420,7 @@ uint32_t MPEG4Extractor::flags() const {
 sp<MetaData> MPEG4Extractor::getMetaData() {
     status_t err;
     if ((err = readMetaData()) != OK) {
-        return new MetaData;
+        return NULL;
     }
 
     return mFileMetaData;
@@ -514,14 +514,15 @@ status_t MPEG4Extractor::readMetaData() {
     uint64_t psshsize = 0;
     for (size_t i = 0; i < mPssh.Length(); i++) {
         psshsize += 20 + mPssh[i].datalen;
-    }
-    if (psshsize > kMAX_ALLOCATION) {
-        return ERROR_MALFORMED;
+        if (mPssh[i].datalen > kMAX_ALLOCATION - 20 ||
+            psshsize > kMAX_ALLOCATION) {
+            return ERROR_MALFORMED;
+        }
     }
     if (psshsize) {
         char *buf = (char*)malloc(psshsize);
         if (!buf) {
-            return ERROR_MALFORMED;
+            return -ENOMEM;
         }
         char *ptr = buf;
         for (size_t i = 0; i < mPssh.Length(); i++) {
@@ -685,7 +686,10 @@ status_t MPEG4Extractor::parseDrmSINF(off64_t *offset, off64_t data_offset) {
                 return ERROR_MALFORMED;
             }
             sinf->len = dataLen - 3;
-            sinf->IPMPData = new char[sinf->len];
+            sinf->IPMPData = new (fallible) char[sinf->len];
+            if (!sinf->IPMPData) {
+                return -ENOMEM;
+            }
 
             if (mDataSource->readAt(data_offset + 2, sinf->IPMPData, sinf->len) < sinf->len) {
                 return ERROR_IO;
@@ -1146,7 +1150,10 @@ status_t MPEG4Extractor::parseChunk(off64_t *offset, int depth) {
 
             // Copy the contents of the box (including header) verbatim.
             pssh.datalen = chunk_data_size + 8;
-            pssh.data = new uint8_t[pssh.datalen];
+            pssh.data = new (fallible) uint8_t[pssh.datalen];
+            if (!pssh.data) {
+                return -ENOMEM;
+            }
             if (mDataSource->readAt(data_offset - 8, pssh.data, pssh.datalen) < pssh.datalen) {
                 return ERROR_IO;
             }
@@ -1762,7 +1769,10 @@ status_t MPEG4Extractor::parseChunk(off64_t *offset, int depth) {
               return ERROR_MALFORMED;
             }
 
-            sp<ABuffer> buffer = new ABuffer(chunk_data_size);
+            sp<ABuffer> buffer = new (fallible) ABuffer(chunk_data_size);
+            if (!buffer.get()) {
+                return -ENOMEM;
+            }
 
             if (mDataSource->readAt(
                         data_offset, buffer->data(), chunk_data_size) < chunk_data_size) {
@@ -1996,7 +2006,10 @@ status_t MPEG4Extractor::parseChunk(off64_t *offset, int depth) {
             if (size >= kMAX_ALLOCATION - chunk_size) {
                 return ERROR_MALFORMED;
             }
-            uint8_t *buffer = new uint8_t[size + chunk_size];
+            uint8_t *buffer = new (fallible) uint8_t[size + chunk_size];
+            if (!buffer) {
+                return -ENOMEM;
+            }
 
             if (size > 0) {
                 memcpy(buffer, data, size);
@@ -2024,12 +2037,18 @@ status_t MPEG4Extractor::parseChunk(off64_t *offset, int depth) {
             if (mFileMetaData != NULL) {
                 ALOGV("chunk_data_size = %lld and data_offset = %lld",
                         chunk_data_size, data_offset);
-                sp<ABuffer> buffer = new ABuffer(chunk_data_size + 1);
+                const int kSkipBytesOfDataBox = 16;
+                if (chunk_data_size <= kSkipBytesOfDataBox) {
+                  return ERROR_MALFORMED;
+                }
+                sp<ABuffer> buffer = new (fallible) ABuffer(chunk_data_size + 1);
+                if (!buffer.get()) {
+                    return -ENOMEM;
+                }
                 if (mDataSource->readAt(
                     data_offset, buffer->data(), chunk_data_size) != (ssize_t)chunk_data_size) {
                     return ERROR_IO;
                 }
-                const int kSkipBytesOfDataBox = 16;
                 mFileMetaData->setData(
                     kKeyAlbumArt, MetaData::TYPE_NONE,
                     buffer->data() + kSkipBytesOfDataBox, chunk_data_size - kSkipBytesOfDataBox);
