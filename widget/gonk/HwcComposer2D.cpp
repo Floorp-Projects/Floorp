@@ -769,7 +769,7 @@ HwcComposer2D::Render(nsIWidget* aWidget)
         mList->hwLayers[mList->numHwLayers - 1].acquireFenceFd = dispSurface->GetPrevDispAcquireFd();
     } else {
         // Update screen rect to handle a case that TryRenderWithHwc() is not called.
-        mScreenRect = screen->GetNaturalBoundsUntyped();
+        mScreenRect = screen->GetNaturalBounds().ToUnknownRect();
 
         mList->flags = HWC_GEOMETRY_CHANGED;
         mList->numHwLayers = 2;
@@ -891,7 +891,7 @@ HwcComposer2D::TryRenderWithHwc(Layer* aRoot,
     // reallocated. We may want to avoid this if possible
     mVisibleRegions.clear();
 
-    mScreenRect = screen->GetNaturalBoundsUntyped();
+    mScreenRect = screen->GetNaturalBounds().ToUnknownRect();
     MOZ_ASSERT(mHwcLayerMap.IsEmpty());
     if (!PrepareLayerList(aRoot,
                           mScreenRect,
