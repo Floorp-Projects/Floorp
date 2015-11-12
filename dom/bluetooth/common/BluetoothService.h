@@ -286,22 +286,22 @@ public:
              BluetoothReplyRunnable* aRunnable) = 0;
 
   virtual void
-  SendFile(const BluetoothAddress& aDeviceAddress,
+  SendFile(const nsAString& aDeviceAddress,
            BlobParent* aBlobParent,
            BlobChild* aBlobChild,
            BluetoothReplyRunnable* aRunnable) = 0;
 
   virtual void
-  SendFile(const BluetoothAddress& aDeviceAddress,
+  SendFile(const nsAString& aDeviceAddress,
            Blob* aBlob,
            BluetoothReplyRunnable* aRunnable) = 0;
 
   virtual void
-  StopSendingFile(const BluetoothAddress& aDeviceAddress,
+  StopSendingFile(const nsAString& aDeviceAddress,
                   BluetoothReplyRunnable* aRunnable) = 0;
 
   virtual void
-  ConfirmReceivingFile(const BluetoothAddress& aDeviceAddress, bool aConfirm,
+  ConfirmReceivingFile(const nsAString& aDeviceAddress, bool aConfirm,
                        BluetoothReplyRunnable* aRunnable) = 0;
 
   virtual void

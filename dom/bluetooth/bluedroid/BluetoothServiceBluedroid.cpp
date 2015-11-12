@@ -1526,20 +1526,27 @@ BluetoothServiceBluedroid::Disconnect(
 }
 
 void
-BluetoothServiceBluedroid::SendFile(const BluetoothAddress& aDeviceAddress,
+BluetoothServiceBluedroid::SendFile(const nsAString& aDeviceAddress,
                                     BlobParent* aBlobParent,
                                     BlobChild* aBlobChild,
                                     BluetoothReplyRunnable* aRunnable)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
+  BluetoothAddress deviceAddress;
+  nsresult rv = StringToAddress(aDeviceAddress, deviceAddress);
+  if (NS_FAILED(rv)) {
+    DispatchReplyError(aRunnable, STATUS_PARM_INVALID);
+    return;
+  }
+
   // Currently we only support one device sending one file at a time,
   // so we don't need aDeviceAddress here because the target device
   // has been determined when calling 'Connect()'. Nevertheless, keep
   // it for future use.
 
   BluetoothOppManager* opp = BluetoothOppManager::Get();
-  if (!opp || !opp->SendFile(aDeviceAddress, aBlobParent)) {
+  if (!opp || !opp->SendFile(deviceAddress, aBlobParent)) {
     DispatchReplyError(aRunnable, NS_LITERAL_STRING("SendFile failed"));
     return;
   }
@@ -1548,19 +1555,26 @@ BluetoothServiceBluedroid::SendFile(const BluetoothAddress& aDeviceAddress,
 }
 
 void
-BluetoothServiceBluedroid::SendFile(const BluetoothAddress& aDeviceAddress,
+BluetoothServiceBluedroid::SendFile(const nsAString& aDeviceAddress,
                                     Blob* aBlob,
                                     BluetoothReplyRunnable* aRunnable)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
+  BluetoothAddress deviceAddress;
+  nsresult rv = StringToAddress(aDeviceAddress, deviceAddress);
+  if (NS_FAILED(rv)) {
+    DispatchReplyError(aRunnable, STATUS_PARM_INVALID);
+    return;
+  }
+
   // Currently we only support one device sending one file at a time,
   // so we don't need aDeviceAddress here because the target device
   // has been determined when calling 'Connect()'. Nevertheless, keep
   // it for future use.
 
   BluetoothOppManager* opp = BluetoothOppManager::Get();
-  if (!opp || !opp->SendFile(aDeviceAddress, aBlob)) {
+  if (!opp || !opp->SendFile(deviceAddress, aBlob)) {
     DispatchReplyError(aRunnable, NS_LITERAL_STRING("SendFile failed"));
     return;
   }
@@ -1569,8 +1583,8 @@ BluetoothServiceBluedroid::SendFile(const BluetoothAddress& aDeviceAddress,
 }
 
 void
-BluetoothServiceBluedroid::StopSendingFile(
-  const BluetoothAddress& aDeviceAddress, BluetoothReplyRunnable* aRunnable)
+BluetoothServiceBluedroid::StopSendingFile(const nsAString& aDeviceAddress,
+                                           BluetoothReplyRunnable* aRunnable)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -1591,7 +1605,7 @@ BluetoothServiceBluedroid::StopSendingFile(
 
 void
 BluetoothServiceBluedroid::ConfirmReceivingFile(
-  const BluetoothAddress& aDeviceAddress, bool aConfirm,
+  const nsAString& aDeviceAddress, bool aConfirm,
   BluetoothReplyRunnable* aRunnable)
 {
   MOZ_ASSERT(NS_IsMainThread());
