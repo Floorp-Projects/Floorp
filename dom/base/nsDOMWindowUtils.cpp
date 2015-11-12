@@ -3641,7 +3641,7 @@ nsDOMWindowUtils::SetChromeMargin(int32_t aTop,
       nsCOMPtr<nsIWidget> widget;
       baseWindow->GetMainWidget(getter_AddRefs(widget));
       if (widget) {
-        nsIntMargin margins(aTop, aRight, aBottom, aLeft);
+        LayoutDeviceIntMargin margins(aTop, aRight, aBottom, aLeft);
         return widget->SetNonClientMargins(margins);
       }
     }
