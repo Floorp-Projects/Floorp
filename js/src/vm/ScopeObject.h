@@ -497,15 +497,6 @@ class StaticScopeIter
     typename MaybeRooted<StaticScope*, allowGC>::RootType scope;
     bool onNamedLambda;
 
-    static bool IsStaticScope(JSObject* obj) {
-        return obj->is<StaticBlockScope>() ||
-               obj->is<StaticFunctionScope>() ||
-               obj->is<StaticModuleScope>() ||
-               obj->is<StaticWithScope>() ||
-               obj->is<StaticEvalScope>() ||
-               obj->is<StaticNonSyntacticScope>();
-    }
-
   public:
     StaticScopeIter(ExclusiveContext* cx, StaticScope* scope)
       : scope(cx, scope), onNamedLambda(false)
@@ -513,7 +504,7 @@ class StaticScopeIter
         static_assert(allowGC == CanGC,
                       "the context-accepting constructor should only be used "
                       "in CanGC code");
-        MOZ_ASSERT_IF(scope, IsStaticScope(scope));
+        MOZ_ASSERT_IF(scope, scope->is<StaticScope>());
     }
 
     StaticScopeIter(ExclusiveContext* cx, const StaticScopeIter<CanGC>& ssi)
@@ -528,7 +519,7 @@ class StaticScopeIter
         static_assert(allowGC == NoGC,
                       "the constructor not taking a context should only be "
                       "used in NoGC code");
-        MOZ_ASSERT_IF(scope, IsStaticScope(scope));
+        MOZ_ASSERT_IF(scope, scope->is<StaticScope>());
     }
 
     explicit StaticScopeIter(const StaticScopeIter<NoGC>& ssi)
