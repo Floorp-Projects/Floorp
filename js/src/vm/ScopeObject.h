@@ -1034,8 +1034,8 @@ class RuntimeLexicalErrorObject : public ScopeObject
 
 template<XDRMode mode>
 bool
-XDRStaticBlockObject(XDRState<mode>* xdr, HandleObject enclosingScope,
-                     MutableHandle<StaticBlockScope*> objp);
+XDRStaticBlockScope(XDRState<mode>* xdr, HandleObject enclosingScope,
+                    MutableHandle<StaticBlockScope*> objp);
 
 extern JSObject*
 CloneNestedScopeObject(JSContext* cx, HandleObject enclosingScope,

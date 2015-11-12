@@ -708,7 +708,7 @@ DeclEnvObject::create(JSContext* cx, HandleObject enclosing, HandleFunction call
 }
 
 static JSObject*
-CloneStaticWithObject(JSContext* cx, HandleObject enclosingScope, Handle<StaticWithScope*> srcWith)
+CloneStaticWithScope(JSContext* cx, HandleObject enclosingScope, Handle<StaticWithScope*> srcWith)
 {
     Rooted<StaticWithScope*> clone(cx, StaticWithScope::create(cx));
     if (!clone)
@@ -1099,10 +1099,10 @@ const Class BlockObject::class_ = {
 
 template<XDRMode mode>
 bool
-js::XDRStaticBlockObject(XDRState<mode>* xdr, HandleObject enclosingScope,
-                         MutableHandle<StaticBlockScope*> objp)
+js::XDRStaticBlockScope(XDRState<mode>* xdr, HandleObject enclosingScope,
+                        MutableHandle<StaticBlockScope*> objp)
 {
-    /* NB: Keep this in sync with CloneStaticBlockObject. */
+    /* NB: Keep this in sync with CloneStaticBlockScope. */
 
     JSContext* cx = xdr->cx();
 
@@ -1205,15 +1205,15 @@ js::XDRStaticBlockObject(XDRState<mode>* xdr, HandleObject enclosingScope,
 }
 
 template bool
-js::XDRStaticBlockObject(XDRState<XDR_ENCODE>*, HandleObject, MutableHandle<StaticBlockScope*>);
+js::XDRStaticBlockScope(XDRState<XDR_ENCODE>*, HandleObject, MutableHandle<StaticBlockScope*>);
 
 template bool
-js::XDRStaticBlockObject(XDRState<XDR_DECODE>*, HandleObject, MutableHandle<StaticBlockScope*>);
+js::XDRStaticBlockScope(XDRState<XDR_DECODE>*, HandleObject, MutableHandle<StaticBlockScope*>);
 
 static JSObject*
-CloneStaticBlockObject(JSContext* cx, HandleObject enclosingScope, Handle<StaticBlockScope*> srcBlock)
+CloneStaticBlockScope(JSContext* cx, HandleObject enclosingScope, Handle<StaticBlockScope*> srcBlock)
 {
-    /* NB: Keep this in sync with XDRStaticBlockObject. */
+    /* NB: Keep this in sync with XDRStaticBlockScope. */
 
     Rooted<StaticBlockScope*> clone(cx, StaticBlockScope::create(cx));
     if (!clone)
@@ -1258,10 +1258,10 @@ js::CloneNestedScopeObject(JSContext* cx, HandleObject enclosingScope,
 {
     if (srcBlock->is<StaticBlockScope>()) {
         Rooted<StaticBlockScope*> blockScope(cx, &srcBlock->as<StaticBlockScope>());
-        return CloneStaticBlockObject(cx, enclosingScope, blockScope);
+        return CloneStaticBlockScope(cx, enclosingScope, blockScope);
     } else {
         Rooted<StaticWithScope*> withScope(cx, &srcBlock->as<StaticWithScope>());
-        return CloneStaticWithObject(cx, enclosingScope, withScope);
+        return CloneStaticWithScope(cx, enclosingScope, withScope);
     }
 }
 
