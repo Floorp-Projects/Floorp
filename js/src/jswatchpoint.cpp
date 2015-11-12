@@ -18,9 +18,9 @@ using namespace js;
 using namespace js::gc;
 
 inline HashNumber
-DefaultHasher<WatchKey>::hash(const Lookup& key)
+WatchKeyHasher::hash(const Lookup& key)
 {
-    return DefaultHasher<JSObject*>::hash(key.object.get()) ^ HashId(key.id.get());
+    return MovableCellHasher<PreBarrieredObject>::hash(key.object) ^ HashId(key.id);
 }
 
 namespace {
