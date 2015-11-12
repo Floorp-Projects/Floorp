@@ -603,6 +603,32 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
     void dump(GenericPrinter& out);
     void dump();
 
+    // Hit count
+    enum class HitState {
+        // Not hit information is attached to this basic block.
+        NotDefined,
+
+        // The hit information is a raw counter. Note that due to inlining this
+        // counter is not guaranteed to be consistent over the graph.
+        Count,
+
+        // The hit information is a frequency, which is a form of normalized
+        // counter, where a hit-count can be compared against any previous block
+        // in the graph.
+        Frequency
+    };
+    HitState getHitState() const {
+        return hitState_;
+    }
+    void setHitCount(uint64_t count) {
+        hitCount_ = count;
+        hitState_ = HitState::Count;
+    }
+    uint64_t getHitCount() const {
+        MOZ_ASSERT(hitState_ == HitState::Count);
+        return hitCount_;
+    }
+
     // Track bailouts by storing the current pc in MIR instruction added at
     // this cycle. This is also used for tracking calls and optimizations when
     // profiling.
@@ -665,6 +691,11 @@ class MBasicBlock : public TempObject, public InlineListNode<MBasicBlock>
     MBasicBlock* immediateDominator_;
 
     BytecodeSite* trackedSite_;
+
+    // Record the number of times a block got visited. Note, due to inlined
+    // scripts these numbers might not be continuous.
+    uint64_t hitCount_;
+    HitState hitState_;
 
 #if defined(JS_ION_PERF) || defined(DEBUG)
     unsigned lineno_;
