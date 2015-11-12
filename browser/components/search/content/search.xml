@@ -488,7 +488,7 @@
 
         // Don't open the suggestions if the mouse was used to focus the
         // textbox, that will be taken care of in the click handler.
-        if (Services.focus.getLastFocusMethod(window) == Services.focus.FLAG_BYMOUSE)
+        if (Services.focus.getLastFocusMethod(window) & Services.focus.FLAG_BYMOUSE)
           return;
 
         this.openSuggestionsPanel();
