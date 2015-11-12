@@ -9,6 +9,7 @@ const STRINGS_URI = "chrome://devtools/locale/memory.properties"
 const L10N = exports.L10N = new ViewHelpers.L10N(STRINGS_URI);
 
 const { URL } = require("sdk/url");
+const { OS } = require("resource://gre/modules/osfile.jsm");
 const { assert } = require("devtools/shared/DevToolsUtils");
 const { Preferences } = require("resource://gre/modules/Preferences.jsm");
 const CUSTOM_BREAKDOWN_PREF = "devtools.memory.custom-breakdowns";
@@ -25,6 +26,11 @@ const { snapshotState: states, breakdowns } = require("./constants");
 exports.getSnapshotTitle = function (snapshot) {
   if (!snapshot.creationTime) {
     return L10N.getStr("snapshot-title.loading");
+  }
+
+  if (snapshot.imported) {
+    // Strip out the extension if it's the expected ".fxsnapshot"
+    return OS.Path.basename(snapshot.path.replace(/\.fxsnapshot$/, ""));
   }
 
   let date = new Date(snapshot.creationTime / 1000);
@@ -124,6 +130,8 @@ exports.getSnapshotStatusText = function (snapshot) {
       return L10N.getStr("snapshot.state.error");
     case states.SAVING:
       return L10N.getStr("snapshot.state.saving");
+    case states.IMPORTING:
+      return L10N.getStr("snapshot.state.importing");
     case states.SAVED:
     case states.READING:
       return L10N.getStr("snapshot.state.reading");
@@ -155,6 +163,8 @@ exports.getSnapshotStatusTextFull = function (snapshot) {
       return L10N.getStr("snapshot.state.error.full");
     case states.SAVING:
       return L10N.getStr("snapshot.state.saving.full");
+    case states.IMPORTING:
+      return L10N.getFormatStr("snapshot.state.importing", OS.Path.basename(snapshot.path));
     case states.SAVED:
     case states.READING:
       return L10N.getStr("snapshot.state.reading.full");
@@ -198,6 +208,8 @@ exports.createSnapshot = function createSnapshot () {
     state: states.SAVING,
     census: null,
     path: null,
+    imported: false,
+    selected: false,
   };
 };
 
@@ -327,12 +339,21 @@ exports.parseSource = function (source) {
  *        (like "*.json").
  * @param {String} .defaultName
  *        The default name chosen by the file picker window.
+ * @param {String} .mode
+ *        The mode that this filepicker should open in. Can be "open" or "save".
  * @return {Promise<?nsILocalFile>}
  *        The file selected by the user, or null, if cancelled.
  */
-exports.openFilePicker = function({ title, filters, defaultName }) {
+exports.openFilePicker = function({ title, filters, defaultName, mode }) {
+  mode = mode === "save" ? Ci.nsIFilePicker.modeSave :
+         mode === "open" ? Ci.nsIFilePicker.modeOpen : null;
+
+  if (mode == void 0) {
+    throw new Error("No valid mode specified for nsIFilePicker.");
+  }
+
   let fp = Cc["@mozilla.org/filepicker;1"].createInstance(Ci.nsIFilePicker);
-  fp.init(window, title, Ci.nsIFilePicker.modeSave);
+  fp.init(window, title, mode);
 
   for (let filter of (filters || [])) {
     fp.appendFilter(filter[0], filter[1]);

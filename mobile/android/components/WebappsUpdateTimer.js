@@ -19,30 +19,18 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 const Log = Cu.import("resource://gre/modules/AndroidLog.jsm", {}).AndroidLog.bind("WebappsUpdateTimer");
 
-function getContextClassName() {
+function isWebAppProcess() {
   let jenv = null;
   try {
     jenv = JNI.GetForThread();
 
     let GeckoAppShell = JNI.LoadClass(jenv, "org.mozilla.gecko.GeckoAppShell", {
       static_methods: [
-        { name: "getContext", sig: "()Landroid/content/Context;" }
+        { name: "isWebAppProcess", sig: "()Z" }
       ],
     });
 
-    JNI.LoadClass(jenv, "android.content.Context", {
-      methods: [
-        { name: "getClass", sig: "()Ljava/lang/Class;" },
-      ],
-    });
-
-    JNI.LoadClass(jenv, "java.lang.Class", {
-      methods: [
-        { name: "getName", sig: "()Ljava/lang/String;" },
-      ],
-    });
-
-    return JNI.ReadString(jenv, GeckoAppShell.getContext().getClass().getName());
+    return GeckoAppShell.isWebAppProcess();
   } finally {
     if (jenv) {
       JNI.UnloadClasses(jenv);
@@ -61,8 +49,7 @@ WebappsUpdateTimer.prototype = {
     // Ignore the timer if automatic update checks are disabled or if this
     // is a webapp process (since we only want to bug people about updates
     // from the browser process).
-    if (Services.prefs.getIntPref("browser.webapps.checkForUpdates") == 0 ||
-        getContextClassName().startsWith("org.mozilla.gecko.webapp")) {
+    if (Services.prefs.getIntPref("browser.webapps.checkForUpdates") == 0 || !isWebAppProcess()) {
       return;
     }
 

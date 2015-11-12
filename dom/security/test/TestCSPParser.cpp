@@ -90,26 +90,18 @@ nsresult runTest(uint32_t aExpectedPolicyCount, // this should be 0 for policies
                  const char* aPolicy,
                  const char* aExpextedResult) {
 
-  // we init the csp with http://www.selfuri.com
-  nsCOMPtr<nsIURI> selfURI;
-  nsresult rv = NS_NewURI(getter_AddRefs(selfURI), "http://www.selfuri.com");
-  NS_ENSURE_SUCCESS(rv, rv);
-
+  nsresult rv;
   nsCOMPtr<nsIScriptSecurityManager> secman =
     do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
-     nsCOMPtr<nsIPrincipal> systemPrincipal;
-  rv = secman->GetSystemPrincipal(getter_AddRefs(systemPrincipal));
+
+  // we init the csp with http://www.selfuri.com
+  nsCOMPtr<nsIURI> selfURI;
+  rv = NS_NewURI(getter_AddRefs(selfURI), "http://www.selfuri.com");
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // we also init the csp with a dummyChannel, which is unused
-  // for the parser tests but surpresses assertions in SetRequestContext.
-  nsCOMPtr<nsIChannel> dummyChannel;
-  rv = NS_NewChannel(getter_AddRefs(dummyChannel),
-                     selfURI,
-                     systemPrincipal,
-                     nsILoadInfo::SEC_NORMAL,
-                     nsIContentPolicy::TYPE_OTHER);
+  nsCOMPtr<nsIPrincipal> selfURIPrincipal;
+  rv = secman->GetSimpleCodebasePrincipal(selfURI, getter_AddRefs(selfURIPrincipal));
   NS_ENSURE_SUCCESS(rv, rv);
 
   // create a CSP object
@@ -117,12 +109,9 @@ nsresult runTest(uint32_t aExpectedPolicyCount, // this should be 0 for policies
     do_CreateInstance(NS_CSPCONTEXT_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // for testing the parser we only need to set selfURI which is needed
-  // to translate the keyword 'self' into an actual URI. All other
-  // arguments can be nullptrs.
-  csp->SetRequestContext(selfURI,
-                         nullptr,  // nsIURI* aReferrer
-                         dummyChannel);
+  // for testing the parser we only need to set a principal which is needed
+  // to translate the keyword 'self' into an actual URI.
+  rv = csp->SetRequestContext(nullptr, selfURIPrincipal);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // append a policy

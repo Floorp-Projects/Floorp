@@ -56,7 +56,7 @@ public:
 
   void SetDragEndPoint(nsIntPoint aEndDragPoint)
   {
-    mEndDragPoint = mozilla::LayoutDeviceIntPoint::FromUntyped(aEndDragPoint);
+    mEndDragPoint = mozilla::LayoutDeviceIntPoint::FromUnknownPoint(aEndDragPoint);
   }
   void SetDragEndPoint(mozilla::LayoutDeviceIntPoint aEndDragPoint)
   {

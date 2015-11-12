@@ -13,7 +13,6 @@ const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 function NetMonitorPanel(iframeWindow, toolbox) {
   this.panelWin = iframeWindow;
   this._toolbox = toolbox;
-  this._destroyer = null;
 
   this._view = this.panelWin.NetMonitorView;
   this._controller = this.panelWin.NetMonitorController;
@@ -31,28 +30,25 @@ NetMonitorPanel.prototype = {
    * @return object
    *         A promise that is resolved when the NetMonitor completes opening.
    */
-  open: function() {
-    let targetPromise;
+  open: Task.async(function*() {
+    if (this._opening) {
+      return this._opening;
+    }
+    let deferred = promise.defer();
+    this._opening = deferred.promise;
 
     // Local monitoring needs to make the target remote.
     if (!this.target.isRemote) {
-      targetPromise = this.target.makeRemote();
-    } else {
-      targetPromise = promise.resolve(this.target);
+      yield this.target.makeRemote();
     }
 
-    return targetPromise
-      .then(() => this._controller.startupNetMonitor())
-      .then(() => this._controller.connect())
-      .then(() => {
-        this.isReady = true;
-        this.emit("ready");
-        return this;
-      })
-      .then(null, function onError(aReason) {
-        DevToolsUtils.reportException("NetMonitorPanel.prototype.open", aReason);
-      });
-  },
+    yield this._controller.startupNetMonitor();
+    this.isReady = true;
+    this.emit("ready");
+
+    deferred.resolve(this);
+    return this._opening;
+  }),
 
   // DevToolPanel API
 
@@ -60,14 +56,17 @@ NetMonitorPanel.prototype = {
     return this._toolbox.target;
   },
 
-  destroy: function() {
-    // Make sure this panel is not already destroyed.
-    if (this._destroyer) {
-      return this._destroyer;
+  destroy: Task.async(function*() {
+    if (this._destroying) {
+      return this._destroying;
     }
+    let deferred = promise.defer();
+    this._destroying = deferred.promise;
 
-    return this._destroyer = this._controller.shutdownNetMonitor().then(() => {
-      this.emit("destroyed");
-    });
-  }
+    yield this._controller.shutdownNetMonitor();
+    this.emit("destroyed");
+
+    deferred.resolve();
+    return this._destroying;
+  })
 };

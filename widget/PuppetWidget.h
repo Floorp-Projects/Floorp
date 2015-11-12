@@ -130,7 +130,7 @@ public:
   { return NS_ERROR_UNEXPECTED; }
 
   virtual mozilla::LayoutDeviceIntPoint WidgetToScreenOffset() override
-  { return LayoutDeviceIntPoint::FromUntyped(GetWindowPosition() + GetChromeDimensions()); }
+  { return LayoutDeviceIntPoint::FromUnknownPoint(GetWindowPosition() + GetChromeDimensions()); }
 
   void InitEvent(WidgetGUIEvent& aEvent,
                  mozilla::LayoutDeviceIntPoint* aPoint = nullptr);

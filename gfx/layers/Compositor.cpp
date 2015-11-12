@@ -66,11 +66,12 @@ Compositor::DrawDiagnostics(DiagnosticFlags aFlags,
     while (const gfx::IntRect* rect = screenIter.Next())
     {
       DrawDiagnostics(aFlags | DiagnosticFlags::REGION_RECT,
-                      ToRect(*rect), aClipRect, aTransform, aFlashCounter);
+                      IntRectToRect(*rect), aClipRect, aTransform,
+                      aFlashCounter);
     }
   }
 
-  DrawDiagnostics(aFlags, ToRect(aVisibleRegion.GetBounds()),
+  DrawDiagnostics(aFlags, IntRectToRect(aVisibleRegion.GetBounds()),
                   aClipRect, aTransform, aFlashCounter);
 }
 
