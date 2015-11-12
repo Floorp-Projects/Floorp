@@ -5401,10 +5401,12 @@ ContentParent::RecvCreateWindow(PBrowserParent* aThisTab,
     MOZ_ASSERT(!(aChromeFlags & nsIWebBrowserChrome::CHROME_PRIVATE_LIFETIME));
     MOZ_ASSERT(!(aChromeFlags & nsIWebBrowserChrome::CHROME_REMOTE_WINDOW));
 
-    TabParent* thisTabParent = TabParent::GetFrom(aThisTab);
-    MOZ_ASSERT(thisTabParent);
+    TabParent* thisTabParent = nullptr;
+    if (aThisTab) {
+        thisTabParent = TabParent::GetFrom(aThisTab);
+    }
 
-    if (NS_WARN_IF(thisTabParent->IsBrowserOrApp())) {
+    if (NS_WARN_IF(thisTabParent && thisTabParent->IsBrowserOrApp())) {
         return false;
     }
 
@@ -5422,7 +5424,10 @@ ContentParent::RecvCreateWindow(PBrowserParent* aThisTab,
     // we must have an opener.
     newTab->SetHasContentOpener(true);
 
-    nsCOMPtr<nsIContent> frame(do_QueryInterface(thisTabParent->GetOwnerElement()));
+    nsCOMPtr<nsIContent> frame;
+    if (thisTabParent) {
+        frame = do_QueryInterface(thisTabParent->GetOwnerElement());
+    }
 
     nsCOMPtr<nsPIDOMWindow> parent;
     if (frame) {
@@ -5435,7 +5440,10 @@ ContentParent::RecvCreateWindow(PBrowserParent* aThisTab,
         }
     }
 
-    nsCOMPtr<nsIBrowserDOMWindow> browserDOMWin = thisTabParent->GetBrowserDOMWindow();
+    nsCOMPtr<nsIBrowserDOMWindow> browserDOMWin;
+    if (thisTabParent) {
+        browserDOMWin = thisTabParent->GetBrowserDOMWindow();
+    }
 
     // If we haven't found a chrome window to open in, just use the most recently
     // opened one.
@@ -5467,8 +5475,10 @@ ContentParent::RecvCreateWindow(PBrowserParent* aThisTab,
         }
 
         bool isPrivate = false;
-        nsCOMPtr<nsILoadContext> loadContext = thisTabParent->GetLoadContext();
-        loadContext->GetUsePrivateBrowsing(&isPrivate);
+        if (thisTabParent) {
+            nsCOMPtr<nsILoadContext> loadContext = thisTabParent->GetLoadContext();
+            loadContext->GetUsePrivateBrowsing(&isPrivate);
+        }
 
         nsCOMPtr<nsIOpenURIInFrameParams> params = new nsOpenURIInFrameParams();
         params->SetReferrer(NS_ConvertUTF8toUTF16(aBaseURI));
