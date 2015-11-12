@@ -165,6 +165,12 @@ MobileConnectionListener::NotifyNetworkSelectionModeChanged()
   return NS_OK;
 }
 
+NS_IMETHODIMP
+MobileConnectionListener::NotifyDeviceIdentitiesChanged()
+{
+  return NS_OK;
+}
+
 bool
 MobileConnectionListener::Listen(bool aStart)
 {
