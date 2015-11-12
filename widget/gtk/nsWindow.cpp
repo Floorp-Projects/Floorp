@@ -1488,9 +1488,8 @@ nsWindow::GetScreenBoundsUntyped(nsIntRect &aRect)
         gint x, y;
         gdk_window_get_root_origin(gtk_widget_get_window(GTK_WIDGET(mContainer)), &x, &y);
         aRect.MoveTo(GdkPointToDevicePixels({ x, y }).ToUnknownPoint());
-    }
-    else {
-        aRect.MoveTo(WidgetToScreenOffsetUntyped());
+    } else {
+        aRect.MoveTo(WidgetToScreenOffset().ToUnknownPoint());
     }
     // mBounds.Size() is the window bounds, not the window-manager frame
     // bounds (bug 581863).  gdk_window_get_frame_extents would give the
