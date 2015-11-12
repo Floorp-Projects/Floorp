@@ -178,7 +178,8 @@ private:
     void DispatchDeactivateEvent(void);
     void DispatchActivateEventOnTopLevelWindow(void);
     void DispatchDeactivateEventOnTopLevelWindow(void);
-    void DispatchResizeEvent(nsIntRect &aRect, nsEventStatus &aStatus);
+    void DispatchResizeEvent(mozilla::LayoutDeviceIntRect &aRect,
+                             nsEventStatus &aStatus);
 
     // Remember the last sizemode so that we can restore it when
     // leaving fullscreen
