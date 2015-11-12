@@ -267,7 +267,7 @@ public:
   virtual void
   SendPlayStatus(int64_t aDuration,
                  int64_t aPosition,
-                 ControlPlayStatus aPlayStatus,
+                 const nsAString& aPlayStatus,
                  BluetoothReplyRunnable* aRunnable) override;
 
   virtual void
