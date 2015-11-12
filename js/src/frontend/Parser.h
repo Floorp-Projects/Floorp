@@ -505,7 +505,7 @@ class Parser : private JS::AutoGCRooter, public StrictModeGetter
     ObjectBox* newObjectBox(JSObject* obj);
     FunctionBox* newFunctionBox(Node fn, JSFunction* fun, ParseContext<ParseHandler>* outerpc,
                                 Directives directives, GeneratorKind generatorKind,
-                                StaticScope* enclosingStaticScope);
+                                Handle<StaticScope*> enclosingStaticScope);
 
     // Use when the funbox is the outermost.
     FunctionBox* newFunctionBox(Node fn, HandleFunction fun, Directives directives,
