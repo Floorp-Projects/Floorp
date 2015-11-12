@@ -258,8 +258,10 @@ var PerformanceController = {
   startRecording: Task.async(function *() {
     let options = {
       withMarkers: true,
-      withMemory: this.getOption("enable-memory"),
       withTicks: this.getOption("enable-framerate"),
+      withMemory: this.getOption("enable-memory"),
+      withFrames: true,
+      withGCEvents: true,
       withJITOptimizations: this.getOption("enable-jit-optimizations"),
       withAllocations: this.getOption("enable-allocations"),
       allocationsSampleProbability: this.getPref("memory-sample-probability"),

@@ -113,6 +113,7 @@ const Heap = module.exports = createClass({
           dom.pre({}, safeErrorString(snapshot.error))
         ];
         break;
+      case states.IMPORTING:
       case states.SAVING:
       case states.SAVED:
       case states.READING:

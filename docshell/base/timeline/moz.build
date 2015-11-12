@@ -10,6 +10,7 @@ EXPORTS.mozilla += [
     'AutoTimelineMarker.h',
     'CompositeTimelineMarker.h',
     'ConsoleTimelineMarker.h',
+    'DocLoadingTimelineMarker.h',
     'EventTimelineMarker.h',
     'JavascriptTimelineMarker.h',
     'LayerTimelineMarker.h',
