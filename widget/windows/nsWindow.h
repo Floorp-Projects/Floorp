@@ -515,7 +515,7 @@ protected:
 
   // Non-client margin settings
   // Pre-calculated outward offset applied to default frames
-  nsIntMargin           mNonClientOffset;
+  mozilla::LayoutDeviceIntMargin mNonClientOffset;
   // Margins set by the owner
   nsIntMargin           mNonClientMargins;
   // Margins we'd like to set once chrome is reshown:
