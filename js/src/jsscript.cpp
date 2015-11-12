@@ -1061,7 +1061,7 @@ js::XDRScript(XDRState<mode>* xdr, HandleObject enclosingScopeArg, HandleScript 
 
             if (classk == CK_BlockObject) {
                 Rooted<StaticBlockScope*> tmp(cx, static_cast<StaticBlockScope*>(objp->get()));
-                if (!XDRStaticBlockObject(xdr, enclosingStaticScope, &tmp))
+                if (!XDRStaticBlockScope(xdr, enclosingStaticScope, &tmp))
                     return false;
                 *objp = tmp;
             } else {
