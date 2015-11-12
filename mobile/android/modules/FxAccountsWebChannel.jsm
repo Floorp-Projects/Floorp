@@ -37,6 +37,8 @@ const PREF_LAST_FXA_USER           = "identity.fxaccounts.lastSignedInUserHash";
 XPCOMUtils.defineLazyGetter(this, "strings",
                             () => Services.strings.createBundle("chrome://browser/locale/aboutAccounts.properties")); /*global strings */
 
+XPCOMUtils.defineLazyModuleGetter(this, "Snackbars", "resource://gre/modules/Snackbars.jsm");
+
 Object.defineProperty(this, "NativeWindow",
                       { get: () => Services.wm.getMostRecentWindow("navigator:browser").NativeWindow }); /*global NativeWindow */
 
@@ -221,9 +223,8 @@ this.FxAccountsWebChannel.prototype = {
                   log.w("Not relinking existing Android Account: email addresses disagree!");
                   let message = strings.GetStringFromName("relinkDenied.message");
                   let buttonLabel = strings.GetStringFromName("relinkDenied.openPrefs");
-                  NativeWindow.toast.show(message, "long", {
-                    button: {
-                      icon: "drawable://switch_button_icon",
+                  Snackbars.show(message, Snackbars.LENGTH_LONG, {
+                    action: {
                       label: buttonLabel,
                       callback: () => {
                         // We have an account, so this opens Sync native preferences.
