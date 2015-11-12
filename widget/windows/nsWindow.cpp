@@ -3549,7 +3549,7 @@ nsWindow::GetLayerManager(PLayerTransactionChild* aShadowManager,
  **************************************************************/
  
 NS_IMETHODIMP
-nsWindow::OnDefaultButtonLoaded(const nsIntRect &aButtonRect)
+nsWindow::OnDefaultButtonLoaded(const LayoutDeviceIntRect& aButtonRect)
 {
   if (aButtonRect.IsEmpty())
     return NS_OK;
@@ -3572,13 +3572,13 @@ nsWindow::OnDefaultButtonLoaded(const nsIntRect &aButtonRect)
       return NS_OK;
   }
 
-  nsIntRect widgetRect;
-  nsresult rv = GetScreenBoundsUntyped(widgetRect);
+  LayoutDeviceIntRect widgetRect;
+  nsresult rv = GetScreenBounds(widgetRect);
   NS_ENSURE_SUCCESS(rv, rv);
-  nsIntRect buttonRect(aButtonRect + widgetRect.TopLeft());
+  LayoutDeviceIntRect buttonRect(aButtonRect + widgetRect.TopLeft());
 
-  nsIntPoint centerOfButton(buttonRect.x + buttonRect.width / 2,
-                            buttonRect.y + buttonRect.height / 2);
+  LayoutDeviceIntPoint centerOfButton(buttonRect.x + buttonRect.width / 2,
+                                      buttonRect.y + buttonRect.height / 2);
   // The center of the button can be outside of the widget.
   // E.g., it could be hidden by scrolling.
   if (!widgetRect.Contains(centerOfButton)) {

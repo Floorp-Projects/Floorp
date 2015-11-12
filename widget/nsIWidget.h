@@ -1865,8 +1865,8 @@ public:
     /*
      * Call this method when a dialog is opened which has a default button.
      * The button's rectangle should be supplied in aButtonRect.
-     */ 
-    NS_IMETHOD OnDefaultButtonLoaded(const nsIntRect &aButtonRect) = 0;
+     */
+    NS_IMETHOD OnDefaultButtonLoaded(const mozilla::LayoutDeviceIntRect& aButtonRect) = 0;
 
     /**
      * Compute the overridden system mouse scroll speed on the root content of
