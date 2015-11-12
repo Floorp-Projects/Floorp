@@ -3,7 +3,10 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
-<merge xmlns:android="http://schemas.android.com/apk/res/android">
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                android:id="@+id/root_layout"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
 
     <ViewStub android:id="@+id/tabs_panel"
               android:layout="@layout/tabs_panel_view"
@@ -16,11 +19,11 @@
          android:layout_height="match_parent"
          android:background="@android:color/transparent">
 
-        <FrameLayout android:id="@+id/gecko_layout"
-                     android:layout_width="match_parent"
-                     android:layout_height="match_parent"
-                     android:layout_below="@+id/tablet_tab_strip"
-                     android:layout_above="@+id/find_in_page">
+        <RelativeLayout android:id="@+id/gecko_layout"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_below="@+id/tablet_tab_strip"
+                        android:layout_above="@+id/find_in_page">
 
             <include layout="@layout/shared_ui_components"/>
 
@@ -61,7 +64,7 @@
                   android:alpha="0"
                   android:layerType="hardware"/>
 
-        </FrameLayout>
+        </RelativeLayout>
 
         <org.mozilla.gecko.FindInPageBar android:id="@+id/find_in_page"
                                          android:layout_width="match_parent"
@@ -140,10 +143,11 @@
     <FrameLayout android:id="@+id/tab_history_panel"
                  android:layout_width="match_parent"
                  android:layout_height="match_parent"
+                 android:layout_alignParentBottom="true"
                  android:visibility="gone" />
 
     <ViewStub android:id="@+id/toast_stub"
               android:layout="@layout/button_toast"
               style="@style/Toast"/>
 
-</merge>
+</RelativeLayout>
