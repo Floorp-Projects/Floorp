@@ -781,7 +781,7 @@ GetAPZCForViewID(Layer* aLayer, FrameMetrics::ViewID aScrollID)
 
 bool
 LayerTransactionParent::RecvSetAsyncScrollOffset(const FrameMetrics::ViewID& aScrollID,
-                                                 const int32_t& aX, const int32_t& aY)
+                                                 const float& aX, const float& aY)
 {
   if (mDestroyed || !layer_manager() || layer_manager()->IsDestroyed()) {
     return false;
