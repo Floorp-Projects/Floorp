@@ -214,7 +214,7 @@ ContentEventHandler::QueryContentRect(nsIContent* aContent,
     resultRect.UnionRect(resultRect, frameRect);
   }
 
-  aEvent->mReply.mRect = LayoutDevicePixel::FromUntyped(
+  aEvent->mReply.mRect = LayoutDeviceIntRect::FromUnknownRect(
       resultRect.ToOutsidePixels(mPresContext->AppUnitsPerDevPixel()));
   aEvent->mSucceeded = true;
 
@@ -1081,7 +1081,7 @@ ContentEventHandler::OnQueryTextRect(WidgetQueryContentEvent* aEvent)
   } else {
     rect.UnionRect(rect, frameRect);
   }
-  aEvent->mReply.mRect = LayoutDevicePixel::FromUntyped(
+  aEvent->mReply.mRect = LayoutDeviceIntRect::FromUnknownRect(
       rect.ToOutsidePixels(mPresContext->AppUnitsPerDevPixel()));
   aEvent->mReply.mWritingMode = lastFrame->GetWritingMode();
   aEvent->mSucceeded = true;
@@ -1129,7 +1129,7 @@ ContentEventHandler::OnQueryCaretRect(WidgetQueryContentEvent* aEvent)
         NS_ENSURE_SUCCESS(rv, rv);
         nscoord appUnitsPerDevPixel =
           caretFrame->PresContext()->AppUnitsPerDevPixel();
-        aEvent->mReply.mRect = LayoutDevicePixel::FromUntyped(
+        aEvent->mReply.mRect = LayoutDeviceIntRect::FromUnknownRect(
           caretRect.ToOutsidePixels(appUnitsPerDevPixel));
         aEvent->mReply.mWritingMode = caretFrame->GetWritingMode();
         aEvent->mReply.mOffset = aEvent->mInput.mOffset;
@@ -1189,7 +1189,7 @@ ContentEventHandler::OnQueryCaretRect(WidgetQueryContentEvent* aEvent)
   rv = ConvertToRootRelativeOffset(frame, rect);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  aEvent->mReply.mRect = LayoutDevicePixel::FromUntyped(
+  aEvent->mReply.mRect = LayoutDeviceIntRect::FromUnknownRect(
       rect.ToOutsidePixels(mPresContext->AppUnitsPerDevPixel()));
   // If the caret rect is empty, let's make it non-empty rect.
   if (!aEvent->mReply.mRect.width) {

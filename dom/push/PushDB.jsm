@@ -127,7 +127,10 @@ this.PushDB.prototype = {
         this._dbStoreName,
         function txnCb(aTxn, aStore) {
           console.debug("delete: Removing record", aKeyID);
-          aStore.delete(aKeyID);
+          aStore.get(aKeyID).onsuccess = event => {
+            aTxn.result = event.target.result;
+            aStore.delete(aKeyID);
+          };
         },
         resolve,
         reject
@@ -213,28 +216,26 @@ this.PushDB.prototype = {
   },
 
   /**
-   * Updates all push registrations for an origin.
+   * Reduces all records associated with an origin to a single value.
    *
    * @param {String} origin The origin, matched as a prefix against the scope.
    * @param {String} originAttributes Additional origin attributes. Requires
    *  an exact match.
-   * @param {Function} updateFunc A function that receives the existing
-   *  registration record as its argument, and returns a new record. The record
-   *  will not be updated if the function returns `null`, `undefined`, or an
-   *  invalid record. If the function returns `false`, the record will be
-   *  dropped.
-   * @returns {Promise} A promise that resolves once all records have been
-   *  updated.
+   * @param {Function} callback A function with the signature `(result,
+   *  record, cursor)`, where `result` is the value returned by the previous
+   *  invocation, `record` is the registration, and `cursor` is an `IDBCursor`.
+   * @param {Object} [initialValue] The value to use for the first invocation.
+   * @returns {Promise} Resolves with the value of the last invocation.
    */
-  updateByOrigin: function(origin, originAttributes, updateFunc) {
-    console.debug("updateByOrigin()");
+  reduceByOrigin: function(origin, originAttributes, callback, initialValue) {
+    console.debug("forEachOrigin()");
 
     return new Promise((resolve, reject) =>
       this.newTxn(
         "readwrite",
         this._dbStoreName,
         (aTxn, aStore) => {
-          aTxn.result = [];
+          aTxn.result = initialValue;
 
           let index = aStore.index("identifiers");
           let range = IDBKeyRange.bound(
@@ -247,19 +248,7 @@ this.PushDB.prototype = {
               return;
             }
             let record = this.toPushRecord(cursor.value);
-            let newRecord = updateFunc(record);
-            if (newRecord === false) {
-              console.debug("updateByOrigin: Removing record for key ID",
-                record.keyID);
-              cursor.delete();
-            } else if (this.isValidRecord(newRecord)) {
-              console.debug("updateByOrigin: Updating record for key ID",
-                record.keyID, newRecord);
-              cursor.update(newRecord);
-            } else {
-              console.error("updateByOrigin: Ignoring invalid update for record",
-                record.keyID, newRecord);
-            }
+            aTxn.result = callback(aTxn.result, record, cursor);
             cursor.continue();
           };
         },
