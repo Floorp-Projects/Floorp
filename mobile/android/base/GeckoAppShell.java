@@ -2045,6 +2045,7 @@ public class GeckoAppShell
         }
     }
 
+    private static Context sApplicationContext;
     private static ContextGetter sContextGetter;
 
     @WrapForJNI(allowMultithread = true)
@@ -2054,6 +2055,14 @@ public class GeckoAppShell
 
     public static void setContextGetter(ContextGetter cg) {
         sContextGetter = cg;
+    }
+
+    public static Context getApplicationContext() {
+        return sApplicationContext;
+    }
+
+    public static void setApplicationContext(final Context context) {
+        sApplicationContext = context;
     }
 
     public static SharedPreferences getSharedPreferences() {
