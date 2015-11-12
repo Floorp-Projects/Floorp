@@ -4669,6 +4669,8 @@ DumpStaticScopeChain(JSContext* cx, unsigned argc, Value* vp)
             return false;
         }
         script = fun->getOrCreateScript(cx);
+        if (!script)
+            return false;
     } else {
         script = obj->as<ModuleObject>().script();
     }
