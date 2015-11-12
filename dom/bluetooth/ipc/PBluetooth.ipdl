@@ -18,6 +18,8 @@ using mozilla::dom::bluetooth::BluetoothObjectType
   from "mozilla/dom/bluetooth/BluetoothCommon.h";
 using mozilla::dom::bluetooth::BluetoothPinCode
   from "mozilla/dom/bluetooth/BluetoothCommon.h";
+using mozilla::dom::bluetooth::ControlPlayStatus
+  from "mozilla/dom/bluetooth/BluetoothCommon.h";
 
 namespace mozilla {
 namespace dom {
@@ -268,7 +270,7 @@ struct SendPlayStatusRequest
 {
   int64_t duration;
   int64_t position;
-  nsString playStatus;
+  ControlPlayStatus playStatus;
 };
 
 struct ConnectGattClientRequest
