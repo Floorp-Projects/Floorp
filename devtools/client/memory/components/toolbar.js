@@ -40,7 +40,7 @@ const Toolbar = module.exports = createClass({
       dom.div({ className: "devtools-toolbar" },
         dom.button({
           id: "take-snapshot",
-          className: `take-snapshot devtools-button`,
+          className: "take-snapshot devtools-button",
           onClick: onTakeSnapshotClick,
           title: L10N.getStr("take-snapshot")
         }),
@@ -50,7 +50,7 @@ const Toolbar = module.exports = createClass({
             L10N.getStr("toolbar.breakdownBy"),
             dom.select({
               id: "select-breakdown",
-              className: `select-breakdown`,
+              className: "select-breakdown",
               onChange: e => onBreakdownChange(e.target.value),
             }, ...breakdowns.map(({ name, displayName }) => dom.option({ key: name, value: name }, displayName)))
           ),
@@ -81,6 +81,7 @@ const Toolbar = module.exports = createClass({
           dom.input({
             id: "filter",
             type: "search",
+            className: "devtools-searchinput",
             placeholder: L10N.getStr("filter.placeholder"),
             onChange: event => setFilterString(event.target.value),
             value: !!filterString ? filterString : undefined,

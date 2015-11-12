@@ -19,14 +19,14 @@ var TEST_DATA = [
   {
     key: "d",
     suggestions: [
-      {label: "div", count: 5},
-      {label: "#d1", count: 2},
-      {label: "#d2", count: 2}
+      {label: "div"},
+      {label: "#d1"},
+      {label: "#d2"}
     ]
   },
   {
     key: "i",
-    suggestions: [{label: "div", count: 5}]
+    suggestions: [{label: "div"}]
   },
   {
     key: "v",
@@ -34,14 +34,14 @@ var TEST_DATA = [
   },
   {
     key: "VK_BACK_SPACE",
-    suggestions: [{label: "div", count: 5}]
+    suggestions: [{label: "div"}]
   },
   {
     key: "VK_BACK_SPACE",
     suggestions: [
-      {label: "div", count: 5},
-      {label: "#d1", count: 2},
-      {label: "#d2", count: 2}
+      {label: "div"},
+      {label: "#d1"},
+      {label: "#d2"}
     ]
   },
   {
@@ -51,8 +51,8 @@ var TEST_DATA = [
   {
     key: ".",
     suggestions: [
-      {label: ".c1", count: 7},
-      {label: ".c2", count: 3}
+      {label: ".c1"},
+      {label: ".c2"}
     ]
   },
   {
@@ -62,14 +62,14 @@ var TEST_DATA = [
   {
     key: "#",
     suggestions: [
-      {label: "#b1", count: 2},
-      {label: "#d1", count: 2},
-      {label: "#d2", count: 2},
-      {label: "#p1", count: 2},
-      {label: "#p2", count: 2},
-      {label: "#p3", count: 2},
-      {label: "#s1", count: 2},
-      {label: "#s2", count: 2}
+      {label: "#b1"},
+      {label: "#d1"},
+      {label: "#d2"},
+      {label: "#p1"},
+      {label: "#p2"},
+      {label: "#p3"},
+      {label: "#s1"},
+      {label: "#s2"}
     ]
   },
 ];
@@ -100,14 +100,12 @@ add_task(function* () {
     for (let i = 0; i < suggestions.length; i++) {
       is(actualSuggestions[i].label, suggestions[i].label,
          "The suggestion at " + i + "th index is correct.");
-      is(actualSuggestions[i].count, suggestions[i].count || 1,
-         "The count for suggestion at " + i + "th index is correct.");
     }
   }
 });
 
 function formatSuggestions(suggestions) {
   return "[" + suggestions
-                .map(s => "'" + s.label + "' (" + (s.count || 1) + ")")
+                .map(s => "'" + s.label + "'")
                 .join(", ") + "]";
 }

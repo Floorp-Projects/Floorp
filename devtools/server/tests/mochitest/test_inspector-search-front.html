@@ -1,0 +1,220 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=835896
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 835896</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+  <script type="application/javascript;version=1.8" src="inspector-helpers.js"></script>
+  <script type="application/javascript;version=1.8">
+window.onload = function() {
+  const Cu = Components.utils;
+  Cu.import("resource://gre/modules/devtools/Loader.jsm");
+  const {Promise: promise} =
+    Cu.import("resource://gre/modules/Promise.jsm", {});
+  const {InspectorFront} =
+    devtools.require("devtools/server/actors/inspector");
+  const {console} =
+    Cu.import("resource://gre/modules/devtools/shared/Console.jsm", {});
+
+  SimpleTest.waitForExplicitFinish();
+
+  let walkerFront = null;
+  let inspectee = null;
+  let inspector = null;
+
+  // WalkerFront specific tests.  These aren't to excercise search
+  // edge cases so much as to test the state the Front maintains between
+  // searches.
+  // See also test_inspector-search.html
+
+  addAsyncTest(function* setup() {
+    info ("Setting up inspector and walker actors.");
+
+    let url = document.getElementById("inspectorContent").href;
+
+    yield new Promise(resolve => {
+      attachURL(url, function(err, client, tab, doc) {
+        inspectee = doc;
+        inspector = InspectorFront(client, tab);
+        resolve();
+      });
+    });
+
+    walkerFront = yield inspector.getWalker();
+    ok(walkerFront, "getWalker() should return an actor.");
+
+    runNextTest();
+  });
+
+  addAsyncTest(function* testWalkerFrontDefaults() {
+    info ("Testing search API using WalkerFront.");
+    let nodes = yield walkerFront.querySelectorAll(walkerFront.rootNode, "h2");
+    let fronts = yield nodes.items();
+
+    let frontResult = yield walkerFront.search("");
+    ok(!frontResult, "Null result on front when searching for ''");
+
+    let results = yield walkerFront.search("h2");
+    isDeeply(results, {
+      node: fronts[0],
+      type: "search",
+      resultsIndex: 0,
+      resultsLength: 3
+    }, "Default options work");
+
+    results = yield walkerFront.search("h2", { });
+    isDeeply(results, {
+      node: fronts[1],
+      type: "search",
+      resultsIndex: 1,
+      resultsLength: 3
+    }, "Search works with empty options");
+
+    // Clear search data to remove result state on the front
+    yield walkerFront.search("");
+    runNextTest();
+  });
+
+  addAsyncTest(function* testMultipleSearches() {
+    info ("Testing search API using WalkerFront (reverse=false)");
+    let nodes = yield walkerFront.querySelectorAll(walkerFront.rootNode, "h2");
+    let fronts = yield nodes.items();
+
+    let results = yield walkerFront.search("h2");
+    isDeeply(results, {
+      node: fronts[0],
+      type: "search",
+      resultsIndex: 0,
+      resultsLength: 3
+    }, "Search works with multiple results (reverse=false)");
+
+    results = yield walkerFront.search("h2");
+    isDeeply(results, {
+      node: fronts[1],
+      type: "search",
+      resultsIndex: 1,
+      resultsLength: 3
+    }, "Search works with multiple results (reverse=false)");
+
+    results = yield walkerFront.search("h2");
+    isDeeply(results, {
+      node: fronts[2],
+      type: "search",
+      resultsIndex: 2,
+      resultsLength: 3
+    }, "Search works with multiple results (reverse=false)");
+
+    results = yield walkerFront.search("h2");
+    isDeeply(results, {
+      node: fronts[0],
+      type: "search",
+      resultsIndex: 0,
+      resultsLength: 3
+    }, "Search works with multiple results (reverse=false)");
+
+    // Clear search data to remove result state on the front
+    yield walkerFront.search("");
+    runNextTest();
+  });
+
+  addAsyncTest(function* testMultipleSearchesReverse() {
+    info ("Testing search API using WalkerFront (reverse=true)");
+    let nodes = yield walkerFront.querySelectorAll(walkerFront.rootNode, "h2");
+    let fronts = yield nodes.items();
+
+    let results = yield walkerFront.search("h2", {reverse: true});
+    isDeeply(results, {
+      node: fronts[2],
+      type: "search",
+      resultsIndex: 2,
+      resultsLength: 3
+    }, "Search works with multiple results (reverse=true)");
+
+    results = yield walkerFront.search("h2", {reverse: true});
+    isDeeply(results, {
+      node: fronts[1],
+      type: "search",
+      resultsIndex: 1,
+      resultsLength: 3
+    }, "Search works with multiple results (reverse=true)");
+
+    results = yield walkerFront.search("h2", {reverse: true});
+    isDeeply(results, {
+      node: fronts[0],
+      type: "search",
+      resultsIndex: 0,
+      resultsLength: 3
+    }, "Search works with multiple results (reverse=true)");
+
+    results = yield walkerFront.search("h2", {reverse: true});
+    isDeeply(results, {
+      node: fronts[2],
+      type: "search",
+      resultsIndex: 2,
+      resultsLength: 3
+    }, "Search works with multiple results (reverse=true)");
+
+    results = yield walkerFront.search("h2", {reverse: false});
+    isDeeply(results, {
+      node: fronts[0],
+      type: "search",
+      resultsIndex: 0,
+      resultsLength: 3
+    }, "Search works with multiple results (reverse=false)");
+
+    // Clear search data to remove result state on the front
+    yield walkerFront.search("");
+    runNextTest();
+  });
+
+
+  addAsyncTest(function* testBackwardsCompat() {
+    info ("Simulating a server that doesn't have the new search functionality.");
+    walkerFront.traits.textSearch = false;
+    let front = yield walkerFront.querySelector(walkerFront.rootNode, "h1");
+
+    let results = yield walkerFront.search("h1");
+    isDeeply(results, {
+      node: front,
+      type: "selector",
+      resultsIndex: 0,
+      resultsLength: 1
+    }, "Only querySelectorAll results being returned");
+
+    // Clear search data to remove result state on the front
+    yield walkerFront.search("");
+
+    // Reset the normal textSearch behavior
+    walkerFront.traits.textSearch = true;
+
+    results = yield walkerFront.search("h1");
+    isDeeply(results, {
+      node: front,
+      type: "search",
+      resultsIndex: 0,
+      resultsLength: 3
+    }, "Other results being included");
+
+    // Clear search data to remove result state on the front
+    yield walkerFront.search("");
+    runNextTest();
+  });
+
+  runNextTest();
+};
+  </script>
+</head>
+<body>
+<a id="inspectorContent" target="_blank" href="inspector-search-data.html">Test Document</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>

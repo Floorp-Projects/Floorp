@@ -15,6 +15,10 @@
 
 %endif
 
+#inspector-searchlabel {
+  overflow: hidden;
+}
+
 #inspector-searchbox {
   transition-property: max-width, -moz-padding-end, -moz-padding-start;
   transition-duration: 250ms;
