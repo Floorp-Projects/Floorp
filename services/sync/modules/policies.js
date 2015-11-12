@@ -272,10 +272,11 @@ SyncScheduler.prototype = {
       case "wake_notification":
         this._log.debug("Woke from sleep.");
         Utils.nextTick(() => {
-          // Trigger a sync if we have multiple clients.
+          // Trigger a sync if we have multiple clients. We give it 5 seconds
+          // incase the network is still in the process of coming back up.
           if (this.numClients > 1) {
-            this._log.debug("More than 1 client. Syncing.");
-            this.scheduleNextSync(0);
+            this._log.debug("More than 1 client. Will sync in 5s.");
+            this.scheduleNextSync(5000);
           }
         });
         break;

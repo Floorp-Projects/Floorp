@@ -68,16 +68,6 @@ var Timeline = exports.Timeline = Class({
 
     events.off(this.tabActor, "window-ready", this._onWindowReady);
     this.tabActor = null;
-
-    if (this._memory) {
-      this._memory.destroy();
-      this._memory = null;
-    }
-
-    if (this._framerate) {
-      this._framerate.destroy();
-      this._framerate = null;
-    }
   },
 
   /**
@@ -91,6 +81,7 @@ var Timeline = exports.Timeline = Class({
    */
   get docShells() {
     let originalDocShell;
+    let docShells = [];
 
     if (this.tabActor.isRootActor) {
       originalDocShell = this.tabActor.docShell;
@@ -98,12 +89,15 @@ var Timeline = exports.Timeline = Class({
       originalDocShell = this.tabActor.originalDocShell;
     }
 
+    if (!originalDocShell) {
+      return docShells;
+    }
+
     let docShellsEnum = originalDocShell.getDocShellEnumerator(
       Ci.nsIDocShellTreeItem.typeAll,
       Ci.nsIDocShell.ENUMERATE_FORWARDS
     );
 
-    let docShells = [];
     while (docShellsEnum.hasMoreElements()) {
       let docShell = docShellsEnum.getNext();
       docShells.push(docShell.QueryInterface(Ci.nsIDocShell));
@@ -117,44 +111,67 @@ var Timeline = exports.Timeline = Class({
    * markers, memory, tick and frames events, if any.
    */
   _pullTimelineData: function() {
-    if (!this._isRecording || !this.docShells.length) {
+    let docShells = this.docShells;
+    if (!this._isRecording || !docShells.length) {
       return;
     }
 
-    let endTime = this.docShells[0].now();
+    let endTime = docShells[0].now();
     let markers = [];
 
-    for (let docShell of this.docShells) {
-      markers.push(...docShell.popProfileTimelineMarkers());
+    // Gather markers if requested.
+    if (this._withMarkers || this._withDocLoadingEvents) {
+      for (let docShell of docShells) {
+        for (let marker of docShell.popProfileTimelineMarkers()) {
+          markers.push(marker);
+
+          // The docshell may return markers with stack traces attached.
+          // Here we transform the stack traces via the stack frame cache,
+          // which lets us preserve tail sharing when transferring the
+          // frames to the client.  We must waive xrays here because Firefox
+          // doesn't understand that the Debugger.Frame object is safe to
+          // use from chrome.  See Tutorial-Alloc-Log-Tree.md.
+          if (this._withFrames) {
+            if (marker.stack) {
+              marker.stack = this._stackFrames.addFrame(Cu.waiveXrays(marker.stack));
+            }
+            if (marker.endStack) {
+              marker.endStack = this._stackFrames.addFrame(Cu.waiveXrays(marker.endStack));
+            }
+          }
+
+          // Emit some helper events for "DOMContentLoaded" and "Load" markers.
+          if (this._withDocLoadingEvents) {
+            if (marker.name == "document::DOMContentLoaded" ||
+                marker.name == "document::Load") {
+              events.emit(this, "doc-loading", marker, endTime);
+            }
+          }
+        }
+      }
     }
 
-    // The docshell may return markers with stack traces attached.
-    // Here we transform the stack traces via the stack frame cache,
-    // which lets us preserve tail sharing when transferring the
-    // frames to the client.  We must waive xrays here because Firefox
-    // doesn't understand that the Debugger.Frame object is safe to
-    // use from chrome.  See Tutorial-Alloc-Log-Tree.md.
-    for (let marker of markers) {
-      if (marker.stack) {
-        marker.stack = this._stackFrames.addFrame(Cu.waiveXrays(marker.stack));
-      }
-      if (marker.endStack) {
-        marker.endStack = this._stackFrames.addFrame(Cu.waiveXrays(marker.endStack));
-      }
-    }
-
-    let frames = this._stackFrames.makeEvent();
-    if (frames) {
-      events.emit(this, "frames", endTime, frames);
-    }
-    if (markers.length > 0) {
+    // Emit markers if requested.
+    if (this._withMarkers && markers.length > 0) {
       events.emit(this, "markers", markers, endTime);
     }
+
+    // Emit framerate data if requested.
+    if (this._withTicks) {
+      events.emit(this, "ticks", endTime, this._framerate.getPendingTicks());
+    }
+
+    // Emit memory data if requested.
     if (this._withMemory) {
       events.emit(this, "memory", endTime, this._memory.measure());
     }
-    if (this._withTicks) {
-      events.emit(this, "ticks", endTime, this._framerate.getPendingTicks());
+
+    // Emit stack frames data if requested.
+    if (this._withFrames && this._withMarkers) {
+      let frames = this._stackFrames.makeEvent();
+      if (frames) {
+        events.emit(this, "frames", endTime, frames);
+      }
     }
 
     this._dataPullTimeout = Timers.setTimeout(() => {
@@ -172,38 +189,73 @@ var Timeline = exports.Timeline = Class({
   /**
    * Start recording profile markers.
    *
-   * @option {boolean} withMemory
-   *         Boolean indiciating whether we want memory measurements sampled. A memory actor
-   *         will be created regardless (to hook into GC events), but this determines
-   *         whether or not a `memory` event gets fired.
+   * @option {boolean} withMarkers
+   *         Boolean indicating whether or not timeline markers are emitted
+   *         once they're accumulated every `DEFAULT_TIMELINE_DATA_PULL_TIMEOUT`
+   *         milliseconds.
    * @option {boolean} withTicks
-   *         Boolean indicating whether a `ticks` event is fired and a FramerateActor
-   *         is created.
+   *         Boolean indicating whether a `ticks` event is fired and a
+   *         FramerateActor is created.
+   * @option {boolean} withMemory
+   *         Boolean indiciating whether we want memory measurements sampled.
+   * @option {boolean} withFrames
+   *         Boolean indicating whether or not stack frames should be handled
+   *         from timeline markers.
+   * @option {boolean} withGCEvents
+   *         Boolean indicating whether or not GC markers should be emitted.
+   *         TODO: Remove these fake GC markers altogether in bug 1198127.
+   * @option {boolean} withDocLoadingEvents
+   *         Boolean indicating whether or not DOMContentLoaded and Load
+   *         marker events are emitted.
    */
-  start: Task.async(function *({ withMemory, withTicks }) {
-    let startTime = this._startTime = this.docShells[0].now();
-
+  start: Task.async(function *({
+    withMarkers,
+    withTicks,
+    withMemory,
+    withFrames,
+    withGCEvents,
+    withDocLoadingEvents,
+  }) {
+    let docShells = this.docShells;
+    if (!docShells.length) {
+      return -1;
+    }
+    let startTime = this._startTime = docShells[0].now();
     if (this._isRecording) {
       return startTime;
     }
 
     this._isRecording = true;
-    this._stackFrames = new StackFrameCache();
-    this._stackFrames.initFrames();
-    this._withMemory = withMemory;
-    this._withTicks = withTicks;
+    this._withMarkers = !!withMarkers;
+    this._withTicks = !!withTicks;
+    this._withMemory = !!withMemory;
+    this._withFrames = !!withFrames;
+    this._withGCEvents = !!withGCEvents;
+    this._withDocLoadingEvents = !!withDocLoadingEvents;
 
-    for (let docShell of this.docShells) {
-      docShell.recordProfileTimelineMarkers = true;
+    if (this._withMarkers || this._withDocLoadingEvents) {
+      for (let docShell of docShells) {
+        docShell.recordProfileTimelineMarkers = true;
+      }
     }
 
-    this._memory = new Memory(this.tabActor, this._stackFrames);
-    this._memory.attach();
-    events.on(this._memory, "garbage-collection", this._onGarbageCollection);
-
-    if (withTicks) {
+    if (this._withTicks) {
       this._framerate = new Framerate(this.tabActor);
       this._framerate.startRecording();
+    }
+
+    if (this._withMemory || this._withGCEvents) {
+      this._memory = new Memory(this.tabActor, this._stackFrames);
+      this._memory.attach();
+    }
+
+    if (this._withGCEvents) {
+      events.on(this._memory, "garbage-collection", this._onGarbageCollection);
+    }
+
+    if (this._withFrames && this._withMarkers) {
+      this._stackFrames = new StackFrameCache();
+      this._stackFrames.initFrames();
     }
 
     this._pullTimelineData();
@@ -214,26 +266,51 @@ var Timeline = exports.Timeline = Class({
    * Stop recording profile markers.
    */
   stop: Task.async(function *() {
-    if (!this._isRecording) {
-      return;
+    let docShells = this.docShells;
+    if (!docShells.length) {
+      return -1;
     }
-    this._isRecording = false;
-    this._stackFrames = null;
+    let endTime = this._startTime = docShells[0].now();
+    if (!this._isRecording) {
+      return endTime;
+    }
 
-    events.off(this._memory, "garbage-collection", this._onGarbageCollection);
-    this._memory.detach();
+    if (this._withMarkers || this._withDocLoadingEvents) {
+      for (let docShell of docShells) {
+        docShell.recordProfileTimelineMarkers = false;
+      }
+    }
 
-    if (this._framerate) {
+    if (this._withTicks) {
       this._framerate.stopRecording();
+      this._framerate.destroy();
       this._framerate = null;
     }
 
-    for (let docShell of this.docShells) {
-      docShell.recordProfileTimelineMarkers = false;
+    if (this._withMemory || this._withGCEvents) {
+      this._memory.detach();
+      this._memory.destroy();
     }
 
+    if (this._withGCEvents) {
+      events.off(this._memory, "garbage-collection", this._onGarbageCollection);
+    }
+
+    if (this._withFrames && this._withMarkers) {
+      this._stackFrames = null;
+    }
+
+    this._isRecording = false;
+    this._withMarkers = false;
+    this._withTicks = false;
+    this._withMemory = false;
+    this._withFrames = false;
+    this._withDocLoadingEvents = false;
+    this._withGCEvents = false;
+
     Timers.clearTimeout(this._dataPullTimeout);
-    return this.docShells[0].now();
+
+    return endTime;
   }),
 
   /**
@@ -259,11 +336,12 @@ var Timeline = exports.Timeline = Class({
    * not incrementally collect garbage.
    */
   _onGarbageCollection: function ({ collections, gcCycleNumber, reason, nonincrementalReason }) {
-    if (!this._isRecording || !this.docShells.length) {
+    let docShells = this.docShells;
+    if (!this._isRecording || !docShells.length) {
       return;
     }
 
-    let endTime = this.docShells[0].now();
+    let endTime = docShells[0].now();
 
     events.emit(this, "markers", collections.map(({ startTimestamp: start, endTimestamp: end }) => {
       return {

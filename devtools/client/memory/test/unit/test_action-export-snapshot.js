@@ -18,12 +18,7 @@ add_task(function *() {
   let store = Store();
   const { getState, dispatch } = store;
 
-  let file = FileUtils.getFile("TmpD", ["tmp.fxsnapshot"]);
-  file.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, FileUtils.PERMS_FILE);
-  let destPath = file.path;
-  let stat = yield OS.File.stat(destPath);
-  ok(stat.size === 0, "new file is 0 bytes at start");
-
+  let destPath = yield createTempFile();
   dispatch(takeSnapshotAndCensus(front, heapWorker));
   yield waitUntilSnapshotState(store, [states.SAVED_CENSUS]);
 

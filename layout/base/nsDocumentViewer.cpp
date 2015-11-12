@@ -82,6 +82,8 @@
 #include "nsIPrompt.h"
 #include "imgIContainer.h" // image animation mode constants
 
+#include "mozilla/DocLoadingTimelineMarker.h"
+
 //--------------------------
 // Printing Include
 //---------------------------
@@ -988,8 +990,8 @@ nsDocumentViewer::LoadComplete(nsresult aStatus)
       RefPtr<TimelineConsumers> timelines = TimelineConsumers::Get();
 
       if (timelines && timelines->HasConsumer(docShell)) {
-        timelines->AddMarkerForDocShell(
-          docShell, "document::Load", MarkerTracingType::TIMESTAMP);
+        timelines->AddMarkerForDocShell(docShell,
+          MakeUnique<DocLoadingTimelineMarker>("document::Load"));
       }
 
       EventDispatcher::Dispatch(window, mPresContext, &event, nullptr, &status);

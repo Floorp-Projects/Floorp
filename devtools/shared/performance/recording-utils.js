@@ -29,8 +29,12 @@ function mapRecordingOptions (type, options) {
 
   if (type === "timeline") {
     return {
-      withMemory: options.withMemory,
+      withMarkers: true,
       withTicks: options.withTicks,
+      withMemory: options.withMemory,
+      withFrames: true,
+      withGCEvents: true,
+      withDocLoadingEvents: false
     };
   }
 

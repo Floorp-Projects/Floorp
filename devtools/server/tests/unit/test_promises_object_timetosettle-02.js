@@ -15,6 +15,7 @@ var events = require("sdk/event/core");
 add_task(function*() {
   let client = yield startTestDebuggerServer("test-promises-timetosettle");
   let chromeActors = yield getChromeActors(client);
+  yield attachTab(client, chromeActors);
 
   ok(Promise.toString().contains("native code"), "Expect native DOM Promise.");
 
@@ -24,6 +25,7 @@ add_task(function*() {
   let response = yield listTabs(client);
   let targetTab = findTab(response.tabs, "test-promises-timetosettle");
   ok(targetTab, "Found our target tab.");
+  yield attachTab(client, targetTab);
 
   yield testGetTimeToSettle(client, targetTab, v => {
     const debuggee =
@@ -47,9 +49,10 @@ function* testGetTimeToSettle(client, form, makePromise) {
       for (let p of promises) {
         if (p.promiseState.state === "fulfilled" &&
             p.promiseState.value === resolution) {
-          equal(Math.floor(p.promiseState.timeToSettle / 100) * 100, 100,
+          let timeToSettle = Math.floor(p.promiseState.timeToSettle / 100) * 100;
+          ok(timeToSettle >= 100,
             "Expect time to settle for resolved promise to be " +
-            "approximately 100ms.");
+            "at least 100ms, got " + timeToSettle + "ms.");
           found = true;
           resolve();
         } else {
