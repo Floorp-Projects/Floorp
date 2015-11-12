@@ -294,6 +294,7 @@ gbjar.sources += [
     'GeckoProfileDirectories.java',
     'GeckoProfilesProvider.java',
     'GeckoScreenOrientation.java',
+    'GeckoService.java',
     'GeckoSharedPrefs.java',
     'GeckoSmsManager.java',
     'GeckoThread.java',

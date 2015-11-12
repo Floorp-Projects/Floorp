@@ -1176,7 +1176,7 @@ richlistitem[type~="action"][actiontype="searchengine"][selected="true"] > .ac-t
   font-size: 0.9em;
 }
 
-richlistitem[type~="action"][actiontype="switchtab"] > .ac-url-box > .ac-action-icon {
+richlistitem[type~="action"][actiontype$="tab"] > .ac-url-box > .ac-action-icon {
   list-style-image: url("chrome://browser/skin/actionicon-tab.png");
   padding: 0 3px;
 }
