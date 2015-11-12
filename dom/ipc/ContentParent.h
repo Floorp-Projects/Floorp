@@ -434,6 +434,21 @@ public:
     void SetNuwaParent(NuwaParent* aNuwaParent) { mNuwaParent = aNuwaParent; }
     void ForkNewProcess(bool aBlocking);
 
+    virtual bool RecvCreateWindow(PBrowserParent* aThisTabParent,
+                                  PBrowserParent* aOpener,
+                                  const uint32_t& aChromeFlags,
+                                  const bool& aCalledFromJS,
+                                  const bool& aPositionSpecified,
+                                  const bool& aSizeSpecified,
+                                  const nsCString& aURI,
+                                  const nsString& aName,
+                                  const nsCString& aFeatures,
+                                  const nsCString& aBaseURI,
+                                  nsresult* aResult,
+                                  bool* aWindowIsNew,
+                                  InfallibleTArray<FrameScriptInfo>* aFrameScripts,
+                                  nsCString* aURLToLoad) override;
+
 protected:
     void OnChannelConnected(int32_t pid) override;
     virtual void ActorDestroy(ActorDestroyReason why) override;

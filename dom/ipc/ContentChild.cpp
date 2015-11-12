@@ -47,6 +47,7 @@
 #include "mozilla/layers/ImageBridgeChild.h"
 #include "mozilla/layers/PCompositorChild.h"
 #include "mozilla/layers/SharedBufferManagerChild.h"
+#include "mozilla/layout/RenderFrameChild.h"
 #include "mozilla/net/NeckoChild.h"
 #include "mozilla/plugins/PluginInstanceParent.h"
 #include "mozilla/plugins/PluginModuleParent.h"
@@ -215,6 +216,7 @@ using namespace mozilla::gmp;
 using namespace mozilla::hal_sandbox;
 using namespace mozilla::ipc;
 using namespace mozilla::layers;
+using namespace mozilla::layout;
 using namespace mozilla::net;
 using namespace mozilla::jsipc;
 using namespace mozilla::psm;
@@ -607,7 +609,8 @@ ContentChild::~ContentChild()
 
 NS_INTERFACE_MAP_BEGIN(ContentChild)
   NS_INTERFACE_MAP_ENTRY(nsIContentChild)
-  NS_INTERFACE_MAP_ENTRY(nsISupports)
+  NS_INTERFACE_MAP_ENTRY(nsIWindowProvider)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIContentChild)
 NS_INTERFACE_MAP_END
 
 bool
@@ -738,6 +741,153 @@ ContentChild::SetProcessName(const nsAString& aName, bool aDontOverride)
     if (aDontOverride) {
         mCanOverrideProcessName = false;
     }
+}
+
+NS_IMETHODIMP
+ContentChild::ProvideWindow(nsIDOMWindow* aParent,
+                            uint32_t aChromeFlags,
+                            bool aCalledFromJS,
+                            bool aPositionSpecified,
+                            bool aSizeSpecified,
+                            nsIURI* aURI,
+                            const nsAString& aName,
+                            const nsACString& aFeatures,
+                            bool* aWindowIsNew,
+                            nsIDOMWindow** aReturn)
+{
+    return ProvideWindowCommon(nullptr, aParent, false, aChromeFlags,
+                               aCalledFromJS, aPositionSpecified,
+                               aSizeSpecified, aURI, aName, aFeatures,
+                               aWindowIsNew, aReturn);
+}
+
+nsresult
+ContentChild::ProvideWindowCommon(TabChild* aTabOpener,
+                                  nsIDOMWindow* aParent,
+                                  bool aIframeMoz,
+                                  uint32_t aChromeFlags,
+                                  bool aCalledFromJS,
+                                  bool aPositionSpecified,
+                                  bool aSizeSpecified,
+                                  nsIURI* aURI,
+                                  const nsAString& aName,
+                                  const nsACString& aFeatures,
+                                  bool* aWindowIsNew,
+                                  nsIDOMWindow** aReturn)
+{
+    MOZ_ASSERT(aTabOpener);
+    *aReturn = nullptr;
+
+    const TabId openerTabId = aTabOpener->GetTabId();
+
+    PopupIPCTabContext context;
+    context.opener() = openerTabId;
+    context.isBrowserElement() = aTabOpener->IsBrowserElement();
+
+    IPCTabContext ipcContext(context);
+
+    TabId tabId;
+    SendAllocateTabId(openerTabId,
+                      ipcContext,
+                      GetID(),
+                      &tabId);
+
+    RefPtr<TabChild> newChild = new TabChild(this, tabId,
+                                             *aTabOpener, aChromeFlags);
+    if (NS_FAILED(newChild->Init())) {
+        return NS_ERROR_ABORT;
+    }
+
+    context.opener() = aTabOpener;
+    unused << SendPBrowserConstructor(
+        // We release this ref in DeallocPBrowserChild
+        RefPtr<TabChild>(newChild).forget().take(),
+        tabId, IPCTabContext(context), aChromeFlags,
+        GetID(), IsForApp(), IsForBrowser());
+
+    nsAutoCString url;
+    if (aURI) {
+        aURI->GetSpec(url);
+    } else {
+        // We can't actually send a nullptr up as the URI, since IPDL doesn't let us
+        // send nullptr's for primitives. We indicate that the nsString for the URI
+        // should be converted to a nullptr by voiding the string.
+        url.SetIsVoid(true);
+    }
+
+    nsString name(aName);
+    nsAutoCString features(aFeatures);
+    nsTArray<FrameScriptInfo> frameScripts;
+    nsCString urlToLoad;
+
+    if (aIframeMoz) {
+        MOZ_ASSERT(aTabOpener);
+        newChild->SendBrowserFrameOpenWindow(aTabOpener, NS_ConvertUTF8toUTF16(url), name,
+                                             NS_ConvertUTF8toUTF16(features),
+                                             aWindowIsNew);
+    } else {
+        nsCOMPtr<nsPIDOMWindow> opener = do_QueryInterface(aParent);
+        nsCOMPtr<nsIDocument> doc = opener->GetDoc();
+        nsCOMPtr<nsIURI> baseURI = doc->GetDocBaseURI();
+        if (!baseURI) {
+            NS_ERROR("nsIDocument didn't return a base URI");
+            return NS_ERROR_FAILURE;
+        }
+
+        nsAutoCString baseURIString;
+        baseURI->GetSpec(baseURIString);
+
+        nsresult rv;
+        if (!SendCreateWindow(aTabOpener, newChild,
+                              aChromeFlags, aCalledFromJS, aPositionSpecified,
+                              aSizeSpecified, url,
+                              name, features,
+                              baseURIString,
+                              &rv,
+                              aWindowIsNew,
+                              &frameScripts,
+                              &urlToLoad)) {
+            return NS_ERROR_NOT_AVAILABLE;
+        }
+
+        if (NS_FAILED(rv)) {
+            return rv;
+        }
+    }
+    if (!*aWindowIsNew) {
+        PBrowserChild::Send__delete__(newChild);
+        return NS_ERROR_ABORT;
+    }
+
+    TextureFactoryIdentifier textureFactoryIdentifier;
+    uint64_t layersId = 0;
+    PRenderFrameChild* renderFrame = newChild->SendPRenderFrameConstructor();
+    newChild->SendGetRenderFrameInfo(renderFrame,
+                                     &textureFactoryIdentifier,
+                                     &layersId);
+    if (layersId == 0) { // if renderFrame is invalid.
+        PRenderFrameChild::Send__delete__(renderFrame);
+        renderFrame = nullptr;
+    }
+
+    // Unfortunately we don't get a window unless we've shown the frame.  That's
+    // pretty bogus; see bug 763602.
+    newChild->DoFakeShow(textureFactoryIdentifier, layersId, renderFrame);
+
+    for (size_t i = 0; i < frameScripts.Length(); i++) {
+        FrameScriptInfo& info = frameScripts[i];
+        if (!newChild->RecvLoadRemoteScript(info.url(), info.runInGlobalScope())) {
+            MOZ_CRASH();
+        }
+    }
+
+    if (!urlToLoad.IsEmpty()) {
+        newChild->RecvLoadURL(urlToLoad, BrowserConfiguration());
+    }
+
+    nsCOMPtr<nsIDOMWindow> win = do_GetInterface(newChild->WebNavigation());
+    win.forget(aReturn);
+    return NS_OK;
 }
 
 void
@@ -2740,7 +2890,8 @@ ContentChild::RecvShutdown()
 
     nsCOMPtr<nsIObserverService> os = services::GetObserverService();
     if (os) {
-        os->NotifyObservers(this, "content-child-shutdown", nullptr);
+        os->NotifyObservers(static_cast<nsIContentChild*>(this),
+                            "content-child-shutdown", nullptr);
     }
 
     GetIPCChannel()->SetAbortOnError(false);
