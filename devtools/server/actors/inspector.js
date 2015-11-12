@@ -61,6 +61,7 @@ const object = require("sdk/util/object");
 const events = require("sdk/event/core");
 const {Unknown} = require("sdk/platform/xpcom");
 const {Class} = require("sdk/core/heritage");
+const {WalkerSearch} = require("devtools/server/actors/utils/walker-search");
 const {PageStyleActor, getFontPreviewData} = require("devtools/server/actors/styles");
 const {
   HighlighterActor,
@@ -1122,6 +1123,13 @@ types.addDictType("disconnectedNodeArray", {
 
 types.addDictType("dommutation", {});
 
+types.addDictType("searchresult", {
+  list: "domnodelist",
+  // Right now there is isn't anything required for metadata,
+  // but it's json so it can be extended with extra data.
+  metadata: "array:json"
+});
+
 /**
  * Server side of a node list as returned by querySelectorAll()
  */
@@ -1299,6 +1307,8 @@ var WalkerActor = protocol.ActorClass({
     this._activePseudoClassLocks = new Set();
     this.showAllAnonymousContent = options.showAllAnonymousContent;
 
+    this.walkerSearch = new WalkerSearch(this);
+
     // Nodes which have been removed from the client's known
     // ownership tree are considered "orphaned", and stored in
     // this set.
@@ -1334,7 +1344,13 @@ var WalkerActor = protocol.ActorClass({
         // FF42+ Inspector starts managing the Walker, while the inspector also
         // starts cleaning itself up automatically on client disconnection.
         // So that there is no need to manually release the walker anymore.
-        autoReleased: true
+        autoReleased: true,
+        // XXX: It seems silly that we need to tell the front which capabilities
+        // its actor has in this way when the target can use actorHasMethod.  If
+        // this was ported to the protocol (Bug 1157048) we could call that inside
+        // of custom front methods and not need to do traits for this.
+        multiFrameQuerySelectorAll: true,
+        textSearch: true,
       }
     }
   },
@@ -1376,6 +1392,7 @@ var WalkerActor = protocol.ActorClass({
       this.onFrameLoad = null;
       this.onFrameUnload = null;
 
+      this.walkerSearch.destroy();
       this.reflowObserver.off("reflows", this._onReflows);
       this.reflowObserver = null;
       this._onReflows = null;
@@ -2045,6 +2062,33 @@ var WalkerActor = protocol.ActorClass({
     },
     response: {
       list: RetVal("domnodelist")
+    }
+  }),
+
+  /**
+   * Search the document for a given string.
+   * Results will be searched with the walker-search module (searches through
+   * tag names, attribute names and values, and text contents).
+   *
+   * @returns {searchresult}
+   *            - {NodeList} list
+   *            - {Array<Object>} metadata. Extra information with indices that
+   *                              match up with node list.
+   */
+  search: method(function(query) {
+    let results = this.walkerSearch.search(query);
+    let nodeList = new NodeListActor(this, results.map(r => r.node));
+
+    return {
+      list: nodeList,
+      metadata: []
+    }
+  }, {
+    request: {
+      query: Arg(0),
+    },
+    response: {
+      list: RetVal("searchresult"),
     }
   }),
 
@@ -2838,6 +2882,11 @@ var WalkerActor = protocol.ActorClass({
    *    See https://developer.mozilla.org/en-US/docs/Web/API/MutationObserver#MutationRecord
    */
   onMutations: function(mutations) {
+    // Notify any observers that want *all* mutations (even on nodes that aren't
+    // referenced).  This is not sent over the protocol so can only be used by
+    // scripts running in the server process.
+    events.emit(this, "any-mutation");
+
     for (let change of mutations) {
       let targetActor = this._refMap.get(change.target);
       if (!targetActor) {
@@ -3313,6 +3362,75 @@ var WalkerFront = exports.WalkerFront = protocol.FrontClass(WalkerActor, {
     });
   }, {
     impl: "_getNodeFromActor"
+  }),
+
+  /*
+   * Incrementally search the document for a given string.
+   * For modern servers, results will be searched with using the WalkerActor
+   * `search` function (includes tag names, attributes, and text contents).
+   * Only 1 result is sent back, and calling the method again with the same
+   * query will send the next result. When there are no more results to be sent
+   * back, null is sent.
+   * @param {String} query
+   * @param {Object} options
+   *    - "reverse": search backwards
+   *    - "selectorOnly": treat input as a selector string (don't search text
+   *                      tags, attributes, etc)
+   */
+  search: protocol.custom(Task.async(function*(query, options = { }) {
+    let nodeList;
+    let searchType;
+    let searchData = this.searchData = this.searchData || { };
+    let selectorOnly = !!options.selectorOnly;
+
+    // Backwards compat.  Use selector only search if the new
+    // search functionality isn't implemented, or if the caller (tests)
+    // want it.
+    if (selectorOnly || !this.traits.textSearch) {
+      searchType = "selector";
+      if (this.traits.multiFrameQuerySelectorAll) {
+        nodeList = yield this.multiFrameQuerySelectorAll(query);
+      } else {
+        nodeList = yield this.querySelectorAll(this.rootNode, query);
+      }
+    } else {
+      searchType = "search";
+      let result = yield this._search(query, options);
+      nodeList = result.list;
+    }
+
+    // If this is a new search, start at the beginning.
+    if (searchData.query !== query ||
+        searchData.selectorOnly !== selectorOnly) {
+      searchData.selectorOnly = selectorOnly;
+      searchData.query = query;
+      searchData.index = -1;
+    }
+
+    if (!nodeList.length) {
+      return null;
+    }
+
+    // Move search result cursor and cycle if necessary.
+    searchData.index = options.reverse ? searchData.index - 1 :
+                                         searchData.index + 1;
+    if (searchData.index >= nodeList.length) {
+      searchData.index = 0;
+    }
+    if (searchData.index < 0) {
+      searchData.index = nodeList.length - 1;
+    }
+
+    // Send back the single node, along with any relevant search data
+    let node = yield nodeList.item(searchData.index);
+    return {
+      type: searchType,
+      node: node,
+      resultsLength: nodeList.length,
+      resultsIndex: searchData.index,
+    };
+  }), {
+    impl: "_search"
   }),
 
   _releaseFront: function(node, force) {
@@ -3875,10 +3993,25 @@ DocumentWalker.prototype = {
     return this.walker.parentNode();
   },
 
+  nextNode: function() {
+    let node = this.walker.currentNode;
+    if (!node) {
+      return null;
+    }
+
+    let nextNode = this.walker.nextNode();
+    while (nextNode && this.filter(nextNode) === Ci.nsIDOMNodeFilter.FILTER_SKIP) {
+      nextNode = this.walker.nextNode();
+    }
+
+    return nextNode;
+  },
+
   firstChild: function() {
     let node = this.walker.currentNode;
-    if (!node)
+    if (!node) {
       return null;
+    }
 
     let firstChild = this.walker.firstChild();
     while (firstChild && this.filter(firstChild) === Ci.nsIDOMNodeFilter.FILTER_SKIP) {
@@ -3890,8 +4023,9 @@ DocumentWalker.prototype = {
 
   lastChild: function() {
     let node = this.walker.currentNode;
-    if (!node)
+    if (!node) {
       return null;
+    }
 
     let lastChild = this.walker.lastChild();
     while (lastChild && this.filter(lastChild) === Ci.nsIDOMNodeFilter.FILTER_SKIP) {
