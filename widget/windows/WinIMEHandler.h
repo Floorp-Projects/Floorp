@@ -113,6 +113,8 @@ public:
 private:
   static bool sPluginHasFocus;
 
+  static InputContextAction::Cause sLastContextActionCause;
+
 #ifdef NS_ENABLE_TSF
   static decltype(SetInputScopes)* sSetInputScopes;
   static void SetInputScopeForIMM32(nsWindow* aWindow,
