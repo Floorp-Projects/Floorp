@@ -410,6 +410,12 @@ union GamepadChangeEvent {
     GamepadButtonInformation;
 };
 
+struct FrameScriptInfo
+{
+    nsString url;
+    bool runInGlobalScope;
+};
+
 prio(normal upto urgent) sync protocol PContent
 {
     parent spawns PPluginModule;
@@ -1106,6 +1112,21 @@ parent:
      */
     sync GetGraphicsDeviceInitData()
         returns (DeviceInitData aData);
+
+    sync CreateWindow(PBrowser aThisTab,
+                      PBrowser aNewTab,
+                      uint32_t aChromeFlags,
+                      bool aCalledFromJS,
+                      bool aPositionSpecified,
+                      bool aSizeSpecified,
+                      nsCString aURI,
+                      nsString aName,
+                      nsCString aFeatures,
+                      nsCString aBaseURI)
+      returns (nsresult rv,
+               bool windowOpened,
+               FrameScriptInfo[] frameScripts,
+               nsCString urlToLoad);
 
     sync GetDeviceStorageLocation(nsString type)
         returns (nsString path);

@@ -11,6 +11,7 @@
 #include "mozilla/ContentCache.h"
 #include "mozilla/dom/ipc/IdType.h"
 #include "mozilla/dom/PBrowserParent.h"
+#include "mozilla/dom/PContent.h"
 #include "mozilla/dom/PFilePickerParent.h"
 #include "mozilla/dom/TabContext.h"
 #include "mozilla/EventForwards.h"
@@ -93,6 +94,9 @@ class TabParent final : public PBrowserParent
     virtual ~TabParent();
 
 public:
+    // Helper class for ContentParent::RecvCreateWindow.
+    struct AutoUseNewTab;
+
     // nsITabParent
     NS_DECL_NSITABPARENT
     // nsIDOMEventListener interfaces
@@ -125,6 +129,12 @@ public:
         mBrowserDOMWindow = aBrowserDOMWindow;
     }
 
+    void SetHasContentOpener(bool aHasContentOpener);
+
+    void SwapFrameScriptsFrom(nsTArray<FrameScriptInfo>& aFrameScripts) {
+        aFrameScripts.SwapElements(mDelayedFrameScripts);
+    }
+
     already_AddRefed<nsILoadContext> GetLoadContext();
     already_AddRefed<nsIWidget> GetTopLevelWidget();
     nsIXULBrowserWindow* GetXULBrowserWindow();
@@ -147,19 +157,6 @@ public:
                                             const nsString& aName,
                                             const nsString& aFeatures,
                                             bool* aOutWindowOpened) override;
-    virtual bool RecvCreateWindow(PBrowserParent* aOpener,
-                                  const uint32_t& aChromeFlags,
-                                  const bool& aCalledFromJS,
-                                  const bool& aPositionSpecified,
-                                  const bool& aSizeSpecified,
-                                  const nsCString& aURI,
-                                  const nsString& aName,
-                                  const nsCString& aFeatures,
-                                  const nsCString& aBaseURI,
-                                  nsresult* aResult,
-                                  bool* aWindowIsNew,
-                                  InfallibleTArray<FrameScriptInfo>* aFrameScripts,
-                                  nsCString* aURLToLoad) override;
     virtual bool RecvSyncMessage(const nsString& aMessage,
                                  const ClonedMessageData& aData,
                                  InfallibleTArray<CpowEntry>&& aCpows,
@@ -497,8 +494,6 @@ protected:
     bool InitBrowserConfiguration(const nsCString& aURI,
                                   BrowserConfiguration& aConfiguration);
 
-    void SetHasContentOpener(bool aHasContentOpener);
-
     // Decide whether we have to use a new process to reload the URI associated
     // with the given channel.
     bool ShouldSwitchProcess(nsIChannel* aChannel);
@@ -584,9 +579,6 @@ private:
 
     TabId mTabId;
 
-    // Helper class for RecvCreateWindow.
-    struct AutoUseNewTab;
-
     // When loading a new tab or window via window.open, the child process sends
     // a new PBrowser to use. We store that tab in sNextTabParent and then
     // proceed through the browser's normal paths to create a new
@@ -653,6 +645,38 @@ private:
 
 public:
     static TabParent* GetTabParentFromLayersId(uint64_t aLayersId);
+};
+
+struct MOZ_STACK_CLASS TabParent::AutoUseNewTab final
+{
+public:
+    AutoUseNewTab(TabParent* aNewTab, bool* aWindowIsNew, nsCString* aURLToLoad)
+     : mNewTab(aNewTab), mWindowIsNew(aWindowIsNew), mURLToLoad(aURLToLoad)
+    {
+        MOZ_ASSERT(!TabParent::sNextTabParent);
+        MOZ_ASSERT(!aNewTab->mCreatingWindow);
+
+        TabParent::sNextTabParent = aNewTab;
+        aNewTab->mCreatingWindow = true;
+        aNewTab->mDelayedURL.Truncate();
+    }
+
+    ~AutoUseNewTab()
+    {
+        mNewTab->mCreatingWindow = false;
+        *mURLToLoad = mNewTab->mDelayedURL;
+
+        if (TabParent::sNextTabParent) {
+            MOZ_ASSERT(TabParent::sNextTabParent == mNewTab);
+            TabParent::sNextTabParent = nullptr;
+            *mWindowIsNew = false;
+        }
+    }
+
+private:
+    TabParent* mNewTab;
+    bool* mWindowIsNew;
+    nsCString* mURLToLoad;
 };
 
 } // namespace dom
