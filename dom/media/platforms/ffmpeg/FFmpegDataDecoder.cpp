@@ -7,7 +7,9 @@
 #include "mozilla/TaskQueue.h"
 
 #include <string.h>
+#ifdef __GNUC__
 #include <unistd.h>
+#endif
 
 #include "FFmpegLibs.h"
 #include "FFmpegLog.h"
