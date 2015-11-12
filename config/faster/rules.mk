@@ -127,6 +127,8 @@ $(addprefix $(TOPOBJDIR)/,$(MANIFEST_TARGETS)): FORCE
 # Files to build with the recursive backend and simply copy
 $(TOPOBJDIR)/dist/bin/platform.ini: $(TOPOBJDIR)/toolkit/xre/platform.ini
 
+$(TOPOBJDIR)/toolkit/xre/platform.ini: $(TOPOBJDIR)/config/buildid
+
 # The xpidl target in config/makefiles/xpidl requires the install manifest for
 # dist/idl to have been processed.
 $(TOPOBJDIR)/config/makefiles/xpidl/xpidl: $(TOPOBJDIR)/install-dist_idl

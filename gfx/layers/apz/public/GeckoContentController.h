@@ -75,15 +75,6 @@ public:
                              uint64_t aInputBlockId) = 0;
 
   /**
-   * Requests sending a mozbrowserasyncscroll domevent to embedder.
-   * |aContentRect| is in CSS pixels, relative to the current cssPage.
-   * |aScrollableSize| is the current content width/height in CSS pixels.
-   */
-  virtual void SendAsyncScrollDOMEvent(bool aIsRootContent,
-                                       const CSSRect &aContentRect,
-                                       const CSSSize &aScrollableSize) = 0;
-
-  /**
    * Schedules a runnable to run on the controller/UI thread at some time
    * in the future.
    * This method must always be called on the controller thread.

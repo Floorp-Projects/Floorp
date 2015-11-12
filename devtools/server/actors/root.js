@@ -176,6 +176,9 @@ RootActor.prototype = {
     // Whether or not the MemoryActor's heap snapshot abilities are
     // fully equipped to handle heap snapshots for the memory tool. Fx44+
     heapSnapshots: true,
+    // Whether or not the timeline actor can emit DOMContentLoaded and Load
+    // markers, currently in use by the network monitor. Fx45+
+    documentLoadingMarkers: true
   },
 
   /**

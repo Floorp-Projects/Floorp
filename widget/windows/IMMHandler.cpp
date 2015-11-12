@@ -1662,8 +1662,7 @@ IMMHandler::HandleQueryCharPosition(nsWindow* aWindow,
       ("IMM: HandleQueryCharPosition, eQueryEditorRect failed"));
     ::GetWindowRect(aWindow->GetWindowHandle(), &pCharPosition->rcDocument);
   } else {
-    nsIntRect editorRectInWindow =
-      LayoutDevicePixel::ToUntyped(editorRect.mReply.mRect);
+    nsIntRect editorRectInWindow = editorRect.mReply.mRect.ToUnknownRect();
     nsWindow* window = editorRect.mReply.mFocusedWidget ?
       static_cast<nsWindow*>(editorRect.mReply.mFocusedWidget) : aWindow;
     nsIntRect editorRectInScreen;
@@ -2170,7 +2169,7 @@ IMMHandler::GetCharacterRectOfSelectedTextAt(nsWindow* aWindow,
     aWindow->InitEvent(charRect, &point);
     aWindow->DispatchWindowEvent(&charRect);
     if (charRect.mSucceeded) {
-      aCharRect = LayoutDevicePixel::ToUntyped(charRect.mReply.mRect);
+      aCharRect = charRect.mReply.mRect.ToUnknownRect();
       if (aWritingMode) {
         *aWritingMode = charRect.GetWritingMode();
       }
@@ -2211,7 +2210,7 @@ IMMHandler::GetCaretRect(nsWindow* aWindow,
       ("IMM: GetCaretRect, FAILED, due to eQueryCaretRect failure"));
     return false;
   }
-  aCaretRect = LayoutDevicePixel::ToUntyped(caretRect.mReply.mRect);
+  aCaretRect = caretRect.mReply.mRect.ToUnknownRect();
   if (aWritingMode) {
     *aWritingMode = caretRect.GetWritingMode();
   }

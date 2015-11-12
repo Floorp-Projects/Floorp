@@ -88,6 +88,8 @@ GetMaskData(Layer* aMaskLayer,
             const gfx::Point& aDeviceOffset,
             AutoMoz2DMaskData* aMaskData);
 
+already_AddRefed<gfx::SourceSurface> GetMaskForLayer(Layer* aLayer, gfx::Matrix* aMaskTransform);
+
 // Paint the current source to a context using a mask, if present
 void
 PaintWithMask(gfxContext* aContext, float aOpacity, Layer* aMaskLayer);

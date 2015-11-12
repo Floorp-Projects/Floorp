@@ -461,6 +461,10 @@ public final class GeckoProfile {
         return mDB;
     }
 
+    public boolean isWebAppProfile() {
+        return mIsWebAppProfile;
+    }
+
     // Warning, Changing the lock file state from outside apis will cause this to become out of sync
     public boolean locked() {
         if (mLocked != LockState.UNDEFINED) {

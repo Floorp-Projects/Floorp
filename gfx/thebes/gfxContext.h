@@ -315,7 +315,8 @@ public:
      * Like Paint, except that it only draws the source where pattern is
      * non-transparent.
      */
-    void Mask(mozilla::gfx::SourceSurface *aSurface, const mozilla::gfx::Matrix& aTransform);
+    void Mask(mozilla::gfx::SourceSurface *aSurface, mozilla::gfx::Float aAlpha, const mozilla::gfx::Matrix& aTransform);
+    void Mask(mozilla::gfx::SourceSurface *aSurface, const mozilla::gfx::Matrix& aTransform) { Mask(aSurface, 1.0f, aTransform); }
 
     /**
      * Shorthand for creating a pattern and calling the pattern-taking
@@ -430,24 +431,24 @@ public:
     /**
      * Groups
      */
-    void PushGroup(gfxContentType content = gfxContentType::COLOR);
+    void PushGroupForBlendBack(gfxContentType content, mozilla::gfx::Float aOpacity = 1.0f,
+                               mozilla::gfx::SourceSurface* aMask = nullptr,
+                               const mozilla::gfx::Matrix& aMaskTransform = mozilla::gfx::Matrix());
+
     /**
-     * Like PushGroup, but if the current surface is gfxContentType::COLOR and
+     * Like PushGroupForBlendBack, but if the current surface is gfxContentType::COLOR and
      * content is gfxContentType::COLOR_ALPHA, makes the pushed surface gfxContentType::COLOR
      * instead and copies the contents of the current surface to the pushed
      * surface. This is good for pushing opacity groups, since blending the
      * group back to the current surface with some alpha applied will give
      * the correct results and using an opaque pushed surface gives better
      * quality and performance.
-     * This API really only makes sense if you do a PopGroupToSource and
-     * immediate Paint with OP_OVER.
      */
-    void PushGroupAndCopyBackground(gfxContentType content = gfxContentType::COLOR);
-    already_AddRefed<gfxPattern> PopGroup();
-    void PopGroupToSource();
-
-    already_AddRefed<mozilla::gfx::SourceSurface>
-    PopGroupToSurface(mozilla::gfx::Matrix* aMatrix);
+    void PushGroupAndCopyBackground(gfxContentType content = gfxContentType::COLOR,
+                                    mozilla::gfx::Float aOpacity = 1.0f,
+                                    mozilla::gfx::SourceSurface* aMask = nullptr,
+                                    const mozilla::gfx::Matrix& aMaskTransform = mozilla::gfx::Matrix());
+    void PopGroupAndBlend();
 
     mozilla::gfx::Point GetDeviceOffset() const;
 
@@ -527,6 +528,11 @@ private:
     Color fontSmoothingBackgroundColor;
     // This is used solely for using minimal intermediate surface size.
     mozilla::gfx::Point deviceOffset;
+    // Support groups
+    mozilla::gfx::Float mBlendOpacity;
+    RefPtr<SourceSurface> mBlendMask;
+    Matrix mBlendMaskTransform;
+    mozilla::DebugOnly<bool> mWasPushedForBlendBack;
   };
 
   // This ensures mPath contains a valid path (in user space!)

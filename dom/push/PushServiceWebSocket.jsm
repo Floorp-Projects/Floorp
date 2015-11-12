@@ -203,26 +203,8 @@ this.PushServiceWebSocket = {
     }
   },
 
-  checkServerURI: function(serverURL) {
-    if (!serverURL) {
-      console.warn("checkServerURI: No dom.push.serverURL found");
-      return;
-    }
-
-    let uri;
-    try {
-      uri = Services.io.newURI(serverURL, null, null);
-    } catch(e) {
-      console.warn("checkServerURI: Error creating valid URI from",
-        "dom.push.serverURL", serverURL);
-      return null;
-    }
-
-    if (uri.scheme !== "wss") {
-      console.warn("checkServerURI: Unsupported websocket scheme", uri.scheme);
-      return null;
-    }
-    return uri;
+  validServerURI: function(serverURI) {
+    return serverURI.scheme == "ws" || serverURI.scheme == "wss";
   },
 
   get _UAID() {
@@ -840,7 +822,7 @@ this.PushServiceWebSocket = {
     if (this._UAID != reply.uaid) {
       console.debug("handleHelloReply: Received new UAID");
 
-      this._mainPushService.dropRegistrations()
+      this._mainPushService.dropUnexpiredRegistrations()
           .then(finishHandshake.bind(this));
 
       return;
@@ -1472,8 +1454,8 @@ PushRecordWebSocket.prototype = Object.create(PushRecord.prototype, {
   },
 });
 
-PushRecordWebSocket.prototype.toRegistration = function() {
-  let registration = PushRecord.prototype.toRegistration.call(this);
-  registration.version = this.version;
-  return registration;
+PushRecordWebSocket.prototype.toSubscription = function() {
+  let subscription = PushRecord.prototype.toSubscription.call(this);
+  subscription.version = this.version;
+  return subscription;
 };

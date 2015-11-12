@@ -45,8 +45,8 @@ HwcUtils::PrepareLayerRects(nsIntRect aVisible,
                             hwc_rect_t* aSourceCrop, hwc_rect_t* aVisibleRegionScreen) {
 
     gfxMatrix aTransform = gfx::ThebesMatrix(aLayerTransform);
-    gfxRect visibleRect(aVisible);
-    gfxRect clip(aClip);
+    gfxRect visibleRect(ThebesRect(aVisible));
+    gfxRect clip(ThebesRect(aClip));
     gfxRect visibleRectScreen = aTransform.TransformBounds(visibleRect);
     // |clip| is guaranteed to be integer
     visibleRectScreen.IntersectRect(visibleRectScreen, clip);
@@ -60,7 +60,7 @@ HwcUtils::PrepareLayerRects(nsIntRect aVisible,
     gfxRect crop = inverse.TransformBounds(visibleRectScreen);
 
     //clip to buffer size
-    crop.IntersectRect(crop, aBufferRect);
+    crop.IntersectRect(crop, ThebesRect(aBufferRect));
     crop.Round();
 
     if (crop.IsEmpty()) {
@@ -103,7 +103,8 @@ HwcUtils::PrepareVisibleRegion(const nsIntRegion& aVisible,
 
     gfxMatrix layerTransform = gfx::ThebesMatrix(aLayerTransform);
     gfxMatrix layerBufferTransform = gfx::ThebesMatrix(aLayerBufferTransform);
-    gfxRect bufferRect = layerBufferTransform.TransformBounds(aBufferRect);
+    gfxRect bufferRect =
+        layerBufferTransform.TransformBounds(ThebesRect(aBufferRect));
     gfxMatrix inverse = gfx::ThebesMatrix(aLayerBufferTransform);
     inverse.Invert();
     nsIntRegionRectIterator rect(aVisible);
@@ -112,9 +113,9 @@ HwcUtils::PrepareVisibleRegion(const nsIntRegion& aVisible,
         hwc_rect_t visibleRectScreen;
         gfxRect screenRect;
 
-        screenRect = layerTransform.TransformBounds(gfxRect(*visibleRect));
+        screenRect = layerTransform.TransformBounds(ThebesRect(*visibleRect));
         screenRect.IntersectRect(screenRect, bufferRect);
-        screenRect.IntersectRect(screenRect, aClip);
+        screenRect.IntersectRect(screenRect, ThebesRect(aClip));
         screenRect.Round();
         if (screenRect.IsEmpty()) {
             continue;
@@ -156,7 +157,7 @@ HwcUtils::CalculateClipRect(const gfx::Matrix& transform,
 
     nsIntRect clip = *aLayerClip;
 
-    gfxRect r(clip);
+    gfxRect r = ThebesRect(clip);
     gfxRect trClip = aTransform.TransformBounds(r);
     trClip.Round();
     gfxUtils::GfxRectToIntRect(trClip, &clip);
