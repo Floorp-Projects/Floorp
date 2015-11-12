@@ -1415,11 +1415,11 @@ ScriptCounts::maybeGetPCCounts(size_t offset) const {
     return elem;
 }
 
-const js::PCCounts*
-ScriptCounts::getImmediatePrecedingPCCounts(size_t offset) const
+js::PCCounts*
+ScriptCounts::getImmediatePrecedingPCCounts(size_t offset)
 {
     PCCounts searched = PCCounts(offset);
-    const PCCounts* elem = std::lower_bound(pcCounts_.begin(), pcCounts_.end(), searched);
+    PCCounts* elem = std::lower_bound(pcCounts_.begin(), pcCounts_.end(), searched);
     if (elem == pcCounts_.end())
         return &pcCounts_.back();
     if (elem->pcOffset() == offset)
@@ -1518,6 +1518,20 @@ JSScript::getHitCount(jsbytecode* pc)
         count -= throwCount->numExec();
         targetOffset = throwCount->pcOffset() - 1;
     } while (true);
+}
+
+void
+JSScript::incHitCount(jsbytecode* pc)
+{
+    MOZ_ASSERT(containsPC(pc));
+    if (pc < main())
+        pc = main();
+
+    ScriptCounts& sc = getScriptCounts();
+    js::PCCounts* baseCount = sc.getImmediatePrecedingPCCounts(pcToOffset(pc));
+    if (!baseCount)
+        return;
+    baseCount->numExec()++;
 }
 
 void
