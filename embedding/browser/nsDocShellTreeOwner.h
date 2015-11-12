@@ -101,6 +101,8 @@ protected:
   void AddToWatcher();
   void RemoveFromWatcher();
 
+  void EnsureContentTreeOwner();
+
   // These helper functions return the correct instances of the requested
   // interfaces.  If the object passed to SetWebBrowserChrome() implements
   // nsISupportsWeakReference, then these functions call QueryReferent on
@@ -127,6 +129,8 @@ protected:
   // and the DOM.
   RefPtr<ChromeTooltipListener> mChromeTooltipListener;
   RefPtr<ChromeContextMenuListener> mChromeContextMenuListener;
+
+  RefPtr<nsDocShellTreeOwner> mContentTreeOwner;
 
   nsCOMPtr<nsIPrompt> mPrompter;
   nsCOMPtr<nsIAuthPrompt> mAuthPrompter;
