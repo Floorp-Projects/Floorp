@@ -296,6 +296,43 @@ jit::PruneUnusedBranches(MIRGenerator* mir, MIRGraph& graph)
             block->getHitState() == MBasicBlock::HitState::Count &&
             block->getHitCount() == 0;
 
+        // Check if the predecessors got accessed a large number of times in
+        // comparisons of the current block, in order to know if our attempt at
+        // removing this block is not premature.
+        if (shouldBailout) {
+            size_t p = numPred;
+            size_t predCount = 0;
+            bool isLoopExit = false;
+            while (p--) {
+                MBasicBlock* pred = block->getPredecessor(p);
+                if (pred->getHitState() == MBasicBlock::HitState::Count)
+                    predCount += pred->getHitCount();
+                isLoopExit |= pred->isLoopHeader() && pred->backedge() != *block;
+            }
+
+            // This assumes that instructions are numbered in sequence, which is
+            // the case after IonBuilder creation of basic blocks.
+            size_t numInst = block->rbegin()->id() - block->begin()->id();
+
+            // This sum is not homogeneous but gives good results on benchmarks
+            // like Kraken and Octane. The current block has not been executed
+            // yet, and ...
+            //
+            //   1. If the number of times the predecessor got executed is
+            //      larger, then we are less likely to hit this block.
+            //
+            //   2. If the block is large, then this is likely a corner case,
+            //      and thus we are less likely to hit this block.
+            if (predCount + numInst < 75)
+                shouldBailout = false;
+
+            // If this is the exit block of a loop, then keep this basic
+            // block. This heuristic is useful as a bailout is often much more
+            // costly than a simple exit sequence.
+            if (isLoopExit)
+                shouldBailout = false;
+        }
+
         // Continue to the next basic block if the current basic block can
         // remain unchanged.
         if (!isUnreachable && !shouldBailout)
