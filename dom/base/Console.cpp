@@ -498,20 +498,16 @@ private:
         frame = *mCallData->mTopStackFrame;
       }
 
-      nsString id = frame.mFilename;
-      nsString innerID;
+      nsString id;
       if (mWorkerPrivate->IsSharedWorker()) {
-        innerID = NS_LITERAL_STRING("SharedWorker");
+        id = NS_LITERAL_STRING("SharedWorker");
       } else if (mWorkerPrivate->IsServiceWorker()) {
-        innerID = NS_LITERAL_STRING("ServiceWorker");
-        // Use scope as ID so the webconsole can decide if the message should
-        // show up per tab
-        id.AssignWithConversion(mWorkerPrivate->WorkerName());
+        id = NS_LITERAL_STRING("ServiceWorker");
       } else {
-        innerID = NS_LITERAL_STRING("Worker");
+        id = NS_LITERAL_STRING("Worker");
       }
 
-      mCallData->SetIDs(id, innerID);
+      mCallData->SetIDs(frame.mFilename, id);
     }
 
     // Now we could have the correct window (if we are not window-less).
