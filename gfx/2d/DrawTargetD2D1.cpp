@@ -254,8 +254,9 @@ DrawTargetD2D1::ClearRect(const Rect &aRect)
     return;
   }
 
-  mDC->SetTarget(mTempBitmap);
-  mDC->Clear();
+  RefPtr<ID2D1CommandList> list;
+  mDC->CreateCommandList(getter_AddRefs(list));
+  mDC->SetTarget(list);
 
   IntRect addClipRect;
   RefPtr<ID2D1Geometry> geom = GetClippedGeometry(&addClipRect);
@@ -267,7 +268,9 @@ DrawTargetD2D1::ClearRect(const Rect &aRect)
   mDC->PopAxisAlignedClip();
 
   mDC->SetTarget(mBitmap);
-  mDC->DrawImage(mTempBitmap, D2D1_INTERPOLATION_MODE_NEAREST_NEIGHBOR, D2D1_COMPOSITE_MODE_DESTINATION_OUT);
+  list->Close();
+
+  mDC->DrawImage(list, D2D1_INTERPOLATION_MODE_NEAREST_NEIGHBOR, D2D1_COMPOSITE_MODE_DESTINATION_OUT);
 
   PopClip();
 
@@ -861,18 +864,8 @@ DrawTargetD2D1::Init(ID3D11Texture2D* aTexture, SurfaceFormat aFormat)
   mFormat = aFormat;
   D3D11_TEXTURE2D_DESC desc;
   aTexture->GetDesc(&desc);
-  desc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
   mSize.width = desc.Width;
   mSize.height = desc.Height;
-  props.pixelFormat.alphaMode = D2D1_ALPHA_MODE_PREMULTIPLIED;
-  props.pixelFormat.format = DXGI_FORMAT_B8G8R8A8_UNORM;
-
-  hr = mDC->CreateBitmap(D2DIntSize(mSize), nullptr, 0, props, (ID2D1Bitmap1**)getter_AddRefs(mTempBitmap));
-
-  if (FAILED(hr)) {
-    gfxCriticalError(CriticalLog::DefaultOptions(Factory::ReasonableSurfaceSize(mSize))) << "[D2D1.1] 2CreateBitmap failure " << mSize << " Code: " << hexa(hr);
-    return false;
-  }
 
   // This single solid color brush system is not very 'threadsafe', however,
   // issueing multiple drawing commands simultaneously to a single drawtarget
@@ -926,16 +919,6 @@ DrawTargetD2D1::Init(const IntSize &aSize, SurfaceFormat aFormat)
 
   if (FAILED(hr)) {
     gfxCriticalError() << "[D2D1.1] 3CreateBitmap failure " << aSize << " Code: " << hexa(hr) << " format " << (int)aFormat;
-    return false;
-  }
-
-  props.pixelFormat.alphaMode = D2D1_ALPHA_MODE_PREMULTIPLIED;
-  props.pixelFormat.format = DXGI_FORMAT_B8G8R8A8_UNORM;
-
-  hr = mDC->CreateBitmap(D2DIntSize(aSize), nullptr, 0, props, (ID2D1Bitmap1**)getter_AddRefs(mTempBitmap));
-
-  if (FAILED(hr)) {
-    gfxCriticalError(CriticalLog::DefaultOptions(Factory::ReasonableSurfaceSize(aSize))) << "[D2D1.1] failed to create new TempBitmap " << aSize << " Code: " << hexa(hr);
     return false;
   }
 
@@ -1045,8 +1028,8 @@ DrawTargetD2D1::PrepareForDrawing(CompositionOp aOp, const Pattern &aPattern)
 
   PopAllClips();
 
-  mDC->SetTarget(mTempBitmap);
-  mDC->Clear(D2D1::ColorF(0, 0));
+  mDC->CreateCommandList(getter_AddRefs(mCommandList));
+  mDC->SetTarget(mCommandList);
 
   PushAllClips();
   FlushTransformToDC();
@@ -1065,10 +1048,11 @@ DrawTargetD2D1::FinalizeDrawing(CompositionOp aOp, const Pattern &aPattern)
 
   PopAllClips();
 
-  RefPtr<ID2D1Image> image;
-  mDC->GetTarget(getter_AddRefs(image));
-
   mDC->SetTarget(mBitmap);
+  mCommandList->Close();
+
+  RefPtr<ID2D1CommandList> source = mCommandList;
+  mCommandList = nullptr;
 
   mDC->SetTransform(D2D1::IdentityMatrix());
   mTransformDirty = true;
@@ -1096,7 +1080,7 @@ DrawTargetD2D1::FinalizeDrawing(CompositionOp aOp, const Pattern &aPattern)
       } else {
         PushAllClips();
       }
-      mDC->DrawImage(image, D2D1_INTERPOLATION_MODE_NEAREST_NEIGHBOR, D2DCompositionMode(aOp));
+      mDC->DrawImage(source, D2D1_INTERPOLATION_MODE_NEAREST_NEIGHBOR, D2DCompositionMode(aOp));
 
       if (tmpBitmap) {
         RefPtr<ID2D1BitmapBrush> brush;
@@ -1135,7 +1119,7 @@ DrawTargetD2D1::FinalizeDrawing(CompositionOp aOp, const Pattern &aPattern)
     tmpBitmap->CopyFromBitmap(nullptr, mBitmap, nullptr);
 
     mBlendEffect->SetInput(0, tmpBitmap);
-    mBlendEffect->SetInput(1, mTempBitmap);
+    mBlendEffect->SetInput(1, source);
     mBlendEffect->SetValue(D2D1_BLEND_PROP_MODE, D2DBlendMode(aOp));
 
     PushAllClips();
@@ -1168,7 +1152,7 @@ DrawTargetD2D1::FinalizeDrawing(CompositionOp aOp, const Pattern &aPattern)
   radialGradientEffect->SetValue(RADIAL_PROP_RADIUS_2, pat->mRadius2);
   radialGradientEffect->SetValue(RADIAL_PROP_RADIUS_2, pat->mRadius2);
   radialGradientEffect->SetValue(RADIAL_PROP_TRANSFORM, D2DMatrix(pat->mMatrix * mTransform));
-  radialGradientEffect->SetInput(0, image);
+  radialGradientEffect->SetInput(0, source);
 
   mDC->DrawImage(radialGradientEffect, D2D1_INTERPOLATION_MODE_NEAREST_NEIGHBOR, D2DCompositionMode(aOp));
 }
