@@ -6245,6 +6245,15 @@ SetRuntimeOptions(JSRuntime* rt, const OptionParser& op)
             return OptionFailure("ion-edgecase-analysis", str);
     }
 
+    if (const char* str = op.getStringOption("ion-pgo")) {
+        if (strcmp(str, "on") == 0)
+            jit::js_JitOptions.disablePgo = false;
+        else if (strcmp(str, "off") == 0)
+            jit::js_JitOptions.disablePgo = true;
+        else
+            return OptionFailure("ion-pgo", str);
+    }
+
     if (const char* str = op.getStringOption("ion-range-analysis")) {
         if (strcmp(str, "on") == 0)
             jit::js_JitOptions.disableRangeAnalysis = false;
@@ -6599,6 +6608,8 @@ main(int argc, char** argv, char** envp)
                                "Loop invariant code motion (default: on, off to disable)")
         || !op.addStringOption('\0', "ion-edgecase-analysis", "on/off",
                                "Find edge cases where Ion can avoid bailouts (default: on, off to disable)")
+        || !op.addStringOption('\0', "ion-pgo", "on/off",
+                               "Profile guided optimization (default: off, on to enable)")
         || !op.addStringOption('\0', "ion-range-analysis", "on/off",
                                "Range analysis (default: on, off to disable)")
 #if defined(__APPLE__)

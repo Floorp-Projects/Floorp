@@ -259,6 +259,8 @@ JSONSpewer::spewMIR(MIRGraph* mir)
         beginObject();
 
         integerProperty("number", block->id());
+        if (block->getHitState() == MBasicBlock::HitState::Count)
+            integerProperty("count", block->getHitCount());
 
         beginListProperty("attributes");
         if (block->isLoopBackedge())
