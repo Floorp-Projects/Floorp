@@ -336,8 +336,14 @@ struct BytecodeEmitter
 
     void setJumpOffsetAt(ptrdiff_t off);
 
+    // Control whether emitTree emits a line number note.
+    enum EmitLineNumberNote {
+        EMIT_LINENOTE,
+        SUPPRESS_LINENOTE
+    };
+
     // Emit code for the tree rooted at pn.
-    bool emitTree(ParseNode* pn);
+    bool emitTree(ParseNode* pn, EmitLineNumberNote emitLineNote = EMIT_LINENOTE);
 
     // Emit function code for the tree rooted at body.
     bool emitFunctionScript(ParseNode* body);
