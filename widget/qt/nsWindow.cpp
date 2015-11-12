@@ -466,7 +466,8 @@ nsWindow::Resize(double aWidth, double aHeight, bool aRepaint)
     // synthesize a resize event if this isn't a toplevel
     if (mIsTopLevel || mListenForResizes) {
         nsEventStatus status;
-        DispatchResizeEvent(mBounds, status);
+        DispatchResizeEvent(LayoutDeviceIntRect::FromUnknownRect(mBounds),
+                            status);
     }
 
     NotifyRollupGeometryChange();
@@ -529,7 +530,8 @@ nsWindow::Resize(double aX, double aY, double aWidth, double aHeight,
     if (mIsTopLevel || mListenForResizes) {
         // synthesize a resize event
         nsEventStatus status;
-        DispatchResizeEvent(mBounds, status);
+        DispatchResizeEvent(LayoutDeviceIntRect::FromUnknownRect(mBounds),
+                            status);
     }
 
     if (aRepaint) {
@@ -907,10 +909,10 @@ nsWindow::moveEvent(QMoveEvent* aEvent)
 nsEventStatus
 nsWindow::resizeEvent(QResizeEvent* aEvent)
 {
-    nsIntRect rect;
+    LayoutDeviceIntRect rect;
 
     // Generate XPFE resize event
-    GetBoundsUntyped(rect);
+    GetBounds(rect);
 
     rect.width = aEvent->size().width();
     rect.height = aEvent->size().height();
@@ -1368,7 +1370,8 @@ nsWindow::DispatchDeactivateEventOnTopLevelWindow(void)
 }
 
 void
-nsWindow::DispatchResizeEvent(nsIntRect &aRect, nsEventStatus &aStatus)
+nsWindow::DispatchResizeEvent(LayoutDeviceIntRect& aRect,
+                              nsEventStatus& aStatus)
 {
     aStatus = nsEventStatus_eIgnore;
     if (mWidgetListener &&
