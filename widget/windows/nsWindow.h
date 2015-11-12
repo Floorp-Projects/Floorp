@@ -120,7 +120,7 @@ public:
   NS_IMETHOD              GetScreenBoundsUntyped(nsIntRect &aRect);
   NS_IMETHOD              GetRestoredBoundsUntyped(nsIntRect &aRect) override;
   NS_IMETHOD              GetClientBoundsUntyped(nsIntRect &aRect);
-  virtual nsIntPoint      GetClientOffset();
+  virtual nsIntPoint      GetClientOffsetUntyped() override;
   void                    SetBackgroundColor(const nscolor &aColor);
   NS_IMETHOD              SetCursor(imgIContainer* aCursor,
                                     uint32_t aHotspotX, uint32_t aHotspotY);

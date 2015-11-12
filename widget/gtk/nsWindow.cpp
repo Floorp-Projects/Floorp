@@ -1515,7 +1515,7 @@ nsWindow::GetClientBoundsUntyped(nsIntRect &aRect)
     // outer bounds, but whose width/height represent the size of the inner
     // bounds (which is messed up).
     GetBoundsUntyped(aRect);
-    aRect.MoveBy(GetClientOffset());
+    aRect.MoveBy(GetClientOffsetUntyped());
 
     return NS_OK;
 }
@@ -1563,7 +1563,7 @@ nsWindow::UpdateClientOffset()
 }
 
 nsIntPoint
-nsWindow::GetClientOffset()
+nsWindow::GetClientOffsetUntyped()
 {
     return mClientOffset;
 }

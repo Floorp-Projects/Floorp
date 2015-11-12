@@ -473,7 +473,7 @@ nsXULPopupManager::PopupMoved(nsIFrame* aFrame, nsIntPoint aPnt)
   nsIntRect curDevSize = view->CalcWidgetBounds(eWindowType_popup);
   nsIWidget* widget = menuPopupFrame->GetWidget();
   if (curDevSize.x == aPnt.x && curDevSize.y == aPnt.y &&
-      (!widget || widget->GetClientOffset() == menuPopupFrame->GetLastClientOffset())) {
+      (!widget || widget->GetClientOffsetUntyped() == menuPopupFrame->GetLastClientOffset())) {
     return;
   }
 

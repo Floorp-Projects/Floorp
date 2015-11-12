@@ -1239,7 +1239,7 @@ NS_METHOD nsBaseWidget::SetWindowClass(const nsAString& xulWinType)
 
 NS_METHOD nsBaseWidget::MoveClient(double aX, double aY)
 {
-  nsIntPoint clientOffset(GetClientOffset());
+  LayoutDeviceIntPoint clientOffset(GetClientOffset());
 
   // GetClientOffset returns device pixels; scale back to display pixels
   // if that's what this widget uses for the Move/Resize APIs
@@ -1290,7 +1290,7 @@ NS_METHOD nsBaseWidget::ResizeClient(double aX,
   aWidth = mBounds.width * scale + (aWidth - clientBounds.width * scale);
   aHeight = mBounds.height * scale + (aHeight - clientBounds.height * scale);
 
-  nsIntPoint clientOffset(GetClientOffset());
+  LayoutDeviceIntPoint clientOffset(GetClientOffset());
   aX -= clientOffset.x * scale;
   aY -= clientOffset.y * scale;
 
@@ -1340,7 +1340,8 @@ NS_METHOD nsBaseWidget::GetRestoredBoundsUntyped(nsIntRect &aRect)
   return GetScreenBoundsUntyped(aRect);
 }
 
-nsIntPoint nsBaseWidget::GetClientOffset()
+nsIntPoint
+nsBaseWidget::GetClientOffsetUntyped()
 {
   return nsIntPoint(0, 0);
 }
