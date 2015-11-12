@@ -4,7 +4,10 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DIST_INSTALL = False
+FINAL_TARGET = '_tests/xpcshell/js/xpconnect/tests/components/native/'
+EXTRA_COMPONENTS += [
+    'xpctest.manifest',
+]
 
 UNIFIED_SOURCES += [
     'xpctest_attributes.cpp',
@@ -14,12 +17,6 @@ UNIFIED_SOURCES += [
 ]
 
 XPCOMBinaryComponent('xpctest')
-
-DEFINES['LIBRARY_FILENAME'] = '%s%s%s' % (
-    CONFIG['DLL_PREFIX'],
-    LIBRARY_NAME,
-    CONFIG['DLL_SUFFIX']
-)
 
 if CONFIG['GNU_CXX']:
     CXXFLAGS += ['-Wshadow']
