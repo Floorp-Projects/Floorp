@@ -408,3 +408,4 @@ dictionary ChannelPixelLayout {
     required unsigned long              skip;
 };
 
+typedef sequence<ChannelPixelLayout> ImagePixelLayout;
