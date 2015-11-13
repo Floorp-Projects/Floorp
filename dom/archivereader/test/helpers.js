@@ -10,8 +10,15 @@ function runTest()
   SimpleTest.waitForExplicitFinish();
 
   SpecialPowers.pushPrefEnv({'set': [ ["dom.archivereader.enabled", true] ]}, function() {
-    testGenerator = testSteps();
-    return testGenerator.next();
+    SpecialPowers.createFiles(filesToCreate(),
+                              function (files) {
+                                testGenerator = testSteps(files);
+                                return testGenerator.next();
+                              },
+                              function (msg) {
+                                ok(false, "File creation error: " + msg);
+                                finishTest();
+                              });
   });
 }
 

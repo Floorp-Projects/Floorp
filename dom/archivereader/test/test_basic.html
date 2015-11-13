@@ -10,57 +10,7 @@
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 
   <script type="text/javascript;version=1.7">
-  function createZipFileWithData(fileData) {
-    var Cc = SpecialPowers.Cc;
-    var Ci = SpecialPowers.Ci;
-
-    var dirSvc = Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties);
-    var testFile = dirSvc.get("ProfD", Ci.nsIFile);
-    testFile.append("fileArchiveReader.zip");
-    var outStream = Cc["@mozilla.org/network/file-output-stream;1"].createInstance(Ci.nsIFileOutputStream);
-    outStream.init(testFile, 0x02 | 0x08 | 0x20, // write, create, truncate
-                   0666, 0);
-    outStream.write(fileData, fileData.length);
-    outStream.close();
-
-    var fileList = document.getElementById('fileList');
-    SpecialPowers.wrap(fileList).value = testFile.path;
-
-    return fileList.files[0];
-  }
-
-  function createTextFileWithData(fileData) {
-    var Cc = SpecialPowers.Cc;
-    var Ci = SpecialPowers.Ci;
-
-    var dirSvc = Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties);
-    var testFile = dirSvc.get("ProfD", Ci.nsIFile);
-    testFile.append("fileArchiveReader.txt");
-    var outStream = Cc["@mozilla.org/network/file-output-stream;1"].createInstance(Ci.nsIFileOutputStream);
-    outStream.init(testFile, 0x02 | 0x08 | 0x20, // write, create, truncate
-                   0666, 0);
-    outStream.write(fileData, fileData.length);
-    outStream.close();
-
-    var fileList = document.getElementById('fileList');
-    SpecialPowers.wrap(fileList).value = testFile.path;
-
-    return fileList.files[0];
-  }
-
-  handleFinished = 0;
-  function markTestDone() {
-    ++handleFinished;
-    if (isFinished()) {
-      finishTest();
-    }
-  }
-  function isFinished() {
-    return handleFinished == 6;
-  }
-
-  function testSteps()
-  {
+  function filesToCreate() {
     var binaryString = '504B03040A00000000002E6BF14000000000000000000000000005001C00746573742F555409000337CA055039CA055075780B' +
                        '000104E803000004E8030000504B03041400000008002D6BF1401780E15015000000580200000A001C00746573742F612E7478' +
                        '74555409000336CA05503ACA055075780B000104E803000004E8030000CB48CDC9C95728CF2FCA49E1CA18658FB2A9C4060050' +
@@ -78,8 +28,25 @@
       binaryData += String.fromCharCode(parseInt(hex,16));
     }
 
-    var binaryFile = createZipFileWithData(binaryData);
-    var textFile = createTextFileWithData("Hello World");
+    return [ {name: "fileArchiveReader.zip", data: binaryData},
+             {name: "fileArchiveReader.txt", data: "Hello World"}];
+  }
+
+  handleFinished = 0;
+  function markTestDone() {
+    ++handleFinished;
+    if (isFinished()) {
+      finishTest();
+    }
+  }
+  function isFinished() {
+    return handleFinished == 6;
+  }
+
+  function testSteps(files)
+  {
+    var binaryFile = files[0];
+    var textFile = files[1];
 
     var status;
 
@@ -254,7 +221,6 @@
 
 <body onload="runTest();">
 <p id="display">
-  <input id="fileList" type="file"></input>
 </p>
 </body>
 
