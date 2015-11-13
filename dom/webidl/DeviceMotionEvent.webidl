@@ -47,7 +47,6 @@ dictionary DeviceMotionEventInit : EventInit {
 
 // Mozilla extensions.
 partial interface DeviceMotionEvent {
-  [Throws]
   void initDeviceMotionEvent(DOMString type,
                              boolean canBubble,
                              boolean cancelable,

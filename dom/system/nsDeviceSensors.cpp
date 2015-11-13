@@ -387,15 +387,13 @@ nsDeviceSensors::FireDOMMotionEvent(nsIDOMDocument *domdoc,
 
   DeviceMotionEvent* me = static_cast<DeviceMotionEvent*>(event.get());
 
-  ErrorResult rv;
   me->InitDeviceMotionEvent(NS_LITERAL_STRING("devicemotion"),
                             true,
                             false,
                             *mLastAcceleration,
                             *mLastAccelerationIncludingGravity,
                             *mLastRotationRate,
-                            Nullable<double>(DEFAULT_SENSOR_POLL),
-                            rv);
+                            Nullable<double>(DEFAULT_SENSOR_POLL));
 
   event->SetTrusted(true);
 
