@@ -5,7 +5,6 @@ XPCOMUtils.defineLazyServiceGetter(this, "aboutNewTabService",
 Cu.import("resource://gre/modules/ExtensionUtils.jsm");
 var {
   EventManager,
-  ignoreEvent,
   runSafe,
 } = ExtensionUtils;
 

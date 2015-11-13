@@ -20,7 +20,6 @@ interface StorageEvent : Event
   readonly attribute Storage? storageArea;
 
   // Bug 1016053 - This is not spec compliant.
-  [Throws]
   void initStorageEvent(DOMString type,
                         boolean canBubble,
                         boolean cancelable,

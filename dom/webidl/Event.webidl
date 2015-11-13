@@ -43,7 +43,6 @@ interface Event {
   [Pure]
   readonly attribute DOMHighResTimeStamp timeStamp;
 
-  [Throws]
   void initEvent(DOMString type, boolean bubbles, boolean cancelable);
 };
 

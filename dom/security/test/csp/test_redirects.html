@@ -86,10 +86,16 @@ var testExpectedResults = { "font-src": true,
                             "worker-redir": false,
                             "xhr-src": true,
                             "xhr-src-redir": false,
-                            "script-src-from-worker": true, /* test runs */
-                            "script-src-redir-from-worker": false, /* redir is blocked */
-                            "img-src-from-css": true, /* test runs */
-                            "img-src-redir-from-css": false, /* redir is blocked */
+                            "from-worker": true,
+                            "script-src-redir-from-worker": true, /* redir is allowed since policy isn't inherited */
+                            "xhr-src-redir-from-worker": true, /* redir is allowed since policy isn't inherited */
+                            "fetch-src-redir-from-worker": true, /* redir is allowed since policy isn't inherited */
+                            "from-blob-worker": true,
+                            "script-src-redir-from-blob-worker": false,
+                            "xhr-src-redir-from-blob-worker": false,
+                            "fetch-src-redir-from-blob-worker": false,
+                            "img-src-from-css": true,
+                            "img-src-redir-from-css": false,
                           };
 
 // takes the name of the test, the URL that was tested, and whether the

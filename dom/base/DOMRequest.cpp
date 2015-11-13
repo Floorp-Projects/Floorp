@@ -193,11 +193,7 @@ DOMRequest::FireEvent(const nsAString& aType, bool aBubble, bool aCancelable)
   }
 
   RefPtr<Event> event = NS_NewDOMEvent(this, nullptr, nullptr);
-  nsresult rv = event->InitEvent(aType, aBubble, aCancelable);
-  if (NS_FAILED(rv)) {
-    return;
-  }
-
+  event->InitEvent(aType, aBubble, aCancelable);
   event->SetTrusted(true);
 
   bool dummy;

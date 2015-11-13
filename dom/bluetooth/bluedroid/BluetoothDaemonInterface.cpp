@@ -278,13 +278,6 @@ BluetoothDaemonProtocol::FetchResultHandler(
 // Interface
 //
 
-/* returns the container structure of a variable; _t is the container's
- * type, _v the name of the variable, and _m is _v's field within _t
- */
-#define container(_t, _v, _m) \
-  ( (_t*)( ((const unsigned char*)(_v)) - offsetof(_t, _m) ) )
-
-
 static bool
 IsDaemonRunning()
 {

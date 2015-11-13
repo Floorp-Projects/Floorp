@@ -483,11 +483,7 @@ nsPerformance::DispatchBufferFullEvent()
 {
   RefPtr<Event> event = NS_NewDOMEvent(this, nullptr, nullptr);
   // it bubbles, and it isn't cancelable
-  nsresult rv = event->InitEvent(NS_LITERAL_STRING("resourcetimingbufferfull"),
-                                 true, false);
-  if (NS_FAILED(rv)) {
-    return;
-  }
+  event->InitEvent(NS_LITERAL_STRING("resourcetimingbufferfull"), true, false);
   event->SetTrusted(true);
   DispatchDOMEvent(nullptr, event, nullptr, nullptr);
 }

@@ -1,16 +1,28 @@
-// some javascript for the CSP XHR tests
-//
+function doXHR(uri) {
+  try {
+    var xhr = new XMLHttpRequest();
+    xhr.open("GET", uri);
+    xhr.send();
+  } catch(ex) {}
+}
 
+doXHR("http://mochi.test:8888/tests/dom/security/test/csp/file_CSP.sjs?testid=xhr_good");
+doXHR("http://example.com/tests/dom/security/test/csp/file_CSP.sjs?testid=xhr_bad");
+fetch("http://mochi.test:8888/tests/dom/security/test/csp/file_CSP.sjs?testid=fetch_good");
+fetch("http://example.com/tests/dom/security/test/csp/file_CSP.sjs?testid=fetch_bad");
+navigator.sendBeacon("http://mochi.test:8888/tests/dom/security/test/csp/file_CSP.sjs?testid=beacon_good");
 try {
-  var xhr_good = new XMLHttpRequest();
-  var xhr_good_uri ="http://mochi.test:8888/tests/dom/security/test/csp/file_CSP.sjs?testid=xhr_good";
-  xhr_good.open("GET", xhr_good_uri, true);
-  xhr_good.send(null);
-} catch(e) {}
+  navigator.sendBeacon("http://example.com/tests/dom/security/test/csp/file_CSP.sjs?testid=beacon_bad");
+} catch(ex) {}
 
-try {
-  var xhr_bad = new XMLHttpRequest();
-  var xhr_bad_uri ="http://example.com/tests/dom/security/test/csp/file_CSP.sjs?testid=xhr_bad";
-  xhr_bad.open("GET", xhr_bad_uri, true);
-  xhr_bad.send(null);
-} catch(e) {}
+
+new Worker("file_main_worker.js").postMessage({inherited : false});
+
+
+var blobxhr = new XMLHttpRequest();
+blobxhr.open("GET", "file_main_worker.js")
+blobxhr.responseType = "blob";
+blobxhr.send();
+blobxhr.onload = () => {
+  new Worker(URL.createObjectURL(blobxhr.response)).postMessage({inherited : true});
+}
