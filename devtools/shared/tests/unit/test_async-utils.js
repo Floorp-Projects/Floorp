@@ -12,16 +12,15 @@ Object.defineProperty(this, "Promise", {
   value: require("promise"),
   writable: false, configurable: false
 });
-const {async, asyncOnce, promiseInvoke, promiseCall} = require("devtools/shared/async-utils");
+const {asyncOnce, promiseInvoke, promiseCall} = require("devtools/shared/async-utils");
 
 function run_test() {
   do_test_pending();
   Task.spawn(function*() {
-    for (let helper of [async, asyncOnce]) {
-      yield test_async_args(helper);
-      yield test_async_return(helper);
-      yield test_async_throw(helper);
-    }
+    yield test_async_args(asyncOnce);
+    yield test_async_return(asyncOnce);
+    yield test_async_throw(asyncOnce);
+
     yield test_async_once();
     yield test_async_invoke();
     do_test_finished();
