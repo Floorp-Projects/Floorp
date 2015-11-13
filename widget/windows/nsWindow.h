@@ -120,7 +120,7 @@ public:
   NS_IMETHOD              GetScreenBounds(mozilla::LayoutDeviceIntRect &aRect) override;
   NS_IMETHOD              GetRestoredBounds(mozilla::LayoutDeviceIntRect &aRect) override;
   NS_IMETHOD              GetClientBounds(mozilla::LayoutDeviceIntRect &aRect) override;
-  virtual nsIntPoint      GetClientOffsetUntyped() override;
+  virtual mozilla::LayoutDeviceIntPoint GetClientOffset() override;
   void                    SetBackgroundColor(const nscolor &aColor);
   NS_IMETHOD              SetCursor(imgIContainer* aCursor,
                                     uint32_t aHotspotX, uint32_t aHotspotY);

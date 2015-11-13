@@ -195,7 +195,7 @@ public:
                             mozilla::LayoutDeviceIntMargin &margins) override;
   NS_IMETHOD              SetNonClientMargins(
                             mozilla::LayoutDeviceIntMargin &margins) override;
-  virtual nsIntPoint      GetClientOffsetUntyped() override;
+  virtual mozilla::LayoutDeviceIntPoint GetClientOffset() override;
   NS_IMETHOD              EnableDragDrop(bool aEnable) override;
   NS_IMETHOD              GetAttention(int32_t aCycleCount) override;
   virtual bool            HasPendingInputEvent() override;
