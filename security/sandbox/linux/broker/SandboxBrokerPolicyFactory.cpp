@@ -5,6 +5,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "SandboxBrokerPolicyFactory.h"
+#include "SandboxInfo.h"
 
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Preferences.h"
@@ -27,6 +28,12 @@ SandboxBrokerPolicyFactory::IsSystemSupported() {
   // "goldfish" -> emulator.  Other devices can be added when we're
   // reasonably sure they work.  Eventually this won't be needed....
   if (length > 0 && strcmp(hardware, "goldfish") == 0) {
+    return true;
+  }
+
+  // When broker is running in permissive mode, we enable it
+  // automatically regardless of the device.
+  if (SandboxInfo::Get().Test(SandboxInfo::kPermissive)) {
     return true;
   }
 #endif
