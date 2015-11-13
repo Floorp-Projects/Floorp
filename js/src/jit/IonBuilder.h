@@ -1016,6 +1016,10 @@ class IonBuilder
     // A builder is inextricably tied to a particular script.
     JSScript* script_;
 
+    // script->hasIonScript() at the start of the compilation. Used to avoid
+    // calling hasIonScript() from background compilation threads.
+    bool scriptHasIonScript_;
+
     // If off thread compilation is successful, the final code generator is
     // attached here. Code has been generated, but not linked (there is not yet
     // an IonScript). This is heap allocated, and must be explicitly destroyed,
@@ -1035,6 +1039,7 @@ class IonBuilder
     JSObject* checkNurseryObject(JSObject* obj);
 
     JSScript* script() const { return script_; }
+    bool scriptHasIonScript() const { return scriptHasIonScript_; }
 
     CodeGenerator* backgroundCodegen() const { return backgroundCodegen_; }
     void setBackgroundCodegen(CodeGenerator* codegen) { backgroundCodegen_ = codegen; }
