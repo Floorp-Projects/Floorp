@@ -704,7 +704,7 @@
                 <image id="plugins-notification-icon" class="notification-anchor-icon" role="button"
                        aria-label="&urlbar.pluginsNotificationAnchor.label;"/>
                 <image id="web-notifications-notification-icon" class="notification-anchor-icon" role="button"
-                       aria-label="&urlbar.webNotsNotificationAnchor2.label;"/>
+                       aria-label="&urlbar.webNotsNotificationAnchor3.label;"/>
                 <image id="webRTC-shareDevices-notification-icon" class="notification-anchor-icon" role="button"
                        aria-label="&urlbar.webRTCShareDevicesNotificationAnchor.label;"/>
                 <image id="webRTC-sharingDevices-notification-icon" class="notification-anchor-icon" role="button"
@@ -738,13 +738,11 @@
                    onclick="gIdentityHandler.handleIdentityButtonEvent(event);"
                    onkeypress="gIdentityHandler.handleIdentityButtonEvent(event);"
                    ondragstart="gIdentityHandler.onDragStart(event);">
-                <hbox id="identity-icons"
-                      consumeanchor="identity-box">
-                  <image id="tracking-protection-icon"/>
-                  <image id="page-proxy-favicon"
-                         onclick="PageProxyClickHandler(event);"
-                         pageproxystate="invalid"/>
-                </hbox>
+                <image id="identity-icon"
+                       consumeanchor="identity-box"
+                       onclick="PageProxyClickHandler(event);"/>
+                <image id="tracking-protection-icon"/>
+                <image id="connection-icon"/>
                 <hbox id="identity-icon-labels">
                   <label id="identity-icon-label" class="plain" flex="1"/>
                   <label id="identity-icon-country-label" class="plain"/>

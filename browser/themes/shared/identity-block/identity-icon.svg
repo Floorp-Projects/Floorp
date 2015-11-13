@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+     width="48" height="16" viewBox="0 0 32 16">
+  <defs>
+    <circle id="shape-circle-base" cx="8" cy="8" r="7" />
+    <g id="shape-i">
+      <circle cx="8" cy="5" r="1" />
+      <rect x="7" y="7" width="2" height="5" rx="1" ry="1" />
+    </g>
+    <mask id="mask-ring-cutout">
+      <rect width="16" height="16" fill="#000" />
+      <use xlink:href="#shape-circle-base" fill="#fff" />
+      <circle cx="8" cy="8" r="6" fill="#000" />
+    </mask>
+  </defs>
+
+  <view id="normal" viewBox="0 0 16 16"/>
+  <g>
+    <use xlink:href="#shape-circle-base" mask="url(#mask-ring-cutout)" fill="#999" />
+    <use xlink:href="#shape-i" fill="#999" />
+  </g>
+
+  <view id="hover" viewBox="16 0 16 16"/>
+  <g transform="translate(16)">
+    <use xlink:href="#shape-circle-base" fill="#4c9ed9" />
+    <use xlink:href="#shape-i" fill="#fff" />
+  </g>
+</svg>
