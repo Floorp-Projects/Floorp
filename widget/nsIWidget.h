@@ -808,13 +808,13 @@ class nsIWidget : public nsISupports {
      * @param aRect   On return it holds the  x, y, width and height of
      *                this widget.
      */
-    NS_IMETHOD GetBounds(mozilla::LayoutDeviceIntRect &aRect) {
-      nsIntRect tmp;
-      nsresult rv = GetBoundsUntyped(tmp);
-      aRect = mozilla::LayoutDeviceIntRect::FromUnknownRect(tmp);
+    NS_IMETHOD GetBounds(mozilla::LayoutDeviceIntRect &aRect) = 0;
+    NS_IMETHOD GetBoundsUntyped(nsIntRect &aRect) {
+      mozilla::LayoutDeviceIntRect tmp;
+      nsresult rv = GetBounds(tmp);
+      aRect = tmp.ToUnknownRect();
       return rv;
     }
-    NS_IMETHOD GetBoundsUntyped(nsIntRect &aRect) = 0;
 
     /**
      * Get this widget's outside dimensions in global coordinates. This
@@ -826,13 +826,13 @@ class nsIWidget : public nsISupports {
      * @param aRect   On return it holds the  x, y, width and height of
      *                this widget.
      */
-    NS_IMETHOD GetScreenBounds(mozilla::LayoutDeviceIntRect &aRect) {
-      nsIntRect tmp;
-      nsresult rv = GetScreenBoundsUntyped(tmp);
-      aRect = mozilla::LayoutDeviceIntRect::FromUnknownRect(tmp);
+    NS_IMETHOD GetScreenBounds(mozilla::LayoutDeviceIntRect &aRect) = 0;
+    NS_IMETHOD GetScreenBoundsUntyped(nsIntRect &aRect) {
+      mozilla::LayoutDeviceIntRect tmp;
+      nsresult rv = GetScreenBounds(tmp);
+      aRect = tmp.ToUnknownRect();
       return rv;
     }
-    NS_IMETHOD GetScreenBoundsUntyped(nsIntRect &aRect) = 0;
 
     /**
      * Similar to GetScreenBounds except that this function will always
@@ -860,13 +860,13 @@ class nsIWidget : public nsISupports {
      * @param aRect   On return it holds the  x. y, width and height of
      *                the client area of this widget.
      */
-    NS_IMETHOD GetClientBounds(mozilla::LayoutDeviceIntRect &aRect) {
-      nsIntRect tmp;
-      nsresult rv = GetClientBoundsUntyped(tmp);
-      aRect = mozilla::LayoutDeviceIntRect::FromUnknownRect(tmp);
+    NS_IMETHOD GetClientBounds(mozilla::LayoutDeviceIntRect &aRect) = 0;
+    NS_IMETHOD GetClientBoundsUntyped(nsIntRect &aRect) {
+      mozilla::LayoutDeviceIntRect tmp;
+      nsresult rv = GetClientBounds(tmp);
+      aRect = tmp.ToUnknownRect();
       return rv;
     }
-    NS_IMETHOD GetClientBoundsUntyped(nsIntRect &aRect) = 0;
 
     /**
      * Get the non-client area dimensions of the window.

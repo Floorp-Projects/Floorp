@@ -212,7 +212,7 @@ public:
   // Get the screen position of the application window.
   nsIntPoint GetWindowPosition();
 
-  NS_IMETHOD GetScreenBoundsUntyped(nsIntRect &aRect) override;
+  NS_IMETHOD GetScreenBounds(mozilla::LayoutDeviceIntRect &aRect) override;
 
   NS_IMETHOD StartPluginIME(const mozilla::WidgetKeyboardEvent& aKeyboardEvent,
                             int32_t aPanelX, int32_t aPanelY,

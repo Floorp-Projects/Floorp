@@ -307,8 +307,8 @@ public:
 
     NS_IMETHOD              Resize(double aWidth, double aHeight, bool aRepaint) override;
     NS_IMETHOD              Resize(double aX, double aY, double aWidth, double aHeight, bool aRepaint) override;
-    NS_IMETHOD              GetClientBoundsUntyped(nsIntRect &aRect) override;
-    NS_IMETHOD              GetScreenBoundsUntyped(nsIntRect &aRect) override;
+    NS_IMETHOD              GetClientBounds(mozilla::LayoutDeviceIntRect &aRect) override;
+    NS_IMETHOD              GetScreenBounds(mozilla::LayoutDeviceIntRect &aRect) override;
     void                    ReportMoveEvent();
     void                    ReportSizeEvent();
     NS_IMETHOD              SetCursor(nsCursor aCursor) override;

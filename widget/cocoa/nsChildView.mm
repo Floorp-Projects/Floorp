@@ -906,31 +906,33 @@ NS_IMETHODIMP nsChildView::SetCursor(imgIContainer* aCursor,
 #pragma mark -
 
 // Get this component dimension
-NS_IMETHODIMP nsChildView::GetBoundsUntyped(nsIntRect &aRect)
+NS_IMETHODIMP nsChildView::GetBounds(LayoutDeviceIntRect& aRect)
 {
+  nsIntRect tmp;
   if (!mView) {
-    aRect = mBounds;
+    tmp = mBounds;
   } else {
-    aRect = CocoaPointsToDevPixels([mView frame]);
+    tmp = CocoaPointsToDevPixels([mView frame]);
   }
+  aRect = LayoutDeviceIntRect::FromUnknownRect(tmp);
   return NS_OK;
 }
 
-NS_IMETHODIMP nsChildView::GetClientBoundsUntyped(nsIntRect &aRect)
+NS_IMETHODIMP nsChildView::GetClientBounds(mozilla::LayoutDeviceIntRect& aRect)
 {
-  GetBoundsUntyped(aRect);
+  GetBounds(aRect);
   if (!mParentWidget) {
     // For top level widgets we want the position on screen, not the position
     // of this view inside the window.
-    aRect.MoveTo(WidgetToScreenOffset().ToUnknownPoint());
+    aRect.MoveTo(WidgetToScreenOffset());
   }
   return NS_OK;
 }
 
-NS_IMETHODIMP nsChildView::GetScreenBoundsUntyped(nsIntRect &aRect)
+NS_IMETHODIMP nsChildView::GetScreenBounds(LayoutDeviceIntRect& aRect)
 {
-  GetBoundsUntyped(aRect);
-  aRect.MoveTo(WidgetToScreenOffset().ToUnknownPoint());
+  GetBounds(aRect);
+  aRect.MoveTo(WidgetToScreenOffset());
   return NS_OK;
 }
 

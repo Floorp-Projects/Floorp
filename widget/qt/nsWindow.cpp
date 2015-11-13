@@ -1500,14 +1500,15 @@ void find_first_visible_parent(QWindow* aItem, QWindow*& aVisibleItem)
 }
 
 NS_IMETHODIMP
-nsWindow::GetScreenBoundsUntyped(nsIntRect &aRect)
+nsWindow::GetScreenBounds(LayoutDeviceIntRect& aRect)
 {
-    aRect = gfx::IntRect(gfx::IntPoint(0, 0), mBounds.Size());
+    aRect = LayoutDeviceIntRect(LayoutDeviceIntPoint(0, 0),
+                                LayoutDeviceIntSize::FromUnknownSize(mBounds.Size()));
     if (mIsTopLevel) {
         QPoint pos = mWidget->position();
         aRect.MoveTo(pos.x(), pos.y());
     } else {
-        aRect.MoveTo(WidgetToScreenOffset().ToUnknownPoint());
+        aRect.MoveTo(WidgetToScreenOffset());
     }
     LOG(("GetScreenBounds %d %d | %d %d | %d %d\n",
          aRect.x, aRect.y,

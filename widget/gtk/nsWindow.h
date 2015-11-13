@@ -131,8 +131,8 @@ public:
     NS_IMETHOD         SetSizeMode(nsSizeMode aMode) override;
     NS_IMETHOD         Enable(bool aState) override;
     NS_IMETHOD         SetFocus(bool aRaise = false) override;
-    NS_IMETHOD         GetScreenBoundsUntyped(nsIntRect &aRect) override;
-    NS_IMETHOD         GetClientBoundsUntyped(nsIntRect &aRect) override;
+    NS_IMETHOD         GetScreenBounds(mozilla::LayoutDeviceIntRect &aRect) override;
+    NS_IMETHOD         GetClientBounds(mozilla::LayoutDeviceIntRect &aRect) override;
     virtual mozilla::gfx::IntSize GetClientSize() override;
     virtual nsIntPoint GetClientOffsetUntyped() override;
     NS_IMETHOD         SetCursor(nsCursor aCursor) override;
