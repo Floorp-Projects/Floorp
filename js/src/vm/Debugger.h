@@ -70,10 +70,11 @@ typedef HashSet<ReadBarrieredGlobalObject,
  * transitions.
  */
 template <class UnbarrieredKey, bool InvisibleKeysOk=false>
-class DebuggerWeakMap : private WeakMap<PreBarriered<UnbarrieredKey>, RelocatablePtrObject>
+class DebuggerWeakMap : private WeakMap<RelocatablePtr<UnbarrieredKey>, RelocatablePtrObject,
+                                        MovableCellHasher<RelocatablePtr<UnbarrieredKey>>>
 {
   private:
-    typedef PreBarriered<UnbarrieredKey> Key;
+    typedef RelocatablePtr<UnbarrieredKey> Key;
     typedef RelocatablePtrObject Value;
 
     typedef HashMap<JS::Zone*,
@@ -85,7 +86,7 @@ class DebuggerWeakMap : private WeakMap<PreBarriered<UnbarrieredKey>, Relocatabl
     JSCompartment* compartment;
 
   public:
-    typedef WeakMap<Key, Value, DefaultHasher<Key> > Base;
+    typedef WeakMap<Key, Value, MovableCellHasher<Key>> Base;
 
     explicit DebuggerWeakMap(JSContext* cx)
         : Base(cx),
@@ -156,13 +157,9 @@ class DebuggerWeakMap : private WeakMap<PreBarriered<UnbarrieredKey>, Relocatabl
     /* Override sweep method to also update our edge cache. */
     void sweep() {
         for (Enum e(*static_cast<Base*>(this)); !e.empty(); e.popFront()) {
-            Key k(e.front().key());
-            if (gc::IsAboutToBeFinalized(&k)) {
+            if (gc::IsAboutToBeFinalized(&e.front().mutableKey())) {
+                decZoneCount(e.front().key()->zone());
                 e.removeFront();
-                decZoneCount(k->zone());
-            } else {
-                // markKeys() should have done any necessary relocation.
-                MOZ_ASSERT(k == e.front().key());
             }
         }
         Base::assertEntriesNotAboutToBeFinalized();
