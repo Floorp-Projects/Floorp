@@ -213,19 +213,25 @@ exports.appendExtraActors = function appendExtraActors(aObject) {
 function ActorPool(aConnection)
 {
   this.conn = aConnection;
-  this._cleanups = {};
   this._actors = {};
 }
 
 ActorPool.prototype = {
   /**
-   * Add an actor to the actor pool.  If the actor doesn't have an ID,
-   * allocate one from the connection.
+   * Destroy the pool. This will remove all actors from the pool.
+   */
+  destroy: function AP_destroy() {
+    for (let id in this._actors) {
+      this.removeActor(this._actors[id]);
+    }
+  },
+
+  /**
+   * Add an actor to the pool. If the actor doesn't have an ID, allocate one
+   * from the connection.
    *
-   * @param aActor object
-   *        The actor implementation.  If the object has a
-   *        'disconnect' property, it will be called when the actor
-   *        pool is cleaned up.
+   * @param Object aActor
+   *        The actor to be added to the pool.
    */
   addActor: function AP_addActor(aActor) {
     aActor.conn = this.conn;
@@ -238,14 +244,23 @@ ActorPool.prototype = {
       aActor.actorID = this.conn.allocID(prefix || undefined);
     }
 
+    // If the actor is already in a pool, remove it without destroying it.
     if (aActor.registeredPool) {
-      aActor.registeredPool.removeActor(aActor);
+      delete aActor.registeredPool._actors[aActor.actorID];
     }
     aActor.registeredPool = this;
 
     this._actors[aActor.actorID] = aActor;
+  },
+
+  /**
+   * Remove an actor from the pool. If the actor has a disconnect method, call
+   * it.
+   */
+  removeActor: function AP_remove(aActor) {
+    delete this._actors[aActor.actorID];
     if (aActor.disconnect) {
-      this._cleanups[aActor.actorID] = aActor;
+      aActor.disconnect();
     }
   },
 
@@ -265,28 +280,10 @@ ActorPool.prototype = {
   },
 
   /**
-   * Remove an actor from the actor pool.
-   */
-  removeActor: function AP_remove(aActor) {
-    delete this._actors[aActor.actorID];
-    delete this._cleanups[aActor.actorID];
-  },
-
-  /**
    * Match the api expected by the protocol library.
    */
   unmanage: function(aActor) {
     return this.removeActor(aActor);
-  },
-
-  /**
-   * Run all actor cleanups.
-   */
-  cleanup: function AP_cleanup() {
-    for (let id in this._cleanups) {
-      this._cleanups[id].disconnect();
-    }
-    this._cleanups = {};
   },
 
   forEach: function(callback) {
