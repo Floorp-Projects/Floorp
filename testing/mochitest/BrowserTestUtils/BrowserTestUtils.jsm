@@ -337,7 +337,7 @@ this.BrowserTestUtils = {
    * Waits for an event to be fired on a specified element.
    *
    * Usage:
-   *    let promiseEvent = BrowserTestUtil.waitForEvent(element, "eventName");
+   *    let promiseEvent = BrowserTestUtils.waitForEvent(element, "eventName");
    *    // Do some processing here that will cause the event to be fired
    *    // ...
    *    // Now yield until the Promise is fulfilled
