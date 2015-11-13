@@ -14,15 +14,13 @@ import os
 import sys
 import urlparse
 
-from mozharness.base.python import (
-    PreScriptAction,
-)
+from mozharness.base.python import PostScriptRun, PreScriptAction
+from mozharness.mozilla.structuredlog import StructuredOutputParser
 from mozharness.mozilla.testing.testbase import (
     TestingMixin,
     testing_config_options,
 )
 from mozharness.mozilla.vcstools import VCSToolsScript
-
 
 # General command line arguments for Firefox ui tests
 firefox_ui_tests_config_options = [
@@ -109,6 +107,8 @@ class FirefoxUITests(TestingMixin, VCSToolsScript):
             default_actions=default_actions or actions,
             *args, **kwargs)
 
+        self.reports = {'html': 'report.html', 'xunit': 'report.xml'}
+
         self.firefox_ui_repo = self.config['firefox_ui_repo']
         self.firefox_ui_branch = self.config.get('firefox_ui_branch')
 
@@ -161,12 +161,24 @@ class FirefoxUITests(TestingMixin, VCSToolsScript):
             vcs='gittool'
         )
 
+    def copy_reports_to_upload_dir(self):
+        self.info("Copying reports to upload dir...")
+
+        dirs = self.query_abs_dirs()
+        for report in self.reports:
+            self.copy_to_upload_dir(os.path.join(dirs['abs_reports_dir'], self.reports[report]),
+                                    dest=os.path.join('reports', self.reports[report]),
+                                    short_desc='%s log' % self.reports[report],
+                                    long_desc='%s log' % self.reports[report],
+                                    max_backups=self.config.get("log_max_rotate", 0))
+
     def query_abs_dirs(self):
         if self.abs_dirs:
             return self.abs_dirs
 
         abs_dirs = VCSToolsScript.query_abs_dirs(self)
         abs_dirs.update({
+            'abs_reports_dir': os.path.join(abs_dirs['abs_work_dir'], 'reports'),
             'fx_ui_dir': os.path.join(abs_dirs['abs_work_dir'], 'firefox_ui_tests'),
         })
         self.abs_dirs = abs_dirs
@@ -205,22 +217,31 @@ class FirefoxUITests(TestingMixin, VCSToolsScript):
 
         super(FirefoxUITests, self).query_minidump_stackwalk(manifest=manifest_path)
 
+    @PostScriptRun
+    def _upload_reports_post_run(self):
+        if self.config.get("copy_reports_post_run", True):
+            self.copy_reports_to_upload_dir()
+
     def run_test(self, installer_path, env=None, cleanup=True, marionette_port=2828):
         """All required steps for running the tests against an installer."""
         dirs = self.query_abs_dirs()
-
-        gecko_log = os.path.join(dirs['abs_log_dir'], 'gecko.log')
 
         cmd = [
             self.query_python_path(),
             os.path.join(dirs['fx_ui_dir'], 'firefox_ui_harness', self.cli_script),
             '--installer', installer_path,
-            # Log to stdout until tests are stable.
-            # '--gecko-log', gecko_log,
-            '--gecko-log=-',
             '--address', 'localhost:{}'.format(marionette_port),
+
             # Use the work dir to get temporary data stored
             '--workspace', dirs['abs_work_dir'],
+
+            # logging options
+            '--gecko-log=-',  # output from the gecko process redirected to stdout
+            '--log-raw=-',  # structured log for output parser redirected to stdout
+
+            # additional reports helpful for Jenkins and inpection via Treeherder
+            '--log-html', os.path.join(dirs["abs_reports_dir"], self.reports['html']),
+            '--log-xunit', os.path.join(dirs["abs_reports_dir"], self.reports['xunit']),
         ]
 
         # Collect all pass-through harness options to the script
@@ -228,31 +249,28 @@ class FirefoxUITests(TestingMixin, VCSToolsScript):
 
         # Set further environment settings
         env = env or self.query_env()
+
         if self.minidump_stackwalk_path:
             env['MINIDUMP_STACKWALK'] = self.minidump_stackwalk_path
 
             if self.query_symbols_url():
                 cmd += ['--symbols-path', self.symbols_url]
 
-        return_code = self.run_command(cmd, cwd=dirs['abs_work_dir'],
-                                       output_timeout=300, env=env)
+        parser = StructuredOutputParser(config=self.config,
+                                        log_obj=self.log_obj,
+                                        strict=False)
 
-        # Return more output if we fail
-        if return_code:
-            if os.path.exists(gecko_log):
-                contents = self.read_from_file(gecko_log, verbose=False)
-                self.warning('== Dumping gecko output ==')
-                self.warning(contents)
-                self.warning('== End of gecko output ==')
-            else:
-                # We're outputting to stdout with --gecko-log=- so there is not log to
-                # complaing about. Remove the commented line below when changing
-                # this behaviour.
-                # self.warning('No gecko.log was found: %s' % gecko_log)
-                pass
+        return_code = self.run_command(cmd,
+                                       cwd=dirs['abs_work_dir'],
+                                       output_timeout=300,
+                                       output_parser=parser,
+                                       env=env)
+
+        tbpl_status, log_level = parser.evaluate_parser(return_code)
+        self.buildbot_status(tbpl_status, level=log_level)
 
         if cleanup:
-            for filepath in (installer_path, gecko_log):
+            for filepath in (installer_path,):
                 if os.path.exists(filepath):
                     self.debug('Removing {}'.format(filepath))
                     os.remove(filepath)
@@ -264,6 +282,9 @@ class FirefoxUITests(TestingMixin, VCSToolsScript):
         if not self.installer_path and not self.installer_url:
             self.critical('Please specify an installer via --installer-path or --installer-url.')
             sys.exit(1)
+
+        # Necessary to allow mozlog to be activated
+        self.activate_virtualenv()
 
     def run_tests(self):
         dirs = self.query_abs_dirs()
