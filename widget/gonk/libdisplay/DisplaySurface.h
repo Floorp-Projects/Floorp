@@ -78,8 +78,6 @@ public:
     // frame's buffer.
     virtual void onFrameCommitted() = 0;
 
-    virtual void dump(String8& result) const = 0;
-
     virtual void resizeBuffers(const uint32_t w, const uint32_t h) = 0;
 
     // setReleaseFenceFd stores a fence file descriptor that will signal when the

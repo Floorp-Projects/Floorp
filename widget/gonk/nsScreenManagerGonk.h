@@ -44,6 +44,11 @@ namespace gl {
 }
 }
 
+enum class NotifyDisplayChangedEvent : int8_t {
+  Observable,
+  Suppressed
+};
+
 class nsScreenGonk : public nsBaseScreen
 {
     typedef mozilla::hal::ScreenConfiguration ScreenConfiguration;
@@ -52,7 +57,8 @@ class nsScreenGonk : public nsBaseScreen
 public:
     nsScreenGonk(uint32_t aId,
                  GonkDisplay::DisplayType aDisplayType,
-                 const GonkDisplay::NativeData& aNativeData);
+                 const GonkDisplay::NativeData& aNativeData,
+                 NotifyDisplayChangedEvent aEventVisibility);
 
     ~nsScreenGonk();
 
@@ -65,6 +71,7 @@ public:
     NS_IMETHOD SetRotation(uint32_t  aRotation);
 
     uint32_t GetId();
+    NotifyDisplayChangedEvent GetEventVisibility();
     nsIntRect GetRect();
     float GetDpi();
     int32_t GetSurfaceFormat();
@@ -114,6 +121,7 @@ public:
 
 protected:
     uint32_t mId;
+    NotifyDisplayChangedEvent mEventVisibility;
     int32_t mColorDepth;
     android::sp<ANativeWindow> mNativeWindow;
     float mDpi;
@@ -155,7 +163,8 @@ public:
     void DisplayEnabled(bool aEnabled);
 
     nsresult AddScreen(GonkDisplay::DisplayType aDisplayType,
-                       android::IGraphicBufferProducer* aSink = nullptr);
+                       android::IGraphicBufferProducer* aSink = nullptr,
+                       NotifyDisplayChangedEvent aEventVisibility = NotifyDisplayChangedEvent::Observable);
 
     nsresult RemoveScreen(GonkDisplay::DisplayType aDisplayType);
 
