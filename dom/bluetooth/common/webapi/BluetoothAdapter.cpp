@@ -405,13 +405,24 @@ BluetoothAdapter::GetPairedDeviceProperties(
   BluetoothService* bs = BluetoothService::Get();
   NS_ENSURE_TRUE_VOID(bs);
 
+  nsTArray<BluetoothAddress> deviceAddresses;
+  deviceAddresses.SetLength(aDeviceAddresses.Length());
+
+  for (size_t i = 0; i < deviceAddresses.Length(); ++i) {
+    auto rv = StringToAddress(aDeviceAddresses[i], deviceAddresses[i]);
+    if (NS_FAILED(rv)) {
+      BT_WARNING("GetPairedDeviceProperties failed");
+      return;
+    }
+  }
+
   RefPtr<BluetoothVoidReplyRunnable> results =
     new BluetoothVoidReplyRunnable(nullptr);
 
-  nsresult rv =
-    bs->GetPairedDevicePropertiesInternal(aDeviceAddresses, results);
+  auto rv = bs->GetPairedDevicePropertiesInternal(deviceAddresses, results);
   if (NS_FAILED(rv)) {
     BT_WARNING("GetPairedDeviceProperties failed");
+    return;
   }
 }
 
@@ -851,11 +862,13 @@ BluetoothAdapter::PairUnpair(bool aPair, const nsAString& aDeviceAddress,
 
   /**
    * Ensure
-   * - device address is not empty,
+   * - device address is valid,
    * - adapter is already enabled, and
    * - BluetoothService is available.
    */
-  BT_ENSURE_TRUE_REJECT(!aDeviceAddress.IsEmpty(),
+  BluetoothAddress deviceAddress;
+  BT_ENSURE_TRUE_REJECT(NS_SUCCEEDED(StringToAddress(aDeviceAddress,
+                                                     deviceAddress)),
                         promise,
                         NS_ERROR_DOM_INVALID_STATE_ERR);
   BT_ENSURE_TRUE_REJECT(mState == BluetoothAdapterState::Enabled,
@@ -867,10 +880,10 @@ BluetoothAdapter::PairUnpair(bool aPair, const nsAString& aDeviceAddress,
   nsresult rv;
   if (aPair) {
     rv = bs->CreatePairedDeviceInternal(
-           aDeviceAddress, kCreatePairedDeviceTimeout,
+           deviceAddress, kCreatePairedDeviceTimeout,
            new BluetoothVoidReplyRunnable(nullptr, promise));
   } else {
-    rv = bs->RemoveDeviceInternal(aDeviceAddress,
+    rv = bs->RemoveDeviceInternal(deviceAddress,
            new BluetoothVoidReplyRunnable(nullptr, promise));
   }
   BT_ENSURE_TRUE_REJECT(NS_SUCCEEDED(rv), promise, NS_ERROR_DOM_OPERATION_ERR);
@@ -1660,6 +1673,12 @@ BluetoothAdapter::Connect(BluetoothDevice& aDevice,
 
   nsAutoString address;
   aDevice.GetAddress(address);
+  BluetoothAddress deviceAddress;
+  if (NS_FAILED(StringToAddress(address, deviceAddress))) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return nullptr;
+  }
+
   uint32_t deviceClass = aDevice.Cod()->ToUint32();
   uint16_t serviceUuid = 0;
   if (aServiceUuid.WasPassed()) {
@@ -1671,7 +1690,7 @@ BluetoothAdapter::Connect(BluetoothDevice& aDevice,
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
   }
-  bs->Connect(address, deviceClass, serviceUuid, results);
+  bs->Connect(deviceAddress, deviceClass, serviceUuid, results);
 
   return request.forget();
 }
@@ -1693,6 +1712,12 @@ BluetoothAdapter::Disconnect(BluetoothDevice& aDevice,
 
   nsAutoString address;
   aDevice.GetAddress(address);
+  BluetoothAddress deviceAddress;
+  if (NS_FAILED(StringToAddress(address, deviceAddress))) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return nullptr;
+  }
+
   uint16_t serviceUuid = 0;
   if (aServiceUuid.WasPassed()) {
     serviceUuid = aServiceUuid.Value();
@@ -1703,7 +1728,7 @@ BluetoothAdapter::Disconnect(BluetoothDevice& aDevice,
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
   }
-  bs->Disconnect(address, serviceUuid, results);
+  bs->Disconnect(deviceAddress, serviceUuid, results);
 
   return request.forget();
 }
