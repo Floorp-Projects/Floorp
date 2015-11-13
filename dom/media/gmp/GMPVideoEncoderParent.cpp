@@ -229,7 +229,6 @@ GMPVideoEncoderParent::Shutdown()
     mCallback->Terminated();
     mCallback = nullptr;
   }
-  mVideoHost.DoneWithAPI();
 
   mIsOpen = false;
   if (!mActorDestroyed) {
@@ -269,7 +268,7 @@ GMPVideoEncoderParent::ActorDestroy(ActorDestroyReason aWhy)
     mPlugin->VideoEncoderDestroyed(this);
     mPlugin = nullptr;
   }
-  mVideoHost.ActorDestroyed();
+  mVideoHost.ActorDestroyed(); // same as DoneWithAPI
 }
 
 static void
@@ -331,8 +330,15 @@ bool
 GMPVideoEncoderParent::RecvParentShmemForPool(Shmem&& aFrameBuffer)
 {
   if (aFrameBuffer.IsWritable()) {
-    mVideoHost.SharedMemMgr()->MgrDeallocShmem(GMPSharedMem::kGMPFrameData,
-                                               aFrameBuffer);
+    // This test may be paranoia now that we don't shut down the VideoHost
+    // in ::Shutdown, but doesn't hurt
+    if (mVideoHost.SharedMemMgr()) {
+      mVideoHost.SharedMemMgr()->MgrDeallocShmem(GMPSharedMem::kGMPFrameData,
+                                                 aFrameBuffer);
+    } else {
+      LOGD(("%s::%s: %p Called in shutdown, ignoring and freeing directly", __CLASS__, __FUNCTION__, this));
+      DeallocShmem(aFrameBuffer);
+    }
   }
   return true;
 }
@@ -343,7 +349,10 @@ GMPVideoEncoderParent::AnswerNeedShmem(const uint32_t& aEncodedBufferSize,
 {
   ipc::Shmem mem;
 
-  if (!mVideoHost.SharedMemMgr()->MgrAllocShmem(GMPSharedMem::kGMPEncodedData,
+  // This test may be paranoia now that we don't shut down the VideoHost
+  // in ::Shutdown, but doesn't hurt
+  if (!mVideoHost.SharedMemMgr() ||
+      !mVideoHost.SharedMemMgr()->MgrAllocShmem(GMPSharedMem::kGMPEncodedData,
                                                 aEncodedBufferSize,
                                                 ipc::SharedMemory::TYPE_BASIC, &mem))
   {
