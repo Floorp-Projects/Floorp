@@ -34,8 +34,8 @@ var PermissionsHelper = {
     },
     "desktop-notification": {
       label: "desktopNotification.useNotifications",
-      allowed: "desktopNotification.allow",
-      denied: "desktopNotification.dontAllow"
+      allowed: "desktopNotification2.allow",
+      denied: "desktopNotification2.dontAllow"
     },
     "plugins": {
       label: "clickToPlayPlugins.activatePlugins",
