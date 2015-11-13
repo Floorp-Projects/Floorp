@@ -49,6 +49,12 @@ public class DefaultDoorHanger extends DoorHanger {
             case GEOLOCATION:
                 mIcon.setImageResource(R.drawable.location);
                 mIcon.setVisibility(VISIBLE);
+                break;
+
+            case DESKTOPNOTIFICATION2:
+                mIcon.setImageResource(R.drawable.push_notification);
+                mIcon.setVisibility(VISIBLE);
+                break;
         }
 
         loadConfig(config);

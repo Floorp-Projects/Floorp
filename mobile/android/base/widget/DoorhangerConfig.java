@@ -5,6 +5,8 @@
 
 package org.mozilla.gecko.widget;
 
+import android.util.Log;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import org.mozilla.gecko.widget.DoorHanger.Type;
@@ -78,6 +80,16 @@ public class DoorhangerConfig {
 
     public void setOptions(JSONObject options) {
         this.options = options;
+
+        // Set link if there is a link provided in options.
+        final JSONObject linkObj = options.optJSONObject("link");
+        if (linkObj != null) {
+            try {
+                setLink(linkObj.getString("label"), linkObj.getString("url"));
+            } catch (JSONException e) {
+                Log.e(LOGTAG, "Malformed link object in options");
+            }
+        }
     }
 
     public JSONObject getOptions() {
