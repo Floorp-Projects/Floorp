@@ -22,7 +22,6 @@ marionette.jar:
   content/modal.js (modal.js)
   content/proxy.js (proxy.js)
   content/capture.js (capture.js)
-  content/cookies.js (cookies.js)
 #ifdef ENABLE_TESTS
   content/test.xul  (client/marionette/chrome/test.xul)
   content/test2.xul  (client/marionette/chrome/test2.xul)

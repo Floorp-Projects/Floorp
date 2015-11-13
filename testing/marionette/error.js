@@ -31,7 +31,32 @@ const errors = [
 
 this.EXPORTED_SYMBOLS = ["error"].concat(errors);
 
+// Because XPCOM is a cesspool of undocumented odd behaviour,
+// Object.getPrototypeOf(err) causes another exception if err is an XPCOM
+// exception, and cannot be used to determine if err is a prototypal Error.
+//
+// Consequently we need to check for properties in its prototypal chain
+// (using in, instead of err.hasOwnProperty because that causes other
+// issues).
+//
+// Since the input is arbitrary it might _not_ be an Error, and can as
+// such be an object with a "result" property without it being considered to
+// be an exception.  The solution is to build a lookup table of XPCOM
+// exceptions from Components.results and check if the value of err#results
+// is in that table.
+const XPCOM_EXCEPTIONS = [];
+{
+  for (let prop in Cr) {
+    XPCOM_EXCEPTIONS.push(Cr[prop]);
+  }
+}
+
 this.error = {};
+
+/**
+ * Determines if the given status is successful.
+ */
+error.isSuccess = status => status === "success";
 
 /**
  * Checks if obj is an instance of the Error prototype in a safe manner.
@@ -47,7 +72,7 @@ this.error = {};
 error.isError = function(val) {
   if (val === null || typeof val != "object") {
     return false;
-  } else if ("result" in val) {
+  } else if ("result" in val && val.result in XPCOM_EXCEPTIONS) {
     return true;
   } else {
     return Object.getPrototypeOf(val) == "Error";

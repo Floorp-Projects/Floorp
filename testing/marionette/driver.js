@@ -2291,22 +2291,7 @@ GeckoDriver.prototype.switchToShadowRoot = function(cmd, resp) {
 
 /** Add a cookie to the document. */
 GeckoDriver.prototype.addCookie = function(cmd, resp) {
-  let cb = msg => {
-    this.mm.removeMessageListener("Marionette:addCookie", cb);
-    let cookie = msg.json;
-    Services.cookies.add(
-        cookie.domain,
-        cookie.path,
-        cookie.name,
-        cookie.value,
-        cookie.secure,
-        cookie.httpOnly,
-        cookie.session,
-        cookie.expiry);
-    return true;
-  };
-  this.mm.addMessageListener("Marionette:addCookie", cb);
-  yield this.listener.addCookie(cmd.parameters.cookie);
+  yield this.listener.addCookie({cookie: cmd.parameters.cookie});
 };
 
 /**
@@ -2321,34 +2306,12 @@ GeckoDriver.prototype.getCookies = function(cmd, resp) {
 
 /** Delete all cookies that are visible to a document. */
 GeckoDriver.prototype.deleteAllCookies = function(cmd, resp) {
-  let cb = msg => {
-    let cookie = msg.json;
-    cookieManager.remove(
-        cookie.host,
-        cookie.name,
-        cookie.path,
-        false);
-    return true;
-  };
-  this.mm.addMessageListener("Marionette:deleteCookie", cb);
   yield this.listener.deleteAllCookies();
-  this.mm.removeMessageListener("Marionette:deleteCookie", cb);
 };
 
 /** Delete a cookie by name. */
 GeckoDriver.prototype.deleteCookie = function(cmd, resp) {
-  let cb = msg => {
-    this.mm.removeMessageListener("Marionette:deleteCookie", cb);
-    let cookie = msg.json;
-    cookieManager.remove(
-        cookie.host,
-        cookie.name,
-        cookie.path,
-        false);
-    return true;
-  };
-  this.mm.addMessageListener("Marionette:deleteCookie", cb);
-  yield this.listener.deleteCookie(cmd.parameters.name);
+  yield this.listener.deleteCookie({name: cmd.parameters.name});
 };
 
 /**
@@ -2858,7 +2821,7 @@ GeckoDriver.prototype.receiveMessage = function(message) {
       break;
 
     case "Marionette:getVisibleCookies":
-      let [currentPath, host] = message.json;
+      let [currentPath, host] = message.json.value;
       let isForCurrentPath = path => currentPath.indexOf(path) != -1;
       let results = [];
 
@@ -2885,6 +2848,28 @@ GeckoDriver.prototype.receiveMessage = function(message) {
         } while (hostname.indexOf(".") != -1);
       }
       return results;
+
+    case "Marionette:addCookie":
+      let cookieToAdd = message.json.value;
+      Services.cookies.add(
+          cookieToAdd.domain,
+          cookieToAdd.path,
+          cookieToAdd.name,
+          cookieToAdd.value,
+          cookieToAdd.secure,
+          cookieToAdd.httpOnly,
+          false,
+          cookieToAdd.expiry);
+      return true;
+
+    case "Marionette:deleteCookie":
+      let cookieToDelete = message.json.value;
+      cookieManager.remove(
+          cookieToDelete.host,
+          cookieToDelete.name,
+          cookieToDelete.path,
+          false);
+      return true;
 
     case "Marionette:getFiles":
       // Generates file objects to send back to the content script
