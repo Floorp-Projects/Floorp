@@ -278,7 +278,6 @@ GMPVideoDecoderParent::ActorDestroy(ActorDestroyReason aWhy)
 
   mIsOpen = false;
   mActorDestroyed = true;
-  mVideoHost.DoneWithAPI();
 
   // Ensure if we've received a destroy while waiting for a ResetComplete
   // or DrainComplete notification, we'll unblock the caller before processing
