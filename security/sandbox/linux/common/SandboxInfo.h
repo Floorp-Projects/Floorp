@@ -37,6 +37,8 @@ public:
     kHasUserNamespaces = 1 << 5,
     // Could a more privileged process have user namespaces, even if we can't?
     kHasPrivilegedUserNamespaces = 1 << 6,
+    // Env var MOZ_PERMISSIVE_CONTENT_SANDBOX
+    kPermissive        = 1 << 7,
   };
 
   bool Test(Flags aFlag) const { return (mFlags & aFlag) == aFlag; }
