@@ -18,18 +18,11 @@ var makeDebugger = require("./utils/make-debugger");
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-XPCOMUtils.defineLazyServiceGetter(
-  this, "swm",
-  "@mozilla.org/serviceworkers/manager;1",
-  "nsIServiceWorkerManager"
-);
-
 loader.lazyRequireGetter(this, "RootActor", "devtools/server/actors/root", true);
 loader.lazyRequireGetter(this, "ThreadActor", "devtools/server/actors/script", true);
 loader.lazyRequireGetter(this, "unwrapDebuggerObjectGlobal", "devtools/server/actors/script", true);
 loader.lazyRequireGetter(this, "BrowserAddonActor", "devtools/server/actors/addon", true);
 loader.lazyRequireGetter(this, "WorkerActorList", "devtools/server/actors/worker", true);
-loader.lazyRequireGetter(this, "ServiceWorkerRegistrationActor", "devtools/server/actors/worker", true);
 loader.lazyImporter(this, "AddonManager", "resource://gre/modules/AddonManager.jsm");
 
 // Assumptions on events module:
@@ -118,34 +111,6 @@ function sendShutdownEvent() {
 }
 
 exports.sendShutdownEvent = sendShutdownEvent;
-
-/**
- * Returns the service worker registration that matches the given client URL, or
- * null if no such registration exists.
- *
- * The service worker specification defines the service worker registration that
- * matches a given client URL as the registration which scope is the longest
- * prefix of the client URL (see section 9.15 for details).
- */
-function matchServiceWorkerRegistration(clientURL) {
-  let matchingRegistration = null;
-
-  let array = swm.getAllRegistrations();
-  for (let index = 0; index < array.length; ++index) {
-    let registration =
-      array.queryElementAt(index, Ci.nsIServiceWorkerRegistrationInfo);
-    if (clientURL.indexOf(registration.scope) !== 0) {
-      continue;
-    }
-
-    if (matchingRegistration === null ||
-        matchingRegistration.scope.length < registration.scope.length) {
-      matchingRegistration = registration;
-    }
-  }
-
-  return matchingRegistration;
-}
 
 /**
  * Construct a root actor appropriate for use in a server running in a
@@ -774,9 +739,6 @@ function TabActor(aConnection)
   this._workerActorList = null;
   this._workerActorPool = null;
   this._onWorkerActorListChanged = this._onWorkerActorListChanged.bind(this);
-
-  this._serviceWorkerRegistrationActor = null;
-  this._mustNotifyServiceWorkerRegistrationChanged = false;
 }
 
 // XXX (bug 710213): TabActor attach/detach/exit/disconnect is a
@@ -1157,107 +1119,6 @@ TabActor.prototype = {
   _onWorkerActorListChanged: function () {
     this._workerActorList.onListChanged = null;
     this.conn.sendActorEvent(this.actorID, "workerListChanged");
-  },
-
-  /**
-   * Gets the current service worker registration for this tab. The current
-   * service worker registration is the registration which scope URL forms the
-   * longest prefix of the URL of the current page in the tab (see
-   * matchServiceWorkerRegistration for details).
-   *
-   * This request works similar to a live list, in the sense that it will send
-   * a one-shot notification when the current service worker registration
-   * changes, provided the client has sent this request at least once since the
-   * last notification was sent.
-   */
-  onGetServiceWorkerRegistration: function () {
-    // The actor for the current service worker registration. This will
-    // initially be set to null. Whenever possible, we will reuse the actor for
-    // the previous service worker registration. Otherwise, a new actor for the
-    // current service worker registration will be created, provided such a
-    // registration exists.
-    let actor = null;
-
-    // Get the current service worker registration and compare it against the
-    // previous service worker registration.
-    //
-    // Note that we can obtain the previous service worker registration from the
-    // actor for the previous service worker registration. If no such actor
-    // exists, the previous service registration was null.
-    let registration = matchServiceWorkerRegistration(this.url);
-    if ((this._serviceWorkerRegistrationActor === null &&
-         registration === null) ||
-        (this._serviceWorkerRegistrationActor !== null &&
-         this._serviceWorkerRegistrationActor.registration === registration)) {
-      // The previous service worker registration equals the current service
-      // worker registration, so reuse the actor for the previous service
-      // worker registration.
-      actor = this._serviceWorkerRegistrationActor;
-    }
-    else {
-      // The previous service worker registration does not equal the current
-      // service worker registration, so remove the actor for the previous
-      // service worker registration from the tab actor pool (this will cause
-      // the actor to be destroyed).
-      if (this._serviceWorkerRegistrationActor) {
-        this._tabPool.removeActor(this._serviceWorkerRegistrationActor);
-      }
-
-      // If there is no service worker registration that matches the URL of the
-      // page in the tab, the current service worker registration will be null.
-      // In that case, no actor should be created.
-      if (registration !== null) {
-        // Create a new actor for the current service worker registration, and
-        // add it to the tab actor pool. We use the tab actor pool because we
-        // don't want the actor to persist when we detach from the tab.
-        actor = new ServiceWorkerRegistrationActor(registration);
-        this._tabPool.addActor(actor);
-      }
-
-      // Cache the actor for the current service worker registration. On
-      // subsequent requests, this will become the actor for the previous
-      // service worker registration.
-      this._serviceWorkerRegistrationActor = actor;
-    }
-
-    // Make sure we send a one-shot notification when the current service worker
-    // registration changes.
-    if (!this._mustNotifyServiceWorkerRegistrationChanged) {
-      swm.addListener(this);
-      this._mustNotifyServiceWorkerRegistrationChanged = true;
-    }
-
-    // Return the actor for the current service worker registration, or null if
-    // no such registration exists.
-    return {
-      "registration": actor !== null ? actor.form() : null
-    }
-  },
-
-  _notifyServiceWorkerRegistrationChanged: function () {
-    this.conn.sendActorEvent(this.actorID, "serviceWorkerRegistrationChanged");
-    swm.removeListener(this);
-    this._mustNotifyServiceWorkerRegistrationChanged = false;
-  },
-
-  onRegister: function () {
-    let registration = matchServiceWorkerRegistration(this.url);
-    if ((this._serviceWorkerRegistrationActor === null &&
-         registration !== null) ||
-        (this._serviceWorkerRegistrationActor !== null &&
-         this._serviceWorkerRegistrationActor.registration !== registration)) {
-      this._notifyServiceWorkerRegistrationChanged();
-    }
-  },
-
-  onUnregister: function () {
-    let registration = matchServiceWorkerRegistration(this.url);
-    if ((this._serviceWorkerRegistrationActor === null &&
-         registration !== null) ||
-        (this._serviceWorkerRegistrationActor !== null &&
-         this._serviceWorkerRegistrationActor.registration !== registration)) {
-      this._notifyServiceWorkerRegistrationChanged();
-    }
   },
 
   observe: function (aSubject, aTopic, aData) {
@@ -1979,8 +1840,7 @@ TabActor.prototype.requestTypes = {
   "reconfigure": TabActor.prototype.onReconfigure,
   "switchToFrame": TabActor.prototype.onSwitchToFrame,
   "listFrames": TabActor.prototype.onListFrames,
-  "listWorkers": TabActor.prototype.onListWorkers,
-  "getServiceWorkerRegistration": TabActor.prototype.onGetServiceWorkerRegistration
+  "listWorkers": TabActor.prototype.onListWorkers
 };
 
 exports.TabActor = TabActor;

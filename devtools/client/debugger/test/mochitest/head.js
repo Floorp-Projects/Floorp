@@ -1066,15 +1066,6 @@ function listWorkers(tabClient) {
   });
 }
 
-function getServiceWorkerRegistration(tabClient) {
-  info("Getting current service worker registration.");
-  return new Promise(function (resolve) {
-    tabClient.getServiceWorkerRegistration(function (response) {
-      resolve(response);
-    });
-  });
-}
-
 function findWorker(workers, url) {
   info("Finding worker with url '" + url + "'.");
   for (let worker of workers) {
@@ -1099,16 +1090,6 @@ function waitForWorkerListChanged(tabClient) {
   return new Promise(function (resolve) {
     tabClient.addListener("workerListChanged", function listener() {
       tabClient.removeListener("workerListChanged", listener);
-      resolve();
-    });
-  });
-}
-
-function waitForServiceWorkerRegistrationChanged(tabClient) {
-  info("Waiting for current service worker registration to change.");
-  return new Promise(function (resolve) {
-    tabClient.addListener("serviceWorkerRegistrationChanged", function listener() {
-      tabClient.removeListener("serviceWorkerRegistrationChanged", listener);
       resolve();
     });
   });
