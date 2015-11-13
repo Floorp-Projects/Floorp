@@ -32,6 +32,9 @@ XPCOMUtils.defineLazyModuleGetter(this, "RemoteAboutNewTab",
 XPCOMUtils.defineLazyModuleGetter(this, "RemoteNewTabUtils",
                                   "resource:///modules/RemoteNewTabUtils.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "NewTabPrefsProvider",
+                                  "resource:///modules/NewTabPrefsProvider.jsm");
+
 XPCOMUtils.defineLazyModuleGetter(this, "UITour",
                                   "resource:///modules/UITour.jsm");
 
@@ -849,6 +852,7 @@ BrowserGlue.prototype = {
     RemoteNewTabUtils.init();
     RemoteNewTabUtils.links.addProvider(DirectoryLinksProvider);
     RemoteAboutNewTab.init();
+    NewTabPrefsProvider.prefs.init();
 
     SessionStore.init();
     BrowserUITelemetry.init();
@@ -1170,6 +1174,7 @@ BrowserGlue.prototype = {
     WebappManager.uninit();
 
     RemoteAboutNewTab.uninit();
+    NewTabPrefsProvider.prefs.uninit();
     AboutNewTab.uninit();
 #ifdef NIGHTLY_BUILD
     if (Services.prefs.getBoolPref("dom.identity.enabled")) {
