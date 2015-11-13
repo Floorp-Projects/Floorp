@@ -161,6 +161,7 @@ IonBuilder::IonBuilder(JSContext* analysisContext, CompileCompartment* comp,
     maybeFallbackFunctionGetter_(nullptr)
 {
     script_ = info->script();
+    scriptHasIonScript_ = script_->hasIonScript();
     pc = info->startPC();
     abortReason_ = AbortReason_Disable;
 
