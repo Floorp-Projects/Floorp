@@ -104,24 +104,17 @@ public:
 
   virtual ~RefreshDriverTimer()
   {
-    MOZ_ASSERT(mContentRefreshDrivers.Length() == 0, "Should have removed all content refresh drivers from here by now!");
-    MOZ_ASSERT(mRootRefreshDrivers.Length() == 0, "Should have removed all root refresh drivers from here by now!");
+    NS_ASSERTION(mRefreshDrivers.Length() == 0, "Should have removed all refresh drivers from here by now!");
   }
 
   virtual void AddRefreshDriver(nsRefreshDriver* aDriver)
   {
     LOG("[%p] AddRefreshDriver %p", this, aDriver);
 
-    bool startTimer = mContentRefreshDrivers.IsEmpty() && mRootRefreshDrivers.IsEmpty();
-    if (IsRootRefreshDriver(aDriver)) {
-      NS_ASSERTION(!mRootRefreshDrivers.Contains(aDriver), "Adding a duplicate root refresh driver!");
-      mRootRefreshDrivers.AppendElement(aDriver);
-    } else {
-      NS_ASSERTION(!mContentRefreshDrivers.Contains(aDriver), "Adding a duplicate content refresh driver!");
-      mContentRefreshDrivers.AppendElement(aDriver);
-    }
+    NS_ASSERTION(!mRefreshDrivers.Contains(aDriver), "AddRefreshDriver for a refresh driver that's already in the list!");
+    mRefreshDrivers.AppendElement(aDriver);
 
-    if (startTimer) {
+    if (mRefreshDrivers.Length() == 1) {
       StartTimer();
     }
   }
@@ -130,30 +123,10 @@ public:
   {
     LOG("[%p] RemoveRefreshDriver %p", this, aDriver);
 
-    if (IsRootRefreshDriver(aDriver)) {
-      NS_ASSERTION(mRootRefreshDrivers.Contains(aDriver), "RemoveRefreshDriver for a refresh driver that's not in the root refresh list!");
-      mRootRefreshDrivers.RemoveElement(aDriver);
-    } else {
-      nsPresContext* displayRoot = aDriver->PresContext()->GetDisplayRootPresContext();
-      // During PresContext shutdown, we can't accurately detect
-      // if a root refresh driver exists or not. Therefore, we have to
-      // search and find out which list this driver exists in.
-      if (!displayRoot) {
-        if (mRootRefreshDrivers.Contains(aDriver)) {
-          mRootRefreshDrivers.RemoveElement(aDriver);
-        } else {
-          NS_ASSERTION(mContentRefreshDrivers.Contains(aDriver),
-                       "RemoveRefreshDriver without a display root for a driver that is not in the content refresh list");
-          mContentRefreshDrivers.RemoveElement(aDriver);
-        }
-      } else {
-        NS_ASSERTION(mContentRefreshDrivers.Contains(aDriver), "RemoveRefreshDriver for a driver that is not in the content refresh list");
-        mContentRefreshDrivers.RemoveElement(aDriver);
-      }
-    }
+    NS_ASSERTION(mRefreshDrivers.Contains(aDriver), "RemoveRefreshDriver for a refresh driver that's not in the list!");
+    mRefreshDrivers.RemoveElement(aDriver);
 
-    bool stopTimer = mContentRefreshDrivers.IsEmpty() && mRootRefreshDrivers.IsEmpty();
-    if (stopTimer) {
+    if (mRefreshDrivers.Length() == 0) {
       StopTimer();
     }
   }
@@ -165,17 +138,11 @@ public:
   {
     MOZ_ASSERT(NS_IsMainThread());
 
-    for (nsRefreshDriver* driver : mContentRefreshDrivers) {
+    for (nsRefreshDriver* driver : mRefreshDrivers) {
       aNewTimer->AddRefreshDriver(driver);
       driver->mActiveTimer = aNewTimer;
     }
-    mContentRefreshDrivers.Clear();
-
-    for (nsRefreshDriver* driver : mRootRefreshDrivers) {
-      aNewTimer->AddRefreshDriver(driver);
-      driver->mActiveTimer = aNewTimer;
-    }
-    mRootRefreshDrivers.Clear();
+    mRefreshDrivers.Clear();
 
     aNewTimer->mLastFireEpoch = mLastFireEpoch;
     aNewTimer->mLastFireTime = mLastFireTime;
@@ -186,17 +153,6 @@ protected:
   virtual void StopTimer() = 0;
   virtual void ScheduleNextTick(TimeStamp aNowTime) = 0;
 
-  bool IsRootRefreshDriver(nsRefreshDriver* aDriver)
-  {
-    nsPresContext* displayRoot = aDriver->PresContext()->GetDisplayRootPresContext();
-    if (!displayRoot) {
-      return false;
-    }
-
-    nsRefreshDriver* rootRefreshDriver = displayRoot->GetRootPresContext()->RefreshDriver();
-    return aDriver == rootRefreshDriver;
-  }
-
   /*
    * Actually runs a tick, poking all the attached RefreshDrivers.
    * Grabs the "now" time via JS_Now and TimeStamp::Now().
@@ -206,23 +162,6 @@ protected:
     int64_t jsnow = JS_Now();
     TimeStamp now = TimeStamp::Now();
     Tick(jsnow, now);
-  }
-
-  void TickRefreshDrivers(int64_t aJsNow, TimeStamp aNow, nsTArray<RefPtr<nsRefreshDriver>>& aDrivers)
-  {
-    if (aDrivers.IsEmpty()) {
-      return;
-    }
-
-    nsTArray<RefPtr<nsRefreshDriver> > drivers(aDrivers);
-    for (nsRefreshDriver* driver : drivers) {
-      // don't poke this driver if it's in test mode
-      if (driver->IsTestControllingRefreshesEnabled()) {
-        continue;
-      }
-
-      TickDriver(driver, aJsNow, aNow);
-    }
   }
 
   /*
@@ -236,12 +175,17 @@ protected:
     mLastFireTime = now;
 
     LOG("[%p] ticking drivers...", this);
+    nsTArray<RefPtr<nsRefreshDriver> > drivers(mRefreshDrivers);
     // RD is short for RefreshDriver
     profiler_tracing("Paint", "RD", TRACING_INTERVAL_START);
+    for (nsRefreshDriver* driver : drivers) {
+      // don't poke this driver if it's in test mode
+      if (driver->IsTestControllingRefreshesEnabled()) {
+        continue;
+      }
 
-    TickRefreshDrivers(jsnow, now, mContentRefreshDrivers);
-    TickRefreshDrivers(jsnow, now, mRootRefreshDrivers);
-
+      TickDriver(driver, jsnow, now);
+    }
     profiler_tracing("Paint", "RD", TRACING_INTERVAL_END);
     LOG("[%p] done.", this);
   }
@@ -256,8 +200,7 @@ protected:
   TimeStamp mLastFireTime;
   TimeStamp mTargetTime;
 
-  nsTArray<RefPtr<nsRefreshDriver> > mContentRefreshDrivers;
-  nsTArray<RefPtr<nsRefreshDriver> > mRootRefreshDrivers;
+  nsTArray<RefPtr<nsRefreshDriver> > mRefreshDrivers;
 
   // useful callback for nsITimer-based derived classes, here
   // bacause of c++ protected shenanigans
@@ -450,6 +393,7 @@ private:
       if (XRE_IsParentProcess()) {
         MonitorAutoLock lock(mRefreshTickLock);
         aVsyncTimestamp = mRecentVsync;
+        mProcessedVsync = true;
       } else {
         mLastChildTick = TimeStamp::Now();
       }
@@ -460,12 +404,6 @@ private:
       // before use.
       if (mVsyncRefreshDriverTimer) {
         mVsyncRefreshDriverTimer->RunRefreshDrivers(aVsyncTimestamp);
-      }
-
-      if (XRE_IsParentProcess()) {
-        MonitorAutoLock lock(mRefreshTickLock);
-        // Allow vsyncs to tick the refresh driver again.
-        mProcessedVsync = true;
       }
     }
 
@@ -620,18 +558,13 @@ public:
 
     // we don't really have to start with the newly added one, but we may as well
     // not tick the old ones at the fastest rate any more than we need to.
-    mNextDriverIndex = GetRefreshDriverCount() - 1;
+    mNextDriverIndex = mRefreshDrivers.Length() - 1;
 
     StopTimer();
     StartTimer();
   }
 
 protected:
-  uint32_t GetRefreshDriverCount()
-  {
-    return mContentRefreshDrivers.Length() + mRootRefreshDrivers.Length();
-  }
-
   virtual void StartTimer()
   {
     mLastFireEpoch = JS_Now();
@@ -660,7 +593,7 @@ protected:
     }
 
     // double the next tick time if we've already gone through all of them once
-    if (mNextDriverIndex >= GetRefreshDriverCount()) {
+    if (mNextDriverIndex >= mRefreshDrivers.Length()) {
       mNextTickDuration *= 2.0;
       mNextDriverIndex = 0;
     }
@@ -670,7 +603,7 @@ protected:
     mTimer->InitWithFuncCallback(TimerTickOne, this, delay, nsITimer::TYPE_ONE_SHOT);
 
     LOG("[%p] inactive timer next tick in %f ms [index %d/%d]", this, mNextTickDuration,
-        mNextDriverIndex, GetRefreshDriverCount());
+        mNextDriverIndex, mRefreshDrivers.Length());
   }
 
   /* Runs just one driver's tick. */
@@ -684,9 +617,7 @@ protected:
     mLastFireEpoch = jsnow;
     mLastFireTime = now;
 
-    nsTArray<RefPtr<nsRefreshDriver> > drivers(mContentRefreshDrivers);
-    drivers.AppendElements(mRootRefreshDrivers);
-
+    nsTArray<RefPtr<nsRefreshDriver> > drivers(mRefreshDrivers);
     if (mNextDriverIndex < drivers.Length() &&
         !drivers[mNextDriverIndex]->IsTestControllingRefreshesEnabled())
     {
@@ -1912,6 +1843,13 @@ void
 nsRefreshDriver::FinishedWaitingForTransaction()
 {
   mWaitingForTransaction = false;
+  if (mSkippedPaints &&
+      !IsInRefresh() &&
+      (ObserverCount() || ImageRequestCount())) {
+    profiler_tracing("Paint", "RD", TRACING_INTERVAL_START);
+    DoRefresh();
+    profiler_tracing("Paint", "RD", TRACING_INTERVAL_END);
+  }
   mSkippedPaints = false;
 }
 
