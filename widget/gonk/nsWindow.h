@@ -123,7 +123,7 @@ public:
 
     virtual uint32_t GetGLFrameBufferFormat() override;
 
-    virtual nsIntRect GetNaturalBoundsUntyped() override;
+    virtual mozilla::LayoutDeviceIntRect GetNaturalBounds() override;
     virtual bool NeedsPaint();
 
     virtual Composer2D* GetComposer2D() override;
