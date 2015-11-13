@@ -11,7 +11,6 @@ Cu.import("resource://gre/modules/ExtensionUtils.jsm");
 var {
   EventManager,
   DefaultWeakMap,
-  ignoreEvent,
   runSafe,
 } = ExtensionUtils;
 

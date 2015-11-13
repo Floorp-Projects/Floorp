@@ -15,7 +15,7 @@
  *
  */
 
-[builtinclass, uuid(ee7b8943-440e-4cc3-b25e-c17c8a821d8b)]
+[builtinclass, uuid(96abf41b-32a8-4ff6-a0d6-4ade4ddebf89)]
 interface nsIDOMBeforeUnloadEvent : nsIDOMEvent
 {
   /**

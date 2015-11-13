@@ -57,7 +57,7 @@ public:
 
     virtual NativeData GetNativeData(
         GonkDisplay::DisplayType aDisplayType,
-        android::IGraphicBufferProducer* aProducer = nullptr);
+        android::IGraphicBufferProducer* aSink = nullptr);
 
     virtual void NotifyBootAnimationStopped() {}
 

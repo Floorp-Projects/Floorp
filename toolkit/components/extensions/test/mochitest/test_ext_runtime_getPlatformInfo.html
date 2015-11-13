@@ -1,0 +1,40 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>WebExtension test</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="application/javascript;version=1.8">
+"use strict";
+
+function backgroundScript() {
+  browser.runtime.getPlatformInfo(info => {
+    var validOSs = ["mac", "win", "android", "cros", "linux", "openbsd"];
+    var validArchs = ["arm", "x86-32", "x86-64"];
+
+    browser.test.assertTrue(validOSs.indexOf(info.os) != -1, "OS is valid");
+    browser.test.assertTrue(validArchs.indexOf(info.arch) != -1, "Architecture is valid");
+    browser.test.notifyPass("runtime.getPlatformInfo");
+  });
+}
+
+let extensionData = {
+  background: "(" + backgroundScript.toString() + ")()",
+};
+
+add_task(function* test_contentscript() {
+  let extension = ExtensionTestUtils.loadExtension(extensionData);
+  yield extension.startup();
+  yield extension.awaitFinish("runtime.getPlatformInfo");
+  yield extension.unload();
+});
+</script>
+
+</body>
+</html>

@@ -1075,13 +1075,7 @@ MediaRecorder::DispatchSimpleEvent(const nsAString & aStr)
   }
 
   RefPtr<Event> event = NS_NewDOMEvent(this, nullptr, nullptr);
-  rv = event->InitEvent(aStr, false, false);
-
-  if (NS_FAILED(rv)) {
-    NS_WARNING("Failed to init the error event!!!");
-    return;
-  }
-
+  event->InitEvent(aStr, false, false);
   event->SetTrusted(true);
 
   rv = DispatchDOMEvent(nullptr, event, nullptr, nullptr);

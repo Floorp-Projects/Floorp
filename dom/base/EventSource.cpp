@@ -757,12 +757,7 @@ EventSource::AnnounceConnection()
   RefPtr<Event> event = NS_NewDOMEvent(this, nullptr, nullptr);
 
   // it doesn't bubble, and it isn't cancelable
-  rv = event->InitEvent(NS_LITERAL_STRING("open"), false, false);
-  if (NS_FAILED(rv)) {
-    NS_WARNING("Failed to init the open event!!!");
-    return;
-  }
-
+  event->InitEvent(NS_LITERAL_STRING("open"), false, false);
   event->SetTrusted(true);
 
   rv = DispatchDOMEvent(nullptr, event, nullptr, nullptr);
@@ -813,12 +808,7 @@ EventSource::ReestablishConnection()
   RefPtr<Event> event = NS_NewDOMEvent(this, nullptr, nullptr);
 
   // it doesn't bubble, and it isn't cancelable
-  rv = event->InitEvent(NS_LITERAL_STRING("error"), false, false);
-  if (NS_FAILED(rv)) {
-    NS_WARNING("Failed to init the error event!!!");
-    return;
-  }
-
+  event->InitEvent(NS_LITERAL_STRING("error"), false, false);
   event->SetTrusted(true);
 
   rv = DispatchDOMEvent(nullptr, event, nullptr, nullptr);
@@ -964,12 +954,7 @@ EventSource::FailConnection()
   RefPtr<Event> event = NS_NewDOMEvent(this, nullptr, nullptr);
 
   // it doesn't bubble, and it isn't cancelable
-  rv = event->InitEvent(NS_LITERAL_STRING("error"), false, false);
-  if (NS_FAILED(rv)) {
-    NS_WARNING("Failed to init the error event!!!");
-    return;
-  }
-
+  event->InitEvent(NS_LITERAL_STRING("error"), false, false);
   event->SetTrusted(true);
 
   rv = DispatchDOMEvent(nullptr, event, nullptr, nullptr);

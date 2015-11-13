@@ -142,10 +142,7 @@ ServiceWorkerMessageEvent::Constructor(EventTarget* aEventTarget,
   RefPtr<ServiceWorkerMessageEvent> event =
     new ServiceWorkerMessageEvent(aEventTarget, nullptr, nullptr);
 
-  aRv = event->InitEvent(aType, aParam.mBubbles, aParam.mCancelable);
-  if (NS_WARN_IF(aRv.Failed())) {
-    return nullptr;
-  }
+  event->InitEvent(aType, aParam.mBubbles, aParam.mCancelable);
 
   bool trusted = event->Init(aEventTarget);
   event->SetTrusted(trusted);

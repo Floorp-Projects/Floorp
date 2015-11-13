@@ -1405,7 +1405,8 @@ IMEContentObserver::TryToFlushPendingNotifications()
   MOZ_LOG(sIMECOLog, LogLevel::Debug,
     ("IMECO: 0x%p IMEContentObserver::TryToFlushPendingNotifications(), "
      "performing queued IMENotificationSender forcibly", this));
-  mQueuedSender->Run();
+  RefPtr<IMENotificationSender> queuedSender = mQueuedSender;
+  queuedSender->Run();
 }
 
 /******************************************************************************

@@ -1046,11 +1046,7 @@ ExtendableMessageEvent::Constructor(mozilla::dom::EventTarget* aEventTarget,
 {
   RefPtr<ExtendableMessageEvent> event = new ExtendableMessageEvent(aEventTarget);
 
-  aRv = event->InitEvent(aType, aOptions.mBubbles, aOptions.mCancelable);
-  if (NS_WARN_IF(aRv.Failed())) {
-    return nullptr;
-  }
-
+  event->InitEvent(aType, aOptions.mBubbles, aOptions.mCancelable);
   bool trusted = event->Init(aEventTarget);
   event->SetTrusted(trusted);
 

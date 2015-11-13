@@ -2003,9 +2003,11 @@ SpecialPowersAPI.prototype = {
     return this._sendSyncMessage('SPCleanUpSTSData', {origin: origin, flags: flags || 0});
   },
 
-  loadExtension: function(ext, handler) {
-    let uuidGenerator = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator);
-    let id = uuidGenerator.generateUUID().number;
+  loadExtension: function(id, ext, handler) {
+    if (!id) {
+      let uuidGenerator = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator);
+      id = uuidGenerator.generateUUID().number;
+    }
 
     let resolveStartup, resolveUnload, rejectStartup;
     let startupPromise = new Promise((resolve, reject) => {
