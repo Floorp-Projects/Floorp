@@ -47,12 +47,6 @@ public:
     return mView;
   }
 
-  void InitTimeEvent(const nsAString& aType, nsIDOMWindow* aView,
-                     int32_t aDetail, ErrorResult& aRv)
-  {
-    aRv = InitTimeEvent(aType, aView, aDetail);
-  }
-
 private:
   ~TimeEvent() {}
 

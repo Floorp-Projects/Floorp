@@ -572,12 +572,7 @@ private:
 
     RefPtr<Event> event = NS_NewDOMEvent(globalScope, nullptr, nullptr);
 
-    nsresult rv = event->InitEvent(NS_LITERAL_STRING("close"), false, false);
-    if (NS_FAILED(rv)) {
-      Throw(aCx, rv);
-      return false;
-    }
-
+    event->InitEvent(NS_LITERAL_STRING("close"), false, false);
     event->SetTrusted(true);
 
     globalScope->DispatchDOMEvent(nullptr, event, nullptr, nullptr);
@@ -3073,9 +3068,7 @@ WorkerPrivate::OfflineStatusChangeEventInternal(JSContext* aCx, bool aIsOffline)
 
   RefPtr<Event> event = NS_NewDOMEvent(globalScope, nullptr, nullptr);
 
-  nsresult rv = event->InitEvent(eventType, false, false);
-  NS_ENSURE_SUCCESS_VOID(rv);
-
+  event->InitEvent(eventType, false, false);
   event->SetTrusted(true);
 
   globalScope->DispatchDOMEvent(nullptr, event, nullptr, nullptr);
@@ -3415,6 +3408,16 @@ WorkerPrivateParent<Derived>::SetPrincipal(nsIPrincipal* aPrincipal,
     (appStatus == nsIPrincipal::APP_STATUS_CERTIFIED ||
      appStatus == nsIPrincipal::APP_STATUS_PRIVILEGED);
   mLoadInfo.mIsInCertifiedApp = (appStatus == nsIPrincipal::APP_STATUS_CERTIFIED);
+
+  aPrincipal->GetCsp(getter_AddRefs(mLoadInfo.mCSP));
+
+  if (mLoadInfo.mCSP) {
+    mLoadInfo.mCSP->GetAllowsEval(&mLoadInfo.mReportCSPViolations,
+                                  &mLoadInfo.mEvalAllowed);
+  } else {
+    mLoadInfo.mEvalAllowed = true;
+    mLoadInfo.mReportCSPViolations = false;
+  }
 
   mLoadInfo.mLoadGroup = aLoadGroup;
 
@@ -4340,20 +4343,6 @@ WorkerPrivate::GetLoadInfo(JSContext* aCx, nsPIDOMWindow* aWindow,
 
     MOZ_ASSERT(loadInfo.mPrincipal);
     MOZ_ASSERT(isChrome || !loadInfo.mDomain.IsEmpty());
-
-    if (!nsContentUtils::GetContentSecurityPolicy(getter_AddRefs(loadInfo.mCSP))) {
-      NS_WARNING("Failed to get CSP!");
-      return NS_ERROR_FAILURE;
-    }
-
-    if (loadInfo.mCSP) {
-      rv = loadInfo.mCSP->GetAllowsEval(&loadInfo.mReportCSPViolations,
-                                        &loadInfo.mEvalAllowed);
-      NS_ENSURE_SUCCESS(rv, rv);
-    } else {
-      loadInfo.mEvalAllowed = true;
-      loadInfo.mReportCSPViolations = false;
-    }
 
     if (!loadInfo.mLoadGroup || aLoadGroupBehavior == OverrideLoadGroup) {
       OverrideLoadInfoLoadGroup(loadInfo);

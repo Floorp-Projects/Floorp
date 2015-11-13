@@ -85,14 +85,9 @@ StorageEvent::InitStorageEvent(const nsAString& aType, bool aCanBubble,
                                const nsAString& aOldValue,
                                const nsAString& aNewValue,
                                const nsAString& aURL,
-                               DOMStorage* aStorageArea,
-                               ErrorResult& aRv)
+                               DOMStorage* aStorageArea)
 {
-  aRv = InitEvent(aType, aCanBubble, aCancelable);
-  if (aRv.Failed()) {
-    return;
-  }
-
+  InitEvent(aType, aCanBubble, aCancelable);
   mKey = aKey;
   mOldValue = aOldValue;
   mNewValue = aNewValue;

@@ -5,7 +5,7 @@
 
 #include "nsIDOMUIEvent.idl"
 
-[builtinclass, uuid(4faecbd6-1bcd-42d8-bc66-ec6b95050063)]
+[builtinclass, uuid(f2606aee-1801-4e4c-9700-af99e435c02c)]
 interface nsIDOMFocusEvent : nsIDOMUIEvent
 {
   readonly attribute nsIDOMEventTarget  relatedTarget;

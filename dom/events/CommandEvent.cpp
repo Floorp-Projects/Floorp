@@ -51,8 +51,7 @@ CommandEvent::InitCommandEvent(const nsAString& aTypeArg,
                                bool aCancelableArg,
                                const nsAString& aCommand)
 {
-  nsresult rv = Event::InitEvent(aTypeArg, aCanBubbleArg, aCancelableArg);
-  NS_ENSURE_SUCCESS(rv, rv);
+  Event::InitEvent(aTypeArg, aCanBubbleArg, aCancelableArg);
 
   mEvent->AsCommandEvent()->command = do_GetAtom(aCommand);
   return NS_OK;

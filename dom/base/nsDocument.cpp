@@ -9122,10 +9122,7 @@ DispatchCustomEventWithFlush(nsINode* aTarget, const nsAString& aEventType,
                              bool aBubbles, bool aOnlyChromeDispatch)
 {
   RefPtr<Event> event = NS_NewDOMEvent(aTarget, nullptr, nullptr);
-  nsresult rv = event->InitEvent(aEventType, aBubbles, false);
-  if (NS_FAILED(rv)) {
-    return;
-  }
+  event->InitEvent(aEventType, aBubbles, false);
   event->SetTrusted(true);
   if (aOnlyChromeDispatch) {
     event->GetInternalNSEvent()->mFlags.mOnlyChromeDispatch = true;
