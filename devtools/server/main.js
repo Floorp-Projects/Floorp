@@ -1387,7 +1387,7 @@ DebuggerServerConnection.prototype = {
     if (index > -1) {
       let pool = this._extraPools.splice(index, 1);
       if (!aNoCleanup) {
-        pool.map(function(p) { p.cleanup(); });
+        pool.map(function(p) { p.destroy(); });
       }
     }
   },
@@ -1702,7 +1702,7 @@ DebuggerServerConnection.prototype = {
     events.emit(this, "closed", aStatus);
 
     this._actorPool = null;
-    this._extraPools.map(function(p) { p.cleanup(); });
+    this._extraPools.map(function(p) { p.destroy(); });
     this._extraPools = null;
 
     this.rootActor = null;
