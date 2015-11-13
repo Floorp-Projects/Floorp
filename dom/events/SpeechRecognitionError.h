@@ -49,8 +49,7 @@ public:
                              bool aCanBubble,
                              bool aCancelable,
                              SpeechRecognitionErrorCode aError,
-                             const nsAString& aMessage,
-                             ErrorResult& aRv);
+                             const nsAString& aMessage);
 
 protected:
   SpeechRecognitionErrorCode mError;

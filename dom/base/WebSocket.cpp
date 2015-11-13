@@ -1807,9 +1807,7 @@ WebSocket::CreateAndDispatchSimpleEvent(const nsAString& aName)
   RefPtr<Event> event = NS_NewDOMEvent(this, nullptr, nullptr);
 
   // it doesn't bubble, and it isn't cancelable
-  rv = event->InitEvent(aName, false, false);
-  NS_ENSURE_SUCCESS(rv, rv);
-
+  event->InitEvent(aName, false, false);
   event->SetTrusted(true);
 
   return DispatchDOMEvent(nullptr, event, nullptr, nullptr);

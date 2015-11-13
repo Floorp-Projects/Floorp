@@ -17,7 +17,6 @@ interface CompositionEvent : UIEvent
 
 partial interface CompositionEvent
 {
-  [Throws]
   void initCompositionEvent(DOMString typeArg,
                             boolean canBubbleArg,
                             boolean cancelableArg,

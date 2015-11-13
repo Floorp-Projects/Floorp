@@ -161,9 +161,7 @@ UIEvent::InitUIEvent(const nsAString& typeArg,
     nsCOMPtr<nsPIDOMWindow> view = do_QueryInterface(viewArg);
     NS_ENSURE_TRUE(view, NS_ERROR_INVALID_ARG);
   }
-  nsresult rv = Event::InitEvent(typeArg, canBubbleArg, cancelableArg);
-  NS_ENSURE_SUCCESS(rv, rv);
-  
+  Event::InitEvent(typeArg, canBubbleArg, cancelableArg);
   mDetail = detailArg;
   mView = viewArg;
 

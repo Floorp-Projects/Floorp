@@ -224,7 +224,6 @@ interface KeyEvent
   // for compatibility with the other web browsers on Windows.
   const unsigned long DOM_VK_WIN_OEM_CLEAR  = 0xFE;
 
-  [Throws]
   void initKeyEvent(DOMString type,
                     boolean canBubble,
                     boolean cancelable,
