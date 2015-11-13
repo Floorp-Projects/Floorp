@@ -271,7 +271,7 @@ GARBAGE += $(addsuffix .log,$(MOCHITESTS) reftest crashtest jstestbrowser)
 ifeq ($(OS_ARCH),Darwin)
 xpcshell_path = $(TARGET_DIST)/$(MOZ_MACBUNDLE_NAME)/Contents/MacOS/xpcshell
 else
-xpcshell_path = $(LIBXUL_DIST)/bin/xpcshell
+xpcshell_path = $(DIST)/bin/xpcshell
 endif
 
 # Execute all xpcshell tests in the directories listed in the manifest.
