@@ -53,6 +53,7 @@ class nsScreenGonk : public nsBaseScreen
 {
     typedef mozilla::hal::ScreenConfiguration ScreenConfiguration;
     typedef mozilla::GonkDisplay GonkDisplay;
+    typedef mozilla::LayoutDeviceIntRect LayoutDeviceIntRect;
 
 public:
     nsScreenGonk(uint32_t aId,
@@ -72,11 +73,11 @@ public:
 
     uint32_t GetId();
     NotifyDisplayChangedEvent GetEventVisibility();
-    nsIntRect GetRect();
+    LayoutDeviceIntRect GetRect();
     float GetDpi();
     int32_t GetSurfaceFormat();
     ANativeWindow* GetNativeWindow();
-    mozilla::LayoutDeviceIntRect GetNaturalBounds();
+    LayoutDeviceIntRect GetNaturalBounds();
     uint32_t EffectiveScreenRotation();
     ScreenConfiguration GetConfiguration();
     bool IsPrimaryScreen();
@@ -127,8 +128,8 @@ protected:
     android::sp<ANativeWindow> mNativeWindow;
     float mDpi;
     int32_t mSurfaceFormat;
-    nsIntRect mNaturalBounds; // Screen bounds w/o rotation taken into account.
-    nsIntRect mVirtualBounds; // Screen bounds w/ rotation taken into account.
+    LayoutDeviceIntRect mNaturalBounds; // Screen bounds w/o rotation taken into account.
+    LayoutDeviceIntRect mVirtualBounds; // Screen bounds w/ rotation taken into account.
     uint32_t mScreenRotation;
     uint32_t mPhysicalScreenRotation;
     nsTArray<nsWindow*> mTopWindows;

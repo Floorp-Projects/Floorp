@@ -353,7 +353,7 @@ nsWindow::Create(nsIWidget *aParent,
     mVisible = false;
 
     if (!aParent) {
-        mBounds = mScreen->GetRect();
+        mBounds = mScreen->GetRect().ToUnknownRect();
     }
 
     mComposer2D = HwcComposer2D::GetInstance();
