@@ -3707,8 +3707,7 @@ GetScrollPortSizeExcludingHeadersAndFooters(nsIFrame* aViewportFrame,
        iterator.Next()) {
     nsIFrame* f = iterator.get();
     nsRect r = f->GetRect().Intersect(aScrollPort);
-    if ((r.width >= aScrollPort.width / 2 ||
-         r.width >= NSIntPixelsToAppUnits(800, AppUnitsPerCSSPixel())) &&
+    if (r.x == 0 && r.width == aScrollPort.width &&
         r.height <= aScrollPort.height/3) {
       list.AppendElement(TopAndBottom(r.y, r.YMost()));
     }
