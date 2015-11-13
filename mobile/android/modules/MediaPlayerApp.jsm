@@ -83,9 +83,6 @@ function RemoteMedia(id, listener) {
 
 RemoteMedia.prototype = {
   shutdown: function shutdown() {
-    Services.obs.removeObserver(this, "MediaPlayer:Playing");
-    Services.obs.removeObserver(this, "MediaPlayer:Paused");
-
     this._send("MediaPlayer:End", {}, (result, err) => {
       this._status = "shutdown";
       if ("onRemoteMediaStop" in this._listener) {
@@ -126,37 +123,12 @@ RemoteMedia.prototype = {
         return;
       }
 
-      Services.obs.addObserver(this, "MediaPlayer:Playing", false);
-      Services.obs.addObserver(this, "MediaPlayer:Paused", false);
       this._status = "started";
     })
   },
 
   get status() {
     return this._status;
-  },
-
-  observe: function (aSubject, aTopic, aData) {
-    switch (aTopic) {
-      case "MediaPlayer:Playing":
-        if (this._status !== "started") {
-          this._status = "started";
-          if ("onRemoteMediaStatus" in this._listener) {
-            this._listener.onRemoteMediaStatus(this);
-          }
-        }
-        break;
-      case "MediaPlayer:Paused":
-        if (this._status !== "paused") {
-          this._status = "paused";
-          if ("onRemoteMediaStatus" in this._listener) {
-            this._listener.onRemoteMediaStatus(this);
-          }
-        }
-        break;
-      default:
-        break;
-    }
   },
 
   _send: function(msg, data, callback) {
