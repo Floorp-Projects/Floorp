@@ -32,6 +32,9 @@ public:
     {}
 
     // ChromeProcessController methods
+    void HandleSingleTap(const CSSPoint& aPoint,
+                         Modifiers aModifiers,
+                         const ScrollableLayerGuid& aGuid) override;
     void PostDelayedTask(Task* aTask, int aDelayMs) override;
 
 public:
