@@ -9,7 +9,6 @@
 <body onload="testWebSocket()">
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=472529">Mozilla Bug </a>
 <p id="display">
-  <input id="fileList" type="file"></input>
 </p>
 <div id="content">
 </div>
@@ -1328,35 +1327,21 @@ function test44()
   {
     ok(ws.readyState == 3, "onclose bad readyState in test-44!");
     shouldCloseCleanly(e);
-    doTest(45);
+    SpecialPowers.createFiles([{name: "testBlobFile", data: "flob"}], function (files) {
+      blobFile = files[0];
+      doTest(45);
+    },
+    function (msg) {
+      testFailed("Failed to create file for test45: " + msg);
+      doTest(46);
+    });
   }
 }
 
-function createDOMFile(fileName, fileData)
-{
-  // create File in profile dir
-  var dirSvc = SpecialPowers.Cc["@mozilla.org/file/directory_service;1"]
-                         .getService(SpecialPowers.Ci.nsIProperties);
-  var testFile = dirSvc.get("ProfD", SpecialPowers.Ci.nsIFile);
-  testFile.append(fileName);
-  var outStream = SpecialPowers.Cc["@mozilla.org/network/file-output-stream;1"]
-                            .createInstance(SpecialPowers.Ci.nsIFileOutputStream);
-  outStream.init(testFile, 0x02 | 0x08 | 0x20, 0666, 0);
-  outStream.write(fileData, fileData.length);
-  outStream.close();
-
-  // Set filename into DOM <input> field, as if selected by user
-  var fileList = document.getElementById('fileList');
-  SpecialPowers.wrap(fileList).value = testFile.path;
-
-  // return JS File object, aka Blob
-  return fileList.files[0];
-}
+var blobFile;
 
 function test45()
 {
-  var blobFile = createDOMFile("testBlobFile", "flob");
-
   var ws = CreateTestWS("ws://mochi.test:8888/tests/dom/base/test/file_websocket", "test-45");
   ok(ws.readyState == 0, "bad readyState in test-45!");
 
