@@ -1779,6 +1779,7 @@ nsContextMenu.prototype = {
     // Store searchTerms in context menu item so we know what to search onclick
     menuItem.searchTerms = selectedText;
 
+    // Copied to alert.js' prefillAlertInfo().
     // If the JS character after our truncation point is a trail surrogate,
     // include it in the truncated string to avoid splitting a surrogate pair.
     if (selectedText.length > 15) {
