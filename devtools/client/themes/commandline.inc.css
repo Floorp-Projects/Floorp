@@ -52,7 +52,7 @@
 
 :root[devtoolstheme="light"] #developer-toolbar > toolbarbutton:not([checked=true]) > image,
 :root[devtoolstheme="light"] .gclitoolbar-input-node:not([focused=true])::before  {
-  filter: url("chrome://devtools/skin/images/filters.svg#invert");
+  filter: invert(1);
 }
 
 .developer-toolbar-button > .toolbarbutton-icon,
