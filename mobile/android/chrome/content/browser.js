@@ -4781,6 +4781,8 @@ var BrowserEventHandler = {
       Services.obs.addObserver(this, "Gesture:Scroll", false);
       Services.obs.addObserver(this, "dom-touch-listener-added", false);
       BrowserApp.deck.addEventListener("touchstart", this, true);
+    } else {
+      BrowserApp.deck.addEventListener("touchend", this, true);
     }
 
     BrowserApp.deck.addEventListener("DOMUpdatePageReport", PopupBlockerObserver.onUpdatePageReport, false);
@@ -4802,6 +4804,11 @@ var BrowserEventHandler = {
     switch (aEvent.type) {
       case 'touchstart':
         this._handleTouchStart(aEvent);
+        break;
+      case 'touchend':
+        if (this._inCluster) {
+          aEvent.preventDefault();
+        }
         break;
       case 'MozMouseHittest':
         this._handleRetargetedTouchStart(aEvent);
