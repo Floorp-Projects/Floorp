@@ -424,6 +424,17 @@ APZEventState::ProcessAPZStateChange(const nsCOMPtr<nsIDocument>& aDocument,
   }
 }
 
+void
+APZEventState::ProcessClusterHit()
+{
+  // If we hit a cluster of links then we shouldn't activate any of them,
+  // as we will be showing the zoomed view. (This is only called on Fennec).
+#ifndef MOZ_ANDROID_APZ
+  MOZ_ASSERT(false);
+#endif
+  mActiveElementManager->ClearActivation();
+}
+
 bool
 APZEventState::SendPendingTouchPreventedResponse(bool aPreventDefault)
 {
