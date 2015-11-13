@@ -229,6 +229,7 @@ function nsAsyncShutdownService() {
    [// Parent process
     "profileBeforeChange",
     "profileChangeTeardown",
+    "quitApplicationGranted",
     "sendTelemetry",
 
     // Child processes
