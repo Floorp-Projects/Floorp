@@ -98,6 +98,9 @@ JitOptions::JitOptions()
     // Toggles whether Loop Unrolling is globally disabled.
     SET_DEFAULT(disableLoopUnrolling, true);
 
+    // Toggle whether Profile Guided Optimization is globally disabled.
+    SET_DEFAULT(disablePgo, true);
+
     // Toggles whether instruction reordering is globally disabled.
     SET_DEFAULT(disableInstructionReordering, false);
 

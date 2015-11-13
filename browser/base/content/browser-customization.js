@@ -60,9 +60,7 @@ var CustomizationHandler = {
     if (aDetails.changed) {
       gURLBar = document.getElementById("urlbar");
 
-      gProxyFavIcon = document.getElementById("page-proxy-favicon");
       gHomeButton.updateTooltip();
-      gIdentityHandler._cacheElements();
       XULBrowserWindow.init();
 
 #ifndef XP_MACOSX

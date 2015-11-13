@@ -268,8 +268,8 @@ class IonBuilder
     ControlStatus maybeLoop(JSOp op, jssrcnote* sn);
     bool pushLoop(CFGState::State state, jsbytecode* stopAt, MBasicBlock* entry, bool osr,
                   jsbytecode* loopHead, jsbytecode* initialPc,
-                  jsbytecode* bodyStart, jsbytecode* bodyEnd, jsbytecode* exitpc,
-                  jsbytecode* continuepc = nullptr);
+                  jsbytecode* bodyStart, jsbytecode* bodyEnd,
+                  jsbytecode* exitpc, jsbytecode* continuepc);
     bool analyzeNewLoopTypes(MBasicBlock* entry, jsbytecode* start, jsbytecode* end);
 
     MBasicBlock* addBlock(MBasicBlock* block, uint32_t loopDepth);
@@ -278,7 +278,8 @@ class IonBuilder
     MBasicBlock* newBlock(MBasicBlock* predecessor, jsbytecode* pc, MResumePoint* priorResumePoint);
     MBasicBlock* newBlockPopN(MBasicBlock* predecessor, jsbytecode* pc, uint32_t popped);
     MBasicBlock* newBlockAfter(MBasicBlock* at, MBasicBlock* predecessor, jsbytecode* pc);
-    MBasicBlock* newOsrPreheader(MBasicBlock* header, jsbytecode* loopEntry);
+    MBasicBlock* newOsrPreheader(MBasicBlock* header, jsbytecode* loopEntry,
+                                 jsbytecode* beforeLoopEntry);
     MBasicBlock* newPendingLoopHeader(MBasicBlock* predecessor, jsbytecode* pc, bool osr, bool canOsr,
                                       unsigned stackPhiCount);
     MBasicBlock* newBlock(jsbytecode* pc) {

@@ -838,7 +838,9 @@ main(int argc, char** argv)
   struct sigaction sa;
   memset(&sa, 0, sizeof(sa));
   sa.sa_flags = SA_RESTART | SA_SIGINFO;
-  if (sigemptyset(&sa.sa_mask) < 0) {
+  // The extra parens around (0) suppress a -Wunreachable-code warning on OS X
+  // where sigemptyset() is a macro that can never fail and always returns 0.
+  if (sigemptyset(&sa.sa_mask) < (0)) {
     Abort("sigemptyset() failed");
   }
   sa.sa_sigaction = SigAlrmHandler;
@@ -877,4 +879,3 @@ main(int argc, char** argv)
 
   return 0;
 }
-

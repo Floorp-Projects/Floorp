@@ -682,6 +682,7 @@ TraceLoggerThreadState::init()
     if (ContainsFlag(env, "IonCompiler")) {
         enabledTextIds[TraceLogger_IonCompilation] = true;
         enabledTextIds[TraceLogger_IonLinking] = true;
+        enabledTextIds[TraceLogger_PruneUnusedBranches] = true;
         enabledTextIds[TraceLogger_FoldTests] = true;
         enabledTextIds[TraceLogger_SplitCriticalEdges] = true;
         enabledTextIds[TraceLogger_RenumberBlocks] = true;

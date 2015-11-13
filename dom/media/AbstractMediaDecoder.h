@@ -111,7 +111,7 @@ public:
 
   // Called by the reader's MediaResource as data arrives over the network.
   // Must be called on the main thread.
-  virtual void NotifyDataArrived(bool aThrottleUpdates) = 0;
+  virtual void NotifyDataArrived() = 0;
 
   // Set by Reader if the current audio track can be offloaded
   virtual void SetPlatformCanOffloadAudio(bool aCanOffloadAudio) {}

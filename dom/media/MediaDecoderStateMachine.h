@@ -168,9 +168,9 @@ public:
     OwnerThread()->Dispatch(runnable.forget());
   }
 
-  void DispatchNotifyDataArrived(bool aThrottleUpdates)
+  void DispatchNotifyDataArrived()
   {
-    mReader->DispatchNotifyDataArrived(aThrottleUpdates);
+    mReader->DispatchNotifyDataArrived();
   }
 
   // Notifies the state machine that should minimize the number of samples

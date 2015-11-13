@@ -1,0 +1,130 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1166138
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1166138</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+  <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1166138">Mozilla Bug 1166138</a>
+  <p id="display"></p>
+  <div id="content" style="display: none">
+  </div>
+
+  <img srcset="file_bug1166138_1x.png 1x, file_bug1166138_2x.png 2x"
+       src="file_bug1166138_def.png"
+       onload="onLoad()">
+
+  <script type="application/javascript">
+    var img1x = "http://mochi.test:8888/tests/dom/html/test/file_bug1166138_1x.png";
+    var img2x = "http://mochi.test:8888/tests/dom/html/test/file_bug1166138_2x.png";
+    var imgdef = "http://mochi.test:8888/tests/dom/html/test/file_bug1166138_def.png";
+    var onLoadCallback = null;
+    var done = false;
+
+    var startPromise = new Promise((a) => {
+      onLoadCallback = () => {
+        var image = document.querySelector('img');
+        // If we aren't starting at 2x scale, resize to 2x scale, and wait for a load
+        if (image.currentSrc != img2x) {
+          onLoadCallback = a;
+          SpecialPowers.pushPrefEnv({'set': [['layout.css.devPixelsPerPx', 2]]});
+        } else {
+          a();
+        }
+      };
+    });
+
+    // if aLoad is true, waits for a load event. Otherwise, spins the event loop twice to
+    // ensure that no events were queued to be fired.
+    function spin(aLoad) {
+      if (aLoad) {
+        return new Promise((a) => {
+          ok(!onLoadCallback, "Shouldn't be an existing callback");
+          onLoadCallback = a;
+        });
+      } else {
+        return new Promise((a) => SimpleTest.executeSoon(() => SimpleTest.executeSoon(a)));
+      }
+    }
+
+    function onLoad() {
+      if (done) return;
+      ok(onLoadCallback, "Expected a load event");
+      if (onLoadCallback) {
+        var cb = onLoadCallback;
+        onLoadCallback = null;
+        cb();
+      }
+    }
+
+    add_task(function* () {
+      yield startPromise;
+      var image = document.querySelector('img');
+      is(image.currentSrc, img2x, "initial scale must be 2x");
+
+      SpecialPowers.pushPrefEnv({'set': [['layout.css.devPixelsPerPx', 1]]});
+      yield spin(true);
+      is(image.currentSrc, img1x, "pre-existing img tag to 1x");
+
+      SpecialPowers.pushPrefEnv({'set': [['layout.css.devPixelsPerPx', 2]]});
+      yield spin(true);
+      is(image.currentSrc, img2x, "pre-existing img tag to 2x");
+
+      // Try removing & re-adding the image
+      document.body.removeChild(image);
+
+      SpecialPowers.pushPrefEnv({'set': [['layout.css.devPixelsPerPx', 1]]});
+      yield spin(false); // No load should occur because the element is unbound
+
+      document.body.appendChild(image);
+      yield spin(true);
+      is(image.currentSrc, img1x, "remove and re-add tag after changing to 1x");
+
+      document.body.removeChild(image);
+      SpecialPowers.pushPrefEnv({'set': [['layout.css.devPixelsPerPx', 2]]});
+      yield spin(false); // No load should occur because the element is unbound
+
+      document.body.appendChild(image);
+      yield spin(true);
+      is(image.currentSrc, img2x, "remove and re-add tag after changing to 2x");
+
+      // get rid of the srcset attribute! It should become the default
+      image.removeAttribute('srcset');
+      yield spin(true);
+      is(image.currentSrc, imgdef, "remove srcset attribute");
+
+      // Setting srcset again should return it to the correct value
+      image.setAttribute('srcset', "file_bug1166138_1x.png 1x, file_bug1166138_2x.png 2x");
+      yield spin(true);
+      is(image.currentSrc, img2x, "restore srcset attribute");
+
+      // Create a new image
+      var newImage = document.createElement('img');
+      // Switch load listening over to newImage
+      newImage.addEventListener('load', onLoad);
+      image.removeEventListener('load', onLoad);
+
+      document.body.appendChild(newImage);
+      yield spin(false); // no load event should fire - as the image has no attributes
+      is(newImage.currentSrc, "", "New element with no attributes");
+      newImage.setAttribute('srcset', "file_bug1166138_1x.png 1x, file_bug1166138_2x.png 2x");
+      yield spin(true);
+      is(newImage.currentSrc, img2x, "Adding srcset attribute");
+
+      SpecialPowers.pushPrefEnv({'set': [['layout.css.devPixelsPerPx', 1]]});
+      yield spin(true);
+      is(newImage.currentSrc, img1x, "new image after switching to 1x");
+      is(image.currentSrc, img1x, "old image after switching to 1x");
+
+      // Clear the listener
+      done = true;
+    });
+  </script>
+</body>
+</html>

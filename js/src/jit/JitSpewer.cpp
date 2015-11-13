@@ -88,7 +88,8 @@ class MOZ_RAII AutoLockIonSpewerOutput
 static IonSpewer ionspewer;
 
 static bool LoggingChecked = false;
-static uint32_t LoggingBits = 0;
+static_assert(JitSpew_Terminator <= 64, "Increase the size of the LoggingBits global.");
+static uint64_t LoggingBits = 0;
 static mozilla::Atomic<uint32_t, mozilla::Relaxed> filteredOutCompilations(0);
 
 static const char * const ChannelNames[] =
@@ -400,6 +401,7 @@ jit::CheckLogging()
             "  aborts     Compilation abort messages\n"
             "  scripts    Compiled scripts\n"
             "  mir        MIR information\n"
+            "  prune      Prune unused branches\n"
             "  escape     Escape analysis\n"
             "  alias      Alias analysis\n"
             "  gvn        Global Value Numbering\n"
@@ -440,6 +442,8 @@ jit::CheckLogging()
     }
     if (ContainsFlag(env, "aborts"))
         EnableChannel(JitSpew_IonAbort);
+    if (ContainsFlag(env, "prune"))
+        EnableChannel(JitSpew_Prune);
     if (ContainsFlag(env, "escape"))
         EnableChannel(JitSpew_Escape);
     if (ContainsFlag(env, "alias"))
@@ -489,7 +493,7 @@ jit::CheckLogging()
     if (ContainsFlag(env, "trackopts"))
         EnableChannel(JitSpew_OptimizationTracking);
     if (ContainsFlag(env, "all"))
-        LoggingBits = uint32_t(-1);
+        LoggingBits = uint64_t(-1);
 
     if (ContainsFlag(env, "bl-aborts"))
         EnableChannel(JitSpew_BaselineAbort);
@@ -625,21 +629,21 @@ bool
 jit::JitSpewEnabled(JitSpewChannel channel)
 {
     MOZ_ASSERT(LoggingChecked);
-    return (LoggingBits & (1 << uint32_t(channel))) && !filteredOutCompilations;
+    return (LoggingBits & (uint64_t(1) << uint32_t(channel))) && !filteredOutCompilations;
 }
 
 void
 jit::EnableChannel(JitSpewChannel channel)
 {
     MOZ_ASSERT(LoggingChecked);
-    LoggingBits |= (1 << uint32_t(channel));
+    LoggingBits |= uint64_t(1) << uint32_t(channel);
 }
 
 void
 jit::DisableChannel(JitSpewChannel channel)
 {
     MOZ_ASSERT(LoggingChecked);
-    LoggingBits &= ~(1 << uint32_t(channel));
+    LoggingBits &= ~(uint64_t(1) << uint32_t(channel));
 }
 
 #endif /* JS_JITSPEW */

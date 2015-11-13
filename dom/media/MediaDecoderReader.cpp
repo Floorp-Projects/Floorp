@@ -68,11 +68,8 @@ MediaDecoderReader::MediaDecoderReader(AbstractMediaDecoder* aDecoder)
   , mTaskQueue(new TaskQueue(GetMediaThreadPool(MediaThreadType::PLAYBACK),
                              /* aSupportsTailDispatch = */ true))
   , mWatchManager(this, mTaskQueue)
-  , mTimer(new MediaTimer())
   , mBuffered(mTaskQueue, TimeIntervals(), "MediaDecoderReader::mBuffered (Canonical)")
   , mDuration(mTaskQueue, NullableTimeUnit(), "MediaDecoderReader::mDuration (Mirror)")
-  , mThrottleDuration(TimeDuration::FromMilliseconds(500))
-  , mLastThrottledNotify(TimeStamp::Now() - mThrottleDuration)
   , mIgnoreAudioOutputFormat(false)
   , mHitAudioDecodeError(false)
   , mShutdown(false)
@@ -180,43 +177,6 @@ MediaDecoderReader::UpdateBuffered()
   MOZ_ASSERT(OnTaskQueue());
   NS_ENSURE_TRUE_VOID(!mShutdown);
   mBuffered = GetBuffered();
-}
-
-void
-MediaDecoderReader::ThrottledNotifyDataArrived()
-{
-  MOZ_ASSERT(OnTaskQueue());
-  NS_ENSURE_TRUE_VOID(!mShutdown);
-
-  // If it's been long enough since our last update, do it.
-  if (TimeStamp::Now() - mLastThrottledNotify > mThrottleDuration) {
-    DoThrottledNotify();
-  } else if (!mThrottledNotify.Exists()) {
-    // Otherwise, schedule an update if one isn't scheduled already.
-    RefPtr<MediaDecoderReader> self = this;
-    mThrottledNotify.Begin(
-      mTimer->WaitUntil(mLastThrottledNotify + mThrottleDuration, __func__)
-      ->Then(OwnerThread(), __func__,
-             [self] () -> void {
-               self->mThrottledNotify.Complete();
-               NS_ENSURE_TRUE_VOID(!self->mShutdown);
-               self->DoThrottledNotify();
-             },
-             [self] () -> void {
-               self->mThrottledNotify.Complete();
-               NS_WARNING("throttle callback rejected");
-             })
-    );
-  }
-}
-
-void
-MediaDecoderReader::DoThrottledNotify()
-{
-  MOZ_ASSERT(OnTaskQueue());
-  mLastThrottledNotify = TimeStamp::Now();
-  mThrottledNotify.DisconnectIfExists();
-  NotifyDataArrived();
 }
 
 media::TimeIntervals
@@ -400,8 +360,6 @@ MediaDecoderReader::Shutdown()
   mBaseAudioPromise.RejectIfExists(END_OF_STREAM, __func__);
   mBaseVideoPromise.RejectIfExists(END_OF_STREAM, __func__);
 
-  mThrottledNotify.DisconnectIfExists();
-
   ReleaseMediaResources();
   mDuration.DisconnectIfConnected();
   mBuffered.DisconnectAll();
@@ -411,7 +369,6 @@ MediaDecoderReader::Shutdown()
 
   RefPtr<ShutdownPromise> p;
 
-  mTimer = nullptr;
   mDecoder = nullptr;
 
   return mTaskQueue->BeginShutdown();
