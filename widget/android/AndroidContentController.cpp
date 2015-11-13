@@ -47,6 +47,26 @@ AndroidContentController::NotifyDefaultPrevented(uint64_t aInputBlockId,
 }
 
 void
+AndroidContentController::HandleSingleTap(const CSSPoint& aPoint,
+                                          Modifiers aModifiers,
+                                          const ScrollableLayerGuid& aGuid)
+{
+    // This function will get invoked first on the Java UI thread, and then
+    // again on the main thread (because of the code in ChromeProcessController::
+    // HandleSingleTap). We want to post the SingleTap message once; it can be
+    // done from either thread but for backwards compatibility with the JPZC
+    // architecture it's better to do it as soon as possible.
+    if (AndroidBridge::IsJavaUiThread()) {
+        CSSIntPoint point = RoundedToInt(aPoint);
+        nsCString data = nsPrintfCString("{ \"x\": %d, \"y\": %d }", point.x, point.y);
+        nsAppShell::gAppShell->PostEvent(AndroidGeckoEvent::MakeBroadcastEvent(
+                NS_LITERAL_CSTRING("Gesture:SingleTap"), data));
+    }
+
+    ChromeProcessController::HandleSingleTap(aPoint, aModifiers, aGuid);
+}
+
+void
 AndroidContentController::PostDelayedTask(Task* aTask, int aDelayMs)
 {
     AndroidBridge::Bridge()->PostTaskToUiThread(aTask, aDelayMs);

@@ -28,6 +28,7 @@ class APZEventState;
 // tree.
 class ChromeProcessController : public mozilla::layers::GeckoContentController
 {
+protected:
   typedef mozilla::layers::FrameMetrics FrameMetrics;
   typedef mozilla::layers::ScrollableLayerGuid ScrollableLayerGuid;
 
