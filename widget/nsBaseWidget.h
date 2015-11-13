@@ -98,6 +98,7 @@ protected:
   typedef mozilla::layers::ScrollableLayerGuid ScrollableLayerGuid;
   typedef mozilla::layers::APZEventState APZEventState;
   typedef mozilla::layers::SetAllowedTouchBehaviorCallback SetAllowedTouchBehaviorCallback;
+  typedef mozilla::CSSIntRect CSSIntRect;
   typedef mozilla::ScreenRotation ScreenRotation;
 
   virtual ~nsBaseWidget();
@@ -288,7 +289,7 @@ public:
 
   // return the widget's outside dimensions
   // in global coordinates in display pixel.
-  nsIntRect GetScaledScreenBounds();
+  CSSIntRect GetScaledScreenBounds();
 
   // return the screen the widget is in.
   already_AddRefed<nsIScreen> GetWidgetScreen();
@@ -507,7 +508,7 @@ protected:
   nsCursor          mCursor;
   nsBorderStyle     mBorderStyle;
   nsIntRect         mBounds;
-  nsIntRect*        mOriginalBounds;
+  CSSIntRect*       mOriginalBounds;
   // When this pointer is null, the widget is not clipped
   mozilla::UniquePtr<nsIntRect[]> mClipRects;
   uint32_t          mClipRectCount;
