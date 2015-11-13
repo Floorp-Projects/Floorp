@@ -774,25 +774,13 @@ NS_IMPL_ISUPPORTS(VibrateWindowListener, nsIDOMEventListener)
 
 StaticRefPtr<VibrateWindowListener> gVibrateWindowListener;
 
-static bool
-MayVibrate(nsIDocument* doc) {
-#if MOZ_WIDGET_GONK
-  if (XRE_IsParentProcess()) {
-    return true; // The system app can always vibrate
-  }
-#endif // MOZ_WIDGET_GONK
-
-  // Hidden documents cannot start or stop a vibration.
-  return (doc && !doc->Hidden());
-}
-
 NS_IMETHODIMP
 VibrateWindowListener::HandleEvent(nsIDOMEvent* aEvent)
 {
   nsCOMPtr<nsIDocument> doc =
     do_QueryInterface(aEvent->InternalDOMEvent()->GetTarget());
 
-  if (!MayVibrate(doc)) {
+  if (!doc || doc->Hidden()) {
     // It's important that we call CancelVibrate(), not Vibrate() with an
     // empty list, because Vibrate() will fail if we're no longer focused, but
     // CancelVibrate() will succeed, so long as nobody else has started a new
@@ -865,8 +853,12 @@ Navigator::Vibrate(const nsTArray<uint32_t>& aPattern)
   }
 
   nsCOMPtr<nsIDocument> doc = mWindow->GetExtantDoc();
+  if (!doc) {
+    return false;
+  }
 
-  if (!MayVibrate(doc)) {
+  if (doc->Hidden()) {
+    // Hidden documents cannot start or stop a vibration.
     return false;
   }
 
