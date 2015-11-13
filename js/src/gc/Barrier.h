@@ -193,7 +193,6 @@ class ArrayBufferObjectMaybeShared;
 class ArrayBufferObject;
 class ArrayBufferViewObject;
 class SharedArrayBufferObject;
-class SharedTypedArrayObject;
 class BaseShape;
 class DebugScopeObject;
 class GlobalObject;

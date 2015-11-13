@@ -22,7 +22,6 @@
 #include "js/Conversions.h"
 #include "js/Value.h"
 
-#include "vm/SharedTypedArrayObject.h"
 #include "vm/TypedArrayObject.h"
 
 namespace js {
