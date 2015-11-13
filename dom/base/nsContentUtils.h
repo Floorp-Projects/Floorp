@@ -522,11 +522,6 @@ public:
     return sSecurityManager;
   }
 
-  /**
-   * Get the ContentSecurityPolicy for a JS context.
-   **/
-  static bool GetContentSecurityPolicy(nsIContentSecurityPolicy** aCSP);
-
   // Returns the subject principal. Guaranteed to return non-null. May only
   // be called when nsContentUtils is initialized.
   static nsIPrincipal* SubjectPrincipal();

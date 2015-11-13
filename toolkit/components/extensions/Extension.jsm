@@ -37,6 +37,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "OS",
                                   "resource://gre/modules/osfile.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
                                   "resource://gre/modules/PrivateBrowsingUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Preferences",
+                                  "resource://gre/modules/Preferences.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Task",
                                   "resource://gre/modules/Task.jsm");
 
@@ -649,16 +651,44 @@ ExtensionData.prototype = {
   }),
 };
 
+// All moz-extension URIs use a machine-specific UUID rather than the
+// extension's own ID in the host component. This makes it more
+// difficult for web pages to detect whether a user has a given add-on
+// installed (by trying to load a moz-extension URI referring to a
+// web_accessible_resource from the extension). getExtensionUUID
+// returns the UUID for a given add-on ID.
+function getExtensionUUID(id)
+{
+  const PREF_NAME = "extensions.webextensions.uuids";
+
+  let pref = Preferences.get(PREF_NAME, "{}");
+  let map = {};
+  try {
+    map = JSON.parse(pref);
+  } catch (e) {
+    Cu.reportError(`Error parsing ${PREF_NAME}.`);
+  }
+
+  if (id in map) {
+    return map[id];
+  }
+
+  let uuidGenerator = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator);
+  let uuid = uuidGenerator.generateUUID().number;
+  uuid = uuid.slice(1, -1); // Strip of { and } off the UUID.
+
+  map[id] = uuid;
+  Preferences.set(PREF_NAME, JSON.stringify(map));
+  return uuid;
+}
+
 // We create one instance of this class per extension. |addonData|
 // comes directly from bootstrap.js when initializing.
 this.Extension = function(addonData)
 {
   ExtensionData.call(this, addonData.resourceURI);
 
-  let uuidGenerator = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUIDGenerator);
-  let uuid = uuidGenerator.generateUUID().number;
-  uuid = uuid.slice(1, -1); // Strip of { and } off the UUID.
-  this.uuid = uuid;
+  this.uuid = getExtensionUUID(addonData.id);
 
   if (addonData.cleanupFile) {
     Services.obs.addObserver(this, "xpcom-shutdown", false);
@@ -668,7 +698,7 @@ this.Extension = function(addonData)
 
   this.addonData = addonData;
   this.id = addonData.id;
-  this.baseURI = Services.io.newURI("moz-extension://" + uuid, null, null);
+  this.baseURI = Services.io.newURI("moz-extension://" + this.uuid, null, null);
   this.baseURI.QueryInterface(Ci.nsIURL);
   this.principal = this.createPrincipal();
 

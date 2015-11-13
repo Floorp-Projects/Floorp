@@ -1638,8 +1638,7 @@ BluetoothAdapter::DispatchEmptyEvent(const nsAString& aType)
 {
   RefPtr<Event> event = NS_NewDOMEvent(this, nullptr, nullptr);
 
-  nsresult rv = event->InitEvent(aType, false, false);
-  NS_ENSURE_SUCCESS_VOID(rv);
+  event->InitEvent(aType, false, false);
 
   DispatchTrustedEvent(event);
 }

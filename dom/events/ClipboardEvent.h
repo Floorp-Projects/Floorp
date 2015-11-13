@@ -46,8 +46,7 @@ public:
 
   void InitClipboardEvent(const nsAString& aType, bool aCanBubble,
                           bool aCancelable,
-                          DataTransfer* aClipboardData,
-                          ErrorResult& aError);
+                          DataTransfer* aClipboardData);
 
 protected:
   ~ClipboardEvent() {}

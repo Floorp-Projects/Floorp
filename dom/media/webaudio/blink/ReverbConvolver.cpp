@@ -94,8 +94,14 @@ ReverbConvolver::ReverbConvolver(const float* impulseResponseData,
 
         // For the last stage, it's possible that stageOffset is such that we're straddling the end
         // of the impulse response buffer (if we use stageSize), so reduce the last stage's length...
-        if (stageSize + stageOffset > totalResponseLength)
+        if (stageSize + stageOffset > totalResponseLength) {
             stageSize = totalResponseLength - stageOffset;
+            // Use smallest FFT that is large enough to cover the last stage.
+            fftSize = MinFFTSize;
+            while (stageSize * 2 > fftSize) {
+              fftSize *= 2;
+            }
+        }
 
         // This "staggers" the time when each FFT happens so they don't all happen at the same time
         int renderPhase = convolverRenderPhase + stagePhase;

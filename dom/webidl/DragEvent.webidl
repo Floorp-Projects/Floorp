@@ -9,7 +9,6 @@ interface DragEvent : MouseEvent
 {
   readonly attribute DataTransfer? dataTransfer;
 
-  [Throws]
   void initDragEvent(DOMString type,
                      boolean canBubble,
                      boolean cancelable,

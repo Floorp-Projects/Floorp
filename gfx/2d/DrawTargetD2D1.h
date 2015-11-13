@@ -200,7 +200,7 @@ private:
   IntRect mCurrentClipBounds;
   mutable RefPtr<ID2D1DeviceContext> mDC;
   RefPtr<ID2D1Bitmap1> mBitmap;
-  RefPtr<ID2D1Bitmap1> mTempBitmap;
+  RefPtr<ID2D1CommandList> mCommandList;
   RefPtr<ID2D1Effect> mBlendEffect;
 
   RefPtr<ID2D1SolidColorBrush> mSolidColorBrush;

@@ -414,7 +414,7 @@ Event::Constructor(const GlobalObject& aGlobal,
   nsCOMPtr<mozilla::dom::EventTarget> t = do_QueryInterface(aGlobal.GetAsSupports());
   RefPtr<Event> e = new Event(t, nullptr, nullptr);
   bool trusted = e->Init(t);
-  aRv = e->InitEvent(aType, aParam.mBubbles, aParam.mCancelable);
+  e->InitEvent(aType, aParam.mBubbles, aParam.mCancelable);
   e->SetTrusted(trusted);
   return e.forget();
 }
@@ -572,13 +572,13 @@ Event::SetEventType(const nsAString& aEventTypeArg)
   }
 }
 
-NS_IMETHODIMP
+void
 Event::InitEvent(const nsAString& aEventTypeArg,
                  bool aCanBubbleArg,
                  bool aCancelableArg)
 {
   // Make sure this event isn't already being dispatched.
-  NS_ENSURE_TRUE(!mEvent->mFlags.mIsBeingDispatched, NS_OK);
+  NS_ENSURE_TRUE_VOID(!mEvent->mFlags.mIsBeingDispatched);
 
   if (IsTrusted()) {
     // Ensure the caller is permitted to dispatch trusted DOM events.
@@ -600,7 +600,6 @@ Event::InitEvent(const nsAString& aEventTypeArg,
   // re-dispatching it.
   mEvent->target = nullptr;
   mEvent->originalTarget = nullptr;
-  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1190,8 +1189,7 @@ Event::Deserialize(const IPC::Message* aMsg, void** aIter)
   bool trusted = false;
   NS_ENSURE_TRUE(IPC::ReadParam(aMsg, aIter, &trusted), false);
 
-  nsresult rv = InitEvent(type, bubbles, cancelable);
-  NS_ENSURE_SUCCESS(rv, false);
+  InitEvent(type, bubbles, cancelable);
   SetTrusted(trusted);
 
   return true;
