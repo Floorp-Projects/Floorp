@@ -160,7 +160,6 @@ const UnsolicitedNotifications = {
   "reflowActivity": "reflowActivity",
   "addonListChanged": "addonListChanged",
   "workerListChanged": "workerListChanged",
-  "serviceWorkerRegistrationChanged": "serviceWorkerRegistrationChanged",
   "tabNavigated": "tabNavigated",
   "frameUpdate": "frameUpdate",
   "pageError": "pageError",
@@ -1227,7 +1226,7 @@ function TabClient(aClient, aForm) {
   this.thread = null;
   this.request = this.client.request;
   this.traits = aForm.traits || {};
-  this.events = ["workerListChanged", "serviceWorkerRegistrationChanged"];
+  this.events = ["workerListChanged"];
 }
 
 TabClient.prototype = {
@@ -1335,12 +1334,6 @@ TabClient.prototype = {
     type: "listWorkers"
   }, {
     telemetry: "LISTWORKERS"
-  }),
-
-  getServiceWorkerRegistration: DebuggerClient.requester({
-    type: "getServiceWorkerRegistration",
-  }, {
-    telemetry: "GETSERVICEWORKERREGISTRATION"
   }),
 
   attachWorker: function (aWorkerActor, aOnResponse) {
