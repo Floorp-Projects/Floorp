@@ -98,6 +98,31 @@ StringToPinCode(const nsAString& aString, BluetoothPinCode& aPinCode)
 }
 
 nsresult
+StringToControlPlayStatus(const nsAString& aString,
+                          ControlPlayStatus& aPlayStatus)
+{
+  if (aString.EqualsLiteral("STOPPED")) {
+    aPlayStatus = ControlPlayStatus::PLAYSTATUS_STOPPED;
+  } else if (aString.EqualsLiteral("PLAYING")) {
+    aPlayStatus = ControlPlayStatus::PLAYSTATUS_PLAYING;
+  } else if (aString.EqualsLiteral("PAUSED")) {
+    aPlayStatus = ControlPlayStatus::PLAYSTATUS_PAUSED;
+  } else if (aString.EqualsLiteral("FWD_SEEK")) {
+    aPlayStatus = ControlPlayStatus::PLAYSTATUS_FWD_SEEK;
+  } else if (aString.EqualsLiteral("REV_SEEK")) {
+    aPlayStatus = ControlPlayStatus::PLAYSTATUS_REV_SEEK;
+  } else if (aString.EqualsLiteral("ERROR")) {
+    aPlayStatus = ControlPlayStatus::PLAYSTATUS_ERROR;
+  } else {
+    BT_LOGR("Invalid play status: %s", NS_ConvertUTF16toUTF8(aString).get());
+    aPlayStatus = ControlPlayStatus::PLAYSTATUS_UNKNOWN;
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+
+  return NS_OK;
+}
+
+nsresult
 StringToPropertyType(const nsAString& aString, BluetoothPropertyType& aType)
 {
   if (aString.EqualsLiteral("Name")) {
