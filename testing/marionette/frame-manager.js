@@ -187,9 +187,7 @@ FrameManager.prototype = {
     mm.addWeakMessageListener("Marionette:shareData", this.server);
     mm.addWeakMessageListener("Marionette:switchToModalOrigin", this.server);
     mm.addWeakMessageListener("Marionette:switchedToFrame", this.server);
-    mm.addWeakMessageListener("Marionette:addCookie", this.server);
     mm.addWeakMessageListener("Marionette:getVisibleCookies", this.server);
-    mm.addWeakMessageListener("Marionette:deleteCookie", this.server);
     mm.addWeakMessageListener("Marionette:register", this.server);
     mm.addWeakMessageListener("Marionette:listenersAttached", this.server);
     mm.addWeakMessageListener("Marionette:getFiles", this.server);
@@ -216,9 +214,7 @@ FrameManager.prototype = {
     mm.removeWeakMessageListener("Marionette:runEmulatorCmd", this.server);
     mm.removeWeakMessageListener("Marionette:runEmulatorShell", this.server);
     mm.removeWeakMessageListener("Marionette:switchedToFrame", this.server);
-    mm.removeWeakMessageListener("Marionette:addCookie", this.server);
     mm.removeWeakMessageListener("Marionette:getVisibleCookies", this.server);
-    mm.removeWeakMessageListener("Marionette:deleteCookie", this.server);
     mm.removeWeakMessageListener("Marionette:listenersAttached", this.server);
     mm.removeWeakMessageListener("Marionette:register", this.server);
     mm.removeWeakMessageListener("Marionette:getFiles", this.server);
