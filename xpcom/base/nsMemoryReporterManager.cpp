@@ -24,6 +24,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/PodOperations.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/Scoped.h"
 #include "mozilla/Services.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/dom/PMemoryReportRequestParent.h" // for dom::MemoryReport
@@ -151,30 +152,6 @@ ResidentUniqueDistinguishedAmount(int64_t* aN)
 {
   return GetProcSelfSmapsPrivate(aN);
 }
-
-class ResidentUniqueReporter final : public nsIMemoryReporter
-{
-  ~ResidentUniqueReporter() {}
-
-public:
-  NS_DECL_ISUPPORTS
-
-  NS_METHOD CollectReports(nsIHandleReportCallback* aHandleReport,
-                           nsISupports* aData, bool aAnonymize) override
-  {
-    int64_t amount = 0;
-    nsresult rv = ResidentUniqueDistinguishedAmount(&amount);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    return MOZ_COLLECT_REPORT(
-      "resident-unique", KIND_OTHER, UNITS_BYTES, amount,
-"Memory mapped by the process that is present in physical memory and not "
-"shared with any other processes.  This is also known as the process's unique "
-"set size (USS).  This is the amount of RAM we'd expect to be freed if we "
-"closed this process.");
-  }
-};
-NS_IMPL_ISUPPORTS(ResidentUniqueReporter, nsIMemoryReporter)
 
 #define HAVE_SYSTEM_HEAP_REPORTER 1
 nsresult
@@ -582,30 +559,6 @@ ResidentUniqueDistinguishedAmount(int64_t* aN)
   return NS_OK;
 }
 
-class ResidentUniqueReporter final : public nsIMemoryReporter
-{
-  ~ResidentUniqueReporter() {}
-
-public:
-  NS_DECL_ISUPPORTS
-
-  NS_METHOD CollectReports(nsIHandleReportCallback* aHandleReport,
-                           nsISupports* aData, bool aAnonymize) override
-  {
-    int64_t amount = 0;
-    nsresult rv = ResidentUniqueDistinguishedAmount(&amount);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    return MOZ_COLLECT_REPORT(
-      "resident-unique", KIND_OTHER, UNITS_BYTES, amount,
-"Memory mapped by the process that is present in physical memory and not "
-"shared with any other processes.  This is also known as the process's unique "
-"set size (USS).  This is the amount of RAM we'd expect to be freed if we "
-"closed this process.");
-  }
-};
-NS_IMPL_ISUPPORTS(ResidentUniqueReporter, nsIMemoryReporter)
-
 #elif defined(XP_WIN)
 
 #include <windows.h>
@@ -645,6 +598,55 @@ static nsresult
 ResidentFastDistinguishedAmount(int64_t* aN)
 {
   return ResidentDistinguishedAmount(aN);
+}
+
+#define HAVE_RESIDENT_UNIQUE_REPORTER 1
+
+static nsresult
+ResidentUniqueDistinguishedAmount(int64_t* aN)
+{
+  // Determine how many entries we need.
+  PSAPI_WORKING_SET_INFORMATION tmp;
+  DWORD tmpSize = sizeof(tmp);
+  memset(&tmp, 0, tmpSize);
+
+  HANDLE proc = GetCurrentProcess();
+  QueryWorkingSet(proc, &tmp, tmpSize);
+
+  // Fudge the size in case new entries are added between calls.
+  size_t entries = tmp.NumberOfEntries * 2;
+
+  if (!entries) {
+    return NS_ERROR_FAILURE;
+  }
+
+  DWORD infoArraySize = tmpSize + (entries * sizeof(PSAPI_WORKING_SET_BLOCK));
+  mozilla::ScopedFreePtr<PSAPI_WORKING_SET_INFORMATION> infoArray(
+      static_cast<PSAPI_WORKING_SET_INFORMATION*>(malloc(infoArraySize)));
+
+  if (!infoArray) {
+    return NS_ERROR_FAILURE;
+  }
+
+  if (!QueryWorkingSet(proc, infoArray, infoArraySize)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  entries = static_cast<size_t>(infoArray->NumberOfEntries);
+  size_t privatePages = 0;
+  for (size_t i = 0; i < entries; i++) {
+    // Count shared pages that only one process is using as private.
+    if (!infoArray->WorkingSetInfo[i].Shared ||
+        infoArray->WorkingSetInfo[i].ShareCount <= 1) {
+      privatePages++;
+    }
+  }
+
+  SYSTEM_INFO si;
+  GetSystemInfo(&si);
+
+  *aN = privatePages * si.dwPageSize;
+  return NS_OK;
 }
 
 #define HAVE_VSIZE_MAX_CONTIGUOUS_REPORTER 1
@@ -997,6 +999,33 @@ public:
 NS_IMPL_ISUPPORTS(ResidentReporter, nsIMemoryReporter)
 
 #endif  // HAVE_VSIZE_AND_RESIDENT_REPORTERS
+
+#ifdef HAVE_RESIDENT_UNIQUE_REPORTER
+class ResidentUniqueReporter final : public nsIMemoryReporter
+{
+  ~ResidentUniqueReporter() {}
+
+public:
+  NS_DECL_ISUPPORTS
+
+  NS_METHOD CollectReports(nsIHandleReportCallback* aHandleReport,
+                           nsISupports* aData, bool aAnonymize) override
+  {
+    int64_t amount = 0;
+    nsresult rv = ResidentUniqueDistinguishedAmount(&amount);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    return MOZ_COLLECT_REPORT(
+      "resident-unique", KIND_OTHER, UNITS_BYTES, amount,
+"Memory mapped by the process that is present in physical memory and not "
+"shared with any other processes.  This is also known as the process's unique "
+"set size (USS).  This is the amount of RAM we'd expect to be freed if we "
+"closed this process.");
+  }
+};
+NS_IMPL_ISUPPORTS(ResidentUniqueReporter, nsIMemoryReporter)
+
+#endif // HAVE_RESIDENT_UNIQUE_REPORTER
 
 #ifdef HAVE_SYSTEM_HEAP_REPORTER
 
