@@ -17,6 +17,10 @@ loader.lazyRequireGetter(this, "StackFrameCache",
 loader.lazyRequireGetter(this, "ThreadSafeChromeUtils");
 loader.lazyRequireGetter(this, "HeapSnapshotFileUtils",
   "devtools/shared/heapsnapshot/HeapSnapshotFileUtils");
+loader.lazyRequireGetter(this, "ChromeActor", "devtools/server/actors/chrome",
+                         true);
+loader.lazyRequireGetter(this, "ChildProcessActor",
+                         "devtools/server/actors/child-process", true);
 
 /**
  * A class that returns memory data for a parent actor's window.
@@ -139,7 +143,12 @@ var Memory = exports.Memory = Class({
    * @returns {String} The snapshot id.
    */
   saveHeapSnapshot: expectState("attached", function () {
-    const path = ThreadSafeChromeUtils.saveHeapSnapshot({ debugger: this.dbg });
+    // If we are observing the whole process, then scope the snapshot
+    // accordingly. Otherwise, use the debugger's debuggees.
+    const opts = this.parent instanceof ChromeActor || this.parent instanceof ChildProcessActor
+      ? { runtime: true }
+      : { debugger: this.dbg };
+    const path = ThreadSafeChromeUtils.saveHeapSnapshot(opts);
     return HeapSnapshotFileUtils.getSnapshotIdFromPath(path);
   }, "saveHeapSnapshot"),
 
