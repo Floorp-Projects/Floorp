@@ -6,7 +6,6 @@
 package org.mozilla.gecko;
 
 import org.mozilla.gecko.annotation.RobocopTarget;
-import org.mozilla.gecko.AdjustConstants;
 import org.mozilla.gecko.AppConstants.Versions;
 import org.mozilla.gecko.DynamicToolbar.PinReason;
 import org.mozilla.gecko.DynamicToolbar.VisibilityTransition;
@@ -112,6 +111,7 @@ import android.os.Bundle;
 import android.os.StrictMode;
 import android.support.annotation.NonNull;
 import android.support.annotation.WorkerThread;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.view.MenuItemCompat;
@@ -330,7 +330,7 @@ public class BrowserApp extends GeckoApp
                 tab.loadFavicon();
                 break;
             case BOOKMARK_ADDED:
-                showBookmarkAddedToast();
+                showBookmarkAddedSnackbar();
                 break;
             case BOOKMARK_REMOVED:
                 showBookmarkRemovedToast();
@@ -396,57 +396,48 @@ public class BrowserApp extends GeckoApp
         }
     }
 
-    private void showBookmarkAddedToast() {
+    private void showBookmarkAddedSnackbar() {
         // This flow is from the option menu which has check to see if a bookmark was already added.
         // So, it is safe here to show the toast that bookmark_added without any checks.
-        getButtonToast().show(false,
-                getResources().getString(R.string.bookmark_added),
-                ButtonToast.LENGTH_SHORT,
-                getResources().getString(R.string.bookmark_options),
-                null,
-                new ButtonToast.ToastListener() {
-                    @Override
-                    public void onButtonClicked() {
-                        Telemetry.sendUIEvent(TelemetryContract.Event.SHOW,
-                            TelemetryContract.Method.TOAST, "bookmark_options");
-                        showBookmarkDialog();
-                    }
 
-                    @Override
-                    public void onToastHidden(ButtonToast.ReasonHidden reason) { }
-                });
+        final SnackbarCallback callback = new SnackbarCallback() {
+            @Override
+            public void onClick(View v) {
+                Telemetry.sendUIEvent(TelemetryContract.Event.SHOW, TelemetryContract.Method.TOAST, "bookmark_options");
+                showBookmarkDialog();
+            }
+        };
+
+        showSnackbar(getResources().getString(R.string.bookmark_added),
+                     Snackbar.LENGTH_LONG,
+                     getResources().getString(R.string.bookmark_options),
+                     callback);
     }
 
     private void showBookmarkRemovedToast() {
         Toast.makeText(this, R.string.bookmark_removed, Toast.LENGTH_SHORT).show();
     }
 
-    private void showSwitchToReadingListToast(String message) {
-        getButtonToast().show(false,
-                message,
-                ButtonToast.LENGTH_SHORT,
-                getResources().getString(R.string.switch_button_message),
-                R.drawable.switch_button_icon,
-                new ButtonToast.ToastListener() {
-                    @Override
-                    public void onButtonClicked() {
-                        Telemetry.sendUIEvent(TelemetryContract.Event.SHOW, TelemetryContract.Method.TOAST, "reading_list");
+    private void showSwitchToReadingListSnackbar(String message) {
+        final SnackbarCallback callback = new SnackbarCallback() {
+            @Override
+            public void onClick(View v) {
+                Telemetry.sendUIEvent(TelemetryContract.Event.SHOW, TelemetryContract.Method.TOAST, "reading_list");
 
-                        final String aboutPageUrl = AboutPages.getURLForBuiltinPanelType(PanelType.READING_LIST);
-                        Tabs.getInstance().loadUrlInTab(aboutPageUrl);
-                    }
+                final String aboutPageUrl = AboutPages.getURLForBuiltinPanelType(PanelType.READING_LIST);
+                Tabs.getInstance().loadUrlInTab(aboutPageUrl);
+            }
+        };
 
-                    @Override
-                    public void onToastHidden(ButtonToast.ReasonHidden reason) { }
-                });
+        showSnackbar(message, Snackbar.LENGTH_LONG, getResources().getString(R.string.switch_button_message), callback);
     }
 
     public void onAddedToReadingList(String url) {
-        showSwitchToReadingListToast(getResources().getString(R.string.reading_list_added));
+        showSwitchToReadingListSnackbar(getResources().getString(R.string.reading_list_added));
     }
 
     public void onAlreadyInReadingList(String url) {
-        showSwitchToReadingListToast(getResources().getString(R.string.reading_list_duplicate));
+        showSwitchToReadingListSnackbar(getResources().getString(R.string.reading_list_duplicate));
     }
 
     public void onRemovedFromReadingList(String url) {
@@ -3662,28 +3653,21 @@ public class BrowserApp extends GeckoApp
         // hold a reference to the Tab itself in the anonymous listener class.
         final int newTabId = newTab.getId();
 
-        final ToastListener listener = new ButtonToast.ToastListener() {
+        final SnackbarCallback callback = new SnackbarCallback() {
             @Override
-            public void onButtonClicked() {
+            public void onClick(View v) {
                 Telemetry.sendUIEvent(TelemetryContract.Event.SHOW, TelemetryContract.Method.TOAST, "switchtab");
 
                 maybeSwitchToTab(newTabId);
             }
-
-            @Override
-            public void onToastHidden(ButtonToast.ReasonHidden reason) { }
         };
 
         final String message = isPrivate ?
                 getResources().getString(R.string.new_private_tab_opened) :
                 getResources().getString(R.string.new_tab_opened);
         final String buttonMessage = getResources().getString(R.string.switch_button_message);
-        getButtonToast().show(false,
-                              message,
-                              ButtonToast.LENGTH_SHORT,
-                              buttonMessage,
-                              R.drawable.switch_button_icon,
-                              listener);
+
+        showSnackbar(message, Snackbar.LENGTH_LONG, buttonMessage, callback);
     }
 
     // BrowserSearch.OnSearchListener
