@@ -167,7 +167,7 @@ typedef NSInteger NSEventGestureAxis;
 #ifdef ACCESSIBILITY
                               mozAccessible,
 #endif
-                              mozView, NSTextInput, NSTextInputClient>
+                              mozView, NSTextInputClient>
 {
 @private
   // the nsChildView that created the view. It retains this NSView, so
