@@ -113,19 +113,25 @@ ifdef NS_USE_GCC
 	else
 		OPTIMIZER += -O2
 	endif
-	DEFINES    += -UDEBUG -U_DEBUG -DNDEBUG
+	DEFINES    += -UDEBUG -DNDEBUG
     else
 	OPTIMIZER  += -g
 	NULLSTRING :=
 	SPACE      := $(NULLSTRING) # end of the line
 	USERNAME   := $(subst $(SPACE),_,$(USERNAME))
 	USERNAME   := $(subst -,_,$(USERNAME))
-	DEFINES    += -DDEBUG -D_DEBUG -UNDEBUG -DDEBUG_$(USERNAME)
+	DEFINES    += -DDEBUG -UNDEBUG -DDEBUG_$(USERNAME)
     endif
 else # !NS_USE_GCC
-    OS_CFLAGS += -W3 -WX -nologo -D_CRT_SECURE_NO_WARNINGS \
+    OS_CFLAGS += -W3 -nologo -D_CRT_SECURE_NO_WARNINGS \
 		 -D_CRT_NONSTDC_NO_WARNINGS
     OS_DLLFLAGS += -nologo -DLL -SUBSYSTEM:WINDOWS
+    ifndef NSS_ENABLE_WERROR
+        NSS_ENABLE_WERROR = 1
+    endif
+    ifeq ($(NSS_ENABLE_WERROR),1)
+        OS_CFLAGS += -WX
+    endif
     ifeq ($(_MSC_VER),$(_MSC_VER_6))
     ifndef MOZ_DEBUG_SYMBOLS
 	OS_DLLFLAGS += -PDB:NONE
@@ -159,7 +165,7 @@ else # !NS_USE_GCC
 	else
 		OPTIMIZER += -O2
 	endif
-	DEFINES    += -UDEBUG -U_DEBUG -DNDEBUG
+	DEFINES    += -UDEBUG -DNDEBUG
 	DLLFLAGS   += -OUT:$@
 	ifdef MOZ_DEBUG_SYMBOLS
 		ifdef MOZ_DEBUG_FLAGS
@@ -176,7 +182,7 @@ else # !NS_USE_GCC
 	SPACE      := $(NULLSTRING) # end of the line
 	USERNAME   := $(subst $(SPACE),_,$(USERNAME))
 	USERNAME   := $(subst -,_,$(USERNAME))
-	DEFINES    += -DDEBUG -D_DEBUG -UNDEBUG -DDEBUG_$(USERNAME)
+	DEFINES    += -DDEBUG -UNDEBUG -DDEBUG_$(USERNAME)
 	DLLFLAGS   += -DEBUG -OUT:$@
 	LDFLAGS    += -DEBUG 
 ifeq ($(_MSC_VER),$(_MSC_VER_6))
