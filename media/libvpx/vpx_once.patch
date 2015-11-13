@@ -1,0 +1,145 @@
+commit 64f73cc1f7f57ca6643b027eae63041fec408ea8
+Author: Ralph Giles <giles@mozilla.com>
+Date:   Fri Nov 6 16:42:49 2015 -0800
+
+    Bug 1218124 - Use InterlockCompare in win32 vpx_once(). r=gerald
+
+diff --git a/media/libvpx/vpx_ports/vpx_once.h b/media/libvpx/vpx_ports/vpx_once.h
+index f1df394..da04db4 100644
+--- a/media/libvpx/vpx_ports/vpx_once.h
++++ b/media/libvpx/vpx_ports/vpx_once.h
+@@ -1,5 +1,5 @@
+ /*
+- *  Copyright (c) 2011 The WebM project authors. All Rights Reserved.
++ *  Copyright (c) 2015 The WebM project authors. All Rights Reserved.
+  *
+  *  Use of this source code is governed by a BSD-style license
+  *  that can be found in the LICENSE file in the root of the source
+@@ -13,63 +13,83 @@
+ 
+ #include "vpx_config.h"
+ 
++/* Implement a function wrapper to guarantee initialization
++ * thread-safety for library singletons.
++ *
++ * NOTE: These functions use static locks, and can only be
++ * used with one common argument per compilation unit. So
++ *
++ * file1.c:
++ *   vpx_once(foo);
++ *   ...
++ *   vpx_once(foo);
++ *
++ *   file2.c:
++ *     vpx_once(bar);
++ *
++ * will ensure foo() and bar() are each called only once, but in
++ *
++ * file1.c:
++ *   vpx_once(foo);
++ *   vpx_once(bar):
++ *
++ * bar() will never be called because the lock is used up
++ * by the call to foo().
++ */
++
+ #if CONFIG_MULTITHREAD && defined(_WIN32)
+ #include <windows.h>
+ #include <stdlib.h>
++/* Declare a per-compilation-unit state variable to track the progress
++ * of calling func() only once. This must be at global scope because
++ * local initializers are not thread-safe in MSVC prior to Visual
++ * Studio 2015.
++ *
++ * As a static, once_state will be zero-initialized as program start.
++ */
++static LONG once_state;
+ static void once(void (*func)(void))
+ {
+-    static CRITICAL_SECTION *lock;
+-    static LONG waiters;
+-    static int done;
+-    void *lock_ptr = &lock;
+-
+-    /* If the initialization is complete, return early. This isn't just an
+-     * optimization, it prevents races on the destruction of the global
+-     * lock.
++    /* Try to advance once_state from its initial value of 0 to 1.
++     * Only one thread can succeed in doing so.
+      */
+-    if(done)
++    if (InterlockedCompareExchange(&once_state, 1, 0) == 0) {
++        /* We're the winning thread, having set once_state to 1.
++         * Call our function. */
++        func();
++        /* Now advance once_state to 2, unblocking any other threads. */
++        InterlockedIncrement(&once_state);
+         return;
+-
+-    InterlockedIncrement(&waiters);
+-
+-    /* Get a lock. We create one and try to make it the one-true-lock,
+-     * throwing it away if we lost the race.
+-     */
+-
+-    {
+-        /* Scope to protect access to new_lock */
+-        CRITICAL_SECTION *new_lock = malloc(sizeof(CRITICAL_SECTION));
+-        InitializeCriticalSection(new_lock);
+-        if (InterlockedCompareExchangePointer(lock_ptr, new_lock, NULL) != NULL)
+-        {
+-            DeleteCriticalSection(new_lock);
+-            free(new_lock);
+-        }
+     }
+ 
+-    /* At this point, we have a lock that can be synchronized on. We don't
+-     * care which thread actually performed the allocation.
++    /* We weren't the winning thread, but we want to block on
++     * the state variable so we don't return before func()
++     * has finished executing elsewhere.
++     *
++     * Try to advance once_state from 2 to 2, which is only possible
++     * after the winning thead advances it from 1 to 2.
+      */
+-
+-    EnterCriticalSection(lock);
+-
+-    if (!done)
+-    {
+-        func();
+-        done = 1;
++    while (InterlockedCompareExchange(&once_state, 2, 2) != 2) {
++        /* State isn't yet 2. Try again.
++         *
++         * We are used for singleton initialization functions,
++         * which should complete quickly. Contention will likewise
++         * be rare, so it's worthwhile to use a simple but cpu-
++         * intensive busy-wait instead of successive backoff,
++         * waiting on a kernel object, or another heavier-weight scheme.
++         *
++         * We can at least yield our timeslice.
++         */
++        Sleep(0);
+     }
+ 
+-    LeaveCriticalSection(lock);
+-
+-    /* Last one out should free resources. The destructed objects are
+-     * protected by checking if(done) above.
++    /* We've seen once_state advance to 2, so we know func()
++     * has been called. And we've left once_state as we found it,
++     * so other threads will have the same experience.
++     *
++     * It's safe to return now.
+      */
+-    if(!InterlockedDecrement(&waiters))
+-    {
+-        DeleteCriticalSection(lock);
+-        free(lock);
+-        lock = NULL;
+-    }
++    return;
+ }
+ 
+ 
