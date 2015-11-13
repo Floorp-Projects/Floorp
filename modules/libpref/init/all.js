@@ -4543,11 +4543,12 @@ pref("dom.mozSettings.enabled", false);
 pref("dom.mozPermissionSettings.enabled", false);
 
 // W3C touch events
-// 0 - disabled, 1 - enabled, 2 - autodetect
-// Enabling it for Windows is tracked by bug 736048.
-#if defined(XP_WIN) || defined(XP_MACOSX)
-pref("dom.w3c_touch_events.enabled", 0);
-#else
+// 0 - disabled, 1 - enabled, 2 - autodetect (win/gtk3)
+#ifdef XP_WIN
+pref("dom.w3c_touch_events.enabled", 2);
+#endif
+
+#if MOZ_WIDGET_GTK == 3
 pref("dom.w3c_touch_events.enabled", 2);
 #endif
 
