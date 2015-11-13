@@ -104,10 +104,6 @@ html, body, #app, #memory-tool {
   min-width: 78px;
 }
 
-#diff-snapshots[disabled] {
-  opacity: .5;
-}
-
 .spacer {
   flex: 1;
 }
