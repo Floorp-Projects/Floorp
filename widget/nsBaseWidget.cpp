@@ -44,6 +44,7 @@
 #include "mozilla/MouseEvents.h"
 #include "GLConsts.h"
 #include "mozilla/unused.h"
+#include "mozilla/IMEStateManager.h"
 #include "mozilla/VsyncDispatcher.h"
 #include "mozilla/layers/APZCTreeManager.h"
 #include "mozilla/layers/APZEventState.h"
@@ -282,6 +283,8 @@ nsBaseWidget::FreeShutdownObserver()
 //-------------------------------------------------------------------------
 nsBaseWidget::~nsBaseWidget()
 {
+  IMEStateManager::WidgetDestroyed(this);
+
   if (mLayerManager &&
       mLayerManager->GetBackendType() == LayersBackend::LAYERS_BASIC) {
     static_cast<BasicLayerManager*>(mLayerManager.get())->ClearRetainerWidget();

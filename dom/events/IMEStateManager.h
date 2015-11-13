@@ -65,6 +65,11 @@ public:
   static void OnTabParentDestroying(TabParent* aTabParent);
 
   /**
+   * Called when aWidget is being deleted.
+   */
+  static void WidgetDestroyed(nsIWidget* aWidget);
+
+  /**
    * SetIMEContextForChildProcess() is called when aTabParent receives
    * SetInputContext() from the remote process.
    */
@@ -225,7 +230,7 @@ protected:
 
   static StaticRefPtr<nsIContent> sContent;
   static nsPresContext* sPresContext;
-  static StaticRefPtr<nsIWidget> sFocusedIMEWidget;
+  static nsIWidget* sFocusedIMEWidget;
   static StaticRefPtr<TabParent> sActiveTabParent;
   // sActiveIMEContentObserver points to the currently active
   // IMEContentObserver.  This is null if there is no focused editor.
