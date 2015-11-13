@@ -993,6 +993,11 @@ if (!isContent) {
   this.AsyncShutdown.sendTelemetry = getPhase("profile-before-change2");
 }
 
+// Notifications that fire in the parent and content process, but should
+// only have phases in the parent process.
+if (!isContent) {
+  this.AsyncShutdown.quitApplicationGranted = getPhase("quit-application-granted");
+}
 
 // Content process
 if (isContent) {
