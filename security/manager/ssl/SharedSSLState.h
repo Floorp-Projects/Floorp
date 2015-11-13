@@ -39,12 +39,17 @@ public:
   {
     mOCSPStaplingEnabled = staplingEnabled;
   }
+  void SetOCSPMustStapleEnabled(bool mustStapleEnabled)
+  {
+    mOCSPMustStapleEnabled = mustStapleEnabled;
+  }
 
   // The following methods may be called from any thread
   bool SocketCreated();
   void NoteSocketCreated();
   static void NoteCertOverrideServiceInstantiated();
   bool IsOCSPStaplingEnabled() const { return mOCSPStaplingEnabled; }
+  bool IsOCSPMustStapleEnabled() const { return mOCSPMustStapleEnabled; }
 
 private:
   ~SharedSSLState();
@@ -61,6 +66,7 @@ private:
   Mutex mMutex;
   bool mSocketCreated;
   bool mOCSPStaplingEnabled;
+  bool mOCSPMustStapleEnabled;
 };
 
 SharedSSLState* PublicSSLState();

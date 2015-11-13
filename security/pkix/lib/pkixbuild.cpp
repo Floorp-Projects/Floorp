@@ -188,6 +188,11 @@ PathBuildingStep::Check(Input potentialIssuerDER,
     }
   }
 
+  rv = CheckTLSFeatures(subject, potentialIssuer);
+  if (rv != Success) {
+    return RecordResult(rv, keepGoing);
+  }
+
   // RFC 5280, Section 4.2.1.3: "If the keyUsage extension is present, then the
   // subject public key MUST NOT be used to verify signatures on certificates
   // or CRLs unless the corresponding keyCertSign or cRLSign bit is set."

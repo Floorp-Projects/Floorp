@@ -55,6 +55,10 @@ Result ParseValidity(Input encodedValidity,
                      /*optional out*/ Time* notAfterOut = nullptr);
 Result CheckValidity(Time time, Time notBefore, Time notAfter);
 
+// Check that a subject has TLS Feature (rfc7633) requirements that match its
+// potential issuer
+Result CheckTLSFeatures(const BackCert& subject, BackCert& potentialIssuer);
+
 } } // namespace mozilla::pkix
 
 #endif // mozilla_pkix_pkixcheck_h

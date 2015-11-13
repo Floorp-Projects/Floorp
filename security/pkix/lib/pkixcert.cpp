@@ -219,6 +219,10 @@ BackCert::RememberExtension(Reader& extnID, Input extnValue,
   static const uint8_t Netscape_certificate_type[] = {
     0x60, 0x86, 0x48, 0x01, 0x86, 0xf8, 0x42, 0x01, 0x01
   };
+  // python DottedOIDToCode.py id-pe-tlsfeature 1.3.6.1.5.5.7.1.24
+  static const uint8_t id_pe_tlsfeature[] = {
+    0x2b, 0x06, 0x01, 0x05, 0x05, 0x07, 0x01, 0x18
+  };
 
   Input* out = nullptr;
 
@@ -263,6 +267,8 @@ BackCert::RememberExtension(Reader& extnID, Input extnValue,
     out = &inhibitAnyPolicy;
   } else if (extnID.MatchRest(id_pe_authorityInfoAccess)) {
     out = &authorityInfoAccess;
+  } else if (extnID.MatchRest(id_pe_tlsfeature)) {
+    out = &requiredTLSFeatures;
   } else if (extnID.MatchRest(id_pkix_ocsp_nocheck) && critical) {
     // We need to make sure we don't reject delegated OCSP response signing
     // certificates that contain the id-pkix-ocsp-nocheck extension marked as
