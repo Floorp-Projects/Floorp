@@ -82,6 +82,45 @@ function makeMemoryActorTest(testGeneratorFunction) {
   };
 }
 
+/**
+ * Save as makeMemoryActorTest but attaches the MemoryFront to the MemoryActor
+ * scoped to the full runtime rather than to a tab.
+ */
+function makeFullRuntimeMemoryActorTest(testGeneratorFunction) {
+  return function run_test() {
+    do_test_pending();
+    startTestDebuggerServer("test_MemoryActor").then(client => {
+      DebuggerServer.registerModule("devtools/server/actors/heap-snapshot-file", {
+        prefix: "heapSnapshotFile",
+        constructor: "HeapSnapshotFileActor",
+        type: { global: true }
+      });
+
+      getChromeActors(client).then(function (form) {
+        if (!form) {
+          ok(false, "Could not attach to chrome actors");
+          return;
+        }
+
+        Task.spawn(function* () {
+          try {
+            const rootForm = yield listTabs(client);
+            const memoryFront = new MemoryFront(client, form, rootForm);
+            yield memoryFront.attach();
+            yield* testGeneratorFunction(client, memoryFront);
+            yield memoryFront.detach();
+          } catch(err) {
+            DevToolsUtils.reportException("makeMemoryActorTest", err);
+            ok(false, "Got an error: " + err);
+          }
+
+          finishClient(client);
+        });
+      });
+    });
+  };
+}
+
 function createTestGlobal(name) {
   let sandbox = Cu.Sandbox(
     Cc["@mozilla.org/systemprincipal;1"].createInstance(Ci.nsIPrincipal)
