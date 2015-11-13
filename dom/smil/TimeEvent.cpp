@@ -64,9 +64,8 @@ TimeEvent::InitTimeEvent(const nsAString& aTypeArg,
                          nsIDOMWindow* aViewArg,
                          int32_t aDetailArg)
 {
-  nsresult rv = Event::InitEvent(aTypeArg, false /*doesn't bubble*/,
-                                           false /*can't cancel*/);
-  NS_ENSURE_SUCCESS(rv, rv);
+  Event::InitEvent(aTypeArg, false /*doesn't bubble*/,
+                   false /*can't cancel*/);
 
   mDetail = aDetailArg;
   mView = aViewArg;

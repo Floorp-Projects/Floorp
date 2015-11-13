@@ -13,7 +13,6 @@ interface DeviceOrientationEvent : Event
   readonly attribute boolean absolute;
 
   // initDeviceOrientationEvent is a Gecko specific deprecated method.
-  [Throws]
   void initDeviceOrientationEvent(DOMString type,
                                   boolean canBubble,
                                   boolean cancelable,

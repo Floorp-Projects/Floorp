@@ -242,11 +242,9 @@ BluetoothGatt::UpdateConnectionState(BluetoothConnectionState aState)
   // Dispatch connectionstatechanged event to application
   RefPtr<Event> event = NS_NewDOMEvent(this, nullptr, nullptr);
 
-  nsresult rv =
-    event->InitEvent(NS_LITERAL_STRING(GATT_CONNECTION_STATE_CHANGED_ID),
-                     false,
-                     false);
-  NS_ENSURE_SUCCESS_VOID(rv);
+  event->InitEvent(NS_LITERAL_STRING(GATT_CONNECTION_STATE_CHANGED_ID),
+                   false,
+                   false);
 
   DispatchTrustedEvent(event);
 }

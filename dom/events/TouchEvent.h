@@ -115,8 +115,7 @@ public:
                       bool aMetaKey,
                       TouchList* aTouches,
                       TouchList* aTargetTouches,
-                      TouchList* aChangedTouches,
-                      ErrorResult& aRv);
+                      TouchList* aChangedTouches);
 
   static bool PrefEnabled(JSContext* aCx = nullptr,
                           JSObject* aGlobal = nullptr);

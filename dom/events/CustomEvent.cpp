@@ -66,8 +66,7 @@ CustomEvent::InitCustomEvent(const nsAString& aType,
                              bool aCancelable,
                              nsIVariant* aDetail)
 {
-  nsresult rv = Event::InitEvent(aType, aCanBubble, aCancelable);
-  NS_ENSURE_SUCCESS(rv, rv);
+  Event::InitEvent(aType, aCanBubble, aCancelable);
   mDetail = aDetail;
   return NS_OK;
 }
@@ -89,7 +88,7 @@ CustomEvent::InitCustomEvent(JSContext* aCx,
     aRv.Throw(NS_ERROR_FAILURE);
     return;
   }
-  aRv = InitCustomEvent(aType, aCanBubble, aCancelable, detail);
+  InitCustomEvent(aType, aCanBubble, aCancelable, detail);
 }
 
 NS_IMETHODIMP

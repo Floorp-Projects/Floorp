@@ -32,7 +32,6 @@ interface MouseEvent : UIEvent {
   readonly attribute long           movementY;
 
   // Deprecated in DOM Level 3:
-  [Throws]
   void                              initMouseEvent(DOMString typeArg, 
                                                    boolean canBubbleArg, 
                                                    boolean cancelableArg, 
@@ -91,7 +90,6 @@ partial interface MouseEvent
 
   readonly attribute unsigned short mozInputSource;
 
-  [Throws]
   void                initNSMouseEvent(DOMString typeArg,
                                        boolean canBubbleArg,
                                        boolean cancelableArg,

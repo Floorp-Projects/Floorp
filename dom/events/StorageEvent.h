@@ -57,8 +57,7 @@ public:
                         const nsAString& aOldValue,
                         const nsAString& aNewValue,
                         const nsAString& aURL,
-                        DOMStorage* aStorageArea,
-                        ErrorResult& aRv);
+                        DOMStorage* aStorageArea);
 
   void GetKey(nsString& aRetVal) const
   {

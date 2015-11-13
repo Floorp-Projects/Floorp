@@ -165,12 +165,7 @@ TextTrackList::CreateAndDispatchChangeEvent()
 {
   RefPtr<Event> event = NS_NewDOMEvent(this, nullptr, nullptr);
 
-  nsresult rv = event->InitEvent(NS_LITERAL_STRING("change"), false, false);
-  if (NS_FAILED(rv)) {
-    NS_WARNING("Failed to init the change event!");
-    return;
-  }
-
+  event->InitEvent(NS_LITERAL_STRING("change"), false, false);
   event->SetTrusted(true);
 
   nsCOMPtr<nsIRunnable> eventRunner = new TrackEventRunner(this, event);

@@ -40,8 +40,7 @@ AsyncEventDispatcher::Run()
   RefPtr<Event> event = mEvent ? mEvent->InternalDOMEvent() : nullptr;
   if (!event) {
     event = NS_NewDOMEvent(mTarget, nullptr, nullptr);
-    nsresult rv = event->InitEvent(mEventType, mBubbles, false);
-    NS_ENSURE_SUCCESS(rv, rv);
+    event->InitEvent(mEventType, mBubbles, false);
     event->SetTrusted(true);
   }
   if (mOnlyChromeDispatch) {

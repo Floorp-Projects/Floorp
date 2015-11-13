@@ -13,7 +13,7 @@
  * http://www.w3.org/TR/DOM-Level-2-Events/
  */
 
-[builtinclass, uuid(df068636-9a5b-11e3-b71f-2c27d728e7f9)]
+[builtinclass, uuid(dbebc4be-75c9-47ca-aee8-0a8b4ae14a87)]
 interface nsIDOMMouseEvent : nsIDOMUIEvent
 {
   readonly attribute long               screenX;

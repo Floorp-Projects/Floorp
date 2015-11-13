@@ -5,7 +5,7 @@
 
 #include "nsIDOMEvent.idl"
 
-[builtinclass, uuid(3fdc07cb-3b2e-4c6e-a054-008a4f302202)]
+[builtinclass, uuid(7efbe68a-811a-4159-801c-226948cfd08f)]
 interface nsIDOMCommandEvent : nsIDOMEvent
 {
   readonly attribute DOMString command;
