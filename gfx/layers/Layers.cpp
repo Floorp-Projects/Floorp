@@ -1914,9 +1914,8 @@ Layer::PrintInfo(std::stringstream& aStream, const char* aPrefix)
   }
   if (GetIsFixedPosition()) {
     LayerPoint anchor = GetFixedPositionAnchor();
-    aStream << nsPrintfCString(" [isFixedPosition scrollId=%lld sides=0x%x anchor=%s%s]",
+    aStream << nsPrintfCString(" [isFixedPosition scrollId=%lld anchor=%s%s]",
                      GetFixedPositionScrollContainerId(),
-                     GetFixedPositionSides(),
                      ToString(anchor).c_str(),
                      IsClipFixed() ? "" : " scrollingClip").get();
   }
