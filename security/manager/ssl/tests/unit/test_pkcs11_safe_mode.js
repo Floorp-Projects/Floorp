@@ -69,7 +69,6 @@ function testFindTestModule(shouldSucceed) {
 
 function simulateShutdown() {
   let psmComponent = Cc["@mozilla.org/psm;1"].getService(Ci.nsIObserver);
-  psmComponent.observe(null, "profile-change-net-teardown", null);
   psmComponent.observe(null, "profile-before-change", null);
   psmComponent.observe(null, "xpcom-shutdown", null);
 }
