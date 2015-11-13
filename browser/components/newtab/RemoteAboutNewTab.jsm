@@ -43,6 +43,7 @@ let RemoteAboutNewTab = {
    * Initialize the RemotePageManager and add all message listeners for this page
    */
   init: function() {
+    RemoteNewTabLocation.init();
     this.pageListener = new RemotePages("about:remote-newtab");
     this.pageListener.addMessageListener("NewTab:InitializeGrid", this.initializeGrid.bind(this));
     this.pageListener.addMessageListener("NewTab:UpdateGrid", this.updateGrid.bind(this));
@@ -292,6 +293,7 @@ let RemoteAboutNewTab = {
                                          Ci.nsISupportsWeakReference]),
 
   uninit: function() {
+    RemoteNewTabLocation.uninit();
     this._removeObservers();
     this.pageListener.destroy();
     this.pageListener = null;
