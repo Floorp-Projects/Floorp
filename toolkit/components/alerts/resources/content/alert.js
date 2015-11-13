@@ -10,6 +10,7 @@ const NS_ALERT_LEFT = 2;
 const NS_ALERT_TOP = 4;
 
 const WINDOW_MARGIN = 10;
+const BODY_TEXT_LIMIT = 200;
 
 Cu.import("resource://gre/modules/Services.jsm");
 
@@ -93,10 +94,34 @@ function prefillAlertInfo() {
     case 3:
       if (window.arguments[2]) {
         document.getElementById("alertBox").setAttribute("hasBodyText", true);
-        document.getElementById("alertTextLabel").textContent = window.arguments[2];
+        let bodyText = window.arguments[2];
+        let bodyTextLabel = document.getElementById("alertTextLabel");
+
+        if (bodyText.length > BODY_TEXT_LIMIT) {
+          bodyTextLabel.setAttribute("tooltiptext", bodyText);
+
+          let ellipsis = "\u2026";
+          try {
+            ellipsis = Services.prefs.getComplexValue("intl.ellipsis",
+                                                      Ci.nsIPrefLocalizedString).data;
+          } catch (e) { }
+
+          // Copied from nsContextMenu.js' formatSearchContextItem().
+          // If the JS character after our truncation point is a trail surrogate,
+          // include it in the truncated string to avoid splitting a surrogate pair.
+          let truncLength = BODY_TEXT_LIMIT;
+          let truncChar = bodyText[BODY_TEXT_LIMIT].charCodeAt(0);
+          if (truncChar >= 0xDC00 && truncChar <= 0xDFFF) {
+            truncLength++;
+          }
+
+          bodyText = bodyText.substring(0, truncLength) +
+                     ellipsis;
+        }
+        bodyTextLabel.textContent = bodyText;
       }
     case 2:
-      document.getElementById("alertTitleLabel").textContent = window.arguments[1];
+      document.getElementById("alertTitleLabel").setAttribute("value", window.arguments[1]);
     case 1:
       if (window.arguments[0]) {
         document.getElementById("alertBox").setAttribute("hasImage", true);
