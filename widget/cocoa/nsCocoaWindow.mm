@@ -1550,13 +1550,14 @@ NS_IMETHODIMP nsCocoaWindow::Resize(double aWidth, double aHeight, bool aRepaint
                   aWidth, aHeight, aRepaint, true);
 }
 
-NS_IMETHODIMP nsCocoaWindow::GetClientBoundsUntyped(nsIntRect &aRect)
+NS_IMETHODIMP nsCocoaWindow::GetClientBounds(mozilla::LayoutDeviceIntRect& aRect)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
   CGFloat scaleFactor = BackingScaleFactor();
   if (!mWindow) {
-    aRect = nsCocoaUtils::CocoaRectToGeckoRectDevPix(NSZeroRect, scaleFactor);
+    aRect = LayoutDeviceIntRect::FromUnknownRect(
+      nsCocoaUtils::CocoaRectToGeckoRectDevPix(NSZeroRect, scaleFactor));
     return NS_OK;
   }
 
@@ -1568,7 +1569,8 @@ NS_IMETHODIMP nsCocoaWindow::GetClientBoundsUntyped(nsIntRect &aRect)
     r = [mWindow contentRectForFrameRect:[mWindow frame]];
   }
 
-  aRect = nsCocoaUtils::CocoaRectToGeckoRectDevPix(r, scaleFactor);
+  aRect = LayoutDeviceIntRect::FromUnknownRect(
+    nsCocoaUtils::CocoaRectToGeckoRectDevPix(r, scaleFactor));
 
   return NS_OK;
 
@@ -1585,7 +1587,7 @@ nsCocoaWindow::UpdateBounds()
   mBounds = nsCocoaUtils::CocoaRectToGeckoRectDevPix(frame, BackingScaleFactor());
 }
 
-NS_IMETHODIMP nsCocoaWindow::GetScreenBoundsUntyped(nsIntRect &aRect)
+NS_IMETHODIMP nsCocoaWindow::GetScreenBounds(LayoutDeviceIntRect &aRect)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
@@ -1594,7 +1596,7 @@ NS_IMETHODIMP nsCocoaWindow::GetScreenBoundsUntyped(nsIntRect &aRect)
   NS_ASSERTION(mWindow && mBounds == r, "mBounds out of sync!");
 #endif
 
-  aRect = mBounds;
+  aRect = LayoutDeviceIntRect::FromUnknownRect(mBounds);
   return NS_OK;
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;

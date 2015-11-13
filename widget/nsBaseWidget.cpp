@@ -1310,18 +1310,18 @@ NS_METHOD nsBaseWidget::ResizeClient(double aX,
 * If the implementation of nsWindow supports borders this method MUST be overridden
 *
 **/
-NS_METHOD nsBaseWidget::GetClientBoundsUntyped(nsIntRect &aRect)
+NS_METHOD nsBaseWidget::GetClientBounds(LayoutDeviceIntRect &aRect)
 {
-  return GetBoundsUntyped(aRect);
+  return GetBounds(aRect);
 }
 
 /**
 * If the implementation of nsWindow supports borders this method MUST be overridden
 *
 **/
-NS_METHOD nsBaseWidget::GetBoundsUntyped(nsIntRect &aRect)
+NS_METHOD nsBaseWidget::GetBounds(LayoutDeviceIntRect &aRect)
 {
-  aRect = mBounds;
+  aRect = LayoutDeviceIntRect::FromUnknownRect(mBounds);
   return NS_OK;
 }
 
@@ -1330,12 +1330,12 @@ NS_METHOD nsBaseWidget::GetBoundsUntyped(nsIntRect &aRect)
 * this method must be overridden
 *
 **/
-NS_METHOD nsBaseWidget::GetScreenBoundsUntyped(nsIntRect &aRect)
+NS_METHOD nsBaseWidget::GetScreenBounds(LayoutDeviceIntRect& aRect)
 {
-  return GetBoundsUntyped(aRect);
+  return GetBounds(aRect);
 }
 
-NS_METHOD nsBaseWidget::GetRestoredBounds(LayoutDeviceIntRect &aRect)
+NS_METHOD nsBaseWidget::GetRestoredBounds(LayoutDeviceIntRect& aRect)
 {
   if (SizeMode() != nsSizeMode_Normal) {
     return NS_ERROR_FAILURE;
