@@ -22,6 +22,8 @@ const Toolbar = module.exports = createClass({
     inverted: PropTypes.bool.isRequired,
     filterString: PropTypes.string,
     setFilterString: PropTypes.func.isRequired,
+    diffing: models.diffingModel,
+    onToggleDiffing: PropTypes.func.isRequired,
   },
 
   render() {
@@ -35,25 +37,38 @@ const Toolbar = module.exports = createClass({
       onToggleInverted,
       inverted,
       filterString,
-      setFilterString
+      setFilterString,
+      snapshots,
+      diffing,
+      onToggleDiffing,
     } = this.props;
 
     return (
       dom.div({ className: "devtools-toolbar" },
-        dom.button({
-          id: "take-snapshot",
-          className: "take-snapshot devtools-button",
-          onClick: onTakeSnapshotClick,
-          title: L10N.getStr("take-snapshot")
-        }),
+        dom.div({ className: "toolbar-group" },
+          dom.button({
+            id: "take-snapshot",
+            className: "take-snapshot devtools-button",
+            onClick: onTakeSnapshotClick,
+            title: L10N.getStr("take-snapshot")
+          }),
 
-        dom.button({
-          id: "import-snapshot",
-          className: "devtools-toolbarbutton import-snapshot devtools-button",
-          onClick: onImportClick,
-          title: L10N.getStr("import-snapshot"),
-          "data-text-only": true,
-        }, L10N.getStr("import-snapshot")),
+          dom.button({
+            id: "diff-snapshots",
+            className: "devtools-button devtools-monospace" + (!!diffing ? " checked" : ""),
+            disabled: snapshots.length < 2,
+            onClick: onToggleDiffing,
+            title: L10N.getStr("diff-snapshots.tooltip"),
+          }, L10N.getStr("diff-snapshots")),
+
+          dom.button({
+            id: "import-snapshot",
+            className: "devtools-toolbarbutton import-snapshot devtools-button",
+            onClick: onImportClick,
+            title: L10N.getStr("import-snapshot"),
+            "data-text-only": true,
+          }, L10N.getStr("import-snapshot"))
+        ),
 
         dom.div({ className: "toolbar-group" },
           dom.label({ className: "breakdown-by" },

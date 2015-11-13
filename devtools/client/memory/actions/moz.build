@@ -6,8 +6,10 @@
 DevToolsModules(
     'allocations.js',
     'breakdown.js',
+    'diffing.js',
     'filter.js',
     'inverted.js',
     'io.js',
+    'refresh.js',
     'snapshot.js',
 )

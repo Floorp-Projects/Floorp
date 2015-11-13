@@ -40,7 +40,7 @@ add_task(function *() {
   // Test new snapshots
   dispatch(takeSnapshotAndCensus(front, heapWorker));
   yield waitUntilSnapshotState(store, [states.SAVED_CENSUS]);
-  ok(isBreakdownType(getState().snapshots[0].census, "objectClass"),
+  ok(isBreakdownType(getState().snapshots[0].census.report, "objectClass"),
     "New snapshots use the current, non-default breakdown");
 
 
@@ -50,7 +50,7 @@ add_task(function *() {
   dispatch(setBreakdownAndRefresh(heapWorker, breakdowns.coarseType.breakdown));
   yield waitUntilSnapshotState(store, [states.SAVED_CENSUS, states.SAVED_CENSUS]);
 
-  ok(isBreakdownType(getState().snapshots[1].census, "coarseType"),
+  ok(isBreakdownType(getState().snapshots[1].census.report, "coarseType"),
     "Breakdown can be changed while saving snapshots, uses updated breakdown in census");
 
 
@@ -60,33 +60,36 @@ add_task(function *() {
   dispatch(setBreakdownAndRefresh(heapWorker, breakdowns.objectClass.breakdown));
   yield waitUntilSnapshotState(store, [states.SAVED_CENSUS, states.SAVED_CENSUS, states.SAVED_CENSUS]);
 
-  ok(breakdownEquals(getState().snapshots[2].breakdown, breakdowns.objectClass.breakdown),
+  ok(breakdownEquals(getState().snapshots[2].census.breakdown, breakdowns.objectClass.breakdown),
     "Breakdown can be changed while saving census, stores updated breakdown in snapshot");
-  ok(isBreakdownType(getState().snapshots[2].census, "objectClass"),
+  ok(isBreakdownType(getState().snapshots[2].census.report, "objectClass"),
     "Breakdown can be changed while saving census, uses updated breakdown in census");
 
   // Updates census on currently selected snapshot when changing breakdown
   ok(getState().snapshots[2].selected, "Third snapshot currently selected");
   dispatch(setBreakdownAndRefresh(heapWorker, breakdowns.internalType.breakdown));
-  yield waitUntilState(store, () => isBreakdownType(getState().snapshots[2].census, "internalType"));
-  ok(isBreakdownType(getState().snapshots[2].census, "internalType"),
+  yield waitUntilState(store, () => isBreakdownType(getState().snapshots[2].census.report, "internalType"));
+  ok(isBreakdownType(getState().snapshots[2].census.report, "internalType"),
     "Snapshot census updated when changing breakdowns after already generating one census");
 
   // Does not update unselected censuses
   ok(!getState().snapshots[1].selected, "Second snapshot unselected currently");
-  ok(breakdownEquals(getState().snapshots[1].breakdown, breakdowns.coarseType.breakdown),
+  ok(breakdownEquals(getState().snapshots[1].census.breakdown, breakdowns.coarseType.breakdown),
     "Second snapshot using `coarseType` breakdown still and not yet updated to correct breakdown");
-  ok(isBreakdownType(getState().snapshots[1].census, "coarseType"),
+  ok(isBreakdownType(getState().snapshots[1].census.report, "coarseType"),
     "Second snapshot using `coarseType` still for census and not yet updated to correct breakdown");
 
   // Updates to current breakdown when switching to stale snapshot
-  dispatch(selectSnapshotAndRefresh(heapWorker, getState().snapshots[1]));
+  dispatch(selectSnapshotAndRefresh(heapWorker, getState().snapshots[1].id));
   yield waitUntilSnapshotState(store, [states.SAVED_CENSUS, states.SAVING_CENSUS, states.SAVED_CENSUS]);
   yield waitUntilSnapshotState(store, [states.SAVED_CENSUS, states.SAVED_CENSUS, states.SAVED_CENSUS]);
 
   ok(getState().snapshots[1].selected, "Second snapshot selected currently");
-  ok(breakdownEquals(getState().snapshots[1].breakdown, breakdowns.internalType.breakdown),
+  ok(breakdownEquals(getState().snapshots[1].census.breakdown, breakdowns.internalType.breakdown),
     "Second snapshot using `internalType` breakdown and updated to correct breakdown");
-  ok(isBreakdownType(getState().snapshots[1].census, "internalType"),
-    "Second snapshot using `internalType` for census and updated to correct breakdown");
+  ok(isBreakdownType(getState().snapshots[1].census.report, "internalType"),
+     "Second snapshot using `internalType` for census and updated to correct breakdown");
+
+  heapWorker.destroy();
+  yield front.detach();
 });
