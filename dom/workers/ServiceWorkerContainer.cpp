@@ -158,12 +158,6 @@ ServiceWorkerContainer::Register(const nsAString& aScriptURL,
     }
   }
 
-
-  if (!baseURI) {
-    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
-    return nullptr;
-  }
-
   nsresult rv;
   nsCOMPtr<nsIURI> scriptURI;
   rv = NS_NewURI(getter_AddRefs(scriptURI), aScriptURL, nullptr, baseURI);
