@@ -729,6 +729,7 @@ if CONFIG['MOZ_NFC']:
          'MozIsoDepTech.webidl',
          'MozNDEFRecord.webidl',
          'MozNFC.webidl',
+         'MozNfcATech.webidl',
          'MozNFCPeer.webidl',
          'MozNFCTag.webidl',
          'NfcOptions.webidl',

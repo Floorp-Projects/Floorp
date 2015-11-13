@@ -4,9 +4,9 @@
 
 [Func="Navigator::HasNFCSupport", AvailableIn="PrivilegedApps",
  ChromeConstructor(MozNFCTag tag)]
-interface MozIsoDepTech {
+interface MozNfcATech {
   /**
-   * Send raw ISO-DEP command to tag and receive the response.
+   * Send raw NFC-A command to tag and receive the response.
    */
   [Throws]
   Promise<Uint8Array> transceive(Uint8Array command);
