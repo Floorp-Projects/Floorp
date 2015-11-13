@@ -69,6 +69,7 @@ public:
                              ViewID aViewId,
                              APZStateChange aChange,
                              int aArg);
+  void ProcessClusterHit();
 private:
   ~APZEventState();
   bool SendPendingTouchPreventedResponse(bool aPreventDefault);

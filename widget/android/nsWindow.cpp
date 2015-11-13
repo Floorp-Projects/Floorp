@@ -58,6 +58,7 @@ using mozilla::Unused;
 #include "mozilla/layers/LayerManagerComposite.h"
 #include "mozilla/layers/AsyncCompositionManager.h"
 #include "mozilla/layers/APZCTreeManager.h"
+#include "mozilla/layers/APZEventState.h"
 #include "mozilla/layers/APZThreadUtils.h"
 #include "GLContext.h"
 #include "GLContextProvider.h"
@@ -1151,6 +1152,7 @@ nsWindow::OnGlobalAndroidEvent(AndroidGeckoEvent *ae)
 
             WidgetTouchEvent touchEvent = ae->MakeTouchEvent(win);
             win->ProcessUntransformedAPZEvent(&touchEvent, ae->ApzGuid(), ae->ApzInputBlockId(), ae->ApzEventStatus());
+            win->DispatchHitTest(touchEvent);
             break;
         }
         case AndroidGeckoEvent::MOTION_EVENT: {
@@ -1353,6 +1355,10 @@ nsWindow::DispatchHitTest(const WidgetTouchEvent& aEvent)
         hittest.inputSource = nsIDOMMouseEvent::MOZ_SOURCE_TOUCH;
         nsEventStatus status;
         DispatchEvent(&hittest, status);
+
+        if (mAPZEventState && hittest.hitCluster) {
+            mAPZEventState->ProcessClusterHit();
+        }
     }
 }
 
