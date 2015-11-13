@@ -89,7 +89,7 @@ class StaticScope : public NativeObject
         setReservedSlot(ENCLOSING_SCOPE_SLOT, ObjectOrNullValue(scope));
     }
 
-    void setEnclosingScope(JSObject* obj);
+    void setEnclosingScope(StaticScope* obj);
 };
 
 class NestedStaticScope : public StaticScope
@@ -362,7 +362,7 @@ class StaticEvalScope : public StaticScope
   public:
     static const Class class_;
 
-    static StaticEvalScope* create(JSContext* cx, HandleObject enclosing);
+    static StaticEvalScope* create(JSContext* cx, Handle<StaticScope*> enclosing);
 
     void setStrict() {
         setReservedSlot(STRICT_SLOT, BooleanValue(true));

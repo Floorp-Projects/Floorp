@@ -288,7 +288,7 @@ EvalKernel(JSContext* cx, const CallArgs& args, EvalType evalType, AbstractFrame
         if (maybeScript && maybeScript->scriptSource()->introducerFilename())
             introducerFilename = maybeScript->scriptSource()->introducerFilename();
 
-        RootedObject enclosing(cx);
+        Rooted<StaticScope*> enclosing(cx);
         if (evalType == DIRECT_EVAL)
             enclosing = callerScript->innermostStaticScope(pc);
         else
@@ -374,7 +374,7 @@ js::DirectEvalStringFromIon(JSContext* cx,
         if (maybeScript && maybeScript->scriptSource()->introducerFilename())
             introducerFilename = maybeScript->scriptSource()->introducerFilename();
 
-        RootedObject enclosing(cx, callerScript->innermostStaticScope(pc));
+        Rooted<StaticScope*> enclosing(cx, callerScript->innermostStaticScope(pc));
         Rooted<StaticEvalScope*> staticScope(cx, StaticEvalScope::create(cx, enclosing));
         if (!staticScope)
             return false;

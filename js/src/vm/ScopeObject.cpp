@@ -39,10 +39,10 @@ typedef MutableHandle<ArgumentsObject*> MutableHandleArgumentsObject;
 /*** Static scope objects ************************************************************************/
 
 void
-StaticScope::setEnclosingScope(JSObject* obj)
+StaticScope::setEnclosingScope(StaticScope* scope)
 {
-    MOZ_ASSERT_IF(obj->is<StaticBlockScope>(), obj->isDelegate());
-    setFixedSlot(ENCLOSING_SCOPE_SLOT, ObjectValue(*obj));
+    MOZ_ASSERT_IF(scope->is<StaticBlockScope>(), scope->isDelegate());
+    setFixedSlot(ENCLOSING_SCOPE_SLOT, ObjectValue(*scope));
 }
 
 bool
@@ -916,16 +916,16 @@ const Class DynamicWithObject::class_ = {
 };
 
 /* static */ StaticEvalScope*
-StaticEvalScope::create(JSContext* cx, HandleObject enclosing)
+StaticEvalScope::create(JSContext* cx, Handle<StaticScope*> enclosing)
 {
-    StaticEvalScope* obj =
+    StaticEvalScope* scope =
         NewObjectWithNullTaggedProto<StaticEvalScope>(cx, TenuredObject, BaseShape::DELEGATE);
-    if (!obj)
+    if (!scope)
         return nullptr;
 
-    obj->setReservedSlot(ENCLOSING_SCOPE_SLOT, ObjectOrNullValue(enclosing));
-    obj->setReservedSlot(STRICT_SLOT, BooleanValue(false));
-    return obj;
+    scope->initEnclosingScope(enclosing);
+    scope->setReservedSlot(STRICT_SLOT, BooleanValue(false));
+    return scope;
 }
 
 const Class StaticEvalScope::class_ = {
