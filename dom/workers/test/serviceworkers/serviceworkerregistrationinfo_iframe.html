@@ -12,18 +12,9 @@
           if (event.data !== "register") {
             return;
           }
-          promise = promise.then(function (registration) {
+          promise.then(function (registration) {
             return navigator.serviceWorker.register("worker2.js");
           });
-          window.onmessage = function (event) {
-            if (event.data !== "unregister") {
-              return;
-            }
-            promise.then(function (registration) {
-              registration.unregister();
-            });
-            window.onmessage = null;
-          };
         };
       };
     </script>

@@ -1,0 +1,77 @@
+<?xml version="1.0"?>
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<window title="Test for ServiceWorkerRegistrationInfo"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="test();">
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script type="application/javascript" src="chrome_helpers.js"/>
+  <script type="application/javascript">
+  <![CDATA[
+
+    let IFRAME_URL = EXAMPLE_URL + "serviceworkerregistrationinfo_iframe.html";
+
+    function test() {
+      SimpleTest.waitForExplicitFinish();
+
+      SpecialPowers.pushPrefEnv({'set': [
+        ["dom.serviceWorkers.enabled", true],
+        ["dom.serviceWorkers.testing.enabled", true],
+      ]}, function () {
+        Task.spawn(function* () {
+          let iframe = $("iframe");
+          let promise = waitForIframeLoad(iframe);
+          iframe.src = IFRAME_URL;
+          yield promise;
+
+          // The change handler is not guaranteed to be called within the same
+          // tick of the event loop as the one in which the change happened.
+          // Because of this, the exact state of the service worker registration
+          // is only known until the handler returns.
+          //
+          // Because then-handlers are resolved asynchronously, the following
+          // checks are done using callbacks, which are called synchronously
+          // when then handler is called. These callbacks can return a promise,
+          // which is used to resolve the promise returned by the function.
+
+          info("Check that a service worker registration notifies its " +
+               "listeners when its state changes.");
+          promise = waitForRegister(EXAMPLE_URL, function (registration) {
+            is(registration.scriptSpec, "");
+
+            return waitForServiceWorkerRegistrationChange(registration, function  () {
+              is(registration.scriptSpec, EXAMPLE_URL + "worker.js");
+
+              return registration;
+            });
+          });
+          iframe.contentWindow.postMessage("register", "*");
+          let registration = yield promise;
+
+          promise = waitForServiceWorkerRegistrationChange(registration, function () {
+            is(registration.scriptSpec, EXAMPLE_URL + "worker2.js");
+
+            return registration;
+          });
+          iframe.contentWindow.postMessage("register", "*");
+          yield promise;
+
+          SimpleTest.finish();
+        });
+      });
+    }
+
+  ]]>
+  </script>
+
+  <body xmlns="http://www.w3.org/1999/xhtml">
+    <p id="display"></p>
+    <div id="content" style="display:none;"></div>
+    <pre id="test"></pre>
+    <iframe id="iframe"></iframe>
+  </body>
+  <label id="test-result"/>
+</window>

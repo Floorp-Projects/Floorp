@@ -436,6 +436,36 @@ ServiceWorkerRegistrationInfo::GetActiveWorker(nsIServiceWorkerInfo **aResult)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+ServiceWorkerRegistrationInfo::AddListener(
+                            nsIServiceWorkerRegistrationInfoListener *aListener)
+{
+  AssertIsOnMainThread();
+
+  if (!aListener || mListeners.Contains(aListener)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  mListeners.AppendElement(aListener);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+ServiceWorkerRegistrationInfo::RemoveListener(
+                            nsIServiceWorkerRegistrationInfoListener *aListener)
+{
+  AssertIsOnMainThread();
+
+  if (!aListener || !mListeners.Contains(aListener)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  mListeners.RemoveElement(aListener);
+
+  return NS_OK;
+}
+
 already_AddRefed<ServiceWorkerInfo>
 ServiceWorkerRegistrationInfo::GetServiceWorkerInfoById(uint64_t aId)
 {
@@ -970,6 +1000,7 @@ public:
       }
 
       mRegistration->mScriptSpec = mScriptSpec;
+      mRegistration->NotifyListenersOnChange();
       swm->StoreRegistration(mPrincipal, mRegistration);
     } else {
       MOZ_ASSERT(mJobType == UPDATE_JOB);
@@ -2463,6 +2494,15 @@ ServiceWorkerRegistrationInfo::IsLastUpdateCheckTimeOverOneDay() const
 }
 
 void
+ServiceWorkerRegistrationInfo::NotifyListenersOnChange()
+{
+  nsTArray<nsCOMPtr<nsIServiceWorkerRegistrationInfoListener>> listeners(mListeners);
+  for (size_t index = 0; index < listeners.Length(); ++index) {
+    listeners[index]->OnChange();
+  }
+}
+
+void
 ServiceWorkerManager::LoadRegistration(
                              const ServiceWorkerRegistrationData& aRegistration)
 {
@@ -3883,7 +3923,7 @@ ServiceWorkerManager::AddListener(nsIServiceWorkerManagerListener* aListener)
 {
   AssertIsOnMainThread();
 
-  if (mListeners.Contains(aListener)) {
+  if (!aListener || mListeners.Contains(aListener)) {
     return NS_ERROR_INVALID_ARG;
   }
 
@@ -3897,7 +3937,7 @@ ServiceWorkerManager::RemoveListener(nsIServiceWorkerManagerListener* aListener)
 {
   AssertIsOnMainThread();
 
-  if (!mListeners.Contains(aListener)) {
+  if (!aListener || !mListeners.Contains(aListener)) {
     return NS_ERROR_INVALID_ARG;
   }
 
