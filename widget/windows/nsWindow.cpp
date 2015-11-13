@@ -1993,19 +1993,19 @@ NS_METHOD nsWindow::GetRestoredBounds(LayoutDeviceIntRect &aRect)
   return NS_OK;
 }
 
-// return the x,y offset of the client area from the origin
-// of the window. If the window is borderless returns (0,0).
-nsIntPoint
-nsWindow::GetClientOffsetUntyped()
+// Return the x,y offset of the client area from the origin of the window. If
+// the window is borderless returns (0,0).
+LayoutDeviceIntPoint
+nsWindow::GetClientOffset()
 {
   if (!mWnd) {
-    return nsIntPoint(0, 0);
+    return LayoutDeviceIntPoint(0, 0);
   }
 
   RECT r1;
   GetWindowRect(mWnd, &r1);
   LayoutDeviceIntPoint pt = WidgetToScreenOffset();
-  return nsIntPoint(pt.x - r1.left, pt.y - r1.top);
+  return LayoutDeviceIntPoint(pt.x - r1.left, pt.y - r1.top);
 }
 
 void

@@ -1561,10 +1561,10 @@ nsWindow::UpdateClientOffset()
     mClientOffset = nsIntPoint(left, top);
 }
 
-nsIntPoint
-nsWindow::GetClientOffsetUntyped()
+LayoutDeviceIntPoint
+nsWindow::GetClientOffset()
 {
-    return mClientOffset;
+    return LayoutDeviceIntPoint::FromUnknownPoint(mClientOffset);
 }
 
 gboolean
