@@ -24,6 +24,8 @@ function SpecialPowers(window) {
   this._pongHandlers = [];
   this._messageListener = this._messageReceived.bind(this);
   this._grandChildFrameMM = null;
+  this._createFilesOnError = null;
+  this._createFilesOnSuccess = null;
   this.SP_SYNC_MESSAGES = ["SPChromeScriptMessage",
                            "SPLoadChromeScript",
                            "SPObserverService",
@@ -36,6 +38,8 @@ function SpecialPowers(window) {
 
   this.SP_ASYNC_MESSAGES = ["SpecialPowers.Focus",
                             "SpecialPowers.Quit",
+                            "SpecialPowers.CreateFiles",
+                            "SpecialPowers.RemoveFiles",
                             "SPPingService",
                             "SPQuotaManager",
                             "SPLoadExtension",
@@ -43,6 +47,8 @@ function SpecialPowers(window) {
                             "SPUnloadExtension",
                             "SPExtensionMessage"];
   addMessageListener("SPPingService", this._messageListener);
+  addMessageListener("SpecialPowers.FilesCreated", this._messageListener);
+  addMessageListener("SpecialPowers.FilesError", this._messageListener);
   let self = this;
   Services.obs.addObserver(function onInnerWindowDestroyed(subject, topic, data) {
     var id = subject.QueryInterface(Components.interfaces.nsISupportsPRUint64).data;
@@ -50,6 +56,8 @@ function SpecialPowers(window) {
       Services.obs.removeObserver(onInnerWindowDestroyed, "inner-window-destroyed");
       try {
         removeMessageListener("SPPingService", self._messageListener);
+        removeMessageListener("SpecialPowers.FilesCreated", self._messageListener);
+        removeMessageListener("SpecialPowers.FilesError", self._messageListener);
       } catch (e if e.result == Components.results.NS_ERROR_ILLEGAL_VALUE) {
         // Ignore the exception which the message manager has been destroyed.
         ;
@@ -122,12 +130,52 @@ SpecialPowers.prototype._messageReceived = function(aMessage) {
         }
       }
       break;
+
+    case "SpecialPowers.FilesCreated":
+      var handler = this._createFilesOnSuccess;
+      this._createFilesOnSuccess = null;
+      this._createFilesOnError = null;
+      if (handler) {
+        handler(aMessage.data);
+      }
+      break;
+
+    case "SpecialPowers.FilesError":
+      var handler = this._createFilesOnError;
+      this._createFilesOnSuccess = null;
+      this._createFilesOnError = null;
+      if (handler) {
+        handler(aMessage.data);
+      }
+      break;
   }
+
   return true;
 };
 
 SpecialPowers.prototype.quit = function() {
   sendAsyncMessage("SpecialPowers.Quit", {});
+};
+
+// fileRequests is an array of file requests. Each file request is an object.
+// A request must have a field |name|, which gives the base of the name of the
+// file to be created in the profile directory. If the request has a |data| field
+// then that data will be written to the file.
+SpecialPowers.prototype.createFiles = function(fileRequests, onCreation, onError) {
+  if (this._createFilesOnSuccess || this._createFilesOnError) {
+    onError("Already waiting for SpecialPowers.createFiles() to finish.");
+    return;
+  }
+
+  this._createFilesOnSuccess = onCreation;
+  this._createFilesOnError = onError;
+  sendAsyncMessage("SpecialPowers.CreateFiles", fileRequests);
+};
+
+// Remove the files that were created using |SpecialPowers.createFiles()|.
+// This will be automatically called by |SimpleTest.finish()|.
+SpecialPowers.prototype.removeFiles = function() {
+  sendAsyncMessage("SpecialPowers.RemoveFiles", {});
 };
 
 SpecialPowers.prototype.executeAfterFlushingMessageQueue = function(aCallback) {

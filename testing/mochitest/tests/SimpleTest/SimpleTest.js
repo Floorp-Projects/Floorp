@@ -1025,6 +1025,8 @@ SimpleTest.finish = function() {
     }
 
     var afterCleanup = function() {
+        SpecialPowers.removeFiles();
+
         if (SpecialPowers.DOMWindowUtils.isTestControllingRefreshes) {
             SimpleTest.ok(false, "test left refresh driver under test control");
             SpecialPowers.DOMWindowUtils.restoreNormalRefresh();
