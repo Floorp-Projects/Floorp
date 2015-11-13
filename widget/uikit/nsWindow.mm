@@ -779,7 +779,7 @@ void nsWindow::ReportSizeEvent()
 }
 
 NS_IMETHODIMP
-nsWindow::GetScreenBoundsUntyped(nsIntRect &aRect)
+nsWindow::GetScreenBounds(LayoutDeviceIntRect& aRect)
 {
     LayoutDeviceIntPoint p = WidgetToScreenOffset();
 

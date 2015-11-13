@@ -105,7 +105,7 @@ public:
     virtual bool IsEnabled() const override;
     NS_IMETHOD Invalidate(const nsIntRect &aRect) override;
     NS_IMETHOD SetFocus(bool aRaise = false) override;
-    NS_IMETHOD GetScreenBoundsUntyped(nsIntRect &aRect) override;
+    NS_IMETHOD GetScreenBounds(mozilla::LayoutDeviceIntRect &aRect) override;
     virtual mozilla::LayoutDeviceIntPoint WidgetToScreenOffset() override;
     NS_IMETHOD DispatchEvent(mozilla::WidgetGUIEvent* aEvent,
                              nsEventStatus& aStatus) override;
