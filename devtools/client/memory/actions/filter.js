@@ -5,7 +5,7 @@
 
 const { clearTimeout, setTimeout } = require("sdk/timers");
 const { actions } = require("../constants");
-const { refreshSelectedCensus } = require("./snapshot");
+const { refresh } = require("./refresh");
 
 const setFilterString = exports.setFilterString = function (filterString) {
   return {
@@ -30,7 +30,7 @@ exports.setFilterStringAndRefresh = function (filterString, heapWorker) {
       clearTimeout(timerId);
     }
 
-    timerId = setTimeout(() => dispatch(refreshSelectedCensus(heapWorker)),
+    timerId = setTimeout(() => dispatch(refresh(heapWorker)),
                          FILTER_INPUT_DEBOUNCE_MS);
   };
 };

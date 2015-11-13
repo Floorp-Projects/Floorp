@@ -4,9 +4,10 @@
 
 const { DOM: dom, createClass, createFactory, PropTypes } = require("devtools/client/shared/vendor/react");
 const { connect } = require("devtools/client/shared/vendor/react-redux");
-const { breakdowns } = require("./constants");
+const { breakdowns, diffingState } = require("./constants");
 const { toggleRecordingAllocationStacks } = require("./actions/allocations");
 const { setBreakdownAndRefresh } = require("./actions/breakdown");
+const { selectSnapshotForDiffingAndRefresh, toggleDiffing } = require("./actions/diffing");
 const { toggleInvertedAndRefresh } = require("./actions/inverted");
 const { setFilterStringAndRefresh } = require("./actions/filter");
 const { pickFileAndExportSnapshot, pickFileAndImportSnapshotAndCensus } = require("./actions/io");
@@ -52,14 +53,20 @@ const App = createClass({
       inverted,
       toolbox,
       filter,
+      diffing
     } = this.props;
 
-    let selectedSnapshot = snapshots.find(s => s.selected);
+    const selectedSnapshot = snapshots.find(s => s.selected);
+
+    const onClickSnapshotListItem = diffing && diffing.state === diffingState.SELECTING
+      ? snapshot => dispatch(selectSnapshotForDiffingAndRefresh(heapWorker, snapshot))
+      : snapshot => dispatch(selectSnapshotAndRefresh(heapWorker, snapshot.id));
 
     return (
       dom.div({ id: "memory-tool" },
 
         Toolbar({
+          snapshots,
           breakdowns: getBreakdownDisplayData(),
           onImportClick: () => dispatch(pickFileAndImportSnapshotAndCensus(heapWorker)),
           onTakeSnapshotClick: () => dispatch(takeSnapshotAndCensus(front, heapWorker)),
@@ -74,18 +81,22 @@ const App = createClass({
           filter,
           setFilterString: filterString =>
             dispatch(setFilterStringAndRefresh(filterString, heapWorker)),
+          diffing,
+          onToggleDiffing: () => dispatch(toggleDiffing())
         }),
 
         dom.div({ id: "memory-tool-container" },
           List({
             itemComponent: SnapshotListItem,
             items: snapshots,
-            onClick: snapshot => dispatch(selectSnapshotAndRefresh(heapWorker, snapshot)),
-            onSave: snapshot => dispatch(pickFileAndExportSnapshot(snapshot))
+            onSave: snapshot => dispatch(pickFileAndExportSnapshot(snapshot)),
+            onClick: onClickSnapshotListItem,
+            diffing,
           }),
 
           HeapView({
             snapshot: selectedSnapshot,
+            diffing,
             onSnapshotClick: () => dispatch(takeSnapshotAndCensus(front, heapWorker)),
             toolbox
           })

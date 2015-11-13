@@ -6,7 +6,7 @@
 
 let { snapshotState: states } = require("devtools/client/memory/constants");
 let { toggleInverted, toggleInvertedAndRefresh } = require("devtools/client/memory/actions/inverted");
-let { takeSnapshotAndCensus, selectSnapshotAndRefresh } = require("devtools/client/memory/actions/snapshot");
+let { takeSnapshotAndCensus } = require("devtools/client/memory/actions/snapshot");
 
 function run_test() {
   run_next_test();
@@ -27,7 +27,7 @@ add_task(function *() {
   yield waitUntilSnapshotState(store, [states.SAVED_CENSUS]);
   ok(getState().inverted,
      "should want inverted trees");
-  ok(getState().snapshots[0].inverted,
+  ok(getState().snapshots[0].census.inverted,
      "snapshot-we-were-in-the-middle-of-saving's census should be inverted");
 
   dispatch(toggleInvertedAndRefresh(heapWorker));
@@ -38,7 +38,7 @@ add_task(function *() {
   dispatch(toggleInverted());
   yield waitUntilSnapshotState(store, [states.SAVED_CENSUS]);
   ok(getState().inverted, "inverted again");
-  ok(getState().snapshots[0].inverted,
+  ok(getState().snapshots[0].census.inverted,
      "census-we-were-in-the-middle-of-recomputing should be inverted again");
 
   heapWorker.destroy();

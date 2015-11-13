@@ -3,12 +3,12 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 const { DOM: dom, createClass, PropTypes, createFactory } = require("devtools/client/shared/vendor/react");
-const { safeErrorString } = require("devtools/shared/DevToolsUtils");
+const { assert, safeErrorString } = require("devtools/shared/DevToolsUtils");
 const Tree = createFactory(require("./tree"));
 const TreeItem = createFactory(require("./tree-item"));
-const { getSnapshotStatusTextFull, getSnapshotTotals, L10N } = require("../utils");
-const { snapshotState: states } = require("../constants");
-const { snapshot: snapshotModel } = require("../models");
+const { getStatusTextFull, L10N } = require("../utils");
+const { snapshotState: states, diffingState } = require("../constants");
+const { snapshot: snapshotModel, diffingModel } = require("../models");
 // If HEAP_TREE_ROW_HEIGHT changes, be sure to change `var(--heap-tree-row-height)`
 // in `devtools/client/themes/memory.css`
 const HEAP_TREE_ROW_HEIGHT = 14;
@@ -33,27 +33,29 @@ function createParentMap (node, aggregator=Object.create(null)) {
 /**
  * Creates properties to be passed into the Tree component.
  *
- * @param {CensusTreeNode} census
+ * @param {censusModel} census
+ * @param {Object} toolbox
+ * @param {Object} diffing
  * @return {Object}
  */
-function createTreeProperties (snapshot, toolbox) {
-  const census = snapshot.census;
-  let map = createParentMap(census);
-  const totals = getSnapshotTotals(snapshot);
+function createTreeProperties(census, toolbox, diffing) {
+  const report = census.report;
+  let map = createParentMap(report);
+  const { totalBytes, totalCount } = report;
 
-  const getPercentBytes = totals.bytes === 0
+  const getPercentBytes = totalBytes === 0
     ? _ => 0
-    : bytes => bytes / totals.bytes * 100;
+    : bytes => (bytes / totalBytes) * 100;
 
-  const getPercentCount = totals.count === 0
+  const getPercentCount = totalCount === 0
     ? _ => 0
-    : count => count / totals.count * 100;
+    : count => (count / totalCount) * 100;
 
   return {
     autoExpandDepth: 0,
     getParent: node => {
       const parent = map[node.id];
-      return parent === census ? null : parent;
+      return parent === report ? null : parent;
     },
     getChildren: node => node.children || [],
     renderItem: (item, depth, focused, arrow) =>
@@ -65,8 +67,9 @@ function createTreeProperties (snapshot, toolbox) {
         arrow,
         getPercentBytes,
         getPercentCount,
+        showSign: !!diffing,
       }),
-    getRoots: () => census.children || [],
+    getRoots: () => report.children || [],
     getKey: node => node.id,
     itemHeight: HEAP_TREE_ROW_HEIGHT,
     // Because we never add or remove children when viewing the same census, we
@@ -87,15 +90,45 @@ const Heap = module.exports = createClass({
   propTypes: {
     onSnapshotClick: PropTypes.func.isRequired,
     snapshot: snapshotModel,
+    toolbox: PropTypes.object.isRequired,
+    diffing: diffingModel,
   },
 
   render() {
-    let { snapshot, onSnapshotClick, toolbox } = this.props;
-    let census = snapshot ? snapshot.census : null;
-    let state = snapshot ? snapshot.state : "initial";
-    let statusText = snapshot ? getSnapshotStatusTextFull(snapshot) : "";
-    let content;
+    let { snapshot, diffing, onSnapshotClick, toolbox } = this.props;
 
+    let census;
+    let state;
+    let statusText;
+    let error;
+    if (diffing) {
+      census = diffing.census;
+      state = diffing.state;
+
+      if (diffing.state === diffingState.SELECTING) {
+        statusText = L10N.getStr(diffing.firstSnapshotId === null
+                                   ? "diffing.prompt.selectBaseline"
+                                   : "diffing.prompt.selectComparison");
+      } else {
+        statusText = getStatusTextFull(diffing.state);
+      }
+
+      if (diffing.error) {
+        error = diffing.error;
+      }
+    } else {
+      census = snapshot ? snapshot.census : null;
+      state = snapshot ? snapshot.state : "initial";
+      statusText = snapshot ? getStatusTextFull(snapshot.state) : "";
+      if (snapshot && snapshot.error) {
+        error = snapshot.error;
+      }
+    }
+    assert(census !== undefined, "census should have been set");
+    assert(state !== undefined, "state should have been set");
+    assert(statusText !== undefined, "statusText should have been set");
+
+    let content;
     switch (state) {
       case "initial":
         content = [dom.button({
@@ -107,26 +140,37 @@ const Heap = module.exports = createClass({
           "data-text-only": true,
         }, L10N.getStr("take-snapshot"))];
         break;
+
+      case diffingState.ERROR:
       case states.ERROR:
         content = [
           dom.span({ className: "snapshot-status error" }, statusText),
-          dom.pre({}, safeErrorString(snapshot.error))
+          dom.pre({}, safeErrorString(error))
         ];
         break;
+
+      case diffingState.SELECTING:
+      case diffingState.TAKING_DIFF:
       case states.IMPORTING:
       case states.SAVING:
       case states.SAVED:
       case states.READING:
       case states.READ:
       case states.SAVING_CENSUS:
-        content = [dom.span({ className: "snapshot-status devtools-throbber" }, statusText)];
+        const throbber = state === diffingState.SELECTING
+          ? ""
+          : "devtools-throbber";
+        content = [dom.span({ className: `snapshot-status ${throbber}` },
+                            statusText)];
         break;
+
+      case diffingState.TOOK_DIFF:
       case states.SAVED_CENSUS:
         content = [];
 
-        if (snapshot.breakdown.by === "allocationStack"
-            && census.children.length === 1
-            && census.children[0].name === "noStack") {
+        if (census.breakdown.by === "allocationStack"
+            && census.report.children.length === 1
+            && census.report.children[0].name === "noStack") {
           content.push(dom.div({ className: "error no-allocation-stacks" },
                                L10N.getStr("heapview.noAllocationStacks")));
         }
@@ -139,14 +183,20 @@ const Heap = module.exports = createClass({
             dom.span({ className: "heap-tree-item-total-count" }, L10N.getStr("heapview.field.totalcount")),
             dom.span({ className: "heap-tree-item-name" }, L10N.getStr("heapview.field.name"))
           ),
-          Tree(createTreeProperties(snapshot, toolbox))
+          Tree(createTreeProperties(census, toolbox, diffing))
         );
         break;
+
+      default:
+        assert(false, "Unexpected state: ${state}");
     }
-    let pane = dom.div({ className: "heap-view-panel", "data-state": state }, ...content);
+    assert(!!content, "Should have set content in the above switch block");
+
+    let pane = dom.div({ className: "heap-view-panel", "data-state": state },
+                       ...content);
 
     return (
       dom.div({ id: "heap-view", "data-state": state }, pane)
-    )
+    );
   }
 });

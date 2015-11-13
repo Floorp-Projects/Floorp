@@ -53,6 +53,16 @@ html, body, #app, #memory-tool {
   align-items: center;
 }
 
+.devtools-toolbar > .toolbar-group:nth-of-type(1) {
+  /**
+   * We want this to be exactly at a `--sidebar-width` distance from the
+   * toolbar's start boundary. A `.devtools-toolbar` has a 3px start padding.
+   */
+  flex: 0 0 calc(var(--sidebar-width) - 3px);
+  border-inline-end: 1px solid var(--theme-splitter-color);
+  margin-inline-end: 5px;
+}
+
 .devtools-toolbar > .toolbar-group {
   /**
    * Flex: contains several children, which need to be laid out horizontally,
@@ -61,15 +71,6 @@ html, body, #app, #memory-tool {
   display: flex;
   align-items: center;
   flex: 1;
-  /**
-   * We want this to be exactly at a --sidebar-width distance from the
-   * toolbar's start boundary. A .devtools-toolbar has a 3px start padding
-   * and the preceeding .take-snapshot button is exactly 32px, and the import
-   * button 78px.
-   */
-  margin-inline-start: calc(var(--sidebar-width) - 3px - 32px - 78px);
-  border-inline-start: 1px solid var(--theme-splitter-color);
-  padding-inline-start: 5px;
 }
 
 .devtools-toolbar > .toolbar-group > label {
@@ -86,11 +87,11 @@ html, body, #app, #memory-tool {
   margin-inline-end: 5px;
 }
 
-.devtools-toolbar > .devtools-button.take-snapshot::before {
+#take-snapshot::before {
   background-image: url(images/command-screenshot.png);
 }
 @media (min-resolution: 1.1dppx) {
-  .devtools-toolbar > .devtools-button.take-snapshot::before {
+  #take-snapshot::before {
     background-image: url(images/command-screenshot@2x.png);
   }
 }
@@ -101,6 +102,10 @@ html, body, #app, #memory-tool {
  */
 #import-snapshot {
   min-width: 78px;
+}
+
+#diff-snapshots[disabled] {
+  opacity: .5;
 }
 
 .spacer {
@@ -173,6 +178,11 @@ html, body, #app, #memory-tool {
 
 .snapshot-list-item > .snapshot-title {
   margin-bottom: 14px;
+}
+
+.snapshot-list-item > .snapshot-title > input[type=checkbox] {
+  margin: 0;
+  margin-inline-end: 5px;
 }
 
 .snapshot-list-item > .snapshot-state,
@@ -369,7 +379,7 @@ html, body, #app, #memory-tool {
 }
 
 .heap-tree-percent {
-  width: 2.5em;
+  flex: 0 0 3.5em;
 }
 
 .heap-tree-item.focused .heap-tree-number,

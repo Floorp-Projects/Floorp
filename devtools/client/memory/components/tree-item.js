@@ -18,8 +18,23 @@ const MAX_SOURCE_LENGTH = 200;
 const TreeItem = module.exports = createClass({
   displayName: "tree-item",
 
-  formatPercent(percent) {
-    return L10N.getFormatStr("tree-item.percent", Math.round(percent));
+  formatPercent(showSign, percent) {
+    return L10N.getFormatStr("tree-item.percent",
+                             this.formatNumber(showSign, percent));
+  },
+
+  formatNumber(showSign, number) {
+    const rounded = Math.round(number);
+    if (rounded === 0 || rounded === -0) {
+      return "0";
+    }
+
+    let sign = "";
+    if (showSign) {
+      sign = rounded < 0 ? "-" : "+";
+    }
+
+    return sign + Math.abs(rounded);
   },
 
   render() {
@@ -31,25 +46,33 @@ const TreeItem = module.exports = createClass({
       toolbox,
       getPercentBytes,
       getPercentCount,
+      showSign,
     } = this.props;
 
-    const percentBytes = this.formatPercent(getPercentBytes(item.bytes));
-    const percentCount = this.formatPercent(getPercentCount(item.count));
-    const percentTotalBytes = this.formatPercent(getPercentBytes(item.totalBytes));
-    const percentTotalCount = this.formatPercent(getPercentBytes(item.totalCount));
+    const bytes = this.formatNumber(showSign, item.bytes);
+    const percentBytes = this.formatPercent(showSign, getPercentBytes(item.bytes));
+
+    const count = this.formatNumber(showSign, item.count);
+    const percentCount = this.formatPercent(showSign, getPercentCount(item.count));
+
+    const totalBytes = this.formatNumber(showSign, item.totalBytes);
+    const percentTotalBytes = this.formatPercent(showSign, getPercentBytes(item.totalBytes));
+
+    const totalCount = this.formatNumber(showSign, item.totalCount);
+    const percentTotalCount = this.formatPercent(showSign, getPercentCount(item.totalCount));
 
     return dom.div({ className: `heap-tree-item ${focused ? "focused" :""}` },
       dom.span({ className: "heap-tree-item-field heap-tree-item-bytes" },
-               dom.span({ className: "heap-tree-number" }, item.bytes),
+               dom.span({ className: "heap-tree-number" }, bytes),
                dom.span({ className: "heap-tree-percent" }, percentBytes)),
       dom.span({ className: "heap-tree-item-field heap-tree-item-count" },
-               dom.span({ className: "heap-tree-number" }, item.count),
+               dom.span({ className: "heap-tree-number" }, count),
                dom.span({ className: "heap-tree-percent" }, percentCount)),
       dom.span({ className: "heap-tree-item-field heap-tree-item-total-bytes" },
-               dom.span({ className: "heap-tree-number" }, item.totalBytes),
+               dom.span({ className: "heap-tree-number" }, totalBytes),
                dom.span({ className: "heap-tree-percent" }, percentTotalBytes)),
       dom.span({ className: "heap-tree-item-field heap-tree-item-total-count" },
-               dom.span({ className: "heap-tree-number" }, item.totalCount),
+               dom.span({ className: "heap-tree-number" }, totalCount),
                dom.span({ className: "heap-tree-percent" }, percentTotalCount)),
       dom.span({ className: "heap-tree-item-field heap-tree-item-name", style: { marginLeft: depth * INDENT }},
         arrow,
