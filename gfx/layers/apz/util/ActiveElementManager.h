@@ -45,9 +45,9 @@ public:
    */
   void HandleTouchStart(bool aCanBePan);
   /**
-   * Handle the start of panning.
+   * Clear the active element.
    */
-  void HandlePanStart();
+  void ClearActivation();
   /**
    * Handle a touch-end or touch-cancel event.
    * @param aWasClick whether the touch was a click

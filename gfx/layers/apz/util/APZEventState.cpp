@@ -407,7 +407,8 @@ APZEventState::ProcessAPZStateChange(const nsCOMPtr<nsIDocument>& aDocument,
   }
   case APZStateChange::StartPanning:
   {
-    mActiveElementManager->HandlePanStart();
+    // The user started to pan, so we don't want anything to be :active.
+    mActiveElementManager->ClearActivation();
     break;
   }
   case APZStateChange::EndTouch:
