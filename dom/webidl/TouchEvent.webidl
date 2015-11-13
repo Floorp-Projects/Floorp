@@ -15,7 +15,6 @@ interface TouchEvent : UIEvent {
   readonly attribute boolean ctrlKey;
   readonly attribute boolean shiftKey;
 
-  [Throws]
   void initTouchEvent(DOMString type,
                       boolean canBubble,
                       boolean cancelable,

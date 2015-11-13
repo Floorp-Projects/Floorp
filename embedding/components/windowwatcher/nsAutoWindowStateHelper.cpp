@@ -61,9 +61,7 @@ nsAutoWindowStateHelper::DispatchEventToChrome(const char* aEventName)
   if (rv.Failed()) {
     return false;
   }
-  NS_ENSURE_TRUE(NS_SUCCEEDED(event->InitEvent(
-                   NS_ConvertASCIItoUTF16(aEventName), true, true)),
-                 false);
+  event->InitEvent(NS_ConvertASCIItoUTF16(aEventName), true, true);
   event->SetTrusted(true);
   event->GetInternalNSEvent()->mFlags.mOnlyChromeDispatch = true;
 

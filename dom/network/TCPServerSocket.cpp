@@ -159,8 +159,7 @@ TCPServerSocket::OnStopListening(nsIServerSocket* aServer, nsresult aStatus)
 {
   if (aStatus != NS_BINDING_ABORTED) {
     RefPtr<Event> event = new Event(GetOwner());
-    nsresult rv = event->InitEvent(NS_LITERAL_STRING("error"), false, false);
-    NS_ENSURE_SUCCESS(rv, rv);
+    event->InitEvent(NS_LITERAL_STRING("error"), false, false);
     event->SetTrusted(true);
     bool dummy;
     DispatchEvent(event, &dummy);

@@ -24,7 +24,6 @@ interface SimpleGestureEvent : MouseEvent
 
   readonly attribute unsigned long clickCount;
 
-  [Throws]
   void initSimpleGestureEvent(DOMString typeArg,
                               boolean canBubbleArg,
                               boolean cancelableArg,

@@ -1110,8 +1110,7 @@ Notification::DispatchClickEvent()
 {
   AssertIsOnTargetThread();
   RefPtr<Event> event = NS_NewDOMEvent(this, nullptr, nullptr);
-  nsresult rv = event->InitEvent(NS_LITERAL_STRING("click"), false, true);
-  NS_ENSURE_SUCCESS(rv, false);
+  event->InitEvent(NS_LITERAL_STRING("click"), false, true);
   event->SetTrusted(true);
   WantsPopupControlCheck popupControlCheck(event);
   bool doDefaultAction = true;

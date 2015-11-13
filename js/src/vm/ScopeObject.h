@@ -1447,6 +1447,19 @@ CreateScopeObjectsForScopeChain(JSContext* cx, AutoObjectVector& scopeChain,
 bool HasNonSyntacticStaticScopeChain(JSObject* staticScope);
 uint32_t StaticScopeChainLength(JSObject* staticScope);
 
+bool CheckVarNameConflict(JSContext* cx, Handle<ClonedBlockObject*> lexicalScope,
+                          HandlePropertyName name);
+
+bool CheckLexicalNameConflict(JSContext* cx, Handle<ClonedBlockObject*> lexicalScope,
+                              HandleObject varObj, HandlePropertyName name);
+
+bool CheckGlobalDeclarationConflicts(JSContext* cx, HandleScript script,
+                                     Handle<ClonedBlockObject*> lexicalScope,
+                                     HandleObject varObj);
+
+bool CheckEvalDeclarationConflicts(JSContext* cx, HandleScript script,
+                                   HandleObject scopeChain, HandleObject varObj);
+
 #ifdef DEBUG
 void DumpStaticScopeChain(JSScript* script);
 void DumpStaticScopeChain(JSObject* staticScope);

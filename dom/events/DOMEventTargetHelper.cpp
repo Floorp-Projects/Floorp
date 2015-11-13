@@ -263,8 +263,7 @@ nsresult
 DOMEventTargetHelper::DispatchTrustedEvent(const nsAString& aEventName)
 {
   RefPtr<Event> event = NS_NewDOMEvent(this, nullptr, nullptr);
-  nsresult rv = event->InitEvent(aEventName, false, false);
-  NS_ENSURE_SUCCESS(rv, rv);
+  event->InitEvent(aEventName, false, false);
 
   return DispatchTrustedEvent(event);
 }
