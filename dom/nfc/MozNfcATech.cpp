@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "MozIsoDepTech.h"
+#include "MozNfcATech.h"
 #include "TagUtils.h"
 #include "mozilla/dom/Promise.h"
 
@@ -13,38 +13,38 @@ using namespace mozilla::dom::nfc;
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(MozIsoDepTech)
+NS_IMPL_CYCLE_COLLECTION_CLASS(MozNfcATech)
 
-NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(MozIsoDepTech)
+NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(MozNfcATech)
   NS_IMPL_CYCLE_COLLECTION_TRACE_PRESERVED_WRAPPER
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(MozIsoDepTech)
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(MozNfcATech)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mWindow)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mTag)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(MozIsoDepTech)
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(MozNfcATech)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mWindow)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mTag)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
-NS_IMPL_CYCLE_COLLECTING_ADDREF(MozIsoDepTech)
-NS_IMPL_CYCLE_COLLECTING_RELEASE(MozIsoDepTech)
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(MozIsoDepTech)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(MozNfcATech)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(MozNfcATech)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(MozNfcATech)
   NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-const NFCTechType MozIsoDepTech::sTechnology = NFCTechType::ISO_DEP;
+const NFCTechType MozNfcATech::sTechnology = NFCTechType::NFC_A;
 
 /* static */
-already_AddRefed<MozIsoDepTech>
-MozIsoDepTech::Constructor(const GlobalObject& aGlobal,
-                           MozNFCTag& aNFCTag,
-                           ErrorResult& aRv)
+already_AddRefed<MozNfcATech>
+MozNfcATech::Constructor(const GlobalObject& aGlobal,
+                         MozNFCTag& aNFCTag,
+                         ErrorResult& aRv)
 {
   ErrorResult rv;
   nsCOMPtr<nsPIDOMWindow> win = do_QueryInterface(aGlobal.GetAsSupports());
@@ -58,31 +58,30 @@ MozIsoDepTech::Constructor(const GlobalObject& aGlobal,
     return nullptr;
   }
 
-  RefPtr<MozIsoDepTech> isoDep = new MozIsoDepTech(win, aNFCTag);
-
-  return isoDep.forget();
+  RefPtr<MozNfcATech> nfcA = new MozNfcATech(win, aNFCTag);
+  return nfcA.forget();
 }
 
-MozIsoDepTech::MozIsoDepTech(nsPIDOMWindow* aWindow, MozNFCTag& aNFCTag)
+MozNfcATech::MozNfcATech(nsPIDOMWindow* aWindow, MozNFCTag& aNFCTag)
  : mWindow(aWindow)
  , mTag(&aNFCTag)
 {
 }
 
-MozIsoDepTech::~MozIsoDepTech()
+MozNfcATech::~MozNfcATech()
 {
 }
 
 already_AddRefed<Promise>
-MozIsoDepTech::Transceive(const Uint8Array& aCommand, ErrorResult& aRv)
+MozNfcATech::Transceive(const Uint8Array& aCommand, ErrorResult& aRv)
 {
   return TagUtils::Transceive(mTag, sTechnology, aCommand, aRv);
 }
 
 JSObject*
-MozIsoDepTech::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
+MozNfcATech::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  return MozIsoDepTechBinding::Wrap(aCx, this, aGivenProto);
+  return MozNfcATechBinding::Wrap(aCx, this, aGivenProto);
 }
 
 } // namespace dom
