@@ -116,6 +116,7 @@ public:
                     mozilla::gl::GLContext* aGLContext);
     hwc_display_t GetEGLDisplay();
     hwc_surface_t GetEGLSurface();
+    already_AddRefed<mozilla::gl::GLContext> GetGLContext();
     void UpdateMirroringWidget(already_AddRefed<nsWindow>& aWindow); // Primary screen only
     nsWindow* GetMirroringWidget(); // Primary screen only
 

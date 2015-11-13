@@ -537,7 +537,10 @@ nsWindow::GetNativeData(uint32_t aDataType)
     case NS_NATIVE_WINDOW:
         // Called before primary display's EGLSurface creation.
         return mScreen->GetNativeWindow();
+    case NS_NATIVE_OPENGL_CONTEXT:
+        return mScreen->GetGLContext().take();
     }
+
     return nullptr;
 }
 
