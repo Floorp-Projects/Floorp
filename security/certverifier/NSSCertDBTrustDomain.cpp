@@ -914,7 +914,8 @@ NSSCertDBTrustDomain::CheckValidityIsAcceptable(Time notBefore, Time notAfter,
     return Success;
   }
 
-  Duration DURATION_39_MONTHS((3 * 365 + 3 * 31) * Time::ONE_DAY_IN_SECONDS);
+  Duration DURATION_27_MONTHS_PLUS_SLOP((2 * 365 + 3 * 31 + 7) *
+                                        Time::ONE_DAY_IN_SECONDS);
   Duration maxValidityDuration(UINT64_MAX);
   Duration validityDuration(notBefore, notAfter);
 
@@ -922,12 +923,9 @@ NSSCertDBTrustDomain::CheckValidityIsAcceptable(Time notBefore, Time notAfter,
     case ValidityCheckingMode::CheckingOff:
       return Success;
     case ValidityCheckingMode::CheckForEV:
-      // The EV Guidelines say the maximum is 27 months, but we use a higher
-      // limit here:
-      //  a) To (hopefully) minimize compatibility breakage.
-      //  b) Because there was some talk about raising the limit to 39 months to
-      //     match the BR limit.
-      maxValidityDuration = DURATION_39_MONTHS;
+      // The EV Guidelines say the maximum is 27 months, but we use a slightly
+      // higher limit here to (hopefully) minimize compatibility breakage.
+      maxValidityDuration = DURATION_27_MONTHS_PLUS_SLOP;
       break;
     default:
       PR_NOT_REACHED("We're not handling every ValidityCheckingMode type");
