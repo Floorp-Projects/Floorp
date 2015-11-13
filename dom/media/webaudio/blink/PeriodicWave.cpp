@@ -29,6 +29,7 @@
 #include "PeriodicWave.h"
 #include <algorithm>
 #include <cmath>
+#include <limits>
 #include "mozilla/FFTBlock.h"
 
 const unsigned MinPeriodicWaveSize = 4096; // This must be a power of two.
@@ -64,7 +65,6 @@ PeriodicWave::create(float sampleRate,
         memcpy(periodicWave->m_imagComponents->Elements(), imag,
                numberOfComponents * sizeof(float));
 
-        periodicWave->createBandLimitedTables();
         return periodicWave.forget();
     }
     return nullptr;
@@ -109,6 +109,7 @@ PeriodicWave::createTriangle(float sampleRate)
 PeriodicWave::PeriodicWave(float sampleRate, size_t numberOfComponents)
     : m_sampleRate(sampleRate)
     , m_centsPerRange(CentsPerRange)
+    , m_lowestRequestedFundamentalFrequency(std::numeric_limits<float>::max())
 {
     float nyquist = 0.5 * m_sampleRate;
 
@@ -120,6 +121,7 @@ PeriodicWave::PeriodicWave(float sampleRate, size_t numberOfComponents)
     }
 
     m_numberOfRanges = (unsigned)(3.0f*logf(m_periodicWaveSize)/logf(2.0f));
+    m_bandLimitedTables.SetCapacity(m_numberOfRanges);
     m_lowestFundamentalFrequency = nyquist / maxNumberOfPartials();
     m_rateScale = m_periodicWaveSize / m_sampleRate;
 }
@@ -140,9 +142,15 @@ size_t PeriodicWave::sizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) co
 
 void PeriodicWave::waveDataForFundamentalFrequency(float fundamentalFrequency, float* &lowerWaveData, float* &higherWaveData, float& tableInterpolationFactor)
 {
+
     // Negative frequencies are allowed, in which case we alias
     // to the positive frequency.
     fundamentalFrequency = fabsf(fundamentalFrequency);
+
+    if (fundamentalFrequency < m_lowestRequestedFundamentalFrequency) {
+        createBandLimitedTables(fundamentalFrequency);
+        m_lowestRequestedFundamentalFrequency = fundamentalFrequency;
+    }
 
     // Calculate the pitch range.
     float ratio = fundamentalFrequency > 0 ? fundamentalFrequency / m_lowestFundamentalFrequency : 0.5;
@@ -192,7 +200,7 @@ unsigned PeriodicWave::numberOfPartialsForRange(unsigned rangeIndex) const
 // One table is created for each range for non-aliasing playback
 // at different playback rates. Thus, higher ranges have more
 // high-frequency partials culled out.
-void PeriodicWave::createBandLimitedTables()
+void PeriodicWave::createBandLimitedTables(float fundamentalFrequency)
 {
     float normalizationScale = 1;
 
@@ -202,7 +210,7 @@ void PeriodicWave::createBandLimitedTables()
     const float *realData = m_realComponents->Elements();
     const float *imagData = m_imagComponents->Elements();
 
-    m_bandLimitedTables.SetCapacity(m_numberOfRanges);
+    m_bandLimitedTables.Clear();
 
     for (unsigned rangeIndex = 0; rangeIndex < m_numberOfRanges; ++rangeIndex) {
         // This FFTBlock is used to cull partials (represented by frequency bins).
@@ -214,6 +222,11 @@ void PeriodicWave::createBandLimitedTables()
         unsigned numberOfPartials = numberOfPartialsForRange(rangeIndex);
         // Also limit to the number of components that are provided.
         numberOfPartials = std::min(numberOfPartials, m_numberOfComponents - 1);
+
+        // Limit number of partials to those below Nyquist frequency
+        float nyquist = 0.5 * m_sampleRate;
+        numberOfPartials = std::min(numberOfPartials,
+                                    (unsigned)(nyquist / fundamentalFrequency));
 
         // Copy from loaded frequency data and generate complex conjugate
         // because of the way the inverse FFT is defined.
@@ -317,8 +330,6 @@ void PeriodicWave::generateBasicWaveform(OscillatorType shape)
         realP[n] = a;
         imagP[n] = b;
     }
-
-    createBandLimitedTables();
 }
 
 } // namespace WebCore
