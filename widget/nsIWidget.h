@@ -1961,17 +1961,10 @@ public:
      * No code outside of the composition pipeline should know or care
      * about this.  If you're not an agent of the compositor, you
      * probably shouldn't call this method.
-     *
-     * The untyped version exists temporarily to ease conversion to typed
-     * coordinates.
      */
     virtual mozilla::LayoutDeviceIntRect GetNaturalBounds() {
-        nsIntRect tmp = GetNaturalBoundsUntyped();
-        return mozilla::LayoutDeviceIntRect::FromUnknownRect(tmp);
-    }
-    virtual nsIntRect GetNaturalBoundsUntyped() {
-        nsIntRect bounds;
-        GetBoundsUntyped(bounds);
+        mozilla::LayoutDeviceIntRect bounds;
+        GetBounds(bounds);
         return bounds;
     }
 
