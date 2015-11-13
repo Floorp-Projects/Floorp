@@ -91,7 +91,7 @@ HeapSnapshot::Create(JSContext* cx,
                      ErrorResult& rv)
 {
   RefPtr<HeapSnapshot> snapshot = new HeapSnapshot(cx, global.GetAsSupports());
-  if (!snapshot->init(buffer, size)) {
+  if (!snapshot->init(cx, buffer, size)) {
     rv.Throw(NS_ERROR_UNEXPECTED);
     return nullptr;
   }
@@ -203,7 +203,7 @@ HeapSnapshot::getOrInternString(InternedStringSet& internedStrings,
        : Nothing())
 
 bool
-HeapSnapshot::saveNode(const protobuf::Node& node)
+HeapSnapshot::saveNode(const protobuf::Node& node, NodeIdSet& edgeReferents)
 {
   // NB: de-duplicated string properties must be read back and interned in the
   // same order here as they are written and serialized in
@@ -247,6 +247,9 @@ HeapSnapshot::saveNode(const protobuf::Node& node)
     if (NS_WARN_IF(!protoEdge.has_referent()))
       return false;
     NodeId referent = protoEdge.referent();
+
+    if (NS_WARN_IF(!edgeReferents.put(referent)))
+      return false;
 
     const char16_t* edgeName = nullptr;
     if (protoEdge.EdgeNameOrRef_case() != protobuf::Edge::EDGENAMEORREF_NOT_SET) {
@@ -402,7 +405,7 @@ StreamHasData(GzipInputStream& stream)
 }
 
 bool
-HeapSnapshot::init(const uint8_t* buffer, uint32_t size)
+HeapSnapshot::init(JSContext* cx, const uint8_t* buffer, uint32_t size)
 {
   if (!nodes.init() || !frames.init())
     return false;
@@ -430,7 +433,12 @@ HeapSnapshot::init(const uint8_t* buffer, uint32_t size)
     return false;
   rootId = root.id();
 
-  if (NS_WARN_IF(!saveNode(root)))
+  // The set of all node ids we've found edges pointing to.
+  NodeIdSet edgeReferents(cx);
+  if (NS_WARN_IF(!edgeReferents.init()))
+    return false;
+
+  if (NS_WARN_IF(!saveNode(root, edgeReferents)))
     return false;
 
   // Finally, the rest of the nodes in the core dump.
@@ -439,7 +447,15 @@ HeapSnapshot::init(const uint8_t* buffer, uint32_t size)
     protobuf::Node node;
     if (!parseMessage(gzipStream, node))
       return false;
-    if (NS_WARN_IF(!saveNode(node)))
+    if (NS_WARN_IF(!saveNode(node, edgeReferents)))
+      return false;
+  }
+
+  // Check the set of node ids referred to by edges we found and ensure that we
+  // have the node corresponding to each id. If we don't have all of them, it is
+  // unsafe to perform analyses of this heap snapshot.
+  for (auto range = edgeReferents.all(); !range.empty(); range.popFront()) {
+    if (NS_WARN_IF(!nodes.has(range.front())))
       return false;
   }
 
