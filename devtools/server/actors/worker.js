@@ -220,3 +220,24 @@ WorkerActorList.prototype = {
 };
 
 exports.WorkerActorList = WorkerActorList;
+
+function ServiceWorkerRegistrationActor(registration) {
+  this._registration = registration;
+}
+
+ServiceWorkerRegistrationActor.prototype = {
+  get registration() {
+    return this._registration;
+  },
+
+  actorPrefix: "serviceWorkerRegistration",
+
+  form: function () {
+    return {
+      actor: this.actorID,
+      scope: this._registration.scope
+    };
+  }
+};
+
+exports.ServiceWorkerRegistrationActor = ServiceWorkerRegistrationActor;
