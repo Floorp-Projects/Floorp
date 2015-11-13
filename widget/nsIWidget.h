@@ -890,17 +890,9 @@ class nsIWidget : public nsISupports {
     /**
      * Get the client offset from the window origin.
      *
-     * The untyped version exists temporarily to ease conversion to typed
-     * coordinates.
-     *
      * @return the x and y of the offset.
-     *
      */
-    virtual mozilla::LayoutDeviceIntPoint GetClientOffset() {
-      nsIntPoint tmp = GetClientOffsetUntyped();
-      return mozilla::LayoutDeviceIntPoint::FromUnknownPoint(tmp);
-    }
-    virtual nsIntPoint GetClientOffsetUntyped() = 0;
+    virtual mozilla::LayoutDeviceIntPoint GetClientOffset() = 0;
 
     /**
      * Equivalent to GetClientBounds but only returns the size.

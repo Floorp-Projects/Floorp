@@ -134,7 +134,7 @@ public:
     NS_IMETHOD         GetScreenBounds(mozilla::LayoutDeviceIntRect &aRect) override;
     NS_IMETHOD         GetClientBounds(mozilla::LayoutDeviceIntRect &aRect) override;
     virtual mozilla::gfx::IntSize GetClientSize() override;
-    virtual nsIntPoint GetClientOffsetUntyped() override;
+    virtual mozilla::LayoutDeviceIntPoint GetClientOffset() override;
     NS_IMETHOD         SetCursor(nsCursor aCursor) override;
     NS_IMETHOD         SetCursor(imgIContainer* aCursor,
                                  uint32_t aHotspotX, uint32_t aHotspotY) override;

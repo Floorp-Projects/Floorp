@@ -1343,10 +1343,10 @@ NS_METHOD nsBaseWidget::GetRestoredBounds(LayoutDeviceIntRect& aRect)
   return GetScreenBounds(aRect);
 }
 
-nsIntPoint
-nsBaseWidget::GetClientOffsetUntyped()
+LayoutDeviceIntPoint
+nsBaseWidget::GetClientOffset()
 {
-  return nsIntPoint(0, 0);
+  return LayoutDeviceIntPoint(0, 0);
 }
 
 NS_IMETHODIMP

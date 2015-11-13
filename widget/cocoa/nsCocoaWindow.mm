@@ -1980,16 +1980,17 @@ LayoutDeviceIntPoint nsCocoaWindow::WidgetToScreenOffset()
   NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(LayoutDeviceIntPoint(0,0));
 }
 
-nsIntPoint nsCocoaWindow::GetClientOffsetUntyped()
+LayoutDeviceIntPoint nsCocoaWindow::GetClientOffset()
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
 
-  nsIntRect clientRect;
-  GetClientBoundsUntyped(clientRect);
+  LayoutDeviceIntRect clientRect;
+  GetClientBounds(clientRect);
 
-  return clientRect.TopLeft() - mBounds.TopLeft();
+  return clientRect.TopLeft() -
+         LayoutDeviceIntPoint::FromUnknownPoint(mBounds.TopLeft());
 
-  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(nsIntPoint(0, 0));
+  NS_OBJC_END_TRY_ABORT_BLOCK_RETURN(LayoutDeviceIntPoint(0, 0));
 }
 
 LayoutDeviceIntSize
