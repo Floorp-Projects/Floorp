@@ -12,6 +12,7 @@
 #include "BluetoothSocketObserver.h"
 #include "DeviceStorage.h"
 #include "mozilla/ipc/SocketBase.h"
+#include "mozilla/UniquePtr.h"
 #include "nsCOMArray.h"
 
 class nsIOutputStream;
@@ -96,6 +97,7 @@ private:
   void NotifyAboutFileChange();
   bool AcquireSdcardMountLock();
   void SendObexData(uint8_t* aData, uint8_t aOpcode, int aSize);
+  void SendObexData(UniquePtr<uint8_t[]> aData, uint8_t aOpcode, int aSize);
   void AppendBlobToSend(const BluetoothAddress& aDeviceAddress, Blob* aBlob);
   void DiscardBlobsToSend();
   bool ProcessNextBatch();

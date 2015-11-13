@@ -11,6 +11,7 @@
 
 #include "base/message_loop.h"
 #include "nsAutoPtr.h"
+#include "mozilla/UniquePtr.h"
 
 namespace mozilla {
 namespace ipc {
@@ -229,6 +230,15 @@ public:
    * @param aSize The number of bytes in |aData|.
    */
   UnixSocketRawData(const void* aData, size_t aSize);
+
+  /**
+   * This constructor takes ownership of the data in aData.  The
+   * data is assumed to be aSize bytes in length.
+   *
+   * @param aData The buffer to take ownership of.
+   * @param aSize The number of bytes in |aData|.
+   */
+  UnixSocketRawData(UniquePtr<uint8_t[]> aData, size_t aSize);
 
   /**
    * This constructor reserves aSize bytes of space. Currently

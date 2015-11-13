@@ -3756,9 +3756,7 @@ nsresult GetEventAndTarget(nsIDocument* aDoc, nsISupports* aTarget,
     domDoc->CreateEvent(NS_LITERAL_STRING("Events"), getter_AddRefs(event));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = event->InitEvent(aEventName, aCanBubble, aCancelable);
-  NS_ENSURE_SUCCESS(rv, rv);
-
+  event->InitEvent(aEventName, aCanBubble, aCancelable);
   event->SetTrusted(aTrusted);
 
   rv = event->SetTarget(target);
@@ -6614,22 +6612,6 @@ nsContentUtils::FindInternalContentViewer(const nsACString& aType,
   }
 
   return nullptr;
-}
-
-bool
-nsContentUtils::GetContentSecurityPolicy(nsIContentSecurityPolicy** aCSP)
-{
-  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
-
-  nsCOMPtr<nsIContentSecurityPolicy> csp;
-  nsresult rv = SubjectPrincipal()->GetCsp(getter_AddRefs(csp));
-  if (NS_FAILED(rv)) {
-    NS_ERROR("CSP: Failed to get CSP from principal.");
-    return false;
-  }
-
-  csp.forget(aCSP);
-  return true;
 }
 
 // static

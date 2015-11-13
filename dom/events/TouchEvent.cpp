@@ -102,14 +102,9 @@ TouchEvent::InitTouchEvent(const nsAString& aType,
                            bool aMetaKey,
                            TouchList* aTouches,
                            TouchList* aTargetTouches,
-                           TouchList* aChangedTouches,
-                           ErrorResult& aRv)
+                           TouchList* aChangedTouches)
 {
-  aRv = UIEvent::InitUIEvent(aType, aCanBubble, aCancelable, aView, aDetail);
-  if (aRv.Failed()) {
-    return;
-  }
-
+  UIEvent::InitUIEvent(aType, aCanBubble, aCancelable, aView, aDetail);
   mEvent->AsInputEvent()->InitBasicModifiers(aCtrlKey, aAltKey,
                                              aShiftKey, aMetaKey);
   mTouches = aTouches;

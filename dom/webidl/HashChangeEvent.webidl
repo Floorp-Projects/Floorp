@@ -10,7 +10,6 @@ interface HashChangeEvent : Event
   readonly attribute DOMString? oldURL;
   readonly attribute DOMString? newURL;
 
-  [Throws]
   void initHashChangeEvent(DOMString typeArg,
                            boolean canBubbleArg,
                            boolean cancelableArg,
