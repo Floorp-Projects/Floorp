@@ -129,8 +129,8 @@ BluetoothServiceChildProcess::GetConnectedDevicePropertiesInternal(
 
 nsresult
 BluetoothServiceChildProcess::GetPairedDevicePropertiesInternal(
-                                     const nsTArray<nsString>& aDeviceAddresses,
-                                     BluetoothReplyRunnable* aRunnable)
+  const nsTArray<BluetoothAddress>& aDeviceAddresses,
+  BluetoothReplyRunnable* aRunnable)
 {
   PairedDevicePropertiesRequest request;
   request.addresses().AppendElements(aDeviceAddresses);
@@ -141,9 +141,9 @@ BluetoothServiceChildProcess::GetPairedDevicePropertiesInternal(
 
 nsresult
 BluetoothServiceChildProcess::FetchUuidsInternal(
-  const nsAString& aDeviceAddress, BluetoothReplyRunnable* aRunnable)
+  const BluetoothAddress& aDeviceAddress, BluetoothReplyRunnable* aRunnable)
 {
-  SendRequest(aRunnable, FetchUuidsRequest(nsString(aDeviceAddress)));
+  SendRequest(aRunnable, FetchUuidsRequest(aDeviceAddress));
   return NS_OK;
 }
 
@@ -188,22 +188,18 @@ BluetoothServiceChildProcess::SetProperty(BluetoothObjectType aType,
 
 nsresult
 BluetoothServiceChildProcess::CreatePairedDeviceInternal(
-                                              const nsAString& aAddress,
-                                              int aTimeout,
-                                              BluetoothReplyRunnable* aRunnable)
+  const BluetoothAddress& aDeviceAddress, int aTimeout,
+  BluetoothReplyRunnable* aRunnable)
 {
-  SendRequest(aRunnable,
-              PairRequest(nsString(aAddress), aTimeout));
+  SendRequest(aRunnable, PairRequest(aDeviceAddress, aTimeout));
   return NS_OK;
 }
 
 nsresult
 BluetoothServiceChildProcess::RemoveDeviceInternal(
-                                              const nsAString& aObjectPath,
-                                              BluetoothReplyRunnable* aRunnable)
+  const BluetoothAddress& aDeviceAddress, BluetoothReplyRunnable* aRunnable)
 {
-  SendRequest(aRunnable,
-              UnpairRequest(nsString(aObjectPath)));
+  SendRequest(aRunnable, UnpairRequest(aDeviceAddress));
   return NS_OK;
 }
 
@@ -224,82 +220,72 @@ BluetoothServiceChildProcess::UpdateSdpRecords(const BluetoothAddress& aDeviceAd
 
 void
 BluetoothServiceChildProcess::PinReplyInternal(
-  const nsAString& aDeviceAddress, bool aAccept,
+  const BluetoothAddress& aDeviceAddress, bool aAccept,
   const nsAString& aPinCode, BluetoothReplyRunnable* aRunnable)
 {
   SendRequest(aRunnable,
-              PinReplyRequest(nsString(aDeviceAddress),
+              PinReplyRequest(aDeviceAddress,
                               aAccept,
                               nsString(aPinCode)));
 }
 
 void
 BluetoothServiceChildProcess::SspReplyInternal(
-  const nsAString& aDeviceAddress, BluetoothSspVariant aVariant,
-  bool aAccept, BluetoothReplyRunnable* aRunnable)
+  const BluetoothAddress& aDeviceAddress,
+  BluetoothSspVariant aVariant, bool aAccept,
+  BluetoothReplyRunnable* aRunnable)
 {
-  SendRequest(aRunnable,
-              SspReplyRequest(nsString(aDeviceAddress),
-                              aVariant,
-                              aAccept));
+  SendRequest(aRunnable, SspReplyRequest(aDeviceAddress, aVariant, aAccept));
 }
 
 void
 BluetoothServiceChildProcess::SetPinCodeInternal(
-                                                const nsAString& aDeviceAddress,
-                                                const nsAString& aPinCode,
-                                                BluetoothReplyRunnable* aRunnable)
+  const BluetoothAddress& aDeviceAddress,
+  const nsAString& aPinCode,
+  BluetoothReplyRunnable* aRunnable)
 {
   SendRequest(aRunnable,
-              SetPinCodeRequest(nsString(aDeviceAddress), nsString(aPinCode)));
+              SetPinCodeRequest(aDeviceAddress, nsString(aPinCode)));
 }
 
 void
 BluetoothServiceChildProcess::SetPasskeyInternal(
-                                                const nsAString& aDeviceAddress,
-                                                uint32_t aPasskey,
-                                                BluetoothReplyRunnable* aRunnable)
+  const BluetoothAddress& aDeviceAddress,
+  uint32_t aPasskey,
+  BluetoothReplyRunnable* aRunnable)
 {
-  SendRequest(aRunnable,
-              SetPasskeyRequest(nsString(aDeviceAddress), aPasskey));
+  SendRequest(aRunnable, SetPasskeyRequest(aDeviceAddress, aPasskey));
 }
 
 void
 BluetoothServiceChildProcess::SetPairingConfirmationInternal(
-                                                const nsAString& aDeviceAddress,
+                                                const BluetoothAddress& aDeviceAddress,
                                                 bool aConfirm,
                                                 BluetoothReplyRunnable* aRunnable)
 {
-  if(aConfirm) {
-    SendRequest(aRunnable,
-                ConfirmPairingConfirmationRequest(nsString(aDeviceAddress)));
+  if (aConfirm) {
+    SendRequest(aRunnable, ConfirmPairingConfirmationRequest(aDeviceAddress));
   } else {
-    SendRequest(aRunnable,
-                DenyPairingConfirmationRequest(nsString(aDeviceAddress)));
+    SendRequest(aRunnable, DenyPairingConfirmationRequest(aDeviceAddress));
   }
 }
 
 void
 BluetoothServiceChildProcess::Connect(
-  const nsAString& aDeviceAddress,
-  uint32_t aCod,
-  uint16_t aServiceUuid,
+  const BluetoothAddress& aDeviceAddress,
+  uint32_t aCod, uint16_t aServiceUuid,
   BluetoothReplyRunnable* aRunnable)
 {
-  SendRequest(aRunnable,
-              ConnectRequest(nsString(aDeviceAddress),
-                             aCod,
-                             aServiceUuid));
+  SendRequest(aRunnable, ConnectRequest(aDeviceAddress, aCod, aServiceUuid));
 }
 
 void
 BluetoothServiceChildProcess::Disconnect(
-  const nsAString& aDeviceAddress,
+  const BluetoothAddress& aDeviceAddress,
   uint16_t aServiceUuid,
   BluetoothReplyRunnable* aRunnable)
 {
-  SendRequest(aRunnable,
-              DisconnectRequest(nsString(aDeviceAddress), aServiceUuid));
+  SendRequest(aRunnable, DisconnectRequest(aDeviceAddress, aServiceUuid));
 }
 
 void
