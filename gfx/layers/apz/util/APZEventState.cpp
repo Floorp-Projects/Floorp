@@ -231,9 +231,12 @@ APZEventState::ProcessLongTap(const nsCOMPtr<nsIPresShell>& aPresShell,
                          nsIDOMMouseEvent::MOZ_SOURCE_TOUCH);
 
   APZES_LOG("Contextmenu event handled: %d\n", eventHandled);
-
-  // If no one handle context menu, fire MOZLONGTAP event
-  if (!eventHandled) {
+  if (eventHandled) {
+    // If the contextmenu event was handled then we're showing a contextmenu,
+    // and so we should remove any activation
+    mActiveElementManager->ClearActivation();
+  } else {
+    // If no one handle context menu, fire MOZLONGTAP event
     LayoutDevicePoint currentPoint =
         APZCCallbackHelper::ApplyCallbackTransform(aPoint, aGuid)
       * widget->GetDefaultScale();
