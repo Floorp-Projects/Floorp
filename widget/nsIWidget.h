@@ -897,12 +897,12 @@ class nsIWidget : public nsISupports {
     /**
      * Equivalent to GetClientBounds but only returns the size.
      */
-    virtual mozilla::gfx::IntSize GetClientSize() {
-      // Dependeing on the backend, overloading this method may be useful if
-      // if requesting the client offset is expensive.
+    virtual mozilla::LayoutDeviceIntSize GetClientSize() {
+      // Depending on the backend, overloading this method may be useful if
+      // requesting the client offset is expensive.
       mozilla::LayoutDeviceIntRect rect;
       GetClientBounds(rect);
-      return mozilla::gfx::IntSize(rect.width, rect.height);
+      return rect.Size();
     }
 
     /**

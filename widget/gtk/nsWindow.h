@@ -133,7 +133,7 @@ public:
     NS_IMETHOD         SetFocus(bool aRaise = false) override;
     NS_IMETHOD         GetScreenBounds(mozilla::LayoutDeviceIntRect &aRect) override;
     NS_IMETHOD         GetClientBounds(mozilla::LayoutDeviceIntRect &aRect) override;
-    virtual mozilla::gfx::IntSize GetClientSize() override;
+    virtual mozilla::LayoutDeviceIntSize GetClientSize() override;
     virtual mozilla::LayoutDeviceIntPoint GetClientOffset() override;
     NS_IMETHOD         SetCursor(nsCursor aCursor) override;
     NS_IMETHOD         SetCursor(imgIContainer* aCursor,
