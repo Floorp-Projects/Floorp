@@ -24,6 +24,7 @@
 #if !(defined(DEBUG) || defined(MOZ_ENABLE_JS_DUMP))
 WORKER_SIMPLE_PREF("browser.dom.window.dump.enabled", DumpEnabled, DUMP)
 #endif
+WORKER_SIMPLE_PREF("canvas.imagebitmap_extensions.enabled", ImageBitmapExtensionsEnabled, IMAGEBITMAP_EXTENSIONS_ENABLED)
 WORKER_SIMPLE_PREF("dom.caches.enabled", DOMCachesEnabled, DOM_CACHES)
 WORKER_SIMPLE_PREF("dom.caches.testing.enabled", DOMCachesTestingEnabled, DOM_CACHES_TESTING)
 WORKER_SIMPLE_PREF("dom.performance.enable_user_timing_logging", PerformanceLoggingEnabled, PERFORMANCE_LOGGING_ENABLED)
