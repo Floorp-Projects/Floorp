@@ -379,6 +379,8 @@ add_task(function* mixup_frecency() {
         style: [ "bookmark" ] },
       { uri: NetUtil.newURI("http://example.com/lo4"),
         title: "low frecency 4" },
+      { uri: NetUtil.newURI("http://example.com/lo3"),
+        title: "low frecency 3" },
       {
         uri: makeActionURI(("searchengine"), {
           engineName: ENGINE_NAME,
@@ -401,8 +403,6 @@ add_task(function* mixup_frecency() {
         style: ["action", "searchengine"],
         icon: "",
       },
-      { uri: NetUtil.newURI("http://example.com/lo3"),
-        title: "low frecency 3" },
       { uri: NetUtil.newURI("http://example.com/lo2"),
         title: "low frecency 2" },
       { uri: NetUtil.newURI("http://example.com/lo1"),
