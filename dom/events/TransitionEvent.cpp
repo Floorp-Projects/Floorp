@@ -44,7 +44,7 @@ TransitionEvent::Constructor(const GlobalObject& aGlobal,
   RefPtr<TransitionEvent> e = new TransitionEvent(t, nullptr, nullptr);
   bool trusted = e->Init(t);
 
-  aRv = e->InitEvent(aType, aParam.mBubbles, aParam.mCancelable);
+  e->InitEvent(aType, aParam.mBubbles, aParam.mCancelable);
 
   InternalTransitionEvent* internalEvent = e->mEvent->AsTransitionEvent();
   internalEvent->propertyName = aParam.mPropertyName;

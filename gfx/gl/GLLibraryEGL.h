@@ -113,7 +113,8 @@ public:
     {
     }
 
-    void InitExtensionsFromDisplay(EGLDisplay eglDisplay);
+    void InitClientExtensions();
+    void InitDisplayExtensions();
 
     /**
      * Known GL extensions that can be queried by

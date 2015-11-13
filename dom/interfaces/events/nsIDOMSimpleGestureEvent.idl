@@ -104,7 +104,7 @@
  * consuming events.
  */
 
-[builtinclass, uuid(d78656ab-9d68-4f03-83f9-7c7bee071aa7)]
+[builtinclass, uuid(1b9afbf0-2cf0-4a7b-99bc-cd35dbd5b637)]
 interface nsIDOMSimpleGestureEvent : nsIDOMMouseEvent
 {
   /* Swipe direction constants */

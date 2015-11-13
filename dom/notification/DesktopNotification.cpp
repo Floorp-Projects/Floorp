@@ -175,10 +175,7 @@ DesktopNotification::DispatchNotificationEvent(const nsString& aName)
 
   RefPtr<Event> event = NS_NewDOMEvent(this, nullptr, nullptr);
   // it doesn't bubble, and it isn't cancelable
-  nsresult rv = event->InitEvent(aName, false, false);
-  if (NS_FAILED(rv)) {
-    return;
-  }
+  event->InitEvent(aName, false, false);
   event->SetTrusted(true);
   DispatchDOMEvent(nullptr, event, nullptr, nullptr);
 }

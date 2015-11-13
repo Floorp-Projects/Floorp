@@ -33,13 +33,9 @@ DeviceMotionEvent::InitDeviceMotionEvent(
                      const DeviceAccelerationInit& aAcceleration,
                      const DeviceAccelerationInit& aAccelIncludingGravity,
                      const DeviceRotationRateInit& aRotationRate,
-                     Nullable<double> aInterval,
-                     ErrorResult& aRv)
+                     Nullable<double> aInterval)
 {
-  aRv = Event::InitEvent(aType, aCanBubble, aCancelable);
-  if (aRv.Failed()) {
-    return;
-  }
+  Event::InitEvent(aType, aCanBubble, aCancelable);
 
   mAcceleration = new DeviceAcceleration(this, aAcceleration.mX,
                                          aAcceleration.mY,
@@ -64,10 +60,7 @@ DeviceMotionEvent::Constructor(const GlobalObject& aGlobal,
 {
   nsCOMPtr<EventTarget> t = do_QueryInterface(aGlobal.GetAsSupports());
   RefPtr<DeviceMotionEvent> e = new DeviceMotionEvent(t, nullptr, nullptr);
-  aRv = e->InitEvent(aType, aEventInitDict.mBubbles, aEventInitDict.mCancelable);
-  if (aRv.Failed()) {
-    return nullptr;
-  }
+  e->InitEvent(aType, aEventInitDict.mBubbles, aEventInitDict.mCancelable);
   bool trusted = e->Init(t);
 
   e->mAcceleration = new DeviceAcceleration(e,
