@@ -277,35 +277,29 @@ this.PushService = {
         })
         break;
 
-      case "webapps-clear-data":
-        console.debug("webapps-clear-data");
-
-        let data = aSubject
-                     .QueryInterface(Ci.mozIApplicationClearPrivateDataParams);
-        if (!data) {
-          console.error("webapps-clear-data: Failed to get information " +
-            "about application");
-          return;
-        }
-
-        var originAttributes =
-          ChromeUtils.originAttributesToSuffix({ appId: data.appId,
-                                                 inBrowser: data.browserOnly });
-        this._db.getAllByOriginAttributes(originAttributes)
-          .then(records => Promise.all(records.map(record =>
-            this._db.delete(record.keyID)
-              .catch(err => {
-                console.error("webapps-clear-data: Error removing record",
-                  record, err);
-                // This is the record we were unable to delete.
-                return record;
-              })
-              .then(maybeDeleted => this._backgroundUnregister(maybeDeleted))
-            )
-          ));
-
+      case "clear-origin-data":
+        this._clearOriginData(data).catch(error => {
+          console.error("clearOriginData: Error clearing origin data:", error);
+        });
         break;
     }
+  },
+
+  _clearOriginData: function(data) {
+    console.log("clearOriginData()");
+
+    if (!data) {
+      return Promise.resolve();
+    }
+
+    let pattern = JSON.parse(data);
+    return this._db.clearIf(record => {
+      if (!record.matchesOriginAttributes(pattern)) {
+        return false;
+      }
+      this._backgroundUnregister(record);
+      return true;
+    });
   },
 
   /**
@@ -487,7 +481,7 @@ this.PushService = {
       return;
     }
 
-    Services.obs.addObserver(this, "webapps-clear-data", false);
+    Services.obs.addObserver(this, "clear-origin-data", false);
 
     // On B2G the NetworkManager interface fires a network-active-changed
     // event.
@@ -614,7 +608,7 @@ this.PushService = {
     prefs.ignore("connection.enabled", this);
 
     Services.obs.removeObserver(this, this._networkStateChangeEventName);
-    Services.obs.removeObserver(this, "webapps-clear-data");
+    Services.obs.removeObserver(this, "clear-origin-data");
     Services.obs.removeObserver(this, "idle-daily");
     Services.obs.removeObserver(this, "perm-changed");
   },
