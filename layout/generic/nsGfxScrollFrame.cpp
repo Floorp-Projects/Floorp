@@ -3706,9 +3706,7 @@ GetScrollPortSizeExcludingHeadersAndFooters(nsIFrame* aViewportFrame,
   for (nsFrameList::Enumerator iterator(fixedFrames); !iterator.AtEnd();
        iterator.Next()) {
     nsIFrame* f = iterator.get();
-    nsRect r = f->GetRectRelativeToSelf();
-    r = nsLayoutUtils::TransformFrameRectToAncestor(f, r, aViewportFrame);
-    r = r.Intersect(aScrollPort);
+    nsRect r = f->GetRect().Intersect(aScrollPort);
     if ((r.width >= aScrollPort.width / 2 ||
          r.width >= NSIntPixelsToAppUnits(800, AppUnitsPerCSSPixel())) &&
         r.height <= aScrollPort.height/3) {
