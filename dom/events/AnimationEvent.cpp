@@ -44,7 +44,7 @@ AnimationEvent::Constructor(const GlobalObject& aGlobal,
   RefPtr<AnimationEvent> e = new AnimationEvent(t, nullptr, nullptr);
   bool trusted = e->Init(t);
 
-  aRv = e->InitEvent(aType, aParam.mBubbles, aParam.mCancelable);
+  e->InitEvent(aType, aParam.mBubbles, aParam.mCancelable);
 
   InternalAnimationEvent* internalEvent = e->mEvent->AsAnimationEvent();
   internalEvent->animationName = aParam.mAnimationName;

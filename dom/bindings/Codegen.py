@@ -15977,7 +15977,7 @@ class CGEventMethod(CGNativeMember):
             self.args.insert(0, Argument("JSContext*", "aCx"))
         if not self.isInit:
             self.args.insert(0, Argument("const GlobalObject&", "aGlobal"))
-        self.args.append(Argument('ErrorResult&', 'aRv'))
+            self.args.append(Argument('ErrorResult&', 'aRv'))
         return constructorForNativeCaller + CGNativeMember.declare(self, cgClass)
 
     def defineInit(self, cgClass):
@@ -15999,19 +15999,13 @@ class CGEventMethod(CGNativeMember):
 
         self.body = fill(
             """
-            nsresult rv = InitEvent(${typeArg}, ${bubblesArg}, ${cancelableArg});
-            if (NS_FAILED(rv)) {
-              aRv.Throw(rv);
-              return;
-            }
+            InitEvent(${typeArg}, ${bubblesArg}, ${cancelableArg});
             ${members}
             """,
             typeArg=self.args[0].name,
             bubblesArg=self.args[1].name,
             cancelableArg=self.args[2].name,
             members=members)
-
-        self.args.append(Argument('ErrorResult&', 'aRv'))
 
         return CGNativeMember.define(self, cgClass)
 

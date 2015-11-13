@@ -35,10 +35,9 @@ CreateGenericEvent(EventTarget* aOwner,
 {
   RefPtr<Event> event = new Event(aOwner, nullptr, nullptr);
 
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(
-    event->InitEvent(aType,
-                     aBubbles == eDoesBubble ? true : false,
-                     aCancelable == eCancelable ? true : false)));
+  event->InitEvent(aType,
+                   aBubbles == eDoesBubble ? true : false,
+                   aCancelable == eCancelable ? true : false);
 
   event->SetTrusted(true);
 
@@ -58,7 +57,7 @@ IDBVersionChangeEvent::CreateInternal(EventTarget* aOwner,
     event->mNewVersion.SetValue(aNewVersion.Value());
   }
 
-  MOZ_ALWAYS_TRUE(NS_SUCCEEDED(event->InitEvent(aType, false, false)));
+  event->InitEvent(aType, false, false);
 
   event->SetTrusted(true);
 

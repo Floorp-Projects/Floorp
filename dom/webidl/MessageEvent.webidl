@@ -42,7 +42,6 @@ interface MessageEvent : Event {
    */
   readonly attribute MessagePortList? ports;
 
-  [Throws]
   void initMessageEvent(DOMString type, boolean bubbles, boolean cancelable,
                         any data, DOMString origin, DOMString lastEventId,
                         (WindowProxy or MessagePort)? source,
