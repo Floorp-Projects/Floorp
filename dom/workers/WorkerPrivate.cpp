@@ -572,12 +572,7 @@ private:
 
     RefPtr<Event> event = NS_NewDOMEvent(globalScope, nullptr, nullptr);
 
-    nsresult rv = event->InitEvent(NS_LITERAL_STRING("close"), false, false);
-    if (NS_FAILED(rv)) {
-      Throw(aCx, rv);
-      return false;
-    }
-
+    event->InitEvent(NS_LITERAL_STRING("close"), false, false);
     event->SetTrusted(true);
 
     globalScope->DispatchDOMEvent(nullptr, event, nullptr, nullptr);
@@ -3073,9 +3068,7 @@ WorkerPrivate::OfflineStatusChangeEventInternal(JSContext* aCx, bool aIsOffline)
 
   RefPtr<Event> event = NS_NewDOMEvent(globalScope, nullptr, nullptr);
 
-  nsresult rv = event->InitEvent(eventType, false, false);
-  NS_ENSURE_SUCCESS_VOID(rv);
-
+  event->InitEvent(eventType, false, false);
   event->SetTrusted(true);
 
   globalScope->DispatchDOMEvent(nullptr, event, nullptr, nullptr);
