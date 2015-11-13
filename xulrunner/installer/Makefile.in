@@ -96,7 +96,7 @@ GARBAGE += debian/changelog
 
 DEBDESTDIR=debian/$(MOZ_BUILD_APP)
 
-GRE_BUILDID = $(shell $(PYTHON) $(topsrcdir)/config/printconfigsetting.py $(LIBXUL_DIST)/bin/platform.ini Build BuildID)
+GRE_BUILDID = $(shell $(PYTHON) $(topsrcdir)/config/printconfigsetting.py $(DIST)/bin/platform.ini Build BuildID)
 MOZ_DEB_TIMESTAMP = "$(shell date  +"%a, %d  %b %Y %T %z" )"
 
 DEFINES += \
@@ -108,7 +108,7 @@ DEFINES += \
 	$(NULL)
 
 ifeq ($(OS_TARGET),Linux)
-debian/changelog: $(srcdir)/debian/changelog.in  $(LIBXUL_DIST)/bin/platform.ini
+debian/changelog: $(srcdir)/debian/changelog.in  $(DIST)/bin/platform.ini
 	$(call py_action,preprocessor, \
         $(AUTOMATION_PPARGS) $(DEFINES) $(ACDEFINES) $^ -o $@)
 
