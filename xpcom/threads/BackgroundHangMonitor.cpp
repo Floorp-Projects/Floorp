@@ -29,7 +29,7 @@
 #include <algorithm>
 
 // Activate BHR only for one every BHR_BETA_MOD users.
-#define BHR_BETA_MOD 100;
+#define BHR_BETA_MOD 2;
 
 // Maximum depth of the call stack in the reported thread hangs. This value represents
 // the 99.9th percentile of the thread hangs stack depths reported by Telemetry.
