@@ -4126,6 +4126,11 @@ AncestorFilter::AssertHasAllAncestors(Element *aElement) const
 void
 TreeMatchContext::AssertHasAllStyleScopes(Element* aElement) const
 {
+  if (aElement->IsInNativeAnonymousSubtree()) {
+    // Document style sheets are never applied to native anonymous content,
+    // so it's not possible for them to be in a <style scoped> scope.
+    return;
+  }
   Element* cur = aElement->GetParentElementCrossingShadowRoot();
   while (cur) {
     if (cur->IsScopedStyleRoot()) {

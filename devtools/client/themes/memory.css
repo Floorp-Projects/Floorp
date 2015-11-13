@@ -115,18 +115,6 @@ html, body, #app, #memory-tool {
 }
 
 /**
- * TODO bug 1213100
- * Once we figure out how to store invertable buttons (pseudo element like in
- * this case?) we should add a .invertable class to handle this generally,
- * rather than the definitions in toolbars.css.
- *
- * @see bug 1173397 for another inverted related bug
- */
-.theme-light .devtools-toolbar > .devtools-toolbarbutton.take-snapshot::before {
-  filter: url(images/filters.svg#invert);
-}
-
-/**
  * Container (sidebar + main panel)
  */
 

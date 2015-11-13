@@ -42,16 +42,7 @@
 }
 
 #filter-button {
-  list-style-image: url(images/timeline-filter.svg#filter);
-  min-width: 24px;
-}
-
-#filter-button[disabled] {
-  list-style-image: url(images/timeline-filter.svg#filter-disabled);
-}
-
-#filter-button[open] {
-  list-style-image: url(images/timeline-filter.svg#filter-open);
+  list-style-image: url(images/timeline-filter.svg);
 }
 
 #performance-filter-menupopup > menuitem:before {
@@ -87,10 +78,6 @@
 
 #main-record-button {
   list-style-image: url(images/profiler-stopwatch.svg);
-}
-
-#main-record-button[checked] {
-  list-style-image: url(images/profiler-stopwatch-checked.svg);
 }
 
 #main-record-button .button-icon {

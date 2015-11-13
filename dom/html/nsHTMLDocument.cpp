@@ -3243,6 +3243,12 @@ nsHTMLDocument::ExecCommand(const nsAString& commandID,
   // cut & copy are allowed in non editable documents
   if (isCutCopy) {
     if (!nsContentUtils::IsCutCopyAllowed()) {
+      // We have rejected the event due to it not being performed in an
+      // input-driven context therefore, we report the error to the console.
+      nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
+                                      NS_LITERAL_CSTRING("DOM"), this,
+                                      nsContentUtils::eDOM_PROPERTIES,
+                                      "ExecCommandCutCopyDeniedNotInputDriven");
       return false;
     }
 

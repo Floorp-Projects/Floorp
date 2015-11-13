@@ -72,7 +72,7 @@
 
 /* Invert all toggle icons but the one in the active row for light theme */
 .theme-light .side-menu-widget-item:not(.selected) .checkbox-check {
-  filter: url(images/filters.svg#invert);
+  filter: invert(1);
 }
 
 /* Shader source editors */

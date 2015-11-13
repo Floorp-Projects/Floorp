@@ -1,3 +1,4 @@
+// |jit-test| --ion-pgo=off;
 
 // This script check that when we enable / disable the code coverage collection,
 // then we have different results for the getOffsetsCoverage methods.

@@ -18,6 +18,7 @@
 
 #include "gc/Marking.h"
 #include "jit/JitCompartment.h"
+#include "jit/JitOptions.h"
 #include "js/Date.h"
 #include "js/Proxy.h"
 #include "js/RootingAPI.h"
@@ -1073,6 +1074,15 @@ JSCompartment::updateDebuggerObservesCoverage()
         return;
 
     clearScriptCounts();
+}
+
+bool
+JSCompartment::collectCoverage() const
+{
+    return !js_JitOptions.disablePgo ||
+           debuggerObservesCoverage() ||
+           runtimeFromAnyThread()->profilingScripts ||
+           runtimeFromAnyThread()->lcovOutput.isEnabled();
 }
 
 void

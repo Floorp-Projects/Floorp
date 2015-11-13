@@ -55,6 +55,7 @@ struct JitOptions
     bool disableInlining;
     bool disableLicm;
     bool disableLoopUnrolling;
+    bool disablePgo;
     bool disableInstructionReordering;
     bool disableRangeAnalysis;
     bool disableScalarReplacement;
