@@ -202,6 +202,8 @@ RegisterErrorTable()
       "verified." },
     { "MOZILLA_PKIX_ERROR_VALIDITY_TOO_LONG",
       "The server presented a certificate that is valid for too long." },
+    { "MOZILLA_PKIX_ERROR_REQUIRED_TLS_FEATURE_MISSING",
+      "A required TLS feature is missing." },
   };
   // Note that these error strings are not localizable.
   // When these strings change, update the localization information too.

@@ -147,6 +147,14 @@ Result VerifyEncodedOCSPResponse(TrustDomain& trustDomain,
               /* optional out */ Time* thisUpdate = nullptr,
               /* optional out */ Time* validThrough = nullptr);
 
+// Check that the TLSFeature extensions in a given end-entity cert (which is
+// assumed to have been already validated with BuildCertChain) are satisfied.
+// The only feature which we cancurrently process a requirement for is
+// status_request (OCSP stapling) so we reject any extension that specifies a
+// requirement for another value. Empty extensions are also rejected.
+Result CheckTLSFeaturesAreSatisfied(Input& cert,
+                                    const Input* stapledOCSPResponse);
+
 } } // namespace mozilla::pkix
 
 #endif // mozilla_pkix_pkix_h

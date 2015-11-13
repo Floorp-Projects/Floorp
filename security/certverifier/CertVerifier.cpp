@@ -28,6 +28,7 @@ namespace mozilla { namespace psm {
 
 const CertVerifier::Flags CertVerifier::FLAG_LOCAL_ONLY = 1;
 const CertVerifier::Flags CertVerifier::FLAG_MUST_BE_EV = 2;
+const CertVerifier::Flags CertVerifier::FLAG_TLS_IGNORE_STATUS_REQUEST = 4;
 
 CertVerifier::CertVerifier(OcspDownloadConfig odc,
                            OcspStrictConfig osc,
@@ -583,6 +584,29 @@ CertVerifier::VerifySSLServerCert(CERTCertificate* peerCert,
     PR_SetError(MapResultToPRErrorCode(result), 0);
     return SECFailure;
   }
+
+  Input stapledOCSPResponseInput;
+  Input* responseInputPtr = nullptr;
+  if (stapledOCSPResponse) {
+    result = stapledOCSPResponseInput.Init(stapledOCSPResponse->data,
+                                           stapledOCSPResponse->len);
+    if (result != Success) {
+      // The stapled OCSP response was too big.
+      PR_SetError(SEC_ERROR_OCSP_MALFORMED_RESPONSE, 0);
+      return SECFailure;
+    }
+    responseInputPtr = &stapledOCSPResponseInput;
+  }
+
+  if (!(flags & FLAG_TLS_IGNORE_STATUS_REQUEST)) {
+    result = CheckTLSFeaturesAreSatisfied(peerCertInput, responseInputPtr);
+
+    if (result != Success) {
+      PR_SetError(MapResultToPRErrorCode(result), 0);
+      return SECFailure;
+    }
+  }
+
   Input hostnameInput;
   result = hostnameInput.Init(uint8_t_ptr_cast(hostname), strlen(hostname));
   if (result != Success) {
