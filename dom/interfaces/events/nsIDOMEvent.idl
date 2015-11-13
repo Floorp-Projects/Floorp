@@ -161,7 +161,7 @@ interface nsIDOMEvent : nsISupports
    * @param   cancelableArg Specifies whether or not the event's default 
    *                        action can be prevented.
    */
-  [notxpcom]
+  [notxpcom,nostdcall]
   void                      initEvent(in DOMString eventTypeArg,
                                       in boolean canBubbleArg,
                                       in boolean cancelableArg);
