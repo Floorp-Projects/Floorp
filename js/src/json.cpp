@@ -136,7 +136,7 @@ class StringifyContext
       : sb(sb),
         gap(gap),
         replacer(cx, replacer),
-        stack(cx, TraceableHashSet<JSObject*>(cx)),
+        stack(cx, TraceableHashSet<JSObject*, MovableCellHasher<JSObject*>>(cx)),
         propertyList(propertyList),
         depth(0)
     {}
@@ -148,7 +148,7 @@ class StringifyContext
     StringBuffer& sb;
     const StringBuffer& gap;
     RootedObject replacer;
-    Rooted<TraceableHashSet<JSObject*>> stack;
+    Rooted<TraceableHashSet<JSObject*, MovableCellHasher<JSObject*>>> stack;
     const AutoIdVector& propertyList;
     uint32_t depth;
 };
@@ -324,7 +324,7 @@ class CycleDetector
     }
 
   private:
-    MutableHandle<TraceableHashSet<JSObject*>> stack;
+    MutableHandle<TraceableHashSet<JSObject*, MovableCellHasher<JSObject*>>> stack;
     HandleObject obj_;
 };
 
