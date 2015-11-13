@@ -37,13 +37,13 @@
 namespace skia {
 
 // Convolves horizontally along a single row. The row data is given in
-// |src_data| and continues for the [begin, end) of the filter.
+// |src_data| and continues for the num_values() of the filter.
 void ConvolveHorizontally_LS3(const unsigned char* src_data,
-                               int begin, int end,
                                const ConvolutionFilter1D& filter,
                                unsigned char* out_row) {
+  int num_values = filter.num_values();
   int tmp, filter_offset, filter_length;
-  double zero, mask[3], shuf_50, shuf_fa;
+  double zero, mask[4], shuf_50, shuf_fa;
 
   asm volatile (
     ".set push \n\t"
@@ -51,27 +51,28 @@ void ConvolveHorizontally_LS3(const unsigned char* src_data,
     "xor %[zero], %[zero], %[zero] \n\t"
     // |mask| will be used to decimate all extra filter coefficients that are
     // loaded by SIMD when |filter_length| is not divisible by 4.
+    // mask[0] is not used in following algorithm.
     "li %[tmp], 1 \n\t"
     "dsll32 %[tmp], 0x10 \n\t"
     "daddiu %[tmp], -1 \n\t"
-    "dmtc1 %[tmp], %[mask2] \n\t"
+    "dmtc1 %[tmp], %[mask3] \n\t"
+    "dsrl %[tmp], 0x10 \n\t"
+    "mtc1 %[tmp], %[mask2] \n\t"
     "dsrl %[tmp], 0x10 \n\t"
     "mtc1 %[tmp], %[mask1] \n\t"
-    "dsrl %[tmp], 0x10 \n\t"
-    "mtc1 %[tmp], %[mask0] \n\t"
     "ori %[tmp], $0, 0x50 \n\t"
     "mtc1 %[tmp], %[shuf_50] \n\t"
     "ori %[tmp], $0, 0xfa \n\t"
     "mtc1 %[tmp], %[shuf_fa] \n\t"
     ".set pop \n\t"
-    :[zero]"=f"(zero), [mask0]"=f"(mask[0]),
-     [mask1]"=f"(mask[1]), [mask2]"=f"(mask[2]),
+    :[zero]"=f"(zero), [mask1]"=f"(mask[1]),
+     [mask2]"=f"(mask[2]), [mask3]"=f"(mask[3]),
      [shuf_50]"=f"(shuf_50), [shuf_fa]"=f"(shuf_fa),
      [tmp]"=&r"(tmp)
   );
 
   // Output one pixel each iteration, calculating all channels (RGBA) together.
-  for (int out_x = begin; out_x < end; out_x++) {
+  for (int out_x = 0; out_x < num_values; out_x++) {
     const ConvolutionFilter1D::Fixed* filter_values =
         filter.FilterForValue(out_x, &filter_offset, &filter_length);
     double accumh, accuml;
@@ -203,7 +204,7 @@ void ConvolveHorizontally_LS3(const unsigned char* src_data,
          [mul_hih]"=&f"(mul_hih), [mul_hil]"=&f"(mul_hil),
          [mul_loh]"=&f"(mul_loh), [mul_lol]"=&f"(mul_lol)
         :[fval]"r"(filter_values), [rtf]"r"(row_to_filter),
-         [zeroh]"f"(zero), [zerol]"f"(zero), [mask]"f"(mask[r-1]),
+         [zeroh]"f"(zero), [zerol]"f"(zero), [mask]"f"(mask[r]),
          [shuf_50]"f"(shuf_50), [shuf_fa]"f"(shuf_fa)
       );
     }
@@ -235,15 +236,15 @@ void ConvolveHorizontally_LS3(const unsigned char* src_data,
 }
 
 // Convolves horizontally along four rows. The row data is given in
-// |src_data| and continues for the [begin, end) of the filter.
+// |src_data| and continues for the num_values() of the filter.
 // The algorithm is almost same as |ConvolveHorizontally_LS3|. Please
 // refer to that function for detailed comments.
 void ConvolveHorizontally4_LS3(const unsigned char* src_data[4],
-                                int begin, int end,
                                 const ConvolutionFilter1D& filter,
                                 unsigned char* out_row[4]) {
+  int num_values = filter.num_values();
   int tmp, filter_offset, filter_length;
-  double zero, mask[3], shuf_50, shuf_fa;
+  double zero, mask[4], shuf_50, shuf_fa;
 
   asm volatile (
     ".set push \n\t"
@@ -251,27 +252,28 @@ void ConvolveHorizontally4_LS3(const unsigned char* src_data[4],
     "xor %[zero], %[zero], %[zero] \n\t"
     // |mask| will be used to decimate all extra filter coefficients that are
     // loaded by SIMD when |filter_length| is not divisible by 4.
+    // mask[0] is not used in following algorithm.
     "li %[tmp], 1 \n\t"
     "dsll32 %[tmp], 0x10 \n\t"
     "daddiu %[tmp], -1 \n\t"
-    "dmtc1 %[tmp], %[mask2] \n\t"
+    "dmtc1 %[tmp], %[mask3] \n\t"
+    "dsrl %[tmp], 0x10 \n\t"
+    "mtc1 %[tmp], %[mask2] \n\t"
     "dsrl %[tmp], 0x10 \n\t"
     "mtc1 %[tmp], %[mask1] \n\t"
-    "dsrl %[tmp], 0x10 \n\t"
-    "mtc1 %[tmp], %[mask0] \n\t"
     "ori %[tmp], $0, 0x50 \n\t"
     "mtc1 %[tmp], %[shuf_50] \n\t"
     "ori %[tmp], $0, 0xfa \n\t"
     "mtc1 %[tmp], %[shuf_fa] \n\t"
     ".set pop \n\t"
-    :[zero]"=f"(zero), [mask0]"=f"(mask[0]),
-     [mask1]"=f"(mask[1]), [mask2]"=f"(mask[2]),
+    :[zero]"=f"(zero), [mask1]"=f"(mask[1]),
+     [mask2]"=f"(mask[2]), [mask3]"=f"(mask[3]),
      [shuf_50]"=f"(shuf_50), [shuf_fa]"=f"(shuf_fa),
      [tmp]"=&r"(tmp)
   );
 
   // Output one pixel each iteration, calculating all channels (RGBA) together.
-  for (int out_x = begin; out_x < end; out_x++) {
+  for (int out_x = 0; out_x < num_values; out_x++) {
     const ConvolutionFilter1D::Fixed* filter_values =
         filter.FilterForValue(out_x, &filter_offset, &filter_length);
     double accum0h, accum0l, accum1h, accum1l;
@@ -385,7 +387,7 @@ void ConvolveHorizontally4_LS3(const unsigned char* src_data[4],
         :[coeffh]"=&f"(coeffh), [coeffl]"=&f"(coeffl),
          [coeff16loh]"=&f"(coeff16loh), [coeff16lol]"=&f"(coeff16lol),
          [coeff16hih]"=&f"(coeff16hih), [coeff16hil]"=&f"(coeff16hil)
-        :[fval]"r"(filter_values), [mask]"f"(mask[r-1]),
+        :[fval]"r"(filter_values), [mask]"f"(mask[r]),
          [shuf_50]"f"(shuf_50), [shuf_fa]"f"(shuf_fa)
       );
 
@@ -440,16 +442,17 @@ void ConvolveHorizontally4_LS3(const unsigned char* src_data[4],
 // Does vertical convolution to produce one output row. The filter values and
 // length are given in the first two parameters. These are applied to each
 // of the rows pointed to in the |source_data_rows| array, with each row
-// being |end - begin| wide.
+// being |pixel_width| wide.
 //
-// The output must have room for |(end - begin) * 4| bytes.
+// The output must have room for |pixel_width * 4| bytes.
 template<bool has_alpha>
 void ConvolveVertically_LS3_impl(const ConvolutionFilter1D::Fixed* filter_values,
                                   int filter_length,
                                   unsigned char* const* source_data_rows,
-                                  int begin, int end,
+                                  int pixel_width,
                                   unsigned char* out_row) {
   uint64_t tmp;
+  int width = pixel_width & ~3;
   double zero, sra, coeff16h, coeff16l;
   double accum0h, accum0l, accum1h, accum1l;
   double accum2h, accum2l, accum3h, accum3l;
@@ -468,7 +471,7 @@ void ConvolveVertically_LS3_impl(const ConvolutionFilter1D::Fixed* filter_values
   );
 
   // Output four pixels per iteration (16 bytes).
-  for (out_x = begin; out_x + 3 < end; out_x += 4) {
+  for (out_x = 0; out_x < width; out_x += 4) {
     // Accumulated result for each pixel. 32 bits per RGBA channel.
     asm volatile (
       ".set push \n\t"
@@ -651,8 +654,7 @@ void ConvolveVertically_LS3_impl(const ConvolutionFilter1D::Fixed* filter_values
 
   // When the width of the output is not divisible by 4, We need to save one
   // pixel (4 bytes) each time. And also the fourth pixel is always absent.
-  int r = end - out_x;
-  if (r > 0) {
+  if (pixel_width & 3) {
     asm volatile (
       ".set push \n\t"
       ".set arch=loongson3a \n\t"
@@ -793,7 +795,7 @@ void ConvolveVertically_LS3_impl(const ConvolutionFilter1D::Fixed* filter_values
       :[s4]"=f"(s4), [s64]"=f"(s64),
        [tmp]"=&r"(tmp)
     );
-    for (; out_x < end; out_x++) {
+    for (int out_x = width; out_x < pixel_width; out_x++) {
       double t;
 
       asm volatile (
@@ -815,14 +817,14 @@ void ConvolveVertically_LS3_impl(const ConvolutionFilter1D::Fixed* filter_values
 void ConvolveVertically_LS3(const ConvolutionFilter1D::Fixed* filter_values,
                              int filter_length,
                              unsigned char* const* source_data_rows,
-                             int begin, int end,
+                             int pixel_width,
                              unsigned char* out_row, bool has_alpha) {
   if (has_alpha) {
     ConvolveVertically_LS3_impl<true>(filter_values, filter_length,
-                                       source_data_rows, begin, end, out_row);
+                                       source_data_rows, pixel_width, out_row);
   } else {
     ConvolveVertically_LS3_impl<false>(filter_values, filter_length,
-                                       source_data_rows, begin, end, out_row);
+                                       source_data_rows, pixel_width, out_row);
   }
 }
 

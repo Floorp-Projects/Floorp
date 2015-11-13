@@ -394,6 +394,7 @@ MBasicBlock::MBasicBlock(MIRGraph& graph, CompileInfo& info, BytecodeSite* site,
     numDominated_(0),
     pc_(site->pc()),
     lir_(nullptr),
+    callerResumePoint_(nullptr),
     entryResumePoint_(nullptr),
     outerResumePoint_(nullptr),
     successorWithPhis_(nullptr),
@@ -403,7 +404,9 @@ MBasicBlock::MBasicBlock(MIRGraph& graph, CompileInfo& info, BytecodeSite* site,
     mark_(false),
     immediatelyDominated_(graph.alloc()),
     immediateDominator_(nullptr),
-    trackedSite_(site)
+    trackedSite_(site),
+    hitCount_(0),
+    hitState_(HitState::NotDefined)
 #if defined (JS_ION_PERF)
     , lineno_(0u),
     columnIndex_(0u)

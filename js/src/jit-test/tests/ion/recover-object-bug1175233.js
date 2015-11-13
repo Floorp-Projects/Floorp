@@ -1,4 +1,4 @@
-// |jit-test| test-join=--no-unboxed-objects
+// |jit-test| test-join=--no-unboxed-objects; --ion-pgo=on
 //
 // Unboxed object optimization might not trigger in all cases, thus we ensure
 // that Scalar Replacement optimization is working well independently of the
@@ -7,8 +7,8 @@
 // Ion eager fails the test below because we have not yet created any
 // template object in baseline before running the content of the top-level
 // function.
-if (getJitCompilerOptions()["ion.warmup.trigger"] <= 30)
-    setJitCompilerOption("ion.warmup.trigger", 30);
+if (getJitCompilerOptions()["ion.warmup.trigger"] <= 90)
+    setJitCompilerOption("ion.warmup.trigger", 90);
 
 // This test checks that we are able to remove the getelem & setelem with scalar
 // replacement, so we should not force inline caches, as this would skip the
@@ -28,8 +28,11 @@ function f(j) {
       i: i,
       v: i + i
     };
-    assertRecoveredOnBailout(obj, false); // :TODO: Fixed by Bug 1165348
-    assertRecoveredOnBailout(obj.v, false); // :TODO: Fixed by Bug 1165348
+    // These can only be recovered on bailout iff either we have type
+    // information for the property access in the branch, or the branch is
+    // removed before scalar replacement.
+    assertRecoveredOnBailout(obj, true);
+    assertRecoveredOnBailout(obj.v, true);
     if (uceFault(j) || uceFault(j)) {
         // MObjectState::recover should neither fail,
         // nor coerce its result to an int32.

@@ -179,29 +179,43 @@ SpeechTaskCallback::OnDidFinishSpeaking()
 namespace mozilla {
 namespace dom {
 
-class RegisterVoicesRunnable final : public nsRunnable
+struct OSXVoice
 {
-public:
-  explicit RegisterVoicesRunnable(OSXSpeechSynthesizerService* aSpeechService)
-    : mSpeechService(aSpeechService)
+  OSXVoice() : mIsDefault(false)
   {
   }
 
-  NS_IMETHOD Run();
+  nsString mUri;
+  nsString mName;
+  nsString mLocale;
+  bool mIsDefault;
+};
+
+class RegisterVoicesRunnable final : public nsRunnable
+{
+public:
+  RegisterVoicesRunnable(OSXSpeechSynthesizerService* aSpeechService,
+                         nsTArray<OSXVoice>& aList)
+    : mSpeechService(aSpeechService)
+    , mVoices(aList)
+  {
+  }
+
+  NS_IMETHOD Run() override;
 
 private:
   ~RegisterVoicesRunnable()
   {
   }
 
-  RefPtr<OSXSpeechSynthesizerService> mSpeechService;
+  // This runnable always use sync mode.  It is unnecesarry to reference object
+  OSXSpeechSynthesizerService* mSpeechService;
+  nsTArray<OSXVoice>& mVoices;
 };
 
 NS_IMETHODIMP
 RegisterVoicesRunnable::Run()
 {
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
-
   nsresult rv;
   nsCOMPtr<nsISynthVoiceRegistry> registry =
     do_GetService(NS_SYNTHVOICEREGISTRY_CONTRACTID, &rv);
@@ -209,36 +223,74 @@ RegisterVoicesRunnable::Run()
     return rv;
   }
 
+  for (OSXVoice voice : mVoices) {
+    rv = registry->AddVoice(mSpeechService, voice.mUri, voice.mName, voice.mLocale, true, false);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      continue;
+    }
+
+    if (voice.mIsDefault) {
+      registry->SetDefaultVoice(voice.mUri, true);
+    }
+  }
+  return NS_OK;
+}
+
+class EnumVoicesRunnable final : public nsRunnable
+{
+public:
+  explicit EnumVoicesRunnable(OSXSpeechSynthesizerService* aSpeechService)
+    : mSpeechService(aSpeechService)
+  {
+  }
+
+  NS_IMETHOD Run() override;
+
+private:
+  ~EnumVoicesRunnable()
+  {
+  }
+
+  RefPtr<OSXSpeechSynthesizerService> mSpeechService;
+};
+
+NS_IMETHODIMP
+EnumVoicesRunnable::Run()
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
+
+  nsAutoTArray<OSXVoice, 64> list;
+
   NSArray* voices = [NSSpeechSynthesizer availableVoices];
   NSString* defaultVoice = [NSSpeechSynthesizer defaultVoice];
 
   for (NSString* voice in voices) {
+    OSXVoice item;
+
     NSDictionary* attr = [NSSpeechSynthesizer attributesForVoice:voice];
 
     nsAutoString identifier;
     nsCocoaUtils::GetStringForNSString([attr objectForKey:NSVoiceIdentifier],
                                        identifier);
 
-    nsAutoString name;
-    nsCocoaUtils::GetStringForNSString([attr objectForKey:NSVoiceName], name);
+    nsCocoaUtils::GetStringForNSString([attr objectForKey:NSVoiceName], item.mName);
 
-    nsAutoString locale;
     nsCocoaUtils::GetStringForNSString(
-      [attr objectForKey:NSVoiceLocaleIdentifier], locale);
-    locale.ReplaceChar('_', '-');
+      [attr objectForKey:NSVoiceLocaleIdentifier], item.mLocale);
+    item.mLocale.ReplaceChar('_', '-');
 
-    nsAutoString uri;
-    uri.AssignLiteral("urn:moz-tts:osx:");
-    uri.Append(identifier);
-    rv = registry->AddVoice(mSpeechService, uri, name, locale, true, false);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      continue;
-    }
+    item.mUri.AssignLiteral("urn:moz-tts:osx:");
+    item.mUri.Append(identifier);
 
     if ([voice isEqualToString:defaultVoice]) {
-      registry->SetDefaultVoice(uri, true);
+      item.mIsDefault = true;
     }
+
+    list.AppendElement(item);
   }
+
+  RefPtr<RegisterVoicesRunnable> runnable = new RegisterVoicesRunnable(mSpeechService, list);
+  NS_DispatchToMainThread(runnable, NS_DISPATCH_SYNC);
 
   return NS_OK;
 
@@ -274,9 +326,14 @@ OSXSpeechSynthesizerService::Init()
     return false;
   }
 
+  nsCOMPtr<nsIThread> thread;
+  if (NS_FAILED(NS_NewNamedThread("SpeechWorker", getter_AddRefs(thread)))) {
+  	return false;
+  }
+
   // Get all the voices and register in the SynthVoiceRegistry
-  nsCOMPtr<nsIRunnable> runnable = new RegisterVoicesRunnable(this);
-  NS_DispatchToMainThread(runnable);
+  nsCOMPtr<nsIRunnable> runnable = new EnumVoicesRunnable(this);
+  thread->Dispatch(runnable, NS_DISPATCH_NORMAL);
 
   mInitialized = true;
   return true;

@@ -21,6 +21,8 @@ namespace jit {
 
 // New channels may be added below.
 #define JITSPEW_CHANNEL_LIST(_)             \
+    /* Information during sinking */        \
+    _(Prune)                                \
     /* Information during escape analysis */\
     _(Escape)                               \
     /* Information during alias analysis */ \

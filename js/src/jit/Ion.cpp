@@ -1503,6 +1503,17 @@ OptimizeMIR(MIRGenerator* mir)
     if (mir->shouldCancel("Start"))
         return false;
 
+    if (!js_JitOptions.disablePgo && !mir->compilingAsmJS()) {
+        AutoTraceLog log(logger, TraceLogger_PruneUnusedBranches);
+        if (!PruneUnusedBranches(mir, graph))
+            return false;
+        gs.spewPass("Prune Unused Branches");
+        AssertBasicGraphCoherency(graph);
+
+        if (mir->shouldCancel("Prune Unused Branches"))
+            return false;
+    }
+
     {
         AutoTraceLog log(logger, TraceLogger_FoldTests);
         if (!FoldTests(graph))
