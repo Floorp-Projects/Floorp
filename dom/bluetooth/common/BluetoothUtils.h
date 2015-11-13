@@ -100,7 +100,7 @@ UuidToString(const BluetoothUuid& aUuid, nsAString& aString);
  * Note: This utility function is used by gecko internal only to convert uuid
  * string created by gecko back to BluetoothUuid representation.
  */
-void
+nsresult
 StringToUuid(const nsAString& aString, BluetoothUuid& aUuid);
 
 /**

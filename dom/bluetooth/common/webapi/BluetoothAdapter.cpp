@@ -366,12 +366,16 @@ BluetoothAdapter::Cleanup()
     BluetoothService* bs = BluetoothService::Get();
     NS_ENSURE_TRUE_VOID(bs);
 
-    nsString uuid;
+    nsString uuidStr;
     for (uint32_t i = 0; i < mLeScanHandleArray.Length(); ++i) {
-      mLeScanHandleArray[i]->GetLeScanUuid(uuid);
+      mLeScanHandleArray[i]->GetLeScanUuid(uuidStr);
       RefPtr<BluetoothVoidReplyRunnable> results =
         new BluetoothVoidReplyRunnable(nullptr);
-      bs->StopLeScanInternal(uuid, results);
+
+      BluetoothUuid uuid;
+      if (NS_SUCCEEDED(StringToUuid(uuidStr, uuid))) {
+        bs->StopLeScanInternal(uuid, results);
+      }
     }
     mLeScanHandleArray.Clear();
   }
@@ -682,6 +686,16 @@ BluetoothAdapter::StartLeScan(const nsTArray<nsString>& aServiceUuids,
   RefPtr<Promise> promise = Promise::Create(global, aRv);
   NS_ENSURE_TRUE(!aRv.Failed(), nullptr);
 
+  nsTArray<BluetoothUuid> serviceUuids;
+  serviceUuids.SetLength(aServiceUuids.Length());
+
+  for (size_t i = 0; i < serviceUuids.Length(); ++i) {
+    BT_ENSURE_TRUE_REJECT(NS_SUCCEEDED(StringToUuid(aServiceUuids[i],
+                                                    serviceUuids[i])),
+                          promise,
+                          NS_ERROR_DOM_OPERATION_ERR);
+  }
+
   BT_ENSURE_TRUE_REJECT(mState == BluetoothAdapterState::Enabled,
                         promise,
                         NS_ERROR_DOM_INVALID_STATE_ERR);
@@ -691,7 +705,7 @@ BluetoothAdapter::StartLeScan(const nsTArray<nsString>& aServiceUuids,
 
   RefPtr<BluetoothReplyRunnable> result =
     new StartLeScanTask(this, promise, aServiceUuids);
-  bs->StartLeScanInternal(aServiceUuids, result);
+  bs->StartLeScanInternal(serviceUuids, result);
 
   return promise.forget();
 }
@@ -721,10 +735,16 @@ BluetoothAdapter::StopLeScan(BluetoothDiscoveryHandle& aDiscoveryHandle,
                         promise,
                         NS_ERROR_DOM_BLUETOOTH_DONE);
 
-  nsString scanUuid;
-  aDiscoveryHandle.GetLeScanUuid(scanUuid);
+  nsString scanUuidStr;
+  aDiscoveryHandle.GetLeScanUuid(scanUuidStr);
+
+  BluetoothUuid scanUuid;
+  BT_ENSURE_TRUE_REJECT(NS_SUCCEEDED(StringToUuid(scanUuidStr, scanUuid)),
+                        promise,
+                        NS_ERROR_DOM_OPERATION_ERR);
+
   RefPtr<BluetoothReplyRunnable> result =
-    new StopLeScanTask(this, promise, scanUuid);
+    new StopLeScanTask(this, promise, scanUuidStr);
   bs->StopLeScanInternal(scanUuid, result);
 
   return promise.forget();
