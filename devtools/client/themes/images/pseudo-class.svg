@@ -1,29 +1,20 @@
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<svg width="16" height="16" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<svg width="16" height="16" viewBox="0 0 16 16" color="#babec3" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
   <defs>
-    <style>
-      use[id^="pseudo-class"]:not(:target) {
-        display: none;
-      }
-    </style>
     <rect id="class-block-maskBG" width="8" height="8" fill="#fff"/>
     <rect id="class-block" width="8" height="8" rx="1" ry="1"/>
     <mask id="mask-block-solid">
       <use xlink:href="#class-block-maskBG"/>
       <use xlink:href="#class-block" transform="translate(3 3)" fill="#000"/>
     </mask>
-    <g id="pseudo-class-shape">
-      <rect x=".5" y=".5" width="7" height="7" rx="1" ry="1" mask="url(#mask-block-solid)" fill="none" stroke="currentColor" stroke-width="1"/>
-      <use xlink:href="#class-block" mask="url(#mask-block-solid)" fill="currentColor" fill-opacity=".4"/>
-      <use xlink:href="#class-block" mask="url(#mask-block-solid)" fill="currentColor" transform="translate(4 4)"/>
-      <g transform="translate(8 8)" fill="currentColor">
-        <path d="M2.5,0C2.2,0,2,0.2,2,0.5C2,0.8,2.2,1,2.5,1C2.8,1,3,0.8,3,0.5 C3,0.2,2.8,0,2.5,0z M4.5,0C4.2,0,4,0.2,4,0.5C4,0.8,4.2,1,4.5,1C4.8,1,5,0.8,5,0.5C5,0.2,4.8,0,4.5,0z M0.5,6C0.8,6,1,5.8,1,5.5 C1,5.2,0.8,5,0.5,5C0.2,5,0,5.2,0,5.5C0,5.8,0.2,6,0.5,6z M0.5,4C0.8,4,1,3.8,1,3.5C1,3.2,0.8,3,0.5,3C0.2,3,0,3.2,0,3.5 C0,3.8,0.2,4,0.5,4z M7.5,2C7.2,2,7,2.2,7,2.5C7,2.8,7.2,3,7.5,3C7.8,3,8,2.8,8,2.5C8,2.2,7.8,2,7.5,2z M7.5,4C7.2,4,7,4.2,7,4.5 C7,4.8,7.2,5,7.5,5C7.8,5,8,4.8,8,4.5C8,4.2,7.8,4,7.5,4z M5.5,7C5.2,7,5,7.2,5,7.5C5,7.8,5.2,8,5.5,8C5.8,8,6,7.8,6,7.5 C6,7.2,5.8,7,5.5,7z M3.5,7C3.2,7,3,7.2,3,7.5C3,7.8,3.2,8,3.5,8C3.8,8,4,7.8,4,7.5C4,7.2,3.8,7,3.5,7z M0.5,2C0.8,2,1,1.8,1,1.5v-1 C1,0.2,0.8,0,0.5,0C0.2,0,0,0.2,0,0.5v1C0,1.8,0.2,2,0.5,2z M8,0.5C8,0.2,7.8,0,7.5,0h-1C6.2,0,6,0.2,6,0.5C6,0.8,6.2,1,6.5,1h1 C7.8,1,8,0.8,8,0.5z M7.5,6C7.2,6,7,6.2,7,6.5v1C7,7.8,7.2,8,7.5,8C7.8,8,8,7.8,8,7.5v-1C8,6.2,7.8,6,7.5,6z M1.5,7h-1 C0.2,7,0,7.2,0,7.5C0,7.8,0.2,8,0.5,8h1C1.8,8,2,7.8,2,7.5C2,7.2,1.8,7,1.5,7z"/>
-        <use xlink:href="#class-block" fill-opacity=".2"/>
-      </g>
-    </g>
   </defs>
-  <use xlink:href="#pseudo-class-shape" id="pseudo-class" color="#babec3"/>
-  <use xlink:href="#pseudo-class-shape" id="pseudo-class-checked" color="#3089C9"/>
+  <rect x=".5" y=".5" width="7" height="7" rx="1" ry="1" mask="url(#mask-block-solid)" fill="none" stroke="currentColor" stroke-width="1"/>
+  <use xlink:href="#class-block" mask="url(#mask-block-solid)" fill="currentColor" fill-opacity=".4"/>
+  <use xlink:href="#class-block" mask="url(#mask-block-solid)" fill="currentColor" transform="translate(4 4)"/>
+  <g transform="translate(8 8)" fill="currentColor">
+    <path d="M2.5,0C2.2,0,2,0.2,2,0.5C2,0.8,2.2,1,2.5,1C2.8,1,3,0.8,3,0.5 C3,0.2,2.8,0,2.5,0z M4.5,0C4.2,0,4,0.2,4,0.5C4,0.8,4.2,1,4.5,1C4.8,1,5,0.8,5,0.5C5,0.2,4.8,0,4.5,0z M0.5,6C0.8,6,1,5.8,1,5.5 C1,5.2,0.8,5,0.5,5C0.2,5,0,5.2,0,5.5C0,5.8,0.2,6,0.5,6z M0.5,4C0.8,4,1,3.8,1,3.5C1,3.2,0.8,3,0.5,3C0.2,3,0,3.2,0,3.5 C0,3.8,0.2,4,0.5,4z M7.5,2C7.2,2,7,2.2,7,2.5C7,2.8,7.2,3,7.5,3C7.8,3,8,2.8,8,2.5C8,2.2,7.8,2,7.5,2z M7.5,4C7.2,4,7,4.2,7,4.5 C7,4.8,7.2,5,7.5,5C7.8,5,8,4.8,8,4.5C8,4.2,7.8,4,7.5,4z M5.5,7C5.2,7,5,7.2,5,7.5C5,7.8,5.2,8,5.5,8C5.8,8,6,7.8,6,7.5 C6,7.2,5.8,7,5.5,7z M3.5,7C3.2,7,3,7.2,3,7.5C3,7.8,3.2,8,3.5,8C3.8,8,4,7.8,4,7.5C4,7.2,3.8,7,3.5,7z M0.5,2C0.8,2,1,1.8,1,1.5v-1 C1,0.2,0.8,0,0.5,0C0.2,0,0,0.2,0,0.5v1C0,1.8,0.2,2,0.5,2z M8,0.5C8,0.2,7.8,0,7.5,0h-1C6.2,0,6,0.2,6,0.5C6,0.8,6.2,1,6.5,1h1 C7.8,1,8,0.8,8,0.5z M7.5,6C7.2,6,7,6.2,7,6.5v1C7,7.8,7.2,8,7.5,8C7.8,8,8,7.8,8,7.5v-1C8,6.2,7.8,6,7.5,6z M1.5,7h-1 C0.2,7,0,7.2,0,7.5C0,7.8,0.2,8,0.5,8h1C1.8,8,2,7.8,2,7.5C2,7.2,1.8,7,1.5,7z"/>
+    <use xlink:href="#class-block" fill-opacity=".2"/>
+  </g>
 </svg>
