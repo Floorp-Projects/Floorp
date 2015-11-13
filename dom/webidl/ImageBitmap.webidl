@@ -267,3 +267,144 @@ enum ChannelPixelLayoutDataType {
   "float64"
 };
 
+/*
+ * Two concepts, ImagePixelLayout and ChannelPixelLayout, together generalize
+ * the variety of pixel layouts among image formats.
+ *
+ * The ChannelPixelLayout represents the pixel layout of a single channel in a
+ * certain image format and the ImagePixelLayout is just the collection of
+ * ChannelPixelLayouts. So, the ChannelPixelLayout is defined as a dictionary
+ * type with properties to describe the layout and the ImagePixelLayout is just
+ * an alias name to a sequence of ChannelPixelLayout objects.
+ *
+ * Since an image format is composed of at least one channel, an
+ * ImagePixelLayout object contains at least one ChannelPixelLayout object.
+ *
+ * Although an image or a video frame is a two-dimensional structure, its data
+ * is usually stored in a one-dimensional array in the row-major way and the
+ * ChannelPixelLayout objects use the following properties to describe the
+ * layout of pixel values in the buffer.
+ *
+ * 1) offset:
+ *    denotes the beginning position of the channel's data relative to the
+ *    beginning position of the one-dimensional array.
+ * 2) width & height:
+ *    denote the width and height of the channel respectively. Each channel in
+ *    an image format may have different height and width.
+ * 3) data type:
+ *    denotes the format used to store one single pixel value.
+ * 4) stride:
+ *    the number of bytes between the beginning two consecutive rows in memory.
+ *    (The total bytes of each row plus the padding bytes of each raw.)
+ * 5) skip value:
+ *    the value is zero for the planar pixel layout, and a positive integer for
+ *    the interleaving pixel layout. (Describes how many bytes there are between
+ *    two adjacent pixel values in this channel.)
+ */
+
+/*
+ * Example1: RGBA image, width = 620, height = 480, stride = 2560
+ *
+ * chanel_r: offset = 0, width = 620, height = 480, data type = uint8, stride = 2560, skip = 3
+ * chanel_g: offset = 1, width = 620, height = 480, data type = uint8, stride = 2560, skip = 3
+ * chanel_b: offset = 2, width = 620, height = 480, data type = uint8, stride = 2560, skip = 3
+ * chanel_a: offset = 3, width = 620, height = 480, data type = uint8, stride = 2560, skip = 3
+ *
+ *         <---------------------------- stride ---------------------------->
+ *         <---------------------- width x 4 ---------------------->
+ * [index] 01234   8   12  16  20  24  28                           2479    2559
+ *         |||||---|---|---|---|---|---|----------------------------|-------|
+ * [data]  RGBARGBARGBARGBARGBAR___R___R...                         A%%%%%%%%
+ * [data]  RGBARGBARGBARGBARGBAR___R___R...                         A%%%%%%%%
+ * [data]  RGBARGBARGBARGBARGBAR___R___R...                         A%%%%%%%%
+ *              ^^^
+ *              r-skip
+ */
+
+/*
+ * Example2: YUV420P image, width = 620, height = 480, stride = 640
+ *
+ * chanel_y: offset = 0, width = 620, height = 480, stride = 640, skip = 0
+ * chanel_u: offset = 307200, width = 310, height = 240, data type = uint8, stride = 320, skip = 0
+ * chanel_v: offset = 384000, width = 310, height = 240, data type = uint8, stride = 320, skip = 0
+ *
+ *         <--------------------------- y-stride --------------------------->
+ *         <----------------------- y-width ----------------------->
+ * [index] 012345                                                  619      639
+ *         ||||||--------------------------------------------------|--------|
+ * [data]  YYYYYYYYYYYYYYYYYYYYYYYYYYYYY...                        Y%%%%%%%%%
+ * [data]  YYYYYYYYYYYYYYYYYYYYYYYYYYYYY...                        Y%%%%%%%%%
+ * [data]  YYYYYYYYYYYYYYYYYYYYYYYYYYYYY...                        Y%%%%%%%%%
+ * [data]  ......
+ *         <-------- u-stride ---------->
+ *         <----- u-width ----->
+ * [index] 307200              307509   307519
+ *         |-------------------|--------|
+ * [data]  UUUUUUUUUU...       U%%%%%%%%%
+ * [data]  UUUUUUUUUU...       U%%%%%%%%%
+ * [data]  UUUUUUUUUU...       U%%%%%%%%%
+ * [data]  ......
+ *         <-------- v-stride ---------->
+ *         <- --- v-width ----->
+ * [index] 384000              384309   384319
+ *         |-------------------|--------|
+ * [data]  VVVVVVVVVV...       V%%%%%%%%%
+ * [data]  VVVVVVVVVV...       V%%%%%%%%%
+ * [data]  VVVVVVVVVV...       V%%%%%%%%%
+ * [data]  ......
+ */
+
+/*
+ * Example3: YUV420SP_NV12 image, width = 620, height = 480, stride = 640
+ *
+ * chanel_y: offset = 0, width = 620, height = 480, stride = 640, skip = 0
+ * chanel_u: offset = 307200, width = 310, height = 240, data type = uint8, stride = 640, skip = 1
+ * chanel_v: offset = 307201, width = 310, height = 240, data type = uint8, stride = 640, skip = 1
+ *
+ *         <--------------------------- y-stride -------------------------->
+ *         <----------------------- y-width ---------------------->
+ * [index] 012345                                                 619      639
+ *         ||||||-------------------------------------------------|--------|
+ * [data]  YYYYYYYYYYYYYYYYYYYYYYYYYYYYY...                       Y%%%%%%%%%
+ * [data]  YYYYYYYYYYYYYYYYYYYYYYYYYYYYY...                       Y%%%%%%%%%
+ * [data]  YYYYYYYYYYYYYYYYYYYYYYYYYYYYY...                       Y%%%%%%%%%
+ * [data]  ......
+ *         <--------------------- u-stride / v-stride -------------------->
+ *         <------------------ u-width + v-width ----------------->
+ * [index] 307200(u-offset)                                       307819  307839
+ *         |------------------------------------------------------|-------|
+ * [index] |307201(v-offset)                                      |307820 |
+ *         ||-----------------------------------------------------||------|
+ * [data]  UVUVUVUVUVUVUVUVUVUVUVUVUVUVUV...                      UV%%%%%%%
+ * [data]  UVUVUVUVUVUVUVUVUVUVUVUVUVUVUV...                      UV%%%%%%%
+ * [data]  UVUVUVUVUVUVUVUVUVUVUVUVUVUVUV...                      UV%%%%%%%
+ *          ^            ^
+ *         u-skip        v-skip
+ */
+
+/*
+ * Example4: DEPTH image, width = 640, height = 480, stride = 1280
+ *
+ * chanel_d: offset = 0, width = 640, height = 480, data type = uint16, stride = 1280, skip = 0
+ *
+ * note: each DEPTH value uses two bytes
+ *
+ *         <----------------------- d-stride ---------------------->
+ *         <----------------------- d-width ----------------------->
+ * [index] 02468                                                   1278
+ *         |||||---------------------------------------------------|
+ * [data]  DDDDDDDDDDDDDDDDDDDDDDDDDDDDD...                        D
+ * [data]  DDDDDDDDDDDDDDDDDDDDDDDDDDDDD...                        D
+ * [data]  DDDDDDDDDDDDDDDDDDDDDDDDDDDDD...                        D
+ * [data]  ......
+ */
+
+dictionary ChannelPixelLayout {
+    required unsigned long              offset;
+    required unsigned long              width;
+    required unsigned long              height;
+    required ChannelPixelLayoutDataType dataType;
+    required unsigned long              stride;
+    required unsigned long              skip;
+};
+
