@@ -58,7 +58,6 @@
 #include "jit/InlinableNatives.h"
 #include "js/Class.h"
 #include "vm/GlobalObject.h"
-#include "vm/SharedTypedArrayObject.h"
 #include "vm/Time.h"
 #include "vm/TypedArrayObject.h"
 
