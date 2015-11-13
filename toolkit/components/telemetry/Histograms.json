@@ -6133,6 +6133,24 @@
     "n_buckets": "50",
     "description": "The time (in milliseconds) that it took a 'listWorkers' request to go round trip."
   },
+  "DEVTOOLS_DEBUGGER_RDP_LOCAL_GETSERVICEWORKERREGISTRATION_MS": {
+    "alert_emails": ["dev-developer-tools@lists.mozilla.org", "ejpbruel@mozilla.com"],
+    "expires_in_version": "50",
+    "kind": "exponential",
+    "high": "10000",
+    "n_buckets": "50",
+    "bug_numbers": [1221892],
+    "description": "The time (in milliseconds) that it took a 'getServiceWorkerRegistration' request to go round trip."
+  },
+  "DEVTOOLS_DEBUGGER_RDP_REMOTE_GETSERVICEWORKERREGISTRATION_MS": {
+    "alert_emails": ["dev-developer-tools@lists.mozilla.org", "ejpbruel@mozilla.com"],
+    "expires_in_version": "50",
+    "kind": "exponential",
+    "high": "10000",
+    "n_buckets": "50",
+    "bug_numbers": [1221892],
+    "description": "The time (in milliseconds) that it took a 'getServiceWorkerRegistration' request to go round trip."
+  },
   "DEVTOOLS_DEBUGGER_RDP_LOCAL_LISTPROCESSES_MS": {
     "expires_in_version": "never",
     "kind": "exponential",
