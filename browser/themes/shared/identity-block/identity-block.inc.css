@@ -75,13 +75,42 @@
   padding-inline-start: calc(var(--backbutton-urlbar-overlap) + 4.01px);
 }
 
+/* MAIN IDENTITY ICON */
+
+#identity-icon {
+  width: 16px;
+  height: 16px;
+  list-style-image: url(chrome://browser/skin/identity-icon.svg#normal);
+}
+
+#identity-box:hover > #identity-icon,
+#identity-box[open=true] > #identity-icon {
+  list-style-image: url(chrome://browser/skin/identity-icon.svg#hover);
+}
+
+#urlbar[pageproxystate="valid"] > #identity-box.chromeUI > #identity-icon {
+  list-style-image: url(chrome://branding/content/identity-icons-brand.svg);
+}
+
+#urlbar[pageproxystate="invalid"] > #identity-box > #identity-icon {
+  opacity: 0.3;
+}
+
+#urlbar[actiontype="searchengine"] > #identity-box > #identity-icon {
+  -moz-image-region: inherit;
+  list-style-image: url(chrome://global/skin/icons/autocomplete-search.svg#search-icon);
+  width: 16px;
+  height: 16px;
+  opacity: 1;
+}
+
 /* TRACKING PROTECTION ICON */
 
 #tracking-protection-icon {
   width: 16px;
   height: 16px;
-  margin-inline-start: 0;
-  margin-inline-end: 2px;
+  margin-inline-start: 2px;
+  margin-inline-end: 0;
   list-style-image: url(chrome://browser/skin/tracking-protection-16.svg);
   opacity: 1;
 }
@@ -95,57 +124,46 @@
 }
 
 #tracking-protection-icon:not([state]) {
-  margin-inline-start: -18px;
+  margin-inline-end: -18px;
   pointer-events: none;
   opacity: 0;
   /* Only animate the shield in, when it disappears hide it immediately. */
   transition: none;
 }
 
-#urlbar[pageproxystate="invalid"] > #identity-box > #identity-icons > #tracking-protection-icon {
+#urlbar[pageproxystate="invalid"] > #identity-box > #tracking-protection-icon {
   visibility: collapse;
 }
 
-/* MAIN IDENTITY ICON */
+/* CONNECTION ICON */
 
-#page-proxy-favicon {
+#connection-icon {
   width: 16px;
   height: 16px;
-  list-style-image: url(chrome://browser/skin/identity-not-secure.svg);
+  margin-inline-start: 2px;
+  visibility: collapse;
 }
 
-.chromeUI > #identity-icons > #page-proxy-favicon[pageproxystate="valid"] {
-  list-style-image: url(chrome://branding/content/identity-icons-brand.svg);
-}
-
-.verifiedDomain > #identity-icons > #page-proxy-favicon[pageproxystate="valid"],
-.verifiedIdentity > #identity-icons > #page-proxy-favicon[pageproxystate="valid"] {
+#urlbar[pageproxystate="valid"] > #identity-box.verifiedDomain > #connection-icon,
+#urlbar[pageproxystate="valid"] > #identity-box.verifiedIdentity > #connection-icon {
   list-style-image: url(chrome://browser/skin/identity-secure.svg);
+  visibility: visible;
 }
 
-.insecureLoginForms > #identity-icons > #page-proxy-favicon[pageproxystate="valid"],
-.mixedActiveContent > #identity-icons > #page-proxy-favicon[pageproxystate="valid"] {
+#urlbar[pageproxystate="valid"] > #identity-box.insecureLoginForms > #connection-icon,
+#urlbar[pageproxystate="valid"] > #identity-box.mixedActiveContent > #connection-icon {
   list-style-image: url(chrome://browser/skin/identity-mixed-active-loaded.svg);
+  visibility: visible;
 }
 
-.weakCipher > #identity-icons > #page-proxy-favicon[pageproxystate="valid"],
-.mixedDisplayContent > #identity-icons > #page-proxy-favicon[pageproxystate="valid"],
-.mixedDisplayContentLoadedActiveBlocked > #identity-icons > #page-proxy-favicon[pageproxystate="valid"] {
+#urlbar[pageproxystate="valid"] > #identity-box.weakCipher > #connection-icon,
+#urlbar[pageproxystate="valid"] > #identity-box.mixedDisplayContent > #connection-icon,
+#urlbar[pageproxystate="valid"] > #identity-box.mixedDisplayContentLoadedActiveBlocked > #connection-icon {
   list-style-image: url(chrome://browser/skin/identity-mixed-passive-loaded.svg);
+  visibility: visible;
 }
 
-.mixedActiveBlocked > #identity-icons > #page-proxy-favicon[pageproxystate="valid"] {
+#urlbar[pageproxystate="valid"] > #identity-box.mixedActiveBlocked > #connection-icon {
   list-style-image: url(chrome://browser/skin/identity-mixed-active-blocked.svg);
-}
-
-#page-proxy-favicon[pageproxystate="invalid"] {
-  opacity: 0.3;
-}
-
-#urlbar[actiontype="searchengine"] > #identity-box > #identity-icons > #page-proxy-favicon {
-  -moz-image-region: inherit;
-  list-style-image: url(chrome://global/skin/icons/autocomplete-search.svg#search-icon);
-  width: 16px;
-  height: 16px;
-  opacity: 1;
+  visibility: visible;
 }
