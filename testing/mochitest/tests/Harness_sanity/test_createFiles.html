@@ -1,0 +1,70 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for SpecialPowers.createFiles</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+
+<div id="content" class="testbody">
+  <script type="text/javascript">
+    // Creating one file, followed by failing to create a file.
+    function test1() {
+      let fdata = "this is same data for a file";
+      SpecialPowers.createFiles([{name: "test1.txt", data:fdata}],
+        function (files) {
+          is(files.length, 1, "Created 1 file");
+          let f = files[0];
+          is("[object File]", f.toString(), "first thing in array is a file");
+          is(f.size, fdata.length, "test1 size of first file should be length of its data");
+          is("test1.txt", f.name, "test1 test file should have the right name");
+          test2();
+        },
+        function (msg) { ok(false, "Should be able to create a file without an error"); test2(); }
+      );
+    }
+
+    // Failing to create a file, followed by creating a file.
+    function test2() {
+      function test3Check(passed) {
+        ok(passed, "Should trigger the error handler for a bad file name.");
+        test3();
+      };
+
+      SpecialPowers.createFiles([{name: "/\/\/\/\/\/\/\/\/\/\/\invalidname",}],
+        function () { test3Check(false); },
+        function (msg) { test3Check(true); }
+      );
+    }
+
+    // Creating two files at the same time.
+    function test3() {
+      let f1data = "hello";
+      SpecialPowers.createFiles([{name: "test3_file.txt", data:f1data}, {name: "emptyfile.txt"}],
+        function (files) {
+          is(files.length, 2, "Expected two files to be created");
+          let f1 = files[0];
+          let f2 = files[1];
+          is("[object File]", f1.toString(), "first thing in array is a file");
+          is("[object File]", f2.toString(), "second thing in array is a file");
+          is("test3_file.txt", f1.name, "first test3 test file should have the right name");
+          is("emptyfile.txt", f2.name, "second test3 test file should have the right name");
+          is(f1.size, f1data.length, "size of first file should be length of its data");
+          is(f2.size, 0, "size of second file should be 0");
+          SimpleTest.finish();
+        },
+        function (msg) {
+          ok(false, "Failed to create files: " + msg);
+          SimpleTest.finish();
+        }
+      );
+    };
+
+    SimpleTest.waitForExplicitFinish();
+    test1();
+
+  </script>
+</div>
+</body>
+</html>
