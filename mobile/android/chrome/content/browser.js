@@ -421,11 +421,7 @@ var BrowserApp = {
 
     this.deck = document.getElementById("browsers");
 
-    // This check and BrowserEventHandler should be removed once we have
-    // switched over to the C++ APZ code
-    if (!AppConstants.MOZ_ANDROID_APZ) {
-      BrowserEventHandler.init();
-    }
+    BrowserEventHandler.init();
 
     ViewportHandler.init();
 
@@ -4777,14 +4773,17 @@ var BrowserEventHandler = {
   init: function init() {
     this._clickInZoomedView = false;
     Services.obs.addObserver(this, "Gesture:SingleTap", false);
-    Services.obs.addObserver(this, "Gesture:CancelTouch", false);
     Services.obs.addObserver(this, "Gesture:ClickInZoomedView", false);
-    Services.obs.addObserver(this, "Gesture:DoubleTap", false);
-    Services.obs.addObserver(this, "Gesture:Scroll", false);
-    Services.obs.addObserver(this, "dom-touch-listener-added", false);
+
+    if (!AppConstants.MOZ_ANDROID_APZ) {
+      Services.obs.addObserver(this, "Gesture:CancelTouch", false);
+      Services.obs.addObserver(this, "Gesture:DoubleTap", false);
+      Services.obs.addObserver(this, "Gesture:Scroll", false);
+      Services.obs.addObserver(this, "dom-touch-listener-added", false);
+      BrowserApp.deck.addEventListener("touchstart", this, true);
+    }
 
     BrowserApp.deck.addEventListener("DOMUpdatePageReport", PopupBlockerObserver.onUpdatePageReport, false);
-    BrowserApp.deck.addEventListener("touchstart", this, true);
     BrowserApp.deck.addEventListener("MozMouseHittest", this, true);
 
     InitLater(() => BrowserApp.deck.addEventListener("click", InputWidgetHelper, true));
@@ -4988,16 +4987,20 @@ var BrowserEventHandler = {
           if (this._clickInZoomedView != true) {
             this._closeZoomedView();
           }
-          // The _highlightElement was chosen after fluffing the touch events
-          // that led to this SingleTap, so by fluffing the mouse events, they
-          // should find the same target since we fluff them again below.
-          this._sendMouseEvent("mousemove", x, y);
-          this._sendMouseEvent("mousedown", x, y);
-          this._sendMouseEvent("mouseup",   x, y);
+          if (!AppConstants.MOZ_ANDROID_APZ) {
+            // The _highlightElement was chosen after fluffing the touch events
+            // that led to this SingleTap, so by fluffing the mouse events, they
+            // should find the same target since we fluff them again below.
+            this._sendMouseEvent("mousemove", x, y);
+            this._sendMouseEvent("mousedown", x, y);
+            this._sendMouseEvent("mouseup",   x, y);
+          }
         }
         this._clickInZoomedView = false;
-        // scrollToFocusedInput does its own checks to find out if an element should be zoomed into
-        BrowserApp.scrollToFocusedInput(BrowserApp.selectedBrowser);
+        if (!AppConstants.MOZ_ANDROID_APZ) {
+          // scrollToFocusedInput does its own checks to find out if an element should be zoomed into
+          BrowserApp.scrollToFocusedInput(BrowserApp.selectedBrowser);
+        }
 
         this._cancelTapHighlight();
         break;
@@ -5072,7 +5075,9 @@ var BrowserEventHandler = {
   _highlightElement: null,
 
   _doTapHighlight: function _doTapHighlight(aElement) {
-    DOMUtils.setContentState(aElement, kStateActive);
+    if (!AppConstants.MOZ_ANDROID_APZ) {
+      DOMUtils.setContentState(aElement, kStateActive);
+    }
     this._highlightElement = aElement;
   },
 
@@ -5080,12 +5085,15 @@ var BrowserEventHandler = {
     if (!this._highlightElement)
       return;
 
-    // If the active element is in a sub-frame, we need to make that frame's document
-    // active to remove the element's active state.
-    if (this._highlightElement.ownerDocument != BrowserApp.selectedBrowser.contentWindow.document)
-      DOMUtils.setContentState(this._highlightElement.ownerDocument.documentElement, kStateActive);
+    if (!AppConstants.MOZ_ANDROID_APZ) {
+      // If the active element is in a sub-frame, we need to make that frame's document
+      // active to remove the element's active state.
+      if (this._highlightElement.ownerDocument != BrowserApp.selectedBrowser.contentWindow.document)
+        DOMUtils.setContentState(this._highlightElement.ownerDocument.documentElement, kStateActive);
 
-    DOMUtils.setContentState(BrowserApp.selectedBrowser.contentWindow.document.documentElement, kStateActive);
+      DOMUtils.setContentState(BrowserApp.selectedBrowser.contentWindow.document.documentElement, kStateActive);
+    }
+
     this._highlightElement = null;
   },
 
