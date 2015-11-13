@@ -25,36 +25,36 @@ add_task(function *() {
   dispatch(takeSnapshotAndCensus(front, heapWorker));
   yield waitUntilSnapshotState(store, [states.SAVED_CENSUS]);
 
-  ok(!getState().snapshots[0].inverted, "Snapshot is not inverted");
-  ok(isBreakdownType(getState().snapshots[0].census, "coarseType"),
+  ok(!getState().snapshots[0].census.inverted, "Snapshot is not inverted");
+  ok(isBreakdownType(getState().snapshots[0].census.report, "coarseType"),
     "Snapshot using `coarseType` breakdown");
 
   let census = getState().snapshots[0].census;
-  let result = aggregate(census);
+  let result = aggregate(census.report);
   let totalBytes = result.bytes;
   let totalCount = result.count;
 
   ok(totalBytes > 0, "counted up bytes in the census");
   ok(totalCount > 0, "counted up count in the census");
 
-  result = getSnapshotTotals(getState().snapshots[0])
+  result = getSnapshotTotals(getState().snapshots[0].census);
   equal(totalBytes, result.bytes, "getSnapshotTotals reuslted in correct bytes");
   equal(totalCount, result.count, "getSnapshotTotals reuslted in correct count");
 
   dispatch(toggleInvertedAndRefresh(heapWorker));
   yield waitUntilSnapshotState(store, [states.SAVING_CENSUS]);
   yield waitUntilSnapshotState(store, [states.SAVED_CENSUS]);
-  ok(getState().snapshots[0].inverted, "Snapshot is inverted");
+  ok(getState().snapshots[0].census.inverted, "Snapshot is inverted");
 
-  result = getSnapshotTotals(getState().snapshots[0])
+  result = getSnapshotTotals(getState().snapshots[0].census);
   equal(totalBytes, result.bytes, "getSnapshotTotals reuslted in correct bytes when inverted");
   equal(totalCount, result.count, "getSnapshotTotals reuslted in correct count when inverted");
 });
 
-function aggregate (census) {
-  let totalBytes = census.bytes;
-  let totalCount = census.count;
-  for (let child of (census.children || [])) {
+function aggregate (report) {
+  let totalBytes = report.bytes;
+  let totalCount = report.count;
+  for (let child of (report.children || [])) {
     let { bytes, count } = aggregate(child);
     totalBytes += bytes
     totalCount += count;

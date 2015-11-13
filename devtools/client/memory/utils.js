@@ -14,7 +14,11 @@ const { assert } = require("devtools/shared/DevToolsUtils");
 const { Preferences } = require("resource://gre/modules/Preferences.jsm");
 const CUSTOM_BREAKDOWN_PREF = "devtools.memory.custom-breakdowns";
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
-const { snapshotState: states, breakdowns } = require("./constants");
+const { snapshotState: states, diffingState, breakdowns } = require("./constants");
+
+exports.immutableUpdate = function (...objs) {
+  return Object.freeze(Object.assign({}, ...objs));
+};
 
 /**
  * Takes a snapshot object and returns the
@@ -115,84 +119,129 @@ exports.breakdownNameToSpec = function (name) {
 };
 
 /**
- * Returns a string representing a readable form of the snapshot's state.
- * More brief than `getSnapshotStatusText`.
+ * Returns a string representing a readable form of the snapshot's state. More
+ * concise than `getStatusTextFull`.
  *
- * @param {Snapshot} snapshot
+ * @param {snapshotState | diffingState} state
  * @return {String}
  */
-exports.getSnapshotStatusText = function (snapshot) {
-  assert((snapshot || {}).state,
-    `Snapshot must have expected state, found ${(snapshot || {}).state}.`);
+exports.getStatusText = function (state) {
+  assert(state, "Must have a state");
 
-  switch (snapshot.state) {
+  switch (state) {
+    case diffingState.ERROR:
+      return L10N.getStr("diffing.state.error");
+
     case states.ERROR:
       return L10N.getStr("snapshot.state.error");
+
     case states.SAVING:
       return L10N.getStr("snapshot.state.saving");
+
     case states.IMPORTING:
       return L10N.getStr("snapshot.state.importing");
+
     case states.SAVED:
     case states.READING:
       return L10N.getStr("snapshot.state.reading");
+
     case states.SAVING_CENSUS:
       return L10N.getStr("snapshot.state.saving-census");
-    // Both READ and SAVED_CENSUS state do not have any message
-    // to show as other content will be displayed.
+
+    case diffingState.TAKING_DIFF:
+      return L10N.getStr("diffing.state.taking-diff");
+
+    case diffingState.SELECTING:
+      return L10N.getStr("diffing.state.selecting");
+
+    // These states do not have any message to show as other content will be
+    // displayed.
+    case diffingState.TOOK_DIFF:
     case states.READ:
     case states.SAVED_CENSUS:
       return "";
-  }
 
-  assert(false, `Snapshot in unexpected state: ${snapshot.state}`);
-  return "";
-}
+    default:
+      assert(false, `Unexpected state: ${state}`);
+      return "";
+  }
+};
 
 /**
  * Returns a string representing a readable form of the snapshot's state;
- * more verbose than `getSnapshotStatusText`.
+ * more verbose than `getStatusText`.
  *
- * @param {Snapshot} snapshot
+ * @param {snapshotState | diffingState} state
  * @return {String}
  */
-exports.getSnapshotStatusTextFull = function (snapshot) {
-  assert((snapshot || {}).state,
-    `Snapshot must have expected state, found ${(snapshot || {}).state}.`);
-  switch (snapshot.state) {
+exports.getStatusTextFull = function (state) {
+  assert(!!state, "Must have a state");
+
+  switch (state) {
+    case diffingState.ERROR:
+      return L10N.getStr("diffing.state.error.full");
+
     case states.ERROR:
       return L10N.getStr("snapshot.state.error.full");
+
     case states.SAVING:
       return L10N.getStr("snapshot.state.saving.full");
+
     case states.IMPORTING:
-      return L10N.getFormatStr("snapshot.state.importing", OS.Path.basename(snapshot.path));
+      return L10N.getStr("snapshot.state.importing");
+
     case states.SAVED:
     case states.READING:
       return L10N.getStr("snapshot.state.reading.full");
+
     case states.SAVING_CENSUS:
       return L10N.getStr("snapshot.state.saving-census.full");
-    // Both READ and SAVED_CENSUS state do not have any full message
-    // to show as other content will be displayed.
+
+    case diffingState.TAKING_DIFF:
+      return L10N.getStr("diffing.state.taking-diff.full");
+
+    case diffingState.SELECTING:
+      return L10N.getStr("diffing.state.selecting.full");
+
+    // These states do not have any full message to show as other content will
+    // be displayed.
+    case diffingState.TOOK_DIFF:
     case states.READ:
     case states.SAVED_CENSUS:
       return "";
+
+    default:
+      assert(false, `Unexpected state: ${state}`);
+      return "";
   }
-}
+};
+
+/**
+ * Return true if the snapshot is in a diffable state, false otherwise.
+ *
+ * @param {snapshotModel} snapshot
+ * @returns {Boolean}
+ */
+exports.snapshotIsDiffable = function snapshotIsDiffable(snapshot) {
+  return snapshot.state === states.SAVED_CENSUS
+    || snapshot.state === states.SAVING_CENSUS
+    || snapshot.state === states.SAVED
+    || snapshot.state === states.READ;
+};
 
 /**
  * Takes an array of snapshots and a snapshot and returns
  * the snapshot instance in `snapshots` that matches
  * the snapshot passed in.
  *
- * @param {Array<Snapshot>} snapshots
- * @param {Snapshot}
- * @return ?Snapshot
+ * @param {appModel} state
+ * @param {snapshotId} id
+ * @return {snapshotModel|null}
  */
-exports.getSnapshot = function getSnapshot (snapshots, snapshot) {
-  let found = snapshots.find(s => s.id === snapshot.id);
-  if (!found) {
-    DevToolsUtils.reportException(`No matching snapshot found for ${snapshot.id}`);
-  }
-  return found || null;
+exports.getSnapshot = function getSnapshot (state, id) {
+  const found = state.snapshots.find(s => s.id === id);
+  assert(found, `No matching snapshot found for ${id}`);
+  return found;
 };
 
 /**
@@ -200,17 +249,17 @@ exports.getSnapshot = function getSnapshot (snapshots, snapshot) {
  *
  * @return {Snapshot}
  */
-let INC_ID = 0;
-exports.createSnapshot = function createSnapshot () {
-  let id = ++INC_ID;
-  return {
-    id,
+let ID_COUNTER = 0;
+exports.createSnapshot = function createSnapshot() {
+  return Object.freeze({
+    id: ++ID_COUNTER,
     state: states.SAVING,
     census: null,
     path: null,
     imported: false,
     selected: false,
-  };
+    error: null,
+  });
 };
 
 /**
@@ -222,7 +271,7 @@ exports.createSnapshot = function createSnapshot () {
  * @param {Any} obj2
  * @return {Boolean}
  */
-exports.breakdownEquals = function (obj1, obj2) {
+const breakdownEquals = exports.breakdownEquals = function (obj1, obj2) {
   let type1 = typeof obj1;
   let type2 = typeof obj2;
 
@@ -254,34 +303,41 @@ exports.breakdownEquals = function (obj1, obj2) {
 };
 
 /**
- * Takes a snapshot and returns the total bytes and
- * total count that this snapshot represents.
+ * Return true if the census is up to date with regards to the current
+ * inversion/filtering/breakdown, false otherwise.
  *
- * @param {Snapshot} snapshot
+ * @param {Boolean} inverted
+ * @param {String} filter
+ * @param {Object} breakdown
+ * @param {censusModel} census
+ *
+ * @returns {Boolean}
+ */
+exports.censusIsUpToDate = function (inverted, filter, breakdown, census) {
+  return census
+      && inverted === census.inverted
+      && filter === census.filter
+      && breakdownEquals(breakdown, census.breakdown);
+};
+
+/**
+ * Takes a snapshot and returns the total bytes and total count that this
+ * snapshot represents.
+ *
+ * @param {CensusModel} census
  * @return {Object}
  */
-exports.getSnapshotTotals = function (snapshot) {
-  let bytes, count;
+exports.getSnapshotTotals = function (census) {
+  let bytes = 0;
+  let count = 0;
 
-  let census = snapshot.census;
-
-  if (snapshot.inverted) {
-    while (census) {
-      bytes = census.totalBytes;
-      count = census.totalCount;
-      census = census.children && census.children[0];
-    }
-  } else {
-    if (census) {
-      bytes = census.totalBytes;
-      count = census.totalCount;
-    }
+  let report = census.report;
+  if (report) {
+    bytes = report.totalBytes;
+    count = report.totalCount;
   }
 
-  return {
-    bytes: bytes || 0,
-    count: count || 0,
-  };
+  return { bytes, count };
 };
 
 /**
