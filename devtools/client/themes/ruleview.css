@@ -284,12 +284,12 @@
 }
 
 .ruleview-selectorhighlighter:hover {
-  background-position: -32px 0;
+  filter: url(images/filters.svg#checked-icon-state);
 }
 
 .ruleview-selectorhighlighter:active,
 .ruleview-selectorhighlighter.highlighted {
-  background-position: -16px 0;
+  filter: url(images/filters.svg#checked-icon-state) brightness(0.9);
 }
 
 #ruleview-add-rule-button::before {
@@ -298,34 +298,13 @@
 }
 
 #pseudo-class-panel-toggle::before {
-  background-image: url("chrome://devtools/skin/images/pseudo-class.svg#pseudo-class");
+  background-image: url("chrome://devtools/skin/images/pseudo-class.svg");
   background-size: cover;
 }
-#pseudo-class-panel-toggle[checked]::before {
-  background-image: url("chrome://devtools/skin/images/pseudo-class.svg#pseudo-class-checked");
-  filter: none !important;
-}
 
-/**
- * These buttons are using opacity instead of background color to indicate
- * the state
- */
-#ruleview-add-rule-button,
-#pseudo-class-panel-toggle,
 .ruleview-overridden-rule-filter {
   opacity: 0.8;
 }
-
-#ruleview-add-rule-button:not([disabled]):hover,
-#pseudo-class-panel-toggle:hover,
-#pseudo-class-panel-toggle[checked],
 .ruleview-overridden-rule-filter:hover {
   opacity: 1;
-}
-
-#ruleview-add-rule-button,
-#pseudo-class-panel-toggle,
-#pseudo-class-panel-toggle:hover,
-#pseudo-class-panel-toggle[checked]::before {
-  background-color: transparent !important;
 }

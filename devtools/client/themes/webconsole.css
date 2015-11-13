@@ -527,11 +527,12 @@ a {
 
 .elementNode:hover .open-inspector,
 .open-inspector:hover {
-  background-position: -32px 0;
+  filter: url(images/filters.svg#checked-icon-state);
 }
 
+.elementNode:hover .open-inspector:active,
 .open-inspector:active {
-  background-position: -16px 0;
+  filter: url(images/filters.svg#checked-icon-state) brightness(0.9);
 }
 
 @media (max-width: 500px) {
