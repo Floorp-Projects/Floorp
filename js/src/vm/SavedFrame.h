@@ -185,7 +185,7 @@ class SavedFrame : public NativeObject {
 struct SavedFrame::HashPolicy
 {
     typedef SavedFrame::Lookup              Lookup;
-    typedef PointerHasher<SavedFrame*, 3>   SavedFramePtrHasher;
+    typedef MovableCellHasher<SavedFrame*>  SavedFramePtrHasher;
     typedef PointerHasher<JSPrincipals*, 3> JSPrincipalsPtrHasher;
 
     static HashNumber hash(const Lookup& lookup);
