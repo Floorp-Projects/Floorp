@@ -13,12 +13,19 @@ test_certificates = (
     'invalidDelegatedSignerKeyUsageCrlSigning.pem',
     'invalidDelegatedSignerNoExtKeyUsage.pem',
     'invalidDelegatedSignerWrongExtKeyUsage.pem',
+    'multi-tls-feature-bad-ee.pem',
+    'multi-tls-feature-good-ee.pem',
+    'must-staple-ee.pem',
+    'must-staple-ee-with-must-staple-int.pem',
+    'must-staple-missing-ee.pem',
     'ocspEEWithIntermediate.pem',
     'ocspOtherEndEntity.pem',
     'other-test-ca.pem',
     'rsa-1016-keysizeDelegatedSigner.pem',
     'test-ca.pem',
     'test-int.pem',
+    'test-multi-tls-feature-int.pem',
+    'test-must-staple-int.pem',
 )
 
 for test_certificate in test_certificates:
