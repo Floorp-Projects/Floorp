@@ -883,11 +883,9 @@ js::NewObjectScriptedCall(JSContext* cx, MutableHandleObject pobj)
 JSObject*
 js::CreateThis(JSContext* cx, const Class* newclasp, HandleObject callee)
 {
-    RootedValue protov(cx);
-    if (!GetProperty(cx, callee, callee, cx->names().prototype, &protov))
+    RootedObject proto(cx);
+    if (!GetPrototypeFromConstructor(cx, callee, &proto))
         return nullptr;
-
-    RootedObject proto(cx, protov.isObjectOrNull() ? protov.toObjectOrNull() : nullptr);
     gc::AllocKind kind = NewObjectGCKind(newclasp);
     return NewObjectWithClassProto(cx, newclasp, proto, kind);
 }
@@ -989,16 +987,24 @@ js::CreateThisForFunctionWithProto(JSContext* cx, HandleObject callee, HandleObj
     return res;
 }
 
+bool
+js::GetPrototypeFromConstructor(JSContext* cx, HandleObject newTarget, MutableHandleObject proto)
+{
+    RootedValue protov(cx);
+    if (!GetProperty(cx, newTarget, newTarget, cx->names().prototype, &protov))
+        return false;
+    proto.set(protov.isObject() ? &protov.toObject() : nullptr);
+    return true;
+}
+
 JSObject*
 js::CreateThisForFunction(JSContext* cx, HandleObject callee, HandleObject newTarget,
                           NewObjectKind newKind)
 {
-    RootedValue protov(cx);
-    if (!GetProperty(cx, newTarget, newTarget, cx->names().prototype, &protov))
-        return nullptr;
     RootedObject proto(cx);
-    if (protov.isObject())
-        proto = &protov.toObject();
+    if (!GetPrototypeFromConstructor(cx, newTarget, &proto))
+        return nullptr;
+
     JSObject* obj = CreateThisForFunctionWithProto(cx, callee, newTarget, proto, newKind);
 
     if (obj && newKind == SingletonObject) {
