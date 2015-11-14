@@ -216,7 +216,7 @@ function TypedArrayFilter(callbackfn, thisArg = undefined) {
         // Step 13.f.
         if (selected) {
             // Step 13.f.i.
-            callFunction(std_Array_push, kept, kValue);
+            kept.push(kValue);
             // Step 13.f.ii.
             captured++;
         }
@@ -1058,14 +1058,14 @@ function TypedArrayFrom(constructor, target, items, mapfn, thisArg) {
         // Steps 10.d-e.
         while (true) {
             // Steps 10.e.i-ii.
-            var next = callFunction(iterator.next, iterator);
+            var next = iterator.next();
             if (!IsObject(next))
                 ThrowTypeError(JSMSG_NEXT_RETURNED_PRIMITIVE);
 
             // Steps 10.e.iii-vi.
             if (next.done)
                 break;
-            callFunction(std_Array_push, values, next.value);
+            values.push(next.value);
         }
 
         // Step 10.f.
