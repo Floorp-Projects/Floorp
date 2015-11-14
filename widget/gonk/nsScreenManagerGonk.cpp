@@ -289,10 +289,10 @@ nsScreenGonk::SetRotation(uint32_t aRotation)
     return NS_OK;
 }
 
-nsIntRect
-nsScreenGonk::GetNaturalBoundsUntyped()
+LayoutDeviceIntRect
+nsScreenGonk::GetNaturalBounds()
 {
-    return mNaturalBounds;
+    return LayoutDeviceIntRect::FromUnknownRect(mNaturalBounds);
 }
 
 uint32_t
@@ -444,7 +444,16 @@ nsScreenGonk::GetEGLDisplay()
 hwc_surface_t
 nsScreenGonk::GetEGLSurface()
 {
+    MOZ_ASSERT(CompositorParent::IsInCompositorThread());
     return mEGLSurface;
+}
+
+already_AddRefed<mozilla::gl::GLContext>
+nsScreenGonk::GetGLContext()
+{
+    MOZ_ASSERT(CompositorParent::IsInCompositorThread());
+    RefPtr<mozilla::gl::GLContext>glContext = mGLContext;
+    return glContext.forget();
 }
 
 static void

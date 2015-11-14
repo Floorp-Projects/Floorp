@@ -704,6 +704,14 @@ IsGetPropPC(jsbytecode* pc)
 }
 
 inline bool
+IsHiddenInitOp(JSOp op)
+{
+    return op == JSOP_INITHIDDENPROP || op == JSOP_INITHIDDENELEM ||
+           op == JSOP_INITHIDDENPROP_GETTER || op == JSOP_INITHIDDENELEM_GETTER ||
+           op == JSOP_INITHIDDENPROP_SETTER || op == JSOP_INITHIDDENELEM_SETTER;
+}
+
+inline bool
 IsStrictSetPC(jsbytecode* pc)
 {
     JSOp op = JSOp(*pc);

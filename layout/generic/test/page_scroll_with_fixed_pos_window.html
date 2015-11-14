@@ -83,11 +83,28 @@ function runTest() {
           scrollDownOnePageWithContinuation(function() {
             is(document.documentElement.scrollTop, fullPageScrollDown - (10 + 11 + 9 + 12),
                "Combine multiple overlapping elements");
+            showFixedPosElements2(false);
 
-            // Scroll back up so test results are visible
-            document.documentElement.scrollTop = 0;
-            SimpleTest.finish();
-            window.close();
+            document.getElementById("top").style.width = "400px";
+            scrollDownOnePageWithContinuation(function() {
+              is(document.documentElement.scrollTop, fullPageScrollDown - (10 + 13),
+                 "Don't ignore elements that span more than half the viewport side");
+              document.getElementById("top").style.width = "100%";
+
+              document.getElementById("top").style.top = "-40px";
+              document.getElementById("top").style.transform = "translateY(38px)";
+              scrollDownOnePageWithContinuation(function() {
+                is(document.documentElement.scrollTop,
+                   fullPageScrollDown - (10 + 13 - 40 + 38),
+                   "Account for offset and transform");
+                document.getElementById("top").style.width = "100%";
+
+                // Scroll back up so test results are visible
+                document.documentElement.scrollTop = 0;
+                SimpleTest.finish();
+                window.close();
+              });
+            });
           });
         });
       });

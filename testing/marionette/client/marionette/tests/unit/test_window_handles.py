@@ -11,7 +11,7 @@ class TestWindowHandles(MarionetteTestCase):
     def test_new_tab_window_handles(self):
 
         keys = []
-        if self.marionette.session_capabilities['platformName'] == 'DARWIN':
+        if self.marionette.session_capabilities['platformName'] == 'Darwin':
             keys.append(Keys.META)
         else:
             keys.append(Keys.CONTROL)

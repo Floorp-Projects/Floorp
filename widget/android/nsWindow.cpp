@@ -58,6 +58,7 @@ using mozilla::Unused;
 #include "mozilla/layers/LayerManagerComposite.h"
 #include "mozilla/layers/AsyncCompositionManager.h"
 #include "mozilla/layers/APZCTreeManager.h"
+#include "mozilla/layers/APZEventState.h"
 #include "mozilla/layers/APZThreadUtils.h"
 #include "GLContext.h"
 #include "GLContextProvider.h"
@@ -1151,6 +1152,7 @@ nsWindow::OnGlobalAndroidEvent(AndroidGeckoEvent *ae)
 
             WidgetTouchEvent touchEvent = ae->MakeTouchEvent(win);
             win->ProcessUntransformedAPZEvent(&touchEvent, ae->ApzGuid(), ae->ApzInputBlockId(), ae->ApzEventStatus());
+            win->DispatchHitTest(touchEvent);
             break;
         }
         case AndroidGeckoEvent::MOTION_EVENT: {
@@ -1338,6 +1340,28 @@ nsWindow::OnLongTapEvent(AndroidGeckoEvent *ae)
     DispatchEvent(&event);
 }
 
+void
+nsWindow::DispatchHitTest(const WidgetTouchEvent& aEvent)
+{
+    if (aEvent.mMessage == eTouchStart && aEvent.touches.Length() == 1) {
+        // Since touch events don't get retargeted by PositionedEventTargeting.cpp
+        // code on Fennec, we dispatch a dummy mouse event that *does* get
+        // retargeted. The Fennec browser.js code can use this to activate the
+        // highlight element in case the this touchstart is the start of a tap.
+        WidgetMouseEvent hittest(true, eMouseHitTest, this,
+                                 WidgetMouseEvent::eReal);
+        hittest.refPoint = aEvent.touches[0]->mRefPoint;
+        hittest.ignoreRootScrollFrame = true;
+        hittest.inputSource = nsIDOMMouseEvent::MOZ_SOURCE_TOUCH;
+        nsEventStatus status;
+        DispatchEvent(&hittest, status);
+
+        if (mAPZEventState && hittest.hitCluster) {
+            mAPZEventState->ProcessClusterHit();
+        }
+    }
+}
+
 bool nsWindow::OnMultitouchEvent(AndroidGeckoEvent *ae)
 {
     RefPtr<nsWindow> kungFuDeathGrip(this);
@@ -1368,19 +1392,7 @@ bool nsWindow::OnMultitouchEvent(AndroidGeckoEvent *ae)
         isDownEvent = (event.mMessage == eTouchStart);
     }
 
-    if (isDownEvent && event.touches.Length() == 1) {
-        // Since touch events don't get retargeted by PositionedEventTargeting.cpp
-        // code on Fennec, we dispatch a dummy mouse event that *does* get
-        // retargeted. The Fennec browser.js code can use this to activate the
-        // highlight element in case the this touchstart is the start of a tap.
-        WidgetMouseEvent hittest(true, eMouseHitTest, this,
-                                 WidgetMouseEvent::eReal);
-        hittest.refPoint = event.touches[0]->mRefPoint;
-        hittest.ignoreRootScrollFrame = true;
-        hittest.inputSource = nsIDOMMouseEvent::MOZ_SOURCE_TOUCH;
-        nsEventStatus status;
-        DispatchEvent(&hittest, status);
-    }
+    DispatchHitTest(event);
 
     // if the last event we got was a down event, then by now we know for sure whether
     // this block has been default-prevented or not. if we haven't already sent the

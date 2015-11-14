@@ -1,0 +1,41 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test Encrypted Media Extensions</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+  <script type="text/javascript" src="eme.js"></script>
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+function beginTest() {
+  var video = document.createElement("video");
+
+  navigator.requestMediaKeySystemAccess("org.w3.clearkey", [{initDataTypes: ["cenc"]}])
+    .then(function(keySystemAccess) {
+      return keySystemAccess.createMediaKeys();
+    })
+    .then(mediaKeys => {
+      return video.setMediaKeys(mediaKeys);
+    })
+    .then(() => {
+      var ms = new MediaSource();
+      ms.addEventListener("sourceopen", ()=>{ok(true, "MediaSource should open"); SimpleTest.finish();});
+      video.addEventListener("error", ()=>{ok(false, "Shouldn't error."); SimpleTest.finish();});
+      video.src = URL.createObjectURL(ms);
+    });
+}
+
+if (!IsMacOSSnowLeopardOrEarlier()) {
+  SimpleTest.waitForExplicitFinish();
+  SetupEMEPref(beginTest);
+} else {
+  todo(false, "Test disabled on this platform.");
+}
+</script>
+</pre>
+</body>
+</html>

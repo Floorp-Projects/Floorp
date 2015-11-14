@@ -4115,12 +4115,10 @@ nsIFrame::InlinePrefISizeData::ForceBreak(nsRenderingContext *aRenderingContext)
             floats_cur_left = 0,
             floats_cur_right = 0;
 
-    WritingMode wm = lineContainer->GetWritingMode();
-
     for (uint32_t i = 0, i_end = floats.Length(); i != i_end; ++i) {
       const FloatInfo& floatInfo = floats[i];
       const nsStyleDisplay *floatDisp = floatInfo.Frame()->StyleDisplay();
-      uint8_t breakType = floatDisp->PhysicalBreakType(wm);
+      uint8_t breakType = floatDisp->PhysicalBreakType(lineContainerWM);
       if (breakType == NS_STYLE_CLEAR_LEFT ||
           breakType == NS_STYLE_CLEAR_RIGHT ||
           breakType == NS_STYLE_CLEAR_BOTH) {
@@ -4137,7 +4135,7 @@ nsIFrame::InlinePrefISizeData::ForceBreak(nsRenderingContext *aRenderingContext)
         }
       }
 
-      uint8_t floatStyle = floatDisp->PhysicalFloats(wm);
+      uint8_t floatStyle = floatDisp->PhysicalFloats(lineContainerWM);
       nscoord& floats_cur = floatStyle == NS_STYLE_FLOAT_LEFT
                               ? floats_cur_left : floats_cur_right;
       nscoord floatWidth = floatInfo.Width();

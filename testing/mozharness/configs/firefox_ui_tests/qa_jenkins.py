@@ -2,6 +2,13 @@
 
 import os
 
+import mozharness
+
+
+external_tools_path = os.path.join(
+    os.path.abspath(os.path.dirname(os.path.dirname(mozharness.__file__))),
+    'external_tools',
+)
 
 config = {
     'env': {
@@ -10,8 +17,8 @@ config = {
 
     # General local variable overwrite
     'exes': {
-        'gittool.py': os.path.join(os.getcwd(), 'external_tools', 'gittool.py'),
-        'hgtool.py': os.path.join(os.getcwd(), 'external_tools', 'hgtool.py'),
+        'gittool.py': os.path.join(external_tools_path, 'gittool.py'),
+        'hgtool.py': os.path.join(external_tools_path, 'hgtool.py'),
     },
 
     # PIP

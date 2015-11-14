@@ -717,7 +717,7 @@ AndroidGeckoEvent::MakeMultiTouchInput(nsIWidget* widget)
         return event;
     }
 
-    const nsIntPoint& offset = widget->WidgetToScreenOffsetUntyped();
+    const nsIntPoint& offset = widget->WidgetToScreenOffset().ToUnknownPoint();
     event.mTouches.SetCapacity(endIndex - startIndex);
     for (int i = startIndex; i < endIndex; i++) {
         nsIntPoint point = Points()[i] - offset;

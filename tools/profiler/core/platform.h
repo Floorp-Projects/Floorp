@@ -57,6 +57,7 @@
 #include "PlatformMacros.h"
 #include "v8-support.h"
 #include <vector>
+#include "StackTop.h"
 
 // We need a definition of gettid(), but glibc doesn't provide a
 // wrapper for it.

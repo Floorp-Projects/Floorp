@@ -461,11 +461,6 @@ private:
                          const nsACString& aOrigin,
                          nsAutoCString& _retval);
 
-  static PLDHashOperator
-  RemoveQuotaCallback(const nsACString& aKey,
-                      nsAutoPtr<GroupInfoPair>& aValue,
-                      void* aUserArg);
-
   mozilla::Mutex mQuotaMutex;
 
   nsClassHashtable<nsCStringHashKey, GroupInfoPair> mGroupInfoPairs;

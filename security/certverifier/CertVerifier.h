@@ -54,6 +54,8 @@ public:
   static const Flags FLAG_LOCAL_ONLY;
   // Don't perform fallback DV validation on EV validation failure.
   static const Flags FLAG_MUST_BE_EV;
+  // TLS feature request_status should be ignored
+  static const Flags FLAG_TLS_IGNORE_STATUS_REQUEST;
 
   // These values correspond to the SSL_OCSP_STAPLING telemetry.
   enum OCSPStaplingStatus {

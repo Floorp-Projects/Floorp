@@ -922,7 +922,7 @@ NS_IMETHODIMP nsChildView::GetClientBoundsUntyped(nsIntRect &aRect)
   if (!mParentWidget) {
     // For top level widgets we want the position on screen, not the position
     // of this view inside the window.
-    aRect.MoveTo(WidgetToScreenOffsetUntyped());
+    aRect.MoveTo(WidgetToScreenOffset().ToUnknownPoint());
   }
   return NS_OK;
 }
@@ -930,7 +930,7 @@ NS_IMETHODIMP nsChildView::GetClientBoundsUntyped(nsIntRect &aRect)
 NS_IMETHODIMP nsChildView::GetScreenBoundsUntyped(nsIntRect &aRect)
 {
   GetBoundsUntyped(aRect);
-  aRect.MoveTo(WidgetToScreenOffsetUntyped());
+  aRect.MoveTo(WidgetToScreenOffset().ToUnknownPoint());
   return NS_OK;
 }
 
@@ -1520,7 +1520,7 @@ void nsChildView::ReportSizeEvent()
 
 #pragma mark -
 
-nsIntPoint nsChildView::GetClientOffset()
+nsIntPoint nsChildView::GetClientOffsetUntyped()
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_RETURN;
 
