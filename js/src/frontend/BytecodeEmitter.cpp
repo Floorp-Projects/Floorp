@@ -7119,12 +7119,25 @@ BytecodeEmitter::emitPropertyList(ParseNode* pn, MutableHandlePlainObject objp, 
                 return false;
         }
 
+        // Class methods are not enumerable.
+        if (type == ClassBody) {
+            switch (op) {
+              case JSOP_INITPROP:        op = JSOP_INITHIDDENPROP;          break;
+              case JSOP_INITPROP_GETTER: op = JSOP_INITHIDDENPROP_GETTER;   break;
+              case JSOP_INITPROP_SETTER: op = JSOP_INITHIDDENPROP_SETTER;   break;
+              default: MOZ_CRASH("Invalid op");
+            }
+        }
+
         if (isIndex) {
             objp.set(nullptr);
             switch (op) {
-              case JSOP_INITPROP:        op = JSOP_INITELEM;        break;
-              case JSOP_INITPROP_GETTER: op = JSOP_INITELEM_GETTER; break;
-              case JSOP_INITPROP_SETTER: op = JSOP_INITELEM_SETTER; break;
+              case JSOP_INITPROP:               op = JSOP_INITELEM;              break;
+              case JSOP_INITHIDDENPROP:         op = JSOP_INITHIDDENELEM;        break;
+              case JSOP_INITPROP_GETTER:        op = JSOP_INITELEM_GETTER;       break;
+              case JSOP_INITHIDDENPROP_GETTER:  op = JSOP_INITHIDDENELEM_GETTER; break;
+              case JSOP_INITPROP_SETTER:        op = JSOP_INITELEM_SETTER;       break;
+              case JSOP_INITHIDDENPROP_SETTER:  op = JSOP_INITHIDDENELEM_SETTER; break;
               default: MOZ_CRASH("Invalid op");
             }
             if (!emit1(op))
@@ -7137,6 +7150,8 @@ BytecodeEmitter::emitPropertyList(ParseNode* pn, MutableHandlePlainObject objp, 
                 return false;
 
             if (objp) {
+                MOZ_ASSERT(type == ObjectLiteral);
+                MOZ_ASSERT(!IsHiddenInitOp(op));
                 MOZ_ASSERT(!objp->inDictionaryMode());
                 Rooted<jsid> id(cx, AtomToId(key->pn_atom));
                 RootedValue undefinedValue(cx, UndefinedValue());

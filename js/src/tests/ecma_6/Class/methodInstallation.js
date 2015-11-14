@@ -52,20 +52,20 @@ for (let a of [testClass,
     var aMethDesc = Object.getOwnPropertyDescriptor(a.prototype, \"__proto__\");
     assertEq(aMethDesc.writable, true);
     assertEq(aMethDesc.configurable, true);
-    assertEq(aMethDesc.enumerable, true);
+    assertEq(aMethDesc.enumerable, false);
     aMethDesc.value();
     assertEq(methodCalled, true);
 
     var aGetDesc = Object.getOwnPropertyDescriptor(a.prototype, \"getter\");
     assertEq(aGetDesc.configurable, true);
-    assertEq(aGetDesc.enumerable, true);
+    assertEq(aGetDesc.enumerable, false);
     aGetDesc.get();
     assertThrowsInstanceOf(() => new aGetDesc.get, TypeError);
     assertEq(getterCalled, true);
 
     var aSetDesc = Object.getOwnPropertyDescriptor(a.prototype, \"setter\");
     assertEq(aSetDesc.configurable, true);
-    assertEq(aSetDesc.enumerable, true);
+    assertEq(aSetDesc.enumerable, false);
     aSetDesc.set();
     assertThrowsInstanceOf(() => new aSetDesc.set, TypeError);
     assertEq(setterCalled, true);
@@ -74,7 +74,7 @@ for (let a of [testClass,
     assertEq(Object.getOwnPropertyDescriptor(new a(), \"staticMethod\"), undefined);
     var aStaticMethDesc = Object.getOwnPropertyDescriptor(a, \"staticMethod\");
     assertEq(aStaticMethDesc.configurable, true);
-    assertEq(aStaticMethDesc.enumerable, true);
+    assertEq(aStaticMethDesc.enumerable, false);
     assertEq(aStaticMethDesc.writable, true);
     aStaticMethDesc.value();
     assertThrowsInstanceOf(() => new aStaticMethDesc.value, TypeError);
@@ -83,7 +83,7 @@ for (let a of [testClass,
     assertEq(Object.getOwnPropertyDescriptor(new a(), \"staticGetter\"), undefined);
     var aStaticGetDesc = Object.getOwnPropertyDescriptor(a, \"staticGetter\");
     assertEq(aStaticGetDesc.configurable, true);
-    assertEq(aStaticGetDesc.enumerable, true);
+    assertEq(aStaticGetDesc.enumerable, false);
     aStaticGetDesc.get();
     assertThrowsInstanceOf(() => new aStaticGetDesc.get, TypeError);
     assertEq(staticGetterCalled, true);
@@ -91,7 +91,7 @@ for (let a of [testClass,
     assertEq(Object.getOwnPropertyDescriptor(new a(), \"staticSetter\"), undefined);
     var aStaticSetDesc = Object.getOwnPropertyDescriptor(a, \"staticSetter\");
     assertEq(aStaticSetDesc.configurable, true);
-    assertEq(aStaticSetDesc.enumerable, true);
+    assertEq(aStaticSetDesc.enumerable, false);
     aStaticSetDesc.set();
     assertThrowsInstanceOf(() => new aStaticSetDesc.set, TypeError);
     assertEq(staticSetterCalled, true);
