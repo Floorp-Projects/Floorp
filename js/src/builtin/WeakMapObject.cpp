@@ -316,8 +316,7 @@ WeakMap_construct(JSContext* cx, unsigned argc, Value* vp)
     if (!ThrowIfNotConstructing(cx, args, "WeakMap"))
         return false;
 
-    RootedObject newTarget(cx, &args.newTarget().toObject());
-    RootedObject obj(cx, CreateThis(cx, &WeakMapObject::class_, newTarget));
+    RootedObject obj(cx, NewBuiltinClassInstance(cx, &WeakMapObject::class_));
     if (!obj)
         return false;
 

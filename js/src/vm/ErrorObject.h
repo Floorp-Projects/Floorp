@@ -72,7 +72,7 @@ class ErrorObject : public NativeObject
     static ErrorObject*
     create(JSContext* cx, JSExnType type, HandleObject stack, HandleString fileName,
            uint32_t lineNumber, uint32_t columnNumber, ScopedJSFreePtr<JSErrorReport>* report,
-           HandleString message, HandleObject proto = nullptr);
+           HandleString message);
 
     /*
      * Assign the initial error shape to the empty object.  (This shape does

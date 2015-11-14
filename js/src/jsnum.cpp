@@ -488,11 +488,7 @@ Number(JSContext* cx, unsigned argc, Value* vp)
     if (!isConstructing)
         return true;
 
-    RootedObject newTarget(cx, &args.newTarget().toObject());
-    RootedObject proto(cx);
-    if (!GetPrototypeFromConstructor(cx, newTarget, &proto))
-        return false;
-    JSObject* obj = NumberObject::create(cx, args.rval().toNumber(), proto);
+    JSObject* obj = NumberObject::create(cx, args.rval().toNumber());
     if (!obj)
         return false;
     args.rval().setObject(*obj);

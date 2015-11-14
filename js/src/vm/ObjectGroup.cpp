@@ -1363,38 +1363,34 @@ struct ObjectGroupCompartment::AllocationSiteKey : public DefaultHasher<Allocati
     uint32_t offset : 24;
     JSProtoKey kind : 8;
 
-    JSObject* proto;
-
     static const uint32_t OFFSET_LIMIT = (1 << 23);
 
     AllocationSiteKey() { mozilla::PodZero(this); }
 
     static inline uint32_t hash(AllocationSiteKey key) {
-        return uint32_t(size_t(key.script->offsetToPC(key.offset)) ^ key.kind ^ size_t(key.proto));
+        return uint32_t(size_t(key.script->offsetToPC(key.offset)) ^ key.kind);
     }
 
     static inline bool match(const AllocationSiteKey& a, const AllocationSiteKey& b) {
-        return a.script == b.script && a.offset == b.offset && a.kind == b.kind && a.proto == b.proto;
+        return a.script == b.script && a.offset == b.offset && a.kind == b.kind;
     }
 };
 
 /* static */ ObjectGroup*
 ObjectGroup::allocationSiteGroup(JSContext* cx, JSScript* script, jsbytecode* pc,
-                                 JSProtoKey kind, HandleObject protoArg /* = nullptr */)
+                                 JSProtoKey kind)
 {
     MOZ_ASSERT(!useSingletonForAllocationSite(script, pc, kind));
-    MOZ_ASSERT_IF(protoArg, kind == JSProto_Array);
 
     uint32_t offset = script->pcToOffset(pc);
 
-    if (offset >= ObjectGroupCompartment::AllocationSiteKey::OFFSET_LIMIT) {
-        if (protoArg)
-            return defaultNewGroup(cx, GetClassForProtoKey(kind), TaggedProto(protoArg));
+    if (offset >= ObjectGroupCompartment::AllocationSiteKey::OFFSET_LIMIT)
         return defaultNewGroup(cx, kind);
-    }
 
-    if (protoArg && gc::IsInsideNursery(protoArg))
-        return defaultNewGroup(cx, GetClassForProtoKey(kind), TaggedProto(protoArg));
+    ObjectGroupCompartment::AllocationSiteKey key;
+    key.script = script;
+    key.offset = offset;
+    key.kind = kind;
 
     ObjectGroupCompartment::AllocationSiteTable*& table =
         cx->compartment()->objectGroups.allocationSiteTable;
@@ -1409,23 +1405,15 @@ ObjectGroup::allocationSiteGroup(JSContext* cx, JSScript* script, jsbytecode* pc
         }
     }
 
-    RootedObject proto(cx, protoArg);
-    if (!proto && kind != JSProto_Null && !GetBuiltinPrototype(cx, kind, &proto))
-        return nullptr;
-
-    MOZ_ASSERT(!gc::IsInsideNursery(proto));
-
-    ObjectGroupCompartment::AllocationSiteKey key;
-    key.script = script;
-    key.offset = offset;
-    key.kind = kind;
-    key.proto = proto;
-
     ObjectGroupCompartment::AllocationSiteTable::AddPtr p = table->lookupForAdd(key);
     if (p)
         return p->value();
 
     AutoEnterAnalysis enter(cx);
+
+    RootedObject proto(cx);
+    if (kind != JSProto_Null && !GetBuiltinPrototype(cx, kind, &proto))
+        return nullptr;
 
     Rooted<TaggedProto> tagged(cx, TaggedProto(proto));
     ObjectGroup* res = ObjectGroupCompartment::makeGroup(cx, GetClassForProtoKey(kind), tagged,
@@ -1475,7 +1463,6 @@ ObjectGroupCompartment::replaceAllocationSiteGroup(JSScript* script, jsbytecode*
     key.script = script;
     key.offset = script->pcToOffset(pc);
     key.kind = kind;
-    key.proto = group->proto().toObjectOrNull();
 
     AllocationSiteTable::Ptr p = allocationSiteTable->lookup(key);
     MOZ_RELEASE_ASSERT(p);
@@ -1488,16 +1475,12 @@ ObjectGroupCompartment::replaceAllocationSiteGroup(JSScript* script, jsbytecode*
 }
 
 /* static */ ObjectGroup*
-ObjectGroup::callingAllocationSiteGroup(JSContext* cx, JSProtoKey key, HandleObject proto)
+ObjectGroup::callingAllocationSiteGroup(JSContext* cx, JSProtoKey key)
 {
-    MOZ_ASSERT_IF(proto, key == JSProto_Array);
-
     jsbytecode* pc;
     RootedScript script(cx, cx->currentScript(&pc));
     if (script)
-        return allocationSiteGroup(cx, script, pc, key, proto);
-    if (proto)
-        return defaultNewGroup(cx, GetClassForProtoKey(key), TaggedProto(proto));
+        return allocationSiteGroup(cx, script, pc, key);
     return defaultNewGroup(cx, key);
 }
 
@@ -1783,16 +1766,12 @@ ObjectGroupCompartment::sweep(FreeOp* fop)
     if (allocationSiteTable) {
         for (AllocationSiteTable::Enum e(*allocationSiteTable); !e.empty(); e.popFront()) {
             AllocationSiteKey key = e.front().key();
-            bool keyDying = IsAboutToBeFinalizedUnbarriered(&key.script) ||
-                            (key.proto && IsAboutToBeFinalizedUnbarriered(&key.proto));
+            bool keyDying = IsAboutToBeFinalizedUnbarriered(&key.script);
             bool valDying = IsAboutToBeFinalized(&e.front().value());
-            if (keyDying || valDying) {
+            if (keyDying || valDying)
                 e.removeFront();
-            } else if (key.script != e.front().key().script ||
-                       key.proto != e.front().key().proto)
-            {
+            else if (key.script != e.front().key().script)
                 e.rekeyFront(key);
-            }
         }
     }
 
