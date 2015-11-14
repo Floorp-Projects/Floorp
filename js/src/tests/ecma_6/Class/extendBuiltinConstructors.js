@@ -12,6 +12,7 @@ function testBuiltin(builtin, ...args) {
     assertEq(instance instanceof inst, true);
     assertEq(instance instanceof builtin, true);
     assertEq(instance.called, true);
+    return instance;
 }
 
 function testBuiltinTypedArrays() {
@@ -30,6 +31,21 @@ function testBuiltinTypedArrays() {
         testBuiltin(array, 5);
         testBuiltin(array, new array());
         testBuiltin(array, new ArrayBuffer());
+    }
+}
+
+function testBuiltinArray() {
+    let argsLists = [
+        [],
+        [15],
+        [3.0],
+        ["non-length one-arg"],
+        [5, 10, 15, "these are elements"]
+    ];
+
+    for (let args of argsLists) {
+        let instance = testBuiltin(Array, ...args);
+        assertEq(Array.isArray(instance), true);
     }
 }
 
@@ -59,6 +75,7 @@ testBuiltinTypedArrays();
 testBuiltin(DataView, new ArrayBuffer());
 testBuiltin(DataView, new (newGlobal().ArrayBuffer)());
 testBuiltin(String);
+testBuiltinArray();
 
 `;
 
