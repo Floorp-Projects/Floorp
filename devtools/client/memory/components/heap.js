@@ -58,13 +58,14 @@ function createTreeProperties(census, toolbox, diffing) {
       return parent === report ? null : parent;
     },
     getChildren: node => node.children || [],
-    renderItem: (item, depth, focused, arrow) =>
+    renderItem: (item, depth, focused, arrow, expanded) =>
       new TreeItem({
         toolbox,
         item,
         depth,
         focused,
         arrow,
+        expanded,
         getPercentBytes,
         getPercentCount,
         showSign: !!diffing,

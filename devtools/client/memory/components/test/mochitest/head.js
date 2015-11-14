@@ -188,18 +188,31 @@ function reload(target) {
   return deferred.promise;
 }
 
+function onNextAnimationFrame(fn) {
+  return () =>
+    requestAnimationFrame(() =>
+      requestAnimationFrame(fn));
+}
+
 function setState(component, newState) {
   var deferred = promise.defer();
-  component.setState(newState, deferred.resolve);
+  component.setState(newState, onNextAnimationFrame(deferred.resolve));
   return deferred.promise;
 }
 
 function setProps(component, newState) {
   var deferred = promise.defer();
-  component.setProps(newState, deferred.resolve);
+  component.setProps(newState, onNextAnimationFrame(deferred.resolve));
   return deferred.promise;
 }
 
+function dumpn(msg) {
+  dump(`MEMORY-TEST: ${msg}\n`);
+}
+
 function isRenderedTree(actual, expectedDescription, msg) {
-    is(actual, expectedDescription.map(x => x + "\n").join(""), msg);
+  const expected = expectedDescription.map(x => x + "\n").join("");
+  dumpn(`Expected tree:\n${expected}`);
+  dumpn(`Actual tree:\n${actual}`);
+  is(actual, expected, msg);
 }
