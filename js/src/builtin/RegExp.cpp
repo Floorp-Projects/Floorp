@@ -307,11 +307,11 @@ js::regexp_construct(JSContext* cx, unsigned argc, Value* vp)
     if (!IsRegExp(cx, args.get(0), &patternIsRegExp))
         return false;
 
-    if (args.isConstructing()) {
-        // XXX Step 3!
-    } else {
-        // XXX Step 4a
 
+    // We can delay step 3 and step 4a until later, during
+    // GetPrototypeFromCallableConstructor calls. Accessing the new.target
+    // and the callee from the stack is unobservable.
+    if (!args.isConstructing()) {
         // Step 4b.
         if (patternIsRegExp && !args.hasDefined(1)) {
             RootedObject patternObj(cx, &args[0].toObject());
@@ -341,6 +341,7 @@ js::regexp_construct(JSContext* cx, unsigned argc, Value* vp)
         // don't reuse the RegExpShared below.
         RootedObject patternObj(cx, &patternValue.toObject());
 
+        // Step 5
         RootedAtom sourceAtom(cx);
         RegExpFlag flags;
         {
@@ -353,26 +354,29 @@ js::regexp_construct(JSContext* cx, unsigned argc, Value* vp)
             if (!args.hasDefined(1)) {
                 // Step 5b.
                 flags = g->getFlags();
-            } else {
-                // Step 5c.
-                // XXX We shouldn't be converting to string yet!  This must
-                //     come *after* the .constructor access in step 8.
-                flags = RegExpFlag(0);
-                RootedString flagStr(cx, ToString<CanGC>(cx, args[1]));
-                if (!flagStr)
-                    return false;
-                if (!ParseRegExpFlags(cx, flagStr, &flags))
-                    return false;
             }
         }
 
         // Steps 8-9.
-        // XXX Note bug in step 5c, with respect to step 8.
-        Rooted<RegExpObject*> regexp(cx, RegExpAlloc(cx));
+        RootedObject proto(cx);
+        if (!GetPrototypeFromCallableConstructor(cx, args, &proto))
+            return false;
+
+        Rooted<RegExpObject*> regexp(cx, RegExpAlloc(cx, proto));
         if (!regexp)
             return false;
 
         // Step 10.
+        if (args.hasDefined(1)) {
+            // Step 5c / 21.2.3.2.2 RegExpInitialize step 5.
+            flags = RegExpFlag(0);
+            RootedString flagStr(cx, ToString<CanGC>(cx, args[1]));
+            if (!flagStr)
+                return false;
+            if (!ParseRegExpFlags(cx, flagStr, &flags))
+                return false;
+        }
+
         if (!RegExpObject::initFromAtom(cx, regexp, sourceAtom, flags))
             return false;
 
@@ -404,7 +408,11 @@ js::regexp_construct(JSContext* cx, unsigned argc, Value* vp)
     }
 
     // Steps 8-9.
-    Rooted<RegExpObject*> regexp(cx, RegExpAlloc(cx));
+    RootedObject proto(cx);
+    if (!GetPrototypeFromCallableConstructor(cx, args, &proto))
+        return false;
+
+    Rooted<RegExpObject*> regexp(cx, RegExpAlloc(cx, proto));
     if (!regexp)
         return false;
 
