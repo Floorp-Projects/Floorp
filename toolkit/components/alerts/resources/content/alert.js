@@ -98,6 +98,8 @@ function prefillAlertInfo() {
         let bodyTextLabel = document.getElementById("alertTextLabel");
 
         if (bodyText.length > BODY_TEXT_LIMIT) {
+          bodyTextLabel.setAttribute("tooltiptext", bodyText);
+
           let ellipsis = "\u2026";
           try {
             ellipsis = Services.prefs.getComplexValue("intl.ellipsis",
@@ -112,11 +114,11 @@ function prefillAlertInfo() {
           if (truncChar >= 0xDC00 && truncChar <= 0xDFFF) {
             truncLength++;
           }
-          bodyTextLabel.textContent = bodyText.substring(0, truncLength) +
-                                      ellipsis;
 
-          bodyTextLabel.setAttribute("tooltiptext", bodyText);
+          bodyText = bodyText.substring(0, truncLength) +
+                     ellipsis;
         }
+        bodyTextLabel.textContent = bodyText;
       }
     case 2:
       document.getElementById("alertTitleLabel").setAttribute("value", window.arguments[1]);
