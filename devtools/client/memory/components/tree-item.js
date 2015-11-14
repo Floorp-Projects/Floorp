@@ -37,6 +37,14 @@ const TreeItem = module.exports = createClass({
     return sign + Math.abs(rounded);
   },
 
+  shouldComponentUpdate(nextProps, nextState) {
+    return this.props.item != nextProps.item
+      || this.props.depth != nextProps.depth
+      || this.props.expanded != nextProps.expanded
+      || this.props.focused != nextProps.focused
+      || this.props.showSign != nextProps.showSign;
+  },
+
   render() {
     let {
       item,
