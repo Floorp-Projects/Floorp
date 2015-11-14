@@ -899,21 +899,25 @@ ArrayBufferObject::createDataViewForThisImpl(JSContext* cx, const CallArgs& args
 
     /*
      * This method is only called for |DataView(alienBuf, ...)| which calls
-     * this as |createDataViewForThis.call(alienBuf, ..., DataView.prototype)|,
-     * ergo there must be at least two arguments.
+     * this as |createDataViewForThis.call(alienBuf, byteOffset, byteLength,
+     *                                     DataView.prototype)|,
+     * ergo there must be exactly 3 arguments.
      */
-    MOZ_ASSERT(args.length() >= 2);
+    MOZ_ASSERT(args.length() == 3);
 
-    Rooted<JSObject*> proto(cx, &args[args.length() - 1].toObject());
-
-    Rooted<JSObject*> buffer(cx, &args.thisv().toObject());
+    uint32_t byteOffset = args[0].toPrivateUint32();
+    uint32_t byteLength = args[1].toPrivateUint32();
+    Rooted<ArrayBufferObject*> buffer(cx, &args.thisv().toObject().as<ArrayBufferObject>());
 
     /*
      * Pop off the passed-along prototype and delegate to normal DataViewObject
      * construction.
      */
-    CallArgs frobbedArgs = CallArgsFromVp(args.length() - 1, args.base());
-    return DataViewObject::construct(cx, buffer, frobbedArgs, proto);
+    JSObject* obj = DataViewObject::create(cx, byteOffset, byteLength, buffer, &args[2].toObject());
+    if (!obj)
+        return false;
+    args.rval().setObject(*obj);
+    return true;
 }
 
 bool
