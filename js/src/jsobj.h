@@ -1100,6 +1100,10 @@ GetInitialHeap(NewObjectKind newKind, const Class* clasp)
     return gc::DefaultHeap;
 }
 
+// ES6 9.1.15 GetPrototypeFromConstructor.
+extern bool
+GetPrototypeFromConstructor(JSContext* cx, js::HandleObject newTarget, js::MutableHandleObject proto);
+
 // Specialized call for constructing |this| with a known function callee,
 // and a known prototype.
 extern JSObject*
