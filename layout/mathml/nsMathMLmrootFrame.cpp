@@ -402,7 +402,6 @@ nsMathMLmrootFrame::GetAdditionalStyleContext(int32_t aIndex) const
   switch (aIndex) {
   case NS_SQR_CHAR_STYLE_CONTEXT_INDEX:
     return mSqrChar.GetStyleContext();
-    break;
   default:
     return nullptr;
   }
