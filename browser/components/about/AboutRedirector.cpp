@@ -93,8 +93,6 @@ static RedirEntry kRedirMap[] = {
   { "remote-newtab", "chrome://browser/content/remote-newtab/newTab.xhtml",
     nsIAboutModule::URI_MUST_LOAD_IN_CHILD |
     nsIAboutModule::ALLOW_SCRIPT },
-  { "permissions", "chrome://browser/content/preferences/aboutPermissions.xul",
-    nsIAboutModule::ALLOW_SCRIPT },
   { "preferences", "chrome://browser/content/preferences/in-content/preferences.xul",
     nsIAboutModule::ALLOW_SCRIPT },
   { "downloads", "chrome://browser/content/downloads/contentAreaDownloadsView.xul",

@@ -18,7 +18,16 @@ avoids ESLint telling us that the function is never called.
 
 ``no-aArgs`` prevents using the hungarian notation in function arguments.
 
-``var-only-at-top-level`` Marks all var declarations that are not at the top
+``no-cpows-in-tests`` This rule checks if the file is a browser mochitest and,
+if so, checks for possible CPOW usage.
+
+Note: These are string matches so we will miss situations where the parent
+object is assigned to another variable e.g.::
+
+   var b = gBrowser;
+   b.content // Would not be detected as a CPOW.
+
+``var-only-at-top-level`` marks all var declarations that are not at the top
 level invalid.
 
 +-------+-----------------------+
@@ -41,6 +50,7 @@ Example configuration::
      "mozilla/import-headjs-globals": 1,
      "mozilla/mark-test-function-used": 1,
      "mozilla/var-only-at-top-level": 1,
+     "mozilla/no-cpows-in-tests": 1,
    }
 
 .. toctree::
@@ -51,4 +61,5 @@ Example configuration::
    import-headjs-globals
    mark-test-function-used
    no-aArgs
+   no-cpows-in-tests
    var-only-at-top-level

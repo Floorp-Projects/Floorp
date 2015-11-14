@@ -30,6 +30,7 @@ DevToolsModules(
     'node-attribute-parser.js',
     'observable-object.js',
     'options-view.js',
+    'output-parser.js',
     'poller.js',
     'source-utils.js',
     'SplitView.jsm',

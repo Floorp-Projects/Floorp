@@ -441,10 +441,10 @@ loop.panel = (function(_, mozL10n) {
         "room-active": this._isActive(),
         "room-opened": this.props.isOpenedRoom
       });
-
+      var urlData = (this.props.room.decryptedContext.urls || [])[0] || {};
       var roomTitle = this.props.room.decryptedContext.roomName ||
-        this.props.room.decryptedContext.urls[0].description ||
-        this.props.room.decryptedContext.urls[0].location;
+        urlData.description || urlData.location ||
+        mozL10n.get("room_name_untitled_page");
 
       return (
         <div className={roomClasses}

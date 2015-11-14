@@ -4,6 +4,14 @@
 
 "use strict";
 
+// Options passed to MemoryFront's startRecordingAllocations never change.
+exports.ALLOCATION_RECORDING_OPTIONS = {
+  probability: 1,
+  maxLogLength: 1
+};
+
+/*** Actions ******************************************************************/
+
 const actions = exports.actions = {};
 
 // Fired by UI to request a snapshot from the actor.
@@ -41,6 +49,17 @@ actions.SELECT_SNAPSHOT = "select-snapshot";
 // Fired to toggle tree inversion on or off.
 actions.TOGGLE_INVERTED = "toggle-inverted";
 
+// Fired to toggle diffing mode on or off.
+actions.TOGGLE_DIFFING = "toggle-diffing";
+
+// Fired when a snapshot is selected for diffing.
+actions.SELECT_SNAPSHOT_FOR_DIFFING = "select-snapshot-for-diffing";
+
+// Fired when taking a census diff.
+actions.TAKE_CENSUS_DIFF_START = "take-census-diff-start";
+actions.TAKE_CENSUS_DIFF_END = "take-census-diff-end";
+actions.DIFFING_ERROR = "diffing-error";
+
 // Fired to set a new breakdown.
 actions.SET_BREAKDOWN = "set-breakdown";
 
@@ -50,11 +69,7 @@ actions.SNAPSHOT_ERROR = "snapshot-error";
 // Fired when there is a new filter string set.
 actions.SET_FILTER_STRING = "set-filter-string";
 
-// Options passed to MemoryFront's startRecordingAllocations never change.
-exports.ALLOCATION_RECORDING_OPTIONS = {
-  probability: 1,
-  maxLogLength: 1
-};
+/*** Breakdowns ***************************************************************/
 
 const COUNT = { by: "count", count: true, bytes: true };
 const INTERNAL_TYPE = { by: "internalType", then: COUNT };
@@ -93,6 +108,8 @@ const breakdowns = exports.breakdowns = {
   },
 };
 
+/*** Snapshot States **********************************************************/
+
 const snapshotState = exports.snapshotState = {};
 
 /**
@@ -114,3 +131,27 @@ snapshotState.READING = "snapshot-state-reading";
 snapshotState.READ = "snapshot-state-read";
 snapshotState.SAVING_CENSUS = "snapshot-state-saving-census";
 snapshotState.SAVED_CENSUS = "snapshot-state-saved-census";
+
+/*** Diffing States ***********************************************************/
+
+/*
+ * Various states the diffing model can be in.
+ *
+ *     SELECTING --> TAKING_DIFF <---> TOOK_DIFF
+ *                       |
+ *                       V
+ *                     ERROR
+ */
+const diffingState = exports.diffingState = Object.create(null);
+
+// Selecting the two snapshots to diff.
+diffingState.SELECTING = "diffing-state-selecting";
+
+// Currently computing the diff between the two selected snapshots.
+diffingState.TAKING_DIFF = "diffing-state-taking-diff";
+
+// Have the diff between the two selected snapshots.
+diffingState.TOOK_DIFF = "diffing-state-took-diff";
+
+// An error occurred while computing the diff.
+diffingState.ERROR = "diffing-state-error";

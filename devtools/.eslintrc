@@ -31,6 +31,7 @@
     "mozilla/import-headjs-globals": 1,
     "mozilla/mark-test-function-used": 1,
     "mozilla/no-aArgs": 1,
+    "mozilla/no-cpows-in-tests": 1,
     "mozilla/var-only-at-top-level": 1,
 
     // Disallow using variables outside the blocks they are defined (especially

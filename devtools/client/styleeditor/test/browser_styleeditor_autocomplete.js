@@ -101,7 +101,10 @@ var TEST_CASES = [
 
 add_task(function* () {
   let { panel, ui } = yield openStyleEditorForURL(TESTCASE_URI);
-  let editor = yield ui.editors[0].getSourceEditor();
+
+  yield ui.selectStyleSheet(ui.editors[1].styleSheet);
+  let editor = yield ui.editors[1].getSourceEditor();
+
   let sourceEditor = editor.sourceEditor;
   let popup = sourceEditor.getAutocompletionPopup();
 

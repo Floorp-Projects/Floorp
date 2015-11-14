@@ -20,17 +20,17 @@ const REPORT = {
     "count": 50,
   },
   "JSString": {
-    "bytes": 0,
-    "count": 0,
+    "bytes": 10,
+    "count": 1,
   },
 };
 
 const EXPECTED = {
   name: null,
   bytes: 0,
-  totalBytes: 600,
+  totalBytes: 610,
   count: 0,
-  totalCount: 60,
+  totalCount: 61,
   children: [
     {
       name: "js::Shape",
@@ -54,10 +54,10 @@ const EXPECTED = {
     },
     {
       name: "JSString",
-      bytes: 0,
-      totalBytes: 0,
-      count: 0,
-      totalCount: 0,
+      bytes: 10,
+      totalBytes: 10,
+      count: 1,
+      totalCount: 1,
       children: undefined,
       id: 4,
       parent: 1
