@@ -18,6 +18,13 @@ function testBuiltin(builtin) {
 testBuiltin(Function);
 testBuiltin(Object);
 testBuiltin(Boolean);
+testBuiltin(Error);
+testBuiltin(EvalError);
+testBuiltin(RangeError);
+testBuiltin(ReferenceError);
+testBuiltin(SyntaxError);
+testBuiltin(TypeError);
+testBuiltin(URIError);
 
 `;
 
