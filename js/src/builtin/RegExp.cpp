@@ -185,7 +185,7 @@ RegExpInitialize(JSContext* cx, Handle<RegExpObject*> obj, HandleValue patternVa
     }
 
     /* Steps 11-15. */
-    if (!InitializeRegExp(cx, obj, pattern, flags))
+    if (!RegExpObject::initFromAtom(cx, obj, pattern, flags))
         return false;
 
     /* Step 16. */
@@ -268,7 +268,7 @@ regexp_compile_impl(JSContext* cx, const CallArgs& args)
         }
 
         // Step 5.
-        if (!InitializeRegExp(cx, regexp, sourceAtom, flags))
+        if (!RegExpObject::initFromAtom(cx, regexp, sourceAtom, flags))
             return false;
 
         args.rval().setObject(*regexp);
@@ -373,7 +373,7 @@ js::regexp_construct(JSContext* cx, unsigned argc, Value* vp)
             return false;
 
         // Step 10.
-        if (!InitializeRegExp(cx, regexp, sourceAtom, flags))
+        if (!RegExpObject::initFromAtom(cx, regexp, sourceAtom, flags))
             return false;
 
         args.rval().setObject(*regexp);
@@ -699,7 +699,9 @@ js::CreateRegExpPrototype(JSContext* cx, JSProtoKey key)
     proto->NativeObject::setPrivate(nullptr);
 
     RootedAtom source(cx, cx->names().empty);
-    return InitializeRegExp(cx, proto, source, RegExpFlag(0));
+    if (!RegExpObject::initFromAtom(cx, proto, source, RegExpFlag(0)))
+        return nullptr;
+    return proto;
 }
 
 static bool
