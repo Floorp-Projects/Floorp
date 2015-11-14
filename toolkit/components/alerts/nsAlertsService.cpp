@@ -5,6 +5,7 @@
 
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/PermissionMessageUtils.h"
+#include "mozilla/Telemetry.h"
 #include "nsXULAppAPI.h"
 
 #include "nsAlertsService.h"
@@ -177,15 +178,19 @@ NS_IMETHODIMP nsAlertsService::SetManualDoNotDisturb(bool aDoNotDisturb)
 #else
   // Try the system notification service.
   nsCOMPtr<nsIAlertsService> sysAlerts(do_GetService(NS_SYSTEMALERTSERVICE_CONTRACTID));
+  nsresult rv;
   if (sysAlerts) {
     nsCOMPtr<nsIAlertsDoNotDisturb> alertsDND(do_GetService(NS_SYSTEMALERTSERVICE_CONTRACTID));
     if (!alertsDND) {
       return NS_ERROR_NOT_IMPLEMENTED;
     }
-    return alertsDND->SetManualDoNotDisturb(aDoNotDisturb);
+    rv = alertsDND->SetManualDoNotDisturb(aDoNotDisturb);
+  } else {
+    rv = mXULAlerts.SetManualDoNotDisturb(aDoNotDisturb);
   }
 
-  return mXULAlerts.SetManualDoNotDisturb(aDoNotDisturb);
+  Telemetry::Accumulate(Telemetry::ALERTS_SERVICE_DND_ENABLED, 1);
+  return rv;
 #endif
 }
 

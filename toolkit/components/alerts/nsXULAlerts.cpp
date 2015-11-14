@@ -7,6 +7,8 @@
 
 #include "nsAutoPtr.h"
 #include "mozilla/LookAndFeel.h"
+#include "mozilla/dom/Notification.h"
+#include "mozilla/unused.h"
 #include "nsIServiceManager.h"
 #include "nsAlertsUtils.h"
 #include "nsISupportsArray.h"
@@ -15,6 +17,7 @@
 #include "nsIWindowWatcher.h"
 
 using namespace mozilla;
+using mozilla::dom::NotificationTelemetryService;
 
 #define ALERT_CHROME_URL "chrome://global/content/alerts/alert.xul"
 
@@ -49,6 +52,17 @@ nsXULAlerts::ShowAlertNotification(const nsAString& aImageUrl, const nsAString& 
                                    bool aInPrivateBrowsing)
 {
   if (mDoNotDisturb) {
+    if (!aInPrivateBrowsing) {
+      RefPtr<NotificationTelemetryService> telemetry =
+        NotificationTelemetryService::GetInstance();
+      if (telemetry) {
+        // Record the number of unique senders for XUL alerts. The OS X and
+        // libnotify backends will fire `alertshow` even if "do not disturb"
+        // is enabled. In that case, `NotificationObserver` will record the
+        // sender.
+        Unused << NS_WARN_IF(NS_FAILED(telemetry->RecordSender(aPrincipal)));
+      }
+    }
     return NS_OK;
   }
 
