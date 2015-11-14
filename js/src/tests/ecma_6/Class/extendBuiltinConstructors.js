@@ -56,6 +56,8 @@ testBuiltin(WeakMap);
 testBuiltin(WeakSet);
 testBuiltin(ArrayBuffer);
 testBuiltinTypedArrays();
+testBuiltin(DataView, new ArrayBuffer());
+testBuiltin(DataView, new (newGlobal().ArrayBuffer)());
 
 `;
 
