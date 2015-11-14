@@ -23,7 +23,7 @@ class WeakSetObject : public NativeObject
     static const JSPropertySpec properties[];
     static const JSFunctionSpec methods[];
 
-    static WeakSetObject* create(JSContext* cx);
+    static WeakSetObject* create(JSContext* cx, HandleObject proto = nullptr);
     static bool construct(JSContext* cx, unsigned argc, Value* vp);
 };
 
