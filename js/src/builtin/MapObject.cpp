@@ -1068,19 +1068,19 @@ SetObject::add(JSContext* cx, HandleObject obj, HandleValue k)
 }
 
 SetObject*
-SetObject::create(JSContext* cx)
+SetObject::create(JSContext* cx, HandleObject proto /* = nullptr */)
 {
-    SetObject* obj = NewBuiltinClassInstance<SetObject>(cx);
-    if (!obj)
-        return nullptr;
-
-    ValueSet* set = cx->new_<ValueSet>(cx->runtime());
+    auto set = cx->make_unique<ValueSet>(cx->runtime());
     if (!set || !set->init()) {
-        js_delete(set);
         ReportOutOfMemory(cx);
         return nullptr;
     }
-    obj->setPrivate(set);
+
+    SetObject* obj = NewObjectWithClassProto<SetObject>(cx, proto);
+    if (!obj)
+        return nullptr;
+
+    obj->setPrivate(set.release());
     return obj;
 }
 
@@ -1110,7 +1110,12 @@ SetObject::construct(JSContext* cx, unsigned argc, Value* vp)
     if (!ThrowIfNotConstructing(cx, args, "Set"))
         return false;
 
-    Rooted<SetObject*> obj(cx, SetObject::create(cx));
+    RootedObject proto(cx);
+    RootedObject newTarget(cx, &args.newTarget().toObject());
+    if (!GetPrototypeFromConstructor(cx, newTarget, &proto))
+        return false;
+
+    Rooted<SetObject*> obj(cx, SetObject::create(cx, proto));
     if (!obj)
         return false;
 
