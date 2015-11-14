@@ -632,23 +632,15 @@ NewScriptedFunction(ExclusiveContext* cx, unsigned nargs, JSFunction::Flags flag
                     NewObjectKind newKind = GenericObject,
                     HandleObject enclosingDynamicScope = nullptr);
 
-// By default, if proto is nullptr, Function.prototype is used instead.i
-// If protoHandling is NewFunctionExactProto, and proto is nullptr, the created
-// function will use nullptr as its [[Prototype]] instead. If
+// If proto is nullptr, Function.prototype is used instead.  If
 // enclosingDynamicScope is null, the function will have a null environment()
 // (yes, null, not the global).  In all cases, the global will be used as the
 // parent.
-
-enum NewFunctionProtoHandling {
-    NewFunctionClassProto,
-    NewFunctionGivenProto
-};
 extern JSFunction*
 NewFunctionWithProto(ExclusiveContext* cx, JSNative native, unsigned nargs,
                      JSFunction::Flags flags, HandleObject enclosingDynamicScope, HandleAtom atom,
                      HandleObject proto, gc::AllocKind allocKind = gc::AllocKind::FUNCTION,
-                     NewObjectKind newKind = GenericObject,
-                     NewFunctionProtoHandling protoHandling = NewFunctionClassProto);
+                     NewObjectKind newKind = GenericObject);
 
 extern JSAtom*
 IdToFunctionName(JSContext* cx, HandleId id);
