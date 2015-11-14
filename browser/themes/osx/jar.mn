@@ -93,10 +93,6 @@ browser.jar:
   skin/classic/browser/customizableui/customizeMode-separatorHorizontal.png  (customizableui/customizeMode-separatorHorizontal.png)
   skin/classic/browser/customizableui/customizeMode-separatorVertical.png  (customizableui/customizeMode-separatorVertical.png)
 * skin/classic/browser/customizableui/panelUIOverlay.css    (customizableui/panelUIOverlay.css)
-  skin/classic/browser/customizableui/thumburger-inverted.png  (customizableui/thumburger-inverted.png)
-  skin/classic/browser/customizableui/thumburger-inverted@2x.png  (customizableui/thumburger-inverted@2x.png)
-  skin/classic/browser/customizableui/thumburger.png  (customizableui/thumburger.png)
-  skin/classic/browser/customizableui/thumburger@2x.png  (customizableui/thumburger@2x.png)
   skin/classic/browser/downloads/allDownloadsViewOverlay.css (downloads/allDownloadsViewOverlay.css)
   skin/classic/browser/downloads/buttons.png                (downloads/buttons.png)
   skin/classic/browser/downloads/buttons@2x.png             (downloads/buttons@2x.png)
@@ -265,8 +261,6 @@ browser.jar:
   skin/classic/browser/yosemite/reload-stop-go@2x.png                  (reload-stop-go-yosemite@2x.png)
   skin/classic/browser/yosemite/sync-horizontalbar.png                 (sync-horizontalbar-yosemite.png)
   skin/classic/browser/yosemite/sync-horizontalbar@2x.png              (sync-horizontalbar-yosemite@2x.png)
-  skin/classic/browser/yosemite/thumburger.png                         (customizableui/thumburger-yosemite.png)
-  skin/classic/browser/yosemite/thumburger@2x.png                      (customizableui/thumburger-yosemite@2x.png)
   skin/classic/browser/yosemite/tab-selected-end-inactive.svg          (tabbrowser/tab-selected-end-yosemite-inactive.svg)
   skin/classic/browser/yosemite/tab-selected-start-inactive.svg        (tabbrowser/tab-selected-start-yosemite-inactive.svg)
   skin/classic/browser/yosemite/tab-active-middle-inactive.png         (tabbrowser/tab-active-middle-yosemite-inactive.png)
@@ -290,8 +284,6 @@ browser.jar:
 % override chrome://browser/skin/places/toolbar.png                        chrome://browser/skin/lion/places/toolbar.png                           os=Darwin osversion>=10.7
 % override chrome://browser/skin/Toolbar.png                               chrome://browser/skin/yosemite/Toolbar.png                              os=Darwin osversion>=10.10
 % override chrome://browser/skin/Toolbar@2x.png                            chrome://browser/skin/yosemite/Toolbar@2x.png                           os=Darwin osversion>=10.10
-% override chrome://browser/skin/customizableui/thumburger.png             chrome://browser/skin/yosemite/thumburger.png                           os=Darwin osversion>=10.10
-% override chrome://browser/skin/customizableui/thumburger@2x.png          chrome://browser/skin/yosemite/thumburger@2x.png                        os=Darwin osversion>=10.10
 % override chrome://browser/skin/menuPanel.png                             chrome://browser/skin/yosemite/menuPanel.png                            os=Darwin osversion>=10.10
 % override chrome://browser/skin/menuPanel@2x.png                          chrome://browser/skin/yosemite/menuPanel@2x.png                         os=Darwin osversion>=10.10
 % override chrome://browser/skin/loop/menuPanel.png                        chrome://browser/skin/yosemite/loop/menuPanel.png                       os=Darwin osversion>=10.10
