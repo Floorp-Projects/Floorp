@@ -17,6 +17,7 @@ function testBuiltin(builtin) {
 
 testBuiltin(Function);
 testBuiltin(Object);
+testBuiltin(Boolean);
 
 `;
 
