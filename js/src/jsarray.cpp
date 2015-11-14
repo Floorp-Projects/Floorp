@@ -3060,9 +3060,9 @@ IsArrayConstructor(const Value& v)
 }
 
 static bool
-ArrayFromCallArgs(JSContext* cx, CallArgs& args)
+ArrayFromCallArgs(JSContext* cx, CallArgs& args, HandleObject proto = nullptr)
 {
-    JSObject* obj = NewCopiedArrayForCallingAllocationSite(cx, args.array(), args.length());
+    JSObject* obj = NewCopiedArrayForCallingAllocationSite(cx, args.array(), args.length(), proto);
     if (!obj)
         return false;
 
@@ -3183,8 +3183,12 @@ js::ArrayConstructor(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
+    RootedObject proto(cx);
+    if (!GetPrototypeFromCallableConstructor(cx, args, &proto))
+        return false;
+
     if (args.length() != 1 || !args[0].isNumber())
-        return ArrayFromCallArgs(cx, args);
+        return ArrayFromCallArgs(cx, args, proto);
 
     uint32_t length;
     if (args[0].isInt32()) {
@@ -3203,7 +3207,7 @@ js::ArrayConstructor(JSContext* cx, unsigned argc, Value* vp)
         }
     }
 
-    JSObject* obj = NewPartlyAllocatedArrayForCallingAllocationSite(cx, length);
+    JSObject* obj = NewPartlyAllocatedArrayForCallingAllocationSite(cx, length, proto);
     if (!obj)
         return false;
 
@@ -3490,7 +3494,9 @@ js::NewDenseCopyOnWriteArray(JSContext* cx, HandleArrayObject templateObject, gc
 }
 
 // Return a new boxed or unboxed array with the specified length and allocated
-// capacity (up to maxLength), using the specified group if possible.
+// capacity (up to maxLength), using the specified group if possible. If the
+// specified group cannot be used, ensure that the created array at least has
+// the given [[Prototype]].
 template <uint32_t maxLength>
 static inline JSObject*
 NewArrayTryUseGroup(ExclusiveContext* cx, HandleObjectGroup group, size_t length,
@@ -3505,9 +3511,10 @@ NewArrayTryUseGroup(ExclusiveContext* cx, HandleObjectGroup group, size_t length
         newKind = TenuredObject;
 
     if (group->maybeUnboxedLayout()) {
-        if (length > UnboxedArrayObject::MaximumCapacity)
-            return NewArray<maxLength>(cx, length, nullptr, newKind);
-
+        if (length > UnboxedArrayObject::MaximumCapacity) {
+            RootedObject proto(cx, group->proto().toObject());
+            return NewArray<maxLength>(cx, length, proto, newKind);
+        }
         return UnboxedArrayObject::create(cx, group, length, newKind, maxLength);
     }
 
@@ -3590,9 +3597,9 @@ js::NewFullyAllocatedArrayForCallingAllocationSite(JSContext* cx, size_t length,
 }
 
 JSObject*
-js::NewPartlyAllocatedArrayForCallingAllocationSite(JSContext* cx, size_t length)
+js::NewPartlyAllocatedArrayForCallingAllocationSite(JSContext* cx, size_t length, HandleObject proto)
 {
-    RootedObjectGroup group(cx, ObjectGroup::callingAllocationSiteGroup(cx, JSProto_Array));
+    RootedObjectGroup group(cx, ObjectGroup::callingAllocationSiteGroup(cx, JSProto_Array, proto));
     if (!group)
         return nullptr;
     return NewArrayTryUseGroup<ArrayObject::EagerAllocationMaxLength>(cx, group, length);
@@ -3652,9 +3659,10 @@ js::NewCopiedArrayTryUseGroup(ExclusiveContext* cx, HandleObjectGroup group,
 }
 
 JSObject*
-js::NewCopiedArrayForCallingAllocationSite(JSContext* cx, const Value* vp, size_t length)
+js::NewCopiedArrayForCallingAllocationSite(JSContext* cx, const Value* vp, size_t length,
+                                           HandleObject proto /* = nullptr */)
 {
-    RootedObjectGroup group(cx, ObjectGroup::callingAllocationSiteGroup(cx, JSProto_Array));
+    RootedObjectGroup group(cx, ObjectGroup::callingAllocationSiteGroup(cx, JSProto_Array, proto));
     if (!group)
         return nullptr;
     return NewCopiedArrayTryUseGroup(cx, group, vp, length);
