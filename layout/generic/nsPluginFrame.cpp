@@ -408,7 +408,8 @@ nsPluginFrame::GetWidgetConfiguration(nsTArray<nsIWidget::Configuration>* aConfi
 
   nsIWidget::Configuration* configuration = aConfigurations->AppendElement();
   configuration->mChild = mWidget;
-  configuration->mBounds = mNextConfigurationBounds;
+  configuration->mBounds =
+    LayoutDeviceIntRect::FromUnknownRect(mNextConfigurationBounds);
   configuration->mClipRegion = mNextConfigurationClipRegion;
 #if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
   if (XRE_IsContentProcess()) {

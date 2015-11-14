@@ -162,7 +162,6 @@ function dispatch(fn) {
     let id = msg.json.command_id;
 
     let req = Task.spawn(function*() {
-      let rv;
       if (typeof msg.json == "undefined" || msg.json instanceof Array) {
         return yield fn.apply(null, msg.json);
       } else {
@@ -928,20 +927,21 @@ function singleTap(id, corx, cory) {
   if (!visible) {
     throw new ElementNotVisibleError("Element is not currently visible and may not be manipulated");
   }
-  let acc = accessibility.getAccessibleObject(el, true);
-  checkVisibleAccessibility(acc, el, visible);
-  checkActionableAccessibility(acc, el);
-  if (!curContainer.frame.document.createTouch) {
-    actions.mouseEventsOnly = true;
-  }
-  let c = coordinates(el, corx, cory);
-  if (!actions.mouseEventsOnly) {
-    let touchId = actions.nextTouchId++;
-    let touch = createATouch(el, c.x, c.y, touchId);
-    emitTouchEvent('touchstart', touch);
-    emitTouchEvent('touchend', touch);
-  }
-  actions.mouseTap(el.ownerDocument, c.x, c.y);
+  return accessibility.getAccessibleObject(el, true).then(acc => {
+    checkVisibleAccessibility(acc, el, visible);
+    checkActionableAccessibility(acc, el);
+    if (!curContainer.frame.document.createTouch) {
+      actions.mouseEventsOnly = true;
+    }
+    let c = coordinates(el, corx, cory);
+    if (!actions.mouseEventsOnly) {
+      let touchId = actions.nextTouchId++;
+      let touch = createATouch(el, c.x, c.y, touchId);
+      emitTouchEvent('touchstart', touch);
+      emitTouchEvent('touchend', touch);
+    }
+    actions.mouseTap(el.ownerDocument, c.x, c.y);
+  });
 }
 
 /**
@@ -1463,16 +1463,16 @@ function clickElement(id) {
   if (!visible) {
     throw new ElementNotVisibleError("Element is not visible");
   }
-  let acc = accessibility.getAccessibleObject(el, true);
-  checkVisibleAccessibility(acc, el, visible);
-
-  if (utils.isElementEnabled(el)) {
-    checkEnabledAccessibility(acc, el, true);
-    checkActionableAccessibility(acc, el);
-    utils.synthesizeMouseAtCenter(el, {}, el.ownerDocument.defaultView);
-  } else {
-    throw new InvalidElementStateError("Element is not Enabled");
-  }
+  return accessibility.getAccessibleObject(el, true).then(acc => {
+    checkVisibleAccessibility(acc, el, visible);
+    if (utils.isElementEnabled(el)) {
+      checkEnabledAccessibility(acc, el, true);
+      checkActionableAccessibility(acc, el);
+      utils.synthesizeMouseAtCenter(el, {}, el.ownerDocument.defaultView);
+    } else {
+      throw new InvalidElementStateError("Element is not Enabled");
+    }
+  });
 }
 
 /**
@@ -1528,9 +1528,10 @@ function getElementTagName(id) {
 function isElementDisplayed(id) {
   let el = elementManager.getKnownElement(id, curContainer);
   let displayed = utils.isElementDisplayed(el);
-  checkVisibleAccessibility(
-    accessibility.getAccessibleObject(el), el, displayed);
-  return displayed;
+  return accessibility.getAccessibleObject(el).then(acc => {
+    checkVisibleAccessibility(acc, el, displayed);
+    return displayed;
+  });
 }
 
 /**
@@ -1583,9 +1584,10 @@ function getElementRect(id) {
 function isElementEnabled(id) {
   let el = elementManager.getKnownElement(id, curContainer);
   let enabled = utils.isElementEnabled(el);
-  checkEnabledAccessibility(
-    accessibility.getAccessibleObject(el), el, enabled);
-  return enabled;
+  return accessibility.getAccessibleObject(el).then(acc => {
+    checkEnabledAccessibility(acc, el, enabled);
+    return enabled;
+  });
 }
 
 /**
@@ -1596,10 +1598,11 @@ function isElementEnabled(id) {
  */
 function isElementSelected(id) {
   let el = elementManager.getKnownElement(id, curContainer);
-    let selected = utils.isElementSelected(el);
-    checkSelectedAccessibility(
-      accessibility.getAccessibleObject(el), el, selected);
-  return selected;
+  let selected = utils.isElementSelected(el);
+  return accessibility.getAccessibleObject(el).then(acc => {
+    checkSelectedAccessibility(acc, el, selected);
+    return selected;
+  });
 }
 
 /**
@@ -1608,27 +1611,28 @@ function isElementSelected(id) {
 function sendKeysToElement(msg) {
   let command_id = msg.json.command_id;
   let val = msg.json.value;
+  let el;
 
-  try {
-    let el = elementManager.getKnownElement(msg.json.id, curContainer);
-    // Element should be actionable from the accessibility standpoint to be able
-    // to send keys to it.
-    checkActionableAccessibility(
-      accessibility.getAccessibleObject(el, true), el);
-    if (el.type == "file") {
-      let p = val.join("");
-      fileInputElement = el;
-      // In e10s, we can only construct File objects in the parent process,
-      // so pass the filename to driver.js, which in turn passes them back
-      // to this frame script in receiveFiles.
-      sendSyncMessage("Marionette:getFiles",
-                      {value: p, command_id: command_id});
-    } else {
-      utils.sendKeysToElement(curContainer.frame, el, val, sendOk, sendError, command_id);
-    }
-  } catch (e) {
-    sendError(e, command_id);
-  }
+  return Promise.resolve(elementManager.getKnownElement(msg.json.id, curContainer))
+    .then(knownEl => {
+      el = knownEl;
+      // Element should be actionable from the accessibility standpoint to be able
+      // to send keys to it.
+      return accessibility.getAccessibleObject(el, true)
+    }).then(acc => {
+      checkActionableAccessibility(acc, el);
+      if (el.type == "file") {
+        let p = val.join("");
+        fileInputElement = el;
+        // In e10s, we can only construct File objects in the parent process,
+        // so pass the filename to driver.js, which in turn passes them back
+        // to this frame script in receiveFiles.
+        sendSyncMessage("Marionette:getFiles",
+                        {value: p, command_id: command_id});
+      } else {
+        utils.sendKeysToElement(curContainer.frame, el, val, sendOk, sendError, command_id);
+      }
+    }).catch(e => sendError(e, command_id));
 }
 
 /**

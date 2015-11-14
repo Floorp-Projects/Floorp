@@ -30,6 +30,7 @@
 #include "mozilla/gfx/2D.h"
 #include "nsDataHashtable.h"
 #include "mozilla/EnumeratedArray.h"
+#include "mozilla/UniquePtr.h"
 
 #ifndef XPCOM_GLUE_AVOID_NSPR
 /**
@@ -203,9 +204,9 @@ class BufferRecycleBin final {
 public:
   BufferRecycleBin();
 
-  void RecycleBuffer(uint8_t* aBuffer, uint32_t aSize);
+  void RecycleBuffer(mozilla::UniquePtr<uint8_t[]> aBuffer, uint32_t aSize);
   // Returns a recycled buffer of the right size, or allocates a new buffer.
-  uint8_t* GetBuffer(uint32_t aSize);
+  mozilla::UniquePtr<uint8_t[]> GetBuffer(uint32_t aSize);
 
 private:
   typedef mozilla::Mutex Mutex;
@@ -221,7 +222,7 @@ private:
 
   // We should probably do something to prune this list on a timer so we don't
   // eat excess memory while video is paused...
-  nsTArray<nsAutoArrayPtr<uint8_t> > mRecycledBuffers;
+  nsTArray<mozilla::UniquePtr<uint8_t[]>> mRecycledBuffers;
   // This is only valid if mRecycledBuffers is non-empty
   uint32_t mRecycledBufferSize;
 };
@@ -733,13 +734,11 @@ protected:
 
   /**
    * Return a buffer to store image data in.
-   * The default implementation returns memory that can
-   * be freed wit delete[]
    */
-  uint8_t* AllocateBuffer(uint32_t aSize);
+  mozilla::UniquePtr<uint8_t[]> AllocateBuffer(uint32_t aSize);
 
   RefPtr<BufferRecycleBin> mRecycleBin;
-  nsAutoArrayPtr<uint8_t> mBuffer;
+  mozilla::UniquePtr<uint8_t[]> mBuffer;
 };
 
 /**

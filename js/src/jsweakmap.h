@@ -392,11 +392,14 @@ extern JSObject*
 InitWeakMapClass(JSContext* cx, HandleObject obj);
 
 
-class ObjectValueMap : public WeakMap<PreBarrieredObject, RelocatableValue>
+class ObjectValueMap : public WeakMap<RelocatablePtrObject, RelocatableValue,
+                                      MovableCellHasher<RelocatablePtrObject>>
 {
   public:
     ObjectValueMap(JSContext* cx, JSObject* obj)
-      : WeakMap<PreBarrieredObject, RelocatableValue>(cx, obj) {}
+      : WeakMap<RelocatablePtrObject, RelocatableValue,
+                MovableCellHasher<RelocatablePtrObject>>(cx, obj)
+    {}
 
     virtual bool findZoneEdges();
 };
@@ -405,9 +408,7 @@ class ObjectValueMap : public WeakMap<PreBarrieredObject, RelocatableValue>
 // Generic weak map for mapping objects to other objects.
 class ObjectWeakMap
 {
-  private:
     ObjectValueMap map;
-    typedef gc::HashKeyRef<ObjectValueMap, JSObject*> StoreBufferRef;
 
   public:
     explicit ObjectWeakMap(JSContext* cx);

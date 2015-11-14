@@ -49,7 +49,7 @@ WIN32_INSTALLER_IN ?= $(_ABS_DIST)/$(PKG_INST_PATH)$(PKG_INST_BASENAME).exe
 # Allows overriding the final destination of the repackaged file
 ZIP_OUT ?= $(_ABS_DIST)/$(PACKAGE)
 
-DEFINES += \
+ACDEFINES += \
 	-DAB_CD=$(AB_CD) \
 	-DMOZ_LANGPACK_EID=$(MOZ_LANGPACK_EID) \
 	-DMOZ_APP_VERSION=$(MOZ_APP_VERSION) \

@@ -10,7 +10,8 @@
 #include "mozilla/dom/ContentChild.h"
 #include "gfxAndroidPlatform.h"
 #include "mozilla/Omnijar.h"
-#include "nsAutoPtr.h"
+#include "mozilla/UniquePtr.h"
+#include "mozilla/UniquePtrExtensions.h"
 #include "nsIInputStream.h"
 #define gfxToolkitPlatform gfxAndroidPlatform
 
@@ -1069,12 +1070,12 @@ gfxFT2FontList::AppendFacesFromOmnijarEntry(nsZipArchive* aArchive,
     uint32_t bufSize = item->RealSize();
     // We use fallible allocation here; if there's not enough RAM, we'll simply
     // ignore the bundled fonts and fall back to the device's installed fonts.
-    nsAutoArrayPtr<uint8_t> buf(new (fallible) uint8_t[bufSize]);
+    auto buf = MakeUniqueFallible<uint8_t[]>(bufSize);
     if (!buf) {
         return;
     }
 
-    nsZipCursor cursor(item, aArchive, buf, bufSize);
+    nsZipCursor cursor(item, aArchive, buf.get(), bufSize);
     uint8_t* data = cursor.Copy(&bufSize);
     NS_ASSERTION(data && bufSize == item->RealSize(),
                  "error reading bundled font");
@@ -1085,13 +1086,13 @@ gfxFT2FontList::AppendFacesFromOmnijarEntry(nsZipArchive* aArchive,
     FT_Library ftLibrary = gfxAndroidPlatform::GetPlatform()->GetFTLibrary();
 
     FT_Face dummy;
-    if (FT_Err_Ok != FT_New_Memory_Face(ftLibrary, buf, bufSize, 0, &dummy)) {
+    if (FT_Err_Ok != FT_New_Memory_Face(ftLibrary, buf.get(), bufSize, 0, &dummy)) {
         return;
     }
 
     for (FT_Long i = 0; i < dummy->num_faces; i++) {
         FT_Face face;
-        if (FT_Err_Ok != FT_New_Memory_Face(ftLibrary, buf, bufSize, i, &face)) {
+        if (FT_Err_Ok != FT_New_Memory_Face(ftLibrary, buf.get(), bufSize, i, &face)) {
             continue;
         }
         AddFaceToList(aEntryName, i, kStandard, FT2FontFamily::kVisible,

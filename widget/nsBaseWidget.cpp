@@ -1239,7 +1239,7 @@ NS_METHOD nsBaseWidget::SetWindowClass(const nsAString& xulWinType)
 
 NS_METHOD nsBaseWidget::MoveClient(double aX, double aY)
 {
-  nsIntPoint clientOffset(GetClientOffset());
+  LayoutDeviceIntPoint clientOffset(GetClientOffset());
 
   // GetClientOffset returns device pixels; scale back to display pixels
   // if that's what this widget uses for the Move/Resize APIs
@@ -1290,7 +1290,7 @@ NS_METHOD nsBaseWidget::ResizeClient(double aX,
   aWidth = mBounds.width * scale + (aWidth - clientBounds.width * scale);
   aHeight = mBounds.height * scale + (aHeight - clientBounds.height * scale);
 
-  nsIntPoint clientOffset(GetClientOffset());
+  LayoutDeviceIntPoint clientOffset(GetClientOffset());
   aX -= clientOffset.x * scale;
   aY -= clientOffset.y * scale;
 
@@ -1332,27 +1332,28 @@ NS_METHOD nsBaseWidget::GetScreenBoundsUntyped(nsIntRect &aRect)
   return GetBoundsUntyped(aRect);
 }
 
-NS_METHOD nsBaseWidget::GetRestoredBoundsUntyped(nsIntRect &aRect)
+NS_METHOD nsBaseWidget::GetRestoredBounds(LayoutDeviceIntRect &aRect)
 {
   if (SizeMode() != nsSizeMode_Normal) {
     return NS_ERROR_FAILURE;
   }
-  return GetScreenBoundsUntyped(aRect);
+  return GetScreenBounds(aRect);
 }
 
-nsIntPoint nsBaseWidget::GetClientOffset()
+nsIntPoint
+nsBaseWidget::GetClientOffsetUntyped()
 {
   return nsIntPoint(0, 0);
 }
 
 NS_IMETHODIMP
-nsBaseWidget::GetNonClientMargins(nsIntMargin &margins)
+nsBaseWidget::GetNonClientMargins(LayoutDeviceIntMargin &margins)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-nsBaseWidget::SetNonClientMargins(nsIntMargin &margins)
+nsBaseWidget::SetNonClientMargins(LayoutDeviceIntMargin &margins)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }

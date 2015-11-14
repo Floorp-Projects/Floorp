@@ -38,6 +38,16 @@ class TestFileRegistry(MatchTestTemplate, unittest.TestCase):
             self.assertFalse(self.registry.contains(pattern))
         self.assertEqual(self.registry.match(pattern), result)
 
+    def test_partial_paths(self):
+        cases = {
+            'foo/bar/baz/zot': ['foo/bar/baz', 'foo/bar', 'foo'],
+            'foo/bar': ['foo'],
+            'bar': [],
+        }
+        reg = FileRegistry()
+        for path, parts in cases.iteritems():
+            self.assertEqual(reg._partial_paths(path), parts)
+
     def test_file_registry(self):
         self.registry = FileRegistry()
         self.registry.add('foo', GeneratedFile('foo'))

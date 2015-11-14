@@ -436,6 +436,36 @@ ServiceWorkerRegistrationInfo::GetActiveWorker(nsIServiceWorkerInfo **aResult)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+ServiceWorkerRegistrationInfo::AddListener(
+                            nsIServiceWorkerRegistrationInfoListener *aListener)
+{
+  AssertIsOnMainThread();
+
+  if (!aListener || mListeners.Contains(aListener)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  mListeners.AppendElement(aListener);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+ServiceWorkerRegistrationInfo::RemoveListener(
+                            nsIServiceWorkerRegistrationInfoListener *aListener)
+{
+  AssertIsOnMainThread();
+
+  if (!aListener || !mListeners.Contains(aListener)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  mListeners.RemoveElement(aListener);
+
+  return NS_OK;
+}
+
 already_AddRefed<ServiceWorkerInfo>
 ServiceWorkerRegistrationInfo::GetServiceWorkerInfoById(uint64_t aId)
 {
@@ -970,6 +1000,7 @@ public:
       }
 
       mRegistration->mScriptSpec = mScriptSpec;
+      mRegistration->NotifyListenersOnChange();
       swm->StoreRegistration(mPrincipal, mRegistration);
     } else {
       MOZ_ASSERT(mJobType == UPDATE_JOB);
@@ -1162,6 +1193,7 @@ public:
 
     mRegistration->mInstallingWorker = mUpdateAndInstallInfo.forget();
     mRegistration->mInstallingWorker->UpdateState(ServiceWorkerState::Installing);
+    mRegistration->NotifyListenersOnChange();
 
     Succeed();
     // The job should NOT call fail from this point on.
@@ -1329,6 +1361,7 @@ private:
 
     mRegistration->mWaitingWorker = mRegistration->mInstallingWorker.forget();
     mRegistration->mWaitingWorker->UpdateState(ServiceWorkerState::Installed);
+    mRegistration->NotifyListenersOnChange();
     swm->InvalidateServiceWorkerRegistrationWorker(mRegistration,
                                                    WhichServiceWorker::INSTALLING_WORKER | WhichServiceWorker::WAITING_WORKER);
 
@@ -1648,6 +1681,7 @@ ServiceWorkerRegistrationInfo::Activate()
   mActiveWorker = activatingWorker.forget();
   mWaitingWorker = nullptr;
   mActiveWorker->UpdateState(ServiceWorkerState::Activating);
+  NotifyListenersOnChange();
 
   // FIXME(nsm): Unlink appcache if there is one.
 
@@ -2460,6 +2494,15 @@ ServiceWorkerRegistrationInfo::IsLastUpdateCheckTimeOverOneDay() const
     return true;
   }
   return false;
+}
+
+void
+ServiceWorkerRegistrationInfo::NotifyListenersOnChange()
+{
+  nsTArray<nsCOMPtr<nsIServiceWorkerRegistrationInfoListener>> listeners(mListeners);
+  for (size_t index = 0; index < listeners.Length(); ++index) {
+    listeners[index]->OnChange();
+  }
 }
 
 void
@@ -3883,7 +3926,7 @@ ServiceWorkerManager::AddListener(nsIServiceWorkerManagerListener* aListener)
 {
   AssertIsOnMainThread();
 
-  if (mListeners.Contains(aListener)) {
+  if (!aListener || mListeners.Contains(aListener)) {
     return NS_ERROR_INVALID_ARG;
   }
 
@@ -3897,7 +3940,7 @@ ServiceWorkerManager::RemoveListener(nsIServiceWorkerManagerListener* aListener)
 {
   AssertIsOnMainThread();
 
-  if (!mListeners.Contains(aListener)) {
+  if (!aListener || !mListeners.Contains(aListener)) {
     return NS_ERROR_INVALID_ARG;
   }
 

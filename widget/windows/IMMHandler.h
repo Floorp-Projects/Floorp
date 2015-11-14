@@ -267,9 +267,9 @@ protected:
    *  @param aOutRect         The converted cursor rect.
    */
   void ResolveIMECaretPos(nsIWidget* aReferenceWidget,
-                          nsIntRect& aCursorRect,
+                          mozilla::LayoutDeviceIntRect& aCursorRect,
                           nsIWidget* aNewOriginWidget,
-                          nsIntRect& aOutRect);
+                          mozilla::LayoutDeviceIntRect& aOutRect);
 
   bool ConvertToANSIString(const nsAFlatString& aStr,
                              UINT aCodePage,
@@ -299,7 +299,7 @@ protected:
   bool GetCharacterRectOfSelectedTextAt(
          nsWindow* aWindow,
          uint32_t aOffset,
-         nsIntRect& aCharRect,
+         mozilla::LayoutDeviceIntRect& aCharRect,
          mozilla::WritingMode* aWritingMode = nullptr);
   /**
    * GetCaretRect() returns caret rect at current selection start.
@@ -313,7 +313,7 @@ protected:
    *                        Otherwise, false.
    */
   bool GetCaretRect(nsWindow* aWindow,
-                    nsIntRect& aCaretRect,
+                    mozilla::LayoutDeviceIntRect& aCaretRect,
                     mozilla::WritingMode* aWritingMode = nullptr);
   void GetCompositionString(const IMEContext& aContext,
                             DWORD aIndex,

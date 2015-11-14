@@ -2659,23 +2659,6 @@ nsXPCComponents_Utils::UnlinkGhostWindows()
 }
 
 NS_IMETHODIMP
-nsXPCComponents_Utils::NondeterministicGetWeakMapKeys(HandleValue aMap,
-                                                      JSContext* aCx,
-                                                      MutableHandleValue aKeys)
-{
-    if (!aMap.isObject()) {
-        aKeys.setUndefined();
-        return NS_OK;
-    }
-    RootedObject objRet(aCx);
-    RootedObject mapObj(aCx, &aMap.toObject());
-    if (!JS_NondeterministicGetWeakMapKeys(aCx, mapObj, &objRet))
-        return NS_ERROR_OUT_OF_MEMORY;
-     aKeys.set(objRet ? ObjectValue(*objRet) : UndefinedValue());
-    return NS_OK;
-}
-
-NS_IMETHODIMP
 nsXPCComponents_Utils::GetJSTestingFunctions(JSContext* cx,
                                              MutableHandleValue retval)
 {

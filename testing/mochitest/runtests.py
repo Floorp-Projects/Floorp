@@ -905,6 +905,8 @@ class MochitestUtilsMixin(object):
             if options.testingModulesDir is not None:
                 manifestFile.write("resource testing-common file:///%s\n" %
                                    options.testingModulesDir)
+        if options.store_chrome_manifest:
+            shutil.copyfile(manifest, options.store_chrome_manifest)
         return manifest
 
     def addChromeToProfile(self, options):

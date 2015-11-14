@@ -5,6 +5,12 @@
 var {utils: Cu} = Components;
 
 Cu.import("chrome://marionette/content/error.js");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+
+XPCOMUtils.defineLazyModuleGetter(this, 'setInterval',
+  'resource://gre/modules/Timer.jsm');
+XPCOMUtils.defineLazyModuleGetter(this, 'clearInterval',
+  'resource://gre/modules/Timer.jsm');
 
 /**
  * The ElementManager manages DOM references and interactions with elements.
@@ -64,6 +70,22 @@ this.Accessibility = function Accessibility() {
 };
 
 Accessibility.prototype = {
+
+  /**
+   * Number of attempts to get an accessible object for an element. We attempt
+   * more than once because accessible tree can be out of sync with the DOM tree
+   * for a short period of time.
+   * @type {Number}
+   */
+  GET_ACCESSIBLE_ATTEMPTS: 100,
+
+  /**
+   * An interval between attempts to retrieve an accessible object for an
+   * element.
+   * @type {Number} ms
+   */
+  GET_ACCESSIBLE_ATTEMPT_INTERVAL: 10,
+
   /**
    * Accessible object roles that support some action
    * @type Object
@@ -100,12 +122,28 @@ Accessibility.prototype = {
    * @return nsIAccessible object for the element
    */
   getAccessibleObject(element, mustHaveAccessible = false) {
-    let acc = this.accessibleRetrieval.getAccessibleFor(element);
-    if (!acc && mustHaveAccessible) {
-      this.handleErrorMessage('Element does not have an accessible object',
-        element);
-    }
-    return acc;
+    return new Promise((resolve, reject) => {
+      let acc = this.accessibleRetrieval.getAccessibleFor(element);
+
+      if (acc || !mustHaveAccessible) {
+        // If accessible object is found, return it. If it is not required,
+        // also resolve.
+        resolve(acc);
+      } else {
+        // If we require an accessible object, we need to poll for it because
+        // accessible tree might be out of sync with DOM tree for a short time.
+        let attempts = this.GET_ACCESSIBLE_ATTEMPTS;
+        let intervalId = setInterval(() => {
+          let acc = this.accessibleRetrieval.getAccessibleFor(element);
+          if (acc || --attempts <= 0) {
+            clearInterval(intervalId);
+            if (acc) { resolve(acc); }
+            else { reject(); }
+          }
+        }, this.GET_ACCESSIBLE_ATTEMPT_INTERVAL);
+      }
+    }).catch(() => this.handleErrorMessage(
+      'Element does not have an accessible object', element));
   },
 
   /**
