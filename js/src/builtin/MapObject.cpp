@@ -221,7 +221,7 @@ MapIteratorObject::next(JSContext* cx, Handle<MapIteratorObject*> mapIterator,
 
 const Class MapObject::class_ = {
     "Map",
-    JSCLASS_HAS_PRIVATE | 
+    JSCLASS_HAS_PRIVATE |
     JSCLASS_HAS_CACHED_PROTO(JSProto_Map),
     nullptr, // addProperty
     nullptr, // delProperty
@@ -412,21 +412,20 @@ MapObject::set(JSContext* cx, HandleObject obj, HandleValue k, HandleValue v)
 }
 
 MapObject*
-MapObject::create(JSContext* cx)
+MapObject::create(JSContext* cx, HandleObject proto /* = nullptr */)
 {
-    Rooted<MapObject*> obj(cx, NewBuiltinClassInstance<MapObject>(cx));
-    if (!obj)
-        return nullptr;
-
-    ValueMap* map = cx->new_<ValueMap>(cx->runtime());
+    auto map = cx->make_unique<ValueMap>(cx->runtime());
     if (!map || !map->init()) {
-        js_delete(map);
         ReportOutOfMemory(cx);
         return nullptr;
     }
 
-    obj->setPrivate(map);
-    return obj;
+    MapObject* mapObj = NewObjectWithClassProto<MapObject>(cx,  proto);
+    if (!mapObj)
+        return nullptr;
+
+    mapObj->setPrivate(map.release());
+    return mapObj;
 }
 
 void
@@ -444,7 +443,12 @@ MapObject::construct(JSContext* cx, unsigned argc, Value* vp)
     if (!ThrowIfNotConstructing(cx, args, "Map"))
         return false;
 
-    Rooted<MapObject*> obj(cx, MapObject::create(cx));
+    RootedObject proto(cx);
+    RootedObject newTarget(cx, &args.newTarget().toObject());
+    if (!GetPrototypeFromConstructor(cx, newTarget, &proto))
+        return false;
+
+    Rooted<MapObject*> obj(cx, MapObject::create(cx, proto));
     if (!obj)
         return false;
 
