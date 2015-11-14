@@ -53,13 +53,6 @@ js::RegExpAlloc(ExclusiveContext* cx)
     return regexp;
 }
 
-RegExpObject*
-js::InitializeRegExp(ExclusiveContext* cx, Handle<RegExpObject*> regexp, HandleAtom source,
-                     RegExpFlag flags)
-{
-    return regexp->init(cx, source, flags) ? regexp : nullptr;
-}
-
 /* MatchPairs */
 
 bool
@@ -155,6 +148,13 @@ RegExpObject::trace(JSTracer* trc, JSObject* obj)
     }
 }
 
+/* static */ bool
+RegExpObject::initFromAtom(ExclusiveContext* cx, Handle<RegExpObject*> regexp, HandleAtom source,
+                           RegExpFlag flags)
+{
+    return regexp->init(cx, source, flags);
+}
+
 const Class RegExpObject::class_ = {
     js_RegExp_str,
     JSCLASS_HAS_PRIVATE |
@@ -224,7 +224,10 @@ RegExpObject::createNoStatics(ExclusiveContext* cx, HandleAtom source, RegExpFla
     if (!regexp)
         return nullptr;
 
-    return InitializeRegExp(cx, regexp, source, flags);
+    if (!RegExpObject::initFromAtom(cx, regexp, source, flags))
+        return nullptr;
+
+    return regexp;
 }
 
 bool
@@ -894,7 +897,10 @@ js::CloneRegExpObject(JSContext* cx, JSObject* obj_)
         if (!clone)
             return nullptr;
 
-        return InitializeRegExp(cx, clone, source, RegExpFlag(origFlags | staticsFlags));
+        if (!RegExpObject::initFromAtom(cx, clone, source, RegExpFlag(origFlags | staticsFlags)))
+            return nullptr;
+
+        return clone;
     }
 
     // Otherwise, the clone can use |regexp|'s RegExpShared.
@@ -911,7 +917,7 @@ js::CloneRegExpObject(JSContext* cx, JSObject* obj_)
     if (!regex->getShared(cx, &g))
         return nullptr;
 
-    if (!InitializeRegExp(cx, clone, source, g->getFlags()))
+    if (!RegExpObject::initFromAtom(cx, clone, source, g->getFlags()))
         return nullptr;
 
     clone->setShared(*g.re());
