@@ -92,7 +92,7 @@ class MapObject : public NativeObject {
                                             JS::AutoValueVector* entries);
     static bool entries(JSContext* cx, unsigned argc, Value* vp);
     static bool has(JSContext* cx, unsigned argc, Value* vp);
-    static MapObject* create(JSContext* cx);
+    static MapObject* create(JSContext* cx, HandleObject proto = nullptr);
 
     // Publicly exposed Map calls for JSAPI access (webidl maplike/setlike
     // interfaces, etc.)

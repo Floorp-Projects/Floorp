@@ -32,6 +32,7 @@ testBuiltin(Date, 5, 10);
 testBuiltin(RegExp);
 testBuiltin(RegExp, /Regexp Argument/);
 testBuiltin(RegExp, "String Argument");
+testBuiltin(Map);
 
 `;
 
