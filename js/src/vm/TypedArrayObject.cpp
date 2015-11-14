@@ -1018,7 +1018,7 @@ DataViewNewObjectKind(JSContext* cx, uint32_t byteLength, JSObject* proto)
     return GenericObject;
 }
 
-inline DataViewObject*
+DataViewObject*
 DataViewObject::create(JSContext* cx, uint32_t byteOffset, uint32_t byteLength,
                        Handle<ArrayBufferObject*> arrayBuffer, JSObject* protoArg)
 {
@@ -1031,24 +1031,21 @@ DataViewObject::create(JSContext* cx, uint32_t byteOffset, uint32_t byteLength,
     RootedObject obj(cx);
 
     NewObjectKind newKind = DataViewNewObjectKind(cx, byteLength, proto);
-    obj = NewBuiltinClassInstance(cx, &class_, newKind);
+    obj = NewObjectWithClassProto(cx, &class_, proto, newKind);
     if (!obj)
         return nullptr;
 
-    if (proto) {
-        ObjectGroup* group = ObjectGroup::defaultNewGroup(cx, &class_, TaggedProto(proto));
-        if (!group)
-            return nullptr;
-        obj->setGroup(group);
-    } else if (byteLength >= TypedArrayObject::SINGLETON_BYTE_LENGTH) {
-        MOZ_ASSERT(obj->isSingleton());
-    } else {
-        jsbytecode* pc;
-        RootedScript script(cx, cx->currentScript(&pc));
-        if (script && !ObjectGroup::setAllocationSiteObjectGroup(cx, script, pc, obj,
-                                                                 newKind == SingletonObject))
-        {
-            return nullptr;
+    if (!proto) {
+        if (byteLength >= TypedArrayObject::SINGLETON_BYTE_LENGTH) {
+            MOZ_ASSERT(obj->isSingleton());
+        } else {
+            jsbytecode* pc;
+            RootedScript script(cx, cx->currentScript(&pc));
+            if (script && !ObjectGroup::setAllocationSiteObjectGroup(cx, script, pc, obj,
+                                                                     newKind == SingletonObject))
+            {
+                return nullptr;
+            }
         }
     }
 
@@ -1079,7 +1076,8 @@ DataViewObject::create(JSContext* cx, uint32_t byteOffset, uint32_t byteLength,
 }
 
 bool
-DataViewObject::construct(JSContext* cx, JSObject* bufobj, const CallArgs& args, HandleObject proto)
+DataViewObject::getAndCheckConstructorArgs(JSContext* cx, JSObject* bufobj, const CallArgs& args,
+                                           uint32_t* byteOffsetPtr, uint32_t* byteLengthPtr)
 {
     if (!IsArrayBuffer(bufobj)) {
         JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_NOT_EXPECTED_TYPE,
@@ -1095,29 +1093,40 @@ DataViewObject::construct(JSContext* cx, JSObject* bufobj, const CallArgs& args,
         if (!ToUint32(cx, args[1], &byteOffset))
             return false;
         if (byteOffset > INT32_MAX) {
-            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
-                                 JSMSG_ARG_INDEX_OUT_OF_RANGE, "1");
+            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_ARG_INDEX_OUT_OF_RANGE, "1");
+            return false;
+        }
+    }
+
+    if (buffer->isNeutered()) {
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_TYPED_ARRAY_DETACHED);
+        return false;
+    }
+
+    if (args.length() > 1) {
+        if (byteOffset > byteLength) {
+            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_ARG_INDEX_OUT_OF_RANGE, "1");
             return false;
         }
 
-        if (!args.get(2).isUndefined()) {
+        if (args.get(2).isUndefined()) {
+            byteLength -= byteOffset;
+        } else {
             if (!ToUint32(cx, args[2], &byteLength))
                 return false;
             if (byteLength > INT32_MAX) {
                 JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
-                                     JSMSG_ARG_INDEX_OUT_OF_RANGE, "2");
+                                        JSMSG_ARG_INDEX_OUT_OF_RANGE, "2");
                 return false;
             }
-        } else {
-            uint32_t bufferLength = buffer->byteLength();
 
-            if (byteOffset > bufferLength) {
+            MOZ_ASSERT(byteOffset + byteLength >= byteOffset,
+                       "can't overflow: both numbers are less than INT32_MAX");
+            if (byteOffset + byteLength > buffer->byteLength()) {
                 JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
                                      JSMSG_ARG_INDEX_OUT_OF_RANGE, "1");
                 return false;
             }
-
-            byteLength = bufferLength - byteOffset;
         }
     }
 
@@ -1125,15 +1134,97 @@ DataViewObject::construct(JSContext* cx, JSObject* bufobj, const CallArgs& args,
     MOZ_ASSERT(byteOffset <= INT32_MAX);
     MOZ_ASSERT(byteLength <= INT32_MAX);
 
-    if (byteOffset + byteLength > buffer->byteLength()) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_ARG_INDEX_OUT_OF_RANGE, "1");
-        return false;
-    }
 
+    *byteOffsetPtr = byteOffset;
+    *byteLengthPtr = byteLength;
+
+    return true;
+}
+
+bool
+DataViewObject::constructSameCompartment(JSContext* cx, HandleObject bufobj, const CallArgs& args)
+{
+    MOZ_ASSERT(args.isConstructing());
+    assertSameCompartment(cx, bufobj);
+
+    uint32_t byteOffset, byteLength;
+    if (!getAndCheckConstructorArgs(cx, bufobj, args, &byteOffset, &byteLength))
+        return false;
+
+    RootedObject proto(cx);
+    RootedObject newTarget(cx, &args.newTarget().toObject());
+    if (!GetPrototypeFromConstructor(cx, newTarget, &proto))
+        return false;
+
+    Rooted<ArrayBufferObject*> buffer(cx, &AsArrayBuffer(bufobj));
     JSObject* obj = DataViewObject::create(cx, byteOffset, byteLength, buffer, proto);
     if (!obj)
         return false;
     args.rval().setObject(*obj);
+    return true;
+}
+
+// Create a DataView object in another compartment.
+//
+// ES6 supports creating a DataView in global A (using global A's DataView
+// constructor) backed by an ArrayBuffer created in global B.
+//
+// Our DataViewObject implementation doesn't support a DataView in
+// compartment A backed by an ArrayBuffer in compartment B. So in this case,
+// we create the DataView in B (!) and return a cross-compartment wrapper.
+//
+// Extra twist: the spec says the new DataView's [[Prototype]] must be
+// A's DataView.prototype. So even though we're creating the DataView in B,
+// its [[Prototype]] must be (a cross-compartment wrapper for) the
+// DataView.prototype in A.
+//
+// As if this were not confusing enough, the way we actually do this is also
+// tricky. We call compartment A's createDataViewForThis method, passing it
+// bufobj as `this`. That calls ArrayBufferObject::createDataViewForThis(),
+// which uses CallNonGenericMethod to switch to compartment B so that
+// the new DataView is created there.
+bool
+DataViewObject::constructWrapped(JSContext* cx, HandleObject bufobj, const CallArgs& args)
+{
+    MOZ_ASSERT(args.isConstructing());
+    MOZ_ASSERT(bufobj->is<WrapperObject>());
+
+    JSObject* unwrapped = CheckedUnwrap(bufobj);
+    if (!unwrapped) {
+        JS_ReportError(cx, "Permission denied to access object");
+        return false;
+    }
+
+    // NB: This entails the IsArrayBuffer check
+    uint32_t byteOffset, byteLength;
+    if (!getAndCheckConstructorArgs(cx, unwrapped, args, &byteOffset, &byteLength))
+        return false;
+
+    // Make sure to get the [[Prototype]] for the created view from this
+    // compartment.
+    RootedObject proto(cx);
+    RootedObject newTarget(cx, &args.newTarget().toObject());
+    if (!GetPrototypeFromConstructor(cx, newTarget, &proto))
+        return false;
+
+    Rooted<GlobalObject*> global(cx, cx->compartment()->maybeGlobal());
+    if (!proto) {
+        proto = global->getOrCreateDataViewPrototype(cx);
+        if (!proto)
+            return false;
+    }
+
+    InvokeArgs args2(cx);
+    if (!args2.init(3))
+        return false;
+    args2.setCallee(global->createDataViewForThis());
+    args2.setThis(ObjectValue(*bufobj));
+    args2[0].set(PrivateUint32Value(byteOffset));
+    args2[1].set(PrivateUint32Value(byteLength));
+    args2[2].setObject(*proto);
+    if (!Invoke(cx, args2))
+        return false;
+    args.rval().set(args2.rval());
     return true;
 }
 
@@ -1149,26 +1240,9 @@ DataViewObject::class_constructor(JSContext* cx, unsigned argc, Value* vp)
     if (!GetFirstArgumentAsObject(cx, args, "DataView constructor", &bufobj))
         return false;
 
-    if (bufobj->is<WrapperObject>() && IsArrayBuffer(UncheckedUnwrap(bufobj))) {
-        Rooted<GlobalObject*> global(cx, cx->compartment()->maybeGlobal());
-        Rooted<JSObject*> proto(cx, global->getOrCreateDataViewPrototype(cx));
-        if (!proto)
-            return false;
-
-        InvokeArgs args2(cx);
-        if (!args2.init(args.length() + 1))
-            return false;
-        args2.setCallee(global->createDataViewForThis());
-        args2.setThis(ObjectValue(*bufobj));
-        PodCopy(args2.array(), args.array(), args.length());
-        args2[args.length()].setObject(*proto);
-        if (!Invoke(cx, args2))
-            return false;
-        args.rval().set(args2.rval());
-        return true;
-    }
-
-    return construct(cx, bufobj, args, nullptr);
+    if (bufobj->is<WrapperObject>())
+        return constructWrapped(cx, bufobj, args);
+    return constructSameCompartment(cx, bufobj, args);
 }
 
 template <typename NativeType>
@@ -1275,6 +1349,11 @@ DataViewObject::read(JSContext* cx, Handle<DataViewObject*> obj,
 
     bool fromLittleEndian = args.length() >= 2 && ToBoolean(args[1]);
 
+    if (obj->arrayBuffer().isNeutered()) {
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_TYPED_ARRAY_DETACHED);
+        return false;
+    }
+
     uint8_t* data = DataViewObject::getDataPointer<NativeType>(cx, obj, offset);
     if (!data)
         return false;
@@ -1335,6 +1414,11 @@ DataViewObject::write(JSContext* cx, Handle<DataViewObject*> obj,
         return false;
 
     bool toLittleEndian = args.length() >= 3 && ToBoolean(args[2]);
+
+    if (obj->arrayBuffer().isNeutered()) {
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_TYPED_ARRAY_DETACHED);
+        return false;
+    }
 
     uint8_t* data = DataViewObject::getDataPointer<NativeType>(cx, obj, offset);
     if (!data)
