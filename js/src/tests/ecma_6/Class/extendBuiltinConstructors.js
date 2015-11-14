@@ -25,6 +25,7 @@ testBuiltin(ReferenceError);
 testBuiltin(SyntaxError);
 testBuiltin(TypeError);
 testBuiltin(URIError);
+testBuiltin(Number);
 
 `;
 
