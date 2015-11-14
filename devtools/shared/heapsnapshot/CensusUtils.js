@@ -182,6 +182,10 @@ function DiffVisitor(otherCensus) {
   // The other census we are comparing against.
   this._otherCensus = otherCensus;
 
+  // The total bytes and count of the basis census we are traversing.
+  this._totalBytes = 0;
+  this._totalCount = 0;
+
   // Stack maintaining the current corresponding sub-report for the other
   // census we are comparing against.
   this._otherCensusStack = [];
@@ -280,6 +284,13 @@ DiffVisitor.prototype.count = function (breakdown, report, edge) {
   const other = this._otherCensusStack[this._otherCensusStack.length - 1];
   const results = this._resultsStack[this._resultsStack.length - 1];
 
+  if (breakdown.count) {
+    this._totalCount += report.count;
+  }
+  if (breakdown.bytes) {
+    this._totalBytes += report.bytes;
+  }
+
   if (other) {
     if (breakdown.count) {
       results.count = other.count - report.count;
@@ -297,6 +308,9 @@ DiffVisitor.prototype.count = function (breakdown, report, edge) {
   }
 };
 
+const basisTotalBytes = exports.basisTotalBytes = Symbol("basisTotalBytes");
+const basisTotalCount = exports.basisTotalCount = Symbol("basisTotalCount");
+
 /**
  * Get the resulting report of the difference between the traversed census
  * report and the other census report.
@@ -312,6 +326,9 @@ DiffVisitor.prototype.results = function () {
   if (this._resultsStack.length) {
     throw new Error("Attempt to get results while still computing diff!");
   }
+
+  this._results[basisTotalBytes] = this._totalBytes;
+  this._results[basisTotalCount] = this._totalCount;
 
   return this._results;
 };
@@ -331,8 +348,11 @@ DiffVisitor.prototype.results = function () {
  *        The second census report.
  *
  * @returns {Object}
- *          A delta report mirroring the structure of the two census reports
- *          (as specified by the given breakdown).
+ *          A delta report mirroring the structure of the two census reports (as
+ *          specified by the given breakdown). Has two additional properties:
+ *            - {Number} basisTotalBytes: the total number of bytes in the start
+ *                                        census.
+ *            - {Number} basisTotalCount: the total count in the start census.
  */
 function diff(breakdown, startCensus, endCensus) {
   const visitor = new DiffVisitor(endCensus);

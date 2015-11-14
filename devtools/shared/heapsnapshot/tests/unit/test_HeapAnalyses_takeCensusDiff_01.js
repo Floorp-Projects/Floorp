@@ -42,6 +42,11 @@ add_task(function* () {
                                                     { breakdown: BREAKDOWN },
                                                     { asTreeNode: true });
 
+  // Have to manually set these because symbol properties aren't structured
+  // cloned.
+  delta[CensusUtils.basisTotalBytes] = deltaTreeNode.totalBytes;
+  delta[CensusUtils.basisTotalCount] = deltaTreeNode.totalCount;
+
   compareCensusViewData(BREAKDOWN, delta, deltaTreeNode,
     "Returning delta-census as a tree node represents same data as the report");
 

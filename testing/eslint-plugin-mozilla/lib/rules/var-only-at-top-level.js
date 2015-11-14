@@ -25,7 +25,7 @@ module.exports = function(context) {
         var ancestors = context.getAncestors();
         var parent = ancestors.pop();
 
-        if (parent.type === "Program") {
+        if (helpers.getIsGlobalScope(context)) {
           return;
         }
 

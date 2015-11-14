@@ -46,7 +46,6 @@ DevToolsModules(
     'event-parsers.js',
     'indentation.js',
     'Loader.jsm',
-    'output-parser.js',
     'Parser.jsm',
     'path.js',
     'system.js',
