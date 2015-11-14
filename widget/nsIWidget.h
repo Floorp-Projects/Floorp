@@ -843,19 +843,10 @@ class nsIWidget : public nsISupports {
      * This method will always succeed if the current size mode is
      * nsSizeMode_Normal.
      *
-     * The untyped version exists temporarily to ease conversion to typed
-     * coordinates.
-     *
      * @param aRect   On return it holds the  x, y, width and height of
      *                this widget.
      */
-    NS_IMETHOD GetRestoredBounds(mozilla::LayoutDeviceIntRect &aRect) {
-      nsIntRect tmp;
-      nsresult rv = GetRestoredBoundsUntyped(tmp);
-      aRect = mozilla::LayoutDeviceIntRect::FromUnknownRect(tmp);
-      return rv;
-    }
-    NS_IMETHOD GetRestoredBoundsUntyped(nsIntRect &aRect) = 0;
+    NS_IMETHOD GetRestoredBounds(mozilla::LayoutDeviceIntRect &aRect) = 0;
 
     /**
      * Get this widget's client area bounds, if the window has a 3D border
@@ -879,9 +870,8 @@ class nsIWidget : public nsISupports {
 
     /**
      * Get the non-client area dimensions of the window.
-     * 
      */
-    NS_IMETHOD GetNonClientMargins(nsIntMargin &margins) = 0;
+    NS_IMETHOD GetNonClientMargins(mozilla::LayoutDeviceIntMargin &margins) = 0;
 
     /**
      * Sets the non-client area dimensions of the window. Pass -1 to restore
@@ -895,16 +885,22 @@ class nsIWidget : public nsISupports {
      *  dimensions between zero and size < system default.
      *
      */
-    NS_IMETHOD SetNonClientMargins(nsIntMargin &margins) = 0;
+    NS_IMETHOD SetNonClientMargins(mozilla::LayoutDeviceIntMargin &margins) = 0;
 
     /**
      * Get the client offset from the window origin.
      *
+     * The untyped version exists temporarily to ease conversion to typed
+     * coordinates.
+     *
      * @return the x and y of the offset.
      *
      */
-    virtual nsIntPoint GetClientOffset() = 0;
-
+    virtual mozilla::LayoutDeviceIntPoint GetClientOffset() {
+      nsIntPoint tmp = GetClientOffsetUntyped();
+      return mozilla::LayoutDeviceIntPoint::FromUnknownPoint(tmp);
+    }
+    virtual nsIntPoint GetClientOffsetUntyped() = 0;
 
     /**
      * Equivalent to GetClientBounds but only returns the size.
@@ -1008,7 +1004,7 @@ class nsIWidget : public nsISupports {
         nsCOMPtr<nsIWidget> mChild;
         uintptr_t mWindowID; // e10s specific, the unique plugin port id
         bool mVisible; // e10s specific, widget visibility
-        nsIntRect mBounds;
+        mozilla::LayoutDeviceIntRect mBounds;
         nsTArray<nsIntRect> mClipRegion;
     };
 
@@ -1366,16 +1362,11 @@ class nsIWidget : public nsISupports {
     NS_IMETHOD SetIcon(const nsAString& anIconSpec) = 0;
 
     /**
-     * Return this widget's origin in screen coordinates. The untyped version
-     * exists temporarily to ease conversion to typed coordinates.
+     * Return this widget's origin in screen coordinates.
      *
      * @return screen coordinates stored in the x,y members
      */
-
     virtual mozilla::LayoutDeviceIntPoint WidgetToScreenOffset() = 0;
-    virtual nsIntPoint WidgetToScreenOffsetUntyped() {
-      return WidgetToScreenOffset().ToUnknownPoint();
-    }
 
     /**
      * Given the specified client size, return the corresponding window size,
@@ -1860,8 +1851,8 @@ public:
     /*
      * Call this method when a dialog is opened which has a default button.
      * The button's rectangle should be supplied in aButtonRect.
-     */ 
-    NS_IMETHOD OnDefaultButtonLoaded(const nsIntRect &aButtonRect) = 0;
+     */
+    NS_IMETHOD OnDefaultButtonLoaded(const mozilla::LayoutDeviceIntRect& aButtonRect) = 0;
 
     /**
      * Compute the overridden system mouse scroll speed on the root content of

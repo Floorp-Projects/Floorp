@@ -35,8 +35,8 @@ process_py := $(topsrcdir)/python/mozbuild/mozbuild/action/xpidl-process.py
 %.xpt:
 	@echo "$(@F)"
 	$(PYTHON_PATH) $(PLY_INCLUDE) -I$(IDL_PARSER_DIR) -I$(IDL_PARSER_CACHE_DIR) \
-		$(process_py) --cache-dir $(IDL_PARSER_CACHE_DIR) $(dist_idl_dir) \
-		$(dist_include_dir) $(@D) $(idl_deps_dir) $(libxul_sdk_includes) \
+		$(process_py) --cache-dir $(IDL_PARSER_CACHE_DIR) --depsdir $(idl_deps_dir) \
+		$(dist_idl_dir) $(dist_include_dir) $(@D) $(libxul_sdk_includes) \
 		$(basename $(notdir $@)) $($(basename $(notdir $@))_deps)
 # When some IDL is added or removed, if the actual IDL file was already, or
 # still is, in the tree, simple dependencies can't detect that the XPT needs

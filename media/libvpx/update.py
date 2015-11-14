@@ -592,6 +592,8 @@ def apply_patches():
     # Cherry pick https://chromium-review.googlesource.com/#/c/276889/
     # to fix crash on 32bit
     os.system("patch -p1 < vp9_filter_restore_aligment.patch")
+    # Patch win32 vpx_once.
+    os.system("patch -p3 < vpx_once.patch")
 
 def update_readme(commit):
     with open('README_MOZILLA') as f:

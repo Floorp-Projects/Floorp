@@ -149,6 +149,7 @@ CompositorD3D11::CompositorD3D11(nsIWidget* aWidget)
   , mWidget(aWidget)
   , mHwnd(nullptr)
   , mDisableSequenceForNextFrame(false)
+  , mVerifyBuffersFailed(false)
 {
 }
 
@@ -1219,9 +1220,10 @@ CompositorD3D11::VerifyBufferSize()
     return false;
   }
 
-  if ((swapDesc.BufferDesc.Width == mSize.width &&
+  if (((swapDesc.BufferDesc.Width == mSize.width &&
        swapDesc.BufferDesc.Height == mSize.height) ||
-      mSize.width <= 0 || mSize.height <= 0) {
+       mSize.width <= 0 || mSize.height <= 0) &&
+      !mVerifyBuffersFailed) {
     return true;
   }
 
@@ -1241,6 +1243,7 @@ CompositorD3D11::VerifyBufferSize()
   if (Failed(hr)) {
     gfxCriticalNote << "D3D11 swap resize buffers failed " << hexa(hr) << " on " << mSize;
   }
+  mVerifyBuffersFailed = FAILED(hr);
 
   return Succeeded(hr);
 }

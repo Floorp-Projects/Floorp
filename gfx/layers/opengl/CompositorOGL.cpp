@@ -740,13 +740,13 @@ CompositorOGL::CreateFBOWithTexture(const IntRect& aRect, bool aCopyFromSource,
 
       // RGBA
       size_t bufferSize = clampedRect.width * clampedRect.height * 4;
-      nsAutoArrayPtr<uint8_t> buf(new uint8_t[bufferSize]);
+      auto buf = MakeUnique<uint8_t[]>(bufferSize);
 
       mGLContext->fReadPixels(clampedRect.x, clampedRect.y,
                               clampedRect.width, clampedRect.height,
                               LOCAL_GL_RGBA,
                               LOCAL_GL_UNSIGNED_BYTE,
-                              buf);
+                              buf.get());
       mGLContext->fTexImage2D(mFBOTextureTarget,
                               0,
                               LOCAL_GL_RGBA,
@@ -754,7 +754,7 @@ CompositorOGL::CreateFBOWithTexture(const IntRect& aRect, bool aCopyFromSource,
                               0,
                               LOCAL_GL_RGBA,
                               LOCAL_GL_UNSIGNED_BYTE,
-                              buf);
+                              buf.get());
     }
     GLenum error = mGLContext->fGetError();
     if (error != LOCAL_GL_NO_ERROR) {

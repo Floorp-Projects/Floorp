@@ -123,7 +123,7 @@ interface ScheduledGCCallback : nsISupports
 /**
 * interface of Components.utils
 */
-[scriptable, uuid(eaeab2c0-ada3-4c22-b36d-70320dd923ba)]
+[scriptable, uuid(3ce3a6f8-2b59-439c-a57e-74e7b122fb3c)]
 interface nsIXPCComponents_Utils : nsISupports
 {
 
@@ -343,21 +343,6 @@ interface nsIXPCComponents_Utils : nsISupports
      * leaks, and can cause bad things to happen if called.
      */
     void unlinkGhostWindows();
-
-    /**
-     * Return the keys in a weak map.  This operation is
-     * non-deterministic because it is affected by the scheduling of the
-     * garbage collector and the cycle collector.
-     *
-     * This should only be used to write tests of the interaction of
-     * the GC and CC with weak maps.
-     *
-     * @param aMap weak map or other JavaScript value
-     * @returns If aMap is a weak map object, return the keys of the weak
-                map as an array.  Otherwise, return undefined.
-     */
-    [implicit_jscontext]
-    jsval nondeterministicGetWeakMapKeys(in jsval aMap);
 
     [implicit_jscontext]
     jsval getJSTestingFunctions();

@@ -501,9 +501,17 @@ class InnerViewTable
     friend class ArrayBufferObject;
 
   private:
+    // This key is a raw pointer and not a ReadBarriered because the post-
+    // barrier would hold nursery-allocated entries live unconditionally. It is
+    // a very common pattern in low-level and performance-oriented JavaScript
+    // to create hundreds or thousands of very short lived temporary views on a
+    // larger buffer; having to tenured all of these would be a catastrophic
+    // performance regression. Thus, it is vital that nursery pointers in this
+    // map not be held live. Special support is required in the minor GC,
+    // implemented in sweepAfterMinorGC.
     typedef HashMap<JSObject*,
                     ViewVector,
-                    DefaultHasher<JSObject*>,
+                    MovableCellHasher<JSObject*>,
                     SystemAllocPolicy> Map;
 
     // For all objects sharing their storage with some other view, this maps
@@ -511,7 +519,10 @@ class InnerViewTable
     Map map;
 
     // List of keys from innerViews where either the source or at least one
-    // target is in the nursery.
+    // target is in the nursery. The raw pointer to a JSObject is allowed here
+    // because this vector is cleared after every minor collection. Users in
+    // sweepAfterMinorCollection must be careful to use MaybeForwarded before
+    // touching these pointers.
     Vector<JSObject*, 0, SystemAllocPolicy> nurseryKeys;
 
     // Whether nurseryKeys is a complete list.

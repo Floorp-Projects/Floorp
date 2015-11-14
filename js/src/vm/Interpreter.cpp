@@ -1693,11 +1693,6 @@ CASE(JSOP_NOP)
 CASE(JSOP_UNUSED14)
 CASE(JSOP_BACKPATCH)
 CASE(JSOP_UNUSED145)
-CASE(JSOP_UNUSED171)
-CASE(JSOP_UNUSED172)
-CASE(JSOP_UNUSED173)
-CASE(JSOP_UNUSED174)
-CASE(JSOP_UNUSED175)
 CASE(JSOP_UNUSED176)
 CASE(JSOP_UNUSED177)
 CASE(JSOP_UNUSED178)
@@ -3205,7 +3200,9 @@ CASE(JSOP_CALLEE)
 END_CASE(JSOP_CALLEE)
 
 CASE(JSOP_INITPROP_GETTER)
+CASE(JSOP_INITHIDDENPROP_GETTER)
 CASE(JSOP_INITPROP_SETTER)
+CASE(JSOP_INITHIDDENPROP_SETTER)
 {
     MOZ_ASSERT(REGS.stackDepth() >= 2);
 
@@ -3221,7 +3218,9 @@ CASE(JSOP_INITPROP_SETTER)
 END_CASE(JSOP_INITPROP_GETTER)
 
 CASE(JSOP_INITELEM_GETTER)
+CASE(JSOP_INITHIDDENELEM_GETTER)
 CASE(JSOP_INITELEM_SETTER)
+CASE(JSOP_INITHIDDENELEM_SETTER)
 {
     MOZ_ASSERT(REGS.stackDepth() >= 3);
 
@@ -3336,6 +3335,7 @@ CASE(JSOP_INITHIDDENPROP)
 END_CASE(JSOP_INITPROP)
 
 CASE(JSOP_INITELEM)
+CASE(JSOP_INITHIDDENELEM)
 {
     MOZ_ASSERT(REGS.stackDepth() >= 3);
     HandleValue val = REGS.stackHandleAt(-1);
@@ -3343,7 +3343,7 @@ CASE(JSOP_INITELEM)
 
     ReservedRooted<JSObject*> obj(&rootObject0, &REGS.sp[-3].toObject());
 
-    if (!InitElemOperation(cx, obj, id, val))
+    if (!InitElemOperation(cx, REGS.pc, obj, id, val))
         goto error;
 
     REGS.sp -= 2;
@@ -4326,16 +4326,22 @@ js::InitGetterSetterOperation(JSContext* cx, jsbytecode* pc, HandleObject obj, H
     MOZ_ASSERT(val->isCallable());
     GetterOp getter;
     SetterOp setter;
-    unsigned attrs = JSPROP_ENUMERATE | JSPROP_SHARED;
+    unsigned attrs = JSPROP_SHARED;
 
     JSOp op = JSOp(*pc);
 
-    if (op == JSOP_INITPROP_GETTER || op == JSOP_INITELEM_GETTER) {
+    if (!IsHiddenInitOp(op))
+        attrs |= JSPROP_ENUMERATE;
+
+    if (op == JSOP_INITPROP_GETTER || op == JSOP_INITELEM_GETTER ||
+        op == JSOP_INITHIDDENPROP_GETTER || op == JSOP_INITHIDDENELEM_GETTER)
+    {
         getter = CastAsGetterOp(val);
         setter = nullptr;
         attrs |= JSPROP_GETTER;
     } else {
-        MOZ_ASSERT(op == JSOP_INITPROP_SETTER || op == JSOP_INITELEM_SETTER);
+        MOZ_ASSERT(op == JSOP_INITPROP_SETTER || op == JSOP_INITELEM_SETTER ||
+                   op == JSOP_INITHIDDENPROP_SETTER || op == JSOP_INITHIDDENELEM_SETTER);
         getter = nullptr;
         setter = CastAsSetterOp(val);
         attrs |= JSPROP_SETTER;
