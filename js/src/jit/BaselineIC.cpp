@@ -8278,7 +8278,7 @@ GetTemplateObjectForNative(JSContext* cx, Native native, const CallArgs& args,
 
     if (native == StringConstructor) {
         RootedString emptyString(cx, cx->runtime()->emptyString);
-        res.set(StringObject::create(cx, emptyString, TenuredObject));
+        res.set(StringObject::create(cx, emptyString, /* proto = */ nullptr, TenuredObject));
         return !!res;
     }
 
