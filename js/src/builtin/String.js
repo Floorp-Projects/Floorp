@@ -296,12 +296,12 @@ function String_static_fromCodePoint(codePoints) {
         // Step 5f.
         // Inlined UTF-16 Encoding
         if (nextCP <= 0xFFFF) {
-            elements.push(nextCP);
+            callFunction(std_Array_push, elements, nextCP);
             continue;
         }
 
-        elements.push((((nextCP - 0x10000) / 0x400) | 0) + 0xD800);
-        elements.push((nextCP - 0x10000) % 0x400 + 0xDC00);
+        callFunction(std_Array_push, elements, (((nextCP - 0x10000) / 0x400) | 0) + 0xD800);
+        callFunction(std_Array_push, elements, (nextCP - 0x10000) % 0x400 + 0xDC00);
     }
 
     // Step 6.

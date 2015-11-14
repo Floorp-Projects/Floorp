@@ -43,7 +43,8 @@ function ModuleGetExportedNames(exportStarSet = [])
     for (let i = 0; i < starExportEntries.length; i++) {
         let e = starExportEntries[i];
         let requestedModule = HostResolveImportedModule(module, e.moduleRequest);
-        let starNames = requestedModule.getExportedNames(exportStarSet);
+        let starNames = callFunction(requestedModule.getExportedNames, requestedModule,
+                                     exportStarSet);
         for (let j = 0; j < starNames.length; j++) {
             let n = starNames[j];
             if (n !== "default" && !(n in exportedNames))
@@ -89,9 +90,8 @@ function ModuleResolveExport(exportName, resolveSet = [], exportStarSet = [])
         let e = indirectExportEntries[i];
         if (exportName === e.exportName) {
             let importedModule = HostResolveImportedModule(module, e.moduleRequest);
-            let indirectResolution = importedModule.resolveExport(e.importName,
-                                                                  resolveSet,
-                                                                  exportStarSet);
+            let indirectResolution = callFunction(importedModule.resolveExport, importedModule,
+                                                  e.importName, resolveSet, exportStarSet);
             if (indirectResolution !== null)
                 return indirectResolution;
         }
@@ -118,7 +118,8 @@ function ModuleResolveExport(exportName, resolveSet = [], exportStarSet = [])
     for (let i = 0; i < starExportEntries.length; i++) {
         let e = starExportEntries[i];
         let importedModule = HostResolveImportedModule(module, e.moduleRequest);
-        let resolution = importedModule.resolveExport(exportName, resolveSet, exportStarSet);
+        let resolution = callFunction(importedModule.resolveExport, importedModule,
+                                      exportName, resolveSet, exportStarSet);
         if (resolution === "ambiguous")
             return resolution;
 
@@ -146,11 +147,11 @@ function GetModuleNamespace(module)
 
     // Step 3
     if (typeof namespace === "undefined") {
-        let exportedNames = module.getExportedNames();
+        let exportedNames = callFunction(module.getExportedNames, module);
         let unambiguousNames = [];
         for (let i = 0; i < exportedNames.length; i++) {
             let name = exportedNames[i];
-            let resolution = module.resolveExport(name);
+            let resolution = callFunction(module.resolveExport, module, name);
             if (resolution === null)
                 ThrowSyntaxError(JSMSG_MISSING_NAMESPACE_EXPORT);
             if (resolution !== "ambiguous")
@@ -166,7 +167,7 @@ function GetModuleNamespace(module)
 // 9.4.6.13 ModuleNamespaceCreate(module, exports)
 function ModuleNamespaceCreate(module, exports)
 {
-    exports.sort();
+    callFunction(std_Array_sort, exports);
 
     let ns = NewModuleNamespace(module, exports);
 
@@ -174,7 +175,7 @@ function ModuleNamespaceCreate(module, exports)
     // access.
     for (let i = 0; i < exports.length; i++) {
         let name = exports[i];
-        let binding = module.resolveExport(name);
+        let binding = callFunction(module.resolveExport, module, name);
         assert(binding !== null && binding !== "ambiguous", "Failed to resolve binding");
         AddModuleNamespaceBinding(ns, name, binding.module, binding.bindingName);
     }
@@ -204,14 +205,14 @@ function ModuleDeclarationInstantiation()
     for (let i = 0; i < requestedModules.length; i++) {
         let required = requestedModules[i];
         let requiredModule = HostResolveImportedModule(module, required);
-        requiredModule.declarationInstantiation();
+        callFunction(requiredModule.declarationInstantiation, requiredModule);
     }
 
     // Step 9
     let indirectExportEntries = module.indirectExportEntries;
     for (let i = 0; i < indirectExportEntries.length; i++) {
         let e = indirectExportEntries[i];
-        let resolution = module.resolveExport(e.exportName);
+        let resolution = callFunction(module.resolveExport, module, e.exportName);
         if (resolution === null)
             ThrowSyntaxError(JSMSG_MISSING_INDIRECT_EXPORT);
         if (resolution === "ambiguous")
@@ -227,7 +228,8 @@ function ModuleDeclarationInstantiation()
             let namespace = GetModuleNamespace(importedModule);
             CreateNamespaceBinding(env, imp.localName, namespace);
         } else {
-            let resolution = importedModule.resolveExport(imp.importName);
+            let resolution = callFunction(importedModule.resolveExport, importedModule,
+                                          imp.importName);
             if (resolution === null)
                 ThrowSyntaxError(JSMSG_MISSING_IMPORT);
             if (resolution === "ambiguous")
@@ -261,7 +263,7 @@ function ModuleEvaluation()
     for (let i = 0; i < requestedModules.length; i++) {
         let required = requestedModules[i];
         let requiredModule = HostResolveImportedModule(module, required);
-        requiredModule.evaluation();
+        callFunction(requiredModule.evaluation, requiredModule);
     }
 
     return EvaluateModule(module);
