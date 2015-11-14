@@ -66,10 +66,6 @@ enum RegExpRunStatus
 extern RegExpObject*
 RegExpAlloc(ExclusiveContext* cx);
 
-extern RegExpObject*
-InitializeRegExp(ExclusiveContext* cx, Handle<RegExpObject*> regexp, HandleAtom source,
-                 RegExpFlag flags);
-
 // |regexp| is under-typed because this function's used in the JIT.
 extern JSObject*
 CloneRegExpObject(JSContext* cx, JSObject* regexp);
@@ -447,11 +443,10 @@ class RegExpObject : public NativeObject
 
     static void trace(JSTracer* trc, JSObject* obj);
 
-  private:
-    friend RegExpObject*
-    InitializeRegExp(ExclusiveContext* cx, Handle<RegExpObject*> regexp, HandleAtom source,
-                     RegExpFlag flags);
+    static bool initFromAtom(ExclusiveContext* cx, Handle<RegExpObject*> regexp, HandleAtom source,
+                             RegExpFlag flags);
 
+  private:
     bool init(ExclusiveContext* cx, HandleAtom source, RegExpFlag flags);
 
     /*
