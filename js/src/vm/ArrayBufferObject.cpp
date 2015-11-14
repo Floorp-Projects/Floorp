@@ -476,7 +476,12 @@ ArrayBufferObject::class_constructor(JSContext* cx, unsigned argc, Value* vp)
         return false;
     }
 
-    JSObject* bufobj = create(cx, uint32_t(nbytes));
+    RootedObject proto(cx);
+    RootedObject newTarget(cx, &args.newTarget().toObject());
+    if (!GetPrototypeFromConstructor(cx, newTarget, &proto))
+        return false;
+
+    JSObject* bufobj = create(cx, uint32_t(nbytes), proto);
     if (!bufobj)
         return false;
     args.rval().setObject(*bufobj);
@@ -793,6 +798,7 @@ ArrayBufferObject::setFlags(uint32_t flags)
 ArrayBufferObject*
 ArrayBufferObject::create(JSContext* cx, uint32_t nbytes, BufferContents contents,
                           OwnsState ownsState /* = OwnsData */,
+                          HandleObject proto /* = nullptr */,
                           NewObjectKind newKind /* = GenericObject */)
 {
     MOZ_ASSERT_IF(contents.kind() == MAPPED, contents);
@@ -833,7 +839,8 @@ ArrayBufferObject::create(JSContext* cx, uint32_t nbytes, BufferContents content
     gc::AllocKind allocKind = GetGCObjectKind(nslots);
 
     AutoSetNewObjectMetadata metadata(cx);
-    Rooted<ArrayBufferObject*> obj(cx, NewBuiltinClassInstance<ArrayBufferObject>(cx, allocKind, newKind));
+    Rooted<ArrayBufferObject*> obj(cx,
+        NewObjectWithClassProto<ArrayBufferObject>(cx, proto, allocKind, newKind));
     if (!obj) {
         if (allocated)
             js_free(contents.data());
@@ -856,9 +863,11 @@ ArrayBufferObject::create(JSContext* cx, uint32_t nbytes, BufferContents content
 
 ArrayBufferObject*
 ArrayBufferObject::create(JSContext* cx, uint32_t nbytes,
+                          HandleObject proto /* = nullptr */,
                           NewObjectKind newKind /* = GenericObject */)
 {
-    return create(cx, nbytes, BufferContents::createPlain(nullptr));
+    return create(cx, nbytes, BufferContents::createPlain(nullptr),
+                  OwnsState::OwnsData, proto);
 }
 
 JSObject*
@@ -1404,7 +1413,8 @@ JS_NewArrayBufferWithContents(JSContext* cx, size_t nbytes, void* data)
     MOZ_ASSERT_IF(!data, nbytes == 0);
     ArrayBufferObject::BufferContents contents =
         ArrayBufferObject::BufferContents::create<ArrayBufferObject::PLAIN>(data);
-    return ArrayBufferObject::create(cx, nbytes, contents, ArrayBufferObject::OwnsData, TenuredObject);
+    return ArrayBufferObject::create(cx, nbytes, contents, ArrayBufferObject::OwnsData,
+                                     /* proto = */ nullptr, TenuredObject);
 }
 
 JS_FRIEND_API(bool)
@@ -1469,7 +1479,8 @@ JS_NewMappedArrayBufferWithContents(JSContext* cx, size_t nbytes, void* data)
     MOZ_ASSERT(data);
     ArrayBufferObject::BufferContents contents =
         ArrayBufferObject::BufferContents::create<ArrayBufferObject::MAPPED>(data);
-    return ArrayBufferObject::create(cx, nbytes, contents, ArrayBufferObject::OwnsData, TenuredObject);
+    return ArrayBufferObject::create(cx, nbytes, contents, ArrayBufferObject::OwnsData,
+                                     /* proto = */ nullptr, TenuredObject);
 }
 
 JS_PUBLIC_API(void*)
