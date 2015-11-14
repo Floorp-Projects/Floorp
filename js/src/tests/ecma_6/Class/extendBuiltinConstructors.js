@@ -1,14 +1,14 @@
 var test = `
 
-function testBuiltin(builtin) {
+function testBuiltin(builtin, ...args) {
     class inst extends builtin {
-        constructor() {
-            super();
+        constructor(...args) {
+            super(...args);
             this.called = true;
         }
     }
 
-    let instance = new inst();
+    let instance = new inst(...args);
     assertEq(instance instanceof inst, true);
     assertEq(instance instanceof builtin, true);
     assertEq(instance.called, true);
@@ -26,6 +26,9 @@ testBuiltin(SyntaxError);
 testBuiltin(TypeError);
 testBuiltin(URIError);
 testBuiltin(Number);
+testBuiltin(Date);
+testBuiltin(Date, 5);
+testBuiltin(Date, 5, 10);
 
 `;
 
