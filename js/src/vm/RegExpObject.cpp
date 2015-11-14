@@ -41,14 +41,13 @@ JS_STATIC_ASSERT(MultilineFlag == JSREG_MULTILINE);
 JS_STATIC_ASSERT(StickyFlag == JSREG_STICKY);
 
 RegExpObject*
-js::RegExpAlloc(ExclusiveContext* cx)
+js::RegExpAlloc(ExclusiveContext* cx, HandleObject proto /* = nullptr */)
 {
     // Note: RegExp objects are always allocated in the tenured heap. This is
     // not strictly required, but simplifies embedding them in jitcode.
-    RegExpObject* regexp = NewBuiltinClassInstance<RegExpObject>(cx, TenuredObject);
+    RegExpObject* regexp = NewObjectWithClassProto<RegExpObject>(cx, proto, TenuredObject);
     if (!regexp)
         return nullptr;
-
     regexp->initPrivate(nullptr);
     return regexp;
 }
