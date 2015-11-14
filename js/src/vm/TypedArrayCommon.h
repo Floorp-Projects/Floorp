@@ -141,6 +141,17 @@ IsAnyTypedArrayClass(const Class* clasp)
     return IsTypedArrayClass(clasp) || IsSharedTypedArrayClass(clasp);
 }
 
+inline bool
+AnyTypedArrayIsDetached(const JSObject* obj)
+{
+    if (obj->is<TypedArrayObject>()) {
+        ArrayBufferObject* buffer = obj->as<TypedArrayObject>().buffer();
+        return buffer && buffer->isNeutered();
+    }
+    // You cannot detatch a shared array buffer
+    return false;
+}
+
 class SharedOps
 {
   public:
