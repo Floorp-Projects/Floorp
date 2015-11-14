@@ -250,6 +250,16 @@ MediaStreamTrack::Stop()
   mReadyState = MediaStreamTrackState::Ended;
 }
 
+void MediaStreamTrack::GetConstraints(dom::MediaTrackConstraints& aResult)
+{
+  aResult = mConstraints;
+}
+
+void MediaStreamTrack::GetSettings(dom::MediaTrackSettings& aResult)
+{
+  aResult = mSettings;
+}
+
 already_AddRefed<Promise>
 MediaStreamTrack::ApplyConstraints(const MediaTrackConstraints& aConstraints,
                                    ErrorResult &aRv)

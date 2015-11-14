@@ -84,8 +84,8 @@ interface MediaStreamTrack : EventTarget {
     MediaStreamTrack       clone ();
     void                   stop ();
 //  MediaTrackCapabilities getCapabilities ();
-//  MediaTrackConstraints  getConstraints ();
-//  MediaTrackSettings     getSettings ();
+    MediaTrackConstraints  getConstraints ();
+    MediaTrackSettings     getSettings ();
 
     [Throws]
     Promise<void>          applyConstraints (optional MediaTrackConstraints constraints);
