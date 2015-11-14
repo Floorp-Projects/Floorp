@@ -34,6 +34,7 @@ testBuiltin(RegExp, /Regexp Argument/);
 testBuiltin(RegExp, "String Argument");
 testBuiltin(Map);
 testBuiltin(Set);
+testBuiltin(WeakMap);
 
 `;
 
