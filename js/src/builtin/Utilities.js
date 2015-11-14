@@ -53,7 +53,16 @@ var std_Map_iterator_next = MapIteratorNext;
 function List() {
     this.length = 0;
 }
-MakeConstructible(List, {__proto__: null});
+
+{
+  let ListProto = std_Object_create(null);
+  ListProto.indexOf = std_Array_indexOf;
+  ListProto.join = std_Array_join;
+  ListProto.push = std_Array_push;
+  ListProto.slice = std_Array_slice;
+  ListProto.sort = std_Array_sort;
+  MakeConstructible(List, ListProto);
+}
 
 
 /********** Record specification type **********/
