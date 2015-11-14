@@ -180,6 +180,20 @@ NewArray(JSContext* cx, uint32_t nelements);
 
 namespace {
 
+// We allow nullptr for newTarget for all the creation methods, to allow for
+// JSFriendAPI functions that don't care about subclassing
+static bool
+GetPrototypeForInstance(JSContext* cx, HandleObject newTarget, MutableHandleObject proto)
+{
+    if (newTarget) {
+        if (!GetPrototypeFromConstructor(cx, newTarget, proto))
+            return false;
+    } else {
+        proto.set(nullptr);
+    }
+    return true;
+}
+
 template<typename NativeType>
 class TypedArrayObjectTemplate : public TypedArrayObject
 {
@@ -282,17 +296,8 @@ class TypedArrayObjectTemplate : public TypedArrayObject
     {
         MOZ_ASSERT(proto);
 
-        RootedObject obj(cx, NewBuiltinClassInstance(cx, instanceClass(), allocKind));
-        if (!obj)
-            return nullptr;
-
-        ObjectGroup* group = ObjectGroup::defaultNewGroup(cx, obj->getClass(),
-                                                          TaggedProto(proto.get()));
-        if (!group)
-            return nullptr;
-        obj->setGroup(group);
-
-        return &obj->as<TypedArrayObject>();
+        JSObject* obj = NewObjectWithClassProto(cx, instanceClass(), proto, allocKind);
+        return obj ? &obj->as<TypedArrayObject>() : nullptr;
     }
 
     static TypedArrayObject*
@@ -334,9 +339,16 @@ class TypedArrayObjectTemplate : public TypedArrayObject
                                   ? GetGCObjectKind(instanceClass())
                                   : AllocKindForLazyBuffer(len * sizeof(NativeType));
 
+        // Subclassing mandates that we hand in the proto every time. Most of
+        // the time, though, that [[Prototype]] will not be interesting. If
+        // it isn't, we can do some more TI optimizations.
+        RootedObject checkProto(cx);
+        if (!GetBuiltinPrototype(cx, JSCLASS_CACHED_PROTO_KEY(instanceClass()), &checkProto))
+            return nullptr;
+
         AutoSetNewObjectMetadata metadata(cx);
         Rooted<TypedArrayObject*> obj(cx);
-        if (proto)
+        if (proto && proto != checkProto)
             obj = makeProtoInstance(cx, proto, allocKind);
         else
             obj = makeTypedInstance(cx, len, allocKind);
@@ -429,10 +441,13 @@ class TypedArrayObjectTemplate : public TypedArrayObject
     static JSObject*
     create(JSContext* cx, const CallArgs& args)
     {
+        MOZ_ASSERT(args.isConstructing());
+        RootedObject newTarget(cx, &args.newTarget().toObject());
+
         /* () or (number) */
         uint32_t len = 0;
         if (args.length() == 0 || ValueIsLength(args[0], &len))
-            return fromLength(cx, len);
+            return fromLength(cx, len, newTarget);
 
         /* (not an object) */
         if (!args[0].isObject()) {
@@ -453,9 +468,13 @@ class TypedArrayObjectTemplate : public TypedArrayObject
          * shared array's values are copied here.
          */
         if (!UncheckedUnwrap(dataObj)->is<ArrayBufferObjectMaybeShared>())
-            return fromArray(cx, dataObj);
+            return fromArray(cx, dataObj, newTarget);
 
         /* (ArrayBuffer, [byteOffset, [length]]) */
+        RootedObject proto(cx);
+        if (!GetPrototypeFromConstructor(cx, newTarget, &proto))
+            return nullptr;
+
         int32_t byteOffset = 0;
         int32_t length = -1;
 
@@ -479,7 +498,7 @@ class TypedArrayObjectTemplate : public TypedArrayObject
             }
         }
 
-        return fromBuffer(cx, dataObj, byteOffset, length);
+        return fromBufferWithProto(cx, dataObj, byteOffset, length, proto);
     }
 
   public:
@@ -533,9 +552,11 @@ class TypedArrayObjectTemplate : public TypedArrayObject
                  * don't have to do anything *uniquely* crazy here.
                  */
 
-                Rooted<JSObject*> proto(cx);
-                if (!GetBuiltinPrototype(cx, JSCLASS_CACHED_PROTO_KEY(instanceClass()), &proto))
-                    return nullptr;
+                RootedObject protoRoot(cx, proto);
+                if (!protoRoot) {
+                    if (!GetBuiltinPrototype(cx, JSCLASS_CACHED_PROTO_KEY(instanceClass()), &protoRoot))
+                        return nullptr;
+                }
 
                 InvokeArgs args(cx);
                 if (!args.init(3))
@@ -545,7 +566,7 @@ class TypedArrayObjectTemplate : public TypedArrayObject
                 args.setThis(ObjectValue(*bufobj));
                 args[0].setNumber(byteOffset);
                 args[1].setInt32(lengthInt);
-                args[2].setObject(*proto);
+                args[2].setObject(*protoRoot);
 
                 if (!Invoke(cx, args))
                     return nullptr;
@@ -559,10 +580,17 @@ class TypedArrayObjectTemplate : public TypedArrayObject
         }
 
         Rooted<ArrayBufferObjectMaybeShared*> buffer(cx);
-        if (IsArrayBuffer(bufobj))
-            buffer = static_cast<ArrayBufferObjectMaybeShared*>(&AsArrayBuffer(bufobj));
-        else
+        if (IsArrayBuffer(bufobj)) {
+            ArrayBufferObject& buf = AsArrayBuffer(bufobj);
+            if (buf.isNeutered()) {
+                JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_TYPED_ARRAY_DETACHED);
+                return nullptr;
+            }
+
+            buffer = static_cast<ArrayBufferObjectMaybeShared*>(&buf);
+        } else {
             buffer = static_cast<ArrayBufferObjectMaybeShared*>(&AsSharedArrayBuffer(bufobj));
+        }
 
         if (byteOffset > buffer->byteLength() || byteOffset % sizeof(NativeType) != 0) {
             JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_TYPED_ARRAY_BAD_ARGS);
@@ -622,16 +650,21 @@ class TypedArrayObjectTemplate : public TypedArrayObject
     }
 
     static JSObject*
-    fromLength(JSContext* cx, uint32_t nelements)
+    fromLength(JSContext* cx, uint32_t nelements, HandleObject newTarget = nullptr)
     {
+        RootedObject proto(cx);
+        if (!GetPrototypeForInstance(cx, newTarget, &proto))
+            return nullptr;
+
         Rooted<ArrayBufferObject*> buffer(cx);
         if (!maybeCreateArrayBuffer(cx, nelements, &buffer))
             return nullptr;
-        return makeInstance(cx, buffer, 0, nelements);
+
+        return makeInstance(cx, buffer, 0, nelements, proto);
     }
 
     static JSObject*
-    fromArray(JSContext* cx, HandleObject other);
+    fromArray(JSContext* cx, HandleObject other, HandleObject newTarget = nullptr);
 
     static const NativeType
     getIndex(JSObject* obj, uint32_t index)
@@ -671,20 +704,35 @@ struct TypedArrayObject::OfType
 
 template<typename T>
 /* static */ JSObject*
-TypedArrayObjectTemplate<T>::fromArray(JSContext* cx, HandleObject other)
+TypedArrayObjectTemplate<T>::fromArray(JSContext* cx, HandleObject other,
+                                       HandleObject newTarget /* = nullptr */)
 {
+    // Allow nullptr newTarget for FriendAPI methods, which don't care about
+    // subclassing.
+    RootedObject proto(cx);
+
     uint32_t len;
     if (IsAnyTypedArray(other)) {
+        if (!GetPrototypeForInstance(cx, newTarget, &proto))
+            return nullptr;
+
+        if (AnyTypedArrayIsDetached(other)) {
+            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_TYPED_ARRAY_DETACHED);
+            return nullptr;
+        }
         len = AnyTypedArrayLength(other);
-    } else if (!GetLengthProperty(cx, other, &len)) {
-        return nullptr;
+    } else {
+        if (!GetLengthProperty(cx, other, &len))
+            return nullptr;
+        if (!GetPrototypeForInstance(cx, newTarget, &proto))
+            return nullptr;
     }
 
     Rooted<ArrayBufferObject*> buffer(cx);
     if (!maybeCreateArrayBuffer(cx, len, &buffer))
         return nullptr;
 
-    Rooted<TypedArrayObject*> obj(cx, makeInstance(cx, buffer, 0, len));
+    Rooted<TypedArrayObject*> obj(cx, makeInstance(cx, buffer, 0, len, proto));
     if (!obj || !TypedArrayMethods<TypedArrayObject>::setFromArrayLike(cx, obj, other, len))
         return nullptr;
     return obj;
@@ -1708,15 +1756,15 @@ TypedArrayObject::setElement(TypedArrayObject& obj, uint32_t index, double d)
  */
 
 #define IMPL_TYPED_ARRAY_JSAPI_CONSTRUCTORS(Name,NativeType)                                    \
-  JS_FRIEND_API(JSObject*) JS_New ## Name ## Array(JSContext* cx, uint32_t nelements)          \
+  JS_FRIEND_API(JSObject*) JS_New ## Name ## Array(JSContext* cx, uint32_t nelements)           \
   {                                                                                             \
       return TypedArrayObjectTemplate<NativeType>::fromLength(cx, nelements);                   \
   }                                                                                             \
-  JS_FRIEND_API(JSObject*) JS_New ## Name ## ArrayFromArray(JSContext* cx, HandleObject other) \
+  JS_FRIEND_API(JSObject*) JS_New ## Name ## ArrayFromArray(JSContext* cx, HandleObject other)  \
   {                                                                                             \
       return TypedArrayObjectTemplate<NativeType>::fromArray(cx, other);                        \
   }                                                                                             \
-  JS_FRIEND_API(JSObject*) JS_New ## Name ## ArrayWithBuffer(JSContext* cx,                    \
+  JS_FRIEND_API(JSObject*) JS_New ## Name ## ArrayWithBuffer(JSContext* cx,                     \
                                HandleObject arrayBuffer, uint32_t byteOffset, int32_t length)   \
   {                                                                                             \
       return TypedArrayObjectTemplate<NativeType>::fromBuffer(cx, arrayBuffer, byteOffset,      \
@@ -1728,8 +1776,8 @@ TypedArrayObject::setElement(TypedArrayObject& obj, uint32_t index, double d)
           return false;                                                                         \
       const Class* clasp = obj->getClass();                                                     \
       return clasp == TypedArrayObjectTemplate<NativeType>::instanceClass();                    \
-  } \
-  JS_FRIEND_API(JSObject*) js::Unwrap ## Name ## Array(JSObject* obj)                          \
+  }                                                                                             \
+  JS_FRIEND_API(JSObject*) js::Unwrap ## Name ## Array(JSObject* obj)                           \
   {                                                                                             \
       obj = CheckedUnwrap(obj);                                                                 \
       if (!obj)                                                                                 \
@@ -1738,7 +1786,7 @@ TypedArrayObject::setElement(TypedArrayObject& obj, uint32_t index, double d)
       if (clasp == TypedArrayObjectTemplate<NativeType>::instanceClass())                       \
           return obj;                                                                           \
       return nullptr;                                                                           \
-  } \
+  }                                                                                             \
   const js::Class* const js::detail::Name ## ArrayClassPtr =                                    \
       &js::TypedArrayObject::classes[TypedArrayObjectTemplate<NativeType>::ArrayTypeID()];
 

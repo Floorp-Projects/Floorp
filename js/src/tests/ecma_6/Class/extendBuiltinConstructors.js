@@ -14,6 +14,24 @@ function testBuiltin(builtin, ...args) {
     assertEq(instance.called, true);
 }
 
+function testBuiltinTypedArrays() {
+    let typedArrays = [Int8Array,
+                       Uint8Array,
+                       Uint8ClampedArray,
+                       Int16Array,
+                       Uint16Array,
+                       Int32Array,
+                       Uint32Array,
+                       Float32Array,
+                       Float64Array];
+
+    for (let array of typedArrays) {
+        testBuiltin(array);
+        testBuiltin(array, 5);
+        testBuiltin(array, new array());
+        testBuiltin(array, new ArrayBuffer());
+    }
+}
 
 testBuiltin(Function);
 testBuiltin(Object);
@@ -37,6 +55,7 @@ testBuiltin(Set);
 testBuiltin(WeakMap);
 testBuiltin(WeakSet);
 testBuiltin(ArrayBuffer);
+testBuiltinTypedArrays();
 
 `;
 
