@@ -63,11 +63,19 @@ template <typename T>
 void
 TraceRoot(JSTracer* trc, T* thingp, const char* name);
 
+template <typename T>
+void
+TraceRoot(JSTracer* trc, ReadBarriered<T>* thingp, const char* name);
+
 // Idential to TraceRoot, except that this variant will not crash if |*thingp|
 // is null.
 template <typename T>
 void
 TraceNullableRoot(JSTracer* trc, T* thingp, const char* name);
+
+template <typename T>
+void
+TraceNullableRoot(JSTracer* trc, ReadBarriered<T>* thingp, const char* name);
 
 // Like TraceEdge, but for edges that do not use one of the automatic barrier
 // classes and, thus, must be treated specially for moving GC. This method is
