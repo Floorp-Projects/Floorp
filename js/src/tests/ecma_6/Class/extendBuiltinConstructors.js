@@ -36,6 +36,7 @@ testBuiltin(Map);
 testBuiltin(Set);
 testBuiltin(WeakMap);
 testBuiltin(WeakSet);
+testBuiltin(ArrayBuffer);
 
 `;
 
