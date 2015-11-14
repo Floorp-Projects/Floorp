@@ -33,6 +33,7 @@ testBuiltin(RegExp);
 testBuiltin(RegExp, /Regexp Argument/);
 testBuiltin(RegExp, "String Argument");
 testBuiltin(Map);
+testBuiltin(Set);
 
 `;
 
