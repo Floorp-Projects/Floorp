@@ -58,6 +58,7 @@ testBuiltin(ArrayBuffer);
 testBuiltinTypedArrays();
 testBuiltin(DataView, new ArrayBuffer());
 testBuiltin(DataView, new (newGlobal().ArrayBuffer)());
+testBuiltin(String);
 
 `;
 
