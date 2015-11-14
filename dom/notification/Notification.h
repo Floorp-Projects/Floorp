@@ -15,6 +15,11 @@
 #include "nsIObserver.h"
 
 #include "nsCycleCollectionParticipant.h"
+#include "nsHashKeys.h"
+#include "nsTHashtable.h"
+
+#define NOTIFICATIONTELEMETRYSERVICE_CONTRACTID \
+  "@mozilla.org/notificationTelemetryService;1"
 
 class nsIPrincipal;
 class nsIVariant;
@@ -44,6 +49,35 @@ public:
   Notify(JSContext* aCx, workers::Status aStatus) override;
 };
 
+// Records telemetry probes at application startup, when a notification is
+// shown, and when the notification permission is revoked for a site.
+class NotificationTelemetryService final : public nsIObserver
+{
+public:
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIOBSERVER
+
+  NotificationTelemetryService();
+
+  static already_AddRefed<NotificationTelemetryService> GetInstance();
+
+  nsresult Init();
+  void RecordDNDSupported();
+  void RecordPermissions();
+  nsresult RecordSender(nsIPrincipal* aPrincipal);
+
+private:
+  virtual ~NotificationTelemetryService();
+
+  nsresult AddPermissionChangeObserver();
+  nsresult RemovePermissionChangeObserver();
+
+  bool GetNotificationPermission(nsISupports* aSupports,
+                                 uint32_t* aCapability);
+
+  bool mDNDRecorded;
+  nsTHashtable<nsStringHashKey> mOrigins;
+};
 
 /*
  * Notifications on workers introduce some lifetime issues. The property we
@@ -107,6 +141,7 @@ class Notification : public DOMEventTargetHelper
   friend class ServiceWorkerNotificationObserver;
   friend class WorkerGetRunnable;
   friend class WorkerNotificationObserver;
+  friend class NotificationTelemetryService;
 
 public:
   IMPL_EVENT_HANDLER(click)
@@ -290,6 +325,7 @@ protected:
                                                        const nsAString& aTitle,
                                                        const NotificationOptions& aOptions);
 
+  bool IsInPrivateBrowsing();
   void ShowInternal();
   void CloseInternal();
 
