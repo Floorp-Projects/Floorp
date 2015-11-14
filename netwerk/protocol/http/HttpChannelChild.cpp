@@ -1736,30 +1736,7 @@ HttpChannelChild::AsyncOpen(nsIStreamListener *listener, nsISupports *aContext)
     return NS_OK;
   }
 
-  bool isHttps = false;
-  rv = mURI->SchemeIs("https", &isHttps);
-  NS_ENSURE_SUCCESS(rv, rv);
-  nsCOMPtr<nsIPrincipal> resultPrincipal;
-  if (!isHttps && mLoadInfo && mLoadInfo->GetUpgradeInsecureRequests()) {
-      nsContentUtils::GetSecurityManager()->
-        GetChannelResultPrincipal(this, getter_AddRefs(resultPrincipal));
-  }
-  bool shouldUpgrade = false;
-  rv = NS_ShouldSecureUpgrade(mURI,
-                              mLoadInfo,
-                              resultPrincipal,
-                              mPrivateBrowsing,
-                              mAllowSTS,
-                              shouldUpgrade);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsIURI> upgradedURI;
-  if (shouldUpgrade) {
-    rv = GetSecureUpgradedURI(mURI, getter_AddRefs(upgradedURI));
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  if (ShouldIntercept(upgradedURI)) {
+  if (ShouldIntercept()) {
     mResponseCouldBeSynthesized = true;
 
     nsCOMPtr<nsINetworkInterceptController> controller;
@@ -1768,8 +1745,7 @@ HttpChannelChild::AsyncOpen(nsIStreamListener *listener, nsISupports *aContext)
     mInterceptListener = new InterceptStreamListener(this, mListenerContext);
 
     RefPtr<InterceptedChannelContent> intercepted =
-        new InterceptedChannelContent(this, controller,
-                                      mInterceptListener, shouldUpgrade);
+        new InterceptedChannelContent(this, controller, mInterceptListener);
     intercepted->NotifyController();
     return NS_OK;
   }
