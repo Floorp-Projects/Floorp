@@ -33,7 +33,12 @@ js::obj_construct(JSContext* cx, unsigned argc, Value* vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     RootedObject obj(cx, nullptr);
-    if (args.length() > 0 && !args[0].isNullOrUndefined()) {
+    if (args.isConstructing() && (&args.newTarget().toObject() != &args.callee())) {
+        RootedObject newTarget(cx, &args.newTarget().toObject());
+        obj = CreateThis(cx, &PlainObject::class_, newTarget);
+        if (!obj)
+            return false;
+    } else if (args.length() > 0 && !args[0].isNullOrUndefined()) {
         obj = ToObject(cx, args[0]);
         if (!obj)
             return false;
