@@ -1964,6 +1964,12 @@ BaselineCompiler::emit_JSOP_INITELEM()
     return true;
 }
 
+bool
+BaselineCompiler::emit_JSOP_INITHIDDENELEM()
+{
+    return emit_JSOP_INITELEM();
+}
+
 typedef bool (*MutateProtoFn)(JSContext* cx, HandlePlainObject obj, HandleValue newProto);
 static const VMFunction MutateProtoInfo = FunctionInfo<MutateProtoFn>(MutatePrototype);
 
@@ -2569,7 +2575,9 @@ bool
 BaselineCompiler::emitInitPropGetterSetter()
 {
     MOZ_ASSERT(JSOp(*pc) == JSOP_INITPROP_GETTER ||
-               JSOp(*pc) == JSOP_INITPROP_SETTER);
+               JSOp(*pc) == JSOP_INITHIDDENPROP_GETTER ||
+               JSOp(*pc) == JSOP_INITPROP_SETTER ||
+               JSOp(*pc) == JSOP_INITHIDDENPROP_SETTER);
 
     // Keep values on the stack for the decompiler.
     frame.syncStack(0);
@@ -2598,7 +2606,19 @@ BaselineCompiler::emit_JSOP_INITPROP_GETTER()
 }
 
 bool
+BaselineCompiler::emit_JSOP_INITHIDDENPROP_GETTER()
+{
+    return emitInitPropGetterSetter();
+}
+
+bool
 BaselineCompiler::emit_JSOP_INITPROP_SETTER()
+{
+    return emitInitPropGetterSetter();
+}
+
+bool
+BaselineCompiler::emit_JSOP_INITHIDDENPROP_SETTER()
 {
     return emitInitPropGetterSetter();
 }
@@ -2612,7 +2632,9 @@ bool
 BaselineCompiler::emitInitElemGetterSetter()
 {
     MOZ_ASSERT(JSOp(*pc) == JSOP_INITELEM_GETTER ||
-               JSOp(*pc) == JSOP_INITELEM_SETTER);
+               JSOp(*pc) == JSOP_INITHIDDENELEM_GETTER ||
+               JSOp(*pc) == JSOP_INITELEM_SETTER ||
+               JSOp(*pc) == JSOP_INITHIDDENELEM_SETTER);
 
     // Load index and value in R0 and R1, but keep values on the stack for the
     // decompiler.
@@ -2642,7 +2664,19 @@ BaselineCompiler::emit_JSOP_INITELEM_GETTER()
 }
 
 bool
+BaselineCompiler::emit_JSOP_INITHIDDENELEM_GETTER()
+{
+    return emitInitElemGetterSetter();
+}
+
+bool
 BaselineCompiler::emit_JSOP_INITELEM_SETTER()
+{
+    return emitInitElemGetterSetter();
+}
+
+bool
+BaselineCompiler::emit_JSOP_INITHIDDENELEM_SETTER()
 {
     return emitInitElemGetterSetter();
 }

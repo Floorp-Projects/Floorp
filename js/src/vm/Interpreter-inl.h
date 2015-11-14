@@ -616,7 +616,7 @@ TypeOfObjectOperation(JSObject* obj, JSRuntime* rt)
 }
 
 static MOZ_ALWAYS_INLINE bool
-InitElemOperation(JSContext* cx, HandleObject obj, HandleValue idval, HandleValue val)
+InitElemOperation(JSContext* cx, jsbytecode* pc, HandleObject obj, HandleValue idval, HandleValue val)
 {
     MOZ_ASSERT(!val.isMagic(JS_ELEMENTS_HOLE));
     MOZ_ASSERT(!obj->getClass()->getProperty);
@@ -626,7 +626,8 @@ InitElemOperation(JSContext* cx, HandleObject obj, HandleValue idval, HandleValu
     if (!ToPropertyKey(cx, idval, &id))
         return false;
 
-    return DefineProperty(cx, obj, id, val, nullptr, nullptr, JSPROP_ENUMERATE);
+    unsigned flags = JSOp(*pc) == JSOP_INITHIDDENELEM ? 0 : JSPROP_ENUMERATE;
+    return DefineProperty(cx, obj, id, val, nullptr, nullptr, flags);
 }
 
 static MOZ_ALWAYS_INLINE bool
