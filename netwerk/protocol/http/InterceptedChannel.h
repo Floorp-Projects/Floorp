@@ -55,9 +55,6 @@ public:
 
   NS_IMETHOD GetResponseBody(nsIOutputStream** aOutput) override;
   NS_IMETHOD GetConsoleReportCollector(nsIConsoleReportCollector** aCollectorOut) override;
-
-  static already_AddRefed<nsIURI>
-  SecureUpgradeChannelURI(nsIChannel* aChannel);
 };
 
 class InterceptedChannelChrome : public InterceptedChannelBase
@@ -81,7 +78,6 @@ public:
   NS_IMETHOD ResetInterception() override;
   NS_IMETHOD FinishSynthesizedResponse(const nsACString& aFinalURLSpec) override;
   NS_IMETHOD GetChannel(nsIChannel** aChannel) override;
-  NS_IMETHOD GetSecureUpgradedChannelURI(nsIURI** aURI) override;
   NS_IMETHOD SynthesizeStatus(uint16_t aStatus, const nsACString& aReason) override;
   NS_IMETHOD SynthesizeHeader(const nsACString& aName, const nsACString& aValue) override;
   NS_IMETHOD Cancel(nsresult aStatus) override;
@@ -102,19 +98,14 @@ class InterceptedChannelContent : public InterceptedChannelBase
   // Listener for the synthesized response to fix up the notifications before they reach
   // the actual channel.
   RefPtr<InterceptStreamListener> mStreamListener;
-
-  // Set for intercepted channels that have gone through a secure upgrade.
-  bool mSecureUpgrade;
 public:
   InterceptedChannelContent(HttpChannelChild* aChannel,
                             nsINetworkInterceptController* aController,
-                            InterceptStreamListener* aListener,
-                            bool aSecureUpgrade);
+                            InterceptStreamListener* aListener);
 
   NS_IMETHOD ResetInterception() override;
   NS_IMETHOD FinishSynthesizedResponse(const nsACString& aFinalURLSpec) override;
   NS_IMETHOD GetChannel(nsIChannel** aChannel) override;
-  NS_IMETHOD GetSecureUpgradedChannelURI(nsIURI** aURI) override;
   NS_IMETHOD SynthesizeStatus(uint16_t aStatus, const nsACString& aReason) override;
   NS_IMETHOD SynthesizeHeader(const nsACString& aName, const nsACString& aValue) override;
   NS_IMETHOD Cancel(nsresult aStatus) override;
