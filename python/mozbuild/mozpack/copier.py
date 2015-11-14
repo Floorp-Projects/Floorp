@@ -35,17 +35,23 @@ class FileRegistry(object):
     def __init__(self):
         self._files = OrderedDict()
         self._required_directories = Counter()
+        self._partial_paths_cache = {}
 
     def _partial_paths(self, path):
         '''
         Turn "foo/bar/baz/zot" into ["foo/bar/baz", "foo/bar", "foo"].
         '''
-        partial_paths = []
-        partial_path = path
-        while partial_path:
-            partial_path = mozpath.dirname(partial_path)
-            if partial_path:
-                partial_paths.append(partial_path)
+        dir_name = path.rpartition('/')[0]
+        if not dir_name:
+            return []
+
+        partial_paths = self._partial_paths_cache.get(dir_name)
+        if partial_paths:
+            return partial_paths
+
+        partial_paths = [dir_name] + self._partial_paths(dir_name)
+
+        self._partial_paths_cache[dir_name] = partial_paths
         return partial_paths
 
     def add(self, path, content):
