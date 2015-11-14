@@ -64,7 +64,7 @@ enum RegExpRunStatus
 };
 
 extern RegExpObject*
-RegExpAlloc(ExclusiveContext* cx);
+RegExpAlloc(ExclusiveContext* cx, HandleObject proto = nullptr);
 
 // |regexp| is under-typed because this function's used in the JIT.
 extern JSObject*
