@@ -66,8 +66,8 @@ add_task(function *() {
 
   // Clone the census data so we can destructively remove the ID/parents to compare
   // equal census data
-  let census1 = stripUnique(JSON.parse(JSON.stringify(snapshot1.census)));
-  let census2 = stripUnique(JSON.parse(JSON.stringify(snapshot2.census)));
+  let census1 = stripUnique(JSON.parse(JSON.stringify(snapshot1.census.report)));
+  let census2 = stripUnique(JSON.parse(JSON.stringify(snapshot2.census.report)));
 
   equal(JSON.stringify(census1), JSON.stringify(census2), "Imported snapshot has correct census");
 

@@ -38,7 +38,7 @@ loader.lazyGetter(this, "DOMUtils", function() {
  * Usage:
  *   const {require} =
  *      Cu.import("resource://devtools/shared/Loader.jsm", {});
- *   const {OutputParser} = require("devtools/shared/output-parser");
+ *   const {OutputParser} = require("devtools/client/shared/output-parser");
  *
  *   let parser = new OutputParser(document);
  *

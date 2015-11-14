@@ -14,6 +14,9 @@ const CM_TERN_SCRIPTS = [
 
 const autocompleteMap = new WeakMap();
 
+// A simple way to give each popup its own panelId.
+var autocompleteCounter = 0;
+
 /**
  * Prepares an editor instance for autocompletion.
  */
@@ -120,12 +123,17 @@ function initializeAutoCompletion(ctx, options = {}) {
     return true;
   }
 
+  // Give each popup a new name to avoid sharing the elements.
+  let panelId = "devtools_sourceEditorCompletePopup" + autocompleteCounter;
+  ++autocompleteCounter;
+
   let popup = new AutocompletePopup(win.parent.document, {
     position: "after_start",
     fixedWidth: true,
     theme: "auto",
     autoSelect: true,
-    onClick: insertSelectedPopupItem
+    onClick: insertSelectedPopupItem,
+    panelId: panelId
   });
 
   let cycle = (reverse) => {

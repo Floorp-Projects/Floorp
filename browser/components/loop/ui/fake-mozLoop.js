@@ -100,6 +100,42 @@ var fakeRooms = [
     "ctime": 1405576934,
     "expiresAt": 1405614180,
     "participants": []
+  },
+  {
+    "roomToken": "preFLighdfso",
+    "decryptedContext": {
+      "roomName": "",
+      "urls": [
+        {
+          "description": "Page Title as Room Name",
+          "location": "http://mozilla.com"
+        }
+      ]
+    },
+    "roomUrl": "http://localhost:3000/rooms/preFLighdfso",
+    "roomOwner": "Alexis",
+    "maxSize": 2,
+    "creationTime": 1405576934,
+    "ctime": 1405576934,
+    "expiresAt": 1405614180,
+    "participants": []
+  },
+  {
+    "roomToken": "preFLighdfsi",
+    "decryptedContext": {
+      "roomName": "",
+      "urls": [{
+          "description": "",
+          "location": "http://mozilla.com/Url_As_Room_Name"
+        }]
+    },
+    "roomUrl": "http://localhost:3000/rooms/preFLighdfsi",
+    "roomOwner": "Alexis",
+    "maxSize": 2,
+    "creationTime": 1405576934,
+    "ctime": 1405576934,
+    "expiresAt": 1405614180,
+    "participants": []
   }
 ];
 

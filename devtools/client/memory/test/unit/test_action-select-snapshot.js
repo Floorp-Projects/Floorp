@@ -25,7 +25,7 @@ add_task(function *() {
 
   for (let i = 0; i < 5; i++) {
     do_print(`Selecting snapshot[${i}]`);
-    store.dispatch(actions.selectSnapshot(store.getState().snapshots[i]));
+    store.dispatch(actions.selectSnapshot(store.getState().snapshots[i].id));
     yield waitUntilState(store, ({ snapshots }) => snapshots[i].selected);
 
     let { snapshots } = store.getState();

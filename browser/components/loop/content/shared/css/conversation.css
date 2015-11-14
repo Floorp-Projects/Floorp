@@ -639,7 +639,7 @@ body[platform="win"] .share-service-dropdown.overflow > .dropdown-menu-item {
   /* 100% height to fill up media-layout, thus forcing other elements into the
      second column that's 200px wide */
   height: 100%;
-  background-color: #D8D8D8;
+  background-color: #d8d8d8;
 }
 
 .media-wrapper > .local {
@@ -720,8 +720,6 @@ body[platform="win"] .share-service-dropdown.overflow > .dropdown-menu-item {
 
 .media-wrapper.receiving-screen-share > .screen {
   order: 1;
-  /* Since there is grey stuff behind us, avoid obvious letterboxing */
-  background-color: black;
 }
 
 .media-wrapper.receiving-screen-share > .text-chat-view {
@@ -915,7 +913,6 @@ body[platform="win"] .share-service-dropdown.overflow > .dropdown-menu-item {
     bottom: auto;
     width: 100%;
     height: 100%;
-    background-color: black;
   }
 
   .media-wrapper:not(.showing-remote-streams) > .focus-stream > .local ~ .conversation-toolbar {

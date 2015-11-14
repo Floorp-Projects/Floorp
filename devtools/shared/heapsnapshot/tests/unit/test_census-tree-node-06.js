@@ -48,9 +48,9 @@ function run_test() {
   const EXPECTED = {
     name: null,
     bytes: 0,
-    totalBytes: 0,
+    totalBytes: 100,
     count: 0,
-    totalCount: 0,
+    totalCount: 10,
     children: [
       {
         name: "noStack",

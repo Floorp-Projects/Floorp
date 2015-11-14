@@ -30,23 +30,23 @@ add_task(function *() {
   equal(snapshot.census, null, "No census data exists yet on the snapshot.");
 
   // Test error case of wrong state
-  store.dispatch(actions.takeCensus(heapWorker, snapshot));
+  store.dispatch(actions.takeCensus(heapWorker, snapshot.id));
   yield waitUntilState(store, () => store.getState().errors.length === 1);
   ok(/Assertion failure/.test(store.getState().errors[0]),
     "Error thrown when taking a census of a snapshot that has not been read.");
 
-  store.dispatch(actions.readSnapshot(heapWorker, snapshot));
+  store.dispatch(actions.readSnapshot(heapWorker, snapshot.id));
   yield waitUntilState(store, () => store.getState().snapshots[0].state === states.READ);
 
-  store.dispatch(actions.takeCensus(heapWorker, snapshot));
+  store.dispatch(actions.takeCensus(heapWorker, snapshot.id));
   yield waitUntilState(store, () => store.getState().snapshots[0].state === states.SAVING_CENSUS);
   yield waitUntilState(store, () => store.getState().snapshots[0].state === states.SAVED_CENSUS);
 
   snapshot = store.getState().snapshots[0];
   ok(snapshot.census, "Snapshot has census after saved census");
-  ok(snapshot.census.children.length, "Census is in tree node form");
-  ok(isBreakdownType(snapshot.census, "coarseType"),
+  ok(snapshot.census.report.children.length, "Census is in tree node form");
+  ok(isBreakdownType(snapshot.census.report, "coarseType"),
     "Census is in tree node form with the default breakdown");
-  ok(breakdownEquals(snapshot.breakdown, breakdowns.coarseType.breakdown),
+  ok(breakdownEquals(snapshot.census.breakdown, breakdowns.coarseType.breakdown),
     "Snapshot stored correct breakdown used for the census");
 });
