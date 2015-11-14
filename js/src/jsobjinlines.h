@@ -696,6 +696,15 @@ NewObjectWithClassProto(ExclusiveContext* cx, HandleObject proto,
     return obj ? &obj->as<T>() : nullptr;
 }
 
+template <class T>
+inline T*
+NewObjectWithClassProto(ExclusiveContext* cx, HandleObject proto, gc::AllocKind allocKind,
+                        NewObjectKind newKind = GenericObject)
+{
+    JSObject* obj = NewObjectWithClassProto(cx, &T::class_, proto, allocKind, newKind);
+    return obj ? &obj->as<T>() : nullptr;
+}
+
 /*
  * Create a native instance of the given class with parent and proto set
  * according to the context's active global.
