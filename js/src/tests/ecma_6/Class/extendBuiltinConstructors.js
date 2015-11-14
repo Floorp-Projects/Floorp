@@ -35,6 +35,7 @@ testBuiltin(RegExp, "String Argument");
 testBuiltin(Map);
 testBuiltin(Set);
 testBuiltin(WeakMap);
+testBuiltin(WeakSet);
 
 `;
 
