@@ -956,6 +956,93 @@ describe("loop.panel", function() {
       expect(node.querySelectorAll(".room-entry").length).to.eql(1);
       expect(node.querySelectorAll(".room-opened h2")[0].textContent).to.equal(roomName);
     });
+
+    it("should show Page Title as Room Name if a Room Name is not given", function() {
+      var urlsRoomData = {
+        roomToken: "QzBbvGmIZWU",
+        roomUrl: "http://sample/QzBbvGmIZWU",
+        decryptedContext: {
+          urls: [{
+            description: "Page Title",
+            location: "http://example.com"
+          }]
+        },
+        maxSize: 2,
+        participants: [{
+          displayName: "Alexis",
+          account: "alexis@example.com",
+          roomConnectionId: "2a1787a6-4a73-43b5-ae3e-906ec1e763cb"
+        }, {
+          displayName: "Adam",
+          roomConnectionId: "781f012b-f1ea-4ce1-9105-7cfc36fb4ec7"
+        }],
+        ctime: 1405517418
+      };
+      roomStore.setStoreState({ rooms: [new loop.store.Room(urlsRoomData)] });
+
+      var view = createTestComponent();
+
+      var node = view.getDOMNode();
+      expect(node.querySelector(".room-entry h2").textContent).to.equal("Page Title");
+    });
+
+    it("should show Page URL as Room Name if a Room Name and Page Title are not available", function() {
+      var urlsRoomData = {
+        roomToken: "QzBbvGmIZWU",
+        roomUrl: "http://sample/QzBbvGmIZWU",
+        decryptedContext: {
+          urls: [{
+            description: "",
+            location: "http://example.com"
+          }]
+        },
+        maxSize: 2,
+        participants: [{
+          displayName: "Alexis",
+          account: "alexis@example.com",
+          roomConnectionId: "2a1787a6-4a73-43b5-ae3e-906ec1e763cb"
+        }, {
+          displayName: "Adam",
+          roomConnectionId: "781f012b-f1ea-4ce1-9105-7cfc36fb4ec7"
+        }],
+        ctime: 1405517418
+      };
+      roomStore.setStoreState({ rooms: [new loop.store.Room(urlsRoomData)] });
+
+      var view = createTestComponent();
+
+      var node = view.getDOMNode();
+      expect(node.querySelector(".room-entry h2").textContent).to.equal("http://example.com");
+    });
+
+    it("should show Fallback Title as Room Name if a Room Name,Page Title and Page Url are not available", function() {
+      var urlsRoomData = {
+        roomToken: "QzBbvGmIZWU",
+        roomUrl: "http://sample/QzBbvGmIZWU",
+        decryptedContext: {
+          urls: [{
+            description: "",
+            location: ""
+          }]
+        },
+        maxSize: 2,
+        participants: [{
+          displayName: "Alexis",
+          account: "alexis@example.com",
+          roomConnectionId: "2a1787a6-4a73-43b5-ae3e-906ec1e763cb"
+        }, {
+          displayName: "Adam",
+          roomConnectionId: "781f012b-f1ea-4ce1-9105-7cfc36fb4ec7"
+        }],
+        ctime: 1405517418
+      };
+      roomStore.setStoreState({ rooms: [new loop.store.Room(urlsRoomData)] });
+
+      var view = createTestComponent();
+
+      var node = view.getDOMNode();
+      expect(node.querySelector(".room-entry h2").textContent).to.equal("Fake title");
+    });
   });
 
   describe("loop.panel.NewRoomView", function() {
