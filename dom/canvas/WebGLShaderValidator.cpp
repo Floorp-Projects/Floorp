@@ -392,6 +392,18 @@ ShaderValidator::FindUniformByMappedName(const std::string& mappedName,
         return true;
     }
 
+    const std::vector<sh::InterfaceBlock>& interfaces = *ShGetInterfaceBlocks(mHandle);
+    for (const auto& interface : interfaces) {
+        for (const auto& field : interface.fields) {
+            const sh::ShaderVariable* found;
+
+            if (!field.findInfoByMappedName(mappedName, &found, out_userName))
+                continue;
+
+            *out_isArray = found->isArray();
+            return true;
+        }
+    }
 
     return false;
 }
