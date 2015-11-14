@@ -1563,16 +1563,33 @@ public:
       , lineContainer(nullptr)
       , prevLines(0)
       , currentLine(0)
-      , skipWhitespace(true)
       , trailingWhitespace(0)
+      , skipWhitespace(true)
     {}
 
     // The line. This may be null if the inlines are not associated with
     // a block or if we just don't know the line.
     const nsLineList_iterator* line;
 
-    // The line container.
+    // The line container. Private, to ensure we always use SetLineContainer
+    // to update it (so that we have a chance to store the lineContainerWM).
+    //
+    // Note that nsContainerFrame::DoInlineIntrinsicISize will clear the
+    // |line| and |lineContainer| fields when following a next-in-flow link,
+    // so we must not assume these can always be dereferenced.
+  private:
     nsIFrame* lineContainer;
+
+    // Setter and getter for the lineContainer field:
+  public:
+    void SetLineContainer(nsIFrame* aLineContainer)
+    {
+      lineContainer = aLineContainer;
+      if (lineContainer) {
+        lineContainerWM = lineContainer->GetWritingMode();
+      }
+    }
+    nsIFrame* LineContainer() const { return lineContainer; }
 
     // The maximum intrinsic width for all previous lines.
     nscoord prevLines;
@@ -1582,14 +1599,18 @@ public:
     // the caller should call |Break()|.
     nscoord currentLine;
 
+    // This contains the width of the trimmable whitespace at the end of
+    // |currentLine|; it is zero if there is no such whitespace.
+    nscoord trailingWhitespace;
+
     // True if initial collapsable whitespace should be skipped.  This
     // should be true at the beginning of a block, after hard breaks
     // and when the last text ended with whitespace.
     bool skipWhitespace;
 
-    // This contains the width of the trimmable whitespace at the end of
-    // |currentLine|; it is zero if there is no such whitespace.
-    nscoord trailingWhitespace;
+    // Writing mode of the line container (stored here so that we don't
+    // lose track of it if the lineContainer field is reset).
+    mozilla::WritingMode lineContainerWM;
 
     // Floats encountered in the lines.
     class FloatInfo {
