@@ -689,9 +689,9 @@ NewObjectCache::fillProto(EntryIndex entry, const Class* clasp, js::TaggedProto 
     return fill(entry, clasp, proto.raw(), kind, obj);
 }
 
-static bool
-NewObjectWithTaggedProtoIsCachable(ExclusiveContext* cxArg, Handle<TaggedProto> proto,
-                                   NewObjectKind newKind, const Class* clasp)
+bool
+js::NewObjectWithTaggedProtoIsCachable(ExclusiveContext* cxArg, Handle<TaggedProto> proto,
+                                       NewObjectKind newKind, const Class* clasp)
 {
     return cxArg->isJSContext() &&
            proto.isObject() &&
