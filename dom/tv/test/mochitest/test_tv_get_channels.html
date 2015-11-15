@@ -12,22 +12,57 @@
 <script type="application/javascript" src="./head.js"></script>
 <script type="application/javascript">
 
-var tests = [
-  // Setup preferences and permissions
-  setupPrefsAndPermissions,
+function runTest() {
 
-  // Installing the app
-  installApp.bind(this, "file_tv_get_channels.html", "file_app.template.webapp"),
+  ok('tv' in navigator, "navigator.tv should exist.");
 
-  // Run tests in app
-  testApp,
+  navigator.tv.getTuners().then(
+    function(aTuners) {
+      ok(aTuners.length > 0, "Got at least 1 tuner.");
 
-  // Uninstall the app
-  uninstallApp
-];
+      aTuners[0].getSources().then(
+        function(aSources) {
+          ok(aSources.length > 0, "Got at least 1 source.");
+
+          aSources[0].getChannels().then(
+            function(aChannels) {
+              ok(aChannels.length > 0, "Got at least 1 channel.");
+
+              for (var i = 0; i < aChannels.length; i++) {
+                var channel = aChannels[i];
+                ok(channel instanceof TVChannel, "Channel " + i + " should be in right type.")
+                ok('source' in channel, "Channel " + i + " should have a source.");
+                ok('networkId' in channel, "Channel " + i + " should have a network ID.");
+                ok('transportStreamId' in channel, "Channel " + i + " should have a transport stream ID.");
+                ok('serviceId' in channel, "Channel " + i + " should have a service ID.");
+                ok('type' in channel, "Channel " + i + " should have a type.");
+                ok('name' in channel, "Channel " + i + " should have a name.");
+                ok('number' in channel, "Channel " + i + " should have a number.");
+              }
+
+              SimpleTest.finish();
+            },
+            function(aError) {
+              ok(false, "Error occurred when getting channels: " + aError);
+              SimpleTest.finish();
+            }
+          );
+        },
+        function(aError) {
+          ok(false, "Error occurred when getting sources: " + aError);
+          SimpleTest.finish();
+        }
+      );
+    },
+    function(aError) {
+      ok(false, "Error occurred when getting tuners: " + aError);
+      SimpleTest.finish();
+    }
+  );
+}
 
 SimpleTest.waitForExplicitFinish();
-runTest();
+prepareTest(runTest);
 
 </script>
 </pre>
