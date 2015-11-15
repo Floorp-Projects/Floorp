@@ -36,9 +36,6 @@ public:
     : mDestinationUUID(aDestinationUUID)
     , mSequenceID(1)
     , mParent(nullptr)
-    // By default we don't know the next parent.
-    , mWaitingForNewParent(true)
-    , mNextStepCloseAll(false)
   {
     MOZ_COUNT_CTOR(MessagePortServiceData);
   }
@@ -65,9 +62,6 @@ public:
 
   FallibleTArray<NextParent> mNextParents;
   FallibleTArray<RefPtr<SharedMessagePortMessage>> mMessages;
-
-  bool mWaitingForNewParent;
-  bool mNextStepCloseAll;
 };
 
 /* static */ MessagePortService*
@@ -119,49 +113,31 @@ MessagePortService::RequestEntangling(MessagePortParent* aParent,
   // This is a security check.
   if (!data->mDestinationUUID.Equals(aDestinationUUID)) {
     MOZ_ASSERT(false, "DestinationUUIDs do not match!");
-    CloseAll(aParent->ID());
     return false;
   }
 
   if (aSequenceID < data->mSequenceID) {
     MOZ_ASSERT(false, "Invalid sequence ID!");
-    CloseAll(aParent->ID());
     return false;
   }
 
   if (aSequenceID == data->mSequenceID) {
     if (data->mParent) {
       MOZ_ASSERT(false, "Two ports cannot have the same sequenceID.");
-      CloseAll(aParent->ID());
       return false;
     }
 
     // We activate this port, sending all the messages.
     data->mParent = aParent;
-    data->mWaitingForNewParent = false;
     FallibleTArray<MessagePortMessage> array;
     if (!SharedMessagePortMessage::FromSharedToMessagesParent(aParent,
                                                               data->mMessages,
                                                               array)) {
-      CloseAll(aParent->ID());
       return false;
     }
 
     data->mMessages.Clear();
-
-    // We can entangle the port.
-    if (!aParent->Entangled(array)) {
-      CloseAll(aParent->ID());
-      return false;
-    }
-
-    // If we were waiting for this parent in order to close this channel, this
-    // is the time to do it.
-    if (data->mNextStepCloseAll) {
-      CloseAll(aParent->ID());
-    }
-
-    return true;
+    return aParent->Entangled(array);
   }
 
   // This new parent will be the next one when a Disentangle request is
@@ -169,7 +145,6 @@ MessagePortService::RequestEntangling(MessagePortParent* aParent,
   MessagePortServiceData::NextParent* nextParent =
     data->mNextParents.AppendElement(mozilla::fallible);
   if (!nextParent) {
-    CloseAll(aParent->ID());
     return false;
   }
 
@@ -218,7 +193,6 @@ MessagePortService::DisentanglePort(
   // We didn't find the parent.
   if (!nextParent) {
     data->mMessages.SwapElements(aMessages);
-    data->mWaitingForNewParent = true;
     data->mParent = nullptr;
     return true;
   }
@@ -293,20 +267,6 @@ MessagePortService::CloseAll(const nsID& aUUID)
   }
 
   nsID destinationUUID = data->mDestinationUUID;
-
-  // If we have informations about the other port and that port has some
-  // pending messages to deliver but the parent has not processed them yet,
-  // because its entangling request didn't arrive yet), we cannot close this
-  // channel.
-  MessagePortServiceData* destinationData;
-  if (mPorts.Get(destinationUUID, &destinationData) &&
-      !destinationData->mMessages.IsEmpty() &&
-      destinationData->mWaitingForNewParent) {
-    MOZ_ASSERT(!destinationData->mNextStepCloseAll);
-    destinationData->mNextStepCloseAll = true;
-    return;
-  }
-
   mPorts.Remove(aUUID);
 
   CloseAll(destinationUUID);
