@@ -333,8 +333,6 @@ public:
   static bool HasMobileIdSupport(JSContext* aCx, JSObject* aGlobal);
 #endif
 
-  static bool HasTVSupport(JSContext* aCx, JSObject* aGlobal);
-
   static bool HasPresentationSupport(JSContext* aCx, JSObject* aGlobal);
 
   static bool IsE10sEnabled(JSContext* aCx, JSObject* aGlobal);

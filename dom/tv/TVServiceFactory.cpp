@@ -28,7 +28,7 @@ TVServiceFactory::AutoCreateTVService()
   nsresult rv;
   nsCOMPtr<nsITVService> service = do_CreateInstance(TV_SERVICE_CONTRACTID);
   if (!service) {
-    if (Preferences::GetBool("dom.testing.tv_enabled_for_hosted_apps", false)) {
+    if (Preferences::GetBool("dom.ignore_webidl_scope_checks", false)) {
       // Fallback to the fake service.
       service = do_CreateInstance(FAKE_TV_SERVICE_CONTRACTID, &rv);
     } else {
