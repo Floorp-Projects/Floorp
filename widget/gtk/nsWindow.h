@@ -520,7 +520,9 @@ private:
 
     // From GDK
     int GdkCoordToDevicePixels(gint coord);
+public:
     mozilla::LayoutDeviceIntPoint GdkPointToDevicePixels(GdkPoint point);
+private:
     mozilla::LayoutDeviceIntPoint GdkEventCoordsToDevicePixels(gdouble x, gdouble y);
     nsIntRect GdkRectToDevicePixels(GdkRectangle rect);
 };
