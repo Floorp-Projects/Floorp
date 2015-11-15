@@ -355,9 +355,10 @@ class OSXBootstrapper(BaseBootstrapper):
         self.sdk_url = 'https://dl.google.com/android/android-sdk_r24.0.1-macosx.zip'
         is_64bits = sys.maxsize > 2**32
         if is_64bits:
-            self.ndk_url = 'https://dl.google.com/android/ndk/android-ndk-r10e-darwin-x86_64.bin'
+            self.ndk_url = android_ndk_url('darwin')
         else:
             raise Exception('You need a 64-bit version of Mac OS X to build Firefox for Android.')
+
         android.ensure_android_sdk_and_ndk(path=mozbuild_path,
                                            sdk_path=self.sdk_path, sdk_url=self.sdk_url,
                                            ndk_path=self.ndk_path, ndk_url=self.ndk_url)
