@@ -19,17 +19,25 @@
  * correct referrer gets sent.
  */
 
-const PRE_POLICY = "upgrade-insecure-requests; default-src https:; ";
-
 var tests = [
   {
-    policy: "referrer origin",
-    description: "upgrade insecure request with referrer = origin",
+    query: "test1",
+    description: "upgrade insecure request with 'referrer = origin' (CSP in header)",
     result: "http://example.com"
   },
   {
-    policy: "referrer no-referrer",
-    description: "upgrade insecure request with referrer = no-referrer",
+    query: "test2",
+    description: "upgrade insecure request with 'referrer = no-referrer' (CSP in header)",
+    result: ""
+  },
+  {
+    query: "test3",
+    description: "upgrade insecure request with 'referrer = origin' (Meta CSP)",
+    result: "http://example.com"
+  },
+  {
+    query: "test4",
+    description: "upgrade insecure request with 'referrer = no-referrer' (Meta CSP)",
     result: ""
   }
 ];
@@ -39,11 +47,9 @@ var curTest;
 
 function loadTestPage() {
   curTest = tests[counter++];
-  var src = "http://example.com/tests/dom/security/test/csp/file_testserver.sjs?file=";
-  // append the file that should be served
-  src += escape("tests/dom/security/test/csp/file_upgrade_insecure_referrer.html")
-  // append the CSP that should be used to serve the file
-  src += "&csp=" + escape(PRE_POLICY + curTest.policy);
+  var src = "http://example.com/tests/dom/security/test/csp/file_upgrade_insecure_referrer.sjs?";
+  // append the query
+  src += curTest.query;
   document.getElementById("testframe").src = src;
 }
 

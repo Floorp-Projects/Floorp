@@ -27,6 +27,9 @@ nsHtml5SpeculativeLoad::Perform(nsHtml5TreeOpExecutor* aExecutor)
     case eSpeculativeLoadBase:
       aExecutor->SetSpeculationBase(mUrl);
       break;
+    case eSpeculativeLoadCSP:
+      aExecutor->AddSpeculationCSP(mMetaCSP);
+      break;
     case eSpeculativeLoadMetaReferrer:
       aExecutor->SetSpeculationReferrerPolicy(mReferrerPolicy);
       break;

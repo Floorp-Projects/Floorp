@@ -275,6 +275,8 @@ class nsHtml5TreeOpExecutor final : public nsHtml5DocumentBuilder,
     void SetSpeculationReferrerPolicy(ReferrerPolicy aReferrerPolicy);
     void SetSpeculationReferrerPolicy(const nsAString& aReferrerPolicy);
 
+    void AddSpeculationCSP(const nsAString& aCSP);
+
     void AddBase(const nsAString& aURL);
 
     static void InitializeStatics();

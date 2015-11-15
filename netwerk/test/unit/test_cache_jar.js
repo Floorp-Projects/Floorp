@@ -89,6 +89,10 @@ function run_all_tests() {
 var gTests;
 function run_test() {
   do_get_profile();
+  if (!newCacheBackEndUsed()) {
+    do_check_true(true, "This test checks only cache2 specific behavior.");
+    return;
+  }
   do_test_pending();
   httpserv = new HttpServer();
   httpserv.registerPathHandler("/cached", cached_handler);

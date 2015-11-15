@@ -146,6 +146,8 @@ public:
   NS_IMETHOD CheckMayLoad(nsIURI* uri, bool report, bool allowIfInheritsPrincipal) final;
   NS_IMETHOD GetCsp(nsIContentSecurityPolicy** aCsp) override;
   NS_IMETHOD SetCsp(nsIContentSecurityPolicy* aCsp) override;
+  NS_IMETHOD GetPreloadCsp(nsIContentSecurityPolicy** aPreloadCSP) override;
+  NS_IMETHOD SetPreloadCsp(nsIContentSecurityPolicy* aPreloadCSP) override;
   NS_IMETHOD GetCspJSON(nsAString& outCSPinJSON) override;
   NS_IMETHOD GetIsNullPrincipal(bool* aResult) override;
   NS_IMETHOD GetIsCodebasePrincipal(bool* aResult) override;
@@ -200,6 +202,7 @@ protected:
   bool AddonAllowsLoad(nsIURI* aURI);
 
   nsCOMPtr<nsIContentSecurityPolicy> mCSP;
+  nsCOMPtr<nsIContentSecurityPolicy> mPreloadCSP;
   OriginAttributes mOriginAttributes;
 };
 
