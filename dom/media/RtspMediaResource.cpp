@@ -857,7 +857,7 @@ nsresult RtspMediaResource::SeekTime(int64_t aOffset)
   NS_ASSERTION(!NS_IsMainThread(), "Don't call on main thread");
 
   RTSPMLOG("Seek requested for aOffset [%lld] for decoder [%p]",
-           aOffset, mCallback);
+           aOffset, mCallback.get());
   // Clear buffer and raise the frametype flag.
   for(uint32_t i = 0 ; i < mTrackBuffer.Length(); ++i) {
     mTrackBuffer[i]->ResetWithFrameType(MEDIASTREAM_FRAMETYPE_DISCONTINUITY);

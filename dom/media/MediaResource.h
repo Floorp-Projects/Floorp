@@ -16,6 +16,7 @@
 #include "nsIInterfaceRequestor.h"
 #include "MediaCache.h"
 #include "MediaData.h"
+#include "MediaResourceCallback.h"
 #include "mozilla/Atomics.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/TimeStamp.h"
@@ -43,7 +44,6 @@ class nsIPrincipal;
 
 namespace mozilla {
 
-class MediaResourceCallback;
 class MediaChannelStatistics;
 
 /**
@@ -513,10 +513,7 @@ protected:
   // on the main thread. This is called automatically after every read.
   void DispatchBytesConsumed(int64_t aNumBytes, int64_t aOffset);
 
-  // This is not an nsCOMPointer to prevent a circular reference
-  // between the decoder to the media stream object. The stream never
-  // outlives the lifetime of the decoder.
-  MediaResourceCallback* mCallback;
+  RefPtr<MediaResourceCallback> mCallback;
 
   // Channel used to download the media data. Must be accessed
   // from the main thread only.
