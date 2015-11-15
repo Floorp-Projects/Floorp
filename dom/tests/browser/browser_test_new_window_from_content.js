@@ -48,7 +48,7 @@ const kNewTab = "new tab";
 
 SpecialPowers.pushPrefEnv({"set": [["dom.require_user_interaction_for_beforeunload", false]]});
 
-requestLongerTimeout(2);
+requestLongerTimeout(3);
 
 // The following "matrices" represent the result of content attempting to
 // open a window with window.open with the default feature set. The key of

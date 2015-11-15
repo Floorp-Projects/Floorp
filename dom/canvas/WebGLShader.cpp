@@ -336,6 +336,23 @@ WebGLShader::FindAttribUserNameByMappedName(const nsACString& mappedName,
 }
 
 bool
+WebGLShader::FindVaryingByMappedName(const nsACString& mappedName,
+                                     nsCString* const out_userName,
+                                     bool* const out_isArray) const
+{
+    if (!mValidator)
+        return false;
+
+    const std::string mappedNameStr(mappedName.BeginReading());
+    std::string userNameStr;
+    if (!mValidator->FindVaryingByMappedName(mappedNameStr, &userNameStr, out_isArray))
+        return false;
+
+    *out_userName = userNameStr.c_str();
+    return true;
+}
+
+bool
 WebGLShader::FindUniformByMappedName(const nsACString& mappedName,
                                      nsCString* const out_userName,
                                      bool* const out_isArray) const

@@ -297,6 +297,11 @@ public:
   virtual void SetChromeXHRDocBaseURI(nsIURI* aURI) = 0;
 
   /**
+   * Set referrer policy and upgrade-insecure-requests flags
+   */
+  virtual void ApplySettingsFromCSP(bool aSpeculative) = 0;
+
+  /**
    * Return the referrer policy of the document. Return "default" if there's no
    * valid meta referrer tag found in the document.
    */
@@ -323,6 +328,14 @@ public:
   bool GetUpgradeInsecureRequests() const
   {
     return mUpgradeInsecureRequests;
+  }
+
+  /**
+   * Same as GetUpgradeInsecureRequests() but *only* for preloads.
+   */
+  bool GetUpgradeInsecurePreloads() const
+  {
+    return mUpgradeInsecurePreloads;
   }
 
   /**
@@ -2713,6 +2726,7 @@ protected:
   ReferrerPolicyEnum mReferrerPolicy;
 
   bool mUpgradeInsecureRequests;
+  bool mUpgradeInsecurePreloads;
 
   mozilla::WeakPtr<nsDocShell> mDocumentContainer;
 

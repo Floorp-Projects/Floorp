@@ -53,6 +53,9 @@ public:
     void BindAttribLocation(GLuint prog, const nsCString& userName, GLuint index) const;
     bool FindAttribUserNameByMappedName(const nsACString& mappedName,
                                         nsDependentCString* const out_userName) const;
+    bool FindVaryingByMappedName(const nsACString& mappedName,
+                                 nsCString* const out_userName,
+                                 bool* const out_isArray) const;
     bool FindUniformByMappedName(const nsACString& mappedName,
                                  nsCString* const out_userName,
                                  bool* const out_isArray) const;
