@@ -8043,6 +8043,18 @@ nsContentUtils::InternalContentPolicyTypeToExternalOrWorker(nsContentPolicyType 
 }
 
 /* static */
+bool
+nsContentUtils::IsPreloadType(nsContentPolicyType aType)
+{
+  if (aType == nsIContentPolicy::TYPE_INTERNAL_SCRIPT_PRELOAD ||
+      aType == nsIContentPolicy::TYPE_INTERNAL_IMAGE_PRELOAD ||
+      aType == nsIContentPolicy::TYPE_INTERNAL_STYLESHEET_PRELOAD) {
+    return true;
+  }
+  return false;
+}
+
+/* static */
 nsContentPolicyType
 nsContentUtils::InternalContentPolicyTypeToExternalOrCSPInternal(nsContentPolicyType aType)
 {

@@ -362,6 +362,24 @@ ShaderValidator::FindAttribMappedNameByUserName(const std::string& userName,
 }
 
 bool
+ShaderValidator::FindVaryingByMappedName(const std::string& mappedName,
+                                         std::string* const out_userName,
+                                         bool* const out_isArray) const
+{
+    const std::vector<sh::Varying>& varyings = *ShGetVaryings(mHandle);
+    for (auto itr = varyings.begin(); itr != varyings.end(); ++itr) {
+        const sh::ShaderVariable* found;
+        if (!itr->findInfoByMappedName(mappedName, &found, out_userName))
+            continue;
+
+        *out_isArray = found->isArray();
+        return true;
+    }
+
+    return false;
+}
+
+bool
 ShaderValidator::FindVaryingMappedNameByUserName(const std::string& userName,
                                                  const std::string** const out_mappedName) const
 {
@@ -375,7 +393,6 @@ ShaderValidator::FindVaryingMappedNameByUserName(const std::string& userName,
 
     return false;
 }
-
 // This must handle names like "foo.bar[0]".
 bool
 ShaderValidator::FindUniformByMappedName(const std::string& mappedName,
@@ -392,6 +409,18 @@ ShaderValidator::FindUniformByMappedName(const std::string& mappedName,
         return true;
     }
 
+    const std::vector<sh::InterfaceBlock>& interfaces = *ShGetInterfaceBlocks(mHandle);
+    for (const auto& interface : interfaces) {
+        for (const auto& field : interface.fields) {
+            const sh::ShaderVariable* found;
+
+            if (!field.findInfoByMappedName(mappedName, &found, out_userName))
+                continue;
+
+            *out_isArray = found->isArray();
+            return true;
+        }
+    }
 
     return false;
 }

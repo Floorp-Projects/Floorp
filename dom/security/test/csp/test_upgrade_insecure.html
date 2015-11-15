@@ -37,7 +37,6 @@ const UPGRADE_POLICY_NO_DEFAULT_SRC =
   "upgrade-insecure-requests;" +               // upgrade all http requests to https
   "script-src 'unsafe-inline' *";              // we have to whitelist the inline scripts
                                                // in the test.
-
 const NO_UPGRADE_POLICY =
   "default-src http: ws: 'unsafe-inline';" +   // allow http:// and ws://
   "form-action http:;";                        // explicit, no fallback to default-src
@@ -47,6 +46,7 @@ var tests = [
     policy: UPGRADE_POLICY,
     topLevelScheme: "https://",
     description: "upgrade all requests on toplevel https",
+    deliveryMethod: "header",
     results: [
       "iframe-ok", "script-ok", "img-ok", "img-redir-ok", "font-ok", "xhr-ok", "style-ok",
       "media-ok", "object-ok", "form-ok", "websocket-ok", "nested-img-ok"
@@ -56,6 +56,7 @@ var tests = [
     policy: UPGRADE_POLICY,
     topLevelScheme: "http://",
     description: "upgrade all requests on toplevel http",
+    deliveryMethod: "header",
     results: [
       "iframe-ok", "script-ok", "img-ok", "img-redir-ok", "font-ok", "xhr-ok", "style-ok",
       "media-ok", "object-ok", "form-ok", "websocket-ok", "nested-img-ok"
@@ -66,6 +67,7 @@ var tests = [
     policy: UPGRADE_POLICY_NO_DEFAULT_SRC,
     topLevelScheme: "http://",
     description: "upgrade all requests on toplevel http where default-src is not specified",
+    deliveryMethod: "header",
     results: [
       "iframe-ok", "script-ok", "img-ok", "img-redir-ok", "font-ok", "xhr-ok", "style-ok",
       "media-ok", "object-ok", "form-ok", "websocket-ok", "nested-img-ok"
@@ -75,10 +77,23 @@ var tests = [
     policy: NO_UPGRADE_POLICY,
     topLevelScheme: "http://",
     description: "do not upgrade any requests on toplevel http",
+    deliveryMethod: "header",
     results: [
       "iframe-error", "script-error", "img-error", "img-redir-error", "font-error",
       "xhr-error", "style-error", "media-error", "object-error", "form-error",
       "websocket-error", "nested-img-error"
+    ]
+  },
+  { // (5) test that all requests within an >> https << page using meta CSP get updated
+    // policy: UPGRADE_POLICY, that test uses UPGRADE_POLICY within
+    //                         file_upgrade_insecure_meta.html
+    //                         no need to define it within that object.
+    topLevelScheme: "https://",
+    description: "upgrade all requests on toplevel https using meta csp",
+    deliveryMethod: "meta",
+    results: [
+      "iframe-ok", "script-ok", "img-ok", "img-redir-ok", "font-ok", "xhr-ok", "style-ok",
+      "media-ok", "object-ok", "form-ok", "websocket-ok", "nested-img-ok"
     ]
   },
 ];
@@ -89,10 +104,16 @@ var curTest;
 function loadTestPage() {
   curTest = tests[counter++];
   var src = curTest.topLevelScheme + "example.com/tests/dom/security/test/csp/file_testserver.sjs?file=";
-  // append the file that should be served
-  src += escape("tests/dom/security/test/csp/file_upgrade_insecure.html")
-  // append the CSP that should be used to serve the file
-  src += "&csp=" + escape(curTest.policy);
+  if (curTest.deliveryMethod === "header") {
+    // append the file that should be served
+    src += escape("tests/dom/security/test/csp/file_upgrade_insecure.html");
+    // append the CSP that should be used to serve the file
+    src += "&csp=" + escape(curTest.policy);
+  }
+  else {
+    src += escape("tests/dom/security/test/csp/file_upgrade_insecure_meta.html");
+    // no csp here, since it's in the meta element
+  }
   document.getElementById("testframe").src = src;
 }
 

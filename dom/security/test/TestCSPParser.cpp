@@ -117,7 +117,7 @@ nsresult runTest(uint32_t aExpectedPolicyCount, // this should be 0 for policies
   // append a policy
   nsString policyStr;
   policyStr.AssignASCII(aPolicy);
-  rv = csp->AppendPolicy(policyStr, false);
+  rv = csp->AppendPolicy(policyStr, false, false);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // when executing fuzzy tests we do not care about the actual output
