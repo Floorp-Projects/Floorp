@@ -563,7 +563,12 @@ nsScriptLoader::ProcessScriptElement(nsIScriptElement *aElement)
           ourCORSMode == request->mCORSMode &&
           ourRefPolicy == request->mReferrerPolicy) {
         rv = CheckContentPolicy(mDocument, aElement, request->mURI, type, false);
-        NS_ENSURE_SUCCESS(rv, false);
+        if (NS_FAILED(rv)) {
+          // probably plans have changed; even though the preload was allowed seems
+          // like the actual load is not; let's cancel the preload request.
+          request->Cancel();
+          return false;
+        }
       } else {
         // Drop the preload
         request = nullptr;
