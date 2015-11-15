@@ -2410,12 +2410,11 @@ this.XPIProvider = {
 
         let chan;
         try {
-          chan = Services.io.newChannelFromURI2(aURI,
-                                                null,      // aLoadingNode
-                                                Services.scriptSecurityManager.getSystemPrincipal(),
-                                                null,      // aTriggeringPrincipal
-                                                Ci.nsILoadInfo.SEC_NORMAL,
-                                                Ci.nsIContentPolicy.TYPE_OTHER);
+          chan = NetUtil.newChannel({
+            uri: aURI,
+            loadUsingSystemPrincipal: true,
+            securityFlags: Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL
+          });
         }
         catch (ex) {
           return null;
@@ -5414,14 +5413,16 @@ AddonInstall.prototype = {
 
       this.channel = NetUtil.newChannel({
         uri: this.sourceURI,
-        loadUsingSystemPrincipal: true});
+        loadUsingSystemPrincipal: true,
+        securityFlags: Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL
+      });
       this.channel.notificationCallbacks = this;
       if (this.channel instanceof Ci.nsIHttpChannel) {
         this.channel.setRequestHeader("Moz-XPI-Update", "1", true);
         if (this.channel instanceof Ci.nsIHttpChannelInternal)
           this.channel.forceAllowThirdPartyCookie = true;
       }
-      this.channel.asyncOpen(listener, null);
+      this.channel.asyncOpen2(listener);
 
       Services.obs.addObserver(this, "network:offline-about-to-go-offline", false);
     }
