@@ -1093,8 +1093,8 @@ Http2Session::CleanupStream(uint32_t aID, nsresult aResult, errorType aResetCode
 
 static void RemoveStreamFromQueue(Http2Stream *aStream, nsDeque &queue)
 {
-  uint32_t size = queue.GetSize();
-  for (uint32_t count = 0; count < size; ++count) {
+  size_t size = queue.GetSize();
+  for (size_t count = 0; count < size; ++count) {
     Http2Stream *stream = static_cast<Http2Stream *>(queue.PopFront());
     if (stream != aStream)
       queue.Push(stream);
@@ -1841,8 +1841,8 @@ Http2Session::RecvGoAway(Http2Session *self)
   self->mStreamTransactionHash.Enumerate(GoAwayEnumerator, self);
 
   // Process the streams marked for deletion and restart.
-  uint32_t size = self->mGoAwayStreamsToRestart.GetSize();
-  for (uint32_t count = 0; count < size; ++count) {
+  size_t size = self->mGoAwayStreamsToRestart.GetSize();
+  for (size_t count = 0; count < size; ++count) {
     Http2Stream *stream =
       static_cast<Http2Stream *>(self->mGoAwayStreamsToRestart.PopFront());
 
@@ -1859,7 +1859,7 @@ Http2Session::RecvGoAway(Http2Session *self)
   // in another one. (they were never sent on the network so they implicitly
   // are not covered by the last-good id.
   size = self->mQueuedStreams.GetSize();
-  for (uint32_t count = 0; count < size; ++count) {
+  for (size_t count = 0; count < size; ++count) {
     Http2Stream *stream =
       static_cast<Http2Stream *>(self->mQueuedStreams.PopFront());
     MOZ_ASSERT(stream->Queued());

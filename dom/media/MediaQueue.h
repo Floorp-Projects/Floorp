@@ -36,7 +36,7 @@ public:
     Reset();
   }
 
-  inline int32_t GetSize() {
+  inline size_t GetSize() {
     ReentrantMonitorAutoEnter mon(mReentrantMonitor);
     return nsDeque::GetSize();
   }
@@ -124,9 +124,9 @@ public:
   // Elements whose start time is before aTime are ignored.
   void GetElementsAfter(int64_t aTime, nsTArray<RefPtr<T>>* aResult) {
     ReentrantMonitorAutoEnter mon(mReentrantMonitor);
-    if (!GetSize())
+    if (GetSize() == 0)
       return;
-    int32_t i;
+    size_t i;
     for (i = GetSize() - 1; i > 0; --i) {
       T* v = static_cast<T*>(ObjectAt(i));
       if (v->GetEndTime() < aTime)
@@ -135,14 +135,14 @@ public:
     // Elements less than i have a end time before aTime. It's also possible
     // that the element at i has a end time before aTime, but that's OK.
     for (; i < GetSize(); ++i) {
-      RefPtr<T> elem = static_cast<T*>(ObjectAt(i));
+      RefPtr<T> elem = static_cast<T*>(ObjectAt(static_cast<size_t>(i)));
       aResult->AppendElement(elem);
     }
   }
 
   void GetFirstElements(uint32_t aMaxElements, nsTArray<RefPtr<T>>* aResult) {
     ReentrantMonitorAutoEnter mon(mReentrantMonitor);
-    for (int32_t i = 0; i < (int32_t)aMaxElements && i < GetSize(); ++i) {
+    for (size_t i = 0; i < aMaxElements && i < GetSize(); ++i) {
       *aResult->AppendElement() = static_cast<T*>(ObjectAt(i));
     }
   }
@@ -150,7 +150,7 @@ public:
   uint32_t FrameCount() {
     ReentrantMonitorAutoEnter mon(mReentrantMonitor);
     uint32_t frames = 0;
-    for (int32_t i = 0; i < GetSize(); ++i) {
+    for (size_t i = 0; i < GetSize(); ++i) {
       T* v = static_cast<T*>(ObjectAt(i));
       frames += v->mFrames;
     }
