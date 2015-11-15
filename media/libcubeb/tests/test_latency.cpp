@@ -5,11 +5,13 @@
 #include <cubeb/cubeb.h>
 #include <assert.h>
 #include <stdio.h>
-
+#include "TestHarness.h"
 #define LOG(msg) fprintf(stderr, "%s\n", msg);
 
 int main(int argc, char * argv[])
 {
+  ScopedXPCOM xpcom("test_latency");
+
   cubeb * ctx = NULL;
   int r;
   uint32_t max_channels;
@@ -49,6 +51,5 @@ int main(int argc, char * argv[])
 
   cubeb_destroy(ctx);
   LOG("cubeb_destroy ok");
-
   return EXIT_SUCCESS;
 }

@@ -37,7 +37,7 @@
 #define OD_LOG(...) __android_log_print(ANDROID_LOG_DEBUG, "OmxDecoder", __VA_ARGS__)
 
 #undef LOG
-PRLogModuleInfo *gOmxDecoderLog;
+mozilla::LazyLogModule gOmxDecoderLog("OmxDecoder");
 #define LOG(type, msg...) MOZ_LOG(gOmxDecoderLog, type, (msg))
 
 using namespace MPAPI;
@@ -102,10 +102,6 @@ static sp<IOMX> GetOMX()
 
 bool
 OmxDecoder::Init(sp<MediaExtractor>& extractor) {
-  if (!gOmxDecoderLog) {
-    gOmxDecoderLog = PR_NewLogModule("OmxDecoder");
-  }
-
   sp<MetaData> meta = extractor->getMetaData();
 
   ssize_t audioTrackIndex = -1;

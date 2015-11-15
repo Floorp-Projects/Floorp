@@ -14,7 +14,7 @@
 
 namespace mozilla {
 
-extern PRLogModuleInfo* gMediaDecoderLog;
+extern LazyLogModule gMediaDecoderLog;
 #define SINK_LOG(msg, ...) \
   MOZ_LOG(gMediaDecoderLog, LogLevel::Debug, \
     ("DecodedAudioDataSink=%p " msg, this, ##__VA_ARGS__))
