@@ -1,0 +1,57 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1212477
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1212477 - Needs a way to access to &lt;canvas&gt;'s context (2d, webgl) from Anonymous Content API</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+  <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1212477">Mozilla Bug 1212477</a>
+  <div>
+    <div id="id" class="test">text content</div>
+    <canvas id="canvas2d"></canvas>
+    <canvas id="canvas-webgl"></canvas>
+    <canvas id="canvas-foo"></canvas>
+  </div>
+  <script type="application/javascript;version=1.8">
+    let chromeDocument = SpecialPowers.wrap(document);
+    let testElement = document.querySelector("div");
+
+    let anonymousContent = chromeDocument.insertAnonymousContent(testElement);
+
+    is(anonymousContent.getCanvasContext("id", "2d"), null,
+        "Context is null for non-canvas elements");
+
+    let context2d = anonymousContent.getCanvasContext("canvas2d", "2d");
+
+    is(context2d.toString(), "[object CanvasRenderingContext2D]",
+        "2D Context is returned properly");
+
+    is(context2d.canvas, null,
+        "context's canvas property is null in anonymous content");
+
+    is (anonymousContent.getCanvasContext("canvas-foo", "foo"), null,
+        "Context is null for unknown context type");
+
+    SimpleTest.doesThrow(
+      () => anonymousContent.getCanvasContext("foo", "2d"),
+      "NS_ERROR_NOT_AVAILABLE",
+      "Get a context using unexisting id should throw"
+    );
+
+    let webgl = anonymousContent.getCanvasContext("canvas-webgl", "webgl");
+
+    is(webgl.toString(), "[object WebGLRenderingContext]",
+        "WebGL Context is returned properly");
+
+    is(webgl.canvas, null,
+        "WebGL context's canvas property is null in anonymous content");
+
+    chromeDocument.removeAnonymousContent(anonymousContent);
+  </script>
+</body>
+</html>
