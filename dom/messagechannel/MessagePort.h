@@ -25,7 +25,6 @@ class DispatchEventRunnable;
 class MessagePortChild;
 class MessagePortIdentifier;
 class MessagePortMessage;
-class PostMessageRunnable;
 class SharedMessagePortMessage;
 
 namespace workers {
@@ -37,7 +36,6 @@ class MessagePort final : public DOMEventTargetHelper
                         , public nsIObserver
 {
   friend class DispatchEventRunnable;
-  friend class PostMessageRunnable;
 
 public:
   NS_DECL_NSIIPCBACKGROUNDCHILDCREATECALLBACK
@@ -150,8 +148,6 @@ private:
     return mIsKeptAlive;
   }
 
-  void MaybeClose();
-
   nsAutoPtr<workers::WorkerFeature> mWorkerFeature;
 
   RefPtr<DispatchEventRunnable> mDispatchRunnable;
@@ -180,7 +176,6 @@ private:
   bool mMessageQueueEnabled;
 
   bool mIsKeptAlive;
-  bool mClosing;
 };
 
 } // namespace dom
