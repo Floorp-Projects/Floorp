@@ -56,18 +56,24 @@ add_task(function* testTabSwitchContext() {
       var tests = [
         expect => {
           browser.test.log("Initial state, expect default properties.");
-          expect(details[0]);
+          expectDefaults(details[0]).then(() => {
+            expect(details[0]);
+          });
         },
         expect => {
           browser.test.log("Change the icon in the current tab. Expect default properties excluding the icon.");
           browser.browserAction.setIcon({ tabId: tabs[0], path: "1.png" });
-          expect(details[1]);
+          expectDefaults(details[0]).then(() => {
+            expect(details[1]);
+          });
         },
         expect => {
           browser.test.log("Create a new tab. Expect default properties.");
           browser.tabs.create({ active: true, url: "about:blank?0" }, tab => {
             tabs.push(tab.id);
-            expect(details[0]);
+            expectDefaults(details[0]).then(() => {
+              expect(details[0]);
+            });
           });
         },
         expect => {
@@ -80,7 +86,9 @@ add_task(function* testTabSwitchContext() {
           browser.browserAction.setBadgeBackgroundColor({ tabId, color: [0xff, 0, 0] });
           browser.browserAction.disable(tabId);
 
-          expect(details[2]);
+          expectDefaults(details[0]).then(() => {
+            expect(details[2]);
+          });
         },
         expect => {
           browser.test.log("Navigate to a new page. Expect no changes.");
@@ -110,17 +118,23 @@ add_task(function* testTabSwitchContext() {
           browser.browserAction.setBadgeText({ text: "d2" });
           browser.browserAction.setBadgeBackgroundColor({ color: [0, 0xff, 0] });
           browser.browserAction.disable();
-          expect(details[3]);
+          expectDefaults(details[3]).then(() => {
+            expect(details[3]);
+          });
         },
         expect => {
           browser.test.log("Re-enable by default. Expect enabled.");
           browser.browserAction.enable();
-          expect(details[4]);
+          expectDefaults(details[4]).then(() => {
+            expect(details[4]);
+          });
         },
         expect => {
           browser.test.log("Switch back to tab 2. Expect former value, unaffected by changes to defaults in previous step.");
           browser.tabs.update(tabs[1], { active: true }, () => {
-            expect(details[2]);
+            expectDefaults(details[3]).then(() => {
+              expect(details[2]);
+            });
           });
         },
         expect => {
@@ -146,18 +160,13 @@ add_task(function* testTabSwitchContext() {
 
       // Gets the current details of the browser action, and returns a
       // promise that resolves to an object containing them.
-      function getDetails() {
-        return new Promise(resolve => {
-          return browser.tabs.query({ active: true, currentWindow: true }, resolve);
-        }).then(tabs => {
-          var tabId = tabs[0].id;
-
-          return Promise.all([
-            new Promise(resolve => browser.browserAction.getTitle({tabId}, resolve)),
-            new Promise(resolve => browser.browserAction.getPopup({tabId}, resolve)),
-            new Promise(resolve => browser.browserAction.getBadgeText({tabId}, resolve)),
-            new Promise(resolve => browser.browserAction.getBadgeBackgroundColor({tabId}, resolve))])
-        }).then(details => {
+      function getDetails(tabId) {
+        return Promise.all([
+          new Promise(resolve => browser.browserAction.getTitle({tabId}, resolve)),
+          new Promise(resolve => browser.browserAction.getPopup({tabId}, resolve)),
+          new Promise(resolve => browser.browserAction.getBadgeText({tabId}, resolve)),
+          new Promise(resolve => browser.browserAction.getBadgeBackgroundColor({tabId}, resolve))]
+        ).then(details => {
           return Promise.resolve({ title: details[0],
                                    popup: details[1],
                                    badge: details[2],
@@ -165,6 +174,26 @@ add_task(function* testTabSwitchContext() {
         });
       }
 
+      function checkDetails(expecting, tabId) {
+        return getDetails(tabId).then(details => {
+          browser.test.assertEq(expecting.title, details.title,
+                                "expected value from getTitle");
+
+          browser.test.assertEq(expecting.popup, details.popup,
+                                "expected value from getPopup");
+
+          browser.test.assertEq(expecting.badge, details.badge,
+                                "expected value from getBadge");
+
+          browser.test.assertEq(String(expecting.badgeBackgroundColor),
+                                String(details.badgeBackgroundColor),
+                                "expected value from getBadgeBackgroundColor");
+        });
+      }
+
+      function expectDefaults(expecting) {
+        return checkDetails(expecting);
+      }
 
       // Runs the next test in the `tests` array, checks the results,
       // and passes control back to the outer test scope.
@@ -174,20 +203,11 @@ add_task(function* testTabSwitchContext() {
         test(expecting => {
           // Check that the API returns the expected values, and then
           // run the next test.
-          getDetails().then(details => {
-            browser.test.assertEq(expecting.title, details.title,
-                                  "expected value from getTitle");
-
-            browser.test.assertEq(expecting.popup, details.popup,
-                                  "expected value from getPopup");
-
-            browser.test.assertEq(expecting.badge, details.badge,
-                                  "expected value from getBadge");
-
-            browser.test.assertEq(String(expecting.badgeBackgroundColor),
-                                  String(details.badgeBackgroundColor),
-                                  "expected value from getBadgeBackgroundColor");
-
+          new Promise(resolve => {
+            return browser.tabs.query({ active: true, currentWindow: true }, resolve);
+          }).then(tabs => {
+            return checkDetails(expecting, tabs[0].id);
+          }).then(() => {
             // Check that the actual icon has the expected values, then
             // run the next test.
             browser.test.sendMessage("nextTest", expecting, tests.length);
