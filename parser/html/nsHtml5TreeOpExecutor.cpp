@@ -6,13 +6,16 @@
 
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Likely.h"
+#include "mozilla/dom/nsCSPService.h"
 
 #include "nsError.h"
 #include "nsHtml5TreeOpExecutor.h"
 #include "nsScriptLoader.h"
 #include "nsIContentViewer.h"
+#include "nsIContentSecurityPolicy.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIDocShell.h"
+#include "nsIDOMDocument.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIWebShellServices.h"
@@ -1012,6 +1015,43 @@ nsHtml5TreeOpExecutor::SetSpeculationReferrerPolicy(const nsAString& aReferrerPo
 {
   ReferrerPolicy policy = mozilla::net::ReferrerPolicyFromString(aReferrerPolicy);
   return SetSpeculationReferrerPolicy(policy);
+}
+
+void
+nsHtml5TreeOpExecutor::AddSpeculationCSP(const nsAString& aCSP)
+{
+  if (!CSPService::sCSPEnabled) {
+    return;
+  }
+
+  NS_ASSERTION(NS_IsMainThread(), "Wrong thread!");
+
+  nsIPrincipal* principal = mDocument->NodePrincipal();
+  nsCOMPtr<nsIContentSecurityPolicy> preloadCsp;
+  nsresult rv = principal->GetPreloadCsp(getter_AddRefs(preloadCsp));
+  NS_ENSURE_SUCCESS_VOID(rv);
+  if (!preloadCsp) {
+    preloadCsp = do_CreateInstance("@mozilla.org/cspcontext;1", &rv);
+    NS_ENSURE_SUCCESS_VOID(rv);
+
+    // Store the request context for violation reports
+    nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(mDocument);
+    rv = preloadCsp->SetRequestContext(domDoc, nullptr);
+    NS_ENSURE_SUCCESS_VOID(rv);
+
+    // set the new csp
+    rv = principal->SetPreloadCsp(preloadCsp);
+    NS_ENSURE_SUCCESS_VOID(rv);
+  }
+
+  // please note that meta CSPs and CSPs delivered through a header need
+  // to be joined together.
+  rv = preloadCsp->AppendPolicy(aCSP,
+                                false, // csp via meta tag can not be report only
+                                true); // delivered through the meta tag
+  NS_ENSURE_SUCCESS_VOID(rv);
+
+  mDocument->ApplySettingsFromCSP(true);
 }
 
 void
