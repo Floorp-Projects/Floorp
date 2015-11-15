@@ -236,6 +236,14 @@ nsHtml5TreeBuilder::createElement(int32_t aNamespace, nsIAtom* aName,
           }
         } else if (nsHtml5Atoms::meta == aName) {
           if (nsHtml5Portability::lowerCaseLiteralEqualsIgnoreAsciiCaseString(
+                      "content-security-policy",
+                      aAttributes->getValue(nsHtml5AttributeName::ATTR_HTTP_EQUIV))) {
+            nsString* csp = aAttributes->getValue(nsHtml5AttributeName::ATTR_CONTENT);
+            if (csp) {
+              mSpeculativeLoadQueue.AppendElement()->InitMetaCSP(*csp);
+            }
+          }
+          else if (nsHtml5Portability::lowerCaseLiteralEqualsIgnoreAsciiCaseString(
                       "referrer",
                       aAttributes->getValue(nsHtml5AttributeName::ATTR_NAME))) {
             nsString* referrerPolicy = aAttributes->getValue(nsHtml5AttributeName::ATTR_CONTENT);
