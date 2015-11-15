@@ -369,31 +369,6 @@ nsDeque::ObjectAt(int32_t aIndex) const
   return result;
 }
 
-void*
-nsDeque::RemoveObjectAt(int32_t aIndex)
-{
-  if (aIndex < 0 || aIndex >= mSize) {
-    return 0;
-  }
-  void* result = mData[modulus(mOrigin + aIndex, mCapacity)];
-
-  // "Shuffle down" all elements in the array by 1, overwritting the element
-  // being removed.
-  for (int32_t i = aIndex; i < mSize; ++i) {
-    mData[modulus(mOrigin + i, mCapacity)] =
-      mData[modulus(mOrigin + i + 1, mCapacity)];
-  }
-  mSize--;
-
-  return result;
-}
-
-void*
-nsDeque::Last() const
-{
-  return ObjectAt(mSize - 1);
-}
-
 /**
  * Call this method when you want to iterate all the
  * members of the container, passing a functor along
@@ -408,25 +383,4 @@ nsDeque::ForEach(nsDequeFunctor& aFunctor) const
   for (int32_t i = 0; i < mSize; ++i) {
     aFunctor(ObjectAt(i));
   }
-}
-
-/**
- * Call this method when you want to iterate all the
- * members of the container, calling the functor you
- * passed with each member. This process will interrupt
- * if your function returns non 0 to this method.
- *
- * @param   aFunctor object to call for each member
- * @return  first nonzero result of aFunctor or 0.
- */
-const void*
-nsDeque::FirstThat(nsDequeFunctor& aFunctor) const
-{
-  for (int32_t i = 0; i < mSize; ++i) {
-    void* obj = aFunctor(ObjectAt(i));
-    if (obj) {
-      return obj;
-    }
-  }
-  return 0;
 }
