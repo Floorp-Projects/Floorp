@@ -508,9 +508,6 @@ public:
   // SetLoadInBackground() on mResource.
   void SetLoadInBackground(bool aLoadInBackground);
 
-  // Returns a weak reference to the media decoder owner.
-  MediaDecoderOwner* GetMediaOwner() const;
-
   MediaDecoderStateMachine* GetStateMachine() const;
   void SetStateMachine(MediaDecoderStateMachine* aStateMachine);
 
