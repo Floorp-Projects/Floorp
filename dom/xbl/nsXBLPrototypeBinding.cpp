@@ -488,101 +488,74 @@ nsXBLPrototypeBinding::LocateInstance(nsIContent* aBoundElement,
   return copyParent->GetChildAt(templParent->IndexOf(aTemplChild));
 }
 
-struct nsXBLAttrChangeData
-{
-  nsXBLPrototypeBinding* mProto;
-  nsIContent* mBoundElement;
-  nsIContent* mContent;
-  int32_t mSrcNamespace;
-
-  nsXBLAttrChangeData(nsXBLPrototypeBinding* aProto,
-                      nsIContent* aElt, nsIContent* aContent) 
-  :mProto(aProto), mBoundElement(aElt), mContent(aContent) {}
-};
-
-// XXXbz this duplicates lots of AttributeChanged
-static PLDHashOperator
-SetAttrs(nsISupports* aKey, nsXBLAttributeEntry* aEntry, void* aClosure)
-{
-  nsXBLAttrChangeData* changeData = static_cast<nsXBLAttrChangeData*>(aClosure);
-
-  nsIAtom* src = aEntry->GetSrcAttribute();
-  int32_t srcNs = changeData->mSrcNamespace;
-  nsAutoString value;
-  bool attrPresent = true;
-
-  if (src == nsGkAtoms::text && srcNs == kNameSpaceID_XBL) {
-    nsContentUtils::GetNodeTextContent(changeData->mBoundElement, false,
-                                       value);
-    value.StripChar(char16_t('\n'));
-    value.StripChar(char16_t('\r'));
-    nsAutoString stripVal(value);
-    stripVal.StripWhitespace();
-
-    if (stripVal.IsEmpty()) 
-      attrPresent = false;
-  }
-  else {
-    attrPresent = changeData->mBoundElement->GetAttr(srcNs, src, value);
-  }
-
-  if (attrPresent) {
-    nsIContent* content =
-      changeData->mProto->GetImmediateChild(nsGkAtoms::content);
-
-    nsXBLAttributeEntry* curr = aEntry;
-    while (curr) {
-      nsIAtom* dst = curr->GetDstAttribute();
-      int32_t dstNs = curr->GetDstNameSpace();
-      nsIContent* element = curr->GetElement();
-
-      nsIContent *realElement =
-        changeData->mProto->LocateInstance(changeData->mBoundElement, content,
-                                           changeData->mContent, element);
-
-      if (realElement) {
-        realElement->SetAttr(dstNs, dst, value, false);
-
-        // XXXndeakin shouldn't this be done in lieu of SetAttr?
-        if ((dst == nsGkAtoms::text && dstNs == kNameSpaceID_XBL) ||
-            (realElement->NodeInfo()->Equals(nsGkAtoms::html,
-                                             kNameSpaceID_XUL) &&
-             dst == nsGkAtoms::value && !value.IsEmpty())) {
-
-          RefPtr<nsTextNode> textContent =
-            new nsTextNode(realElement->NodeInfo()->NodeInfoManager());
-
-          textContent->SetText(value, false);
-          realElement->AppendChildTo(textContent, false);
-        }
-      }
-
-      curr = curr->GetNext();
-    }
-  }
-
-  return PL_DHASH_NEXT;
-}
-
-static PLDHashOperator
-SetAttrsNS(const uint32_t &aNamespace,
-           nsXBLPrototypeBinding::InnerAttributeTable* aXBLAttributes,
-           void* aClosure)
-{
-  if (aXBLAttributes && aClosure) {
-    nsXBLAttrChangeData* changeData = static_cast<nsXBLAttrChangeData*>(aClosure);
-    changeData->mSrcNamespace = aNamespace;
-    aXBLAttributes->EnumerateRead(SetAttrs, aClosure);
-  }
-  return PL_DHASH_NEXT;
-}
-
 void
 nsXBLPrototypeBinding::SetInitialAttributes(nsIContent* aBoundElement, nsIContent* aAnonymousContent)
 {
-  if (mAttributeTable) {
-    nsXBLAttrChangeData data(this, aBoundElement, aAnonymousContent);
-    mAttributeTable->EnumerateRead(SetAttrsNS, &data);
+  if (!mAttributeTable) {
+    return;
+  }
+
+  for (auto iter1 = mAttributeTable->Iter(); !iter1.Done(); iter1.Next()) {
+    InnerAttributeTable* xblAttributes = iter1.UserData();
+    if (xblAttributes) {
+      int32_t srcNamespace = iter1.Key();
+
+      for (auto iter2 = xblAttributes->Iter(); !iter2.Done(); iter2.Next()) {
+        // XXXbz this duplicates lots of AttributeChanged
+        nsXBLAttributeEntry* entry = iter2.UserData();
+        nsIAtom* src = entry->GetSrcAttribute();
+        nsAutoString value;
+        bool attrPresent = true;
+
+        if (src == nsGkAtoms::text && srcNamespace == kNameSpaceID_XBL) {
+          nsContentUtils::GetNodeTextContent(aBoundElement, false, value);
+          value.StripChar(char16_t('\n'));
+          value.StripChar(char16_t('\r'));
+          nsAutoString stripVal(value);
+          stripVal.StripWhitespace();
+
+          if (stripVal.IsEmpty()) {
+            attrPresent = false;
+          }
+        } else {
+          attrPresent = aBoundElement->GetAttr(srcNamespace, src, value);
+        }
+
+        if (attrPresent) {
+          nsIContent* content = GetImmediateChild(nsGkAtoms::content);
+
+          nsXBLAttributeEntry* curr = entry;
+          while (curr) {
+            nsIAtom* dst = curr->GetDstAttribute();
+            int32_t dstNs = curr->GetDstNameSpace();
+            nsIContent* element = curr->GetElement();
+
+            nsIContent* realElement =
+              LocateInstance(aBoundElement, content,
+                             aAnonymousContent, element);
+
+            if (realElement) {
+              realElement->SetAttr(dstNs, dst, value, false);
+
+              // XXXndeakin shouldn't this be done in lieu of SetAttr?
+              if ((dst == nsGkAtoms::text && dstNs == kNameSpaceID_XBL) ||
+                  (realElement->NodeInfo()->Equals(nsGkAtoms::html,
+                                                   kNameSpaceID_XUL) &&
+                   dst == nsGkAtoms::value && !value.IsEmpty())) {
+
+                RefPtr<nsTextNode> textContent =
+                  new nsTextNode(realElement->NodeInfo()->NodeInfoManager());
+
+                textContent->SetText(value, false);
+                realElement->AppendChildTo(textContent, false);
+              }
+            }
+
+            curr = curr->GetNext();
+          }
+        }
+      }
+    }
   }
 }
 
