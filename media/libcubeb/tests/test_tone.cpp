@@ -17,6 +17,7 @@
 
 #include "cubeb/cubeb.h"
 #include "common.h"
+#include "TestHarness.h"
 
 #define SAMPLE_FREQUENCY 48000
 
@@ -72,6 +73,8 @@ void state_cb(cubeb_stream *stream, void *user, cubeb_state state)
 
 int main(int argc, char *argv[])
 {
+  ScopedXPCOM xpcom("test_tone");
+
   cubeb *ctx;
   cubeb_stream *stream;
   cubeb_stream_params params;
