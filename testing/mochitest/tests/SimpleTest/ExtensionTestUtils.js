@@ -6,6 +6,38 @@ ExtensionTestUtils.loadExtension = function(ext, id = null)
   var testDone = new Promise(resolve => { testResolve = resolve; });
 
   var messageHandler = new Map();
+  var messageAwaiter = new Map();
+
+  var messageQueue = [];
+
+  SimpleTest.registerCleanupFunction(() => {
+    if (messageQueue.length) {
+      SimpleTest.is(messageQueue.length, 0, "message queue is empty");
+    }
+    if (messageAwaiter.size) {
+      SimpleTest.is(messageAwaiter.size, 0, "no tasks awaiting on messages");
+    }
+  });
+
+  function checkMessages() {
+    if (messageQueue.length) {
+      let [msg, ...args] = messageQueue[0];
+
+      let listener = messageAwaiter.get(msg);
+      if (listener) {
+        messageQueue.shift();
+        messageAwaiter.delete(msg);
+
+        listener.resolve(...args);
+      }
+    }
+  }
+
+  function checkDuplicateListeners(msg) {
+    if (messageHandler.has(msg) || messageAwaiter.has(msg)) {
+      throw new Error("only one message handler allowed");
+    }
+  }
 
   function testHandler(kind, pass, msg, ...args) {
     if (kind == "test-eq") {
@@ -29,11 +61,13 @@ ExtensionTestUtils.loadExtension = function(ext, id = null)
 
     testMessage(msg, ...args) {
       var handler = messageHandler.get(msg);
-      if (!handler) {
-        return;
+      if (handler) {
+        handler(...args);
+      } else {
+        messageQueue.push([msg, ...args]);
+        checkMessages();
       }
 
-      handler(...args);
     },
   };
 
@@ -41,21 +75,15 @@ ExtensionTestUtils.loadExtension = function(ext, id = null)
 
   extension.awaitMessage = (msg) => {
     return new Promise(resolve => {
-      if (messageHandler.has(msg)) {
-        throw new Error("only one message handler allowed");
-      }
+      checkDuplicateListeners(msg);
 
-      messageHandler.set(msg, (...args) => {
-        messageHandler.delete(msg);
-        resolve(...args);
-      });
+      messageAwaiter.set(msg, {resolve});
+      checkMessages();
     });
   };
 
   extension.onMessage = (msg, callback) => {
-    if (messageHandler.has(msg)) {
-      throw new Error("only one message handler allowed");
-    }
+    checkDuplicateListeners(msg);
     messageHandler.set(msg, callback);
   };
 
