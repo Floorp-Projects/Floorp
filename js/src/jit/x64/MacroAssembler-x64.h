@@ -953,6 +953,10 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
         cmp32(ToUpper32(operand), Imm32(Upper32Of(GetShiftedTag(JSVAL_TYPE_BOOLEAN))));
         j(cond, label);
     }
+    void branchTestBoolean(Condition cond, const Address& address, Label* label) {
+        MOZ_ASSERT(cond == Equal || cond == NotEqual);
+        branchTestBoolean(cond, Operand(address), label);
+    }
     void branchTestNull(Condition cond, const Operand& operand, Label* label) {
         MOZ_ASSERT(cond == Equal || cond == NotEqual);
         cmp32(ToUpper32(operand), Imm32(Upper32Of(GetShiftedTag(JSVAL_TYPE_NULL))));
