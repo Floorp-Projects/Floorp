@@ -53,4 +53,12 @@ interface AnonymousContent {
   [Throws]
   void removeAttributeForElement(DOMString elementId,
                                  DOMString attributeName);
+
+  /**
+   * Get the canvas' context for the element specified if it's a <canvas>
+   * node, `null` otherwise.
+   */
+  [Throws]
+  nsISupports? getCanvasContext(DOMString elementId,
+                                DOMString contextId);
 };
