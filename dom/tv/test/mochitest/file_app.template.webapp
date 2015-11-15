@@ -1,6 +1,0 @@
-{
-  "name": "TV Test App (hosted)",
-  "description": "Hosted TV test app used for mochitest.",
-  "launch_path": "/tests/dom/tv/test/mochitest/TESTTOKEN",
-  "icons": { "128": "default_icon" }
-}
