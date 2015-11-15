@@ -4449,6 +4449,9 @@ class MUnbox final : public MUnaryInstruction, public BoxInputsPolicy::Data
             return false;
         return congruentIfOperandsEqual(ins);
     }
+
+    MDefinition* foldsTo(TempAllocator& alloc) override;
+
     AliasSet getAliasSet() const override {
         return AliasSet::None();
     }
@@ -10113,6 +10116,67 @@ class MLoadFixedSlot
     bool mightAlias(const MDefinition* store) const override;
 
     ALLOW_CLONE(MLoadFixedSlot)
+};
+
+class MLoadFixedSlotAndUnbox
+  : public MUnaryInstruction,
+    public SingleObjectPolicy::Data
+{
+    size_t slot_;
+    MUnbox::Mode mode_;
+    BailoutKind bailoutKind_;
+  protected:
+    MLoadFixedSlotAndUnbox(MDefinition* obj, size_t slot, MUnbox::Mode mode, MIRType type,
+                           BailoutKind kind)
+      : MUnaryInstruction(obj), slot_(slot), mode_(mode), bailoutKind_(kind)
+    {
+        setResultType(type);
+        setMovable();
+        if (mode_ == MUnbox::TypeBarrier || mode_ == MUnbox::Fallible)
+            setGuard();
+    }
+
+  public:
+    INSTRUCTION_HEADER(LoadFixedSlotAndUnbox)
+
+    static MLoadFixedSlotAndUnbox* New(TempAllocator& alloc, MDefinition* obj, size_t slot,
+                                       MUnbox::Mode mode, MIRType type, BailoutKind kind)
+    {
+        return new(alloc) MLoadFixedSlotAndUnbox(obj, slot, mode, type, kind);
+    }
+
+    MDefinition* object() const {
+        return getOperand(0);
+    }
+    size_t slot() const {
+        return slot_;
+    }
+    MUnbox::Mode mode() const {
+        return mode_;
+    }
+    BailoutKind bailoutKind() const {
+        return bailoutKind_;
+    }
+    bool fallible() const {
+        return mode_ != MUnbox::Infallible;
+    }
+    bool congruentTo(const MDefinition* ins) const override {
+        if (!ins->isLoadFixedSlotAndUnbox() ||
+            slot() != ins->toLoadFixedSlotAndUnbox()->slot() ||
+            mode() != ins->toLoadFixedSlotAndUnbox()->mode())
+        {
+            return false;
+        }
+        return congruentIfOperandsEqual(ins);
+    }
+
+    AliasSet getAliasSet() const override {
+        return AliasSet::Load(AliasSet::FixedSlot);
+    }
+
+    bool mightAlias(const MDefinition* store) const override;
+
+    ALLOW_CLONE(MLoadFixedSlotAndUnbox);
 };
 
 class MStoreFixedSlot
