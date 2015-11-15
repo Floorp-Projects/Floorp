@@ -116,9 +116,7 @@ nsCSPContext::ShouldLoad(nsContentPolicyType aContentType,
     CSPCONTEXTLOG((">>>>                      aContentType: %d", aContentType));
   }
 
-  bool isStyleOrScriptPreLoad =
-    (aContentType == nsIContentPolicy::TYPE_INTERNAL_SCRIPT_PRELOAD ||
-     aContentType == nsIContentPolicy::TYPE_INTERNAL_STYLESHEET_PRELOAD);
+  bool isPreload = nsContentUtils::IsPreloadType(aContentType);
 
   // Since we know whether we are dealing with a preload, we have to convert
   // the internal policytype ot the external policy type before moving on.
@@ -157,7 +155,7 @@ nsCSPContext::ShouldLoad(nsContentPolicyType aContentType,
   }
 
   nsAutoString nonce;
-  if (!isStyleOrScriptPreLoad) {
+  if (!isPreload) {
     nsCOMPtr<nsIDOMHTMLElement> htmlElement = do_QueryInterface(aRequestContext);
     if (htmlElement) {
       rv = htmlElement->GetAttribute(NS_LITERAL_STRING("nonce"), nonce);
@@ -174,7 +172,7 @@ nsCSPContext::ShouldLoad(nsContentPolicyType aContentType,
                                    originalURI,
                                    nonce,
                                    wasRedirected,
-                                   isStyleOrScriptPreLoad,
+                                   isPreload,
                                    false,     // allow fallback to default-src
                                    true,      // send violation reports
                                    true);     // send blocked URI in violation reports
@@ -183,7 +181,7 @@ nsCSPContext::ShouldLoad(nsContentPolicyType aContentType,
                            : nsIContentPolicy::REJECT_SERVER;
 
   // Done looping, cache any relevant result
-  if (cacheKey.Length() > 0 && !isStyleOrScriptPreLoad) {
+  if (cacheKey.Length() > 0 && !isPreload) {
     mShouldLoadCache.Put(cacheKey, *outDecision);
   }
 
