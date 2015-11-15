@@ -20,7 +20,7 @@ interface nsIContentSecurityPolicy;
 [ptr] native JSPrincipals(JSPrincipals);
 [ptr] native PrincipalArray(nsTArray<nsCOMPtr<nsIPrincipal> >);
 
-[scriptable, builtinclass, uuid(86e5fd29-dccb-4547-8918-f224005479a0)]
+[scriptable, builtinclass, uuid(188fc4a2-3157-4956-a7a2-d674991770da)]
 interface nsIPrincipal : nsISerializable
 {
     /**
@@ -132,8 +132,28 @@ interface nsIPrincipal : nsISerializable
 
     /**
      * A Content Security Policy associated with this principal.
+     *
+     * Please note that if a csp was already set on the
+     * principal, then it should not be destroyed! Instead, the
+     * current csp should be quried and extended by
+     * calling AppendPolicy() on it.
      */
     [noscript] attribute nsIContentSecurityPolicy csp;
+
+    /**
+     * A speculative Content Security Policy associated with this
+     * principal. Set during speculative loading (preloading) and
+     * used *only* for preloads.
+     *
+     * If you want to query the CSP associated with that principal,
+     * then this is *not* what you want. Instead query 'csp'.
+     * 
+     * Please note that if a preloadCSP was already set on the
+     * principal, then it should not be destroyed! Instead, the
+     * current preloadCSP should be quried and extended by
+     * calling AppendPolicy() on it.
+     */
+    [noscript] attribute nsIContentSecurityPolicy preloadCsp;
 
     /**
      * The CSP of the principal in JSON notation.
