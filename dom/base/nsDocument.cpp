@@ -2615,7 +2615,7 @@ AppendCSPFromHeader(nsIContentSecurityPolicy* csp,
   nsCharSeparatedTokenizer tokenizer(aHeaderValue, ',');
   while (tokenizer.hasMoreTokens()) {
       const nsSubstring& policy = tokenizer.nextToken();
-      rv = csp->AppendPolicy(policy, aReportOnly);
+      rv = csp->AppendPolicy(policy, aReportOnly, false);
       NS_ENSURE_SUCCESS(rv, rv);
       {
         MOZ_LOG(gCspPRLog, LogLevel::Debug,
@@ -2768,12 +2768,12 @@ nsDocument::InitCSP(nsIChannel* aChannel)
 
   // ----- if the doc is an app and we want a default CSP, apply it.
   if (applyAppDefaultCSP) {
-    csp->AppendPolicy(appDefaultCSP, false);
+    csp->AppendPolicy(appDefaultCSP, false, false);
   }
 
   // ----- if the doc is an app and specifies a CSP in its manifest, apply it.
   if (applyAppManifestCSP) {
-    csp->AppendPolicy(appManifestCSP, false);
+    csp->AppendPolicy(appManifestCSP, false, false);
   }
 
   // ----- if the doc is part of Loop, apply the loop CSP
@@ -2783,7 +2783,7 @@ nsDocument::InitCSP(nsIChannel* aChannel)
     NS_ASSERTION(loopCSP, "Missing loop.CSP preference");
     // If the pref has been removed, we continue without setting a CSP
     if (loopCSP) {
-      csp->AppendPolicy(loopCSP, false);
+      csp->AppendPolicy(loopCSP, false, false);
     }
   }
 

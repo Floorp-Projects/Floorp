@@ -100,12 +100,15 @@ class nsCSPParser {
     static nsCSPPolicy* parseContentSecurityPolicy(const nsAString &aPolicyString,
                                                    nsIURI *aSelfURI,
                                                    bool aReportOnly,
-                                                   nsCSPContext* aCSPContext);
+                                                   nsCSPContext* aCSPContext,
+                                                   bool aDeliveredViaMetaTag);
 
   private:
     nsCSPParser(cspTokens& aTokens,
                 nsIURI* aSelfURI,
-                nsCSPContext* aCSPContext);
+                nsCSPContext* aCSPContext,
+                bool aDeliveredViaMetaTag);
+
     ~nsCSPParser();
 
 
@@ -246,6 +249,7 @@ class nsCSPParser {
     nsIURI*            mSelfURI;
     nsCSPPolicy*       mPolicy;
     nsCSPContext*      mCSPContext; // used for console logging
+    bool               mDeliveredViaMetaTag;
 };
 
 #endif /* nsCSPParser_h___ */
