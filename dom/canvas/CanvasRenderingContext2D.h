@@ -71,6 +71,10 @@ public:
 
   HTMLCanvasElement* GetCanvas() const
   {
+    if (mCanvasElement->IsInNativeAnonymousSubtree()) {
+      return nullptr;
+    }
+
     // corresponds to changes to the old bindings made in bug 745025
     return mCanvasElement->GetOriginalCanvas();
   }
