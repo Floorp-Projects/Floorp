@@ -1,0 +1,79 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests; default-src https: wss: 'unsafe-inline'; form-action https:;">
+  <meta charset="utf-8">
+  <title>Bug 1139297 - Implement CSP upgrade-insecure-requests directive</title>
+  <!-- style -->
+  <link rel='stylesheet' type='text/css' href='http://example.com/tests/dom/security/test/csp/file_upgrade_insecure_server.sjs?style' media='screen' />
+
+  <!-- font -->
+  <style>
+    @font-face {
+      font-family: "foofont";
+      src: url('http://example.com/tests/dom/security/test/csp/file_upgrade_insecure_server.sjs?font');
+    }
+    .div_foo { font-family: "foofont"; }
+  </style>
+</head>
+<body>
+
+  <!-- images: -->
+  <img src="http://example.com/tests/dom/security/test/csp/file_upgrade_insecure_server.sjs?img"></img>
+
+  <!-- redirects: upgrade http:// to https:// redirect to http:// and then upgrade to https:// again -->
+  <img src="http://example.com/tests/dom/security/test/csp/file_upgrade_insecure_server.sjs?redirect-image"></img>
+
+  <!-- script: -->
+  <script src="http://example.com/tests/dom/security/test/csp/file_upgrade_insecure_server.sjs?script"></script>
+
+  <!-- media: -->
+  <audio src="http://example.com/tests/dom/security/test/csp/file_upgrade_insecure_server.sjs?media"></audio>
+
+  <!-- objects: -->
+  <object width="10" height="10" data="http://example.com/tests/dom/security/test/csp/file_upgrade_insecure_server.sjs?object"></object>
+
+  <!-- font: (apply font loaded in header to div) -->
+  <div class="div_foo">foo</div>
+
+  <!-- iframe: (same origin) -->
+  <iframe src="http://example.com/tests/dom/security/test/csp/file_upgrade_insecure_server.sjs?iframe">
+    <!-- within that iframe we load an image over http and make sure the requested gets upgraded to https -->
+  </iframe>
+
+  <!-- xhr: -->
+  <script type="application/javascript">
+    var myXHR = new XMLHttpRequest();
+    myXHR.open("GET", "http://example.com/tests/dom/security/test/csp/file_upgrade_insecure_server.sjs?xhr");
+    myXHR.send(null);
+  </script>
+
+  <!-- websockets: upgrade ws:// to wss://-->
+  <script type="application/javascript">
+    var mySocket = new WebSocket("ws://example.com/tests/dom/security/test/csp/file_upgrade_insecure");
+    mySocket.onopen = function(e) {
+      if (mySocket.url.includes("wss://")) {
+        window.parent.postMessage({result: "websocket-ok"}, "*");
+      }
+      else {
+        window.parent.postMessage({result: "websocket-error"}, "*");
+      }
+    };
+    mySocket.onerror = function(e) {
+      window.parent.postMessage({result: "websocket-unexpected-error"}, "*");
+    };
+  </script>
+
+  <!-- form action: (upgrade POST from http:// to https://) -->
+  <iframe name='formFrame' id='formFrame'></iframe>
+  <form target="formFrame" action="http://example.com/tests/dom/security/test/csp/file_upgrade_insecure_server.sjs?form" method="POST">
+    <input name="foo" value="foo">
+    <input type="submit" id="submitButton" formenctype='multipart/form-data' value="Submit form">
+  </form>
+  <script type="text/javascript">
+    var submitButton = document.getElementById('submitButton');
+    submitButton.click();
+  </script>
+
+</body>
+</html>
