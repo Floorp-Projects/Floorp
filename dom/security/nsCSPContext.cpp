@@ -116,9 +116,7 @@ nsCSPContext::ShouldLoad(nsContentPolicyType aContentType,
     CSPCONTEXTLOG((">>>>                      aContentType: %d", aContentType));
   }
 
-  bool isStyleOrScriptPreLoad =
-    (aContentType == nsIContentPolicy::TYPE_INTERNAL_SCRIPT_PRELOAD ||
-     aContentType == nsIContentPolicy::TYPE_INTERNAL_STYLESHEET_PRELOAD);
+  bool isPreload = nsContentUtils::IsPreloadType(aContentType);
 
   // Since we know whether we are dealing with a preload, we have to convert
   // the internal policytype ot the external policy type before moving on.
@@ -157,7 +155,7 @@ nsCSPContext::ShouldLoad(nsContentPolicyType aContentType,
   }
 
   nsAutoString nonce;
-  if (!isStyleOrScriptPreLoad) {
+  if (!isPreload) {
     nsCOMPtr<nsIDOMHTMLElement> htmlElement = do_QueryInterface(aRequestContext);
     if (htmlElement) {
       rv = htmlElement->GetAttribute(NS_LITERAL_STRING("nonce"), nonce);
@@ -174,7 +172,7 @@ nsCSPContext::ShouldLoad(nsContentPolicyType aContentType,
                                    originalURI,
                                    nonce,
                                    wasRedirected,
-                                   isStyleOrScriptPreLoad,
+                                   isPreload,
                                    false,     // allow fallback to default-src
                                    true,      // send violation reports
                                    true);     // send blocked URI in violation reports
@@ -183,7 +181,7 @@ nsCSPContext::ShouldLoad(nsContentPolicyType aContentType,
                            : nsIContentPolicy::REJECT_SERVER;
 
   // Done looping, cache any relevant result
-  if (cacheKey.Length() > 0 && !isStyleOrScriptPreLoad) {
+  if (cacheKey.Length() > 0 && !isPreload) {
     mShouldLoadCache.Put(cacheKey, *outDecision);
   }
 
@@ -342,14 +340,17 @@ nsCSPContext::GetReferrerPolicy(uint32_t* outPolicy, bool* outIsSet)
 
 NS_IMETHODIMP
 nsCSPContext::AppendPolicy(const nsAString& aPolicyString,
-                           bool aReportOnly)
+                           bool aReportOnly,
+                           bool aDeliveredViaMetaTag)
 {
   CSPCONTEXTLOG(("nsCSPContext::AppendPolicy: %s",
                  NS_ConvertUTF16toUTF8(aPolicyString).get()));
 
   // Use the mSelfURI from setRequestContext, see bug 991474
   NS_ASSERTION(mSelfURI, "mSelfURI required for AppendPolicy, but not set");
-  nsCSPPolicy* policy = nsCSPParser::parseContentSecurityPolicy(aPolicyString, mSelfURI, aReportOnly, this);
+  nsCSPPolicy* policy = nsCSPParser::parseContentSecurityPolicy(aPolicyString, mSelfURI,
+                                                                aReportOnly, this,
+                                                                aDeliveredViaMetaTag);
   if (policy) {
     mPolicies.AppendElement(policy);
     // reset cache since effective policy changes
@@ -1353,10 +1354,15 @@ nsCSPContext::Read(nsIObjectInputStream* aStream)
     rv = aStream->ReadBoolean(&reportOnly);
     NS_ENSURE_SUCCESS(rv, rv);
 
+    // @param deliveredViaMetaTag:
+    // when parsing the CSP policy string initially we already remove directives
+    // that should not be processed when delivered via the meta tag. Such directives
+    // will not be present at this point anymore.
     nsCSPPolicy* policy = nsCSPParser::parseContentSecurityPolicy(policyString,
                                                                   mSelfURI,
                                                                   reportOnly,
-                                                                  this);
+                                                                  this,
+                                                                  false);
     if (policy) {
       mPolicies.AppendElement(policy);
     }

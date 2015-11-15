@@ -122,7 +122,8 @@ nsCSPTokenizer::tokenizeCSPPolicy(const nsAString &aPolicyString,
 
 nsCSPParser::nsCSPParser(cspTokens& aTokens,
                          nsIURI* aSelfURI,
-                         nsCSPContext* aCSPContext)
+                         nsCSPContext* aCSPContext,
+                         bool aDeliveredViaMetaTag)
  : mHasHashOrNonce(false)
  , mUnsafeInlineKeywordSrc(nullptr)
  , mChildSrc(nullptr)
@@ -130,6 +131,7 @@ nsCSPParser::nsCSPParser(cspTokens& aTokens,
  , mTokens(aTokens)
  , mSelfURI(aSelfURI)
  , mCSPContext(aCSPContext)
+ , mDeliveredViaMetaTag(aDeliveredViaMetaTag)
 {
   CSPPARSERLOG(("nsCSPParser::nsCSPParser"));
 }
@@ -991,6 +993,20 @@ nsCSPParser::directiveName()
     return nullptr;
   }
 
+  // CSP delivered via meta tag should ignore the following directives:
+  // report-uri, frame-ancestors, and sandbox, see:
+  // http://www.w3.org/TR/CSP11/#delivery-html-meta-element
+  if (mDeliveredViaMetaTag &&
+       ((CSP_IsDirective(mCurToken, nsIContentSecurityPolicy::REPORT_URI_DIRECTIVE)) ||
+        (CSP_IsDirective(mCurToken, nsIContentSecurityPolicy::FRAME_ANCESTORS_DIRECTIVE)))) {
+    // log to the console to indicate that meta CSP is ignoring the directive
+    const char16_t* params[] = { mCurToken.get() };
+    logWarningErrorToConsole(nsIScriptError::warningFlag,
+                             "ignoringSrcFromMetaCSP",
+                             params, ArrayLength(params));
+    return nullptr;
+  }
+
   // special case handling for upgrade-insecure-requests
   if (CSP_IsDirective(mCurToken, nsIContentSecurityPolicy::UPGRADE_IF_INSECURE_DIRECTIVE)) {
     return new nsUpgradeInsecureDirective(CSP_StringToCSPDirective(mCurToken));
@@ -1116,7 +1132,8 @@ nsCSPPolicy*
 nsCSPParser::parseContentSecurityPolicy(const nsAString& aPolicyString,
                                         nsIURI *aSelfURI,
                                         bool aReportOnly,
-                                        nsCSPContext* aCSPContext)
+                                        nsCSPContext* aCSPContext,
+                                        bool aDeliveredViaMetaTag)
 {
   if (CSPPARSERLOGENABLED()) {
     CSPPARSERLOG(("nsCSPParser::parseContentSecurityPolicy, policy: %s",
@@ -1126,6 +1143,8 @@ nsCSPParser::parseContentSecurityPolicy(const nsAString& aPolicyString,
     CSPPARSERLOG(("nsCSPParser::parseContentSecurityPolicy, selfURI: %s", spec.get()));
     CSPPARSERLOG(("nsCSPParser::parseContentSecurityPolicy, reportOnly: %s",
                  (aReportOnly ? "true" : "false")));
+    CSPPARSERLOG(("nsCSPParser::parseContentSecurityPolicy, deliveredViaMetaTag: %s",
+                 (aDeliveredViaMetaTag ? "true" : "false")));
   }
 
   NS_ASSERTION(aSelfURI, "Can not parseContentSecurityPolicy without aSelfURI");
@@ -1138,7 +1157,7 @@ nsCSPParser::parseContentSecurityPolicy(const nsAString& aPolicyString,
   nsTArray< nsTArray<nsString> > tokens;
   nsCSPTokenizer::tokenizeCSPPolicy(aPolicyString, tokens);
 
-  nsCSPParser parser(tokens, aSelfURI, aCSPContext);
+  nsCSPParser parser(tokens, aSelfURI, aCSPContext, aDeliveredViaMetaTag);
 
   // Start the parser to generate a new CSPPolicy using the generated tokens.
   nsCSPPolicy* policy = parser.policy();
