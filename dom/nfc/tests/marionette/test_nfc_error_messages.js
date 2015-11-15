@@ -140,8 +140,7 @@ function setAndFireTechLostHandler() {
 
 var tests = [
   testNfcNotEnabledError,
-// This testcase is temporarily removed due to Bug 1055959, will reopen when it is fixed
-//  testNfcBadSessionIdError
+  testNfcBadSessionIdError,
   testNoErrorInTechMsg
 ];
 
