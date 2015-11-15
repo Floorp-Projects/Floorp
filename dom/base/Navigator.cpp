@@ -2594,37 +2594,6 @@ Navigator::HasMobileIdSupport(JSContext* aCx, JSObject* aGlobal)
 
 /* static */
 bool
-Navigator::HasTVSupport(JSContext* aCx, JSObject* aGlobal)
-{
-  JS::Rooted<JSObject*> global(aCx, aGlobal);
-
-  nsCOMPtr<nsPIDOMWindow> win = GetWindowFromGlobal(global);
-  if (!win) {
-    return false;
-  }
-
-  // Just for testing, we can enable TV for any kind of app.
-  if (Preferences::GetBool("dom.testing.tv_enabled_for_hosted_apps", false)) {
-    return true;
-  }
-
-  nsIDocument* doc = win->GetExtantDoc();
-  if (!doc || !doc->NodePrincipal()) {
-    return false;
-  }
-
-  nsIPrincipal* principal = doc->NodePrincipal();
-  uint16_t status;
-  if (NS_FAILED(principal->GetAppStatus(&status))) {
-    return false;
-  }
-
-  // Only support TV Manager API for certified apps for now.
-  return status == nsIPrincipal::APP_STATUS_CERTIFIED;
-}
-
-/* static */
-bool
 Navigator::HasPresentationSupport(JSContext* aCx, JSObject* aGlobal)
 {
   JS::Rooted<JSObject*> global(aCx, aGlobal);
