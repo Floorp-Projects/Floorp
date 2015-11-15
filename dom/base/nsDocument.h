@@ -717,6 +717,8 @@ public:
 
   virtual void SetChromeXHRDocBaseURI(nsIURI* aURI) override;
 
+  virtual void ApplySettingsFromCSP(bool aSpeculative) override;
+
   /**
    * Set the principal responsible for this document.
    */

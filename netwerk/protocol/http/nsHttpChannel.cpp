@@ -332,7 +332,15 @@ nsHttpChannel::Connect()
         // the CSP directive 'upgrade-insecure-requests', then it's time to fulfill
         // the promise to CSP and mixed content blocking to upgrade the channel
         // from http to https.
-        if (mLoadInfo && mLoadInfo->GetUpgradeInsecureRequests()) {
+        if (mLoadInfo) {
+            bool isPreload =
+              (mLoadInfo->InternalContentPolicyType() == nsIContentPolicy::TYPE_INTERNAL_SCRIPT_PRELOAD ||
+               mLoadInfo->InternalContentPolicyType() == nsIContentPolicy::TYPE_INTERNAL_STYLESHEET_PRELOAD ||
+               mLoadInfo->InternalContentPolicyType() == nsIContentPolicy::TYPE_INTERNAL_IMAGE_PRELOAD);
+            bool upgradeRequests =
+              ((isPreload && mLoadInfo->GetUpgradeInsecurePreloads()) ||
+               (mLoadInfo->GetUpgradeInsecureRequests()));
+
             // Please note that cross origin top level navigations are not subject
             // to upgrade-insecure-requests, see:
             // http://www.w3.org/TR/upgrade-insecure-requests/#examples
@@ -343,7 +351,7 @@ nsHttpChannel::Connect()
                 (mLoadInfo->GetExternalContentPolicyType() == nsIContentPolicy::TYPE_DOCUMENT) &&
                 (!resultPrincipal->Equals(mLoadInfo->LoadingPrincipal()));
 
-            if (!crossOriginNavigation) {
+            if (upgradeRequests && !crossOriginNavigation) {
                 // let's log a message to the console that we are upgrading a request
                 nsAutoCString spec, scheme;
                 mURI->GetSpec(spec);
