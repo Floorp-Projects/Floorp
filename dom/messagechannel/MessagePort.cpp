@@ -98,26 +98,6 @@ public:
   NS_IMETHOD
   Run() override
   {
-    nsresult rv = SendEvent();
-    NS_WARN_IF(NS_FAILED(rv));
-
-    mPort->MaybeClose();
-
-    return NS_OK;
-  }
-
-  NS_IMETHOD
-  Cancel() override
-  {
-    mPort = nullptr;
-    mData = nullptr;
-    return NS_OK;
-  }
-
-private:
-  nsresult
-  SendEvent()
-  {
     nsCOMPtr<nsIGlobalObject> globalObject;
 
     if (NS_IsMainThread()) {
@@ -172,6 +152,15 @@ private:
     return NS_OK;
   }
 
+  NS_IMETHOD
+  Cancel() override
+  {
+    mPort = nullptr;
+    mData = nullptr;
+    return NS_OK;
+  }
+
+private:
   ~PostMessageRunnable()
   {}
 
@@ -292,7 +281,6 @@ MessagePort::MessagePort(nsPIDOMWindow* aWindow)
   , mInnerID(0)
   , mMessageQueueEnabled(false)
   , mIsKeptAlive(false)
-  , mClosing(false)
 {
   mIdentifier = new MessagePortIdentifier();
   mIdentifier->neutered() = true;
@@ -469,12 +457,6 @@ MessagePort::PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
     return;
   }
 
-  // Just processing pending messages, then closing. This message must be
-  // ignored.
-  if (mClosing) {
-    return;
-  }
-
   RemoveDocFromBFCache();
 
   // Not entangled yet.
@@ -549,12 +531,6 @@ MessagePort::Close()
   }
 
   if (mState > eStateEntangled) {
-    return;
-  }
-
-  // If we have some messages to send, we cannot close this port immediatelly.
-  if (!mMessages.IsEmpty()) {
-    mClosing = true;
     return;
   }
 
@@ -660,7 +636,6 @@ void
 MessagePort::MessagesReceived(nsTArray<MessagePortMessage>& aMessages)
 {
   MOZ_ASSERT(mState == eStateEntangled || mState == eStateDisentangling);
-  // We cannot have a next-step because this must be processed by Entangled().
   MOZ_ASSERT(mNextStep == eNextStepNone);
   MOZ_ASSERT(mMessagesForTheOtherPort.IsEmpty());
 
@@ -726,11 +701,6 @@ MessagePort::CloneAndDisentangle(MessagePortIdentifier& aIdentifier)
   // We already have a 'next step'. We have to consider this port as already
   // cloned/closed/disentangled.
   if (mNextStep != eNextStepNone) {
-    return;
-  }
-
-  // If Close() has been called.
-  if (mClosing) {
     return;
   }
 
@@ -924,15 +894,6 @@ MessagePort::RemoveDocFromBFCache()
 MessagePort::ForceClose(const MessagePortIdentifier& aIdentifier)
 {
   ForceCloseHelper::ForceClose(aIdentifier);
-}
-
-void
-MessagePort::MaybeClose()
-{
-  // All the other checks are done in Close():
-  if (mClosing && mMessages.IsEmpty()) {
-    Close();
-  }
 }
 
 } // namespace dom
