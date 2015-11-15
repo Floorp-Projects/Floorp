@@ -17,7 +17,6 @@ onconnect = function(evt) {
                           test: (evtFromPort2.data.type == "connected"),
                           msg: "The original message received" });
         port.postMessage({type: "finish"});
-        close();
       }
     }
   }
