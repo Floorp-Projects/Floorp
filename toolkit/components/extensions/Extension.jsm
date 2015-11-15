@@ -315,6 +315,9 @@ var GlobalManager = {
 
     let eventHandler = docShell.chromeEventHandler;
     let listener = event => {
+      if (event.target != docShell.contentViewer.DOMDocument) {
+        return;
+      }
       eventHandler.removeEventListener("unload", listener);
       context.unload();
     };
