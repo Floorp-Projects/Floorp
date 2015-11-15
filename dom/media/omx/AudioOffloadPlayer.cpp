@@ -42,7 +42,7 @@ using namespace android;
 
 namespace mozilla {
 
-PRLogModuleInfo* gAudioOffloadPlayerLog;
+LazyLogModule gAudioOffloadPlayerLog("AudioOffloadPlayer");
 #define AUDIO_OFFLOAD_LOG(type, msg) \
   MOZ_LOG(gAudioOffloadPlayerLog, type, msg)
 
@@ -62,10 +62,6 @@ AudioOffloadPlayer::AudioOffloadPlayer(MediaOmxCommonDecoder* aObserver) :
   mObserver(aObserver)
 {
   MOZ_ASSERT(NS_IsMainThread());
-
-  if (!gAudioOffloadPlayerLog) {
-    gAudioOffloadPlayerLog = PR_NewLogModule("AudioOffloadPlayer");
-  }
 
   CHECK(aObserver);
 #if ANDROID_VERSION >= 21

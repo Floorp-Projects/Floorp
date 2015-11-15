@@ -107,8 +107,8 @@ class AudioSegment;
 class DecodedStream;
 class TaskQueue;
 
-extern PRLogModuleInfo* gMediaDecoderLog;
-extern PRLogModuleInfo* gMediaSampleLog;
+extern LazyLogModule gMediaDecoderLog;
+extern LazyLogModule gMediaSampleLog;
 
 /*
   The state machine class. This manages the decoding and seeking in the

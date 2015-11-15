@@ -21,7 +21,7 @@
 using namespace mozilla::net;
 using namespace mozilla::media;
 
-PRLogModuleInfo* gRtspMediaResourceLog;
+mozilla::LazyLogModule gRtspMediaResourceLog("RtspMediaResource");
 #define RTSP_LOG(msg, ...) MOZ_LOG(gRtspMediaResourceLog, mozilla::LogLevel::Debug, \
                                   (msg, ##__VA_ARGS__))
 // Debug logging macro with object pointer and class name.
@@ -505,9 +505,6 @@ RtspMediaResource::RtspMediaResource(MediaResourceCallback* aCallback,
   MOZ_ASSERT(mMediaStreamController);
   mListener = new Listener(this);
   mMediaStreamController->AsyncOpen(mListener);
-  if (!gRtspMediaResourceLog) {
-    gRtspMediaResourceLog = PR_NewLogModule("RtspMediaResource");
-  }
 #endif
 }
 
