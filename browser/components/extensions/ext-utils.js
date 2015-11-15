@@ -172,7 +172,10 @@ global.openPanel = (node, popupURL, extension) => {
     GlobalManager.injectInDocShell(browser.docShell, extension, context);
     browser.setAttribute("src", context.uri.spec);
 
-    let contentLoadListener = () => {
+    let contentLoadListener = event => {
+      if (event.target != browser.contentDocument) {
+        return;
+      }
       browser.removeEventListener("load", contentLoadListener, true);
 
       let contentViewer = browser.docShell.contentViewer;
@@ -461,8 +464,8 @@ global.WindowListManager = {
   },
 
   handleEvent(event) {
+    event.currentTarget.removeEventListener(event.type, this);
     let window = event.target.defaultView;
-    window.removeEventListener("load", this.loadListener);
     if (window.document.documentElement.getAttribute("windowtype") != "navigator:browser") {
       return;
     }
