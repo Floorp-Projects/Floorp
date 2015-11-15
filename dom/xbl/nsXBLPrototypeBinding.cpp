@@ -1350,60 +1350,6 @@ nsXBLPrototypeBinding::ReadContentNode(nsIObjectInputStream* aStream,
   return NS_OK;
 }
 
-// This structure holds information about a forwarded attribute that needs to be
-// written out. This is used because we need several fields passed within the
-// enumeration closure.
-struct WriteAttributeData
-{
-  nsXBLPrototypeBinding* binding;
-  nsIObjectOutputStream* stream;
-  nsIContent* content;
-  int32_t srcNamespace;
-
-  WriteAttributeData(nsXBLPrototypeBinding* aBinding,
-                     nsIObjectOutputStream* aStream,
-                     nsIContent* aContent)
-    : binding(aBinding), stream(aStream), content(aContent)
-  { }
-};
-
-static PLDHashOperator
-WriteAttribute(nsISupports* aKey, nsXBLAttributeEntry* aEntry, void* aClosure)
-{
-  WriteAttributeData* data = static_cast<WriteAttributeData *>(aClosure);
-  nsIObjectOutputStream* stream = data->stream;
-  const int32_t srcNamespace = data->srcNamespace;
-
-  do {
-    if (aEntry->GetElement() == data->content) {
-      data->binding->WriteNamespace(stream, srcNamespace);
-      stream->WriteWStringZ(nsDependentAtomString(aEntry->GetSrcAttribute()).get());
-      data->binding->WriteNamespace(stream, aEntry->GetDstNameSpace());
-      stream->WriteWStringZ(nsDependentAtomString(aEntry->GetDstAttribute()).get());
-    }
-
-    aEntry = aEntry->GetNext();
-  } while (aEntry);
-
-  return PL_DHASH_NEXT;
-}
-
-// WriteAttributeNS is the callback to enumerate over the attribute
-// forwarding entries. Since these are stored in a hash of hashes,
-// we need to iterate over the inner hashes, calling WriteAttribute
-// to do the actual work.
-static PLDHashOperator
-WriteAttributeNS(const uint32_t &aNamespace,
-                 nsXBLPrototypeBinding::InnerAttributeTable* aXBLAttributes,
-                 void* aClosure)
-{
-  WriteAttributeData* data = static_cast<WriteAttributeData *>(aClosure);
-  data->srcNamespace = aNamespace;
-  aXBLAttributes->EnumerateRead(WriteAttribute, data);
-
-  return PL_DHASH_NEXT;
-}
-
 nsresult
 nsXBLPrototypeBinding::WriteContentNode(nsIObjectOutputStream* aStream,
                                         nsIContent* aNode)
@@ -1484,8 +1430,27 @@ nsXBLPrototypeBinding::WriteContentNode(nsIObjectOutputStream* aStream,
 
   // Write out the attribute fowarding information
   if (mAttributeTable) {
-    WriteAttributeData data(this, aStream, aNode);
-    mAttributeTable->EnumerateRead(WriteAttributeNS, &data);
+    for (auto iter1 = mAttributeTable->Iter(); !iter1.Done(); iter1.Next()) {
+      int32_t srcNamespace = iter1.Key();
+      InnerAttributeTable* xblAttributes = iter1.UserData();
+
+      for (auto iter2 = xblAttributes->Iter(); !iter2.Done(); iter2.Next()) {
+        nsXBLAttributeEntry* entry = iter2.UserData();
+
+        do {
+          if (entry->GetElement() == aNode) {
+            WriteNamespace(aStream, srcNamespace);
+            aStream->WriteWStringZ(
+              nsDependentAtomString(entry->GetSrcAttribute()).get());
+            WriteNamespace(aStream, entry->GetDstNameSpace());
+            aStream->WriteWStringZ(
+              nsDependentAtomString(entry->GetDstAttribute()).get());
+          }
+
+          entry = entry->GetNext();
+        } while (entry);
+      }
+    }
   }
   rv = aStream->Write8(XBLBinding_Serialize_NoMoreAttributes);
   NS_ENSURE_SUCCESS(rv, rv);
