@@ -42,8 +42,8 @@ LOCAL_INCLUDES += [
     '/memory/build',
 ]
 
-# XXX: We should fix these warnings.
-ALLOW_COMPILER_WARNINGS = True
-
 if CONFIG['GNU_CC']:
     CFLAGS += ['-Wshadow']
+
+if CONFIG['_MSC_VER']:
+    CFLAGS += ['-wd4273'] # inconsistent dll linkage (bug 558163)
