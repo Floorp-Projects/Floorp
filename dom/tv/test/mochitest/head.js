@@ -10,7 +10,7 @@ function setupPrefsAndPermissions(callback) {
 
 function setupPrefs(callback) {
   SpecialPowers.pushPrefEnv({"set": [["dom.tv.enabled", true],
-                                     ["dom.testing.tv_enabled_for_hosted_apps", true]]}, function() {
+                                     ["dom.ignore_webidl_scope_checks", true]]}, function() {
     callback();
   });
 }
