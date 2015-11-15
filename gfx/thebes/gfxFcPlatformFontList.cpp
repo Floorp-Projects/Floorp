@@ -12,6 +12,7 @@
 #include "gfxFT2Utils.h"
 #include "gfxPlatform.h"
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/Preferences.h"
 #include "mozilla/TimeStamp.h"
 #include "nsGkAtoms.h"
 #include "nsILanguageAtomService.h"
@@ -20,6 +21,7 @@
 #include "nsDirectoryServiceUtils.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsAppDirectoryServiceDefs.h"
+#include "nsCharSeparatedTokenizer.h"
 
 #include "mozilla/gfx/HelpersCairo.h"
 
@@ -940,6 +942,7 @@ gfxFcPlatformFontList::gfxFcPlatformFontList()
     , mGenericMappings(32)
     , mFcSubstituteCache(64)
     , mLastConfig(nullptr)
+    , mAlwaysUseFontconfigGenerics(true)
 {
     // if the rescan interval is set, start the timer
     int rescanInterval = FcConfigGetRescanInterval(nullptr);
@@ -1064,12 +1067,12 @@ gfxFcPlatformFontList::InitFontList()
     gfxPlatformFontList::InitFontList();
 
     mLocalNames.Clear();
-    mGenericMappings.Clear();
     mFcSubstituteCache.Clear();
 
     // iterate over available fonts
     FcFontSet* systemFonts = FcConfigGetFonts(nullptr, FcSetSystem);
     AddFontSetFamilies(systemFonts);
+    mAlwaysUseFontconfigGenerics = PrefFontListsUseOnlyGenerics();
 
 #ifdef MOZ_BUNDLED_FONTS
     ActivateBundledFonts();
@@ -1180,8 +1183,13 @@ gfxFcPlatformFontList::GetDefaultFont(const gfxFontStyle* aStyle)
 {
     // Get the default font by using a fake name to retrieve the first
     // scalable font that fontconfig suggests for the given language.
-    return FindGenericFamily(NS_LITERAL_STRING("-moz-default"),
-                             aStyle->language);
+    PrefFontList* prefFonts =
+        FindGenericFamilies(NS_LITERAL_STRING("-moz-default"), aStyle->language);
+    NS_ASSERTION(prefFonts, "null list of generic fonts");
+    if (prefFonts && !prefFonts->IsEmpty()) {
+        return (*prefFonts)[0];
+    }
+    return nullptr;
 }
 
 gfxFontEntry*
@@ -1251,7 +1259,11 @@ gfxFcPlatformFontList::FindFamily(const nsAString& aFamily, gfxFontStyle* aStyle
     // fontconfig generics? use fontconfig to determine the family for lang
     if (isDeprecatedGeneric ||
         mozilla::FontFamilyName::Convert(familyName).IsGeneric()) {
-        return FindGenericFamily(familyName, language);
+        PrefFontList* prefFonts = FindGenericFamilies(familyName, language);
+        if (prefFonts && !prefFonts->IsEmpty()) {
+            return (*prefFonts)[0];
+        }
+        return nullptr;
     }
 
     // fontconfig allows conditional substitutions in such a way that it's
@@ -1412,6 +1424,74 @@ gfxFcPlatformFontList::GetStandardFamilyName(const nsAString& aFontName,
     return true;
 }
 
+static const char kFontNamePrefix[] = "font.name.";
+
+void
+gfxFcPlatformFontList::AddGenericFonts(mozilla::FontFamilyType aGenericType,
+                                       nsIAtom* aLanguage,
+                                       nsTArray<gfxFontFamily*>& aFamilyList)
+{
+    bool usePrefFontList = false;
+
+    // treat -moz-fixed as monospace
+    if (aGenericType == eFamily_moz_fixed) {
+        aGenericType = eFamily_monospace;
+    }
+
+    const char* generic = GetGenericName(aGenericType);
+    NS_ASSERTION(generic, "weird generic font type");
+    if (!generic) {
+        return;
+    }
+
+    // By default, most font prefs on Linux map to "use fontconfig"
+    // keywords. So only need to explicitly lookup font pref if
+    // non-default settings exist
+    NS_ConvertASCIItoUTF16 genericToLookup(generic);
+    if ((!mAlwaysUseFontconfigGenerics && aLanguage) ||
+        aLanguage == nsGkAtoms::x_math) {
+        nsIAtom* langGroup = GetLangGroup(aLanguage);
+        nsAutoCString langGroupStr;
+        if (langGroup) {
+            langGroup->ToUTF8String(langGroupStr);
+        }
+        nsAutoCString prefFontName(kFontNamePrefix);
+        prefFontName.Append(generic);
+        prefFontName.Append('.');
+        prefFontName.Append(langGroupStr);
+        nsAdoptingString fontlistValue = Preferences::GetString(prefFontName.get());
+        if (fontlistValue) {
+            if (!fontlistValue.EqualsLiteral("serif") &&
+                !fontlistValue.EqualsLiteral("sans-serif") &&
+                !fontlistValue.EqualsLiteral("monospace")) {
+                usePrefFontList = true;
+            } else {
+                // serif, sans-serif or monospace was specified
+                genericToLookup.Assign(fontlistValue);
+            }
+        }
+    }
+
+    // when pref fonts exist, use standard pref font lookup
+    if (usePrefFontList) {
+        return gfxPlatformFontList::AddGenericFonts(aGenericType,
+                                                    aLanguage,
+                                                    aFamilyList);
+    }
+
+    PrefFontList* prefFonts = FindGenericFamilies(genericToLookup, aLanguage);
+    NS_ASSERTION(prefFonts, "null generic font list");
+    aFamilyList.AppendElements(*prefFonts);
+}
+
+void
+gfxFcPlatformFontList::ClearLangGroupPrefFonts()
+{
+    mGenericMappings.Clear();
+    gfxPlatformFontList::ClearLangGroupPrefFonts();
+    mAlwaysUseFontconfigGenerics = PrefFontListsUseOnlyGenerics();
+}
+
 /* static */ FT_Library
 gfxFcPlatformFontList::GetFTLibrary()
 {
@@ -1452,23 +1532,30 @@ gfxFcPlatformFontList::GetFTLibrary()
     return sCairoFTLibrary;
 }
 
-gfxFontFamily*
-gfxFcPlatformFontList::FindGenericFamily(const nsAString& aGeneric,
-                                         nsIAtom* aLanguage)
+// a given generic will map to at most this many families
+const uint32_t kMaxGenericFamilies = 3;
+
+gfxPlatformFontList::PrefFontList*
+gfxFcPlatformFontList::FindGenericFamilies(const nsAString& aGeneric,
+                                           nsIAtom* aLanguage)
 {
     // set up name
     NS_ConvertUTF16toUTF8 generic(aGeneric);
 
     nsAutoCString fcLang;
     GetSampleLangForGroup(aLanguage, fcLang);
+    ToLowerCase(fcLang);
 
     nsAutoCString genericLang(generic);
+    if (fcLang.Length() > 0) {
+        genericLang.Append('-');
+    }
     genericLang.Append(fcLang);
 
     // try to get the family from the cache
-    gfxFontFamily *genericFamily = mGenericMappings.GetWeak(genericLang);
-    if (genericFamily) {
-        return genericFamily;
+    PrefFontList* prefFonts = mGenericMappings.Get(genericLang);
+    if (prefFonts) {
+        return prefFonts;
     }
 
     // if not found, ask fontconfig to pick the appropriate font
@@ -1498,7 +1585,8 @@ gfxFcPlatformFontList::FindGenericFamily(const nsAString& aGeneric,
       return nullptr;
     }
 
-    // -- pick the first font for which a font family exists
+    // -- select the fonts to be used for the generic
+    prefFonts = new PrefFontList; // can be empty but in practice won't happen
     for (int i = 0; i < faces->nfont; i++) {
         FcPattern* font = faces->fonts[i];
         FcChar8* mappedGeneric = nullptr;
@@ -1513,16 +1601,53 @@ gfxFcPlatformFontList::FindGenericFamily(const nsAString& aGeneric,
         FcPatternGetString(font, FC_FAMILY, 0, &mappedGeneric);
         if (mappedGeneric) {
             NS_ConvertUTF8toUTF16 mappedGenericName(ToCharPtr(mappedGeneric));
-            genericFamily = gfxPlatformFontList::FindFamily(mappedGenericName);
-            if (genericFamily) {
+            gfxFontFamily* genericFamily =
+                gfxPlatformFontList::FindFamily(mappedGenericName);
+            if (genericFamily && !prefFonts->Contains(genericFamily)) {
                 //printf("generic %s ==> %s\n", genericLang.get(), (const char*)mappedGeneric);
-                mGenericMappings.Put(genericLang, genericFamily);
-                break;
+                prefFonts->AppendElement(genericFamily);
+                if (prefFonts->Length() >= kMaxGenericFamilies) {
+                    break;
+                }
             }
         }
     }
+    mGenericMappings.Put(genericLang, prefFonts);
+    return prefFonts;
+}
 
-    return genericFamily;
+bool
+gfxFcPlatformFontList::PrefFontListsUseOnlyGenerics()
+{
+    bool prefFontsUseOnlyGenerics = true;
+    uint32_t count;
+    char** names;
+    nsresult rv = Preferences::GetRootBranch()->
+        GetChildList(kFontNamePrefix, &count, &names);
+    if (NS_SUCCEEDED(rv) && count) {
+        for (size_t i = 0; i < count; i++) {
+            // Check whether all font.name prefs map to generic keywords
+            // and that the pref name and keyword match.
+            //   Ex: font.name.serif.ar ==> "serif" (ok)
+            //   Ex: font.name.serif.ar ==> "monospace" (return false)
+            //   Ex: font.name.serif.ar ==> "DejaVu Serif" (return false)
+
+            nsDependentCString prefName(names[i] +
+                                        ArrayLength(kFontNamePrefix) - 1);
+            nsCCharSeparatedTokenizer tokenizer(prefName, '.');
+            const nsDependentCSubstring& generic = tokenizer.nextToken();
+            const nsDependentCSubstring& langGroup = tokenizer.nextToken();
+            nsAdoptingCString fontPrefValue = Preferences::GetCString(names[i]);
+
+            if (!langGroup.EqualsLiteral("x-math") &&
+                !generic.Equals(fontPrefValue)) {
+                prefFontsUseOnlyGenerics = false;
+                break;
+            }
+        }
+        NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(count, names);
+    }
+    return prefFontsUseOnlyGenerics;
 }
 
 /* static */ void
