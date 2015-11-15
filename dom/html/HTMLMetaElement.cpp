@@ -7,8 +7,10 @@
 #include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/dom/HTMLMetaElement.h"
 #include "mozilla/dom/HTMLMetaElementBinding.h"
+#include "mozilla/dom/nsCSPService.h"
 #include "nsContentUtils.h"
 #include "nsStyleConsts.h"
+#include "nsIContentSecurityPolicy.h"
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(Meta)
 
@@ -111,6 +113,51 @@ HTMLMetaElement::BindToTree(nsIDocument* aDocument, nsIContent* aParent,
     NS_ENSURE_SUCCESS(rv, rv);
     nsContentUtils::ProcessViewportInfo(aDocument, content);
   }
+
+  if (CSPService::sCSPEnabled && aDocument &&
+      AttrValueIs(kNameSpaceID_None, nsGkAtoms::httpEquiv, nsGkAtoms::headerCSP, eIgnoreCase)) {
+
+    // only accept <meta http-equiv="Content-Security-Policy" content=""> if it appears
+    // in the <head> element.
+    Element* headElt = aDocument->GetHeadElement();
+    if (headElt && nsContentUtils::ContentIsDescendantOf(this, headElt)) {
+      
+      nsAutoString content;
+      rv = GetContent(content);
+      NS_ENSURE_SUCCESS(rv, rv);
+      content = nsContentUtils::TrimWhitespace<nsContentUtils::IsHTMLWhitespace>(content);
+
+      nsIPrincipal* principal = aDocument->NodePrincipal();
+      nsCOMPtr<nsIContentSecurityPolicy> csp;
+      rv = principal->GetCsp(getter_AddRefs(csp));
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      // Multiple CSPs (delivered through either header of meta tag) need to be
+      // joined together, see:
+      // https://w3c.github.io/webappsec/specs/content-security-policy/#delivery-html-meta-element
+      if (!csp) {
+        csp = do_CreateInstance("@mozilla.org/cspcontext;1", &rv);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        // Store the request context so CSP can resolve 'self'
+        nsCOMPtr<nsIDOMDocument> domDoc = do_QueryInterface(aDocument);
+        rv = csp->SetRequestContext(domDoc, nullptr);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        // set the new CSP
+        rv = principal->SetCsp(csp);
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
+
+      rv = csp->AppendPolicy(content,
+                             false, // csp via meta tag can not be report only
+                             true); // delivered through the meta tag
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      aDocument->ApplySettingsFromCSP(false);
+    }
+  }
+
   // Referrer Policy spec requires a <meta name="referrer" tag to be in the
   // <head> element.
   rv = SetMetaReferrer(aDocument);
