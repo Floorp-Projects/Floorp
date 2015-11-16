@@ -53,13 +53,6 @@ testDir = testDir.replace("chrome:/mochitest", "chrome://mochitest");
 var helpersjs = testDir + "/../../../commandline/test/helpers.js";
 Services.scriptloader.loadSubScript(helpersjs, this);
 
-// Redeclare dbg_assert with a fatal behavior.
-function dbg_assert(cond, e) {
-  if (!cond) {
-    throw e;
-  }
-}
-
 function addWindow(aUrl) {
   info("Adding window: " + aUrl);
   return promise.resolve(getChromeWindow(window.open(aUrl)));

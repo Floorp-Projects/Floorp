@@ -12,7 +12,7 @@ var promise = require("promise");
 var { ActorPool, createExtraActors, appendExtraActors } = require("devtools/server/actors/common");
 var { DebuggerServer } = require("devtools/server/main");
 var DevToolsUtils = require("devtools/shared/DevToolsUtils");
-var { assert, dbg_assert } = DevToolsUtils;
+var { assert  } = DevToolsUtils;
 var { TabSources } = require("./utils/TabSources");
 var makeDebugger = require("./utils/make-debugger");
 
@@ -893,7 +893,7 @@ TabActor.prototype = {
 
   get sources() {
     if (!this._sources) {
-      dbg_assert(this.threadActor, "threadActor should exist when creating sources.");
+      assert(this.threadActor, "threadActor should exist when creating sources.");
       this._sources = new TabSources(this.threadActor);
     }
     return this._sources;
