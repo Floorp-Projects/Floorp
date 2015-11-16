@@ -300,6 +300,20 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=887836
     runTest();
   }
 
+  function testCopyConstructor() {
+    var url = new URL("http://example.com/");
+    var p = url.searchParams;
+    var q = new URLSearchParams(p);
+    q.set("a", "b");
+    is(url.href, "http://example.com/",
+       "Messing with copy of URLSearchParams should not affect URL");
+    p.set("c", "d");
+    is(url.href, "http://example.com/?c=d",
+       "Messing with URLSearchParams should affect URL");
+
+    runTest();
+  }
+
   var tests = [
     testSimpleURLSearchParams,
     testCopyURLSearchParams,
@@ -314,6 +328,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=887836
     testSet,
     testIterable,
     testZeroHandling,
+    testCopyConstructor,
   ];
 
   function runTest() {

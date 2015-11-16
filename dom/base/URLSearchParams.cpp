@@ -315,7 +315,7 @@ URLSearchParams::URLSearchParams(nsISupports* aParent,
                                  const URLSearchParams& aOther)
   : mParams(new URLParams(*aOther.mParams.get()))
   , mParent(aParent)
-  , mObserver(aOther.mObserver)
+  , mObserver(nullptr)
 {
 }
 
