@@ -162,15 +162,7 @@ Set4BitPixel(uint32_t*& aDecoded, uint8_t aData, uint32_t& aCount,
   }
 }
 
-static PRLogModuleInfo*
-GetBMPLog()
-{
-  static PRLogModuleInfo* sBMPLog;
-  if (!sBMPLog) {
-    sBMPLog = PR_NewLogModule("BMPDecoder");
-  }
-  return sBMPLog;
-}
+static mozilla::LazyLogModule sBMPLog("BMPDecoder");
 
 // The length of the mBIHSize field in the info header.
 static const uint32_t BIHSIZE_FIELD_LENGTH = 4;
@@ -538,7 +530,7 @@ nsBMPDecoder::ReadInfoHeaderRest(const char* aData, size_t aLength)
   }
 
   // Run with NSPR_LOG_MODULES=BMPDecoder:4 set to see this output.
-  MOZ_LOG(GetBMPLog(), LogLevel::Debug,
+  MOZ_LOG(sBMPLog, LogLevel::Debug,
           ("BMP: bihsize=%u, %d x %d, bpp=%u, compression=%u, colors=%u\n",
           mH.mBIHSize, mH.mWidth, mH.mHeight, uint32_t(mH.mBpp),
           mH.mCompression, mH.mNumColors));

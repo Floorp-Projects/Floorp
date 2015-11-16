@@ -1634,7 +1634,7 @@ RasterImage::DoError()
   // Invalidate to get rid of any partially-drawn image content.
   NotifyProgress(NoProgress, IntRect(0, 0, mSize.width, mSize.height));
 
-  MOZ_LOG(GetImgLog(), LogLevel::Error,
+  MOZ_LOG(gImgLog, LogLevel::Error,
           ("RasterImage: [this=%p] Error detected for image\n", this));
 }
 

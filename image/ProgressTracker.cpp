@@ -157,16 +157,16 @@ ProgressTracker::Notify(IProgressObserver* aObserver)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  if (MOZ_LOG_TEST(GetImgLog(), LogLevel::Debug)) {
+  if (MOZ_LOG_TEST(gImgLog, LogLevel::Debug)) {
     RefPtr<Image> image = GetImage();
     if (image && image->GetURI()) {
       RefPtr<ImageURL> uri(image->GetURI());
       nsAutoCString spec;
       uri->GetSpec(spec);
-      LOG_FUNC_WITH_PARAM(GetImgLog(),
+      LOG_FUNC_WITH_PARAM(gImgLog,
                           "ProgressTracker::Notify async", "uri", spec.get());
     } else {
-      LOG_FUNC_WITH_PARAM(GetImgLog(),
+      LOG_FUNC_WITH_PARAM(gImgLog,
                           "ProgressTracker::Notify async", "uri", "<unknown>");
     }
   }
@@ -226,13 +226,13 @@ ProgressTracker::NotifyCurrentState(IProgressObserver* aObserver)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  if (MOZ_LOG_TEST(GetImgLog(), LogLevel::Debug)) {
+  if (MOZ_LOG_TEST(gImgLog, LogLevel::Debug)) {
     RefPtr<Image> image = GetImage();
     nsAutoCString spec;
     if (image && image->GetURI()) {
       image->GetURI()->GetSpec(spec);
     }
-    LOG_FUNC_WITH_PARAM(GetImgLog(),
+    LOG_FUNC_WITH_PARAM(gImgLog,
                         "ProgressTracker::NotifyCurrentState", "uri", spec.get());
   }
 
@@ -406,7 +406,7 @@ ProgressTracker::SyncNotify(IProgressObserver* aObserver)
   if (image && image->GetURI()) {
     image->GetURI()->GetSpec(spec);
   }
-  LOG_SCOPE_WITH_PARAM(GetImgLog(),
+  LOG_SCOPE_WITH_PARAM(gImgLog,
                        "ProgressTracker::SyncNotify", "uri", spec.get());
 
   nsIntRect rect;
