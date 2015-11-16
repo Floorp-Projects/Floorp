@@ -14,10 +14,11 @@ function test() {
     win.addEventListener("SSWindowClosing", function onWindowClosing() {
       win.removeEventListener("SSWindowClosing", onWindowClosing, false);
       eventReceived = true;
-      waitForFocus(finish);
     }, false);
 
-    win.close();
+    BrowserTestUtils.closeWindow(win).then(() => {
+      waitForFocus(finish);
+    });
   });
 }
 

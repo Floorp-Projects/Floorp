@@ -101,7 +101,7 @@ function newWindowWithState(state, callback) {
   let opts = "chrome,all,dialog=no,height=800,width=800";
   let win = window.openDialog(getBrowserURL(), "_blank", opts);
 
-  registerCleanupFunction(() => win.close());
+  registerCleanupFunction(() => BrowserTestUtils.closeWindow(win));
 
   whenWindowLoaded(win, function onWindowLoaded(aWin) {
     TabsProgressListener.init(aWin);
