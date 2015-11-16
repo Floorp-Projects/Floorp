@@ -58,10 +58,8 @@ nsJARInputStream::InitFile(nsJAR *aJar, nsZipItem *item)
     // Must keep handle to filepointer and mmap structure as long as we need access to the mmapped data
     mFd = aJar->mZip->GetFD();
     mZs.next_in = (Bytef *)aJar->mZip->GetData(item);
-    if (!mZs.next_in) {
-        nsZipArchive::sFileCorruptedReason = "nsJARInputStream: !mZs.next_in";
+    if (!mZs.next_in)
         return NS_ERROR_FILE_CORRUPTED;
-    }
     mZs.avail_in = item->Size();
     mOutSize = item->RealSize();
     mZs.total_out = 0;
@@ -268,10 +266,8 @@ nsJARInputStream::ContinueInflate(char* aBuffer, uint32_t aCount,
 
     // now inflate
     int zerr = inflate(&mZs, Z_SYNC_FLUSH);
-    if ((zerr != Z_OK) && (zerr != Z_STREAM_END)) {
-        nsZipArchive::sFileCorruptedReason = "nsJARInputStream: error while inflating";
+    if ((zerr != Z_OK) && (zerr != Z_STREAM_END))
         return NS_ERROR_FILE_CORRUPTED;
-    }
 
     *aBytesRead = (mZs.total_out - oldTotalOut);
 
@@ -284,10 +280,8 @@ nsJARInputStream::ContinueInflate(char* aBuffer, uint32_t aCount,
         inflateEnd(&mZs);
 
         // stop returning valid data as soon as we know we have a bad CRC
-        if (mOutCrc != mInCrc) {
-            nsZipArchive::sFileCorruptedReason = "nsJARInputStream: crc mismatch";
+        if (mOutCrc != mInCrc)
             return NS_ERROR_FILE_CORRUPTED;
-        }
     }
 
     return NS_OK;
