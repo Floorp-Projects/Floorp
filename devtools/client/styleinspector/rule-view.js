@@ -15,7 +15,7 @@ const {InplaceEditor, editableField, editableItem} =
       require("devtools/client/shared/inplace-editor");
 const {ELEMENT_STYLE, PSEUDO_ELEMENTS} =
       require("devtools/server/actors/styles");
-const {OutputParser} = require("devtools/shared/output-parser");
+const {OutputParser} = require("devtools/client/shared/output-parser");
 const {PrefObserver, PREF_ORIG_SOURCES} = require("devtools/client/styleeditor/utils");
 const {
   createChild,

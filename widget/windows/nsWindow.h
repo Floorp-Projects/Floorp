@@ -118,9 +118,9 @@ public:
   NS_IMETHOD              SetFocus(bool aRaise);
   NS_IMETHOD              GetBoundsUntyped(nsIntRect &aRect);
   NS_IMETHOD              GetScreenBoundsUntyped(nsIntRect &aRect);
-  NS_IMETHOD              GetRestoredBoundsUntyped(nsIntRect &aRect) override;
+  NS_IMETHOD              GetRestoredBounds(mozilla::LayoutDeviceIntRect &aRect) override;
   NS_IMETHOD              GetClientBoundsUntyped(nsIntRect &aRect);
-  virtual nsIntPoint      GetClientOffset();
+  virtual nsIntPoint      GetClientOffsetUntyped() override;
   void                    SetBackgroundColor(const nscolor &aColor);
   NS_IMETHOD              SetCursor(imgIContainer* aCursor,
                                     uint32_t aHotspotX, uint32_t aHotspotY);
@@ -156,7 +156,7 @@ public:
                                           LayersBackend aBackendHint = mozilla::layers::LayersBackend::LAYERS_NONE,
                                           LayerManagerPersistence aPersistence = LAYER_MANAGER_CURRENT,
                                           bool* aAllowRetaining = nullptr);
-  NS_IMETHOD              OnDefaultButtonLoaded(const nsIntRect &aButtonRect);
+  NS_IMETHOD              OnDefaultButtonLoaded(const mozilla::LayoutDeviceIntRect& aButtonRect) override;
   NS_IMETHOD              OverrideSystemMouseScrollSpeed(double aOriginalDeltaX,
                                                          double aOriginalDeltaY,
                                                          double& aOverriddenDeltaX,
@@ -195,8 +195,10 @@ public:
   virtual void            UpdateOpaqueRegion(const nsIntRegion& aOpaqueRegion);
 #endif // MOZ_XUL
   virtual nsIMEUpdatePreference GetIMEUpdatePreference();
-  NS_IMETHOD              GetNonClientMargins(nsIntMargin &margins);
-  NS_IMETHOD              SetNonClientMargins(nsIntMargin &margins);
+  NS_IMETHOD              GetNonClientMargins(
+                            mozilla::LayoutDeviceIntMargin &margins) override;
+  NS_IMETHOD              SetNonClientMargins(
+                            mozilla::LayoutDeviceIntMargin &margins) override;
   void                    SetDrawsInTitlebar(bool aState);
   already_AddRefed<mozilla::gfx::DrawTarget> StartRemoteDrawing() override;
   virtual void            EndRemoteDrawing() override;
@@ -515,11 +517,11 @@ protected:
 
   // Non-client margin settings
   // Pre-calculated outward offset applied to default frames
-  nsIntMargin           mNonClientOffset;
+  mozilla::LayoutDeviceIntMargin mNonClientOffset;
   // Margins set by the owner
-  nsIntMargin           mNonClientMargins;
+  mozilla::LayoutDeviceIntMargin mNonClientMargins;
   // Margins we'd like to set once chrome is reshown:
-  nsIntMargin           mFutureMarginsOnceChromeShows;
+  mozilla::LayoutDeviceIntMargin mFutureMarginsOnceChromeShows;
   // Indicates we need to apply margins once toggling chrome into showing:
   bool                  mFutureMarginsToUse;
 

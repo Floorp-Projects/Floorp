@@ -21,6 +21,7 @@ NS_IMPL_ISUPPORTS(CacheIOThread, nsIThreadObserver)
 CacheIOThread::CacheIOThread()
 : mMonitor("CacheIOThread")
 , mThread(nullptr)
+, mXPCOMThread(nullptr)
 , mLowestLevelWaiting(LAST_LEVEL)
 , mCurrentlyExecutingLevel(0)
 , mHasXPCOMEvents(false)
@@ -33,6 +34,11 @@ CacheIOThread::CacheIOThread()
 
 CacheIOThread::~CacheIOThread()
 {
+  if (mXPCOMThread) {
+    nsIThread *thread = mXPCOMThread;
+    thread->Release();
+  }
+
   sSelf = nullptr;
 #ifdef DEBUG
   for (uint32_t level = 0; level < LAST_LEVEL; ++level) {
@@ -182,7 +188,7 @@ void CacheIOThread::ThreadFunc()
     if (threadInternal)
       threadInternal->SetObserver(this);
 
-    mXPCOMThread.swap(xpcomThread);
+    mXPCOMThread = xpcomThread.forget().take();
 
     lock.NotifyAll();
 
@@ -203,7 +209,8 @@ loopStart:
         bool processedEvent;
         nsresult rv;
         do {
-          rv = mXPCOMThread->ProcessNextEvent(false, &processedEvent);
+          nsIThread *thread = mXPCOMThread;
+          rv = thread->ProcessNextEvent(false, &processedEvent);
         } while (NS_SUCCEEDED(rv) && processedEvent);
       }
 

@@ -54,6 +54,16 @@ static CriticalAddress gCriticalAddress;
 #include <CoreServices/CoreServices.h>
 #endif
 
+#if __GLIBC__ > 2 || (__GLIBC__ == 2 && __GLIBC_MINOR__ >= 1)
+#define HAVE___LIBC_STACK_END 1
+#else
+#define HAVE___LIBC_STACK_END 0
+#endif
+
+#if HAVE___LIBC_STACK_END
+extern MOZ_EXPORT void* __libc_stack_end; // from ld-linux.so
+#endif
+
 typedef void
 malloc_logger_t(uint32_t aType,
                 uintptr_t aArg1, uintptr_t aArg2, uintptr_t aArg3,
@@ -873,67 +883,6 @@ void DemangleSymbol(const char* aSymbol,
 #endif // MOZ_DEMANGLE_SYMBOLS
 }
 
-#if __GLIBC__ > 2 || (__GLIBC__ == 2 && __GLIBC_MINOR__ >= 1)
-#define HAVE___LIBC_STACK_END 1
-#else
-#define HAVE___LIBC_STACK_END 0
-#endif
-
-#if HAVE___LIBC_STACK_END
-extern MOZ_EXPORT void* __libc_stack_end; // from ld-linux.so
-#endif
-namespace mozilla {
-bool
-FramePointerStackWalk(MozWalkStackCallback aCallback, uint32_t aSkipFrames,
-                      uint32_t aMaxFrames, void* aClosure, void** bp,
-                      void* aStackEnd)
-{
-  // Stack walking code courtesy Kipp's "leaky".
-
-  int32_t skip = aSkipFrames;
-  uint32_t numFrames = 0;
-  while (bp) {
-    void** next = (void**)*bp;
-    // bp may not be a frame pointer on i386 if code was compiled with
-    // -fomit-frame-pointer, so do some sanity checks.
-    // (bp should be a frame pointer on ppc(64) but checking anyway may help
-    // a little if the stack has been corrupted.)
-    // We don't need to check against the begining of the stack because
-    // we can assume that bp > sp
-    if (next <= bp ||
-        next > aStackEnd ||
-        (long(next) & 3)) {
-      break;
-    }
-#if (defined(__ppc__) && defined(XP_MACOSX)) || defined(__powerpc64__)
-    // ppc mac or powerpc64 linux
-    void* pc = *(bp + 2);
-    bp += 3;
-#else // i386 or powerpc32 linux
-    void* pc = *(bp + 1);
-    bp += 2;
-#endif
-    if (IsCriticalAddress(pc)) {
-      return false;
-    }
-    if (--skip < 0) {
-      // Assume that the SP points to the BP of the function
-      // it called. We can't know the exact location of the SP
-      // but this should be sufficient for our use the SP
-      // to order elements on the stack.
-      numFrames++;
-      (*aCallback)(numFrames, pc, bp, aClosure);
-      if (aMaxFrames != 0 && numFrames == aMaxFrames) {
-        break;
-      }
-    }
-    bp = next;
-  }
-  return numFrames != 0;
-}
-
-} // namespace mozilla
-
 #define X86_OR_PPC (defined(__i386) || defined(PPC) || defined(__ppc__))
 #if X86_OR_PPC && (MOZ_STACKWALK_SUPPORTS_MACOSX || MOZ_STACKWALK_SUPPORTS_LINUX) // i386 or PPC Linux or Mac stackwalking code
 
@@ -1089,15 +1038,6 @@ MozStackWalk(MozWalkStackCallback aCallback, uint32_t aSkipFrames,
   return false;
 }
 
-namespace mozilla {
-MFBT_API bool
-FramePointerStackWalk(MozWalkStackCallback aCallback, uint32_t aSkipFrames,
-                      void* aClosure, void** aBp)
-{
-  return false;
-}
-}
-
 MFBT_API bool
 MozDescribeCodeAddress(void* aPC, MozCodeAddressDetails* aDetails)
 {
@@ -1108,6 +1048,71 @@ MozDescribeCodeAddress(void* aPC, MozCodeAddressDetails* aDetails)
   aDetails->function[0] = '\0';
   aDetails->foffset = 0;
   return false;
+}
+
+#endif
+
+#if defined(XP_WIN) || defined (XP_MACOSX) || defined (XP_LINUX)
+namespace mozilla {
+bool
+FramePointerStackWalk(MozWalkStackCallback aCallback, uint32_t aSkipFrames,
+                      uint32_t aMaxFrames, void* aClosure, void** bp,
+                      void* aStackEnd)
+{
+  // Stack walking code courtesy Kipp's "leaky".
+
+  int32_t skip = aSkipFrames;
+  uint32_t numFrames = 0;
+  while (bp) {
+    void** next = (void**)*bp;
+    // bp may not be a frame pointer on i386 if code was compiled with
+    // -fomit-frame-pointer, so do some sanity checks.
+    // (bp should be a frame pointer on ppc(64) but checking anyway may help
+    // a little if the stack has been corrupted.)
+    // We don't need to check against the begining of the stack because
+    // we can assume that bp > sp
+    if (next <= bp ||
+        next > aStackEnd ||
+        (long(next) & 3)) {
+      break;
+    }
+#if (defined(__ppc__) && defined(XP_MACOSX)) || defined(__powerpc64__)
+    // ppc mac or powerpc64 linux
+    void* pc = *(bp + 2);
+    bp += 3;
+#else // i386 or powerpc32 linux
+    void* pc = *(bp + 1);
+    bp += 2;
+#endif
+    if (IsCriticalAddress(pc)) {
+      return false;
+    }
+    if (--skip < 0) {
+      // Assume that the SP points to the BP of the function
+      // it called. We can't know the exact location of the SP
+      // but this should be sufficient for our use the SP
+      // to order elements on the stack.
+      numFrames++;
+      (*aCallback)(numFrames, pc, bp, aClosure);
+      if (aMaxFrames != 0 && numFrames == aMaxFrames) {
+        break;
+      }
+    }
+    bp = next;
+  }
+  return numFrames != 0;
+}
+} // namespace mozilla
+
+#else
+
+namespace mozilla {
+MFBT_API bool
+FramePointerStackWalk(MozWalkStackCallback aCallback, uint32_t aSkipFrames,
+                      void* aClosure, void** aBp)
+{
+  return false;
+}
 }
 
 #endif

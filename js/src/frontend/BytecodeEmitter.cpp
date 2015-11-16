@@ -5747,6 +5747,13 @@ BytecodeEmitter::emitCStyleFor(ParseNode* pn, ptrdiff_t top)
 
         if (!emitTree(forHead->pn_kid2))
             return false;
+    } else if (!forHead->pn_kid3) {
+        // If there is no condition clause and no update clause, mark
+        // the loop-ending "goto" with the location of the "for".
+        // This ensures that the debugger will stop on each loop
+        // iteration.
+        if (!updateSourceCoordNotes(pn->pn_pos.begin))
+            return false;
     }
 
     /* Set the first note offset so we can find the loop condition. */
@@ -7119,12 +7126,25 @@ BytecodeEmitter::emitPropertyList(ParseNode* pn, MutableHandlePlainObject objp, 
                 return false;
         }
 
+        // Class methods are not enumerable.
+        if (type == ClassBody) {
+            switch (op) {
+              case JSOP_INITPROP:        op = JSOP_INITHIDDENPROP;          break;
+              case JSOP_INITPROP_GETTER: op = JSOP_INITHIDDENPROP_GETTER;   break;
+              case JSOP_INITPROP_SETTER: op = JSOP_INITHIDDENPROP_SETTER;   break;
+              default: MOZ_CRASH("Invalid op");
+            }
+        }
+
         if (isIndex) {
             objp.set(nullptr);
             switch (op) {
-              case JSOP_INITPROP:        op = JSOP_INITELEM;        break;
-              case JSOP_INITPROP_GETTER: op = JSOP_INITELEM_GETTER; break;
-              case JSOP_INITPROP_SETTER: op = JSOP_INITELEM_SETTER; break;
+              case JSOP_INITPROP:               op = JSOP_INITELEM;              break;
+              case JSOP_INITHIDDENPROP:         op = JSOP_INITHIDDENELEM;        break;
+              case JSOP_INITPROP_GETTER:        op = JSOP_INITELEM_GETTER;       break;
+              case JSOP_INITHIDDENPROP_GETTER:  op = JSOP_INITHIDDENELEM_GETTER; break;
+              case JSOP_INITPROP_SETTER:        op = JSOP_INITELEM_SETTER;       break;
+              case JSOP_INITHIDDENPROP_SETTER:  op = JSOP_INITHIDDENELEM_SETTER; break;
               default: MOZ_CRASH("Invalid op");
             }
             if (!emit1(op))
@@ -7137,6 +7157,8 @@ BytecodeEmitter::emitPropertyList(ParseNode* pn, MutableHandlePlainObject objp, 
                 return false;
 
             if (objp) {
+                MOZ_ASSERT(type == ObjectLiteral);
+                MOZ_ASSERT(!IsHiddenInitOp(op));
                 MOZ_ASSERT(!objp->inDictionaryMode());
                 Rooted<jsid> id(cx, AtomToId(key->pn_atom));
                 RootedValue undefinedValue(cx, UndefinedValue());
@@ -8459,11 +8481,9 @@ CGBlockScopeList::findEnclosingScope(uint32_t index)
             // scope contains POS, it should still be open, so its length should
             // be zero.
             return list[index].index;
-        } else {
-            // Conversely, if the length is not zero, it should not contain
-            // POS.
-            MOZ_ASSERT_IF(inPrologue == list[index].endInPrologue, list[index].end <= pos);
         }
+        // Conversely, if the length is not zero, it should not contain POS.
+        MOZ_ASSERT_IF(inPrologue == list[index].endInPrologue, list[index].end <= pos);
     }
 
     return BlockScopeNote::NoBlockScopeIndex;

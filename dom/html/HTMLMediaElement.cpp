@@ -1235,7 +1235,7 @@ nsresult HTMLMediaElement::LoadResource()
 
 #ifdef MOZ_EME
   if (mMediaKeys &&
-      !IsMediaStreamURI(mLoadingSrc) &&
+      !IsMediaSourceURI(mLoadingSrc) &&
       Preferences::GetBool("media.eme.mse-only", true)) {
     return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
   }

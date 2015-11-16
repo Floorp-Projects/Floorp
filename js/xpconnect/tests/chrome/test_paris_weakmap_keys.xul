@@ -67,7 +67,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=777385
     SpecialPowers.DOMWindowUtils.garbageCollect();
     SpecialPowers.DOMWindowUtils.garbageCollect();
 
-    is(Cu.nondeterministicGetWeakMapKeys(live_map).length, 1,
+    is(ThreadSafeChromeUtils.nondeterministicGetWeakMapKeys(live_map).length, 1,
        "Live nsISupports new DOM bindings wrappercached native weak map key should not be removed.");
 
     is(live_map.get(get_div_style()), 12345, "Live map should have live style with right value after GC.");

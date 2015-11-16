@@ -120,6 +120,17 @@ function setBreakdown (window, type) {
   return waitUntilState(window.gStore, () => {
     let selected = window.gStore.getState().snapshots.find(s => s.selected);
     return selected.state === states.SAVED_CENSUS &&
-           breakdownEquals(breakdownNameToSpec(type), selected.breakdown);
+           breakdownEquals(breakdownNameToSpec(type), selected.census.breakdown);
   });
+}
+
+/**
+ * Get the snapshot tatus text currently displayed, or null if none is
+ * displayed.
+ *
+ * @param {Document} document
+ */
+function getDisplayedSnapshotStatus(document) {
+  const status = document.querySelector(".snapshot-status");
+  return status ? status.textContent.trim() : null;
 }

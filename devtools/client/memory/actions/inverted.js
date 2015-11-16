@@ -4,7 +4,7 @@
 "use strict";
 
 const { actions } = require("../constants");
-const { refreshSelectedCensus } = require("./snapshot");
+const { refresh } = require("./refresh");
 
 const toggleInverted = exports.toggleInverted = function () {
   return { type: actions.TOGGLE_INVERTED };
@@ -13,6 +13,6 @@ const toggleInverted = exports.toggleInverted = function () {
 exports.toggleInvertedAndRefresh = function (heapWorker) {
   return function* (dispatch, getState) {
     dispatch(toggleInverted());
-    yield dispatch(refreshSelectedCensus(heapWorker));
+    yield dispatch(refresh(heapWorker));
   };
 };

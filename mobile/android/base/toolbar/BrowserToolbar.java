@@ -217,6 +217,11 @@ public abstract class BrowserToolbar extends ThemedRelativeLayout
         setOnCreateContextMenuListener(new View.OnCreateContextMenuListener() {
             @Override
             public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
+                // Do not show the context menu while editing
+                if (isEditing()) {
+                    return;
+                }
+
                 // NOTE: Use MenuUtils.safeSetVisible because some actions might
                 // be on the Page menu
                 MenuInflater inflater = activity.getMenuInflater();

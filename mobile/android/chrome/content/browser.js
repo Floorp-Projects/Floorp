@@ -421,11 +421,7 @@ var BrowserApp = {
 
     this.deck = document.getElementById("browsers");
 
-    // This check and BrowserEventHandler should be removed once we have
-    // switched over to the C++ APZ code
-    if (!AppConstants.MOZ_ANDROID_APZ) {
-      BrowserEventHandler.init();
-    }
+    BrowserEventHandler.init();
 
     ViewportHandler.init();
 
@@ -682,9 +678,9 @@ var BrowserApp = {
         let newtabStrings = Strings.browser.GetStringFromName("newtabpopup.opened");
         let label = PluralForm.get(1, newtabStrings).replace("#1", 1);
         let buttonLabel = Strings.browser.GetStringFromName("newtabpopup.switch");
-        NativeWindow.toast.show(label, "long", {
-          button: {
-            icon: "drawable://switch_button_icon",
+
+        Snackbars.show(label, Snackbars.LENGTH_LONG, {
+          action: {
             label: buttonLabel,
             callback: () => { BrowserApp.selectTab(tab); },
           }
@@ -711,9 +707,8 @@ var BrowserApp = {
           let newtabStrings = Strings.browser.GetStringFromName("newprivatetabpopup.opened");
           let label = PluralForm.get(1, newtabStrings).replace("#1", 1);
           let buttonLabel = Strings.browser.GetStringFromName("newtabpopup.switch");
-          NativeWindow.toast.show(label, "long", {
-            button: {
-              icon: "drawable://switch_button_icon",
+          Snackbars.show(label, Snackbars.LENGTH_LONG, {
+            action: {
               label: buttonLabel,
               callback: () => { BrowserApp.selectTab(tab); },
             }
@@ -1005,14 +1000,14 @@ var BrowserApp = {
         aTarget.setAttribute("data-ctv-show", "true");
         aTarget.setAttribute("src", aTarget.getAttribute("data-ctv-src"));
 
-        // Shows a toast to unblock all images if browser.image_blocking.enabled is enabled.
+        // Shows a snackbar to unblock all images if browser.image_blocking.enabled is enabled.
         let blockedImgs = aTarget.ownerDocument.querySelectorAll("[data-ctv-src]");
         if (blockedImgs.length == 0) {
           return;
         }
         let message = Strings.browser.GetStringFromName("imageblocking.downloadedImage");
-        NativeWindow.toast.show(message, "short", {
-          button: {
+        Snackbars.show(message, Snackbars.LENGTH_SHORT, {
+          action: {
             label: Strings.browser.GetStringFromName("imageblocking.showAllImages"),
             callback: () => {
               UITelemetry.addEvent("action.1", "toast", null, "web_show_all_image");
@@ -4777,14 +4772,19 @@ var BrowserEventHandler = {
   init: function init() {
     this._clickInZoomedView = false;
     Services.obs.addObserver(this, "Gesture:SingleTap", false);
-    Services.obs.addObserver(this, "Gesture:CancelTouch", false);
     Services.obs.addObserver(this, "Gesture:ClickInZoomedView", false);
-    Services.obs.addObserver(this, "Gesture:DoubleTap", false);
-    Services.obs.addObserver(this, "Gesture:Scroll", false);
-    Services.obs.addObserver(this, "dom-touch-listener-added", false);
+
+    if (!AppConstants.MOZ_ANDROID_APZ) {
+      Services.obs.addObserver(this, "Gesture:CancelTouch", false);
+      Services.obs.addObserver(this, "Gesture:DoubleTap", false);
+      Services.obs.addObserver(this, "Gesture:Scroll", false);
+      Services.obs.addObserver(this, "dom-touch-listener-added", false);
+      BrowserApp.deck.addEventListener("touchstart", this, true);
+    } else {
+      BrowserApp.deck.addEventListener("touchend", this, true);
+    }
 
     BrowserApp.deck.addEventListener("DOMUpdatePageReport", PopupBlockerObserver.onUpdatePageReport, false);
-    BrowserApp.deck.addEventListener("touchstart", this, true);
     BrowserApp.deck.addEventListener("MozMouseHittest", this, true);
 
     InitLater(() => BrowserApp.deck.addEventListener("click", InputWidgetHelper, true));
@@ -4803,6 +4803,11 @@ var BrowserEventHandler = {
     switch (aEvent.type) {
       case 'touchstart':
         this._handleTouchStart(aEvent);
+        break;
+      case 'touchend':
+        if (this._inCluster) {
+          aEvent.preventDefault();
+        }
         break;
       case 'MozMouseHittest':
         this._handleRetargetedTouchStart(aEvent);
@@ -4988,16 +4993,20 @@ var BrowserEventHandler = {
           if (this._clickInZoomedView != true) {
             this._closeZoomedView();
           }
-          // The _highlightElement was chosen after fluffing the touch events
-          // that led to this SingleTap, so by fluffing the mouse events, they
-          // should find the same target since we fluff them again below.
-          this._sendMouseEvent("mousemove", x, y);
-          this._sendMouseEvent("mousedown", x, y);
-          this._sendMouseEvent("mouseup",   x, y);
+          if (!AppConstants.MOZ_ANDROID_APZ) {
+            // The _highlightElement was chosen after fluffing the touch events
+            // that led to this SingleTap, so by fluffing the mouse events, they
+            // should find the same target since we fluff them again below.
+            this._sendMouseEvent("mousemove", x, y);
+            this._sendMouseEvent("mousedown", x, y);
+            this._sendMouseEvent("mouseup",   x, y);
+          }
         }
         this._clickInZoomedView = false;
-        // scrollToFocusedInput does its own checks to find out if an element should be zoomed into
-        BrowserApp.scrollToFocusedInput(BrowserApp.selectedBrowser);
+        if (!AppConstants.MOZ_ANDROID_APZ) {
+          // scrollToFocusedInput does its own checks to find out if an element should be zoomed into
+          BrowserApp.scrollToFocusedInput(BrowserApp.selectedBrowser);
+        }
 
         this._cancelTapHighlight();
         break;
@@ -5072,7 +5081,9 @@ var BrowserEventHandler = {
   _highlightElement: null,
 
   _doTapHighlight: function _doTapHighlight(aElement) {
-    DOMUtils.setContentState(aElement, kStateActive);
+    if (!AppConstants.MOZ_ANDROID_APZ) {
+      DOMUtils.setContentState(aElement, kStateActive);
+    }
     this._highlightElement = aElement;
   },
 
@@ -5080,12 +5091,15 @@ var BrowserEventHandler = {
     if (!this._highlightElement)
       return;
 
-    // If the active element is in a sub-frame, we need to make that frame's document
-    // active to remove the element's active state.
-    if (this._highlightElement.ownerDocument != BrowserApp.selectedBrowser.contentWindow.document)
-      DOMUtils.setContentState(this._highlightElement.ownerDocument.documentElement, kStateActive);
+    if (!AppConstants.MOZ_ANDROID_APZ) {
+      // If the active element is in a sub-frame, we need to make that frame's document
+      // active to remove the element's active state.
+      if (this._highlightElement.ownerDocument != BrowserApp.selectedBrowser.contentWindow.document)
+        DOMUtils.setContentState(this._highlightElement.ownerDocument.documentElement, kStateActive);
 
-    DOMUtils.setContentState(BrowserApp.selectedBrowser.contentWindow.document.documentElement, kStateActive);
+      DOMUtils.setContentState(BrowserApp.selectedBrowser.contentWindow.document.documentElement, kStateActive);
+    }
+
     this._highlightElement = null;
   },
 
@@ -6056,9 +6070,8 @@ var XPInstallObserver = {
       // Display completion message for new installs or updates not done Automatically
       if (!aInstall.existingAddon || !AddonManager.shouldAutoUpdate(aInstall.existingAddon)) {
         let message = Strings.browser.GetStringFromName("alertAddonsInstalledNoRestart.message");
-        NativeWindow.toast.show(message, "short", {
-          button: {
-            icon: "drawable://alert_addon",
+        Snackbars.show(message, Snackbars.LENGTH_LONG, {
+          action: {
             label: Strings.browser.GetStringFromName("alertAddonsInstalledNoRestart.action2"),
             callback: () => {
               UITelemetry.addEvent("show.1", "toast", null, "addons");

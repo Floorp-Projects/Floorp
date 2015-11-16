@@ -46,9 +46,9 @@ function run_test() {
   const EXPECTED = {
     name: null,
     bytes: 0,
-    totalBytes: 0,
+    totalBytes: 220,
     count: 0,
-    totalCount: 0,
+    totalCount: 22,
     children: [
       {
         name: "js::Shape",
@@ -159,38 +159,6 @@ function run_test() {
             totalBytes: 30,
             count: 0,
             totalCount: 3,
-            children: [
-              {
-                name: null,
-                bytes: 0,
-                totalBytes: 220,
-                count: 0,
-                totalCount: 22,
-                children: undefined,
-                id: 26,
-                parent: 25,
-              }
-            ],
-            id: 25,
-            parent: 24,
-          }
-        ],
-        id: 24,
-        parent: 11,
-      },
-      {
-        name: "other",
-        bytes: 0,
-        totalBytes: 0,
-        count: 0,
-        totalCount: 0,
-        children: [
-          {
-            name: "objects",
-            bytes: 0,
-            totalBytes: 50,
-            count: 0,
-            totalCount: 5,
             children: [
               {
                 name: null,

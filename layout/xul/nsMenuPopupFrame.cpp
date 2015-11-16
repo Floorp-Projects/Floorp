@@ -1501,7 +1501,7 @@ nsMenuPopupFrame::SetPopupPosition(nsIFrame* aAnchorFrame, bool aIsMove, bool aS
   // to save time since they will never have a titlebar.
   nsIWidget* widget = view->GetWidget();
   if (mPopupType == ePopupTypePanel && widget) {
-    mLastClientOffset = widget->GetClientOffset();
+    mLastClientOffset = widget->GetClientOffsetUntyped();
     viewPoint.x += presContext->DevPixelsToAppUnits(mLastClientOffset.x);
     viewPoint.y += presContext->DevPixelsToAppUnits(mLastClientOffset.y);
   }
@@ -2168,7 +2168,7 @@ nsMenuPopupFrame::MoveTo(const CSSIntPoint& aPos, bool aUpdateAttrs)
 {
   nsIWidget* widget = GetWidget();
   if ((mScreenRect.x == aPos.x && mScreenRect.y == aPos.y) &&
-      (!widget || widget->GetClientOffset() == mLastClientOffset)) {
+      (!widget || widget->GetClientOffsetUntyped() == mLastClientOffset)) {
     return;
   }
 

@@ -1441,6 +1441,7 @@ nsIDocument::nsIDocument()
     mReferrerPolicySet(false),
     mReferrerPolicy(mozilla::net::RP_Default),
     mUpgradeInsecureRequests(false),
+    mUpgradeInsecurePreloads(false),
     mCharacterSet(NS_LITERAL_CSTRING("ISO-8859-1")),
     mNodeInfoManager(nullptr),
     mCompatMode(eCompatibility_FullStandards),
@@ -2574,6 +2575,8 @@ nsDocument::StartDocumentLoad(const char* aCommand, nsIChannel* aChannel,
     if (sameTypeParent) {
       mUpgradeInsecureRequests =
         sameTypeParent->GetDocument()->GetUpgradeInsecureRequests();
+      mUpgradeInsecurePreloads =
+        sameTypeParent->GetDocument()->GetUpgradeInsecurePreloads();
     }
   }
 
@@ -2615,7 +2618,7 @@ AppendCSPFromHeader(nsIContentSecurityPolicy* csp,
   nsCharSeparatedTokenizer tokenizer(aHeaderValue, ',');
   while (tokenizer.hasMoreTokens()) {
       const nsSubstring& policy = tokenizer.nextToken();
-      rv = csp->AppendPolicy(policy, aReportOnly);
+      rv = csp->AppendPolicy(policy, aReportOnly, false);
       NS_ENSURE_SUCCESS(rv, rv);
       {
         MOZ_LOG(gCspPRLog, LogLevel::Debug,
@@ -2651,6 +2654,58 @@ nsDocument::IsLoopDocument(nsIChannel *aChannel)
     }
   }
   return isLoop;
+}
+
+void
+nsDocument::ApplySettingsFromCSP(bool aSpeculative)
+{
+  nsresult rv = NS_OK;
+  if (!aSpeculative) {
+    // 1) apply settings from regular CSP
+    nsCOMPtr<nsIContentSecurityPolicy> csp;
+    rv = NodePrincipal()->GetCsp(getter_AddRefs(csp));
+    NS_ENSURE_SUCCESS_VOID(rv);
+    if (csp) {
+      // Set up any Referrer Policy specified by CSP
+      bool hasReferrerPolicy = false;
+      uint32_t referrerPolicy = mozilla::net::RP_Default;
+      rv = csp->GetReferrerPolicy(&referrerPolicy, &hasReferrerPolicy);
+      NS_ENSURE_SUCCESS_VOID(rv);
+      if (hasReferrerPolicy) {
+        mReferrerPolicy = static_cast<ReferrerPolicy>(referrerPolicy);
+        mReferrerPolicySet = true;
+      }
+
+      // Set up 'upgrade-insecure-requests' if not already inherited
+      // from the parent context or set by any other CSP.
+      if (!mUpgradeInsecureRequests) {
+        rv = csp->GetUpgradeInsecureRequests(&mUpgradeInsecureRequests);
+        NS_ENSURE_SUCCESS_VOID(rv);
+      }
+    }
+    return;
+  }
+
+  // 2) apply settings from speculative csp
+  nsCOMPtr<nsIContentSecurityPolicy> preloadCsp;
+  rv = NodePrincipal()->GetPreloadCsp(getter_AddRefs(preloadCsp));
+  if (preloadCsp) {
+    // Set up any Referrer Policy specified by CSP
+    bool hasReferrerPolicy = false;
+    uint32_t referrerPolicy = mozilla::net::RP_Default;
+    rv = preloadCsp->GetReferrerPolicy(&referrerPolicy, &hasReferrerPolicy);
+    NS_ENSURE_SUCCESS_VOID(rv);
+    if (hasReferrerPolicy) {
+      // please note that referrer policy spec defines that the latest
+      // policy awlays wins, hence we can safely overwrite the policy here.
+      mReferrerPolicy = static_cast<ReferrerPolicy>(referrerPolicy);
+      mReferrerPolicySet = true;
+    }
+    if (!mUpgradeInsecurePreloads) {
+      rv = preloadCsp->GetUpgradeInsecureRequests(&mUpgradeInsecurePreloads);
+      NS_ENSURE_SUCCESS_VOID(rv);
+    }
+  }
 }
 
 nsresult
@@ -2768,12 +2823,12 @@ nsDocument::InitCSP(nsIChannel* aChannel)
 
   // ----- if the doc is an app and we want a default CSP, apply it.
   if (applyAppDefaultCSP) {
-    csp->AppendPolicy(appDefaultCSP, false);
+    csp->AppendPolicy(appDefaultCSP, false, false);
   }
 
   // ----- if the doc is an app and specifies a CSP in its manifest, apply it.
   if (applyAppManifestCSP) {
-    csp->AppendPolicy(appManifestCSP, false);
+    csp->AppendPolicy(appManifestCSP, false, false);
   }
 
   // ----- if the doc is part of Loop, apply the loop CSP
@@ -2783,7 +2838,7 @@ nsDocument::InitCSP(nsIChannel* aChannel)
     NS_ASSERTION(loopCSP, "Missing loop.CSP preference");
     // If the pref has been removed, we continue without setting a CSP
     if (loopCSP) {
-      csp->AppendPolicy(loopCSP, false);
+      csp->AppendPolicy(loopCSP, false, false);
     }
   }
 
@@ -2815,33 +2870,12 @@ nsDocument::InitCSP(nsIChannel* aChannel)
     }
   }
 
-  // ----- Set up any Referrer Policy specified by CSP
-  bool hasReferrerPolicy = false;
-  uint32_t referrerPolicy = mozilla::net::RP_Default;
-  rv = csp->GetReferrerPolicy(&referrerPolicy, &hasReferrerPolicy);
-  NS_ENSURE_SUCCESS(rv, rv);
-  if (hasReferrerPolicy) {
-    // Referrer policy spec (section 6.1) says that we always use the newest
-    // referrer policy we find
-    mReferrerPolicy = static_cast<ReferrerPolicy>(referrerPolicy);
-    mReferrerPolicySet = true;
-
-    // Referrer Policy is set separately for the speculative parser in
-    // nsHTMLDocument::StartDocumentLoad() so there's nothing to do here for
-    // speculative loads.
-  }
-
-  // ------ Set flag for 'upgrade-insecure-requests' if not already
-  //        inherited from the parent context.
-  if (!mUpgradeInsecureRequests) {
-    rv = csp->GetUpgradeInsecureRequests(&mUpgradeInsecureRequests);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
   rv = principal->SetCsp(csp);
   NS_ENSURE_SUCCESS(rv, rv);
   MOZ_LOG(gCspPRLog, LogLevel::Debug,
          ("Inserted CSP into principal %p", principal));
+
+  ApplySettingsFromCSP(false);
 
   return NS_OK;
 }

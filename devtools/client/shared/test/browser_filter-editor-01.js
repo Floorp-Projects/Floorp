@@ -69,4 +69,19 @@ add_task(function *() {
   info("Test parsing of 'inherit'");
   widget.setCssValue("inherit");
   is(widget.getCssValue(), "inherit", "setCssValue should handle 'inherit'");
+
+  info("Test parsing of quoted URL");
+  widget.setCssValue("url('invalid ) when ) unquoted')");
+  is(widget.getCssValue(), "url('invalid ) when ) unquoted')",
+     "setCssValue should re-quote single-quoted URL contents");
+  widget.setCssValue("url(\"invalid ) when ) unquoted\")");
+  is(widget.getCssValue(), "url(\"invalid ) when ) unquoted\")",
+     "setCssValue should re-quote double-quoted URL contents");
+  widget.setCssValue("url(ordinary)");
+  is(widget.getCssValue(), "url(ordinary)",
+     "setCssValue should not quote ordinary unquoted URL contents");
+  widget.setCssValue("url(invalid\\ \\)\\ \\{\\ when\\ \\}\\ \\;\\ unquoted)");
+  is(widget.getCssValue(),
+     "url(invalid\\ \\)\\ \\{\\ when\\ \\}\\ \\;\\ unquoted)",
+     "setCssValue should re-quote weird unquoted URL contents");
 });

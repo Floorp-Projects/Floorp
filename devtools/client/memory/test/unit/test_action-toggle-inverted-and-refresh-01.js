@@ -41,11 +41,11 @@ add_task(function *() {
                                        states.SAVED_CENSUS,
                                        states.SAVED_CENSUS]);
 
-  equal(getState().snapshots[0].inverted, false);
-  equal(getState().snapshots[1].inverted, false);
-  equal(getState().snapshots[2].inverted, true);
+  equal(getState().snapshots[0].census.inverted, false);
+  equal(getState().snapshots[1].census.inverted, false);
+  equal(getState().snapshots[2].census.inverted, true);
 
-  dispatch(selectSnapshotAndRefresh(heapWorker, getState().snapshots[1]));
+  dispatch(selectSnapshotAndRefresh(heapWorker, getState().snapshots[1].id));
   yield waitUntilSnapshotState(store, [states.SAVED_CENSUS,
                                        states.SAVING_CENSUS,
                                        states.SAVED_CENSUS]);
@@ -55,9 +55,9 @@ add_task(function *() {
                                        states.SAVED_CENSUS,
                                        states.SAVED_CENSUS]);
 
-  equal(getState().snapshots[0].inverted, false);
-  equal(getState().snapshots[1].inverted, true);
-  equal(getState().snapshots[2].inverted, true);
+  equal(getState().snapshots[0].census.inverted, false);
+  equal(getState().snapshots[1].census.inverted, true);
+  equal(getState().snapshots[2].census.inverted, true);
 
   heapWorker.destroy();
   yield front.detach();

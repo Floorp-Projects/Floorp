@@ -317,12 +317,28 @@ BasePrincipal::GetCsp(nsIContentSecurityPolicy** aCsp)
 NS_IMETHODIMP
 BasePrincipal::SetCsp(nsIContentSecurityPolicy* aCsp)
 {
-  // If CSP was already set, it should not be destroyed!  Instead, it should
-  // get set anew when a new principal is created.
-  if (mCSP)
+  if (mCSP) {
     return NS_ERROR_ALREADY_INITIALIZED;
+  }
 
   mCSP = aCsp;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+BasePrincipal::GetPreloadCsp(nsIContentSecurityPolicy** aPreloadCSP)
+{
+  NS_IF_ADDREF(*aPreloadCSP = mPreloadCSP);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+BasePrincipal::SetPreloadCsp(nsIContentSecurityPolicy* aPreloadCSP)
+{
+  if (mPreloadCSP) {
+    return NS_ERROR_ALREADY_INITIALIZED;
+  }
+  mPreloadCSP = aPreloadCSP;
   return NS_OK;
 }
 

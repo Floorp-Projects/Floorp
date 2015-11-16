@@ -8,10 +8,13 @@ var { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
 var { gDevTools } = Cu.import("resource://devtools/client/framework/gDevTools.jsm", {});
 var { console } = Cu.import("resource://gre/modules/Console.jsm", {});
 var { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
+
+var DevToolsUtils = require("devtools/shared/DevToolsUtils");
+DevToolsUtils.testing = true;
+
 var { OS } = require("resource://gre/modules/osfile.jsm");
 var { FileUtils } = require("resource://gre/modules/FileUtils.jsm");
 var { TargetFactory } = require("devtools/client/framework/target");
-var DevToolsUtils = require("devtools/shared/DevToolsUtils");
 var promise = require("promise");
 var { Task } = Cu.import("resource://gre/modules/Task.jsm", {});
 var { expectState } = require("devtools/server/actors/common");
@@ -21,7 +24,9 @@ var { addDebuggerToGlobal } = require("resource://gre/modules/jsdebugger.jsm");
 var Store = require("devtools/client/memory/store");
 var SYSTEM_PRINCIPAL = Cc["@mozilla.org/systemprincipal;1"].createInstance(Ci.nsIPrincipal);
 
-DevToolsUtils.testing = true;
+function dumpn(msg) {
+  dump(`MEMORY-TEST: ${msg}\n`);
+}
 
 function initDebugger () {
   let global = new Cu.Sandbox(SYSTEM_PRINCIPAL, { freshZone: true });
@@ -102,19 +107,19 @@ function waitUntilSnapshotState (store, expected) {
   return waitUntilState(store, predicate);
 }
 
-function isBreakdownType (census, type) {
-  // Little sanity check, all censuses should have atleast a children array
-  if (!census || !Array.isArray(census.children)) {
+function isBreakdownType (report, type) {
+  // Little sanity check, all reports should have at least a children array.
+  if (!report || !Array.isArray(report.children)) {
     return false;
   }
   switch (type) {
     case "coarseType":
-      return census.children.find(c => c.name === "objects");
+      return report.children.find(c => c.name === "objects");
     case "objectClass":
-      return census.children.find(c => c.name === "Function");
+      return report.children.find(c => c.name === "Function");
     case "internalType":
-      return census.children.find(c => c.name === "js::BaseShape") &&
-             !census.children.find(c => c.name === "objects");
+      return report.children.find(c => c.name === "js::BaseShape") &&
+             !report.children.find(c => c.name === "objects");
     default:
       throw new Error(`isBreakdownType does not yet support ${type}`);
   }

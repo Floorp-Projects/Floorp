@@ -59,11 +59,13 @@ class HeapSnapshot final : public nsISupports
   // Initialize this HeapSnapshot from the given buffer that contains a
   // serialized core dump. Do NOT take ownership of the buffer, only borrow it
   // for the duration of the call. Return false on failure.
-  bool init(const uint8_t* buffer, uint32_t size);
+  bool init(JSContext* cx, const uint8_t* buffer, uint32_t size);
+
+  using NodeIdSet = js::HashSet<NodeId>;
 
   // Save the given `protobuf::Node` message in this `HeapSnapshot` as a
   // `DeserializedNode`.
-  bool saveNode(const protobuf::Node& node);
+  bool saveNode(const protobuf::Node& node, NodeIdSet& edgeReferents);
 
   // Save the given `protobuf::StackFrame` message in this `HeapSnapshot` as a
   // `DeserializedStackFrame`. The saved stack frame's id is returned via the

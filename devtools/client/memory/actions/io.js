@@ -5,7 +5,7 @@
 
 const { reportException, assert } = require("devtools/shared/DevToolsUtils");
 const { snapshotState: states, actions } = require("../constants");
-const { L10N, openFilePicker, createSnapshot } = require("../utils");
+const { immutableUpdate, L10N, openFilePicker, createSnapshot } = require("../utils");
 const { readSnapshot, takeCensus, selectSnapshot } = require("./snapshot");
 const { OS } = require("resource://gre/modules/osfile.jsm");
 const VALID_EXPORT_STATES = [states.SAVED, states.READ, states.SAVING_CENSUS, states.SAVED_CENSUS];
@@ -64,24 +64,24 @@ const pickFileAndImportSnapshotAndCensus = exports.pickFileAndImportSnapshotAndC
 
 const importSnapshotAndCensus = exports.importSnapshotAndCensus = function (heapWorker, path) {
   return function* (dispatch, getState) {
-    let snapshot = createSnapshot();
-
-    // Override the defaults for a new snapshot
-    snapshot.path = path;
-    snapshot.state = states.IMPORTING;
-    snapshot.imported = true;
+    const snapshot = immutableUpdate(createSnapshot(), {
+      path,
+      state: states.IMPORTING,
+      imported: true,
+    });
+    const id = snapshot.id;
 
     dispatch({ type: actions.IMPORT_SNAPSHOT_START, snapshot });
-    dispatch(selectSnapshot(snapshot));
+    dispatch(selectSnapshot(snapshot.id));
 
     try {
-      yield dispatch(readSnapshot(heapWorker, snapshot));
-      yield dispatch(takeCensus(heapWorker, snapshot));
+      yield dispatch(readSnapshot(heapWorker, id));
+      yield dispatch(takeCensus(heapWorker, id));
     } catch (error) {
       reportException("importSnapshot", error);
-      dispatch({ type: actions.IMPORT_SNAPSHOT_ERROR, error, snapshot });
+      dispatch({ type: actions.IMPORT_SNAPSHOT_ERROR, error, id });
     }
 
-    dispatch({ type: actions.IMPORT_SNAPSHOT_END, snapshot });
+    dispatch({ type: actions.IMPORT_SNAPSHOT_END, id });
   };
 };

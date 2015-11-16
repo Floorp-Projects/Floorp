@@ -1744,11 +1744,63 @@
      *   Stack: =>
      */ \
     macro(JSOP_THROWSETALIASEDCONST, 170, "throwsetaliasedconst", NULL, 5,  1,  1, JOF_SCOPECOORD|JOF_NAME|JOF_SET|JOF_DETECTING) \
-    macro(JSOP_UNUSED171,     171,"unused171",  NULL,     1,  0,  0,  JOF_BYTE) \
-    macro(JSOP_UNUSED172,     172,"unused172",  NULL,     1,  0,  0,  JOF_BYTE) \
-    macro(JSOP_UNUSED173,     173,"unused173",  NULL,     1,  0,  0,  JOF_BYTE) \
-    macro(JSOP_UNUSED174,     174,"unused174",  NULL,     1,  0,  0,  JOF_BYTE) \
-    macro(JSOP_UNUSED175,     175,"unused175",  NULL,     1,  0,  0,  JOF_BYTE) \
+    /*
+     * Initialize a non-enumerable getter in an object literal.
+     *
+     * Pops the top two values on the stack as 'val' and 'obj', defines
+     * getter of 'obj' as 'val', pushes 'obj' onto the stack.
+     *   Category: Literals
+     *   Type: Object
+     *   Operands: uint32_t nameIndex
+     *   Stack: obj, val => obj
+     */ \
+    macro(JSOP_INITHIDDENPROP_GETTER,  171, "inithiddenprop_getter",   NULL, 5,  2,  1, JOF_ATOM|JOF_PROP|JOF_SET|JOF_DETECTING) \
+    /*
+     * Initialize a non-enumerable setter in an object literal.
+     *
+     * Pops the top two values on the stack as 'val' and 'obj', defines
+     * setter of 'obj' as 'val', pushes 'obj' onto the stack.
+     *   Category: Literals
+     *   Type: Object
+     *   Operands: uint32_t nameIndex
+     *   Stack: obj, val => obj
+     */ \
+    macro(JSOP_INITHIDDENPROP_SETTER,  172, "inithiddenprop_setter",   NULL, 5,  2,  1, JOF_ATOM|JOF_PROP|JOF_SET|JOF_DETECTING) \
+    /*
+     * Initialize a non-enumerable numeric getter in an object literal like
+     * '{get 2() {}}'.
+     *
+     * Pops the top three values on the stack as 'val', 'id' and 'obj', defines
+     * 'id' getter of 'obj' as 'val', pushes 'obj' onto the stack.
+     *   Category: Literals
+     *   Type: Object
+     *   Operands:
+     *   Stack: obj, id, val => obj
+     */ \
+    macro(JSOP_INITHIDDENELEM_GETTER,  173, "inithiddenelem_getter",   NULL, 1,  3,  1, JOF_BYTE|JOF_ELEM|JOF_SET|JOF_DETECTING) \
+    /*
+     * Initialize a non-enumerable numeric setter in an object literal like
+     * '{set 2(v) {}}'.
+     *
+     * Pops the top three values on the stack as 'val', 'id' and 'obj', defines
+     * 'id' setter of 'obj' as 'val', pushes 'obj' onto the stack.
+     *   Category: Literals
+     *   Type: Object
+     *   Operands:
+     *   Stack: obj, id, val => obj
+     */ \
+    macro(JSOP_INITHIDDENELEM_SETTER, 174, "inithiddenelem_setter",   NULL, 1,  3,  1, JOF_BYTE|JOF_ELEM|JOF_SET|JOF_DETECTING) \
+    /*
+     * Initialize a non-enumerable numeric property in an object literal, like '{1: x}'.
+     *
+     * Pops the top three values on the stack as 'val', 'id' and 'obj', defines
+     * 'id' property of 'obj' as 'val', pushes 'obj' onto the stack.
+     *   Category: Literals
+     *   Type: Object
+     *   Operands:
+     *   Stack: obj, id, val => obj
+     */ \
+    macro(JSOP_INITHIDDENELEM,  175, "inithiddenelem",   NULL,         1,  3,  1, JOF_BYTE|JOF_ELEM|JOF_SET|JOF_DETECTING) \
     macro(JSOP_UNUSED176,     176,"unused176",  NULL,     1,  0,  0,  JOF_BYTE) \
     macro(JSOP_UNUSED177,     177,"unused177",  NULL,     1,  0,  0,  JOF_BYTE) \
     macro(JSOP_UNUSED178,     178,"unused178",  NULL,     1,  0,  0,  JOF_BYTE) \
