@@ -441,7 +441,7 @@ var Impl = {
    *                  environment data.
    * @param {Object}  [aOptions.overrideEnvironment=null] set to override the environment data.
    *
-   * @returns Promise<Object> A promise that resolves when the ping is completely assembled.
+   * @returns {Object} An object that contains the assembled ping data.
    */
   assemblePing: function assemblePing(aType, aPayload, aOptions = {}) {
     this._log.trace("assemblePing - Type " + aType + ", aOptions " + JSON.stringify(aOptions));
