@@ -97,7 +97,12 @@ CaptureStreamTestHelper.prototype = {
       const startTime = video.currentTime;
       CaptureStreamTestHelper2D.prototype.clear.call(this, this.cout);
       var ontimeupdate = () => {
-        const pixelMatch = test(this.getPixel(video, offsetX, offsetY));
+        var pixelMatch = false;
+        try {
+          pixelMatch = test(this.getPixel(video, offsetX, offsetY));
+        } catch (NS_ERROR_NOT_AVAILABLE) {
+          info("Waiting for pixel but no video available");
+        }
         if (!pixelMatch &&
             (!timeout || video.currentTime < startTime + (timeout / 1000.0))) {
           // No match yet and,
