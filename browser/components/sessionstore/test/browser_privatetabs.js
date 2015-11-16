@@ -97,7 +97,7 @@ add_task(function () {
 
   // Check that all private tabs are removed when the non-private
   // window is closed and we don't save windows without any tabs.
-  yield promiseWindowClosed(win);
+  yield BrowserTestUtils.closeWindow(win);
   is(ss.getClosedWindowCount(), 0, "no windows to restore");
 });
 
@@ -123,7 +123,7 @@ add_task(function () {
   is(ss.getClosedTabCount(win), 1, "there is a single tab to restore");
 
   // Ensure that closed private windows can never be restored.
-  yield promiseWindowClosed(win);
+  yield BrowserTestUtils.closeWindow(win);
   is(ss.getClosedWindowCount(), 0, "no windows to restore");
 });
 

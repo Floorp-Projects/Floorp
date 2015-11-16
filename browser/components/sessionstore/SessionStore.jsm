@@ -1299,7 +1299,6 @@ var SessionStoreInternal = {
         // save the state without this window to disk
         this.saveStateDelayed();
       });
-
     } else {
       this.cleanUpWindow(aWindow, winData);
     }
