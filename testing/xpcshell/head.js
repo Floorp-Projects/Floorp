@@ -406,7 +406,8 @@ function _setupDebuggerServer(breakpointFiles, callback) {
           // Add a breakpoint for the first line in our test files.
           let threadActor = subject.wrappedJSObject;
           for (let file of breakpointFiles) {
-            let sourceActor = threadActor.sources.source({originalUrl: file});
+            // Pass an empty `source` object to workaround `source` function assertion
+            let sourceActor = threadActor.sources.source({originalUrl: file, source: {}});
             sourceActor._getOrCreateBreakpointActor(new OriginalLocation(sourceActor, 1));
           }
         } catch (ex) {

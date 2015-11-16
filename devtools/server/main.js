@@ -17,7 +17,7 @@ var { ActorPool, OriginalLocation, RegisteredActorFactory,
 var { LocalDebuggerTransport, ChildDebuggerTransport, WorkerDebuggerTransport } =
   require("devtools/shared/transport/transport");
 var DevToolsUtils = require("devtools/shared/DevToolsUtils");
-var { dumpn, dumpv, dbg_assert } = DevToolsUtils;
+var { dumpn, dumpv } = DevToolsUtils;
 var EventEmitter = require("devtools/shared/event-emitter");
 var Debugger = require("Debugger");
 var Promise = require("promise");
@@ -43,7 +43,6 @@ this.ActorPool = ActorPool;
 this.DevToolsUtils = DevToolsUtils;
 this.dumpn = dumpn;
 this.dumpv = dumpv;
-this.dbg_assert = dbg_assert;
 
 // Overload `Components` to prevent SDK loader exception on Components
 // object usage
