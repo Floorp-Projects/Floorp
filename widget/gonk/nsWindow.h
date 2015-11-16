@@ -46,10 +46,10 @@ public:
     static nsEventStatus DispatchKeyInput(mozilla::WidgetKeyboardEvent& aEvent);
     static void DispatchTouchInput(mozilla::MultiTouchInput& aInput);
 
-    NS_IMETHOD Create(nsIWidget *aParent,
-                      void *aNativeParent,
-                      const nsIntRect &aRect,
-                      nsWidgetInitData *aInitData);
+    NS_IMETHOD Create(nsIWidget* aParent,
+                      void* aNativeParent,
+                      const LayoutDeviceIntRect& aRect,
+                      nsWidgetInitData* aInitData);
     NS_IMETHOD Destroy(void);
 
     NS_IMETHOD Show(bool aState);

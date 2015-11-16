@@ -246,7 +246,6 @@ typedef struct _nsCocoaWindowList {
 class nsCocoaWindow : public nsBaseWidget, public nsPIWidgetCocoa
 {
 private:
-  
   typedef nsBaseWidget Inherited;
 
 public:
@@ -255,11 +254,11 @@ public:
 
     NS_DECL_ISUPPORTS_INHERITED
     NS_DECL_NSPIWIDGETCOCOA
-      
+
     NS_IMETHOD              Create(nsIWidget* aParent,
                                    nsNativeWidget aNativeParent,
-                                   const nsIntRect &aRect,
-                                   nsWidgetInitData *aInitData = nullptr) override;
+                                   const LayoutDeviceIntRect& aRect,
+                                   nsWidgetInitData* aInitData = nullptr) override;
 
     NS_IMETHOD              Destroy() override;
 
@@ -393,7 +392,7 @@ protected:
   nsresult             CreateNativeWindow(const NSRect &aRect,
                                           nsBorderStyle aBorderStyle,
                                           bool aRectIsFrameRect);
-  nsresult             CreatePopupContentView(const nsIntRect &aRect);
+  nsresult             CreatePopupContentView(const LayoutDeviceIntRect &aRect);
   void                 DestroyNativeWindow();
   void                 AdjustWindowShadow();
   void                 SetWindowBackgroundBlur();

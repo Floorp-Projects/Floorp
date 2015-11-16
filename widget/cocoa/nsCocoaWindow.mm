@@ -182,13 +182,16 @@ nsCocoaWindow::~nsCocoaWindow()
 
 // Find the screen that overlaps aRect the most,
 // if none are found default to the mainScreen.
-static NSScreen *FindTargetScreenForRect(const nsIntRect& aRect)
+static NSScreen*
+FindTargetScreenForRect(const LayoutDeviceIntRect& aRect)
 {
   NSScreen *targetScreen = [NSScreen mainScreen];
   NSEnumerator *screenEnum = [[NSScreen screens] objectEnumerator];
   int largestIntersectArea = 0;
   while (NSScreen *screen = [screenEnum nextObject]) {
-    nsIntRect screenRect(nsCocoaUtils::CocoaRectToGeckoRect([screen visibleFrame]));
+    LayoutDeviceIntRect screenRect =
+      LayoutDeviceIntRect::FromUnknownRect(
+        nsCocoaUtils::CocoaRectToGeckoRect([screen visibleFrame]));
     screenRect = screenRect.Intersect(aRect);
     int area = screenRect.width * screenRect.height;
     if (area > largestIntersectArea) {
@@ -202,7 +205,8 @@ static NSScreen *FindTargetScreenForRect(const nsIntRect& aRect)
 // fits the rect to the screen that contains the largest area of it,
 // or to aScreen if a screen is passed in
 // NB: this operates with aRect in global display pixels
-static void FitRectToVisibleAreaForScreen(nsIntRect &aRect, NSScreen *aScreen)
+static void
+FitRectToVisibleAreaForScreen(LayoutDeviceIntRect& aRect, NSScreen* aScreen)
 {
   if (!aScreen) {
     aScreen = FindTargetScreenForRect(aRect);
@@ -246,10 +250,10 @@ static bool UseNativePopupWindows()
 }
 
 // aRect here is specified in global display pixels
-nsresult nsCocoaWindow::Create(nsIWidget *aParent,
+nsresult nsCocoaWindow::Create(nsIWidget* aParent,
                                nsNativeWidget aNativeParent,
-                               const nsIntRect &aRect,
-                               nsWidgetInitData *aInitData)
+                               const LayoutDeviceIntRect& aRect,
+                               nsWidgetInitData* aInitData)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
@@ -257,7 +261,7 @@ nsresult nsCocoaWindow::Create(nsIWidget *aParent,
   // we have to provide an autorelease pool (see bug 559075).
   nsAutoreleasePool localPool;
 
-  nsIntRect newBounds = aRect;
+  LayoutDeviceIntRect newBounds = aRect;
   FitRectToVisibleAreaForScreen(newBounds, nullptr);
 
   // Set defaults which can be overriden from aInitData in BaseCreate
@@ -281,7 +285,7 @@ nsresult nsCocoaWindow::Create(nsIWidget *aParent,
     return NS_OK;
 
   nsresult rv =
-    CreateNativeWindow(nsCocoaUtils::GeckoRectToCocoaRect(newBounds),
+    CreateNativeWindow(nsCocoaUtils::GeckoRectToCocoaRect(newBounds.ToUnknownRect()),
                        mBorderStyle, false);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -481,7 +485,8 @@ nsresult nsCocoaWindow::CreateNativeWindow(const NSRect &aRect,
   NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
 }
 
-NS_IMETHODIMP nsCocoaWindow::CreatePopupContentView(const nsIntRect &aRect)
+NS_IMETHODIMP
+nsCocoaWindow::CreatePopupContentView(const LayoutDeviceIntRect &aRect)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
@@ -1520,16 +1525,17 @@ nsresult nsCocoaWindow::DoResize(double aX, double aY,
   int32_t height = NSToIntRound(aHeight * scale);
   ConstrainSize(&width, &height);
 
-  nsIntRect newBounds(NSToIntRound(aX), NSToIntRound(aY),
-                      NSToIntRound(width / scale),
-                      NSToIntRound(height / scale));
+  LayoutDeviceIntRect newBounds(NSToIntRound(aX), NSToIntRound(aY),
+                                NSToIntRound(width / scale),
+                                NSToIntRound(height / scale));
 
   // constrain to the screen that contains the largest area of the new rect
   FitRectToVisibleAreaForScreen(newBounds, aConstrainToCurrentScreen ?
                                            [mWindow screen] : nullptr);
 
   // convert requested bounds into Cocoa coordinate system
-  NSRect newFrame = nsCocoaUtils::GeckoRectToCocoaRect(newBounds);
+  NSRect newFrame =
+    nsCocoaUtils::GeckoRectToCocoaRect(newBounds.ToUnknownRect());
 
   NSRect frame = [mWindow frame];
   BOOL isMoving = newFrame.origin.x != frame.origin.x ||
@@ -1665,7 +1671,8 @@ GetBackingScaleFactor(NSWindow* aWindow)
 
   // Then identify the screen it belongs to, and return its scale factor.
   NSScreen *screen =
-    FindTargetScreenForRect(nsCocoaUtils::CocoaRectToGeckoRect(frame));
+    FindTargetScreenForRect(
+      LayoutDeviceIntRect::FromUnknownRect(nsCocoaUtils::CocoaRectToGeckoRect(frame)));
   return nsCocoaUtils::GetBackingScaleFactor(screen);
 }
 

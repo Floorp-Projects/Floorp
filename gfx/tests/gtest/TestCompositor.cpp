@@ -55,10 +55,10 @@ public:
     return nullptr;
   }
 
-  NS_IMETHOD              Create(nsIWidget *aParent,
+  NS_IMETHOD              Create(nsIWidget* aParent,
                                  nsNativeWidget aNativeParent,
-                                 const IntRect &aRect,
-                                 nsWidgetInitData *aInitData = nullptr) override { return NS_OK; }
+                                 const LayoutDeviceIntRect& aRect,
+                                 nsWidgetInitData* aInitData = nullptr) override { return NS_OK; }
   NS_IMETHOD              Show(bool aState) override { return NS_OK; }
   virtual bool            IsVisible() const override { return true; }
   NS_IMETHOD              ConstrainPosition(bool aAllowSlop,

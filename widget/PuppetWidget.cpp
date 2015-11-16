@@ -98,16 +98,16 @@ PuppetWidget::~PuppetWidget()
 }
 
 NS_IMETHODIMP
-PuppetWidget::Create(nsIWidget        *aParent,
-                     nsNativeWidget   aNativeParent,
-                     const nsIntRect  &aRect,
-                     nsWidgetInitData *aInitData)
+PuppetWidget::Create(nsIWidget* aParent,
+                     nsNativeWidget aNativeParent,
+                     const LayoutDeviceIntRect& aRect,
+                     nsWidgetInitData* aInitData)
 {
   MOZ_ASSERT(!aNativeParent, "got a non-Puppet native parent");
 
   BaseCreate(nullptr, aRect, aInitData);
 
-  mBounds = aRect;
+  mBounds = aRect.ToUnknownRect();
   mEnabled = true;
   mVisible = true;
 
@@ -146,9 +146,9 @@ PuppetWidget::InitIMEState()
 }
 
 already_AddRefed<nsIWidget>
-PuppetWidget::CreateChild(const nsIntRect  &aRect,
-                          nsWidgetInitData *aInitData,
-                          bool             aForceUseIWidgetParent)
+PuppetWidget::CreateChild(const LayoutDeviceIntRect& aRect,
+                          nsWidgetInitData* aInitData,
+                          bool aForceUseIWidgetParent)
 {
   bool isPopup = IsPopup(aInitData);
   nsCOMPtr<nsIWidget> widget = nsIWidget::CreatePuppetWidget(mTabChild);

@@ -465,10 +465,10 @@ nsChildView::ReleaseTitlebarCGContext()
   }
 }
 
-nsresult nsChildView::Create(nsIWidget *aParent,
+nsresult nsChildView::Create(nsIWidget* aParent,
                              nsNativeWidget aNativeParent,
-                             const nsIntRect &aRect,
-                             nsWidgetInitData *aInitData)
+                             const LayoutDeviceIntRect& aRect,
+                             nsWidgetInitData* aInitData)
 {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
@@ -493,7 +493,7 @@ nsresult nsChildView::Create(nsIWidget *aParent,
     gChildViewMethodsSwizzled = true;
   }
 
-  mBounds = aRect;
+  mBounds = aRect.ToUnknownRect();
 
   // Ensure that the toolkit is created.
   nsToolkit::GetToolkit();

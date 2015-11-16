@@ -95,10 +95,10 @@ public:
     bool AreBoundsSane(void);
 
     // nsIWidget
-    NS_IMETHOD         Create(nsIWidget        *aParent,
-                              nsNativeWidget   aNativeParent,
-                              const nsIntRect  &aRect,
-                              nsWidgetInitData *aInitData) override;
+    NS_IMETHOD         Create(nsIWidget* aParent,
+                              nsNativeWidget aNativeParent,
+                              const LayoutDeviceIntRect& aRect,
+                              nsWidgetInitData* aInitData) override;
     NS_IMETHOD         Destroy(void) override;
     virtual nsIWidget *GetParent() override;
     virtual float      GetDPI() override;
