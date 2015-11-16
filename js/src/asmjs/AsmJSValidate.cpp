@@ -1596,17 +1596,9 @@ class MOZ_STACK_CLASS ModuleValidator
             masm().patchCall(callerOffset, calleeOffset);
         }
 
-        // When an interrupt is triggered, all function code is mprotected and,
-        // for sanity, stub code (particularly the interrupt stub) is not.
-        // Protection works at page granularity, so we need to ensure that no
-        // stub code gets into the function code pages.
-        // TODO; this is no longer true and could be removed, see also
-        // bug 1200609.
         MOZ_ASSERT(!finishedFunctionBodies_);
-        masm().haltingAlign(AsmJSPageSize);
         module_->finishFunctionBodies(masm().currentOffset());
         finishedFunctionBodies_ = true;
-
         return true;
     }
 
