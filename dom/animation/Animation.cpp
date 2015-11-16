@@ -601,6 +601,10 @@ Animation::DoCancel()
   mStartTime.SetNull();
 
   UpdateTiming(SeekFlag::NoSeek, SyncNotifyFlag::Async);
+
+  if (mTimeline) {
+    mTimeline->RemoveAnimation(this);
+  }
 }
 
 void
