@@ -200,13 +200,16 @@ nsChangeHint nsStyleFont::CalcDifference(const nsStyleFont& aOther) const
 /* static */ nscoord
 nsStyleFont::ZoomText(nsPresContext *aPresContext, nscoord aSize)
 {
-  return nscoord(float(aSize) * aPresContext->TextZoom());
+  MOZ_ASSERT(aSize >= 0, "negative font size");
+  return NSCoordSaturatingNonnegativeMultiply(aSize, aPresContext->TextZoom());
 }
 
 /* static */ nscoord
 nsStyleFont::UnZoomText(nsPresContext *aPresContext, nscoord aSize)
 {
-  return nscoord(float(aSize) / aPresContext->TextZoom());
+  MOZ_ASSERT(aSize >= 0, "negative font size");
+  return NSCoordSaturatingNonnegativeMultiply(aSize,
+                                              1.0 / aPresContext->TextZoom());
 }
 
 /* static */ already_AddRefed<nsIAtom>
