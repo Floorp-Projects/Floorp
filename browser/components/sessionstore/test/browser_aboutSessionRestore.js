@@ -30,7 +30,7 @@ add_task(function* () {
 
   // Wait until the new window was restored.
   let win = yield waitForNewWindow();
-  yield promiseWindowClosed(win);
+  yield BrowserTestUtils.closeWindow(win);
 
   let [{tabs: [{entries: [{url}]}]}] = JSON.parse(ss.getClosedWindowData());
   is(url, "about:mozilla", "session was restored correctly");

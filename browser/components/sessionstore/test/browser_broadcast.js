@@ -74,7 +74,7 @@ add_task(function flush_on_windowclose() {
   let browser = tab.linkedBrowser;
 
   yield modifySessionStorage(browser, {test: "on-window-close"});
-  yield closeWindow(win);
+  yield BrowserTestUtils.closeWindow(win);
 
   let [{tabs: [_, {storage}]}] = JSON.parse(ss.getClosedWindowData());
   is(storage["http://example.com"].test, "on-window-close",
@@ -135,24 +135,6 @@ add_task(function flush_on_tabclose_racy() {
 function promiseNewWindow() {
   let deferred = Promise.defer();
   whenNewWindowLoaded({private: false}, deferred.resolve);
-  return deferred.promise;
-}
-
-function closeWindow(win) {
-  let deferred = Promise.defer();
-  let outerID = win.QueryInterface(Ci.nsIInterfaceRequestor)
-                   .getInterface(Ci.nsIDOMWindowUtils)
-                   .outerWindowID;
-
-  Services.obs.addObserver(function obs(subject, topic) {
-    let id = subject.QueryInterface(Ci.nsISupportsPRUint64).data;
-    if (id == outerID) {
-      Services.obs.removeObserver(obs, topic);
-      deferred.resolve();
-    }
-  }, "outer-window-destroyed", false);
-
-  win.close();
   return deferred.promise;
 }
 

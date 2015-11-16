@@ -17,11 +17,10 @@ function test() {
     win.addEventListener("SSWindowClosing", function onclosing() {
       win.removeEventListener("SSWindowClosing", onclosing, false);
       executeSoon(function () {
-        is (ss.getClosedWindowCount(), 0,
+        is(ss.getClosedWindowCount(), 0,
             "The private window should not have been stored");
-        finish();
       });
     }, false);
-    win.close();
+    BrowserTestUtils.closeWindow(win).then(finish);
   });
 }
