@@ -95,6 +95,7 @@
     _(IntrinsicUnsafeGetBooleanFromReservedSlot) \
                                     \
     _(IntrinsicIsCallable)          \
+    _(IntrinsicIsConstructor)       \
     _(IntrinsicToObject)            \
     _(IntrinsicIsObject)            \
     _(IntrinsicToInteger)           \
