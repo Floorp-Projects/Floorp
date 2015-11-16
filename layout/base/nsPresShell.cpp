@@ -897,7 +897,7 @@ PresShell::Init(nsIDocument* aDocument,
 
   if (AccessibleCaretEnabled()) {
     // Need to happen before nsFrameSelection has been set up.
-    mAccessibleCaretEventHub = new AccessibleCaretEventHub();
+    mAccessibleCaretEventHub = new AccessibleCaretEventHub(this);
   }
 
   mSelection = new nsFrameSelection();
@@ -1679,7 +1679,7 @@ PresShell::Initialize(nscoord aWidth, nscoord aHeight)
 
     // Initialize after nsCanvasFrame is created.
     if (mAccessibleCaretEventHub) {
-      mAccessibleCaretEventHub->Init(this);
+      mAccessibleCaretEventHub->Init();
     }
 
     // nsAutoScriptBlocker going out of scope may have killed us too
