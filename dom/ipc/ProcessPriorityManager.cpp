@@ -1108,7 +1108,7 @@ ParticularProcessPriorityManager::ComputePriority()
   }
 
   RefPtr<AudioChannelService> service = AudioChannelService::GetOrCreate();
-  if (service->ProcessContentOrNormalChannelIsActive(ChildID())) {
+  if (service && service->ProcessContentOrNormalChannelIsActive(ChildID())) {
     return PROCESS_PRIORITY_BACKGROUND_PERCEIVABLE;
   }
 
