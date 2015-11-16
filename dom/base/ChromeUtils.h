@@ -40,6 +40,11 @@ public:
                                              JS::Handle<JS::Value> aMap,
                                              JS::MutableHandle<JS::Value> aRetval,
                                              ErrorResult& aRv);
+
+  static void NondeterministicGetWeakSetKeys(GlobalObject& aGlobal,
+                                             JS::Handle<JS::Value> aSet,
+                                             JS::MutableHandle<JS::Value> aRetval,
+                                             ErrorResult& aRv);
 };
 
 class ChromeUtils : public ThreadSafeChromeUtils

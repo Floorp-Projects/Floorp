@@ -30,6 +30,26 @@ ThreadSafeChromeUtils::NondeterministicGetWeakMapKeys(GlobalObject& aGlobal,
   }
 }
 
+/* static */ void
+ThreadSafeChromeUtils::NondeterministicGetWeakSetKeys(GlobalObject& aGlobal,
+                                                      JS::Handle<JS::Value> aSet,
+                                                      JS::MutableHandle<JS::Value> aRetval,
+                                                      ErrorResult& aRv)
+{
+  if (!aSet.isObject()) {
+    aRetval.setUndefined();
+  } else {
+    JSContext* cx = aGlobal.Context();
+    JS::Rooted<JSObject*> objRet(cx);
+    JS::Rooted<JSObject*> setObj(cx, &aSet.toObject());
+    if (!JS_NondeterministicGetWeakSetKeys(cx, setObj, &objRet)) {
+      aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+    } else {
+      aRetval.set(objRet ? JS::ObjectValue(*objRet) : JS::UndefinedValue());
+    }
+  }
+}
+
   /* static */ void
 ChromeUtils::OriginAttributesToSuffix(dom::GlobalObject& aGlobal,
                                       const dom::OriginAttributesDictionary& aAttrs,
