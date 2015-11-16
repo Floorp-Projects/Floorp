@@ -600,7 +600,9 @@ WebAudioDecodeJob::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
   if (mOutput) {
     amount += mOutput->SizeOfIncludingThis(aMallocSizeOf);
   }
-  amount += mBuffer->SizeOfIncludingThis(aMallocSizeOf);
+  if (mBuffer) {
+    amount += mBuffer->SizeOfIncludingThis(aMallocSizeOf);
+  }
   return amount;
 }
 
