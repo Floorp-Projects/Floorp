@@ -491,7 +491,8 @@ enum AudioLayers
     kAudioWindowsWave = 1,
     kAudioWindowsCore = 2,
     kAudioLinuxAlsa = 3,
-    kAudioLinuxPulse = 4
+    kAudioLinuxPulse = 4,
+    kAudioSndio = 5
 };
 
 // TODO(henrika): to be removed.

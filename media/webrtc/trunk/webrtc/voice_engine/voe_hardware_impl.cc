@@ -81,6 +81,9 @@ int VoEHardwareImpl::SetAudioDeviceLayer(AudioLayers audioLayer)
         case kAudioLinuxPulse:
             wantedLayer = AudioDeviceModule::kLinuxPulseAudio;
             break;
+        case kAudioSndio:
+            wantedLayer = AudioDeviceModule::kSndioAudio;
+            break;
     }
 
     // Save the audio device layer for Init()
@@ -132,6 +135,9 @@ int VoEHardwareImpl::GetAudioDeviceLayer(AudioLayers& audioLayer)
             break;
         case AudioDeviceModule::kLinuxPulseAudio:
             audioLayer = kAudioLinuxPulse;
+            break;
+        case AudioDeviceModule::kSndioAudio:
+            audioLayer = kAudioSndio;
             break;
         default:
             _shared->SetLastError(VE_UNDEFINED_SC_ERR, kTraceError,
