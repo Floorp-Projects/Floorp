@@ -21,40 +21,48 @@ using namespace mozilla::test;
 
 const OCSPHost sOCSPHosts[] =
 {
-  { "ocsp-stapling-good.example.com", ORTGood, nullptr },
-  { "ocsp-stapling-revoked.example.com", ORTRevoked, nullptr },
-  { "ocsp-stapling-revoked-old.example.com", ORTRevokedOld, nullptr },
-  { "ocsp-stapling-unknown.example.com", ORTUnknown, nullptr },
-  { "ocsp-stapling-unknown-old.example.com", ORTUnknownOld, nullptr },
-  { "ocsp-stapling-good-other.example.com", ORTGoodOtherCert, "ocspOtherEndEntity" },
-  { "ocsp-stapling-good-other-ca.example.com", ORTGoodOtherCA, "other-test-ca" },
-  { "ocsp-stapling-expired.example.com", ORTExpired, nullptr },
-  { "ocsp-stapling-expired-fresh-ca.example.com", ORTExpiredFreshCA, nullptr },
-  { "ocsp-stapling-none.example.com", ORTNone, nullptr },
-  { "ocsp-stapling-empty.example.com", ORTEmpty, nullptr },
-  { "ocsp-stapling-malformed.example.com", ORTMalformed, nullptr },
-  { "ocsp-stapling-srverr.example.com", ORTSrverr, nullptr },
-  { "ocsp-stapling-trylater.example.com", ORTTryLater, nullptr },
-  { "ocsp-stapling-needssig.example.com", ORTNeedsSig, nullptr },
-  { "ocsp-stapling-unauthorized.example.com", ORTUnauthorized, nullptr },
-  { "ocsp-stapling-with-intermediate.example.com", ORTGood, "ocspEEWithIntermediate" },
-  { "ocsp-stapling-bad-signature.example.com", ORTBadSignature, nullptr },
-  { "ocsp-stapling-skip-responseBytes.example.com", ORTSkipResponseBytes, nullptr },
-  { "ocsp-stapling-critical-extension.example.com", ORTCriticalExtension, nullptr },
-  { "ocsp-stapling-noncritical-extension.example.com", ORTNoncriticalExtension, nullptr },
-  { "ocsp-stapling-empty-extensions.example.com", ORTEmptyExtensions, nullptr },
-  { "ocsp-stapling-delegated-included.example.com", ORTDelegatedIncluded, "delegatedSigner" },
-  { "ocsp-stapling-delegated-included-last.example.com", ORTDelegatedIncludedLast, "delegatedSigner" },
-  { "ocsp-stapling-delegated-missing.example.com", ORTDelegatedMissing, "delegatedSigner" },
-  { "ocsp-stapling-delegated-missing-multiple.example.com", ORTDelegatedMissingMultiple, "delegatedSigner" },
-  { "ocsp-stapling-delegated-no-extKeyUsage.example.com", ORTDelegatedIncluded, "invalidDelegatedSignerNoExtKeyUsage" },
-  { "ocsp-stapling-delegated-from-intermediate.example.com", ORTDelegatedIncluded, "invalidDelegatedSignerFromIntermediate" },
-  { "ocsp-stapling-delegated-keyUsage-crlSigning.example.com", ORTDelegatedIncluded, "invalidDelegatedSignerKeyUsageCrlSigning" },
-  { "ocsp-stapling-delegated-wrong-extKeyUsage.example.com", ORTDelegatedIncluded, "invalidDelegatedSignerWrongExtKeyUsage" },
-  { "ocsp-stapling-ancient-valid.example.com", ORTAncientAlmostExpired, nullptr},
-  { "keysize-ocsp-delegated.example.com", ORTDelegatedIncluded, "rsa-1016-keysizeDelegatedSigner" },
-  { "revoked-ca-cert-used-as-end-entity.example.com", ORTRevoked, "ca-used-as-end-entity" },
-  { nullptr, ORTNull, nullptr }
+  { "ocsp-stapling-good.example.com", ORTGood, nullptr, nullptr },
+  { "ocsp-stapling-revoked.example.com", ORTRevoked, nullptr, nullptr },
+  { "ocsp-stapling-revoked-old.example.com", ORTRevokedOld, nullptr, nullptr },
+  { "ocsp-stapling-unknown.example.com", ORTUnknown, nullptr, nullptr },
+  { "ocsp-stapling-unknown-old.example.com", ORTUnknownOld, nullptr, nullptr },
+  { "ocsp-stapling-good-other.example.com", ORTGoodOtherCert, "ocspOtherEndEntity", nullptr },
+  { "ocsp-stapling-good-other-ca.example.com", ORTGoodOtherCA, "other-test-ca", nullptr },
+  { "ocsp-stapling-expired.example.com", ORTExpired, nullptr, nullptr },
+  { "ocsp-stapling-expired-fresh-ca.example.com", ORTExpiredFreshCA, nullptr, nullptr },
+  { "ocsp-stapling-none.example.com", ORTNone, nullptr, nullptr },
+  { "ocsp-stapling-empty.example.com", ORTEmpty, nullptr, nullptr },
+  { "ocsp-stapling-malformed.example.com", ORTMalformed, nullptr, nullptr },
+  { "ocsp-stapling-srverr.example.com", ORTSrverr, nullptr, nullptr },
+  { "ocsp-stapling-trylater.example.com", ORTTryLater, nullptr, nullptr },
+  { "ocsp-stapling-needssig.example.com", ORTNeedsSig, nullptr, nullptr },
+  { "ocsp-stapling-unauthorized.example.com", ORTUnauthorized, nullptr, nullptr },
+  { "ocsp-stapling-with-intermediate.example.com", ORTGood, nullptr, "ocspEEWithIntermediate" },
+  { "ocsp-stapling-bad-signature.example.com", ORTBadSignature, nullptr, nullptr },
+  { "ocsp-stapling-skip-responseBytes.example.com", ORTSkipResponseBytes, nullptr, nullptr },
+  { "ocsp-stapling-critical-extension.example.com", ORTCriticalExtension, nullptr, nullptr },
+  { "ocsp-stapling-noncritical-extension.example.com", ORTNoncriticalExtension, nullptr, nullptr },
+  { "ocsp-stapling-empty-extensions.example.com", ORTEmptyExtensions, nullptr, nullptr },
+  { "ocsp-stapling-delegated-included.example.com", ORTDelegatedIncluded, "delegatedSigner", nullptr },
+  { "ocsp-stapling-delegated-included-last.example.com", ORTDelegatedIncludedLast, "delegatedSigner", nullptr },
+  { "ocsp-stapling-delegated-missing.example.com", ORTDelegatedMissing, "delegatedSigner", nullptr },
+  { "ocsp-stapling-delegated-missing-multiple.example.com", ORTDelegatedMissingMultiple, "delegatedSigner", nullptr },
+  { "ocsp-stapling-delegated-no-extKeyUsage.example.com", ORTDelegatedIncluded, "invalidDelegatedSignerNoExtKeyUsage", nullptr },
+  { "ocsp-stapling-delegated-from-intermediate.example.com", ORTDelegatedIncluded, "invalidDelegatedSignerFromIntermediate", nullptr },
+  { "ocsp-stapling-delegated-keyUsage-crlSigning.example.com", ORTDelegatedIncluded, "invalidDelegatedSignerKeyUsageCrlSigning", nullptr },
+  { "ocsp-stapling-delegated-wrong-extKeyUsage.example.com", ORTDelegatedIncluded, "invalidDelegatedSignerWrongExtKeyUsage", nullptr },
+  { "ocsp-stapling-ancient-valid.example.com", ORTAncientAlmostExpired, nullptr, nullptr },
+  { "keysize-ocsp-delegated.example.com", ORTDelegatedIncluded, "rsa-1016-keysizeDelegatedSigner", nullptr },
+  { "revoked-ca-cert-used-as-end-entity.example.com", ORTRevoked, "ca-used-as-end-entity", nullptr },
+  { "ocsp-stapling-must-staple.example.com", ORTGood, nullptr, "must-staple-ee" },
+  { "ocsp-stapling-must-staple-revoked.example.com", ORTRevoked, nullptr, "must-staple-ee" },
+  { "ocsp-stapling-must-staple-missing.example.com", ORTNone, nullptr, "must-staple-ee" },
+  { "ocsp-stapling-must-staple-empty.example.com", ORTEmpty, nullptr, "must-staple-ee" },
+  { "ocsp-stapling-must-staple-ee-with-must-staple-int.example.com", ORTGood, nullptr, "must-staple-ee-with-must-staple-int" },
+  { "ocsp-stapling-plain-ee-with-must-staple-int.example.com", ORTGood, nullptr, "must-staple-missing-ee" },
+  { "multi-tls-feature-good.example.com", ORTNone, nullptr, "multi-tls-feature-good-ee" },
+  { "multi-tls-feature-bad.example.com", ORTNone, nullptr, "multi-tls-feature-bad-ee" },
+  { nullptr, ORTNull, nullptr, nullptr }
 };
 
 int32_t
@@ -71,13 +79,8 @@ DoSNISocketConfig(PRFileDesc *aFd, const SECItem *aSrvNameArr,
     fprintf(stderr, "found pre-defined host '%s'\n", host->mHostName);
   }
 
-  const char *certNickname;
-  if (strcmp(host->mHostName,
-             "ocsp-stapling-with-intermediate.example.com") == 0) {
-    certNickname = host->mAdditionalCertName;
-  } else {
-    certNickname = DEFAULT_CERT_NICKNAME;
-  }
+  const char *certNickname = host->mServerCertName ? host->mServerCertName
+                                                   : DEFAULT_CERT_NICKNAME;
 
   ScopedCERTCertificate cert;
   SSLKEAType certKEA;

@@ -933,34 +933,37 @@ protected:
   {
   }
 
-  void DoCreateImageBitmapFromBlob(ErrorResult& aRv)
+  // Returns true on success, false on failure.
+  bool DoCreateImageBitmapFromBlob()
   {
-    RefPtr<ImageBitmap> imageBitmap = CreateImageBitmap(aRv);
+    RefPtr<ImageBitmap> imageBitmap = CreateImageBitmap();
 
     // handle errors while creating ImageBitmap
     // (1) error occurs during reading of the object
     // (2) the image data is not in a supported file format
     // (3) the image data is corrupted
     // All these three cases should reject promise with null value
-    if (aRv.Failed()) {
-      mPromise->MaybeReject(aRv);
-      return;
+    if (!imageBitmap) {
+      return false;
     }
 
     if (imageBitmap && mCropRect.isSome()) {
-      imageBitmap->SetPictureRect(mCropRect.ref(), aRv);
+      ErrorResult rv;
+      imageBitmap->SetPictureRect(mCropRect.ref(), rv);
 
-      if (aRv.Failed()) {
-        mPromise->MaybeReject(aRv);
-        return;
+      if (rv.Failed()) {
+        mPromise->MaybeReject(rv);
+        return false;
       }
     }
 
     mPromise->MaybeResolve(imageBitmap);
-    return;
+    return true;
   }
 
-  virtual already_AddRefed<ImageBitmap> CreateImageBitmap(ErrorResult& aRv) = 0;
+  // Will return null on failure.  In that case, mPromise will already
+  // be rejected with the right thing.
+  virtual already_AddRefed<ImageBitmap> CreateImageBitmap() = 0;
 
   RefPtr<Promise> mPromise;
   nsCOMPtr<nsIGlobalObject> mGlobalObject;
@@ -982,17 +985,18 @@ public:
 
   NS_IMETHOD Run() override
   {
-    ErrorResult error;
-    DoCreateImageBitmapFromBlob(error);
+    DoCreateImageBitmapFromBlob();
     return NS_OK;
   }
 
 private:
-  already_AddRefed<ImageBitmap> CreateImageBitmap(ErrorResult& aRv) override
+  already_AddRefed<ImageBitmap> CreateImageBitmap() override
   {
-    RefPtr<layers::Image> data = DecodeAndCropBlob(*mBlob, mCropRect, aRv);
+    ErrorResult rv;
+    RefPtr<layers::Image> data = DecodeAndCropBlob(*mBlob, mCropRect, rv);
 
-    if (NS_WARN_IF(aRv.Failed())) {
+    if (NS_WARN_IF(rv.Failed())) {
+      mPromise->MaybeReject(rv);
       return nullptr;
     }
 
@@ -1054,23 +1058,22 @@ public:
 
   bool WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override
   {
-    ErrorResult error;
-    DoCreateImageBitmapFromBlob(error);
-    return !(error.Failed());
+    return DoCreateImageBitmapFromBlob();
   }
 
 private:
-  already_AddRefed<ImageBitmap> CreateImageBitmap(ErrorResult& aRv) override
+  already_AddRefed<ImageBitmap> CreateImageBitmap() override
   {
     RefPtr<layers::Image> data;
 
+    ErrorResult rv;
     RefPtr<DecodeBlobInMainThreadSyncTask> task =
       new DecodeBlobInMainThreadSyncTask(mWorkerPrivate, *mBlob, mCropRect,
-                                         aRv, getter_AddRefs(data));
+                                         rv, getter_AddRefs(data));
     task->Dispatch(mWorkerPrivate->GetJSContext()); // This is a synchronous call.
 
-    if (NS_WARN_IF(aRv.Failed())) {
-      mPromise->MaybeReject(aRv);
+    if (NS_WARN_IF(rv.Failed())) {
+      mPromise->MaybeReject(rv);
       return nullptr;
     }
 

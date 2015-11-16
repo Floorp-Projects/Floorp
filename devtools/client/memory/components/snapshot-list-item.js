@@ -2,9 +2,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+const { assert } = require("devtools/shared/DevToolsUtils");
 const { DOM: dom, createClass, PropTypes } = require("devtools/client/shared/vendor/react");
-const { L10N, getSnapshotTitle, getSnapshotTotals, getSnapshotStatusText } = require("../utils");
-const { snapshotState: states } = require("../constants");
+const {
+  L10N,
+  getSnapshotTitle,
+  getSnapshotTotals,
+  getStatusText,
+  snapshotIsDiffable
+} = require("../utils");
+const { snapshotState: states, diffingState } = require("../constants");
 const { snapshot: snapshotModel } = require("../models");
 
 const SnapshotListItem = module.exports = createClass({
@@ -18,14 +25,44 @@ const SnapshotListItem = module.exports = createClass({
   },
 
   render() {
-    let { index, item: snapshot, onClick, onSave } = this.props;
+    let { index, item: snapshot, onClick, onSave, diffing } = this.props;
     let className = `snapshot-list-item ${snapshot.selected ? " selected" : ""}`;
-    let statusText = getSnapshotStatusText(snapshot);
+    let statusText = getStatusText(snapshot.state);
+    let wantThrobber = !!statusText;
     let title = getSnapshotTitle(snapshot);
 
+    const selectedForDiffing = diffing
+          && (diffing.firstSnapshotId === snapshot.id
+              || diffing.secondSnapshotId === snapshot.id);
+
+    let checkbox;
+    if (diffing && snapshotIsDiffable(snapshot)) {
+      if (diffing.state === diffingState.SELECTING) {
+        wantThrobber = false;
+      }
+
+      const checkboxAttrs = {
+        type: "checkbox",
+        checked: false,
+      };
+
+      if (selectedForDiffing) {
+        checkboxAttrs.checked = true;
+        checkboxAttrs.disabled = true;
+        className += " selected";
+        statusText = L10N.getStr(diffing.firstSnapshotId === snapshot.id
+                                   ? "diffing.baseline"
+                                   : "diffing.comparison");
+      }
+
+      if (selectedForDiffing || diffing.state == diffingState.SELECTING) {
+        checkbox = dom.input(checkboxAttrs);
+      }
+    }
+
     let details;
-    if (snapshot.state === states.SAVED_CENSUS) {
-      let { bytes } = getSnapshotTotals(snapshot);
+    if (!selectedForDiffing && snapshot.state === states.SAVED_CENSUS) {
+      let { bytes } = getSnapshotTotals(snapshot.census);
       let formatBytes = L10N.getFormatStr("aggregate.mb", L10N.numberWithDecimals(bytes / 1000000, 2));
 
       details = dom.span({ className: "snapshot-totals" },
@@ -42,10 +79,11 @@ const SnapshotListItem = module.exports = createClass({
 
     return (
       dom.li({ className, onClick },
-        dom.span({
-          className: `snapshot-title ${statusText ? " devtools-throbber" : ""}`
-        }, title),
-        dom.div({ className: "snapshot-info" },
+        dom.span({ className: `snapshot-title ${wantThrobber ? " devtools-throbber" : ""}` },
+          checkbox,
+          title
+        ),
+        dom.span({ className: "snapshot-info" },
           details,
           saveLink
         )

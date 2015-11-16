@@ -1488,9 +1488,8 @@ nsWindow::GetScreenBoundsUntyped(nsIntRect &aRect)
         gint x, y;
         gdk_window_get_root_origin(gtk_widget_get_window(GTK_WIDGET(mContainer)), &x, &y);
         aRect.MoveTo(GdkPointToDevicePixels({ x, y }).ToUnknownPoint());
-    }
-    else {
-        aRect.MoveTo(WidgetToScreenOffsetUntyped());
+    } else {
+        aRect.MoveTo(WidgetToScreenOffset().ToUnknownPoint());
     }
     // mBounds.Size() is the window bounds, not the window-manager frame
     // bounds (bug 581863).  gdk_window_get_frame_extents would give the
@@ -1515,7 +1514,7 @@ nsWindow::GetClientBoundsUntyped(nsIntRect &aRect)
     // outer bounds, but whose width/height represent the size of the inner
     // bounds (which is messed up).
     GetBoundsUntyped(aRect);
-    aRect.MoveBy(GetClientOffset());
+    aRect.MoveBy(GetClientOffsetUntyped());
 
     return NS_OK;
 }
@@ -1563,7 +1562,7 @@ nsWindow::UpdateClientOffset()
 }
 
 nsIntPoint
-nsWindow::GetClientOffset()
+nsWindow::GetClientOffsetUntyped()
 {
     return mClientOffset;
 }
@@ -4300,14 +4299,16 @@ nsWindow::ConfigureChildren(const nsTArray<Configuration>& aConfigurations)
         nsWindow* w = static_cast<nsWindow*>(configuration.mChild.get());
         NS_ASSERTION(w->GetParent() == this,
                      "Configured widget is not a child");
+        LayoutDeviceIntRect wBounds =
+            LayoutDeviceIntRect::FromUnknownRect(w->mBounds);
         w->SetWindowClipRegion(configuration.mClipRegion, true);
-        if (w->mBounds.Size() != configuration.mBounds.Size()) {
+        if (wBounds.Size() != configuration.mBounds.Size()) {
             w->Resize(configuration.mBounds.x, configuration.mBounds.y,
                       configuration.mBounds.width, configuration.mBounds.height,
                       true);
-        } else if (w->mBounds.TopLeft() != configuration.mBounds.TopLeft()) {
+        } else if (wBounds.TopLeft() != configuration.mBounds.TopLeft()) {
             w->Move(configuration.mBounds.x, configuration.mBounds.y);
-        } 
+        }
         w->SetWindowClipRegion(configuration.mClipRegion, false);
     }
     return NS_OK;

@@ -204,9 +204,9 @@ void profiler_unlock()
 }
 
 static inline
-void profiler_register_thread(const char* name, void* stackTop)
+void profiler_register_thread(const char* name, void* guessStackTop)
 {
-  mozilla_sampler_register_thread(name, stackTop);
+  mozilla_sampler_register_thread(name, guessStackTop);
 }
 
 static inline

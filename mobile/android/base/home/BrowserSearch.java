@@ -635,9 +635,15 @@ public class BrowserSearch extends HomeFragment
 
             // Show suggestions opt-in prompt only if suggestions are not enabled yet,
             // user hasn't been prompted and we're not on a private browsing tab.
+            // The prompt might have been inflated already when this view was previously called.
+            // Remove the opt-in prompt if it has been inflated in the view and dealt with by the user,
+            // or if we're on a private browsing tab
             if (!mSuggestionsEnabled && !suggestionsPrompted && mSuggestClient != null) {
                 showSuggestionsOptIn();
+            } else {
+                removeSuggestionsOptIn();
             }
+
         } catch (JSONException e) {
             Log.e(LOGTAG, "Error getting search engine JSON", e);
         }
@@ -667,7 +673,12 @@ public class BrowserSearch extends HomeFragment
     }
 
     private void maybeSetSuggestClient(final String suggestTemplate, final boolean isPrivate) {
-        if (mSuggestClient != null || isPrivate) {
+        if (isPrivate) {
+            mSuggestClient = null;
+            return;
+        }
+
+        if (mSuggestClient != null) {
             return;
         }
 
@@ -714,6 +725,14 @@ public class BrowserSearch extends HomeFragment
                 }
             }
         });
+    }
+
+    private void removeSuggestionsOptIn() {
+        if (mSuggestionsOptInPrompt == null) {
+            return;
+        }
+
+        mSuggestionsOptInPrompt.setVisibility(View.GONE);
     }
 
     private void setSuggestionsEnabled(final boolean enabled) {

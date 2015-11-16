@@ -513,7 +513,7 @@ ShadowLayerForwarder::StorePluginWidgetConfigurations(const nsTArray<nsIWidget::
     const nsIWidget::Configuration& configuration = aConfigurations[idx];
     mPluginWindowData.AppendElement(PluginWindowData(configuration.mWindowID,
                                                      configuration.mClipRegion,
-                                                     configuration.mBounds,
+                                                     configuration.mBounds.ToUnknownRect(),
                                                      configuration.mVisible));
   }
 }
@@ -598,6 +598,7 @@ ShadowLayerForwarder::EndTransaction(InfallibleTArray<EditReply>* aReplies,
     if (mutant->GetIsFixedPosition()) {
       common.fixedPositionScrollContainerId() = mutant->GetFixedPositionScrollContainerId();
       common.fixedPositionAnchor() = mutant->GetFixedPositionAnchor();
+      common.fixedPositionSides() = mutant->GetFixedPositionSides();
       common.isClipFixed() = mutant->IsClipFixed();
     }
     common.isStickyPosition() = mutant->GetIsStickyPosition();

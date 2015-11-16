@@ -22,6 +22,7 @@ struct ANPEvent;
 namespace mozilla {
     class AndroidGeckoEvent;
     class TextComposition;
+    class WidgetTouchEvent;
 
     namespace layers {
         class CompositorParent;
@@ -187,6 +188,7 @@ protected:
 
     void ConfigureAPZCTreeManager() override;
     void ConfigureAPZControllerThread() override;
+    void DispatchHitTest(const mozilla::WidgetTouchEvent& aEvent);
 
     already_AddRefed<GeckoContentController> CreateRootContentController() override;
 

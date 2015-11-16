@@ -831,6 +831,65 @@ CheckExtendedKeyUsage(EndEntityOrCA endEntityOrCA,
 }
 
 Result
+CheckTLSFeatures(const BackCert& subject, BackCert& potentialIssuer)
+{
+  const Input* issuerTLSFeatures = potentialIssuer.GetRequiredTLSFeatures();
+  if (!issuerTLSFeatures) {
+    return Success;
+  }
+
+  const Input* subjectTLSFeatures = subject.GetRequiredTLSFeatures();
+  if (issuerTLSFeatures->GetLength() == 0 ||
+      !subjectTLSFeatures ||
+      !InputsAreEqual(*issuerTLSFeatures, *subjectTLSFeatures)) {
+    return Result::ERROR_REQUIRED_TLS_FEATURE_MISSING;
+  }
+
+  return Success;
+}
+
+Result
+TLSFeaturesSatisfiedInternal(const Input* requiredTLSFeatures,
+                             const Input* stapledOCSPResponse)
+{
+  if (!requiredTLSFeatures) {
+    return Success;
+  }
+
+  // RFC 6066 10.2: ExtensionType status_request
+  const static uint8_t status_request = 5;
+  const static uint8_t status_request_bytes[] = { status_request };
+
+  Reader input(*requiredTLSFeatures);
+  return der::NestedOf(input, der::SEQUENCE, der::INTEGER,
+                       der::EmptyAllowed::No, [&](Reader& r) {
+    if (!r.MatchRest(status_request_bytes)) {
+      return Result::ERROR_REQUIRED_TLS_FEATURE_MISSING;
+    }
+
+    if (!stapledOCSPResponse) {
+      return Result::ERROR_REQUIRED_TLS_FEATURE_MISSING;
+    }
+
+    return Result::Success;
+  });
+}
+
+Result
+CheckTLSFeaturesAreSatisfied(Input& cert,
+                             const Input* stapledOCSPResponse)
+{
+  BackCert backCert(cert, EndEntityOrCA::MustBeEndEntity, nullptr);
+  Result rv = backCert.Init();
+  if (rv != Success) {
+    return rv;
+  }
+
+  return TLSFeaturesSatisfiedInternal(backCert.GetRequiredTLSFeatures(),
+                                      stapledOCSPResponse);
+}
+
+Result
 CheckIssuerIndependentProperties(TrustDomain& trustDomain,
                                  const BackCert& cert,
                                  Time time,

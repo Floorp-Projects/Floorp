@@ -11,5 +11,7 @@ var ContentAreaDownloadsView = {
     if (!PrivateBrowsingUtils.isContentWindowPrivate(window)) {
       view.place = "place:transition=7&sort=4";
     }
+    // Set focus to Downloads list once it is created
+    document.getElementById("downloadsRichListBox").focus();
   },
 };

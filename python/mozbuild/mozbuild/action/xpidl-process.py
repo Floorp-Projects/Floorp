@@ -45,7 +45,6 @@ def process(input_dir, inc_paths, cache_dir, header_dir, xpt_dir, deps_dir, modu
         idl.resolve([input_dir] + inc_paths, p)
 
         header_path = os.path.join(header_dir, '%s.h' % stem)
-        deps_path = os.path.join(deps_dir, '%s.pp' % stem)
 
         xpt = BytesIO()
         write_typelib(idl, xpt, path)
@@ -62,23 +61,24 @@ def process(input_dir, inc_paths, cache_dir, header_dir, xpt_dir, deps_dir, modu
     xpt_link(xpts.values()).write(xpt_path)
 
     rule.add_targets([xpt_path])
-    deps_path = os.path.join(deps_dir, '%s.pp' % module)
-    with FileAvoidWrite(deps_path) as fh:
-        mk.dump(fh)
+    if deps_dir:
+        deps_path = os.path.join(deps_dir, '%s.pp' % module)
+        with FileAvoidWrite(deps_path) as fh:
+            mk.dump(fh)
 
 
 def main(argv):
     parser = argparse.ArgumentParser()
     parser.add_argument('--cache-dir',
         help='Directory in which to find or write cached lexer data.')
+    parser.add_argument('--depsdir',
+        help='Directory in which to write dependency files.')
     parser.add_argument('inputdir',
         help='Directory in which to find source .idl files.')
     parser.add_argument('headerdir',
         help='Directory in which to write header files.')
     parser.add_argument('xptdir',
         help='Directory in which to write xpt file.')
-    parser.add_argument('depsdir',
-        help='Directory in which to write dependency files.')
     parser.add_argument('module',
         help='Final module name to use for linked output xpt file.')
     parser.add_argument('idls', nargs='+',

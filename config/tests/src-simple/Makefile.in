@@ -13,7 +13,7 @@ include $(topsrcdir)/config/config.mk
 
 XPI_NAME = test_jar_mn
 
-DEFINES += \
+ACDEFINES += \
 	-DAB_CD=ab-X-stuff \
 	$(NULL)
 

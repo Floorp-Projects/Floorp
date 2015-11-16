@@ -695,21 +695,21 @@
   -moz-appearance: none;
   width: 16px;
   height: 16px;
-  background-size: 64px 16px;
+  background-size: cover;
   background-position: 0 center;
   background-repeat: no-repeat;
+  opacity: 0.7;
 }
 .command-button:hover > image {
-  background-position: -16px center;
+  opacity: 0.85;
 }
-.command-button:hover:active > image {
-  background-position: -32px center;
+.command-button:hover:active > image,
+.command-button[checked=true] > image,
+.command-button[open=true] > image {
+  opacity: 1;
 }
 .command-button[checked=true] > image {
-  background-position: -48px center;
-}
-.command-button[open=true] > image {
-  background-position: 0 center;
+  filter: url(images/filters.svg#checked-icon-state) !important;
 }
 
 #command-button-paintflashing > image {
@@ -730,7 +730,6 @@
 
 #command-button-scratchpad > image {
   background-image: url("chrome://devtools/skin/images/command-scratchpad.png");
-  background-size: 48px 16px;
 }
 
 #command-button-pick > image {
@@ -973,7 +972,6 @@
 .theme-light .devtools-tab[icon-invertable] > image,
 .theme-light #toolbox-dock-buttons > toolbarbutton > image,
 .theme-light .command-button-invertable > image,
-.theme-light .command-button-invertable:active > image,
 .theme-light .devtools-closebutton > image,
 .theme-light .devtools-toolbarbutton > image,
 .theme-light .devtools-button::before,
@@ -990,7 +988,6 @@
 
 /* Since selected backgrounds are blue, we want to use the normal
  * (light) icons. */
-.theme-light .command-button-invertable[checked=true]:not(:active) > image,
 .theme-light .devtools-tab[icon-invertable][selected] > image,
 .theme-light .devtools-tab[icon-invertable][highlighted] > image {
   filter: none !important;

@@ -28,7 +28,13 @@ interface nsIServiceWorkerInfo : nsISupports
   readonly attribute DOMString cacheName;
 };
 
-[scriptable, builtinclass, uuid(e908bc07-0a4c-443f-a546-2109bf1f4A01)]
+[scriptable, uuid(87e63548-d440-4b8a-b158-65ad1de0211E)]
+interface nsIServiceWorkerRegistrationInfoListener : nsISupports
+{
+  void onChange();
+};
+
+[scriptable, builtinclass, uuid(72faba24-0a1b-4284-bad3-d44c044d6d95)]
 interface nsIServiceWorkerRegistrationInfo : nsISupports
 {
   readonly attribute nsIPrincipal principal;
@@ -39,6 +45,10 @@ interface nsIServiceWorkerRegistrationInfo : nsISupports
   readonly attribute nsIServiceWorkerInfo installingWorker;
   readonly attribute nsIServiceWorkerInfo waitingWorker;
   readonly attribute nsIServiceWorkerInfo activeWorker;
+
+  void addListener(in nsIServiceWorkerRegistrationInfoListener listener);
+
+  void removeListener(in nsIServiceWorkerRegistrationInfoListener listener);
 };
 
 [scriptable, uuid(9e523e7c-ad6f-4df0-8077-c74aebbc679d)]

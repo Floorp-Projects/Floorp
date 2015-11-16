@@ -31,7 +31,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=693527
 
   /* Check to see if a weak reference is dead. */
   let weak_ref_dead = function (r) {
-    return Cu.nondeterministicGetWeakMapKeys(r).length == 0;
+    return ThreadSafeChromeUtils.nondeterministicGetWeakMapKeys(r).length == 0;
   }
 
 

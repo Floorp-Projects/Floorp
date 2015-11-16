@@ -527,8 +527,9 @@ nsContentList::NamedItem(const nsAString& aName, bool aDoFlush)
     nsIContent *content = mElements[i];
     // XXX Should this pass eIgnoreCase?
     if (content &&
-        (content->AttrValueIs(kNameSpaceID_None, nsGkAtoms::name,
-                              name, eCaseMatters) ||
+        ((content->IsHTMLElement() &&
+          content->AttrValueIs(kNameSpaceID_None, nsGkAtoms::name,
+                               name, eCaseMatters)) ||
          content->AttrValueIs(kNameSpaceID_None, nsGkAtoms::id,
                               name, eCaseMatters))) {
       return content->AsElement();

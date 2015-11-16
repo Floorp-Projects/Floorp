@@ -28,19 +28,6 @@ import os
 import sys
 
 
-class OverwriteInstallManifest(InstallManifest):
-    def _add_entry(self, dest, entry):
-        # Because of bug 1210703, we can't let the default behavior of
-        # InstallManifest._add_entry, which is to error out.
-        # To match the current behavior of the recursive make libs tier, we
-        # keep the last one given, but still warn about it.
-        if dest in self._dests:
-            print('Warning: Item already in manifest: %s' % dest,
-                  file=sys.stderr)
-
-        self._dests[dest] = entry
-
-
 class FasterMakeBackend(CommonBackend):
     def _init(self):
         super(FasterMakeBackend, self)._init()
@@ -50,7 +37,7 @@ class FasterMakeBackend(CommonBackend):
 
         self._manifest_entries = OrderedDefaultDict(list)
 
-        self._install_manifests = OrderedDefaultDict(OverwriteInstallManifest)
+        self._install_manifests = OrderedDefaultDict(InstallManifest)
 
         self._dependencies = OrderedDefaultDict(list)
 

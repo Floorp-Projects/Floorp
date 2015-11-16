@@ -66,6 +66,7 @@ $(if $(MOZ_ANDROID_SHARED_FXACCOUNT_TYPE),,$(error Missing MOZ_ANDROID_SHARED_FX
 $(dir-strings-xml)/strings.xml: $(strings-xml-preqs)
 	$(call py_action,preprocessor, \
       $(DEFINES) \
+      $(ACDEFINES) \
 	  -DANDROID_PACKAGE_NAME=$(ANDROID_PACKAGE_NAME) \
 	  -DBRANDPATH='$(BRANDPATH)' \
 	  -DMOZ_ANDROID_SHARED_ACCOUNT_TYPE=$(MOZ_ANDROID_SHARED_ACCOUNT_TYPE) \
