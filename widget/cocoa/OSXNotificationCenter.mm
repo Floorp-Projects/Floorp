@@ -105,7 +105,7 @@ enum {
        didActivateNotification:(id<FakeNSUserNotification>)notification
 {
   unsigned long long additionalActionIndex = ULLONG_MAX;
-  if ([notification respondsToSelector:@selector(get_alternateActionIndex:)]) {
+  if ([notification respondsToSelector:@selector(_alternateActionIndex)]) {
     NSNumber *alternateActionIndex = [(NSObject*)notification valueForKey:@"_alternateActionIndex"];
     additionalActionIndex = [alternateActionIndex unsignedLongLongValue];
   }
