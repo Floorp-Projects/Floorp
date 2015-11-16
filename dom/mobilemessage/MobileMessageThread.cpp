@@ -1,190 +1,91 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:set ts=2 sw=2 sts=2 et cindent: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this file,
- * You can obtain one at http://mozilla.org/MPL/2.0/. */
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "MobileMessageThread.h"
-#include "nsIDOMClassInfo.h"
-#include "jsapi.h"           // For OBJECT_TO_JSVAL and JS_NewDateObjectMsec
-#include "nsJSUtils.h"       // For nsAutoJSString
-#include "nsTArrayHelpers.h" // For nsTArrayToJSArray
-#include "mozilla/dom/mobilemessage/Constants.h" // For MessageType
+
+#include "MobileMessageThreadInternal.h"
+#include "mozilla/dom/MobileMessageThreadBinding.h"
 
 using namespace mozilla::dom::mobilemessage;
 
 namespace mozilla {
 namespace dom {
 
-NS_INTERFACE_MAP_BEGIN(MobileMessageThread)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMMozMobileMessageThread)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(MobileMessageThread, mWindow, mThread)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(MobileMessageThread)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(MobileMessageThread)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(MobileMessageThread)
+  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_MAP_ENTRY(nsISupports)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(MozMobileMessageThread)
 NS_INTERFACE_MAP_END
 
-NS_IMPL_ADDREF(MobileMessageThread)
-NS_IMPL_RELEASE(MobileMessageThread)
-
-/* static */ nsresult
-MobileMessageThread::Create(uint64_t aId,
-                            const JS::Value& aParticipants,
-                            uint64_t aTimestamp,
-                            const nsAString& aLastMessageSubject,
-                            const nsAString& aBody,
-                            uint64_t aUnreadCount,
-                            const nsAString& aLastMessageType,
-                            JSContext* aCx,
-                            nsIDOMMozMobileMessageThread** aThread)
+MobileMessageThread::MobileMessageThread(nsPIDOMWindow* aWindow,
+                                         MobileMessageThreadInternal* aThread)
+  : mWindow(aWindow)
+  , mThread(aThread)
 {
-  *aThread = nullptr;
-
-  // ThreadData exposes these as references, so we can simply assign
-  // to them.
-  ThreadData data;
-  data.id() = aId;
-  data.lastMessageSubject().Assign(aLastMessageSubject);
-  data.body().Assign(aBody);
-  data.unreadCount() = aUnreadCount;
-
-  // Participants.
-  {
-    if (!aParticipants.isObject()) {
-      return NS_ERROR_INVALID_ARG;
-    }
-
-    JS::Rooted<JSObject*> obj(aCx, &aParticipants.toObject());
-    bool isArray;
-    if (!JS_IsArrayObject(aCx, obj, &isArray)) {
-      return NS_ERROR_FAILURE;
-    }
-    if (!isArray) {
-      return NS_ERROR_INVALID_ARG;
-    }
-
-    uint32_t length;
-    MOZ_ALWAYS_TRUE(JS_GetArrayLength(aCx, obj, &length));
-    NS_ENSURE_TRUE(length, NS_ERROR_INVALID_ARG);
-
-    for (uint32_t i = 0; i < length; ++i) {
-      JS::Rooted<JS::Value> val(aCx);
-
-      if (!JS_GetElement(aCx, obj, i, &val) || !val.isString()) {
-        return NS_ERROR_INVALID_ARG;
-      }
-
-      nsAutoJSString str;
-      if (!str.init(aCx, val.toString())) {
-        return NS_ERROR_FAILURE;
-      }
-
-      data.participants().AppendElement(str);
-    }
-  }
-
-  // Set |timestamp|;
-  data.timestamp() = aTimestamp;
-
-  // Set |lastMessageType|.
-  {
-    MessageType lastMessageType;
-    if (aLastMessageType.Equals(MESSAGE_TYPE_SMS)) {
-      lastMessageType = eMessageType_SMS;
-    } else if (aLastMessageType.Equals(MESSAGE_TYPE_MMS)) {
-      lastMessageType = eMessageType_MMS;
-    } else {
-      return NS_ERROR_INVALID_ARG;
-    }
-    data.lastMessageType() = lastMessageType;
-  }
-
-  nsCOMPtr<nsIDOMMozMobileMessageThread> thread = new MobileMessageThread(data);
-  thread.forget(aThread);
-  return NS_OK;
 }
 
-MobileMessageThread::MobileMessageThread(uint64_t aId,
-                                         const nsTArray<nsString>& aParticipants,
-                                         uint64_t aTimestamp,
-                                         const nsString& aLastMessageSubject,
-                                         const nsString& aBody,
-                                         uint64_t aUnreadCount,
-                                         MessageType aLastMessageType)
-  : mData(aId, aParticipants, aTimestamp, aLastMessageSubject, aBody,
-          aUnreadCount, aLastMessageType)
+MobileMessageThread::~MobileMessageThread()
 {
-  MOZ_ASSERT(aParticipants.Length());
 }
 
-MobileMessageThread::MobileMessageThread(const ThreadData& aData)
-  : mData(aData)
+JSObject*
+MobileMessageThread::WrapObject(JSContext* aCx,
+                                JS::Handle<JSObject*> aGivenProto)
 {
-  MOZ_ASSERT(aData.participants().Length());
+  return MobileMessageThreadBinding::Wrap(aCx, this, aGivenProto);
 }
 
-NS_IMETHODIMP
-MobileMessageThread::GetId(uint64_t* aId)
+uint64_t
+MobileMessageThread::Id() const
 {
-  *aId = mData.id();
-  return NS_OK;
+  uint64_t id;
+  mThread->GetId(&id);
+  return id;
 }
 
-NS_IMETHODIMP
-MobileMessageThread::GetLastMessageSubject(nsAString& aLastMessageSubject)
+void
+MobileMessageThread::GetLastMessageSubject(nsString& aRetVal) const
 {
-  aLastMessageSubject = mData.lastMessageSubject();
-  return NS_OK;
+  mThread->GetLastMessageSubject(aRetVal);
 }
 
-NS_IMETHODIMP
-MobileMessageThread::GetBody(nsAString& aBody)
+void
+MobileMessageThread::GetBody(nsString& aRetVal) const
 {
-  aBody = mData.body();
-  return NS_OK;
+  mThread->GetBody(aRetVal);
 }
 
-NS_IMETHODIMP
-MobileMessageThread::GetUnreadCount(uint64_t* aUnreadCount)
+uint64_t
+MobileMessageThread::UnreadCount() const
 {
-  *aUnreadCount = mData.unreadCount();
-  return NS_OK;
+  uint64_t count;
+  mThread->GetUnreadCount(&count);
+  return count;
 }
 
-NS_IMETHODIMP
-MobileMessageThread::GetParticipants(JSContext* aCx,
-                                     JS::MutableHandle<JS::Value> aParticipants)
+void
+MobileMessageThread::GetParticipants(nsTArray<nsString>& aRetVal) const
 {
-  JS::Rooted<JSObject*> obj(aCx);
-
-  nsresult rv = nsTArrayToJSArray(aCx, mData.participants(), &obj);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  aParticipants.setObject(*obj);
-  return NS_OK;
+  aRetVal = mThread->mData.participants();
 }
 
-NS_IMETHODIMP
-MobileMessageThread::GetTimestamp(DOMTimeStamp* aDate)
+DOMTimeStamp
+MobileMessageThread::Timestamp() const
 {
-  *aDate = mData.timestamp();
-  return NS_OK;
+  DOMTimeStamp timestamp;
+  mThread->GetTimestamp(&timestamp);
+  return timestamp;
 }
 
-NS_IMETHODIMP
-MobileMessageThread::GetLastMessageType(nsAString& aLastMessageType)
+void
+MobileMessageThread::GetLastMessageType(nsString& aRetVal) const
 {
-  switch (mData.lastMessageType()) {
-    case eMessageType_SMS:
-      aLastMessageType = MESSAGE_TYPE_SMS;
-      break;
-    case eMessageType_MMS:
-      aLastMessageType = MESSAGE_TYPE_MMS;
-      break;
-    case eMessageType_EndGuard:
-    default:
-      MOZ_CRASH("We shouldn't get any other message type!");
-  }
-
-  return NS_OK;
+  mThread->GetLastMessageType(aRetVal);
 }
 
 } // namespace dom

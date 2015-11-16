@@ -154,8 +154,14 @@ BluetoothGattCharacteristic::StartNotifications(ErrorResult& aRv)
   BT_ENSURE_TRUE_REJECT(bs, promise, NS_ERROR_NOT_AVAILABLE);
   BT_ENSURE_TRUE_REJECT(mService, promise, NS_ERROR_NOT_AVAILABLE);
 
+  BluetoothUuid appUuid;
+  BT_ENSURE_TRUE_REJECT(NS_SUCCEEDED(StringToUuid(mService->GetAppUuid(),
+                                                  appUuid)),
+                        promise,
+                        NS_ERROR_DOM_OPERATION_ERR);
+
   bs->GattClientStartNotificationsInternal(
-    mService->GetAppUuid(), mService->GetServiceId(), mCharId,
+    appUuid, mService->GetServiceId(), mCharId,
     new BluetoothVoidReplyRunnable(nullptr, promise));
 
   return promise.forget();
@@ -181,8 +187,14 @@ BluetoothGattCharacteristic::StopNotifications(ErrorResult& aRv)
   BT_ENSURE_TRUE_REJECT(bs, promise, NS_ERROR_NOT_AVAILABLE);
   BT_ENSURE_TRUE_REJECT(mService, promise, NS_ERROR_NOT_AVAILABLE);
 
+  BluetoothUuid appUuid;
+  BT_ENSURE_TRUE_REJECT(NS_SUCCEEDED(StringToUuid(mService->GetAppUuid(),
+                                                  appUuid)),
+                        promise,
+                        NS_ERROR_DOM_OPERATION_ERR);
+
   bs->GattClientStopNotificationsInternal(
-    mService->GetAppUuid(), mService->GetServiceId(), mCharId,
+    appUuid, mService->GetServiceId(), mCharId,
     new BluetoothVoidReplyRunnable(nullptr, promise));
 
   return promise.forget();
@@ -362,8 +374,14 @@ BluetoothGattCharacteristic::ReadValue(ErrorResult& aRv)
   BluetoothService* bs = BluetoothService::Get();
   BT_ENSURE_TRUE_REJECT(bs, promise, NS_ERROR_NOT_AVAILABLE);
 
+  BluetoothUuid appUuid;
+  BT_ENSURE_TRUE_REJECT(NS_SUCCEEDED(StringToUuid(mService->GetAppUuid(),
+                                                  appUuid)),
+                        promise,
+                        NS_ERROR_DOM_OPERATION_ERR);
+
   bs->GattClientReadCharacteristicValueInternal(
-    mService->GetAppUuid(), mService->GetServiceId(), mCharId,
+    appUuid, mService->GetServiceId(), mCharId,
     new ReadValueTask(this, promise));
 
   return promise.forget();
@@ -405,9 +423,14 @@ BluetoothGattCharacteristic::WriteValue(const ArrayBuffer& aValue,
   BluetoothService* bs = BluetoothService::Get();
   BT_ENSURE_TRUE_REJECT(bs, promise, NS_ERROR_NOT_AVAILABLE);
 
+  BluetoothUuid appUuid;
+  BT_ENSURE_TRUE_REJECT(NS_SUCCEEDED(StringToUuid(mService->GetAppUuid(),
+                                                  appUuid)),
+                        promise,
+                        NS_ERROR_DOM_OPERATION_ERR);
+
   bs->GattClientWriteCharacteristicValueInternal(
-    mService->GetAppUuid(), mService->GetServiceId(),
-    mCharId, mWriteType, value,
+    appUuid, mService->GetServiceId(), mCharId, mWriteType, value,
     new BluetoothVoidReplyRunnable(nullptr, promise));
 
   return promise.forget();

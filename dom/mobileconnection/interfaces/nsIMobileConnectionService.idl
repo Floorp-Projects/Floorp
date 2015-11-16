@@ -8,11 +8,12 @@ interface nsICellInfoListCallback;
 interface nsIMobileCallForwardingOptions;
 interface nsIMobileConnection;
 interface nsIMobileConnectionInfo;
+interface nsIMobileDeviceIdentities;
 interface nsIMobileNetworkInfo;
 interface nsINeighboringCellIdsCallback;
 interface nsIVariant;
 
-[scriptable, uuid(d6827b51-61a7-4b7c-8454-42d0cffc1829)]
+[scriptable, uuid(8884b326-891c-11e5-a434-67def07c4a41)]
 interface nsIMobileConnectionListener : nsISupports
 {
   /**
@@ -102,6 +103,11 @@ interface nsIMobileConnectionListener : nsISupports
    * Notify when network selection mode is changed.
    */
   void notifyNetworkSelectionModeChanged();
+
+  /**
+   * Notify when device identities are changed.
+   */
+  void notifyDeviceIdentitiesChanged();
 };
 
 %{C++
@@ -165,7 +171,7 @@ already_AddRefed<nsIMobileConnectionService>
 NS_CreateMobileConnectionService();
 %}
 
-[scriptable, uuid(d7173ff3-a8da-41c1-a976-440e5402b856)]
+[scriptable, uuid(7a557116-8753-11e5-9f9b-6794b577c0a1)]
 interface nsIMobileConnection : nsISupports
 {
   /*
@@ -319,6 +325,11 @@ interface nsIMobileConnection : nsISupports
    * values.
    */
   readonly attribute long radioState;
+
+  /**
+   * Device Identities, including IMEI, IMEISV, ESN and MEID.
+   */
+  readonly attribute nsIMobileDeviceIdentities deviceIdentities;
 
   /**
    * The network types supported by this radio.
