@@ -61,15 +61,15 @@ function runNextTest() {
     // Enumerate windows and close everything but our primary window. We can't
     // use waitForFocus() because apparently it's buggy. See bug 599253.
     var windowsEnum = Services.wm.getEnumerator("navigator:browser");
+    let closeWinPromises = [];
     while (windowsEnum.hasMoreElements()) {
       var currentWindow = windowsEnum.getNext();
       if (currentWindow != window) {
-        currentWindow.close();
+        closeWinPromises.push(BrowserTestUtils.closeWindow(currentWindow));
       }
     }
 
-    // If we closed a window, give it time to close
-    executeSoon(function() {
+    Promise.all(closeWinPromises).then(() => {
       let currentTest = tests.shift();
       info("prepping for " + currentTest.name);
       waitForBrowserState(testState, currentTest);
@@ -319,9 +319,8 @@ function test_undoCloseWindow() {
 
   waitForBrowserState(lameMultiWindowState, function() {
     // Close the window which isn't window
-    newWindow.close();
-    // Now give it time to close
-    executeSoon(function() {
+    BrowserTestUtils.closeWindow(newWindow).then(() => {
+      // Now give it time to close
       reopenedWindow = ss.undoCloseWindow(0);
       reopenedWindow.addEventListener("SSWindowStateBusy", onSSWindowStateBusy, false);
       reopenedWindow.addEventListener("SSWindowStateReady", onSSWindowStateReady, false);
@@ -357,9 +356,6 @@ function test_undoCloseWindow() {
     reopenedWindow.removeEventListener("SSWindowStateReady", onSSWindowStateReady, false);
     reopenedWindow.gBrowser.tabContainer.removeEventListener("SSTabRestored", onSSTabRestored, false);
 
-    reopenedWindow.close();
-
-    // Give it time to close
-    executeSoon(runNextTest);
+    BrowserTestUtils.closeWindow(reopenedWindow).then(runNextTest);
   }
 }
