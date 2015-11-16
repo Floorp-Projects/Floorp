@@ -3498,10 +3498,10 @@ CreateGdkWindow(GdkWindow *parent, GtkWidget *widget)
 }
 
 nsresult
-nsWindow::Create(nsIWidget        *aParent,
-                 nsNativeWidget    aNativeParent,
-                 const nsIntRect  &aRect,
-                 nsWidgetInitData *aInitData)
+nsWindow::Create(nsIWidget* aParent,
+                 nsNativeWidget aNativeParent,
+                 const LayoutDeviceIntRect& aRect,
+                 nsWidgetInitData* aInitData)
 {
     // only set the base parent if we're going to be a dialog or a
     // toplevel
@@ -3531,7 +3531,7 @@ nsWindow::Create(nsIWidget        *aParent,
     CommonCreate(aParent, listenForResizes);
 
     // save our bounds
-    mBounds = aRect;
+    mBounds = aRect.ToUnknownRect();
     ConstrainSize(&mBounds.width, &mBounds.height);
 
     // figure out our parent window

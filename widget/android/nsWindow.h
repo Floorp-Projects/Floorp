@@ -70,10 +70,10 @@ public:
     // nsIWidget
     //
 
-    NS_IMETHOD Create(nsIWidget *aParent,
+    NS_IMETHOD Create(nsIWidget* aParent,
                       nsNativeWidget aNativeParent,
-                      const nsIntRect &aRect,
-                      nsWidgetInitData *aInitData) override;
+                      const LayoutDeviceIntRect& aRect,
+                      nsWidgetInitData* aInitData) override;
     NS_IMETHOD Destroy(void) override;
     NS_IMETHOD ConfigureChildren(const nsTArray<nsIWidget::Configuration>&) override;
     NS_IMETHOD SetParent(nsIWidget* aNewParent) override;

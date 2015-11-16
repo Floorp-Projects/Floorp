@@ -84,10 +84,10 @@ public:
     //
     // nsIWidget
     //
-    NS_IMETHOD Create(nsIWidget        *aParent,
-                      nsNativeWidget   aNativeParent,
-                      const nsIntRect  &aRect,
-                      nsWidgetInitData *aInitData);
+    NS_IMETHOD Create(nsIWidget* aParent,
+                      nsNativeWidget aNativeParent,
+                      const LayoutDeviceIntRect& aRect,
+                      nsWidgetInitData* aInitData);
     NS_IMETHOD Destroy(void);
 
     NS_IMETHOD Show(bool aState);

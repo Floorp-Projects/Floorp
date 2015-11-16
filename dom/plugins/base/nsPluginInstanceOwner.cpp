@@ -2960,8 +2960,8 @@ NS_IMETHODIMP nsPluginInstanceOwner::CreateWidget(void)
       initData.mUnicode = false;
       initData.clipChildren = true;
       initData.clipSiblings = true;
-      rv = mWidget->Create(parentWidget.get(), nullptr, nsIntRect(0,0,0,0),
-                           &initData);
+      rv = mWidget->Create(parentWidget.get(), nullptr,
+                           LayoutDeviceIntRect(0, 0, 0, 0), &initData);
       if (NS_FAILED(rv)) {
         mWidget->Destroy();
         mWidget = nullptr;

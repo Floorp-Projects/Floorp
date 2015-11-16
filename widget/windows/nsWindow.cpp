@@ -490,10 +490,10 @@ ShouldCacheTitleBarInfo(nsWindowType aWindowType, nsBorderStyle aBorderStyle)
 
 // Create the proper widget
 nsresult
-nsWindow::Create(nsIWidget *aParent,
+nsWindow::Create(nsIWidget* aParent,
                  nsNativeWidget aNativeParent,
-                 const nsIntRect &aRect,
-                 nsWidgetInitData *aInitData)
+                 const LayoutDeviceIntRect& aRect,
+                 nsWidgetInitData* aInitData)
 {
   nsWidgetInitData defaultInitData;
   if (!aInitData)
@@ -507,7 +507,7 @@ nsWindow::Create(nsIWidget *aParent,
                           nullptr : aParent;
 
   mIsTopWidgetWindow = (nullptr == baseParent);
-  mBounds = aRect;
+  mBounds = aRect.ToUnknownRect();
 
   // Ensure that the toolkit is created.
   nsToolkit::GetToolkit();

@@ -308,9 +308,9 @@ nsBaseWidget::~nsBaseWidget()
 // Basic create.
 //
 //-------------------------------------------------------------------------
-void nsBaseWidget::BaseCreate(nsIWidget *aParent,
-                              const nsIntRect &aRect,
-                              nsWidgetInitData *aInitData)
+void nsBaseWidget::BaseCreate(nsIWidget* aParent,
+                              const LayoutDeviceIntRect& aRect,
+                              nsWidgetInitData* aInitData)
 {
   static bool gDisableNativeThemeCached = false;
   if (!gDisableNativeThemeCached) {
@@ -355,9 +355,9 @@ void nsBaseWidget::SetWidgetListener(nsIWidgetListener* aWidgetListener)
 }
 
 already_AddRefed<nsIWidget>
-nsBaseWidget::CreateChild(const nsIntRect  &aRect,
-                          nsWidgetInitData *aInitData,
-                          bool             aForceUseIWidgetParent)
+nsBaseWidget::CreateChild(const LayoutDeviceIntRect& aRect,
+                          nsWidgetInitData* aInitData,
+                          bool aForceUseIWidgetParent)
 {
   nsIWidget* parent = this;
   nsNativeWidget nativeParent = nullptr;

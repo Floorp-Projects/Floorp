@@ -354,10 +354,10 @@ public:
   nsChildView();
 
   // nsIWidget interface
-  NS_IMETHOD              Create(nsIWidget *aParent,
+  NS_IMETHOD              Create(nsIWidget* aParent,
                                  nsNativeWidget aNativeParent,
-                                 const nsIntRect &aRect,
-                                 nsWidgetInitData *aInitData = nullptr) override;
+                                 const LayoutDeviceIntRect& aRect,
+                                 nsWidgetInitData* aInitData = nullptr) override;
 
   NS_IMETHOD              Destroy() override;
 

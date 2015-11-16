@@ -53,17 +53,17 @@ protected:
 public:
   NS_DECL_ISUPPORTS_INHERITED
 
-  NS_IMETHOD Create(nsIWidget*        aParent,
-                    nsNativeWidget    aNativeParent,
-                    const nsIntRect&  aRect,
+  NS_IMETHOD Create(nsIWidget* aParent,
+                    nsNativeWidget aNativeParent,
+                    const LayoutDeviceIntRect& aRect,
                     nsWidgetInitData* aInitData = nullptr) override;
 
   void InitIMEState();
 
   virtual already_AddRefed<nsIWidget>
-  CreateChild(const nsIntRect  &aRect,
-              nsWidgetInitData *aInitData = nullptr,
-              bool             aForceUseIWidgetParent = false) override;
+  CreateChild(const LayoutDeviceIntRect& aRect,
+              nsWidgetInitData* aInitData = nullptr,
+              bool aForceUseIWidgetParent = false) override;
 
   NS_IMETHOD Destroy() override;
 

@@ -395,10 +395,10 @@ class nsIWidget : public nsISupports {
      * @param     aInitData     data that is used for widget initialization
      *
      */
-    NS_IMETHOD Create(nsIWidget        *aParent,
-                      nsNativeWidget   aNativeParent,
-                      const nsIntRect  &aRect,
-                      nsWidgetInitData *aInitData = nullptr) = 0;
+    NS_IMETHOD Create(nsIWidget* aParent,
+                      nsNativeWidget aNativeParent,
+                      const LayoutDeviceIntRect& aRect,
+                      nsWidgetInitData* aInitData = nullptr) = 0;
 
     /**
      * Allocate, initialize, and return a widget that is a child of
@@ -417,9 +417,9 @@ class nsIWidget : public nsISupports {
      * understood code, and shouldn't be used in new code.
      */
     virtual already_AddRefed<nsIWidget>
-    CreateChild(const nsIntRect  &aRect,
-                nsWidgetInitData *aInitData = nullptr,
-                bool             aForceUseIWidgetParent = false) = 0;
+    CreateChild(const LayoutDeviceIntRect& aRect,
+                nsWidgetInitData* aInitData = nullptr,
+                bool aForceUseIWidgetParent = false) = 0;
 
     /**
      * Attach to a top level widget. 

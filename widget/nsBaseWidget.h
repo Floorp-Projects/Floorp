@@ -231,9 +231,9 @@ public:
                                                          double& aOverriddenDeltaX,
                                                          double& aOverriddenDeltaY) override;
   virtual already_AddRefed<nsIWidget>
-  CreateChild(const nsIntRect  &aRect,
-              nsWidgetInitData *aInitData = nullptr,
-              bool             aForceUseIWidgetParent = false) override;
+  CreateChild(const LayoutDeviceIntRect& aRect,
+              nsWidgetInitData* aInitData = nullptr,
+              bool aForceUseIWidgetParent = false) override;
   NS_IMETHOD              AttachViewToTopLevel(bool aUseAttachedEvents) override;
   virtual nsIWidgetListener* GetAttachedWidgetListener() override;
   virtual void               SetAttachedWidgetListener(nsIWidgetListener* aListener) override;
@@ -350,8 +350,8 @@ protected:
                                   nsIFile **aResult);
   virtual void    OnDestroy();
   void            BaseCreate(nsIWidget *aParent,
-                             const nsIntRect &aRect,
-                             nsWidgetInitData *aInitData);
+                             const LayoutDeviceIntRect& aRect,
+                             nsWidgetInitData* aInitData);
 
   virtual void ConfigureAPZCTreeManager();
   virtual void ConfigureAPZControllerThread();
