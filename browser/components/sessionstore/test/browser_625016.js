@@ -31,7 +31,7 @@ add_task(function* new_window() {
     // Double check that we have no closed windows
     is(ss.getClosedWindowCount(), 0, "no closed windows on first save");
 
-    yield promiseWindowClosed(newWin);
+    yield BrowserTestUtils.closeWindow(newWin);
     newWin = null;
 
     let state = JSON.parse((yield promiseRecoveryFileContents()));
@@ -45,7 +45,7 @@ add_task(function* new_window() {
       "observe1: 1 closed window according to API");
   } finally {
     if (newWin) {
-      yield promiseWindowClosed(newWin);
+      yield BrowserTestUtils.closeWindow(newWin);
     }
     yield forceSaveState();
   }

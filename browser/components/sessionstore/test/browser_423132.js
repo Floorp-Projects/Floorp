@@ -66,8 +66,7 @@ function test() {
           if (gPrefService.prefHasUserValue("browser.sessionstore.interval"))
             gPrefService.clearUserPref("browser.sessionstore.interval");
           cs.removeAll();
-          newWin.close();
-          finish();
+          BrowserTestUtils.closeWindow(newWin).then(finish);
         };
 
         function flushAndReady() {
