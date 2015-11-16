@@ -79,6 +79,14 @@ class CommonCaretsTestCase(object):
 
         self._iframe = self.marionette.find_element(By.ID, 'frame')
 
+    def open_test_html_display_none(self):
+        'Open html for testing html with display: none.'
+        test_html = self.marionette.absolute_url('test_carets_display_none.html')
+        self.marionette.navigate(test_html)
+
+        self._html = self.marionette.find_element(By.ID, 'html')
+        self._content = self.marionette.find_element(By.ID, 'content')
+
     def word_offset(self, text, ordinal):
         'Get the character offset of the ordinal-th word in text.'
         tokens = re.split(r'(\S+)', text)         # both words and spaces
@@ -436,6 +444,23 @@ class CommonCaretsTestCase(object):
         self.long_press_on_location(self._bottomtext)
 
         self.assertNotEqual(self.to_unix_line_ending(sel.selected_content), '')
+
+    def test_carets_initialized_in_display_none(self):
+        '''Test AccessibleCaretEventHub is properly initialized on a <html> with
+        display: none.
+
+        '''
+        self.open_test_html_display_none()
+
+        # Remove 'display: none' from <html>
+        self.marionette.execute_script(
+            'arguments[0].style.display = "unset";',
+            script_args=[self._html]
+        )
+
+        # If AccessibleCaretEventHub is initialized successfully, select a word
+        # should work.
+        self._test_long_press_to_select_a_word(self._content, self.assertEqual)
 
     ########################################################################
     # <input> test cases with selection carets enabled
