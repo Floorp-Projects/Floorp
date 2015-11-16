@@ -169,7 +169,9 @@ public:
   virtual size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const override
   {
     size_t amount = AudioNodeEngine::SizeOfExcludingThis(aMallocSizeOf);
-    amount += mBuffer->SizeOfIncludingThis(aMallocSizeOf);
+    if (mBuffer) {
+      amount += mBuffer->SizeOfIncludingThis(aMallocSizeOf);
+    }
     return amount;
   }
 
