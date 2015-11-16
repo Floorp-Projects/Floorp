@@ -551,9 +551,7 @@ AudioManager::HandleAudioChannelProcessChanged()
   }
 
   RefPtr<AudioChannelService> service = AudioChannelService::GetOrCreate();
-  MOZ_ASSERT(service);
-
-  bool telephonyChannelIsActive = service->TelephonyChannelIsActive();
+  bool telephonyChannelIsActive = service && service->TelephonyChannelIsActive();
   telephonyChannelIsActive ? SetPhoneState(PHONE_STATE_IN_COMMUNICATION) :
                              SetPhoneState(PHONE_STATE_NORMAL);
 }

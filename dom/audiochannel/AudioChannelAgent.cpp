@@ -171,7 +171,10 @@ NS_IMETHODIMP AudioChannelAgent::NotifyStoppedPlaying()
   }
 
   RefPtr<AudioChannelService> service = AudioChannelService::GetOrCreate();
-  service->UnregisterAudioChannelAgent(this, mNotifyPlayback);
+  if (service) {
+    service->UnregisterAudioChannelAgent(this, mNotifyPlayback);
+  }
+
   mIsRegToService = false;
   return NS_OK;
 }
@@ -198,7 +201,9 @@ AudioChannelAgent::WindowVolumeChanged()
   bool muted = false;
 
   RefPtr<AudioChannelService> service = AudioChannelService::GetOrCreate();
-  service->GetState(mWindow, mAudioChannelType, &volume, &muted);
+  if (service) {
+    service->GetState(mWindow, mAudioChannelType, &volume, &muted);
+  }
 
   callback->WindowVolumeChanged(volume, muted);
 }
