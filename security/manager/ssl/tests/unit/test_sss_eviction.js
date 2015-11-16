@@ -9,11 +9,11 @@ var gSSService = null;
 var gProfileDir = null;
 
 function do_state_written(aSubject, aTopic, aData) {
-  do_check_eq(aData, SSS_STATE_FILE_NAME);
+  equal(aData, SSS_STATE_FILE_NAME);
 
   let stateFile = gProfileDir.clone();
   stateFile.append(SSS_STATE_FILE_NAME);
-  do_check_true(stateFile.exists());
+  ok(stateFile.exists());
   let stateFileContents = readFile(stateFile);
   // the last part is removed because it's the empty string after the final \n
   let lines = stateFileContents.split('\n').slice(0, -1);
@@ -35,15 +35,15 @@ function do_state_written(aSubject, aTopic, aData) {
     }
   }
 
-  do_check_true(foundLegitSite);
+  ok(foundLegitSite);
   do_test_finished();
 }
 
 function do_state_read(aSubject, aTopic, aData) {
-  do_check_eq(aData, SSS_STATE_FILE_NAME);
+  equal(aData, SSS_STATE_FILE_NAME);
 
-  do_check_true(gSSService.isSecureHost(Ci.nsISiteSecurityService.HEADER_HSTS,
-                                        "frequentlyused.example.com", 0));
+  ok(gSSService.isSecureHost(Ci.nsISiteSecurityService.HEADER_HSTS,
+                             "frequentlyused.example.com", 0));
   let sslStatus = new FakeSSLStatus();
   for (let i = 0; i < 2000; i++) {
     let uri = Services.io.newURI("http://bad" + i + ".example.com", null, null);
@@ -62,7 +62,7 @@ function run_test() {
   stateFile.append(SSS_STATE_FILE_NAME);
   // Assuming we're working with a clean slate, the file shouldn't exist
   // until we create it.
-  do_check_false(stateFile.exists());
+  ok(!stateFile.exists());
   let outputStream = FileUtils.openFileOutputStream(stateFile);
   let now = (new Date()).getTime();
   let line = "frequentlyused.example.com:HSTS\t4\t0\t" + (now + 100000) + ",1,0\n";
@@ -72,5 +72,5 @@ function run_test() {
   do_test_pending();
   gSSService = Cc["@mozilla.org/ssservice;1"]
                  .getService(Ci.nsISiteSecurityService);
-  do_check_true(gSSService != null);
+  notEqual(gSSService, null);
 }
