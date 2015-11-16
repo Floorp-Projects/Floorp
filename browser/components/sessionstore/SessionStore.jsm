@@ -405,6 +405,11 @@ var SessionStoreInternal = {
   // that is being stored in _closedWindows for that tab.
   _closedWindowTabs: new WeakMap(),
 
+  // A map (xul:browser -> object) that maps a browser that is switching
+  // remoteness via navigateAndRestore, to the loadArguments that were
+  // most recently passed when calling navigateAndRestore.
+  _remotenessChangingBrowsers: new WeakMap(),
+
   // whether a setBrowserState call is in progress
   _browserSetState: false,
 
@@ -2373,11 +2378,31 @@ var SessionStoreInternal = {
    * or restoring the exact same state again and passing the new URL to load
    * in |loadArguments|. Use this method to seamlessly switch between pages
    * loaded in the parent and pages loaded in the child process.
+   *
+   * This method might be called multiple times before it has finished
+   * flushing the browser tab. If that occurs, the loadArguments from
+   * the most recent call to navigateAndRestore will be used once the
+   * flush has finished.
    */
   navigateAndRestore(tab, loadArguments, historyIndex) {
     let window = tab.ownerDocument.defaultView;
     NS_ASSERT(window.__SSi, "tab's window must be tracked");
     let browser = tab.linkedBrowser;
+
+    // Were we already waiting for a flush from a previous call to
+    // navigateAndRestore on this tab?
+    let alreadyRestoring =
+      this._remotenessChangingBrowsers.has(browser.permanentKey);
+
+    // Stash the most recent loadArguments in this WeakMap so that
+    // we know to use it when the TabStateFlusher.flush resolves.
+    this._remotenessChangingBrowsers.set(browser.permanentKey, loadArguments);
+
+    if (alreadyRestoring) {
+      // This tab was already being restored to run in the
+      // correct process. We're done here.
+      return;
+    }
 
     // Set tab title to "Connecting..." and start the throbber to pretend we're
     // doing something while actually waiting for data from the frame script.
@@ -2386,6 +2411,13 @@ var SessionStoreInternal = {
 
     // Flush to get the latest tab state.
     TabStateFlusher.flush(browser).then(() => {
+      // loadArguments might have been overwritten by multiple calls
+      // to navigateAndRestore while we waited for the tab to flush,
+      // so we use the most recently stored one.
+      let recentLoadArguments =
+        this._remotenessChangingBrowsers.get(browser.permanentKey);
+      this._remotenessChangingBrowsers.delete(browser.permanentKey);
+
       // The tab might have been closed/gone in the meantime.
       if (tab.closing || !tab.linkedBrowser) {
         return;
@@ -2406,7 +2438,7 @@ var SessionStoreInternal = {
         tabState.index = Math.max(1, Math.min(tabState.index, tabState.entries.length));
       } else {
         tabState.userTypedValue = null;
-        options.loadArguments = loadArguments;
+        options.loadArguments = recentLoadArguments;
       }
 
       // Need to reset restoring tabs.
