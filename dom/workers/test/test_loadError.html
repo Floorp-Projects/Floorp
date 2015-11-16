@@ -13,55 +13,53 @@
 <script class="testbody" type="text/javascript">
 "use strict";
 
+function nextTest() {
+  (function(){
+    function workerfunc() {
+      var subworker = new Worker("about:blank");
+      subworker.onerror = function(e) {
+        e.preventDefault();
+        postMessage(e.message);
+      }
+    }
+    var b = new Blob([workerfunc+'workerfunc();']);
+    var u = URL.createObjectURL(b);
+    function callworker(i) {
+      try {
+        var w = new Worker(u);
+        URL.revokeObjectURL(u);
+        is(i, 0, 'worker creation succeeded');
+      } catch (e) {
+        is(i, 1, 'worker creation failed');
+        SimpleTest.finish();
+        return;
+      }
+      w.onmessage = function(e) {
+        is(e.data.indexOf('Error: Failed to load script'), 0, "Error: Failed to load script");
+        if (++i < 2) callworker(i);
+        else SimpleTest.finish();
+      };
+    }
+    callworker(0);
+  })();
+}
+
 try {
   var worker = new Worker("about:blank");
-  ok(false, "Shouldn't success!");
+  worker.onerror = function(e) {
+    e.preventDefault();
+    ok(true, "Shouldn't success!");
+    nextTest();
+  }
 
   worker.onmessage = function(event) {
     ok(false, "Shouldn't get a message!");
     SimpleTest.finish();
   }
-
-  worker.onerror = function(event) {
-    ok(false, "Shouldn't get a error message!");
-    SimpleTest.finish();
-  }
 } catch (e) {
-  ok(!worker, "worker should not be created");
-  is(e.name, "SecurityError", "SecurityError should be thrown");
-  is(e.code, DOMException.SECURITY_ERR, "SECURITY_ERR should be thrown");
+  ok(false, "This should not happen.");
 }
 
-(function(){
-  function workerfunc() {
-    try {
-      var subworker = new Worker("about:blank");
-      postMessage({});
-    } catch (e) {
-      postMessage({name: e.name, code: e.code});
-    }
-  }
-  var b = new Blob([workerfunc+'workerfunc();']);
-  var u = URL.createObjectURL(b);
-  function callworker(i) {
-    try {
-      var w = new Worker(u);
-      URL.revokeObjectURL(u);
-      is(i, 0, 'worker creation succeeded');
-    } catch (e) {
-      is(i, 1, 'worker creation failed');
-      SimpleTest.finish();
-      return;
-    }
-    w.onmessage = function(e) {
-      is(e.data.name, "SecurityError", "SecurityError should be thrown");
-      is(e.data.code, DOMException.SECURITY_ERR, "SECURITY_ERR should be thrown");
-      if (++i < 2) callworker(i);
-      else SimpleTest.finish();
-    };
-  }
-  callworker(0);
-})();
 
 SimpleTest.waitForExplicitFinish();
 
