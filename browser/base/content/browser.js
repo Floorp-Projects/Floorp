@@ -916,6 +916,7 @@ function _loadURIWithFlags(browser, uri, params) {
     // We might lose history that way but at least the browser loaded a page.
     // This might be necessary if SessionStore wasn't initialized yet i.e.
     // when the homepage is a non-remote page.
+    Cu.reportError(e);
     gBrowser.updateBrowserRemotenessByURL(browser, uri);
     browser.webNavigation.loadURIWithOptions(uri, flags, referrer, referrerPolicy,
                                              postData, null, null);
