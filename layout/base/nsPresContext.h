@@ -529,7 +529,6 @@ public:
 
   float TextZoom() { return mTextZoom; }
   void SetTextZoom(float aZoom) {
-    MOZ_ASSERT(aZoom > 0.0f, "invalid zoom factor");
     if (aZoom == mTextZoom)
       return;
 
