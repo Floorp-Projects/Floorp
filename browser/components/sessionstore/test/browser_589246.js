@@ -234,8 +234,9 @@ function onWindowUnloaded() {
 
 function afterTestCleanup(aNewWin) {
   executeSoon(function() {
-    aNewWin.close();
-    document.documentElement.setAttribute("windowtype", originalWindowType);
-    runNextTestOrFinish();
+    BrowserTestUtils.closeWindow(aNewWin).then(() => {
+      document.documentElement.setAttribute("windowtype", originalWindowType);
+      runNextTestOrFinish();
+    });
   });
 }
