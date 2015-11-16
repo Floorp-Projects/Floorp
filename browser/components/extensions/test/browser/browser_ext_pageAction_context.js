@@ -27,9 +27,9 @@ add_task(function* testTabSwitchContext() {
           "title": "Title 2" },
       ];
 
-      var tabs = [];
-
-      var tests = [
+      var tabs;
+      var tests;
+      var allTests = [
         expect => {
           browser.test.log("Initial state. No icon visible.");
           expect(null);
@@ -113,7 +113,6 @@ add_task(function* testTabSwitchContext() {
           return browser.tabs.query({ active: true, currentWindow: true }, resolve);
         }).then(tabs => {
           var tabId = tabs[0].id;
-
           return Promise.all([
             new Promise(resolve => browser.pageAction.getTitle({tabId}, resolve)),
             new Promise(resolve => browser.pageAction.getPopup({tabId}, resolve))])
@@ -155,25 +154,36 @@ add_task(function* testTabSwitchContext() {
       }
 
       browser.test.onMessage.addListener((msg) => {
-        if (msg != "runNextTest") {
-          browser.test.fail("Expecting 'runNextTest' message");
+        if (msg == "runTests") {
+          runTests();
+        } else if (msg == "runNextTest") {
+          nextTest();
+        } else {
+          browser.test.fail(`Unexpected message: ${msg}`);
         }
-
-        nextTest();
       });
 
-      browser.tabs.query({ active: true, currentWindow: true }, resultTabs => {
-        tabs[0] = resultTabs[0].id;
+      function runTests() {
+        tabs = [];
+        tests = allTests.slice();
 
-        nextTest();
-      });
+        browser.tabs.query({ active: true, currentWindow: true }, resultTabs => {
+          tabs[0] = resultTabs[0].id;
+
+          nextTest();
+        });
+      }
+
+      runTests();
     },
   });
 
   let pageActionId = makeWidgetId(extension.id) + "-page-action";
+  let currentWindow = window;
+  let windows = [];
 
   function checkDetails(details) {
-    let image = document.getElementById(pageActionId);
+    let image = currentWindow.document.getElementById(pageActionId);
     if (details == null) {
       ok(image == null || image.hidden, "image is hidden");
     } else {
@@ -186,12 +196,24 @@ add_task(function* testTabSwitchContext() {
     }
   }
 
+  let testNewWindows = 1;
+
   let awaitFinish = new Promise(resolve => {
     extension.onMessage("nextTest", (expecting, testsRemaining) => {
       checkDetails(expecting);
 
       if (testsRemaining) {
         extension.sendMessage("runNextTest")
+      } else if (testNewWindows) {
+        testNewWindows--;
+
+        BrowserTestUtils.openNewBrowserWindow().then(window => {
+          windows.push(window);
+          currentWindow = window;
+          return focusWindow(window);
+        }).then(() => {
+          extension.sendMessage("runTests")
+        });
       } else {
         resolve();
       }
@@ -206,4 +228,12 @@ add_task(function* testTabSwitchContext() {
 
   let node = document.getElementById(pageActionId);
   is(node, undefined, "pageAction image removed from document");
+
+  currentWindow = null;
+  for (let win of windows.splice(0)) {
+    node = win.document.getElementById(pageActionId);
+    is(node, undefined, "pageAction image removed from second document");
+
+    yield BrowserTestUtils.closeWindow(win);
+  }
 });
