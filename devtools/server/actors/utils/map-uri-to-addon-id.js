@@ -41,6 +41,7 @@ const GRAPHENE_ID = "{d1bfe7d9-c01e-4237-998b-7b5f960a4314}";
 module.exports = function mapURIToAddonID(uri, id) {
   if (!Services.appinfo
       || Services.appinfo.processType == Services.appinfo.PROCESS_TYPE_CONTENT
+      || Services.appinfo.ID === undefined /* XPCShell */
       || Services.appinfo.ID == B2G_ID
       || Services.appinfo.ID == GRAPHENE_ID
       || !uri
