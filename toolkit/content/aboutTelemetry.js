@@ -328,6 +328,9 @@ var PingPicker = {
   _updateCurrentPingData: function() {
     const subsession = document.getElementById("show-subsession-data").checked;
     const ping = TelemetryController.getCurrentPingData(subsession);
+    if (!ping) {
+      return;
+    }
     displayPingData(ping, true);
   },
 
