@@ -97,6 +97,7 @@
     _(IntrinsicIsConstructor)       \
     _(IntrinsicToObject)            \
     _(IntrinsicIsObject)            \
+    _(IntrinsicIsWrappedArrayConstructor) \
     _(IntrinsicToInteger)           \
     _(IntrinsicToString)            \
     _(IntrinsicIsConstructing)      \
