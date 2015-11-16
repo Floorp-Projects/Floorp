@@ -978,11 +978,13 @@ CssLogic.prettifyCSS = function(text, ruleCount) {
 
   // remove initial and terminating HTML comments and surrounding whitespace
   text = text.replace(/(?:^\s*<!--[\r\n]*)|(?:\s*-->\s*$)/g, "");
+  let originalText = text;
+  text = text.trim();
 
   // don't attempt to prettify if there's more than one line per rule.
   let lineCount = text.split("\n").length - 1;
   if (ruleCount !== null && lineCount >= ruleCount) {
-    return text;
+    return originalText;
   }
 
   // We reformat the text using a simple state machine.  The
@@ -1139,7 +1141,7 @@ CssLogic.prettifyCSS = function(text, ruleCount) {
     // the text.
     if (pushbackToken && token && token.tokenType === "whitespace" &&
         /\n/g.test(text.substring(token.startOffset, token.endOffset))) {
-      return text;
+      return originalText;
     }
 
     // Finally time for that newline.
