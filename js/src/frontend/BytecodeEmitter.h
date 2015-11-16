@@ -443,6 +443,7 @@ struct BytecodeEmitter
     bool emitAtomOp(JSAtom* atom, JSOp op);
     bool emitAtomOp(ParseNode* pn, JSOp op);
 
+    bool emitArrayLiteral(ParseNode* pn);
     bool emitArray(ParseNode* pn, uint32_t count, JSOp op);
     bool emitArrayComp(ParseNode* pn);
 
@@ -576,8 +577,11 @@ struct BytecodeEmitter
     // |op| must be JSOP_TYPEOF or JSOP_TYPEOFEXPR.
     bool emitTypeof(ParseNode* node, JSOp op);
 
-    bool emitLogical(ParseNode* pn);
     bool emitUnary(ParseNode* pn);
+    bool emitRightAssociative(ParseNode* pn);
+    bool emitLeftAssociative(ParseNode* pn);
+    bool emitLogical(ParseNode* pn);
+    bool emitSequenceExpr(ParseNode* pn);
 
     MOZ_NEVER_INLINE bool emitIncOrDec(ParseNode* pn);
 
@@ -598,6 +602,7 @@ struct BytecodeEmitter
     bool emitBreak(PropertyName* label);
     bool emitContinue(PropertyName* label);
 
+    bool emitArgsBody(ParseNode* pn);
     bool emitDefaultsAndDestructuring(ParseNode* pn);
     bool emitLexicalInitialization(ParseNode* pn, JSOp globalDefOp);
 
