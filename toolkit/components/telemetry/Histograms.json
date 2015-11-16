@@ -4224,7 +4224,6 @@
   },
   "EVENTLOOP_UI_ACTIVITY_EXP_MS": {
     "alert_emails": ["perf-telemetry-alerts@mozilla.com"],
-    "bug_numbers": [1198196],
     "expires_in_version": "never",
     "kind": "exponential",
     "high": "60000",
