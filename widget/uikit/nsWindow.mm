@@ -466,10 +466,10 @@ nsWindow::IsTopLevel()
 //
 
 NS_IMETHODIMP
-nsWindow::Create(nsIWidget *aParent,
+nsWindow::Create(nsIWidget* aParent,
                  nsNativeWidget aNativeParent,
-                 const nsIntRect &aRect,
-                 nsWidgetInitData *aInitData)
+                 const LayoutDeviceIntRect& aRect,
+                 nsWidgetInitData* aInitData)
 {
     ALOG("nsWindow[%p]::Create %p/%p [%d %d %d %d]", (void*)this, (void*)aParent, (void*)aNativeParent, aRect.x, aRect.y, aRect.width, aRect.height);
     nsWindow* parent = (nsWindow*) aParent;
@@ -484,17 +484,15 @@ nsWindow::Create(nsIWidget *aParent,
     if (parent == nullptr) {
         if (nsAppShell::gWindow == nil) {
             mBounds = UIKitScreenManager::GetBounds();
-        }
-        else {
+        } else {
             CGRect cgRect = [nsAppShell::gWindow bounds];
             mBounds.x = cgRect.origin.x;
             mBounds.y = cgRect.origin.y;
             mBounds.width = cgRect.size.width;
             mBounds.height = cgRect.size.height;
         }
-    }
-    else {
-        mBounds = aRect;
+    } else {
+        mBounds = aRect.ToUnknownRect();
     }
 
     ALOG("nsWindow[%p]::Create bounds: %d %d %d %d", (void*)this,
@@ -504,7 +502,9 @@ nsWindow::Create(nsIWidget *aParent,
     mWindowType = eWindowType_toplevel;
     mBorderStyle = eBorderStyle_default;
 
-    Inherited::BaseCreate(aParent, mBounds, aInitData);
+    Inherited::BaseCreate(aParent,
+                          LayoutDeviceIntRect::FromUnknownRect(mBounds),
+                          aInitData);
 
     NS_ASSERTION(IsTopLevel() || parent, "non top level window doesn't have a parent!");
 

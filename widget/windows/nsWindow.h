@@ -92,10 +92,10 @@ public:
   using nsWindowBase::DispatchPluginEvent;
 
   // nsIWidget interface
-  NS_IMETHOD              Create(nsIWidget *aParent,
+  NS_IMETHOD              Create(nsIWidget* aParent,
                                  nsNativeWidget aNativeParent,
-                                 const nsIntRect &aRect,
-                                 nsWidgetInitData *aInitData = nullptr);
+                                 const LayoutDeviceIntRect& aRect,
+                                 nsWidgetInitData* aInitData = nullptr);
   NS_IMETHOD              Destroy();
   NS_IMETHOD              SetParent(nsIWidget *aNewParent);
   virtual nsIWidget*      GetParent(void);

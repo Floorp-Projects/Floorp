@@ -330,10 +330,10 @@ nsWindow::SynthesizeNativeTouchPoint(uint32_t aPointerId,
 }
 
 NS_IMETHODIMP
-nsWindow::Create(nsIWidget *aParent,
-                 void *aNativeParent,
-                 const nsIntRect &aRect,
-                 nsWidgetInitData *aInitData)
+nsWindow::Create(nsIWidget* aParent,
+                 void* aNativeParent,
+                 const LayoutDeviceIntRect& aRect,
+                 nsWidgetInitData* aInitData)
 {
     BaseCreate(aParent, aRect, aInitData);
 
@@ -347,7 +347,7 @@ nsWindow::Create(nsIWidget *aParent,
 
     mScreen = static_cast<nsScreenGonk*>(screen.get());
 
-    mBounds = aRect;
+    mBounds = aRect.ToUnknownRect();
 
     mParent = (nsWindow *)aParent;
     mVisible = false;
