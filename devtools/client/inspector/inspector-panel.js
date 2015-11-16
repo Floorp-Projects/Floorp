@@ -13,6 +13,8 @@ var EventEmitter = require("devtools/shared/event-emitter");
 var clipboard = require("sdk/clipboard");
 var {HostType} = require("devtools/client/framework/toolbox").Toolbox;
 
+loader.lazyRequireGetter(this, "CSS", "CSS");
+
 loader.lazyGetter(this, "MarkupView", () => require("devtools/client/markupview/markup-view").MarkupView);
 loader.lazyGetter(this, "HTMLBreadcrumbs", () => require("devtools/client/inspector/breadcrumbs").HTMLBreadcrumbs);
 loader.lazyGetter(this, "ToolSidebar", () => require("devtools/client/framework/sidebar").ToolSidebar);
