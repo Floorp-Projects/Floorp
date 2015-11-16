@@ -892,7 +892,7 @@ FrameParser::FrameHeader::IsValid(int aPos) const {
   if (aPos == frame_header::SYNC2_VERSION_LAYER_PROTECTION) {
     return Sync2() == 7 &&
            RawVersion() != 1 &&
-           RawLayer() != 0;
+           Layer() == 3;
   }
   if (aPos == frame_header::BITRATE_SAMPLERATE_PADDING_PRIVATE) {
     return RawBitrate() != 0xF && RawBitrate() != 0 &&
