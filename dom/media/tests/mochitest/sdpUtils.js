@@ -45,6 +45,14 @@ removeBundle: function(sdp) {
   return sdp.replace(/a=group:BUNDLE .*\r\n/g, "");
 },
 
+reduceAudioMLineToPcmuPcma: function(sdp) {
+  return sdp.replace(/m=audio .*\r\n/g, "m=audio 9 UDP/TLS/RTP/SAVPF 0 8\r\n");
+},
+
+removeAllRtpMaps: function(sdp) {
+  return sdp.replace(/a=rtpmap:.*\r\n/g, "");
+},
+
 verifySdp: function(desc, expectedType, offerConstraintsList, offerOptions,
                     testOptions) {
   info("Examining this SessionDescription: " + JSON.stringify(desc));
@@ -76,7 +84,7 @@ verifySdp: function(desc, expectedType, offerConstraintsList, offerOptions,
     ok(!desc.sdp.includes("m=audio"), "audio m-line is absent from SDP");
   } else {
     ok(desc.sdp.includes("m=audio"), "audio m-line is present in SDP");
-    ok(desc.sdp.includes("a=rtpmap:109 opus/48000/2"), "OPUS codec is present in SDP");
+    is(testOptions.opus, desc.sdp.includes("a=rtpmap:109 opus/48000/2"), "OPUS codec is present in SDP");
     //TODO: ideally the rtcp-mux should be for the m=audio, and not just
     //      anywhere in the SDP (JS SDP parser bug 1045429)
     is(testOptions.rtcpmux, desc.sdp.includes("a=rtcp-mux"), "RTCP Mux is offered in SDP");
