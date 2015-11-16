@@ -232,7 +232,7 @@ this.TelemetryController = Object.freeze({
    * Get the current session ping data as it would be sent out or stored.
    *
    * @param {bool} aSubsession Whether to get subsession data. Optional, defaults to false.
-   * @return {object} The current ping data in object form.
+   * @return {object} The current ping data if Telemetry is enabled, null otherwise.
    */
   getCurrentPingData: function(aSubsession = false) {
     return Impl.getCurrentPingData(aSubsession);
@@ -955,6 +955,11 @@ var Impl = {
 
   getCurrentPingData: function(aSubsession) {
     this._log.trace("getCurrentPingData - subsession: " + aSubsession)
+
+    // Telemetry is disabled, don't gather any data.
+    if (!Telemetry.canRecordBase) {
+      return null;
+    }
 
     const reason = aSubsession ? REASON_GATHER_SUBSESSION_PAYLOAD : REASON_GATHER_PAYLOAD;
     const type = PING_TYPE_MAIN;
