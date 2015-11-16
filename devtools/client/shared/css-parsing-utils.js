@@ -15,7 +15,7 @@
 "use strict";
 
 const {Cc, Ci, Cu} = require("chrome");
-Cu.importGlobalProperties(["CSS"]);
+loader.lazyRequireGetter(this, "CSS", "CSS");
 const promise = require("promise");
 Cu.import("resource://gre/modules/Task.jsm", this);
 loader.lazyGetter(this, "DOMUtils", () => {
