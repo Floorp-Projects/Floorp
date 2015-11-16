@@ -1590,7 +1590,7 @@ CSSParserImpl::ParseSheet(const nsAString& aInput,
   }
 
   mParsingMode = aParsingMode;
-  mIsChrome = nsContentUtils::IsSystemPrincipal(aSheetPrincipal);
+  mIsChrome = dom::IsChromeURI(aSheetURI);
   mReusableSheets = aReusableSheets;
 
   nsCSSToken* tk = &mToken;
