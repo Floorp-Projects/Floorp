@@ -36,6 +36,9 @@ var typedarray1 = new Int32Array([1, 287, 8651, 40983, 8754]);
 var set1 = new Set([1, 2, null, array3, "a", "b", undefined, document.head]);
 set1.add(set1);
 
+var bunnies = new String("bunnies")
+var weakset = new WeakSet([bunnies, document.head]);
+
 var testobj2 = {a: "b", c: "d", e: 1, f: "2"};
 testobj2.foo = testobj1;
 testobj2.bar = testobj2;
@@ -55,6 +58,8 @@ Object.defineProperty(testobj4, "nonEnumerable", { value: "hello world" });
 
 var map1 = new Map([["a", "b"], [document.body.children, testobj2]]);
 map1.set(map1, set1);
+
+var weakmap = new WeakMap([[bunnies, 23], [document.body.children, testobj2]]);
 
   </script>
 </body>

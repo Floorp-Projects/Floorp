@@ -120,7 +120,25 @@ const TEST_DATA = [
       { _index: 1, _key: "5", _value: "\"value associated with 5\"" },
     ],
     columns: { _index: "(iteration index)", _key: "Key", _value: "Values" }
-  }
+  },
+  {
+    command: "console.table(weakset)",
+    data: [
+      { _value: "String[7]" },
+      { _value: "String[7]" },
+    ],
+    columns: { _index: "(iteration index)", _value: "Values" },
+    couldBeOutOfOrder: true,
+  },
+  {
+    command: "console.table(weakmap)",
+    data: [
+      { _key: "String[7]", _value: "\"oh no\"" },
+      { _key: "String[7]", _value: "23" },
+    ],
+    columns: { _index: "(iteration index)", _key: "Key", _value: "Values" },
+    couldBeOutOfOrder: true,
+  },
 ];
 
 add_task(function*() {
@@ -156,14 +174,23 @@ add_task(function*() {
       let entryResult = {};
 
       for (let key of Object.keys(entries)) {
-        entryResult[key] = entries[key] instanceof HTMLElement ?
-          entries[key].textContent : entries[key];
+        // If the results can be out of order, then ignore _index.
+        if (!testdata.couldBeOutOfOrder || key !== "_index") {
+          entryResult[key] = entries[key] instanceof HTMLElement ?
+            entries[key].textContent : entries[key];
+        }
       }
 
       return entryResult;
     });
 
-    is(data.toSource(), testdata.data.toSource(), "table data is correct");
+    if (testdata.couldBeOutOfOrder) {
+      data = data.map(e => e.toSource()).sort().join(",");
+      let expected = testdata.data.map(e => e.toSource()).sort().join(",");
+      is(data, expected, "table data is correct");
+    } else {
+      is(data.toSource(), testdata.data.toSource(), "table data is correct");
+    }
     ok(obj._columns, "found table column object");
     is(obj._columns.toSource(), testdata.columns.toSource(),
        "table column is correct");
