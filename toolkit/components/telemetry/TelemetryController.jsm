@@ -407,14 +407,14 @@ var Impl = {
     try {
       arch = Services.sysinfo.get("arch");
     } catch (e) {
-      this._log.trace("assemblePing - Unable to get system architecture.", e);
+      this._log.trace("_getApplicationSection - Unable to get system architecture.", e);
     }
 
     let updateChannel = null;
     try {
       updateChannel = UpdateUtils.getUpdateChannel(false);
     } catch (e) {
-      this._log.trace("assemblePing - Unable to get update channel.", e);
+      this._log.trace("_getApplicationSection - Unable to get update channel.", e);
     }
 
     return {
