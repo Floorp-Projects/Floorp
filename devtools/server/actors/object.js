@@ -10,7 +10,7 @@ const { Cu, Ci } = require("chrome");
 const { GeneratedLocation } = require("devtools/server/actors/common");
 const { DebuggerServer } = require("devtools/server/main")
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
-const { dbg_assert, dumpn } = DevToolsUtils;
+const { assert, dumpn } = DevToolsUtils;
 const PromiseDebugging = require("PromiseDebugging");
 
 const TYPED_ARRAY_CLASSES = ["Uint8Array", "Uint8ClampedArray", "Uint16Array",
@@ -54,8 +54,8 @@ function ObjectActor(obj, {
   decrementGripDepth,
   getGlobalDebugObject
 }) {
-  dbg_assert(!obj.optimizedOut,
-    "Should not create object actors for optimized out values!");
+  assert(!obj.optimizedOut,
+         "Should not create object actors for optimized out values!");
   this.obj = obj;
   this.hooks = {
     createValueGrip,
@@ -1923,7 +1923,7 @@ function createValueGrip(value, pool, makeObjectGrip) {
       return form;
 
     default:
-      dbg_assert(false, "Failed to provide a grip for: " + value);
+      assert(false, "Failed to provide a grip for: " + value);
       return null;
   }
 }
