@@ -136,11 +136,6 @@ public:
     nsCOMPtr<nsILoadGroup> loadGroup = proxy->GetWorkerPrivate()->GetLoadGroup();
     MOZ_ASSERT(loadGroup);
     RefPtr<FetchDriver> fetch = new FetchDriver(mRequest, principal, loadGroup);
-    nsIDocument* doc = proxy->GetWorkerPrivate()->GetDocument();
-    if (doc) {
-      fetch->SetDocument(doc);
-    }
-
     nsresult rv = fetch->Fetch(mResolver);
     // Right now we only support async fetch, which should never directly fail.
     if (NS_WARN_IF(NS_FAILED(rv))) {
