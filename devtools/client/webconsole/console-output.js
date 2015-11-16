@@ -1820,7 +1820,8 @@ Messages.ConsoleTable.prototype = Heritage.extend(Messages.Extended.prototype,
 
     let data = this._arguments[0];
     if (data.class != "Array" && data.class != "Object" &&
-        data.class != "Map" && data.class != "Set") {
+        data.class != "Map" && data.class != "Set" &&
+        data.class != "WeakMap" && data.class != "WeakSet") {
       return;
     }
 
@@ -1900,7 +1901,7 @@ Messages.ConsoleTable.prototype = Heritage.extend(Messages.Extended.prototype,
 
         deferred.resolve();
       });
-    } else if (data.class == "Map") {
+    } else if (data.class == "Map" || data.class == "WeakMap") {
       let entries = data.preview.entries;
 
       if (!hasColumnsArg) {
@@ -1925,7 +1926,7 @@ Messages.ConsoleTable.prototype = Heritage.extend(Messages.Extended.prototype,
       }
 
       deferred.resolve();
-    } else if (data.class == "Set") {
+    } else if (data.class == "Set" || data.class == "WeakSet") {
       let entries = data.preview.items;
 
       if (!hasColumnsArg) {

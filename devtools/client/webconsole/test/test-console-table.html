@@ -44,6 +44,17 @@
       mySet.add("some text");
       mySet.add(null);
       mySet.add(undefined);
+
+      // These are globals and so won't be reclaimed by the GC.
+      var bunnies = new String("bunnies");
+      var lizards = new String("lizards");
+
+      var weakmap = new WeakMap();
+      weakmap.set(bunnies, 23);
+      weakmap.set(lizards, "oh no");
+
+      var weakset = new WeakSet([bunnies, lizards]);
+
     </script>
   </head>
   <body>
