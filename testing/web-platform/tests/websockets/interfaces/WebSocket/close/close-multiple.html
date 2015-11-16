@@ -17,6 +17,7 @@ async_test(function(t) {
   var f = t.step_func(function() {
     if (i < 1) {
       setTimeout(f, 500);
+      return;
     }
     assert_equals(i, 1);
     t.done()
