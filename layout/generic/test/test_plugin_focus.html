@@ -1,7 +1,10 @@
 <html title="Test plugin focus control">
 <head>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
-  <script type="text/javascript" src="enableTestPlugin.js"></script>
+  <script type="application/javascript" src="plugin-utils.js"></script>
+  <script type="application/javascript">
+    setTestPluginEnabledState(SpecialPowers.Ci.nsIPluginTag.STATE_ENABLED);
+  </script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
