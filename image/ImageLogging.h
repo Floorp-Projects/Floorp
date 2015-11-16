@@ -11,8 +11,7 @@
 #include "prinrval.h"
 #include "nsString.h"
 
-// Declared in imgRequest.cpp.
-extern PRLogModuleInfo* GetImgLog();
+static mozilla::LazyLogModule gImgLog("imgRequest");
 
 #define GIVE_ME_MS_NOW() PR_IntervalToMilliseconds(PR_IntervalNow())
 
@@ -21,7 +20,7 @@ using mozilla::LogLevel;
 class LogScope {
 public:
 
-  LogScope(PRLogModuleInfo* aLog, void* aFrom, const char* aFunc)
+  LogScope(mozilla::LogModule* aLog, void* aFrom, const char* aFunc)
     : mLog(aLog)
     , mFrom(aFrom)
     , mFunc(aFunc)
@@ -31,7 +30,7 @@ public:
   }
 
   /* const char * constructor */
-  LogScope(PRLogModuleInfo* aLog, void* from, const char* fn,
+  LogScope(mozilla::LogModule* aLog, void* from, const char* fn,
            const char* paramName, const char* paramValue)
     : mLog(aLog)
     , mFrom(from)
@@ -43,7 +42,7 @@ public:
   }
 
   /* void ptr constructor */
-  LogScope(PRLogModuleInfo* aLog, void* from, const char* fn,
+  LogScope(mozilla::LogModule* aLog, void* from, const char* fn,
            const char* paramName, const void* paramValue)
     : mLog(aLog)
     , mFrom(from)
@@ -55,7 +54,7 @@ public:
   }
 
   /* int32_t constructor */
-  LogScope(PRLogModuleInfo* aLog, void* from, const char* fn,
+  LogScope(mozilla::LogModule* aLog, void* from, const char* fn,
            const char* paramName, int32_t paramValue)
     : mLog(aLog)
     , mFrom(from)
@@ -67,7 +66,7 @@ public:
   }
 
   /* uint32_t constructor */
-  LogScope(PRLogModuleInfo* aLog, void* from, const char* fn,
+  LogScope(mozilla::LogModule* aLog, void* from, const char* fn,
            const char* paramName, uint32_t paramValue)
     : mLog(aLog)
     , mFrom(from)
@@ -85,20 +84,20 @@ public:
   }
 
 private:
-  PRLogModuleInfo* mLog;
+  mozilla::LogModule* mLog;
   void* mFrom;
   const char* mFunc;
 };
 
 class LogFunc {
 public:
-  LogFunc(PRLogModuleInfo* aLog, void* from, const char* fn)
+  LogFunc(mozilla::LogModule* aLog, void* from, const char* fn)
   {
     MOZ_LOG(aLog, LogLevel::Debug, ("%d [this=%p] %s\n",
                                 GIVE_ME_MS_NOW(), from, fn));
   }
 
-  LogFunc(PRLogModuleInfo* aLog, void* from, const char* fn,
+  LogFunc(mozilla::LogModule* aLog, void* from, const char* fn,
           const char* paramName, const char* paramValue)
   {
     MOZ_LOG(aLog, LogLevel::Debug, ("%d [this=%p] %s (%s=\"%s\")\n",
@@ -106,7 +105,7 @@ public:
                                 paramName, paramValue));
   }
 
-  LogFunc(PRLogModuleInfo* aLog, void* from, const char* fn,
+  LogFunc(mozilla::LogModule* aLog, void* from, const char* fn,
           const char* paramName, const void* paramValue)
   {
     MOZ_LOG(aLog, LogLevel::Debug, ("%d [this=%p] %s (%s=\"%p\")\n",
@@ -115,7 +114,7 @@ public:
   }
 
 
-  LogFunc(PRLogModuleInfo* aLog, void* from, const char* fn,
+  LogFunc(mozilla::LogModule* aLog, void* from, const char* fn,
           const char* paramName, uint32_t paramValue)
   {
     MOZ_LOG(aLog, LogLevel::Debug, ("%d [this=%p] %s (%s=\"%d\")\n",
@@ -128,7 +127,7 @@ public:
 
 class LogMessage {
 public:
-  LogMessage(PRLogModuleInfo* aLog, void* from, const char* fn,
+  LogMessage(mozilla::LogModule* aLog, void* from, const char* fn,
              const char* msg)
   {
     MOZ_LOG(aLog, LogLevel::Debug, ("%d [this=%p] %s -- %s\n",
