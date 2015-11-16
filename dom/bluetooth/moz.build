@@ -16,7 +16,6 @@ if CONFIG['MOZ_B2G_BT']:
         ]
 
     SOURCES += [
-        'common/BluetoothCommon.cpp',
         'common/BluetoothHidManager.cpp',
         'common/BluetoothInterface.cpp',
         'common/BluetoothProfileController.cpp',
@@ -130,8 +129,6 @@ if CONFIG['MOZ_B2G_BT']:
         DEFINES['MOZ_BLUETOOTH_DBUS'] = True
         DEFINES['HAVE_PTHREADS'] = True
 
-    FINAL_LIBRARY = 'xul'
-
 #
 # Exported interfaces
 #
@@ -160,6 +157,11 @@ EXPORTS.mozilla.dom.bluetooth += [
     'common/webapi/BluetoothPairingListener.h',
     'common/webapi/BluetoothPbapRequestHandle.h'
 ]
+
+UNIFIED_SOURCES += [
+    'common/BluetoothCommon.cpp',
+]
+
 IPDL_SOURCES += [
     'ipc/BluetoothTypes.ipdlh',
     'ipc/PBluetooth.ipdl',
@@ -173,3 +175,5 @@ LOCAL_INCLUDES += [
 ]
 
 include('/ipc/chromium/chromium-config.mozbuild')
+
+FINAL_LIBRARY = 'xul'

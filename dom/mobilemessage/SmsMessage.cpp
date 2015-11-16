@@ -1,289 +1,135 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:set ts=2 sw=2 sts=2 et cindent: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this file,
- * You can obtain one at http://mozilla.org/MPL/2.0/. */
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "SmsMessage.h"
-#include "nsIDOMClassInfo.h"
-#include "mozilla/dom/mobilemessage/Constants.h" // For MessageType
 
-using namespace mozilla::dom::mobilemessage;
+#include "SmsMessageInternal.h"
+#include "mozilla/dom/SmsMessageBinding.h"
 
 namespace mozilla {
 namespace dom {
 
-NS_INTERFACE_MAP_BEGIN(SmsMessage)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMMozSmsMessage)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(SmsMessage, mWindow, mMessage)
+NS_IMPL_CYCLE_COLLECTING_ADDREF(SmsMessage)
+NS_IMPL_CYCLE_COLLECTING_RELEASE(SmsMessage)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(SmsMessage)
+  NS_WRAPPERCACHE_INTERFACE_MAP_ENTRY
   NS_INTERFACE_MAP_ENTRY(nsISupports)
-  NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(MozSmsMessage)
 NS_INTERFACE_MAP_END
 
-NS_IMPL_ADDREF(SmsMessage)
-NS_IMPL_RELEASE(SmsMessage)
-
-SmsMessage::SmsMessage(int32_t aId,
-                       uint64_t aThreadId,
-                       const nsString& aIccId,
-                       DeliveryState aDelivery,
-                       DeliveryStatus aDeliveryStatus,
-                       const nsString& aSender,
-                       const nsString& aReceiver,
-                       const nsString& aBody,
-                       MessageClass aMessageClass,
-                       uint64_t aTimestamp,
-                       uint64_t aSentTimestamp,
-                       uint64_t aDeliveryTimestamp,
-                       bool aRead)
-  : mData(aId, aThreadId, aIccId, aDelivery, aDeliveryStatus,
-          aSender, aReceiver, aBody, aMessageClass, aTimestamp, aSentTimestamp,
-          aDeliveryTimestamp, aRead)
+SmsMessage::SmsMessage(nsPIDOMWindow* aWindow, SmsMessageInternal* aMessage)
+  : mWindow(aWindow)
+  , mMessage(aMessage)
 {
 }
 
-SmsMessage::SmsMessage(const SmsMessageData& aData)
-  : mData(aData)
+SmsMessage::~SmsMessage()
 {
 }
 
-/* static */ nsresult
-SmsMessage::Create(int32_t aId,
-                   uint64_t aThreadId,
-                   const nsAString& aIccId,
-                   const nsAString& aDelivery,
-                   const nsAString& aDeliveryStatus,
-                   const nsAString& aSender,
-                   const nsAString& aReceiver,
-                   const nsAString& aBody,
-                   const nsAString& aMessageClass,
-                   uint64_t aTimestamp,
-                   uint64_t aSentTimestamp,
-                   uint64_t aDeliveryTimestamp,
-                   bool aRead,
-                   JSContext* aCx,
-                   nsIDOMMozSmsMessage** aMessage)
+JSObject*
+SmsMessage::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
-  *aMessage = nullptr;
-
-  // SmsMessageData exposes these as references, so we can simply assign
-  // to them.
-  SmsMessageData data;
-  data.id() = aId;
-  data.threadId() = aThreadId;
-  data.iccId() = nsString(aIccId);
-  data.sender() = nsString(aSender);
-  data.receiver() = nsString(aReceiver);
-  data.body() = nsString(aBody);
-  data.read() = aRead;
-
-  if (aDelivery.Equals(DELIVERY_RECEIVED)) {
-    data.delivery() = eDeliveryState_Received;
-  } else if (aDelivery.Equals(DELIVERY_SENDING)) {
-    data.delivery() = eDeliveryState_Sending;
-  } else if (aDelivery.Equals(DELIVERY_SENT)) {
-    data.delivery() = eDeliveryState_Sent;
-  } else if (aDelivery.Equals(DELIVERY_ERROR)) {
-    data.delivery() = eDeliveryState_Error;
-  } else {
-    return NS_ERROR_INVALID_ARG;
-  }
-
-  if (aDeliveryStatus.Equals(DELIVERY_STATUS_NOT_APPLICABLE)) {
-    data.deliveryStatus() = eDeliveryStatus_NotApplicable;
-  } else if (aDeliveryStatus.Equals(DELIVERY_STATUS_SUCCESS)) {
-    data.deliveryStatus() = eDeliveryStatus_Success;
-  } else if (aDeliveryStatus.Equals(DELIVERY_STATUS_PENDING)) {
-    data.deliveryStatus() = eDeliveryStatus_Pending;
-  } else if (aDeliveryStatus.Equals(DELIVERY_STATUS_ERROR)) {
-    data.deliveryStatus() = eDeliveryStatus_Error;
-  } else {
-    return NS_ERROR_INVALID_ARG;
-  }
-
-  if (aMessageClass.Equals(MESSAGE_CLASS_NORMAL)) {
-    data.messageClass() = eMessageClass_Normal;
-  } else if (aMessageClass.Equals(MESSAGE_CLASS_CLASS_0)) {
-    data.messageClass() = eMessageClass_Class0;
-  } else if (aMessageClass.Equals(MESSAGE_CLASS_CLASS_1)) {
-    data.messageClass() = eMessageClass_Class1;
-  } else if (aMessageClass.Equals(MESSAGE_CLASS_CLASS_2)) {
-    data.messageClass() = eMessageClass_Class2;
-  } else if (aMessageClass.Equals(MESSAGE_CLASS_CLASS_3)) {
-    data.messageClass() = eMessageClass_Class3;
-  } else {
-    return NS_ERROR_INVALID_ARG;
-  }
-
-  // Set |timestamp|.
-  data.timestamp() = aTimestamp;
-
-  // Set |sentTimestamp|.
-  data.sentTimestamp() = aSentTimestamp;
-
-  // Set |deliveryTimestamp|.
-  data.deliveryTimestamp() = aDeliveryTimestamp;
-
-  nsCOMPtr<nsIDOMMozSmsMessage> message = new SmsMessage(data);
-  message.swap(*aMessage);
-  return NS_OK;
+  return SmsMessageBinding::Wrap(aCx, this, aGivenProto);
 }
 
-const SmsMessageData&
-SmsMessage::GetData() const
+void
+SmsMessage::GetType(nsString& aRetVal) const
 {
-  return mData;
+  mMessage->GetType(aRetVal);
 }
 
-NS_IMETHODIMP
-SmsMessage::GetType(nsAString& aType)
+int32_t
+SmsMessage::Id() const
 {
-  aType = NS_LITERAL_STRING("sms");
-  return NS_OK;
+  int32_t id;
+  mMessage->GetId(&id);
+  return id;
 }
 
-NS_IMETHODIMP
-SmsMessage::GetId(int32_t* aId)
+uint64_t
+SmsMessage::ThreadId() const
 {
-  *aId = mData.id();
-  return NS_OK;
+  uint64_t id;
+  mMessage->GetThreadId(&id);
+  return id;
 }
 
-NS_IMETHODIMP
-SmsMessage::GetThreadId(uint64_t* aThreadId)
+void
+SmsMessage::GetIccId(nsString& aRetVal) const
 {
-  *aThreadId = mData.threadId();
-  return NS_OK;
+  mMessage->GetIccId(aRetVal);
 }
 
-NS_IMETHODIMP
-SmsMessage::GetIccId(nsAString& aIccId)
+void
+SmsMessage::GetDelivery(nsString& aRetVal) const
 {
-  aIccId = mData.iccId();
-  return NS_OK;
+  mMessage->GetDelivery(aRetVal);
 }
 
-NS_IMETHODIMP
-SmsMessage::GetDelivery(nsAString& aDelivery)
+void
+SmsMessage::GetDeliveryStatus(nsString& aRetVal) const
 {
-  switch (mData.delivery()) {
-    case eDeliveryState_Received:
-      aDelivery = DELIVERY_RECEIVED;
-      break;
-    case eDeliveryState_Sending:
-      aDelivery = DELIVERY_SENDING;
-      break;
-    case eDeliveryState_Sent:
-      aDelivery = DELIVERY_SENT;
-      break;
-    case eDeliveryState_Error:
-      aDelivery = DELIVERY_ERROR;
-      break;
-    case eDeliveryState_Unknown:
-    case eDeliveryState_EndGuard:
-    default:
-      MOZ_CRASH("We shouldn't get any other delivery state!");
-  }
-
-  return NS_OK;
+  mMessage->GetDeliveryStatus(aRetVal);
 }
 
-NS_IMETHODIMP
-SmsMessage::GetDeliveryStatus(nsAString& aDeliveryStatus)
+void
+SmsMessage::GetSender(nsString& aRetVal) const
 {
-  switch (mData.deliveryStatus()) {
-    case eDeliveryStatus_NotApplicable:
-      aDeliveryStatus = DELIVERY_STATUS_NOT_APPLICABLE;
-      break;
-    case eDeliveryStatus_Success:
-      aDeliveryStatus = DELIVERY_STATUS_SUCCESS;
-      break;
-    case eDeliveryStatus_Pending:
-      aDeliveryStatus = DELIVERY_STATUS_PENDING;
-      break;
-    case eDeliveryStatus_Error:
-      aDeliveryStatus = DELIVERY_STATUS_ERROR;
-      break;
-    case eDeliveryStatus_EndGuard:
-    default:
-      MOZ_CRASH("We shouldn't get any other delivery status!");
-  }
-
-  return NS_OK;
+  mMessage->GetSender(aRetVal);
 }
 
-NS_IMETHODIMP
-SmsMessage::GetSender(nsAString& aSender)
+void
+SmsMessage::GetReceiver(nsString& aRetVal) const
 {
-  aSender = mData.sender();
-  return NS_OK;
+  mMessage->GetReceiver(aRetVal);
 }
 
-NS_IMETHODIMP
-SmsMessage::GetReceiver(nsAString& aReceiver)
+void
+SmsMessage::GetBody(nsString& aRetVal) const
 {
-  aReceiver = mData.receiver();
-  return NS_OK;
+  mMessage->GetBody(aRetVal);
 }
 
-NS_IMETHODIMP
-SmsMessage::GetBody(nsAString& aBody)
+void
+SmsMessage::GetMessageClass(nsString& aRetVal) const
 {
-  aBody = mData.body();
-  return NS_OK;
+  mMessage->GetMessageClass(aRetVal);
 }
 
-NS_IMETHODIMP
-SmsMessage::GetMessageClass(nsAString& aMessageClass)
+uint64_t
+SmsMessage::Timestamp() const
 {
-  switch (mData.messageClass()) {
-    case eMessageClass_Normal:
-      aMessageClass = MESSAGE_CLASS_NORMAL;
-      break;
-    case eMessageClass_Class0:
-      aMessageClass = MESSAGE_CLASS_CLASS_0;
-      break;
-    case eMessageClass_Class1:
-      aMessageClass = MESSAGE_CLASS_CLASS_1;
-      break;
-    case eMessageClass_Class2:
-      aMessageClass = MESSAGE_CLASS_CLASS_2;
-      break;
-    case eMessageClass_Class3:
-      aMessageClass = MESSAGE_CLASS_CLASS_3;
-      break;
-    default:
-      MOZ_CRASH("We shouldn't get any other message class!");
-  }
-
-  return NS_OK;
+  uint64_t timestamp;
+  mMessage->GetTimestamp(&timestamp);
+  return timestamp;
 }
 
-NS_IMETHODIMP
-SmsMessage::GetTimestamp(DOMTimeStamp* aTimestamp)
+uint64_t
+SmsMessage::SentTimestamp() const
 {
-  *aTimestamp = mData.timestamp();
-  return NS_OK;
+  uint64_t timestamp;
+  mMessage->GetSentTimestamp(&timestamp);
+  return timestamp;
 }
 
-NS_IMETHODIMP
-SmsMessage::GetSentTimestamp(DOMTimeStamp* aSentTimestamp)
+uint64_t
+SmsMessage::DeliveryTimestamp() const
 {
-  *aSentTimestamp = mData.sentTimestamp();
-  return NS_OK;
+  uint64_t timestamp;
+  mMessage->GetDeliveryTimestamp(&timestamp);
+  return timestamp;
 }
 
-NS_IMETHODIMP
-SmsMessage::GetDeliveryTimestamp(DOMTimeStamp* aDate)
+bool
+SmsMessage::Read() const
 {
-  *aDate = mData.deliveryTimestamp();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-SmsMessage::GetRead(bool* aRead)
-{
-  *aRead = mData.read();
-  return NS_OK;
+  bool read;
+  mMessage->GetRead(&read);
+  return read;
 }
 
 } // namespace dom

@@ -157,7 +157,7 @@ interface nsIDhcpRequestCallback : nsISupports
 /**
  * Provide network services.
  */
-[scriptable, uuid(8f689d9f-30c0-4809-8bf6-87120e71f3ee)]
+[scriptable, uuid(bb929ae3-4a42-4a63-8388-97c4de69200e)]
 interface nsINetworkService : nsISupports
 {
   const long MODIFY_ROUTE_ADD    = 0;
@@ -228,7 +228,7 @@ interface nsINetworkService : nsISupports
    * @return false if there is no interface registered for the networkType param.
    */
   boolean setNetworkInterfaceAlarm(in DOMString networkName,
-                                   in long threshold,
+                                   in long long threshold,
                                    in nsINetworkUsageAlarmCallback callback);
 
   /**

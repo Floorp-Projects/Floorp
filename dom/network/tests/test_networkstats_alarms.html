@@ -147,6 +147,51 @@ var steps = [
       ok(false, "getAllAlarms() shouldn't fail.");
     }
   },
+  // Bug 1209654 - Test threshold value will overflow or not for 2^32.
+  function () {
+    ok(true, "Calling addAlarm() with threshold greater than 4GiB");
+
+    req = navigator.mozNetworkStats
+                   .addAlarm(new window.MozNetworkStatsInterface(wifi), 5000000000);
+
+    req.onsuccess = function () {
+      ok(true, "Succeeded to add alarm. AlarmId: " + req.result);
+      next();
+    };
+    req.onerror = function () {
+      ok(false, "addAlarm() shouldn't fail.");
+    };
+  },
+  function () {
+    ok(true, "Calling getAllAlarms() and check threshold.");
+
+    req = navigator.mozNetworkStats.getAllAlarms();
+
+    req.onsuccess = function () {
+      ok(Array.isArray(req.result) && req.result[0].threshold == 5000000000,
+         "Succeeded to check threshold.");
+      next();
+    };
+
+    req.onerror = function () {
+      ok(false, "getAllAlarms() shouldn't fail.");
+    }
+  },
+  // Bug 1209654 - Test threshold value will overflow or not for signed long.
+  function () {
+    ok(true, "Calling addAlarm() with threshold 3 Gib");
+
+    req = navigator.mozNetworkStats
+                   .addAlarm(new window.MozNetworkStatsInterface(wifi), 3000000000);
+
+    req.onsuccess = function () {
+      ok(true, "Succeeded to add alarm. AlarmId: " + req.result);
+      next();
+    };
+    req.onerror = function () {
+      ok(false, "addAlarm() shouldn't fail.");
+    };
+  },
   function () {
     ok(true, "all done!\n");
     SimpleTest.finish();
