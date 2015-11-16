@@ -240,6 +240,10 @@ MP3TrackDemuxer::ScanUntil(const TimeUnit& aTime) {
     FastSeek(aTime);
   }
 
+  if (Duration(mFrameIndex + 1) > aTime) {
+    return SeekPosition();
+  }
+
   MediaByteRange nextRange = FindNextFrame();
   while (SkipNextFrame(nextRange) && Duration(mFrameIndex + 1) < aTime) {
     nextRange = FindNextFrame();
@@ -253,7 +257,7 @@ MP3TrackDemuxer::ScanUntil(const TimeUnit& aTime) {
          " mFrameIndex=%" PRId64 " mOffset=%" PRIu64,
          aTime, AverageFrameLength(), mNumParsedFrames, mFrameIndex, mOffset);
 
-  return Duration(mFrameIndex);
+  return SeekPosition();
 }
 
 RefPtr<MP3TrackDemuxer::SamplesPromise>
