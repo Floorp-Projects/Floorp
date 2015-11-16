@@ -1,6 +1,7 @@
 "use strict";
 
-var Cu = Components.utils;
+const Cu = Components.utils;
+const Ci = Components.interfaces;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
@@ -9,8 +10,43 @@ XPCOMUtils.defineLazyServiceGetter(this, "cpmm",
                                    "@mozilla.org/childprocessmessagemanager;1",
                                    "nsIMessageSender");
 
-var principal = Services.scriptSecurityManager.getSystemPrincipal();
-var lockID = "{435d2192-4f21-48d4-90b7-285f147a56be}";
+let principal = Services.scriptSecurityManager.getSystemPrincipal();
+let lockID = "{435d2192-4f21-48d4-90b7-285f147a56be}";
+
+// AppsUtils.isFirstRun uses Services.appinfo.platformVersion and
+// Services.appinfo.platformBuildID
+let XULRuntime = Components.classesByID["{95d89e3e-a169-41a3-8e56-719978e15b12}"]
+                           .getService(Ci.nsIXULRuntime);
+
+let XULAppInfo = {
+  vendor: "Mozilla",
+  name: "XPCShell",
+  ID: "xpcshell@test.mozilla.org",
+  version: "5",
+  appBuildID: "2007010101",
+  platformVersion: "1.9",
+  platformBuildID: "2007010101",
+  inSafeMode: false,
+  logConsoleErrors: true,
+  OS: XULRuntime.OS,
+  XPCOMABI: "noarch-spidermonkey",
+  processType: XULRuntime.processType,
+  QueryInterface: XPCOMUtils.generateQI([Ci.nsIXULAppInfo, Ci.nsIXULRuntime,
+                                         Ci.nsISupports])
+};
+
+let XULAppInfoFactory = {
+  createInstance: function (outer, iid) {
+    if (outer != null)
+      throw Cr.NS_ERROR_NO_AGGREGATION;
+    return XULAppInfo.QueryInterface(iid);
+  }
+};
+
+Components.manager.QueryInterface(Ci.nsIComponentRegistrar)
+          .registerFactory(Components.ID("{ecff8849-cee8-40a7-bd4a-3f4fdfeddb5c}"),
+                           "XULAppInfo", "@mozilla.org/xre/app-info;1",
+                           XULAppInfoFactory);
 
 // Helper to start the Settings Request Manager
 function startSettingsRequestManager() {
