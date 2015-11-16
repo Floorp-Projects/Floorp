@@ -27,6 +27,8 @@
 #include "nsIChromeRegistry.h"
 #include "nsISimpleEnumerator.h"
 #include "nsISubstitutingProtocolHandler.h"
+#include "zlib.h"
+#include "nsZipArchive.h"
 #endif
 
 using namespace mozilla;
@@ -469,6 +471,30 @@ nsLayoutStylesheetCache::LoadSheetFile(nsIFile* aFile,
 }
 
 #ifdef MOZ_CRASHREPORTER
+static inline nsresult
+ComputeCRC32(nsIFile* aFile, uint32_t* aResult)
+{
+  PRFileDesc* fd;
+  nsresult rv = aFile->OpenNSPRFileDesc(PR_RDONLY, 0, &fd);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  uint32_t crc = crc32(0, nullptr, 0);
+
+  unsigned char buf[512];
+  int32_t n;
+  while ((n = PR_Read(fd, buf, sizeof(buf))) > 0) {
+    crc = crc32(crc, buf, n);
+  }
+  PR_Close(fd);
+
+  if (n < 0) {
+    return NS_ERROR_FAILURE;
+  }
+
+  *aResult = crc;
+  return NS_OK;
+}
+
 static void
 ListInterestingFiles(nsString& aAnnotation, nsIFile* aFile,
                      const nsTArray<nsString>& aInterestingFilenames)
@@ -488,7 +514,14 @@ ListInterestingFiles(nsString& aAnnotation, nsIFile* aFile,
       } else {
         aAnnotation.AppendLiteral("???");
       }
-      aAnnotation.AppendLiteral(" bytes)\n");
+      aAnnotation.AppendLiteral(" bytes, crc32 = ");
+      uint32_t crc;
+      nsresult rv = ComputeCRC32(aFile, &crc);
+      if (NS_SUCCEEDED(rv)) {
+        aAnnotation.AppendPrintf("0x%08x)\n", crc);
+      } else {
+        aAnnotation.AppendPrintf("error 0x%08x)\n", uint32_t(rv));
+      }
       return;
     }
   }
@@ -552,6 +585,14 @@ AnnotateCrashReport(nsIURI* aURI)
   annotation.AppendLiteral("Error loading sheet: ");
   annotation.Append(NS_ConvertUTF8toUTF16(spec).get());
   annotation.Append('\n');
+
+  annotation.AppendLiteral("NS_ERROR_FILE_CORRUPTION reason: ");
+  if (nsZipArchive::sFileCorruptedReason) {
+    annotation.Append(NS_ConvertUTF8toUTF16(nsZipArchive::sFileCorruptedReason).get());
+    annotation.Append('\n');
+  } else {
+    annotation.AppendLiteral("(none)\n");
+  }
 
   // The jar: or file: URL that the sheet's resource: or chrome: URL
   // resolves to.
@@ -739,6 +780,9 @@ nsLayoutStylesheetCache::LoadSheet(nsIURI* aURI,
   }
 
 
+#ifdef MOZ_CRASHREPORTER
+  nsZipArchive::sFileCorruptedReason = nullptr;
+#endif
   nsresult rv = gCSSLoader->LoadSheetSync(aURI, aParsingMode, true,
                                           getter_AddRefs(aSheet));
   if (NS_FAILED(rv)) {
