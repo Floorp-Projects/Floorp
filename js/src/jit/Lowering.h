@@ -270,6 +270,7 @@ class LIRGenerator : public LIRGeneratorSpecific
     void visitInstanceOf(MInstanceOf* ins);
     void visitCallInstanceOf(MCallInstanceOf* ins);
     void visitIsCallable(MIsCallable* ins);
+    void visitIsConstructor(MIsConstructor* ins);
     void visitIsObject(MIsObject* ins);
     void visitHasClass(MHasClass* ins);
     void visitAsmJSLoadGlobalVar(MAsmJSLoadGlobalVar* ins);
