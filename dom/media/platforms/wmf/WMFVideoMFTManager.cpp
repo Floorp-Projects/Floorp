@@ -367,12 +367,8 @@ WMFVideoMFTManager::ConfigureVideoFrameGeometry()
   NS_ENSURE_TRUE(videoFormat == MFVideoFormat_NV12 || !mUseHwAccel, E_FAIL);
   NS_ENSURE_TRUE(videoFormat == MFVideoFormat_YV12 || mUseHwAccel, E_FAIL);
 
-  UINT32 width = 0, height = 0;
-  hr = MFGetAttributeSize(mediaType, MF_MT_FRAME_SIZE, &width, &height);
-  NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
-
-  mVideoInfo.mImage.width = width;
-  mVideoInfo.mImage.height = height;
+  UINT32 width = mVideoInfo.mImage.width;
+  UINT32 height = mVideoInfo.mImage.height;
   nsIntRect pictureRegion = mVideoInfo.mImage;
   // Calculate and validate the picture region and frame dimensions after
   // scaling by the pixel aspect ratio.
