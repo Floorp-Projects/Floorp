@@ -1643,13 +1643,25 @@ or run without that action (ie: --no-{action})"
                     installer_size = filesize
                 else:
                     size_measurements.append({'name': name, 'value': filesize})
+
+        perfherder_data = {
+            "framework": {
+                "name": "build_metrics"
+            },
+            "suites": [],
+        }
         if installer_size or size_measurements:
-            self.info('PERFHERDER_DATA: %s' % (json.dumps({
-                "framework": {"name": "build_metrics"},
-                "suites": [{"name": "installer size",
-                            "value": installer_size,
-                            "subtests": size_measurements}]
-            })))
+            perfherder_data["suites"].append({
+                "name": "installer size",
+                "value": installer_size,
+                "subtests": size_measurements
+            })
+        if (hasattr(self, "build_metrics_summary") and
+            self.build_metrics_summary):
+            perfherder_data["suites"].append(self.build_metrics_summary)
+
+        if perfherder_data["suites"]:
+            self.info('PERFHERDER_DATA: %s' % json.dumps(perfherder_data))
 
     def _set_file_properties(self, file_name, find_dir, prop_type,
                              error_level=ERROR):
