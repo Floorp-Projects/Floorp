@@ -329,6 +329,11 @@ public:
   // Set of all documents that may be controlled by a service worker.
   nsTHashtable<nsISupportsHashKey> mAllDocuments;
 
+  // Track all documents that have attempted to register a service worker for a
+  // given scope.
+  typedef nsTArray<nsCOMPtr<nsIWeakReference>> WeakDocumentList;
+  nsClassHashtable<nsCStringHashKey, WeakDocumentList> mRegisteringDocuments;
+
   bool
   IsAvailable(const OriginAttributes& aOriginAttributes, nsIURI* aURI);
 
@@ -620,6 +625,9 @@ private:
 
   void
   NotifyListenersOnUnregister(nsIServiceWorkerRegistrationInfo* aRegistration);
+
+  void
+  AddRegisteringDocument(const nsACString& aScope, nsIDocument* aDoc);
 };
 
 } // namespace workers
