@@ -8,53 +8,10 @@
         onload="test();">
   <script type="application/javascript"
           src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+  <script type="application/javascript" src="chrome_helpers.js"/>
   <script type="application/javascript">
   <![CDATA[
 
-    let { classes: Cc, interfaces: Ci, utils: Cu } = Components;
-
-    Cu.import("resource://gre/modules/Task.jsm");
-
-    let swm = Cc["@mozilla.org/serviceworkers/manager;1"].
-              getService(Ci.nsIServiceWorkerManager);
-
-    function waitForIframeLoad(iframe) {
-      return new Promise(function (resolve) {
-        iframe.onload = resolve;
-      });
-    }
-
-    function waitForRegister(scope) {
-      return new Promise(function (resolve) {
-        let listener = {
-          onRegister: function (registration) {
-            if (registration.scope !== scope) {
-              return;
-            }
-            swm.removeListener(listener);
-            resolve(registration);
-          }
-        };
-        swm.addListener(listener);
-      });
-    }
-
-    function waitForUnregister(scope) {
-      return new Promise(function (resolve) {
-        let listener = {
-          onUnregister: function (registration) {
-            if (registration.scope !== scope) {
-              return;
-            }
-            swm.removeListener(listener);
-            resolve(registration);
-          }
-        };
-        swm.addListener(listener);
-      });
-    }
-
-    let EXAMPLE_URL = "https://example.com/chrome/dom/workers/test/serviceworkers/";
     let IFRAME_URL = EXAMPLE_URL + "serviceworkermanager_iframe.html";
 
     function test() {
@@ -64,7 +21,7 @@
         ["dom.serviceWorkers.enabled", true],
         ["dom.serviceWorkers.testing.enabled", true],
       ]}, function () {
-        Task.spawn(function *() {
+        Task.spawn(function* () {
           let registrations = swm.getAllRegistrations();
           is(registrations.length, 0);
 
@@ -84,11 +41,23 @@
           is(registrations.queryElementAt(0, Ci.nsIServiceWorkerRegistrationInfo),
              registration);
 
+          info("Check that the service worker manager does not notify its " +
+               "listeners when a service worker is registered with the same " +
+               "scope as an existing registration.");
+          let listener = {
+            onRegister: function () {
+              ok(false, "Listener should not have been notified.");
+            }
+          };
+          swm.addListener(listener);
+          iframe.contentWindow.postMessage("register", "*");
+
           info("Check that the service worker manager notifies its listeners " +
                "when a service worker is unregistered.");
           promise = waitForUnregister(EXAMPLE_URL);
           iframe.contentWindow.postMessage("unregister", "*");
           registration = yield promise;
+          swm.removeListener(listener);
 
           registrations = swm.getAllRegistrations();
           is(registrations.length, 0);

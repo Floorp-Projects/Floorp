@@ -73,7 +73,8 @@ const TreeNode = createFactory(createClass({
       this.props.renderItem(this.props.item,
                             this.props.depth,
                             this.props.focused,
-                            arrow),
+                            arrow,
+                            this.props.expanded),
 
       // XXX: OSX won't focus/blur regular elements even if you set tabindex
       // unless there is an input/button child.
@@ -97,6 +98,29 @@ const TreeNode = createFactory(createClass({
     }
   }
 }));
+
+/**
+ * Create a function that calls the given function `fn` only once per animation
+ * frame.
+ *
+ * @param {Function} fn
+ * @returns {Function}
+ */
+function oncePerAnimationFrame(fn) {
+  let animationId = null;
+  return function (...args) {
+    if (animationId !== null) {
+      return;
+    }
+
+    animationId = requestAnimationFrame(() => {
+      animationId = null;
+      fn.call(this, ...args);
+    });
+  };
+}
+
+const NUMBER_OF_OFFSCREEN_ITEMS = 1;
 
 /**
  * A generic tree component. See propTypes for the public API.
@@ -188,8 +212,8 @@ const Tree = module.exports = createClass({
     // Remove 1 from `begin` and add 2 to `end` so that the top and bottom of
     // the page are filled with the previous and next items respectively,
     // rather than whitespace if the item is not in full view.
-    const begin = Math.max(((this.state.scroll / this.props.itemHeight) | 0) - 1, 0);
-    const end = begin + 2 + ((this.state.height / this.props.itemHeight) | 0);
+    const begin = Math.max(((this.state.scroll / this.props.itemHeight) | 0) - NUMBER_OF_OFFSCREEN_ITEMS, 0);
+    const end = begin + (2 * NUMBER_OF_OFFSCREEN_ITEMS) + ((this.state.height / this.props.itemHeight) | 0);
     const toRender = traversal.slice(begin, end);
 
     const nodes = [
@@ -309,7 +333,7 @@ const Tree = module.exports = createClass({
    * @param {Object} item
    * @param {Boolean} expandAllChildren
    */
-  _onExpand(item, expandAllChildren) {
+  _onExpand: oncePerAnimationFrame(function (item, expandAllChildren) {
     this.state.expanded.add(item);
 
     if (expandAllChildren) {
@@ -322,40 +346,40 @@ const Tree = module.exports = createClass({
       expanded: this.state.expanded,
       cachedTraversal: null,
     });
-  },
+  }),
 
   /**
    * Collapses current row.
    *
    * @param {Object} item
    */
-  _onCollapse(item) {
+  _onCollapse: oncePerAnimationFrame(function (item) {
     this.state.expanded.delete(item);
     this.setState({
       expanded: this.state.expanded,
       cachedTraversal: null,
     });
-  },
+  }),
 
   /**
    * Sets the passed in item to be the focused item.
    *
    * @param {Object} item
    */
-  _onFocus(item) {
+  _onFocus: oncePerAnimationFrame(function (item) {
     this.setState({
       focused: item
     });
-  },
+  }),
 
   /**
    * Sets the state to have no focused item.
    */
-  _onBlur() {
+  _onBlur: oncePerAnimationFrame(function () {
     this.setState({
       focused: undefined
     });
-  },
+  }),
 
   /**
    * Fired on a scroll within the tree's container, updates
@@ -363,12 +387,12 @@ const Tree = module.exports = createClass({
    *
    * @param {Event} e
    */
-  _onScroll(e) {
+  _onScroll: oncePerAnimationFrame(function (e) {
     this.setState({
       scroll: Math.max(this.refs.tree.scrollTop, 0),
       height: this.refs.tree.clientHeight
     });
-  },
+  }),
 
   /**
    * Handles key down events in the tree's container.
@@ -411,13 +435,13 @@ const Tree = module.exports = createClass({
           this._focusNextNode();
         }
         return false;
-    }
+      }
   },
 
   /**
    * Sets the previous node relative to the currently focused item, to focused.
    */
-  _focusPrevNode() {
+  _focusPrevNode: oncePerAnimationFrame(function () {
     // Start a depth first search and keep going until we reach the currently
     // focused node. Focus the previous node in the DFS, if it exists. If it
     // doesn't exist, we're at the first node already.
@@ -437,13 +461,13 @@ const Tree = module.exports = createClass({
     this.setState({
       focused: prev
     });
-  },
+  }),
 
   /**
    * Handles the down arrow key which will focus either the next child
    * or sibling row.
    */
-  _focusNextNode() {
+  _focusNextNode: oncePerAnimationFrame(function () {
     // Start a depth first search and keep going until we reach the currently
     // focused node. Focus the next node in the DFS, if it exists. If it
     // doesn't exist, we're at the last node already.
@@ -463,18 +487,18 @@ const Tree = module.exports = createClass({
         focused: traversal[i + 1].item
       });
     }
-  },
+  }),
 
   /**
    * Handles the left arrow key, going back up to the current rows'
    * parent row.
    */
-  _focusParentNode() {
+  _focusParentNode: oncePerAnimationFrame(function () {
     const parent = this.props.getParent(this.state.focused);
     if (parent) {
       this.setState({
         focused: parent
       });
     }
-  }
+  }),
 });

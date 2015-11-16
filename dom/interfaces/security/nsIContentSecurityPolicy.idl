@@ -21,7 +21,7 @@ interface nsIURI;
 
 typedef unsigned short CSPDirective;
 
-[scriptable, builtinclass, uuid(b9a029c3-9484-4bf7-826d-0c6b545790bc)]
+[scriptable, builtinclass, uuid(b3c4c0ae-bd5e-4cad-87e0-8d210dbb3f9f)]
 interface nsIContentSecurityPolicy : nsISerializable
 {
   /**
@@ -90,12 +90,17 @@ interface nsIContentSecurityPolicy : nsISerializable
   /**
    * Parse and install a CSP policy.
    * @param aPolicy
-   *        String representation of the policy (e.g., header value)
+   *        String representation of the policy
+   *        (e.g., header value, meta content)
    * @param reportOnly
    *        Should this policy affect content, script and style processing or
    *        just send reports if it is violated?
+   * @param deliveredViaMetaTag
+   *        Indicates whether the policy was delivered via the meta tag.
    */
-  void appendPolicy(in AString policyString, in boolean reportOnly);
+  void appendPolicy(in AString policyString,
+                    in boolean reportOnly,
+                    in boolean deliveredViaMetaTag);
 
   /*
    * Whether this policy allows inline script or style.

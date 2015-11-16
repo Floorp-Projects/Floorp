@@ -83,14 +83,12 @@ module.exports = function(context) {
 
   return {
     Program: function(node) {
-      var pathAndFilename = this.getFilename();
-      var processPath = process.cwd();
-      var isTest = /.*[\\/]browser_.+\.js$/.test(pathAndFilename);
-
-      if (!isTest) {
+      if (!helpers.getIsBrowserMochitest(this)) {
         return;
       }
 
+      var pathAndFilename = this.getFilename();
+      var processPath = process.cwd();
       var testFilename = path.basename(pathAndFilename);
       var testPath = path.join(processPath, testFilename);
       var headjs = path.join(processPath, "head.js");

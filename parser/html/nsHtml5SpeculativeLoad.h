@@ -15,6 +15,7 @@ enum eHtml5SpeculativeLoad {
   eSpeculativeLoadUninitialized,
 #endif
   eSpeculativeLoadBase,
+  eSpeculativeLoadCSP,
   eSpeculativeLoadMetaReferrer,
   eSpeculativeLoadImage,
   eSpeculativeLoadOpenPicture,
@@ -39,6 +40,14 @@ class nsHtml5SpeculativeLoad {
                       "Trying to reinitialize a speculative load!");
       mOpCode = eSpeculativeLoadBase;
       mUrl.Assign(aUrl);
+    }
+
+    inline void InitMetaCSP(const nsAString& aCSP) {
+      NS_PRECONDITION(mOpCode == eSpeculativeLoadUninitialized,
+                      "Trying to reinitialize a speculative load!");
+      mOpCode = eSpeculativeLoadCSP;
+      mMetaCSP.Assign(
+        nsContentUtils::TrimWhitespace<nsContentUtils::IsHTMLWhitespace>(aCSP));
     }
 
     inline void InitMetaReferrerPolicy(const nsAString& aReferrerPolicy) {
@@ -187,6 +196,8 @@ class nsHtml5SpeculativeLoad {
     eHtml5SpeculativeLoad mOpCode;
     nsString mUrl;
     nsString mReferrerPolicy;
+    nsString mMetaCSP;
+
     /**
      * If mOpCode is eSpeculativeLoadStyle or eSpeculativeLoadScript[FromHead]
      * then this is the value of the "charset" attribute. For

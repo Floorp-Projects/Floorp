@@ -215,7 +215,7 @@ static inline void profiler_lock() {}
 // Re-enable the profiler and notify 'profiler-unlocked'.
 static inline void profiler_unlock() {}
 
-static inline void profiler_register_thread(const char* name, void* stackTop) {}
+static inline void profiler_register_thread(const char* name, void* guessStackTop) {}
 static inline void profiler_unregister_thread() {}
 
 // These functions tell the profiler that a thread went to sleep so that we can avoid

@@ -4,6 +4,15 @@
 #include "mozilla/IntegerTypeTraits.h"
 #include "mozilla/unused.h"
 
+#if defined(XP_WIN)
+#include <processthreadsapi.h>
+#include <windows.h>
+#endif // defined(XP_WIN)
+
+#include "jscompartment.h"
+
+#include "gc/Zone.h"
+
 namespace js {
 
 bool

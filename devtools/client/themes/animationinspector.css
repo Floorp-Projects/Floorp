@@ -106,21 +106,6 @@ body {
   border-width: 0 1px 0 0;
 }
 
-.devtools-button {
-  position: relative;
-}
-
-.devtools-button::before {
-  content: "";
-  display: block;
-  width: 16px;
-  height: 16px;
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  margin: -8px 0 0 -8px;
-}
-
 #element-picker::before {
   background-image: url("chrome://devtools/skin/images/command-pick.png");
 }
@@ -140,7 +125,6 @@ body {
 @media (min-resolution: 1.1dppx) {
   #element-picker::before {
     background-image: url("chrome://devtools/skin/images/command-pick@2x.png");
-    background-size: 64px;
   }
 
   .pause-button::before {

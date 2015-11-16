@@ -40,6 +40,6 @@ add_task(function *() {
   // Test new snapshots
   dispatch(takeSnapshotAndCensus(front, heapWorker));
   yield waitUntilSnapshotState(store, [states.SAVED_CENSUS]);
-  ok(isBreakdownType(getState().snapshots[0].census, "objectClass"),
+  ok(isBreakdownType(getState().snapshots[0].census.report, "objectClass"),
     "New snapshots use the current, non-default breakdown");
 });

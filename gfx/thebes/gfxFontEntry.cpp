@@ -211,7 +211,7 @@ nsresult gfxFontEntry::InitializeUVSMap()
             return NS_ERROR_FAILURE;
         }
 
-        uint8_t* uvsData;
+        UniquePtr<uint8_t[]> uvsData;
         unsigned int cmapLen;
         const char* cmapData = hb_blob_get_data(cmapTable, &cmapLen);
         nsresult rv = gfxFontUtils::ReadCMAPTableFormat14(
@@ -223,7 +223,7 @@ nsresult gfxFontEntry::InitializeUVSMap()
             return rv;
         }
 
-        mUVSData = uvsData;
+        mUVSData = Move(uvsData);
     }
 
     return NS_OK;
@@ -234,7 +234,7 @@ uint16_t gfxFontEntry::GetUVSGlyph(uint32_t aCh, uint32_t aVS)
     InitializeUVSMap();
 
     if (mUVSData) {
-        return gfxFontUtils::MapUVSToGlyphFormat14(mUVSData, aCh, aVS);
+        return gfxFontUtils::MapUVSToGlyphFormat14(mUVSData.get(), aCh, aVS);
     }
 
     return 0;

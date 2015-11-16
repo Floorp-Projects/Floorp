@@ -2526,35 +2526,30 @@ QuotaManager::UpdateOriginAccessTime(PersistenceType aPersistenceType,
   }
 }
 
-// static
-PLDHashOperator
-QuotaManager::RemoveQuotaCallback(const nsACString& aKey,
-                                  nsAutoPtr<GroupInfoPair>& aValue,
-                                  void* aUserArg)
-{
-  NS_ASSERTION(!aKey.IsEmpty(), "Empty key!");
-  NS_ASSERTION(aValue, "Null pointer!");
-
-  RefPtr<GroupInfo> groupInfo =
-    aValue->LockedGetGroupInfo(PERSISTENCE_TYPE_TEMPORARY);
-  if (groupInfo) {
-    groupInfo->LockedRemoveOriginInfos();
-  }
-
-  groupInfo = aValue->LockedGetGroupInfo(PERSISTENCE_TYPE_DEFAULT);
-  if (groupInfo) {
-    groupInfo->LockedRemoveOriginInfos();
-  }
-
-  return PL_DHASH_REMOVE;
-}
-
 void
 QuotaManager::RemoveQuota()
 {
   MutexAutoLock lock(mQuotaMutex);
 
-  mGroupInfoPairs.Enumerate(RemoveQuotaCallback, nullptr);
+  for (auto iter = mGroupInfoPairs.Iter(); !iter.Done(); iter.Next()) {
+    nsAutoPtr<GroupInfoPair>& pair = iter.Data();
+
+    MOZ_ASSERT(!iter.Key().IsEmpty(), "Empty key!");
+    MOZ_ASSERT(pair, "Null pointer!");
+
+    RefPtr<GroupInfo> groupInfo =
+      pair->LockedGetGroupInfo(PERSISTENCE_TYPE_TEMPORARY);
+    if (groupInfo) {
+      groupInfo->LockedRemoveOriginInfos();
+    }
+
+    groupInfo = pair->LockedGetGroupInfo(PERSISTENCE_TYPE_DEFAULT);
+    if (groupInfo) {
+      groupInfo->LockedRemoveOriginInfos();
+    }
+
+    iter.Remove();
+  }
 
   NS_ASSERTION(mTemporaryStorageUsage == 0, "Should be zero!");
 }

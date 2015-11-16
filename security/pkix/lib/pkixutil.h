@@ -102,6 +102,10 @@ public:
   {
     return MaybeInput(subjectAltName);
   }
+  const Input* GetRequiredTLSFeatures() const
+  {
+    return MaybeInput(requiredTLSFeatures);
+  }
 
 private:
   const Input der;
@@ -144,6 +148,7 @@ private:
   Input nameConstraints;
   Input subjectAltName;
   Input criticalNetscapeCertificateType;
+  Input requiredTLSFeatures;
 
   Result RememberExtension(Reader& extnID, Input extnValue, bool critical,
                            /*out*/ bool& understood);

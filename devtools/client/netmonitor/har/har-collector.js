@@ -209,11 +209,11 @@ HarCollector.prototype = {
     let actor = packet.from;
 
     // Skip events from unknown actors (not in the list).
-    // There could also be zombie requests received after the target is closed.
+    // It can happen when there are zombie requests received after
+    // the target is closed or multiple tabs are attached through
+    // one connection (one DebuggerClient object).
     let file = this.getFile(packet.from);
     if (!file) {
-      Cu.reportError("HarCollector.onNetworkEventUpdate; ERROR " +
-        "Unknown event actor: " + type, packet);
       return;
     }
 
