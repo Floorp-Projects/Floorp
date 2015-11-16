@@ -32,6 +32,7 @@
 #include "nsILoadContext.h"
 #include "nsINotificationStorage.h"
 #include "nsIPermissionManager.h"
+#include "nsIPushNotificationService.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIServiceWorkerManager.h"
 #include "nsIUUIDGenerator.h"
@@ -1173,6 +1174,27 @@ NotificationObserver::Observe(nsISupports* aSubject, const char* aTopic,
     ContentChild::GetSingleton()->SendOpenNotificationSettings(
       IPC::Principal(mPrincipal));
     return NS_OK;
+  } else if (!strcmp("alertshow", aTopic) ||
+             !strcmp("alertfinished", aTopic)) {
+    nsCOMPtr<nsIPushQuotaManager> pushQuotaManager =
+      do_GetService("@mozilla.org/push/NotificationService;1");
+    if (pushQuotaManager) {
+      nsAutoCString origin;
+      nsresult rv = mPrincipal->GetOrigin(origin);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+
+      if (!strcmp("alertshow", aTopic)) {
+        rv = pushQuotaManager->NotificationForOriginShown(origin.get());
+      } else {
+        rv = pushQuotaManager->NotificationForOriginClosed(origin.get());
+      }
+
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+    }
   }
 
   return mObserver->Observe(aSubject, aTopic, aData);
