@@ -3367,8 +3367,17 @@ FireControllerChangeOnDocument(nsIDocument* aDocument)
   MOZ_ASSERT(aDocument);
 
   nsCOMPtr<nsPIDOMWindow> w = aDocument->GetWindow();
-  MOZ_ASSERT(w);
+  if (!w) {
+    NS_WARNING("Failed to dispatch controllerchange event");
+    return;
+  }
+
   w = w->GetCurrentInnerWindow();
+  if (!w) {
+    NS_WARNING("Failed to dispatch controllerchange event");
+    return;
+  }
+
   auto* window = static_cast<nsGlobalWindow*>(w.get());
 
   ErrorResult result;
