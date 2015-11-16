@@ -23,6 +23,12 @@
           page_id);
       worker.port.start();
 
+      worker.onerror = function(evt) {
+        evt.preventDefault();
+        window.parent.postMessage({id:page_id, message:"blocked"},
+                                  'http://mochi.test:8888');
+      }
+
       worker.port.onmessage = function(ev) {
         window.parent.postMessage({id:page_id, message:"allowed"}, 'http://mochi.test:8888');
       };
