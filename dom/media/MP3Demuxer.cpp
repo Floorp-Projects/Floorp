@@ -367,6 +367,22 @@ MP3TrackDemuxer::Duration(int64_t aNumFrames) const {
   return TimeUnit::FromMicroseconds(aNumFrames * usPerFrame);
 }
 
+static bool
+VerifyFrameConsistency(
+    const FrameParser::Frame& aFrame1, const FrameParser::Frame& aFrame2) {
+  const auto& h1 = aFrame1.Header();
+  const auto& h2 = aFrame2.Header();
+
+  return h1.IsValid() && h2.IsValid() &&
+         h1.Layer() == h2.Layer() &&
+         h1.SlotSize() == h2.SlotSize() &&
+         h1.SamplesPerFrame() == h2.SamplesPerFrame() &&
+         h1.Channels() == h2.Channels() &&
+         h1.SampleRate() == h2.SampleRate() &&
+         h1.RawVersion() == h2.RawVersion() &&
+         h1.RawProtection() == h2.RawProtection();
+}
+
 MediaByteRange
 MP3TrackDemuxer::FindNextFrame() {
   static const int BUFFER_SIZE = 64;
@@ -404,10 +420,20 @@ MP3TrackDemuxer::FindNextFrame() {
     MOZ_ASSERT(foundFrame || bytesToSkip || !reader.Remaining());
     reader.DiscardRemaining();
 
-    // Advance mOffset by the amount of bytes read and if necessary,
-    // skip an ID3v2 tag which stretches beyond the current buffer.
-    NS_ENSURE_TRUE(mOffset + read + bytesToSkip > mOffset, MediaByteRange(0, 0));
-    mOffset += read + bytesToSkip;
+    if (foundFrame && mParser.FirstFrame().Length() &&
+        !VerifyFrameConsistency(mParser.FirstFrame(), mParser.CurrentFrame())) {
+      // We've likely hit a false-positive, ignore it and proceed with the
+      // search for the next valid frame.
+      foundFrame = false;
+      mOffset = frameHeaderOffset + 1;
+      mParser.EndFrameSession();
+    } else {
+      // Advance mOffset by the amount of bytes read and if necessary,
+      // skip an ID3v2 tag which stretches beyond the current buffer.
+      NS_ENSURE_TRUE(mOffset + read + bytesToSkip > mOffset,
+                     MediaByteRange(0, 0));
+      mOffset += read + bytesToSkip;
+    }
   }
 
   if (!foundFrame || !mParser.CurrentFrame().Length()) {
