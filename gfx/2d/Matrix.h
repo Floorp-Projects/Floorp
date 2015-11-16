@@ -507,20 +507,24 @@ public:
     return *this;
   }
 
-  Point4D ProjectPoint(const Point& aPoint) const {
+  template<class F>
+  Point4DTyped<UnknownUnits, F>
+  ProjectPoint(const PointTyped<UnknownUnits, F>& aPoint) const {
     // Find a value for z that will transform to 0.
 
     // The transformed value of z is computed as:
     // z' = aPoint.x * _13 + aPoint.y * _23 + z * _33 + _43;
 
     // Solving for z when z' = 0 gives us:
-    float z = -(aPoint.x * _13 + aPoint.y * _23 + _43) / _33;
+    F z = -(aPoint.x * _13 + aPoint.y * _23 + _43) / _33;
 
     // Compute the transformed point
-    return *this * Point4D(aPoint.x, aPoint.y, z, 1);
+    return *this * Point4DTyped<UnknownUnits, F>(aPoint.x, aPoint.y, z, 1);
   }
 
-  Rect ProjectRectBounds(const Rect& aRect, const Rect &aClip) const;
+  template<class F>
+  RectTyped<UnknownUnits, F>
+  ProjectRectBounds(const RectTyped<UnknownUnits, F>& aRect, const RectTyped<UnknownUnits, F>& aClip) const;
 
   /**
    * TransformAndClipBounds transforms aRect as a bounding box, while clipping
