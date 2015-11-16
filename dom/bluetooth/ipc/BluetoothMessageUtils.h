@@ -13,12 +13,71 @@
 namespace IPC {
 
 template <>
+struct ParamTraits<mozilla::dom::bluetooth::BluetoothAddress>
+{
+  typedef mozilla::dom::bluetooth::BluetoothAddress paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam)
+  {
+    for (size_t i = 0; i < MOZ_ARRAY_LENGTH(aParam.mAddr); ++i) {
+      WriteParam(aMsg, aParam.mAddr[i]);
+    }
+  }
+
+  static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
+  {
+    for (size_t i = 0; i < MOZ_ARRAY_LENGTH(aResult->mAddr); ++i) {
+      if (!ReadParam(aMsg, aIter, aResult->mAddr + i)) {
+        return false;
+      }
+    }
+    return true;
+  }
+};
+
+template <>
 struct ParamTraits<mozilla::dom::bluetooth::BluetoothObjectType>
   : public ContiguousEnumSerializer<
              mozilla::dom::bluetooth::BluetoothObjectType,
              mozilla::dom::bluetooth::TYPE_MANAGER,
              mozilla::dom::bluetooth::NUM_TYPE>
 { };
+
+template <>
+struct ParamTraits<mozilla::dom::bluetooth::BluetoothPinCode>
+{
+  typedef mozilla::dom::bluetooth::BluetoothPinCode paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam)
+  {
+    WriteParam(aMsg, aParam.mLength);
+    for (uint8_t i = 0; i < aParam.mLength; ++i) {
+      WriteParam(aMsg, aParam.mPinCode[i]);
+    }
+  }
+
+  static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
+  {
+    if (!ReadParam(aMsg, aIter, &aResult->mLength)) {
+      return false;
+    }
+
+    auto maxLength = MOZ_ARRAY_LENGTH(aResult->mPinCode);
+
+    if (aResult->mLength > maxLength) {
+      return false;
+    }
+    for (uint8_t i = 0; i < aResult->mLength; ++i) {
+      if (!ReadParam(aMsg, aIter, aResult->mPinCode + i)) {
+        return false;
+      }
+    }
+    for (uint8_t i = aResult->mLength; i < maxLength; ++i) {
+      aResult->mPinCode[i] = 0;
+    }
+    return true;
+  }
+};
 
 template <>
 struct ParamTraits<mozilla::dom::bluetooth::BluetoothSspVariant>
@@ -198,6 +257,42 @@ struct ParamTraits<mozilla::dom::bluetooth::BluetoothGattResponse>
     return true;
   }
 };
+
+template <>
+struct ParamTraits<mozilla::dom::bluetooth::ControlPlayStatus>
+{
+  typedef mozilla::dom::bluetooth::ControlPlayStatus paramType;
+
+  static void Write(Message* aMsg, const paramType& aParam)
+  {
+    WriteParam(aMsg, static_cast<uint8_t>(aParam));
+  }
+
+  static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
+  {
+    uint8_t value;
+    if (!ReadParam(aMsg, aIter, &value)) {
+      return false;
+    }
+
+    mozilla::dom::bluetooth::ControlPlayStatus result =
+      static_cast<mozilla::dom::bluetooth::ControlPlayStatus>(value);
+
+    switch (result) {
+      case mozilla::dom::bluetooth::ControlPlayStatus::PLAYSTATUS_STOPPED:
+      case mozilla::dom::bluetooth::ControlPlayStatus::PLAYSTATUS_PLAYING:
+      case mozilla::dom::bluetooth::ControlPlayStatus::PLAYSTATUS_PAUSED:
+      case mozilla::dom::bluetooth::ControlPlayStatus::PLAYSTATUS_FWD_SEEK:
+      case mozilla::dom::bluetooth::ControlPlayStatus::PLAYSTATUS_REV_SEEK:
+      case mozilla::dom::bluetooth::ControlPlayStatus::PLAYSTATUS_ERROR:
+        *aResult = result;
+        return true;
+      default:
+        return false;
+    }
+  }
+};
+
 } // namespace IPC
 
 #endif // mozilla_dom_bluetooth_ipc_BluetoothMessageUtils_h

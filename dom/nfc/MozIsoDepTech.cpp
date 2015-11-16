@@ -5,7 +5,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "MozIsoDepTech.h"
+#include "TagUtils.h"
 #include "mozilla/dom/Promise.h"
+
+using namespace mozilla::dom::nfc;
 
 namespace mozilla {
 namespace dom {
@@ -35,7 +38,7 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(MozIsoDepTech)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
-const NFCTechType MozIsoDepTech::mTechnology = NFCTechType::ISO_DEP;
+const NFCTechType MozIsoDepTech::sTechnology = NFCTechType::ISO_DEP;
 
 /* static */
 already_AddRefed<MozIsoDepTech>
@@ -50,14 +53,7 @@ MozIsoDepTech::Constructor(const GlobalObject& aGlobal,
     return nullptr;
   }
 
-  Nullable<nsTArray<NFCTechType>> techList;
-  aNFCTag.GetTechList(techList, rv);
-  if (rv.Failed()) {
-    aRv.Throw(NS_ERROR_FAILURE);
-    return nullptr;
-  }
-
-  if (techList.IsNull() || !(techList.Value().Contains(mTechnology))) {
+  if (!TagUtils::IsTechSupported(aNFCTag, sTechnology)) {
     aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
     return nullptr;
   }
@@ -80,16 +76,7 @@ MozIsoDepTech::~MozIsoDepTech()
 already_AddRefed<Promise>
 MozIsoDepTech::Transceive(const Uint8Array& aCommand, ErrorResult& aRv)
 {
-  ErrorResult rv;
-
-  aCommand.ComputeLengthAndData();
-  RefPtr<Promise> promise = mTag->Transceive(mTechnology, aCommand, rv);
-  if (rv.Failed()) {
-    aRv.Throw(NS_ERROR_FAILURE);
-    return nullptr;
-  }
-
-  return promise.forget();
+  return TagUtils::Transceive(mTag, sTechnology, aCommand, aRv);
 }
 
 JSObject*

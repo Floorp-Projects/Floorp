@@ -9,8 +9,12 @@
 #include "DeletedMessageInfo.h"
 #include "DOMCursor.h"
 #include "DOMRequest.h"
+#include "MmsMessage.h"
+#include "MmsMessageInternal.h"
 #include "MobileMessageCallback.h"
 #include "MobileMessageCursorCallback.h"
+#include "SmsMessage.h"
+#include "SmsMessageInternal.h"
 #include "mozilla/dom/mobilemessage/Constants.h" // For kSms*ObserverTopic
 #include "mozilla/dom/MozMessageDeletedEvent.h"
 #include "mozilla/dom/MozMmsEvent.h"
@@ -20,8 +24,6 @@
 #include "mozilla/dom/ToJSValue.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
-#include "nsIDOMMozMmsMessage.h"
-#include "nsIDOMMozSmsMessage.h"
 #include "nsIMmsService.h"
 #include "nsIMobileMessageCallback.h"
 #include "nsIMobileMessageDatabaseService.h"
@@ -357,31 +359,21 @@ MobileMessageManager::Delete(int32_t aId,
 }
 
 already_AddRefed<DOMRequest>
-MobileMessageManager::Delete(nsIDOMMozSmsMessage* aMessage,
+MobileMessageManager::Delete(SmsMessage& aMessage,
                              ErrorResult& aRv)
 {
-  int32_t id;
-
-  DebugOnly<nsresult> rv = aMessage->GetId(&id);
-  MOZ_ASSERT(NS_SUCCEEDED(rv));
-
-  return Delete(id, aRv);
+  return Delete(aMessage.Id(), aRv);
 }
 
 already_AddRefed<DOMRequest>
-MobileMessageManager::Delete(nsIDOMMozMmsMessage* aMessage,
+MobileMessageManager::Delete(MmsMessage& aMessage,
                              ErrorResult& aRv)
 {
-  int32_t id;
-
-  DebugOnly<nsresult> rv = aMessage->GetId(&id);
-  MOZ_ASSERT(NS_SUCCEEDED(rv));
-
-  return Delete(id, aRv);
+  return Delete(aMessage.Id(), aRv);
 }
 
 already_AddRefed<DOMRequest>
-MobileMessageManager::Delete(const Sequence<OwningLongOrMozSmsMessageOrMozMmsMessage>& aParams,
+MobileMessageManager::Delete(const Sequence<OwningLongOrSmsMessageOrMmsMessage>& aParams,
                              ErrorResult& aRv)
 {
   const uint32_t size = aParams.Length();
@@ -393,17 +385,15 @@ MobileMessageManager::Delete(const Sequence<OwningLongOrMozSmsMessageOrMozMmsMes
 
   DebugOnly<nsresult> rv;
   for (uint32_t i = 0; i < size; i++) {
-    const OwningLongOrMozSmsMessageOrMozMmsMessage& element = aParams[i];
+    const OwningLongOrSmsMessageOrMmsMessage& element = aParams[i];
     int32_t &id = idArray[i];
 
     if (element.IsLong()) {
       id = element.GetAsLong();
-    } else if (element.IsMozMmsMessage()) {
-      rv = element.GetAsMozMmsMessage()->GetId(&id);
-      MOZ_ASSERT(NS_SUCCEEDED(rv));
-    } else /*if (element.IsMozSmsMessage())*/ {
-      rv = element.GetAsMozSmsMessage()->GetId(&id);
-      MOZ_ASSERT(NS_SUCCEEDED(rv));
+    } else if (element.IsMmsMessage()) {
+      id = element.GetAsMmsMessage()->Id();
+    } else /*if (element.IsSmsMessage())*/ {
+      id = element.GetAsSmsMessage()->Id();
     }
   }
 
@@ -592,15 +582,10 @@ MobileMessageManager::RetrieveMMS(int32_t aId,
 }
 
 already_AddRefed<DOMRequest>
-MobileMessageManager::RetrieveMMS(nsIDOMMozMmsMessage* aMessage,
+MobileMessageManager::RetrieveMMS(MmsMessage& aMessage,
                                   ErrorResult& aRv)
 {
-  int32_t id;
-
-  DebugOnly<nsresult> rv = aMessage->GetId(&id);
-  MOZ_ASSERT(NS_SUCCEEDED(rv));
-
-  return RetrieveMMS(id, aRv);
+  return RetrieveMMS(aMessage.Id(), aRv);
 }
 
 nsresult
@@ -608,24 +593,29 @@ MobileMessageManager::DispatchTrustedSmsEventToSelf(const char* aTopic,
                                                     const nsAString& aEventName,
                                                     nsISupports* aMsg)
 {
-  nsCOMPtr<nsIDOMMozSmsMessage> sms = do_QueryInterface(aMsg);
+  nsCOMPtr<nsPIDOMWindow> window = GetOwner();
+  NS_ENSURE_TRUE(window, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsISmsMessage> sms = do_QueryInterface(aMsg);
   if (sms) {
     MozSmsEventInit init;
     init.mBubbles = false;
     init.mCancelable = false;
-    init.mMessage = sms;
+    init.mMessage =
+      new SmsMessage(window, static_cast<SmsMessageInternal*>(sms.get()));
 
     RefPtr<MozSmsEvent> event =
       MozSmsEvent::Constructor(this, aEventName, init);
     return DispatchTrustedEvent(event);
   }
 
-  nsCOMPtr<nsIDOMMozMmsMessage> mms = do_QueryInterface(aMsg);
+  nsCOMPtr<nsIMmsMessage> mms = do_QueryInterface(aMsg);
   if (mms) {
     MozMmsEventInit init;
     init.mBubbles = false;
     init.mCancelable = false;
-    init.mMessage = mms;
+    init.mMessage =
+      new MmsMessage(window, static_cast<MmsMessageInternal*>(mms.get()));
 
     RefPtr<MozMmsEvent> event =
       MozMmsEvent::Constructor(this, aEventName, init);
