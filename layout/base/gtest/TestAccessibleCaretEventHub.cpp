@@ -63,6 +63,7 @@ public:
   using AccessibleCaretEventHub::FireScrollEnd;
 
   explicit MockAccessibleCaretEventHub()
+    : AccessibleCaretEventHub(nullptr)
   {
     mManager = MakeUnique<MockAccessibleCaretManager>();
     mInitialized = true;
