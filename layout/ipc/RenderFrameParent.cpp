@@ -169,7 +169,7 @@ public:
       return;
     }
     if (mRenderFrame) {
-      mRenderFrame->TakeFocusForClick();
+      mRenderFrame->TakeFocusForClickFromTap();
       TabParent* browser = TabParent::GetFrom(mRenderFrame->Manager());
       browser->HandleSingleTap(aPoint, aModifiers, aGuid);
     }
@@ -600,7 +600,7 @@ RenderFrameParent::GetTextureFactoryIdentifier(TextureFactoryIdentifier* aTextur
 }
 
 void
-RenderFrameParent::TakeFocusForClick()
+RenderFrameParent::TakeFocusForClickFromTap()
 {
   nsIFocusManager* fm = nsFocusManager::GetFocusManager();
   if (!fm) {
@@ -615,6 +615,7 @@ RenderFrameParent::TakeFocusForClick()
     return;
   }
   fm->SetFocus(element, nsIFocusManager::FLAG_BYMOUSE |
+                        nsIFocusManager::FLAG_BYTOUCH |
                         nsIFocusManager::FLAG_NOSCROLL);
 }
 

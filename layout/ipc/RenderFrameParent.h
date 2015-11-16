@@ -99,7 +99,7 @@ public:
 
   inline uint64_t GetLayersId() { return mLayersId; }
 
-  void TakeFocusForClick();
+  void TakeFocusForClickFromTap();
 
 protected:
   void ActorDestroy(ActorDestroyReason why) override;
