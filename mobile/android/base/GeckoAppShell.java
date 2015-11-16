@@ -1071,7 +1071,7 @@ public class GeckoAppShell
             }
         }
 
-        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 
         if (!showPromptInPrivateBrowsing) {
             return ActivityHandlerHelper.startIntentAndCatch(LOGTAG, context, intent);
