@@ -4713,20 +4713,18 @@ nsBlockFrame::DrainSelfOverflowList()
 
   // No need to reparent frames in our own overflow lines/oofs, because they're
   // already ours. But we should put overflow floats back in mFloats.
-  // (explicit scope to remove the OOF list before VerifyOverflowSituation)
-  {
-    nsAutoOOFFrameList oofs(this);
-    if (oofs.mList.NotEmpty()) {
+  nsAutoOOFFrameList oofs(this);
+  if (oofs.mList.NotEmpty()) {
 #ifdef DEBUG
-      for (nsIFrame* f : oofs.mList) {
-        MOZ_ASSERT(!(f->GetStateBits() & NS_FRAME_IS_PUSHED_FLOAT),
-                   "CollectFloats should've removed that bit");
-      }
-#endif
-      // The overflow floats go after our regular floats.
-      mFloats.AppendFrames(nullptr, oofs.mList);
+    for (nsIFrame* f : oofs.mList) {
+      MOZ_ASSERT(!(f->GetStateBits() & NS_FRAME_IS_PUSHED_FLOAT),
+                 "CollectFloats should've removed that bit");
     }
+#endif
+    // The overflow floats go after our regular floats.
+    mFloats.AppendFrames(nullptr, oofs.mList);
   }
+
   if (!ourOverflowLines->mLines.empty()) {
     mFrames.AppendFrames(nullptr, ourOverflowLines->mFrames);
     mLines.splice(mLines.end(), ourOverflowLines->mLines);
