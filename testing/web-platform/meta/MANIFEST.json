@@ -14682,6 +14682,10 @@
         "url": "/hr-time/basic.html"
       },
       {
+        "path": "hr-time/basic.worker.js",
+        "url": "/hr-time/basic.worker"
+      },
+      {
         "path": "hr-time/idlharness.html",
         "url": "/hr-time/idlharness.html"
       },
@@ -26246,6 +26250,38 @@
         "url": "/url/url-constructor.html"
       },
       {
+        "path": "url/urlsearchparams-append.html",
+        "url": "/url/urlsearchparams-append.html"
+      },
+      {
+        "path": "url/urlsearchparams-constructor.html",
+        "url": "/url/urlsearchparams-constructor.html"
+      },
+      {
+        "path": "url/urlsearchparams-delete.html",
+        "url": "/url/urlsearchparams-delete.html"
+      },
+      {
+        "path": "url/urlsearchparams-get.html",
+        "url": "/url/urlsearchparams-get.html"
+      },
+      {
+        "path": "url/urlsearchparams-getall.html",
+        "url": "/url/urlsearchparams-getall.html"
+      },
+      {
+        "path": "url/urlsearchparams-has.html",
+        "url": "/url/urlsearchparams-has.html"
+      },
+      {
+        "path": "url/urlsearchparams-set.html",
+        "url": "/url/urlsearchparams-set.html"
+      },
+      {
+        "path": "url/urlsearchparams-stringifier.html",
+        "url": "/url/urlsearchparams-stringifier.html"
+      },
+      {
         "path": "user-timing/idlharness.html",
         "url": "/user-timing/idlharness.html"
       },
@@ -35420,7 +35456,7 @@
       }
     ]
   },
-  "rev": "a5f15d6bdbeeec010465dc906e542873d64797ec",
+  "rev": "623c1536821f7536d8ee2859bbeaf0d9738ea707",
   "url_base": "/",
   "version": 2
 }
