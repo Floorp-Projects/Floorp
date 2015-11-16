@@ -410,11 +410,10 @@ function promiseStartExternalHelperAppServiceDownload(aSourceUrl) {
     let channel = NetUtil.newChannel({
       uri: sourceURI,
       loadUsingSystemPrincipal: true,
-      securityFlags: Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL
     });
 
     // Start the actual download process.
-    channel.asyncOpen2({
+    channel.asyncOpen({
       contentListener: null,
 
       onStartRequest: function (aRequest, aContext)
@@ -436,7 +435,7 @@ function promiseStartExternalHelperAppServiceDownload(aSourceUrl) {
         this.contentListener.onDataAvailable(aRequest, aContext, aInputStream,
                                              aOffset, aCount);
       },
-    });
+    }, null);
   }.bind(this)).then(null, do_report_unexpected_exception);
 
   return deferred.promise;
