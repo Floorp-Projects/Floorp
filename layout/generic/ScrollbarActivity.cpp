@@ -363,7 +363,11 @@ SetOpacityOnElement(nsIContent* aContent, double aOpacity)
 bool
 ScrollbarActivity::UpdateOpacity(TimeStamp aTime)
 {
-  double progress = (aTime - mFadeBeginTime) / FadeDuration();
+  // Avoid division by zero if mScrollbarFadeDuration is zero, just jump
+  // to the end of the fade animation
+  double progress = mScrollbarFadeDuration
+    ? ((aTime - mFadeBeginTime) / FadeDuration())
+    : 1.0;
   double opacity = 1.0 - std::max(0.0, std::min(1.0, progress));
 
   // 'this' may be getting destroyed during SetOpacityOnElement calls.
