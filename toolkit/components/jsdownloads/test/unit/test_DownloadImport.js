@@ -167,10 +167,9 @@ function promiseEntityID(aUrl) {
   let channel = NetUtil.newChannel({
     uri: NetUtil.newURI(aUrl),
     loadUsingSystemPrincipal: true,
-    securityFlags: Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL
   });
 
-  channel.asyncOpen2({
+  channel.asyncOpen({
     onStartRequest: function (aRequest) {
       if (aRequest instanceof Ci.nsIResumableChannel) {
         entityID = aRequest.entityID;
@@ -187,7 +186,7 @@ function promiseEntityID(aUrl) {
     },
 
     onDataAvailable: function () {}
-  });
+  }, null);
 
   return deferred.promise;
 }
