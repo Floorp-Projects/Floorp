@@ -102,8 +102,6 @@ class nsZipArchive final
   ~nsZipArchive();
 
 public:
-  static const char* sFileCorruptedReason;
-
   /** constructing does not open the archive. See OpenArchive() */
   nsZipArchive();
 
