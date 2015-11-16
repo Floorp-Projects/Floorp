@@ -174,20 +174,20 @@ var tests = [
 function run_test() {
   var verifier = Cc["@mozilla.org/security/datasignatureverifier;1"].
                  createInstance(Ci.nsIDataSignatureVerifier);
-  
+
   for (var t = 0; t < tests.length; t++) {
+    let testShouldThrow = tests[t][4];
     try {
       var result = verifier.verifyData(data[tests[t][0]],
                                        signatures[tests[t][1]],
                                        keys[tests[t][2]]);
-      if (tests[t][4])
-        do_throw("Test " + t + " didn't throw");
-      if (result != tests[t][3])
-        do_throw("Test " + t + " was " + result + " but should have been " + tests[t][3]);
+      ok(!testShouldThrow,
+         `Test ${t} should reach here only if not expected to throw`);
+      equal(result, tests[t][3],
+            `Actual and expected result should match for test ${t}`);
     }
     catch (e) {
-      if (!tests[t][4])
-        do_throw("Test " + t + " threw " + e);
+      ok(testShouldThrow, `Test ${t} should throw only if expected to: ${e}`);
     }
   }
 }
