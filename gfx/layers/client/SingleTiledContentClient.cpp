@@ -120,9 +120,9 @@ ClientSingleTiledLayerBuffer::PaintThebes(const nsIntRegion& aNewValidRegion,
                                           LayerManager::DrawPaintedLayerCallback aCallback,
                                           void* aCallbackData)
 {
-  // Compare layer visible region size to current backbuffer size, discard if not matching.
-  IntSize size = mPaintedLayer->GetVisibleRegion().GetBounds().Size();
-  IntPoint origin = mPaintedLayer->GetVisibleRegion().GetBounds().TopLeft();
+  // Compare layer valid region size to current backbuffer size, discard if not matching.
+  IntSize size = aNewValidRegion.GetBounds().Size();
+  IntPoint origin = aNewValidRegion.GetBounds().TopLeft();
   nsIntRegion paintRegion = aPaintRegion;
   if (mSize != size ||
       mTilingOrigin != origin) {
