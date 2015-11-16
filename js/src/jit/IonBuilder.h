@@ -906,6 +906,7 @@ class IonBuilder
 
     // Utility intrinsics.
     InliningStatus inlineIsCallable(CallInfo& callInfo);
+    InliningStatus inlineIsConstructor(CallInfo& callInfo);
     InliningStatus inlineIsObject(CallInfo& callInfo);
     InliningStatus inlineToObject(CallInfo& callInfo);
     InliningStatus inlineToInteger(CallInfo& callInfo);

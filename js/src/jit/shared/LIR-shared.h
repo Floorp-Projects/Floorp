@@ -7215,6 +7215,22 @@ class LIsCallable : public LInstructionHelper<1, 1, 0>
     }
 };
 
+class LIsConstructor : public LInstructionHelper<1, 1, 0>
+{
+  public:
+    LIR_HEADER(IsConstructor);
+    explicit LIsConstructor(const LAllocation& object) {
+        setOperand(0, object);
+    }
+
+    const LAllocation* object() {
+        return getOperand(0);
+    }
+    MIsConstructor* mir() const {
+        return mir_->toIsConstructor();
+    }
+};
+
 class LIsObject : public LInstructionHelper<1, BOX_PIECES, 0>
 {
   public:

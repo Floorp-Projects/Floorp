@@ -233,6 +233,8 @@ IonBuilder::inlineNativeCall(CallInfo& callInfo, JSFunction* target)
       // Utility intrinsics.
       case InlinableNative::IntrinsicIsCallable:
         return inlineIsCallable(callInfo);
+      case InlinableNative::IntrinsicIsConstructor:
+        return inlineIsConstructor(callInfo);
       case InlinableNative::IntrinsicToObject:
         return inlineToObject(callInfo);
       case InlinableNative::IntrinsicIsObject:
@@ -2515,6 +2517,26 @@ IonBuilder::inlineIsCallable(CallInfo& callInfo)
     MIsCallable* isCallable = MIsCallable::New(alloc(), callInfo.getArg(0));
     current->add(isCallable);
     current->push(isCallable);
+
+    return InliningStatus_Inlined;
+}
+
+IonBuilder::InliningStatus
+IonBuilder::inlineIsConstructor(CallInfo& callInfo)
+{
+    MOZ_ASSERT(!callInfo.constructing());
+    MOZ_ASSERT(callInfo.argc() == 1);
+
+    if (getInlineReturnType() != MIRType_Boolean)
+        return InliningStatus_NotInlined;
+    if (callInfo.getArg(0)->type() != MIRType_Object)
+        return InliningStatus_NotInlined;
+
+    callInfo.setImplicitlyUsedUnchecked();
+
+    MIsConstructor* ins = MIsConstructor::New(alloc(), callInfo.getArg(0));
+    current->add(ins);
+    current->push(ins);
 
     return InliningStatus_Inlined;
 }

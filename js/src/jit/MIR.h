@@ -13442,6 +13442,32 @@ class MIsCallable
     }
 };
 
+class MIsConstructor
+  : public MUnaryInstruction,
+    public SingleObjectPolicy::Data
+{
+  public:
+    explicit MIsConstructor(MDefinition* object)
+      : MUnaryInstruction(object)
+    {
+        setResultType(MIRType_Boolean);
+        setMovable();
+    }
+
+  public:
+    INSTRUCTION_HEADER(IsConstructor)
+
+    static MIsConstructor* New(TempAllocator& alloc, MDefinition* obj) {
+        return new(alloc) MIsConstructor(obj);
+    }
+    MDefinition* object() const {
+        return getOperand(0);
+    }
+    AliasSet getAliasSet() const override {
+        return AliasSet::None();
+    }
+};
+
 class MIsObject
   : public MUnaryInstruction,
     public BoxInputsPolicy::Data
