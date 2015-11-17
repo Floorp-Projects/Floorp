@@ -420,38 +420,11 @@ class Graph(object):
             taskcluster_graph.build_task.validate(build_task)
             graph['tasks'].append(build_task)
 
-            test_packages_url, tests_url, mozharness_url = None, None, None
-
-            if 'test_packages' in build_task['task']['extra']['locations']:
-                test_packages_url = ARTIFACT_URL.format(
+            for location in build_task['task']['extra'].get('locations', {}):
+                build_parameters['{}_url'.format(location)] = ARTIFACT_URL.format(
                     build_parameters['build_slugid'],
-                    build_task['task']['extra']['locations']['test_packages']
+                    build_task['task']['extra']['locations'][location]
                 )
-
-            if 'tests' in build_task['task']['extra']['locations']:
-                tests_url = ARTIFACT_URL.format(
-                    build_parameters['build_slugid'],
-                    build_task['task']['extra']['locations']['tests']
-                )
-
-            if 'mozharness' in build_task['task']['extra']['locations']:
-                mozharness_url = ARTIFACT_URL.format(
-                    build_parameters['build_slugid'],
-                    build_task['task']['extra']['locations']['mozharness']
-                )
-
-            build_url = ARTIFACT_URL.format(
-                build_parameters['build_slugid'],
-                build_task['task']['extra']['locations']['build']
-            )
-            build_parameters['build_url'] = build_url
-
-            # img_url is only necessary for device builds
-            img_url = ARTIFACT_URL.format(
-                build_parameters['build_slugid'],
-                build_task['task']['extra']['locations'].get('img', '')
-            )
-            build_parameters['img_url'] = img_url
 
             define_task = DEFINE_TASK.format(build_task['task']['workerType'])
 
@@ -514,12 +487,7 @@ class Graph(object):
                 test_parameters = merge_dicts(build_parameters,
                                               test.get('additional-parameters', {}))
                 test_parameters = copy.copy(build_parameters)
-                if tests_url:
-                    test_parameters['tests_url'] = tests_url
-                if test_packages_url:
-                    test_parameters['test_packages_url'] = test_packages_url
-                if mozharness_url:
-                    test_parameters['mozharness_url'] = mozharness_url
+
                 test_definition = templates.load(test['task'], {})['task']
                 chunk_config = test_definition['extra'].get('chunks', {})
 
