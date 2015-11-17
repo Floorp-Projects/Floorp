@@ -26,7 +26,7 @@ XPCOMUtils.defineLazyGetter(this, "gDatareportingService",
           .wrappedJSObject);
 
 // Force the Telemetry enabled preference so that TelemetrySession.reset() doesn't exit early.
-Services.prefs.setBoolPref(TelemetryController.Constants.PREF_ENABLED, true);
+Services.prefs.setBoolPref(PREF_TELEMETRY_ENABLED, true);
 
 // Set up our dummy AppInfo object so we can control the appBuildID.
 Cu.import("resource://testing-common/AppInfo.jsm", this);

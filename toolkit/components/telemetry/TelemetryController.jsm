@@ -33,7 +33,6 @@ const LOGGER_PREFIX = "TelemetryController::";
 const PREF_BRANCH = "toolkit.telemetry.";
 const PREF_BRANCH_LOG = PREF_BRANCH + "log.";
 const PREF_SERVER = PREF_BRANCH + "server";
-const PREF_ENABLED = PREF_BRANCH + "enabled";
 const PREF_LOG_LEVEL = PREF_BRANCH_LOG + "level";
 const PREF_LOG_DUMP = PREF_BRANCH_LOG + "dump";
 const PREF_CACHED_CLIENTID = PREF_BRANCH + "cachedClientID";
@@ -162,7 +161,6 @@ this.EXPORTED_SYMBOLS = ["TelemetryController"];
 
 this.TelemetryController = Object.freeze({
   Constants: Object.freeze({
-    PREF_ENABLED: PREF_ENABLED,
     PREF_LOG_LEVEL: PREF_LOG_LEVEL,
     PREF_LOG_DUMP: PREF_LOG_DUMP,
     PREF_SERVER: PREF_SERVER,
@@ -670,7 +668,7 @@ var Impl = {
     // Unified Telemetry makes it opt-out unless the unifedOptin pref is set.
     // Additionally, we make Telemetry opt-out for a 5% sample.
     // If extended Telemetry is enabled, base recording is always on as well.
-    const enabled = Preferences.get(PREF_ENABLED, false);
+    const enabled = Utils.isTelemetryEnabled;
     const isOptout = IS_UNIFIED_TELEMETRY && (!Policy.isUnifiedOptin() || this._isInOptoutSample());
     Telemetry.canRecordBase = enabled || isOptout;
 

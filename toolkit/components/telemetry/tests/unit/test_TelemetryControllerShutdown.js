@@ -15,7 +15,6 @@ Cu.import("resource://gre/modules/AsyncShutdown.jsm", this);
 Cu.import("resource://testing-common/httpd.js", this);
 
 const PREF_BRANCH = "toolkit.telemetry.";
-const PREF_ENABLED = PREF_BRANCH + "enabled";
 const PREF_FHR_UPLOAD_ENABLED = "datareporting.healthreport.uploadEnabled";
 
 function contentHandler(metadata, response)
@@ -32,7 +31,7 @@ function run_test() {
   do_get_profile();
   loadAddonManager("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
 
-  Services.prefs.setBoolPref(PREF_ENABLED, true);
+  Services.prefs.setBoolPref(PREF_TELEMETRY_ENABLED, true);
   Services.prefs.setBoolPref(PREF_FHR_UPLOAD_ENABLED, true);
 
   // Send the needed startup notifications to the datareporting service
