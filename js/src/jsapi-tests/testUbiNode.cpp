@@ -4,6 +4,7 @@
 
 #include "builtin/TestingFunctions.h"
 #include "js/UbiNode.h"
+#include "js/UbiNodeDominatorTree.h"
 #include "js/UbiNodePostOrder.h"
 #include "jsapi-tests/tests.h"
 #include "vm/SavedFrame.h"
@@ -266,6 +267,35 @@ BEGIN_TEST(test_ubiCoarseType)
 }
 END_TEST(test_ubiCoarseType)
 
+struct ExpectedEdge
+{
+    char from;
+    char to;
+
+    ExpectedEdge(FakeNode& fromNode, FakeNode& toNode)
+        : from(fromNode.name)
+        , to(toNode.name)
+    { }
+};
+
+namespace js {
+
+template <>
+struct DefaultHasher<ExpectedEdge>
+{
+    using Lookup = ExpectedEdge;
+
+    static HashNumber hash(const Lookup& l) {
+        return mozilla::AddToHash(l.from, l.to);
+    }
+
+    static bool match(const ExpectedEdge& k, const Lookup& l) {
+        return k.from == l.from && k.to == l.to;
+    }
+};
+
+} // namespace js
+
 BEGIN_TEST(test_ubiPostOrder)
 {
     // Construct the following graph:
@@ -304,29 +334,56 @@ BEGIN_TEST(test_ubiPostOrder)
     FakeNode f('f');
     FakeNode g('g');
 
-    r.addEdgeTo(a);
-    r.addEdgeTo(e);
-    a.addEdgeTo(b);
-    a.addEdgeTo(c);
-    b.addEdgeTo(d);
-    c.addEdgeTo(a);
-    c.addEdgeTo(d);
-    c.addEdgeTo(f);
-    e.addEdgeTo(f);
-    e.addEdgeTo(g);
-    f.addEdgeTo(g);
+    js::HashSet<ExpectedEdge> expectedEdges(cx);
+    CHECK(expectedEdges.init());
+
+    auto declareEdge = [&](FakeNode& from, FakeNode& to) {
+        return from.addEdgeTo(to) && expectedEdges.putNew(ExpectedEdge(from, to));
+    };
+
+    CHECK(declareEdge(r, a));
+    CHECK(declareEdge(r, e));
+    CHECK(declareEdge(a, b));
+    CHECK(declareEdge(a, c));
+    CHECK(declareEdge(b, d));
+    CHECK(declareEdge(c, a));
+    CHECK(declareEdge(c, d));
+    CHECK(declareEdge(c, f));
+    CHECK(declareEdge(e, f));
+    CHECK(declareEdge(e, g));
+    CHECK(declareEdge(f, g));
 
     js::Vector<char, 8, js::SystemAllocPolicy> visited;
     {
         // Do a PostOrder traversal, starting from r. Accumulate the names of
-        // the nodes we visit in `visited`.
+        // the nodes we visit in `visited`. Remove edges we traverse from
+        // `expectedEdges` as we find them to ensure that we only find each edge
+        // once.
+
         JS::AutoCheckCannotGC nogc(rt);
         JS::ubi::PostOrder traversal(rt, nogc);
         CHECK(traversal.init());
         CHECK(traversal.addStart(&r));
-        CHECK(traversal.traverse([&](const JS::ubi::Node& node) {
+
+        auto onNode = [&](const JS::ubi::Node& node) {
             return visited.append(node.as<FakeNode>()->name);
-        }));
+        };
+
+        auto onEdge = [&](const JS::ubi::Node& origin, const JS::ubi::Edge& edge) {
+            ExpectedEdge e(*origin.as<FakeNode>(), *edge.referent.as<FakeNode>());
+            if (!expectedEdges.has(e)) {
+                fprintf(stderr,
+                        "Error: Unexpected edge from %c to %c!\n",
+                        origin.as<FakeNode>()->name,
+                        edge.referent.as<FakeNode>()->name);
+                return false;
+            }
+
+            expectedEdges.remove(e);
+            return true;
+        };
+
+        CHECK(traversal.traverse(onNode, onEdge));
     }
 
     fprintf(stderr, "visited.length() = %lu\n", (unsigned long) visited.length());
@@ -343,9 +400,181 @@ BEGIN_TEST(test_ubiPostOrder)
     CHECK(visited[6] == 'a');
     CHECK(visited[7] == 'r');
 
+    // We found all the edges we expected.
+    CHECK(expectedEdges.count() == 0);
+
     return true;
 }
 END_TEST(test_ubiPostOrder)
+
+BEGIN_TEST(test_JS_ubi_DominatorTree)
+{
+    // Construct the following graph:
+    //
+    //                                  .-----.
+    //                                  |     <--------------------------------.
+    //          .--------+--------------|  r  |--------------.                 |
+    //          |        |              |     |              |                 |
+    //          |        |              '-----'              |                 |
+    //          |     .--V--.                             .--V--.              |
+    //          |     |     |                             |     |              |
+    //          |     |  b  |                             |  c  |--------.     |
+    //          |     |     |                             |     |        |     |
+    //          |     '-----'                             '-----'        |     |
+    //       .--V--.     |                                   |        .--V--.  |
+    //       |     |     |                                   |        |     |  |
+    //       |  a  <-----+                                   |   .----|  g  |  |
+    //       |     |     |                              .----'   |    |     |  |
+    //       '-----'     |                              |        |    '-----'  |
+    //          |        |                              |        |       |     |
+    //       .--V--.     |    .-----.                .--V--.     |       |     |
+    //       |     |     |    |     |                |     |     |       |     |
+    //       |  d  <-----+---->  e  <----.           |  f  |     |       |     |
+    //       |     |          |     |    |           |     |     |       |     |
+    //       '-----'          '-----'    |           '-----'     |       |     |
+    //          |     .-----.    |       |              |        |    .--V--.  |
+    //          |     |     |    |       |              |      .-'    |     |  |
+    //          '----->  l  |    |       |              |      |      |  j  |  |
+    //                |     |    '--.    |              |      |      |     |  |
+    //                '-----'       |    |              |      |      '-----'  |
+    //                   |       .--V--. |              |   .--V--.      |     |
+    //                   |       |     | |              |   |     |      |     |
+    //                   '------->  h  |-'              '--->  i  <------'     |
+    //                           |     |          .--------->     |            |
+    //                           '-----'          |         '-----'            |
+    //                              |          .-----.         |               |
+    //                              |          |     |         |               |
+    //                              '---------->  k  <---------'               |
+    //                                         |     |                         |
+    //                                         '-----'                         |
+    //                                            |                            |
+    //                                            '----------------------------'
+    //
+    // This graph has the following dominator tree:
+    //
+    //     r
+    //     |-- a
+    //     |-- b
+    //     |-- c
+    //     |   |-- f
+    //     |   `-- g
+    //     |       `-- j
+    //     |-- d
+    //     |   `-- l
+    //     |-- e
+    //     |-- i
+    //     |-- k
+    //     `-- h
+    //
+    // This graph and dominator tree are taken from figures 1 and 2 of "A Fast
+    // Algorithm for Finding Dominators in a Flowgraph" by Lengauer et al:
+    // http://www.cs.princeton.edu/courses/archive/spr03/cs423/download/dominators.pdf.
+
+    FakeNode r('r');
+    FakeNode a('a');
+    FakeNode b('b');
+    FakeNode c('c');
+    FakeNode d('d');
+    FakeNode e('e');
+    FakeNode f('f');
+    FakeNode g('g');
+    FakeNode h('h');
+    FakeNode i('i');
+    FakeNode j('j');
+    FakeNode k('k');
+    FakeNode l('l');
+
+    CHECK(r.addEdgeTo(a));
+    CHECK(r.addEdgeTo(b));
+    CHECK(r.addEdgeTo(c));
+    CHECK(a.addEdgeTo(d));
+    CHECK(b.addEdgeTo(a));
+    CHECK(b.addEdgeTo(d));
+    CHECK(b.addEdgeTo(e));
+    CHECK(c.addEdgeTo(f));
+    CHECK(c.addEdgeTo(g));
+    CHECK(d.addEdgeTo(l));
+    CHECK(e.addEdgeTo(h));
+    CHECK(f.addEdgeTo(i));
+    CHECK(g.addEdgeTo(i));
+    CHECK(g.addEdgeTo(j));
+    CHECK(h.addEdgeTo(e));
+    CHECK(h.addEdgeTo(k));
+    CHECK(i.addEdgeTo(k));
+    CHECK(j.addEdgeTo(i));
+    CHECK(k.addEdgeTo(r));
+    CHECK(k.addEdgeTo(i));
+    CHECK(l.addEdgeTo(h));
+
+    mozilla::Maybe<JS::ubi::DominatorTree> maybeTree;
+    {
+        JS::AutoCheckCannotGC noGC(rt);
+        maybeTree = JS::ubi::DominatorTree::Create(rt, noGC, &r);
+    }
+
+    CHECK(maybeTree.isSome());
+    auto& tree = *maybeTree;
+
+    // We return the null JS::ubi::Node for nodes that were not reachable in the
+    // graph when computing the dominator tree.
+    FakeNode m('m');
+    CHECK(tree.getImmediateDominator(&m) == JS::ubi::Node());
+
+    fprintf(stderr, "r's immediate dominator is %c\n",
+            tree.getImmediateDominator(&r).as<FakeNode>()->name);
+    CHECK(tree.getImmediateDominator(&r) == JS::ubi::Node(&r));
+
+    fprintf(stderr, "a's immediate dominator is %c\n",
+            tree.getImmediateDominator(&a).as<FakeNode>()->name);
+    CHECK(tree.getImmediateDominator(&a) == JS::ubi::Node(&r));
+
+    fprintf(stderr, "b's immediate dominator is %c\n",
+            tree.getImmediateDominator(&b).as<FakeNode>()->name);
+    CHECK(tree.getImmediateDominator(&b) == JS::ubi::Node(&r));
+
+    fprintf(stderr, "c's immediate dominator is %c\n",
+            tree.getImmediateDominator(&c).as<FakeNode>()->name);
+    CHECK(tree.getImmediateDominator(&c) == JS::ubi::Node(&r));
+
+    fprintf(stderr, "d's immediate dominator is %c\n",
+            tree.getImmediateDominator(&d).as<FakeNode>()->name);
+    CHECK(tree.getImmediateDominator(&d) == JS::ubi::Node(&r));
+
+    fprintf(stderr, "e's immediate dominator is %c\n",
+            tree.getImmediateDominator(&e).as<FakeNode>()->name);
+    CHECK(tree.getImmediateDominator(&e) == JS::ubi::Node(&r));
+
+    fprintf(stderr, "f's immediate dominator is %c\n",
+            tree.getImmediateDominator(&f).as<FakeNode>()->name);
+    CHECK(tree.getImmediateDominator(&f) == JS::ubi::Node(&c));
+
+    fprintf(stderr, "g's immediate dominator is %c\n",
+            tree.getImmediateDominator(&g).as<FakeNode>()->name);
+    CHECK(tree.getImmediateDominator(&g) == JS::ubi::Node(&c));
+
+    fprintf(stderr, "h's immediate dominator is %c\n",
+            tree.getImmediateDominator(&h).as<FakeNode>()->name);
+    CHECK(tree.getImmediateDominator(&h) == JS::ubi::Node(&r));
+
+    fprintf(stderr, "i's immediate dominator is %c\n",
+            tree.getImmediateDominator(&i).as<FakeNode>()->name);
+    CHECK(tree.getImmediateDominator(&i) == JS::ubi::Node(&r));
+
+    fprintf(stderr, "j's immediate dominator is %c\n",
+            tree.getImmediateDominator(&j).as<FakeNode>()->name);
+    CHECK(tree.getImmediateDominator(&j) == JS::ubi::Node(&g));
+
+    fprintf(stderr, "k's immediate dominator is %c\n",
+            tree.getImmediateDominator(&k).as<FakeNode>()->name);
+    CHECK(tree.getImmediateDominator(&k) == JS::ubi::Node(&r));
+
+    fprintf(stderr, "l's immediate dominator is %c\n",
+            tree.getImmediateDominator(&l).as<FakeNode>()->name);
+    CHECK(tree.getImmediateDominator(&l) == JS::ubi::Node(&d));
+
+    return true;
+}
+END_TEST(test_JS_ubi_DominatorTree)
 
 BEGIN_TEST(test_JS_ubi_Node_scriptFilename)
 {
