@@ -26,7 +26,7 @@
 .theme-dark .searchBox,
 .theme-light .searchBox {
   border: 1px solid rgb(170, 170, 170);
-  background-image: url("chrome://devtools/skin/themes/images/magnifying-glass-light.png");
+  background-image: url("chrome://devtools/skin/images/magnifying-glass-light.png");
   background-position: 8px center;
   border-radius: 2px;
   padding-left: 25px;
@@ -42,5 +42,5 @@
   background-color: rgba(24, 29, 32, 1);
   color: rgba(184, 200, 217, 1);
   border-color: var(--theme-splitter-color);
-  background-image: url("chrome://devtools/skin/themes/images/magnifying-glass.png");
+  background-image: url("chrome://devtools/skin/images/magnifying-glass.png");
 }

@@ -641,7 +641,7 @@
 }
 
 .variable-or-property-non-writable-icon {
-  background: url("chrome://devtools/skin/themes/images/vview-lock.png") no-repeat;
+  background: url("chrome://devtools/skin/images/vview-lock.png") no-repeat;
   background-size: cover;
   width: 16px;
   height: 16px;
@@ -649,7 +649,7 @@
 
 @media (min-resolution: 1.1dppx) {
   .variable-or-property-non-writable-icon {
-    background-image: url("chrome://devtools/skin/themes/images/vview-lock@2x.png");
+    background-image: url("chrome://devtools/skin/images/vview-lock@2x.png");
   }
 }
 
@@ -741,7 +741,7 @@
 /* Variables and properties editing */
 
 .variables-view-delete {
-  background: url("chrome://devtools/skin/themes/images/vview-delete.png");
+  background: url("chrome://devtools/skin/images/vview-delete.png");
   background-size: cover;
   width: 16px;
   height: 16px;
@@ -749,7 +749,7 @@
 
 @media (min-resolution: 1.1dppx) {
   .variables-view-delete {
-    background-image: url("chrome://devtools/skin/themes/images/vview-delete@2x.png");
+    background-image: url("chrome://devtools/skin/images/vview-delete@2x.png");
   }
 }
 
@@ -766,7 +766,7 @@
 }
 
 .variables-view-edit {
-  background: url("chrome://devtools/skin/themes/images/vview-edit.png");
+  background: url("chrome://devtools/skin/images/vview-edit.png");
   background-size: cover;
   width: 16px;
   height: 16px;
@@ -775,7 +775,7 @@
 
 @media (min-resolution: 1.1dppx) {
   .variables-view-edit {
-    background-image: url("chrome://devtools/skin/themes/images/vview-edit@2x.png");
+    background-image: url("chrome://devtools/skin/images/vview-edit@2x.png");
   }
 }
 
@@ -792,7 +792,7 @@
 }
 
 .variables-view-open-inspector {
-  background: url("chrome://devtools/skin/themes/images/vview-open-inspector.png");
+  background: url("chrome://devtools/skin/images/vview-open-inspector.png");
   background-size: cover;
   width: 16px;
   height: 16px;
@@ -801,7 +801,7 @@
 
 @media (min-resolution: 1.1dppx) {
   .variables-view-open-inspector {
-    background-image: url("chrome://devtools/skin/themes/images/vview-open-inspector@2x.png");
+    background-image: url("chrome://devtools/skin/images/vview-open-inspector@2x.png");
   }
 }
 
@@ -1374,7 +1374,7 @@
   float: left;
   margin: 3px 2px -3px;
   background-repeat: no-repeat;
-  background-image: url("chrome://devtools/skin/themes/images/controls.png");
+  background-image: url("chrome://devtools/skin/images/controls.png");
   background-size: 56px 28px;
   cursor: pointer;
   background-position: -28px -14px;
@@ -1432,7 +1432,7 @@
 
 @media (min-resolution: 1.1dppx) {
   .tree-widget-item:before {
-    background-image: url("chrome://devtools/skin/themes/images/controls@2x.png");
+    background-image: url("chrome://devtools/skin/images/controls@2x.png");
   }
 }
 
@@ -1502,18 +1502,18 @@
 }
 
 .tree-widget-item[type="dir"]::after {
-  background-image: url(chrome://devtools/skin/themes/images/filetypes/dir-close.svg);
+  background-image: url(chrome://devtools/skin/images/filetypes/dir-close.svg);
   background-position: 2px 0;
   background-size: auto 16px;
   width: 20px;
 }
 
 .tree-widget-item[type="dir"][expanded]:not([empty])::after {
-  background-image: url(chrome://devtools/skin/themes/images/filetypes/dir-open.svg);
+  background-image: url(chrome://devtools/skin/images/filetypes/dir-open.svg);
 }
 
 .tree-widget-item[type="url"]::after {
-  background-image: url(chrome://devtools/skin/themes/images/filetypes/globe.svg);
+  background-image: url(chrome://devtools/skin/images/filetypes/globe.svg);
   background-size: auto 18px;
   width: 18px;
 }

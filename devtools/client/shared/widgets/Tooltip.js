@@ -1280,7 +1280,7 @@ EventTooltip.prototype = {
       if (!listener.hide.debugger) {
         let debuggerIcon = doc.createElement("image");
         debuggerIcon.className = "event-tooltip-debugger-icon";
-        debuggerIcon.setAttribute("src", "chrome://devtools/skin/themes/images/tool-debugger.svg");
+        debuggerIcon.setAttribute("src", "chrome://devtools/skin/images/tool-debugger.svg");
         let openInDebugger =
             l10n.strings.GetStringFromName("eventsTooltip.openInDebugger");
         debuggerIcon.setAttribute("tooltiptext", openInDebugger);

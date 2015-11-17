@@ -5,9 +5,9 @@
 <?xml-stylesheet href="chrome://browser/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://devtools/content/shared/widgets/widgets.css" type="text/css"?>
 <?xml-stylesheet href="chrome://devtools/content/netmonitor/netmonitor.css" type="text/css"?>
-<?xml-stylesheet href="chrome://devtools/skin/themes/common.css" type="text/css"?>
-<?xml-stylesheet href="chrome://devtools/skin/themes/widgets.css" type="text/css"?>
-<?xml-stylesheet href="chrome://devtools/skin/themes/netmonitor.css" type="text/css"?>
+<?xml-stylesheet href="chrome://devtools/skin/common.css" type="text/css"?>
+<?xml-stylesheet href="chrome://devtools/skin/widgets.css" type="text/css"?>
+<?xml-stylesheet href="chrome://devtools/skin/netmonitor.css" type="text/css"?>
 <!DOCTYPE window [
   <!ENTITY % netmonitorDTD SYSTEM "chrome://browser/locale/devtools/netmonitor.dtd">
   %netmonitorDTD;

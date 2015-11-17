@@ -44,7 +44,7 @@ a {
 
 .message > .icon::before {
   content: "";
-  background-image: url(chrome://devtools/skin/themes/images/webconsole.svg);
+  background-image: url(chrome://devtools/skin/images/webconsole.svg);
   background-position: 12px 12px;
   background-repeat: no-repeat;
   background-size: 72px 60px;
@@ -54,7 +54,7 @@ a {
 }
 
 .theme-light .message > .icon::before {
-  background-image: url(chrome://devtools/skin/themes/images/webconsole.svg#light-icons);
+  background-image: url(chrome://devtools/skin/images/webconsole.svg#light-icons);
 }
 
 .message > .message-body-wrapper {
@@ -383,7 +383,7 @@ a {
   /* Always allow scrolling on input - it auto expands in js by setting height,
      but don't want it to get bigger than the window. 24px = toolbar height. */
   max-height: calc(90vh - 24px);
-  background-image: -moz-image-rect(url("chrome://devtools/skin/themes/images/commandline-icon.png"), 0, 32, 16, 16);
+  background-image: -moz-image-rect(url("chrome://devtools/skin/images/commandline-icon.png"), 0, 32, 16, 16);
   background-repeat: no-repeat;
   background-size: 16px 16px;
   color: var(--theme-content-color1);
@@ -391,7 +391,7 @@ a {
 
 @media (min-resolution: 1.1dppx) {
   .jsterm-input-node {
-    background-image: -moz-image-rect(url('chrome://devtools/skin/themes/images/commandline-icon@2x.png'), 0, 64, 32, 32);
+    background-image: -moz-image-rect(url('chrome://devtools/skin/images/commandline-icon@2x.png'), 0, 64, 32, 32);
   }
 }
 
@@ -519,7 +519,7 @@ a {
 
 /* Open DOMNode in inspector button */
 .open-inspector {
-  background: url("chrome://devtools/skin/themes/images/vview-open-inspector.png") no-repeat 0 0;
+  background: url("chrome://devtools/skin/images/vview-open-inspector.png") no-repeat 0 0;
   padding-left: 16px;
   margin-left: 5px;
   cursor: pointer;

@@ -4,8 +4,8 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <?xml-stylesheet href="chrome://browser/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://devtools/content/shared/widgets/widgets.css" type="text/css"?>
-<?xml-stylesheet href="chrome://devtools/skin/themes/common.css" type="text/css"?>
-<?xml-stylesheet href="chrome://devtools/skin/themes/widgets.css" type="text/css"?>
+<?xml-stylesheet href="chrome://devtools/skin/common.css" type="text/css"?>
+<?xml-stylesheet href="chrome://devtools/skin/widgets.css" type="text/css"?>
 <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   <script type="application/javascript;version=1.8" src="chrome://devtools/content/shared/theme-switching.js"/>
   <box flex="1" class="devtools-responsive-container theme-body">
