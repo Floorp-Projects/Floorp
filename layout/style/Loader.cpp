@@ -1348,12 +1348,10 @@ Loader::InsertSheetInDoc(CSSStyleSheet* aSheet,
    */
   int32_t insertionPoint;
   for (insertionPoint = sheetCount - 1; insertionPoint >= 0; --insertionPoint) {
-    nsIStyleSheet *curSheet = aDocument->GetStyleSheetAt(insertionPoint);
+    CSSStyleSheet* curSheet = aDocument->GetStyleSheetAt(insertionPoint);
     NS_ASSERTION(curSheet, "There must be a sheet here!");
-    nsCOMPtr<nsIDOMStyleSheet> domSheet = do_QueryInterface(curSheet);
-    NS_ASSERTION(domSheet, "All the \"normal\" sheets implement nsIDOMStyleSheet");
     nsCOMPtr<nsIDOMNode> sheetOwner;
-    domSheet->GetOwnerNode(getter_AddRefs(sheetOwner));
+    curSheet->GetOwnerNode(getter_AddRefs(sheetOwner));
     if (sheetOwner && !aLinkingContent) {
       // Keep moving; all sheets with a sheetOwner come after all
       // sheets without a linkingNode
@@ -2608,7 +2606,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(Loader)
          !iter.Done();
          iter.Next()) {
       NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "Sheet cache nsCSSLoader");
-      cb.NoteXPCOMChild(NS_ISUPPORTS_CAST(nsIStyleSheet*, iter.UserData()));
+      cb.NoteXPCOMChild(NS_ISUPPORTS_CAST(nsIDOMCSSStyleSheet*, iter.UserData()));
     }
   }
   nsTObserverArray<nsCOMPtr<nsICSSLoaderObserver>>::ForwardIterator

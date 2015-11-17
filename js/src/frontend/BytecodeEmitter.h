@@ -351,9 +351,6 @@ struct BytecodeEmitter
     // Emit module code for the tree rooted at body.
     bool emitModuleScript(ParseNode* body);
 
-    // Report an error if we are not processing a module.
-    bool checkIsModule();
-
     // If op is JOF_TYPESET (see the type barriers comment in TypeInference.h),
     // reserve a type set to store its result.
     void checkTypeSet(JSOp op);
@@ -443,6 +440,7 @@ struct BytecodeEmitter
     bool emitAtomOp(JSAtom* atom, JSOp op);
     bool emitAtomOp(ParseNode* pn, JSOp op);
 
+    bool emitArrayLiteral(ParseNode* pn);
     bool emitArray(ParseNode* pn, uint32_t count, JSOp op);
     bool emitArrayComp(ParseNode* pn);
 
@@ -566,7 +564,7 @@ struct BytecodeEmitter
 
     bool emitReturn(ParseNode* pn);
     bool emitStatement(ParseNode* pn);
-    bool emitStatementList(ParseNode* pn, ptrdiff_t top);
+    bool emitStatementList(ParseNode* pn);
 
     bool emitDeleteName(ParseNode* pn);
     bool emitDeleteProperty(ParseNode* pn);
@@ -576,8 +574,11 @@ struct BytecodeEmitter
     // |op| must be JSOP_TYPEOF or JSOP_TYPEOFEXPR.
     bool emitTypeof(ParseNode* node, JSOp op);
 
-    bool emitLogical(ParseNode* pn);
     bool emitUnary(ParseNode* pn);
+    bool emitRightAssociative(ParseNode* pn);
+    bool emitLeftAssociative(ParseNode* pn);
+    bool emitLogical(ParseNode* pn);
+    bool emitSequenceExpr(ParseNode* pn);
 
     MOZ_NEVER_INLINE bool emitIncOrDec(ParseNode* pn);
 
@@ -589,15 +590,16 @@ struct BytecodeEmitter
     bool emitSelfHostedForceInterpreter(ParseNode* pn);
 
     bool emitDo(ParseNode* pn);
-    bool emitFor(ParseNode* pn, ptrdiff_t top);
-    bool emitForIn(ParseNode* pn, ptrdiff_t top);
+    bool emitFor(ParseNode* pn);
+    bool emitForIn(ParseNode* pn);
     bool emitForInOrOfVariables(ParseNode* pn, bool* letDecl);
-    bool emitCStyleFor(ParseNode* pn, ptrdiff_t top);
-    bool emitWhile(ParseNode* pn, ptrdiff_t top);
+    bool emitCStyleFor(ParseNode* pn);
+    bool emitWhile(ParseNode* pn);
 
     bool emitBreak(PropertyName* label);
     bool emitContinue(PropertyName* label);
 
+    bool emitArgsBody(ParseNode* pn);
     bool emitDefaultsAndDestructuring(ParseNode* pn);
     bool emitLexicalInitialization(ParseNode* pn, JSOp globalDefOp);
 
@@ -620,7 +622,7 @@ struct BytecodeEmitter
     //
     // Please refer the comment above emitSpread for additional information about
     // stack convention.
-    bool emitForOf(StmtType type, ParseNode* pn, ptrdiff_t top);
+    bool emitForOf(StmtType type, ParseNode* pn);
 
     bool emitClass(ParseNode* pn);
     bool emitSuperPropLHS(bool isCall = false);

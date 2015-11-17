@@ -71,6 +71,12 @@ public:
    */
   virtual void MapRuleInfoInto(nsRuleData* aRuleData)=0;
 
+  /**
+   * Returns whether this style rule has any style data for inherited
+   * properties.
+   */
+  virtual bool MightMapInheritedStyleData() = 0;
+
 #ifdef DEBUG
   virtual void List(FILE* out = stdout, int32_t aIndent = 0) const = 0;
 #endif
