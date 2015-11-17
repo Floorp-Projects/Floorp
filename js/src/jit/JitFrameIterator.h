@@ -171,6 +171,9 @@ class JitFrameIterator
     bool isIonStub() const {
         return type_ == JitFrame_IonStub;
     }
+    bool isIonStubMaybeUnwound() const {
+        return type_ == JitFrame_IonStub || type_ == JitFrame_Unwound_IonStub;
+    }
     bool isBailoutJS() const {
         return type_ == JitFrame_Bailout;
     }
