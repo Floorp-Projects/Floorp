@@ -107,6 +107,7 @@
 }
 
 :root[devtoolstheme="dark"] .findbar-closebutton,
+:root[devtoolstheme="dark"] #sidebar-header > .close-icon,
 /* Tab styling - make sure to use an inverted icon for the selected tab
    (brighttext only covers the unselected tabs) */
 .tab-close-button[visuallyselected=true] {
@@ -115,6 +116,7 @@
 
 @media (min-resolution: 1.1dppx) {
   :root[devtoolstheme="dark"] .findbar-closebutton,
+  :root[devtoolstheme="dark"] #sidebar-header > .close-icon,
   .tab-close-button[visuallyselected=true] {
     list-style-image: url("chrome://global/skin/icons/close-inverted@2x.png");
   }
@@ -252,6 +254,14 @@
    * the native background color at all, and these are !important for the same reason as above. */
   border-left: none !important;
   border-right: none !important;
+}
+
+/* The sidebar header has no background now that the background of the #browser-panel
+ * has no image and is transparent. Fix: */
+.sidebar-header:-moz-lwtheme,
+#sidebar-header {
+  background-color: var(--chrome-background-color);
+  color: var(--chrome-color);
 }
 
 @media (-moz-os-version: windows-vista),
