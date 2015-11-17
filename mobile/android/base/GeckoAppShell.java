@@ -1247,9 +1247,9 @@ public class GeckoAppShell
             }
         }
 
-        // Have a special handling for SMS, as the message body
-        // is not extracted from the URI automatically.
-        if (!"sms".equals(scheme) && !"smsto".equals(scheme)) {
+        // Have a special handling for SMS based schemes, as the query parameters
+        // are not extracted from the URI automatically.
+        if (!"sms".equals(scheme) && !"smsto".equals(scheme) && !"mms".equals(scheme) && !"mmsto".equals(scheme)) {
             return intent;
         }
 
@@ -1267,26 +1267,35 @@ public class GeckoAppShell
         }
 
         final String[] fields = query.split("&");
-        boolean foundBody = false;
+        boolean shouldUpdateIntent = false;
         String resultQuery = "";
         for (String field : fields) {
-            if (foundBody || !field.startsWith("body=")) {
+            if (field.startsWith("body=")) {
+                final String body = Uri.decode(field.substring(5));
+                intent.putExtra("sms_body", body);
+                shouldUpdateIntent = true;
+            } else if (field.startsWith("subject=")) {
+                final String subject = Uri.decode(field.substring(8));
+                intent.putExtra("subject", subject);
+                shouldUpdateIntent = true;
+            } else if (field.startsWith("cc=")) {
+                final String ccNumber = Uri.decode(field.substring(3));
+                String phoneNumber = uri.getAuthority();
+                if (phoneNumber != null) {
+                    uri = uri.buildUpon().encodedAuthority(phoneNumber + ";" + ccNumber).build();
+                }
+                shouldUpdateIntent = true;
+            } else {
                 resultQuery = resultQuery.concat(resultQuery.length() > 0 ? "&" + field : field);
-                continue;
             }
-
-            // Found the first body param. Put it into the intent.
-            final String body = Uri.decode(field.substring(5));
-            intent.putExtra("sms_body", body);
-            foundBody = true;
         }
 
-        if (!foundBody) {
+        if (!shouldUpdateIntent) {
             // No need to rewrite the URI, then.
             return intent;
         }
 
-        // Form a new URI without the body field in the query part, and
+        // Form a new URI without the extracted fields in the query part, and
         // push that into the new Intent.
         final String newQuery = resultQuery.length() > 0 ? "?" + resultQuery : "";
         final Uri pruned = uri.buildUpon().encodedQuery(newQuery).build();
