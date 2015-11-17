@@ -21,7 +21,7 @@
 using namespace mozilla::net;
 using namespace mozilla::media;
 
-PRLogModuleInfo* gRtspMediaResourceLog;
+mozilla::LazyLogModule gRtspMediaResourceLog("RtspMediaResource");
 #define RTSP_LOG(msg, ...) MOZ_LOG(gRtspMediaResourceLog, mozilla::LogLevel::Debug, \
                                   (msg, ##__VA_ARGS__))
 // Debug logging macro with object pointer and class name.
@@ -505,9 +505,6 @@ RtspMediaResource::RtspMediaResource(MediaResourceCallback* aCallback,
   MOZ_ASSERT(mMediaStreamController);
   mListener = new Listener(this);
   mMediaStreamController->AsyncOpen(mListener);
-  if (!gRtspMediaResourceLog) {
-    gRtspMediaResourceLog = PR_NewLogModule("RtspMediaResource");
-  }
 #endif
 }
 
@@ -860,7 +857,7 @@ nsresult RtspMediaResource::SeekTime(int64_t aOffset)
   NS_ASSERTION(!NS_IsMainThread(), "Don't call on main thread");
 
   RTSPMLOG("Seek requested for aOffset [%lld] for decoder [%p]",
-           aOffset, mCallback);
+           aOffset, mCallback.get());
   // Clear buffer and raise the frametype flag.
   for(uint32_t i = 0 ; i < mTrackBuffer.Length(); ++i) {
     mTrackBuffer[i]->ResetWithFrameType(MEDIASTREAM_FRAMETYPE_DISCONTINUITY);

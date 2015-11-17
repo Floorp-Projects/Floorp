@@ -7,7 +7,7 @@
  * http://seanyhlin.github.io/TV-Manager-API/
  */
 
-[Pref="dom.tv.enabled", CheckAnyPermissions="tv", Func="Navigator::HasTVSupport"]
+[Pref="dom.tv.enabled", CheckAnyPermissions="tv", AvailableIn=CertifiedApps]
 interface TVTuner : EventTarget {
   [Throws]
   sequence<TVSourceType> getSupportedSourceTypes();

@@ -136,7 +136,7 @@ public:
     }
 
     bool Contains(int32_t aValue) {
-      for (int32_t i = 0; i < GetSize(); ++i) {
+      for (size_t i = 0; i < GetSize(); ++i) {
         if (ObjectAt(i) == aValue) {
           return true;
         }
@@ -149,7 +149,7 @@ public:
     }
 
   private:
-    int32_t ObjectAt(int32_t aIndex) {
+    int32_t ObjectAt(size_t aIndex) {
       void* v = nsDeque::ObjectAt(aIndex);
       return reinterpret_cast<uintptr_t>(v);
     }

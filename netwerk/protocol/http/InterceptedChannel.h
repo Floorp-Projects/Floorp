@@ -37,6 +37,7 @@ protected:
   Maybe<nsAutoPtr<nsHttpResponseHead>> mSynthesizedResponseHead;
 
   nsCOMPtr<nsIConsoleReportCollector> mReportCollector;
+  nsCOMPtr<nsISupports> mReleaseHandle;
 
   void EnsureSynthesizedResponse();
   void DoNotifyController();
@@ -55,6 +56,7 @@ public:
 
   NS_IMETHOD GetResponseBody(nsIOutputStream** aOutput) override;
   NS_IMETHOD GetConsoleReportCollector(nsIConsoleReportCollector** aCollectorOut) override;
+  NS_IMETHOD SetReleaseHandle(nsISupports* aHandle) override;
 };
 
 class InterceptedChannelChrome : public InterceptedChannelBase

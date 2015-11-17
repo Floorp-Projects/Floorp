@@ -18,7 +18,7 @@
 
 #undef LOG
 #undef LOG_ENABLED
-PRLogModuleInfo *gCamerasParentLog;
+mozilla::LazyLogModule gCamerasParentLog("CamerasParent");
 #define LOG(args) MOZ_LOG(gCamerasParentLog, mozilla::LogLevel::Debug, args)
 #define LOG_ENABLED() MOZ_LOG_TEST(gCamerasParentLog, mozilla::LogLevel::Debug)
 
@@ -852,9 +852,6 @@ CamerasParent::CamerasParent()
     mDestroyed(false),
     mWebRTCAlive(true)
 {
-  if (!gCamerasParentLog) {
-    gCamerasParentLog = PR_NewLogModule("CamerasParent");
-  }
   LOG(("CamerasParent: %p", this));
 
   mPBackgroundThread = NS_GetCurrentThread();

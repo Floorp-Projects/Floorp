@@ -39,7 +39,7 @@ using namespace mozilla::gfx;
 
 namespace mozilla {
 
-PRLogModuleInfo* gMediaStreamGraphLog;
+LazyLogModule gMediaStreamGraphLog("MediaStreamGraph");
 #define STREAM_LOG(type, msg) MOZ_LOG(gMediaStreamGraphLog, type, msg)
 
 // #define ENABLE_LIFECYCLE_LOG
@@ -2639,10 +2639,6 @@ MediaStreamGraphImpl::MediaStreamGraphImpl(GraphDriverType aDriverRequested,
 #endif
   , mAudioChannel(aChannel)
 {
-  if (!gMediaStreamGraphLog) {
-    gMediaStreamGraphLog = PR_NewLogModule("MediaStreamGraph");
-  }
-
   if (mRealtime) {
     if (aDriverRequested == AUDIO_THREAD_DRIVER) {
       AudioCallbackDriver* driver = new AudioCallbackDriver(this);

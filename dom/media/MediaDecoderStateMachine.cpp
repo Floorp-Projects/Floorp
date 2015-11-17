@@ -472,6 +472,10 @@ bool MediaDecoderStateMachine::HaveEnoughDecodedVideo()
 {
   MOZ_ASSERT(OnTaskQueue());
 
+  if (VideoQueue().GetSize() == 0) {
+    return false;
+  }
+
   if (VideoQueue().GetSize() - 1 < GetAmpleVideoFrames() * mPlaybackRate) {
     return false;
   }
