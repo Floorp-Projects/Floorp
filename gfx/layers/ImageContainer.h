@@ -274,10 +274,6 @@ protected:
   ImageFactory() {}
   virtual ~ImageFactory() {}
 
-  virtual already_AddRefed<Image> CreateImage(ImageFormat aFormat,
-                                              const gfx::IntSize &aScaleHint,
-                                              BufferRecycleBin *aRecycleBin);
-
   virtual RefPtr<PlanarYCbCrImage> CreatePlanarYCbCrImage(
     const gfx::IntSize& aScaleHint,
     BufferRecycleBin *aRecycleBin);
@@ -316,17 +312,6 @@ public:
 
   typedef uint32_t FrameID;
   typedef uint32_t ProducerID;
-
-
-  /**
-   * Create an Image in one of the given formats.
-   * Picks the "best" format from the list and creates an Image of that
-   * format.
-   * Returns null if this backend does not support any of the formats.
-   * Can be called on any thread. This method takes mReentrantMonitor
-   * when accessing thread-shared state.
-   */
-  B2G_ACL_EXPORT already_AddRefed<Image> CreateImage(ImageFormat aFormat);
 
   RefPtr<PlanarYCbCrImage> CreatePlanarYCbCrImage();
 

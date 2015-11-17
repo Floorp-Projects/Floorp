@@ -317,12 +317,6 @@ ImageClientBridge::UpdateImage(ImageContainer* aContainer, uint32_t aContentFlag
   return true;
 }
 
-already_AddRefed<Image>
-ImageClientSingle::CreateImage(ImageFormat aFormat)
-{
-  return nullptr;
-}
-
 #ifdef MOZ_WIDGET_GONK
 ImageClientOverlay::ImageClientOverlay(CompositableForwarder* aFwd,
                                        TextureFlags aFlags)
