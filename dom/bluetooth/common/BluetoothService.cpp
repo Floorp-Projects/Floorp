@@ -240,8 +240,7 @@ BluetoothService::Cleanup()
 
 void
 BluetoothService::RegisterBluetoothSignalHandler(
-                                              const nsAString& aNodeName,
-                                              BluetoothSignalObserver* aHandler)
+  const nsAString& aNodeName, BluetoothSignalObserver* aHandler)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aHandler);
@@ -332,6 +331,48 @@ BluetoothService::DistributeSignal(const nsAString& aName,
 {
   BluetoothSignal signal(nsString(aName), nsString(aPath), aValue);
   DistributeSignal(signal);
+}
+
+void
+BluetoothService::DistributeSignal(const nsAString& aName,
+                                   const BluetoothAddress& aAddress)
+{
+  nsAutoString path;
+  AddressToString(aAddress, path);
+
+  DistributeSignal(aName, path);
+}
+
+void
+BluetoothService::DistributeSignal(const nsAString& aName,
+                                   const BluetoothAddress& aAddress,
+                                   const BluetoothValue& aValue)
+{
+  nsAutoString path;
+  AddressToString(aAddress, path);
+
+  DistributeSignal(aName, path, aValue);
+}
+
+void
+BluetoothService::DistributeSignal(const nsAString& aName,
+                                   const BluetoothUuid& aUuid)
+{
+  nsAutoString path;
+  UuidToString(aUuid, path);
+
+  DistributeSignal(aName, path);
+}
+
+void
+BluetoothService::DistributeSignal(const nsAString& aName,
+                                   const BluetoothUuid& aUuid,
+                                   const BluetoothValue& aValue)
+{
+  nsAutoString path;
+  UuidToString(aUuid, path);
+
+  DistributeSignal(aName, path, aValue);
 }
 
 void

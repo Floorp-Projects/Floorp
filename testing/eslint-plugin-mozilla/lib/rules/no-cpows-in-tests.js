@@ -13,13 +13,13 @@
 
 var helpers = require("../helpers");
 
-var cpows = new Set([
+var cpows = [
   /^gBrowser\.contentWindow/,
   /^gBrowser\.contentDocument/,
   /^gBrowser\.selectedBrowser.contentWindow/,
   /^browser\.contentDocument/,
   /^window\.content/
-]);
+];
 
 module.exports = function(context) {
   //--------------------------------------------------------------------------
@@ -45,12 +45,13 @@ module.exports = function(context) {
 
       var expression = context.getSource(node);
 
-      for (var cpow of cpows) {
+      cpows.some(function(cpow) {
         if (cpow.test(expression)) {
           showError(context, node, expression);
-          return;
+          return true;
         }
-      }
+        return false;
+      });
       if (helpers.getIsGlobalScope(context)) {
         if (/^content\./.test(expression)) {
           showError(context, node, expression);

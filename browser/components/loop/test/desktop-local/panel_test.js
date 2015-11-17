@@ -493,7 +493,7 @@ describe("loop.panel", function() {
       beforeEach(function() {
         feedbackUrl = "https://example.com";
         fakeMozLoop.getLoopPref = function(pref) {
-          if (pref === "feedback.formURL") {
+          if (pref === "feedback.manualFormURL") {
             return feedbackUrl;
           }
 

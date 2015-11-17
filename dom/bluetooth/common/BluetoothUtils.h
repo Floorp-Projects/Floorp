@@ -180,7 +180,7 @@ GeneratePathFromGattId(const BluetoothGattId& aId,
 //
 
 /**
- * Register the bluetooth signal handler.
+ * Register the Bluetooth signal handler.
  *
  * @param aPath Path of the signal to be registered.
  * @param aHandler The message handler object to be added into the observer
@@ -191,7 +191,29 @@ RegisterBluetoothSignalHandler(const nsAString& aPath,
                                BluetoothSignalObserver* aHandler);
 
 /**
- * Unregister the bluetooth signal handler.
+ * Register the Bluetooth signal handler.
+ *
+ * @param aAddress Address of the signal to be unregistered.
+ * @param aHandler The message handler object to be added into the observer
+ *                 list. Note that this function doesn't take references to it.
+ */
+void
+RegisterBluetoothSignalHandler(const BluetoothAddress& aAddress,
+                               BluetoothSignalObserver* aHandler);
+
+/**
+ * Register the Bluetooth signal handler.
+ *
+ * @param aUuid UUID of the signal to be unregistered.
+ * @param aHandler The message handler object to be added into the observer
+ *                 list. Note that this function doesn't take references to it.
+ */
+void
+RegisterBluetoothSignalHandler(const BluetoothUuid& aUuid,
+                               BluetoothSignalObserver* aHandler);
+
+/**
+ * Unregister the Bluetooth signal handler.
  *
  * @param aPath Path of the signal to be unregistered.
  * @param aHandler The message handler object to be removed from the observer
@@ -199,6 +221,28 @@ RegisterBluetoothSignalHandler(const nsAString& aPath,
  */
 void
 UnregisterBluetoothSignalHandler(const nsAString& aPath,
+                                 BluetoothSignalObserver* aHandler);
+
+/**
+ * Unregister the Bluetooth signal handler.
+ *
+ * @param aAddress Address of the signal to be unregistered.
+ * @param aHandler The message handler object to be removed from the observer
+ *                 list. Note that this function doesn't take references to it.
+ */
+void
+UnregisterBluetoothSignalHandler(const BluetoothAddress& aAddress,
+                                 BluetoothSignalObserver* aHandler);
+
+/**
+ * Unregister the Bluetooth signal handler.
+ *
+ * @param aUuid UUID of the signal to be unregistered.
+ * @param aHandler The message handler object to be removed from the observer
+ *                 list. Note that this function doesn't take references to it.
+ */
+void
+UnregisterBluetoothSignalHandler(const BluetoothUuid& aUuid,
                                  BluetoothSignalObserver* aHandler);
 
 //
