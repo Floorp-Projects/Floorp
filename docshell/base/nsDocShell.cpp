@@ -13714,6 +13714,13 @@ nsDocShell::SetIsBrowserInsideApp(uint32_t aContainingAppId)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsDocShell::SetIsSignedPackage(const nsAString& aSignedPkg)
+{
+  mSignedPkg = aSignedPkg;
+  return NS_OK;
+}
+
 /* [infallible] */ NS_IMETHODIMP
 nsDocShell::GetIsBrowserElement(bool* aIsBrowser)
 {
@@ -13820,6 +13827,9 @@ nsDocShell::GetOriginAttributes()
   if (mFrameType == eFrameTypeBrowser) {
     attrs.mInBrowser = true;
   }
+
+  // Bug 1209162 will address the inheritance of each attributes.
+  attrs.mSignedPkg = mSignedPkg;
 
   return attrs;
 }

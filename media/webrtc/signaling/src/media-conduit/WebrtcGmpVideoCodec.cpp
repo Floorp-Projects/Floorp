@@ -33,7 +33,7 @@ namespace mozilla {
 #endif
 
 #ifdef MOZILLA_INTERNAL_API
-extern PRLogModuleInfo* GetGMPLog();
+extern mozilla::LogModule* GetGMPLog();
 #else
 // For CPP unit tests
 PRLogModuleInfo*

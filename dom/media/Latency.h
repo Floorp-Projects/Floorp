@@ -17,7 +17,7 @@
 
 class AsyncLatencyLogger;
 
-PRLogModuleInfo* GetLatencyLog();
+mozilla::LogModule* GetLatencyLog();
 
 // This class is a singleton. It is refcounted.
 class AsyncLatencyLogger : public nsIObserver

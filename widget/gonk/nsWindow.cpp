@@ -353,7 +353,7 @@ nsWindow::Create(nsIWidget *aParent,
     mVisible = false;
 
     if (!aParent) {
-        mBounds = mScreen->GetRect();
+        mBounds = mScreen->GetRect().ToUnknownRect();
     }
 
     mComposer2D = HwcComposer2D::GetInstance();
@@ -854,10 +854,10 @@ nsWindow::GetGLFrameBufferFormat()
     return LOCAL_GL_NONE;
 }
 
-nsIntRect
-nsWindow::GetNaturalBoundsUntyped()
+LayoutDeviceIntRect
+nsWindow::GetNaturalBounds()
 {
-    return mScreen->GetNaturalBounds().ToUnknownRect();
+    return mScreen->GetNaturalBounds();
 }
 
 nsScreenGonk*

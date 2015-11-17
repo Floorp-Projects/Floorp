@@ -129,11 +129,11 @@ public:
   NS_IMETHOD SetTitle(const nsAString& aTitle) override
   { return NS_ERROR_UNEXPECTED; }
 
-  virtual mozilla::LayoutDeviceIntPoint WidgetToScreenOffset() override
+  virtual LayoutDeviceIntPoint WidgetToScreenOffset() override
   { return LayoutDeviceIntPoint::FromUnknownPoint(GetWindowPosition() + GetChromeDimensions()); }
 
   void InitEvent(WidgetGUIEvent& aEvent,
-                 mozilla::LayoutDeviceIntPoint* aPoint = nullptr);
+                 LayoutDeviceIntPoint* aPoint = nullptr);
 
   NS_IMETHOD DispatchEvent(WidgetGUIEvent* aEvent, nsEventStatus& aStatus) override;
   nsEventStatus DispatchAPZAwareEvent(WidgetInputEvent* aEvent) override;
@@ -212,7 +212,7 @@ public:
   // Get the screen position of the application window.
   nsIntPoint GetWindowPosition();
 
-  NS_IMETHOD GetScreenBoundsUntyped(nsIntRect &aRect) override;
+  NS_IMETHOD GetScreenBounds(LayoutDeviceIntRect& aRect) override;
 
   NS_IMETHOD StartPluginIME(const mozilla::WidgetKeyboardEvent& aKeyboardEvent,
                             int32_t aPanelX, int32_t aPanelY,
@@ -226,13 +226,13 @@ public:
                                             const nsAString& aCharacters,
                                             const nsAString& aUnmodifiedCharacters,
                                             nsIObserver* aObserver) override;
-  virtual nsresult SynthesizeNativeMouseEvent(mozilla::LayoutDeviceIntPoint aPoint,
+  virtual nsresult SynthesizeNativeMouseEvent(LayoutDeviceIntPoint aPoint,
                                               uint32_t aNativeMessage,
                                               uint32_t aModifierFlags,
                                               nsIObserver* aObserver) override;
-  virtual nsresult SynthesizeNativeMouseMove(mozilla::LayoutDeviceIntPoint aPoint,
+  virtual nsresult SynthesizeNativeMouseMove(LayoutDeviceIntPoint aPoint,
                                              nsIObserver* aObserver) override;
-  virtual nsresult SynthesizeNativeMouseScrollEvent(mozilla::LayoutDeviceIntPoint aPoint,
+  virtual nsresult SynthesizeNativeMouseScrollEvent(LayoutDeviceIntPoint aPoint,
                                                     uint32_t aNativeMessage,
                                                     double aDeltaX,
                                                     double aDeltaY,
@@ -275,9 +275,9 @@ private:
 
   bool CacheEditorRect();
   bool CacheCompositionRects(uint32_t& aStartOffset,
-                             nsTArray<mozilla::LayoutDeviceIntRect>& aRectArray,
+                             nsTArray<LayoutDeviceIntRect>& aRectArray,
                              uint32_t& aTargetCauseOffset);
-  bool GetCaretRect(mozilla::LayoutDeviceIntRect& aCaretRect, uint32_t aCaretOffset);
+  bool GetCaretRect(LayoutDeviceIntRect& aCaretRect, uint32_t aCaretOffset);
   uint32_t GetCaretOffset();
 
   nsIWidgetListener* GetCurrentWidgetListener();
