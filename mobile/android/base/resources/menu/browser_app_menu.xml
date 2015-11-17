@@ -9,6 +9,8 @@
           android:icon="@drawable/ic_menu_reload"
           android:title="@string/reload"/>
 
+    <!-- We keep the reference so calls to findView don't fail. Hide
+         to avoid taking up real estate on the users' screen. -->
     <item android:id="@+id/back"
           android:icon="@drawable/ic_menu_back"
           android:title="@string/back"
@@ -36,13 +38,6 @@
     <item android:id="@+id/reading_list"
           android:title="@string/overlay_share_reading_list_btn_label" />
 
-    <item android:id="@+id/save_as_pdf"
-          android:title="@string/save_as_pdf" />
-
-    <item android:id="@+id/print"
-          android:visible="false"
-          android:title="@string/print" />
-
     <item android:id="@+id/find_in_page"
           android:title="@string/find_in_page" />
 
@@ -50,14 +45,47 @@
           android:title="@string/desktop_mode"
           android:checkable="true" />
 
-    <item android:id="@+id/addons"
-          android:title="@string/addons"/>
+    <item android:id="@+id/page"
+          android:title="@string/page">
 
-    <item android:id="@+id/downloads"
-          android:title="@string/downloads"/>
+        <menu>
+            <item android:id="@+id/subscribe"
+                  android:title="@string/contextmenu_subscribe"/>
 
-    <item android:id="@+id/logins"
-          android:title="@string/logins"/>
+            <item android:id="@+id/save_as_pdf"
+                  android:title="@string/save_as_pdf"/>
+
+            <item android:id="@+id/print"
+                  android:title="@string/print"/>
+
+            <item android:id="@+id/add_search_engine"
+                  android:title="@string/contextmenu_add_search_engine"/>
+
+            <item android:id="@+id/add_to_launcher"
+                  android:title="@string/contextmenu_add_to_launcher"/>
+        </menu>
+
+    </item>
+
+    <item android:id="@+id/tools"
+          android:title="@string/tools">
+
+        <menu>
+            <item android:id="@+id/downloads"
+                  android:title="@string/downloads"/>
+            <item android:id="@+id/addons"
+                  android:title="@string/addons"/>
+            <item android:id="@+id/logins"
+                  android:title="@string/logins"/>
+            <item android:id="@+id/new_guest_session"
+                  android:visible="false"
+                  android:title="@string/new_guest_session"/>
+            <item android:id="@+id/exit_guest_session"
+                  android:visible="false"
+                  android:title="@string/exit_guest_session"/>
+        </menu>
+
+    </item>
 
     <item android:id="@+id/char_encoding"
           android:visible="false"
@@ -69,14 +97,6 @@
     <item android:id="@+id/help"
           android:title="@string/help_menu" />
 
-    <item android:id="@+id/new_guest_session"
-          android:visible="false"
-          android:title="@string/new_guest_session"/>
-
-    <item android:id="@+id/exit_guest_session"
-          android:visible="false"
-          android:title="@string/exit_guest_session"/>
-
     <!-- Android will eliminate v11+ resource files from pre-11 builds.
          Those files are the only place in which certain IDs are defined.
          This causes compilation errors.
@@ -87,13 +107,4 @@
           android:visible="false"
           android:enabled="false" />
 
-    <item android:id="@+id/page"
-          android:visible="false"
-          android:enabled="false"
-          android:title="@string/page" />
-
-    <item android:id="@+id/tools"
-          android:visible="false"
-          android:enabled="false"
-          android:title="@string/tools" />
 </menu>
