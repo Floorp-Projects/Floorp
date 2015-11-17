@@ -29,6 +29,12 @@ ImportantStyleData::MapRuleInfoInto(nsRuleData* aRuleData)
   Declaration()->MapImportantRuleInfoInto(aRuleData);
 }
 
+/* virtual */ bool
+ImportantStyleData::MightMapInheritedStyleData()
+{
+  return Declaration()->MapsImportantInheritedStyleData();
+}
+
 #ifdef DEBUG
 /* virtual */ void
 ImportantStyleData::List(FILE* out, int32_t aIndent) const
@@ -88,11 +94,33 @@ NS_IMPL_RELEASE(Declaration)
 /* virtual */ void
 Declaration::MapRuleInfoInto(nsRuleData* aRuleData)
 {
-  MOZ_ASSERT(mData, "called while expanded");
+  MOZ_ASSERT(mData, "must call only while compressed");
   mData->MapRuleInfoInto(aRuleData);
   if (mVariables) {
     mVariables->MapRuleInfoInto(aRuleData);
   }
+}
+
+/* virtual */ bool
+Declaration::MightMapInheritedStyleData()
+{
+  MOZ_ASSERT(mData, "must call only while compressed");
+  if (mVariables && mVariables->Count() != 0) {
+    return true;
+  }
+  return mData->HasInheritedStyleData();
+}
+
+bool
+Declaration::MapsImportantInheritedStyleData() const
+{
+  MOZ_ASSERT(mData, "must call only while compressed");
+  MOZ_ASSERT(HasImportantData(), "must only be called for Declarations with "
+                                 "important data");
+  if (mImportantVariables && mImportantVariables->Count() != 0) {
+    return true;
+  }
+  return mImportantData ? mImportantData->HasInheritedStyleData() : false;
 }
 
 void

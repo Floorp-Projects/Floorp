@@ -179,16 +179,10 @@ AttachToContainerAsEGLImage(ImageContainer* container,
     return;
   }
 
-  RefPtr<Image> img = container->CreateImage(ImageFormat::EGLIMAGE);
-
-  EGLImageImage::Data data;
-  data.mImage = image;
-  data.mSize = gfx::IntSize(rect.width, rect.height);
-  data.mOriginPos = instance->OriginPos();
-
-  EGLImageImage* typedImg = static_cast<EGLImageImage*>(img.get());
-  typedImg->SetData(data);
-
+  RefPtr<EGLImageImage> img = new EGLImageImage(
+    image, nullptr,
+    gfx::IntSize(rect.width, rect.height), instance->OriginPos(),
+    false /* owns */);
   *out_image = img;
 }
 
@@ -206,16 +200,10 @@ AttachToContainerAsSurfaceTexture(ImageContainer* container,
     return;
   }
 
-  RefPtr<Image> img = container->CreateImage(ImageFormat::SURFACE_TEXTURE);
-
-  SurfaceTextureImage::Data data;
-  data.mSurfTex = surfTex;
-  data.mSize = gfx::IntSize(rect.width, rect.height);
-  data.mOriginPos = instance->OriginPos();
-
-  SurfaceTextureImage* typedImg = static_cast<SurfaceTextureImage*>(img.get());
-  typedImg->SetData(data);
-
+  RefPtr<Image> img = new SurfaceTextureImage(
+    surfTex,
+    gfx::IntSize(rect.width, rect.height),
+    instance->OriginPos());
   *out_image = img;
 }
 #endif
@@ -1339,16 +1327,10 @@ nsPluginInstanceOwner::GetImageContainerForVideo(nsNPAPIPluginInstance::VideoInf
 {
   RefPtr<ImageContainer> container = LayerManager::CreateImageContainer();
 
-  RefPtr<Image> img = container->CreateImage(ImageFormat::SURFACE_TEXTURE);
-
-  SurfaceTextureImage::Data data;
-  data.mSurfTex = aVideoInfo->mSurfaceTexture;
-  data.mOriginPos = gl::OriginPos::BottomLeft;
-  data.mSize = gfx::IntSize(aVideoInfo->mDimensions.width, aVideoInfo->mDimensions.height);
-
-  SurfaceTextureImage* typedImg = static_cast<SurfaceTextureImage*>(img.get());
-  typedImg->SetData(data);
-
+  RefPtr<Image> img = new SurfaceTextureImage(
+    aVideoInfo->mSurfaceTexture,
+    gfx::IntSize(aVideoInfo->mDimensions.width, aVideoInfo->mDimensions.height),
+    gl::OriginPos::BottomLeft);
   container->SetCurrentImageInTransaction(img);
 
   return container.forget();

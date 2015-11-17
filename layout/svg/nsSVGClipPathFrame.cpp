@@ -179,6 +179,11 @@ nsSVGClipPathFrame::GetClipMask(gfxContext& aReferenceContext, nsIFrame* aClippe
     intRect = RoundedOut(ToRect(rect));
   }
 
+  if (intRect.IsEmpty()) {
+    // We don't need to create a mask surface, all drawing is clipped anyway.
+    return nullptr;
+  }
+
   RefPtr<DrawTarget> maskDT = aReferenceContext.GetDrawTarget()->CreateSimilarDrawTarget(intRect.Size(), SurfaceFormat::A8);
 
   gfxMatrix mat =

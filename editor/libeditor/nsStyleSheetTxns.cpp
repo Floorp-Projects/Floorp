@@ -19,10 +19,8 @@
 
 using namespace mozilla;
 
-class nsIStyleSheet;
-
 static void
-AddStyleSheet(nsIEditor* aEditor, nsIStyleSheet* aSheet)
+AddStyleSheet(nsIEditor* aEditor, CSSStyleSheet* aSheet)
 {
   nsCOMPtr<nsIDOMDocument> domDoc;
   aEditor->GetDocument(getter_AddRefs(domDoc));
@@ -35,7 +33,7 @@ AddStyleSheet(nsIEditor* aEditor, nsIStyleSheet* aSheet)
 }
 
 static void
-RemoveStyleSheet(nsIEditor *aEditor, nsIStyleSheet *aSheet)
+RemoveStyleSheet(nsIEditor* aEditor, CSSStyleSheet* aSheet)
 {
   nsCOMPtr<nsIDOMDocument> domDoc;
   aEditor->GetDocument(getter_AddRefs(domDoc));

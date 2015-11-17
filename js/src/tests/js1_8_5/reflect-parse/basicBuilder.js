@@ -41,7 +41,7 @@ assertGlobalExpr("({ x: y })", 13, { objectExpression: () => 13 });
 assertGlobalExpr("this", 14, { thisExpression: () => 14 });
 assertGlobalExpr("[x for (x in y)]", 17, { comprehensionExpression: () => 17 });
 assertGlobalExpr("(x for (x in y))", 18, { generatorExpression: () => 18 });
-assertGlobalExpr("(function() { yield 42 })", genFunExpr(null, [], blockStmt([exprStmt(19)])), { yieldExpression: () => 19 });
+assertGlobalExpr("(function() { yield 42 })", genFunExpr("legacy", null, [], blockStmt([exprStmt(19)])), { yieldExpression: () => 19 });
 
 assertGlobalStmt("switch (x) { case y: }", switchStmt(ident("x"), [1]), { switchCase: () => 1 });
 assertGlobalStmt("try { } catch (e) { }", 2, { tryStatement: (b, g, u, f) => u, catchClause: () => 2 });

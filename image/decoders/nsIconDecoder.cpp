@@ -42,7 +42,7 @@ nsIconDecoder::WriteInternal(const char* aBuffer, uint32_t aCount)
   MOZ_ASSERT(aBuffer);
   MOZ_ASSERT(aCount > 0);
 
-  Maybe<State> terminalState =
+  Maybe<TerminalState> terminalState =
     mLexer.Lex(aBuffer, aCount, [=](State aState,
                                     const char* aData, size_t aLength) {
       switch (aState) {
@@ -53,21 +53,13 @@ nsIconDecoder::WriteInternal(const char* aBuffer, uint32_t aCount)
         case State::FINISH:
           return Finish();
         default:
-          MOZ_ASSERT_UNREACHABLE("Unknown State");
-          return Transition::Terminate(State::FAILURE);
+          MOZ_CRASH("Unknown State");
       }
     });
 
-  if (!terminalState) {
-    return;  // Need more data.
-  }
-
-  if (*terminalState == State::FAILURE) {
+  if (terminalState == Some(TerminalState::FAILURE)) {
     PostDataError();
-    return;
   }
-
-  MOZ_ASSERT(*terminalState == State::SUCCESS);
 }
 
 LexerTransition<nsIconDecoder::State>
@@ -88,7 +80,7 @@ nsIconDecoder::ReadHeader(const char* aData)
 
   // If we're doing a metadata decode, we're done.
   if (IsMetadataDecode()) {
-    return Transition::Terminate(State::SUCCESS);
+    return Transition::TerminateSuccess();
   }
 
   MOZ_ASSERT(!mImageData, "Already have a buffer allocated?");
@@ -97,7 +89,7 @@ nsIconDecoder::ReadHeader(const char* aData)
                               IntRect(IntPoint(), targetSize),
                               gfx::SurfaceFormat::B8G8R8A8);
   if (NS_FAILED(rv)) {
-    return Transition::Terminate(State::FAILURE);
+    return Transition::TerminateFailure();
   }
   MOZ_ASSERT(mImageData, "Should have a buffer now");
 
@@ -105,7 +97,7 @@ nsIconDecoder::ReadHeader(const char* aData)
     nsresult rv = mDownscaler->BeginFrame(GetSize(), Nothing(),
                                           mImageData, /* aHasAlpha = */ true);
     if (NS_FAILED(rv)) {
-      return Transition::Terminate(State::FAILURE);
+      return Transition::TerminateFailure();
     }
   }
 
@@ -142,7 +134,7 @@ nsIconDecoder::Finish()
   PostFrameStop();
   PostDecodeDone();
 
-  return Transition::Terminate(State::SUCCESS);
+  return Transition::TerminateSuccess();
 }
 
 } // namespace image

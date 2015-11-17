@@ -21,8 +21,6 @@
 #include "mozilla/layers/ISurfaceAllocator.h"
 #include "mozilla/layers/LayersSurfaces.h"  // for SurfaceDescriptor, etc
 #include "mozilla/layers/ShadowLayers.h"  // for ShadowLayerForwarder
-#include "mozilla/layers/SharedPlanarYCbCrImage.h"
-#include "mozilla/layers/SharedRGBImage.h"
 #include "mozilla/layers/TextureClient.h"  // for TextureClient, etc
 #include "mozilla/layers/TextureClientOGL.h"  // for SurfaceTextureClient
 #include "mozilla/mozalloc.h"           // for operator delete, etc
@@ -204,18 +202,17 @@ ImageClientSingle::UpdateImage(ImageContainer* aContainer, uint32_t aContentFlag
         gfx::IntSize size = image->GetSize();
 
         if (image->GetFormat() == ImageFormat::EGLIMAGE) {
-          EGLImageImage* typedImage = static_cast<EGLImageImage*>(image);
+          EGLImageImage* typedImage = image->AsEGLImageImage();
           texture = new EGLImageTextureClient(GetForwarder(),
                                               mTextureFlags,
                                               typedImage,
                                               size);
 #ifdef MOZ_WIDGET_ANDROID
         } else if (image->GetFormat() == ImageFormat::SURFACE_TEXTURE) {
-          SurfaceTextureImage* typedImage = static_cast<SurfaceTextureImage*>(image);
-          const SurfaceTextureImage::Data* data = typedImage->GetData();
+          SurfaceTextureImage* typedImage = image->AsSurfaceTextureImage();
           texture = new SurfaceTextureClient(GetForwarder(), mTextureFlags,
-                                             data->mSurfTex, size,
-                                             data->mOriginPos);
+                                             typedImage->GetSurfaceTexture(), size,
+                                             typedImage->GetOriginPos());
 #endif
         } else {
           MOZ_ASSERT(false, "Bad ImageFormat.");
@@ -320,27 +317,6 @@ ImageClientBridge::UpdateImage(ImageContainer* aContainer, uint32_t aContentFlag
   return true;
 }
 
-already_AddRefed<Image>
-ImageClientSingle::CreateImage(ImageFormat aFormat)
-{
-  RefPtr<Image> img;
-  switch (aFormat) {
-    case ImageFormat::PLANAR_YCBCR:
-      img = new SharedPlanarYCbCrImage(this);
-      return img.forget();
-    case ImageFormat::SHARED_RGB:
-      img = new SharedRGBImage(this);
-      return img.forget();
-#ifdef MOZ_WIDGET_GONK
-    case ImageFormat::GRALLOC_PLANAR_YCBCR:
-      img = new GrallocImage();
-      return img.forget();
-#endif
-    default:
-      return nullptr;
-  }
-}
-
 #ifdef MOZ_WIDGET_GONK
 ImageClientOverlay::ImageClientOverlay(CompositableForwarder* aFwd,
                                        TextureFlags aFlags)
@@ -375,20 +351,6 @@ ImageClientOverlay::UpdateImage(ImageContainer* aContainer, uint32_t aContentFla
   }
   return true;
 }
-
-already_AddRefed<Image>
-ImageClientOverlay::CreateImage(ImageFormat aFormat)
-{
-  RefPtr<Image> img;
-  switch (aFormat) {
-    case ImageFormat::OVERLAY_IMAGE:
-      img = new OverlayImage();
-      return img.forget();
-    default:
-      return nullptr;
-  }
-}
-
 #endif
 } // namespace layers
 } // namespace mozilla

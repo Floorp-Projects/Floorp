@@ -45,8 +45,7 @@ GstFlowReturn GStreamerReader::AllocateVideoBufferFull(GstPad* aPad,
   if (container == nullptr) {
     return GST_FLOW_ERROR;
   }
-  RefPtr<PlanarYCbCrImage> image =
-    container->CreateImage(ImageFormat::PLANAR_YCBCR).downcast<PlanarYCbCrImage>();
+  RefPtr<PlanarYCbCrImage> image = container->CreatePlanarYCbCrImage();
 
   /* prepare a GstBuffer pointing to the underlying PlanarYCbCrImage buffer */
   GstBuffer* buf = GST_BUFFER(gst_moz_video_buffer_new());

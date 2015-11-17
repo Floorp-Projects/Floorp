@@ -1341,7 +1341,6 @@ using namespace devtools;
 
 /* static */ void
 ThreadSafeChromeUtils::SaveHeapSnapshot(GlobalObject& global,
-                                        JSContext* cx,
                                         const HeapSnapshotBoundaries& boundaries,
                                         nsAString& outFilePath,
                                         ErrorResult& rv)
@@ -1360,6 +1359,7 @@ ThreadSafeChromeUtils::SaveHeapSnapshot(GlobalObject& global,
   ZeroCopyNSIOutputStream zeroCopyStream(outputStream);
   ::google::protobuf::io::GzipOutputStream gzipStream(&zeroCopyStream);
 
+  JSContext* cx = global.Context();
   StreamWriter writer(cx, gzipStream, wantNames);
   if (NS_WARN_IF(!writer.init())) {
     rv.Throw(NS_ERROR_OUT_OF_MEMORY);
@@ -1405,7 +1405,6 @@ ThreadSafeChromeUtils::SaveHeapSnapshot(GlobalObject& global,
 
 /* static */ already_AddRefed<HeapSnapshot>
 ThreadSafeChromeUtils::ReadHeapSnapshot(GlobalObject& global,
-                                        JSContext* cx,
                                         const nsAString& filePath,
                                         ErrorResult& rv)
 {
@@ -1423,7 +1422,8 @@ ThreadSafeChromeUtils::ReadHeapSnapshot(GlobalObject& global,
     return nullptr;
 
   RefPtr<HeapSnapshot> snapshot = HeapSnapshot::Create(
-      cx, global, reinterpret_cast<const uint8_t*>(mm.address()), mm.size(), rv);
+      global.Context(), global, reinterpret_cast<const uint8_t*>(mm.address()),
+      mm.size(), rv);
 
   if (!rv.Failed())
     Telemetry::AccumulateTimeDelta(Telemetry::DEVTOOLS_READ_HEAP_SNAPSHOT_MS,

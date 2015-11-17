@@ -41,19 +41,16 @@ CreateSharedRGBImage(ImageContainer *aImageContainer,
     return nullptr;
   }
 
-  RefPtr<Image> image = aImageContainer->CreateImage(ImageFormat::SHARED_RGB);
-
-  if (!image) {
+  RefPtr<SharedRGBImage> rgbImage = aImageContainer->CreateSharedRGBImage();
+  if (!rgbImage) {
     NS_WARNING("Failed to create SharedRGBImage");
     return nullptr;
   }
-
-  RefPtr<SharedRGBImage> rgbImage = static_cast<SharedRGBImage*>(image.get());
   if (!rgbImage->Allocate(aSize, gfx::ImageFormatToSurfaceFormat(aImageFormat))) {
     NS_WARNING("Failed to allocate a shared image");
     return nullptr;
   }
-  return image.forget();
+  return rgbImage.forget();
 }
 
 SharedRGBImage::SharedRGBImage(ImageClient* aCompositable)

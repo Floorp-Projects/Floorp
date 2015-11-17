@@ -423,6 +423,7 @@ nsWindow::nsWindow()
 #if GTK_CHECK_VERSION(3,4,0)
     mHandleTouchEvent    = false;
 #endif
+    mIsDragPopup         = false;
 
     mContainer           = nullptr;
     mGdkWindow           = nullptr;
@@ -1895,16 +1896,11 @@ nsWindow::CaptureRollupEvents(nsIRollupListener *aListener,
 
     if (aDoCapture) {
         gRollupListener = aListener;
-        // real grab is only done when there is no dragging
-        if (!nsWindow::DragInProgress()) {
-            // Maybe the dnd flag is not yet set at this point, but dnd has already started
-            // so let's be extra careful and skip this operation for dnd popup panels always
-            // (panels with type="drag").
-            GdkWindowTypeHint gdkTypeHint = gtk_window_get_type_hint(GTK_WINDOW(mShell));
-            if (gdkTypeHint != GDK_WINDOW_TYPE_HINT_DND) {
-              gtk_grab_add(GTK_WIDGET(mContainer));
-              GrabPointer(GetLastUserInputTime());
-            }
+        // Don't add a grab if a drag is in progress, or if the widget is a drag
+        // feedback popup. (panels with type="drag").
+        if (!mIsDragPopup && !nsWindow::DragInProgress()) {
+            gtk_grab_add(GTK_WIDGET(mContainer));
+            GrabPointer(GetLastUserInputTime());
         }
     }
     else {
@@ -2703,23 +2699,25 @@ nsWindow::InitButtonEvent(WidgetMouseEvent& aEvent,
     aEvent.refPoint = GetRefPoint(this, aGdkEvent);
 
     guint modifierState = aGdkEvent->state;
-    // aEvent's state doesn't include this event's information.  Therefore,
-    // if aEvent is mouse button down event, we need to set it manually.
-    // Note that we cannot do same thing for eMouseUp because
-    // system may have two or more mice and same button of another mouse
-    // may be still pressed.
-    if (aGdkEvent->type != GDK_BUTTON_RELEASE) {
-        switch (aGdkEvent->button) {
-            case 1:
-                modifierState |= GDK_BUTTON1_MASK;
-                break;
-            case 2:
-                modifierState |= GDK_BUTTON2_MASK;
-                break;
-            case 3:
-                modifierState |= GDK_BUTTON3_MASK;
-                break;
-        }
+    // aEvent's state includes the button state from immediately before this
+    // event.  If aEvent is a mousedown or mouseup event, we need to update
+    // the button state.
+    guint buttonMask = 0;
+    switch (aGdkEvent->button) {
+        case 1:
+            buttonMask = GDK_BUTTON1_MASK;
+            break;
+        case 2:
+            buttonMask = GDK_BUTTON2_MASK;
+            break;
+        case 3:
+            buttonMask = GDK_BUTTON3_MASK;
+            break;
+    }
+    if (aGdkEvent->type == GDK_BUTTON_RELEASE) {
+        modifierState &= ~buttonMask;
+    } else {
+        modifierState |= buttonMask;
     }
 
     KeymapWrapper::InitInputEvent(aEvent, modifierState);
@@ -3668,6 +3666,7 @@ nsWindow::Create(nsIWidget        *aParent,
             GdkWindowTypeHint gtkTypeHint;
             if (aInitData->mIsDragPopup) {
                 gtkTypeHint = GDK_WINDOW_TYPE_HINT_DND;
+                mIsDragPopup = true;
             }
             else {
                 switch (aInitData->mPopupHint) {

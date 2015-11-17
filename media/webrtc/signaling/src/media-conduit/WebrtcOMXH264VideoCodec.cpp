@@ -524,12 +524,9 @@ public:
       return;
     }
 
-    layers::GrallocImage::GrallocData grallocData;
-    grallocData.mPicSize = buffer->GetSize();
-    grallocData.mGraphicBuffer = buffer;
-
+    gfx::IntSize picSize(buffer->GetSize());
     nsAutoPtr<layers::GrallocImage> grallocImage(new layers::GrallocImage());
-    grallocImage->SetData(grallocData);
+    grallocImage->SetData(buffer, picSize);
 
     // Get timestamp of the frame about to render.
     int64_t timestamp = -1;
@@ -547,12 +544,12 @@ public:
     MOZ_ASSERT(timestamp >= 0 && renderTimeMs >= 0);
 
     CODEC_LOGD("Decoder NewFrame: %dx%d, timestamp %lld, renderTimeMs %lld",
-               grallocData.mPicSize.width, grallocData.mPicSize.height, timestamp, renderTimeMs);
+               picSize.width, picSize.height, timestamp, renderTimeMs);
 
     nsAutoPtr<webrtc::I420VideoFrame> videoFrame(
       new webrtc::TextureVideoFrame(new ImageNativeHandle(grallocImage.forget()),
-                                    grallocData.mPicSize.width,
-                                    grallocData.mPicSize.height,
+                                    picSize.width,
+                                    picSize.height,
                                     timestamp,
                                     renderTimeMs));
     if (videoFrame != nullptr) {

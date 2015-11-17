@@ -61,9 +61,9 @@ class AccessibleCaretEventHub : public nsIReflowObserver,
                                 public nsSupportsWeakReference
 {
 public:
-  explicit AccessibleCaretEventHub();
-  virtual void Init(nsIPresShell* aPresShell);
-  virtual void Terminate();
+  explicit AccessibleCaretEventHub(nsIPresShell* aPresShell);
+  void Init();
+  void Terminate();
 
   nsEventStatus HandleEvent(WidgetEvent* aEvent);
 
