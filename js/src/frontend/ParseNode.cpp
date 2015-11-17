@@ -273,7 +273,6 @@ PushNodeChildren(ParseNode* pn, NodeStack* stack)
       case PNK_IMPORT_SPEC:
       case PNK_EXPORT_SPEC:
       case PNK_COLON:
-      case PNK_CASE:
       case PNK_SHORTHAND:
       case PNK_DOWHILE:
       case PNK_WHILE:
@@ -288,7 +287,10 @@ PushNodeChildren(ParseNode* pn, NodeStack* stack)
         return PushResult::Recyclable;
       }
 
-      // Named class expressions do not have outer binding nodes
+      // Default clauses are PNK_CASE but do not have case expressions.
+      // Named class expressions do not have outer binding nodes.
+      // So both are binary nodes with a possibly-null pn_left.
+      case PNK_CASE:
       case PNK_CLASSNAMES: {
         MOZ_ASSERT(pn->isArity(PN_BINARY));
         if (pn->pn_left)
@@ -304,16 +306,6 @@ PushNodeChildren(ParseNode* pn, NodeStack* stack)
       case PNK_WITH: {
         MOZ_ASSERT(pn->isArity(PN_BINARY_OBJ));
         stack->push(pn->pn_left);
-        stack->push(pn->pn_right);
-        return PushResult::Recyclable;
-      }
-
-      // Default nodes, for dumb reasons that we're not changing now (mostly
-      // structural semi-consistency with PNK_CASE nodes), have a null left
-      // node and a non-null right node.
-      case PNK_DEFAULT: {
-        MOZ_ASSERT(pn->isArity(PN_BINARY));
-        MOZ_ASSERT(pn->pn_left == nullptr);
         stack->push(pn->pn_right);
         return PushResult::Recyclable;
       }

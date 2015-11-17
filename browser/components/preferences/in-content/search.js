@@ -95,15 +95,8 @@ var gSearchPane = {
   buildDefaultEngineDropDown: function() {
     // This is called each time something affects the list of engines.
     let list = document.getElementById("defaultEngine");
-    let currentEngine;
-
-    // First, try to preserve the current selection.
-    if (list.selectedItem)
-      currentEngine = list.selectedItem.label;
-
-    // If there's no current selection, use the current default engine.
-    if (!currentEngine)
-      currentEngine = Services.search.currentEngine.name;
+    // Set selection to the current default engine.
+    let currentEngine = Services.search.currentEngine.name;
 
     // If the current engine isn't in the list any more, select the first item.
     let engines = gEngineView._engineStore._engines;
@@ -411,6 +404,7 @@ EngineStore.prototype = {
         added++;
       }
     }
+    Services.search.resetToOriginalDefaultEngine();
     gSearchPane.showRestoreDefaults(false);
     gSearchPane.buildDefaultEngineDropDown();
     return added;

@@ -15,6 +15,7 @@
 #include "nsCSSProps.h"
 #include "nsCSSPropertySet.h"
 #include "nsCSSValue.h"
+#include "nsStyleStruct.h"
 #include "imgRequestProxy.h"
 
 struct nsRuleData;
@@ -91,6 +92,11 @@ public:
     bool HasDefaultBorderImageWidth() const;
     bool HasDefaultBorderImageOutset() const;
     bool HasDefaultBorderImageRepeat() const;
+
+    bool HasInheritedStyleData() const
+    {
+      return mStyleBits & NS_STYLE_INHERITED_STRUCT_MASK;
+    }
 
 private:
     void* operator new(size_t aBaseSize, uint32_t aNumProps) {

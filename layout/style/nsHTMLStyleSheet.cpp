@@ -51,6 +51,12 @@ nsHTMLStyleSheet::HTMLColorRule::MapRuleInfoInto(nsRuleData* aRuleData)
   }
 }
 
+/* virtual */ bool
+nsHTMLStyleSheet::HTMLColorRule::MightMapInheritedStyleData()
+{
+  return true;
+}
+
 #ifdef DEBUG
 /* virtual */ void
 nsHTMLStyleSheet::HTMLColorRule::List(FILE* out, int32_t aIndent) const
@@ -90,6 +96,12 @@ nsHTMLStyleSheet::TableTHRule::MapRuleInfoInto(nsRuleData* aRuleData)
   }
 }
 
+/* virtual */ bool
+nsHTMLStyleSheet::TableTHRule::MightMapInheritedStyleData()
+{
+  return true;
+}
+
 /* virtual */ void
 nsHTMLStyleSheet::TableQuirkColorRule::MapRuleInfoInto(nsRuleData* aRuleData)
 {
@@ -101,6 +113,12 @@ nsHTMLStyleSheet::TableQuirkColorRule::MapRuleInfoInto(nsRuleData* aRuleData)
       color->SetIntValue(NS_STYLE_COLOR_INHERIT_FROM_BODY,
                          eCSSUnit_Enumerated);
   }
+}
+
+/* virtual */ bool
+nsHTMLStyleSheet::TableQuirkColorRule::MightMapInheritedStyleData()
+{
+  return true;
 }
 
 
@@ -115,6 +133,12 @@ nsHTMLStyleSheet::LangRule::MapRuleInfoInto(nsRuleData* aRuleData)
       lang->SetStringValue(mLang, eCSSUnit_Ident);
     }
   }
+}
+
+/* virtual */ bool
+nsHTMLStyleSheet::LangRule::MightMapInheritedStyleData()
+{
+  return true;
 }
 
 #ifdef DEBUG

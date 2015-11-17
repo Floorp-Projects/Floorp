@@ -158,11 +158,15 @@ protected:
 class AnimValuesStyleRule final : public nsIStyleRule
 {
 public:
+  AnimValuesStyleRule()
+    : mStyleBits(0) {}
+
   // nsISupports implementation
   NS_DECL_ISUPPORTS
 
   // nsIStyleRule implementation
   virtual void MapRuleInfoInto(nsRuleData* aRuleData) override;
+  virtual bool MightMapInheritedStyleData() override;
 #ifdef DEBUG
   virtual void List(FILE* out = stdout, int32_t aIndent = 0) const override;
 #endif
@@ -171,6 +175,8 @@ public:
   {
     PropertyValuePair v = { aProperty, aStartValue };
     mPropertyValuePairs.AppendElement(v);
+    mStyleBits |=
+      nsCachedStyleData::GetBitForSID(nsCSSProps::kSIDTable[aProperty]);
   }
 
   // Caller must fill in returned value.
@@ -178,6 +184,8 @@ public:
   {
     PropertyValuePair *p = mPropertyValuePairs.AppendElement();
     p->mProperty = aProperty;
+    mStyleBits |=
+      nsCachedStyleData::GetBitForSID(nsCSSProps::kSIDTable[aProperty]);
     return &p->mValue;
   }
 
@@ -198,6 +206,7 @@ private:
   ~AnimValuesStyleRule() {}
 
   InfallibleTArray<PropertyValuePair> mPropertyValuePairs;
+  uint32_t mStyleBits;
 };
 
 typedef InfallibleTArray<RefPtr<dom::Animation>> AnimationPtrArray;

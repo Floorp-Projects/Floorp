@@ -15,9 +15,7 @@ enum class TestState
   ONE,
   TWO,
   THREE,
-  UNBUFFERED,
-  SUCCESS,
-  FAILURE
+  UNBUFFERED
 };
 
 void
@@ -41,10 +39,9 @@ DoLex(TestState aState, const char* aData, size_t aLength)
       return Transition::To(TestState::THREE, 3);
     case TestState::THREE:
       CheckData(aData, aLength);
-      return Transition::Terminate(TestState::SUCCESS);
+      return Transition::TerminateSuccess();
     default:
-      EXPECT_TRUE(false);  // Shouldn't get here.
-      return Transition::Terminate(TestState::FAILURE);
+      MOZ_CRASH("Unknown TestState");
   }
 }
 
@@ -65,10 +62,9 @@ DoLexWithUnbuffered(TestState aState, const char* aData, size_t aLength,
       return Transition::To(TestState::THREE, 3);
     case TestState::THREE:
       CheckData(aData, aLength);
-      return Transition::Terminate(TestState::SUCCESS);
+      return Transition::TerminateSuccess();
     default:
-      EXPECT_TRUE(false);
-      return Transition::Terminate(TestState::FAILURE);
+      MOZ_CRASH("Unknown TestState");
   }
 }
 
@@ -80,10 +76,9 @@ DoLexWithUnbufferedTerminate(TestState aState, const char* aData, size_t aLength
       CheckData(aData, aLength);
       return Transition::ToUnbuffered(TestState::TWO, TestState::UNBUFFERED, 3);
     case TestState::UNBUFFERED:
-      return Transition::Terminate(TestState::SUCCESS);
+      return Transition::TerminateSuccess();
     default:
-      EXPECT_TRUE(false);
-      return Transition::Terminate(TestState::FAILURE);
+      MOZ_CRASH("Unknown TestState");
   }
 }
 
@@ -93,9 +88,9 @@ TEST(ImageStreamingLexer, SingleChunk)
   char data[9] = { 1, 2, 3, 1, 2, 3, 1, 2, 3 };
 
   // Test delivering all the data at once.
-  Maybe<TestState> result = lexer.Lex(data, sizeof(data), DoLex);
+  Maybe<TerminalState> result = lexer.Lex(data, sizeof(data), DoLex);
   EXPECT_TRUE(result.isSome());
-  EXPECT_EQ(TestState::SUCCESS, *result);
+  EXPECT_EQ(Some(TerminalState::SUCCESS), result);
 }
 
 TEST(ImageStreamingLexer, SingleChunkWithUnbuffered)
@@ -105,13 +100,13 @@ TEST(ImageStreamingLexer, SingleChunkWithUnbuffered)
   Vector<char> unbufferedVector;
 
   // Test delivering all the data at once.
-  Maybe<TestState> result =
+  Maybe<TerminalState> result =
     lexer.Lex(data, sizeof(data),
               [&](TestState aState, const char* aData, size_t aLength) {
       return DoLexWithUnbuffered(aState, aData, aLength, unbufferedVector);
   });
   EXPECT_TRUE(result.isSome());
-  EXPECT_EQ(TestState::SUCCESS, *result);
+  EXPECT_EQ(Some(TerminalState::SUCCESS), result);
 }
 
 TEST(ImageStreamingLexer, ChunkPerState)
@@ -121,11 +116,11 @@ TEST(ImageStreamingLexer, ChunkPerState)
 
   // Test delivering in perfectly-sized chunks, one per state.
   for (unsigned i = 0 ; i < 3 ; ++i) {
-    Maybe<TestState> result = lexer.Lex(data + 3 * i, 3, DoLex);
+    Maybe<TerminalState> result = lexer.Lex(data + 3 * i, 3, DoLex);
 
     if (i == 2) {
       EXPECT_TRUE(result.isSome());
-      EXPECT_EQ(TestState::SUCCESS, *result);
+      EXPECT_EQ(Some(TerminalState::SUCCESS), result);
     } else {
       EXPECT_TRUE(result.isNothing());
     }
@@ -140,7 +135,7 @@ TEST(ImageStreamingLexer, ChunkPerStateWithUnbuffered)
 
   // Test delivering in perfectly-sized chunks, one per state.
   for (unsigned i = 0 ; i < 3 ; ++i) {
-    Maybe<TestState> result =
+    Maybe<TerminalState> result =
       lexer.Lex(data + 3 * i, 3,
                 [&](TestState aState, const char* aData, size_t aLength) {
         return DoLexWithUnbuffered(aState, aData, aLength, unbufferedVector);
@@ -148,7 +143,7 @@ TEST(ImageStreamingLexer, ChunkPerStateWithUnbuffered)
 
     if (i == 2) {
       EXPECT_TRUE(result.isSome());
-      EXPECT_EQ(TestState::SUCCESS, *result);
+      EXPECT_EQ(Some(TerminalState::SUCCESS), result);
     } else {
       EXPECT_TRUE(result.isNothing());
     }
@@ -162,11 +157,11 @@ TEST(ImageStreamingLexer, OneByteChunks)
 
   // Test delivering in one byte chunks.
   for (unsigned i = 0 ; i < 9 ; ++i) {
-    Maybe<TestState> result = lexer.Lex(data + i, 1, DoLex);
+    Maybe<TerminalState> result = lexer.Lex(data + i, 1, DoLex);
 
     if (i == 8) {
       EXPECT_TRUE(result.isSome());
-      EXPECT_EQ(TestState::SUCCESS, *result);
+      EXPECT_EQ(Some(TerminalState::SUCCESS), result);
     } else {
       EXPECT_TRUE(result.isNothing());
     }
@@ -181,7 +176,7 @@ TEST(ImageStreamingLexer, OneByteChunksWithUnbuffered)
 
   // Test delivering in one byte chunks.
   for (unsigned i = 0 ; i < 9 ; ++i) {
-    Maybe<TestState> result =
+    Maybe<TerminalState> result =
       lexer.Lex(data + i, 1,
                 [&](TestState aState, const char* aData, size_t aLength) {
         return DoLexWithUnbuffered(aState, aData, aLength, unbufferedVector);
@@ -189,7 +184,7 @@ TEST(ImageStreamingLexer, OneByteChunksWithUnbuffered)
 
     if (i == 8) {
       EXPECT_TRUE(result.isSome());
-      EXPECT_EQ(TestState::SUCCESS, *result);
+      EXPECT_EQ(Some(TerminalState::SUCCESS), result);
     } else {
       EXPECT_TRUE(result.isNothing());
     }
@@ -202,23 +197,23 @@ TEST(ImageStreamingLexer, TerminateSuccess)
   char data[9] = { 1, 2, 3, 1, 2, 3, 1, 2, 3 };
 
   // Test that Terminate is "sticky".
-  Maybe<TestState> result =
+  Maybe<TerminalState> result =
     lexer.Lex(data, sizeof(data),
               [&](TestState aState, const char* aData, size_t aLength) {
       EXPECT_TRUE(aState == TestState::ONE);
-      return Transition::Terminate(TestState::SUCCESS);
+      return Transition::TerminateSuccess();
   });
   EXPECT_TRUE(result.isSome());
-  EXPECT_EQ(TestState::SUCCESS, *result);
+  EXPECT_EQ(Some(TerminalState::SUCCESS), result);
 
   result =
     lexer.Lex(data, sizeof(data),
               [&](TestState aState, const char* aData, size_t aLength) {
       EXPECT_TRUE(false);  // Shouldn't get here.
-      return Transition::Terminate(TestState::FAILURE);
+      return Transition::TerminateFailure();
   });
   EXPECT_TRUE(result.isSome());
-  EXPECT_EQ(TestState::SUCCESS, *result);
+  EXPECT_EQ(Some(TerminalState::SUCCESS), result);
 }
 
 TEST(ImageStreamingLexer, TerminateFailure)
@@ -227,23 +222,23 @@ TEST(ImageStreamingLexer, TerminateFailure)
   char data[9] = { 1, 2, 3, 1, 2, 3, 1, 2, 3 };
 
   // Test that Terminate is "sticky".
-  Maybe<TestState> result =
+  Maybe<TerminalState> result =
     lexer.Lex(data, sizeof(data),
               [&](TestState aState, const char* aData, size_t aLength) {
       EXPECT_TRUE(aState == TestState::ONE);
-      return Transition::Terminate(TestState::FAILURE);
+      return Transition::TerminateFailure();
   });
   EXPECT_TRUE(result.isSome());
-  EXPECT_EQ(TestState::FAILURE, *result);
+  EXPECT_EQ(Some(TerminalState::FAILURE), result);
 
   result =
     lexer.Lex(data, sizeof(data),
               [&](TestState aState, const char* aData, size_t aLength) {
       EXPECT_TRUE(false);  // Shouldn't get here.
-      return Transition::Terminate(TestState::FAILURE);
+      return Transition::TerminateFailure();
   });
   EXPECT_TRUE(result.isSome());
-  EXPECT_EQ(TestState::FAILURE, *result);
+  EXPECT_EQ(Some(TerminalState::FAILURE), result);
 }
 
 TEST(ImageStreamingLexer, TerminateUnbuffered)
@@ -253,12 +248,12 @@ TEST(ImageStreamingLexer, TerminateUnbuffered)
 
   // Test that Terminate works during an unbuffered read.
   for (unsigned i = 0 ; i < 9 ; ++i) {
-    Maybe<TestState> result =
+    Maybe<TerminalState> result =
       lexer.Lex(data + i, 1, DoLexWithUnbufferedTerminate);
 
     if (i > 2) {
       EXPECT_TRUE(result.isSome());
-      EXPECT_EQ(TestState::SUCCESS, *result);
+      EXPECT_EQ(Some(TerminalState::SUCCESS), result);
     } else {
       EXPECT_TRUE(result.isNothing());
     }

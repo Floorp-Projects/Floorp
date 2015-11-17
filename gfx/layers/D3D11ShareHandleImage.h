@@ -45,40 +45,22 @@ protected:
 // passed into SetData(), so that it can be accessed from other D3D devices.
 // This class also manages the synchronization of the copy, to ensure the
 // resource is ready to use.
-class D3D11ShareHandleImage : public Image {
+class D3D11ShareHandleImage final : public Image {
 public:
+  D3D11ShareHandleImage(const gfx::IntSize& aSize,
+                        const gfx::IntRect& aRect);
+  ~D3D11ShareHandleImage() override {}
 
-  struct Data {
-    Data(D3D11RecycleAllocator* aAllocator,
-         const gfx::IntSize& aSize,
-         const gfx::IntRect& aRegion)
-      : mAllocator(aAllocator)
-      , mSize(aSize)
-      , mRegion(aRegion) {}
-    RefPtr<D3D11RecycleAllocator> mAllocator;
-    gfx::IntSize mSize;
-    gfx::IntRect mRegion;
-  };
-
-  D3D11ShareHandleImage() : Image(NULL, ImageFormat::D3D11_SHARE_HANDLE_TEXTURE), mSize(0, 0) {}
-  virtual ~D3D11ShareHandleImage() {}
-
-  // Copies the surface into a sharable texture's surface, and initializes
-  // the image.
-  HRESULT SetData(const Data& aData);
+  bool AllocateTexture(D3D11RecycleAllocator* aAllocator);
 
   gfx::IntSize GetSize() override;
-
   virtual already_AddRefed<gfx::SourceSurface> GetAsSourceSurface() override;
-
   virtual TextureClient* GetTextureClient(CompositableClient* aClient) override;
+  virtual gfx::IntRect GetPictureRect() override { return mPictureRect; }
 
   ID3D11Texture2D* GetTexture() const;
 
-  virtual gfx::IntRect GetPictureRect() override { return mPictureRect; }
-
 private:
-
   gfx::IntSize mSize;
   gfx::IntRect mPictureRect;
   RefPtr<TextureClientD3D11> mTextureClient;

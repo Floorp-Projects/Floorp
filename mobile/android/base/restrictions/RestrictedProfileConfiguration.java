@@ -27,7 +27,6 @@ public class RestrictedProfileConfiguration implements RestrictionConfiguration 
             Restriction.DISALLOW_CLEAR_HISTORY,
             Restriction.DISALLOW_MASTER_PASSWORD,
             Restriction.DISALLOW_GUEST_BROWSING,
-            Restriction.DISALLOW_DEFAULT_THEME,
             Restriction.DISALLOW_ADVANCED_SETTINGS,
             Restriction.DISALLOW_CAMERA_MICROPHONE
     );

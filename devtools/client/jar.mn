@@ -332,3 +332,4 @@ devtools.jar:
     skin/tooltip/arrow-horizontal-light@2x.png (themes/tooltip/arrow-horizontal-light@2x.png)
     skin/tooltip/arrow-vertical-light.png (themes/tooltip/arrow-vertical-light.png)
     skin/tooltip/arrow-vertical-light@2x.png (themes/tooltip/arrow-vertical-light@2x.png)
+    skin/images/reload.svg (themes/images/reload.svg)
