@@ -6,11 +6,8 @@
 
 #include "FuzzingWrapper.h"
 
-PRLogModuleInfo* GetFuzzingWrapperLog() {
-  static PRLogModuleInfo* log = nullptr;
-  if (!log) {
-    log = PR_NewLogModule("MediaFuzzingWrapper");
-  }
+mozilla::LogModule* GetFuzzingWrapperLog() {
+  static mozilla::LazyLogModule log("MediaFuzzingWrapper");
   return log;
 }
 #define DFW_LOGD(arg, ...) MOZ_LOG(GetFuzzingWrapperLog(), mozilla::LogLevel::Debug, ("DecoderFuzzingWrapper(%p)::%s: " arg, this, __func__, ##__VA_ARGS__))

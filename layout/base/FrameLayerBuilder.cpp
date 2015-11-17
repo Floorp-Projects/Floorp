@@ -5146,7 +5146,7 @@ ChooseScaleAndSetTransform(FrameLayerBuilder* aLayerBuilder,
       nsIWidget* widget = aContainerFrame->GetNearestWidget();
       nsSize displaySize;
       if (widget) {
-        IntSize widgetSize = widget->GetClientSize();
+        LayoutDeviceIntSize widgetSize = widget->GetClientSize();
         int32_t p2a = presContext->AppUnitsPerDevPixel();
         displaySize.width = NSIntPixelsToAppUnits(widgetSize.width, p2a);
         displaySize.height = NSIntPixelsToAppUnits(widgetSize.height, p2a);

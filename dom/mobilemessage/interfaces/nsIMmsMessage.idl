@@ -1,0 +1,60 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "domstubs.idl"
+#include "nsISupports.idl"
+
+interface nsIDOMBlob;
+
+[scriptable, builtinclass, uuid(cd2ff09a-8853-11e5-ac49-0f655992cef6)]
+interface nsIMmsMessage : nsISupports
+{
+  /**
+   * |type| is always "mms".
+   */
+  readonly attribute DOMString type;
+
+  readonly attribute long      id;
+
+  readonly attribute unsigned long long threadId;
+
+  /**
+   * Integrated Circuit Card Identifier.
+   *
+   * Will be null if ICC is not available.
+   */
+  readonly attribute DOMString iccId;
+
+  /**
+   * Should be "not-downloaded", "received", "sending", "sent" or "error".
+   */
+  readonly attribute DOMString delivery;
+
+  [implicit_jscontext]
+  readonly attribute jsval     deliveryInfo;   // MmsDeliveryInfo[]
+
+  readonly attribute DOMString sender;
+
+  [implicit_jscontext]
+  readonly attribute jsval     receivers;      // DOMString[]
+
+  readonly attribute DOMTimeStamp timestamp;
+
+  readonly attribute DOMTimeStamp sentTimestamp;
+                                  // 0 if not available (e.g., |delivery| =
+                                  // "sending").
+
+  readonly attribute boolean   read;
+  readonly attribute DOMString subject;
+  readonly attribute DOMString smil;
+
+  [implicit_jscontext]
+  readonly attribute jsval     attachments;    // MmsAttachment[]
+
+  readonly attribute DOMTimeStamp expiryDate;  // Expiry date for an MMS to be
+                                               // manually downloaded.
+
+  // Request read report from sender or not.
+  readonly attribute boolean   readReportRequested;
+};

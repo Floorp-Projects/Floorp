@@ -34,12 +34,12 @@ public:
 
   NS_DECL_ISUPPORTS_INHERITED
 
-  NS_IMETHOD GetClientBoundsUntyped(IntRect &aRect) override {
-    aRect = IntRect(0, 0, gCompWidth, gCompHeight);
+  NS_IMETHOD GetClientBounds(LayoutDeviceIntRect& aRect) override {
+    aRect = LayoutDeviceIntRect(0, 0, gCompWidth, gCompHeight);
     return NS_OK;
   }
-  NS_IMETHOD GetBoundsUntyped(IntRect &aRect) override {
-    return GetClientBoundsUntyped(aRect);
+  NS_IMETHOD GetBounds(LayoutDeviceIntRect& aRect) override {
+    return GetClientBounds(aRect);
   }
 
   void* GetNativeData(uint32_t aDataType) override {

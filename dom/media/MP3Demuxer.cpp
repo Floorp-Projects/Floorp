@@ -16,7 +16,7 @@
 #include "prenv.h"
 
 #ifdef PR_LOGGING
-PRLogModuleInfo* gMP3DemuxerLog;
+mozilla::LazyLogModule gMP3DemuxerLog("MP3Demuxer");
 #define MP3LOG(msg, ...) \
   MOZ_LOG(gMP3DemuxerLog, LogLevel::Debug, ("MP3Demuxer " msg, ##__VA_ARGS__))
 #define MP3LOGV(msg, ...) \
@@ -112,12 +112,6 @@ MP3TrackDemuxer::MP3TrackDemuxer(MediaResource* aSource)
   , mChannels(0)
 {
   Reset();
-
-#ifdef PR_LOGGING
-  if (!gMP3DemuxerLog) {
-    gMP3DemuxerLog = PR_NewLogModule("MP3Demuxer");
-  }
-#endif
 }
 
 bool

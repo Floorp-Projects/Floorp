@@ -7,12 +7,14 @@ task:
   workerType: flame-kk
   scopes:
     - 'docker-worker:cache:build-nexus-4-user'
+    - 'docker-worker:cache:build-nexus-4-user-objdir-gecko-{{project}}'
   metadata:
     name: '[TC] B2G Nexus 4 User'
 
   payload:
     cache:
       build-nexus-4-user: /home/worker/object-folder
+      build-nexus-4-user-objdir-gecko-{{project}}: /home/worker/objdir-gecko
     env:
       TARGET: 'nexus-4'
       DEBUG: 0

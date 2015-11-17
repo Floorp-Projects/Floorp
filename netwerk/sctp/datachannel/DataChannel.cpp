@@ -1832,7 +1832,7 @@ DataChannelConnection::HandleStreamChangeEvent(const struct sctp_stream_change_e
 
       // Make sure we request enough streams if there's a big jump in streams
       // Could make a more complex API for OpenXxxFinish() and avoid this loop
-      int32_t num_needed = mPending.GetSize();
+      size_t num_needed = mPending.GetSize();
       LOG(("%d of %d new streams already needed", num_needed,
            new_len - old_len));
       num_needed -= (new_len - old_len); // number we added

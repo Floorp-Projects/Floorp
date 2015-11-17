@@ -5,58 +5,58 @@
 #include "nsISupports.idl"
 
 interface nsIDeletedMessageInfo;
-interface nsIDOMMozSmsMessage;
-interface nsIDOMMozMmsMessage;
-interface nsIDOMMozMobileMessageThread;
+interface nsISmsMessage;
+interface nsIMmsMessage;
+interface nsIMobileMessageThread;
 
 %{C++
 #define MOBILE_MESSAGE_SERVICE_CID { 0x829c1dd6, 0x0466, 0x4591, { 0x83, 0x6f, 0xb8, 0xf6, 0xfd, 0x1f, 0x7b, 0xa5 } }
 #define MOBILE_MESSAGE_SERVICE_CONTRACTID "@mozilla.org/mobilemessage/mobilemessageservice;1"
 %}
 
-[scriptable, builtinclass, uuid(bc28e604-53ee-4be9-af20-268ce9efc61a)]
+[scriptable, builtinclass, uuid(15267554-8854-11e5-8947-8f2150f4eabc)]
 interface nsIMobileMessageService : nsISupports
 {
   [implicit_jscontext]
-  nsIDOMMozSmsMessage createSmsMessage(in long               id,
-                                       in unsigned long long threadId,
-                                       in DOMString          iccId,
-                                       in DOMString          delivery,
-                                       in DOMString          deliveryStatus,
-                                       in DOMString          sender,
-                                       in DOMString          receiver,
-                                       in DOMString          body,
-                                       in DOMString          messageClass,
-                                       in unsigned long long timestamp,
-                                       in unsigned long long sentTimestamp,
-                                       in unsigned long long deliveryTimestamp,
-                                       in bool               read);
+  nsISmsMessage createSmsMessage(in long               id,
+                                 in unsigned long long threadId,
+                                 in DOMString          iccId,
+                                 in DOMString          delivery,
+                                 in DOMString          deliveryStatus,
+                                 in DOMString          sender,
+                                 in DOMString          receiver,
+                                 in DOMString          body,
+                                 in DOMString          messageClass,
+                                 in unsigned long long timestamp,
+                                 in unsigned long long sentTimestamp,
+                                 in unsigned long long deliveryTimestamp,
+                                 in bool               read);
 
   [implicit_jscontext]
-  nsIDOMMozMmsMessage createMmsMessage(in long               id,
-                                       in unsigned long long threadId,
-                                       in DOMString          iccId,
-                                       in DOMString          delivery,
-                                       in jsval              deliveryInfo,
-                                       in DOMString          sender,
-                                       in jsval              receivers,
-                                       in unsigned long long timestamp,
-                                       in unsigned long long sentTimestamp,
-                                       in boolean            read,
-                                       in DOMString          subject,
-                                       in DOMString          smil,
-                                       in jsval              attachments,
-                                       in unsigned long long expiryDate,
-                                       in boolean            readReportRequested);
+  nsIMmsMessage createMmsMessage(in long               id,
+                                 in unsigned long long threadId,
+                                 in DOMString          iccId,
+                                 in DOMString          delivery,
+                                 in jsval              deliveryInfo,
+                                 in DOMString          sender,
+                                 in jsval              receivers,
+                                 in unsigned long long timestamp,
+                                 in unsigned long long sentTimestamp,
+                                 in boolean            read,
+                                 in DOMString          subject,
+                                 in DOMString          smil,
+                                 in jsval              attachments,
+                                 in unsigned long long expiryDate,
+                                 in boolean            readReportRequested);
 
   [implicit_jscontext]
-  nsIDOMMozMobileMessageThread createThread(in unsigned long long id,
-                                            in jsval              participants,
-                                            in unsigned long long timestamp,
-                                            in DOMString          lastMessageSubject,
-                                            in DOMString          body,
-                                            in unsigned long long unreadCount,
-                                            in DOMString          aLastMessageType);
+  nsIMobileMessageThread createThread(in unsigned long long id,
+                                      in jsval              participants,
+                                      in unsigned long long timestamp,
+                                      in DOMString          lastMessageSubject,
+                                      in DOMString          body,
+                                      in unsigned long long unreadCount,
+                                      in DOMString          aLastMessageType);
 
   nsIDeletedMessageInfo createDeletedMessageInfo(
     [array, size_is(msgCount)] in long messageIds,

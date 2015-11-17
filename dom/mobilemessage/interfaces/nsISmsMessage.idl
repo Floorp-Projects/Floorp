@@ -1,0 +1,64 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "domstubs.idl"
+#include "nsISupports.idl"
+
+[scriptable, builtinclass, uuid(d7670dfa-8853-11e5-8e3e-43cd171289cc)]
+interface nsISmsMessage : nsISupports
+{
+  /**
+   * |type| is always "sms".
+   */
+  readonly attribute DOMString type;
+
+  readonly attribute long      id;
+
+  readonly attribute unsigned long long threadId;
+
+  /**
+   * Integrated Circuit Card Identifier.
+   *
+   * Will be null if ICC is not available.
+   */
+  readonly attribute DOMString iccId;
+
+  /**
+   * Should be "received", "sending", "sent" or "error".
+   */
+  readonly attribute DOMString delivery;
+
+  /**
+   * Possible delivery status values for above delivery states are:
+   *
+   * "received": "success"
+   * "sending" : "pending", or "not-applicable" if the message was sent without
+   *             status report requisition.
+   * "sent"    : "pending", "success", "error", or "not-applicable"
+   *             if the message was sent without status report requisition.
+   * "error"   : "error"
+   */
+  readonly attribute DOMString deliveryStatus;
+
+  readonly attribute DOMString sender;
+  readonly attribute DOMString receiver;
+  readonly attribute DOMString body;
+
+  /**
+   * Should be "normal", "class-0", "class-1", "class-2" or "class-3".
+   */
+  readonly attribute DOMString messageClass;
+
+  readonly attribute DOMTimeStamp timestamp;
+
+  readonly attribute DOMTimeStamp sentTimestamp;
+                                  // 0 if not available (e.g., |delivery| =
+                                  // "sending").
+
+  readonly attribute DOMTimeStamp deliveryTimestamp;
+                                  // 0 if not available (e.g., |delivery| =
+                                  // "received" or not yet delivered).
+
+  readonly attribute boolean   read;
+};

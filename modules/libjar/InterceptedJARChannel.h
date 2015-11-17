@@ -41,6 +41,8 @@ class InterceptedJARChannel : public nsIInterceptedChannel
   // The stream to write the body of the synthesized response.
   nsCOMPtr<nsIOutputStream> mResponseBody;
 
+  nsCOMPtr<nsISupports> mReleaseHandle;
+
   // The content type of the synthesized response.
   nsCString mContentType;
 

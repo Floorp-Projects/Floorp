@@ -187,10 +187,13 @@ BluetoothDevice::FetchUuids(ErrorResult& aRv)
   // Ensure BluetoothService is available
   BluetoothService* bs = BluetoothService::Get();
   BT_ENSURE_TRUE_REJECT(bs, promise, NS_ERROR_NOT_AVAILABLE);
-
+  BluetoothAddress address;
+  BT_ENSURE_TRUE_REJECT(NS_SUCCEEDED(StringToAddress(mAddress, address)),
+                        promise,
+                        NS_ERROR_DOM_INVALID_STATE_ERR);
   BT_ENSURE_TRUE_REJECT(
     NS_SUCCEEDED(
-      bs->FetchUuidsInternal(mAddress, new FetchUuidsTask(promise, this))),
+      bs->FetchUuidsInternal(address, new FetchUuidsTask(promise, this))),
     promise, NS_ERROR_DOM_OPERATION_ERR);
 
   return promise.forget();

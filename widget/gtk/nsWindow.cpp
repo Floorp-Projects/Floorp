@@ -1481,40 +1481,40 @@ nsWindow::SetFocus(bool aRaise)
 }
 
 NS_IMETHODIMP
-nsWindow::GetScreenBoundsUntyped(nsIntRect &aRect)
+nsWindow::GetScreenBounds(LayoutDeviceIntRect& aRect)
 {
     if (mIsTopLevel && mContainer) {
         // use the point including window decorations
         gint x, y;
         gdk_window_get_root_origin(gtk_widget_get_window(GTK_WIDGET(mContainer)), &x, &y);
-        aRect.MoveTo(GdkPointToDevicePixels({ x, y }).ToUnknownPoint());
+        aRect.MoveTo(GdkPointToDevicePixels({ x, y }));
     } else {
-        aRect.MoveTo(WidgetToScreenOffset().ToUnknownPoint());
+        aRect.MoveTo(WidgetToScreenOffset());
     }
     // mBounds.Size() is the window bounds, not the window-manager frame
     // bounds (bug 581863).  gdk_window_get_frame_extents would give the
     // frame bounds, but mBounds.Size() is returned here for consistency
     // with Resize.
-    aRect.SizeTo(mBounds.Size());
-    LOG(("GetScreenBoundsUntyped %d,%d | %dx%d\n",
+    aRect.SizeTo(LayoutDeviceIntSize::FromUnknownSize(mBounds.Size()));
+    LOG(("GetScreenBounds %d,%d | %dx%d\n",
          aRect.x, aRect.y, aRect.width, aRect.height));
     return NS_OK;
 }
 
-gfx::IntSize
+LayoutDeviceIntSize
 nsWindow::GetClientSize()
 {
-  return gfx::IntSize(mBounds.width, mBounds.height);
+  return LayoutDeviceIntSize(mBounds.width, mBounds.height);
 }
 
 NS_IMETHODIMP
-nsWindow::GetClientBoundsUntyped(nsIntRect &aRect)
+nsWindow::GetClientBounds(LayoutDeviceIntRect& aRect)
 {
     // GetBounds returns a rect whose top left represents the top left of the
     // outer bounds, but whose width/height represent the size of the inner
     // bounds (which is messed up).
-    GetBoundsUntyped(aRect);
-    aRect.MoveBy(GetClientOffsetUntyped());
+    GetBounds(aRect);
+    aRect.MoveBy(GetClientOffset());
 
     return NS_OK;
 }
@@ -1561,10 +1561,10 @@ nsWindow::UpdateClientOffset()
     mClientOffset = nsIntPoint(left, top);
 }
 
-nsIntPoint
-nsWindow::GetClientOffsetUntyped()
+LayoutDeviceIntPoint
+nsWindow::GetClientOffset()
 {
-    return mClientOffset;
+    return LayoutDeviceIntPoint::FromUnknownPoint(mClientOffset);
 }
 
 gboolean

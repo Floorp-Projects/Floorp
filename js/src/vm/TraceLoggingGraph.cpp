@@ -276,7 +276,7 @@ TraceLoggerGraph::flush()
         if (bytesWritten < tree.size())
             return false;
 
-        treeOffset += tree.lastEntryId();
+        treeOffset += tree.size();
         tree.clear();
     }
 
@@ -359,7 +359,7 @@ TraceLoggerGraph::startEventInternal(uint32_t id, uint64_t timestamp)
 
     if (parent.lastChildId() == 0) {
         MOZ_ASSERT(!entry.hasChildren());
-        MOZ_ASSERT(parent.treeId() == tree.lastEntryId() + treeOffset);
+        MOZ_ASSERT(parent.treeId() == treeOffset + tree.size() - 1);
 
         if (!updateHasChildren(parent.treeId()))
             return false;

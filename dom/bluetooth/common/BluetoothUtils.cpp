@@ -62,6 +62,21 @@ StringToAddress(const nsAString& aString, BluetoothAddress& aAddress)
 }
 
 nsresult
+PinCodeToString(const BluetoothPinCode& aPinCode, nsAString& aString)
+{
+  if (aPinCode.mLength > sizeof(aPinCode.mPinCode)) {
+    BT_LOGR("Pin-code string too long");
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
+
+  aString = NS_ConvertUTF8toUTF16(
+    nsCString(reinterpret_cast<const char*>(aPinCode.mPinCode),
+              aPinCode.mLength));
+
+  return NS_OK;
+}
+
+nsresult
 StringToPinCode(const nsAString& aString, BluetoothPinCode& aPinCode)
 {
   NS_ConvertUTF16toUTF8 stringUTF8(aString);
@@ -69,7 +84,7 @@ StringToPinCode(const nsAString& aString, BluetoothPinCode& aPinCode)
   auto len = stringUTF8.Length();
 
   if (len > sizeof(aPinCode.mPinCode)) {
-    BT_LOGR("Service-name string too long");
+    BT_LOGR("Pin-code string too long");
     return NS_ERROR_ILLEGAL_VALUE;
   }
 
@@ -78,6 +93,31 @@ StringToPinCode(const nsAString& aString, BluetoothPinCode& aPinCode)
   memcpy(aPinCode.mPinCode, str, len);
   memset(aPinCode.mPinCode + len, 0, sizeof(aPinCode.mPinCode) - len);
   aPinCode.mLength = len;
+
+  return NS_OK;
+}
+
+nsresult
+StringToControlPlayStatus(const nsAString& aString,
+                          ControlPlayStatus& aPlayStatus)
+{
+  if (aString.EqualsLiteral("STOPPED")) {
+    aPlayStatus = ControlPlayStatus::PLAYSTATUS_STOPPED;
+  } else if (aString.EqualsLiteral("PLAYING")) {
+    aPlayStatus = ControlPlayStatus::PLAYSTATUS_PLAYING;
+  } else if (aString.EqualsLiteral("PAUSED")) {
+    aPlayStatus = ControlPlayStatus::PLAYSTATUS_PAUSED;
+  } else if (aString.EqualsLiteral("FWD_SEEK")) {
+    aPlayStatus = ControlPlayStatus::PLAYSTATUS_FWD_SEEK;
+  } else if (aString.EqualsLiteral("REV_SEEK")) {
+    aPlayStatus = ControlPlayStatus::PLAYSTATUS_REV_SEEK;
+  } else if (aString.EqualsLiteral("ERROR")) {
+    aPlayStatus = ControlPlayStatus::PLAYSTATUS_ERROR;
+  } else {
+    BT_LOGR("Invalid play status: %s", NS_ConvertUTF16toUTF8(aString).get());
+    aPlayStatus = ControlPlayStatus::PLAYSTATUS_UNKNOWN;
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
 
   return NS_OK;
 }
@@ -205,15 +245,18 @@ UuidToString(const BluetoothUuid& aUuid, nsAString& aString)
   aString.AssignLiteral(uuidStr);
 }
 
-void
+nsresult
 StringToUuid(const nsAString& aString, BluetoothUuid& aUuid)
 {
   uint32_t uuid0, uuid4;
   uint16_t uuid1, uuid2, uuid3, uuid5;
 
-  sscanf(NS_ConvertUTF16toUTF8(aString).get(),
-         "%08x-%04hx-%04hx-%04hx-%08x%04hx",
-         &uuid0, &uuid1, &uuid2, &uuid3, &uuid4, &uuid5);
+  auto res = sscanf(NS_ConvertUTF16toUTF8(aString).get(),
+                    "%08x-%04hx-%04hx-%04hx-%08x%04hx",
+                    &uuid0, &uuid1, &uuid2, &uuid3, &uuid4, &uuid5);
+  if (res == EOF || res < 6) {
+    return NS_ERROR_ILLEGAL_VALUE;
+  }
 
   uuid0 = htonl(uuid0);
   uuid1 = htons(uuid1);
@@ -228,6 +271,8 @@ StringToUuid(const nsAString& aString, BluetoothUuid& aUuid)
   memcpy(&aUuid.mUuid[8], &uuid3, sizeof(uint16_t));
   memcpy(&aUuid.mUuid[10], &uuid4, sizeof(uint32_t));
   memcpy(&aUuid.mUuid[14], &uuid5, sizeof(uint16_t));
+
+  return NS_OK;
 }
 
 nsresult

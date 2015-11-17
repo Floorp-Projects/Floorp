@@ -8,19 +8,13 @@
 
 namespace mozilla {
 
-PRLogModuleInfo* GetEMELog() {
-  static PRLogModuleInfo* log = nullptr;
-  if (!log) {
-    log = PR_NewLogModule("EME");
-  }
+LogModule* GetEMELog() {
+  static LazyLogModule log("EME");
   return log;
 }
 
-PRLogModuleInfo* GetEMEVerboseLog() {
-  static PRLogModuleInfo* log = nullptr;
-  if (!log) {
-    log = PR_NewLogModule("EMEV");
-  }
+LogModule* GetEMEVerboseLog() {
+  static LazyLogModule log("EMEV");
   return log;
 }
 

@@ -63,7 +63,7 @@ function checkEVChains() {
   // Chain with an end entity cert with a validity period that is acceptable
   // for EV.
   const intFullName = "ev_int_60_months-evroot";
-  let eeFullName = `ev_ee_39_months-${intFullName}`;
+  let eeFullName = `ev_ee_27_months-${intFullName}`;
   let expectedNamesForOCSP = gEVExpected
                            ? [ intFullName,
                                eeFullName ]
@@ -73,7 +73,7 @@ function checkEVChains() {
 
   // Chain with an end entity cert with a validity period that is too long
   // for EV.
-  eeFullName = `ev_ee_40_months-${intFullName}`;
+  eeFullName = `ev_ee_28_months-${intFullName}`;
   expectedNamesForOCSP = gEVExpected
                            ? [ intFullName,
                                eeFullName ]

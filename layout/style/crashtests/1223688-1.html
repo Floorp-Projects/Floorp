@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<script>
+
+function boom() {
+    CSS.supports('');
+
+    var style = document.createElement("style");
+    var tn = document.createTextNode("* { border: var(--b); }");
+    style.appendChild(tn);
+    document.body.appendChild(style);
+}
+
+</script>
+</head>
+<body onload="boom();"></body>
+</html>
