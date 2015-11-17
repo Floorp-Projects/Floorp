@@ -1,0 +1,94 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1224825
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1224825</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1224825">Mozilla Bug 1224825</a>
+<div id="content"></div>
+<pre id="test">
+</pre>
+  <script type="application/javascript">
+
+var MAX = 100;
+
+function test_fullDeliveredMessages() {
+  var worker = new Worker('data:javascript,onmessage = function(e) { e.ports[0].onmessage = function(evt) { postMessage(evt.data);}}');
+
+  var count = 0;
+  worker.onmessage = function(e) {
+    is(e.data, count, "Correct value expected!");
+    ok(count < MAX,"No count > MAX messages!");
+    if (++count == MAX) {
+
+      SimpleTest.requestFlakyTimeout("Testing an event not happening");
+      setTimeout(function() {
+        runTests();
+      }, 200);
+
+      info("All the messages correctly received");
+    }
+  }
+
+  var mc = new MessageChannel();
+  worker.postMessage(42, [mc.port2]);
+
+  for (var i = 0; i < MAX; ++i) {
+    mc.port1.postMessage(i);
+  }
+
+  mc.port1.close();
+
+  for (var i = 0; i < MAX * 2; ++i) {
+    mc.port1.postMessage(i);
+  }
+}
+
+function test_closeInBetween() {
+  var mc = new MessageChannel();
+
+  for (var i = 0; i < MAX; ++i) {
+    mc.port1.postMessage(i);
+  }
+
+  mc.port1.onmessage = function(e) {
+    ok (e.data < MAX/2, "Correct message received from port1:" + e.data);
+  }
+
+  mc.port2.onmessage = function(e) {
+    ok (e.data < MAX, "Correct message received from port2:" + e.data);
+    if (e.data == MAX/2) {
+      mc.port2.close();
+    }
+
+    mc.port2.postMessage(e.data);
+
+    if (e.data == MAX - 1) {
+      runTests();
+    }
+  }
+}
+
+var tests = [ test_fullDeliveredMessages, test_closeInBetween ];
+
+function runTests() {
+  if (!tests.length) {
+    SimpleTest.finish();
+    return;
+  }
+
+  var test = tests.shift();
+  test();
+}
+
+SimpleTest.waitForExplicitFinish();
+runTests();
+  </script>
+</body>
+</html>

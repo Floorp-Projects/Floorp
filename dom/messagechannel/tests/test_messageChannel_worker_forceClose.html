@@ -1,0 +1,27 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test for forcing the closing of the port in workers</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<div id="content"></div>
+<pre id="test">
+</pre>
+  <script type="application/javascript">
+
+  var worker = new Worker('data:javascript,onmessage = function(e) { "doing nothing with this port"; }');
+
+  var mc = new MessageChannel();
+  worker.postMessage(42, [mc.port2]);
+
+  for (var i = 0; i < 10; ++i) {
+    mc.port1.postMessage(i);
+  }
+
+  ok(true, "All the messages are sent! We should shutdown correctly.");
+  </script>
+</body>
+</html>
