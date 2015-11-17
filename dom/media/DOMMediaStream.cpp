@@ -1044,10 +1044,9 @@ DOMHwMediaStream::DOMHwMediaStream()
 {
 #ifdef MOZ_WIDGET_GONK
   mImageContainer = LayerManager::CreateImageContainer(ImageContainer::ASYNCHRONOUS_OVERLAY);
-  RefPtr<Image> img = mImageContainer->CreateImage(ImageFormat::OVERLAY_IMAGE);
-  mOverlayImage = static_cast<layers::OverlayImage*>(img.get());
+  mOverlayImage = mImageContainer->CreateOverlayImage();
   nsAutoTArray<ImageContainer::NonOwningImage,1> images;
-  images.AppendElement(ImageContainer::NonOwningImage(img));
+  images.AppendElement(ImageContainer::NonOwningImage(mOverlayImage));
   mImageContainer->SetCurrentImages(images);
 #endif
 }

@@ -16,20 +16,32 @@ namespace layers {
 
 static RefPtr<GLContext> sSnapshotContext;
 
+EGLImageImage::EGLImageImage(EGLImage aImage, EGLSync aSync,
+                             const gfx::IntSize& aSize, const gl::OriginPos& aOrigin,
+                             bool aOwns)
+ : GLImage(ImageFormat::EGLIMAGE),
+   mImage(aImage),
+   mSync(aSync),
+   mSize(aSize),
+   mPos(aOrigin),
+   mOwns(aOwns)
+{
+}
+
 EGLImageImage::~EGLImageImage()
 {
-  if (!mData.mOwns) {
+  if (!mOwns) {
     return;
   }
 
-  if (mData.mImage) {
-    sEGLLibrary.fDestroyImage(EGL_DISPLAY(), mData.mImage);
-    mData.mImage = nullptr;
+  if (mImage) {
+    sEGLLibrary.fDestroyImage(EGL_DISPLAY(), mImage);
+    mImage = nullptr;
   }
 
-  if (mData.mSync) {
-    sEGLLibrary.fDestroySync(EGL_DISPLAY(), mData.mSync);
-    mData.mSync = nullptr;
+  if (mSync) {
+    sEGLLibrary.fDestroySync(EGL_DISPLAY(), mSync);
+    mSync = nullptr;
   }
 }
 
@@ -81,6 +93,18 @@ GLImage::GetAsSourceSurface()
   ReadPixelsIntoDataSurface(sSnapshotContext, source);
   return source.forget();
 }
+
+#ifdef MOZ_WIDGET_ANDROID
+SurfaceTextureImage::SurfaceTextureImage(gl::AndroidSurfaceTexture* aSurfTex,
+                                         const gfx::IntSize& aSize,
+                                         gl::OriginPos aOriginPos)
+ : GLImage(ImageFormat::SURFACE_TEXTURE),
+   mSurfaceTexture(aSurfTex),
+   mSize(aSize),
+   mOriginPos(aOriginPos)
+{
+}
+#endif
 
 } // namespace layers
 } // namespace mozilla

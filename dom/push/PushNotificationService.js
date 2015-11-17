@@ -36,7 +36,8 @@ PushNotificationService.prototype = {
   _xpcom_factory: XPCOMUtils.generateSingletonFactory(PushNotificationService),
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIObserver,
                                          Ci.nsISupportsWeakReference,
-                                         Ci.nsIPushNotificationService]),
+                                         Ci.nsIPushNotificationService,
+                                         Ci.nsIPushQuotaManager,]),
 
   register: function register(scope, originAttributes) {
     return PushService.register({
@@ -74,6 +75,26 @@ PushNotificationService.prototype = {
         }
         break;
     }
+  },
+
+  // nsIPushQuotaManager methods
+
+  notificationForOriginShown: function(origin) {
+    if (!isParent) {
+      Services.cpmm.sendAsyncMessage("Push:NotificationForOriginShown", origin);
+      return;
+    }
+
+    PushService._notificationForOriginShown(origin);
+  },
+
+  notificationForOriginClosed: function(origin) {
+    if (!isParent) {
+      Services.cpmm.sendAsyncMessage("Push:NotificationForOriginClosed", origin);
+      return;
+    }
+
+    PushService._notificationForOriginClosed(origin);
   }
 };
 

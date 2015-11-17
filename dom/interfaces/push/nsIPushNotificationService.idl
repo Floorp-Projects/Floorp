@@ -57,3 +57,21 @@ interface nsIPushNotificationService : nsISupports
    */
   jsval clearForDomain(in string domain);
 };
+
+[scriptable, uuid(a2555e70-46f8-4b52-bf02-d978b979d143)]
+interface nsIPushQuotaManager : nsISupports
+{
+  /**
+   * Informs the quota manager that a notification
+   * for the given origin has been shown. Used to
+   * determine if push quota should be relaxed.
+   */
+  void notificationForOriginShown(in string origin);
+
+  /**
+   * Informs the quota manager that a notification
+   * for the given origin has been closed. Used to
+   * determine if push quota should be relaxed.
+   */
+  void notificationForOriginClosed(in string origin);
+};

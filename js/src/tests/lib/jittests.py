@@ -119,6 +119,7 @@ class JitTest:
         self.expect_error = '' # Errors to expect and consider passing
         self.expect_status = 0 # Exit status to expect from shell
         self.is_module = False
+        self.test_reflect_stringify = None  # Reflect.stringify implementation to test
 
         # Expected by the test runner. Always true for jit-tests.
         self.enable = True
@@ -137,6 +138,7 @@ class JitTest:
         t.test_join = self.test_join
         t.expect_error = self.expect_error
         t.expect_status = self.expect_status
+        t.test_reflect_stringify = self.test_reflect_stringify
         t.enable = True
         t.is_module = self.is_module
         return t
@@ -235,6 +237,10 @@ class JitTest:
         if options.valgrind_all:
             test.valgrind = True
 
+        if options.test_reflect_stringify is not None:
+            test.expect_error = ''
+            test.expect_status = 0
+
         return test
 
     def command(self, prefix, libdir, moduledir, remote_prefix=None):
@@ -266,8 +272,10 @@ class JitTest:
         if self.is_module:
             cmd += ['--module-load-path', moduledir]
             cmd += ['--module', path]
-        else:
+        elif self.test_reflect_stringify is None:
             cmd += ['-f', path]
+        else:
+            cmd += ['--', self.test_reflect_stringify, "--check", path]
         if self.valgrind:
             cmd = self.VALGRIND_CMD + cmd
         return cmd
@@ -298,6 +306,8 @@ def find_tests(substring=None):
     return ans
 
 def run_test_remote(test, device, prefix, options):
+    if options.test_reflect_stringify:
+        raise ValueError("can't run Reflect.stringify tests remotely")
     cmd = test.command(prefix,
                        posixpath.join(options.remote_test_root, 'lib/'),
                        posixpath.join(options.remote_test_root, 'modules/'),

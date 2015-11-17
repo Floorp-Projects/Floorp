@@ -298,13 +298,7 @@ MediaEngineTabVideoSource::Draw() {
     return;
   }
 
-  layers::CairoImage::Data cairoData;
-  cairoData.mSize = size;
-  cairoData.mSourceSurface = surface;
-
-  RefPtr<layers::CairoImage> image = new layers::CairoImage();
-
-  image->SetData(cairoData);
+  RefPtr<layers::CairoImage> image = new layers::CairoImage(size, surface);
 
   MonitorAutoLock mon(mMonitor);
   mImage = image;

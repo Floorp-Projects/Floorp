@@ -143,7 +143,8 @@ typedef uint32_t nsSplittableType;
 
 #define NS_INTRINSICSIZE    NS_UNCONSTRAINEDSIZE
 #define NS_AUTOHEIGHT       NS_UNCONSTRAINEDSIZE
-#define NS_AUTOMARGIN       NS_UNCONSTRAINEDSIZE
+// +1 is to avoid clamped huge margin values being processed as auto margins
+#define NS_AUTOMARGIN       (NS_UNCONSTRAINEDSIZE + 1)
 #define NS_AUTOOFFSET       NS_UNCONSTRAINEDSIZE
 // NOTE: there are assumptions all over that these have the same value, namely NS_UNCONSTRAINEDSIZE
 //       if any are changed to be a value other than NS_UNCONSTRAINEDSIZE

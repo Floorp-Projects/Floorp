@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+
+    <head>
+        <meta charset="UTF-8">
+        <script>
+            function boom()
+            {
+                document.documentElement.offsetHeight;
+                document.body.appendChild(document.getElementById("x"));
+                document.documentElement.offsetHeight;
+            }
+        </script>
+    </head>
+
+    <body style="-moz-column-count: 4;" onload="boom();">
+        <div style="float: left; height: 10px; width: 10px;">
+            <div id="x">
+                <div style="height: 80px;"></div>
+                <div style="float: left; height: 10px;"></div>
+            </div>
+        </div>
+    </body>
+
+</html>

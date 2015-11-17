@@ -108,6 +108,46 @@ public:
                    const BluetoothValue& aValue);
 
   /**
+   * Create a signal without value and distribute it to the observer list
+   *
+   * @param aName Name of the signal
+   * @param aAddress Path of the signal to distribute to
+   */
+  void
+  DistributeSignal(const nsAString& aName, const BluetoothAddress& aAddress);
+
+  /**
+   * Create a signal and distribute it to the observer list
+   *
+   * @param aName Name of the signal
+   * @param aAddress Path of the signal to distribute to
+   * @param aValue Value of the signal to carry
+   */
+  void
+  DistributeSignal(const nsAString& aName, const BluetoothAddress& aAddress,
+                   const BluetoothValue& aValue);
+
+  /**
+   * Create a signal without value and distribute it to the observer list
+   *
+   * @param aName Name of the signal
+   * @param aUuid Path of the signal to distribute to
+   */
+  void
+  DistributeSignal(const nsAString& aName, const BluetoothUuid& aUuid);
+
+  /**
+   * Create a signal and distribute it to the observer list
+   *
+   * @param aName Name of the signal
+   * @param aUuid Path of the signal to distribute to
+   * @param aValue Value of the signal to carry
+   */
+  void
+  DistributeSignal(const nsAString& aName, const BluetoothUuid& aUuid,
+                   const BluetoothValue& aValue);
+
+  /**
    * Distribute a signal to the observer list
    *
    * @param aSignal Signal object to distribute

@@ -353,6 +353,11 @@ protected:
   bool GetTargetClauseRange(uint32_t *aOffset, uint32_t *aLength = nullptr);
 
   /**
+   * DispatchEvent() dispatches aEvent if aWidget hasn't been destroyed yet.
+   */
+  static void DispatchEvent(nsWindow* aWindow, WidgetGUIEvent& aEvent);
+
+  /**
    * DispatchCompositionChangeEvent() dispatches eCompositionChange event
    * with clause information (it'll be retrieved by CreateTextRangeArray()).
    * I.e., this should be called only during composing.  If a composition is
