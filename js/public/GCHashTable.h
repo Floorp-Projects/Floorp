@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef gc_HashTable_h
-#define gc_HashTable_h
+#ifndef GCHashTable_h
+#define GCHashTable_h
 
 #include "js/HashTable.h"
 #include "js/RootingAPI.h"
@@ -18,36 +18,48 @@ template <typename Key, typename Value>
 struct DefaultMapGCPolicy {
     using KeyPolicy = DefaultGCPolicy<Key>;
     using ValuePolicy = DefaultGCPolicy<Value>;
+
+    static bool needsSweep(Key* key, Value* value) {
+        return KeyPolicy::needsSweep(key) || ValuePolicy::needsSweep(value);
+    }
 };
 
-// A TraceableHashMap is a HashMap with an additional trace method that knows
-// how to visit all keys and values in the table. HashMaps that contain GC
-// pointers that must be traced to be kept alive will generally want to use
-// this TraceableHashMap specializeation in lieu of HashMap.
+// A GCHashMap is a GC-aware HashMap, meaning that it has additional trace and
+// sweep methods that know how to visit all keys and values in the table.
+// HashMaps that contain GC pointers will generally want to use this GCHashMap
+// specialization in lieu of HashMap, either because those pointers must be
+// traced to be kept alive -- in which case, KeyPolicy and/or ValuePolicy
+// should do the appropriate tracing -- or because those pointers are weak and
+// must be swept during a GC -- in which case needsSweep should be set
+// appropriately.
 //
 // Most types of GC pointers as keys and values can be traced with no extra
-// infrastructure. For structs and non-gc-pointer members, ensure that there
-// is a specialization of DefaultGCPolicy<T> with an appropriate trace method
-// available to handle the custom type. Generic helpers can be found in
-// js/public/TracingAPI.h.
+// infrastructure. For structs, the DefaultGCPolicy<T> will call a trace()
+// method on the struct. For other structs and non-gc-pointer members, ensure
+// that there is a specialization of DefaultGCPolicy<T> with an appropriate
+// trace() static method available to handle the custom type. Generic helpers
+// can be found in js/public/TracingAPI.h.
 //
-// Note that although this HashMap's trace will deal correctly with moved keys,
-// it does not itself know when to barrier or trace keys. To function properly
-// it must either be used with Rooted, or barriered and traced manually.
+// Note that this HashMap only knows *how* to trace and sweep (and the tracing
+// can handle keys that move), but it does not itself cause tracing or sweeping
+// to be invoked. For tracing, it must be used with Rooted or PersistentRooted,
+// or barriered and traced manually. For sweeping, currently it requires an
+// explicit call to <map>.sweep().
+//
 template <typename Key,
           typename Value,
           typename HashPolicy = DefaultHasher<Key>,
           typename AllocPolicy = TempAllocPolicy,
           typename GCPolicy = DefaultMapGCPolicy<Key, Value>>
-class TraceableHashMap : public HashMap<Key, Value, HashPolicy, AllocPolicy>,
-                         public JS::Traceable
+class GCHashMap : public HashMap<Key, Value, HashPolicy, AllocPolicy>,
+                  public JS::Traceable
 {
     using Base = HashMap<Key, Value, HashPolicy, AllocPolicy>;
 
   public:
-    explicit TraceableHashMap(AllocPolicy a = AllocPolicy()) : Base(a)  {}
+    explicit GCHashMap(AllocPolicy a = AllocPolicy()) : Base(a)  {}
 
-    static void trace(TraceableHashMap* map, JSTracer* trc) { map->trace(trc); }
+    static void trace(GCHashMap* map, JSTracer* trc) { map->trace(trc); }
     void trace(JSTracer* trc) {
         if (!this->initialized())
             return;
@@ -60,23 +72,33 @@ class TraceableHashMap : public HashMap<Key, Value, HashPolicy, AllocPolicy>,
         }
     }
 
-    // TraceableHashMap is movable
-    TraceableHashMap(TraceableHashMap&& rhs) : Base(mozilla::Forward<TraceableHashMap>(rhs)) {}
-    void operator=(TraceableHashMap&& rhs) {
+    void sweep() {
+        if (!this->initialized())
+            return;
+
+        for (typename Base::Enum e(*this); !e.empty(); e.popFront()) {
+            if (GCPolicy::needsSweep(&e.front().mutableKey(), &e.front().value()))
+                e.removeFront();
+        }
+    }
+
+    // GCHashMap is movable
+    GCHashMap(GCHashMap&& rhs) : Base(mozilla::Forward<GCHashMap>(rhs)) {}
+    void operator=(GCHashMap&& rhs) {
         MOZ_ASSERT(this != &rhs, "self-move assignment is prohibited");
-        Base::operator=(mozilla::Forward<TraceableHashMap>(rhs));
+        Base::operator=(mozilla::Forward<GCHashMap>(rhs));
     }
 
   private:
-    // TraceableHashMap is not copyable or assignable
-    TraceableHashMap(const TraceableHashMap& hm) = delete;
-    TraceableHashMap& operator=(const TraceableHashMap& hm) = delete;
+    // GCHashMap is not copyable or assignable
+    GCHashMap(const GCHashMap& hm) = delete;
+    GCHashMap& operator=(const GCHashMap& hm) = delete;
 };
 
 template <typename Outer, typename... Args>
-class TraceableHashMapOperations
+class GCHashMapOperations
 {
-    using Map = TraceableHashMap<Args...>;
+    using Map = GCHashMap<Args...>;
     using Lookup = typename Map::Lookup;
     using Ptr = typename Map::Ptr;
     using AddPtr = typename Map::AddPtr;
@@ -98,10 +120,10 @@ class TraceableHashMapOperations
 };
 
 template <typename Outer, typename... Args>
-class MutableTraceableHashMapOperations
-  : public TraceableHashMapOperations<Outer, Args...>
+class MutableGCHashMapOperations
+  : public GCHashMapOperations<Outer, Args...>
 {
-    using Map = TraceableHashMap<Args...>;
+    using Map = GCHashMap<Args...>;
     using Lookup = typename Map::Lookup;
     using Ptr = typename Map::Ptr;
     using AddPtr = typename Map::AddPtr;
@@ -145,24 +167,22 @@ class MutableTraceableHashMapOperations
 };
 
 template <typename A, typename B, typename C, typename D, typename E>
-class RootedBase<TraceableHashMap<A,B,C,D,E>>
-  : public MutableTraceableHashMapOperations<JS::Rooted<TraceableHashMap<A,B,C,D,E>>, A,B,C,D,E>
+class RootedBase<GCHashMap<A,B,C,D,E>>
+  : public MutableGCHashMapOperations<JS::Rooted<GCHashMap<A,B,C,D,E>>, A,B,C,D,E>
 {};
 
 template <typename A, typename B, typename C, typename D, typename E>
-class MutableHandleBase<TraceableHashMap<A,B,C,D,E>>
-  : public MutableTraceableHashMapOperations<JS::MutableHandle<TraceableHashMap<A,B,C,D,E>>,
-                                             A,B,C,D,E>
+class MutableHandleBase<GCHashMap<A,B,C,D,E>>
+  : public MutableGCHashMapOperations<JS::MutableHandle<GCHashMap<A,B,C,D,E>>, A,B,C,D,E>
 {};
 
 template <typename A, typename B, typename C, typename D, typename E>
-class HandleBase<TraceableHashMap<A,B,C,D,E>>
-  : public TraceableHashMapOperations<JS::Handle<TraceableHashMap<A,B,C,D,E>>, A,B,C,D,E>
+class HandleBase<GCHashMap<A,B,C,D,E>>
+  : public GCHashMapOperations<JS::Handle<GCHashMap<A,B,C,D,E>>, A,B,C,D,E>
 {};
 
-// A TraceableHashSet is a HashSet with an additional trace method that knows
-// how to visit all set elements. HashSets that contain GC pointers that must
-// be traced to be kept alive will generally want to use this TraceableHashSet
+// A GCHashSet is a HashSet with an additional trace method that knows
+// be traced to be kept alive will generally want to use this GCHashSet
 // specializeation in lieu of HashSet.
 //
 // Most types of GC pointers can be traced with no extra infrastructure. For
@@ -178,15 +198,15 @@ template <typename T,
           typename HashPolicy = DefaultHasher<T>,
           typename AllocPolicy = TempAllocPolicy,
           typename GCPolicy = DefaultGCPolicy<T>>
-class TraceableHashSet : public HashSet<T, HashPolicy, AllocPolicy>,
-                         public JS::Traceable
+class GCHashSet : public HashSet<T, HashPolicy, AllocPolicy>,
+                  public JS::Traceable
 {
     using Base = HashSet<T, HashPolicy, AllocPolicy>;
 
   public:
-    explicit TraceableHashSet(AllocPolicy a = AllocPolicy()) : Base(a)  {}
+    explicit GCHashSet(AllocPolicy a = AllocPolicy()) : Base(a)  {}
 
-    static void trace(TraceableHashSet* set, JSTracer* trc) { set->trace(trc); }
+    static void trace(GCHashSet* set, JSTracer* trc) { set->trace(trc); }
     void trace(JSTracer* trc) {
         if (!this->initialized())
             return;
@@ -198,23 +218,32 @@ class TraceableHashSet : public HashSet<T, HashPolicy, AllocPolicy>,
         }
     }
 
-    // TraceableHashSet is movable
-    TraceableHashSet(TraceableHashSet&& rhs) : Base(mozilla::Forward<TraceableHashSet>(rhs)) {}
-    void operator=(TraceableHashSet&& rhs) {
+    void sweep() {
+        if (!this->initialized())
+            return;
+        for (typename Base::Enum e(*this); !e.empty(); e.popFront()) {
+            if (GCPolicy::needsSweep(&e.mutableFront()))
+                e.removeFront();
+        }
+    }
+
+    // GCHashSet is movable
+    GCHashSet(GCHashSet&& rhs) : Base(mozilla::Forward<GCHashSet>(rhs)) {}
+    void operator=(GCHashSet&& rhs) {
         MOZ_ASSERT(this != &rhs, "self-move assignment is prohibited");
-        Base::operator=(mozilla::Forward<TraceableHashSet>(rhs));
+        Base::operator=(mozilla::Forward<GCHashSet>(rhs));
     }
 
   private:
-    // TraceableHashSet is not copyable or assignable
-    TraceableHashSet(const TraceableHashSet& hs) = delete;
-    TraceableHashSet& operator=(const TraceableHashSet& hs) = delete;
+    // GCHashSet is not copyable or assignable
+    GCHashSet(const GCHashSet& hs) = delete;
+    GCHashSet& operator=(const GCHashSet& hs) = delete;
 };
 
 template <typename Outer, typename... Args>
-class TraceableHashSetOperations
+class GCHashSetOperations
 {
-    using Set = TraceableHashSet<Args...>;
+    using Set = GCHashSet<Args...>;
     using Lookup = typename Set::Lookup;
     using Ptr = typename Set::Ptr;
     using AddPtr = typename Set::AddPtr;
@@ -236,10 +265,10 @@ class TraceableHashSetOperations
 };
 
 template <typename Outer, typename... Args>
-class MutableTraceableHashSetOperations
-  : public TraceableHashSetOperations<Outer, Args...>
+class MutableGCHashSetOperations
+  : public GCHashSetOperations<Outer, Args...>
 {
-    using Set = TraceableHashSet<Args...>;
+    using Set = GCHashSet<Args...>;
     using Lookup = typename Set::Lookup;
     using Ptr = typename Set::Ptr;
     using AddPtr = typename Set::AddPtr;
@@ -281,44 +310,42 @@ class MutableTraceableHashSetOperations
 };
 
 template <typename T, typename HP, typename AP, typename GP>
-class RootedBase<TraceableHashSet<T, HP, AP, GP>>
-  : public MutableTraceableHashSetOperations<JS::Rooted<TraceableHashSet<T, HP, AP, GP>>,
-                                             T, HP, AP, GP>
+class RootedBase<GCHashSet<T, HP, AP, GP>>
+  : public MutableGCHashSetOperations<JS::Rooted<GCHashSet<T, HP, AP, GP>>, T, HP, AP, GP>
 {
-    using Set = TraceableHashSet<T, HP, AP, GP>;
+    using Set = GCHashSet<T, HP, AP, GP>;
 
-    friend class TraceableHashSetOperations<JS::Rooted<Set>, T, HP, AP, GP>;
+    friend class GCHashSetOperations<JS::Rooted<Set>, T, HP, AP, GP>;
     const Set& extract() const { return *static_cast<const JS::Rooted<Set>*>(this)->address(); }
 
-    friend class MutableTraceableHashSetOperations<JS::Rooted<Set>, T, HP, AP, GP>;
+    friend class MutableGCHashSetOperations<JS::Rooted<Set>, T, HP, AP, GP>;
     Set& extract() { return *static_cast<JS::Rooted<Set>*>(this)->address(); }
 };
 
 template <typename T, typename HP, typename AP, typename GP>
-class MutableHandleBase<TraceableHashSet<T, HP, AP, GP>>
-  : public MutableTraceableHashSetOperations<JS::MutableHandle<TraceableHashSet<T, HP, AP, GP>>,
-                                             T, HP, AP, GP>
+class MutableHandleBase<GCHashSet<T, HP, AP, GP>>
+  : public MutableGCHashSetOperations<JS::MutableHandle<GCHashSet<T, HP, AP, GP>>, T, HP, AP, GP>
 {
-    using Set = TraceableHashSet<T, HP, AP, GP>;
+    using Set = GCHashSet<T, HP, AP, GP>;
 
-    friend class TraceableHashSetOperations<JS::MutableHandle<Set>, T, HP, AP, GP>;
+    friend class GCHashSetOperations<JS::MutableHandle<Set>, T, HP, AP, GP>;
     const Set& extract() const {
         return *static_cast<const JS::MutableHandle<Set>*>(this)->address();
     }
 
-    friend class MutableTraceableHashSetOperations<JS::MutableHandle<Set>, T, HP, AP, GP>;
+    friend class MutableGCHashSetOperations<JS::MutableHandle<Set>, T, HP, AP, GP>;
     Set& extract() { return *static_cast<JS::MutableHandle<Set>*>(this)->address(); }
 };
 
 template <typename T, typename HP, typename AP, typename GP>
-class HandleBase<TraceableHashSet<T, HP, AP, GP>>
-  : public TraceableHashSetOperations<JS::Handle<TraceableHashSet<T, HP, AP, GP>>, T, HP, AP, GP>
+class HandleBase<GCHashSet<T, HP, AP, GP>>
+  : public GCHashSetOperations<JS::Handle<GCHashSet<T, HP, AP, GP>>, T, HP, AP, GP>
 {
-    using Set = TraceableHashSet<T, HP, AP, GP>;
-    friend class TraceableHashSetOperations<JS::Handle<Set>, T, HP, AP, GP>;
+    using Set = GCHashSet<T, HP, AP, GP>;
+    friend class GCHashSetOperations<JS::Handle<Set>, T, HP, AP, GP>;
     const Set& extract() const { return *static_cast<const JS::Handle<Set>*>(this)->address(); }
 };
 
 } /* namespace js */
 
-#endif /* gc_HashTable_h */
+#endif /* GCHashTable_h */

@@ -6,8 +6,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "ds/TraceableFifo.h"
+#include "js/GCHashTable.h"
 #include "js/RootingAPI.h"
-#include "js/TraceableHashTable.h"
 #include "js/TraceableVector.h"
 
 #include "jsapi-tests/tests.h"
@@ -122,7 +122,7 @@ BEGIN_TEST(testGCRootedStaticStructInternalStackStorageAugmented)
 }
 END_TEST(testGCRootedStaticStructInternalStackStorageAugmented)
 
-using MyHashMap = js::TraceableHashMap<js::Shape*, JSObject*>;
+using MyHashMap = js::GCHashMap<js::Shape*, JSObject*>;
 
 BEGIN_TEST(testGCRootedHashMap)
 {

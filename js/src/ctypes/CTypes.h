@@ -14,7 +14,7 @@
 #include "prlink.h"
 
 #include "ctypes/typedefs.h"
-#include "js/TraceableHashTable.h"
+#include "js/GCHashTable.h"
 #include "js/Vector.h"
 #include "vm/String.h"
 
@@ -283,8 +283,7 @@ struct FieldHashPolicy : DefaultHasher<JSFlatString*>
   }
 };
 
-typedef TraceableHashMap<JSFlatString*, FieldInfo, FieldHashPolicy, SystemAllocPolicy>
-    FieldInfoHash;
+using FieldInfoHash = GCHashMap<JSFlatString*, FieldInfo, FieldHashPolicy, SystemAllocPolicy>;
 
 void
 TraceFieldInfoHash(JSTracer* trc, FieldInfoHash* fields);
