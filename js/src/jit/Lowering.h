@@ -177,6 +177,7 @@ class LIRGenerator : public LIRGeneratorSpecific
     void visitMaybeToDoubleElement(MMaybeToDoubleElement* ins);
     void visitMaybeCopyElementsForWrite(MMaybeCopyElementsForWrite* ins);
     void visitLoadSlot(MLoadSlot* ins);
+    void visitLoadFixedSlotAndUnbox(MLoadFixedSlotAndUnbox* ins);
     void visitFunctionEnvironment(MFunctionEnvironment* ins);
     void visitInterruptCheck(MInterruptCheck* ins);
     void visitAsmJSInterruptCheck(MAsmJSInterruptCheck* ins);

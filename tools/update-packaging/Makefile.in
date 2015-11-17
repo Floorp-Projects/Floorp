@@ -27,8 +27,8 @@ else
 PACKAGE_DIR	= $(PACKAGE_BASE_DIR)/$(MOZ_PKG_DIR)
 endif
 
-MAR_BIN	= $(LIBXUL_DIST)/host/bin/mar$(HOST_BIN_SUFFIX)
-MBSDIFF_BIN	= $(LIBXUL_DIST)/host/bin/mbsdiff$(HOST_BIN_SUFFIX)
+MAR_BIN	= $(DIST)/host/bin/mar$(HOST_BIN_SUFFIX)
+MBSDIFF_BIN	= $(DIST)/host/bin/mbsdiff$(HOST_BIN_SUFFIX)
 
 OVERRIDE_DEFAULT_GOAL := full-update
 full-update:: complete-patch

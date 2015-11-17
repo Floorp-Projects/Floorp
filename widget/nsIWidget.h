@@ -1829,17 +1829,6 @@ public:
                         void* aCallbackData) = 0;
 
     /*
-     * Get toggled key states.
-     * aKeyCode should be NS_VK_CAPS_LOCK or  NS_VK_NUM_LOCK or
-     * NS_VK_SCROLL_LOCK.
-     * aLEDState is the result for current LED state of the key.
-     * If the LED is 'ON', it returns TRUE, otherwise, FALSE.
-     * If the platform doesn't support the LED state (or we cannot get the
-     * state), this method returns NS_ERROR_NOT_IMPLEMENTED.
-     */
-    NS_IMETHOD GetToggledKeyState(uint32_t aKeyCode, bool* aLEDState) = 0;
-
-    /*
      * Retrieves preference for IME updates
      */
     virtual nsIMEUpdatePreference GetIMEUpdatePreference() = 0;
