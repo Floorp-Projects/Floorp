@@ -1127,6 +1127,13 @@ MobileConnection::NotifyNetworkSelectionModeChanged()
   return NS_OK;
 }
 
+NS_IMETHODIMP
+MobileConnection::NotifyDeviceIdentitiesChanged()
+{
+  // To be supported when bug 1222870 is required in m-c.
+  return NS_OK;
+}
+
 // nsIIccListener
 
 NS_IMETHODIMP

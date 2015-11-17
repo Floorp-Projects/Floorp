@@ -79,6 +79,11 @@ public:
                                      mActive
                                        ? MOZ_UTF16("active")
                                        : MOZ_UTF16("inactive"));
+
+    MOZ_LOG(AudioChannelService::GetAudioChannelLog(), LogLevel::Debug,
+           ("NotifyChannelActiveRunnable, type = %d, active = %d\n",
+            mAudioChannel, mActive));
+
     return NS_OK;
   }
 
@@ -181,6 +186,16 @@ AudioChannelService::GetOrCreate()
   CreateServiceIfNeeded();
   RefPtr<AudioChannelService> service = gAudioChannelService.get();
   return service.forget();
+}
+
+/* static */ PRLogModuleInfo*
+AudioChannelService::GetAudioChannelLog()
+{
+  static PRLogModuleInfo *gAudioChannelLog;
+  if (!gAudioChannelLog) {
+    gAudioChannelLog = PR_NewLogModule("AudioChannel");
+  }
+  return gAudioChannelLog;
 }
 
 /* static */ void
@@ -730,6 +745,10 @@ AudioChannelService::SetAudioChannelVolume(nsPIDOMWindow* aWindow,
   MOZ_ASSERT(aWindow);
   MOZ_ASSERT(aWindow->IsOuterWindow());
 
+  MOZ_LOG(GetAudioChannelLog(), LogLevel::Debug,
+         ("AudioChannelService, SetAudioChannelVolume, window = %p, type = %d, "
+          "volume = %d\n", aWindow, aAudioChannel, aVolume));
+
   AudioChannelWindow* winData = GetOrCreateWindowData(aWindow);
   winData->mChannels[(uint32_t)aAudioChannel].mVolume = aVolume;
   RefreshAgentsVolume(aWindow);
@@ -783,6 +802,10 @@ AudioChannelService::SetAudioChannelMuted(nsPIDOMWindow* aWindow,
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(aWindow);
   MOZ_ASSERT(aWindow->IsOuterWindow());
+
+  MOZ_LOG(GetAudioChannelLog(), LogLevel::Debug,
+         ("AudioChannelService, SetAudioChannelMuted, window = %p, type = %d, "
+          "mute = %d\n", aWindow, aAudioChannel, aMuted));
 
   if (aAudioChannel == AudioChannel::System) {
     // Workaround for bug1183033, system channel type can always playback.

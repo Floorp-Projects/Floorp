@@ -8,7 +8,6 @@
 #include "SmsIPCService.h"
 #include "nsXULAppAPI.h"
 #include "mozilla/dom/mobilemessage/SmsChild.h"
-#include "SmsMessage.h"
 #include "nsJSUtils.h"
 #include "mozilla/dom/MozMobileMessageManagerBinding.h"
 #include "mozilla/dom/BindingUtils.h"

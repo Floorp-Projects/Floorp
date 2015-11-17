@@ -73,6 +73,7 @@ import android.os.Process;
 import android.os.StrictMode;
 import android.provider.ContactsContract;
 import android.provider.MediaStore.Images.Media;
+import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
 import android.support.v4.content.ContextCompat;
 import android.text.TextUtils;
@@ -657,10 +658,12 @@ public abstract class GeckoApp
 
             NativeJSObject action = message.optObject("action", null);
 
+            final SnackbarEventCallback snackbarCallback = new SnackbarEventCallback(callback);
+
             showSnackbar(msg,
                     duration,
                     action != null ? action.optString("label", null) : null,
-                    callback);
+                    snackbarCallback);
         } else if ("SystemUI:Visibility".equals(event)) {
             setSystemUiVisible(message.getBoolean("visible"));
 
@@ -859,21 +862,29 @@ public abstract class GeckoApp
         return mToast;
     }
 
-    void showSnackbar(final String message, final int duration, final String action, final EventCallback callback) {
+    void showSnackbar(final String message, final int duration, @Nullable final String action,
+                      final @Nullable SnackbarCallback callback) {
         final Snackbar snackbar = Snackbar.make(mRootLayout, message, duration);
 
-        if (!TextUtils.isEmpty(action)) {
-            final SnackbarEventCallback snackbarCallback = new SnackbarEventCallback(callback);
-
-            snackbar.setAction(action, snackbarCallback);
+        if (callback != null && !TextUtils.isEmpty(action)) {
+            snackbar.setAction(action, callback);
             snackbar.setActionTextColor(ContextCompat.getColor(this, R.color.fennec_ui_orange));
-            snackbar.setCallback(snackbarCallback);
+            snackbar.setCallback(callback);
         }
 
         snackbar.show();
     }
 
-    private static class SnackbarEventCallback extends Snackbar.Callback implements View.OnClickListener {
+    /**
+     * Combined interface for handling all callbacks from a snackbar because anonymous classes can only extend one
+     * interface or class.
+     */
+    public static abstract class SnackbarCallback extends Snackbar.Callback implements View.OnClickListener {};
+
+    /**
+     * SnackbarCallback implementation for delegating snackbar events to an EventCallback.
+     */
+    private static class SnackbarEventCallback extends SnackbarCallback {
         private EventCallback callback;
 
         public SnackbarEventCallback(EventCallback callback) {
