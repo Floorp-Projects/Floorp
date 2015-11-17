@@ -97,7 +97,7 @@ window.busy-determined #action-busy-undetermined {
 .panel-list {
   display: none;
   position: relative;
-  max-width: 180px;
+  max-width: 190px;
   overflow: hidden;
 }
 

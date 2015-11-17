@@ -158,11 +158,7 @@ ProjectList.prototype = {
 
     let tabs = AppManager.tabStore.tabs;
 
-    if (tabs.length > 0) {
-      tabsHeaderNode.removeAttribute("hidden");
-    } else {
-      tabsHeaderNode.setAttribute("hidden", "true");
-    }
+    tabsHeaderNode.removeAttribute("hidden");
 
     for (let i = 0; i < tabs.length; i++) {
       let tab = tabs[i];
