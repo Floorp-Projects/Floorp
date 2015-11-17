@@ -3666,11 +3666,13 @@ ICGetPropCallNativeCompiler::generateStubCode(MacroAssembler& masm)
     }
 
     // Box and push obj onto baseline frame stack for decompiler
-    if (inputDefinitelyObject_)
-        masm.tagValue(JSVAL_TYPE_OBJECT, objReg, R0);
-    EmitStowICValues(masm, 1);
-    if (inputDefinitelyObject_)
-        objReg = masm.extractObject(R0, ExtractTemp0);
+    if (engine_ == Engine::Baseline) {
+        if (inputDefinitelyObject_)
+            masm.tagValue(JSVAL_TYPE_OBJECT, objReg, R0);
+        EmitStowICValues(masm, 1);
+        if (inputDefinitelyObject_)
+            objReg = masm.extractObject(R0, ExtractTemp0);
+    }
 
     // Push a stub frame so that we can perform a non-tail call.
     enterStubFrame(masm, scratch);
@@ -3694,7 +3696,8 @@ ICGetPropCallNativeCompiler::generateStubCode(MacroAssembler& masm)
         return false;
     leaveStubFrame(masm);
 
-    EmitUnstowICValues(masm, 1, /* discard = */true);
+    if (engine_ == Engine::Baseline)
+        EmitUnstowICValues(masm, 1, /* discard = */true);
 
     // Enter type monitor IC to type-check result.
     EmitEnterTypeMonitorIC(masm);
@@ -4106,7 +4109,8 @@ ICGetProp_Generic::Compiler::generateStubCode(MacroAssembler& masm)
     Register scratch = regs.takeAnyExcluding(ICTailCallReg);
 
     // Sync for the decompiler.
-    EmitStowICValues(masm, 1);
+    if (engine_ == Engine::Baseline)
+        EmitStowICValues(masm, 1);
 
     enterStubFrame(masm, scratch);
 
@@ -4115,11 +4119,14 @@ ICGetProp_Generic::Compiler::generateStubCode(MacroAssembler& masm)
     masm.Push(ICStubReg);
     PushFramePtr(masm, R0.scratchReg());
 
-    if(!callVM(DoGetPropGenericInfo, masm))
+    if (!callVM(DoGetPropGenericInfo, masm))
         return false;
 
     leaveStubFrame(masm);
-    EmitUnstowICValues(masm, 1, /* discard = */ true);
+
+    if (engine_ == Engine::Baseline)
+        EmitUnstowICValues(masm, 1, /* discard = */ true);
+
     EmitEnterTypeMonitorIC(masm);
     return true;
 }
