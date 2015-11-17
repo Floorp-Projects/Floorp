@@ -241,10 +241,8 @@ FetchDriver::HttpFetch()
   MOZ_ASSERT(mLoadGroup);
   nsCOMPtr<nsIChannel> chan;
 
-  // For dedicated workers mDocument refers to the parent document of the
-  // worker (why do we do that?). In that case we don't want to use the
-  // document here since that is not the correct principal.
-  if (mDocument && mDocument->NodePrincipal() == mPrincipal) {
+  if (mDocument) {
+    MOZ_ASSERT(mDocument->NodePrincipal() == mPrincipal);
     rv = NS_NewChannel(getter_AddRefs(chan),
                        uri,
                        mDocument,

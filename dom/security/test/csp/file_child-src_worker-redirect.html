@@ -24,11 +24,12 @@
 
       worker.onerror = function(error) {
         var msg = error.message;
-        if (msg.match(/^: NetworkError/)) {
+        if (msg.match(/^: NetworkError/) || msg.match(/Failed to load script/)) {
           // this means CSP blocked it
           msg = "blocked";
         }
         window.parent.postMessage({id:page_id, message:msg}, 'http://mochi.test:8888');
+        error.preventDefault();
       };
 
       worker.onmessage = function(ev) {

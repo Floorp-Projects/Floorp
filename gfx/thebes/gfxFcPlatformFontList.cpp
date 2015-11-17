@@ -212,38 +212,100 @@ const MozLangGroupData MozLangGroups[] = {
     { nsGkAtoms::Unicode,        0    }
 };
 
-static void
-GetSampleLangForGroup(nsIAtom* aLanguage, nsACString& aLangStr)
+bool
+gfxFcPlatformFontList::TryLangForGroup(const nsACString& aOSLang,
+                                       nsIAtom* aLangGroup,
+                                       nsACString& aFcLang)
+{
+    // Truncate at '.' or '@' from aOSLang, and convert '_' to '-'.
+    // aOSLang is in the form "language[_territory][.codeset][@modifier]".
+    // fontconfig takes languages in the form "language-territory".
+    // nsILanguageAtomService takes languages in the form language-subtag,
+    // where subtag may be a territory.  fontconfig and nsILanguageAtomService
+    // handle case-conversion for us.
+    const char *pos, *end;
+    aOSLang.BeginReading(pos);
+    aOSLang.EndReading(end);
+    aFcLang.Truncate();
+    while (pos < end) {
+        switch (*pos) {
+            case '.':
+            case '@':
+                end = pos;
+                break;
+            case '_':
+                aFcLang.Append('-');
+                break;
+            default:
+                aFcLang.Append(*pos);
+        }
+        ++pos;
+    }
+
+    nsILanguageAtomService* langService = GetLangService();
+    nsIAtom *atom = langService->LookupLanguage(aFcLang);
+    return atom == aLangGroup;
+}
+
+void
+gfxFcPlatformFontList::GetSampleLangForGroup(nsIAtom* aLanguage,
+                                             nsACString& aLangStr)
 {
     aLangStr.Truncate();
-    if (aLanguage) {
-        // set up lang string
-        const MozLangGroupData *mozLangGroup = nullptr;
+    if (!aLanguage) {
+        return;
+    }
 
-        // -- look it up in the list of moz lang groups
-        for (unsigned int i = 0; i < ArrayLength(MozLangGroups); ++i) {
-            if (aLanguage == MozLangGroups[i].mozLangGroup) {
-                mozLangGroup = &MozLangGroups[i];
-                break;
+    // set up lang string
+    const MozLangGroupData *mozLangGroup = nullptr;
+
+    // -- look it up in the list of moz lang groups
+    for (unsigned int i = 0; i < ArrayLength(MozLangGroups); ++i) {
+        if (aLanguage == MozLangGroups[i].mozLangGroup) {
+            mozLangGroup = &MozLangGroups[i];
+            break;
+        }
+    }
+
+    // -- not a mozilla lang group? Just return the BCP47 string
+    //    representation of the lang group
+    if (!mozLangGroup) {
+        // Not a special mozilla language group.
+        // Use aLanguage as a language code.
+        aLanguage->ToUTF8String(aLangStr);
+        return;
+    }
+
+    // -- check the environment for the user's preferred language that
+    //    corresponds to this mozilla lang group.
+    const char *languages = getenv("LANGUAGE");
+    if (languages) {
+        const char separator = ':';
+
+        for (const char *pos = languages; true; ++pos) {
+            if (*pos == '\0' || *pos == separator) {
+                if (languages < pos &&
+                    TryLangForGroup(Substring(languages, pos),
+                                    aLanguage, aLangStr))
+                    return;
+
+                if (*pos == '\0')
+                    break;
+
+                languages = pos + 1;
             }
         }
+    }
+    const char *ctype = setlocale(LC_CTYPE, nullptr);
+    if (ctype &&
+        TryLangForGroup(nsDependentCString(ctype), aLanguage, aLangStr)) {
+        return;
+    }
 
-        // xxx - Is this sufficient? The code in
-        // gfxFontconfigUtils::GetSampleLangForGroup has logic for sniffing the
-        // LANGUAGE environment to try and map langGroup ==> closest user language
-        // but I'm guessing that's not really all that useful. For now, just use
-        // the default lang mapping.
-
-        // -- get the BCP47 string representation of the lang group
-        if (mozLangGroup) {
-            if (mozLangGroup->defaultLang) {
-                aLangStr.Assign(mozLangGroup->defaultLang);
-            }
-        } else {
-            // Not a special mozilla language group.
-            // Use aLangGroup as a language code.
-            aLanguage->ToUTF8String(aLangStr);
-        }
+    if (mozLangGroup->defaultLang) {
+        aLangStr.Assign(mozLangGroup->defaultLang);
+    } else {
+        aLangStr.Truncate();
     }
 }
 
@@ -346,7 +408,8 @@ gfxFontconfigFontEntry::SupportsLangGroup(nsIAtom *aLangGroup) const
     }
 
     nsAutoCString fcLang;
-    GetSampleLangForGroup(aLangGroup, fcLang);
+    gfxFcPlatformFontList* pfl = gfxFcPlatformFontList::PlatformFontList();
+    pfl->GetSampleLangForGroup(aLangGroup, fcLang);
     if (fcLang.IsEmpty()) {
         return true;
     }
@@ -1105,7 +1168,8 @@ GetSystemFontList(nsTArray<nsString>& aListOfFonts, nsIAtom *aLangGroup)
 
     // add the lang to the pattern
     nsAutoCString fcLang;
-    GetSampleLangForGroup(aLangGroup, fcLang);
+    gfxFcPlatformFontList* pfl = gfxFcPlatformFontList::PlatformFontList();
+    pfl->GetSampleLangForGroup(aLangGroup, fcLang);
     if (!fcLang.IsEmpty()) {
         FcPatternAddString(pat, FC_LANG, ToFcChar8Ptr(fcLang.get()));
     }
