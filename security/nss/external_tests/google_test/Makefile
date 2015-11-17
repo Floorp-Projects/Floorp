@@ -44,10 +44,8 @@ include $(CORE_DEPTH)/coreconf/rules.mk
 
 MKSHLIB	= $(CCC) $(DSO_LDOPTS) $(DARWIN_SDK_SHLIBFLAGS)
 ifeq (WINNT,$(OS_ARCH))
-    # -MTd (not -MD) because that makes it link to the right library
     # -EHsc because gtest has exception handlers
-    OS_CFLAGS := $(filterout -MD,$(OS_CFLAGS))
-    OS_CFLAGS += -MTd -EHsc
+    OS_CFLAGS += -EHsc
     # On windows, we need to create the parent directory
     # Needed because we include files from a subdirectory
     MAKE_OBJDIR = $(INSTALL) -D $(dir $@)
