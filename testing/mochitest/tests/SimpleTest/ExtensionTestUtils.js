@@ -20,16 +20,18 @@ ExtensionTestUtils.loadExtension = function(ext, id = null)
   });
 
   function checkMessages() {
-    if (messageQueue.length) {
+    while (messageQueue.length) {
       let [msg, ...args] = messageQueue[0];
 
       let listener = messageAwaiter.get(msg);
-      if (listener) {
-        messageQueue.shift();
-        messageAwaiter.delete(msg);
-
-        listener.resolve(...args);
+      if (!listener) {
+        break;
       }
+
+      messageQueue.shift();
+      messageAwaiter.delete(msg);
+
+      listener.resolve(...args);
     }
   }
 
