@@ -110,18 +110,6 @@ browser.jar:
   skin/classic/browser/customizableui/customizeMode-separatorVertical.png  (customizableui/customizeMode-separatorVertical.png)
   skin/classic/browser/customizableui/menu-arrow.svg           (customizableui/menu-arrow.svg)
 * skin/classic/browser/customizableui/panelUIOverlay.css       (customizableui/panelUIOverlay.css)
-  skin/classic/browser/customizableui/thumburger-XP.png             (customizableui/thumburger-XP.png)
-  skin/classic/browser/customizableui/thumburger-XP@2x.png          (customizableui/thumburger-XP@2x.png)
-  skin/classic/browser/customizableui/thumburger-aero.png           (customizableui/thumburger-aero.png)
-  skin/classic/browser/customizableui/thumburger-aero@2x.png        (customizableui/thumburger-aero@2x.png)
-  skin/classic/browser/customizableui/thumburger-inverted.png       (customizableui/thumburger-inverted.png)
-  skin/classic/browser/customizableui/thumburger-inverted@2x.png    (customizableui/thumburger-inverted@2x.png)
-  skin/classic/browser/customizableui/thumburger-lunaSilver.png     (customizableui/thumburger-lunaSilver.png)
-  skin/classic/browser/customizableui/thumburger-lunaSilver@2x.png  (customizableui/thumburger-lunaSilver@2x.png)
-  skin/classic/browser/customizableui/thumburger-win8.png           (customizableui/thumburger-win8.png)
-  skin/classic/browser/customizableui/thumburger-win8@2x.png        (customizableui/thumburger-win8@2x.png)
-  skin/classic/browser/customizableui/thumburger.png                (customizableui/thumburger.png)
-  skin/classic/browser/customizableui/thumburger@2x.png             (customizableui/thumburger@2x.png)
   skin/classic/browser/downloads/allDownloadsViewOverlay.css   (downloads/allDownloadsViewOverlay.css)
   skin/classic/browser/downloads/buttons.png                   (downloads/buttons.png)
   skin/classic/browser/downloads/buttons-XP.png                (downloads/buttons-XP.png)
@@ -361,16 +349,6 @@ browser.jar:
 % override chrome://browser/skin/Toolbar.png                          chrome://browser/skin/Toolbar-aero.png                            os=WINNT osversion=6.1
 % override chrome://browser/skin/Toolbar.png                          chrome://browser/skin/Toolbar-win8.png                            os=WINNT osversion=6.2
 % override chrome://browser/skin/Toolbar.png                          chrome://browser/skin/Toolbar-win8.png                            os=WINNT osversion=6.3
-% override chrome://browser/skin/customizableui/thumburger.png        chrome://browser/skin/customizableui/thumburger-XP.png            os=WINNT osversion<6
-% override chrome://browser/skin/customizableui/thumburger.png        chrome://browser/skin/customizableui/thumburger-aero.png          os=WINNT osversion=6
-% override chrome://browser/skin/customizableui/thumburger.png        chrome://browser/skin/customizableui/thumburger-aero.png          os=WINNT osversion=6.1
-% override chrome://browser/skin/customizableui/thumburger.png        chrome://browser/skin/customizableui/thumburger-win8.png          os=WINNT osversion=6.2
-% override chrome://browser/skin/customizableui/thumburger.png        chrome://browser/skin/customizableui/thumburger-win8.png          os=WINNT osversion=6.3
-% override chrome://browser/skin/customizableui/thumburger@2x.png     chrome://browser/skin/customizableui/thumburger-XP@2x.png         os=WINNT osversion<6
-% override chrome://browser/skin/customizableui/thumburger@2x.png     chrome://browser/skin/customizableui/thumburger-aero@2x.png       os=WINNT osversion=6
-% override chrome://browser/skin/customizableui/thumburger@2x.png     chrome://browser/skin/customizableui/thumburger-aero@2x.png       os=WINNT osversion=6.1
-% override chrome://browser/skin/customizableui/thumburger@2x.png     chrome://browser/skin/customizableui/thumburger-win8@2x.png       os=WINNT osversion=6.2
-% override chrome://browser/skin/customizableui/thumburger@2x.png     chrome://browser/skin/customizableui/thumburger-win8@2x.png       os=WINNT osversion=6.3
 % override chrome://browser/skin/loop/toolbar.png                     chrome://browser/skin/loop/toolbar-XP.png                         os=WINNT osversion<6
 % override chrome://browser/skin/loop/toolbar.png                     chrome://browser/skin/loop/toolbar-aero.png                       os=WINNT osversion=6
 % override chrome://browser/skin/loop/toolbar.png                     chrome://browser/skin/loop/toolbar-aero.png                       os=WINNT osversion=6.1

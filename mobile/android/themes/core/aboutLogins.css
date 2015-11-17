@@ -1,9 +1,8 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
-* License, v. 2.0. If a copy of the MPL was not distributed with this
-* file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-%filter substitution
-%include defines.inc
+@import "defines.css";
 
 html {
   height: 100%;
@@ -54,8 +53,8 @@ body {
   width: 100%;
   padding: 10px 0;
   display: flex;
-  background: @color_about_background@;
-  border-top: 2px solid @color_about_item_border@;
+  background: var(--color_about_background);
+  border-top: 2px solid var(--color_about_item_border);
 }
 
 #filter-input-container[hidden] {

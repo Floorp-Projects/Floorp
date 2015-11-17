@@ -64,13 +64,17 @@ label {
   align-items: center;
 }
 
-.target-logo {
+.target-icon {
   height: 24px;
   margin-right: 5px;
 }
 
-.target-logo:not([src]) {
+.target-icon:not([src]) {
   display: none;
+}
+
+.inverted-icons .target-icon {
+  filter: invert(30%);
 }
 
 .target-details {

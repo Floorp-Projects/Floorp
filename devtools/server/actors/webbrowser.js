@@ -12,7 +12,7 @@ var promise = require("promise");
 var { ActorPool, createExtraActors, appendExtraActors } = require("devtools/server/actors/common");
 var { DebuggerServer } = require("devtools/server/main");
 var DevToolsUtils = require("devtools/shared/DevToolsUtils");
-var { assert, dbg_assert } = DevToolsUtils;
+var { assert  } = DevToolsUtils;
 var { TabSources } = require("./utils/TabSources");
 var makeDebugger = require("./utils/make-debugger");
 
@@ -345,8 +345,7 @@ BrowserTabList.prototype._getActorForBrowser = function(browser) {
     this._checkListening();
     return actor.connect();
   } else {
-    actor = new BrowserTabActor(this._connection, browser,
-                                browser.getTabBrowser());
+    actor = new BrowserTabActor(this._connection, browser);
     this._actorByBrowser.set(browser, actor);
     this._checkListening();
     return promise.resolve(actor);
@@ -894,7 +893,7 @@ TabActor.prototype = {
 
   get sources() {
     if (!this._sources) {
-      dbg_assert(this.threadActor, "threadActor should exist when creating sources.");
+      assert(this.threadActor, "threadActor should exist when creating sources.");
       this._sources = new TabSources(this.threadActor);
     }
     return this._sources;
@@ -1847,20 +1846,21 @@ exports.TabActor = TabActor;
 
 /**
  * Creates a tab actor for handling requests to a single in-process
- * <browser> tab. Most of the implementation comes from TabActor.
+ * <xul:browser> tab, or <html:iframe>.
+ * Most of the implementation comes from TabActor.
  *
  * @param aConnection DebuggerServerConnection
  *        The connection to the client.
  * @param aBrowser browser
- *        The browser instance that contains this tab.
- * @param aTabBrowser tabbrowser
- *        The tabbrowser that can receive nsIWebProgressListener events.
+ *        The frame instance that contains this tab.
  */
-function BrowserTabActor(aConnection, aBrowser, aTabBrowser)
+function BrowserTabActor(aConnection, aBrowser)
 {
   TabActor.call(this, aConnection, aBrowser);
   this._browser = aBrowser;
-  this._tabbrowser = aTabBrowser;
+  if (typeof(aBrowser.getTabBrowser) == "function") {
+    this._tabbrowser = aBrowser.getTabBrowser();
+  }
 
   Object.defineProperty(this, "docShell", {
     value: this._browser.docShell,

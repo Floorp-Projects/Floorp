@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1445462022000">
+<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1447453044000">
   <emItems>
       <emItem  blockID="i58" id="webmaster@buzzzzvideos.info">
                         <versionRange  minVersion="0" maxVersion="*">
@@ -402,6 +402,12 @@
     </emItem>
       <emItem  blockID="i966" id="{5C655500-E712-41e7-9349-CE462F844B19}">
                         <versionRange  minVersion="0" maxVersion="1.0.1-signed" severity="1">
+                    </versionRange>
+                    <prefs>
+              </prefs>
+    </emItem>
+      <emItem  blockID="i1050" id="87aukfkausiopoawjsuifhasefgased278djasi@jetpack">
+                        <versionRange  minVersion="0" maxVersion="*" severity="3">
                     </versionRange>
                     <prefs>
               </prefs>
@@ -2823,12 +2829,13 @@
                             <infoURL>https://get.adobe.com/flashplayer/</infoURL>
           </pluginItem>
       <pluginItem  blockID="p180">
-                  <match name="filename" exp="JavaAppletPlugin\.plugin" />                                    <versionRange  minVersion="Java 7 Update 0" maxVersion="Java 7 Update 11" severity="0" vulnerabilitystatus="1">
+                  <match name="filename" exp="JavaAppletPlugin\.plugin" />                                    <versionRange  minVersion="Java 7 Update 0" maxVersion="Java 7 Update 10" severity="0" vulnerabilitystatus="1">
                                 <targetApplication  id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
                               <versionRange  minVersion="17.0" maxVersion="*" />
                           </targetApplication>
                   </versionRange>
-                        </pluginItem>
+                            <infoURL>https://java.com/</infoURL>
+          </pluginItem>
       <pluginItem  blockID="p182">
       <match name="name" exp="Java\(TM\) Platform SE 7 U([0-9]|(1[0-1]))(\s[^\d\._U]|$)" />            <match name="filename" exp="npjp2\.dll" />                                    <versionRange  severity="0" vulnerabilitystatus="1">
                                 <targetApplication  id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
@@ -3277,6 +3284,22 @@
                   <match name="filename" exp="(NPSWF32.*\.dll)|(NPSWF64.*\.dll)|(Flash\ Player\.plugin)" />                      <versionRange  minVersion="19.0" maxVersion="19.0.0.225" severity="0" vulnerabilitystatus="1"></versionRange>
                             <infoURL>https://get.adobe.com/flashplayer/</infoURL>
           </pluginItem>
+      <pluginItem  blockID="p1052">
+                  <match name="filename" exp="JavaAppletPlugin\.plugin" />                      <versionRange  minVersion="Java 7 Update 11" maxVersion="Java 7 Update 11" severity="0" vulnerabilitystatus="1"></versionRange>
+                            <infoURL>https://java.com/</infoURL>
+          </pluginItem>
+      <pluginItem  blockID="p1053">
+                  <match name="filename" exp="nprpplugin\.dll" />                      <versionRange  minVersion="0" maxVersion="17.0.10.7" severity="0" vulnerabilitystatus="1"></versionRange>
+                            <infoURL>https://real.com/</infoURL>
+          </pluginItem>
+      <pluginItem  blockID="p1054">
+                  <match name="filename" exp="np32dsw_[0-9]+\.dll" />                      <versionRange  minVersion="0" maxVersion="12.2.0.162" severity="0" vulnerabilitystatus="1"></versionRange>
+                            <infoURL>https://get.adobe.com/shockwave/</infoURL>
+          </pluginItem>
+      <pluginItem  blockID="p1055">
+                  <match name="filename" exp="DirectorShockwave\.plugin" />                      <versionRange  minVersion="0" maxVersion="12.2.0.162" severity="0" vulnerabilitystatus="1"></versionRange>
+                            <infoURL>https://get.adobe.com/shockwave/</infoURL>
+          </pluginItem>
     </pluginItems>
 
   <gfxItems>
@@ -3341,6 +3364,11 @@
                       <device>0x6903</device>
                       <device>0x6907</device>
                       <device>0x7300</device>
+                      <device>0x9870</device>
+                      <device>0x9874</device>
+                      <device>0x9875</device>
+                      <device>0x9876</device>
+                      <device>0x9877</device>
                   </devices>
             <feature>DIRECT2D</feature>      <featureStatus>BLOCKED_DRIVER_VERSION</featureStatus>      <driverVersion>15.201.1151.0</driverVersion>      <driverVersionComparator>LESS_THAN</driverVersionComparator>    </gfxBlacklistEntry>
     <gfxBlacklistEntry  blockID="g984">      <os>All</os>      <vendor>0x8086</vendor>            <feature>DIRECT2D</feature>      <featureStatus>BLOCKED_DRIVER_VERSION</featureStatus>      <driverVersion>8.15.10.2413</driverVersion>      <driverVersionComparator>LESS_THAN_OR_EQUAL</driverVersionComparator>    </gfxBlacklistEntry>
@@ -3360,6 +3388,11 @@
                       <device>0x6903</device>
                       <device>0x6907</device>
                       <device>0x7300</device>
+                      <device>0x9870</device>
+                      <device>0x9874</device>
+                      <device>0x9875</device>
+                      <device>0x9876</device>
+                      <device>0x9877</device>
                   </devices>
             <feature>DIRECT2D</feature>      <featureStatus>BLOCKED_DRIVER_VERSION</featureStatus>      <driverVersion>15.201.1151.0</driverVersion>      <driverVersionComparator>LESS_THAN</driverVersionComparator>    </gfxBlacklistEntry>
     </gfxItems>
