@@ -44,6 +44,8 @@ gDebuggingEnabled = prefs.get("debug");
 
 const kCHILD_PROCESS_MESSAGES = ["Push:Register", "Push:Unregister",
                                  "Push:Registration", "Push:RegisterEventNotificationListener",
+                                 "Push:NotificationForOriginShown",
+                                 "Push:NotificationForOriginClosed",
                                  "child-process-shutdown"];
 
 const PUSH_SERVICE_UNINIT = 0;
@@ -96,6 +98,11 @@ this.PushService = {
   _db: null,
   _options: null,
   _alarmID: null,
+  _visibleNotifications: new Map(),
+
+  // Callback that is called after attempting to
+  // reduce the quota for a record. Used for testing purposes.
+  _updateQuotaTestCallback: null,
 
   _childListeners: [],
 
@@ -847,20 +854,77 @@ this.PushService = {
         if (shouldNotify) {
           notified = this._notifyApp(record, message);
         }
-        if (record.isExpired()) {
-          this._recordDidNotNotify(kDROP_NOTIFICATION_REASON_EXPIRED);
-          // Drop the registration in the background. If the user returns to the
-          // site, the service worker will be notified on the next `idle-daily`
-          // event.
-          this._sendUnregister(record).catch(error => {
-            debug("receivedPushMessage: Unregister error: " + error);
-          });
-        }
+        // Update quota after the delay, at which point
+        // we check for visible notifications.
+        setTimeout(() => this._updateQuota(keyID),
+          prefs.get("quotaUpdateDelay"));
         return notified;
       });
     }).catch(error => {
       debug("receivedPushMessage: Error notifying app: " + error);
     });
+  },
+
+  _updateQuota: function(keyID) {
+    debug("updateQuota()");
+
+    this._db.update(keyID, record => {
+      // Record may have expired from an earlier quota update.
+      if (record.isExpired()) {
+        debug("updateQuota: Trying to update quota for expired record " +
+          JSON.stringify(record));
+        return null;
+      }
+      // If there are visible notifications, don't apply the quota penalty
+      // for the message.
+      if (!this._visibleNotifications.has(record.uri.prePath)) {
+        record.reduceQuota();
+      }
+      return record;
+    }).then(record => {
+      if (record && record.isExpired()) {
+        this._recordDidNotNotify(kDROP_NOTIFICATION_REASON_EXPIRED);
+        // Drop the registration in the background. If the user returns to the
+        // site, the service worker will be notified on the next `idle-daily`
+        // event.
+        this._sendUnregister(record).catch(error => {
+          debug("updateQuota: Unregister error: " + error);
+        });
+      }
+      if (this._updateQuotaTestCallback) {
+        // Callback so that test may be notified when the quota update is complete.
+        this._updateQuotaTestCallback();
+      }
+    }).catch(error => {
+      debug("updateQuota: Error while trying to update quota " + error);
+    });
+  },
+
+  _notificationForOriginShown(origin) {
+    debug("notificationForOriginShown() " + origin);
+    let count;
+    if (this._visibleNotifications.has(origin)) {
+      count = this._visibleNotifications.get(origin);
+    } else {
+      count = 0;
+    }
+    this._visibleNotifications.set(origin, count + 1);
+  },
+
+  _notificationForOriginClosed(origin) {
+    debug("notificationForOriginClosed() " + origin);
+    let count;
+    if (this._visibleNotifications.has(origin)) {
+      count = this._visibleNotifications.get(origin);
+    } else {
+      debug("notificationForOriginClosed: closing notification that has not been shown?");
+      return;
+    }
+    if (count > 1) {
+      this._visibleNotifications.set(origin, count - 1);
+    } else {
+      this._visibleNotifications.delete(origin);
+    }
   },
 
   _notifyApp: function(aPushRecord, message) {
@@ -1052,6 +1116,20 @@ this.PushService = {
           this._childListeners.splice(i, 1);
         }
       }
+      debug("Clearing notifications from child");
+      this._visibleNotifications.clear();
+      return;
+    }
+
+    if (aMessage.name === "Push:NotificationForOriginShown") {
+      debug("Notification shown from child");
+      this._notificationForOriginShown(aMessage.data);
+      return;
+    }
+
+    if (aMessage.name === "Push:NotificationForOriginClosed") {
+      debug("Notification closed from child");
+      this._notificationForOriginClosed(aMessage.data);
       return;
     }
 
