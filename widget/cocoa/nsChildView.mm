@@ -1887,31 +1887,6 @@ nsChildView::GetIMEUpdatePreference()
   return nsIMEUpdatePreference(nsIMEUpdatePreference::NOTIFY_SELECTION_CHANGE);
 }
 
-NS_IMETHODIMP nsChildView::GetToggledKeyState(uint32_t aKeyCode,
-                                              bool* aLEDState)
-{
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
-
-  NS_ENSURE_ARG_POINTER(aLEDState);
-  uint32_t key;
-  switch (aKeyCode) {
-    case NS_VK_CAPS_LOCK:
-      key = alphaLock;
-      break;
-    case NS_VK_NUM_LOCK:
-      key = kEventKeyModifierNumLockMask;
-      break;
-    // Mac doesn't support SCROLL_LOCK state.
-    default:
-      return NS_ERROR_NOT_IMPLEMENTED;
-  }
-  uint32_t modifierFlags = ::GetCurrentKeyModifiers();
-  *aLEDState = (modifierFlags & key) != 0;
-  return NS_OK;
-
-  NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
-}
-
 NSView<mozView>* nsChildView::GetEditorView()
 {
   NSView<mozView>* editorView = mView;

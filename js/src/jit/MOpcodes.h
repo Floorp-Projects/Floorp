@@ -214,6 +214,7 @@ namespace jit {
     _(EffectiveAddress)                                                     \
     _(ClampToUint8)                                                         \
     _(LoadFixedSlot)                                                        \
+    _(LoadFixedSlotAndUnbox)                                                \
     _(StoreFixedSlot)                                                       \
     _(CallGetProperty)                                                      \
     _(GetNameCache)                                                         \

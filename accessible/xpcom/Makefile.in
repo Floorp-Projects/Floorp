@@ -2,31 +2,9 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-EXTRA_MDDEPEND_FILES = xpcAccEvents.pp
-
+# We'd like this to be defined in a future GENERATED_EXPORTS list.
+# Bug 1160185 has a few proposals for this.
 INSTALL_TARGETS += xpcaccevents
 xpcaccevents_FILES := xpcAccEvents.h
 xpcaccevents_DEST = $(DIST)/include
 xpcaccevents_TARGET := export
-
-include $(topsrcdir)/config/rules.mk
-
-xpcAccEvents.cpp: $(srcdir)/AccEvents.conf \
-                     $(srcdir)/AccEventGen.py \
-                     $(LIBXUL_DIST)/sdk/bin/header.py \
-                     $(LIBXUL_DIST)/sdk/bin/xpidl.py
-	$(PYTHON) $(topsrcdir)/config/pythonpath.py \
-	  -I$(LIBXUL_DIST)/sdk/bin \
-	  $(srcdir)/AccEventGen.py \
-	  -I $(DEPTH)/dist/idl \
-	  $(srcdir)/AccEvents.conf \
-	  xpcAccEvents.h \
-	  xpcAccEvents.cpp \
-	  $(MDDEPDIR)/xpcAccEvents.pp
-
-xpcAccEvents.h: xpcAccEvents.cpp
-
-GARBAGE += \
-  xpcAccEvents.cpp \
-  xpcAccEvents.h \
-  $(null)
