@@ -101,7 +101,8 @@ class ICTypeUpdate_PrimitiveSet : public TypeCheckPrimitiveSetStub
 
       public:
         Compiler(JSContext* cx, ICTypeUpdate_PrimitiveSet* existingStub, JSValueType type)
-          : TypeCheckPrimitiveSetStub::Compiler(cx, TypeUpdate_PrimitiveSet, existingStub, type)
+          : TypeCheckPrimitiveSetStub::Compiler(cx, TypeUpdate_PrimitiveSet,
+                                                Engine::Baseline, existingStub, type)
         {}
 
         ICTypeUpdate_PrimitiveSet* updateStub() {
@@ -528,7 +529,7 @@ class ICGetElem_Fallback : public ICMonitoredFallbackStub
             ICGetElem_Fallback* stub = newStub<ICGetElem_Fallback>(space, getStubCode());
             if (!stub)
                 return nullptr;
-            if (!stub->initMonitoringChain(cx, space))
+            if (!stub->initMonitoringChain(cx, space, engine_))
                 return nullptr;
             return stub;
         }
@@ -1698,7 +1699,7 @@ class ICGetName_Fallback : public ICMonitoredFallbackStub
 
         ICStub* getStub(ICStubSpace* space) {
             ICGetName_Fallback* stub = newStub<ICGetName_Fallback>(space, getStubCode());
-            if (!stub || !stub->initMonitoringChain(cx, space))
+            if (!stub || !stub->initMonitoringChain(cx, space, engine_))
                 return nullptr;
             return stub;
         }
@@ -1858,7 +1859,7 @@ class ICGetIntrinsic_Fallback : public ICMonitoredFallbackStub
         ICStub* getStub(ICStubSpace* space) {
             ICGetIntrinsic_Fallback* stub =
                 newStub<ICGetIntrinsic_Fallback>(space, getStubCode());
-            if (!stub || !stub->initMonitoringChain(cx, space))
+            if (!stub || !stub->initMonitoringChain(cx, space, engine_))
                 return nullptr;
             return stub;
         }
@@ -2559,7 +2560,7 @@ class ICCall_Fallback : public ICMonitoredFallbackStub
 
         ICStub* getStub(ICStubSpace* space) {
             ICCall_Fallback* stub = newStub<ICCall_Fallback>(space, getStubCode());
-            if (!stub || !stub->initMonitoringChain(cx, space))
+            if (!stub || !stub->initMonitoringChain(cx, space, engine_))
                 return nullptr;
             return stub;
         }

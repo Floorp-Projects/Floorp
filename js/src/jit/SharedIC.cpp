@@ -675,11 +675,12 @@ ICMonitoredStub::ICMonitoredStub(Kind kind, JitCode* stubCode, ICStub* firstMoni
 }
 
 bool
-ICMonitoredFallbackStub::initMonitoringChain(JSContext* cx, ICStubSpace* space)
+ICMonitoredFallbackStub::initMonitoringChain(JSContext* cx, ICStubSpace* space,
+                                             ICStubCompiler::Engine engine)
 {
     MOZ_ASSERT(fallbackMonitorStub_ == nullptr);
 
-    ICTypeMonitor_Fallback::Compiler compiler(cx, this);
+    ICTypeMonitor_Fallback::Compiler compiler(cx, engine, this);
     ICTypeMonitor_Fallback* stub = compiler.getStub(space);
     if (!stub)
         return false;
@@ -688,9 +689,9 @@ ICMonitoredFallbackStub::initMonitoringChain(JSContext* cx, ICStubSpace* space)
 }
 
 bool
-ICMonitoredFallbackStub::addMonitorStubForValue(JSContext* cx, JSScript* script, HandleValue val)
+ICMonitoredFallbackStub::addMonitorStubForValue(JSContext* cx, JSScript* script, HandleValue val, ICStubCompiler::Engine engine)
 {
-    return fallbackMonitorStub_->addMonitorStubForValue(cx, script, val);
+    return fallbackMonitorStub_->addMonitorStubForValue(cx, script, val, engine);
 }
 
 bool
@@ -899,8 +900,9 @@ SharedStubEngine(BaselineFrame* frame)
     return frame ? ICStubCompiler::Engine::Baseline : ICStubCompiler::Engine::IonMonkey;
 }
 
+template<typename T>
 static JSScript*
-SharedStubScript(BaselineFrame* frame, ICFallbackStub* stub)
+SharedStubScript(BaselineFrame* frame, T* stub)
 {
     ICStubCompiler::Engine engine = SharedStubEngine(frame);
     if (engine == ICStubCompiler::Engine::Baseline)
@@ -3017,7 +3019,7 @@ DoGetPropFallback(JSContext* cx, BaselineFrame* frame, ICGetProp_Fallback* stub_
         return true;
 
     // Add a type monitor stub for the resulting value.
-    if (!stub->addMonitorStubForValue(cx, script, res))
+    if (!stub->addMonitorStubForValue(cx, script, res, engine))
         return false;
 
     if (attached)
@@ -4490,7 +4492,7 @@ ICGetProp_DOMProxyShadowed::Clone(JSContext* cx, ICStubSpace* space, ICStub* fir
 //
 
 bool
-ICTypeMonitor_Fallback::addMonitorStubForValue(JSContext* cx, JSScript* script, HandleValue val)
+ICTypeMonitor_Fallback::addMonitorStubForValue(JSContext* cx, JSScript* script, HandleValue val, ICStubCompiler::Engine engine)
 {
     bool wasDetachedMonitorChain = lastMonitorStubPtrAddr_ == nullptr;
     MOZ_ASSERT_IF(wasDetachedMonitorChain, numOptimizedMonitorStubs_ == 0);
@@ -4517,7 +4519,7 @@ ICTypeMonitor_Fallback::addMonitorStubForValue(JSContext* cx, JSScript* script, 
             }
         }
 
-        ICTypeMonitor_PrimitiveSet::Compiler compiler(cx, existingStub, type);
+        ICTypeMonitor_PrimitiveSet::Compiler compiler(cx, engine, existingStub, type);
         ICStub* stub = existingStub ? compiler.updateStub()
                                     : compiler.getStub(compiler.getStubSpace(script));
         if (!stub) {
@@ -4623,7 +4625,8 @@ DoTypeMonitorFallback(JSContext* cx, BaselineFrame* frame, ICTypeMonitor_Fallbac
         }
     }
 
-    RootedScript script(cx, frame->script());
+    ICStubCompiler::Engine engine = SharedStubEngine(frame);
+    RootedScript script(cx, SharedStubScript(frame, stub));
     jsbytecode* pc = stub->icEntry()->pc(script);
     TypeFallbackICSpew(cx, stub, "TypeMonitor");
 
@@ -4641,7 +4644,7 @@ DoTypeMonitorFallback(JSContext* cx, BaselineFrame* frame, ICTypeMonitor_Fallbac
         TypeScript::Monitor(cx, script, pc, value);
     }
 
-    if (!stub->addMonitorStubForValue(cx, script, value))
+    if (!stub->addMonitorStubForValue(cx, script, value, engine))
         return false;
 
     // Copy input value to res.
@@ -4657,7 +4660,6 @@ static const VMFunction DoTypeMonitorFallbackInfo =
 bool
 ICTypeMonitor_Fallback::Compiler::generateStubCode(MacroAssembler& masm)
 {
-    MOZ_ASSERT(engine_ == Engine::Baseline);
     MOZ_ASSERT(R0 == JSReturnOperand);
 
     // Restore the tail call register.
@@ -4673,8 +4675,6 @@ ICTypeMonitor_Fallback::Compiler::generateStubCode(MacroAssembler& masm)
 bool
 ICTypeMonitor_PrimitiveSet::Compiler::generateStubCode(MacroAssembler& masm)
 {
-    MOZ_ASSERT(engine_ == Engine::Baseline);
-
     Label success;
     if ((flags_ & TypeToFlag(JSVAL_TYPE_INT32)) && !(flags_ & TypeToFlag(JSVAL_TYPE_DOUBLE)))
         masm.branchTestInt32(Assembler::Equal, R0, &success);
@@ -4718,8 +4718,6 @@ ICTypeMonitor_PrimitiveSet::Compiler::generateStubCode(MacroAssembler& masm)
 bool
 ICTypeMonitor_SingleObject::Compiler::generateStubCode(MacroAssembler& masm)
 {
-    MOZ_ASSERT(engine_ == Engine::Baseline);
-
     Label failure;
     masm.branchTestObject(Assembler::NotEqual, R0, &failure);
 
@@ -4738,8 +4736,6 @@ ICTypeMonitor_SingleObject::Compiler::generateStubCode(MacroAssembler& masm)
 bool
 ICTypeMonitor_ObjectGroup::Compiler::generateStubCode(MacroAssembler& masm)
 {
-    MOZ_ASSERT(engine_ == Engine::Baseline);
-
     Label failure;
     masm.branchTestObject(Assembler::NotEqual, R0, &failure);
 
