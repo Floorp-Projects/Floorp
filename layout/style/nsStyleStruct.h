@@ -119,7 +119,17 @@ struct nsStyleFont {
   }
   static nsChangeHint CalcFontDifference(const nsFont& aFont1, const nsFont& aFont2);
 
+  /**
+   * Return aSize multiplied by the current text zoom factor (in aPresContext).
+   * aSize is allowed to be negative, but the caller is expected to deal with
+   * negative results.  The result is clamped to nscoord_MIN .. nscoord_MAX.
+   */
   static nscoord ZoomText(nsPresContext* aPresContext, nscoord aSize);
+  /**
+   * Return aSize divided by the current text zoom factor (in aPresContext).
+   * aSize is allowed to be negative, but the caller is expected to deal with
+   * negative results.  The result is clamped to nscoord_MIN .. nscoord_MAX.
+   */
   static nscoord UnZoomText(nsPresContext* aPresContext, nscoord aSize);
   static already_AddRefed<nsIAtom> GetLanguage(nsPresContext* aPresContext);
 

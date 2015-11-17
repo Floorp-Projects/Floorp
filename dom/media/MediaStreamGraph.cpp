@@ -828,13 +828,11 @@ MediaStreamGraphImpl::PlayVideo(MediaStream* aStream)
 
     if (frame->GetForceBlack()) {
       if (!blackImage) {
-        blackImage = aStream->mVideoOutputs[0]->
-          GetImageContainer()->CreateImage(ImageFormat::PLANAR_YCBCR);
+        blackImage = aStream->mVideoOutputs[0]->GetImageContainer()->CreatePlanarYCbCrImage();
         if (blackImage) {
           // Sets the image to a single black pixel, which will be scaled to
           // fill the rendered size.
-          SetImageToBlackPixel(static_cast<PlanarYCbCrImage*>
-                               (blackImage.get()));
+          SetImageToBlackPixel(blackImage->AsPlanarYCbCrImage());
         }
       }
       if (blackImage) {

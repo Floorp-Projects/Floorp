@@ -99,7 +99,6 @@
 #include "mozilla/Preferences.h"
 #include "nsIContentIterator.h"
 #include "nsIDOMStyleSheet.h"
-#include "nsIStyleSheet.h"
 #include "nsIStyleSheetService.h"
 #include "nsContentPermissionHelper.h"
 #include "nsNetUtil.h"
@@ -3244,7 +3243,7 @@ nsDOMWindowUtils::AddSheet(nsIDOMStyleSheet *aSheet, uint32_t aSheetType)
   NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
 
   nsIDocument::additionalSheetType type = convertSheetType(aSheetType);
-  nsCOMPtr<nsIStyleSheet> sheet = do_QueryInterface(aSheet);
+  RefPtr<CSSStyleSheet> sheet = do_QueryObject(aSheet);
   NS_ENSURE_TRUE(sheet, NS_ERROR_FAILURE);
   if (sheet->GetOwningDocument()) {
     return NS_ERROR_INVALID_ARG;

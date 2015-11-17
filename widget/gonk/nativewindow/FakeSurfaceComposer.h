@@ -25,14 +25,27 @@
 
 #include <binder/BinderService.h>
 
+#include <gui/IGraphicBufferProducer.h>
 #include <gui/ISurfaceComposer.h>
 #include <gui/ISurfaceComposerClient.h>
+#include <hardware/hwcomposer.h>
+#include <private/gui/LayerState.h>
+#include <utils/KeyedVector.h>
+
+class nsIWidget;
 
 namespace android {
 
 // ---------------------------------------------------------------------------
 
 class IGraphicBufferAlloc;
+
+enum {
+    eTransactionNeeded        = 0x01,
+    eTraversalNeeded          = 0x02,
+    eDisplayTransactionNeeded = 0x04,
+    eTransactionMask          = 0x07
+};
 
 class FakeSurfaceComposer : public BinderService<FakeSurfaceComposer>,
                             public BnSurfaceComposer
@@ -102,7 +115,45 @@ private:
     virtual void unblank(const sp<IBinder>& display);
     virtual status_t getDisplayInfo(const sp<IBinder>& display, DisplayInfo* info);
 #endif
+    void getPrimaryDisplayInfo(DisplayInfo* info);
 
+    /* ------------------------------------------------------------------------
+     * Transactions
+     */
+    uint32_t setDisplayStateLocked(const DisplayState& s);
+
+    sp<IBinder> mPrimaryDisplay;
+
+    struct DisplayDeviceState {
+        enum {
+            NO_LAYER_STACK = 0xFFFFFFFF,
+        };
+        DisplayDeviceState()
+            : type(-1), displayId(-1), width(0), height(0) {
+        }
+        DisplayDeviceState(int type)
+            : type(type), displayId(-1), layerStack(NO_LAYER_STACK), orientation(0), width(0), height(0) {
+            viewport.makeInvalid();
+            frame.makeInvalid();
+        }
+        bool isValid() const { return type >= 0; }
+        int type;
+        int displayId;
+        sp<IGraphicBufferProducer> surface;
+        uint32_t layerStack;
+        Rect viewport;
+        Rect frame;
+        uint8_t orientation;
+        uint32_t width, height;
+        String8 displayName;
+        bool isSecure;
+    };
+
+    // access must be protected by mStateLock
+    mutable Mutex mStateLock;
+    DefaultKeyedVector<wp<IBinder>, DisplayDeviceState> mDisplays;
+
+    friend class DestroyDisplayRunnable;
 };
 
 // ---------------------------------------------------------------------------

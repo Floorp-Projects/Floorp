@@ -236,9 +236,7 @@ MediaEngineDefaultVideoSource::Notify(nsITimer* aTimer)
   }
 
   // Allocate a single solid color image
-  RefPtr<layers::Image> image = mImageContainer->CreateImage(ImageFormat::PLANAR_YCBCR);
-  RefPtr<layers::PlanarYCbCrImage> ycbcr_image =
-      static_cast<layers::PlanarYCbCrImage*>(image.get());
+  RefPtr<layers::PlanarYCbCrImage> ycbcr_image = mImageContainer->CreatePlanarYCbCrImage();
   layers::PlanarYCbCrData data;
   AllocateSolidColorFrame(data, mOpts.mWidth, mOpts.mHeight, 0x80, mCb, mCr);
 

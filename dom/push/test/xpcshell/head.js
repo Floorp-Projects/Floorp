@@ -222,6 +222,7 @@ function setPrefs(prefs = {}) {
     'http2.retryInterval': 500,
     'http2.reset_retry_count_after_ms': 60000,
     maxQuotaPerSubscription: 16,
+    quotaUpdateDelay: 3000,
   }, prefs);
   for (let pref in defaultPrefs) {
     servicePrefs.set(pref, defaultPrefs[pref]);

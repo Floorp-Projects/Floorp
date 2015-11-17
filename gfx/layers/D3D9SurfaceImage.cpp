@@ -15,11 +15,11 @@ namespace mozilla {
 namespace layers {
 
 
-D3D9SurfaceImage::D3D9SurfaceImage()
+D3D9SurfaceImage::D3D9SurfaceImage(bool aIsFirstFrame)
   : Image(nullptr, ImageFormat::D3D9_RGB32_TEXTURE)
   , mSize(0, 0)
   , mValid(false)
-  , mIsFirstFrame(false)
+  , mIsFirstFrame(aIsFirstFrame)
 {}
 
 D3D9SurfaceImage::~D3D9SurfaceImage()
@@ -27,11 +27,13 @@ D3D9SurfaceImage::~D3D9SurfaceImage()
 }
 
 HRESULT
-D3D9SurfaceImage::SetData(const Data& aData)
+D3D9SurfaceImage::AllocateAndCopy(D3D9RecycleAllocator* aAllocator,
+                                  IDirect3DSurface9* aSurface,
+                                  const gfx::IntRect& aRegion)
 {
-  NS_ENSURE_TRUE(aData.mSurface, E_POINTER);
+  NS_ENSURE_TRUE(aSurface, E_POINTER);
   HRESULT hr;
-  RefPtr<IDirect3DSurface9> surface = aData.mSurface;
+  RefPtr<IDirect3DSurface9> surface = aSurface;
 
   RefPtr<IDirect3DDevice9> device;
   hr = surface->GetDevice(getter_AddRefs(device));
@@ -54,10 +56,8 @@ D3D9SurfaceImage::SetData(const Data& aData)
   // DXVA surfaces aren't created sharable, so we need to copy the surface
   // to a sharable texture to that it's accessible to the layer manager's
   // device.
-  const gfx::IntRect& region = aData.mRegion;
   RefPtr<SharedTextureClientD3D9> textureClient =
-    aData.mAllocator->CreateOrRecycleClient(gfx::SurfaceFormat::B8G8R8X8,
-                                            region.Size());
+    aAllocator->CreateOrRecycleClient(gfx::SurfaceFormat::B8G8R8X8, aRegion.Size());
   if (!textureClient) {
     return E_FAIL;
   }
@@ -68,7 +68,7 @@ D3D9SurfaceImage::SetData(const Data& aData)
     return E_FAIL;
   }
 
-  RECT src = { region.x, region.y, region.x+region.width, region.y+region.height };
+  RECT src = { aRegion.x, aRegion.y, aRegion.x+aRegion.width, aRegion.y+aRegion.height };
   hr = device->StretchRect(surface, &src, textureSurface, nullptr, D3DTEXF_NONE);
   NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
 
@@ -82,10 +82,8 @@ D3D9SurfaceImage::SetData(const Data& aData)
   NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
 
   mTextureClient = textureClient;
-  mSize = region.Size();
+  mSize = aRegion.Size();
   mQuery = query;
-  mIsFirstFrame = aData.mIsFirstFrame;
-
   return S_OK;
 }
 

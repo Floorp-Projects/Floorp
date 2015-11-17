@@ -154,13 +154,10 @@ public:
     BluetoothService* bs = BluetoothService::Get();
     NS_ENSURE_TRUE_VOID(bs);
 
-    nsAutoString appUuidStr;
-    UuidToString(mAppUuid, appUuidStr);
-
     // Notify application to clear the cache values of
     // service/characteristic/descriptor.
     bs->DistributeSignal(NS_LITERAL_STRING("DiscoverCompleted"),
-                         appUuidStr,
+                         mAppUuid,
                          BluetoothValue(aSuccess));
 
     // Resolve/Reject the Promise.
@@ -659,13 +656,10 @@ public:
     BluetoothService* bs = BluetoothService::Get();
     NS_ENSURE_TRUE_VOID(bs);
 
-    nsAutoString appUuidStr;
-    UuidToString(mClient->mAppUuid, appUuidStr);
-
     // Notify BluetoothGatt for client disconnected
     bs->DistributeSignal(
       NS_LITERAL_STRING(GATT_CONNECTION_STATE_CHANGED_ID),
-      appUuidStr,
+      mClient->mAppUuid,
       BluetoothValue(false)); // Disconnected
 
     // Reject the connect request
@@ -698,12 +692,9 @@ public:
     BluetoothService* bs = BluetoothService::Get();
     NS_ENSURE_TRUE_VOID(bs);
 
-    nsAutoString appUuidStr;
-    UuidToString(mClient->mAppUuid, appUuidStr);
-
     // Notify BluetoothGatt to clear the clientIf
     bs->DistributeSignal(NS_LITERAL_STRING("ClientUnregistered"),
-                         appUuidStr);
+                         mClient->mAppUuid);
 
     // Resolve the unregister request
     DispatchReplySuccess(mClient->mUnregisterClientRunnable);
@@ -906,13 +897,10 @@ public:
     BluetoothService* bs = BluetoothService::Get();
     NS_ENSURE_TRUE_VOID(bs);
 
-    nsAutoString appUuidStr;
-    UuidToString(mClient->mAppUuid, appUuidStr);
-
     // Notify BluetoothGatt for client disconnected
     bs->DistributeSignal(
       NS_LITERAL_STRING(GATT_CONNECTION_STATE_CHANGED_ID),
-      appUuidStr,
+      mClient->mAppUuid,
       BluetoothValue(false)); // Disconnected
 
     // Reject the connect request
@@ -976,13 +964,10 @@ public:
     BluetoothService* bs = BluetoothService::Get();
     NS_ENSURE_TRUE_VOID(bs);
 
-    nsAutoString appUuidStr;
-    UuidToString(mClient->mAppUuid, appUuidStr);
-
     // Notify BluetoothGatt that the client remains connected
     bs->DistributeSignal(
       NS_LITERAL_STRING(GATT_CONNECTION_STATE_CHANGED_ID),
-      appUuidStr,
+      mClient->mAppUuid,
       BluetoothValue(true)); // Connected
 
     // Reject the disconnect request
@@ -1836,12 +1821,9 @@ public:
     BluetoothService* bs = BluetoothService::Get();
     NS_ENSURE_TRUE_VOID(bs);
 
-    nsAutoString appUuidStr;
-    UuidToString(mServer->mAppUuid, appUuidStr);
-
     // Notify BluetoothGattServer to clear the serverIf
     bs->DistributeSignal(NS_LITERAL_STRING("ServerUnregistered"),
-                         appUuidStr);
+                         mServer->mAppUuid);
 
     // Resolve the unregister request
     if (mServer->mUnregisterServerRunnable) {
@@ -2543,17 +2525,17 @@ BluetoothGattManager::RegisterClientNotification(BluetoothGattStatus aStatus,
   BluetoothService* bs = BluetoothService::Get();
   NS_ENSURE_TRUE_VOID(bs);
 
-  nsAutoString appUuidStr;
-  UuidToString(aAppUuid, appUuidStr);
-
   if (aStatus != GATT_STATUS_SUCCESS) {
+    nsAutoString appUuidStr;
+    UuidToString(aAppUuid, appUuidStr);
+
     BT_LOGD("RegisterClient failed: clientIf = %d, status = %d, appUuid = %s",
             aClientIf, aStatus, NS_ConvertUTF16toUTF8(appUuidStr).get());
 
     // Notify BluetoothGatt for client disconnected
     bs->DistributeSignal(
       NS_LITERAL_STRING(GATT_CONNECTION_STATE_CHANGED_ID),
-      appUuidStr, BluetoothValue(false)); // Disconnected
+      aAppUuid, BluetoothValue(false)); // Disconnected
 
     if (client->mStartLeScanRunnable) {
       // Reject the LE scan request
@@ -2578,7 +2560,7 @@ BluetoothGattManager::RegisterClientNotification(BluetoothGattStatus aStatus,
   // Notify BluetoothGatt to update the clientIf
   bs->DistributeSignal(
     NS_LITERAL_STRING("ClientRegistered"),
-    appUuidStr, BluetoothValue(uint32_t(aClientIf)));
+    aAppUuid, BluetoothValue(uint32_t(aClientIf)));
 
   if (client->mStartLeScanRunnable) {
     // Client just registered, proceed remaining startLeScan request.
@@ -2677,9 +2659,6 @@ BluetoothGattManager::ConnectNotification(int aConnId,
 
   RefPtr<BluetoothGattClient> client = sClients->ElementAt(index);
 
-  nsAutoString appUuidStr;
-  UuidToString(client->mAppUuid, appUuidStr);
-
   if (aStatus != GATT_STATUS_SUCCESS) {
     BT_LOGD("Connect failed: clientIf = %d, connId = %d, status = %d",
             aClientIf, aConnId, aStatus);
@@ -2687,7 +2666,7 @@ BluetoothGattManager::ConnectNotification(int aConnId,
     // Notify BluetoothGatt that the client remains disconnected
     bs->DistributeSignal(
       NS_LITERAL_STRING(GATT_CONNECTION_STATE_CHANGED_ID),
-      appUuidStr,
+      client->mAppUuid,
       BluetoothValue(false)); // Disconnected
 
     // Reject the connect request
@@ -2705,7 +2684,7 @@ BluetoothGattManager::ConnectNotification(int aConnId,
   // Notify BluetoothGatt for client connected
   bs->DistributeSignal(
     NS_LITERAL_STRING(GATT_CONNECTION_STATE_CHANGED_ID),
-    appUuidStr,
+    client->mAppUuid,
     BluetoothValue(true)); // Connected
 
   // Resolve the connect request
@@ -2733,14 +2712,11 @@ BluetoothGattManager::DisconnectNotification(
 
   RefPtr<BluetoothGattClient> client = sClients->ElementAt(index);
 
-  nsAutoString appUuidStr;
-  UuidToString(client->mAppUuid, appUuidStr);
-
   if (aStatus != GATT_STATUS_SUCCESS) {
     // Notify BluetoothGatt that the client remains connected
     bs->DistributeSignal(
       NS_LITERAL_STRING(GATT_CONNECTION_STATE_CHANGED_ID),
-      appUuidStr,
+      client->mAppUuid,
       BluetoothValue(true)); // Connected
 
     // Reject the disconnect request
@@ -2758,7 +2734,7 @@ BluetoothGattManager::DisconnectNotification(
   // Notify BluetoothGatt for client disconnected
   bs->DistributeSignal(
     NS_LITERAL_STRING(GATT_CONNECTION_STATE_CHANGED_ID),
-    appUuidStr,
+    client->mAppUuid,
     BluetoothValue(false)); // Disconnected
 
   // Resolve the disconnect request
@@ -2789,12 +2765,9 @@ BluetoothGattManager::SearchCompleteNotification(int aConnId,
     return;
   }
 
-  nsAutoString appUuidStr;
-  UuidToString(client->mAppUuid, appUuidStr);
-
   // Notify BluetoothGatt to create all services
   bs->DistributeSignal(NS_LITERAL_STRING("ServicesDiscovered"),
-                       appUuidStr,
+                       client->mAppUuid,
                        BluetoothValue(client->mServices));
 
   // All services are discovered, continue to search included services of each
@@ -2872,11 +2845,8 @@ BluetoothGattManager::GetCharacteristicNotification(
     AppendNamedValue(values, "serviceId", aServiceId);
     AppendNamedValue(values, "characteristics", client->mCharacteristics);
 
-    nsAutoString appUuidStr;
-    UuidToString(client->mAppUuid, appUuidStr);
-
     bs->DistributeSignal(NS_LITERAL_STRING("CharacteristicsDiscovered"),
-                         appUuidStr,
+                         client->mAppUuid,
                          BluetoothValue(values));
 
     ProceedDiscoverProcess(client, aServiceId);
@@ -2922,11 +2892,8 @@ BluetoothGattManager::GetDescriptorNotification(
     AppendNamedValue(values, "characteristicId", aCharId);
     AppendNamedValue(values, "descriptors", client->mDescriptors);
 
-    nsAutoString appUuidStr;
-    UuidToString(client->mAppUuid, appUuidStr);
-
     bs->DistributeSignal(NS_LITERAL_STRING("DescriptorsDiscovered"),
-                         appUuidStr,
+                         client->mAppUuid,
                          BluetoothValue(values));
     client->mDescriptors.Clear();
 
@@ -2970,11 +2937,8 @@ BluetoothGattManager::GetIncludedServiceNotification(
     AppendNamedValue(values, "serviceId", aServiceId);
     AppendNamedValue(values, "includedServices", client->mIncludedServices);
 
-    nsAutoString appUuidStr;
-    UuidToString(client->mAppUuid, appUuidStr);
-
     bs->DistributeSignal(NS_LITERAL_STRING("IncludedServicesDiscovered"),
-                         appUuidStr,
+                         client->mAppUuid,
                          BluetoothValue(values));
     client->mIncludedServices.Clear();
 
@@ -3045,11 +3009,8 @@ BluetoothGattManager::NotifyNotification(
   ids.AppendElement(BluetoothNamedValue(NS_LITERAL_STRING("charId"),
                                         aNotifyParam.mCharId));
 
-  nsAutoString appUuidStr;
-  UuidToString(client->mAppUuid, appUuidStr);
-
   bs->DistributeSignal(NS_LITERAL_STRING(GATT_CHARACTERISTIC_CHANGED_ID),
-                       appUuidStr,
+                       client->mAppUuid,
                        BluetoothValue(ids));
 }
 
@@ -3092,11 +3053,8 @@ BluetoothGattManager::ReadCharacteristicNotification(
     ids.AppendElement(BluetoothNamedValue(NS_LITERAL_STRING("charId"),
                                           aReadParam.mCharId));
 
-    nsAutoString appUuidStr;
-    UuidToString(client->mAppUuid, appUuidStr);
-
     bs->DistributeSignal(NS_LITERAL_STRING(GATT_CHARACTERISTIC_CHANGED_ID),
-                         appUuidStr,
+                         client->mAppUuid,
                          BluetoothValue(ids));
 
     // Resolve the promise
@@ -3320,9 +3278,6 @@ BluetoothGattManager::RegisterServerNotification(BluetoothGattStatus aStatus,
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  nsAutoString appUuidStr;
-  UuidToString(aAppUuid, appUuidStr);
-
   size_t index = sServers->IndexOf(aAppUuid, 0 /* Start */, UuidComparator());
   NS_ENSURE_TRUE_VOID(index != sServers->NoIndex);
 
@@ -3332,6 +3287,9 @@ BluetoothGattManager::RegisterServerNotification(BluetoothGattStatus aStatus,
 
   BluetoothService* bs = BluetoothService::Get();
   if (!bs || aStatus != GATT_STATUS_SUCCESS) {
+    nsAutoString appUuidStr;
+    UuidToString(aAppUuid, appUuidStr);
+
     BT_LOGD("RegisterServer failed: serverIf = %d, status = %d, appUuid = %s",
              aServerIf, aStatus, NS_ConvertUTF16toUTF8(appUuidStr).get());
 
@@ -3362,7 +3320,7 @@ BluetoothGattManager::RegisterServerNotification(BluetoothGattStatus aStatus,
   // Notify BluetoothGattServer to update the serverIf
   bs->DistributeSignal(
     NS_LITERAL_STRING("ServerRegistered"),
-    appUuidStr, BluetoothValue(uint32_t(aServerIf)));
+    aAppUuid, BluetoothValue(uint32_t(aServerIf)));
 
   if (server->mConnectPeripheralRunnable) {
     // Only one entry exists in the map during first connect peripheral request
@@ -3409,16 +3367,13 @@ BluetoothGattManager::ConnectionNotification(int aConnId,
   nsAutoString bdAddrStr;
   AddressToString(aBdAddr, bdAddrStr);
 
-  nsAutoString appUuidStr;
-  UuidToString(server->mAppUuid, appUuidStr);
-
   // Notify BluetoothGattServer that connection status changed
   InfallibleTArray<BluetoothNamedValue> props;
   AppendNamedValue(props, "Connected", aConnected);
   AppendNamedValue(props, "Address", bdAddrStr);
   bs->DistributeSignal(
     NS_LITERAL_STRING(GATT_CONNECTION_STATE_CHANGED_ID),
-    appUuidStr,
+    server->mAppUuid,
     BluetoothValue(props));
 
   // Resolve or reject connect/disconnect peripheral requests
@@ -3466,15 +3421,12 @@ BluetoothGattManager::ServiceAddedNotification(
     return;
   }
 
-  nsAutoString appUuidStr;
-  UuidToString(server->mAppUuid, appUuidStr);
-
   // Notify BluetoothGattServer to update service handle
   InfallibleTArray<BluetoothNamedValue> props;
   AppendNamedValue(props, "ServiceId", aServiceId);
   AppendNamedValue(props, "ServiceHandle", aServiceHandle);
   bs->DistributeSignal(NS_LITERAL_STRING("ServiceHandleUpdated"),
-                       appUuidStr,
+                       server->mAppUuid,
                        BluetoothValue(props));
 
   if (server->mAddServiceState.mRunnable) {
@@ -3541,16 +3493,13 @@ BluetoothGattManager::CharacteristicAddedNotification(
     return;
   }
 
-  nsAutoString appUuidStr;
-  UuidToString(server->mAppUuid, appUuidStr);
-
   // Notify BluetoothGattServer to update characteristic handle
   InfallibleTArray<BluetoothNamedValue> props;
   AppendNamedValue(props, "CharacteristicUuid", aCharId);
   AppendNamedValue(props, "ServiceHandle", aServiceHandle);
   AppendNamedValue(props, "CharacteristicHandle", aCharacteristicHandle);
   bs->DistributeSignal(NS_LITERAL_STRING("CharacteristicHandleUpdated"),
-                       appUuidStr,
+                       server->mAppUuid,
                        BluetoothValue(props));
 
   if (server->mAddCharacteristicRunnable) {
@@ -3587,9 +3536,6 @@ BluetoothGattManager::DescriptorAddedNotification(
     return;
   }
 
-  nsAutoString appUuidStr;
-  UuidToString(server->mAppUuid, appUuidStr);
-
   // Notify BluetoothGattServer to update descriptor handle
   InfallibleTArray<BluetoothNamedValue> props;
   AppendNamedValue(props, "CharacteristicUuid", aCharId);
@@ -3598,7 +3544,7 @@ BluetoothGattManager::DescriptorAddedNotification(
     server->mAddDescriptorState.mCharacteristicHandle);
   AppendNamedValue(props, "DescriptorHandle", aDescriptorHandle);
   bs->DistributeSignal(NS_LITERAL_STRING("DescriptorHandleUpdated"),
-                       appUuidStr,
+                       server->mAppUuid,
                        BluetoothValue(props));
 
   if (server->mAddDescriptorState.mRunnable) {
@@ -3734,9 +3680,6 @@ BluetoothGattManager::RequestReadNotification(
   nsAutoString bdAddrStr;
   AddressToString(aBdAddr, bdAddrStr);
 
-  nsAutoString appUuidStr;
-  UuidToString(server->mAppUuid, appUuidStr);
-
   // Distribute a signal to gattServer
   InfallibleTArray<BluetoothNamedValue> properties;
 
@@ -3747,7 +3690,7 @@ BluetoothGattManager::RequestReadNotification(
   AppendNamedValue(properties, "Value", new nsTArray<uint8_t>());
 
   bs->DistributeSignal(NS_LITERAL_STRING("ReadRequested"),
-                       appUuidStr,
+                       server->mAppUuid,
                        properties);
 }
 
@@ -3793,9 +3736,6 @@ BluetoothGattManager::RequestWriteNotification(
   nsAutoString bdAddrStr;
   AddressToString(aBdAddr, bdAddrStr);
 
-  nsAutoString appUuidStr;
-  UuidToString(server->mAppUuid, appUuidStr);
-
   // Distribute a signal to gattServer
   InfallibleTArray<BluetoothNamedValue> properties;
 
@@ -3809,7 +3749,7 @@ BluetoothGattManager::RequestWriteNotification(
   AppendNamedValue(properties, "Value", value);
 
   bs->DistributeSignal(NS_LITERAL_STRING("WrtieRequested"),
-                       appUuidStr,
+                       server->mAppUuid,
                        properties);
 }
 

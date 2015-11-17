@@ -64,6 +64,10 @@ public:
 
   virtual void WaitForBufferOwnership(bool aWaitReleaseFence = true) override;
 
+  GrallocTextureClientOGL* AsGrallocTextureClientOGL() override {
+    return this;
+  }
+
   void SetTextureFlags(TextureFlags aFlags) { AddFlags(aFlags); }
 
   gfx::IntSize GetSize() const override { return mSize; }

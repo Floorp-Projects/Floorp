@@ -17,15 +17,15 @@ const NON_ISSUED_KEY_HASH = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=";
 // separated by newlines ('\n')
 
 function checkStateWritten(aSubject, aTopic, aData) {
-  do_check_eq(aData, SSS_STATE_FILE_NAME);
+  equal(aData, SSS_STATE_FILE_NAME);
 
   let stateFile = gProfileDir.clone();
   stateFile.append(SSS_STATE_FILE_NAME);
-  do_check_true(stateFile.exists());
+  ok(stateFile.exists());
   let stateFileContents = readFile(stateFile);
   // the last line is removed because it's just a trailing newline
   let lines = stateFileContents.split('\n').slice(0, -1);
-  do_check_eq(lines.length, EXPECTED_ENTRIES);
+  equal(lines.length, EXPECTED_ENTRIES);
   let sites = {}; // a map of domain name -> [the entry in the state file]
   for (let line of lines) {
     let parts = line.split('\t');
@@ -37,7 +37,7 @@ function checkStateWritten(aSubject, aTopic, aData) {
     if (host.indexOf("HPKP") != -1) {
       expectedColumns = EXPECTED_HPKP_COLUMNS;
     }
-    do_check_eq(entry.length, expectedColumns);
+    equal(entry.length, expectedColumns);
     sites[host] = entry;
   }
 
@@ -85,7 +85,7 @@ function checkStateWritten(aSubject, aTopic, aData) {
   if (sites["dynamic-pin.example.com:HPKP"][2] != 1) {
     return;
   }
-  do_check_eq(sites["dynamic-pin.example.com:HPKP"][3], NON_ISSUED_KEY_HASH);
+  equal(sites["dynamic-pin.example.com:HPKP"][3], NON_ISSUED_KEY_HASH);
 
   do_test_finished();
 }

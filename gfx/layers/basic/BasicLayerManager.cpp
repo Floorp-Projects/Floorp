@@ -111,16 +111,18 @@ BasicLayerManager::PushGroupForLayer(gfxContext* aContext, Layer* aLayer, const 
     IntRect surfRect;
     ToRect(rect).ToIntRect(&surfRect);
 
-    RefPtr<DrawTarget> dt = aContext->GetDrawTarget()->CreateSimilarDrawTarget(surfRect.Size(), SurfaceFormat::B8G8R8A8);
+    if (!surfRect.IsEmpty()) {
+      RefPtr<DrawTarget> dt = aContext->GetDrawTarget()->CreateSimilarDrawTarget(surfRect.Size(), SurfaceFormat::B8G8R8A8);
 
-    RefPtr<gfxContext> ctx = new gfxContext(dt, ToRect(rect).TopLeft());
-    ctx->SetMatrix(oldMat);
+      RefPtr<gfxContext> ctx = new gfxContext(dt, ToRect(rect).TopLeft());
+      ctx->SetMatrix(oldMat);
 
-    group.mGroupOffset = surfRect.TopLeft();
-    group.mGroupTarget = ctx;
+      group.mGroupOffset = surfRect.TopLeft();
+      group.mGroupTarget = ctx;
 
-    group.mMaskSurface = GetMaskForLayer(aLayer, &group.mMaskTransform);
-    return group;
+      group.mMaskSurface = GetMaskForLayer(aLayer, &group.mMaskTransform);
+      return group;
+    }
   }
 
   Matrix maskTransform;

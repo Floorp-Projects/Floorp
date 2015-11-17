@@ -62,7 +62,6 @@ EXPORTS += [
     'nsICSSStyleRuleDOMWrapper.h',
     'nsIStyleRule.h',
     'nsIStyleRuleProcessor.h',
-    'nsIStyleSheet.h',
     'nsLayoutStylesheetCache.h',
     'nsRuleData.h',
     'nsRuleNode.h',

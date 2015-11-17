@@ -151,15 +151,7 @@ static already_AddRefed<layers::Image>
 CreateImageFromSurface(SourceSurface* aSurface, ErrorResult& aRv)
 {
   MOZ_ASSERT(aSurface);
-
-  layers::CairoImage::Data cairoData;
-  cairoData.mSize = aSurface->GetSize();
-  cairoData.mSourceSurface = aSurface;
-
-  RefPtr<layers::CairoImage> image = new layers::CairoImage();
-
-  image->SetData(cairoData);
-
+  RefPtr<layers::CairoImage> image = new layers::CairoImage(aSurface->GetSize(), aSurface);
   return image.forget();
 }
 

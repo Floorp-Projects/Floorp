@@ -441,7 +441,6 @@ class NameResolver
           case PNK_MODASSIGN:
           case PNK_POWASSIGN:
           case PNK_COLON:
-          case PNK_CASE:
           case PNK_SHORTHAND:
           case PNK_DOWHILE:
           case PNK_WHILE:
@@ -472,9 +471,12 @@ class NameResolver
                 return false;
             break;
 
-          case PNK_DEFAULT:
+          case PNK_CASE:
             MOZ_ASSERT(cur->isArity(PN_BINARY));
-            MOZ_ASSERT(!cur->pn_left);
+            if (ParseNode* caseExpr = cur->pn_left) {
+                if (!resolve(caseExpr, prefix))
+                    return false;
+            }
             if (!resolve(cur->pn_right, prefix))
                 return false;
             break;

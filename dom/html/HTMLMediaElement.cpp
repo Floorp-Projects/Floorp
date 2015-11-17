@@ -979,8 +979,13 @@ void HTMLMediaElement::NotifyMediaTrackEnabled(MediaTrack* aTrack)
   if (!aTrack) {
     return;
   }
+#ifdef DEBUG
+  nsString id;
+  aTrack->GetId(id);
 
-  LOG(LogLevel::Debug, ("MediaElement %p MediaStreamTrack %p enabled", this));
+  LOG(LogLevel::Debug, ("MediaElement %p MediaStreamTrack enabled with id %s",
+                        this, NS_ConvertUTF16toUTF8(id).get()));
+#endif
 
   // TODO: We are dealing with single audio track and video track for now.
   if (AudioTrack* track = aTrack->AsAudioTrack()) {

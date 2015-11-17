@@ -50,9 +50,7 @@ private:
   enum class State {
     HEADER,
     ROW_OF_PIXELS,
-    FINISH,
-    SUCCESS,
-    FAILURE
+    FINISH
   };
 
   LexerTransition<State> ReadHeader(const char* aData);
