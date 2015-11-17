@@ -211,11 +211,10 @@ ImageClientSingle::UpdateImage(ImageContainer* aContainer, uint32_t aContentFlag
                                               size);
 #ifdef MOZ_WIDGET_ANDROID
         } else if (image->GetFormat() == ImageFormat::SURFACE_TEXTURE) {
-          SurfaceTextureImage* typedImage = static_cast<SurfaceTextureImage*>(image);
-          const SurfaceTextureImage::Data* data = typedImage->GetData();
+          SurfaceTextureImage* typedImage = image->AsSurfaceTextureImage();
           texture = new SurfaceTextureClient(GetForwarder(), mTextureFlags,
-                                             data->mSurfTex, size,
-                                             data->mOriginPos);
+                                             typedImage->GetSurfaceTexture(), size,
+                                             typedImage->GetOriginPos());
 #endif
         } else {
           MOZ_ASSERT(false, "Bad ImageFormat.");
