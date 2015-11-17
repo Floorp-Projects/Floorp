@@ -281,7 +281,7 @@ add_task(function* test_bad_app_cert() {
   // Add-on will still be present
   let addon = yield promiseAddonByID("system1@tests.mozilla.org");
   do_check_neq(addon, null);
-  do_check_eq(addon.signedState, AddonManager.SIGNEDSTATE_BROKEN);
+  do_check_eq(addon.signedState, AddonManager.SIGNEDSTATE_NOT_REQUIRED);
 
   yield check_installed(false, "1.0", null, "1.0");
 
