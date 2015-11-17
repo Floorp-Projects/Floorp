@@ -48,6 +48,7 @@ TEST_HARNESS_FILES.gtest += [
     'noise.mp3',
     'noise_vbr.mp3',
     'short-zero-in-moov.mp4',
+    'small-shot.mp3',
     'test.webm',
 ]
 
