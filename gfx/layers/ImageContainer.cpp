@@ -50,14 +50,6 @@ Atomic<int32_t> Image::sSerialCounter(0);
 
 Atomic<uint32_t> ImageContainer::sGenerationCounter(0);
 
-already_AddRefed<Image>
-ImageFactory::CreateImage(ImageFormat aFormat,
-                          const gfx::IntSize &,
-                          BufferRecycleBin *aRecycleBin)
-{
-  return nullptr;
-}
-
 RefPtr<PlanarYCbCrImage>
 ImageFactory::CreatePlanarYCbCrImage(const gfx::IntSize& aScaleHint, BufferRecycleBin *aRecycleBin)
 {
@@ -160,19 +152,6 @@ ImageContainer::~ImageContainer()
     mIPDLChild->ForgetImageContainer();
     ImageBridgeChild::DispatchReleaseImageClient(mImageClient, mIPDLChild);
   }
-}
-
-already_AddRefed<Image>
-ImageContainer::CreateImage(ImageFormat aFormat)
-{
-  ReentrantMonitorAutoEnter mon(mReentrantMonitor);
-  if (mImageClient) {
-    RefPtr<Image> img = mImageClient->CreateImage(aFormat);
-    if (img) {
-      return img.forget();
-    }
-  }
-  return mImageFactory->CreateImage(aFormat, mScaleHint, mRecycleBin);
 }
 
 RefPtr<PlanarYCbCrImage>
