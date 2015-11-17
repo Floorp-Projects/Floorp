@@ -165,10 +165,13 @@ public:
                      TextureFlags aFlags);
 
   virtual bool UpdateImage(ImageContainer* aContainer, uint32_t aContentFlags);
-  virtual already_AddRefed<Image> CreateImage(ImageFormat aFormat);
   TextureInfo GetTextureInfo() const override
   {
     return TextureInfo(CompositableType::IMAGE_OVERLAY);
+  }
+
+  already_AddRefed<Image> CreateImage(ImageFormat aFormat) override {
+    return nullptr;
   }
 };
 #endif
