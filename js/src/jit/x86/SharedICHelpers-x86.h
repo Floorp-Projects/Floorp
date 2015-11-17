@@ -189,7 +189,7 @@ EmitIonEnterStubFrame(MacroAssembler& masm, Register scratch)
 {
     MOZ_ASSERT(scratch != ICTailCallReg);
 
-    masm.Pop(ICTailCallReg);
+    masm.loadPtr(Address(masm.getStackPointer(), 0), ICTailCallReg);
     masm.Push(ICTailCallReg);
     masm.Push(ICStubReg);
 }
