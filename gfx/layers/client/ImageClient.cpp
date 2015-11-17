@@ -21,8 +21,6 @@
 #include "mozilla/layers/ISurfaceAllocator.h"
 #include "mozilla/layers/LayersSurfaces.h"  // for SurfaceDescriptor, etc
 #include "mozilla/layers/ShadowLayers.h"  // for ShadowLayerForwarder
-#include "mozilla/layers/SharedPlanarYCbCrImage.h"
-#include "mozilla/layers/SharedRGBImage.h"
 #include "mozilla/layers/TextureClient.h"  // for TextureClient, etc
 #include "mozilla/layers/TextureClientOGL.h"  // for SurfaceTextureClient
 #include "mozilla/mozalloc.h"           // for operator delete, etc
@@ -324,12 +322,6 @@ ImageClientSingle::CreateImage(ImageFormat aFormat)
 {
   RefPtr<Image> img;
   switch (aFormat) {
-    case ImageFormat::PLANAR_YCBCR:
-      img = new SharedPlanarYCbCrImage(this);
-      return img.forget();
-    case ImageFormat::SHARED_RGB:
-      img = new SharedRGBImage(this);
-      return img.forget();
 #ifdef MOZ_WIDGET_GONK
     case ImageFormat::GRALLOC_PLANAR_YCBCR:
       img = new GrallocImage();

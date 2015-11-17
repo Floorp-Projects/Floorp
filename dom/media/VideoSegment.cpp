@@ -43,17 +43,14 @@ VideoFrame::TakeFrom(VideoFrame* aFrame)
 /* static */ already_AddRefed<Image>
 VideoFrame::CreateBlackImage(const gfx::IntSize& aSize)
 {
-  RefPtr<ImageContainer> container;
-  RefPtr<Image> image;
-  container = LayerManager::CreateImageContainer();
-  image = container->CreateImage(ImageFormat::PLANAR_YCBCR);
+  RefPtr<ImageContainer> container = LayerManager::CreateImageContainer();
+  RefPtr<PlanarYCbCrImage> image = container->CreatePlanarYCbCrImage();
   if (!image) {
     MOZ_ASSERT(false);
     return nullptr;
   }
 
   int len = ((aSize.width * aSize.height) * 3 / 2);
-  PlanarYCbCrImage* planar = static_cast<PlanarYCbCrImage*>(image.get());
 
   // Generate a black image.
   ScopedDeletePtr<uint8_t> frame(new uint8_t[len]);
@@ -80,7 +77,7 @@ VideoFrame::CreateBlackImage(const gfx::IntSize& aSize)
   data.mStereoMode = StereoMode::MONO;
 
   // SetData copies data, so we can free data.
-  if (!planar->SetData(data)) {
+  if (!image->SetData(data)) {
     MOZ_ASSERT(false);
     return nullptr;
   }

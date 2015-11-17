@@ -103,6 +103,7 @@ class ImageCompositeNotification;
 class ImageContainerChild;
 class PImageContainerChild;
 class SharedPlanarYCbCrImage;
+class PlanarYCbCrImage;
 class TextureClient;
 class CompositableClient;
 class GrallocImage;
@@ -123,6 +124,7 @@ class SurfaceTextureImage;
 #ifdef XP_MACOSX
 class MacIOSurfaceImage;
 #endif
+class SharedRGBImage;
 
 /**
  * A class representing a buffer of pixel data. The data can be in one
@@ -183,6 +185,7 @@ public:
 #ifdef XP_MACOSX
   virtual MacIOSurfaceImage* AsMacIOSurfaceImage() { return nullptr; }
 #endif
+  virtual PlanarYCbCrImage* AsPlanarYCbCrImage() { return nullptr; }
 
 protected:
   Image(void* aImplData, ImageFormat aFormat) :
@@ -274,6 +277,9 @@ protected:
                                               const gfx::IntSize &aScaleHint,
                                               BufferRecycleBin *aRecycleBin);
 
+  virtual RefPtr<PlanarYCbCrImage> CreatePlanarYCbCrImage(
+    const gfx::IntSize& aScaleHint,
+    BufferRecycleBin *aRecycleBin);
 };
  
 /**
@@ -320,6 +326,11 @@ public:
    * when accessing thread-shared state.
    */
   B2G_ACL_EXPORT already_AddRefed<Image> CreateImage(ImageFormat aFormat);
+
+  RefPtr<PlanarYCbCrImage> CreatePlanarYCbCrImage();
+
+  // Factory methods for shared image types.
+  RefPtr<SharedRGBImage> CreateSharedRGBImage();
 
   struct NonOwningImage {
     explicit NonOwningImage(Image* aImage = nullptr,
@@ -721,6 +732,8 @@ public:
   }
 
   virtual size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const = 0;
+
+  PlanarYCbCrImage* AsPlanarYCbCrImage() { return this; }
 
 protected:
   already_AddRefed<gfx::SourceSurface> GetAsSourceSurface();

@@ -331,10 +331,8 @@ FFmpegH264Decoder<LIBAV_VER>::AllocateYUV420PVideoBuffer(
 
   size_t allocSize = pitch * decodeHeight + (chroma_pitch * chroma_height) * 2;
 
-  RefPtr<Image> image =
-    mImageContainer->CreateImage(ImageFormat::PLANAR_YCBCR);
-  PlanarYCbCrImage* ycbcr = static_cast<PlanarYCbCrImage*>(image.get());
-  uint8_t* buffer = ycbcr->AllocateAndGetNewBuffer(allocSize + 64);
+  RefPtr<PlanarYCbCrImage> image = mImageContainer->CreatePlanarYCbCrImage();
+  uint8_t* buffer = image->AllocateAndGetNewBuffer(allocSize + 64);
   // FFmpeg requires a 16/32 bytes-aligned buffer, align it on 64 to be safe
   buffer = reinterpret_cast<uint8_t*>((reinterpret_cast<uintptr_t>(buffer) + 63) & ~63);
 
