@@ -149,6 +149,10 @@ public:
 
     bool dummy;
     mPort->DispatchEvent(static_cast<dom::Event*>(event.get()), &dummy);
+
+    // We must check if we were waiting for this message in order to shutdown
+    // the port.
+    mPort->UpdateMustKeepAlive();
     return NS_OK;
   }
 
@@ -216,8 +220,10 @@ public:
 
   virtual bool Notify(JSContext* aCx, workers::Status aStatus) override
   {
-    if (mPort && aStatus > Running) {
-      mPort->Close();
+    if (aStatus > Running) {
+      // We cannot process messages anymore because we cannot dispatch new
+      // runnables. Let's force a Close().
+      mPort->CloseForced();
     }
 
     return true;
@@ -336,7 +342,6 @@ MessagePort::Initialize(const nsID& aUUID,
   mIdentifier->sequenceId() = aSequenceID;
 
   mState = aState;
-  mNextStep = eNextStepNone;
 
   if (mNeutered) {
     // If this port is neutered we don't want to keep it alive artificially nor
@@ -452,8 +457,9 @@ MessagePort::PostMessage(JSContext* aCx, JS::Handle<JS::Value> aMessage,
     return;
   }
 
-  // Not entangled yet, but already closed.
-  if (mNextStep != eNextStepNone) {
+  // Not entangled yet, but already closed/disentangled.
+  if (mState == eStateEntanglingForDisentangle ||
+      mState == eStateEntanglingForClose) {
     return;
   }
 
@@ -490,9 +496,53 @@ MessagePort::Start()
 void
 MessagePort::Dispatch()
 {
-  if (!mMessageQueueEnabled || mMessages.IsEmpty() || mDispatchRunnable ||
-      mState > eStateEntangled || mNextStep != eNextStepNone) {
+  if (!mMessageQueueEnabled || mMessages.IsEmpty() || mDispatchRunnable) {
     return;
+  }
+
+  switch (mState) {
+    case eStateUnshippedEntangled:
+      // Everything is fine here. We have messages because the other
+      // port populates our queue directly.
+      break;
+
+    case eStateEntangling:
+      // Everything is fine here as well. We have messages because the other
+      // port populated our queue directly when we were in the
+      // eStateUnshippedEntangled state.
+      break;
+
+    case eStateEntanglingForDisentangle:
+      // Here we don't want to ship messages because these messages must be
+      // delivered by the cloned version of this one. They will be sent in the
+      // SendDisentangle().
+      return;
+
+    case eStateEntanglingForClose:
+      // We still want to deliver messages if we are closing. These messages
+      // are here from the previous eStateUnshippedEntangled state.
+      break;
+
+    case eStateEntangled:
+      // This port is up and running.
+      break;
+
+    case eStateDisentangling:
+      // If we are in the process to disentangle the port, we cannot dispatch
+      // messages. They will be sent to the cloned version of this port via
+      // SendDisentangle();
+      return;
+
+    case eStateDisentangled:
+      MOZ_CRASH("This cannot happen.");
+      // It cannot happen because Disentangle should take off all the pending
+      // messages.
+      break;
+
+    case eStateDisentangledForClose:
+      // If we are here is because the port has been closed. We can still
+      // process the pending messages.
+      break;
   }
 
   RefPtr<SharedMessagePortMessage> data = mMessages.ElementAt(0);
@@ -510,6 +560,24 @@ MessagePort::Dispatch()
 void
 MessagePort::Close()
 {
+  CloseInternal(true /* aSoftly */);
+}
+
+void
+MessagePort::CloseForced()
+{
+  CloseInternal(false /* aSoftly */);
+}
+
+void
+MessagePort::CloseInternal(bool aSoftly)
+{
+  // If we have some messages to send but we don't want a 'soft' close, we have
+  // to flush them now.
+  if (!aSoftly) {
+    mMessages.Clear();
+  }
+
   if (mState == eStateUnshippedEntangled) {
     MOZ_ASSERT(mUnshippedEntangledPort);
 
@@ -517,8 +585,8 @@ MessagePort::Close()
     RefPtr<MessagePort> port = Move(mUnshippedEntangledPort);
     MOZ_ASSERT(mUnshippedEntangledPort == nullptr);
 
-    mState = eStateDisentangled;
-    port->Close();
+    mState = eStateDisentangledForClose;
+    port->CloseInternal(aSoftly);
 
     UpdateMustKeepAlive();
     return;
@@ -526,7 +594,13 @@ MessagePort::Close()
 
   // Not entangled yet, we have to wait.
   if (mState == eStateEntangling) {
-    mNextStep = eNextStepClose;
+    mState = eStateEntanglingForClose;
+    return;
+  }
+
+  // Not entangled but already cloned or closed
+  if (mState == eStateEntanglingForDisentangle ||
+      mState == eStateEntanglingForClose) {
     return;
   }
 
@@ -536,7 +610,7 @@ MessagePort::Close()
 
   // We don't care about stopping the sending of messages because from now all
   // the incoming messages will be ignored.
-  mState = eStateDisentangled;
+  mState = eStateDisentangledForClose;
 
   MOZ_ASSERT(mActor);
 
@@ -576,8 +650,11 @@ MessagePort::SetOnmessage(EventHandlerNonNull* aCallback)
 void
 MessagePort::Entangled(nsTArray<MessagePortMessage>& aMessages)
 {
-  MOZ_ASSERT(mState == eStateEntangling);
+  MOZ_ASSERT(mState == eStateEntangling ||
+             mState == eStateEntanglingForDisentangle ||
+             mState == eStateEntanglingForClose);
 
+  State oldState = mState;
   mState = eStateEntangled;
 
   // If we have pending messages, these have to be sent.
@@ -598,8 +675,10 @@ MessagePort::Entangled(nsTArray<MessagePortMessage>& aMessages)
     return;
   }
 
-  if (mNextStep == eNextStepClose) {
-    Close();
+  // If the next step is to close the port, we do it ignoring the received
+  // messages.
+  if (oldState == eStateEntanglingForClose) {
+    CloseForced();
     return;
   }
 
@@ -607,12 +686,11 @@ MessagePort::Entangled(nsTArray<MessagePortMessage>& aMessages)
 
   // We were waiting for the entangling callback in order to disentangle this
   // port immediately after.
-  if (mNextStep == eNextStepDisentangle) {
+  if (oldState == eStateEntanglingForDisentangle) {
     StartDisentangling();
     return;
   }
 
-  MOZ_ASSERT(mNextStep == eNextStepNone);
   Dispatch();
 }
 
@@ -623,7 +701,6 @@ MessagePort::StartDisentangling()
   MOZ_ASSERT(mState == eStateEntangled);
 
   mState = eStateDisentangling;
-  mNextStep = eNextStepNone;
 
   // Sending this message we communicate to the parent actor that we don't want
   // to receive any new messages. It is possible that a message has been
@@ -635,8 +712,12 @@ MessagePort::StartDisentangling()
 void
 MessagePort::MessagesReceived(nsTArray<MessagePortMessage>& aMessages)
 {
-  MOZ_ASSERT(mState == eStateEntangled || mState == eStateDisentangling);
-  MOZ_ASSERT(mNextStep == eNextStepNone);
+  MOZ_ASSERT(mState == eStateEntangled ||
+             mState == eStateDisentangling ||
+             // This last step can happen only if Close() has been called
+             // manually. At this point SendClose() is sent but we can still
+             // receive something until the Closing request is processed.
+             mState == eStateDisentangledForClose);
   MOZ_ASSERT(mMessagesForTheOtherPort.IsEmpty());
 
   RemoveDocFromBFCache();
@@ -700,7 +781,8 @@ MessagePort::CloneAndDisentangle(MessagePortIdentifier& aIdentifier)
 
   // We already have a 'next step'. We have to consider this port as already
   // cloned/closed/disentangled.
-  if (mNextStep != eNextStepNone) {
+  if (mState == eStateEntanglingForDisentangle ||
+      mState == eStateEntanglingForClose) {
     return;
   }
 
@@ -730,27 +812,28 @@ MessagePort::CloneAndDisentangle(MessagePortIdentifier& aIdentifier)
     // Register this component to PBackground.
     ConnectToPBackground();
 
-    mNextStep = eNextStepDisentangle;
+    mState = eStateEntanglingForDisentangle;
     return;
   }
 
   // Not entangled yet, we have to wait.
-  if (mState < eStateEntangled) {
-    mNextStep = eNextStepDisentangle;
+  if (mState == eStateEntangling) {
+    mState = eStateEntanglingForDisentangle;
     return;
   }
 
+  MOZ_ASSERT(mState == eStateEntangled);
   StartDisentangling();
 }
 
 void
 MessagePort::Closed()
 {
-  if (mState == eStateDisentangled) {
+  if (mState >= eStateDisentangled) {
     return;
   }
 
-  mState = eStateDisentangled;
+  mState = eStateDisentangledForClose;
 
   if (mActor) {
     mActor->SetPort(nullptr);
@@ -789,7 +872,9 @@ MessagePort::ActorCreated(mozilla::ipc::PBackgroundChild* aActor)
   MOZ_ASSERT(aActor);
   MOZ_ASSERT(!mActor);
   MOZ_ASSERT(mIdentifier);
-  MOZ_ASSERT(mState == eStateEntangling);
+  MOZ_ASSERT(mState == eStateEntangling ||
+             mState == eStateEntanglingForDisentangle ||
+             mState == eStateEntanglingForClose);
 
   PMessagePortChild* actor =
     aActor->SendPMessagePortConstructor(mIdentifier->uuid(),
@@ -805,7 +890,9 @@ MessagePort::ActorCreated(mozilla::ipc::PBackgroundChild* aActor)
 void
 MessagePort::UpdateMustKeepAlive()
 {
-  if (mState == eStateDisentangled && mIsKeptAlive) {
+  if (mState >= eStateDisentangled &&
+      mMessages.IsEmpty() &&
+      mIsKeptAlive) {
     mIsKeptAlive = false;
 
     if (mWorkerFeature) {
@@ -859,7 +946,7 @@ MessagePort::Observe(nsISupports* aSubject, const char* aTopic,
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (innerID == mInnerID) {
-    Close();
+    CloseForced();
   }
 
   return NS_OK;

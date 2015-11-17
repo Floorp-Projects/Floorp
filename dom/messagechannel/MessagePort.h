@@ -25,6 +25,7 @@ class DispatchEventRunnable;
 class MessagePortChild;
 class MessagePortIdentifier;
 class MessagePortMessage;
+class PostMessageRunnable;
 class SharedMessagePortMessage;
 
 namespace workers {
@@ -36,6 +37,7 @@ class MessagePort final : public DOMEventTargetHelper
                         , public nsIObserver
 {
   friend class DispatchEventRunnable;
+  friend class PostMessageRunnable;
 
 public:
   NS_DECL_NSIIPCBACKGROUNDCHILDCREATECALLBACK
@@ -52,6 +54,7 @@ public:
   Create(nsPIDOMWindow* aWindow, const MessagePortIdentifier& aIdentifier,
          ErrorResult& aRv);
 
+  // For IPC.
   static void
   ForceClose(const MessagePortIdentifier& aIdentifier);
 
@@ -77,6 +80,8 @@ public:
 
   void CloneAndDisentangle(MessagePortIdentifier& aIdentifier);
 
+  void CloseForced();
+
   // These methods are useful for MessagePortChild
 
   void Entangled(nsTArray<MessagePortMessage>& aMessages);
@@ -96,10 +101,15 @@ private:
     // StateEntangling.
     eStateUnshippedEntangled,
 
-    // If the port is closed or cloned when we are in this state, we set the
-    // mNextStep. This 'next' operation will be done when entangled() message
-    // is received.
+    // If the port is closed or cloned when we are in this state, we go in one
+    // of the following 2 steps. EntanglingForClose or ForDisentangle.
     eStateEntangling,
+
+    // We are not fully entangled yet but are already disentangled.
+    eStateEntanglingForDisentangle,
+
+    // We are not fully entangled yet but are already closed.
+    eStateEntanglingForClose,
 
     // When entangled() is received we send all the messages in the
     // mMessagesForTheOtherPort to the actor and we change the state to
@@ -121,7 +131,11 @@ private:
     // don't receive any other message, so nothing will be lost.
     // Disentangling the port we send all the messages from the mMessages
     // though the actor.
-    eStateDisentangled
+    eStateDisentangled,
+
+    // We are here if Close() has been called. We are disentangled but we can
+    // still send pending messages.
+    eStateDisentangledForClose
   };
 
   void Initialize(const nsID& aUUID, const nsID& aDestinationUUID,
@@ -137,6 +151,8 @@ private:
   void Disentangle();
 
   void RemoveDocFromBFCache();
+
+  void CloseInternal(bool aSoftly);
 
   // This method is meant to keep alive the MessagePort when this object is
   // creating the actor and until the actor is entangled.
@@ -164,14 +180,6 @@ private:
   uint64_t mInnerID;
 
   State mState;
-
-  // This 'nextStep' is used when we are waiting to be entangled but the
-  // content has called Clone() or Close().
-  enum {
-    eNextStepNone,
-    eNextStepDisentangle,
-    eNextStepClose
-  } mNextStep;
 
   bool mMessageQueueEnabled;
 
