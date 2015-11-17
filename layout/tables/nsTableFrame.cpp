@@ -622,7 +622,24 @@ nsTableFrame::RemoveCol(nsTableColGroupFrame* aColGroupFrame,
   if (aRemoveFromCellMap) {
     nsTableCellMap* cellMap = GetCellMap();
     if (cellMap) {
-      AppendAnonymousColFrames(1);
+      // If we have some anonymous cols at the end already, we just
+      // add a new anonymous col.
+      if (!mColFrames.IsEmpty() &&
+          mColFrames.LastElement() && // XXXbz is this ever null?
+          mColFrames.LastElement()->GetColType() == eColAnonymousCell) {
+        AppendAnonymousColFrames(1);
+      } else {
+        // All of our colframes correspond to actual <col> tags.  It's possible
+        // that we still have at least as many <col> tags as we have logical
+        // columns from cells, but we might have one less.  Handle the latter
+        // case as follows: First ask the cellmap to drop its last col if it
+        // doesn't have any actual cells in it.  Then call
+        // MatchCellMapToColCache to append an anonymous column if it's needed;
+        // this needs to be after RemoveColsAtEnd, since it will determine the
+        // need for a new column frame based on the width of the cell map.
+        cellMap->RemoveColsAtEnd();
+        MatchCellMapToColCache(cellMap);
+      }
     }
   }
   // for now, just bail and recalc all of the collapsing borders
@@ -2534,10 +2551,30 @@ nsTableFrame::DoRemoveFrame(ChildListID     aListID,
       }
     }
 
-    int32_t numAnonymousColsToAdd = GetColCount() - mColFrames.Length();
-    if (numAnonymousColsToAdd > 0) {
-      // this sets the child list, updates the col cache and cell map
-      AppendAnonymousColFrames(numAnonymousColsToAdd);
+    // If we have some anonymous cols at the end already, we just
+    // add more of them.
+    if (!mColFrames.IsEmpty() &&
+        mColFrames.LastElement() && // XXXbz is this ever null?
+        mColFrames.LastElement()->GetColType() == eColAnonymousCell) {
+      int32_t numAnonymousColsToAdd = GetColCount() - mColFrames.Length();
+      if (numAnonymousColsToAdd > 0) {
+        // this sets the child list, updates the col cache and cell map
+        AppendAnonymousColFrames(numAnonymousColsToAdd);
+      }
+    } else {
+      // All of our colframes correspond to actual <col> tags.  It's possible
+      // that we still have at least as many <col> tags as we have logical
+      // columns from cells, but we might have one less.  Handle the latter case
+      // as follows: First ask the cellmap to drop its last col if it doesn't
+      // have any actual cells in it.  Then call MatchCellMapToColCache to
+      // append an anonymous column if it's needed; this needs to be after
+      // RemoveColsAtEnd, since it will determine the need for a new column
+      // frame based on the width of the cell map.
+      nsTableCellMap* cellMap = GetCellMap();
+      if (cellMap) { // XXXbz is this ever null?
+        cellMap->RemoveColsAtEnd();
+        MatchCellMapToColCache(cellMap);
+      }
     }
 
   } else {
