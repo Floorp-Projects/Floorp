@@ -348,11 +348,7 @@ public abstract class GeckoApp
 
     @Override
     public MenuInflater getMenuInflater() {
-        if (Versions.feature11Plus) {
-            return new GeckoMenuInflater(this);
-        } else {
-            return super.getMenuInflater();
-        }
+        return new GeckoMenuInflater(this);
     }
 
     public MenuPanel getMenuPanel() {
@@ -403,7 +399,7 @@ public abstract class GeckoApp
 
     @Override
     public View onCreatePanelView(int featureId) {
-        if (Versions.feature11Plus && featureId == Window.FEATURE_OPTIONS_PANEL) {
+        if (featureId == Window.FEATURE_OPTIONS_PANEL) {
             if (mMenuPanel == null) {
                 mMenuPanel = new MenuPanel(this, null);
             } else {
@@ -419,7 +415,7 @@ public abstract class GeckoApp
 
     @Override
     public boolean onCreatePanelMenu(int featureId, Menu menu) {
-        if (Versions.feature11Plus && featureId == Window.FEATURE_OPTIONS_PANEL) {
+        if (featureId == Window.FEATURE_OPTIONS_PANEL) {
             if (mMenuPanel == null) {
                 mMenuPanel = (MenuPanel) onCreatePanelView(featureId);
             }
@@ -438,7 +434,7 @@ public abstract class GeckoApp
 
     @Override
     public boolean onPreparePanel(int featureId, View view, Menu menu) {
-        if (Versions.feature11Plus && featureId == Window.FEATURE_OPTIONS_PANEL) {
+        if (featureId == Window.FEATURE_OPTIONS_PANEL) {
             return onPrepareOptionsMenu(menu);
         }
 
@@ -452,7 +448,7 @@ public abstract class GeckoApp
             GeckoAppShell.sendEventToGecko(GeckoEvent.createBroadcastEvent("FullScreen:Exit", null));
         }
 
-        if (Versions.feature11Plus && featureId == Window.FEATURE_OPTIONS_PANEL) {
+        if (featureId == Window.FEATURE_OPTIONS_PANEL) {
             if (mMenu == null) {
                 // getMenuPanel() will force the creation of the menu as well
                 MenuPanel panel = getMenuPanel();
@@ -517,10 +513,8 @@ public abstract class GeckoApp
 
     @Override
     public void onOptionsMenuClosed(Menu menu) {
-        if (Versions.feature11Plus) {
-            mMenuPanel.removeAllViews();
-            mMenuPanel.addView((GeckoMenu) mMenu);
-        }
+        mMenuPanel.removeAllViews();
+        mMenuPanel.addView((GeckoMenu) mMenu);
     }
 
     @Override
