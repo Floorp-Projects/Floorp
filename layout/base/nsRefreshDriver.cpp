@@ -375,6 +375,11 @@ private:
                               vsyncLatency.ToMilliseconds());
       } else if (mVsyncRate != TimeDuration::Forever()) {
         TimeDuration contentDelay = (TimeStamp::Now() - mLastChildTick) - mVsyncRate;
+        if (contentDelay.ToMilliseconds() < 0 ){
+          // Vsyncs are noisy and some can come at a rate quicker than
+          // the reported hardware rate. In those cases, consider that we have 0 delay.
+          contentDelay = TimeDuration::FromMilliseconds(0);
+        }
         Telemetry::Accumulate(Telemetry::FX_REFRESH_DRIVER_CONTENT_FRAME_DELAY_MS,
                               contentDelay.ToMilliseconds());
       } else {
