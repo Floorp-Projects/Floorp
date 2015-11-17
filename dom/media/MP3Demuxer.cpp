@@ -161,7 +161,11 @@ MP3TrackDemuxer::DemuxSample() {
 
 media::TimeUnit
 MP3TrackDemuxer::SeekPosition() const {
-  return Duration(mFrameIndex);
+  TimeUnit pos = Duration(mFrameIndex);
+  if (Duration() > TimeUnit()) {
+    pos = std::min(Duration(), pos);
+  }
+  return pos;
 }
 #endif
 
