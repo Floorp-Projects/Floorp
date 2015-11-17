@@ -109,7 +109,7 @@ public:
 
   virtual nsresult ConfigureChildren(const nsTArray<Configuration>& aConfigurations) override;
 
-  NS_IMETHOD Invalidate(const nsIntRect& aRect) override;
+  NS_IMETHOD Invalidate(const LayoutDeviceIntRect& aRect) override;
 
   // This API is going away, steer clear.
   virtual void Scroll(const nsIntPoint& aDelta,
@@ -313,7 +313,7 @@ private:
   // The "widget" to which we delegate events if we don't have an
   // event handler.
   RefPtr<PuppetWidget> mChild;
-  nsIntRegion mDirtyRegion;
+  LayoutDeviceIntRegion mDirtyRegion;
   nsRevocableEventPtr<PaintTask> mPaintTask;
   RefPtr<MemoryPressureObserver> mMemoryPressureObserver;
   // XXX/cjones: keeping this around until we teach LayerManager to do

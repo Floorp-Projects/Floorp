@@ -103,7 +103,7 @@ public:
     NS_IMETHOD SetSizeMode(nsSizeMode aMode) override;
     NS_IMETHOD Enable(bool aState) override;
     virtual bool IsEnabled() const override;
-    NS_IMETHOD Invalidate(const nsIntRect &aRect) override;
+    NS_IMETHOD Invalidate(const LayoutDeviceIntRect& aRect) override;
     NS_IMETHOD SetFocus(bool aRaise = false) override;
     NS_IMETHOD GetScreenBounds(LayoutDeviceIntRect& aRect) override;
     virtual LayoutDeviceIntPoint WidgetToScreenOffset() override;

@@ -872,7 +872,7 @@ nsWindow::IsEnabled() const
 }
 
 NS_IMETHODIMP
-nsWindow::Invalidate(const nsIntRect &aRect)
+nsWindow::Invalidate(const LayoutDeviceIntRect& aRect)
 {
     return NS_OK;
 }

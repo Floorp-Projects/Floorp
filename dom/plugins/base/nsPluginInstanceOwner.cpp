@@ -608,9 +608,10 @@ NS_IMETHODIMP nsPluginInstanceOwner::InvalidateRect(NPRect *invalidRect)
   // Windowed plugins should not be calling NPN_InvalidateRect, but
   // Silverlight does and expects it to "work"
   if (mWidget) {
-    mWidget->Invalidate(nsIntRect(invalidRect->left, invalidRect->top,
-                                  invalidRect->right - invalidRect->left,
-                                  invalidRect->bottom - invalidRect->top));
+    mWidget->Invalidate(
+      LayoutDeviceIntRect(invalidRect->left, invalidRect->top,
+                          invalidRect->right - invalidRect->left,
+                          invalidRect->bottom - invalidRect->top));
     return NS_OK;
   }
 #endif

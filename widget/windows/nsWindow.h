@@ -136,7 +136,7 @@ public:
   NS_IMETHOD              Invalidate(bool aEraseBackground = false,
                                      bool aUpdateNCArea = false,
                                      bool aIncludeChildren = false);
-  NS_IMETHOD              Invalidate(const nsIntRect & aRect);
+  NS_IMETHOD              Invalidate(const LayoutDeviceIntRect& aRect);
   virtual void*           GetNativeData(uint32_t aDataType);
   void                    SetNativeData(uint32_t aDataType, uintptr_t aVal) override;
   virtual void            FreeNativeData(void * data, uint32_t aDataType);
