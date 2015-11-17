@@ -4,54 +4,7 @@
 
 /**
  * Checks that restoring the last browser window in session is actually
- * working:
- *  1.1) Open a new browser window
- *  1.2) Add some tabs
- *  1.3) Close that window
- *  1.4) Opening another window
- *  --> State is restored
- *
- *  2.1) Open a new browser window
- *  2.2) Add some tabs
- *  2.3) Enter private browsing mode
- *  2.4) Close the window while still in private browsing mode
- *  2.5) Opening a new window
- *  --> State is not restored, because private browsing mode is still active
- *  2.6) Leaving private browsing mode
- *  2.7) Open another window
- *  --> State (that was before entering PBM) is restored
- *
- *  3.1) Open a new browser window
- *  3.2) Add some tabs
- *  3.4) Open some popups
- *  3.5) Add another tab to one popup (so that it gets stored) and close it again
- *  3.5) Close the browser window
- *  3.6) Open another browser window
- *  --> State of the closed browser window, but not of the popup, is restored
- *
- *  4.1) Open a popup
- *  4.2) Add another tab to the popup (so that it gets stored) and close it again
- *  4.3) Open a window
- *  --> Nothing at all should be restored
- *
- *  5.1) Open two browser windows and close them again
- *  5.2) undoCloseWindow() one
- *  5.3) Open another browser window
- *  --> Nothing at all should be restored
- *
- * Checks the new notifications are correctly posted and processed, that is
- * for each successful -requested a -granted is received, but omitted if
- *  -requested was cnceled
- * Said notifications are:
- *  - browser-lastwindow-close-requested
- *  - browser-lastwindow-close-granted
- * Tests are:
- *  6) Cancel closing when first observe a -requested
- *  --> Window is kept open
- *  7) Count the number of notifications
- *  --> count(-requested) == count(-granted) + 1
- *  --> (The first -requested was canceled, so off-by-one)
- *  8) (Mac only) Mac version of Test 5 additionally preparing Test 6
+ * working.
  *
  * @see https://bugzilla.mozilla.org/show_bug.cgi?id=354894
  * @note It is implicitly tested that restoring the last window works when
@@ -71,48 +24,86 @@
  * notifications. The latter won't.
  */
 
-function browserWindowsCount(expected, msg) {
-  if (typeof expected == "number")
-    expected = [expected, expected];
-  let count = 0;
+// Some urls that might be opened in tabs and/or popups
+// Do not use about:blank:
+// That one is reserved for special purposes in the tests
+const TEST_URLS = ["about:mozilla", "about:buildconfig"];
+
+// Number of -request notifications to except
+// remember to adjust when adding new tests
+const NOTIFICATIONS_EXPECTED = 6;
+
+// Window features of popup windows
+const POPUP_FEATURES = "toolbar=no,resizable=no,status=no";
+
+// Window features of browser windows
+const CHROME_FEATURES = "chrome,all,dialog=no";
+
+const IS_MAC = navigator.platform.match(/Mac/);
+
+/**
+ * Returns an Object with two properties:
+ *   open (int):
+ *     A count of how many non-closed navigator:browser windows there are.
+ *   winstates (int):
+ *     A count of how many windows there are in the SessionStore state.
+ */
+function getBrowserWindowsCount() {
+  let open = 0;
   let e = Services.wm.getEnumerator("navigator:browser");
   while (e.hasMoreElements()) {
     if (!e.getNext().closed)
-      ++count;
+      ++open;
   }
-  is(count, expected[0], msg + " (nsIWindowMediator)");
-  let state = ss.getBrowserState();
-  is(JSON.parse(state).windows.length, expected[1], msg + " (getBrowserState)");
+
+  let winstates = JSON.parse(ss.getBrowserState()).windows.length;
+
+  return { open, winstates };
 }
 
-function test() {
-  browserWindowsCount(1, "Only one browser window should be open initially");
+add_task(function* setup() {
+  // Make sure we've only got one browser window to start with
+  let { open, winstates } = getBrowserWindowsCount();
+  is(open, 1, "Should only be one open window");
+  is(winstates, 1, "Should only be one window state in SessionStore");
 
-  waitForExplicitFinish();
   // This test takes some time to run, and it could timeout randomly.
   // So we require a longer timeout. See bug 528219.
   requestLongerTimeout(2);
 
-  // Some urls that might be opened in tabs and/or popups
-  // Do not use about:blank:
-  // That one is reserved for special purposes in the tests
-  const TEST_URLS = ["about:mozilla", "about:buildconfig"];
+  // Make the main test window not count as a browser window any longer
+  let oldWinType = document.documentElement.getAttribute("windowtype");
+  document.documentElement.setAttribute("windowtype", "navigator:testrunner");
 
-  // Number of -request notifications to except
-  // remember to adjust when adding new tests
-  const NOTIFICATIONS_EXPECTED = 6;
+  registerCleanupFunction(() => {
+    document.documentElement.setAttribute("windowtype", "navigator:browser");
+  });
+});
 
-  // Window features of popup windows
-  const POPUP_FEATURES = "toolbar=no,resizable=no,status=no";
-
-  // Window features of browser windows
-  const CHROME_FEATURES = "chrome,all,dialog=no";
-
-  // Store the old window type for cleanup
-  let oldWinType = "";
-  // Store the old tabs.warnOnClose pref so that we may reset it during
-  // cleanup
-  let oldWarnTabsOnClose = gPrefService.getBoolPref("browser.tabs.warnOnClose");
+/**
+ * Sets up one of our tests by setting the right preferences, and
+ * then opening up a browser window preloaded with some tabs.
+ *
+ * @param options (Object)
+ *        An object that can contain the following properties:
+ *
+ *        private:
+ *          Whether or not the opened window should be private.
+ *
+ *        denyFirst:
+ *          Whether or not the first window that attempts to close
+ *          via closeWindowForRestoration should be denied.
+ *
+ * @param testFunction (Function*)
+ *        A generator function that yields Promises to be run
+ *        once the test has been set up.
+ *
+ * @returns Promise
+ *        Resolves once the test has been cleaned up.
+ */
+let setupTest = Task.async(function*(options, testFunction) {
+  yield pushPrefs(["browser.startup.page", 3],
+                  ["browser.tabs.warnOnClose", false]);
 
   // Observe these, and also use to count the number of hits
   let observing = {
@@ -129,355 +120,355 @@ function test() {
     observing[aTopic]++;
 
     // handle some tests
-    if (++hitCount == 1) {
-      // Test 6
+    if (options.denyFirst && ++hitCount == 1) {
       aCancel.QueryInterface(Ci.nsISupportsPRBool).data = true;
     }
   }
 
-  /**
-   * Helper: Sets prefs as the testsuite requires
-   * @note Will be reset in cleanTestSuite just before finishing the tests
-   */
-  function setPrefs() {
-    gPrefService.setIntPref("browser.startup.page", 3);
-    gPrefService.setBoolPref("browser.tabs.warnOnClose", false);
+  for (let o in observing) {
+    Services.obs.addObserver(observer, o, false);
   }
 
-  /**
-   * Helper: Sets up this testsuite
-   */
-  function setupTestsuite(testFn) {
-    // Register our observers
-    for (let o in observing)
-      Services.obs.addObserver(observer, o, false);
+  let private = options.private || false;
+  let newWin = yield promiseNewWindowLoaded({ private });
 
-    // Make the main test window not count as a browser window any longer
-    oldWinType = document.documentElement.getAttribute("windowtype");
-    document.documentElement.setAttribute("windowtype", "navigator:testrunner");
+  injectTestTabs(newWin);
+
+  yield testFunction(newWin, observing);
+
+  let count = getBrowserWindowsCount();
+  is(count.open, 0, "Got right number of open windows");
+  is(count.winstates, 1, "Got right number of stored window states");
+
+  for (let o in observing) {
+    Services.obs.removeObserver(observer, o);
   }
 
-  /**
-   * Helper: Cleans up behind the testsuite
-   */
-  function cleanupTestsuite(callback) {
-    // Finally remove observers again
-    for (let o in observing)
-      Services.obs.removeObserver(observer, o);
+  yield popPrefs();
+});
 
-    // Reset the prefs we touched
-    let pref = "browser.startup.page";
-    if (gPrefService.prefHasUserValue(pref))
-      gPrefService.clearUserPref(pref);
-    gPrefService.setBoolPref("browser.tabs.warnOnClose", oldWarnTabsOnClose);
+/**
+ * Loads a TEST_URLS into a browser window.
+ *
+ * @param win (Window)
+ *        The browser window to load the tabs in
+ */
+function injectTestTabs(win) {
+  TEST_URLS.forEach(function (url) {
+    win.gBrowser.addTab(url);
+  });
+}
 
-    // Reset the window type
-    document.documentElement.setAttribute("windowtype", oldWinType);
-  }
-
-  /**
-   * Helper: sets the prefs and a new window with our test tabs
-   */
-  function setupTestAndRun(aIsPrivateWindow, testFn) {
-    // Prepare the prefs
-    setPrefs();
-
-    // Prepare a window; open it and add more tabs
-    let options = {};
-    if (aIsPrivateWindow) {
-      options = {private: true};
+/**
+ * Attempts to close a window via BrowserTryToCloseWindow so that
+ * we get the browser-lastwindow-close-requested and
+ * browser-lastwindow-close-granted observer notifications.
+ *
+ * @param win (Window)
+ *        The window to try to close
+ * @returns Promise
+ *        Resolves to true if the window closed, or false if the window
+ *        was denied the ability to close.
+ */
+function closeWindowForRestoration(win) {
+  return new Promise((resolve) => {
+    let closePromise = BrowserTestUtils.windowClosed(win);
+    win.BrowserTryToCloseWindow();
+    if (!win.closed) {
+      resolve(false);
+      return;
     }
 
-    whenNewWindowLoaded(options, function (newWin) {
-      TEST_URLS.forEach(function (url) {
-        newWin.gBrowser.addTab(url);
-      });
-
-      executeSoon(() => testFn(newWin));
+    closePromise.then(() => {
+      resolve(true);
     });
+  });
+}
+
+/**
+ * Normal in-session restore
+ *
+ * @note: Non-Mac only
+ *
+ * Should do the following:
+ *  1. Open a new browser window
+ *  2. Add some tabs
+ *  3. Close that window
+ *  4. Opening another window
+ *  5. Checks that state is restored
+ */
+add_task(function* test_open_close_normal() {
+  if (IS_MAC) {
+    return;
   }
 
-  /**
-   * Test 1: Normal in-session restore
-   * @note: Non-Mac only
-   */
-  function testOpenCloseNormal(nextFn) {
-    setupTestAndRun(false, function(newWin) {
-      // Close the window
-      // window.close doesn't push any close events,
-      // so use BrowserTryToCloseWindow
-      newWin.BrowserTryToCloseWindow();
+  yield setupTest({ denyFirst: true }, function*(newWin, obs) {
+    let closed = yield closeWindowForRestoration(newWin);
+    ok(!closed, "First close request should have been denied");
 
-      // The first request to close is denied by our observer (Test 6)
-      ok(!newWin.closed, "First close request was denied");
-      if (!newWin.closed) {
-        newWin.BrowserTryToCloseWindow();
-        ok(newWin.closed, "Second close request was granted");
-      }
+    closed = yield closeWindowForRestoration(newWin);
+    ok(closed, "Second close request should be accepted");
 
-      // Open a new window
-      // The previously closed window should be restored
-      whenNewWindowLoaded({}, function (newWin) {
-        is(newWin.gBrowser.browsers.length, TEST_URLS.length + 2,
-           "Restored window in-session with otherpopup windows around");
+    newWin = yield promiseNewWindowLoaded();
+    is(newWin.gBrowser.browsers.length, TEST_URLS.length + 2,
+       "Restored window in-session with otherpopup windows around");
 
-        // Cleanup
-        newWin.close();
+    // Note that this will not result in the the browser-lastwindow-close
+    // notifications firing for this other newWin.
+    yield BrowserTestUtils.closeWindow(newWin);
 
-        // Next please
-        executeSoon(nextFn);
-      });
-    });
+    // setupTest gave us a window which was denied for closing once, and then
+    // closed.
+    is(obs["browser-lastwindow-close-requested"], 2,
+       "Got expected browser-lastwindow-close-requested notifications");
+    is(obs["browser-lastwindow-close-granted"], 1,
+       "Got expected browser-lastwindow-close-granted notifications");
+  });
+});
+
+/**
+ * PrivateBrowsing in-session restore
+ *
+ * @note: Non-Mac only
+ *
+ * Should do the following:
+ *  1. Open a new browser window A
+ *  2. Add some tabs
+ *  3. Close the window A as the last window
+ *  4. Open a private browsing window B
+ *  5. Make sure that B didn't restore the tabs from A
+ *  6. Close private browsing window B
+ *  7. Open a new window C
+ *  8. Make sure that new window C has restored tabs from A
+ */
+add_task(function* test_open_close_private_browsing() {
+  if (IS_MAC) {
+    return;
   }
 
-  /**
-   * Test 2: PrivateBrowsing in-session restore
-   * @note: Non-Mac only
-   */
-  function testOpenClosePrivateBrowsing(nextFn) {
-    setupTestAndRun(false, function(newWin) {
-      // Close the window
-      newWin.BrowserTryToCloseWindow();
+  yield setupTest({}, function*(newWin, obs) {
+    let closed = yield closeWindowForRestoration(newWin);
+    ok(closed, "Should be able to close the window");
 
-      // Enter private browsing mode
-      // Open a new window.
-      // The previously closed window should NOT be restored
-      whenNewWindowLoaded({private: true}, function (newWin) {
-        is(newWin.gBrowser.browsers.length, 1,
-           "Did not restore in private browing mode");
+    newWin = yield promiseNewWindowLoaded({private: true});
+    is(newWin.gBrowser.browsers.length, 1,
+       "Did not restore in private browing mode");
 
-        // Cleanup
-        newWin.BrowserTryToCloseWindow();
+    closed = yield closeWindowForRestoration(newWin);
+    ok(closed, "Should be able to close the window");
 
-        // Exit private browsing mode again
-        whenNewWindowLoaded({}, function (newWin) {
-          is(newWin.gBrowser.browsers.length, TEST_URLS.length + 2,
-             "Restored after leaving private browsing again");
+    newWin = yield promiseNewWindowLoaded();
+    is(newWin.gBrowser.browsers.length, TEST_URLS.length + 2,
+       "Restored tabs in a new non-private window");
 
-          newWin.close();
+    // Note that this will not result in the the browser-lastwindow-close
+    // notifications firing for this other newWin.
+    yield BrowserTestUtils.closeWindow(newWin);
 
-          // Next please
-          executeSoon(nextFn);
-        });
-      });
-    });
+    // We closed two windows with closeWindowForRestoration, and both
+    // should have been successful.
+    is(obs["browser-lastwindow-close-requested"], 2,
+       "Got expected browser-lastwindow-close-requested notifications");
+    is(obs["browser-lastwindow-close-granted"], 2,
+       "Got expected browser-lastwindow-close-granted notifications");
+  });
+});
+
+/**
+ * Open some popup windows to check those aren't restored, but the browser
+ * window is.
+ *
+ * @note: Non-Mac only
+ *
+ * Should do the following:
+ *  1. Open a new browser window
+ *  2. Add some tabs
+ *  3. Open some popups
+ *  4. Add another tab to one popup (so that it gets stored) and close it again
+ *  5. Close the browser window
+ *  6. Open another browser window
+ *  7. Make sure that the tabs of the closed browser window, but not the popup,
+ *     are restored
+ */
+add_task(function* test_open_close_window_and_popup() {
+  if (IS_MAC) {
+    return;
   }
 
-  /**
-   * Test 3: Open some popup windows to check those aren't restored, but
-   *         the browser window is
-   * @note: Non-Mac only
-   */
-  function testOpenCloseWindowAndPopup(nextFn) {
-    setupTestAndRun(false, function(newWin) {
-      // open some popups
-      let popup = openDialog(location, "popup", POPUP_FEATURES, TEST_URLS[0]);
-      let popup2 = openDialog(location, "popup2", POPUP_FEATURES, TEST_URLS[1]);
-      popup2.addEventListener("load", function() {
-        popup2.removeEventListener("load", arguments.callee, false);
-        popup2.gBrowser.addEventListener("load", function() {
-          popup2.gBrowser.removeEventListener("load", arguments.callee, true);
-          popup2.gBrowser.addTab(TEST_URLS[0]);
-          // close the window
-          newWin.BrowserTryToCloseWindow();
+  yield setupTest({}, function*(newWin, obs) {
+    let popupPromise = BrowserTestUtils.waitForNewWindow();
+    openDialog(location, "popup", POPUP_FEATURES, TEST_URLS[0]);
+    let popup = yield popupPromise;
 
-          // Close the popup window
-          // The test is successful when not this popup window is restored
-          // but instead newWin
-          popup2.close();
+    let popup2Promise = BrowserTestUtils.waitForNewWindow();
+    openDialog(location, "popup2", POPUP_FEATURES, TEST_URLS[1]);
+    let popup2 = yield popup2Promise;
 
-          // open a new window the previously closed window should be restored to
-          whenNewWindowLoaded({}, function (newWin) {
-            is(newWin.gBrowser.browsers.length, TEST_URLS.length + 2,
-               "Restored window and associated tabs in session");
+    popup2.gBrowser.addTab(TEST_URLS[0]);
 
-            // Cleanup
-            newWin.close();
-            popup.close();
+    let closed = yield closeWindowForRestoration(newWin);
+    ok(closed, "Should be able to close the window");
 
-            // Next please
-            executeSoon(nextFn);
-          });
-        }, true);
-      }, false);
-    });
+    yield BrowserTestUtils.closeWindow(popup2);
+
+    newWin = yield promiseNewWindowLoaded();
+
+    is(newWin.gBrowser.browsers.length, TEST_URLS.length + 2,
+       "Restored window and associated tabs in session");
+
+    yield BrowserTestUtils.closeWindow(popup);
+    yield BrowserTestUtils.closeWindow(newWin);
+
+    // We closed one window with closeWindowForRestoration, and it should
+    // have been successful.
+    is(obs["browser-lastwindow-close-requested"], 1,
+       "Got expected browser-lastwindow-close-requested notifications");
+    is(obs["browser-lastwindow-close-granted"], 1,
+       "Got expected browser-lastwindow-close-granted notifications");
+  });
+});
+
+/**
+ * Open some popup window to check it isn't restored. Instead nothing at all
+ * should be restored
+ *
+ * @note: Non-Mac only
+ *
+ * Should do the following:
+ *  1. Open a popup
+ *  2. Add another tab to the popup (so that it gets stored) and close it again
+ *  3. Open a window
+ *  4. Check that nothing at all is restored
+ *  5. Open two browser windows and close them again
+ *  6. undoCloseWindow() one
+ *  7. Open another browser window
+ *  8. Check that nothing at all is restored
+ */
+add_task(function* test_open_close_only_popup() {
+  if (IS_MAC) {
+    return;
   }
 
-  /**
-   * Test 4: Open some popup window to check it isn't restored.
-   *         Instead nothing at all should be restored
-   * @note: Non-Mac only
-   */
-  function testOpenCloseOnlyPopup(nextFn) {
-    // prepare the prefs
-    setPrefs();
+  yield setupTest({}, function*(newWin, obs) {
+    // We actually don't care about the initial window in this test.
+    yield BrowserTestUtils.closeWindow(newWin);
 
     // This will cause nsSessionStore to restore a window the next time it
     // gets a chance.
-    let popup = openDialog(location, "popup", POPUP_FEATURES, TEST_URLS[1]);
-    popup.addEventListener("load", function() {
-      this.removeEventListener("load", arguments.callee, true);
-      is(popup.gBrowser.browsers.length, 1,
-         "Did not restore the popup window (1)");
-      popup.BrowserTryToCloseWindow();
+    let popupPromise = BrowserTestUtils.waitForNewWindow();
+    openDialog(location, "popup", POPUP_FEATURES, TEST_URLS[1]);
+    let popup = yield popupPromise;
 
-      // Real tests
-      popup = openDialog(location, "popup", POPUP_FEATURES, TEST_URLS[1]);
-      popup.addEventListener("load", function() {
-        popup.removeEventListener("load", arguments.callee, false);
-        popup.gBrowser.addEventListener("load", function() {
-          popup.gBrowser.removeEventListener("load", arguments.callee, true);
-          popup.gBrowser.addTab(TEST_URLS[0]);
+    is(popup.gBrowser.browsers.length, 1,
+       "Did not restore the popup window (1)");
 
-          is(popup.gBrowser.browsers.length, 2,
-             "Did not restore to the popup window (2)");
+    let closed = yield closeWindowForRestoration(popup);
+    ok(closed, "Should be able to close the window");
 
-          // Close the popup window
-          // The test is successful when not this popup window is restored
-          // but instead a new window is opened without restoring anything
-          popup.close();
+    popupPromise = BrowserTestUtils.waitForNewWindow();
+    openDialog(location, "popup", POPUP_FEATURES, TEST_URLS[1]);
+    popup = yield popupPromise;
 
-          whenNewWindowLoaded({}, function (newWin) {
-            isnot(newWin.gBrowser.browsers.length, 2,
-                  "Did not restore the popup window");
-            is(TEST_URLS.indexOf(newWin.gBrowser.browsers[0].currentURI.spec), -1,
-               "Did not restore the popup window (2)");
+    popup.gBrowser.addTab(TEST_URLS[0]);
+    is(popup.gBrowser.browsers.length, 2,
+       "Did not restore to the popup window (2)");
 
-            // Cleanup
-            newWin.close();
+    yield BrowserTestUtils.closeWindow(popup);
 
-            // Next please
-            executeSoon(nextFn);
-          });
-        }, true);
-      }, false);
-    }, true);
+    newWin = yield promiseNewWindowLoaded();
+    isnot(newWin.gBrowser.browsers.length, 2,
+          "Did not restore the popup window");
+    is(TEST_URLS.indexOf(newWin.gBrowser.browsers[0].currentURI.spec), -1,
+        "Did not restore the popup window (2)");
+    yield BrowserTestUtils.closeWindow(newWin);
+
+    // We closed one popup window with closeWindowForRestoration, and popup
+    // windows should never fire the browser-lastwindow notifications.
+    is(obs["browser-lastwindow-close-requested"], 0,
+       "Got expected browser-lastwindow-close-requested notifications");
+    is(obs["browser-lastwindow-close-granted"], 0,
+       "Got expected browser-lastwindow-close-granted notifications");
+  });
+});
+
+/**
+ * Open some windows and do undoCloseWindow. This should prevent any
+ * restoring later in the test
+ *
+ * @note: Non-Mac only
+ *
+ * Should do the following:
+ *  1. Open two browser windows and close them again
+ *  2. undoCloseWindow() one
+ *  3. Open another browser window
+ *  4. Make sure nothing at all is restored
+ */
+add_task(function* test_open_close_restore_from_popup() {
+  if (IS_MAC) {
+    return;
   }
 
-    /**
-   * Test 5: Open some windows and do undoCloseWindow. This should prevent any
-   *         restoring later in the test
-   * @note: Non-Mac only
-   */
-  function testOpenCloseRestoreFromPopup(nextFn) {
-    setupTestAndRun(false, function(newWin) {
-      setupTestAndRun(false, function(newWin2) {
-        newWin.BrowserTryToCloseWindow();
-        newWin2.BrowserTryToCloseWindow();
+  yield setupTest({}, function*(newWin, obs) {
+    let newWin2 = yield promiseNewWindowLoaded();
+    yield injectTestTabs(newWin2);
 
-        browserWindowsCount([0, 1], "browser windows while running testOpenCloseRestoreFromPopup");
+    let closed = yield closeWindowForRestoration(newWin);
+    ok(closed, "Should be able to close the window");
+    closed = yield closeWindowForRestoration(newWin2);
+    ok(closed, "Should be able to close the window");
 
-        newWin = undoCloseWindow(0);
-        newWin.addEventListener("load", function whenloaded() {
-          newWin.removeEventListener("load", whenloaded, false);
+    let counts = getBrowserWindowsCount();
+    is(counts.open, 0, "Got right number of open windows");
+    is(counts.winstates, 1, "Got right number of window states");
 
-          newWin.gBrowser.tabContainer.addEventListener("SSTabRestored", function whenSSTabRestored() {
-            newWin.gBrowser.tabContainer.removeEventListener("SSTabRestored", whenSSTabRestored, false);
+    newWin = undoCloseWindow(0);
+    yield BrowserTestUtils.waitForEvent(newWin, "load");
 
-            whenNewWindowLoaded({}, function (newWin2) {
-              is(newWin2.gBrowser.browsers.length, 1,
-                 "Did not restore, as undoCloseWindow() was last called");
-              is(TEST_URLS.indexOf(newWin2.gBrowser.browsers[0].currentURI.spec), -1,
-                 "Did not restore, as undoCloseWindow() was last called (2)");
+    // Make sure we wait until this window is restored.
+    yield BrowserTestUtils.waitForEvent(newWin.gBrowser.tabContainer,
+                                        "SSTabRestored");
 
-              browserWindowsCount([2, 3], "browser windows while running testOpenCloseRestoreFromPopup");
+    newWin2 = yield promiseNewWindowLoaded();
 
-              // Cleanup
-              newWin.close();
-              newWin2.close();
+    is(newWin2.gBrowser.browsers.length, 1,
+       "Did not restore, as undoCloseWindow() was last called");
+    is(TEST_URLS.indexOf(newWin2.gBrowser.browsers[0].currentURI.spec), -1,
+       "Did not restore, as undoCloseWindow() was last called (2)");
 
-              browserWindowsCount([0, 1], "browser windows while running testOpenCloseRestoreFromPopup");
+    counts = getBrowserWindowsCount();
+    is(counts.open, 2, "Got right number of open windows");
+    is(counts.winstates, 3, "Got right number of window states");
 
-              // Next please
-              executeSoon(nextFn);
-            });
-          }, false);
-        }, false);
-      });
-    });
+    yield BrowserTestUtils.closeWindow(newWin);
+    yield BrowserTestUtils.closeWindow(newWin2);
+
+    counts = getBrowserWindowsCount();
+    is(counts.open, 0, "Got right number of open windows");
+    is(counts.winstates, 1, "Got right number of window states");
+  });
+});
+
+/**
+ * Test if closing can be denied on Mac.
+ * @note: Mac only
+ */
+add_task(function* test_mac_notifications() {
+  if (!IS_MAC) {
+    return;
   }
 
-  /**
-   * Test 7: Check whether the right number of notifications was received during
-   *         the tests
-   */
-  function testNotificationCount(nextFn) {
-    is(observing["browser-lastwindow-close-requested"], NOTIFICATIONS_EXPECTED,
-       "browser-lastwindow-close-requested notifications observed");
+  yield setupTest({ denyFirst: true }, function*(newWin, obs) {
+    let closed = yield closeWindowForRestoration(newWin);
+    ok(!closed, "First close attempt should be denied");
+    closed = yield closeWindowForRestoration(newWin);
+    ok(closed, "Second close attempt should be granted");
 
-    // -request must be one more as we cancel the first one we hit,
-    // and hence won't produce a corresponding -grant
-    // @see observer.observe
-    is(observing["browser-lastwindow-close-requested"],
-       observing["browser-lastwindow-close-granted"] + 1,
-       "Notification count for -request and -grant matches");
+    // We tried closing once, and got denied. Then we tried again and
+    // succeeded. That means 2 close requests, and 1 close granted.
+    is(obs["browser-lastwindow-close-requested"], 2,
+       "Got expected browser-lastwindow-close-requested notifications");
+    is(obs["browser-lastwindow-close-granted"], 1,
+       "Got expected browser-lastwindow-close-granted notifications");
+  });
+});
 
-    executeSoon(nextFn);
-  }
-
-  /**
-   * Test 8: Test if closing can be denied on Mac
-   *         Futhermore prepares the testNotificationCount test (Test 7)
-   * @note: Mac only
-   */
-  function testMacNotifications(nextFn, iteration) {
-    iteration = iteration || 1;
-    setupTestAndRun(false, function(newWin) {
-      // close the window
-      // window.close doesn't push any close events,
-      // so use BrowserTryToCloseWindow
-      newWin.BrowserTryToCloseWindow();
-      if (iteration == 1) {
-        ok(!newWin.closed, "First close attempt denied");
-        if (!newWin.closed) {
-          newWin.BrowserTryToCloseWindow();
-          ok(newWin.closed, "Second close attempt granted");
-        }
-      }
-
-      if (iteration < NOTIFICATIONS_EXPECTED - 1) {
-        executeSoon(() => testMacNotifications(nextFn, ++iteration));
-      }
-      else {
-        executeSoon(nextFn);
-      }
-    });
-  }
-
-  // Execution starts here
-
-  setupTestsuite();
-  if (navigator.platform.match(/Mac/)) {
-    // Mac tests
-    testMacNotifications(function () {
-      testNotificationCount(function () {
-        cleanupTestsuite();
-        browserWindowsCount(1, "Only one browser window should be open eventually");
-        finish();
-      });
-    });
-  }
-  else {
-    // Non-Mac Tests
-    testOpenCloseNormal(function () {
-      browserWindowsCount([0, 1], "browser windows after testOpenCloseNormal");
-      testOpenClosePrivateBrowsing(function () {
-        browserWindowsCount([0, 1], "browser windows after testOpenClosePrivateBrowsing");
-        testOpenCloseWindowAndPopup(function () {
-          browserWindowsCount([0, 1], "browser windows after testOpenCloseWindowAndPopup");
-          testOpenCloseOnlyPopup(function () {
-            browserWindowsCount([0, 1], "browser windows after testOpenCloseOnlyPopup");
-            testOpenCloseRestoreFromPopup(function () {
-              browserWindowsCount([0, 1], "browser windows after testOpenCloseRestoreFromPopup");
-              testNotificationCount(function () {
-                cleanupTestsuite();
-                browserWindowsCount(1, "browser windows after testNotificationCount");
-                finish();
-              });
-            });
-          });
-        });
-      });
-    });
-  }
-}
