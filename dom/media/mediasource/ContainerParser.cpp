@@ -20,7 +20,7 @@
 #endif
 #include "SourceBufferResource.h"
 
-extern PRLogModuleInfo* GetMediaSourceSamplesLog();
+extern mozilla::LogModule* GetMediaSourceSamplesLog();
 
 #define STRINGIFY(x) #x
 #define TOSTRING(x) STRINGIFY(x)

@@ -12,35 +12,14 @@
 <script type="application/javascript" src="./head.js"></script>
 <script type="application/javascript">
 
-var tests = [
-  function() {
-    SpecialPowers.pushPrefEnv({"set": [["dom.tv.enabled", true],["dom.mozBrowserFramesEnabled", true]]}, function() {
-      SpecialPowers.pushPermissions(
-        [{ "type": "browser", "allow": true, "context": document },
-         { "type": "embed-apps", "allow": true, "context": document },
-         { "type": "webapps-manage", "allow": true, "context": document }],
-        function() {
-          SpecialPowers.setAllAppsLaunchable(true);
-          // No confirmation needed when an app is installed and uninstalled.
-          SpecialPowers.autoConfirmAppInstall(() => {
-            SpecialPowers.autoConfirmAppUninstall(runTest);
-          });
-        });
-    });
-  },
-
-  // Installing the app
-  installApp.bind(this, "file_tv_non_permitted_app.html", "file_app.template.webapp"),
-
-  // Run tests in app
-  testApp,
-
-  // Uninstall the app
-  uninstallApp
-];
+function runTest() {
+  ok(!('tv' in navigator),
+     "navigator.tv should not exist for non-permitted app.");
+  SimpleTest.finish();
+}
 
 SimpleTest.waitForExplicitFinish();
-runTest();
+setupPrefs(runTest);
 
 </script>
 </pre>

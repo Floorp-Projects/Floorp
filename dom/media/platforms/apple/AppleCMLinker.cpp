@@ -15,7 +15,7 @@
 #include "nsCocoaFeatures.h"
 #endif
 
-extern PRLogModuleInfo* GetPDMLog();
+extern mozilla::LogModule* GetPDMLog();
 #define LOG(...) MOZ_LOG(GetPDMLog(), mozilla::LogLevel::Debug, (__VA_ARGS__))
 
 namespace mozilla {

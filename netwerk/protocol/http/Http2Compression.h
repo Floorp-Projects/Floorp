@@ -48,9 +48,9 @@ public:
   uint32_t ByteCount() const;
   uint32_t Length() const;
   uint32_t VariableLength() const;
-  uint32_t StaticLength() const;
+  size_t StaticLength() const;
   void Clear();
-  const nvPair *operator[] (int32_t index) const;
+  const nvPair *operator[] (size_t index) const;
 
 private:
   uint32_t mByteCount;

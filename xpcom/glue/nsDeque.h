@@ -74,7 +74,7 @@ public:
    *
    * @return  number of elements currently in the deque
    */
-  inline int32_t GetSize() const { return mSize; }
+  inline size_t GetSize() const { return mSize; }
 
   /**
    * Appends new member at the end of the deque.
@@ -138,20 +138,7 @@ public:
    * @param   index of desired item
    * @return  element in list
    */
-  void* ObjectAt(int aIndex) const;
-
-  /**
-   * Removes and returns the a member from the deque.
-   *
-   * @param   index of desired item
-   * @return  element which was removed
-   */
-  void* RemoveObjectAt(int aIndex);
-
-  /**
-   * Remove all items from container without destroying them.
-   */
-  void Empty();
+  void* ObjectAt(size_t aIndex) const;
 
   /**
    * Remove and delete all items from container.
@@ -159,8 +146,6 @@ public:
    * which is specified at deque construction.
    */
   void Erase();
-
-  void* Last() const;
 
   /**
    * Call this method when you want to iterate all the
@@ -171,26 +156,13 @@ public:
    */
   void ForEach(nsDequeFunctor& aFunctor) const;
 
-  /**
-   * Call this method when you want to iterate all the
-   * members of the container, calling the functor you
-   * passed with each member. This process will interrupt
-   * if your function returns non 0 to this method.
-   *
-   * @param   aFunctor object to call for each member
-   * @return  first nonzero result of aFunctor or 0.
-   */
-  const void* FirstThat(nsDequeFunctor& aFunctor) const;
-
-  void SetDeallocator(nsDequeFunctor* aDeallocator);
-
   size_t SizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
   size_t SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const;
 
 protected:
-  int32_t         mSize;
-  int32_t         mCapacity;
-  int32_t         mOrigin;
+  size_t         mSize;
+  size_t         mCapacity;
+  size_t         mOrigin;
   nsDequeFunctor* mDeallocator;
   void*           mBuffer[8];
   void**          mData;
@@ -213,5 +185,11 @@ private:
   nsDeque& operator=(const nsDeque& aOther);
 
   bool GrowCapacity();
+  void SetDeallocator(nsDequeFunctor* aDeallocator);
+
+  /**
+   * Remove all items from container without destroying them.
+   */
+  void Empty();
 };
 #endif

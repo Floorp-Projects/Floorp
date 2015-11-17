@@ -13,12 +13,9 @@
 #include "mozilla/Logging.h"
 #include "MediaData.h"
 
-PRLogModuleInfo* GetSourceBufferResourceLog()
+mozilla::LogModule* GetSourceBufferResourceLog()
 {
-  static PRLogModuleInfo* sLogModule = nullptr;
-  if (!sLogModule) {
-    sLogModule = PR_NewLogModule("SourceBufferResource");
-  }
+  static mozilla::LazyLogModule sLogModule("SourceBufferResource");
   return sLogModule;
 }
 

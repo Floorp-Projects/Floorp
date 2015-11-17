@@ -24,7 +24,7 @@
 #include "SpeechSynthesisParent.h"
 
 #undef LOG
-extern PRLogModuleInfo* GetSpeechSynthLog();
+extern mozilla::LogModule* GetSpeechSynthLog();
 #define LOG(type, msg) MOZ_LOG(GetSpeechSynthLog(), type, msg)
 
 namespace {

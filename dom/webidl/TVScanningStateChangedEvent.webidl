@@ -21,7 +21,7 @@ dictionary TVScanningStateChangedEventInit : EventInit {
 
 [Pref="dom.tv.enabled",
  CheckAnyPermissions="tv",
- Func="Navigator::HasTVSupport",
+ AvailableIn=CertifiedApps,
  Constructor(DOMString type, optional TVScanningStateChangedEventInit eventInitDict)]
 interface TVScanningStateChangedEvent : Event {
   readonly attribute TVScanningState state;

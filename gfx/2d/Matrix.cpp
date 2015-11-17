@@ -185,8 +185,10 @@ Matrix4x4::TransformBounds(const RectTyped<UnknownUnits, F>& aRect) const
   return RectTyped<UnknownUnits, F>(min_x, min_y, max_x - min_x, max_y - min_y);
 }
 
-Point4D ComputePerspectivePlaneIntercept(const Point4D& aFirst,
-                                         const Point4D& aSecond)
+template<class F>
+Point4DTyped<UnknownUnits, F>
+ComputePerspectivePlaneIntercept(const Point4DTyped<UnknownUnits, F>& aFirst,
+                                 const Point4DTyped<UnknownUnits, F>& aSecond)
 {
   // This function will always return a point with a w value of 0.
   // The X, Y, and Z components will point towards an infinite vanishing
@@ -203,7 +205,9 @@ Point4D ComputePerspectivePlaneIntercept(const Point4D& aFirst,
   return aFirst + (aSecond - aFirst) * t;
 }
 
-Rect Matrix4x4::ProjectRectBounds(const Rect& aRect, const Rect &aClip) const
+template <class F>
+RectTyped<UnknownUnits, F>
+Matrix4x4::ProjectRectBounds(const RectTyped<UnknownUnits, F>& aRect, const RectTyped<UnknownUnits, F>& aClip) const
 {
   // This function must never return std::numeric_limits<Float>::max() or any
   // other arbitrary large value in place of inifinity.  This often occurs when
@@ -229,26 +233,26 @@ Rect Matrix4x4::ProjectRectBounds(const Rect& aRect, const Rect &aClip) const
 
   // Callers should pass an aClip value that represents the extents to clip
   // the result to, in the same coordinate system as aRect.
-  Point4D points[4];
+  Point4DTyped<UnknownUnits, F> points[4];
 
   points[0] = ProjectPoint(aRect.TopLeft());
   points[1] = ProjectPoint(aRect.TopRight());
   points[2] = ProjectPoint(aRect.BottomRight());
   points[3] = ProjectPoint(aRect.BottomLeft());
 
-  Float min_x = std::numeric_limits<Float>::max();
-  Float min_y = std::numeric_limits<Float>::max();
-  Float max_x = -std::numeric_limits<Float>::max();
-  Float max_y = -std::numeric_limits<Float>::max();
+  F min_x = std::numeric_limits<F>::max();
+  F min_y = std::numeric_limits<F>::max();
+  F max_x = -std::numeric_limits<F>::max();
+  F max_y = -std::numeric_limits<F>::max();
 
   for (int i=0; i<4; i++) {
     // Only use points that exist above the w=0 plane
     if (points[i].HasPositiveWCoord()) {
-      Point point2d = aClip.ClampPoint(points[i].As2DPoint());
-      min_x = std::min<Float>(point2d.x, min_x);
-      max_x = std::max<Float>(point2d.x, max_x);
-      min_y = std::min<Float>(point2d.y, min_y);
-      max_y = std::max<Float>(point2d.y, max_y);
+      PointTyped<UnknownUnits, F> point2d = aClip.ClampPoint(points[i].As2DPoint());
+      min_x = std::min<F>(point2d.x, min_x);
+      max_x = std::max<F>(point2d.x, max_x);
+      min_y = std::min<F>(point2d.y, min_y);
+      max_y = std::max<F>(point2d.y, max_y);
     }
 
     int next = (i == 3) ? 0 : i + 1;
@@ -256,7 +260,8 @@ Rect Matrix4x4::ProjectRectBounds(const Rect& aRect, const Rect &aClip) const
       // If the line between two points crosses the w=0 plane, then interpolate
       // to find the point of intersection with the w=0 plane and use that
       // instead.
-      Point4D intercept = ComputePerspectivePlaneIntercept(points[i], points[next]);
+      Point4DTyped<UnknownUnits, F> intercept =
+        ComputePerspectivePlaneIntercept(points[i], points[next]);
       // Since intercept.w will always be 0 here, we interpret x,y,z as a
       // direction towards an infinite vanishing point.
       if (intercept.x < 0.0f) {
@@ -273,10 +278,10 @@ Rect Matrix4x4::ProjectRectBounds(const Rect& aRect, const Rect &aClip) const
   }
 
   if (max_x < min_x || max_y < min_y) {
-    return Rect(0, 0, 0, 0);
+    return RectTyped<UnknownUnits, F>(0, 0, 0, 0);
   }
 
-  return Rect(min_x, min_y, max_x - min_x, max_y - min_y);
+  return RectTyped<UnknownUnits, F>(min_x, min_y, max_x - min_x, max_y - min_y);
 }
 
 template<class F>
@@ -636,6 +641,15 @@ Matrix4x4::TransformBounds(const Rect& aRect) const;
 template
 RectDouble
 Matrix4x4::TransformBounds(const RectDouble& aRect) const;
+
+template
+Rect
+Matrix4x4::ProjectRectBounds(const Rect& aRect, const Rect& aClip) const;
+
+template
+RectDouble
+Matrix4x4::ProjectRectBounds(const RectDouble& aRect, const RectDouble& aClip) const;
+
 
 } // namespace gfx
 } // namespace mozilla
