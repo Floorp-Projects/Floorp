@@ -19,6 +19,8 @@ add_task(function*() {
 
   ok(Promise.toString().contains("native code"), "Expect native DOM Promise.");
 
+  // We have to attach the chrome TabActor before playing with the PromiseActor
+  yield attachTab(client, chromeActors);
   yield testGetTimeToSettle(client, chromeActors,
     v => new Promise(resolve => setTimeout(() => resolve(v), 100)));
 
