@@ -458,7 +458,7 @@ nsWindow::Resize(double aX,
     }
 
     if (aRepaint) {
-        Invalidate(mBounds);
+        Invalidate(LayoutDeviceIntRect::FromUnknownRect(mBounds));
     }
 
     return NS_OK;
@@ -498,7 +498,7 @@ nsWindow::ConfigureChildren(const nsTArray<nsIWidget::Configuration>&)
 }
 
 NS_IMETHODIMP
-nsWindow::Invalidate(const nsIntRect &aRect)
+nsWindow::Invalidate(const LayoutDeviceIntRect& aRect)
 {
     nsWindow *top = mParent;
     while (top && top->mParent) {
@@ -827,7 +827,7 @@ nsWindow::BringToTop()
         mWidgetListener->WindowActivated();
     }
 
-    Invalidate(mBounds);
+    Invalidate(LayoutDeviceIntRect::FromUnknownRect(mBounds));
 }
 
 void
