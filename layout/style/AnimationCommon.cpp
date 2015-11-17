@@ -397,6 +397,12 @@ AnimValuesStyleRule::MapRuleInfoInto(nsRuleData* aRuleData)
   }
 }
 
+/* virtual */ bool
+AnimValuesStyleRule::MightMapInheritedStyleData()
+{
+  return mStyleBits & NS_STYLE_INHERITED_STRUCT_MASK;
+}
+
 #ifdef DEBUG
 /* virtual */ void
 AnimValuesStyleRule::List(FILE* out, int32_t aIndent) const
