@@ -16,20 +16,19 @@
 namespace mozilla {
 namespace layers {
 
-HRESULT
-D3D11ShareHandleImage::SetData(const Data& aData)
+D3D11ShareHandleImage::D3D11ShareHandleImage(const gfx::IntSize& aSize,
+                                             const gfx::IntRect& aRect)
+ : Image(nullptr, ImageFormat::D3D11_SHARE_HANDLE_TEXTURE),
+   mSize(aSize),
+   mPictureRect(aRect)
 {
-  mPictureRect = aData.mRegion;
-  mSize = aData.mSize;
+}
 
-  mTextureClient =
-    aData.mAllocator->CreateOrRecycleClient(gfx::SurfaceFormat::B8G8R8A8,
-                                            mSize);
-  if (!mTextureClient) {
-    return E_FAIL;
-  }
-
-  return S_OK;
+bool
+D3D11ShareHandleImage::AllocateTexture(D3D11RecycleAllocator* aAllocator)
+{
+  mTextureClient = aAllocator->CreateOrRecycleClient(gfx::SurfaceFormat::B8G8R8A8, mSize);
+  return !!mTextureClient;
 }
 
 gfx::IntSize
