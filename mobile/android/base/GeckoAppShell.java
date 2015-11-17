@@ -1176,7 +1176,7 @@ public class GeckoAppShell
                                         context.getResources().getString(R.string.share_title)); 
         }
 
-        final Uri uri = normalizeUriScheme(targetURI.indexOf(':') >= 0 ? Uri.parse(targetURI) : new Uri.Builder().scheme(targetURI).build());
+        Uri uri = normalizeUriScheme(targetURI.indexOf(':') >= 0 ? Uri.parse(targetURI) : new Uri.Builder().scheme(targetURI).build());
         if (!TextUtils.isEmpty(mimeType)) {
             Intent intent = getIntentForActionString(action);
             intent.setDataAndType(uri, mimeType);
@@ -1256,6 +1256,14 @@ public class GeckoAppShell
         final String query = uri.getEncodedQuery();
         if (TextUtils.isEmpty(query)) {
             return intent;
+        }
+
+        // It is common to see sms*/mms* uris on the web without '//', it is W3C standard not to have the slashes,
+        // but android's Uri builder & Uri require the slashes and will interpret those without as malformed.
+        String currentUri = uri.toString();
+        String correctlyFormattedDataURIScheme = scheme + "://";
+        if (!currentUri.contains(correctlyFormattedDataURIScheme)) {
+            uri = Uri.parse(currentUri.replaceFirst(scheme + ":", correctlyFormattedDataURIScheme));
         }
 
         final String[] fields = query.split("&");
