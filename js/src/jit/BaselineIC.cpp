@@ -5725,8 +5725,7 @@ GetTemplateObjectForNative(JSContext* cx, Native native, const CallArgs& args,
            ION_COMMONX4_SIMD_OP(ADD_INT32X4_SIMD_OP_NAME_)
            COMP_COMMONX4_TO_INT32X4_SIMD_OP(ADD_INT32X4_SIMD_OP_NAME_)
            COMP_COMMONX4_TO_INT32X4_SIMD_OP(ADD_FLOAT32X4_SIMD_OP_NAME_)
-           FOREACH_INT32X4_SIMD_OP(ADD_INT32X4_SIMD_OP_NAME_)
-           ION_ONLY_INT32X4_SIMD_OP(ADD_INT32X4_SIMD_OP_NAME_))
+           FOREACH_INT32X4_SIMD_OP(ADD_INT32X4_SIMD_OP_NAME_))
        {
             Rooted<SimdTypeDescr*> descr(cx, &cx->global()->int32x4TypeDescr().as<SimdTypeDescr>());
             res.set(cx->compartment()->jitCompartment()->getSimdTemplateObjectFor(cx, descr));
