@@ -61,10 +61,11 @@ public class RestrictedProfileConfiguration implements RestrictionConfiguration 
         StrictMode.ThreadPolicy policy = StrictMode.allowThreadDiskReads();
 
         try {
-            cachedAppRestrictions = mgr.getApplicationRestrictions(context.getPackageName());
+            Bundle appRestrictions = mgr.getApplicationRestrictions(context.getPackageName());
+            migrateRestrictionsIfNeeded(appRestrictions);
+
+            cachedAppRestrictions = appRestrictions;
             cachedUserRestrictions = mgr.getUserRestrictions();
-
-
         } finally {
             StrictMode.setThreadPolicy(policy);
         }
@@ -96,5 +97,38 @@ public class RestrictedProfileConfiguration implements RestrictionConfiguration 
     @Override
     public synchronized void update() {
         isCacheInvalid = true;
+    }
+
+    /**
+     * This method migrates the old set of DISALLOW_ restrictions to the new restrictable feature ones (Bug 1189336).
+     */
+    public static void migrateRestrictionsIfNeeded(Bundle bundle) {
+        if (!bundle.containsKey(Restrictable.INSTALL_EXTENSION.name) && bundle.containsKey("no_install_extensions")) {
+            bundle.putBoolean(Restrictable.INSTALL_EXTENSION.name, !bundle.getBoolean("no_install_extensions"));
+        }
+
+        if (!bundle.containsKey(Restrictable.PRIVATE_BROWSING.name) && bundle.containsKey("no_private_browsing")) {
+            bundle.putBoolean(Restrictable.PRIVATE_BROWSING.name, !bundle.getBoolean("no_private_browsing"));
+        }
+
+        if (!bundle.containsKey(Restrictable.LOCATION_SERVICE.name) && bundle.containsKey("no_location_service")) {
+            bundle.putBoolean(Restrictable.LOCATION_SERVICE.name, !bundle.getBoolean("no_location_service"));
+        }
+
+        if (!bundle.containsKey(Restrictable.CLEAR_HISTORY.name) && bundle.containsKey("no_clear_history")) {
+            bundle.putBoolean(Restrictable.CLEAR_HISTORY.name, !bundle.getBoolean("no_clear_history"));
+        }
+
+        if (!bundle.containsKey(Restrictable.MASTER_PASSWORD.name) && bundle.containsKey("no_master_password")) {
+            bundle.putBoolean(Restrictable.MASTER_PASSWORD.name, !bundle.getBoolean("no_master_password"));
+        }
+
+        if (!bundle.containsKey(Restrictable.GUEST_BROWSING.name) && bundle.containsKey("no_guest_browsing")) {
+            bundle.putBoolean(Restrictable.GUEST_BROWSING.name, !bundle.getBoolean("no_guest_browsing"));
+        }
+
+        if (!bundle.containsKey(Restrictable.ADVANCED_SETTINGS.name) && bundle.containsKey("no_advanced_settings")) {
+            bundle.putBoolean(Restrictable.ADVANCED_SETTINGS.name, !bundle.getBoolean("no_advanced_settings"));
+        }
     }
 }
