@@ -2045,6 +2045,13 @@ nsPluginHost::ShouldAddPlugin(nsPluginTag* aPluginTag)
        aPluginTag->HasMimeType(NS_LITERAL_CSTRING("application/x-shockwave-flash-test")))) {
     return true;
   }
+  // Microsoft Silverlight Tests
+  if (StringBeginsWith(aPluginTag->FileName(), NS_LITERAL_CSTRING("npctrl"), nsCaseInsensitiveCStringComparator()) &&
+      (aPluginTag->HasMimeType(NS_LITERAL_CSTRING("application/x-silverlight-app")) ||
+       aPluginTag->HasMimeType(NS_LITERAL_CSTRING("application/x-silverlight-2")) ||
+       aPluginTag->HasMimeType(NS_LITERAL_CSTRING("application/x-silverlight")))) {
+    return true;
+  }
   // Accept the test plugin MIME types, so mochitests still work.
   if (aPluginTag->HasMimeType(NS_LITERAL_CSTRING("application/x-test")) ||
       aPluginTag->HasMimeType(NS_LITERAL_CSTRING("application/x-Second-Test")) ||
