@@ -4,6 +4,10 @@
 
 %include ../shared/devedition.inc.css
 
+:root {
+  --forwardbutton-width: 29px;
+}
+
 .tab-close-button[visuallyselected]:not(:hover) {
   background-image: -moz-image-rect(url("chrome://global/skin/icons/close.svg"), 0, 80, 16, 64);
 }
