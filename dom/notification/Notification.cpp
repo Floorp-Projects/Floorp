@@ -51,6 +51,10 @@
 #include "nsIDOMDesktopNotification.h"
 #endif
 
+#ifndef MOZ_SIMPLEPUSH
+#include "nsIPushNotificationService.h"
+#endif
+
 namespace mozilla {
 namespace dom {
 
@@ -678,6 +682,8 @@ protected:
   {
     AssertIsOnMainThread();
   }
+
+  nsresult AdjustPushQuota(const char* aTopic);
 };
 
 NS_IMPL_ISUPPORTS(NotificationObserver, nsIObserver)
@@ -1173,9 +1179,37 @@ NotificationObserver::Observe(nsISupports* aSubject, const char* aTopic,
     ContentChild::GetSingleton()->SendOpenNotificationSettings(
       IPC::Principal(mPrincipal));
     return NS_OK;
+  } else if (!strcmp("alertshow", aTopic) ||
+             !strcmp("alertfinished", aTopic)) {
+    Unused << NS_WARN_IF(NS_FAILED(AdjustPushQuota(aTopic)));
   }
 
   return mObserver->Observe(aSubject, aTopic, aData);
+}
+
+nsresult
+NotificationObserver::AdjustPushQuota(const char* aTopic)
+{
+#ifdef MOZ_SIMPLEPUSH
+  return NS_ERROR_NOT_IMPLEMENTED;
+#else
+  nsCOMPtr<nsIPushQuotaManager> pushQuotaManager =
+    do_GetService("@mozilla.org/push/NotificationService;1");
+  if (!pushQuotaManager) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsAutoCString origin;
+  nsresult rv = mPrincipal->GetOrigin(origin);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  if (!strcmp("alertshow", aTopic)) {
+    return pushQuotaManager->NotificationForOriginShown(origin.get());
+  }
+  return pushQuotaManager->NotificationForOriginClosed(origin.get());
+#endif
 }
 
 NS_IMETHODIMP
