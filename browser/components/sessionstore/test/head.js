@@ -550,3 +550,15 @@ function modifySessionStorage(browser, data, options = {}) {
     });
   });
 }
+
+function pushPrefs(...aPrefs) {
+  return new Promise(resolve => {
+    SpecialPowers.pushPrefEnv({"set": aPrefs}, resolve);
+  });
+}
+
+function popPrefs() {
+  return new Promise(resolve => {
+    SpecialPowers.popPrefEnv(resolve);
+  });
+}
