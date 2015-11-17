@@ -4,7 +4,6 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
-                  xmlns:gecko="http://schemas.android.com/apk/res-auto"
                   android:enabled="false">
 
     <PreferenceScreen
@@ -30,12 +29,6 @@
                     android:value="preferences_locale" />
         </intent>
     </PreferenceScreen>
-
-    <ListPreference android:key="browser.chrome.titlebarMode"
-                    android:title="@string/pref_titlebar_mode"
-                    android:entries="@array/pref_titlebar_mode_entries"
-                    android:entryValues="@array/pref_titlebar_mode_values"
-                    android:persistent="false" />
 
     <CheckBoxPreference android:key="browser.chrome.dynamictoolbar"
                         android:title="@string/pref_scroll_title_bar2"

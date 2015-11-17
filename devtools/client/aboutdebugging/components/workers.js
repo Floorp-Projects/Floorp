@@ -16,6 +16,7 @@ loader.lazyRequireGetter(this, "Services");
 
 const Strings = Services.strings.createBundle(
   "chrome://devtools/locale/aboutdebugging.properties");
+const WorkerIcon = "chrome://devtools/skin/images/debugging-workers.svg";
 
 exports.WorkersComponent = React.createClass({
   displayName: "WorkersComponent",
@@ -42,7 +43,7 @@ exports.WorkersComponent = React.createClass({
   render() {
     let client = this.props.client;
     let workers = this.state.workers;
-    return React.createElement("div", null,
+    return React.createElement("div", { className: "inverted-icons" },
       React.createElement(TargetListComponent, {
         name: Strings.GetStringFromName("serviceWorkers"),
         targets: workers.service, client }),
@@ -63,6 +64,7 @@ exports.WorkersComponent = React.createClass({
       forms.forEach(form => {
         let worker = {
           name: form.url,
+          icon: WorkerIcon,
           actorID: form.actor
         };
         switch (form.type) {

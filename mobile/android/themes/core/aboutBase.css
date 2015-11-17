@@ -2,13 +2,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-%filter substitution
-%include defines.inc
+@import "defines.css";
 
 html {
   font-family: "Clear Sans",sans-serif;
   font-size: 14px;
-  background-color: @color_about_background@;
+  background-color: var(--color_about_background);
   -moz-text-size-adjust: none;
   -moz-user-select: none;
   --icon-size: 1.8em;
@@ -57,8 +56,8 @@ input {
 
 .list-item {
   color: #363B40;
-  background-color: @color_about_item@;
-  border-bottom: 1px solid @color_about_item_border@;
+  background-color: var(--color_about_item);
+  border-bottom: 1px solid var(--color_about_item_border);
   position: relative;
   list-style-type: none;
   list-style-image: none;

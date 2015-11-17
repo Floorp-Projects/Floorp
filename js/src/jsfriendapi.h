@@ -81,6 +81,9 @@ JS_GetCustomIteratorCount(JSContext* cx);
 extern JS_FRIEND_API(bool)
 JS_NondeterministicGetWeakMapKeys(JSContext* cx, JS::HandleObject obj, JS::MutableHandleObject ret);
 
+extern JS_FRIEND_API(bool)
+JS_NondeterministicGetWeakSetKeys(JSContext* cx, JS::HandleObject obj, JS::MutableHandleObject ret);
+
 // Raw JSScript* because this needs to be callable from a signal handler.
 extern JS_FRIEND_API(unsigned)
 JS_PCToLineNumber(JSScript* script, jsbytecode* pc, unsigned* columnp = nullptr);

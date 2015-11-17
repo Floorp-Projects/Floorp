@@ -343,12 +343,6 @@ public class ToolbarDisplayLayout extends ThemedLinearLayout
             return;
         }
 
-        // If the pref to show the title is set, use the tab's display title.
-        if (!mPrefs.shouldShowUrl() || url == null) {
-            setTitle(tab.getDisplayTitle());
-            return;
-        }
-
         String strippedURL = stripAboutReaderURL(url);
 
         if (mPrefs.shouldTrimUrls()) {
