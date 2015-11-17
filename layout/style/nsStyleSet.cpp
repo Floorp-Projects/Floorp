@@ -197,8 +197,8 @@ nsStyleSet::nsStyleSet()
 nsStyleSet::~nsStyleSet()
 {
   for (SheetType type : gCSSSheetTypes) {
-    for (uint32_t i = 0, n = mSheets[type].Length(); i < n; i++) {
-      static_cast<CSSStyleSheet*>(mSheets[type][i])->DropStyleSet(this);
+    for (CSSStyleSheet* sheet : mSheets[type]) {
+      sheet->DropStyleSet(this);
     }
   }
 
@@ -234,12 +234,9 @@ nsStyleSet::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
         n += mRuleProcessors[type]->SizeOfIncludingThis(aMallocSizeOf);
       }
     }
-    // mSheets is a C-style array of nsCOMArrays.  We do not own the sheets in
-    // the nsCOMArrays (either the nsLayoutStyleSheetCache singleton or our
-    // document owns them) so we do not count the sheets here (we pass nullptr
-    // as the aSizeOfElementIncludingThis argument).  All we're doing here is
-    // counting the size of the nsCOMArrays' buffers.
-    n += mSheets[type].SizeOfExcludingThis(nullptr, aMallocSizeOf);
+    // We don't own the sheets (either the nsLayoutStyleSheetCache singleton
+    // or our document owns them).
+    n += mSheets[type].ShallowSizeOfExcludingThis(aMallocSizeOf);
   }
 
   for (uint32_t i = 0; i < mScopedDocSheetRuleProcessors.Length(); i++) {
@@ -450,8 +447,7 @@ nsStyleSet::GatherRuleProcessors(SheetType aType)
     return NS_OK;
   }
   switch (aType) {
-    // handle the types for which have a rule processor that does not
-    // implement the style sheet interface.
+    // levels that do not contain CSS style sheets
     case SheetType::Animation:
       MOZ_ASSERT(mSheets[aType].IsEmpty());
       mRuleProcessors[aType] = PresContext()->AnimationManager();
@@ -478,17 +474,16 @@ nsStyleSet::GatherRuleProcessors(SheetType aType)
       // keep going
       break;
   }
+  MOZ_ASSERT(IsCSSSheetType(aType));
   if (aType == SheetType::ScopedDoc) {
     // Create a rule processor for each scope.
-    uint32_t count = mSheets[SheetType::ScopedDoc].Count();
+    uint32_t count = mSheets[SheetType::ScopedDoc].Length();
     if (count) {
       // Gather the scoped style sheets into an array as
       // CSSStyleSheets, and mark all of their scope elements
       // as scoped style roots.
       nsTArray<CSSStyleSheet*> sheets(count);
-      for (uint32_t i = 0; i < count; i++) {
-        RefPtr<CSSStyleSheet> sheet =
-          do_QueryObject(mSheets[SheetType::ScopedDoc].ObjectAt(i));
+      for (CSSStyleSheet* sheet : mSheets[SheetType::ScopedDoc]) {
         sheets.AppendElement(sheet);
 
         Element* scope = sheet->GetScopeElement();
@@ -537,27 +532,20 @@ nsStyleSet::GatherRuleProcessors(SheetType aType)
     }
     return NS_OK;
   }
-  if (mSheets[aType].Count()) {
+  if (!mSheets[aType].IsEmpty()) {
     switch (aType) {
       case SheetType::Agent:
       case SheetType::User: {
         // levels containing non-scoped CSS style sheets whose rule processors
         // we want to re-use
-        nsCOMArray<nsIStyleSheet>& sheets = mSheets[aType];
-        nsTArray<RefPtr<CSSStyleSheet>> cssSheets(sheets.Count());
-        for (int32_t i = 0, i_end = sheets.Count(); i < i_end; ++i) {
-          RefPtr<CSSStyleSheet> cssSheet = do_QueryObject(sheets[i]);
-          NS_ASSERTION(cssSheet, "not a CSS sheet");
-          cssSheets.AppendElement(cssSheet);
-        }
-        nsTArray<CSSStyleSheet*> cssSheetsRaw(cssSheets.Length());
-        for (int32_t i = 0, i_end = cssSheets.Length(); i < i_end; ++i) {
-          cssSheetsRaw.AppendElement(cssSheets[i]);
+        nsTArray<CSSStyleSheet*> sheets(mSheets[aType].Length());
+        for (CSSStyleSheet* sheet : mSheets[aType]) {
+          sheets.AppendElement(sheet);
         }
         nsCSSRuleProcessor* rp =
-          RuleProcessorCache::GetRuleProcessor(cssSheetsRaw, PresContext());
+          RuleProcessorCache::GetRuleProcessor(sheets, PresContext());
         if (!rp) {
-          rp = new nsCSSRuleProcessor(cssSheets, aType, nullptr,
+          rp = new nsCSSRuleProcessor(mSheets[aType], aType, nullptr,
                                       static_cast<nsCSSRuleProcessor*>(
                                        oldRuleProcessor.get()),
                                       true /* aIsShared */);
@@ -565,7 +553,7 @@ nsStyleSet::GatherRuleProcessors(SheetType aType)
           nsDocumentRuleResultCacheKey cacheKey;
           rp->TakeDocumentRulesAndCacheKey(PresContext(),
                                            documentRules, cacheKey);
-          RuleProcessorCache::PutRuleProcessor(cssSheetsRaw,
+          RuleProcessorCache::PutRuleProcessor(sheets,
                                                Move(documentRules),
                                                cacheKey, rp);
         }
@@ -577,23 +565,14 @@ nsStyleSet::GatherRuleProcessors(SheetType aType)
       case SheetType::Override: {
         // levels containing non-scoped CSS stylesheets whose rule processors
         // we don't want to re-use
-        nsCOMArray<nsIStyleSheet>& sheets = mSheets[aType];
-        nsTArray<RefPtr<CSSStyleSheet>> cssSheets(sheets.Count());
-        for (int32_t i = 0, i_end = sheets.Count(); i < i_end; ++i) {
-          RefPtr<CSSStyleSheet> cssSheet = do_QueryObject(sheets[i]);
-          NS_ASSERTION(cssSheet, "not a CSS sheet");
-          cssSheets.AppendElement(cssSheet);
-        }
         mRuleProcessors[aType] =
-          new nsCSSRuleProcessor(cssSheets, aType, nullptr,
+          new nsCSSRuleProcessor(mSheets[aType], aType, nullptr,
                                  static_cast<nsCSSRuleProcessor*>(
                                    oldRuleProcessor.get()));
       } break;
 
       default:
-        // levels containing non-CSS stylesheets
-        NS_ASSERTION(mSheets[aType].Count() == 1, "only one sheet per level");
-        mRuleProcessors[aType] = do_QueryInterface(mSheets[aType][0]);
+        MOZ_ASSERT_UNREACHABLE("non-CSS sheet types should be handled above");
         break;
     }
   }
@@ -601,58 +580,47 @@ nsStyleSet::GatherRuleProcessors(SheetType aType)
   return NS_OK;
 }
 
-static bool
-IsScopedStyleSheet(nsIStyleSheet* aSheet)
-{
-  RefPtr<CSSStyleSheet> cssSheet = do_QueryObject(aSheet);
-  NS_ASSERTION(cssSheet, "expected aSheet to be a CSSStyleSheet");
-
-  return cssSheet->GetScopeElement();
-}
-
 nsresult
-nsStyleSet::AppendStyleSheet(SheetType aType, nsIStyleSheet *aSheet)
+nsStyleSet::AppendStyleSheet(SheetType aType, CSSStyleSheet* aSheet)
 {
   NS_PRECONDITION(aSheet, "null arg");
   NS_ASSERTION(aSheet->IsApplicable(),
                "Inapplicable sheet being placed in style set");
-  bool present = mSheets[aType].RemoveObject(aSheet);
-  if (!mSheets[aType].AppendObject(aSheet))
-    return NS_ERROR_OUT_OF_MEMORY;
+  bool present = mSheets[aType].RemoveElement(aSheet);
+  mSheets[aType].AppendElement(aSheet);
 
   if (!present && IsCSSSheetType(aType)) {
-    static_cast<CSSStyleSheet*>(aSheet)->AddStyleSet(this);
+    aSheet->AddStyleSet(this);
   }
 
   return DirtyRuleProcessors(aType);
 }
 
 nsresult
-nsStyleSet::PrependStyleSheet(SheetType aType, nsIStyleSheet *aSheet)
+nsStyleSet::PrependStyleSheet(SheetType aType, CSSStyleSheet* aSheet)
 {
   NS_PRECONDITION(aSheet, "null arg");
   NS_ASSERTION(aSheet->IsApplicable(),
                "Inapplicable sheet being placed in style set");
-  bool present = mSheets[aType].RemoveObject(aSheet);
-  if (!mSheets[aType].InsertObjectAt(aSheet, 0))
-    return NS_ERROR_OUT_OF_MEMORY;
+  bool present = mSheets[aType].RemoveElement(aSheet);
+  mSheets[aType].InsertElementAt(0, aSheet);
 
   if (!present && IsCSSSheetType(aType)) {
-    static_cast<CSSStyleSheet*>(aSheet)->AddStyleSet(this);
+    aSheet->AddStyleSet(this);
   }
 
   return DirtyRuleProcessors(aType);
 }
 
 nsresult
-nsStyleSet::RemoveStyleSheet(SheetType aType, nsIStyleSheet *aSheet)
+nsStyleSet::RemoveStyleSheet(SheetType aType, CSSStyleSheet* aSheet)
 {
   NS_PRECONDITION(aSheet, "null arg");
   NS_ASSERTION(aSheet->IsComplete(),
                "Incomplete sheet being removed from style set");
-  if (mSheets[aType].RemoveObject(aSheet)) {
+  if (mSheets[aType].RemoveElement(aSheet)) {
     if (IsCSSSheetType(aType)) {
-      static_cast<CSSStyleSheet*>(aSheet)->DropStyleSet(this);
+      aSheet->DropStyleSet(this);
     }
   }
 
@@ -661,22 +629,21 @@ nsStyleSet::RemoveStyleSheet(SheetType aType, nsIStyleSheet *aSheet)
 
 nsresult
 nsStyleSet::ReplaceSheets(SheetType aType,
-                          const nsCOMArray<nsIStyleSheet> &aNewSheets)
+                          const nsTArray<RefPtr<CSSStyleSheet>>& aNewSheets)
 {
   bool cssSheetType = IsCSSSheetType(aType);
   if (cssSheetType) {
-    for (uint32_t i = 0, n = mSheets[aType].Length(); i < n; i++) {
-      static_cast<CSSStyleSheet*>(mSheets[aType][i])->DropStyleSet(this);
+    for (CSSStyleSheet* sheet : mSheets[aType]) {
+      sheet->DropStyleSet(this);
     }
   }
 
   mSheets[aType].Clear();
-  if (!mSheets[aType].AppendObjects(aNewSheets))
-    return NS_ERROR_OUT_OF_MEMORY;
+  mSheets[aType].AppendElements(aNewSheets);
 
   if (cssSheetType) {
-    for (uint32_t i = 0, n = mSheets[aType].Length(); i < n; i++) {
-      static_cast<CSSStyleSheet*>(mSheets[aType][i])->AddStyleSet(this);
+    for (CSSStyleSheet* sheet : mSheets[aType]) {
+      sheet->AddStyleSet(this);
     }
   }
 
@@ -684,23 +651,22 @@ nsStyleSet::ReplaceSheets(SheetType aType,
 }
 
 nsresult
-nsStyleSet::InsertStyleSheetBefore(SheetType aType, nsIStyleSheet *aNewSheet,
-                                   nsIStyleSheet *aReferenceSheet)
+nsStyleSet::InsertStyleSheetBefore(SheetType aType, CSSStyleSheet* aNewSheet,
+                                   CSSStyleSheet* aReferenceSheet)
 {
   NS_PRECONDITION(aNewSheet && aReferenceSheet, "null arg");
   NS_ASSERTION(aNewSheet->IsApplicable(),
                "Inapplicable sheet being placed in style set");
 
-  bool present = mSheets[aType].RemoveObject(aNewSheet);
+  bool present = mSheets[aType].RemoveElement(aNewSheet);
   int32_t idx = mSheets[aType].IndexOf(aReferenceSheet);
   if (idx < 0)
     return NS_ERROR_INVALID_ARG;
 
-  if (!mSheets[aType].InsertObjectAt(aNewSheet, idx))
-    return NS_ERROR_OUT_OF_MEMORY;
+  mSheets[aType].InsertElementAt(idx, aNewSheet);
 
   if (!present && IsCSSSheetType(aType)) {
-    static_cast<CSSStyleSheet*>(aNewSheet)->AddStyleSet(this);
+    aNewSheet->AddStyleSet(this);
   }
 
   return DirtyRuleProcessors(aType);
@@ -745,27 +711,27 @@ nsStyleSet::SetAuthorStyleDisabled(bool aStyleDisabled)
 // -------- Doc Sheets
 
 nsresult
-nsStyleSet::AddDocStyleSheet(nsIStyleSheet* aSheet, nsIDocument* aDocument)
+nsStyleSet::AddDocStyleSheet(CSSStyleSheet* aSheet, nsIDocument* aDocument)
 {
   NS_PRECONDITION(aSheet && aDocument, "null arg");
   NS_ASSERTION(aSheet->IsApplicable(),
                "Inapplicable sheet being placed in style set");
 
-  SheetType type = IsScopedStyleSheet(aSheet) ?
+  SheetType type = aSheet->GetScopeElement() ?
                      SheetType::ScopedDoc :
                      SheetType::Doc;
-  nsCOMArray<nsIStyleSheet>& sheets = mSheets[type];
+  nsTArray<RefPtr<CSSStyleSheet>>& sheets = mSheets[type];
 
-  bool present = sheets.RemoveObject(aSheet);
+  bool present = sheets.RemoveElement(aSheet);
   nsStyleSheetService *sheetService = nsStyleSheetService::GetInstance();
 
   // lowest index first
   int32_t newDocIndex = aDocument->GetIndexOfStyleSheet(aSheet);
 
-  int32_t count = sheets.Count();
+  int32_t count = sheets.Length();
   int32_t index;
   for (index = 0; index < count; index++) {
-    nsIStyleSheet* sheet = sheets.ObjectAt(index);
+    CSSStyleSheet* sheet = sheets[index];
     int32_t sheetDocIndex = aDocument->GetIndexOfStyleSheet(sheet);
     if (sheetDocIndex > newDocIndex)
       break;
@@ -774,27 +740,32 @@ nsStyleSet::AddDocStyleSheet(nsIStyleSheet* aSheet, nsIDocument* aDocument)
     // sheet registered at nsStyleSheetService or an additional author
     // sheet on the document, which means the new 
     // doc sheet should end up before it.
-    if (sheetDocIndex < 0 &&
-        ((sheetService &&
-        sheetService->AuthorStyleSheets()->IndexOf(sheet) >= 0) ||
-        sheet == aDocument->FirstAdditionalAuthorSheet()))
+    if (sheetDocIndex < 0) {
+      if (sheetService) {
+        auto& authorSheets = *sheetService->AuthorStyleSheets();
+        if (authorSheets.IndexOf(sheet) != authorSheets.NoIndex) {
+          break;
+        }
+      }
+      if (sheet == aDocument->FirstAdditionalAuthorSheet()) {
         break;
+      }
+    }
   }
-  if (!sheets.InsertObjectAt(aSheet, index))
-    return NS_ERROR_OUT_OF_MEMORY;
+
+  sheets.InsertElementAt(index, aSheet);
 
   if (!present) {
-    static_cast<CSSStyleSheet*>(aSheet)->AddStyleSet(this);
+    aSheet->AddStyleSet(this);
   }
 
   return DirtyRuleProcessors(type);
 }
 
 nsresult
-nsStyleSet::RemoveDocStyleSheet(nsIStyleSheet *aSheet)
+nsStyleSet::RemoveDocStyleSheet(CSSStyleSheet* aSheet)
 {
-  RefPtr<CSSStyleSheet> cssSheet = do_QueryObject(aSheet);
-  bool isScoped = cssSheet && cssSheet->GetScopeElement();
+  bool isScoped = aSheet->GetScopeElement();
   return RemoveStyleSheet(isScoped ? SheetType::ScopedDoc : SheetType::Doc,
                           aSheet);
 }
@@ -2496,10 +2467,8 @@ bool
 nsStyleSet::EnsureUniqueInnerOnCSSSheets()
 {
   nsAutoTArray<CSSStyleSheet*, 32> queue;
-  for (uint32_t i = 0; i < ArrayLength(gCSSSheetTypes); ++i) {
-    nsCOMArray<nsIStyleSheet> &sheets = mSheets[gCSSSheetTypes[i]];
-    for (uint32_t j = 0, j_end = sheets.Count(); j < j_end; ++j) {
-      CSSStyleSheet* sheet = static_cast<CSSStyleSheet*>(sheets[j]);
+  for (SheetType type : gCSSSheetTypes) {
+    for (CSSStyleSheet* sheet : mSheets[type]) {
       queue.AppendElement(sheet);
     }
   }

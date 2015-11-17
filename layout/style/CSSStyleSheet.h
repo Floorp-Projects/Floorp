@@ -17,7 +17,6 @@
 #include "nscore.h"
 #include "nsCOMPtr.h"
 #include "nsAutoPtr.h"
-#include "nsIStyleSheet.h"
 #include "nsIDOMCSSStyleSheet.h"
 #include "nsICSSLoaderObserver.h"
 #include "nsTArrayForwardDeclare.h"
@@ -112,14 +111,13 @@ private:
 //
 
 // CID for the CSSStyleSheet class
-// ca926f30-2a7e-477e-8467-803fb32af20a
+// 7985c7ac-9ddc-444d-9899-0c86ec122f54
 #define NS_CSS_STYLE_SHEET_IMPL_CID     \
-{ 0xca926f30, 0x2a7e, 0x477e, \
- { 0x84, 0x67, 0x80, 0x3f, 0xb3, 0x2a, 0xf2, 0x0a } }
+{ 0x7985c7ac, 0x9ddc, 0x444d, \
+  { 0x98, 0x99, 0x0c, 0x86, 0xec, 0x12, 0x2f, 0x54 } }
 
 
-class CSSStyleSheet final : public nsIStyleSheet,
-                            public nsIDOMCSSStyleSheet,
+class CSSStyleSheet final : public nsIDOMCSSStyleSheet,
                             public nsICSSLoaderObserver,
                             public nsWrapperCache
 {
@@ -131,28 +129,50 @@ public:
 
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(CSSStyleSheet,
-                                                         nsIStyleSheet)
+                                                         nsIDOMCSSStyleSheet)
 
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_CSS_STYLE_SHEET_IMPL_CID)
 
-  // nsIStyleSheet interface
-  virtual nsIURI* GetSheetURI() const override;
-  virtual nsIURI* GetBaseURI() const override;
-  virtual void GetTitle(nsString& aTitle) const override;
-  virtual void GetType(nsString& aType) const override;
-  virtual bool HasRules() const override;
-  virtual bool IsApplicable() const override;
-  virtual void SetEnabled(bool aEnabled) override;
-  virtual bool IsComplete() const override;
-  virtual void SetComplete() override;
-  virtual nsIStyleSheet* GetParentSheet() const override;  // may be null
-  virtual nsIDocument* GetOwningDocument() const override;  // may be null
-  virtual void SetOwningDocument(nsIDocument* aDocument) override;
+  nsIURI* GetSheetURI() const;
+  nsIURI* GetBaseURI() const;
+  void GetTitle(nsString& aTitle) const;
+  void GetType(nsString& aType) const;
+  bool HasRules() const;
+
+  /**
+   * Whether the sheet is applicable.  A sheet that is not applicable
+   * should never be inserted into a style set.  A sheet may not be
+   * applicable for a variety of reasons including being disabled and
+   * being incomplete.
+   */
+  bool IsApplicable() const;
+
+  /**
+   * Set the stylesheet to be enabled.  This may or may not make it
+   * applicable.  Note that this WILL inform the sheet's document of
+   * its new applicable state if the state changes but WILL NOT call
+   * BeginUpdate() or EndUpdate() on the document -- calling those is
+   * the caller's responsibility.  This allows use of SetEnabled when
+   * batched updates are desired.  If you want updates handled for
+   * you, see nsIDOMStyleSheet::SetDisabled().
+   */
+  void SetEnabled(bool aEnabled);
+
+  /**
+   * Whether the sheet is complete.
+   */
+  bool IsComplete() const;
+  void SetComplete();
+
+  // style sheet owner info
+  CSSStyleSheet* GetParentSheet() const;  // may be null
+  nsIDocument* GetOwningDocument() const;  // may be null
+  void SetOwningDocument(nsIDocument* aDocument);
 
   // Find the ID of the owner inner window.
   uint64_t FindOwningWindowInnerID() const;
 #ifdef DEBUG
-  virtual void List(FILE* out = stdout, int32_t aIndent = 0) const override;
+  void List(FILE* out = stdout, int32_t aIndent = 0) const;
 #endif
 
   void AppendStyleSheet(CSSStyleSheet* aSheet);
@@ -250,7 +270,7 @@ public:
   // list after we clone a unique inner for ourselves.
   static bool RebuildChildList(css::Rule* aRule, void* aBuilder);
 
-  size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const override;
+  size_t SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const;
 
   // Get this style sheet's CORS mode
   CORSMode GetCORSMode() const { return mInner->mCORSMode; }
@@ -268,7 +288,7 @@ public:
   }
 
   // WebIDL StyleSheet API
-  // Our nsIStyleSheet::GetType is a const method, so it ends up
+  // Our CSSStyleSheet::GetType is a const method, so it ends up
   // ambiguous with with the XPCOM version.  Just disambiguate.
   void GetType(nsString& aType) {
     const_cast<const CSSStyleSheet*>(this)->GetType(aType);
@@ -276,7 +296,7 @@ public:
   // Our XPCOM GetHref is fine for WebIDL
   nsINode* GetOwnerNode() const { return mOwningNode; }
   CSSStyleSheet* GetParentStyleSheet() const { return mParent; }
-  // Our nsIStyleSheet::GetTitle is a const method, so it ends up
+  // Our CSSStyleSheet::GetTitle is a const method, so it ends up
   // ambiguous with with the XPCOM version.  Just disambiguate.
   void GetTitle(nsString& aTitle) {
     const_cast<const CSSStyleSheet*>(this)->GetTitle(aTitle);
@@ -307,7 +327,7 @@ public:
       return dom::ParentObject(mOwningNode);
     }
 
-    return dom::ParentObject(static_cast<nsIStyleSheet*>(mParent), mParent);
+    return dom::ParentObject(static_cast<nsIDOMCSSStyleSheet*>(mParent), mParent);
   }
   virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
