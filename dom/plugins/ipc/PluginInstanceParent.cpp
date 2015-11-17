@@ -1004,7 +1004,7 @@ PluginInstanceParent::NPP_SetWindow(const NPWindow* aWindow)
 #if defined(MOZ_X11) && defined(XP_UNIX) && !defined(XP_MACOSX)
     const NPSetWindowCallbackStruct* ws_info =
       static_cast<NPSetWindowCallbackStruct*>(aWindow->ws_info);
-    window.visualID = ws_info->visual ? ws_info->visual->visualid : 0;
+    window.visualID = ws_info->visual ? ws_info->visual->visualid : None;
     window.colormap = ws_info->colormap;
 #endif
 
