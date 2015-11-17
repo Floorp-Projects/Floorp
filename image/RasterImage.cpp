@@ -628,17 +628,11 @@ RasterImage::GetCurrentImage(ImageContainer* aContainer, uint32_t aFlags)
     return MakePair(drawResult, RefPtr<layers::Image>());
   }
 
-  CairoImage::Data cairoData;
-  GetWidth(&cairoData.mSize.width);
-  GetHeight(&cairoData.mSize.height);
-  cairoData.mSourceSurface = surface;
+  IntSize size;
+  GetWidth(&size.width);
+  GetHeight(&size.height);
 
-  RefPtr<layers::Image> image =
-    aContainer->CreateImage(ImageFormat::CAIRO_SURFACE);
-  MOZ_ASSERT(image);
-
-  static_cast<CairoImage*>(image.get())->SetData(cairoData);
-
+  RefPtr<layers::Image> image = new layers::CairoImage(size, surface);
   return MakePair(drawResult, Move(image));
 }
 
