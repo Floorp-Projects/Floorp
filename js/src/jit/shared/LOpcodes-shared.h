@@ -267,6 +267,7 @@
     _(ClampVToUint8)                \
     _(LoadFixedSlotV)               \
     _(LoadFixedSlotT)               \
+    _(LoadFixedSlotAndUnbox)        \
     _(StoreFixedSlotV)              \
     _(StoreFixedSlotT)              \
     _(FunctionEnvironment)          \

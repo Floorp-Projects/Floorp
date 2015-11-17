@@ -736,6 +736,9 @@ int32_t FuncTestManager::TestAudioLayerSelection()
     } else if (audioLayer == AudioDeviceModule::kLinuxPulseAudio)
     {
         TEST_LOG("\nActiveAudioLayer: kLinuxPulseAudio\n \n");
+    } else if (audioLayer == AudioDeviceModule::kSndioAudio)
+    {
+        TEST_LOG("\nActiveAudioLayer: kSndioAudio\n \n");
     } else
     {
         TEST_LOG("\nActiveAudioLayer: INVALID\n \n");

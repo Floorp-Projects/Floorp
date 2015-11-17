@@ -353,6 +353,11 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     Condition testError(Condition cond, Register tag) {
         return testMagic(cond, tag);
     }
+    Condition testBoolean(Condition cond, const Address& address) {
+        MOZ_ASSERT(cond == Equal || cond == NotEqual);
+        cmp32(Operand(ToType(address)), ImmTag(JSVAL_TAG_BOOLEAN));
+        return cond;
+    }
     Condition testInt32(Condition cond, const Operand& operand) {
         MOZ_ASSERT(cond == Equal || cond == NotEqual);
         cmp32(ToType(operand), ImmTag(JSVAL_TAG_INT32));

@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<script>
+
+function boom() {
+    var audio = document.createElement('audio');
+    audio.loop = true;
+    audio.play();
+    document.implementation.createDocument("", "", null).adoptNode(audio);
+}
+
+</script>
+</head>
+<body onload="boom();"></body>
+</html>
