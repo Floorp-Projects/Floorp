@@ -1,3 +1,4 @@
+
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
@@ -519,7 +520,7 @@ class PerfherderOutput(Output):
                         # calculate mean value
                         if len(vals) > 0:
                             varray = [float(v) for v in vals]
-                            subtest['value'] = "%.2f" % filter.mean(varray)
+                            subtest['value'] = filter.mean(varray)
             if counter_subtests:
                 suites.append({'name': test.name(), 'subtests': counter_subtests})
         return test_results
