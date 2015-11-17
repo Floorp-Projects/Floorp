@@ -896,6 +896,14 @@ AbstractFramePtr::popWith(JSContext* cx) const
     asBaselineFrame()->popWith(cx);
 }
 
+ActivationEntryMonitor::~ActivationEntryMonitor()
+{
+    if (entryMonitor_)
+        entryMonitor_->Exit(cx_);
+
+    cx_->runtime()->entryMonitor = entryMonitor_;
+}
+
 Activation::Activation(JSContext* cx, Kind kind)
   : cx_(cx),
     compartment_(cx->compartment()),
@@ -907,13 +915,11 @@ Activation::Activation(JSContext* cx, Kind kind)
     asyncStack_(cx, cx->runtime_->asyncStackForNewActivations),
     asyncCause_(cx, cx->runtime_->asyncCauseForNewActivations),
     asyncCallIsExplicit_(cx->runtime_->asyncCallIsExplicit),
-    entryMonitor_(cx->runtime_->entryMonitor),
     kind_(kind)
 {
     cx->runtime_->asyncStackForNewActivations = nullptr;
     cx->runtime_->asyncCauseForNewActivations = nullptr;
     cx->runtime_->asyncCallIsExplicit = false;
-    cx->runtime_->entryMonitor = nullptr;
     cx->runtime_->activation_ = this;
 }
 
@@ -923,7 +929,6 @@ Activation::~Activation()
     MOZ_ASSERT(cx_->runtime_->activation_ == this);
     MOZ_ASSERT(hideScriptedCallerCount_ == 0);
     cx_->runtime_->activation_ = prev_;
-    cx_->runtime_->entryMonitor = entryMonitor_;
     cx_->runtime_->asyncCauseForNewActivations = asyncCause_;
     cx_->runtime_->asyncStackForNewActivations = asyncStack_;
     cx_->runtime_->asyncCallIsExplicit = asyncCallIsExplicit_;
@@ -969,17 +974,6 @@ InterpreterActivation::InterpreterActivation(RunState& state, JSContext* cx,
     regs_.prepareToRun(*entryFrame, state.script());
     MOZ_ASSERT(regs_.pc == state.script()->code());
     MOZ_ASSERT_IF(entryFrame_->isEvalFrame(), state.script()->isActiveEval());
-
-    if (entryMonitor_) {
-        RootedValue stack(cx_);
-        stack.setObjectOrNull(asyncStack_.get());
-        if (!cx_->compartment()->wrap(cx_, &stack))
-            stack.setUndefined();
-        if (entryFrame->isFunctionFrame())
-            entryMonitor_->Entry(cx_, entryFrame->fun(), stack, asyncCause_);
-        else
-            entryMonitor_->Entry(cx_, entryFrame->script(), stack, asyncCause_);
-    }
 }
 
 InterpreterActivation::~InterpreterActivation()
@@ -991,9 +985,6 @@ InterpreterActivation::~InterpreterActivation()
     JSContext* cx = cx_->asJSContext();
     MOZ_ASSERT(oldFrameCount_ == cx->runtime()->interpreterStack().frameCount_);
     MOZ_ASSERT_IF(oldFrameCount_ == 0, cx->runtime()->interpreterStack().allocator_.used() == 0);
-
-    if (entryMonitor_)
-        entryMonitor_->Exit(cx_);
 
     if (entryFrame_)
         cx->runtime()->interpreterStack().releaseFrame(entryFrame_);
