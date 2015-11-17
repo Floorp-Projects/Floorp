@@ -54,6 +54,12 @@ nsEmptyStyleRule::MapRuleInfoInto(nsRuleData* aRuleData)
 {
 }
 
+/* virtual */ bool
+nsEmptyStyleRule::MightMapInheritedStyleData()
+{
+  return false;
+}
+
 #ifdef DEBUG
 /* virtual */ void
 nsEmptyStyleRule::List(FILE* out, int32_t aIndent) const
@@ -107,6 +113,12 @@ nsInitialStyleRule::MapRuleInfoInto(nsRuleData* aRuleData)
   }
 }
 
+/* virtual */ bool
+nsInitialStyleRule::MightMapInheritedStyleData()
+{
+  return true;
+}
+
 #ifdef DEBUG
 /* virtual */ void
 nsInitialStyleRule::List(FILE* out, int32_t aIndent) const
@@ -130,6 +142,12 @@ nsDisableTextZoomStyleRule::MapRuleInfoInto(nsRuleData* aRuleData)
   nsCSSValue* value = aRuleData->ValueForTextZoom();
   if (value->GetUnit() == eCSSUnit_Null)
     value->SetNoneValue();
+}
+
+/* virtual */ bool
+nsDisableTextZoomStyleRule::MightMapInheritedStyleData()
+{
+  return true;
 }
 
 #ifdef DEBUG
