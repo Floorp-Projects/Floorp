@@ -849,6 +849,7 @@ sync_java_files = [TOPSRCDIR + '/mobile/android/services/src/main/java/org/mozil
     'browserid/verifier/BrowserIDVerifierException.java',
     'browserid/VerifyingPublicKey.java',
     'fxa/AccountLoader.java',
+    'fxa/AccountLoaderNative.java',
     'fxa/activities/CustomColorPreference.java',
     'fxa/activities/FxAccountAbstractActivity.java',
     'fxa/activities/FxAccountConfirmAccountActivityWeb.java',
