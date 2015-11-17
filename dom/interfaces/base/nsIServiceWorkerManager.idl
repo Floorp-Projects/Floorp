@@ -59,7 +59,7 @@ interface nsIServiceWorkerManagerListener : nsISupports
   void onUnregister(in nsIServiceWorkerRegistrationInfo aInfo);
 };
 
-[scriptable, builtinclass, uuid(2f61820a-1e9a-4c16-bf1c-ce182c5f5d6d)]
+[scriptable, builtinclass, uuid(c945e2e6-30c2-48e6-a282-e69de0c7ebb1)]
 interface nsIServiceWorkerManager : nsISupports
 {
   /**
@@ -174,6 +174,8 @@ interface nsIServiceWorkerManager : nsISupports
   void addListener(in nsIServiceWorkerManagerListener aListener);
 
   void removeListener(in nsIServiceWorkerManagerListener aListener);
+
+  bool shouldReportToWindow(in nsIDOMWindow aWindow, in ACString aScope);
 };
 
 %{ C++

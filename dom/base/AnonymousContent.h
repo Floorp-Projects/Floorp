@@ -52,6 +52,10 @@ public:
                                  const nsAString& aName,
                                  ErrorResult& aRv);
 
+  already_AddRefed<nsISupports> GetCanvasContext(const nsAString& aElementId,
+                                                 const nsAString& aContextId,
+                                                 ErrorResult& aRv);
+
 private:
   ~AnonymousContent();
   Element* GetElementById(const nsAString& aElementId);

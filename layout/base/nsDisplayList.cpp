@@ -1834,11 +1834,28 @@ void FlushFramesArray(nsTArray<FramesWithDepth>& aSource, nsTArray<nsIFrame*>* a
 void nsDisplayList::HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
                             nsDisplayItem::HitTestState* aState,
                             nsTArray<nsIFrame*> *aOutFrames) const {
-  int32_t itemBufferStart = aState->mItemBuffer.Length();
   nsDisplayItem* item;
+
+  if (aState->mInPreserves3D) {
+    // Collect leaves of the current 3D rendering context.
+    for (item = GetBottom(); item; item = item->GetAbove()) {
+      MOZ_ASSERT(item->GetType() == nsDisplayTransform::TYPE_TRANSFORM);
+      if (item->Frame()->Extend3DContext() &&
+          !static_cast<nsDisplayTransform*>(item)->IsTransformSeparator()) {
+        item->HitTest(aBuilder, aRect, aState, aOutFrames);
+      } else {
+        // One of leaves in the current 3D rendering context.
+        aState->mItemBuffer.AppendElement(item);
+      }
+    }
+    return;
+  }
+
+  int32_t itemBufferStart = aState->mItemBuffer.Length();
   for (item = GetBottom(); item; item = item->GetAbove()) {
     aState->mItemBuffer.AppendElement(item);
   }
+
   nsAutoTArray<FramesWithDepth, 16> temp;
   for (int32_t i = aState->mItemBuffer.Length() - 1; i >= itemBufferStart; --i) {
     // Pop element off the end of the buffer. We want to shorten the buffer
@@ -1849,11 +1866,26 @@ void nsDisplayList::HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
     bool snap;
     nsRect r = item->GetBounds(aBuilder, &snap).Intersect(aRect);
     bool alwaysIntersect =
-      item->Frame()->Combines3DTransformWithAncestors() &&
-      item->GetType() == nsDisplayItem::TYPE_TRANSFORM;
+      item->GetType() == nsDisplayItem::TYPE_TRANSFORM &&
+      (item->Frame()->Combines3DTransformWithAncestors() ||
+       item->Frame()->Extend3DContext() ||
+       static_cast<nsDisplayTransform*>(item)->IsTransformSeparator());
     if (alwaysIntersect || item->GetClip().MayIntersect(r)) {
       nsAutoTArray<nsIFrame*, 16> outFrames;
-      item->HitTest(aBuilder, aRect, aState, &outFrames);
+      if (item->Frame()->Extend3DContext() &&
+          item->GetType() == nsDisplayItem::TYPE_TRANSFORM &&
+          !static_cast<nsDisplayTransform*>(item)->IsTransformSeparator()) {
+        // Start gethering leaves of the 3D rendering context, and
+        // append leaves at the end of mItemBuffer.  Leaves are
+        // processed at following iterations.
+        aState->mInPreserves3D = true;
+        item->HitTest(aBuilder, aRect, aState, &outFrames);
+        aState->mInPreserves3D = false;
+        i = aState->mItemBuffer.Length();
+        continue;
+      } else {
+        item->HitTest(aBuilder, aRect, aState, &outFrames);
+      }
 
       // For 3d transforms with preserve-3d we add hit frames into the temp list
       // so we can sort them later, otherwise we add them directly to the output list.
@@ -4806,7 +4838,16 @@ nsDisplayTransform::SetReferenceFrameToAncestor(nsDisplayListBuilder* aBuilder)
   mReferenceFrame =
     aBuilder->FindReferenceFrameFor(outerFrame);
   mToReferenceFrame = mFrame->GetOffsetToCrossDoc(mReferenceFrame);
-  mAnimatedGeometryRoot = nsLayoutUtils::GetAnimatedGeometryRootForFrame(aBuilder, outerFrame);
+  if (nsLayoutUtils::IsFixedPosFrameInDisplayPort(mFrame)) {
+    // This is an odd special case. If we are both IsFixedPosFrameInDisplayPort
+    // and transformed that we are our own AGR parent.
+    // We want our frame to be our AGR because FrameLayerBuilder uses our AGR to
+    // determine if we are inside a fixed pos subtree. If we use the outer AGR
+    // from outside the fixed pos subtree FLB can't tell that we are fixed pos.
+    mAnimatedGeometryRoot = mFrame;
+  } else {
+    mAnimatedGeometryRoot = nsLayoutUtils::GetAnimatedGeometryRootForFrame(aBuilder, outerFrame);
+  }
   mVisibleRect = aBuilder->GetDirtyRect() + mToReferenceFrame;
 }
 
@@ -5419,7 +5460,7 @@ nsDisplayTransform::GetTransform()
 }
 
 const Matrix4x4&
-nsDisplayTransform::GetAccumulatedPreserved3DTransform()
+nsDisplayTransform::GetAccumulatedPreserved3DTransform(nsDisplayListBuilder* aBuilder)
 {
   // XXX: should go back to fix mTransformGetter.
   if (!mTransformPreserves3DInited) {
@@ -5428,13 +5469,22 @@ nsDisplayTransform::GetAccumulatedPreserved3DTransform()
       mTransformPreserves3D = GetTransform();
       return mTransformPreserves3D;
     }
+    MOZ_ASSERT(!mFrame->Extend3DContext() || IsTransformSeparator());
+
+    const nsIFrame* establisher; // Establisher of the 3D rendering context.
+    for (establisher = nsLayoutUtils::GetCrossDocParentFrame(mFrame);
+         establisher && establisher->Combines3DTransformWithAncestors();
+         establisher = nsLayoutUtils::GetCrossDocParentFrame(establisher)) {
+    }
+    establisher = nsLayoutUtils::GetCrossDocParentFrame(establisher);
+    const nsIFrame* establisherReference =
+      aBuilder->FindReferenceFrameFor(establisher);
+
+    nsPoint offset = mFrame->GetOffsetToCrossDoc(establisherReference);
     float scale = mFrame->PresContext()->AppUnitsPerDevPixel();
-    bool isReference =
-      mFrame->IsTransformed() ||
-      mFrame->Combines3DTransformWithAncestors() || mFrame->Extend3DContext();
     mTransformPreserves3D =
-      GetResultingTransformMatrixP3D(mFrame, ToReferenceFrame(), scale,
-                                     nullptr, nullptr, isReference);
+      GetResultingTransformMatrixP3D(mFrame, offset, scale,
+                                     nullptr, nullptr, true);
   }
   return mTransformPreserves3D;
 }
@@ -5555,6 +5605,11 @@ void nsDisplayTransform::HitTest(nsDisplayListBuilder *aBuilder,
                                  HitTestState *aState,
                                  nsTArray<nsIFrame*> *aOutFrames)
 {
+  if (aState->mInPreserves3D) {
+    mStoredList.HitTest(aBuilder, aRect, aState, aOutFrames);
+    return;
+  }
+
   /* Here's how this works:
    * 1. Get the matrix.  If it's singular, abort (clearly we didn't hit
    *    anything).
@@ -5564,9 +5619,9 @@ void nsDisplayTransform::HitTest(nsDisplayListBuilder *aBuilder,
    */
   // GetTransform always operates in dev pixels.
   float factor = mFrame->PresContext()->AppUnitsPerDevPixel();
-  Matrix4x4 matrix = GetTransform();
+  Matrix4x4 matrix = GetAccumulatedPreserved3DTransform(aBuilder);
 
-  if (!IsFrameVisible(mFrame, GetAccumulatedPreserved3DTransform())) {
+  if (!IsFrameVisible(mFrame, matrix)) {
     return;
   }
 
@@ -5641,9 +5696,9 @@ nsDisplayTransform::GetHitDepthAtPoint(nsDisplayListBuilder* aBuilder, const nsP
 {
   // GetTransform always operates in dev pixels.
   float factor = mFrame->PresContext()->AppUnitsPerDevPixel();
-  Matrix4x4 matrix = GetTransform();
+  Matrix4x4 matrix = GetAccumulatedPreserved3DTransform(aBuilder);
 
-  NS_ASSERTION(IsFrameVisible(mFrame, GetAccumulatedPreserved3DTransform()),
+  NS_ASSERTION(IsFrameVisible(mFrame, matrix),
                "We can't have hit a frame that isn't visible!");
 
   Matrix4x4 inverse = matrix;
@@ -5896,15 +5951,15 @@ bool nsDisplayTransform::UntransformRect(const nsRect &aTransformedBounds,
     return false;
   }
 
-  Rect result(NSAppUnitsToFloatPixels(aTransformedBounds.x, factor),
-              NSAppUnitsToFloatPixels(aTransformedBounds.y, factor),
-              NSAppUnitsToFloatPixels(aTransformedBounds.width, factor),
-              NSAppUnitsToFloatPixels(aTransformedBounds.height, factor));
+  RectDouble result(NSAppUnitsToFloatPixels(aTransformedBounds.x, factor),
+                    NSAppUnitsToFloatPixels(aTransformedBounds.y, factor),
+                    NSAppUnitsToFloatPixels(aTransformedBounds.width, factor),
+                    NSAppUnitsToFloatPixels(aTransformedBounds.height, factor));
 
-  Rect childGfxBounds(NSAppUnitsToFloatPixels(aChildBounds.x, factor),
-                      NSAppUnitsToFloatPixels(aChildBounds.y, factor),
-                      NSAppUnitsToFloatPixels(aChildBounds.width, factor),
-                      NSAppUnitsToFloatPixels(aChildBounds.height, factor));
+  RectDouble childGfxBounds(NSAppUnitsToFloatPixels(aChildBounds.x, factor),
+                            NSAppUnitsToFloatPixels(aChildBounds.y, factor),
+                            NSAppUnitsToFloatPixels(aChildBounds.width, factor),
+                            NSAppUnitsToFloatPixels(aChildBounds.height, factor));
 
   result = transform.Inverse().ProjectRectBounds(result, childGfxBounds);
   *aOutRect = nsLayoutUtils::RoundGfxRectToAppRect(ThebesRect(result), factor);
@@ -5920,17 +5975,17 @@ bool nsDisplayTransform::UntransformVisibleRect(nsDisplayListBuilder* aBuilder,
 
   // GetTransform always operates in dev pixels.
   float factor = mFrame->PresContext()->AppUnitsPerDevPixel();
-  Rect result(NSAppUnitsToFloatPixels(mVisibleRect.x, factor),
-              NSAppUnitsToFloatPixels(mVisibleRect.y, factor),
-              NSAppUnitsToFloatPixels(mVisibleRect.width, factor),
-              NSAppUnitsToFloatPixels(mVisibleRect.height, factor));
+  RectDouble result(NSAppUnitsToFloatPixels(mVisibleRect.x, factor),
+                    NSAppUnitsToFloatPixels(mVisibleRect.y, factor),
+                    NSAppUnitsToFloatPixels(mVisibleRect.width, factor),
+                    NSAppUnitsToFloatPixels(mVisibleRect.height, factor));
 
   bool snap;
   nsRect childBounds = mStoredList.GetBounds(aBuilder, &snap);
-  Rect childGfxBounds(NSAppUnitsToFloatPixels(childBounds.x, factor),
-                      NSAppUnitsToFloatPixels(childBounds.y, factor),
-                      NSAppUnitsToFloatPixels(childBounds.width, factor),
-                      NSAppUnitsToFloatPixels(childBounds.height, factor));
+  RectDouble childGfxBounds(NSAppUnitsToFloatPixels(childBounds.x, factor),
+                            NSAppUnitsToFloatPixels(childBounds.y, factor),
+                            NSAppUnitsToFloatPixels(childBounds.width, factor),
+                            NSAppUnitsToFloatPixels(childBounds.height, factor));
 
   /* We want to untransform the matrix, so invert the transformation first! */
   result = matrix.Inverse().ProjectRectBounds(result, childGfxBounds);

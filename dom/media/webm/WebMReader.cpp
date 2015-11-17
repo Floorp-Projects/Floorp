@@ -39,8 +39,8 @@ using namespace gfx;
 using namespace layers;
 using namespace media;
 
-extern PRLogModuleInfo* gMediaDecoderLog;
-PRLogModuleInfo* gNesteggLog;
+extern LazyLogModule gMediaDecoderLog;
+LazyLogModule gNesteggLog("Nestegg");
 
 // Functions for reading and seeking using MediaResource required for
 // nestegg_io. The 'user data' passed to these functions is the
@@ -137,9 +137,6 @@ WebMReader::WebMReader(AbstractMediaDecoder* aDecoder)
   , mResource(aDecoder->GetResource())
 {
   MOZ_COUNT_CTOR(WebMReader);
-  if (!gNesteggLog) {
-    gNesteggLog = PR_NewLogModule("Nestegg");
-  }
 }
 
 WebMReader::~WebMReader()

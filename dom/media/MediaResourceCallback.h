@@ -8,9 +8,11 @@
 #define MediaResourceCallback_h_
 
 #include "nsError.h"
+#include "nsISupportsImpl.h"
 
 namespace mozilla {
 
+class MediaDecoderOwner;
 class MediaResource;
 
 /**
@@ -24,6 +26,8 @@ class MediaResource;
  */
 class MediaResourceCallback {
 public:
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MediaResourceCallback);
+
   // Returns a weak reference to the media decoder owner.
   virtual MediaDecoderOwner* GetMediaOwner() const { return nullptr; }
 
@@ -67,6 +71,9 @@ public:
 
   // Notify the number of bytes read from the resource.
   virtual void NotifyBytesConsumed(int64_t aBytes, int64_t aOffset) {}
+
+protected:
+  virtual ~MediaResourceCallback() {}
 };
 
 } // namespace mozilla

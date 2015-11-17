@@ -128,11 +128,8 @@ class DebianBootstrapper(BaseBootstrapper):
         self.sdk_path = os.environ.get('ANDROID_SDK_HOME', os.path.join(mozbuild_path, 'android-sdk-linux'))
         self.ndk_path = os.environ.get('ANDROID_NDK_HOME', os.path.join(mozbuild_path, 'android-ndk-r10e'))
         self.sdk_url = 'https://dl.google.com/android/android-sdk_r24.0.1-linux.tgz'
-        is_64bits = sys.maxsize > 2**32
-        if is_64bits:
-            self.ndk_url = 'https://dl.google.com/android/ndk/android-ndk-r10e-linux-x86_64.bin'
-        else:
-            self.ndk_url = 'https://dl.google.com/android/ndk/android-ndk-r10e-linux-x86.bin'
+        self.ndk_url = android_ndk_url('linux')
+
         android.ensure_android_sdk_and_ndk(path=mozbuild_path,
                                            sdk_path=self.sdk_path, sdk_url=self.sdk_url,
                                            ndk_path=self.ndk_path, ndk_url=self.ndk_url)

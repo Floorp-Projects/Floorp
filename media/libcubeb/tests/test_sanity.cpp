@@ -14,6 +14,7 @@
 #include <string.h>
 #include <math.h>
 #include "common.h"
+#include "TestHarness.h"
 
 #if (defined(_WIN32) || defined(__WIN32__))
 #define __func__ __FUNCTION__
@@ -571,6 +572,8 @@ int is_windows_7()
 int
 main(int argc, char * argv[])
 {
+  ScopedXPCOM xpcom("test_sanity");
+
   test_init_destroy_context();
   test_init_destroy_multiple_contexts();
   test_context_variables();
@@ -607,5 +610,6 @@ main(int argc, char * argv[])
   test_stream_destroy_pending_drain();
 */
   printf("\n");
+
   return 0;
 }

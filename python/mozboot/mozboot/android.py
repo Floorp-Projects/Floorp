@@ -235,3 +235,12 @@ def ensure_android_packages(android_tool, packages=None):
 
 def suggest_mozconfig(sdk_path=None, ndk_path=None):
     print(MOBILE_ANDROID_MOZCONFIG_TEMPLATE % (sdk_path, ndk_path))
+
+def android_ndk_url(os_name, ver='r10e') :
+    from sys import maxsize
+    base_url = 'https://dl.google.com/android/ndk/android-ndk-'
+
+    if maxsize > 2**32 :
+	return (base_url+ver+'-'+os_name+'-x86_64.bin')
+    else :
+	return (base_url+ver+'-'+os_name+'-x86.bin')
