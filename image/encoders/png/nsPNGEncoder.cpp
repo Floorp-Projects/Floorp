@@ -12,15 +12,7 @@
 
 using namespace mozilla;
 
-static PRLogModuleInfo*
-GetPNGEncoderLog()
-{
-  static PRLogModuleInfo* sPNGEncoderLog;
-  if (!sPNGEncoderLog) {
-    sPNGEncoderLog = PR_NewLogModule("PNGEncoder");
-  }
-  return sPNGEncoderLog;
-}
+static LazyLogModule sPNGEncoderLog("PNGEncoder");
 
 NS_IMPL_ISUPPORTS(nsPNGEncoder, imgIEncoder, nsIInputStream,
                   nsIAsyncInputStream)
@@ -685,7 +677,7 @@ void
 nsPNGEncoder::WarningCallback(png_structp png_ptr,
                             png_const_charp warning_msg)
 {
-  MOZ_LOG(GetPNGEncoderLog(), LogLevel::Warning,
+  MOZ_LOG(sPNGEncoderLog, LogLevel::Warning,
          ("libpng warning: %s\n", warning_msg));
 }
 
@@ -696,7 +688,7 @@ void
 nsPNGEncoder::ErrorCallback(png_structp png_ptr,
                             png_const_charp error_msg)
 {
-  MOZ_LOG(GetPNGEncoderLog(), LogLevel::Error, ("libpng error: %s\n", error_msg));
+  MOZ_LOG(sPNGEncoderLog, LogLevel::Error, ("libpng error: %s\n", error_msg));
   png_longjmp(png_ptr, 1);
 }
 

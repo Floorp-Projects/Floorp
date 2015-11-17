@@ -7,17 +7,17 @@
 const {Cc, Ci} = require("chrome");
 const events = require("sdk/event/core");
 const protocol = require("devtools/server/protocol");
-const {async} = require("devtools/shared/async-utils");
 const {Arg, method, RetVal, types} = protocol;
 const {LongStringActor} = require("devtools/server/actors/string");
 const {DebuggerServer} = require("devtools/server/main");
 const Services = require("Services");
 const promise = require("promise");
 const {isWindowIncluded} = require("devtools/shared/layout/utils");
-const { setTimeout, clearTimeout } = require("sdk/timers");
+const {setTimeout, clearTimeout} = require("sdk/timers");
 
 loader.lazyImporter(this, "OS", "resource://gre/modules/osfile.jsm");
 loader.lazyImporter(this, "Sqlite", "resource://gre/modules/Sqlite.jsm");
+loader.lazyImporter(this, "Task", "resource://gre/modules/Task.jsm", "Task");
 
 var gTrackedMessageManager = new Map();
 
@@ -245,7 +245,7 @@ StorageActors.defaults = function(typeName, observationTopic, storeObjectType) {
      * @param {window} window
      *        The window which was added.
      */
-    onWindowReady: async(function*(window) {
+    onWindowReady: Task.async(function*(window) {
       let host = this.getHostName(window.location);
       if (!this.hostVsStores.has(host)) {
         yield this.populateStoresForHost(host, window);
@@ -329,7 +329,7 @@ StorageActors.defaults = function(typeName, observationTopic, storeObjectType) {
      *          - total - The total number of entries possible.
      *          - data - The requested values.
      */
-    getStoreObjects: method(async(function*(host, names, options = {}) {
+    getStoreObjects: method(Task.async(function*(host, names, options = {}) {
       let offset = options.offset || 0;
       let size = options.size || MAX_STORE_OBJECT_COUNT;
       if (size > MAX_STORE_OBJECT_COUNT) {
@@ -1143,7 +1143,7 @@ StorageActors.createActor({
    * method, as that method is called in initialize method of the actor, which
    * cannot be asynchronous.
    */
-  preListStores: async(function*() {
+  preListStores: Task.async(function*() {
     this.hostVsStores = new Map();
 
     for (let host of this.hosts) {
@@ -1151,7 +1151,7 @@ StorageActors.createActor({
     }
   }),
 
-  populateStoresForHost: async(function*(host) {
+  populateStoresForHost: Task.async(function*(host) {
     let storeMap = new Map();
     let {names} = yield this.getDBNamesForHost(host);
 
@@ -1292,7 +1292,7 @@ var indexedDBHelpers = {
    * `name` for the given `host`. The stored metadata information is of
    * `DatabaseMetadata` type.
    */
-  getDBMetaData: async(function*(host, name) {
+  getDBMetaData: Task.async(function*(host, name) {
     let request = this.openWithOrigin(host, name);
     let success = promise.defer();
 
@@ -1333,7 +1333,7 @@ var indexedDBHelpers = {
     /**
    * Fetches all the databases and their metadata for the given `host`.
    */
-  getDBNamesForHost: async(function*(host) {
+  getDBNamesForHost: Task.async(function*(host) {
     let sanitizedHost = this.getSanitizedHost(host);
     let directory = OS.Path.join(OS.Constants.Path.profileDir, "storage",
                                  "default", sanitizedHost, "idb");
@@ -1389,7 +1389,7 @@ var indexedDBHelpers = {
    * Retrieves the proper indexed db database name from the provided .sqlite
    * file location.
    */
-  getNameFromDatabaseFile: async(function*(path) {
+  getNameFromDatabaseFile: Task.async(function*(path) {
     let connection = null;
     let retryCount = 0;
 
@@ -1422,7 +1422,7 @@ var indexedDBHelpers = {
   }),
 
   getValuesForHost:
-  async(function*(host, name = "null", options, hostVsStores) {
+  Task.async(function*(host, name = "null", options, hostVsStores) {
     name = JSON.parse(name);
     if (!name || !name.length) {
       // This means that details about the db in this particular host are
@@ -1824,7 +1824,7 @@ var StorageActor = exports.StorageActor = protocol.ActorClass({
    *      host: <hostname>
    *    }]
    */
-  listStores: method(async(function*() {
+  listStores: method(Task.async(function*() {
     let toReturn = {};
 
     for (let [name, value] of this.childActorPool) {

@@ -162,15 +162,7 @@ Set4BitPixel(uint32_t*& aDecoded, uint8_t aData, uint32_t& aCount,
   }
 }
 
-static PRLogModuleInfo*
-GetBMPLog()
-{
-  static PRLogModuleInfo* sBMPLog;
-  if (!sBMPLog) {
-    sBMPLog = PR_NewLogModule("BMPDecoder");
-  }
-  return sBMPLog;
-}
+static mozilla::LazyLogModule sBMPLog("BMPDecoder");
 
 // The length of the mBIHSize field in the info header.
 static const uint32_t BIHSIZE_FIELD_LENGTH = 4;
@@ -437,7 +429,7 @@ nsBMPDecoder::WriteInternal(const char* aBuffer, uint32_t aCount)
   MOZ_ASSERT(aBuffer);
   MOZ_ASSERT(aCount > 0);
 
-  Maybe<State> terminalState =
+  Maybe<TerminalState> terminalState =
     mLexer.Lex(aBuffer, aCount, [=](State aState,
                                     const char* aData, size_t aLength) {
       switch (aState) {
@@ -452,23 +444,13 @@ nsBMPDecoder::WriteInternal(const char* aBuffer, uint32_t aCount)
         case State::RLE_DELTA:        return ReadRLEDelta(aData);
         case State::RLE_ABSOLUTE:     return ReadRLEAbsolute(aData, aLength);
         default:
-          MOZ_ASSERT_UNREACHABLE("Unknown State");
-          return Transition::Terminate(State::FAILURE);
+          MOZ_CRASH("Unknown State");
       }
     });
 
-  if (!terminalState) {
-    return;  // Need more data.
-  }
-
-  if (*terminalState == State::FAILURE) {
+  if (terminalState == Some(TerminalState::FAILURE)) {
     PostDataError();
-    return;
   }
-
-  MOZ_ASSERT(*terminalState == State::SUCCESS);
-
-  return;
 }
 
 LexerTransition<nsBMPDecoder::State>
@@ -479,7 +461,7 @@ nsBMPDecoder::ReadFileHeader(const char* aData, size_t aLength)
   bool signatureOk = aData[0] == 'B' && aData[1] == 'M';
   if (!signatureOk) {
     PostDataError();
-    return Transition::Terminate(State::FAILURE);
+    return Transition::TerminateFailure();
   }
 
   // We ignore the filesize (aData + 2) and reserved (aData + 6) fields.
@@ -506,7 +488,7 @@ nsBMPDecoder::ReadInfoHeaderSize(const char* aData, size_t aLength)
                     mH.mBIHSize <= InfoHeaderLength::OS2_V2_MAX);
   if (!bihSizeOk) {
     PostDataError();
-    return Transition::Terminate(State::FAILURE);
+    return Transition::TerminateFailure();
   }
   // ICO BMPs must have a WinVMPv3 header. nsICODecoder should have already
   // terminated decoding if this isn't the case.
@@ -548,7 +530,7 @@ nsBMPDecoder::ReadInfoHeaderRest(const char* aData, size_t aLength)
   }
 
   // Run with NSPR_LOG_MODULES=BMPDecoder:4 set to see this output.
-  MOZ_LOG(GetBMPLog(), LogLevel::Debug,
+  MOZ_LOG(sBMPLog, LogLevel::Debug,
           ("BMP: bihsize=%u, %d x %d, bpp=%u, compression=%u, colors=%u\n",
           mH.mBIHSize, mH.mWidth, mH.mHeight, uint32_t(mH.mBpp),
           mH.mCompression, mH.mNumColors));
@@ -561,7 +543,7 @@ nsBMPDecoder::ReadInfoHeaderRest(const char* aData, size_t aLength)
                 mH.mHeight != INT_MIN;
   if (!sizeOk) {
     PostDataError();
-    return Transition::Terminate(State::FAILURE);
+    return Transition::TerminateFailure();
   }
 
   // Check mBpp and mCompression.
@@ -575,7 +557,7 @@ nsBMPDecoder::ReadInfoHeaderRest(const char* aData, size_t aLength)
       (mH.mBpp == 16 || mH.mBpp == 32));
   if (!bppCompressionOk) {
     PostDataError();
-    return Transition::Terminate(State::FAILURE);
+    return Transition::TerminateFailure();
   }
 
   // Post our size to the superclass.
@@ -652,7 +634,7 @@ nsBMPDecoder::ReadBitfields(const char* aData, size_t aLength)
   // We've now read all the headers. If we're doing a metadata decode, we're
   // done.
   if (IsMetadataDecode()) {
-    return Transition::Terminate(State::SUCCESS);
+    return Transition::TerminateSuccess();
   }
 
   // Set up the color table, if present; it'll be filled in by ReadColorTable().
@@ -677,7 +659,7 @@ nsBMPDecoder::ReadBitfields(const char* aData, size_t aLength)
                               IntRect(IntPoint(), targetSize),
                               SurfaceFormat::B8G8R8A8);
   if (NS_FAILED(rv)) {
-    return Transition::Terminate(State::FAILURE);
+    return Transition::TerminateFailure();
   }
   MOZ_ASSERT(mImageData, "Should have a buffer now");
 
@@ -688,7 +670,7 @@ nsBMPDecoder::ReadBitfields(const char* aData, size_t aLength)
                                  mImageData, mMayHaveTransparency,
                                  /* aFlipVertically = */ true);
     if (NS_FAILED(rv)) {
-      return Transition::Terminate(State::FAILURE);
+      return Transition::TerminateFailure();
     }
   }
 
@@ -719,7 +701,7 @@ nsBMPDecoder::ReadColorTable(const char* aData, size_t aLength)
   // we give up.
   if (mPreGapLength > mH.mDataOffset) {
     PostDataError();
-    return Transition::Terminate(State::FAILURE);
+    return Transition::TerminateFailure();
   }
   uint32_t gapLength = mH.mDataOffset - mPreGapLength;
   return Transition::To(State::GAP, gapLength);
@@ -866,7 +848,7 @@ nsBMPDecoder::ReadPixelRow(const char* aData)
 
   FinishRow();
   return mCurrentRow == 0
-       ? Transition::Terminate(State::SUCCESS)
+       ? Transition::TerminateSuccess()
        : Transition::To(State::PIXEL_ROW, mPixelRowSize);
 }
 
@@ -874,7 +856,7 @@ LexerTransition<nsBMPDecoder::State>
 nsBMPDecoder::ReadRLESegment(const char* aData)
 {
   if (mCurrentRow == 0) {
-    return Transition::Terminate(State::SUCCESS);
+    return Transition::TerminateSuccess();
   }
 
   uint8_t byte1 = uint8_t(aData[0]);
@@ -909,12 +891,12 @@ nsBMPDecoder::ReadRLESegment(const char* aData)
     mCurrentPos = 0;
     FinishRow();
     return mCurrentRow == 0
-         ? Transition::Terminate(State::SUCCESS)
+         ? Transition::TerminateSuccess()
          : Transition::To(State::RLE_SEGMENT, RLE::SEGMENT_LENGTH);
   }
 
   if (byte2 == RLE::ESCAPE_EOF) {
-    return Transition::Terminate(State::SUCCESS);
+    return Transition::TerminateSuccess();
   }
 
   if (byte2 == RLE::ESCAPE_DELTA) {
@@ -972,7 +954,7 @@ nsBMPDecoder::ReadRLEDelta(const char* aData)
   }
 
   return mCurrentRow == 0
-       ? Transition::Terminate(State::SUCCESS)
+       ? Transition::TerminateSuccess()
        : Transition::To(State::RLE_SEGMENT, RLE::SEGMENT_LENGTH);
 }
 
@@ -985,7 +967,7 @@ nsBMPDecoder::ReadRLEAbsolute(const char* aData, size_t aLength)
   if (mCurrentPos + n > uint32_t(mH.mWidth)) {
     // Bad data. Stop decoding; at least part of the image may have been
     // decoded.
-    return Transition::Terminate(State::SUCCESS);
+    return Transition::TerminateSuccess();
   }
 
   // In absolute mode, n represents the number of pixels that follow, each of

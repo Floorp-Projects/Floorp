@@ -2309,6 +2309,15 @@ nsHTMLReflowState::InitConstraints(nsPresContext*     aPresContext,
         MOZ_ASSERT(!mFlags.mIsFlexContainerMeasuringHeight,
                    "We're not in a flex container, so the flag "
                    "'mIsFlexContainerMeasuringHeight' shouldn't be set");
+
+        if (parentFrameType == nsGkAtoms::gridContainerFrame) {
+          auto justifySelf = mStylePosition->ComputedJustifySelf(mStyleDisplay,
+                               frame->StyleContext()->GetParent());
+          if (justifySelf != NS_STYLE_JUSTIFY_STRETCH) {
+            computeSizeFlags =
+              ComputeSizeFlags(computeSizeFlags | ComputeSizeFlags::eShrinkWrap);
+          }
+        }
       }
 
       if (cbSize.ISize(wm) == NS_UNCONSTRAINEDSIZE) {

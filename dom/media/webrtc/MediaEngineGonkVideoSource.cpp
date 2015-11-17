@@ -738,9 +738,9 @@ MediaEngineGonkVideoSource::RotateImage(layers::Image* aImage, uint32_t aWidth, 
   graphicBuffer->lock(GraphicBuffer::USAGE_SW_READ_MASK, &pMem);
 
   uint8_t* srcPtr = static_cast<uint8_t*>(pMem);
+
   // Create a video frame and append it to the track.
-  ImageFormat format = ImageFormat::GONK_CAMERA_IMAGE;
-  RefPtr<layers::Image> image = mImageContainer->CreateImage(format);
+  RefPtr<layers::PlanarYCbCrImage> image = new GonkCameraImage();
 
   uint32_t dstWidth;
   uint32_t dstHeight;
@@ -755,7 +755,6 @@ MediaEngineGonkVideoSource::RotateImage(layers::Image* aImage, uint32_t aWidth, 
 
   uint32_t half_width = dstWidth / 2;
 
-  layers::GrallocImage* videoImage = static_cast<layers::GrallocImage*>(image.get());
   MOZ_ASSERT(mTextureClientAllocator);
   RefPtr<layers::TextureClient> textureClient
     = mTextureClientAllocator->CreateOrRecycle(gfx::SurfaceFormat::YUV,
@@ -764,8 +763,7 @@ MediaEngineGonkVideoSource::RotateImage(layers::Image* aImage, uint32_t aWidth, 
                                                layers::TextureFlags::DEFAULT,
                                                layers::ALLOC_DISALLOW_BUFFERTEXTURECLIENT);
   if (textureClient) {
-    RefPtr<layers::GrallocTextureClientOGL> grallocTextureClient =
-      static_cast<layers::GrallocTextureClientOGL*>(textureClient.get());
+    RefPtr<layers::GrallocTextureClientOGL> grallocTextureClient = textureClient->AsGrallocTextureClientOGL();
 
     android::sp<android::GraphicBuffer> destBuffer = grallocTextureClient->GetGraphicBuffer();
 
@@ -788,16 +786,11 @@ MediaEngineGonkVideoSource::RotateImage(layers::Image* aImage, uint32_t aWidth, 
                           libyuv::FOURCC_NV21);
     destBuffer->unlock();
 
-    layers::GrallocImage::GrallocData data;
-
-    data.mPicSize = gfx::IntSize(dstWidth, dstHeight);
-    data.mGraphicBuffer = textureClient;
-    videoImage->SetData(data);
+    image->AsGrallocImage()->SetData(textureClient, gfx::IntSize(dstWidth, dstHeight));
   } else {
     // Handle out of gralloc case.
-    image = mImageContainer->CreateImage(ImageFormat::PLANAR_YCBCR);
-    layers::PlanarYCbCrImage* videoImage = static_cast<layers::PlanarYCbCrImage*>(image.get());
-    uint8_t* dstPtr = videoImage->AllocateAndGetNewBuffer(size);
+    image = mImageContainer->CreatePlanarYCbCrImage();
+    uint8_t* dstPtr = image->AsPlanarYCbCrImage()->AllocateAndGetNewBuffer(size);
 
     libyuv::ConvertToI420(srcPtr, size,
                           dstPtr, dstWidth,
@@ -825,7 +818,7 @@ MediaEngineGonkVideoSource::RotateImage(layers::Image* aImage, uint32_t aWidth, 
     data.mPicSize = IntSize(dstWidth, dstHeight);
     data.mStereoMode = StereoMode::MONO;
 
-    videoImage->SetDataNoCopy(data);
+    image->AsPlanarYCbCrImage()->SetDataNoCopy(data);
   }
   graphicBuffer->unlock();
 

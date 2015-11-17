@@ -50,11 +50,9 @@ public enum Restriction {
 
     DISALLOW_GUEST_BROWSING(16, "no_guest_browsing",  R.string.restriction_disallow_guest_browsing_title),
 
-    DISALLOW_DEFAULT_THEME(17, "no_default_theme", 0),
+    DISALLOW_ADVANCED_SETTINGS(17, "no_advanced_settings", R.string.restriction_disallow_advanced_settings_title),
 
-    DISALLOW_ADVANCED_SETTINGS(18, "no_advanced_settings", R.string.restriction_disallow_advanced_settings_title),
-
-    DISALLOW_CAMERA_MICROPHONE(19, "no_camera_microphone", R.string.restriction_disallow_camera_microphone_title);
+    DISALLOW_CAMERA_MICROPHONE(18, "no_camera_microphone", R.string.restriction_disallow_camera_microphone_title);
 
     public final int id;
     public final String name;

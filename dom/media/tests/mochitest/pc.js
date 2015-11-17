@@ -62,6 +62,7 @@ function PeerConnectionTest(options) {
   options.h264 = "h264" in options ? options.h264 : false;
   options.bundle = "bundle" in options ? options.bundle : true;
   options.rtcpmux = "rtcpmux" in options ? options.rtcpmux : true;
+  options.opus = "opus" in options ? options.opus : true;
 
   if (typeof turnServers !== "undefined") {
     if ((!options.turn_disabled_local) && (turnServers.local)) {

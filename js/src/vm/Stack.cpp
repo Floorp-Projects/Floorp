@@ -1469,9 +1469,52 @@ NonBuiltinScriptFrameIter::settle()
     }
 }
 
+ActivationEntryMonitor::ActivationEntryMonitor(JSContext* cx)
+  : cx_(cx), entryMonitor_(cx->runtime()->entryMonitor)
+{
+    cx->runtime()->entryMonitor = nullptr;
+}
+
+Value
+ActivationEntryMonitor::asyncStack(JSContext* cx)
+{
+    RootedValue stack(cx, ObjectOrNullValue(cx->runtime()->asyncStackForNewActivations));
+    if (!cx->compartment()->wrap(cx, &stack)) {
+        cx->clearPendingException();
+        return UndefinedValue();
+    }
+    return stack;
+}
+
+ActivationEntryMonitor::ActivationEntryMonitor(JSContext* cx, InterpreterFrame* entryFrame)
+  : ActivationEntryMonitor(cx)
+{
+    if (entryMonitor_) {
+        RootedValue stack(cx, asyncStack(cx));
+        RootedString asyncCause(cx, cx->runtime()->asyncCauseForNewActivations);
+        if (entryFrame->isFunctionFrame())
+            entryMonitor_->Entry(cx, entryFrame->fun(), stack, asyncCause);
+        else
+            entryMonitor_->Entry(cx, entryFrame->script(), stack, asyncCause);
+    }
+}
+
+ActivationEntryMonitor::ActivationEntryMonitor(JSContext* cx, jit::CalleeToken entryToken)
+  : ActivationEntryMonitor(cx)
+{
+    if (entryMonitor_) {
+        RootedValue stack(cx, asyncStack(cx));
+        RootedString asyncCause(cx, cx->runtime()->asyncCauseForNewActivations);
+        if (jit::CalleeTokenIsFunction(entryToken))
+            entryMonitor_->Entry(cx_, jit::CalleeTokenToFunction(entryToken), stack, asyncCause);
+        else
+            entryMonitor_->Entry(cx_, jit::CalleeTokenToScript(entryToken), stack, asyncCause);
+    }
+}
+
 /*****************************************************************************/
 
-jit::JitActivation::JitActivation(JSContext* cx, CalleeToken entryPoint, bool active)
+jit::JitActivation::JitActivation(JSContext* cx, bool active)
   : Activation(cx, Jit),
     active_(active),
     isLazyLinkExitFrame_(false),
@@ -1494,26 +1537,10 @@ jit::JitActivation::JitActivation(JSContext* cx, CalleeToken entryPoint, bool ac
         prevJitJSContext_ = nullptr;
         prevJitActivation_ = nullptr;
     }
-
-    if (entryMonitor_) {
-        MOZ_ASSERT(entryPoint);
-
-        RootedValue stack(cx_);
-        stack.setObjectOrNull(asyncStack_.get());
-        if (!cx_->compartment()->wrap(cx_, &stack))
-            stack.setUndefined();
-        if (CalleeTokenIsFunction(entryPoint))
-            entryMonitor_->Entry(cx_, CalleeTokenToFunction(entryPoint), stack, asyncCause_);
-        else
-            entryMonitor_->Entry(cx_, CalleeTokenToScript(entryPoint), stack, asyncCause_);
-    }
 }
 
 jit::JitActivation::~JitActivation()
 {
-    if (entryMonitor_)
-        entryMonitor_->Exit(cx_);
-
     if (active_) {
         if (isProfiling())
             unregisterProfiling();

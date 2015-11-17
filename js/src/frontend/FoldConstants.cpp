@@ -238,13 +238,8 @@ ContainsHoistedDeclaration(ExclusiveContext* cx, ParseNode* node, bool* result)
         MOZ_ASSERT(node->isArity(PN_BINARY));
         return ContainsHoistedDeclaration(cx, node->pn_right, result);
 
-      // A case/default node's right half is its statements.  A default node's
-      // left half is null; a case node's left half is its expression.
-      case PNK_DEFAULT:
-        MOZ_ASSERT(!node->pn_left);
       case PNK_CASE:
-        MOZ_ASSERT(node->isArity(PN_BINARY));
-        return ContainsHoistedDeclaration(cx, node->pn_right, result);
+        return ContainsHoistedDeclaration(cx, node->as<CaseClause>().statementList(), result);
 
       case PNK_FOR: {
         MOZ_ASSERT(node->isArity(PN_BINARY));
@@ -1873,7 +1868,6 @@ Fold(ExclusiveContext* cx, ParseNode** pnp, Parser<FullParseHandler>& parser, bo
         return FoldCall(cx, pn, parser, inGenexpLambda);
 
       case PNK_SWITCH:
-      case PNK_CASE:
       case PNK_COLON:
       case PNK_ASSIGN:
       case PNK_ADDASSIGN:
@@ -1924,11 +1918,16 @@ Fold(ExclusiveContext* cx, ParseNode** pnp, Parser<FullParseHandler>& parser, bo
         return FoldCondition(cx, &pn->pn_left, parser, inGenexpLambda) &&
                Fold(cx, &pn->pn_right, parser, inGenexpLambda);
 
-      case PNK_DEFAULT:
+      case PNK_CASE: {
         MOZ_ASSERT(pn->isArity(PN_BINARY));
-        MOZ_ASSERT(!pn->pn_left);
-        MOZ_ASSERT(pn->pn_right->isKind(PNK_STATEMENTLIST));
+
+        // pn_left is null for DefaultClauses.
+        if (pn->pn_left) {
+            if (!Fold(cx, &pn->pn_left, parser, inGenexpLambda))
+                return false;
+        }
         return Fold(cx, &pn->pn_right, parser, inGenexpLambda);
+      }
 
       case PNK_WITH:
         MOZ_ASSERT(pn->isArity(PN_BINARY_OBJ));

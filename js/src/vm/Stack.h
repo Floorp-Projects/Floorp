@@ -1314,6 +1314,30 @@ namespace jit {
     class JitActivation;
 } // namespace jit
 
+// This class is separate from Activation, because it calls JSCompartment::wrap()
+// which can GC and walk the stack. It's not safe to do that within the
+// JitActivation constructor.
+class MOZ_RAII ActivationEntryMonitor
+{
+    JSContext* cx_;
+
+    // The entry point monitor that was set on cx_->runtime() when this
+    // ActivationEntryMonitor was created.
+    JS::dbg::AutoEntryMonitor* entryMonitor_;
+
+    explicit ActivationEntryMonitor(JSContext* cx);
+
+    ActivationEntryMonitor(const ActivationEntryMonitor& other) = delete;
+    void operator=(const ActivationEntryMonitor& other) = delete;
+
+    Value asyncStack(JSContext* cx);
+
+  public:
+    ActivationEntryMonitor(JSContext* cx, InterpreterFrame* entryFrame);
+    ActivationEntryMonitor(JSContext* cx, jit::CalleeToken entryToken);
+    inline ~ActivationEntryMonitor();
+};
+
 class Activation
 {
   protected:
@@ -1354,15 +1378,10 @@ class Activation
     // callFunctionWithAsyncStack.
     bool asyncCallIsExplicit_;
 
-    // The entry point monitor that was set on cx_->runtime() when this
-    // Activation was created. Subclasses should report their entry frame's
-    // function or script here.
-    JS::dbg::AutoEntryMonitor* entryMonitor_;
-
     enum Kind { Interpreter, Jit, AsmJS };
     Kind kind_;
 
-    inline Activation(JSContext* cx, Kind kind_);
+    inline Activation(JSContext* cx, Kind kind);
     inline ~Activation();
 
   public:
@@ -1614,11 +1633,7 @@ class JitActivation : public Activation
 #endif
 
   public:
-    // If non-null, |entryScript| should be the script we're about to begin
-    // executing, for the benefit of performance tooling. We can pass null for
-    // entryScript when we know we couldn't possibly be entering JS directly
-    // from the JSAPI: OSR, asm.js -> Ion transitions, and so on.
-    explicit JitActivation(JSContext* cx, CalleeToken entryPoint, bool active = true);
+    explicit JitActivation(JSContext* cx, bool active = true);
     ~JitActivation();
 
     bool isActive() const {

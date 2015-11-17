@@ -18,20 +18,6 @@ var {Task} = require("resource://gre/modules/Task.jsm");
 var Promise = require("promise");
 
 /**
- * Create an async function from a generator function.
- *
- * @param Function func
- *        The generator function that to wrap as an async function.
- * @return Function
- *         The async function.
- */
-exports.async = function async(func) {
-  return function(...args) {
-    return Task.spawn(func.apply(this, args));
-  };
-};
-
-/**
  * Create an async function that only executes once per instance of an object.
  * Once called on a given object, the same promise will be returned for any
  * future calls for that object.

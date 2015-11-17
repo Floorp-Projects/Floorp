@@ -2775,14 +2775,18 @@ GeckoDriver.prototype.generateFrameId = function(id) {
 
 /** Receives all messages from content messageManager. */
 GeckoDriver.prototype.receiveMessage = function(message) {
-  // we need to just check if we need to remove the mozbrowserclose listener
-  if (this.mozBrowserClose !== null) {
-    let win = this.getCurrentWindow();
-    win.removeEventListener("mozbrowserclose", this.mozBrowserClose, true);
-    this.mozBrowserClose = null;
-  }
-
   switch (message.name) {
+    case "Marionette:ok":
+    case "Marionette:done":
+    case "Marionette:error":
+      // check if we need to remove the mozbrowserclose listener
+      if (this.mozBrowserClose !== null) {
+        let win = this.getCurrentWindow();
+        win.removeEventListener("mozbrowserclose", this.mozBrowserClose, true);
+        this.mozBrowserClose = null;
+      }
+      break;
+
     case "Marionette:log":
       // log server-side messages
       logger.info(message.json.message);

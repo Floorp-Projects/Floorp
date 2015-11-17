@@ -2136,22 +2136,6 @@ nsDocumentViewer::RequestWindowClose(bool* aCanClose)
   return NS_OK;
 }
 
-static bool
-AppendAgentSheet(nsIStyleSheet *aSheet, void *aData)
-{
-  nsStyleSet *styleSet = static_cast<nsStyleSet*>(aData);
-  styleSet->AppendStyleSheet(SheetType::Agent, aSheet);
-  return true;
-}
-
-static bool
-PrependUserSheet(nsIStyleSheet *aSheet, void *aData)
-{
-  nsStyleSet *styleSet = static_cast<nsStyleSet*>(aData);
-  styleSet->PrependStyleSheet(SheetType::User, aSheet);
-  return true;
-}
-
 nsresult
 nsDocumentViewer::CreateStyleSet(nsIDocument* aDocument,
                                    nsStyleSet** aStyleSet)
@@ -2315,12 +2299,14 @@ nsDocumentViewer::CreateStyleSet(nsIDocument* aDocument,
     }
   }
 
-  nsStyleSheetService *sheetService = nsStyleSheetService::GetInstance();
+  nsStyleSheetService* sheetService = nsStyleSheetService::GetInstance();
   if (sheetService) {
-    sheetService->AgentStyleSheets()->EnumerateForwards(AppendAgentSheet,
-                                                        styleSet);
-    sheetService->UserStyleSheets()->EnumerateBackwards(PrependUserSheet,
-                                                        styleSet);
+    for (CSSStyleSheet* sheet : *sheetService->AgentStyleSheets()) {
+      styleSet->AppendStyleSheet(SheetType::Agent, sheet);
+    }
+    for (CSSStyleSheet* sheet : Reversed(*sheetService->UserStyleSheets())) {
+      styleSet->PrependStyleSheet(SheetType::User, sheet);
+    }
   }
 
   // Caller will handle calling EndUpdate, per contract.
