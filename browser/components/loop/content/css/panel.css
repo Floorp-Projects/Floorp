@@ -391,6 +391,7 @@ html[dir="rtl"] .room-entry-context-actions > .dropdown-menu {
   vertical-align: middle;
 }
 
+.room-entry-context-item > img,
 .room-entry-context-item > a > img {
   width: 16px;
 }
