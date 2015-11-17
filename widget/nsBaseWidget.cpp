@@ -2977,11 +2977,11 @@ nsBaseWidget::debug_DumpPaintEvent(FILE *                aFileOut,
 }
 //////////////////////////////////////////////////////////////
 /* static */ void
-nsBaseWidget::debug_DumpInvalidate(FILE *                aFileOut,
-                                   nsIWidget *           aWidget,
-                                   const nsIntRect *     aRect,
-                                   const nsAutoCString & aWidgetName,
-                                   int32_t               aWindowID)
+nsBaseWidget::debug_DumpInvalidate(FILE* aFileOut,
+                                   nsIWidget* aWidget,
+                                   const LayoutDeviceIntRect* aRect,
+                                   const nsAutoCString& aWidgetName,
+                                   int32_t aWindowID)
 {
   if (!debug_GetCachedBoolPref("nglayout.debug.invalidate_dumping"))
     return;
@@ -2996,23 +2996,17 @@ nsBaseWidget::debug_DumpInvalidate(FILE *                aFileOut,
           aWidgetName.get(),
           aWindowID);
 
-  if (aRect)
-  {
+  if (aRect) {
     fprintf(aFileOut,
             " rect=%3d,%-3d %3d,%-3d",
-            aRect->x,
-            aRect->y,
-            aRect->width,
-            aRect->height);
-  }
-  else
-  {
+            aRect->x, aRect->y, aRect->width, aRect->height);
+  } else {
     fprintf(aFileOut,
             " rect=%-15s",
             "none");
   }
 
-  fprintf(aFileOut,"\n");
+  fprintf(aFileOut, "\n");
 }
 //////////////////////////////////////////////////////////////
 

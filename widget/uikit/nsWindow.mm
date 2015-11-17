@@ -700,7 +700,7 @@ nsWindow::SetSizeMode(nsSizeMode aMode)
 }
 
 NS_IMETHODIMP
-nsWindow::Invalidate(const nsIntRect &aRect)
+nsWindow::Invalidate(const LayoutDeviceIntRect& aRect)
 {
   if (!mNativeView || !mVisible)
     return NS_OK;

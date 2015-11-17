@@ -27,6 +27,8 @@ class nsViewManager final
 public:
   friend class nsView;
 
+  typedef mozilla::LayoutDeviceIntRect LayoutDeviceIntRect;
+
   NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
 
   NS_INLINE_DECL_REFCOUNTING(nsViewManager)
@@ -355,7 +357,7 @@ private:
    * coordinate system to the coordinate system of the widget attached to
    * aView.
    */
-  nsIntRect ViewToWidget(nsView *aView, const nsRect &aRect) const;
+  LayoutDeviceIntRect ViewToWidget(nsView* aView, const nsRect& aRect) const;
 
   void DoSetWindowDimensions(nscoord aWidth, nscoord aHeight);
 
