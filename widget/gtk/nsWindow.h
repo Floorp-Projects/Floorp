@@ -296,8 +296,6 @@ public:
                         const mozilla::WidgetKeyboardEvent& aEvent,
                         DoCommandCallback aCallback,
                         void* aCallbackData) override;
-    NS_IMETHOD GetToggledKeyState(uint32_t aKeyCode,
-                                  bool* aLEDState) override;
 
     // These methods are for toplevel windows only.
     void               ResizeTransparencyBitmap();

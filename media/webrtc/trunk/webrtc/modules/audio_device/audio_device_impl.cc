@@ -331,6 +331,7 @@ int32_t AudioDeviceModuleImpl::CreatePlatformSpecificObjects()
     if (ptrAudioDevice != NULL)
     {
         WEBRTC_TRACE(kTraceInfo, kTraceAudioDevice, _id, "attempting to use the Sndio audio API...");
+        _platformAudioLayer = kSndioAudio;
         // Create the sndio implementation of the Device Utility.
         ptrAudioDeviceUtility = new AudioDeviceUtilitySndio(Id());
     }
@@ -622,6 +623,10 @@ int32_t AudioDeviceModuleImpl::ActiveAudioLayer(AudioLayer* audioLayer) const
     else if (*audioLayer == AudioDeviceModule::kLinuxAlsaAudio)
     {
         WEBRTC_TRACE(kTraceStateInfo, kTraceAudioDevice, _id, "output: kLinuxAlsaAudio");
+    }
+    else if (*audioLayer == AudioDeviceModule::kSndioAudio)
+    {
+        WEBRTC_TRACE(kTraceStateInfo, kTraceAudioDevice, _id, "output: kSndioAudio");
     }
     else
     {
@@ -2068,6 +2073,10 @@ AudioDeviceModule::AudioLayer AudioDeviceModuleImpl::PlatformAudioLayer() const
     case kLinuxAlsaAudio:
         WEBRTC_TRACE(kTraceStateInfo, kTraceAudioDevice, _id,
                      "output: kLinuxAlsaAudio");
+        break;
+    case kSndioAudio:
+        WEBRTC_TRACE(kTraceStateInfo, kTraceAudioDevice, _id,
+                     "output: kSndioAudio");
         break;
     case kDummyAudio:
         WEBRTC_TRACE(kTraceStateInfo, kTraceAudioDevice, _id,
