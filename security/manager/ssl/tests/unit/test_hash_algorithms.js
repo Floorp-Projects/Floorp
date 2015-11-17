@@ -71,22 +71,14 @@ function doHash(algo, value, cmp) {
   value = converter.convertToByteArray(value);
   hash.update(value, value.length);
   var hash1 = hexdigest(hash.finish(false));
-  if (cmp != hash1) {
-    do_throw("Hash mismatch!\n" +
-             "  Expected: " + cmp + "\n" +
-             "  Actual: " + hash1 + "\n" +
-             "  Algo: " + algo);
-  }                                                                                                                                                                                                                                  
+  equal(hash1, cmp,
+        `Actual and expected hash for ${algo} should match`);
 
   hash.initWithString(algo);
   hash.update(value, value.length);
   var hash2 = hexdigest(hash.finish(false));
-  if (cmp != hash2) {
-    do_throw("Hash mismatch after crypto hash re-init!\n" +
-             "  Expected: " + cmp + "\n" +
-             "  Actual: " + hash2 + "\n" +
-             "  Algo: " + algo);
-  }
+  equal(hash2, cmp,
+        `Actual and expected hash for ${algo} should match after re-init`);
 }
 
 function doHashStream(algo, value, cmp) {
@@ -97,12 +89,8 @@ function doHashStream(algo, value, cmp) {
   var stream = converter.convertToInputStream(value);
   hash.updateFromStream(stream, stream.available());
   hash = hexdigest(hash.finish(false));
-  if (cmp != hash) {
-    do_throw("Hash mismatch!\n" +
-             "  Expected: " + cmp + "\n" +
-             "  Actual: " + hash + "\n" +
-             "  Algo: " + algo);
-  }
+  equal(hash, cmp,
+        `Actual and expected hash for ${algo} should match updating from stream`);
 }
 
 function run_test() {
@@ -110,7 +98,7 @@ function run_test() {
     hashes[algo].forEach(
       function(e, i) {
         doHash(algo, messages[i], e);
-        
+
         if (messages[i].length) {
           // this test doesn't work for empty string/stream
           doHashStream(algo, messages[i], e);

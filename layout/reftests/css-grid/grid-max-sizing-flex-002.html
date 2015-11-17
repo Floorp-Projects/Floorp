@@ -17,6 +17,7 @@ body { width: 800px; }
   display: grid;
   grid-auto-columns: minmax(0,1fr);
   border: dashed blue;
+  justify-items: stretch;
 }
 
 .c1 { grid-column: 1 / span 2; min-width:40px; }
@@ -29,7 +30,6 @@ span {
   border-width: 1px 3px 5px 7px;
   padding: 1px 3px;
   margin: 1px 5px;
-  justify-self: flex-start;
 }
 
 x { display:inline-block; width:10px; height:18px; }

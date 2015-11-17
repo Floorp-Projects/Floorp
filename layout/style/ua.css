@@ -39,8 +39,9 @@
   page-break-inside: inherit;
   vertical-align: inherit; /* needed for inline-table */
   line-height: inherit; /* needed for vertical-align on inline-table */
-  align-self: inherit; /* needed for "align-self" to work on table flex items */
-  order: inherit;   /* needed for "order" to work on table flex items */
+  align-self: inherit;
+  justify-self: inherit;
+  order: inherit;   /* needed for "order" to work on table flex/grid items */
   /* Bug 722777 */
   -moz-transform: inherit;
   -moz-transform-origin: inherit;

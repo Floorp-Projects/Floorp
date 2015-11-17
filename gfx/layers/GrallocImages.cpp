@@ -147,11 +147,12 @@ GrallocImage::SetData(const Data& aData)
   return true;
 }
 
-bool GrallocImage::SetData(const GrallocData& aData)
+void
+GrallocImage::SetData(TextureClient* aGraphicBuffer, const gfx::IntSize& aSize)
 {
-  mTextureClient = static_cast<GrallocTextureClientOGL*>(aData.mGraphicBuffer.get());
-  mSize = aData.mPicSize;
-  return true;
+  MOZ_ASSERT(aGraphicBuffer->AsGrallocTextureClientOGL());
+  mTextureClient = aGraphicBuffer->AsGrallocTextureClientOGL();
+  mSize = aSize;
 }
 
 /**
