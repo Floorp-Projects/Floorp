@@ -295,7 +295,7 @@ MessagePort::MessagePort(nsPIDOMWindow* aWindow)
 
 MessagePort::~MessagePort()
 {
-  Close();
+  CloseForced();
   MOZ_ASSERT(!mWorkerFeature);
 }
 
@@ -601,6 +601,13 @@ MessagePort::CloseInternal(bool aSoftly)
   // Not entangled but already cloned or closed
   if (mState == eStateEntanglingForDisentangle ||
       mState == eStateEntanglingForClose) {
+    return;
+  }
+
+  // Maybe we were already closing the port but softly. In this case we call
+  // UpdateMustKeepAlive() to consider the empty pending message queue.
+  if (mState == eStateDisentangledForClose && !aSoftly) {
+    UpdateMustKeepAlive();
     return;
   }
 
