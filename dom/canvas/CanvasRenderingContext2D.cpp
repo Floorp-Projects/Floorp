@@ -1896,7 +1896,7 @@ CanvasRenderingContext2D::SetMozCurrentTransform(JSContext* cx,
   }
 
   Matrix newCTM;
-  if (ObjectToMatrix(cx, currentTransform, newCTM, error)) {
+  if (ObjectToMatrix(cx, currentTransform, newCTM, error) && newCTM.IsFinite()) {
     mTarget->SetTransform(newCTM);
   }
 }
@@ -1924,7 +1924,7 @@ CanvasRenderingContext2D::SetMozCurrentTransformInverse(JSContext* cx,
   Matrix newCTMInverse;
   if (ObjectToMatrix(cx, currentTransform, newCTMInverse, error)) {
     // XXX ERRMSG we need to report an error to developers here! (bug 329026)
-    if (newCTMInverse.Invert()) {
+    if (newCTMInverse.Invert() && newCTMInverse.IsFinite()) {
       mTarget->SetTransform(newCTMInverse);
     }
   }
