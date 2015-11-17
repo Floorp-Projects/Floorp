@@ -119,7 +119,7 @@ public:
     {
         return NS_OK;
     }
-    virtual mozilla::LayoutDeviceIntPoint WidgetToScreenOffset();
+    virtual LayoutDeviceIntPoint WidgetToScreenOffset();
     NS_IMETHOD DispatchEvent(mozilla::WidgetGUIEvent* aEvent,
                              nsEventStatus& aStatus);
     NS_IMETHOD CaptureRollupEvents(nsIRollupListener *aListener,
@@ -178,7 +178,7 @@ private:
     void DispatchDeactivateEvent(void);
     void DispatchActivateEventOnTopLevelWindow(void);
     void DispatchDeactivateEventOnTopLevelWindow(void);
-    void DispatchResizeEvent(mozilla::LayoutDeviceIntRect &aRect,
+    void DispatchResizeEvent(LayoutDeviceIntRect &aRect,
                              nsEventStatus &aStatus);
 
     // Remember the last sizemode so that we can restore it when
@@ -203,7 +203,7 @@ public:
                                    nsIWidget                  *aWidget,
                                    bool                        aActivate);
     NS_IMETHOD         SetSizeMode(nsSizeMode aMode);
-    NS_IMETHOD         GetScreenBoundsUntyped(nsIntRect &aRect);
+    NS_IMETHOD         GetScreenBounds(LayoutDeviceIntRect& aRect) override;
     NS_IMETHOD         SetHasTransparentBackground(bool aTransparent);
     NS_IMETHOD         GetHasTransparentBackground(bool& aTransparent);
     NS_IMETHOD         HideWindowChrome(bool aShouldHide);

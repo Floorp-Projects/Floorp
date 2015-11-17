@@ -747,7 +747,7 @@ PackagedAppService::PackagedAppDownloader::AddCallback(nsIURI *aURI,
 {
   MOZ_RELEASE_ASSERT(NS_IsMainThread(), "mCallbacks hashtable is not thread safe");
   nsAutoCString spec;
-  aURI->GetAsciiSpec(spec);
+  aURI->GetSpecIgnoringRef(spec);
 
   LogURI("PackagedAppDownloader::AddCallback", this, aURI);
   LOG(("[%p]    > callback: %p\n", this, aCallback));

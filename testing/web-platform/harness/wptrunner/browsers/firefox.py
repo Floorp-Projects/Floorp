@@ -61,6 +61,8 @@ def executor_kwargs(test_type, server_config, cache_manager, run_info_data,
                 executor_kwargs["timeout_multiplier"] = 2
         elif run_info_data["debug"]:
             executor_kwargs["timeout_multiplier"] = 3
+        elif test_type == "reftest":
+            executor_kwargs["timeout_multiplier"] = 2
     return executor_kwargs
 
 

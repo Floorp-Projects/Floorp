@@ -19,6 +19,7 @@
 
 #include "cubeb/cubeb.h"
 #include "common.h"
+#include "TestHarness.h"
 
 #define MAX_NUM_CHANNELS 32
 
@@ -261,6 +262,8 @@ void run_channel_rate_test()
 
 int main(int argc, char *argv[])
 {
+  ScopedXPCOM xpcom("test_audio");
+
   assert(run_panning_volume_test() == CUBEB_OK);
   run_channel_rate_test();
 

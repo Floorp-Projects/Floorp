@@ -33,7 +33,7 @@ dictionary TVStartScanningOptions {
   boolean isRescanned;
 };
 
-[Pref="dom.tv.enabled", CheckAnyPermissions="tv", Func="Navigator::HasTVSupport"]
+[Pref="dom.tv.enabled", CheckAnyPermissions="tv", AvailableIn=CertifiedApps]
 interface TVSource : EventTarget {
   [Throws]
   Promise<sequence<TVChannel>> getChannels();

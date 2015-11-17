@@ -80,11 +80,6 @@ class SearchEngineRow extends AnimatedHeightLayout {
     private int mMaxSavedSuggestions;
     private int mMaxSearchSuggestions;
 
-    // Styles for text in a suggestion 'button' that is not part of the first instance of mUserSearchTerm
-    // Even though they're the same style, SpannableStringBuilder will interpret there as being only one Span present if we re-use a StyleSpan
-    StyleSpan mPriorToSearchTerm;
-    StyleSpan mAfterSearchTerm;
-
     public SearchEngineRow(Context context) {
         this(context, null);
     }
@@ -150,9 +145,6 @@ class SearchEngineRow extends AnimatedHeightLayout {
         // Suggestion limits
         mMaxSavedSuggestions = getResources().getInteger(R.integer.max_saved_suggestions);
         mMaxSearchSuggestions = getResources().getInteger(R.integer.max_search_suggestions);
-
-        mPriorToSearchTerm = new StyleSpan(Typeface.BOLD);
-        mAfterSearchTerm = new StyleSpan(Typeface.BOLD);
     }
 
     private void setDescriptionOnSuggestion(View v, String suggestion) {
@@ -165,6 +157,38 @@ class SearchEngineRow extends AnimatedHeightLayout {
         return suggestionText.getText().toString();
     }
 
+    /**
+     * Finds all occurrences of pattern in string and returns a list of the starting indices
+     * of each occurrence.
+     *
+     * @param pattern The pattern that is searched for
+     * @param string The string where we search for the pattern
+     */
+    private List<Integer> findAllOccurrencesOf(String pattern, String string) {
+        List<Integer> occurrences = new ArrayList<>();
+        final int patternLength = pattern.length();
+        int indexOfMatch = 0;
+        int lastIndexOfMatch = 0;
+        while(indexOfMatch != -1) {
+            indexOfMatch = string.indexOf(pattern, lastIndexOfMatch);
+            lastIndexOfMatch = indexOfMatch + patternLength;
+            if(indexOfMatch != -1) {
+                occurrences.add(indexOfMatch);
+            }
+        }
+        return occurrences;
+    }
+
+    /**
+     * Sets the content for the suggestion view.
+     *
+     * If the suggestion doesn't contain mUserSearchTerm, nothing is made bold.
+     * All instances of mUserSearchTerm in the suggestion are not bold.
+     *
+     * @param v The View that needs to be populated
+     * @param suggestion The suggestion text that will be placed in the view
+     * @param isUserSavedSearch whether the suggestion is from history or not
+     */
     private void setSuggestionOnView(View v, String suggestion, boolean isUserSavedSearch) {
         final ImageView historyIcon = (ImageView) v.findViewById(R.id.suggestion_item_icon);
         if (isUserSavedSearch) {
@@ -176,14 +200,19 @@ class SearchEngineRow extends AnimatedHeightLayout {
 
         final TextView suggestionText = (TextView) v.findViewById(R.id.suggestion_text);
         final String searchTerm = getSuggestionTextFromView(mUserEnteredView);
-        // If there is more than one copy of mUserSearchTerm, only the first is not bolded
-        final int startOfSearchTerm = suggestion.indexOf(searchTerm);
-        // Sometimes the suggestion does not contain mUserSearmTerm at all, in which case, bold nothing
-        if (startOfSearchTerm >= 0) {
-            final int endOfSearchTerm = startOfSearchTerm + searchTerm.length();
+        final int searchTermLength = searchTerm.length();
+        final List<Integer> occurrences = findAllOccurrencesOf(searchTerm, suggestion);
+        if (occurrences.size() > 0) {
             final SpannableStringBuilder sb = new SpannableStringBuilder(suggestion);
-            sb.setSpan(mPriorToSearchTerm, 0, startOfSearchTerm, Spannable.SPAN_INCLUSIVE_INCLUSIVE);
-            sb.setSpan(mAfterSearchTerm, endOfSearchTerm, suggestion.length(), Spannable.SPAN_INCLUSIVE_INCLUSIVE);
+            int nextStartSpanIndex = 0;
+            // Done to make sure that the stretch of text after the last occurrence, till the end of the suggestion, is made bold
+            occurrences.add(suggestion.length());
+            for(int occurrence : occurrences) {
+                // Even though they're the same style, SpannableStringBuilder will interpret there as being only one Span present if we re-use a StyleSpan
+                StyleSpan boldSpan = new StyleSpan(Typeface.BOLD);
+                sb.setSpan(boldSpan, nextStartSpanIndex, occurrence, Spannable.SPAN_INCLUSIVE_INCLUSIVE);
+                nextStartSpanIndex = occurrence + searchTermLength;
+            }
             suggestionText.setText(sb);
         } else {
             suggestionText.setText(suggestion);

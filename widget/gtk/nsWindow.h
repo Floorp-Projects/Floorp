@@ -131,10 +131,10 @@ public:
     NS_IMETHOD         SetSizeMode(nsSizeMode aMode) override;
     NS_IMETHOD         Enable(bool aState) override;
     NS_IMETHOD         SetFocus(bool aRaise = false) override;
-    NS_IMETHOD         GetScreenBoundsUntyped(nsIntRect &aRect) override;
-    NS_IMETHOD         GetClientBoundsUntyped(nsIntRect &aRect) override;
-    virtual mozilla::gfx::IntSize GetClientSize() override;
-    virtual nsIntPoint GetClientOffsetUntyped() override;
+    NS_IMETHOD         GetScreenBounds(LayoutDeviceIntRect& aRect) override;
+    NS_IMETHOD         GetClientBounds(LayoutDeviceIntRect& aRect) override;
+    virtual LayoutDeviceIntSize GetClientSize() override;
+    virtual LayoutDeviceIntPoint GetClientOffset() override;
     NS_IMETHOD         SetCursor(nsCursor aCursor) override;
     NS_IMETHOD         SetCursor(imgIContainer* aCursor,
                                  uint32_t aHotspotX, uint32_t aHotspotY) override;
@@ -144,7 +144,7 @@ public:
     NS_IMETHOD         SetTitle(const nsAString& aTitle) override;
     NS_IMETHOD         SetIcon(const nsAString& aIconSpec) override;
     NS_IMETHOD         SetWindowClass(const nsAString& xulWinType) override;
-    virtual mozilla::LayoutDeviceIntPoint WidgetToScreenOffset() override;
+    virtual LayoutDeviceIntPoint WidgetToScreenOffset() override;
     NS_IMETHOD         EnableDragDrop(bool aEnable) override;
     NS_IMETHOD         CaptureMouse(bool aCapture) override;
     NS_IMETHOD         CaptureRollupEvents(nsIRollupListener *aListener,
@@ -227,7 +227,7 @@ private:
 
     void               NativeShow  (bool    aAction);
     void               SetHasMappedToplevel(bool aState);
-    mozilla::LayoutDeviceIntSize GetSafeWindowSize(mozilla::LayoutDeviceIntSize aSize);
+    LayoutDeviceIntSize GetSafeWindowSize(LayoutDeviceIntSize aSize);
 
     void               EnsureGrabs  (void);
     void               GrabPointer  (guint32 aTime);
@@ -269,7 +269,7 @@ public:
     bool               IsDestroyed() { return mIsDestroyed; }
 
     void               DispatchDragEvent(mozilla::EventMessage aMsg,
-                                         const mozilla::LayoutDeviceIntPoint& aRefPoint,
+                                         const LayoutDeviceIntPoint& aRefPoint,
                                          guint aTime);
     static void        UpdateDragStatus (GdkDragContext *aDragContext,
                                          nsIDragService *aDragService);
@@ -317,16 +317,16 @@ public:
 #endif
     NS_IMETHOD         ReparentNativeWidget(nsIWidget* aNewParent) override;
 
-    virtual nsresult SynthesizeNativeMouseEvent(mozilla::LayoutDeviceIntPoint aPoint,
+    virtual nsresult SynthesizeNativeMouseEvent(LayoutDeviceIntPoint aPoint,
                                                 uint32_t aNativeMessage,
                                                 uint32_t aModifierFlags,
                                                 nsIObserver* aObserver) override;
 
-    virtual nsresult SynthesizeNativeMouseMove(mozilla::LayoutDeviceIntPoint aPoint,
+    virtual nsresult SynthesizeNativeMouseMove(LayoutDeviceIntPoint aPoint,
                                                nsIObserver* aObserver) override
     { return SynthesizeNativeMouseEvent(aPoint, GDK_MOTION_NOTIFY, 0, aObserver); }
 
-    virtual nsresult SynthesizeNativeMouseScrollEvent(mozilla::LayoutDeviceIntPoint aPoint,
+    virtual nsresult SynthesizeNativeMouseScrollEvent(LayoutDeviceIntPoint aPoint,
                                                       uint32_t aNativeMessage,
                                                       double aDeltaX,
                                                       double aDeltaY,
@@ -346,8 +346,8 @@ public:
 
     // From GDK
     int GdkCoordToDevicePixels(gint coord);
-    mozilla::LayoutDeviceIntPoint GdkPointToDevicePixels(GdkPoint point);
-    mozilla::LayoutDeviceIntPoint GdkEventCoordsToDevicePixels(gdouble x, gdouble y);
+    LayoutDeviceIntPoint GdkPointToDevicePixels(GdkPoint point);
+    LayoutDeviceIntPoint GdkEventCoordsToDevicePixels(gdouble x, gdouble y);
     nsIntRect GdkRectToDevicePixels(GdkRectangle rect);
 
 protected:

@@ -24,7 +24,7 @@
 
 namespace mozilla {
 
-extern PRLogModuleInfo* gAudioOffloadPlayerLog;
+extern LazyLogModule gAudioOffloadPlayerLog;
 #define AUDIO_OFFLOAD_LOG(type, msg) \
   MOZ_LOG(gAudioOffloadPlayerLog, type, msg)
 
@@ -37,9 +37,6 @@ AudioOutput::AudioOutput(int aSessionId, int aUid) :
   mUid(aUid),
   mSessionId(aSessionId)
 {
-  if (!gAudioOffloadPlayerLog) {
-    gAudioOffloadPlayerLog = PR_NewLogModule("AudioOffloadPlayer");
-  }
 }
 
 AudioOutput::~AudioOutput()

@@ -378,9 +378,9 @@ public:
   NS_IMETHOD              Enable(bool aState) override;
   virtual bool            IsEnabled() const override;
   NS_IMETHOD              SetFocus(bool aRaise) override;
-  NS_IMETHOD              GetBoundsUntyped(nsIntRect &aRect) override;
-  NS_IMETHOD              GetClientBoundsUntyped(nsIntRect &aRect) override;
-  NS_IMETHOD              GetScreenBoundsUntyped(nsIntRect &aRect) override;
+  NS_IMETHOD              GetBounds(LayoutDeviceIntRect& aRect) override;
+  NS_IMETHOD              GetClientBounds(LayoutDeviceIntRect& aRect) override;
+  NS_IMETHOD              GetScreenBounds(LayoutDeviceIntRect& aRect) override;
 
   // Returns the "backing scale factor" of the view's window, which is the
   // ratio of pixels in the window's backing store to Cocoa points. Prior to
@@ -402,7 +402,7 @@ public:
 
   virtual void*           GetNativeData(uint32_t aDataType) override;
   virtual nsresult        ConfigureChildren(const nsTArray<Configuration>& aConfigurations) override;
-  virtual mozilla::LayoutDeviceIntPoint WidgetToScreenOffset() override;
+  virtual LayoutDeviceIntPoint WidgetToScreenOffset() override;
   virtual bool            ShowsResizeIndicator(nsIntRect* aResizerRect) override;
 
   static  bool            ConvertStatus(nsEventStatus aStatus)
@@ -456,15 +456,15 @@ public:
                                             const nsAString& aUnmodifiedCharacters,
                                             nsIObserver* aObserver) override;
 
-  virtual nsresult SynthesizeNativeMouseEvent(mozilla::LayoutDeviceIntPoint aPoint,
+  virtual nsresult SynthesizeNativeMouseEvent(LayoutDeviceIntPoint aPoint,
                                               uint32_t aNativeMessage,
                                               uint32_t aModifierFlags,
                                               nsIObserver* aObserver) override;
 
-  virtual nsresult SynthesizeNativeMouseMove(mozilla::LayoutDeviceIntPoint aPoint,
+  virtual nsresult SynthesizeNativeMouseMove(LayoutDeviceIntPoint aPoint,
                                              nsIObserver* aObserver) override
   { return SynthesizeNativeMouseEvent(aPoint, NSMouseMoved, 0, aObserver); }
-  virtual nsresult SynthesizeNativeMouseScrollEvent(mozilla::LayoutDeviceIntPoint aPoint,
+  virtual nsresult SynthesizeNativeMouseScrollEvent(LayoutDeviceIntPoint aPoint,
                                                     uint32_t aNativeMessage,
                                                     double aDeltaX,
                                                     double aDeltaY,
@@ -551,7 +551,7 @@ public:
 
   bool IsPluginFocused() { return mPluginFocused; }
 
-  virtual nsIntPoint GetClientOffsetUntyped() override;
+  virtual LayoutDeviceIntPoint GetClientOffset() override;
 
   void DispatchAPZWheelInputEvent(mozilla::InputData& aEvent, bool aCanTriggerSwipe);
 
