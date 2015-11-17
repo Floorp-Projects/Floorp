@@ -186,9 +186,9 @@ const Frame = Class({
   dispose: function() {
     emit(this, 'detach', this);
     ns(this).messageManager.removeMessageListener('sdk/remote/frame/message', ns(this).messageReceived);
-    ns(this).messageManager = null;
 
     frameMap.delete(ns(this).messageManager);
+    ns(this).messageManager = null;
   },
 
   // Returns the browser or iframe element this frame displays in
