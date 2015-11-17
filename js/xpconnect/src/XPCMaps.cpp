@@ -119,12 +119,11 @@ JSObject2WrappedJSMap::UpdateWeakPointersAfterGC(XPCJSRuntime* runtime)
 
         // Remove or update the JSObject key in the table if necessary.
         JSObject* obj = e.front().key();
-        JSObject* prior = obj;
         JS_UpdateWeakPointerAfterGCUnbarriered(&obj);
         if (!obj)
             e.removeFront();
-        else if (obj != prior)
-            e.rekeyFront(obj);
+        else
+            e.front().mutableKey() = obj;
     }
 }
 
