@@ -103,6 +103,7 @@ class ImageCompositeNotification;
 class ImageContainerChild;
 class PImageContainerChild;
 class SharedPlanarYCbCrImage;
+class PlanarYCbCrImage;
 class TextureClient;
 class CompositableClient;
 class GrallocImage;
@@ -114,6 +115,17 @@ struct ImageBackendData
 protected:
   ImageBackendData() {}
 };
+
+/* Forward declarations for Image derivatives. */
+class EGLImageImage;
+class SharedRGBImage;
+#ifdef MOZ_WIDGET_ANDROID
+class SurfaceTextureImage;
+#elif defined(XP_MACOSX)
+class MacIOSurfaceImage;
+#elif defined(MOZ_WIDGET_GONK)
+class OverlayImage;
+#endif
 
 /**
  * A class representing a buffer of pixel data. The data can be in one
@@ -161,10 +173,20 @@ public:
   virtual uint8_t* GetBuffer() { return nullptr; }
 
   /**
-  * For use with the CompositableClient only (so that the later can
-  * synchronize the TextureClient with the TextureHost).
-  */
+   * For use with the CompositableClient only (so that the later can
+   * synchronize the TextureClient with the TextureHost).
+   */
   virtual TextureClient* GetTextureClient(CompositableClient* aClient) { return nullptr; }
+
+  /* Access to derived classes. */
+  virtual EGLImageImage* AsEGLImageImage() { return nullptr; }
+#ifdef MOZ_WIDGET_ANDROID
+  virtual SurfaceTextureImage* AsSurfaceTextureImage() { return nullptr; }
+#endif
+#ifdef XP_MACOSX
+  virtual MacIOSurfaceImage* AsMacIOSurfaceImage() { return nullptr; }
+#endif
+  virtual PlanarYCbCrImage* AsPlanarYCbCrImage() { return nullptr; }
 
 protected:
   Image(void* aImplData, ImageFormat aFormat) :
@@ -252,10 +274,9 @@ protected:
   ImageFactory() {}
   virtual ~ImageFactory() {}
 
-  virtual already_AddRefed<Image> CreateImage(ImageFormat aFormat,
-                                              const gfx::IntSize &aScaleHint,
-                                              BufferRecycleBin *aRecycleBin);
-
+  virtual RefPtr<PlanarYCbCrImage> CreatePlanarYCbCrImage(
+    const gfx::IntSize& aScaleHint,
+    BufferRecycleBin *aRecycleBin);
 };
  
 /**
@@ -292,16 +313,14 @@ public:
   typedef uint32_t FrameID;
   typedef uint32_t ProducerID;
 
+  RefPtr<PlanarYCbCrImage> CreatePlanarYCbCrImage();
 
-  /**
-   * Create an Image in one of the given formats.
-   * Picks the "best" format from the list and creates an Image of that
-   * format.
-   * Returns null if this backend does not support any of the formats.
-   * Can be called on any thread. This method takes mReentrantMonitor
-   * when accessing thread-shared state.
-   */
-  B2G_ACL_EXPORT already_AddRefed<Image> CreateImage(ImageFormat aFormat);
+  // Factory methods for shared image types.
+  RefPtr<SharedRGBImage> CreateSharedRGBImage();
+
+#ifdef MOZ_WIDGET_GONK
+  RefPtr<OverlayImage> CreateOverlayImage();
+#endif
 
   struct NonOwningImage {
     explicit NonOwningImage(Image* aImage = nullptr,
@@ -704,6 +723,8 @@ public:
 
   virtual size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const = 0;
 
+  PlanarYCbCrImage* AsPlanarYCbCrImage() { return this; }
+
 protected:
   already_AddRefed<gfx::SourceSurface> GetAsSourceSurface();
 
@@ -748,22 +769,6 @@ protected:
  */
 class CairoImage final : public Image {
 public:
-  struct Data {
-    gfx::IntSize mSize;
-    RefPtr<gfx::SourceSurface> mSourceSurface;
-  };
-
-  /**
-   * This can only be called on the main thread. It may add a reference
-   * to the surface (which will eventually be released on the main thread).
-   * The surface must not be modified after this call!!!
-   */
-  void SetData(const Data& aData)
-  {
-    mSize = aData.mSize;
-    mSourceSurface = aData.mSourceSurface;
-  }
-
   virtual already_AddRefed<gfx::SourceSurface> GetAsSourceSurface() override
   {
     RefPtr<gfx::SourceSurface> surface(mSourceSurface);
@@ -774,11 +779,11 @@ public:
 
   virtual gfx::IntSize GetSize() override { return mSize; }
 
-  CairoImage();
+  CairoImage(const gfx::IntSize& aSize, gfx::SourceSurface* aSourceSurface);
   ~CairoImage();
 
+private:
   gfx::IntSize mSize;
-
   nsCountedRef<nsMainThreadSourceSurfaceRef> mSourceSurface;
   nsDataHashtable<nsUint32HashKey, RefPtr<TextureClient> >  mTextureClients;
 };

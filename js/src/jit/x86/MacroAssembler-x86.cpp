@@ -90,30 +90,6 @@ MacroAssemblerX86::convertUInt64ToDouble(Register64 src, Register temp, FloatReg
     vhaddpd(dest128, dest128);
 }
 
-MacroAssemblerX86::Double*
-MacroAssemblerX86::getDouble(double d)
-{
-    if (!doubleMap_.initialized()) {
-        enoughMemory_ &= doubleMap_.init();
-        if (!enoughMemory_)
-            return nullptr;
-    }
-    size_t doubleIndex;
-    DoubleMap::AddPtr p = doubleMap_.lookupForAdd(d);
-    if (p) {
-        doubleIndex = p->value();
-    } else {
-        doubleIndex = doubles_.length();
-        enoughMemory_ &= doubles_.append(Double(d));
-        enoughMemory_ &= doubleMap_.add(p, d, doubleIndex);
-        if (!enoughMemory_)
-            return nullptr;
-    }
-    Double& dbl = doubles_[doubleIndex];
-    MOZ_ASSERT(!dbl.uses.bound());
-    return &dbl;
-}
-
 void
 MacroAssemblerX86::loadConstantDouble(double d, FloatRegister dest)
 {
@@ -136,30 +112,6 @@ MacroAssemblerX86::addConstantDouble(double d, FloatRegister dest)
     dbl->uses.setPrev(masm.size());
 }
 
-MacroAssemblerX86::Float*
-MacroAssemblerX86::getFloat(float f)
-{
-    if (!floatMap_.initialized()) {
-        enoughMemory_ &= floatMap_.init();
-        if (!enoughMemory_)
-            return nullptr;
-    }
-    size_t floatIndex;
-    FloatMap::AddPtr p = floatMap_.lookupForAdd(f);
-    if (p) {
-        floatIndex = p->value();
-    } else {
-        floatIndex = floats_.length();
-        enoughMemory_ &= floats_.append(Float(f));
-        enoughMemory_ &= floatMap_.add(p, f, floatIndex);
-        if (!enoughMemory_)
-            return nullptr;
-    }
-    Float& flt = floats_[floatIndex];
-    MOZ_ASSERT(!flt.uses.bound());
-    return &flt;
-}
-
 void
 MacroAssemblerX86::loadConstantFloat32(float f, FloatRegister dest)
 {
@@ -180,30 +132,6 @@ MacroAssemblerX86::addConstantFloat32(float f, FloatRegister dest)
         return;
     masm.vaddss_mr(reinterpret_cast<const void*>(flt->uses.prev()), dest.encoding(), dest.encoding());
     flt->uses.setPrev(masm.size());
-}
-
-MacroAssemblerX86::SimdData*
-MacroAssemblerX86::getSimdData(const SimdConstant& v)
-{
-    if (!simdMap_.initialized()) {
-        enoughMemory_ &= simdMap_.init();
-        if (!enoughMemory_)
-            return nullptr;
-    }
-    size_t index;
-    SimdMap::AddPtr p = simdMap_.lookupForAdd(v);
-    if (p) {
-        index = p->value();
-    } else {
-        index = simds_.length();
-        enoughMemory_ &= simds_.append(SimdData(v));
-        enoughMemory_ &= simdMap_.add(p, v, index);
-        if (!enoughMemory_)
-            return nullptr;
-    }
-    SimdData& simd = simds_[index];
-    MOZ_ASSERT(!simd.uses.bound());
-    return &simd;
 }
 
 void

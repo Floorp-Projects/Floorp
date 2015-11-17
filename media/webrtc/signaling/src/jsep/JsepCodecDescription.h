@@ -56,11 +56,18 @@ class JsepCodecDescription {
 
     const SdpRtpmapAttributeList::Rtpmap* entry(remoteMsection.FindRtpmap(fmt));
 
-    if (entry
-        && !nsCRT::strcasecmp(mName.c_str(), entry->name.c_str())
-        && (mClock == entry->clock)
-        && (mChannels == entry->channels)) {
-      return ParametersMatch(fmt, remoteMsection);
+    if (entry) {
+      if (!nsCRT::strcasecmp(mName.c_str(), entry->name.c_str())
+          && (mClock == entry->clock)
+          && (mChannels == entry->channels)) {
+        return ParametersMatch(fmt, remoteMsection);
+      }
+    } else if (fmt.compare("9") && mName == "G722") {
+      return true;
+    } else if (fmt.compare("0") && mName == "PCMU") {
+      return true;
+    } else if (fmt.compare("8") && mName == "PCMA") {
+      return true;
     }
     return false;
   }

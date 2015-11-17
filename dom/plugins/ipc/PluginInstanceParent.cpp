@@ -615,18 +615,15 @@ PluginInstanceParent::RecvShow(const NPRect& updatedRect,
                    updatedRect.bottom - updatedRect.top);
         surface->MarkDirty(ur);
 
-        ImageContainer *container = GetImageContainer();
-        RefPtr<Image> image = container->CreateImage(ImageFormat::CAIRO_SURFACE);
-        NS_ASSERTION(image->GetFormat() == ImageFormat::CAIRO_SURFACE, "Wrong format?");
-        CairoImage* cairoImage = static_cast<CairoImage*>(image.get());
-        CairoImage::Data cairoData;
-        cairoData.mSize = surface->GetSize();
-        cairoData.mSourceSurface = gfxPlatform::GetPlatform()->GetSourceSurfaceForSurface(nullptr, surface);
-        cairoImage->SetData(cairoData);
+        RefPtr<gfx::SourceSurface> sourceSurface =
+            gfxPlatform::GetPlatform()->GetSourceSurfaceForSurface(nullptr, surface);
+        RefPtr<CairoImage> image = new CairoImage(surface->GetSize(), sourceSurface);
 
         nsAutoTArray<ImageContainer::NonOwningImage,1> imageList;
         imageList.AppendElement(
             ImageContainer::NonOwningImage(image));
+
+        ImageContainer *container = GetImageContainer();
         container->SetCurrentImages(imageList);
     }
     else if (mImageContainer) {
@@ -697,17 +694,8 @@ PluginInstanceParent::GetImageContainer(ImageContainer** aContainer)
 
 #ifdef XP_MACOSX
     if (ioSurface) {
-        RefPtr<Image> image = container->CreateImage(ImageFormat::MAC_IOSURFACE);
-        if (!image) {
-            return NS_ERROR_FAILURE;
-        }
-
-        NS_ASSERTION(image->GetFormat() == ImageFormat::MAC_IOSURFACE, "Wrong format?");
-
-        MacIOSurfaceImage* pluginImage = static_cast<MacIOSurfaceImage*>(image.get());
-        pluginImage->SetSurface(ioSurface);
-
-        container->SetCurrentImageInTransaction(pluginImage);
+        RefPtr<Image> image = new MacIOSurfaceImage(ioSurface);
+        container->SetCurrentImageInTransaction(image);
 
         NS_IF_ADDREF(container);
         *aContainer = container;

@@ -25,14 +25,12 @@ class ThreadSafeChromeUtils
 public:
   // Implemented in devtools/shared/heapsnapshot/HeapSnapshot.cpp
   static void SaveHeapSnapshot(GlobalObject& global,
-                               JSContext* cx,
                                const HeapSnapshotBoundaries& boundaries,
                                nsAString& filePath,
                                ErrorResult& rv);
 
   // Implemented in devtools/shared/heapsnapshot/HeapSnapshot.cpp
   static already_AddRefed<devtools::HeapSnapshot> ReadHeapSnapshot(GlobalObject& global,
-                                                                   JSContext* cx,
                                                                    const nsAString& filePath,
                                                                    ErrorResult& rv);
 
