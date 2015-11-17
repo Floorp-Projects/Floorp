@@ -46,7 +46,7 @@ public:
 private:
   ~MessagePortService() {}
 
-  void CloseAll(const nsID& aUUID);
+  void CloseAll(const nsID& aUUID, bool aForced = false);
   void MaybeShutdown();
 
   class MessagePortServiceData;

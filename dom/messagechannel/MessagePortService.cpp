@@ -276,7 +276,7 @@ MessagePortService::CloseAllDebugCheck(const nsID& aID,
 #endif
 
 void
-MessagePortService::CloseAll(const nsID& aUUID)
+MessagePortService::CloseAll(const nsID& aUUID, bool aForced)
 {
   MessagePortServiceData* data;
   if (!mPorts.Get(aUUID, &data)) {
@@ -299,7 +299,8 @@ MessagePortService::CloseAll(const nsID& aUUID)
   // because its entangling request didn't arrive yet), we cannot close this
   // channel.
   MessagePortServiceData* destinationData;
-  if (mPorts.Get(destinationUUID, &destinationData) &&
+  if (!aForced &&
+      mPorts.Get(destinationUUID, &destinationData) &&
       !destinationData->mMessages.IsEmpty() &&
       destinationData->mWaitingForNewParent) {
     MOZ_ASSERT(!destinationData->mNextStepCloseAll);
@@ -309,7 +310,7 @@ MessagePortService::CloseAll(const nsID& aUUID)
 
   mPorts.Remove(aUUID);
 
-  CloseAll(destinationUUID);
+  CloseAll(destinationUUID, aForced);
 
   // CloseAll calls itself recursively and it can happen that it deletes
   // itself. Before continuing we must check if we are still alive.
@@ -410,7 +411,7 @@ MessagePortService::ForceClose(const nsID& aUUID,
     return false;
   }
 
-  CloseAll(aUUID);
+  CloseAll(aUUID, true);
   return true;
 }
 
