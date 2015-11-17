@@ -163,9 +163,6 @@
   V(selectBits, (SelectBits<Int8x16, Int8x16>), 3)                                            \
   V(store, (Store<Int8x16, 16>), 3)
 
-#define INT8X16_BOOL_FUNCTION_LIST(V)                                                 \
-  V(bool, Bool<Int8x16>, 16)
-
 #define INT8X16_SHUFFLE_FUNCTION_LIST(V)                                              \
   V(swizzle, Swizzle<Int8x16>, 17)                                                    \
   V(shuffle, Shuffle<Int8x16>, 18)
@@ -174,7 +171,6 @@
   INT8X16_UNARY_FUNCTION_LIST(V)                                                      \
   INT8X16_BINARY_FUNCTION_LIST(V)                                                     \
   INT8X16_TERNARY_FUNCTION_LIST(V)                                                    \
-  INT8X16_BOOL_FUNCTION_LIST(V)                                                       \
   INT8X16_SHUFFLE_FUNCTION_LIST(V)
 
 #define INT16X8_UNARY_FUNCTION_LIST(V)                                                \
@@ -212,9 +208,6 @@
   V(selectBits, (SelectBits<Int16x8, Int16x8>), 3)                                            \
   V(store, (Store<Int16x8, 8>), 3)
 
-#define INT16X8_BOOL_FUNCTION_LIST(V)                                                 \
-  V(bool, Bool<Int16x8>, 8)
-
 #define INT16X8_SHUFFLE_FUNCTION_LIST(V)                                              \
   V(swizzle, Swizzle<Int16x8>, 9)                                                     \
   V(shuffle, Shuffle<Int16x8>, 10)
@@ -223,7 +216,6 @@
   INT16X8_UNARY_FUNCTION_LIST(V)                                                      \
   INT16X8_BINARY_FUNCTION_LIST(V)                                                     \
   INT16X8_TERNARY_FUNCTION_LIST(V)                                                    \
-  INT16X8_BOOL_FUNCTION_LIST(V)                                                       \
   INT16X8_SHUFFLE_FUNCTION_LIST(V)
 
 #define INT32X4_UNARY_FUNCTION_LIST(V)                                                \
@@ -269,9 +261,6 @@
   V(store2, (Store<Int32x4, 2>), 3)                                                   \
   V(store1, (Store<Int32x4, 1>), 3)
 
-#define INT32X4_QUARTERNARY_FUNCTION_LIST(V)                                          \
-  V(bool, Bool<Int32x4>, 4)
-
 #define INT32X4_SHUFFLE_FUNCTION_LIST(V)                                              \
   V(swizzle, Swizzle<Int32x4>, 5)                                                     \
   V(shuffle, Shuffle<Int32x4>, 6)
@@ -280,7 +269,6 @@
   INT32X4_UNARY_FUNCTION_LIST(V)                                                      \
   INT32X4_BINARY_FUNCTION_LIST(V)                                                     \
   INT32X4_TERNARY_FUNCTION_LIST(V)                                                    \
-  INT32X4_QUARTERNARY_FUNCTION_LIST(V)                                                \
   INT32X4_SHUFFLE_FUNCTION_LIST(V)
 
 #define CONVERSION_INT32X4_SIMD_OP(_) \
@@ -344,8 +332,6 @@
     _(store2)                        \
     _(store3)                        \
     _(check)
-#define ION_ONLY_INT32X4_SIMD_OP(_)  \
-    _(bool)
 #define FOREACH_COMMONX4_SIMD_OP(_)  \
     ION_COMMONX4_SIMD_OP(_)          \
     COMP_COMMONX4_TO_INT32X4_SIMD_OP(_)
