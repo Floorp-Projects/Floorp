@@ -204,7 +204,7 @@ ImageClientSingle::UpdateImage(ImageContainer* aContainer, uint32_t aContentFlag
         gfx::IntSize size = image->GetSize();
 
         if (image->GetFormat() == ImageFormat::EGLIMAGE) {
-          EGLImageImage* typedImage = static_cast<EGLImageImage*>(image);
+          EGLImageImage* typedImage = image->AsEGLImageImage();
           texture = new EGLImageTextureClient(GetForwarder(),
                                               mTextureFlags,
                                               typedImage,

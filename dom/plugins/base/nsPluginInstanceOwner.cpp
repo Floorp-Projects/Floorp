@@ -179,16 +179,10 @@ AttachToContainerAsEGLImage(ImageContainer* container,
     return;
   }
 
-  RefPtr<Image> img = container->CreateImage(ImageFormat::EGLIMAGE);
-
-  EGLImageImage::Data data;
-  data.mImage = image;
-  data.mSize = gfx::IntSize(rect.width, rect.height);
-  data.mOriginPos = instance->OriginPos();
-
-  EGLImageImage* typedImg = static_cast<EGLImageImage*>(img.get());
-  typedImg->SetData(data);
-
+  RefPtr<EGLImageImage> img = new EGLImageImage(
+    image, nullptr,
+    gfx::IntSize(rect.width, rect.height), instance->OriginPos(),
+    false /* owns */);
   *out_image = img;
 }
 
