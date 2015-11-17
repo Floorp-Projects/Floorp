@@ -135,6 +135,7 @@ EOF
   break
 fi
 MOZ_BUILD_ROOT=`pwd -W 2>/dev/null || pwd`
+DIST="$MOZ_BUILD_ROOT/dist"
 
 MOZ_PYTHON
 
@@ -972,7 +973,7 @@ TARGET_MD_ARCH=unix
 DIRENT_INO=d_ino
 MOZ_USER_DIR=".mozilla"
 
-MOZ_FIX_LINK_PATHS='-Wl,-rpath-link,$(LIBXUL_DIST)/bin -Wl,-rpath-link,$(prefix)/lib'
+MOZ_FIX_LINK_PATHS="-Wl,-rpath-link,${DIST}/bin -Wl,-rpath-link,${prefix}/lib"
 
 MOZ_FS_LAYOUT=unix
 
@@ -2035,7 +2036,7 @@ case "$target" in
     fi
     LDFLAGS=$_SAVE_LDFLAGS
 
-    MOZ_FIX_LINK_PATHS='-Wl,-executable_path,$(LIBXUL_DIST)/bin'
+    MOZ_FIX_LINK_PATHS="-Wl,-executable_path,${DIST}/bin"
     ;;
 
 ia64*-hpux*)
@@ -2063,13 +2064,13 @@ ia64*-hpux*)
         DSO_LDOPTS='-b -Wl,+s'
         DSO_CFLAGS=""
         DSO_PIC_CFLAGS="+Z"
-        MKSHLIB='$(CXX) $(CXXFLAGS) $(DSO_LDOPTS) -L$(LIBXUL_DIST)/bin -o $@'
-        MKCSHLIB='$(LD) -b +s -L$(LIBXUL_DIST)/bin -o $@'
+        MKSHLIB='$(CXX) $(CXXFLAGS) $(DSO_LDOPTS) -L$(DIST)/bin -o $@'
+        MKCSHLIB='$(LD) -b +s -L$(DIST)/bin -o $@'
         CXXFLAGS="$CXXFLAGS -Wc,-ansi_for_scope,on"
     else
         DSO_LDOPTS='-b -E +s'
-        MKSHLIB='$(LD) $(DSO_LDOPTS) -L$(LIBXUL_DIST)/bin -L$(LIBXUL_DIST)/lib -o $@'
-        MKCSHLIB='$(LD) $(DSO_LDOPTS) -L$(LIBXUL_DIST)/bin -L$(LIBXUL_DIST)/lib -o $@'
+        MKSHLIB='$(LD) $(DSO_LDOPTS) -L$(DIST)/bin -L$(DIST)/lib -o $@'
+        MKCSHLIB='$(LD) $(DSO_LDOPTS) -L$(DIST)/bin -L$(DIST)/lib -o $@'
     fi
     MOZ_POST_PROGRAM_COMMAND='chatr +s enable'
     AC_DEFINE(NSCAP_DISABLE_DEBUG_PTR_TYPES)
@@ -2389,7 +2390,10 @@ ia64*-hpux*)
     else
         DLL_SUFFIX=".so.1.0"
     fi
-    MOZ_FIX_LINK_PATHS='-Wl,-rpath-link,$(LIBXUL_DIST)/bin -Wl,-rpath-link,$(prefix)/lib -Wl,-rpath-link,$(if $(X11BASE),$(X11BASE),/usr/X11R6)/lib'
+    if test -z "$X11BASE"; then
+        X11BASE=/usr/X11R6
+    fi
+    MOZ_FIX_LINK_PATHS="$MOZ_FIX_LINK_PATHS -Wl,-rpath-link,${X11BASE}/lib"
     DSO_CFLAGS=''
     DSO_PIC_CFLAGS='-fPIC'
     DSO_LDOPTS='-shared -fPIC'
@@ -3354,9 +3358,6 @@ MOZ_ARG_WITH_STRING(libxul-sdk,
 [  --with-libxul-sdk=PFX   Use the libXUL SDK at <PFX>],
   AC_MSG_ERROR([--with-libxul-sdk is not supported anymore.]))
 
-LIBXUL_DIST="$MOZ_BUILD_ROOT/dist"
-AC_SUBST(LIBXUL_DIST)
-
 MOZ_CONFIG_NSPR()
 
 dnl set GRE_MILESTONE
@@ -3449,18 +3450,7 @@ fi
 if test -n "$MOZ_NATIVE_NSS"; then
    NSS_LIBS="$NSS_LIBS -lcrmf"
 else
-   NSS_CFLAGS='-I$(LIBXUL_DIST)/include/nss'
-
-   if test -z "$GNU_CC" -a "$OS_ARCH" = "WINNT"; then
-       NSS_LIBS="\
-        \$(LIBXUL_DIST)/lib/\$(LIB_PREFIX)crmf.\$(LIB_SUFFIX) \
-        \$(LIBXUL_DIST)/lib/\$(LIB_PREFIX)smime$NSS_VERSION.\$(LIB_SUFFIX) \
-        \$(LIBXUL_DIST)/lib/\$(LIB_PREFIX)ssl$NSS_VERSION.\$(LIB_SUFFIX) \
-        \$(LIBXUL_DIST)/lib/\$(LIB_PREFIX)nss$NSS_VERSION.\$(LIB_SUFFIX) \
-        \$(LIBXUL_DIST)/lib/\$(LIB_PREFIX)nssutil$NSS_VERSION.\$(LIB_SUFFIX)"
-   else
-       NSS_LIBS='-L$(LIBXUL_DIST)/lib'" -lcrmf -lsmime$NSS_VERSION -lssl$NSS_VERSION -lnss$NSS_VERSION -lnssutil$NSS_VERSION"
-   fi
+   NSS_CFLAGS="-I${DIST}/include/nss"
 fi
 
 dnl ======================
@@ -8201,7 +8191,7 @@ fi
 AC_SUBST(HAVE_INTTYPES_H)
 
 if test "$MOZ_TREE_CAIRO"; then
-    MOZ_CAIRO_CFLAGS='-I$(LIBXUL_DIST)/include/cairo'
+    MOZ_CAIRO_CFLAGS="-I${DIST}/include/cairo"
     AC_DEFINE(MOZ_TREE_CAIRO)
 
     if test "$OS_ARCH" = "WINNT"; then

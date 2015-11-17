@@ -5508,6 +5508,20 @@ class LLoadFixedSlotT : public LInstructionHelper<1, 1, 0>
     }
 };
 
+class LLoadFixedSlotAndUnbox : public LInstructionHelper<1, 1, 0>
+{
+  public:
+    LIR_HEADER(LoadFixedSlotAndUnbox)
+
+    explicit LLoadFixedSlotAndUnbox(const LAllocation& object) {
+        setOperand(0, object);
+    }
+
+    const MLoadFixedSlotAndUnbox* mir() const {
+        return mir_->toLoadFixedSlotAndUnbox();
+    }
+};
+
 // Store a boxed value to an object's fixed slot.
 class LStoreFixedSlotV : public LInstructionHelper<0, 1 + BOX_PIECES, 0>
 {

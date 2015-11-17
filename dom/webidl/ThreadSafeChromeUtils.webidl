@@ -43,6 +43,18 @@ interface ThreadSafeChromeUtils {
    */
   [Throws, NewObject]
   static any nondeterministicGetWeakMapKeys(any map);
+
+  /**
+   * Return the keys in a weak set.  This operation is
+   * non-deterministic because it is affected by the scheduling of the
+   * garbage collector and the cycle collector.
+   *
+   * @param aSet weak set or other JavaScript value
+   * @returns If aSet is a weak set object, return the keys of the weak
+   *          set as an array.  Otherwise, return undefined.
+   */
+  [Throws, NewObject]
+  static any nondeterministicGetWeakSetKeys(any aSet);
 };
 
 /**

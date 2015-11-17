@@ -11,7 +11,7 @@ var { TabSources } = require("./utils/TabSources");
 var makeDebugger = require("./utils/make-debugger");
 var { ConsoleAPIListener } = require("devtools/shared/webconsole/utils");
 var DevToolsUtils = require("devtools/shared/DevToolsUtils");
-var { dbg_assert, update } = DevToolsUtils;
+var { assert, update } = DevToolsUtils;
 
 loader.lazyRequireGetter(this, "AddonThreadActor", "devtools/server/actors/script", true);
 loader.lazyRequireGetter(this, "unwrapDebuggerObjectGlobal", "devtools/server/actors/script", true);
@@ -64,7 +64,7 @@ BrowserAddonActor.prototype = {
 
   get sources() {
     if (!this._sources) {
-      dbg_assert(this.threadActor, "threadActor should exist when creating sources.");
+      assert(this.threadActor, "threadActor should exist when creating sources.");
       this._sources = new TabSources(this.threadActor, this._allowSource);
     }
     return this._sources;
@@ -72,7 +72,7 @@ BrowserAddonActor.prototype = {
 
 
   form: function BAA_form() {
-    dbg_assert(this.actorID, "addon should have an actorID.");
+    assert(this.actorID, "addon should have an actorID.");
     if (!this._consoleActor) {
       this._consoleActor = new AddonConsoleActor(this._addon, this.conn, this);
       this._contextPool.addActor(this._consoleActor);

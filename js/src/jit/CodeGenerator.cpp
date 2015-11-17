@@ -8393,6 +8393,40 @@ CodeGenerator::visitLoadFixedSlotT(LLoadFixedSlotT* ins)
 }
 
 void
+CodeGenerator::visitLoadFixedSlotAndUnbox(LLoadFixedSlotAndUnbox* ins)
+{
+    const MLoadFixedSlotAndUnbox* mir = ins->mir();
+    MIRType type = mir->type();
+    const Register input = ToRegister(ins->getOperand(0));
+    AnyRegister result = ToAnyRegister(ins->output());
+    size_t slot = mir->slot();
+
+    Address address(input, NativeObject::getFixedSlotOffset(slot));
+    Label bail;
+    if (type == MIRType_Double) {
+        MOZ_ASSERT(result.isFloat());
+        masm.ensureDouble(address, result.fpu(), &bail);
+        if (mir->fallible())
+            bailoutFrom(&bail, ins->snapshot());
+        return;
+    }
+    if (mir->fallible()) {
+        switch (type) {
+          case MIRType_Int32:
+            masm.branchTestInt32(Assembler::NotEqual, address, &bail);
+            break;
+          case MIRType_Boolean:
+            masm.branchTestBoolean(Assembler::NotEqual, address, &bail);
+            break;
+          default:
+            MOZ_CRASH("Given MIRType cannot be unboxed.");
+        }
+        bailoutFrom(&bail, ins->snapshot());
+    }
+    masm.loadUnboxedValue(address, type, result);
+}
+
+void
 CodeGenerator::visitStoreFixedSlotV(LStoreFixedSlotV* ins)
 {
     const Register obj = ToRegister(ins->getOperand(0));

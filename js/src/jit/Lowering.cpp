@@ -3207,6 +3207,19 @@ LIRGenerator::visitLoadFixedSlot(MLoadFixedSlot* ins)
 }
 
 void
+LIRGenerator::visitLoadFixedSlotAndUnbox(MLoadFixedSlotAndUnbox* ins)
+{
+    MDefinition* obj = ins->object();
+    MOZ_ASSERT(obj->type() == MIRType_Object);
+
+    LLoadFixedSlotAndUnbox* lir = new(alloc()) LLoadFixedSlotAndUnbox(useRegisterAtStart(obj));
+    if (ins->fallible())
+        assignSnapshot(lir, ins->bailoutKind());
+
+    define(lir, ins);
+}
+
+void
 LIRGenerator::visitStoreFixedSlot(MStoreFixedSlot* ins)
 {
     MOZ_ASSERT(ins->object()->type() == MIRType_Object);

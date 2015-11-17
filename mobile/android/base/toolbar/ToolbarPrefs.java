@@ -8,24 +8,20 @@ package org.mozilla.gecko.toolbar;
 import org.mozilla.gecko.PrefsHelper;
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
-import org.mozilla.gecko.util.HardwareUtils;
 import org.mozilla.gecko.util.ThreadUtils;
 
 class ToolbarPrefs {
     private static final String PREF_AUTOCOMPLETE_ENABLED = "browser.urlbar.autocomplete.enabled";
-    private static final String PREF_TITLEBAR_MODE = "browser.chrome.titlebarMode";
     private static final String PREF_TRIM_URLS = "browser.urlbar.trimURLs";
 
     private static final String[] PREFS = {
         PREF_AUTOCOMPLETE_ENABLED,
-        PREF_TITLEBAR_MODE,
         PREF_TRIM_URLS
     };
 
     private final TitlePrefsHandler HANDLER = new TitlePrefsHandler();
 
     private volatile boolean enableAutocomplete;
-    private volatile boolean showUrl;
     private volatile boolean trimUrls;
 
     private Integer prefObserverId;
@@ -39,10 +35,6 @@ class ToolbarPrefs {
 
     boolean shouldAutocomplete() {
         return enableAutocomplete;
-    }
-
-    boolean shouldShowUrl() {
-        return showUrl || HardwareUtils.isTablet();
     }
 
     boolean shouldTrimUrls() {
@@ -76,20 +68,6 @@ class ToolbarPrefs {
     }
 
     private class TitlePrefsHandler extends PrefsHelper.PrefHandlerBase {
-        @Override
-        public void prefValue(String pref, String str) {
-            if (PREF_TITLEBAR_MODE.equals(pref)) {
-                // Handles PREF_TITLEBAR_MODE, which is always a string.
-                int value = Integer.parseInt(str);
-                boolean shouldShowUrl = (value == 1);
-
-                if (shouldShowUrl != showUrl) {
-                    showUrl = shouldShowUrl;
-                    triggerTitleChangeListener();
-                }
-            }
-        }
-
         @Override
         public void prefValue(String pref, boolean value) {
             if (PREF_AUTOCOMPLETE_ENABLED.equals(pref)) {
