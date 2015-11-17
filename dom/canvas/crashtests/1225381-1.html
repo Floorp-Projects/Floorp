@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<script>
+
+function boom() {
+    var canvas = document.createElement('canvas');
+    var ctx = canvas.getContext('2d');
+    ctx.mozCurrentTransformInverse = [32, -1, 0.8320478957221024, 1.7976931348623157e+308, 512, 0.9012573524148337];
+    ctx.fillText("A", 0 ,0);
+}
+
+</script>
+</head>
+<body onload="boom();"></body>
+</html>
