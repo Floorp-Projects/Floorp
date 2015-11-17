@@ -615,18 +615,15 @@ PluginInstanceParent::RecvShow(const NPRect& updatedRect,
                    updatedRect.bottom - updatedRect.top);
         surface->MarkDirty(ur);
 
-        ImageContainer *container = GetImageContainer();
-        RefPtr<Image> image = container->CreateImage(ImageFormat::CAIRO_SURFACE);
-        NS_ASSERTION(image->GetFormat() == ImageFormat::CAIRO_SURFACE, "Wrong format?");
-        CairoImage* cairoImage = static_cast<CairoImage*>(image.get());
-        CairoImage::Data cairoData;
-        cairoData.mSize = surface->GetSize();
-        cairoData.mSourceSurface = gfxPlatform::GetPlatform()->GetSourceSurfaceForSurface(nullptr, surface);
-        cairoImage->SetData(cairoData);
+        RefPtr<gfx::SourceSurface> sourceSurface =
+            gfxPlatform::GetPlatform()->GetSourceSurfaceForSurface(nullptr, surface);
+        RefPtr<CairoImage> image = new CairoImage(surface->GetSize(), sourceSurface);
 
         nsAutoTArray<ImageContainer::NonOwningImage,1> imageList;
         imageList.AppendElement(
             ImageContainer::NonOwningImage(image));
+
+        ImageContainer *container = GetImageContainer();
         container->SetCurrentImages(imageList);
     }
     else if (mImageContainer) {

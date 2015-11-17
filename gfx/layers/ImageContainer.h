@@ -748,22 +748,6 @@ protected:
  */
 class CairoImage final : public Image {
 public:
-  struct Data {
-    gfx::IntSize mSize;
-    RefPtr<gfx::SourceSurface> mSourceSurface;
-  };
-
-  /**
-   * This can only be called on the main thread. It may add a reference
-   * to the surface (which will eventually be released on the main thread).
-   * The surface must not be modified after this call!!!
-   */
-  void SetData(const Data& aData)
-  {
-    mSize = aData.mSize;
-    mSourceSurface = aData.mSourceSurface;
-  }
-
   virtual already_AddRefed<gfx::SourceSurface> GetAsSourceSurface() override
   {
     RefPtr<gfx::SourceSurface> surface(mSourceSurface);
@@ -774,11 +758,11 @@ public:
 
   virtual gfx::IntSize GetSize() override { return mSize; }
 
-  CairoImage();
+  CairoImage(const gfx::IntSize& aSize, gfx::SourceSurface* aSourceSurface);
   ~CairoImage();
 
+private:
   gfx::IntSize mSize;
-
   nsCountedRef<nsMainThreadSourceSurfaceRef> mSourceSurface;
   nsDataHashtable<nsUint32HashKey, RefPtr<TextureClient> >  mTextureClients;
 };
