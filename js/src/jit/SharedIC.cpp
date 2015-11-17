@@ -3106,16 +3106,18 @@ ICGetProp_Fallback::Compiler::generateStubCode(MacroAssembler& masm)
     if (!tailCallVM(DoGetPropFallbackInfo, masm))
         return false;
 
+    // Even though the fallback frame doesn't enter a stub frame, the CallScripted
+    // frame that we are emulating does. Again, we lie.
+#ifdef DEBUG
+    EmitRepushTailCallReg(masm);
+    enterStubFrame(masm, R0.scratchReg());
+#else
+    inStubFrame_ = true;
+#endif
+
     // What follows is bailout for inlined scripted getters.
     // The return address pointed to by the baseline stack points here.
     returnOffset_ = masm.currentOffset();
-
-    // Even though the fallback frame doesn't enter a stub frame, the CallScripted
-    // frame that we are emulating does. Again, we lie.
-    inStubFrame_ = true;
-#ifdef DEBUG
-    entersStubFrame_ = true;
-#endif
 
     leaveStubFrame(masm, true);
 
