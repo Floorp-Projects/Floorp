@@ -13,10 +13,14 @@ var ac = new AudioContext();
 var sp = ac.createScriptProcessor(4096, 1, 1);
 sp.connect(ac.destination);
 
+// Not started so as to test
+// https://bugzilla.mozilla.org/show_bug.cgi?id=1225003#c2
+var oac = new OfflineAudioContext(1, 1, 48000);
+
 var nodeTypes = ["ScriptProcessorNode", "AudioDestinationNode"];
 var objectTypes = ["dom-nodes", "engine-objects", "stream-objects"];
 
-var usages = {};
+var usages = { "explicit/webaudio/audiocontext": 0 };
 
 for (var i = 0; i < nodeTypes.length; ++i) {
   for (var j = 0; j < objectTypes.length; ++j) {
@@ -43,5 +47,8 @@ SpecialPowers.Cc["@mozilla.org/memory-reporter-manager;1"].
   getService(SpecialPowers.Ci.nsIMemoryReporterManager).
   getReports(handleReport, null, finished, null, /* anonymized = */ false);
 
+// To test bug 1225003, run a failing decodeAudioData() job over a time when
+// the tasks from getReports() are expected to run.
+ac.decodeAudioData(new ArrayBuffer(4), function(){}, function(){});
 </script>
 </html>
