@@ -20,6 +20,9 @@
 
   --backbutton-urlbar-overlap: 6px;
 
+  /* icon width + border + horizontal padding (includes the overlap from backbutton-urlbar-overlap) */
+  --forwardbutton-width: 31px;
+
   --toolbarbutton-vertical-inner-padding: 2px;
   --toolbarbutton-vertical-outer-padding: 8px;
 
@@ -939,9 +942,7 @@ toolbar[brighttext] .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker {
   border-radius: 0 !important;
   padding-left: calc(var(--backbutton-urlbar-overlap) + 3px) !important;
   padding-right: 3px !important;
-% icon width + border + horizontal padding without --backbutton-urlbar-overlap
-%define forwardButtonWidth 25
-  max-width: calc(@forwardButtonWidth@px + var(--backbutton-urlbar-overlap)) !important;
+  max-width: var(--forwardbutton-width) !important;
 }
 
 @conditionalForwardWithUrlbar@:not([switchingtabs]) > #forward-button {
@@ -949,7 +950,7 @@ toolbar[brighttext] .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker {
 }
 
 @conditionalForwardWithUrlbar@ > #forward-button[disabled] {
-  margin-left: calc(-@forwardButtonWidth@px - var(--backbutton-urlbar-overlap));
+  margin-left: calc(0px - var(--forwardbutton-width));
 }
 
 @conditionalForwardWithUrlbar@:hover:not([switchingtabs]) > #forward-button[disabled] {
@@ -959,7 +960,7 @@ toolbar[brighttext] .toolbarbutton-1 > .toolbarbutton-menubutton-dropmarker {
 
 @conditionalForwardWithUrlbar@:not(:hover) > #forward-button[disabled] {
   /* when not hovered anymore, trigger a new transition to hide the forward button immediately */
-  margin-left: calc(-@forwardButtonWidth@.01px - var(--backbutton-urlbar-overlap));
+  margin-left: calc(-0.01px - var(--forwardbutton-width));
 }
 
 #back-button {
