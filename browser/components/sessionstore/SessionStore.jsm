@@ -185,6 +185,14 @@ XPCOMUtils.defineLazyModuleGetter(this, "ViewSourceBrowser",
  * Debug mode is controlled by preference browser.sessionstore.debug
  */
 var gDebuggingEnabled = false;
+
+/**
+ * |true| if we are ignoring non-final update messages that weren't
+ * caused by a flush from the parent. This is controlled via
+ * browser.sessionstore.debug.no_auto_updates.
+ */
+var gNoAutoUpdates = false;
+
 function debug(aMsg) {
   if (gDebuggingEnabled) {
     aMsg = ("SessionStore: " + aMsg).replace(/\S{80}/g, "$&\n");
@@ -581,9 +589,16 @@ var SessionStoreInternal = {
     this._prefBranch = Services.prefs.getBranch("browser.");
 
     gDebuggingEnabled = this._prefBranch.getBoolPref("sessionstore.debug");
+    gNoAutoUpdates =
+      this._prefBranch.getBoolPref("sessionstore.debug.no_auto_updates");
 
     Services.prefs.addObserver("browser.sessionstore.debug", () => {
-      gDebuggingEnabled = this._prefBranch.getBoolPref("sessionstore.debug");
+        gDebuggingEnabled = this._prefBranch.getBoolPref("sessionstore.debug");
+    }, false);
+
+    Services.prefs.addObserver("browser.sessionstore.debug.no_auto_updates", () => {
+        gNoAutoUpdates =
+          this._prefBranch.getBoolPref("sessionstore.debug.no_auto_updates");
     }, false);
 
     this._max_tabs_undo = this._prefBranch.getIntPref("sessionstore.max_tabs_undo");
@@ -698,6 +713,12 @@ var SessionStoreInternal = {
 
         // If the message isn't targeting the latest frameLoader discard it.
         if (frameLoader != aMessage.targetFrameLoader) {
+          return;
+        }
+
+        if (gNoAutoUpdates && !aMessage.data.isFinal && !aMessage.data.flushID) {
+          // For testing, we can disable all non-final updates from
+          // browsers that weren't caused by a flush.
           return;
         }
 
