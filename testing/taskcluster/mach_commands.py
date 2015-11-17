@@ -426,6 +426,10 @@ class Graph(object):
                     build_task['task']['extra']['locations'][location]
                 )
 
+            for url in build_task['task']['extra'].get('url', {}):
+                build_parameters['{}_url'.format(url)] = \
+                    build_task['task']['extra']['url'][url]
+
             define_task = DEFINE_TASK.format(build_task['task']['workerType'])
 
             for route in build_task['task'].get('routes', []):
