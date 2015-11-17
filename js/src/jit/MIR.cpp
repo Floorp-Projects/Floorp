@@ -5505,10 +5505,13 @@ jit::PropertyWriteNeedsTypeBarrier(TempAllocator& alloc, CompilerConstraintList*
                                                 implicitType);
             break;
         }
+    }
 
-        // Perform additional filtering to make sure that any unboxed property
-        // being written can accommodate the value.
-        if (key->isGroup() && key->group()->maybeUnboxedLayout()) {
+    // Perform additional filtering to make sure that any unboxed property
+    // being written can accommodate the value.
+    for (size_t i = 0; i < types->getObjectCount(); i++) {
+        TypeSet::ObjectKey* key = types->getObject(i);
+        if (key && key->isGroup() && key->group()->maybeUnboxedLayout()) {
             const UnboxedLayout& layout = key->group()->unboxedLayout();
             if (name) {
                 const UnboxedLayout::Property* property = layout.lookup(name);
