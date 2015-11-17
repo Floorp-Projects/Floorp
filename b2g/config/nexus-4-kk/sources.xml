@@ -128,7 +128,7 @@
   <project name="platform_system_core" path="system/core" remote="b2g" revision="8586f55fe4b015911b48e731b69c592ad82a0807"/>
   <default remote="caf" revision="refs/tags/android-4.4.2_r1" sync-j="4"/>
   <!-- Nexus 4 specific things -->
-  <project name="device-mako" path="device/lge/mako" remote="b2g" revision="aea6908cd694b4ef9e7ad64a930d52eab6ab1e17"/>
+  <project name="device-mako" path="device/lge/mako" remote="b2g" revision="d7b8c7b6be661270437704760a8cfc27ddbf9a9d"/>
   <project name="device/generic/armv7-a-neon" path="device/generic/armv7-a-neon" revision="72ffdf71c68a96309212eb13d63560d66db14c9e"/>
   <project name="device_lge_mako-kernel" path="device/lge/mako-kernel" remote="b2g" revision="a49f2c34bc50a07b02f010a53d80477542209a81"/>
   <project name="platform/external/libnfc-nci" path="external/libnfc-nci" revision="f37bd545063039e30a92f2550ae78c0e6e4e2d08"/>
