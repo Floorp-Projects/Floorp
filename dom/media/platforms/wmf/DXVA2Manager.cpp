@@ -420,17 +420,13 @@ D3D9DXVA2Manager::CopyToImage(IMFSample* aSample,
                          getter_AddRefs(surface));
   NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
 
-  RefPtr<Image> image = aImageContainer->CreateImage(ImageFormat::D3D9_RGB32_TEXTURE);
-  NS_ENSURE_TRUE(image, E_FAIL);
-  NS_ASSERTION(image->GetFormat() == ImageFormat::D3D9_RGB32_TEXTURE,
-               "Wrong format?");
+  RefPtr<D3D9SurfaceImage> image = new D3D9SurfaceImage(mFirstFrame);
+  hr = image->AllocateAndCopy(mTextureClientAllocator, surface, aRegion);
+  NS_ENSURE_TRUE(SUCCEEDED(hr), hr);
 
-  D3D9SurfaceImage* videoImage = static_cast<D3D9SurfaceImage*>(image.get());
-  hr = videoImage->SetData(D3D9SurfaceImage::Data(surface, aRegion, mTextureClientAllocator, mFirstFrame));
   mFirstFrame = false;
 
   image.forget(aOutImage);
-
   return S_OK;
 }
 

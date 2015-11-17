@@ -36,7 +36,6 @@
 #ifdef XP_WIN
 #include "gfxWindowsPlatform.h"
 #include <d3d10_1.h>
-#include "D3D9SurfaceImage.h"
 #endif
 
 namespace mozilla {
@@ -89,12 +88,6 @@ ImageFactory::CreateImage(ImageFormat aFormat,
 #ifdef XP_MACOSX
   if (aFormat == ImageFormat::MAC_IOSURFACE) {
     img = new MacIOSurfaceImage();
-    return img.forget();
-  }
-#endif
-#ifdef XP_WIN
-  if (aFormat == ImageFormat::D3D9_RGB32_TEXTURE) {
-    img = new D3D9SurfaceImage();
     return img.forget();
   }
 #endif
