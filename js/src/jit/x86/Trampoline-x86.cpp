@@ -881,6 +881,11 @@ JitCode*
 JitRuntime::generateDebugTrapHandler(JSContext* cx)
 {
     MacroAssembler masm;
+#ifndef JS_USE_LINK_REGISTER
+    // The first value contains the return addres,
+    // which we pull into ICTailCallReg for tail calls.
+    masm.setFramePushed(sizeof(intptr_t));
+#endif
 
     Register scratch1 = eax;
     Register scratch2 = ecx;
