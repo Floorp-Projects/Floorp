@@ -42,6 +42,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "PrivateBrowsingUtils",
                                   "resource://gre/modules/PrivateBrowsingUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Preferences",
                                   "resource://gre/modules/Preferences.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Schemas",
+                                  "resource://gre/modules/Schemas.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Task",
                                   "resource://gre/modules/Task.jsm");
 
@@ -62,6 +64,8 @@ ExtensionManagement.registerScript("chrome://extensions/content/ext-webRequest.j
 ExtensionManagement.registerScript("chrome://extensions/content/ext-storage.js");
 ExtensionManagement.registerScript("chrome://extensions/content/ext-test.js");
 
+ExtensionManagement.registerSchema("chrome://extensions/content/schemas/cookies.json");
+
 Cu.import("resource://gre/modules/ExtensionUtils.jsm");
 var {
   LocaleData,
@@ -80,17 +84,22 @@ var ExtensionPage, GlobalManager;
 
 // This object loads the ext-*.js scripts that define the extension API.
 var Management = {
-  initialized: false,
+  initialized: null,
   scopes: [],
   apis: [],
+  schemaApis: [],
   emitter: new EventEmitter(),
 
   // Loads all the ext-*.js scripts currently registered.
   lazyInit() {
     if (this.initialized) {
-      return;
+      return this.initialized;
     }
-    this.initialized = true;
+
+    let promises = [];
+    for (let schema of ExtensionManagement.getSchemas()) {
+      promises.push(Schemas.load(schema));
+    }
 
     for (let script of ExtensionManagement.getScripts()) {
       let scope = {extensions: this,
@@ -102,6 +111,9 @@ var Management = {
       // Save the scope to avoid it being garbage collected.
       this.scopes.push(scope);
     }
+
+    this.initialized = Promise.all(promises);
+    return this.initialized;
   },
 
   // Called by an ext-*.js script to register an API. The |api|
@@ -123,9 +135,13 @@ var Management = {
     this.apis.push({api, permission});
   },
 
+  registerSchemaAPI(namespace, permission, api) {
+    this.schemaApis.push({namespace, permission, api});
+  },
+
   // Mash together into a single object all the APIs registered by the
   // functions above. Return the merged object.
-  generateAPIs(extension, context) {
+  generateAPIs(extension, context, apis) {
     let obj = {};
 
     // Recursively copy properties from source to dest.
@@ -142,7 +158,7 @@ var Management = {
       }
     }
 
-    for (let api of this.apis) {
+    for (let api of apis) {
       if (api.permission) {
         if (!extension.hasPermission(api.permission)) {
           continue;
@@ -163,7 +179,6 @@ var Management = {
 
   // Ask to run all the callbacks that are registered for a given hook.
   emit(hook, ...args) {
-    this.lazyInit();
     this.emitter.emit(hook, ...args);
   },
 
@@ -307,12 +322,30 @@ GlobalManager = {
   },
 
   observe(contentWindow, topic, data) {
-    function inject(extension, context) {
+    let inject = (extension, context) => {
       let chromeObj = Cu.createObjectIn(contentWindow, {defineAs: "browser"});
       contentWindow.wrappedJSObject.chrome = contentWindow.wrappedJSObject.browser;
-      let api = Management.generateAPIs(extension, context);
+      let api = Management.generateAPIs(extension, context, Management.apis);
       injectAPI(api, chromeObj);
-    }
+
+      let schemaApi = Management.generateAPIs(extension, context, Management.schemaApis);
+      let schemaWrapper = {
+        callFunction(ns, name, args) {
+          return schemaApi[ns][name].apply(null, args);
+        },
+
+        addListener(ns, name, listener, args) {
+          return schemaApi[ns][name].addListener.call(null, listener, ...args);
+        },
+        removeListener(ns, name, listener) {
+          return schemaApi[ns][name].removeListener.call(null, listener);
+        },
+        hasListener(ns, name, listener) {
+          return schemaApi[ns][name].hasListener.call(null, listener);
+        },
+      };
+      Schemas.inject(chromeObj, schemaWrapper);
+    };
 
     // Find the add-on associated with this document via the
     // principal's originAttributes. This value is computed by
@@ -945,7 +978,11 @@ Extension.prototype = extend(Object.create(ExtensionData.prototype), {
       return Promise.reject(e);
     }
 
-    return this.readManifest().then(() => {
+    let lazyInit = Management.lazyInit();
+
+    return lazyInit.then(() => {
+      return this.readManifest();
+    }).then(() => {
       return this.initLocale();
     }).then(() => {
       if (this.hasShutdown) {

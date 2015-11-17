@@ -4,18 +4,4 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-EXTRA_JS_MODULES += [
-    'Extension.jsm',
-    'ExtensionContent.jsm',
-    'ExtensionManagement.jsm',
-    'ExtensionStorage.jsm',
-    'ExtensionUtils.jsm',
-    'Schemas.jsm',
-]
-
-DIRS += ['schemas']
-
 JAR_MANIFESTS += ['jar.mn']
-
-MOCHITEST_MANIFESTS += ['test/mochitest/mochitest.ini']
-XPCSHELL_TESTS_MANIFESTS += ['test/xpcshell/xpcshell.ini']
