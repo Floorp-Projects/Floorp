@@ -391,6 +391,8 @@ protected:
     // whether we handle touch event
     bool                mHandleTouchEvent;
 #endif
+    // true if this is a drag and drop feedback popup
+    bool               mIsDragPopup;
 
 private:
     void               DestroyChildWindows();
