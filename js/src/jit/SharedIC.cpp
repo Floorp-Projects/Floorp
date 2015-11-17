@@ -721,6 +721,11 @@ ICStubCompiler::getStubCode()
     // Compile new stubcode.
     JitContext jctx(cx, nullptr);
     MacroAssembler masm;
+#ifndef JS_USE_LINK_REGISTER
+    // The first value contains the return addres,
+    // which we pull into ICTailCallReg for tail calls.
+    masm.adjustFrame(sizeof(intptr_t));
+#endif
 #ifdef JS_CODEGEN_ARM
     masm.setSecondScratchReg(BaselineSecondScratchReg);
 #endif
@@ -804,10 +809,14 @@ ICStubCompiler::callTypeUpdateIC(MacroAssembler& masm, uint32_t objectOffset)
 void
 ICStubCompiler::enterStubFrame(MacroAssembler& masm, Register scratch)
 {
-    if (engine_ == Engine::Baseline)
+    if (engine_ == Engine::Baseline) {
         EmitBaselineEnterStubFrame(masm, scratch);
-    else
+#ifdef DEBUG
+        framePushedAtEnterStubFrame_ = masm.framePushed();
+#endif
+    } else {
         EmitIonEnterStubFrame(masm, scratch);
+    }
 
     MOZ_ASSERT(!inStubFrame_);
     inStubFrame_ = true;
@@ -823,10 +832,17 @@ ICStubCompiler::leaveStubFrame(MacroAssembler& masm, bool calledIntoIon)
     MOZ_ASSERT(entersStubFrame_ && inStubFrame_);
     inStubFrame_ = false;
 
-    if (engine_ == Engine::Baseline)
+    if (engine_ == Engine::Baseline) {
+#ifdef DEBUG
+        masm.setFramePushed(framePushedAtEnterStubFrame_);
+        if (calledIntoIon)
+            masm.adjustFrame(sizeof(intptr_t)); // Calls into ion have this extra.
+#endif
+
         EmitBaselineLeaveStubFrame(masm, calledIntoIon);
-    else
+    } else {
         EmitIonLeaveStubFrame(masm);
+    }
 }
 
 void
@@ -843,6 +859,13 @@ ICStubCompiler::pushFramePtr(MacroAssembler& masm, Register scratch)
     } else {
         masm.pushBaselineFramePtr(BaselineFrameReg, scratch);
     }
+}
+
+void
+ICStubCompiler::PushFramePtr(MacroAssembler& masm, Register scratch)
+{
+    pushFramePtr(masm, scratch);
+    masm.adjustFrame(sizeof(intptr_t));
 }
 
 bool
@@ -3825,8 +3848,8 @@ ICGetPropCallDOMProxyNativeCompiler::generateStubCode(MacroAssembler& masm,
     masm.loadPtr(Address(ICStubReg, ICGetProp_CallDOMProxyNative::offsetOfGetter()), callee);
 
     // Push args for vm call.
-    masm.push(objReg);
-    masm.push(callee);
+    masm.Push(objReg);
+    masm.Push(callee);
 
     // Don't have to preserve R0 anymore.
     regs.add(R0);
@@ -3946,8 +3969,8 @@ ICGetProp_DOMProxyShadowed::Compiler::generateStubCode(MacroAssembler& masm)
 
     // Push property name and proxy object.
     masm.loadPtr(Address(ICStubReg, ICGetProp_DOMProxyShadowed::offsetOfName()), scratch);
-    masm.push(scratch);
-    masm.push(objReg);
+    masm.Push(scratch);
+    masm.Push(objReg);
 
     // Don't have to preserve R0 anymore.
     regs.add(R0);
@@ -4086,9 +4109,9 @@ ICGetProp_Generic::Compiler::generateStubCode(MacroAssembler& masm)
     enterStubFrame(masm, scratch);
 
     // Push arguments.
-    masm.pushValue(R0);
-    masm.push(ICStubReg);
-    pushFramePtr(masm, R0.scratchReg());
+    masm.Push(R0);
+    masm.Push(ICStubReg);
+    PushFramePtr(masm, R0.scratchReg());
 
     if(!callVM(DoGetPropGenericInfo, masm))
         return false;

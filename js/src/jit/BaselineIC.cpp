@@ -5234,16 +5234,19 @@ ICSetProp_Fallback::Compiler::generateStubCode(MacroAssembler& masm)
     if (!tailCallVM(DoSetPropFallbackInfo, masm))
         return false;
 
+    // Even though the fallback frame doesn't enter a stub frame, the CallScripted
+    // frame that we are emulating does. Again, we lie.
+#ifdef DEBUG
+    EmitRepushTailCallReg(masm);
+    EmitStowICValues(masm, 1);
+    enterStubFrame(masm, R1.scratchReg());
+#else
+    inStubFrame_ = true;
+#endif
+
     // What follows is bailout-only code for inlined script getters.
     // The return address pointed to by the baseline stack points here.
     returnOffset_ = masm.currentOffset();
-
-    // Even though the fallback frame doesn't enter a stub frame, the CallScripted
-    // frame that we are emulating does. Again, we lie.
-    inStubFrame_ = true;
-#ifdef DEBUG
-    entersStubFrame_ = true;
-#endif
 
     leaveStubFrame(masm, true);
 
@@ -5730,6 +5733,7 @@ ICSetProp_CallScripted::Compiler::generateStubCode(MacroAssembler& masm)
     Register scratch = regs.takeAnyExcluding(ICTailCallReg);
 
     // Unbox and shape guard.
+    uint32_t framePushed = masm.framePushed();
     Register objReg = masm.extractObject(R0, ExtractTemp0);
     GuardReceiverObject(masm, ReceiverGuard(receiver_), objReg, scratch,
                         ICSetProp_CallScripted::offsetOfReceiverGuard(), &failureUnstow);
@@ -5796,6 +5800,8 @@ ICSetProp_CallScripted::Compiler::generateStubCode(MacroAssembler& masm)
     masm.bind(&noUnderflow);
     masm.callJit(code);
 
+    uint32_t framePushedAfterCall = masm.framePushed();
+
     leaveStubFrame(masm, true);
     // Do not care about return value from function. The original RHS should be returned
     // as the result of this operation.
@@ -5805,11 +5811,13 @@ ICSetProp_CallScripted::Compiler::generateStubCode(MacroAssembler& masm)
 
     // Leave stub frame and go to next stub.
     masm.bind(&failureLeaveStubFrame);
+    masm.setFramePushed(framePushedAfterCall);
     inStubFrame_ = true;
     leaveStubFrame(masm, false);
 
     // Unstow R0 and R1
     masm.bind(&failureUnstow);
+    masm.setFramePushed(framePushed);
     EmitUnstowICValues(masm, 2);
 
     // Failure case - jump to next stub
@@ -5854,6 +5862,7 @@ ICSetProp_CallNative::Compiler::generateStubCode(MacroAssembler& masm)
     Register scratch = regs.takeAnyExcluding(ICTailCallReg);
 
     // Unbox and shape guard.
+    uint32_t framePushed = masm.framePushed();
     Register objReg = masm.extractObject(R0, ExtractTemp0);
     GuardReceiverObject(masm, ReceiverGuard(receiver_), objReg, scratch,
                         ICSetProp_CallNative::offsetOfReceiverGuard(), &failureUnstow);
@@ -5896,6 +5905,7 @@ ICSetProp_CallNative::Compiler::generateStubCode(MacroAssembler& masm)
 
     // Unstow R0 and R1
     masm.bind(&failureUnstow);
+    masm.setFramePushed(framePushed);
     EmitUnstowICValues(masm, 2);
 
     // Failure case - jump to next stub
@@ -6954,7 +6964,7 @@ ICCall_Fallback::Compiler::generateStubCode(MacroAssembler& masm)
         masm.push(masm.getStackPointer());
         masm.push(ICStubReg);
 
-        pushFramePtr(masm, R0.scratchReg());
+        PushFramePtr(masm, R0.scratchReg());
 
         if (!callVM(DoSpreadCallFallbackInfo, masm))
             return false;
@@ -6978,11 +6988,12 @@ ICCall_Fallback::Compiler::generateStubCode(MacroAssembler& masm)
     masm.push(R0.scratchReg());
     masm.push(ICStubReg);
 
-    pushFramePtr(masm, R0.scratchReg());
+    PushFramePtr(masm, R0.scratchReg());
 
     if (!callVM(DoCallFallbackInfo, masm))
         return false;
 
+    uint32_t framePushed = masm.framePushed();
     leaveStubFrame(masm);
     EmitReturnFromIC(masm);
 
@@ -6993,6 +7004,7 @@ ICCall_Fallback::Compiler::generateStubCode(MacroAssembler& masm)
 
     // Here we are again in a stub frame. Marking as so.
     inStubFrame_ = true;
+    masm.setFramePushed(framePushed);
 
     // Load passed-in ThisV into R1 just in case it's needed.  Need to do this before
     // we leave the stub frame since that info will be lost.
