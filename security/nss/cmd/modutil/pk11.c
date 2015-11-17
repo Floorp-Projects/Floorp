@@ -712,6 +712,8 @@ ChangePW(char *tokenName, char *pwFile, char *newpwFile)
 	    newpw2 = SECU_GetPasswordString(NULL, "Re-enter new password: ");
 	    if(strcmp(newpw, newpw2)) {
 		PR_fprintf(PR_STDOUT, msgStrings[PW_MATCH_MSG]);
+		PORT_ZFree(newpw, strlen(newpw));
+		PORT_ZFree(newpw2, strlen(newpw2));
 	    } else {
 		matching = PR_TRUE;
 	    }
@@ -738,16 +740,13 @@ ChangePW(char *tokenName, char *pwFile, char *newpwFile)
 
 loser:
     if(oldpw) {
-	memset(oldpw, 0, strlen(oldpw));
-	PORT_Free(oldpw);
+	PORT_ZFree(oldpw, strlen(oldpw));
     }
     if(newpw) {
-	memset(newpw, 0, strlen(newpw));
-	PORT_Free(newpw);
+	PORT_ZFree(newpw, strlen(newpw));
     }
     if(newpw2) {
-	memset(newpw2, 0, strlen(newpw2));
-	PORT_Free(newpw2);
+	PORT_ZFree(newpw2, strlen(newpw2));
     }
     PK11_FreeSlot(slot);
 

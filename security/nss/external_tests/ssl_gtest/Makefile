@@ -48,10 +48,8 @@ CFLAGS += -I$(CORE_DEPTH)/lib/ssl
 include ../../cmd/platrules.mk
 
 ifeq (WINNT,$(OS_ARCH))
-    # -MTd (not -MD) because that makes it link to the right library
     # -EHsc because gtest has exception handlers
-    OS_CFLAGS := $(filterout -MD,$(OS_CFLAGS))
-    OS_CFLAGS += -MTd -EHsc -nologo
+    OS_CFLAGS += -EHsc -nologo
     # http://www.suodenjoki.dk/us/archive/2010/min-max.htm
     OS_CFLAGS += -DNOMINMAX
 
