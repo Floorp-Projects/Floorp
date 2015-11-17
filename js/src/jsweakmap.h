@@ -206,12 +206,8 @@ class WeakMap : public HashMap<Key, Value, HashPolicy, RuntimeAllocPolicy>,
         if (!trc->isMarkingTracer()) {
             // Trace keys only if weakMapAction() says to.
             if (trc->weakMapAction() == TraceWeakMapKeysValues) {
-                for (Enum e(*this); !e.empty(); e.popFront()) {
-                    Key key(e.front().key());
-                    TraceEdge(trc, &key, "WeakMap entry key");
-                    if (key != e.front().key())
-                        e.rekeyFront(key);
-                }
+                for (Enum e(*this); !e.empty(); e.popFront())
+                    TraceEdge(trc, &e.front().mutableKey(), "WeakMap entry key");
             }
 
             // Always trace all values (unless weakMapAction() is
@@ -252,40 +248,30 @@ class WeakMap : public HashMap<Key, Value, HashPolicy, RuntimeAllocPolicy>,
         bool markedAny = false;
 
         for (Enum e(*this); !e.empty(); e.popFront()) {
-            Entry& entry(e.front());
-            Key key(entry.key());
-
             // If the entry is live, ensure its key and value are marked.
-
-            bool keyIsMarked = gc::IsMarked(&key);
-            if (!keyIsMarked && keyNeedsMark(key)) {
-                TraceEdge(trc, &key, "proxy-preserved WeakMap entry key");
+            bool keyIsMarked = gc::IsMarked(&e.front().mutableKey());
+            if (!keyIsMarked && keyNeedsMark(e.front().key())) {
+                TraceEdge(trc, &e.front().mutableKey(), "proxy-preserved WeakMap entry key");
                 keyIsMarked = true;
                 markedAny = true;
             }
 
             if (keyIsMarked) {
-                if (!gc::IsMarked(&entry.value())) {
-                    TraceEdge(trc, &entry.value(), "WeakMap entry value");
+                if (!gc::IsMarked(&e.front().value())) {
+                    TraceEdge(trc, &e.front().value(), "WeakMap entry value");
                     markedAny = true;
                 }
-
-                if (e.front().key() != key)
-                    e.rekeyFront(key);
             } else if (trc->isWeakMarkingTracer()) {
                 // Entry is not yet known to be live. Record this weakmap and
                 // the lookup key in the list of weak keys. Also record the
                 // delegate, if any, because marking the delegate also marks
                 // the entry.
-                JS::GCCellPtr weakKey(extractUnbarriered(key));
+                JS::GCCellPtr weakKey(extractUnbarriered(e.front().key()));
                 gc::WeakMarkable markable(this, weakKey);
                 addWeakEntry(trc, weakKey, markable);
-                if (JSObject* delegate = getDelegate(key))
+                if (JSObject* delegate = getDelegate(e.front().key()))
                     addWeakEntry(trc, JS::GCCellPtr(delegate), markable);
-                MOZ_ASSERT(key == e.front().key()); // No moving
             }
-
-            key.unsafeSet(nullptr); // Prevent destructor from running barriers.
         }
 
         return markedAny;
@@ -325,11 +311,8 @@ class WeakMap : public HashMap<Key, Value, HashPolicy, RuntimeAllocPolicy>,
     void sweep() override {
         /* Remove all entries whose keys remain unmarked. */
         for (Enum e(*this); !e.empty(); e.popFront()) {
-            Key k(e.front().key());
-            if (gc::IsAboutToBeFinalized(&k))
+            if (gc::IsAboutToBeFinalized(&e.front().mutableKey()))
                 e.removeFront();
-            else if (k != e.front().key())
-                e.rekeyFront(k);
         }
         /*
          * Once we've swept, all remaining edges should stay within the
