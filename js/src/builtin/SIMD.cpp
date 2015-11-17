@@ -418,7 +418,7 @@ FillLanes(JSContext* cx, Handle<TypedObject*> result, const CallArgs& args)
     typedef typename T::Elem Elem;
     Elem tmp;
     for (unsigned i = 0; i < T::lanes; i++) {
-        if (!T::toType(cx, args.get(i), &tmp))
+        if (!T::Cast(cx, args.get(i), &tmp))
             return false;
         reinterpret_cast<Elem*>(result->typedMem())[i] = tmp;
     }
@@ -761,7 +761,8 @@ ExtractLane(JSContext* cx, unsigned argc, Value* vp)
         return ErrorBadArgs(cx);
 
     Elem* vec = TypedObjectMemory<Elem*>(args[0]);
-    V::setReturn(args, vec[lane]);
+    Elem val = vec[lane];
+    args.rval().set(V::ToValue(val));
     return true;
 }
 
@@ -787,7 +788,7 @@ ReplaceLane(JSContext* cx, unsigned argc, Value* vp)
     uint32_t lane = uint32_t(lanearg);
 
     Elem value;
-    if (!V::toType(cx, args.get(2), &value))
+    if (!V::Cast(cx, args.get(2), &value))
         return false;
 
     for (unsigned i = 0; i < V::lanes; i++)
@@ -1015,7 +1016,7 @@ FuncSplat(JSContext* cx, unsigned argc, Value* vp)
 
     CallArgs args = CallArgsFromVp(argc, vp);
     RetElem arg;
-    if (!Vret::toType(cx, args.get(0), &arg))
+    if (!Vret::Cast(cx, args.get(0), &arg))
         return false;
 
     RetElem result[Vret::lanes];

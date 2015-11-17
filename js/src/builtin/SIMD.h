@@ -370,22 +370,18 @@ struct Float32x4 {
     typedef float Elem;
     static const unsigned lanes = 4;
     static const SimdTypeDescr::Type type = SimdTypeDescr::Float32x4;
-
     static TypeDescr& GetTypeDescr(GlobalObject& global) {
         return global.float32x4TypeDescr().as<TypeDescr>();
     }
-    static Elem toType(Elem a) {
-        return a;
-    }
-    static bool toType(JSContext* cx, JS::HandleValue v, Elem* out) {
+    static bool Cast(JSContext* cx, JS::HandleValue v, Elem* out) {
         double d;
         if (!ToNumber(cx, v, &d))
             return false;
         *out = float(d);
         return true;
     }
-    static void setReturn(CallArgs& args, Elem value) {
-        args.rval().setDouble(JS::CanonicalizeNaN(value));
+    static Value ToValue(Elem value) {
+        return DoubleValue(JS::CanonicalizeNaN(value));
     }
 };
 
@@ -393,18 +389,14 @@ struct Float64x2 {
     typedef double Elem;
     static const unsigned lanes = 2;
     static const SimdTypeDescr::Type type = SimdTypeDescr::Float64x2;
-
     static TypeDescr& GetTypeDescr(GlobalObject& global) {
         return global.float64x2TypeDescr().as<TypeDescr>();
     }
-    static Elem toType(Elem a) {
-        return a;
-    }
-    static bool toType(JSContext* cx, JS::HandleValue v, Elem* out) {
+    static bool Cast(JSContext* cx, JS::HandleValue v, Elem* out) {
         return ToNumber(cx, v, out);
     }
-    static void setReturn(CallArgs& args, Elem value) {
-        args.rval().setDouble(JS::CanonicalizeNaN(value));
+    static Value ToValue(Elem value) {
+        return DoubleValue(JS::CanonicalizeNaN(value));
     }
 };
 
@@ -416,14 +408,11 @@ struct Int8x16 {
     static TypeDescr& GetTypeDescr(GlobalObject& global) {
         return global.int8x16TypeDescr().as<TypeDescr>();
     }
-    static Elem toType(Elem a) {
-        return JS::ToInt8(a);
-    }
-    static bool toType(JSContext* cx, JS::HandleValue v, Elem* out) {
+    static bool Cast(JSContext* cx, JS::HandleValue v, Elem* out) {
         return ToInt8(cx, v, out);
     }
-    static void setReturn(CallArgs& args, Elem value) {
-        args.rval().setInt32(value);
+    static Value ToValue(Elem value) {
+        return Int32Value(value);
     }
 };
 
@@ -435,14 +424,11 @@ struct Int16x8 {
     static TypeDescr& GetTypeDescr(GlobalObject& global) {
         return global.int16x8TypeDescr().as<TypeDescr>();
     }
-    static Elem toType(Elem a) {
-        return JS::ToInt16(a);
-    }
-    static bool toType(JSContext* cx, JS::HandleValue v, Elem* out) {
+    static bool Cast(JSContext* cx, JS::HandleValue v, Elem* out) {
         return ToInt16(cx, v, out);
     }
-    static void setReturn(CallArgs& args, Elem value) {
-        args.rval().setInt32(value);
+    static Value ToValue(Elem value) {
+        return Int32Value(value);
     }
 };
 
@@ -454,14 +440,11 @@ struct Int32x4 {
     static TypeDescr& GetTypeDescr(GlobalObject& global) {
         return global.int32x4TypeDescr().as<TypeDescr>();
     }
-    static Elem toType(Elem a) {
-        return JS::ToInt32(a);
-    }
-    static bool toType(JSContext* cx, JS::HandleValue v, Elem* out) {
+    static bool Cast(JSContext* cx, JS::HandleValue v, Elem* out) {
         return ToInt32(cx, v, out);
     }
-    static void setReturn(CallArgs& args, Elem value) {
-        args.rval().setInt32(value);
+    static Value ToValue(Elem value) {
+        return Int32Value(value);
     }
 };
 
