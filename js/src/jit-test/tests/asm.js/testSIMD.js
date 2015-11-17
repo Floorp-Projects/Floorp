@@ -67,7 +67,7 @@ assertAsmLinkFail(asmCompile('glob', USE_ASM + I32 + "return {}"), {SIMD: {Int32
 assertAsmLinkFail(asmCompile('glob', USE_ASM + I32 + "return {}"), {SIMD: {Int32x4: new Array}});
 assertAsmLinkFail(asmCompile('glob', USE_ASM + I32 + "return {}"), {SIMD: {Int32x4: SIMD.Float32x4}});
 
-[Type, int32] = [TypedObject.StructType, TypedObject.int32];
+var [Type, int32] = [TypedObject.StructType, TypedObject.int32];
 var MyStruct = new Type({'x': int32, 'y': int32, 'z': int32, 'w': int32});
 assertAsmLinkFail(asmCompile('glob', USE_ASM + I32 + "return {}"), {SIMD: {Int32x4: MyStruct}});
 assertAsmLinkFail(asmCompile('glob', USE_ASM + I32 + "return {}"), {SIMD: {Int32x4: new MyStruct}});
@@ -495,6 +495,23 @@ CheckF4(F32S, 'var x=f4(1,2,3,4); x=f4s(x,x)', [0,0,0,0]);
 CheckF4(F32S, 'var x=f4(1,2,3,4); var y=f4(4,3,5,2); x=f4s(x,y)', [-3,-1,-2,2]);
 CheckF4(F32S, 'var x=f4(13.37,2,3,4); var y=f4(4,3,5,2); x=f4s(x,y)', [Math.fround(13.37) - 4,-1,-2,2]);
 CheckF4(F32S, 'var x=f4(13.37,2,3,4); var y=f4(4,3,5,2); x=cf4(f4s(x,y))', [Math.fround(13.37) - 4,-1,-2,2]);
+
+{
+    // Bug 1216099
+    let code = `
+        "use asm";
+        var f4 = global.SIMD.Float32x4;
+        var f4sub = f4.sub;
+        const zerox4 = f4(0.0, 0.0, 0.0, 0.0);
+        function f() {
+            var newVelx4 = f4(0.0, 0.0, 0.0, 0.0);
+            var newVelTruex4 = f4(0.0,0.0,0.0,0.0);
+            newVelTruex4 = f4sub(zerox4, newVelx4);
+        }
+        // return statement voluntarily missing
+    `;
+    assertAsmTypeFail('global', code);
+}
 
 // 2.3.3. Multiplications / Divisions
 assertAsmTypeFail('glob', USE_ASM + I32 + "var f4d=i4.div; function f() {} return f");
