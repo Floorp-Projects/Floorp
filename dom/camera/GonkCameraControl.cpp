@@ -2388,15 +2388,11 @@ void
 nsGonkCameraControl::OnNewPreviewFrame(layers::TextureClient* aBuffer)
 {
 #ifdef MOZ_WIDGET_GONK
-  RefPtr<Image> frame = mImageContainer->CreateImage(ImageFormat::GRALLOC_PLANAR_YCBCR);
+  RefPtr<GrallocImage> frame = new GrallocImage();
 
-  GrallocImage* videoImage = static_cast<GrallocImage*>(frame.get());
-
-  GrallocImage::GrallocData data;
-  data.mGraphicBuffer = aBuffer;
-  data.mPicSize = IntSize(mCurrentConfiguration.mPreviewSize.width,
-                          mCurrentConfiguration.mPreviewSize.height);
-  videoImage->SetData(data);
+  IntSize picSize(mCurrentConfiguration.mPreviewSize.width,
+                  mCurrentConfiguration.mPreviewSize.height);
+  frame->SetData(aBuffer, picSize);
 
   if (mCapturePoster.exchange(false)) {
     CreatePoster(frame,

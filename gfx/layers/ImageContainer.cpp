@@ -55,23 +55,6 @@ ImageFactory::CreateImage(ImageFormat aFormat,
                           const gfx::IntSize &,
                           BufferRecycleBin *aRecycleBin)
 {
-  RefPtr<Image> img;
-#ifdef MOZ_WIDGET_GONK
-  if (aFormat == ImageFormat::GRALLOC_PLANAR_YCBCR) {
-    img = new GrallocImage();
-    return img.forget();
-  }
-  if (aFormat == ImageFormat::OVERLAY_IMAGE) {
-    img = new OverlayImage();
-    return img.forget();
-  }
-#endif
-#if defined(MOZ_WIDGET_GONK) && defined(MOZ_B2G_CAMERA) && defined(MOZ_WEBRTC)
-  if (aFormat == ImageFormat::GONK_CAMERA_IMAGE) {
-    img = new GonkCameraImage();
-    return img.forget();
-  }
-#endif
   return nullptr;
 }
 
@@ -183,19 +166,6 @@ already_AddRefed<Image>
 ImageContainer::CreateImage(ImageFormat aFormat)
 {
   ReentrantMonitorAutoEnter mon(mReentrantMonitor);
-
-#ifdef MOZ_WIDGET_GONK
-  if (aFormat == ImageFormat::OVERLAY_IMAGE) {
-    if (mImageClient && mImageClient->GetTextureInfo().mCompositableType != CompositableType::IMAGE_OVERLAY) {
-      // If this ImageContainer is async but the image type mismatch, fix it here
-      if (ImageBridgeChild::IsCreated()) {
-        ImageBridgeChild::DispatchReleaseImageClient(mImageClient);
-        mImageClient = ImageBridgeChild::GetSingleton()->CreateImageClient(
-            CompositableType::IMAGE_OVERLAY, this).take();
-      }
-    }
-  }
-#endif
   if (mImageClient) {
     RefPtr<Image> img = mImageClient->CreateImage(aFormat);
     if (img) {
@@ -224,6 +194,23 @@ ImageContainer::CreateSharedRGBImage()
   }
   return new SharedRGBImage(mImageClient);
 }
+
+#ifdef MOZ_WIDGET_GONK
+RefPtr<OverlayImage>
+ImageContainer::CreateOverlayImage()
+{
+  ReentrantMonitorAutoEnter mon(mReentrantMonitor);
+  if (mImageClient && mImageClient->GetTextureInfo().mCompositableType != CompositableType::IMAGE_OVERLAY) {
+    // If this ImageContainer is async but the image type mismatch, fix it here
+    if (ImageBridgeChild::IsCreated()) {
+      ImageBridgeChild::DispatchReleaseImageClient(mImageClient);
+      mImageClient = ImageBridgeChild::GetSingleton()->CreateImageClient(
+          CompositableType::IMAGE_OVERLAY, this).take();
+    }
+  }
+  return new OverlayImage();
+}
+#endif
 
 void
 ImageContainer::SetCurrentImageInternal(const nsTArray<NonOwningImage>& aImages)
