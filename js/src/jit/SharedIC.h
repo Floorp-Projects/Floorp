@@ -1874,8 +1874,8 @@ class ICGetProp_Fallback : public ICMonitoredFallbackStub
         void postGenerateStubCode(MacroAssembler& masm, Handle<JitCode*> code);
 
       public:
-        explicit Compiler(JSContext* cx)
-          : ICStubCompiler(cx, ICStub::GetProp_Fallback, Engine::Baseline)
+        explicit Compiler(JSContext* cx, Engine engine)
+          : ICStubCompiler(cx, ICStub::GetProp_Fallback, engine)
         { }
 
         ICStub* getStub(ICStubSpace* space) {
@@ -1905,8 +1905,8 @@ class ICGetProp_Generic : public ICMonitoredStub
         bool generateStubCode(MacroAssembler& masm);
         ICStub* firstMonitorStub_;
       public:
-        explicit Compiler(JSContext* cx, ICStub* firstMonitorStub)
-          : ICStubCompiler(cx, ICStub::GetProp_Generic, Engine::Baseline),
+        explicit Compiler(JSContext* cx, Engine engine, ICStub* firstMonitorStub)
+          : ICStubCompiler(cx, ICStub::GetProp_Generic, engine),
             firstMonitorStub_(firstMonitorStub)
         {}
 
@@ -1930,8 +1930,8 @@ class ICGetProp_ArrayLength : public ICStub
         bool generateStubCode(MacroAssembler& masm);
 
       public:
-        explicit Compiler(JSContext* cx)
-          : ICStubCompiler(cx, ICStub::GetProp_ArrayLength, Engine::Baseline)
+        explicit Compiler(JSContext* cx, Engine engine)
+          : ICStubCompiler(cx, ICStub::GetProp_ArrayLength, engine)
         {}
 
         ICStub* getStub(ICStubSpace* space) {
@@ -1954,8 +1954,8 @@ class ICGetProp_UnboxedArrayLength : public ICStub
         bool generateStubCode(MacroAssembler& masm);
 
       public:
-        explicit Compiler(JSContext* cx)
-          : ICStubCompiler(cx, ICStub::GetProp_UnboxedArrayLength, Engine::Baseline)
+        explicit Compiler(JSContext* cx, Engine engine)
+          : ICStubCompiler(cx, ICStub::GetProp_UnboxedArrayLength, engine)
         {}
 
         ICStub* getStub(ICStubSpace* space) {
@@ -2014,9 +2014,9 @@ class ICGetProp_Primitive : public ICMonitoredStub
         }
 
       public:
-        Compiler(JSContext* cx, ICStub* firstMonitorStub, JSValueType primitiveType,
+        Compiler(JSContext* cx, Engine engine, ICStub* firstMonitorStub, JSValueType primitiveType,
                  HandleObject prototype, bool isFixedSlot, uint32_t offset)
-          : ICStubCompiler(cx, ICStub::GetProp_Primitive, Engine::Baseline),
+          : ICStubCompiler(cx, ICStub::GetProp_Primitive, engine),
             firstMonitorStub_(firstMonitorStub),
             primitiveType_(primitiveType),
             prototype_(cx, prototype),
@@ -2046,8 +2046,8 @@ class ICGetProp_StringLength : public ICStub
         bool generateStubCode(MacroAssembler& masm);
 
       public:
-        explicit Compiler(JSContext* cx)
-          : ICStubCompiler(cx, ICStub::GetProp_StringLength, Engine::Baseline)
+        explicit Compiler(JSContext* cx, Engine engine)
+          : ICStubCompiler(cx, ICStub::GetProp_StringLength, engine)
         {}
 
         ICStub* getStub(ICStubSpace* space) {
@@ -2205,11 +2205,11 @@ class ICGetPropNativeCompiler : public ICStubCompiler
     }
 
   public:
-    ICGetPropNativeCompiler(JSContext* cx, ICStub::Kind kind,
+    ICGetPropNativeCompiler(JSContext* cx, ICStub::Kind kind, ICStubCompiler::Engine engine,
                             ICStub* firstMonitorStub, HandleObject obj, HandleObject holder,
                             HandlePropertyName propName, bool isFixedSlot, uint32_t offset,
                             bool inputDefinitelyObject = false)
-      : ICStubCompiler(cx, kind, Engine::Baseline),
+      : ICStubCompiler(cx, kind, engine),
         firstMonitorStub_(firstMonitorStub),
         obj_(obj),
         holder_(holder),
@@ -2304,8 +2304,9 @@ class ICGetPropNativeDoesNotExistCompiler : public ICStubCompiler
     bool generateStubCode(MacroAssembler& masm);
 
   public:
-    ICGetPropNativeDoesNotExistCompiler(JSContext* cx, ICStub* firstMonitorStub,
-                                        HandleObject obj, size_t protoChainDepth);
+    ICGetPropNativeDoesNotExistCompiler(JSContext* cx, ICStubCompiler::Engine engine,
+                                        ICStub* firstMonitorStub, HandleObject obj,
+                                        size_t protoChainDepth);
 
     template <size_t ProtoChainDepth>
     ICStub* getStubSpecific(ICStubSpace* space, Handle<ShapeVector> shapes) {
@@ -2360,9 +2361,9 @@ class ICGetProp_Unboxed : public ICMonitoredStub
         }
 
       public:
-        Compiler(JSContext* cx, ICStub* firstMonitorStub,
+        Compiler(JSContext* cx, Engine engine, ICStub* firstMonitorStub,
                  ObjectGroup* group, uint32_t fieldOffset, JSValueType fieldType)
-          : ICStubCompiler(cx, ICStub::GetProp_Unboxed, Engine::Baseline),
+          : ICStubCompiler(cx, ICStub::GetProp_Unboxed, engine),
             firstMonitorStub_(firstMonitorStub),
             group_(cx, group),
             fieldOffset_(fieldOffset),
@@ -2429,9 +2430,9 @@ class ICGetProp_TypedObject : public ICMonitoredStub
         }
 
       public:
-        Compiler(JSContext* cx, ICStub* firstMonitorStub,
+        Compiler(JSContext* cx, Engine engine, ICStub* firstMonitorStub,
                  Shape* shape, uint32_t fieldOffset, SimpleTypeDescr* fieldDescr)
-          : ICStubCompiler(cx, ICStub::GetProp_TypedObject, Engine::Baseline),
+          : ICStubCompiler(cx, ICStub::GetProp_TypedObject, engine),
             firstMonitorStub_(firstMonitorStub),
             shape_(cx, shape),
             fieldOffset_(fieldOffset),
@@ -2530,10 +2531,10 @@ class ICGetPropCallGetter : public ICMonitoredStub
         }
 
       public:
-        Compiler(JSContext* cx, ICStub::Kind kind, ICStub* firstMonitorStub,
+        Compiler(JSContext* cx, ICStub::Kind kind, Engine engine, ICStub* firstMonitorStub,
                  HandleObject receiver, HandleObject holder, HandleFunction getter,
                  uint32_t pcOffset, const Class* outerClass)
-          : ICStubCompiler(cx, kind, Engine::Baseline),
+          : ICStubCompiler(cx, kind, engine),
             firstMonitorStub_(firstMonitorStub),
             receiver_(cx, receiver),
             holder_(cx, holder),
@@ -2572,9 +2573,9 @@ class ICGetProp_CallScripted : public ICGetPropCallGetter
         bool generateStubCode(MacroAssembler& masm);
 
       public:
-        Compiler(JSContext* cx, ICStub* firstMonitorStub, HandleObject obj,
+        Compiler(JSContext* cx, Engine engine, ICStub* firstMonitorStub, HandleObject obj,
                  HandleObject holder, HandleFunction getter, uint32_t pcOffset)
-          : ICGetPropCallGetter::Compiler(cx, ICStub::GetProp_CallScripted,
+          : ICGetPropCallGetter::Compiler(cx, ICStub::GetProp_CallScripted, engine,
                                           firstMonitorStub, obj, holder,
                                           getter, pcOffset, /* outerClass = */ nullptr)
         {}
@@ -2653,11 +2654,11 @@ class ICGetPropCallNativeCompiler : public ICGetPropCallGetter::Compiler
     }
 
   public:
-    ICGetPropCallNativeCompiler(JSContext* cx, ICStub::Kind kind, ICStub* firstMonitorStub,
-                                HandleObject receiver, HandleObject holder, HandleFunction getter,
-                                uint32_t pcOffset, const Class* outerClass,
-                                bool inputDefinitelyObject = false)
-      : ICGetPropCallGetter::Compiler(cx, kind, firstMonitorStub, receiver, holder,
+    ICGetPropCallNativeCompiler(JSContext* cx, ICStub::Kind kind, ICStubCompiler::Engine engine,
+                                ICStub* firstMonitorStub, HandleObject receiver,
+                                HandleObject holder, HandleFunction getter, uint32_t pcOffset,
+                                const Class* outerClass, bool inputDefinitelyObject = false)
+      : ICGetPropCallGetter::Compiler(cx, kind, engine, firstMonitorStub, receiver, holder,
                                       getter, pcOffset, outerClass),
         inputDefinitelyObject_(inputDefinitelyObject)
     {}
@@ -2763,6 +2764,7 @@ class ICGetPropCallDOMProxyNativeCompiler : public ICStubCompiler {
 
   public:
     ICGetPropCallDOMProxyNativeCompiler(JSContext* cx, ICStub::Kind kind,
+                                        ICStubCompiler::Engine engine,
                                         ICStub* firstMonitorStub, Handle<ProxyObject*> proxy,
                                         HandleObject holder, HandleFunction getter,
                                         uint32_t pcOffset);
@@ -2817,9 +2819,9 @@ class ICGetProp_DOMProxyShadowed : public ICMonitoredStub
         bool generateStubCode(MacroAssembler& masm);
 
       public:
-        Compiler(JSContext* cx, ICStub* firstMonitorStub, Handle<ProxyObject*> proxy,
+        Compiler(JSContext* cx, Engine engine, ICStub* firstMonitorStub, Handle<ProxyObject*> proxy,
                  HandlePropertyName name, uint32_t pcOffset)
-          : ICStubCompiler(cx, ICStub::GetProp_CallNative, Engine::Baseline),
+          : ICStubCompiler(cx, ICStub::GetProp_CallNative, engine),
             firstMonitorStub_(firstMonitorStub),
             proxy_(cx, proxy),
             name_(cx, name),
@@ -2855,8 +2857,8 @@ class ICGetProp_ArgumentsLength : public ICStub
         }
 
       public:
-        Compiler(JSContext* cx, Which which)
-          : ICStubCompiler(cx, ICStub::GetProp_ArgumentsLength, Engine::Baseline),
+        Compiler(JSContext* cx, Engine engine, Which which)
+          : ICStubCompiler(cx, ICStub::GetProp_ArgumentsLength, engine),
             which_(which)
         {}
 
@@ -2880,8 +2882,8 @@ class ICGetProp_ArgumentsCallee : public ICMonitoredStub
         bool generateStubCode(MacroAssembler& masm);
 
       public:
-        Compiler(JSContext* cx, ICStub* firstMonitorStub)
-          : ICStubCompiler(cx, ICStub::GetProp_ArgumentsCallee, Engine::Baseline),
+        Compiler(JSContext* cx, Engine engine, ICStub* firstMonitorStub)
+          : ICStubCompiler(cx, ICStub::GetProp_ArgumentsCallee, engine),
             firstMonitorStub_(firstMonitorStub)
         {}
 

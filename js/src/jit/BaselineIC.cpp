@@ -4337,7 +4337,8 @@ TryAttachGlobalNameValueStub(JSContext* cx, HandleScript script, jsbytecode* pc,
                 return true;
 
             JitSpew(JitSpew_BaselineIC, "  Generating GetName(GlobalName non-lexical) stub");
-            ICGetPropNativeCompiler compiler(cx, ICStub::GetName_Global, monitorStub,
+            ICGetPropNativeCompiler compiler(cx, ICStub::GetName_Global,
+                                             ICStubCompiler::Engine::Baseline, monitorStub,
                                              globalLexical, current, name, isFixedSlot, offset,
                                              /* inputDefinitelyObject = */ true);
             newStub = compiler.getStub(compiler.getStubSpace(script));
@@ -4414,6 +4415,7 @@ TryAttachGlobalNameAccessorStub(JSContext* cx, HandleScript script, jsbytecode* 
             return true;
         }
         ICGetPropCallNativeCompiler compiler(cx, ICStub::GetProp_CallNativeGlobal,
+                                             ICStubCompiler::Engine::Baseline,
                                              monitorStub, globalLexical, current,
                                              getter, script->pcToOffset(pc),
                                              /* outerClass = */ nullptr,
