@@ -50,3 +50,16 @@ index 9fb8d0a..97ad3b9 100644
          rgba_color[0] = rgba >> 24;
          rgba_color[1] = rgba >> 16;
          rgba_color[2] = rgba >> 8;
+diff --git a/media/ffvpx/libavutil/internal.h b/media/ffvpx/libavutil/internal.h
+index 047f742..fe504c3 100644
+--- a/media/ffvpx/libavutil/internal.h
++++ b/media/ffvpx/libavutil/internal.h
+@@ -237,7 +237,7 @@ void avpriv_request_sample(void *avc,
+ 
+ #if HAVE_LIBC_MSVCRT
+ #include <crtversion.h>
+-#if defined(_VC_CRT_MAJOR_VERSION) && _VC_CRT_MAJOR_VERSION < 14
++#if defined(_VC_CRT_MAJOR_VERSION) && _VC_CRT_MAJOR_VERSION < 12
+ #pragma comment(linker, "/include:" EXTERN_PREFIX "avpriv_strtod")
+ #pragma comment(linker, "/include:" EXTERN_PREFIX "avpriv_snprintf")
+ #endif
