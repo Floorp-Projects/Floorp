@@ -1626,54 +1626,30 @@ gfxWindowsPlatform::GetDXGIAdapter()
   decltype(CreateDXGIFactory1)* createDXGIFactory1 = (decltype(CreateDXGIFactory1)*)
     GetProcAddress(dxgiModule, "CreateDXGIFactory1");
 
-  if (!createDXGIFactory1) {
-    return nullptr;
-  }
-
   // Try to use a DXGI 1.1 adapter in order to share resources
   // across processes.
-  RefPtr<IDXGIFactory1> factory1;
-  HRESULT hr = createDXGIFactory1(__uuidof(IDXGIFactory1),
-                                  getter_AddRefs(factory1));
-  if (FAILED(hr) || !factory1) {
-    // This seems to happen with some people running the iZ3D driver.
-    // They won't get acceleration.
-    return nullptr;
-  }
+  if (createDXGIFactory1) {
+    RefPtr<IDXGIFactory1> factory1;
+    HRESULT hr = createDXGIFactory1(__uuidof(IDXGIFactory1),
+                                    getter_AddRefs(factory1));
 
-  if (!XRE_IsContentProcess()) {
-    // In the parent process, we pick the first adapter.
-    if (FAILED(factory1->EnumAdapters1(0, getter_AddRefs(mAdapter)))) {
+    if (FAILED(hr) || !factory1) {
+      // This seems to happen with some people running the iZ3D driver.
+      // They won't get acceleration.
       return nullptr;
     }
-  } else {
-    const DxgiAdapterDesc& parent = GetParentDevicePrefs().adapter();
 
-    // In the child process, we search for the adapter that matches the parent
-    // process. The first adapter can be mismatched on dual-GPU systems.
-    for (UINT index = 0; ; index++) {
-      RefPtr<IDXGIAdapter1> adapter;
-      if (FAILED(factory1->EnumAdapters1(index, getter_AddRefs(adapter)))) {
-        break;
-      }
-
-      DXGI_ADAPTER_DESC desc;
-      if (SUCCEEDED(adapter->GetDesc(&desc)) &&
-          desc.AdapterLuid.HighPart == parent.AdapterLuid.HighPart &&
-          desc.AdapterLuid.LowPart == parent.AdapterLuid.LowPart)
-      {
-        mAdapter = adapter.forget();
-        break;
-      }
+    hr = factory1->EnumAdapters1(0, getter_AddRefs(mAdapter));
+    if (FAILED(hr)) {
+      // We should return and not accelerate if we can't obtain
+      // an adapter.
+      return nullptr;
     }
-  }
-
-  if (!mAdapter) {
-    return nullptr;
   }
 
   // We leak this module everywhere, we might as well do so here as well.
   dxgiModule.disown();
+
   return mAdapter;
 }
 
@@ -2233,14 +2209,14 @@ gfxWindowsPlatform::ContentAdapterIsParentAdapter(ID3D11Device* device)
     return false;
   }
 
-  const DxgiAdapterDesc& parent = GetParentDevicePrefs().adapter();
-  if (desc.VendorId != parent.VendorId ||
-      desc.DeviceId != parent.DeviceId ||
-      desc.SubSysId != parent.SubSysId ||
-      desc.AdapterLuid.HighPart != parent.AdapterLuid.HighPart ||
-      desc.AdapterLuid.LowPart != parent.AdapterLuid.LowPart)
+  const DxgiDesc& parent = GetParentDevicePrefs().dxgiDesc();
+  if (desc.VendorId != parent.vendorID() ||
+      desc.DeviceId != parent.deviceID() ||
+      desc.SubSysId != parent.subSysID() ||
+      desc.AdapterLuid.HighPart != parent.luid().HighPart() ||
+      desc.AdapterLuid.LowPart != parent.luid().LowPart())
   {
-    gfxCriticalNote << "VendorIDMismatch " << hexa(parent.VendorId) << " " << hexa(desc.VendorId);
+    gfxCriticalNote << "VendorIDMismatch " << hexa(parent.vendorID()) << " " << hexa(desc.VendorId);
     return false;
   }
 
@@ -2292,13 +2268,12 @@ gfxWindowsPlatform::AttemptD3D11ContentDeviceCreation()
   // we re-check texture sharing against the newly created D3D11 content device.
   // If it fails, we won't use Direct2D.
   if (XRE_IsContentProcess()) {
-    if (!DoesD3D11TextureSharingWork(mD3D11ContentDevice)) {
+    if (!DoesD3D11TextureSharingWork(mD3D11ContentDevice) ||
+        !ContentAdapterIsParentAdapter(mD3D11ContentDevice))
+    {
       mD3D11ContentDevice = nullptr;
       return FeatureStatus::Failed;
     }
-
-    DebugOnly<bool> ok = ContentAdapterIsParentAdapter(mD3D11ContentDevice);
-    MOZ_ASSERT(ok);
   }
 
   mD3D11ContentDevice->SetExceptionMode(0);
@@ -2330,13 +2305,12 @@ gfxWindowsPlatform::AttemptD3D11ImageBridgeDeviceCreation()
   }
 
   mD3D11ImageBridgeDevice->SetExceptionMode(0);
-  if (!DoesD3D11AlphaTextureSharingWork(mD3D11ImageBridgeDevice)) {
+  if (!DoesD3D11AlphaTextureSharingWork(mD3D11ImageBridgeDevice) ||
+      (XRE_IsContentProcess() && !ContentAdapterIsParentAdapter(mD3D11ImageBridgeDevice)))
+  {
     mD3D11ImageBridgeDevice = nullptr;
     return FeatureStatus::Failed;
   }
-
-  DebugOnly<bool> ok = ContentAdapterIsParentAdapter(mD3D11ImageBridgeDevice);
-  MOZ_ASSERT(ok);
   return FeatureStatus::Available;
 }
 
@@ -3053,6 +3027,11 @@ gfxWindowsPlatform::GetDeviceInitData(DeviceInitData* aOut)
     if (!GetDxgiDesc(mD3D11Device, &desc)) {
       return;
     }
-    aOut->adapter() = DxgiAdapterDesc::From(desc);
+
+    aOut->dxgiDesc().vendorID() = desc.VendorId;
+    aOut->dxgiDesc().deviceID() = desc.DeviceId;
+    aOut->dxgiDesc().subSysID() = desc.SubSysId;
+    aOut->dxgiDesc().luid().LowPart() = desc.AdapterLuid.LowPart;
+    aOut->dxgiDesc().luid().HighPart() = desc.AdapterLuid.HighPart;
   }
 }
