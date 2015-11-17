@@ -36,6 +36,7 @@
 #include "imgIContainer.h"
 #include "mozIApplication.h"
 #include "mozilla/ClearOnShutdown.h"
+#include "mozilla/CSSStyleSheet.h"
 #include "mozilla/DataStorage.h"
 #include "mozilla/devtools/HeapSnapshotTempFileHelperParent.h"
 #include "mozilla/docshell/OfflineCacheUpdateParent.h"
@@ -142,7 +143,6 @@
 #include "nsIScriptSecurityManager.h"
 #include "nsISiteSecurityService.h"
 #include "nsISpellChecker.h"
-#include "nsIStyleSheet.h"
 #include "nsISupportsPrimitives.h"
 #include "nsISystemMessagesInternal.h"
 #include "nsITimer.h"
@@ -2576,24 +2576,21 @@ ContentParent::InitInternal(ProcessPriority aInitialPriority,
         // This looks like a lot of work, but in a normal browser session we just
         // send two loads.
 
-        nsCOMArray<nsIStyleSheet>& agentSheets = *sheetService->AgentStyleSheets();
-        for (uint32_t i = 0; i < agentSheets.Length(); i++) {
+        for (CSSStyleSheet* sheet : *sheetService->AgentStyleSheets()) {
             URIParams uri;
-            SerializeURI(agentSheets[i]->GetSheetURI(), uri);
+            SerializeURI(sheet->GetSheetURI(), uri);
             Unused << SendLoadAndRegisterSheet(uri, nsIStyleSheetService::AGENT_SHEET);
         }
 
-        nsCOMArray<nsIStyleSheet>& userSheets = *sheetService->UserStyleSheets();
-        for (uint32_t i = 0; i < userSheets.Length(); i++) {
+        for (CSSStyleSheet* sheet : *sheetService->UserStyleSheets()) {
             URIParams uri;
-            SerializeURI(userSheets[i]->GetSheetURI(), uri);
+            SerializeURI(sheet->GetSheetURI(), uri);
             Unused << SendLoadAndRegisterSheet(uri, nsIStyleSheetService::USER_SHEET);
         }
 
-        nsCOMArray<nsIStyleSheet>& authorSheets = *sheetService->AuthorStyleSheets();
-        for (uint32_t i = 0; i < authorSheets.Length(); i++) {
+        for (CSSStyleSheet* sheet : *sheetService->AuthorStyleSheets()) {
             URIParams uri;
-            SerializeURI(authorSheets[i]->GetSheetURI(), uri);
+            SerializeURI(sheet->GetSheetURI(), uri);
             Unused << SendLoadAndRegisterSheet(uri, nsIStyleSheetService::AUTHOR_SHEET);
         }
     }

@@ -72,7 +72,6 @@ class nsIRequest;
 class nsIRunnable;
 class nsIStreamListener;
 class nsIStructuredCloneContainer;
-class nsIStyleSheet;
 class nsIURI;
 class nsIVariant;
 class nsLocation;
@@ -156,8 +155,8 @@ typedef CallbackObjectHolder<NodeFilter, nsIDOMNodeFilter> NodeFilterHolder;
 } // namespace mozilla
 
 #define NS_IDOCUMENT_IID \
-{ 0x4307abe8, 0x5386, 0x4024, \
-  { 0xa2, 0xfe, 0x4a, 0x80, 0xe8, 0x47, 0x46, 0x90 } }
+{ 0xecc9e376, 0x6c31, 0x4f04, \
+  { 0xbe, 0xde, 0xd6, 0x27, 0x61, 0xd7, 0x00, 0x84 } }
 
 // Enum for requesting a particular type of document when creating a doc
 enum DocumentFlavor {
@@ -925,7 +924,7 @@ public:
    * @return the stylesheet at aIndex.  Null if aIndex is out of range.
    * @throws no exceptions
    */
-  virtual nsIStyleSheet* GetStyleSheetAt(int32_t aIndex) const = 0;
+  virtual mozilla::CSSStyleSheet* GetStyleSheetAt(int32_t aIndex) const = 0;
 
   /**
    * Insert a sheet at a particular spot in the stylesheet list (zero-based)
@@ -934,7 +933,8 @@ public:
    *   adjusted for the "special" sheets.
    * @throws no exceptions
    */
-  virtual void InsertStyleSheetAt(nsIStyleSheet* aSheet, int32_t aIndex) = 0;
+  virtual void InsertStyleSheetAt(mozilla::CSSStyleSheet* aSheet,
+                                  int32_t aIndex) = 0;
 
   /**
    * Get the index of a particular stylesheet.  This will _always_
@@ -942,7 +942,7 @@ public:
    * @param aSheet the sheet to get the index of
    * @return aIndex the index of the sheet in the full list
    */
-  virtual int32_t GetIndexOfStyleSheet(nsIStyleSheet* aSheet) const = 0;
+  virtual int32_t GetIndexOfStyleSheet(mozilla::CSSStyleSheet* aSheet) const = 0;
 
   /**
    * Replace the stylesheets in aOldSheets with the stylesheets in
@@ -952,24 +952,25 @@ public:
    * may be null; if so the corresponding sheets in the first list
    * will simply be removed.
    */
-  virtual void UpdateStyleSheets(nsCOMArray<nsIStyleSheet>& aOldSheets,
-                                 nsCOMArray<nsIStyleSheet>& aNewSheets) = 0;
+  virtual void UpdateStyleSheets(
+      nsTArray<RefPtr<mozilla::CSSStyleSheet>>& aOldSheets,
+      nsTArray<RefPtr<mozilla::CSSStyleSheet>>& aNewSheets) = 0;
 
   /**
    * Add a stylesheet to the document
    */
-  virtual void AddStyleSheet(nsIStyleSheet* aSheet) = 0;
+  virtual void AddStyleSheet(mozilla::CSSStyleSheet* aSheet) = 0;
 
   /**
    * Remove a stylesheet from the document
    */
-  virtual void RemoveStyleSheet(nsIStyleSheet* aSheet) = 0;
+  virtual void RemoveStyleSheet(mozilla::CSSStyleSheet* aSheet) = 0;
 
   /**
    * Notify the document that the applicable state of the sheet changed
    * and that observers should be notified and style sets updated
    */
-  virtual void SetStyleSheetApplicableState(nsIStyleSheet* aSheet,
+  virtual void SetStyleSheetApplicableState(mozilla::CSSStyleSheet* aSheet,
                                             bool aApplicable) = 0;
 
   enum additionalSheetType {
@@ -979,10 +980,13 @@ public:
     AdditionalSheetTypeCount
   };
 
-  virtual nsresult LoadAdditionalStyleSheet(additionalSheetType aType, nsIURI* aSheetURI) = 0;
-  virtual nsresult AddAdditionalStyleSheet(additionalSheetType aType, nsIStyleSheet* aSheet) = 0;
-  virtual void RemoveAdditionalStyleSheet(additionalSheetType aType, nsIURI* sheetURI) = 0;
-  virtual nsIStyleSheet* FirstAdditionalAuthorSheet() = 0;
+  virtual nsresult LoadAdditionalStyleSheet(additionalSheetType aType,
+                                            nsIURI* aSheetURI) = 0;
+  virtual nsresult AddAdditionalStyleSheet(additionalSheetType aType,
+                                           mozilla::CSSStyleSheet* aSheet) = 0;
+  virtual void RemoveAdditionalStyleSheet(additionalSheetType aType,
+                                          nsIURI* sheetURI) = 0;
+  virtual mozilla::CSSStyleSheet* FirstAdditionalAuthorSheet() = 0;
 
   /**
    * Get this document's CSSLoader.  This is guaranteed to not return null.
@@ -1285,12 +1289,12 @@ public:
 
   // Observation hooks for style data to propagate notifications
   // to document observers
-  virtual void StyleRuleChanged(nsIStyleSheet* aStyleSheet,
+  virtual void StyleRuleChanged(mozilla::CSSStyleSheet* aStyleSheet,
                                 mozilla::css::Rule* aOldStyleRule,
                                 mozilla::css::Rule* aNewStyleRule) = 0;
-  virtual void StyleRuleAdded(nsIStyleSheet* aStyleSheet,
+  virtual void StyleRuleAdded(mozilla::CSSStyleSheet* aStyleSheet,
                               mozilla::css::Rule* aStyleRule) = 0;
-  virtual void StyleRuleRemoved(nsIStyleSheet* aStyleSheet,
+  virtual void StyleRuleRemoved(mozilla::CSSStyleSheet* aStyleSheet,
                                 mozilla::css::Rule* aStyleRule) = 0;
 
   /**

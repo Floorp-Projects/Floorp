@@ -53,7 +53,6 @@
 #include "nsIScriptSecurityManager.h"
 #include "nsIServiceManager.h"
 #include "mozilla/css/StyleRule.h"
-#include "nsIStyleSheet.h"
 #include "nsIURL.h"
 #include "nsViewManager.h"
 #include "nsIWidget.h"

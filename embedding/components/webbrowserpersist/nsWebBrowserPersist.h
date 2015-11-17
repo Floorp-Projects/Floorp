@@ -16,7 +16,6 @@
 #include "nsIOutputStream.h"
 #include "nsIInputStream.h"
 #include "nsIChannel.h"
-#include "nsIStyleSheet.h"
 #include "nsIDocumentEncoder.h"
 #include "nsITransport.h"
 #include "nsIProgressEventSink.h"
