@@ -374,12 +374,17 @@ struct StructGCPolicy {
         // trace method.
         t->trace(trc);
     }
+
+    static bool needsSweep(T* t) {
+        return t->needsSweep();
+    }
 };
 
 // This policy ignores any GC interaction, e.g. for non-GC types.
 template <typename T>
 struct IgnoreGCPolicy {
-    static void trace(JSTracer* trc, uint32_t* id, const char* name) {}
+    static void trace(JSTracer* trc, T* t, const char* name) {}
+    static bool needsSweep(T* v) { return false; }
 };
 
 // The default policy when no other more specific policy fits (e.g. for a
