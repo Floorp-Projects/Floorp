@@ -441,6 +441,31 @@ protected:
       bool mOriginalValue;
   };
 
+  /**
+   * RAII class to set aParser->mInSupportsCondition to true and restore it
+   * to false later.
+   */
+  class MOZ_RAII nsAutoInSupportsCondition
+  {
+  public:
+    explicit nsAutoInSupportsCondition(CSSParserImpl* aParser)
+      : mParser(aParser)
+    {
+      MOZ_ASSERT(!aParser->mInSupportsCondition,
+                 "nsAutoInSupportsCondition is not designed to be used "
+                 "re-entrantly");
+      mParser->mInSupportsCondition = true;
+    }
+
+    ~nsAutoInSupportsCondition()
+    {
+      mParser->mInSupportsCondition = false;
+    }
+
+  private:
+    CSSParserImpl* const mParser;
+  };
+
   // the caller must hold on to aString until parsing is done
   void InitScanner(nsCSSScanner& aScanner,
                    css::ErrorReporter& aReporter,
@@ -4333,7 +4358,7 @@ CSSParserImpl::ParseSupportsRule(RuleAppendFunc aAppendFunc, void* aProcessData)
 bool
 CSSParserImpl::ParseSupportsCondition(bool& aConditionMet)
 {
-  mInSupportsCondition = true;
+  nsAutoInSupportsCondition aisc(this);
 
   if (!GetToken(true)) {
     REPORT_UNEXPECTED_EOF(PESupportsConditionStartEOF2);
@@ -4351,7 +4376,6 @@ CSSParserImpl::ParseSupportsCondition(bool& aConditionMet)
     bool result = ParseSupportsConditionInParens(aConditionMet) &&
                   ParseSupportsConditionTerms(aConditionMet) &&
                   !mScanner->SeenBadToken();
-    mInSupportsCondition = false;
     return result;
   }
 
@@ -4359,12 +4383,10 @@ CSSParserImpl::ParseSupportsCondition(bool& aConditionMet)
       mToken.mIdent.LowerCaseEqualsLiteral("not")) {
     bool result = ParseSupportsConditionNegation(aConditionMet) &&
                   !mScanner->SeenBadToken();
-    mInSupportsCondition = false;
     return result;
   }
 
   REPORT_UNEXPECTED_TOKEN(PESupportsConditionExpectedStart);
-  mInSupportsCondition = false;
   return false;
 }
 

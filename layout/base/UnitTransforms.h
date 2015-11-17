@@ -174,7 +174,8 @@ template <typename TargetUnits, typename SourceUnits>
 static Maybe<gfx::IntPointTyped<TargetUnits>> UntransformTo(const gfx::Matrix4x4& aTransform,
                                                 const gfx::IntPointTyped<SourceUnits>& aPoint)
 {
-  gfx::Point4D point = aTransform.ProjectPoint(aPoint.ToUnknownPoint());
+  gfx::Point p = aPoint.ToUnknownPoint();
+  gfx::Point4D point = aTransform.ProjectPoint(p);
   if (!point.HasPositiveWCoord()) {
     return Nothing();
   }

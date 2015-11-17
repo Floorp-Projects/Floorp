@@ -5,8 +5,8 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 test_certificates = (
-    'ev_ee_39_months-ev_int_60_months-evroot.pem',
-    'ev_ee_40_months-ev_int_60_months-evroot.pem',
+    'ev_ee_27_months-ev_int_60_months-evroot.pem',
+    'ev_ee_28_months-ev_int_60_months-evroot.pem',
     'ev_int_60_months-evroot.pem',
     'evroot.pem',
 )

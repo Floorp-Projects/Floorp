@@ -2809,11 +2809,15 @@ protected:
   // True iff we've ever fired a DOMTitleChanged event for this document
   bool mHaveFiredTitleChange : 1;
 
-  // True iff IsShowing() should be returning true
+  // State for IsShowing(). mIsShowing starts off false. It becomes true when
+  // OnPageShow happens and becomes false when OnPageHide happens. So it's false
+  // before the initial load completes and when we're in bfcache or unloaded,
+  // true otherwise.
   bool mIsShowing : 1;
 
-  // True iff the document "page" is not hidden (i.e. currently in the
-  // bfcache)
+  // State for IsVisible(). mVisible starts off true. It becomes false when
+  // OnPageHide happens, and becomes true again when OnPageShow happens.  So
+  // it's false only when we're in bfcache or unloaded.
   bool mVisible : 1;
 
   // True if our content viewer has been removed from the docshell

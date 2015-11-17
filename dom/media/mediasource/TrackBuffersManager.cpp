@@ -23,17 +23,14 @@
 
 #include <limits>
 
-extern PRLogModuleInfo* GetMediaSourceLog();
+extern mozilla::LogModule* GetMediaSourceLog();
 
 #define MSE_DEBUG(arg, ...) MOZ_LOG(GetMediaSourceLog(), mozilla::LogLevel::Debug, ("TrackBuffersManager(%p:%s)::%s: " arg, this, mType.get(), __func__, ##__VA_ARGS__))
 #define MSE_DEBUGV(arg, ...) MOZ_LOG(GetMediaSourceLog(), mozilla::LogLevel::Verbose, ("TrackBuffersManager(%p:%s)::%s: " arg, this, mType.get(), __func__, ##__VA_ARGS__))
 
-PRLogModuleInfo* GetMediaSourceSamplesLog()
+mozilla::LogModule* GetMediaSourceSamplesLog()
 {
-  static PRLogModuleInfo* sLogModule = nullptr;
-  if (!sLogModule) {
-    sLogModule = PR_NewLogModule("MediaSourceSamples");
-  }
+  static mozilla::LazyLogModule sLogModule("MediaSourceSamples");
   return sLogModule;
 }
 #define SAMPLE_DEBUG(arg, ...) MOZ_LOG(GetMediaSourceSamplesLog(), mozilla::LogLevel::Debug, ("TrackBuffersManager(%p:%s)::%s: " arg, this, mType.get(), __func__, ##__VA_ARGS__))

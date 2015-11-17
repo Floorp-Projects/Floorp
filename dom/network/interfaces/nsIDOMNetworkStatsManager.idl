@@ -6,7 +6,7 @@
 
 interface nsIDOMDOMRequest;
 
-[scriptable,  uuid(ceb874cd-cc1a-4e65-b404-cc2d3e42425f)]
+[scriptable,  uuid(72c4e583-389d-4d1b-9424-702feabb6055)]
 interface nsIDOMMozNetworkStatsManager : nsISupports
 {
   /**
@@ -40,7 +40,7 @@ interface nsIDOMMozNetworkStatsManager : nsISupports
    * If success, the |result| field of the DOMRequest keeps the alarm Id.
    */
   nsIDOMDOMRequest addAlarm(in nsISupports network,
-                            in long threshold,
+                            in long long threshold,
                             [optional] in jsval options /* NetworkStatsAlarmOptions */);
 
   /**

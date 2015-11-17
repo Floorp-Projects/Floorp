@@ -3,7 +3,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  */
-interface MozSmsMessage;
 
 [Pref="dom.sms.enabled",
  CheckAnyPermissions="sms",
@@ -11,10 +10,10 @@ interface MozSmsMessage;
  Constructor(DOMString type, optional MozSmsEventInit eventInitDict)]
 interface MozSmsEvent : Event
 {
-  readonly attribute MozSmsMessage? message;
+  readonly attribute SmsMessage? message;
 };
 
 dictionary MozSmsEventInit : EventInit
 {
-  MozSmsMessage? message = null;
+  SmsMessage? message = null;
 };

@@ -1235,7 +1235,12 @@ WebGLContext::GetCanvas(Nullable<dom::OwningHTMLCanvasElementOrOffscreenCanvas>&
 {
     if (mCanvasElement) {
         MOZ_RELEASE_ASSERT(!mOffscreenCanvas);
-        retval.SetValue().SetAsHTMLCanvasElement() = mCanvasElement;
+
+        if (mCanvasElement->IsInNativeAnonymousSubtree()) {
+          retval.SetNull();
+        } else {
+          retval.SetValue().SetAsHTMLCanvasElement() = mCanvasElement;
+        }
     } else if (mOffscreenCanvas) {
         retval.SetValue().SetAsOffscreenCanvas() = mOffscreenCanvas;
     } else {

@@ -11,7 +11,10 @@
 #define NS_SAVEASCHARSET_CONTRACTID "@mozilla.org/intl/saveascharset;1"
 %}
 
-[scriptable, uuid(33B87F70-7A9C-11d3-915C-006008A6EDF6)]
+/**
+ * DO NOT USE! For compat with legacy extension code only.
+ */
+[scriptable, uuid(b3b8124f-0abb-460e-88ac-3cf1a0134b2d)]
 interface nsISaveAsCharset : nsISupports
 {
   // attributes
@@ -19,17 +22,17 @@ interface nsISaveAsCharset : nsISupports
   const unsigned long mask_Entity                  = 0x00000300; // mask for entity (2bits)
   const unsigned long mask_CharsetFallback         = 0x00000400; // mask for charset fallback (1bit)
 
-  const unsigned long attr_FallbackNone = 0;                   // no fall back for unconverted chars (skipped)
-  const unsigned long attr_FallbackQuestionMark = 1;           // unconverted chars are replaced by '?'
-  const unsigned long attr_FallbackEscapeU = 2;                // unconverted chars are escaped as \uxxxx
-  const unsigned long attr_FallbackDecimalNCR = 3;             // unconverted chars are replaced by decimal NCR
-  const unsigned long attr_FallbackHexNCR = 4;                 // unconverted chars are replaced by hex NCR
+  const unsigned long attr_FallbackNone = 0;                   // IGNORED
+  const unsigned long attr_FallbackQuestionMark = 1;           // IGNORED
+  const unsigned long attr_FallbackEscapeU = 2;                // IGNORED
+  const unsigned long attr_FallbackDecimalNCR = 3;             // IGNORED
+  const unsigned long attr_FallbackHexNCR = 4;                 // IGNORED
 
-  const unsigned long attr_EntityNone = 0;                       // generate no Named Entity
-  const unsigned long attr_EntityBeforeCharsetConv = 0x00000100; // generate Named Entity before charset conversion
-  const unsigned long attr_EntityAfterCharsetConv =  0x00000200; // generate Named Entity after charset conversion
+  const unsigned long attr_EntityNone = 0;                       // IGNORED
+  const unsigned long attr_EntityBeforeCharsetConv = 0x00000100; // IGNORED
+  const unsigned long attr_EntityAfterCharsetConv =  0x00000200; // IGNORED
 
-  const unsigned long attr_CharsetFallback        =  0x00000400; // fallback to other charset and restart the convesion
+  const unsigned long attr_CharsetFallback        =  0x00000400; // IGNORED
 
 
                                                                // default attribute for plain text
@@ -39,14 +42,9 @@ interface nsISaveAsCharset : nsISupports
                                                                // generate entity before charset conversion, use decimal NCR
   const unsigned long attr_htmlTextDefault = attr_FallbackDecimalNCR + attr_EntityBeforeCharsetConv;
 
-  readonly attribute string charset;                           // charset used for the conversion
+  readonly attribute AUTF8String charset;                      // charset used for the conversion
 
-  // set up charset, attribute and entity version 
-  // see nsIEntityConverter.idl for possible value of entityVersion (entityNone for plain text).
-  void Init(in string charset, in unsigned long attr, in unsigned long entityVersion);
+  void Init(in AUTF8String charset, in unsigned long ignored, in unsigned long alsoIgnored);
 
-  // convert UCS-2 html to target charset
-  // may return the result code of the unicode converter (NS_ERROR_UENC_NOMAPPING)
-  // if the attribute does not specify any fall back (e.g. attrPlainTextDefault)
-	string Convert(in wstring inString);
+  ACString Convert(in AString inString);
 };

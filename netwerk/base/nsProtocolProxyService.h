@@ -390,6 +390,9 @@ protected:
     nsFailedProxyTable           mFailedProxies;
     int32_t                      mFailedProxyTimeout;
 
+    // 'true' means try DIRECT when the proxies fail
+    bool                         mFailoverToDirect;
+
 private:
     nsresult AsyncResolveInternal(nsIChannel *channel, uint32_t flags,
                                   nsIProtocolProxyCallback *callback,

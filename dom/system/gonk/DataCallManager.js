@@ -941,7 +941,9 @@ DataCallHandler.prototype = {
 
   notifyLastKnownHomeNetworkChanged: function() {},
 
-  notifyNetworkSelectionModeChanged: function() {}
+  notifyNetworkSelectionModeChanged: function() {},
+
+  notifyDeviceIdentitiesChanged: function() {}
 };
 
 function DataCall(aClientId, aApnSetting, aDataCallHandler) {

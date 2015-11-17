@@ -28,6 +28,9 @@ self.addEventListener('fetch', function(event) {
     if (params['ignore']) {
       return;
     }
+    if (params['throw']) {
+      throw new Error('boom');
+    }
     if (params['reject']) {
       event.respondWith(new Promise(function(resolve, reject) {
           reject();

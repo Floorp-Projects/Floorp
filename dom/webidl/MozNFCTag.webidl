@@ -36,7 +36,7 @@ enum NFCTagType {
   "MIFARE-Classic"
 };
 
-typedef MozIsoDepTech MozTagTech;
+typedef (MozIsoDepTech or MozNfcATech) MozTagTech;
 
 [JSImplementation="@mozilla.org/nfc/tag;1", AvailableIn="PrivilegedApps"]
 interface MozNFCTag {

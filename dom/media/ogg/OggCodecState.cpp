@@ -32,7 +32,7 @@
 
 namespace mozilla {
 
-extern PRLogModuleInfo* gMediaDecoderLog;
+extern LazyLogModule gMediaDecoderLog;
 #define LOG(type, msg) MOZ_LOG(gMediaDecoderLog, type, msg)
 
 /** Decoder base class for Ogg-encapsulated streams. */

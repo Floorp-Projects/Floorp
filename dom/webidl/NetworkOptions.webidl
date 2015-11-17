@@ -38,7 +38,7 @@ dictionary NetworkCommandOptions
   DOMString usbEndIp;                 // for "setWifiTethering".
   DOMString dns1;                     // for "setWifiTethering".
   DOMString dns2;                     // for "setWifiTethering".
-  long threshold;                     // for "setNetworkInterfaceAlarm",
+  long long threshold;                // for "setNetworkInterfaceAlarm",
                                       //     "enableNetworkInterfaceAlarm".
   DOMString startIp;                  // for "setDhcpServer".
   DOMString endIp;                    // for "setDhcpServer".

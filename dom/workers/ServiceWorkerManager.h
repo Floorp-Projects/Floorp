@@ -155,16 +155,10 @@ public:
   NS_INLINE_DECL_REFCOUNTING(ServiceWorkerUpdateFinishCallback)
 
   virtual
-  void UpdateSucceeded(ServiceWorkerRegistrationInfo* aInfo)
-  { }
+  void UpdateSucceeded(ServiceWorkerRegistrationInfo* aInfo) = 0;
 
   virtual
-  void UpdateFailed(nsresult aStatus)
-  { }
-
-  virtual
-  void UpdateFailed(JSExnType aExnType, const ErrorEventInit& aDesc)
-  { }
+  void UpdateFailed(ErrorResult& aStatus) = 0;
 };
 
 /*
@@ -329,6 +323,23 @@ public:
   // Set of all documents that may be controlled by a service worker.
   nsTHashtable<nsISupportsHashKey> mAllDocuments;
 
+  // Track all documents that have attempted to register a service worker for a
+  // given scope.
+  typedef nsTArray<nsCOMPtr<nsIWeakReference>> WeakDocumentList;
+  nsClassHashtable<nsCStringHashKey, WeakDocumentList> mRegisteringDocuments;
+
+  // Track all intercepted navigation channels for a given scope.  Channels are
+  // placed in the appropriate list before dispatch the FetchEvent to the worker
+  // thread and removed once FetchEvent processing dispatches back to the main
+  // thread.
+  //
+  // Note: Its safe to use weak references here because a RAII-style callback
+  //       is registered with the channel before its added to this list.  We
+  //       are guaranteed the callback will fire before and remove the ref
+  //       from this list before the channel is destroyed.
+  typedef nsTArray<nsIInterceptedChannel*> InterceptionList;
+  nsClassHashtable<nsCStringHashKey, InterceptionList> mNavigationInterceptions;
+
   bool
   IsAvailable(const OriginAttributes& aOriginAttributes, nsIURI* aURI);
 
@@ -389,16 +400,25 @@ public:
   void
   FinishFetch(ServiceWorkerRegistrationInfo* aRegistration);
 
-  // Returns true if the error was handled, false if normal worker error
-  // handling should continue.
-  bool
+  void
+  ReportToAllClients(const nsCString& aScope,
+                     const nsString& aMessage,
+                     const nsString& aFilename,
+                     const nsString& aLine,
+                     uint32_t aLineNumber,
+                     uint32_t aColumnNumber,
+                     uint32_t aFlags);
+
+  // Always consumes the error by reporting to consoles of all controlled
+  // documents.
+  void
   HandleError(JSContext* aCx,
               nsIPrincipal* aPrincipal,
               const nsCString& aScope,
               const nsString& aWorkerURL,
-              nsString aMessage,
-              nsString aFilename,
-              nsString aLine,
+              const nsString& aMessage,
+              const nsString& aFilename,
+              const nsString& aLine,
               uint32_t aLineNumber,
               uint32_t aColumnNumber,
               uint32_t aFlags,
@@ -611,6 +631,19 @@ private:
 
   void
   NotifyListenersOnUnregister(nsIServiceWorkerRegistrationInfo* aRegistration);
+
+  void
+  AddRegisteringDocument(const nsACString& aScope, nsIDocument* aDoc);
+
+  class InterceptionReleaseHandle;
+
+  void
+  AddNavigationInterception(const nsACString& aScope,
+                            nsIInterceptedChannel* aChannel);
+
+  void
+  RemoveNavigationInterception(const nsACString& aScope,
+                               nsIInterceptedChannel* aChannel);
 };
 
 } // namespace workers

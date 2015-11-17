@@ -6,7 +6,7 @@
  ChromeConstructor(MozNFCTag tag)]
 interface MozIsoDepTech {
   /**
-   * Send raw command to tag and receive the response.
+   * Send raw ISO-DEP command to tag and receive the response.
    */
   [Throws]
   Promise<Uint8Array> transceive(Uint8Array command);

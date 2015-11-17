@@ -9,6 +9,6 @@
 interface MozNetworkStatsAlarm {
   readonly attribute unsigned long alarmId;
   readonly attribute MozNetworkStatsInterface network;
-  readonly attribute long threshold;
+  readonly attribute long long threshold;
   readonly attribute any data;
 };

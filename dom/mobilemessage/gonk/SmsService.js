@@ -291,7 +291,7 @@ SmsService.prototype = {
 
   _notifySendingError: function(aErrorCode, aSendingMessage, aSilent, aRequest) {
     if (aSilent || aErrorCode === Ci.nsIMobileMessageCallback.NOT_FOUND_ERROR) {
-      // There is no way to modify nsIDOMMozSmsMessage attributes as they
+      // There is no way to modify nsISmsMessage attributes as they
       // are read only so we just create a new sms instance to send along
       // with the notification.
       aRequest.notifySendMessageFailed(aErrorCode,
@@ -322,11 +322,15 @@ SmsService.prototype = {
                                      RIL.GECKO_SMS_DELIVERY_STATUS_ERROR,
                                      null,
                                      (aRv, aDomMessage) => {
+      let smsMessage = null;
+      try {
+        smsMessage = aDomMessage.QueryInterface(Ci.nsISmsMessage);
+      } catch (e) {}
       // TODO bug 832140 handle !Components.isSuccessCode(aRv)
       this._broadcastSmsSystemMessage(
-        Ci.nsISmsMessenger.NOTIFICATION_TYPE_SENT_FAILED, aDomMessage);
-      aRequest.notifySendMessageFailed(aErrorCode, aDomMessage);
-      Services.obs.notifyObservers(aDomMessage, kSmsFailedObserverTopic, null);
+        Ci.nsISmsMessenger.NOTIFICATION_TYPE_SENT_FAILED, smsMessage);
+      aRequest.notifySendMessageFailed(aErrorCode, smsMessage);
+      Services.obs.notifyObservers(smsMessage, kSmsFailedObserverTopic, null);
     });
   },
 
@@ -396,7 +400,7 @@ SmsService.prototype = {
       // Message was sent to SMSC.
       if (!aResponse.deliveryStatus) {
         if (aSilent) {
-          // There is no way to modify nsIDOMMozSmsMessage attributes as they
+          // There is no way to modify nsISmsMessage attributes as they
           // are read only so we just create a new sms instance to send along
           // with the notification.
           aRequest.notifyMessageSent(
@@ -424,17 +428,21 @@ SmsService.prototype = {
                                          sentMessage.deliveryStatus,
                                          null,
                                          (aRv, aDomMessage) => {
+          let smsMessage = null;
+          try {
+            smsMessage = aDomMessage.QueryInterface(Ci.nsISmsMessage);
+          } catch (e) {}
           // TODO bug 832140 handle !Components.isSuccessCode(aRv)
 
           if (requestStatusReport) {
             // Update the sentMessage and wait for the status report.
-            sentMessage = aDomMessage;
+            sentMessage = smsMessage;
           }
 
           this._broadcastSmsSystemMessage(
-            Ci.nsISmsMessenger.NOTIFICATION_TYPE_SENT, aDomMessage);
-          aRequest.notifyMessageSent(aDomMessage);
-          Services.obs.notifyObservers(aDomMessage, kSmsSentObserverTopic, null);
+            Ci.nsISmsMessenger.NOTIFICATION_TYPE_SENT, smsMessage);
+          aRequest.notifyMessageSent(smsMessage);
+          Services.obs.notifyObservers(smsMessage, kSmsSentObserverTopic, null);
         });
 
         // Keep this callback if we have status report waiting.
@@ -450,6 +458,10 @@ SmsService.prototype = {
                                        aResponse.deliveryStatus,
                                        null,
                                        (aRv, aDomMessage) => {
+        let smsMessage = null;
+        try {
+          smsMessage = aDomMessage.QueryInterface(Ci.nsISmsMessage);
+        } catch (e) {}
         // TODO bug 832140 handle !Components.isSuccessCode(aRv)
 
         let [topic, notificationType] =
@@ -461,10 +473,10 @@ SmsService.prototype = {
 
         // Broadcasting a "sms-delivery-success/sms-delivery-error" system
         // message to open apps.
-        this._broadcastSmsSystemMessage(notificationType, aDomMessage);
+        this._broadcastSmsSystemMessage(notificationType, smsMessage);
 
         // Notifying observers the delivery status is updated.
-        Services.obs.notifyObservers(aDomMessage, topic, null);
+        Services.obs.notifyObservers(smsMessage, topic, null);
       });
 
       // Send transaction has ended completely.
@@ -479,7 +491,7 @@ SmsService.prototype = {
    * @param aNotificationType
    *        Ci.nsISmsMessenger.NOTIFICATION_TYPE_*.
    * @param aDomMessage
-   *        The nsIDOMMozSmsMessage object.
+   *        The nsISmsMessage object.
    */
   _broadcastSmsSystemMessage: function(aNotificationType, aDomMessage) {
     if (DEBUG) debug("Broadcasting the SMS system message: " + aNotificationType);
@@ -799,6 +811,10 @@ SmsService.prototype = {
     }
 
     let notifyReceived = (aRv, aDomMessage) => {
+      let smsMessage = null;
+      try {
+        smsMessage = aDomMessage.QueryInterface(Ci.nsISmsMessage);
+      } catch (e) {}
       let success = Components.isSuccessCode(aRv);
 
       this._sendAckSms(aRv, aMessage, aServiceId);
@@ -813,8 +829,8 @@ SmsService.prototype = {
       }
 
       this._broadcastSmsSystemMessage(
-        Ci.nsISmsMessenger.NOTIFICATION_TYPE_RECEIVED, aDomMessage);
-      Services.obs.notifyObservers(aDomMessage, kSmsReceivedObserverTopic, null);
+        Ci.nsISmsMessenger.NOTIFICATION_TYPE_RECEIVED, smsMessage);
+      Services.obs.notifyObservers(smsMessage, kSmsReceivedObserverTopic, null);
     };
 
     if (aMessage.messageClass != RIL.GECKO_SMS_MESSAGE_CLASSES[RIL.PDU_DCS_MSG_CLASS_0]) {
@@ -960,20 +976,25 @@ SmsService.prototype = {
       iccId: this._getIccId(aServiceId)
     };
 
-    let saveSendingMessageCallback = (aRv, aSendingMessage) => {
+    let saveSendingMessageCallback = (aRv, aDomMessage) => {
+      let smsMessage = null;
+      try {
+        smsMessage = aDomMessage.QueryInterface(Ci.nsISmsMessage);
+      } catch (e) {}
+
       if (!Components.isSuccessCode(aRv)) {
         if (DEBUG) debug("Error! Fail to save sending message! aRv = " + aRv);
         this._broadcastSmsSystemMessage(
-          Ci.nsISmsMessenger.NOTIFICATION_TYPE_SENT_FAILED, aSendingMessage);
+          Ci.nsISmsMessenger.NOTIFICATION_TYPE_SENT_FAILED, smsMessage);
         aRequest.notifySendMessageFailed(
           gMobileMessageDatabaseService.translateCrErrorToMessageCallbackError(aRv),
-          aSendingMessage);
-        Services.obs.notifyObservers(aSendingMessage, kSmsFailedObserverTopic, null);
+          smsMessage);
+        Services.obs.notifyObservers(smsMessage, kSmsFailedObserverTopic, null);
         return;
       }
 
       if (!aSilent) {
-        Services.obs.notifyObservers(aSendingMessage, kSmsSendingObserverTopic, null);
+        Services.obs.notifyObservers(smsMessage, kSmsSendingObserverTopic, null);
       }
 
       let connection =
@@ -994,11 +1015,11 @@ SmsService.prototype = {
         errorCode = Ci.nsIMobileMessageCallback.NO_SIM_CARD_ERROR;
       }
       if (errorCode) {
-        this._notifySendingError(errorCode, aSendingMessage, aSilent, aRequest);
+        this._notifySendingError(errorCode, smsMessage, aSilent, aRequest);
         return;
       }
 
-      this._scheduleSending(aServiceId, aSendingMessage, aSilent, options,
+      this._scheduleSending(aServiceId, smsMessage, aSilent, options,
         aRequest);
     }; // End of |saveSendingMessageCallback|.
 
@@ -1389,7 +1410,9 @@ SmsSendingScheduler.prototype = {
   notifyClirModeChanged: function(mode) {},
   notifyLastKnownNetworkChanged: function() {},
   notifyLastKnownHomeNetworkChanged: function() {},
-  notifyNetworkSelectionModeChanged: function() {}
+  notifyNetworkSelectionModeChanged: function() {},
+  notifyDeviceIdentitiesChanged: function() {}
+
 };
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([SmsService]);
