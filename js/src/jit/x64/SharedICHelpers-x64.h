@@ -189,7 +189,7 @@ EmitBaselineEnterStubFrame(MacroAssembler& masm, Register)
 inline void
 EmitIonEnterStubFrame(MacroAssembler& masm, Register)
 {
-    masm.Pop(ICTailCallReg);
+    masm.loadPtr(Address(masm.getStackPointer(), 0), ICTailCallReg);
     masm.Push(ICTailCallReg);
     masm.Push(ICStubReg);
 }
