@@ -252,7 +252,7 @@ add_task(function* test_bad_app_cert() {
   // Add-on will still be present just not active
   let addon = yield promiseAddonByID("system1@tests.mozilla.org");
   do_check_neq(addon, null);
-  do_check_eq(addon.signedState, AddonManager.SIGNEDSTATE_SIGNED);
+  do_check_eq(addon.signedState, AddonManager.SIGNEDSTATE_NOT_REQUIRED);
 
   yield check_installed(false, null, null, "1.0");
 
