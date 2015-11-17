@@ -81,10 +81,6 @@ ImageFactory::CreateImage(ImageFormat aFormat,
     return img.forget();
   }
 #endif
-  if (aFormat == ImageFormat::EGLIMAGE) {
-    img = new EGLImageImage();
-    return img.forget();
-  }
 #ifdef XP_MACOSX
   if (aFormat == ImageFormat::MAC_IOSURFACE) {
     img = new MacIOSurfaceImage();

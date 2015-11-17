@@ -34,7 +34,7 @@ EGLImageTextureClient::EGLImageTextureClient(ISurfaceAllocator* aAllocator,
 
   AddFlags(TextureFlags::DEALLOCATE_CLIENT);
 
-  if (aImage->GetData()->mOriginPos == gl::OriginPos::BottomLeft) {
+  if (aImage->GetOriginPos() == gl::OriginPos::BottomLeft) {
     AddFlags(TextureFlags::ORIGIN_BOTTOM_LEFT);
   }
 }
@@ -45,10 +45,11 @@ EGLImageTextureClient::ToSurfaceDescriptor(SurfaceDescriptor& aOutDescriptor)
   MOZ_ASSERT(IsValid());
   MOZ_ASSERT(IsAllocated());
 
-  const EGLImageImage::Data* data = mImage->GetData();
   const bool hasAlpha = true;
-  aOutDescriptor = EGLImageDescriptor((uintptr_t)data->mImage, (uintptr_t)data->mSync,
-                                      mSize, hasAlpha);
+  aOutDescriptor =
+    EGLImageDescriptor((uintptr_t)mImage->GetImage(),
+                       (uintptr_t)mImage->GetSync(),
+                       mImage->GetSize(), hasAlpha);
   return true;
 }
 
