@@ -2606,7 +2606,8 @@ nsWindow::GetIMEUpdatePreference()
 }
 
 void
-nsWindow::DrawWindowUnderlay(LayerManagerComposite* aManager, nsIntRect aRect)
+nsWindow::DrawWindowUnderlay(LayerManagerComposite* aManager,
+                             LayoutDeviceIntRect aRect)
 {
     GeckoLayerClient::LocalRef client = AndroidBridge::Bridge()->GetLayerClient();
     if (!client) {
