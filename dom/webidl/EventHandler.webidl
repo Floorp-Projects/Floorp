@@ -134,7 +134,7 @@ interface WindowEventHandlers {
            attribute EventHandler onpagehide;
            attribute EventHandler onpageshow;
            attribute EventHandler onpopstate;
-           //(Not implemented)attribute EventHandler onstorage;
+           attribute EventHandler onstorage;
            attribute EventHandler onunload;
 };
 

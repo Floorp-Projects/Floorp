@@ -98,6 +98,7 @@ NS_EVENT_MESSAGE(eHashChange)
 NS_EVENT_MESSAGE(eImageAbort)
 NS_EVENT_MESSAGE(eLoadError)
 NS_EVENT_MESSAGE(ePopState)
+NS_EVENT_MESSAGE(eStorage)
 NS_EVENT_MESSAGE(eBeforeUnload)
 NS_EVENT_MESSAGE(eReadyStateChange)
  
