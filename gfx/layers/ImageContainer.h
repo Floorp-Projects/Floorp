@@ -117,6 +117,9 @@ protected:
 
 /* Forward declarations for Image derivatives. */
 class EGLImageImage;
+#ifdef MOZ_WIDGET_ANDROID
+class SurfaceTextureImage;
+#endif
 
 /**
  * A class representing a buffer of pixel data. The data can be in one
@@ -171,6 +174,9 @@ public:
 
   /* Access to derived classes. */
   virtual EGLImageImage* AsEGLImageImage() { return nullptr; }
+#ifdef MOZ_WIDGET_ANDROID
+  virtual SurfaceTextureImage* AsSurfaceTextureImage() { return nullptr; }
+#endif
 
 protected:
   Image(void* aImplData, ImageFormat aFormat) :
