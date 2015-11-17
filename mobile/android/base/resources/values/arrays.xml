@@ -159,14 +159,6 @@
         <item>wifi</item>
         <item>disabled</item>
     </string-array>
-    <string-array name="pref_titlebar_mode_entries">
-        <item>@string/pref_titlebar_mode_title</item>
-        <item>@string/pref_titlebar_mode_url</item>
-    </string-array>
-    <string-array name="pref_titlebar_mode_values">
-        <item>0</item>
-        <item>1</item>
-    </string-array>
     <!-- This value is similar to config_longPressVibePattern in android frameworks/base/core/res/res/values/config.xml-->
     <integer-array name="long_press_vibrate_msec">
         <item>0</item>

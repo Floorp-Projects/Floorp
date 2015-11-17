@@ -195,6 +195,12 @@ interface nsIFocusManager : nsISupports
    */
   const unsigned long FLAG_SHOWRING = 0x100000;
 
+  /**
+   * Focus is changing due to a touch operation that generated a mouse event.
+   * Normally used in conjunction with FLAG_BYMOUSE.
+   */
+  const unsigned long FLAG_BYTOUCH = 0x200000;
+
   // these constants are used with the aType argument to MoveFocus
 
   /** move focus forward one element, used when pressing TAB */

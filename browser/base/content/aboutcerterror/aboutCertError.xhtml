@@ -51,16 +51,6 @@
         return decodeURIComponent(matches[1]);
       }
 
-      function goBack(buttonEl)
-      {
-        if (history.length > 1) {
-          history.back();
-        } else {
-          location.href = "about:home";
-        }
-        buttonEl.disabled = true;
-      }
-
       function toggleVisibility(id)
       {
         var node = document.getElementById(id);
@@ -213,7 +203,7 @@
         </div>
 
         <div id="buttonContainer">
-          <button id="returnButton" autocomplete="off" onclick="goBack(this);" autofocus="true">&certerror.returnToPreviousPage.label;</button>
+          <button id="returnButton" autocomplete="off" autofocus="true">&certerror.returnToPreviousPage.label;</button>
           <div id="buttonSpacer"></div>
           <button id="advancedButton" autocomplete="off" onclick="toggleVisibility('advancedPanel');" autofocus="true">&certerror.advanced.label;</button>
         </div>

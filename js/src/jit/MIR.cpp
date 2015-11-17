@@ -1554,6 +1554,30 @@ MUnbox::printOpcode(GenericPrinter& out) const
     }
 }
 
+MDefinition*
+MUnbox::foldsTo(TempAllocator &alloc)
+{
+    if (!input()->isLoadFixedSlot())
+        return this;
+    MLoadFixedSlot* load = input()->toLoadFixedSlot();
+    if (load->type() != MIRType_Value)
+        return this;
+    if (type() != MIRType_Boolean && !IsNumberType(type()))
+        return this;
+    // Only optimize if the load comes immediately before the unbox, so it's
+    // safe to copy the load's dependency field.
+    MInstructionIterator iter(load->block()->begin(load));
+    ++iter;
+    if (*iter != this)
+        return this;
+
+    MLoadFixedSlotAndUnbox* ins = MLoadFixedSlotAndUnbox::New(alloc, load->object(), load->slot(),
+                                                              mode(), type(), bailoutKind());
+    // As GVN runs after the Alias Analysis, we have to set the dependency by hand
+    ins->setDependency(load->dependency());
+    return ins;
+}
+
 void
 MTypeBarrier::printOpcode(GenericPrinter& out) const
 {
@@ -4153,6 +4177,14 @@ MNewArray::shouldUseVM() const
 
 bool
 MLoadFixedSlot::mightAlias(const MDefinition* store) const
+{
+    if (store->isStoreFixedSlot() && store->toStoreFixedSlot()->slot() != slot())
+        return false;
+    return true;
+}
+
+bool
+MLoadFixedSlotAndUnbox::mightAlias(const MDefinition* store) const
 {
     if (store->isStoreFixedSlot() && store->toStoreFixedSlot()->slot() != slot())
         return false;

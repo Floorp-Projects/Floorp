@@ -11,12 +11,12 @@ chrome.jar:
 #ifndef MOZ_ANDROID_NATIVE_ACCOUNT_UI
   skin/aboutAccounts.css                    (aboutAccounts.css)
 #endif
-* skin/aboutAddons.css                      (aboutAddons.css)
-* skin/aboutBase.css                        (aboutBase.css)
+  skin/aboutAddons.css                      (aboutAddons.css)
+  skin/aboutBase.css                        (aboutBase.css)
 #ifdef MOZ_DEVICES
   skin/aboutDevices.css                     (aboutDevices.css)
 #endif
-* skin/aboutDownloads.css                   (aboutDownloads.css)
+  skin/aboutDownloads.css                   (aboutDownloads.css)
   skin/aboutFeedback.css                    (aboutFeedback.css)
 #ifdef MOZ_SERVICES_HEALTHREPORT
   skin/aboutHealthReport.css                (aboutHealthReport.css)
@@ -28,8 +28,9 @@ chrome.jar:
   skin/aboutReaderControls.css              (aboutReaderControls.css)
   skin/aboutSupport.css                     (aboutSupport.css)
   skin/browser.css                          (browser.css)
-* skin/content.css                          (content.css)
+  skin/content.css                          (content.css)
   skin/config.css                           (config.css)
+  skin/defines.css                          (defines.css)
   skin/touchcontrols.css                    (touchcontrols.css)
   skin/netError.css                         (netError.css)
   skin/spinner.css                          (spinner.css)
@@ -47,7 +48,7 @@ chrome.jar:
 #endif
 #
 
-* skin/aboutLogins.css                      (aboutLogins.css)
+  skin/aboutLogins.css                      (aboutLogins.css)
 
   skin/images/search.png                    (images/search.png)
   skin/images/lock.png                      (images/lock.png)

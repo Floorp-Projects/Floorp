@@ -156,3 +156,21 @@ js::InitWeakSetClass(JSContext* cx, HandleObject obj)
 {
     return WeakSetObject::initClass(cx, obj);
 }
+
+JS_FRIEND_API(bool)
+JS_NondeterministicGetWeakSetKeys(JSContext* cx, HandleObject objArg, MutableHandleObject ret)
+{
+    RootedObject obj(cx, objArg);
+    obj = UncheckedUnwrap(obj);
+    if (!obj || !obj->is<WeakSetObject>()) {
+        ret.set(nullptr);
+        return true;
+    }
+
+    Rooted<WeakSetObject*> weakset(cx, &obj->as<WeakSetObject>());
+    if (!weakset)
+        return false;
+
+    RootedObject map(cx, &weakset->getReservedSlot(WEAKSET_MAP_SLOT).toObject());
+    return JS_NondeterministicGetWeakMapKeys(cx, map, ret);
+}

@@ -12,7 +12,7 @@ const { ActorPool, OriginalLocation, GeneratedLocation } = require("devtools/ser
 const { ObjectActor, createValueGrip, longStringGrip } = require("devtools/server/actors/object");
 const { DebuggerServer } = require("devtools/server/main");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
-const { dbg_assert, dumpn, update, fetch } = DevToolsUtils;
+const { assert, dbg_assert, dumpn, update, fetch } = DevToolsUtils;
 const { dirname, joinURI } = require("devtools/shared/path");
 const promise = require("promise");
 const PromiseDebugging = require("PromiseDebugging");
@@ -354,8 +354,7 @@ EventLoop.prototype = {
       }
     }
 
-    dbg_assert(this._thread.state === "running",
-               "Should be in the running state");
+    dbg_assert(this._thread.state === "running", "Should be in the running state");
 
     if (this._hooks.postNest) {
       this._hooks.postNest(nestData);
@@ -545,7 +544,7 @@ ThreadActor.prototype = {
   },
   _popThreadPause: function () {
     const eventLoop = this._threadPauseEventLoops.pop();
-    dbg_assert(eventLoop, "Should have an event loop.");
+    assert(eventLoop, "Should have an event loop.");
     eventLoop.resolve();
   },
 
@@ -1536,7 +1535,7 @@ ThreadActor.prototype = {
 
     // Create the actor pool that will hold the pause actor and its
     // children.
-    dbg_assert(!this._pausePool, "No pause pool should exist yet");
+    assert(!this._pausePool, "No pause pool should exist yet");
     this._pausePool = new ActorPool(this.conn);
     this.conn.addActorPool(this._pausePool);
 
@@ -1545,7 +1544,7 @@ ThreadActor.prototype = {
     this._pausePool.threadActor = this;
 
     // Create the pause actor itself...
-    dbg_assert(!this._pauseActor, "No pause actor should exist yet");
+    assert(!this._pauseActor, "No pause actor should exist yet");
     this._pauseActor = new PauseActor(this._pausePool);
     this._pausePool.addActor(this._pauseActor);
 
@@ -3319,8 +3318,7 @@ BreakpointActor.prototype = {
           message: message
         };
       } else if (completion.yield) {
-        dbg_assert(false,
-                   "Shouldn't ever get yield completions from an eval");
+        assert(false, "Shouldn't ever get yield completions from an eval");
       } else {
         return { result: completion.return ? true : false };
       }
@@ -3722,7 +3720,7 @@ exports.AddonThreadActor = AddonThreadActor;
  */
 var oldReportError = reportError;
 reportError = function(aError, aPrefix="") {
-  dbg_assert(aError instanceof Error, "Must pass Error objects to reportError");
+  assert(aError instanceof Error, "Must pass Error objects to reportError");
   let msg = aPrefix + aError.message + ":\n" + aError.stack;
   oldReportError(msg);
   dumpn(msg);

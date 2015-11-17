@@ -443,8 +443,6 @@ public:
                       uint32_t aGeckoKeyCode,
                       uint32_t aCocoaKeyCode);
   virtual nsIMEUpdatePreference GetIMEUpdatePreference() override;
-  NS_IMETHOD        GetToggledKeyState(uint32_t aKeyCode,
-                                       bool* aLEDState) override;
 
   virtual nsTransparencyMode GetTransparencyMode() override;
   virtual void                SetTransparencyMode(nsTransparencyMode aMode) override;
