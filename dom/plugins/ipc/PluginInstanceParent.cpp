@@ -694,17 +694,8 @@ PluginInstanceParent::GetImageContainer(ImageContainer** aContainer)
 
 #ifdef XP_MACOSX
     if (ioSurface) {
-        RefPtr<Image> image = container->CreateImage(ImageFormat::MAC_IOSURFACE);
-        if (!image) {
-            return NS_ERROR_FAILURE;
-        }
-
-        NS_ASSERTION(image->GetFormat() == ImageFormat::MAC_IOSURFACE, "Wrong format?");
-
-        MacIOSurfaceImage* pluginImage = static_cast<MacIOSurfaceImage*>(image.get());
-        pluginImage->SetSurface(ioSurface);
-
-        container->SetCurrentImageInTransaction(pluginImage);
+        RefPtr<Image> image = new MacIOSurfaceImage(ioSurface);
+        container->SetCurrentImageInTransaction(image);
 
         NS_IF_ADDREF(container);
         *aContainer = container;

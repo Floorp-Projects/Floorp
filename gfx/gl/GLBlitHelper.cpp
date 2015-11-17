@@ -892,7 +892,7 @@ GLBlitHelper::BlitImageToFramebuffer(layers::Image* srcImage,
 
 #ifdef XP_MACOSX
     case ConvertMacIOSurfaceImage:
-        return BlitMacIOSurfaceImage(static_cast<layers::MacIOSurfaceImage*>(srcImage));
+        return BlitMacIOSurfaceImage(srcImage->AsMacIOSurfaceImage());
 #endif
 
     default:

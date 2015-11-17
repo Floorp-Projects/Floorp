@@ -397,11 +397,7 @@ AppleVDADecoder::OutputFrame(CVPixelBufferRef aImage,
 
     RefPtr<MacIOSurface> macSurface = new MacIOSurface(surface);
 
-    RefPtr<layers::Image> image =
-      mImageContainer->CreateImage(ImageFormat::MAC_IOSURFACE);
-    layers::MacIOSurfaceImage* videoImage =
-      static_cast<layers::MacIOSurfaceImage*>(image.get());
-    videoImage->SetSurface(macSurface);
+    RefPtr<layers::Image> image = new MacIOSurfaceImage(macSurface);
 
     data =
       VideoData::CreateFromImage(info,
