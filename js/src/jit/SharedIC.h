@@ -980,6 +980,7 @@ class ICStubCompiler
 
 #ifdef DEBUG
     bool entersStubFrame_;
+    uint32_t framePushedAtEnterStubFrame_;
 #endif
 
     // By default the stubcode key is just the kind.
@@ -996,11 +997,12 @@ class ICStubCompiler
     ICStubCompiler(JSContext* cx, ICStub::Kind kind, Engine engine)
       : suppressGC(cx), cx(cx), kind(kind), engine_(engine), inStubFrame_(false)
 #ifdef DEBUG
-      , entersStubFrame_(false)
+      , entersStubFrame_(false), framePushedAtEnterStubFrame_(0)
 #endif
     {}
 
     // Pushes the frame ptr.
+    void PushFramePtr(MacroAssembler& masm, Register scratch);
     void pushFramePtr(MacroAssembler& masm, Register scratch);
 
     // Emits a tail call to a VMFunction wrapper.
