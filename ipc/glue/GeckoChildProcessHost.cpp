@@ -949,6 +949,12 @@ GeckoChildProcessHost::PerformAsyncLaunchInternal(std::vector<std::string>& aExt
          ++it) {
       mSandboxBroker.AllowReadWriteFile(it->c_str());
     }
+
+    for (auto it = mAllowedDirectories.begin();
+         it != mAllowedDirectories.end();
+         ++it) {
+      mSandboxBroker.AllowDirectory(it->c_str());
+    }
   }
 #endif // XP_WIN && MOZ_SANDBOX
 
