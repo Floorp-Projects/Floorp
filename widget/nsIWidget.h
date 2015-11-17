@@ -1225,7 +1225,8 @@ class nsIWidget : public nsISupports {
      *
      * Always called from the compositing thread.
      */
-    virtual void DrawWindowUnderlay(LayerManagerComposite* aManager, nsIntRect aRect) = 0;
+    virtual void DrawWindowUnderlay(LayerManagerComposite* aManager,
+                                    LayoutDeviceIntRect aRect) = 0;
 
     /**
      * Called after the LayerManager draws the layer tree
