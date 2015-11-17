@@ -24,12 +24,6 @@
                android:value="preferences_locale" />
     </PreferenceScreen>
 
-    <ListPreference android:key="browser.chrome.titlebarMode"
-                    android:title="@string/pref_titlebar_mode"
-                    android:entries="@array/pref_titlebar_mode_entries"
-                    android:entryValues="@array/pref_titlebar_mode_values"
-                    android:persistent="false" />
-
     <CheckBoxPreference android:key="browser.chrome.dynamictoolbar"
                         android:title="@string/pref_scroll_title_bar2"
                         android:summary="@string/pref_scroll_title_bar_summary" />

@@ -39,6 +39,7 @@ function BrowserAction(options, extension)
   }
 
   this.defaults = {
+    enabled: true,
     title: title,
     badgeText: "",
     badgeBackgroundColor: null,
@@ -111,6 +112,12 @@ BrowserAction.prototype = {
       node.setAttribute("badge", tabData.badgeText);
     } else {
       node.removeAttribute("badge");
+    }
+
+    if (tabData.enabled) {
+      node.removeAttribute("disabled");
+    } else {
+      node.setAttribute("disabled", "true");
     }
 
     let badgeNode = node.ownerDocument.getAnonymousElementByAttribute(node,
@@ -206,6 +213,16 @@ extensions.registerAPI((extension, context) => {
           browserActionOf(extension).off("click", listener);
         };
       }).api(),
+
+      enable: function(tabId) {
+        let tab = tabId ? TabManager.getTab(tabId) : null;
+        browserActionOf(extension).setProperty(tab, "enabled", true);
+      },
+
+      disable: function(tabId) {
+        let tab = tabId ? TabManager.getTab(tabId) : null;
+        browserActionOf(extension).setProperty(tab, "enabled", false);
+      },
 
       setTitle: function(details) {
         let tab = details.tabId ? TabManager.getTab(details.tabId) : null;

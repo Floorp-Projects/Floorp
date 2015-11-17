@@ -2,8 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-%filter substitution
-%include defines.inc
+@import "defines.css";
 
 a {
   text-decoration: none;
@@ -35,7 +34,7 @@ a:active {
 }
 
 .warn-unsigned {
-  border-top: 1px solid @color_about_item_border@;
+  border-top: 1px solid var(--color_about_item_border);
   padding: 1em;
   -moz-padding-start: calc(var(--icon-size) + var(--icon-margin) * 2);
   background-image: url("chrome://browser/skin/images/grey-caution.svg");
@@ -50,7 +49,7 @@ a:active {
 }
 
 .status {
-  border-top: 1px solid @color_about_item_border@;
+  border-top: 1px solid var(--color_about_item_border);
   font-weight: bold;
   padding: 0.5em;
   width: 100%;
@@ -85,9 +84,9 @@ a:active {
   -moz-appearance: none;
   font-size: 1em;
   border: 1px solid transparent;
-  border-top-color: @color_about_item_border@;
-  -moz-border-start-color: @color_about_item_border@;
-  background-color: @color_about_item@;
+  border-top-color: var(--color_about_item_border);
+  -moz-border-start-color: var(--color_about_item_border);
+  background-color: var(--color_about_item);
   flex: 1;
   padding: 0.75em 0.5em;
   border-radius: 0;
@@ -220,7 +219,7 @@ menulist {
 menulist > dropmarker {
   height: 1.8em;
   width: 1.8em;
-  margin-left: @margin_snormal@;
+  margin-left: var(--margin_snormal);
   background-color: transparent;
   border: none;
   -moz-box-align: center;

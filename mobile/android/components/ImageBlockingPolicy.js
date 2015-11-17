@@ -20,7 +20,7 @@ const TELEMETRY_SHOW_IMAGE_SIZE = "TAP_TO_LOAD_IMAGE_SIZE";
 const TOPIC_GATHER_TELEMETRY = "gather-telemetry";
 
 //// Gecko preference
-const PREF_IMAGEBLOCKING_ENABLED = "browser.image_blocking.enabled";
+const PREF_IMAGEBLOCKING = "browser.image_blocking";
 
 //// Enabled options
 const OPTION_NEVER = 0;
@@ -92,19 +92,15 @@ ImageBlockingPolicy.prototype = {
   },
 
   _enabled: function() {
-    return Services.prefs.getIntPref("browser.image_blocking");
+    return Services.prefs.getIntPref(PREF_IMAGEBLOCKING);
   },
 
   observe : function (subject, topic, data) {
     if (topic == TOPIC_GATHER_TELEMETRY) {
-      Services.telemetry.getHistogramById(TELEMETRY_TAP_TO_LOAD_ENABLED).add(getEnabled());
+      Services.telemetry.getHistogramById(TELEMETRY_TAP_TO_LOAD_ENABLED).add(this._enabled());
     }
   },
 };
-
-function getEnabled() {
-  return Services.prefs.getBoolPref(PREF_IMAGEBLOCKING_ENABLED);
-}
 
 function sendImageSizeTelemetry(imageURL) {
   let xhr = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"].createInstance(Ci.nsIXMLHttpRequest);

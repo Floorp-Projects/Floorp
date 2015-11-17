@@ -294,6 +294,7 @@ public class CrashHandler implements Thread.UncaughtExceptionHandler {
                 final Intent intent = new Intent(action);
                 intent.setComponent(new ComponentName(pkg, component));
                 intent.putExtra("minidumpPath", dumpFile);
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 context.startActivity(intent);
                 return true;
             }

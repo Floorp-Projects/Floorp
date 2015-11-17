@@ -124,15 +124,6 @@ toolbar[brighttext] #sync-button[status="active"] {
   -moz-image-region: rect(0, 486px, 18px, 468px);
 }
 
-#PanelUI-menu-button.thumburger {
-  list-style-image: url("chrome://browser/skin/customizableui/thumburger.png") !important;
-  -moz-image-region: auto !important;
-}
-
-toolbar[brighttext] #PanelUI-menu-button.thumburger {
-  list-style-image: url("chrome://browser/skin/customizableui/thumburger-inverted.png") !important;
-}
-
 #edit-controls:not(@inAnyPanel@) > #cut-button {
   -moz-image-region: rect(0, 504px, 18px, 486px);
 }
@@ -437,14 +428,6 @@ toolbar[brighttext] #loop-button {
 %else
     -moz-image-region: rect(36px, 1548px, 72px, 1512px);
 %endif
-  }
-
-  #PanelUI-menu-button.thumburger {
-    list-style-image: url("chrome://browser/skin/customizableui/thumburger@2x.png") !important;
-  }
-
-  toolbar[brighttext] #PanelUI-menu-button.thumburger {
-    list-style-image: url("chrome://browser/skin/customizableui/thumburger-inverted@2x.png") !important;
   }
 
   #loop-button {

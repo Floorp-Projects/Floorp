@@ -10,8 +10,10 @@ const { Cu, Ci } = require("chrome");
 const { GeneratedLocation } = require("devtools/server/actors/common");
 const { DebuggerServer } = require("devtools/server/main")
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
-const { dbg_assert, dumpn } = DevToolsUtils;
+const { assert, dumpn } = DevToolsUtils;
 const PromiseDebugging = require("PromiseDebugging");
+
+loader.lazyRequireGetter(this, "ThreadSafeChromeUtils");
 
 const TYPED_ARRAY_CLASSES = ["Uint8Array", "Uint8ClampedArray", "Uint16Array",
       "Uint32Array", "Int8Array", "Int16Array", "Int32Array", "Float32Array",
@@ -54,8 +56,8 @@ function ObjectActor(obj, {
   decrementGripDepth,
   getGlobalDebugObject
 }) {
-  dbg_assert(!obj.optimizedOut,
-    "Should not create object actors for optimized out values!");
+  assert(!obj.optimizedOut,
+         "Should not create object actors for optimized out values!");
   this.obj = obj;
   this.hooks = {
     createValueGrip,
@@ -1067,6 +1069,43 @@ DebuggerServer.ObjectActorPreviewers = {
     return true;
   }],
 
+  WeakSet: [function({obj, hooks}, grip) {
+    let raw = obj.unsafeDereference();
+
+    // We currently lack XrayWrappers for WeakSet, so when we iterate over
+    // the values, the temporary iterator objects get created in the target
+    // compartment. However, we _do_ have Xrays to Object now, so we end up
+    // Xraying those temporary objects, and filtering access to |it.value|
+    // based on whether or not it's Xrayable and/or callable, which breaks
+    // the for/of iteration.
+    //
+    // This code is designed to handle untrusted objects, so we can safely
+    // waive Xrays on the iterable, and relying on the Debugger machinery to
+    // make sure we handle the resulting objects carefully.
+    let keys = Cu.waiveXrays(ThreadSafeChromeUtils.nondeterministicGetWeakSetKeys(raw));
+    grip.preview = {
+      kind: "ArrayLike",
+      length: keys.length,
+    };
+
+    // Avoid recursive object grips.
+    if (hooks.getGripDepth() > 1) {
+      return true;
+    }
+
+    let items = grip.preview.items = [];
+    for (let item of keys) {
+      item = Cu.unwaiveXrays(item);
+      item = makeDebuggeeValueIfNeeded(obj, item);
+      items.push(hooks.createValueGrip(item));
+      if (items.length == OBJECT_PREVIEW_MAX_ITEMS) {
+        break;
+      }
+    }
+
+    return true;
+  }],
+
   Map: [function({obj, hooks}, grip) {
     let size = DevToolsUtils.getProperty(obj, "size");
     if (typeof size != "number") {
@@ -1099,6 +1138,45 @@ DebuggerServer.ObjectActorPreviewers = {
     for (let keyValuePair of Cu.waiveXrays(Map.prototype.entries.call(raw))) {
       let key = Cu.unwaiveXrays(keyValuePair[0]);
       let value = Cu.unwaiveXrays(keyValuePair[1]);
+      key = makeDebuggeeValueIfNeeded(obj, key);
+      value = makeDebuggeeValueIfNeeded(obj, value);
+      entries.push([hooks.createValueGrip(key),
+                    hooks.createValueGrip(value)]);
+      if (entries.length == OBJECT_PREVIEW_MAX_ITEMS) {
+        break;
+      }
+    }
+
+    return true;
+  }],
+
+  WeakMap: [function({obj, hooks}, grip) {
+    let raw = obj.unsafeDereference();
+    // We currently lack XrayWrappers for WeakMap, so when we iterate over
+    // the values, the temporary iterator objects get created in the target
+    // compartment. However, we _do_ have Xrays to Object now, so we end up
+    // Xraying those temporary objects, and filtering access to |it.value|
+    // based on whether or not it's Xrayable and/or callable, which breaks
+    // the for/of iteration.
+    //
+    // This code is designed to handle untrusted objects, so we can safely
+    // waive Xrays on the iterable, and relying on the Debugger machinery to
+    // make sure we handle the resulting objects carefully.
+    let rawEntries = Cu.waiveXrays(ThreadSafeChromeUtils.nondeterministicGetWeakMapKeys(raw));
+
+    grip.preview = {
+      kind: "MapLike",
+      size: rawEntries.length,
+    };
+
+    if (hooks.getGripDepth() > 1) {
+      return true;
+    }
+
+    let entries = grip.preview.entries = [];
+    for (let key of rawEntries) {
+      let value = Cu.unwaiveXrays(WeakMap.prototype.get.call(raw, key));
+      key = Cu.unwaiveXrays(key);
       key = makeDebuggeeValueIfNeeded(obj, key);
       value = makeDebuggeeValueIfNeeded(obj, value);
       entries.push([hooks.createValueGrip(key),
@@ -1923,7 +2001,7 @@ function createValueGrip(value, pool, makeObjectGrip) {
       return form;
 
     default:
-      dbg_assert(false, "Failed to provide a grip for: " + value);
+      assert(false, "Failed to provide a grip for: " + value);
       return null;
   }
 }
