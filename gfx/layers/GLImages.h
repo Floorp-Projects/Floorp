@@ -62,21 +62,26 @@ private:
 
 class SurfaceTextureImage : public GLImage {
 public:
-  struct Data {
-    mozilla::gl::AndroidSurfaceTexture* mSurfTex;
-    gfx::IntSize mSize;
-    gl::OriginPos mOriginPos;
-  };
+  SurfaceTextureImage(gl::AndroidSurfaceTexture* aSurfTex,
+                      const gfx::IntSize& aSize,
+                      gl::OriginPos aOriginPos);
 
-  void SetData(const Data& aData) { mData = aData; }
-  const Data* GetData() { return &mData; }
+  gfx::IntSize GetSize() override { return mSize; }
+  gl::AndroidSurfaceTexture* GetSurfaceTexture() const {
+    return mSurfaceTexture;
+  }
+  gl::OriginPos GetOriginPos() const {
+    return mOriginPos;
+  }
 
-  gfx::IntSize GetSize() { return mData.mSize; }
-
-  SurfaceTextureImage() : GLImage(ImageFormat::SURFACE_TEXTURE) {}
+  SurfaceTextureImage* AsSurfaceTextureImage() override {
+    return this;
+  }
 
 private:
-  Data mData;
+  gl::AndroidSurfaceTexture* mSurfaceTexture;
+  gfx::IntSize mSize;
+  gl::OriginPos mOriginPos;
 };
 
 #endif // MOZ_WIDGET_ANDROID

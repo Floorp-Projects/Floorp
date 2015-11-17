@@ -684,7 +684,7 @@ GLBlitHelper::BlitGrallocImage(layers::GrallocImage* grallocImage)
 bool
 GLBlitHelper::BlitSurfaceTextureImage(layers::SurfaceTextureImage* stImage)
 {
-    AndroidSurfaceTexture* surfaceTexture = stImage->GetData()->mSurfTex;
+    AndroidSurfaceTexture* surfaceTexture = stImage->GetSurfaceTexture();
 
     ScopedBindTextureUnit boundTU(mGL, LOCAL_GL_TEXTURE0);
 
@@ -841,8 +841,7 @@ GLBlitHelper::BlitImageToFramebuffer(layers::Image* srcImage,
 #ifdef MOZ_WIDGET_ANDROID
     case ImageFormat::SURFACE_TEXTURE:
         type = ConvertSurfaceTexture;
-        srcOrigin = static_cast<layers::SurfaceTextureImage*>(srcImage)->GetData()
-                                                                       ->mOriginPos;
+        srcOrigin = srcImage->AsSurfaceTextureImage()->GetOriginPos();
         break;
 
     case ImageFormat::EGLIMAGE:

@@ -127,14 +127,8 @@ public:
       return NS_ERROR_FAILURE;
     }
 
-    RefPtr<layers::Image> img = mImageContainer->CreateImage(ImageFormat::SURFACE_TEXTURE);
-    layers::SurfaceTextureImage::Data data;
-    data.mSurfTex = mSurfaceTexture.get();
-    data.mSize = mConfig.mDisplay;
-    data.mOriginPos = gl::OriginPos::BottomLeft;
-
-    layers::SurfaceTextureImage* stImg = static_cast<layers::SurfaceTextureImage*>(img.get());
-    stImg->SetData(data);
+    RefPtr<layers::Image> img =
+      new SurfaceTextureImage(mSurfaceTexture.get(), mConfig.mDisplay, gl::OriginPos::BottomLeft);
 
     if (WantCopy()) {
       EGLImage eglImage = CopySurface(img);

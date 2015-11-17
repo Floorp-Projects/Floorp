@@ -75,12 +75,6 @@ ImageFactory::CreateImage(ImageFormat aFormat,
     img = new RecyclingPlanarYCbCrImage(aRecycleBin);
     return img.forget();
   }
-#ifdef MOZ_WIDGET_ANDROID
-  if (aFormat == ImageFormat::SURFACE_TEXTURE) {
-    img = new SurfaceTextureImage();
-    return img.forget();
-  }
-#endif
 #ifdef XP_MACOSX
   if (aFormat == ImageFormat::MAC_IOSURFACE) {
     img = new MacIOSurfaceImage();
