@@ -755,7 +755,6 @@ MediaEngineGonkVideoSource::RotateImage(layers::Image* aImage, uint32_t aWidth, 
 
   uint32_t half_width = dstWidth / 2;
 
-  layers::GrallocImage* videoImage = static_cast<layers::GrallocImage*>(image.get());
   MOZ_ASSERT(mTextureClientAllocator);
   RefPtr<layers::TextureClient> textureClient
     = mTextureClientAllocator->CreateOrRecycle(gfx::SurfaceFormat::YUV,
@@ -792,12 +791,11 @@ MediaEngineGonkVideoSource::RotateImage(layers::Image* aImage, uint32_t aWidth, 
 
     data.mPicSize = gfx::IntSize(dstWidth, dstHeight);
     data.mGraphicBuffer = textureClient;
-    videoImage->SetData(data);
+    image->AsGrallocImage()->SetData(data);
   } else {
     // Handle out of gralloc case.
-    image = mImageContainer->CreateImage(ImageFormat::PLANAR_YCBCR);
-    layers::PlanarYCbCrImage* videoImage = static_cast<layers::PlanarYCbCrImage*>(image.get());
-    uint8_t* dstPtr = videoImage->AllocateAndGetNewBuffer(size);
+    image = mImageContainer->CreatePlanarYCbCrImage();
+    uint8_t* dstPtr = image->AsPlanarYCbCrImage()->AllocateAndGetNewBuffer(size);
 
     libyuv::ConvertToI420(srcPtr, size,
                           dstPtr, dstWidth,
@@ -825,7 +823,7 @@ MediaEngineGonkVideoSource::RotateImage(layers::Image* aImage, uint32_t aWidth, 
     data.mPicSize = IntSize(dstWidth, dstHeight);
     data.mStereoMode = StereoMode::MONO;
 
-    videoImage->SetDataNoCopy(data);
+    image->AsPlanarYCbCrImage()->SetDataNoCopy(data);
   }
   graphicBuffer->unlock();
 

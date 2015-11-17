@@ -316,7 +316,7 @@ VideoData::Create(const VideoInfo& aInfo,
     }
 #endif
     if (!v->mImage) {
-      v->mImage = aContainer->CreateImage(ImageFormat::PLANAR_YCBCR);
+      v->mImage = aContainer->CreatePlanarYCbCrImage();
     }
   } else {
     v->mImage = aImage;
@@ -328,7 +328,8 @@ VideoData::Create(const VideoInfo& aInfo,
   NS_ASSERTION(v->mImage->GetFormat() == ImageFormat::PLANAR_YCBCR ||
                v->mImage->GetFormat() == ImageFormat::GRALLOC_PLANAR_YCBCR,
                "Wrong format?");
-  PlanarYCbCrImage* videoImage = static_cast<PlanarYCbCrImage*>(v->mImage.get());
+  PlanarYCbCrImage* videoImage = v->mImage->AsPlanarYCbCrImage();
+  MOZ_ASSERT(videoImage);
 
   bool shouldCopyData = (aImage == nullptr);
   if (!VideoData::SetVideoDataToImage(videoImage, aInfo, aBuffer, aPicture,
@@ -339,11 +340,11 @@ VideoData::Create(const VideoInfo& aInfo,
 #ifdef MOZ_WIDGET_GONK
   if (!videoImage->IsValid() && !aImage && IsYV12Format(Y, Cb, Cr)) {
     // Failed to allocate gralloc. Try fallback.
-    v->mImage = aContainer->CreateImage(ImageFormat::PLANAR_YCBCR);
+    v->mImage = aContainer->CreatePlanarYCbCrImage();
     if (!v->mImage) {
       return nullptr;
     }
-    videoImage = static_cast<PlanarYCbCrImage*>(v->mImage.get());
+    videoImage = v->mImage->AsPlanarYCbCrImage();
     if(!VideoData::SetVideoDataToImage(videoImage, aInfo, aBuffer, aPicture,
                                        true /* aCopyData */)) {
       return nullptr;

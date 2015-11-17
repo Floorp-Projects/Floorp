@@ -29,6 +29,7 @@ class AsyncTransactionTracker;
 class Image;
 class ImageContainer;
 class ShadowableLayer;
+class ImageClientSingle;
 
 /**
  * Image clients are used by basic image layers on the content thread, they
@@ -72,6 +73,8 @@ public:
   void RemoveTextureWithWaiter(TextureClient* aTexture,
                                AsyncTransactionWaiter* aAsyncTransactionWaiter = nullptr);
 
+  virtual ImageClientSingle* AsImageClientSingle() { return nullptr; }
+
 protected:
   ImageClient(CompositableForwarder* aFwd, TextureFlags aFlags,
               CompositableType aType);
@@ -102,6 +105,8 @@ public:
   virtual already_AddRefed<Image> CreateImage(ImageFormat aFormat) override;
 
   virtual void FlushAllImages(AsyncTransactionWaiter* aAsyncTransactionWaiter) override;
+
+  ImageClientSingle* AsImageClientSingle() override { return this; }
 
 protected:
   struct Buffer {

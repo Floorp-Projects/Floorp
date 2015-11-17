@@ -17,6 +17,8 @@
 #include "mozilla/layers/PImageContainerChild.h"
 #include "mozilla/layers/ImageClient.h"  // for ImageClient
 #include "mozilla/layers/LayersMessages.h"
+#include "mozilla/layers/SharedPlanarYCbCrImage.h"
+#include "mozilla/layers/SharedRGBImage.h"
 #include "nsISupportsUtils.h"           // for NS_IF_ADDREF
 #include "YCbCrUtils.h"                 // for YCbCr conversions
 #ifdef MOZ_WIDGET_GONK
@@ -70,11 +72,13 @@ ImageFactory::CreateImage(ImageFormat aFormat,
     return img.forget();
   }
 #endif
-  if (aFormat == ImageFormat::PLANAR_YCBCR) {
-    img = new RecyclingPlanarYCbCrImage(aRecycleBin);
-    return img.forget();
-  }
   return nullptr;
+}
+
+RefPtr<PlanarYCbCrImage>
+ImageFactory::CreatePlanarYCbCrImage(const gfx::IntSize& aScaleHint, BufferRecycleBin *aRecycleBin)
+{
+  return new RecyclingPlanarYCbCrImage(aRecycleBin);
 }
 
 BufferRecycleBin::BufferRecycleBin()
@@ -199,6 +203,26 @@ ImageContainer::CreateImage(ImageFormat aFormat)
     }
   }
   return mImageFactory->CreateImage(aFormat, mScaleHint, mRecycleBin);
+}
+
+RefPtr<PlanarYCbCrImage>
+ImageContainer::CreatePlanarYCbCrImage()
+{
+  ReentrantMonitorAutoEnter mon(mReentrantMonitor);
+  if (mImageClient && mImageClient->AsImageClientSingle()) {
+    return new SharedPlanarYCbCrImage(mImageClient);
+  }
+  return mImageFactory->CreatePlanarYCbCrImage(mScaleHint, mRecycleBin);
+}
+
+RefPtr<SharedRGBImage>
+ImageContainer::CreateSharedRGBImage()
+{
+  ReentrantMonitorAutoEnter mon(mReentrantMonitor);
+  if (!mImageClient || !mImageClient->AsImageClientSingle()) {
+    return nullptr;
+  }
+  return new SharedRGBImage(mImageClient);
 }
 
 void
