@@ -441,6 +441,26 @@ RegisterBluetoothSignalHandler(const nsAString& aPath,
 }
 
 void
+RegisterBluetoothSignalHandler(const BluetoothAddress& aAddress,
+                               BluetoothSignalObserver* aHandler)
+{
+  nsAutoString path;
+  AddressToString(aAddress, path);
+
+  RegisterBluetoothSignalHandler(path, aHandler);
+}
+
+void
+RegisterBluetoothSignalHandler(const BluetoothUuid& aUuid,
+                               BluetoothSignalObserver* aHandler)
+{
+  nsAutoString path;
+  UuidToString(aUuid, path);
+
+  RegisterBluetoothSignalHandler(path, aHandler);
+}
+
+void
 UnregisterBluetoothSignalHandler(const nsAString& aPath,
                                  BluetoothSignalObserver* aHandler)
 {
@@ -452,6 +472,26 @@ UnregisterBluetoothSignalHandler(const nsAString& aPath,
 
   bs->UnregisterBluetoothSignalHandler(aPath, aHandler);
   aHandler->SetSignalRegistered(false);
+}
+
+void
+UnregisterBluetoothSignalHandler(const BluetoothAddress& aAddress,
+                                 BluetoothSignalObserver* aHandler)
+{
+  nsAutoString path;
+  AddressToString(aAddress, path);
+
+  UnregisterBluetoothSignalHandler(path, aHandler);
+}
+
+void
+UnregisterBluetoothSignalHandler(const BluetoothUuid& aUuid,
+                                 BluetoothSignalObserver* aHandler)
+{
+  nsAutoString path;
+  UuidToString(aUuid, path);
+
+  UnregisterBluetoothSignalHandler(path, aHandler);
 }
 
 /**
