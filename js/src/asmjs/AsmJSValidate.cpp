@@ -69,6 +69,7 @@ using mozilla::Maybe;
 using mozilla::Move;
 using mozilla::PositiveInfinity;
 using mozilla::UniquePtr;
+using JS::AsmJSOption;
 using JS::GenericNaN;
 
 /*****************************************************************************/
@@ -8267,11 +8268,14 @@ EstablishPreconditions(ExclusiveContext* cx, AsmJSParser& parser)
     if (cx->gcSystemPageSize() != AsmJSPageSize)
         return Warn(parser, JSMSG_USE_ASM_TYPE_FAIL, "Disabled by non 4KiB system page size");
 
-    if (!parser.options().asmJSOption)
+    switch (parser.options().asmJSOption) {
+      case AsmJSOption::Disabled:
         return Warn(parser, JSMSG_USE_ASM_TYPE_FAIL, "Disabled by javascript.options.asmjs in about:config");
-
-    if (cx->compartment()->debuggerObservesAsmJS())
+      case AsmJSOption::DisabledByDebugger:
         return Warn(parser, JSMSG_USE_ASM_TYPE_FAIL, "Disabled by debugger");
+      case AsmJSOption::Enabled:
+        break;
+    }
 
     if (parser.pc->isGenerator())
         return Warn(parser, JSMSG_USE_ASM_TYPE_FAIL, "Disabled by generator context");
