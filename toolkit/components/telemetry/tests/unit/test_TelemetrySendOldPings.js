@@ -170,7 +170,7 @@ function run_test() {
   gDatareportingService.observe(null, "app-startup", null);
   gDatareportingService.observe(null, "profile-after-change", null);
 
-  Services.prefs.setBoolPref(TelemetryController.Constants.PREF_ENABLED, true);
+  Services.prefs.setBoolPref(PREF_TELEMETRY_ENABLED, true);
   Services.prefs.setCharPref(TelemetryController.Constants.PREF_SERVER,
                              "http://localhost:" + PingServer.port);
   run_next_test();
