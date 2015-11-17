@@ -8,9 +8,16 @@
     page_id = window.location.hash.substring(1);
     try {
       worker = new Worker('file_testserver.sjs?file='+escape("tests/dom/security/test/csp/file_child-src_worker.js"));
+
+      worker.onerror = function(e) {
+        window.parent.postMessage({id:page_id, message:"blocked"}, 'http://mochi.test:8888');
+        e.preventDefault();
+      }
+
       worker.onmessage = function(ev) {
         window.parent.postMessage({id:page_id, message:"allowed"}, 'http://mochi.test:8888');
-      };
+      }
+
       worker.postMessage('foo');
     }
     catch (e) {

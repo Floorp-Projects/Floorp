@@ -7,11 +7,12 @@
 #ifndef mozilla_layers_TreeTraversal_h
 #define mozilla_layers_TreeTraversal_h
 
+#include <queue>
+#include <stack>
+
 namespace mozilla {
 namespace layers {
 
-#include <queue>
-#include <stack>
 
 /*
  * Returned by |aAction| in ForEachNode. If the action returns

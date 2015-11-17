@@ -34,6 +34,7 @@ EXPORTS += [
 ]
 
 EXPORTS += [
+    'ContentHandlerService.h',
     'nsExternalHelperAppService.h',
 ]
 
@@ -49,8 +50,10 @@ EXPORTS.mozilla.dom += [
 ]
 
 UNIFIED_SOURCES += [
+    'ContentHandlerService.cpp',
     'ExternalHelperAppChild.cpp',
     'ExternalHelperAppParent.cpp',
+    'HandlerServiceParent.cpp',
     'nsExternalHelperAppService.cpp',
     'nsExternalProtocolHandler.cpp',
     'nsLocalHandlerApp.cpp',
@@ -119,6 +122,7 @@ EXTRA_COMPONENTS += [
 
 IPDL_SOURCES += [
     'PExternalHelperApp.ipdl',
+    'PHandlerService.ipdl',
 ]
 
 include('/ipc/chromium/chromium-config.mozbuild')

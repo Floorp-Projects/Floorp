@@ -24,6 +24,10 @@
 
 #ifdef XP_MACOSX
 #include <assert.h>
+#ifdef HASH_NODE_ID_WITH_DEVICE_ID
+#include <mach/mach.h>
+#include <mach/mach_vm.h>
+#endif
 #endif
 
 #if defined(HASH_NODE_ID_WITH_DEVICE_ID)
@@ -114,14 +118,42 @@ GetStackAfterCurrentFrame(uint8_t** aOutTop, uint8_t** aOutBottom)
 #endif
 
 #if defined(XP_MACOSX) && defined(HASH_NODE_ID_WITH_DEVICE_ID)
+static mach_vm_address_t
+RegionContainingAddress(mach_vm_address_t aAddress)
+{
+  mach_port_t task;
+  kern_return_t kr = task_for_pid(mach_task_self(), getpid(), &task);
+  if (kr != KERN_SUCCESS) {
+    return 0;
+  }
+
+  mach_vm_address_t address = aAddress;
+  mach_vm_size_t size;
+  vm_region_basic_info_data_64_t info;
+  mach_msg_type_number_t count = VM_REGION_BASIC_INFO_COUNT_64;
+  mach_port_t object_name;
+  kr = mach_vm_region(task, &address, &size, VM_REGION_BASIC_INFO_64,
+                      reinterpret_cast<vm_region_info_t>(&info), &count,
+                      &object_name);
+  if (kr != KERN_SUCCESS || size == 0
+      || address > aAddress || address + size <= aAddress) {
+    // mach_vm_region failed, or couldn't find region at given address.
+    return 0;
+  }
+
+  return address;
+}
+
 MOZ_NEVER_INLINE
 static bool
 GetStackAfterCurrentFrame(uint8_t** aOutTop, uint8_t** aOutBottom)
 {
-  // TODO
-  *aOutTop = nullptr;
-  *aOutBottom = nullptr;
-  return true;
+  mach_vm_address_t stackFrame =
+    reinterpret_cast<mach_vm_address_t>(__builtin_frame_address(0));
+  *aOutTop = reinterpret_cast<uint8_t*>(stackFrame);
+  // Kernel code shows that stack is always a single region.
+  *aOutBottom = reinterpret_cast<uint8_t*>(RegionContainingAddress(stackFrame));
+  return *aOutBottom && (*aOutBottom < *aOutTop);
 }
 #endif
 
