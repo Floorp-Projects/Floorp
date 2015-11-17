@@ -320,16 +320,7 @@ ImageClientBridge::UpdateImage(ImageContainer* aContainer, uint32_t aContentFlag
 already_AddRefed<Image>
 ImageClientSingle::CreateImage(ImageFormat aFormat)
 {
-  RefPtr<Image> img;
-  switch (aFormat) {
-#ifdef MOZ_WIDGET_GONK
-    case ImageFormat::GRALLOC_PLANAR_YCBCR:
-      img = new GrallocImage();
-      return img.forget();
-#endif
-    default:
-      return nullptr;
-  }
+  return nullptr;
 }
 
 #ifdef MOZ_WIDGET_GONK
@@ -366,20 +357,6 @@ ImageClientOverlay::UpdateImage(ImageContainer* aContainer, uint32_t aContentFla
   }
   return true;
 }
-
-already_AddRefed<Image>
-ImageClientOverlay::CreateImage(ImageFormat aFormat)
-{
-  RefPtr<Image> img;
-  switch (aFormat) {
-    case ImageFormat::OVERLAY_IMAGE:
-      img = new OverlayImage();
-      return img.forget();
-    default:
-      return nullptr;
-  }
-}
-
 #endif
 } // namespace layers
 } // namespace mozilla

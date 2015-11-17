@@ -1481,9 +1481,7 @@ void MediaPipelineReceiveVideo::PipelineListener::RenderVideoFrame(
   if (buffer) {
     // Create a video frame using |buffer|.
 #ifdef MOZ_WIDGET_GONK
-    ImageFormat format = ImageFormat::GRALLOC_PLANAR_YCBCR;
-    RefPtr<Image> image = image_container_->CreateImage(format);
-    PlanarYCbCrImage* yuvImage = static_cast<PlanarYCbCrImage*>(image.get());
+    RefPtr<PlanarYCbCrImage> yuvImage = new GrallocImage();
 #else
     RefPtr<PlanarYCbCrImage> yuvImage = image_container_->CreatePlanarYCbCrImage();
 #endif

@@ -56,6 +56,7 @@ class TextureClientRecycleAllocator;
 class TextureClientPool;
 #endif
 class KeepAlive;
+class GrallocTextureClientOGL;
 
 /**
  * TextureClient is the abstraction that allows us to share data between the
@@ -234,6 +235,7 @@ public:
   }
 
   virtual TextureClientYCbCr* AsTextureClientYCbCr() { return nullptr; }
+  virtual GrallocTextureClientOGL* AsGrallocTextureClientOGL() { return nullptr; }
 
   /**
    * Locks the shared data, allowing the caller to get access to it.

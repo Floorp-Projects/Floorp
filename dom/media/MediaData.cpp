@@ -312,7 +312,7 @@ VideoData::Create(const VideoInfo& aInfo,
     // format.
 #ifdef MOZ_WIDGET_GONK
     if (IsYV12Format(Y, Cb, Cr) && !IsInEmulator()) {
-      v->mImage = aContainer->CreateImage(ImageFormat::GRALLOC_PLANAR_YCBCR);
+      v->mImage = new layers::GrallocImage();
     }
 #endif
     if (!v->mImage) {
@@ -461,22 +461,9 @@ VideoData::Create(const VideoInfo& aInfo,
                                       aInfo.mDisplay,
                                       0));
 
-  v->mImage = aContainer->CreateImage(ImageFormat::GRALLOC_PLANAR_YCBCR);
-  if (!v->mImage) {
-    return nullptr;
-  }
-  NS_ASSERTION(v->mImage->GetFormat() == ImageFormat::GRALLOC_PLANAR_YCBCR,
-               "Wrong format?");
-  typedef mozilla::layers::GrallocImage GrallocImage;
-  GrallocImage* videoImage = static_cast<GrallocImage*>(v->mImage.get());
-  GrallocImage::GrallocData data;
-
-  data.mPicSize = aPicture.Size();
-  data.mGraphicBuffer = aBuffer;
-
-  if (!videoImage->SetData(data)) {
-    return nullptr;
-  }
+  RefPtr<layers::GrallocImage> image = new layers::GrallocImage();
+  image->SetData(aBuffer, aPicture.Size());
+  v->mImage = image;
 
   return v.forget();
 }
