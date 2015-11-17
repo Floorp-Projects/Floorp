@@ -713,8 +713,8 @@ GLBlitHelper::BlitSurfaceTextureImage(layers::SurfaceTextureImage* stImage)
 bool
 GLBlitHelper::BlitEGLImageImage(layers::EGLImageImage* image)
 {
-    EGLImage eglImage = image->GetData()->mImage;
-    EGLSync eglSync = image->GetData()->mSync;
+    EGLImage eglImage = image->GetImage();
+    EGLSync eglSync = image->GetSync();
 
     if (eglSync) {
         EGLint status = sEGLLibrary.fClientWaitSync(EGL_DISPLAY(), eglSync, 0, LOCAL_EGL_FOREVER);
@@ -847,7 +847,7 @@ GLBlitHelper::BlitImageToFramebuffer(layers::Image* srcImage,
 
     case ImageFormat::EGLIMAGE:
         type = ConvertEGLImage;
-        srcOrigin = static_cast<layers::EGLImageImage*>(srcImage)->GetData()->mOriginPos;
+        srcOrigin = srcImage->AsEGLImageImage()->GetOriginPos();
         break;
 #endif
 #ifdef XP_MACOSX

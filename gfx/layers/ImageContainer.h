@@ -115,6 +115,9 @@ protected:
   ImageBackendData() {}
 };
 
+/* Forward declarations for Image derivatives. */
+class EGLImageImage;
+
 /**
  * A class representing a buffer of pixel data. The data can be in one
  * of various formats including YCbCr.
@@ -161,10 +164,13 @@ public:
   virtual uint8_t* GetBuffer() { return nullptr; }
 
   /**
-  * For use with the CompositableClient only (so that the later can
-  * synchronize the TextureClient with the TextureHost).
-  */
+   * For use with the CompositableClient only (so that the later can
+   * synchronize the TextureClient with the TextureHost).
+   */
   virtual TextureClient* GetTextureClient(CompositableClient* aClient) { return nullptr; }
+
+  /* Access to derived classes. */
+  virtual EGLImageImage* AsEGLImageImage() { return nullptr; }
 
 protected:
   Image(void* aImplData, ImageFormat aFormat) :
