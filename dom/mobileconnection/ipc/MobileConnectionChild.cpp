@@ -108,6 +108,12 @@ MobileConnectionChild::GetRadioState(int32_t* aRadioState)
 }
 
 NS_IMETHODIMP
+MobileConnectionChild::GetDeviceIdentities(nsIMobileDeviceIdentities** aIdentities)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
 MobileConnectionChild::GetSupportedNetworkTypes(int32_t** aTypes,
                                                 uint32_t* aLength)
 {

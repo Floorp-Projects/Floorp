@@ -1035,6 +1035,8 @@ pref("dom.webcomponents.enabled", true);
 pref("dom.mozAlarms.enabled", true);
 
 pref("layout.css.scroll-snap.enabled", true);
+pref("layout.css.scroll-behavior.enabled", true);
+pref("layout.css.scroll-behavior.property-enabled", true);
 
 // Enable extensions
 pref("dom.apps.customization.enabled", true);

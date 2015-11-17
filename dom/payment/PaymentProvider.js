@@ -231,9 +231,16 @@ PaymentProvider.prototype.removeSilentSmsObserver = function(aNumber, aCallback)
 };
 
 PaymentProvider.prototype._onSilentSms = function(aSubject, aTopic, aData) {
-  _debug && DEBUG("Got silent message! " + aSubject.sender + " - " + aSubject.body);
+  if (!aSubject || !(aSubject instanceof Ci.nsISmsMessage)) {
+    _debug && DEBUG("Invalid subject when receiving silent message!");
+    return;
+  }
 
-  let number = aSubject.sender;
+  let message = aSubject.QueryInterface(Ci.nsISmsMessage);
+
+  _debug && DEBUG("Got silent message! " + message.sender + " - " + message.body);
+
+  let number = message.sender;
   if (!number || this._silentNumbers.indexOf(number) == -1) {
     _debug && DEBUG("No observers for " + number);
     return;
@@ -246,7 +253,7 @@ PaymentProvider.prototype._onSilentSms = function(aSubject, aTopic, aData) {
   if (this._strategy.paymentServiceId === null) {
     let i = 0;
     while(i < gRil.numRadioInterfaces) {
-      if (this.iccInfo[i].iccId === aSubject.iccId) {
+      if (this.iccInfo[i].iccId === message.iccId) {
         this._strategy.paymentServiceId = i;
         break;
       }
@@ -255,7 +262,13 @@ PaymentProvider.prototype._onSilentSms = function(aSubject, aTopic, aData) {
   }
 
   this._silentSmsObservers[number].forEach(function(callback) {
-    callback(aSubject);
+    callback({
+      iccId: message.iccId,
+      sender: message.sender,
+      body: message.body,
+      timestamp: message.timestamp,
+      sentTimestamp: message.sentTimestamp
+    });
   });
 };
 

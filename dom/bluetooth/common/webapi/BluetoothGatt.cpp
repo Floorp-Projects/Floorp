@@ -112,6 +112,17 @@ BluetoothGatt::Connect(ErrorResult& aRv)
   BluetoothService* bs = BluetoothService::Get();
   BT_ENSURE_TRUE_REJECT(bs, promise, NS_ERROR_NOT_AVAILABLE);
 
+  BluetoothUuid appUuid;
+  BT_ENSURE_TRUE_REJECT(NS_SUCCEEDED(StringToUuid(mAppUuid, appUuid)),
+                        promise,
+                        NS_ERROR_DOM_OPERATION_ERR);
+
+  BluetoothAddress deviceAddr;
+  BT_ENSURE_TRUE_REJECT(
+    NS_SUCCEEDED(StringToAddress(mDeviceAddr, deviceAddr)),
+    promise,
+    NS_ERROR_DOM_OPERATION_ERR);
+
   if (mAppUuid.IsEmpty()) {
     nsresult rv = GenerateUuid(mAppUuid);
     BT_ENSURE_TRUE_REJECT(NS_SUCCEEDED(rv) && !mAppUuid.IsEmpty(),
@@ -122,7 +133,7 @@ BluetoothGatt::Connect(ErrorResult& aRv)
 
   UpdateConnectionState(BluetoothConnectionState::Connecting);
   bs->ConnectGattClientInternal(
-    mAppUuid, mDeviceAddr, new BluetoothVoidReplyRunnable(nullptr, promise));
+    appUuid, deviceAddr, new BluetoothVoidReplyRunnable(nullptr, promise));
 
   return promise.forget();
 }
@@ -147,9 +158,20 @@ BluetoothGatt::Disconnect(ErrorResult& aRv)
   BluetoothService* bs = BluetoothService::Get();
   BT_ENSURE_TRUE_REJECT(bs, promise, NS_ERROR_NOT_AVAILABLE);
 
+  BluetoothUuid appUuid;
+  BT_ENSURE_TRUE_REJECT(NS_SUCCEEDED(StringToUuid(mAppUuid, appUuid)),
+                        promise,
+                        NS_ERROR_DOM_OPERATION_ERR);
+
+  BluetoothAddress deviceAddr;
+  BT_ENSURE_TRUE_REJECT(
+    NS_SUCCEEDED(StringToAddress(mDeviceAddr, deviceAddr)),
+    promise,
+    NS_ERROR_DOM_OPERATION_ERR);
+
   UpdateConnectionState(BluetoothConnectionState::Disconnecting);
   bs->DisconnectGattClientInternal(
-    mAppUuid, mDeviceAddr, new BluetoothVoidReplyRunnable(nullptr, promise));
+    appUuid, deviceAddr, new BluetoothVoidReplyRunnable(nullptr, promise));
 
   return promise.forget();
 }
@@ -196,8 +218,14 @@ BluetoothGatt::ReadRemoteRssi(ErrorResult& aRv)
   BluetoothService* bs = BluetoothService::Get();
   BT_ENSURE_TRUE_REJECT(bs, promise, NS_ERROR_NOT_AVAILABLE);
 
+  BluetoothAddress deviceAddr;
+  BT_ENSURE_TRUE_REJECT(
+    NS_SUCCEEDED(StringToAddress(mDeviceAddr, deviceAddr)),
+    promise,
+    NS_ERROR_DOM_OPERATION_ERR);
+
   bs->GattClientReadRemoteRssiInternal(
-    mClientIf, mDeviceAddr, new ReadRemoteRssiTask(promise));
+    mClientIf, deviceAddr, new ReadRemoteRssiTask(promise));
 
   return promise.forget();
 }
@@ -214,6 +242,11 @@ BluetoothGatt::DiscoverServices(ErrorResult& aRv)
   RefPtr<Promise> promise = Promise::Create(global, aRv);
   NS_ENSURE_TRUE(!aRv.Failed(), nullptr);
 
+  BluetoothUuid appUuid;
+  BT_ENSURE_TRUE_REJECT(NS_SUCCEEDED(StringToUuid(mAppUuid, appUuid)),
+                        promise,
+                        NS_ERROR_DOM_OPERATION_ERR);
+
   BT_ENSURE_TRUE_REJECT(
     mConnectionState == BluetoothConnectionState::Connected &&
     !mDiscoveringServices,
@@ -228,7 +261,7 @@ BluetoothGatt::DiscoverServices(ErrorResult& aRv)
   BluetoothGattBinding::ClearCachedServicesValue(this);
 
   bs->DiscoverGattServicesInternal(
-    mAppUuid, new BluetoothVoidReplyRunnable(nullptr, promise));
+    appUuid, new BluetoothVoidReplyRunnable(nullptr, promise));
 
   return promise.forget();
 }

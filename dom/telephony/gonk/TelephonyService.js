@@ -359,7 +359,8 @@ MobileConnectionListener.prototype = {
   notifyClirModeChanged: function(mode) {},
   notifyLastKnownNetworkChanged: function() {},
   notifyLastKnownHomeNetworkChanged: function() {},
-  notifyNetworkSelectionModeChanged: function() {}
+  notifyNetworkSelectionModeChanged: function() {},
+  notifyDeviceIdentitiesChanged: function() {}
 };
 
 function TelephonyService() {
@@ -1230,22 +1231,13 @@ TelephonyService.prototype = {
    *        A nsITelephonyDialCallback object.
    */
   _getImeiMMI: function(aClientId, aMmi, aCallback) {
-    this._sendToRilWorker(aClientId, "getIMEI", {}, aResponse => {
-      if (aResponse.errorMsg) {
-        aCallback.notifyDialMMIError(aResponse.errorMsg);
-        return;
-      }
+    let connection = gGonkMobileConnectionService.getItemByServiceId(aClientId);
+    if (!connection.deviceIdentities || !connection.deviceIdentities.imei) {
+      aCallback.notifyDialMMIError(RIL.GECKO_ERROR_GENERIC_FAILURE);
+      return;
+    }
 
-      // We expect to have an IMEI at this point if the request was supposed
-      // to query for the IMEI, so getting a successful reply from the RIL
-       // without containing an actual IMEI number is considered an error.
-      if (!aResponse.imei) {
-        aCallback.notifyDialMMIError(RIL.GECKO_ERROR_GENERIC_FAILURE);
-        return;
-      }
-
-      aCallback.notifyDialMMISuccess(aResponse.imei);
-    });
+    aCallback.notifyDialMMISuccess(connection.deviceIdentities.imei);
   },
 
   /**
