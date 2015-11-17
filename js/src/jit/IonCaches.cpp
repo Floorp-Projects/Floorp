@@ -2067,12 +2067,16 @@ ValueToNameOrSymbolId(JSContext* cx, HandleValue idval, MutableHandleId id, bool
     if (!ValueToId<CanGC>(cx, idval, id))
         return false;
 
-    if (!JSID_IS_STRING(id) && !JSID_IS_SYMBOL(id))
+    if (!JSID_IS_STRING(id) && !JSID_IS_SYMBOL(id)) {
+        id.set(JSID_VOID);
         return true;
+    }
 
     uint32_t dummy;
-    if (JSID_IS_STRING(id) && JSID_TO_ATOM(id)->isIndex(&dummy))
+    if (JSID_IS_STRING(id) && JSID_TO_ATOM(id)->isIndex(&dummy)) {
+        id.set(JSID_VOID);
         return true;
+    }
 
     *nameOrSymbol = true;
     return true;
@@ -3358,7 +3362,7 @@ CanAttachAddUnboxedExpando(JSContext* cx, HandleObject obj, HandleShape oldShape
         return false;
 
     Shape* newShape = expando->lastProperty();
-    if (newShape->propid() != id || newShape->previous() != oldShape)
+    if (newShape->isEmptyShape() || newShape->propid() != id || newShape->previous() != oldShape)
         return false;
 
     MOZ_ASSERT(newShape->hasDefaultSetter() && newShape->hasSlot() && newShape->writable());
@@ -3551,6 +3555,9 @@ SetPropertyIC::tryAttachAddSlot(JSContext* cx, HandleScript outerScript, IonScri
     MOZ_ASSERT(!*emitted);
 
     if (!canAttachStub())
+        return true;
+
+    if (!JSID_IS_STRING(id) && !JSID_IS_SYMBOL(id))
         return true;
 
     // A GC may have caused cache.value() to become stale as it is not traced.
