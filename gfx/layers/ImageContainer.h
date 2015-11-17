@@ -120,6 +120,9 @@ class EGLImageImage;
 #ifdef MOZ_WIDGET_ANDROID
 class SurfaceTextureImage;
 #endif
+#ifdef XP_MACOSX
+class MacIOSurfaceImage;
+#endif
 
 /**
  * A class representing a buffer of pixel data. The data can be in one
@@ -176,6 +179,9 @@ public:
   virtual EGLImageImage* AsEGLImageImage() { return nullptr; }
 #ifdef MOZ_WIDGET_ANDROID
   virtual SurfaceTextureImage* AsSurfaceTextureImage() { return nullptr; }
+#endif
+#ifdef XP_MACOSX
+  virtual MacIOSurfaceImage* AsMacIOSurfaceImage() { return nullptr; }
 #endif
 
 protected:
