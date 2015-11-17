@@ -3107,7 +3107,10 @@ ICGetProp_Fallback::Compiler::generateStubCode(MacroAssembler& masm)
 void
 ICGetProp_Fallback::Compiler::postGenerateStubCode(MacroAssembler& masm, Handle<JitCode*> code)
 {
-    cx->compartment()->jitCompartment()->initBaselineGetPropReturnAddr(code->raw() + returnOffset_);
+    if (engine_ == Engine::Baseline) {
+        void* address = code->raw() + returnOffset_;
+        cx->compartment()->jitCompartment()->initBaselineGetPropReturnAddr(address);
+    }
 }
 
 bool
