@@ -7,7 +7,6 @@
 /* implementation of interface for managing user and user-agent style sheets */
 
 #include "nsStyleSheetService.h"
-#include "nsIStyleSheet.h"
 #include "mozilla/CSSStyleSheet.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/unused.h"
@@ -79,14 +78,14 @@ nsStyleSheetService::RegisterFromEnumerator(nsICategoryManager  *aManager,
 }
 
 int32_t
-nsStyleSheetService::FindSheetByURI(const nsCOMArray<nsIStyleSheet> &sheets,
-                                    nsIURI *sheetURI)
+nsStyleSheetService::FindSheetByURI(const nsTArray<RefPtr<CSSStyleSheet>>& aSheets,
+                                    nsIURI* aSheetURI)
 {
-  for (int32_t i = sheets.Count() - 1; i >= 0; i-- ) {
+  for (int32_t i = aSheets.Length() - 1; i >= 0; i-- ) {
     bool bEqual;
-    nsIURI* uri = sheets[i]->GetSheetURI();
+    nsIURI* uri = aSheets[i]->GetSheetURI();
     if (uri
-        && NS_SUCCEEDED(uri->Equals(sheetURI, &bEqual))
+        && NS_SUCCEEDED(uri->Equals(aSheetURI, &bEqual))
         && bEqual) {
       return i;
     }
@@ -153,8 +152,9 @@ nsStyleSheetService::LoadAndRegisterSheet(nsIURI *aSheetURI,
     if (serv) {
       // We're guaranteed that the new sheet is the last sheet in
       // mSheets[aSheetType]
-      const nsCOMArray<nsIStyleSheet> & sheets = mSheets[aSheetType];
-      serv->NotifyObservers(sheets[sheets.Count() - 1], message, nullptr);
+      CSSStyleSheet* sheet = mSheets[aSheetType].LastElement();
+      serv->NotifyObservers(NS_ISUPPORTS_CAST(nsIDOMCSSStyleSheet*, sheet),
+                            message, nullptr);
     }
 
     if (XRE_IsParentProcess()) {
@@ -208,9 +208,7 @@ nsStyleSheetService::LoadAndRegisterSheetInternal(nsIURI *aSheetURI,
                                       getter_AddRefs(sheet));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  if (!mSheets[aSheetType].AppendObject(sheet)) {
-    rv = NS_ERROR_OUT_OF_MEMORY;
-  }
+  mSheets[aSheetType].AppendElement(sheet);
 
   return rv;
 }
@@ -275,8 +273,8 @@ nsStyleSheetService::UnregisterSheet(nsIURI *aSheetURI, uint32_t aSheetType)
 
   int32_t foundIndex = FindSheetByURI(mSheets[aSheetType], aSheetURI);
   NS_ENSURE_TRUE(foundIndex >= 0, NS_ERROR_INVALID_ARG);
-  nsCOMPtr<nsIStyleSheet> sheet = mSheets[aSheetType][foundIndex];
-  mSheets[aSheetType].RemoveObjectAt(foundIndex);
+  RefPtr<CSSStyleSheet> sheet = mSheets[aSheetType][foundIndex];
+  mSheets[aSheetType].RemoveElementAt(foundIndex);
 
   const char* message;
   switch (aSheetType) {
@@ -292,8 +290,10 @@ nsStyleSheetService::UnregisterSheet(nsIURI *aSheetURI, uint32_t aSheetType)
   }
 
   nsCOMPtr<nsIObserverService> serv = services::GetObserverService();
-  if (serv)
-    serv->NotifyObservers(sheet, message, nullptr);
+  if (serv) {
+    serv->NotifyObservers(NS_ISUPPORTS_CAST(nsIDOMCSSStyleSheet*, sheet),
+                          message, nullptr);
+  }
 
   if (XRE_IsParentProcess()) {
     nsTArray<dom::ContentParent*> children;
@@ -329,13 +329,6 @@ nsStyleSheetService::GetInstance()
   return gInstance;
 }
 
-static size_t
-SizeOfElementIncludingThis(nsIStyleSheet* aElement,
-                           MallocSizeOf aMallocSizeOf, void *aData)
-{
-  return aElement->SizeOfIncludingThis(aMallocSizeOf);
-}
-
 MOZ_DEFINE_MALLOC_SIZE_OF(StyleSheetServiceMallocSizeOf)
 
 NS_IMETHODIMP
@@ -352,13 +345,11 @@ size_t
 nsStyleSheetService::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf) const
 {
   size_t n = aMallocSizeOf(this);
-  n += mSheets[AGENT_SHEET].SizeOfExcludingThis(SizeOfElementIncludingThis,
-                                                aMallocSizeOf);
-  n += mSheets[USER_SHEET].SizeOfExcludingThis(SizeOfElementIncludingThis,
-                                               aMallocSizeOf);
-  n += mSheets[AUTHOR_SHEET].SizeOfExcludingThis(SizeOfElementIncludingThis,
-                                                 aMallocSizeOf);
+  for (auto& sheetArray : mSheets) {
+    n += sheetArray.ShallowSizeOfExcludingThis(aMallocSizeOf);
+    for (CSSStyleSheet* sheet : sheetArray) {
+      n += sheet->SizeOfIncludingThis(aMallocSizeOf);
+    }
+  }
   return n;
 }
-
-

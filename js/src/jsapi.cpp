@@ -3971,7 +3971,12 @@ JS::CompileOptions::CompileOptions(JSContext* cx, JSVersion version)
     strictOption = cx->runtime()->options().strictMode();
     extraWarningsOption = cx->compartment()->options().extraWarnings(cx);
     werrorOption = cx->runtime()->options().werror();
-    asmJSOption = cx->runtime()->options().asmJS();
+    if (!cx->runtime()->options().asmJS())
+        asmJSOption = AsmJSOption::Disabled;
+    else if (cx->compartment()->debuggerObservesAsmJS())
+        asmJSOption = AsmJSOption::DisabledByDebugger;
+    else
+        asmJSOption = AsmJSOption::Enabled;
     throwOnAsmJSValidationFailureOption = cx->runtime()->options().throwOnAsmJSValidationFailure();
 }
 

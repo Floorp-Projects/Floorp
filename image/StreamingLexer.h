@@ -1,4 +1,5 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -14,7 +15,9 @@
 
 #include <algorithm>
 #include "mozilla/Assertions.h"
+#include "mozilla/Attributes.h"
 #include "mozilla/Maybe.h"
+#include "mozilla/Variant.h"
 #include "mozilla/Vector.h"
 
 namespace mozilla {
@@ -27,13 +30,12 @@ enum class BufferingStrategy
   UNBUFFERED  // Data will be processed as it arrives, in multiple chunks.
 };
 
-/// @return true if @aState is a terminal state.
-template <typename State>
-bool IsTerminalState(State aState)
+/// The result of a call to StreamingLexer::Lex().
+enum class TerminalState
 {
-  return aState == State::SUCCESS ||
-         aState == State::FAILURE;
-}
+  SUCCESS,
+  FAILURE
+};
 
 /**
  * LexerTransition is a type used to give commands to the lexing framework.
@@ -45,33 +47,78 @@ template <typename State>
 class LexerTransition
 {
 public:
-  State NextState() const { return mNextState; }
-  State UnbufferedState() const { return *mUnbufferedState; }
-  size_t Size() const { return mSize; }
-  BufferingStrategy Buffering() const { return mBufferingStrategy; }
+  // This is implicit so that Terminate{Success,Failure}() can return a
+  // TerminalState and have it implicitly converted to a
+  // LexerTransition<State>, which avoids the need for a "<State>"
+  // qualification to the Terminate{Success,Failure}() callsite.
+  MOZ_IMPLICIT LexerTransition(TerminalState aFinalState)
+    : mNextState(aFinalState)
+  {}
+
+  bool NextStateIsTerminal() const
+  {
+    return mNextState.template is<TerminalState>();
+  }
+
+  TerminalState NextStateAsTerminal() const
+  {
+    return mNextState.template as<TerminalState>();
+  }
+
+  State NextState() const
+  {
+    return mNextState.template as<NonTerminalState>().mState;
+  }
+
+  State UnbufferedState() const
+  {
+    return *mNextState.template as<NonTerminalState>().mUnbufferedState;
+  }
+
+  size_t Size() const
+  {
+    return mNextState.template as<NonTerminalState>().mSize;
+  }
+
+  BufferingStrategy Buffering() const
+  {
+    return mNextState.template as<NonTerminalState>().mBufferingStrategy;
+  }
 
 private:
   friend struct Transition;
 
-  LexerTransition(const State& aNextState,
+  LexerTransition(State aNextState,
                   const Maybe<State>& aUnbufferedState,
                   size_t aSize,
                   BufferingStrategy aBufferingStrategy)
-    : mNextState(aNextState)
-    , mUnbufferedState(aUnbufferedState)
-    , mSize(aSize)
-    , mBufferingStrategy(aBufferingStrategy)
-  {
-    MOZ_ASSERT_IF(mBufferingStrategy == BufferingStrategy::UNBUFFERED,
-                  mUnbufferedState);
-    MOZ_ASSERT_IF(mUnbufferedState,
-                  mBufferingStrategy == BufferingStrategy::UNBUFFERED);
-  }
+    : mNextState(NonTerminalState(aNextState, aUnbufferedState, aSize,
+                                  aBufferingStrategy))
+  {}
 
-  State mNextState;
-  Maybe<State> mUnbufferedState;
-  size_t mSize;
-  BufferingStrategy mBufferingStrategy;
+  struct NonTerminalState
+  {
+    State mState;
+    Maybe<State> mUnbufferedState;
+    size_t mSize;
+    BufferingStrategy mBufferingStrategy;
+
+    NonTerminalState(State aState,
+                     const Maybe<State>& aUnbufferedState,
+                     size_t aSize,
+                     BufferingStrategy aBufferingStrategy)
+      : mState(aState)
+      , mUnbufferedState(aUnbufferedState)
+      , mSize(aSize)
+      , mBufferingStrategy(aBufferingStrategy)
+    {
+      MOZ_ASSERT_IF(mBufferingStrategy == BufferingStrategy::UNBUFFERED,
+                    mUnbufferedState);
+      MOZ_ASSERT_IF(mUnbufferedState,
+                    mBufferingStrategy == BufferingStrategy::UNBUFFERED);
+    }
+  };
+  Variant<NonTerminalState, TerminalState> mNextState;
 };
 
 struct Transition
@@ -81,7 +128,6 @@ struct Transition
   static LexerTransition<State>
   To(const State& aNextState, size_t aSize)
   {
-    MOZ_ASSERT(!IsTerminalState(aNextState));
     return LexerTransition<State>(aNextState, Nothing(), aSize,
                                   BufferingStrategy::BUFFERED);
   }
@@ -102,8 +148,6 @@ struct Transition
                const State& aUnbufferedState,
                size_t aSize)
   {
-    MOZ_ASSERT(!IsTerminalState(aNextState));
-    MOZ_ASSERT(!IsTerminalState(aUnbufferedState));
     return LexerTransition<State>(aNextState, Some(aUnbufferedState), aSize,
                                   BufferingStrategy::UNBUFFERED);
   }
@@ -119,23 +163,34 @@ struct Transition
   static LexerTransition<State>
   ContinueUnbuffered(const State& aUnbufferedState)
   {
-    MOZ_ASSERT(!IsTerminalState(aUnbufferedState));
     return LexerTransition<State>(aUnbufferedState, Nothing(), 0,
                                   BufferingStrategy::BUFFERED);
   }
 
   /**
-   * Terminate lexing, ending up in terminal state @aFinalState.
+   * Terminate lexing, ending up in terminal state SUCCESS. (The implicit
+   * LexerTransition constructor will convert the result to a LexerTransition
+   * as needed.)
    *
-   * No more data will be delivered after Terminate() is used.
+   * No more data will be delivered after this function is used.
    */
-  template <typename State>
-  static LexerTransition<State>
-  Terminate(const State& aFinalState)
+  static TerminalState
+  TerminateSuccess()
   {
-    MOZ_ASSERT(IsTerminalState(aFinalState));
-    return LexerTransition<State>(aFinalState, Nothing(), 0,
-                                  BufferingStrategy::BUFFERED);
+    return TerminalState::SUCCESS;
+  }
+
+  /**
+   * Terminate lexing, ending up in terminal state FAILURE. (The implicit
+   * LexerTransition constructor will convert the result to a LexerTransition
+   * as needed.)
+   *
+   * No more data will be delivered after this function is used.
+   */
+  static TerminalState
+  TerminateFailure()
+  {
+    return TerminalState::FAILURE;
   }
 
 private:
@@ -151,7 +206,7 @@ private:
  *
  *  - Create a State type. This should be an |enum class| listing all of the
  *    states that you can be in while lexing the image format you're trying to
- *    read. It must contain the two terminal states SUCCESS and FAILURE.
+ *    read.
  *
  *  - Add an instance of StreamingLexer<State> to your decoder class. Initialize
  *    it with a Transition::To() the state that you want to start lexing in.
@@ -166,9 +221,9 @@ private:
  *
  *  - Write the methods that actually implement lexing for your image format.
  *    These methods should return either Transition::To(), to move on to another
- *    state, or Transition::Terminate(), if lexing has terminated in either
- *    success or failure. (There are also additional transitions for unbuffered
- *    reads; see below.)
+ *    state, or Transition::Terminate{Success,Failure}(), if lexing has
+ *    terminated in either success or failure. (There are also additional
+ *    transitions for unbuffered reads; see below.)
  *
  * That's all there is to it. The StreamingLexer will track your position in the
  * input and buffer enough data so that your lexing methods can process
@@ -208,12 +263,12 @@ public:
   { }
 
   template <typename Func>
-  Maybe<State> Lex(const char* aInput, size_t aLength, Func aFunc)
+  Maybe<TerminalState> Lex(const char* aInput, size_t aLength, Func aFunc)
   {
-    if (IsTerminalState(mTransition.NextState())) {
+    if (mTransition.NextStateIsTerminal()) {
       // We've already reached a terminal state. We never deliver any more data
       // in this case; just return the terminal state again immediately.
-      return Some(mTransition.NextState());
+      return Some(mTransition.NextStateAsTerminal());
     }
 
     if (mToReadUnbuffered > 0) {
@@ -225,15 +280,15 @@ public:
 
       size_t toRead = std::min(mToReadUnbuffered, aLength);
 
-      // Call aFunc with the unbuffered state to indicate that we're in the middle
-      // of an unbuffered read. We enforce that any state transition passed back
-      // to us is either a terminal states or takes us back to the unbuffered
-      // state.
+      // Call aFunc with the unbuffered state to indicate that we're in the
+      // middle of an unbuffered read. We enforce that any state transition
+      // passed back to us is either a terminal state or takes us back to the
+      // unbuffered state.
       LexerTransition<State> unbufferedTransition =
         aFunc(mTransition.UnbufferedState(), aInput, toRead);
-      if (IsTerminalState(unbufferedTransition.NextState())) {
+      if (unbufferedTransition.NextStateIsTerminal()) {
         mTransition = unbufferedTransition;
-        return Some(mTransition.NextState());  // Done!
+        return Some(mTransition.NextStateAsTerminal());  // Done!
       }
       MOZ_ASSERT(mTransition.UnbufferedState() ==
                    unbufferedTransition.NextState());
@@ -247,8 +302,8 @@ public:
 
       // We're done with the unbuffered read, so transition to the next state.
       mTransition = aFunc(mTransition.NextState(), nullptr, 0);
-      if (IsTerminalState(mTransition.NextState())) {
-        return Some(mTransition.NextState());  // Done!
+      if (mTransition.NextStateIsTerminal()) {
+        return Some(mTransition.NextStateAsTerminal());  // Done!
       }
     } else if (0 < mBuffer.length()) {
       // We're continuing a buffered read.
@@ -272,8 +327,8 @@ public:
       mTransition =
         aFunc(mTransition.NextState(), mBuffer.begin(), mBuffer.length());
       mBuffer.clear();
-      if (IsTerminalState(mTransition.NextState())) {
-        return Some(mTransition.NextState());  // Done!
+      if (mTransition.NextStateIsTerminal()) {
+        return Some(mTransition.NextStateAsTerminal());  // Done!
       }
     }
 
@@ -291,13 +346,13 @@ public:
 
         // Call aFunc with the unbuffered state to indicate that we're in the
         // middle of an unbuffered read. We enforce that any state transition
-        // passed back to us is either a terminal states or takes us back to the
+        // passed back to us is either a terminal state or takes us back to the
         // unbuffered state.
         LexerTransition<State> unbufferedTransition =
           aFunc(mTransition.UnbufferedState(), aInput, toRead);
-        if (IsTerminalState(unbufferedTransition.NextState())) {
+        if (unbufferedTransition.NextStateIsTerminal()) {
           mTransition = unbufferedTransition;
-          return Some(mTransition.NextState());  // Done!
+          return Some(mTransition.NextStateAsTerminal());  // Done!
         }
         MOZ_ASSERT(mTransition.UnbufferedState() ==
                      unbufferedTransition.NextState());
@@ -309,8 +364,8 @@ public:
       aInput += toRead;
       aLength -= toRead;
 
-      if (IsTerminalState(mTransition.NextState())) {
-        return Some(mTransition.NextState());  // Done!
+      if (mTransition.NextStateIsTerminal()) {
+        return Some(mTransition.NextStateAsTerminal());  // Done!
       }
     }
 
@@ -323,9 +378,9 @@ public:
     if (mTransition.Buffering() == BufferingStrategy::UNBUFFERED) {
       LexerTransition<State> unbufferedTransition =
         aFunc(mTransition.UnbufferedState(), aInput, aLength);
-      if (IsTerminalState(unbufferedTransition.NextState())) {
+      if (unbufferedTransition.NextStateIsTerminal()) {
         mTransition = unbufferedTransition;
-        return Some(mTransition.NextState());  // Done!
+        return Some(mTransition.NextStateAsTerminal());  // Done!
       }
       MOZ_ASSERT(mTransition.UnbufferedState() ==
                    unbufferedTransition.NextState());
@@ -333,11 +388,11 @@ public:
       mToReadUnbuffered = mTransition.Size() - aLength;
       return Nothing();  // Need more input.
     }
-    
+
     // If the next state is buffered, buffer what we can and then wait.
     MOZ_ASSERT(mTransition.Buffering() == BufferingStrategy::BUFFERED);
     if (!mBuffer.reserve(mTransition.Size())) {
-      return Some(State::FAILURE);  // Done due to allocation failure.
+      return Some(TerminalState::FAILURE);  // Done due to allocation failure.
     }
     mBuffer.append(aInput, aLength);
     return Nothing();  // Need more input.

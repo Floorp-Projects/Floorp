@@ -310,6 +310,7 @@ private:
   DECL_GFX_PREF(Once, "layers.componentalpha.enabled",         ComponentAlphaEnabled, bool, true);
 #endif
   DECL_GFX_PREF(Live, "layers.composer2d.enabled",             Composer2DCompositionEnabled, bool, false);
+  DECL_GFX_PREF(Live, "layers.screen-recording.enabled",       ScreenRecordingEnabled, bool, false);
   DECL_GFX_PREF(Once, "layers.d3d11.disable-warp",             LayersD3D11DisableWARP, bool, false);
   DECL_GFX_PREF(Once, "layers.d3d11.force-warp",               LayersD3D11ForceWARP, bool, false);
   DECL_GFX_PREF(Live, "layers.deaa.enabled",                   LayersDEAAEnabled, bool, false);

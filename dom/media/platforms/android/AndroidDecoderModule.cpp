@@ -127,14 +127,8 @@ public:
       return NS_ERROR_FAILURE;
     }
 
-    RefPtr<layers::Image> img = mImageContainer->CreateImage(ImageFormat::SURFACE_TEXTURE);
-    layers::SurfaceTextureImage::Data data;
-    data.mSurfTex = mSurfaceTexture.get();
-    data.mSize = mConfig.mDisplay;
-    data.mOriginPos = gl::OriginPos::BottomLeft;
-
-    layers::SurfaceTextureImage* stImg = static_cast<layers::SurfaceTextureImage*>(img.get());
-    stImg->SetData(data);
+    RefPtr<layers::Image> img =
+      new SurfaceTextureImage(mSurfaceTexture.get(), mConfig.mDisplay, gl::OriginPos::BottomLeft);
 
     if (WantCopy()) {
       EGLImage eglImage = CopySurface(img);
@@ -156,16 +150,10 @@ public:
         NS_WARNING("No EGL fence support detected, rendering artifacts may occur!");
       }
 
-      img = mImageContainer->CreateImage(ImageFormat::EGLIMAGE);
-      layers::EGLImageImage::Data data;
-      data.mImage = eglImage;
-      data.mSync = eglSync;
-      data.mOwns = true;
-      data.mSize = mConfig.mDisplay;
-      data.mOriginPos = gl::OriginPos::TopLeft;
-
-      layers::EGLImageImage* typedImg = static_cast<layers::EGLImageImage*>(img.get());
-      typedImg->SetData(data);
+      img = new layers::EGLImageImage(
+        eglImage, eglSync,
+        mConfig.mDisplay, gl::OriginPos::TopLeft,
+        true /* owns */);
     }
 
     nsresult rv;

@@ -577,8 +577,7 @@ class FullParseHandler
     }
 
     ParseNode* newCaseOrDefault(uint32_t begin, ParseNode* expr, ParseNode* body) {
-        TokenPos pos(begin, body->pn_pos.end);
-        return new_<BinaryNode>(expr ? PNK_CASE : PNK_DEFAULT, JSOP_NOP, pos, expr, body);
+        return new_<CaseClause>(expr, body, begin);
     }
 
     ParseNode* newContinueStatement(PropertyName* label, const TokenPos& pos) {
