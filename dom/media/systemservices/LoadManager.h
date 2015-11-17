@@ -16,7 +16,7 @@
 #include "webrtc/common_types.h"
 #include "webrtc/video_engine/include/vie_base.h"
 
-extern PRLogModuleInfo *gLoadManagerLog;
+extern mozilla::LazyLogModule gLoadManagerLog;
 
 namespace mozilla {
 

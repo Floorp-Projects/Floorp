@@ -1173,6 +1173,10 @@ private:
         event->ReportCanceled();
         runnable = new CancelChannelRunnable(mInterceptedChannel,
                                              NS_ERROR_INTERCEPTION_FAILED);
+      } else if (event->GetInternalNSEvent()->mFlags.mExceptionHasBeenRisen) {
+        // Exception logged via the WorkerPrivate ErrorReporter
+        runnable = new CancelChannelRunnable(mInterceptedChannel,
+                                             NS_ERROR_INTERCEPTION_FAILED);
       } else {
         runnable = new ResumeRequest(mInterceptedChannel);
       }

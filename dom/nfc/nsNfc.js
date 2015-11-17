@@ -155,7 +155,8 @@ MozNFCTagImpl.prototype = {
   canBeMadeReadOnly: null,
   isLost: false,
 
-  createTech: { "ISO-DEP": (win, tag) => { return new win.MozIsoDepTech(tag); }
+  createTech: { "ISO-DEP": (win, tag) => { return new win.MozIsoDepTech(tag); },
+                "NFC-A"  : (win, tag) => { return new win.MozNfcATech(tag);   },
               },
 
   // NFCTag interface:

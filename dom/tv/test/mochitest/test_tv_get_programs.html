@@ -12,22 +12,68 @@
 <script type="application/javascript" src="./head.js"></script>
 <script type="application/javascript">
 
-var tests = [
-  // Setup preferences and permissions
-  setupPrefsAndPermissions,
+function runTest() {
+  ok('tv' in navigator, "navigator.tv should exist.");
 
-  // Installing the app
-  installApp.bind(this, "file_tv_get_programs.html", "file_app.template.webapp"),
+  navigator.tv.getTuners().then(
+    function(aTuners) {
+      ok(aTuners.length > 0, "Got at least 1 tuner.");
 
-  // Run tests in app
-  testApp,
+      aTuners[0].getSources().then(
+        function(aSources) {
+          ok(aSources.length > 0, "Got at least 1 source.");
 
-  // Uninstall the app
-  uninstallApp
-];
+          aSources[0].getChannels().then(
+            function(aChannels) {
+              ok(aChannels.length > 0, "Got at least 1 channel.");
+
+              aChannels[0].getPrograms().then(
+                function(aPrograms) {
+                  ok(aPrograms.length > 0, "Got at least 1 program.");
+
+                  for (var i = 0; i < aPrograms.length; i++) {
+                    var program = aPrograms[i];
+                    ok(program instanceof TVProgram, "Program " + i + " should be in the right type.")
+                    ok('channel' in program, "Program " + i + " should have a channel.");
+                    ok('eventId' in program, "Program " + i + " should have an event ID.");
+                    ok('title' in program, "Program " + i + " should have a title.");
+                    ok('startTime' in program, "Program " + i + " should have start time.");
+                    ok('duration' in program, "Program " + i + " should have duration.");
+                    ok(program.getAudioLanguages().length >= 0,
+                       "Program " + i + " may have audio language(s).");
+                    ok(program.getSubtitleLanguages().length >= 0,
+                       "Program " + i + " may have subtitle language(s).");
+                  }
+
+                  SimpleTest.finish();
+                },
+                function(aError) {
+                  ok(false, "Error occurred when getting programs: " + aError);
+                  SimpleTest.finish();
+                }
+              );
+            },
+            function(aError) {
+              ok(false, "Error occurred when getting channels: " + aError);
+              SimpleTest.finish();
+            }
+          );
+        },
+        function(aError) {
+          ok(false, "Error occurred when getting sources: " + aError);
+          SimpleTest.finish();
+        }
+      );
+    },
+    function(aError) {
+      ok(false, "Error occurred when getting tuners: " + aError);
+      SimpleTest.finish();
+    }
+  );
+}
 
 SimpleTest.waitForExplicitFinish();
-runTest();
+prepareTest(runTest);
 
 </script>
 </pre>

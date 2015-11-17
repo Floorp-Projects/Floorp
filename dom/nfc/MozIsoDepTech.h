@@ -44,7 +44,7 @@ private:
   RefPtr<nsPIDOMWindow> mWindow;
   RefPtr<MozNFCTag> mTag;
 
-  static const NFCTechType mTechnology;
+  static const NFCTechType sTechnology;
 };
 
 } // namespace dom

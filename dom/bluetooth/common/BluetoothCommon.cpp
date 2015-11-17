@@ -6,6 +6,10 @@
 
 #include "BluetoothCommon.h"
 
+// FIXME: Bug 1224171: This variable needs to be cleaned up and
+//                     remove from global namespace.
+bool gBluetoothDebugFlag = false;
+
 BEGIN_BLUETOOTH_NAMESPACE
 
 //

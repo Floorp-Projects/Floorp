@@ -162,7 +162,7 @@ GetNotifyIMEMessageName(IMEMessage aMessage)
 
 StaticRefPtr<nsIContent> IMEStateManager::sContent;
 nsPresContext* IMEStateManager::sPresContext = nullptr;
-StaticRefPtr<nsIWidget> IMEStateManager::sFocusedIMEWidget;
+nsIWidget* IMEStateManager::sFocusedIMEWidget;
 StaticRefPtr<TabParent> IMEStateManager::sActiveTabParent;
 StaticRefPtr<IMEContentObserver> IMEStateManager::sActiveIMEContentObserver;
 TextCompositionArray* IMEStateManager::sTextCompositions = nullptr;
@@ -215,6 +215,15 @@ IMEStateManager::OnTabParentDestroying(TabParent* aTabParent)
 
   // TODO: Need to cancel composition without TextComposition and make
   //       disable IME.
+}
+
+// static
+void
+IMEStateManager::WidgetDestroyed(nsIWidget* aWidget)
+{
+  if (sFocusedIMEWidget == aWidget) {
+    sFocusedIMEWidget = nullptr;
+  }
 }
 
 // static
@@ -1316,7 +1325,7 @@ IMEStateManager::NotifyIME(const IMENotification& aNotification,
      "aWidget=0x%p, aOriginIsRemote=%s), sFocusedIMEWidget=0x%p, "
      "sRemoteHasFocus=%s",
      GetNotifyIMEMessageName(aNotification.mMessage), aWidget,
-     GetBoolName(aOriginIsRemote), sFocusedIMEWidget.get(),
+     GetBoolName(aOriginIsRemote), sFocusedIMEWidget,
      GetBoolName(sRemoteHasFocus)));
 
   if (NS_WARN_IF(!aWidget)) {

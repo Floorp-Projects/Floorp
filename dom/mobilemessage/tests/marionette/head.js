@@ -236,7 +236,7 @@ function sendMmsWithFailure(aMmsParameters, aSendParameters) {
 /**
  * Retrieve message by message id.
  *
- * Fulfill params: MozSmsMessage
+ * Fulfill params: SmsMessage
  * Reject params:
  *   event -- a DOMEvent
  *
@@ -481,7 +481,7 @@ function sendTextSmsToEmulator(aFrom, aText) {
 /**
  * Send simple text SMS to emulator and wait for a received event.
  *
- * Fulfill params: MozSmsMessage
+ * Fulfill params: SmsMessage
  * Reject params: (none)
  *
  * @param aFrom

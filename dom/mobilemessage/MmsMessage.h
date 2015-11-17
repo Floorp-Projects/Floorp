@@ -1,111 +1,106 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:set ts=2 sw=2 sts=2 et cindent: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this file,
- * You can obtain one at http://mozilla.org/MPL/2.0/. */
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_mobilemessage_MmsMessage_h
-#define mozilla_dom_mobilemessage_MmsMessage_h
+#ifndef mozilla_dom_MmsMessage_h
+#define mozilla_dom_MmsMessage_h
 
-#include "nsIDOMMozMmsMessage.h"
-#include "nsString.h"
-#include "mozilla/dom/mobilemessage/Types.h"
-#include "mozilla/dom/MozMmsMessageBinding.h"
-#include "mozilla/dom/MozMobileMessageManagerBinding.h"
-#include "mozilla/Attributes.h"
+#include "mozilla/dom/BindingDeclarations.h"
+#include "nsWrapperCache.h"
+
+class nsPIDOMWindow;
 
 namespace mozilla {
 namespace dom {
 
-class Blob;
-
 namespace mobilemessage {
-class MmsMessageData;
+class MmsMessageInternal;
 } // namespace mobilemessage
 
-class ContentParent;
+struct MmsAttachment;
+struct MmsDeliveryInfo;
 
-class MmsMessage final : public nsIDOMMozMmsMessage
+class MmsMessage final : public nsISupports,
+                         public nsWrapperCache
 {
 public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIDOMMOZMMSMESSAGE
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(MmsMessage)
 
-  // If this is changed, change the WebIDL dictionary as well.
-  struct Attachment final
+  MmsMessage(nsPIDOMWindow* aWindow,
+             mobilemessage::MmsMessageInternal* aMessage);
+
+  nsPIDOMWindow*
+  GetParentObject() const
   {
-    RefPtr<Blob> content;
-    nsString id;
-    nsString location;
+    return mWindow;
+  }
 
-    explicit Attachment(const MmsAttachment& aAttachment) :
-      content(aAttachment.mContent),
-      id(aAttachment.mId),
-      location(aAttachment.mLocation)
-    {}
-  };
+  virtual JSObject*
+  WrapObject(JSContext* aCx,
+             JS::Handle<JSObject*> aGivenProto) override;
 
-  MmsMessage(int32_t aId,
-             uint64_t aThreadId,
-             const nsAString& aIccId,
-             mobilemessage::DeliveryState aDelivery,
-             const nsTArray<MmsDeliveryInfo>& aDeliveryInfo,
-             const nsAString& aSender,
-             const nsTArray<nsString>& aReceivers,
-             uint64_t aTimestamp,
-             uint64_t aSentTimestamp,
-             bool aRead,
-             const nsAString& aSubject,
-             const nsAString& aSmil,
-             const nsTArray<Attachment>& aAttachments,
-             uint64_t aExpiryDate,
-             bool aReadReportRequested);
+  void
+  GetType(nsString& aRetVal) const;
 
-  explicit MmsMessage(const mobilemessage::MmsMessageData& aData);
+  int32_t
+  Id() const;
 
-  static nsresult Create(int32_t aId,
-                         uint64_t aThreadId,
-                         const nsAString& aIccId,
-                         const nsAString& aDelivery,
-                         const JS::Value& aDeliveryInfo,
-                         const nsAString& aSender,
-                         const JS::Value& aReceivers,
-                         uint64_t aTimestamp,
-                         uint64_t aSentTimestamp,
-                         bool aRead,
-                         const nsAString& aSubject,
-                         const nsAString& aSmil,
-                         const JS::Value& aAttachments,
-                         uint64_t aExpiryDate,
-                         bool aReadReportRequested,
-                         JSContext* aCx,
-                         nsIDOMMozMmsMessage** aMessage);
+  uint64_t
+  ThreadId() const;
 
-  bool GetData(ContentParent* aParent,
-               mobilemessage::MmsMessageData& aData);
+  void
+  GetIccId(nsString& aRetVal) const;
+
+  void
+  GetDelivery(nsString& aRetVal) const;
+
+  void
+  GetDeliveryInfo(nsTArray<MmsDeliveryInfo>& aRetVal) const;
+
+  void
+  GetSender(nsString& aRetVal) const;
+
+  void
+  GetReceivers(nsTArray<nsString>& aRetVal) const;
+
+  uint64_t
+  Timestamp() const;
+
+  uint64_t
+  SentTimestamp() const;
+
+  bool
+  Read() const;
+
+  void
+  GetSubject(nsString& aRetVal) const;
+
+  void
+  GetSmil(nsString& aRetVal) const;
+
+  void
+  GetAttachments(nsTArray<MmsAttachment>& aRetVal) const;
+
+  uint64_t
+  ExpiryDate() const;
+
+  bool
+  ReadReportRequested() const;
 
 private:
+  // Don't try to use the default constructor.
+  MmsMessage() = delete;
 
-  ~MmsMessage() {}
+  ~MmsMessage();
 
-  int32_t mId;
-  uint64_t mThreadId;
-  nsString mIccId;
-  mobilemessage::DeliveryState mDelivery;
-  nsTArray<MmsDeliveryInfo> mDeliveryInfo;
-  nsString mSender;
-  nsTArray<nsString> mReceivers;
-  uint64_t mTimestamp;
-  uint64_t mSentTimestamp;
-  bool mRead;
-  nsString mSubject;
-  nsString mSmil;
-  nsTArray<Attachment> mAttachments;
-  uint64_t mExpiryDate;
-  bool mReadReportRequested;
+  nsCOMPtr<nsPIDOMWindow> mWindow;
+  RefPtr<mobilemessage::MmsMessageInternal> mMessage;
 };
 
 } // namespace dom
 } // namespace mozilla
 
-#endif // mozilla_dom_mobilemessage_MmsMessage_h
+#endif // mozilla_dom_MmsMessage_h

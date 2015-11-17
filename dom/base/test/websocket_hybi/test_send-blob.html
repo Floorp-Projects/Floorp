@@ -7,7 +7,6 @@
 <body>
 
 <p id="display">
-  <input id="fileList" type="file"></input>
 </p>
 <div id="content" style="display: none">
 </div>
@@ -20,74 +19,51 @@ function startsWith(target, prefix)
     return target.indexOf(prefix) === 0;
 }
 
-function createDOMFile(fileName, fileData)
-{
-    // create File in profile dir 
-    var dirSvc = SpecialPowers.Cc["@mozilla.org/file/directory_service;1"]
-                         .getService(SpecialPowers.Ci.nsIProperties);
-    var testFile = dirSvc.get("ProfD", SpecialPowers.Ci.nsIFile);
-    testFile.append(fileName);
-    var outStream = SpecialPowers.Cc["@mozilla.org/network/file-output-stream;1"]
-                               .createInstance(SpecialPowers.Ci.nsIFileOutputStream);
-    outStream.init(testFile, 0x02 | 0x08 | 0x20, 0666, 0);
-    if (fileData) {
-        outStream.write(fileData, fileData.length);
-        outStream.close();
-    } 
-
-    // Set filename into DOM <input> field, as if selected by user 
-    var fileList = document.getElementById('fileList');
-    SpecialPowers.wrap(fileList).value = testFile.path;
-
-    // return JS File object, aka Blob
-    return fileList.files[0];
-}
-
-
-function createBlobContainingHelloWorld()
-{
-    return createDOMFile("hellofile", "Hello, world!");
-}
-
-function createEmptyBlob()
-{
-    return createDOMFile("emptyfile");
-}
-
-function createBlobContainingAllDistinctBytes()
+function distinctBytes()
 {
     var array = new Array();
     for (var i = 0; i < 256; ++i)
         array[i] = i;
-    // Concatenates chars into a single binary string 
-    binaryString = String.fromCharCode.apply(null, array);
-    return createDOMFile("allchars", binaryString);
+    // Concatenates chars into a single binary string
+    return String.fromCharCode.apply(null, array);
 }
 
-var ws = new WebSocket("ws://mochi.test:8888/tests/dom/base/test/websocket_hybi/file_check-binary-messages");
-var closeEvent;
+var filesToCreate = [
+  {name: "hellofile", data: "Hello, world!"},
+  {name: "emptyfile"},
+  {name: "allchars", data: distinctBytes()},
+];
 
-ws.onopen = function()
-{
-    ws.send(createBlobContainingHelloWorld());
-    ws.send(createEmptyBlob());
-    ws.send(createBlobContainingAllDistinctBytes());
-};
+SpecialPowers.createFiles(filesToCreate, function (files) {
+  var ws = new WebSocket("ws://mochi.test:8888/tests/dom/base/test/websocket_hybi/file_check-binary-messages");
+  var closeEvent;
 
-ws.onmessage = function(event)
-{
-    var message = event.data;
-    if (startsWith(message, "PASS"))
-        ok(true, message);
-    else
-        ok(false, message);
-};
+  ws.onopen = function()
+  {
+      ws.send(files[0]);
+      ws.send(files[1]);
+      ws.send(files[2]);
+  };
 
-ws.onclose = function(event)
-{
+  ws.onmessage = function(event)
+  {
+      var message = event.data;
+      if (startsWith(message, "PASS"))
+          ok(true, message);
+      else
+          ok(false, message);
+  };
+
+  ws.onclose = function(event)
+  {
     ok(event.wasClean, "should have closed cleanly");
     SimpleTest.finish();
-};
+  };
+},
+function (msg) {
+  ok(false, "Failed to create files: " + msg);
+  SimpleTest.finish();
+});
 
 SimpleTest.waitForExplicitFinish();
 

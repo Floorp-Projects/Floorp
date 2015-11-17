@@ -10,34 +10,18 @@
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 
   <script type="text/javascript;version=1.7">
-  function createZipInZipData() {
-    var Cc = SpecialPowers.Cc;
-    var Ci = SpecialPowers.Ci;
-
-    var dirSvc = Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties);
-    var testFile = dirSvc.get("ProfD", Ci.nsIFile);
-    testFile.append("fileArchiveReader_42.zip");
-    var outStream = Cc["@mozilla.org/network/file-output-stream;1"].createInstance(Ci.nsIFileOutputStream);
-    outStream.init(testFile, 0x02 | 0x08 | 0x20, // write, create, truncate
-                   0666, 0);
-
+  function filesToCreate() {
     var binaryData = "";
     for (var i = 0, len = binaryString.length / 2; i < len; ++i) {
       var hex = binaryString[i * 2] + binaryString[i * 2 + 1];
       binaryData += String.fromCharCode(parseInt(hex,16));
     }
-    outStream.write(binaryData, binaryData.length);
-    outStream.close();
-
-    var fileList = document.getElementById('fileList');
-    SpecialPowers.wrap(fileList).value = testFile.path;
-
-    return fileList.files[0];
+    return [ {name: "fileArchiveReader_42.zip", data: binaryData} ];
   }
 
-  function testSteps()
+  function testSteps(files)
   {
-    var binaryFile = createZipInZipData();
+    var binaryFile = files[0];
 
     // The input is 4 nested zip archives:
     doLoop(binaryFile, 4);
@@ -96,7 +80,6 @@
 
 <body onload="runTest();">
 <p id="display">
-  <input id="fileList" type="file"></input>
 </p>
 <script type="text/javascript;version=1.7">
 var binaryString = '' +

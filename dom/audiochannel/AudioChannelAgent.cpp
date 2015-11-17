@@ -130,6 +130,11 @@ AudioChannelAgent::InitInternal(nsIDOMWindow* aWindow, int32_t aChannelType,
     mCallback = aCallback;
   }
 
+  MOZ_LOG(AudioChannelService::GetAudioChannelLog(), LogLevel::Debug,
+         ("AudioChannelAgent, InitInternal, this = %p, type = %d, "
+          "owner = %p, hasCallback = %d\n", this, mAudioChannelType,
+          mWindow.get(), (!!mCallback || !!mWeakCallback)));
+
   return NS_OK;
 }
 
@@ -158,6 +163,10 @@ NS_IMETHODIMP AudioChannelAgent::NotifyStartedPlaying(uint32_t aNotifyPlayback,
 
   service->GetState(mWindow, mAudioChannelType, aVolume, aMuted);
 
+  MOZ_LOG(AudioChannelService::GetAudioChannelLog(), LogLevel::Debug,
+         ("AudioChannelAgent, NotifyStartedPlaying, this = %p, mute = %d, "
+          "volume = %f\n", this, *aMuted, *aVolume));
+
   mNotifyPlayback = aNotifyPlayback;
   mIsRegToService = true;
   return NS_OK;
@@ -170,8 +179,14 @@ NS_IMETHODIMP AudioChannelAgent::NotifyStoppedPlaying()
     return NS_ERROR_FAILURE;
   }
 
+  MOZ_LOG(AudioChannelService::GetAudioChannelLog(), LogLevel::Debug,
+         ("AudioChannelAgent, NotifyStoppedPlaying, this = %p\n", this));
+
   RefPtr<AudioChannelService> service = AudioChannelService::GetOrCreate();
-  service->UnregisterAudioChannelAgent(this, mNotifyPlayback);
+  if (service) {
+    service->UnregisterAudioChannelAgent(this, mNotifyPlayback);
+  }
+
   mIsRegToService = false;
   return NS_OK;
 }
@@ -198,7 +213,13 @@ AudioChannelAgent::WindowVolumeChanged()
   bool muted = false;
 
   RefPtr<AudioChannelService> service = AudioChannelService::GetOrCreate();
-  service->GetState(mWindow, mAudioChannelType, &volume, &muted);
+  if (service) {
+    service->GetState(mWindow, mAudioChannelType, &volume, &muted);
+  }
+
+  MOZ_LOG(AudioChannelService::GetAudioChannelLog(), LogLevel::Debug,
+         ("AudioChannelAgent, WindowVolumeChanged, this = %p, mute = %d, "
+          "volume = %f\n", this, muted, volume));
 
   callback->WindowVolumeChanged(volume, muted);
 }

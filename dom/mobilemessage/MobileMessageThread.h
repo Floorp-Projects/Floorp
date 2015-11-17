@@ -1,61 +1,80 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/* vim: set ts=8 sts=2 et sw=2 tw=80: */
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim:set ts=2 sw=2 sts=2 et cindent: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this file,
- * You can obtain one at http://mozilla.org/MPL/2.0/. */
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_mobilemessage_MobileMessageThread_h
-#define mozilla_dom_mobilemessage_MobileMessageThread_h
+#ifndef mozilla_dom_MobileMessageThread_h
+#define mozilla_dom_MobileMessageThread_h
 
-#include "mozilla/Attributes.h"
-#include "mozilla/dom/mobilemessage/SmsTypes.h"
-#include "nsIDOMMozMobileMessageThread.h"
-#include "nsString.h"
+#include "mozilla/dom/BindingDeclarations.h"
+#include "nsWrapperCache.h"
+
+class nsPIDOMWindow;
 
 namespace mozilla {
 namespace dom {
 
-class MobileMessageThread final : public nsIDOMMozMobileMessageThread
+namespace mobilemessage {
+class MobileMessageThreadInternal;
+} // namespace mobilemessage
+
+/**
+ * Each instance of this class provides the DOM-level representation of
+ * a MobileMessageThread object to bind it to a window being exposed to.
+ */
+class MobileMessageThread final : public nsISupports,
+                                  public nsWrapperCache
 {
-private:
-  typedef mobilemessage::ThreadData ThreadData;
-
 public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIDOMMOZMOBILEMESSAGETHREAD
+  NS_DECL_CYCLE_COLLECTING_ISUPPORTS
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(MobileMessageThread)
 
-  MobileMessageThread(uint64_t aId,
-                      const nsTArray<nsString>& aParticipants,
-                      uint64_t aTimestamp,
-                      const nsString& aLastMessageSubject,
-                      const nsString& aBody,
-                      uint64_t aUnreadCount,
-                      mobilemessage::MessageType aLastMessageType);
+  MobileMessageThread(nsPIDOMWindow* aWindow,
+                      mobilemessage::MobileMessageThreadInternal* aThread);
 
-  explicit MobileMessageThread(const ThreadData& aData);
+  nsPIDOMWindow*
+  GetParentObject() const
+  {
+    return mWindow;
+  }
 
-  static nsresult Create(uint64_t aId,
-                         const JS::Value& aParticipants,
-                         uint64_t aTimestamp,
-                         const nsAString& aLastMessageSubject,
-                         const nsAString& aBody,
-                         uint64_t aUnreadCount,
-                         const nsAString& aLastMessageType,
-                         JSContext* aCx,
-                         nsIDOMMozMobileMessageThread** aThread);
+  virtual JSObject*
+  WrapObject(JSContext* aCx,
+             JS::Handle<JSObject*> aGivenProto) override;
 
-  const ThreadData& GetData() const { return mData; }
+  uint64_t
+  Id() const;
+
+  void
+  GetLastMessageSubject(nsString& aRetVal) const;
+
+  void
+  GetBody(nsString& aRetVal) const;
+
+  uint64_t
+  UnreadCount() const;
+
+  void
+  GetParticipants(nsTArray<nsString>& aRetVal) const;
+
+  DOMTimeStamp
+  Timestamp() const;
+
+  void
+  GetLastMessageType(nsString& aRetVal) const;
 
 private:
-  ~MobileMessageThread() {}
-
   // Don't try to use the default constructor.
   MobileMessageThread() = delete;
 
-  ThreadData mData;
+  ~MobileMessageThread();
+
+  nsCOMPtr<nsPIDOMWindow> mWindow;
+  RefPtr<mobilemessage::MobileMessageThreadInternal> mThread;
 };
 
 } // namespace dom
 } // namespace mozilla
 
-#endif // mozilla_dom_mobilemessage_MobileMessageThread_h
+#endif // mozilla_dom_MobileMessageThread_h

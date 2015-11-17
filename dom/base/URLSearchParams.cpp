@@ -253,8 +253,9 @@ namespace {
 void SerializeString(const nsCString& aInput, nsAString& aValue)
 {
   const unsigned char* p = (const unsigned char*) aInput.get();
+  const unsigned char* end = p + aInput.Length();
 
-  while (p && *p) {
+  while (p != end) {
     // ' ' to '+'
     if (*p == 0x20) {
       aValue.Append(0x2B);
@@ -314,7 +315,7 @@ URLSearchParams::URLSearchParams(nsISupports* aParent,
                                  const URLSearchParams& aOther)
   : mParams(new URLParams(*aOther.mParams.get()))
   , mParent(aParent)
-  , mObserver(aOther.mObserver)
+  , mObserver(nullptr)
 {
 }
 

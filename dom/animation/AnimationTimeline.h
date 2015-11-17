@@ -40,7 +40,10 @@ public:
   }
 
 protected:
-  virtual ~AnimationTimeline() { }
+  virtual ~AnimationTimeline()
+  {
+    mAnimationOrder.clear();
+  }
 
 public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
@@ -91,6 +94,8 @@ public:
    */
   virtual void NotifyAnimationUpdated(Animation& aAnimation);
 
+  void RemoveAnimation(Animation* aAnimation);
+
 protected:
   nsCOMPtr<nsIGlobalObject> mWindow;
 
@@ -99,13 +104,11 @@ protected:
   // We store them in (a) a hashset for quick lookup, and (b) an array
   // to maintain a fixed sampling order.
   //
-  // The array keeps a strong reference to each animation in order
-  // to save some addref/release traffic and because we never dereference
-  // the pointers in the hashset.
-  typedef nsTHashtable<nsPtrHashKey<dom::Animation>> AnimationSet;
-  typedef nsTArray<RefPtr<dom::Animation>>         AnimationArray;
-  AnimationSet   mAnimations;
-  AnimationArray mAnimationOrder;
+  // The hashset keeps a strong reference to each animation since
+  // dealing with addref/release with LinkedList is difficult.
+  typedef nsTHashtable<nsRefPtrHashKey<dom::Animation>> AnimationSet;
+  AnimationSet mAnimations;
+  LinkedList<dom::Animation> mAnimationOrder;
 };
 
 } // namespace dom

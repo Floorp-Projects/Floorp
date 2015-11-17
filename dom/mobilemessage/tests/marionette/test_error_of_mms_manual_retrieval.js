@@ -53,7 +53,7 @@ function saveMmsNotification() {
     .saveReceivedMessage(notification, function(aRv, aDomMessage) {
       log("saveReceivedMessage(): " + aRv);
       if (Components.isSuccessCode(aRv)) {
-        deferred.resolve(aDomMessage);
+        deferred.resolve(aDomMessage.QueryInterface(Ci.nsIMmsMessage));
       } else {
         deferred.reject();
       }

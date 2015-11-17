@@ -674,6 +674,24 @@ struct BluetoothUuid {
 struct BluetoothPinCode {
   uint8_t mPinCode[16]; /* not \0-terminated */
   uint8_t mLength;
+
+  BluetoothPinCode()
+    : mLength(0)
+  {
+    std::fill(mPinCode, mPinCode + MOZ_ARRAY_LENGTH(mPinCode), 0);
+  }
+
+  bool operator==(const BluetoothPinCode& aRhs) const
+  {
+    MOZ_ASSERT(mLength <= MOZ_ARRAY_LENGTH(mPinCode));
+    return (mLength == aRhs.mLength) &&
+            std::equal(aRhs.mPinCode, aRhs.mPinCode + aRhs.mLength, mPinCode);
+  }
+
+  bool operator!=(const BluetoothPinCode& aRhs) const
+  {
+    return !operator==(aRhs);
+  }
 };
 
 struct BluetoothServiceName {

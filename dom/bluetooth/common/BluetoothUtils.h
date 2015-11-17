@@ -38,7 +38,18 @@ StringToAddress(const nsAString& aString, BluetoothAddress& aAddress);
 //
 
 nsresult
+PinCodeToString(const BluetoothPinCode& aPinCode, nsAString& aString);
+
+nsresult
 StringToPinCode(const nsAString& aString, BluetoothPinCode& aPinCode);
+
+//
+// Play status/string conversion
+//
+
+nsresult
+StringToControlPlayStatus(const nsAString& aString,
+                          ControlPlayStatus& aPlayStatus);
 
 //
 // Property type/string conversion
@@ -89,7 +100,7 @@ UuidToString(const BluetoothUuid& aUuid, nsAString& aString);
  * Note: This utility function is used by gecko internal only to convert uuid
  * string created by gecko back to BluetoothUuid representation.
  */
-void
+nsresult
 StringToUuid(const nsAString& aString, BluetoothUuid& aUuid);
 
 /**

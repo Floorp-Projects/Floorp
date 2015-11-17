@@ -9,7 +9,6 @@
 <body onload="testWebSocket()">
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=472529">Mozilla Bug </a>
 <p id="display">
-  <input id="fileList" type="file"></input>
 </p>
 <div id="content">
 </div>
@@ -66,8 +65,8 @@
  * 41. HSTS
  * 42. non-char utf-8 sequences
  * 43. Test setting binaryType attribute
- * 44. Test sending/receving binary ArrayBuffer 
- * 45. Test sending/receving binary Blob 
+ * 44. Test sending/receving binary ArrayBuffer
+ * 45. Test sending/receving binary Blob
  * 46. Test that we don't dispatch incoming msgs once in CLOSING state
  * 47. Make sure onerror/onclose aren't called during close()
  */
@@ -77,13 +76,13 @@ var last_test = 47;
 
 
 // Set this to >1 if you want to run the suite multiple times to probe for
-// random orange failures. 
+// random orange failures.
 // - Do NOT check into mozilla-central with a value != 1.
 // - Too large a count will wind up causing tryserver to timeout the test (which
 //   is ok, but means all testruns will be orange).  If I set first_test to >22
 //   (i.e don't run any of the tests that require waiting) I can get ~250-300
 //   iterations of the remaining tests w/o a timeout.
-var testsuite_iterations = 1;   
+var testsuite_iterations = 1;
 
 
 var current_test = first_test;
@@ -113,7 +112,7 @@ function shouldNotReceiveCloseEvent(e)
       extendedErrorInfo += (i + ": " + e[i] + "\n");
     }
   }
-  
+
   // FIXME: see bug 578276. This should be a test failure, but it's too flaky on the tbox.
   ok(true, "onclose shouldn't be called on test " + ws._testNumber + "!" + extendedErrorInfo);
 }
@@ -191,7 +190,7 @@ function doTest(number)
   }
 
   if (testsuite_iteration > 1) {
-    $("feedback").innerHTML = "test suite iteration #" + testsuite_iteration + " of " + testsuite_iterations + 
+    $("feedback").innerHTML = "test suite iteration #" + testsuite_iteration + " of " + testsuite_iterations +
       ": executing test: " + number + " of " + last_test + " tests.";
   } else {
     $("feedback").innerHTML = "executing test: " + number + " of " + last_test + " tests.";
@@ -390,7 +389,7 @@ function test8()
   {
     shouldCloseCleanly(e);
     // We called close() with no close code: so pywebsocket will also send no
-    // close code, which translates to code 1005 
+    // close code, which translates to code 1005
     ok(e.code == 1005, "test-8 close code has wrong value:" + e.code);
     ok(e.reason == "", "test-8 close reason has wrong value:" + e.reason);
     doTest(9);
@@ -419,7 +418,7 @@ function test9()
   };
 
   ws.close();
-  
+
   // the server injects a delay, so proceed with this in the background
   doTest(10);
 }
@@ -520,7 +519,7 @@ function test12()
 
 function test13()
 {
-    // previous versions of this test counted the number of protocol errors returned, but the 
+    // previous versions of this test counted the number of protocol errors returned, but the
     // protocol stack typically closes down after reporting a protocol level error - trying
     // to resync is too dangerous
 
@@ -1110,7 +1109,7 @@ function test37()
       {
          ok(e.code != 3101, "test 37c custom server code not present");
          ok(e.reason == "", "test 37c custom server reason not present");
-         doTest(38);  
+         doTest(38);
       }
     }
   }
@@ -1152,7 +1151,7 @@ function test39()
   ws.onclose = function(e)
   {
     ok(true, "test 39 close");
-    ok(status_test39 == "opened", "test 39 did open"); 
+    ok(status_test39 == "opened", "test 39 did open");
     doTest(40);
   };
 }
@@ -1176,7 +1175,7 @@ function test40()
   ws.onclose = function(e)
   {
     ok(true, "test 40 close");
-    ok(status_test40 == "started", "test 40 did not open"); 
+    ok(status_test40 == "started", "test 40 did not open");
     doTest(41);
   };
 }
@@ -1211,7 +1210,7 @@ function test41()
 
       // try ws:// again, it should be done over wss:// now due to hsts
       var wsc = CreateTestWS("ws://example.com/tests/dom/base/test/file_websocket", "test-41c");
-   
+
       wsc.onopen = function(e)
       {
         ok(true, "test 41c open");
@@ -1328,35 +1327,21 @@ function test44()
   {
     ok(ws.readyState == 3, "onclose bad readyState in test-44!");
     shouldCloseCleanly(e);
-    doTest(45);
+    SpecialPowers.createFiles([{name: "testBlobFile", data: "flob"}], function (files) {
+      blobFile = files[0];
+      doTest(45);
+    },
+    function (msg) {
+      testFailed("Failed to create file for test45: " + msg);
+      doTest(46);
+    });
   }
 }
 
-function createDOMFile(fileName, fileData)
-{
-  // create File in profile dir 
-  var dirSvc = SpecialPowers.Cc["@mozilla.org/file/directory_service;1"]
-                         .getService(SpecialPowers.Ci.nsIProperties);
-  var testFile = dirSvc.get("ProfD", SpecialPowers.Ci.nsIFile);
-  testFile.append(fileName);
-  var outStream = SpecialPowers.Cc["@mozilla.org/network/file-output-stream;1"]
-                            .createInstance(SpecialPowers.Ci.nsIFileOutputStream);
-  outStream.init(testFile, 0x02 | 0x08 | 0x20, 0666, 0);
-  outStream.write(fileData, fileData.length);
-  outStream.close();
-
-  // Set filename into DOM <input> field, as if selected by user 
-  var fileList = document.getElementById('fileList');
-  SpecialPowers.wrap(fileList).value = testFile.path;
-
-  // return JS File object, aka Blob
-  return fileList.files[0];
-}
+var blobFile;
 
 function test45()
 {
-  var blobFile = createDOMFile("testBlobFile", "flob");
-
   var ws = CreateTestWS("ws://mochi.test:8888/tests/dom/base/test/file_websocket", "test-45");
   ok(ws.readyState == 0, "bad readyState in test-45!");
 
@@ -1387,7 +1372,7 @@ function test45()
     var reader = new FileReader();
     reader.onload = function(event)
     {
-      ok(reader.result == "flob", "response should be 'flob': got '" 
+      ok(reader.result == "flob", "response should be 'flob': got '"
          + reader.result + "'");
     };
     reader.onerror = function(event)
@@ -1433,7 +1418,7 @@ function test47()
 
   ws.onerror = function (e)
   {
-    ok(ws.readyState == 3, "test-47: readyState should be CLOSED(3) in onerror: got " 
+    ok(ws.readyState == 3, "test-47: readyState should be CLOSED(3) in onerror: got "
        + ws.readyState);
     ok(!ws._withinClose, "onerror() called during close()!");
     hasError = true;
@@ -1443,7 +1428,7 @@ function test47()
   {
     shouldCloseNotCleanly(e);
     ok(hasError, "test-47: should have called onerror before onclose");
-    ok(ws.readyState == 3, "test-47: readyState should be CLOSED(3) in onclose: got " 
+    ok(ws.readyState == 3, "test-47: readyState should be CLOSED(3) in onclose: got "
        + ws.readyState);
     ok(!ws._withinClose, "onclose() called during close()!");
     ok(e.code == 1006, "test-47 close code should be 1006 but is:" + e.code);

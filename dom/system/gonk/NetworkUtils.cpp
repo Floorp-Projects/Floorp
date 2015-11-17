@@ -734,7 +734,7 @@ void NetworkUtils::setAlarm(CommandChain* aChain,
                             NetworkResultOptions& aResult)
 {
   char command[MAX_COMMAND_SIZE];
-  PR_snprintf(command, MAX_COMMAND_SIZE - 1, "bandwidth setinterfacealert %s %ld", GET_CHAR(mIfname), GET_FIELD(mThreshold));
+  PR_snprintf(command, MAX_COMMAND_SIZE - 1, "bandwidth setinterfacealert %s %lld", GET_CHAR(mIfname), GET_FIELD(mThreshold));
 
   doCommand(command, aChain, aCallback);
 }

@@ -332,6 +332,10 @@ class nsIWidget : public nsISupports {
     typedef mozilla::widget::SizeConstraints SizeConstraints;
     typedef mozilla::widget::TextEventDispatcher TextEventDispatcher;
     typedef mozilla::CompositorVsyncDispatcher CompositorVsyncDispatcher;
+    typedef mozilla::LayoutDeviceIntMargin LayoutDeviceIntMargin;
+    typedef mozilla::LayoutDeviceIntPoint LayoutDeviceIntPoint;
+    typedef mozilla::LayoutDeviceIntRect LayoutDeviceIntRect;
+    typedef mozilla::LayoutDeviceIntSize LayoutDeviceIntSize;
 
     // Used in UpdateThemeGeometries.
     struct ThemeGeometry {
@@ -808,13 +812,13 @@ class nsIWidget : public nsISupports {
      * @param aRect   On return it holds the  x, y, width and height of
      *                this widget.
      */
-    NS_IMETHOD GetBounds(mozilla::LayoutDeviceIntRect &aRect) {
-      nsIntRect tmp;
-      nsresult rv = GetBoundsUntyped(tmp);
-      aRect = mozilla::LayoutDeviceIntRect::FromUnknownRect(tmp);
+    NS_IMETHOD GetBounds(LayoutDeviceIntRect& aRect) = 0;
+    NS_IMETHOD GetBoundsUntyped(nsIntRect& aRect) {
+      LayoutDeviceIntRect tmp;
+      nsresult rv = GetBounds(tmp);
+      aRect = tmp.ToUnknownRect();
       return rv;
     }
-    NS_IMETHOD GetBoundsUntyped(nsIntRect &aRect) = 0;
 
     /**
      * Get this widget's outside dimensions in global coordinates. This
@@ -826,13 +830,13 @@ class nsIWidget : public nsISupports {
      * @param aRect   On return it holds the  x, y, width and height of
      *                this widget.
      */
-    NS_IMETHOD GetScreenBounds(mozilla::LayoutDeviceIntRect &aRect) {
-      nsIntRect tmp;
-      nsresult rv = GetScreenBoundsUntyped(tmp);
-      aRect = mozilla::LayoutDeviceIntRect::FromUnknownRect(tmp);
+    NS_IMETHOD GetScreenBounds(LayoutDeviceIntRect& aRect) = 0;
+    NS_IMETHOD GetScreenBoundsUntyped(nsIntRect& aRect) {
+      LayoutDeviceIntRect tmp;
+      nsresult rv = GetScreenBounds(tmp);
+      aRect = tmp.ToUnknownRect();
       return rv;
     }
-    NS_IMETHOD GetScreenBoundsUntyped(nsIntRect &aRect) = 0;
 
     /**
      * Similar to GetScreenBounds except that this function will always
@@ -846,7 +850,7 @@ class nsIWidget : public nsISupports {
      * @param aRect   On return it holds the  x, y, width and height of
      *                this widget.
      */
-    NS_IMETHOD GetRestoredBounds(mozilla::LayoutDeviceIntRect &aRect) = 0;
+    NS_IMETHOD GetRestoredBounds(mozilla::LayoutDeviceIntRect& aRect) = 0;
 
     /**
      * Get this widget's client area bounds, if the window has a 3D border
@@ -860,18 +864,18 @@ class nsIWidget : public nsISupports {
      * @param aRect   On return it holds the  x. y, width and height of
      *                the client area of this widget.
      */
-    NS_IMETHOD GetClientBounds(mozilla::LayoutDeviceIntRect &aRect) {
-      nsIntRect tmp;
-      nsresult rv = GetClientBoundsUntyped(tmp);
-      aRect = mozilla::LayoutDeviceIntRect::FromUnknownRect(tmp);
+    NS_IMETHOD GetClientBounds(mozilla::LayoutDeviceIntRect& aRect) = 0;
+    NS_IMETHOD GetClientBoundsUntyped(nsIntRect& aRect) {
+      LayoutDeviceIntRect tmp;
+      nsresult rv = GetClientBounds(tmp);
+      aRect = tmp.ToUnknownRect();
       return rv;
     }
-    NS_IMETHOD GetClientBoundsUntyped(nsIntRect &aRect) = 0;
 
     /**
      * Get the non-client area dimensions of the window.
      */
-    NS_IMETHOD GetNonClientMargins(mozilla::LayoutDeviceIntMargin &margins) = 0;
+    NS_IMETHOD GetNonClientMargins(LayoutDeviceIntMargin& aMargins) = 0;
 
     /**
      * Sets the non-client area dimensions of the window. Pass -1 to restore
@@ -885,32 +889,24 @@ class nsIWidget : public nsISupports {
      *  dimensions between zero and size < system default.
      *
      */
-    NS_IMETHOD SetNonClientMargins(mozilla::LayoutDeviceIntMargin &margins) = 0;
+    NS_IMETHOD SetNonClientMargins(LayoutDeviceIntMargin& aMargins) = 0;
 
     /**
      * Get the client offset from the window origin.
      *
-     * The untyped version exists temporarily to ease conversion to typed
-     * coordinates.
-     *
      * @return the x and y of the offset.
-     *
      */
-    virtual mozilla::LayoutDeviceIntPoint GetClientOffset() {
-      nsIntPoint tmp = GetClientOffsetUntyped();
-      return mozilla::LayoutDeviceIntPoint::FromUnknownPoint(tmp);
-    }
-    virtual nsIntPoint GetClientOffsetUntyped() = 0;
+    virtual LayoutDeviceIntPoint GetClientOffset() = 0;
 
     /**
      * Equivalent to GetClientBounds but only returns the size.
      */
-    virtual mozilla::gfx::IntSize GetClientSize() {
-      // Dependeing on the backend, overloading this method may be useful if
-      // if requesting the client offset is expensive.
-      mozilla::LayoutDeviceIntRect rect;
+    virtual LayoutDeviceIntSize GetClientSize() {
+      // Depending on the backend, overloading this method may be useful if
+      // requesting the client offset is expensive.
+      LayoutDeviceIntRect rect;
       GetClientBounds(rect);
-      return mozilla::gfx::IntSize(rect.width, rect.height);
+      return rect.Size();
     }
 
     /**
@@ -1004,7 +1000,7 @@ class nsIWidget : public nsISupports {
         nsCOMPtr<nsIWidget> mChild;
         uintptr_t mWindowID; // e10s specific, the unique plugin port id
         bool mVisible; // e10s specific, widget visibility
-        mozilla::LayoutDeviceIntRect mBounds;
+        LayoutDeviceIntRect mBounds;
         nsTArray<nsIntRect> mClipRegion;
     };
 
@@ -1366,15 +1362,15 @@ class nsIWidget : public nsISupports {
      *
      * @return screen coordinates stored in the x,y members
      */
-    virtual mozilla::LayoutDeviceIntPoint WidgetToScreenOffset() = 0;
+    virtual LayoutDeviceIntPoint WidgetToScreenOffset() = 0;
 
     /**
      * Given the specified client size, return the corresponding window size,
      * which includes the area for the borders and titlebar. This method
      * should work even when the window is not yet visible.
      */
-    virtual mozilla::LayoutDeviceIntSize ClientToWindowSize(
-                const mozilla::LayoutDeviceIntSize& aClientSize) = 0;
+    virtual LayoutDeviceIntSize ClientToWindowSize(
+                const LayoutDeviceIntSize& aClientSize) = 0;
 
     /**
      * Dispatches an event to the widget
@@ -1577,7 +1573,7 @@ class nsIWidget : public nsISupports {
      * @param aObserver the observer that will get notified once the events
      * have been dispatched.
      */
-    virtual nsresult SynthesizeNativeMouseEvent(mozilla::LayoutDeviceIntPoint aPoint,
+    virtual nsresult SynthesizeNativeMouseEvent(LayoutDeviceIntPoint aPoint,
                                                 uint32_t aNativeMessage,
                                                 uint32_t aModifierFlags,
                                                 nsIObserver* aObserver) = 0;
@@ -1588,7 +1584,7 @@ class nsIWidget : public nsISupports {
      * @param aObserver the observer that will get notified once the events
      * have been dispatched.
      */
-    virtual nsresult SynthesizeNativeMouseMove(mozilla::LayoutDeviceIntPoint aPoint,
+    virtual nsresult SynthesizeNativeMouseMove(LayoutDeviceIntPoint aPoint,
                                                nsIObserver* aObserver) = 0;
 
     /**
@@ -1614,7 +1610,7 @@ class nsIWidget : public nsISupports {
      * @param aObserver         The observer that will get notified once the
      *                          events have been dispatched.
      */
-    virtual nsresult SynthesizeNativeMouseScrollEvent(mozilla::LayoutDeviceIntPoint aPoint,
+    virtual nsresult SynthesizeNativeMouseScrollEvent(LayoutDeviceIntPoint aPoint,
                                                       uint32_t aNativeMessage,
                                                       double aDeltaX,
                                                       double aDeltaY,
@@ -1852,7 +1848,7 @@ public:
      * Call this method when a dialog is opened which has a default button.
      * The button's rectangle should be supplied in aButtonRect.
      */
-    NS_IMETHOD OnDefaultButtonLoaded(const mozilla::LayoutDeviceIntRect& aButtonRect) = 0;
+    NS_IMETHOD OnDefaultButtonLoaded(const LayoutDeviceIntRect& aButtonRect) = 0;
 
     /**
      * Compute the overridden system mouse scroll speed on the root content of
@@ -1944,7 +1940,7 @@ public:
        if (!IsVisible()) {
            return false;
        }
-       mozilla::LayoutDeviceIntRect bounds;
+       LayoutDeviceIntRect bounds;
        nsresult rv = GetBounds(bounds);
        NS_ENSURE_SUCCESS(rv, false);
        return !bounds.IsEmpty();
@@ -1961,17 +1957,10 @@ public:
      * No code outside of the composition pipeline should know or care
      * about this.  If you're not an agent of the compositor, you
      * probably shouldn't call this method.
-     *
-     * The untyped version exists temporarily to ease conversion to typed
-     * coordinates.
      */
-    virtual mozilla::LayoutDeviceIntRect GetNaturalBounds() {
-        nsIntRect tmp = GetNaturalBoundsUntyped();
-        return mozilla::LayoutDeviceIntRect::FromUnknownRect(tmp);
-    }
-    virtual nsIntRect GetNaturalBoundsUntyped() {
-        nsIntRect bounds;
-        GetBoundsUntyped(bounds);
+    virtual LayoutDeviceIntRect GetNaturalBounds() {
+        LayoutDeviceIntRect bounds;
+        GetBounds(bounds);
         return bounds;
     }
 

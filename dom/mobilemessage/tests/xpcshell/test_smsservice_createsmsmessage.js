@@ -34,7 +34,7 @@ function run_test() {
 add_test(function test_interface() {
   let sms = newMessage(null, null, ICC_ID, "sent", "success", null, null, null,
                        "normal", Date.now(), Date.now(), Date.now(), true);
-  do_check_true(sms instanceof Ci.nsIDOMMozSmsMessage);
+  do_check_true(sms instanceof Ci.nsISmsMessage);
   do_check_eq(sms.id, 0);
   do_check_eq(sms.threadId, 0);
   do_check_eq(sms.iccId, ICC_ID);
@@ -54,7 +54,7 @@ add_test(function test_interface() {
 add_test(function test_icc_id_not_available() {
   let sms = newMessage(null, null, null, "sent", "success", null, null, null,
                        "normal", Date.now(), Date.now(), Date.now(), true);
-  do_check_true(sms instanceof Ci.nsIDOMMozSmsMessage);
+  do_check_true(sms instanceof Ci.nsISmsMessage);
   do_check_eq(sms.id, 0);
   do_check_eq(sms.threadId, 0);
   do_check_eq(sms.iccId, null);

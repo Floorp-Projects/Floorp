@@ -2065,13 +2065,13 @@ MobileMessageDB.prototype = {
   },
 
   /**
-   * Generate a <code>nsIDOMMozSmsMessage</code> or
-   * <code>nsIDOMMozMmsMessage</code> instance from a stored message record.
+   * Generate a <code>nsISmsMessage</code> or
+   * <code>nsIMmsMessage</code> instance from a stored message record.
    *
    * @function MobileMessageDB.createDomMessageFromRecord
    * @param {MobileMessageDB.MessageRecord} aMessageRecord
    *        The stored message record.
-   * @return {nsIDOMMozSmsMessage|nsIDOMMozMmsMessage}
+   * @return {nsISmsMessage|nsIMmsMessage}
    */
   createDomMessageFromRecord: function(aMessageRecord) {
     if (DEBUG) {
@@ -2580,7 +2580,7 @@ MobileMessageDB.prototype = {
    * @callback MobileMessageDB.TransactionResultCallback
    * @param {number} aErrorCode
    *        The error code on failure, or <code>NS_OK</code> on success.
-   * @param {nsIDOMMozSmsMessage|nsIDOMMozMmsMessage} aDomMessage
+   * @param {nsISmsMessage|nsIMmsMessage} aDomMessage
    *        The DOM message instance of the transaction result.
    */
 
@@ -3592,7 +3592,7 @@ MobileMessageDB.prototype = {
    *        The error code on failure, or <code>NS_OK</code> on success.
    * @param {MobileMessageDB.MessageRecord} aMessageRecord
    *        The stored message record.
-   * @param {nsIDOMMozSmsMessage|nsIDOMMozMmsMessage} aDomMessage
+   * @param {nsISmsMessage|nsIMmsMessage} aDomMessage
    *        The DOM message instance of the message record.
    */
 
