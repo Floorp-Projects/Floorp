@@ -92,7 +92,7 @@ _PTHREAD_LDFLAGS=""
 
 dnl Do not allow objdir == srcdir builds.
 dnl ==============================================================
-_topsrcdir=`cd \`dirname $0\`; pwd`
+_topsrcdir=`cd \`dirname $0\`; pwd -W 2>/dev/null || pwd`
 _objdir=`pwd`
 
 dnl TODO Don't exempt L10N builds once bug 842760 is resolved.
