@@ -161,11 +161,13 @@ public:
 
   virtual void UnsuppressPainting() override;
 
-  virtual nsresult GetAgentStyleSheets(nsCOMArray<nsIStyleSheet>& aSheets) override;
-  virtual nsresult SetAgentStyleSheets(const nsCOMArray<nsIStyleSheet>& aSheets) override;
+  virtual nsresult GetAgentStyleSheets(
+      nsTArray<RefPtr<mozilla::CSSStyleSheet>>& aSheets) override;
+  virtual nsresult SetAgentStyleSheets(
+      const nsTArray<RefPtr<mozilla::CSSStyleSheet>>& aSheets) override;
 
-  virtual nsresult AddOverrideStyleSheet(nsIStyleSheet *aSheet) override;
-  virtual nsresult RemoveOverrideStyleSheet(nsIStyleSheet *aSheet) override;
+  virtual nsresult AddOverrideStyleSheet(mozilla::CSSStyleSheet* aSheet) override;
+  virtual nsresult RemoveOverrideStyleSheet(mozilla::CSSStyleSheet* aSheet) override;
 
   virtual nsresult HandleEventWithTarget(
                                  mozilla::WidgetEvent* aEvent,
@@ -516,7 +518,7 @@ protected:
   void ShowEventTargetDebug();
 #endif
 
-  void RecordStyleSheetChange(nsIStyleSheet* aStyleSheet);
+  void RecordStyleSheetChange(mozilla::CSSStyleSheet* aStyleSheet);
 
   void RemovePreferenceStyles();
 

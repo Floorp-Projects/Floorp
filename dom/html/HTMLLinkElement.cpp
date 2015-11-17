@@ -21,7 +21,6 @@
 #include "nsIDOMEvent.h"
 #include "nsIDOMStyleSheet.h"
 #include "nsINode.h"
-#include "nsIStyleSheet.h"
 #include "nsIStyleSheetLinkingElement.h"
 #include "nsIURL.h"
 #include "nsPIDOMWindow.h"

@@ -401,14 +401,12 @@ nsresult nsChromeRegistry::RefreshWindow(nsPIDOMWindow* aWindow)
   nsCOMPtr<nsIPresShell> shell = document->GetShell();
   if (shell) {
     // Reload only the chrome URL agent style sheets.
-    nsCOMArray<nsIStyleSheet> agentSheets;
+    nsTArray<RefPtr<CSSStyleSheet>> agentSheets;
     rv = shell->GetAgentStyleSheets(agentSheets);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsCOMArray<nsIStyleSheet> newAgentSheets;
-    for (int32_t l = 0; l < agentSheets.Count(); ++l) {
-      nsIStyleSheet *sheet = agentSheets[l];
-
+    nsTArray<RefPtr<CSSStyleSheet>> newAgentSheets;
+    for (CSSStyleSheet* sheet : agentSheets) {
       nsIURI* uri = sheet->GetSheetURI();
 
       if (IsChromeURI(uri)) {
@@ -418,12 +416,12 @@ nsresult nsChromeRegistry::RefreshWindow(nsPIDOMWindow* aWindow)
                                            getter_AddRefs(newSheet));
         if (NS_FAILED(rv)) return rv;
         if (newSheet) {
-          rv = newAgentSheets.AppendObject(newSheet) ? NS_OK : NS_ERROR_FAILURE;
+          rv = newAgentSheets.AppendElement(newSheet) ? NS_OK : NS_ERROR_FAILURE;
           if (NS_FAILED(rv)) return rv;
         }
       }
       else {  // Just use the same sheet.
-        rv = newAgentSheets.AppendObject(sheet) ? NS_OK : NS_ERROR_FAILURE;
+        rv = newAgentSheets.AppendElement(sheet) ? NS_OK : NS_ERROR_FAILURE;
         if (NS_FAILED(rv)) return rv;
       }
     }
@@ -432,27 +430,22 @@ nsresult nsChromeRegistry::RefreshWindow(nsPIDOMWindow* aWindow)
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
-  // Build an array of nsIURIs of style sheets we need to load.
-  nsCOMArray<nsIStyleSheet> oldSheets;
-  nsCOMArray<nsIStyleSheet> newSheets;
-
   int32_t count = document->GetNumberOfStyleSheets();
 
-  // Iterate over the style sheets.
-  int32_t i;
-  for (i = 0; i < count; i++) {
-    // Get the style sheet
-    nsIStyleSheet *styleSheet = document->GetStyleSheetAt(i);
+  // Build an array of style sheets we need to reload.
+  nsTArray<RefPtr<CSSStyleSheet>> oldSheets(count);
+  nsTArray<RefPtr<CSSStyleSheet>> newSheets(count);
 
-    if (!oldSheets.AppendObject(styleSheet)) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
+  // Iterate over the style sheets.
+  for (int32_t i = 0; i < count; i++) {
+    // Get the style sheet
+    CSSStyleSheet* styleSheet = document->GetStyleSheetAt(i);
+    oldSheets.AppendElement(styleSheet);
   }
 
   // Iterate over our old sheets and kick off a sync load of the new
   // sheet if and only if it's a chrome URL.
-  for (i = 0; i < count; i++) {
-    RefPtr<CSSStyleSheet> sheet = do_QueryObject(oldSheets[i]);
+  for (CSSStyleSheet* sheet : oldSheets) {
     nsIURI* uri = sheet ? sheet->GetOriginalURI() : nullptr;
 
     if (uri && IsChromeURI(uri)) {
@@ -462,11 +455,10 @@ nsresult nsChromeRegistry::RefreshWindow(nsPIDOMWindow* aWindow)
       // only works by sheer dumb luck.
       document->LoadChromeSheetSync(uri, false, getter_AddRefs(newSheet));
       // Even if it's null, we put in in there.
-      newSheets.AppendObject(newSheet);
-    }
-    else {
+      newSheets.AppendElement(newSheet);
+    } else {
       // Just use the same sheet.
-      newSheets.AppendObject(sheet);
+      newSheets.AppendElement(sheet);
     }
   }
 
