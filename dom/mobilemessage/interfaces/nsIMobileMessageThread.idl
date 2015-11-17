@@ -5,8 +5,8 @@
 #include "domstubs.idl"
 #include "nsISupports.idl"
 
-[scriptable, builtinclass, uuid(525ad3a6-59a9-11e3-bdc3-836486cb58be)]
-interface nsIDOMMozMobileMessageThread : nsISupports
+[scriptable, builtinclass, uuid(dd6794cc-8853-11e5-89b4-278852073d45)]
+interface nsIMobileMessageThread : nsISupports
 {
   // Unique identity of the thread.
   readonly attribute unsigned long long id;
