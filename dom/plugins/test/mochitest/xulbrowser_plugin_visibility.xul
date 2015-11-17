@@ -14,7 +14,7 @@
       <browser id="browser2" type="content-primary" flex="1" src="about:blank"/>
     </tabpanels>
   </tabbox>
-  <script type="application/javascript" src="utils.js"/>
+  <script type="application/javascript" src="plugin-utils.js"/>
   <script type="application/javascript"><![CDATA[
     const ok = window.opener.wrappedJSObject.ok;
     const is = window.opener.wrappedJSObject.is;

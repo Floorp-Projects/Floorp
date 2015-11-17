@@ -80,13 +80,6 @@ UnmarkXBLJSObject(JS::GCCellPtr aPtr, const char* aName, void* aClosure)
   JS::ExposeObjectToActiveJS(&aPtr.as<JSObject>());
 }
 
-static PLDHashOperator
-UnmarkProtos(const nsACString &aKey, nsXBLPrototypeBinding *aProto, void* aClosure)
-{
-  aProto->Trace(TraceCallbackFunc(UnmarkXBLJSObject), nullptr);
-  return PL_DHASH_NEXT;
-}
-
 void
 nsXBLDocumentInfo::MarkInCCGeneration(uint32_t aGeneration)
 {
@@ -95,7 +88,9 @@ nsXBLDocumentInfo::MarkInCCGeneration(uint32_t aGeneration)
   }
   // Unmark any JS we hold
   if (mBindingTable) {
-    mBindingTable->EnumerateRead(UnmarkProtos, nullptr);
+    for (auto iter = mBindingTable->Iter(); !iter.Done(); iter.Next()) {
+      iter.UserData()->Trace(TraceCallbackFunc(UnmarkXBLJSObject), nullptr);
+    }
   }
 }
 
@@ -190,16 +185,6 @@ nsXBLDocumentInfo::RemovePrototypeBinding(const nsACString& aRef)
   }
 }
 
-// Callback to enumerate over the bindings from this document and write them
-// out to the cache.
-static PLDHashOperator
-WriteBinding(const nsACString &aKey, nsXBLPrototypeBinding *aProto, void* aClosure)
-{
-  aProto->Write((nsIObjectOutputStream*)aClosure);
-
-  return PL_DHASH_NEXT;
-}
-
 // static
 nsresult
 nsXBLDocumentInfo::ReadPrototypeBindings(nsIURI* aURI, nsXBLDocumentInfo** aDocInfo)
@@ -292,7 +277,9 @@ nsXBLDocumentInfo::WritePrototypeBindings()
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (mBindingTable) {
-    mBindingTable->EnumerateRead(WriteBinding, stream);
+    for (auto iter = mBindingTable->Iter(); !iter.Done(); iter.Next()) {
+      iter.UserData()->Write(stream);
+    }
   }
 
   // write a end marker at the end
@@ -316,18 +303,13 @@ nsXBLDocumentInfo::SetFirstPrototypeBinding(nsXBLPrototypeBinding* aBinding)
   mFirstBinding = aBinding;
 }
 
-static PLDHashOperator
-FlushScopedSkinSheets(const nsACString &aKey, nsXBLPrototypeBinding *aProto, void* aClosure)
-{
-  aProto->FlushSkinSheets();
-  return PL_DHASH_NEXT;
-}
-
 void
 nsXBLDocumentInfo::FlushSkinStylesheets()
 {
   if (mBindingTable) {
-    mBindingTable->EnumerateRead(FlushScopedSkinSheets, nullptr);
+    for (auto iter = mBindingTable->Iter(); !iter.Done(); iter.Next()) {
+      iter.UserData()->FlushSkinSheets();
+    }
   }
 }
 

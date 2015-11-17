@@ -1,0 +1,42 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PContent;
+
+namespace mozilla {
+namespace dom {
+
+struct HandlerApp {
+  nsString name;
+  nsString detailedDescription;
+};
+
+struct HandlerInfo {
+  nsCString type;
+  bool isMIMEInfo;
+  nsString description;
+  bool alwaysAskBeforeHandling;
+  HandlerApp preferredApplicationHandler;
+  HandlerApp[] possibleApplicationHandlers;
+  long preferredAction;
+};
+
+sync protocol PHandlerService
+{
+  manager PContent;
+
+parent:
+  sync FillHandlerInfo(HandlerInfo aHandlerInfoData,
+                       nsCString aOverrideType)
+      returns (HandlerInfo handlerInfoData);
+  sync Exists(HandlerInfo aHandlerInfo)
+      returns (bool exists);
+  sync GetTypeFromExtension(nsCString aFileExtension)
+      returns (nsCString type);
+  __delete__();
+};
+
+
+} // namespace dom
+} // namespace mozilla

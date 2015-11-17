@@ -319,7 +319,7 @@ def main():
         if is_native(args.source):
             launcher.tooldir = args.source
     elif not buildconfig.substs['CROSS_COMPILE']:
-        launcher.tooldir = buildconfig.substs['LIBXUL_DIST']
+        launcher.tooldir = mozpath.join(buildconfig.topobjdir, 'dist')
 
     with errors.accumulate():
         finder_args = dict(
