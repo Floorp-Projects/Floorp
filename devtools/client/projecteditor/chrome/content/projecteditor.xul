@@ -2,12 +2,12 @@
 <!-- This Source Code Form is subject to the terms of the Mozilla Public
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
-<?xml-stylesheet href="chrome://devtools/skin/themes/light-theme.css" type="text/css"?>
-<?xml-stylesheet href="chrome://devtools/skin/themes/projecteditor/projecteditor.css" type="text/css"?>
+<?xml-stylesheet href="chrome://devtools/skin/light-theme.css" type="text/css"?>
+<?xml-stylesheet href="chrome://devtools/skin/projecteditor/projecteditor.css" type="text/css"?>
 <?xml-stylesheet href="chrome://devtools/content/debugger/debugger.css" type="text/css"?>
-<?xml-stylesheet href="chrome://devtools/skin/themes/common.css" type="text/css"?>
+<?xml-stylesheet href="chrome://devtools/skin/common.css" type="text/css"?>
 <?xml-stylesheet href="chrome://devtools/content/markupview/markup-view.css" type="text/css"?>
-<?xml-stylesheet href="chrome://devtools/skin/themes/markup-view.css" type="text/css"?>
+<?xml-stylesheet href="chrome://devtools/skin/markup-view.css" type="text/css"?>
 
 <?xul-overlay href="chrome://global/content/editMenuOverlay.xul"?>
 

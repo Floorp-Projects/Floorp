@@ -16,11 +16,11 @@
 <?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?>
 <?xml-stylesheet href="chrome://devtools/content/shared/widgets/widgets.css" type="text/css"?>
 <?xml-stylesheet href="chrome://devtools/content/shared/splitview.css" type="text/css"?>
-<?xml-stylesheet href="chrome://devtools/skin/themes/common.css" type="text/css"?>
-<?xml-stylesheet href="chrome://devtools/skin/themes/widgets.css" type="text/css"?>
-<?xml-stylesheet href="chrome://devtools/skin/themes/splitview.css" type="text/css"?>
+<?xml-stylesheet href="chrome://devtools/skin/common.css" type="text/css"?>
+<?xml-stylesheet href="chrome://devtools/skin/widgets.css" type="text/css"?>
+<?xml-stylesheet href="chrome://devtools/skin/splitview.css" type="text/css"?>
 <?xml-stylesheet href="chrome://devtools/content/styleeditor/styleeditor.css" type="text/css"?>
-<?xml-stylesheet href="chrome://devtools/skin/themes/styleeditor.css" type="text/css"?>
+<?xml-stylesheet href="chrome://devtools/skin/styleeditor.css" type="text/css"?>
 <?xul-overlay href="chrome://global/content/editMenuOverlay.xul"?>
 
 <xul:window xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"

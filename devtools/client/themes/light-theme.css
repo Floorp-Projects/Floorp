@@ -266,7 +266,7 @@ div.CodeMirror span.eval-text {
   width: 14px;
   height: 14px;
   background-repeat: no-repeat;
-  background-image: url("chrome://devtools/skin/themes/images/controls.png");
+  background-image: url("chrome://devtools/skin/images/controls.png");
   background-size: 56px 28px;
 }
 
@@ -310,7 +310,7 @@ div.CodeMirror span.eval-text {
 
 @media (min-resolution: 1.1dppx) {
   .theme-twisty, .theme-checkbox {
-    background-image: url("chrome://devtools/skin/themes/images/controls@2x.png");
+    background-image: url("chrome://devtools/skin/images/controls@2x.png");
   }
 }
 
@@ -327,34 +327,34 @@ div.CodeMirror span.eval-text {
 /* Overring panel arrow images to fit with our light and dark themes */
 
 .theme-tooltip-panel .panel-arrow[side="top"] {
-  list-style-image: url("chrome://devtools/skin/themes/tooltip/arrow-vertical-light.png");
+  list-style-image: url("chrome://devtools/skin/tooltip/arrow-vertical-light.png");
   margin-bottom: -4px;
 }
 
 .theme-tooltip-panel .panel-arrow[side="bottom"] {
-  list-style-image: url("chrome://devtools/skin/themes/tooltip/arrow-vertical-light.png");
+  list-style-image: url("chrome://devtools/skin/tooltip/arrow-vertical-light.png");
   margin-top: -4px;
 }
 
 .theme-tooltip-panel .panel-arrow[side="left"] {
-  list-style-image: url("chrome://devtools/skin/themes/tooltip/arrow-horizontal-light.png");
+  list-style-image: url("chrome://devtools/skin/tooltip/arrow-horizontal-light.png");
   margin-right: -4px;
 }
 
 .theme-tooltip-panel .panel-arrow[side="right"] {
-  list-style-image: url("chrome://devtools/skin/themes/tooltip/arrow-horizontal-light.png");
+  list-style-image: url("chrome://devtools/skin/tooltip/arrow-horizontal-light.png");
   margin-left: -4px;
 }
 
 @media (min-resolution: 1.1dppx) {
   .theme-tooltip-panel .panel-arrow[side="top"],
   .theme-tooltip-panel .panel-arrow[side="bottom"] {
-    list-style-image: url("chrome://devtools/skin/themes/tooltip/arrow-vertical-light@2x.png");
+    list-style-image: url("chrome://devtools/skin/tooltip/arrow-vertical-light@2x.png");
   }
 
   .theme-tooltip-panel .panel-arrow[side="left"],
   .theme-tooltip-panel .panel-arrow[side="right"] {
-    list-style-image: url("chrome://devtools/skin/themes/tooltip/arrow-horizontal-light@2x.png");
+    list-style-image: url("chrome://devtools/skin/tooltip/arrow-horizontal-light@2x.png");
   }
 }
 

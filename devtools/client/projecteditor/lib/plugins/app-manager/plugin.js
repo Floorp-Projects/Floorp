@@ -5,7 +5,7 @@ const { emit } = require("sdk/event/core");
 const promise = require("promise");
 var { registerPlugin, Plugin } = require("devtools/client/projecteditor/lib/plugins/core");
 const { AppProjectEditor } = require("./app-project-editor");
-const OPTION_URL = "chrome://devtools/skin/themes/images/tool-options.svg";
+const OPTION_URL = "chrome://devtools/skin/images/tool-options.svg";
 const {Services} = Cu.import("resource://gre/modules/Services.jsm");
 const Strings = Services.strings.createBundle("chrome://browser/locale/devtools/webide.properties");
 

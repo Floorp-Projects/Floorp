@@ -134,7 +134,7 @@ window.busy-determined #action-busy-undetermined {
 
 #deck {
   background-color: rgb(225, 225, 225);
-  background-image: url('chrome://devtools/skin/themes/app-manager/images/rocket.svg'), url('chrome://devtools/skin/themes/app-manager/images/noise.png');
+  background-image: url('chrome://devtools/skin/app-manager/images/rocket.svg'), url('chrome://devtools/skin/app-manager/images/noise.png');
   background-repeat: no-repeat, repeat;
   background-size: 35%, auto;
   background-position: center center, top left;

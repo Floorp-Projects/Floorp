@@ -30,7 +30,7 @@ const Strings = Services.strings.createBundle("chrome://browser/locale/devtools/
 var AppManager = exports.AppManager = {
 
   // FIXME: will break when devtools/app-manager will be removed:
-  DEFAULT_PROJECT_ICON: "chrome://devtools/skin/themes/app-manager/images/default-app-icon.png",
+  DEFAULT_PROJECT_ICON: "chrome://devtools/skin/app-manager/images/default-app-icon.png",
   DEFAULT_PROJECT_NAME: "--",
 
   _initialized: false,
