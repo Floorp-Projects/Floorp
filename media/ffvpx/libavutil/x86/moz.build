@@ -1,0 +1,19 @@
+# -*- Mode: python; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+SOURCES += [
+    'cpu.c',
+    'cpuid.asm',
+    'emms.asm',
+    'float_dsp.asm',
+    'float_dsp_init.c',
+    'lls.asm',
+    'lls_init.c'
+]
+
+FINAL_LIBRARY = 'mozavutil'
+
+include('/media/ffvpx/ffvpxcommon.mozbuild')
