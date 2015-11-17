@@ -5,9 +5,9 @@
 <?xml-stylesheet href="chrome://browser/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://devtools/content/shared/widgets/widgets.css" type="text/css"?>
 <?xml-stylesheet href="chrome://devtools/content/inspector/inspector.css" type="text/css"?>
-<?xml-stylesheet href="chrome://devtools/skin/themes/common.css" type="text/css"?>
-<?xml-stylesheet href="chrome://devtools/skin/themes/widgets.css" type="text/css"?>
-<?xml-stylesheet href="chrome://devtools/skin/themes/inspector.css" type="text/css"?>
+<?xml-stylesheet href="chrome://devtools/skin/common.css" type="text/css"?>
+<?xml-stylesheet href="chrome://devtools/skin/widgets.css" type="text/css"?>
+<?xml-stylesheet href="chrome://devtools/skin/inspector.css" type="text/css"?>
 <!DOCTYPE window [
   <!ENTITY % inspectorDTD SYSTEM "chrome://browser/locale/devtools/inspector.dtd" >
    %inspectorDTD;

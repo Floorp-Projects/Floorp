@@ -5,9 +5,9 @@
 <?xml-stylesheet href="chrome://browser/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://devtools/content/shared/widgets/widgets.css" type="text/css"?>
 <?xml-stylesheet href="debugger.css" type="text/css"?>
-<?xml-stylesheet href="chrome://devtools/skin/themes/common.css" type="text/css"?>
-<?xml-stylesheet href="chrome://devtools/skin/themes/widgets.css" type="text/css"?>
-<?xml-stylesheet href="chrome://devtools/skin/themes/debugger.css" type="text/css"?>
+<?xml-stylesheet href="chrome://devtools/skin/common.css" type="text/css"?>
+<?xml-stylesheet href="chrome://devtools/skin/widgets.css" type="text/css"?>
+<?xml-stylesheet href="chrome://devtools/skin/debugger.css" type="text/css"?>
 <!DOCTYPE window [
   <!ENTITY % debuggerDTD SYSTEM "chrome://browser/locale/devtools/debugger.dtd">
   %debuggerDTD;

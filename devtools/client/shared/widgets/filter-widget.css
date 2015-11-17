@@ -200,7 +200,7 @@ input {
 .remove-button {
   width: 16px;
   height: 16px;
-  background: url(chrome://devtools/skin/themes/images/close@2x.png);
+  background: url(chrome://devtools/skin/images/close@2x.png);
   background-size: cover;
   font-size: 0;
   border: none;
@@ -236,14 +236,14 @@ input {
 }
 
 .add {
-  background: url(chrome://devtools/skin/themes/images/add.svg);
+  background: url(chrome://devtools/skin/images/add.svg);
 }
 
 #toggle-presets {
-  background: url(chrome://devtools/skin/themes/images/pseudo-class.svg#pseudo-class);
+  background: url(chrome://devtools/skin/images/pseudo-class.svg#pseudo-class);
 }
 
 .show-presets #toggle-presets {
-  background: url(chrome://devtools/skin/themes/images/pseudo-class.svg#pseudo-class-checked);
+  background: url(chrome://devtools/skin/images/pseudo-class.svg#pseudo-class-checked);
   filter: none;
 }

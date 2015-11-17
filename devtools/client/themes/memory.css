@@ -364,7 +364,7 @@ html, body, #app, #memory-tool {
   width: 12px;
   height: 12px;
   max-height: 12px;
-  background-image: url(chrome://devtools/skin/themes/images/webconsole.svg);
+  background-image: url(chrome://devtools/skin/images/webconsole.svg);
   background-size: 72px 60px;
   background-position: -24px -24px;
   background-repeat: no-repeat;
@@ -374,7 +374,7 @@ html, body, #app, #memory-tool {
 }
 
 .theme-light .error::before {
-  background-image: url(chrome://devtools/skin/themes/images/webconsole.svg#light-icons);
+  background-image: url(chrome://devtools/skin/images/webconsole.svg#light-icons);
 }
 
 /**
