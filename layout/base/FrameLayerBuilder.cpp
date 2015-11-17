@@ -6143,13 +6143,8 @@ ContainerState::CreateMaskLayer(Layer *aLayer,
     // build the image and container
     container = aLayer->Manager()->CreateImageContainer();
     NS_ASSERTION(container, "Could not create image container for mask layer.");
-    RefPtr<Image> image = container->CreateImage(ImageFormat::CAIRO_SURFACE);
-    NS_ASSERTION(image, "Could not create image container for mask layer.");
-    CairoImage::Data data;
-    data.mSize = surfaceSizeInt;
-    data.mSourceSurface = surface;
 
-    static_cast<CairoImage*>(image.get())->SetData(data);
+    RefPtr<CairoImage> image = new CairoImage(surfaceSizeInt, surface);
     container->SetCurrentImageInTransaction(image);
 
     GetMaskLayerImageCache()->PutImage(newKey.forget(), container);

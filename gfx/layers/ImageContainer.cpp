@@ -77,10 +77,6 @@ ImageFactory::CreateImage(ImageFormat aFormat,
     img = new RecyclingPlanarYCbCrImage(aRecycleBin);
     return img.forget();
   }
-  if (aFormat == ImageFormat::CAIRO_SURFACE) {
-    img = new CairoImage();
-    return img.forget();
-  }
 #ifdef MOZ_WIDGET_ANDROID
   if (aFormat == ImageFormat::SURFACE_TEXTURE) {
     img = new SurfaceTextureImage();
@@ -592,8 +588,10 @@ PlanarYCbCrImage::GetAsSourceSurface()
   return surface.forget();
 }
 
-CairoImage::CairoImage()
-  : Image(nullptr, ImageFormat::CAIRO_SURFACE)
+CairoImage::CairoImage(const gfx::IntSize& aSize, gfx::SourceSurface* aSourceSurface)
+  : Image(nullptr, ImageFormat::CAIRO_SURFACE),
+    mSize(aSize),
+    mSourceSurface(aSourceSurface)
 {}
 
 CairoImage::~CairoImage()
