@@ -405,8 +405,8 @@ SpdySession31::QueueStream(SpdyStream31 *stream)
   LOG3(("SpdySession31::QueueStream %p stream %p queued.", this, stream));
 
 #ifdef DEBUG
-  int32_t qsize = mQueuedStreams.GetSize();
-  for (int32_t i = 0; i < qsize; i++) {
+  size_t qsize = mQueuedStreams.GetSize();
+  for (size_t i = 0; i < qsize; i++) {
     SpdyStream31 *qStream = static_cast<SpdyStream31 *>(mQueuedStreams.ObjectAt(i));
     MOZ_ASSERT(qStream != stream);
     MOZ_ASSERT(qStream->Queued());
@@ -954,8 +954,8 @@ SpdySession31::CleanupStream(SpdyStream31 *aStream, nsresult aResult,
 
 static void RemoveStreamFromQueue(SpdyStream31 *aStream, nsDeque &queue)
 {
-  uint32_t size = queue.GetSize();
-  for (uint32_t count = 0; count < size; ++count) {
+  size_t size = queue.GetSize();
+  for (size_t count = 0; count < size; ++count) {
     SpdyStream31 *stream = static_cast<SpdyStream31 *>(queue.PopFront());
     if (stream != aStream)
       queue.Push(stream);
@@ -1519,8 +1519,8 @@ SpdySession31::HandleGoAway(SpdySession31 *self)
   self->mStreamTransactionHash.Enumerate(GoAwayEnumerator, self);
 
   // Process the streams marked for deletion and restart.
-  uint32_t size = self->mGoAwayStreamsToRestart.GetSize();
-  for (uint32_t count = 0; count < size; ++count) {
+  size_t size = self->mGoAwayStreamsToRestart.GetSize();
+  for (size_t count = 0; count < size; ++count) {
     SpdyStream31 *stream =
       static_cast<SpdyStream31 *>(self->mGoAwayStreamsToRestart.PopFront());
 
@@ -1534,7 +1534,7 @@ SpdySession31::HandleGoAway(SpdySession31 *self)
   // in another one. (they were never sent on the network so they implicitly
   // are not covered by the last-good id.
   size = self->mQueuedStreams.GetSize();
-  for (uint32_t count = 0; count < size; ++count) {
+  for (size_t count = 0; count < size; ++count) {
     SpdyStream31 *stream =
       static_cast<SpdyStream31 *>(self->mQueuedStreams.PopFront());
     MOZ_ASSERT(stream->Queued());

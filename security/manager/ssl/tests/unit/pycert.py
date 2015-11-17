@@ -319,7 +319,7 @@ class Certificate(object):
         self.issuer = 'Default Issuer'
         actualNow = datetime.datetime.utcnow()
         self.now = datetime.datetime.strptime(str(actualNow.year), '%Y')
-        aYearAndAWhile = datetime.timedelta(days=550)
+        aYearAndAWhile = datetime.timedelta(days=400)
         self.notBefore = self.now - aYearAndAWhile
         self.notAfter = self.now + aYearAndAWhile
         self.subject = 'Default Subject'

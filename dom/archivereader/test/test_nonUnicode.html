@@ -10,35 +10,17 @@
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
 
   <script type="text/javascript;version=1.7">
-  function createNonUnicodeData() {
-    const Cc = SpecialPowers.Cc;
-    const Ci = SpecialPowers.Ci;
-
-    var dirSvc = Cc["@mozilla.org/file/directory_service;1"].getService(Ci.nsIProperties);
-    var testFile = dirSvc.get("ProfD", Ci.nsIFile);
-    testFile.append("fileArchiveReader_nonUnicode.zip");
-    var outStream = Cc["@mozilla.org/network/file-output-stream;1"].createInstance(Ci.nsIFileOutputStream);
-    outStream.init(testFile, 0x02 | 0x08 | 0x20, // write, create, truncate
-                   0666, 0);
-
+  function filesToCreate() {
     var binaryData = "";
     for (var i = 0, len = binaryString.length / 2; i < len; ++i) {
       var hex = binaryString[i * 2] + binaryString[i * 2 + 1];
       binaryData += String.fromCharCode(parseInt(hex,16));
     }
-    outStream.write(binaryData, binaryData.length);
-    outStream.close();
-
-    var fileList = document.getElementById('fileList');
-    SpecialPowers.wrap(fileList).value = testFile.path;
-
-    return fileList.files[0];
+    return [ {name: "fileArchiveReader_nonUnicode.zip", data: binaryData} ];
   }
 
-  function test1()
+  function test1(binaryFile)
   {
-    var binaryFile = createNonUnicodeData();
-
     var r = new ArchiveReader(binaryFile, { encoding: "ISO-8859-1" });
     isnot(r, null, "ArchiveReader cannot be null");
 
@@ -51,14 +33,12 @@
       is(this.result.length, 1, "ArchiveReader.getFilenames(): the array contains 1 item");
       ok(this.reader, r, "ArchiveRequest.reader should be == ArchiveReader");
       dump('Content: ' + this.result[0] + '\n');
-      test2();
+      test2(binaryFile);
     }
   }
 
-  function test2()
+  function test2(binaryFile)
   {
-    var binaryFile = createNonUnicodeData();
-
     try {
       new ArchiveReader(binaryFile, { encoding: "random stuff" });
       ok(false, "Should have thrown for bogus encoding label.");
@@ -68,9 +48,9 @@
     finishTest();
   }
 
-  function testSteps()
+  function testSteps(files)
   {
-    test1();
+    test1(files[0]);
     yield undefined;
   }
 
@@ -82,7 +62,6 @@
 
 <body onload="runTest();">
 <p id="display">
-  <input id="fileList" type="file"></input>
 </p>
 <script type="text/javascript;version=1.7">
 var binaryString = '' +

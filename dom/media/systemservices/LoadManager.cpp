@@ -19,7 +19,7 @@
 #include "mozilla/ArrayUtils.h"
 
 // NSPR_LOG_MODULES=LoadManager:5
-PRLogModuleInfo *gLoadManagerLog = nullptr;
+mozilla::LazyLogModule gLoadManagerLog("LoadManager");
 #undef LOG
 #undef LOG_ENABLED
 #define LOG(args) MOZ_LOG(gLoadManagerLog, mozilla::LogLevel::Debug, args)
@@ -46,8 +46,6 @@ LoadManagerSingleton::LoadManagerSingleton(int aLoadMeasurementInterval,
     mHighLoadThreshold(aHighLoadThreshold),
     mLowLoadThreshold(aLowLoadThreshold)
 {
-  if (!gLoadManagerLog)
-    gLoadManagerLog = PR_NewLogModule("LoadManager");
   LOG(("LoadManager - Initializing (%dms x %d, %f, %f)",
        mLoadMeasurementInterval, mAveragingMeasurements,
        mHighLoadThreshold, mLowLoadThreshold));

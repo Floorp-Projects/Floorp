@@ -477,6 +477,11 @@ class BaseIntRegion
 {
   friend class ::nsRegion;
 
+  // Give access to all specializations of IntRegionTyped, not just ones that
+  // derive from this specialization of BaseIntRegion.
+  template <typename units>
+  friend class IntRegionTyped;
+
 public:
   typedef Rect RectType;
   typedef Point PointType;
@@ -826,6 +831,11 @@ class IntRegionTyped :
     public BaseIntRegion<IntRegionTyped<units>, IntRectTyped<units>, IntPointTyped<units>, IntMarginTyped<units>>
 {
   typedef BaseIntRegion<IntRegionTyped<units>, IntRectTyped<units>, IntPointTyped<units>, IntMarginTyped<units>> Super;
+
+  // Make other specializations of IntRegionTyped friends.
+  template <typename OtherUnits>
+  friend class IntRegionTyped;
+
 public:
   // Forward constructors.
   IntRegionTyped() {}
@@ -844,9 +854,14 @@ public:
     return Super::operator=(mozilla::Move(aRegion));
   }
 
-  static IntRegionTyped FromUnknownRegion(const IntRegionTyped<UnknownUnits>& aRegion)
+  static IntRegionTyped FromUnknownRegion(const IntRegion& aRegion)
   {
     return IntRegionTyped(aRegion.Impl());
+  }
+  IntRegion ToUnknownRegion() const
+  {
+    // Need |this->| because Impl() is defined in a dependent base class.
+    return IntRegion(this->Impl());
   }
 private:
   // This is deliberately private, so calling code uses FromUnknownRegion().

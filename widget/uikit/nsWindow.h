@@ -47,7 +47,7 @@ public:
         return mVisible;
     }
     NS_IMETHOD              SetFocus(bool aState=false) override;
-    virtual mozilla::LayoutDeviceIntPoint WidgetToScreenOffset() override;
+    virtual LayoutDeviceIntPoint WidgetToScreenOffset() override;
 
     virtual void SetBackgroundColor(const nscolor &aColor) override;
     virtual void* GetNativeData(uint32_t aDataType) override;
@@ -61,7 +61,7 @@ public:
     void                    EnteredFullScreen(bool aFullScreen);
     NS_IMETHOD              Resize(double aWidth, double aHeight, bool aRepaint) override;
     NS_IMETHOD              Resize(double aX, double aY, double aWidth, double aHeight, bool aRepaint) override;
-    NS_IMETHOD              GetScreenBoundsUntyped(nsIntRect &aRect) override;
+    NS_IMETHOD              GetScreenBounds(LayoutDeviceIntRect& aRect) override;
     void                    ReportMoveEvent();
     void                    ReportSizeEvent();
     void                    ReportSizeModeEvent(nsSizeMode aMode);

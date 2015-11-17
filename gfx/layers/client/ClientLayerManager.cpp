@@ -203,9 +203,10 @@ ClientLayerManager::BeginTransactionWithTarget(gfxContext* aTarget)
     hal::GetCurrentScreenConfiguration(&currentConfig);
     orientation = currentConfig.orientation();
   }
-  IntRect targetBounds = mWidget->GetNaturalBoundsUntyped();
+  LayoutDeviceIntRect targetBounds = mWidget->GetNaturalBounds();
   targetBounds.x = targetBounds.y = 0;
-  mForwarder->BeginTransaction(targetBounds, mTargetRotation, orientation);
+  mForwarder->BeginTransaction(targetBounds.ToUnknownRect(), mTargetRotation,
+                               orientation);
 
   // If we're drawing on behalf of a context with async pan/zoom
   // enabled, then the entire buffer of painted layers might be

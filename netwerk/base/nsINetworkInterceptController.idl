@@ -29,7 +29,7 @@ class ChannelInfo;
  * which do not implement nsIChannel.
  */
 
-[scriptable, uuid(231bb567-90e1-4973-9728-7dab93ab29a8)]
+[scriptable, uuid(64439e24-eda5-4f39-9a7e-162c4b5e0150)]
 interface nsIInterceptedChannel : nsISupports
 {
     /**
@@ -100,6 +100,14 @@ interface nsIInterceptedChannel : nsISupports
       return reporter.forget();
     }
 %}
+
+    /**
+     * Allow the ServiceWorkerManager to set an RAII-style object on the
+     * intercepted channel that should be released once the channel is
+     * torn down.
+     */
+    [noscript]
+    void setReleaseHandle(in nsISupports aHandle);
 };
 
 /**

@@ -3703,7 +3703,9 @@ void
 nsPIDOMWindow::RefreshMediaElements()
 {
   RefPtr<AudioChannelService> service = AudioChannelService::GetOrCreate();
-  service->RefreshAgentsVolume(GetOuterWindow());
+  if (service) {
+    service->RefreshAgentsVolume(GetOuterWindow());
+  }
 }
 
 bool
@@ -3721,7 +3723,9 @@ nsPIDOMWindow::SetAudioCapture(bool aCapture)
   mAudioCaptured = aCapture;
 
   RefPtr<AudioChannelService> service = AudioChannelService::GetOrCreate();
-  service->RefreshAgentsCapture(GetOuterWindow(), mWindowID);
+  if (service) {
+    service->RefreshAgentsCapture(GetOuterWindow(), mWindowID);
+  }
 
   return NS_OK;
 }
