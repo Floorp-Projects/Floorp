@@ -401,6 +401,8 @@ class ModuleEnvironmentObject : public LexicalScopeBase
     bool createImportBinding(JSContext* cx, HandleAtom importName, HandleModuleObject module,
                              HandleAtom exportName);
 
+    bool hasImportBinding(HandlePropertyName name);
+
   private:
     static bool lookupProperty(JSContext* cx, HandleObject obj, HandleId id,
                                MutableHandleObject objp, MutableHandleShape propp);
