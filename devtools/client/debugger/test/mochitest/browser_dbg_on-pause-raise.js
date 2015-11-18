@@ -93,8 +93,14 @@ function testPause() {
     }).then(testResume);
   });
 
+  EventUtils.sendMouseEvent({ type: "mousedown" },
+    gDebugger.document.getElementById("resume"),
+    gDebugger);
+
   // Evaluate a script to fully pause the debugger
-  evalInTab(gTab, "debugger;");
+  once(gDebugger.gClient, "willInterrupt").then(() => {
+    evalInTab(gTab, "1+1;");
+  });
 }
 
 function testResume() {

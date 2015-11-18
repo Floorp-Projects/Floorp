@@ -817,8 +817,7 @@ this.WidgetMethods = {
     }
     // Find the target position in this container and insert the item there.
     if (!("index" in aOptions)) {
-      var idx = this._findExpectedIndexFor(item);
-      return this._insertItemAt(idx, item, aOptions);
+      return this._insertItemAt(this._findExpectedIndexFor(item), item, aOptions);
     }
     // Insert the item at the specified index. If negative or out of bounds,
     // the item will be simply appended.

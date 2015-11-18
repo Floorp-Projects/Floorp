@@ -20,7 +20,6 @@ var EventEmitter = require("devtools/shared/event-emitter");
 var Telemetry = require("devtools/client/shared/telemetry");
 var HUDService = require("devtools/client/webconsole/hudservice");
 var sourceUtils = require("devtools/client/shared/source-utils");
-var { attachThread, detachThread } = require("./attach-thread");
 
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://devtools/client/framework/gDevTools.jsm");
@@ -252,10 +251,6 @@ Toolbox.prototype = {
     return this._target;
   },
 
-  get threadClient() {
-    return this._threadClient;
-  },
-
   /**
    * Get/alter the host of a Toolbox, i.e. is it in browser or in a separate
    * tab. See HostType for more details.
@@ -355,8 +350,6 @@ Toolbox.prototype = {
 
       // Load the toolbox-level actor fronts and utilities now
       yield this._target.makeRemote();
-      this._threadClient = yield attachThread(this);
-
       iframe.setAttribute("src", this._URL);
       iframe.setAttribute("aria-label", toolboxStrings("toolbox.label"));
       let domHelper = new DOMHelpers(iframe.contentWindow);
@@ -1958,10 +1951,6 @@ Toolbox.prototype = {
 
     // Destroy the profiler connection
     outstanding.push(this.destroyPerformance());
-
-    // Detach the thread
-    detachThread(this._threadClient);
-    this._threadClient = null;
 
     // We need to grab a reference to win before this._host is destroyed.
     let win = this.frame.ownerGlobal;
