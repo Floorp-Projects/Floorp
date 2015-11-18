@@ -121,7 +121,7 @@ extensions.registerPrivilegedAPI("notifications", (extension, context) => {
 
       getAll: function(callback) {
         let notifications = notificationsMap.get(extension);
-        notifications = [ for (notification of notifications) notification.id ];
+        notifications = notifications.map(notification => notification.id);
         runSafe(context, callback, notifications);
       },
 
