@@ -356,7 +356,9 @@ this.NetUtil = {
         }
 
         if (securityFlags === undefined) {
-            securityFlags = Ci.nsILoadInfo.SEC_NORMAL;
+            securityFlags = loadUsingSystemPrincipal
+                            ? Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL
+                            : Ci.nsILoadInfo.SEC_NORMAL;
         }
 
         if (contentPolicyType === undefined) {
