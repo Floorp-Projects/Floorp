@@ -7,6 +7,7 @@
 const LOCAL_URI = "about:robots";
 const REMOTE_URI = "data:text/html;charset=utf-8,remote";
 
+const { Cu } = require('chrome');
 const { Loader } = require('sdk/test/loader');
 const { getTabs, openTab, closeTab, setTabURL, getBrowserForTab, getURI } = require('sdk/tabs/utils');
 const { getMostRecentBrowserWindow } = require('sdk/window/utils');
@@ -541,6 +542,33 @@ exports["test cannot load in wrong loader"] = function*(assert) {
   }
 
   loader.unload();
+};
+
+exports["test send cpow"] = function*(assert) {
+  if (!isE10S) {
+    assert.pass("Skipping test in non-e10s mode");
+    return;
+  }
+
+  let window = getMostRecentBrowserWindow();
+
+  let tabs = getTabs(window);
+  assert.equal(tabs.length, 1, "Should have just the one tab to start with");
+  let tab = tabs[0];
+  let browser = getBrowserForTab(tab);
+
+  assert.ok(Cu.isCrossProcessWrapper(browser.contentWindow),
+            "Should have a CPOW for the browser content window");
+
+  let loader = new Loader(module);
+  let { processes } = yield waitForProcesses(loader);
+
+  processes.port.emitCPOW('sdk/test/cpow', ['foobar'], { window: browser.contentWindow });
+  let [process, arg, id] = yield promiseEvent(processes.port, 'sdk/test/cpow');
+
+  assert.ok(process.isRemote, "Response should come from the remote process");
+  assert.equal(arg, "foobar", "Argument should have passed through");
+  assert.equal(id, browser.outerWindowID, "Should have got the ID from the child");
 };
 
 after(exports, function*(name, assert) {
