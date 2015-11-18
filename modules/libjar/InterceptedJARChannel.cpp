@@ -56,6 +56,7 @@ InterceptedJARChannel::ResetInterception()
   mSynthesizedInput = nullptr;
 
   mChannel->ResetInterception();
+  mReleaseHandle = nullptr;
   mChannel = nullptr;
   return NS_OK;
 }
@@ -93,6 +94,7 @@ InterceptedJARChannel::FinishSynthesizedResponse(const nsACString& aFinalURLSpec
   mChannel->OverrideWithSynthesizedResponse(mSynthesizedInput, mContentType);
 
   mResponseBody = nullptr;
+  mReleaseHandle = nullptr;
   mChannel = nullptr;
   return NS_OK;
 }
@@ -109,6 +111,7 @@ InterceptedJARChannel::Cancel(nsresult aStatus)
   nsresult rv = mChannel->Cancel(aStatus);
   NS_ENSURE_SUCCESS(rv, rv);
   mResponseBody = nullptr;
+  mReleaseHandle = nullptr;
   mChannel = nullptr;
   return NS_OK;
 }
@@ -127,6 +130,16 @@ NS_IMETHODIMP
 InterceptedJARChannel::GetConsoleReportCollector(nsIConsoleReportCollector**)
 {
   return NS_ERROR_NOT_AVAILABLE;
+}
+
+NS_IMETHODIMP
+InterceptedJARChannel::SetReleaseHandle(nsISupports* aHandle)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(!mReleaseHandle);
+  MOZ_ASSERT(aHandle);
+  mReleaseHandle = aHandle;
+  return NS_OK;
 }
 
 void
