@@ -16,16 +16,6 @@ loop.panel = (function(_, mozL10n) {
   var GettingStartedView = React.createClass({
     mixins: [sharedMixins.WindowCloseMixin],
 
-    componentWillMount: function() {
-      loop.request("GetLoopPref", "gettingStarted.seen").then(function(result) {
-        this.setState({ seen: result });
-      }.bind(this));
-    },
-
-    getInitialState: function() {
-      return { seen: true };
-    },
-
     handleButtonClick: function() {
       loop.requestMulti(
         ["OpenGettingStartedTour", "getting-started"],
@@ -36,9 +26,6 @@ loop.panel = (function(_, mozL10n) {
     },
 
     render: function() {
-      if (this.state.seen) {
-        return null;
-      }
       return (
         <div className="fte-get-started-content">
           <header className="fte-title">
@@ -882,9 +869,19 @@ loop.panel = (function(_, mozL10n) {
   var PanelView = React.createClass({
     propTypes: {
       dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
+      // Only used for the ui-showcase:
+      gettingStartedSeen: React.PropTypes.bool,
       notifications: React.PropTypes.object.isRequired,
       roomStore:
-        React.PropTypes.instanceOf(loop.store.RoomStore).isRequired
+        React.PropTypes.instanceOf(loop.store.RoomStore).isRequired,
+      // Only used for the ui-showcase:
+      userProfile: React.PropTypes.object
+    },
+
+    getDefaultProps: function() {
+      return {
+        gettingStartedSeen: true
+      };
     },
 
     getInitialState: function() {
@@ -992,7 +989,7 @@ loop.panel = (function(_, mozL10n) {
     render: function() {
       var NotificationListView = sharedViews.NotificationListView;
 
-      if (!this.state.gettingStartedSeen) {
+      if (!this.props.gettingStartedSeen || !this.state.gettingStartedSeen) {
         return (
           <div className="fte-get-started-container"
                onContextMenu={this.handleContextMenu}>
@@ -1021,7 +1018,7 @@ loop.panel = (function(_, mozL10n) {
           <div className="footer">
             <div className="user-details">
               <AccountLink fxAEnabled={this.state.fxAEnabled}
-                           userProfile={this.state.userProfile}/>
+                           userProfile={this.props.userProfile || this.state.userProfile}/>
             </div>
             <div className="signin-details">
               <SettingsDropdown />
