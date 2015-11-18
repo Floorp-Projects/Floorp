@@ -243,6 +243,9 @@ public:
   void
   FlushConsoleReports(nsIDocument* aDocument) override;
 
+  void
+  FlushConsoleReports(nsIConsoleReportCollector* aCollector) override;
+
   class nsContentEncodings : public nsIUTF8StringEnumerator
     {
     public:

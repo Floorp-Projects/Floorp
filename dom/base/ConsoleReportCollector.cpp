@@ -79,6 +79,27 @@ ConsoleReportCollector::FlushConsoleReports(nsIDocument* aDocument)
   }
 }
 
+void
+ConsoleReportCollector::FlushConsoleReports(nsIConsoleReportCollector* aCollector)
+{
+  MOZ_ASSERT(aCollector);
+
+  nsTArray<PendingReport> reports;
+
+  {
+    MutexAutoLock lock(mMutex);
+    mPendingReports.SwapElements(reports);
+  }
+
+  for (uint32_t i = 0; i < reports.Length(); ++i) {
+    PendingReport& report = reports[i];
+    aCollector->AddConsoleReport(report.mErrorFlags, report.mCategory,
+                                 report.mPropertiesFile, report.mSourceFileURI,
+                                 report.mLineNumber, report.mColumnNumber,
+                                 report.mMessageName, report.mStringParams);
+  }
+}
+
 ConsoleReportCollector::~ConsoleReportCollector()
 {
 }
