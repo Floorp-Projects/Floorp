@@ -2975,6 +2975,8 @@ this.AddonManager = {
   ERROR_FILE_ACCESS: -4,
   // The add-on must be signed and isn't.
   ERROR_SIGNEDSTATE_REQUIRED: -5,
+  // The downloaded add-on had a different type than expected.
+  ERROR_UNEXPECTED_ADDON_TYPE: -6,
 
   // These must be kept in sync with AddonUpdateChecker.
   // No error was encountered.
