@@ -1,0 +1,64 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for sub-frames of WebExtension background pages</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="application/javascript;version=1.8">
+
+add_task(function* testBackgroundWindow() {
+  let extension = ExtensionTestUtils.loadExtension({
+    background: "new " + function() {
+      browser.test.log("background script executed");
+
+      browser.test.sendMessage("background-script-load");
+
+      let img = document.createElement("img");
+      img.src = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
+      document.body.appendChild(img);
+
+      img.onload = () => {
+        browser.test.log("image loaded");
+
+        let iframe = document.createElement("iframe");
+        iframe.src = "about:blank?1";
+
+        iframe.onload = () => {
+          browser.test.log("iframe loaded");
+          setTimeout(() => {
+            browser.test.notifyPass("background sub-window test done");
+          }, 0);
+        };
+        document.body.appendChild(iframe);
+      };
+    },
+  });
+
+  info("extension loaded");
+
+  let loadCount = 0;
+  extension.onMessage("background-script-load", () => {
+    loadCount++;
+  });
+
+  yield extension.startup();
+
+  info("startup complete loaded");
+
+  yield extension.awaitFinish("background sub-window test done")
+
+  is(loadCount, 1, "background script loaded only once");
+
+  yield extension.unload();
+});
+
+</script>
+
+</body>
+</html>

@@ -352,11 +352,11 @@ pref("dom.w3c_touch_events.safetyX", 0); // escape borders in units of 1/240"
 pref("dom.w3c_touch_events.safetyY", 120); // escape borders in units of 1/240"
 
 #ifdef MOZ_SAFE_BROWSING
-pref("browser.safebrowsing.enabled", false);
+pref("browser.safebrowsing.enabled", true);
 // Prevent loading of pages identified as malware
-pref("browser.safebrowsing.malware.enabled", false);
-pref("browser.safebrowsing.downloads.enabled", false);
-pref("browser.safebrowsing.downloads.remote.enabled", false);
+pref("browser.safebrowsing.malware.enabled", true);
+pref("browser.safebrowsing.downloads.enabled", true);
+pref("browser.safebrowsing.downloads.remote.enabled", true);
 pref("browser.safebrowsing.downloads.remote.timeout_ms", 10000);
 pref("browser.safebrowsing.debug", false);
 
@@ -388,7 +388,7 @@ pref("urlclassifier.max-complete-age", 2700);
 
 // Tracking protection
 pref("privacy.trackingprotection.enabled", false);
-pref("privacy.trackingprotection.pbmode.enabled", false);
+pref("privacy.trackingprotection.pbmode.enabled", true);
 
 #endif
 

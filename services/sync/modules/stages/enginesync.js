@@ -31,7 +31,7 @@ this.EngineSynchronizer = function EngineSynchronizer(service) {
 }
 
 EngineSynchronizer.prototype = {
-  sync: function sync() {
+  sync: function sync(engineNamesToSync) {
     if (!this.onComplete) {
       throw new Error("onComplete handler not installed.");
     }
@@ -96,6 +96,9 @@ EngineSynchronizer.prototype = {
       return;
     }
 
+    // We only honor the "hint" of what engines to Sync if this isn't
+    // a first sync.
+    let allowEnginesHint = false;
     // Wipe data in the desired direction if necessary
     switch (Svc.Prefs.get("firstSync")) {
       case "resetClient":
@@ -106,6 +109,9 @@ EngineSynchronizer.prototype = {
         break;
       case "wipeRemote":
         this.service.wipeRemote(engineManager.enabledEngineNames);
+        break;
+      default:
+        allowEnginesHint = true;
         break;
     }
 
@@ -143,8 +149,17 @@ EngineSynchronizer.prototype = {
       return;
     }
 
+    // If the engines to sync has been specified, we sync in the order specified.
+    let enginesToSync;
+    if (allowEnginesHint && engineNamesToSync) {
+      this._log.info("Syncing specified engines", engineNamesToSync);
+      enginesToSync = engineManager.get(engineNamesToSync).filter(e => e.enabled);
+    } else {
+      this._log.info("Syncing all enabled engines.");
+      enginesToSync = engineManager.getEnabled();
+    }
     try {
-      for (let engine of engineManager.getEnabled()) {
+      for (let engine of enginesToSync) {
         // If there's any problems with syncing the engine, report the failure
         if (!(this._syncEngine(engine)) || this.service.status.enforceBackoff) {
           this._log.info("Aborting sync for failure in " + engine.name);

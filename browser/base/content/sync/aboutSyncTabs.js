@@ -318,15 +318,8 @@ var RemoteTabViewer = {
       }
     }
 
-    // if Clients hasn't synced yet this session, we need to sync it as well.
-    if (Weave.Service.clientsEngine.lastSync == 0) {
-      Weave.Service.clientsEngine.sync();
-    }
-
-    // Force a sync only for the tabs engine
-    let engine = Weave.Service.engineManager.get("tabs");
-    engine.lastModified = null;
-    engine.sync();
+    // Ask Sync to just do the tabs engine if it can.
+    Weave.Service.sync(["tabs"]);
     Services.prefs.setIntPref("services.sync.lastTabFetch",
                               Math.floor(Date.now() / 1000));
 
