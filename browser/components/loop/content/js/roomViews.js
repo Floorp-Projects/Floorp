@@ -121,8 +121,7 @@ loop.roomViews = (function(mozL10n) {
 
     propTypes: {
       dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
-      failureReason: React.PropTypes.string,
-      mozLoop: React.PropTypes.object.isRequired
+      failureReason: React.PropTypes.string
     },
 
     componentDidMount: function() {
@@ -156,8 +155,7 @@ loop.roomViews = (function(mozL10n) {
           ), 
           React.createElement(loop.shared.views.SettingsControlButton, {
             menuBelow: true, 
-            menuItems: settingsMenuItems, 
-            mozLoop: this.props.mozLoop})
+            menuItems: settingsMenuItems})
         )
       );
     }
@@ -245,7 +243,6 @@ loop.roomViews = (function(mozL10n) {
     propTypes: {
       dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
       error: React.PropTypes.object,
-      mozLoop: React.PropTypes.object.isRequired,
       onAddContextClick: React.PropTypes.func,
       onEditContextClose: React.PropTypes.func,
       // This data is supplied by the activeRoomStore.
@@ -369,7 +366,6 @@ loop.roomViews = (function(mozL10n) {
           React.createElement(DesktopRoomEditContextView, {
             dispatcher: this.props.dispatcher, 
             error: this.props.error, 
-            mozLoop: this.props.mozLoop, 
             onClose: this.handleEditContextClose, 
             roomData: this.props.roomData, 
             savingContext: this.props.savingContext, 
@@ -386,7 +382,6 @@ loop.roomViews = (function(mozL10n) {
     propTypes: {
       dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
       error: React.PropTypes.object,
-      mozLoop: React.PropTypes.object.isRequired,
       onClose: React.PropTypes.func,
       // This data is supplied by the activeRoomStore.
       roomData: React.PropTypes.object.isRequired,
@@ -461,7 +456,7 @@ loop.roomViews = (function(mozL10n) {
     },
 
     _fetchMetadata: function() {
-      this.props.mozLoop.getSelectedTabMetadata(function(metadata) {
+      loop.request("GetSelectedTabMetadata").then(function(metadata) {
         var previewImage = metadata.favicon || "";
         var description = metadata.title || metadata.description;
         var metaUrl = metadata.url;
@@ -494,10 +489,9 @@ loop.roomViews = (function(mozL10n) {
         return;
       }
 
-      var mozLoop = this.props.mozLoop;
-      mozLoop.openURL(url.location);
-
-      mozLoop.telemetryAddValue("LOOP_ROOM_CONTEXT_CLICK", 1);
+      loop.requestMulti(
+        ["OpenURL", url.location],
+        ["TelemetryAddValue", "LOOP_ROOM_CONTEXT_CLICK", 1]);
     },
 
     handleFormSubmit: function(event) {
@@ -605,7 +599,6 @@ loop.roomViews = (function(mozL10n) {
       dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
       // The poster URLs are for UI-showcase testing and development.
       localPosterUrl: React.PropTypes.string,
-      mozLoop: React.PropTypes.object.isRequired,
       onCallTerminated: React.PropTypes.func.isRequired,
       remotePosterUrl: React.PropTypes.string,
       roomStore: React.PropTypes.instanceOf(loop.store.RoomStore).isRequired
@@ -791,8 +784,7 @@ loop.roomViews = (function(mozL10n) {
           return (
             React.createElement(RoomFailureView, {
               dispatcher: this.props.dispatcher, 
-              failureReason: this.state.failureReason, 
-              mozLoop: this.props.mozLoop})
+              failureReason: this.state.failureReason})
           );
         }
         case ROOM_STATES.ENDED: {
@@ -834,7 +826,6 @@ loop.roomViews = (function(mozL10n) {
                   audio: { enabled: !this.state.audioMuted, visible: true}, 
                   dispatcher: this.props.dispatcher, 
                   hangup: this.leaveRoom, 
-                  mozLoop: this.props.mozLoop, 
                   publishStream: this.publishStream, 
                   screenShare: screenShareData, 
                   settingsMenuItems: settingsMenuItems, 
@@ -844,7 +835,6 @@ loop.roomViews = (function(mozL10n) {
                 React.createElement(DesktopRoomInvitationView, {
                   dispatcher: this.props.dispatcher, 
                   error: this.state.error, 
-                  mozLoop: this.props.mozLoop, 
                   onAddContextClick: this.handleAddContextClick, 
                   onEditContextClose: this.handleEditContextClose, 
                   roomData: roomData, 
@@ -855,7 +845,6 @@ loop.roomViews = (function(mozL10n) {
                 React.createElement(DesktopRoomEditContextView, {
                   dispatcher: this.props.dispatcher, 
                   error: this.state.error, 
-                  mozLoop: this.props.mozLoop, 
                   onClose: this.handleEditContextClose, 
                   roomData: roomData, 
                   savingContext: this.state.savingContext, 
