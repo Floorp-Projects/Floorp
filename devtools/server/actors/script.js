@@ -680,10 +680,16 @@ ThreadActor.prototype = {
     if (this.state == "exited") {
       return { error: "wrongState" };
     }
+    const options = aRequest.options || {};
 
-    update(this._options, aRequest.options || {});
+    if ('observeAsmJS' in options) {
+      this.dbg.allowUnobservedAsmJS = !options.observeAsmJS;
+    }
+
+    update(this._options, options);
+
     // Update the global source store
-    this.sources.reconfigure(this._options);
+    this.sources.reconfigure(options);
 
     return {};
   },
