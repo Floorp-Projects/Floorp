@@ -5,3 +5,4 @@
 toolkit.jar:
 % content extensions %content/extensions/
     content/extensions/schemas/cookies.json
+    content/extensions/schemas/web_request.json
