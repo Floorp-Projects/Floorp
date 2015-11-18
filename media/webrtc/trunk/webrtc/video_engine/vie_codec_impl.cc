@@ -73,6 +73,12 @@ static void LogCodec(const VideoCodec& codec) {
     LOG(LS_INFO) << "H264 specific settings";
     LOG(LS_INFO) << "profile: "
                  <<  codec.codecSpecific.H264.profile
+                 << ", constraints: "
+                 << codec.codecSpecific.H264.constraints
+                 << ", level: "
+                 << codec.codecSpecific.H264.level/10.0
+                 << ", packetizationMode: "
+                 << codec.codecSpecific.H264.packetizationMode
                  << ", framedropping: "
                  << codec.codecSpecific.H264.frameDroppingOn
                  << ", keyFrameInterval: "
@@ -81,6 +87,8 @@ static void LogCodec(const VideoCodec& codec) {
                  << codec.codecSpecific.H264.spsLen
                  << ", ppslen: "
                  << codec.codecSpecific.H264.ppsLen;
+  } else if (codec.codecType == kVideoCodecVP9) {
+    LOG(LS_INFO) << "VP9 specific settings";
   }
 }
 
@@ -354,9 +362,9 @@ int ViECodecImpl::SetImageScaleStatus(const int video_channel,
   return 0;
 }
 
-int ViECodecImpl::GetSendCodecStastistics(const int video_channel,
-                                          unsigned int& key_frames,
-                                          unsigned int& delta_frames) const {
+int ViECodecImpl::GetSendCodecStatistics(const int video_channel,
+                                         unsigned int& key_frames,
+                                         unsigned int& delta_frames) const {
   ViEChannelManagerScoped cs(*(shared_data_->channel_manager()));
   ViEEncoder* vie_encoder = cs.Encoder(video_channel);
   if (!vie_encoder) {
@@ -371,9 +379,9 @@ int ViECodecImpl::GetSendCodecStastistics(const int video_channel,
   return 0;
 }
 
-int ViECodecImpl::GetReceiveCodecStastistics(const int video_channel,
-                                             unsigned int& key_frames,
-                                             unsigned int& delta_frames) const {
+int ViECodecImpl::GetReceiveCodecStatistics(const int video_channel,
+                                            unsigned int& key_frames,
+                                            unsigned int& delta_frames) const {
   ViEChannelManagerScoped cs(*(shared_data_->channel_manager()));
   ViEChannel* vie_channel = cs.Channel(video_channel);
   if (!vie_channel) {

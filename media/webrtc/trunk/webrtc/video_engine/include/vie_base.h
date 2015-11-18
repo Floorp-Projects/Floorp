@@ -21,6 +21,10 @@
 
 #include "webrtc/common_types.h"
 
+#if defined(ANDROID) && !defined(WEBRTC_CHROMIUM_BUILD) && !defined(MOZ_WIDGET_GONK)
+#include <jni.h>
+#endif
+
 namespace webrtc {
 
 class Config;
@@ -152,6 +156,11 @@ class WEBRTC_DLLEXPORT VideoEngine {
   // user receives callbacks for generated trace messages.
   static int SetTraceCallback(TraceCallback* callback);
 
+#if defined(ANDROID) && !defined(WEBRTC_CHROMIUM_BUILD) && !defined(MOZ_WIDGET_GONK)
+  // Android specific.
+  static int SetAndroidObjects(JavaVM* java_vm);
+#endif
+
  protected:
   VideoEngine() {}
   virtual ~VideoEngine() {}
@@ -221,6 +230,10 @@ class WEBRTC_DLLEXPORT ViEBase {
   // been updated.
   virtual void RegisterSendSideDelayObserver(
       int channel, SendSideDelayObserver* observer) {}
+
+  // Changing the current state of the host CPU. Encoding engines
+  // can adapt their behavior if needed. (Optional)
+  virtual void SetLoadManager(CPULoadStateCallbackInvoker* load_manager) = 0;
 
   // Specifies the VoiceEngine and VideoEngine channel pair to use for
   // audio/video synchronization.

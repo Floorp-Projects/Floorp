@@ -26,6 +26,9 @@ import android.os.Process;
 import android.os.SystemClock;
 import android.util.Log;
 
+import org.mozilla.gecko.annotation.WebRTCJNITarget;
+
+@WebRTCJNITarget
 class  WebRtcAudioRecord {
   private static final boolean DEBUG = false;
 
@@ -46,7 +49,7 @@ class  WebRtcAudioRecord {
 
   private ByteBuffer byteBuffer;
 
-  private AudioRecord audioRecord = null;
+  private AudioRecord audioRecord;
   private AudioRecordThread audioThread = null;
 
   private AcousticEchoCanceler aec = null;
@@ -163,7 +166,7 @@ class  WebRtcAudioRecord {
         channels + ")");
     final int bytesPerFrame = channels * (BITS_PER_SAMPLE / 8);
     final int framesPerBuffer = sampleRate / BUFFERS_PER_SECOND;
-    byteBuffer = byteBuffer.allocateDirect(bytesPerFrame * framesPerBuffer);
+    byteBuffer = ByteBuffer.allocateDirect(bytesPerFrame * framesPerBuffer);
     Logd("byteBuffer.capacity: " + byteBuffer.capacity());
     // Rather than passing the ByteBuffer with every callback (requiring
     // the potentially expensive GetDirectBufferAddress) we simply have the
@@ -188,8 +191,14 @@ class  WebRtcAudioRecord {
 
     int bufferSizeInBytes = Math.max(byteBuffer.capacity(), minBufferSize);
     Logd("bufferSizeInBytes: " + bufferSizeInBytes);
+
+    int audioSource = AudioSource.VOICE_COMMUNICATION;
+    if (android.os.Build.VERSION.SDK_INT < 11) {
+        audioSource = AudioSource.DEFAULT;
+    }
+
     try {
-      audioRecord = new AudioRecord(AudioSource.VOICE_COMMUNICATION,
+      audioRecord = new AudioRecord(audioSource,
                                     sampleRate,
                                     AudioFormat.CHANNEL_IN_MONO,
                                     AudioFormat.ENCODING_PCM_16BIT,

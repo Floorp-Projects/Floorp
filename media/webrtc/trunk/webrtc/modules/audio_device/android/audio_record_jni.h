@@ -78,6 +78,9 @@ class AudioRecordJni {
 
   bool BuiltInAECIsAvailable() const;
   int32_t EnableBuiltInAEC(bool enable);
+  int32_t RecordingDeviceName(uint16_t index,
+                              char name[kAdmMaxDeviceNameSize],
+                              char guid[kAdmMaxGuidSize]);
 
  private:
   // Called from Java side so we can cache the address of the Java-manged

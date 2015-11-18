@@ -27,12 +27,29 @@
 #pragma warning(disable:4355)
 #endif  // _WIN32
 
+extern "C" {
+  int AECDebug() { return (int) webrtc::Trace::aec_debug(); }
+  uint32_t AECDebugMaxSize() { return webrtc::Trace::aec_debug_size(); }
+  void AECDebugEnable(uint32_t enable) { webrtc::Trace::set_aec_debug(!!enable); }
+  void AECDebugFilenameBase(char *buffer, size_t size) {
+    webrtc::Trace::aec_debug_filename(buffer, size);
+  }
+}
+
 namespace webrtc {
 
 const int Trace::kBoilerplateLength = 71;
 const int Trace::kTimestampPosition = 13;
 const int Trace::kTimestampLength = 12;
 volatile int Trace::level_filter_ = kTraceDefault;
+bool Trace::aec_debug_ = false;
+uint32_t Trace::aec_debug_size_ = 4*1024*1024;
+std::string Trace::aec_filename_base_;
+
+void Trace::aec_debug_filename(char *buffer, size_t size) {
+  strncpy(buffer, aec_filename_base_.c_str(), size-1);
+  buffer[size-1] = '\0';
+}
 
 // Construct On First Use idiom. Avoids "static initialization order fiasco".
 TraceImpl* TraceImpl::StaticInstance(CountOperation count_operation,

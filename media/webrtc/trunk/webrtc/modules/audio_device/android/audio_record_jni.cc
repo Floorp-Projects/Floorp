@@ -8,6 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
+#include "AndroidJNIWrapper.h"
 #include "webrtc/modules/audio_device/android/audio_record_jni.h"
 
 #include <android/log.h>
@@ -44,17 +45,16 @@ void AudioRecordJni::SetAndroidAudioDeviceObjects(void* jvm, void* context) {
   JNIEnv* jni = GetEnv(g_jvm);
   CHECK(jni) << "AttachCurrentThread must be called on this tread";
 
-  // Protect context from being deleted during garbage collection.
-  g_context = NewGlobalRef(jni, reinterpret_cast<jobject>(context));
+  if (!g_context) {
+    // Protect context from being deleted during garbage collection.
+    g_context = NewGlobalRef(jni, reinterpret_cast<jobject>(context));
+  }
 
-  // Load the locally-defined WebRtcAudioRecord class and create a new global
-  // reference to it.
-  jclass local_class = FindClass(
-      jni, "org/webrtc/voiceengine/WebRtcAudioRecord");
-  g_audio_record_class = reinterpret_cast<jclass>(
-      NewGlobalRef(jni, local_class));
-  jni->DeleteLocalRef(local_class);
-  CHECK_EXCEPTION(jni);
+  if (!g_audio_record_class) {
+    g_audio_record_class = jsjni_GetGlobalClassRef(
+                               "org/webrtc/voiceengine/WebRtcAudioRecord");
+    DCHECK(g_audio_record_class);
+  }
 
   // Register native methods with the WebRtcAudioRecord class. These methods
   // are declared private native in WebRtcAudioRecord.java.
@@ -316,6 +316,20 @@ void AudioRecordJni::CreateJavaInstance() {
   j_audio_record_ = jni->NewGlobalRef(j_audio_record_);
   CHECK_EXCEPTION(jni) << "Error during NewGlobalRef";
   CHECK(j_audio_record_);
+}
+
+int32_t AudioRecordJni::RecordingDeviceName(uint16_t index,
+                                            char name[kAdmMaxDeviceNameSize],
+                                            char guid[kAdmMaxGuidSize]) {
+  // Return empty string
+  memset(name, 0, kAdmMaxDeviceNameSize);
+
+  if (guid)
+  {
+    memset(guid, 0, kAdmMaxGuidSize);
+  }
+
+  return 0;
 }
 
 }  // namespace webrtc

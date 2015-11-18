@@ -285,7 +285,7 @@ int VP8EncoderImpl::GetStreamBitrate(int stream_idx,
     // If we will be sending the next higher stream, |max_rate| is given by
     // current stream's |targetBitrate|, otherwise it's capped by |maxBitrate|.
     if (stream_idx < codec_.numberOfSimulcastStreams - 1) {
-      uint32 max_rate = codec_.simulcastStream[stream_idx].maxBitrate;
+      uint32_t max_rate = codec_.simulcastStream[stream_idx].maxBitrate;
       if (new_bitrate_kbit >= SumStreamTargetBitrate(stream_idx + 1, codec_) +
           codec_.simulcastStream[stream_idx + 1].minBitrate) {
         max_rate = codec_.simulcastStream[stream_idx].targetBitrate;
@@ -435,8 +435,9 @@ int VP8EncoderImpl::InitEncode(const VideoCodec* inst,
     if (encoded_images_[i]._buffer != NULL) {
       delete [] encoded_images_[i]._buffer;
     }
-    encoded_images_[i]._size = CalcBufferSize(kI420,
-                                              codec_.width, codec_.height);
+    // Reserve 100 extra bytes for overhead at small resolutions.
+    encoded_images_[i]._size = CalcBufferSize(kI420, codec_.width, codec_.height)
+                               + 100;
     encoded_images_[i]._buffer = new uint8_t[encoded_images_[i]._size];
     encoded_images_[i]._completeFrame = true;
   }

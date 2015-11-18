@@ -28,7 +28,7 @@
         '<(webrtc_root)/base/base.gyp:rtc_base_approved',
         '<(webrtc_root)/common.gyp:webrtc_common',
         '<(webrtc_root)/common_audio/common_audio.gyp:common_audio',
-        '<(webrtc_root)/modules/modules.gyp:iSAC',
+#        '<(webrtc_root)/modules/modules.gyp:iSAC',
         '<(webrtc_root)/system_wrappers/system_wrappers.gyp:system_wrappers',
       ],
       'sources': [
@@ -233,6 +233,11 @@
             'aec/aec_rdft_sse2.c',
           ],
           'cflags': ['-msse2',],
+          'conditions': [
+            [ 'os_posix == 1', {
+              'cflags_mozilla': ['-msse2',],
+            }],
+          ],
           'xcode_settings': {
             'OTHER_CFLAGS': ['-msse2',],
           },

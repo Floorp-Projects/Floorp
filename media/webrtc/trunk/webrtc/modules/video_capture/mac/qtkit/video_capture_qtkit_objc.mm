@@ -152,7 +152,17 @@ using namespace videocapturemodule;
   if (!_capturing)
     return;
 
-  [_captureSession stopRunning];
+  // This method is often called on a secondary thread.  Which means
+  // that the following can sometimes run "too early", causing crashes
+  // and/or weird errors concerning initialization.  On OS X 10.7 and
+  // 10.8, the CoreMediaIO method CMIOUninitializeGraph() is called from
+  // -[QTCaptureSession stopRunning].  If this is called too early,
+  // low-level session data gets uninitialized before low-level code
+  // is finished trying to use it.  The solution is to make stopRunning
+  // always run on the main thread.  See bug 837539.
+  [_captureSession performSelectorOnMainThread:@selector(stopRunning)
+                   withObject:nil
+                   waitUntilDone:NO];
   _capturing = NO;
 }
 

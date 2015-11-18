@@ -63,6 +63,7 @@ class ReceiveStatisticsProxy : public ViEDecoderObserver,
                      int min_playout_delay_ms,
                      int render_delay_ms) override;
   void RequestNewKeyFrame(const int video_channel) override {}
+  virtual void ReceiveStateChange(const int video_channel, VideoReceiveState state) override;
 
   // Overrides RtcpStatisticsCallback.
   void StatisticsUpdated(const webrtc::RtcpStatistics& statistics,
@@ -84,6 +85,7 @@ class ReceiveStatisticsProxy : public ViEDecoderObserver,
   VideoReceiveStream::Stats stats_ GUARDED_BY(crit_);
   RateStatistics decode_fps_estimator_ GUARDED_BY(crit_);
   RateStatistics renders_fps_estimator_ GUARDED_BY(crit_);
+  VideoReceiveState receive_state_ GUARDED_BY(crit_);
 };
 
 }  // namespace webrtc

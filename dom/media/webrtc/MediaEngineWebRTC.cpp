@@ -251,7 +251,7 @@ MediaEngineWebRTC::EnumerateAudioDevices(dom::MediaSourceEnum aMediaSource,
   JNIEnv* const env = jni::GetEnvForThread();
   MOZ_ALWAYS_TRUE(!env->GetJavaVM(&jvm));
 
-  if (webrtc::VoiceEngine::SetAndroidObjects(jvm, env, (void*)context) != 0) {
+  if (webrtc::VoiceEngine::SetAndroidObjects(jvm, (void*)context) != 0) {
     LOG(("VoiceEngine:SetAndroidObjects Failed"));
     return;
   }

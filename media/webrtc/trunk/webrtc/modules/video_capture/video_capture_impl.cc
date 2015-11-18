@@ -258,22 +258,23 @@ int32_t VideoCaptureImpl::IncomingFrame(
             return -1;
         }
 
-        int stride_y = width;
-        int stride_uv = (width + 1) / 2;
-        int target_width = width;
-        int target_height = height;
-
         // SetApplyRotation doesn't take any lock. Make a local copy here.
         bool apply_rotation = apply_rotation_;
-
-        if (apply_rotation) {
-          // Rotating resolution when for 90/270 degree rotations.
-          if (_rotateFrame == kVideoRotation_90 ||
-              _rotateFrame == kVideoRotation_270) {
-            target_width = abs(height);
-            target_height = width;
-          }
+        int target_width;
+        int target_height;
+        
+        if (apply_rotation &&
+            (_rotateFrame == kVideoRotation_90 ||
+             _rotateFrame == kVideoRotation_270)) {
+          target_width = abs(height);
+          target_height = width;
+        } else {
+          target_width = width;
+          target_height = height;
         }
+
+        int stride_y = target_width;
+        int stride_uv = (target_width + 1) / 2;
 
         // TODO(mikhal): Update correct aligned stride values.
         //Calc16ByteAlignedStride(target_width, &stride_y, &stride_uv);
@@ -294,7 +295,7 @@ int32_t VideoCaptureImpl::IncomingFrame(
             commonVideoType, videoFrame, 0, 0,  // No cropping
             width, height, videoFrameLength,
             apply_rotation ? _rotateFrame : kVideoRotation_0, &_captureFrame);
-        if (conversionResult < 0)
+        if (conversionResult != 0)
         {
           LOG(LS_ERROR) << "Failed to convert capture frame from type "
                         << frameInfo.rawType << "to I420.";

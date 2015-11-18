@@ -11,13 +11,17 @@
 #ifndef WEBRTC_MODULES_AUDIO_DEVICE_ANDROID_AUDIO_MANAGER_H_
 #define WEBRTC_MODULES_AUDIO_DEVICE_ANDROID_AUDIO_MANAGER_H_
 
+#if !defined(MOZ_WIDGET_GONK)
 #include <jni.h>
+#endif
 
 #include "webrtc/base/thread_checker.h"
 #include "webrtc/modules/audio_device/android/audio_common.h"
 #include "webrtc/modules/audio_device/include/audio_device_defines.h"
 #include "webrtc/modules/audio_device/audio_device_generic.h"
+#if !defined(MOZ_WIDGET_GONK)
 #include "webrtc/modules/utility/interface/helpers_android.h"
+#endif
 
 namespace webrtc {
 
@@ -96,13 +100,15 @@ class AudioManager {
   bool initialized() const { return initialized_; }
 
  private:
+#if !defined(MOZ_WIDGET_GONK)
   // Called from Java side so we can cache the native audio parameters.
   // This method will be called by the WebRtcAudioManager constructor, i.e.
   // on the same thread that this object is created on.
   static void JNICALL CacheAudioParameters(JNIEnv* env, jobject obj,
       jint sample_rate, jint channels, jlong nativeAudioManager);
   void OnCacheAudioParameters(JNIEnv* env, jint sample_rate, jint channels);
-
+#endif
+  
   // Returns true if SetAndroidAudioDeviceObjects() has been called
   // successfully.
   bool HasDeviceObjects();
@@ -115,8 +121,10 @@ class AudioManager {
   // other methods are called from the same thread.
   rtc::ThreadChecker thread_checker_;
 
+#if !defined(MOZ_WIDGET_GONK)
   // The Java WebRtcAudioManager instance.
   jobject j_audio_manager_;
+#endif
 
   // Set to true by Init() and false by Close().
   bool initialized_;

@@ -51,12 +51,18 @@ enum BufferState
 bool
 OMXCodecReservation::ReserveOMXCodec()
 {
-  if (mClient) {
-    // Already tried reservation.
-    return false;
+  if (!mClient) {
+    mClient = new mozilla::MediaSystemResourceClient(mType);
+  } else {
+    if (mOwned) {
+      //CODEC_ERROR("OMX Reservation: (%d) already owned", (int) mType);
+      return true;
+    }
+    //CODEC_ERROR("OMX Reservation: (%d) already NOT owned", (int) mType);
   }
-  mClient = new mozilla::MediaSystemResourceClient(mType);
-  return mClient->AcquireSyncNoWait(); // don't wait if resrouce is not available
+  mOwned = mClient->AcquireSyncNoWait(); // don't wait if resource is not available
+  //CODEC_ERROR("OMX Reservation: (%d) Acquire was %s", (int) mType, mOwned ? "Successful" : "Failed");
+  return mOwned;
 }
 
 void
@@ -65,7 +71,12 @@ OMXCodecReservation::ReleaseOMXCodec()
   if (!mClient) {
     return;
   }
-  mClient->ReleaseResource();
+  //CODEC_ERROR("OMX Reservation: Releasing resource: (%d) %s", (int) mType, mOwned ? "Owned" : "Not owned");
+  if (mOwned) {
+    mClient->ReleaseResource();
+    mClient = nullptr;
+    mOwned = false;
+  }
 }
 
 OMXAudioEncoder*

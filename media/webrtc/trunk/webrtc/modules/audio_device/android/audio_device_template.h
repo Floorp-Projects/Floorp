@@ -84,8 +84,7 @@ class AudioDeviceTemplate : public AudioDeviceGeneric {
       uint16_t index,
       char name[kAdmMaxDeviceNameSize],
       char guid[kAdmMaxGuidSize]) override {
-    FATAL() << "Should never be called";
-    return -1;
+    return input_.RecordingDeviceName(index, name, guid);
   }
 
   int32_t SetPlayoutDevice(uint16_t index) override {

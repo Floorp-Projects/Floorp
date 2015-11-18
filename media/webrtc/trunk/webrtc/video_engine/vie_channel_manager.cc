@@ -38,7 +38,9 @@ ViEChannelManager::ViEChannelManager(int engine_id,
       free_channel_ids_(new bool[kViEMaxNumberOfChannels]),
       free_channel_ids_size_(kViEMaxNumberOfChannels),
       voice_sync_interface_(NULL),
-      module_process_thread_(NULL) {
+      module_process_thread_(NULL),
+      load_manager_(NULL)
+{
   for (int idx = 0; idx < free_channel_ids_size_; idx++) {
     free_channel_ids_[idx] = true;
   }
@@ -72,6 +74,15 @@ void ViEChannelManager::SetModuleProcessThread(
     ProcessThread* module_process_thread) {
   assert(!module_process_thread_);
   module_process_thread_ = module_process_thread;
+}
+
+void ViEChannelManager::SetLoadManager(
+    CPULoadStateCallbackInvoker* load_manager) {
+  load_manager_ = load_manager;
+  for (ChannelGroups::const_iterator it = channel_groups_.begin();
+       it != channel_groups_.end(); ++it) {
+    (*it)->SetLoadManager(load_manager);
+  }
 }
 
 int ViEChannelManager::CreateChannel(int* channel_id,

@@ -173,7 +173,7 @@ inline int64_t TickTime::MillisecondTimestamp() {
 #else
   return ticks;
 #endif
-#elif defined(WEBRTC_LINUX) || defined(WEBRTC_MAC)
+#elif defined(WEBRTC_LINUX) || defined(WEBRTC_BSD) || defined(WEBRTC_MAC)
   return ticks / 1000000LL;
 #else
   return ticks / 1000LL;
@@ -190,7 +190,7 @@ inline int64_t TickTime::MicrosecondTimestamp() {
 #else
   return ticks * 1000LL;
 #endif
-#elif defined(WEBRTC_LINUX) || defined(WEBRTC_MAC)
+#elif defined(WEBRTC_LINUX) || defined(WEBRTC_BSD) || defined(WEBRTC_MAC)
   return ticks / 1000LL;
 #else
   return ticks;
@@ -210,7 +210,7 @@ inline int64_t TickTime::MillisecondsToTicks(const int64_t ms) {
 #else
   return ms;
 #endif
-#elif defined(WEBRTC_LINUX) || defined(WEBRTC_MAC)
+#elif defined(WEBRTC_LINUX) || defined(WEBRTC_BSD) || defined(WEBRTC_MAC)
   return ms * 1000000LL;
 #else
   return ms * 1000LL;
@@ -226,7 +226,7 @@ inline int64_t TickTime::TicksToMilliseconds(const int64_t ticks) {
 #else
   return ticks;
 #endif
-#elif defined(WEBRTC_LINUX) || defined(WEBRTC_MAC)
+#elif defined(WEBRTC_LINUX) || defined(WEBRTC_BSD) || defined(WEBRTC_MAC)
   return ticks / 1000000LL;
 #else
   return ticks / 1000LL;
@@ -255,7 +255,7 @@ inline int64_t TickInterval::Milliseconds() const {
   // interval_ is in ms
   return interval_;
 #endif
-#elif defined(WEBRTC_LINUX) || defined(WEBRTC_MAC)
+#elif defined(WEBRTC_LINUX) || defined(WEBRTC_BSD) || defined(WEBRTC_MAC)
   // interval_ is in ns
   return interval_ / 1000000;
 #else
@@ -274,7 +274,7 @@ inline int64_t TickInterval::Microseconds() const {
   // interval_ is in ms
   return interval_ * 1000LL;
 #endif
-#elif defined(WEBRTC_LINUX) || defined(WEBRTC_MAC)
+#elif defined(WEBRTC_LINUX) || defined(WEBRTC_BSD) || defined(WEBRTC_MAC)
   // interval_ is in ns
   return interval_ / 1000;
 #else

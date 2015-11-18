@@ -46,6 +46,8 @@ class ViEChannelManager: private ViEManagerBase {
 
   void SetModuleProcessThread(ProcessThread* module_process_thread);
 
+  void SetLoadManager(CPULoadStateCallbackInvoker* load_manager);
+
   // Creates a new channel. 'channel_id' will be the id of the created channel.
   int CreateChannel(int* channel_id,
                     const Config* config);
@@ -133,6 +135,7 @@ class ViEChannelManager: private ViEManagerBase {
   VoEVideoSync* voice_sync_interface_;
 
   ProcessThread* module_process_thread_;
+  CPULoadStateCallbackInvoker* load_manager_;
 };
 
 class ViEChannelManagerScoped: private ViEManagerScopedBase {

@@ -133,7 +133,36 @@ void VCMEncodedFrame::CopyCodecSpecific(const RTPVideoHeader* header)
         break;
       }
       case kRtpVideoH264: {
+        _codecSpecificInfo.codecSpecific.H264.single_nalu =
+            header->codecHeader.H264.single_nalu;
         _codecSpecificInfo.codecType = kVideoCodecH264;
+        break;
+      }
+      case kRtpVideoVp9: {
+        if (_codecSpecificInfo.codecType != kVideoCodecVP9) {
+          // This is the first packet for this frame.
+          _codecSpecificInfo.codecSpecific.VP9.pictureId = -1;
+          _codecSpecificInfo.codecSpecific.VP9.temporalIdx = 0;
+          _codecSpecificInfo.codecSpecific.VP9.layerSync = false;
+          _codecSpecificInfo.codecSpecific.VP9.keyIdx = -1;
+          _codecSpecificInfo.codecType = kVideoCodecVP9;
+        }
+        _codecSpecificInfo.codecSpecific.VP9.nonReference =
+            header->codecHeader.VP9.nonReference;
+        if (header->codecHeader.VP9.pictureId != kNoPictureId) {
+          _codecSpecificInfo.codecSpecific.VP9.pictureId =
+              header->codecHeader.VP9.pictureId;
+        }
+        if (header->codecHeader.VP9.temporalIdx != kNoTemporalIdx) {
+          _codecSpecificInfo.codecSpecific.VP9.temporalIdx =
+              header->codecHeader.VP9.temporalIdx;
+          _codecSpecificInfo.codecSpecific.VP9.layerSync =
+              header->codecHeader.VP9.layerSync;
+        }
+        if (header->codecHeader.VP9.keyIdx != kNoKeyIdx) {
+          _codecSpecificInfo.codecSpecific.VP9.keyIdx =
+              header->codecHeader.VP9.keyIdx;
+        }
         break;
       }
       default: {

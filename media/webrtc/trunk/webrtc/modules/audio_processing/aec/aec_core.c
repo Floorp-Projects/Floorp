@@ -33,6 +33,12 @@
 #include "webrtc/system_wrappers/interface/cpu_features_wrapper.h"
 #include "webrtc/typedefs.h"
 
+extern int AECDebug();
+extern uint32_t AECDebugMaxSize();
+extern void AECDebugEnable(uint32_t enable);
+extern void AECDebugFilenameBase(char *buffer, size_t size);
+static void OpenCoreDebugFiles(AecCore* aec, int *instance_count);
+
 // Buffer size (samples)
 static const size_t kBufSizePartitions = 250;  // 1 second of audio in 16 kHz.
 
@@ -908,6 +914,80 @@ static int SignalBasedDelayCorrection(AecCore* self) {
   return delay_correction;
 }
 
+#ifdef WEBRTC_AEC_DEBUG_DUMP
+// Open a new Wav file for writing. If it was already open with a different
+// sample frequency, close it first.
+static void ReopenWav(rtc_WavWriter** wav_file,
+                      const char* name,
+                      int seq1,
+                      int seq2,
+                      int sample_rate) {
+  int written /*UNUSED*/;
+  char path[1024];
+  char *filename;
+  if (*wav_file) {
+    if (rtc_WavSampleRate(*wav_file) == sample_rate)
+      return;
+    rtc_WavClose(*wav_file);
+    *wav_file = NULL;
+  }
+  AECDebugFilenameBase(path, sizeof(path));
+  filename = path + strlen(path);
+  if (filename > path) {
+#ifdef XP_WIN
+    if (*(filename-1) != '\\') {
+      *filename++ = '\\';
+    }
+#else
+    if (*(filename-1) != '/') {
+      *filename++ = '/';
+    }
+#endif
+  }
+  written = snprintf(filename, sizeof(path) - (filename-path), "%s%d-%d.wav",
+                     name, seq1, seq2);
+  assert(written >= 0);  // no output error
+  assert(filename+written < path + sizeof(path)-1);  // buffer was large enough
+  *wav_file = rtc_WavOpen(path, sample_rate, 1);
+}
+
+static void
+OpenCoreDebugFiles(AecCore* aec, int *aec_instance_count)
+{
+  if (AECDebug())
+  {
+    if (!aec->farFile)
+    {
+      int process_rate = aec->sampFreq > 16000 ? 16000 : aec->sampFreq;
+      ReopenWav(&aec->farFile, "aec_far",
+                aec->instance_index, aec->debug_dump_count, process_rate);
+      ReopenWav(&aec->nearFile, "aec_near",
+                aec->instance_index, aec->debug_dump_count, process_rate);
+      ReopenWav(&aec->outFile, "aec_out",
+                aec->instance_index, aec->debug_dump_count, process_rate);
+      ReopenWav(&aec->outLinearFile, "aec_out_linear",
+                aec->instance_index, aec->debug_dump_count, process_rate);
+      ++aec->debug_dump_count;
+    }
+  } else {
+    if (aec->farFile) {
+      rtc_WavClose(aec->farFile);
+    }
+    if (aec->nearFile) {
+      rtc_WavClose(aec->nearFile);
+    }
+    if (aec->outFile) {
+      rtc_WavClose(aec->outFile);
+    }
+    if (aec->outLinearFile) {
+      rtc_WavClose(aec->outLinearFile);
+    }
+    aec->outLinearFile = aec->outFile = aec->nearFile = aec->farFile = NULL;
+    aec->debugWritten = 0;
+  }
+}
+#endif
+
 static void NonLinearProcessing(AecCore* aec,
                                 float* output,
                                 float* const* outputH) {
@@ -1190,8 +1270,15 @@ static void ProcessBlock(AecCore* aec) {
     float farend[PART_LEN];
     float* farend_ptr = NULL;
     WebRtc_ReadBuffer(aec->far_time_buf, (void**)&farend_ptr, farend, 1);
-    rtc_WavWriteSamples(aec->farFile, farend_ptr, PART_LEN);
-    rtc_WavWriteSamples(aec->nearFile, nearend_ptr, PART_LEN);
+    OpenCoreDebugFiles(aec, &webrtc_aec_instance_count);
+    if (aec->farFile) {
+      rtc_WavWriteSamples(aec->farFile, farend_ptr, PART_LEN);
+      rtc_WavWriteSamples(aec->nearFile, nearend_ptr, PART_LEN);
+      aec->debugWritten += sizeof(int16_t) * PART_LEN;
+      if (aec->debugWritten >= AECDebugMaxSize()) {
+        AECDebugEnable(0);
+      }
+    }
   }
 #endif
 
@@ -1345,8 +1432,11 @@ static void ProcessBlock(AecCore* aec) {
   }
 
 #ifdef WEBRTC_AEC_DEBUG_DUMP
-  rtc_WavWriteSamples(aec->outLinearFile, e, PART_LEN);
-  rtc_WavWriteSamples(aec->outFile, output, PART_LEN);
+  OpenCoreDebugFiles(aec, &webrtc_aec_instance_count);
+  if (aec->outLinearFile) {
+    rtc_WavWriteSamples(aec->outLinearFile, e, PART_LEN);
+    rtc_WavWriteSamples(aec->outFile, output, PART_LEN);
+  }
 #endif
 }
 
@@ -1415,6 +1505,8 @@ int WebRtcAec_CreateAec(AecCore** aecInst) {
   }
   aec->farFile = aec->nearFile = aec->outFile = aec->outLinearFile = NULL;
   aec->debug_dump_count = 0;
+  aec->debugWritten = 0;
+  OpenCoreDebugFiles(aec, &webrtc_aec_instance_count);
 #endif
   aec->delay_estimator_farend =
       WebRtc_CreateDelayEstimatorFarend(PART_LEN1, kHistorySizeBlocks);
@@ -1489,10 +1581,13 @@ int WebRtcAec_FreeAec(AecCore* aec) {
   WebRtc_FreeBuffer(aec->far_buf_windowed);
 #ifdef WEBRTC_AEC_DEBUG_DUMP
   WebRtc_FreeBuffer(aec->far_time_buf);
-  rtc_WavClose(aec->farFile);
-  rtc_WavClose(aec->nearFile);
-  rtc_WavClose(aec->outFile);
-  rtc_WavClose(aec->outLinearFile);
+  if (aec->farFile) {
+    // we don't let one be open and not the others
+    rtc_WavClose(aec->farFile);
+    rtc_WavClose(aec->nearFile);
+    rtc_WavClose(aec->outFile);
+    rtc_WavClose(aec->outLinearFile);
+  }
 #endif
   WebRtc_FreeDelayEstimator(aec->delay_estimator);
   WebRtc_FreeDelayEstimatorFarend(aec->delay_estimator_farend);
@@ -1500,29 +1595,6 @@ int WebRtcAec_FreeAec(AecCore* aec) {
   free(aec);
   return 0;
 }
-
-#ifdef WEBRTC_AEC_DEBUG_DUMP
-// Open a new Wav file for writing. If it was already open with a different
-// sample frequency, close it first.
-static void ReopenWav(rtc_WavWriter** wav_file,
-                      const char* name,
-                      int seq1,
-                      int seq2,
-                      int sample_rate) {
-  int written ATTRIBUTE_UNUSED;
-  char filename[64];
-  if (*wav_file) {
-    if (rtc_WavSampleRate(*wav_file) == sample_rate)
-      return;
-    rtc_WavClose(*wav_file);
-  }
-  written = snprintf(filename, sizeof(filename), "%s%d-%d.wav",
-                     name, seq1, seq2);
-  assert(written >= 0);  // no output error
-  assert((size_t)written < sizeof(filename));  // buffer was large enough
-  *wav_file = rtc_WavOpen(filename, sample_rate, 1);
-}
-#endif  // WEBRTC_AEC_DEBUG_DUMP
 
 int WebRtcAec_InitAec(AecCore* aec, int sampFreq) {
   int i;
@@ -1551,18 +1623,8 @@ int WebRtcAec_InitAec(AecCore* aec, int sampFreq) {
   WebRtc_InitBuffer(aec->far_buf_windowed);
 #ifdef WEBRTC_AEC_DEBUG_DUMP
   WebRtc_InitBuffer(aec->far_time_buf);
-  {
-    int process_rate = sampFreq > 16000 ? 16000 : sampFreq;
-    ReopenWav(&aec->farFile, "aec_far",
-              aec->instance_index, aec->debug_dump_count, process_rate);
-    ReopenWav(&aec->nearFile, "aec_near",
-              aec->instance_index, aec->debug_dump_count, process_rate);
-    ReopenWav(&aec->outFile, "aec_out",
-              aec->instance_index, aec->debug_dump_count, process_rate);
-    ReopenWav(&aec->outLinearFile, "aec_out_linear",
-              aec->instance_index, aec->debug_dump_count, process_rate);
-  }
-  ++aec->debug_dump_count;
+  aec->instance_index = webrtc_aec_instance_count;
+  OpenCoreDebugFiles(aec, &webrtc_aec_instance_count);
 #endif
   aec->system_delay = 0;
 

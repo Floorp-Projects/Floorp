@@ -16,7 +16,9 @@
 #include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
 #include "webrtc/system_wrappers/interface/thread_wrapper.h"
 
+#ifdef USE_X11
 #include <X11/Xlib.h>
+#endif
 #include <pulse/pulseaudio.h>
 
 // We define this flag if it's missing from our headers, because we want to be
@@ -367,7 +369,9 @@ private:
     pa_buffer_attr _recBufferAttr;
 
     char _oldKeyState[32];
+#ifdef USE_X11
     Display* _XDisplay;
+#endif
 };
 
 }

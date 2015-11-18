@@ -45,7 +45,7 @@ public:
 
   virtual int32_t Release() override;
 
-  virtual int32_t SetChannelParameters(uint32_t packetLoss, int rtt) override;
+  virtual int32_t SetChannelParameters(uint32_t packetLoss, int64_t rtt) override;
 
   virtual int32_t SetRates(uint32_t newBitRate, uint32_t frameRate) override;
 

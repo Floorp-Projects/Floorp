@@ -69,6 +69,8 @@ class WEBRTC_DLLEXPORT ViERTPObserver {
   virtual ~ViERTPObserver() {}
 };
 
+struct SenderInfo;
+
 class WEBRTC_DLLEXPORT ViERTP_RTCP {
  public:
   enum { KDefaultDeltaTransmitTimeSeconds = 15 };
@@ -161,6 +163,16 @@ class WEBRTC_DLLEXPORT ViERTP_RTCP {
   virtual int GetRemoteRTCPCName(
       const int video_channel,
       char rtcp_cname[KMaxRTCPCNameLength]) const = 0;
+
+  virtual int GetRemoteRTCPReceiverInfo(const int video_channel,
+                                        uint32_t& NTPHigh,
+                                        uint32_t& NTPLow,
+                                        uint32_t& receivedPacketCount,
+                                        uint64_t& receivedOctetCount,
+                                        uint32_t* jitter,
+                                        uint16_t* fractionLost,
+                                        uint32_t* cumulativeLost,
+                                        int32_t* rttMs) const = 0;
 
   // This function sends an RTCP APP packet on a specific channel.
   virtual int SendApplicationDefinedRTCPPacket(
@@ -385,6 +397,10 @@ class WEBRTC_DLLEXPORT ViERTP_RTCP {
   virtual int GetReceiveRtcpPacketTypeCounter(
       int video_channel,
       RtcpPacketTypeCounter* packet_counter) const = 0;
+
+  // Gets the sender info part of the last received RTCP Sender Report (SR)
+  virtual int GetRemoteRTCPSenderInfo(const int video_channel,
+                                      SenderInfo* sender_info) const = 0;
 
   // The function gets bandwidth usage statistics from the sent RTP streams in
   // bits/s.

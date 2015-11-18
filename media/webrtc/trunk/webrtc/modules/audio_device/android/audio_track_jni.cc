@@ -10,6 +10,7 @@
 
 #include "webrtc/modules/audio_device/android/audio_manager.h"
 #include "webrtc/modules/audio_device/android/audio_track_jni.h"
+#include "AndroidJNIWrapper.h"
 
 #include <android/log.h>
 
@@ -39,13 +40,15 @@ void AudioTrackJni::SetAndroidAudioDeviceObjects(void* jvm, void* context) {
   JNIEnv* jni = GetEnv(g_jvm);
   CHECK(jni) << "AttachCurrentThread must be called on this tread";
 
-  g_context = NewGlobalRef(jni, reinterpret_cast<jobject>(context));
-  jclass local_class = FindClass(
-      jni, "org/webrtc/voiceengine/WebRtcAudioTrack");
-  g_audio_track_class = reinterpret_cast<jclass>(
-      NewGlobalRef(jni, local_class));
-  jni->DeleteLocalRef(local_class);
-  CHECK_EXCEPTION(jni);
+  if (!g_context) {
+    g_context = NewGlobalRef(jni, reinterpret_cast<jobject>(context));
+  }
+
+  if (!g_audio_track_class) {
+    g_audio_track_class = jsjni_GetGlobalClassRef(
+                              "org/webrtc/voiceengine/WebRtcAudioTrack");
+    DCHECK(g_audio_track_class);
+  }
 
   // Register native methods with the WebRtcAudioTrack class. These methods
   // are declared private native in WebRtcAudioTrack.java.
@@ -336,6 +339,20 @@ void AudioTrackJni::CreateJavaInstance() {
   j_audio_track_ = jni->NewGlobalRef(j_audio_track_);
   CHECK_EXCEPTION(jni) << "Error during NewGlobalRef";
   CHECK(j_audio_track_);
+}
+
+int32_t AudioTrackJni::PlayoutDeviceName(uint16_t index,
+                                         char name[kAdmMaxDeviceNameSize],
+                                         char guid[kAdmMaxGuidSize]) {
+  // Return empty string
+  memset(name, 0, kAdmMaxDeviceNameSize);
+
+  if (guid)
+  {
+    memset(guid, 0, kAdmMaxGuidSize);
+    }
+
+  return 0;
 }
 
 }  // namespace webrtc

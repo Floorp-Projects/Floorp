@@ -454,6 +454,7 @@ int VCMJitterEstimator::GetJitterEstimate(double rttMultiplier) {
 }
 
 bool VCMJitterEstimator::LowRateExperimentEnabled() {
+#ifndef WEBRTC_MOZILLA_BUILD
   if (low_rate_experiment_ == kInit) {
     std::string group =
         webrtc::field_trial::FindFullName("WebRTC-ReducedJitterDelay");
@@ -463,6 +464,7 @@ bool VCMJitterEstimator::LowRateExperimentEnabled() {
       low_rate_experiment_ = kEnabled;
     }
   }
+#endif
   return low_rate_experiment_ == kEnabled ? true : false;
 }
 

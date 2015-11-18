@@ -444,6 +444,19 @@ public:
     virtual int32_t RegisterPacketRequestCallback(
                                         VCMPacketRequestCallback* callback) = 0;
 
+    // Register a receive state change callback. This callback will be called when the
+    // module state has changed
+    //
+    // Input:
+    //      - callback      : The callback object to be used by the module when
+    //                        the receiver decode state changes.
+    //                        De-register with a NULL pointer.
+    //
+    // Return value      : VCM_OK, on success.
+    //                     < 0,         on error.
+    virtual int32_t RegisterReceiveStateCallback(
+                                  VCMReceiveStateCallback* callback) = 0;
+
     // Waits for the next frame in the jitter buffer to become complete
     // (waits no longer than maxWaitTimeMs), then passes it to the decoder for decoding.
     // Should be called as often as possible to get the most out of the decoder.
@@ -564,6 +577,9 @@ public:
     // Setting a desired delay to the VCM receiver. Video rendering will be
     // delayed by at least desired_delay_ms.
     virtual int SetMinReceiverDelay(int desired_delay_ms) = 0;
+
+    // Set current load state of the CPU
+    virtual void SetCPULoadState(CPULoadState state) = 0;
 
     // Enables recording of debugging information.
     virtual int StartDebugRecording(const char* file_name_utf8) = 0;
