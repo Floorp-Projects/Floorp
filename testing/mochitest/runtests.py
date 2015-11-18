@@ -492,17 +492,10 @@ class WebSocketServer(object):
         self._process.kill()
 
 
-class MochitestUtilsMixin(object):
-
+class MochitestBase(object):
     """
-    Class containing some utility functions common to both local and remote
-    mochitest runners
+    Base mochitest class for both desktop and b2g.
     """
-
-    # TODO Utility classes are a code smell. This class is temporary
-    #      and should be removed when desktop mochitests are refactored
-    #      on top of mozbase. Each of the functions in here should
-    #      probably live somewhere in mozbase
 
     oldcwd = os.getcwd()
     jarDir = 'mochijar'
@@ -519,6 +512,7 @@ class MochitestUtilsMixin(object):
         self.server = None
         self.wsserver = None
         self.sslTunnel = None
+        self._active_tests = None
         self._locations = None
 
         if self.log is None:
@@ -530,7 +524,7 @@ class MochitestUtilsMixin(object):
                                                  {
                                                      "tbpl": sys.stdout
                                                  })
-            MochitestUtilsMixin.log = self.log
+            MochitestBase.log = self.log
 
         self.message_logger = MessageLogger(logger=self.log)
 
@@ -547,6 +541,10 @@ class MochitestUtilsMixin(object):
             path = os.path.split(path)[0]
 
         mozinfo.find_and_update_from_json(*dirs)
+
+    def environment(self, **kwargs):
+        kwargs['log'] = self.log
+        return test_environment(**kwargs)
 
     def getFullPath(self, path):
         " Get an absolute path relative to self.oldcwd."
@@ -994,6 +992,273 @@ overlay chrome://browser/content/browser.xul chrome://mochikit/content/jetpack-a
         extensions.append(os.path.join(SCRIPT_DIR, self.jarDir))
         return extensions
 
+    def logPreamble(self, tests):
+        """Logs a suite_start message and test_start/test_end at the beginning of a run.
+        """
+        self.log.suite_start([t['path'] for t in tests])
+        for test in tests:
+            if 'disabled' in test:
+                self.log.test_start(test['path'])
+                self.log.test_end(
+                    test['path'],
+                    'SKIP',
+                    message=test['disabled'])
+
+    def getActiveTests(self, options, disabled=True):
+        """
+          This method is used to parse the manifest and return active filtered tests.
+        """
+        if self._active_tests:
+            return self._active_tests
+
+        manifest = self.getTestManifest(options)
+        if manifest:
+            if options.extra_mozinfo_json:
+                mozinfo.update(options.extra_mozinfo_json)
+            info = mozinfo.info
+
+            # Bug 1089034 - imptest failure expectations are encoded as
+            # test manifests, even though they aren't tests. This gross
+            # hack causes several problems in automation including
+            # throwing off the chunking numbers. Remove them manually
+            # until bug 1089034 is fixed.
+            def remove_imptest_failure_expectations(tests, values):
+                return (t for t in tests
+                        if 'imptests/failures' not in t['path'])
+
+            filters = [
+                remove_imptest_failure_expectations,
+                subsuite(options.subsuite),
+            ]
+
+            if options.test_tags:
+                filters.append(tags(options.test_tags))
+
+            if options.test_paths:
+                options.test_paths = self.normalize_paths(options.test_paths)
+                filters.append(pathprefix(options.test_paths))
+
+            # Add chunking filters if specified
+            if options.totalChunks:
+                if options.chunkByRuntime:
+                    runtime_file = self.resolve_runtime_file(options)
+                    if not os.path.exists(runtime_file):
+                        self.log.warning("runtime file %s not found; defaulting to chunk-by-dir" %
+                                         runtime_file)
+                        options.chunkByRuntime = None
+                        flavor = self.getTestFlavor(options)
+                        if flavor in ('browser-chrome', 'devtools-chrome'):
+                            # these values match current mozharness configs
+                            options.chunkbyDir = 5
+                        else:
+                            options.chunkByDir = 4
+
+                if options.chunkByDir:
+                    filters.append(chunk_by_dir(options.thisChunk,
+                                                options.totalChunks,
+                                                options.chunkByDir))
+                elif options.chunkByRuntime:
+                    with open(runtime_file, 'r') as f:
+                        runtime_data = json.loads(f.read())
+                    runtimes = runtime_data['runtimes']
+                    default = runtime_data['excluded_test_average']
+                    filters.append(
+                        chunk_by_runtime(options.thisChunk,
+                                         options.totalChunks,
+                                         runtimes,
+                                         default_runtime=default))
+                else:
+                    filters.append(chunk_by_slice(options.thisChunk,
+                                                  options.totalChunks))
+
+            tests = manifest.active_tests(
+                exists=False, disabled=disabled, filters=filters, **info)
+
+            if len(tests) == 0:
+                self.log.error("no tests to run using specified "
+                               "combination of filters: {}".format(
+                                   manifest.fmt_filters()))
+
+        paths = []
+        for test in tests:
+            if len(tests) == 1 and 'disabled' in test:
+                del test['disabled']
+
+            pathAbs = os.path.abspath(test['path'])
+            assert pathAbs.startswith(self.testRootAbs)
+            tp = pathAbs[len(self.testRootAbs):].replace('\\', '/').strip('/')
+
+            if not self.isTest(options, tp):
+                self.log.warning(
+                    'Warning: %s from manifest %s is not a valid test' %
+                    (test['name'], test['manifest']))
+                continue
+
+            testob = {'path': tp}
+            if 'disabled' in test:
+                testob['disabled'] = test['disabled']
+            if 'expected' in test:
+                testob['expected'] = test['expected']
+            paths.append(testob)
+
+        def path_sort(ob1, ob2):
+            path1 = ob1['path'].split('/')
+            path2 = ob2['path'].split('/')
+            return cmp(path1, path2)
+
+        paths.sort(path_sort)
+        self._active_tests = paths
+        if options.dump_tests:
+            options.dump_tests = os.path.expanduser(options.dump_tests)
+            assert os.path.exists(os.path.dirname(options.dump_tests))
+            with open(options.dump_tests, 'w') as dumpFile:
+                dumpFile.write(json.dumps({'active_tests': self._active_tests}))
+
+            self.log.info("Dumping active_tests to %s file." % options.dump_tests)
+            sys.exit()
+
+        return self._active_tests
+
+    def getTestManifest(self, options):
+        if isinstance(options.manifestFile, TestManifest):
+            manifest = options.manifestFile
+        elif options.manifestFile and os.path.isfile(options.manifestFile):
+            manifestFileAbs = os.path.abspath(options.manifestFile)
+            assert manifestFileAbs.startswith(SCRIPT_DIR)
+            manifest = TestManifest([options.manifestFile], strict=False)
+        elif options.manifestFile and os.path.isfile(os.path.join(SCRIPT_DIR, options.manifestFile)):
+            manifestFileAbs = os.path.abspath(
+                os.path.join(
+                    SCRIPT_DIR,
+                    options.manifestFile))
+            assert manifestFileAbs.startswith(SCRIPT_DIR)
+            manifest = TestManifest([manifestFileAbs], strict=False)
+        else:
+            masterName = self.getTestFlavor(options) + '.ini'
+            masterPath = os.path.join(SCRIPT_DIR, self.testRoot, masterName)
+
+            if os.path.exists(masterPath):
+                manifest = TestManifest([masterPath], strict=False)
+            else:
+                self._log.warning(
+                    'TestManifest masterPath %s does not exist' %
+                    masterPath)
+
+        return manifest
+
+    def makeTestConfig(self, options):
+        "Creates a test configuration file for customizing test execution."
+        options.logFile = options.logFile.replace("\\", "\\\\")
+
+        if "MOZ_HIDE_RESULTS_TABLE" in os.environ and os.environ[
+                "MOZ_HIDE_RESULTS_TABLE"] == "1":
+            options.hideResultsTable = True
+
+        # strip certain unnecessary items to avoid serialization errors in json.dumps()
+        d = dict((k, v) for k, v in options.__dict__.items() if (v is None) or
+                 isinstance(v, (basestring, numbers.Number)))
+        d['testRoot'] = self.testRoot
+        if not options.keep_open:
+            d['closeWhenDone'] = '1'
+        content = json.dumps(d)
+
+        with open(os.path.join(options.profilePath, "testConfig.js"), "w") as config:
+            config.write(content)
+
+    def buildBrowserEnv(self, options, debugger=False, env=None):
+        """build the environment variables for the specific test and operating system"""
+        if mozinfo.info["asan"]:
+            lsanPath = SCRIPT_DIR
+        else:
+            lsanPath = None
+
+        browserEnv = self.environment(
+            xrePath=options.xrePath,
+            env=env,
+            debugger=debugger,
+            dmdPath=options.dmdPath,
+            lsanPath=lsanPath)
+
+        # These variables are necessary for correct application startup; change
+        # via the commandline at your own risk.
+        browserEnv["XPCOM_DEBUG_BREAK"] = "stack"
+
+        # When creating child processes on Windows pre-Vista (e.g. Windows XP) we
+        # don't normally inherit stdout/err handles, because you can only do it by
+        # inheriting all other inheritable handles as well.
+        # We need to inherit them for plain mochitests for test logging purposes, so
+        # we do so on the basis of a specific environment variable.
+        if self.getTestFlavor(options) == "mochitest":
+            browserEnv["MOZ_WIN_INHERIT_STD_HANDLES_PRE_VISTA"] = "1"
+
+        # interpolate environment passed with options
+        try:
+            browserEnv.update(
+                dict(
+                    parseKeyValue(
+                        options.environment,
+                        context='--setenv')))
+        except KeyValueParseError as e:
+            self.log.error(str(e))
+            return None
+
+        browserEnv["XPCOM_MEM_BLOAT_LOG"] = self.leak_report_file
+
+        try:
+            gmp_path = self.getGMPPluginPath(options)
+            if gmp_path is not None:
+                browserEnv["MOZ_GMP_PATH"] = gmp_path
+        except EnvironmentError:
+            self.log.error('Could not find path to gmp-fake plugin!')
+            return None
+
+        if options.fatalAssertions:
+            browserEnv["XPCOM_DEBUG_BREAK"] = "stack-and-abort"
+
+        # Produce an NSPR log, is setup (see NSPR_LOG_MODULES global at the top of
+        # this script).
+        self.nsprLogs = NSPR_LOG_MODULES and "MOZ_UPLOAD_DIR" in os.environ
+        if self.nsprLogs:
+            browserEnv["NSPR_LOG_MODULES"] = NSPR_LOG_MODULES
+
+            browserEnv["NSPR_LOG_FILE"] = "%s/nspr.log" % tempfile.gettempdir()
+            browserEnv["GECKO_SEPARATE_NSPR_LOGS"] = "1"
+
+        if debugger and not options.slowscript:
+            browserEnv["JS_DISABLE_SLOW_SCRIPT_SIGNALS"] = "1"
+
+        # For e10s, our tests default to suppressing the "unsafe CPOW usage"
+        # warnings that can plague test logs.
+        if not options.enableCPOWWarnings:
+            browserEnv["DISABLE_UNSAFE_CPOW_WARNINGS"] = "1"
+
+        return browserEnv
+
+    def killNamedOrphans(self, pname):
+        """ Kill orphan processes matching the given command name """
+        self.log.info("Checking for orphan %s processes..." % pname)
+
+        def _psInfo(line):
+            if pname in line:
+                self.log.info(line)
+
+        process = mozprocess.ProcessHandler(['ps', '-f'],
+                                            processOutputLine=_psInfo)
+        process.run()
+        process.wait()
+
+        def _psKill(line):
+            parts = line.split()
+            if len(parts) == 3 and parts[0].isdigit():
+                pid = int(parts[0])
+                if parts[2] == pname and parts[1] == '1':
+                    self.log.info("killing %s orphan with pid %d" % (pname, pid))
+                    killPid(pid, self.log)
+        process = mozprocess.ProcessHandler(['ps', '-o', 'pid,ppid,comm'],
+                                            processOutputLine=_psKill)
+        process.run()
+        process.wait()
+
 
 class SSLTunnel:
 
@@ -1225,8 +1490,10 @@ def parseKeyValue(strings, separator='=', context='key, value: '):
     return [string.split(separator, 1) for string in strings]
 
 
-class Mochitest(MochitestUtilsMixin):
-    _active_tests = None
+class MochitestDesktop(MochitestBase):
+    """
+    Mochitest class for desktop firefox and mulet.
+    """
     certdbNew = False
     sslTunnel = None
     DEFAULT_TIMEOUT = 60.0
@@ -1237,7 +1504,7 @@ class Mochitest(MochitestUtilsMixin):
     test_name = 'automation.py'
 
     def __init__(self, logger_options):
-        super(Mochitest, self).__init__(logger_options)
+        MochitestBase.__init__(self, logger_options)
 
         # Max time in seconds to wait for server startup before tests will fail -- if
         # this seems big, it's mostly for debug machines where cold startup
@@ -1255,10 +1522,6 @@ class Mochitest(MochitestUtilsMixin):
 
         self.expectedError = {}
         self.result = {}
-
-    def environment(self, **kwargs):
-        kwargs['log'] = self.log
-        return test_environment(**kwargs)
 
     def extraPrefs(self, extraPrefs):
         """interpolate extra preferences from option strings"""
@@ -1467,75 +1730,6 @@ class Mochitest(MochitestUtilsMixin):
 
         return os.pathsep.join(gmp_paths)
 
-    def buildBrowserEnv(self, options, debugger=False, env=None):
-        """build the environment variables for the specific test and operating system"""
-        if mozinfo.info["asan"]:
-            lsanPath = SCRIPT_DIR
-        else:
-            lsanPath = None
-
-        browserEnv = self.environment(
-            xrePath=options.xrePath,
-            env=env,
-            debugger=debugger,
-            dmdPath=options.dmdPath,
-            lsanPath=lsanPath)
-
-        # These variables are necessary for correct application startup; change
-        # via the commandline at your own risk.
-        browserEnv["XPCOM_DEBUG_BREAK"] = "stack"
-
-        # When creating child processes on Windows pre-Vista (e.g. Windows XP) we
-        # don't normally inherit stdout/err handles, because you can only do it by
-        # inheriting all other inheritable handles as well.
-        # We need to inherit them for plain mochitests for test logging purposes, so
-        # we do so on the basis of a specific environment variable.
-        if self.getTestFlavor(options) == "mochitest":
-            browserEnv["MOZ_WIN_INHERIT_STD_HANDLES_PRE_VISTA"] = "1"
-
-        # interpolate environment passed with options
-        try:
-            browserEnv.update(
-                dict(
-                    parseKeyValue(
-                        options.environment,
-                        context='--setenv')))
-        except KeyValueParseError as e:
-            self.log.error(str(e))
-            return None
-
-        browserEnv["XPCOM_MEM_BLOAT_LOG"] = self.leak_report_file
-
-        try:
-            gmp_path = self.getGMPPluginPath(options)
-            if gmp_path is not None:
-                browserEnv["MOZ_GMP_PATH"] = gmp_path
-        except EnvironmentError:
-            self.log.error('Could not find path to gmp-fake plugin!')
-            return None
-
-        if options.fatalAssertions:
-            browserEnv["XPCOM_DEBUG_BREAK"] = "stack-and-abort"
-
-        # Produce an NSPR log, is setup (see NSPR_LOG_MODULES global at the top of
-        # this script).
-        self.nsprLogs = NSPR_LOG_MODULES and "MOZ_UPLOAD_DIR" in os.environ
-        if self.nsprLogs:
-            browserEnv["NSPR_LOG_MODULES"] = NSPR_LOG_MODULES
-
-            browserEnv["NSPR_LOG_FILE"] = "%s/nspr.log" % tempfile.gettempdir()
-            browserEnv["GECKO_SEPARATE_NSPR_LOGS"] = "1"
-
-        if debugger and not options.slowscript:
-            browserEnv["JS_DISABLE_SLOW_SCRIPT_SIGNALS"] = "1"
-
-        # For e10s, our tests default to suppressing the "unsafe CPOW usage"
-        # warnings that can plague test logs.
-        if not options.enableCPOWWarnings:
-            browserEnv["DISABLE_UNSAFE_CPOW_WARNINGS"] = "1"
-
-        return browserEnv
-
     def cleanup(self, options):
         """ remove temporary files and profile """
         if hasattr(self, 'manifest') and self.manifest is not None:
@@ -1673,8 +1867,6 @@ class Mochitest(MochitestUtilsMixin):
             interactive = False
             valgrindArgs_split = ([] if valgrindArgs is None
                                   else valgrindArgs.split())
-            valgrindSuppFiles_split = ([] if valgrindSuppFiles is None
-                                       else valgrindSuppFiles.split(","))
 
             valgrindSuppFiles_final = []
             if valgrindSuppFiles is not None:
@@ -1877,133 +2069,6 @@ class Mochitest(MochitestUtilsMixin):
                 norm_paths.append(p)
         return norm_paths
 
-    def getActiveTests(self, options, disabled=True):
-        """
-          This method is used to parse the manifest and return active filtered tests.
-        """
-        if self._active_tests:
-            return self._active_tests
-
-        manifest = self.getTestManifest(options)
-        if manifest:
-            if options.extra_mozinfo_json:
-                mozinfo.update(options.extra_mozinfo_json)
-            info = mozinfo.info
-
-            # Bug 1089034 - imptest failure expectations are encoded as
-            # test manifests, even though they aren't tests. This gross
-            # hack causes several problems in automation including
-            # throwing off the chunking numbers. Remove them manually
-            # until bug 1089034 is fixed.
-            def remove_imptest_failure_expectations(tests, values):
-                return (t for t in tests
-                        if 'imptests/failures' not in t['path'])
-
-            filters = [
-                remove_imptest_failure_expectations,
-                subsuite(options.subsuite),
-            ]
-
-            if options.test_tags:
-                filters.append(tags(options.test_tags))
-
-            if options.test_paths:
-                options.test_paths = self.normalize_paths(options.test_paths)
-                filters.append(pathprefix(options.test_paths))
-
-            # Add chunking filters if specified
-            if options.totalChunks:
-                if options.chunkByRuntime:
-                    runtime_file = self.resolve_runtime_file(options)
-                    if not os.path.exists(runtime_file):
-                        self.log.warning("runtime file %s not found; defaulting to chunk-by-dir" %
-                                         runtime_file)
-                        options.chunkByRuntime = None
-                        flavor = self.getTestFlavor(options)
-                        if flavor in ('browser-chrome', 'devtools-chrome'):
-                            # these values match current mozharness configs
-                            options.chunkbyDir = 5
-                        else:
-                            options.chunkByDir = 4
-
-                if options.chunkByDir:
-                    filters.append(chunk_by_dir(options.thisChunk,
-                                                options.totalChunks,
-                                                options.chunkByDir))
-                elif options.chunkByRuntime:
-                    with open(runtime_file, 'r') as f:
-                        runtime_data = json.loads(f.read())
-                    runtimes = runtime_data['runtimes']
-                    default = runtime_data['excluded_test_average']
-                    filters.append(
-                        chunk_by_runtime(options.thisChunk,
-                                         options.totalChunks,
-                                         runtimes,
-                                         default_runtime=default))
-                else:
-                    filters.append(chunk_by_slice(options.thisChunk,
-                                                  options.totalChunks))
-
-            tests = manifest.active_tests(
-                exists=False, disabled=disabled, filters=filters, **info)
-
-            if len(tests) == 0:
-                self.log.error("no tests to run using specified "
-                               "combination of filters: {}".format(
-                                    manifest.fmt_filters()))
-
-        paths = []
-        for test in tests:
-            if len(tests) == 1 and 'disabled' in test:
-                del test['disabled']
-
-            pathAbs = os.path.abspath(test['path'])
-            assert pathAbs.startswith(self.testRootAbs)
-            tp = pathAbs[len(self.testRootAbs):].replace('\\', '/').strip('/')
-
-            if not self.isTest(options, tp):
-                self.log.warning(
-                    'Warning: %s from manifest %s is not a valid test' %
-                    (test['name'], test['manifest']))
-                continue
-
-            testob = {'path': tp}
-            if 'disabled' in test:
-                testob['disabled'] = test['disabled']
-            if 'expected' in test:
-                testob['expected'] = test['expected']
-            paths.append(testob)
-
-        def path_sort(ob1, ob2):
-            path1 = ob1['path'].split('/')
-            path2 = ob2['path'].split('/')
-            return cmp(path1, path2)
-
-        paths.sort(path_sort)
-        self._active_tests = paths
-        if options.dump_tests:
-            options.dump_tests = os.path.expanduser(options.dump_tests)
-            assert os.path.exists(os.path.dirname(options.dump_tests))
-            with open(options.dump_tests, 'w') as dumpFile:
-                dumpFile.write(json.dumps({'active_tests': self._active_tests}))
-
-            self.log.info("Dumping active_tests to %s file." % options.dump_tests)
-            sys.exit()
-
-        return self._active_tests
-
-    def logPreamble(self, tests):
-        """Logs a suite_start message and test_start/test_end at the beginning of a run.
-        """
-        self.log.suite_start([t['path'] for t in tests])
-        for test in tests:
-            if 'disabled' in test:
-                self.log.test_start(test['path'])
-                self.log.test_end(
-                    test['path'],
-                    'SKIP',
-                    message=test['disabled'])
-
     def getTestsToRun(self, options):
         """
           This method makes a list of tests that are to be run. Required mainly for --bisect-chunk.
@@ -2055,29 +2120,6 @@ class Mochitest(MochitestUtilsMixin):
             bisect.print_summary()
 
         return result
-
-    def killNamedOrphans(self, pname):
-        """ Kill orphan processes matching the given command name """
-        self.log.info("Checking for orphan %s processes..." % pname)
-        def _psInfo(line):
-            if pname in line:
-                self.log.info(line)
-        process = mozprocess.ProcessHandler(['ps', '-f'],
-                                            processOutputLine=_psInfo)
-        process.run()
-        process.wait()
-
-        def _psKill(line):
-            parts = line.split()
-            if len(parts) == 3 and parts[0].isdigit():
-                pid = int(parts[0])
-                if parts[2] == pname and parts[1] == '1':
-                    self.log.info("killing %s orphan with pid %d" % (pname, pid))
-                    killPid(pid, self.log)
-        process = mozprocess.ProcessHandler(['ps', '-o', 'pid,ppid,comm'],
-                                            processOutputLine=_psKill)
-        process.run()
-        process.wait()
 
     def runTests(self, options, onLaunch=None):
         """ Prepare, configure, run tests and cleanup """
@@ -2199,7 +2241,6 @@ class Mochitest(MochitestUtilsMixin):
         self.browserEnv = self.buildBrowserEnv(
             options,
             debuggerInfo is not None)
-
 
         # If there are any Mulet-specific tests doing remote network access,
         # we will not be aware since we are explicitely allowing this, as for
@@ -2514,52 +2555,6 @@ class Mochitest(MochitestUtilsMixin):
                 self.shutdownLeaks.log(message)
             return message
 
-    def makeTestConfig(self, options):
-        "Creates a test configuration file for customizing test execution."
-        options.logFile = options.logFile.replace("\\", "\\\\")
-
-        if "MOZ_HIDE_RESULTS_TABLE" in os.environ and os.environ[
-                "MOZ_HIDE_RESULTS_TABLE"] == "1":
-            options.hideResultsTable = True
-
-        # strip certain unnecessary items to avoid serialization errors in json.dumps()
-        d = dict((k, v) for k, v in options.__dict__.items() if (v is None) or
-            isinstance(v,(basestring,numbers.Number)))
-        d['testRoot'] = self.testRoot
-        if not options.keep_open:
-            d['closeWhenDone'] = '1'
-        content = json.dumps(d)
-
-        with open(os.path.join(options.profilePath, "testConfig.js"), "w") as config:
-            config.write(content)
-
-    def getTestManifest(self, options):
-        if isinstance(options.manifestFile, TestManifest):
-            manifest = options.manifestFile
-        elif options.manifestFile and os.path.isfile(options.manifestFile):
-            manifestFileAbs = os.path.abspath(options.manifestFile)
-            assert manifestFileAbs.startswith(SCRIPT_DIR)
-            manifest = TestManifest([options.manifestFile], strict=False)
-        elif options.manifestFile and os.path.isfile(os.path.join(SCRIPT_DIR, options.manifestFile)):
-            manifestFileAbs = os.path.abspath(
-                os.path.join(
-                    SCRIPT_DIR,
-                    options.manifestFile))
-            assert manifestFileAbs.startswith(SCRIPT_DIR)
-            manifest = TestManifest([manifestFileAbs], strict=False)
-        else:
-            masterName = self.getTestFlavor(options) + '.ini'
-            masterPath = os.path.join(SCRIPT_DIR, self.testRoot, masterName)
-
-            if os.path.exists(masterPath):
-                manifest = TestManifest([masterPath], strict=False)
-            else:
-                self._log.warning(
-                    'TestManifest masterPath %s does not exist' %
-                    masterPath)
-
-        return manifest
-
     def getDirectories(self, options):
         """
             Make the list of directories by parsing manifests
@@ -2580,8 +2575,8 @@ class Mochitest(MochitestUtilsMixin):
 def run_test_harness(options):
     logger_options = {
         key: value for key, value in vars(options).iteritems()
-        if key.startswith('log') or key == 'valgrind' }
-    runner = Mochitest(logger_options)
+        if key.startswith('log') or key == 'valgrind'}
+    runner = MochitestDesktop(logger_options)
 
     options.runByDir = False
 
