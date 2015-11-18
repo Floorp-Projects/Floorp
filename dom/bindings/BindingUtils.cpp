@@ -461,6 +461,38 @@ ErrorResult::operator=(ErrorResult&& aRHS)
 }
 
 void
+ErrorResult::CloneTo(ErrorResult& aRv) const
+{
+  aRv.ClearUnionData();
+  aRv.mResult = mResult;
+#ifdef DEBUG
+  aRv.mMightHaveUnreportedJSException = mMightHaveUnreportedJSException;
+#endif
+
+  if (IsErrorWithMessage()) {
+#ifdef DEBUG
+    aRv.mUnionState = HasMessage;
+#endif
+    aRv.mMessage = new Message();
+    aRv.mMessage->mArgs = mMessage->mArgs;
+    aRv.mMessage->mErrorNumber = mMessage->mErrorNumber;
+  } else if (IsDOMException()) {
+#ifdef DEBUG
+    aRv.mUnionState = HasDOMExceptionInfo;
+#endif
+    aRv.mDOMExceptionInfo = new DOMExceptionInfo(mDOMExceptionInfo->mRv,
+                                                 mDOMExceptionInfo->mMessage);
+  } else if (IsJSException()) {
+#ifdef DEBUG
+    aRv.mUnionState = HasJSException;
+#endif
+    JSContext* cx = nsContentUtils::RootingCxForThread();
+    JS::Rooted<JS::Value> exception(cx, mJSException);
+    aRv.ThrowJSException(cx, exception);
+  }
+}
+
+void
 ErrorResult::SuppressException()
 {
   WouldReportJSException();
