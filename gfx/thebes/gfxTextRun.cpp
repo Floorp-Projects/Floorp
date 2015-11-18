@@ -1729,7 +1729,12 @@ gfxFontGroup::FindPlatformFont(const nsAString& aName,
     // Not known in the user font set ==> check system fonts
     if (!family) {
         gfxPlatformFontList *fontList = gfxPlatformFontList::PlatformFontList();
+        // workaround for beta branch
+#if defined(XP_MACOSX)
+        family = fontList->FindFamilyWithStyle(aName, &mStyle);
+#else
         family = fontList->FindFamily(aName, mStyle.language, mStyle.systemFont);
+#endif
     }
 
     // if family found, do style matching and add all font entries to mFonts
