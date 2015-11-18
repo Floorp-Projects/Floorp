@@ -423,6 +423,12 @@ ModuleEnvironmentObject::createImportBinding(JSContext* cx, HandleAtom importNam
     return true;
 }
 
+bool
+ModuleEnvironmentObject::hasImportBinding(HandlePropertyName name)
+{
+    return importBindings().has(NameToId(name));
+}
+
 /* static */ bool
 ModuleEnvironmentObject::lookupProperty(JSContext* cx, HandleObject obj, HandleId id,
                                         MutableHandleObject objp, MutableHandleShape propp)
