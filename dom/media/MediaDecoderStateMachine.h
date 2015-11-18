@@ -168,11 +168,6 @@ public:
     OwnerThread()->Dispatch(runnable.forget());
   }
 
-  void DispatchNotifyDataArrived()
-  {
-    mReader->DispatchNotifyDataArrived();
-  }
-
   // Notifies the state machine that should minimize the number of samples
   // decoded we preroll, until playback starts. The first time playback starts
   // the state machine is free to return to prerolling normally. Note
