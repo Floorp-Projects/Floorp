@@ -263,6 +263,16 @@ function test_accentEncoding()
   do_check_eq(url.query, "hello=%2C");
 }
 
+function test_percentDecoding()
+{
+  var url = stringToURL("http://%70%61%73%74%65%62%69%6E.com");
+  do_check_eq(url.spec, "http://pastebin.com/");
+
+  // We shouldn't unescape characters that are not allowed in the hostname.
+  url = stringToURL("http://example.com%0a%23.google.com/");
+  do_check_eq(url.spec, "http://example.com%0a%23.google.com/");
+}
+
 function run_test()
 {
   test_setEmptyPath();
@@ -274,4 +284,5 @@ function run_test()
   test_escapeBrackets();
   test_apostropheEncoding();
   test_accentEncoding();
+  test_percentDecoding();
 }
