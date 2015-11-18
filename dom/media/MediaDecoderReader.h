@@ -223,15 +223,6 @@ public:
   virtual size_t SizeOfVideoQueueInFrames();
   virtual size_t SizeOfAudioQueueInFrames();
 
-  void DispatchNotifyDataArrived()
-  {
-    RefPtr<nsRunnable> r = NS_NewRunnableMethod(
-      this, &MediaDecoderReader::NotifyDataArrived);
-
-    OwnerThread()->Dispatch(
-      r.forget(), AbstractThread::DontAssertDispatchSuccess);
-  }
-
   void NotifyDataArrived()
   {
     MOZ_ASSERT(OnTaskQueue());
