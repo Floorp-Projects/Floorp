@@ -396,26 +396,6 @@ SerializeURI(nsIURI* aURI,
   aURI->GetOriginCharset(aSerializedURI.charset);
 }
 
-static PLDHashOperator
-EnumerateOverride(nsIURI* aURIKey,
-                  nsIURI* aURI,
-                  void* aArg)
-{
-  nsTArray<OverrideMapping>* overrides =
-      static_cast<nsTArray<OverrideMapping>*>(aArg);
-
-  SerializedURI chromeURI, overrideURI;
-
-  SerializeURI(aURIKey, chromeURI);
-  SerializeURI(aURI, overrideURI);
-
-  OverrideMapping override = {
-    chromeURI, overrideURI
-  };
-  overrides->AppendElement(override);
-  return (PLDHashOperator)PL_DHASH_NEXT;
-}
-
 void
 nsChromeRegistryChrome::SendRegisteredChrome(
     mozilla::dom::PContentParent* aParent)
@@ -447,7 +427,15 @@ nsChromeRegistryChrome::SendRegisteredChrome(
     rph->CollectSubstitutions(resources);
   }
 
-  mOverrideTable.EnumerateRead(&EnumerateOverride, &overrides);
+  for (auto iter = mOverrideTable.Iter(); !iter.Done(); iter.Next()) {
+    SerializedURI chromeURI, overrideURI;
+
+    SerializeURI(iter.Key(), chromeURI);
+    SerializeURI(iter.UserData(), overrideURI);
+
+    OverrideMapping override = { chromeURI, overrideURI };
+    overrides.AppendElement(override);
+  }
 
   if (aParent) {
     bool success = aParent->SendRegisterChrome(packages, resources, overrides,
