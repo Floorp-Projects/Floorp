@@ -421,32 +421,17 @@ global.WindowListManager = {
   // Returns an iterator for all browser windows. Unless |includeIncomplete| is
   // true, only fully-loaded windows are returned.
   *browserWindows(includeIncomplete = false) {
-    // The window type parameter is only available once the window's document
-    // element has been created. This means that, when looking for incomplete
-    // browser windows, we need to ignore the type entirely for windows which
-    // haven't finished loading, since we would otherwise skip browser windows
-    // in their early loading stages.
-    // This is particularly important given that the "domwindowcreated" event
-    // fires for browser windows when they're in that in-between state, and just
-    // before we register our own "domwindowcreated" listener.
-
-    let e = Services.wm.getEnumerator("");
+    let e = Services.wm.getEnumerator("navigator:browser");
     while (e.hasMoreElements()) {
       let window = e.getNext();
-
-      let ok = includeIncomplete;
-      if (window.document.readyState == "complete") {
-        ok = window.document.documentElement.getAttribute("windowtype") == "navigator:browser";
-      }
-
-      if (ok) {
+      if (includeIncomplete || window.document.readyState == "complete") {
         yield window;
       }
     }
   },
 
   addOpenListener(listener) {
-    if (this._openListeners.size == 0 && this._closeListeners.size == 0) {
+    if (this._openListeners.length == 0 && this._closeListeners.length == 0) {
       Services.ww.registerNotification(this);
     }
     this._openListeners.add(listener);
@@ -460,13 +445,13 @@ global.WindowListManager = {
 
   removeOpenListener(listener) {
     this._openListeners.delete(listener);
-    if (this._openListeners.size == 0 && this._closeListeners.size == 0) {
+    if (this._openListeners.length == 0 && this._closeListeners.length == 0) {
       Services.ww.unregisterNotification(this);
     }
   },
 
   addCloseListener(listener) {
-    if (this._openListeners.size == 0 && this._closeListeners.size == 0) {
+    if (this._openListeners.length == 0 && this._closeListeners.length == 0) {
       Services.ww.registerNotification(this);
     }
     this._closeListeners.add(listener);
@@ -474,7 +459,7 @@ global.WindowListManager = {
 
   removeCloseListener(listener) {
     this._closeListeners.delete(listener);
-    if (this._openListeners.size == 0 && this._closeListeners.size == 0) {
+    if (this._openListeners.length == 0 && this._closeListeners.length == 0) {
       Services.ww.unregisterNotification(this);
     }
   },
@@ -490,6 +475,8 @@ global.WindowListManager = {
       listener(window);
     }
   },
+
+  queryInterface: XPCOMUtils.generateQI([Ci.nsISupports, Ci.nsIObserver]),
 
   observe(window, topic, data) {
     if (topic == "domwindowclosed") {
@@ -580,8 +567,6 @@ global.AllWindowEvents = {
     }
   },
 };
-
-AllWindowEvents.openListener = AllWindowEvents.openListener.bind(AllWindowEvents);
 
 // Subclass of EventManager where we just need to call
 // add/removeEventListener on each XUL window.

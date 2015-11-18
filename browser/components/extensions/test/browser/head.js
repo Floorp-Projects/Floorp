@@ -6,7 +6,7 @@ function makeWidgetId(id)
   return id.replace(/[^a-z0-9_-]/g, "_");
 }
 
-var focusWindow = Task.async(function* focusWindow(win)
+function* focusWindow(win)
 {
   let fm = Cc["@mozilla.org/focus-manager;1"].getService(Ci.nsIFocusManager);
   if (fm.activeWindow == win) {
@@ -22,4 +22,4 @@ var focusWindow = Task.async(function* focusWindow(win)
 
   win.focus();
   yield promise;
-});
+}
