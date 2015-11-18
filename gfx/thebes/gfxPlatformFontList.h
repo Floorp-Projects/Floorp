@@ -129,6 +129,13 @@ public:
                                       nsIAtom* aLanguage = nullptr,
                                       bool aUseSystemFonts = false);
 
+#if defined(XP_MACOSX)
+    virtual gfxFontFamily*
+    FindFamilyWithStyle(const nsAString& aFamily, gfxFontStyle* aStyle) {
+        return FindFamily(aFamily, aStyle->language, aStyle->systemFont);
+    }
+#endif
+
     gfxFontEntry* FindFontForFamily(const nsAString& aFamily, const gfxFontStyle* aStyle, bool& aNeedsBold);
 
     bool GetPrefFontFamilyEntries(eFontPrefLang aLangGroup, nsTArray<nsRefPtr<gfxFontFamily> > *array);
@@ -314,11 +321,6 @@ protected:
 
     // canonical family name ==> family entry (unique, one name per family entry)
     FontFamilyTable mFontFamilies;
-
-#if defined(XP_MACOSX)
-    // hidden system fonts used within UI elements
-    FontFamilyTable mSystemFontFamilies;
-#endif
 
     // other family name ==> family entry (not unique, can have multiple names per
     // family entry, only names *other* than the canonical names are stored here)

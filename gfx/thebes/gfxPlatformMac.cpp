@@ -388,6 +388,17 @@ gfxPlatformMac::GetCommonFallbackFonts(uint32_t aCh, uint32_t aNextCh,
     aFontList.AppendElement(kFontArialUnicodeMS);
 }
 
+/*static*/ void
+gfxPlatformMac::LookupSystemFont(mozilla::LookAndFeel::FontID aSystemFontID,
+                                 nsAString& aSystemFontName,
+                                 gfxFontStyle& aFontStyle,
+                                 float aDevPixPerCSSPixel)
+{
+    gfxMacPlatformFontList* pfl = gfxMacPlatformFontList::PlatformFontList();
+    return pfl->LookupSystemFont(aSystemFontID, aSystemFontName, aFontStyle,
+                                 aDevPixPerCSSPixel);
+}
+
 uint32_t
 gfxPlatformMac::ReadAntiAliasingThreshold()
 {
