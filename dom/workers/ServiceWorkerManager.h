@@ -151,16 +151,10 @@ public:
   NS_INLINE_DECL_REFCOUNTING(ServiceWorkerUpdateFinishCallback)
 
   virtual
-  void UpdateSucceeded(ServiceWorkerRegistrationInfo* aInfo)
-  { }
+  void UpdateSucceeded(ServiceWorkerRegistrationInfo* aInfo) = 0;
 
   virtual
-  void UpdateFailed(nsresult aStatus)
-  { }
-
-  virtual
-  void UpdateFailed(JSExnType aExnType, const ErrorEventInit& aDesc)
-  { }
+  void UpdateFailed(ErrorResult& aStatus) = 0;
 };
 
 /*

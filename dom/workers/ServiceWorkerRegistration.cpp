@@ -290,10 +290,8 @@ public:
     mPromise->MaybeResolve(JS::UndefinedHandleValue);
   }
 
-  using ServiceWorkerUpdateFinishCallback::UpdateFailed;
-
   void
-  UpdateFailed(nsresult aStatus) override
+  UpdateFailed(ErrorResult& aStatus) override
   {
     mPromise->MaybeReject(aStatus);
   }
@@ -302,27 +300,28 @@ public:
 class UpdateResultRunnable final : public WorkerRunnable
 {
   RefPtr<PromiseWorkerProxy> mPromiseProxy;
-  nsresult mStatus;
+  ErrorResult mStatus;
 
   ~UpdateResultRunnable()
   {}
 
 public:
-  UpdateResultRunnable(PromiseWorkerProxy* aPromiseProxy, nsresult aStatus)
+  UpdateResultRunnable(PromiseWorkerProxy* aPromiseProxy, ErrorResult& aStatus)
     : WorkerRunnable(aPromiseProxy->GetWorkerPrivate(), WorkerThreadModifyBusyCount)
     , mPromiseProxy(aPromiseProxy)
-    , mStatus(aStatus)
+    , mStatus(Move(aStatus))
   { }
 
   bool
   WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override
   {
     Promise* promise = mPromiseProxy->WorkerPromise();
-    if (NS_SUCCEEDED(mStatus)) {
-      promise->MaybeResolve(JS::UndefinedHandleValue);
-    } else {
+    if (mStatus.Failed()) {
       promise->MaybeReject(mStatus);
+    } else {
+      promise->MaybeResolve(JS::UndefinedHandleValue);
     }
+    mStatus.SuppressException();
     mPromiseProxy->CleanUp(aCx);
     return true;
   }
@@ -346,19 +345,18 @@ public:
   void
   UpdateSucceeded(ServiceWorkerRegistrationInfo* aRegistration) override
   {
-    Finish(NS_OK);
+    ErrorResult rv(NS_OK);
+    Finish(rv);
   }
 
-  using ServiceWorkerUpdateFinishCallback::UpdateFailed;
-
   void
-  UpdateFailed(nsresult aStatus) override
+  UpdateFailed(ErrorResult& aStatus) override
   {
     Finish(aStatus);
   }
 
   void
-  Finish(nsresult aStatus)
+  Finish(ErrorResult& aStatus)
   {
     if (!mPromiseProxy) {
       return;
