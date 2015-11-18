@@ -14,19 +14,19 @@ describe("loop.conversation", function() {
   var fakeWindow, sandbox, getLoopPrefStub, setLoopPrefStub, mozL10nGet;
 
   beforeEach(function() {
-    sandbox = sinon.sandbox.create();
+    sandbox = LoopMochaUtils.createSandbox();
     setLoopPrefStub = sandbox.stub();
 
-    navigator.mozLoop = {
-      doNotDisturb: true,
-      getStrings: function() {
+    LoopMochaUtils.stubLoopRequest({
+      GetDoNotDisturb: function() { return true; },
+      GetAllStrings: function() {
         return JSON.stringify({ textContent: "fakeText" });
       },
-      get locale() {
+      GetLocale: function() {
         return "en-US";
       },
-      setLoopPref: setLoopPrefStub,
-      getLoopPref: function(prefName) {
+      SetLoopPref: setLoopPrefStub,
+      GetLoopPref: function(prefName) {
         switch (prefName) {
           case "debug.sdk":
             return false;
@@ -34,30 +34,33 @@ describe("loop.conversation", function() {
             return "http://fake";
         }
       },
-      LOOP_SESSION_TYPE: {
-        GUEST: 1,
-        FXA: 2
+      GetAllConstants: function() {
+        return {
+          LOOP_SESSION_TYPE: {
+            GUEST: 1,
+            FXA: 2
+          }
+        };
       },
-      startAlerting: sinon.stub(),
-      stopAlerting: sinon.stub(),
-      ensureRegistered: sinon.stub(),
-      get appVersionInfo() {
+      StartAlerting: sinon.stub(),
+      StopAlerting: sinon.stub(),
+      EnsureRegistered: sinon.stub(),
+      GetAppVersionInfo: function() {
         return {
           version: "42",
           channel: "test",
           platform: "test"
         };
       },
-      getAudioBlob: sinon.spy(function(name, callback) {
-        callback(null, new Blob([new ArrayBuffer(10)], { type: "audio/ogg" }));
+      GetAudioBlob: sinon.spy(function(name) {
+        return new Blob([new ArrayBuffer(10)], { type: "audio/ogg" });
       }),
-      getSelectedTabMetadata: function(callback) {
-        callback({});
+      GetSelectedTabMetadata: function() {
+        return {};
       }
-    };
+    });
 
     fakeWindow = {
-      navigator: { mozLoop: navigator.mozLoop },
       close: sinon.stub(),
       document: {},
       addEventListener: function() {},
@@ -70,13 +73,16 @@ describe("loop.conversation", function() {
     mozL10nGet = sandbox.stub(document.mozL10n, "get", function(x) {
       return x;
     });
-    document.mozL10n.initialize(navigator.mozLoop);
+    document.mozL10n.initialize({
+      getStrings: function() { return JSON.stringify({ textContent: "fakeText" }); },
+      locale: "en_US"
+    });
   });
 
   afterEach(function() {
     loop.shared.mixins.setRootObject(window);
-    delete navigator.mozLoop;
     sandbox.restore();
+    LoopMochaUtils.restore();
   });
 
   describe("#init", function() {
@@ -107,8 +113,7 @@ describe("loop.conversation", function() {
       loop.conversation.init();
 
       sinon.assert.calledOnce(document.mozL10n.initialize);
-      sinon.assert.calledWithExactly(document.mozL10n.initialize,
-        navigator.mozLoop);
+      sinon.assert.calledWith(document.mozL10n.initialize, sinon.match({ locale: "en-US" }));
     });
 
     it("should create the AppControllerView", function() {
@@ -142,8 +147,7 @@ describe("loop.conversation", function() {
       return TestUtils.renderIntoDocument(
         React.createElement(loop.conversation.AppControllerView, {
           roomStore: roomStore,
-          dispatcher: dispatcher,
-          mozLoop: navigator.mozLoop
+          dispatcher: dispatcher
         }));
     }
 
@@ -155,13 +159,14 @@ describe("loop.conversation", function() {
         sdkDriver: {}
       });
       roomStore = new loop.store.RoomStore(dispatcher, {
-        mozLoop: navigator.mozLoop,
-        activeRoomStore: activeRoomStore
+        activeRoomStore: activeRoomStore,
+        constants: {}
       });
       conversationAppStore = new loop.store.ConversationAppStore({
         activeRoomStore: activeRoomStore,
         dispatcher: dispatcher,
-        mozLoop: navigator.mozLoop
+        feedbackPeriod: 42,
+        feedbackTimestamp: 42
       });
 
       loop.store.StoreMixin.register({
