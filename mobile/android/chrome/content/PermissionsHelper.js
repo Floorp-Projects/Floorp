@@ -8,37 +8,37 @@ var PermissionsHelper = {
                     "offline-app", "desktop-notification", "plugins", "native-intent"],
   _permissionStrings: {
     "password": {
-      label: "password.savePassword",
+      label: "password.logins",
       allowed: "password.save",
       denied: "password.dontSave"
     },
     "geolocation": {
-      label: "geolocation.shareLocation",
+      label: "geolocation.location",
       allowed: "geolocation.allow",
       denied: "geolocation.dontAllow"
     },
     "popup": {
-      label: "blockPopups.label",
+      label: "blockPopups.label2",
       allowed: "popup.show",
       denied: "popup.dontShow"
     },
     "indexedDB": {
-      label: "offlineApps.storeOfflineData",
+      label: "offlineApps.offlineData",
       allowed: "offlineApps.allow",
       denied: "offlineApps.dontAllow2"
     },
     "offline-app": {
-      label: "offlineApps.storeOfflineData",
+      label: "offlineApps.offlineData",
       allowed: "offlineApps.allow",
       denied: "offlineApps.dontAllow2"
     },
     "desktop-notification": {
-      label: "desktopNotification.useNotifications",
+      label: "desktopNotification.notifications",
       allowed: "desktopNotification2.allow",
       denied: "desktopNotification2.dontAllow"
     },
     "plugins": {
-      label: "clickToPlayPlugins.activatePlugins",
+      label: "clickToPlayPlugins.plugins",
       allowed: "clickToPlayPlugins.activate",
       denied: "clickToPlayPlugins.dontActivate"
     },
