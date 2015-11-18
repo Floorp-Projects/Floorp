@@ -533,8 +533,7 @@ private:
   nsAutoPtr<base::Thread> mMediaThread;
   nsCOMPtr<nsIAsyncShutdownBlocker> mShutdownBlocker;
 
-  Mutex mMutex;
-  // protected with mMutex:
+  // ONLY accessed from MediaManagerThread
   RefPtr<MediaEngine> mBackend;
 
   static StaticRefPtr<MediaManager> sSingleton;
