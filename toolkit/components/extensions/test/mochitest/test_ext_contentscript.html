@@ -39,6 +39,8 @@ add_task(function* test_contentscript()
   }
 
   function contentScript() {
+    var manifest = browser.runtime.getManifest();
+    manifest.applications.gecko.id;
     chrome.runtime.sendMessage(["chrome-namespace-ok"]);
   }
 
