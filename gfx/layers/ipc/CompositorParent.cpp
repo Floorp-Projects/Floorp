@@ -342,7 +342,7 @@ CompositorVsyncScheduler::ScheduleComposition()
     // Used only for performance testing purposes
     PostCompositeTask(TimeStamp::Now());
   } else {
-    SetNeedsComposite(true);
+    SetNeedsComposite();
   }
 }
 
@@ -366,13 +366,12 @@ CompositorVsyncScheduler::CancelCurrentSetNeedsCompositeTask()
  * How many skipped vsync events until we stop listening to vsync events?
  */
 void
-CompositorVsyncScheduler::SetNeedsComposite(bool aNeedsComposite)
+CompositorVsyncScheduler::SetNeedsComposite()
 {
   if (!CompositorParent::IsInCompositorThread()) {
     MonitorAutoLock lock(mSetNeedsCompositeMonitor);
     mSetNeedsCompositeTask = NewRunnableMethod(this,
-                                              &CompositorVsyncScheduler::SetNeedsComposite,
-                                              aNeedsComposite);
+                                              &CompositorVsyncScheduler::SetNeedsComposite);
     ScheduleTask(mSetNeedsCompositeTask, 0);
     return;
   } else {
@@ -380,7 +379,7 @@ CompositorVsyncScheduler::SetNeedsComposite(bool aNeedsComposite)
     mSetNeedsCompositeTask = nullptr;
   }
 
-  mNeedsComposite = aNeedsComposite;
+  mNeedsComposite = true;
   if (!mIsObservingVsync && mNeedsComposite) {
     ObserveVsync();
   }
