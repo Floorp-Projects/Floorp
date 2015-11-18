@@ -136,7 +136,7 @@ public:
 
 private:
     Atomic32 _ref_count;
-    scoped_ptr<const Config> own_config_;
+    rtc::scoped_ptr<const Config> own_config_;
 };
 
 }  // namespace webrtc

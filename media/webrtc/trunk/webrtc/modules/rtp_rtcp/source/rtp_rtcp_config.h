@@ -13,11 +13,6 @@
 
 // Configuration file for RTP utilities (RTPSender, RTPReceiver ...)
 namespace webrtc {
-enum { kRtpRtcpMaxIdleTimeProcess = 5,
-       kRtpRtcpBitrateProcessTimeMs = 10,
-       kRtpRtcpPacketTimeoutProcessTimeMs = 100,
-       kRtpRtcpRttProcessTimeMs = 1000 };
-
 enum { NACK_BYTECOUNT_SIZE      = 60};   // size of our NACK history
 // A sanity for the NACK list parsing at the send-side.
 enum { kSendSideNackListSizeSanity = 20000 };

@@ -74,9 +74,8 @@ int ViEFileImage::ConvertPictureToI420VideoFrame(int engine_id,
   int half_width = (picture.width + 1) / 2;
   video_frame->CreateEmptyFrame(picture.width, picture.height,
                                 picture.width, half_width, half_width);
-  return ConvertToI420(kI420, picture.data, 0, 0,
-                       picture.width, picture.height,
-                       0, kRotateNone, video_frame);
+  return ConvertToI420(kI420, picture.data, 0, 0, picture.width, picture.height,
+                       0, kVideoRotation_0, video_frame);
 }
 
 }  // namespace webrtc

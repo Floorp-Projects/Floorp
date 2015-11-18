@@ -9,9 +9,9 @@
  */
 
 #include "testing/gmock/include/gmock/gmock.h"
+#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/modules/desktop_capture/differ.h"
 #include "webrtc/modules/desktop_capture/differ_block.h"
-#include "webrtc/system_wrappers/interface/scoped_ptr.h"
 
 namespace webrtc {
 
@@ -188,7 +188,7 @@ class DifferTest : public testing::Test {
   }
 
   // The differ class we're testing.
-  scoped_ptr<Differ> differ_;
+  rtc::scoped_ptr<Differ> differ_;
 
   // Screen/buffer info.
   int width_;
@@ -200,8 +200,8 @@ class DifferTest : public testing::Test {
   int buffer_size_;
 
   // Previous and current screen buffers.
-  scoped_ptr<uint8_t[]> prev_;
-  scoped_ptr<uint8_t[]> curr_;
+  rtc::scoped_ptr<uint8_t[]> prev_;
+  rtc::scoped_ptr<uint8_t[]> curr_;
 
  private:
   DISALLOW_COPY_AND_ASSIGN(DifferTest);

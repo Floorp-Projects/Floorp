@@ -356,7 +356,7 @@ void PrintAnalysisResults(FILE* output, const std::string& label,
          ++iter) {
       fprintf(output, "%f,", iter->ssim_value);
     }
-    fprintf(output, "%f]\n", iter->ssim_value);
+    fprintf(output, "%f] score\n", iter->ssim_value);
   }
 }
 

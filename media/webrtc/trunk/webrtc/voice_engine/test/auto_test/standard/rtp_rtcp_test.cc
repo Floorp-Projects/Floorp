@@ -29,16 +29,15 @@ class TestRtpObserver : public webrtc::VoERTPObserver {
   void WaitForChangedSsrc() {
     // 10 seconds should be enough.
     EXPECT_EQ(voetest::kEventSignaled, changed_ssrc_event_->Wait(10*1000));
-    changed_ssrc_event_->Reset();
   }
   void SetIncomingSsrc(unsigned int ssrc) {
     voetest::CriticalSectionScoped lock(crit_.get());
     incoming_ssrc_ = ssrc;
   }
  public:
-  voetest::scoped_ptr<voetest::CriticalSectionWrapper> crit_;
+  rtc::scoped_ptr<voetest::CriticalSectionWrapper> crit_;
   unsigned int incoming_ssrc_;
-  voetest::scoped_ptr<voetest::EventWrapper> changed_ssrc_event_;
+  rtc::scoped_ptr<voetest::EventWrapper> changed_ssrc_event_;
 };
 
 void TestRtpObserver::OnIncomingSSRCChanged(int channel,
@@ -54,23 +53,6 @@ void TestRtpObserver::OnIncomingSSRCChanged(int channel,
       changed_ssrc_event_->Set();
   }
 }
-
-class RtcpAppHandler : public webrtc::VoERTCPObserver {
- public:
-  RtcpAppHandler() : length_in_bytes_(0), sub_type_(0), name_(0) {}
-  void OnApplicationDataReceived(int channel,
-                                 unsigned char sub_type,
-                                 unsigned int name,
-                                 const unsigned char* data,
-                                 unsigned short length_in_bytes);
-  void Reset();
-  ~RtcpAppHandler() {}
-  unsigned short length_in_bytes_;
-  unsigned char data_[256];
-  unsigned char sub_type_;
-  unsigned int name_;
-};
-
 
 static const char* const RTCP_CNAME = "Whatever";
 
@@ -103,23 +85,6 @@ class RtpRtcpTest : public AfterStreamingFixture {
   int second_channel_;
   LoopBackTransport* transport_;
 };
-
-void RtcpAppHandler::OnApplicationDataReceived(
-    const int /*channel*/, unsigned char sub_type,
-    unsigned int name, const unsigned char* data,
-    unsigned short length_in_bytes) {
-  length_in_bytes_ = length_in_bytes;
-  memcpy(data_, &data[0], length_in_bytes);
-  sub_type_ = sub_type;
-  name_ = name;
-}
-
-void RtcpAppHandler::Reset() {
-  length_in_bytes_ = 0;
-  memset(data_, 0, sizeof(data_));
-  sub_type_ = 0;
-  name_ = 0;
-}
 
 TEST_F(RtpRtcpTest, RemoteRtcpCnameHasPropagatedToRemoteSide) {
   if (!FLAGS_include_timing_dependent_tests) {

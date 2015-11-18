@@ -34,10 +34,13 @@ class NetworkTest : public testing::Test, public sigslot::has_slots<>  {
     callback_called_ = true;
   }
 
-  void MergeNetworkList(BasicNetworkManager& network_manager,
-                        const NetworkManager::NetworkList& list,
-                        bool* changed ) {
-    network_manager.MergeNetworkList(list, changed);
+  NetworkManager::Stats MergeNetworkList(
+      BasicNetworkManager& network_manager,
+      const NetworkManager::NetworkList& list,
+      bool* changed) {
+    NetworkManager::Stats stats;
+    network_manager.MergeNetworkList(list, changed, &stats);
+    return stats;
   }
 
   bool IsIgnoredNetwork(BasicNetworkManager& network_manager,
@@ -78,16 +81,51 @@ TEST_F(NetworkTest, TestNetworkConstruct) {
 }
 
 // Tests that our ignore function works properly.
-TEST_F(NetworkTest, TestNetworkIgnore) {
+TEST_F(NetworkTest, TestIsIgnoredNetworkIgnoresOnlyLoopbackByDefault) {
   Network ipv4_network1("test_eth0", "Test Network Adapter 1",
-                        IPAddress(0x12345600U), 24);
+                        IPAddress(0x12345600U), 24, ADAPTER_TYPE_ETHERNET);
+  Network ipv4_network2("test_wlan0", "Test Network Adapter 2",
+                        IPAddress(0x12345601U), 16, ADAPTER_TYPE_WIFI);
+  Network ipv4_network3("test_cell0", "Test Network Adapter 3",
+                        IPAddress(0x12345602U), 16, ADAPTER_TYPE_CELLULAR);
+  Network ipv4_network4("test_vpn0", "Test Network Adapter 4",
+                        IPAddress(0x12345603U), 16, ADAPTER_TYPE_VPN);
+  Network ipv4_network5("test_lo", "Test Network Adapter 5",
+                        IPAddress(0x12345604U), 16, ADAPTER_TYPE_LOOPBACK);
+  BasicNetworkManager network_manager;
+  EXPECT_FALSE(IsIgnoredNetwork(network_manager, ipv4_network1));
+  EXPECT_FALSE(IsIgnoredNetwork(network_manager, ipv4_network2));
+  EXPECT_FALSE(IsIgnoredNetwork(network_manager, ipv4_network3));
+  EXPECT_FALSE(IsIgnoredNetwork(network_manager, ipv4_network4));
+  EXPECT_TRUE(IsIgnoredNetwork(network_manager, ipv4_network5));
+}
+
+TEST_F(NetworkTest, TestIsIgnoredNetworkIgnoresIPsStartingWith0) {
+  Network ipv4_network1("test_eth0", "Test Network Adapter 1",
+                        IPAddress(0x12345600U), 24, ADAPTER_TYPE_ETHERNET);
   Network ipv4_network2("test_eth1", "Test Network Adapter 2",
-                        IPAddress(0x00010000U), 16);
+                        IPAddress(0x010000U), 24, ADAPTER_TYPE_ETHERNET);
   BasicNetworkManager network_manager;
   EXPECT_FALSE(IsIgnoredNetwork(network_manager, ipv4_network1));
   EXPECT_TRUE(IsIgnoredNetwork(network_manager, ipv4_network2));
 }
 
+TEST_F(NetworkTest, TestIsIgnoredNetworkIgnoresNetworksAccordingToIgnoreMask) {
+  Network ipv4_network1("test_eth0", "Test Network Adapter 1",
+                        IPAddress(0x12345600U), 24, ADAPTER_TYPE_ETHERNET);
+  Network ipv4_network2("test_wlan0", "Test Network Adapter 2",
+                        IPAddress(0x12345601U), 16, ADAPTER_TYPE_WIFI);
+  Network ipv4_network3("test_cell0", "Test Network Adapter 3",
+                        IPAddress(0x12345602U), 16, ADAPTER_TYPE_CELLULAR);
+  BasicNetworkManager network_manager;
+  network_manager.set_network_ignore_mask(
+      ADAPTER_TYPE_ETHERNET | ADAPTER_TYPE_LOOPBACK | ADAPTER_TYPE_WIFI);
+  EXPECT_TRUE(IsIgnoredNetwork(network_manager, ipv4_network1));
+  EXPECT_TRUE(IsIgnoredNetwork(network_manager, ipv4_network2));
+  EXPECT_FALSE(IsIgnoredNetwork(network_manager, ipv4_network3));
+}
+
+// TODO(phoglund): Remove when ignore list goes away.
 TEST_F(NetworkTest, TestIgnoreList) {
   Network ignore_me("ignore_me", "Ignore me please!",
                     IPAddress(0x12345600U), 24);
@@ -182,8 +220,10 @@ TEST_F(NetworkTest, TestBasicMergeNetworkList) {
   NetworkManager::NetworkList list;
   list.push_back(new Network(ipv4_network1));
   bool changed;
-  MergeNetworkList(manager, list, &changed);
+  NetworkManager::Stats stats = MergeNetworkList(manager, list, &changed);
   EXPECT_TRUE(changed);
+  EXPECT_EQ(stats.ipv6_network_count, 0);
+  EXPECT_EQ(stats.ipv4_network_count, 1);
   list.clear();
 
   manager.GetNetworks(&list);
@@ -194,8 +234,10 @@ TEST_F(NetworkTest, TestBasicMergeNetworkList) {
 
   // Replace ipv4_network1 with ipv4_network2.
   list.push_back(new Network(ipv4_network2));
-  MergeNetworkList(manager, list, &changed);
+  stats = MergeNetworkList(manager, list, &changed);
   EXPECT_TRUE(changed);
+  EXPECT_EQ(stats.ipv6_network_count, 0);
+  EXPECT_EQ(stats.ipv4_network_count, 1);
   list.clear();
 
   manager.GetNetworks(&list);
@@ -207,8 +249,10 @@ TEST_F(NetworkTest, TestBasicMergeNetworkList) {
   // Add Network2 back.
   list.push_back(new Network(ipv4_network1));
   list.push_back(new Network(ipv4_network2));
-  MergeNetworkList(manager, list, &changed);
+  stats = MergeNetworkList(manager, list, &changed);
   EXPECT_TRUE(changed);
+  EXPECT_EQ(stats.ipv6_network_count, 0);
+  EXPECT_EQ(stats.ipv4_network_count, 2);
   list.clear();
 
   // Verify that we get previous instances of Network objects.
@@ -222,8 +266,10 @@ TEST_F(NetworkTest, TestBasicMergeNetworkList) {
   // notification.
   list.push_back(new Network(ipv4_network2));
   list.push_back(new Network(ipv4_network1));
-  MergeNetworkList(manager, list, &changed);
+  stats = MergeNetworkList(manager, list, &changed);
   EXPECT_FALSE(changed);
+  EXPECT_EQ(stats.ipv6_network_count, 0);
+  EXPECT_EQ(stats.ipv4_network_count, 2);
   list.clear();
 
   // Verify that we get previous instances of Network objects.
@@ -239,13 +285,13 @@ TEST_F(NetworkTest, TestBasicMergeNetworkList) {
 void SetupNetworks(NetworkManager::NetworkList* list) {
   IPAddress ip;
   IPAddress prefix;
-  EXPECT_TRUE(IPFromString("fe80::1234:5678:abcd:ef12", &ip));
-  EXPECT_TRUE(IPFromString("fe80::", &prefix));
+  EXPECT_TRUE(IPFromString("abcd::1234:5678:abcd:ef12", &ip));
+  EXPECT_TRUE(IPFromString("abcd::", &prefix));
   // First, fake link-locals.
   Network ipv6_eth0_linklocalnetwork("test_eth0", "Test NetworkAdapter 1",
                                      prefix, 64);
   ipv6_eth0_linklocalnetwork.AddIP(ip);
-  EXPECT_TRUE(IPFromString("fe80::5678:abcd:ef12:3456", &ip));
+  EXPECT_TRUE(IPFromString("abcd::5678:abcd:ef12:3456", &ip));
   Network ipv6_eth1_linklocalnetwork("test_eth1", "Test NetworkAdapter 2",
                                      prefix, 64);
   ipv6_eth1_linklocalnetwork.AddIP(ip);
@@ -274,8 +320,11 @@ TEST_F(NetworkTest, TestIPv6MergeNetworkList) {
   NetworkManager::NetworkList original_list;
   SetupNetworks(&original_list);
   bool changed = false;
-  MergeNetworkList(manager, original_list, &changed);
+  NetworkManager::Stats stats =
+      MergeNetworkList(manager, original_list, &changed);
   EXPECT_TRUE(changed);
+  EXPECT_EQ(stats.ipv6_network_count, 4);
+  EXPECT_EQ(stats.ipv4_network_count, 0);
   NetworkManager::NetworkList list;
   manager.GetNetworks(&list);
   EXPECT_EQ(original_list.size(), list.size());
@@ -284,6 +333,45 @@ TEST_F(NetworkTest, TestIPv6MergeNetworkList) {
        it != original_list.end(); ++it) {
     EXPECT_NE(list.end(), std::find(list.begin(), list.end(), *it));
   }
+}
+
+// Test that no more than manager.max_ipv6_networks() IPv6 networks get
+// returned.
+TEST_F(NetworkTest, TestIPv6MergeNetworkListTrimExcessive) {
+  BasicNetworkManager manager;
+  manager.SignalNetworksChanged.connect(static_cast<NetworkTest*>(this),
+                                        &NetworkTest::OnNetworksChanged);
+  NetworkManager::NetworkList original_list;
+
+  // Add twice the allowed number of IPv6 networks.
+  for (int i = 0; i < 2 * manager.max_ipv6_networks(); i++) {
+    // Make a network with different prefix length.
+    IPAddress ip;
+    EXPECT_TRUE(IPFromString("2401:fa01:4:1000:be30:faa:fee:faa", &ip));
+    IPAddress prefix = TruncateIP(ip, 64 - i);
+    Network* ipv6_network =
+        new Network("test_eth0", "Test Network Adapter 1", prefix, 64 - i);
+    ipv6_network->AddIP(ip);
+    original_list.push_back(ipv6_network);
+  }
+
+  // Add one IPv4 network.
+  Network* ipv4_network = new Network("test_eth0", "Test Network Adapter 1",
+                                      IPAddress(0x12345600U), 24);
+  ipv4_network->AddIP(IPAddress(0x12345600U));
+  original_list.push_back(ipv4_network);
+
+  bool changed = false;
+  MergeNetworkList(manager, original_list, &changed);
+  EXPECT_TRUE(changed);
+  NetworkManager::NetworkList list;
+  manager.GetNetworks(&list);
+
+  // List size should be the max allowed IPv6 networks plus one IPv4 network.
+  EXPECT_EQ(manager.max_ipv6_networks() + 1, (int)list.size());
+
+  // Verify that the IPv4 network is in the list.
+  EXPECT_NE(list.end(), std::find(list.begin(), list.end(), ipv4_network));
 }
 
 // Tests that when two network lists that describe the same set of networks are

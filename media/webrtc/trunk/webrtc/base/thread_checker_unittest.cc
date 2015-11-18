@@ -61,9 +61,7 @@ class CallDoStuffOnThread : public Thread {
     SetName("call_do_stuff_on_thread", NULL);
   }
 
-  virtual void Run() OVERRIDE {
-    thread_checker_class_->DoStuff();
-  }
+  void Run() override { thread_checker_class_->DoStuff(); }
 
   // New method. Needed since Thread::Join is protected, and it is called by
   // the TEST.
@@ -87,9 +85,7 @@ class DeleteThreadCheckerClassOnThread : public Thread {
     SetName("delete_thread_checker_class_on_thread", NULL);
   }
 
-  virtual void Run() OVERRIDE {
-    thread_checker_class_.reset();
-  }
+  void Run() override { thread_checker_class_.reset(); }
 
   // New method. Needed since Thread::Join is protected, and it is called by
   // the TEST.

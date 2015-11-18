@@ -36,9 +36,7 @@
 #define WEBRTC_CODEC_AVT
 
 // PCM16 is useful for testing and incurs only a small binary size cost.
-#ifndef WEBRTC_CODEC_PCM16
 #define WEBRTC_CODEC_PCM16
-#endif
 
 // iLBC and Redundancy coding are excluded from Chromium and Mozilla
 // builds to reduce binary size.
@@ -67,7 +65,6 @@
 #define WEBRTC_VOICE_ENGINE_AGC                 // Near-end AGC
 #define WEBRTC_VOICE_ENGINE_ECHO                // Near-end AEC
 #define WEBRTC_VOICE_ENGINE_NR                  // Near-end NS
-#define WEBRTC_VOE_EXTERNAL_REC_AND_PLAYOUT
 
 #if !defined(WEBRTC_ANDROID) && !defined(WEBRTC_IOS)
 #define WEBRTC_VOICE_ENGINE_TYPING_DETECTION    // Typing detection
@@ -142,7 +139,6 @@
 //  Deprecated
 // ----------------------------------------------------------------------------
 
-// #define WEBRTC_CODEC_G729
 // #define WEBRTC_DTMF_DETECTION
 
 #endif  // WEBRTC_ENGINE_CONFIGURATIONS_H_

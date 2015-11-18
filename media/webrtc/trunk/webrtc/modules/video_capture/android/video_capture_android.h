@@ -28,10 +28,10 @@ class VideoCaptureAndroid : public VideoCaptureImpl {
   virtual int32_t StopCapture();
   virtual bool CaptureStarted();
   virtual int32_t CaptureSettings(VideoCaptureCapability& settings);
-  virtual int32_t SetCaptureRotation(VideoCaptureRotation rotation);
+  virtual int32_t SetCaptureRotation(VideoRotation rotation);
 
   int32_t OnIncomingFrame(uint8_t* videoFrame,
-                          int32_t videoFrameLength,
+                          size_t videoFrameLength,
                           int32_t degrees,
                           int64_t captureTime = 0);
 
@@ -41,7 +41,7 @@ class VideoCaptureAndroid : public VideoCaptureImpl {
   DeviceInfoAndroid _deviceInfo;
   jobject _jCapturer; // Global ref to Java VideoCaptureAndroid object.
   VideoCaptureCapability _captureCapability;
-  VideoCaptureRotation _rotation;
+  VideoRotation _rotation;
   bool _captureStarted;
 };
 

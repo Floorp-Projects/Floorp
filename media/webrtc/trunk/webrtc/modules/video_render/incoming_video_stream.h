@@ -20,12 +20,6 @@ class ThreadWrapper;
 class VideoRenderCallback;
 class VideoRenderFrames;
 
-struct VideoMirroring {
-  VideoMirroring() : mirror_x_axis(false), mirror_y_axis(false) {}
-  bool mirror_x_axis;
-  bool mirror_y_axis;
-};
-
 class IncomingVideoStream : public VideoRenderCallback {
  public:
   IncomingVideoStream(const int32_t module_id,
@@ -37,7 +31,7 @@ class IncomingVideoStream : public VideoRenderCallback {
   // Get callback to deliver frames to the module.
   VideoRenderCallback* ModuleCallback();
   virtual int32_t RenderFrame(const uint32_t stream_id,
-                              I420VideoFrame& video_frame);
+                              const I420VideoFrame& video_frame);
 
   // Set callback to the platform dependent code.
   int32_t SetRenderCallback(VideoRenderCallback* render_callback);
@@ -56,16 +50,10 @@ class IncomingVideoStream : public VideoRenderCallback {
   uint32_t StreamId() const;
   uint32_t IncomingRate() const;
 
-  int32_t GetLastRenderedFrame(I420VideoFrame& video_frame) const;
-
   int32_t SetStartImage(const I420VideoFrame& video_frame);
 
   int32_t SetTimeoutImage(const I420VideoFrame& video_frame,
                           const uint32_t timeout);
-
-  int32_t EnableMirroring(const bool enable,
-                          const bool mirror_xaxis,
-                          const bool mirror_yaxis);
 
   int32_t SetExpectedRenderDelay(int32_t delay_ms);
 
@@ -84,7 +72,7 @@ class IncomingVideoStream : public VideoRenderCallback {
   CriticalSectionWrapper& stream_critsect_;
   CriticalSectionWrapper& thread_critsect_;
   CriticalSectionWrapper& buffer_critsect_;
-  ThreadWrapper* incoming_render_thread_;
+  rtc::scoped_ptr<ThreadWrapper> incoming_render_thread_;
   EventWrapper& deliver_buffer_event_;
   bool running_;
 
@@ -99,15 +87,11 @@ class IncomingVideoStream : public VideoRenderCallback {
   uint32_t incoming_rate_;
   int64_t last_rate_calculation_time_ms_;
   uint16_t num_frames_since_last_calculation_;
-  I420VideoFrame last_rendered_frame_;
+  int64_t last_render_time_ms_;
   I420VideoFrame temp_frame_;
   I420VideoFrame start_image_;
   I420VideoFrame timeout_image_;
   uint32_t timeout_time_;
-
-  bool mirror_frames_enabled_;
-  VideoMirroring mirroring_;
-  I420VideoFrame transformed_video_frame_;
 };
 
 }  // namespace webrtc

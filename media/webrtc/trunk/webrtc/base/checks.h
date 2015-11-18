@@ -71,10 +71,15 @@ namespace rtc {
 #define LAZY_STREAM(stream, condition)                                        \
   !(condition) ? static_cast<void>(0) : rtc::FatalMessageVoidify() & (stream)
 
-// The actual stream used isn't important.
-#define EAT_STREAM_PARAMETERS                                           \
-  true ? static_cast<void>(0)                                           \
-       : rtc::FatalMessageVoidify() & rtc::FatalMessage("", 0).stream()
+// The actual stream used isn't important. We reference condition in the code
+// but don't evaluate it; this is to avoid "unused variable" warnings (we do so
+// in a particularly convoluted way with an extra ?: because that appears to be
+// the simplest construct that keeps Visual Studio from complaining about
+// condition being unused).
+#define EAT_STREAM_PARAMETERS(condition) \
+  (true ? true : !(condition))           \
+      ? static_cast<void>(0)             \
+      : rtc::FatalMessageVoidify() & rtc::FatalMessage("", 0).stream()
 
 // CHECK dies with a fatal error if condition is not true.  It is *not*
 // controlled by NDEBUG, so the check will be executed regardless of
@@ -159,8 +164,9 @@ DEFINE_CHECK_OP_IMPL(GT, > )
 #define CHECK_GE(val1, val2) CHECK_OP(GE, >=, val1, val2)
 #define CHECK_GT(val1, val2) CHECK_OP(GT, > , val1, val2)
 
-// The DCHECK macro is equivalent to CHECK except that it only generates code in
-// debug builds.
+// The DCHECK macro is equivalent to CHECK except that it only generates code
+// in debug builds. It does reference the condition parameter in all cases,
+// though, so callers won't risk getting warnings about unused variables.
 #if (!defined(NDEBUG) || defined(DCHECK_ALWAYS_ON))
 #define DCHECK(condition) CHECK(condition)
 #define DCHECK_EQ(v1, v2) CHECK_EQ(v1, v2)
@@ -170,13 +176,13 @@ DEFINE_CHECK_OP_IMPL(GT, > )
 #define DCHECK_GE(v1, v2) CHECK_GE(v1, v2)
 #define DCHECK_GT(v1, v2) CHECK_GT(v1, v2)
 #else
-#define DCHECK(condition) EAT_STREAM_PARAMETERS
-#define DCHECK_EQ(v1, v2) EAT_STREAM_PARAMETERS
-#define DCHECK_NE(v1, v2) EAT_STREAM_PARAMETERS
-#define DCHECK_LE(v1, v2) EAT_STREAM_PARAMETERS
-#define DCHECK_LT(v1, v2) EAT_STREAM_PARAMETERS
-#define DCHECK_GE(v1, v2) EAT_STREAM_PARAMETERS
-#define DCHECK_GT(v1, v2) EAT_STREAM_PARAMETERS
+#define DCHECK(condition) EAT_STREAM_PARAMETERS(condition)
+#define DCHECK_EQ(v1, v2) EAT_STREAM_PARAMETERS((v1) == (v2))
+#define DCHECK_NE(v1, v2) EAT_STREAM_PARAMETERS((v1) != (v2))
+#define DCHECK_LE(v1, v2) EAT_STREAM_PARAMETERS((v1) <= (v2))
+#define DCHECK_LT(v1, v2) EAT_STREAM_PARAMETERS((v1) < (v2))
+#define DCHECK_GE(v1, v2) EAT_STREAM_PARAMETERS((v1) >= (v2))
+#define DCHECK_GT(v1, v2) EAT_STREAM_PARAMETERS((v1) > (v2))
 #endif
 
 // This is identical to LogMessageVoidify but in name.
@@ -189,6 +195,9 @@ class FatalMessageVoidify {
 };
 
 #endif  // WEBRTC_CHROMIUM_BUILD
+
+#define RTC_UNREACHABLE_CODE_HIT false
+#define RTC_NOTREACHED() DCHECK(RTC_UNREACHABLE_CODE_HIT)
 
 #define FATAL() rtc::FatalMessage(__FILE__, __LINE__).stream()
 // TODO(ajm): Consider adding NOTIMPLEMENTED and NOTREACHED macros when
@@ -210,6 +219,14 @@ class FatalMessage {
 
   std::ostringstream stream_;
 };
+
+// Performs the integer division a/b and returns the result. CHECKs that the
+// remainder is zero.
+template <typename T>
+inline T CheckedDivExact(T a, T b) {
+  CHECK_EQ(a % b, static_cast<T>(0));
+  return a / b;
+}
 
 }  // namespace rtc
 

@@ -13,168 +13,144 @@
 
 #include <jni.h>
 
-#include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
+#include "webrtc/base/thread_checker.h"
+#include "webrtc/modules/audio_device/android/audio_manager.h"
 #include "webrtc/modules/audio_device/include/audio_device_defines.h"
 #include "webrtc/modules/audio_device/audio_device_generic.h"
+#include "webrtc/modules/utility/interface/helpers_android.h"
 
 namespace webrtc {
 
-class EventWrapper;
-class ThreadWrapper;
 class PlayoutDelayProvider;
 
+// Implements 16-bit mono PCM audio input support for Android using the Java
+// AudioRecord interface. Most of the work is done by its Java counterpart in
+// WebRtcAudioRecord.java. This class is created and lives on a thread in
+// C++-land, but recorded audio buffers are delivered on a high-priority
+// thread managed by the Java class.
+//
+// The Java class makes use of AudioEffect features (mainly AEC) which are
+// first available in Jelly Bean. If it is instantiated running against earlier
+// SDKs, the AEC provided by the APM in WebRTC must be used and enabled
+// separately instead.
+//
+// An instance must be created and destroyed on one and the same thread.
+// All public methods must also be called on the same thread. A thread checker
+// will DCHECK if any method is called on an invalid thread.
+// It is possible to call the two static methods (SetAndroidAudioDeviceObjects
+// and ClearAndroidAudioDeviceObjects) from a different thread but both will
+// CHECK that the calling thread is attached to a Java VM.
+//
+// All methods use AttachThreadScoped to attach to a Java VM if needed and then
+// detach when method goes out of scope. We do so because this class does not
+// own the thread is is created and called on and other objects on the same
+// thread might put us in a detached state at any time.
 class AudioRecordJni {
  public:
-  static int32_t SetAndroidAudioDeviceObjects(void* javaVM, void* env,
-                                              void* context);
-
-  static int32_t SetAndroidAudioDeviceObjects(void* javaVM,
-                                              void* context);
-
+  // Use the invocation API to allow the native application to use the JNI
+  // interface pointer to access VM features.
+  // |jvm| denotes the Java VM and |context| corresponds to
+  // android.content.Context in Java.
+  // This method also sets a global jclass object, |g_audio_record_class| for
+  // the "org/webrtc/voiceengine/WebRtcAudioRecord"-class.
+  static void SetAndroidAudioDeviceObjects(void* jvm, void* context);
+  // Always call this method after the object has been destructed. It deletes
+  // existing global references and enables garbage collection.
   static void ClearAndroidAudioDeviceObjects();
 
-  AudioRecordJni(const int32_t id, PlayoutDelayProvider* delay_provider);
+  AudioRecordJni(
+      PlayoutDelayProvider* delay_provider, AudioManager* audio_manager);
   ~AudioRecordJni();
 
-  // Main initializaton and termination
   int32_t Init();
   int32_t Terminate();
-  bool Initialized() const { return _initialized; }
 
-  // Device enumeration
-  int16_t RecordingDevices() { return 1; }  // There is one device only
-  int32_t RecordingDeviceName(uint16_t index,
-                              char name[kAdmMaxDeviceNameSize],
-                              char guid[kAdmMaxGuidSize]);
-
-  // Device selection
-  int32_t SetRecordingDevice(uint16_t index);
-  int32_t SetRecordingDevice(
-      AudioDeviceModule::WindowsDeviceType device);
-
-  // Audio transport initialization
-  int32_t RecordingIsAvailable(bool& available);  // NOLINT
   int32_t InitRecording();
-  bool RecordingIsInitialized() const { return _recIsInitialized; }
+  bool RecordingIsInitialized() const { return initialized_; }
 
-  // Audio transport control
   int32_t StartRecording();
-  int32_t StopRecording();
-  bool Recording() const { return _recording; }
+  int32_t StopRecording ();
+  bool Recording() const { return recording_; }
 
-  // Microphone Automatic Gain Control (AGC)
-  int32_t SetAGC(bool enable);
-  bool AGC() const { return _AGC; }
+  int32_t RecordingDelay(uint16_t& delayMS) const;
 
-  // Audio mixer initialization
-  int32_t InitMicrophone();
-  bool MicrophoneIsInitialized() const { return _micIsInitialized; }
-
-  // Microphone volume controls
-  int32_t MicrophoneVolumeIsAvailable(bool& available);  // NOLINT
-  // TODO(leozwang): Add microphone volume control when OpenSL APIs
-  // are available.
-  int32_t SetMicrophoneVolume(uint32_t volume);
-  int32_t MicrophoneVolume(uint32_t& volume) const;  // NOLINT
-  int32_t MaxMicrophoneVolume(uint32_t& maxVolume) const;  // NOLINT
-  int32_t MinMicrophoneVolume(uint32_t& minVolume) const;  // NOLINT
-  int32_t MicrophoneVolumeStepSize(
-      uint16_t& stepSize) const;  // NOLINT
-
-  // Microphone mute control
-  int32_t MicrophoneMuteIsAvailable(bool& available);  // NOLINT
-  int32_t SetMicrophoneMute(bool enable);
-  int32_t MicrophoneMute(bool& enabled) const;  // NOLINT
-
-  // Microphone boost control
-  int32_t MicrophoneBoostIsAvailable(bool& available);  // NOLINT
-  int32_t SetMicrophoneBoost(bool enable);
-  int32_t MicrophoneBoost(bool& enabled) const;  // NOLINT
-
-  // Stereo support
-  int32_t StereoRecordingIsAvailable(bool& available);  // NOLINT
-  int32_t SetStereoRecording(bool enable);
-  int32_t StereoRecording(bool& enabled) const;  // NOLINT
-
-  // Delay information and control
-  int32_t RecordingDelay(uint16_t& delayMS) const;  // NOLINT
-
-  bool RecordingWarning() const;
-  bool RecordingError() const;
-  void ClearRecordingWarning();
-  void ClearRecordingError();
-
-  // Attach audio buffer
   void AttachAudioBuffer(AudioDeviceBuffer* audioBuffer);
 
-  int32_t SetRecordingSampleRate(const uint32_t samplesPerSec);
-
-  static const uint32_t N_REC_SAMPLES_PER_SEC = 16000; // Default is 16 kHz
-  static const uint32_t N_REC_CHANNELS = 1; // default is mono recording
-  static const uint32_t REC_BUF_SIZE_IN_SAMPLES = 480; // Handle max 10 ms @ 48 kHz
+  bool BuiltInAECIsAvailable() const;
+  int32_t EnableBuiltInAEC(bool enable);
 
  private:
-  void Lock() EXCLUSIVE_LOCK_FUNCTION(_critSect) {
-    _critSect.Enter();
-  }
-  void UnLock() UNLOCK_FUNCTION(_critSect) {
-    _critSect.Leave();
-  }
+  // Called from Java side so we can cache the address of the Java-manged
+  // |byte_buffer| in |direct_buffer_address_|. The size of the buffer
+  // is also stored in |direct_buffer_capacity_in_bytes_|.
+  // This method will be called by the WebRtcAudioRecord constructor, i.e.,
+  // on the same thread that this object is created on.
+  static void JNICALL CacheDirectBufferAddress(
+    JNIEnv* env, jobject obj, jobject byte_buffer, jlong nativeAudioRecord);
+  void OnCacheDirectBufferAddress(JNIEnv* env, jobject byte_buffer);
 
-  int32_t InitJavaResources();
-  int32_t InitSampleRate();
+  // Called periodically by the Java based WebRtcAudioRecord object when
+  // recording has started. Each call indicates that there are |length| new
+  // bytes recorded in the memory area |direct_buffer_address_| and it is
+  // now time to send these to the consumer.
+  // This method is called on a high-priority thread from Java. The name of
+  // the thread is 'AudioRecordThread'.
+  static void JNICALL DataIsRecorded(
+    JNIEnv* env, jobject obj, jint length, jlong nativeAudioRecord);
+  void OnDataIsRecorded(int length);
 
-  static bool RecThreadFunc(void*);
-  bool RecThreadProcess();
+  // Returns true if SetAndroidAudioDeviceObjects() has been called
+  // successfully.
+  bool HasDeviceObjects();
 
-  // TODO(leozwang): Android holds only one JVM, all these jni handling
-  // will be consolidated into a single place to make it consistant and
-  // reliable. Chromium has a good example at base/android.
-  static JavaVM* globalJvm;
-  static JNIEnv* globalJNIEnv;
-  static jobject globalContext;
-  static jclass globalScClass;
+  // Called from the constructor. Defines the |j_audio_record_| member.
+  void CreateJavaInstance();
 
-  JavaVM* _javaVM; // denotes a Java VM
-  JNIEnv* _jniEnvRec; // The JNI env for recording thread
-  jclass _javaScClass; // AudioDeviceAndroid class
-  jobject _javaScObj; // AudioDeviceAndroid object
-  jobject _javaRecBuffer;
-  void* _javaDirectRecBuffer; // Direct buffer pointer to rec buffer
-  jmethodID _javaMidRecAudio; // Method ID of rec in AudioDeviceAndroid
+  // Stores thread ID in constructor.
+  // We can then use ThreadChecker::CalledOnValidThread() to ensure that
+  // other methods are called from the same thread.
+  // Currently only does DCHECK(thread_checker_.CalledOnValidThread()).
+  rtc::ThreadChecker thread_checker_;
 
-  AudioDeviceBuffer* _ptrAudioBuffer;
-  CriticalSectionWrapper& _critSect;
-  int32_t _id;
-  PlayoutDelayProvider* _delay_provider;
-  bool _initialized;
+  // Stores thread ID in first call to OnDataIsRecorded() from high-priority
+  // thread in Java. Detached during construction of this object.
+  rtc::ThreadChecker thread_checker_java_;
 
-  EventWrapper& _timeEventRec;
-  EventWrapper& _recStartStopEvent;
-  ThreadWrapper* _ptrThreadRec;
-  uint32_t _recThreadID;
-  bool _recThreadIsInitialized;
-  bool _shutdownRecThread;
+  // Returns the current playout delay.
+  // TODO(henrika): this value is currently fixed since initial tests have
+  // shown that the estimated delay varies very little over time. It might be
+  // possible to make improvements in this area.
+  PlayoutDelayProvider* delay_provider_;
 
-  int8_t _recBuffer[2 * REC_BUF_SIZE_IN_SAMPLES];
-  bool _recordingDeviceIsSpecified;
+  // Contains audio parameters provided to this class at construction by the
+  // AudioManager.
+  const AudioParameters audio_parameters_;
 
-  bool _recording;
-  bool _recIsInitialized;
-  bool _micIsInitialized;
+  // The Java WebRtcAudioRecord instance.
+  jobject j_audio_record_;
 
-  bool _startRec;
+  // Cached copy of address to direct audio buffer owned by |j_audio_record_|.
+  void* direct_buffer_address_;
 
-  uint16_t _recWarning;
-  uint16_t _recError;
+  // Number of bytes in the direct audio buffer owned by |j_audio_record_|.
+  int direct_buffer_capacity_in_bytes_;
 
-  uint16_t _delayRecording;
+  // Number audio frames per audio buffer. Each audio frame corresponds to
+  // one sample of PCM mono data at 16 bits per sample. Hence, each audio
+  // frame contains 2 bytes (given that the Java layer only supports mono).
+  // Example: 480 for 48000 Hz or 441 for 44100 Hz.
+  int frames_per_buffer_;
 
-  bool _AGC;
+  bool initialized_;
 
-  uint16_t _samplingFreqIn; // Sampling frequency for Mic
-  int _recAudioSource;
+  bool recording_;
 
+  // Raw pointer handle provided to us in AttachAudioBuffer(). Owned by the
+  // AudioDeviceModuleImpl class and called by AudioDeviceModuleImpl::Create().
+  AudioDeviceBuffer* audio_device_buffer_;
+
+  // Contains a delay estimate from the playout side given by |delay_provider_|.
+  int playout_delay_in_milliseconds_;
 };
 
 }  // namespace webrtc

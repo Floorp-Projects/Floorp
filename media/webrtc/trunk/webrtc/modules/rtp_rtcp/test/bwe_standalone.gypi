@@ -15,7 +15,7 @@
         'matlab_plotting',
         'rtp_rtcp',
         'udp_transport',
-        '<(webrtc_root)/system_wrappers/source/system_wrappers.gyp:system_wrappers',
+        '<(webrtc_root)/system_wrappers/system_wrappers.gyp:system_wrappers',
       ],
       'sources': [
         'BWEStandAlone/BWEStandAlone.cc',
@@ -39,7 +39,7 @@
       'type': 'static_library',
       'dependencies': [
         'matlab_plotting_include',
-        '<(webrtc_root)/system_wrappers/source/system_wrappers.gyp:system_wrappers',
+        '<(webrtc_root)/system_wrappers/system_wrappers.gyp:system_wrappers',
       ],
       'include_dirs': [
           '/opt/matlab2010a/extern/include',

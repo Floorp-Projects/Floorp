@@ -19,7 +19,7 @@ SharedExclusiveLock::SharedExclusiveLock()
 
 void SharedExclusiveLock::LockExclusive() {
   cs_exclusive_.Enter();
-  shared_count_is_zero_.Wait(rtc::kForever);
+  shared_count_is_zero_.Wait(Event::kForever);
 }
 
 void SharedExclusiveLock::UnlockExclusive() {

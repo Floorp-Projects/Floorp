@@ -20,6 +20,7 @@
 
 #include "webrtc/common_types.h"
 #include "webrtc/common_video/interface/i420_video_frame.h"
+#include "webrtc/common_video/rotation.h"
 
 namespace webrtc {
 
@@ -47,20 +48,6 @@ struct CaptureCapability {
   }
 };
 
-enum CaptureDeviceType {
-  Camera = 0,
-  Screen = 1,
-  Application = 2,
-  Window = 3,
-  Browser = 4
-};
-struct CaptureDeviceInfo {
-  CaptureDeviceType type;
-
-  CaptureDeviceInfo() : type(CaptureDeviceType::Camera) {}
-  CaptureDeviceInfo(CaptureDeviceType t) : type(t) {}
-};
-
 // This enumerator tells the current brightness alarm mode.
 enum Brightness {
   Normal = 0,
@@ -72,37 +59,6 @@ enum Brightness {
 enum CaptureAlarm {
   AlarmRaised = 0,
   AlarmCleared = 1
-};
-
-enum RotateCapturedFrame {
-  RotateCapturedFrame_0 = 0,
-  RotateCapturedFrame_90 = 90,
-  RotateCapturedFrame_180 = 180,
-  RotateCapturedFrame_270 = 270
-};
-
-struct ViEVideoFrameI420 {
-  ViEVideoFrameI420() {
-    y_plane = NULL;
-    u_plane = NULL;
-    v_plane = NULL;
-    y_pitch = 0;
-    u_pitch = 0;
-    v_pitch = 0;
-    width = 0;
-    height = 0;
-  }
-
-  unsigned char* y_plane;
-  unsigned char* u_plane;
-  unsigned char* v_plane;
-
-  int y_pitch;
-  int u_pitch;
-  int v_pitch;
-
-  unsigned short width;
-  unsigned short height;
 };
 
 // This class declares an abstract interface to be used when implementing
@@ -118,22 +74,7 @@ class WEBRTC_DLLEXPORT ViEExternalCapture {
 
   // This method is called by the user to deliver a new captured frame to
   // VideoEngine.
-  // |capture_time| must be specified in the NTP time format in milliseconds.
-  virtual int IncomingFrame(unsigned char* video_frame,
-                            unsigned int video_frame_length,
-                            unsigned short width,
-                            unsigned short height,
-                            RawVideoType video_type,
-                            unsigned long long capture_time = 0) = 0;
-
-  // This method is specifically for delivering a new captured I420 frame to
-  // VideoEngine.
-  // |capture_time| must be specified in the NTP time format in milliseconds.
-  virtual int IncomingFrameI420(
-      const ViEVideoFrameI420& video_frame,
-      unsigned long long capture_time = 0) = 0;
-
-  virtual void SwapFrame(I420VideoFrame* frame) {}
+  virtual void IncomingFrame(const I420VideoFrame& frame) = 0;
 };
 
 // This class declares an abstract interface for a user defined observer. It is
@@ -217,8 +158,8 @@ class WEBRTC_DLLEXPORT ViECapture {
 
   // Rotates captured frames before encoding and sending.
   // Used on mobile devices with rotates cameras.
-  virtual int SetRotateCapturedFrames(const int capture_id,
-                                      const RotateCapturedFrame rotation) = 0;
+  virtual int SetVideoRotation(const int capture_id,
+                               const VideoRotation rotation) = 0;
 
   // This function sets the expected delay from when a video frame is captured
   // to when that frame is delivered to VideoEngine.
@@ -251,7 +192,7 @@ class WEBRTC_DLLEXPORT ViECapture {
   // order to display the frames correctly if the display is rotated in its
   // natural orientation.
   virtual int GetOrientation(const char* unique_id_utf8,
-                             RotateCapturedFrame& orientation) = 0;
+                             VideoRotation& orientation) = 0;
 
   // Enables brightness alarm detection and the brightness alarm callback.
   virtual int EnableBrightnessAlarm(const int capture_id,

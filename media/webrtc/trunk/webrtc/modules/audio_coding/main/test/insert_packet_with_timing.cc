@@ -12,13 +12,13 @@
 
 #include "gflags/gflags.h"
 #include "testing/gtest/include/gtest/gtest.h"
+#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/common_types.h"
 #include "webrtc/modules/audio_coding/main/interface/audio_coding_module.h"
 #include "webrtc/modules/audio_coding/main/test/Channel.h"
 #include "webrtc/modules/audio_coding/main/test/PCMFile.h"
 #include "webrtc/modules/interface/module_common_types.h"
 #include "webrtc/system_wrappers/interface/clock.h"
-#include "webrtc/system_wrappers/interface/scoped_ptr.h"
 #include "webrtc/test/testsupport/fileutils.h"
 
 // Codec.
@@ -164,7 +164,7 @@ class InsertPacketWithTiming {
       // Push in just enough audio.
       for (int n = 0; n < num_10ms_in_codec_frame_; n++) {
         pcm_in_fid_.Read10MsData(frame_);
-        EXPECT_EQ(0, send_acm_->Add10MsData(frame_));
+        EXPECT_GE(send_acm_->Add10MsData(frame_), 0);
       }
 
       // Set the parameters for the packet to be pushed in receiver ACM right
@@ -178,10 +178,6 @@ class InsertPacketWithTiming {
         channel_->set_num_packets_to_drop(1);
         lost = true;
       }
-
-      // Process audio in send ACM, this should result in generation of a
-      // packet.
-      EXPECT_GT(send_acm_->Process(), 0);
 
       if (FLAGS_verbose) {
         if (!lost) {
@@ -219,8 +215,8 @@ class InsertPacketWithTiming {
 
   // Jitter buffer delay.
   void Delay(int* optimal_delay, int* current_delay) {
-    ACMNetworkStatistics statistics;
-    receive_acm_->NetworkStatistics(&statistics);
+    NetworkStatistics statistics;
+    receive_acm_->GetNetworkStatistics(&statistics);
     *optimal_delay = statistics.preferredBufferSize;
     *current_delay = statistics.currentBufferSize;
   }
@@ -249,8 +245,8 @@ class InsertPacketWithTiming {
   SimulatedClock* sender_clock_;
   SimulatedClock* receiver_clock_;
 
-  scoped_ptr<AudioCodingModule> send_acm_;
-  scoped_ptr<AudioCodingModule> receive_acm_;
+  rtc::scoped_ptr<AudioCodingModule> send_acm_;
+  rtc::scoped_ptr<AudioCodingModule> receive_acm_;
   Channel* channel_;
 
   FILE* seq_num_fid_;  // Input (text), one sequence number per line.

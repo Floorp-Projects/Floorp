@@ -20,6 +20,7 @@
 #include <openssl/crypto.h>
 #include <openssl/err.h>
 #include <openssl/rand.h>
+#include <openssl/tls1.h>
 #include <openssl/x509v3.h>
 
 #include <vector>
@@ -56,6 +57,92 @@ static SrtpCipherMapEntry SrtpCipherMap[] = {
 };
 #endif
 
+#ifndef OPENSSL_IS_BORINGSSL
+// Cipher name table. Maps internal OpenSSL cipher ids to the RFC name.
+struct SslCipherMapEntry {
+  uint32_t openssl_id;
+  const char* rfc_name;
+};
+
+#define DEFINE_CIPHER_ENTRY_SSL3(name)  {SSL3_CK_##name, "TLS_"#name}
+#define DEFINE_CIPHER_ENTRY_TLS1(name)  {TLS1_CK_##name, "TLS_"#name}
+
+// There currently is no method available to get a RFC-compliant name for a
+// cipher suite from BoringSSL, so we need to define the mapping manually here.
+// This should go away once BoringSSL supports "SSL_CIPHER_standard_name"
+// (as available in OpenSSL if compiled with tracing enabled) or a similar
+// method.
+static const SslCipherMapEntry kSslCipherMap[] = {
+  // TLS v1.0 ciphersuites from RFC2246.
+  DEFINE_CIPHER_ENTRY_SSL3(RSA_RC4_128_SHA),
+  {SSL3_CK_RSA_DES_192_CBC3_SHA,
+      "TLS_RSA_WITH_3DES_EDE_CBC_SHA"},
+
+  // AES ciphersuites from RFC3268.
+  {TLS1_CK_RSA_WITH_AES_128_SHA,
+      "TLS_RSA_WITH_AES_128_CBC_SHA"},
+  {TLS1_CK_DHE_RSA_WITH_AES_128_SHA,
+      "TLS_DHE_RSA_WITH_AES_128_CBC_SHA"},
+  {TLS1_CK_RSA_WITH_AES_256_SHA,
+      "TLS_RSA_WITH_AES_256_CBC_SHA"},
+  {TLS1_CK_DHE_RSA_WITH_AES_256_SHA,
+      "TLS_DHE_RSA_WITH_AES_256_CBC_SHA"},
+
+  // ECC ciphersuites from RFC4492.
+  DEFINE_CIPHER_ENTRY_TLS1(ECDHE_ECDSA_WITH_RC4_128_SHA),
+  {TLS1_CK_ECDHE_ECDSA_WITH_DES_192_CBC3_SHA,
+      "TLS_ECDHE_ECDSA_WITH_3DES_EDE_CBC_SHA"},
+  DEFINE_CIPHER_ENTRY_TLS1(ECDHE_ECDSA_WITH_AES_128_CBC_SHA),
+  DEFINE_CIPHER_ENTRY_TLS1(ECDHE_ECDSA_WITH_AES_256_CBC_SHA),
+
+  DEFINE_CIPHER_ENTRY_TLS1(ECDHE_RSA_WITH_RC4_128_SHA),
+  {TLS1_CK_ECDHE_RSA_WITH_DES_192_CBC3_SHA,
+      "TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA"},
+  DEFINE_CIPHER_ENTRY_TLS1(ECDHE_RSA_WITH_AES_128_CBC_SHA),
+  DEFINE_CIPHER_ENTRY_TLS1(ECDHE_RSA_WITH_AES_256_CBC_SHA),
+
+  // TLS v1.2 ciphersuites.
+  {TLS1_CK_RSA_WITH_AES_128_SHA256,
+      "TLS_RSA_WITH_AES_128_CBC_SHA256"},
+  {TLS1_CK_RSA_WITH_AES_256_SHA256,
+      "TLS_RSA_WITH_AES_256_CBC_SHA256"},
+  {TLS1_CK_DHE_RSA_WITH_AES_128_SHA256,
+      "TLS_DHE_RSA_WITH_AES_128_CBC_SHA256"},
+  {TLS1_CK_DHE_RSA_WITH_AES_256_SHA256,
+      "TLS_DHE_RSA_WITH_AES_256_CBC_SHA256"},
+
+  // TLS v1.2 GCM ciphersuites from RFC5288.
+  DEFINE_CIPHER_ENTRY_TLS1(RSA_WITH_AES_128_GCM_SHA256),
+  DEFINE_CIPHER_ENTRY_TLS1(RSA_WITH_AES_256_GCM_SHA384),
+  DEFINE_CIPHER_ENTRY_TLS1(DHE_RSA_WITH_AES_128_GCM_SHA256),
+  DEFINE_CIPHER_ENTRY_TLS1(DHE_RSA_WITH_AES_256_GCM_SHA384),
+  DEFINE_CIPHER_ENTRY_TLS1(DH_RSA_WITH_AES_128_GCM_SHA256),
+  DEFINE_CIPHER_ENTRY_TLS1(DH_RSA_WITH_AES_256_GCM_SHA384),
+
+  // ECDH HMAC based ciphersuites from RFC5289.
+  {TLS1_CK_ECDHE_ECDSA_WITH_AES_128_SHA256,
+      "TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256"},
+  {TLS1_CK_ECDHE_ECDSA_WITH_AES_256_SHA384,
+      "TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA384"},
+  {TLS1_CK_ECDHE_RSA_WITH_AES_128_SHA256,
+      "TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256"},
+  {TLS1_CK_ECDHE_RSA_WITH_AES_256_SHA384,
+      "TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384"},
+
+  // ECDH GCM based ciphersuites from RFC5289.
+  DEFINE_CIPHER_ENTRY_TLS1(ECDHE_ECDSA_WITH_AES_128_GCM_SHA256),
+  DEFINE_CIPHER_ENTRY_TLS1(ECDHE_ECDSA_WITH_AES_256_GCM_SHA384),
+  DEFINE_CIPHER_ENTRY_TLS1(ECDHE_RSA_WITH_AES_128_GCM_SHA256),
+  DEFINE_CIPHER_ENTRY_TLS1(ECDHE_RSA_WITH_AES_256_GCM_SHA384),
+
+  {0, NULL}
+};
+#endif  // #ifndef OPENSSL_IS_BORINGSSL
+
+// Default cipher used between OpenSSL/BoringSSL stream adapters.
+// This needs to be updated when the default of the SSL library changes.
+static const char kDefaultSslCipher[] = "TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA";
+
 //////////////////////////////////////////////////////////////////////
 // StreamBIO
 //////////////////////////////////////////////////////////////////////
@@ -67,6 +154,7 @@ static long stream_ctrl(BIO* h, int cmd, long arg1, void* arg2);
 static int stream_new(BIO* h);
 static int stream_free(BIO* data);
 
+// TODO(davidben): This should be const once BoringSSL is assumed.
 static BIO_METHOD methods_stream = {
   BIO_TYPE_BIO,
   "stream",
@@ -221,6 +309,45 @@ bool OpenSSLStreamAdapter::SetPeerCertificateDigest(const std::string
   return true;
 }
 
+#ifndef OPENSSL_IS_BORINGSSL
+const char* OpenSSLStreamAdapter::GetRfcSslCipherName(
+    const SSL_CIPHER* cipher) {
+  ASSERT(cipher != NULL);
+  for (const SslCipherMapEntry* entry = kSslCipherMap; entry->rfc_name;
+       ++entry) {
+    if (cipher->id == entry->openssl_id) {
+      return entry->rfc_name;
+    }
+  }
+  return NULL;
+}
+#endif
+
+bool OpenSSLStreamAdapter::GetSslCipher(std::string* cipher) {
+  if (state_ != SSL_CONNECTED)
+    return false;
+
+  const SSL_CIPHER* current_cipher = SSL_get_current_cipher(ssl_);
+  if (current_cipher == NULL) {
+    return false;
+  }
+
+#ifdef OPENSSL_IS_BORINGSSL
+  char* cipher_name = SSL_CIPHER_get_rfc_name(current_cipher);
+#else
+  const char* cipher_name = GetRfcSslCipherName(current_cipher);
+#endif
+  if (cipher_name == NULL) {
+    return false;
+  }
+
+  *cipher = cipher_name;
+#ifdef OPENSSL_IS_BORINGSSL
+  OPENSSL_free(cipher_name);
+#endif
+  return true;
+}
+
 // Key Extractor interface
 bool OpenSSLStreamAdapter::ExportKeyingMaterial(const std::string& label,
                                                 const uint8* context,
@@ -289,7 +416,7 @@ bool OpenSSLStreamAdapter::GetDtlsSrtpCipher(std::string* cipher) {
   if (state_ != SSL_CONNECTED)
     return false;
 
-  SRTP_PROTECTION_PROFILE *srtp_profile =
+  const SRTP_PROTECTION_PROFILE *srtp_profile =
       SSL_get_selected_srtp_profile(ssl_);
 
   if (!srtp_profile)
@@ -874,6 +1001,10 @@ bool OpenSSLStreamAdapter::HaveExporter() {
 #else
   return false;
 #endif
+}
+
+std::string OpenSSLStreamAdapter::GetDefaultSslCipher() {
+  return kDefaultSslCipher;
 }
 
 }  // namespace rtc

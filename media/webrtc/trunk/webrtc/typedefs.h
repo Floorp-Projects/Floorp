@@ -41,90 +41,9 @@
 //#define WEBRTC_ARCH_ARMEL
 #define WEBRTC_ARCH_32_BITS
 #define WEBRTC_ARCH_LITTLE_ENDIAN
-#elif defined(__powerpc64__)
-#define WEBRTC_ARCH_PPC64 1
-#define WEBRTC_ARCH_64_BITS 1
-#ifdef __LITTLE_ENDIAN__
+#elif defined(__MIPSEL__)
+#define WEBRTC_ARCH_32_BITS
 #define WEBRTC_ARCH_LITTLE_ENDIAN
-#define WEBRTC_LITTLE_ENDIAN
-#else
-#define WEBRTC_ARCH_BIG_ENDIAN
-#define WEBRTC_BIG_ENDIAN
-#endif
-#elif defined(__ppc__) || defined(__powerpc__)
-#define WEBRTC_ARCH_PPC 1
-#define WEBRTC_ARCH_32_BITS 1
-#ifdef __LITTLE_ENDIAN__
-#define WEBRTC_ARCH_LITTLE_ENDIAN
-#define WEBRTC_LITTLE_ENDIAN
-#else
-#define WEBRTC_ARCH_BIG_ENDIAN
-#define WEBRTC_BIG_ENDIAN
-#endif
-#elif defined(__sparc64__)
-#define WEBRTC_ARCH_SPARC 1
-#define WEBRTC_ARCH_64_BITS 1
-#define WEBRTC_ARCH_BIG_ENDIAN
-#define WEBRTC_BIG_ENDIAN
-#elif defined(__sparc__)
-#define WEBRTC_ARCH_SPARC 1
-#define WEBRTC_ARCH_32_BITS 1
-#define WEBRTC_ARCH_BIG_ENDIAN
-#define WEBRTC_BIG_ENDIAN
-#elif defined(__mips__)
-#define WEBRTC_ARCH_MIPS 1
-#if defined(_ABI64) && _MIPS_SIM == _ABI64
-#define WEBRTC_ARCH_64_BITS 1
-#else
-#define WEBRTC_ARCH_32_BITS 1
-#endif
-#if defined(__MIPSEB__)
-#define WEBRTC_ARCH_BIG_ENDIAN
-#define WEBRTC_BIG_ENDIAN
-#else
-#define WEBRTC_ARCH_LITTLE_ENDIAN
-#define WEBRTC_LITTLE_ENDIAN
-#endif
-#elif defined(__hppa__)
-#define WEBRTC_ARCH_HPPA 1
-#define WEBRTC_ARCH_32_BITS 1
-#define WEBRTC_ARCH_BIG_ENDIAN
-#define WEBRTC_BIG_ENDIAN
-#elif defined(__ia64__)
-#define WEBRTC_ARCH_IA64 1
-#define WEBRTC_ARCH_64_BITS 1
-#define WEBRTC_ARCH_LITTLE_ENDIAN
-#define WEBRTC_LITTLE_ENDIAN
-#elif defined(__s390x__)
-#define WEBRTC_ARCH_S390X 1
-#define WEBRTC_ARCH_64_BITS 1
-#define WEBRTC_ARCH_BIG_ENDIAN
-#define WEBRTC_BIG_ENDIAN
-#elif defined(__s390__)
-#define WEBRTC_ARCH_S390 1
-#define WEBRTC_ARCH_32_BITS 1
-#define WEBRTC_ARCH_BIG_ENDIAN
-#define WEBRTC_BIG_ENDIAN
-#elif defined(__aarch64__)
-#define WEBRTC_ARCH_AARCH64 1
-#define WEBRTC_ARCH_64_BITS 1
-#if defined(__AARCH64EL__)
-#define WEBRTC_ARCH_LITTLE_ENDIAN
-#define WEBRTC_LITTLE_ENDIAN
-#elif defined(__AARCH64EB__)
-#define WEBRTC_ARCH_BIG_ENDIAN
-#define WEBRTC_BIG_ENDIAN
-#endif
-#elif defined(__alpha__)
-#define WEBRTC_ARCH_ALPHA 1
-#define WEBRTC_ARCH_64_BITS 1
-#define WEBRTC_ARCH_LITTLE_ENDIAN
-#define WEBRTC_LITTLE_ENDIAN
-#elif defined(__avr32__)
-#define WEBRTC_ARCH_AVR32 1
-#define WEBRTC_ARCH_32_BITS 1
-#define WEBRTC_ARCH_BIG_ENDIAN
-#define WEBRTC_BIG_ENDIAN
 #elif defined(__pnacl__)
 #define WEBRTC_ARCH_32_BITS
 #define WEBRTC_ARCH_LITTLE_ENDIAN
@@ -155,28 +74,6 @@ typedef unsigned int        uint32_t;
 typedef unsigned __int64    uint64_t;
 #endif
 
-// Borrowed from Chromium's base/compiler_specific.h.
-// Annotate a virtual method indicating it must be overriding a virtual
-// method in the parent class.
-// Use like:
-//   virtual void foo() OVERRIDE;
-#if defined(_MSC_VER)
-#define OVERRIDE override
-#elif defined(__clang__)
-// Clang defaults to C++03 and warns about using override. Squelch that.
-// Intentionally no push/pop here so all users of OVERRIDE ignore the warning
-// too. This is like passing -Wno-c++11-extensions, except that GCC won't die
-// (because it won't see this pragma).
-#pragma clang diagnostic ignored "-Wc++11-extensions"
-#define OVERRIDE override
-#elif defined(__GNUC__) && __cplusplus >= 201103 && \
-    (__GNUC__ * 10000 + __GNUC_MINOR__ * 100) >= 40700
-// GCC 4.7 supports explicit virtual overrides when C++11 support is enabled.
-#define OVERRIDE override
-#else
-#define OVERRIDE
-#endif
-
 // Annotate a function indicating the caller must examine the return value.
 // Use like:
 //   int foo() WARN_UNUSED_RESULT;
@@ -191,13 +88,23 @@ typedef unsigned __int64    uint64_t;
 #endif  // WARN_UNUSED_RESULT
 
 // Put after a variable that might not be used, to prevent compiler warnings:
-//   int result UNUSED = DoSomething();
+//   int result ATTRIBUTE_UNUSED = DoSomething();
 //   assert(result == 17);
-#ifndef UNUSED
-#ifdef __GNUC__
-#define UNUSED __attribute__((unused))
+#ifndef ATTRIBUTE_UNUSED
+#if defined(__GNUC__) || defined(__clang__)
+#define ATTRIBUTE_UNUSED __attribute__((unused))
 #else
-#define UNUSED
+#define ATTRIBUTE_UNUSED
+#endif
+#endif
+
+// Macro to be used for switch-case fallthrough (required for enabling
+// -Wimplicit-fallthrough warning on Clang).
+#ifndef FALLTHROUGH
+#if defined(__clang__)
+#define FALLTHROUGH() [[clang::fallthrough]]
+#else
+#define FALLTHROUGH() do { } while (0)
 #endif
 #endif
 

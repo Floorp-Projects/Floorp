@@ -31,11 +31,13 @@ VideoCaptureIos::VideoCaptureIos(const int32_t capture_id)
   capability_.width = kDefaultWidth;
   capability_.height = kDefaultHeight;
   capability_.maxFPS = kDefaultFrameRate;
+  capture_device_ = nil;
 }
 
 VideoCaptureIos::~VideoCaptureIos() {
   if (is_capturing_) {
     [capture_device_ stopCapture];
+    capture_device_ = nil;
   }
 }
 

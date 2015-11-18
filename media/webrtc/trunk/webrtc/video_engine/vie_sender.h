@@ -13,9 +13,9 @@
 #ifndef WEBRTC_VIDEO_ENGINE_VIE_SENDER_H_
 #define WEBRTC_VIDEO_ENGINE_VIE_SENDER_H_
 
+#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/common_types.h"
 #include "webrtc/engine_configurations.h"
-#include "webrtc/system_wrappers/interface/scoped_ptr.h"
 #include "webrtc/typedefs.h"
 #include "webrtc/video_engine/vie_defines.h"
 
@@ -40,13 +40,13 @@ class ViESender: public Transport {
   int StopRTPDump();
 
   // Implements Transport.
-  virtual int SendPacket(int vie_id, const void* data, int len) OVERRIDE;
-  virtual int SendRTCPPacket(int vie_id, const void* data, int len) OVERRIDE;
+  int SendPacket(int vie_id, const void* data, size_t len) override;
+  int SendRTCPPacket(int vie_id, const void* data, size_t len) override;
 
  private:
   const int32_t channel_id_;
 
-  scoped_ptr<CriticalSectionWrapper> critsect_;
+  rtc::scoped_ptr<CriticalSectionWrapper> critsect_;
 
   Transport* transport_;
   RtpDump* rtp_dump_;

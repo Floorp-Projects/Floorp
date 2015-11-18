@@ -24,13 +24,13 @@ class PartitionTreeNode {
  public:
   // Create a tree node.
   PartitionTreeNode(PartitionTreeNode* parent,
-                    const int* size_vector,
-                    int num_partitions,
-                    int this_size);
+                    const size_t* size_vector,
+                    size_t num_partitions,
+                    size_t this_size);
 
   // Create a root node.
-  static PartitionTreeNode* CreateRootNode(const int* size_vector,
-                                           int num_partitions);
+  static PartitionTreeNode* CreateRootNode(const size_t* size_vector,
+                                           size_t num_partitions);
 
   ~PartitionTreeNode();
 
@@ -38,18 +38,18 @@ class PartitionTreeNode {
   // will be the actual cost associated with that solution. If not, the cost
   // will be the cost accumulated so far along the current branch (which is a
   // lower bound for any solution along the branch).
-  int Cost(int penalty);
+  int Cost(size_t penalty);
 
   // Create the two children for this node.
-  bool CreateChildren(int max_size);
+  bool CreateChildren(size_t max_size);
 
   // Get the number of packets for the configuration that this node represents.
-  int NumPackets();
+  size_t NumPackets();
 
   // Find the optimal solution given a maximum packet size and a per-packet
   // penalty. The method will be recursively called while the solver is
   // probing down the tree of nodes.
-  PartitionTreeNode* GetOptimalNode(int max_size, int penalty);
+  PartitionTreeNode* GetOptimalNode(size_t max_size, size_t penalty);
 
   // Setters and getters.
   void set_max_parent_size(int size) { max_parent_size_ = size; }
@@ -57,7 +57,7 @@ class PartitionTreeNode {
   PartitionTreeNode* parent() const { return parent_; }
   PartitionTreeNode* left_child() const { return children_[kLeftChild]; }
   PartitionTreeNode* right_child() const { return children_[kRightChild]; }
-  int this_size() const { return this_size_; }
+  size_t this_size() const { return this_size_; }
   bool packet_start() const { return packet_start_; }
 
  private:
@@ -66,13 +66,14 @@ class PartitionTreeNode {
     kRightChild = 1
   };
 
+  int this_size_int() const { return static_cast<int>(this_size_); }
   void set_packet_start(bool value) { packet_start_ = value; }
 
   PartitionTreeNode* parent_;
   PartitionTreeNode* children_[2];
-  int this_size_;
-  const int* size_vector_;
-  int num_partitions_;
+  size_t this_size_;
+  const size_t* size_vector_;
+  size_t num_partitions_;
   int max_parent_size_;
   int min_parent_size_;
   bool packet_start_;
@@ -84,13 +85,14 @@ class PartitionTreeNode {
 // the maximum packet size.
 class Vp8PartitionAggregator {
  public:
-  typedef std::vector<int> ConfigVec;
+  typedef std::vector<size_t> ConfigVec;
 
   // Constructor. All partitions in the fragmentation header from index
   // first_partition_idx to last_partition_idx must be smaller than
   // maximum packet size to be used in FindOptimalConfiguration.
   Vp8PartitionAggregator(const RTPFragmentationHeader& fragmentation,
-                         int first_partition_idx, int last_partition_idx);
+                         size_t first_partition_idx,
+                         size_t last_partition_idx);
 
   ~Vp8PartitionAggregator();
 
@@ -103,7 +105,7 @@ class Vp8PartitionAggregator {
   // first_partition_idx + 1), where each element indicates the packet index
   // for that partition. Thus, the output vector starts at 0 and is increasing
   // up to the number of packets - 1.
-  ConfigVec FindOptimalConfiguration(int max_size, int penalty);
+  ConfigVec FindOptimalConfiguration(size_t max_size, size_t penalty);
 
   // Calculate minimum and maximum packet sizes for a given aggregation config.
   // The extreme packet sizes of the given aggregation are compared with the
@@ -116,17 +118,17 @@ class Vp8PartitionAggregator {
   // be larger than max_payload_size. Each fragment comes at an overhead cost
   // of penalty bytes. If the size of the fragments fall outside the range
   // [min_size, max_size], an extra cost is inflicted.
-  static int CalcNumberOfFragments(int large_partition_size,
-                                   int max_payload_size,
-                                   int penalty,
-                                   int min_size,
-                                   int max_size);
+  static size_t CalcNumberOfFragments(size_t large_partition_size,
+                                      size_t max_payload_size,
+                                      size_t penalty,
+                                      int min_size,
+                                      int max_size);
 
  private:
   PartitionTreeNode* root_;
   size_t num_partitions_;
-  int* size_vector_;
-  int largest_partition_size_;
+  size_t* size_vector_;
+  size_t largest_partition_size_;
 
   DISALLOW_COPY_AND_ASSIGN(Vp8PartitionAggregator);
 };

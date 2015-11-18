@@ -88,7 +88,7 @@ class RtpPlayerInterface {
 
 RtpPlayerInterface* Create(const std::string& inputFilename,
     PayloadSinkFactoryInterface* payloadSinkFactory, Clock* clock,
-    const PayloadTypes& payload_types, float lossRate, uint32_t rttMs,
+    const PayloadTypes& payload_types, float lossRate, int64_t rttMs,
     bool reordering);
 
 }  // namespace rtpplayer

@@ -16,6 +16,8 @@
 
 #include <sstream>
 
+namespace rtc {
+
 bool GetStringFromJson(const Json::Value& in, std::string* out) {
   if (!in.isString()) {
     std::ostringstream s;
@@ -294,3 +296,5 @@ std::string JsonValueToString(const Json::Value& json) {
   std::string value = w.write(json);
   return value.substr(0, value.size() - 1);  // trim trailing newline
 }
+
+}  // namespace rtc

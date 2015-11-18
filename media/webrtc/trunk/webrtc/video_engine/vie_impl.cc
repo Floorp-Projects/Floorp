@@ -14,11 +14,6 @@
 #include "webrtc/system_wrappers/interface/logging.h"
 #include "webrtc/system_wrappers/interface/trace.h"
 
-#ifdef WEBRTC_ANDROID
-#include "webrtc/modules/video_capture/include/video_capture_factory.h"
-#include "webrtc/modules/video_render/include/video_render.h"
-#endif
-
 namespace webrtc {
 
 enum { kModuleId = 0 };
@@ -138,26 +133,5 @@ int VideoEngine::SetTraceCallback(TraceCallback* callback) {
   LOG_F(LS_INFO);
   return Trace::SetTraceCallback(callback);
 }
-
-#if defined(ANDROID) && !defined(WEBRTC_CHROMIUM_BUILD) && !defined(WEBRTC_GONK)
-int VideoEngine::SetAndroidObjects(JavaVM* javaVM) {
-  WEBRTC_TRACE(kTraceApiCall, kTraceVideo, kModuleId,
-               "SetAndroidObjects()");
-
-  if (SetCaptureAndroidVM(javaVM) != 0) {
-    WEBRTC_TRACE(kTraceError, kTraceVideo, kModuleId,
-                 "Could not set capture Android VM");
-    return -1;
-  }
-#ifdef WEBRTC_INCLUDE_INTERNAL_VIDEO_RENDER
-  if (SetRenderAndroidVM(javaVM) != 0) {
-    WEBRTC_TRACE(kTraceError, kTraceVideo, kModuleId,
-                 "Could not set render Android VM");
-    return -1;
-  }
-#endif
-  return 0;
-}
-#endif
 
 }  // namespace webrtc

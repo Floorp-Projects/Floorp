@@ -11,23 +11,20 @@
 #include <string.h>
 
 #include "webrtc/modules/interface/module_common_types.h"
+#include "webrtc/modules/rtp_rtcp/source/byte_io.h"
 #include "webrtc/modules/rtp_rtcp/source/rtp_format_h264.h"
-#include "webrtc/modules/rtp_rtcp/source/rtp_utility.h"
-#include "webrtc/system_wrappers/interface/trace.h"
 
 namespace webrtc {
 namespace {
 
-enum Nalu { // 0-23 from H.264, 24-31 from RFC 6184
-  kSlice = 1, // I/P/B slice
-  kIdr = 5, // IDR slice
-  kSei = 6, // Supplementary Enhancement Info
-  kSeiRecPt = 6, // Recovery Point SEI Payload
-  kSps = 7, // Sequence Parameter Set
-  kPps = 8, // Picture Parameter Set
-  kPrefix = 14, // Prefix
-  kStapA = 24, // Single-Time Aggregation Packet Type A
-  kFuA = 28 // Fragmentation Unit Type A
+enum Nalu {
+  kSlice = 1,
+  kIdr = 5,
+  kSei = 6,
+  kSps = 7,
+  kPps = 8,
+  kStapA = 24,
+  kFuA = 28
 };
 
 static const size_t kNalHeaderSize = 1;
@@ -53,38 +50,14 @@ void ParseSingleNalu(RtpDepacketizer::ParsedPayload* parsed_payload,
   h264_header->stap_a = false;
 
   uint8_t nal_type = payload_data[0] & kTypeMask;
-  size_t offset = 0;
   if (nal_type == kStapA) {
-    offset = 3;
-    if (offset >= payload_data_length) {
-      return; // XXX malformed
-    }
-    nal_type = payload_data[offset] & kTypeMask;
+    nal_type = payload_data[3] & kTypeMask;
     h264_header->stap_a = true;
   }
 
-  // key frames start with SPS, PPS, IDR, or Recovery Point SEI
-  // Recovery Point SEI's are used in AIR and GDR refreshes, which don't
-  // send large iframes, and instead use forms of incremental/continuous refresh.
   switch (nal_type) {
-    case kSei: // check if it is a Recovery Point SEI (aka GDR)
-      if (offset+1 >= payload_data_length) {
-        return; // XXX malformed
-      }
-      if (payload_data[offset+1] != kSeiRecPt) {
-        parsed_payload->frame_type = kVideoFrameDelta;
-        break; // some other form of SEI - not a keyframe
-      }
-      // else fall through since GDR is like IDR
     case kSps:
     case kPps:
-      // These are always combined with other packets with the same timestamp...
-      // XXX To support 'solitary' SPS/PPS/etc, either fix the jitter buffer to
-      // accept multiple sessions with the same timestamp, or pass marker info
-      // down into here (SPS/PPS as a pair without an kIdr NALU would still be
-      // painful, but might work).
-      h264_header->single_nalu = false;
-      // fall through...
     case kIdr:
       parsed_payload->frame_type = kVideoFrameKey;
       break;
@@ -267,7 +240,7 @@ void RtpPacketizerH264::NextAggregatePacket(uint8_t* buffer,
   *bytes_to_send += kNalHeaderSize;
   while (packet.aggregated) {
     // Add NAL unit length field.
-    RtpUtility::AssignUWord16ToBuffer(&buffer[index], packet.size);
+    ByteWriter<uint16_t>::WriteBigEndian(&buffer[index], packet.size);
     index += kLengthFieldSize;
     *bytes_to_send += kLengthFieldSize;
     // Add NAL unit.

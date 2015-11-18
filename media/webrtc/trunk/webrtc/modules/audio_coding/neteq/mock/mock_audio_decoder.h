@@ -11,7 +11,7 @@
 #ifndef WEBRTC_MODULES_AUDIO_CODING_NETEQ_MOCK_MOCK_AUDIO_DECODER_H_
 #define WEBRTC_MODULES_AUDIO_CODING_NETEQ_MOCK_MOCK_AUDIO_DECODER_H_
 
-#include "webrtc/modules/audio_coding/neteq/interface/audio_decoder.h"
+#include "webrtc/modules/audio_coding/codecs/audio_decoder.h"
 
 #include "testing/gmock/include/gmock/gmock.h"
 
@@ -22,14 +22,16 @@ class MockAudioDecoder : public AudioDecoder {
   MockAudioDecoder() {}
   virtual ~MockAudioDecoder() { Die(); }
   MOCK_METHOD0(Die, void());
-  MOCK_METHOD4(Decode, int(const uint8_t*, size_t, int16_t*,
-                           AudioDecoder::SpeechType*));
+  MOCK_METHOD6(
+      Decode,
+      int(const uint8_t*, size_t, int, size_t, int16_t*, SpeechType*));
   MOCK_CONST_METHOD0(HasDecodePlc, bool());
   MOCK_METHOD2(DecodePlc, int(int, int16_t*));
   MOCK_METHOD0(Init, int());
   MOCK_METHOD5(IncomingPacket, int(const uint8_t*, size_t, uint16_t, uint32_t,
                                    uint32_t));
   MOCK_METHOD0(ErrorCode, int());
+  MOCK_CONST_METHOD0(Channels, size_t());
   MOCK_CONST_METHOD0(codec_type, NetEqDecoder());
   MOCK_METHOD1(CodecSupported, bool(NetEqDecoder));
 };

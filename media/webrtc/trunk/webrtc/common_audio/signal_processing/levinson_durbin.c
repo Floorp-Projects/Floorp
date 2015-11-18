@@ -19,7 +19,7 @@
 
 #define SPL_LEVINSON_MAXORDER 20
 
-int16_t WebRtcSpl_LevinsonDurbin(int32_t *R, int16_t *A, int16_t *K,
+int16_t WebRtcSpl_LevinsonDurbin(const int32_t* R, int16_t* A, int16_t* K,
                                  int16_t order)
 {
     int16_t i, j;

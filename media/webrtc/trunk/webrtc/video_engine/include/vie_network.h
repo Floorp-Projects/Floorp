@@ -47,6 +47,11 @@ class WEBRTC_DLLEXPORT ViENetwork {
   // for all sub-API:s before the VideoEngine object can be safely deleted.
   virtual int Release() = 0;
 
+  virtual void SetBitrateConfig(int video_channel,
+                                int min_bitrate_bps,
+                                int start_bitrate_bps,
+                                int max_bitrate_bps) = 0;
+
   // Inform the engine about if the network adapter is currently transmitting
   // packets or not.
   virtual void SetNetworkTransmissionState(const int video_channel,
@@ -65,14 +70,14 @@ class WEBRTC_DLLEXPORT ViENetwork {
   // the RTP header and payload.
   virtual int ReceivedRTPPacket(const int video_channel,
                                 const void* data,
-                                const int length,
+                                const size_t length,
                                 const PacketTime& packet_time) = 0;
 
   // When using external transport for a channel, received RTCP packets should
   // be passed to VideoEngine using this function.
   virtual int ReceivedRTCPPacket(const int video_channel,
                                  const void* data,
-                                 const int length) = 0;
+                                 const size_t length) = 0;
 
   // This function sets the Maximum Transition Unit (MTU) for a channel. The
   // RTP packet will be packetized based on this MTU to optimize performance
@@ -82,15 +87,8 @@ class WEBRTC_DLLEXPORT ViENetwork {
   // Forward (audio) packet to bandwidth estimator for the given video channel,
   // for aggregated audio+video BWE.
   virtual int ReceivedBWEPacket(const int video_channel,
-      int64_t arrival_time_ms, int payload_size, const RTPHeader& header) {
+      int64_t arrival_time_ms, size_t payload_size, const RTPHeader& header) {
     return 0;
-  }
-
-  // TODO(holmer): Remove the default implementation when this has been fixed
-  // in fakewebrtcvideoengine.cc.
-  virtual bool SetBandwidthEstimationConfig(int video_channel,
-                                            const webrtc::Config& config) {
-    return false;
   }
 
  protected:

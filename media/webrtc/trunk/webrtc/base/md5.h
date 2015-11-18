@@ -26,9 +26,6 @@
 
 namespace rtc {
 
-// Canonical name for a MD5 context structure, used in many crypto libs.
-typedef struct MD5Context MD5_CTX;
-
 struct MD5Context {
   uint32 buf[4];
   uint32 bits[2];

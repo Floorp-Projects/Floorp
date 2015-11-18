@@ -16,30 +16,30 @@ namespace rtc {
 
 class SymmetricNAT : public NAT {
 public:
-  bool IsSymmetric() { return true; }
-  bool FiltersIP() { return true; }
-  bool FiltersPort() { return true; }
+ bool IsSymmetric() override { return true; }
+ bool FiltersIP() override { return true; }
+ bool FiltersPort() override { return true; }
 };
 
 class OpenConeNAT : public NAT {
 public:
-  bool IsSymmetric() { return false; }
-  bool FiltersIP() { return false; }
-  bool FiltersPort() { return false; }
+ bool IsSymmetric() override { return false; }
+ bool FiltersIP() override { return false; }
+ bool FiltersPort() override { return false; }
 };
 
 class AddressRestrictedNAT : public NAT {
 public:
-  bool IsSymmetric() { return false; }
-  bool FiltersIP() { return true; }
-  bool FiltersPort() { return false; }
+ bool IsSymmetric() override { return false; }
+ bool FiltersIP() override { return true; }
+ bool FiltersPort() override { return false; }
 };
 
 class PortRestrictedNAT : public NAT {
 public:
-  bool IsSymmetric() { return false; }
-  bool FiltersIP() { return true; }
-  bool FiltersPort() { return true; }
+ bool IsSymmetric() override { return false; }
+ bool FiltersIP() override { return true; }
+ bool FiltersPort() override { return true; }
 };
 
 NAT* NAT::Create(NATType type) {

@@ -29,8 +29,9 @@ class AudioDeviceModule : public RefCountedModule {
     kWindowsCoreAudio = 2,
     kLinuxAlsaAudio = 3,
     kLinuxPulseAudio = 4,
-    kSndioAudio = 5,
-    kDummyAudio = 6
+    kAndroidJavaAudio = 5,
+    kAndroidOpenSLESAudio = 6,
+    kDummyAudio = 7
   };
 
   enum WindowsDeviceType {
@@ -183,15 +184,22 @@ class AudioDeviceModule : public RefCountedModule {
   virtual int32_t SetLoudspeakerStatus(bool enable) = 0;
   virtual int32_t GetLoudspeakerStatus(bool* enabled) const = 0;
 
-  // *Experimental - not recommended for use.*
-  // Enables the Windows Core Audio built-in AEC. Fails on other platforms.
+  // Only supported on Android.
+  // TODO(henrika): Make pure virtual after updating Chromium.
+  virtual bool BuiltInAECIsAvailable() const { return false; }
+
+  // Enables the built-in AEC. Only supported on Windows and Android.
   //
+  // For usage on Windows (requires Core Audio):
   // Must be called before InitRecording(). When enabled:
   // 1. StartPlayout() must be called before StartRecording().
   // 2. StopRecording() should be called before StopPlayout().
   //    The reverse order may cause garbage audio to be rendered or the
   //    capture side to halt until StopRecording() is called.
+  // TODO(henrika): Make pure virtual after updating Chromium.
   virtual int32_t EnableBuiltInAEC(bool enable) { return -1; }
+
+  // Don't use.
   virtual bool BuiltInAECIsEnabled() const { return false; }
 
  protected:

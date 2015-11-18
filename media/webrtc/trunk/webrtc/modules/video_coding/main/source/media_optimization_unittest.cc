@@ -30,14 +30,16 @@ class TestMediaOptimization : public ::testing::Test {
         next_timestamp_(0) {}
 
   // This method mimics what happens in VideoSender::AddVideoFrame.
-  void AddFrameAndAdvanceTime(int bitrate_bps, bool expect_frame_drop) {
-    ASSERT_GE(bitrate_bps, 0);
+  void AddFrameAndAdvanceTime(uint32_t bitrate_bps, bool expect_frame_drop) {
     bool frame_dropped = media_opt_.DropFrame();
     EXPECT_EQ(expect_frame_drop, frame_dropped);
     if (!frame_dropped) {
-      int bytes_per_frame = bitrate_bps * frame_time_ms_ / (8 * 1000);
-      ASSERT_EQ(VCM_OK, media_opt_.UpdateWithEncodedData(
-          bytes_per_frame, next_timestamp_, kVideoFrameDelta));
+      size_t bytes_per_frame = bitrate_bps * frame_time_ms_ / (8 * 1000);
+      EncodedImage encoded_image;
+      encoded_image._length = bytes_per_frame;
+      encoded_image._timeStamp = next_timestamp_;
+      encoded_image._frameType = kKeyFrame;
+      ASSERT_EQ(VCM_OK, media_opt_.UpdateWithEncodedData(encoded_image));
     }
     next_timestamp_ += frame_time_ms_ * kSampleRate / 1000;
     clock_.AdvanceTimeMilliseconds(frame_time_ms_);
@@ -54,14 +56,14 @@ TEST_F(TestMediaOptimization, VerifyMuting) {
   // Enable video suspension with these limits.
   // Suspend the video when the rate is below 50 kbps and resume when it gets
   // above 50 + 10 kbps again.
-  const int kThresholdBps = 50000;
-  const int kWindowBps = 10000;
+  const uint32_t kThresholdBps = 50000;
+  const uint32_t kWindowBps = 10000;
   media_opt_.SuspendBelowMinBitrate(kThresholdBps, kWindowBps);
 
   // The video should not be suspended from the start.
   EXPECT_FALSE(media_opt_.IsVideoSuspended());
 
-  int target_bitrate_kbps = 100;
+  uint32_t target_bitrate_kbps = 100;
   media_opt_.SetTargetRates(target_bitrate_kbps * 1000,
                             0,  // Lossrate.
                             100,

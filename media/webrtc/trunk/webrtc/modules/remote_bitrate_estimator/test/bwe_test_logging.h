@@ -99,8 +99,8 @@
 #include <string>
 
 #include "webrtc/base/constructormagic.h"
+#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/common_types.h"
-#include "webrtc/system_wrappers/interface/scoped_ptr.h"
 
 #define BWE_TEST_LOGGING_GLOBAL_CONTEXT(name) \
     do { \
@@ -212,7 +212,7 @@ class Logging {
   void PopState();
 
   static Logging g_Logging;
-  scoped_ptr<CriticalSectionWrapper> crit_sect_;
+  rtc::scoped_ptr<CriticalSectionWrapper> crit_sect_;
   ThreadMap thread_map_;
 
   DISALLOW_COPY_AND_ASSIGN(Logging);

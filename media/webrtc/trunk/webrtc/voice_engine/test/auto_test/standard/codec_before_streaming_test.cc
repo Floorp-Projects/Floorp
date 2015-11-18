@@ -47,6 +47,7 @@ TEST_F(CodecBeforeStreamingTest, GetRecPayloadTypeRecognizesISAC) {
 
 TEST_F(CodecBeforeStreamingTest, SetRecPayloadTypeCanChangeISACPayloadType) {
   strcpy(codec_instance_.plname, "ISAC");
+  codec_instance_.rate = 32000;
 
   codec_instance_.pltype = 123;
   EXPECT_EQ(0, voe_codec_->SetRecPayloadType(channel_, codec_instance_));

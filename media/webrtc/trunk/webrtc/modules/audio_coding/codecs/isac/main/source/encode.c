@@ -1004,7 +1004,7 @@ int WebRtcIsac_EncodeUb12(float* in, ISACUBEncStruct* ISACencUB_obj,
    The data needed is taken from the structure, where it was stored
    when calling the encoder. */
 
-int WebRtcIsac_EncodeStoredDataLb(const ISAC_SaveEncData_t* ISACSavedEnc_obj,
+int WebRtcIsac_EncodeStoredDataLb(const IsacSaveEncoderData* ISACSavedEnc_obj,
                                   Bitstr* ISACBitStr_obj, int BWnumber,
                                   float scale) {
   int ii;

@@ -10,97 +10,39 @@
   'variables': {
     'codecs': [
       'G711',
+      'G722',
       'PCM16B',
+      'iLBC',
+      'iSAC',
+      'iSACFix',
       'CNG',
     ],
     'neteq_defines': [],
     'conditions': [
-      ['include_g722==1', {
-        'neteq_dependencies': ['G722'],
-        'neteq_defines': ['WEBRTC_CODEC_G722',],
-      }],
-      ['include_ilbc==1', {
-        'neteq_dependencies': ['iLBC'],
-        'neteq_defines': ['WEBRTC_CODEC_ILBC',],
-      }],
-      ['include_isac==1', {
-        'neteq_dependencies': ['iSAC', 'iSACFix',],
-        'neteq_defines': ['WEBRTC_CODEC_ISAC', 'WEBRTC_CODEC_ISACFIX',],
-      }],
       ['include_opus==1', {
-        'codecs': ['webrtc_opus'],
-        'neteq_dependencies': ['webrtc_opus'],
+        'codecs': ['webrtc_opus',],
         'neteq_defines': ['WEBRTC_CODEC_OPUS',],
-        'conditions': [
-          ['build_with_mozilla==0', {
-            'neteq_dependencies': [
-              '<(DEPTH)/third_party/opus/opus.gyp:opus',
-	    ],
-	  }],
- 	],
       }],
     ],
     'neteq_dependencies': [
       '<@(codecs)',
       '<(webrtc_root)/common_audio/common_audio.gyp:common_audio',
-      '<(webrtc_root)/system_wrappers/source/system_wrappers.gyp:system_wrappers',
+      '<(webrtc_root)/system_wrappers/system_wrappers.gyp:system_wrappers',
+      'audio_decoder_interface',
     ],
-
   },
   'targets': [
     {
       'target_name': 'neteq',
       'type': 'static_library',
-      'include_dirs': [
-        '../../../../../../media/opus/celt',
-      ],
-      'direct_dependent_settings': {
-        'include_dirs': [
-          '../../../../../../media/opus/celt',
-	],
-      },
       'dependencies': [
         '<@(neteq_dependencies)',
+        '<(webrtc_root)/common.gyp:webrtc_common',
       ],
       'defines': [
         '<@(neteq_defines)',
       ],
-      'conditions': [
-        ['build_with_mozilla==0', {
-          'include_dirs': [
-            # Need Opus header files for the audio classifier.
-            '<(DEPTH)/third_party/opus/src/celt',
-            '<(DEPTH)/third_party/opus/src/src',
-          ],
-          'direct_dependent_settings': {
-            'include_dirs': [
-              # Need Opus header files for the audio classifier.
-              '<(DEPTH)/third_party/opus/src/celt',
-              '<(DEPTH)/third_party/opus/src/src',
-            ],
-          },
-          'export_dependent_settings': [
-            '<(DEPTH)/third_party/opus/opus.gyp:opus',
-          ],
-	}],
-        ['build_with_mozilla==1', {
-          'include_dirs': [
-            # Need Opus header files for the audio classifier.
-            '<(DEPTH)/../../../media/opus/celt',
-#            '<(DEPTH)/third_party/opus/src/src',
-          ],
-          'direct_dependent_settings': {
-            'include_dirs': [
-              '../../../../../../media/opus/celt',
-              # Need Opus header files for the audio classifier.
-              '<(DEPTH)/../../../media/opus/celt',
-#              '<(DEPTH)/third_party/opus/src/src',
-            ],
-          },
-        }],
-      ],
       'sources': [
-        'interface/audio_decoder.h',
         'interface/neteq.h',
         'accelerate.cc',
         'accelerate.h',
@@ -108,7 +50,6 @@
         'audio_classifier.h',
         'audio_decoder_impl.cc',
         'audio_decoder_impl.h',
-        'audio_decoder.cc',
         'audio_multi_vector.cc',
         'audio_multi_vector.h',
         'audio_vector.cc',
@@ -179,12 +120,12 @@
           'type': '<(gtest_target_type)',
           'dependencies': [
             '<@(codecs)',
+            'audio_decoder_interface',
             'neteq_unittest_tools',
             '<(DEPTH)/testing/gtest.gyp:gtest',
             '<(webrtc_root)/common_audio/common_audio.gyp:common_audio',
             '<(webrtc_root)/test/test.gyp:test_support_main',
           ],
-# FIX for include_isac/etc
           'defines': [
             'AUDIO_DECODER_UNITTEST',
             'WEBRTC_CODEC_G722',
@@ -198,8 +139,6 @@
             'audio_decoder_impl.cc',
             'audio_decoder_impl.h',
             'audio_decoder_unittest.cc',
-            'audio_decoder.cc',
-            'interface/audio_decoder.h',
           ],
           'conditions': [
             ['OS=="android"', {
@@ -215,6 +154,7 @@
           'type': 'static_library',
           'dependencies': [
             'rtp_rtcp',
+            '<(webrtc_root)/common_audio/common_audio.gyp:common_audio',
             '<(webrtc_root)/test/test.gyp:rtp_test_utils',
           ],
           'direct_dependent_settings': {
@@ -235,6 +175,7 @@
             'tools/input_audio_file.cc',
             'tools/input_audio_file.h',
             'tools/output_audio_file.h',
+            'tools/output_wav_file.h',
             'tools/packet.cc',
             'tools/packet.h',
             'tools/packet_source.h',

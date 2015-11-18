@@ -34,7 +34,7 @@ class Worker : private MessageHandler {
   Worker();
 
   // Destroys this Worker, but it must have already been stopped via StopWork().
-  virtual ~Worker();
+  ~Worker() override;
 
   // Attaches the worker to the current thread and begins processing work if not
   // already doing so.
@@ -59,7 +59,7 @@ class Worker : private MessageHandler {
 
  private:
   // Inherited from MessageHandler.
-  virtual void OnMessage(Message *msg);
+  void OnMessage(Message* msg) override;
 
   // The thread that is currently doing the work.
   Thread *worker_thread_;

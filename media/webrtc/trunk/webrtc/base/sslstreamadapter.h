@@ -119,6 +119,10 @@ class SSLStreamAdapter : public StreamAdapterInterface {
   // chain. The returned certificate is owned by the caller.
   virtual bool GetPeerCertificate(SSLCertificate** cert) const = 0;
 
+  // Retrieves the name of the cipher suite used for the connection
+  // (e.g. "TLS_RSA_WITH_AES_128_CBC_SHA").
+  virtual bool GetSslCipher(std::string* cipher);
+
   // Key Exporter interface from RFC 5705
   // Arguments are:
   // label               -- the exporter label.
@@ -136,24 +140,20 @@ class SSLStreamAdapter : public StreamAdapterInterface {
                                     size_t context_len,
                                     bool use_context,
                                     uint8* result,
-                                    size_t result_len) {
-    return false;  // Default is unsupported
-  }
-
+                                    size_t result_len);
 
   // DTLS-SRTP interface
-  virtual bool SetDtlsSrtpCiphers(const std::vector<std::string>& ciphers) {
-    return false;
-  }
-
-  virtual bool GetDtlsSrtpCipher(std::string* cipher) {
-    return false;
-  }
+  virtual bool SetDtlsSrtpCiphers(const std::vector<std::string>& ciphers);
+  virtual bool GetDtlsSrtpCipher(std::string* cipher);
 
   // Capabilities testing
   static bool HaveDtls();
   static bool HaveDtlsSrtp();
   static bool HaveExporter();
+
+  // Returns the default Ssl cipher used between streams of this class.
+  // This is used by the unit tests.
+  static std::string GetDefaultSslCipher();
 
  private:
   // If true, the server certificate need not match the configured

@@ -13,18 +13,14 @@
 
 #include <map>
 
+#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/modules/video_coding/codecs/interface/video_codec_interface.h"
 #include "webrtc/modules/video_coding/main/interface/video_coding.h"
 #include "webrtc/modules/video_coding/main/source/generic_decoder.h"
 #include "webrtc/modules/video_coding/main/source/generic_encoder.h"
-#include "webrtc/system_wrappers/interface/scoped_ptr.h"
 #include "webrtc/typedefs.h"
 
 namespace webrtc {
-
-enum VCMCodecDBProperties {
-  kDefaultPayloadSize = 1440
-};
 
 struct VCMDecoderMapItem {
  public:
@@ -32,7 +28,7 @@ struct VCMDecoderMapItem {
                     int number_of_cores,
                     bool require_key_frame);
 
-  scoped_ptr<VideoCodec> settings;
+  rtc::scoped_ptr<VideoCodec> settings;
   int number_of_cores;
   bool require_key_frame;
 };
@@ -50,7 +46,7 @@ struct VCMExtDecoderMapItem {
 
 class VCMCodecDataBase {
  public:
-  VCMCodecDataBase();
+  explicit VCMCodecDataBase(VideoEncoderRateObserver* encoder_rate_observer);
   ~VCMCodecDataBase();
 
   // Sender Side
@@ -70,7 +66,7 @@ class VCMCodecDataBase {
   // Returns true if the codec was successfully registered, false otherwise.
   bool SetSendCodec(const VideoCodec* send_codec,
                     int number_of_cores,
-                    int max_payload_size,
+                    size_t max_payload_size,
                     VCMEncodedFrameCallback* encoded_frame_callback);
 
   // Gets the current send codec. Relevant for internal codecs only.
@@ -134,29 +130,23 @@ class VCMCodecDataBase {
   VCMGenericDecoder* GetDecoder(
       uint8_t payload_type, VCMDecodedFrameCallback* decoded_frame_callback);
 
-  // Returns a deep copy of the currently active decoder.
-  VCMGenericDecoder* CreateDecoderCopy() const;
-
   // Deletes the memory of the decoder instance |decoder|. Used to delete
   // deep copies returned by CreateDecoderCopy().
   void ReleaseDecoder(VCMGenericDecoder* decoder) const;
-
-  // Creates a deep copy of |decoder| and replaces the currently used decoder
-  // with it.
-  void CopyDecoder(const VCMGenericDecoder& decoder);
 
   // Returns true if the currently active decoder supports render scheduling,
   // that is, it is able to render frames according to the render timestamp of
   // the encoded frames.
   bool SupportsRenderScheduling() const;
 
+  bool MatchesCurrentResolution(int width, int height) const;
+
  private:
   typedef std::map<uint8_t, VCMDecoderMapItem*> DecoderMap;
   typedef std::map<uint8_t, VCMExtDecoderMapItem*> ExternalDecoderMap;
 
   VCMGenericDecoder* CreateAndInitDecoder(uint8_t payload_type,
-                                          VideoCodec* new_codec,
-                                          bool* external) const;
+                                          VideoCodec* new_codec) const;
 
   // Determines whether a new codec has to be created or not.
   // Checks every setting apart from maxFramerate and startBitrate.
@@ -175,7 +165,7 @@ class VCMCodecDataBase {
       uint8_t payload_type) const;
 
   int number_of_cores_;
-  int max_payload_size_;
+  size_t max_payload_size_;
   bool periodic_key_frames_;
   bool pending_encoder_reset_;
   bool current_enc_is_external_;
@@ -184,9 +174,9 @@ class VCMCodecDataBase {
   uint8_t external_payload_type_;
   VideoEncoder* external_encoder_;
   bool internal_source_;
+  VideoEncoderRateObserver* const encoder_rate_observer_;
   VCMGenericEncoder* ptr_encoder_;
   VCMGenericDecoder* ptr_decoder_;
-  bool current_dec_is_external_;
   DecoderMap dec_map_;
   ExternalDecoderMap dec_external_map_;
 };  // VCMCodecDataBase

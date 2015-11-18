@@ -28,7 +28,7 @@
 
 
 int16_t WebRtcIsacfix_DecodeImpl(int16_t       *signal_out16,
-                                 ISACFIX_DecInst_t *ISACdec_obj,
+                                 IsacFixDecoderInstance *ISACdec_obj,
                                  int16_t       *current_framesamples)
 {
   int k;
@@ -181,7 +181,7 @@ int16_t WebRtcIsacfix_DecodeImpl(int16_t       *signal_out16,
 
     for (k = 0; k < FRAMESAMPLES/2; k++)
     {
-      Vector_Word32_1[k] = (int32_t) WEBRTC_SPL_LSHIFT_W32(WEBRTC_SPL_MUL_16_16(Vector_Word16_2[k], gainQ13), 3); // Q25
+      Vector_Word32_1[k] = (Vector_Word16_2[k] * gainQ13) << 3;  // Q25
     }
 
 
@@ -191,7 +191,7 @@ int16_t WebRtcIsacfix_DecodeImpl(int16_t       *signal_out16,
 
     /* --- Store Highpass Residual --- */
     for (k = 0; k < FRAMESAMPLES/2; k++)
-      Vector_Word32_1[k]    = WEBRTC_SPL_LSHIFT_W32(Vector_Word32_2[k], 9); // Q16 -> Q25
+      Vector_Word32_1[k] = Vector_Word32_2[k] << 9;  // Q16 -> Q25
 
     for( k = 0; k < PITCH_MAX_LAG + 10; k++ )
       (ISACdec_obj->plcstr_obj).prevHP[k] = Vector_Word32_1[FRAMESAMPLES/2 - (PITCH_MAX_LAG + 10) + k];

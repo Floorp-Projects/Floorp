@@ -29,7 +29,7 @@ class FirewallSocketServer : public SocketServer {
   FirewallSocketServer(SocketServer * server,
                        FirewallManager * manager = NULL,
                        bool should_delete_server = false);
-  virtual ~FirewallSocketServer();
+  ~FirewallSocketServer() override;
 
   SocketServer* socketserver() const { return server_; }
   void set_socketserver(SocketServer* server) {
@@ -58,21 +58,15 @@ class FirewallSocketServer : public SocketServer {
   bool Check(FirewallProtocol p,
              const SocketAddress& src, const SocketAddress& dst);
 
-  virtual Socket* CreateSocket(int type);
-  virtual Socket* CreateSocket(int family, int type);
+  Socket* CreateSocket(int type) override;
+  Socket* CreateSocket(int family, int type) override;
 
-  virtual AsyncSocket* CreateAsyncSocket(int type);
-  virtual AsyncSocket* CreateAsyncSocket(int family, int type);
+  AsyncSocket* CreateAsyncSocket(int type) override;
+  AsyncSocket* CreateAsyncSocket(int family, int type) override;
 
-  virtual void SetMessageQueue(MessageQueue* queue) {
-    server_->SetMessageQueue(queue);
-  }
-  virtual bool Wait(int cms, bool process_io) {
-    return server_->Wait(cms, process_io);
-  }
-  virtual void WakeUp() {
-    return server_->WakeUp();
-  }
+  void SetMessageQueue(MessageQueue* queue) override;
+  bool Wait(int cms, bool process_io) override;
+  void WakeUp() override;
 
   Socket * WrapSocket(Socket * sock, int type);
   AsyncSocket * WrapSocket(AsyncSocket * sock, int type);

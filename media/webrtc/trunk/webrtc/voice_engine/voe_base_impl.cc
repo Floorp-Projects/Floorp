@@ -314,12 +314,7 @@ int VoEBaseImpl::Init(AudioDeviceModule* external_adm,
 
     if (_shared->process_thread())
     {
-        if (_shared->process_thread()->Start() != 0)
-        {
-            _shared->SetLastError(VE_THREAD_ERROR, kTraceError,
-                "Init() failed to start module process thread");
-            return -1;
-        }
+        _shared->process_thread()->Start();
     }
 
     // Create an internal ADM if the user has not added an external
@@ -347,12 +342,9 @@ int VoEBaseImpl::Init(AudioDeviceModule* external_adm,
 
     // Register the ADM to the process thread, which will drive the error
     // callback mechanism
-    if (_shared->process_thread() &&
-        _shared->process_thread()->RegisterModule(_shared->audio_device()) != 0)
+    if (_shared->process_thread())
     {
-        _shared->SetLastError(VE_AUDIO_DEVICE_MODULE_ERROR, kTraceError,
-            "Init() failed to register the ADM");
-        return -1;
+        _shared->process_thread()->RegisterModule(_shared->audio_device());
     }
 
     bool available(false);
@@ -432,7 +424,7 @@ int VoEBaseImpl::Init(AudioDeviceModule* external_adm,
     }
 
     if (!audioproc) {
-      audioproc = AudioProcessing::Create(VoEId(_shared->instance_id(), -1));
+      audioproc = AudioProcessing::Create();
       if (!audioproc) {
         LOG(LS_ERROR) << "Failed to create AudioProcessing.";
         _shared->SetLastError(VE_NO_MEMORY);
@@ -787,16 +779,6 @@ int VoEBaseImpl::GetVersion(char version[1024])
     accLen += len;
     assert(accLen < kVoiceEngineVersionMaxMessageSize);
 #endif
-#ifdef WEBRTC_VOE_EXTERNAL_REC_AND_PLAYOUT
-    len = AddExternalRecAndPlayoutBuild(versionPtr);
-    if (len == -1)
-    {
-        return -1;
-    }
-    versionPtr += len;
-    accLen += len;
-    assert(accLen < kVoiceEngineVersionMaxMessageSize);
- #endif
 
     memcpy(version, versionBuf, accLen);
     version[accLen] = '\0';
@@ -838,13 +820,6 @@ int32_t VoEBaseImpl::AddVoEVersion(char* str) const
 int32_t VoEBaseImpl::AddExternalTransportBuild(char* str) const
 {
     return sprintf(str, "External transport build\n");
-}
-#endif
-
-#ifdef WEBRTC_VOE_EXTERNAL_REC_AND_PLAYOUT
-int32_t VoEBaseImpl::AddExternalRecAndPlayoutBuild(char* str) const
-{
-    return sprintf(str, "External recording and playout build\n");
 }
 #endif
 
@@ -962,18 +937,10 @@ int32_t VoEBaseImpl::TerminateInternal()
     {
         if (_shared->audio_device())
         {
-            if (_shared->process_thread()->
-                    DeRegisterModule(_shared->audio_device()) != 0)
-            {
-                _shared->SetLastError(VE_THREAD_ERROR, kTraceError,
-                    "TerminateInternal() failed to deregister ADM");
-            }
+            _shared->process_thread()->DeRegisterModule(
+                _shared->audio_device());
         }
-        if (_shared->process_thread()->Stop() != 0)
-        {
-            _shared->SetLastError(VE_THREAD_ERROR, kTraceError,
-                "TerminateInternal() failed to stop module process thread");
-        }
+        _shared->process_thread()->Stop();
     }
 
     if (_shared->audio_device())

@@ -39,7 +39,6 @@ class MockSocketManager : public UdpSocketManager {
     delete this;
   }
   MOCK_METHOD2(Init, bool(int32_t, uint8_t&));
-  MOCK_METHOD1(ChangeUniqueId, int32_t(const int32_t));
   MOCK_METHOD0(Start, bool());
   MOCK_METHOD0(Stop, bool());
   MOCK_METHOD1(AddSocket, bool(UdpSocketWrapper*));

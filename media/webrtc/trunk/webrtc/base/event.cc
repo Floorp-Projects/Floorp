@@ -20,18 +20,18 @@
 #error "Must define either WEBRTC_WIN or WEBRTC_POSIX."
 #endif
 
+#include "webrtc/base/checks.h"
+
 namespace rtc {
 
 #if defined(WEBRTC_WIN)
 
-Event::Event(bool manual_reset, bool initially_signaled)
-    : is_manual_reset_(manual_reset),
-      is_initially_signaled_(initially_signaled) {
+Event::Event(bool manual_reset, bool initially_signaled) {
   event_handle_ = ::CreateEvent(NULL,                 // Security attributes.
-                                is_manual_reset_,
-                                is_initially_signaled_,
+                                manual_reset,
+                                initially_signaled,
                                 NULL);                // Name.
-  ASSERT(event_handle_ != NULL);
+  CHECK(event_handle_);
 }
 
 Event::~Event() {
@@ -46,8 +46,8 @@ void Event::Reset() {
   ResetEvent(event_handle_);
 }
 
-bool Event::Wait(int cms) {
-  DWORD ms = (cms == kForever)? INFINITE : cms;
+bool Event::Wait(int milliseconds) {
+  DWORD ms = (milliseconds == kForever) ? INFINITE : milliseconds;
   return (WaitForSingleObject(event_handle_, ms) == WAIT_OBJECT_0);
 }
 
@@ -56,8 +56,8 @@ bool Event::Wait(int cms) {
 Event::Event(bool manual_reset, bool initially_signaled)
     : is_manual_reset_(manual_reset),
       event_status_(initially_signaled) {
-  VERIFY(pthread_mutex_init(&event_mutex_, NULL) == 0);
-  VERIFY(pthread_cond_init(&event_cond_, NULL) == 0);
+  CHECK(pthread_mutex_init(&event_mutex_, NULL) == 0);
+  CHECK(pthread_cond_init(&event_cond_, NULL) == 0);
 }
 
 Event::~Event() {
@@ -78,11 +78,11 @@ void Event::Reset() {
   pthread_mutex_unlock(&event_mutex_);
 }
 
-bool Event::Wait(int cms) {
+bool Event::Wait(int milliseconds) {
   pthread_mutex_lock(&event_mutex_);
   int error = 0;
 
-  if (cms != kForever) {
+  if (milliseconds != kForever) {
     // Converting from seconds and microseconds (1e-6) plus
     // milliseconds (1e-3) to seconds and nanoseconds (1e-9).
 
@@ -90,14 +90,14 @@ bool Event::Wait(int cms) {
 #if HAVE_PTHREAD_COND_TIMEDWAIT_RELATIVE
     // Use relative time version, which tends to be more efficient for
     // pthread implementations where provided (like on Android).
-    ts.tv_sec = cms / 1000;
-    ts.tv_nsec = (cms % 1000) * 1000000;
+    ts.tv_sec = milliseconds / 1000;
+    ts.tv_nsec = (milliseconds % 1000) * 1000000;
 #else
     struct timeval tv;
     gettimeofday(&tv, NULL);
 
-    ts.tv_sec = tv.tv_sec + (cms / 1000);
-    ts.tv_nsec = tv.tv_usec * 1000 + (cms % 1000) * 1000000;
+    ts.tv_sec = tv.tv_sec + (milliseconds / 1000);
+    ts.tv_nsec = tv.tv_usec * 1000 + (milliseconds % 1000) * 1000000;
 
     // Handle overflow.
     if (ts.tv_nsec >= 1000000000) {

@@ -12,6 +12,7 @@
 #define WEBRTC_BASE_SSLADAPTER_H_
 
 #include "webrtc/base/asyncsocket.h"
+#include "webrtc/base/sslstreamadapter.h"
 
 namespace rtc {
 
@@ -24,6 +25,9 @@ class SSLAdapter : public AsyncSocketAdapter {
 
   bool ignore_bad_cert() const { return ignore_bad_cert_; }
   void set_ignore_bad_cert(bool ignore) { ignore_bad_cert_ = ignore; }
+
+  // Do DTLS or TLS (default is TLS, if unspecified)
+  virtual void SetMode(SSLMode mode) = 0;
 
   // StartSSL returns 0 if successful.
   // If StartSSL is called while the socket is closed or connecting, the SSL

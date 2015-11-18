@@ -23,7 +23,7 @@ class TestNetworkPredictor : public ::testing::Test {
       : clock_(0),
         network_predictor_(new NetworkPredictor(&clock_)) {}
   SimulatedClock clock_;
-  scoped_ptr<NetworkPredictor> network_predictor_;
+  rtc::scoped_ptr<NetworkPredictor> network_predictor_;
 };
 
 TEST_F(TestNetworkPredictor, TestPacketLossRateFilter) {

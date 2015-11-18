@@ -56,8 +56,10 @@ class Config;
 class InStream
 {
 public:
-    virtual int Read(void *buf,int len) = 0;
-    virtual int Rewind() {return -1;}
+ // Reads |length| bytes from file to |buf|. Returns the number of bytes read
+ // or -1 on error.
+    virtual int Read(void *buf, size_t len) = 0;
+    virtual int Rewind();
     virtual ~InStream() {}
 protected:
     InStream() {}
@@ -66,8 +68,10 @@ protected:
 class OutStream
 {
 public:
-    virtual bool Write(const void *buf,int len) = 0;
-    virtual int Rewind() {return -1;}
+ // Writes |length| bytes from |buf| to file. The actual writing may happen
+ // some time later. Call Flush() to force a write.
+    virtual bool Write(const void *buf, size_t len) = 0;
+    virtual int Rewind();
     virtual ~OutStream() {}
 protected:
     OutStream() {}
@@ -137,7 +141,6 @@ enum FileFormats
 {
     kFileFormatWavFile        = 1,
     kFileFormatCompressedFile = 2,
-    kFileFormatAviFile        = 3,
     kFileFormatPreencodedFile = 4,
     kFileFormatPcm16kHzFile   = 7,
     kFileFormatPcm8kHzFile    = 8,
@@ -166,8 +169,8 @@ enum FrameType
 class Transport
 {
 public:
-    virtual int SendPacket(int channel, const void *data, int len) = 0;
-    virtual int SendRTCPPacket(int channel, const void *data, int len) = 0;
+    virtual int SendPacket(int channel, const void *data, size_t len) = 0;
+    virtual int SendRTCPPacket(int channel, const void *data, size_t len) = 0;
 
 protected:
     virtual ~Transport() {}
@@ -188,19 +191,20 @@ struct RtcpStatistics {
   uint32_t jitter;
 };
 
-// Callback, called whenever a new rtcp report block is transmitted.
 class RtcpStatisticsCallback {
  public:
   virtual ~RtcpStatisticsCallback() {}
 
   virtual void StatisticsUpdated(const RtcpStatistics& statistics,
                                  uint32_t ssrc) = 0;
+  virtual void CNameChanged(const char* cname, uint32_t ssrc) = 0;
 };
 
 // Statistics for RTCP packet types.
 struct RtcpPacketTypeCounter {
   RtcpPacketTypeCounter()
-    : nack_packets(0),
+    : first_packet_time_ms(-1),
+      nack_packets(0),
       fir_packets(0),
       pli_packets(0),
       nack_requests(0),
@@ -212,6 +216,16 @@ struct RtcpPacketTypeCounter {
     pli_packets += other.pli_packets;
     nack_requests += other.nack_requests;
     unique_nack_requests += other.unique_nack_requests;
+    if (other.first_packet_time_ms != -1 &&
+       (other.first_packet_time_ms < first_packet_time_ms ||
+        first_packet_time_ms == -1)) {
+      // Use oldest time.
+      first_packet_time_ms = other.first_packet_time_ms;
+    }
+  }
+
+  int64_t TimeSinceFirstPacketInMs(int64_t now_ms) const {
+    return (first_packet_time_ms == -1) ? -1 : (now_ms - first_packet_time_ms);
   }
 
   int UniqueNackRequestsInPercent() const {
@@ -222,42 +236,23 @@ struct RtcpPacketTypeCounter {
         (unique_nack_requests * 100.0f / nack_requests) + 0.5f);
   }
 
-  uint32_t nack_packets;          // Number of RTCP NACK packets.
-  uint32_t fir_packets;           // Number of RTCP FIR packets.
-  uint32_t pli_packets;           // Number of RTCP PLI packets.
-  uint32_t nack_requests;         // Number of NACKed RTP packets.
+  int64_t first_packet_time_ms;  // Time when first packet is sent/received.
+  uint32_t nack_packets;   // Number of RTCP NACK packets.
+  uint32_t fir_packets;    // Number of RTCP FIR packets.
+  uint32_t pli_packets;    // Number of RTCP PLI packets.
+  uint32_t nack_requests;  // Number of NACKed RTP packets.
   uint32_t unique_nack_requests;  // Number of unique NACKed RTP packets.
 };
 
-// Data usage statistics for a (rtp) stream
-struct StreamDataCounters {
-  StreamDataCounters()
-   : bytes(0),
-     header_bytes(0),
-     padding_bytes(0),
-     packets(0),
-     retransmitted_packets(0),
-     fec_packets(0) {}
-
-  // TODO(pbos): Rename bytes -> media_bytes.
-  uint32_t bytes;  // Payload bytes, excluding RTP headers and padding.
-  uint32_t header_bytes;  // Number of bytes used by RTP headers.
-  uint32_t padding_bytes;  // Number of padding bytes.
-  uint32_t packets;  // Number of packets.
-  uint32_t retransmitted_packets;  // Number of retransmitted packets.
-  uint32_t fec_packets;  // Number of redundancy packets.
-};
-
-// Callback, called whenever byte/packet counts have been updated.
-class StreamDataCountersCallback {
+class RtcpPacketTypeCounterObserver {
  public:
-  virtual ~StreamDataCountersCallback() {}
-
-  virtual void DataCountersUpdated(const StreamDataCounters& counters,
-                                   uint32_t ssrc) = 0;
+  virtual ~RtcpPacketTypeCounterObserver() {}
+  virtual void RtcpPacketTypesCounterUpdated(
+      uint32_t ssrc,
+      const RtcpPacketTypeCounter& packet_counter) = 0;
 };
 
-// Rate statistics for a stream
+// Rate statistics for a stream.
 struct BitrateStatistics {
   BitrateStatistics() : bitrate_bps(0), packet_rate(0), timestamp_ms(0) {}
 
@@ -276,13 +271,18 @@ class BitrateStatisticsObserver {
                       uint32_t ssrc) = 0;
 };
 
-// Callback, used to notify an observer whenever frame counts have been updated
+struct FrameCounts {
+  FrameCounts() : key_frames(0), delta_frames(0) {}
+  int key_frames;
+  int delta_frames;
+};
+
+// Callback, used to notify an observer whenever frame counts have been updated.
 class FrameCountObserver {
  public:
   virtual ~FrameCountObserver() {}
-  virtual void FrameCountUpdated(FrameType frame_type,
-                                 uint32_t frame_count,
-                                 const unsigned int ssrc) = 0;
+  virtual void FrameCountUpdated(const FrameCounts& frame_counts,
+                                 uint32_t ssrc) = 0;
 };
 
 // Callback, used to notify an observer whenever the send-side delay is updated.
@@ -357,14 +357,19 @@ struct NetworkStatistics           // NETEQ statistics
     uint16_t currentPacketLossRate;
     // Late loss rate; fraction between 0 and 1, scaled to Q14.
     uint16_t currentDiscardRate;
-    // fraction (of original stream) of synthesized speech inserted through
+    // fraction (of original stream) of synthesized audio inserted through
     // expansion (in Q14)
     uint16_t currentExpandRate;
+    // fraction (of original stream) of synthesized speech inserted through
+    // expansion (in Q14)
+    uint16_t currentSpeechExpandRate;
     // fraction of synthesized speech inserted through pre-emptive expansion
     // (in Q14)
     uint16_t currentPreemptiveRate;
     // fraction of data removed through acceleration (in Q14)
     uint16_t currentAccelerateRate;
+    // fraction of data coming from secondary decoding (in Q14)
+    uint16_t currentSecondaryDecodedRate;
     // clock-drift in parts-per-million (negative or positive)
     int32_t clockDriftPPM;
     // average packet waiting time in the jitter buffer (ms)
@@ -430,7 +435,7 @@ enum NsModes    // type of Noise Suppression
     kNsLowSuppression,  // lowest suppression
     kNsModerateSuppression,
     kNsHighSuppression,
-    kNsVeryHighSuppression     // highest suppression
+    kNsVeryHighSuppression,     // highest suppression
 };
 
 enum AgcModes                  // type of Automatic Gain Control
@@ -455,7 +460,7 @@ enum EcModes                   // type of Echo Control
     kEcDefault,                // platform default
     kEcConference,             // conferencing default (aggressive AEC)
     kEcAec,                    // Acoustic Echo Cancellation
-    kEcAecm                    // AEC mobile
+    kEcAecm,                   // AEC mobile
 };
 
 // AECM modes
@@ -491,8 +496,7 @@ enum AudioLayers
     kAudioWindowsWave = 1,
     kAudioWindowsCore = 2,
     kAudioLinuxAlsa = 3,
-    kAudioLinuxPulse = 4,
-    kAudioSndio = 5
+    kAudioLinuxPulse = 4
 };
 
 // TODO(henrika): to be removed.
@@ -509,7 +513,7 @@ enum NetEqModes             // NetEQ playout configurations
     kNetEqFax = 2,
     // Minimal buffer management. Inserts zeros for lost packets and during
     // buffer increases.
-    kNetEqOff = 3
+    kNetEqOff = 3,
 };
 
 // TODO(henrika): to be removed.
@@ -525,7 +529,7 @@ enum AmrMode
 {
     kRfc3267BwEfficient = 0,
     kRfc3267OctetAligned = 1,
-    kRfc3267FileStorage = 2
+    kRfc3267FileStorage = 2,
 };
 
 // ==================================================================
@@ -550,16 +554,6 @@ enum RawVideoType
     kVideoNV21     = 12,
     kVideoBGRA     = 13,
     kVideoUnknown  = 99
-};
-
-enum VideoReceiveState
-{
-  kReceiveStateInitial,            // No video decoded yet
-  kReceiveStateNormal,
-  kReceiveStatePreemptiveNACK,     // NACK sent for missing packet, no decode stall/fail yet
-  kReceiveStateWaitingKey,         // Decoding stalled, waiting for keyframe or NACK
-  kReceiveStateDecodingWithErrors, // Decoding with errors, waiting for keyframe or NACK
-  kReceiveStateNoIncoming,         // No errors, but no incoming video since last decode
 };
 
 // Video codec
@@ -638,10 +632,6 @@ struct VideoCodecVP9 {
 // H264 specific.
 struct VideoCodecH264 {
   VideoCodecProfile profile;
-  uint8_t        profile_byte;
-  uint8_t        constraints;
-  uint8_t        level;
-  uint8_t        packetizationMode; // 0 or 1
   bool           frameDroppingOn;
   int            keyFrameInterval;
   // These are NULL/0 if not externally negotiated.
@@ -709,8 +699,6 @@ struct VideoCodec {
 
   unsigned short      width;
   unsigned short      height;
-  // width & height modulo resolution_divisor must be 0
-  unsigned char       resolution_divisor;
 
   unsigned int        startBitrate;  // kilobits/sec.
   unsigned int        maxBitrate;  // kilobits/sec.
@@ -787,26 +775,6 @@ struct OverUseDetectorOptions {
   double initial_threshold;
 };
 
-enum CPULoadState {
-  kLoadRelaxed = 0,
-  kLoadNormal,
-  kLoadStressed,
-  kLoadLast,
-};
-
-class CPULoadStateObserver {
-public:
-  virtual void onLoadStateChanged(CPULoadState aNewState) = 0;
-  virtual ~CPULoadStateObserver() {};
-};
-
-class CPULoadStateCallbackInvoker {
-public:
-    virtual void AddObserver(CPULoadStateObserver* aObserver) = 0;
-    virtual void RemoveObserver(CPULoadStateObserver* aObserver) = 0;
-    virtual ~CPULoadStateCallbackInvoker() {};
-};
-
 // This structure will have the information about when packet is actually
 // received by socket.
 struct PacketTime {
@@ -824,39 +792,29 @@ struct PacketTime {
 };
 
 struct RTPHeaderExtension {
-  RTPHeaderExtension()
-      : hasTransmissionTimeOffset(false),
-        transmissionTimeOffset(0),
-        hasAbsoluteSendTime(false),
-        absoluteSendTime(0),
-        hasAudioLevel(false),
-        audioLevel(0) {}
+  RTPHeaderExtension();
 
   bool hasTransmissionTimeOffset;
   int32_t transmissionTimeOffset;
   bool hasAbsoluteSendTime;
   uint32_t absoluteSendTime;
+  bool hasTransportSequenceNumber;
+  uint16_t transportSequenceNumber;
 
   // Audio Level includes both level in dBov and voiced/unvoiced bit. See:
   // https://datatracker.ietf.org/doc/draft-lennox-avt-rtp-audio-level-exthdr/
   bool hasAudioLevel;
   uint8_t audioLevel;
+
+  // For Coordination of Video Orientation. See
+  // http://www.etsi.org/deliver/etsi_ts/126100_126199/126114/12.07.00_60/
+  // ts_126114v120700p.pdf
+  bool hasVideoRotation;
+  uint8_t videoRotation;
 };
 
 struct RTPHeader {
-  RTPHeader()
-      : markerBit(false),
-        payloadType(0),
-        sequenceNumber(0),
-        timestamp(0),
-        ssrc(0),
-        numCSRCs(0),
-        paddingLength(0),
-        headerLength(0),
-        payload_type_frequency(0),
-        extension() {
-    memset(&arrOfCSRCs, 0, sizeof(arrOfCSRCs));
-  }
+  RTPHeader();
 
   bool markerBit;
   uint8_t payloadType;
@@ -865,12 +823,86 @@ struct RTPHeader {
   uint32_t ssrc;
   uint8_t numCSRCs;
   uint32_t arrOfCSRCs[kRtpCsrcSize];
-  uint8_t paddingLength;
-  uint16_t headerLength;
+  size_t paddingLength;
+  size_t headerLength;
   int payload_type_frequency;
   RTPHeaderExtension extension;
 };
 
+struct RtpPacketCounter {
+  RtpPacketCounter()
+    : header_bytes(0),
+      payload_bytes(0),
+      padding_bytes(0),
+      packets(0) {}
+
+  void Add(const RtpPacketCounter& other) {
+    header_bytes += other.header_bytes;
+    payload_bytes += other.payload_bytes;
+    padding_bytes += other.padding_bytes;
+    packets += other.packets;
+  }
+
+  void AddPacket(size_t packet_length, const RTPHeader& header) {
+    ++packets;
+    header_bytes += header.headerLength;
+    padding_bytes += header.paddingLength;
+    payload_bytes +=
+        packet_length - (header.headerLength + header.paddingLength);
+  }
+
+  size_t TotalBytes() const {
+    return header_bytes + payload_bytes + padding_bytes;
+  }
+
+  size_t header_bytes;   // Number of bytes used by RTP headers.
+  size_t payload_bytes;  // Payload bytes, excluding RTP headers and padding.
+  size_t padding_bytes;  // Number of padding bytes.
+  uint32_t packets;      // Number of packets.
+};
+
+// Data usage statistics for a (rtp) stream.
+struct StreamDataCounters {
+  StreamDataCounters();
+
+  void Add(const StreamDataCounters& other) {
+    transmitted.Add(other.transmitted);
+    retransmitted.Add(other.retransmitted);
+    fec.Add(other.fec);
+    if (other.first_packet_time_ms != -1 &&
+       (other.first_packet_time_ms < first_packet_time_ms ||
+        first_packet_time_ms == -1)) {
+      // Use oldest time.
+      first_packet_time_ms = other.first_packet_time_ms;
+    }
+  }
+
+  int64_t TimeSinceFirstPacketInMs(int64_t now_ms) const {
+    return (first_packet_time_ms == -1) ? -1 : (now_ms - first_packet_time_ms);
+  }
+
+  // Returns the number of bytes corresponding to the actual media payload (i.e.
+  // RTP headers, padding, retransmissions and fec packets are excluded).
+  // Note this function does not have meaning for an RTX stream.
+  size_t MediaPayloadBytes() const {
+    return transmitted.payload_bytes - retransmitted.payload_bytes -
+           fec.payload_bytes;
+  }
+
+  int64_t first_packet_time_ms;  // Time when first packet is sent/received.
+  RtpPacketCounter transmitted;  // Number of transmitted packets/bytes.
+  RtpPacketCounter retransmitted;  // Number of retransmitted packets/bytes.
+  RtpPacketCounter fec;  // Number of redundancy packets/bytes.
+};
+
+// Callback, called whenever byte/packet counts have been updated.
+class StreamDataCountersCallback {
+ public:
+  virtual ~StreamDataCountersCallback() {}
+
+  virtual void DataCountersUpdated(const StreamDataCounters& counters,
+                                   uint32_t ssrc) = 0;
+};
 }  // namespace webrtc
 
 #endif  // WEBRTC_COMMON_TYPES_H_

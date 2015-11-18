@@ -46,15 +46,14 @@ namespace webrtc {
 enum { kDefaultStartBitrateKbps = 300 };
 
 enum VCMVideoProtection {
+  kProtectionNone,
   kProtectionNack,                // Both send-side and receive-side
   kProtectionNackSender,          // Send-side only
   kProtectionNackReceiver,        // Receive-side only
-  kProtectionDualDecoder,
   kProtectionFEC,
   kProtectionNackFEC,
   kProtectionKeyOnLoss,
   kProtectionKeyOnKeyLoss,
-  kProtectionPeriodicKeyFrames
 };
 
 enum VCMTemporalDecimation {
@@ -69,15 +68,11 @@ struct VCMFrameCount {
 // Callback class used for sending data ready to be packetized
 class VCMPacketizationCallback {
  public:
-  virtual int32_t SendData(
-      FrameType frameType,
-      uint8_t payloadType,
-      uint32_t timeStamp,
-      int64_t capture_time_ms,
-      const uint8_t* payloadData,
-      uint32_t payloadSize,
-      const RTPFragmentationHeader& fragmentationHeader,
-      const RTPVideoHeader* rtpVideoHdr) = 0;
+  virtual int32_t SendData(uint8_t payloadType,
+                           const EncodedImage& encoded_image,
+                           const RTPFragmentationHeader& fragmentationHeader,
+                           const RTPVideoHeader* rtpVideoHdr) = 0;
+
  protected:
   virtual ~VCMPacketizationCallback() {
   }
@@ -114,8 +109,9 @@ class VCMSendStatisticsCallback {
 // Callback class used for informing the user of the incoming bit rate and frame rate.
 class VCMReceiveStatisticsCallback {
  public:
-  virtual int32_t OnReceiveStatisticsUpdate(const uint32_t bitRate,
-                                            const uint32_t frameRate) = 0;
+  virtual void OnReceiveRatesUpdated(uint32_t bitRate, uint32_t frameRate) = 0;
+  virtual void OnDiscardedPacketsUpdated(int discarded_packets) = 0;
+  virtual void OnFrameCountsUpdated(const FrameCounts& frame_counts) = 0;
 
  protected:
   virtual ~VCMReceiveStatisticsCallback() {
@@ -152,6 +148,12 @@ class VCMProtectionCallback {
   }
 };
 
+class VideoEncoderRateObserver {
+ public:
+  virtual ~VideoEncoderRateObserver() {}
+  virtual void OnSetRates(uint32_t bitrate_bps, int framerate) = 0;
+};
+
 // Callback class used for telling the user about what frame type needed to continue decoding.
 // Typically a key frame when the stream has been corrupted in some way.
 class VCMFrameTypeCallback {
@@ -176,17 +178,6 @@ class VCMPacketRequestCallback {
 
  protected:
   virtual ~VCMPacketRequestCallback() {
-  }
-};
-
-// Callback class used for telling the user about the state of the decoder & jitter buffer.
-//
-class VCMReceiveStateCallback {
- public:
-  virtual void ReceiveStateChange(VideoReceiveState state) = 0;
-
- protected:
-  virtual ~VCMReceiveStateCallback() {
   }
 };
 

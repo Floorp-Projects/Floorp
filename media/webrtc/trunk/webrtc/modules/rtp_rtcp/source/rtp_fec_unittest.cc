@@ -11,8 +11,8 @@
 #include <list>
 
 #include "testing/gtest/include/gtest/gtest.h"
+#include "webrtc/modules/rtp_rtcp/source/byte_io.h"
 #include "webrtc/modules/rtp_rtcp/source/forward_error_correction.h"
-#include "webrtc/modules/rtp_rtcp/source/rtp_utility.h"
 
 using webrtc::ForwardErrorCorrection;
 
@@ -866,7 +866,7 @@ void RtpFecTest::ReceivedPackets(const PacketList& packet_list, int* loss_mask,
         // For media packets, the sequence number and marker bit is
         // obtained from RTP header. These were set in ConstructMediaPackets().
         received_packet->seq_num =
-            webrtc::RtpUtility::BufferToUWord16(&packet->data[2]);
+            webrtc::ByteReader<uint16_t>::ReadBigEndian(&packet->data[2]);
       } else {
         // The sequence number, marker bit, and ssrc number are defined in the
         // RTP header of the FEC packet, which is not constructed in this test.
@@ -896,7 +896,7 @@ int RtpFecTest::ConstructMediaPacketsSeqNum(int num_media_packets,
   for (int i = 0; i < num_media_packets; ++i) {
     media_packet = new ForwardErrorCorrection::Packet;
     media_packet_list_.push_back(media_packet);
-    media_packet->length = static_cast<uint16_t>(
+    media_packet->length = static_cast<size_t>(
         (static_cast<float>(rand()) / RAND_MAX) *
         (IP_PACKET_SIZE - kRtpHeaderSize - kTransportOverhead -
          ForwardErrorCorrection::PacketOverhead()));
@@ -921,14 +921,14 @@ int RtpFecTest::ConstructMediaPacketsSeqNum(int num_media_packets,
     // Only push one (fake) frame to the FEC.
     media_packet->data[1] &= 0x7f;
 
-    webrtc::RtpUtility::AssignUWord16ToBuffer(&media_packet->data[2],
-                                              sequence_number);
-    webrtc::RtpUtility::AssignUWord32ToBuffer(&media_packet->data[4],
-                                              time_stamp);
-    webrtc::RtpUtility::AssignUWord32ToBuffer(&media_packet->data[8], ssrc_);
+    webrtc::ByteWriter<uint16_t>::WriteBigEndian(&media_packet->data[2],
+                                                 sequence_number);
+    webrtc::ByteWriter<uint32_t>::WriteBigEndian(&media_packet->data[4],
+                                                 time_stamp);
+    webrtc::ByteWriter<uint32_t>::WriteBigEndian(&media_packet->data[8], ssrc_);
 
     // Generate random values for payload.
-    for (int j = 12; j < media_packet->length; ++j) {
+    for (size_t j = 12; j < media_packet->length; ++j) {
       media_packet->data[j] = static_cast<uint8_t>(rand() % 256);
     }
     sequence_number++;

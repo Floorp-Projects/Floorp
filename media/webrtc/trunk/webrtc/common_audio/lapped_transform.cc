@@ -10,6 +10,7 @@
 
 #include "webrtc/common_audio/lapped_transform.h"
 
+#include <algorithm>
 #include <cstdlib>
 #include <cstring>
 
@@ -30,7 +31,8 @@ void LappedTransform::BlockThunk::ProcessBlock(const float* const* input,
   for (int i = 0; i < num_input_channels; ++i) {
     memcpy(parent_->real_buf_.Row(i), input[i],
            num_frames * sizeof(*input[0]));
-    parent_->fft_.Forward(parent_->real_buf_.Row(i), parent_->cplx_pre_.Row(i));
+    parent_->fft_->Forward(parent_->real_buf_.Row(i),
+                           parent_->cplx_pre_.Row(i));
   }
 
   int block_length = RealFourier::ComplexLength(
@@ -43,8 +45,8 @@ void LappedTransform::BlockThunk::ProcessBlock(const float* const* input,
                                                parent_->cplx_post_.Array());
 
   for (int i = 0; i < num_output_channels; ++i) {
-    parent_->fft_.Inverse(parent_->cplx_post_.Row(i),
-                          parent_->real_buf_.Row(i));
+    parent_->fft_->Inverse(parent_->cplx_post_.Row(i),
+                           parent_->real_buf_.Row(i));
     memcpy(output[i], parent_->real_buf_.Row(i),
            num_frames * sizeof(*input[0]));
   }
@@ -57,50 +59,30 @@ LappedTransform::LappedTransform(int in_channels, int out_channels,
     : blocker_callback_(this),
       in_channels_(in_channels),
       out_channels_(out_channels),
-      window_(window),
-      own_window_(false),
-      window_shift_amount_(shift_amount),
       block_length_(block_length),
       chunk_length_(chunk_length),
       block_processor_(callback),
-      blocker_(nullptr),
-      fft_(RealFourier::FftOrder(block_length_)),
-      cplx_length_(RealFourier::ComplexLength(fft_.order())),
-      real_buf_(in_channels, block_length, RealFourier::kFftBufferAlignment),
+      blocker_(
+        chunk_length_, block_length_, in_channels_, out_channels_, window,
+        shift_amount, &blocker_callback_),
+      fft_(RealFourier::Create(RealFourier::FftOrder(block_length_))),
+      cplx_length_(RealFourier::ComplexLength(fft_->order())),
+      real_buf_(in_channels, block_length_, RealFourier::kFftBufferAlignment),
       cplx_pre_(in_channels, cplx_length_, RealFourier::kFftBufferAlignment),
       cplx_post_(out_channels, cplx_length_, RealFourier::kFftBufferAlignment) {
   CHECK(in_channels_ > 0 && out_channels_ > 0);
   CHECK_GT(block_length_, 0);
   CHECK_GT(chunk_length_, 0);
   CHECK(block_processor_);
-  CHECK_EQ(0, block_length & (block_length - 1));  // block_length_ power of 2?
 
-  if (!window_) {
-    own_window_ = true;
-    window_ = new float[block_length_];
-    CHECK(window_ != nullptr);
-    window_shift_amount_ = block_length_;
-    float* temp = const_cast<float*>(window_);
-    for (int i = 0; i < block_length_; ++i) {
-      temp[i] = 1.0f;
-    }
-  }
-
-  blocker_.reset(new Blocker(chunk_length_, block_length_, in_channels_,
-                             out_channels_, window_, window_shift_amount_,
-                             &blocker_callback_));
-}
-
-LappedTransform::~LappedTransform() {
-  if (own_window_) {
-    delete [] window_;
-  }
+  // block_length_ power of 2?
+  CHECK_EQ(0, block_length_ & (block_length_ - 1));
 }
 
 void LappedTransform::ProcessChunk(const float* const* in_chunk,
                                    float* const* out_chunk) {
-  blocker_->ProcessChunk(in_chunk, chunk_length_, in_channels_, out_channels_,
-                         out_chunk);
+  blocker_.ProcessChunk(in_chunk, chunk_length_, in_channels_, out_channels_,
+                        out_chunk);
 }
 
 }  // namespace webrtc

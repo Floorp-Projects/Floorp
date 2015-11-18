@@ -43,7 +43,7 @@ public:
     // Note: packet should contain the RTP/RTCP part of the packet. I.e. the
     // first bytes of packet should be the RTP/RTCP header.
     virtual int32_t DumpPacket(const uint8_t* packet,
-                               uint16_t packetLength) = 0;
+                               size_t packetLength) = 0;
 
 protected:
     virtual ~RtpDump();

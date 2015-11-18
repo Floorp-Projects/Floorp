@@ -16,33 +16,45 @@
 #ifndef WEBRTC_SYSTEM_WRAPPERS_INTERFACE_THREAD_WRAPPER_H_
 #define WEBRTC_SYSTEM_WRAPPERS_INTERFACE_THREAD_WRAPPER_H_
 
+#if defined(WEBRTC_WIN)
+#include <windows.h>
+#endif
+
+#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/common_types.h"
 #include "webrtc/typedefs.h"
 
 namespace webrtc {
 
-// Object that will be passed by the spawned thread when it enters the callback
-// function.
-#define ThreadObj void*
-
 // Callback function that the spawned thread will enter once spawned.
 // A return value of false is interpreted as that the function has no
 // more work to do and that the thread can be released.
-typedef bool(*ThreadRunFunction)(ThreadObj);
+typedef bool(*ThreadRunFunction)(void*);
 
 enum ThreadPriority {
+#ifdef WEBRTC_WIN
+  kLowPriority = THREAD_PRIORITY_BELOW_NORMAL,
+  kNormalPriority = THREAD_PRIORITY_NORMAL,
+  kHighPriority = THREAD_PRIORITY_ABOVE_NORMAL,
+  kHighestPriority = THREAD_PRIORITY_HIGHEST,
+  kRealtimePriority = THREAD_PRIORITY_TIME_CRITICAL
+#else
   kLowPriority = 1,
   kNormalPriority = 2,
   kHighPriority = 3,
   kHighestPriority = 4,
   kRealtimePriority = 5
+#endif
 };
 
+// Represents a simple worker thread.  The implementation must be assumed
+// to be single threaded, meaning that all methods of the class, must be
+// called from the same thread, including instantiation.
+// TODO(tommi): There's no need for this to be a virtual interface since there's
+// only ever a single implementation of it.
 class ThreadWrapper {
  public:
-  enum {kThreadMaxNameLength = 64};
-
-  virtual ~ThreadWrapper() {};
+  virtual ~ThreadWrapper() {}
 
   // Factory method. Constructor disabled.
   //
@@ -52,38 +64,20 @@ class ThreadWrapper {
   // prio        Thread priority. May require root/admin rights.
   // thread_name  NULL terminated thread name, will be visable in the Windows
   //             debugger.
-  static ThreadWrapper* CreateThread(ThreadRunFunction func,
-                                     ThreadObj obj,
-                                     ThreadPriority prio = kNormalPriority,
-                                     const char* thread_name = NULL);
+  static rtc::scoped_ptr<ThreadWrapper> CreateThread(ThreadRunFunction func,
+      void* obj, const char* thread_name);
 
-  static ThreadWrapper* CreateUIThread(ThreadRunFunction func,
-                                       ThreadObj obj,
-                                       ThreadPriority prio = kNormalPriority,
-                                       const char* thread_name = NULL);
-
-  // Get the current thread's kernel thread ID.
+  // Get the current thread's thread ID.
+  // NOTE: This is a static method. It returns the id of the calling thread,
+  // *not* the id of the worker thread that a ThreadWrapper instance represents.
+  // TODO(tommi): Move outside of the ThreadWrapper class to avoid confusion.
   static uint32_t GetThreadId();
-
-  // Non blocking termination of the spawned thread. Note that it is not safe
-  // to delete this class until the spawned thread has been reclaimed.
-  virtual void SetNotAlive() = 0;
 
   // Tries to spawns a thread and returns true if that was successful.
   // Additionally, it tries to set thread priority according to the priority
   // from when CreateThread was called. However, failure to set priority will
   // not result in a false return value.
-  // TODO(henrike): add a function for polling whether priority was set or
-  //                not.
-  virtual bool Start(unsigned int& id) = 0;
-
-  // Sets the threads CPU affinity. CPUs are listed 0 - (number of CPUs - 1).
-  // The numbers in processor_numbers specify which CPUs are allowed to run the
-  // thread. processor_numbers should not contain any duplicates and elements
-  // should be lower than (number of CPUs - 1). amount_of_processors should be
-  // equal to the number of processors listed in processor_numbers.
-  virtual bool SetAffinity(const int* processor_numbers,
-                           const unsigned int amount_of_processors);
+  virtual bool Start() = 0;
 
   // Stops the spawned thread and waits for it to be reclaimed with a timeout
   // of two seconds. Will return false if the thread was not reclaimed.
@@ -91,9 +85,9 @@ class ThreadWrapper {
   // It's ok to call Stop() even if the spawned thread has been reclaimed.
   virtual bool Stop() = 0;
 
-  // Request a timed callback for ThreadRunFunction. Currently only
-  // implemented for a specific type of thread on Windows.
-  virtual bool RequestCallbackTimer(unsigned int milliseconds);
+  // Set the priority of the worker thread.  Must be called when thread
+  // is running.
+  virtual bool SetPriority(ThreadPriority priority) = 0;
 };
 
 }  // namespace webrtc

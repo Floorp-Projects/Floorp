@@ -18,16 +18,16 @@
 #if defined(_WIN32)
 #include <winsock2.h>
 #include <ws2tcpip.h>
-#elif defined(WEBRTC_LINUX) || defined(WEBRTC_BSD) || defined(WEBRTC_MAC)
+#elif defined(WEBRTC_LINUX) || defined(WEBRTC_MAC)
 #include <arpa/inet.h>
 #include <ctype.h>
 #include <fcntl.h>
 #include <net/if.h>
 #include <netdb.h>
-#include <sys/socket.h>
 #include <netinet/in.h>
 #include <stdlib.h>
 #include <sys/ioctl.h>
+#include <sys/socket.h>
 #include <sys/time.h>
 #include <unistd.h>
 #ifndef WEBRTC_IOS
@@ -36,10 +36,8 @@
 #endif // defined(WEBRTC_LINUX) || defined(WEBRTC_MAC)
 
 #if defined(WEBRTC_MAC)
-#include <machine/types.h>
-#endif
-#if defined(WEBRTC_BSD) || defined(WEBRTC_MAC)
 #include <ifaddrs.h>
+#include <machine/types.h>
 #endif
 #if defined(WEBRTC_LINUX)
 #include <linux/netlink.h>
@@ -53,7 +51,7 @@
 #include "webrtc/test/channel_transport/udp_socket_manager_wrapper.h"
 #include "webrtc/typedefs.h"
 
-#if defined(WEBRTC_LINUX) || defined(WEBRTC_BSD) || defined(WEBRTC_MAC)
+#if defined(WEBRTC_LINUX) || defined(WEBRTC_MAC)
 #define GetLastError() errno
 
 #define IFRSIZE ((int)(size * sizeof (struct ifreq)))
@@ -63,19 +61,19 @@
    (int)(nlh)->nlmsg_len >= (int)sizeof(struct nlmsghdr) &&             \
    (int)(nlh)->nlmsg_len <= (len))
 
-#endif // defined(WEBRTC_LINUX) || defined(WEBRTC_BSD) || defined(WEBRTC_MAC)
+#endif // defined(WEBRTC_LINUX) || defined(WEBRTC_MAC)
 
 namespace webrtc {
 namespace test {
 
 class SocketFactory : public UdpTransportImpl::SocketFactoryInterface {
  public:
-  virtual UdpSocketWrapper* CreateSocket(const int32_t id,
+  UdpSocketWrapper* CreateSocket(const int32_t id,
                                  UdpSocketManager* mgr,
                                  CallbackObj obj,
                                  IncomingSocketCallback cb,
                                  bool ipV6Enable,
-                                 bool disableGQOS) OVERRIDE {
+                                 bool disableGQOS) override {
     return UdpSocketWrapper::CreateSocket(id, mgr, obj, cb, ipV6Enable,
                                           disableGQOS);
   }
@@ -1767,7 +1765,7 @@ void UdpTransportImpl::BuildSockaddrIn(uint16_t portnr,
 }
 
 int32_t UdpTransportImpl::SendRaw(const int8_t *data,
-                                  uint32_t length,
+                                  size_t length,
                                   int32_t isRTCP,
                                   uint16_t portnr,
                                   const char* ip)
@@ -1843,7 +1841,7 @@ int32_t UdpTransportImpl::SendRaw(const int8_t *data,
 }
 
 int32_t UdpTransportImpl::SendRTPPacketTo(const int8_t* data,
-                                          uint32_t length,
+                                          size_t length,
                                           const SocketAddress& to)
 {
     CriticalSectionScoped cs(_crit);
@@ -1859,7 +1857,7 @@ int32_t UdpTransportImpl::SendRTPPacketTo(const int8_t* data,
 }
 
 int32_t UdpTransportImpl::SendRTCPPacketTo(const int8_t* data,
-                                           uint32_t length,
+                                           size_t length,
                                            const SocketAddress& to)
 {
 
@@ -1877,7 +1875,7 @@ int32_t UdpTransportImpl::SendRTCPPacketTo(const int8_t* data,
 }
 
 int32_t UdpTransportImpl::SendRTPPacketTo(const int8_t* data,
-                                          uint32_t length,
+                                          size_t length,
                                           const uint16_t rtpPort)
 {
     CriticalSectionScoped cs(_crit);
@@ -1905,7 +1903,7 @@ int32_t UdpTransportImpl::SendRTPPacketTo(const int8_t* data,
 }
 
 int32_t UdpTransportImpl::SendRTCPPacketTo(const int8_t* data,
-                                           uint32_t length,
+                                           size_t length,
                                            const uint16_t rtcpPort)
 {
     CriticalSectionScoped cs(_crit);
@@ -1933,7 +1931,9 @@ int32_t UdpTransportImpl::SendRTCPPacketTo(const int8_t* data,
     return -1;
 }
 
-int UdpTransportImpl::SendPacket(int /*channel*/, const void* data, int length)
+int UdpTransportImpl::SendPacket(int /*channel*/,
+                                 const void* data,
+                                 size_t length)
 {
     WEBRTC_TRACE(kTraceStream, kTraceTransport, _id, "%s", __FUNCTION__);
 
@@ -2001,7 +2001,7 @@ int UdpTransportImpl::SendPacket(int /*channel*/, const void* data, int length)
 }
 
 int UdpTransportImpl::SendRTCPPacket(int /*channel*/, const void* data,
-                                     int length)
+                                     size_t length)
 {
 
     CriticalSectionScoped cs(_crit);
@@ -2096,7 +2096,7 @@ int32_t UdpTransportImpl::SetSendPorts(uint16_t rtpPort, uint16_t rtcpPort)
 
 void UdpTransportImpl::IncomingRTPCallback(CallbackObj obj,
                                            const int8_t* rtpPacket,
-                                           int32_t rtpPacketLength,
+                                           size_t rtpPacketLength,
                                            const SocketAddress* from)
 {
     if (rtpPacket && rtpPacketLength > 0)
@@ -2108,7 +2108,7 @@ void UdpTransportImpl::IncomingRTPCallback(CallbackObj obj,
 
 void UdpTransportImpl::IncomingRTCPCallback(CallbackObj obj,
                                             const int8_t* rtcpPacket,
-                                            int32_t rtcpPacketLength,
+                                            size_t rtcpPacketLength,
                                             const SocketAddress* from)
 {
     if (rtcpPacket && rtcpPacketLength > 0)
@@ -2120,7 +2120,7 @@ void UdpTransportImpl::IncomingRTCPCallback(CallbackObj obj,
 }
 
 void UdpTransportImpl::IncomingRTPFunction(const int8_t* rtpPacket,
-                                           int32_t rtpPacketLength,
+                                           size_t rtpPacketLength,
                                            const SocketAddress* fromSocket)
 {
     char ipAddress[kIpAddressVersion6Length];
@@ -2183,7 +2183,7 @@ void UdpTransportImpl::IncomingRTPFunction(const int8_t* rtpPacket,
 }
 
 void UdpTransportImpl::IncomingRTCPFunction(const int8_t* rtcpPacket,
-                                            int32_t rtcpPacketLength,
+                                            size_t rtcpPacketLength,
                                             const SocketAddress* fromSocket)
 {
     char ipAddress[kIpAddressVersion6Length];
@@ -2332,7 +2332,7 @@ int32_t UdpTransport::InetPresentationToNumeric(int32_t af,
                                                 const char* src,
                                                 void* dst)
 {
-#if defined(WEBRTC_LINUX) || defined(WEBRTC_BSD) || defined(WEBRTC_MAC)
+#if defined(WEBRTC_LINUX) || defined(WEBRTC_MAC)
     const int32_t result = inet_pton(af, src, dst);
     return result > 0 ? 0 : -1;
 
@@ -2454,7 +2454,7 @@ int32_t UdpTransport::LocalHostAddressIPV6(char n_localIP[16])
                  "getaddrinfo failed to find address");
     return -1;
 
-#elif defined(WEBRTC_BSD) || defined(WEBRTC_MAC)
+#elif defined(WEBRTC_MAC)
     struct ifaddrs* ptrIfAddrs = NULL;
     struct ifaddrs* ptrIfAddrsStart = NULL;
 
@@ -2646,7 +2646,7 @@ int32_t UdpTransport::LocalHostAddress(uint32_t& localIP)
                      "gethostbyname failed, error:%d", error);
         return -1;
     }
-#elif (defined(WEBRTC_BSD) || defined(WEBRTC_MAC))
+#elif (defined(WEBRTC_MAC))
     char localname[255];
     if (gethostname(localname, 255) != -1)
     {
@@ -2785,7 +2785,7 @@ int32_t UdpTransport::IPAddress(const SocketAddress& address,
     sourcePort = htons(source_port);
     return 0;
 
- #elif defined(WEBRTC_LINUX) || defined(WEBRTC_BSD) || defined(WEBRTC_MAC)
+ #elif defined(WEBRTC_LINUX) || defined(WEBRTC_MAC)
     int32_t ipFamily = address._sockaddr_storage.sin_family;
     const void* ptrNumericIP = NULL;
 

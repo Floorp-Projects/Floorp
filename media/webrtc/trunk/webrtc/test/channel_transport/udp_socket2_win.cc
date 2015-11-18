@@ -14,6 +14,7 @@
 #include <stdlib.h>
 #include <winsock2.h>
 
+#include "webrtc/base/format_macros.h"
 #include "webrtc/system_wrappers/interface/sleep.h"
 #include "webrtc/test/channel_transport/traffic_control_win.h"
 #include "webrtc/test/channel_transport/udp_socket2_manager_win.h"
@@ -215,16 +216,6 @@ UdpSocket2Windows::~UdpSocket2Windows()
     }
 }
 
-int32_t UdpSocket2Windows::ChangeUniqueId(const int32_t id)
-{
-    _id = id;
-    if (_gtc)
-    {
-        _gtc->ChangeUniqueId(id);
-    }
-    return 0;
-}
-
 bool UdpSocket2Windows::ValidHandle()
 {
     return GetFd() != INVALID_SOCKET;
@@ -349,19 +340,11 @@ bool UdpSocket2Windows::Bind(const SocketAddress& name)
     return returnValue;
 }
 
-int32_t UdpSocket2Windows::SendTo(const int8_t* buf, int32_t len,
+int32_t UdpSocket2Windows::SendTo(const int8_t* buf, size_t len,
                                   const SocketAddress& to)
 {
     int32_t retVal = 0;
     int32_t error = 0;
-    if(len < 0)
-    {
-        WEBRTC_TRACE(kTraceError, kTraceTransport, _id,
-                     "UdpSocket2Windows(%d)::SendTo(), len= %d < 0",
-                     (int32_t)this, len);
-        return -1;
-    }
-
     PerIoContext* pIoContext = _mgr->PopIoContext();
     if(pIoContext == 0)
     {
@@ -371,14 +354,15 @@ int32_t UdpSocket2Windows::SendTo(const int8_t* buf, int32_t len,
         return -1;
     }
     // sizeof(pIoContext->buffer) is smaller than the highest number that
-    // can be represented by a int32_t.
-    if(len >= (int32_t) sizeof(pIoContext->buffer))
+    // can be represented by a size_t.
+    if(len >= sizeof(pIoContext->buffer))
     {
         WEBRTC_TRACE(
             kTraceError,
             kTraceTransport,
             _id,
-            "UdpSocket2Windows(%d)::SendTo(), len= %d > buffer_size = %d",
+            "UdpSocket2Windows(%d)::SendTo(), len= %" PRIuS
+            " > buffer_size = %d",
             (int32_t) this,
             len,sizeof(pIoContext->buffer));
         len = sizeof(pIoContext->buffer);
@@ -386,7 +370,7 @@ int32_t UdpSocket2Windows::SendTo(const int8_t* buf, int32_t len,
 
     memcpy(pIoContext->buffer,buf,len);
     pIoContext->wsabuf.buf = pIoContext->buffer;
-    pIoContext->wsabuf.len = len;
+    pIoContext->wsabuf.len = static_cast<ULONG>(len);
     pIoContext->fromLen=sizeof(SocketAddress);
     pIoContext->ioOperation = OP_WRITE;
     pIoContext->nTotalBytes = len;
@@ -424,7 +408,7 @@ int32_t UdpSocket2Windows::SendTo(const int8_t* buf, int32_t len,
     }
     if(retVal == 0 || (retVal == SOCKET_ERROR && error == ERROR_IO_PENDING))
     {
-        return len;
+        return static_cast<int32_t>(len);
     }
     error = _mgr->PushIoContext(pIoContext);
     if(error)

@@ -189,13 +189,13 @@ char* ByteBuffer::ReserveWriteBuffer(size_t len) {
 }
 
 void ByteBuffer::Resize(size_t size) {
-  size_t len = _min(end_ - start_, size);
+  size_t len = std::min(end_ - start_, size);
   if (size <= size_) {
     // Don't reallocate, just move data backwards
     memmove(bytes_, bytes_ + start_, len);
   } else {
     // Reallocate a larger buffer.
-    size_ = _max(size, 3 * size_ / 2);
+    size_ = std::max(size, 3 * size_ / 2);
     char* new_bytes = new char[size_];
     memcpy(new_bytes, bytes_ + start_, len);
     delete [] bytes_;
