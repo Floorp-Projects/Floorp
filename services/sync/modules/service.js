@@ -1268,7 +1268,7 @@ Sync11Service.prototype = {
     return reason;
   },
 
-  sync: function sync() {
+  sync: function sync(engineNamesToSync) {
     if (!this.enabled) {
       this._log.debug("Not syncing as Sync is disabled.");
       return;
@@ -1288,14 +1288,14 @@ Sync11Service.prototype = {
       else {
         this._log.trace("In sync: no need to login.");
       }
-      return this._lockedSync.apply(this, arguments);
+      return this._lockedSync(engineNamesToSync);
     })();
   },
 
   /**
    * Sync up engines with the server.
    */
-  _lockedSync: function _lockedSync() {
+  _lockedSync: function _lockedSync(engineNamesToSync) {
     return this._lock("service.js: sync",
                       this._notify("sync", "", function onNotify() {
 
@@ -1306,7 +1306,7 @@ Sync11Service.prototype = {
       let cb = Async.makeSpinningCallback();
       synchronizer.onComplete = cb;
 
-      synchronizer.sync();
+      synchronizer.sync(engineNamesToSync);
       // wait() throws if the first argument is truthy, which is exactly what
       // we want.
       let result = cb.wait();
