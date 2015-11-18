@@ -100,15 +100,8 @@ var PermissionsHelper = {
         // Keep track of permissions, so we know which ones to clear
         this._currentPermissions = permissions;
 
-        let host;
-        try {
-          host = uri.host;
-        } catch(e) {
-          host = uri.spec;
-        }
         Messaging.sendRequest({
           type: "Permissions:Data",
-          host: host,
           permissions: permissions
         });
         break;
