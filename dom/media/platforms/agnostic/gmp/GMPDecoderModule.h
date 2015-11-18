@@ -36,7 +36,7 @@ public:
   DecoderNeedsConversion(const TrackInfo& aConfig) const override;
 
   bool
-  SupportsMimeType(const nsACString& aMimeType) override;
+  SupportsMimeType(const nsACString& aMimeType) const override;
 
   // Main thread only.
   static void Init();

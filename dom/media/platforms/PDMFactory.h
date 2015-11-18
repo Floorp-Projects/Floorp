@@ -35,7 +35,7 @@ public:
                 layers::LayersBackend aLayersBackend = layers::LayersBackend::LAYERS_NONE,
                 layers::ImageContainer* aImageContainer = nullptr);
 
-  bool SupportsMimeType(const nsACString& aMimeType);
+  bool SupportsMimeType(const nsACString& aMimeType) const;
 
 #ifdef MOZ_EME
   // Creates a PlatformDecoderModule that uses a CDMProxy to decrypt or
@@ -52,7 +52,9 @@ private:
   // Startup the provided PDM and add it to our list if successful.
   bool StartupPDM(PlatformDecoderModule* aPDM);
   // Returns the first PDM in our list supporting the mimetype.
-  already_AddRefed<PlatformDecoderModule> GetDecoder(const nsACString& aMimeType);
+  already_AddRefed<PlatformDecoderModule>
+  GetDecoder(const nsACString& aMimeType) const;
+
   already_AddRefed<MediaDataDecoder>
   CreateDecoderWithPDM(PlatformDecoderModule* aPDM,
                        const TrackInfo& aConfig,

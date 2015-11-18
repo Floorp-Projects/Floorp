@@ -22,6 +22,10 @@ class nsIPresShell;
 namespace mozilla {
 
 /**
+ * NOTE: TouchCaret was obsoleted by AccessibleCaret, and is no longer used on
+ * B2G. This file is going to be removed in bug 1221459. Please see the wiki
+ * page for more information. https://wiki.mozilla.org/Copy_n_Paste
+ *
  * The TouchCaret places a touch caret according to caret position when the
  * caret is shown.
  * TouchCaret is also responsible for touch caret visibility. Touch caret

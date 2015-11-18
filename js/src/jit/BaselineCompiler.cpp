@@ -766,7 +766,8 @@ BaselineCompiler::emitArgumentTypeChecks()
     frame.pushThis();
     frame.popRegsAndSync(1);
 
-    ICTypeMonitor_Fallback::Compiler compiler(cx, (uint32_t) 0);
+    ICTypeMonitor_Fallback::Compiler compiler(cx, ICStubCompiler::Engine::Baseline,
+                                              (uint32_t) 0);
     if (!emitNonOpIC(compiler.getStub(&stubSpace_)))
         return false;
 
@@ -774,7 +775,8 @@ BaselineCompiler::emitArgumentTypeChecks()
         frame.pushArg(i);
         frame.popRegsAndSync(1);
 
-        ICTypeMonitor_Fallback::Compiler compiler(cx, i + 1);
+        ICTypeMonitor_Fallback::Compiler compiler(cx, ICStubCompiler::Engine::Baseline,
+                                                  i + 1);
         if (!emitNonOpIC(compiler.getStub(&stubSpace_)))
             return false;
     }
@@ -2258,7 +2260,7 @@ BaselineCompiler::emit_JSOP_GETPROP()
     frame.popRegsAndSync(1);
 
     // Call IC.
-    ICGetProp_Fallback::Compiler compiler(cx);
+    ICGetProp_Fallback::Compiler compiler(cx, ICStubCompiler::Engine::Baseline);
     if (!emitOpIC(compiler.getStub(&stubSpace_)))
         return false;
 
@@ -2361,7 +2363,8 @@ BaselineCompiler::emit_JSOP_GETALIASEDVAR()
 
     if (ionCompileable_) {
         // No need to monitor types if we know Ion can't compile this script.
-        ICTypeMonitor_Fallback::Compiler compiler(cx, (ICMonitoredFallbackStub*) nullptr);
+        ICTypeMonitor_Fallback::Compiler compiler(cx, ICStubCompiler::Engine::Baseline,
+                                                  (ICMonitoredFallbackStub*) nullptr);
         if (!emitOpIC(compiler.getStub(&stubSpace_)))
             return false;
     }

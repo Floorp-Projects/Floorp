@@ -1758,6 +1758,11 @@ CodeGenerator::visitUnarySharedStub(LUnarySharedStub* lir)
       case JSOP_NEG:
         emitSharedStub(ICStub::Kind::UnaryArith_Fallback, lir);
         break;
+      case JSOP_CALLPROP:
+      case JSOP_GETPROP:
+      case JSOP_LENGTH:
+        emitSharedStub(ICStub::Kind::GetProp_Fallback, lir);
+        break;
       default:
         MOZ_CRASH("Unsupported jsop in shared stubs.");
     }
@@ -7966,6 +7971,11 @@ CodeGenerator::linkSharedStubs(JSContext* cx)
           }
           case ICStub::Kind::Compare_Fallback: {
             ICCompare_Fallback::Compiler stubCompiler(cx, ICStubCompiler::Engine::IonMonkey);
+            stub = stubCompiler.getStub(&stubSpace_);
+            break;
+          }
+          case ICStub::Kind::GetProp_Fallback: {
+            ICGetProp_Fallback::Compiler stubCompiler(cx, ICStubCompiler::Engine::IonMonkey);
             stub = stubCompiler.getStub(&stubSpace_);
             break;
           }

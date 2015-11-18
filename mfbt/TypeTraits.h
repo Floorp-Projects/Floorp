@@ -24,6 +24,18 @@ namespace mozilla {
 /* Forward declarations. */
 
 template<typename> struct RemoveCV;
+template<typename> struct AddRvalueReference;
+
+/* 20.2.4 Function template declval [declval] */
+
+/**
+ * DeclVal simplifies the definition of expressions which occur as unevaluated
+ * operands. It converts T to a reference type, making it possible to use in
+ * decltype expressions even if T does not have a default constructor, e.g.:
+ * decltype(DeclVal<TWithNoDefaultConstructor>().foo())
+ */
+template<typename T>
+typename AddRvalueReference<T>::Type DeclVal();
 
 /* 20.9.3 Helper classes [meta.help] */
 
@@ -632,21 +644,25 @@ struct IsBaseOf
 
 namespace detail {
 
+// This belongs inside ConvertibleTester, but it's pulled out to
+// work around a bug in the compiler used for hazard builds.
+template <typename To>
+static void ConvertibleTestHelper(To);
+
 template<typename From, typename To>
 struct ConvertibleTester
 {
 private:
-  static From create();
-
-  template<typename From1, typename To1>
-  static char test(To to);
+  template<typename From1, typename To1,
+           typename = decltype(ConvertibleTestHelper<To1>(DeclVal<From>()))>
+  static char test(int);
 
   template<typename From1, typename To1>
   static int test(...);
 
 public:
   static const bool value =
-    sizeof(test<From, To>(create())) == sizeof(char);
+    sizeof(test<From, To>(0)) == sizeof(char);
 };
 
 } // namespace detail
@@ -863,17 +879,6 @@ template<typename T>
 struct AddRvalueReference
   : detail::AddRvalueReferenceHelper<T>
 {};
-
-/* 20.2.4 Function template declval [declval] */
-
-/**
- * DeclVal simplifies the definition of expressions which occur as unevaluated
- * operands. It converts T to a reference type, making it possible to use in
- * decltype expressions even if T does not have a default constructor, e.g.:
- * decltype(DeclVal<TWithNoDefaultConstructor>().foo())
- */
-template<typename T>
-typename AddRvalueReference<T>::Type DeclVal();
 
 /* 20.9.7.3 Sign modifications [meta.trans.sign] */
 

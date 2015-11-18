@@ -162,6 +162,10 @@ WrapperFactory::PrepareForWrapping(JSContext* cx, HandleObject scope,
         // ToWindowProxyIfWindow can return a CCW if |obj| was a
         // navigated-away-from Window. Strip any CCWs.
         obj = js::UncheckedUnwrap(obj);
+        if (JS_IsDeadWrapper(obj)) {
+            JS_ReportError(cx, "Can't wrap dead object");
+            return nullptr;
+        }
         MOZ_ASSERT(js::IsWindowProxy(obj));
     }
 
