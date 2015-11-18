@@ -127,8 +127,9 @@ nsClipboardProxy::HasDataMatchingFlavors(const char **aFlavorList,
   *aHasType = false;
 
   nsTArray<nsCString> types;
+  nsCString* t = types.AppendElements(aLength);
   for (uint32_t j = 0; j < aLength; ++j) {
-    types.AppendElement(nsDependentCString(aFlavorList[j]));
+    t[j].Rebind(aFlavorList[j], nsCharTraits<char>::length(aFlavorList[j]));
   }
 
   ContentChild::GetSingleton()->SendClipboardHasType(types, aWhichClipboard, aHasType);
