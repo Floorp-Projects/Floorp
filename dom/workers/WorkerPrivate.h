@@ -927,8 +927,9 @@ class WorkerPrivate : public WorkerPrivateParent<WorkerPrivate>
 
   nsCOMPtr<nsITimer> mTimer;
 
-  nsCOMPtr<nsITimer> mPeriodicGCTimer;
-  nsCOMPtr<nsITimer> mIdleGCTimer;
+  nsCOMPtr<nsITimer> mGCTimer;
+  nsCOMPtr<nsIEventTarget> mPeriodicGCTimerTarget;
+  nsCOMPtr<nsIEventTarget> mIdleGCTimerTarget;
 
   RefPtr<MemoryReporter> mMemoryReporter;
 
@@ -1292,12 +1293,6 @@ public:
 
   void
   MaybeDispatchLoadFailedRunnable();
-
-  void
-  CancelGCTimers()
-  {
-    SetGCTimerMode(NoTimer);
-  }
 
 private:
   WorkerPrivate(JSContext* aCx, WorkerPrivate* aParent,
