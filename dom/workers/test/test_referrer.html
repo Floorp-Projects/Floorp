@@ -15,19 +15,42 @@
 <pre id="test"></pre>
 <script class="testbody" type="text/javascript">
 
-  var worker = new Worker("referrer.sjs");
-  worker.onmessage = function() {
-    var xhr = new XMLHttpRequest();
-    xhr.open('GET', 'referrer.sjs?result', true);
-    xhr.onload = function() {
-      is(xhr.responseText, location.href, "The referrer has been sent.");
-      SimpleTest.finish();
+  function test_mainScript() {
+    var worker = new Worker("referrer.sjs?worker");
+    worker.onmessage = function() {
+      var xhr = new XMLHttpRequest();
+      xhr.open('GET', 'referrer.sjs?result', true);
+      xhr.onload = function() {
+        is(xhr.responseText, location.href, "The referrer has been sent.");
+        next();
+      }
+      xhr.send();
     }
-    xhr.send();
+    worker.postMessage(42);
   }
-  worker.postMessage(42);
+
+  function test_importScript() {
+    var worker = new Worker("worker_referrer.js");
+    worker.onmessage = function(e) {
+      is(e.data, location.href.replace("test_referrer.html", "worker_referrer.js"), "The referrer has been sent.");
+      next();
+    }
+    worker.postMessage(42);
+  }
+
+  var tests = [ test_mainScript, test_importScript ];
+  function next() {
+    if (!tests.length) {
+      SimpleTest.finish();
+      return;
+    }
+
+    var test = tests.shift();
+    test();
+  }
 
   SimpleTest.waitForExplicitFinish();
+  next();
 
 </script>
 </pre>
