@@ -3,19 +3,18 @@
 
 /*
  * This file contains tests for various context-in-conversations helpers in
- * LoopUI and MozLoopAPI.
+ * LoopUI and Loop API.
  */
 "use strict";
 
-add_task(loadLoopPanel);
+const { LoopAPI } = Cu.import("resource:///modules/loop/MozLoopAPI.jsm", {});
+var [, gHandlers] = LoopAPI.inspect();
 
 function promiseGetMetadata() {
-  return new Promise(resolve => gMozLoopAPI.getSelectedTabMetadata(resolve));
+  return new Promise(resolve => gHandlers.GetSelectedTabMetadata({}, resolve));
 }
 
 add_task(function* test_mozLoop_getSelectedTabMetadata() {
-  Assert.ok(gMozLoopAPI, "mozLoop should exist");
-
   let metadata = yield promiseGetMetadata();
 
   Assert.strictEqual(metadata.url, null, "URL should be empty for about:blank");

@@ -3,7 +3,7 @@
 
 "use strict";
 
-Cu.import("resource:///modules/loop/MozLoopAPI.jsm");
+const { LoopAPI } = Cu.import("resource:///modules/loop/MozLoopAPI.jsm", {});
 const [LoopAPIInternal] = LoopAPI.inspect();
 
 add_test(function test_intialize() {
@@ -22,7 +22,7 @@ add_test(function test_intialize() {
   Assert.equal(pageListeners3[0], pageListenersStub, "A second call should be ignored");
 
   // Restore the original pageListeners.
-  LoopAPI.stub(pageListeners);
+  LoopAPI.restore();
   run_next_test();
 });
 

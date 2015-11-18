@@ -1,17 +1,12 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
-
-/**
- * This is an integration test from navigator.mozLoop through to the end
- * effects - rather than just testing MozLoopAPI alone.
- */
-
 "use strict";
 
 Cu.import("resource://gre/modules/Promise.jsm");
 const { SocialService } = Cu.import("resource://gre/modules/SocialService.jsm", {});
+const { LoopAPI } = Cu.import("resource:///modules/loop/MozLoopAPI.jsm", {});
 
-add_task(loadLoopPanel);
+var [, gHandlers] = LoopAPI.inspect();
 
 const kShareProvider = {
   name: "provider 1",
@@ -23,8 +18,10 @@ const kShareProviderInvalid = {
   name: "provider 1",
   origin: "https://example2.com"
 };
+const kActivationPage = "https://example.com/browser/browser/base/content/test/social/share_activate.html";
 
 registerCleanupFunction(function* () {
+  Services.prefs.clearUserPref("social.shareDirectory");
   yield new Promise(resolve => SocialService.disableProvider(kShareProvider.origin, resolve));
   yield new Promise(resolve => SocialService.disableProvider(kShareProviderInvalid.origin, resolve));
   Assert.strictEqual(Social.providers.length, 0, "all providers should be removed");
@@ -32,7 +29,9 @@ registerCleanupFunction(function* () {
 });
 
 add_task(function* test_mozLoop_addSocialShareProvider() {
-  gMozLoopAPI.addSocialShareProvider();
+  Services.prefs.setCharPref("social.shareDirectory", kActivationPage);
+
+  gHandlers.AddSocialShareProvider({}, () => {});
 
   yield promiseWaitForCondition(() => SocialShare.panel.state == "open");
 
@@ -43,13 +42,14 @@ add_task(function* test_mozLoop_addSocialShareProvider() {
 });
 
 add_task(function* test_mozLoop_getSocialShareProviders() {
-  Assert.strictEqual(gMozLoopAPI.getSocialShareProviders().length, 0,
-    "Provider list should be empty initially");
+  let providers;
+  gHandlers.GetSocialShareProviders({}, result => providers = result);
+  Assert.strictEqual(providers.length, 0, "Provider list should be empty initially");
 
   // Add a provider.
   yield new Promise(resolve => SocialService.addProvider(kShareProvider, resolve));
 
-  let providers = gMozLoopAPI.getSocialShareProviders();
+  gHandlers.GetSocialShareProviders({}, result => providers = result);
   Assert.strictEqual(providers.length, 1,
     "The newly added provider should be part of the list");
   let provider = providers[0];
@@ -60,7 +60,7 @@ add_task(function* test_mozLoop_getSocialShareProviders() {
   // Add another provider that should not be picked up by Loop.
   yield new Promise(resolve => SocialService.addProvider(kShareProviderInvalid, resolve));
 
-  providers = gMozLoopAPI.getSocialShareProviders();
+  gHandlers.GetSocialShareProviders({}, result => providers = result);
   Assert.strictEqual(providers.length, 1,
     "The newly added provider should not be part of the list");
 
@@ -70,7 +70,7 @@ add_task(function* test_mozLoop_getSocialShareProviders() {
   provider2.origin = "https://example3.com";
   yield new Promise(resolve => SocialService.addProvider(provider2, resolve));
 
-  providers = gMozLoopAPI.getSocialShareProviders();
+  gHandlers.GetSocialShareProviders({}, result => providers = result);
   Assert.strictEqual(providers.length, 2,
     "The newly added provider should be part of the list");
   Assert.strictEqual(providers[1].name, provider2.name,
@@ -78,14 +78,15 @@ add_task(function* test_mozLoop_getSocialShareProviders() {
 
   // Remove the second valid provider.
   yield new Promise(resolve => SocialService.disableProvider(provider2.origin, resolve));
-  providers = gMozLoopAPI.getSocialShareProviders();
+  gHandlers.GetSocialShareProviders({}, result => providers = result);
   Assert.strictEqual(providers.length, 1,
     "The uninstalled provider should not be part of the list");
   Assert.strictEqual(providers[0].name, kShareProvider.name, "Names should match");
 });
 
 add_task(function* test_mozLoop_socialShareRoom() {
-  gMozLoopAPI.socialShareRoom(kShareProvider.origin, "https://someroom.com", "Some Title");
+  gHandlers.SocialShareRoom({ data: [kShareProvider.origin, "https://someroom.com",
+    "Some Title"] }, () => {});
 
   yield promiseWaitForCondition(() => SocialShare.panel.state == "open");
 
