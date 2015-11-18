@@ -245,7 +245,7 @@ public class AppMenuComponent extends BaseComponent {
 
         // This is a hack needed for tablets where the OverflowMenuButton is always in the GONE state,
         // so we press the menu key instead.
-        if (HardwareUtils.hasMenuButton() || DeviceHelper.isTablet()) {
+        if (DeviceHelper.isTablet()) {
             mSolo.sendKey(Solo.MENU);
         } else {
             pressOverflowMenuButton();

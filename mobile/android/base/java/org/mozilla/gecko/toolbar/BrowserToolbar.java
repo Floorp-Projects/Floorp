@@ -129,7 +129,6 @@ public abstract class BrowserToolbar extends ThemedRelativeLayout
     private OnStopEditingListener stopEditingListener;
 
     protected final BrowserApp activity;
-    protected boolean hasSoftMenuButton;
 
     protected UIMode uiMode;
     protected TabHistoryController tabHistoryController;
@@ -194,7 +193,6 @@ public abstract class BrowserToolbar extends ThemedRelativeLayout
 
         menuButton = (ThemedFrameLayout) findViewById(R.id.menu);
         menuIcon = (ThemedImageView) findViewById(R.id.menu_icon);
-        hasSoftMenuButton = !HardwareUtils.hasMenuButton();
 
         // The focusOrder List should be filled by sub-classes.
         focusOrder = new ArrayList<View>();
@@ -321,17 +319,15 @@ public abstract class BrowserToolbar extends ThemedRelativeLayout
         });
         tabsButton.setImageLevel(0);
 
-        if (hasSoftMenuButton) {
-            menuButton.setVisibility(View.VISIBLE);
-            menuButton.setOnClickListener(new Button.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    // Drop the soft keyboard.
-                    urlEditLayout.clearFocus();
-                    activity.openOptionsMenu();
-                }
-            });
-        }
+        menuButton.setVisibility(View.VISIBLE);
+        menuButton.setOnClickListener(new Button.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                // Drop the soft keyboard.
+                urlEditLayout.clearFocus();
+                activity.openOptionsMenu();
+            }
+        });
     }
 
     @Override
@@ -660,7 +656,7 @@ public abstract class BrowserToolbar extends ThemedRelativeLayout
 
     public void setToolBarButtonsAlpha(float alpha) {
         ViewHelper.setAlpha(tabsCounter, alpha);
-        if (hasSoftMenuButton && !HardwareUtils.isTablet()) {
+        if (!HardwareUtils.isTablet()) {
             ViewHelper.setAlpha(menuIcon, alpha);
         }
     }
@@ -855,10 +851,6 @@ public abstract class BrowserToolbar extends ThemedRelativeLayout
     }
 
     public boolean openOptionsMenu() {
-        if (!hasSoftMenuButton) {
-            return false;
-        }
-
         // Initialize the popup.
         if (menuPopup == null) {
             View panel = activity.getMenuPanel();
@@ -882,10 +874,6 @@ public abstract class BrowserToolbar extends ThemedRelativeLayout
     }
 
     public boolean closeOptionsMenu() {
-        if (!hasSoftMenuButton) {
-            return false;
-        }
-
         if (menuPopup != null && menuPopup.isShowing()) {
             menuPopup.dismiss();
         }
