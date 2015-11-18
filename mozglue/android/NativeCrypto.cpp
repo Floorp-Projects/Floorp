@@ -73,3 +73,61 @@ extern "C" JNIEXPORT jbyteArray MOZ_JNICALL Java_org_mozilla_gecko_background_na
 
   return out;
 }
+
+/**
+ * Helper function to invoke native SHA-256 init with JNI arguments.
+ */
+extern "C" JNIEXPORT jbyteArray MOZ_JNICALL Java_org_mozilla_gecko_background_nativecode_NativeCrypto_sha256init
+    (JNIEnv *env, jclass jc) {
+  jbyteArray out = env->NewByteArray(sizeof(SHA256_CTX));
+  if (nullptr == out) {
+    return nullptr;
+  }
+
+  SHA256_CTX *shaContext = (SHA256_CTX*)env->GetByteArrayElements(out, nullptr);
+  SHA256_Init(shaContext);
+
+  env->ReleaseByteArrayElements(out, (jbyte*)shaContext, 0);
+
+  return out;
+}
+
+/**
+ * Helper function to invoke native SHA-256 update with JNI arguments.
+ */
+extern "C" JNIEXPORT void MOZ_JNICALL Java_org_mozilla_gecko_background_nativecode_NativeCrypto_sha256update
+    (JNIEnv *env, jclass jc, jbyteArray jctx, jbyteArray jstr) {
+  jbyte *str = env->GetByteArrayElements(jstr, nullptr);
+  size_t strLen = env->GetArrayLength(jstr);
+
+  SHA256_CTX *shaContext = (SHA256_CTX*)env->GetByteArrayElements(jctx, nullptr);
+
+  SHA256_Update(shaContext, (void*)str, strLen);
+
+  env->ReleaseByteArrayElements(jstr, str, JNI_ABORT);
+  env->ReleaseByteArrayElements(jctx, (jbyte*)shaContext, 0);
+
+  return;
+}
+
+/**
+ * Helper function to invoke native SHA-256 finalize with JNI arguments.
+ */
+extern "C" JNIEXPORT jbyteArray MOZ_JNICALL Java_org_mozilla_gecko_background_nativecode_NativeCrypto_sha256finalize
+    (JNIEnv *env, jclass jc, jbyteArray jctx) {
+  SHA256_CTX *shaContext = (SHA256_CTX*)env->GetByteArrayElements(jctx, nullptr);
+
+  unsigned char* digest = new unsigned char[32];
+  SHA256_Final(digest, shaContext);
+
+  env->ReleaseByteArrayElements(jctx, (jbyte*)shaContext, JNI_ABORT);
+
+  jbyteArray out = env->NewByteArray(32);
+  if (nullptr != out) {
+    env->SetByteArrayRegion(out, 0, 32, (jbyte*)digest);
+  }
+
+  delete digest;
+
+  return out;
+}
