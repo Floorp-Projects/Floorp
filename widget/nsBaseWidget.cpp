@@ -1,4 +1,5 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -1910,31 +1911,6 @@ nsIWidget::LookupRegisteredPluginWindow(uintptr_t aWindowID)
 #endif
 }
 
-#if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
-struct VisEnumContext {
-  uintptr_t parentWidget;
-  const nsTArray<uintptr_t>* list;
-  bool widgetVisibilityFlag;
-};
-
-static PLDHashOperator
-RegisteredPluginEnumerator(const void* aWindowId, nsIWidget* aWidget, void* aUserArg)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(aWindowId);
-  MOZ_ASSERT(aWidget);
-  MOZ_ASSERT(aUserArg);
-
-  if (!aWidget->Destroyed()) {
-    VisEnumContext* pctx = static_cast<VisEnumContext*>(aUserArg);
-    if ((uintptr_t)aWidget->GetParent() == pctx->parentWidget) {
-      aWidget->Show(pctx->list->Contains((uintptr_t)aWindowId));
-    }
-  }
-  return PLDHashOperator::PL_DHASH_NEXT;
-}
-#endif
-
 // static
 void
 nsIWidget::UpdateRegisteredPluginWindowVisibility(uintptr_t aOwnerWidget,
@@ -1946,11 +1922,23 @@ nsIWidget::UpdateRegisteredPluginWindowVisibility(uintptr_t aOwnerWidget,
 #else
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(sPluginWidgetList);
+
   // Our visible list is associated with a compositor which is associated with
-  // a specific top level window. We hand the parent widget in here so the
-  // enumerator can skip the plugin widgets owned by other top level windows.
-  VisEnumContext ctx = { aOwnerWidget, &aPluginIds };
-  sPluginWidgetList->EnumerateRead(RegisteredPluginEnumerator, static_cast<void*>(&ctx));
+  // a specific top level window. We use the parent widget during iteration
+  // to skip the plugin widgets owned by other top level windows.
+  for (auto iter = sPluginWidgetList->Iter(); !iter.Done(); iter.Next()) {
+    const void* windowId = iter.Key();
+    nsIWidget* widget = iter.UserData();
+
+    MOZ_ASSERT(windowId);
+    MOZ_ASSERT(widget);
+
+    if (!widget->Destroyed()) {
+      if ((uintptr_t)widget->GetParent() == aOwnerWidget) {
+        widget->Show(aPluginIds.Contains((uintptr_t)windowId));
+      }
+    }
+  }
 #endif
 }
 

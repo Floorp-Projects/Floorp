@@ -28,6 +28,9 @@ sw1.port.onmessage = function(event) {
   }
 
   if (event.data.type == "finish") {
+    info("Finished!");
+    ok(sw1.port, "The port still exists");
+    sw1.port.foo = sw1; // Just a test to see if we leak.
     SimpleTest.finish();
   }
 }

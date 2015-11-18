@@ -337,6 +337,10 @@ TestIsBaseOf()
                 "B is the same as B (and therefore, a base of B)");
 }
 
+class ExplicitCopyConstructor {
+  explicit ExplicitCopyConstructor(const ExplicitCopyConstructor&) = default;
+};
+
 static void
 TestIsConvertible()
 {
@@ -367,6 +371,10 @@ TestIsConvertible()
   static_assert(IsConvertible<void, void>::value, "void is void");
   static_assert(!IsConvertible<A, void>::value, "A shouldn't convert to void");
   static_assert(!IsConvertible<void, B>::value, "void shouldn't convert to B");
+
+  static_assert(!IsConvertible<const ExplicitCopyConstructor&,
+                               ExplicitCopyConstructor>::value,
+                "IsConvertible should test for implicit convertibility");
 
   // These cases seem to require C++11 support to properly implement them, so
   // for now just disable them.

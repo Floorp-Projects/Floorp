@@ -246,7 +246,7 @@ public:
   }
 
   bool
-  SupportsMimeType(const nsACString& aMimeType) override
+  SupportsMimeType(const nsACString& aMimeType) const override
   {
     return true;
   }
