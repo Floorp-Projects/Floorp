@@ -63,7 +63,6 @@ function runTest(aEnable) {
     iframe.setAttribute('remote', aEnable);
     iframe.setAttribute('mozapp', manifestURI);
     iframe.src = srcURI;
-    document.body.appendChild(iframe);
 
     iframe.addEventListener('mozbrowserloadend', () => {
       var channels = iframe.allowedAudioChannels;
@@ -93,6 +92,8 @@ function runTest(aEnable) {
         }
       });
     });
+
+    document.body.appendChild(iframe);
   };
 }
 
