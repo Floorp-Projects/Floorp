@@ -13,7 +13,6 @@ const TOOLKIT_MINVERSION = "42.0a1";
 createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "42.0a2", "42.0a2");
 
 Components.utils.import("resource://gre/modules/addons/AddonUpdateChecker.jsm");
-Components.utils.import("resource://testing-common/httpd.js");
 
 let testserver = createHttpServer();
 gPort = testserver.identity.primaryPort;

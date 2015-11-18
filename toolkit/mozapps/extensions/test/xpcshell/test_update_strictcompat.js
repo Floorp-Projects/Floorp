@@ -23,7 +23,6 @@ const PARAMS = "?%REQ_VERSION%/%ITEM_ID%/%ITEM_VERSION%/%ITEM_MAXAPPVERSION%/" +
 
 var gInstallDate;
 
-Components.utils.import("resource://testing-common/httpd.js");
 var testserver = createHttpServer();
 gPort = testserver.identity.primaryPort;
 mapFile("/data/test_update.rdf", testserver);
