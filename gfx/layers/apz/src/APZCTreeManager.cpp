@@ -6,11 +6,13 @@
 #include "APZCTreeManager.h"
 #include "AsyncPanZoomController.h"
 #include "Compositor.h"                 // for Compositor
+#include "gfxPrefs.h"                   // for gfxPrefs
 #include "HitTestingTreeNode.h"         // for HitTestingTreeNode
 #include "InputBlockState.h"            // for InputBlockState
 #include "InputData.h"                  // for InputData, etc
 #include "Layers.h"                     // for Layer, etc
 #include "mozilla/dom/Touch.h"          // for Touch
+#include "mozilla/gfx/Logging.h"        // for gfx::TreeLog
 #include "mozilla/gfx/Point.h"          // for Point
 #include "mozilla/layers/APZThreadUtils.h"  // for AssertOnCompositorThread, etc
 #include "mozilla/layers/AsyncCompositionManager.h" // for ViewTransform
@@ -25,15 +27,13 @@
 #include "nsDebug.h"                    // for NS_WARNING
 #include "nsPoint.h"                    // for nsIntPoint
 #include "nsThreadUtils.h"              // for NS_IsMainThread
-#include "mozilla/gfx/Logging.h"        // for gfx::TreeLog
-#include "UnitTransforms.h"             // for ViewAs
-#include "gfxPrefs.h"                   // for gfxPrefs
 #include "OverscrollHandoffState.h"     // for OverscrollHandoffState
 #include "TaskThrottler.h"              // for TaskThrottler
 #include "TreeTraversal.h"              // for generic tree traveral algorithms
 #include "LayersLogging.h"              // for Stringify
 #include "Units.h"                      // for ParentlayerPixel
 #include "GestureEventListener.h"       // for GestureEventListener::setLongTapEnabled
+#include "UnitTransforms.h"             // for ViewAs
 
 #define ENABLE_APZCTM_LOGGING 0
 // #define ENABLE_APZCTM_LOGGING 1
