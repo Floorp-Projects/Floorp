@@ -1,0 +1,173 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for simple WebExtension</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="application/javascript;version=1.8">
+"use strict";
+
+function backgroundScript() {
+  const BASE = "http://mochi.test:8888/tests/toolkit/components/extensions/test/mochitest";
+  const URL = BASE + "/file_WebNavigation_page1.html";
+
+  const EVENTS = [
+    "onBeforeNavigate",
+    "onCommitted",
+    "onDOMContentLoaded",
+    "onCompleted",
+    "onErrorOccurred",
+    "onReferenceFragmentUpdated",
+  ];
+
+  var expectedTabId = -1;
+
+  function gotEvent(event, details)
+  {
+    if (!details.url.startsWith(BASE)) {
+      return;
+    }
+    browser.test.log(`Got ${event} ${details.url} ${details.frameId} ${details.parentFrameId}`);
+
+    if (expectedTabId == -1) {
+      browser.test.assertTrue(details.tabId !== undefined, "tab ID defined");
+      expectedTabId = details.tabId;
+    }
+
+    browser.test.assertEq(details.tabId, expectedTabId, "correct tab");
+
+    browser.test.sendMessage("received", {url: details.url, event});
+
+    if (details.url == URL) {
+      browser.test.assertEq(details.frameId, 0, "root frame ID correct");
+      browser.test.assertEq(details.parentFrameId, -1, "root parent frame ID correct");
+    } else {
+      browser.test.assertEq(details.parentFrameId, 0, "parent frame ID correct");
+      browser.test.assertTrue(details.frameId != 0, "frame ID probably okay");
+    }
+
+    browser.test.assertTrue(details.frameId !== undefined);
+    browser.test.assertTrue(details.parentFrameId !== undefined);
+  }
+
+  var listeners = {};
+  for (var event of EVENTS) {
+    listeners[event] = gotEvent.bind(null, event);
+    browser.webNavigation[event].addListener(listeners[event]);
+  }
+
+  browser.test.sendMessage("ready", browser.webRequest.ResourceType);
+}
+
+const BASE = "http://mochi.test:8888/tests/toolkit/components/extensions/test/mochitest";
+const URL = BASE + "/file_WebNavigation_page1.html";
+const FRAME = BASE + "/file_WebNavigation_page2.html";
+const FRAME2 = BASE + "/file_WebNavigation_page3.html";
+
+const REQUIRED = [
+  "onBeforeNavigate",
+  "onCommitted",
+  "onDOMContentLoaded",
+  "onCompleted",
+];
+
+var received = [];
+var completedResolve;
+var waitingURL, waitingEvent;
+
+function loadAndWait(win, event, url, script)
+{
+  received = [];
+  waitingEvent = event;
+  waitingURL = url;
+  dump(`RUN ${script}\n`);
+  eval(script);
+  return new Promise(resolve => { completedResolve = resolve; });
+}
+
+add_task(function* webnav_ordering() {
+  let extensionData = {
+    manifest: {
+      permissions: [
+        "webNavigation",
+      ],
+    },
+    background: "(" + backgroundScript.toString() + ")()",
+  };
+
+  let extension = ExtensionTestUtils.loadExtension(extensionData);
+
+  extension.onMessage("received", ({url, event}) => {
+    received.push({url, event});
+
+    if (event == waitingEvent && url == waitingURL) {
+      completedResolve();
+    }
+  });
+
+  yield Promise.all([extension.startup(), extension.awaitMessage("ready")]);
+  info("webnavigation extension loaded");
+
+  let win = window.open();
+
+  yield loadAndWait(win, "onCompleted", URL, `win.location = "${URL}";`);
+
+  function checkRequired(url) {
+    for (let event of REQUIRED) {
+      let found = false;
+      for (let r of received) {
+        if (r.url == url && r.event == event) {
+          found = true;
+        }
+      }
+      ok(found, `Received event ${event} from ${url}`);
+    }
+  }
+
+  checkRequired(URL);
+  checkRequired(FRAME);
+
+  function checkBefore(action1, action2) {
+    function find(action) {
+      for (let i = 0; i < received.length; i++) {
+        if (received[i].url == action.url && received[i].event == action.event) {
+          return i;
+        }
+      }
+      return -1;
+    }
+
+    let index1 = find(action1);
+    let index2 = find(action2);
+    ok(index1 != -1, `Action ${JSON.stringify(action1)} happened`);
+    ok(index2 != -1, `Action ${JSON.stringify(action2)} happened`);
+    ok(index1 < index2, `Action ${JSON.stringify(action1)} happened before ${JSON.stringify(action2)}`);
+  }
+
+  checkBefore({url: URL, event: "onCommitted"}, {url: FRAME, event: "onBeforeNavigate"});
+  checkBefore({url: FRAME, event: "onCompleted"}, {url: URL, event: "onCompleted"});
+
+  yield loadAndWait(win, "onCompleted", FRAME2, `win.frames[0].location = "${FRAME2}";`);
+
+  checkRequired(FRAME2);
+
+  yield loadAndWait(win, "onReferenceFragmentUpdated", FRAME2 + "#ref",
+                    "win.frames[0].document.getElementById('elt').click();");
+
+  info("Received onReferenceFragmentUpdated from FRAME2");
+
+  win.close();
+
+  yield extension.unload();
+  info("webnavigation extension unloaded");
+});
+</script>
+
+</body>
+</html>
