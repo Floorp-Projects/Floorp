@@ -21,7 +21,7 @@
     return navigator.serviceWorker.register("notification_constructor_error.js", { scope: "notification_constructor_error/" }).then(function(swr) {
       ok(false, "Registration should fail.");
     }, function(e) {
-      ok(e.message.indexOf("Notification") != -1, "Registration should fail.");
+      is(e.name, 'TypeError', "Registration should fail with a TypeError.");
     });
   }
 
