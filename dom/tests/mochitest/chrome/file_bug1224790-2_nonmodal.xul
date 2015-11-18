@@ -1,0 +1,46 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/css" href="chrome://global/skin"?>
+<?xml-stylesheet type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1224790
+-->
+<window title="Mozilla Bug 1224790"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
+
+  <!-- test results are displayed in the html:body -->
+  <body xmlns="http://www.w3.org/1999/xhtml">
+  </body>
+
+  <!-- test code goes here -->
+  <script type="application/javascript">
+  <![CDATA[
+  /** Test for Bug 1224790 **/
+
+  function runTests() {
+    opener.wrappedJSObject.nonModalOpened()
+  }
+
+  function modalClosed(grandparent) {
+    // Request cycle collection to trigger destructor for parent modal window,
+    // that mutates mAncestorLink of this window.
+    const Ci = Components.interfaces;
+    const Cu = Components.utils;
+    var { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
+    var windowUtils = window.QueryInterface(Ci.nsIInterfaceRequestor).
+      getInterface(Ci.nsIDOMWindowUtils);
+
+    Services.obs.notifyObservers(null, "child-cc-request", null);
+    windowUtils.cycleCollect();
+
+    // Wait for a while.
+    setTimeout(function() {
+      window.close();
+      grandparent.wrappedJSObject.nonModalClosed();
+    }, 3000);
+  }
+
+  SimpleTest.waitForFocus(runTests);
+  ]]>
+  </script>
+</window>

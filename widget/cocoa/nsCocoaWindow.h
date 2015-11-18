@@ -268,6 +268,7 @@ public:
     NS_IMETHOD              Enable(bool aState) override;
     virtual bool            IsEnabled() const override;
     NS_IMETHOD              SetModal(bool aState) override;
+    NS_IMETHOD              SetFakeModal(bool aState) override;
     virtual bool            IsVisible() const override;
     NS_IMETHOD              SetFocus(bool aState=false) override;
     virtual LayoutDeviceIntPoint WidgetToScreenOffset() override;
@@ -417,6 +418,7 @@ protected:
                      const IMENotification& aIMENotification) override;
 
   nsIWidget*           mParent;         // if we're a popup, this is our parent [WEAK]
+  nsIWidget*           mAncestorLink;   // link to traverse ancestors [WEAK]
   BaseWindow*          mWindow;         // our cocoa window [STRONG]
   WindowDelegate*      mDelegate;       // our delegate for processing window msgs [STRONG]
   RefPtr<nsMenuBarX> mMenuBar;
@@ -438,6 +440,7 @@ protected:
   bool                 mInFullScreenTransition; // true from the request to enter/exit fullscreen
                                                 // (MakeFullScreen() call) to EnteredFullScreen()
   bool                 mModal;
+  bool                 mFakeModal;
 
   // Only true on 10.7+ if SetShowsFullScreenButton(true) is called.
   bool                 mSupportsNativeFullScreen;
