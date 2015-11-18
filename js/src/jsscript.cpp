@@ -144,9 +144,11 @@ Bindings::initWithTemporaryStorage(ExclusiveContext* cx, MutableHandle<Bindings>
 
     // Start with the empty shape and then append one shape per aliased binding.
     const Class* cls = isModule ? &ModuleEnvironmentObject::class_ : &CallObject::class_;
+    uint32_t baseShapeFlags = BaseShape::QUALIFIED_VAROBJ | BaseShape::DELEGATE;
+    if (isModule)
+        baseShapeFlags |= BaseShape::NOT_EXTENSIBLE; // Module code is always strict.
     RootedShape shape(cx,
-        EmptyShape::getInitialShape(cx, cls, TaggedProto(nullptr), nfixed,
-                                    BaseShape::QUALIFIED_VAROBJ | BaseShape::DELEGATE));
+        EmptyShape::getInitialShape(cx, cls, TaggedProto(nullptr), nfixed, baseShapeFlags));
     if (!shape)
         return false;
 
@@ -173,7 +175,7 @@ Bindings::initWithTemporaryStorage(ExclusiveContext* cx, MutableHandle<Bindings>
         }
 #endif
 
-        StackBaseShape stackBase(cx, cls, BaseShape::QUALIFIED_VAROBJ | BaseShape::DELEGATE);
+        StackBaseShape stackBase(cx, cls, baseShapeFlags);
         UnownedBaseShape* base = BaseShape::getUnowned(cx, stackBase);
         if (!base)
             return false;
