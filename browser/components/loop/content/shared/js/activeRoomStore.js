@@ -293,7 +293,7 @@ loop.store.ActiveRoomStore = (function() {
     setupWindowData: function(actionData) {
       if (actionData.type !== "room") {
         // Nothing for us to do here, leave it to other stores.
-        return;
+        return Promise.resolve();
       }
 
       this.setStoreState({
@@ -305,7 +305,7 @@ loop.store.ActiveRoomStore = (function() {
       this._registerPostSetupActions();
 
       // Get the window data from the Loop API.
-      loop.requestMulti(
+      return loop.requestMulti(
         ["Rooms:Get", actionData.roomToken],
         ["GetSocialShareProviders"])
         .then(function(results) {
@@ -925,6 +925,10 @@ loop.store.ActiveRoomStore = (function() {
      * @param {sharedActions.StartScreenShare} actionData
      */
     startScreenShare: function(actionData) {
+      // For the unit test we already set the state here, instead of indirectly
+      // via an action, because actions are queued thus depending on the
+      // asynchronous nature of `loop.request`.
+      this.setStoreState({ screenSharingState: SCREEN_SHARE_STATES.PENDING });
       this.dispatchAction(new sharedActions.ScreenSharingState({
         state: SCREEN_SHARE_STATES.PENDING
       }));

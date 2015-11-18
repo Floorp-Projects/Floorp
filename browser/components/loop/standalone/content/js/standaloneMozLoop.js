@@ -327,85 +327,7 @@ loop.StandaloneMozLoop = (function(mozL10n) {
     });
   }
 
-  window.sendAsyncMessage = window.sendAsyncMessage || function(name, data, reply) {
-    if (name !== "Loop:Message") {
-      return;
-    }
-
-    var seq = data.shift();
-    var action = data.shift();
-
-    var actionParts = action.split(":");
-
-    // The name that is supposed to match with a handler function is tucked inside
-    // the second part of the message name. If all is well.
-    var handlerName = actionParts.shift();
-
-    if (!reply) {
-      reply = function(result) {
-        var listeners = messageListeners[name];
-        if (!listeners || !listeners.length) {
-          return;
-        }
-        var message = { data: [seq, result] };
-        listeners.forEach(function(listener) {
-          listener(message);
-        });
-      };
-    }
-
-    // First, check if this is a batch call.
-    if (handlerName === BATCH_MESSAGE) {
-      handleBatchMessage(name, seq, data, reply);
-      return;
-    }
-
-    // Second, check if the message is meant for one of our Object APIs.
-    // If so, a wildcard entry should exist for the message name in the
-    // `kMessageHandlers` dictionary.
-    var wildcardName = handlerName + ":*";
-    if (kMessageHandlers[wildcardName]) {
-      // Alright, pass the message forward.
-      kMessageHandlers[wildcardName](action, data, reply);
-      // Aaaaand we're done.
-      return;
-    }
-
-    if (!kMessageHandlers[handlerName]) {
-      var msg = "Ouch, no message handler available for '" + handlerName + "'";
-      console.error(msg);
-      reply(cloneableError(msg));
-      return;
-    }
-
-    kMessageHandlers[handlerName](data, reply);
-  };
-
   var messageListeners = {};
-
-  window.addMessageListener = window.addMessageListener || function(name, func) {
-    if (!messageListeners[name]) {
-      messageListeners[name] = [];
-    }
-
-    if (messageListeners[name].indexOf(func) === -1) {
-      messageListeners[name].push(func);
-    }
-  };
-
-  window.removeMessageListener = window.removeMessageListener || function(name, func) {
-    if (!messageListeners[name]) {
-      return;
-    }
-
-    var idx = messageListeners[name].indexOf(func);
-    if (idx !== -1) {
-      messageListeners[name].splice(idx, 1);
-    }
-    if (!messageListeners[name].length) {
-      delete messageListeners[name];
-    }
-  };
 
   return function(options) {
     options = options || {};
@@ -414,5 +336,83 @@ loop.StandaloneMozLoop = (function(mozL10n) {
     }
 
     StandaloneLoopRooms.baseServerUrl = options.baseServerUrl;
+
+    window.sendAsyncMessage = function(name, data, reply) {
+      if (name !== "Loop:Message") {
+        return;
+      }
+
+      var seq = data.shift();
+      var action = data.shift();
+
+      var actionParts = action.split(":");
+
+      // The name that is supposed to match with a handler function is tucked inside
+      // the second part of the message name. If all is well.
+      var handlerName = actionParts.shift();
+
+      if (!reply) {
+        reply = function(result) {
+          var listeners = messageListeners[name];
+          if (!listeners || !listeners.length) {
+            return;
+          }
+          var message = { data: [seq, result] };
+          listeners.forEach(function(listener) {
+            listener(message);
+          });
+        };
+      }
+
+      // First, check if this is a batch call.
+      if (handlerName === BATCH_MESSAGE) {
+        handleBatchMessage(name, seq, data, reply);
+        return;
+      }
+
+      // Second, check if the message is meant for one of our Object APIs.
+      // If so, a wildcard entry should exist for the message name in the
+      // `kMessageHandlers` dictionary.
+      var wildcardName = handlerName + ":*";
+      if (kMessageHandlers[wildcardName]) {
+        // Alright, pass the message forward.
+        kMessageHandlers[wildcardName](action, data, reply);
+        // Aaaaand we're done.
+        return;
+      }
+
+      if (!kMessageHandlers[handlerName]) {
+        var msg = "Ouch, no message handler available for '" + handlerName + "'";
+        console.error(msg);
+        reply(cloneableError(msg));
+        return;
+      }
+
+      kMessageHandlers[handlerName](data, reply);
+    };
+
+    window.addMessageListener = function(name, func) {
+      if (!messageListeners[name]) {
+        messageListeners[name] = [];
+      }
+
+      if (messageListeners[name].indexOf(func) === -1) {
+        messageListeners[name].push(func);
+      }
+    };
+
+    window.removeMessageListener = function(name, func) {
+      if (!messageListeners[name]) {
+        return;
+      }
+
+      var idx = messageListeners[name].indexOf(func);
+      if (idx !== -1) {
+        messageListeners[name].splice(idx, 1);
+      }
+      if (!messageListeners[name].length) {
+        delete messageListeners[name];
+      }
+    };
   };
 })(navigator.mozL10n);

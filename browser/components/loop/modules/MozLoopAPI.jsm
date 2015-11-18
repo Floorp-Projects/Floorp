@@ -1231,5 +1231,13 @@ this.LoopAPI = Object.freeze({
   /* @see LoopAPIInternal#destroy */
   destroy: function() {
     LoopAPIInternal.destroy();
+  },
+  // The following functions are only used in unit tests.
+  inspect: function() {
+    return [Object.create(LoopAPIInternal), Object.create(kMessageHandlers),
+      gPageListeners ? [...gPageListeners] : null];
+  },
+  stub: function(pageListeners) {
+    gPageListeners = pageListeners;
   }
 });

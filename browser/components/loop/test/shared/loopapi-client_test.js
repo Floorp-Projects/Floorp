@@ -22,6 +22,10 @@ describe("loopapi-client", function() {
     loop.request.reset();
     loop.subscribe.reset();
     sandbox.restore();
+
+    delete window.addMessageListener;
+    delete window.removeMessageListener;
+    delete window.sendAsyncMessage;
   });
 
   describe("loop.request", function() {
