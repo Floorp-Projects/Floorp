@@ -1503,6 +1503,13 @@ JS_GetArrayPrototype(JSContext* cx, JS::HandleObject forObj);
 extern JS_PUBLIC_API(JSObject*)
 JS_GetErrorPrototype(JSContext* cx);
 
+/**
+ * Returns the %IteratorPrototype% object that all built-in iterator prototype
+ * chains go through for the global object of the current compartment of cx.
+ */
+extern JS_PUBLIC_API(JSObject*)
+JS_GetIteratorPrototype(JSContext* cx);
+
 extern JS_PUBLIC_API(JSObject*)
 JS_GetGlobalForObject(JSContext* cx, JSObject* obj);
 
