@@ -2492,6 +2492,8 @@ BaselineCompiler::emit_JSOP_GETIMPORT()
     Shape* shape;
     MOZ_ALWAYS_TRUE(env->lookupImport(NameToId(script->getName(pc)), &targetEnv, &shape));
 
+    EnsureTrackPropertyTypes(cx, targetEnv, shape->propid());
+
     frame.syncStack(0);
 
     uint32_t slot = shape->slot();
