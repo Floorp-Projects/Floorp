@@ -12,8 +12,8 @@
 #define WEBRTC_MODULES_AUDIO_CODING_MAIN_ACM2_ACM_RECEIVE_TEST_H_
 
 #include "webrtc/base/constructormagic.h"
+#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/system_wrappers/interface/clock.h"
-#include "webrtc/system_wrappers/interface/scoped_ptr.h"
 
 namespace webrtc {
 class AudioCoding;
@@ -50,7 +50,7 @@ class AcmReceiveTest {
 
  private:
   SimulatedClock clock_;
-  scoped_ptr<AudioCoding> acm_;
+  rtc::scoped_ptr<AudioCoding> acm_;
   PacketSource* packet_source_;
   AudioSink* audio_sink_;
   const int output_freq_hz_;

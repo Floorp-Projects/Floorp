@@ -12,9 +12,9 @@
 
 #include "testing/gmock/include/gmock/gmock.h"
 #include "testing/gtest/include/gtest/gtest.h"
+#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/modules/rtp_rtcp/source/mock/mock_rtp_payload_strategy.h"
 #include "webrtc/modules/rtp_rtcp/source/rtp_utility.h"
-#include "webrtc/system_wrappers/interface/scoped_ptr.h"
 
 namespace webrtc {
 
@@ -57,7 +57,7 @@ class RtpPayloadRegistryTest : public ::testing::Test {
     return returned_payload_on_heap;
   }
 
-  scoped_ptr<RTPPayloadRegistry> rtp_payload_registry_;
+  rtc::scoped_ptr<RTPPayloadRegistry> rtp_payload_registry_;
   testing::NiceMock<MockRTPPayloadStrategy>* mock_payload_strategy_;
 };
 
@@ -87,24 +87,34 @@ TEST_F(RtpPayloadRegistryTest, RegistersAndRemembersPayloadsUntilDeregistered) {
       payload_type, retrieved_payload));
 }
 
-TEST_F(RtpPayloadRegistryTest, DoesNotCreateNewPayloadTypeIfRed) {
-  EXPECT_CALL(*mock_payload_strategy_,
-      CreatePayloadType(_, _, _, _, _)).Times(0);
+TEST_F(RtpPayloadRegistryTest, AudioRedWorkProperly) {
+  const uint8_t kRedPayloadType = 127;
+  const int kRedSampleRate = 8000;
+  const int kRedChannels = 1;
+  const int kRedBitRate = 0;
+
+  // This creates an audio RTP payload strategy.
+  rtp_payload_registry_.reset(new RTPPayloadRegistry(
+      RTPPayloadStrategy::CreateStrategy(true)));
 
   bool new_payload_created = false;
-  uint8_t red_type_of_the_day = 104;
   EXPECT_EQ(0, rtp_payload_registry_->RegisterReceivePayload(
-      "red", red_type_of_the_day, kTypicalFrequency, kTypicalChannels,
-      kTypicalRate, &new_payload_created));
-  ASSERT_FALSE(new_payload_created);
+      "red", kRedPayloadType, kRedSampleRate, kRedChannels, kRedBitRate,
+      &new_payload_created));
+  EXPECT_TRUE(new_payload_created);
 
-  ASSERT_EQ(red_type_of_the_day, rtp_payload_registry_->red_payload_type());
+  EXPECT_EQ(kRedPayloadType, rtp_payload_registry_->red_payload_type());
 
   RtpUtility::Payload* retrieved_payload = NULL;
-  EXPECT_TRUE(rtp_payload_registry_->PayloadTypeToPayload(red_type_of_the_day,
+  EXPECT_TRUE(rtp_payload_registry_->PayloadTypeToPayload(kRedPayloadType,
                                                           retrieved_payload));
-  EXPECT_FALSE(retrieved_payload->audio);
+  ASSERT_TRUE(retrieved_payload);
+  EXPECT_TRUE(retrieved_payload->audio);
   EXPECT_STRCASEEQ("red", retrieved_payload->name);
+
+  // Sample rate is correctly registered.
+  EXPECT_EQ(kRedSampleRate,
+            rtp_payload_registry_->GetPayloadTypeFrequency(kRedPayloadType));
 }
 
 TEST_F(RtpPayloadRegistryTest,
@@ -225,8 +235,7 @@ TEST_P(ParameterizedRtpPayloadRegistryTest,
 
   bool ignored;
   EXPECT_EQ(-1, rtp_payload_registry_->RegisterReceivePayload(
-      "whatever", static_cast<uint8_t>(payload_type), 19, 1, 17,
-      &ignored));
+      "whatever", static_cast<uint8_t>(payload_type), 19, 1, 17, &ignored));
 }
 
 INSTANTIATE_TEST_CASE_P(TestKnownBadPayloadTypes,

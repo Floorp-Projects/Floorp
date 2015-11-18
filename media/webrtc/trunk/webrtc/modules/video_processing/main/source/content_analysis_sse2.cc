@@ -18,7 +18,7 @@ namespace webrtc {
 int32_t VPMContentAnalysis::TemporalDiffMetric_SSE2() {
   uint32_t num_pixels = 0;       // counter for # of pixels
   const uint8_t* imgBufO = orig_frame_ + border_*width_ + border_;
-  const uint8_t* imgBufP = prev_frame_.get() + border_*width_ + border_;
+  const uint8_t* imgBufP = prev_frame_ + border_*width_ + border_;
 
   const int32_t width_end = ((width_ - 2*border_) & -16) + border_;
 

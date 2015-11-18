@@ -39,7 +39,7 @@ void RunAnalysisTest(const std::string& audio_filename,
                      const std::string& data_filename,
                      size_t channels) {
   AudioClassifier classifier;
-  scoped_ptr<int16_t[]> in(new int16_t[channels * kFrameSize]);
+  rtc::scoped_ptr<int16_t[]> in(new int16_t[channels * kFrameSize]);
   bool is_music_ref;
 
   FILE* audio_file = fopen(audio_filename.c_str(), "rb");

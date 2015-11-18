@@ -17,7 +17,6 @@
 
 #include "webrtc/engine_configurations.h"
 #include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
-#include "webrtc/system_wrappers/interface/thread_wrapper.h"
 #include "webrtc/video_engine/test/auto_test/interface/vie_autotest_defines.h"
 #include "webrtc/video_engine/test/auto_test/interface/vie_autotest_main.h"
 

@@ -36,14 +36,14 @@ extern ALIGN16_BEG const float ALIGN16_END rdft_wk3i[32];
 extern ALIGN16_BEG const float ALIGN16_END cftmdl_wk1r[4];
 
 // code path selection function pointers
-typedef void (*rft_sub_128_t)(float* a);
-extern rft_sub_128_t rftfsub_128;
-extern rft_sub_128_t rftbsub_128;
-extern rft_sub_128_t cft1st_128;
-extern rft_sub_128_t cftmdl_128;
-extern rft_sub_128_t cftfsub_128;
-extern rft_sub_128_t cftbsub_128;
-extern rft_sub_128_t bitrv2_128;
+typedef void (*RftSub128)(float* a);
+extern RftSub128 rftfsub_128;
+extern RftSub128 rftbsub_128;
+extern RftSub128 cft1st_128;
+extern RftSub128 cftmdl_128;
+extern RftSub128 cftfsub_128;
+extern RftSub128 cftbsub_128;
+extern RftSub128 bitrv2_128;
 
 // entry points
 void aec_rdft_init(void);

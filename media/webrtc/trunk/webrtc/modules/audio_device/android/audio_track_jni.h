@@ -13,164 +13,139 @@
 
 #include <jni.h>
 
-#include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
+#include "webrtc/base/thread_checker.h"
 #include "webrtc/modules/audio_device/android/audio_common.h"
+#include "webrtc/modules/audio_device/android/audio_manager.h"
 #include "webrtc/modules/audio_device/include/audio_device_defines.h"
 #include "webrtc/modules/audio_device/audio_device_generic.h"
+#include "webrtc/modules/utility/interface/helpers_android.h"
 
 namespace webrtc {
 
-class EventWrapper;
-class ThreadWrapper;
-
+// Implements 16-bit mono PCM audio output support for Android using the Java
+// AudioTrack interface. Most of the work is done by its Java counterpart in
+// WebRtcAudioTrack.java. This class is created and lives on a thread in
+// C++-land, but decoded audio buffers are requested on a high-priority
+// thread managed by the Java class.
+//
+// An instance must be created and destroyed on one and the same thread.
+// All public methods must also be called on the same thread. A thread checker
+// will DCHECK if any method is called on an invalid thread.
+// It is possible to call the two static methods (SetAndroidAudioDeviceObjects
+// and ClearAndroidAudioDeviceObjects) from a different thread but both will
+// CHECK that the calling thread is attached to a Java VM.
+//
+// All methods use AttachThreadScoped to attach to a Java VM if needed and then
+// detach when method goes out of scope. We do so because this class does not
+// own the thread is is created and called on and other objects on the same
+// thread might put us in a detached state at any time.
 class AudioTrackJni : public PlayoutDelayProvider {
  public:
-  static int32_t SetAndroidAudioDeviceObjects(void* javaVM, void* env,
-                                              void* context);
-
-  static int32_t SetAndroidAudioDeviceObjects(void* javaVM,
-                                              void* context);
-
+  // Use the invocation API to allow the native application to use the JNI
+  // interface pointer to access VM features.
+  // |jvm| denotes the Java VM and |context| corresponds to
+  // android.content.Context in Java.
+  // This method also sets a global jclass object, |g_audio_track_class| for
+  // the "org/webrtc/voiceengine/WebRtcAudioTrack"-class.
+  static void SetAndroidAudioDeviceObjects(void* jvm, void* context);
+  // Always call this method after the object has been destructed. It deletes
+  // existing global references and enables garbage collection.
   static void ClearAndroidAudioDeviceObjects();
-  explicit AudioTrackJni(const int32_t id);
-  virtual ~AudioTrackJni();
 
-  // Main initializaton and termination
+  AudioTrackJni(AudioManager* audio_manager);
+  ~AudioTrackJni();
+
   int32_t Init();
   int32_t Terminate();
-  bool Initialized() const { return _initialized; }
 
-  // Device enumeration
-  int16_t PlayoutDevices() { return 1; }  // There is one device only.
-
-  int32_t PlayoutDeviceName(uint16_t index,
-                            char name[kAdmMaxDeviceNameSize],
-                            char guid[kAdmMaxGuidSize]);
-
-  // Device selection
-  int32_t SetPlayoutDevice(uint16_t index);
-  int32_t SetPlayoutDevice(
-      AudioDeviceModule::WindowsDeviceType device);
-
-  // Audio transport initialization
-  int32_t PlayoutIsAvailable(bool& available);  // NOLINT
   int32_t InitPlayout();
-  bool PlayoutIsInitialized() const { return _playIsInitialized; }
+  bool PlayoutIsInitialized() const { return initialized_; }
 
-  // Audio transport control
   int32_t StartPlayout();
   int32_t StopPlayout();
-  bool Playing() const { return _playing; }
+  bool Playing() const { return playing_; }
 
-  // Audio mixer initialization
-  int32_t InitSpeaker();
-  bool SpeakerIsInitialized() const { return _speakerIsInitialized; }
+  int SpeakerVolumeIsAvailable(bool& available);
+  int SetSpeakerVolume(uint32_t volume);
+  int SpeakerVolume(uint32_t& volume) const;
+  int MaxSpeakerVolume(uint32_t& max_volume) const;
+  int MinSpeakerVolume(uint32_t& min_volume) const;
 
-  // Speaker volume controls
-  int32_t SpeakerVolumeIsAvailable(bool& available);  // NOLINT
-  int32_t SetSpeakerVolume(uint32_t volume);
-  int32_t SpeakerVolume(uint32_t& volume) const;  // NOLINT
-  int32_t MaxSpeakerVolume(uint32_t& maxVolume) const;  // NOLINT
-  int32_t MinSpeakerVolume(uint32_t& minVolume) const;  // NOLINT
-  int32_t SpeakerVolumeStepSize(uint16_t& stepSize) const;  // NOLINT
-
-  // Speaker mute control
-  int32_t SpeakerMuteIsAvailable(bool& available);  // NOLINT
-  int32_t SetSpeakerMute(bool enable);
-  int32_t SpeakerMute(bool& enabled) const;  // NOLINT
-
-
-  // Stereo support
-  int32_t StereoPlayoutIsAvailable(bool& available);  // NOLINT
-  int32_t SetStereoPlayout(bool enable);
-  int32_t StereoPlayout(bool& enabled) const;  // NOLINT
-
-  // Delay information and control
-  int32_t SetPlayoutBuffer(const AudioDeviceModule::BufferType type,
-                           uint16_t sizeMS);
-  int32_t PlayoutBuffer(AudioDeviceModule::BufferType& type,  // NOLINT
-                        uint16_t& sizeMS) const;
-  int32_t PlayoutDelay(uint16_t& delayMS) const;  // NOLINT
-
-  // Attach audio buffer
+  int32_t PlayoutDelay(uint16_t& delayMS) const;
   void AttachAudioBuffer(AudioDeviceBuffer* audioBuffer);
 
-  int32_t SetPlayoutSampleRate(const uint32_t samplesPerSec);
-
-  // Error and warning information
-  bool PlayoutWarning() const;
-  bool PlayoutError() const;
-  void ClearPlayoutWarning();
-  void ClearPlayoutError();
-
-  // Speaker audio routing
-  int32_t SetLoudspeakerStatus(bool enable);
-  int32_t GetLoudspeakerStatus(bool& enable) const;  // NOLINT
-
-  static const uint32_t N_PLAY_SAMPLES_PER_SEC = 16000; // Default is 16 kHz
-  static const uint32_t N_PLAY_CHANNELS = 1; // default is mono playout
-
  protected:
-  virtual int PlayoutDelayMs() { return 0; }
+  // PlayoutDelayProvider implementation.
+  virtual int PlayoutDelayMs();
 
  private:
-  void Lock() EXCLUSIVE_LOCK_FUNCTION(_critSect) {
-    _critSect.Enter();
-  }
-  void UnLock() UNLOCK_FUNCTION(_critSect) {
-    _critSect.Leave();
-  }
+  // Called from Java side so we can cache the address of the Java-manged
+  // |byte_buffer| in |direct_buffer_address_|. The size of the buffer
+  // is also stored in |direct_buffer_capacity_in_bytes_|.
+  // Called on the same thread as the creating thread.
+  static void JNICALL CacheDirectBufferAddress(
+    JNIEnv* env, jobject obj, jobject byte_buffer, jlong nativeAudioTrack);
+  void OnCacheDirectBufferAddress(JNIEnv* env, jobject byte_buffer);
 
-  int32_t InitJavaResources();
-  int32_t InitSampleRate();
+  // Called periodically by the Java based WebRtcAudioTrack object when
+  // playout has started. Each call indicates that |length| new bytes should
+  // be written to the memory area |direct_buffer_address_| for playout.
+  // This method is called on a high-priority thread from Java. The name of
+  // the thread is 'AudioTrackThread'.
+  static void JNICALL GetPlayoutData(
+    JNIEnv* env, jobject obj, jint length, jlong nativeAudioTrack);
+  void OnGetPlayoutData(int length);
 
-  static bool PlayThreadFunc(void*);
-  bool PlayThreadProcess();
+  // Returns true if SetAndroidAudioDeviceObjects() has been called
+  // successfully.
+  bool HasDeviceObjects();
 
-  // TODO(leozwang): Android holds only one JVM, all these jni handling
-  // will be consolidated into a single place to make it consistant and
-  // reliable. Chromium has a good example at base/android.
-  static JavaVM* globalJvm;
-  static JNIEnv* globalJNIEnv;
-  static jobject globalContext;
-  static jclass globalScClass;
+  // Called from the constructor. Defines the |j_audio_track_| member.
+  void CreateJavaInstance();
 
-  JavaVM* _javaVM; // denotes a Java VM
-  JNIEnv* _jniEnvPlay; // The JNI env for playout thread
-  jclass _javaScClass; // AudioDeviceAndroid class
-  jobject _javaScObj; // AudioDeviceAndroid object
-  jobject _javaPlayBuffer;
-  void* _javaDirectPlayBuffer; // Direct buffer pointer to play buffer
-  jmethodID _javaMidPlayAudio; // Method ID of play in AudioDeviceAndroid
+  // Stores thread ID in constructor.
+  // We can then use ThreadChecker::CalledOnValidThread() to ensure that
+  // other methods are called from the same thread.
+  rtc::ThreadChecker thread_checker_;
 
-  AudioDeviceBuffer* _ptrAudioBuffer;
-  CriticalSectionWrapper& _critSect;
-  int32_t _id;
-  bool _initialized;
+  // Stores thread ID in first call to OnGetPlayoutData() from high-priority
+  // thread in Java. Detached during construction of this object.
+  rtc::ThreadChecker thread_checker_java_;
 
-  EventWrapper& _timeEventPlay;
-  EventWrapper& _playStartStopEvent;
-  ThreadWrapper* _ptrThreadPlay;
-  uint32_t _playThreadID;
-  bool _playThreadIsInitialized;
-  bool _shutdownPlayThread;
-  bool _playoutDeviceIsSpecified;
+  // Contains audio parameters provided to this class at construction by the
+  // AudioManager.
+  const AudioParameters audio_parameters_;
 
-  bool _playing;
-  bool _playIsInitialized;
-  bool _speakerIsInitialized;
+  // The Java WebRtcAudioTrack instance.
+  jobject j_audio_track_;
 
-  bool _startPlay;
+  // Cached copy of address to direct audio buffer owned by |j_audio_track_|.
+  void* direct_buffer_address_;
 
-  uint16_t _playWarning;
-  uint16_t _playError;
+  // Number of bytes in the direct audio buffer owned by |j_audio_track_|.
+  int direct_buffer_capacity_in_bytes_;
 
-  uint16_t _delayPlayout;
+  // Number of audio frames per audio buffer. Each audio frame corresponds to
+  // one sample of PCM mono data at 16 bits per sample. Hence, each audio
+  // frame contains 2 bytes (given that the Java layer only supports mono).
+  // Example: 480 for 48000 Hz or 441 for 44100 Hz.
+  int frames_per_buffer_;
 
-  uint16_t _samplingFreqOut; // Sampling frequency for Speaker
-  uint32_t _maxSpeakerVolume; // The maximum speaker volume value
-  bool _loudSpeakerOn;
+  bool initialized_;
 
+  bool playing_;
+
+  // Raw pointer handle provided to us in AttachAudioBuffer(). Owned by the
+  // AudioDeviceModuleImpl class and called by AudioDeviceModuleImpl::Create().
+  // The AudioDeviceBuffer is a member of the AudioDeviceModuleImpl instance
+  // and therefore outlives this object.
+  AudioDeviceBuffer* audio_device_buffer_;
+
+  // Estimated playout delay caused by buffering in the Java based audio track.
+  // We are using a fixed value here since measurements have shown that the
+  // variations are very small (~10ms) and it is not worth the extra complexity
+  // to update this estimate on a continuous basis.
+  int delay_in_milliseconds_;
 };
 
 }  // namespace webrtc

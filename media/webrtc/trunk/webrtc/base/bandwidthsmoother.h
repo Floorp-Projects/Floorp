@@ -35,6 +35,7 @@ class BandwidthSmoother {
                     double percent_increase,
                     size_t samples_count_to_average,
                     double min_sample_count_percent);
+  ~BandwidthSmoother();
 
   // Samples a new bandwidth measurement.
   // bandwidth is expected to be non-negative.

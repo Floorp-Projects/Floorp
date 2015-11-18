@@ -21,13 +21,13 @@ namespace webrtc {
 class ConditionVariablePosix : public ConditionVariableWrapper {
  public:
   static ConditionVariableWrapper* Create();
-  virtual ~ConditionVariablePosix();
+  ~ConditionVariablePosix() override;
 
-  virtual void SleepCS(CriticalSectionWrapper& crit_sect) OVERRIDE;
-  virtual bool SleepCS(CriticalSectionWrapper& crit_sect,
-               unsigned long max_time_in_ms) OVERRIDE;
-  virtual void Wake() OVERRIDE;
-  virtual void WakeAll() OVERRIDE;
+  void SleepCS(CriticalSectionWrapper& crit_sect) override;
+  bool SleepCS(CriticalSectionWrapper& crit_sect,
+               unsigned long max_time_in_ms) override;
+  void Wake() override;
+  void WakeAll() override;
 
  private:
   ConditionVariablePosix();

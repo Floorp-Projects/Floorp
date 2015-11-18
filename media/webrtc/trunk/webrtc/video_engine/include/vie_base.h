@@ -21,14 +21,12 @@
 
 #include "webrtc/common_types.h"
 
-#if defined(ANDROID) && !defined(WEBRTC_CHROMIUM_BUILD) && !defined(MOZ_WIDGET_GONK)
-#include <jni.h>
-#endif
-
 namespace webrtc {
 
 class Config;
 class VoiceEngine;
+class ReceiveStatisticsProxy;
+class SendStatisticsProxy;
 
 // CpuOveruseObserver is called when a system overuse is detected and
 // VideoEngine cannot keep up the encoding frequency.
@@ -45,12 +43,12 @@ class CpuOveruseObserver {
 
 struct CpuOveruseOptions {
   CpuOveruseOptions()
-      : enable_capture_jitter_method(true),
+      : enable_capture_jitter_method(false),
         low_capture_jitter_threshold_ms(20.0f),
         high_capture_jitter_threshold_ms(30.0f),
-        enable_encode_usage_method(false),
-        low_encode_usage_threshold_percent(60),
-        high_encode_usage_threshold_percent(90),
+        enable_encode_usage_method(true),
+        low_encode_usage_threshold_percent(55),
+        high_encode_usage_threshold_percent(85),
         low_encode_time_rsd_threshold(-1),
         high_encode_time_rsd_threshold(-1),
         enable_extended_processing_usage(true),
@@ -114,7 +112,6 @@ struct CpuOveruseMetrics {
       : capture_jitter_ms(-1),
         avg_encode_time_ms(-1),
         encode_usage_percent(-1),
-        encode_rsd(-1),
         capture_queue_delay_ms_per_s(-1) {}
 
   int capture_jitter_ms;  // The current estimated jitter in ms based on
@@ -122,12 +119,16 @@ struct CpuOveruseMetrics {
   int avg_encode_time_ms;   // The average encode time in ms.
   int encode_usage_percent; // The average encode time divided by the average
                             // time difference between incoming captured frames.
-  // TODO(asapersson): Remove metric, not used.
-  int encode_rsd;           // The relative std dev of encode time of frames.
   int capture_queue_delay_ms_per_s;  // The current time delay between an
                                      // incoming captured frame until the frame
                                      // is being processed. The delay is
                                      // expressed in ms delay per second.
+};
+
+class CpuOveruseMetricsObserver {
+ public:
+  virtual ~CpuOveruseMetricsObserver() {}
+  virtual void CpuOveruseMetricsUpdated(const CpuOveruseMetrics& metrics) = 0;
 };
 
 class WEBRTC_DLLEXPORT VideoEngine {
@@ -150,11 +151,6 @@ class WEBRTC_DLLEXPORT VideoEngine {
   // Installs the TraceCallback implementation to ensure that the VideoEngine
   // user receives callbacks for generated trace messages.
   static int SetTraceCallback(TraceCallback* callback);
-
-#if defined(ANDROID) && !defined(WEBRTC_CHROMIUM_BUILD) && !defined(MOZ_WIDGET_GONK)
-  // Android specific.
-  static int SetAndroidObjects(JavaVM* java_vm);
-#endif
 
  protected:
   VideoEngine() {}
@@ -191,6 +187,9 @@ class WEBRTC_DLLEXPORT ViEBase {
   virtual int CreateChannel(int& video_channel,
                             int original_channel) = 0;
 
+  virtual int CreateChannelWithoutDefaultEncoder(int& video_channel,
+                                                 int original_channel) = 0;
+
   // Creates a new channel grouped together with |original_channel|. The channel
   // can only receive video and it is assumed the remote end-point is the same
   // as for |original_channel|.
@@ -212,6 +211,9 @@ class WEBRTC_DLLEXPORT ViEBase {
 
   // Gets cpu overuse measures.
   virtual int GetCpuOveruseMetrics(int channel, CpuOveruseMetrics* metrics) = 0;
+  virtual void RegisterCpuOveruseMetricsObserver(
+      int channel,
+      CpuOveruseMetricsObserver* observer) = 0;
 
   // Registers a callback which is called when send-side delay statistics has
   // been updated.
@@ -219,10 +221,6 @@ class WEBRTC_DLLEXPORT ViEBase {
   // been updated.
   virtual void RegisterSendSideDelayObserver(
       int channel, SendSideDelayObserver* observer) {}
-
-  // Changing the current state of the host CPU. Encoding engines
-  // can adapt their behavior if needed. (Optional)
-  virtual void SetLoadManager(CPULoadStateCallbackInvoker* load_manager) = 0;
 
   // Specifies the VoiceEngine and VideoEngine channel pair to use for
   // audio/video synchronization.
@@ -250,6 +248,14 @@ class WEBRTC_DLLEXPORT ViEBase {
 
   // Returns the last VideoEngine error code.
   virtual int LastError() = 0;
+
+  virtual void RegisterSendStatisticsProxy(
+      int channel,
+      SendStatisticsProxy* send_statistics_proxy) = 0;
+
+  virtual void RegisterReceiveStatisticsProxy(
+      int channel,
+      ReceiveStatisticsProxy* receive_statistics_proxy) = 0;
 
  protected:
   ViEBase() {}

@@ -8,7 +8,6 @@
 
 # TODO(kjellander): Rebase this to webrtc/build/common.gypi changes after r6330.
 
-import("//build/config/arm.gni")
 import("//build/config/crypto.gni")
 import("//build/config/linux/pkg_config.gni")
 import("build/webrtc.gni")
@@ -84,10 +83,6 @@ config("common_config") {
     all_dependent_configs = [ "dbus-glib" ]
   }
 
-  if (rtc_enable_video) {
-    defines += [ "WEBRTC_MODULE_UTILITY_VIDEO" ]
-  }
-
   if (build_with_chromium) {
     defines += [ "LOGGING_INSIDE_WEBRTC" ]
   } else {
@@ -98,7 +93,7 @@ config("common_config") {
       # expression" warning in android_tools/ndk_experimental"s version
       # of stlport.
       # See: https://code.google.com/p/chromium/issues/detail?id=379699
-      if (cpu_arch != "arm64" || !is_android) {
+      if (current_cpu != "arm64" || !is_android) {
         cflags = [
           "-Wextra",
           # We need to repeat some flags from Chromium"s common.gypi
@@ -120,46 +115,43 @@ config("common_config") {
     }
   }
 
-  if (cpu_arch == "arm64") {
+  if (current_cpu == "arm64") {
     defines += [ "WEBRTC_ARCH_ARM" ]
+    # TODO(zhongwei) Defining an unique WEBRTC_NEON and
+    # distinguishing ARMv7 NEON and ARM64 NEON by
+    # WEBRTC_ARCH_ARM_V7 and WEBRTC_ARCH_ARM64 should be better.
+
+    # This macro is used to distinguish ARMv7 NEON and ARM64 NEON
+    defines += [ "WEBRTC_ARCH_ARM64_NEON" ]
   }
 
-  if (cpu_arch == "arm") {
+  if (current_cpu == "arm") {
     defines += [ "WEBRTC_ARCH_ARM" ]
-    if (arm_version == 7) {
+    if (arm_version >= 7) {
       defines += [ "WEBRTC_ARCH_ARM_V7" ]
       if (arm_use_neon) {
         defines += [ "WEBRTC_ARCH_ARM_NEON" ]
-      } else {
+      } else if (is_android) {
         defines += [ "WEBRTC_DETECT_ARM_NEON" ]
       }
     }
   }
 
-  if (cpu_arch == "mipsel") {
+  if (current_cpu == "mipsel") {
     defines += [ "MIPS32_LE" ]
-    if (mips_fpu) {
+    if (mips_float_abi == "hard") {
       defines += [ "MIPS_FPU_LE" ]
-      cflags += [ "-mhard-float" ]
-    } else {
-      cflags += [ "-msoft-float" ]
     }
-    if (mips_arch_variant == "mips32r2") {
+    if (mips_arch_variant == "r2") {
       defines += [ "MIPS32_R2_LE" ]
-      cflags += [ "-mips32r2" ]
-      cflags_cc += [ "-mips32r2" ]
     }
     if (mips_dsp_rev == 1) {
       defines += [ "MIPS_DSP_R1_LE" ]
-      cflags += [ "-mdsp" ]
-      cflags_cc += [ "-mdsp" ]
     } else if (mips_dsp_rev == 2) {
       defines += [
         "MIPS_DSP_R1_LE",
         "MIPS_DSP_R2_LE",
       ]
-      cflags += [ "-mdspr2" ]
-      cflags_cc += [ "-mdspr2" ]
     }
   }
 
@@ -178,7 +170,7 @@ config("common_config") {
   }
 }
 
-static_library("webrtc") {
+source_set("webrtc") {
   sources = [
     "call.h",
     "config.h",
@@ -192,7 +184,7 @@ static_library("webrtc") {
 
   deps = [
     ":webrtc_common",
-    "base:webrtc_base",
+    "base:rtc_base",
     "common_audio",
     "common_video",
     "modules/audio_coding",
@@ -204,16 +196,21 @@ static_library("webrtc") {
     "modules/media_file",
     "modules/rtp_rtcp",
     "modules/utility",
-    "modules/video_capture",
     "modules/video_coding",
     "modules/video_processing",
-    "modules/video_render",
     "system_wrappers",
     "tools",
     "video",
     "video_engine",
     "voice_engine",
   ]
+
+  if (build_with_chromium) {
+    deps += [
+    "modules/video_capture",
+    "modules/video_render",
+    ]
+  }
 }
 
 if (!build_with_chromium) {
@@ -230,16 +227,20 @@ if (!build_with_chromium) {
 
 source_set("webrtc_common") {
   sources = [
+    "common_types.cc",
+    "common_types.h",
     "config.h",
     "config.cc",
+    "engine_configurations.h",
+    "typedefs.h",
   ]
-
-  if (is_clang) {
-    # Suppress warnings from Chrome's Clang plugins.
-    # See http://code.google.com/p/webrtc/issues/detail?id=163 for details.
-    configs -= [ "//build/config/clang:find_bad_constructs" ]
-  }
 
   configs += [ ":common_config" ]
   public_configs = [ ":common_inherited_config" ]
+}
+
+source_set("gtest_prod") {
+  sources = [
+    "test/testsupport/gtest_prod_util.h",
+  ]
 }

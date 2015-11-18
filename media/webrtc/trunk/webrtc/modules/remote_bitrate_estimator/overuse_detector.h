@@ -7,11 +7,12 @@
  *  in the file PATENTS.  All contributing project authors may
  *  be found in the AUTHORS file in the root of the source tree.
  */
-#ifndef WEBRTC_MODULES_RTP_RTCP_SOURCE_OVERUSE_DETECTOR_H_
-#define WEBRTC_MODULES_RTP_RTCP_SOURCE_OVERUSE_DETECTOR_H_
+#ifndef WEBRTC_MODULES_REMOTE_BITRATE_ESTIMATOR_OVERUSE_DETECTOR_H_
+#define WEBRTC_MODULES_REMOTE_BITRATE_ESTIMATOR_OVERUSE_DETECTOR_H_
 
 #include <list>
 
+#include "webrtc/base/constructormagic.h"
 #include "webrtc/modules/interface/module_common_types.h"
 #include "webrtc/modules/remote_bitrate_estimator/include/bwe_defines.h"
 #include "webrtc/typedefs.h"
@@ -19,76 +20,39 @@
 namespace webrtc {
 enum RateControlRegion;
 
-// This class is assumed to be protected by the owner if used by multiple
-// threads.
 class OveruseDetector {
  public:
   explicit OveruseDetector(const OverUseDetectorOptions& options);
   ~OveruseDetector();
-  void Update(uint16_t packet_size,
-              int64_t timestamp_ms,
-              uint32_t rtp_timestamp,
-              int64_t arrival_time_ms);
+
+  // Update the detection state based on the estimated inter-arrival time delta
+  // offset. |timestamp_delta| is the delta between the last timestamp which the
+  // estimated offset is based on and the last timestamp on which the last
+  // offset was based on, representing the time between detector updates.
+  // |num_of_deltas| is the number of deltas the offset estimate is based on.
+  // Returns the state after the detection update.
+  BandwidthUsage Detect(double offset, double timestamp_delta,
+                        int num_of_deltas);
+
+  // Returns the current detector state.
   BandwidthUsage State() const;
-  double NoiseVar() const;
-  void SetRateControlRegion(RateControlRegion region);
+
+  // Sets the current rate-control region as decided by RemoteRateControl. This
+  // affects the sensitivity of the detector.
+  void SetRateControlRegion(webrtc::RateControlRegion region);
 
  private:
-  struct FrameSample {
-    FrameSample()
-        : size(0),
-          complete_time_ms(-1),
-          timestamp(-1),
-          timestamp_ms(-1) {}
-
-    uint32_t size;
-    int64_t complete_time_ms;
-    int64_t timestamp;
-    int64_t timestamp_ms;
-  };
-
-  // Returns true if |timestamp| represent a time which is later than
-  // |prev_timestamp|.
-  static bool InOrderTimestamp(uint32_t timestamp, uint32_t prev_timestamp);
-
-  bool PacketInOrder(uint32_t timestamp, int64_t timestamp_ms);
-
-  // Prepares the overuse detector to start using timestamps in milliseconds
-  // instead of 90 kHz timestamps.
-  void SwitchTimeBase();
-
-  void TimeDeltas(const FrameSample& current_frame,
-                  const FrameSample& prev_frame,
-                  int64_t* t_delta,
-                  double* ts_delta);
-  void UpdateKalman(int64_t t_delta,
-                    double ts_elta,
-                    uint32_t frame_size,
-                    uint32_t prev_frame_size);
-  double UpdateMinFramePeriod(double ts_delta);
-  void UpdateNoiseEstimate(double residual, double ts_delta, bool stable_state);
-  BandwidthUsage Detect(double ts_delta);
-  double CurrentDrift();
-
-  OverUseDetectorOptions options_;  // Must be first member
-                                    // variable. Cannot be const
-                                    // because we need to be copyable.
-  FrameSample current_frame_;
-  FrameSample prev_frame_;
-  uint16_t num_of_deltas_;
-  double slope_;
-  double offset_;
-  double E_[2][2];
-  double process_noise_[2];
-  double avg_noise_;
-  double var_noise_;
+  // Must be first member variable. Cannot be const because we need to be
+  // copyable.
+  webrtc::OverUseDetectorOptions options_;
   double threshold_;
-  std::list<double> ts_delta_hist_;
   double prev_offset_;
   double time_over_using_;
-  uint16_t over_use_counter_;
+  int overuse_counter_;
   BandwidthUsage hypothesis_;
+
+  DISALLOW_COPY_AND_ASSIGN(OveruseDetector);
 };
 }  // namespace webrtc
 
-#endif  // WEBRTC_MODULES_RTP_RTCP_SOURCE_OVERUSE_DETECTOR_H_
+#endif  // WEBRTC_MODULES_REMOTE_BITRATE_ESTIMATOR_OVERUSE_DETECTOR_H_

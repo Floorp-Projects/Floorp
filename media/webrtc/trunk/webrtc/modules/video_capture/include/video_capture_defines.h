@@ -26,15 +26,6 @@ enum {kVideoCaptureUniqueNameLength =1024}; //Max unique capture device name len
 enum {kVideoCaptureDeviceNameLength =256}; //Max capture device name lenght
 enum {kVideoCaptureProductIdLength =128}; //Max product id length
 
-// Enums
-enum VideoCaptureRotation
-{
-    kCameraRotate0 = 0,
-    kCameraRotate90 = 5,
-    kCameraRotate180 = 10,
-    kCameraRotate270 = 15
-};
-
 struct VideoCaptureCapability
 {
     int32_t width;
@@ -92,12 +83,9 @@ class VideoCaptureExternal
 public:
     // |capture_time| must be specified in the NTP time format in milliseconds.
     virtual int32_t IncomingFrame(uint8_t* videoFrame,
-                                  int32_t videoFrameLength,
+                                  size_t videoFrameLength,
                                   const VideoCaptureCapability& frameInfo,
                                   int64_t captureTime = 0) = 0;
-    virtual int32_t IncomingI420VideoFrame(I420VideoFrame* video_frame,
-                                           int64_t captureTime = 0) = 0;
-
 protected:
     ~VideoCaptureExternal() {}
 };
@@ -107,7 +95,7 @@ class VideoCaptureDataCallback
 {
 public:
     virtual void OnIncomingCapturedFrame(const int32_t id,
-                                         I420VideoFrame& videoFrame) = 0;
+                                         const I420VideoFrame& videoFrame) = 0;
     virtual void OnCaptureDelayChanged(const int32_t id,
                                        const int32_t delay) = 0;
 protected:

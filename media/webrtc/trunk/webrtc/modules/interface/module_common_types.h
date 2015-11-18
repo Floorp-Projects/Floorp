@@ -18,6 +18,7 @@
 
 #include "webrtc/base/constructormagic.h"
 #include "webrtc/common_types.h"
+#include "webrtc/common_video/rotation.h"
 #include "webrtc/typedefs.h"
 
 namespace webrtc {
@@ -61,41 +62,12 @@ struct RTPVideoHeaderVP8 {
 };
 
 struct RTPVideoHeaderH264 {
-  uint8_t nalu_header;    // us ********* REMOVE ME??? *********
-  bool stap_a;            // them *** or this? ***
+  bool stap_a;
   bool single_nalu;
-};
-
-// XXX fix vp9 (bug 1138629)
-struct RTPVideoHeaderVP9 {
-  void InitRTPVideoHeaderVP9() {
-    nonReference = false;
-    pictureId = kNoPictureId;
-    tl0PicIdx = kNoTl0PicIdx;
-    temporalIdx = kNoTemporalIdx;
-    layerSync = false;
-    keyIdx = kNoKeyIdx;
-    partitionId = 0;
-    beginningOfPartition = false;
-  }
-
-  bool nonReference;          // Frame is discardable.
-  int16_t pictureId;          // Picture ID index, 15 bits;
-                              // kNoPictureId if PictureID does not exist.
-  int16_t tl0PicIdx;          // TL0PIC_IDX, 8 bits;
-                              // kNoTl0PicIdx means no value provided.
-  uint8_t temporalIdx;        // Temporal layer index, or kNoTemporalIdx.
-  bool layerSync;             // This frame is a layer sync frame.
-                              // Disabled if temporalIdx == kNoTemporalIdx.
-  int keyIdx;                 // 5 bits; kNoKeyIdx means not used.
-  int partitionId;            // VP9 partition ID
-  bool beginningOfPartition;  // True if this packet is the first
-                              // in a VP9 partition. Otherwise false
 };
 
 union RTPVideoTypeHeader {
   RTPVideoHeaderVP8 VP8;
-  RTPVideoHeaderVP9 VP9;
   RTPVideoHeaderH264 H264;
 };
 
@@ -103,14 +75,16 @@ enum RtpVideoCodecTypes {
   kRtpVideoNone,
   kRtpVideoGeneric,
   kRtpVideoVp8,
-  kRtpVideoVp9,
   kRtpVideoH264
 };
+// Since RTPVideoHeader is used as a member of a union, it can't have a
+// non-trivial default constructor.
 struct RTPVideoHeader {
   uint16_t width;  // size
   uint16_t height;
+  VideoRotation rotation;
 
-  bool isFirstPacket;    // first packet in frame (or NAL for H.264)
+  bool isFirstPacket;    // first packet in frame
   uint8_t simulcastIdx;  // Index if the simulcast encoder creating
                          // this frame, 0 if not using simulcast.
   RtpVideoCodecTypes codec;
@@ -166,10 +140,10 @@ class RTPFragmentationHeader {
       if (src.fragmentationVectorSize > 0) {
         // allocate new
         if (src.fragmentationOffset) {
-          fragmentationOffset = new uint32_t[src.fragmentationVectorSize];
+          fragmentationOffset = new size_t[src.fragmentationVectorSize];
         }
         if (src.fragmentationLength) {
-          fragmentationLength = new uint32_t[src.fragmentationVectorSize];
+          fragmentationLength = new size_t[src.fragmentationVectorSize];
         }
         if (src.fragmentationTimeDiff) {
           fragmentationTimeDiff = new uint16_t[src.fragmentationVectorSize];
@@ -186,11 +160,11 @@ class RTPFragmentationHeader {
       // copy values
       if (src.fragmentationOffset) {
         memcpy(fragmentationOffset, src.fragmentationOffset,
-               src.fragmentationVectorSize * sizeof(uint32_t));
+               src.fragmentationVectorSize * sizeof(size_t));
       }
       if (src.fragmentationLength) {
         memcpy(fragmentationLength, src.fragmentationLength,
-               src.fragmentationVectorSize * sizeof(uint32_t));
+               src.fragmentationVectorSize * sizeof(size_t));
       }
       if (src.fragmentationTimeDiff) {
         memcpy(fragmentationTimeDiff, src.fragmentationTimeDiff,
@@ -208,23 +182,23 @@ class RTPFragmentationHeader {
       uint16_t oldVectorSize = fragmentationVectorSize;
       {
         // offset
-        uint32_t* oldOffsets = fragmentationOffset;
-        fragmentationOffset = new uint32_t[size];
+        size_t* oldOffsets = fragmentationOffset;
+        fragmentationOffset = new size_t[size];
         memset(fragmentationOffset + oldVectorSize, 0,
-               sizeof(uint32_t) * (size - oldVectorSize));
+               sizeof(size_t) * (size - oldVectorSize));
         // copy old values
         memcpy(fragmentationOffset, oldOffsets,
-               sizeof(uint32_t) * oldVectorSize);
+               sizeof(size_t) * oldVectorSize);
         delete[] oldOffsets;
       }
       // length
       {
-        uint32_t* oldLengths = fragmentationLength;
-        fragmentationLength = new uint32_t[size];
+        size_t* oldLengths = fragmentationLength;
+        fragmentationLength = new size_t[size];
         memset(fragmentationLength + oldVectorSize, 0,
-               sizeof(uint32_t) * (size - oldVectorSize));
+               sizeof(size_t) * (size - oldVectorSize));
         memcpy(fragmentationLength, oldLengths,
-               sizeof(uint32_t) * oldVectorSize);
+               sizeof(size_t) * oldVectorSize);
         delete[] oldLengths;
       }
       // time diff
@@ -252,11 +226,12 @@ class RTPFragmentationHeader {
   }
 
   uint16_t fragmentationVectorSize;  // Number of fragmentations
-  uint32_t* fragmentationOffset;    // Offset of pointer to data for each fragm.
-  uint32_t* fragmentationLength;    // Data size for each fragmentation
-  uint16_t* fragmentationTimeDiff;  // Timestamp difference relative "now" for
-                                    // each fragmentation
-  uint8_t* fragmentationPlType;     // Payload type of each fragmentation
+  size_t* fragmentationOffset;       // Offset of pointer to data for each
+                                     // fragmentation
+  size_t* fragmentationLength;       // Data size for each fragmentation
+  uint16_t* fragmentationTimeDiff;   // Timestamp difference relative "now" for
+                                     // each fragmentation
+  uint8_t* fragmentationPlType;      // Payload type of each fragmentation
 
  private:
   DISALLOW_COPY_AND_ASSIGN(RTPFragmentationHeader);
@@ -308,7 +283,7 @@ struct FecProtectionParams {
 // CallStats object using RegisterStatsObserver.
 class CallStatsObserver {
  public:
-  virtual void OnRttUpdate(uint32_t rtt_ms) = 0;
+  virtual void OnRttUpdate(int64_t rtt_ms) = 0;
 
   virtual ~CallStatsObserver() {}
 };
@@ -346,6 +321,7 @@ class EncodedVideoData {
     if (data.payloadSize > 0) {
       payloadData = new uint8_t[data.payloadSize];
       memcpy(payloadData, data.payloadData, data.payloadSize);
+      bufferSize = data.payloadSize;
     } else {
       payloadData = NULL;
     }
@@ -378,7 +354,7 @@ class EncodedVideoData {
     }
     return *this;
   };
-  void VerifyAndAllocate(const uint32_t size) {
+  void VerifyAndAllocate(const size_t size) {
     if (bufferSize < size) {
       uint8_t* oldPayload = payloadData;
       payloadData = new uint8_t[size];
@@ -397,8 +373,8 @@ class EncodedVideoData {
   bool completeFrame;
   bool missingFrame;
   uint8_t* payloadData;
-  uint32_t payloadSize;
-  uint32_t bufferSize;
+  size_t payloadSize;
+  size_t bufferSize;
   RTPFragmentationHeader fragmentationHeader;
   FrameType frameType;
   VideoCodecType codec;
@@ -422,238 +398,6 @@ struct VideoContentMetrics {
   float spatial_pred_err_h;
   float spatial_pred_err_v;
 };
-
-/*************************************************
- *
- * VideoFrame class
- *
- * The VideoFrame class allows storing and
- * handling of video frames.
- *
- *
- *************************************************/
-class VideoFrame {
- public:
-  VideoFrame();
-  ~VideoFrame();
-  /**
-  * Verifies that current allocated buffer size is larger than or equal to the
-  * input size.
-  * If the current buffer size is smaller, a new allocation is made and the old
-  * buffer data
-  * is copied to the new buffer.
-  * Buffer size is updated to minimumSize.
-  */
-  int32_t VerifyAndAllocate(const uint32_t minimumSize);
-  /**
-  *    Update length of data buffer in frame. Function verifies that new length
-  * is less or
-  *    equal to allocated size.
-  */
-  int32_t SetLength(const uint32_t newLength);
-  /*
-  *    Swap buffer and size data
-  */
-  int32_t Swap(uint8_t*& newMemory, uint32_t& newLength, uint32_t& newSize);
-  /*
-  *    Swap buffer and size data
-  */
-  int32_t SwapFrame(VideoFrame& videoFrame);
-  /**
-  *    Copy buffer: If newLength is bigger than allocated size, a new buffer of
-  * size length
-  *    is allocated.
-  */
-  int32_t CopyFrame(const VideoFrame& videoFrame);
-  /**
-  *    Copy buffer: If newLength is bigger than allocated size, a new buffer of
-  * size length
-  *    is allocated.
-  */
-  int32_t CopyFrame(uint32_t length, const uint8_t* sourceBuffer);
-  /**
-  *    Delete VideoFrame and resets members to zero
-  */
-  void Free();
-  /**
-  *   Set frame timestamp (90kHz)
-  */
-  void SetTimeStamp(const uint32_t timeStamp) { _timeStamp = timeStamp; }
-  /**
-  *   Get pointer to frame buffer
-  */
-  uint8_t* Buffer() const { return _buffer; }
-
-  uint8_t*& Buffer() { return _buffer; }
-
-  /**
-  *   Get allocated buffer size
-  */
-  uint32_t Size() const { return _bufferSize; }
-  /**
-  *   Get frame length
-  */
-  uint32_t Length() const { return _bufferLength; }
-  /**
-  *   Get frame timestamp (90kHz)
-  */
-  uint32_t TimeStamp() const { return _timeStamp; }
-  /**
-  *   Get frame width
-  */
-  uint32_t Width() const { return _width; }
-  /**
-  *   Get frame height
-  */
-  uint32_t Height() const { return _height; }
-  /**
-  *   Set frame width
-  */
-  void SetWidth(const uint32_t width) { _width = width; }
-  /**
-  *   Set frame height
-  */
-  void SetHeight(const uint32_t height) { _height = height; }
-  /**
-  *   Set render time in miliseconds
-  */
-  void SetRenderTime(const int64_t renderTimeMs) {
-    _renderTimeMs = renderTimeMs;
-  }
-  /**
-  *  Get render time in miliseconds
-  */
-  int64_t RenderTimeMs() const { return _renderTimeMs; }
-
- private:
-  void Set(uint8_t* buffer, uint32_t size, uint32_t length, uint32_t timeStamp);
-
-  uint8_t* _buffer;        // Pointer to frame buffer
-  uint32_t _bufferSize;    // Allocated buffer size
-  uint32_t _bufferLength;  // Length (in bytes) of buffer
-  uint32_t _timeStamp;     // Timestamp of frame (90kHz)
-  uint32_t _width;
-  uint32_t _height;
-  int64_t _renderTimeMs;
-};  // end of VideoFrame class declaration
-
-// inline implementation of VideoFrame class:
-inline VideoFrame::VideoFrame()
-    : _buffer(0),
-      _bufferSize(0),
-      _bufferLength(0),
-      _timeStamp(0),
-      _width(0),
-      _height(0),
-      _renderTimeMs(0) {
-  //
-}
-inline VideoFrame::~VideoFrame() {
-  if (_buffer) {
-    delete[] _buffer;
-    _buffer = NULL;
-  }
-}
-
-inline int32_t VideoFrame::VerifyAndAllocate(const uint32_t minimumSize) {
-  if (minimumSize < 1) {
-    return -1;
-  }
-  if (minimumSize > _bufferSize) {
-    // create buffer of sufficient size
-    uint8_t* newBufferBuffer = new uint8_t[minimumSize];
-    if (_buffer) {
-      // copy old data
-      memcpy(newBufferBuffer, _buffer, _bufferSize);
-      delete[] _buffer;
-    } else {
-      memset(newBufferBuffer, 0, minimumSize * sizeof(uint8_t));
-    }
-    _buffer = newBufferBuffer;
-    _bufferSize = minimumSize;
-  }
-  return 0;
-}
-
-inline int32_t VideoFrame::SetLength(const uint32_t newLength) {
-  if (newLength > _bufferSize) {  // can't accomodate new value
-    return -1;
-  }
-  _bufferLength = newLength;
-  return 0;
-}
-
-inline int32_t VideoFrame::SwapFrame(VideoFrame& videoFrame) {
-  uint32_t tmpTimeStamp = _timeStamp;
-  uint32_t tmpWidth = _width;
-  uint32_t tmpHeight = _height;
-  int64_t tmpRenderTime = _renderTimeMs;
-
-  _timeStamp = videoFrame._timeStamp;
-  _width = videoFrame._width;
-  _height = videoFrame._height;
-  _renderTimeMs = videoFrame._renderTimeMs;
-
-  videoFrame._timeStamp = tmpTimeStamp;
-  videoFrame._width = tmpWidth;
-  videoFrame._height = tmpHeight;
-  videoFrame._renderTimeMs = tmpRenderTime;
-
-  return Swap(videoFrame._buffer, videoFrame._bufferLength,
-              videoFrame._bufferSize);
-}
-
-inline int32_t VideoFrame::Swap(uint8_t*& newMemory, uint32_t& newLength,
-                                uint32_t& newSize) {
-  uint8_t* tmpBuffer = _buffer;
-  uint32_t tmpLength = _bufferLength;
-  uint32_t tmpSize = _bufferSize;
-  _buffer = newMemory;
-  _bufferLength = newLength;
-  _bufferSize = newSize;
-  newMemory = tmpBuffer;
-  newLength = tmpLength;
-  newSize = tmpSize;
-  return 0;
-}
-
-inline int32_t VideoFrame::CopyFrame(uint32_t length,
-                                     const uint8_t* sourceBuffer) {
-  if (length > _bufferSize) {
-    int32_t ret = VerifyAndAllocate(length);
-    if (ret < 0) {
-      return ret;
-    }
-  }
-  memcpy(_buffer, sourceBuffer, length);
-  _bufferLength = length;
-  return 0;
-}
-
-inline int32_t VideoFrame::CopyFrame(const VideoFrame& videoFrame) {
-  if (CopyFrame(videoFrame.Length(), videoFrame.Buffer()) != 0) {
-    return -1;
-  }
-  _timeStamp = videoFrame._timeStamp;
-  _width = videoFrame._width;
-  _height = videoFrame._height;
-  _renderTimeMs = videoFrame._renderTimeMs;
-  return 0;
-}
-
-inline void VideoFrame::Free() {
-  _timeStamp = 0;
-  _bufferLength = 0;
-  _bufferSize = 0;
-  _height = 0;
-  _width = 0;
-  _renderTimeMs = 0;
-
-  if (_buffer) {
-    delete[] _buffer;
-    _buffer = NULL;
-  }
-}
 
 /* This class holds up to 60 ms of super-wideband (32 kHz) stereo audio. It
  * allows for adding and subtracting frames while keeping track of the resulting
@@ -924,11 +668,6 @@ inline bool IsNewerSequenceNumber(uint16_t sequence_number,
 inline bool IsNewerTimestamp(uint32_t timestamp, uint32_t prev_timestamp) {
   return timestamp != prev_timestamp &&
          static_cast<uint32_t>(timestamp - prev_timestamp) < 0x80000000;
-}
-
-inline bool IsNewerOrSameTimestamp(uint32_t timestamp, uint32_t prev_timestamp) {
-  return timestamp == prev_timestamp ||
-      static_cast<uint32_t>(timestamp - prev_timestamp) < 0x80000000;
 }
 
 inline uint16_t LatestSequenceNumber(uint16_t sequence_number1,

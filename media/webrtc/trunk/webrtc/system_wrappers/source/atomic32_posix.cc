@@ -12,6 +12,7 @@
 
 #include <assert.h>
 #include <inttypes.h>
+#include <malloc.h>
 
 #include "webrtc/common_types.h"
 

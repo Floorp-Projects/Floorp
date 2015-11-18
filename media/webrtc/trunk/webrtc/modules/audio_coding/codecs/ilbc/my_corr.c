@@ -37,7 +37,7 @@ void WebRtcIlbcfix_MyCorr(
   max=WebRtcSpl_MaxAbsValueW16(seq1, dim1);
   scale=WebRtcSpl_GetSizeInBits(max);
 
-  scale = (int16_t)(WEBRTC_SPL_MUL_16_16(2,scale)-26);
+  scale = (int16_t)(2 * scale - 26);
   if (scale<0) {
     scale=0;
   }

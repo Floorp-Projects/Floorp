@@ -22,8 +22,6 @@
 
 namespace webrtc {
 
-enum { kSyncInterval = 1000};
-
 int UpdateMeasurements(StreamSynchronization::Measurements* stream,
                        const RtpRtcp& rtp_rtcp, const RtpReceiver& receiver) {
   if (!receiver.Timestamp(&stream->latest_timestamp))
@@ -93,9 +91,9 @@ int ViESyncModule::VoiceChannel() {
   return voe_channel_id_;
 }
 
-int32_t ViESyncModule::TimeUntilNextProcess() {
-  return static_cast<int32_t>(kSyncInterval -
-      (TickTime::Now() - last_sync_time_).Milliseconds());
+int64_t ViESyncModule::TimeUntilNextProcess() {
+  const int64_t kSyncIntervalMs = 1000;
+  return kSyncIntervalMs - (TickTime::Now() - last_sync_time_).Milliseconds();
 }
 
 int32_t ViESyncModule::Process() {
@@ -112,11 +110,9 @@ int32_t ViESyncModule::Process() {
 
   int audio_jitter_buffer_delay_ms = 0;
   int playout_buffer_delay_ms = 0;
-  int avsync_offset_ms = 0;
   if (voe_sync_interface_->GetDelayEstimate(voe_channel_id_,
                                             &audio_jitter_buffer_delay_ms,
-                                            &playout_buffer_delay_ms,
-                                            &avsync_offset_ms) != 0) {
+                                            &playout_buffer_delay_ms) != 0) {
     return 0;
   }
   const int current_audio_delay_ms = audio_jitter_buffer_delay_ms +
@@ -142,15 +138,11 @@ int32_t ViESyncModule::Process() {
   }
 
   int relative_delay_ms;
-  int result;
   // Calculate how much later or earlier the audio stream is compared to video.
-
-  result = sync_->ComputeRelativeDelay(audio_measurement_, video_measurement_,
-                                       &relative_delay_ms);
-  if (!result) {
+  if (!sync_->ComputeRelativeDelay(audio_measurement_, video_measurement_,
+                                   &relative_delay_ms)) {
     return 0;
   }
-  voe_sync_interface_->SetCurrentSyncOffset(voe_channel_id_, relative_delay_ms);
 
   TRACE_COUNTER1("webrtc", "SyncCurrentVideoDelay", current_video_delay_ms);
   TRACE_COUNTER1("webrtc", "SyncCurrentAudioDelay", current_audio_delay_ms);

@@ -14,7 +14,7 @@
 #include <list>
 #include <map>
 
-#include "webrtc/system_wrappers/interface/scoped_ptr.h"
+#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/typedefs.h"
 #include "webrtc/video_engine/vie_manager_base.h"
 
@@ -54,7 +54,7 @@ class ViERenderManager : private ViEManagerBase {
   // Methods used by ViERenderScoped.
   ViERenderer* ViERenderPtr(int32_t render_id) const;
 
-  scoped_ptr<CriticalSectionWrapper> list_cs_;
+  rtc::scoped_ptr<CriticalSectionWrapper> list_cs_;
   int32_t engine_id_;
   // Protected by ViEManagerBase.
   typedef std::map<int32_t, ViERenderer*> RendererMap;

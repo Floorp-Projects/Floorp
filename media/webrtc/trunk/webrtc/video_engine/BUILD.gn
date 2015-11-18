@@ -29,6 +29,10 @@ source_set("video_engine_core") {
     "encoder_state_feedback.h",
     "overuse_frame_detector.cc",
     "overuse_frame_detector.h",
+    "payload_router.cc",
+    "payload_router.h",
+    "report_block_stats.cc",
+    "report_block_stats.h",
     "stream_synchronization.cc",
     "stream_synchronization.h",
     "vie_base_impl.cc",
@@ -99,18 +103,21 @@ source_set("video_engine_core") {
     cflags = [
       # TODO(jschuh): Bug 1348: fix size_t to int truncations.
       "/wd4267",  # size_t to int truncation.
+      # Bug 261.
+      "/wd4373",  # legacy warning for ignoring const / volatile in signatures.
     ]
   }
 
   deps = [
+    "..:webrtc_common",
     "../common_video",
     "../modules/bitrate_controller",
     "../modules/rtp_rtcp",
     "../modules/utility",
-    "../modules/video_capture",
+    "../modules/video_capture:video_capture_module",
     "../modules/video_coding",
     "../modules/video_processing",
-    "../modules/video_render",
+    "../modules/video_render:video_render_module",
     "../voice_engine",
     "../system_wrappers",
   ]

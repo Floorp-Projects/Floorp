@@ -11,8 +11,8 @@
 #ifndef WEBRTC_MODULES_AUDIO_PROCESSING_AEC_ECHO_CANCELLATION_INTERNAL_H_
 #define WEBRTC_MODULES_AUDIO_PROCESSING_AEC_ECHO_CANCELLATION_INTERNAL_H_
 
+#include "webrtc/common_audio/ring_buffer.h"
 #include "webrtc/modules/audio_processing/aec/aec_core.h"
-#include "webrtc/modules/audio_processing/utility/ring_buffer.h"
 
 typedef struct {
   int delayCtr;
@@ -62,6 +62,6 @@ typedef struct {
   int farend_started;
 
   AecCore* aec;
-} aecpc_t;
+} Aec;
 
 #endif  // WEBRTC_MODULES_AUDIO_PROCESSING_AEC_ECHO_CANCELLATION_INTERNAL_H_

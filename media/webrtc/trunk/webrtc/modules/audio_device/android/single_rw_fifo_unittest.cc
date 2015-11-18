@@ -13,7 +13,7 @@
 #include <list>
 
 #include "testing/gtest/include/gtest/gtest.h"
-#include "webrtc/system_wrappers/interface/scoped_ptr.h"
+#include "webrtc/base/scoped_ptr.h"
 
 namespace webrtc {
 
@@ -90,7 +90,7 @@ class SingleRwFifoTest : public testing::Test {
  protected:
   SingleRwFifo fifo_;
   // Memory area for proper de-allocation.
-  scoped_ptr<int8_t[]> buffer_[kCapacity];
+  rtc::scoped_ptr<int8_t[]> buffer_[kCapacity];
   std::list<int8_t*> memory_queue_;
 
   int pushed_;

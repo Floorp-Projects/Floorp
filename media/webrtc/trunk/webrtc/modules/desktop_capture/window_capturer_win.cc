@@ -12,11 +12,11 @@
 
 #include <assert.h>
 
+#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/base/win32.h"
 #include "webrtc/modules/desktop_capture/desktop_frame_win.h"
 #include "webrtc/modules/desktop_capture/win/window_capture_utils.h"
 #include "webrtc/system_wrappers/interface/logging.h"
-#include "webrtc/system_wrappers/interface/scoped_ptr.h"
 
 namespace webrtc {
 
@@ -25,7 +25,6 @@ namespace {
 typedef HRESULT (WINAPI *DwmIsCompositionEnabledFunc)(BOOL* enabled);
 
 BOOL CALLBACK WindowsEnumerationHandler(HWND hwnd, LPARAM param) {
-  assert(IsGUIThread(false));
   WindowCapturer::WindowList* list =
       reinterpret_cast<WindowCapturer::WindowList*>(param);
 
@@ -73,13 +72,13 @@ class WindowCapturerWin : public WindowCapturer {
   virtual ~WindowCapturerWin();
 
   // WindowCapturer interface.
-  virtual bool GetWindowList(WindowList* windows) OVERRIDE;
-  virtual bool SelectWindow(WindowId id) OVERRIDE;
-  virtual bool BringSelectedWindowToFront() OVERRIDE;
+  bool GetWindowList(WindowList* windows) override;
+  bool SelectWindow(WindowId id) override;
+  bool BringSelectedWindowToFront() override;
 
   // DesktopCapturer interface.
-  virtual void Start(Callback* callback) OVERRIDE;
-  virtual void Capture(const DesktopRegion& region) OVERRIDE;
+  void Start(Callback* callback) override;
+  void Capture(const DesktopRegion& region) override;
 
  private:
   bool IsAeroEnabled();
@@ -127,7 +126,6 @@ bool WindowCapturerWin::IsAeroEnabled() {
 }
 
 bool WindowCapturerWin::GetWindowList(WindowList* windows) {
-  assert(IsGUIThread(false));
   WindowList result;
   LPARAM param = reinterpret_cast<LPARAM>(&result);
   if (!EnumWindows(&WindowsEnumerationHandler, param))
@@ -137,7 +135,6 @@ bool WindowCapturerWin::GetWindowList(WindowList* windows) {
 }
 
 bool WindowCapturerWin::SelectWindow(WindowId id) {
-  assert(IsGUIThread(false));
   HWND window = reinterpret_cast<HWND>(id);
   if (!IsWindow(window) || !IsWindowVisible(window) || IsIconic(window))
     return false;
@@ -147,7 +144,6 @@ bool WindowCapturerWin::SelectWindow(WindowId id) {
 }
 
 bool WindowCapturerWin::BringSelectedWindowToFront() {
-  assert(IsGUIThread(false));
   if (!window_)
     return false;
 
@@ -165,7 +161,6 @@ void WindowCapturerWin::Start(Callback* callback) {
 }
 
 void WindowCapturerWin::Capture(const DesktopRegion& region) {
-  assert(IsGUIThread(false));
   if (!window_) {
     LOG(LS_ERROR) << "Window hasn't been selected: " << GetLastError();
     callback_->OnCaptureCompleted(NULL);
@@ -204,8 +199,8 @@ void WindowCapturerWin::Capture(const DesktopRegion& region) {
     return;
   }
 
-  scoped_ptr<DesktopFrameWin> frame(DesktopFrameWin::Create(
-      cropped_rect.size(), NULL, window_dc));
+  rtc::scoped_ptr<DesktopFrameWin> frame(
+      DesktopFrameWin::Create(cropped_rect.size(), NULL, window_dc));
   if (!frame.get()) {
     ReleaseDC(window_, window_dc);
     callback_->OnCaptureCompleted(NULL);

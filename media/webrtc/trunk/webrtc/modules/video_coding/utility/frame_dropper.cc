@@ -75,7 +75,7 @@ FrameDropper::Enable(bool enable)
 }
 
 void
-FrameDropper::Fill(uint32_t frameSizeBytes, bool deltaFrame)
+FrameDropper::Fill(size_t frameSizeBytes, bool deltaFrame)
 {
     if (!_enabled)
     {

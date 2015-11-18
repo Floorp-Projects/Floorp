@@ -35,9 +35,6 @@ class EventWrapper {
   // either immediately or some time in the future.
   virtual bool Set() = 0;
 
-  // Prevents future Wait() calls from finishing without a new Set() call.
-  virtual bool Reset() = 0;
-
   // Puts the calling thread into a wait state. The thread may be released
   // by a Set() call depending on if other threads are waiting and if so on
   // timing. The thread that was released will call Reset() before leaving

@@ -24,7 +24,7 @@ public:
     AudioDeviceUtilityDummy(const int32_t id) {}
     virtual ~AudioDeviceUtilityDummy() {}
 
-    virtual int32_t Init() OVERRIDE;
+    int32_t Init() override;
 };
 }  // namespace webrtc
 

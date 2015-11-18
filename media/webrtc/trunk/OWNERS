@@ -4,9 +4,11 @@ mflodman@webrtc.org
 niklas.enbom@webrtc.org
 tina.legrand@webrtc.org
 tommi@webrtc.org
-per-file *.isolate=kjellander@webrtc.org
 per-file .gitignore=*
 per-file AUTHORS=*
+per-file BUILD.gn=kjellander@webrtc.org
 per-file DEPS=*
+per-file PRESUBMIT.py=kjellander@webrtc.org
+per-file setup_links.py=*
+per-file sync_chromium.py=kjellander@webrtc.org
 per-file WATCHLISTS=*
-per-file webrtc_examples.gyp=*

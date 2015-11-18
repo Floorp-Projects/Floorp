@@ -18,7 +18,7 @@
 #include <string>
 
 #include "webrtc/base/constructormagic.h"
-#include "webrtc/system_wrappers/interface/scoped_ptr.h"
+#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/video_engine/include/vie_render.h"
 
 namespace webrtc {
@@ -54,23 +54,29 @@ class ViEToFileRenderer: public webrtc::ExternalRenderer {
   bool SaveOutputFile(const std::string& prefix);
 
   // Implementation of ExternalRenderer:
-  int FrameSizeChange(unsigned int width, unsigned int height,
-                      unsigned int number_of_streams) OVERRIDE;
+  int FrameSizeChange(unsigned int width,
+                      unsigned int height,
+                      unsigned int number_of_streams) override;
 
   int DeliverFrame(unsigned char* buffer,
-                   int buffer_size,
+                   size_t buffer_size,
                    uint32_t time_stamp,
                    int64_t ntp_time_ms,
                    int64_t render_time,
-                   void* handle) OVERRIDE;
+                   void* handle) override;
 
-  bool IsTextureSupported() OVERRIDE;
+  int DeliverI420Frame(const webrtc::I420VideoFrame& webrtc_frame) override;
+
+  bool IsTextureSupported() override;
 
   const std::string GetFullOutputPath() const;
 
  private:
   typedef std::list<test::Frame*> FrameQueue;
 
+  // Returns a frame with the specified |buffer_size|. Tries to avoid allocating
+  // new frames by reusing frames from |free_frame_queue_|.
+  test::Frame* NewFrame(size_t buffer_size);
   static bool RunRenderThread(void* obj);
   void ForgetOutputFile();
   bool ProcessRenderQueue();
@@ -78,9 +84,9 @@ class ViEToFileRenderer: public webrtc::ExternalRenderer {
   FILE* output_file_;
   std::string output_path_;
   std::string output_filename_;
-  webrtc::scoped_ptr<webrtc::ThreadWrapper> thread_;
-  webrtc::scoped_ptr<webrtc::CriticalSectionWrapper> frame_queue_cs_;
-  webrtc::scoped_ptr<webrtc::EventWrapper> frame_render_event_;
+  rtc::scoped_ptr<webrtc::ThreadWrapper> thread_;
+  rtc::scoped_ptr<webrtc::CriticalSectionWrapper> frame_queue_cs_;
+  rtc::scoped_ptr<webrtc::EventWrapper> frame_render_event_;
   FrameQueue render_queue_;
   FrameQueue free_frame_queue_;
 };

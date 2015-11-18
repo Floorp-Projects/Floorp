@@ -34,7 +34,7 @@ class WEBRTC_DLLEXPORT ViEExternalCodec {
                                           const unsigned char pl_type) = 0;
 
   virtual int RegisterExternalReceiveCodec(const int video_channel,
-                                           const unsigned int pl_type,
+                                           const unsigned char pl_type,
                                            VideoDecoder* decoder,
                                            bool decoder_render = false,
                                            int render_delay = 0) = 0;

@@ -20,59 +20,80 @@ namespace webrtc {
 class AudioEncoderPcm : public AudioEncoder {
  public:
   struct Config {
-    Config() : frame_size_ms(20), num_channels(1) {}
-
+   public:
     int frame_size_ms;
     int num_channels;
+    int payload_type;
+
+   protected:
+    explicit Config(int pt)
+        : frame_size_ms(20), num_channels(1), payload_type(pt) {}
   };
 
-  explicit AudioEncoderPcm(const Config& config);
+  ~AudioEncoderPcm() override;
 
-  virtual ~AudioEncoderPcm();
-
-  virtual int sample_rate_hz() const OVERRIDE;
-  virtual int num_channels() const OVERRIDE;
-  virtual int Num10MsFramesInNextPacket() const OVERRIDE;
+  int SampleRateHz() const override;
+  int NumChannels() const override;
+  size_t MaxEncodedBytes() const override;
+  int Num10MsFramesInNextPacket() const override;
+  int Max10MsFramesInAPacket() const override;
 
  protected:
-  virtual bool Encode(uint32_t timestamp,
-                      const int16_t* audio,
-                      size_t max_encoded_bytes,
-                      uint8_t* encoded,
-                      size_t* encoded_bytes,
-                      uint32_t* encoded_timestamp) OVERRIDE;
+  AudioEncoderPcm(const Config& config, int sample_rate_hz);
+
+  EncodedInfo EncodeInternal(uint32_t rtp_timestamp,
+                             const int16_t* audio,
+                             size_t max_encoded_bytes,
+                             uint8_t* encoded) override;
 
   virtual int16_t EncodeCall(const int16_t* audio,
                              size_t input_len,
                              uint8_t* encoded) = 0;
 
  private:
-  static const int kSampleRateHz = 8000;
+  const int sample_rate_hz_;
   const int num_channels_;
+  const int payload_type_;
   const int num_10ms_frames_per_packet_;
-  const int16_t full_frame_samples_;
+  const size_t full_frame_samples_;
   std::vector<int16_t> speech_buffer_;
   uint32_t first_timestamp_in_buffer_;
 };
 
 class AudioEncoderPcmA : public AudioEncoderPcm {
  public:
-  explicit AudioEncoderPcmA(const Config& config) : AudioEncoderPcm(config) {}
+  struct Config : public AudioEncoderPcm::Config {
+    Config() : AudioEncoderPcm::Config(8) {}
+  };
+
+  explicit AudioEncoderPcmA(const Config& config)
+      : AudioEncoderPcm(config, kSampleRateHz) {}
 
  protected:
-  virtual int16_t EncodeCall(const int16_t* audio,
-                             size_t input_len,
-                             uint8_t* encoded) OVERRIDE;
+  int16_t EncodeCall(const int16_t* audio,
+                     size_t input_len,
+                     uint8_t* encoded) override;
+
+ private:
+  static const int kSampleRateHz = 8000;
 };
 
 class AudioEncoderPcmU : public AudioEncoderPcm {
  public:
-  explicit AudioEncoderPcmU(const Config& config) : AudioEncoderPcm(config) {}
+  struct Config : public AudioEncoderPcm::Config {
+    Config() : AudioEncoderPcm::Config(0) {}
+  };
+
+  explicit AudioEncoderPcmU(const Config& config)
+      : AudioEncoderPcm(config, kSampleRateHz) {}
 
  protected:
-  virtual int16_t EncodeCall(const int16_t* audio,
-                             size_t input_len,
-                             uint8_t* encoded) OVERRIDE;
+  int16_t EncodeCall(const int16_t* audio,
+                     size_t input_len,
+                     uint8_t* encoded) override;
+
+ private:
+  static const int kSampleRateHz = 8000;
 };
 
 }  // namespace webrtc

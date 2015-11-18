@@ -110,15 +110,16 @@ static __inline int16_t WebRtcSpl_NormU32(uint32_t a) {
 
 static __inline int16_t WebRtcSpl_NormW16(int16_t a) {
   int32_t tmp = 0;
+  int32_t a_32 = a;
 
-  if (a == 0) {
+  if (a_32 == 0) {
     return 0;
   }
-  else if (a < 0) {
-    a ^= 0xFFFFFFFF;
+  else if (a_32 < 0) {
+    a_32 ^= 0xFFFFFFFF;
   }
 
-  __asm __volatile ("clz %0, %1":"=r"(tmp):"r"(a));
+  __asm __volatile ("clz %0, %1":"=r"(tmp):"r"(a_32));
 
   return (int16_t)(tmp - 17);
 }

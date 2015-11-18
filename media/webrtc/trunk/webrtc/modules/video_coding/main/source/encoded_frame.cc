@@ -16,26 +16,26 @@
 namespace webrtc {
 
 VCMEncodedFrame::VCMEncodedFrame()
-:
-webrtc::EncodedImage(),
-_renderTimeMs(-1),
-_payloadType(0),
-_missingFrame(false),
-_codec(kVideoCodecUnknown),
-_fragmentation()
-{
+    : webrtc::EncodedImage(),
+      _renderTimeMs(-1),
+      _payloadType(0),
+      _missingFrame(false),
+      _codec(kVideoCodecUnknown),
+      _fragmentation(),
+      _rotation(kVideoRotation_0),
+      _rotation_set(false) {
     _codecSpecificInfo.codecType = kVideoCodecUnknown;
 }
 
 VCMEncodedFrame::VCMEncodedFrame(const webrtc::EncodedImage& rhs)
-:
-webrtc::EncodedImage(rhs),
-_renderTimeMs(-1),
-_payloadType(0),
-_missingFrame(false),
-_codec(kVideoCodecUnknown),
-_fragmentation()
-{
+    : webrtc::EncodedImage(rhs),
+      _renderTimeMs(-1),
+      _payloadType(0),
+      _missingFrame(false),
+      _codec(kVideoCodecUnknown),
+      _fragmentation(),
+      _rotation(kVideoRotation_0),
+      _rotation_set(false) {
     _codecSpecificInfo.codecType = kVideoCodecUnknown;
     _buffer = NULL;
     _size = 0;
@@ -48,14 +48,15 @@ _fragmentation()
 }
 
 VCMEncodedFrame::VCMEncodedFrame(const VCMEncodedFrame& rhs)
-  :
-    webrtc::EncodedImage(rhs),
-    _renderTimeMs(rhs._renderTimeMs),
-    _payloadType(rhs._payloadType),
-    _missingFrame(rhs._missingFrame),
-    _codecSpecificInfo(rhs._codecSpecificInfo),
-    _codec(rhs._codec),
-    _fragmentation() {
+    : webrtc::EncodedImage(rhs),
+      _renderTimeMs(rhs._renderTimeMs),
+      _payloadType(rhs._payloadType),
+      _missingFrame(rhs._missingFrame),
+      _codecSpecificInfo(rhs._codecSpecificInfo),
+      _codec(rhs._codec),
+      _fragmentation(),
+      _rotation(rhs._rotation),
+      _rotation_set(rhs._rotation_set) {
   _buffer = NULL;
   _size = 0;
   _length = 0;
@@ -96,6 +97,8 @@ void VCMEncodedFrame::Reset()
     _length = 0;
     _codecSpecificInfo.codecType = kVideoCodecUnknown;
     _codec = kVideoCodecUnknown;
+    _rotation = kVideoRotation_0;
+    _rotation_set = false;
 }
 
 void VCMEncodedFrame::CopyCodecSpecific(const RTPVideoHeader* header)
@@ -130,38 +133,7 @@ void VCMEncodedFrame::CopyCodecSpecific(const RTPVideoHeader* header)
         break;
       }
       case kRtpVideoH264: {
-        _codecSpecificInfo.codecSpecific.H264.nalu_header =
-            header->codecHeader.H264.nalu_header;
-        _codecSpecificInfo.codecSpecific.H264.single_nalu =
-            header->codecHeader.H264.single_nalu;
         _codecSpecificInfo.codecType = kVideoCodecH264;
-        break;
-      }
-      case kRtpVideoVp9: {
-        if (_codecSpecificInfo.codecType != kVideoCodecVP9) {
-          // This is the first packet for this frame.
-          _codecSpecificInfo.codecSpecific.VP9.pictureId = -1;
-          _codecSpecificInfo.codecSpecific.VP9.temporalIdx = 0;
-          _codecSpecificInfo.codecSpecific.VP9.layerSync = false;
-          _codecSpecificInfo.codecSpecific.VP9.keyIdx = -1;
-          _codecSpecificInfo.codecType = kVideoCodecVP9;
-        }
-        _codecSpecificInfo.codecSpecific.VP9.nonReference =
-            header->codecHeader.VP9.nonReference;
-        if (header->codecHeader.VP9.pictureId != kNoPictureId) {
-          _codecSpecificInfo.codecSpecific.VP9.pictureId =
-              header->codecHeader.VP9.pictureId;
-        }
-        if (header->codecHeader.VP9.temporalIdx != kNoTemporalIdx) {
-          _codecSpecificInfo.codecSpecific.VP9.temporalIdx =
-              header->codecHeader.VP9.temporalIdx;
-          _codecSpecificInfo.codecSpecific.VP9.layerSync =
-              header->codecHeader.VP9.layerSync;
-        }
-        if (header->codecHeader.VP9.keyIdx != kNoKeyIdx) {
-          _codecSpecificInfo.codecSpecific.VP9.keyIdx =
-              header->codecHeader.VP9.keyIdx;
-        }
         break;
       }
       default: {

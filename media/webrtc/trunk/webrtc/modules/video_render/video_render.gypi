@@ -10,15 +10,16 @@
   'targets': [
     {
       # Note this library is missing an implementation for the video render.
-      # For that targets must link with 'video_render_module_impl' or
+      # For that targets must link with 'video_render' or
       # 'video_render_module_internal_impl' if they want to compile and use
       # the internal render as the default renderer.
       'target_name': 'video_render_module',
       'type': 'static_library',
       'dependencies': [
         'webrtc_utility',
+        '<(webrtc_root)/common.gyp:webrtc_common',
         '<(webrtc_root)/common_video/common_video.gyp:common_video',
-        '<(webrtc_root)/system_wrappers/source/system_wrappers.gyp:system_wrappers',
+        '<(webrtc_root)/system_wrappers/system_wrappers.gyp:system_wrappers',
       ],
       'sources': [
         'external/video_render_external_impl.cc',
@@ -36,7 +37,7 @@
     {
       # Default video_render_module implementation that only supports external
       # renders.
-      'target_name': 'video_render_module_impl',
+      'target_name': 'video_render',
       'type': 'static_library',
       'dependencies': [
         'video_render_module',
@@ -45,112 +46,117 @@
         'video_render_impl.cc',
       ],
     },
-    {
-      # video_render_module implementation that supports the internal
-      # video_render implementation.
-      'target_name': 'video_render_module_internal_impl',
-      'type': 'static_library',
-      'dependencies': [
-        'video_render_module',
-      ],
-      'sources': [
-        'video_render_internal_impl.cc',
-      ],
-       # TODO(andrew): with the proper suffix, these files will be excluded
-       # automatically.
-      'conditions': [
-        ['OS=="android"', {
-          'sources': [
-            'android/video_render_android_impl.h',
-            'android/video_render_android_native_opengl2.h',
-            'android/video_render_android_surface_view.h',
-            'android/video_render_opengles20.h',
-            'android/video_render_android_impl.cc',
-            'android/video_render_android_native_opengl2.cc',
-            'android/video_render_android_surface_view.cc',
-            'android/video_render_opengles20.cc',
-          ],
-          'link_settings': {
-            'libraries': [
-              '-lGLESv2',
-            ],
-          },
-        }],
-        ['OS=="ios"', {
-          'sources': [
-            # iOS
-            'ios/open_gles20.h',
-            'ios/open_gles20.mm',
-            'ios/video_render_ios_channel.h',
-            'ios/video_render_ios_channel.mm',
-            'ios/video_render_ios_gles20.h',
-            'ios/video_render_ios_gles20.mm',
-            'ios/video_render_ios_impl.h',
-            'ios/video_render_ios_impl.mm',
-            'ios/video_render_ios_view.h',
-            'ios/video_render_ios_view.mm',
-          ],
-          'xcode_settings': {
-            'CLANG_ENABLE_OBJC_ARC': 'YES',
-          },
-          'all_dependent_settings': {
-            'xcode_settings': {
-              'OTHER_LDFLAGS': [
-                '-framework OpenGLES',
-                '-framework QuartzCore',
-                '-framework UIKit',
-              ],
-            },
-          },
-        }],
-        ['OS=="linux"', {
-          'sources': [
-            'linux/video_render_linux_impl.h',
-            'linux/video_x11_channel.h',
-            'linux/video_x11_render.h',
-            'linux/video_render_linux_impl.cc',
-            'linux/video_x11_channel.cc',
-            'linux/video_x11_render.cc',
-          ],
-          'link_settings': {
-            'libraries': [
-              '-lXext',
-            ],
-          },
-        }],
-        ['OS=="mac"', {
-          'sources': [
-            'mac/cocoa_full_screen_window.h',
-            'mac/cocoa_render_view.h',
-            'mac/video_render_agl.h',
-            'mac/video_render_mac_carbon_impl.h',
-            'mac/video_render_mac_cocoa_impl.h',
-            'mac/video_render_nsopengl.h',
-            'mac/video_render_nsopengl.mm',
-            'mac/video_render_mac_cocoa_impl.mm',
-            'mac/video_render_agl.cc',
-            'mac/video_render_mac_carbon_impl.cc',
-            'mac/cocoa_render_view.mm',
-            'mac/cocoa_full_screen_window.mm',
-          ],
-        }],
-        ['OS=="win"', {
-          'sources': [
-            'windows/i_video_render_win.h',
-            'windows/video_render_direct3d9.h',
-            'windows/video_render_windows_impl.h',
-            'windows/video_render_direct3d9.cc',
-            'windows/video_render_windows_impl.cc',
-          ],
-          'include_dirs': [
-            '<(directx_sdk_path)/Include',
-          ],
-        }],
-      ] # conditions
-    },
   ], # targets
 
   'conditions': [
+    ['build_with_chromium==0', {
+      'targets': [
+        {
+          # video_render_module implementation that supports the internal
+          # video_render implementation.
+          'target_name': 'video_render_module_internal_impl',
+          'type': 'static_library',
+          'dependencies': [
+            '<(webrtc_root)/common.gyp:webrtc_common',
+            'video_render_module',
+          ],
+          'sources': [
+            'video_render_internal_impl.cc',
+          ],
+           # TODO(andrew): with the proper suffix, these files will be excluded
+           # automatically.
+          'conditions': [
+            ['OS=="android"', {
+              'sources': [
+                'android/video_render_android_impl.h',
+                'android/video_render_android_native_opengl2.h',
+                'android/video_render_android_surface_view.h',
+                'android/video_render_opengles20.h',
+                'android/video_render_android_impl.cc',
+                'android/video_render_android_native_opengl2.cc',
+                'android/video_render_android_surface_view.cc',
+                'android/video_render_opengles20.cc',
+              ],
+              'link_settings': {
+                'libraries': [
+                  '-lGLESv2',
+                ],
+              },
+            }],
+            ['OS=="ios"', {
+              'sources': [
+                # iOS
+                'ios/open_gles20.h',
+                'ios/open_gles20.mm',
+                'ios/video_render_ios_channel.h',
+                'ios/video_render_ios_channel.mm',
+                'ios/video_render_ios_gles20.h',
+                'ios/video_render_ios_gles20.mm',
+                'ios/video_render_ios_impl.h',
+                'ios/video_render_ios_impl.mm',
+                'ios/video_render_ios_view.h',
+                'ios/video_render_ios_view.mm',
+              ],
+              'xcode_settings': {
+                'CLANG_ENABLE_OBJC_ARC': 'YES',
+              },
+              'all_dependent_settings': {
+                'xcode_settings': {
+                  'OTHER_LDFLAGS': [
+                    '-framework OpenGLES',
+                    '-framework QuartzCore',
+                    '-framework UIKit',
+                  ],
+                },
+              },
+            }],
+            ['OS=="linux"', {
+              'sources': [
+                'linux/video_render_linux_impl.h',
+                'linux/video_x11_channel.h',
+                'linux/video_x11_render.h',
+                'linux/video_render_linux_impl.cc',
+                'linux/video_x11_channel.cc',
+                'linux/video_x11_render.cc',
+              ],
+              'link_settings': {
+                'libraries': [
+                  '-lXext',
+                ],
+              },
+            }],
+            ['OS=="mac"', {
+              'sources': [
+                'mac/cocoa_full_screen_window.h',
+                'mac/cocoa_render_view.h',
+                'mac/video_render_agl.h',
+                'mac/video_render_mac_carbon_impl.h',
+                'mac/video_render_mac_cocoa_impl.h',
+                'mac/video_render_nsopengl.h',
+                'mac/video_render_nsopengl.mm',
+                'mac/video_render_mac_cocoa_impl.mm',
+                'mac/video_render_agl.cc',
+                'mac/video_render_mac_carbon_impl.cc',
+                'mac/cocoa_render_view.mm',
+                'mac/cocoa_full_screen_window.mm',
+              ],
+            }],
+            ['OS=="win"', {
+              'sources': [
+                'windows/i_video_render_win.h',
+                'windows/video_render_direct3d9.h',
+                'windows/video_render_windows_impl.h',
+                'windows/video_render_direct3d9.cc',
+                'windows/video_render_windows_impl.cc',
+              ],
+              'include_dirs': [
+                '<(directx_sdk_path)/Include',
+              ],
+            }],
+          ] # conditions
+        },
+      ],
+    }], # build_with_chromium==0
     ['include_tests==1', {
       'targets': [
         {
@@ -159,7 +165,8 @@
           'dependencies': [
             'video_render_module_internal_impl',
             'webrtc_utility',
-            '<(webrtc_root)/system_wrappers/source/system_wrappers.gyp:system_wrappers',
+            '<(webrtc_root)/common.gyp:webrtc_common',
+            '<(webrtc_root)/system_wrappers/system_wrappers.gyp:system_wrappers',
             '<(webrtc_root)/common_video/common_video.gyp:common_video',
           ],
           'sources': [
@@ -213,7 +220,7 @@
           ],
         }],
       ],
-    }], # include_tests==0
+    }], # include_tests==1
   ], # conditions
 }
 

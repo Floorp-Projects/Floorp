@@ -21,10 +21,10 @@ class VCMPacket {
 public:
     VCMPacket();
     VCMPacket(const uint8_t* ptr,
-              const uint32_t size,
+              const size_t size,
               const WebRtcRTPHeader& rtpHeader);
     VCMPacket(const uint8_t* ptr,
-              uint32_t size,
+              size_t size,
               uint16_t seqNum,
               uint32_t timestamp,
               bool markerBit);
@@ -37,7 +37,7 @@ public:
     int64_t ntp_time_ms_;
     uint16_t          seqNum;
     const uint8_t*    dataPtr;
-    uint32_t          sizeBytes;
+    size_t          sizeBytes;
     bool                    markerBit;
 
     FrameType               frameType;

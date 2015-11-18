@@ -16,8 +16,8 @@
 
 #include <algorithm>  // find_if()
 
+#include "webrtc/modules/audio_coding/codecs/audio_decoder.h"
 #include "webrtc/modules/audio_coding/neteq/decoder_database.h"
-#include "webrtc/modules/audio_coding/neteq/interface/audio_decoder.h"
 
 namespace webrtc {
 

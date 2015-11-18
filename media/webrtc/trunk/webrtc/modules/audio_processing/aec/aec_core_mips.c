@@ -274,7 +274,7 @@ void WebRtcAec_ComfortNoise_mips(AecCore* aec,
   noiseAvg = 0.0;
   tmpAvg = 0.0;
   num = 0;
-  if (aec->sampFreq == 32000 && flagHbandCn == 1) {
+  if ((aec->sampFreq == 32000 || aec->sampFreq == 48000) && flagHbandCn == 1) {
     for (i = 0; i < PART_LEN; i++) {
       rand[i] = ((float)randW16[i]) / 32768;
     }

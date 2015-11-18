@@ -56,7 +56,7 @@ const int16_t WebRtcNsx_kLogTableFrac[256] = {
 };
 
 // Update the noise estimation information.
-static void UpdateNoiseEstimateNeon(NsxInst_t* inst, int offset) {
+static void UpdateNoiseEstimateNeon(NoiseSuppressionFixedC* inst, int offset) {
   const int16_t kExp2Const = 11819; // Q13
   int16_t* ptr_noiseEstLogQuantile = NULL;
   int16_t* ptr_noiseEstQuantile = NULL;
@@ -80,8 +80,7 @@ static void UpdateNoiseEstimateNeon(NsxInst_t* inst, int offset) {
        ptr_noiseEstQuantile < &inst->noiseEstQuantile[inst->magnLen - 3];
        ptr_noiseEstQuantile += 4, ptr_noiseEstLogQuantile += 4) {
 
-    // tmp32no2 = WEBRTC_SPL_MUL_16_16(kExp2Const,
-    //                                inst->noiseEstLogQuantile[offset + i]);
+    // tmp32no2 = kExp2Const * inst->noiseEstLogQuantile[offset + i];
     int16x4_t v16x4 = vld1_s16(ptr_noiseEstLogQuantile);
     int32x4_t v32x4B = vmull_s16(v16x4, kExp2Const16x4);
 
@@ -117,8 +116,7 @@ static void UpdateNoiseEstimateNeon(NsxInst_t* inst, int offset) {
 
   // inst->quantile[i]=exp(inst->lquantile[offset+i]);
   // in Q21
-  int32_t tmp32no2 = WEBRTC_SPL_MUL_16_16(kExp2Const,
-                                          *ptr_noiseEstLogQuantile);
+  int32_t tmp32no2 = kExp2Const * *ptr_noiseEstLogQuantile;
   int32_t tmp32no1 = (0x00200000 | (tmp32no2 & 0x001FFFFF)); // 2^21 + frac
 
   tmp16 = (int16_t)(tmp32no2 >> 21);
@@ -133,7 +131,7 @@ static void UpdateNoiseEstimateNeon(NsxInst_t* inst, int offset) {
 }
 
 // Noise Estimation
-void WebRtcNsx_NoiseEstimationNeon(NsxInst_t* inst,
+void WebRtcNsx_NoiseEstimationNeon(NoiseSuppressionFixedC* inst,
                                    uint16_t* magn,
                                    uint32_t* noise,
                                    int16_t* q_noise) {
@@ -170,7 +168,7 @@ void WebRtcNsx_NoiseEstimationNeon(NsxInst_t* inst,
       log2 = (int16_t)(((31 - zeros) << 8)
                        + WebRtcNsx_kLogTableFrac[frac]);
       // log2(magn(i))*log(2)
-      lmagn[i] = (int16_t)WEBRTC_SPL_MUL_16_16_RSFT(log2, log2_const, 15);
+      lmagn[i] = (int16_t)((log2 * log2_const) >> 15);
       // + log(2^stages)
       lmagn[i] += logval;
     } else {
@@ -194,7 +192,7 @@ void WebRtcNsx_NoiseEstimationNeon(NsxInst_t* inst,
     counter = inst->noiseEstCounter[s];
     assert(counter < 201);
     countDiv = WebRtcNsx_kCounterDiv[counter];
-    countProd = (int16_t)WEBRTC_SPL_MUL_16_16(counter, countDiv);
+    countProd = (int16_t)(counter * countDiv);
 
     // quant_est(...)
     int16_t deltaBuff[8];
@@ -207,9 +205,7 @@ void WebRtcNsx_NoiseEstimationNeon(NsxInst_t* inst,
     int16x8_t tmp16x8_1;
     int16x8_t tmp16x8_2;
     int16x8_t tmp16x8_3;
-    // Initialize tmp16x8_4 to zero to avoid compilaton error.
-    int16x8_t tmp16x8_4 = vdupq_n_s16(0);
-    int16x8_t tmp16x8_5;
+    uint16x8_t tmp16x8_4;
     int32x4_t tmp32x4;
 
     for (i = 0; i < inst->magnLen - 7; i += 8) {
@@ -230,7 +226,7 @@ void WebRtcNsx_NoiseEstimationNeon(NsxInst_t* inst,
 
       // Update log quantile estimate
 
-      // tmp16 = (int16_t)WEBRTC_SPL_MUL_16_16_RSFT(delta, countDiv, 14);
+      // tmp16 = (int16_t)((delta * countDiv) >> 14);
       tmp32x4 = vmull_s16(vld1_s16(&deltaBuff[0]), countDiv_16x4);
       tmp16x4_1 = vshrn_n_s32(tmp32x4, 14);
       tmp32x4 = vmull_s16(vld1_s16(&deltaBuff[4]), countDiv_16x4);
@@ -251,11 +247,11 @@ void WebRtcNsx_NoiseEstimationNeon(NsxInst_t* inst,
       // tmp16_1 = (Word16)(tmp16>>1);
       tmp16x8_0 = vrshrq_n_s16(tmp16x8_0, 1);
 
-      // tmp16_2 = (Word16)WEBRTC_SPL_MUL_16_16_RSFT(tmp16_1,3,1);
+      // tmp16_2 = (int16_t)((tmp16_1 * 3) >> 1);
       tmp32x4 = vmull_s16(vget_low_s16(tmp16x8_0), Q3_16x4);
       tmp16x4_1 = vshrn_n_s32(tmp32x4, 1);
 
-      // tmp16_2 = (Word16)WEBRTC_SPL_MUL_16_16_RSFT(tmp16_1,3,1);
+      // tmp16_2 = (int16_t)((tmp16_1 * 3) >> 1);
       tmp32x4 = vmull_s16(vget_high_s16(tmp16x8_0), Q3_16x4);
       tmp16x4_0 = vshrn_n_s32(tmp32x4, 1);
 
@@ -270,12 +266,8 @@ void WebRtcNsx_NoiseEstimationNeon(NsxInst_t* inst,
 
       // Do the if-else branches:
       tmp16x8_3 = vld1q_s16(&lmagn[i]); // keep for several lines
-      tmp16x8_5 = vsubq_s16(tmp16x8_3, tmp16x8_2);
-      __asm__("vcgt.s16 %q0, %q1, #0"::"w"(tmp16x8_4), "w"(tmp16x8_5));
-      __asm__("vbit %q0, %q1, %q2"::
-              "w"(tmp16x8_2), "w"(tmp16x8_1), "w"(tmp16x8_4));
-      __asm__("vbif %q0, %q1, %q2"::
-              "w"(tmp16x8_2), "w"(tmp16x8_0), "w"(tmp16x8_4));
+      tmp16x8_4 = vcgtq_s16(tmp16x8_3, tmp16x8_2);
+      tmp16x8_2 = vbslq_s16(tmp16x8_4, tmp16x8_1, tmp16x8_0);
       vst1q_s16(&inst->noiseEstLogQuantile[offset + i], tmp16x8_2);
 
       // Update density estimate
@@ -288,8 +280,7 @@ void WebRtcNsx_NoiseEstimationNeon(NsxInst_t* inst,
       tmp16x8_3 = vsubq_s16(tmp16x8_3, tmp16x8_2);
       tmp16x8_3 = vabsq_s16(tmp16x8_3);
       tmp16x8_4 = vcgtq_s16(WIDTHQ8_16x8, tmp16x8_3);
-      __asm__("vbit %q0, %q1, %q2"::
-              "w"(tmp16x8_1), "w"(tmp16x8_0), "w"(tmp16x8_4));
+      tmp16x8_1 = vbslq_s16(tmp16x8_4, tmp16x8_0, tmp16x8_1);
       vst1q_s16(&inst->noiseEstDensity[offset + i], tmp16x8_1);
     }  // End loop over magnitude spectrum
 
@@ -308,7 +299,7 @@ void WebRtcNsx_NoiseEstimationNeon(NsxInst_t* inst,
       }
     }
     // update log quantile estimate
-    tmp16 = (int16_t)WEBRTC_SPL_MUL_16_16_RSFT(delta, countDiv, 14);
+    tmp16 = (int16_t)((delta * countDiv) >> 14);
     if (lmagn[i] > inst->noiseEstLogQuantile[offset + i]) {
       // +=QUANTILE*delta/(inst->counter[s]+1) QUANTILE=0.25, =1 in Q2
       // CounterDiv=1/(inst->counter[s]+1) in Q15
@@ -317,7 +308,8 @@ void WebRtcNsx_NoiseEstimationNeon(NsxInst_t* inst,
     } else {
       tmp16 += 1;
       // *(1-QUANTILE), in Q2 QUANTILE=0.25, 1-0.25=0.75=3 in Q2
-      tmp16no2 = (int16_t)WEBRTC_SPL_MUL_16_16_RSFT(tmp16 / 2, 3, 1);
+      // TODO(bjornv): investigate why we need to truncate twice.
+      tmp16no2 = (int16_t)((tmp16 / 2) * 3 / 2);
       inst->noiseEstLogQuantile[offset + i] -= tmp16no2;
       if (inst->noiseEstLogQuantile[offset + i] < logval) {
         // logval is the smallest fixed point representation we can have.
@@ -360,7 +352,8 @@ void WebRtcNsx_NoiseEstimationNeon(NsxInst_t* inst,
 }
 
 // Filter the data in the frequency domain, and create spectrum.
-void WebRtcNsx_PrepareSpectrumNeon(NsxInst_t* inst, int16_t* freq_buf) {
+void WebRtcNsx_PrepareSpectrumNeon(NoiseSuppressionFixedC* inst,
+                                   int16_t* freq_buf) {
   assert(inst->magnLen % 8 == 1);
   assert(inst->anaLen2 % 16 == 0);
 
@@ -368,10 +361,10 @@ void WebRtcNsx_PrepareSpectrumNeon(NsxInst_t* inst, int16_t* freq_buf) {
 
   // Fixed point C code for the next block is as follows:
   // for (i = 0; i < inst->magnLen; i++) {
-  //   inst->real[i] = (int16_t)WEBRTC_SPL_MUL_16_16_RSFT(inst->real[i],
-  //      (int16_t)(inst->noiseSupFilter[i]), 14); // Q(normData-stages)
-  //   inst->imag[i] = (int16_t)WEBRTC_SPL_MUL_16_16_RSFT(inst->imag[i],
-  //      (int16_t)(inst->noiseSupFilter[i]), 14); // Q(normData-stages)
+  //   inst->real[i] = (int16_t)((inst->real[i] *
+  //      (int16_t)(inst->noiseSupFilter[i])) >> 14);  // Q(normData-stages)
+  //   inst->imag[i] = (int16_t)((inst->imag[i] *
+  //      (int16_t)(inst->noiseSupFilter[i])) >> 14);  // Q(normData-stages)
   // }
 
   int16_t* preal = &inst->real[0];
@@ -404,8 +397,8 @@ void WebRtcNsx_PrepareSpectrumNeon(NsxInst_t* inst, int16_t* freq_buf) {
   }
 
   // Filter the last element
-  *preal = (int16_t)WEBRTC_SPL_MUL_16_16_RSFT(*preal, *pns_filter, 14);
-  *pimag = (int16_t)WEBRTC_SPL_MUL_16_16_RSFT(*pimag, *pns_filter, 14);
+  *preal = (int16_t)((*preal * *pns_filter) >> 14);
+  *pimag = (int16_t)((*pimag * *pns_filter) >> 14);
 
   // (2) Create spectrum.
 
@@ -447,47 +440,9 @@ void WebRtcNsx_PrepareSpectrumNeon(NsxInst_t* inst, int16_t* freq_buf) {
   freq_buf[inst->anaLen + 1] = -inst->imag[inst->anaLen2];
 }
 
-// Denormalize the input buffer.
-void WebRtcNsx_DenormalizeNeon(NsxInst_t* inst, int16_t* in, int factor) {
-  int16_t* ptr_real = &inst->real[0];
-  int16_t* ptr_in = &in[0];
-
-  __asm__ __volatile__("vdup.32 q10, %0" ::
-                       "r"((int32_t)(factor - inst->normData)) : "q10");
-  for (; ptr_real < &inst->real[inst->anaLen];) {
-
-    // Loop unrolled once. Both pointers are incremented.
-    __asm__ __volatile__(
-      // tmp32 = WEBRTC_SPL_SHIFT_W32((int32_t)in[j],
-      //                             factor - inst->normData);
-      "vld2.16 {d24, d25}, [%[ptr_in]]!\n\t"
-      "vmovl.s16 q12, d24\n\t"
-      "vshl.s32 q12, q10\n\t"
-      // inst->real[i] = WebRtcSpl_SatW32ToW16(tmp32); // Q0
-      "vqmovn.s32 d24, q12\n\t"
-      "vst1.16 d24, [%[ptr_real]]!\n\t"
-
-      // tmp32 = WEBRTC_SPL_SHIFT_W32((int32_t)in[j],
-      //                             factor - inst->normData);
-      "vld2.16 {d22, d23}, [%[ptr_in]]!\n\t"
-      "vmovl.s16 q11, d22\n\t"
-      "vshl.s32 q11, q10\n\t"
-      // inst->real[i] = WebRtcSpl_SatW32ToW16(tmp32); // Q0
-      "vqmovn.s32 d22, q11\n\t"
-      "vst1.16 d22, [%[ptr_real]]!\n\t"
-
-      // Specify constraints.
-      :[ptr_in]"+r"(ptr_in),
-       [ptr_real]"+r"(ptr_real)
-      :
-      :"d22", "d23", "d24", "d25"
-    );
-  }
-}
-
 // For the noise supress process, synthesis, read out fully processed segment,
 // and update synthesis buffer.
-void WebRtcNsx_SynthesisUpdateNeon(NsxInst_t* inst,
+void WebRtcNsx_SynthesisUpdateNeon(NoiseSuppressionFixedC* inst,
                                    int16_t* out_frame,
                                    int16_t gain_factor) {
   assert(inst->anaLen % 16 == 0);
@@ -579,7 +534,7 @@ void WebRtcNsx_SynthesisUpdateNeon(NsxInst_t* inst,
 }
 
 // Update analysis buffer for lower band, and window data before FFT.
-void WebRtcNsx_AnalysisUpdateNeon(NsxInst_t* inst,
+void WebRtcNsx_AnalysisUpdateNeon(NoiseSuppressionFixedC* inst,
                                   int16_t* out,
                                   int16_t* new_speech) {
   assert(inst->blockLen10ms % 16 == 0);
@@ -640,49 +595,5 @@ void WebRtcNsx_AnalysisUpdateNeon(NsxInst_t* inst,
     p_start_buffer += 8;
     p_start_window += 8;
     p_start_out += 8;
-  }
-}
-
-// Create a complex number buffer (out[]) as the intput (in[]) interleaved with
-// zeros, and normalize it.
-void WebRtcNsx_CreateComplexBufferNeon(NsxInst_t* inst,
-                                       int16_t* in,
-                                       int16_t* out) {
-  int16_t* ptr_out = &out[0];
-  int16_t* ptr_in = &in[0];
-
-  __asm__ __volatile__("vdup.16 d25, %0" : : "r"(0) : "d25");
-  __asm__ __volatile__("vdup.16 q10, %0" : : "r"(inst->normData) : "q10");
-  for (; ptr_in < &in[inst->anaLen];) {
-
-    // Loop unrolled once, so ptr_in is incremented by 8 twice,
-    // and ptr_out is incremented by 8 four times.
-    __asm__ __volatile__(
-      // out[j] = in[i] << inst->normData;  // Q(normData)
-      "vld1.16 {d22, d23}, [%[ptr_in]]!\n\t"
-      "vshl.s16 q11, q10\n\t"
-      "vmov d24, d23\n\t"
-
-      // out[j + 1] = 0; // Insert zeros in imaginary part
-      "vmov d23, d25\n\t"
-      "vst2.16 {d22, d23}, [%[ptr_out]]!\n\t"
-      "vst2.16 {d24, d25}, [%[ptr_out]]!\n\t"
-
-      // out[j] = in[i] << inst->normData;  // Q(normData)
-      "vld1.16 {d22, d23}, [%[ptr_in]]!\n\t"
-      "vshl.s16 q11, q10\n\t"
-      "vmov d24, d23\n\t"
-
-      // out[j + 1] = 0; // Insert zeros in imaginary part
-      "vmov d23, d25\n\t"
-      "vst2.16 {d22, d23}, [%[ptr_out]]!\n\t"
-      "vst2.16 {d24, d25}, [%[ptr_out]]!\n\t"
-
-      // Specify constraints.
-      :[ptr_in]"+r"(ptr_in),
-       [ptr_out]"+r"(ptr_out)
-      :
-      :"d22", "d23", "d24", "d25", "q10", "q11"
-    );
   }
 }

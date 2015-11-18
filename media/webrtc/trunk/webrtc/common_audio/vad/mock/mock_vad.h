@@ -19,7 +19,7 @@ namespace webrtc {
 
 class MockVad : public Vad {
  public:
-  explicit MockVad(enum Aggressiveness mode) {}
+  explicit MockVad(enum Aggressiveness mode) : Vad(mode) {}
   virtual ~MockVad() { Die(); }
   MOCK_METHOD0(Die, void());
 

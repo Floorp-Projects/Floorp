@@ -16,7 +16,7 @@
 #include "cng_helpfuns.h"
 #include "signal_processing_library.h"
 
-typedef struct WebRtcCngDecInst_t_ {
+typedef struct WebRtcCngDecoder_ {
   uint32_t dec_seed;
   int32_t dec_target_energy;
   int32_t dec_used_energy;
@@ -32,9 +32,9 @@ typedef struct WebRtcCngDecInst_t_ {
   int16_t target_scale_factor;  /* Q13 */
   int16_t errorcode;
   int16_t initflag;
-} WebRtcCngDecInst_t;
+} WebRtcCngDecoder;
 
-typedef struct WebRtcCngEncInst_t_ {
+typedef struct WebRtcCngEncoder_ {
   int16_t enc_nrOfCoefs;
   uint16_t enc_sampfreq;
   int16_t enc_interval;
@@ -45,7 +45,7 @@ typedef struct WebRtcCngEncInst_t_ {
   uint32_t enc_seed;
   int16_t errorcode;
   int16_t initflag;
-} WebRtcCngEncInst_t;
+} WebRtcCngEncoder;
 
 const int32_t WebRtcCng_kDbov[94] = {
   1081109975,  858756178,  682134279,  541838517,  430397633,  341876992,
@@ -84,10 +84,10 @@ const int16_t WebRtcCng_kCorrWindow[WEBRTC_CNG_MAX_LPC_ORDER] = {
  */
 int16_t WebRtcCng_CreateEnc(CNG_enc_inst** cng_inst) {
   if (cng_inst != NULL) {
-    *cng_inst = (CNG_enc_inst*) malloc(sizeof(WebRtcCngEncInst_t));
+    *cng_inst = (CNG_enc_inst*) malloc(sizeof(WebRtcCngEncoder));
     if (*cng_inst != NULL) {
-      (*(WebRtcCngEncInst_t**) cng_inst)->errorcode = 0;
-      (*(WebRtcCngEncInst_t**) cng_inst)->initflag = 0;
+      (*(WebRtcCngEncoder**) cng_inst)->errorcode = 0;
+      (*(WebRtcCngEncoder**) cng_inst)->initflag = 0;
 
       /* Needed to get the right function pointers in SPLIB. */
       WebRtcSpl_Init();
@@ -105,10 +105,10 @@ int16_t WebRtcCng_CreateEnc(CNG_enc_inst** cng_inst) {
 
 int16_t WebRtcCng_CreateDec(CNG_dec_inst** cng_inst) {
   if (cng_inst != NULL ) {
-    *cng_inst = (CNG_dec_inst*) malloc(sizeof(WebRtcCngDecInst_t));
+    *cng_inst = (CNG_dec_inst*) malloc(sizeof(WebRtcCngDecoder));
     if (*cng_inst != NULL ) {
-      (*(WebRtcCngDecInst_t**) cng_inst)->errorcode = 0;
-      (*(WebRtcCngDecInst_t**) cng_inst)->initflag = 0;
+      (*(WebRtcCngDecoder**) cng_inst)->errorcode = 0;
+      (*(WebRtcCngDecoder**) cng_inst)->initflag = 0;
 
       /* Needed to get the right function pointers in SPLIB. */
       WebRtcSpl_Init();
@@ -145,8 +145,8 @@ int16_t WebRtcCng_CreateDec(CNG_dec_inst** cng_inst) {
 int16_t WebRtcCng_InitEnc(CNG_enc_inst* cng_inst, uint16_t fs, int16_t interval,
                           int16_t quality) {
   int i;
-  WebRtcCngEncInst_t* inst = (WebRtcCngEncInst_t*) cng_inst;
-  memset(inst, 0, sizeof(WebRtcCngEncInst_t));
+  WebRtcCngEncoder* inst = (WebRtcCngEncoder*) cng_inst;
+  memset(inst, 0, sizeof(WebRtcCngEncoder));
 
   /* Check LPC order */
   if (quality > WEBRTC_CNG_MAX_LPC_ORDER || quality <= 0) {
@@ -172,9 +172,9 @@ int16_t WebRtcCng_InitEnc(CNG_enc_inst* cng_inst, uint16_t fs, int16_t interval,
 int16_t WebRtcCng_InitDec(CNG_dec_inst* cng_inst) {
   int i;
 
-  WebRtcCngDecInst_t* inst = (WebRtcCngDecInst_t*) cng_inst;
+  WebRtcCngDecoder* inst = (WebRtcCngDecoder*) cng_inst;
 
-  memset(inst, 0, sizeof(WebRtcCngDecInst_t));
+  memset(inst, 0, sizeof(WebRtcCngDecoder));
   inst->dec_seed = 7777;  /* For debugging only. */
   inst->dec_order = 5;
   inst->dec_target_scale_factor = 0;
@@ -230,7 +230,7 @@ int16_t WebRtcCng_FreeDec(CNG_dec_inst* cng_inst) {
 int16_t WebRtcCng_Encode(CNG_enc_inst* cng_inst, int16_t* speech,
                          int16_t nrOfSamples, uint8_t* SIDdata,
                          int16_t* bytesOut, int16_t forceSID) {
-  WebRtcCngEncInst_t* inst = (WebRtcCngEncInst_t*) cng_inst;
+  WebRtcCngEncoder* inst = (WebRtcCngEncoder*) cng_inst;
 
   int16_t arCoefs[WEBRTC_CNG_MAX_LPC_ORDER + 1];
   int32_t corrVector[WEBRTC_CNG_MAX_LPC_ORDER + 1];
@@ -411,9 +411,9 @@ int16_t WebRtcCng_Encode(CNG_enc_inst* cng_inst, int16_t* speech,
  *                      -1 - Error
  */
 int16_t WebRtcCng_UpdateSid(CNG_dec_inst* cng_inst, uint8_t* SID,
-                            int16_t length) {
+                            size_t length) {
 
-  WebRtcCngDecInst_t* inst = (WebRtcCngDecInst_t*) cng_inst;
+  WebRtcCngDecoder* inst = (WebRtcCngDecoder*) cng_inst;
   int16_t refCs[WEBRTC_CNG_MAX_LPC_ORDER];
   int32_t targetEnergy;
   int i;
@@ -427,7 +427,7 @@ int16_t WebRtcCng_UpdateSid(CNG_dec_inst* cng_inst, uint8_t* SID,
   if (length > (WEBRTC_CNG_MAX_LPC_ORDER + 1))
     length = WEBRTC_CNG_MAX_LPC_ORDER + 1;
 
-  inst->dec_order = length - 1;
+  inst->dec_order = (int16_t)length - 1;
 
   if (SID[0] > 93)
     SID[0] = 93;
@@ -474,7 +474,7 @@ int16_t WebRtcCng_UpdateSid(CNG_dec_inst* cng_inst, uint8_t* SID,
  */
 int16_t WebRtcCng_Generate(CNG_dec_inst* cng_inst, int16_t* outData,
                            int16_t nrOfSamples, int16_t new_period) {
-  WebRtcCngDecInst_t* inst = (WebRtcCngDecInst_t*) cng_inst;
+  WebRtcCngDecoder* inst = (WebRtcCngDecoder*) cng_inst;
 
   int i;
   int16_t excitation[WEBRTC_CNG_MAX_OUTSIZE_ORDER];
@@ -591,12 +591,12 @@ int16_t WebRtcCng_Generate(CNG_dec_inst* cng_inst, int16_t* outData,
  */
 int16_t WebRtcCng_GetErrorCodeEnc(CNG_enc_inst* cng_inst) {
   /* Typecast pointer to real structure. */
-  WebRtcCngEncInst_t* inst = (WebRtcCngEncInst_t*) cng_inst;
+  WebRtcCngEncoder* inst = (WebRtcCngEncoder*) cng_inst;
   return inst->errorcode;
 }
 
 int16_t WebRtcCng_GetErrorCodeDec(CNG_dec_inst* cng_inst) {
   /* Typecast pointer to real structure. */
-  WebRtcCngDecInst_t* inst = (WebRtcCngDecInst_t*) cng_inst;
+  WebRtcCngDecoder* inst = (WebRtcCngDecoder*) cng_inst;
   return inst->errorcode;
 }

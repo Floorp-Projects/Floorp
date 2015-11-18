@@ -27,7 +27,8 @@ class MacRenderer : public GlRenderer {
   bool Init(const char* window_title, int width, int height);
 
   // Implements GlRenderer.
-  virtual void RenderFrame(const I420VideoFrame& frame, int delta) OVERRIDE;
+  void RenderFrame(const I420VideoFrame& frame, int delta) override;
+  bool IsTextureSupported() const override { return false; }
 
  private:
   CocoaWindow* window_;

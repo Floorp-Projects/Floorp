@@ -26,8 +26,8 @@ class MouseCursorMonitorWin : public MouseCursorMonitor {
   explicit MouseCursorMonitorWin(ScreenId screen);
   virtual ~MouseCursorMonitorWin();
 
-  virtual void Init(Callback* callback, Mode mode) OVERRIDE;
-  virtual void Capture() OVERRIDE;
+  void Init(Callback* callback, Mode mode) override;
+  void Capture() override;
 
  private:
   // Get the rect of the currently selected screen, relative to the primary
@@ -73,7 +73,6 @@ MouseCursorMonitorWin::~MouseCursorMonitorWin() {
 void MouseCursorMonitorWin::Init(Callback* callback, Mode mode) {
   assert(!callback_);
   assert(callback);
-  assert(IsGUIThread(false));
 
   callback_ = callback;
   mode_ = mode;
@@ -82,7 +81,6 @@ void MouseCursorMonitorWin::Init(Callback* callback, Mode mode) {
 }
 
 void MouseCursorMonitorWin::Capture() {
-  assert(IsGUIThread(false));
   assert(callback_);
 
   CURSORINFO cursor_info;
@@ -95,7 +93,7 @@ void MouseCursorMonitorWin::Capture() {
   if (last_cursor_ != cursor_info.hCursor) {
     last_cursor_ = cursor_info.hCursor;
     // Note that |cursor_info.hCursor| does not need to be freed.
-    scoped_ptr<MouseCursor> cursor(
+    rtc::scoped_ptr<MouseCursor> cursor(
         CreateMouseCursorFromHCursor(desktop_dc_, cursor_info.hCursor));
     if (cursor.get())
       callback_->OnMouseCursor(cursor.release());
@@ -133,7 +131,6 @@ void MouseCursorMonitorWin::Capture() {
 }
 
 DesktopRect MouseCursorMonitorWin::GetScreenRect() {
-  assert(IsGUIThread(false));
   assert(screen_ != kInvalidScreenId);
   if (screen_ == kFullDesktopScreenId) {
     return DesktopRect::MakeXYWH(

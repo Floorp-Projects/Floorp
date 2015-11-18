@@ -11,61 +11,41 @@
 #ifndef WEBRTC_SYSTEM_WRAPPERS_SOURCE_THREAD_POSIX_H_
 #define WEBRTC_SYSTEM_WRAPPERS_SOURCE_THREAD_POSIX_H_
 
+#include "webrtc/base/event.h"
+#include "webrtc/base/scoped_ptr.h"
+#include "webrtc/base/thread_checker.h"
 #include "webrtc/system_wrappers/interface/thread_wrapper.h"
 
 #include <pthread.h>
 
 namespace webrtc {
 
-class CriticalSectionWrapper;
-class EventWrapper;
-
 int ConvertToSystemPriority(ThreadPriority priority, int min_prio,
                             int max_prio);
 
 class ThreadPosix : public ThreadWrapper {
  public:
-  static ThreadWrapper* Create(ThreadRunFunction func, ThreadObj obj,
-                               ThreadPriority prio, const char* thread_name);
-
-  ThreadPosix(ThreadRunFunction func, ThreadObj obj, ThreadPriority prio,
-              const char* thread_name);
-  virtual ~ThreadPosix();
+  ThreadPosix(ThreadRunFunction func, void* obj, const char* thread_name);
+  ~ThreadPosix() override;
 
   // From ThreadWrapper.
-  virtual void SetNotAlive() OVERRIDE;
-  virtual bool Start(unsigned int& id) OVERRIDE;
-  // Not implemented on Mac.
-  virtual bool SetAffinity(const int* processor_numbers,
-                           unsigned int amount_of_processors) OVERRIDE;
-  virtual bool Stop() OVERRIDE;
+  bool Start() override;
+  bool Stop() override;
+
+  bool SetPriority(ThreadPriority priority) override;
+
+ private:
+  static void* StartThread(void* param);
 
   void Run();
 
- private:
-  int Construct();
+  rtc::ThreadChecker thread_checker_;
+  ThreadRunFunction const run_function_;
+  void* const obj_;
+  rtc::Event stop_event_;
+  const std::string name_;
 
- private:
-  ThreadRunFunction   run_function_;
-  ThreadObj           obj_;
-
-  // Internal state.
-  CriticalSectionWrapper* crit_state_;  // Protects alive_ and dead_
-  bool                    alive_;
-  bool                    dead_;
-  ThreadPriority          prio_;
-  EventWrapper*           event_;
-
-  // Zero-terminated thread name string.
-  char                    name_[kThreadMaxNameLength];
-  bool                    set_thread_name_;
-
-  // Handle to thread.
-#if (defined(WEBRTC_LINUX) || defined(WEBRTC_ANDROID))
-  pid_t                   pid_;
-#endif
-  pthread_attr_t          attr_;
-  pthread_t               thread_;
+  pthread_t thread_;
 };
 
 }  // namespace webrtc

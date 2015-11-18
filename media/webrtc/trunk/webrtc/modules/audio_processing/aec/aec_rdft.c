@@ -555,13 +555,13 @@ void aec_rdft_inverse_128(float* a) {
 }
 
 // code path selection
-rft_sub_128_t cft1st_128;
-rft_sub_128_t cftmdl_128;
-rft_sub_128_t rftfsub_128;
-rft_sub_128_t rftbsub_128;
-rft_sub_128_t cftfsub_128;
-rft_sub_128_t cftbsub_128;
-rft_sub_128_t bitrv2_128;
+RftSub128 cft1st_128;
+RftSub128 cftmdl_128;
+RftSub128 rftfsub_128;
+RftSub128 rftbsub_128;
+RftSub128 cftfsub_128;
+RftSub128 cftbsub_128;
+RftSub128 bitrv2_128;
 
 void aec_rdft_init(void) {
   cft1st_128 = cft1st_128_C;
@@ -579,11 +579,11 @@ void aec_rdft_init(void) {
 #if defined(MIPS_FPU_LE)
   aec_rdft_init_mips();
 #endif
-#if defined(WEBRTC_DETECT_ARM_NEON)
+#if defined(WEBRTC_ARCH_ARM_NEON)
+  aec_rdft_init_neon();
+#elif defined(WEBRTC_DETECT_ARM_NEON)
   if ((WebRtc_GetCPUFeaturesARM() & kCPUFeatureNEON) != 0) {
     aec_rdft_init_neon();
   }
-#elif defined(WEBRTC_ARCH_ARM_NEON)
-  aec_rdft_init_neon();
 #endif
 }

@@ -13,7 +13,7 @@
 
 #include <string>
 #include "testing/gtest/include/gtest/gtest.h"
-#include "webrtc/system_wrappers/interface/scoped_ptr.h"
+#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/typedefs.h"
 
 namespace webrtc {
@@ -60,11 +60,11 @@ class AudioCodecSpeedTest : public testing::TestWithParam<coding_param> {
   // Expected output number of samples-per-channel in a frame.
   int output_length_sample_;
 
-  scoped_ptr<int16_t[]> in_data_;
-  scoped_ptr<int16_t[]> out_data_;
+  rtc::scoped_ptr<int16_t[]> in_data_;
+  rtc::scoped_ptr<int16_t[]> out_data_;
   size_t data_pointer_;
   size_t loop_length_samples_;
-  scoped_ptr<uint8_t[]> bit_stream_;
+  rtc::scoped_ptr<uint8_t[]> bit_stream_;
 
   // Maximum number of bytes in output bitstream for a frame of audio.
   int max_bytes_;

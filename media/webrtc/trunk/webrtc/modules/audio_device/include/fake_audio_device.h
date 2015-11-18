@@ -36,7 +36,7 @@ class FakeAudioDeviceModule : public AudioDeviceModule {
   virtual int32_t SetStereoRecording(bool enable) { return 0; }
   virtual int32_t SetAGC(bool enable) { return 0; }
   virtual int32_t StopRecording() { return 0; }
-  virtual int32_t TimeUntilNextProcess() { return 0; }
+  virtual int64_t TimeUntilNextProcess() { return 0; }
   virtual int32_t Process() { return 0; }
   virtual int32_t Terminate() { return 0; }
 
@@ -144,6 +144,7 @@ class FakeAudioDeviceModule : public AudioDeviceModule {
   virtual int32_t ResetAudioDevice() { return 0; }
   virtual int32_t SetLoudspeakerStatus(bool enable) { return 0; }
   virtual int32_t GetLoudspeakerStatus(bool* enabled) const { return 0; }
+  virtual bool BuiltInAECIsAvailable() const { return false; }
   virtual int32_t EnableBuiltInAEC(bool enable) { return -1; }
   virtual bool BuiltInAECIsEnabled() const { return false; }
 };

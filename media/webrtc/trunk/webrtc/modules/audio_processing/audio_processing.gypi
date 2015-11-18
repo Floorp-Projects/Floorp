@@ -8,11 +8,6 @@
 
 {
   'variables': {
-    'audio_processing_dependencies': [
-      '<(webrtc_root)/base/base.gyp:rtc_base_approved',
-      '<(webrtc_root)/common_audio/common_audio.gyp:common_audio',
-      '<(webrtc_root)/system_wrappers/source/system_wrappers.gyp:system_wrappers',
-    ],
     'shared_generated_dir': '<(SHARED_INTERMEDIATE_DIR)/audio_processing/asm_offsets',
   },
   'targets': [
@@ -30,32 +25,70 @@
         'aec_untrusted_delay_for_testing%': 0,
       },
       'dependencies': [
-        '<@(audio_processing_dependencies)',
+        '<(webrtc_root)/base/base.gyp:rtc_base_approved',
+        '<(webrtc_root)/common.gyp:webrtc_common',
+        '<(webrtc_root)/common_audio/common_audio.gyp:common_audio',
+        '<(webrtc_root)/modules/modules.gyp:iSAC',
+        '<(webrtc_root)/system_wrappers/system_wrappers.gyp:system_wrappers',
       ],
       'sources': [
-        'aec/include/echo_cancellation.h',
+        'aec/aec_core.c',
+        'aec/aec_core.h',
+        'aec/aec_core_internal.h',
+        'aec/aec_rdft.c',
+        'aec/aec_rdft.h',
+        'aec/aec_resampler.c',
+        'aec/aec_resampler.h',
         'aec/echo_cancellation.c',
         'aec/echo_cancellation_internal.h',
-        'aec/aec_core.h',
-        'aec/aec_core.c',
-        'aec/aec_core_internal.h',
-        'aec/aec_rdft.h',
-        'aec/aec_rdft.c',
-        'aec/aec_resampler.h',
-        'aec/aec_resampler.c',
-        'aecm/include/echo_control_mobile.h',
-        'aecm/echo_control_mobile.c',
+        'aec/include/echo_cancellation.h',
         'aecm/aecm_core.c',
         'aecm/aecm_core.h',
-        'agc/include/gain_control.h',
-        'agc/analog_agc.c',
-        'agc/analog_agc.h',
-        'agc/digital_agc.c',
-        'agc/digital_agc.h',
+        'aecm/echo_control_mobile.c',
+        'aecm/include/echo_control_mobile.h',
+        'agc/agc.cc',
+        'agc/agc.h',
+        'agc/agc_audio_proc.cc',
+        'agc/agc_audio_proc.h',
+        'agc/agc_audio_proc_internal.h',
+        'agc/agc_manager_direct.cc',
+        'agc/agc_manager_direct.h',
+        'agc/circular_buffer.cc',
+        'agc/circular_buffer.h',
+        'agc/common.h',
+        'agc/gain_map_internal.h',
+        'agc/gmm.cc',
+        'agc/gmm.h',
+        'agc/histogram.cc',
+        'agc/histogram.h',
+        'agc/legacy/analog_agc.c',
+        'agc/legacy/analog_agc.h',
+        'agc/legacy/digital_agc.c',
+        'agc/legacy/digital_agc.h',
+        'agc/legacy/gain_control.h',
+        'agc/noise_gmm_tables.h',
+        'agc/pitch_based_vad.cc',
+        'agc/pitch_based_vad.h',
+        'agc/pitch_internal.cc',
+        'agc/pitch_internal.h',
+        'agc/pole_zero_filter.cc',
+        'agc/pole_zero_filter.h',
+        'agc/standalone_vad.cc',
+        'agc/standalone_vad.h',
+        'agc/utility.cc',
+        'agc/utility.h',
+        'agc/voice_gmm_tables.h',
         'audio_buffer.cc',
         'audio_buffer.h',
         'audio_processing_impl.cc',
         'audio_processing_impl.h',
+        'beamformer/beamformer.h',
+        'beamformer/complex_matrix.h',
+        'beamformer/covariance_matrix_generator.cc',
+        'beamformer/covariance_matrix_generator.h',
+        'beamformer/matrix.h',
+        'beamformer/nonlinear_beamformer.cc',
+        'beamformer/nonlinear_beamformer.h',
         'common.h',
         'echo_cancellation_impl.cc',
         'echo_cancellation_impl.h',
@@ -74,6 +107,21 @@
         'processing_component.h',
         'rms_level.cc',
         'rms_level.h',
+        'splitting_filter.cc',
+        'splitting_filter.h',
+        'transient/common.h',
+        'transient/daubechies_8_wavelet_coeffs.h',
+        'transient/dyadic_decimator.h',
+        'transient/moving_moments.cc',
+        'transient/moving_moments.h',
+        'transient/transient_detector.cc',
+        'transient/transient_detector.h',
+        'transient/transient_suppressor.cc',
+        'transient/transient_suppressor.h',
+        'transient/wpd_node.cc',
+        'transient/wpd_node.h',
+        'transient/wpd_tree.cc',
+        'transient/wpd_tree.h',
         'typing_detection.cc',
         'typing_detection.h',
         'utility/delay_estimator.c',
@@ -81,10 +129,6 @@
         'utility/delay_estimator_internal.h',
         'utility/delay_estimator_wrapper.c',
         'utility/delay_estimator_wrapper.h',
-        'utility/fft4g.c',
-        'utility/fft4g.h',
-        'utility/ring_buffer.c',
-        'utility/ring_buffer.h',
         'voice_detection_impl.cc',
         'voice_detection_impl.h',
       ],
@@ -136,7 +180,7 @@
         ['target_arch=="ia32" or target_arch=="x64"', {
           'dependencies': ['audio_processing_sse2',],
         }],
-        ['(target_arch=="arm" and arm_version==7) or target_arch=="armv7"', {
+        ['(target_arch=="arm" and arm_version>=7) or target_arch=="arm64"', {
           'dependencies': ['audio_processing_neon',],
         }],
         ['target_arch=="mipsel" and mips_arch_variant!="r6" and android_webview_build==0', {
@@ -144,7 +188,7 @@
             'aecm/aecm_core_mips.c',
           ],
           'conditions': [
-            ['mips_fpu==1', {
+            ['mips_float_abi=="hard"', {
               'sources': [
                 'aec/aec_core_mips.c',
                 'aec/aec_rdft_mips.c',
@@ -189,18 +233,13 @@
             'aec/aec_rdft_sse2.c',
           ],
           'cflags': ['-msse2',],
-          'conditions': [
-            [ 'os_posix == 1', {
-              'cflags_mozilla': ['-msse2',],
-            }],
-          ],
           'xcode_settings': {
             'OTHER_CFLAGS': ['-msse2',],
           },
         },
       ],
     }],
-    ['(target_arch=="arm" and arm_version==7) or target_arch=="armv7"', {
+    ['(target_arch=="arm" and arm_version>=7) or target_arch=="arm64"', {
       'targets': [{
         'target_name': 'audio_processing_neon',
         'type': 'static_library',
@@ -215,27 +254,6 @@
           'ns/nsx_core_neon.c',
         ],
         'conditions': [
-          ['OS=="android" or OS=="ios"', {
-	    # This also provokes it to try to invoke gypi's in libvpx
-            #'dependencies': [
-            #  '<(gen_core_neon_offsets_gyp):*',
-            #],
-	    #
-	    # We disable the ASM source, because our gyp->Makefile translator
-	    # does not support the build steps to get the asm offsets.
-            'sources!': [
-              'aecm/aecm_core_neon.S',
-              'ns/nsx_core_neon.S',
-            ],
-            'include_dirs': [
-              '<(shared_generated_dir)',
-            ],
-            'sources': [
-              'aecm/aecm_core_neon.c',
-              'ns/nsx_core_neon.c',
-            ],
-            'includes!': ['../../build/arm_neon.gypi',],
-          }],
           # Disable LTO in audio_processing_neon target due to compiler bug
           ['use_lto==1', {
             'cflags!': [

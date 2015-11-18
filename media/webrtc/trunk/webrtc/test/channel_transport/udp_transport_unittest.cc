@@ -28,7 +28,6 @@ namespace test {
 class MockUdpSocketWrapper : public UdpSocketWrapper {
  public:
   // The following methods have to be mocked because they are pure.
-  MOCK_METHOD1(ChangeUniqueId, int32_t(int32_t));
   MOCK_METHOD2(SetCallback, bool(CallbackObj, IncomingSocketCallback));
   MOCK_METHOD1(Bind, bool(const SocketAddress&));
   MOCK_METHOD0(ValidHandle, bool());
@@ -36,7 +35,7 @@ class MockUdpSocketWrapper : public UdpSocketWrapper {
                                 const int8_t*,
                                 int32_t));
   MOCK_METHOD1(SetTOS, int32_t(int32_t));
-  MOCK_METHOD3(SendTo, int32_t(const int8_t*, int32_t, const SocketAddress&));
+  MOCK_METHOD3(SendTo, int32_t(const int8_t*, size_t, const SocketAddress&));
   MOCK_METHOD8(SetQos, bool(int32_t, int32_t,
                             int32_t, int32_t,
                             int32_t, int32_t,
@@ -51,7 +50,6 @@ class MockUdpSocketManager : public UdpSocketManager {
     delete this;
   }
   MOCK_METHOD2(Init, bool(int32_t, uint8_t&));
-  MOCK_METHOD1(ChangeUniqueId, int32_t(const int32_t));
   MOCK_METHOD0(Start, bool());
   MOCK_METHOD0(Stop, bool());
   MOCK_METHOD1(AddSocket, bool(UdpSocketWrapper*));

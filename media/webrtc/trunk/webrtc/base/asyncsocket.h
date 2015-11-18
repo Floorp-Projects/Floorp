@@ -23,9 +23,9 @@ namespace rtc {
 class AsyncSocket : public Socket {
  public:
   AsyncSocket();
-  virtual ~AsyncSocket();
+  ~AsyncSocket() override;
 
-  virtual AsyncSocket* Accept(SocketAddress* paddr) = 0;
+  AsyncSocket* Accept(SocketAddress* paddr) override = 0;
 
   // SignalReadEvent and SignalWriteEvent use multi_threaded_local to allow
   // access concurrently from different thread.
@@ -48,73 +48,31 @@ class AsyncSocketAdapter : public AsyncSocket, public sigslot::has_slots<> {
   // that will be called during the detached period (usually GetState()), to
   // avoid dereferencing a null pointer.
   explicit AsyncSocketAdapter(AsyncSocket* socket);
-  virtual ~AsyncSocketAdapter();
+  ~AsyncSocketAdapter() override;
   void Attach(AsyncSocket* socket);
-  virtual SocketAddress GetLocalAddress() const {
-    return socket_->GetLocalAddress();
-  }
-  virtual SocketAddress GetRemoteAddress() const {
-    return socket_->GetRemoteAddress();
-  }
-  virtual int Bind(const SocketAddress& addr) {
-    return socket_->Bind(addr);
-  }
-  virtual int Connect(const SocketAddress& addr) {
-    return socket_->Connect(addr);
-  }
-  virtual int Send(const void* pv, size_t cb) {
-    return socket_->Send(pv, cb);
-  }
-  virtual int SendTo(const void* pv, size_t cb, const SocketAddress& addr) {
-    return socket_->SendTo(pv, cb, addr);
-  }
-  virtual int Recv(void* pv, size_t cb) {
-    return socket_->Recv(pv, cb);
-  }
-  virtual int RecvFrom(void* pv, size_t cb, SocketAddress* paddr) {
-    return socket_->RecvFrom(pv, cb, paddr);
-  }
-  virtual int Listen(int backlog) {
-    return socket_->Listen(backlog);
-  }
-  virtual AsyncSocket* Accept(SocketAddress* paddr) {
-    return socket_->Accept(paddr);
-  }
-  virtual int Close() {
-    return socket_->Close();
-  }
-  virtual int GetError() const {
-    return socket_->GetError();
-  }
-  virtual void SetError(int error) {
-    return socket_->SetError(error);
-  }
-  virtual ConnState GetState() const {
-    return socket_->GetState();
-  }
-  virtual int EstimateMTU(uint16* mtu) {
-    return socket_->EstimateMTU(mtu);
-  }
-  virtual int GetOption(Option opt, int* value) {
-    return socket_->GetOption(opt, value);
-  }
-  virtual int SetOption(Option opt, int value) {
-    return socket_->SetOption(opt, value);
-  }
+  SocketAddress GetLocalAddress() const override;
+  SocketAddress GetRemoteAddress() const override;
+  int Bind(const SocketAddress& addr) override;
+  int Connect(const SocketAddress& addr) override;
+  int Send(const void* pv, size_t cb) override;
+  int SendTo(const void* pv, size_t cb, const SocketAddress& addr) override;
+  int Recv(void* pv, size_t cb) override;
+  int RecvFrom(void* pv, size_t cb, SocketAddress* paddr) override;
+  int Listen(int backlog) override;
+  AsyncSocket* Accept(SocketAddress* paddr) override;
+  int Close() override;
+  int GetError() const override;
+  void SetError(int error) override;
+  ConnState GetState() const override;
+  int EstimateMTU(uint16* mtu) override;
+  int GetOption(Option opt, int* value) override;
+  int SetOption(Option opt, int value) override;
 
  protected:
-  virtual void OnConnectEvent(AsyncSocket* socket) {
-    SignalConnectEvent(this);
-  }
-  virtual void OnReadEvent(AsyncSocket* socket) {
-    SignalReadEvent(this);
-  }
-  virtual void OnWriteEvent(AsyncSocket* socket) {
-    SignalWriteEvent(this);
-  }
-  virtual void OnCloseEvent(AsyncSocket* socket, int err) {
-    SignalCloseEvent(this, err);
-  }
+  virtual void OnConnectEvent(AsyncSocket* socket);
+  virtual void OnReadEvent(AsyncSocket* socket);
+  virtual void OnWriteEvent(AsyncSocket* socket);
+  virtual void OnCloseEvent(AsyncSocket* socket, int err);
 
   AsyncSocket* socket_;
 };

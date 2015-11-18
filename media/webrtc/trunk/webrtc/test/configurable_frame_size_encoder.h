@@ -13,7 +13,7 @@
 
 #include <vector>
 
-#include "webrtc/system_wrappers/interface/scoped_ptr.h"
+#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/video_encoder.h"
 
 namespace webrtc {
@@ -21,38 +21,37 @@ namespace test {
 
 class ConfigurableFrameSizeEncoder : public VideoEncoder {
  public:
-  explicit ConfigurableFrameSizeEncoder(uint32_t max_frame_size);
+  explicit ConfigurableFrameSizeEncoder(size_t max_frame_size);
   virtual ~ConfigurableFrameSizeEncoder();
 
-  virtual int32_t InitEncode(const VideoCodec* codec_settings,
-                             int32_t number_of_cores,
-                             uint32_t max_payload_size) OVERRIDE;
+  int32_t InitEncode(const VideoCodec* codec_settings,
+                     int32_t number_of_cores,
+                     size_t max_payload_size) override;
 
-  virtual int32_t Encode(const I420VideoFrame& input_image,
-                         const CodecSpecificInfo* codec_specific_info,
-                         const std::vector<VideoFrameType>* frame_types)
-      OVERRIDE;
+  int32_t Encode(const I420VideoFrame& input_image,
+                 const CodecSpecificInfo* codec_specific_info,
+                 const std::vector<VideoFrameType>* frame_types) override;
 
-  virtual int32_t RegisterEncodeCompleteCallback(EncodedImageCallback* callback)
-      OVERRIDE;
+  int32_t RegisterEncodeCompleteCallback(
+      EncodedImageCallback* callback) override;
 
-  virtual int32_t Release() OVERRIDE;
+  int32_t Release() override;
 
-  virtual int32_t SetChannelParameters(uint32_t packet_loss, int rtt) OVERRIDE;
+  int32_t SetChannelParameters(uint32_t packet_loss, int64_t rtt) override;
 
-  virtual int32_t SetRates(uint32_t new_bit_rate, uint32_t frame_rate) OVERRIDE;
+  int32_t SetRates(uint32_t new_bit_rate, uint32_t frame_rate) override;
 
-  virtual int32_t SetPeriodicKeyFrames(bool enable) OVERRIDE;
+  int32_t SetPeriodicKeyFrames(bool enable) override;
 
-  virtual int32_t CodecConfigParameters(uint8_t* buffer, int32_t size) OVERRIDE;
+  int32_t CodecConfigParameters(uint8_t* buffer, int32_t size) override;
 
-  int32_t SetFrameSize(uint32_t size);
+  int32_t SetFrameSize(size_t size);
 
  private:
   EncodedImageCallback* callback_;
-  const uint32_t max_frame_size_;
-  uint32_t current_frame_size_;
-  scoped_ptr<uint8_t[]> buffer_;
+  const size_t max_frame_size_;
+  size_t current_frame_size_;
+  rtc::scoped_ptr<uint8_t[]> buffer_;
 };
 
 }  // namespace test

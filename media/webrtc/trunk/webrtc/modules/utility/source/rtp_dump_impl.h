@@ -22,11 +22,11 @@ public:
     RtpDumpImpl();
     virtual ~RtpDumpImpl();
 
-    virtual int32_t Start(const char* fileNameUTF8) OVERRIDE;
-    virtual int32_t Stop() OVERRIDE;
-    virtual bool IsActive() const OVERRIDE;
-    virtual int32_t DumpPacket(const uint8_t* packet,
-                               uint16_t packetLength) OVERRIDE;
+    int32_t Start(const char* fileNameUTF8) override;
+    int32_t Stop() override;
+    bool IsActive() const override;
+    int32_t DumpPacket(const uint8_t* packet, size_t packetLength) override;
+
 private:
     // Return the system time in ms.
     inline uint32_t GetTimeInMS() const;

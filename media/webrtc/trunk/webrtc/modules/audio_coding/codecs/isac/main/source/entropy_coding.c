@@ -128,7 +128,7 @@ static void FindInvArSpec(const int16_t* ARCoefQ12,
     sum >>= 15;
     CorrQ11[k] = (sum * tmpGain + round) >> shftVal;
   }
-  sum = WEBRTC_SPL_LSHIFT_W32(CorrQ11[0], 7);
+  sum = CorrQ11[0] << 7;
   for (n = 0; n < FRAMESAMPLES / 8; n++) {
     CurveQ16[n] = sum;
   }
@@ -163,8 +163,8 @@ static void FindInvArSpec(const int16_t* ARCoefQ12,
 
   for (k = 0; k < FRAMESAMPLES / 8; k++) {
     CurveQ16[FRAMESAMPLES_QUARTER - 1 - k] = CurveQ16[k] -
-        WEBRTC_SPL_LSHIFT_W32(diffQ16[k], shftVal);
-    CurveQ16[k] += WEBRTC_SPL_LSHIFT_W32(diffQ16[k], shftVal);
+        (diffQ16[k] << shftVal);
+    CurveQ16[k] += diffQ16[k] << shftVal;
   }
 }
 
@@ -995,7 +995,7 @@ int WebRtcIsac_DecodeLpcCoef(Bitstr* streamdata, double* LPCCoef) {
 
 /* Encode LPC in LAR domain. */
 void WebRtcIsac_EncodeLar(double* LPCCoef, Bitstr* streamdata,
-                          ISAC_SaveEncData_t* encData) {
+                          IsacSaveEncoderData* encData) {
   int j, k, n, pos, pos2, poss, offss, offs2;
   int index_s[KLT_ORDER_SHAPE];
   int index_ovr_s[KLT_ORDER_SHAPE];
@@ -1155,7 +1155,7 @@ void WebRtcIsac_EncodeLar(double* LPCCoef, Bitstr* streamdata,
 
 
 void WebRtcIsac_EncodeLpcLb(double* LPCCoef_lo, double* LPCCoef_hi,
-                            Bitstr* streamdata, ISAC_SaveEncData_t* encData) {
+                            Bitstr* streamdata, IsacSaveEncoderData* encData) {
   double lars[KLT_ORDER_GAIN + KLT_ORDER_SHAPE];
   int k;
 
@@ -1233,7 +1233,7 @@ int16_t WebRtcIsac_EncodeLpcUB(double* lpcVecs, Bitstr* streamdata,
 
 void WebRtcIsac_EncodeLpcGainLb(double* LPCCoef_lo, double* LPCCoef_hi,
                                 Bitstr* streamdata,
-                                ISAC_SaveEncData_t* encData) {
+                                IsacSaveEncoderData* encData) {
   int j, k, n, pos, pos2, posg, offsg, offs2;
   int index_g[KLT_ORDER_GAIN];
   int index_ovr_g[KLT_ORDER_GAIN];
@@ -1533,7 +1533,7 @@ int WebRtcIsac_DecodePitchGain(Bitstr* streamdata,
 /* Quantize & code Pitch Gains. */
 void WebRtcIsac_EncodePitchGain(int16_t* PitchGains_Q12,
                                 Bitstr* streamdata,
-                                ISAC_SaveEncData_t* encData) {
+                                IsacSaveEncoderData* encData) {
   int k, j;
   double C;
   double S[PITCH_SUBFRAMES];
@@ -1678,7 +1678,7 @@ int WebRtcIsac_DecodePitchLag(Bitstr* streamdata, int16_t* PitchGain_Q12,
 /* Quantize & code pitch lags. */
 void WebRtcIsac_EncodePitchLag(double* PitchLags, int16_t* PitchGain_Q12,
                                Bitstr* streamdata,
-                               ISAC_SaveEncData_t* encData) {
+                               IsacSaveEncoderData* encData) {
   int k, j;
   double StepSize;
   double C;

@@ -15,22 +15,16 @@
 #include <SLES/OpenSLES_Android.h>
 #include <SLES/OpenSLES_AndroidConfiguration.h>
 
-// Not defined in the android version we use to build with
-#define SL_ANDROID_RECORDING_PRESET_VOICE_COMMUNICATION ((SLuint32) 0x00000004)
-
-#if !defined(WEBRTC_GONK)
+#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/modules/audio_device/android/audio_manager_jni.h"
-#else
-#include "media/AudioEffect.h"
-#endif
 #include "webrtc/modules/audio_device/android/low_latency_event.h"
 #include "webrtc/modules/audio_device/include/audio_device.h"
 #include "webrtc/modules/audio_device/include/audio_device_defines.h"
-#include "webrtc/system_wrappers/interface/scoped_ptr.h"
 
 namespace webrtc {
 
 class AudioDeviceBuffer;
+class AudioManager;
 class CriticalSectionWrapper;
 class PlayoutDelayProvider;
 class SingleRwFifo;
@@ -42,11 +36,11 @@ class ThreadWrapper;
 // to non-const methods require exclusive access to the object.
 class OpenSlesInput {
  public:
-  OpenSlesInput(const int32_t id, PlayoutDelayProvider* delay_provider);
+  OpenSlesInput(
+      PlayoutDelayProvider* delay_provider, AudioManager* audio_manager);
   ~OpenSlesInput();
 
   static int32_t SetAndroidAudioDeviceObjects(void* javaVM,
-                                              void* env,
                                               void* context);
   static void ClearAndroidAudioDeviceObjects();
 
@@ -111,7 +105,7 @@ class OpenSlesInput {
 
   // Stereo support
   int32_t StereoRecordingIsAvailable(bool& available);  // NOLINT
-  int32_t SetStereoRecording(bool enable);
+  int32_t SetStereoRecording(bool enable) { return -1; }
   int32_t StereoRecording(bool& enabled) const;  // NOLINT
 
   // Delay information and control
@@ -125,13 +119,17 @@ class OpenSlesInput {
   // Attach audio buffer
   void AttachAudioBuffer(AudioDeviceBuffer* audioBuffer);
 
+  // Built-in AEC is only supported in combination with Java/AudioRecord.
+  bool BuiltInAECIsAvailable() const { return false; }
+  int32_t EnableBuiltInAEC(bool enable) { return -1; }
+
  private:
   enum {
     kNumInterfaces = 2,
     // Keep as few OpenSL buffers as possible to avoid wasting memory. 2 is
     // minimum for playout. Keep 2 for recording as well.
     kNumOpenSlBuffers = 2,
-    kNum10MsToBuffer = 8,
+    kNum10MsToBuffer = 3,
   };
 
   int InitSampleRate();
@@ -147,11 +145,6 @@ class OpenSlesInput {
   // etc, so it should be called when starting recording.
   bool CreateAudioRecorder();
   void DestroyAudioRecorder();
-  void SetupVoiceMode();
-#if defined(WEBRTC_GONK) && defined(WEBRTC_HARDWARE_AEC_NS)
-  void SetupAECAndNS();
-  bool CheckPlatformAEC();
-#endif
 
   // When overrun happens there will be more frames received from OpenSL than
   // the desired number of buffers. It is possible to expand the number of
@@ -182,21 +175,22 @@ class OpenSlesInput {
   // Thread-compatible.
   bool CbThreadImpl();
 
-#if !defined(WEBRTC_GONK)
+  PlayoutDelayProvider* delay_provider_;
+
   // Java API handle
   AudioManagerJni audio_manager_;
-#endif
 
-  int id_;
-  PlayoutDelayProvider* delay_provider_;
+  // TODO(henrika): improve this area
+  // PlayoutDelayProvider* delay_provider_;
+
   bool initialized_;
   bool mic_initialized_;
   bool rec_initialized_;
 
   // Members that are read/write accessed concurrently by the process thread and
   // threads calling public functions of this class.
-  scoped_ptr<ThreadWrapper> rec_thread_;  // Processing thread
-  scoped_ptr<CriticalSectionWrapper> crit_sect_;
+  rtc::scoped_ptr<ThreadWrapper> rec_thread_;  // Processing thread
+  rtc::scoped_ptr<CriticalSectionWrapper> crit_sect_;
   // This member controls the starting and stopping of recording audio to the
   // the device.
   bool recording_;
@@ -204,7 +198,7 @@ class OpenSlesInput {
   // Only one thread, T1, may push and only one thread, T2, may pull. T1 may or
   // may not be the same thread as T2. T2 is the process thread and T1 is the
   // OpenSL thread.
-  scoped_ptr<SingleRwFifo> fifo_;
+  rtc::scoped_ptr<SingleRwFifo> fifo_;
   int num_fifo_buffers_needed_;
   LowLatencyEvent event_;
   int number_overruns_;
@@ -219,7 +213,7 @@ class OpenSlesInput {
   // Audio buffers
   AudioDeviceBuffer* audio_buffer_;
   // Holds all allocated memory such that it is deallocated properly.
-  scoped_ptr<scoped_ptr<int8_t[]>[]> rec_buf_;
+  rtc::scoped_ptr<rtc::scoped_ptr<int8_t[]>[]> rec_buf_;
   // Index in |rec_buf_| pointing to the audio buffer that will be ready the
   // next time RecorderSimpleBufferQueueCallbackHandler is invoked.
   // Ready means buffer contains audio data from the device.
@@ -229,27 +223,8 @@ class OpenSlesInput {
   uint32_t rec_sampling_rate_;
   bool agc_enabled_;
 
-#if defined(WEBRTC_GONK) && defined(WEBRTC_HARDWARE_AEC_NS)
-  android::AudioEffect* aec_;
-  android::AudioEffect* ns_;
-#endif
   // Audio status
   uint16_t recording_delay_;
-
-  // dlopen for OpenSLES
-  void *opensles_lib_;
-  typedef SLresult (*slCreateEngine_t)(SLObjectItf *,
-                                       SLuint32,
-                                       const SLEngineOption *,
-                                       SLuint32,
-                                       const SLInterfaceID *,
-                                       const SLboolean *);
-  slCreateEngine_t f_slCreateEngine;
-  SLInterfaceID SL_IID_ENGINE_;
-  SLInterfaceID SL_IID_BUFFERQUEUE_;
-  SLInterfaceID SL_IID_ANDROIDCONFIGURATION_;
-  SLInterfaceID SL_IID_ANDROIDSIMPLEBUFFERQUEUE_;
-  SLInterfaceID SL_IID_RECORD_;
 };
 
 }  // namespace webrtc

@@ -28,29 +28,30 @@ class MacBaseSocketServer;
 class MacAsyncSocket : public AsyncSocket, public sigslot::has_slots<> {
  public:
   MacAsyncSocket(MacBaseSocketServer* ss, int family);
-  virtual ~MacAsyncSocket();
+  ~MacAsyncSocket() override;
 
   bool valid() const { return source_ != NULL; }
 
   // Socket interface
-  virtual SocketAddress GetLocalAddress() const;
-  virtual SocketAddress GetRemoteAddress() const;
-  virtual int Bind(const SocketAddress& addr);
-  virtual int Connect(const SocketAddress& addr);
-  virtual int Send(const void* buffer, size_t length);
-  virtual int SendTo(const void* buffer, size_t length,
-                     const SocketAddress& addr);
-  virtual int Recv(void* buffer, size_t length);
-  virtual int RecvFrom(void* buffer, size_t length, SocketAddress* out_addr);
-  virtual int Listen(int backlog);
-  virtual MacAsyncSocket* Accept(SocketAddress* out_addr);
-  virtual int Close();
-  virtual int GetError() const;
-  virtual void SetError(int error);
-  virtual ConnState GetState() const;
-  virtual int EstimateMTU(uint16* mtu);
-  virtual int GetOption(Option opt, int* value);
-  virtual int SetOption(Option opt, int value);
+  SocketAddress GetLocalAddress() const override;
+  SocketAddress GetRemoteAddress() const override;
+  int Bind(const SocketAddress& addr) override;
+  int Connect(const SocketAddress& addr) override;
+  int Send(const void* buffer, size_t length) override;
+  int SendTo(const void* buffer,
+             size_t length,
+             const SocketAddress& addr) override;
+  int Recv(void* buffer, size_t length) override;
+  int RecvFrom(void* buffer, size_t length, SocketAddress* out_addr) override;
+  int Listen(int backlog) override;
+  MacAsyncSocket* Accept(SocketAddress* out_addr) override;
+  int Close() override;
+  int GetError() const override;
+  void SetError(int error) override;
+  ConnState GetState() const override;
+  int EstimateMTU(uint16* mtu) override;
+  int GetOption(Option opt, int* value) override;
+  int SetOption(Option opt, int value) override;
 
   // For the MacBaseSocketServer to disable callbacks when process_io is false.
   void EnableCallbacks();

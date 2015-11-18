@@ -50,7 +50,7 @@ VoiceChannelTransport::~VoiceChannelTransport() {
 
 void VoiceChannelTransport::IncomingRTPPacket(
     const int8_t* incoming_rtp_packet,
-    const int32_t packet_length,
+    const size_t packet_length,
     const char* /*from_ip*/,
     const uint16_t /*from_port*/) {
   voe_network_->ReceivedRTPPacket(
@@ -59,7 +59,7 @@ void VoiceChannelTransport::IncomingRTPPacket(
 
 void VoiceChannelTransport::IncomingRTCPPacket(
     const int8_t* incoming_rtcp_packet,
-    const int32_t packet_length,
+    const size_t packet_length,
     const char* /*from_ip*/,
     const uint16_t /*from_port*/) {
   voe_network_->ReceivedRTCPPacket(channel_, incoming_rtcp_packet,
@@ -103,7 +103,7 @@ VideoChannelTransport::~VideoChannelTransport() {
 
 void VideoChannelTransport::IncomingRTPPacket(
     const int8_t* incoming_rtp_packet,
-    const int32_t packet_length,
+    const size_t packet_length,
     const char* /*from_ip*/,
     const uint16_t /*from_port*/) {
   vie_network_->ReceivedRTPPacket(
@@ -112,7 +112,7 @@ void VideoChannelTransport::IncomingRTPPacket(
 
 void VideoChannelTransport::IncomingRTCPPacket(
     const int8_t* incoming_rtcp_packet,
-    const int32_t packet_length,
+    const size_t packet_length,
     const char* /*from_ip*/,
     const uint16_t /*from_port*/) {
   vie_network_->ReceivedRTCPPacket(channel_, incoming_rtcp_packet,

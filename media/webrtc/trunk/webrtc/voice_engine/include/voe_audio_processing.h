@@ -185,9 +185,11 @@ public:
     virtual int GetEchoMetrics(int& ERL, int& ERLE, int& RERL, int& A_NLP) = 0;
 
     // Gets the EC internal |delay_median| and |delay_std| in ms between
-    // near-end and far-end. The values are calculated over the time period
-    // since the last GetEcDelayMetrics() call.
-    virtual int GetEcDelayMetrics(int& delay_median, int& delay_std) = 0;
+    // near-end and far-end. The metric |fraction_poor_delays| is the amount of
+    // delay values that potentially can break the EC. The values are aggregated
+    // over one second and the last updated metrics are returned.
+    virtual int GetEcDelayMetrics(int& delay_median, int& delay_std,
+                                  float& fraction_poor_delays) = 0;
 
     // Enables recording of Audio Processing (AP) debugging information.
     // The file can later be used for off-line analysis of the AP performance.

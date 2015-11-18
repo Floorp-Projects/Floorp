@@ -33,9 +33,9 @@ class Vad {
 
   virtual ~Vad();
 
-  enum Activity VoiceActivity(const int16_t* audio,
-                              size_t num_samples,
-                              int sample_rate_hz);
+  virtual Activity VoiceActivity(const int16_t* audio,
+                                 size_t num_samples,
+                                 int sample_rate_hz);
 
  private:
   VadInst* handle_;

@@ -62,7 +62,7 @@ int main(int argc, char* argv[])
     int16_t stream_len = 0;
     int16_t shortdata[960];
     int16_t decoded[960];
-    int16_t streamdata[80*3];
+    uint8_t streamdata[80 * 6];
     int16_t speechType[1];
 
     /* handling wrong input arguments in the command line */
@@ -124,7 +124,8 @@ int main(int argc, char* argv[])
 
         /* G.722 encoding + decoding */
         stream_len = WebRtcG722_Encode((G722EncInst *)G722enc_inst, shortdata, framelength, streamdata);
-        err = WebRtcG722_Decode((G722DecInst *)G722dec_inst, streamdata, stream_len, decoded, speechType);
+        err = WebRtcG722_Decode(G722dec_inst, streamdata, stream_len, decoded,
+                                speechType);
 
         /* Stop clock after call to encoder and decoder */
         runtime += (double)((clock()/(double)CLOCKS_PER_SEC_G722)-starttime);

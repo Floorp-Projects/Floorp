@@ -34,7 +34,7 @@ TEST_F(NullSocketServerTest, WaitAndSet) {
   thread.Post(this, 0);
   // The process_io will be ignored.
   const bool process_io = true;
-  EXPECT_TRUE_WAIT(ss_.Wait(rtc::kForever, process_io), kTimeout);
+  EXPECT_TRUE_WAIT(ss_.Wait(SocketServer::kForever, process_io), kTimeout);
 }
 
 TEST_F(NullSocketServerTest, TestWait) {

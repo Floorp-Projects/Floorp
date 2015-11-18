@@ -15,24 +15,22 @@
 #ifndef WEBRTC_AUDIO_DEVICE_AUDIO_DEVICE_UTILITY_ANDROID_H
 #define WEBRTC_AUDIO_DEVICE_AUDIO_DEVICE_UTILITY_ANDROID_H
 
+#include <jni.h>
+
+#include "webrtc/base/checks.h"
 #include "webrtc/modules/audio_device/audio_device_utility.h"
 #include "webrtc/modules/audio_device/include/audio_device.h"
 
-namespace webrtc
-{
-class CriticalSectionWrapper;
+namespace webrtc {
 
-class AudioDeviceUtilityAndroid: public AudioDeviceUtility
-{
-public:
+// TODO(henrika): this utility class is not used but I would like to keep this
+// file for the other helper methods which are unique for Android.
+class AudioDeviceUtilityAndroid: public AudioDeviceUtility {
+ public:
     AudioDeviceUtilityAndroid(const int32_t id);
     ~AudioDeviceUtilityAndroid();
 
     virtual int32_t Init();
-
-private:
-    CriticalSectionWrapper& _critSect;
-    int32_t _id;
 };
 
 }  // namespace webrtc

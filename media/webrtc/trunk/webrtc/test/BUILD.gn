@@ -25,17 +25,27 @@ source_set("field_trial") {
   ]
 
   deps = [
+    "..:webrtc_common",
     "../system_wrappers",
   ]
 
   configs += [ "..:common_config" ]
   public_configs = [ "..:common_inherited_config"]
+}
 
-  if (is_clang) {
-    # Suppress warnings from Chrome's Clang plugins.
-    # See http://code.google.com/p/webrtc/issues/detail?id=163 for details.
-    configs -= [ "//build/config/clang:find_bad_constructs" ]
-  }
+source_set("histogram") {
+  sources = [
+    "histogram.cc",
+    "histogram.h",
+  ]
+
+  deps = [
+    "..:webrtc_common",
+    "../system_wrappers",
+  ]
+
+  configs += [ "..:common_config" ]
+  public_configs = [ "..:common_inherited_config"]
 }
 
 source_set("test_support") {
@@ -48,7 +58,6 @@ source_set("test_support") {
     "testsupport/frame_reader.h",
     "testsupport/frame_writer.cc",
     "testsupport/frame_writer.h",
-    "testsupport/gtest_prod_util.h",
     "testsupport/gtest_disable.h",
     "testsupport/mock/mock_frame_reader.h",
     "testsupport/mock/mock_frame_writer.h",
@@ -63,6 +72,7 @@ source_set("test_support") {
   deps = [
     "//testing/gmock",
     "//testing/gtest",
+    "..:gtest_prod",
     "../system_wrappers",
   ]
 
@@ -72,12 +82,6 @@ source_set("test_support") {
 
   configs += [ "..:common_config" ]
   public_configs = [ "..:common_inherited_config"]
-
-  if (is_clang) {
-    # Suppress warnings from Chrome's Clang plugins.
-    # See http://code.google.com/p/webrtc/issues/detail?id=163 for details.
-    configs -= [ "//build/config/clang:find_bad_constructs" ]
-  }
 }
 
 source_set("test_support_main") {
@@ -91,8 +95,8 @@ source_set("test_support_main") {
 
   deps = [
     ":field_trial",
+    ":histogram",
     ":test_support",
-    "../system_wrappers:metrics_default",
     "//testing/gmock",
     "//testing/gtest",
     "//third_party/gflags",
@@ -100,10 +104,4 @@ source_set("test_support_main") {
 
   configs += [ "..:common_config" ]
   public_configs = [ "..:common_inherited_config"]
-
-  if (is_clang) {
-    # Suppress warnings from Chrome's Clang plugins.
-    # See http://code.google.com/p/webrtc/issues/detail?id=163 for details.
-    configs -= [ "//build/config/clang:find_bad_constructs" ]
-  }
 }

@@ -61,14 +61,6 @@ int32_t VideoRenderLinuxImpl::Init()
 
 }
 
-int32_t VideoRenderLinuxImpl::ChangeUniqueId(const int32_t id)
-{
-    CriticalSectionScoped cs(&_renderLinuxCritsect);
-
-    _id = id;
-    return 0;
-}
-
 int32_t VideoRenderLinuxImpl::ChangeWindow(void* window)
 {
     WEBRTC_TRACE(kTraceInfo, kTraceVideoRenderer, _id, "%s",

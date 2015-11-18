@@ -12,6 +12,7 @@
 
 #include <assert.h>
 
+#include "webrtc/common_video/libyuv/include/webrtc_libyuv.h"
 #include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
 #include "webrtc/system_wrappers/interface/event_wrapper.h"
 #include "webrtc/system_wrappers/interface/thread_wrapper.h"
@@ -19,19 +20,10 @@
 namespace test {
 struct Frame {
  public:
-  Frame(unsigned char* buffer,
-        int buffer_size,
-        uint32_t timestamp,
-        int64_t render_time)
-      : buffer(new unsigned char[buffer_size]),
-        buffer_size(buffer_size),
-        timestamp(timestamp),
-        render_time(render_time) {
-    memcpy(this->buffer.get(), buffer, buffer_size);
-  }
+  Frame() : buffer(nullptr), buffer_size(0), timestamp(0), render_time(0) {}
 
-  webrtc::scoped_ptr<unsigned char[]> buffer;
-  int buffer_size;
+  rtc::scoped_ptr<unsigned char[]> buffer;
+  size_t buffer_size;
   uint32_t timestamp;
   int64_t render_time;
 
@@ -45,8 +37,7 @@ ViEToFileRenderer::ViEToFileRenderer()
       output_path_(),
       output_filename_(),
       thread_(webrtc::ThreadWrapper::CreateThread(
-          ViEToFileRenderer::RunRenderThread,
-          this, webrtc::kNormalPriority, "ViEToFileRendererThread")),
+          ViEToFileRenderer::RunRenderThread, this, "ViEToFileRendererThread")),
       frame_queue_cs_(webrtc::CriticalSectionWrapper::CreateCriticalSection()),
       frame_render_event_(webrtc::EventWrapper::Create()),
       render_queue_(),
@@ -73,14 +64,12 @@ bool ViEToFileRenderer::PrepareForRendering(
 
   output_filename_ = output_filename;
   output_path_ = output_path;
-  unsigned int tid;
-  return thread_->Start(tid);
+  return thread_->Start();
 }
 
 void ViEToFileRenderer::StopRendering() {
   assert(output_file_ != NULL);
   if (thread_.get() != NULL) {
-    thread_->SetNotAlive();
     // Signal that a frame is ready to be written to file.
     frame_render_event_->Set();
     // Call Stop() repeatedly, waiting for ProcessRenderQueue() to finish.
@@ -120,28 +109,54 @@ void ViEToFileRenderer::ForgetOutputFile() {
   output_path_ = "";
 }
 
+test::Frame* ViEToFileRenderer::NewFrame(size_t buffer_size) {
+  test::Frame* frame;
+  if (free_frame_queue_.empty()) {
+    frame = new test::Frame();
+  } else {
+    // Reuse an already allocated frame.
+    frame = free_frame_queue_.front();
+    free_frame_queue_.pop_front();
+  }
+  if (frame->buffer_size < buffer_size) {
+    frame->buffer.reset(new unsigned char[buffer_size]);
+    frame->buffer_size = buffer_size;
+  }
+  return frame;
+}
+
 int ViEToFileRenderer::DeliverFrame(unsigned char *buffer,
-                                    int buffer_size,
+                                    size_t buffer_size,
                                     uint32_t time_stamp,
                                     int64_t ntp_time_ms,
                                     int64_t render_time,
                                     void* /*handle*/) {
   webrtc::CriticalSectionScoped lock(frame_queue_cs_.get());
-  test::Frame* frame;
-  if (free_frame_queue_.empty()) {
-    frame = new test::Frame(buffer, buffer_size, time_stamp, render_time);
-  } else {
-    // Reuse an already allocated frame.
-    frame = free_frame_queue_.front();
-    free_frame_queue_.pop_front();
-    if (frame->buffer_size < buffer_size) {
-      frame->buffer.reset(new unsigned char[buffer_size]);
-    }
-    memcpy(frame->buffer.get(), buffer, buffer_size);
-    frame->buffer_size = buffer_size;
-    frame->timestamp = time_stamp;
-    frame->render_time = render_time;
-  }
+  test::Frame* frame = NewFrame(buffer_size);
+  memcpy(frame->buffer.get(), buffer, buffer_size);
+  frame->timestamp = time_stamp;
+  frame->render_time = render_time;
+
+  render_queue_.push_back(frame);
+  // Signal that a frame is ready to be written to file.
+  frame_render_event_->Set();
+  return 0;
+}
+
+int ViEToFileRenderer::DeliverI420Frame(
+    const webrtc::I420VideoFrame& input_frame) {
+  const size_t buffer_size =
+      CalcBufferSize(webrtc::kI420, input_frame.width(), input_frame.height());
+  webrtc::CriticalSectionScoped lock(frame_queue_cs_.get());
+  test::Frame* frame = NewFrame(buffer_size);
+  const int length =
+      ExtractBuffer(input_frame, frame->buffer_size, frame->buffer.get());
+  assert(static_cast<size_t>(length) == buffer_size);
+  if (length < 0)
+    return -1;
+  frame->timestamp = input_frame.timestamp();
+  frame->render_time = input_frame.render_time_ms();
+
   render_queue_.push_back(frame);
   // Signal that a frame is ready to be written to file.
   frame_render_event_->Set();
@@ -174,8 +189,8 @@ bool ViEToFileRenderer::ProcessRenderQueue() {
     // the renderer.
     frame_queue_cs_->Leave();
     assert(output_file_);
-    int written = fwrite(frame->buffer.get(), sizeof(unsigned char),
-                              frame->buffer_size, output_file_);
+    size_t written = fwrite(frame->buffer.get(), sizeof(unsigned char),
+                            frame->buffer_size, output_file_);
     frame_queue_cs_->Enter();
     // Return the frame.
     free_frame_queue_.push_front(frame);

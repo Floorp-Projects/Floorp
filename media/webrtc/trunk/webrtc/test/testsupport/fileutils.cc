@@ -23,7 +23,7 @@
 #else
 #include <unistd.h>
 
-#include "webrtc/system_wrappers/interface/scoped_ptr.h"
+#include "webrtc/base/scoped_ptr.h"
 #define GET_CURRENT_DIR getcwd
 #endif
 
@@ -168,7 +168,7 @@ std::string TempFilename(const std::string &dir, const std::string &prefix) {
   return "";
 #else
   int len = dir.size() + prefix.size() + 2 + 6;
-  scoped_ptr<char[]> tempname(new char[len]);
+  rtc::scoped_ptr<char[]> tempname(new char[len]);
 
   snprintf(tempname.get(), len, "%s/%sXXXXXX", dir.c_str(),
            prefix.c_str());

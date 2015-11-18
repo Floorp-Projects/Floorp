@@ -378,8 +378,9 @@ bool Win32Filesystem::GetAppTempFolder(Pathname* path) {
   return GetTemporaryFolder(*path, true, &filename);
 }
 
-bool Win32Filesystem::GetDiskFreeSpace(const Pathname& path, int64 *freebytes) {
-  if (!freebytes) {
+bool Win32Filesystem::GetDiskFreeSpace(const Pathname& path,
+                                       int64 *free_bytes) {
+  if (!free_bytes) {
     return false;
   }
   char drive[4];
@@ -398,24 +399,24 @@ bool Win32Filesystem::GetDiskFreeSpace(const Pathname& path, int64 *freebytes) {
     // TODO: Add method to Pathname to determine if the path is relative.
     // TODO: Add method to Pathname to convert a path to absolute.
   }
-  UINT driveType = ::GetDriveType(target_drive);
-  if ( (driveType & DRIVE_REMOTE) || (driveType & DRIVE_UNKNOWN) ) {
-    LOG(LS_VERBOSE) << " remove or unknown drive " << drive;
+  UINT drive_type = ::GetDriveType(target_drive);
+  if ((drive_type == DRIVE_REMOTE) || (drive_type == DRIVE_UNKNOWN)) {
+    LOG(LS_VERBOSE) << "Remote or unknown drive: " << drive;
     return false;
   }
 
-  int64 totalNumberOfBytes;  // receives the number of bytes on disk
-  int64 totalNumberOfFreeBytes;  // receives the free bytes on disk
+  int64 total_number_of_bytes;  // receives the number of bytes on disk
+  int64 total_number_of_free_bytes;  // receives the free bytes on disk
   // make sure things won't change in 64 bit machine
   // TODO replace with compile time assert
   ASSERT(sizeof(ULARGE_INTEGER) == sizeof(uint64));  //NOLINT
   if (::GetDiskFreeSpaceEx(target_drive,
-                           (PULARGE_INTEGER)freebytes,
-                           (PULARGE_INTEGER)&totalNumberOfBytes,
-                           (PULARGE_INTEGER)&totalNumberOfFreeBytes)) {
+                           (PULARGE_INTEGER)free_bytes,
+                           (PULARGE_INTEGER)&total_number_of_bytes,
+                           (PULARGE_INTEGER)&total_number_of_free_bytes)) {
     return true;
   } else {
-    LOG(LS_VERBOSE) << " GetDiskFreeSpaceEx returns error ";
+    LOG(LS_VERBOSE) << "GetDiskFreeSpaceEx returns error.";
     return false;
   }
 }

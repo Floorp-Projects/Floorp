@@ -13,11 +13,10 @@
 
 #include <complex>
 
-#include "webrtc/base/checks.h"
+#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/common_audio/blocker.h"
 #include "webrtc/common_audio/real_fourier.h"
 #include "webrtc/system_wrappers/interface/aligned_array.h"
-#include "webrtc/system_wrappers/interface/scoped_ptr.h"
 
 namespace webrtc {
 
@@ -43,15 +42,14 @@ class LappedTransform {
 
   // Construct a transform instance. |chunk_length| is the number of samples in
   // each channel. |window| defines the window, owned by the caller (a copy is
-  // made internally); can be NULL to disable windowing entirely.
-  // |block_length| defines the length of a block, in samples, even when
-  // windowing is disabled. |shift_length| is in samples. |callback| is the
-  // caller-owned audio processing function called for each block of the input
-  // chunk.
+  // made internally); |window| should have length equal to |block_length|.
+  // |block_length| defines the length of a block, in samples.
+  // |shift_amount| is in samples. |callback| is the caller-owned audio
+  // processing function called for each block of the input chunk.
   LappedTransform(int in_channels, int out_channels, int chunk_length,
                   const float* window, int block_length, int shift_amount,
                   Callback* callback);
-  ~LappedTransform();
+  ~LappedTransform() {}
 
   // Main audio processing helper method. Internally slices |in_chunk| into
   // blocks, transforms them to frequency domain, calls the callback for each
@@ -62,34 +60,29 @@ class LappedTransform {
  private:
   // Internal middleware callback, given to the blocker. Transforms each block
   // and hands it over to the processing method given at construction time.
-  friend class BlockThunk;
   class BlockThunk : public BlockerCallback {
    public:
     explicit BlockThunk(LappedTransform* parent) : parent_(parent) {}
-    virtual ~BlockThunk() {}
 
     virtual void ProcessBlock(const float* const* input, int num_frames,
                               int num_input_channels, int num_output_channels,
                               float* const* output);
 
    private:
-    LappedTransform* parent_;
+    LappedTransform* const parent_;
   } blocker_callback_;
 
-  int in_channels_;
-  int out_channels_;
+  const int in_channels_;
+  const int out_channels_;
 
-  const float* window_;
-  bool own_window_;
-  int window_shift_amount_;
+  const int block_length_;
+  const int chunk_length_;
 
-  int block_length_;
-  int chunk_length_;
-  Callback* block_processor_;
-  scoped_ptr<Blocker> blocker_;
+  Callback* const block_processor_;
+  Blocker blocker_;
 
-  RealFourier fft_;
-  int cplx_length_;
+  rtc::scoped_ptr<RealFourier> fft_;
+  const int cplx_length_;
   AlignedArray<float> real_buf_;
   AlignedArray<std::complex<float> > cplx_pre_;
   AlignedArray<std::complex<float> > cplx_post_;

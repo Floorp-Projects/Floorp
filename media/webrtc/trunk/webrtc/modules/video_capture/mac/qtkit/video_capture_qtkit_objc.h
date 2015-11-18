@@ -35,7 +35,7 @@
   bool _captureInitialized;
 
   webrtc::videocapturemodule::VideoCaptureMacQTKit* _owner;
-  NSLock* lock_;
+  NSLock* _lock;
 
   QTCaptureSession* _captureSession;
   QTCaptureDeviceInput* _captureVideoDeviceInput;

@@ -99,12 +99,12 @@ int ViEExternalCodecImpl::DeRegisterExternalSendCodec(
 
 int ViEExternalCodecImpl::RegisterExternalReceiveCodec(
     const int video_channel,
-    const unsigned int pl_type,
+    const unsigned char pl_type,
     VideoDecoder* decoder,
     bool decoder_render,
     int render_delay) {
-  LOG(LS_INFO) << "Register exrernal decoder for channel " << video_channel
-               << ", pl_type " << pl_type
+  LOG(LS_INFO) << "Register external decoder for channel " << video_channel
+               << ", pl_type " << static_cast<int>(pl_type)
                << ", decoder_render " << decoder_render
                << ", render_delay " << render_delay;
   assert(decoder != NULL);
@@ -127,7 +127,7 @@ int ViEExternalCodecImpl::RegisterExternalReceiveCodec(
 int ViEExternalCodecImpl::DeRegisterExternalReceiveCodec(
     const int video_channel, const unsigned char pl_type) {
   LOG(LS_INFO) << "DeRegisterExternalReceiveCodec for channel " << video_channel
-               << ", pl_type " << pl_type;
+               << ", pl_type " << static_cast<int>(pl_type);
 
   ViEChannelManagerScoped cs(*(shared_data_->channel_manager()));
   ViEChannel* vie_channel = cs.Channel(video_channel);

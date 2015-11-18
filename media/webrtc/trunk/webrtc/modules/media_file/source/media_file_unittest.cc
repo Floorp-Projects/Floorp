@@ -10,7 +10,6 @@
 
 #include "testing/gtest/include/gtest/gtest.h"
 #include "webrtc/modules/media_file/interface/media_file.h"
-#include "webrtc/system_wrappers/interface/compile_assert.h"
 #include "webrtc/system_wrappers/interface/sleep.h"
 #include "webrtc/test/testsupport/fileutils.h"
 #include "webrtc/test/testsupport/gtest_disable.h"
@@ -49,9 +48,11 @@ TEST_F(MediaFileTest, DISABLED_ON_ANDROID(StartPlayingAudioFileWithoutError)) {
 
 TEST_F(MediaFileTest, WriteWavFile) {
   // Write file.
-  static const int kHeaderSize = 44;
-  static const int kPayloadSize = 320;
-  webrtc::CodecInst codec = {0, "L16", 16000, kPayloadSize, 1};
+  static const size_t kHeaderSize = 44;
+  static const size_t kPayloadSize = 320;
+  webrtc::CodecInst codec = {
+    0, "L16", 16000, static_cast<int>(kPayloadSize), 1
+  };
   std::string outfile = webrtc::test::OutputPath() + "wavtest.wav";
   ASSERT_EQ(0,
             media_file_->StartRecordingAudioFile(
@@ -76,10 +77,9 @@ TEST_F(MediaFileTest, WriteWavFile) {
     'd', 'a', 't', 'a',
     0x40, 0x1, 0, 0,  // size of payload: 320
   };
-  COMPILE_ASSERT(sizeof(kExpectedHeader) == kHeaderSize, header_size);
+  static_assert(sizeof(kExpectedHeader) == kHeaderSize, "header size");
 
-  EXPECT_EQ(size_t(kHeaderSize + kPayloadSize),
-            webrtc::test::GetFileSize(outfile));
+  EXPECT_EQ(kHeaderSize + kPayloadSize, webrtc::test::GetFileSize(outfile));
   FILE* f = fopen(outfile.c_str(), "rb");
   ASSERT_TRUE(f);
 

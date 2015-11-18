@@ -19,6 +19,7 @@
 #include "webrtc/base/basictypes.h"
 #include "webrtc/base/ipaddress.h"
 #include "webrtc/base/messagehandler.h"
+#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/base/sigslot.h"
 
 #if defined(WEBRTC_POSIX)
@@ -33,11 +34,15 @@ class Thread;
 enum AdapterType {
   // This enum resembles the one in Chromium net::ConnectionType.
   ADAPTER_TYPE_UNKNOWN = 0,
-  ADAPTER_TYPE_ETHERNET = 1,
-  ADAPTER_TYPE_WIFI = 2,
-  ADAPTER_TYPE_CELLULAR = 3,
-  ADAPTER_TYPE_VPN = 4
+  ADAPTER_TYPE_ETHERNET = 1 << 0,
+  ADAPTER_TYPE_WIFI = 1 << 1,
+  ADAPTER_TYPE_CELLULAR = 1 << 2,
+  ADAPTER_TYPE_VPN = 1 << 3,
+  ADAPTER_TYPE_LOOPBACK = 1 << 4
 };
+
+// By default, ignore loopback interfaces on the host.
+const int kDefaultNetworkIgnoreMask = ADAPTER_TYPE_LOOPBACK;
 
 // Makes a string key for this network. Used in the network manager's maps.
 // Network objects are keyed on interface name, network prefix and the
@@ -61,9 +66,9 @@ class NetworkManager {
   sigslot::signal0<> SignalError;
 
   // Start/Stop monitoring of network interfaces
-  // list. SignalNetworksChanged or SignalError is emitted immidiately
+  // list. SignalNetworksChanged or SignalError is emitted immediately
   // after StartUpdating() is called. After that SignalNetworksChanged
-  // is emitted wheneven list of networks changes.
+  // is emitted whenever list of networks changes.
   virtual void StartUpdating() = 0;
   virtual void StopUpdating() = 0;
 
@@ -74,19 +79,39 @@ class NetworkManager {
   // include ignored networks.
   virtual void GetNetworks(NetworkList* networks) const = 0;
 
+  // "AnyAddressNetwork" is a network which only contains single "any address"
+  // IP address.  (i.e. INADDR_ANY for IPv4 or in6addr_any for IPv6). This is
+  // useful as binding to such interfaces allow default routing behavior like
+  // http traffic.
+  // TODO(guoweis): remove this body when chromium implements this.
+  virtual void GetAnyAddressNetworks(NetworkList* networks) {}
+
   // Dumps a list of networks available to LS_INFO.
   virtual void DumpNetworks(bool include_ignored) {}
+
+  struct Stats {
+    int ipv4_network_count;
+    int ipv6_network_count;
+    Stats() {
+      ipv4_network_count = 0;
+      ipv6_network_count = 0;
+    }
+  };
 };
 
 // Base class for NetworkManager implementations.
 class NetworkManagerBase : public NetworkManager {
  public:
   NetworkManagerBase();
-  virtual ~NetworkManagerBase();
+  ~NetworkManagerBase() override;
 
-  virtual void GetNetworks(std::vector<Network*>* networks) const;
+  void GetNetworks(std::vector<Network*>* networks) const override;
+  void GetAnyAddressNetworks(NetworkList* networks) override;
   bool ipv6_enabled() const { return ipv6_enabled_; }
   void set_ipv6_enabled(bool enabled) { ipv6_enabled_ = enabled; }
+
+  void set_max_ipv6_networks(int networks) { max_ipv6_networks_ = networks; }
+  int max_ipv6_networks() { return max_ipv6_networks_; }
 
  protected:
   typedef std::map<std::string, Network*> NetworkMap;
@@ -97,13 +122,23 @@ class NetworkManagerBase : public NetworkManager {
   // any change in the network list.
   void MergeNetworkList(const NetworkList& list, bool* changed);
 
+  // |stats| will be populated even if |*changed| is false.
+  void MergeNetworkList(const NetworkList& list,
+                        bool* changed,
+                        NetworkManager::Stats* stats);
+
  private:
   friend class NetworkTest;
   void DoUpdateNetworks();
 
   NetworkList networks_;
+  int max_ipv6_networks_;
+
   NetworkMap networks_map_;
   bool ipv6_enabled_;
+
+  rtc::scoped_ptr<rtc::Network> ipv4_any_address_network_;
+  rtc::scoped_ptr<rtc::Network> ipv6_any_address_network_;
 };
 
 // Basic implementation of the NetworkManager interface that gets list
@@ -112,23 +147,36 @@ class BasicNetworkManager : public NetworkManagerBase,
                             public MessageHandler {
  public:
   BasicNetworkManager();
-  virtual ~BasicNetworkManager();
+  ~BasicNetworkManager() override;
 
-  virtual void StartUpdating();
-  virtual void StopUpdating();
+  void StartUpdating() override;
+  void StopUpdating() override;
 
   // Logs the available networks.
-  virtual void DumpNetworks(bool include_ignored);
+  void DumpNetworks(bool include_ignored) override;
 
   // MessageHandler interface.
-  virtual void OnMessage(Message* msg);
+  void OnMessage(Message* msg) override;
   bool started() { return start_count_ > 0; }
 
-  // Sets the network ignore list, which is empty by default. Any network on
-  // the ignore list will be filtered from network enumeration results.
+  // Sets the network ignore list, which is empty by default. Any network on the
+  // ignore list will be filtered from network enumeration results.
   void set_network_ignore_list(const std::vector<std::string>& list) {
     network_ignore_list_ = list;
   }
+
+  // Sets the network types to ignore. For instance, calling this with
+  // ADAPTER_TYPE_ETHERNET | ADAPTER_TYPE_LOOPBACK will ignore Ethernet and
+  // loopback interfaces. Set to kDefaultNetworkIgnoreMask by default.
+  void set_network_ignore_mask(int network_ignore_mask) {
+    // TODO(phoglund): implement support for other types than loopback.
+    // See https://code.google.com/p/webrtc/issues/detail?id=4288.
+    // Then remove set_network_ignore_list.
+    network_ignore_mask_ = network_ignore_mask;
+  }
+
+  int network_ignore_mask() const { return network_ignore_mask_; }
+
 #if defined(WEBRTC_LINUX)
   // Sets the flag for ignoring non-default routes.
   void set_ignore_non_default_routes(bool value) {
@@ -147,7 +195,8 @@ class BasicNetworkManager : public NetworkManagerBase,
   // Creates a network object for each network available on the machine.
   bool CreateNetworks(bool include_ignored, NetworkList* networks) const;
 
-  // Determines if a network should be ignored.
+  // Determines if a network should be ignored. This should only be determined
+  // based on the network's property instead of any individual IP.
   bool IsIgnoredNetwork(const Network& network) const;
 
  private:
@@ -159,6 +208,7 @@ class BasicNetworkManager : public NetworkManagerBase,
   bool sent_first_update_;
   int start_count_;
   std::vector<std::string> network_ignore_list_;
+  int network_ignore_mask_;
   bool ignore_non_default_routes_;
 };
 
@@ -170,6 +220,7 @@ class Network {
 
   Network(const std::string& name, const std::string& description,
           const IPAddress& prefix, int prefix_length, AdapterType type);
+  ~Network();
 
   // Returns the name of the interface this network is associated wtih.
   const std::string& name() const { return name_; }

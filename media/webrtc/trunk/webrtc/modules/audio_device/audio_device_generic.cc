@@ -58,10 +58,16 @@ int32_t AudioDeviceGeneric::SoundDeviceControl(unsigned int par1,
     return -1;
 }
 
+bool AudioDeviceGeneric::BuiltInAECIsAvailable() const {
+  WEBRTC_TRACE(kTraceError, kTraceAudioDevice, -1,
+      "Built-in AEC not supported on this platform");
+  return false;
+}
+
 int32_t AudioDeviceGeneric::EnableBuiltInAEC(bool enable)
 {
     WEBRTC_TRACE(kTraceError, kTraceAudioDevice, -1,
-        "Windows AEC not supported on this platform");
+        "Built-in AEC not supported on this platform");
     return -1;
 }
 

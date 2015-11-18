@@ -11,8 +11,9 @@
 #ifndef WEBRTC_INTERNAL_BEAMFORMER_BLOCKER_H_
 #define WEBRTC_INTERNAL_BEAMFORMER_BLOCKER_H_
 
-#include "webrtc/modules/audio_processing/common.h"
-#include "webrtc/system_wrappers/interface/scoped_ptr.h"
+#include "webrtc/base/scoped_ptr.h"
+#include "webrtc/common_audio/audio_ring_buffer.h"
+#include "webrtc/common_audio/channel_buffer.h"
 
 namespace webrtc {
 
@@ -57,6 +58,9 @@ class BlockerCallback {
 //
 // A small amount of delay is added to the first received chunk to deal with
 // the difference in chunk/block sizes. This delay is <= chunk_size.
+//
+// Ownership of window is retained by the caller.  That is, Blocker makes a
+// copy of window and does not attempt to delete it.
 class Blocker {
  public:
   Blocker(int chunk_size,
@@ -80,8 +84,6 @@ class Blocker {
   const int num_output_channels_;
 
   // The number of frames of delay to add at the beginning of the first chunk.
-  //
-  // TODO(claguna): find a lower cap for this than |block_size_|.
   const int initial_delay_;
 
   // The frame index into the input buffer where the first block should be read
@@ -95,8 +97,10 @@ class Blocker {
   // input and output buffers are responsible for saving those frames between
   // calls to ProcessChunk().
   //
-  // Both contain |initial delay| + |chunk_size| frames.
-  ChannelBuffer<float> input_buffer_;
+  // Both contain |initial delay| + |chunk_size| frames. The input is a fairly
+  // standard FIFO, but due to the overlap-add it's harder to use an
+  // AudioRingBuffer for the output.
+  AudioRingBuffer input_buffer_;
   ChannelBuffer<float> output_buffer_;
 
   // Space for the input block (can't wrap because of windowing).
@@ -105,7 +109,7 @@ class Blocker {
   // Space for the output block (can't wrap because of overlap/add).
   ChannelBuffer<float> output_block_;
 
-  scoped_ptr<float[]> window_;
+  rtc::scoped_ptr<float[]> window_;
 
   // The amount of frames between the start of contiguous blocks. For example,
   // |shift_amount_| = |block_size_| / 2 for a Hann window.

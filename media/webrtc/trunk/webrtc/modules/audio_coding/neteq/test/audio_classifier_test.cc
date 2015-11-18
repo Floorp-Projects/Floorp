@@ -18,7 +18,7 @@
 #include <string>
 #include <iostream>
 
-#include "webrtc/system_wrappers/interface/scoped_ptr.h"
+#include "webrtc/base/scoped_ptr.h"
 
 int main(int argc, char* argv[]) {
   if (argc != 5) {
@@ -48,7 +48,7 @@ int main(int argc, char* argv[]) {
   }
 
   const int data_size = channels * kFrameSizeSamples;
-  webrtc::scoped_ptr<int16_t[]> in(new int16_t[data_size]);
+  rtc::scoped_ptr<int16_t[]> in(new int16_t[data_size]);
 
   std::string input_filename = argv[3];
   std::string output_filename = argv[4];

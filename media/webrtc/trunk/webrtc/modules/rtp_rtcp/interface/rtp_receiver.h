@@ -72,7 +72,7 @@ class RtpReceiver {
   // detected and acted upon.
   virtual bool IncomingRtpPacket(const RTPHeader& rtp_header,
                                  const uint8_t* payload,
-                                 int payload_length,
+                                 size_t payload_length,
                                  PayloadUnion payload_specific,
                                  bool in_order) = 0;
 

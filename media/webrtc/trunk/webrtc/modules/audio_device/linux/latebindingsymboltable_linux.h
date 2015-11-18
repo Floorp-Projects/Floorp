@@ -25,7 +25,7 @@
 
 namespace webrtc_adm_linux {
 
-#if defined(WEBRTC_LINUX) || defined(WEBRTC_BSD)
+#ifdef WEBRTC_LINUX
 typedef void *DllHandle;
 
 const DllHandle kInvalidDllHandle = NULL;

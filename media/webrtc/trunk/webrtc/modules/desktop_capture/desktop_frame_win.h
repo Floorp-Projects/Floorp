@@ -13,8 +13,8 @@
 
 #include <windows.h>
 
+#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/modules/desktop_capture/desktop_frame.h"
-#include "webrtc/system_wrappers/interface/scoped_ptr.h"
 #include "webrtc/typedefs.h"
 
 namespace webrtc {
@@ -38,7 +38,7 @@ class DesktopFrameWin : public DesktopFrame {
                   HBITMAP bitmap);
 
   HBITMAP bitmap_;
-  scoped_ptr<SharedMemory> owned_shared_memory_;
+  rtc::scoped_ptr<SharedMemory> owned_shared_memory_;
 
   DISALLOW_COPY_AND_ASSIGN(DesktopFrameWin);
 };

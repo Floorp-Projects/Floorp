@@ -27,7 +27,7 @@ namespace rtc {
 class MultipartStream : public StreamInterface, public sigslot::has_slots<> {
  public:
   MultipartStream(const std::string& type, const std::string& boundary);
-  virtual ~MultipartStream();
+  ~MultipartStream() override;
 
   void GetContentType(std::string* content_type);
 
@@ -48,16 +48,20 @@ class MultipartStream : public StreamInterface, public sigslot::has_slots<> {
   size_t GetEndPartSize() const;
 
   // StreamInterface
-  virtual StreamState GetState() const;
-  virtual StreamResult Read(void* buffer, size_t buffer_len,
-                            size_t* read, int* error);
-  virtual StreamResult Write(const void* data, size_t data_len,
-                             size_t* written, int* error);
-  virtual void Close();
-  virtual bool SetPosition(size_t position);
-  virtual bool GetPosition(size_t* position) const;
-  virtual bool GetSize(size_t* size) const;
-  virtual bool GetAvailable(size_t* size) const;
+  StreamState GetState() const override;
+  StreamResult Read(void* buffer,
+                    size_t buffer_len,
+                    size_t* read,
+                    int* error) override;
+  StreamResult Write(const void* data,
+                     size_t data_len,
+                     size_t* written,
+                     int* error) override;
+  void Close() override;
+  bool SetPosition(size_t position) override;
+  bool GetPosition(size_t* position) const override;
+  bool GetSize(size_t* size) const override;
+  bool GetAvailable(size_t* size) const override;
 
  private:
   typedef std::vector<StreamInterface*> PartList;

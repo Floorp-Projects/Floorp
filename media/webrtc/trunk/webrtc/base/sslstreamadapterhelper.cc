@@ -23,6 +23,16 @@
 
 namespace rtc {
 
+SSLStreamAdapterHelper::SSLStreamAdapterHelper(StreamInterface* stream)
+    : SSLStreamAdapter(stream),
+      state_(SSL_NONE),
+      role_(SSL_CLIENT),
+      ssl_error_code_(0),  // Not meaningful yet
+      ssl_mode_(SSL_MODE_TLS) {
+}
+
+SSLStreamAdapterHelper::~SSLStreamAdapterHelper() = default;
+
 void SSLStreamAdapterHelper::SetIdentity(SSLIdentity* identity) {
   ASSERT(identity_.get() == NULL);
   identity_.reset(identity);

@@ -19,6 +19,7 @@
 #include "secmodt.h"
 
 #include "webrtc/base/buffer.h"
+#include "webrtc/base/criticalsection.h"
 #include "webrtc/base/nssidentity.h"
 #include "webrtc/base/ssladapter.h"
 #include "webrtc/base/sslstreamadapter.h"
@@ -29,7 +30,7 @@ namespace rtc {
 // Singleton
 class NSSContext {
  public:
-  NSSContext() {}
+  explicit NSSContext(PK11SlotInfo* slot) : slot_(slot) {}
   ~NSSContext() {
   }
 
@@ -44,7 +45,7 @@ class NSSContext {
 
  private:
   PK11SlotInfo *slot_;                    // The PKCS-11 slot
-  static bool initialized;                // Was this initialized?
+  static GlobalLockPod lock;              // To protect the global context
   static NSSContext *global_nss_context;  // The global context
 };
 
@@ -52,42 +53,47 @@ class NSSContext {
 class NSSStreamAdapter : public SSLStreamAdapterHelper {
  public:
   explicit NSSStreamAdapter(StreamInterface* stream);
-  virtual ~NSSStreamAdapter();
+  ~NSSStreamAdapter() override;
   bool Init();
 
-  virtual StreamResult Read(void* data, size_t data_len,
-                            size_t* read, int* error);
-  virtual StreamResult Write(const void* data, size_t data_len,
-                             size_t* written, int* error);
-  void OnMessage(Message *msg);
+  StreamResult Read(void* data,
+                    size_t data_len,
+                    size_t* read,
+                    int* error) override;
+  StreamResult Write(const void* data,
+                     size_t data_len,
+                     size_t* written,
+                     int* error) override;
+  void OnMessage(Message* msg) override;
+
+  bool GetSslCipher(std::string* cipher) override;
 
   // Key Extractor interface
-  virtual bool ExportKeyingMaterial(const std::string& label,
-                                    const uint8* context,
-                                    size_t context_len,
-                                    bool use_context,
-                                    uint8* result,
-                                    size_t result_len);
+  bool ExportKeyingMaterial(const std::string& label,
+                            const uint8* context,
+                            size_t context_len,
+                            bool use_context,
+                            uint8* result,
+                            size_t result_len) override;
 
   // DTLS-SRTP interface
-  virtual bool SetDtlsSrtpCiphers(const std::vector<std::string>& ciphers);
-  virtual bool GetDtlsSrtpCipher(std::string* cipher);
+  bool SetDtlsSrtpCiphers(const std::vector<std::string>& ciphers) override;
+  bool GetDtlsSrtpCipher(std::string* cipher) override;
 
   // Capabilities interfaces
   static bool HaveDtls();
   static bool HaveDtlsSrtp();
   static bool HaveExporter();
+  static std::string GetDefaultSslCipher();
 
  protected:
   // Override SSLStreamAdapter
-  virtual void OnEvent(StreamInterface* stream, int events, int err);
+  void OnEvent(StreamInterface* stream, int events, int err) override;
 
   // Override SSLStreamAdapterHelper
-  virtual int BeginSSL();
-  virtual void Cleanup();
-  virtual bool GetDigestLength(const std::string& algorithm, size_t* length) {
-    return NSSCertificate::GetDigestLength(algorithm, length);
-  }
+  int BeginSSL() override;
+  void Cleanup() override;
+  bool GetDigestLength(const std::string& algorithm, size_t* length) override;
 
  private:
   int ContinueSSL();

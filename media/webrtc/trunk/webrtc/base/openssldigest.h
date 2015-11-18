@@ -22,13 +22,13 @@ class OpenSSLDigest : public MessageDigest {
  public:
   // Creates an OpenSSLDigest with |algorithm| as the hash algorithm.
   explicit OpenSSLDigest(const std::string& algorithm);
-  ~OpenSSLDigest();
+  ~OpenSSLDigest() override;
   // Returns the digest output size (e.g. 16 bytes for MD5).
-  virtual size_t Size() const;
+  size_t Size() const override;
   // Updates the digest with |len| bytes from |buf|.
-  virtual void Update(const void* buf, size_t len);
+  void Update(const void* buf, size_t len) override;
   // Outputs the digest value to |buf| with length |len|.
-  virtual size_t Finish(void* buf, size_t len);
+  size_t Finish(void* buf, size_t len) override;
 
   // Helper function to look up a digest's EVP by name.
   static bool GetDigestEVP(const std::string &algorithm,

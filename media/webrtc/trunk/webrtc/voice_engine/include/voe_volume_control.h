@@ -112,8 +112,8 @@ public:
     virtual int GetSystemInputMute(bool& enabled) { return -1; }
 
 protected:
-    VoEVolumeControl() {}
-    virtual ~VoEVolumeControl() {}
+    VoEVolumeControl() {};
+    virtual ~VoEVolumeControl() {};
 };
 
 }  // namespace webrtc
