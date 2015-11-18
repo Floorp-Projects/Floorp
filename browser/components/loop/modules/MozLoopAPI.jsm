@@ -126,6 +126,7 @@ var gAppVersionInfo = null;
 var gBrowserSharingListenerCount = 0;
 var gBrowserSharingWindows = new Set();
 var gPageListeners = null;
+var gOriginalPageListeners = null;
 var gSocialProviders = null;
 var gStringBundle = null;
 const kBatchMessage = "Batch";
@@ -1195,8 +1196,16 @@ const LoopAPIInternal = {
    * @param {name} name Name of the event
    */
   broadcastPushMessage: function(name, data) {
+    if (!gPageListeners) {
+      return;
+    }
     for (let page of gPageListeners) {
-      page.sendAsyncMessage(kPushMessageName, [name, data]);
+      try {
+        page.sendAsyncMessage(kPushMessageName, [name, data]);
+      } catch (ex if ex.result == Components.results.NS_ERROR_NOT_INITIALIZED) {
+        // Don't make noise when the Remote Page Manager needs more time to
+        // initialize.
+      }
     }
   },
 
@@ -1238,6 +1247,14 @@ this.LoopAPI = Object.freeze({
       gPageListeners ? [...gPageListeners] : null];
   },
   stub: function(pageListeners) {
+    if (!gOriginalPageListeners) {
+      gOriginalPageListeners = gPageListeners;
+    }
     gPageListeners = pageListeners;
+  },
+  restore: function() {
+    if (gOriginalPageListeners) {
+      gPageListeners = gOriginalPageListeners;
+    }
   }
 });

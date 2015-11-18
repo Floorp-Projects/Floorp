@@ -25,10 +25,10 @@ loop.store.ConversationAppStore = (function() {
     if (!options.dispatcher) {
       throw new Error("Missing option dispatcher");
     }
-    if (!options.feedbackPeriod) {
+    if (!("feedbackPeriod" in options)) {
       throw new Error("Missing option feedbackPeriod");
     }
-    if (!options.feedbackTimestamp) {
+    if (!("feedbackTimestamp" in options)) {
       throw new Error("Missing option feedbackTimestamp");
     }
 

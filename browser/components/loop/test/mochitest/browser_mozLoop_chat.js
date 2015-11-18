@@ -2,7 +2,7 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 /*
- * This file contains tests for various chat window helpers in MozLoopAPI.
+ * This file contains tests for various chat window helpers in MozLoopService.
  */
 "use strict";
 
@@ -11,7 +11,7 @@ function isAnyLoopChatOpen() {
   return [...Chat.chatboxes].some(({ src }) => /^about:loopconversation#/.test(src));
 }
 
-add_task(loadLoopPanel);
+add_task(MozLoopService.initialize.bind(MozLoopService));
 
 add_task(function* test_mozLoop_nochat() {
   Assert.ok(!isAnyLoopChatOpen(), "there should be no chat windows yet");
@@ -36,7 +36,7 @@ add_task(function* test_mozLoop_hangupAllChatWindows() {
   LoopRooms.open(windowData);
 
   yield promiseWaitForCondition(() => {
-    gMozLoopAPI.hangupAllChatWindows();
+    MozLoopService.hangupAllChatWindows();
     return !isAnyLoopChatOpen();
   });
 
