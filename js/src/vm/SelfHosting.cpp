@@ -1384,13 +1384,15 @@ intrinsic_CreateNamespaceBinding(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
     MOZ_ASSERT(args.length() == 3);
-    RootedObject environment(cx, &args[0].toObject());
+    RootedModuleEnvironmentObject environment(cx, &args[0].toObject().as<ModuleEnvironmentObject>());
     RootedId name(cx, AtomToId(&args[1].toString()->asAtom()));
     MOZ_ASSERT(args[2].toObject().is<ModuleNamespaceObject>());
-    const unsigned attrs = JSPROP_ENUMERATE | JSPROP_READONLY | JSPROP_PERMANENT;
-    if (!DefineProperty(cx, environment, name, args[2], nullptr, nullptr, attrs))
-        return false;
-
+    // The property already exists in the evironment but is not writable, so set
+    // the slot directly.
+    RootedShape shape(cx, environment->lookup(cx, name));
+    MOZ_ASSERT(shape);
+    MOZ_ASSERT(environment->getSlot(shape->slot()).isMagic(JS_UNINITIALIZED_LEXICAL));
+    environment->setSlot(shape->slot(), args[2]);
     args.rval().setUndefined();
     return true;
 }
