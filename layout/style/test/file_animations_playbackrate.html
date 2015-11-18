@@ -67,6 +67,36 @@ addAsyncAnimTest(function *() {
 
   done_div();
 });
+
+addAsyncAnimTest(function *() {
+  var [ div, cs ] = new_div("animation: anim 10s 1s");
+  var animation = div.getAnimations()[0];
+  animation.playbackRate = 0.5;
+
+  advance_clock(2000); // 1s * (1 / playbackRate)
+
+  yield waitForPaints();
+  omta_is(div, "transform", { tx: 0 }, RunningOn.Compositor,
+          "animation with positive delay and playbackRate > 1 should " +
+          "start from the initial position at the beginning of the " +
+          "active duration");
+  done_div();
+});
+
+addAsyncAnimTest(function *() {
+  var [ div, cs ] = new_div("animation: anim 10s 1s");
+  var animation = div.getAnimations()[0];
+  animation.playbackRate = 2.0;
+
+  advance_clock(500); // 1s * (1 / playbackRate)
+
+  yield waitForPaints();
+  omta_is(div, "transform", { tx: 0 }, RunningOn.Compositor,
+          "animation with positive delay and playbackRate < 1 should " +
+          "start from the initial position at the beginning of the " +
+          "active duration");
+  done_div();
+});
 </script>
 </body>
 </html>
