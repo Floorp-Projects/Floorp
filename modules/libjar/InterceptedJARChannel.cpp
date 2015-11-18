@@ -123,6 +123,12 @@ InterceptedJARChannel::SetChannelInfo(mozilla::dom::ChannelInfo* aChannelInfo)
   return aChannelInfo->ResurrectInfoOnChannel(mChannel);
 }
 
+NS_IMETHODIMP
+InterceptedJARChannel::GetConsoleReportCollector(nsIConsoleReportCollector**)
+{
+  return NS_ERROR_NOT_AVAILABLE;
+}
+
 void
 InterceptedJARChannel::NotifyController()
 {
@@ -145,10 +151,4 @@ InterceptedJARChannel::NotifyController()
         "Failed to resume intercepted network request");
   }
   mController = nullptr;
-}
-
-nsIConsoleReportCollector*
-InterceptedJARChannel::GetConsoleReportCollector() const
-{
-  return nullptr;
 }
