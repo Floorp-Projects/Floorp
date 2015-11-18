@@ -341,6 +341,16 @@ CompositorVsyncScheduler::ScheduleComposition()
   if (mAsapScheduling) {
     // Used only for performance testing purposes
     PostCompositeTask(TimeStamp::Now());
+#ifdef MOZ_WIDGET_ANDROID
+  } else if (mNeedsComposite >= 2 && mIsObservingVsync) {
+    // uh-oh, we already requested a composite at least twice so far, and a
+    // composite hasn't happened yet. It is possible that the vsync observation
+    // is blocked on the main thread, so let's just composite ASAP and not
+    // wait for the vsync. Note that this should only ever happen on Fennec
+    // because there content runs in the same process as the compositor, and so
+    // content can actually block the main thread in this process.
+    PostCompositeTask(TimeStamp::Now());
+#endif
   } else {
     SetNeedsComposite();
   }
