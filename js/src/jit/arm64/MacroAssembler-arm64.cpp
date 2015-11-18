@@ -442,6 +442,13 @@ MacroAssembler::Push(Register reg)
 }
 
 void
+MacroAssembler::Push(Register reg1, Register reg2, Register reg3, Register reg4)
+{
+    push(reg1, reg2, reg3, reg4);
+    adjustFrame(4 * sizeof(intptr_t));
+}
+
+void
 MacroAssembler::Push(const Imm32 imm)
 {
     push(imm);

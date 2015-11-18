@@ -57,20 +57,12 @@ VibrancyManager::UpdateVibrantRegion(VibrancyType aType, const nsIntRegion& aReg
   vr.region = aRegion;
 }
 
-static PLDHashOperator
-ClearVibrantRegionFunc(const uint32_t& aVibrancyType,
-                       VibrancyManager::VibrantRegion* aVibrantRegion,
-                       void* aVM)
-{
-  static_cast<VibrancyManager*>(aVM)->ClearVibrantRegion(*aVibrantRegion);
-  return PL_DHASH_NEXT;
-}
-
 void
 VibrancyManager::ClearVibrantAreas() const
 {
-  mVibrantRegions.EnumerateRead(ClearVibrantRegionFunc,
-                                const_cast<VibrancyManager*>(this));
+  for (auto iter = mVibrantRegions.ConstIter(); !iter.Done(); iter.Next()) {
+    ClearVibrantRegion(*iter.UserData());
+  }
 }
 
 void

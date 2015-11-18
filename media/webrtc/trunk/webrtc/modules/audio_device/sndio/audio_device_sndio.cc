@@ -747,14 +747,16 @@ int32_t AudioDeviceSndio::StartRecording()
 int32_t AudioDeviceSndio::StopRecording()
 {
 
-    CriticalSectionScoped lock(&_critSect);
-
-    if (_recHandle == NULL)
     {
-        return 0;
-    }
+      CriticalSectionScoped lock(&_critSect);
 
-    _recording = false;
+      if (_recHandle == NULL)
+      {
+          return 0;
+      }
+
+      _recording = false;
+    }
 
     if (_ptrThreadRec && !_ptrThreadRec->Stop())
     {
@@ -841,12 +843,15 @@ int32_t AudioDeviceSndio::StartPlayout()
 
 int32_t AudioDeviceSndio::StopPlayout()
 {
-    CriticalSectionScoped lock(&_critSect);
-    if (_playHandle == NULL)
+
     {
-        return 0;
+      CriticalSectionScoped lock(&_critSect);
+      if (_playHandle == NULL)
+      {
+          return 0;
+      }
+      _playing = false;
     }
-    _playing = false;
 
     if (_ptrThreadPlay && !_ptrThreadPlay->Stop())
     {

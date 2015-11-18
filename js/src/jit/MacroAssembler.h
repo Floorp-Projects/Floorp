@@ -439,6 +439,7 @@ class MacroAssembler : public MacroAssemblerSpecific
 
     void Push(const Operand op) DEFINED_ON(x86_shared);
     void Push(Register reg) PER_SHARED_ARCH;
+    void Push(Register reg1, Register reg2, Register reg3, Register reg4) DEFINED_ON(arm64);
     void Push(const Imm32 imm) PER_SHARED_ARCH;
     void Push(const ImmWord imm) PER_SHARED_ARCH;
     void Push(const ImmPtr imm) PER_SHARED_ARCH;

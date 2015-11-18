@@ -319,8 +319,8 @@ nsStringBuffer::ToString(uint32_t aLen, nsACString& aStr,
 size_t
 nsStringBuffer::SizeOfIncludingThisMustBeUnshared(mozilla::MallocSizeOf aMallocSizeOf) const
 {
-  NS_ASSERTION(!IsReadonly(),
-               "shared StringBuffer in SizeOfIncludingThisMustBeUnshared");
+  MOZ_ASSERT(!IsReadonly(),
+             "shared StringBuffer in SizeOfIncludingThisMustBeUnshared");
   return aMallocSizeOf(this);
 }
 
