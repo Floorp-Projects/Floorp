@@ -96,6 +96,11 @@ SourceSurfaceD2DTarget::GetSRView()
     return mSRView;
   }
 
+  if (!Factory::GetDirect3D10Device()) {
+    gfxCriticalError() << "Invalid D3D10 device in D2D target surface";
+    return nullptr;
+  }
+
   HRESULT hr = Factory::GetDirect3D10Device()->CreateShaderResourceView(mTexture, nullptr, getter_AddRefs(mSRView));
 
   if (FAILED(hr)) {
