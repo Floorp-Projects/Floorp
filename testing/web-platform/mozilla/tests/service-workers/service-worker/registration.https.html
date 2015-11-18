@@ -142,7 +142,7 @@ promise_test(function(t) {
     var scope = 'resources/scope/parse-error';
     return assert_promise_rejects(
         navigator.serviceWorker.register(script, {scope: scope}),
-        new SyntaxError(),
+        new TypeError(),
         'Registration of script including parse error should fail.');
   }, 'Registering script including parse error');
 
@@ -151,7 +151,7 @@ promise_test(function(t) {
     var scope = 'resources/scope/undefined-error';
     return assert_promise_rejects(
         navigator.serviceWorker.register(script, {scope: scope}),
-        new ReferenceError(),
+        new TypeError(),
         'Registration of script including undefined error should fail.');
   }, 'Registering script including undefined error');
 
@@ -160,7 +160,7 @@ promise_test(function(t) {
     var scope = 'resources/scope/uncaught-exception';
     return assert_promise_rejects(
         navigator.serviceWorker.register(script, {scope: scope}),
-        'AbortError',
+        new TypeError(),
         'Registration of script including uncaught exception should fail.');
   }, 'Registering script including uncaught exception');
 
@@ -180,7 +180,7 @@ promise_test(function(t) {
     var scope = 'resources/scope/import-malformed-script';
     return assert_promise_rejects(
         navigator.serviceWorker.register(script, {scope: scope}),
-        new SyntaxError(),
+        new TypeError(),
         'Registration of script importing malformed script should fail.');
   }, 'Registering script importing malformed script');
 
@@ -189,7 +189,7 @@ promise_test(function(t) {
     var scope = 'resources/scope/import-no-such-script';
     return assert_promise_rejects(
         navigator.serviceWorker.register(script, {scope: scope}),
-        'AbortError',
+        new TypeError(),
         'Registration of script importing non-existent script should fail.');
   }, 'Registering script importing non-existent script');
 
