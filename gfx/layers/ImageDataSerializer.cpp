@@ -84,21 +84,23 @@ ImageDataSerializerBase::ComputeMinBufferSize(IntSize aSize,
                                               SurfaceFormat aFormat)
 {
   MOZ_ASSERT(aSize.height >= 0 && aSize.width >= 0);
-  if (aSize.height <= 0 || aSize.width <= 0) {
-    gfxDebug() << "Non-positive image buffer size request " << aSize.width << "x" << aSize.height;
+
+  // This takes care of checking whether there could be overflow
+  // with enough margin for the metadata.
+  if (!gfx::Factory::AllowedSurfaceSize(aSize)) {
     return 0;
   }
 
-  CheckedInt<int32_t> bufsize = ComputeStride(aFormat, aSize.width);
-  bufsize *= aSize.height;
+  int32_t bufsize = GetAlignedStride<16>(ComputeStride(aFormat, aSize.width)
+                                         * aSize.height)
+                  + SurfaceBufferInfo::GetOffset();
 
-  if (!bufsize.isValid() || bufsize.value() <= 0) {
-    gfxDebug() << "Buffer size overflow " << aSize.width << "x" << aSize.height;
+  if (bufsize < 0) {
+    // This should not be possible thanks to Factory::AllowedSurfaceSize
     return 0;
   }
 
-  return SurfaceBufferInfo::GetOffset()
-       + GetAlignedStride<16>(bufsize.value());
+  return bufsize;
 }
 
 void
@@ -114,7 +116,8 @@ ImageDataSerializerBase::Validate()
   }
   size_t requiredSize =
            ComputeMinBufferSize(IntSize(info->width, info->height), info->format);
-  mIsValid = requiredSize <= mDataSize;
+
+  mIsValid = !!requiredSize && requiredSize <= mDataSize;
 }
 
 uint8_t*
