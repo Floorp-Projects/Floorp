@@ -191,6 +191,17 @@ add_task(function test_collect() {
         "application/x-shockwave-flash-test"
       ],
     },
+    "Silverlight Test Plug-in":
+    {
+      "version": "1.0.0.0",
+      "description": "Silverlight plug-in for testing purposes.",
+      "blocklisted": false,
+      "disabled": false,
+      "clicktoplay": false,
+      "mimeTypes":[
+        "application/x-silverlight-test"
+      ],
+    },
   };
 
   let pluginTags = Cc["@mozilla.org/plugin/host;1"]
