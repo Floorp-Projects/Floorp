@@ -16,6 +16,9 @@ loop.OTSdkDriver = (function() {
    * actions, and instruct the SDK what to do as a result of actions.
    */
   var OTSdkDriver = function(options) {
+    if (!options.constants) {
+      throw new Error("Missing option constants");
+    }
     if (!options.dispatcher) {
       throw new Error("Missing option dispatcher");
     }
@@ -26,15 +29,9 @@ loop.OTSdkDriver = (function() {
     this.dispatcher = options.dispatcher;
     this.sdk = options.sdk;
 
+    this._constants = options.constants;
     this._useDataChannels = !!options.useDataChannels;
     this._isDesktop = !!options.isDesktop;
-
-    if (this._isDesktop) {
-      if (!options.mozLoop) {
-        throw new Error("Missing option mozLoop");
-      }
-      this.mozLoop = options.mozLoop;
-    }
 
     this.connections = {};
 
@@ -52,8 +49,9 @@ loop.OTSdkDriver = (function() {
     // about:config, or use
     //
     // localStorage.setItem("debug.twoWayMediaTelemetry", true);
-    this._debugTwoWayMediaTelemetry =
-      loop.shared.utils.getBoolPreference("debug.twoWayMediaTelemetry");
+    loop.shared.utils.getBoolPreference("debug.twoWayMediaTelemetry", function(enabled) {
+      this._debugTwoWayMediaTelemetry = enabled;
+    }.bind(this));
 
     /**
      * XXX This is a workaround for desktop machines that do not have a
@@ -1105,7 +1103,7 @@ loop.OTSdkDriver = (function() {
      * @private
      */
     _noteConnectionLength: function(callLengthSeconds) {
-      var buckets = this.mozLoop.TWO_WAY_MEDIA_CONN_LENGTH;
+      var buckets = this._constants.TWO_WAY_MEDIA_CONN_LENGTH;
 
       var bucket = buckets.SHORTER_THAN_10S;
       if (callLengthSeconds >= 10 && callLengthSeconds <= 30) {
@@ -1116,7 +1114,7 @@ loop.OTSdkDriver = (function() {
         bucket = buckets.MORE_THAN_5M;
       }
 
-      this.mozLoop.telemetryAddValue("LOOP_TWO_WAY_MEDIA_CONN_LENGTH_1", bucket);
+      loop.request("TelemetryAddValue", "LOOP_TWO_WAY_MEDIA_CONN_LENGTH_1", bucket);
       this._setTwoWayMediaStartTime(this.CONNECTION_START_TIME_ALREADY_NOTED);
 
       this._connectionLengthNotedCalls++;
@@ -1163,8 +1161,7 @@ loop.OTSdkDriver = (function() {
     _debugTwoWayMediaTelemetry: false,
 
     /**
-     * Note the sharing state. If this.mozLoop is not defined, we're assumed to
-     * be running in the standalone client and return immediately.
+     * Note the sharing state.
      *
      * @param  {String}  type    Type of sharing that was flipped. May be 'window'
      *                           or 'browser'.
@@ -1173,18 +1170,14 @@ loop.OTSdkDriver = (function() {
      * @private
      */
     _noteSharingState: function(type, enabled) {
-      if (!this.mozLoop) {
-        return;
-      }
-
-      var bucket = this.mozLoop.SHARING_STATE_CHANGE[type.toUpperCase() + "_" +
+      var bucket = this._constants.SHARING_STATE_CHANGE[type.toUpperCase() + "_" +
         (enabled ? "ENABLED" : "DISABLED")];
       if (typeof bucket === "undefined") {
         console.error("No sharing state bucket found for '" + type + "'");
         return;
       }
 
-      this.mozLoop.telemetryAddValue("LOOP_SHARING_STATE_CHANGE_1", bucket);
+      loop.request("TelemetryAddValue", "LOOP_SHARING_STATE_CHANGE_1", bucket);
     }
   };
 

@@ -144,7 +144,8 @@ var LoopUI;
 
           let documentDOMLoaded = () => {
             iframe.removeEventListener("DOMContentLoaded", documentDOMLoaded, true);
-            this.injectLoopAPI(iframe.contentWindow);
+            // Handle window.close correctly on the panel.
+            this.hookWindowCloseForPanelClose(iframe.contentWindow);
             iframe.contentWindow.addEventListener("loopPanelInitialized", function loopPanelInitialized() {
               iframe.contentWindow.removeEventListener("loopPanelInitialized",
                 loopPanelInitialized);
@@ -166,6 +167,8 @@ var LoopUI;
             resolve();
             return;
           }
+
+          this.LoopAPI.initialize();
 
           let anchor = event ? event.target : this.toolbarButton.anchor;
 
@@ -401,48 +404,36 @@ var LoopUI;
     },
 
     /**
-     * Adds a listener for browser sharing. It will inform the listener straight
-     * away for the current windowId, and then on every tab change.
+     * Start listening to selected tab changes and notify any content page that's
+     * listening to 'BrowserSwitch' push messages.
      *
-     * Listener parameters:
-     * - {Object}  err       If there is a error this will be defined, null otherwise.
+     * Push message parameters:
      * - {Integer} windowId  The new windowId for the browser.
-     *
-     * @param {Function} listener The listener to receive information on when the
-     *                            windowId changes.
      */
-    addBrowserSharingListener: function(listener) {
-      if (!this._tabChangeListeners) {
-        this._tabChangeListeners = new Set();
+    startBrowserSharing: function() {
+      if (!this._listeningToTabSelect) {
         gBrowser.tabContainer.addEventListener("TabSelect", this);
+        this._listeningToTabSelect = true;
       }
 
-      this._tabChangeListeners.add(listener);
       this._maybeShowBrowserSharingInfoBar();
 
       // Get the first window Id for the listener.
-      listener(null, gBrowser.selectedBrowser.outerWindowID);
+      this.LoopAPI.broadcastPushMessage("BrowserSwitch",
+        gBrowser.selectedBrowser.outerWindowID);
     },
 
     /**
-     * Removes a listener from browser sharing.
-     *
-     * @param {Function} listener The listener to remove from the list.
+     * Stop listening to selected tab changes.
      */
-    removeBrowserSharingListener: function(listener) {
-      if (!this._tabChangeListeners) {
+    stopBrowserSharing: function() {
+      if (!this._listeningToTabSelect) {
         return;
       }
 
-      if (this._tabChangeListeners.has(listener)) {
-        this._tabChangeListeners.delete(listener);
-      }
-
-      if (!this._tabChangeListeners.size) {
-        this._hideBrowserSharingInfoBar();
-        gBrowser.tabContainer.removeEventListener("TabSelect", this);
-        delete this._tabChangeListeners;
-      }
+      this._hideBrowserSharingInfoBar();
+      gBrowser.tabContainer.removeEventListener("TabSelect", this);
+      this._listeningToTabSelect = false;
     },
 
     /**
@@ -543,17 +534,13 @@ var LoopUI;
       let wasVisible = false;
       // Hide the infobar from the previous tab.
       if (event.detail.previousTab) {
-        wasVisible = this._hideBrowserSharingInfoBar(false, event.detail.previousTab.linkedBrowser);
+        wasVisible = this._hideBrowserSharingInfoBar(false,
+          event.detail.previousTab.linkedBrowser);
       }
 
       // We've changed the tab, so get the new window id.
-      for (let listener of this._tabChangeListeners) {
-        try {
-          listener(null, gBrowser.selectedBrowser.outerWindowID);
-        } catch (ex) {
-          Cu.reportError("Tab switch caused an error: " + ex.message);
-        }
-      };
+      this.LoopAPI.broadcastPushMessage("BrowserSwitch",
+        gBrowser.selectedBrowser.outerWindowID);
 
       if (wasVisible) {
         // If the infobar was visible before, we should show it again after the
@@ -605,7 +592,8 @@ var LoopUI;
   };
 })();
 
-XPCOMUtils.defineLazyModuleGetter(LoopUI, "injectLoopAPI", "resource:///modules/loop/MozLoopAPI.jsm");
+XPCOMUtils.defineLazyModuleGetter(LoopUI, "hookWindowCloseForPanelClose", "resource://gre/modules/MozSocialAPI.jsm");
+XPCOMUtils.defineLazyModuleGetter(LoopUI, "LoopAPI", "resource:///modules/loop/MozLoopAPI.jsm");
 XPCOMUtils.defineLazyModuleGetter(LoopUI, "LoopRooms", "resource:///modules/loop/LoopRooms.jsm");
 XPCOMUtils.defineLazyModuleGetter(LoopUI, "MozLoopService", "resource:///modules/loop/MozLoopService.jsm");
 XPCOMUtils.defineLazyModuleGetter(LoopUI, "PanelFrame", "resource:///modules/PanelFrame.jsm");
