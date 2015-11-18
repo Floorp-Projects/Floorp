@@ -551,8 +551,8 @@ public:
 
     nsAutoPtr<webrtc::I420VideoFrame> videoFrame(new webrtc::I420VideoFrame(
       new ImageNativeHandle(grallocImage.forget()),
-      grallocData.mPicSize.width,
-      grallocData.mPicSize.height,
+      picSize.width,
+      picSize.height,
       timestamp,
       renderTimeMs));
     if (videoFrame != nullptr) {
