@@ -787,13 +787,16 @@ IntersectMaybeRects(const Maybe<IntRectTyped<Units>>& a,
 
 bool
 AsyncCompositionManager::ApplyAsyncContentTransformToTree(Layer *aLayer,
-                                                          bool* aOutFoundRoot)
+                                                          bool* aOutFoundRoot,
+                                                          Maybe<ParentLayerIntRect>& aClipDeferredToParent)
 {
+  Maybe<ParentLayerIntRect> clipDeferredFromChildren;
   bool appliedTransform = false;
   for (Layer* child = aLayer->GetFirstChild();
       child; child = child->GetNextSibling()) {
     appliedTransform |=
-      ApplyAsyncContentTransformToTree(child, aOutFoundRoot);
+      ApplyAsyncContentTransformToTree(child, aOutFoundRoot,
+          clipDeferredFromChildren);
   }
 
   Matrix4x4 oldTransform = aLayer->GetTransform();
@@ -900,7 +903,16 @@ AsyncCompositionManager::ApplyAsyncContentTransformToTree(Layer *aLayer,
     // move with this APZC.
     if (metrics.HasClipRect()) {
       ParentLayerIntRect clip = metrics.ClipRect();
-      asyncClip = IntersectMaybeRects(Some(clip), asyncClip);
+      if (aLayer->GetParent() && aLayer->GetParent()->GetTransformIsPerspective()) {
+        // If our parent layer has a perspective transform, we want to apply
+        // our scroll clip to it instead of to this layer (see bug 1168263).
+        // A layer with a perspective transform shouldn't have multiple
+        // children with FrameMetrics, nor a child with multiple FrameMetrics.
+        MOZ_ASSERT(!aClipDeferredToParent);
+        aClipDeferredToParent = Some(clip);
+      } else {
+        asyncClip = IntersectMaybeRects(Some(clip), asyncClip);
+      }
     }
 
     // Do the same for the ancestor mask layers: ancestorMaskLayers contains
@@ -936,11 +948,12 @@ AsyncCompositionManager::ApplyAsyncContentTransformToTree(Layer *aLayer,
                               transformWithoutOverscrollOrOmta, fixedLayerMargins);
   }
 
-  if (hasAsyncTransform) {
-    if (asyncClip) {
-      aLayer->AsLayerComposite()->SetShadowClipRect(asyncClip);
-    }
+  if (hasAsyncTransform || clipDeferredFromChildren) {
+    aLayer->AsLayerComposite()->SetShadowClipRect(
+        IntersectMaybeRects(asyncClip, clipDeferredFromChildren));
+  }
 
+  if (hasAsyncTransform) {
     // Apply the APZ transform on top of GetLocalTransform() here (rather than
     // GetTransform()) in case the OMTA code in SampleAnimations already set a
     // shadow transform; in that case we want to apply ours on top of that one
@@ -1358,7 +1371,8 @@ AsyncCompositionManager::TransformShadowTree(TimeStamp aCurrentFrame,
     // in Gecko and partially in Java.
     wantNextFrame |= SampleAPZAnimations(LayerMetricsWrapper(root), aCurrentFrame);
     bool foundRoot = false;
-    if (ApplyAsyncContentTransformToTree(root, &foundRoot)) {
+    Maybe<ParentLayerIntRect> clipDeferredFromChildren;
+    if (ApplyAsyncContentTransformToTree(root, &foundRoot, clipDeferredFromChildren)) {
 #if defined(MOZ_ANDROID_APZ)
       MOZ_ASSERT(foundRoot);
       if (foundRoot && mFixedLayerMargins != ScreenMargin()) {
