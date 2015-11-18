@@ -31,11 +31,13 @@ using namespace mozilla::pkix;
 
 #define PREF_BACKGROUND_UPDATE_TIMER "app.update.lastUpdateTime.blocklist-background-update-timer"
 #define PREF_MAX_STALENESS_IN_SECONDS "security.onecrl.maximum_staleness_in_seconds"
+#define PREF_ONECRL_VIA_AMO "security.onecrl.via.amo"
 
 static PRLogModuleInfo* gCertBlockPRLog;
 
 uint32_t CertBlocklist::sLastBlocklistUpdate = 0U;
 uint32_t CertBlocklist::sMaxStaleness = 0U;
+bool CertBlocklist::sUseAMO = true;
 
 CertBlocklistItem::CertBlocklistItem(const uint8_t* DNData,
                                      size_t DNLength,
@@ -139,6 +141,9 @@ CertBlocklist::~CertBlocklist()
   Preferences::UnregisterCallback(CertBlocklist::PreferenceChanged,
                                   PREF_MAX_STALENESS_IN_SECONDS,
                                   this);
+  Preferences::UnregisterCallback(CertBlocklist::PreferenceChanged,
+                                  PREF_ONECRL_VIA_AMO,
+                                  this);
 }
 
 nsresult
@@ -163,6 +168,12 @@ CertBlocklist::Init()
   }
   rv = Preferences::RegisterCallbackAndCall(CertBlocklist::PreferenceChanged,
                                             PREF_MAX_STALENESS_IN_SECONDS,
+                                            this);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  rv = Preferences::RegisterCallbackAndCall(CertBlocklist::PreferenceChanged,
+                                            PREF_ONECRL_VIA_AMO,
                                             this);
   if (NS_FAILED(rv)) {
     return rv;
@@ -606,6 +617,11 @@ CertBlocklist::IsBlocklistFresh(bool* _retval)
 {
   MutexAutoLock lock(mMutex);
   *_retval = false;
+  if (!sUseAMO) {
+    // for the time being, if we're not using AMO data, assume the blocklist is
+    // not fresh (in particular, prevent OneCRL OCSP bypass).
+    return NS_OK;
+  }
 
   uint32_t now = uint32_t(PR_Now() / PR_USEC_PER_SEC);
 
@@ -638,5 +654,7 @@ CertBlocklist::PreferenceChanged(const char* aPref, void* aClosure)
   } else if (strcmp(aPref, PREF_MAX_STALENESS_IN_SECONDS) == 0) {
     sMaxStaleness = Preferences::GetUint(PREF_MAX_STALENESS_IN_SECONDS,
                                          uint32_t(0));
+  } else if (strcmp(aPref, PREF_ONECRL_VIA_AMO) == 0) {
+    sUseAMO = Preferences::GetBool(PREF_ONECRL_VIA_AMO, true);
   }
 }
