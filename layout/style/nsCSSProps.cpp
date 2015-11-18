@@ -2702,6 +2702,8 @@ static const nsCSSProperty gGridSubpropTable[] = {
   eCSSProperty_grid_auto_flow,
   eCSSProperty_grid_auto_columns,
   eCSSProperty_grid_auto_rows,
+  eCSSProperty_grid_column_gap, // can only be reset, not get/set
+  eCSSProperty_grid_row_gap, // can only be reset, not get/set
   eCSSProperty_UNKNOWN
 };
 
@@ -2722,6 +2724,12 @@ static const nsCSSProperty gGridAreaSubpropTable[] = {
   eCSSProperty_grid_column_start,
   eCSSProperty_grid_row_end,
   eCSSProperty_grid_column_end,
+  eCSSProperty_UNKNOWN
+};
+
+static const nsCSSProperty gGridGapSubpropTable[] = {
+  eCSSProperty_grid_column_gap,
+  eCSSProperty_grid_row_gap,
   eCSSProperty_UNKNOWN
 };
 

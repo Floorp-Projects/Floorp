@@ -1019,6 +1019,18 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue,
     // This can express either grid-template-{areas,columns,rows}
     // or grid-auto-{flow,columns,rows}, but not both.
     case eCSSProperty_grid: {
+      const nsCSSValue& columnGapValue =
+        *data->ValueFor(eCSSProperty_grid_column_gap);
+      if (columnGapValue.GetUnit() != eCSSUnit_Pixel ||
+          columnGapValue.GetFloatValue() != 0.0f) {
+        return; // Not serializable, bail.
+      }
+      const nsCSSValue& rowGapValue =
+        *data->ValueFor(eCSSProperty_grid_row_gap);
+      if (rowGapValue.GetUnit() != eCSSUnit_Pixel ||
+          rowGapValue.GetFloatValue() != 0.0f) {
+        return; // Not serializable, bail.
+      }
       const nsCSSValue& areasValue =
         *data->ValueFor(eCSSProperty_grid_template_areas);
       const nsCSSValue& columnsValue =
@@ -1151,6 +1163,25 @@ Declaration::GetValue(nsCSSProperty aProperty, nsAString& aValue,
       }
       break;
     }
+    case eCSSProperty_grid_gap: {
+      const nsCSSProperty* subprops =
+        nsCSSProps::SubpropertyEntryFor(aProperty);
+      MOZ_ASSERT(subprops[2] == eCSSProperty_UNKNOWN,
+                 "must have exactly two subproperties");
+
+      nsAutoString val1, val2;
+      AppendValueToString(subprops[0], val1, aSerialization);
+      AppendValueToString(subprops[1], val2, aSerialization);
+      if (val1 == val2) {
+        aValue.Append(val1);
+      } else {
+        aValue.Append(val1);
+        aValue.Append(' ');
+        aValue.Append(val2);
+      }
+      break;
+    }
+
     case eCSSProperty__moz_transform: {
       // shorthands that are just aliases with different parsing rules
       const nsCSSProperty* subprops =
