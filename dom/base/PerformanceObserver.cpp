@@ -168,7 +168,7 @@ PerformanceObserver::Observe(const PerformanceObserverInit& aOptions,
     return;
   }
 
-  mEntryTypes = validEntryTypes;
+  mEntryTypes.SwapElements(validEntryTypes);
 
   mPerformance->AddObserver(this);
   mConnected = true;
