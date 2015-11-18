@@ -123,6 +123,8 @@ public:
   bool SendNotifyRegionInvalidated(const nsIntRegion& region);
   bool SendRequestNotifyAfterRemotePaint();
 
+  static void ShutdownLayersIPC();
+
 private:
   // Private destructor, to discourage deletion outside of Release():
   virtual ~CompositorChild();
