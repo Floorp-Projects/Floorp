@@ -1261,7 +1261,7 @@ pref("network.warnOnAboutNetworking", true);
 // Whether IOService.connectivity and NS_IsOffline depends on connectivity status
 pref("network.manage-offline-status", true);
 // If set to true, IOService.offline depends on IOService.connectivity
-pref("network.offline-mirrors-connectivity", true);
+pref("network.offline-mirrors-connectivity", false);
 
 // <http>
 pref("network.http.version", "1.1");      // default
