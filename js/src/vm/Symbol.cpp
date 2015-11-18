@@ -105,18 +105,6 @@ Symbol::dump(FILE* fp)
 }
 #endif  // DEBUG
 
-void
-SymbolRegistry::sweep()
-{
-    for (Enum e(*this); !e.empty(); e.popFront()) {
-        mozilla::DebugOnly<Symbol*> sym = e.front().unbarrieredGet();
-        if (IsAboutToBeFinalized(&e.mutableFront()))
-            e.removeFront();
-        else
-            MOZ_ASSERT(sym == e.front().unbarrieredGet());
-    }
-}
-
 bool
 js::SymbolDescriptiveString(JSContext* cx, Symbol* sym, MutableHandleValue result)
 {
