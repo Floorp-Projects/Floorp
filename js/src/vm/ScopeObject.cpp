@@ -384,6 +384,15 @@ ModuleEnvironmentObject::create(ExclusiveContext* cx, HandleModuleObject module)
     RootedObject globalLexical(cx, &cx->global()->lexicalScope());
     scope->setEnclosingScope(globalLexical);
 
+    // It is not be possible to add or remove bindings from a module environment
+    // after this point as module code is always strict.
+#ifdef DEBUG
+    for (Shape::Range<NoGC> r(scope->lastProperty()); !r.empty(); r.popFront())
+        MOZ_ASSERT(!r.front().configurable());
+    MOZ_ASSERT(scope->lastProperty()->getObjectFlags() & BaseShape::NOT_EXTENSIBLE);
+    MOZ_ASSERT(!scope->inDictionaryMode());
+#endif
+
     return scope;
 }
 
