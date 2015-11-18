@@ -346,7 +346,9 @@ loop.shared.mixins = (function() {
     _audioRequest: null,
 
     _isLoopDesktop: function() {
-      return loop.shared.utils.isDesktop();
+      var isUIShowcase = !!(rootObject.document.querySelector &&
+        rootObject.document.querySelector("#main > .showcase"));
+      return loop.shared.utils.isDesktop() || isUIShowcase;
     },
 
     /**
