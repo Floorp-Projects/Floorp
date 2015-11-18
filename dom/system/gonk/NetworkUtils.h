@@ -191,7 +191,7 @@ public:
   nsString mPreExternalIfname;
   nsString mCurInternalIfname;
   nsString mCurExternalIfname;
-  long mThreshold;
+  long long mThreshold;
   long mIpaddr;
   long mMask;
   long mGateway_long;
