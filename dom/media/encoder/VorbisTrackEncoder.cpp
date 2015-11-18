@@ -142,6 +142,8 @@ VorbisTrackEncoder::GetEncodedFrames(EncodedFrameContainer& aData)
       VORBISLOG("vorbis_analysis_blockout block size %d", oggPacket.bytes);
       EncodedFrame* audiodata = new EncodedFrame();
       audiodata->SetFrameType(EncodedFrame::VORBIS_AUDIO_FRAME);
+      audiodata->SetTimeStamp(oggPacket.granulepos * PR_USEC_PER_SEC
+                              / mSamplingRate);
       nsTArray<uint8_t> frameData;
       frameData.AppendElements(oggPacket.packet, oggPacket.bytes);
       audiodata->SwapInFrameData(frameData);
