@@ -209,6 +209,11 @@ PushRecord.prototype = {
     return this.quota === 0;
   },
 
+  matchesOriginAttributes(pattern) {
+    return ChromeUtils.originAttributesMatchPattern(
+      this.principal.originAttributes, pattern);
+  },
+
   toSubscription() {
     return {
       pushEndpoint: this.pushEndpoint,

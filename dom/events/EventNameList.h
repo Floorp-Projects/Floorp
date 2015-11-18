@@ -527,8 +527,10 @@ WINDOW_EVENT(popstate,
              eBasicEventClass)
 // Not supported yet
 // WINDOW_EVENT(redo)
-// Not supported yet
-// WINDOW_EVENT(storage)
+WINDOW_EVENT(storage,
+             eStorage,
+             EventNameType_HTMLBodyOrFramesetOnly,
+             eBasicEventClass)
 // Not supported yet
 // WINDOW_EVENT(undo)
 WINDOW_EVENT(unload,

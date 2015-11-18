@@ -61,7 +61,7 @@ public:
     return decoder.forget();
   }
 
-  bool SupportsMimeType(const nsACString& aMimeType) override
+  bool SupportsMimeType(const nsACString& aMimeType) const override
   {
     AVCodecID audioCodec = FFmpegAudioDecoder<V>::GetCodecId(aMimeType);
     AVCodecID videoCodec = FFmpegH264Decoder<V>::GetCodecId(aMimeType);

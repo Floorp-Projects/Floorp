@@ -164,7 +164,7 @@ CanCreateWMFDecoder()
 }
 
 bool
-WMFDecoderModule::SupportsMimeType(const nsACString& aMimeType)
+WMFDecoderModule::SupportsMimeType(const nsACString& aMimeType) const
 {
   if ((aMimeType.EqualsLiteral("audio/mp4a-latm") ||
        aMimeType.EqualsLiteral("audio/mp4")) &&

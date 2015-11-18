@@ -12,7 +12,7 @@
 namespace mozilla {
 
 bool
-AgnosticDecoderModule::SupportsMimeType(const nsACString& aMimeType)
+AgnosticDecoderModule::SupportsMimeType(const nsACString& aMimeType) const
 {
   return VPXDecoder::IsVPX(aMimeType) ||
     OpusDataDecoder::IsOpus(aMimeType) ||

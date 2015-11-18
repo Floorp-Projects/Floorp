@@ -79,6 +79,11 @@ MediaDecoderReader::MediaDecoderReader(AbstractMediaDecoder* aDecoder)
   MOZ_COUNT_CTOR(MediaDecoderReader);
   MOZ_ASSERT(NS_IsMainThread());
 
+  if (mDecoder && mDecoder->DataArrivedEvent()) {
+    mDataArrivedListener = mDecoder->DataArrivedEvent()->Connect(
+      mTaskQueue, this, &MediaDecoderReader::NotifyDataArrived);
+  }
+
   // Dispatch initialization that needs to happen on that task queue.
   nsCOMPtr<nsIRunnable> r = NS_NewRunnableMethod(this, &MediaDecoderReader::InitializationTask);
   mTaskQueue->Dispatch(r.forget());
@@ -359,6 +364,8 @@ MediaDecoderReader::Shutdown()
 
   mBaseAudioPromise.RejectIfExists(END_OF_STREAM, __func__);
   mBaseVideoPromise.RejectIfExists(END_OF_STREAM, __func__);
+
+  mDataArrivedListener.DisconnectIfExists();
 
   ReleaseMediaResources();
   mDuration.DisconnectIfConnected();

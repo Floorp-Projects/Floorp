@@ -41,6 +41,9 @@ class Selection;
 // prior to performing its task. The caller must ensure the layout is up to
 // date.
 //
+// Please see the wiki page for more information.
+// https://wiki.mozilla.org/Copy_n_Paste
+//
 class AccessibleCaretManager
 {
 public:

@@ -25,6 +25,7 @@ namespace JS {
     _(GetProp_InlineAccess)                             \
     _(GetProp_Innerize)                                 \
     _(GetProp_InlineCache)                              \
+    _(GetProp_SharedCache)                              \
                                                         \
     _(SetProp_CommonSetter)                             \
     _(SetProp_TypedObject)                              \

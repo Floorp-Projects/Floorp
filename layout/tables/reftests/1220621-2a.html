@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<style>
+  table {
+    table-layout: fixed;
+    border: 1px solid black;
+    width: 300px;
+  }
+  td {
+    background: yellow;
+    border: 1px solid purple;
+  }
+</style>
+<table>
+  <colgroup>
+    <col>
+    <col>
+    <col>
+  </colgroup>
+  <tbody>
+    <td>One</td>
+  </tbody>
+</table>
+<script>
+  var t = document.querySelector("table");
+  // Flush layout
+  var width = t.offsetWidth;
+  // Remove the first col
+  document.querySelector("col").remove();
+</script>
