@@ -611,6 +611,7 @@ if CONFIG['ENABLE_INTL_API']:
     ]
 
 USE_LIBS += [
+    'fdlibm',
     'nspr',
     'zlib',
 ]
