@@ -384,16 +384,25 @@ public:
   void
   FinishFetch(ServiceWorkerRegistrationInfo* aRegistration);
 
-  // Returns true if the error was handled, false if normal worker error
-  // handling should continue.
-  bool
+  void
+  ReportToAllClients(const nsCString& aScope,
+                     const nsString& aMessage,
+                     const nsString& aFilename,
+                     const nsString& aLine,
+                     uint32_t aLineNumber,
+                     uint32_t aColumnNumber,
+                     uint32_t aFlags);
+
+  // Always consumes the error by reporting to consoles of all controlled
+  // documents.
+  void
   HandleError(JSContext* aCx,
               nsIPrincipal* aPrincipal,
               const nsCString& aScope,
               const nsString& aWorkerURL,
-              nsString aMessage,
-              nsString aFilename,
-              nsString aLine,
+              const nsString& aMessage,
+              const nsString& aFilename,
+              const nsString& aLine,
               uint32_t aLineNumber,
               uint32_t aColumnNumber,
               uint32_t aFlags,
