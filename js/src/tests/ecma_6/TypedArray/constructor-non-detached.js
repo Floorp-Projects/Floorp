@@ -1,3 +1,5 @@
+// |reftest| skip-if(!xulRuntime.shell)
+
 const constructors = [
     Int8Array,
     Uint8Array,
