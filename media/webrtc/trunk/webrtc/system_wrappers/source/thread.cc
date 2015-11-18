@@ -30,4 +30,19 @@ rtc::scoped_ptr<ThreadWrapper> ThreadWrapper::CreateThread(
       new ThreadType(func, obj, thread_name)).Pass();
 }
 
+rtc::scoped_ptr<ThreadWrapper> ThreadWrapper::CreateUIThread(
+    ThreadRunFunction func, void* obj, const char* thread_name) {
+#if defined(_WIN32)
+  return rtc::scoped_ptr<ThreadWrapper>(
+    new ThreadWindowsUI(func, obj, thread_name)).Pass();
+#else
+  return rtc::scoped_ptr<ThreadWrapper>(
+    new ThreadType(func, obj, thread_name)).Pass();
+#endif
+}
+
+bool ThreadWrapper::RequestCallbackTimer(unsigned int milliseconds) {
+  return false;
+}
+
 }  // namespace webrtc

@@ -158,12 +158,14 @@ void UtilityTest::RunResampleTest(int src_channels,
       SetStereoFrame(&golden_frame_, dst_left, dst_right, dst_sample_rate_hz);
   }
 
-  // The sinc resampler has a known delay, which we compute here. Multiplying by
-  // two gives us a crude maximum for any resampling, as the old resampler
-  // typically (but not always) has lower delay.
-  static const int kInputKernelDelaySamples = 16;
-  const int max_delay = static_cast<double>(dst_sample_rate_hz)
-      / src_sample_rate_hz * kInputKernelDelaySamples * dst_channels * 2;
+  // The speex resampler has a known delay dependent on quality and rates,
+  // which we approximate here. Multiplying by two gives us a crude maximum
+  // for any resampling, as the old resampler typically (but not always)
+  // has lower delay.  The actual delay is calculated internally based on the
+  // filter length in the QualityMap.
+  static const int kInputKernelDelaySamples = 16*3;
+  const int max_delay = std::min(1.0f, 1/kResamplingFactor) *
+                        kInputKernelDelaySamples * dst_channels * 2;
   printf("(%d, %d Hz) -> (%d, %d Hz) ",  // SNR reported on the same line later.
       src_channels, src_sample_rate_hz, dst_channels, dst_sample_rate_hz);
   if (function == TestRemixAndResample) {
@@ -190,6 +192,9 @@ void UtilityTest::RunResampleTest(int src_channels,
   }
 }
 
+// These two tests assume memcpy() (no delay and no filtering) for input
+// freq == output freq && same channels.  RemixAndResample uses 'Fixed'
+// resamplers to enable this behavior
 TEST_F(UtilityTest, RemixAndResampleCopyFrameSucceeds) {
   // Stereo -> stereo.
   SetStereoFrame(&src_frame_, 10, 10);

@@ -66,8 +66,36 @@ struct RTPVideoHeaderH264 {
   bool single_nalu;
 };
 
+// XXX fix vp9 (bug 1138629)
+struct RTPVideoHeaderVP9 {
+  void InitRTPVideoHeaderVP9() {
+    nonReference = false;
+    pictureId = kNoPictureId;
+    tl0PicIdx = kNoTl0PicIdx;
+    temporalIdx = kNoTemporalIdx;
+    layerSync = false;
+    keyIdx = kNoKeyIdx;
+    partitionId = 0;
+    beginningOfPartition = false;
+  }
+
+  bool nonReference;          // Frame is discardable.
+  int16_t pictureId;          // Picture ID index, 15 bits;
+                              // kNoPictureId if PictureID does not exist.
+  int16_t tl0PicIdx;          // TL0PIC_IDX, 8 bits;
+                              // kNoTl0PicIdx means no value provided.
+  uint8_t temporalIdx;        // Temporal layer index, or kNoTemporalIdx.
+  bool layerSync;             // This frame is a layer sync frame.
+                              // Disabled if temporalIdx == kNoTemporalIdx.
+  int keyIdx;                 // 5 bits; kNoKeyIdx means not used.
+  int partitionId;            // VP9 partition ID
+  bool beginningOfPartition;  // True if this packet is the first
+                              // in a VP9 partition. Otherwise false
+};
+
 union RTPVideoTypeHeader {
   RTPVideoHeaderVP8 VP8;
+  RTPVideoHeaderVP9 VP9;
   RTPVideoHeaderH264 H264;
 };
 
@@ -75,6 +103,7 @@ enum RtpVideoCodecTypes {
   kRtpVideoNone,
   kRtpVideoGeneric,
   kRtpVideoVp8,
+  kRtpVideoVp9,
   kRtpVideoH264
 };
 // Since RTPVideoHeader is used as a member of a union, it can't have a
@@ -84,7 +113,7 @@ struct RTPVideoHeader {
   uint16_t height;
   VideoRotation rotation;
 
-  bool isFirstPacket;    // first packet in frame
+  bool isFirstPacket;    // first packet in frame (or NAL for H.264)
   uint8_t simulcastIdx;  // Index if the simulcast encoder creating
                          // this frame, 0 if not using simulcast.
   RtpVideoCodecTypes codec;
@@ -668,6 +697,11 @@ inline bool IsNewerSequenceNumber(uint16_t sequence_number,
 inline bool IsNewerTimestamp(uint32_t timestamp, uint32_t prev_timestamp) {
   return timestamp != prev_timestamp &&
          static_cast<uint32_t>(timestamp - prev_timestamp) < 0x80000000;
+}
+
+inline bool IsNewerOrSameTimestamp(uint32_t timestamp, uint32_t prev_timestamp) {
+  return timestamp == prev_timestamp ||
+      static_cast<uint32_t>(timestamp - prev_timestamp) < 0x80000000;
 }
 
 inline uint16_t LatestSequenceNumber(uint16_t sequence_number1,

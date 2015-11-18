@@ -57,6 +57,7 @@ ViEReceiver::ViEReceiver(const int32_t channel_id,
       ntp_estimator_(new RemoteNtpTimeEstimator(clock_)),
       rtp_dump_(NULL),
       receiving_(false),
+      receiving_rtcp_(false),
       restored_packet_in_use_(false),
       receiving_ast_enabled_(false),
       receiving_cvo_enabled_(false),
@@ -412,7 +413,7 @@ int ViEReceiver::InsertRTCPPacket(const uint8_t* rtcp_packet,
                                   size_t rtcp_packet_length) {
   {
     CriticalSectionScoped cs(receive_cs_.get());
-    if (!receiving_) {
+    if (!receiving_rtcp_) {
       return -1;
     }
 
@@ -459,6 +460,16 @@ void ViEReceiver::StartReceive() {
 void ViEReceiver::StopReceive() {
   CriticalSectionScoped cs(receive_cs_.get());
   receiving_ = false;
+}
+
+void ViEReceiver::StartRTCPReceive() {
+  CriticalSectionScoped cs(receive_cs_.get());
+  receiving_rtcp_ = true;
+}
+
+void ViEReceiver::StopRTCPReceive() {
+  CriticalSectionScoped cs(receive_cs_.get());
+  receiving_rtcp_ = false;
 }
 
 int ViEReceiver::StartRTPDump(const char file_nameUTF8[1024]) {

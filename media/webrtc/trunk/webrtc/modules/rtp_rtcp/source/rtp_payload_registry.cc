@@ -426,6 +426,8 @@ class RTPPayloadVideoStrategy : public RTPPayloadStrategy {
 
     if (RtpUtility::StringCompare(payloadName, "VP8", 3)) {
       videoType = kRtpVideoVp8;
+    } else if (RtpUtility::StringCompare(payloadName, "VP9", 3)) {
+      videoType = kRtpVideoVp9;
     } else if (RtpUtility::StringCompare(payloadName, "H264", 4)) {
       videoType = kRtpVideoH264;
     } else if (RtpUtility::StringCompare(payloadName, "I420", 4)) {

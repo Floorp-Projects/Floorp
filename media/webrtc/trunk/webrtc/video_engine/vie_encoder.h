@@ -43,6 +43,7 @@ class ViEBitrateObserver;
 class ViEEffectFilter;
 class ViEEncoderObserver;
 class VideoCodingModule;
+class ViECPULoadStateObserver;
 
 class ViEEncoder
     : public RtcpIntraFrameObserver,
@@ -52,6 +53,7 @@ class ViEEncoder
       public ViEFrameCallback {
  public:
   friend class ViEBitrateObserver;
+  friend class ViECPULoadStateObserver;
 
   ViEEncoder(int32_t channel_id,
              uint32_t number_of_cores,
@@ -156,6 +158,9 @@ class ViEEncoder
   // Effect filter.
   int32_t RegisterEffectFilter(ViEEffectFilter* effect_filter);
 
+  // Load Management
+  void SetLoadManager(CPULoadStateCallbackInvoker* load_manager);
+
   // Enables recording of debugging information.
   int StartDebugRecording(const char* fileNameUTF8);
 
@@ -186,6 +191,9 @@ class ViEEncoder
                         uint8_t fraction_lost,
                         int64_t round_trip_time_ms);
 
+  // Called by CPULoadStateObserver
+  void onLoadStateChanged(CPULoadState load_state);
+
  private:
   bool EncoderPaused() const EXCLUSIVE_LOCKS_REQUIRED(data_cs_);
   void TraceFrameDropStart() EXCLUSIVE_LOCKS_REQUIRED(data_cs_);
@@ -205,10 +213,13 @@ class ViEEncoder
   rtc::scoped_ptr<CriticalSectionWrapper> callback_cs_;
   rtc::scoped_ptr<CriticalSectionWrapper> data_cs_;
   rtc::scoped_ptr<BitrateObserver> bitrate_observer_;
+  rtc::scoped_ptr<CPULoadStateObserver> loadstate_observer_;
 
   PacedSender* const pacer_;
   BitrateAllocator* const bitrate_allocator_;
   BitrateController* const bitrate_controller_;
+  // Owned by PeerConnection, not ViEEncoder
+  CPULoadStateCallbackInvoker* load_manager_;
 
   int64_t time_of_last_incoming_frame_ms_ GUARDED_BY(data_cs_);
   bool send_padding_ GUARDED_BY(data_cs_);

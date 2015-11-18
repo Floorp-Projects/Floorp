@@ -54,6 +54,13 @@ void SetThreadName(DWORD dwThreadID, LPCSTR szThreadName) {
 
 }
 
+// For use in ThreadWindowsUI callbacks
+static UINT static_reg_windows_msg = RegisterWindowMessageW(L"WebrtcWindowsUIThreadEvent");
+// timer id used in delayed callbacks
+static const UINT_PTR kTimerId = 1;
+static const wchar_t kThisProperty[] = L"ThreadWindowsUIPtr";
+static const wchar_t kThreadWindow[] = L"WebrtcWindowsUIThread";
+
 ThreadWindows::ThreadWindows(ThreadRunFunction func, void* obj,
                              const char* thread_name)
     : run_function_(func),
@@ -131,6 +138,134 @@ void ThreadWindows::Run() {
     // Alertable sleep to permit RaiseFlag to run and update |stop_|.
     SleepEx(0, true);
   } while (!stop_);
+}
+
+bool ThreadWindowsUI::Stop() {
+  DCHECK(main_thread_.CalledOnValidThread());
+
+  // Shut down the dispatch loop and let the background thread exit.
+  if (timerid_) {
+    KillTimer(hwnd_, timerid_);
+    timerid_ = 0;
+  }
+
+  PostMessage(hwnd_, WM_CLOSE, 0, 0);
+
+  return ThreadWindows::Stop();
+}
+
+bool ThreadWindowsUI::InternalInit() {
+  // Create an event window for use in generating callbacks to capture
+  // objects.
+  if (hwnd_ == NULL) {
+    WNDCLASSW wc;
+    HMODULE hModule = GetModuleHandle(NULL);
+    if (!GetClassInfoW(hModule, kThreadWindow, &wc)) {
+      ZeroMemory(&wc, sizeof(WNDCLASSW));
+      wc.hInstance = hModule;
+      wc.lpfnWndProc = EventWindowProc;
+      wc.lpszClassName = kThreadWindow;
+      RegisterClassW(&wc);
+    }
+    hwnd_ = CreateWindowW(kThreadWindow, L"",
+                          0, 0, 0, 0, 0,
+                          NULL, NULL, hModule, NULL);
+    assert(hwnd_);
+    SetPropW(hwnd_, kThisProperty, this);
+
+    if (timeout_) {
+      // if someone set the timer before we started
+      RequestCallbackTimer(timeout_);
+    }
+  }
+  return !!hwnd_;
+}
+
+void ThreadWindowsUI::RequestCallback() {
+  assert(hwnd_);
+  assert(static_reg_windows_msg);
+  PostMessage(hwnd_, static_reg_windows_msg, 0, 0);
+}
+
+bool ThreadWindowsUI::RequestCallbackTimer(unsigned int milliseconds) {
+  if (!hwnd_) {
+    assert(!thread_);
+    // set timer once thread starts
+  } else {
+    if (timerid_) {
+      KillTimer(hwnd_, timerid_);
+    }
+    timerid_ = SetTimer(hwnd_, kTimerId, milliseconds, NULL);
+  }
+  timeout_ = milliseconds;
+  return !!timerid_;
+}
+
+void ThreadWindowsUI::Run() {
+  if (!InternalInit()) {
+    assert(false);
+  }
+
+  if (!name_.empty())
+    SetThreadName(static_cast<DWORD>(-1), name_.c_str());
+
+  do {
+    // The interface contract of Start/Stop is that for a successful call to
+    // Start, there should be at least one call to the run function.  So we
+    // call the function before checking |stop_|.
+    if (!run_function_(obj_))
+      break;
+
+    // Alertable sleep to permit RaiseFlag to run and update |stop_|.
+    if (MsgWaitForMultipleObjectsEx(0, nullptr, INFINITE, QS_ALLINPUT,
+                                    MWMO_ALERTABLE | MWMO_INPUTAVAILABLE) ==
+        WAIT_OBJECT_0) {
+      MSG msg;
+      if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
+        if (msg.message == WM_QUIT) {
+          stop_ = true;
+          break;
+        }
+        TranslateMessage(&msg);
+        DispatchMessage(&msg);
+      }
+    }
+
+  } while (!stop_);
+
+  // Don't need to DestroyWindow(hwnd_) due to WM_CLOSE->WM_DESTROY handling
+};
+
+void
+ThreadWindowsUI::NativeEventCallback() {
+  if (!run_function_) {
+    stop_ = true;
+    return;
+  }
+  stop_ = !run_function_(obj_);
+}
+
+/* static */
+LRESULT CALLBACK
+ThreadWindowsUI::EventWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
+  if (uMsg == WM_DESTROY) {
+    RemovePropW(hwnd, kThisProperty);
+    PostQuitMessage(0);
+    return 0;
+  }
+
+  ThreadWindowsUI *twui = static_cast<ThreadWindowsUI*>(GetPropW(hwnd, kThisProperty));
+  if (!twui) {
+    return DefWindowProc(hwnd, uMsg, wParam, lParam);
+  }
+
+  if ((uMsg == static_reg_windows_msg && uMsg != WM_NULL) ||
+      (uMsg == WM_TIMER && wParam == kTimerId)) {
+    twui->NativeEventCallback();
+    return 0;
+  }
+
+  return DefWindowProc(hwnd, uMsg, wParam, lParam);
 }
 
 }  // namespace webrtc

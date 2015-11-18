@@ -57,6 +57,15 @@ class ViERTP_RTCPImpl
                            const char rtcp_cname[KMaxRTCPCNameLength]);
   virtual int GetRemoteRTCPCName(const int video_channel,
                                  char rtcp_cname[KMaxRTCPCNameLength]) const;
+  virtual int GetRemoteRTCPReceiverInfo(const int video_channel,
+                                        uint32_t& NTPHigh,
+                                        uint32_t& NTPLow,
+                                        uint32_t& receivedPacketCount,
+                                        uint64_t& receivedOctetCount,
+                                        uint32_t* jitter,
+                                        uint16_t* fractionLost,
+                                        uint32_t* cumulativeLost,
+                                        int32_t* rttMs) const;
   virtual int SendApplicationDefinedRTCPPacket(
       const int video_channel,
       const unsigned char sub_type,
@@ -117,6 +126,8 @@ class ViERTP_RTCPImpl
   virtual int GetReceiveRtcpPacketTypeCounter(
       int video_channel,
       RtcpPacketTypeCounter* packet_counter) const;
+  virtual int GetRemoteRTCPSenderInfo(const int video_channel,
+                                      SenderInfo* sender_info) const;
   virtual int GetBandwidthUsage(const int video_channel,
                                 unsigned int& total_bitrate_sent,
                                 unsigned int& video_bitrate_sent,

@@ -170,14 +170,6 @@ LoadManagerSingleton::AddObserver(webrtc::CPULoadStateObserver * aObserver)
   LOG(("LoadManager - Adding Observer"));
   MutexAutoLock lock(mLock);
   mObservers.AppendElement(aObserver);
-  if (mObservers.Length() == 1) {
-    if (!mLoadMonitor) {
-      mLoadMonitor = new LoadMonitor(mLoadMeasurementInterval);
-      mLoadMonitor->Init(mLoadMonitor);
-      mLoadMonitor->SetLoadChangeCallback(this);
-      mLastStateChange = TimeStamp::Now();
-    }
-  }
 }
 
 void

@@ -12,16 +12,22 @@
     'codecs/interfaces.gypi',
     'codecs/cng/cng.gypi',
     'codecs/g711/g711.gypi',
-    'codecs/g722/g722.gypi',
-    'codecs/ilbc/ilbc.gypi',
-    'codecs/isac/isac.gypi',
-    'codecs/isac/isacfix.gypi',
     'codecs/pcm16b/pcm16b.gypi',
     'codecs/red/red.gypi',
     'main/acm2/audio_coding_module.gypi',
     'neteq/neteq.gypi',
   ],
   'conditions': [
+    ['include_g722==1', {
+      'includes': ['codecs/g722/g722.gypi',],
+    }],
+    ['include_ilbc==1', {
+      'includes': ['codecs/ilbc/ilbc.gypi',],
+    }],
+    ['include_isac==1', {
+      'includes': ['codecs/isac/isac.gypi',
+                   'codecs/isac/isacfix.gypi',],
+    }],
     ['include_opus==1', {
       'includes': ['codecs/opus/opus.gypi',],
     }],

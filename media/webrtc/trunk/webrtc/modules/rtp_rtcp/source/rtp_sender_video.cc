@@ -19,6 +19,7 @@
 #include "webrtc/modules/rtp_rtcp/source/producer_fec.h"
 #include "webrtc/modules/rtp_rtcp/source/rtp_format_video_generic.h"
 #include "webrtc/modules/rtp_rtcp/source/rtp_format_vp8.h"
+#include "webrtc/modules/rtp_rtcp/source/rtp_format_h264.h"
 #include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
 #include "webrtc/system_wrappers/interface/logging.h"
 #include "webrtc/system_wrappers/interface/trace_event.h"
@@ -78,6 +79,8 @@ int32_t RTPSenderVideo::RegisterVideoPayload(
   RtpVideoCodecTypes videoType = kRtpVideoGeneric;
   if (RtpUtility::StringCompare(payloadName, "VP8", 3)) {
     videoType = kRtpVideoVp8;
+  } else if (RtpUtility::StringCompare(payloadName, "VP9", 3)) {
+    videoType = kRtpVideoVp9;
   } else if (RtpUtility::StringCompare(payloadName, "H264", 4)) {
     videoType = kRtpVideoH264;
   } else if (RtpUtility::StringCompare(payloadName, "I420", 4)) {
@@ -320,7 +323,7 @@ bool RTPSenderVideo::Send(const RtpVideoCodecTypes videoType,
   // output multiple partitions for VP8. Should remove below check after the
   // issue is fixed.
   const RTPFragmentationHeader* frag =
-      (videoType == kRtpVideoVp8) ? NULL : fragmentation;
+      (videoType == kRtpVideoVp8 || videoType == kRtpVideoVp9) ? NULL : fragmentation;
 
   packetizer->SetPayloadData(data, payload_bytes_to_send, frag);
 

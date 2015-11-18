@@ -136,6 +136,23 @@ int VoEVideoSyncImpl::SetMinimumPlayoutDelay(int channel,int delayMs)
     return channelPtr->SetMinimumPlayoutDelay(delayMs);
 }
 
+int VoEVideoSyncImpl::SetCurrentSyncOffset(int channel, int offsetMs)
+{
+    WEBRTC_TRACE(kTraceApiCall, kTraceVoice, VoEId(_shared->instance_id(), -1),
+                 "SetCurrentSyncOffset(channel=%d, offsetMs=%d)",
+                 channel, offsetMs);
+    voe::ChannelOwner ch = _shared->channel_manager().GetChannel(channel);
+    voe::Channel* channelPtr = ch.channel();
+    if (channelPtr == NULL)
+    {
+        _shared->SetLastError(VE_CHANNEL_NOT_VALID, kTraceError,
+            "SetCurrentSyncOffset() failed to locate channel");
+        return -1;
+    }
+    channelPtr->SetCurrentSyncOffset(offsetMs);
+    return 0;
+}
+
 int VoEVideoSyncImpl::SetInitialPlayoutDelay(int channel, int delay_ms)
 {
     WEBRTC_TRACE(kTraceApiCall, kTraceVoice, VoEId(_shared->instance_id(), -1),
@@ -160,7 +177,8 @@ int VoEVideoSyncImpl::SetInitialPlayoutDelay(int channel, int delay_ms)
 
 int VoEVideoSyncImpl::GetDelayEstimate(int channel,
                                        int* jitter_buffer_delay_ms,
-                                       int* playout_buffer_delay_ms) {
+                                       int* playout_buffer_delay_ms,
+                                       int* avsync_offset_ms) {
   WEBRTC_TRACE(kTraceApiCall, kTraceVoice, VoEId(_shared->instance_id(), -1),
                "GetDelayEstimate(channel=%d, delayMs=?)", channel);
 
@@ -176,7 +194,8 @@ int VoEVideoSyncImpl::GetDelayEstimate(int channel,
     return -1;
   }
   if (!channelPtr->GetDelayEstimate(jitter_buffer_delay_ms,
-                                    playout_buffer_delay_ms)) {
+                                    playout_buffer_delay_ms,
+                                    avsync_offset_ms)) {
     return -1;
   }
   return 0;

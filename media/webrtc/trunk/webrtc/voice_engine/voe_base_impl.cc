@@ -779,6 +779,16 @@ int VoEBaseImpl::GetVersion(char version[1024])
     accLen += len;
     assert(accLen < kVoiceEngineVersionMaxMessageSize);
 #endif
+#ifdef WEBRTC_VOE_EXTERNAL_REC_AND_PLAYOUT
+    len = AddExternalRecAndPlayoutBuild(versionPtr);
+    if (len == -1)
+    {
+        return -1;
+    }
+    versionPtr += len;
+    accLen += len;
+    assert(accLen < kVoiceEngineVersionMaxMessageSize);
+ #endif
 
     memcpy(version, versionBuf, accLen);
     version[accLen] = '\0';
@@ -820,6 +830,13 @@ int32_t VoEBaseImpl::AddVoEVersion(char* str) const
 int32_t VoEBaseImpl::AddExternalTransportBuild(char* str) const
 {
     return sprintf(str, "External transport build\n");
+}
+#endif
+
+#ifdef WEBRTC_VOE_EXTERNAL_REC_AND_PLAYOUT
+int32_t VoEBaseImpl::AddExternalRecAndPlayoutBuild(char* str) const
+{
+    return sprintf(str, "External recording and playout build\n");
 }
 #endif
 

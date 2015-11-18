@@ -20,6 +20,9 @@ import android.media.AudioTrack;
 import android.os.Process;
 import android.util.Log;
 
+import org.mozilla.gecko.annotation.WebRTCJNITarget;
+
+@WebRTCJNITarget
 class WebRtcAudioTrack {
   private static final boolean DEBUG = false;
 
@@ -41,7 +44,7 @@ class WebRtcAudioTrack {
 
   private ByteBuffer byteBuffer;
 
-  private AudioTrack audioTrack = null;
+  private AudioTrack audioTrack;
   private AudioTrackThread audioThread = null;
 
   /**
@@ -149,7 +152,7 @@ class WebRtcAudioTrack {
     Logd("InitPlayout(sampleRate=" + sampleRate + ", channels=" +
          channels + ")");
     final int bytesPerFrame = channels * (BITS_PER_SAMPLE / 8);
-    byteBuffer = byteBuffer.allocateDirect(
+    byteBuffer = ByteBuffer.allocateDirect(
         bytesPerFrame * (sampleRate / BUFFERS_PER_SECOND));
     Logd("byteBuffer.capacity: " + byteBuffer.capacity());
     // Rather than passing the ByteBuffer with every callback (requiring

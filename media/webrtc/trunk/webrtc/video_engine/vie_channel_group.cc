@@ -412,6 +412,13 @@ bool ChannelGroup::OtherChannelsUsingEncoder(int channel_id) const {
   return false;
 }
 
+void ChannelGroup::SetLoadManager(CPULoadStateCallbackInvoker* load_manager) {
+  for (EncoderMap::const_iterator comp_it = vie_encoder_map_.begin();
+       comp_it != vie_encoder_map_.end(); ++comp_it) {
+    comp_it->second->SetLoadManager(load_manager);
+  }
+}
+
 void ChannelGroup::SetSyncInterface(VoEVideoSync* sync_interface) {
   for (auto channel : channel_map_) {
     channel.second->SetVoiceChannel(-1, sync_interface);

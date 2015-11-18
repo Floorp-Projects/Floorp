@@ -7,6 +7,9 @@
 # be found in the AUTHORS file in the root of the source tree.
 
 {
+  'variables': {
+    'opus_complexity%': 0,
+  },
   'targets': [
     {
       'target_name': 'webrtc_opus',
@@ -30,8 +33,17 @@
             ['build_with_mozilla==1', {
               # Mozilla provides its own build of the opus library.
               'include_dirs': [
-                '$(DIST)/include/opus',
-              ]
+                '/media/libopus/include',
+                '/media/libopus/src',
+                '/media/libopus/celt',
+              ],
+              'direct_dependent_settings': {
+                'include_dirs': [
+                  '/media/libopus/include',
+                  '/media/libopus/src',
+                  '/media/libopus/celt',
+                ],
+              },
             }],
           ],
         }],
@@ -41,6 +53,9 @@
       ],
       'include_dirs': [
         '<(webrtc_root)',
+      ],
+      'defines': [
+        'OPUS_COMPLEXITY=<(opus_complexity)'
       ],
       'sources': [
         'audio_encoder_opus.cc',

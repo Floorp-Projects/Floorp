@@ -10,7 +10,9 @@
 
 #include <sstream>
 
+#ifndef WEBRTC_MOZILLA_BUILD
 #include "webrtc/base/common.h"
+#endif
 #include "webrtc/base/logging.h"
 #include "webrtc/base/macutils.h"
 #include "webrtc/base/scoped_ptr.h"
@@ -70,7 +72,9 @@ void DecodeFourChar(UInt32 fc, std::string* out) {
 }
 
 static bool GetGestalt(OSType ostype, int* value) {
+#ifndef WEBRTC_MOZILLA_BUILD
   ASSERT(NULL != value);
+#endif
   SInt32 native_value;
   OSStatus result = Gestalt(ostype, &native_value);
   if (noErr == result) {
@@ -79,12 +83,16 @@ static bool GetGestalt(OSType ostype, int* value) {
   }
   std::string str;
   DecodeFourChar(ostype, &str);
+#ifndef WEBRTC_MOZILLA_BUILD
   LOG_E(LS_ERROR, OS, result) << "Gestalt(" << str << ")";
+#endif
   return false;
 }
 
 bool GetOSVersion(int* major, int* minor, int* bugfix) {
+#ifndef WEBRTC_MOZILLA_BUILD
   ASSERT(major && minor && bugfix);
+#endif
   if (!GetGestalt(gestaltSystemVersion, major)) {
     return false;
   }
@@ -141,6 +149,7 @@ bool GetQuickTimeVersion(std::string* out) {
   return true;
 }
 
+#ifndef WEBRTC_MOZILLA_BUILD
 bool RunAppleScript(const std::string& script) {
   // TODO(thaloun): Add a .mm file that contains something like this:
   // NSString source from script
@@ -214,6 +223,8 @@ bool RunAppleScript(const std::string& script) {
   return false;
 #endif  // CARBON_DEPRECATED
 }
+#endif // !WEBRTC_MOZILLA
+
 #endif  // WEBRTC_MAC && !defined(WEBRTC_IOS)
 
 ///////////////////////////////////////////////////////////////////////////////

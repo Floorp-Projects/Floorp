@@ -27,10 +27,24 @@ PlatformThreadId CurrentThreadId() {
 #elif defined(WEBRTC_POSIX)
 #if defined(WEBRTC_MAC) || defined(WEBRTC_IOS)
   ret = pthread_mach_thread_np(pthread_self());
-#elif defined(WEBRTC_LINUX)
+#elif defined(WEBRTC_LINUX) || defined(WEBRTC_GONK)
   ret =  syscall(__NR_gettid);
 #elif defined(WEBRTC_ANDROID)
   ret = gettid();
+#elif defined(__NetBSD__)
+  return _lwp_self();
+#elif defined(__DragonFly__)
+  return lwp_gettid();
+#elif defined(__OpenBSD__)
+  return reinterpret_cast<uintptr_t> (pthread_self());
+#elif defined(__FreeBSD__)
+#if __FreeBSD_version > 900030
+    return pthread_getthreadid_np();
+#else
+    long lwpid;
+    thr_self(&lwpid);
+    return lwpid;
+#endif
 #else
   // Default implementation for nacl and solaris.
   ret = reinterpret_cast<pid_t>(pthread_self());

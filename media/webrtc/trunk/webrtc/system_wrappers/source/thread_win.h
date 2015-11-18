@@ -24,15 +24,14 @@ class ThreadWindows : public ThreadWrapper {
   ThreadWindows(ThreadRunFunction func, void* obj, const char* thread_name);
   ~ThreadWindows() override;
 
-  bool Start() override;
-  bool Stop() override;
+  virtual bool Start() override;
+  virtual bool Stop() override;
 
   bool SetPriority(ThreadPriority priority) override;
 
  protected:
-  void Run();
+  virtual void Run();
 
- private:
   static DWORD WINAPI StartThread(void* param);
 
   ThreadRunFunction const run_function_;
@@ -42,6 +41,42 @@ class ThreadWindows : public ThreadWrapper {
   const std::string name_;
   rtc::ThreadChecker main_thread_;
 };
+
+class ThreadWindowsUI : public ThreadWindows {
+ public:
+  ThreadWindowsUI(ThreadRunFunction func, void* obj,
+		  const char* thread_name) :
+  ThreadWindows(func, obj, thread_name),
+  hwnd_(nullptr),
+  timerid_(0),
+  timeout_(0) {
+ }
+
+ virtual bool Stop() override;
+
+ /**
+  * Request an async callback soon.
+  */
+ void RequestCallback();
+
+ /**
+  * Request a recurring callback.
+  */
+ bool RequestCallbackTimer(unsigned int milliseconds);
+
+ protected:
+  virtual void Run() override;
+
+ private:
+  static LRESULT CALLBACK EventWindowProc(HWND, UINT, WPARAM, LPARAM);
+  void NativeEventCallback();
+  bool InternalInit();
+
+  HWND hwnd_;
+  UINT_PTR timerid_;
+  unsigned int timeout_;
+};
+
 
 }  // namespace webrtc
 

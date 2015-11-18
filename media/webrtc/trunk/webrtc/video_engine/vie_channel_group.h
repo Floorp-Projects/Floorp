@@ -33,6 +33,7 @@ class ViEChannel;
 class ViEEncoder;
 class VieRemb;
 class VoEVideoSync;
+class CPULoadStateCallbackInvoker;
 
 typedef std::list<ViEChannel*> ChannelList;
 
@@ -60,6 +61,7 @@ class ChannelGroup : public BitrateObserver {
   ViEEncoder* GetEncoder(int channel_id) const;
   std::vector<int> GetChannelIds() const;
   bool OtherChannelsUsingEncoder(int channel_id) const;
+  void SetLoadManager(CPULoadStateCallbackInvoker* load_manager);
   void GetChannelsUsingEncoder(int channel_id, ChannelList* channels) const;
 
   void SetSyncInterface(VoEVideoSync* sync_interface);

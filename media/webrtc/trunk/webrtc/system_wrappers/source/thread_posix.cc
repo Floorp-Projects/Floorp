@@ -22,6 +22,17 @@
 #include <sys/types.h>
 #endif
 
+#if defined(__NetBSD__)
+#include <lwp.h>
+#elif defined(__FreeBSD__)
+#include <sys/param.h>
+#include <sys/thr.h>
+#endif
+
+#if defined(WEBRTC_BSD) && !defined(__NetBSD__)
+#include <pthread_np.h>
+#endif
+
 #include "webrtc/base/checks.h"
 #include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
 #include "webrtc/system_wrappers/interface/event_wrapper.h"
@@ -152,8 +163,12 @@ void ThreadPosix::Run() {
   if (!name_.empty()) {
     // Setting the thread name may fail (harmlessly) if running inside a
     // sandbox. Ignore failures if they happen.
-#if defined(WEBRTC_LINUX) || defined(WEBRTC_ANDROID)
+#if (defined(WEBRTC_LINUX) || defined(WEBRTC_ANDROID) || defined(WEBRTC_GONK))
     prctl(PR_SET_NAME, reinterpret_cast<unsigned long>(name_.c_str()));
+#elif defined(__NetBSD__)
+    pthread_setname_np(pthread_self(), "%s", (void *)name_);
+#elif defined(WEBRTC_BSD)
+    pthread_set_name_np(pthread_self(), name_);
 #elif defined(WEBRTC_MAC) || defined(WEBRTC_IOS)
     pthread_setname_np(name_.substr(0, 63).c_str());
 #endif
