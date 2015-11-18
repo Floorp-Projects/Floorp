@@ -159,8 +159,8 @@ private:
 #endif
 
   bool mAsapScheduling;
-  bool mNeedsComposite;
   bool mIsObservingVsync;
+  uint32_t mNeedsComposite;
   int32_t mVsyncNotificationsSkipped;
   RefPtr<CompositorVsyncDispatcher> mCompositorVsyncDispatcher;
   RefPtr<CompositorVsyncScheduler::Observer> mVsyncObserver;

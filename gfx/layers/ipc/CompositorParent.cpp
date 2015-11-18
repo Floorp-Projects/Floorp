@@ -280,8 +280,8 @@ CompositorVsyncScheduler::CompositorVsyncScheduler(CompositorParent* aCompositor
   : mCompositorParent(aCompositorParent)
   , mLastCompose(TimeStamp::Now())
   , mCurrentCompositeTask(nullptr)
-  , mNeedsComposite(false)
   , mIsObservingVsync(false)
+  , mNeedsComposite(0)
   , mVsyncNotificationsSkipped(0)
   , mCurrentCompositeTaskMonitor("CurrentCompositeTaskMonitor")
   , mSetNeedsCompositeMonitor("SetNeedsCompositeMonitor")
@@ -355,7 +355,7 @@ CompositorVsyncScheduler::CancelCurrentSetNeedsCompositeTask()
     mSetNeedsCompositeTask->Cancel();
     mSetNeedsCompositeTask = nullptr;
   }
-  mNeedsComposite = false;
+  mNeedsComposite = 0;
 }
 
 /**
@@ -379,7 +379,7 @@ CompositorVsyncScheduler::SetNeedsComposite()
     mSetNeedsCompositeTask = nullptr;
   }
 
-  mNeedsComposite = true;
+  mNeedsComposite++;
   if (!mIsObservingVsync && mNeedsComposite) {
     ObserveVsync();
   }
@@ -418,7 +418,7 @@ CompositorVsyncScheduler::Composite(TimeStamp aVsyncTimestamp)
   DispatchTouchEvents(aVsyncTimestamp);
 
   if (mNeedsComposite || mAsapScheduling) {
-    mNeedsComposite = false;
+    mNeedsComposite = 0;
     mLastCompose = aVsyncTimestamp;
     ComposeToTarget(nullptr);
     mVsyncNotificationsSkipped = 0;
