@@ -22,13 +22,6 @@
 #include <sys/types.h>
 #endif
 
-#if defined(__NetBSD__)
-#include <lwp.h>
-#elif defined(__FreeBSD__)
-#include <sys/param.h>
-#include <sys/thr.h>
-#endif
-
 #if defined(WEBRTC_BSD) && !defined(__NetBSD__)
 #include <pthread_np.h>
 #endif
@@ -166,9 +159,9 @@ void ThreadPosix::Run() {
 #if (defined(WEBRTC_LINUX) || defined(WEBRTC_ANDROID) || defined(WEBRTC_GONK))
     prctl(PR_SET_NAME, reinterpret_cast<unsigned long>(name_.c_str()));
 #elif defined(__NetBSD__)
-    pthread_setname_np(pthread_self(), "%s", (void *)name_);
+    pthread_setname_np(pthread_self(), "%s", (void *)name_.c_str());
 #elif defined(WEBRTC_BSD)
-    pthread_set_name_np(pthread_self(), name_);
+    pthread_set_name_np(pthread_self(), name_.c_str());
 #elif defined(WEBRTC_MAC) || defined(WEBRTC_IOS)
     pthread_setname_np(name_.substr(0, 63).c_str());
 #endif
