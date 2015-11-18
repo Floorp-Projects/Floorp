@@ -60,8 +60,8 @@ var api = context => { return {
       return context.messenger.connect(context.messageManager, name, recipient);
     },
 
-    getManifest: function(context) {
-      return context.extension.getManifest();
+    getManifest: function() {
+      return Cu.cloneInto(context.extension.manifest, context.cloneScope);
     },
 
     getURL: function(url) {
