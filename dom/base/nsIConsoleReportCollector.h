@@ -66,7 +66,7 @@ public:
                      aLineNumber, aColumnNumber, aMessageName, params);
   }
 
-  // Flush all pending reports to the console.
+  // Flush all pending reports to the console.  Main thread only.
   //
   // aDocument      An optional document representing where to flush the
   //                reports.  If provided, then the corresponding window's
@@ -74,6 +74,14 @@ public:
   //                go to the browser console.
   virtual void
   FlushConsoleReports(nsIDocument* aDocument) = 0;
+
+  // Flush all pending reports to another collector.  May be called from any
+  // thread.
+  //
+  // aCollector     A required collector object that will effectively take
+  //                ownership of our currently console reports.
+  virtual void
+  FlushConsoleReports(nsIConsoleReportCollector* aCollector) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsIConsoleReportCollector, NS_NSICONSOLEREPORTCOLLECTOR_IID)
