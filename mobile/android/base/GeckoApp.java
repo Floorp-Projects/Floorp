@@ -6,6 +6,8 @@
 package org.mozilla.gecko;
 
 import org.mozilla.gecko.AppConstants;
+import android.widget.AdapterView;
+import android.widget.Button;
 import org.mozilla.gecko.AppConstants.Versions;
 import org.mozilla.gecko.GeckoProfileDirectories.NoMozillaDirectoryException;
 import org.mozilla.gecko.db.BrowserDB;
@@ -823,16 +825,38 @@ public abstract class GeckoApp
         ThreadUtils.postToUiThread(new Runnable() {
             @Override
             public void run() {
-                Dialog dialog = builder.create();
+                AlertDialog dialog = builder.create();
                 dialog.show();
 
-                ListView listView = ((AlertDialog) dialog).getListView();
+                final ListView listView = dialog.getListView();
                 if (listView != null) {
                     listView.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE);
-                    int listSize = listView.getAdapter().getCount();
-                    for (int i = 0; i < listSize; i++)
-                        listView.setItemChecked(i, true);
                 }
+
+                final Button clearButton = dialog.getButton(DialogInterface.BUTTON_POSITIVE);
+                clearButton.setEnabled(false);
+
+                dialog.getListView().setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                    @Override
+                    public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+                        if (Versions.feature11Plus) {
+                            if (listView.getCheckedItemCount() == 0) {
+                                clearButton.setEnabled(false);
+                            } else {
+                                clearButton.setEnabled(true);
+                            }
+                        } else {
+                            final SparseBooleanArray items = listView.getCheckedItemPositions();
+                            for (int j = 0; j < items.size(); j++) {
+                                if (items.valueAt(j) == true) {
+                                    clearButton.setEnabled(true);
+                                    return;
+                                }
+                            }
+                            clearButton.setEnabled(false);
+                        }
+                    }
+                });
             }
         });
     }
