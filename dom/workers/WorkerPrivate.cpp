@@ -1053,24 +1053,25 @@ private:
         return true;
       }
 
-      if (aWorkerPrivate->IsServiceWorker() || aWorkerPrivate->IsSharedWorker()) {
-        if (aWorkerPrivate->IsServiceWorker() && !JSREPORT_IS_WARNING(mFlags)) {
-          RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
-          MOZ_ASSERT(swm);
-          bool handled = swm->HandleError(aCx, aWorkerPrivate->GetPrincipal(),
-                                          aWorkerPrivate->WorkerName(),
-                                          aWorkerPrivate->ScriptURL(),
-                                          mMessage,
-                                          mFilename, mLine, mLineNumber,
-                                          mColumnNumber, mFlags, mExnType);
-          if (handled) {
-            return true;
-          }
-        }
-
+      if (aWorkerPrivate->IsSharedWorker()) {
         aWorkerPrivate->BroadcastErrorToSharedWorkers(aCx, mMessage, mFilename,
                                                       mLine, mLineNumber,
                                                       mColumnNumber, mFlags);
+        return true;
+      }
+
+      // Service workers do not have a main thread parent global, so normal
+      // worker error reporting will crash.  Instead, pass the error to
+      // the ServiceWorkerManager to report on any controlled documents.
+      if (aWorkerPrivate->IsServiceWorker()) {
+        RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
+        MOZ_ASSERT(swm);
+        swm->HandleError(aCx, aWorkerPrivate->GetPrincipal(),
+                         aWorkerPrivate->WorkerName(),
+                         aWorkerPrivate->ScriptURL(),
+                         mMessage,
+                         mFilename, mLine, mLineNumber,
+                         mColumnNumber, mFlags, mExnType);
         return true;
       }
 
