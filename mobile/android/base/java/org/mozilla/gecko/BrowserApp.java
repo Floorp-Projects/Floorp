@@ -3031,7 +3031,6 @@ public class BrowserApp extends GeckoApp
         bookmark.setVisible(!inGuestMode);
         bookmark.setCheckable(true);
         bookmark.setChecked(tab.isBookmark());
-        bookmark.setIcon(resolveBookmarkIconID(tab.isBookmark()));
         bookmark.setTitle(resolveBookmarkTitleID(tab.isBookmark()));
 
         reader.setEnabled(isAboutReader || !AboutPages.isAboutPage(tab.getURL()));
@@ -3039,8 +3038,13 @@ public class BrowserApp extends GeckoApp
         reader.setCheckable(true);
         final boolean isPageInReadingList = tab.isInReadingList();
         reader.setChecked(isPageInReadingList);
-        reader.setIcon(resolveReadingListIconID(isPageInReadingList));
         reader.setTitle(resolveReadingListTitleID(isPageInReadingList));
+
+        if (Versions.feature11Plus) {
+            // We don't use icons on GB builds so not resolving icons might conserve resources.
+            bookmark.setIcon(resolveBookmarkIconID(tab.isBookmark()));
+            reader.setIcon(resolveReadingListIconID(isPageInReadingList));
+        }
 
         back.setEnabled(tab.canDoBack());
         forward.setEnabled(tab.canDoForward());
@@ -3190,6 +3194,7 @@ public class BrowserApp extends GeckoApp
     }
 
     private int resolveBookmarkIconID(final boolean isBookmark) {
+        Assert.isTrue(Versions.feature11Plus, "We don't use menu icons on v11+ so don't set them to conserve resources.");
         if (isBookmark) {
             return R.drawable.ic_menu_bookmark_remove;
         } else {
@@ -3202,6 +3207,7 @@ public class BrowserApp extends GeckoApp
     }
 
     private int resolveReadingListIconID(final boolean isInReadingList) {
+        Assert.isTrue(Versions.feature11Plus, "We don't use menu icons on v11+ so don't set them to conserve resources.");
         return (isInReadingList ? R.drawable.ic_menu_reader_remove : R.drawable.ic_menu_reader_add);
     }
 
@@ -3233,13 +3239,19 @@ public class BrowserApp extends GeckoApp
                 if (item.isChecked()) {
                     Telemetry.sendUIEvent(TelemetryContract.Event.UNSAVE, TelemetryContract.Method.MENU, "bookmark");
                     tab.removeBookmark();
-                    item.setIcon(resolveBookmarkIconID(false));
                     item.setTitle(resolveBookmarkTitleID(false));
+                    if (Versions.feature11Plus) {
+                        // We don't use icons on GB builds so not resolving icons might conserve resources.
+                        item.setIcon(resolveBookmarkIconID(false));
+                    }
                 } else {
                     Telemetry.sendUIEvent(TelemetryContract.Event.SAVE, TelemetryContract.Method.MENU, "bookmark");
                     tab.addBookmark();
-                    item.setIcon(resolveBookmarkIconID(true));
                     item.setTitle(resolveBookmarkTitleID(true));
+                    if (Versions.feature11Plus) {
+                        // We don't use icons on GB builds so not resolving icons might conserve resources.
+                        item.setIcon(resolveBookmarkIconID(true));
+                    }
                 }
             }
             return true;
@@ -3251,13 +3263,19 @@ public class BrowserApp extends GeckoApp
                 if (item.isChecked()) {
                     Telemetry.sendUIEvent(TelemetryContract.Event.UNSAVE, TelemetryContract.Method.MENU, "reading_list");
                     tab.removeFromReadingList();
-                    item.setIcon(resolveReadingListIconID(false));
                     item.setTitle(resolveReadingListTitleID(false));
+                    if (Versions.feature11Plus) {
+                        // We don't use icons on GB builds so not resolving icons might conserve resources.
+                        item.setIcon(resolveReadingListIconID(false));
+                    }
                 } else {
                     Telemetry.sendUIEvent(TelemetryContract.Event.SAVE, TelemetryContract.Method.MENU, "reading_list");
                     tab.addToReadingList();
-                    item.setIcon(resolveReadingListIconID(true));
                     item.setTitle(resolveReadingListTitleID(true));
+                    if (Versions.feature11Plus) {
+                        // We don't use icons on GB builds so not resolving icons might conserve resources.
+                        item.setIcon(resolveReadingListIconID(true));
+                    }
                 }
             }
             return true;
