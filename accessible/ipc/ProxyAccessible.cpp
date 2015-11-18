@@ -200,6 +200,18 @@ ProxyAccessible::GetLevelInternal()
   return level;
 }
 
+void
+ProxyAccessible::ScrollTo(uint32_t aScrollType)
+{
+  Unused << mDoc->SendScrollTo(mID, aScrollType);
+}
+
+void
+ProxyAccessible::ScrollToPoint(uint32_t aScrollType, int32_t aX, int32_t aY)
+{
+  Unused << mDoc->SendScrollToPoint(mID, aScrollType, aX, aY);
+}
+
 int32_t
 ProxyAccessible::CaretLineNumber()
 {
