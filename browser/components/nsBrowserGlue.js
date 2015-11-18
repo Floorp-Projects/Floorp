@@ -1277,6 +1277,14 @@ BrowserGlue.prototype = {
 #else
       let shouldCheck = ShellService.shouldCheckDefaultBrowser;
 #endif
+#ifndef RELEASE_BUILD
+      let promptCount =
+        Services.prefs.getIntPref("browser.shell.defaultBrowserCheckCount");
+      let skipDefaultBrowserCheck =
+        Services.prefs.getBoolPref("browser.shell.skipDefaultBrowserCheck");
+#else
+      let skipDefaultBrowserCheck = false;
+#endif
       let willRecoverSession = false;
       try {
         let ss = Cc["@mozilla.org/browser/sessionstartup;1"].
@@ -1302,6 +1310,27 @@ BrowserGlue.prototype = {
 
       let willPrompt = shouldCheck && !isDefault && !willRecoverSession;
 
+      // Skip the "Set Default Browser" check during first-run or after the
+      // browser has been run a few times.
+      if (willPrompt) {
+        if (skipDefaultBrowserCheck) {
+          Services.prefs.setBoolPref("browser.shell.skipDefaultBrowserCheck", false);
+          willPrompt = false;
+        } else {
+          promptCount++;
+        }
+        if (promptCount > 3) {
+          willPrompt = false;
+        }
+      }
+
+#ifndef RELEASE_BUILD
+      if (willPrompt) {
+        Services.prefs.setIntPref("browser.shell.defaultBrowserCheckCount",
+                                  promptCount);
+      }
+#endif
+
       try {
         // Report default browser status on startup to telemetry
         // so we can track whether we are the default.
@@ -1311,15 +1340,8 @@ BrowserGlue.prototype = {
                           .add(isDefaultError);
         Services.telemetry.getHistogramById("BROWSER_SET_DEFAULT_ALWAYS_CHECK")
                           .add(shouldCheck);
-        let promptCount =
-          Services.prefs.getIntPref("browser.shell.defaultBrowserCheckCount");
-        if (willPrompt) {
-          promptCount++;
-        }
         Services.telemetry.getHistogramById("BROWSER_SET_DEFAULT_DIALOG_PROMPT_RAWCOUNT")
                           .add(promptCount);
-        Services.prefs.setIntPref("browser.shell.defaultBrowserCheckCount",
-                                  promptCount)
       }
       catch (ex) { /* Don't break the default prompt if telemetry is broken. */ }
 
