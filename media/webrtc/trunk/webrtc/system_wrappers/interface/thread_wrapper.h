@@ -67,6 +67,9 @@ class ThreadWrapper {
   static rtc::scoped_ptr<ThreadWrapper> CreateThread(ThreadRunFunction func,
       void* obj, const char* thread_name);
 
+  static rtc::scoped_ptr<ThreadWrapper> CreateUIThread(ThreadRunFunction func,
+      void* obj,  const char* thread_name);
+
   // Get the current thread's thread ID.
   // NOTE: This is a static method. It returns the id of the calling thread,
   // *not* the id of the worker thread that a ThreadWrapper instance represents.
@@ -84,6 +87,10 @@ class ThreadWrapper {
   // Multiple tries to Stop are allowed (e.g. to wait longer than 2 seconds).
   // It's ok to call Stop() even if the spawned thread has been reclaimed.
   virtual bool Stop() = 0;
+
+  // Request a timed callback for ThreadRunFunction. Currently only
+  // implemented for a specific type of thread on Windows.
+  virtual bool RequestCallbackTimer(unsigned int milliseconds);
 
   // Set the priority of the worker thread.  Must be called when thread
   // is running.

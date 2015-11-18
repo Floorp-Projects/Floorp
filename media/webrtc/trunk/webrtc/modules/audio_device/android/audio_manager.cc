@@ -9,13 +9,18 @@
  */
 
 #include "webrtc/modules/audio_device/android/audio_manager.h"
+#if !defined(MOZ_WIDGET_GONK)
+#include "AndroidJNIWrapper.h"
+#endif
 
 #include <android/log.h>
 
 #include "webrtc/base/arraysize.h"
 #include "webrtc/base/checks.h"
 #include "webrtc/modules/audio_device/android/audio_common.h"
+#if !defined(MOZ_WIDGET_GONK)
 #include "webrtc/modules/utility/interface/helpers_android.h"
+#endif
 
 #define TAG "AudioManager"
 #define ALOGV(...) __android_log_print(ANDROID_LOG_VERBOSE, TAG, __VA_ARGS__)
@@ -26,11 +31,14 @@
 
 namespace webrtc {
 
+#if !defined(MOZ_WIDGET_GONK)
 static JavaVM* g_jvm = NULL;
 static jobject g_context = NULL;
 static jclass g_audio_manager_class = NULL;
+#endif
 
 void AudioManager::SetAndroidAudioDeviceObjects(void* jvm, void* context) {
+#if !defined(MOZ_WIDGET_GONK)
   ALOGD("SetAndroidAudioDeviceObjects%s", GetThreadInfo().c_str());
 
   CHECK(jvm);
@@ -40,13 +48,15 @@ void AudioManager::SetAndroidAudioDeviceObjects(void* jvm, void* context) {
   JNIEnv* jni = GetEnv(g_jvm);
   CHECK(jni) << "AttachCurrentThread must be called on this tread";
 
-  g_context = NewGlobalRef(jni, reinterpret_cast<jobject>(context));
-  jclass local_class = FindClass(
-      jni, "org/webrtc/voiceengine/WebRtcAudioManager");
-  g_audio_manager_class = reinterpret_cast<jclass>(
-      NewGlobalRef(jni, local_class));
-  CHECK_EXCEPTION(jni);
+  if (!g_context) {
+    g_context = NewGlobalRef(jni, reinterpret_cast<jobject>(context));
+  }
 
+  if (!g_audio_manager_class) {
+    g_audio_manager_class = jsjni_GetGlobalClassRef(
+                                "org/webrtc/voiceengine/WebRtcAudioManager");
+    DCHECK(g_audio_manager_class);
+  }
   // Register native methods with the WebRtcAudioManager class. These methods
   // are declared private native in WebRtcAudioManager.java.
   JNINativeMethod native_methods[] = {
@@ -55,9 +65,11 @@ void AudioManager::SetAndroidAudioDeviceObjects(void* jvm, void* context) {
   jni->RegisterNatives(g_audio_manager_class,
                        native_methods, arraysize(native_methods));
   CHECK_EXCEPTION(jni) << "Error during RegisterNatives";
+#endif
 }
 
 void AudioManager::ClearAndroidAudioDeviceObjects() {
+#if !defined(MOZ_WIDGET_GONK)
   ALOGD("ClearAndroidAudioDeviceObjects%s", GetThreadInfo().c_str());
   JNIEnv* jni = GetEnv(g_jvm);
   CHECK(jni) << "AttachCurrentThread must be called on this tread";
@@ -68,28 +80,36 @@ void AudioManager::ClearAndroidAudioDeviceObjects() {
   DeleteGlobalRef(jni, g_context);
   g_context = NULL;
   g_jvm = NULL;
+#endif
 }
 
 AudioManager::AudioManager()
-    : j_audio_manager_(NULL),
-      initialized_(false) {
+    : initialized_(false) {
+#if !defined(MOZ_WIDGET_GONK)
+  j_audio_manager_ = NULL;
   ALOGD("ctor%s", GetThreadInfo().c_str());
+#endif
   CHECK(HasDeviceObjects());
   CreateJavaInstance();
 }
 
 AudioManager::~AudioManager() {
+#if !defined(MOZ_WIDGET_GONK)
   ALOGD("~dtor%s", GetThreadInfo().c_str());
+#endif
   DCHECK(thread_checker_.CalledOnValidThread());
   Close();
+#if !defined(MOZ_WIDGET_GONK)
   AttachThreadScoped ats(g_jvm);
   JNIEnv* jni = ats.env();
   jni->DeleteGlobalRef(j_audio_manager_);
   j_audio_manager_ = NULL;
+#endif
   DCHECK(!initialized_);
 }
 
 bool AudioManager::Init() {
+#if !defined(MOZ_WIDGET_GONK)
   ALOGD("Init%s", GetThreadInfo().c_str());
   DCHECK(thread_checker_.CalledOnValidThread());
   DCHECK(!initialized_);
@@ -102,11 +122,13 @@ bool AudioManager::Init() {
     ALOGE("init failed!");
     return false;
   }
+#endif
   initialized_ = true;
   return true;
 }
 
 bool AudioManager::Close() {
+#if !defined(MOZ_WIDGET_GONK)
   ALOGD("Close%s", GetThreadInfo().c_str());
   DCHECK(thread_checker_.CalledOnValidThread());
   if (!initialized_)
@@ -117,10 +139,12 @@ bool AudioManager::Close() {
       jni, g_audio_manager_class, "dispose", "()V");
   jni->CallVoidMethod(j_audio_manager_, disposeID);
   CHECK_EXCEPTION(jni);
+#endif
   initialized_ = false;
   return true;
 }
 
+#if !defined(MOZ_WIDGET_GONK)
 void JNICALL AudioManager::CacheAudioParameters(JNIEnv* env, jobject obj,
     jint sample_rate, jint channels, jlong nativeAudioManager) {
   webrtc::AudioManager* this_object =
@@ -138,6 +162,7 @@ void AudioManager::OnCacheAudioParameters(
   playout_parameters_.reset(sample_rate, channels);
   record_parameters_.reset(sample_rate, channels);
 }
+#endif
 
 AudioParameters AudioManager::GetPlayoutAudioParameters() const {
   CHECK(playout_parameters_.is_valid());
@@ -150,10 +175,15 @@ AudioParameters AudioManager::GetRecordAudioParameters() const {
 }
 
 bool AudioManager::HasDeviceObjects() {
+#if !defined(MOZ_WIDGET_GONK)
   return (g_jvm && g_context && g_audio_manager_class);
+#else
+  return true;
+#endif
 }
 
 void AudioManager::CreateJavaInstance() {
+#if !defined(MOZ_WIDGET_GONK)
   ALOGD("CreateJavaInstance");
   AttachThreadScoped ats(g_jvm);
   JNIEnv* jni = ats.env();
@@ -168,6 +198,7 @@ void AudioManager::CreateJavaInstance() {
   j_audio_manager_ = jni->NewGlobalRef(j_audio_manager_);
   CHECK_EXCEPTION(jni) << "Error during NewGlobalRef";
   CHECK(j_audio_manager_);
+#endif
 }
 
 }  // namespace webrtc

@@ -8,6 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
+#include "AndroidJNIWrapper.h"
 #include "webrtc/modules/video_capture/android/video_capture_android.h"
 
 #include "webrtc/base/common.h"
@@ -40,6 +41,8 @@ void JNICALL ProvideCameraFrame(
     jint rotation,
     jlong timeStamp,
     jlong context) {
+  if (!context)
+    return;
   webrtc::videocapturemodule::VideoCaptureAndroid* captureModule =
       reinterpret_cast<webrtc::videocapturemodule::VideoCaptureAndroid*>(
           context);
@@ -49,20 +52,21 @@ void JNICALL ProvideCameraFrame(
   env->ReleaseByteArrayElements(javaCameraFrame, cameraFrame, JNI_ABORT);
 }
 
-int32_t SetCaptureAndroidVM(JavaVM* javaVM, jobject context) {
+int32_t SetCaptureAndroidVM(JavaVM* javaVM) {
+  if (g_java_capturer_class)
+    return 0;
+
   if (javaVM) {
     assert(!g_jvm);
     g_jvm = javaVM;
     AttachThreadScoped ats(g_jvm);
-    g_context = ats.env()->NewGlobalRef(context);
+
+    g_context = jsjni_GetGlobalContextRef();
 
     videocapturemodule::DeviceInfoAndroid::Initialize(ats.env());
 
-    jclass j_capture_class =
-        ats.env()->FindClass("org/webrtc/videoengine/VideoCaptureAndroid");
-    assert(j_capture_class);
     g_java_capturer_class =
-        reinterpret_cast<jclass>(ats.env()->NewGlobalRef(j_capture_class));
+      jsjni_GetGlobalClassRef("org/webrtc/videoengine/VideoCaptureAndroid");
     assert(g_java_capturer_class);
 
     JNINativeMethod native_methods[] = {
@@ -81,7 +85,6 @@ int32_t SetCaptureAndroidVM(JavaVM* javaVM, jobject context) {
       ats.env()->UnregisterNatives(g_java_capturer_class);
       ats.env()->DeleteGlobalRef(g_java_capturer_class);
       g_java_capturer_class = NULL;
-      ats.env()->DeleteGlobalRef(g_context);
       g_context = NULL;
       videocapturemodule::DeviceInfoAndroid::DeInitialize();
       g_jvm = NULL;
@@ -166,7 +169,14 @@ VideoCaptureAndroid::~VideoCaptureAndroid() {
   if (_captureStarted)
     StopCapture();
   AttachThreadScoped ats(g_jvm);
-  ats.env()->DeleteGlobalRef(_jCapturer);
+  JNIEnv* env = ats.env();
+
+  // Avoid callbacks into ourself even if the above stopCapture fails.
+  jmethodID j_unlink =
+    env->GetMethodID(g_java_capturer_class, "unlinkCapturer", "()V");
+  env->CallVoidMethod(_jCapturer, j_unlink);
+
+  env->DeleteGlobalRef(_jCapturer);
 }
 
 int32_t VideoCaptureAndroid::StartCapture(
@@ -215,6 +225,7 @@ int32_t VideoCaptureAndroid::StopCapture() {
   // onIncomingFrame() call.
   _apiCs.Leave();
 
+  // try to stop the capturer.
   jmethodID j_stop =
       env->GetMethodID(g_java_capturer_class, "stopCapture", "()Z");
   return env->CallBooleanMethod(_jCapturer, j_stop) ? 0 : -1;
@@ -233,21 +244,11 @@ int32_t VideoCaptureAndroid::CaptureSettings(
 }
 
 int32_t VideoCaptureAndroid::SetCaptureRotation(VideoRotation rotation) {
-  int32_t status = VideoCaptureImpl::SetCaptureRotation(rotation);
-  if (status != 0)
-    return status;
-
-  AttachThreadScoped ats(g_jvm);
-  JNIEnv* env = ats.env();
-
-  jmethodID j_spr =
-      env->GetMethodID(g_java_capturer_class, "setPreviewRotation", "(I)V");
-  assert(j_spr);
-  int rotation_degrees;
-  if (RotationInDegrees(rotation, &rotation_degrees) != 0) {
-    assert(false);
-  }
-  env->CallVoidMethod(_jCapturer, j_spr, rotation_degrees);
+  // Our only caller is ProvideCameraFrame, which is called
+  // from a synchronized Java method. If we'd take this lock,
+  // any call going from C++ to Java will deadlock.
+  // CriticalSectionScoped cs(&_apiCs);
+  VideoCaptureImpl::SetCaptureRotation(rotation);
   return 0;
 }
 

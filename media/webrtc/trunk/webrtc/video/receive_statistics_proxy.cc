@@ -20,7 +20,8 @@ ReceiveStatisticsProxy::ReceiveStatisticsProxy(uint32_t ssrc, Clock* clock)
       crit_(CriticalSectionWrapper::CreateCriticalSection()),
       // 1000ms window, scale 1000 for ms to s.
       decode_fps_estimator_(1000, 1000),
-      renders_fps_estimator_(1000, 1000) {
+      renders_fps_estimator_(1000, 1000),
+      receive_state_(kReceiveStateInitial) {
   stats_.ssrc = ssrc;
 }
 
@@ -37,6 +38,12 @@ void ReceiveStatisticsProxy::IncomingRate(const int video_channel,
   CriticalSectionScoped lock(crit_.get());
   stats_.network_frame_rate = framerate;
   stats_.total_bitrate_bps = bitrate_bps;
+}
+
+void ReceiveStatisticsProxy::ReceiveStateChange(const int video_channel,
+                                                VideoReceiveState state) {
+  CriticalSectionScoped cs(lock_.get());
+  receive_state_ = state;
 }
 
 void ReceiveStatisticsProxy::DecoderTiming(int decode_ms,

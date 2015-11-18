@@ -26,6 +26,7 @@
 #include "webrtc/video_engine/overuse_frame_detector.h"
 #include "webrtc/video_engine/vie_defines.h"
 #include "webrtc/video_engine/vie_encoder.h"
+#include "webrtc/video_engine/desktop_capture_impl.h"
 
 namespace webrtc {
 
@@ -89,7 +90,8 @@ ViECapturer::ViECapturer(int capture_id,
       cpu_overuse_metrics_observer_(new RegistrableCpuOveruseMetricsObserver()),
       overuse_detector_(
           new OveruseFrameDetector(Clock::GetRealTimeClock(),
-                                   cpu_overuse_metrics_observer_.get())) {
+                                   cpu_overuse_metrics_observer_.get())),
+      config_(config) {
   capture_thread_->Start();
   capture_thread_->SetPriority(kHighPriority);
   module_process_thread_.RegisterModule(overuse_detector_.get());
@@ -168,12 +170,20 @@ ViECapturer* ViECapturer::CreateViECapture(
 int32_t ViECapturer::Init(const char* device_unique_idUTF8,
                           uint32_t device_unique_idUTF8Length) {
   assert(capture_module_ == NULL);
-  if (device_unique_idUTF8 == NULL) {
+  CaptureDeviceType type = config_.Get<CaptureDeviceInfo>().type;
+
+  if(type != CaptureDeviceType::Camera) {
+#if !defined(ANDROID) && !defined(WEBRTC_IOS)
+    capture_module_ = DesktopCaptureImpl::Create(
+      ViEModuleId(engine_id_, capture_id_), device_unique_idUTF8, type);
+#endif
+  } else if (device_unique_idUTF8 == NULL) {
     use_external_capture_ = true;
+    // YYY: was      ViEModuleId(engine_id_, capture_id_), external_capture_module_);
     return 0;
   } else {
     capture_module_ = VideoCaptureFactory::Create(
-        ViEModuleId(engine_id_, capture_id_), device_unique_idUTF8);
+      ViEModuleId(engine_id_, capture_id_), device_unique_idUTF8);
   }
   if (!capture_module_) {
     return -1;
@@ -218,6 +228,7 @@ int32_t ViECapturer::Start(const CaptureCapability& capture_capability) {
   int frame_rate;
   VideoCaptureCapability capability;
   requested_capability_ = capture_capability;
+  CaptureDeviceType type = config_.Get<CaptureDeviceInfo>().type;
 
   if (!CaptureCapabilityFixed()) {
     // Ask the observers for best size.
@@ -229,7 +240,11 @@ int32_t ViECapturer::Start(const CaptureCapability& capture_capability) {
       height = kViECaptureDefaultHeight;
     }
     if (frame_rate == 0) {
-      frame_rate = kViECaptureDefaultFramerate;
+      if (type == Screen || type == Window || type == Application) {
+        frame_rate = kViEScreenCaptureDefaultFramerate;
+      } else {
+        frame_rate = kViECaptureDefaultFramerate;
+      }
     }
     capability.height = height;
     capability.width = width;

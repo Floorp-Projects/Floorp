@@ -69,6 +69,9 @@ class ViEReceiver : public RtpData {
   void StartReceive();
   void StopReceive();
 
+  void StartRTCPReceive();
+  void StopRTCPReceive();
+
   int StartRTPDump(const char file_nameUTF8[1024]);
   int StopRTPDump();
 
@@ -121,6 +124,7 @@ class ViEReceiver : public RtpData {
 
   RtpDump* rtp_dump_;
   bool receiving_;
+  bool receiving_rtcp_;
   uint8_t restored_packet_[kViEMaxMtu];
   bool restored_packet_in_use_;
   bool receiving_ast_enabled_;

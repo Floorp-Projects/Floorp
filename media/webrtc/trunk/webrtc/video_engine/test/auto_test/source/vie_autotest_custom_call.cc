@@ -1623,8 +1623,8 @@ void PrintCodecStatistics(webrtc::ViECodec* vie_codec,
       std::cout << "Codec Receive statistics"
                 << std::endl;
       // Get and print the Receive Codec Statistics
-      error = vie_codec->GetReceiveCodecStastistics(video_channel, key_frames,
-                                                    delta_frames);
+      error = vie_codec->GetReceiveCodecStatistics(video_channel, key_frames,
+                                                   delta_frames);
       number_of_errors += ViETest::TestError(error == 0,
                                              "ERROR: %s at line %d",
                                              __FUNCTION__, __LINE__);
@@ -1633,8 +1633,8 @@ void PrintCodecStatistics(webrtc::ViECodec* vie_codec,
       std::cout << "Codec Send statistics"
                 << std::endl;
       // Get and print the Send Codec Statistics
-      error = vie_codec->GetSendCodecStastistics(video_channel, key_frames,
-                                                 delta_frames);
+      error = vie_codec->GetSendCodecStatistics(video_channel, key_frames,
+                                                delta_frames);
       number_of_errors += ViETest::TestError(error == 0,
                                              "ERROR: %s at line %d",
                                              __FUNCTION__, __LINE__);

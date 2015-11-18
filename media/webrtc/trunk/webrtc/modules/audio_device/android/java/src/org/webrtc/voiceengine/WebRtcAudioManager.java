@@ -26,6 +26,10 @@ import android.util.Log;
 // recommended to always use AudioManager.MODE_IN_COMMUNICATION.
 // This class also adds support for output volume control of the
 // STREAM_VOICE_CALL-type stream.
+
+import org.mozilla.gecko.annotation.WebRTCJNITarget;
+
+@WebRTCJNITarget
 class WebRtcAudioManager {
   private static final boolean DEBUG = false;
 

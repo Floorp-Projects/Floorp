@@ -332,6 +332,37 @@ int ViERTP_RTCPImpl::GetRemoteRTCPCName(
   return 0;
 }
 
+int ViERTP_RTCPImpl::GetRemoteRTCPReceiverInfo(const int video_channel,
+                                               uint32_t& NTPHigh,
+                                               uint32_t& NTPLow,
+                                               uint32_t& receivedPacketCount,
+                                               uint64_t& receivedOctetCount,
+                                               uint32_t* jitter,
+                                               uint16_t* fractionLost,
+                                               uint32_t* cumulativeLost,
+                                               int32_t* rttMs) const {
+  LOG_F(LS_INFO) << "channel:" << video_channel;
+  ViEChannelManagerScoped cs(*(shared_data_->channel_manager()));
+  ViEChannel* vie_channel = cs.Channel(video_channel);
+  if (!vie_channel) {
+    LOG(LS_ERROR) << "Channel " << video_channel << " doesn't exist";
+    shared_data_->SetLastError(kViERtpRtcpInvalidChannelId);
+    return -1;
+  }
+  if (vie_channel->GetRemoteRTCPReceiverInfo(NTPHigh,
+                                             NTPLow,
+                                             receivedPacketCount,
+                                             receivedOctetCount,
+                                             jitter,
+                                             fractionLost,
+                                             cumulativeLost,
+                                             rttMs) != 0) {
+    shared_data_->SetLastError(kViERtpRtcpUnknownError);
+    return -1;
+  }
+  return 0;
+}
+
 int ViERTP_RTCPImpl::SendApplicationDefinedRTCPPacket(
   const int video_channel,
   const unsigned char sub_type,
@@ -797,6 +828,23 @@ int ViERTP_RTCPImpl::GetReceiveRtcpPacketTypeCounter(
     return -1;
   }
   vie_channel->GetReceiveRtcpPacketTypeCounter(packet_counter);
+  return 0;
+}
+
+int ViERTP_RTCPImpl::GetRemoteRTCPSenderInfo(const int video_channel,
+                                             SenderInfo* sender_info) const {
+  LOG_F(LS_INFO) << "channel:" << video_channel;
+  ViEChannelManagerScoped cs(*(shared_data_->channel_manager()));
+  ViEChannel* vie_channel = cs.Channel(video_channel);
+  if (!vie_channel) {
+    LOG(LS_ERROR) << "Channel " << video_channel << " doesn't exist";
+    shared_data_->SetLastError(kViERtpRtcpInvalidChannelId);
+    return -1;
+  }
+  if (vie_channel->GetRemoteRTCPSenderInfo(sender_info) != 0) {
+    shared_data_->SetLastError(kViERtpRtcpUnknownError);
+    return -1;
+  }
   return 0;
 }
 

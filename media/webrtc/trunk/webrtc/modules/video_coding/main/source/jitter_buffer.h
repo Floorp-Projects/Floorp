@@ -64,6 +64,7 @@ class FrameList
     : public std::map<uint32_t, VCMFrameBuffer*, TimestampLessThan> {
  public:
   void InsertFrame(VCMFrameBuffer* frame);
+  VCMFrameBuffer* FindFrame(uint16_t seq_num, uint32_t timestamp);
   VCMFrameBuffer* PopFrame(uint32_t timestamp);
   VCMFrameBuffer* Front() const;
   VCMFrameBuffer* Back() const;

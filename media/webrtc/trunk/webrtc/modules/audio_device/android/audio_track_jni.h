@@ -74,6 +74,10 @@ class AudioTrackJni : public PlayoutDelayProvider {
   int32_t PlayoutDelay(uint16_t& delayMS) const;
   void AttachAudioBuffer(AudioDeviceBuffer* audioBuffer);
 
+  int32_t PlayoutDeviceName(uint16_t index,
+                            char name[kAdmMaxDeviceNameSize],
+                            char guid[kAdmMaxGuidSize]);
+
  protected:
   // PlayoutDelayProvider implementation.
   virtual int PlayoutDelayMs();

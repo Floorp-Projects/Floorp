@@ -276,7 +276,7 @@ MediaEngineRemoteVideoSource::FrameSizeChange(unsigned int w, unsigned int h,
 
 int
 MediaEngineRemoteVideoSource::DeliverFrame(unsigned char* buffer,
-                                           int size,
+                                           size_t size,
                                            uint32_t time_stamp,
                                            int64_t ntp_time,
                                            int64_t render_time,
@@ -288,7 +288,7 @@ MediaEngineRemoteVideoSource::DeliverFrame(unsigned char* buffer,
     return 0;
   }
 
-  if (mWidth*mHeight + 2*(((mWidth+1)/2)*((mHeight+1)/2)) != size) {
+  if ((size_t) (mWidth*mHeight + 2*(((mWidth+1)/2)*((mHeight+1)/2))) != size) {
     MOZ_ASSERT(false, "Wrong size frame in DeliverFrame!");
     return 0;
   }

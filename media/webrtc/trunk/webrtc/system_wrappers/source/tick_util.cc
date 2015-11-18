@@ -58,7 +58,7 @@ int64_t TickTime::QueryOsForTicks() {
   }
   result.ticks_ = now + (num_wrap_time_get_time << 32);
 #endif
-#elif defined(WEBRTC_LINUX)
+#elif defined(WEBRTC_LINUX) || defined(WEBRTC_BSD)
   struct timespec ts;
   // TODO(wu): Remove CLOCK_REALTIME implementation.
 #ifdef WEBRTC_CLOCK_TYPE_REALTIME

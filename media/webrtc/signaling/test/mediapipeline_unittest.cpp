@@ -396,10 +396,15 @@ class MediaPipelineTest : public ::testing::Test {
     // Setup transport flows
     InitTransports(aIsRtcpMux);
 
+#if 0 //DEBUG(pkerr)
     mozilla::SyncRunnable::DispatchToThread(
       test_utils->sts_target(),
       WrapRunnable(&p1_, &TestAgent::CreatePipelines_s, aIsRtcpMux));
-
+#else
+    NS_DispatchToMainThread(
+      WrapRunnable(&p1_, &TestAgent::CreatePipelines_s, aIsRtcpMux),
+      NS_DISPATCH_SYNC);
+#endif
     mozilla::SyncRunnable::DispatchToThread(
       test_utils->sts_target(),
       WrapRunnable(&p2_, &TestAgent::CreatePipelines_s, aIsRtcpMux));

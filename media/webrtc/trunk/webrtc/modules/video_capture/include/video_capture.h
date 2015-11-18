@@ -15,7 +15,15 @@
 #include "webrtc/modules/interface/module.h"
 #include "webrtc/modules/video_capture/include/video_capture_defines.h"
 
+#if defined(ANDROID) && !defined(WEBRTC_GONK)
+#include <jni.h>
+#endif
+
 namespace webrtc {
+
+#if defined(ANDROID) && !defined(WEBRTC_CHROMIUM_BUILD) && !defined(WEBRTC_GONK)
+  int32_t SetCaptureAndroidVM(JavaVM* javaVM);
+#endif
 
 class VideoCaptureModule: public RefCountedModule {
  public:
@@ -23,6 +31,7 @@ class VideoCaptureModule: public RefCountedModule {
   class DeviceInfo {
    public:
     virtual uint32_t NumberOfDevices() = 0;
+    virtual int32_t Refresh() = 0;
 
     // Returns the available capture devices.
     // deviceNumber   - Index of capture device.

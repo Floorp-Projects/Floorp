@@ -8,6 +8,8 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
+#include <math.h>
+
 #include "testing/gtest/include/gtest/gtest.h"
 
 #include "webrtc/common_audio/resampler/include/resampler.h"
@@ -26,7 +28,7 @@ const int kRates[] = {
   8000,
   16000,
   32000,
-  44000,
+  44100,
   48000,
   kMaxRate
 };
@@ -34,26 +36,19 @@ const size_t kRatesSize = sizeof(kRates) / sizeof(*kRates);
 const int kMaxChannels = 2;
 const size_t kDataSize = static_cast<size_t> (kMaxChannels * kMaxRate / 100);
 
-// TODO(andrew): should we be supporting these combinations?
-bool ValidRates(int in_rate, int out_rate) {
-  // Not the most compact notation, for clarity.
-  if ((in_rate == 44000 && (out_rate == 48000 || out_rate == 96000)) ||
-      (out_rate == 44000 && (in_rate == 48000 || in_rate == 96000))) {
-    return false;
-  }
-
-  return true;
-}
-
 class ResamplerTest : public testing::Test {
  protected:
   ResamplerTest();
   virtual void SetUp();
   virtual void TearDown();
+  void RunResampleTest(int channels,
+                       int src_sample_rate_hz,
+                       int dst_sample_rate_hz);
 
   Resampler rs_;
   int16_t data_in_[kDataSize];
   int16_t data_out_[kDataSize];
+  int16_t data_reference_[kDataSize];
 };
 
 ResamplerTest::ResamplerTest() {}
@@ -78,59 +73,132 @@ TEST_F(ResamplerTest, Reset) {
         ss << "Input rate: " << kRates[i] << ", output rate: " << kRates[j]
             << ", channels: " << kNumChannels[k];
         SCOPED_TRACE(ss.str());
-        if (ValidRates(kRates[i], kRates[j]))
-          EXPECT_EQ(0, rs_.Reset(kRates[i], kRates[j], kNumChannels[k]));
-        else
-          EXPECT_EQ(-1, rs_.Reset(kRates[i], kRates[j], kNumChannels[k]));
+        EXPECT_EQ(0, rs_.Reset(kRates[i], kRates[j], kTypes[k]));
       }
     }
   }
 }
 
-// TODO(tlegrand): Replace code inside the two tests below with a function
-// with number of channels and ResamplerType as input.
+// Sets the signal value to increase by |data| with every sample. Floats are
+// used so non-integer values result in rounding error, but not an accumulating
+// error.
+void SetMonoFrame(int16_t* buffer, float data, int sample_rate_hz) {
+  for (int i = 0; i < sample_rate_hz / 100; i++) {
+    buffer[i] = data * i;
+  }
+}
+
+// Sets the signal value to increase by |left| and |right| with every sample in
+// each channel respectively.
+void SetStereoFrame(int16_t* buffer, float left, float right,
+                    int sample_rate_hz) {
+  for (int i = 0; i < sample_rate_hz / 100; i++) {
+    buffer[i * 2] = left * i;
+    buffer[i * 2 + 1] = right * i;
+  }
+}
+
+// Computes the best SNR based on the error between |ref_frame| and
+// |test_frame|. It allows for a sample delay between the signals to
+// compensate for the resampling delay.
+float ComputeSNR(const int16_t* reference, const int16_t* test,
+                 int sample_rate_hz, int channels, int max_delay) {
+  float best_snr = 0;
+  int best_delay = 0;
+  int samples_per_channel = sample_rate_hz/100;
+  for (int delay = 0; delay < max_delay; delay++) {
+    float mse = 0;
+    float variance = 0;
+    for (int i = 0; i < samples_per_channel * channels - delay; i++) {
+      int error = reference[i] - test[i + delay];
+      mse += error * error;
+      variance += reference[i] * reference[i];
+    }
+    float snr = 100;  // We assign 100 dB to the zero-error case.
+    if (mse > 0)
+      snr = 10 * log10(variance / mse);
+    if (snr > best_snr) {
+      best_snr = snr;
+      best_delay = delay;
+    }
+  }
+  printf("SNR=%.1f dB at delay=%d\n", best_snr, best_delay);
+  return best_snr;
+}
+
+void ResamplerTest::RunResampleTest(int channels,
+                                    int src_sample_rate_hz,
+                                    int dst_sample_rate_hz) {
+  Resampler resampler;  // Create a new one with every test.
+  const int16_t kSrcLeft = 60;  // Shouldn't overflow for any used sample rate.
+  const int16_t kSrcRight = 30;
+  const float kResamplingFactor = (1.0 * src_sample_rate_hz) /
+      dst_sample_rate_hz;
+  const float kDstLeft = kResamplingFactor * kSrcLeft;
+  const float kDstRight = kResamplingFactor * kSrcRight;
+  if (channels == 1)
+    SetMonoFrame(data_in_, kSrcLeft, src_sample_rate_hz);
+  else
+    SetStereoFrame(data_in_, kSrcLeft, kSrcRight, src_sample_rate_hz);
+
+  if (channels == 1) {
+    SetMonoFrame(data_out_, 0, dst_sample_rate_hz);
+    SetMonoFrame(data_reference_, kDstLeft, dst_sample_rate_hz);
+  } else {
+    SetStereoFrame(data_out_, 0, 0, dst_sample_rate_hz);
+    SetStereoFrame(data_reference_, kDstLeft, kDstRight, dst_sample_rate_hz);
+  }
+
+  // The speex resampler has a known delay dependent on quality and rates,
+  // which we approximate here. Multiplying by two gives us a crude maximum
+  // for any resampling, as the old resampler typically (but not always)
+  // has lower delay.  The actual delay is calculated internally based on the
+  // filter length in the QualityMap.
+  static const int kInputKernelDelaySamples = 16*3;
+  const int max_delay = std::min(1.0f, 1/kResamplingFactor) *
+                        kInputKernelDelaySamples * channels * 2;
+  printf("(%d, %d Hz) -> (%d, %d Hz) ",  // SNR reported on the same line later.
+      channels, src_sample_rate_hz, channels, dst_sample_rate_hz);
+
+  int in_length = channels * src_sample_rate_hz / 100;
+  int out_length = 0;
+  EXPECT_EQ(0, rs_.Reset(src_sample_rate_hz, dst_sample_rate_hz,
+                         (channels == 1 ?
+                          kResamplerSynchronous :
+                          kResamplerSynchronousStereo)));
+  EXPECT_EQ(0, rs_.Push(data_in_, in_length, data_out_, kDataSize,
+                        out_length));
+  EXPECT_EQ(channels * dst_sample_rate_hz / 100, out_length);
+
+  //  EXPECT_EQ(0, Resample(src_frame_, &resampler, &dst_frame_));
+  EXPECT_GT(ComputeSNR(data_reference_, data_out_, dst_sample_rate_hz,
+                       channels, max_delay), 40.0f);
+}
+
 TEST_F(ResamplerTest, Mono) {
   const int kChannels = 1;
-  for (size_t i = 0; i < kRatesSize; ++i) {
-    for (size_t j = 0; j < kRatesSize; ++j) {
-      std::ostringstream ss;
-      ss << "Input rate: " << kRates[i] << ", output rate: " << kRates[j];
-      SCOPED_TRACE(ss.str());
-
-      if (ValidRates(kRates[i], kRates[j])) {
-        int in_length = kRates[i] / 100;
-        int out_length = 0;
-        EXPECT_EQ(0, rs_.Reset(kRates[i], kRates[j], kChannels));
-        EXPECT_EQ(0, rs_.Push(data_in_, in_length, data_out_, kDataSize,
-                              out_length));
-        EXPECT_EQ(kRates[j] / 100, out_length);
-      } else {
-        EXPECT_EQ(-1, rs_.Reset(kRates[i], kRates[j], kChannels));
-      }
+  // We don't attempt to be exhaustive here, but just get good coverage. Some
+  // combinations of rates will not be resampled, and some give an odd
+  // resampling factor which makes it more difficult to evaluate.
+  const int kSampleRates[] = {16000, 32000, 44100, 48000};
+  const int kSampleRatesSize = sizeof(kSampleRates) / sizeof(*kSampleRates);
+  for (int src_rate = 0; src_rate < kSampleRatesSize; src_rate++) {
+    for (int dst_rate = 0; dst_rate < kSampleRatesSize; dst_rate++) {
+      RunResampleTest(kChannels, kSampleRates[src_rate], kSampleRates[dst_rate]);
     }
   }
 }
 
 TEST_F(ResamplerTest, Stereo) {
   const int kChannels = 2;
-  for (size_t i = 0; i < kRatesSize; ++i) {
-    for (size_t j = 0; j < kRatesSize; ++j) {
-      std::ostringstream ss;
-      ss << "Input rate: " << kRates[i] << ", output rate: " << kRates[j];
-      SCOPED_TRACE(ss.str());
-
-      if (ValidRates(kRates[i], kRates[j])) {
-        int in_length = kChannels * kRates[i] / 100;
-        int out_length = 0;
-        EXPECT_EQ(0, rs_.Reset(kRates[i], kRates[j],
-                               kChannels));
-        EXPECT_EQ(0, rs_.Push(data_in_, in_length, data_out_, kDataSize,
-                              out_length));
-        EXPECT_EQ(kChannels * kRates[j] / 100, out_length);
-      } else {
-        EXPECT_EQ(-1, rs_.Reset(kRates[i], kRates[j],
-                                kChannels));
-      }
+  // We don't attempt to be exhaustive here, but just get good coverage. Some
+  // combinations of rates will not be resampled, and some give an odd
+  // resampling factor which makes it more difficult to evaluate.
+  const int kSampleRates[] = {16000, 32000, 44100, 48000};
+  const int kSampleRatesSize = sizeof(kSampleRates) / sizeof(*kSampleRates);
+  for (int src_rate = 0; src_rate < kSampleRatesSize; src_rate++) {
+    for (int dst_rate = 0; dst_rate < kSampleRatesSize; dst_rate++) {
+      RunResampleTest(kChannels, kSampleRates[src_rate], kSampleRates[dst_rate]);
     }
   }
 }

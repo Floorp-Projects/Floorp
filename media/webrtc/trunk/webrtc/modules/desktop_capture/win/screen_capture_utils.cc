@@ -55,6 +55,7 @@ bool IsScreenValid(ScreenId screen, std::wstring* device_key) {
 }
 
 DesktopRect GetScreenRect(ScreenId screen, const std::wstring& device_key) {
+  assert(IsGUIThread(false));
   if (screen == kFullDesktopScreenId) {
     return DesktopRect::MakeXYWH(GetSystemMetrics(SM_XVIRTUALSCREEN),
                                  GetSystemMetrics(SM_YVIRTUALSCREEN),

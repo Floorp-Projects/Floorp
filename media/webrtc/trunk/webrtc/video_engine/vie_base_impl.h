@@ -42,6 +42,7 @@ class ViEBaseImpl
                                    CpuOveruseMetrics* metrics);
   void RegisterSendSideDelayObserver(int channel,
                                      SendSideDelayObserver* observer) override;
+  virtual void SetLoadManager(CPULoadStateCallbackInvoker* aLoadManager);
   virtual int CreateChannel(int& video_channel);  // NOLINT
   virtual int CreateChannel(int& video_channel,  // NOLINT
                             const Config* config);

@@ -27,6 +27,9 @@
         '<(webrtc_root)/modules/modules.gyp:webrtc_utility',
         '<(webrtc_root)/system_wrappers/system_wrappers.gyp:system_wrappers',
       ],
+      'defines': [
+        'WEBRTC_EXTERNAL_TRANSPORT',
+      ],
       'sources': [
         'include/voe_audio_processing.h',
         'include/voe_base.h',

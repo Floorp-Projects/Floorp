@@ -110,6 +110,7 @@ int32_t VideoSender::InitializeSender() {
   _codecDataBase.ResetSender();
   _encoder = NULL;
   _encodedFrameCallback.SetTransportCallback(NULL);
+  _encodedFrameCallback.SetCritSect(_sendCritSect);
   _mediaOpt.Reset();  // Resetting frame dropper
   return VCM_OK;
 }
@@ -144,6 +145,7 @@ int32_t VideoSender::RegisterSendCodec(const VideoCodec* sendCodec,
     return VCM_CODEC_ERROR;
   }
 
+  // XXX fix VP9 (bug 1138629)
   int numLayers = (sendCodec->codecType != kVideoCodecVP8)
                       ? 1
                       : sendCodec->codecSpecific.VP8.numberOfTemporalLayers;
@@ -161,10 +163,11 @@ int32_t VideoSender::RegisterSendCodec(const VideoCodec* sendCodec,
 
   _mediaOpt.SetEncodingData(sendCodec->codecType,
                             sendCodec->maxBitrate * 1000,
-                            sendCodec->maxFramerate * 1000,
                             sendCodec->startBitrate * 1000,
                             sendCodec->width,
                             sendCodec->height,
+                            sendCodec->maxFramerate * 1000,
+                            sendCodec->resolution_divisor,
                             numLayers,
                             maxPayloadSize);
   return VCM_OK;
@@ -441,5 +444,11 @@ bool VideoSender::VideoSuspended() const {
   CriticalSectionScoped cs(_sendCritSect);
   return _mediaOpt.IsVideoSuspended();
 }
+
+void VideoSender::SetCPULoadState(CPULoadState state) {
+  CriticalSectionScoped cs(_sendCritSect);
+  _mediaOpt.SetCPULoadState(state);
+}
+
 }  // namespace vcm
 }  // namespace webrtc

@@ -20,6 +20,10 @@ EXPORTS += [
 ]
 
 if CONFIG['MOZ_WEBRTC']:
+    if CONFIG['OS_TARGET'] == 'WINNT':
+        DEFINES['WEBRTC_WIN'] = True
+    else:
+        DEFINES['WEBRTC_POSIX'] = True
     EXPORTS += ['AudioOutputObserver.h',
                 'MediaEngineRemoteVideoSource.h',
                 'MediaEngineWebRTC.h']

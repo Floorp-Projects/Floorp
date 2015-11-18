@@ -156,6 +156,7 @@ bool isInIgnoredNamespaceForImplicitCtor(const Decl *decl) {
          name == "__gnu_cxx" ||         // gnu C++ lib
          name == "boost" ||             // boost
          name == "webrtc" ||            // upstream webrtc
+         name == "rtc" ||               // upstream webrtc 'base' package
          name.substr(0, 4) == "icu_" || // icu
          name == "google" ||            // protobuf
          name == "google_breakpad" ||   // breakpad

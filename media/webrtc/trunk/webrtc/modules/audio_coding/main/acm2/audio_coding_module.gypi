@@ -10,12 +10,6 @@
   'variables': {
     'audio_coding_dependencies': [
       'CNG',
-      'G711',
-      'G722',
-      'iLBC',
-      'iSAC',
-      'iSACFix',
-      'PCM16B',
       'red',
       '<(webrtc_root)/common.gyp:webrtc_common',
       '<(webrtc_root)/common_audio/common_audio.gyp:common_audio',
@@ -26,6 +20,26 @@
       ['include_opus==1', {
         'audio_coding_dependencies': ['webrtc_opus',],
         'audio_coding_defines': ['WEBRTC_CODEC_OPUS',],
+      }],
+      ['include_g711==1', {
+        'audio_coding_dependencies': ['G711',],
+        'audio_coding_defines': ['WEBRTC_CODEC_G711',],
+      }],
+      ['include_g722==1', {
+        'audio_coding_dependencies': ['G722',],
+        'audio_coding_defines': ['WEBRTC_CODEC_G722',],
+      }],
+      ['include_ilbc==1', {
+        'audio_coding_dependencies': ['iLBC',],
+        'audio_coding_defines': ['WEBRTC_CODEC_ILBC',],
+      }],
+      ['include_isac==1', {
+        'audio_coding_dependencies': ['iSAC', 'iSACFix',],
+#        'audio_coding_defines': ['WEBRTC_CODEC_ISAC', 'WEBRTC_CODEC_ISACFX',],
+      }],
+      ['include_pcm16b==1', {
+        'audio_coding_dependencies': ['PCM16B',],
+        'audio_coding_defines': ['WEBRTC_CODEC_PCM16',],
       }],
     ],
   },

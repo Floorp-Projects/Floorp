@@ -29,6 +29,7 @@
 #include "webrtc/video_engine/include/vie_capture.h"
 #include "webrtc/video_engine/vie_defines.h"
 #include "webrtc/video_engine/vie_frame_provider_base.h"
+#include "webrtc/common.h"
 
 namespace webrtc {
 
@@ -186,6 +187,7 @@ class ViECapturer
   const rtc::scoped_ptr<RegistrableCpuOveruseMetricsObserver>
       cpu_overuse_metrics_observer_;
   rtc::scoped_ptr<OveruseFrameDetector> overuse_detector_;
+  const Config & config_;
 };
 
 }  // namespace webrtc

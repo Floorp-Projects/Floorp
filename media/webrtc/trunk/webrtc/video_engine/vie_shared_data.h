@@ -45,6 +45,9 @@ class ViESharedData {
   std::map<int, CpuOveruseObserver*>* overuse_observers() {
     return &overuse_observers_; }
 
+  CPULoadStateCallbackInvoker* load_manager() { return load_manager_; }
+  void set_load_manager(CPULoadStateCallbackInvoker* load_manager);
+
  private:
   const int number_cores_;
 
@@ -52,6 +55,8 @@ class ViESharedData {
   rtc::scoped_ptr<ViEInputManager> input_manager_;
   rtc::scoped_ptr<ViERenderManager> render_manager_;
   rtc::scoped_ptr<ProcessThread> module_process_thread_;
+  // Owned by PeerConnection, not ViEEngine
+  CPULoadStateCallbackInvoker* load_manager_;
   mutable int last_error_;
 
   std::map<int, CpuOveruseObserver*> overuse_observers_;

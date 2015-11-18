@@ -15,7 +15,9 @@
 #ifndef WEBRTC_AUDIO_DEVICE_AUDIO_DEVICE_UTILITY_ANDROID_H
 #define WEBRTC_AUDIO_DEVICE_AUDIO_DEVICE_UTILITY_ANDROID_H
 
+#if !defined(MOZ_WIDGET_GONK)
 #include <jni.h>
+#endif
 
 #include "webrtc/base/checks.h"
 #include "webrtc/modules/audio_device/audio_device_utility.h"

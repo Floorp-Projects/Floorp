@@ -35,6 +35,7 @@ VCMReceiver::VCMReceiver(VCMTiming* timing,
       timing_(timing),
       render_wait_event_(event_factory->CreateEvent()),
       state_(kPassive),
+      receiveState_(kReceiveStateInitial),
       max_video_delay_ms_(kMaxVideoDelayMs) {}
 
 VCMReceiver::~VCMReceiver() {
@@ -50,6 +51,7 @@ void VCMReceiver::Reset() {
     jitter_buffer_.Flush();
   }
   state_ = kReceiving;
+  receiveState_ = kReceiveStateInitial;
 }
 
 int32_t VCMReceiver::Initialize() {
@@ -115,8 +117,9 @@ VCMEncodedFrame* VCMReceiver::FrameForDecoding(uint16_t max_wait_time_ms,
   // Assume that render timing errors are due to changes in the video stream.
   if (next_render_time_ms < 0) {
     timing_error = true;
-  } else if (std::abs(next_render_time_ms - now_ms) > max_video_delay_ms_) {
-    int frame_delay = static_cast<int>(std::abs(next_render_time_ms - now_ms));
+  } else if (std::abs(static_cast<int>(next_render_time_ms - now_ms)) >
+             max_video_delay_ms_) {
+    int frame_delay = std::abs(static_cast<int>(next_render_time_ms - now_ms));
     LOG(LS_WARNING) << "A frame about to be decoded is out of the configured "
                     << "delay bounds (" << frame_delay << " > "
                     << max_video_delay_ms_
@@ -163,6 +166,7 @@ VCMEncodedFrame* VCMReceiver::FrameForDecoding(uint16_t max_wait_time_ms,
   frame->SetRenderTime(next_render_time_ms);
   TRACE_EVENT_ASYNC_STEP1("webrtc", "Video", frame->TimeStamp(),
                           "SetRenderTS", "render_time", next_render_time_ms);
+  UpdateReceiveState(*frame);
   if (!frame->Complete()) {
     // Update stats for incomplete frames.
     bool retransmitted = false;
@@ -236,6 +240,11 @@ VCMReceiverState VCMReceiver::State() const {
   return state_;
 }
 
+VideoReceiveState VCMReceiver::ReceiveState() const {
+  CriticalSectionScoped cs(crit_sect_);
+  return receiveState_;
+}
+
 void VCMReceiver::SetDecodeErrorMode(VCMDecodeErrorMode decode_error_mode) {
   jitter_buffer_.SetDecodeErrorMode(decode_error_mode);
 }
@@ -271,6 +280,18 @@ int VCMReceiver::RenderBufferSizeMs() {
   uint32_t render_start = timing_->RenderTimeMs(timestamp_start, now_ms);
   uint32_t render_end = timing_->RenderTimeMs(timestamp_end, now_ms);
   return render_end - render_start;
+}
+
+void VCMReceiver::UpdateReceiveState(const VCMEncodedFrame& frame) {
+  if (frame.Complete() && frame.FrameType() == kVideoFrameKey) {
+    receiveState_ = kReceiveStateNormal;
+    return;
+  }
+  if (frame.MissingFrame() || !frame.Complete()) {
+    // State is corrupted
+    receiveState_ = kReceiveStateWaitingKey;
+  }
+  // state continues
 }
 
 void VCMReceiver::RegisterStatsCallback(

@@ -10,6 +10,7 @@
 
 #include "webrtc/modules/interface/module_common_types.h"
 #include "webrtc/modules/video_coding/main/source/packet.h"
+#include "webrtc/modules/rtp_rtcp/source/rtp_format_h264.h"
 
 #include <assert.h>
 
@@ -104,6 +105,7 @@ void VCMPacket::CopyCodecSpecifics(const RTPVideoHeader& videoHeader) {
   }
   switch (videoHeader.codec) {
     case kRtpVideoVp8:
+    case kRtpVideoVp9:
       // Handle all packets within a frame as depending on the previous packet
       // TODO(holmer): This should be changed to make fragments independent
       // when the VP8 RTP receiver supports fragments.
@@ -116,12 +118,13 @@ void VCMPacket::CopyCodecSpecifics(const RTPVideoHeader& videoHeader) {
       else
         completeNALU = kNaluIncomplete;
 
-      codec = kVideoCodecVP8;
+      codec = videoHeader.codec == kRtpVideoVp8 ? kVideoCodecVP8 : kVideoCodecVP9;
       return;
     case kRtpVideoH264:
       isFirstPacket = videoHeader.isFirstPacket;
-      if (isFirstPacket)
+      if (isFirstPacket) {
         insertStartCode = true;
+      }
 
       if (videoHeader.codecHeader.H264.single_nalu) {
         completeNALU = kNaluComplete;
@@ -136,6 +139,14 @@ void VCMPacket::CopyCodecSpecifics(const RTPVideoHeader& videoHeader) {
       return;
     case kRtpVideoGeneric:
     case kRtpVideoNone:
+      if (isFirstPacket && markerBit)
+        completeNALU = kNaluComplete;
+      else if (isFirstPacket)
+        completeNALU = kNaluStart;
+      else if (markerBit)
+        completeNALU = kNaluEnd;
+      else
+        completeNALU = kNaluIncomplete;
       codec = kVideoCodecUnknown;
       return;
   }

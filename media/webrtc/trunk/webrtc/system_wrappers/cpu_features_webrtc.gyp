@@ -7,8 +7,11 @@
 # be found in the AUTHORS file in the root of the source tree.
 
 {
+  'variables': {
+    'include_ndk_cpu_features%': 0,
+  },
   'conditions': [
-    ['OS=="android"', {
+    ['OS=="android" or moz_widget_toolkit_gonk==1', {
       'targets': [
         {
           'target_name': 'cpu_features_android',
@@ -16,8 +19,17 @@
           'sources': [
             'source/cpu_features_android.c',
           ],
-          'includes': [
-            '../../build/android/cpufeatures.gypi',
+          'conditions': [
+            ['include_ndk_cpu_features==1', {
+               'includes': [
+                  '../../build/android/cpufeatures.gypi',
+               ],
+            }, {
+              'sources': [
+                'source/droid-cpu-features.c',
+                'source/droid-cpu-features.h',
+              ],
+            }],
           ],
         },
       ],

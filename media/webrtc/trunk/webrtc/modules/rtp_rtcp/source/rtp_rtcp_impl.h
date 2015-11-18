@@ -157,6 +157,12 @@ class ModuleRtpRtcpImpl : public RtpRtcp {
               int64_t* min_rtt,
               int64_t* max_rtt) const override;
 
+  virtual int32_t GetReportBlockInfo(const uint32_t remote_ssrc,
+                                     uint32_t* ntp_high,
+                                     uint32_t* ntp_low,
+                                     uint32_t* packets_received,
+                                     uint64_t* octets_received) const override;
+
   // Force a send of an RTCP packet.
   // Normal SR and RR are triggered via the process function.
   int32_t SendRTCP(uint32_t rtcp_packet_type = kRtcpReport) override;
@@ -305,7 +311,10 @@ class ModuleRtpRtcpImpl : public RtpRtcp {
                    uint32_t* fec_rate,
                    uint32_t* nackRate) const override;
 
-  int64_t SendTimeOfSendReport(uint32_t send_report);
+  bool GetSendReportMetadata(const uint32_t send_report,
+                             uint64_t *time_of_send,
+                             uint32_t *packet_count,
+                             uint64_t *octet_count);
 
   bool SendTimeOfXrRrReport(uint32_t mid_ntp, int64_t* time_ms) const;
 

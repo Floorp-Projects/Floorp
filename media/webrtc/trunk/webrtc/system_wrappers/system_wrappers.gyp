@@ -114,7 +114,12 @@
         }, {
           'sources!': [ 'source/data_log.cc', ],
         },],
-        ['OS=="android"', {
+        ['build_with_mozilla', {
+          'sources': [
+            'source/metrics_default.cc',
+          ],
+        }],
+        ['OS=="android" or moz_widget_toolkit_gonk==1', {
           'defines': [
             'WEBRTC_THREAD_RR',
             # TODO(leozwang): Investigate CLOCK_REALTIME and CLOCK_MONOTONIC
@@ -133,6 +138,11 @@
                 'cpu_features_webrtc.gyp:cpu_features_android',
               ],
             }],
+          ],
+          'sources!': [
+            # Android doesn't have these in <=2.2
+            'rw_lock_posix.cc',
+            'rw_lock_posix.h',
           ],
           'link_settings': {
             'libraries': [
