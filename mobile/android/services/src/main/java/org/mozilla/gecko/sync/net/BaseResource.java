@@ -493,6 +493,10 @@ public class BaseResource implements Resource {
     put(jsonEntity(jsonObject));
   }
 
+  public void put(ExtendedJSONObject o) {
+    put(jsonEntity(o));
+  }
+
   public void post(ExtendedJSONObject o) {
     post(jsonEntity(o));
   }
