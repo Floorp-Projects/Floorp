@@ -1520,10 +1520,7 @@ function checkOutputForInputs(hud, inputTests) {
     container.addEventListener("TabOpen", entry._onTabOpen, true);
 
     body.scrollIntoView();
-
-    if (!entry.suppressClick) {
-      EventUtils.synthesizeMouse(body, 2, 2, {}, hud.iframeWindow);
-    }
+    EventUtils.synthesizeMouse(body, 2, 2, {}, hud.iframeWindow);
 
     if (entry.inspectable) {
       info("message body tagName '" + body.tagName + "' className '" +
