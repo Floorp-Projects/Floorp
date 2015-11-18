@@ -323,6 +323,18 @@ public:
   typedef nsTArray<nsCOMPtr<nsIWeakReference>> WeakDocumentList;
   nsClassHashtable<nsCStringHashKey, WeakDocumentList> mRegisteringDocuments;
 
+  // Track all intercepted navigation channels for a given scope.  Channels are
+  // placed in the appropriate list before dispatch the FetchEvent to the worker
+  // thread and removed once FetchEvent processing dispatches back to the main
+  // thread.
+  //
+  // Note: Its safe to use weak references here because a RAII-style callback
+  //       is registered with the channel before its added to this list.  We
+  //       are guaranteed the callback will fire before and remove the ref
+  //       from this list before the channel is destroyed.
+  typedef nsTArray<nsIInterceptedChannel*> InterceptionList;
+  nsClassHashtable<nsCStringHashKey, InterceptionList> mNavigationInterceptions;
+
   bool
   IsAvailable(const OriginAttributes& aOriginAttributes, nsIURI* aURI);
 
@@ -602,6 +614,16 @@ private:
 
   void
   AddRegisteringDocument(const nsACString& aScope, nsIDocument* aDoc);
+
+  class InterceptionReleaseHandle;
+
+  void
+  AddNavigationInterception(const nsACString& aScope,
+                            nsIInterceptedChannel* aChannel);
+
+  void
+  RemoveNavigationInterception(const nsACString& aScope,
+                               nsIInterceptedChannel* aChannel);
 
   RefPtr<ServiceWorkerManagerChild> mActor;
 
