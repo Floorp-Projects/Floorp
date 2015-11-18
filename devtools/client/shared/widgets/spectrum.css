@@ -28,13 +28,16 @@
 
 .spectrum-slider-control {
   cursor: pointer;
-  border: 1px solid black;
-  background: white;
-  opacity: .7;
+  box-shadow: 0 0 2px rgba(0,0,0,.6);
+  background: #fff;
+  border-radius: 10px;
+  opacity: .8;
 }
 
 .spectrum-box {
-  border: solid 1px #333;
+  border: 1px solid rgba(0,0,0,0.2);
+  border-radius: 2px;
+  background-clip: content-box;
 }
 
 /* Elements */
@@ -141,7 +144,7 @@ http://www.briangrinstead.com/blog/keep-aspect-ratio-with-html-and-css */
   height: 8px;
   width: 8px;
   border: 1px solid white;
-  background: black;
+  box-shadow: 0 0 2px rgba(0,0,0,.6);
 }
 
 .spectrum-slider {
