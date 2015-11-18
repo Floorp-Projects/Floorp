@@ -120,7 +120,7 @@ XPCOMUtils.defineConstant(this, "ROOM_CREATE", ROOM_CREATE);
 XPCOMUtils.defineConstant(this, "ROOM_DELETE", ROOM_DELETE);
 XPCOMUtils.defineConstant(this, "ROOM_CONTEXT_ADD", ROOM_CONTEXT_ADD);
 
-XPCOMUtils.defineLazyModuleGetter(this, "injectLoopAPI",
+XPCOMUtils.defineLazyModuleGetter(this, "LoopAPI",
   "resource:///modules/loop/MozLoopAPI.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "convertToRTCStatsReport",
@@ -146,6 +146,9 @@ XPCOMUtils.defineLazyModuleGetter(this, "HawkClient",
 
 XPCOMUtils.defineLazyModuleGetter(this, "deriveHawkCredentials",
                                   "resource://services-common/hawkrequest.js");
+
+XPCOMUtils.defineLazyModuleGetter(this, "hookWindowCloseForPanelClose",
+                                  "resource://gre/modules/MozSocialAPI.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "LoopRooms",
                                   "resource:///modules/loop/LoopRooms.jsm");
@@ -945,6 +948,12 @@ var MozLoopServiceInternal = {
             chatbox = ref && ref.get() || chatbox;
           } else if (eventName == "Loop:ChatWindowClosed") {
             windowCloseCallback();
+            if (conversationWindowData.type == "room") {
+              // NOTE: if you add something here, please also consider if something
+              //       needs to be done on the content side as well (e.g.
+              //       activeRoomStore#windowUnload).
+              LoopRooms.leave(conversationWindowData.roomToken);
+            }
           }
         }
 
@@ -977,7 +986,8 @@ var MozLoopServiceInternal = {
         window.addEventListener("LoopChatMessageAppended", onChatEvent);
         window.addEventListener("LoopChatDisabledMessageAppended", onChatEvent);
 
-        injectLoopAPI(window);
+        // Handle window.close correctly on the chatbox.
+        hookWindowCloseForPanelClose(window);
 
         let ourID = window.QueryInterface(Ci.nsIInterfaceRequestor)
             .getInterface(Ci.nsIDOMWindowUtils).currentInnerWindowID;
@@ -1022,6 +1032,7 @@ var MozLoopServiceInternal = {
       chatbox.addEventListener("DOMContentLoaded", loaded, true);
     };
 
+    LoopAPI.initialize();
     let chatboxInstance = Chat.open(null, origin, "", url, undefined, undefined,
                                     callback);
     if (!chatboxInstance) {
@@ -1436,12 +1447,16 @@ this.MozLoopService = {
   /**
    * Returns the strings for the specified element. Designed for use with l10n.js.
    *
-   * @param {key} The element id to get strings for.
+   * @param {key} The element id to get strings for. Optional, returns the whole
+   *              map of strings when omitted.
    * @return {String} A JSON string containing the localized attribute/value pairs
    *                  for the element.
    */
   getStrings: function(key) {
     var stringData = MozLoopServiceInternal.localizedStrings;
+    if (!key) {
+      return stringData;
+    }
     if (!stringData.has(key)) {
       log.error("No string found for key: ", key);
       return "";
@@ -1487,8 +1502,10 @@ this.MozLoopService = {
    * @return {Object}
    */
   get userProfile() {
-    return getJSONPref("loop.fxa_oauth.tokendata") &&
-           getJSONPref("loop.fxa_oauth.profile");
+    let profile = getJSONPref("loop.fxa_oauth.tokendata") &&
+      getJSONPref("loop.fxa_oauth.profile");
+
+    return profile;
   },
 
   /**
