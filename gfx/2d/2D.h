@@ -1236,7 +1236,7 @@ public:
 
   static uint32_t GetMaxSurfaceSize(BackendType aType);
 
-  static LogForwarder* GetLogForwarder() { return sConfig->mLogForwarder; }
+  static LogForwarder* GetLogForwarder() { return sConfig ? sConfig->mLogForwarder : nullptr; }
 
 private:
   static Config* sConfig;
