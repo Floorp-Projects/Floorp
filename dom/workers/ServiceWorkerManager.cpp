@@ -1492,6 +1492,8 @@ ServiceWorkerManager::Register(nsIDOMWindow* aWindow,
     return rv;
   }
 
+  AddRegisteringDocument(cleanedScope, doc);
+
   ServiceWorkerJobQueue* queue = GetOrCreateJobQueue(originSuffix, cleanedScope);
   MOZ_ASSERT(queue);
 
@@ -2328,7 +2330,9 @@ ServiceWorkerManager::ReportToAllClients(const nsCString& aScope,
     return;
   }
 
-  // Report errors to the consoles of every controlled document
+  nsAutoTArray<uint64_t, 16> windows;
+
+  // Report errors to every controlled document.
   for (auto iter = mControlledDocuments.Iter(); !iter.Done(); iter.Next()) {
     ServiceWorkerRegistrationInfo* reg = iter.UserData();
     MOZ_ASSERT(reg);
@@ -2341,6 +2345,8 @@ ServiceWorkerManager::ReportToAllClients(const nsCString& aScope,
       continue;
     }
 
+    windows.AppendElement(doc->InnerWindowID());
+
     nsContentUtils::ReportToConsoleNonLocalized(aMessage,
                                                 aFlags,
                                                 NS_LITERAL_CSTRING("Service Workers"),
@@ -2349,6 +2355,49 @@ ServiceWorkerManager::ReportToAllClients(const nsCString& aScope,
                                                 aLine,
                                                 aLineNumber,
                                                 aColumnNumber);
+  }
+
+  // Report to any documents that have called .register() for this scope.  They
+  // may not be controlled, but will still want to see error reports.
+  WeakDocumentList* list = mRegisteringDocuments.Get(aScope);
+  if (list) {
+    for (int32_t i = list->Length() - 1; i >= 0; --i) {
+      nsCOMPtr<nsIDocument> doc = do_QueryReferent(list->ElementAt(i));
+      if (!doc) {
+        list->RemoveElementAt(i);
+        continue;
+      }
+
+      uint64_t innerWindowId = doc->InnerWindowID();
+      if (windows.Contains(innerWindowId)) {
+        continue;
+      }
+
+      windows.AppendElement(innerWindowId);
+
+      nsContentUtils::ReportToConsoleNonLocalized(aMessage,
+                                                  aFlags,
+                                                  NS_LITERAL_CSTRING("Service Workers"),
+                                                  doc,
+                                                  uri,
+                                                  aLine,
+                                                  aLineNumber,
+                                                  aColumnNumber);
+    }
+  }
+
+  // If there are no documents to report to, at least report something to the
+  // browser console.
+  if (windows.IsEmpty()) {
+    nsContentUtils::ReportToConsoleNonLocalized(aMessage,
+                                                aFlags,
+                                                NS_LITERAL_CSTRING("Service Workers"),
+                                                nullptr,  // document
+                                                uri,
+                                                aLine,
+                                                aLineNumber,
+                                                aColumnNumber);
+    return;
   }
 }
 
@@ -3899,6 +3948,31 @@ GetAllRegistrationsPerPrincipalEnumerator(const nsACString& aKey,
 }
 
 } // namespace
+
+void
+ServiceWorkerManager::AddRegisteringDocument(const nsACString& aScope,
+                                             nsIDocument* aDoc)
+{
+  AssertIsOnMainThread();
+  MOZ_ASSERT(!aScope.IsEmpty());
+  MOZ_ASSERT(aDoc);
+
+  WeakDocumentList* list = mRegisteringDocuments.LookupOrAdd(aScope);
+  MOZ_ASSERT(list);
+
+  for (int32_t i = list->Length() - 1; i >= 0; --i) {
+    nsCOMPtr<nsIDocument> existing = do_QueryReferent(list->ElementAt(i));
+    if (!existing) {
+      list->RemoveElementAt(i);
+      continue;
+    }
+    if (existing == aDoc) {
+      return;
+    }
+  }
+
+  list->AppendElement(do_GetWeakReference(aDoc));
+}
 
 NS_IMPL_ISUPPORTS(ServiceWorkerDataInfo, nsIServiceWorkerInfo)
 
