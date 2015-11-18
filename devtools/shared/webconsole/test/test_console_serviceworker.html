@@ -14,16 +14,40 @@
 <script class="testbody" type="text/javascript;version=1.8">
 SimpleTest.waitForExplicitFinish();
 
-let SERVICE_WORKER_URL = "https://example.com/chrome/devtools/shared/webconsole/test/helper_serviceworker.js";
-let FRAME_URL = "https://example.com/chrome/devtools/shared/webconsole/test/sandboxed_iframe.html";
+let BASE_URL = "https://example.com/chrome/devtools/shared/webconsole/test/";
+let SERVICE_WORKER_URL = BASE_URL + "helper_serviceworker.js";
+let SCOPE = BASE_URL + "foo/";
+let NONSCOPE_FRAME_URL = BASE_URL + "sandboxed_iframe.html";
+let SCOPE_FRAME_URL = SCOPE + "fake.html";
+let SCOPE_FRAME_URL2 = SCOPE + "whatsit.html";
+let MESSAGE = 'Tic Tock';
 
-let swClosed = new Promise(() => {});
 let expectedConsoleCalls = [
     {
       level: "log",
       filename: /helper_serviceworker/,
-      arguments: ["Hello from serviceworker"],
-    }
+      arguments: ['script evaluation'],
+    },
+    {
+      level: "log",
+      filename: /helper_serviceworker/,
+      arguments: ['install event'],
+    },
+    {
+      level: "log",
+      filename: /helper_serviceworker/,
+      arguments: ['activate event'],
+    },
+    {
+      level: "log",
+      filename: /helper_serviceworker/,
+      arguments: ['fetch event: ' + SCOPE_FRAME_URL],
+    },
+    {
+      level: "log",
+      filename: /helper_serviceworker/,
+      arguments: ['fetch event: ' + SCOPE_FRAME_URL2],
+    },
 ];
 let consoleCalls = [];
 
@@ -40,55 +64,160 @@ let startTest = Task.async(function*() {
 });
 addEventListener("load", startTest);
 
-function onAttach(state, response) {
-  onConsoleAPICall = onConsoleAPICall.bind(null, state);
-  state.dbgClient.addListener("consoleAPICall", onConsoleAPICall);
-
-  info("Loading a ServiceWorker that will use console API");
-  swClosed = new Promise(resolve => {
+function withFrame(url) {
+  return new Promise(resolve => {
     let iframe = document.createElement("iframe");
     iframe.onload = function() {
-      let win = iframe.contentWindow;
-      info("Registering the service worker");
-      win.navigator.serviceWorker.register(SERVICE_WORKER_URL).then(swr => {
-
-        info("Service worker registered.  Unregistering");
-        swr.unregister().then(() => {
-          resolve();
-        });
-      }, error => {
-        info("Error registering service worker: " + error);
-      });
+      resolve(iframe);
     };
-    iframe.src = FRAME_URL;
-
+    iframe.src = url;
     document.body.appendChild(iframe);
   });
 }
 
+function navigateFrame(iframe, url) {
+  return new Promise(resolve => {
+    iframe.onload = function() {
+      resolve(iframe);
+    };
+    iframe.src = url;
+  });
+}
+
+function forceReloadFrame(iframe) {
+  return new Promise(resolve => {
+    iframe.onload = function() {
+      resolve(iframe);
+    };
+    iframe.contentWindow.location.reload(true);
+  });
+}
+
+function withActiveServiceWorker(win, url, scope) {
+  return win.navigator.serviceWorker.register(url, { scope: scope }).then(swr => {
+    if (swr.active) {
+      return swr;
+    }
+
+    // Unfortunately we can't just use navigator.serviceWorker.ready promise
+    // here.  If the service worker is for a scope that does not cover the window
+    // then the ready promise will never resolve.  Instead monitor the service
+    // workers state change events to determine when its activated.
+    return new Promise(resolve => {
+      let sw = swr.waiting || swr.installing;
+      sw.addEventListener('statechange', function stateHandler(evt) {
+        if (sw.state === 'activated') {
+          sw.removeEventListener('statechange', stateHandler);
+          resolve(swr);
+        }
+      });
+    });
+  });
+}
+
+function messageServiceWorker(win, scope, message) {
+  return win.navigator.serviceWorker.getRegistration(scope).then(swr => {
+    return new Promise(resolve => {
+      win.navigator.serviceWorker.onmessage = evt => {
+        resolve();
+      };
+      let sw = swr.active || swr.waiting || swr.installing;
+      sw.postMessage({ type: 'PING', message: message });
+    });
+  })
+}
+
+function unregisterServiceWorker(win) {
+  return win.navigator.serviceWorker.ready.then(swr => {
+    return swr.unregister();
+  });
+}
+
+let onAttach = Task.async(function*(state, response) {
+  onConsoleAPICall = onConsoleAPICall.bind(null, state);
+  state.dbgClient.addListener("consoleAPICall", onConsoleAPICall);
+
+  let currentFrame;
+  try {
+    // First, we need a frame from which to register our script.  This
+    // will not trigger any console calls.
+    info("Loading a non-scope frame from which to register a service worker.");
+    currentFrame = yield withFrame(NONSCOPE_FRAME_URL);
+
+    // Now register the service worker and wait for it to become
+    // activate.  This should trigger 3 console calls; 1 for script
+    // evaluation, 1 for the install event, and 1 for the activate
+    // event.  These console calls are received because we called
+    // register(), not because we are in scope for the worker.
+    info("Registering the service worker");
+    yield withActiveServiceWorker(currentFrame.contentWindow,
+                                  SERVICE_WORKER_URL, SCOPE);
+    ok(!currentFrame.contentWindow.navigator.serviceWorker.controller,
+       'current frame should not be controlled');
+
+    // Now that the service worker is activate, lets navigate our frame.
+    // This will trigger 1 more console call for the fetch event.
+    info("Service worker registered. Navigating frame.");
+    yield navigateFrame(currentFrame, SCOPE_FRAME_URL);
+    ok(currentFrame.contentWindow.navigator.serviceWorker.controller,
+       'navigated frame should be controlled');
+
+    // We now have a controlled frame.  Lets perform a non-navigation fetch.
+    // This should produce another console call for the fetch event.
+    info("Frame navigated.  Calling fetch().");
+    yield currentFrame.contentWindow.fetch(SCOPE_FRAME_URL2);
+
+    // Now force refresh our controlled frame.  This will cause the frame
+    // to bypass the service worker and become an uncontrolled frame.  It
+    // also happens to make the frame display a 404 message because the URL
+    // does not resolve to a real resource.  This is ok, as we really only
+    // care about the frame being non-controlled, but still having a location
+    // that matches our service worker scope so we can provide its not
+    // incorrectly getting console calls.
+    info("Completed fetch().  Force refreshing to get uncontrolled frame.");
+    yield forceReloadFrame(currentFrame);
+    ok(!currentFrame.contentWindow.navigator.serviceWorker.controller,
+       'current frame should not be controlled after force refresh');
+    is(currentFrame.contentWindow.location.toString(), SCOPE_FRAME_URL,
+       'current frame should still have in-scope location URL even though it got 404');
+
+    // Now postMessage() the service worker to trigger its message event
+    // handler.  This will generate 1 or 2 to console.log() statements
+    // depending on if the worker thread needs to spin up again.  In either
+    // case, though, we should not get any console calls because we don't
+    // have a controlled or registering document.
+    info("Completed force refresh.  Messaging service worker.");
+    yield messageServiceWorker(currentFrame.contentWindow, SCOPE, MESSAGE);
+
+    info("Done messaging service worker.  Unregistering service worker.");
+    yield unregisterServiceWorker(currentFrame.contentWindow);
+
+    info('Service worker unregistered.  Checking console calls.');
+    state.dbgClient.removeListener("consoleAPICall", onConsoleAPICall);
+    is(consoleCalls.length, expectedConsoleCalls.length,
+       'received correct number of console calls');
+    expectedConsoleCalls.forEach(function(aMessage, aIndex) {
+      info("checking received console call #" + aIndex);
+      checkConsoleAPICall(consoleCalls[aIndex], expectedConsoleCalls[aIndex]);
+    });
+  } catch(error) {
+    ok(false, 'unexpected error: ' + error);
+  } finally {
+    if (currentFrame) {
+      currentFrame.remove();
+      currentFrame = null;
+    }
+    consoleCalls = [];
+    closeDebugger(state, function() {
+      SimpleTest.finish();
+    });
+  }
+});
+
 function onConsoleAPICall(state, type, packet) {
   info("received message level: " + packet.message.level);
   is(packet.from, state.actor, "console API call actor");
-
   consoleCalls.push(packet.message);
-  if (consoleCalls.length != expectedConsoleCalls.length) {
-    return;
-  }
-
-  state.dbgClient.removeListener("consoleAPICall", onConsoleAPICall);
-
-  expectedConsoleCalls.forEach(function(aMessage, aIndex) {
-    info("checking received console call #" + aIndex);
-    checkConsoleAPICall(consoleCalls[aIndex], expectedConsoleCalls[aIndex]);
-  });
-
-  consoleCalls = [];
-
-  closeDebugger(state, function() {
-    swClosed.then(() => {
-      SimpleTest.finish();
-    });
-  });
 }
 </script>
 </body>
