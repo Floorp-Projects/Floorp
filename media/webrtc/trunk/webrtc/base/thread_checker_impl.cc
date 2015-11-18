@@ -18,6 +18,14 @@
 #include <sys/syscall.h>
 #endif
 
+#if defined(__NetBSD__)
+#include <lwp.h>
+#elif defined(__FreeBSD__)
+#include <sys/param.h>
+#include <sys/thr.h>
+#include <pthread_np.h>
+#endif
+
 namespace rtc {
 
 PlatformThreadId CurrentThreadId() {
