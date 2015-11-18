@@ -121,7 +121,7 @@ extensions.registerAPI((extension, context) => {
 
       getAll: function(callback) {
         let alarms = alarmsMap.get(extension);
-        result = [ for (alarm of alarms) alarm.data ];
+        result = alarms.map(alarm => alarm.data);
         runSafe(context, callback, result);
       },
 

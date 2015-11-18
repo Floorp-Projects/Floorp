@@ -64,6 +64,12 @@ function runSafe(context, f, ...args)
   return runSafeWithoutClone(f, ...args);
 }
 
+// Return true if the given value is an instance of the given
+// native type.
+function instanceOf(value, type) {
+  return {}.toString.call(value) == `[object ${type}]`;
+}
+
 // Extend the object |obj| with the property descriptors of each object in
 // |args|.
 function extend(obj, ...args) {
@@ -634,4 +640,5 @@ this.ExtensionUtils = {
   Messenger,
   extend,
   flushJarCache,
+  instanceOf,
 };

@@ -1,0 +1,121 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for WebExtension localization APIs</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="application/javascript;version=1.8">
+
+add_task(function* test_i18n() {
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      "default_locale": "jp",
+    },
+
+    files: {
+      "_locales/en_US/messages.json": {
+        "foo": {
+          "message": "Foo.",
+          "description": "foo",
+        },
+
+        "basic_substitutions": {
+          "message": "'$0' '$14' '$1' '$5' '$$$$$' '$$'.",
+          "description": "foo",
+        },
+
+        "Named_placeholder_substitutions": {
+          "message": "$Foo$\n$2\n$bad name$\n$bad_value$\n$bad_content_value$\n$foo",
+          "description": "foo",
+          "placeholders": {
+            "foO": {
+              "content": "_foo_ $1 _bar_",
+              "description": "foo",
+            },
+
+            "bad name": {
+              "content": "Nope.",
+              "description": "bad name",
+            },
+
+            "bad_value": "Nope.",
+
+            "bad_content_value": {
+              "content": ["Accepted, but shouldn't break."],
+              "description": "bad value",
+            },
+          },
+        },
+
+        "broken_placeholders": {
+          "message": "$broken$",
+          "description": "broken placeholders",
+          "placeholders": "foo.",
+        },
+      },
+
+      "_locales/jp/messages.json": {
+        "foo": {
+          "message": "(foo)",
+          "description": "foo",
+        },
+
+        "bar": {
+          "message": "(bar)",
+          "description": "bar",
+        },
+      },
+    },
+
+    background: "new " + function() {
+      let _ = browser.i18n.getMessage.bind(browser.i18n);
+
+      browser.test.assertEq("Foo.", _("Foo"), "Simple message in selected locale.");
+
+      browser.test.assertEq("(bar)", _("bar"), "Simple message fallback in default locale.");
+
+      let substitutions = [];
+      substitutions[4] = "5";
+      substitutions[13] = "14";
+
+      browser.test.assertEq("'$0' '14' '' '5' '$$$$' '$'.",
+                            _("basic_substitutions", substitutions),
+                            "Basic numeric substitutions");
+
+      browser.test.assertEq("'$0' '' 'just a string' '' '$$$$' '$'.",
+                            _("basic_substitutions", "just a string"),
+                            "Basic numeric substitutions, with non-array value");
+
+      let values = _("named_placeholder_substitutions", ["(subst $1 $2)", "(2 $1 $2)"]).split("\n");
+
+      browser.test.assertEq("_foo_ (subst $1 $2) _bar_", values[0], "Named and numeric substitution");
+
+      browser.test.assertEq("(2 $1 $2)", values[1], "Numeric substitution amid named placeholders");
+
+      browser.test.assertEq("$bad name$", values[2], "Named placeholder with invalid key");
+
+      browser.test.assertEq("", values[3], "Named placeholder with an invalid value");
+
+      browser.test.assertEq("Accepted, but shouldn't break.", values[4], "Named placeholder with a strange content value");
+
+      browser.test.assertEq("$foo", values[5], "Non-placeholder token that should be ignored");
+
+      browser.test.notifyPass("l10n");
+    },
+  });
+
+  yield extension.startup();
+  yield extension.awaitFinish("l10n");
+  yield extension.unload();
+});
+
+</script>
+
+</body>
+</html>

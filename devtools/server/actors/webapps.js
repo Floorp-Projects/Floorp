@@ -275,6 +275,8 @@ WebappsActor.prototype = {
     aApp.localId = (aId in reg.webapps) ? reg.webapps[aId].localId
                                         : reg._nextLocalId();
     aApp.sideloaded = true;
+    aApp.enabled = true;
+    aApp.blockedStatus = Ci.nsIBlocklistService.STATE_NOT_BLOCKED;
 
     reg.webapps[aId] = aApp;
     reg.updatePermissionsForApp(aId);

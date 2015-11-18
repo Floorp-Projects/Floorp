@@ -1,5 +1,6 @@
 var { classes: Cc, interfaces: Ci, utils: Cu } = Components;
 
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "AppConstants",
                                   "resource://gre/modules/AppConstants.jsm");
 
