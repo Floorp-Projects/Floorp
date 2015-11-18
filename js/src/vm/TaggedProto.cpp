@@ -10,6 +10,8 @@
 #include "jsobj.h"
 
 #include "gc/Barrier.h"
+#include "gc/Zone.h"
+#include "js/HashTable.h"
 
 namespace js {
 
@@ -28,4 +30,32 @@ InternalGCMethods<TaggedProto>::postBarrier(TaggedProto* vp, TaggedProto prev, T
                                               nextObj);
 }
 
+/* static */ void
+InternalGCMethods<TaggedProto>::readBarrier(const TaggedProto& proto)
+{
+    InternalGCMethods<JSObject*>::readBarrier(proto.toObjectOrNull());
+}
+
 } // namespace js
+
+js::HashNumber
+js::TaggedProto::hashCode() const
+{
+    uint64_t uid = uniqueId();
+    return js::HashNumber(uid >> 32) ^ js::HashNumber(uid & 0xFFFFFFFF);
+}
+
+uint64_t
+js::TaggedProto::uniqueId() const
+{
+    if (isLazy())
+        return uint64_t(1);
+    JSObject* obj = toObjectOrNull();
+    if (!obj)
+        return uint64_t(0);
+    AutoEnterOOMUnsafeRegion oomUnsafe;
+    uint64_t uid;
+    if (!obj->zone()->getUniqueId(obj, &uid))
+        oomUnsafe.crash("failed to get unique id for TaggedProto");
+    return uid;
+}

@@ -227,7 +227,7 @@ PDMFactory::CreateDecoderWithPDM(PlatformDecoderModule* aPDM,
 }
 
 bool
-PDMFactory::SupportsMimeType(const nsACString& aMimeType)
+PDMFactory::SupportsMimeType(const nsACString& aMimeType) const
 {
   if (mEMEPDM) {
     return mEMEPDM->SupportsMimeType(aMimeType);
@@ -305,7 +305,7 @@ PDMFactory::StartupPDM(PlatformDecoderModule* aPDM)
 }
 
 already_AddRefed<PlatformDecoderModule>
-PDMFactory::GetDecoder(const nsACString& aMimeType)
+PDMFactory::GetDecoder(const nsACString& aMimeType) const
 {
   RefPtr<PlatformDecoderModule> pdm;
   for (auto& current : mCurrentPDMs) {
