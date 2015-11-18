@@ -1571,6 +1571,7 @@ var UI = {
     let banner = iQ("<div>")
       .text(notificationText)
       .addClass("banner")
+      .css({background: 'linear-gradient(#ffe13e, #ffc703)', color: 'rgba(0,0,0,0.95)'})
       .append(button)
       .appendTo("body");
 
