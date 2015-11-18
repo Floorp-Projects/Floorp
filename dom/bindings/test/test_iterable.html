@@ -50,6 +50,9 @@
        info("IterableSingle: Testing simple iterable creation and functionality");
        itr = new TestInterfaceIterableSingle();
        testExistence("IterableSingle: ", itr, base_properties);
+       var keys = [...itr.keys()];
+       var values = [...itr.values()];
+       var entries = [...itr.entries()];
        var key_itr = itr.keys();
        var value_itr = itr.values();
        var entries_itr = itr.entries();
@@ -58,9 +61,17 @@
          var value = value_itr.next();
          var entry = entries_itr.next();
          is(key.value, i, "IterableSingle: Key iterator value should be " + i);
+         is(key.value, keys[i],
+            "IterableSingle: Key iterator value should match destructuring " + i);
          is(value.value, key.value, "IterableSingle: Value iterator value should be " + key.value);
+         is(value.value, values[i],
+            "IterableSingle: Value iterator value should match destructuring " + i);
          is(entry.value[0], i, "IterableSingle: Entry iterator value 0 should be " + i);
          is(entry.value[1], i, "IterableSingle: Entry iterator value 1 should be " + i);
+         is(entry.value[0], entries[i][0],
+            "IterableSingle: Entry iterator value 0 should match destructuring " + i);
+         is(entry.value[1], entries[i][1],
+            "IterableSingle: Entry iterator value 1 should match destructuring " + i);
        }
        var key = key_itr.next();
        var value = value_itr.next();
@@ -80,6 +91,9 @@
        itr = new TestInterfaceIterableDouble();
        testExistence("IterableDouble: ", itr, base_properties);
        var elements = [["a", "b"], ["c", "d"], ["e", "f"]]
+       var keys = [...itr.keys()];
+       var values = [...itr.values()];
+       var entries = [...itr.entries()];
        var key_itr = itr.keys();
        var value_itr = itr.values();
        var entries_itr = itr.entries();
@@ -88,9 +102,17 @@
          var value = value_itr.next();
          var entry = entries_itr.next();
          is(key.value, elements[i][0], "IterableDouble: Key iterator value should be " + elements[i][0]);
+         is(key.value, keys[i],
+            "IterableDouble: Key iterator value should match destructuring " + i);
          is(value.value, elements[i][1], "IterableDouble: Value iterator value should be " + elements[i][1]);
+         is(value.value, values[i],
+            "IterableDouble: Value iterator value should match destructuring " + i);
          is(entry.value[0], elements[i][0], "IterableDouble: Entry iterator value 0 should be " + elements[i][0]);
          is(entry.value[1], elements[i][1], "IterableDouble: Entry iterator value 1 should be " + elements[i][1]);
+         is(entry.value[0], entries[i][0],
+            "IterableDouble: Entry iterator value 0 should match destructuring " + i);
+         is(entry.value[1], entries[i][1],
+            "IterableDouble: Entry iterator value 1 should match destructuring " + i);
        }
        var key = key_itr.next();
        var value = value_itr.next();

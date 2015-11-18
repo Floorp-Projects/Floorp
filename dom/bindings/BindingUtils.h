@@ -3310,6 +3310,13 @@ GetErrorPrototype(JSContext* aCx, JS::Handle<JSObject*> aForObj)
   return JS_GetErrorPrototype(aCx);
 }
 
+inline
+JSObject*
+GetIteratorPrototype(JSContext* aCx, JS::Handle<JSObject*> aForObj)
+{
+  return JS_GetIteratorPrototype(aCx);
+}
+
 // Resolve an id on the given global object that wants to be included in
 // Exposed=System webidl annotations.  False return value means exception
 // thrown.
