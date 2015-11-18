@@ -1,24 +1,42 @@
 ---
 $inherits:
-  from: 'tasks/tests/b2g_unittest_base.yml'
+  from: 'tasks/test.yml'
 task:
   metadata:
     name: '[TC] Mulet Mochitests ( {{chunk}} )'
     description: Mulet Mochitest run {{chunk}}
+  scopes:
+    - 'docker-worker:cache:tc-vcs'
+    - 'docker-worker:cache:linux-cache'
+    - 'docker-worker:capability:device:loopbackVideo'
+    - 'docker-worker:capability:device:loopbackAudio'
   payload:
+    image: '{{#docker_image}}desktop-test{{/docker_image}}'
+    cache:
+      # So pip installs are cached...
+      linux-cache: /home/worker/.cache
+      tc-vcs: '/home/worker/.tc-vcs'
+    capabilities:
+      devices:
+        loopbackVideo: true
+        loopbackAudio: true
+    env:
+      NEED_XVFB: true
+      NEED_PULSEAUDIO: true
+      MOZHARNESS_SCRIPT: 'mozharness/scripts/desktop_unittest.py'
+      MOZHARNESS_CONFIG: >
+        mozharness/configs/unittests/linux_unittest.py
+        mozharness/configs/remove_executables.py
     command:
-      - entrypoint # entrypoint ensures we are running in xvfb
-      - >
-        python ./mozharness/scripts/desktop_unittest.py
-        --no-read-buildbot-config
-        --config-file ./mozharness/configs/unittests/linux_unittest.py
-        --config-file ./mozharness_configs/remove_executables.py
-        --installer-url {{build_url}}
-        --test-packages-url {{test_packages_url}}
-        --download-symbols ondemand
-        --mochitest-suite plain-chunked
-        --total-chunk={{total_chunks}}
-        --this-chunk={{chunk}}
+      - bash
+      - /home/worker/bin/test.sh
+      - --no-read-buildbot-config
+      - --installer-url={{build_url}}
+      - --test-packages-url={{test_packages_url}}
+      - --download-symbols=ondemand
+      - --mochitest-suite=plain-chunked
+      - --total-chunk={{total_chunks}}
+      - --this-chunk={{chunk}}
     artifacts:
       'public/build':
         type: directory
