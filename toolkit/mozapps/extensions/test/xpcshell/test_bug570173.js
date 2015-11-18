@@ -7,7 +7,6 @@
 // The test extension uses an insecure update url.
 Services.prefs.setBoolPref("extensions.checkUpdateSecurity", false);
 
-Components.utils.import("resource://testing-common/httpd.js");
 var testserver;
 const profileDir = gProfD.clone();
 profileDir.append("extensions");
