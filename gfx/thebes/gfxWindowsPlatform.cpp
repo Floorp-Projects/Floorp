@@ -2209,14 +2209,14 @@ gfxWindowsPlatform::ContentAdapterIsParentAdapter(ID3D11Device* device)
     return false;
   }
 
-  const DxgiDesc& parent = GetParentDevicePrefs().dxgiDesc();
-  if (desc.VendorId != parent.vendorID() ||
-      desc.DeviceId != parent.deviceID() ||
-      desc.SubSysId != parent.subSysID() ||
-      desc.AdapterLuid.HighPart != parent.luid().HighPart() ||
-      desc.AdapterLuid.LowPart != parent.luid().LowPart())
+  const DxgiAdapterDesc& parent = GetParentDevicePrefs().adapter();
+  if (desc.VendorId != parent.VendorId ||
+      desc.DeviceId != parent.DeviceId ||
+      desc.SubSysId != parent.SubSysId ||
+      desc.AdapterLuid.HighPart != parent.AdapterLuid.HighPart ||
+      desc.AdapterLuid.LowPart != parent.AdapterLuid.LowPart)
   {
-    gfxCriticalNote << "VendorIDMismatch " << hexa(parent.vendorID()) << " " << hexa(desc.VendorId);
+    gfxCriticalNote << "VendorIDMismatch " << hexa(parent.VendorId) << " " << hexa(desc.VendorId);
     return false;
   }
 
@@ -3027,11 +3027,6 @@ gfxWindowsPlatform::GetDeviceInitData(DeviceInitData* aOut)
     if (!GetDxgiDesc(mD3D11Device, &desc)) {
       return;
     }
-
-    aOut->dxgiDesc().vendorID() = desc.VendorId;
-    aOut->dxgiDesc().deviceID() = desc.DeviceId;
-    aOut->dxgiDesc().subSysID() = desc.SubSysId;
-    aOut->dxgiDesc().luid().LowPart() = desc.AdapterLuid.LowPart;
-    aOut->dxgiDesc().luid().HighPart() = desc.AdapterLuid.HighPart;
+    aOut->adapter() = DxgiAdapterDesc::From(desc);
   }
 }
