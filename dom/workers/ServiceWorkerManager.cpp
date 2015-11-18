@@ -8,6 +8,7 @@
 
 #include "mozIApplication.h"
 #include "nsIAppsService.h"
+#include "nsIConsoleService.h"
 #include "nsIDOMEventTarget.h"
 #include "nsIDocument.h"
 #include "nsIScriptSecurityManager.h"
@@ -18,9 +19,11 @@
 #include "nsIJARChannel.h"
 #include "nsINetworkInterceptController.h"
 #include "nsIMutableArray.h"
+#include "nsIScriptError.h"
 #include "nsIUploadChannel2.h"
 #include "nsPIDOMWindow.h"
 #include "nsScriptLoader.h"
+#include "nsServiceManagerUtils.h"
 #include "nsDebug.h"
 
 #include "jsapi.h"
@@ -2332,12 +2335,12 @@ ServiceWorkerManager::ReportToAllClients(const nsCString& aScope,
 
   // Report to any documents that have called .register() for this scope.  They
   // may not be controlled, but will still want to see error reports.
-  WeakDocumentList* list = mRegisteringDocuments.Get(aScope);
-  if (list) {
-    for (int32_t i = list->Length() - 1; i >= 0; --i) {
-      nsCOMPtr<nsIDocument> doc = do_QueryReferent(list->ElementAt(i));
+  WeakDocumentList* regList = mRegisteringDocuments.Get(aScope);
+  if (regList) {
+    for (int32_t i = regList->Length() - 1; i >= 0; --i) {
+      nsCOMPtr<nsIDocument> doc = do_QueryReferent(regList->ElementAt(i));
       if (!doc) {
-        list->RemoveElementAt(i);
+        regList->RemoveElementAt(i);
         continue;
       }
 
@@ -2356,6 +2359,57 @@ ServiceWorkerManager::ReportToAllClients(const nsCString& aScope,
                                                   aLine,
                                                   aLineNumber,
                                                   aColumnNumber);
+    }
+  }
+
+  InterceptionList* intList = mNavigationInterceptions.Get(aScope);
+  if (intList) {
+    nsIConsoleService* consoleService = nullptr;
+    for (uint32_t i = 0; i < intList->Length(); ++i) {
+      nsCOMPtr<nsIInterceptedChannel> channel = intList->ElementAt(i);
+
+      nsCOMPtr<nsIChannel> inner;
+      rv = channel->GetChannel(getter_AddRefs(inner));
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        continue;
+      }
+
+      uint64_t innerWindowId = nsContentUtils::GetInnerWindowID(inner);
+      if (innerWindowId == 0 || windows.Contains(innerWindowId)) {
+        continue;
+      }
+
+      windows.AppendElement(innerWindowId);
+
+      // Unfortunately the nsContentUtils helpers don't provide a convenient
+      // way to log to a window ID without a document.  Use console service
+      // directly.
+      nsCOMPtr<nsIScriptError> errorObject =
+        do_CreateInstance(NS_SCRIPTERROR_CONTRACTID, &rv);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return;
+      }
+
+      rv = errorObject->InitWithWindowID(aMessage,
+                                         aFilename,
+                                         aLine,
+                                         aLineNumber,
+                                         aColumnNumber,
+                                         aFlags,
+                                         NS_LITERAL_CSTRING("Service Workers"),
+                                         innerWindowId);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return;
+      }
+
+      if (!consoleService) {
+        rv = CallGetService(NS_CONSOLESERVICE_CONTRACTID, &consoleService);
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return;
+        }
+      }
+
+      consoleService->LogMessage(errorObject);
     }
   }
 
