@@ -57,21 +57,15 @@ TabSources.prototype = {
    * Update preferences and clear out existing sources
    */
   reconfigure: function(options) {
-    let shouldReset = false;
-
     if ('useSourceMaps' in options) {
-      shouldReset = true;
       this._useSourceMaps = options.useSourceMaps;
     }
 
     if ('autoBlackBox' in options) {
-      shouldReset = true;
       this._autoBlackBox = options.autoBlackBox;
     }
 
-    if(shouldReset) {
-      this.reset();
-    }
+    this.reset();
   },
 
   /**
@@ -393,8 +387,7 @@ TabSources.prototype = {
     let result = this._fetchSourceMap(sourceMapURL, aSource.url);
 
     // The promises in `_sourceMaps` must be the exact same instances
-    // as returned by `_fetchSourceMap` for `clearSourceMapCache` to
-    // work.
+    // as returned by `_fetchSourceMap` for `clearSourceMapCache` to work.
     this._sourceMaps.set(aSource, result);
     return result;
   },
