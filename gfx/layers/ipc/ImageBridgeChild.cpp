@@ -262,6 +262,8 @@ static void ConnectImageBridge(ImageBridgeChild * child, ImageBridgeParent * par
 ImageBridgeChild::ImageBridgeChild()
   : mShuttingDown(false)
 {
+  MOZ_COUNT_CTOR(ImageBridgeChild);
+
   MOZ_ASSERT(NS_IsMainThread());
 
   // Always run destructor on the main thread
@@ -274,6 +276,8 @@ ImageBridgeChild::~ImageBridgeChild()
   MOZ_ASSERT(NS_IsMainThread());
 
   delete mTxn;
+
+  MOZ_COUNT_DTOR(ImageBridgeChild);
 }
 
 void
