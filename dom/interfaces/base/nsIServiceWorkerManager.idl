@@ -34,7 +34,7 @@ interface nsIServiceWorkerInfo : nsISupports
   readonly attribute DOMString waitingCacheName;
 };
 
-[scriptable, builtinclass, uuid(8fb9db4f-1d04-402b-9c37-542da06e03b9)]
+[scriptable, builtinclass, uuid(c945e2e6-30c2-48e6-a282-e69de0c7ebb1)]
 interface nsIServiceWorkerManager : nsISupports
 {
   /**
@@ -147,6 +147,8 @@ interface nsIServiceWorkerManager : nsISupports
                                        in ACString scope);
 
   void updateAllRegistrations();
+
+  bool shouldReportToWindow(in nsIDOMWindow aWindow, in ACString aScope);
 };
 
 %{ C++
