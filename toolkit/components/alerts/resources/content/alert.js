@@ -140,6 +140,10 @@ function onAlertLoad() {
     alertBox.setAttribute("animate", true);
   }
 
+  let alertSettings = document.getElementById("alertSettings");
+  alertSettings.addEventListener("focus", onAlertSettingsFocus);
+  alertSettings.addEventListener("click", onAlertSettingsClick);
+
   let ev = new CustomEvent("AlertActive", {bubbles: true, cancelable: true});
   document.documentElement.dispatchEvent(ev);
 
@@ -253,6 +257,18 @@ function doNotDisturb() {
 function disableForOrigin() {
   gAlertListener.observe(null, "alertdisablecallback", gAlertCookie);
   onAlertClose();
+}
+
+function onAlertSettingsFocus(event) {
+  event.target.removeAttribute("focusedViaMouse");
+}
+
+function onAlertSettingsClick(event) {
+  // XXXjaws Hack used to remove the focus-ring only
+  // from mouse interaction, but focus-ring drawing
+  // should only be enabled when interacting via keyboard.
+  event.target.setAttribute("focusedViaMouse", true);
+  event.stopPropagation();
 }
 
 function openSettings() {
