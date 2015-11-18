@@ -587,6 +587,8 @@ def InterfacePrototypeObjectProtoGetter(descriptor):
             protoGetter = "JS_GetArrayPrototype"
         elif descriptor.interface.getExtendedAttribute("ExceptionClass"):
             protoGetter = "GetErrorPrototype"
+        elif descriptor.interface.isIteratorInterface():
+            protoGetter = "GetIteratorPrototype"
         else:
             protoGetter = "JS_GetObjectPrototype"
         protoHandleGetter = None
@@ -2264,6 +2266,22 @@ class MethodDefiner(PropertyDefiner):
                 "selfHostedName": "ArrayValues",
                 "length": 0,
                 "flags": "JSPROP_ENUMERATE",
+                "condition": MemberCondition(None, None)
+            })
+
+        # Output an @@iterator for generated iterator interfaces.  This should
+        # not be necessary, but
+        # https://bugzilla.mozilla.org/show_bug.cgi?id=1091945 means that
+        # %IteratorPrototype%[@@iterator] is a broken puppy.
+        if (not static and
+            not unforgeable and
+            descriptor.interface.isIteratorInterface()):
+            self.regular.append({
+                "name": "@@iterator",
+                "methodInfo": False,
+                "selfHostedName": "IteratorIdentity",
+                "length": 0,
+                "flags": "0",
                 "condition": MemberCondition(None, None)
             })
 
