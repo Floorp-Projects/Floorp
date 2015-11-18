@@ -1,18 +1,55 @@
 var test = `
 
-function testBuiltin(builtin, ...args) {
-    class inst extends builtin {
+function testBuiltinInstanceIsInstanceOf(instance, builtin, class_) {
+    assertEq(instance instanceof class_, true);
+    assertEq(instance instanceof builtin, true);
+
+    if (builtin === Array)
+        assertEq(Array.isArray(instance), true);
+}
+
+function testBuiltinInstance(builtin, ...args) {
+    class sub extends builtin {
         constructor(...args) {
             super(...args);
             this.called = true;
         }
     }
 
-    let instance = new inst(...args);
-    assertEq(instance instanceof inst, true);
-    assertEq(instance instanceof builtin, true);
+    let instance = new sub(...args);
     assertEq(instance.called, true);
-    return instance;
+    testBuiltinInstanceIsInstanceOf(instance, builtin, sub);
+}
+
+function testBuiltinMultipleSubclasses(builtin, ...args) {
+    function f(obj, prop) {
+        assertEq(obj.prop, prop);
+    }
+
+    class sub1 extends builtin { };
+    class sub2 extends builtin { };
+
+    const prop1 = "A";
+    const prop2 = "B";
+
+    sub1.prototype.prop = prop1;
+    sub2.prototype.prop = prop2;
+
+    let instance1 = new sub1(...args);
+    let instance2 = new sub2(...args);
+
+    // Also make sure we get the properties we want with a default constructor
+    testBuiltinInstanceIsInstanceOf(instance1, builtin, sub1);
+
+    for (let i = 0; i < 10; i++) {
+        f(instance1, prop1);
+        f(instance2, prop2);
+    }
+}
+
+function testBuiltin(builtin, ...args) {
+    testBuiltinInstance(builtin, ...args);
+    testBuiltinMultipleSubclasses(builtin, ...args);
 }
 
 function testBuiltinTypedArrays() {
@@ -31,21 +68,6 @@ function testBuiltinTypedArrays() {
         testBuiltin(array, 5);
         testBuiltin(array, new array());
         testBuiltin(array, new ArrayBuffer());
-    }
-}
-
-function testBuiltinArray() {
-    let argsLists = [
-        [],
-        [15],
-        [3.0],
-        ["non-length one-arg"],
-        [5, 10, 15, "these are elements"]
-    ];
-
-    for (let args of argsLists) {
-        let instance = testBuiltin(Array, ...args);
-        assertEq(Array.isArray(instance), true);
     }
 }
 
@@ -75,7 +97,11 @@ testBuiltinTypedArrays();
 testBuiltin(DataView, new ArrayBuffer());
 testBuiltin(DataView, new (newGlobal().ArrayBuffer)());
 testBuiltin(String);
-testBuiltinArray();
+testBuiltin(Array);
+testBuiltin(Array, 15);
+testBuiltin(Array, 3.0);
+testBuiltin(Array, "non-length one-arg");
+testBuiltin(Array, 5, 10, 15, "these are elements");
 
 `;
 
