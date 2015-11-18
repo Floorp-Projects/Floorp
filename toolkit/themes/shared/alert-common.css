@@ -86,6 +86,11 @@
   width: 255px;
 }
 
+#alertFooter {
+  -moz-box-align: end;
+  padding-bottom: 2px;
+}
+
 #alertSourceLabel {
   -moz-box-flex: 1;
   font-size: 83.334%;
@@ -96,18 +101,33 @@
   -moz-appearance: none;
   background-color: transparent;
   border-width: 0;
+  border-radius: 20px;
   min-width: 0;
   list-style-image: url("chrome://mozapps/skin/extensions/utilities.svg#utilities");
+  margin-inline-end: 0;
+  margin-bottom: 0;
+}
+
+#alertSettings > .button-box {
+  padding: 0;
+}
+
+#alertSettings:hover,
+#alertSettings[open] {
+  list-style-image: url("chrome://mozapps/skin/extensions/utilities.svg#utilities-inverted");
 }
 
 #alertSettings:hover {
-  background-color: rgba(107,107,107,.2);
-  border-radius: 20px;
+  background-color: rgb(128,128,128);
 }
 
 #alertSettings[open],
 #alertSettings:hover:active {
-  background-color: rgba(107,107,107,.4);
+  background-color: rgb(102,102,102);
+}
+
+#alertSettings[focusedViaMouse]:-moz-focusring > .button-box {
+  border-color: transparent;
 }
 
 #alertSettings > .button-box > .button-menu-dropmarker,
