@@ -1,0 +1,37 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Sanity test that we can compute dominator trees from a heap snapshot in a web window.
+-->
+<head>
+  <meta charset="utf-8">
+  <title>ChromeUtils.saveHeapSnapshot test</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+</head>
+<body>
+<pre id="test">
+<script>
+SimpleTest.waitForExplicitFinish();
+window.onload = function() {
+  const path = ChromeUtils.saveHeapSnapshot({ runtime: true });
+  const snapshot = ChromeUtils.readHeapSnapshot(path);
+
+  const dominatorTree = snapshot.computeDominatorTree();
+  ok(dominatorTree);
+  ok(dominatorTree instanceof DominatorTree);
+
+  let threw = false;
+  try {
+    new DominatorTree();
+  } catch (e) {
+    threw = true;
+  }
+  ok(threw, "Constructor shouldn't be usable");
+
+  SimpleTest.finish();
+};
+</script>
+</pre>
+</body>
+</html>

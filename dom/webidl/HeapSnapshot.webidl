@@ -56,4 +56,12 @@ interface HeapSnapshot {
    */
   [Throws]
   any takeCensus(object? options);
+
+  /**
+   * Compute the dominator tree for this heap snapshot.
+   *
+   * @see DominatorTree.webidl
+   */
+  [Throws]
+  DominatorTree computeDominatorTree();
 };
