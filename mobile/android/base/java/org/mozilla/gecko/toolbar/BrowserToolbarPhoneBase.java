@@ -127,24 +127,18 @@ abstract class BrowserToolbarPhoneBase extends BrowserToolbar {
     public void triggerTabsPanelTransition(final PropertyAnimator animator, final boolean areTabsShown) {
         if (areTabsShown) {
             ViewHelper.setAlpha(tabsCounter, 0.0f);
-            if (hasSoftMenuButton) {
-                ViewHelper.setAlpha(menuIcon, 0.0f);
-            }
+            ViewHelper.setAlpha(menuIcon, 0.0f);
             return;
         }
 
         final PropertyAnimator buttonsAnimator =
                 new PropertyAnimator(animator.getDuration(), buttonsInterpolator);
-
         buttonsAnimator.attach(tabsCounter,
                                PropertyAnimator.Property.ALPHA,
                                1.0f);
-        if (hasSoftMenuButton) {
-            buttonsAnimator.attach(menuIcon,
-                                   PropertyAnimator.Property.ALPHA,
-                                   1.0f);
-        }
-
+        buttonsAnimator.attach(menuIcon,
+                               PropertyAnimator.Property.ALPHA,
+                               1.0f);
         buttonsAnimator.start();
     }
 
