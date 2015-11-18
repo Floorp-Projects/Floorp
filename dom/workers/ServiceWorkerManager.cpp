@@ -554,45 +554,9 @@ public:
   }
 
   void
-  UpdateFailed(nsresult aStatus) override
+  UpdateFailed(ErrorResult& aStatus) override
   {
     mPromise->MaybeReject(aStatus);
-  }
-
-  void
-  UpdateFailed(JSExnType aExnType, const ErrorEventInit& aErrorDesc) override
-  {
-    AutoJSAPI jsapi;
-    jsapi.Init(mWindow);
-
-    JSContext* cx = jsapi.cx();
-
-    JS::Rooted<JS::Value> fnval(cx);
-    if (!ToJSValue(cx, aErrorDesc.mFilename, &fnval)) {
-      JS_ClearPendingException(cx);
-      mPromise->MaybeReject(NS_ERROR_DOM_ABORT_ERR);
-      return;
-    }
-    JS::Rooted<JSString*> fn(cx, fnval.toString());
-
-    JS::Rooted<JS::Value> msgval(cx);
-    if (!ToJSValue(cx, aErrorDesc.mMessage, &msgval)) {
-      JS_ClearPendingException(cx);
-      mPromise->MaybeReject(NS_ERROR_DOM_ABORT_ERR);
-      return;
-    }
-    JS::Rooted<JSString*> msg(cx, msgval.toString());
-
-    JS::Rooted<JS::Value> error(cx);
-    if ((aExnType < JSEXN_ERR) ||
-        !JS::CreateError(cx, aExnType, nullptr, fn, aErrorDesc.mLineno,
-                         aErrorDesc.mColno, nullptr, msg, &error)) {
-      JS_ClearPendingException(cx);
-      mPromise->MaybeReject(NS_ERROR_DOM_ABORT_ERR);
-      return;
-    }
-
-    mPromise->MaybeReject(cx, error);
   }
 };
 
@@ -933,16 +897,12 @@ public:
   {
     RefPtr<ServiceWorkerRegisterJob> kungFuDeathGrip = this;
     if (NS_WARN_IF(mCanceled)) {
-      Fail(NS_ERROR_DOM_TYPE_ERR);
+      Fail(NS_ERROR_DOM_ABORT_ERR);
       return;
     }
 
     if (NS_WARN_IF(NS_FAILED(aStatus))) {
-      if (aStatus == NS_ERROR_DOM_SECURITY_ERR) {
-        Fail(aStatus);
-      } else {
-        Fail(NS_ERROR_DOM_TYPE_ERR);
-      }
+      Fail(aStatus);
       return;
     }
 
@@ -1048,21 +1008,73 @@ public:
     Fail(NS_ERROR_DOM_ABORT_ERR);
   }
 
-  // Public so our error handling code can use it.
+  // This MUST only be called when the job is still performing actions related
+  // to registration or update. After the spec resolves the update promise, use
+  // Done() with the failure code instead.
   // Callers MUST hold a strong ref before calling this!
   void
-  Fail(JSExnType aExnType, const ErrorEventInit& aError)
+  Fail(ErrorResult& aRv)
   {
     MOZ_ASSERT(mCallback);
     RefPtr<ServiceWorkerUpdateFinishCallback> callback = mCallback.forget();
     // With cancellation support, we may only be running with one reference
     // from another object like a stream loader or something.
-    // UpdateFailed may do something with that, so hold a ref to ourself since
-    // FailCommon relies on it.
-    // FailCommon does check for cancellation, but let's be safe here.
     RefPtr<ServiceWorkerRegisterJob> kungFuDeathGrip = this;
-    callback->UpdateFailed(aExnType, aError);
-    FailCommon(NS_ERROR_DOM_JS_EXCEPTION);
+
+    // Save off the plain error code to pass to Done() where its logged to
+    // stderr as a warning.
+    nsresult origStatus = static_cast<nsresult>(aRv.ErrorCodeAsInt());
+
+    // Ensure that we only surface SecurityErr or TypeErr to script.
+    if (aRv.Failed() && !aRv.ErrorCodeIs(NS_ERROR_DOM_SECURITY_ERR) &&
+                        !aRv.ErrorCodeIs(NS_ERROR_DOM_TYPE_ERR)) {
+
+      // Remove the old error code so we can replace it with a TypeError.
+      aRv.SuppressException();
+
+      // Depending on how the job was created and where we are in the
+      // state machine the spec and scope may be stored in different ways.
+      // Extract the current scope and script spec.
+      nsString scriptSpec;
+      nsString scope;
+      if (mRegistration) {
+        CopyUTF8toUTF16(mRegistration->mScriptSpec, scriptSpec);
+        CopyUTF8toUTF16(mRegistration->mScope, scope);
+      } else {
+        CopyUTF8toUTF16(mScriptSpec, scriptSpec);
+        CopyUTF8toUTF16(mScope, scope);
+      }
+
+      // Throw the type error with a generic error message.
+      aRv.ThrowTypeError<MSG_SW_INSTALL_ERROR>(&scriptSpec, &scope);
+    }
+
+    callback->UpdateFailed(aRv);
+
+    // In case the callback does not consume the exception
+    aRv.SuppressException();
+
+    mUpdateAndInstallInfo = nullptr;
+    if (mRegistration->mInstallingWorker) {
+      nsresult rv = serviceWorkerScriptCache::PurgeCache(mRegistration->mPrincipal,
+                                                         mRegistration->mInstallingWorker->CacheName());
+      if (NS_FAILED(rv)) {
+        NS_WARNING("Failed to purge the installing worker cache.");
+      }
+    }
+
+    RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
+    swm->MaybeRemoveRegistration(mRegistration);
+    // Ensures that the job can't do anything useful from this point on.
+    mRegistration = nullptr;
+    Done(origStatus);
+  }
+
+  void
+  Fail(nsresult aRv)
+  {
+    ErrorResult rv(aRv);
+    Fail(rv);
   }
 
   // Public so our error handling code can continue with a successful worker.
@@ -1198,45 +1210,6 @@ private:
     MOZ_ASSERT(mCallback);
     mCallback->UpdateSucceeded(mRegistration);
     mCallback = nullptr;
-  }
-
-  void
-  FailCommon(nsresult aRv)
-  {
-    mUpdateAndInstallInfo = nullptr;
-    if (mRegistration->mInstallingWorker) {
-      nsresult rv = serviceWorkerScriptCache::PurgeCache(mRegistration->mPrincipal,
-                                                         mRegistration->mInstallingWorker->CacheName());
-      if (NS_FAILED(rv)) {
-        NS_WARNING("Failed to purge the installing worker cache.");
-      }
-    }
-
-    RefPtr<ServiceWorkerManager> swm = ServiceWorkerManager::GetInstance();
-    swm->MaybeRemoveRegistration(mRegistration);
-    // Ensures that the job can't do anything useful from this point on.
-    mRegistration = nullptr;
-    unused << NS_WARN_IF(NS_FAILED(aRv));
-    Done(aRv);
-  }
-
-  // This MUST only be called when the job is still performing actions related
-  // to registration or update. After the spec resolves the update promise, use
-  // Done() with the failure code instead.
-  // Callers MUST hold a strong ref before calling this!
-  void
-  Fail(nsresult aRv)
-  {
-    MOZ_ASSERT(mCallback);
-    RefPtr<ServiceWorkerUpdateFinishCallback> callback = mCallback.forget();
-    // With cancellation support, we may only be running with one reference
-    // from another object like a stream loader or something.
-    // UpdateFailed may do something with that, so hold a ref to ourself since
-    // FailCommon relies on it.
-    // FailCommon does check for cancellation, but let's be safe here.
-    RefPtr<ServiceWorkerRegisterJob> kungFuDeathGrip = this;
-    callback->UpdateFailed(aRv);
-    FailCommon(aRv);
   }
 
   void
@@ -2429,32 +2402,29 @@ ServiceWorkerManager::HandleError(JSContext* aCx,
   }
 
   // If this is a failure, we may need to cancel an in-progress registration.
-  if (!JSREPORT_IS_WARNING(aFlags)) {
-    ServiceWorkerJob* job = nullptr;
+  if (!JSREPORT_IS_WARNING(aFlags) &&
+      data->mSetOfScopesBeingUpdated.Contains(aScope)) {
 
-    if (data->mSetOfScopesBeingUpdated.Contains(aScope)) {
-      data->mSetOfScopesBeingUpdated.Remove(aScope);
+    data->mSetOfScopesBeingUpdated.Remove(aScope);
 
-      ServiceWorkerJobQueue* queue = data->mJobQueues.Get(aScope);
-      MOZ_ASSERT(queue);
-      job = queue->Peek();
-    }
+    ServiceWorkerJobQueue* queue = data->mJobQueues.Get(aScope);
+    MOZ_ASSERT(queue);
 
+    ServiceWorkerJob* job = queue->Peek();
     if (job) {
       MOZ_ASSERT(job->IsRegisterJob());
       RefPtr<ServiceWorkerRegisterJob> regJob =
         static_cast<ServiceWorkerRegisterJob*>(job);
 
-      RootedDictionary<ErrorEventInit> init(aCx);
-      init.mMessage = aMessage;
-      init.mFilename = aFilename;
-      init.mLineno = aLineNumber;
-      init.mColno = aColumnNumber;
-
-      regJob->Fail(aExnType, init);
+      ErrorResult rv;
+      NS_ConvertUTF8toUTF16 scope(aScope);
+      rv.ThrowTypeError<MSG_SW_SCRIPT_THREW>(&aWorkerURL, &scope);
+      regJob->Fail(rv);
     }
   }
 
+  // Always report any uncaught exceptions or errors to the console of
+  // each client.
   ReportToAllClients(aScope, aMessage, aFilename, aLine, aLineNumber,
                      aColumnNumber, aFlags);
 }
@@ -3361,6 +3331,23 @@ ServiceWorkerManager::SoftUpdate(const OriginAttributes& aOriginAttributes,
   SoftUpdate(scopeKey, aScope, aCallback);
 }
 
+namespace {
+
+// Empty callback.  Only use when you really want to ignore errors.
+class EmptyUpdateFinishCallback final : public ServiceWorkerUpdateFinishCallback
+{
+public:
+  void
+  UpdateSucceeded(ServiceWorkerRegistrationInfo* aInfo) override
+  { }
+
+  void
+  UpdateFailed(ErrorResult& aStatus) override
+  { }
+};
+
+} // anonymous namespace
+
 void
 ServiceWorkerManager::SoftUpdate(const nsACString& aScopeKey,
                                  const nsACString& aScope,
@@ -3399,7 +3386,7 @@ ServiceWorkerManager::SoftUpdate(const nsACString& aScopeKey,
 
   RefPtr<ServiceWorkerUpdateFinishCallback> cb(aCallback);
   if (!cb) {
-    cb = new ServiceWorkerUpdateFinishCallback();
+    cb = new EmptyUpdateFinishCallback();
   }
 
   // "Invoke Update algorithm, or its equivalent, with client, registration as
