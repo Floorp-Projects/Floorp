@@ -428,6 +428,8 @@ private:
   // "discontinuity" in the stream. For example after a seek.
   bool mAudioDiscontinuity;
   bool mVideoDiscontinuity;
+
+  MediaEventListener mDataArrivedListener;
 };
 
 } // namespace mozilla
