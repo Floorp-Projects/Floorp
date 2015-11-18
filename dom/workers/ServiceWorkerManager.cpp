@@ -2360,6 +2360,12 @@ ServiceWorkerManager::ReportToAllClients(const nsCString& aScope,
                                                   aLineNumber,
                                                   aColumnNumber);
     }
+
+    if (regList->IsEmpty()) {
+      regList = nullptr;
+      nsAutoPtr<WeakDocumentList> doomed;
+      mRegisteringDocuments.RemoveAndForget(aScope, doomed);
+    }
   }
 
   InterceptionList* intList = mNavigationInterceptions.Get(aScope);
