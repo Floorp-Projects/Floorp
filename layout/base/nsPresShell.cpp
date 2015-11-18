@@ -5316,6 +5316,9 @@ nsresult PresShell::SetResolutionImpl(float aResolution, bool aScaleToResolution
   state.mResolution = aResolution;
   SetRenderingState(state);
   mScaleToResolution = aScaleToResolution;
+  if (mMobileViewportManager) {
+    mMobileViewportManager->ResolutionUpdated();
+  }
 
   return NS_OK;
 }
