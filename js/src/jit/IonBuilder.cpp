@@ -10888,6 +10888,11 @@ IonBuilder::jsop_getprop(PropertyName* name)
     if (!getPropTryCache(&emitted, obj, name, barrier, types) || emitted)
         return emitted;
 
+    // Try to emit a shared stub.
+    trackOptimizationAttempt(TrackedStrategy::GetProp_SharedCache);
+    if (!getPropTrySharedStub(&emitted, obj) || emitted)
+        return emitted;
+
     // Emit a call.
     MCallGetProperty* call = MCallGetProperty::New(alloc(), obj, name);
     current->add(call);
@@ -11834,6 +11839,27 @@ IonBuilder::getPropTryCache(bool* emitted, MDefinition* obj, PropertyName* name,
         return false;
 
     trackOptimizationSuccess();
+    *emitted = true;
+    return true;
+}
+
+bool
+IonBuilder::getPropTrySharedStub(bool* emitted, MDefinition* obj)
+{
+    MOZ_ASSERT(*emitted == false);
+
+    // Try to emit a shared stub cache.
+
+    if (js_JitOptions.disableSharedStubs)
+        return true;
+
+    MInstruction* stub = MUnarySharedStub::New(alloc(), obj);
+    current->add(stub);
+    current->push(stub);
+
+    if (!resumeAfter(stub))
+        return false;
+
     *emitted = true;
     return true;
 }

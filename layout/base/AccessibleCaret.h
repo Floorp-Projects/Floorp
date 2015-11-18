@@ -37,6 +37,8 @@ namespace mozilla {
 // that SetPosition() works correctly, the caller must make sure the layout is
 // up to date.
 //
+// Please see the wiki page for more information.
+// https://wiki.mozilla.org/Copy_n_Paste
 class AccessibleCaret
 {
 public:

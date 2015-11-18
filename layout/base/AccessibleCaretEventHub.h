@@ -47,13 +47,18 @@ class WidgetTouchEvent;
 // transitions by giving events, callbacks, and the return values by mocked
 // methods of AccessibleCaretEventHub. See TestAccessibleCaretEventHub.cpp.
 //
-// Besides dealing with real events, AccessibleCaretEventHub also synthesizes
-// fake events such as scroll-end or long-tap providing APZ is not in use.
+// Besides dealing with real events, AccessibleCaretEventHub could also
+// synthesize fake long-tap events and inject those events to itself on the
+// platform lacks eMouseLongTap. Turn on this preference
+// "layout.accessiblecaret.use_long_tap_injector" for the fake long-tap events.
 //
 // State transition diagram:
 // http://hg.mozilla.org/mozilla-central/raw-file/default/layout/base/doc/AccessibleCaretEventHubStates.png
 // Source code of the diagram:
 // http://hg.mozilla.org/mozilla-central/file/default/layout/base/doc/AccessibleCaretEventHubStates.dot
+//
+// Please see the wiki page for more information.
+// https://wiki.mozilla.org/Copy_n_Paste
 //
 class AccessibleCaretEventHub : public nsIReflowObserver,
                                 public nsIScrollObserver,

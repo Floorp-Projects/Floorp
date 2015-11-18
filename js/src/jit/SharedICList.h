@@ -34,6 +34,26 @@ namespace jit {
     _(Compare_ObjectWithUndefined)               \
     _(Compare_Int32WithBoolean)                  \
                                                  \
+    _(GetProp_Fallback)                          \
+    _(GetProp_ArrayLength)                       \
+    _(GetProp_UnboxedArrayLength)                \
+    _(GetProp_Primitive)                         \
+    _(GetProp_StringLength)                      \
+    _(GetProp_Native)                            \
+    _(GetProp_NativeDoesNotExist)                \
+    _(GetProp_NativePrototype)                   \
+    _(GetProp_Unboxed)                           \
+    _(GetProp_TypedObject)                       \
+    _(GetProp_CallScripted)                      \
+    _(GetProp_CallNative)                        \
+    _(GetProp_CallNativeGlobal)                  \
+    _(GetProp_CallDOMProxyNative)                \
+    _(GetProp_CallDOMProxyWithGenerationNative)  \
+    _(GetProp_DOMProxyShadowed)                  \
+    _(GetProp_ArgumentsLength)                   \
+    _(GetProp_ArgumentsCallee)                   \
+    _(GetProp_Generic)                           \
+                                                 \
 
 } // namespace jit
 } // namespace js

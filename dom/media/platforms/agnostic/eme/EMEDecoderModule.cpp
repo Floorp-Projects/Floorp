@@ -303,7 +303,7 @@ EMEDecoderModule::DecoderNeedsConversion(const TrackInfo& aConfig) const
 }
 
 bool
-EMEDecoderModule::SupportsMimeType(const nsACString& aMimeType)
+EMEDecoderModule::SupportsMimeType(const nsACString& aMimeType) const
 {
   Maybe<nsCString> gmp;
   gmp.emplace(NS_ConvertUTF16toUTF8(mProxy->KeySystem()));
