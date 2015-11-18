@@ -160,7 +160,7 @@ interface nsIAsyncShutdownBarrier: nsISupports {
 /**
  * A service that allows registering shutdown-time dependencies.
  */
-[scriptable, uuid(8a9a0859-0404-4d50-9e76-10a4f56dfb51)]
+[scriptable, uuid(10f51032-dcc9-4732-bec0-c0b7d6596622)]
 interface nsIAsyncShutdownService: nsISupports {
   /**
    * Create a new barrier.
@@ -174,7 +174,8 @@ interface nsIAsyncShutdownService: nsISupports {
    */
   nsIAsyncShutdownBarrier makeBarrier(in AString aName);
 
-  // Barriers for global shutdown stages
+
+  // Barriers for global shutdown stages in the parent process.
 
   /**
    * Barrier for notification profile-before-change.
@@ -191,6 +192,12 @@ interface nsIAsyncShutdownService: nsISupports {
    */
   readonly attribute nsIAsyncShutdownClient sendTelemetry;
 
+  // Barriers for global shutdown stages in the content processes.
+
+  readonly attribute nsIAsyncShutdownClient contentChildShutdown;
+
+  // Barriers for global shutdown stages in all processes.
+
   /**
    * Barrier for notification web-workers-shutdown.
    */
@@ -200,6 +207,7 @@ interface nsIAsyncShutdownService: nsISupports {
    * Barrier for notification xpcom-threads-shutdown.
    */
   readonly attribute nsIAsyncShutdownClient xpcomThreadsShutdown;
+
 };
 
 %{C++
