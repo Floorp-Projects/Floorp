@@ -2,6 +2,7 @@ This source tree contains third party source code which is governed by third
 party licenses. Paths to the files and associated licenses are collected here.
 
 Files governed by third party licenses:
+common_audio/fft4g.c
 common_audio/signal_processing/spl_sqrt_floor.c
 common_audio/signal_processing/spl_sqrt_floor_arm.S
 modules/audio_coding/codecs/g711/main/source/g711.c
@@ -14,8 +15,6 @@ modules/audio_device/mac/portaudio/pa_memorybarrier.h
 modules/audio_device/mac/portaudio/pa_ringbuffer.c
 modules/audio_device/mac/portaudio/pa_ringbuffer.h
 modules/audio_processing/aec/aec_rdft.c
-modules/audio_processing/utility/fft4g.c
-system_wrappers/interface/scoped_ptr.h
 system_wrappers/source/condition_variable_event_win.cc
 system_wrappers/source/set_thread_name_win.h
 system_wrappers/source/spreadsortlib/constants.hpp
@@ -231,8 +230,8 @@ License:
  */
 -------------------------------------------------------------------------------
 Files:
+common_audio/fft4g.c
 modules/audio_processing/aec/aec_rdft.c
-modules/audio_processing/utility/fft4g.c
 
 License:
 /*
@@ -243,21 +242,6 @@ License:
  * commercial use) and without fee. Please refer to this package when you modify
  * this code.
  */
--------------------------------------------------------------------------------
-Files:
-system_wrappers/interface/scoped_ptr.h
-
-License:
-//  (C) Copyright Greg Colvin and Beman Dawes 1998, 1999.
-//  Copyright (c) 2001, 2002 Peter Dimov
-//
-//  Permission to copy, use, modify, sell and distribute this software
-//  is granted provided this copyright notice appears in all copies.
-//  This software is provided "as is" without express or implied
-//  warranty, and with no claim as to its suitability for any purpose.
-//
-//  See http://www.boost.org/libs/smart_ptr/scoped_ptr.htm for documentation.
-//
 -------------------------------------------------------------------------------
 Files:
 system_wrappers/source/condition_variable_event_win.cc

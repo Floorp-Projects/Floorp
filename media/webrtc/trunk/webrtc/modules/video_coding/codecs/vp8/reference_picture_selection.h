@@ -54,13 +54,11 @@ class ReferencePictureSelection {
 
   // Set the round-trip time between the sender and the receiver to |rtt|
   // milliseconds.
-  void SetRtt(int rtt);
+  void SetRtt(int64_t rtt);
 
  private:
-  static uint32_t TimestampDiff(uint32_t new_ts, uint32_t old_ts);
+  static int64_t TimestampDiff(uint32_t new_ts, uint32_t old_ts);
 
-  // The minimum time between reference frame updates.
-  enum { kMinUpdateInterval = 90 * 10 };  // Timestamp frequency
   const double kRttConfidence;
 
   bool update_golden_next_;
@@ -70,7 +68,7 @@ class ReferencePictureSelection {
   uint32_t last_sent_ref_update_time_;
   int established_ref_picture_id_;
   uint32_t last_refresh_time_;
-  uint32_t rtt_;
+  int64_t rtt_;
 };
 
 }  // namespace webrtc

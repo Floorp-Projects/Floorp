@@ -46,7 +46,7 @@ int PayloadSplitter::SplitRed(PacketList* packet_list) {
     //   +-+-+-+-+-+-+-+-+
 
     bool last_block = false;
-    int sum_length = 0;
+    size_t sum_length = 0;
     while (!last_block) {
       Packet* new_packet = new Packet;
       new_packet->header = red_packet->header;
@@ -82,7 +82,7 @@ int PayloadSplitter::SplitRed(PacketList* packet_list) {
     // |payload_ptr| now points at the first payload byte.
     PacketList::iterator new_it;
     for (new_it = new_packets.begin(); new_it != new_packets.end(); ++new_it) {
-      int payload_length = (*new_it)->payload_length;
+      size_t payload_length = (*new_it)->payload_length;
       if (payload_ptr + payload_length >
           red_packet->payload + red_packet->payload_length) {
         // The block lengths in the RED headers do not match the overall packet
@@ -151,8 +151,11 @@ int PayloadSplitter::SplitFec(PacketList* packet_list,
     switch (info->codec_type) {
       case kDecoderOpus:
       case kDecoderOpus_2ch: {
-        Packet* new_packet = new Packet;
+        // The main payload of this packet should be decoded as a primary
+        // payload, even if it comes as a secondary payload in a RED packet.
+        packet->primary = true;
 
+        Packet* new_packet = new Packet;
         new_packet->header = packet->header;
         int duration = decoder->
             PacketDurationRedundant(packet->payload, packet->payload_length);
@@ -291,11 +294,12 @@ int PayloadSplitter::SplitAudio(PacketList* packet_list,
         break;
       }
       case kDecoderILBC: {
-        int bytes_per_frame;
+        size_t bytes_per_frame;
         int timestamps_per_frame;
         if (packet->payload_length >= 950) {
           return kTooLargePayload;
-        } else if (packet->payload_length % 38 == 0) {
+        }
+        if (packet->payload_length % 38 == 0) {
           // 20 ms frames.
           bytes_per_frame = 38;
           timestamps_per_frame = 160;
@@ -345,28 +349,28 @@ int PayloadSplitter::SplitAudio(PacketList* packet_list,
 }
 
 void PayloadSplitter::SplitBySamples(const Packet* packet,
-                                     int bytes_per_ms,
-                                     int timestamps_per_ms,
+                                     size_t bytes_per_ms,
+                                     uint32_t timestamps_per_ms,
                                      PacketList* new_packets) {
   assert(packet);
   assert(new_packets);
 
-  int split_size_bytes = packet->payload_length;
+  size_t split_size_bytes = packet->payload_length;
 
   // Find a "chunk size" >= 20 ms and < 40 ms.
-  int min_chunk_size = bytes_per_ms * 20;
+  size_t min_chunk_size = bytes_per_ms * 20;
   // Reduce the split size by half as long as |split_size_bytes| is at least
   // twice the minimum chunk size (so that the resulting size is at least as
   // large as the minimum chunk size).
   while (split_size_bytes >= 2 * min_chunk_size) {
     split_size_bytes >>= 1;
   }
-  int timestamps_per_chunk =
-      split_size_bytes * timestamps_per_ms / bytes_per_ms;
+  uint32_t timestamps_per_chunk = static_cast<uint32_t>(
+      split_size_bytes * timestamps_per_ms / bytes_per_ms);
   uint32_t timestamp = packet->header.timestamp;
 
   uint8_t* payload_ptr = packet->payload;
-  int len = packet->payload_length;
+  size_t len = packet->payload_length;
   while (len >= (2 * split_size_bytes)) {
     Packet* new_packet = new Packet;
     new_packet->payload_length = split_size_bytes;
@@ -394,22 +398,21 @@ void PayloadSplitter::SplitBySamples(const Packet* packet,
 }
 
 int PayloadSplitter::SplitByFrames(const Packet* packet,
-                                   int bytes_per_frame,
-                                   int timestamps_per_frame,
+                                   size_t bytes_per_frame,
+                                   uint32_t timestamps_per_frame,
                                    PacketList* new_packets) {
   if (packet->payload_length % bytes_per_frame != 0) {
     return kFrameSplitError;
   }
 
-  int num_frames = packet->payload_length / bytes_per_frame;
-  if (num_frames == 1) {
+  if (packet->payload_length == bytes_per_frame) {
     // Special case. Do not split the payload.
     return kNoSplit;
   }
 
   uint32_t timestamp = packet->header.timestamp;
   uint8_t* payload_ptr = packet->payload;
-  int len = packet->payload_length;
+  size_t len = packet->payload_length;
   while (len > 0) {
     assert(len >= bytes_per_frame);
     Packet* new_packet = new Packet;

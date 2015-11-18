@@ -22,8 +22,6 @@
 #include "webrtc/video_engine/include/vie_errors.h"
 #include "webrtc/video_engine/vie_capturer.h"
 #include "webrtc/video_engine/vie_defines.h"
-#include "webrtc/video_engine/desktop_capture_impl.h"
-#include "webrtc/video_engine/browser_capture_impl.h"
 
 namespace webrtc {
 
@@ -57,10 +55,10 @@ void ViEInputManager::SetModuleProcessThread(
 
 int ViEInputManager::NumberOfCaptureDevices() {
   CriticalSectionScoped cs(device_info_cs_.get());
-  if (!GetDeviceInfo())
-    return 0;
+  if (capture_device_info_ == NULL)
+    capture_device_info_ = VideoCaptureFactory::CreateDeviceInfo(
+        ViEModuleId(engine_id_));
   assert(capture_device_info_);
-  capture_device_info_->Refresh();
   return capture_device_info_->NumberOfDevices();
 }
 
@@ -70,7 +68,9 @@ int ViEInputManager::GetDeviceName(uint32_t device_number,
                                    char* device_unique_idUTF8,
                                    uint32_t device_unique_idUTF8Length) {
   CriticalSectionScoped cs(device_info_cs_.get());
-  GetDeviceInfo();
+  if (capture_device_info_ == NULL)
+    capture_device_info_ = VideoCaptureFactory::CreateDeviceInfo(
+        ViEModuleId(engine_id_));
   assert(capture_device_info_);
   return capture_device_info_->GetDeviceName(device_number, device_nameUTF8,
                                              device_name_length,
@@ -81,8 +81,9 @@ int ViEInputManager::GetDeviceName(uint32_t device_number,
 int ViEInputManager::NumberOfCaptureCapabilities(
   const char* device_unique_idUTF8) {
   CriticalSectionScoped cs(device_info_cs_.get());
-  if (!GetDeviceInfo())
-    return 0;
+  if (capture_device_info_ == NULL)
+    capture_device_info_ = VideoCaptureFactory::CreateDeviceInfo(
+        ViEModuleId(engine_id_));
   assert(capture_device_info_);
   return capture_device_info_->NumberOfCapabilities(device_unique_idUTF8);
 }
@@ -92,7 +93,9 @@ int ViEInputManager::GetCaptureCapability(
     const uint32_t device_capability_number,
     CaptureCapability& capability) {
   CriticalSectionScoped cs(device_info_cs_.get());
-  GetDeviceInfo();
+  if (capture_device_info_ == NULL)
+    capture_device_info_ = VideoCaptureFactory::CreateDeviceInfo(
+        ViEModuleId(engine_id_));
   assert(capture_device_info_);
   VideoCaptureCapability module_capability;
   int result = capture_device_info_->GetCapability(device_unique_idUTF8,
@@ -113,29 +116,14 @@ int ViEInputManager::GetCaptureCapability(
 }
 
 int ViEInputManager::GetOrientation(const char* device_unique_idUTF8,
-                                    RotateCapturedFrame& orientation) {
+                                    VideoRotation& orientation) {
   CriticalSectionScoped cs(device_info_cs_.get());
-  GetDeviceInfo();
+  if (capture_device_info_ == NULL)
+    capture_device_info_ = VideoCaptureFactory::CreateDeviceInfo(
+        ViEModuleId(engine_id_));
   assert(capture_device_info_);
-  VideoCaptureRotation module_orientation;
-  int result = capture_device_info_->GetOrientation(device_unique_idUTF8,
-                                                    module_orientation);
-  // Copy from module type to public type.
-  switch (module_orientation) {
-    case kCameraRotate0:
-      orientation = RotateCapturedFrame_0;
-      break;
-    case kCameraRotate90:
-      orientation = RotateCapturedFrame_90;
-      break;
-    case kCameraRotate180:
-      orientation = RotateCapturedFrame_180;
-      break;
-    case kCameraRotate270:
-      orientation = RotateCapturedFrame_270;
-      break;
-  }
-  return result;
+  return capture_device_info_->GetOrientation(device_unique_idUTF8,
+                                              orientation);
 }
 
 int ViEInputManager::DisplayCaptureSettingsDialogBox(
@@ -145,7 +133,9 @@ int ViEInputManager::DisplayCaptureSettingsDialogBox(
     uint32_t positionX,
     uint32_t positionY) {
   CriticalSectionScoped cs(device_info_cs_.get());
-  GetDeviceInfo();
+  if (capture_device_info_ == NULL)
+    capture_device_info_ = VideoCaptureFactory::CreateDeviceInfo(
+        ViEModuleId(engine_id_));
   assert(capture_device_info_);
   return capture_device_info_->DisplayCaptureSettingsDialogBox(
            device_unique_idUTF8, dialog_titleUTF8, parent_window, positionX,
@@ -179,7 +169,9 @@ int ViEInputManager::CreateCaptureDevice(
   // Make sure the device name is valid.
   bool found_device = false;
   CriticalSectionScoped cs_devinfo(device_info_cs_.get());
-  GetDeviceInfo();
+  if (capture_device_info_ == NULL)
+    capture_device_info_ = VideoCaptureFactory::CreateDeviceInfo(
+        ViEModuleId(engine_id_));
   assert(capture_device_info_);
   for (uint32_t device_index = 0;
        device_index < capture_device_info_->NumberOfDevices(); ++device_index) {
@@ -259,12 +251,6 @@ int ViEInputManager::DestroyCaptureDevice(const int capture_id) {
     if (!vie_capture) {
       LOG(LS_ERROR) << "No such capture device id: " << capture_id;
       return -1;
-    }
-    uint32_t num_callbacks =
-        vie_capture->NumberOfRegisteredFrameCallbacks();
-    if (num_callbacks > 0) {
-      LOG(LS_WARNING) << num_callbacks << " still registered to capture id "
-                      << capture_id << " when destroying capture device.";
     }
     vie_frame_provider_map_.erase(capture_id);
     ReturnCaptureId(capture_id);
@@ -357,33 +343,6 @@ ViECapturer* ViEInputManager::ViECapturePtr(int capture_id) const {
   return static_cast<ViECapturer*>(ViEFrameProvider(capture_id));
 }
 
-// Create different DeviceInfo by _config;
-VideoCaptureModule::DeviceInfo* ViEInputManager::GetDeviceInfo() {
-  CaptureDeviceType type = config_.Get<CaptureDeviceInfo>().type;
-
-  if (capture_device_info_ == NULL) {
-    switch (type) {
-      case CaptureDeviceType::Screen:
-      case CaptureDeviceType::Application:
-      case CaptureDeviceType::Window:
-#if !defined(ANDROID) && !defined(WEBRTC_IOS)
-        capture_device_info_ = DesktopCaptureImpl::CreateDeviceInfo(ViEModuleId(engine_id_),
-                                                                    type);
-#endif
-        break;
-      case CaptureDeviceType::Browser:
-        capture_device_info_ = BrowserDeviceInfoImpl::CreateDeviceInfo();
-        break;
-      case CaptureDeviceType::Camera:
-        capture_device_info_ = VideoCaptureFactory::CreateDeviceInfo(ViEModuleId(engine_id_));
-        break;
-      default:
-        // Don't try to build anything for unknown/unsupported types
-        break;
-    }
-  }
-  return capture_device_info_;
-}
 ViEInputManagerScoped::ViEInputManagerScoped(
     const ViEInputManager& vie_input_manager)
     : ViEManagerScopedBase(vie_input_manager) {

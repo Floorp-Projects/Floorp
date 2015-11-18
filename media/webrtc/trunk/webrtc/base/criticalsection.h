@@ -15,7 +15,12 @@
 #include "webrtc/base/thread_annotations.h"
 
 #if defined(WEBRTC_WIN)
-#include "webrtc/base/win32.h"
+// Include winsock2.h before including <windows.h> to maintain consistency with
+// win32.h.  We can't include win32.h directly here since it pulls in
+// headers such as basictypes.h which causes problems in Chromium where webrtc
+// exists as two separate projects, webrtc and libjingle.
+#include <winsock2.h>
+#include <windows.h>
 #endif
 
 #if defined(WEBRTC_POSIX)
@@ -37,39 +42,27 @@ namespace rtc {
 #if defined(WEBRTC_WIN)
 class LOCKABLE CriticalSection {
  public:
-  CriticalSection() {
-    InitializeCriticalSection(&crit_);
-    // Windows docs say 0 is not a valid thread id
-    TRACK_OWNER(thread_ = 0);
-  }
-  ~CriticalSection() {
-    DeleteCriticalSection(&crit_);
-  }
+  CriticalSection() { InitializeCriticalSection(&crit_); }
+  ~CriticalSection() { DeleteCriticalSection(&crit_); }
   void Enter() EXCLUSIVE_LOCK_FUNCTION() {
     EnterCriticalSection(&crit_);
-    TRACK_OWNER(thread_ = GetCurrentThreadId());
   }
   bool TryEnter() EXCLUSIVE_TRYLOCK_FUNCTION(true) {
-    if (TryEnterCriticalSection(&crit_) != FALSE) {
-      TRACK_OWNER(thread_ = GetCurrentThreadId());
-      return true;
-    }
-    return false;
+    return TryEnterCriticalSection(&crit_) != FALSE;
   }
   void Leave() UNLOCK_FUNCTION() {
-    TRACK_OWNER(thread_ = 0);
     LeaveCriticalSection(&crit_);
   }
 
-#if CS_TRACK_OWNER
-  bool CurrentThreadIsOwner() const { return thread_ == GetCurrentThreadId(); }
-#endif  // CS_TRACK_OWNER
+  // Used for debugging.
+  bool CurrentThreadIsOwner() const {
+    return crit_.OwningThread == reinterpret_cast<HANDLE>(GetCurrentThreadId());
+  }
 
  private:
   CRITICAL_SECTION crit_;
-  TRACK_OWNER(DWORD thread_);  // The section's owning thread id
 };
-#endif // WEBRTC_WIN 
+#endif // WEBRTC_WIN
 
 #if defined(WEBRTC_POSIX)
 class LOCKABLE CriticalSection {
@@ -101,9 +94,14 @@ class LOCKABLE CriticalSection {
     pthread_mutex_unlock(&mutex_);
   }
 
+  // Used for debugging.
+  bool CurrentThreadIsOwner() const {
 #if CS_TRACK_OWNER
-  bool CurrentThreadIsOwner() const { return pthread_equal(thread_, pthread_self()); }
+    return pthread_equal(thread_, pthread_self());
+#else
+    return true;
 #endif  // CS_TRACK_OWNER
+  }
 
  private:
   pthread_mutex_t mutex_;
@@ -159,20 +157,59 @@ class AtomicOps {
  public:
 #if defined(WEBRTC_WIN)
   // Assumes sizeof(int) == sizeof(LONG), which it is on Win32 and Win64.
-  static int Increment(int* i) {
-    return ::InterlockedIncrement(reinterpret_cast<LONG*>(i));
+  static int Increment(volatile int* i) {
+    return ::InterlockedIncrement(reinterpret_cast<volatile LONG*>(i));
   }
-  static int Decrement(int* i) {
-    return ::InterlockedDecrement(reinterpret_cast<LONG*>(i));
+  static int Decrement(volatile int* i) {
+    return ::InterlockedDecrement(reinterpret_cast<volatile LONG*>(i));
+  }
+  static int Load(volatile const int* i) {
+    return *i;
+  }
+  static void Store(volatile int* i, int value) {
+    *i = value;
+  }
+  static int CompareAndSwap(volatile int* i, int old_value, int new_value) {
+    return ::InterlockedCompareExchange(reinterpret_cast<volatile LONG*>(i),
+                                        new_value,
+                                        old_value);
   }
 #else
-  static int Increment(int* i) {
+  static int Increment(volatile int* i) {
     return __sync_add_and_fetch(i, 1);
   }
-  static int Decrement(int* i) {
+  static int Decrement(volatile int* i) {
     return __sync_sub_and_fetch(i, 1);
   }
+  static int Load(volatile const int* i) {
+    // Adding 0 is a no-op, so const_cast is fine.
+    return __sync_add_and_fetch(const_cast<volatile int*>(i), 0);
+  }
+  static void Store(volatile int* i, int value) {
+    __sync_synchronize();
+    *i = value;
+  }
+  static int CompareAndSwap(volatile int* i, int old_value, int new_value) {
+    return __sync_val_compare_and_swap(i, old_value, new_value);
+  }
 #endif
+};
+
+
+// A POD lock used to protect global variables. Do NOT use for other purposes.
+// No custom constructor or private data member should be added.
+class LOCKABLE GlobalLockPod {
+ public:
+  void Lock() EXCLUSIVE_LOCK_FUNCTION();
+
+  void Unlock() UNLOCK_FUNCTION();
+
+  volatile int lock_acquired;
+};
+
+class GlobalLock : public GlobalLockPod {
+ public:
+  GlobalLock();
 };
 
 } // namespace rtc

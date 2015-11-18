@@ -97,12 +97,12 @@ class UdpTransportData {
   virtual ~UdpTransportData()  {};
 
   virtual void IncomingRTPPacket(const int8_t* incomingRtpPacket,
-                                 const int32_t rtpPacketLength,
+                                 const size_t rtpPacketLength,
                                  const char* fromIP,
                                  const uint16_t fromPort) = 0;
 
   virtual void IncomingRTCPPacket(const int8_t* incomingRtcpPacket,
-                                  const int32_t rtcpPacketLength,
+                                  const size_t rtcpPacketLength,
                                   const char* fromIP,
                                   const uint16_t fromPort) = 0;
 };
@@ -283,33 +283,33 @@ class UdpTransport : public Transport {
     // address as set with InitializeSendSockets(..) is used if ip is NULL.
     // If isRTCP is true the port used will be the RTCP port.
     virtual int32_t SendRaw(const int8_t* data,
-                            uint32_t length,
+                            size_t length,
                             int32_t isRTCP,
                             uint16_t portnr = 0,
                             const char* ip = NULL) = 0;
 
     // Send RTP data with size length to the address specified by to.
     virtual int32_t SendRTPPacketTo(const int8_t* data,
-                                    uint32_t length,
+                                    size_t length,
                                     const SocketAddress& to) = 0;
 
 
     // Send RTCP data with size length to the address specified by to.
     virtual int32_t SendRTCPPacketTo(const int8_t* data,
-                                     uint32_t length,
+                                     size_t length,
                                      const SocketAddress& to) = 0;
 
     // Send RTP data with size length to ip:rtpPort where ip is the ip set by
     // the InitializeSendSockets(..) call.
     virtual int32_t SendRTPPacketTo(const int8_t* data,
-                                    uint32_t length,
+                                    size_t length,
                                     uint16_t rtpPort) = 0;
 
 
     // Send RTCP data with size length to ip:rtcpPort where ip is the ip set by
     // the InitializeSendSockets(..) call.
     virtual int32_t SendRTCPPacketTo(const int8_t* data,
-                                     uint32_t length,
+                                     size_t length,
                                      uint16_t rtcpPort) = 0;
 
     // Set the IP address to which packets are sent to ipaddr.

@@ -73,12 +73,6 @@ static void LogCodec(const VideoCodec& codec) {
     LOG(LS_INFO) << "H264 specific settings";
     LOG(LS_INFO) << "profile: "
                  <<  codec.codecSpecific.H264.profile
-                 << ", constraints: "
-                 << codec.codecSpecific.H264.constraints
-                 << ", level: "
-                 << codec.codecSpecific.H264.level/10.0
-                 << ", packetizationMode: "
-                 << codec.codecSpecific.H264.packetizationMode
                  << ", framedropping: "
                  << codec.codecSpecific.H264.frameDroppingOn
                  << ", keyFrameInterval: "
@@ -87,8 +81,6 @@ static void LogCodec(const VideoCodec& codec) {
                  << codec.codecSpecific.H264.spsLen
                  << ", ppslen: "
                  << codec.codecSpecific.H264.ppsLen;
-  } else if (codec.codecType == kVideoCodecVP9) {
-    LOG(LS_INFO) << "VP9 specific settings";
   }
 }
 
@@ -189,22 +181,21 @@ int ViECodecImpl::SetSendCodec(const int video_channel,
     LOG(LS_INFO) << "New max bitrate set " << video_codec_internal.maxBitrate;
   }
 
-  if (video_codec_internal.startBitrate < video_codec_internal.minBitrate) {
-    video_codec_internal.startBitrate = video_codec_internal.minBitrate;
+  if (video_codec_internal.startBitrate > 0) {
+    if (video_codec_internal.startBitrate < video_codec_internal.minBitrate) {
+      video_codec_internal.startBitrate = video_codec_internal.minBitrate;
+    }
+    if (video_codec_internal.startBitrate > video_codec_internal.maxBitrate) {
+      video_codec_internal.startBitrate = video_codec_internal.maxBitrate;
+    }
   }
-  if (video_codec_internal.startBitrate > video_codec_internal.maxBitrate) {
-    video_codec_internal.startBitrate = video_codec_internal.maxBitrate;
-  }
-
-  VideoCodec encoder;
-  vie_encoder->GetEncoder(&encoder);
 
   // Make sure to generate a new SSRC if the codec type and/or resolution has
   // changed. This won't have any effect if the user has set an SSRC.
-  bool new_rtp_stream = false;
-  if (encoder.codecType != video_codec_internal.codecType) {
-    new_rtp_stream = true;
-  }
+  bool new_rtp_stream = true;
+  VideoCodec encoder;
+  if (vie_encoder->GetEncoder(&encoder) == 0)
+    new_rtp_stream = encoder.codecType != video_codec_internal.codecType;
 
   ViEInputManagerScoped is(*(shared_data_->input_manager()));
 
@@ -254,7 +245,8 @@ int ViECodecImpl::SetSendCodec(const int video_channel,
   shared_data_->channel_manager()->UpdateSsrcs(video_channel, ssrcs);
 
   // Update the protection mode, we might be switching NACK/FEC.
-  vie_encoder->UpdateProtectionMethod(vie_encoder->nack_enabled());
+  vie_encoder->UpdateProtectionMethod(vie_encoder->nack_enabled(),
+                                      vie_channel->IsSendingFecEnabled());
 
   // Get new best format for frame provider.
   ViEFrameProviderBase* frame_provider = is.FrameProvider(vie_encoder);
@@ -285,7 +277,7 @@ int ViECodecImpl::SetReceiveCodec(const int video_channel,
                                   const VideoCodec& video_codec) {
   LOG(LS_INFO) << "SetReceiveCodec for channel " << video_channel;
   LOG(LS_INFO) << "Codec type " << video_codec.codecType
-               << ", payload type " << video_codec.plType;
+               << ", payload type " << static_cast<int>(video_codec.plType);
 
   if (CodecValid(video_codec) == false) {
     shared_data_->SetLastError(kViECodecInvalidCodec);
@@ -362,9 +354,9 @@ int ViECodecImpl::SetImageScaleStatus(const int video_channel,
   return 0;
 }
 
-int ViECodecImpl::GetSendCodecStatistics(const int video_channel,
-                                         unsigned int& key_frames,
-                                         unsigned int& delta_frames) const {
+int ViECodecImpl::GetSendCodecStastistics(const int video_channel,
+                                          unsigned int& key_frames,
+                                          unsigned int& delta_frames) const {
   ViEChannelManagerScoped cs(*(shared_data_->channel_manager()));
   ViEEncoder* vie_encoder = cs.Encoder(video_channel);
   if (!vie_encoder) {
@@ -379,9 +371,9 @@ int ViECodecImpl::GetSendCodecStatistics(const int video_channel,
   return 0;
 }
 
-int ViECodecImpl::GetReceiveCodecStatistics(const int video_channel,
-                                            unsigned int& key_frames,
-                                            unsigned int& delta_frames) const {
+int ViECodecImpl::GetReceiveCodecStastistics(const int video_channel,
+                                             unsigned int& key_frames,
+                                             unsigned int& delta_frames) const {
   ViEChannelManagerScoped cs(*(shared_data_->channel_manager()));
   ViEChannel* vie_channel = cs.Channel(video_channel);
   if (!vie_channel) {
@@ -412,6 +404,12 @@ int ViECodecImpl::GetReceiveSideDelay(const int video_channel,
   return 0;
 }
 
+uint32_t ViECodecImpl::GetLastObservedBitrateBps(int video_channel) const {
+  ViEChannelManagerScoped cs(*(shared_data_->channel_manager()));
+  ViEEncoder* vie_encoder = cs.Encoder(video_channel);
+  assert(vie_encoder != nullptr);
+  return vie_encoder->LastObservedBitrateBps();
+}
 
 int ViECodecImpl::GetCodecTargetBitrate(const int video_channel,
                                         unsigned int* bitrate) const {
@@ -661,7 +659,8 @@ bool ViECodecImpl::CodecValid(const VideoCodec& video_codec) {
   }
 
   if (video_codec.plType == 0 || video_codec.plType > 127) {
-    LOG(LS_ERROR) << "Invalif payload type: " << video_codec.plType;
+    LOG(LS_ERROR) << "Invalid payload type: "
+                  << static_cast<int>(video_codec.plType);
     return false;
   }
 
@@ -672,7 +671,8 @@ bool ViECodecImpl::CodecValid(const VideoCodec& video_codec) {
     return false;
   }
 
-  if (video_codec.startBitrate < kViEMinCodecBitrate) {
+  if (video_codec.startBitrate > 0 &&
+      video_codec.startBitrate < kViEMinCodecBitrate) {
     LOG(LS_ERROR) << "Invalid start bitrate.";
     return false;
   }

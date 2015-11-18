@@ -85,7 +85,7 @@ int ViESender::StopRTPDump() {
   return 0;
 }
 
-int ViESender::SendPacket(int vie_id, const void* data, int len) {
+int ViESender::SendPacket(int vie_id, const void* data, size_t len) {
   CriticalSectionScoped cs(critsect_.get());
   if (!transport_) {
     // No transport
@@ -94,14 +94,13 @@ int ViESender::SendPacket(int vie_id, const void* data, int len) {
   assert(ChannelId(vie_id) == channel_id_);
 
   if (rtp_dump_) {
-    rtp_dump_->DumpPacket(static_cast<const uint8_t*>(data),
-                          static_cast<uint16_t>(len));
+    rtp_dump_->DumpPacket(static_cast<const uint8_t*>(data), len);
   }
 
   return transport_->SendPacket(channel_id_, data, len);
 }
 
-int ViESender::SendRTCPPacket(int vie_id, const void* data, int len) {
+int ViESender::SendRTCPPacket(int vie_id, const void* data, size_t len) {
   CriticalSectionScoped cs(critsect_.get());
   if (!transport_) {
     return -1;
@@ -109,8 +108,7 @@ int ViESender::SendRTCPPacket(int vie_id, const void* data, int len) {
   assert(ChannelId(vie_id) == channel_id_);
 
   if (rtp_dump_) {
-    rtp_dump_->DumpPacket(static_cast<const uint8_t*>(data),
-                          static_cast<uint16_t>(len));
+    rtp_dump_->DumpPacket(static_cast<const uint8_t*>(data), len);
   }
 
   return transport_->SendRTCPPacket(channel_id_, data, len);

@@ -49,8 +49,6 @@ class TrafficControlWindows
     static TrafficControlWindows* GetInstance(const int32_t id);
     static void Release(TrafficControlWindows* gtc);
 
-    int32_t ChangeUniqueId(const int32_t id);
-
     ULONG TcRegisterClient(ULONG TciVersion, HANDLE ClRegCtx,
                            PTCI_CLIENT_FUNC_LIST ClientHandlerList,
                            PHANDLE pClientHandle);
@@ -75,7 +73,6 @@ class TrafficControlWindows
     ULONG TcDeleteFilter(HANDLE FilterHandle);
 private:
     TrafficControlWindows(const int32_t id);
-    int32_t _id;
     TCI_CLIENT_FUNC_LIST QoSFunctions;
 
     static TrafficControlWindows* instance;

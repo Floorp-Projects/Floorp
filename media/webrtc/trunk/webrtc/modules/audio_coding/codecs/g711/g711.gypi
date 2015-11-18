@@ -11,6 +11,9 @@
     {
       'target_name': 'G711',
       'type': 'static_library',
+      'dependencies': [
+        'audio_encoder_interface',
+      ],
       'include_dirs': [
         'include',
         '<(webrtc_root)',

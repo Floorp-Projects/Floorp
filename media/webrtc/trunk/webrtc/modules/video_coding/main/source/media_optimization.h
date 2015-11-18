@@ -13,12 +13,12 @@
 
 #include <list>
 
+#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/modules/interface/module_common_types.h"
 #include "webrtc/modules/video_coding/main/interface/video_coding.h"
 #include "webrtc/modules/video_coding/main/source/media_opt_util.h"
 #include "webrtc/modules/video_coding/main/source/qm_select.h"
 #include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
-#include "webrtc/system_wrappers/interface/scoped_ptr.h"
 
 namespace webrtc {
 
@@ -45,7 +45,6 @@ class MediaOptimization {
                        uint32_t bit_rate,
                        uint16_t width,
                        uint16_t height,
-                       uint8_t divisor,
                        int num_temporal_layers,
                        int32_t mtu);
 
@@ -59,7 +58,7 @@ class MediaOptimization {
   // an internal critical section.
   uint32_t SetTargetRates(uint32_t target_bitrate,
                           uint8_t fraction_lost,
-                          uint32_t round_trip_time_ms,
+                          int64_t round_trip_time_ms,
                           VCMProtectionCallback* protection_callback,
                           VCMQMSettingsCallback* qmsettings_callback);
 
@@ -77,13 +76,8 @@ class MediaOptimization {
 
   void UpdateContentData(const VideoContentMetrics* content_metrics);
 
-  // Informs Media Optimization of encoding output: Length and frame type.
-  int32_t UpdateWithEncodedData(int encoded_length,
-                                uint32_t timestamp,
-                                FrameType encoded_frame_type);
-
-  // Informs Media Optimization of CPU Load state
-  void SetCPULoadState(CPULoadState state);
+  // Informs Media Optimization of encoded output.
+  int32_t UpdateWithEncodedData(const EncodedImage& encoded_image);
 
   uint32_t InputFrameRate();
   uint32_t SentFrameRate();
@@ -137,7 +131,6 @@ class MediaOptimization {
                                uint32_t bit_rate,
                                uint16_t width,
                                uint16_t height,
-                               uint8_t  divisor,
                                int num_temporal_layers,
                                int32_t mtu)
       EXCLUSIVE_LOCKS_REQUIRED(crit_sect_);
@@ -147,18 +140,17 @@ class MediaOptimization {
   uint32_t SentFrameRateInternal() EXCLUSIVE_LOCKS_REQUIRED(crit_sect_);
 
   // Protect all members.
-  scoped_ptr<CriticalSectionWrapper> crit_sect_;
+  rtc::scoped_ptr<CriticalSectionWrapper> crit_sect_;
 
   Clock* clock_ GUARDED_BY(crit_sect_);
   int32_t max_bit_rate_ GUARDED_BY(crit_sect_);
   VideoCodecType send_codec_type_ GUARDED_BY(crit_sect_);
   uint16_t codec_width_ GUARDED_BY(crit_sect_);
   uint16_t codec_height_ GUARDED_BY(crit_sect_);
-  uint16_t min_width_ GUARDED_BY(crit_sect_);
-  uint16_t min_height_  GUARDED_BY(crit_sect_);
   float user_frame_rate_ GUARDED_BY(crit_sect_);
-  scoped_ptr<FrameDropper> frame_dropper_ GUARDED_BY(crit_sect_);
-  scoped_ptr<VCMLossProtectionLogic> loss_prot_logic_ GUARDED_BY(crit_sect_);
+  rtc::scoped_ptr<FrameDropper> frame_dropper_ GUARDED_BY(crit_sect_);
+  rtc::scoped_ptr<VCMLossProtectionLogic> loss_prot_logic_
+      GUARDED_BY(crit_sect_);
   uint8_t fraction_lost_ GUARDED_BY(crit_sect_);
   uint32_t send_statistics_[4] GUARDED_BY(crit_sect_);
   uint32_t send_statistics_zero_encode_ GUARDED_BY(crit_sect_);
@@ -172,8 +164,8 @@ class MediaOptimization {
   uint32_t avg_sent_framerate_ GUARDED_BY(crit_sect_);
   uint32_t key_frame_cnt_ GUARDED_BY(crit_sect_);
   uint32_t delta_frame_cnt_ GUARDED_BY(crit_sect_);
-  scoped_ptr<VCMContentMetricsProcessing> content_ GUARDED_BY(crit_sect_);
-  scoped_ptr<VCMQmResolution> qm_resolution_ GUARDED_BY(crit_sect_);
+  rtc::scoped_ptr<VCMContentMetricsProcessing> content_ GUARDED_BY(crit_sect_);
+  rtc::scoped_ptr<VCMQmResolution> qm_resolution_ GUARDED_BY(crit_sect_);
   int64_t last_qm_update_time_ GUARDED_BY(crit_sect_);
   int64_t last_change_time_ GUARDED_BY(crit_sect_);  // Content/user triggered.
   int num_layers_ GUARDED_BY(crit_sect_);
@@ -181,7 +173,6 @@ class MediaOptimization {
   bool video_suspended_ GUARDED_BY(crit_sect_);
   int suspension_threshold_bps_ GUARDED_BY(crit_sect_);
   int suspension_window_bps_ GUARDED_BY(crit_sect_);
-  CPULoadState loadstate_ GUARDED_BY(crit_sect_);
 };
 }  // namespace media_optimization
 }  // namespace webrtc

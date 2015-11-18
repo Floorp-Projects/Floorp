@@ -35,25 +35,25 @@ RtpFormatVp8TestHelper::~RtpFormatVp8TestHelper() {
   delete [] buffer_;
 }
 
-bool RtpFormatVp8TestHelper::Init(const int* partition_sizes,
-                                  int num_partitions) {
+bool RtpFormatVp8TestHelper::Init(const size_t* partition_sizes,
+                                  size_t num_partitions) {
   if (inited_) return false;
   fragmentation_ = new RTPFragmentationHeader;
   fragmentation_->VerifyAndAllocateFragmentationHeader(num_partitions);
   payload_size_ = 0;
   // Calculate sum payload size.
-  for (int p = 0; p < num_partitions; ++p) {
+  for (size_t p = 0; p < num_partitions; ++p) {
     payload_size_ += partition_sizes[p];
   }
   buffer_size_ = payload_size_ + 6;  // Add space for payload descriptor.
   payload_data_ = new uint8_t[payload_size_];
   buffer_ = new uint8_t[buffer_size_];
-  int j = 0;
+  size_t j = 0;
   // Loop through the partitions again.
-  for (int p = 0; p < num_partitions; ++p) {
+  for (size_t p = 0; p < num_partitions; ++p) {
     fragmentation_->fragmentationLength[p] = partition_sizes[p];
     fragmentation_->fragmentationOffset[p] = j;
-    for (int i = 0; i < partition_sizes[p]; ++i) {
+    for (size_t i = 0; i < partition_sizes[p]; ++i) {
       assert(j < payload_size_);
       payload_data_[j++] = p;  // Set the payload value to the partition index.
     }
@@ -65,14 +65,14 @@ bool RtpFormatVp8TestHelper::Init(const int* partition_sizes,
 
 void RtpFormatVp8TestHelper::GetAllPacketsAndCheck(
     RtpPacketizerVp8* packetizer,
-    const int* expected_sizes,
+    const size_t* expected_sizes,
     const int* expected_part,
     const bool* expected_frag_start,
-    int expected_num_packets) {
+    size_t expected_num_packets) {
   ASSERT_TRUE(inited_);
   size_t send_bytes = 0;
   bool last = false;
-  for (int i = 0; i < expected_num_packets; ++i) {
+  for (size_t i = 0; i < expected_num_packets; ++i) {
     std::ostringstream ss;
     ss << "Checking packet " << i;
     SCOPED_TRACE(ss.str());
@@ -222,8 +222,8 @@ void RtpFormatVp8TestHelper::CheckTIDAndKeyIdx() {
 
 // Verify that the payload (i.e., after the headers) of the packet stored in
 // buffer_ is identical to the expected (as found in data_ptr_).
-void RtpFormatVp8TestHelper::CheckPayload(int payload_end) {
-  for (int i = payload_start_; i < payload_end; ++i, ++data_ptr_)
+void RtpFormatVp8TestHelper::CheckPayload(size_t payload_end) {
+  for (size_t i = payload_start_; i < payload_end; ++i, ++data_ptr_)
     EXPECT_EQ(buffer_[i], *data_ptr_);
 }
 
@@ -236,8 +236,8 @@ void RtpFormatVp8TestHelper::CheckLast(bool last) const {
 
 // Verify the contents of a packet. Check the length versus expected_bytes,
 // the header, payload, and "last" flag.
-void RtpFormatVp8TestHelper::CheckPacket(int send_bytes,
-                                         int expect_bytes,
+void RtpFormatVp8TestHelper::CheckPacket(size_t send_bytes,
+                                         size_t expect_bytes,
                                          bool last,
                                          bool frag_start) {
   EXPECT_EQ(expect_bytes, send_bytes);

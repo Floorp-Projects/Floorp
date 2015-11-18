@@ -11,13 +11,13 @@
 #include <vector>
 
 #include "testing/gtest/include/gtest/gtest.h"
+#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/modules/video_coding/codecs/interface/mock/mock_video_codec_interface.h"
 #include "webrtc/modules/video_coding/main/interface/mock/mock_vcm_callbacks.h"
 #include "webrtc/modules/video_coding/main/interface/video_coding.h"
 #include "webrtc/modules/video_coding/main/source/video_coding_impl.h"
 #include "webrtc/modules/video_coding/main/test/test_util.h"
 #include "webrtc/system_wrappers/interface/clock.h"
-#include "webrtc/system_wrappers/interface/scoped_ptr.h"
 
 using ::testing::_;
 using ::testing::NiceMock;
@@ -49,7 +49,6 @@ class TestVideoReceiver : public ::testing::Test {
   }
 
   void InsertAndVerifyPaddingFrame(const uint8_t* payload,
-                                   int length,
                                    WebRtcRTPHeader* header) {
     ASSERT_TRUE(header != NULL);
     for (int j = 0; j < 5; ++j) {
@@ -63,7 +62,7 @@ class TestVideoReceiver : public ::testing::Test {
   }
 
   void InsertAndVerifyDecodableFrame(const uint8_t* payload,
-                                     int length,
+                                     size_t length,
                                      WebRtcRTPHeader* header) {
     ASSERT_TRUE(header != NULL);
     EXPECT_EQ(0, receiver_->IncomingPacket(payload, length, *header));
@@ -80,14 +79,14 @@ class TestVideoReceiver : public ::testing::Test {
   NiceMock<MockVideoDecoder> decoder_;
   NiceMock<MockPacketRequestCallback> packet_request_callback_;
 
-  scoped_ptr<VideoReceiver> receiver_;
+  rtc::scoped_ptr<VideoReceiver> receiver_;
 };
 
 TEST_F(TestVideoReceiver, PaddingOnlyFrames) {
   EXPECT_EQ(0, receiver_->SetVideoProtection(kProtectionNack, true));
   EXPECT_EQ(
       0, receiver_->RegisterPacketRequestCallback(&packet_request_callback_));
-  const unsigned int kPaddingSize = 220;
+  const size_t kPaddingSize = 220;
   const uint8_t payload[kPaddingSize] = {0};
   WebRtcRTPHeader header;
   memset(&header, 0, sizeof(header));
@@ -100,7 +99,7 @@ TEST_F(TestVideoReceiver, PaddingOnlyFrames) {
   header.type.Video.codec = kRtpVideoVp8;
   for (int i = 0; i < 10; ++i) {
     EXPECT_CALL(packet_request_callback_, ResendPackets(_, _)).Times(0);
-    InsertAndVerifyPaddingFrame(payload, 0, &header);
+    InsertAndVerifyPaddingFrame(payload, &header);
     clock_.AdvanceTimeMilliseconds(33);
     header.header.timestamp += 3000;
   }
@@ -110,8 +109,8 @@ TEST_F(TestVideoReceiver, PaddingOnlyFramesWithLosses) {
   EXPECT_EQ(0, receiver_->SetVideoProtection(kProtectionNack, true));
   EXPECT_EQ(
       0, receiver_->RegisterPacketRequestCallback(&packet_request_callback_));
-  const unsigned int kFrameSize = 1200;
-  const unsigned int kPaddingSize = 220;
+  const size_t kFrameSize = 1200;
+  const size_t kPaddingSize = 220;
   const uint8_t payload[kFrameSize] = {0};
   WebRtcRTPHeader header;
   memset(&header, 0, sizeof(header));
@@ -150,7 +149,7 @@ TEST_F(TestVideoReceiver, PaddingOnlyFramesWithLosses) {
       } else {
         EXPECT_CALL(packet_request_callback_, ResendPackets(_, _)).Times(0);
       }
-      InsertAndVerifyPaddingFrame(payload, 0, &header);
+      InsertAndVerifyPaddingFrame(payload, &header);
     }
     clock_.AdvanceTimeMilliseconds(33);
     header.header.timestamp += 3000;
@@ -161,8 +160,8 @@ TEST_F(TestVideoReceiver, PaddingOnlyAndVideo) {
   EXPECT_EQ(0, receiver_->SetVideoProtection(kProtectionNack, true));
   EXPECT_EQ(
       0, receiver_->RegisterPacketRequestCallback(&packet_request_callback_));
-  const unsigned int kFrameSize = 1200;
-  const unsigned int kPaddingSize = 220;
+  const size_t kFrameSize = 1200;
+  const size_t kPaddingSize = 220;
   const uint8_t payload[kFrameSize] = {0};
   WebRtcRTPHeader header;
   memset(&header, 0, sizeof(header));
@@ -195,7 +194,7 @@ TEST_F(TestVideoReceiver, PaddingOnlyAndVideo) {
     header.type.Video.isFirstPacket = false;
     header.header.markerBit = false;
     for (int j = 0; j < 2; ++j) {
-      // InsertAndVerifyPaddingFrame(payload, 0, &header);
+      // InsertAndVerifyPaddingFrame(payload, &header);
       clock_.AdvanceTimeMilliseconds(33);
       header.header.timestamp += 3000;
     }

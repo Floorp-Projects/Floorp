@@ -15,7 +15,7 @@
 #include "gflags/gflags.h"
 #include "testing/gtest/include/gtest/gtest.h"
 
-#include "webrtc/system_wrappers/interface/scoped_ptr.h"
+#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/test/channel_transport/include/channel_transport.h"
 #include "webrtc/voice_engine/include/voe_audio_processing.h"
 #include "webrtc/voice_engine/include/voe_base.h"
@@ -48,7 +48,7 @@ void RunHarness() {
   int channel = base->CreateChannel();
   ASSERT_NE(-1, channel);
 
-  scoped_ptr<VoiceChannelTransport> voice_channel_transport(
+  rtc::scoped_ptr<VoiceChannelTransport> voice_channel_transport(
       new VoiceChannelTransport(network, channel));
 
   ASSERT_EQ(0, voice_channel_transport->SetSendDestination("127.0.0.1", 1234));

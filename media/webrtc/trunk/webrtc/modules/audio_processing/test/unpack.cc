@@ -17,8 +17,8 @@
 
 #include "gflags/gflags.h"
 #include "webrtc/audio_processing/debug.pb.h"
+#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/modules/audio_processing/test/test_utils.h"
-#include "webrtc/system_wrappers/interface/scoped_ptr.h"
 #include "webrtc/typedefs.h"
 
 // TODO(andrew): unpack more of the data.
@@ -73,12 +73,12 @@ int do_main(int argc, char* argv[]) {
   int num_reverse_channels = 0;
   int num_input_channels = 0;
   int num_output_channels = 0;
-  scoped_ptr<WavWriter> reverse_wav_file;
-  scoped_ptr<WavWriter> input_wav_file;
-  scoped_ptr<WavWriter> output_wav_file;
-  scoped_ptr<RawFile> reverse_raw_file;
-  scoped_ptr<RawFile> input_raw_file;
-  scoped_ptr<RawFile> output_raw_file;
+  rtc::scoped_ptr<WavWriter> reverse_wav_file;
+  rtc::scoped_ptr<WavWriter> input_wav_file;
+  rtc::scoped_ptr<WavWriter> output_wav_file;
+  rtc::scoped_ptr<RawFile> reverse_raw_file;
+  rtc::scoped_ptr<RawFile> input_raw_file;
+  rtc::scoped_ptr<RawFile> output_raw_file;
   while (ReadMessageFromFile(debug_file, &event_msg)) {
     if (event_msg.type() == Event::REVERSE_STREAM) {
       if (!event_msg.has_reverse_stream()) {
@@ -103,7 +103,8 @@ int do_main(int argc, char* argv[]) {
         if (FLAGS_raw && !reverse_raw_file) {
           reverse_raw_file.reset(new RawFile(FLAGS_reverse_file + ".float"));
         }
-        scoped_ptr<const float*[]> data(new const float*[num_reverse_channels]);
+        rtc::scoped_ptr<const float* []> data(
+            new const float* [num_reverse_channels]);
         for (int i = 0; i < num_reverse_channels; ++i) {
           data[i] = reinterpret_cast<const float*>(msg.channel(i).data());
         }
@@ -133,7 +134,8 @@ int do_main(int argc, char* argv[]) {
         if (FLAGS_raw && !input_raw_file) {
           input_raw_file.reset(new RawFile(FLAGS_input_file + ".float"));
         }
-        scoped_ptr<const float*[]> data(new const float*[num_input_channels]);
+        rtc::scoped_ptr<const float* []> data(
+            new const float* [num_input_channels]);
         for (int i = 0; i < num_input_channels; ++i) {
           data[i] = reinterpret_cast<const float*>(msg.input_channel(i).data());
         }
@@ -156,7 +158,8 @@ int do_main(int argc, char* argv[]) {
         if (FLAGS_raw && !output_raw_file) {
           output_raw_file.reset(new RawFile(FLAGS_output_file + ".float"));
         }
-        scoped_ptr<const float*[]> data(new const float*[num_output_channels]);
+        rtc::scoped_ptr<const float* []> data(
+            new const float* [num_output_channels]);
         for (int i = 0; i < num_output_channels; ++i) {
           data[i] =
               reinterpret_cast<const float*>(msg.output_channel(i).data());

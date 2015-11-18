@@ -23,26 +23,28 @@ namespace rtc {
 class AsyncTCPSocketBase : public AsyncPacketSocket {
  public:
   AsyncTCPSocketBase(AsyncSocket* socket, bool listen, size_t max_packet_size);
-  virtual ~AsyncTCPSocketBase();
+  ~AsyncTCPSocketBase() override;
 
   // Pure virtual methods to send and recv data.
-  virtual int Send(const void *pv, size_t cb,
-                   const rtc::PacketOptions& options) = 0;
+  int Send(const void *pv, size_t cb,
+                   const rtc::PacketOptions& options) override = 0;
   virtual void ProcessInput(char* data, size_t* len) = 0;
   // Signals incoming connection.
   virtual void HandleIncomingConnection(AsyncSocket* socket) = 0;
 
-  virtual SocketAddress GetLocalAddress() const;
-  virtual SocketAddress GetRemoteAddress() const;
-  virtual int SendTo(const void *pv, size_t cb, const SocketAddress& addr,
-                     const rtc::PacketOptions& options);
-  virtual int Close();
+  SocketAddress GetLocalAddress() const override;
+  SocketAddress GetRemoteAddress() const override;
+  int SendTo(const void* pv,
+             size_t cb,
+             const SocketAddress& addr,
+             const rtc::PacketOptions& options) override;
+  int Close() override;
 
-  virtual State GetState() const;
-  virtual int GetOption(Socket::Option opt, int* value);
-  virtual int SetOption(Socket::Option opt, int value);
-  virtual int GetError() const;
-  virtual void SetError(int error);
+  State GetState() const override;
+  int GetOption(Socket::Option opt, int* value) override;
+  int SetOption(Socket::Option opt, int value) override;
+  int GetError() const override;
+  void SetError(int error) override;
 
  protected:
   // Binds and connects |socket| and creates AsyncTCPSocket for
@@ -84,12 +86,13 @@ class AsyncTCPSocket : public AsyncTCPSocketBase {
                                 const SocketAddress& bind_address,
                                 const SocketAddress& remote_address);
   AsyncTCPSocket(AsyncSocket* socket, bool listen);
-  virtual ~AsyncTCPSocket() {}
+  ~AsyncTCPSocket() override {}
 
-  virtual int Send(const void* pv, size_t cb,
-                   const rtc::PacketOptions& options);
-  virtual void ProcessInput(char* data, size_t* len);
-  virtual void HandleIncomingConnection(AsyncSocket* socket);
+  int Send(const void* pv,
+           size_t cb,
+           const rtc::PacketOptions& options) override;
+  void ProcessInput(char* data, size_t* len) override;
+  void HandleIncomingConnection(AsyncSocket* socket) override;
 
  private:
   DISALLOW_EVIL_CONSTRUCTORS(AsyncTCPSocket);

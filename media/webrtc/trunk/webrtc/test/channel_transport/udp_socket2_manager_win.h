@@ -39,7 +39,7 @@ struct PerIoContext {
     WSAOVERLAPPED overlapped;
     char buffer[MAX_IO_BUFF_SIZE];
     WSABUF wsabuf;
-    int nTotalBytes;
+    size_t nTotalBytes;
     int nSentBytes;
     int bytes;
     IO_OPERATION ioOperation;
@@ -100,13 +100,12 @@ public:
     virtual bool Start();
     virtual bool Stop();
     virtual int32_t Init();
-    virtual void SetNotAlive();
 protected:
-    static bool Run(ThreadObj obj);
+    static bool Run(void* obj);
     bool Process();
 private:
     HANDLE _ioCompletionHandle;
-    ThreadWrapper*_pThread;
+    rtc::scoped_ptr<ThreadWrapper> _pThread;
     static int32_t _numOfWorkers;
     int32_t _workerNumber;
     volatile bool _stop;
@@ -120,7 +119,6 @@ public:
     virtual ~UdpSocket2ManagerWindows();
 
     virtual bool Init(int32_t id, uint8_t& numOfWorkThreads);
-    virtual int32_t ChangeUniqueId(const int32_t id);
 
     virtual bool Start();
     virtual bool Stop();

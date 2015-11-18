@@ -245,7 +245,7 @@ private:
     std::string _playoutFile16;
     std::string _playoutFile8;
 
-    ProcessThread* _processThread;
+    rtc::scoped_ptr<ProcessThread> _processThread;
     AudioDeviceModule* _audioDevice;
     AudioEventObserver* _audioEventObserver;
     AudioTransportImpl* _audioTransport;

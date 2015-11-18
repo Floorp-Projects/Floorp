@@ -35,7 +35,7 @@ void WebRtcIsacfix_PitchFilterCore(int loopNumber,
 
     /* Filter to get fractional pitch. */
     for (j = 0; j < PITCH_FRACORDER; j++) {
-      tmpW32 += WEBRTC_SPL_MUL_16_16(ubufQQpos2[*index2 + j], coefficient[j]);
+      tmpW32 += ubufQQpos2[*index2 + j] * coefficient[j];
     }
 
     /* Saturate to avoid overflow in tmpW16. */
@@ -54,7 +54,7 @@ void WebRtcIsacfix_PitchFilterCore(int loopNumber,
     /* TODO(kma): Define a static inline function WebRtcSpl_DotProduct()
        in spl_inl.h to replace this and other similar loops. */
     for (j = 0; j < PITCH_DAMPORDER; j++) {
-      tmpW32 += WEBRTC_SPL_MUL_16_16(inputState[j], kDampFilter[j]);
+      tmpW32 += inputState[j] * kDampFilter[j];
     }
 
     /* Saturate to avoid overflow in tmpW16. */
@@ -63,7 +63,7 @@ void WebRtcIsacfix_PitchFilterCore(int loopNumber,
     tmpW16 = (int16_t)(tmpW32 >> 15);
 
     /* Subtract from input and update buffer. */
-    tmpW32 = inputBuf[*index2] - WEBRTC_SPL_MUL_16_16(sign, tmpW16);
+    tmpW32 = inputBuf[*index2] - sign * tmpW16;
     outputBuf[*index2] = WebRtcSpl_SatW32ToW16(tmpW32);
     tmpW32 = inputBuf[*index2] + outputBuf[*index2];
     outputBuf2[*index2 + PITCH_BUFFSIZE] = WebRtcSpl_SatW32ToW16(tmpW32);

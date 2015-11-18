@@ -13,6 +13,7 @@
       'type': 'static_library',
       'dependencies': [
         '<(webrtc_root)/common_audio/common_audio.gyp:common_audio',
+        'audio_encoder_interface',
       ],
       'include_dirs': [
         'interface',
@@ -25,9 +26,11 @@
         ],
       },
       'sources': [
+        'interface/audio_encoder_ilbc.h',
         'interface/ilbc.h',
         'abs_quant.c',
         'abs_quant_loop.c',
+        'audio_encoder_ilbc.cc',
         'augmented_cb_corr.c',
         'bw_expand.c',
         'cb_construct.c',

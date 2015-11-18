@@ -97,23 +97,6 @@ VideoRenderMacCarbonImpl::Init()
 }
 
 int32_t
-VideoRenderMacCarbonImpl::ChangeUniqueId(const int32_t id)
-{
-    return -1;
-
-    CriticalSectionScoped cs(&_renderMacCarbonCritsect);
-    WEBRTC_TRACE(kTraceInfo, kTraceVideoRenderer, _id, "%s", __FUNCTION__);
-    _id = id;
-
-    if(_ptrCarbonRender)
-    {
-        _ptrCarbonRender->ChangeUniqueID(_id);
-    }
-
-    return 0;
-}
-
-int32_t
 VideoRenderMacCarbonImpl::ChangeWindow(void* window)
 {
     return -1;

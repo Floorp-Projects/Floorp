@@ -101,7 +101,7 @@ int WebRtcIsacfix_EncHistMulti(Bitstr_enc *streamData,
      * W_upper < 2^24 */
     while ( !(W_upper & 0xFF000000) )
     {
-      W_upper = WEBRTC_SPL_LSHIFT_W32(W_upper, 8);
+      W_upper <<= 8;
       if (streamData->full == 0) {
         *streamPtr++ += (uint16_t)(streamData->streamval >> 24);
         streamData->full = 1;
@@ -113,7 +113,7 @@ int WebRtcIsacfix_EncHistMulti(Bitstr_enc *streamData,
       if( streamPtr > maxStreamPtr ) {
         return -ISAC_DISALLOWED_BITSTREAM_LENGTH;
       }
-      streamData->streamval = WEBRTC_SPL_LSHIFT_W32(streamData->streamval, 8);
+      streamData->streamval <<= 8;
     }
   }
 
@@ -174,7 +174,7 @@ int16_t WebRtcIsacfix_DecHistBisectMulti(int16_t *data,
   if (streamData->stream_index == 0)
   {
     /* read first word from bytestream */
-    streamval = WEBRTC_SPL_LSHIFT_W32((uint32_t)*streamPtr++, 16);
+    streamval = (uint32_t)*streamPtr++ << 16;
     streamval |= *streamPtr++;
   } else {
     streamval = streamData->streamval;
@@ -230,14 +230,13 @@ int16_t WebRtcIsacfix_DecHistBisectMulti(int16_t *data,
     {
       /* read next byte from stream */
       if (streamData->full == 0) {
-        streamval = WEBRTC_SPL_LSHIFT_W32(streamval, 8) |
-            (*streamPtr++ & 0x00FF);
+        streamval = (streamval << 8) | (*streamPtr++ & 0x00FF);
         streamData->full = 1;
       } else {
         streamval = (streamval << 8) | (*streamPtr >> 8);
         streamData->full = 0;
       }
-      W_upper = WEBRTC_SPL_LSHIFT_W32(W_upper, 8);
+      W_upper <<= 8;
     }
 
 
@@ -379,13 +378,13 @@ int16_t WebRtcIsacfix_DecHistOneStepMulti(int16_t *data,
     {
       /* read next byte from stream */
       if (streamData->full == 0) {
-        streamval = WEBRTC_SPL_LSHIFT_W32(streamval, 8) | (*streamPtr++ & 0x00FF);
+        streamval = (streamval << 8) | (*streamPtr++ & 0x00FF);
         streamData->full = 1;
       } else {
-        streamval = WEBRTC_SPL_LSHIFT_W32(streamval, 8) | (*streamPtr >> 8);
+        streamval = (streamval << 8) | (*streamPtr >> 8);
         streamData->full = 0;
       }
-      W_upper = WEBRTC_SPL_LSHIFT_W32(W_upper, 8);
+      W_upper <<= 8;
     }
   }
 

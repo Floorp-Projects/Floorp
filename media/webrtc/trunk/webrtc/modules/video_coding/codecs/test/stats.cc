@@ -15,6 +15,8 @@
 
 #include <algorithm>  // min_element, max_element
 
+#include "webrtc/base/format_macros.h"
+
 namespace webrtc {
 namespace test {
 
@@ -70,11 +72,11 @@ void Stats::PrintSummary() {
   // Calculate min, max, average and total encoding time
   int total_encoding_time_in_us = 0;
   int total_decoding_time_in_us = 0;
-  int total_encoded_frames_lengths = 0;
-  int total_encoded_key_frames_lengths = 0;
-  int total_encoded_nonkey_frames_lengths = 0;
-  int nbr_keyframes = 0;
-  int nbr_nonkeyframes = 0;
+  size_t total_encoded_frames_lengths = 0;
+  size_t total_encoded_key_frames_lengths = 0;
+  size_t total_encoded_nonkey_frames_lengths = 0;
+  size_t nbr_keyframes = 0;
+  size_t nbr_nonkeyframes = 0;
 
   for (FrameStatisticsIterator it = stats_.begin();
       it != stats_.end(); ++it) {
@@ -141,23 +143,24 @@ void Stats::PrintSummary() {
   printf("Frame sizes:\n");
   frame = std::min_element(stats_.begin(),
                       stats_.end(), LessForEncodedSize);
-  printf("  Min     : %7d bytes (frame %d)\n",
+  printf("  Min     : %7" PRIuS " bytes (frame %d)\n",
          frame->encoded_frame_length_in_bytes, frame->frame_number);
 
   frame = std::max_element(stats_.begin(),
                       stats_.end(), LessForEncodedSize);
-  printf("  Max     : %7d bytes (frame %d)\n",
+  printf("  Max     : %7" PRIuS " bytes (frame %d)\n",
          frame->encoded_frame_length_in_bytes, frame->frame_number);
 
-  printf("  Average : %7d bytes\n",
-         static_cast<int>(total_encoded_frames_lengths / stats_.size()));
+  printf("  Average : %7" PRIuS " bytes\n",
+         total_encoded_frames_lengths / stats_.size());
   if (nbr_keyframes > 0) {
-    printf("  Average key frame size    : %7d bytes (%d keyframes)\n",
-           total_encoded_key_frames_lengths / nbr_keyframes,
-           nbr_keyframes);
+    printf("  Average key frame size    : %7" PRIuS " bytes (%" PRIuS
+           " keyframes)\n",
+           total_encoded_key_frames_lengths / nbr_keyframes, nbr_keyframes);
   }
   if (nbr_nonkeyframes > 0) {
-    printf("  Average non-key frame size: %7d bytes (%d frames)\n",
+    printf("  Average non-key frame size: %7" PRIuS " bytes (%" PRIuS
+           " frames)\n",
            total_encoded_nonkey_frames_lengths / nbr_nonkeyframes,
            nbr_nonkeyframes);
   }

@@ -24,7 +24,7 @@ public:
     AudioDeviceUtilityLinux(const int32_t id);
     virtual ~AudioDeviceUtilityLinux();
 
-    virtual int32_t Init() OVERRIDE;
+    int32_t Init() override;
 
 private:
     CriticalSectionWrapper& _critSect;

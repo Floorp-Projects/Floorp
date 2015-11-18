@@ -17,7 +17,8 @@
       'type': 'static_library',
       'dependencies': [
         '<(DEPTH)/testing/gtest.gyp:gtest',
-        '<(webrtc_root)/system_wrappers/source/system_wrappers.gyp:system_wrappers',
+        '<(webrtc_root)/common.gyp:webrtc_common',
+        '<(webrtc_root)/system_wrappers/system_wrappers.gyp:system_wrappers',
       ],
       'sources': [
         'channel_transport/channel_transport.cc',
@@ -60,8 +61,12 @@
         'rtcp_packet_parser.h',
         'rtp_file_reader.cc',
         'rtp_file_reader.h',
+        'rtp_file_writer.cc',
+        'rtp_file_writer.h',
       ],
       'dependencies': [
+        '<(DEPTH)/webrtc/common.gyp:webrtc_common',
+        '<(DEPTH)/testing/gtest.gyp:gtest',
         '<(webrtc_root)/modules/modules.gyp:rtp_rtcp',
       ],
     },
@@ -73,7 +78,20 @@
         'field_trial.h',
       ],
       'dependencies': [
-        '<(webrtc_root)/system_wrappers/source/system_wrappers.gyp:system_wrappers',
+        '<(webrtc_root)/common.gyp:webrtc_common',
+        '<(webrtc_root)/system_wrappers/system_wrappers.gyp:system_wrappers',
+      ],
+    },
+    {
+      'target_name': 'histogram',
+      'type': 'static_library',
+      'sources': [
+        'histogram.cc',
+        'histogram.h',
+      ],
+      'dependencies': [
+        '<(webrtc_root)/common.gyp:webrtc_common',
+        '<(webrtc_root)/system_wrappers/system_wrappers.gyp:system_wrappers',
       ],
     },
     {
@@ -84,9 +102,9 @@
       ],
       'dependencies': [
         'field_trial',
+        'histogram',
         '<(DEPTH)/testing/gtest.gyp:gtest',
         '<(DEPTH)/third_party/gflags/gflags.gyp:gflags',
-        '<(webrtc_root)/system_wrappers/source/system_wrappers.gyp:metrics_default',
       ],
     },
     {
@@ -95,7 +113,8 @@
       'dependencies': [
         '<(DEPTH)/testing/gtest.gyp:gtest',
         '<(DEPTH)/testing/gmock.gyp:gmock',
-        '<(webrtc_root)/system_wrappers/source/system_wrappers.gyp:system_wrappers',
+        '<(webrtc_root)/common.gyp:gtest_prod',
+        '<(webrtc_root)/system_wrappers/system_wrappers.gyp:system_wrappers',
       ],
       'sources': [
         'testsupport/fileutils.cc',
@@ -104,7 +123,6 @@
         'testsupport/frame_reader.h',
         'testsupport/frame_writer.cc',
         'testsupport/frame_writer.h',
-        'testsupport/gtest_prod_util.h',
         'testsupport/gtest_disable.h',
         'testsupport/mock/mock_frame_reader.h',
         'testsupport/mock/mock_frame_writer.h',
@@ -123,11 +141,11 @@
       'type': 'static_library',
       'dependencies': [
         'field_trial',
+        'histogram',
         'test_support',
         '<(DEPTH)/testing/gmock.gyp:gmock',
         '<(DEPTH)/testing/gtest.gyp:gtest',
         '<(DEPTH)/third_party/gflags/gflags.gyp:gflags',
-        '<(webrtc_root)/system_wrappers/source/system_wrappers.gyp:metrics_default',
       ],
       'sources': [
         'run_all_unittests.cc',

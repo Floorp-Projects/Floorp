@@ -76,7 +76,8 @@ class VoEAudioProcessingImpl : public VoEAudioProcessing {
 
   virtual int GetEchoMetrics(int& ERL, int& ERLE, int& RERL, int& A_NLP);
 
-  virtual int GetEcDelayMetrics(int& delay_median, int& delay_std);
+  virtual int GetEcDelayMetrics(int& delay_median, int& delay_std,
+                                float& fraction_poor_delays);
 
   virtual int StartDebugRecording(const char* fileNameUTF8);
   virtual int StartDebugRecording(FILE* file_handle);

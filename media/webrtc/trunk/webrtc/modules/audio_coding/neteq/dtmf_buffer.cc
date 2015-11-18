@@ -55,7 +55,7 @@ namespace webrtc {
 //
 int DtmfBuffer::ParseEvent(uint32_t rtp_timestamp,
                            const uint8_t* payload,
-                           int payload_length_bytes,
+                           size_t payload_length_bytes,
                            DtmfEvent* event) {
   if (!payload || !event) {
     return kInvalidPointer;

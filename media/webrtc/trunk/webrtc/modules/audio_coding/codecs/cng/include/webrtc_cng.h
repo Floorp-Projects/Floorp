@@ -12,6 +12,7 @@
 #ifndef WEBRTC_MODULES_AUDIO_CODING_CODECS_CNG_MAIN_INTERFACE_WEBRTC_CNG_H_
 #define WEBRTC_MODULES_AUDIO_CODING_CODECS_CNG_MAIN_INTERFACE_WEBRTC_CNG_H_
 
+#include <stddef.h>
 #include "webrtc/typedefs.h"
 
 #ifdef __cplusplus
@@ -120,7 +121,7 @@ int16_t WebRtcCng_Encode(CNG_enc_inst* cng_inst, int16_t* speech,
  *                      -1 - Error
  */
 int16_t WebRtcCng_UpdateSid(CNG_dec_inst* cng_inst, uint8_t* SID,
-                            int16_t length);
+                            size_t length);
 
 /****************************************************************************
  * WebRtcCng_Generate(...)

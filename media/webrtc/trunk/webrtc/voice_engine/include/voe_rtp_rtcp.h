@@ -61,19 +61,6 @@ protected:
     virtual ~VoERTPObserver() {}
 };
 
-// VoERTCPObserver
-class WEBRTC_DLLEXPORT VoERTCPObserver
-{
-public:
-    virtual void OnApplicationDataReceived(
-        int channel, unsigned char subType,
-        unsigned int name, const unsigned char* data,
-        unsigned short dataLengthInBytes) = 0;
-
-protected:
-    virtual ~VoERTCPObserver() {}
-};
-
 // CallStatistics
 struct CallStatistics
 {
@@ -81,10 +68,10 @@ struct CallStatistics
     unsigned int cumulativeLost;
     unsigned int extendedMax;
     unsigned int jitterSamples;
-    int rttMs;
-    int bytesSent;
+    int64_t rttMs;
+    size_t bytesSent;
     int packetsSent;
-    int bytesReceived;
+    size_t bytesReceived;
     int packetsReceived;
     // The capture ntp time (in local timebase) of the first played out audio
     // frame.
@@ -182,17 +169,15 @@ public:
     virtual int GetRemoteRTCP_CNAME(int channel, char cName[256]) = 0;
 
     // Gets RTCP data from incoming RTCP Sender Reports.
-    virtual int GetRemoteRTCPReceiverInfo(
-        int channel, uint32_t& NTPHigh, uint32_t& NTPLow,
-        uint32_t& receivedPacketCount, uint64_t& receivedOctetCount,
-        uint32_t& jitter, uint16_t& fractionLost,
-        uint32_t& cumulativeLost,
-        int32_t& rttMs) = 0;
+    virtual int GetRemoteRTCPData(
+        int channel, unsigned int& NTPHigh, unsigned int& NTPLow,
+        unsigned int& timestamp, unsigned int& playoutTimestamp,
+        unsigned int* jitter = NULL, unsigned short* fractionLost = NULL) = 0;
 
     // Gets RTP statistics for a specific |channel|.
     virtual int GetRTPStatistics(
         int channel, unsigned int& averageJitterMs, unsigned int& maxJitterMs,
-        unsigned int& discardedPackets, unsigned int& cumulativeLost) = 0;
+        unsigned int& discardedPackets) = 0;
 
     // Gets RTCP statistics for a specific |channel|.
     virtual int GetRTCPStatistics(int channel, CallStatistics& stats) = 0;
@@ -270,9 +255,6 @@ public:
     virtual int RegisterRTPObserver(int channel,
             VoERTPObserver& observer) { return -1; };
     virtual int DeRegisterRTPObserver(int channel) { return -1; };
-    virtual int RegisterRTCPObserver(
-            int channel, VoERTCPObserver& observer) { return -1; };
-    virtual int DeRegisterRTCPObserver(int channel) { return -1; };
     virtual int GetRemoteCSRCs(int channel,
             unsigned int arrCSRC[15]) { return -1; };
     virtual int InsertExtraRTPPacket(

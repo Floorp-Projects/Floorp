@@ -21,14 +21,26 @@ source_set("common_audio") {
   sources = [
     "audio_converter.cc",
     "audio_converter.h",
+    "audio_ring_buffer.cc",
+    "audio_ring_buffer.h",
     "audio_util.cc",
     "blocker.cc",
     "blocker.h",
+    "channel_buffer.cc",
+    "channel_buffer.h",
+    "fft4g.c",
+    "fft4g.h",
     "fir_filter.cc",
     "fir_filter.h",
     "fir_filter_neon.h",
     "fir_filter_sse.h",
     "include/audio_util.h",
+    "lapped_transform.cc",
+    "lapped_transform.h",
+    "real_fourier.cc",
+    "real_fourier.h",
+    "real_fourier_ooura.cc",
+    "real_fourier_ooura.h",
     "resampler/include/push_resampler.h",
     "resampler/include/resampler.h",
     "resampler/push_resampler.cc",
@@ -37,6 +49,8 @@ source_set("common_audio") {
     "resampler/resampler.cc",
     "resampler/sinc_resampler.cc",
     "resampler/sinc_resampler.h",
+    "ring_buffer.c",
+    "ring_buffer.h",
     "signal_processing/include/real_fft.h",
     "signal_processing/include/signal_processing_library.h",
     "signal_processing/include/spl_inl.h",
@@ -93,24 +107,23 @@ source_set("common_audio") {
 
   deps = [ "../system_wrappers" ]
 
+  defines = []
   if (rtc_use_openmax_dl) {
     sources += [
-      "lapped_transform.cc",
-      "lapped_transform.h",
-      "real_fourier.cc",
-      "real_fourier.h",
+      "real_fourier_openmax.cc",
+      "real_fourier_openmax.h",
     ]
-
+    defines += [ "RTC_USE_OPENMAX_DL" ]
     deps += [ "//third_party/openmax_dl/dl" ]
   }
 
-  if (cpu_arch == "arm") {
+  if (current_cpu == "arm") {
     sources += [
       "signal_processing/complex_bit_reverse_arm.S",
       "signal_processing/spl_sqrt_floor_arm.S",
     ]
 
-    if (arm_version == 7) {
+    if (arm_version >= 7) {
       deps += [ ":common_audio_neon" ]
       sources += [ "signal_processing/filter_ar_fast_q12_armv7.S" ]
     } else {
@@ -118,7 +131,11 @@ source_set("common_audio") {
     }
   }
 
-  if (cpu_arch == "mipsel") {
+  if (current_cpu == "arm64") {
+    deps += [ ":common_audio_neon" ]
+  }
+
+  if (current_cpu == "mipsel") {
     sources += [
       "signal_processing/include/spl_inl_mips.h",
       "signal_processing/complex_bit_reverse_mips.c",
@@ -137,7 +154,7 @@ source_set("common_audio") {
     sources += [ "signal_processing/complex_fft.c" ]
   }
 
-  if (cpu_arch != "arm" && cpu_arch != "mipsel") {
+  if (current_cpu != "arm" && current_cpu != "mipsel") {
     sources += [
       "signal_processing/complex_bit_reverse.c",
       "signal_processing/filter_ar_fast_q12.c",
@@ -164,12 +181,12 @@ source_set("common_audio") {
     configs -= [ "//build/config/clang:find_bad_constructs" ]
   }
 
-  if (cpu_arch == "x86" || cpu_arch == "x64") {
+  if (current_cpu == "x86" || current_cpu == "x64") {
     deps += [ ":common_audio_sse2" ]
   }
 }
 
-if (cpu_arch == "x86" || cpu_arch == "x64") {
+if (current_cpu == "x86" || current_cpu == "x64") {
   source_set("common_audio_sse2") {
     sources = [
       "fir_filter_sse.cc",
@@ -188,32 +205,23 @@ if (cpu_arch == "x86" || cpu_arch == "x64") {
   }
 }
 
-if (rtc_build_armv7_neon) {
+if (rtc_build_armv7_neon || current_cpu == "arm64") {
   source_set("common_audio_neon") {
     sources = [
       "fir_filter_neon.cc",
       "resampler/sinc_resampler_neon.cc",
-      "signal_processing/cross_correlation_neon.S",
-      "signal_processing/downsample_fast_neon.S",
-      "signal_processing/min_max_operations_neon.S",
-      "signal_processing/vector_scaling_operations_neon.S",
+      "signal_processing/cross_correlation_neon.c",
+      "signal_processing/downsample_fast_neon.c",
+      "signal_processing/min_max_operations_neon.c",
     ]
 
     configs += [ "..:common_config" ]
     public_configs = [ "..:common_inherited_config" ]
 
-
-    # Enable compilation for the ARM v7 Neon instruction set. This is needed
-    # since //build/config/arm.gni only enables Neon for iOS, not Android.
-    # This provides the same functionality as webrtc/build/arm_neon.gypi.
-    # TODO(kjellander): Investigate if this can be moved into webrtc.gni or
-    # //build/config/arm.gni instead, to reduce code duplication.
-    # Remove the -mfpu=vfpv3-d16 cflag.
-    configs -= [ "//build/config/compiler:compiler_arm_fpu" ]
-    cflags = [
-      "-flax-vector-conversions",
-      "-mfpu=neon",
-    ]
+    if (!arm_use_neon) {
+      configs -= [ "//build/config/compiler:compiler_arm_fpu" ]
+      cflags = [ "-mfpu=neon" ]
+    }
 
     # Disable LTO in audio_processing_neon target due to compiler bug.
     if (rtc_use_lto) {
@@ -221,12 +229,6 @@ if (rtc_build_armv7_neon) {
         "-flto",
         "-ffat-lto-objects",
       ]
-    }
-
-    if (is_clang) {
-      # Suppress warnings from Chrome's Clang plugins.
-      # See http://code.google.com/p/webrtc/issues/detail?id=163 for details.
-      configs -= [ "//build/config/clang:find_bad_constructs" ]
     }
   }
 }

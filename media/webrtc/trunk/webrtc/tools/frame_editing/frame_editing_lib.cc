@@ -13,8 +13,8 @@
 
 #include <string>
 
+#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/common_video/libyuv/include/webrtc_libyuv.h"
-#include "webrtc/system_wrappers/interface/scoped_ptr.h"
 #include "webrtc/typedefs.h"
 
 using std::string;
@@ -36,9 +36,9 @@ int EditFrames(const string& in_path, int width, int height,
   }
 
   // Frame size of I420.
-  int frame_length = CalcBufferSize(kI420, width, height);
+  size_t frame_length = CalcBufferSize(kI420, width, height);
 
-  webrtc::scoped_ptr<uint8_t[]> temp_buffer(new uint8_t[frame_length]);
+  rtc::scoped_ptr<uint8_t[]> temp_buffer(new uint8_t[frame_length]);
 
   FILE* out_fid = fopen(out_path.c_str(), "wb");
 
@@ -50,7 +50,7 @@ int EditFrames(const string& in_path, int width, int height,
 
   int num_frames_read = 0;
   int num_frames_read_between = 0;
-  int num_bytes_read;
+  size_t num_bytes_read;
 
   while ((num_bytes_read = fread(temp_buffer.get(), 1, frame_length, in_fid))
       == frame_length) {

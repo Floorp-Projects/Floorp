@@ -23,13 +23,9 @@ public:
      *   Constructor/destructor
      */
 
-    virtual ~IVideoRender()
-    {
-    };
+    virtual ~IVideoRender() {}
 
     virtual int32_t Init() = 0;
-
-    virtual int32_t ChangeUniqueId(const int32_t id) = 0;
 
     virtual int32_t ChangeWindow(void* window) = 0;
 

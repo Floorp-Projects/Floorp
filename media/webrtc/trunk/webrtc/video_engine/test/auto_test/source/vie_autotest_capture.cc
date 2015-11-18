@@ -83,7 +83,7 @@ class CaptureEffectFilter : public webrtc::ViEEffectFilter {
   }
 
   // Implements video_engineEffectFilter.
-  virtual int Transform(int size,
+  virtual int Transform(size_t size,
                         unsigned char* frame_buffer,
                         int64_t ntp_time_ms,
                         unsigned int timestamp,
@@ -360,26 +360,26 @@ void ViEAutoTest::ViECaptureAPITest() {
   EXPECT_EQ(kViECaptureDeviceDoesNotExist, video_engine.LastError());
 
   // Test GetOrientation.
-  webrtc::VideoCaptureRotation orientation;
+  webrtc::VideoRotation orientation;
   char dummy_name[5];
   EXPECT_NE(0, dev_info->GetOrientation(dummy_name, orientation));
 
   // Test SetRotation.
-  EXPECT_NE(0, video_engine.capture->SetRotateCapturedFrames(
-      capture_id, webrtc::RotateCapturedFrame_90));
+  EXPECT_NE(0, video_engine.capture->SetVideoRotation(
+                   capture_id, webrtc::kVideoRotation_90));
   EXPECT_EQ(kViECaptureDeviceDoesNotExist, video_engine.LastError());
 
   // Allocate capture device.
   EXPECT_EQ(0, video_engine.capture->AllocateCaptureDevice(*vcpm, capture_id));
 
-  EXPECT_EQ(0, video_engine.capture->SetRotateCapturedFrames(
-      capture_id, webrtc::RotateCapturedFrame_0));
-  EXPECT_EQ(0, video_engine.capture->SetRotateCapturedFrames(
-      capture_id, webrtc::RotateCapturedFrame_90));
-  EXPECT_EQ(0, video_engine.capture->SetRotateCapturedFrames(
-      capture_id, webrtc::RotateCapturedFrame_180));
-  EXPECT_EQ(0, video_engine.capture->SetRotateCapturedFrames(
-      capture_id, webrtc::RotateCapturedFrame_270));
+  EXPECT_EQ(0, video_engine.capture->SetVideoRotation(
+                   capture_id, webrtc::kVideoRotation_0));
+  EXPECT_EQ(0, video_engine.capture->SetVideoRotation(
+                   capture_id, webrtc::kVideoRotation_90));
+  EXPECT_EQ(0, video_engine.capture->SetVideoRotation(
+                   capture_id, webrtc::kVideoRotation_180));
+  EXPECT_EQ(0, video_engine.capture->SetVideoRotation(
+                   capture_id, webrtc::kVideoRotation_270));
 
   // Release the capture device
   EXPECT_EQ(0, video_engine.capture->ReleaseCaptureDevice(capture_id));
@@ -445,7 +445,7 @@ void ViEAutoTest::ViECaptureExternalCaptureTest() {
   /// **************************************************************
   //  Engine ready. Begin testing class
   /// **************************************************************
-  const unsigned int video_frame_length = (176 * 144 * 3) / 2;
+  const size_t video_frame_length = (176 * 144 * 3) / 2;
   unsigned char* video_frame = new unsigned char[video_frame_length];
   memset(video_frame, 128, 176 * 144);
 

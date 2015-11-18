@@ -64,7 +64,7 @@ bool RTPReceiverAudio::TelephoneEventForwardToDecoder() const {
 bool RTPReceiverAudio::TelephoneEventPayloadType(
     int8_t payload_type) const {
   CriticalSectionScoped lock(crit_sect_.get());
-  return (telephone_event_payload_type_ == payload_type) ? true : false;
+  return telephone_event_payload_type_ == payload_type;
 }
 
 bool RTPReceiverAudio::CNGPayloadType(int8_t payload_type,
@@ -184,12 +184,12 @@ int32_t RTPReceiverAudio::ParseRtpPacket(WebRtcRTPHeader* rtp_header,
                                          const PayloadUnion& specific_payload,
                                          bool is_red,
                                          const uint8_t* payload,
-                                         uint16_t payload_length,
+                                         size_t payload_length,
                                          int64_t timestamp_ms,
                                          bool is_first_packet) {
-  TRACE_EVENT2("webrtc_rtp", "Audio::ParseRtp",
-               "seqnum", rtp_header->header.sequenceNumber,
-               "timestamp", rtp_header->header.timestamp);
+  TRACE_EVENT2(TRACE_DISABLED_BY_DEFAULT("webrtc_rtp"), "Audio::ParseRtp",
+               "seqnum", rtp_header->header.sequenceNumber, "timestamp",
+               rtp_header->header.timestamp);
   rtp_header->type.Audio.numEnergy = rtp_header->header.numCSRCs;
   num_energy_ = rtp_header->type.Audio.numEnergy;
   if (rtp_header->type.Audio.numEnergy > 0 &&
@@ -278,7 +278,7 @@ int32_t RTPReceiverAudio::InvokeOnInitializeDecoder(
                                           specific_payload.Audio.channels,
                                           specific_payload.Audio.rate)) {
     LOG(LS_ERROR) << "Failed to create decoder for payload type: "
-                  << payload_name << "/" << payload_type;
+                  << payload_name << "/" << static_cast<int>(payload_type);
     return -1;
   }
   return 0;
@@ -288,7 +288,7 @@ int32_t RTPReceiverAudio::InvokeOnInitializeDecoder(
 int32_t RTPReceiverAudio::ParseAudioCodecSpecific(
     WebRtcRTPHeader* rtp_header,
     const uint8_t* payload_data,
-    uint16_t payload_length,
+    size_t payload_length,
     const AudioPayload& audio_specific,
     bool is_red) {
 
@@ -311,13 +311,13 @@ int32_t RTPReceiverAudio::ParseAudioCodecSpecific(
     if (payload_length % 4 != 0) {
       return -1;
     }
-    uint8_t number_of_events = payload_length / 4;
+    size_t number_of_events = payload_length / 4;
 
     // sanity
     if (number_of_events >= MAX_NUMBER_OF_PARALLEL_TELEPHONE_EVENTS) {
       number_of_events = MAX_NUMBER_OF_PARALLEL_TELEPHONE_EVENTS;
     }
-    for (int n = 0; n < number_of_events; ++n) {
+    for (size_t n = 0; n < number_of_events; ++n) {
       bool end = (payload_data[(4 * n) + 1] & 0x80) ? true : false;
 
       std::set<uint8_t>::iterator event =

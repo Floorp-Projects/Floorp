@@ -11,73 +11,91 @@
 #ifndef WEBRTC_MODULES_AUDIO_CODING_MAIN_TEST_TESTVADDTX_H_
 #define WEBRTC_MODULES_AUDIO_CODING_MAIN_TEST_TESTVADDTX_H_
 
+
+#include "webrtc/base/scoped_ptr.h"
+#include "webrtc/common_types.h"
+#include "webrtc/modules/audio_coding/main/interface/audio_coding_module.h"
+#include "webrtc/modules/audio_coding/main/interface/audio_coding_module_typedefs.h"
 #include "webrtc/modules/audio_coding/main/test/ACMTest.h"
 #include "webrtc/modules/audio_coding/main/test/Channel.h"
-#include "webrtc/modules/audio_coding/main/test/PCMFile.h"
-#include "webrtc/system_wrappers/interface/scoped_ptr.h"
 
 namespace webrtc {
-
-typedef struct {
-  bool statusDTX;
-  bool statusVAD;
-  ACMVADMode vadMode;
-} VADDTXstruct;
 
 class ActivityMonitor : public ACMVADCallback {
  public:
   ActivityMonitor();
-  ~ActivityMonitor();
-  int32_t InFrameType(int16_t frameType);
+  int32_t InFrameType(FrameType frame_type);
   void PrintStatistics();
   void ResetStatistics();
-  void GetStatistics(uint32_t* getCounter);
+  void GetStatistics(uint32_t* stats);
  private:
-  // Counting according to
-  // enum WebRtcACMEncodingType {
-  //   kNoEncoding,
-  //   kActiveNormalEncoded,
-  //   kPassiveNormalEncoded,
-  //   kPassiveDTXNB,
-  //   kPassiveDTXWB,
-  //   kPassiveDTXSWB
-  // };
-  uint32_t _counter[6];
+  // 0 - kFrameEmpty
+  // 1 - kAudioFrameSpeech
+  // 2 - kAudioFrameCN
+  // 3 - kVideoFrameKey (not used by audio)
+  // 4 - kVideoFrameDelta (not used by audio)
+  uint32_t counter_[5];
 };
 
-class TestVADDTX : public ACMTest {
+
+// TestVadDtx is to verify that VAD/DTX perform as they should. It runs through
+// an audio file and check if the occurrence of various packet types follows
+// expectation. TestVadDtx needs its derived class to implement the Perform()
+// to put the test together.
+class TestVadDtx : public ACMTest {
  public:
-  TestVADDTX();
-  ~TestVADDTX();
+  static const int kOutputFreqHz = 16000;
 
-  void Perform();
+  TestVadDtx();
+
+  virtual void Perform() = 0;
+
+ protected:
+  void RegisterCodec(CodecInst codec_param);
+
+  // Encoding a file and see if the numbers that various packets occur follow
+  // the expectation. Saves result to a file.
+  // expects[x] means
+  // -1 : do not care,
+  // 0  : there have been no packets of type |x|,
+  // 1  : there have been packets of type |x|,
+  // with |x| indicates the following packet types
+  // 0 - kFrameEmpty
+  // 1 - kAudioFrameSpeech
+  // 2 - kAudioFrameCN
+  // 3 - kVideoFrameKey (not used by audio)
+  // 4 - kVideoFrameDelta (not used by audio)
+  void Run(std::string in_filename, int frequency, int channels,
+           std::string out_filename, bool append, const int* expects);
+
+  rtc::scoped_ptr<AudioCodingModule> acm_send_;
+  rtc::scoped_ptr<AudioCodingModule> acm_receive_;
+  rtc::scoped_ptr<Channel> channel_;
+  rtc::scoped_ptr<ActivityMonitor> monitor_;
+};
+
+// TestWebRtcVadDtx is to verify that the WebRTC VAD/DTX perform as they should.
+class TestWebRtcVadDtx final : public TestVadDtx {
+ public:
+  TestWebRtcVadDtx();
+
+  void Perform() override;
+
  private:
-  // Registration can be based on codec name only, codec name and sampling
-  //  frequency, or codec name, sampling frequency and rate.
-  int16_t RegisterSendCodec(char side,
-                            char* codecName,
-                            int32_t samplingFreqHz = -1,
-                            int32_t rateKhz = -1);
-  void Run();
-  void OpenOutFile(int16_t testNumber);
-  void runTestCases();
-  void runTestInternalDTX(int expected_result);
-  void SetVAD(bool statusDTX, bool statusVAD, int16_t vadMode);
-  VADDTXstruct GetVAD();
-  int16_t VerifyTest();
-  scoped_ptr<AudioCodingModule> _acmA;
-  scoped_ptr<AudioCodingModule> _acmB;
+  void RunTestCases();
+  void Test(bool new_outfile);
+  void SetVAD(bool enable_dtx, bool enable_vad, ACMVADMode vad_mode);
 
-  Channel* _channelA2B;
+  bool vad_enabled_;
+  bool dtx_enabled_;
+  bool use_webrtc_dtx_;
+  int output_file_num_;
+};
 
-  PCMFile _inFileA;
-  PCMFile _outFileB;
-
-  ActivityMonitor _monitor;
-  uint32_t _statCounter[6];
-
-  VADDTXstruct _setStruct;
-  VADDTXstruct _getStruct;
+// TestOpusDtx is to verify that the Opus DTX performs as it should.
+class TestOpusDtx final : public TestVadDtx {
+ public:
+  void Perform() override;
 };
 
 }  // namespace webrtc

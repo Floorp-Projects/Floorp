@@ -618,9 +618,11 @@ void Expand::AnalyzeSignal(int16_t* random_vector) {
     memcpy(unvoiced_vector - kUnvoicedLpcOrder,
            &(audio_history[signal_length - 128 - kUnvoicedLpcOrder]),
            sizeof(int16_t) * kUnvoicedLpcOrder);
-    WebRtcSpl_FilterMAFastQ12(
-        const_cast<int16_t*>(&audio_history[signal_length - 128]),
-        unvoiced_vector, parameters.ar_filter, kUnvoicedLpcOrder + 1, 128);
+    WebRtcSpl_FilterMAFastQ12(&audio_history[signal_length - 128],
+                              unvoiced_vector,
+                              parameters.ar_filter,
+                              kUnvoicedLpcOrder + 1,
+                              128);
     int16_t unvoiced_prescale;
     if (WebRtcSpl_MaxAbsValueW16(unvoiced_vector, 128) > 4000) {
       unvoiced_prescale = 4;

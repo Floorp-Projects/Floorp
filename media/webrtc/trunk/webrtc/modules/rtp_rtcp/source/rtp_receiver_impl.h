@@ -11,11 +11,11 @@
 #ifndef WEBRTC_MODULES_RTP_RTCP_SOURCE_RTP_RECEIVER_IMPL_H_
 #define WEBRTC_MODULES_RTP_RTCP_SOURCE_RTP_RECEIVER_IMPL_H_
 
+#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/modules/rtp_rtcp/interface/rtp_receiver.h"
 #include "webrtc/modules/rtp_rtcp/interface/rtp_rtcp_defines.h"
 #include "webrtc/modules/rtp_rtcp/source/rtp_receiver_strategy.h"
 #include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
-#include "webrtc/system_wrappers/interface/scoped_ptr.h"
 #include "webrtc/typedefs.h"
 
 namespace webrtc {
@@ -34,38 +34,36 @@ class RtpReceiverImpl : public RtpReceiver {
 
   virtual ~RtpReceiverImpl();
 
-  virtual int32_t RegisterReceivePayload(
-      const char payload_name[RTP_PAYLOAD_NAME_SIZE],
-      const int8_t payload_type,
-      const uint32_t frequency,
-      const uint8_t channels,
-      const uint32_t rate) OVERRIDE;
+  int32_t RegisterReceivePayload(const char payload_name[RTP_PAYLOAD_NAME_SIZE],
+                                 const int8_t payload_type,
+                                 const uint32_t frequency,
+                                 const uint8_t channels,
+                                 const uint32_t rate) override;
 
-  virtual int32_t DeRegisterReceivePayload(const int8_t payload_type) OVERRIDE;
+  int32_t DeRegisterReceivePayload(const int8_t payload_type) override;
 
-  virtual bool IncomingRtpPacket(
-      const RTPHeader& rtp_header,
-      const uint8_t* payload,
-      int payload_length,
-      PayloadUnion payload_specific,
-      bool in_order) OVERRIDE;
+  bool IncomingRtpPacket(const RTPHeader& rtp_header,
+                         const uint8_t* payload,
+                         size_t payload_length,
+                         PayloadUnion payload_specific,
+                         bool in_order) override;
 
-  virtual NACKMethod NACK() const OVERRIDE;
+  NACKMethod NACK() const override;
 
   // Turn negative acknowledgement requests on/off.
-  virtual void SetNACKStatus(const NACKMethod method) OVERRIDE;
+  void SetNACKStatus(const NACKMethod method) override;
 
   // Returns the last received timestamp.
-  virtual bool Timestamp(uint32_t* timestamp) const OVERRIDE;
-  virtual bool LastReceivedTimeMs(int64_t* receive_time_ms) const OVERRIDE;
+  bool Timestamp(uint32_t* timestamp) const override;
+  bool LastReceivedTimeMs(int64_t* receive_time_ms) const override;
 
-  virtual uint32_t SSRC() const OVERRIDE;
+  uint32_t SSRC() const override;
 
-  virtual int32_t CSRCs(uint32_t array_of_csrc[kRtpCsrcSize]) const OVERRIDE;
+  int32_t CSRCs(uint32_t array_of_csrc[kRtpCsrcSize]) const override;
 
-  virtual int32_t Energy(uint8_t array_of_energy[kRtpCsrcSize]) const OVERRIDE;
+  int32_t Energy(uint8_t array_of_energy[kRtpCsrcSize]) const override;
 
-  virtual TelephoneEventHandler* GetTelephoneEventHandler() OVERRIDE;
+  TelephoneEventHandler* GetTelephoneEventHandler() override;
 
  private:
   bool HaveReceivedFrame() const;
@@ -80,15 +78,15 @@ class RtpReceiverImpl : public RtpReceiver {
 
   Clock* clock_;
   RTPPayloadRegistry* rtp_payload_registry_;
-  scoped_ptr<RTPReceiverStrategy> rtp_media_receiver_;
+  rtc::scoped_ptr<RTPReceiverStrategy> rtp_media_receiver_;
 
   int32_t id_;
 
   RtpFeedback* cb_rtp_feedback_;
 
-  scoped_ptr<CriticalSectionWrapper> critical_section_rtp_receiver_;
+  rtc::scoped_ptr<CriticalSectionWrapper> critical_section_rtp_receiver_;
   int64_t last_receive_time_;
-  uint16_t last_received_payload_length_;
+  size_t last_received_payload_length_;
 
   // SSRCs.
   uint32_t ssrc_;

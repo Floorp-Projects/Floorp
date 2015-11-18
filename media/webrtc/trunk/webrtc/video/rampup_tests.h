@@ -15,10 +15,10 @@
 #include <string>
 #include <vector>
 
+#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/call.h"
 #include "webrtc/modules/remote_bitrate_estimator/include/remote_bitrate_estimator.h"
 #include "webrtc/system_wrappers/interface/event_wrapper.h"
-#include "webrtc/system_wrappers/interface/scoped_ptr.h"
 #include "webrtc/test/call_test.h"
 #include "webrtc/video/transport_adapter.h"
 
@@ -49,12 +49,12 @@ class StreamObserver : public newapi::Transport, public RemoteBitrateObserver {
 
   void set_start_bitrate_bps(unsigned int start_bitrate_bps);
 
-  virtual void OnReceiveBitrateChanged(const std::vector<unsigned int>& ssrcs,
-                                       unsigned int bitrate) OVERRIDE;
+  void OnReceiveBitrateChanged(const std::vector<unsigned int>& ssrcs,
+                               unsigned int bitrate) override;
 
-  virtual bool SendRtp(const uint8_t* packet, size_t length) OVERRIDE;
+  bool SendRtp(const uint8_t* packet, size_t length) override;
 
-  virtual bool SendRtcp(const uint8_t* packet, size_t length) OVERRIDE;
+  bool SendRtcp(const uint8_t* packet, size_t length) override;
 
   EventTypeWrapper Wait();
 
@@ -65,15 +65,15 @@ class StreamObserver : public newapi::Transport, public RemoteBitrateObserver {
   void TriggerTestDone() EXCLUSIVE_LOCKS_REQUIRED(crit_);
 
   Clock* const clock_;
-  const scoped_ptr<EventWrapper> test_done_;
-  const scoped_ptr<RtpHeaderParser> rtp_parser_;
-  scoped_ptr<RtpRtcp> rtp_rtcp_;
+  const rtc::scoped_ptr<EventWrapper> test_done_;
+  const rtc::scoped_ptr<RtpHeaderParser> rtp_parser_;
+  rtc::scoped_ptr<RtpRtcp> rtp_rtcp_;
   internal::TransportAdapter feedback_transport_;
-  const scoped_ptr<ReceiveStatistics> receive_stats_;
-  const scoped_ptr<RTPPayloadRegistry> payload_registry_;
-  scoped_ptr<RemoteBitrateEstimator> remote_bitrate_estimator_;
+  const rtc::scoped_ptr<ReceiveStatistics> receive_stats_;
+  const rtc::scoped_ptr<RTPPayloadRegistry> payload_registry_;
+  rtc::scoped_ptr<RemoteBitrateEstimator> remote_bitrate_estimator_;
 
-  const scoped_ptr<CriticalSectionWrapper> crit_;
+  const rtc::scoped_ptr<CriticalSectionWrapper> crit_;
   unsigned int expected_bitrate_bps_ GUARDED_BY(crit_);
   unsigned int start_bitrate_bps_ GUARDED_BY(crit_);
   SsrcMap rtx_media_ssrcs_ GUARDED_BY(crit_);
@@ -96,17 +96,16 @@ class LowRateStreamObserver : public test::DirectTransport,
                         size_t number_of_streams,
                         bool rtx_used);
 
-  virtual void SetSendStream(const VideoSendStream* send_stream);
+  virtual void SetSendStream(VideoSendStream* send_stream);
 
   virtual void OnReceiveBitrateChanged(const std::vector<unsigned int>& ssrcs,
                                        unsigned int bitrate);
 
-  virtual bool SendRtp(const uint8_t* data, size_t length) OVERRIDE;
+  bool SendRtp(const uint8_t* data, size_t length) override;
 
-  virtual DeliveryStatus DeliverPacket(const uint8_t* packet,
-                                       size_t length) OVERRIDE;
+  DeliveryStatus DeliverPacket(const uint8_t* packet, size_t length) override;
 
-  virtual bool SendRtcp(const uint8_t* packet, size_t length) OVERRIDE;
+  bool SendRtcp(const uint8_t* packet, size_t length) override;
 
   // Produces a string similar to "1stream_nortx", depending on the values of
   // number_of_streams_ and rtx_used_;
@@ -127,15 +126,15 @@ class LowRateStreamObserver : public test::DirectTransport,
   Clock* const clock_;
   const size_t number_of_streams_;
   const bool rtx_used_;
-  const scoped_ptr<EventWrapper> test_done_;
-  const scoped_ptr<RtpHeaderParser> rtp_parser_;
-  scoped_ptr<RtpRtcp> rtp_rtcp_;
+  const rtc::scoped_ptr<EventWrapper> test_done_;
+  const rtc::scoped_ptr<RtpHeaderParser> rtp_parser_;
+  rtc::scoped_ptr<RtpRtcp> rtp_rtcp_;
   internal::TransportAdapter feedback_transport_;
-  const scoped_ptr<ReceiveStatistics> receive_stats_;
-  scoped_ptr<RemoteBitrateEstimator> remote_bitrate_estimator_;
+  const rtc::scoped_ptr<ReceiveStatistics> receive_stats_;
+  rtc::scoped_ptr<RemoteBitrateEstimator> remote_bitrate_estimator_;
 
-  scoped_ptr<CriticalSectionWrapper> crit_;
-  const VideoSendStream* send_stream_ GUARDED_BY(crit_);
+  rtc::scoped_ptr<CriticalSectionWrapper> crit_;
+  VideoSendStream* send_stream_ GUARDED_BY(crit_);
   FakeNetworkPipe::Config forward_transport_config_ GUARDED_BY(crit_);
   TestStates test_state_ GUARDED_BY(crit_);
   int64_t state_start_ms_ GUARDED_BY(crit_);

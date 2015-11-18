@@ -19,6 +19,7 @@ namespace webrtc {
 
 VPMContentAnalysis::VPMContentAnalysis(bool runtime_cpu_detection)
     : orig_frame_(NULL),
+      prev_frame_(NULL),
       width_(0),
       height_(0),
       skip_num_(1),
@@ -28,7 +29,8 @@ VPMContentAnalysis::VPMContentAnalysis(bool runtime_cpu_detection)
       spatial_pred_err_h_(0.0f),
       spatial_pred_err_v_(0.0f),
       first_frame_(true),
-      ca_Init_(false) {
+      ca_Init_(false),
+      content_metrics_(NULL) {
   ComputeSpatialMetrics = &VPMContentAnalysis::ComputeSpatialMetrics_C;
   TemporalDiffMetric = &VPMContentAnalysis::TemporalDiffMetric_C;
 
@@ -58,32 +60,35 @@ VideoContentMetrics* VPMContentAnalysis::ComputeContentMetrics(
     if (VPM_OK != Initialize(inputFrame.width(), inputFrame.height()))
       return NULL;
   }
-#if !defined(WEBRTC_GONK)
+  // Only interested in the Y plane.
+  orig_frame_ = inputFrame.buffer(kYPlane);
+
+  // Compute spatial metrics: 3 spatial prediction errors.
+  (this->*ComputeSpatialMetrics)();
+
   // Compute motion metrics
-  if (ca_Init_) {
-    // Only interested in the Y plane.
-    orig_frame_ = inputFrame.buffer(kYPlane);
+  if (first_frame_ == false)
+    ComputeMotionMetrics();
 
-    // Compute spatial metrics: 3 spatial prediction errors.
-    (this->*ComputeSpatialMetrics)();
+  // Saving current frame as previous one: Y only.
+  memcpy(prev_frame_, orig_frame_, width_ * height_);
 
-    if (first_frame_ == false) {
-      ComputeMotionMetrics();
-    }
-
-    // Saving current frame as previous one: Y only.
-    memcpy(prev_frame_.get(), orig_frame_, width_ * height_);
-
-    first_frame_ =  false;
-  }
-#endif
+  first_frame_ =  false;
+  ca_Init_ = true;
 
   return ContentMetrics();
 }
 
 int32_t VPMContentAnalysis::Release() {
-  content_metrics_.reset(NULL);
-  prev_frame_.reset();
+  if (content_metrics_ != NULL) {
+    delete content_metrics_;
+    content_metrics_ = NULL;
+  }
+
+  if (prev_frame_ != NULL) {
+    delete [] prev_frame_;
+    prev_frame_ = NULL;
+  }
 
   width_ = 0;
   height_ = 0;
@@ -93,7 +98,6 @@ int32_t VPMContentAnalysis::Release() {
 }
 
 int32_t VPMContentAnalysis::Initialize(int width, int height) {
-  ca_Init_ = false;
   width_ = width;
   height_ = height;
   first_frame_ = true;
@@ -111,29 +115,29 @@ int32_t VPMContentAnalysis::Initialize(int width, int height) {
     skip_num_ = 4;
   }
 
-  content_metrics_.reset(NULL);
-  prev_frame_.reset();
+  if (content_metrics_ != NULL) {
+    delete content_metrics_;
+  }
+
+  if (prev_frame_ != NULL) {
+    delete [] prev_frame_;
+  }
 
   // Spatial Metrics don't work on a border of 8. Minimum processing
   // block size is 16 pixels.  So make sure the width and height support this.
   if (width_ <= 32 || height_ <= 32) {
+    ca_Init_ = false;
     return VPM_PARAMETER_ERROR;
   }
 
-  content_metrics_.reset(new VideoContentMetrics());
-  if (!content_metrics_) {
+  content_metrics_ = new VideoContentMetrics();
+  if (content_metrics_ == NULL) {
     return VPM_MEMORY;
   }
 
-#if !defined(WEBRTC_GONK)
-  prev_frame_.reset(new uint8_t[width_ * height_]);  // Y only.
-  if (!prev_frame_) {
-    return VPM_MEMORY;
-  }
-#endif
+  prev_frame_ = new uint8_t[width_ * height_];  // Y only.
+  if (prev_frame_ == NULL) return VPM_MEMORY;
 
-  // ok, all initialized
-  ca_Init_ = true;
   return VPM_OK;
 }
 
@@ -161,7 +165,6 @@ int32_t VPMContentAnalysis::TemporalDiffMetric_C() {
 
   uint32_t num_pixels = 0;  // Counter for # of pixels.
   const int width_end = ((width_ - 2*border_) & -16) + border_;
-  uint8_t *prev_frame = prev_frame_.get();
 
   for (int i = border_; i < sizei - border_; i += skip_num_) {
     for (int j = border_; j < width_end; j++) {
@@ -169,7 +172,7 @@ int32_t VPMContentAnalysis::TemporalDiffMetric_C() {
       int ssn =  i * sizej + j;
 
       uint8_t currPixel  = orig_frame_[ssn];
-      uint8_t prevPixel  = prev_frame[ssn];
+      uint8_t prevPixel  = prev_frame_[ssn];
 
       tempDiffSum += (uint32_t)abs((int16_t)(currPixel - prevPixel));
       pixelSum += (uint32_t) currPixel;
@@ -260,15 +263,13 @@ int32_t VPMContentAnalysis::ComputeSpatialMetrics_C() {
 VideoContentMetrics* VPMContentAnalysis::ContentMetrics() {
   if (ca_Init_ == false) return NULL;
 
-  if (content_metrics_) {
-    content_metrics_->spatial_pred_err = spatial_pred_err_;
-    content_metrics_->spatial_pred_err_h = spatial_pred_err_h_;
-    content_metrics_->spatial_pred_err_v = spatial_pred_err_v_;
-    // Motion metric: normalized temporal difference (MAD).
-    content_metrics_->motion_magnitude = motion_magnitude_;
-  }
+  content_metrics_->spatial_pred_err = spatial_pred_err_;
+  content_metrics_->spatial_pred_err_h = spatial_pred_err_h_;
+  content_metrics_->spatial_pred_err_v = spatial_pred_err_v_;
+  // Motion metric: normalized temporal difference (MAD).
+  content_metrics_->motion_magnitude = motion_magnitude_;
 
-  return content_metrics_.get();
+  return content_metrics_;
 }
 
 }  // namespace webrtc

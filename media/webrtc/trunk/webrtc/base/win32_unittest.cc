@@ -59,4 +59,37 @@ TEST_F(Win32Test, WinPingTest) {
             IPAddress(INADDR_LOOPBACK), 20, 50, 0, false));
 }
 
+TEST_F(Win32Test, IPv6AddressCompression) {
+  IPAddress ipv6;
+
+  // Zero compression should be done on the leftmost 0s when there are
+  // multiple longest series.
+  ASSERT_TRUE(IPFromString("2a00:8a00:a000:1190:0000:0001:000:252", &ipv6));
+  EXPECT_EQ("2a00:8a00:a000:1190::1:0:252", ipv6.ToString());
+
+  // Ensure the zero compression could handle multiple octects.
+  ASSERT_TRUE(IPFromString("0:0:0:0:0:0:0:1", &ipv6));
+  EXPECT_EQ("::1", ipv6.ToString());
+
+  // Make sure multiple 0 octects compressed.
+  ASSERT_TRUE(IPFromString("fe80:0:0:0:2aa:ff:fe9a:4ca2", &ipv6));
+  EXPECT_EQ("fe80::2aa:ff:fe9a:4ca2", ipv6.ToString());
+
+  // Test zero compression at the end of string.
+  ASSERT_TRUE(IPFromString("2a00:8a00:a000:1190:0000:0001:000:00", &ipv6));
+  EXPECT_EQ("2a00:8a00:a000:1190:0:1::", ipv6.ToString());
+
+  // Test zero compression at the beginning of string.
+  ASSERT_TRUE(IPFromString("0:0:000:1190:0000:0001:000:00", &ipv6));
+  EXPECT_EQ("::1190:0:1:0:0", ipv6.ToString());
+
+  // Test zero compression only done once.
+  ASSERT_TRUE(IPFromString("0:1:000:1190:0000:0001:000:01", &ipv6));
+  EXPECT_EQ("::1:0:1190:0:1:0:1", ipv6.ToString());
+
+  // Make sure noncompressable IPv6 is the same.
+  ASSERT_TRUE(IPFromString("1234:5678:abcd:1234:5678:abcd:1234:5678", &ipv6));
+  EXPECT_EQ("1234:5678:abcd:1234:5678:abcd:1234:5678", ipv6.ToString());
+}
+
 }  // namespace rtc

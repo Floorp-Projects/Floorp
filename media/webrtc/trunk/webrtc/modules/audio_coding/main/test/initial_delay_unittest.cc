@@ -16,6 +16,7 @@
 #include <iostream>
 
 #include "testing/gtest/include/gtest/gtest.h"
+#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/common_types.h"
 #include "webrtc/engine_configurations.h"
 #include "webrtc/modules/audio_coding/main/interface/audio_coding_module_typedefs.h"
@@ -23,7 +24,6 @@
 #include "webrtc/modules/audio_coding/main/test/PCMFile.h"
 #include "webrtc/modules/audio_coding/main/test/utility.h"
 #include "webrtc/system_wrappers/interface/event_wrapper.h"
-#include "webrtc/system_wrappers/interface/scoped_ptr.h"
 #include "webrtc/test/testsupport/fileutils.h"
 #include "webrtc/test/testsupport/gtest_disable.h"
 
@@ -145,8 +145,7 @@ class InitialPlayoutDelayTest : public ::testing::Test {
     while (rms < kAmp / 2) {
       in_audio_frame.timestamp_ = timestamp;
       timestamp += in_audio_frame.samples_per_channel_;
-      ASSERT_EQ(0, acm_a_->Add10MsData(in_audio_frame));
-      ASSERT_LE(0, acm_a_->Process());
+      ASSERT_GE(acm_a_->Add10MsData(in_audio_frame), 0);
       ASSERT_EQ(0, acm_b_->PlayoutData10Ms(codec.plfreq, &out_audio_frame));
       rms = FrameRms(out_audio_frame);
       ++num_frames;
@@ -156,8 +155,8 @@ class InitialPlayoutDelayTest : public ::testing::Test {
     ASSERT_LE(num_frames * 10, initial_delay_ms + 100);
   }
 
-  scoped_ptr<AudioCodingModule> acm_a_;
-  scoped_ptr<AudioCodingModule> acm_b_;
+  rtc::scoped_ptr<AudioCodingModule> acm_a_;
+  rtc::scoped_ptr<AudioCodingModule> acm_b_;
   Channel* channel_a2b_;
 };
 

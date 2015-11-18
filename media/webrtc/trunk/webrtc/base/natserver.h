@@ -54,7 +54,7 @@ class NATServer : public sigslot::has_slots<> {
   NATServer(
       NATType type, SocketFactory* internal, const SocketAddress& internal_addr,
       SocketFactory* external, const SocketAddress& external_ip);
-  ~NATServer();
+  ~NATServer() override;
 
   SocketAddress internal_address() const {
     return server_socket_->GetLocalAddress();

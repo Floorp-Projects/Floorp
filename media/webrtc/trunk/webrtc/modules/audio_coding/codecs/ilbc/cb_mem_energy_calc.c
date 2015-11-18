@@ -45,8 +45,7 @@ void WebRtcIlbcfix_CbMemEnergyCalc(
 
     /* Calculate next energy by a +/-
        operation on the edge samples */
-    tmp  = WEBRTC_SPL_MUL_16_16(*ppi, *ppi);
-    tmp -= WEBRTC_SPL_MUL_16_16(*ppo, *ppo);
+    tmp = (*ppi) * (*ppi) - (*ppo) * (*ppo);
     energy += tmp >> scale;
     energy = WEBRTC_SPL_MAX(energy, 0);
 
@@ -59,7 +58,7 @@ void WebRtcIlbcfix_CbMemEnergyCalc(
     shft = (int16_t)WebRtcSpl_NormW32(energy);
     *eSh_ptr++ = shft;
 
-    tmp = WEBRTC_SPL_LSHIFT_W32(energy, shft);
+    tmp = energy << shft;
     *eW16_ptr++ = (int16_t)(tmp >> 16);
   }
 }

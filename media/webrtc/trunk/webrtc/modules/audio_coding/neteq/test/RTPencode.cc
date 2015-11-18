@@ -25,7 +25,7 @@
 
 #include "webrtc/typedefs.h"
 // needed for NetEqDecoder
-#include "webrtc/modules/audio_coding/neteq/interface/audio_decoder.h"
+#include "webrtc/modules/audio_coding/neteq/audio_decoder_impl.h"
 #include "webrtc/modules/audio_coding/neteq/interface/neteq.h"
 
 /************************/
@@ -71,15 +71,47 @@
 /* Function declarations */
 /*************************/
 
-void NetEQTest_GetCodec_and_PT(char * name, webrtc::NetEqDecoder *codec, int *PT, int frameLen, int *fs, int *bitrate, int *useRed);
-int NetEQTest_init_coders(webrtc::NetEqDecoder coder, int enc_frameSize, int bitrate, int sampfreq , int vad, int numChannels);
-void defineCodecs(webrtc::NetEqDecoder *usedCodec, int *noOfCodecs );
+void NetEQTest_GetCodec_and_PT(char* name,
+                               webrtc::NetEqDecoder* codec,
+                               int* PT,
+                               int frameLen,
+                               int* fs,
+                               int* bitrate,
+                               int* useRed);
+int NetEQTest_init_coders(webrtc::NetEqDecoder coder,
+                          int enc_frameSize,
+                          int bitrate,
+                          int sampfreq,
+                          int vad,
+                          int numChannels);
+void defineCodecs(webrtc::NetEqDecoder* usedCodec, int* noOfCodecs);
 int NetEQTest_free_coders(webrtc::NetEqDecoder coder, int numChannels);
-int NetEQTest_encode(int coder, int16_t *indata, int frameLen, unsigned char * encoded,int sampleRate , int * vad, int useVAD, int bitrate, int numChannels);
-void makeRTPheader(unsigned char* rtp_data, int payloadType, int seqNo, uint32_t timestamp, uint32_t ssrc);
-int makeRedundantHeader(unsigned char* rtp_data, int *payloadType, int numPayloads, uint32_t *timestamp, uint16_t *blockLen,
-                        int seqNo, uint32_t ssrc);
-int makeDTMFpayload(unsigned char* payload_data, int Event, int End, int Volume, int Duration);
+int NetEQTest_encode(int coder,
+                     int16_t* indata,
+                     int frameLen,
+                     unsigned char* encoded,
+                     int sampleRate,
+                     int* vad,
+                     int useVAD,
+                     int bitrate,
+                     int numChannels);
+void makeRTPheader(unsigned char* rtp_data,
+                   int payloadType,
+                   int seqNo,
+                   uint32_t timestamp,
+                   uint32_t ssrc);
+int makeRedundantHeader(unsigned char* rtp_data,
+                        int* payloadType,
+                        int numPayloads,
+                        uint32_t* timestamp,
+                        uint16_t* blockLen,
+                        int seqNo,
+                        uint32_t ssrc);
+int makeDTMFpayload(unsigned char* payload_data,
+                    int Event,
+                    int End,
+                    int Volume,
+                    int Duration);
 void stereoDeInterleave(int16_t* audioSamples, int numSamples);
 void stereoInterleave(unsigned char* data, int dataLen, int stride);
 
@@ -157,10 +189,6 @@ void stereoInterleave(unsigned char* data, int dataLen, int stride);
 #if ((defined CODEC_SPEEX_8)||(defined CODEC_SPEEX_16))
 	#include "SpeexInterface.h"
 #endif
-#ifdef CODEC_CELT_32
-#include "celt_interface.h"
-#endif
-
 
 /***********************************/
 /* Global codec instance variables */
@@ -208,7 +236,7 @@ WebRtcVadInst *VAD_inst[2];
 	int16_t		  AMRWB_bitrate;
 #endif
 #ifdef CODEC_ILBC
-	iLBC_encinst_t *iLBCenc_inst[2];
+	IlbcEncoderInstance *iLBCenc_inst[2];
 #endif
 #ifdef CODEC_ISAC
 	ISACStruct *ISAC_inst[2];
@@ -232,44 +260,40 @@ WebRtcVadInst *VAD_inst[2];
 #ifdef CODEC_SPEEX_16
 	SPEEX_encinst_t *SPEEX16enc_inst[2];
 #endif
-#ifdef CODEC_CELT_32
-  CELT_encinst_t *CELT32enc_inst[2];
-#endif
-
 
 int main(int argc, char* argv[])
 {
-	int packet_size, fs;
-	webrtc::NetEqDecoder usedCodec;
-	int payloadType;
-	int bitrate = 0;
-	int useVAD, vad;
+    int packet_size, fs;
+    webrtc::NetEqDecoder usedCodec;
+    int payloadType;
+    int bitrate = 0;
+    int useVAD, vad;
     int useRed=0;
-	int len, enc_len;
-	int16_t org_data[4000];
-	unsigned char rtp_data[8000];
-	int16_t seqNo=0xFFF;
-	uint32_t ssrc=1235412312;
-	uint32_t timestamp=0xAC1245;
-        uint16_t length, plen;
-	uint32_t offset;
-	double sendtime = 0;
+    int len, enc_len;
+    int16_t org_data[4000];
+    unsigned char rtp_data[8000];
+    int16_t seqNo=0xFFF;
+    uint32_t ssrc=1235412312;
+    uint32_t timestamp=0xAC1245;
+    uint16_t length, plen;
+    uint32_t offset;
+    double sendtime = 0;
     int red_PT[2] = {0};
     uint32_t red_TS[2] = {0};
     uint16_t red_len[2] = {0};
     int RTPheaderLen=12;
     uint8_t red_data[8000];
 #ifdef INSERT_OLD_PACKETS
-	uint16_t old_length, old_plen;
-	int old_enc_len;
-	int first_old_packet=1;
-	unsigned char old_rtp_data[8000];
-	int packet_age=0;
+    uint16_t old_length, old_plen;
+    int old_enc_len;
+    int first_old_packet=1;
+    unsigned char old_rtp_data[8000];
+    int packet_age=0;
 #endif
 #ifdef INSERT_DTMF_PACKETS
-	int NTone = 1;
-	int DTMFfirst = 1;
-	uint32_t DTMFtimestamp;
+    int NTone = 1;
+    int DTMFfirst = 1;
+    uint32_t DTMFtimestamp;
     bool dtmfSent = false;
 #endif
     bool usingStereo = false;
@@ -372,9 +396,6 @@ int main(int argc, char* argv[])
 #endif
 #ifdef CODEC_SPEEX_16
 		printf("             : speex16      speex coder (16 kHz)\n");
-#endif
-#ifdef CODEC_CELT_32
-    printf("             : celt32       celt coder (32 kHz)\n");
 #endif
 #ifdef CODEC_RED
 #ifdef CODEC_G711
@@ -800,7 +821,13 @@ int main(int argc, char* argv[])
 /* Subfunctions */
 /****************/
 
-void NetEQTest_GetCodec_and_PT(char * name, webrtc::NetEqDecoder *codec, int *PT, int frameLen, int *fs, int *bitrate, int *useRed) {
+void NetEQTest_GetCodec_and_PT(char* name,
+                               webrtc::NetEqDecoder* codec,
+                               int* PT,
+                               int frameLen,
+                               int* fs,
+                               int* bitrate,
+                               int* useRed) {
 
 	*bitrate = 0; /* Default bitrate setting */
     *useRed = 0; /* Default no redundancy */
@@ -855,11 +882,6 @@ void NetEQTest_GetCodec_and_PT(char * name, webrtc::NetEqDecoder *codec, int *PT
 		*codec=webrtc::kDecoderISACswb;
 		*PT=NETEQ_CODEC_ISACSWB_PT;
 	}
-  else if(!strcmp(name,"celt32")){
-    *fs=32000;
-    *codec=webrtc::kDecoderCELT_32;
-    *PT=NETEQ_CODEC_CELT32_PT;
-  }
     else if(!strcmp(name,"red_pcm")){
 		*codec=webrtc::kDecoderPCMa;
 		*PT=NETEQ_CODEC_PCMA_PT; /* this will be the PT for the sub-headers */
@@ -1028,26 +1050,6 @@ int NetEQTest_init_coders(webrtc::NetEqDecoder coder, int enc_frameSize, int bit
             if (ok!=0) exit(0);
         } else {
             printf("\nError - Speex16 called with sample frequency other than 16 kHz.\n\n");
-        }
-        break;
-#endif
-#ifdef CODEC_CELT_32
-    case webrtc::kDecoderCELT_32 :
-        if (sampfreq==32000) {
-            if (enc_frameSize==320) {
-                ok=WebRtcCelt_CreateEnc(&CELT32enc_inst[k], 1 /*mono*/);
-                if (ok!=0) {
-                    printf("Error: Couldn't allocate memory for Celt encoding instance\n");
-                    exit(0);
-                }
-            } else {
-                printf("\nError: Celt only supports 10 ms!!\n\n");
-                exit(0);
-            }
-            ok=WebRtcCelt_EncoderInit(CELT32enc_inst[k],  1 /*mono*/, 48000 /*bitrate*/);
-            if (ok!=0) exit(0);
-        } else {
-          printf("\nError - Celt32 called with sample frequency other than 32 kHz.\n\n");
         }
         break;
 #endif
@@ -1439,11 +1441,6 @@ int NetEQTest_free_coders(webrtc::NetEqDecoder coder, int numChannels) {
             WebRtcSpeex_FreeEnc(SPEEX16enc_inst[k]);
             break;
 #endif
-#ifdef CODEC_CELT_32
-        case webrtc::kDecoderCELT_32 :
-            WebRtcCelt_FreeEnc(CELT32enc_inst[k]);
-            break;
-#endif
 
 #ifdef CODEC_G722_1_16
         case webrtc::kDecoderG722_1_16 :
@@ -1599,29 +1596,30 @@ int NetEQTest_encode(int coder, int16_t *indata, int frameLen, unsigned char * e
         /* Encode with the selected coder type */
         if (coder==webrtc::kDecoderPCMu) { /*g711 u-law */
 #ifdef CODEC_G711
-            cdlen = WebRtcG711_EncodeU(indata, frameLen, (int16_t*) encoded);
+            cdlen = WebRtcG711_EncodeU(indata, frameLen, encoded);
 #endif
         }  
         else if (coder==webrtc::kDecoderPCMa) { /*g711 A-law */
 #ifdef CODEC_G711
-            cdlen = WebRtcG711_EncodeA(indata, frameLen, (int16_t*) encoded);
+            cdlen = WebRtcG711_EncodeA(indata, frameLen, encoded);
         }
 #endif
 #ifdef CODEC_PCM16B
         else if ((coder==webrtc::kDecoderPCM16B)||(coder==webrtc::kDecoderPCM16Bwb)||
             (coder==webrtc::kDecoderPCM16Bswb32kHz)||(coder==webrtc::kDecoderPCM16Bswb48kHz)) { /*pcm16b (8kHz, 16kHz, 32kHz or 48kHz) */
-                cdlen = WebRtcPcm16b_EncodeW16(indata, frameLen, (int16_t*) encoded);
+                cdlen = WebRtcPcm16b_Encode(indata, frameLen, encoded);
             }
 #endif
 #ifdef CODEC_G722
         else if (coder==webrtc::kDecoderG722) { /*g722 */
-            cdlen=WebRtcG722_Encode(g722EncState[k], indata, frameLen, (int16_t*)encoded);
+            cdlen=WebRtcG722_Encode(g722EncState[k], indata, frameLen, encoded);
             assert(cdlen == frameLen>>1);
         }
 #endif
 #ifdef CODEC_ILBC
         else if (coder==webrtc::kDecoderILBC) { /*iLBC */
-            cdlen=WebRtcIlbcfix_Encode(iLBCenc_inst[k], indata,frameLen,(int16_t*)encoded);
+            cdlen = WebRtcIlbcfix_Encode(iLBCenc_inst[k], indata,
+                                         frameLen, encoded);
         }
 #endif
 #if (defined(CODEC_ISAC) || defined(NETEQ_ISACFIX_CODEC)) // TODO(hlundin): remove all NETEQ_ISACFIX_CODEC
@@ -1654,21 +1652,6 @@ int NetEQTest_encode(int coder, int16_t *indata, int frameLen, unsigned char * e
             }
         }
 #endif
-#ifdef CODEC_CELT_32
-        else if (coder==webrtc::kDecoderCELT_32) { /* Celt */
-            int encodedLen = 0;
-            cdlen = 0;
-            while (cdlen <= 0) {
-                cdlen = WebRtcCelt_Encode(CELT32enc_inst[k], &indata[encodedLen], encoded);
-                encodedLen += 10*32; /* 10 ms */
-            }
-            if( (encodedLen != frameLen) || cdlen < 0) {
-                printf("Error encoding Celt frame!\n");
-                exit(0);
-            }
-        }
-#endif
-
         indata += frameLen;
         encoded += cdlen;
         totalLen += cdlen;
@@ -1681,59 +1664,71 @@ int NetEQTest_encode(int coder, int16_t *indata, int frameLen, unsigned char * e
 
 
 
-void makeRTPheader(unsigned char* rtp_data, int payloadType, int seqNo, uint32_t timestamp, uint32_t ssrc){
-			
-			rtp_data[0]=(unsigned char)0x80;
-			rtp_data[1]=(unsigned char)(payloadType & 0xFF);
-			rtp_data[2]=(unsigned char)((seqNo>>8)&0xFF);
-			rtp_data[3]=(unsigned char)((seqNo)&0xFF);
-			rtp_data[4]=(unsigned char)((timestamp>>24)&0xFF);
-			rtp_data[5]=(unsigned char)((timestamp>>16)&0xFF);
-
-			rtp_data[6]=(unsigned char)((timestamp>>8)&0xFF); 
-			rtp_data[7]=(unsigned char)(timestamp & 0xFF);
-
-			rtp_data[8]=(unsigned char)((ssrc>>24)&0xFF);
-			rtp_data[9]=(unsigned char)((ssrc>>16)&0xFF);
-
-			rtp_data[10]=(unsigned char)((ssrc>>8)&0xFF);
-			rtp_data[11]=(unsigned char)(ssrc & 0xFF);
+void makeRTPheader(unsigned char* rtp_data,
+                   int payloadType,
+                   int seqNo,
+                   uint32_t timestamp,
+                   uint32_t ssrc) {
+    rtp_data[0] = 0x80;
+    rtp_data[1] = payloadType & 0xFF;
+    rtp_data[2] = (seqNo >> 8) & 0xFF;
+    rtp_data[3] = seqNo & 0xFF;
+    rtp_data[4] = timestamp >> 24;
+    rtp_data[5] = (timestamp >> 16) & 0xFF;
+    rtp_data[6] = (timestamp >> 8) & 0xFF;
+    rtp_data[7] = timestamp & 0xFF;
+    rtp_data[8] = ssrc >> 24;
+    rtp_data[9] = (ssrc >> 16) & 0xFF;
+    rtp_data[10] = (ssrc >> 8) & 0xFF;
+    rtp_data[11] = ssrc & 0xFF;
 }
 
 
-int makeRedundantHeader(unsigned char* rtp_data, int *payloadType, int numPayloads, uint32_t *timestamp, uint16_t *blockLen,
-                        int seqNo, uint32_t ssrc)
+int makeRedundantHeader(unsigned char* rtp_data,
+                        int* payloadType,
+                        int numPayloads,
+                        uint32_t* timestamp,
+                        uint16_t* blockLen,
+                        int seqNo,
+                        uint32_t ssrc)
 {
-
     int i;
-    unsigned char *rtpPointer;
+    unsigned char* rtpPointer;
     uint16_t offset;
 
     /* first create "standard" RTP header */
-    makeRTPheader(rtp_data, NETEQ_CODEC_RED_PT, seqNo, timestamp[numPayloads-1], ssrc);
+    makeRTPheader(rtp_data, NETEQ_CODEC_RED_PT, seqNo, timestamp[numPayloads-1],
+                  ssrc);
 
     rtpPointer = &rtp_data[12];
 
     /* add one sub-header for each redundant payload (not the primary) */
-    for(i=0; i<numPayloads-1; i++) {                                            /* |0 1 2 3 4 5 6 7| */
-        if(blockLen[i] > 0) {
-            offset = (uint16_t) (timestamp[numPayloads-1] - timestamp[i]);
+    for (i = 0; i < numPayloads - 1; i++) {
+        if (blockLen[i] > 0) {
+            offset = static_cast<uint16_t>(
+                timestamp[numPayloads - 1] - timestamp[i]);
 
-            rtpPointer[0] = (unsigned char) ( 0x80 | (0x7F & payloadType[i]) ); /* |F|   block PT  | */
-            rtpPointer[1] = (unsigned char) ((offset >> 6) & 0xFF);             /* |  timestamp-   | */
-            rtpPointer[2] = (unsigned char) ( ((offset & 0x3F)<<2) |
-                ( (blockLen[i]>>8) & 0x03 ) );                                  /* | -offset   |bl-| */
-            rtpPointer[3] = (unsigned char) ( blockLen[i] & 0xFF );             /* | -ock length   | */
+            // Byte |0|       |1       2     |  3       |
+            // Bit  |0|1234567|01234567012345|6701234567|
+            //      |F|payload|   timestamp  |   block  |
+            //      | |  type |    offset    |  length  |
+            rtpPointer[0] = (payloadType[i] & 0x7F) | 0x80;
+            rtpPointer[1] = (offset >> 6) & 0xFF;
+            rtpPointer[2] =
+                ((offset & 0x3F) << 2) | ((blockLen[i] >> 8) & 0x03);
+            rtpPointer[3] = blockLen[i] & 0xFF;
 
             rtpPointer += 4;
         }
     }
 
-    /* last sub-header */
-    rtpPointer[0]= (unsigned char) (0x00 | (0x7F&payloadType[numPayloads-1]));/* |F|   block PT  | */
-    rtpPointer += 1;
+    // Bit  |0|1234567|
+    //      |0|payload|
+    //      | |  type |
+    rtpPointer[0] = payloadType[numPayloads - 1] & 0x7F;
+    ++rtpPointer;
 
-    return(rtpPointer - rtp_data); /* length of header in bytes */
+    return rtpPointer - rtp_data;  // length of header in bytes
 }
 
 

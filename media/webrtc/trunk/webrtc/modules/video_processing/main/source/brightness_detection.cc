@@ -15,17 +15,11 @@
 
 namespace webrtc {
 
-VPMBrightnessDetection::VPMBrightnessDetection() :
-    id_(0) {
+VPMBrightnessDetection::VPMBrightnessDetection() {
   Reset();
 }
 
 VPMBrightnessDetection::~VPMBrightnessDetection() {}
-
-int32_t VPMBrightnessDetection::ChangeUniqueId(const int32_t id) {
-  id_ = id;
-  return VPM_OK;
-}
 
 void VPMBrightnessDetection::Reset() {
   frame_cnt_bright_ = 0;

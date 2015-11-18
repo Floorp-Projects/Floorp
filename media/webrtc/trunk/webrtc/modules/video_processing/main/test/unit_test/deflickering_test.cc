@@ -43,7 +43,7 @@ TEST_F(VideoProcessingModuleTest, Deflickering)
         "Could not open output file: " << output_file << "\n";
 
     printf("\nRun time [us / frame]:\n");
-    scoped_ptr<uint8_t[]> video_buffer(new uint8_t[frame_length_]);
+    rtc::scoped_ptr<uint8_t[]> video_buffer(new uint8_t[frame_length_]);
     for (uint32_t run_idx = 0; run_idx < NumRuns; run_idx++)
     {
         TickTime t0;
@@ -56,9 +56,9 @@ TEST_F(VideoProcessingModuleTest, Deflickering)
                frame_length_)
         {
             frameNum++;
-            EXPECT_EQ(0, ConvertToI420(kI420, video_buffer.get(), 0, 0,
-                                       width_, height_,
-                                       0, kRotateNone, &video_frame_));
+            EXPECT_EQ(
+                0, ConvertToI420(kI420, video_buffer.get(), 0, 0, width_,
+                                 height_, 0, kVideoRotation_0, &video_frame_));
             video_frame_.set_timestamp(timeStamp);
 
             t0 = TickTime::Now();

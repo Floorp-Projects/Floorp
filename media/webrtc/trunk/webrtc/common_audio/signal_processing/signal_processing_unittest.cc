@@ -106,6 +106,11 @@ TEST_F(SplTest, InlineTest) {
     EXPECT_EQ(15, WebRtcSpl_NormW16(-1));
     EXPECT_EQ(0, WebRtcSpl_NormW16(WEBRTC_SPL_WORD16_MIN));
     EXPECT_EQ(4, WebRtcSpl_NormW16(b32));
+    for (int ii = 0; ii < 15; ++ii) {
+      int16_t value = 1 << ii;
+      EXPECT_EQ(14 - ii, WebRtcSpl_NormW16(value));
+      EXPECT_EQ(15 - ii, WebRtcSpl_NormW16(-value));
+    }
 
     EXPECT_EQ(0, WebRtcSpl_NormU32(0u));
     EXPECT_EQ(0, WebRtcSpl_NormU32(0xffffffff));
@@ -371,18 +376,20 @@ TEST_F(SplTest, VectorOperationsTest) {
 }
 
 TEST_F(SplTest, EstimatorsTest) {
-    const int kVectorSize = 4;
-    int B[] = {4, 12, 133, 1100};
-    int16_t b16[kVectorSize];
-    int32_t b32[kVectorSize];
-    int16_t bTmp16[kVectorSize];
+  const int16_t kOrder = 2;
+  const int32_t unstable_filter[] = { 4, 12, 133, 1100 };
+  const int32_t stable_filter[] = { 1100, 133, 12, 4 };
+  int16_t lpc[kOrder + 2] = { 0 };
+  int16_t refl[kOrder + 2] = { 0 };
+  int16_t lpc_result[] = { 4096, -497, 15, 0 };
+  int16_t refl_result[] = { -3962, 123, 0, 0 };
 
-    for (int kk = 0; kk < kVectorSize; ++kk) {
-        b16[kk] = B[kk];
-        b32[kk] = B[kk];
-    }
-
-    EXPECT_EQ(0, WebRtcSpl_LevinsonDurbin(b32, b16, bTmp16, 2));
+  EXPECT_EQ(0, WebRtcSpl_LevinsonDurbin(unstable_filter, lpc, refl, kOrder));
+  EXPECT_EQ(1, WebRtcSpl_LevinsonDurbin(stable_filter, lpc, refl, kOrder));
+  for (int i = 0; i < kOrder + 2; ++i) {
+    EXPECT_EQ(lpc_result[i], lpc[i]);
+    EXPECT_EQ(refl_result[i], refl[i]);
+  }
 }
 
 TEST_F(SplTest, FilterTest) {

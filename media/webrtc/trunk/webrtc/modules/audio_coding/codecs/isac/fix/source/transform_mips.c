@@ -200,6 +200,9 @@ void WebRtcIsacfix_Time2SpecMIPS(int16_t* inre1Q9,
       [tmpreQ16] "r" (tmpreQ16), [tmpimQ16] "r" (tmpimQ16),
       [cosptr] "r" (cosptr), [sinptr] "r" (sinptr)
     : "hi", "lo", "memory"
+#if defined(MIPS_DSP_R2_LE)
+    , "$ac1hi", "$ac1lo", "$ac2hi", "$ac2lo", "$ac3hi", "$ac3lo"
+#endif  // #if defined(MIPS_DSP_R2_LE)
   );
 
   // "Fastest" vectors

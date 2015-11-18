@@ -51,14 +51,14 @@ bool VCMDecodingState::IsOldFrame(const VCMFrameBuffer* frame) const {
   assert(frame != NULL);
   if (in_initial_state_)
     return false;
-  return !IsNewerOrSameTimestamp(frame->TimeStamp(), time_stamp_);
+  return !IsNewerTimestamp(frame->TimeStamp(), time_stamp_);
 }
 
 bool VCMDecodingState::IsOldPacket(const VCMPacket* packet) const {
   assert(packet != NULL);
   if (in_initial_state_)
     return false;
-  return !IsNewerOrSameTimestamp(packet->timestamp, time_stamp_);
+  return !IsNewerTimestamp(packet->timestamp, time_stamp_);
 }
 
 void VCMDecodingState::SetState(const VCMFrameBuffer* frame) {
@@ -196,7 +196,7 @@ bool VCMDecodingState::ContinuousPictureId(int picture_id) const {
 }
 
 bool VCMDecodingState::ContinuousSeqNum(uint16_t seq_num) const {
-  return (seq_num == static_cast<uint16_t>(sequence_num_ + 1));
+  return seq_num == static_cast<uint16_t>(sequence_num_ + 1);
 }
 
 bool VCMDecodingState::ContinuousLayer(int temporal_id,

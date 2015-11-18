@@ -13,7 +13,7 @@
 #include <assert.h>
 #include <utility>  // pair
 
-#include "webrtc/modules/audio_coding/neteq/interface/audio_decoder.h"
+#include "webrtc/modules/audio_coding/codecs/audio_decoder.h"
 
 namespace webrtc {
 
@@ -38,13 +38,13 @@ void DecoderDatabase::Reset() {
 
 int DecoderDatabase::RegisterPayload(uint8_t rtp_payload_type,
                                      NetEqDecoder codec_type) {
-  if (rtp_payload_type > kMaxRtpPayloadType) {
+  if (rtp_payload_type > 0x7F) {
     return kInvalidRtpPayloadType;
   }
-  if (!AudioDecoder::CodecSupported(codec_type)) {
+  if (!CodecSupported(codec_type)) {
     return kCodecNotSupported;
   }
-  int fs_hz = AudioDecoder::CodecSampleRateHz(codec_type);
+  int fs_hz = CodecSampleRateHz(codec_type);
   std::pair<DecoderMap::iterator, bool> ret;
   DecoderInfo info(codec_type, fs_hz, NULL, false);
   ret = decoders_.insert(std::make_pair(rtp_payload_type, info));
@@ -62,7 +62,7 @@ int DecoderDatabase::InsertExternal(uint8_t rtp_payload_type,
   if (rtp_payload_type > 0x7F) {
     return kInvalidRtpPayloadType;
   }
-  if (!AudioDecoder::CodecSupported(codec_type)) {
+  if (!CodecSupported(codec_type)) {
     return kCodecNotSupported;
   }
   if (fs_hz != 8000 && fs_hz != 16000 && fs_hz != 32000 && fs_hz != 48000) {
@@ -74,8 +74,7 @@ int DecoderDatabase::InsertExternal(uint8_t rtp_payload_type,
   decoder->Init();
   std::pair<DecoderMap::iterator, bool> ret;
   DecoderInfo info(codec_type, fs_hz, decoder, true);
-  ret = decoders_.insert(
-      std::pair<uint8_t, DecoderInfo>(rtp_payload_type, info));
+  ret = decoders_.insert(std::make_pair(rtp_payload_type, info));
   if (ret.second == false) {
     // Database already contains a decoder with type |rtp_payload_type|.
     return kDecoderExists;
@@ -133,7 +132,7 @@ AudioDecoder* DecoderDatabase::GetDecoder(uint8_t rtp_payload_type) {
   DecoderInfo* info = &(*it).second;
   if (!info->decoder) {
     // Create the decoder object.
-    AudioDecoder* decoder = AudioDecoder::CreateAudioDecoder(info->codec_type);
+    AudioDecoder* decoder = CreateAudioDecoder(info->codec_type);
     assert(decoder);  // Should not be able to have an unsupported codec here.
     info->decoder = decoder;
     info->decoder->Init();

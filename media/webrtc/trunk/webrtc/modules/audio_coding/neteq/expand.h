@@ -14,8 +14,8 @@
 #include <assert.h>
 
 #include "webrtc/base/constructormagic.h"
+#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/modules/audio_coding/neteq/audio_multi_vector.h"
-#include "webrtc/system_wrappers/interface/scoped_ptr.h"
 #include "webrtc/typedefs.h"
 
 namespace webrtc {
@@ -167,7 +167,7 @@ class Expand {
   int lag_index_direction_;
   int current_lag_index_;
   bool stop_muting_;
-  scoped_ptr<ChannelParameters[]> channel_parameters_;
+  rtc::scoped_ptr<ChannelParameters[]> channel_parameters_;
 
   DISALLOW_COPY_AND_ASSIGN(Expand);
 };

@@ -10,7 +10,6 @@
 
 #include "webrtc/video_engine/vie_capturer.h"
 
-#include "webrtc/common_video/interface/texture_video_frame.h"
 #include "webrtc/common_video/libyuv/include/webrtc_libyuv.h"
 #include "webrtc/modules/interface/module_common_types.h"
 #include "webrtc/modules/utility/interface/process_thread.h"
@@ -21,17 +20,41 @@
 #include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
 #include "webrtc/system_wrappers/interface/event_wrapper.h"
 #include "webrtc/system_wrappers/interface/logging.h"
-#include "webrtc/system_wrappers/interface/thread_wrapper.h"
+#include "webrtc/system_wrappers/interface/tick_util.h"
 #include "webrtc/system_wrappers/interface/trace_event.h"
 #include "webrtc/video_engine/include/vie_image_process.h"
 #include "webrtc/video_engine/overuse_frame_detector.h"
 #include "webrtc/video_engine/vie_defines.h"
 #include "webrtc/video_engine/vie_encoder.h"
-#include "webrtc/video_engine/desktop_capture_impl.h"
 
 namespace webrtc {
 
 const int kThreadWaitTimeMs = 100;
+
+class RegistrableCpuOveruseMetricsObserver : public CpuOveruseMetricsObserver {
+ public:
+  void CpuOveruseMetricsUpdated(const CpuOveruseMetrics& metrics) override {
+    rtc::CritScope lock(&crit_);
+    if (observer_)
+      observer_->CpuOveruseMetricsUpdated(metrics);
+    metrics_ = metrics;
+  }
+
+  CpuOveruseMetrics GetCpuOveruseMetrics() const {
+    rtc::CritScope lock(&crit_);
+    return metrics_;
+  }
+
+  void Set(CpuOveruseMetricsObserver* observer) {
+    rtc::CritScope lock(&crit_);
+    observer_ = observer;
+  }
+
+ private:
+  mutable rtc::CriticalSection crit_;
+  CpuOveruseMetricsObserver* observer_ GUARDED_BY(crit_) = nullptr;
+  CpuOveruseMetrics metrics_ GUARDED_BY(crit_);
+};
 
 ViECapturer::ViECapturer(int capture_id,
                          int engine_id,
@@ -39,17 +62,21 @@ ViECapturer::ViECapturer(int capture_id,
                          ProcessThread& module_process_thread)
     : ViEFrameProviderBase(capture_id, engine_id),
       capture_cs_(CriticalSectionWrapper::CreateCriticalSection()),
-      deliver_cs_(CriticalSectionWrapper::CreateCriticalSection()),
+      effects_and_stats_cs_(CriticalSectionWrapper::CreateCriticalSection()),
       capture_module_(NULL),
-      external_capture_module_(NULL),
+      use_external_capture_(false),
       module_process_thread_(module_process_thread),
       capture_id_(capture_id),
       incoming_frame_cs_(CriticalSectionWrapper::CreateCriticalSection()),
-      capture_thread_(*ThreadWrapper::CreateThread(ViECaptureThreadFunction,
-                                                   this, kHighPriority,
-                                                   "ViECaptureThread")),
+      capture_thread_(ThreadWrapper::CreateThread(
+          ViECaptureThreadFunction, this, "ViECaptureThread")),
       capture_event_(*EventWrapper::Create()),
       deliver_event_(*EventWrapper::Create()),
+      stop_(0),
+      last_captured_timestamp_(0),
+      delta_ntp_internal_ms_(
+          Clock::GetRealTimeClock()->CurrentNtpInMilliseconds() -
+          TickTime::MillisecondTimestamp()),
       effect_filter_(NULL),
       image_proc_module_(NULL),
       image_proc_module_ref_counter_(0),
@@ -59,12 +86,12 @@ ViECapturer::ViECapturer(int capture_id,
       reported_brightness_level_(Normal),
       observer_cs_(CriticalSectionWrapper::CreateCriticalSection()),
       observer_(NULL),
-      overuse_detector_(new OveruseFrameDetector(Clock::GetRealTimeClock())),
-      config_(config) {
-  unsigned int t_id = 0;
-  if (!capture_thread_.Start(t_id)) {
-    assert(false);
-  }
+      cpu_overuse_metrics_observer_(new RegistrableCpuOveruseMetricsObserver()),
+      overuse_detector_(
+          new OveruseFrameDetector(Clock::GetRealTimeClock(),
+                                   cpu_overuse_metrics_observer_.get())) {
+  capture_thread_->Start();
+  capture_thread_->SetPriority(kHighPriority);
   module_process_thread_.RegisterModule(overuse_detector_.get());
 }
 
@@ -72,12 +99,8 @@ ViECapturer::~ViECapturer() {
   module_process_thread_.DeRegisterModule(overuse_detector_.get());
 
   // Stop the thread.
-  deliver_cs_->Enter();
-  capture_cs_->Enter();
-  capture_thread_.SetNotAlive();
+  rtc::AtomicOps::Increment(&stop_);
   capture_event_.Set();
-  capture_cs_->Leave();
-  deliver_cs_->Leave();
 
   // Stop the camera input.
   if (capture_module_) {
@@ -86,14 +109,10 @@ ViECapturer::~ViECapturer() {
     capture_module_->Release();
     capture_module_ = NULL;
   }
-  if (capture_thread_.Stop()) {
-    // Thread stopped.
-    delete &capture_thread_;
-    delete &capture_event_;
-    delete &deliver_event_;
-  } else {
-    assert(false);
-  }
+
+  capture_thread_->Stop();
+  delete &capture_event_;
+  delete &deliver_event_;
 
   if (image_proc_module_) {
     VideoProcessingModule::Destroy(image_proc_module_);
@@ -125,10 +144,7 @@ int32_t ViECapturer::Init(VideoCaptureModule* capture_module) {
   capture_module_ = capture_module;
   capture_module_->RegisterCaptureDataCallback(*this);
   capture_module_->AddRef();
-  if (module_process_thread_.RegisterModule(capture_module_) != 0) {
-    return -1;
-  }
-
+  module_process_thread_.RegisterModule(capture_module_);
   return 0;
 }
 
@@ -152,33 +168,26 @@ ViECapturer* ViECapturer::CreateViECapture(
 int32_t ViECapturer::Init(const char* device_unique_idUTF8,
                           uint32_t device_unique_idUTF8Length) {
   assert(capture_module_ == NULL);
-  CaptureDeviceType type = config_.Get<CaptureDeviceInfo>().type;
-
-  if(type != CaptureDeviceType::Camera) {
-#if !defined(ANDROID) && !defined(WEBRTC_IOS)
-    capture_module_ = DesktopCaptureImpl::Create(
-      ViEModuleId(engine_id_, capture_id_), device_unique_idUTF8, type);
-#endif
-  } else if (device_unique_idUTF8 == NULL) {
-    capture_module_  = VideoCaptureFactory::Create(
-      ViEModuleId(engine_id_, capture_id_), external_capture_module_);
+  if (device_unique_idUTF8 == NULL) {
+    use_external_capture_ = true;
+    return 0;
   } else {
     capture_module_ = VideoCaptureFactory::Create(
-      ViEModuleId(engine_id_, capture_id_), device_unique_idUTF8);
+        ViEModuleId(engine_id_, capture_id_), device_unique_idUTF8);
   }
   if (!capture_module_) {
     return -1;
   }
   capture_module_->AddRef();
   capture_module_->RegisterCaptureDataCallback(*this);
-  if (module_process_thread_.RegisterModule(capture_module_) != 0) {
-    return -1;
-  }
+  module_process_thread_.RegisterModule(capture_module_);
 
   return 0;
 }
 
 int ViECapturer::FrameCallbackChanged() {
+  if (use_external_capture_)
+    return -1;
   if (Started() && !CaptureCapabilityFixed()) {
     // Reconfigure the camera if a new size is required and the capture device
     // does not provide encoded frames.
@@ -202,12 +211,13 @@ int ViECapturer::FrameCallbackChanged() {
 }
 
 int32_t ViECapturer::Start(const CaptureCapability& capture_capability) {
+  if (use_external_capture_)
+    return -1;
   int width;
   int height;
   int frame_rate;
   VideoCaptureCapability capability;
   requested_capability_ = capture_capability;
-  CaptureDeviceType type = config_.Get<CaptureDeviceInfo>().type;
 
   if (!CaptureCapabilityFixed()) {
     // Ask the observers for best size.
@@ -219,11 +229,7 @@ int32_t ViECapturer::Start(const CaptureCapability& capture_capability) {
       height = kViECaptureDefaultHeight;
     }
     if (frame_rate == 0) {
-      if (type == Screen || type == Window || type == Application) {
-        frame_rate = kViEScreenCaptureDefaultFramerate;
-      } else {
-        frame_rate = kViECaptureDefaultFramerate;
-      }
+      frame_rate = kViECaptureDefaultFramerate;
     }
     capability.height = height;
     capability.width = width;
@@ -243,15 +249,21 @@ int32_t ViECapturer::Start(const CaptureCapability& capture_capability) {
 }
 
 int32_t ViECapturer::Stop() {
+  if (use_external_capture_)
+    return -1;
   requested_capability_ = CaptureCapability();
   return capture_module_->StopCapture();
 }
 
 bool ViECapturer::Started() {
+  if (use_external_capture_)
+    return false;
   return capture_module_->CaptureStarted();
 }
 
 const char* ViECapturer::CurrentDeviceName() const {
+  if (use_external_capture_)
+    return "";
   return capture_module_->CurrentDeviceName();
 }
 
@@ -263,114 +275,75 @@ void ViECapturer::SetCpuOveruseOptions(const CpuOveruseOptions& options) {
   overuse_detector_->SetOptions(options);
 }
 
+void ViECapturer::RegisterCpuOveruseMetricsObserver(
+    CpuOveruseMetricsObserver* observer) {
+  cpu_overuse_metrics_observer_->Set(observer);
+}
+
 void ViECapturer::GetCpuOveruseMetrics(CpuOveruseMetrics* metrics) const {
-  overuse_detector_->GetCpuOveruseMetrics(metrics);
+  *metrics = cpu_overuse_metrics_observer_->GetCpuOveruseMetrics();
 }
 
 int32_t ViECapturer::SetCaptureDelay(int32_t delay_ms) {
+  if (use_external_capture_)
+    return -1;
   capture_module_->SetCaptureDelay(delay_ms);
   return 0;
 }
 
-int32_t ViECapturer::SetRotateCapturedFrames(
-  const RotateCapturedFrame rotation) {
-  VideoCaptureRotation converted_rotation = kCameraRotate0;
-  switch (rotation) {
-    case RotateCapturedFrame_0:
-      converted_rotation = kCameraRotate0;
-      break;
-    case RotateCapturedFrame_90:
-      converted_rotation = kCameraRotate90;
-      break;
-    case RotateCapturedFrame_180:
-      converted_rotation = kCameraRotate180;
-      break;
-    case RotateCapturedFrame_270:
-      converted_rotation = kCameraRotate270;
-      break;
-  }
-  return capture_module_->SetCaptureRotation(converted_rotation);
+int32_t ViECapturer::SetVideoRotation(const VideoRotation rotation) {
+  if (use_external_capture_)
+    return -1;
+  return capture_module_->SetCaptureRotation(rotation);
 }
 
-int ViECapturer::IncomingFrame(unsigned char* video_frame,
-                               unsigned int video_frame_length,
-                               uint16_t width,
-                               uint16_t height,
-                               RawVideoType video_type,
-                               unsigned long long capture_time) {  // NOLINT
-  if (!external_capture_module_) {
-    return -1;
-  }
-  VideoCaptureCapability capability;
-  capability.width = width;
-  capability.height = height;
-  capability.rawType = video_type;
-  return external_capture_module_->IncomingFrame(video_frame,
-                                                 video_frame_length,
-                                                 capability, capture_time);
-}
-
-int ViECapturer::IncomingFrameI420(const ViEVideoFrameI420& video_frame,
-                                   unsigned long long capture_time) {  // NOLINT
-  if (!external_capture_module_) {
-    return -1;
-  }
-
-  int size_y = video_frame.height * video_frame.y_pitch;
-  int size_u = video_frame.u_pitch * ((video_frame.height + 1) / 2);
-  int size_v = video_frame.v_pitch * ((video_frame.height + 1) / 2);
-  CriticalSectionScoped cs(incoming_frame_cs_.get());
-  int ret = incoming_frame_.CreateFrame(size_y,
-                                       video_frame.y_plane,
-                                       size_u,
-                                       video_frame.u_plane,
-                                       size_v,
-                                       video_frame.v_plane,
-                                       video_frame.width,
-                                       video_frame.height,
-                                       video_frame.y_pitch,
-                                       video_frame.u_pitch,
-                                       video_frame.v_pitch);
-
-  if (ret < 0) {
-    LOG_F(LS_ERROR) << "Could not create I420Frame.";
-    return -1;
-  }
-
-  return external_capture_module_->IncomingI420VideoFrame(&incoming_frame_,
-                                                          capture_time);
-}
-
-void ViECapturer::SwapFrame(I420VideoFrame* frame) {
-  external_capture_module_->IncomingI420VideoFrame(frame,
-                                                   frame->render_time_ms());
-  frame->set_timestamp(0);
-  frame->set_ntp_time_ms(0);
-  frame->set_render_time_ms(0);
+void ViECapturer::IncomingFrame(const I420VideoFrame& frame) {
+  OnIncomingCapturedFrame(-1, frame);
 }
 
 void ViECapturer::OnIncomingCapturedFrame(const int32_t capture_id,
-                                          I420VideoFrame& video_frame) {
-  CriticalSectionScoped cs(capture_cs_.get());
-  // Make sure we render this frame earlier since we know the render time set
-  // is slightly off since it's being set when the frame has been received from
-  // the camera, and not when the camera actually captured the frame.
-  video_frame.set_render_time_ms(video_frame.render_time_ms() - FrameDelay());
+                                          const I420VideoFrame& video_frame) {
+  I420VideoFrame incoming_frame = video_frame;
 
-  overuse_detector_->FrameCaptured(video_frame.width(),
-                                   video_frame.height(),
-                                   video_frame.render_time_ms());
+  if (incoming_frame.ntp_time_ms() != 0) {
+    // If a NTP time stamp is set, this is the time stamp we will use.
+    incoming_frame.set_render_time_ms(
+        incoming_frame.ntp_time_ms() - delta_ntp_internal_ms_);
+  } else {  // NTP time stamp not set.
+    int64_t render_time = incoming_frame.render_time_ms() != 0 ?
+        incoming_frame.render_time_ms() : TickTime::MillisecondTimestamp();
+
+    // Make sure we render this frame earlier since we know the render time set
+    // is slightly off since it's being set when the frame was received
+    // from the camera, and not when the camera actually captured the frame.
+    render_time -= FrameDelay();
+    incoming_frame.set_render_time_ms(render_time);
+    incoming_frame.set_ntp_time_ms(
+        render_time + delta_ntp_internal_ms_);
+  }
+
+  // Convert NTP time, in ms, to RTP timestamp.
+  const int kMsToRtpTimestamp = 90;
+  incoming_frame.set_timestamp(kMsToRtpTimestamp *
+      static_cast<uint32_t>(incoming_frame.ntp_time_ms()));
+
+  CriticalSectionScoped cs(capture_cs_.get());
+  if (incoming_frame.ntp_time_ms() <= last_captured_timestamp_) {
+    // We don't allow the same capture time for two frames, drop this one.
+    LOG(LS_WARNING) << "Same/old NTP timestamp for incoming frame. Dropping.";
+    return;
+  }
+
+  captured_frame_.ShallowCopy(incoming_frame);
+  last_captured_timestamp_ = incoming_frame.ntp_time_ms();
+
+  overuse_detector_->FrameCaptured(captured_frame_.width(),
+                                   captured_frame_.height(),
+                                   captured_frame_.render_time_ms());
 
   TRACE_EVENT_ASYNC_BEGIN1("webrtc", "Video", video_frame.render_time_ms(),
                            "render_time", video_frame.render_time_ms());
 
-  if (video_frame.native_handle() != NULL) {
-    captured_frame_.reset(video_frame.CloneFrame());
-  } else {
-    if (captured_frame_ == NULL || captured_frame_->native_handle() != NULL)
-      captured_frame_.reset(new I420VideoFrame());
-    captured_frame_->SwapFrame(&video_frame);
-  }
   capture_event_.Set();
 }
 
@@ -385,7 +358,7 @@ void ViECapturer::OnCaptureDelayChanged(const int32_t id,
 
 int32_t ViECapturer::RegisterEffectFilter(
     ViEEffectFilter* effect_filter) {
-  CriticalSectionScoped cs(deliver_cs_.get());
+  CriticalSectionScoped cs(effects_and_stats_cs_.get());
 
   if (effect_filter != NULL && effect_filter_ != NULL) {
     LOG_F(LS_ERROR) << "Effect filter already registered.";
@@ -420,7 +393,7 @@ int32_t ViECapturer::DecImageProcRefCount() {
 }
 
 int32_t ViECapturer::EnableDeflickering(bool enable) {
-  CriticalSectionScoped cs(deliver_cs_.get());
+  CriticalSectionScoped cs(effects_and_stats_cs_.get());
   if (enable) {
     if (deflicker_frame_stats_) {
       return -1;
@@ -441,7 +414,7 @@ int32_t ViECapturer::EnableDeflickering(bool enable) {
 }
 
 int32_t ViECapturer::EnableBrightnessAlarm(bool enable) {
-  CriticalSectionScoped cs(deliver_cs_.get());
+  CriticalSectionScoped cs(effects_and_stats_cs_.get());
   if (enable) {
     if (brightness_frame_stats_) {
       return -1;
@@ -468,17 +441,24 @@ bool ViECapturer::ViECaptureThreadFunction(void* obj) {
 bool ViECapturer::ViECaptureProcess() {
   int64_t capture_time = -1;
   if (capture_event_.Wait(kThreadWaitTimeMs) == kEventSignaled) {
+    if (rtc::AtomicOps::Load(&stop_))
+      return false;
+
     overuse_detector_->FrameProcessingStarted();
     int64_t encode_start_time = -1;
-    deliver_cs_->Enter();
-    if (SwapCapturedAndDeliverFrameIfAvailable()) {
-      capture_time = deliver_frame_->render_time_ms();
-      encode_start_time = Clock::GetRealTimeClock()->TimeInMilliseconds();
-      DeliverI420Frame(deliver_frame_.get());
-      if (deliver_frame_->native_handle() != NULL)
-        deliver_frame_.reset();  // Release the texture so it can be reused.
+    I420VideoFrame deliver_frame;
+    {
+      CriticalSectionScoped cs(capture_cs_.get());
+      if (!captured_frame_.IsZeroSize()) {
+        deliver_frame = captured_frame_;
+        captured_frame_.Reset();
+      }
     }
-    deliver_cs_->Leave();
+    if (!deliver_frame.IsZeroSize()) {
+      capture_time = deliver_frame.render_time_ms();
+      encode_start_time = Clock::GetRealTimeClock()->TimeInMilliseconds();
+      DeliverI420Frame(&deliver_frame);
+    }
     if (current_brightness_level_ != reported_brightness_level_) {
       CriticalSectionScoped cs(observer_cs_.get());
       if (observer_) {
@@ -501,66 +481,57 @@ bool ViECapturer::ViECaptureProcess() {
 
 void ViECapturer::DeliverI420Frame(I420VideoFrame* video_frame) {
   if (video_frame->native_handle() != NULL) {
-    ViEFrameProviderBase::DeliverFrame(video_frame);
+    ViEFrameProviderBase::DeliverFrame(video_frame, std::vector<uint32_t>());
     return;
   }
 
   // Apply image enhancement and effect filter.
-  if (deflicker_frame_stats_) {
-    if (image_proc_module_->GetFrameStats(deflicker_frame_stats_,
-                                          *video_frame) == 0) {
-      image_proc_module_->Deflickering(video_frame, deflicker_frame_stats_);
-    } else {
-      LOG_F(LS_ERROR) << "Could not get frame stats.";
-    }
-  }
-  if (brightness_frame_stats_) {
-    if (image_proc_module_->GetFrameStats(brightness_frame_stats_,
-                                          *video_frame) == 0) {
-      int32_t brightness = image_proc_module_->BrightnessDetection(
-          *video_frame, *brightness_frame_stats_);
-
-      switch (brightness) {
-      case VideoProcessingModule::kNoWarning:
-        current_brightness_level_ = Normal;
-        break;
-      case VideoProcessingModule::kDarkWarning:
-        current_brightness_level_ = Dark;
-        break;
-      case VideoProcessingModule::kBrightWarning:
-        current_brightness_level_ = Bright;
-        break;
-      default:
-        break;
+  {
+    CriticalSectionScoped cs(effects_and_stats_cs_.get());
+    if (deflicker_frame_stats_) {
+      if (image_proc_module_->GetFrameStats(deflicker_frame_stats_,
+                                            *video_frame) == 0) {
+        image_proc_module_->Deflickering(video_frame, deflicker_frame_stats_);
+      } else {
+        LOG_F(LS_ERROR) << "Could not get frame stats.";
       }
     }
-  }
-  if (effect_filter_) {
-    unsigned int length = CalcBufferSize(kI420,
-                                         video_frame->width(),
-                                         video_frame->height());
-    scoped_ptr<uint8_t[]> video_buffer(new uint8_t[length]);
-    ExtractBuffer(*video_frame, length, video_buffer.get());
-    effect_filter_->Transform(length,
-                              video_buffer.get(),
-                              video_frame->ntp_time_ms(),
-                              video_frame->timestamp(),
-                              video_frame->width(),
-                              video_frame->height());
+    if (brightness_frame_stats_) {
+      if (image_proc_module_->GetFrameStats(brightness_frame_stats_,
+                                            *video_frame) == 0) {
+        int32_t brightness = image_proc_module_->BrightnessDetection(
+            *video_frame, *brightness_frame_stats_);
+
+        switch (brightness) {
+          case VideoProcessingModule::kNoWarning:
+            current_brightness_level_ = Normal;
+            break;
+          case VideoProcessingModule::kDarkWarning:
+            current_brightness_level_ = Dark;
+            break;
+          case VideoProcessingModule::kBrightWarning:
+            current_brightness_level_ = Bright;
+            break;
+          default:
+            break;
+        }
+      }
+    }
+    if (effect_filter_) {
+      size_t length =
+          CalcBufferSize(kI420, video_frame->width(), video_frame->height());
+      rtc::scoped_ptr<uint8_t[]> video_buffer(new uint8_t[length]);
+      ExtractBuffer(*video_frame, length, video_buffer.get());
+      effect_filter_->Transform(length,
+                                video_buffer.get(),
+                                video_frame->ntp_time_ms(),
+                                video_frame->timestamp(),
+                                video_frame->width(),
+                                video_frame->height());
+    }
   }
   // Deliver the captured frame to all observers (channels, renderer or file).
-  ViEFrameProviderBase::DeliverFrame(video_frame);
-}
-
-int ViECapturer::DeregisterFrameCallback(
-    const ViEFrameCallback* callbackObject) {
-  return ViEFrameProviderBase::DeregisterFrameCallback(callbackObject);
-}
-
-bool ViECapturer::IsFrameCallbackRegistered(
-    const ViEFrameCallback* callbackObject) {
-  CriticalSectionScoped cs(provider_cs_.get());
-  return ViEFrameProviderBase::IsFrameCallbackRegistered(callbackObject);
+  ViEFrameProviderBase::DeliverFrame(video_frame, std::vector<uint32_t>());
 }
 
 bool ViECapturer::CaptureCapabilityFixed() {
@@ -612,26 +583,6 @@ void ViECapturer::OnNoPictureAlarm(const int32_t id,
   CriticalSectionScoped cs(observer_cs_.get());
   CaptureAlarm vie_alarm = (alarm == Raised) ? AlarmRaised : AlarmCleared;
   observer_->NoPictureAlarm(id, vie_alarm);
-}
-
-bool ViECapturer::SwapCapturedAndDeliverFrameIfAvailable() {
-  CriticalSectionScoped cs(capture_cs_.get());
-  if (captured_frame_ == NULL)
-    return false;
-
-  if (captured_frame_->native_handle() != NULL) {
-    deliver_frame_.reset(captured_frame_.release());
-    return true;
-  }
-
-  if (captured_frame_->IsZeroSize())
-    return false;
-
-  if (deliver_frame_ == NULL)
-    deliver_frame_.reset(new I420VideoFrame());
-  deliver_frame_->SwapFrame(captured_frame_.get());
-  captured_frame_->ResetSize();
-  return true;
 }
 
 }  // namespace webrtc

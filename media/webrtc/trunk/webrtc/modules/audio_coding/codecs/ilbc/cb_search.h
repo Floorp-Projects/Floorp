@@ -20,7 +20,7 @@
 #define WEBRTC_MODULES_AUDIO_CODING_CODECS_ILBC_MAIN_SOURCE_CB_SEARCH_H_
 
 void WebRtcIlbcfix_CbSearch(
-    iLBC_Enc_Inst_t *iLBCenc_inst,
+    IlbcEncoder *iLBCenc_inst,
     /* (i) the encoder state structure */
     int16_t *index,  /* (o) Codebook indices */
     int16_t *gain_index, /* (o) Gain quantization indices */

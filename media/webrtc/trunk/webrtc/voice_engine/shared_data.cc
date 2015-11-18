@@ -29,7 +29,7 @@ SharedData::SharedData(const Config& config) :
     _channelManager(_gInstanceCounter, config),
     _engineStatistics(_gInstanceCounter),
     _audioDevicePtr(NULL),
-    _moduleProcessThreadPtr(ProcessThread::CreateProcessThread()),
+    _moduleProcessThreadPtr(ProcessThread::Create()),
     _externalRecording(false),
     _externalPlayout(false)
 {
@@ -55,7 +55,7 @@ SharedData::~SharedData()
         _audioDevicePtr->Release();
     }
     delete _apiCritPtr;
-    ProcessThread::DestroyProcessThread(_moduleProcessThreadPtr);
+    _moduleProcessThreadPtr->Stop();
     Trace::ReturnTrace();
 }
 

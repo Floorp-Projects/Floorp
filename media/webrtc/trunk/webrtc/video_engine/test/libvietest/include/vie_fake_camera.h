@@ -11,10 +11,10 @@
 #define SRC_VIDEO_ENGINE_MAIN_TEST_AUTOTEST_HELPERS_VIE_FAKE_CAMERA_H_
 
 #include <string>
+#include "webrtc/system_wrappers/interface/thread_wrapper.h"
 
 namespace webrtc {
 class ViECapture;
-class ThreadWrapper;
 }
 
 class ViEFileCaptureDevice;
@@ -43,7 +43,7 @@ class ViEFakeCamera {
   webrtc::ViECapture* capture_interface_;
 
   int capture_id_;
-  webrtc::ThreadWrapper* camera_thread_;
+  rtc::scoped_ptr<webrtc::ThreadWrapper> camera_thread_;
   ViEFileCaptureDevice* file_capture_device_;
 };
 

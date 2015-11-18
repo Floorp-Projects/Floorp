@@ -11,7 +11,7 @@
 #include "webrtc/modules/audio_device/android/low_latency_event.h"
 
 #include "testing/gtest/include/gtest/gtest.h"
-#include "webrtc/system_wrappers/interface/scoped_ptr.h"
+#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/system_wrappers/interface/sleep.h"
 #include "webrtc/system_wrappers/interface/thread_wrapper.h"
 
@@ -22,10 +22,8 @@ static const int kEventMsg = 1;
 class LowLatencyEventTest : public testing::Test {
  public:
   LowLatencyEventTest()
-      : process_thread_(ThreadWrapper::CreateThread(CbThread,
-                                                    this,
-                                                    kRealtimePriority,
-                                                    "test_thread")),
+      : process_thread_(ThreadWrapper::CreateThread(
+            CbThread, this, "test_thread")),
         terminated_(false),
         iteration_count_(0),
         allowed_iterations_(0) {
@@ -45,8 +43,8 @@ class LowLatencyEventTest : public testing::Test {
 
  private:
   void Start() {
-    unsigned int thread_id = 0;
-    EXPECT_TRUE(process_thread_->Start(thread_id));
+    EXPECT_TRUE(process_thread_->Start());
+    process_thread_->SetPriority(kRealtimePriority);
   }
   void Stop() {
     terminated_ = true;
@@ -69,7 +67,7 @@ class LowLatencyEventTest : public testing::Test {
 
   LowLatencyEvent event_;
 
-  scoped_ptr<ThreadWrapper> process_thread_;
+  rtc::scoped_ptr<ThreadWrapper> process_thread_;
   bool terminated_;
   int iteration_count_;
   int allowed_iterations_;

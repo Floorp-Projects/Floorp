@@ -13,10 +13,10 @@
 
 
 #include "webrtc/base/constructormagic.h"
+#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/modules/rtp_rtcp/interface/rtp_rtcp_defines.h"  // RTCPReportBlock
 #include "webrtc/modules/rtp_rtcp/source/rtcp_utility.h"
 #include "webrtc/modules/rtp_rtcp/source/tmmbr_help.h"
-#include "webrtc/system_wrappers/interface/scoped_ptr.h"
 #include "webrtc/typedefs.h"
 
 namespace webrtc {
@@ -32,17 +32,13 @@ public:
     // Statistics
     RTCPReportBlock remoteReceiveBlock;
     uint32_t        remoteMaxJitter;
-    uint32_t        remotePacketsReceived;
-    uint64_t        remoteOctetsReceived;
-    uint32_t        lastReceivedRRNTPsecs;
-    uint32_t        lastReceivedRRNTPfrac;
 
     // RTT
-    uint16_t    RTT;
-    uint16_t    minRTT;
-    uint16_t    maxRTT;
-    uint16_t    avgRTT;
-    uint32_t    numAverageCalcs;
+    int64_t  RTT;
+    int64_t  minRTT;
+    int64_t  maxRTT;
+    int64_t  avgRTT;
+    uint32_t numAverageCalcs;
 };
 
 class RTCPPacketInformation
@@ -72,7 +68,7 @@ public:
     uint16_t  applicationLength;
 
     ReportBlockList report_blocks;
-    uint16_t rtt;
+    int64_t rtt;
 
     uint32_t  interArrivalJitter;
 

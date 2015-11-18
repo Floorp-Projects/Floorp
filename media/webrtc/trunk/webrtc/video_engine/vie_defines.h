@@ -41,7 +41,6 @@ enum { kViEMaxCaptureDevices = 256 };
 enum { kViECaptureDefaultWidth = 352 };
 enum { kViECaptureDefaultHeight = 288 };
 enum { kViECaptureDefaultFramerate = 30 };
-enum { kViEScreenCaptureDefaultFramerate = 3 };
 enum { kViECaptureMaxSnapshotWaitTimeMs = 500 };
 
 // ViECodec

@@ -14,6 +14,7 @@
 #include <tchar.h>
 
 #include <time.h>
+#include <algorithm>
 
 #include "webrtc/base/common.h"
 #include "webrtc/base/diskcache.h"
@@ -45,7 +46,7 @@ bool DiskCacheWin32::InitializeEntries() {
       Entry* entry = GetOrCreateEntry(id, true);
       entry->size += find_data.nFileSizeLow;
       total_size_ += find_data.nFileSizeLow;
-      entry->streams = _max(entry->streams, index + 1);
+      entry->streams = std::max(entry->streams, index + 1);
       FileTimeToUnixTime(find_data.ftLastWriteTime, &entry->last_modified);
 
     } while (FindNextFile(find_handle, &find_data));

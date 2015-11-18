@@ -183,6 +183,7 @@ int DefaultTemporalLayers::EncodeFlags(uint32_t timestamp) {
     case kTemporalUpdateGoldenWithoutDependency:
       flags |= VP8_EFLAG_NO_REF_GF;
       // Deliberately no break here.
+      FALLTHROUGH();
     case kTemporalUpdateGolden:
       flags |= VP8_EFLAG_NO_REF_ARF;
       flags |= VP8_EFLAG_NO_UPD_ARF;
@@ -192,6 +193,7 @@ int DefaultTemporalLayers::EncodeFlags(uint32_t timestamp) {
       flags |= VP8_EFLAG_NO_REF_ARF;
       flags |= VP8_EFLAG_NO_REF_GF;
       // Deliberately no break here.
+      FALLTHROUGH();
     case kTemporalUpdateAltref:
       flags |= VP8_EFLAG_NO_UPD_GF;
       flags |= VP8_EFLAG_NO_UPD_LAST;
@@ -199,6 +201,7 @@ int DefaultTemporalLayers::EncodeFlags(uint32_t timestamp) {
     case kTemporalUpdateNoneNoRefAltref:
       flags |= VP8_EFLAG_NO_REF_ARF;
       // Deliberately no break here.
+      FALLTHROUGH();
     case kTemporalUpdateNone:
       flags |= VP8_EFLAG_NO_UPD_GF;
       flags |= VP8_EFLAG_NO_UPD_ARF;

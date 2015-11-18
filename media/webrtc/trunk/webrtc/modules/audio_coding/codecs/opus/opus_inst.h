@@ -15,13 +15,14 @@
 
 struct WebRtcOpusEncInst {
   OpusEncoder* encoder;
+  int in_dtx_mode;
 };
 
 struct WebRtcOpusDecInst {
-  OpusDecoder* decoder_left;
-  OpusDecoder* decoder_right;
+  OpusDecoder* decoder;
   int prev_decoded_samples;
   int channels;
+  int in_dtx_mode;
 };
 
 

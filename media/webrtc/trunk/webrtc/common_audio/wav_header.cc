@@ -17,6 +17,7 @@
 #include <algorithm>
 #include <cstring>
 #include <limits>
+#include <string>
 
 #include "webrtc/base/checks.h"
 #include "webrtc/common_audio/include/audio_util.h"
@@ -28,7 +29,7 @@ struct ChunkHeader {
   uint32_t ID;
   uint32_t Size;
 };
-COMPILE_ASSERT(sizeof(ChunkHeader) == 8, chunk_header_size);
+static_assert(sizeof(ChunkHeader) == 8, "ChunkHeader size");
 
 // We can't nest this definition in WavHeader, because VS2013 gives an error
 // on sizeof(WavHeader::fmt): "error C2070: 'unknown': illegal sizeof operand".
@@ -41,7 +42,7 @@ struct FmtSubchunk {
   uint16_t BlockAlign;
   uint16_t BitsPerSample;
 };
-COMPILE_ASSERT(sizeof(FmtSubchunk) == 24, fmt_subchunk_size);
+static_assert(sizeof(FmtSubchunk) == 24, "FmtSubchunk size");
 const uint32_t kFmtSubchunkSize = sizeof(FmtSubchunk) - sizeof(ChunkHeader);
 
 struct WavHeader {
@@ -54,7 +55,7 @@ struct WavHeader {
     ChunkHeader header;
   } data;
 };
-COMPILE_ASSERT(sizeof(WavHeader) == kWavHeaderSize, no_padding_in_header);
+static_assert(sizeof(WavHeader) == kWavHeaderSize, "no padding in header");
 
 }  // namespace
 
@@ -128,39 +129,7 @@ static inline std::string ReadFourCC(uint32_t x) {
   return std::string(reinterpret_cast<char*>(&x), 4);
 }
 #else
-static inline void WriteLE16(uint16_t* f, uint16_t x) {
-  *f = ((x << 8) & 0xff00)  | ( ( x >> 8) & 0x00ff);
-}
-
-static inline void WriteLE32(uint32_t* f, uint32_t x) {
-    *f = ( (x & 0x000000ff) << 24 )
-      | ((x & 0x0000ff00) << 8)
-      | ((x & 0x00ff0000) >> 8)
-      | ((x & 0xff000000) >> 24 );
-}
-
-static inline void WriteFourCC(uint32_t* f, char a, char b, char c, char d) {
-    *f = (static_cast<uint32_t>(a) << 24 )
-      |  (static_cast<uint32_t>(b) << 16)
-      |  (static_cast<uint32_t>(c) << 8)
-      |  (static_cast<uint32_t>(d) );
-}
-
-static inline uint16_t ReadLE16(uint16_t x) {
-  return  (( x & 0x00ff) << 8 )| ((x & 0xff00)>>8);
-}
-
-static inline uint32_t ReadLE32(uint32_t x) {
-  return   ( (x & 0x000000ff) << 24 )
-         | ( (x & 0x0000ff00) << 8 )
-         | ( (x & 0x00ff0000) >> 8)
-         | ( (x & 0xff000000) >> 24 );
-}
-
-static inline std::string ReadFourCC(uint32_t x) {
-  x = ReadLE32(x);
-  return std::string(reinterpret_cast<char*>(&x), 4);
-}
+#error "Write be-to-le conversion functions"
 #endif
 
 static inline uint32_t RiffChunkSize(uint32_t bytes_in_payload) {
@@ -210,14 +179,31 @@ void WriteWavHeader(uint8_t* buf,
   memcpy(buf, &header, kWavHeaderSize);
 }
 
-bool ReadWavHeader(const uint8_t* buf,
+bool ReadWavHeader(ReadableWav* readable,
                    int* num_channels,
                    int* sample_rate,
                    WavFormat* format,
                    int* bytes_per_sample,
                    uint32_t* num_samples) {
   WavHeader header;
-  memcpy(&header, buf, kWavHeaderSize);
+  if (readable->Read(&header, kWavHeaderSize - sizeof(header.data)) !=
+      kWavHeaderSize - sizeof(header.data))
+    return false;
+
+  const uint32_t fmt_size = ReadLE32(header.fmt.header.Size);
+  if (fmt_size != kFmtSubchunkSize) {
+    // There is an optional two-byte extension field permitted to be present
+    // with PCM, but which must be zero.
+    int16_t ext_size;
+    if (kFmtSubchunkSize + sizeof(ext_size) != fmt_size)
+      return false;
+    if (readable->Read(&ext_size, sizeof(ext_size)) != sizeof(ext_size))
+      return false;
+    if (ext_size != 0)
+      return false;
+  }
+  if (readable->Read(&header.data, sizeof(header.data)) != sizeof(header.data))
+    return false;
 
   // Parse needed fields.
   *format = static_cast<WavFormat>(ReadLE16(header.fmt.AudioFormat));
@@ -239,9 +225,7 @@ bool ReadWavHeader(const uint8_t* buf,
   if (ReadFourCC(header.data.header.ID) != "data")
     return false;
 
-  if (ReadLE32(header.riff.header.Size) != RiffChunkSize(bytes_in_payload))
-    return false;
-  if (ReadLE32(header.fmt.header.Size) != kFmtSubchunkSize)
+  if (ReadLE32(header.riff.header.Size) < RiffChunkSize(bytes_in_payload))
     return false;
   if (ReadLE32(header.fmt.ByteRate) !=
       ByteRate(*num_channels, *sample_rate, *bytes_per_sample))

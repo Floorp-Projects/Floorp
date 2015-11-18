@@ -16,7 +16,7 @@ namespace webrtc {
 
 RateStatistics::RateStatistics(uint32_t window_size_ms, float scale)
     : num_buckets_(window_size_ms + 1),  // N ms in (N+1) buckets.
-      buckets_(new uint32_t[num_buckets_]()),
+      buckets_(new size_t[num_buckets_]()),
       accumulated_count_(0),
       oldest_time_(0),
       oldest_index_(0),
@@ -35,7 +35,7 @@ void RateStatistics::Reset() {
   }
 }
 
-void RateStatistics::Update(uint32_t count, int64_t now_ms) {
+void RateStatistics::Update(size_t count, int64_t now_ms) {
   if (now_ms < oldest_time_) {
     // Too old data is ignored.
     return;
@@ -65,7 +65,7 @@ void RateStatistics::EraseOld(int64_t now_ms) {
   }
 
   while (oldest_time_ < new_oldest_time) {
-    uint32_t count_in_oldest_bucket = buckets_[oldest_index_];
+    size_t count_in_oldest_bucket = buckets_[oldest_index_];
     assert(accumulated_count_ >= count_in_oldest_bucket);
     accumulated_count_ -= count_in_oldest_bucket;
     buckets_[oldest_index_] = 0;

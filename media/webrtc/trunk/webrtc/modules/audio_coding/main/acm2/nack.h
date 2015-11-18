@@ -14,8 +14,8 @@
 #include <vector>
 #include <map>
 
+#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/modules/audio_coding/main/interface/audio_coding_module_typedefs.h"
-#include "webrtc/system_wrappers/interface/scoped_ptr.h"
 #include "webrtc/test/testsupport/gtest_prod_util.h"
 
 //
@@ -87,7 +87,7 @@ class Nack {
   // Get a list of "missing" packets which have expected time-to-play larger
   // than the given round-trip-time (in milliseconds).
   // Note: Late packets are not included.
-  std::vector<uint16_t> GetNackList(int round_trip_time_ms) const;
+  std::vector<uint16_t> GetNackList(int64_t round_trip_time_ms) const;
 
   // Reset to default values. The NACK list is cleared.
   // |nack_threshold_packets_| & |max_nack_list_size_| preserve their values.
@@ -98,7 +98,7 @@ class Nack {
   FRIEND_TEST_ALL_PREFIXES(NackTest, EstimateTimestampAndTimeToPlay);
 
   struct NackElement {
-    NackElement(int initial_time_to_play_ms,
+    NackElement(int64_t initial_time_to_play_ms,
                 uint32_t initial_timestamp,
                 bool missing)
         : time_to_play_ms(initial_time_to_play_ms),
@@ -107,7 +107,7 @@ class Nack {
 
     // Estimated time (ms) left for this packet to be decoded. This estimate is
     // updated every time jitter buffer decodes a packet.
-    int time_to_play_ms;
+    int64_t time_to_play_ms;
 
     // A guess about the timestamp of the missing packet, it is used for
     // estimation of |time_to_play_ms|. The estimate might be slightly wrong if
@@ -171,7 +171,7 @@ class Nack {
   uint32_t EstimateTimestamp(uint16_t sequence_number);
 
   // Compute time-to-play given a timestamp.
-  int TimeToPlay(uint32_t timestamp) const;
+  int64_t TimeToPlay(uint32_t timestamp) const;
 
   // If packet N is arrived, any packet prior to N - |nack_threshold_packets_|
   // which is not arrived is considered missing, and should be in NACK list.

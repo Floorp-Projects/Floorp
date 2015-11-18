@@ -91,7 +91,7 @@ void AsyncHttpRequest::DoWork() {
   // Do nothing while we wait for the request to finish. We only do this so
   // that we can be a SignalThread; in the future this class should not be
   // a SignalThread, since it does not need to spawn a new thread.
-  Thread::Current()->ProcessMessages(kForever);
+  Thread::Current()->ProcessMessages(Thread::kForever);
 }
 
 void AsyncHttpRequest::LaunchRequest() {

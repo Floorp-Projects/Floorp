@@ -78,11 +78,10 @@ TEST_F(CritSectTest, ThreadWakesOnce) NO_THREAD_SAFETY_ANALYSIS {
   CriticalSectionWrapper* crit_sect =
       CriticalSectionWrapper::CreateCriticalSection();
   ProtectedCount count(crit_sect);
-  ThreadWrapper* thread = ThreadWrapper::CreateThread(
-      &LockUnlockThenStopRunFunction, &count);
-  unsigned int id = 42;
+  rtc::scoped_ptr<ThreadWrapper> thread = ThreadWrapper::CreateThread(
+      &LockUnlockThenStopRunFunction, &count, "ThreadWakesOnce");
   crit_sect->Enter();
-  ASSERT_TRUE(thread->Start(id));
+  ASSERT_TRUE(thread->Start());
   SwitchProcess();
   // The critical section is of reentrant mode, so this should not release
   // the lock, even though count.Count() locks and unlocks the critical section
@@ -92,7 +91,6 @@ TEST_F(CritSectTest, ThreadWakesOnce) NO_THREAD_SAFETY_ANALYSIS {
   crit_sect->Leave();  // This frees the thread to act.
   EXPECT_TRUE(WaitForCount(1, &count));
   EXPECT_TRUE(thread->Stop());
-  delete thread;
   delete crit_sect;
 }
 
@@ -107,11 +105,10 @@ TEST_F(CritSectTest, ThreadWakesTwice) NO_THREAD_SAFETY_ANALYSIS {
   CriticalSectionWrapper* crit_sect =
       CriticalSectionWrapper::CreateCriticalSection();
   ProtectedCount count(crit_sect);
-  ThreadWrapper* thread = ThreadWrapper::CreateThread(&LockUnlockRunFunction,
-                                                      &count);
-  unsigned int id = 42;
+  rtc::scoped_ptr<ThreadWrapper> thread = ThreadWrapper::CreateThread(
+      &LockUnlockRunFunction, &count, "ThreadWakesTwice");
   crit_sect->Enter();  // Make sure counter stays 0 until we wait for it.
-  ASSERT_TRUE(thread->Start(id));
+  ASSERT_TRUE(thread->Start());
   crit_sect->Leave();
 
   // The thread is capable of grabbing the lock multiple times,
@@ -129,11 +126,9 @@ TEST_F(CritSectTest, ThreadWakesTwice) NO_THREAD_SAFETY_ANALYSIS {
   EXPECT_EQ(count_before, count.Count());
   crit_sect->Leave();
 
-  thread->SetNotAlive();  // Tell thread to exit once run function finishes.
   SwitchProcess();
   EXPECT_TRUE(WaitForCount(count_before + 1, &count));
   EXPECT_TRUE(thread->Stop());
-  delete thread;
   delete crit_sect;
 }
 

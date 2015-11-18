@@ -14,10 +14,10 @@
 #include <vector>
 
 #include "webrtc/base/constructormagic.h"
+#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/modules/audio_coding/main/interface/audio_coding_module.h"
 #include "webrtc/modules/audio_coding/neteq/tools/packet_source.h"
 #include "webrtc/system_wrappers/interface/clock.h"
-#include "webrtc/system_wrappers/interface/scoped_ptr.h"
 
 namespace webrtc {
 
@@ -41,16 +41,15 @@ class AcmSendTest : public AudioPacketizationCallback, public PacketSource {
   // Returns the next encoded packet. Returns NULL if the test duration was
   // exceeded. Ownership of the packet is handed over to the caller.
   // Inherited from PacketSource.
-  virtual Packet* NextPacket() OVERRIDE;
+  Packet* NextPacket() override;
 
   // Inherited from AudioPacketizationCallback.
-  virtual int32_t SendData(
-      FrameType frame_type,
-      uint8_t payload_type,
-      uint32_t timestamp,
-      const uint8_t* payload_data,
-      uint16_t payload_len_bytes,
-      const RTPFragmentationHeader* fragmentation) OVERRIDE;
+  int32_t SendData(FrameType frame_type,
+                   uint8_t payload_type,
+                   uint32_t timestamp,
+                   const uint8_t* payload_data,
+                   size_t payload_len_bytes,
+                   const RTPFragmentationHeader* fragmentation) override;
 
  private:
   static const int kBlockSizeMs = 10;
@@ -61,7 +60,7 @@ class AcmSendTest : public AudioPacketizationCallback, public PacketSource {
   Packet* CreatePacket();
 
   SimulatedClock clock_;
-  scoped_ptr<AudioCoding> acm_;
+  rtc::scoped_ptr<AudioCoding> acm_;
   InputAudioFile* audio_source_;
   int source_rate_hz_;
   const int input_block_size_samples_;

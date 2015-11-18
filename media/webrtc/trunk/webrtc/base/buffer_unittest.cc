@@ -19,21 +19,21 @@ static const char kTestData[] = {
 
 TEST(BufferTest, TestConstructDefault) {
   Buffer buf;
-  EXPECT_EQ(0U, buf.length());
+  EXPECT_EQ(0U, buf.size());
   EXPECT_EQ(0U, buf.capacity());
   EXPECT_EQ(Buffer(), buf);
 }
 
 TEST(BufferTest, TestConstructEmptyWithCapacity) {
   Buffer buf(NULL, 0, 256U);
-  EXPECT_EQ(0U, buf.length());
+  EXPECT_EQ(0U, buf.size());
   EXPECT_EQ(256U, buf.capacity());
   EXPECT_EQ(Buffer(), buf);
 }
 
 TEST(BufferTest, TestConstructData) {
   Buffer buf(kTestData, sizeof(kTestData));
-  EXPECT_EQ(sizeof(kTestData), buf.length());
+  EXPECT_EQ(sizeof(kTestData), buf.size());
   EXPECT_EQ(sizeof(kTestData), buf.capacity());
   EXPECT_EQ(0, memcmp(buf.data(), kTestData, sizeof(kTestData)));
   EXPECT_EQ(Buffer(kTestData, sizeof(kTestData)), buf);
@@ -41,7 +41,7 @@ TEST(BufferTest, TestConstructData) {
 
 TEST(BufferTest, TestConstructDataWithCapacity) {
   Buffer buf(kTestData, sizeof(kTestData), 256U);
-  EXPECT_EQ(sizeof(kTestData), buf.length());
+  EXPECT_EQ(sizeof(kTestData), buf.size());
   EXPECT_EQ(256U, buf.capacity());
   EXPECT_EQ(0, memcmp(buf.data(), kTestData, sizeof(kTestData)));
   EXPECT_EQ(Buffer(kTestData, sizeof(kTestData)), buf);
@@ -49,7 +49,7 @@ TEST(BufferTest, TestConstructDataWithCapacity) {
 
 TEST(BufferTest, TestConstructCopy) {
   Buffer buf1(kTestData, sizeof(kTestData), 256), buf2(buf1);
-  EXPECT_EQ(sizeof(kTestData), buf2.length());
+  EXPECT_EQ(sizeof(kTestData), buf2.size());
   EXPECT_EQ(sizeof(kTestData), buf2.capacity());  // capacity isn't copied
   EXPECT_EQ(0, memcmp(buf2.data(), kTestData, sizeof(kTestData)));
   EXPECT_EQ(buf1, buf2);
@@ -59,7 +59,7 @@ TEST(BufferTest, TestAssign) {
   Buffer buf1, buf2(kTestData, sizeof(kTestData), 256);
   EXPECT_NE(buf1, buf2);
   buf1 = buf2;
-  EXPECT_EQ(sizeof(kTestData), buf1.length());
+  EXPECT_EQ(sizeof(kTestData), buf1.size());
   EXPECT_EQ(sizeof(kTestData), buf1.capacity());  // capacity isn't copied
   EXPECT_EQ(0, memcmp(buf1.data(), kTestData, sizeof(kTestData)));
   EXPECT_EQ(buf1, buf2);
@@ -68,7 +68,7 @@ TEST(BufferTest, TestAssign) {
 TEST(BufferTest, TestSetData) {
   Buffer buf;
   buf.SetData(kTestData, sizeof(kTestData));
-  EXPECT_EQ(sizeof(kTestData), buf.length());
+  EXPECT_EQ(sizeof(kTestData), buf.size());
   EXPECT_EQ(sizeof(kTestData), buf.capacity());
   EXPECT_EQ(0, memcmp(buf.data(), kTestData, sizeof(kTestData)));
 }
@@ -76,27 +76,27 @@ TEST(BufferTest, TestSetData) {
 TEST(BufferTest, TestAppendData) {
   Buffer buf(kTestData, sizeof(kTestData));
   buf.AppendData(kTestData, sizeof(kTestData));
-  EXPECT_EQ(2 * sizeof(kTestData), buf.length());
+  EXPECT_EQ(2 * sizeof(kTestData), buf.size());
   EXPECT_EQ(2 * sizeof(kTestData), buf.capacity());
   EXPECT_EQ(0, memcmp(buf.data(), kTestData, sizeof(kTestData)));
   EXPECT_EQ(0, memcmp(buf.data() + sizeof(kTestData),
                       kTestData, sizeof(kTestData)));
 }
 
-TEST(BufferTest, TestSetLengthSmaller) {
+TEST(BufferTest, TestSetSizeSmaller) {
   Buffer buf;
   buf.SetData(kTestData, sizeof(kTestData));
-  buf.SetLength(sizeof(kTestData) / 2);
-  EXPECT_EQ(sizeof(kTestData) / 2, buf.length());
+  buf.SetSize(sizeof(kTestData) / 2);
+  EXPECT_EQ(sizeof(kTestData) / 2, buf.size());
   EXPECT_EQ(sizeof(kTestData), buf.capacity());
   EXPECT_EQ(0, memcmp(buf.data(), kTestData, sizeof(kTestData) / 2));
 }
 
-TEST(BufferTest, TestSetLengthLarger) {
+TEST(BufferTest, TestSetSizeLarger) {
   Buffer buf;
   buf.SetData(kTestData, sizeof(kTestData));
-  buf.SetLength(sizeof(kTestData) * 2);
-  EXPECT_EQ(sizeof(kTestData) * 2, buf.length());
+  buf.SetSize(sizeof(kTestData) * 2);
+  EXPECT_EQ(sizeof(kTestData) * 2, buf.size());
   EXPECT_EQ(sizeof(kTestData) * 2, buf.capacity());
   EXPECT_EQ(0, memcmp(buf.data(), kTestData, sizeof(kTestData)));
 }
@@ -105,7 +105,7 @@ TEST(BufferTest, TestSetCapacitySmaller) {
   Buffer buf;
   buf.SetData(kTestData, sizeof(kTestData));
   buf.SetCapacity(sizeof(kTestData) / 2);  // should be ignored
-  EXPECT_EQ(sizeof(kTestData), buf.length());
+  EXPECT_EQ(sizeof(kTestData), buf.size());
   EXPECT_EQ(sizeof(kTestData), buf.capacity());
   EXPECT_EQ(0, memcmp(buf.data(), kTestData, sizeof(kTestData)));
 }
@@ -113,17 +113,17 @@ TEST(BufferTest, TestSetCapacitySmaller) {
 TEST(BufferTest, TestSetCapacityLarger) {
   Buffer buf(kTestData, sizeof(kTestData));
   buf.SetCapacity(sizeof(kTestData) * 2);
-  EXPECT_EQ(sizeof(kTestData), buf.length());
+  EXPECT_EQ(sizeof(kTestData), buf.size());
   EXPECT_EQ(sizeof(kTestData) * 2, buf.capacity());
   EXPECT_EQ(0, memcmp(buf.data(), kTestData, sizeof(kTestData)));
 }
 
-TEST(BufferTest, TestSetCapacityThenSetLength) {
+TEST(BufferTest, TestSetCapacityThenSetSize) {
   Buffer buf(kTestData, sizeof(kTestData));
   buf.SetCapacity(sizeof(kTestData) * 4);
   memcpy(buf.data() + sizeof(kTestData), kTestData, sizeof(kTestData));
-  buf.SetLength(sizeof(kTestData) * 2);
-  EXPECT_EQ(sizeof(kTestData) * 2, buf.length());
+  buf.SetSize(sizeof(kTestData) * 2);
+  EXPECT_EQ(sizeof(kTestData) * 2, buf.size());
   EXPECT_EQ(sizeof(kTestData) * 4, buf.capacity());
   EXPECT_EQ(0, memcmp(buf.data(), kTestData, sizeof(kTestData)));
   EXPECT_EQ(0, memcmp(buf.data() + sizeof(kTestData),
@@ -133,9 +133,9 @@ TEST(BufferTest, TestSetCapacityThenSetLength) {
 TEST(BufferTest, TestTransfer) {
   Buffer buf1(kTestData, sizeof(kTestData), 256U), buf2;
   buf1.TransferTo(&buf2);
-  EXPECT_EQ(0U, buf1.length());
+  EXPECT_EQ(0U, buf1.size());
   EXPECT_EQ(0U, buf1.capacity());
-  EXPECT_EQ(sizeof(kTestData), buf2.length());
+  EXPECT_EQ(sizeof(kTestData), buf2.size());
   EXPECT_EQ(256U, buf2.capacity());  // capacity does transfer
   EXPECT_EQ(0, memcmp(buf2.data(), kTestData, sizeof(kTestData)));
 }

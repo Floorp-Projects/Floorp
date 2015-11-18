@@ -92,7 +92,7 @@
 #define WEBRTC_SPL_RSHIFT_U32(x, c)     ((uint32_t)(x) >> (c))
 
 #define WEBRTC_SPL_RAND(a) \
-    ((int16_t)(WEBRTC_SPL_MUL_16_16_RSFT((a), 18816, 7) & 0x00007fff))
+    ((int16_t)((((int16_t)a * 18816) >> 7) & 0x00007fff))
 
 #ifdef __cplusplus
 extern "C" {
@@ -154,7 +154,8 @@ void WebRtcSpl_ZerosArrayW32(int32_t* vector,
 typedef int16_t (*MaxAbsValueW16)(const int16_t* vector, int length);
 extern MaxAbsValueW16 WebRtcSpl_MaxAbsValueW16;
 int16_t WebRtcSpl_MaxAbsValueW16C(const int16_t* vector, int length);
-#if (defined WEBRTC_DETECT_ARM_NEON) || (defined WEBRTC_ARCH_ARM_NEON)
+#if (defined WEBRTC_DETECT_ARM_NEON) || (defined WEBRTC_ARCH_ARM_NEON) || \
+  (defined WEBRTC_ARCH_ARM64_NEON)
 int16_t WebRtcSpl_MaxAbsValueW16Neon(const int16_t* vector, int length);
 #endif
 #if defined(MIPS32_LE)
@@ -172,7 +173,8 @@ int16_t WebRtcSpl_MaxAbsValueW16_mips(const int16_t* vector, int length);
 typedef int32_t (*MaxAbsValueW32)(const int32_t* vector, int length);
 extern MaxAbsValueW32 WebRtcSpl_MaxAbsValueW32;
 int32_t WebRtcSpl_MaxAbsValueW32C(const int32_t* vector, int length);
-#if (defined WEBRTC_DETECT_ARM_NEON) || (defined WEBRTC_ARCH_ARM_NEON)
+#if (defined WEBRTC_DETECT_ARM_NEON) || (defined WEBRTC_ARCH_ARM_NEON) || \
+  (defined WEBRTC_ARCH_ARM64_NEON)
 int32_t WebRtcSpl_MaxAbsValueW32Neon(const int32_t* vector, int length);
 #endif
 #if defined(MIPS_DSP_R1_LE)
@@ -192,7 +194,8 @@ int32_t WebRtcSpl_MaxAbsValueW32_mips(const int32_t* vector, int length);
 typedef int16_t (*MaxValueW16)(const int16_t* vector, int length);
 extern MaxValueW16 WebRtcSpl_MaxValueW16;
 int16_t WebRtcSpl_MaxValueW16C(const int16_t* vector, int length);
-#if (defined WEBRTC_DETECT_ARM_NEON) || (defined WEBRTC_ARCH_ARM_NEON)
+#if (defined WEBRTC_DETECT_ARM_NEON) || (defined WEBRTC_ARCH_ARM_NEON) || \
+  (defined WEBRTC_ARCH_ARM64_NEON)
 int16_t WebRtcSpl_MaxValueW16Neon(const int16_t* vector, int length);
 #endif
 #if defined(MIPS32_LE)
@@ -212,7 +215,8 @@ int16_t WebRtcSpl_MaxValueW16_mips(const int16_t* vector, int length);
 typedef int32_t (*MaxValueW32)(const int32_t* vector, int length);
 extern MaxValueW32 WebRtcSpl_MaxValueW32;
 int32_t WebRtcSpl_MaxValueW32C(const int32_t* vector, int length);
-#if (defined WEBRTC_DETECT_ARM_NEON) || (defined WEBRTC_ARCH_ARM_NEON)
+#if (defined WEBRTC_DETECT_ARM_NEON) || (defined WEBRTC_ARCH_ARM_NEON) || \
+  (defined WEBRTC_ARCH_ARM64_NEON)
 int32_t WebRtcSpl_MaxValueW32Neon(const int32_t* vector, int length);
 #endif
 #if defined(MIPS32_LE)
@@ -232,7 +236,8 @@ int32_t WebRtcSpl_MaxValueW32_mips(const int32_t* vector, int length);
 typedef int16_t (*MinValueW16)(const int16_t* vector, int length);
 extern MinValueW16 WebRtcSpl_MinValueW16;
 int16_t WebRtcSpl_MinValueW16C(const int16_t* vector, int length);
-#if (defined WEBRTC_DETECT_ARM_NEON) || (defined WEBRTC_ARCH_ARM_NEON)
+#if (defined WEBRTC_DETECT_ARM_NEON) || (defined WEBRTC_ARCH_ARM_NEON) || \
+  (defined WEBRTC_ARCH_ARM64_NEON)
 int16_t WebRtcSpl_MinValueW16Neon(const int16_t* vector, int length);
 #endif
 #if defined(MIPS32_LE)
@@ -252,7 +257,8 @@ int16_t WebRtcSpl_MinValueW16_mips(const int16_t* vector, int length);
 typedef int32_t (*MinValueW32)(const int32_t* vector, int length);
 extern MinValueW32 WebRtcSpl_MinValueW32;
 int32_t WebRtcSpl_MinValueW32C(const int32_t* vector, int length);
-#if (defined WEBRTC_DETECT_ARM_NEON) || (defined WEBRTC_ARCH_ARM_NEON)
+#if (defined WEBRTC_DETECT_ARM_NEON) || (defined WEBRTC_ARCH_ARM_NEON) || \
+  (defined WEBRTC_ARCH_ARM64_NEON)
 int32_t WebRtcSpl_MinValueW32Neon(const int32_t* vector, int length);
 #endif
 #if defined(MIPS32_LE)
@@ -383,15 +389,6 @@ int WebRtcSpl_ScaleAndAddVectorsWithRoundC(const int16_t* in_vector1,
                                            int right_shifts,
                                            int16_t* out_vector,
                                            int length);
-#if (defined WEBRTC_DETECT_ARM_NEON) || (defined WEBRTC_ARCH_ARM_NEON)
-int WebRtcSpl_ScaleAndAddVectorsWithRoundNeon(const int16_t* in_vector1,
-                                              int16_t in_vector1_scale,
-                                              const int16_t* in_vector2,
-                                              int16_t in_vector2_scale,
-                                              int right_shifts,
-                                              int16_t* out_vector,
-                                              int length);
-#endif
 #if defined(MIPS_DSP_R1_LE)
 int WebRtcSpl_ScaleAndAddVectorsWithRound_mips(const int16_t* in_vector1,
                                                int16_t in_vector1_scale,
@@ -465,17 +462,15 @@ int WebRtcSpl_AutoCorrelation(const int16_t* in_vector,
 // does NOT use the 64 bit class
 //
 // Input:
-//      - auto_corr : Vector with autocorrelation values of length >=
-//                    |use_order|+1
-//      - use_order : The LPC filter order (support up to order 20)
+//      - auto_corr : Vector with autocorrelation values of length >= |order|+1
+//      - order     : The LPC filter order (support up to order 20)
 //
 // Output:
-//      - lpc_coef  : lpc_coef[0..use_order] LPC coefficients in Q12
-//      - refl_coef : refl_coef[0...use_order-1]| Reflection coefficients in
-//                    Q15
+//      - lpc_coef  : lpc_coef[0..order] LPC coefficients in Q12
+//      - refl_coef : refl_coef[0...order-1]| Reflection coefficients in Q15
 //
 // Return value     : 1 for stable 0 for unstable
-int16_t WebRtcSpl_LevinsonDurbin(int32_t* auto_corr,
+int16_t WebRtcSpl_LevinsonDurbin(const int32_t* auto_corr,
                                  int16_t* lpc_coef,
                                  int16_t* refl_coef,
                                  int16_t order);
@@ -563,7 +558,8 @@ void WebRtcSpl_CrossCorrelationC(int32_t* cross_correlation,
                                  int16_t dim_cross_correlation,
                                  int16_t right_shifts,
                                  int16_t step_seq2);
-#if (defined WEBRTC_DETECT_ARM_NEON) || (defined WEBRTC_ARCH_ARM_NEON)
+#if (defined WEBRTC_DETECT_ARM_NEON) || (defined WEBRTC_ARCH_ARM_NEON) || \
+  (defined WEBRTC_ARCH_ARM64_NEON)
 void WebRtcSpl_CrossCorrelationNeon(int32_t* cross_correlation,
                                     const int16_t* seq1,
                                     const int16_t* seq2,
@@ -659,9 +655,23 @@ int WebRtcSpl_FilterAR(const int16_t* ar_coef,
                        int16_t* out_vector_low,
                        int out_vector_low_length);
 
-void WebRtcSpl_FilterMAFastQ12(int16_t* in_vector,
+// WebRtcSpl_FilterMAFastQ12(...)
+//
+// Performs a MA filtering on a vector in Q12
+//
+// Input:
+//      - in_vector         : Input samples (state in positions
+//                            in_vector[-order] .. in_vector[-1])
+//      - ma_coef           : Filter coefficients (in Q12)
+//      - ma_coef_length    : Number of B coefficients (order+1)
+//      - vector_length     : Number of samples to be filtered
+//
+// Output:
+//      - out_vector        : Filtered samples
+//
+void WebRtcSpl_FilterMAFastQ12(const int16_t* in_vector,
                                int16_t* out_vector,
-                               int16_t* ma_coef,
+                               const int16_t* ma_coef,
                                int16_t ma_coef_length,
                                int16_t vector_length);
 
@@ -714,7 +724,8 @@ int WebRtcSpl_DownsampleFastC(const int16_t* data_in,
                               int coefficients_length,
                               int factor,
                               int delay);
-#if (defined WEBRTC_DETECT_ARM_NEON) || (defined WEBRTC_ARCH_ARM_NEON)
+#if (defined WEBRTC_DETECT_ARM_NEON) || (defined WEBRTC_ARCH_ARM_NEON) || \
+  (defined WEBRTC_ARCH_ARM64_NEON)
 int WebRtcSpl_DownsampleFastNeon(const int16_t* data_in,
                                  int data_in_length,
                                  int16_t* data_out,
@@ -1506,22 +1517,6 @@ void WebRtcSpl_SynthesisQMF(const int16_t* low_band,
 //                                filtered values.
 //
 // Return value                 : Number of samples in the |out_vector|.
-//
-
-//
-// WebRtcSpl_FilterMAFastQ12(...)
-//
-// Performs a MA filtering on a vector in Q12
-//
-// Input:
-//      - in_vector         : Input samples (state in positions
-//                            in_vector[-order] .. in_vector[-1])
-//      - ma_coef           : Filter coefficients (in Q12)
-//      - ma_coef_length    : Number of B coefficients (order+1)
-//      - vector_length     : Number of samples to be filtered
-//
-// Output:
-//      - out_vector        : Filtered samples
 //
 
 //

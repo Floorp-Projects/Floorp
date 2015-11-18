@@ -46,12 +46,12 @@ public:
 class StreamCache : public StreamPool, public sigslot::has_slots<> {
 public:
   StreamCache(StreamPool* pool);
-  virtual ~StreamCache();
+  ~StreamCache() override;
 
   // StreamPool Interface
-  virtual StreamInterface* RequestConnectedStream(const SocketAddress& remote,
-                                                  int* err);
-  virtual void ReturnConnectedStream(StreamInterface* stream);
+  StreamInterface* RequestConnectedStream(const SocketAddress& remote,
+                                          int* err) override;
+  void ReturnConnectedStream(StreamInterface* stream) override;
 
 private:
   typedef std::pair<SocketAddress, StreamInterface*> ConnectedStream;
@@ -75,13 +75,13 @@ private:
 class NewSocketPool : public StreamPool {
 public:
   NewSocketPool(SocketFactory* factory);
-  virtual ~NewSocketPool();
+  ~NewSocketPool() override;
   
   // StreamPool Interface
-  virtual StreamInterface* RequestConnectedStream(const SocketAddress& remote,
-                                                  int* err);
-  virtual void ReturnConnectedStream(StreamInterface* stream);
-  
+  StreamInterface* RequestConnectedStream(const SocketAddress& remote,
+                                          int* err) override;
+  void ReturnConnectedStream(StreamInterface* stream) override;
+
 private:
   SocketFactory* factory_;
 };
@@ -95,13 +95,13 @@ private:
 class ReuseSocketPool : public StreamPool, public sigslot::has_slots<> {
 public:
   ReuseSocketPool(SocketFactory* factory);
-  virtual ~ReuseSocketPool();
+  ~ReuseSocketPool() override;
 
   // StreamPool Interface
-  virtual StreamInterface* RequestConnectedStream(const SocketAddress& remote,
-                                                  int* err);
-  virtual void ReturnConnectedStream(StreamInterface* stream);
-  
+  StreamInterface* RequestConnectedStream(const SocketAddress& remote,
+                                          int* err) override;
+  void ReturnConnectedStream(StreamInterface* stream) override;
+
 private:
   void OnStreamEvent(StreamInterface* stream, int events, int err);
 
@@ -120,12 +120,12 @@ class LoggingPoolAdapter : public StreamPool {
 public:
   LoggingPoolAdapter(StreamPool* pool, LoggingSeverity level,
                      const std::string& label, bool binary_mode);
-  virtual ~LoggingPoolAdapter();
+  ~LoggingPoolAdapter() override;
 
   // StreamPool Interface
-  virtual StreamInterface* RequestConnectedStream(const SocketAddress& remote,
-                                                  int* err);
-  virtual void ReturnConnectedStream(StreamInterface* stream);
+  StreamInterface* RequestConnectedStream(const SocketAddress& remote,
+                                          int* err) override;
+  void ReturnConnectedStream(StreamInterface* stream) override;
 
 private:
   StreamPool* pool_;

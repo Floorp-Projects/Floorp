@@ -26,8 +26,9 @@ class GlxRenderer : public GlRenderer {
                              size_t height);
   virtual ~GlxRenderer();
 
-  virtual void RenderFrame(const webrtc::I420VideoFrame& frame, int delta)
-      OVERRIDE;
+  void RenderFrame(const webrtc::I420VideoFrame& frame, int delta) override;
+  bool IsTextureSupported() const override { return false; }
+
  private:
   GlxRenderer(size_t width, size_t height);
 

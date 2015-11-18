@@ -56,6 +56,10 @@ void BeforeStreamingFixture::ResumePlaying() {
   EXPECT_EQ(0, voe_base_->StartSend(channel_));
 }
 
+void BeforeStreamingFixture::WaitForTransmittedPackets(int32_t packet_count) {
+  transport_->WaitForTransmittedPackets(packet_count);
+}
+
 void BeforeStreamingFixture::SetUpLocalPlayback() {
   transport_ = new LoopBackTransport(voe_network_);
   EXPECT_EQ(0, voe_network_->RegisterExternalTransport(channel_, *transport_));

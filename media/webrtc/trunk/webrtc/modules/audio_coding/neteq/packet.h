@@ -22,7 +22,7 @@ namespace webrtc {
 struct Packet {
   RTPHeader header;
   uint8_t* payload;  // Datagram excluding RTP header and header extension.
-  int payload_length;
+  size_t payload_length;
   bool primary;  // Primary, i.e., not redundant payload.
   int waiting_time;
   bool sync_packet;

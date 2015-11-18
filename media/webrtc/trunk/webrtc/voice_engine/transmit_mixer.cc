@@ -259,15 +259,8 @@ TransmitMixer::SetEngineInformation(ProcessThread& processThread,
     _engineStatisticsPtr = &engineStatistics;
     _channelManagerPtr = &channelManager;
 
-    if (_processThreadPtr->RegisterModule(&_monitorModule) == -1)
-    {
-        WEBRTC_TRACE(kTraceWarning, kTraceVoice, VoEId(_instanceId, -1),
-                     "TransmitMixer::SetEngineInformation() failed to"
-                     "register the monitor module");
-    } else
-    {
-        _monitorModule.RegisterObserver(*this);
-    }
+    _processThreadPtr->RegisterModule(&_monitorModule);
+    _monitorModule.RegisterObserver(*this);
 
     return 0;
 }
@@ -1134,8 +1127,6 @@ bool TransmitMixer::IsRecordingMic()
     return _fileRecording;
 }
 
-// Note that if drift compensation is done here, a buffering stage will be
-// needed and this will need to switch to non-fixed resamples.
 void TransmitMixer::GenerateAudioFrame(const int16_t* audio,
                                        int samples_per_channel,
                                        int num_channels,
@@ -1196,7 +1187,7 @@ int32_t TransmitMixer::RecordAudioToFile(
 int32_t TransmitMixer::MixOrReplaceAudioWithFile(
     int mixingFrequency)
 {
-    scoped_ptr<int16_t[]> fileBuffer(new int16_t[640]);
+  rtc::scoped_ptr<int16_t[]> fileBuffer(new int16_t[640]);
 
     int fileSamples(0);
     {

@@ -21,37 +21,18 @@
 #include "webrtc/system_wrappers/source/trace_posix.h"
 #endif  // _WIN32
 
-#include "webrtc/system_wrappers/interface/sleep.h"
-
 #define KEY_LEN_CHARS 31
 
 #ifdef _WIN32
 #pragma warning(disable:4355)
 #endif  // _WIN32
 
-extern "C" {
-  int AECDebug() { return (int) webrtc::Trace::aec_debug(); }
-  uint32_t AECDebugMaxSize() { return webrtc::Trace::aec_debug_size(); }
-  void AECDebugEnable(uint32_t enable) { webrtc::Trace::set_aec_debug(!!enable); }
-  void AECDebugFilenameBase(char *buffer, size_t size) {
-    webrtc::Trace::aec_debug_filename(buffer, size);
-  }
-}
-
 namespace webrtc {
 
 const int Trace::kBoilerplateLength = 71;
 const int Trace::kTimestampPosition = 13;
 const int Trace::kTimestampLength = 12;
-uint32_t Trace::level_filter_ = kTraceDefault;
-bool Trace::aec_debug_ = false;
-uint32_t Trace::aec_debug_size_ = 4*1024*1024;
-std::string Trace::aec_filename_base_;
-
-void Trace::aec_debug_filename(char *buffer, size_t size) {
-  strncpy(buffer, aec_filename_base_.c_str(), size-1);
-  buffer[size-1] = '\0';
-}
+volatile int Trace::level_filter_ = kTraceDefault;
 
 // Construct On First Use idiom. Avoids "static initialization order fiasco".
 TraceImpl* TraceImpl::StaticInstance(CountOperation count_operation,
@@ -82,71 +63,15 @@ TraceImpl* TraceImpl::CreateInstance() {
 }
 
 TraceImpl::TraceImpl()
-    : critsect_interface_(CriticalSectionWrapper::CreateCriticalSection()),
-      callback_(NULL),
+    : callback_(NULL),
       row_count_text_(0),
       file_count_text_(0),
-      trace_file_(*FileWrapper::Create()),
-      thread_(*ThreadWrapper::CreateThread(TraceImpl::Run, this,
-                                           kHighestPriority, "Trace")),
-      event_(*EventWrapper::Create()),
-      critsect_array_(CriticalSectionWrapper::CreateCriticalSection()),
-      next_free_idx_(),
-      level_(),
-      length_(),
-      message_queue_(),
-      active_queue_(0) {
-  next_free_idx_[0] = 0;
-  next_free_idx_[1] = 0;
-
-  unsigned int tid = 0;
-  thread_.Start(tid);
-
-  for (int m = 0; m < WEBRTC_TRACE_NUM_ARRAY; ++m) {
-    for (int n = 0; n < WEBRTC_TRACE_MAX_QUEUE; ++n) {
-      message_queue_[m][n] = NULL;
-    }
-  }
-#if !defined(WEBRTC_LAZY_TRACE_ALLOC)
-  AllocateTraceBuffers();
-#endif
-}
-
-bool TraceImpl::StopThread() {
-  // Release the worker thread so that it can flush any lingering messages.
-  event_.Set();
-
-  // Allow 10 ms for pending messages to be flushed out.
-  // TODO(hellner): why not use condition variables to do this? Or let the
-  //                worker thread die and let this thread flush remaining
-  //                messages?
-  SleepMs(10);
-
-  thread_.SetNotAlive();
-  // Make sure the thread finishes as quickly as possible (instead of having
-  // to wait for the timeout).
-  event_.Set();
-  bool stopped = thread_.Stop();
-
-  CriticalSectionScoped lock(critsect_interface_);
-  trace_file_.Flush();
-  trace_file_.CloseFile();
-  return stopped;
+      trace_file_(FileWrapper::Create()) {
 }
 
 TraceImpl::~TraceImpl() {
-  StopThread();
-  delete &event_;
-  delete &trace_file_;
-  delete &thread_;
-  delete critsect_interface_;
-  delete critsect_array_;
-
-  for (int m = 0; m < WEBRTC_TRACE_NUM_ARRAY; ++m) {
-    for (int n = 0; n < WEBRTC_TRACE_MAX_QUEUE; ++n) {
-      delete [] message_queue_[m][n];
-    }
-  }
+  trace_file_->Flush();
+  trace_file_->CloseFile();
 }
 
 int32_t TraceImpl::AddThreadId(char* trace_message) const {
@@ -356,34 +281,12 @@ int32_t TraceImpl::AddModuleAndId(char* trace_message,
   return kMessageLength;
 }
 
-void TraceImpl::AllocateTraceBuffers()
-{
-  // Lazy-allocate trace buffers to save memory.
-  // Avoid locking issues by not holding both critsects at once.
-  // Do this before we can return true from .Open().
-  CriticalSectionScoped lock(critsect_array_);
-
-  if (!message_queue_[0][0]) {
-    for (int m = 0; m < WEBRTC_TRACE_NUM_ARRAY; ++m) {
-      for (int n = 0; n < WEBRTC_TRACE_MAX_QUEUE; ++n) {
-        message_queue_[m][n] = new char[WEBRTC_TRACE_MAX_MESSAGE_SIZE];
-      }
-    }
-  }
-}
-
 int32_t TraceImpl::SetTraceFileImpl(const char* file_name_utf8,
                                     const bool add_file_counter) {
-#if defined(WEBRTC_LAZY_TRACE_ALLOC)
-  if (file_name_utf8) {
-    AllocateTraceBuffers();
-  }
-#endif
+  rtc::CritScope lock(&crit_);
 
-  CriticalSectionScoped lock(critsect_interface_);
-
-  trace_file_.Flush();
-  trace_file_.CloseFile();
+  trace_file_->Flush();
+  trace_file_->CloseFile();
 
   if (file_name_utf8) {
     if (add_file_counter) {
@@ -392,13 +295,13 @@ int32_t TraceImpl::SetTraceFileImpl(const char* file_name_utf8,
       char file_name_with_counter_utf8[FileWrapper::kMaxFileNameSize];
       CreateFileName(file_name_utf8, file_name_with_counter_utf8,
                      file_count_text_);
-      if (trace_file_.OpenFile(file_name_with_counter_utf8, false, false,
+      if (trace_file_->OpenFile(file_name_with_counter_utf8, false, false,
                                true) == -1) {
         return -1;
       }
     } else {
       file_count_text_ = 0;
-      if (trace_file_.OpenFile(file_name_utf8, false, false, true) == -1) {
+      if (trace_file_->OpenFile(file_name_utf8, false, false, true) == -1) {
         return -1;
       }
     }
@@ -409,17 +312,12 @@ int32_t TraceImpl::SetTraceFileImpl(const char* file_name_utf8,
 
 int32_t TraceImpl::TraceFileImpl(
     char file_name_utf8[FileWrapper::kMaxFileNameSize]) {
-  CriticalSectionScoped lock(critsect_interface_);
-  return trace_file_.FileName(file_name_utf8, FileWrapper::kMaxFileNameSize);
+  rtc::CritScope lock(&crit_);
+  return trace_file_->FileName(file_name_utf8, FileWrapper::kMaxFileNameSize);
 }
 
 int32_t TraceImpl::SetTraceCallbackImpl(TraceCallback* callback) {
-#if defined(WEBRTC_LAZY_TRACE_ALLOC)
-  if (callback) {
-    AllocateTraceBuffers();
-  }
-#endif
-  CriticalSectionScoped lock(critsect_interface_);
+  rtc::CritScope lock(&crit_);
   callback_ = callback;
   return 0;
 }
@@ -459,215 +357,97 @@ void TraceImpl::AddMessageToList(
     const char trace_message[WEBRTC_TRACE_MAX_MESSAGE_SIZE],
     const uint16_t length,
     const TraceLevel level) {
-// NOTE(andresp): Enabled externally.
-#ifdef WEBRTC_DIRECT_TRACE
-  if (callback_) {
+  rtc::CritScope lock(&crit_);
+  if (callback_)
     callback_->Print(level, trace_message, length);
-  }
-  return;
-#endif
-
-  CriticalSectionScoped lock(critsect_array_);
-
-  uint16_t idx = next_free_idx_[active_queue_];
-
-#if defined(WEBRTC_LAZY_TRACE_ALLOC)
-  // Avoid grabbing another lock just to check Open(); use
-  // the fact we've allocated buffers to decide whether to save
-  // the message in the buffer.  Use the indexing as this minimizes
-  // cache misses/etc
-  if (!message_queue_[active_queue_][idx]) {
-  return;
-}
-#endif
-
-  if (idx >= WEBRTC_TRACE_MAX_QUEUE) {
-    if (!trace_file_.Open() && !callback_) {
-      // Drop the first 1/4 of old messages when not logging.
-      // TODO(hellner): isn't this redundant. The user will make it known
-      //                when to start logging. Why keep messages before
-      //                that?
-      for (int n = 0; n < WEBRTC_TRACE_MAX_QUEUE * 3 / 4; ++n) {
-        const int last_quarter_offset = (1 * WEBRTC_TRACE_MAX_QUEUE / 4);
-        memcpy(message_queue_[active_queue_][n],
-               message_queue_[active_queue_][n + last_quarter_offset],
-               WEBRTC_TRACE_MAX_MESSAGE_SIZE);
-      }
-      idx = next_free_idx_[active_queue_] = WEBRTC_TRACE_MAX_QUEUE * 3 / 4;
-    } else {
-      // More messages are being written than there is room for in the
-      // buffer. Drop any new messages.
-      // TODO(hellner): its probably better to drop old messages instead
-      //                of new ones. One step further: if this happens
-      //                it's due to writing faster than what can be
-      //                processed. Maybe modify the filter at this point.
-      //                E.g. turn of STREAM.
-      return;
-    }
-  }
-
-  next_free_idx_[active_queue_]++;
-
-  level_[active_queue_][idx] = level;
-  length_[active_queue_][idx] = length;
-  memcpy(message_queue_[active_queue_][idx], trace_message, length);
-
-  if (next_free_idx_[active_queue_] >= WEBRTC_TRACE_MAX_QUEUE - 1) {
-    // Logging more messages than can be worked off. Log a warning.
-    const char warning_msg[] = "WARNING MISSING TRACE MESSAGES\n";
-    level_[active_queue_][WEBRTC_TRACE_MAX_QUEUE-1] = kTraceWarning;
-    length_[active_queue_][WEBRTC_TRACE_MAX_QUEUE-1] = strlen(warning_msg);
-    memcpy(message_queue_[active_queue_][WEBRTC_TRACE_MAX_QUEUE-1],
-           warning_msg, length_[active_queue_][WEBRTC_TRACE_MAX_QUEUE-1]);
-    next_free_idx_[active_queue_]++;
-  }
+  WriteToFile(trace_message, length);
 }
 
-bool TraceImpl::Run(void* obj) {
-  return static_cast<TraceImpl*>(obj)->Process();
-}
-
-bool TraceImpl::Process() {
-  if (event_.Wait(1000) == kEventSignaled) {
-    // This slightly odd construction is to avoid locking |critsect_interface_|
-    // while calling WriteToFile() since it's locked inside the function.
-    critsect_interface_->Enter();
-    bool write_to_file = trace_file_.Open() || callback_;
-    critsect_interface_->Leave();
-    if (write_to_file) {
-      WriteToFile();
-    }
-  } else {
-    CriticalSectionScoped lock(critsect_interface_);
-    trace_file_.Flush();
-  }
-  return true;
-}
-
-void TraceImpl::WriteToFile() {
-  uint8_t local_queue_active = 0;
-  uint16_t local_next_free_idx = 0;
-
-  // There are two buffers. One for reading (for writing to file) and one for
-  // writing (for storing new messages). Let new messages be posted to the
-  // unused buffer so that the current buffer can be flushed safely.
-  {
-    CriticalSectionScoped lock(critsect_array_);
-    local_next_free_idx = next_free_idx_[active_queue_];
-    next_free_idx_[active_queue_] = 0;
-    local_queue_active = active_queue_;
-    if (active_queue_ == 0) {
-      active_queue_ = 1;
-    } else {
-      active_queue_ = 0;
-    }
-  }
-  if (local_next_free_idx == 0) {
+void TraceImpl::WriteToFile(const char* msg, uint16_t length) {
+  if (!trace_file_->Open())
     return;
-  }
 
-  CriticalSectionScoped lock(critsect_interface_);
+  if (row_count_text_ > WEBRTC_TRACE_MAX_FILE_SIZE) {
+    // wrap file
+    row_count_text_ = 0;
+    trace_file_->Flush();
 
-  for (uint16_t idx = 0; idx < local_next_free_idx; ++idx) {
-    TraceLevel local_level = level_[local_queue_active][idx];
-    if (callback_) {
-      callback_->Print(local_level, message_queue_[local_queue_active][idx],
-                       length_[local_queue_active][idx]);
+    if (file_count_text_ == 0) {
+      trace_file_->Rewind();
+    } else {
+      char old_file_name[FileWrapper::kMaxFileNameSize];
+      char new_file_name[FileWrapper::kMaxFileNameSize];
+
+      // get current name
+      trace_file_->FileName(old_file_name, FileWrapper::kMaxFileNameSize);
+      trace_file_->CloseFile();
+
+      file_count_text_++;
+
+      UpdateFileName(old_file_name, new_file_name, file_count_text_);
+
+      if (trace_file_->OpenFile(new_file_name, false, false, true) == -1) {
+        return;
+      }
     }
-    if (trace_file_.Open()) {
-      if (row_count_text_ > WEBRTC_TRACE_MAX_FILE_SIZE) {
-        // wrap file
-        row_count_text_ = 0;
-        trace_file_.Flush();
-
-        if (file_count_text_ == 0) {
-          trace_file_.Rewind();
-        } else {
-          char old_file_name[FileWrapper::kMaxFileNameSize];
-          char new_file_name[FileWrapper::kMaxFileNameSize];
-
-          // get current name
-          trace_file_.FileName(old_file_name,
-                               FileWrapper::kMaxFileNameSize);
-          trace_file_.CloseFile();
-
-          file_count_text_++;
-
-          UpdateFileName(old_file_name, new_file_name, file_count_text_);
-
-          if (trace_file_.OpenFile(new_file_name, false, false,
-                                   true) == -1) {
-            return;
-          }
-        }
-      }
-      if (row_count_text_ ==  0) {
-        char message[WEBRTC_TRACE_MAX_MESSAGE_SIZE + 1];
-        int32_t length = AddDateTimeInfo(message);
-        if (length != -1) {
-          message[length] = 0;
-          message[length - 1] = '\n';
-          trace_file_.Write(message, length);
-          row_count_text_++;
-        }
-      }
-      uint16_t length = length_[local_queue_active][idx];
-      message_queue_[local_queue_active][idx][length] = 0;
-      message_queue_[local_queue_active][idx][length - 1] = '\n';
-      trace_file_.Write(message_queue_[local_queue_active][idx], length);
+  }
+  if (row_count_text_ == 0) {
+    char message[WEBRTC_TRACE_MAX_MESSAGE_SIZE + 1];
+    int32_t length = AddDateTimeInfo(message);
+    if (length != -1) {
+      message[length] = 0;
+      message[length - 1] = '\n';
+      trace_file_->Write(message, length);
       row_count_text_++;
     }
   }
+  trace_file_->Write(msg, length);
+  row_count_text_++;
 }
 
-void TraceImpl::AddImpl(const TraceLevel level, const TraceModule module,
+void TraceImpl::AddImpl(const TraceLevel level,
+                        const TraceModule module,
                         const int32_t id,
                         const char msg[WEBRTC_TRACE_MAX_MESSAGE_SIZE]) {
-  if (TraceCheck(level)) {
-    char trace_message[WEBRTC_TRACE_MAX_MESSAGE_SIZE];
-    char* message_ptr = trace_message;
+  if (!TraceCheck(level))
+    return;
 
-    int32_t len = 0;
-    int32_t ack_len = 0;
+  char trace_message[WEBRTC_TRACE_MAX_MESSAGE_SIZE];
+  char* message_ptr = &trace_message[0];
+  int32_t len = AddLevel(message_ptr, level);
+  if (len == -1)
+    return;
 
-    len = AddLevel(message_ptr, level);
-    if (len == -1) {
-      return;
-    }
-    message_ptr += len;
-    ack_len += len;
+  message_ptr += len;
+  int32_t ack_len = len;
 
-    len = AddTime(message_ptr, level);
-    if (len == -1) {
-      return;
-    }
-    message_ptr += len;
-    ack_len += len;
+  len = AddTime(message_ptr, level);
+  if (len == -1)
+    return;
 
-    len = AddModuleAndId(message_ptr, module, id);
-    if (len == -1) {
-      return;
-    }
-    message_ptr += len;
-    ack_len += len;
+  message_ptr += len;
+  ack_len += len;
 
-    len = AddThreadId(message_ptr);
-    if (len < 0) {
-      return;
-    }
-    message_ptr += len;
-    ack_len += len;
+  len = AddModuleAndId(message_ptr, module, id);
+  if (len == -1)
+    return;
 
-    len = AddMessage(message_ptr, msg, (uint16_t)ack_len);
-    if (len == -1) {
-      return;
-    }
-    ack_len += len;
-    AddMessageToList(trace_message, (uint16_t)ack_len, level);
+  message_ptr += len;
+  ack_len += len;
 
-    // Make sure that messages are written as soon as possible.
-    event_.Set();
-  }
+  len = AddThreadId(message_ptr);
+  if (len < 0)
+    return;
+
+  message_ptr += len;
+  ack_len += len;
+
+  len = AddMessage(message_ptr, msg, static_cast<uint16_t>(ack_len));
+  if (len == -1)
+    return;
+
+  ack_len += len;
+  AddMessageToList(trace_message, static_cast<uint16_t>(ack_len), level);
 }
 
 bool TraceImpl::TraceCheck(const TraceLevel level) const {
@@ -738,14 +518,17 @@ bool TraceImpl::CreateFileName(
   return true;
 }
 
+// static
 void Trace::CreateTrace() {
   TraceImpl::StaticInstance(kAddRef);
 }
 
+// static
 void Trace::ReturnTrace() {
   TraceImpl::StaticInstance(kRelease);
 }
 
+// static
 int32_t Trace::TraceFile(char file_name[FileWrapper::kMaxFileNameSize]) {
   TraceImpl* trace = TraceImpl::GetTrace();
   if (trace) {
@@ -756,6 +539,17 @@ int32_t Trace::TraceFile(char file_name[FileWrapper::kMaxFileNameSize]) {
   return -1;
 }
 
+// static
+void Trace::set_level_filter(int filter) {
+  rtc::AtomicOps::Store(&level_filter_, filter);
+}
+
+// static
+int Trace::level_filter() {
+  return rtc::AtomicOps::Load(&level_filter_);
+}
+
+// static
 int32_t Trace::SetTraceFile(const char* file_name,
                             const bool add_file_counter) {
   TraceImpl* trace = TraceImpl::GetTrace();

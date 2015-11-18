@@ -19,8 +19,8 @@ namespace rtc {
 // This interface defines the methods to resolve the address asynchronously.
 class AsyncResolverInterface {
  public:
-  AsyncResolverInterface() {}
-  virtual ~AsyncResolverInterface() {}
+  AsyncResolverInterface();
+  virtual ~AsyncResolverInterface();
 
   // Start address resolve process.
   virtual void Start(const SocketAddress& addr) = 0;

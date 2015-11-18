@@ -59,7 +59,7 @@ int VoiceDetectionImpl::ProcessCaptureAudio(AudioBuffer* audio) {
     using_external_vad_ = false;
     return apm_->kNoError;
   }
-  assert(audio->samples_per_split_channel() <= 160);
+  assert(audio->num_frames_per_band() <= 160);
 
   // TODO(ajm): concatenate data in frame buffer here.
 

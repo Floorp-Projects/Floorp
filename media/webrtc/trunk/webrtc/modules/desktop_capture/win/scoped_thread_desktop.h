@@ -14,7 +14,7 @@
 #include <windows.h>
 
 #include "webrtc/base/constructormagic.h"
-#include "webrtc/system_wrappers/interface/scoped_ptr.h"
+#include "webrtc/base/scoped_ptr.h"
 
 namespace webrtc {
 
@@ -40,10 +40,10 @@ class ScopedThreadDesktop {
 
  private:
   // The desktop handle assigned to the calling thread by Set
-  scoped_ptr<Desktop> assigned_;
+  rtc::scoped_ptr<Desktop> assigned_;
 
   // The desktop handle assigned to the calling thread at creation.
-  scoped_ptr<Desktop> initial_;
+  rtc::scoped_ptr<Desktop> initial_;
 
   DISALLOW_COPY_AND_ASSIGN(ScopedThreadDesktop);
 };

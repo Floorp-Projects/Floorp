@@ -32,7 +32,7 @@ Bitrate::Bitrate(Clock* clock, Observer* observer)
 
 Bitrate::~Bitrate() {}
 
-void Bitrate::Update(const int32_t bytes) {
+void Bitrate::Update(const size_t bytes) {
   CriticalSectionScoped cs(crit_.get());
   bytes_count_ += bytes;
   packet_count_++;

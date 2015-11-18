@@ -15,6 +15,7 @@
 #include <qos.h>
 #endif
 
+#include "webrtc/base/checks.h"
 #include "webrtc/engine_configurations.h"
 #include "webrtc/system_wrappers/interface/logging.h"
 #include "webrtc/video_engine/include/vie_errors.h"
@@ -51,6 +52,26 @@ int ViENetworkImpl::Release() {
   return ref_count;
 }
 
+ViENetworkImpl::ViENetworkImpl(ViESharedData* shared_data)
+    : shared_data_(shared_data) {
+}
+
+ViENetworkImpl::~ViENetworkImpl() {
+}
+
+void ViENetworkImpl::SetBitrateConfig(int video_channel,
+                                      int min_bitrate_bps,
+                                      int start_bitrate_bps,
+                                      int max_bitrate_bps) {
+  LOG_F(LS_INFO) << "channel: " << video_channel
+                 << " new bitrate config: min=" << min_bitrate_bps
+                 << ", start=" << start_bitrate_bps
+                 << ", max=" << max_bitrate_bps;
+  bool success = shared_data_->channel_manager()->SetBitrateConfig(
+      video_channel, min_bitrate_bps, start_bitrate_bps, max_bitrate_bps);
+  DCHECK(success);
+}
+
 void ViENetworkImpl::SetNetworkTransmissionState(const int video_channel,
                                                  const bool is_transmitting) {
   LOG_F(LS_INFO) << "channel: " << video_channel
@@ -63,11 +84,6 @@ void ViENetworkImpl::SetNetworkTransmissionState(const int video_channel,
   }
   vie_encoder->SetNetworkTransmissionState(is_transmitting);
 }
-
-ViENetworkImpl::ViENetworkImpl(ViESharedData* shared_data)
-    : shared_data_(shared_data) {}
-
-ViENetworkImpl::~ViENetworkImpl() {}
 
 int ViENetworkImpl::RegisterSendTransport(const int video_channel,
                                           Transport& transport) {
@@ -111,7 +127,7 @@ int ViENetworkImpl::DeregisterSendTransport(const int video_channel) {
 }
 
 int ViENetworkImpl::ReceivedRTPPacket(const int video_channel, const void* data,
-                                      const int length,
+                                      const size_t length,
                                       const PacketTime& packet_time) {
   ViEChannelManagerScoped cs(*(shared_data_->channel_manager()));
   ViEChannel* vie_channel = cs.Channel(video_channel);
@@ -123,7 +139,7 @@ int ViENetworkImpl::ReceivedRTPPacket(const int video_channel, const void* data,
 }
 
 int ViENetworkImpl::ReceivedRTCPPacket(const int video_channel,
-                                       const void* data, const int length) {
+                                       const void* data, const size_t length) {
   ViEChannelManagerScoped cs(*(shared_data_->channel_manager()));
   ViEChannel* vie_channel = cs.Channel(video_channel);
   if (!vie_channel) {
@@ -149,7 +165,9 @@ int ViENetworkImpl::SetMTU(int video_channel, unsigned int mtu) {
 }
 
 int ViENetworkImpl::ReceivedBWEPacket(const int video_channel,
-    int64_t arrival_time_ms, int payload_size, const RTPHeader& header) {
+                                      int64_t arrival_time_ms,
+                                      size_t payload_size,
+                                      const RTPHeader& header) {
   ViEChannelManagerScoped cs(*(shared_data_->channel_manager()));
   ViEChannel* vie_channel = cs.Channel(video_channel);
   if (!vie_channel) {
@@ -159,12 +177,5 @@ int ViENetworkImpl::ReceivedBWEPacket(const int video_channel,
 
   vie_channel->ReceivedBWEPacket(arrival_time_ms, payload_size, header);
   return 0;
-}
-
-bool ViENetworkImpl::SetBandwidthEstimationConfig(
-    int video_channel, const webrtc::Config& config) {
-  LOG_F(LS_INFO) << "channel: " << video_channel;
-  return shared_data_->channel_manager()->SetBandwidthEstimationConfig(
-      video_channel, config);
 }
 }  // namespace webrtc

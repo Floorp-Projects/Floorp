@@ -15,24 +15,35 @@
 #include <limits>
 
 #include "testing/gtest/include/gtest/gtest.h"
-#include "webrtc/base/compile_assert.h"
 #include "webrtc/common_audio/wav_header.h"
 #include "webrtc/common_audio/wav_file.h"
 #include "webrtc/test/testsupport/fileutils.h"
+
+namespace webrtc {
 
 static const float kSamples[] = {0.0, 10.0, 4e4, -1e9};
 
 // Write a tiny WAV file with the C++ interface and verify the result.
 TEST(WavWriterTest, CPP) {
-  const std::string outfile = webrtc::test::OutputPath() + "wavtest1.wav";
+  const std::string outfile = test::OutputPath() + "wavtest1.wav";
   static const uint32_t kNumSamples = 3;
   {
-    webrtc::WavWriter w(outfile, 14099, 1);
+    WavWriter w(outfile, 14099, 1);
     EXPECT_EQ(14099, w.sample_rate());
     EXPECT_EQ(1, w.num_channels());
     EXPECT_EQ(0u, w.num_samples());
     w.WriteSamples(kSamples, kNumSamples);
     EXPECT_EQ(kNumSamples, w.num_samples());
+  }
+  // Write some extra "metadata" to the file that should be silently ignored
+  // by WavReader. We don't use WavWriter directly for this because it doesn't
+  // support metadata.
+  static const uint8_t kMetadata[] = {101, 202};
+  {
+    FILE* f = fopen(outfile.c_str(), "ab");
+    ASSERT_TRUE(f);
+    ASSERT_EQ(1u, fwrite(kMetadata, sizeof(kMetadata), 1, f));
+    fclose(f);
   }
   static const uint8_t kExpectedContents[] = {
     'R', 'I', 'F', 'F',
@@ -51,11 +62,12 @@ TEST(WavWriterTest, CPP) {
     0, 0,  // first sample: 0.0
     10, 0,  // second sample: 10.0
     0xff, 0x7f,  // third sample: 4e4 (saturated)
+    kMetadata[0], kMetadata[1],
   };
   static const int kContentSize =
-      webrtc::kWavHeaderSize + kNumSamples * sizeof(int16_t);
-  COMPILE_ASSERT(sizeof(kExpectedContents) == kContentSize, content_size);
-  EXPECT_EQ(size_t(kContentSize), webrtc::test::GetFileSize(outfile));
+      kWavHeaderSize + kNumSamples * sizeof(int16_t) + sizeof(kMetadata);
+  static_assert(sizeof(kExpectedContents) == kContentSize, "content size");
+  EXPECT_EQ(size_t(kContentSize), test::GetFileSize(outfile));
   FILE* f = fopen(outfile.c_str(), "rb");
   ASSERT_TRUE(f);
   uint8_t contents[kContentSize];
@@ -64,7 +76,7 @@ TEST(WavWriterTest, CPP) {
   EXPECT_EQ(0, memcmp(kExpectedContents, contents, kContentSize));
 
   {
-    webrtc::WavReader r(outfile);
+    WavReader r(outfile);
     EXPECT_EQ(14099, r.sample_rate());
     EXPECT_EQ(1, r.num_channels());
     EXPECT_EQ(kNumSamples, r.num_samples());
@@ -78,8 +90,8 @@ TEST(WavWriterTest, CPP) {
 
 // Write a tiny WAV file with the C interface and verify the result.
 TEST(WavWriterTest, C) {
-  const std::string outfile = webrtc::test::OutputPath() + "wavtest2.wav";
-  rtc_WavWriter *w = rtc_WavOpen(outfile.c_str(), 11904, 2);
+  const std::string outfile = test::OutputPath() + "wavtest2.wav";
+  rtc_WavWriter* w = rtc_WavOpen(outfile.c_str(), 11904, 2);
   EXPECT_EQ(11904, rtc_WavSampleRate(w));
   EXPECT_EQ(2, rtc_WavNumChannels(w));
   EXPECT_EQ(0u, rtc_WavNumSamples(w));
@@ -109,9 +121,9 @@ TEST(WavWriterTest, C) {
     0, 0x80,  // fourth sample: -1e9 (saturated)
   };
   static const int kContentSize =
-      webrtc::kWavHeaderSize + kNumSamples * sizeof(int16_t);
-  COMPILE_ASSERT(sizeof(kExpectedContents) == kContentSize, content_size);
-  EXPECT_EQ(size_t(kContentSize), webrtc::test::GetFileSize(outfile));
+      kWavHeaderSize + kNumSamples * sizeof(int16_t);
+  static_assert(sizeof(kExpectedContents) == kContentSize, "content size");
+  EXPECT_EQ(size_t(kContentSize), test::GetFileSize(outfile));
   FILE* f = fopen(outfile.c_str(), "rb");
   ASSERT_TRUE(f);
   uint8_t contents[kContentSize];
@@ -122,7 +134,7 @@ TEST(WavWriterTest, C) {
 
 // Write a larger WAV file. You can listen to this file to sanity-check it.
 TEST(WavWriterTest, LargeFile) {
-  std::string outfile = webrtc::test::OutputPath() + "wavtest3.wav";
+  std::string outfile = test::OutputPath() + "wavtest3.wav";
   static const int kSampleRate = 8000;
   static const int kNumChannels = 2;
   static const uint32_t kNumSamples = 3 * kSampleRate * kNumChannels;
@@ -137,18 +149,18 @@ TEST(WavWriterTest, LargeFile) {
     samples[i + 1] = std::pow(std::cos(t * 2 * 2 * M_PI), 10) * x;
   }
   {
-    webrtc::WavWriter w(outfile, kSampleRate, kNumChannels);
+    WavWriter w(outfile, kSampleRate, kNumChannels);
     EXPECT_EQ(kSampleRate, w.sample_rate());
     EXPECT_EQ(kNumChannels, w.num_channels());
     EXPECT_EQ(0u, w.num_samples());
     w.WriteSamples(samples, kNumSamples);
     EXPECT_EQ(kNumSamples, w.num_samples());
   }
-  EXPECT_EQ(sizeof(int16_t) * kNumSamples + webrtc::kWavHeaderSize,
-            webrtc::test::GetFileSize(outfile));
+  EXPECT_EQ(sizeof(int16_t) * kNumSamples + kWavHeaderSize,
+            test::GetFileSize(outfile));
 
   {
-    webrtc::WavReader r(outfile);
+    WavReader r(outfile);
     EXPECT_EQ(kSampleRate, r.sample_rate());
     EXPECT_EQ(kNumChannels, r.num_channels());
     EXPECT_EQ(kNumSamples, r.num_samples());
@@ -161,3 +173,5 @@ TEST(WavWriterTest, LargeFile) {
     EXPECT_EQ(0u, r.ReadSamples(kNumSamples, read_samples));
   }
 }
+
+}  // namespace webrtc
