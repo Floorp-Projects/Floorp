@@ -697,6 +697,12 @@ IsCheckSloppyOp(JSOp op)
 #endif
 
 inline bool
+IsAtomOp(JSOp op)
+{
+    return JOF_OPTYPE(op) == JOF_ATOM;
+}
+
+inline bool
 IsGetPropPC(jsbytecode* pc)
 {
     JSOp op = JSOp(*pc);

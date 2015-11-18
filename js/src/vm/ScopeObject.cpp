@@ -429,6 +429,12 @@ ModuleEnvironmentObject::hasImportBinding(HandlePropertyName name)
     return importBindings().has(NameToId(name));
 }
 
+bool
+ModuleEnvironmentObject::lookupImport(jsid name, ModuleEnvironmentObject** envOut, Shape** shapeOut)
+{
+    return importBindings().lookup(name, envOut, shapeOut);
+}
+
 /* static */ bool
 ModuleEnvironmentObject::lookupProperty(JSContext* cx, HandleObject obj, HandleId id,
                                         MutableHandleObject objp, MutableHandleShape propp)
@@ -2931,6 +2937,18 @@ js::StaticScopeChainLength(JSObject* staticScope)
     for (StaticScopeIter<NoGC> ssi(staticScope); !ssi.done(); ssi++)
         length++;
     return length;
+}
+
+ModuleEnvironmentObject*
+js::GetModuleEnvironmentForScript(JSScript* script)
+{
+    StaticScopeIter<NoGC> ssi(script->enclosingStaticScope());
+    while (!ssi.done() && ssi.type() != StaticScopeIter<NoGC>::Module)
+        ssi++;
+    if (ssi.done())
+        return nullptr;
+
+    return ssi.module().environment();
 }
 
 bool
