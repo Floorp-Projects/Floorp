@@ -330,7 +330,13 @@ var DocumentManager = {
   },
 
   handleEvent: function(event) {
-    let window = event.target.defaultView;
+    let window = event.currentTarget;
+    if (event.target != window.document) {
+      // We use capturing listeners so we have precedence over content script
+      // listeners, but only care about events targeted to the element we're
+      // listening on.
+      return;
+    }
     window.removeEventListener(event.type, this, true);
 
     // Need to check if we're still on the right page? Greasemonkey does this.
@@ -437,7 +443,7 @@ function BrowserExtensionContent(data)
   this.id = data.id;
   this.uuid = data.uuid;
   this.data = data;
-  this.scripts = [ for (scriptData of data.content_scripts) new Script(scriptData) ];
+  this.scripts = data.content_scripts.map(scriptData => new Script(scriptData));
   this.webAccessibleResources = data.webAccessibleResources;
   this.whiteListedHosts = data.whiteListedHosts;
 

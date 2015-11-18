@@ -66,6 +66,7 @@ var {
   injectAPI,
   extend,
   flushJarCache,
+  instanceOf,
 } = ExtensionUtils;
 
 const LOGGER_ID_BASE = "addons.webextension.";
@@ -322,6 +323,9 @@ var GlobalManager = {
 
     let eventHandler = docShell.chromeEventHandler;
     let listener = event => {
+      if (event.target != docShell.contentViewer.DOMDocument) {
+        return;
+      }
       eventHandler.removeEventListener("unload", listener);
       context.unload();
     };
@@ -343,10 +347,10 @@ this.ExtensionData = function(rootURI)
 
   this.manifest = null;
   this.id = null;
-  // Map(locale-name -> message-map)
+  // Map(locale-name -> Map(message-key -> localized-strings))
+  //
   // Contains a key for each loaded locale, each of which is a
-  // JSON-compatible object with a property for each message
-  // in that locale.
+  // Map of message keys to their localized strings.
   this.localeMessages = new Map();
   this.selectedLocale = null;
   this._promiseLocales = null;
@@ -372,41 +376,36 @@ ExtensionData.prototype = {
   },
 
   // https://developer.chrome.com/extensions/i18n
-  localizeMessage(message, substitutions, locale = this.selectedLocale) {
-    let messages = {};
-    if (this.localeMessages.has(locale)) {
-      messages = this.localeMessages.get(locale);
-    }
+  localizeMessage(message, substitutions = [], locale = this.selectedLocale, defaultValue = "??") {
+    let locales = new Set([locale, this.defaultLocale]
+                          .filter(locale => this.localeMessages.has(locale)));
 
-    if (message in messages) {
-      let str = messages[message].message;
+    // Message names are case-insensitive, so normalize them to lower-case.
+    message = message.toLowerCase();
+    for (let locale of locales) {
+      let messages = this.localeMessages.get(locale);
+      if (messages.has(message)) {
+        let str = messages.get(message)
 
-      if (!substitutions) {
-        substitutions = [];
-      } else if (!Array.isArray(substitutions)) {
-        substitutions = [substitutions];
-      }
-
-      // https://developer.chrome.com/extensions/i18n-messages
-      // |str| may contain substrings of the form $1 or $PLACEHOLDER$.
-      // In the former case, we replace $n with substitutions[n - 1].
-      // In the latter case, we consult the placeholders array.
-      // The placeholder may itself use $n to refer to substitutions.
-      let replacer = (matched, name) => {
-        if (name.length == 1 && name[0] >= '1' && name[0] <= '9') {
-          return substitutions[parseInt(name) - 1];
-        } else {
-          let content = messages[message].placeholders[name].content;
-          if (content[0] == '$') {
-            return replacer(matched, content[1]);
-          } else {
-            return content;
-          }
+        if (!Array.isArray(substitutions)) {
+          substitutions = [substitutions];
         }
-      };
-      return str.replace(/\$([A-Za-z_@]+)\$/, replacer)
-                .replace(/\$([0-9]+)/, replacer)
-                .replace(/\$\$/, "$");
+
+        let replacer = (matched, index, dollarSigns) => {
+          if (index) {
+            // This is not quite Chrome-compatible. Chrome consumes any number
+            // of digits following the $, but only accepts 9 substitutions. We
+            // accept any number of substitutions.
+            index = parseInt(index) - 1;
+            return index in substitutions ? substitutions[index] : "";
+          } else {
+            // For any series of contiguous `$`s, the first is dropped, and
+            // the rest remain in the output string.
+            return dollarSigns;
+          }
+        };
+        return str.replace(/\$(?:([1-9]\d*)|(\$+))/g, replacer);
+      }
     }
 
     // Check for certain pre-defined messages.
@@ -425,7 +424,7 @@ ExtensionData.prototype = {
     }
 
     Cu.reportError(`Unknown localization message ${message}`);
-    return "??";
+    return defaultValue;
   },
 
   // Localize a string, replacing all |__MSG_(.*)__| tokens with the
@@ -440,7 +439,7 @@ ExtensionData.prototype = {
     }
 
     return str.replace(/__MSG_([A-Za-z0-9@_]+?)__/g, (matched, message) => {
-      return this.localizeMessage(message, [], locale);
+      return this.localizeMessage(message, [], locale, matched);
     });
   },
 
@@ -565,6 +564,61 @@ ExtensionData.prototype = {
     });
   },
 
+  // Validates the contents of a locale JSON file, normalizes the
+  // messages into a Map of message key -> localized string pairs.
+  processLocale(locale, messages) {
+    let result = new Map();
+
+    // Chrome does not document the semantics of its localization
+    // system very well. It handles replacements by pre-processing
+    // messages, replacing |$[a-zA-Z0-9@_]+$| tokens with the value of their
+    // replacements. Later, it processes the resulting string for
+    // |$[0-9]| replacements.
+    //
+    // Again, it does not document this, but it accepts any number
+    // of sequential |$|s, and replaces them with that number minus
+    // 1. It also accepts |$| followed by any number of sequential
+    // digits, but refuses to process a localized string which
+    // provides more than 9 substitutions.
+    if (!instanceOf(messages, "Object")) {
+      this.packagingError(`Invalid locale data for ${locale}`);
+      return result;
+    }
+
+    for (let key of Object.keys(messages)) {
+      let msg = messages[key];
+
+      if (!instanceOf(msg, "Object") || typeof(msg.message) != "string") {
+        this.packagingError(`Invalid locale message data for ${locale}, message ${JSON.stringify(key)}`);
+        continue;
+      }
+
+      // Substitutions are case-insensitive, so normalize all of their names
+      // to lower-case.
+      let placeholders = new Map();
+      if (instanceOf(msg.placeholders, "Object")) {
+        for (let key of Object.keys(msg.placeholders)) {
+          placeholders.set(key.toLowerCase(), msg.placeholders[key]);
+        }
+      }
+
+      let replacer = (match, name) => {
+        let replacement = placeholders.get(name.toLowerCase());
+        if (instanceOf(replacement, "Object") && "content" in replacement) {
+          return replacement.content;
+        }
+        return "";
+      };
+
+      let value = msg.message.replace(/\$([A-Za-z0-9@_]+)\$/g, replacer);
+
+      // Message names are also case-insensitive, so normalize them to lower-case.
+      result.set(key.toLowerCase(), value);
+    }
+
+    return result;
+  },
+
   // Reads the locale file for the given Gecko-compatible locale code, and
   // stores its parsed contents in |this.localeMessages.get(locale)|.
   readLocaleFile: Task.async(function* (locale) {
@@ -572,9 +626,10 @@ ExtensionData.prototype = {
     let dir = locales.get(locale);
     let file = `_locales/${dir}/messages.json`;
 
-    let messages = {};
+    let messages = new Map();
     try {
       messages = yield this.readJSON(file);
+      messages = this.processLocale(locale, messages);
     } catch (e) {
       this.packagingError(`Loading locale file ${file}: ${e}`);
     }
@@ -638,16 +693,25 @@ ExtensionData.prototype = {
   // default locale if no locale code is given, and sets it as the currently
   // selected locale on success.
   //
+  // Pre-loads the default locale for fallback message processing, regardless
+  // of the locale specified.
+  //
   // If no locales are unavailable, resolves to |null|.
   initLocale: Task.async(function* (locale = this.defaultLocale) {
     if (locale == null) {
       return null;
     }
 
-    let localeData = yield this.readLocaleFile(locale);
+    let promises = [this.readLocaleFile(locale)];
 
+    let { defaultLocale } = this;
+    if (locale != defaultLocale && !this.localeMessages.has(defaultLocale)) {
+      promises.push(this.readLocaleFile(defaultLocale));
+    }
+
+    let results = yield Promise.all(promises);
     this.selectedLocale = locale;
-    return localeData;
+    return results[0];
   }),
 };
 
@@ -777,7 +841,7 @@ this.Extension.generate = function(id, data)
     files[bgScript] = data.background;
   }
 
-  provide(files, ["manifest.json"], JSON.stringify(manifest));
+  provide(files, ["manifest.json"], manifest);
 
   let ZipWriter = Components.Constructor("@mozilla.org/zipwriter;1", "nsIZipWriter");
   let zipW = new ZipWriter();
@@ -807,6 +871,8 @@ this.Extension.generate = function(id, data)
     let script = files[filename];
     if (typeof(script) == "function") {
       script = "(" + script.toString() + ")()";
+    } else if (typeof(script) == "object") {
+      script = JSON.stringify(script);
     }
 
     let stream = Cc["@mozilla.org/io/string-input-stream;1"].createInstance(Ci.nsIStringInputStream);
@@ -940,7 +1006,7 @@ Extension.prototype = extend(Object.create(ExtensionData.prototype), {
     if (locale === undefined) {
       let locales = yield this.promiseLocales();
 
-      let localeList = Object.keys(locales).map(locale => {
+      let localeList = Array.from(locales.keys(), locale => {
         return { name: locale, locales: [locale] };
       });
 
@@ -971,7 +1037,7 @@ Extension.prototype = extend(Object.create(ExtensionData.prototype), {
 
       return this.runManifest(this.manifest);
     }).catch(e => {
-      dump(`Extension error: ${e} ${e.filename}:${e.lineNumber}\n`);
+      dump(`Extension error: ${e} ${e.filename || e.fileName}:${e.lineNumber}\n`);
       Cu.reportError(e);
       throw e;
     });
