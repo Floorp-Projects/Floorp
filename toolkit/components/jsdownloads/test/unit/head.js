@@ -409,8 +409,7 @@ function promiseStartExternalHelperAppServiceDownload(aSourceUrl) {
 
     let channel = NetUtil.newChannel({
       uri: sourceURI,
-      loadUsingSystemPrincipal: true,
-      securityFlags: Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL
+      loadUsingSystemPrincipal: true
     });
 
     // Start the actual download process.
