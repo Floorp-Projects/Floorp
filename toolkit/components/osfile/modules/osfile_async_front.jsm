@@ -1463,11 +1463,16 @@ Object.defineProperty(OS.File, "queue", {
   }
 });
 
+// `true` if this is a content process, `false` otherwise.
+// It would be nicer to go through `Services.appInfo`, but some tests need to be
+// able to replace that field with a custom implementation before it is first
+// called.
+const isContent = Components.classes["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime).processType == Ci.nsIXULRuntime.PROCESS_TYPE_CONTENT;
+
 /**
  * Shutdown barriers, to let clients register to be informed during shutdown.
  */
 var Barriers = {
-  profileBeforeChange: new AsyncShutdown.Barrier("OS.File: Waiting for clients before profile-before-shutdown"),
   shutdown: new AsyncShutdown.Barrier("OS.File: Waiting for clients before full shutdown"),
   /**
    * Return the shutdown state of OS.File
@@ -1495,25 +1500,35 @@ var Barriers = {
   }
 };
 
-File.profileBeforeChange = Barriers.profileBeforeChange.client;
+function setupShutdown(phaseName) {
+  Barriers[phaseName] = new AsyncShutdown.Barrier(`OS.File: Waiting for clients before ${phaseName}`),
+  File[phaseName] = Barriers[phaseName].client;
+
+  // Auto-flush OS.File during `phaseName`. This ensures that any I/O
+  // that has been queued *before* `phaseName` is properly completed.
+  // To ensure that I/O queued *during* `phaseName` change is completed,
+  // clients should register using AsyncShutdown.addBlocker.
+  AsyncShutdown[phaseName].addBlocker(
+    `OS.File: flush I/O queued before ${phaseName}`,
+    Task.async(function*() {
+      // Give clients a last chance to enqueue requests.
+      yield Barriers[phaseName].wait({crashAfterMS: null});
+
+      // Wait until all currently enqueued requests are completed.
+      yield Scheduler.queue;
+    }),
+    () => {
+      let details = Barriers.getDetails();
+      details.clients = Barriers[phaseName].state;
+      return details;
+    }
+  );
+}
+
+
+if (isContent) {
+  setupShutdown("contentChildShutdown");
+} else {
+  setupShutdown("profileBeforeChange")
+}
 File.shutdown = Barriers.shutdown.client;
-
-// Auto-flush OS.File during profile-before-change. This ensures that any I/O
-// that has been queued *before* profile-before-change is properly completed.
-// To ensure that I/O queued *during* profile-before-change is completed,
-// clients should register using AsyncShutdown.addBlocker.
-AsyncShutdown.profileBeforeChange.addBlocker(
-  "OS.File: flush I/O queued before profile-before-change",
-  Task.async(function*() {
-    // Give clients a last chance to enqueue requests.
-    yield Barriers.profileBeforeChange.wait({crashAfterMS: null});
-
-    // Wait until all currently enqueued requests are completed.
-    yield Scheduler.queue;
-  }),
-  () => {
-    let details = Barriers.getDetails();
-    details.clients = Barriers.profileBeforeChange.state;
-    return details;
-  }
-);
