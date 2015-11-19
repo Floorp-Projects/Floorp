@@ -31,7 +31,7 @@ add_task(function* test() {
   let closedTabData = ss.getClosedTabData(win);
 
   // Close our window.
-  yield BrowserTestUtils.closeWindow(win);
+  yield promiseWindowClosed(win);
 
   // SessionStore should no longer track our window
   // but it should still report the same state.

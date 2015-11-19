@@ -26,10 +26,10 @@ function test() {
     "//input[@type='file']":      filePath
   };
 
-  registerCleanupFunction(function* () {
-    for (let win of windowsToClose) {
-      yield BrowserTestUtils.closeWindow(win);
-    }
+  registerCleanupFunction(function() {
+    windowsToClose.forEach(function(win) {
+      win.close();
+    });
   });
 
   function test(aLambda) {

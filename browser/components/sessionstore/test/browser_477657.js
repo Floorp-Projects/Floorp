@@ -52,7 +52,8 @@ function test() {
           isnot(newWin.windowState, newWin.STATE_MAXIMIZED,
                 "the window was explicitly unmaximized");
 
-          BrowserTestUtils.closeWindow(newWin).then(finish);
+          newWin.close();
+          finish();
         }, 0);
       }, 0);
     }, 0);

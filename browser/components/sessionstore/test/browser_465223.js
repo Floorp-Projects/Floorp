@@ -40,6 +40,7 @@ function test() {
        "window value was correctly overwritten");
 
     // clean up
-    BrowserTestUtils.closeWindow(newWin).then(finish);
+    newWin.close();
+    finish();
   });
 }

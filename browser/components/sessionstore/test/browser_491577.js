@@ -114,7 +114,8 @@ function test() {
        "... and windows not specifically forgetten weren't.");
 
     // clean up
+    newWin.close();
     gPrefService.clearUserPref("browser.sessionstore.max_windows_undo");
-    BrowserTestUtils.closeWindow(newWin).then(finish);
+    finish();
   });
 }
