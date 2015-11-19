@@ -298,8 +298,6 @@ nsJSONWriter::Write(const char16_t *aBuffer, uint32_t aLength)
 
   if (!mDidWrite) {
     mBuffer = new char16_t[JSON_STREAM_BUFSIZE];
-    if (!mBuffer)
-      return NS_ERROR_OUT_OF_MEMORY;
     mDidWrite = true;
   }
 
@@ -481,9 +479,6 @@ nsresult
 NS_NewJSON(nsISupports* aOuter, REFNSIID aIID, void** aResult)
 {
   nsJSON* json = new nsJSON();
-  if (!json)
-    return NS_ERROR_OUT_OF_MEMORY;
-
   NS_ADDREF(json);
   *aResult = json;
 

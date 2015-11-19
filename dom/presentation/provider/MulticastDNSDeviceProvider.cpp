@@ -175,9 +175,6 @@ MulticastDNSDeviceProvider::Init()
   }
 
   mWrappedListener = new DNSServiceWrappedListener();
-  if (NS_WARN_IF(!mWrappedListener)) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
   if (NS_WARN_IF(NS_FAILED(rv = mWrappedListener->SetListener(this)))) {
     return rv;
   }

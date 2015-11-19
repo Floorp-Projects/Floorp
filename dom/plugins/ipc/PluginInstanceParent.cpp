@@ -1533,11 +1533,6 @@ PluginInstanceParent::GetActorForNPObject(NPObject* aObject)
     }
 
     actor = new PluginScriptableObjectParent(LocalObject);
-    if (!actor) {
-        NS_ERROR("Out of memory!");
-        return nullptr;
-    }
-
     if (!SendPPluginScriptableObjectConstructor(actor)) {
         NS_WARNING("Failed to send constructor message!");
         return nullptr;

@@ -640,9 +640,6 @@ InitMediaCache()
     return;
 
   gMediaCache = new MediaCache();
-  if (!gMediaCache)
-    return;
-
   nsresult rv = gMediaCache->Init();
   if (NS_FAILED(rv)) {
     delete gMediaCache;

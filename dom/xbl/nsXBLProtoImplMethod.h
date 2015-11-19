@@ -65,8 +65,6 @@ struct nsXBLUncompiledMethod {
 
   void AddParameter(const nsAString& aText) {
     nsXBLParameter* param = new nsXBLParameter(aText);
-    if (!param)
-      return;
     if (!mParameters)
       mParameters = param;
     else
