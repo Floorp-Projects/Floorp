@@ -58,28 +58,25 @@ function test()
     }
 
     gDevTools.once("toolbox-ready", (e, toolbox) => {
-      inspectorShouldBeOpenAndHighlighting(toolbox.getCurrentPanel(), toolbox);
+      // The inspector is already selected at this point, but we wait
+      // for the signal here to avoid confusing ourselves when we wait
+      // for the next select-tool-command signal.
+      gDevTools.once("select-tool-command", () => {
+        inspectorShouldBeSelected(toolbox.getCurrentPanel(), toolbox);
+      });
     });
 
     keysetMap.inspector.synthesizeKey();
   }
 
-  function inspectorShouldBeOpenAndHighlighting(aInspector, aToolbox)
+  function inspectorShouldBeSelected(aInspector, aToolbox)
   {
     is (aToolbox.currentToolId, "inspector", "Correct tool has been loaded");
 
-    aToolbox.once("picker-started", () => {
-      ok(true, "picker-started event received, highlighter started");
-      keysetMap.inspector.synthesizeKey();
-
-      aToolbox.once("picker-stopped", () => {
-        ok(true, "picker-stopped event received, highlighter stopped");
-        gDevTools.once("select-tool-command", () => {
-          webconsoleShouldBeSelected(aToolbox);
-        });
-        keysetMap.webconsole.synthesizeKey();
-      });
+    gDevTools.once("select-tool-command", (x, toolId) => {
+      webconsoleShouldBeSelected(aToolbox);
     });
+    keysetMap.webconsole.synthesizeKey();
   }
 
   function webconsoleShouldBeSelected(aToolbox)
