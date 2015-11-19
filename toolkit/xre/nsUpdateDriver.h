@@ -89,7 +89,7 @@ private:
     nsCOMPtr<nsIFile> mOSApplyToDir;
     int mArgc;
     char **mArgv;
-    nsAutoCString mAppVersion;
+    nsCString mAppVersion;
     bool mIsOSUpdate;
   };
 
