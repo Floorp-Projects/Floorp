@@ -29,6 +29,7 @@
     const SAMPLE_URL = "http://www.mozilla.org/";
     const SAMPLE_TEXT = "Some text in a text field.";
     const SEARCH_TEXT = "Text Test";
+    const NOT_FOUND_TEXT = "This text is not on the page."
 
     var gFindBar = null;
     var gBrowser;
@@ -122,6 +123,7 @@
       yield testFailedStringReset();
       gFindBar.close();
       yield testQuickFindClose();
+      yield Task.spawn(testFindAgainNotFound);
       finish();
     });
 
@@ -543,6 +545,38 @@
       ok(searchStr.toLowerCase() == aExpected.toLowerCase(),
         "testClipboardSearchString: search string not set to '" + aExpected +
         "', instead found '" + searchStr + "'");
+    }
+
+    // See bug 967982.
+    function* testFindAgainNotFound() {
+      yield openFindbar();
+      yield findAndWaitForResult(NOT_FOUND_TEXT);
+      gFindBar.close();
+      ok(gFindBar.hidden, "The findbar is closed.");
+      yield findAndWaitForResult();
+      ok(!gFindBar.hidden, "Unsuccessful Find Again opens the find bar.");
+
+      yield findAndWaitForResult(SEARCH_TEXT);
+      gFindBar.close();
+      ok(gFindBar.hidden, "The findbar is closed.");
+      yield findAndWaitForResult();
+      ok(gFindBar.hidden, "Successful Find Again leaves the find bar closed.");
+    }
+
+    function findAndWaitForResult(aText) {
+      return new Promise(resolve => {
+        gFindBar.browser.finder.addResultListener({
+          onFindResult: function(aData) {
+            gFindBar.browser.finder.removeResultListener(this);
+            resolve(aData);
+          }
+        });
+        if (aText) {
+          enterStringIntoFindField(aText);
+        } else {
+          gFindBar.onFindAgainCommand();
+        }
+      });
     }
   ]]></script>
 
