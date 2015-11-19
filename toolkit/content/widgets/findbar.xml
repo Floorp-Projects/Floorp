@@ -1152,13 +1152,19 @@
       <method name="onFindResult">
         <parameter name="aData"/>
         <body><![CDATA[
+          if (aData.result == this.nsITypeAheadFind.FIND_NOTFOUND) {
+            // If an explicit Find Again command fails, re-open the toolbar.
+            if (aData.storeResult && this.open()) {
+              this._findField.select();
+              this._findField.focus();
+            }
+            this._findFailedString = aData.searchString;
+          } else {
+            this._findFailedString = null;
+          }
+
           this._updateStatusUI(aData.result, aData.findBackwards);
           this._updateStatusUIBar(aData.linkURL);
-
-          if (aData.result == this.nsITypeAheadFind.FIND_NOTFOUND)
-            this._findFailedString = aData.searchString;
-          else
-            this._findFailedString = null;
 
           if (this._findMode != this.FIND_NORMAL)
             this._setFindCloseTimeout();
