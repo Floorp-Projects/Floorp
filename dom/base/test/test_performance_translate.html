@@ -43,7 +43,7 @@ function testWorker() {
   var w = new Worker('empty_worker.js');
   var a = performance.translateTime(0, w);
   // bug 1226147
-  todo (a >= now, "Time has been translated from a Worker that started loading later than we did");
+  ok (a >= now, "Time has been translated from a Worker that started loading later than we did");
   next();
 }
 
