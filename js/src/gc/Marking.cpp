@@ -427,25 +427,11 @@ js::TraceRoot(JSTracer* trc, T* thingp, const char* name)
 
 template <typename T>
 void
-js::TraceRoot(JSTracer* trc, ReadBarriered<T>* thingp, const char* name)
-{
-    TraceRoot(trc, thingp->unsafeGet(), name);
-}
-
-template <typename T>
-void
 js::TraceNullableRoot(JSTracer* trc, T* thingp, const char* name)
 {
     AssertRootMarkingPhase(trc);
     if (InternalGCMethods<T>::isMarkableTaggedPointer(*thingp))
         DispatchToTracer(trc, ConvertToBase(thingp), name);
-}
-
-template <typename T>
-void
-js::TraceNullableRoot(JSTracer* trc, ReadBarriered<T>* thingp, const char* name)
-{
-    TraceNullableRoot(trc, thingp->unsafeGet(), name);
 }
 
 template <typename T>
@@ -479,9 +465,7 @@ js::TraceRootRange(JSTracer* trc, size_t len, T* vec, const char* name)
     template void js::TraceManuallyBarrieredEdge<type>(JSTracer*, type*, const char*); \
     template void js::TraceWeakEdge<type>(JSTracer*, WeakRef<type>*, const char*); \
     template void js::TraceRoot<type>(JSTracer*, type*, const char*); \
-    template void js::TraceRoot<type>(JSTracer*, ReadBarriered<type>*, const char*); \
     template void js::TraceNullableRoot<type>(JSTracer*, type*, const char*); \
-    template void js::TraceNullableRoot<type>(JSTracer*, ReadBarriered<type>*, const char*); \
     template void js::TraceRange<type>(JSTracer*, size_t, WriteBarrieredBase<type>*, const char*); \
     template void js::TraceRootRange<type>(JSTracer*, size_t, type*, const char*);
 FOR_EACH_GC_POINTER_TYPE(INSTANTIATE_ALL_VALID_TRACE_FUNCTIONS)
