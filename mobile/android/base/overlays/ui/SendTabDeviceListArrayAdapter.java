@@ -104,7 +104,7 @@ public class SendTabDeviceListArrayAdapter extends ArrayAdapter<RemoteClient> {
 
         if (currentState != State.LIST) {
             // If we're in a special "Button-like" state, use the override string and a generic icon.
-            final Drawable sendTabIcon = context.getResources().getDrawable(R.drawable.overlay_send_tab_icon);
+            final Drawable sendTabIcon = context.getResources().getDrawable(R.drawable.shareplane);
             row.setText(dummyRecordName);
             row.setDrawable(sendTabIcon);
         }
