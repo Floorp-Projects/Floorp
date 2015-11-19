@@ -20,7 +20,7 @@
 
 #include "webrtc/modules/desktop_capture/desktop_frame_win.h"
 #include "webrtc/system_wrappers/interface/logging.h"
-#include "webrtc/system_wrappers/interface/scoped_ptr.h"
+#include "webrtc/base/scoped_ptr.h"
 
 namespace webrtc {
 
@@ -37,15 +37,15 @@ public:
   ~WindowsCapturerProxy(){}
 
   void SelectWindow(HWND hwnd) { window_capturer_->SelectWindow(reinterpret_cast<WindowId>(hwnd)); }
-  scoped_ptr<DesktopFrame>& GetFrame() { return frame_; }
+  rtc::scoped_ptr<DesktopFrame>& GetFrame() { return frame_; }
   void Capture(const DesktopRegion& region) { window_capturer_->Capture(region); }
 
   // Callback interface
-  virtual SharedMemory *CreateSharedMemory(size_t) OVERRIDE { return NULL; }
-  virtual void OnCaptureCompleted(DesktopFrame *frame) OVERRIDE { frame_.reset(frame); }
+  virtual SharedMemory *CreateSharedMemory(size_t) override { return NULL; }
+  virtual void OnCaptureCompleted(DesktopFrame *frame) override { frame_.reset(frame); }
 private:
-  scoped_ptr<WindowCapturer> window_capturer_;
-  scoped_ptr<DesktopFrame> frame_;
+  rtc::scoped_ptr<WindowCapturer> window_capturer_;
+  rtc::scoped_ptr<DesktopFrame> frame_;
 };
 
 // Proxy over the WebRTC screen capturer, to allow post-processing
@@ -58,14 +58,14 @@ public:
     screen_capturer_->Start(this);
   }
   void Capture(const DesktopRegion& region) { screen_capturer_->Capture(region); }
-  scoped_ptr<DesktopFrame>& GetFrame() { return frame_; }
+  rtc::scoped_ptr<DesktopFrame>& GetFrame() { return frame_; }
 
   // Callback interface
-  virtual SharedMemory *CreateSharedMemory(size_t) OVERRIDE { return NULL; }
-  virtual void OnCaptureCompleted(DesktopFrame *frame) OVERRIDE { frame_.reset(frame); }
+  virtual SharedMemory *CreateSharedMemory(size_t) override { return NULL; }
+  virtual void OnCaptureCompleted(DesktopFrame *frame) override { frame_.reset(frame); }
 protected:
-  scoped_ptr<ScreenCapturer> screen_capturer_;
-  scoped_ptr<DesktopFrame> frame_;
+  rtc::scoped_ptr<ScreenCapturer> screen_capturer_;
+  rtc::scoped_ptr<DesktopFrame> frame_;
 };
 
 class AppCapturerWin : public AppCapturer {
@@ -74,13 +74,13 @@ public:
   virtual ~AppCapturerWin();
 
   // AppCapturer interface.
-  virtual bool GetAppList(AppList* apps) OVERRIDE;
-  virtual bool SelectApp(ProcessId processId) OVERRIDE;
-  virtual bool BringAppToFront() OVERRIDE;
+  virtual bool GetAppList(AppList* apps) override;
+  virtual bool SelectApp(ProcessId processId) override;
+  virtual bool BringAppToFront() override;
 
   // DesktopCapturer interface.
-  virtual void Start(Callback* callback) OVERRIDE;
-  virtual void Capture(const DesktopRegion& region) OVERRIDE;
+  virtual void Start(Callback* callback) override;
+  virtual void Capture(const DesktopRegion& region) override;
 
   struct WindowItem {
     HWND handle;
@@ -217,7 +217,7 @@ void AppCapturerWin::CaptureByWebRTC(const DesktopRegion& region) {
     ReleaseDC(NULL, dcScreen);
   }
 
-  scoped_ptr<DesktopFrameWin> frameCapture(DesktopFrameWin::Create(
+  rtc::scoped_ptr<DesktopFrameWin> frameCapture(DesktopFrameWin::Create(
       DesktopSize(rcDesktop.width(), rcDesktop.height()),
       NULL, memDcCapture));
   HBITMAP bmpOrigin = static_cast<HBITMAP>(SelectObject(memDcCapture, frameCapture->bitmap()));
@@ -237,7 +237,7 @@ void AppCapturerWin::CaptureByWebRTC(const DesktopRegion& region) {
     HDC dcWin = NULL;
     RECT rcWin = window_item.bounds;
     bool bCaptureResult = false;
-    scoped_ptr<DesktopFrameWin> frame;
+    rtc::scoped_ptr<DesktopFrameWin> frame;
     do {
       if (rcWin.left == rcWin.right || rcWin.top == rcWin.bottom) {
         break;

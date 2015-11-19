@@ -10,24 +10,29 @@
  * WEBRTC VP8 wrapper interface
  */
 
-#ifndef WEBRTC_MODULES_VIDEO_CODING_CODECS_VP8_IMPL_H_
-#define WEBRTC_MODULES_VIDEO_CODING_CODECS_VP8_IMPL_H_
+#ifndef WEBRTC_MODULES_VIDEO_CODING_CODECS_VP8_VP8_IMPL_H_
+#define WEBRTC_MODULES_VIDEO_CODING_CODECS_VP8_VP8_IMPL_H_
 
+#include <vector>
+
+// NOTE: This include order must remain to avoid compile errors, even though
+//       it breaks the style guide.
+#include "vpx/vpx_encoder.h"
+#include "vpx/vpx_decoder.h"
+#include "vpx/vp8cx.h"
+#include "vpx/vp8dx.h"
+
+#include "webrtc/common_video/interface/i420_buffer_pool.h"
+#include "webrtc/common_video/interface/i420_video_frame.h"
+#include "webrtc/modules/video_coding/codecs/interface/video_codec_interface.h"
 #include "webrtc/modules/video_coding/codecs/vp8/include/vp8.h"
+#include "webrtc/modules/video_coding/codecs/vp8/reference_picture_selection.h"
+#include "webrtc/modules/video_coding/utility/include/frame_dropper.h"
 #include "webrtc/modules/video_coding/utility/quality_scaler.h"
-
-// VPX forward declaration
-typedef struct vpx_codec_ctx vpx_codec_ctx_t;
-typedef struct vpx_codec_ctx vpx_dec_ctx_t;
-typedef struct vpx_codec_enc_cfg vpx_codec_enc_cfg_t;
-typedef struct vpx_image vpx_image_t;
-typedef struct vpx_ref_frame vpx_ref_frame_t;
-struct vpx_codec_cx_pkt;
 
 namespace webrtc {
 
 class TemporalLayers;
-class ReferencePictureSelection;
 
 class VP8EncoderImpl : public VP8Encoder {
  public:
@@ -39,7 +44,7 @@ class VP8EncoderImpl : public VP8Encoder {
 
   virtual int InitEncode(const VideoCodec* codec_settings,
                          int number_of_cores,
-                         uint32_t max_payload_size);
+                         size_t max_payload_size);
 
   virtual int Encode(const I420VideoFrame& input_image,
                      const CodecSpecificInfo* codec_specific_info,
@@ -47,49 +52,73 @@ class VP8EncoderImpl : public VP8Encoder {
 
   virtual int RegisterEncodeCompleteCallback(EncodedImageCallback* callback);
 
-  virtual int SetChannelParameters(uint32_t packet_loss, int rtt);
+  virtual int SetChannelParameters(uint32_t packet_loss, int64_t rtt);
 
   virtual int SetRates(uint32_t new_bitrate_kbit, uint32_t frame_rate);
 
  private:
+  void SetupTemporalLayers(int num_streams, int num_temporal_layers,
+                           const VideoCodec& codec);
+
+  // Set the cpu_speed setting for encoder based on resolution and/or platform.
+  int SetCpuSpeed(int width, int height);
+
+  // Determine number of encoder threads to use.
+  int NumberOfThreads(int width, int height, int number_of_cores);
+
   // Call encoder initialize function and set control settings.
-  int InitAndSetControlSettings(const VideoCodec* inst);
+  int InitAndSetControlSettings();
 
   // Update frame size for codec.
   int UpdateCodecFrameSize(const I420VideoFrame& input_image);
 
   void PopulateCodecSpecific(CodecSpecificInfo* codec_specific,
                              const vpx_codec_cx_pkt& pkt,
-                             uint32_t timestamp);
+                             int stream_idx,
+                             uint32_t timestamp,
+                             bool only_predicting_from_key_frame);
 
-  int GetEncodedPartitions(const I420VideoFrame& input_image);
+  int GetEncodedPartitions(const I420VideoFrame& input_image,
+                           bool only_predicting_from_key_frame);
 
-  // Determine maximum target for Intra frames
-  //
-  // Input:
-  //    - optimal_buffer_size : Optimal buffer size
-  // Return Value             : Max target size for Intra frames represented as
-  //                            percentage of the per frame bandwidth
+  // Get the stream bitrate, for the stream |stream_idx|, given the bitrate
+  // |new_bitrate_kbit|.
+  int GetStreamBitrate(int stream_idx,
+                       uint32_t new_bitrate_kbit,
+                       bool* send_stream) const;
+
+  // Set the stream state for stream |stream_idx|.
+  void SetStreamState(bool send_stream, int stream_idx);
+
   uint32_t MaxIntraTarget(uint32_t optimal_buffer_size);
 
-  EncodedImage encoded_image_;
   EncodedImageCallback* encoded_complete_callback_;
   VideoCodec codec_;
   bool inited_;
   int64_t timestamp_;
-  uint16_t picture_id_;
   bool feedback_mode_;
-  int cpu_speed_;
+  int qp_max_;
+  int cpu_speed_default_;
   uint32_t rc_max_intra_target_;
   int token_partitions_;
-  ReferencePictureSelection* rps_;
-  TemporalLayers* temporal_layers_;
-  vpx_codec_ctx_t* encoder_;
-  vpx_codec_enc_cfg_t* config_;
-  vpx_image_t* raw_;
+  ReferencePictureSelection rps_;
+  std::vector<TemporalLayers*> temporal_layers_;
+  bool down_scale_requested_;
+  uint32_t down_scale_bitrate_;
+  FrameDropper tl0_frame_dropper_;
+  FrameDropper tl1_frame_dropper_;
+  std::vector<uint16_t> picture_id_;
+  std::vector<int> last_key_frame_picture_id_;
+  std::vector<bool> key_frame_request_;
+  std::vector<bool> send_stream_;
+  std::vector<int> cpu_speed_;
+  std::vector<vpx_image_t> raw_images_;
+  std::vector<EncodedImage> encoded_images_;
+  std::vector<vpx_codec_ctx_t> encoders_;
+  std::vector<vpx_codec_enc_cfg_t> configurations_;
+  std::vector<vpx_rational_t> downsampling_factors_;
   QualityScaler quality_scaler_;
-};  // end of VP8Encoder class
-
+};  // end of VP8EncoderImpl class
 
 class VP8DecoderImpl : public VP8Decoder {
  public:
@@ -117,7 +146,7 @@ class VP8DecoderImpl : public VP8Decoder {
   // Copy reference image from this _decoder to the _decoder in copyTo. Set
   // which frame type to copy in _refFrame->frame_type before the call to
   // this function.
-  int CopyReference(VP8Decoder* copy);
+  int CopyReference(VP8DecoderImpl* copy);
 
   int DecodePartitions(const EncodedImage& input_image,
                        const RTPFragmentationHeader* fragmentation);
@@ -126,19 +155,21 @@ class VP8DecoderImpl : public VP8Decoder {
                   uint32_t timeStamp,
                   int64_t ntp_time_ms);
 
-  I420VideoFrame decoded_image_;
+  I420BufferPool buffer_pool_;
   DecodedImageCallback* decode_complete_callback_;
   bool inited_;
   bool feedback_mode_;
-  vpx_dec_ctx_t* decoder_;
+  vpx_codec_ctx_t* decoder_;
   VideoCodec codec_;
   EncodedImage last_keyframe_;
   int image_format_;
   vpx_ref_frame_t* ref_frame_;
   int propagation_cnt_;
-  bool mfqe_enabled_;
+  int last_frame_width_;
+  int last_frame_height_;
   bool key_frame_required_;
-};  // end of VP8Decoder class
+};  // end of VP8DecoderImpl class
 }  // namespace webrtc
 
-#endif  // WEBRTC_MODULES_VIDEO_CODING_CODECS_VP8_IMPL_H_
+#endif  // WEBRTC_MODULES_VIDEO_CODING_CODECS_VP8_VP8_IMPL_H_
+

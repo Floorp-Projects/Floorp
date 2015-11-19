@@ -49,7 +49,7 @@ class ForwardErrorCorrection {
     // reaches zero.
     virtual int32_t Release();
 
-    uint16_t length;               // Length of packet in bytes.
+    size_t length;               // Length of packet in bytes.
     uint8_t data[IP_PACKET_SIZE];  // Packet data.
 
    private:
@@ -200,7 +200,7 @@ class ForwardErrorCorrection {
   // Gets the size in bytes of the FEC/ULP headers, which must be accounted for
   // as packet overhead.
   // \return Packet overhead in bytes.
-  static uint16_t PacketOverhead();
+  static size_t PacketOverhead();
 
   // Reset internal states from last frame and clear the recovered_packet_list.
   // Frees all memory allocated by this class.

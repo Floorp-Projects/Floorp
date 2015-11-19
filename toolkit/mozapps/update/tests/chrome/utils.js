@@ -1300,9 +1300,12 @@ function setupAddons(aCallback) {
       // checking plugins compatibility information isn't supported at this
       // time (also see bug 566787). Also, SCOPE_APPLICATION add-ons are
       // excluded by app update so there is no reason to disable them.
+      // Specialpowers is excluded as the test harness requires it to run
+      // the tests.
       if (aAddon.type != "plugin" && !aAddon.appDisabled &&
           !aAddon.userDisabled &&
-          aAddon.scope != AddonManager.SCOPE_APPLICATION) {
+          aAddon.scope != AddonManager.SCOPE_APPLICATION &&
+          aAddon.id != "special-powers@mozilla.org") {
         disabledAddons.push(aAddon);
         aAddon.userDisabled = true;
       }

@@ -9,13 +9,13 @@
  */
 
 #include "testing/gmock/include/gmock/gmock.h"
+#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/modules/desktop_capture/desktop_frame.h"
 #include "webrtc/modules/desktop_capture/desktop_geometry.h"
 #include "webrtc/modules/desktop_capture/mouse_cursor.h"
 #include "webrtc/modules/desktop_capture/win/cursor.h"
 #include "webrtc/modules/desktop_capture/win/cursor_unittest_resources.h"
 #include "webrtc/modules/desktop_capture/win/scoped_gdi_object.h"
-#include "webrtc/system_wrappers/interface/scoped_ptr.h"
 
 namespace webrtc {
 
@@ -34,7 +34,7 @@ bool ConvertToMouseShapeAndCompare(unsigned left, unsigned right) {
 
   // Convert |cursor| to |mouse_shape|.
   HDC dc = GetDC(NULL);
-  scoped_ptr<MouseCursor> mouse_shape(
+  rtc::scoped_ptr<MouseCursor> mouse_shape(
       CreateMouseCursorFromHCursor(dc, cursor));
   ReleaseDC(NULL, dc);
 
@@ -62,7 +62,7 @@ bool ConvertToMouseShapeAndCompare(unsigned left, unsigned right) {
 
   // Get the pixels from |scoped_color|.
   int size = width * height;
-  scoped_ptr<uint32_t[]> data(new uint32_t[size]);
+  rtc::scoped_ptr<uint32_t[]> data(new uint32_t[size]);
   EXPECT_TRUE(GetBitmapBits(scoped_color, size * sizeof(uint32_t), data.get()));
 
   // Compare the 32bpp image in |mouse_shape| with the one loaded from |right|.

@@ -1213,8 +1213,8 @@ _cairo_gstate_in_stroke (cairo_gstate_t	    *gstate,
 
     limit.p1.x = _cairo_fixed_from_double (x) - 5;
     limit.p1.y = _cairo_fixed_from_double (y) - 5;
-    limit.p2.x = limit.p1.x + 5;
-    limit.p2.y = limit.p1.y + 5;
+    limit.p2.x = limit.p1.x + 10;
+    limit.p2.y = limit.p1.y + 10;
 
     _cairo_traps_init (&traps);
     _cairo_traps_limit (&traps, &limit, 1);

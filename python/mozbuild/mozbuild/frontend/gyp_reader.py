@@ -7,6 +7,7 @@ from __future__ import absolute_import, unicode_literals
 import gyp
 import sys
 import os
+import types
 import mozpack.path as mozpath
 from mozpack.files import FileFinder
 from .sandbox import alphabetical_sorted
@@ -211,7 +212,17 @@ def read_from_gyp(config, path, output, vars, non_unified_sources = set()):
                     for e in extensions if e in suffix_map
                 )
                 for var in variables:
-                    context[var].extend(flags)
+                    for f in flags:
+                        # We may be getting make variable references out of the
+                        # gyp data, and we don't want those in emitted data, so
+                        # substitute them with their actual value.
+                        if f.startswith('$(') and f.endswith(')'):
+                            f = config.substs.get(f[2:-1])
+                        # config.substs may contain strings or lists.
+                        if isinstance(f, types.StringTypes):
+                            context[var].append(f)
+                        elif f:
+                            context[var].extend(f)
         else:
             # Ignore other types than static_library because we don't have
             # anything using them, and we're not testing them. They can be

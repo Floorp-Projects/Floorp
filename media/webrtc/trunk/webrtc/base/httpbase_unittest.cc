@@ -8,6 +8,8 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
+#include <algorithm>
+
 #include "webrtc/base/gunit.h"
 #include "webrtc/base/httpbase.h"
 #include "webrtc/base/testutils.h"
@@ -229,7 +231,8 @@ void HttpBaseTest::ReadDocumentStreamData(const char* expected_data) {
   while (verified_length < expected_length) {
     size_t read = 0;
     char buffer[5] = { 0 };
-    size_t amt_to_read = _min(expected_length - verified_length, sizeof(buffer));
+    size_t amt_to_read =
+        std::min(expected_length - verified_length, sizeof(buffer));
     EXPECT_EQ(SR_SUCCESS, http_stream->Read(buffer, amt_to_read, &read, NULL));
     EXPECT_EQ(amt_to_read, read);
     EXPECT_TRUE(0 == memcmp(expected_data + verified_length, buffer, read));

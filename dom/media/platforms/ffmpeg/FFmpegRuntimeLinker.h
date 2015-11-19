@@ -10,10 +10,10 @@
 #include "PlatformDecoderModule.h"
 #include <stdint.h>
 
+struct PRLibrary;
+
 namespace mozilla
 {
-
-struct AvCodecLib;
 
 class FFmpegRuntimeLinker
 {
@@ -21,12 +21,13 @@ public:
   static bool Link();
   static void Unlink();
   static already_AddRefed<PlatformDecoderModule> CreateDecoderModule();
+  static bool GetVersion(uint32_t& aMajor, uint32_t& aMinor);
 
 private:
-  static void* sLinkedLib;
-  static const AvCodecLib* sLib;
+  static PRLibrary* sLinkedLib;
+  static const char* sLib;
 
-  static bool Bind(const char* aLibName, uint32_t Version);
+  static bool Bind(const char* aLibName);
 
   static enum LinkStatus {
     LinkStatus_INIT = 0,

@@ -19,7 +19,7 @@ TEST(BitrateProberTest, VerifyStatesAndTimeBetweenProbes) {
   BitrateProber prober;
   EXPECT_FALSE(prober.IsProbing());
   int64_t now_ms = 0;
-  EXPECT_EQ(std::numeric_limits<int>::max(), prober.TimeUntilNextProbe(now_ms));
+  EXPECT_EQ(-1, prober.TimeUntilNextProbe(now_ms));
 
   prober.SetEnabled(true);
   EXPECT_FALSE(prober.IsProbing());
@@ -45,7 +45,7 @@ TEST(BitrateProberTest, VerifyStatesAndTimeBetweenProbes) {
     prober.PacketSent(now_ms, 1000);
   }
 
-  EXPECT_EQ(std::numeric_limits<int>::max(), prober.TimeUntilNextProbe(now_ms));
+  EXPECT_EQ(-1, prober.TimeUntilNextProbe(now_ms));
   EXPECT_FALSE(prober.IsProbing());
 }
 }  // namespace webrtc

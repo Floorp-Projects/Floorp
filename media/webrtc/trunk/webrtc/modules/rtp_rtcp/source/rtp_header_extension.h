@@ -22,13 +22,23 @@ const uint16_t kRtpOneByteHeaderExtensionId = 0xBEDE;
 
 const size_t kRtpOneByteHeaderLength = 4;
 const size_t kTransmissionTimeOffsetLength = 4;
-const size_t kAudioLevelLength = 4;
+const size_t kAudioLevelLength = 2;
 const size_t kAbsoluteSendTimeLength = 4;
+const size_t kVideoRotationLength = 2;
+const size_t kTransportSequenceNumberLength = 3;
 
 struct HeaderExtension {
   HeaderExtension(RTPExtensionType extension_type)
-    : type(extension_type),
-      length(0) {
+      : type(extension_type), length(0), active(true) {
+    Init();
+  }
+
+  HeaderExtension(RTPExtensionType extension_type, bool active)
+      : type(extension_type), length(0), active(active) {
+    Init();
+  }
+
+  void Init() {
     // TODO(solenberg): Create handler classes for header extensions so we can
     // get rid of switches like these as well as handling code spread out all
     // over.
@@ -42,13 +52,20 @@ struct HeaderExtension {
       case kRtpExtensionAbsoluteSendTime:
         length = kAbsoluteSendTimeLength;
         break;
+      case kRtpExtensionVideoRotation:
+        length = kVideoRotationLength;
+        break;
+      case kRtpExtensionTransportSequenceNumber:
+        length = kTransportSequenceNumberLength;
+        break;
       default:
         assert(false);
     }
   }
 
-   const RTPExtensionType type;
-   uint8_t length;
+  const RTPExtensionType type;
+  uint8_t length;
+  bool active;
 };
 
 class RtpHeaderExtensionMap {
@@ -60,6 +77,13 @@ class RtpHeaderExtensionMap {
 
   int32_t Register(const RTPExtensionType type, const uint8_t id);
 
+  // Active is a concept for a registered rtp header extension which doesn't
+  // take effect yet until being activated. Inactive RTP header extensions do
+  // not take effect and should not be included in size calculations until they
+  // are activated.
+  int32_t RegisterInactive(const RTPExtensionType type, const uint8_t id);
+  bool SetActive(const RTPExtensionType type, bool active);
+
   int32_t Deregister(const RTPExtensionType type);
 
   bool IsRegistered(RTPExtensionType type) const;
@@ -68,7 +92,11 @@ class RtpHeaderExtensionMap {
 
   int32_t GetId(const RTPExtensionType type, uint8_t* id) const;
 
-  uint16_t GetTotalLengthInBytes() const;
+  //
+  // Methods below ignore any inactive rtp header extensions.
+  //
+
+  size_t GetTotalLengthInBytes() const;
 
   int32_t GetLengthUntilBlockStartInBytes(const RTPExtensionType type) const;
 
@@ -81,6 +109,7 @@ class RtpHeaderExtensionMap {
   RTPExtensionType Next(RTPExtensionType type) const;
 
  private:
+  int32_t Register(const RTPExtensionType type, const uint8_t id, bool active);
   std::map<uint8_t, HeaderExtension*> extensionMap_;
 };
 }

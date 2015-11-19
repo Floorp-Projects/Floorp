@@ -28,7 +28,7 @@ RemoteNtpTimeEstimator::RemoteNtpTimeEstimator(Clock* clock)
 
 RemoteNtpTimeEstimator::~RemoteNtpTimeEstimator() {}
 
-bool RemoteNtpTimeEstimator::UpdateRtcpTimestamp(uint16_t rtt,
+bool RemoteNtpTimeEstimator::UpdateRtcpTimestamp(int64_t rtt,
                                                  uint32_t ntp_secs,
                                                  uint32_t ntp_frac,
                                                  uint32_t rtcp_timestamp) {

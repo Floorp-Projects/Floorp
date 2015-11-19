@@ -13,11 +13,11 @@
 
 #include "webrtc/common_types.h"
 #include "webrtc/modules/video_capture/video_capture_impl.h"
+#include "webrtc/system_wrappers/interface/thread_wrapper.h"
 
 namespace webrtc
 {
 class CriticalSectionWrapper;
-class ThreadWrapper;
 namespace videocapturemodule
 {
 class VideoCaptureModuleV4L2: public VideoCaptureImpl
@@ -39,7 +39,7 @@ private:
     bool AllocateVideoBuffers();
     bool DeAllocateVideoBuffers();
 
-    ThreadWrapper* _captureThread;
+    rtc::scoped_ptr<ThreadWrapper> _captureThread;
     CriticalSectionWrapper* _captureCritSect;
 
     int32_t _deviceId;

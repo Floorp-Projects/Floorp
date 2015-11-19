@@ -21,7 +21,7 @@ namespace webrtc {
 namespace test {
 
 ConfigurableFrameSizeEncoder::ConfigurableFrameSizeEncoder(
-    uint32_t max_frame_size)
+    size_t max_frame_size)
     : callback_(NULL),
       max_frame_size_(max_frame_size),
       current_frame_size_(max_frame_size),
@@ -34,7 +34,7 @@ ConfigurableFrameSizeEncoder::~ConfigurableFrameSizeEncoder() {}
 int32_t ConfigurableFrameSizeEncoder::InitEncode(
     const VideoCodec* codec_settings,
     int32_t number_of_cores,
-    uint32_t max_payload_size) {
+    size_t max_payload_size) {
   return WEBRTC_VIDEO_CODEC_OK;
 }
 
@@ -69,7 +69,7 @@ int32_t ConfigurableFrameSizeEncoder::Release() {
 }
 
 int32_t ConfigurableFrameSizeEncoder::SetChannelParameters(uint32_t packet_loss,
-                                                           int rtt) {
+                                                           int64_t rtt) {
   return WEBRTC_VIDEO_CODEC_OK;
 }
 
@@ -87,7 +87,7 @@ int32_t ConfigurableFrameSizeEncoder::CodecConfigParameters(uint8_t* buffer,
   return WEBRTC_VIDEO_CODEC_OK;
 }
 
-int32_t ConfigurableFrameSizeEncoder::SetFrameSize(uint32_t size) {
+int32_t ConfigurableFrameSizeEncoder::SetFrameSize(size_t size) {
   assert(size <= max_frame_size_);
   current_frame_size_ = size;
   return WEBRTC_VIDEO_CODEC_OK;

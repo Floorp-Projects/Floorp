@@ -52,12 +52,7 @@ inline void RtcUnused(const void*) {}
 #define stricmp(x, y) strcasecmp(x, y)
 #endif
 
-// TODO(fbarchard): Remove this. std::max should be used everywhere in the code.
-// NOMINMAX must be defined where we include <windows.h>.
-#define stdmax(x, y) std::max(x, y)
-#else
-#define stdmax(x, y) rtc::_max(x, y)
-#endif
+#endif  // !defined(WEBRTC_WIN)
 
 #define ARRAY_SIZE(x) (static_cast<int>(sizeof(x) / sizeof(x[0])))
 
@@ -186,28 +181,6 @@ inline bool ImplicitCastToBool(bool result) { return result; }
 #define FORCE_INLINE __forceinline
 #else
 #define FORCE_INLINE
-#endif
-
-// Borrowed from Chromium's base/compiler_specific.h.
-// Annotate a virtual method indicating it must be overriding a virtual
-// method in the parent class.
-// Use like:
-//   virtual void foo() OVERRIDE;
-#if defined(WEBRTC_WIN)
-#define OVERRIDE override
-#elif defined(__clang__)
-// Clang defaults to C++03 and warns about using override. Squelch that.
-// Intentionally no push/pop here so all users of OVERRIDE ignore the warning
-// too. This is like passing -Wno-c++11-extensions, except that GCC won't die
-// (because it won't see this pragma).
-#pragma clang diagnostic ignored "-Wc++11-extensions"
-#define OVERRIDE override
-#elif defined(__GNUC__) && __cplusplus >= 201103 && \
-    (__GNUC__ * 10000 + __GNUC_MINOR__ * 100) >= 40700
-// GCC 4.7 supports explicit virtual overrides when C++11 support is enabled.
-#define OVERRIDE override
-#else
-#define OVERRIDE
 #endif
 
 // Annotate a function indicating the caller must examine the return value.

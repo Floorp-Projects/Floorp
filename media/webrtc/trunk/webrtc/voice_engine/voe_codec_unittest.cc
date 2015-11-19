@@ -11,8 +11,8 @@
 #include "webrtc/voice_engine/include/voe_codec.h"
 
 #include "testing/gtest/include/gtest/gtest.h"
+#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/modules/audio_device/include/fake_audio_device.h"
-#include "webrtc/system_wrappers/interface/scoped_ptr.h"
 #include "webrtc/test/testsupport/gtest_disable.h"
 #include "webrtc/voice_engine/include/voe_base.h"
 #include "webrtc/voice_engine/include/voe_hardware.h"
@@ -94,80 +94,12 @@ class VoECodecTest : public ::testing::Test {
   int channel_;
   CodecInst primary_;
   CodecInst valid_secondary_;
-  scoped_ptr<FakeAudioDeviceModule> adm_;
+  rtc::scoped_ptr<FakeAudioDeviceModule> adm_;
 
   // A codec which is not valid to be registered as secondary codec.
   CodecInst invalid_secondary_;
   int red_payload_type_;
 };
-
-
-TEST_F(VoECodecTest,
-       DISABLED_ON_ANDROID(DualStreamSetSecondaryBeforePrimaryFails)) {
-  // Setting secondary before a primary is registered should fail.
-  EXPECT_EQ(-1, voe_codec_->SetSecondarySendCodec(channel_, valid_secondary_,
-                                                  red_payload_type_));
-  red_payload_type_ = 1;
-}
-
-TEST_F(VoECodecTest,
-       DISABLED_ON_ANDROID(DualStreamRegisterWithWrongInputsFails)) {
-  // Register primary codec.
-  EXPECT_EQ(0, voe_codec_->SetSendCodec(channel_, primary_));
-
-  // Wrong secondary.
-  EXPECT_EQ(-1, voe_codec_->SetSecondarySendCodec(channel_, invalid_secondary_,
-                                                  red_payload_type_));
-
-  // Wrong payload.
-  EXPECT_EQ(-1, voe_codec_->SetSecondarySendCodec(channel_, valid_secondary_,
-                                                  -1));
-  // Wrong channel.
-  EXPECT_EQ(-1, voe_codec_->SetSecondarySendCodec(channel_ + 1,
-                                                  valid_secondary_,
-                                                  red_payload_type_));
-}
-
-TEST_F(VoECodecTest, DISABLED_ON_ANDROID(DualStreamGetSecodaryEncoder)) {
-  // Register primary codec.
-  EXPECT_EQ(0, voe_codec_->SetSendCodec(channel_, primary_));
-
-  // Register a valid codec.
-  EXPECT_EQ(0, voe_codec_->SetSecondarySendCodec(channel_, valid_secondary_,
-                                                 red_payload_type_));
-  CodecInst my_codec;
-
-  // Get secondary codec from wrong channel.
-  EXPECT_EQ(-1, voe_codec_->GetSecondarySendCodec(channel_ + 1, my_codec));
-
-  // Get secondary and compare.
-  memset(&my_codec, 0, sizeof(my_codec));
-  EXPECT_EQ(0, voe_codec_->GetSecondarySendCodec(channel_, my_codec));
-
-  EXPECT_EQ(valid_secondary_.plfreq, my_codec.plfreq);
-  EXPECT_EQ(valid_secondary_.channels, my_codec.channels);
-  EXPECT_EQ(valid_secondary_.pacsize, my_codec.pacsize);
-  EXPECT_EQ(valid_secondary_.rate, my_codec.rate);
-  EXPECT_EQ(valid_secondary_.pltype, my_codec.pltype);
-  EXPECT_EQ(0, STR_CASE_CMP(valid_secondary_.plname, my_codec.plname));
-}
-
-TEST_F(VoECodecTest, DISABLED_ON_ANDROID(DualStreamRemoveSecondaryCodec)) {
-  // Register primary codec.
-  EXPECT_EQ(0, voe_codec_->SetSendCodec(channel_, primary_));
-
-  // Register a valid codec.
-  EXPECT_EQ(0, voe_codec_->SetSecondarySendCodec(channel_, valid_secondary_,
-                                                 red_payload_type_));
-  // Remove from wrong channel.
-  EXPECT_EQ(-1, voe_codec_->RemoveSecondarySendCodec(channel_ + 1));
-  EXPECT_EQ(0, voe_codec_->RemoveSecondarySendCodec(channel_));
-
-  CodecInst my_codec;
-
-  // Get should fail, if secondary is removed.
-  EXPECT_EQ(-1, voe_codec_->GetSecondarySendCodec(channel_, my_codec));
-}
 
 TEST(VoECodecInst, TestCompareCodecInstances) {
   CodecInst codec1, codec2;

@@ -32,7 +32,7 @@
 
 
 int WebRtcIsacfix_EncodeImpl(int16_t      *in,
-                             ISACFIX_EncInst_t  *ISACenc_obj,
+                             IsacFixEncoderInstance  *ISACenc_obj,
                              BwEstimatorstr      *bw_estimatordata,
                              int16_t         CodingMode)
 {
@@ -338,9 +338,9 @@ int WebRtcIsacfix_EncodeImpl(int16_t      *in,
 
       // we compare bytesLeftQ5 with ratioQ5[]*arithLenDFTByte;
       idx = 4;
-      idx += (bytesLeftQ5 >= WEBRTC_SPL_MUL_16_16(ratioQ5[idx], arithLenDFTByte))? 2:-2;
-      idx += (bytesLeftQ5 >= WEBRTC_SPL_MUL_16_16(ratioQ5[idx], arithLenDFTByte))? 1:-1;
-      idx += (bytesLeftQ5 >= WEBRTC_SPL_MUL_16_16(ratioQ5[idx], arithLenDFTByte))? 0:-1;
+      idx += (bytesLeftQ5 >= ratioQ5[idx] * arithLenDFTByte) ? 2 : -2;
+      idx += (bytesLeftQ5 >= ratioQ5[idx] * arithLenDFTByte) ? 1 : -1;
+      idx += (bytesLeftQ5 >= ratioQ5[idx] * arithLenDFTByte) ? 0 : -1;
     }
     else
     {
@@ -491,7 +491,7 @@ int WebRtcIsacfix_EncodeImpl(int16_t      *in,
    The same data as previously encoded with the fucntion WebRtcIsacfix_EncodeImpl()
    is used. The data needed is taken from the struct, where it was stored
    when calling the encoder. */
-int WebRtcIsacfix_EncodeStoredData(ISACFIX_EncInst_t  *ISACenc_obj,
+int WebRtcIsacfix_EncodeStoredData(IsacFixEncoderInstance  *ISACenc_obj,
                                    int     BWnumber,
                                    float              scale)
 {
@@ -503,7 +503,7 @@ int WebRtcIsacfix_EncodeStoredData(ISACFIX_EncInst_t  *ISACenc_obj,
   int16_t model;
   const uint16_t *Q_PitchGain_cdf_ptr[1];
   const uint16_t **cdf;
-  const ISAC_SaveEncData_t *SaveEnc_str;
+  const IsacSaveEncoderData *SaveEnc_str;
   int32_t tmpLPCcoeffs_g[KLT_ORDER_GAIN<<1];
   int16_t tmpLPCindex_g[KLT_ORDER_GAIN<<1];
   int16_t tmp_fre[FRAMESAMPLES];

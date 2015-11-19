@@ -45,15 +45,16 @@ int main(int argc, char* argv[])
 
   FILE *ifileid,*efileid,*ofileid, *cfileid;
   int16_t data[BLOCKL_MAX];
-  int16_t encoded_data[ILBCNOOFWORDS_MAX], decoded_data[BLOCKL_MAX];
+  uint8_t encoded_data[2 * ILBCNOOFWORDS_MAX];
+  int16_t decoded_data[BLOCKL_MAX];
   int len;
   short pli, mode;
   int blockcount = 0;
   int packetlosscount = 0;
   int frameLen;
   int16_t speechType;
-  iLBC_encinst_t *Enc_Inst;
-  iLBC_decinst_t *Dec_Inst;
+  IlbcEncoderInstance *Enc_Inst;
+  IlbcDecoderInstance *Dec_Inst;
 
 #ifdef __ILBC_WITH_40BITACC
   /* Doublecheck that long long exists */
@@ -163,7 +164,7 @@ int main(int argc, char* argv[])
     /* encoding */
 
     fprintf(stderr, "--- Encoding block %i --- ",blockcount);
-    len=WebRtcIlbcfix_Encode(Enc_Inst, data, (int16_t)frameLen, encoded_data);
+    len = WebRtcIlbcfix_Encode(Enc_Inst, data, (int16_t)frameLen, encoded_data);
     fprintf(stderr, "\r");
 
     /* write byte file */

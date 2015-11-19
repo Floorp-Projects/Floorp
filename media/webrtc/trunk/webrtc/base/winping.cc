@@ -13,6 +13,8 @@
 #include <assert.h>
 #include <Iphlpapi.h>
 
+#include <algorithm>
+
 #include "webrtc/base/byteorder.h"
 #include "webrtc/base/common.h"
 #include "webrtc/base/ipaddress.h"
@@ -129,7 +131,7 @@ inline uint32 ReplySize(uint32 data_size, int family) {
   if (family == AF_INET) {
     // A ping error message is 8 bytes long, so make sure we allow for at least
     // 8 bytes of reply data.
-    return sizeof(ICMP_ECHO_REPLY) + rtc::_max<uint32>(8, data_size);
+    return sizeof(ICMP_ECHO_REPLY) + std::max<uint32>(8, data_size);
   } else if (family == AF_INET6) {
     // Per MSDN, Send6IcmpEcho2 needs at least one ICMPV6_ECHO_REPLY,
     // 8 bytes for ICMP header, _and_ an IO_BLOCK_STATUS (2 pointers),

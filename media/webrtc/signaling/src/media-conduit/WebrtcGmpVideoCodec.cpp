@@ -486,7 +486,9 @@ int32_t
 WebrtcGmpVideoEncoder::SetRates(uint32_t aNewBitRate, uint32_t aFrameRate)
 {
   MOZ_ASSERT(mGMPThread);
-  MOZ_ASSERT(!NS_IsMainThread());
+  if (aFrameRate == 0) {
+    aFrameRate = 30; // Assume 30fps if we don't know the rate
+  }
   mGMPThread->Dispatch(WrapRunnableNM(&WebrtcGmpVideoEncoder::SetRates_g,
                                       RefPtr<WebrtcGmpVideoEncoder>(this),
                                       aNewBitRate,
@@ -926,11 +928,8 @@ WebrtcGmpVideoDecoder::Decoded(GMPVideoi420Frame* aDecodedFrame)
   MutexAutoLock lock(mCallbackMutex);
   if (mCallback) {
     webrtc::I420VideoFrame image;
-    int ret = image.CreateFrame(aDecodedFrame->AllocatedSize(kGMPYPlane),
-                                aDecodedFrame->Buffer(kGMPYPlane),
-                                aDecodedFrame->AllocatedSize(kGMPUPlane),
+    int ret = image.CreateFrame(aDecodedFrame->Buffer(kGMPYPlane),
                                 aDecodedFrame->Buffer(kGMPUPlane),
-                                aDecodedFrame->AllocatedSize(kGMPVPlane),
                                 aDecodedFrame->Buffer(kGMPVPlane),
                                 aDecodedFrame->Width(),
                                 aDecodedFrame->Height(),

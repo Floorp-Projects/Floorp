@@ -13,10 +13,10 @@
 
 #include <math.h>
 
-#include "common_types.h"
-#include "SpatialAudio.h"
-#include "trace.h"
-#include "utility.h"
+#include "webrtc/common_types.h"
+#include "webrtc/modules/audio_coding/main/test/SpatialAudio.h"
+#include "webrtc/system_wrappers/interface/trace.h"
+#include "webrtc/system_wrappers/interface/trace.h"
 #include "webrtc/test/testsupport/fileutils.h"
 
 namespace webrtc {
@@ -171,9 +171,6 @@ void SpatialAudio::EncodeDecode(const double leftPanning,
     }
     CHECK_ERROR(_acmRight->Add10MsData(audioFrame));
 
-    CHECK_ERROR(_acmLeft->Process());
-    CHECK_ERROR(_acmRight->Process());
-
     CHECK_ERROR(_acmReceiver->PlayoutData10Ms(outFileSampFreq, &audioFrame));
     _outFile.Write10MsData(audioFrame);
   }
@@ -189,8 +186,6 @@ void SpatialAudio::EncodeDecode() {
   while (!_inFile.EndOfFile()) {
     _inFile.Read10MsData(audioFrame);
     CHECK_ERROR(_acmLeft->Add10MsData(audioFrame));
-
-    CHECK_ERROR(_acmLeft->Process());
 
     CHECK_ERROR(_acmReceiver->PlayoutData10Ms(outFileSampFreq, &audioFrame));
     _outFile.Write10MsData(audioFrame);

@@ -11,7 +11,6 @@
 #ifndef WEBRTC_MODULES_VIDEO_RENDER_MAIN_SOURCE_WINDOWS_VIDEO_RENDER_DIRECT3D9_H_
 #define WEBRTC_MODULES_VIDEO_RENDER_MAIN_SOURCE_WINDOWS_VIDEO_RENDER_DIRECT3D9_H_
 
-// WebRtc includes
 #include "webrtc/modules/video_render/windows/i_video_render_win.h"
 
 #include <d3d9.h>
@@ -22,6 +21,7 @@
 
 // Added
 #include "webrtc/modules/video_render/include/video_render_defines.h"
+#include "webrtc/system_wrappers/interface/thread_wrapper.h"
 
 #pragma comment(lib, "d3d9.lib")       // located in DirectX SDK
 
@@ -29,7 +29,6 @@ namespace webrtc {
 class CriticalSectionWrapper;
 class EventWrapper;
 class Trace;
-class ThreadWrapper;
 
 class D3D9Channel: public VideoRenderCallback
 {
@@ -46,7 +45,7 @@ public:
     // A new frame is delivered.
     virtual int DeliverFrame(const I420VideoFrame& videoFrame);
     virtual int32_t RenderFrame(const uint32_t streamId,
-                                I420VideoFrame& videoFrame);
+                                const I420VideoFrame& videoFrame);
 
     // Called to check if the video frame is updated.
     int IsUpdated(bool& isUpdated);
@@ -205,7 +204,7 @@ private:
 
     CriticalSectionWrapper& _refD3DCritsect;
     Trace* _trace;
-    ThreadWrapper* _screenUpdateThread;
+    rtc::scoped_ptr<ThreadWrapper> _screenUpdateThread;
     EventWrapper* _screenUpdateEvent;
 
     HWND _hWnd;

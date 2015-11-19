@@ -31,6 +31,7 @@ class SocketFactory;
 class ProxyBinding : public sigslot::has_slots<> {
  public:
   ProxyBinding(AsyncProxyServerSocket* in_socket, AsyncSocket* out_socket);
+  ~ProxyBinding() override;
   sigslot::signal1<ProxyBinding*> SignalDestroyed;
 
  private:
@@ -61,7 +62,7 @@ class ProxyServer : public sigslot::has_slots<> {
  public:
   ProxyServer(SocketFactory* int_factory, const SocketAddress& int_addr,
               SocketFactory* ext_factory, const SocketAddress& ext_ip);
-  virtual ~ProxyServer();
+  ~ProxyServer() override;
 
  protected:
   void OnAcceptEvent(AsyncSocket* socket);
@@ -85,9 +86,7 @@ class SocksProxyServer : public ProxyServer {
       : ProxyServer(int_factory, int_addr, ext_factory, ext_ip) {
   }
  protected:
-  AsyncProxyServerSocket* WrapSocket(AsyncSocket* socket) {
-    return new AsyncSocksProxyServerSocket(socket);
-  }
+  AsyncProxyServerSocket* WrapSocket(AsyncSocket* socket) override;
   DISALLOW_EVIL_CONSTRUCTORS(SocksProxyServer);
 };
 

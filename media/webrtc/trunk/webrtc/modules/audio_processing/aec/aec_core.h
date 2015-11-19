@@ -21,6 +21,7 @@
 #define PART_LEN 64               // Length of partition
 #define PART_LEN1 (PART_LEN + 1)  // Unique fft coefficients
 #define PART_LEN2 (PART_LEN * 2)  // Length of partition * 2
+#define NUM_HIGH_BANDS_MAX  2     // Max number of high bands
 
 typedef float complex_t[2];
 // For performance reasons, some arrays of complex numbers are replaced by twice
@@ -62,21 +63,26 @@ void WebRtcAec_InitAec_neon(void);
 #endif
 
 void WebRtcAec_BufferFarendPartition(AecCore* aec, const float* farend);
-void WebRtcAec_ProcessFrame(AecCore* aec,
-                            const float* nearend,
-                            const float* nearendH,
-                            int knownDelay,
-                            float* out,
-                            float* outH);
+void WebRtcAec_ProcessFrames(AecCore* aec,
+                             const float* const* nearend,
+                             int num_bands,
+                             int num_samples,
+                             int knownDelay,
+                             float* const* out);
 
 // A helper function to call WebRtc_MoveReadPtr() for all far-end buffers.
 // Returns the number of elements moved, and adjusts |system_delay| by the
 // corresponding amount in ms.
 int WebRtcAec_MoveFarReadPtr(AecCore* aec, int elements);
 
-// Calculates the median and standard deviation among the delay estimates
-// collected since the last call to this function.
-int WebRtcAec_GetDelayMetricsCore(AecCore* self, int* median, int* std);
+// Calculates the median, standard deviation and amount of poor values among the
+// delay estimates aggregated up to the first call to the function. After that
+// first call the metrics are aggregated and updated every second. With poor
+// values we mean values that most likely will cause the AEC to perform poorly.
+// TODO(bjornv): Consider changing tests and tools to handle constant
+// constant aggregation window throughout the session instead.
+int WebRtcAec_GetDelayMetricsCore(AecCore* self, int* median, int* std,
+                                  float* fraction_poor_delays);
 
 // Returns the echo state (1: echo, 0: no echo).
 int WebRtcAec_echo_state(AecCore* self);

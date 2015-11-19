@@ -11,8 +11,9 @@
 #ifndef WEBRTC_MODULES_AUDIO_DEVICE_ANDROID_AUDIO_DEVICE_TEMPLATE_H_
 #define WEBRTC_MODULES_AUDIO_DEVICE_ANDROID_AUDIO_DEVICE_TEMPLATE_H_
 
+#include "webrtc/base/checks.h"
+#include "webrtc/modules/audio_device/android/audio_manager.h"
 #include "webrtc/modules/audio_device/audio_device_generic.h"
-
 #include "webrtc/system_wrappers/interface/trace.h"
 
 namespace webrtc {
@@ -22,390 +23,395 @@ namespace webrtc {
 template <class InputType, class OutputType>
 class AudioDeviceTemplate : public AudioDeviceGeneric {
  public:
-  static int32_t SetAndroidAudioDeviceObjects(void* javaVM,
-                                       void* env,
-                                       void* context) {
-    if (OutputType::SetAndroidAudioDeviceObjects(javaVM, env, context) == -1) {
-      return -1;
-    }
-    return InputType::SetAndroidAudioDeviceObjects(javaVM, env, context);
+  static void SetAndroidAudioDeviceObjects(void* javaVM,
+                                           void* context) {
+    AudioManager::SetAndroidAudioDeviceObjects(javaVM, context);
+    OutputType::SetAndroidAudioDeviceObjects(javaVM, context);
+    InputType::SetAndroidAudioDeviceObjects(javaVM, context);
   }
 
   static void ClearAndroidAudioDeviceObjects() {
     OutputType::ClearAndroidAudioDeviceObjects();
     InputType::ClearAndroidAudioDeviceObjects();
+    AudioManager::ClearAndroidAudioDeviceObjects();
   }
 
+  // TODO(henrika): remove id.
   explicit AudioDeviceTemplate(const int32_t id)
-      : output_(id),
-        input_(id, &output_) {
+      : audio_manager_(),
+        output_(&audio_manager_),
+        input_(&output_, &audio_manager_) {
   }
 
   virtual ~AudioDeviceTemplate() {
   }
 
   int32_t ActiveAudioLayer(
-      AudioDeviceModule::AudioLayer& audioLayer) const { // NOLINT
+      AudioDeviceModule::AudioLayer& audioLayer) const override {
     audioLayer = AudioDeviceModule::kPlatformDefaultAudio;
     return 0;
+  };
+
+  int32_t Init() override {
+    return audio_manager_.Init() | output_.Init() | input_.Init();
   }
 
-  int32_t Init() {
-    return output_.Init() | input_.Init();
+  int32_t Terminate() override {
+    return output_.Terminate() | input_.Terminate() | audio_manager_.Close();
   }
 
-  int32_t Terminate()  {
-    return output_.Terminate() | input_.Terminate();
+  bool Initialized() const override {
+    return true;
   }
 
-  bool Initialized() const {
-    return output_.Initialized() && input_.Initialized();
+  int16_t PlayoutDevices() override {
+    return 1;
   }
 
-  int16_t PlayoutDevices() {
-    return output_.PlayoutDevices();
-  }
-
-  int16_t RecordingDevices() {
-    return input_.RecordingDevices();
+  int16_t RecordingDevices() override {
+    return 1;
   }
 
   int32_t PlayoutDeviceName(
       uint16_t index,
       char name[kAdmMaxDeviceNameSize],
-      char guid[kAdmMaxGuidSize]) {
-    return output_.PlayoutDeviceName(index, name, guid);
+      char guid[kAdmMaxGuidSize]) override {
+    FATAL() << "Should never be called";
+    return -1;
   }
 
   int32_t RecordingDeviceName(
       uint16_t index,
       char name[kAdmMaxDeviceNameSize],
-      char guid[kAdmMaxGuidSize]) {
+      char guid[kAdmMaxGuidSize]) override {
     return input_.RecordingDeviceName(index, name, guid);
   }
 
-  int32_t SetPlayoutDevice(uint16_t index) {
-    return output_.SetPlayoutDevice(index);
+  int32_t SetPlayoutDevice(uint16_t index) override {
+    // OK to use but it has no effect currently since device selection is
+    // done using Andoid APIs instead.
+    return 0;
   }
 
   int32_t SetPlayoutDevice(
-      AudioDeviceModule::WindowsDeviceType device) {
-    return output_.SetPlayoutDevice(device);
+      AudioDeviceModule::WindowsDeviceType device) override {
+    FATAL() << "Should never be called";
+    return -1;
   }
 
-  int32_t SetRecordingDevice(uint16_t index) {
-    return input_.SetRecordingDevice(index);
+  int32_t SetRecordingDevice(uint16_t index) override {
+    // OK to use but it has no effect currently since device selection is
+    // done using Andoid APIs instead.
+    return 0;
   }
 
   int32_t SetRecordingDevice(
-      AudioDeviceModule::WindowsDeviceType device) {
-    return input_.SetRecordingDevice(device);
+      AudioDeviceModule::WindowsDeviceType device) override {
+    FATAL() << "Should never be called";
+    return -1;
   }
 
-  int32_t PlayoutIsAvailable(
-      bool& available) {  // NOLINT
-    return output_.PlayoutIsAvailable(available);
+  int32_t PlayoutIsAvailable(bool& available) override {
+    available = true;
+    return 0;
   }
 
-  int32_t InitPlayout() {
+  int32_t InitPlayout() override {
     return output_.InitPlayout();
   }
 
-  bool PlayoutIsInitialized() const {
+  bool PlayoutIsInitialized() const override {
     return output_.PlayoutIsInitialized();
   }
 
-  int32_t RecordingIsAvailable(
-      bool& available) {  // NOLINT
-    return input_.RecordingIsAvailable(available);
+  int32_t RecordingIsAvailable(bool& available) override {
+    available = true;
+    return 0;
   }
 
-  int32_t InitRecording() {
+  int32_t InitRecording() override {
     return input_.InitRecording();
   }
 
-  bool RecordingIsInitialized() const {
+  bool RecordingIsInitialized() const override {
     return input_.RecordingIsInitialized();
   }
 
-  int32_t StartPlayout() {
+  int32_t StartPlayout() override {
     return output_.StartPlayout();
   }
 
-  int32_t StopPlayout() {
+  int32_t StopPlayout() override {
     return output_.StopPlayout();
   }
 
-  bool Playing() const {
+  bool Playing() const override {
     return output_.Playing();
   }
 
-  int32_t StartRecording() {
+  int32_t StartRecording() override {
     return input_.StartRecording();
   }
 
-  int32_t StopRecording() {
+  int32_t StopRecording() override {
     return input_.StopRecording();
   }
 
-  bool Recording() const {
+  bool Recording() const override {
     return input_.Recording() ;
   }
 
-  int32_t SetAGC(bool enable) {
-    return input_.SetAGC(enable);
+  int32_t SetAGC(bool enable) override {
+    if (enable) {
+      FATAL() << "Should never be called";
+    }
+    return -1;
   }
 
-  bool AGC() const {
-    return input_.AGC();
+  bool AGC() const override {
+    return false;
   }
 
-  int32_t SetWaveOutVolume(uint16_t volumeLeft,
-                           uint16_t volumeRight) {
-    WEBRTC_TRACE(kTraceWarning, kTraceAudioDevice, 0,
-                 "  API call not supported on this platform");
+  int32_t SetWaveOutVolume(
+      uint16_t volumeLeft, uint16_t volumeRight) override {
+     FATAL() << "Should never be called";
     return -1;
   }
 
   int32_t WaveOutVolume(
-      uint16_t& volumeLeft,           // NOLINT
-      uint16_t& volumeRight) const {  // NOLINT
-    WEBRTC_TRACE(kTraceWarning, kTraceAudioDevice, 0,
-                 "  API call not supported on this platform");
+      uint16_t& volumeLeft, uint16_t& volumeRight) const override {
+    FATAL() << "Should never be called";
     return -1;
   }
 
-  int32_t InitSpeaker() {
-    return output_.InitSpeaker();
+  int32_t InitSpeaker() override {
+    return 0;
   }
 
-  bool SpeakerIsInitialized() const {
-    return output_.SpeakerIsInitialized();
+  bool SpeakerIsInitialized() const override {
+    return true;
   }
 
-  int32_t InitMicrophone() {
-    return input_.InitMicrophone();
+  int32_t InitMicrophone() override {
+    return 0;
   }
 
-  bool MicrophoneIsInitialized() const {
-    return input_.MicrophoneIsInitialized();
+  bool MicrophoneIsInitialized() const override {
+    return true;
   }
 
-  int32_t SpeakerVolumeIsAvailable(
-      bool& available) {  // NOLINT
+  int32_t SpeakerVolumeIsAvailable(bool& available) override {
     return output_.SpeakerVolumeIsAvailable(available);
   }
 
-  int32_t SetSpeakerVolume(uint32_t volume) {
+  int32_t SetSpeakerVolume(uint32_t volume) override {
     return output_.SetSpeakerVolume(volume);
   }
 
-  int32_t SpeakerVolume(
-      uint32_t& volume) const {  // NOLINT
+  int32_t SpeakerVolume(uint32_t& volume) const override {
     return output_.SpeakerVolume(volume);
   }
 
-  int32_t MaxSpeakerVolume(
-      uint32_t& maxVolume) const {  // NOLINT
+  int32_t MaxSpeakerVolume(uint32_t& maxVolume) const override {
     return output_.MaxSpeakerVolume(maxVolume);
   }
 
-  int32_t MinSpeakerVolume(
-      uint32_t& minVolume) const {  // NOLINT
+  int32_t MinSpeakerVolume(uint32_t& minVolume) const override {
     return output_.MinSpeakerVolume(minVolume);
   }
 
-  int32_t SpeakerVolumeStepSize(
-      uint16_t& stepSize) const {  // NOLINT
-    return output_.SpeakerVolumeStepSize(stepSize);
-  }
-
-  int32_t MicrophoneVolumeIsAvailable(
-      bool& available) {  // NOLINT
-    return input_.MicrophoneVolumeIsAvailable(available);
-  }
-
-  int32_t SetMicrophoneVolume(uint32_t volume) {
-    return input_.SetMicrophoneVolume(volume);
-  }
-
-  int32_t MicrophoneVolume(
-      uint32_t& volume) const {  // NOLINT
-    return input_.MicrophoneVolume(volume);
-  }
-
-  int32_t MaxMicrophoneVolume(
-      uint32_t& maxVolume) const {  // NOLINT
-    return input_.MaxMicrophoneVolume(maxVolume);
-  }
-
-  int32_t MinMicrophoneVolume(
-      uint32_t& minVolume) const {  // NOLINT
-    return input_.MinMicrophoneVolume(minVolume);
-  }
-
-  int32_t MicrophoneVolumeStepSize(
-      uint16_t& stepSize) const {  // NOLINT
-    return input_.MicrophoneVolumeStepSize(stepSize);
-  }
-
-  int32_t SpeakerMuteIsAvailable(
-      bool& available) {  // NOLINT
-    return output_.SpeakerMuteIsAvailable(available);
-  }
-
-  int32_t SetSpeakerMute(bool enable) {
-    return output_.SetSpeakerMute(enable);
-  }
-
-  int32_t SpeakerMute(
-      bool& enabled) const {  // NOLINT
-    return output_.SpeakerMute(enabled);
-  }
-
-  int32_t MicrophoneMuteIsAvailable(
-      bool& available) {  // NOLINT
-    return input_.MicrophoneMuteIsAvailable(available);
-  }
-
-  int32_t SetMicrophoneMute(bool enable) {
-    return input_.SetMicrophoneMute(enable);
-  }
-
-  int32_t MicrophoneMute(
-      bool& enabled) const {  // NOLINT
-    return input_.MicrophoneMute(enabled);
-  }
-
-  int32_t MicrophoneBoostIsAvailable(
-      bool& available) {  // NOLINT
-    return input_.MicrophoneBoostIsAvailable(available);
-  }
-
-  int32_t SetMicrophoneBoost(bool enable) {
-    return input_.SetMicrophoneBoost(enable);
-  }
-
-  int32_t MicrophoneBoost(
-      bool& enabled) const {  // NOLINT
-    return input_.MicrophoneBoost(enabled);
-  }
-
-  int32_t StereoPlayoutIsAvailable(
-      bool& available) {  // NOLINT
-    return output_.StereoPlayoutIsAvailable(available);
-  }
-
-  int32_t SetStereoPlayout(bool enable) {
-    return output_.SetStereoPlayout(enable);
-  }
-
-  int32_t StereoPlayout(
-      bool& enabled) const {  // NOLINT
-    return output_.StereoPlayout(enabled);
-  }
-
-  int32_t StereoRecordingIsAvailable(
-      bool& available) {  // NOLINT
-    return input_.StereoRecordingIsAvailable(available);
-  }
-
-  int32_t SetStereoRecording(bool enable) {
-    return input_.SetStereoRecording(enable);
-  }
-
-  int32_t StereoRecording(
-      bool& enabled) const {  // NOLINT
-    return input_.StereoRecording(enabled);
-  }
-
-  int32_t SetPlayoutBuffer(
-      const AudioDeviceModule::BufferType type,
-      uint16_t sizeMS) {
-    return output_.SetPlayoutBuffer(type, sizeMS);
-  }
-
-  int32_t PlayoutBuffer(
-      AudioDeviceModule::BufferType& type,
-      uint16_t& sizeMS) const {  // NOLINT
-    return output_.PlayoutBuffer(type, sizeMS);
-  }
-
-  int32_t PlayoutDelay(
-      uint16_t& delayMS) const {  // NOLINT
-    return output_.PlayoutDelay(delayMS);
-  }
-
-  int32_t RecordingDelay(
-      uint16_t& delayMS) const {  // NOLINT
-    return input_.RecordingDelay(delayMS);
-  }
-
-  int32_t CPULoad(
-      uint16_t& load) const {  // NOLINT
-    WEBRTC_TRACE(kTraceWarning, kTraceAudioDevice, 0,
-                 "  API call not supported on this platform");
+  int32_t SpeakerVolumeStepSize(uint16_t& stepSize) const override {
+    FATAL() << "Should never be called";
     return -1;
   }
 
-  bool PlayoutWarning() const {
-    return output_.PlayoutWarning();
+  int32_t MicrophoneVolumeIsAvailable(bool& available) override{
+    available = false;
+    FATAL() << "Should never be called";
+    return -1;
   }
 
-  bool PlayoutError() const {
-    return output_.PlayoutError();
+  int32_t SetMicrophoneVolume(uint32_t volume) override {
+    FATAL() << "Should never be called";
+    return -1;
   }
 
-  bool RecordingWarning() const {
-    return input_.RecordingWarning();
+  int32_t MicrophoneVolume(uint32_t& volume) const override {
+    FATAL() << "Should never be called";
+    return -1;
   }
 
-  bool RecordingError() const {
-    return input_.RecordingError();
+  int32_t MaxMicrophoneVolume(uint32_t& maxVolume) const override {
+    FATAL() << "Should never be called";
+    return -1;
   }
 
-  void ClearPlayoutWarning() {
-    return output_.ClearPlayoutWarning();
+  int32_t MinMicrophoneVolume(uint32_t& minVolume) const override {
+    FATAL() << "Should never be called";
+    return -1;
   }
 
-  void ClearPlayoutError() {
-    return output_.ClearPlayoutError();
+  int32_t MicrophoneVolumeStepSize(uint16_t& stepSize) const override {
+    FATAL() << "Should never be called";
+    return -1;
   }
 
-  void ClearRecordingWarning() {
-    return input_.ClearRecordingWarning();
+  int32_t SpeakerMuteIsAvailable(bool& available) override {
+    FATAL() << "Should never be called";
+    return -1;
   }
 
-  void ClearRecordingError() {
-    return input_.ClearRecordingError();
+  int32_t SetSpeakerMute(bool enable) override {
+    FATAL() << "Should never be called";
+    return -1;
   }
 
-  void AttachAudioBuffer(
-      AudioDeviceBuffer* audioBuffer) {
+  int32_t SpeakerMute(bool& enabled) const override {
+    FATAL() << "Should never be called";
+    return -1;
+  }
+
+  int32_t MicrophoneMuteIsAvailable(bool& available) override {
+    FATAL() << "Not implemented";
+    return -1;
+  }
+
+  int32_t SetMicrophoneMute(bool enable) override {
+    FATAL() << "Not implemented";
+    return -1;
+  }
+
+  int32_t MicrophoneMute(bool& enabled) const override {
+    FATAL() << "Not implemented";
+    return -1;
+  }
+
+  int32_t MicrophoneBoostIsAvailable(bool& available) override {
+    FATAL() << "Should never be called";
+    return -1;
+  }
+
+  int32_t SetMicrophoneBoost(bool enable) override {
+    FATAL() << "Should never be called";
+    return -1;
+  }
+
+  int32_t MicrophoneBoost(bool& enabled) const override {
+    FATAL() << "Should never be called";
+    return -1;
+  }
+
+  int32_t StereoPlayoutIsAvailable(bool& available) override {
+    available = false;
+    return 0;
+  }
+
+  // TODO(henrika): add support.
+  int32_t SetStereoPlayout(bool enable) override {
+    return -1;
+  }
+
+  // TODO(henrika): add support.
+  int32_t StereoPlayout(bool& enabled) const override {
+    enabled = false;
+    FATAL() << "Should never be called";
+    return -1;
+  }
+
+  int32_t StereoRecordingIsAvailable(bool& available) override {
+    available = false;
+    return 0;
+  }
+
+  int32_t SetStereoRecording(bool enable) override {
+    return -1;
+  }
+
+  int32_t StereoRecording(bool& enabled) const override {
+    enabled = false;
+    return 0;
+  }
+
+  int32_t SetPlayoutBuffer(
+      const AudioDeviceModule::BufferType type, uint16_t sizeMS) override {
+    FATAL() << "Should never be called";
+    return -1;
+  }
+
+  int32_t PlayoutBuffer(
+      AudioDeviceModule::BufferType& type, uint16_t& sizeMS) const override {
+    FATAL() << "Should never be called";
+    return -1;
+  }
+
+  int32_t PlayoutDelay(uint16_t& delayMS) const override {
+    return output_.PlayoutDelay(delayMS);
+  }
+
+  int32_t RecordingDelay(uint16_t& delayMS) const override {
+    return input_.RecordingDelay(delayMS);
+  }
+
+  int32_t CPULoad(uint16_t& load) const override {
+    FATAL() << "Should never be called";
+    return -1;
+  }
+
+  bool PlayoutWarning() const override {
+    return false;
+  }
+
+  bool PlayoutError() const override {
+    return false;
+  }
+
+  bool RecordingWarning() const override {
+    return false;
+  }
+
+  bool RecordingError() const override {
+    return false;
+  }
+
+  void ClearPlayoutWarning() override {}
+
+  void ClearPlayoutError() override {}
+
+  void ClearRecordingWarning() override {}
+
+  void ClearRecordingError() override {}
+
+  void AttachAudioBuffer(AudioDeviceBuffer* audioBuffer) override {
     output_.AttachAudioBuffer(audioBuffer);
     input_.AttachAudioBuffer(audioBuffer);
   }
 
-  int32_t SetRecordingSampleRate(
-      const uint32_t samplesPerSec) {
-    return input_.SetRecordingSampleRate(samplesPerSec);
+  // TODO(henrika): remove
+  int32_t SetPlayoutSampleRate(const uint32_t samplesPerSec) override {
+    FATAL() << "Should never be called";
+    return -1;
   }
 
-  int32_t SetPlayoutSampleRate(
-      const uint32_t samplesPerSec) {
-    return output_.SetPlayoutSampleRate(samplesPerSec);
+  int32_t SetLoudspeakerStatus(bool enable) override {
+    FATAL() << "Should never be called";
+    return -1;
   }
 
-  int32_t SetLoudspeakerStatus(bool enable) {
-    return output_.SetLoudspeakerStatus(enable);
+  int32_t GetLoudspeakerStatus(bool& enable) const override {
+    FATAL() << "Should never be called";
+    return -1;
   }
 
-  int32_t GetLoudspeakerStatus(
-      bool& enable) const {  // NOLINT
-    return output_.GetLoudspeakerStatus(enable);
+  bool BuiltInAECIsAvailable() const override {
+    return input_.BuiltInAECIsAvailable();
+  }
+
+  int32_t EnableBuiltInAEC(bool enable) override {
+    return input_.EnableBuiltInAEC(enable);
   }
 
  private:
+  AudioManager audio_manager_;
   OutputType output_;
   InputType input_;
 };

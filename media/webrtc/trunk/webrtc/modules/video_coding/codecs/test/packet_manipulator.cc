@@ -13,6 +13,8 @@
 #include <assert.h>
 #include <stdio.h>
 
+#include "webrtc/base/format_macros.h"
+
 namespace webrtc {
 namespace test {
 
@@ -34,7 +36,6 @@ PacketManipulatorImpl::~PacketManipulatorImpl() {
 
 int PacketManipulatorImpl::ManipulatePackets(
     webrtc::EncodedImage* encoded_image) {
-  assert(encoded_image);
   int nbr_packets_dropped = 0;
   // There's no need to build a copy of the image data since viewing an
   // EncodedImage object, setting the length to a new lower value represents
@@ -72,7 +73,7 @@ int PacketManipulatorImpl::ManipulatePackets(
     // Must set completeFrame to false to inform the decoder about this:
     encoded_image->_completeFrame = false;
     if (verbose_) {
-      printf("Dropped %d packets for frame %d (frame length: %d)\n",
+      printf("Dropped %d packets for frame %d (frame length: %" PRIuS ")\n",
              nbr_packets_dropped, encoded_image->_timeStamp,
              encoded_image->_length);
     }

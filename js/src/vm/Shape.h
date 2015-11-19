@@ -1064,29 +1064,31 @@ struct InitialShapeEntry
      * certain classes (e.g. String, RegExp) which may add certain baked-in
      * properties.
      */
-    ReadBarriered<Shape*> shape;
+    ReadBarrieredShape shape;
 
     /*
      * Matching prototype for the entry. The shape of an object determines its
      * prototype, but the prototype cannot be determined from the shape itself.
      */
-    ReadBarriered<TaggedProto> proto;
+    TaggedProto proto;
 
     /* State used to determine a match on an initial shape. */
     struct Lookup {
         const Class* clasp;
-        TaggedProto proto;
+        TaggedProto hashProto;
+        TaggedProto matchProto;
         uint32_t nfixed;
         uint32_t baseFlags;
 
         Lookup(const Class* clasp, TaggedProto proto, uint32_t nfixed, uint32_t baseFlags)
-          : clasp(clasp), proto(proto), nfixed(nfixed), baseFlags(baseFlags)
+          : clasp(clasp),
+            hashProto(proto), matchProto(proto),
+            nfixed(nfixed), baseFlags(baseFlags)
         {}
     };
 
     inline InitialShapeEntry();
-    inline InitialShapeEntry(const ReadBarriered<Shape*>& shape,
-                             const ReadBarriered<TaggedProto>& proto);
+    inline InitialShapeEntry(const ReadBarrieredShape& shape, TaggedProto proto);
 
     inline Lookup getLookup() const;
 

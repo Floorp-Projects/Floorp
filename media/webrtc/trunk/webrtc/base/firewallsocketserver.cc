@@ -25,7 +25,7 @@ class FirewallSocket : public AsyncSocketAdapter {
     : AsyncSocketAdapter(socket), server_(server), type_(type) {
   }
 
-  virtual int Connect(const SocketAddress& addr) {
+  int Connect(const SocketAddress& addr) override {
     if (type_ == SOCK_STREAM) {
       if (!server_->Check(FP_TCP, GetLocalAddress(), addr)) {
         LOG(LS_VERBOSE) << "FirewallSocket outbound TCP connection from "
@@ -38,10 +38,10 @@ class FirewallSocket : public AsyncSocketAdapter {
     }
     return AsyncSocketAdapter::Connect(addr);
   }
-  virtual int Send(const void* pv, size_t cb) {
+  int Send(const void* pv, size_t cb) override {
     return SendTo(pv, cb, GetRemoteAddress());
   }
-  virtual int SendTo(const void* pv, size_t cb, const SocketAddress& addr) {
+  int SendTo(const void* pv, size_t cb, const SocketAddress& addr) override {
     if (type_ == SOCK_DGRAM) {
       if (!server_->Check(FP_UDP, GetLocalAddress(), addr)) {
         LOG(LS_VERBOSE) << "FirewallSocket outbound UDP packet from "
@@ -52,11 +52,11 @@ class FirewallSocket : public AsyncSocketAdapter {
     }
     return AsyncSocketAdapter::SendTo(pv, cb, addr);
   }
-  virtual int Recv(void* pv, size_t cb) {
+  int Recv(void* pv, size_t cb) override {
     SocketAddress addr;
     return RecvFrom(pv, cb, &addr);
   }
-  virtual int RecvFrom(void* pv, size_t cb, SocketAddress* paddr) {
+  int RecvFrom(void* pv, size_t cb, SocketAddress* paddr) override {
     if (type_ == SOCK_DGRAM) {
       while (true) {
         int res = AsyncSocketAdapter::RecvFrom(pv, cb, paddr);
@@ -72,7 +72,7 @@ class FirewallSocket : public AsyncSocketAdapter {
     return AsyncSocketAdapter::RecvFrom(pv, cb, paddr);
   }
 
-  virtual int Listen(int backlog) {
+  int Listen(int backlog) override {
     if (!server_->tcp_listen_enabled()) {
       LOG(LS_VERBOSE) << "FirewallSocket listen attempt denied";
       return -1;
@@ -80,7 +80,7 @@ class FirewallSocket : public AsyncSocketAdapter {
 
     return AsyncSocketAdapter::Listen(backlog);
   }
-  virtual AsyncSocket* Accept(SocketAddress* paddr) {
+  AsyncSocket* Accept(SocketAddress* paddr) override {
     SocketAddress addr;
     while (AsyncSocket* sock = AsyncSocketAdapter::Accept(&addr)) {
       if (server_->Check(FP_TCP, addr, GetLocalAddress())) {
@@ -188,6 +188,18 @@ AsyncSocket* FirewallSocketServer::CreateAsyncSocket(int type) {
 
 AsyncSocket* FirewallSocketServer::CreateAsyncSocket(int family, int type) {
   return WrapSocket(server_->CreateAsyncSocket(family, type), type);
+}
+
+void FirewallSocketServer::SetMessageQueue(MessageQueue* queue) {
+  server_->SetMessageQueue(queue);
+}
+
+bool FirewallSocketServer::Wait(int cms, bool process_io) {
+  return server_->Wait(cms, process_io);
+}
+
+void FirewallSocketServer::WakeUp() {
+  return server_->WakeUp();
 }
 
 AsyncSocket* FirewallSocketServer::WrapSocket(AsyncSocket* sock, int type) {

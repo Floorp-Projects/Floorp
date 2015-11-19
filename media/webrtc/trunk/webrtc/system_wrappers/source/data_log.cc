@@ -19,7 +19,6 @@
 #include "webrtc/system_wrappers/interface/event_wrapper.h"
 #include "webrtc/system_wrappers/interface/file_wrapper.h"
 #include "webrtc/system_wrappers/interface/rw_lock_wrapper.h"
-#include "webrtc/system_wrappers/interface/thread_wrapper.h"
 
 namespace webrtc {
 
@@ -322,14 +321,12 @@ DataLogImpl::DataLogImpl()
   : counter_(1),
     tables_(),
     flush_event_(EventWrapper::Create()),
-    file_writer_thread_(NULL),
     tables_lock_(RWLockWrapper::CreateRWLock()) {
 }
 
 DataLogImpl::~DataLogImpl() {
   StopThread();
   Flush();  // Write any remaining rows
-  delete file_writer_thread_;
   delete flush_event_;
   for (TableMap::iterator it = tables_.begin(); it != tables_.end();) {
     delete static_cast<LogTable*>(it->second);
@@ -352,16 +349,11 @@ int DataLogImpl::CreateLog() {
 
 int DataLogImpl::Init() {
   file_writer_thread_ = ThreadWrapper::CreateThread(
-                          DataLogImpl::Run,
-                          instance_,
-                          kHighestPriority,
-                          "DataLog");
-  if (file_writer_thread_ == NULL)
-    return -1;
-  unsigned int thread_id = 0;
-  bool success = file_writer_thread_->Start(thread_id);
+      DataLogImpl::Run, instance_, "DataLog");
+  bool success = file_writer_thread_->Start();
   if (!success)
     return -1;
+  file_writer_thread_->SetPriority(kHighestPriority);
   return 0;
 }
 
@@ -414,7 +406,7 @@ int DataLogImpl::NextRow(const std::string& table_name) {
   if (tables_.count(table_name) == 0)
     return -1;
   tables_[table_name]->NextRow();
-  if (file_writer_thread_ == NULL) {
+  if (!file_writer_thread_) {
     // Write every row to file as they get complete.
     tables_[table_name]->Flush();
   } else {
@@ -443,12 +435,9 @@ void DataLogImpl::Process() {
 }
 
 void DataLogImpl::StopThread() {
-  if (file_writer_thread_ != NULL) {
-    file_writer_thread_->SetNotAlive();
+  if (file_writer_thread_) {
     flush_event_->Set();
-    // Call Stop() repeatedly, waiting for the Flush() call in Process() to
-    // finish.
-    while (!file_writer_thread_->Stop()) continue;
+    file_writer_thread_->Stop();
   }
 }
 

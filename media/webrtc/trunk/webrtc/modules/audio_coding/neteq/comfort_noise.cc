@@ -12,10 +12,10 @@
 
 #include <assert.h>
 
+#include "webrtc/modules/audio_coding/codecs/audio_decoder.h"
 #include "webrtc/modules/audio_coding/codecs/cng/include/webrtc_cng.h"
 #include "webrtc/modules/audio_coding/neteq/decoder_database.h"
 #include "webrtc/modules/audio_coding/neteq/dsp_helper.h"
-#include "webrtc/modules/audio_coding/neteq/interface/audio_decoder.h"
 #include "webrtc/modules/audio_coding/neteq/sync_buffer.h"
 
 namespace webrtc {

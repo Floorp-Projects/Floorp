@@ -56,15 +56,15 @@ static void HighPassFilter(const int16_t* data_in, int data_length,
 
   for (i = 0; i < data_length; i++) {
     // All-zero section (filter coefficients in Q14).
-    tmp32 = WEBRTC_SPL_MUL_16_16(kHpZeroCoefs[0], *in_ptr);
-    tmp32 += WEBRTC_SPL_MUL_16_16(kHpZeroCoefs[1], filter_state[0]);
-    tmp32 += WEBRTC_SPL_MUL_16_16(kHpZeroCoefs[2], filter_state[1]);
+    tmp32 = kHpZeroCoefs[0] * *in_ptr;
+    tmp32 += kHpZeroCoefs[1] * filter_state[0];
+    tmp32 += kHpZeroCoefs[2] * filter_state[1];
     filter_state[1] = filter_state[0];
     filter_state[0] = *in_ptr++;
 
     // All-pole section (filter coefficients in Q14).
-    tmp32 -= WEBRTC_SPL_MUL_16_16(kHpPoleCoefs[1], filter_state[2]);
-    tmp32 -= WEBRTC_SPL_MUL_16_16(kHpPoleCoefs[2], filter_state[3]);
+    tmp32 -= kHpPoleCoefs[1] * filter_state[2];
+    tmp32 -= kHpPoleCoefs[2] * filter_state[3];
     filter_state[3] = filter_state[2];
     filter_state[2] = (int16_t) (tmp32 >> 14);
     *out_ptr++ = filter_state[2];
@@ -212,9 +212,8 @@ static void LogOfEnergy(const int16_t* data_in, int data_length,
 
     // |kLogConst| is in Q9, |log2_energy| in Q10 and |tot_rshifts| in Q0.
     // Note that we in our derivation above have accounted for an output in Q4.
-    *log_energy = (int16_t) (WEBRTC_SPL_MUL_16_16_RSFT(
-        kLogConst, log2_energy, 19) +
-        WEBRTC_SPL_MUL_16_16_RSFT(tot_rshifts, kLogConst, 9));
+    *log_energy = (int16_t)(((kLogConst * log2_energy) >> 19) +
+        ((tot_rshifts * kLogConst) >> 9));
 
     if (*log_energy < 0) {
       *log_energy = 0;

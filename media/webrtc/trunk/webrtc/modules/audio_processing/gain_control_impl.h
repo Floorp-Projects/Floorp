@@ -33,36 +33,36 @@ class GainControlImpl : public GainControl,
   int ProcessCaptureAudio(AudioBuffer* audio);
 
   // ProcessingComponent implementation.
-  virtual int Initialize() OVERRIDE;
+  int Initialize() override;
 
   // GainControl implementation.
-  virtual bool is_enabled() const OVERRIDE;
-  virtual int stream_analog_level() OVERRIDE;
+  bool is_enabled() const override;
+  int stream_analog_level() override;
 
  private:
   // GainControl implementation.
-  virtual int Enable(bool enable) OVERRIDE;
-  virtual int set_stream_analog_level(int level) OVERRIDE;
-  virtual int set_mode(Mode mode) OVERRIDE;
-  virtual Mode mode() const OVERRIDE;
-  virtual int set_target_level_dbfs(int level) OVERRIDE;
-  virtual int target_level_dbfs() const OVERRIDE;
-  virtual int set_compression_gain_db(int gain) OVERRIDE;
-  virtual int compression_gain_db() const OVERRIDE;
-  virtual int enable_limiter(bool enable) OVERRIDE;
-  virtual bool is_limiter_enabled() const OVERRIDE;
-  virtual int set_analog_level_limits(int minimum, int maximum) OVERRIDE;
-  virtual int analog_level_minimum() const OVERRIDE;
-  virtual int analog_level_maximum() const OVERRIDE;
-  virtual bool stream_is_saturated() const OVERRIDE;
+  int Enable(bool enable) override;
+  int set_stream_analog_level(int level) override;
+  int set_mode(Mode mode) override;
+  Mode mode() const override;
+  int set_target_level_dbfs(int level) override;
+  int target_level_dbfs() const override;
+  int set_compression_gain_db(int gain) override;
+  int compression_gain_db() const override;
+  int enable_limiter(bool enable) override;
+  bool is_limiter_enabled() const override;
+  int set_analog_level_limits(int minimum, int maximum) override;
+  int analog_level_minimum() const override;
+  int analog_level_maximum() const override;
+  bool stream_is_saturated() const override;
 
   // ProcessingComponent implementation.
-  virtual void* CreateHandle() const OVERRIDE;
-  virtual int InitializeHandle(void* handle) const OVERRIDE;
-  virtual int ConfigureHandle(void* handle) const OVERRIDE;
-  virtual void DestroyHandle(void* handle) const OVERRIDE;
-  virtual int num_handles_required() const OVERRIDE;
-  virtual int GetHandleError(void* handle) const OVERRIDE;
+  void* CreateHandle() const override;
+  int InitializeHandle(void* handle) const override;
+  int ConfigureHandle(void* handle) const override;
+  void DestroyHandle(void* handle) const override;
+  int num_handles_required() const override;
+  int GetHandleError(void* handle) const override;
 
   const AudioProcessing* apm_;
   CriticalSectionWrapper* crit_;

@@ -26,23 +26,23 @@ class MacAsyncSocket;
 class MacBaseSocketServer : public PhysicalSocketServer {
  public:
   MacBaseSocketServer();
-  virtual ~MacBaseSocketServer();
+  ~MacBaseSocketServer() override;
 
   // SocketServer Interface
-  virtual Socket* CreateSocket(int type) { return NULL; }
-  virtual Socket* CreateSocket(int family, int type) { return NULL; }
+  Socket* CreateSocket(int type) override;
+  Socket* CreateSocket(int family, int type) override;
 
-  virtual AsyncSocket* CreateAsyncSocket(int type);
-  virtual AsyncSocket* CreateAsyncSocket(int family, int type);
+  AsyncSocket* CreateAsyncSocket(int type) override;
+  AsyncSocket* CreateAsyncSocket(int family, int type) override;
 
-  virtual bool Wait(int cms, bool process_io) = 0;
-  virtual void WakeUp() = 0;
+  bool Wait(int cms, bool process_io) override = 0;
+  void WakeUp() override = 0;
 
   void RegisterSocket(MacAsyncSocket* socket);
   void UnregisterSocket(MacAsyncSocket* socket);
 
   // PhysicalSocketServer Overrides
-  virtual bool SetPosixSignalHandler(int signum, void (*handler)(int));
+  bool SetPosixSignalHandler(int signum, void (*handler)(int)) override;
 
  protected:
   void EnableSocketCallbacks(bool enable);
@@ -65,11 +65,11 @@ class MacBaseSocketServer : public PhysicalSocketServer {
 class MacCFSocketServer : public MacBaseSocketServer {
  public:
   MacCFSocketServer();
-  virtual ~MacCFSocketServer();
+  ~MacCFSocketServer() override;
 
   // SocketServer Interface
-  virtual bool Wait(int cms, bool process_io);
-  virtual void WakeUp();
+  bool Wait(int cms, bool process_io) override;
+  void WakeUp() override;
   void OnWakeUpCallback();
 
  private:

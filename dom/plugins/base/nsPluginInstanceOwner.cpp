@@ -1150,9 +1150,6 @@ void nsPluginInstanceOwner::AddToCARefreshTimer() {
 
   if (!sCARefreshListeners) {
     sCARefreshListeners = new nsTArray<nsPluginInstanceOwner*>();
-    if (!sCARefreshListeners) {
-      return;
-    }
   }
 
   if (sCARefreshListeners->Contains(this)) {
@@ -1163,9 +1160,6 @@ void nsPluginInstanceOwner::AddToCARefreshTimer() {
 
   if (!sCATimer) {
     sCATimer = new nsCOMPtr<nsITimer>();
-    if (!sCATimer) {
-      return;
-    }
   }
 
   if (sCARefreshListeners->Length() == 1) {

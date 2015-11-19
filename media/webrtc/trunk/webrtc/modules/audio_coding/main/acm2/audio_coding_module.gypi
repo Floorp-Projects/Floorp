@@ -10,8 +10,10 @@
   'variables': {
     'audio_coding_dependencies': [
       'CNG',
+      'red',
+      '<(webrtc_root)/common.gyp:webrtc_common',
       '<(webrtc_root)/common_audio/common_audio.gyp:common_audio',
-      '<(webrtc_root)/system_wrappers/source/system_wrappers.gyp:system_wrappers',
+      '<(webrtc_root)/system_wrappers/system_wrappers.gyp:system_wrappers',
     ],
     'audio_coding_defines': [],
     'conditions': [
@@ -33,7 +35,7 @@
       }],
       ['include_isac==1', {
         'audio_coding_dependencies': ['iSAC', 'iSACFix',],
-        'audio_coding_defines': ['WEBRTC_CODEC_ISAC', 'WEBRTC_CODEC_ISACFX',],
+#        'audio_coding_defines': ['WEBRTC_CODEC_ISAC', 'WEBRTC_CODEC_ISACFX',],
       }],
       ['include_pcm16b==1', {
         'audio_coding_dependencies': ['PCM16B',],
@@ -50,6 +52,7 @@
       ],
       'dependencies': [
         '<@(audio_coding_dependencies)',
+        '<(webrtc_root)/common.gyp:webrtc_common',
         'neteq',
       ],
       'include_dirs': [
@@ -67,17 +70,11 @@
       'sources': [
         '../interface/audio_coding_module.h',
         '../interface/audio_coding_module_typedefs.h',
-        'acm_cng.cc',
-        'acm_cng.h',
         'acm_codec_database.cc',
         'acm_codec_database.h',
         'acm_common_defs.h',
-        'acm_dtmf_playout.cc',
-        'acm_dtmf_playout.h',
         'acm_generic_codec.cc',
         'acm_generic_codec.h',
-        'acm_red.cc',
-        'acm_red.h',
         'acm_receiver.cc',
         'acm_receiver.h',
         'acm_resampler.cc',
@@ -87,48 +84,12 @@
         'audio_coding_module_impl.h',
         'call_statistics.cc',
         'call_statistics.h',
+        'codec_manager.cc',
+        'codec_manager.h',
         'initial_delay_manager.cc',
         'initial_delay_manager.h',
         'nack.cc',
         'nack.h',
-      ],
-      'conditions': [
-        ['include_opus==1', {
-          'sources': [
-            'acm_opus.cc',
-           'acm_opus.h',
-          ],
-        }],
-        ['include_g711==1', {
-          'sources': [
-            'acm_pcma.cc',
-            'acm_pcma.h',
-            'acm_pcmu.cc',
-            'acm_pcmu.h',
-          ],
-        }],
-        ['include_g722==1', {
-          'sources': [
-             'acm_g722.cc',
-             'acm_g722.h',
-          ],
-        }],
-        ['include_ilbc==1', {
-          'sources': [
-#           FIX
-          ],
-        }],
-        ['include_isac==1', {
-          'sources': [
-#           FIX
-          ],
-        }],
-        ['include_pcm16b==1', {
-          'sources': [
-            'acm_pcm16b.cc',
-            'acm_pcm16b.h',
-          ],
-        }],
       ],
     },
   ],
@@ -179,9 +140,10 @@
           'dependencies': [
             'audio_coding_module',
             '<(DEPTH)/testing/gtest.gyp:gtest',
+            '<(webrtc_root)/common.gyp:webrtc_common',
             '<(webrtc_root)/test/test.gyp:test_support',
-            '<(webrtc_root)/system_wrappers/source/system_wrappers.gyp:system_wrappers',
-            '<(webrtc_root)/system_wrappers/source/system_wrappers.gyp:system_wrappers_default',
+            '<(webrtc_root)/system_wrappers/system_wrappers.gyp:system_wrappers',
+            '<(webrtc_root)/system_wrappers/system_wrappers.gyp:system_wrappers_default',
             '<(DEPTH)/third_party/gflags/gflags.gyp:gflags',
           ],
           'sources': [
@@ -197,9 +159,10 @@
           'dependencies': [
             'audio_coding_module',
             '<(DEPTH)/testing/gtest.gyp:gtest',
+            '<(webrtc_root)/common.gyp:webrtc_common',
             '<(webrtc_root)/test/test.gyp:test_support',
-            '<(webrtc_root)/system_wrappers/source/system_wrappers.gyp:system_wrappers',
-            '<(webrtc_root)/system_wrappers/source/system_wrappers.gyp:system_wrappers_default',
+            '<(webrtc_root)/system_wrappers/system_wrappers.gyp:system_wrappers',
+            '<(webrtc_root)/system_wrappers/system_wrappers.gyp:system_wrappers_default',
             '<(DEPTH)/third_party/gflags/gflags.gyp:gflags',
           ],
           'sources': [

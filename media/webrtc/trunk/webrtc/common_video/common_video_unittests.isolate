@@ -7,11 +7,10 @@
 # be found in the AUTHORS file in the root of the source tree.
 {
   'conditions': [
-    ['OS=="android"', {
+    ['OS=="linux" or OS=="mac" or OS=="win" or OS=="android"', {
       'variables': {
         'files': [
-          '<(DEPTH)/data/',
-          '<(DEPTH)/resources/',
+          '<(DEPTH)/resources/foreman_cif.yuv',
         ],
       },
     }],
@@ -23,7 +22,6 @@
         ],
         'files': [
           '<(DEPTH)/DEPS',
-          '<(DEPTH)/resources/foreman_cif.yuv',
           '<(DEPTH)/testing/test_env.py',
           '<(PRODUCT_DIR)/common_video_unittests<(EXECUTABLE_SUFFIX)',
         ],

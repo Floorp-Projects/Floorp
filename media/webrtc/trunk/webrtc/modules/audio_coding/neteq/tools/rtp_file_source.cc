@@ -43,7 +43,7 @@ bool RtpFileSource::RegisterRtpHeaderExtension(RTPExtensionType type,
 
 Packet* RtpFileSource::NextPacket() {
   while (true) {
-    RtpFileReader::Packet temp_packet;
+    RtpPacket temp_packet;
     if (!rtp_reader_->NextPacket(&temp_packet)) {
       return NULL;
     }
@@ -52,13 +52,11 @@ Packet* RtpFileSource::NextPacket() {
       // Read the next one.
       continue;
     }
-    scoped_ptr<uint8_t[]> packet_memory(new uint8_t[temp_packet.length]);
+    rtc::scoped_ptr<uint8_t[]> packet_memory(new uint8_t[temp_packet.length]);
     memcpy(packet_memory.get(), temp_packet.data, temp_packet.length);
-    scoped_ptr<Packet> packet(new Packet(packet_memory.release(),
-                                         temp_packet.length,
-                                         temp_packet.original_length,
-                                         temp_packet.time_ms,
-                                         *parser_.get()));
+    rtc::scoped_ptr<Packet> packet(new Packet(
+        packet_memory.release(), temp_packet.length,
+        temp_packet.original_length, temp_packet.time_ms, *parser_.get()));
     if (!packet->valid_header()) {
       assert(false);
       return NULL;

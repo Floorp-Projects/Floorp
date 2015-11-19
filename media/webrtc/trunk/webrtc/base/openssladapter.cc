@@ -37,6 +37,7 @@
 #include "webrtc/base/safe_conversions.h"
 #include "webrtc/base/sslroots.h"
 #include "webrtc/base/stringutils.h"
+#include "webrtc/base/thread.h"
 
 // TODO: Use a nicer abstraction for mutex.
 
@@ -73,6 +74,7 @@ static long socket_ctrl(BIO* h, int cmd, long arg1, void* arg2);
 static int socket_new(BIO* h);
 static int socket_free(BIO* data);
 
+// TODO(davidben): This should be const once BoringSSL is assumed.
 static BIO_METHOD methods_socket = {
   BIO_TYPE_BIO,
   "socket",
@@ -266,11 +268,18 @@ OpenSSLAdapter::OpenSSLAdapter(AsyncSocket* socket)
     ssl_write_needs_read_(false),
     restartable_(false),
     ssl_(NULL), ssl_ctx_(NULL),
+    ssl_mode_(SSL_MODE_TLS),
     custom_verification_succeeded_(false) {
 }
 
 OpenSSLAdapter::~OpenSSLAdapter() {
   Cleanup();
+}
+
+void
+OpenSSLAdapter::SetMode(SSLMode mode) {
+  ASSERT(state_ == SSL_NONE);
+  ssl_mode_ = mode;
 }
 
 int
@@ -352,6 +361,9 @@ int
 OpenSSLAdapter::ContinueSSL() {
   ASSERT(state_ == SSL_CONNECTING);
 
+  // Clear the DTLS timer
+  Thread::Current()->Clear(this, MSG_TIMEOUT);
+
   int code = SSL_connect(ssl_);
   switch (SSL_get_error(ssl_, code)) {
   case SSL_ERROR_NONE:
@@ -376,6 +388,15 @@ OpenSSLAdapter::ContinueSSL() {
     break;
 
   case SSL_ERROR_WANT_READ:
+    LOG(LS_VERBOSE) << " -- error want read";
+    struct timeval timeout;
+    if (DTLSv1_get_timeout(ssl_, &timeout)) {
+      int delay = timeout.tv_sec * 1000 + timeout.tv_usec/1000;
+
+      Thread::Current()->PostDelayed(delay, this, MSG_TIMEOUT, 0);
+    }
+    break;
+
   case SSL_ERROR_WANT_WRITE:
     break;
 
@@ -416,6 +437,9 @@ OpenSSLAdapter::Cleanup() {
     SSL_CTX_free(ssl_ctx_);
     ssl_ctx_ = NULL;
   }
+
+  // Clear the DTLS timer
+  Thread::Current()->Clear(this, MSG_TIMEOUT);
 }
 
 //
@@ -478,6 +502,18 @@ OpenSSLAdapter::Send(const void* pv, size_t cb) {
 }
 
 int
+OpenSSLAdapter::SendTo(const void* pv, size_t cb, const SocketAddress& addr) {
+  if (socket_->GetState() == Socket::CS_CONNECTED &&
+      addr == socket_->GetRemoteAddress()) {
+    return Send(pv, cb);
+  }
+
+  SetError(ENOTCONN);
+
+  return SOCKET_ERROR;
+}
+
+int
 OpenSSLAdapter::Recv(void* pv, size_t cb) {
   //LOG(LS_INFO) << "OpenSSLAdapter::Recv(" << cb << ")";
   switch (state_) {
@@ -533,6 +569,21 @@ OpenSSLAdapter::Recv(void* pv, size_t cb) {
 }
 
 int
+OpenSSLAdapter::RecvFrom(void* pv, size_t cb, SocketAddress* paddr) {
+  if (socket_->GetState() == Socket::CS_CONNECTED) {
+    int ret = Recv(pv, cb);
+
+    *paddr = GetRemoteAddress();
+
+    return ret;
+  }
+
+  SetError(ENOTCONN);
+
+  return SOCKET_ERROR;
+}
+
+int
 OpenSSLAdapter::Close() {
   Cleanup();
   state_ = restartable_ ? SSL_WAIT : SSL_NONE;
@@ -548,6 +599,15 @@ OpenSSLAdapter::GetState() const {
       && ((state_ == SSL_WAIT) || (state_ == SSL_CONNECTING)))
     state = CS_CONNECTING;
   return state;
+}
+
+void
+OpenSSLAdapter::OnMessage(Message* msg) {
+  if (MSG_TIMEOUT == msg->message_id) {
+    LOG(LS_INFO) << "DTLS timeout expired";
+    DTLSv1_handle_timeout(ssl_);
+    ContinueSSL();
+  }
 }
 
 void
@@ -861,7 +921,8 @@ bool OpenSSLAdapter::ConfigureTrustedRootCertificates(SSL_CTX* ctx) {
 
 SSL_CTX*
 OpenSSLAdapter::SetupSSLContext() {
-  SSL_CTX* ctx = SSL_CTX_new(TLSv1_client_method());
+  SSL_CTX* ctx = SSL_CTX_new(ssl_mode_ == SSL_MODE_DTLS ?
+      DTLSv1_client_method() : TLSv1_client_method());
   if (ctx == NULL) {
     unsigned long error = ERR_get_error();  // NOLINT: type used by OpenSSL.
     LOG(LS_WARNING) << "SSL_CTX creation failed: "
@@ -881,6 +942,10 @@ OpenSSLAdapter::SetupSSLContext() {
   SSL_CTX_set_verify(ctx, SSL_VERIFY_PEER, SSLVerifyCallback);
   SSL_CTX_set_verify_depth(ctx, 4);
   SSL_CTX_set_cipher_list(ctx, "ALL:!ADH:!LOW:!EXP:!MD5:@STRENGTH");
+
+  if (ssl_mode_ == SSL_MODE_DTLS) {
+    SSL_CTX_set_read_ahead(ctx, 1);
+  }
 
   return ctx;
 }

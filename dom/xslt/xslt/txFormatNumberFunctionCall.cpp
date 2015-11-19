@@ -275,8 +275,6 @@ txFormatNumberFunctionCall::evaluate(txIEvalContext* aContext,
         bufsize = 1 + 30;
 
     char* buf = new char[bufsize];
-    NS_ENSURE_TRUE(buf, NS_ERROR_OUT_OF_MEMORY);
-
     int bufIntDigits, sign;
     char* endp;
     PR_dtoa(value, 0, 0, &bufIntDigits, &sign, &endp, buf, bufsize-1);

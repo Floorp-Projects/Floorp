@@ -103,8 +103,6 @@ txExecutionState::init(const txXPathNode& aNode,
 
     // Set up initial context
     mEvalContext = new txSingleNodeContext(aNode, this);
-    NS_ENSURE_TRUE(mEvalContext, NS_ERROR_OUT_OF_MEMORY);
-
     mInitialEvalContext = mEvalContext;
 
     // Set up output and result-handler
@@ -129,7 +127,6 @@ txExecutionState::init(const txXPathNode& aNode,
     // The actual value here doesn't really matter since noone should use this
     // value. But lets put something errorlike in just in case
     mGlobalVarPlaceholderValue = new StringResult(NS_LITERAL_STRING("Error"), nullptr);
-    NS_ENSURE_TRUE(mGlobalVarPlaceholderValue, NS_ERROR_OUT_OF_MEMORY);
 
     // Initiate first instruction. This has to be done last since findTemplate
     // might use us.
@@ -482,7 +479,6 @@ txExecutionState::bindVariable(const txExpandedName& aName,
 {
     if (!mLocalVariables) {
         mLocalVariables = new txVariableMap;
-        NS_ENSURE_TRUE(mLocalVariables, NS_ERROR_OUT_OF_MEMORY);
     }
     return mLocalVariables->bindVariable(aName, aValue);
 }

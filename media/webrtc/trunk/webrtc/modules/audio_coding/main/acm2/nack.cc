@@ -207,13 +207,13 @@ void Nack::LimitNackListSize() {
   nack_list_.erase(nack_list_.begin(), nack_list_.upper_bound(limit));
 }
 
-int Nack::TimeToPlay(uint32_t timestamp) const {
+int64_t Nack::TimeToPlay(uint32_t timestamp) const {
   uint32_t timestamp_increase = timestamp - timestamp_last_decoded_rtp_;
   return timestamp_increase / sample_rate_khz_;
 }
 
 // We don't erase elements with time-to-play shorter than round-trip-time.
-std::vector<uint16_t> Nack::GetNackList(int round_trip_time_ms) const {
+std::vector<uint16_t> Nack::GetNackList(int64_t round_trip_time_ms) const {
   std::vector<uint16_t> sequence_numbers;
   for (NackList::const_iterator it = nack_list_.begin(); it != nack_list_.end();
       ++it) {

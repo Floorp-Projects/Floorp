@@ -29,8 +29,6 @@
   do {                                                           \
     SLresult err = (op);                                         \
     if (err != SL_RESULT_SUCCESS) {                              \
-      WEBRTC_TRACE(kTraceError, kTraceAudioDevice, id_,          \
-                   "OpenSL error: %d", err);                     \
       assert(false);                                             \
       return ret_val;                                            \
     }                                                            \
@@ -47,9 +45,8 @@ enum {
 
 namespace webrtc {
 
-OpenSlesOutput::OpenSlesOutput(const int32_t id)
-    : id_(id),
-      initialized_(false),
+OpenSlesOutput::OpenSlesOutput(AudioManager* audio_manager)
+    : initialized_(false),
       speaker_initialized_(false),
       play_initialized_(false),
       crit_sect_(CriticalSectionWrapper::CreateCriticalSection()),
@@ -75,9 +72,8 @@ OpenSlesOutput::~OpenSlesOutput() {
 }
 
 int32_t OpenSlesOutput::SetAndroidAudioDeviceObjects(void* javaVM,
-                                                     void* env,
                                                      void* context) {
-  AudioManagerJni::SetAndroidAudioDeviceObjects(javaVM, env, context);
+  AudioManagerJni::SetAndroidAudioDeviceObjects(javaVM, context);
   return 0;
 }
 
@@ -91,7 +87,7 @@ int32_t OpenSlesOutput::Init() {
   /* Try to dynamically open the OpenSLES library */
   opensles_lib_ = dlopen("libOpenSLES.so", RTLD_LAZY);
   if (!opensles_lib_) {
-      WEBRTC_TRACE(kTraceError, kTraceAudioDevice, id_,
+      WEBRTC_TRACE(kTraceError, kTraceAudioDevice, -1,
                    "  failed to dlopen OpenSLES library");
       return -1;
   }
@@ -111,7 +107,7 @@ int32_t OpenSlesOutput::Init() {
       !SL_IID_PLAY_ ||
       !SL_IID_ANDROIDSIMPLEBUFFERQUEUE_ ||
       !SL_IID_VOLUME_) {
-      WEBRTC_TRACE(kTraceError, kTraceAudioDevice, id_,
+      WEBRTC_TRACE(kTraceError, kTraceAudioDevice, -1,
                    "  failed to find OpenSLES function");
       return -1;
   }
@@ -390,7 +386,7 @@ void OpenSlesOutput::AllocateBuffers() {
   fifo_.reset(new SingleRwFifo(num_fifo_buffers_needed_));
 
   // Allocate the memory area to be used.
-  play_buf_.reset(new scoped_ptr<int8_t[]>[TotalBuffersUsed()]);
+  play_buf_.reset(new rtc::scoped_ptr<int8_t[]>[TotalBuffersUsed()]);
   int required_buffer_size = fine_buffer_->RequiredBufferSizeBytes();
   for (int i = 0; i < TotalBuffersUsed(); ++i) {
     play_buf_[i].reset(new int8_t[required_buffer_size]);
@@ -518,7 +514,6 @@ bool OpenSlesOutput::HandleUnderrun(int event_id, int event_msg) {
   if (event_id == kNoUnderrun) {
     return false;
   }
-  WEBRTC_TRACE(kTraceWarning, kTraceAudioDevice, id_, "Audio underrun");
   assert(event_id == kUnderrun);
   assert(event_msg > 0);
   // Wait for all enqueued buffers to be flushed.
@@ -565,21 +560,19 @@ void OpenSlesOutput::PlayerSimpleBufferQueueCallbackHandler(
 }
 
 bool OpenSlesOutput::StartCbThreads() {
-  play_thread_.reset(ThreadWrapper::CreateThread(CbThread,
-                                                 this,
-                                                 kRealtimePriority,
-                                                 "opensl_play_thread"));
+  play_thread_ = ThreadWrapper::CreateThread(CbThread, this,
+                                             "opensl_play_thread");
   assert(play_thread_.get());
   OPENSL_RETURN_ON_FAILURE(
       (*sles_player_itf_)->SetPlayState(sles_player_itf_,
                                         SL_PLAYSTATE_PLAYING),
       false);
 
-  unsigned int thread_id = 0;
-  if (!play_thread_->Start(thread_id)) {
+  if (!play_thread_->Start()) {
     assert(false);
     return false;
   }
+  play_thread_->SetPriority(kRealtimePriority);
   return true;
 }
 

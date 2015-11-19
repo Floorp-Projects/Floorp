@@ -192,7 +192,7 @@ SpeechSynthesis::Pause()
     return;
   }
 
-  if (mCurrentTask &&
+  if (mCurrentTask && !mSpeechQueue.IsEmpty() &&
       mSpeechQueue.ElementAt(0)->GetState() != SpeechSynthesisUtterance::STATE_ENDED) {
     mCurrentTask->Pause();
   } else {

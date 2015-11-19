@@ -11,13 +11,13 @@
 #ifndef WEBRTC_VOICE_ENGINE_TRANSMIT_MIXER_H
 #define WEBRTC_VOICE_ENGINE_TRANSMIT_MIXER_H
 
+#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/common_audio/resampler/include/push_resampler.h"
 #include "webrtc/common_types.h"
 #include "webrtc/modules/audio_processing/typing_detection.h"
 #include "webrtc/modules/interface/module_common_types.h"
 #include "webrtc/modules/utility/interface/file_player.h"
 #include "webrtc/modules/utility/interface/file_recorder.h"
-#include "webrtc/system_wrappers/interface/scoped_ptr.h"
 #include "webrtc/voice_engine/include/voe_base.h"
 #include "webrtc/voice_engine/level_indicator.h"
 #include "webrtc/voice_engine/monitor_module.h"
@@ -229,7 +229,7 @@ private:
     int32_t _remainingMuteMicTimeMs;
     bool stereo_codec_;
     bool swap_stereo_channels_;
-    scoped_ptr<int16_t[]> mono_buffer_;
+    rtc::scoped_ptr<int16_t[]> mono_buffer_;
 };
 
 }  // namespace voe

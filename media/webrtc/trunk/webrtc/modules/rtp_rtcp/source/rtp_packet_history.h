@@ -25,6 +25,8 @@ namespace webrtc {
 class Clock;
 class CriticalSectionWrapper;
 
+static const size_t kMaxHistoryCapacity = 9600;
+
 class RTPPacketHistory {
  public:
   RTPPacketHistory(Clock* clock);
@@ -36,8 +38,8 @@ class RTPPacketHistory {
 
   // Stores RTP packet.
   int32_t PutRTPPacket(const uint8_t* packet,
-                       uint16_t packet_length,
-                       uint16_t max_packet_length,
+                       size_t packet_length,
+                       size_t max_packet_length,
                        int64_t capture_time_ms,
                        StorageType type);
 
@@ -53,39 +55,47 @@ class RTPPacketHistory {
   // stored_time_ms: returns the time when the packet was stored.
   // type: returns the storage type set in PutRTPPacket.
   bool GetPacketAndSetSendTime(uint16_t sequence_number,
-                               uint32_t min_elapsed_time_ms,
+                               int64_t min_elapsed_time_ms,
                                bool retransmit,
                                uint8_t* packet,
-                               uint16_t* packet_length,
+                               size_t* packet_length,
                                int64_t* stored_time_ms);
 
-  bool GetBestFittingPacket(uint8_t* packet, uint16_t* packet_length,
+  bool GetBestFittingPacket(uint8_t* packet, size_t* packet_length,
                             int64_t* stored_time_ms);
 
   bool HasRTPPacket(uint16_t sequence_number) const;
 
+  bool SetSent(uint16_t sequence_number);
+
  private:
-  void GetPacket(int index, uint8_t* packet, uint16_t* packet_length,
-                 int64_t* stored_time_ms) const;
-  void Allocate(uint16_t number_to_store) EXCLUSIVE_LOCKS_REQUIRED(*critsect_);
+  void GetPacket(int index,
+                 uint8_t* packet,
+                 size_t* packet_length,
+                 int64_t* stored_time_ms) const
+      EXCLUSIVE_LOCKS_REQUIRED(*critsect_);
+  void Allocate(size_t number_to_store) EXCLUSIVE_LOCKS_REQUIRED(*critsect_);
   void Free() EXCLUSIVE_LOCKS_REQUIRED(*critsect_);
-  void VerifyAndAllocatePacketLength(uint16_t packet_length);
-  bool FindSeqNum(uint16_t sequence_number, int32_t* index) const;
-  int FindBestFittingPacket(uint16_t size) const;
+  void VerifyAndAllocatePacketLength(size_t packet_length, uint32_t start_index)
+      EXCLUSIVE_LOCKS_REQUIRED(*critsect_);
+  bool FindSeqNum(uint16_t sequence_number, int32_t* index) const
+      EXCLUSIVE_LOCKS_REQUIRED(*critsect_);
+  int FindBestFittingPacket(size_t size) const
+      EXCLUSIVE_LOCKS_REQUIRED(*critsect_);
 
  private:
   Clock* clock_;
-  CriticalSectionWrapper* critsect_;
-  bool store_;
-  uint32_t prev_index_;
-  uint16_t max_packet_length_;
+  rtc::scoped_ptr<CriticalSectionWrapper> critsect_;
+  bool store_ GUARDED_BY(critsect_);
+  uint32_t prev_index_ GUARDED_BY(critsect_);
+  size_t max_packet_length_ GUARDED_BY(critsect_);
 
-  std::vector<std::vector<uint8_t> > stored_packets_;
-  std::vector<uint16_t> stored_seq_nums_;
-  std::vector<uint16_t> stored_lengths_;
-  std::vector<int64_t> stored_times_;
-  std::vector<int64_t> stored_send_times_;
-  std::vector<StorageType> stored_types_;
+  std::vector<std::vector<uint8_t> > stored_packets_ GUARDED_BY(critsect_);
+  std::vector<uint16_t> stored_seq_nums_ GUARDED_BY(critsect_);
+  std::vector<size_t> stored_lengths_ GUARDED_BY(critsect_);
+  std::vector<int64_t> stored_times_ GUARDED_BY(critsect_);
+  std::vector<int64_t> stored_send_times_ GUARDED_BY(critsect_);
+  std::vector<StorageType> stored_types_ GUARDED_BY(critsect_);
 };
 }  // namespace webrtc
 #endif  // WEBRTC_MODULES_RTP_RTCP_RTP_PACKET_HISTORY_H_

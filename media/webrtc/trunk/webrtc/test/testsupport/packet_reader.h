@@ -11,6 +11,7 @@
 #ifndef WEBRTC_TEST_TESTSUPPORT_PACKET_READER_H_
 #define WEBRTC_TEST_TESTSUPPORT_PACKET_READER_H_
 
+#include <cstddef>
 #include "webrtc/typedefs.h"
 
 namespace webrtc {
@@ -24,12 +25,12 @@ class PacketReader {
 
   // Inizializes a new reading operation. Must be done before invoking the
   // NextPacket method.
-  // * data_length_in_bytes is the length of the data byte array. Must be >= 0.
+  // * data_length_in_bytes is the length of the data byte array.
   //   0 length will result in no packets are read.
   // * packet_size_in_bytes is the number of bytes to read in each NextPacket
   //   method call. Must be > 0
-  virtual void InitializeReading(uint8_t* data, int data_length_in_bytes,
-                                 int packet_size_in_bytes);
+  virtual void InitializeReading(uint8_t* data, size_t data_length_in_bytes,
+                                 size_t packet_size_in_bytes);
 
   // Moves the supplied pointer to the beginning of the next packet.
   // Returns:
@@ -41,9 +42,9 @@ class PacketReader {
 
  private:
   uint8_t* data_;
-  int data_length_;
-  int packet_size_;
-  int currentIndex_;
+  size_t data_length_;
+  size_t packet_size_;
+  size_t currentIndex_;
   bool initialized_;
 };
 

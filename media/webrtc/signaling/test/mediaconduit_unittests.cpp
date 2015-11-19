@@ -378,10 +378,21 @@ public:
 
 
   void RenderVideoFrame(const unsigned char* buffer,
-                        unsigned int buffer_size,
+                        size_t buffer_size,
+                        uint32_t y_stride,
+                        uint32_t cbcr_stride,
                         uint32_t time_stamp,
                         int64_t render_time,
-                        const mozilla::ImageHandle& handle)
+                        const mozilla::ImageHandle& handle) override
+  {
+    RenderVideoFrame(buffer, buffer_size, time_stamp, render_time, handle);
+  }
+
+  void RenderVideoFrame(const unsigned char* buffer,
+                        size_t buffer_size,
+                        uint32_t time_stamp,
+                        int64_t render_time,
+                        const mozilla::ImageHandle& handle) override
  {
   //write the frame to the file
   if(VerifyFrame(buffer, buffer_size) == 0)
@@ -393,7 +404,7 @@ public:
   }
  }
 
- void FrameSizeChange(unsigned int, unsigned int, unsigned int)
+ void FrameSizeChange(unsigned int, unsigned int, unsigned int) override
  {
     //do nothing
  }

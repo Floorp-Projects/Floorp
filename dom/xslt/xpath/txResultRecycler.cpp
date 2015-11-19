@@ -77,7 +77,6 @@ txResultRecycler::getStringResult(StringResult** aResult)
 {
     if (mStringResults.isEmpty()) {
         *aResult = new StringResult(this);
-        NS_ENSURE_TRUE(*aResult, NS_ERROR_OUT_OF_MEMORY);
     }
     else {
         *aResult = static_cast<StringResult*>(mStringResults.pop());
@@ -95,7 +94,6 @@ txResultRecycler::getStringResult(const nsAString& aValue,
 {
     if (mStringResults.isEmpty()) {
         *aResult = new StringResult(aValue, this);
-        NS_ENSURE_TRUE(*aResult, NS_ERROR_OUT_OF_MEMORY);
     }
     else {
         StringResult* strRes =
@@ -121,7 +119,6 @@ txResultRecycler::getNodeSet(txNodeSet** aResult)
 {
     if (mNodeSetResults.isEmpty()) {
         *aResult = new txNodeSet(this);
-        NS_ENSURE_TRUE(*aResult, NS_ERROR_OUT_OF_MEMORY);
     }
     else {
         *aResult = static_cast<txNodeSet*>(mNodeSetResults.pop());
@@ -137,7 +134,6 @@ txResultRecycler::getNodeSet(txNodeSet* aNodeSet, txNodeSet** aResult)
 {
     if (mNodeSetResults.isEmpty()) {
         *aResult = new txNodeSet(*aNodeSet, this);
-        NS_ENSURE_TRUE(*aResult, NS_ERROR_OUT_OF_MEMORY);
     }
     else {
         *aResult = static_cast<txNodeSet*>(mNodeSetResults.pop());
@@ -154,7 +150,6 @@ txResultRecycler::getNodeSet(const txXPathNode& aNode, txAExprResult** aResult)
 {
     if (mNodeSetResults.isEmpty()) {
         *aResult = new txNodeSet(aNode, this);
-        NS_ENSURE_TRUE(*aResult, NS_ERROR_OUT_OF_MEMORY);
     }
     else {
         txNodeSet* nodes = static_cast<txNodeSet*>(mNodeSetResults.pop());
@@ -172,7 +167,6 @@ txResultRecycler::getNumberResult(double aValue, txAExprResult** aResult)
 {
     if (mNumberResults.isEmpty()) {
         *aResult = new NumberResult(aValue, this);
-        NS_ENSURE_TRUE(*aResult, NS_ERROR_OUT_OF_MEMORY);
     }
     else {
         NumberResult* numRes =

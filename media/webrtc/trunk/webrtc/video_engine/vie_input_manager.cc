@@ -113,29 +113,12 @@ int ViEInputManager::GetCaptureCapability(
 }
 
 int ViEInputManager::GetOrientation(const char* device_unique_idUTF8,
-                                    RotateCapturedFrame& orientation) {
+                                    VideoRotation& orientation) {
   CriticalSectionScoped cs(device_info_cs_.get());
   GetDeviceInfo();
   assert(capture_device_info_);
-  VideoCaptureRotation module_orientation;
-  int result = capture_device_info_->GetOrientation(device_unique_idUTF8,
-                                                    module_orientation);
-  // Copy from module type to public type.
-  switch (module_orientation) {
-    case kCameraRotate0:
-      orientation = RotateCapturedFrame_0;
-      break;
-    case kCameraRotate90:
-      orientation = RotateCapturedFrame_90;
-      break;
-    case kCameraRotate180:
-      orientation = RotateCapturedFrame_180;
-      break;
-    case kCameraRotate270:
-      orientation = RotateCapturedFrame_270;
-      break;
-  }
-  return result;
+  return capture_device_info_->GetOrientation(device_unique_idUTF8,
+                                              orientation);
 }
 
 int ViEInputManager::DisplayCaptureSettingsDialogBox(
@@ -259,12 +242,6 @@ int ViEInputManager::DestroyCaptureDevice(const int capture_id) {
     if (!vie_capture) {
       LOG(LS_ERROR) << "No such capture device id: " << capture_id;
       return -1;
-    }
-    uint32_t num_callbacks =
-        vie_capture->NumberOfRegisteredFrameCallbacks();
-    if (num_callbacks > 0) {
-      LOG(LS_WARNING) << num_callbacks << " still registered to capture id "
-                      << capture_id << " when destroying capture device.";
     }
     vie_frame_provider_map_.erase(capture_id);
     ReturnCaptureId(capture_id);

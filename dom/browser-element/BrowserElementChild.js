@@ -53,7 +53,7 @@ if (!('BrowserElementIsPreloaded' in this)) {
     Services.scriptloader.loadSubScript("chrome://global/content/BrowserElementCopyPaste.js");
   }
 
-  if (Services.prefs.getIntPref("dom.w3c_touch_events.enabled") == 1) {
+  if (Services.prefs.getIntPref("dom.w3c_touch_events.enabled") != 0) {
     if (docShell.asyncPanZoomEnabled === false) {
       Services.scriptloader.loadSubScript("chrome://global/content/BrowserElementPanningAPZDisabled.js");
       ContentPanningAPZDisabled.init();

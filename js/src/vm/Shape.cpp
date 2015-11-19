@@ -1350,13 +1350,12 @@ BaseShape::finalize(FreeOp* fop)
 }
 
 inline
-InitialShapeEntry::InitialShapeEntry() : shape(nullptr), proto(TaggedProto(nullptr))
+InitialShapeEntry::InitialShapeEntry() : shape(nullptr), proto(nullptr)
 {
 }
 
 inline
-InitialShapeEntry::InitialShapeEntry(const ReadBarriered<Shape*>& shape,
-                                     const ReadBarriered<TaggedProto>& proto)
+InitialShapeEntry::InitialShapeEntry(const ReadBarrieredShape& shape, TaggedProto proto)
   : shape(shape), proto(proto)
 {
 }
@@ -1370,18 +1369,72 @@ InitialShapeEntry::getLookup() const
 /* static */ inline HashNumber
 InitialShapeEntry::hash(const Lookup& lookup)
 {
-    return (RotateLeft(uintptr_t(lookup.clasp) >> 3, 4) ^ lookup.proto.hashCode()) + lookup.nfixed;
+    HashNumber hash = uintptr_t(lookup.clasp) >> 3;
+    hash = RotateLeft(hash, 4) ^
+        (uintptr_t(lookup.hashProto.toWord()) >> 3);
+    return hash + lookup.nfixed;
 }
 
 /* static */ inline bool
 InitialShapeEntry::match(const InitialShapeEntry& key, const Lookup& lookup)
 {
-    const Shape* shape = key.shape.unbarrieredGet();
+    const Shape* shape = *key.shape.unsafeGet();
     return lookup.clasp == shape->getObjectClass()
+        && lookup.matchProto.toWord() == key.proto.toWord()
         && lookup.nfixed == shape->numFixedSlots()
-        && lookup.baseFlags == shape->getObjectFlags()
-        && lookup.proto.uniqueId() == key.proto.unbarrieredGet().uniqueId();
+        && lookup.baseFlags == shape->getObjectFlags();
 }
+
+/*
+ * This class is used to add a post barrier on the initialShapes set, as the key
+ * is calculated based on objects which may be moved by generational GC.
+ */
+class InitialShapeSetRef : public BufferableRef
+{
+    InitialShapeSet* set;
+    const Class* clasp;
+    TaggedProto proto;
+    size_t nfixed;
+    uint32_t objectFlags;
+
+  public:
+    InitialShapeSetRef(InitialShapeSet* set,
+                       const Class* clasp,
+                       TaggedProto proto,
+                       size_t nfixed,
+                       uint32_t objectFlags)
+        : set(set),
+          clasp(clasp),
+          proto(proto),
+          nfixed(nfixed),
+          objectFlags(objectFlags)
+    {}
+
+    void trace(JSTracer* trc) override {
+        TaggedProto priorProto = proto;
+        if (proto.isObject()) {
+            TraceManuallyBarrieredEdge(trc, reinterpret_cast<JSObject**>(&proto),
+                                       "initialShapes set proto");
+        }
+        if (proto == priorProto)
+            return;
+
+        /* Find the original entry, which must still be present. */
+        InitialShapeEntry::Lookup lookup(clasp, priorProto, nfixed, objectFlags);
+        InitialShapeSet::Ptr p = set->lookup(lookup);
+        MOZ_ASSERT(p);
+
+        /* Update the entry's possibly-moved proto, and ensure lookup will still match. */
+        InitialShapeEntry& entry = const_cast<InitialShapeEntry&>(*p);
+        entry.proto = proto;
+        lookup.matchProto = proto;
+
+        /* Rekey the entry. */
+        set->rekeyAs(lookup,
+                     InitialShapeEntry::Lookup(clasp, proto, nfixed, objectFlags),
+                     *p);
+    }
+};
 
 #ifdef JSGC_HASH_TABLE_CHECKS
 
@@ -1398,7 +1451,7 @@ JSCompartment::checkInitialShapesTableAfterMovingGC()
      */
     for (InitialShapeSet::Enum e(initialShapes); !e.empty(); e.popFront()) {
         InitialShapeEntry entry = e.front();
-        TaggedProto proto = entry.proto.unbarrieredGet();
+        TaggedProto proto = entry.proto;
         Shape* shape = entry.shape.unbarrieredGet();
 
         if (proto.isObject())
@@ -1459,8 +1512,16 @@ EmptyShape::getInitialShape(ExclusiveContext* cx, const Class* clasp, TaggedProt
         return nullptr;
 
     Lookup lookup(clasp, protoRoot, nfixed, objectFlags);
-    if (!p.add(cx, table, lookup, InitialShapeEntry(shape, protoRoot.get())))
+    if (!p.add(cx, table, lookup, InitialShapeEntry(ReadBarrieredShape(shape), protoRoot)))
         return nullptr;
+
+    // Post-barrier for the initial shape table update.
+    if (cx->isJSContext()) {
+        if (protoRoot.isObject() && IsInsideNursery(protoRoot.toObject())) {
+            InitialShapeSetRef ref(&table, clasp, protoRoot, nfixed, objectFlags);
+            cx->asJSContext()->runtime()->gc.storeBuffer.putGeneric(ref);
+        }
+    }
 
     return shape;
 }
@@ -1542,14 +1603,22 @@ EmptyShape::insertInitialShape(ExclusiveContext* cx, HandleShape shape, HandleOb
 void
 JSCompartment::sweepInitialShapeTable()
 {
-    if (!initialShapes.initialized())
-        return;
-
-    for (InitialShapeSet::Enum e(initialShapes); !e.empty(); e.popFront()) {
-        if (IsAboutToBeFinalized(&e.mutableFront().shape) ||
-            IsAboutToBeFinalized(&e.mutableFront().proto))
-        {
-            e.removeFront();
+    if (initialShapes.initialized()) {
+        for (InitialShapeSet::Enum e(initialShapes); !e.empty(); e.popFront()) {
+            const InitialShapeEntry& entry = e.front();
+            Shape* shape = entry.shape.unbarrieredGet();
+            JSObject* proto = entry.proto.raw();
+            if (IsAboutToBeFinalizedUnbarriered(&shape) ||
+                (entry.proto.isObject() && IsAboutToBeFinalizedUnbarriered(&proto)))
+            {
+                e.removeFront();
+            } else {
+                if (shape != entry.shape.unbarrieredGet() || proto != entry.proto.raw()) {
+                    ReadBarrieredShape readBarrieredShape(shape);
+                    InitialShapeEntry newKey(readBarrieredShape, TaggedProto(proto));
+                    e.rekeyFront(newKey.getLookup(), newKey);
+                }
+            }
         }
     }
 }
@@ -1561,10 +1630,23 @@ JSCompartment::fixupInitialShapeTable()
         return;
 
     for (InitialShapeSet::Enum e(initialShapes); !e.empty(); e.popFront()) {
-        if (IsForwarded(e.front().shape.unbarrieredGet()))
-            e.mutableFront().shape.set(Forwarded(e.front().shape.unbarrieredGet()));
-        if (e.front().proto.isObject() && IsForwarded(e.front().proto.toObject()))
-            e.mutableFront().proto = TaggedProto(Forwarded(e.front().proto.toObject()));
+        InitialShapeEntry entry = e.front();
+        bool needRekey = false;
+        if (IsForwarded(entry.shape.unbarrieredGet())) {
+            entry.shape.set(Forwarded(entry.shape.unbarrieredGet()));
+            needRekey = true;
+        }
+        if (entry.proto.isObject() && IsForwarded(entry.proto.toObject())) {
+            entry.proto = TaggedProto(Forwarded(entry.proto.toObject()));
+            needRekey = true;
+        }
+        if (needRekey) {
+            InitialShapeEntry::Lookup relookup(entry.shape.unbarrieredGet()->getObjectClass(),
+                                               entry.proto,
+                                               entry.shape.unbarrieredGet()->numFixedSlots(),
+                                               entry.shape.unbarrieredGet()->getObjectFlags());
+            e.rekeyFront(relookup, entry);
+        }
     }
 }
 

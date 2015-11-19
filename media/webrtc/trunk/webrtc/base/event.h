@@ -20,29 +20,31 @@
 #endif
 
 #include "webrtc/base/basictypes.h"
-#include "webrtc/base/common.h"
 
 namespace rtc {
 
 class Event {
  public:
+  static const int kForever = -1;
+
   Event(bool manual_reset, bool initially_signaled);
   ~Event();
 
   void Set();
   void Reset();
-  bool Wait(int cms);
+
+  // Wait for the event to become signaled, for the specified number of
+  // |milliseconds|.  To wait indefinetly, pass kForever.
+  bool Wait(int milliseconds);
 
  private:
-  bool is_manual_reset_;
-
 #if defined(WEBRTC_WIN)
-  bool is_initially_signaled_;
   HANDLE event_handle_;
 #elif defined(WEBRTC_POSIX)
-  bool event_status_;
   pthread_mutex_t event_mutex_;
   pthread_cond_t event_cond_;
+  const bool is_manual_reset_;
+  bool event_status_;
 #endif
 };
 

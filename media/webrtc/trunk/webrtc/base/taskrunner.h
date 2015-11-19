@@ -27,7 +27,7 @@ const int64 kSecTo100ns = kSecToMsec * kMsecTo100ns;
 class TaskRunner : public TaskParent, public sigslot::has_slots<> {
  public:
   TaskRunner();
-  virtual ~TaskRunner();
+  ~TaskRunner() override;
 
   virtual void WakeTasks() = 0;
 
