@@ -15,8 +15,10 @@
 
 BEGIN_BLUETOOTH_NAMESPACE
 
-class BluetoothServiceBluedroid : public BluetoothService
-                                , public BluetoothNotificationHandler
+class BluetoothServiceBluedroid
+  : public BluetoothService
+  , public BluetoothCoreNotificationHandler
+  , public BluetoothNotificationHandler
 {
   class CleanupResultHandler;
   class DisableResultHandler;

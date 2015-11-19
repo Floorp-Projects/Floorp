@@ -18,6 +18,8 @@
     test.chain.removeAfter('PC_REMOTE_SET_REMOTE_DESCRIPTION');
     test.chain.append([
         function PC_REMOTE_ROLLBACK(test) {
+          // We still haven't negotiated the tracks
+          test.pcRemote.expectNegotiationNeeded();
           return test.setRemoteDescription(
               test.pcRemote,
               new RTCSessionDescription({ type: "rollback" }),
@@ -25,6 +27,8 @@
         },
 
         function PC_LOCAL_ROLLBACK(test) {
+          // We still haven't negotiated the tracks
+          test.pcLocal.expectNegotiationNeeded();
           return test.setLocalDescription(
               test.pcLocal,
               new RTCSessionDescription({ type: "rollback", sdp: ""}),

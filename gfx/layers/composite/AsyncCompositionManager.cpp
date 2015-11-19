@@ -40,6 +40,7 @@
 #endif
 #include "GeckoProfiler.h"
 #include "FrameUniformityData.h"
+#include "TreeTraversal.h"
 
 struct nsCSSValueSharedList;
 
@@ -734,6 +735,40 @@ ExpandRootClipRect(Layer* aLayer, const ScreenMargin& aFixedLayerMargins)
   }
 }
 
+#ifdef MOZ_ANDROID_APZ
+static void
+MoveScrollbarForLayerMargin(Layer* aRoot, FrameMetrics::ViewID aRootScrollId,
+                            const ScreenMargin& aFixedLayerMargins)
+{
+  // See bug 1223928 comment 9 - once we can detect the RCD with just the
+  // isRootContent flag on the metrics, we can probably move this code into
+  // ApplyAsyncTransformToScrollbar rather than having it as a separate
+  // adjustment on the layer tree.
+  Layer* scrollbar = BreadthFirstSearch(aRoot,
+    [aRootScrollId](Layer* aNode) {
+      return (aNode->GetScrollbarDirection() == Layer::HORIZONTAL &&
+              aNode->GetScrollbarTargetContainerId() == aRootScrollId);
+    });
+  if (scrollbar) {
+    // Shift the horizontal scrollbar down into the new space exposed by the
+    // dynamic toolbar hiding. Technically we should also scale the vertical
+    // scrollbar a bit to expand into the new space but it's not as noticeable
+    // and it would add a lot more complexity, so we're going with the "it's not
+    // worth it" justification.
+    TranslateShadowLayer(scrollbar, gfxPoint(0, -aFixedLayerMargins.bottom), true);
+    if (scrollbar->GetParent()) {
+      // The layer that has the HORIZONTAL direction sits inside another
+      // ContainerLayer. This ContainerLayer also has a clip rect that causes
+      // the scrollbar to get clipped. We need to expand that clip rect to
+      // prevent that from happening. This is kind of ugly in that we're
+      // assuming a particular layer tree structure but short of adding more
+      // flags to the layer there doesn't appear to be a good way to do this.
+      ExpandRootClipRect(scrollbar->GetParent(), aFixedLayerMargins);
+    }
+  }
+}
+#endif
+
 bool
 AsyncCompositionManager::ApplyAsyncContentTransformToTree(Layer *aLayer,
                                                           bool* aOutFoundRoot)
@@ -805,6 +840,7 @@ AsyncCompositionManager::ApplyAsyncContentTransformToTree(Layer *aLayer,
             (aLayer->GetParent() == nullptr &&          /* rootmost metrics */
              i + 1 >= aLayer->GetFrameMetricsCount());
       if (*aOutFoundRoot) {
+        mRootScrollableId = metrics.GetScrollId();
         CSSToLayerScale geckoZoom = metrics.LayersPixelsPerCSSPixel().ToScaleFactor();
         if (mIsFirstPaint) {
           LayerIntPoint scrollOffsetLayerPixels = RoundedToInt(metrics.GetScrollOffset() * geckoZoom);
@@ -822,6 +858,7 @@ AsyncCompositionManager::ApplyAsyncContentTransformToTree(Layer *aLayer,
               geckoZoom * asyncTransformWithoutOverscroll.mScale,
               metrics.GetScrollableRect(), displayPort, geckoZoom, mLayersUpdated,
               mPaintSyncId, fixedLayerMargins);
+          mFixedLayerMargins = fixedLayerMargins;
           mLayersUpdated = false;
         }
         mIsFirstPaint = false;
@@ -1312,6 +1349,9 @@ AsyncCompositionManager::TransformShadowTree(TimeStamp aCurrentFrame,
     if (ApplyAsyncContentTransformToTree(root, &foundRoot)) {
 #if defined(MOZ_ANDROID_APZ)
       MOZ_ASSERT(foundRoot);
+      if (foundRoot && mFixedLayerMargins != ScreenMargin()) {
+        MoveScrollbarForLayerMargin(root, mRootScrollableId, mFixedLayerMargins);
+      }
 #endif
     } else {
       nsAutoTArray<Layer*,1> scrollableLayers;

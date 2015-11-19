@@ -120,6 +120,7 @@ private:
     analysis            _analysis;
     enum passtype       _passtype;
     int                 _stack_depth;
+    bool                _in_ctxt_item;
 };
 
 
@@ -139,7 +140,8 @@ inline Machine::Code::decoder::decoder(limits & lims, Code &code, enum passtype 
   _pre_context(code._constraint ? 0 : lims.pre_context), 
   _rule_length(code._constraint ? 1 : lims.rule_length), 
   _instr(code._code), _data(code._data), _max(lims), _passtype(pt),
-  _stack_depth(0)
+  _stack_depth(0),
+  _in_ctxt_item(false)
 { }
     
 
@@ -356,8 +358,8 @@ opcode Machine::Code::decoder::fetch_opcode(const byte * bc)
             break;
         case CNTXT_ITEM :
             valid_upto(_max.rule_length, _max.pre_context + int8(bc[0]));
-            if (bc + 2 + bc[1] >= _max.bytecode)  failure(jump_past_end);
-            if (_pre_context != 0)                failure(nested_context_item);
+            if (bc + 2 + bc[1] >= _max.bytecode)    failure(jump_past_end);
+            if (_in_ctxt_item)                      failure(nested_context_item);
             break;
         case ATTR_SET :
         case ATTR_ADD :
@@ -578,6 +580,7 @@ bool Machine::Code::decoder::emit_opcode(opcode opc, const byte * & bc)
     if (opc == CNTXT_ITEM)
     {
         assert(_pre_context == 0);
+        _in_ctxt_item = true;
         _pre_context = _max.pre_context + int8(_data[-2]);
         _rule_length = _max.rule_length;
 
@@ -596,6 +599,7 @@ bool Machine::Code::decoder::emit_opcode(opcode opc, const byte * & bc)
 
             _rule_length = 1;
             _pre_context = 0;
+            _in_ctxt_item = false;
         }
         else
         {

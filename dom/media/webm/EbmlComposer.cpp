@@ -112,7 +112,9 @@ EbmlComposer::WriteSimpleBlock(EncodedFrame* aFrame)
   EbmlGlobal ebml;
   ebml.offset = 0;
 
-  if (aFrame->GetFrameType() == EncodedFrame::FrameType::VP8_I_FRAME) {
+  auto frameType = aFrame->GetFrameType();
+  bool isVP8IFrame = (frameType == EncodedFrame::FrameType::VP8_I_FRAME);
+  if (isVP8IFrame) {
     FinishCluster();
   }
 
@@ -120,7 +122,7 @@ EbmlComposer::WriteSimpleBlock(EncodedFrame* aFrame)
   block->SetLength(aFrame->GetFrameData().Length() + DEFAULT_HEADER_SIZE);
   ebml.buf = block->Elements();
 
-  if (aFrame->GetFrameType() == EncodedFrame::FrameType::VP8_I_FRAME) {
+  if (isVP8IFrame) {
     EbmlLoc ebmlLoc;
     Ebml_StartSubElement(&ebml, &ebmlLoc, Cluster);
     MOZ_ASSERT(mClusterBuffs.Length() > 0);
@@ -132,18 +134,11 @@ EbmlComposer::WriteSimpleBlock(EncodedFrame* aFrame)
     mFlushState |= FLUSH_CLUSTER;
   }
 
-  if (aFrame->GetFrameType() != EncodedFrame::FrameType::VORBIS_AUDIO_FRAME) {
-    short timeCode = aFrame->GetTimeStamp() / PR_USEC_PER_MSEC
-                     - mClusterTimecode;
-    writeSimpleBlock(&ebml, 0x1, timeCode, aFrame->GetFrameType() ==
-                     EncodedFrame::FrameType::VP8_I_FRAME,
-                     0, 0, (unsigned char*)aFrame->GetFrameData().Elements(),
-                     aFrame->GetFrameData().Length());
-  } else {
-    writeSimpleBlock(&ebml, 0x2, 0, false,
-                     0, 0, (unsigned char*)aFrame->GetFrameData().Elements(),
-                     aFrame->GetFrameData().Length());
-  }
+  bool isVorbis = (frameType == EncodedFrame::FrameType::VORBIS_AUDIO_FRAME);
+  short timeCode = aFrame->GetTimeStamp() / PR_USEC_PER_MSEC - mClusterTimecode;
+  writeSimpleBlock(&ebml, isVorbis ? 0x2 : 0x1, timeCode, isVP8IFrame,
+                   0, 0, (unsigned char*)aFrame->GetFrameData().Elements(),
+                   aFrame->GetFrameData().Length());
   MOZ_ASSERT(ebml.offset <= DEFAULT_HEADER_SIZE +
              aFrame->GetFrameData().Length(),
              "write more data > EBML_BUFFER_SIZE");
