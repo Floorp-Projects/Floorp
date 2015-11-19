@@ -20994,79 +20994,32 @@ OpenDatabaseOp::MetadataToSpec(DatabaseSpec& aSpec)
   AssertIsOnOwningThread();
   MOZ_ASSERT(mMetadata);
 
-  class MOZ_STACK_CLASS Helper final
-  {
-    DatabaseSpec& mSpec;
-    ObjectStoreSpec* mCurrentObjectStoreSpec;
+  aSpec.metadata() = mMetadata->mCommonMetadata;
 
-  public:
-    static void
-    CopyToSpec(const FullDatabaseMetadata* aMetadata, DatabaseSpec& aSpec)
-    {
-      AssertIsOnBackgroundThread();
-      MOZ_ASSERT(aMetadata);
+  for (auto objectStoreIter = mMetadata->mObjectStores.ConstIter();
+       !objectStoreIter.Done();
+       objectStoreIter.Next()) {
+    FullObjectStoreMetadata* metadata = objectStoreIter.UserData();
+    MOZ_ASSERT(objectStoreIter.Key());
+    MOZ_ASSERT(metadata);
 
-      aSpec.metadata() = aMetadata->mCommonMetadata;
+    // XXX This should really be fallible...
+    ObjectStoreSpec* objectStoreSpec = aSpec.objectStores().AppendElement();
+    objectStoreSpec->metadata() = metadata->mCommonMetadata;
 
-      Helper helper(aSpec);
-      aMetadata->mObjectStores.EnumerateRead(Enumerate, &helper);
-    }
-
-  private:
-    explicit Helper(DatabaseSpec& aSpec)
-      : mSpec(aSpec)
-      , mCurrentObjectStoreSpec(nullptr)
-    { }
-
-    static PLDHashOperator
-    Enumerate(const uint64_t& aKey,
-              FullObjectStoreMetadata* aValue,
-              void* aClosure)
-    {
-      MOZ_ASSERT(aKey);
-      MOZ_ASSERT(aValue);
-      MOZ_ASSERT(aClosure);
-
-      auto* helper = static_cast<Helper*>(aClosure);
-
-      MOZ_ASSERT(!helper->mCurrentObjectStoreSpec);
+    for (auto indexIter = metadata->mIndexes.Iter();
+         !indexIter.Done();
+         indexIter.Next()) {
+      FullIndexMetadata* indexMetadata = indexIter.UserData();
+      MOZ_ASSERT(indexIter.Key());
+      MOZ_ASSERT(indexMetadata);
 
       // XXX This should really be fallible...
-      ObjectStoreSpec* objectStoreSpec =
-        helper->mSpec.objectStores().AppendElement();
-      objectStoreSpec->metadata() = aValue->mCommonMetadata;
-
-      AutoRestore<ObjectStoreSpec*> ar(helper->mCurrentObjectStoreSpec);
-      helper->mCurrentObjectStoreSpec = objectStoreSpec;
-
-      aValue->mIndexes.EnumerateRead(Enumerate, helper);
-
-      return PL_DHASH_NEXT;
+      IndexMetadata* metadata = objectStoreSpec->indexes().AppendElement();
+      *metadata = indexMetadata->mCommonMetadata;
     }
-
-    static PLDHashOperator
-    Enumerate(const uint64_t& aKey, FullIndexMetadata* aValue, void* aClosure)
-    {
-      MOZ_ASSERT(aKey);
-      MOZ_ASSERT(aValue);
-      MOZ_ASSERT(aClosure);
-
-      auto* helper = static_cast<Helper*>(aClosure);
-
-      MOZ_ASSERT(helper->mCurrentObjectStoreSpec);
-
-      // XXX This should really be fallible...
-      IndexMetadata* metadata =
-        helper->mCurrentObjectStoreSpec->indexes().AppendElement();
-      *metadata = aValue->mCommonMetadata;
-
-      return PL_DHASH_NEXT;
-    }
-  };
-
-  Helper::CopyToSpec(mMetadata, aSpec);
+  }
 }
-
 
 #ifdef DEBUG
 
