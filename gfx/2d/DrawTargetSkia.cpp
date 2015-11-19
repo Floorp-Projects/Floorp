@@ -830,6 +830,10 @@ DrawTargetSkia::CopySurface(SourceSurface *aSurface,
 bool
 DrawTargetSkia::Init(const IntSize &aSize, SurfaceFormat aFormat)
 {
+  if (size_t(std::max(aSize.width, aSize.height)) > GetMaxSurfaceSize()) {
+    return false;
+  }
+
   SkAlphaType alphaType = (aFormat == SurfaceFormat::B8G8R8X8) ?
     kOpaque_SkAlphaType : kPremul_SkAlphaType;
 
@@ -862,6 +866,10 @@ DrawTargetSkia::InitWithGrContext(GrContext* aGrContext,
                                   SurfaceFormat aFormat)
 {
   MOZ_ASSERT(aGrContext, "null GrContext");
+
+  if (size_t(std::max(aSize.width, aSize.height)) > GetMaxSurfaceSize()) {
+    return false;
+  }
 
   mGrContext = aGrContext;
   mSize = aSize;
