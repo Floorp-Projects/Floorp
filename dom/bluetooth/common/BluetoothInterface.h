@@ -144,6 +144,11 @@ protected:
 class BluetoothCoreInterface
 {
 public:
+  virtual void SetNotificationHandler(
+    BluetoothCoreNotificationHandler* aNotificationHandler) = 0;
+
+  /* Enable/Disable */
+
   virtual void Enable(BluetoothCoreResultHandler* aRes) = 0;
   virtual void Disable(BluetoothCoreResultHandler* aRes) = 0;
 
@@ -1114,43 +1119,6 @@ protected:
 class BluetoothNotificationHandler
 {
 public:
-  virtual void AdapterStateChangedNotification(bool aState);
-  virtual void AdapterPropertiesNotification(
-    BluetoothStatus aStatus, int aNumProperties,
-    const BluetoothProperty* aProperties);
-
-  virtual void RemoteDevicePropertiesNotification(
-    BluetoothStatus aStatus, const BluetoothAddress& aBdAddr,
-    int aNumProperties, const BluetoothProperty* aProperties);
-
-  virtual void DeviceFoundNotification(
-    int aNumProperties, const BluetoothProperty* aProperties);
-
-  virtual void DiscoveryStateChangedNotification(bool aState);
-
-  virtual void PinRequestNotification(const BluetoothAddress& aRemoteBdAddr,
-                                      const BluetoothRemoteName& aBdName,
-                                      uint32_t aCod);
-  virtual void SspRequestNotification(const BluetoothAddress& aRemoteBdAddr,
-                                      const BluetoothRemoteName& aBdName,
-                                      uint32_t aCod,
-                                      BluetoothSspVariant aPairingVariant,
-                                      uint32_t aPassKey);
-
-  virtual void BondStateChangedNotification(
-    BluetoothStatus aStatus, const BluetoothAddress& aRemoteBdAddr,
-    BluetoothBondState aState);
-  virtual void AclStateChangedNotification(
-    BluetoothStatus aStatus, const BluetoothAddress& aRemoteBdAddr,
-    BluetoothAclState aState);
-
-  virtual void DutModeRecvNotification(uint16_t aOpcode,
-                                       const uint8_t* aBuf, uint8_t aLen);
-  virtual void LeTestModeNotification(BluetoothStatus aStatus,
-                                      uint16_t aNumPackets);
-
-  virtual void EnergyInfoNotification(const BluetoothActivityEnergyInfo& aInfo);
-
   virtual void BackendErrorNotification(bool aCrashed);
 
 protected:
@@ -1175,6 +1143,9 @@ class BluetoothInterface
 {
 public:
   static BluetoothInterface* GetInstance();
+
+  virtual void SetNotificationHandler(
+    BluetoothCoreNotificationHandler* aNotificationHandler) = 0;
 
   virtual void Init(BluetoothNotificationHandler* aNotificationHandler,
                     BluetoothResultHandler* aRes) = 0;

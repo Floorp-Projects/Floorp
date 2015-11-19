@@ -17,19 +17,14 @@ using namespace mozilla::ipc;
 
 const int BluetoothDaemonCoreModule::MAX_NUM_CLIENTS = 1;
 
-BluetoothNotificationHandler* BluetoothDaemonCoreModule::sNotificationHandler;
+BluetoothCoreNotificationHandler*
+  BluetoothDaemonCoreModule::sNotificationHandler;
 
 void
 BluetoothDaemonCoreModule::SetNotificationHandler(
-  BluetoothNotificationHandler* aNotificationHandler)
+  BluetoothCoreNotificationHandler* aNotificationHandler)
 {
   sNotificationHandler = aNotificationHandler;
-}
-
-BluetoothNotificationHandler*
-BluetoothDaemonCoreModule::GetNotificationHandler()
-{
-  return sNotificationHandler;
 }
 
 void
@@ -771,7 +766,7 @@ BluetoothDaemonCoreModule::HandleRsp(
 class BluetoothDaemonCoreModule::NotificationHandlerWrapper final
 {
 public:
-  typedef BluetoothNotificationHandler ObjectType;
+  typedef BluetoothCoreNotificationHandler ObjectType;
 
   static ObjectType* GetInstance()
   {
@@ -786,7 +781,7 @@ BluetoothDaemonCoreModule::AdapterStateChangedNtf(
   const DaemonSocketPDUHeader& aHeader, DaemonSocketPDU& aPDU)
 {
   AdapterStateChangedNotification::Dispatch(
-    &BluetoothNotificationHandler::AdapterStateChangedNotification,
+    &BluetoothCoreNotificationHandler::AdapterStateChangedNotification,
     UnpackPDUInitOp(aPDU));
 }
 
@@ -835,7 +830,7 @@ BluetoothDaemonCoreModule::AdapterPropertiesNtf(
   const DaemonSocketPDUHeader& aHeader, DaemonSocketPDU& aPDU)
 {
   AdapterPropertiesNotification::Dispatch(
-    &BluetoothNotificationHandler::AdapterPropertiesNotification,
+    &BluetoothCoreNotificationHandler::AdapterPropertiesNotification,
     AdapterPropertiesInitOp(aPDU));
 }
 
@@ -890,7 +885,7 @@ BluetoothDaemonCoreModule::RemoteDevicePropertiesNtf(
   const DaemonSocketPDUHeader& aHeader, DaemonSocketPDU& aPDU)
 {
   RemoteDevicePropertiesNotification::Dispatch(
-    &BluetoothNotificationHandler::RemoteDevicePropertiesNotification,
+    &BluetoothCoreNotificationHandler::RemoteDevicePropertiesNotification,
     RemoteDevicePropertiesInitOp(aPDU));
 }
 
@@ -932,7 +927,7 @@ BluetoothDaemonCoreModule::DeviceFoundNtf(
   const DaemonSocketPDUHeader& aHeader, DaemonSocketPDU& aPDU)
 {
   DeviceFoundNotification::Dispatch(
-    &BluetoothNotificationHandler::DeviceFoundNotification,
+    &BluetoothCoreNotificationHandler::DeviceFoundNotification,
     DeviceFoundInitOp(aPDU));
 }
 
@@ -941,7 +936,7 @@ BluetoothDaemonCoreModule::DiscoveryStateChangedNtf(
   const DaemonSocketPDUHeader& aHeader, DaemonSocketPDU& aPDU)
 {
   DiscoveryStateChangedNotification::Dispatch(
-    &BluetoothNotificationHandler::DiscoveryStateChangedNotification,
+    &BluetoothCoreNotificationHandler::DiscoveryStateChangedNotification,
     UnpackPDUInitOp(aPDU));
 }
 
@@ -950,7 +945,7 @@ BluetoothDaemonCoreModule::PinRequestNtf(
   const DaemonSocketPDUHeader& aHeader, DaemonSocketPDU& aPDU)
 {
   PinRequestNotification::Dispatch(
-    &BluetoothNotificationHandler::PinRequestNotification,
+    &BluetoothCoreNotificationHandler::PinRequestNotification,
     UnpackPDUInitOp(aPDU));
 }
 
@@ -959,7 +954,7 @@ BluetoothDaemonCoreModule::SspRequestNtf(
   const DaemonSocketPDUHeader& aHeader, DaemonSocketPDU& aPDU)
 {
   SspRequestNotification::Dispatch(
-    &BluetoothNotificationHandler::SspRequestNotification,
+    &BluetoothCoreNotificationHandler::SspRequestNotification,
     UnpackPDUInitOp(aPDU));
 }
 
@@ -968,7 +963,7 @@ BluetoothDaemonCoreModule::BondStateChangedNtf(
   const DaemonSocketPDUHeader& aHeader, DaemonSocketPDU& aPDU)
 {
   BondStateChangedNotification::Dispatch(
-    &BluetoothNotificationHandler::BondStateChangedNotification,
+    &BluetoothCoreNotificationHandler::BondStateChangedNotification,
     UnpackPDUInitOp(aPDU));
 }
 
@@ -977,7 +972,7 @@ BluetoothDaemonCoreModule::AclStateChangedNtf(
   const DaemonSocketPDUHeader& aHeader, DaemonSocketPDU& aPDU)
 {
   AclStateChangedNotification::Dispatch(
-    &BluetoothNotificationHandler::AclStateChangedNotification,
+    &BluetoothCoreNotificationHandler::AclStateChangedNotification,
     UnpackPDUInitOp(aPDU));
 }
 
@@ -1023,7 +1018,7 @@ BluetoothDaemonCoreModule::DutModeRecvNtf(
   const DaemonSocketPDUHeader& aHeader, DaemonSocketPDU& aPDU)
 {
   DutModeRecvNotification::Dispatch(
-    &BluetoothNotificationHandler::DutModeRecvNotification,
+    &BluetoothCoreNotificationHandler::DutModeRecvNotification,
     DutModeRecvInitOp(aPDU));
 }
 
@@ -1032,7 +1027,7 @@ BluetoothDaemonCoreModule::LeTestModeNtf(
   const DaemonSocketPDUHeader& aHeader, DaemonSocketPDU& aPDU)
 {
   LeTestModeNotification::Dispatch(
-    &BluetoothNotificationHandler::LeTestModeNotification,
+    &BluetoothCoreNotificationHandler::LeTestModeNotification,
     UnpackPDUInitOp(aPDU));
 }
 
