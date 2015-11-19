@@ -115,6 +115,12 @@ public:
 private:
   void Proceed() const
   {
+    BluetoothService* bs = BluetoothService::Get();
+    NS_ENSURE_TRUE_VOID(bs);
+
+    sBtInterface->SetNotificationHandler(
+      reinterpret_cast<BluetoothServiceBluedroid*>(bs));
+
     sBtInterface->Enable(new EnableResultHandler());
   }
 

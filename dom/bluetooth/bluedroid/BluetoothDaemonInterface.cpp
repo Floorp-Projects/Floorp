@@ -28,6 +28,9 @@ using namespace mozilla::ipc;
 
 static const int sRetryInterval = 100; // ms
 
+BluetoothNotificationHandler*
+  BluetoothDaemonInterface::sNotificationHandler;
+
 //
 // Protocol handling
 //
@@ -311,6 +314,18 @@ BluetoothDaemonInterface::BluetoothDaemonInterface()
 BluetoothDaemonInterface::~BluetoothDaemonInterface()
 { }
 
+void
+BluetoothDaemonInterface::SetNotificationHandler(
+  BluetoothCoreNotificationHandler* aNotificationHandler)
+{
+  MOZ_ASSERT(mProtocol);
+
+  auto protocol = mProtocol.get();
+
+  static_cast<BluetoothDaemonCoreModule*>(protocol)->SetNotificationHandler(
+    aNotificationHandler);
+}
+
 class BluetoothDaemonInterface::StartDaemonTask final : public Task
 {
 public:
@@ -435,6 +450,10 @@ BluetoothDaemonInterface::Init(
 #define BASE_SOCKET_NAME "bluetoothd"
   static unsigned long POSTFIX_LENGTH = 16;
 
+  // First of all, we set the notification handler. Backend crashes
+  // will be reported this way.
+  sNotificationHandler = aNotificationHandler;
+
   // If we could not cleanup properly before and an old
   // instance of the daemon is still running, we kill it
   // here.
@@ -445,8 +464,6 @@ BluetoothDaemonInterface::Init(
   if (!mProtocol) {
     mProtocol = new BluetoothDaemonProtocol();
   }
-  static_cast<BluetoothDaemonCoreModule*>(mProtocol)->SetNotificationHandler(
-    aNotificationHandler);
 
   if (!mListenSocket) {
     mListenSocket = new ListenSocket(this, LISTEN_SOCKET);
@@ -556,8 +573,7 @@ private:
 void
 BluetoothDaemonInterface::Cleanup(BluetoothResultHandler* aRes)
 {
-  static_cast<BluetoothDaemonCoreModule*>(mProtocol)->SetNotificationHandler(
-    nullptr);
+  sNotificationHandler = nullptr;
 
   // Cleanup, step 1: Unregister Socket module
   nsresult rv = mProtocol->UnregisterModuleCmd(
@@ -1081,22 +1097,17 @@ BluetoothDaemonInterface::OnDisconnect(int aIndex)
       break;
   }
 
-  BluetoothNotificationHandler* notificationHandler =
-    static_cast<BluetoothDaemonCoreModule*>(mProtocol)->
-      GetNotificationHandler();
-
   /* For recovery make sure all sockets disconnected, in order to avoid
    * the remaining disconnects interfere with the restart procedure.
    */
-  if (notificationHandler && mResultHandlerQ.IsEmpty()) {
+  if (sNotificationHandler && mResultHandlerQ.IsEmpty()) {
     if (mListenSocket->GetConnectionStatus() == SOCKET_DISCONNECTED &&
         mCmdChannel->GetConnectionStatus() == SOCKET_DISCONNECTED &&
         mNtfChannel->GetConnectionStatus() == SOCKET_DISCONNECTED) {
       // Assume daemon crashed during regular service; notify
       // BluetoothServiceBluedroid to prepare restart-daemon procedure
-      notificationHandler->BackendErrorNotification(true);
-      static_cast<BluetoothDaemonCoreModule*>(mProtocol)->
-        SetNotificationHandler(nullptr);
+      sNotificationHandler->BackendErrorNotification(true);
+      sNotificationHandler = nullptr;
     }
   }
 }

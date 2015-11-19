@@ -65,9 +65,7 @@ public:
                         DaemonSocketResultHandler* aRes) = 0;
 
   void SetNotificationHandler(
-    BluetoothNotificationHandler* aNotificationHandler);
-
-  BluetoothNotificationHandler* GetNotificationHandler();
+    BluetoothCoreNotificationHandler* aNotificationHandler);
 
   //
   // Commands
@@ -339,7 +337,7 @@ private:
   void HandleNtf(const DaemonSocketPDUHeader& aHeader,
                  DaemonSocketPDU& aPDU, DaemonSocketResultHandler* aRes);
 
-  static BluetoothNotificationHandler* sNotificationHandler;
+  static BluetoothCoreNotificationHandler* sNotificationHandler;
 };
 
 END_BLUETOOTH_NAMESPACE
