@@ -567,17 +567,17 @@ bool
 SimdScalarPolicy<Op>::staticAdjustInputs(TempAllocator& alloc, MInstruction* ins)
 {
     MOZ_ASSERT(IsSimdType(ins->type()));
-    MIRType scalarType = SimdTypeToScalarType(ins->type());
+    MIRType laneType = SimdTypeToLaneType(ins->type());
 
     MDefinition* in = ins->getOperand(Op);
-    if (in->type() == scalarType)
+    if (in->type() == laneType)
         return true;
 
     MInstruction* replace;
-    if (scalarType == MIRType_Int32) {
+    if (laneType == MIRType_Int32) {
         replace = MTruncateToInt32::New(alloc, in);
     } else {
-        MOZ_ASSERT(scalarType == MIRType_Float32);
+        MOZ_ASSERT(laneType == MIRType_Float32);
         replace = MToFloat32::New(alloc, in);
     }
 
