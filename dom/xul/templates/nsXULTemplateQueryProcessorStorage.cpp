@@ -79,10 +79,6 @@ nsXULTemplateResultSetStorage::GetNext(nsISupports **aResult)
 {
     nsXULTemplateResultStorage* result =
         new nsXULTemplateResultStorage(this);
-
-    if (!result)
-        return NS_ERROR_OUT_OF_MEMORY;
-
     *aResult = result;
     NS_ADDREF(result);
     return NS_OK;
@@ -405,10 +401,6 @@ nsXULTemplateQueryProcessorStorage::GenerateResults(nsISupports* aDatasource,
 
     nsXULTemplateResultSetStorage* results =
         new nsXULTemplateResultSetStorage(statement);
-
-    if (!results)
-        return NS_ERROR_OUT_OF_MEMORY;
-
     *aResults = results;
     NS_ADDREF(*aResults);
 
@@ -431,9 +423,6 @@ nsXULTemplateQueryProcessorStorage::TranslateRef(nsISupports* aDatasource,
 {
     nsXULTemplateResultStorage* result =
         new nsXULTemplateResultStorage(nullptr);
-    if (!result)
-        return NS_ERROR_OUT_OF_MEMORY;
-
     *aRef = result;
     NS_ADDREF(*aRef);
     return NS_OK;

@@ -1210,15 +1210,12 @@ nsXULTemplateBuilder::LoadDataSources(nsIDocument* aDocument,
     if (querytype.EqualsLiteral("rdf")) {
         isRDFQuery = true;
         mQueryProcessor = new nsXULTemplateQueryProcessorRDF();
-        NS_ENSURE_TRUE(mQueryProcessor, NS_ERROR_OUT_OF_MEMORY);
     }
     else if (querytype.EqualsLiteral("xml")) {
         mQueryProcessor = new nsXULTemplateQueryProcessorXML();
-        NS_ENSURE_TRUE(mQueryProcessor, NS_ERROR_OUT_OF_MEMORY);
     }
     else if (querytype.EqualsLiteral("storage")) {
         mQueryProcessor = new nsXULTemplateQueryProcessorStorage();
-        NS_ENSURE_TRUE(mQueryProcessor, NS_ERROR_OUT_OF_MEMORY);
     }
     else {
         nsAutoCString cid(NS_QUERY_PROCESSOR_CONTRACTID_PREFIX);
@@ -1749,9 +1746,6 @@ nsXULTemplateBuilder::CompileQueries()
         mMemberVariable = do_GetAtom(membervar);
 
     nsTemplateQuerySet* queryset = new nsTemplateQuerySet(0);
-    if (!queryset)
-        return NS_ERROR_OUT_OF_MEMORY;
-
     if (!mQuerySets.AppendElement(queryset)) {
         delete queryset;
         return NS_ERROR_OUT_OF_MEMORY;
@@ -1812,8 +1806,6 @@ nsXULTemplateBuilder::CompileTemplate(nsIContent* aTemplate,
             // first one is always created by CompileQueries
             if (hasQuerySet) {
                 aQuerySet = new nsTemplateQuerySet(++*aPriority);
-                if (!aQuerySet)
-                    return NS_ERROR_OUT_OF_MEMORY;
 
                 // once the queryset is appended to the mQuerySets list, it
                 // will be removed by CompileQueries if an error occurs
@@ -1892,9 +1884,6 @@ nsXULTemplateBuilder::CompileTemplate(nsIContent* aTemplate,
                         // create a new queryset if one hasn't been created already
                         if (hasQuerySet) {
                             aQuerySet = new nsTemplateQuerySet(++*aPriority);
-                            if (! aQuerySet)
-                                return NS_ERROR_OUT_OF_MEMORY;
-
                             if (!mQuerySets.AppendElement(aQuerySet)) {
                                 delete aQuerySet;
                                 return NS_ERROR_OUT_OF_MEMORY;
@@ -1936,9 +1925,6 @@ nsXULTemplateBuilder::CompileTemplate(nsIContent* aTemplate,
                 // a new queryset must always be created in this case
                 if (hasQuerySet) {
                     aQuerySet = new nsTemplateQuerySet(++*aPriority);
-                    if (! aQuerySet)
-                        return NS_ERROR_OUT_OF_MEMORY;
-
                     if (!mQuerySets.AppendElement(aQuerySet)) {
                         delete aQuerySet;
                         return NS_ERROR_OUT_OF_MEMORY;
@@ -2275,9 +2261,6 @@ nsXULTemplateBuilder::CompileWhereCondition(nsTemplateRule* aRule,
         nsXULContentUtils::LogTemplateError(ERROR_TEMPLATE_WHERE_NO_VAR);
         return NS_OK;
     }
-
-    if (! condition)
-        return NS_ERROR_OUT_OF_MEMORY;
 
     if (*aCurrentCondition) {
         (*aCurrentCondition)->SetNext(condition);
