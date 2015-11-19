@@ -53,7 +53,7 @@ BluetoothDaemonCoreModule::HandleSvc(const DaemonSocketPDUHeader& aHeader,
 //
 
 nsresult
-BluetoothDaemonCoreModule::EnableCmd(BluetoothResultHandler* aRes)
+BluetoothDaemonCoreModule::EnableCmd(BluetoothCoreResultHandler* aRes)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -70,7 +70,7 @@ BluetoothDaemonCoreModule::EnableCmd(BluetoothResultHandler* aRes)
 }
 
 nsresult
-BluetoothDaemonCoreModule::DisableCmd(BluetoothResultHandler* aRes)
+BluetoothDaemonCoreModule::DisableCmd(BluetoothCoreResultHandler* aRes)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -88,7 +88,7 @@ BluetoothDaemonCoreModule::DisableCmd(BluetoothResultHandler* aRes)
 
 nsresult
 BluetoothDaemonCoreModule::GetAdapterPropertiesCmd(
-  BluetoothResultHandler* aRes)
+  BluetoothCoreResultHandler* aRes)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -105,8 +105,8 @@ BluetoothDaemonCoreModule::GetAdapterPropertiesCmd(
 }
 
 nsresult
-BluetoothDaemonCoreModule::GetAdapterPropertyCmd(BluetoothPropertyType aType,
-                                                 BluetoothResultHandler* aRes)
+BluetoothDaemonCoreModule::GetAdapterPropertyCmd(
+  BluetoothPropertyType aType, BluetoothCoreResultHandler* aRes)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -128,7 +128,7 @@ BluetoothDaemonCoreModule::GetAdapterPropertyCmd(BluetoothPropertyType aType,
 
 nsresult
 BluetoothDaemonCoreModule::SetAdapterPropertyCmd(
-  const BluetoothProperty& aProperty, BluetoothResultHandler* aRes)
+  const BluetoothProperty& aProperty, BluetoothCoreResultHandler* aRes)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -150,7 +150,7 @@ BluetoothDaemonCoreModule::SetAdapterPropertyCmd(
 
 nsresult
 BluetoothDaemonCoreModule::GetRemoteDevicePropertiesCmd(
-  const BluetoothAddress& aRemoteAddr, BluetoothResultHandler* aRes)
+  const BluetoothAddress& aRemoteAddr, BluetoothCoreResultHandler* aRes)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -174,7 +174,7 @@ nsresult
 BluetoothDaemonCoreModule::GetRemoteDevicePropertyCmd(
   const BluetoothAddress& aRemoteAddr,
   BluetoothPropertyType aType,
-  BluetoothResultHandler* aRes)
+  BluetoothCoreResultHandler* aRes)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -198,7 +198,7 @@ nsresult
 BluetoothDaemonCoreModule::SetRemoteDevicePropertyCmd(
   const BluetoothAddress& aRemoteAddr,
   const BluetoothProperty& aProperty,
-  BluetoothResultHandler* aRes)
+  BluetoothCoreResultHandler* aRes)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -221,7 +221,7 @@ BluetoothDaemonCoreModule::SetRemoteDevicePropertyCmd(
 nsresult
 BluetoothDaemonCoreModule::GetRemoteServiceRecordCmd(
   const BluetoothAddress& aRemoteAddr, const BluetoothUuid& aUuid,
-  BluetoothResultHandler* aRes)
+  BluetoothCoreResultHandler* aRes)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -243,7 +243,7 @@ BluetoothDaemonCoreModule::GetRemoteServiceRecordCmd(
 
 nsresult
 BluetoothDaemonCoreModule::GetRemoteServicesCmd(
-  const BluetoothAddress& aRemoteAddr, BluetoothResultHandler* aRes)
+  const BluetoothAddress& aRemoteAddr, BluetoothCoreResultHandler* aRes)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -263,7 +263,7 @@ BluetoothDaemonCoreModule::GetRemoteServicesCmd(
 }
 
 nsresult
-BluetoothDaemonCoreModule::StartDiscoveryCmd(BluetoothResultHandler* aRes)
+BluetoothDaemonCoreModule::StartDiscoveryCmd(BluetoothCoreResultHandler* aRes)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -280,7 +280,7 @@ BluetoothDaemonCoreModule::StartDiscoveryCmd(BluetoothResultHandler* aRes)
 }
 
 nsresult
-BluetoothDaemonCoreModule::CancelDiscoveryCmd(BluetoothResultHandler* aRes)
+BluetoothDaemonCoreModule::CancelDiscoveryCmd(BluetoothCoreResultHandler* aRes)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -299,7 +299,7 @@ BluetoothDaemonCoreModule::CancelDiscoveryCmd(BluetoothResultHandler* aRes)
 nsresult
 BluetoothDaemonCoreModule::CreateBondCmd(const BluetoothAddress& aBdAddr,
                                          BluetoothTransport aTransport,
-                                         BluetoothResultHandler* aRes)
+                                         BluetoothCoreResultHandler* aRes)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -325,7 +325,7 @@ BluetoothDaemonCoreModule::CreateBondCmd(const BluetoothAddress& aBdAddr,
 
 nsresult
 BluetoothDaemonCoreModule::RemoveBondCmd(const BluetoothAddress& aBdAddr,
-                                         BluetoothResultHandler* aRes)
+                                         BluetoothCoreResultHandler* aRes)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -347,7 +347,7 @@ BluetoothDaemonCoreModule::RemoveBondCmd(const BluetoothAddress& aBdAddr,
 
 nsresult
 BluetoothDaemonCoreModule::CancelBondCmd(const BluetoothAddress& aBdAddr,
-                                         BluetoothResultHandler* aRes)
+                                         BluetoothCoreResultHandler* aRes)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -371,7 +371,7 @@ nsresult
 BluetoothDaemonCoreModule::PinReplyCmd(const BluetoothAddress& aBdAddr,
                                        bool aAccept,
                                        const BluetoothPinCode& aPinCode,
-                                       BluetoothResultHandler* aRes)
+                                       BluetoothCoreResultHandler* aRes)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -395,7 +395,7 @@ nsresult
 BluetoothDaemonCoreModule::SspReplyCmd(const BluetoothAddress& aBdAddr,
                                        BluetoothSspVariant aVariant,
                                        bool aAccept, uint32_t aPasskey,
-                                       BluetoothResultHandler* aRes)
+                                       BluetoothCoreResultHandler* aRes)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -416,8 +416,8 @@ BluetoothDaemonCoreModule::SspReplyCmd(const BluetoothAddress& aBdAddr,
 }
 
 nsresult
-BluetoothDaemonCoreModule::DutModeConfigureCmd(bool aEnable,
-                                               BluetoothResultHandler* aRes)
+BluetoothDaemonCoreModule::DutModeConfigureCmd(
+  bool aEnable, BluetoothCoreResultHandler* aRes)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -440,7 +440,7 @@ BluetoothDaemonCoreModule::DutModeConfigureCmd(bool aEnable,
 nsresult
 BluetoothDaemonCoreModule::DutModeSendCmd(uint16_t aOpcode,
                                           uint8_t* aBuf, uint8_t aLen,
-                                          BluetoothResultHandler* aRes)
+                                          BluetoothCoreResultHandler* aRes)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -464,7 +464,7 @@ BluetoothDaemonCoreModule::DutModeSendCmd(uint16_t aOpcode,
 nsresult
 BluetoothDaemonCoreModule::LeTestModeCmd(uint16_t aOpcode,
                                          uint8_t* aBuf, uint8_t aLen,
-                                         BluetoothResultHandler* aRes)
+                                         BluetoothCoreResultHandler* aRes)
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -491,207 +491,207 @@ BluetoothDaemonCoreModule::LeTestModeCmd(uint16_t aOpcode,
 void
 BluetoothDaemonCoreModule::ErrorRsp(const DaemonSocketPDUHeader& aHeader,
                                     DaemonSocketPDU& aPDU,
-                                    BluetoothResultHandler* aRes)
+                                    BluetoothCoreResultHandler* aRes)
 {
   ErrorRunnable::Dispatch(
-    aRes, &BluetoothResultHandler::OnError, UnpackPDUInitOp(aPDU));
+    aRes, &BluetoothCoreResultHandler::OnError, UnpackPDUInitOp(aPDU));
 }
 
 void
 BluetoothDaemonCoreModule::EnableRsp(const DaemonSocketPDUHeader& aHeader,
                                      DaemonSocketPDU& aPDU,
-                                     BluetoothResultHandler* aRes)
+                                     BluetoothCoreResultHandler* aRes)
 {
   ResultRunnable::Dispatch(
-    aRes, &BluetoothResultHandler::Enable, UnpackPDUInitOp(aPDU));
+    aRes, &BluetoothCoreResultHandler::Enable, UnpackPDUInitOp(aPDU));
 }
 
 void
 BluetoothDaemonCoreModule::DisableRsp(const DaemonSocketPDUHeader& aHeader,
                                       DaemonSocketPDU& aPDU,
-                                      BluetoothResultHandler* aRes)
+                                      BluetoothCoreResultHandler* aRes)
 {
   ResultRunnable::Dispatch(
-    aRes, &BluetoothResultHandler::Disable, UnpackPDUInitOp(aPDU));
+    aRes, &BluetoothCoreResultHandler::Disable, UnpackPDUInitOp(aPDU));
 }
 
 void
 BluetoothDaemonCoreModule::GetAdapterPropertiesRsp(
   const DaemonSocketPDUHeader& aHeader, DaemonSocketPDU& aPDU,
-  BluetoothResultHandler* aRes)
+  BluetoothCoreResultHandler* aRes)
 {
   ResultRunnable::Dispatch(
-    aRes, &BluetoothResultHandler::GetAdapterProperties,
+    aRes, &BluetoothCoreResultHandler::GetAdapterProperties,
     UnpackPDUInitOp(aPDU));
 }
 
 void
 BluetoothDaemonCoreModule::GetAdapterPropertyRsp(
   const DaemonSocketPDUHeader& aHeader, DaemonSocketPDU& aPDU,
-  BluetoothResultHandler* aRes)
+  BluetoothCoreResultHandler* aRes)
 {
   ResultRunnable::Dispatch(
-    aRes, &BluetoothResultHandler::GetAdapterProperty,
+    aRes, &BluetoothCoreResultHandler::GetAdapterProperty,
     UnpackPDUInitOp(aPDU));
 }
 
 void
 BluetoothDaemonCoreModule::SetAdapterPropertyRsp(
   const DaemonSocketPDUHeader& aHeader, DaemonSocketPDU& aPDU,
-  BluetoothResultHandler* aRes)
+  BluetoothCoreResultHandler* aRes)
 {
   ResultRunnable::Dispatch(
-    aRes, &BluetoothResultHandler::SetAdapterProperty,
+    aRes, &BluetoothCoreResultHandler::SetAdapterProperty,
     UnpackPDUInitOp(aPDU));
 }
 
 void
 BluetoothDaemonCoreModule::GetRemoteDevicePropertiesRsp(
   const DaemonSocketPDUHeader& aHeader, DaemonSocketPDU& aPDU,
-  BluetoothResultHandler* aRes)
+  BluetoothCoreResultHandler* aRes)
 {
   ResultRunnable::Dispatch(
-    aRes, &BluetoothResultHandler::GetRemoteDeviceProperties,
+    aRes, &BluetoothCoreResultHandler::GetRemoteDeviceProperties,
     UnpackPDUInitOp(aPDU));
 }
 
 void
 BluetoothDaemonCoreModule::GetRemoteDevicePropertyRsp(
   const DaemonSocketPDUHeader& aHeader, DaemonSocketPDU& aPDU,
-  BluetoothResultHandler* aRes)
+  BluetoothCoreResultHandler* aRes)
 {
   ResultRunnable::Dispatch(
-    aRes, &BluetoothResultHandler::GetRemoteDeviceProperty,
+    aRes, &BluetoothCoreResultHandler::GetRemoteDeviceProperty,
     UnpackPDUInitOp(aPDU));
 }
 
 void
 BluetoothDaemonCoreModule::SetRemoteDevicePropertyRsp(
   const DaemonSocketPDUHeader& aHeader, DaemonSocketPDU& aPDU,
-  BluetoothResultHandler* aRes)
+  BluetoothCoreResultHandler* aRes)
 {
   ResultRunnable::Dispatch(
-    aRes, &BluetoothResultHandler::SetRemoteDeviceProperty,
+    aRes, &BluetoothCoreResultHandler::SetRemoteDeviceProperty,
     UnpackPDUInitOp(aPDU));
 }
 
 void
 BluetoothDaemonCoreModule::GetRemoteServiceRecordRsp(
   const DaemonSocketPDUHeader& aHeader, DaemonSocketPDU& aPDU,
-  BluetoothResultHandler* aRes)
+  BluetoothCoreResultHandler* aRes)
 {
   ResultRunnable::Dispatch(
-    aRes, &BluetoothResultHandler::GetRemoteServiceRecord,
+    aRes, &BluetoothCoreResultHandler::GetRemoteServiceRecord,
     UnpackPDUInitOp(aPDU));
 }
 
 void
 BluetoothDaemonCoreModule::GetRemoteServicesRsp(
   const DaemonSocketPDUHeader& aHeader, DaemonSocketPDU& aPDU,
-  BluetoothResultHandler* aRes)
+  BluetoothCoreResultHandler* aRes)
 {
   ResultRunnable::Dispatch(
-    aRes, &BluetoothResultHandler::GetRemoteServices,
+    aRes, &BluetoothCoreResultHandler::GetRemoteServices,
     UnpackPDUInitOp(aPDU));
 }
 
 void
 BluetoothDaemonCoreModule::StartDiscoveryRsp(
   const DaemonSocketPDUHeader& aHeader, DaemonSocketPDU& aPDU,
-  BluetoothResultHandler* aRes)
+  BluetoothCoreResultHandler* aRes)
 {
   ResultRunnable::Dispatch(
-    aRes, &BluetoothResultHandler::StartDiscovery,
+    aRes, &BluetoothCoreResultHandler::StartDiscovery,
     UnpackPDUInitOp(aPDU));
 }
 
 void
 BluetoothDaemonCoreModule::CancelDiscoveryRsp(
   const DaemonSocketPDUHeader& aHeader, DaemonSocketPDU& aPDU,
-  BluetoothResultHandler* aRes)
+  BluetoothCoreResultHandler* aRes)
 {
   ResultRunnable::Dispatch(
-    aRes, &BluetoothResultHandler::CancelDiscovery,
+    aRes, &BluetoothCoreResultHandler::CancelDiscovery,
     UnpackPDUInitOp(aPDU));
 }
 
 void
 BluetoothDaemonCoreModule::CreateBondRsp(
   const DaemonSocketPDUHeader& aHeader, DaemonSocketPDU& aPDU,
-  BluetoothResultHandler* aRes)
+  BluetoothCoreResultHandler* aRes)
 {
   ResultRunnable::Dispatch(
-    aRes, &BluetoothResultHandler::CreateBond,
+    aRes, &BluetoothCoreResultHandler::CreateBond,
     UnpackPDUInitOp(aPDU));
 }
 
 void
 BluetoothDaemonCoreModule::RemoveBondRsp(
   const DaemonSocketPDUHeader& aHeader, DaemonSocketPDU& aPDU,
-  BluetoothResultHandler* aRes)
+  BluetoothCoreResultHandler* aRes)
 {
   ResultRunnable::Dispatch(
-    aRes, &BluetoothResultHandler::RemoveBond,
+    aRes, &BluetoothCoreResultHandler::RemoveBond,
     UnpackPDUInitOp(aPDU));
 }
 
 void
 BluetoothDaemonCoreModule::CancelBondRsp(
   const DaemonSocketPDUHeader& aHeader, DaemonSocketPDU& aPDU,
-  BluetoothResultHandler* aRes)
+  BluetoothCoreResultHandler* aRes)
 {
   ResultRunnable::Dispatch(
-    aRes, &BluetoothResultHandler::CancelBond,
+    aRes, &BluetoothCoreResultHandler::CancelBond,
     UnpackPDUInitOp(aPDU));
 }
 
 void
 BluetoothDaemonCoreModule::PinReplyRsp(
   const DaemonSocketPDUHeader& aHeader, DaemonSocketPDU& aPDU,
-  BluetoothResultHandler* aRes)
+  BluetoothCoreResultHandler* aRes)
 {
   ResultRunnable::Dispatch(
-    aRes, &BluetoothResultHandler::PinReply,
+    aRes, &BluetoothCoreResultHandler::PinReply,
     UnpackPDUInitOp(aPDU));
 }
 
 void
 BluetoothDaemonCoreModule::SspReplyRsp(
   const DaemonSocketPDUHeader& aHeader, DaemonSocketPDU& aPDU,
-  BluetoothResultHandler* aRes)
+  BluetoothCoreResultHandler* aRes)
 {
   ResultRunnable::Dispatch(
-    aRes, &BluetoothResultHandler::SspReply,
+    aRes, &BluetoothCoreResultHandler::SspReply,
     UnpackPDUInitOp(aPDU));
 }
 
 void
 BluetoothDaemonCoreModule::DutModeConfigureRsp(
   const DaemonSocketPDUHeader& aHeader, DaemonSocketPDU& aPDU,
-  BluetoothResultHandler* aRes)
+  BluetoothCoreResultHandler* aRes)
 {
   ResultRunnable::Dispatch(
-    aRes, &BluetoothResultHandler::DutModeConfigure,
+    aRes, &BluetoothCoreResultHandler::DutModeConfigure,
     UnpackPDUInitOp(aPDU));
 }
 
 void
 BluetoothDaemonCoreModule::DutModeSendRsp(
   const DaemonSocketPDUHeader& aHeader, DaemonSocketPDU& aPDU,
-  BluetoothResultHandler* aRes)
+  BluetoothCoreResultHandler* aRes)
 {
   ResultRunnable::Dispatch(
-    aRes, &BluetoothResultHandler::DutModeSend,
+    aRes, &BluetoothCoreResultHandler::DutModeSend,
     UnpackPDUInitOp(aPDU));
 }
 
 void
 BluetoothDaemonCoreModule::LeTestModeRsp(
   const DaemonSocketPDUHeader& aHeader, DaemonSocketPDU& aPDU,
-  BluetoothResultHandler* aRes)
+  BluetoothCoreResultHandler* aRes)
 {
   ResultRunnable::Dispatch(
-    aRes, &BluetoothResultHandler::LeTestMode,
+    aRes, &BluetoothCoreResultHandler::LeTestMode,
     UnpackPDUInitOp(aPDU));
 }
 
@@ -703,7 +703,7 @@ BluetoothDaemonCoreModule::HandleRsp(
   static void (BluetoothDaemonCoreModule::* const HandleRsp[])(
     const DaemonSocketPDUHeader&,
     DaemonSocketPDU&,
-    BluetoothResultHandler*) = {
+    BluetoothCoreResultHandler*) = {
     [OPCODE_ERROR] =
       &BluetoothDaemonCoreModule::ErrorRsp,
     [OPCODE_ENABLE] =
@@ -755,8 +755,8 @@ BluetoothDaemonCoreModule::HandleRsp(
     return;
   }
 
-  RefPtr<BluetoothResultHandler> res =
-    static_cast<BluetoothResultHandler*>(aRes);
+  RefPtr<BluetoothCoreResultHandler> res =
+    static_cast<BluetoothCoreResultHandler*>(aRes);
 
   if (!res) {
     return; // Return early if no result handler has been set for response
