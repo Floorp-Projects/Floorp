@@ -3453,8 +3453,13 @@ IsFunctionCloneable(HandleFunction fun)
         if (IsStaticGlobalLexicalScope(scope))
             return true;
 
-        // 'eval' and non-syntactic scopes are always scoped immediately under
-        // a non-extensible lexical scope.
+        // If the script already deals with non-syntactic scopes, we can clone
+        // it.
+        if (scope->is<StaticNonSyntacticScopeObjects>())
+            return true;
+
+        // 'eval' scopes are always scoped immediately under a non-extensible
+        // lexical scope.
         if (scope->is<StaticBlockObject>()) {
             StaticBlockObject& block = scope->as<StaticBlockObject>();
             if (block.needsClone())
@@ -3466,11 +3471,6 @@ IsFunctionCloneable(HandleFunction fun)
             // under the global, we can clone it.
             if (enclosing->is<StaticEvalObject>())
                 return !enclosing->as<StaticEvalObject>().isNonGlobal();
-
-            // If the script already deals with a non-syntactic scope, we can
-            // clone it.
-            if (enclosing->is<StaticNonSyntacticScopeObjects>())
-                return true;
         }
 
         // Any other enclosing static scope (e.g., function, block) cannot be
@@ -3536,7 +3536,16 @@ CloneFunctionObject(JSContext* cx, HandleObject funobj, HandleObject dynamicScop
         return CloneFunctionReuseScript(cx, fun, dynamicScope, fun->getAllocKind());
     }
 
-    return CloneFunctionAndScript(cx, fun, dynamicScope, staticScope, fun->getAllocKind());
+    JSFunction* clone = CloneFunctionAndScript(cx, fun, dynamicScope, staticScope,
+                                               fun->getAllocKind());
+
+#ifdef DEBUG
+    // The cloned function should itself be cloneable.
+    RootedFunction cloneRoot(cx, clone);
+    MOZ_ASSERT_IF(cloneRoot, IsFunctionCloneable(cloneRoot));
+#endif
+
+    return clone;
 }
 
 namespace JS {
