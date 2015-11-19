@@ -259,14 +259,14 @@ public class GeckoMenu extends ListView
                     return false;
                 }
             });
-        } else if (actionView instanceof MenuItemSwitcherLayout) {
-            ((MenuItemSwitcherLayout) actionView).setMenuItemClickListener(new View.OnClickListener() {
+        } else if (actionView instanceof MenuItemActionView) {
+            ((MenuItemActionView) actionView).setMenuItemClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
                     handleMenuItemClick(menuItem);
                 }
             });
-            ((MenuItemSwitcherLayout) actionView).setMenuItemLongClickListener(new View.OnLongClickListener() {
+            ((MenuItemActionView) actionView).setMenuItemLongClickListener(new View.OnLongClickListener() {
                 @Override
                 public boolean onLongClick(View view) {
                     if (handleMenuItemLongClick(menuItem)) {
@@ -601,7 +601,7 @@ public class GeckoMenu extends ListView
                     if (actionView instanceof MenuItemActionBar) {
                         ((MenuItemActionBar) actionView).initialize(item);
                     } else {
-                        ((MenuItemSwitcherLayout) actionView).initialize(item);
+                        ((MenuItemActionView) actionView).initialize(item);
                     }
                 } else {
                     actionView.setVisibility(View.GONE);
@@ -732,8 +732,8 @@ public class GeckoMenu extends ListView
                 params = new LinearLayout.LayoutParams(0, mRowHeight);
             }
 
-            if (actionItem instanceof MenuItemSwitcherLayout) {
-                params.weight = ((MenuItemSwitcherLayout) actionItem).getChildCount();
+            if (actionItem instanceof MenuItemActionView) {
+                params.weight = ((MenuItemActionView) actionItem).getChildCount();
             } else {
                 params.weight = 1.0f;
             }
@@ -812,17 +812,17 @@ public class GeckoMenu extends ListView
                 view = (GeckoMenuItem.Layout) convertView;
             }
 
-            if (view == null || view instanceof MenuItemSwitcherLayout) {
+            if (view == null || view instanceof MenuItemActionView) {
                 // Always get from the menu item.
                 // This will ensure that the default activity is refreshed.
-                view = (MenuItemSwitcherLayout) item.getActionView();
+                view = (MenuItemActionView) item.getActionView();
 
                 // ListView will not perform an item click if the row has a focusable view in it.
                 // Hence, forward the click event on the menu item in the action-view to the ListView.
                 final View actionView = (View) view;
                 final int pos = position;
                 final long id = getItemId(position);
-                ((MenuItemSwitcherLayout) view).setMenuItemClickListener(new View.OnClickListener() {
+                ((MenuItemActionView) view).setMenuItemClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
                         GeckoMenu listView = GeckoMenu.this;
