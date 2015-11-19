@@ -71,7 +71,7 @@ static BluetoothInterface* sBtInterface;
 static nsTArray<RefPtr<BluetoothProfileController> > sControllerArray;
 
 class BluetoothServiceBluedroid::EnableResultHandler final
-  : public BluetoothResultHandler
+  : public BluetoothCoreResultHandler
 {
 public:
   void OnError(BluetoothStatus aStatus) override
@@ -182,7 +182,7 @@ BluetoothServiceBluedroid::StartGonkBluetooth()
 }
 
 class BluetoothServiceBluedroid::DisableResultHandler final
-  : public BluetoothResultHandler
+  : public BluetoothCoreResultHandler
 {
 public:
   void OnError(BluetoothStatus aStatus) override
@@ -816,9 +816,8 @@ public:
   RefPtr<BluetoothReplyRunnable> mRunnable;
 };
 
-class BluetoothServiceBluedroid::GetRemoteDevicePropertiesResultHandler
-  final
-  : public BluetoothResultHandler
+class BluetoothServiceBluedroid::GetRemoteDevicePropertiesResultHandler final
+  : public BluetoothCoreResultHandler
 {
 public:
   GetRemoteDevicePropertiesResultHandler(
@@ -918,7 +917,7 @@ BluetoothServiceBluedroid::GetPairedDevicePropertiesInternal(
 }
 
 class BluetoothServiceBluedroid::DispatchReplyErrorResultHandler final
-  : public BluetoothResultHandler
+  : public BluetoothCoreResultHandler
 {
 public:
   DispatchReplyErrorResultHandler(
@@ -1034,7 +1033,7 @@ struct BluetoothServiceBluedroid::GetRemoteServiceRecordRequest final
 };
 
 class BluetoothServiceBluedroid::GetRemoteServiceRecordResultHandler final
-  : public BluetoothResultHandler
+  : public BluetoothCoreResultHandler
 {
 public:
   GetRemoteServiceRecordResultHandler(
@@ -1097,7 +1096,7 @@ BluetoothServiceBluedroid::GetServiceChannel(
   mGetRemoteServiceRecordArray.AppendElement(
     GetRemoteServiceRecordRequest(aDeviceAddress, aServiceUuid, aManager));
 
-  RefPtr<BluetoothResultHandler> res =
+  RefPtr<BluetoothCoreResultHandler> res =
     new GetRemoteServiceRecordResultHandler(mGetRemoteServiceRecordArray,
                                             aDeviceAddress, aServiceUuid);
 
@@ -1128,7 +1127,7 @@ struct BluetoothServiceBluedroid::GetRemoteServicesRequest final
 };
 
 class BluetoothServiceBluedroid::GetRemoteServicesResultHandler final
-  : public BluetoothResultHandler
+  : public BluetoothCoreResultHandler
 {
 public:
   GetRemoteServicesResultHandler(
@@ -1190,7 +1189,7 @@ BluetoothServiceBluedroid::UpdateSdpRecords(
   mGetRemoteServicesArray.AppendElement(
     GetRemoteServicesRequest(aDeviceAddress, aManager));
 
-  RefPtr<BluetoothResultHandler> res =
+  RefPtr<BluetoothCoreResultHandler> res =
     new GetRemoteServicesResultHandler(mGetRemoteServicesArray,
                                        aDeviceAddress, aManager);
 
@@ -1238,7 +1237,7 @@ BluetoothServiceBluedroid::RemoveDeviceInternal(
 }
 
 class BluetoothServiceBluedroid::PinReplyResultHandler final
-  : public BluetoothResultHandler
+  : public BluetoothCoreResultHandler
 {
 public:
   PinReplyResultHandler(BluetoothReplyRunnable* aRunnable)
@@ -1289,7 +1288,7 @@ BluetoothServiceBluedroid::SetPasskeyInternal(
 }
 
 class BluetoothServiceBluedroid::SspReplyResultHandler final
-  : public BluetoothResultHandler
+  : public BluetoothCoreResultHandler
 {
 public:
   SspReplyResultHandler(BluetoothReplyRunnable* aRunnable)
@@ -1935,7 +1934,7 @@ private:
 
 class BluetoothServiceBluedroid::SetAdapterPropertyDiscoverableResultHandler
   final
-  : public BluetoothResultHandler
+  : public BluetoothCoreResultHandler
 {
 public:
   void OnError(BluetoothStatus aStatus) override
