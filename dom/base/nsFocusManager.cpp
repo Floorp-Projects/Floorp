@@ -190,7 +190,6 @@ nsresult
 nsFocusManager::Init()
 {
   nsFocusManager* fm = new nsFocusManager();
-  NS_ENSURE_TRUE(fm, NS_ERROR_OUT_OF_MEMORY);
   NS_ADDREF(fm);
   sInstance = fm;
 

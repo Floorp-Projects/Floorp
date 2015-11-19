@@ -56,7 +56,6 @@ nsCCUncollectableMarker::Init()
   }
 
   nsCOMPtr<nsIObserver> marker = new nsCCUncollectableMarker;
-  NS_ENSURE_TRUE(marker, NS_ERROR_OUT_OF_MEMORY);
 
   nsCOMPtr<nsIObserverService> obs =
     mozilla::services::GetObserverService();
