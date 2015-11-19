@@ -644,8 +644,10 @@ ScalarTypeToLength(Scalar::Type type)
     MOZ_CRASH("unexpected SIMD kind");
 }
 
+// Get the type of the individual lanes in a SIMD type.
+// For example, Int32x4 -> Int32, FLoat32x4 -> Float32 etc.
 static inline MIRType
-SimdTypeToScalarType(MIRType type)
+SimdTypeToLaneType(MIRType type)
 {
     MOZ_ASSERT(IsSimdType(type));
     static_assert(MIRType_Last <= ELEMENT_TYPE_MASK,
