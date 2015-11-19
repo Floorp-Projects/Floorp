@@ -1031,7 +1031,8 @@ moz_gtk_toggle_paint(cairo_t *cr, GdkRectangle* rect,
 static gint
 calculate_button_inner_rect(GtkWidget* button, GdkRectangle* rect,
                             GdkRectangle* inner_rect,
-                            GtkTextDirection direction)
+                            GtkTextDirection direction,
+                            gboolean ignore_focus)
 {
     GtkStyleContext* style;
     GtkBorder border;
@@ -1041,7 +1042,8 @@ calculate_button_inner_rect(GtkWidget* button, GdkRectangle* rect,
 
     /* This mirrors gtkbutton's child positioning */
     gtk_style_context_get_border(style, 0, &border);
-    gtk_style_context_get_padding(style, 0, &padding);
+    if (!ignore_focus)
+        gtk_style_context_get_padding(style, 0, &padding);
 
     inner_rect->x = rect->x + border.left + padding.left;
     inner_rect->y = rect->y + padding.top + border.top;
@@ -1645,7 +1647,7 @@ moz_gtk_treeview_expander_paint(cairo_t *cr, GdkRectangle* rect,
 static gint
 moz_gtk_combo_box_paint(cairo_t *cr, GdkRectangle* rect,
                         GtkWidgetState* state,
-                        GtkTextDirection direction)
+                        gboolean ishtml, GtkTextDirection direction)
 {
     GdkRectangle arrow_rect, real_arrow_rect;
     gint arrow_size, separator_width;
@@ -1661,7 +1663,7 @@ moz_gtk_combo_box_paint(cairo_t *cr, GdkRectangle* rect,
                          gComboBoxButtonWidget, direction);
 
     calculate_button_inner_rect(gComboBoxButtonWidget,
-                                rect, &arrow_rect, direction);
+                                rect, &arrow_rect, direction, ishtml);
     /* Now arrow_rect contains the inner rect ; we want to correct the width
      * to what the arrow needs (see gtk_combo_box_size_allocate) */
     gtk_widget_get_preferred_size(gComboBoxArrowWidget, NULL, &arrow_req);
@@ -1771,7 +1773,7 @@ moz_gtk_combo_box_entry_button_paint(cairo_t *cr, GdkRectangle* rect,
                          gComboBoxEntryButtonWidget, direction);
 
     calculate_button_inner_rect(gComboBoxEntryButtonWidget,
-                                rect, &arrow_rect, direction);
+                                rect, &arrow_rect, direction, FALSE);
     if (state_flags & GTK_STATE_FLAG_ACTIVE) {
         gtk_widget_style_get(gComboBoxEntryButtonWidget,
                              "child-displacement-x", &x_displacement,
@@ -2783,7 +2785,10 @@ moz_gtk_get_widget_border(GtkThemeWidgetType widget, gint* left, gint* top,
 
             style = gtk_widget_get_style_context(gComboBoxButtonWidget);
 
-            moz_gtk_add_style_padding(style, left, top, right, bottom);
+            if (!inhtml) {
+                moz_gtk_add_style_padding(style, left, top, right, bottom);
+            }
+          
             moz_gtk_add_style_border(style, left, top, right, bottom);
 
             /* If there is no separator, don't try to count its width. */
@@ -3264,7 +3269,8 @@ moz_gtk_widget_paint(GtkThemeWidgetType widget, cairo_t *cr,
                                    gEntryWidget, direction);
         break;
     case MOZ_GTK_DROPDOWN:
-        return moz_gtk_combo_box_paint(cr, rect, state, direction);
+        return moz_gtk_combo_box_paint(cr, rect, state,
+                                       (gboolean) flags, direction);
         break;
     case MOZ_GTK_DROPDOWN_ARROW:
         return moz_gtk_combo_box_entry_button_paint(cr, rect,
