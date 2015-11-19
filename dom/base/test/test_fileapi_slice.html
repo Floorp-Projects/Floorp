@@ -85,53 +85,74 @@ var testBinaryData = "";
 // that we're testing with files that are large enough.
 ok(size > 65536, "test data sufficiently large");
 
-var fileFile = createFileWithData(fileData);
+basicTest([createFileWithData(fileData)]);
 
-// Test that basic properties work
-var memFile = cx.canvas.mozGetAsFile("image/png");
-testSlice(memFile, size, "image/png", fileData, "memFile");
-testSlice(fileFile, size, "", fileData, "fileFile");
+function basicTest(files) {
+  var fileFile = files[0];
 
+  // Test that basic properties work
+  var memFile = cx.canvas.mozGetAsFile("image/png");
+  testSlice(memFile, size, "image/png", fileData, "memFile");
+  testSlice(fileFile, size, "", fileData, "fileFile");
 
-// Try loading directly from slice into an image
-for (var i = 0; i < 256; i++) {
-  testBinaryData += String.fromCharCode(i);
+  // Try loading directly from slice into an image
+  for (var i = 0; i < 256; i++) {
+    testBinaryData += String.fromCharCode(i);
+  }
+  while (testBinaryData.length < 20000) {
+    testBinaryData += testBinaryData;
+  }
+
+  // image in the middle
+  imageMiddleTest([createFileWithData(testBinaryData + fileData + testBinaryData)]);
 }
-while (testBinaryData.length < 20000) {
-  testBinaryData += testBinaryData;
+
+function imageMiddleTest(files) {
+  var imgfile = files[0];
+  is(imgfile.size, size + testBinaryData.length * 2, "correct file size (middle)");
+  var img = new Image;
+  img.src = URL.createObjectURL(imgfile.slice(testBinaryData.length, testBinaryData.length + size));
+  img.onload = imageLoadHandler;
+  expectedTestCount++;
+
+  // image at start
+  imageStartTest([createFileWithData(fileData + testBinaryData)]);
 }
 
-// image in the middle
-var imgfile = createFileWithData(testBinaryData + fileData + testBinaryData);
-is(imgfile.size, size + testBinaryData.length * 2, "correct file size (middle)");
-var img = new Image;
-img.src = URL.createObjectURL(imgfile.slice(testBinaryData.length, testBinaryData.length + size));
-img.onload = imageLoadHandler;
-expectedTestCount++;
+function imageStartTest(files) {
+  var imgfile = files[0];
+  is(imgfile.size, size + testBinaryData.length, "correct file size (start)");
+  var img = new Image;
+  img.src = URL.createObjectURL(imgfile.slice(0, size));
+  img.onload = imageLoadHandler;
+  expectedTestCount++;
 
-// image at start
-var imgfile = createFileWithData(fileData + testBinaryData);
-is(imgfile.size, size + testBinaryData.length, "correct file size (start)");
-var img = new Image;
-img.src = URL.createObjectURL(imgfile.slice(0, size));
-img.onload = imageLoadHandler;
-expectedTestCount++;
+  // image at end
+  imageEndTest([createFileWithData(testBinaryData + fileData)]);
+}
 
-// image at end
-var imgfile = createFileWithData(testBinaryData + fileData);
-is(imgfile.size, size + testBinaryData.length, "correct file size (end)");
-var img = new Image;
-img.src = URL.createObjectURL(imgfile.slice(testBinaryData.length, testBinaryData.length + size));
-img.onload = imageLoadHandler;
-expectedTestCount++;
+function imageEndTest(files) {
+  var imgfile = files[0];
+  is(imgfile.size, size + testBinaryData.length, "correct file size (end)");
+  var img = new Image;
+  img.src = URL.createObjectURL(imgfile.slice(testBinaryData.length, testBinaryData.length + size));
+  img.onload = imageLoadHandler;
+  expectedTestCount++;
 
-// image past end
-var imgfile = createFileWithData(testBinaryData + fileData);
-is(imgfile.size, size + testBinaryData.length, "correct file size (past end)");
-var img = new Image;
-img.src = URL.createObjectURL(imgfile.slice(testBinaryData.length, testBinaryData.length + size + 1000));
-img.onload = imageLoadHandler;
-expectedTestCount++;
+  // image past end
+  imagePastEndTest([createFileWithData(testBinaryData + fileData)]);
+}
+
+function imagePastEndTest(files) {
+  var imgfile = files[0];
+  is(imgfile.size, size + testBinaryData.length, "correct file size (past end)");
+  var img = new Image;
+  img.src = URL.createObjectURL(imgfile.slice(testBinaryData.length, testBinaryData.length + size + 1000));
+  img.onload = imageLoadHandler;
+  expectedTestCount++;
+}
+
 </script>
 </pre>
-</body> </html>
+</body>
+</html>
