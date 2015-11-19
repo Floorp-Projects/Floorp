@@ -9,6 +9,7 @@
 var { Cu, CC, Ci, Cc } = require("chrome");
 
 const { DebuggerServer } = require("devtools/server/main");
+const promise = require("promise");
 
 /**
  * Support for actor registration. Main used by ActorRegistryActor
@@ -45,12 +46,14 @@ exports.registerActor = function(sourceText, fileName, options) {
   // Also register in all child processes in case the current scope
   // is chrome parent process.
   if (!DebuggerServer.isInChildProcess) {
-    DebuggerServer.setupInChild({
+    return DebuggerServer.setupInChild({
       module: "devtools/server/actors/utils/actor-registry-utils",
       setupChild: "registerActor",
-      args: [sourceText, fileName, options]
+      args: [sourceText, fileName, options],
+      waitForEval: true
     });
   }
+  return promise.resolve();
 }
 
 exports.unregisterActor = function(options) {
