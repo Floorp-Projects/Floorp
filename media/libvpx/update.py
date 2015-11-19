@@ -398,7 +398,7 @@ def prepare_upstream(prefix, commit=None):
         configure = ['../../configure', '--target=%s' % target,
             '--disable-examples', '--disable-install-docs',
             '--enable-multi-res-encoding',
-            '--size-limit=4000x3000'
+            '--size-limit=8192x4608'
         ]
 
         if 'darwin9' in target:

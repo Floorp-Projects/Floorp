@@ -441,6 +441,35 @@ add_task(function* test_optoutSampling() {
   }
 });
 
+add_task(function* test_telemetryEnabledUnexpectedValue(){
+  // Remove the default value for toolkit.telemetry.enabled from the default prefs.
+  // Otherwise, we wouldn't be able to set the pref to a string.
+  let defaultPrefBranch = Services.prefs.getDefaultBranch(null);
+  defaultPrefBranch.deleteBranch(PREF_ENABLED);
+
+  // Set the preferences controlling the Telemetry status to a string.
+  Preferences.set(PREF_ENABLED, "false");
+  // Check that Telemetry is not enabled.
+  yield TelemetryController.reset();
+  Assert.equal(Telemetry.canRecordExtended, false,
+               "Invalid values must not enable Telemetry recording.");
+
+  // Delete the pref again.
+  defaultPrefBranch.deleteBranch(PREF_ENABLED);
+
+  // Make sure that flipping it to true works.
+  Preferences.set(PREF_ENABLED, true);
+  yield TelemetryController.reset();
+  Assert.equal(Telemetry.canRecordExtended, true,
+               "True must enable Telemetry recording.");
+
+  // Also check that the false works as well.
+  Preferences.set(PREF_ENABLED, false);
+  yield TelemetryController.reset();
+  Assert.equal(Telemetry.canRecordExtended, false,
+               "False must disable Telemetry recording.");
+});
+
 add_task(function* stopServer(){
   yield PingServer.stop();
   do_test_finished();

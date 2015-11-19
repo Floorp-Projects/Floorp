@@ -13,13 +13,17 @@ describe("loop.store.ConversationAppStore", function() {
     activeRoomStore = {
       getStoreState: function() { return { used: roomUsed }; }
     };
-    sandbox = sinon.sandbox.create();
+    sandbox = LoopMochaUtils.createSandbox();
+    LoopMochaUtils.stubLoopRequest({
+      GetLoopPref: function() {}
+    });
     dispatcher = new loop.Dispatcher();
     sandbox.stub(dispatcher, "dispatch");
   });
 
   afterEach(function() {
     sandbox.restore();
+    LoopMochaUtils.restore();
   });
 
   describe("#constructor", function() {
@@ -27,7 +31,8 @@ describe("loop.store.ConversationAppStore", function() {
       expect(function() {
         new loop.store.ConversationAppStore({
           dispatcher: dispatcher,
-          mozLoop: {}
+          feedbackPeriod: 1,
+          feedbackTimestamp: 1
         });
       }).to.Throw(/activeRoomStore/);
     });
@@ -36,18 +41,30 @@ describe("loop.store.ConversationAppStore", function() {
       expect(function() {
         new loop.store.ConversationAppStore({
           activeRoomStore: activeRoomStore,
-          mozLoop: {}
+          feedbackPeriod: 1,
+          feedbackTimestamp: 1
         });
       }).to.Throw(/dispatcher/);
     });
 
-    it("should throw an error if mozLoop is missing", function() {
+    it("should throw an error if feedbackPeriod is missing", function() {
       expect(function() {
         new loop.store.ConversationAppStore({
           activeRoomStore: activeRoomStore,
-          dispatcher: dispatcher
+          dispatcher: dispatcher,
+          feedbackTimestamp: 1
         });
-      }).to.Throw(/mozLoop/);
+      }).to.Throw(/feedbackPeriod/);
+    });
+
+    it("should throw an error if feedbackTimestamp is missing", function() {
+      expect(function() {
+        new loop.store.ConversationAppStore({
+          activeRoomStore: activeRoomStore,
+          dispatcher: dispatcher,
+          feedbackPeriod: 1
+        });
+      }).to.Throw(/feedbackTimestamp/);
     });
 
     it("should start listening to events on the window object", function() {
@@ -58,7 +75,8 @@ describe("loop.store.ConversationAppStore", function() {
       var store = new loop.store.ConversationAppStore({
         activeRoomStore: activeRoomStore,
         dispatcher: dispatcher,
-        mozLoop: { getLoopPref: function() {} },
+        feedbackPeriod: 1,
+        feedbackTimestamp: 1,
         rootObject: fakeWindow
       });
 
@@ -72,7 +90,7 @@ describe("loop.store.ConversationAppStore", function() {
   });
 
   describe("#getWindowData", function() {
-    var fakeWindowData, fakeGetWindowData, fakeMozLoop, store, getLoopPrefStub;
+    var fakeWindowData, fakeGetWindowData, store, getLoopPrefStub;
     var setLoopPrefStub;
 
     beforeEach(function() {
@@ -88,21 +106,22 @@ describe("loop.store.ConversationAppStore", function() {
       getLoopPrefStub = sandbox.stub();
       setLoopPrefStub = sandbox.stub();
 
-      fakeMozLoop = {
-        getConversationWindowData: function(windowId) {
+      LoopMochaUtils.stubLoopRequest({
+        GetConversationWindowData: function(windowId) {
           if (windowId === "42") {
             return fakeWindowData;
           }
           return null;
         },
-        getLoopPref: getLoopPrefStub,
-        setLoopPref: setLoopPrefStub
-      };
+        GetLoopPref: getLoopPrefStub,
+        SetLoopPref: setLoopPrefStub
+      });
 
       store = new loop.store.ConversationAppStore({
         activeRoomStore: activeRoomStore,
         dispatcher: dispatcher,
-        mozLoop: fakeMozLoop
+        feedbackPeriod: 42,
+        feedbackTimestamp: 42
       });
     });
 
@@ -110,37 +129,20 @@ describe("loop.store.ConversationAppStore", function() {
       sandbox.restore();
     });
 
-    it("should fetch the window type from the mozLoop API", function() {
+    it("should fetch the window type from the Loop API", function() {
       store.getWindowData(new sharedActions.GetWindowData(fakeGetWindowData));
 
       expect(store.getStoreState().windowType).eql("room");
     });
 
     it("should have the feedback period in initial state", function() {
-      getLoopPrefStub.returns(42);
-
       // Expect ms.
       expect(store.getInitialStoreState().feedbackPeriod).to.eql(42 * 1000);
     });
 
     it("should have the dateLastSeen in initial state", function() {
-      getLoopPrefStub.returns(42);
-
       // Expect ms.
       expect(store.getInitialStoreState().feedbackTimestamp).to.eql(42 * 1000);
-    });
-
-    it("should fetch the correct pref for feedback period", function() {
-      store.getInitialStoreState();
-
-      sinon.assert.calledWithExactly(getLoopPrefStub, "feedback.periodSec");
-    });
-
-    it("should fetch the correct pref for feedback period", function() {
-      store.getInitialStoreState();
-
-      sinon.assert.calledWithExactly(getLoopPrefStub,
-                                     "feedback.dateLastSeenSec");
     });
 
     it("should set showFeedbackForm to true when action is triggered", function() {
@@ -162,7 +164,7 @@ describe("loop.store.ConversationAppStore", function() {
                                      "feedback.dateLastSeenSec", 1);
     });
 
-    it("should dispatch a SetupWindowData action with the data from the mozLoop API",
+    it("should dispatch a SetupWindowData action with the data from the Loop API",
       function() {
         store.getWindowData(new sharedActions.GetWindowData(fakeGetWindowData));
 
@@ -183,10 +185,15 @@ describe("loop.store.ConversationAppStore", function() {
         removeEventListener: sinon.stub()
       };
 
+      LoopMochaUtils.stubLoopRequest({
+        GetLoopPref: function() {}
+      });
+
       store = new loop.store.ConversationAppStore({
         activeRoomStore: activeRoomStore,
         dispatcher: dispatcher,
-        mozLoop: { getLoopPref: function() {} },
+        feedbackPeriod: 1,
+        feedbackTimestamp: 1,
         rootObject: fakeWindow
       });
     });

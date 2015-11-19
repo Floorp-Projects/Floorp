@@ -10,7 +10,7 @@
 
 #include "webrtc/modules/rtp_rtcp/source/rtcp_packet.h"
 
-#include "webrtc/modules/rtp_rtcp/source/rtp_utility.h"
+#include "webrtc/modules/rtp_rtcp/source/byte_io.h"
 #include "webrtc/system_wrappers/interface/logging.h"
 
 using webrtc::RTCPUtility::kBtDlrr;
@@ -61,15 +61,15 @@ void AssignUWord8(uint8_t* buffer, size_t* offset, uint8_t value) {
   buffer[(*offset)++] = value;
 }
 void AssignUWord16(uint8_t* buffer, size_t* offset, uint16_t value) {
-  RtpUtility::AssignUWord16ToBuffer(buffer + *offset, value);
+  ByteWriter<uint16_t>::WriteBigEndian(buffer + *offset, value);
   *offset += 2;
 }
 void AssignUWord24(uint8_t* buffer, size_t* offset, uint32_t value) {
-  RtpUtility::AssignUWord24ToBuffer(buffer + *offset, value);
+  ByteWriter<uint32_t, 3>::WriteBigEndian(buffer + *offset, value);
   *offset += 3;
 }
 void AssignUWord32(uint8_t* buffer, size_t* offset, uint32_t value) {
-  RtpUtility::AssignUWord32ToBuffer(buffer + *offset, value);
+  ByteWriter<uint32_t>::WriteBigEndian(buffer + *offset, value);
   *offset += 4;
 }
 

@@ -11,9 +11,6 @@ import("../build/webrtc.gni")
 source_set("voice_engine") {
 
   sources = [
-    "../common_types.h",
-    "../engine_configurations.h",
-    "../typedefs.h",
     "include/voe_audio_processing.h",
     "include/voe_base.h",
     "include/voe_codec.h",
@@ -82,6 +79,11 @@ source_set("voice_engine") {
 
   if (is_win) {
     defines = [ "WEBRTC_DRIFT_COMPENSATION_SUPPORTED" ]
+
+    cflags = [
+      # TODO(kjellander): Bug 261: fix this warning.
+      "/wd4373",  # virtual function override.
+    ]
   }
 
   configs += [ "..:common_config" ]
@@ -94,6 +96,7 @@ source_set("voice_engine") {
   }
 
   deps = [
+    "..:webrtc_common",
     "../common_audio",
     "../modules/audio_coding",
     "../modules/audio_conference_mixer",

@@ -11,12 +11,12 @@ describe("loop.OTSdkDriver", function() {
   var SCREEN_SHARE_STATES = loop.shared.utils.SCREEN_SHARE_STATES;
   var CHAT_CONTENT_TYPES = loop.shared.utils.CHAT_CONTENT_TYPES;
 
-  var sandbox;
-  var dispatcher, driver, mozLoop, publisher, sdk, session, sessionData, subscriber;
+  var sandbox, constants;
+  var dispatcher, driver, requestStubs, publisher, sdk, session, sessionData, subscriber;
   var publisherConfig, fakeEvent;
 
   beforeEach(function() {
-    sandbox = sinon.sandbox.create();
+    sandbox = LoopMochaUtils.createSandbox();
 
     fakeEvent = {
       preventDefault: sinon.stub()
@@ -29,6 +29,11 @@ describe("loop.OTSdkDriver", function() {
       sessionId: "3216549870",
       sessionToken: "1357924680"
     };
+
+    LoopMochaUtils.stubLoopRequest(requestStubs = {
+      TelemetryAddValue: sinon.stub(),
+      GetLoopPref: sinon.stub()
+    });
 
     dispatcher = new loop.Dispatcher();
 
@@ -73,9 +78,8 @@ describe("loop.OTSdkDriver", function() {
       }
     };
 
-    mozLoop = {
-      telemetryAddValue: sinon.stub(),
-      TWO_WAY_MEDIA_CONN_LENGTH: {
+    constants = {
+        TWO_WAY_MEDIA_CONN_LENGTH: {
         SHORTER_THAN_10S: 0,
         BETWEEN_10S_AND_30S: 1,
         BETWEEN_30S_AND_5M: 2,
@@ -90,32 +94,40 @@ describe("loop.OTSdkDriver", function() {
     };
 
     driver = new loop.OTSdkDriver({
+      constants: constants,
       dispatcher: dispatcher,
       sdk: sdk,
-      mozLoop: mozLoop,
       isDesktop: true
     });
   });
 
   afterEach(function() {
     sandbox.restore();
+    LoopMochaUtils.restore();
   });
 
   describe("Constructor", function() {
+    it("should throw an error if the constants are missing", function() {
+      expect(function() {
+        new loop.OTSdkDriver({ dispatcher: dispatcher, sdk: sdk });
+      }).to.Throw(/constants/);
+    });
+
     it("should throw an error if the dispatcher is missing", function() {
       expect(function() {
-        new loop.OTSdkDriver({ sdk: sdk });
+        new loop.OTSdkDriver({ constants: constants, sdk: sdk });
       }).to.Throw(/dispatcher/);
     });
 
     it("should throw an error if the sdk is missing", function() {
       expect(function() {
-        new loop.OTSdkDriver({ dispatcher: dispatcher });
+        new loop.OTSdkDriver({ constants: constants, dispatcher: dispatcher });
       }).to.Throw(/sdk/);
     });
 
     it("should set the metrics to zero", function() {
       driver = new loop.OTSdkDriver({
+        constants: constants,
         dispatcher: dispatcher,
         sdk: sdk
       });
@@ -587,61 +599,60 @@ describe("loop.OTSdkDriver", function() {
         driver.CONNECTION_START_TIME_ALREADY_NOTED);
     });
 
-    it("should call mozLoop.noteConnectionLength with SHORTER_THAN_10S for calls less than 10s", function() {
+    it("should record telemetry with SHORTER_THAN_10S for calls less than 10s", function() {
       var endTimeMS = 9000;
 
       driver._noteConnectionLengthIfNeeded(startTimeMS, endTimeMS);
 
-      sinon.assert.calledOnce(mozLoop.telemetryAddValue);
-      sinon.assert.calledWith(mozLoop.telemetryAddValue,
+      sinon.assert.calledOnce(requestStubs.TelemetryAddValue);
+      sinon.assert.calledWith(requestStubs.TelemetryAddValue,
         "LOOP_TWO_WAY_MEDIA_CONN_LENGTH_1",
-        mozLoop.TWO_WAY_MEDIA_CONN_LENGTH.SHORTER_THAN_10S);
+        constants.TWO_WAY_MEDIA_CONN_LENGTH.SHORTER_THAN_10S);
     });
 
-    it("should call mozLoop.noteConnectionLength with BETWEEN_10S_AND_30S for 15s calls",
+    it("should call record telemetry with BETWEEN_10S_AND_30S for 15s calls",
       function() {
         var endTimeMS = 15000;
 
         driver._noteConnectionLengthIfNeeded(startTimeMS, endTimeMS);
 
-        sinon.assert.calledOnce(mozLoop.telemetryAddValue);
-        sinon.assert.calledWith(mozLoop.telemetryAddValue,
+        sinon.assert.calledOnce(requestStubs.TelemetryAddValue);
+        sinon.assert.calledWith(requestStubs.TelemetryAddValue,
           "LOOP_TWO_WAY_MEDIA_CONN_LENGTH_1",
-          mozLoop.TWO_WAY_MEDIA_CONN_LENGTH.BETWEEN_10S_AND_30S);
+          constants.TWO_WAY_MEDIA_CONN_LENGTH.BETWEEN_10S_AND_30S);
       });
 
-    it("should call mozLoop.noteConnectionLength with BETWEEN_30S_AND_5M for 60s calls",
+    it("should call record telemetry with BETWEEN_30S_AND_5M for 60s calls",
       function() {
         var endTimeMS = 60 * 1000;
 
         driver._noteConnectionLengthIfNeeded(startTimeMS, endTimeMS);
 
-        sinon.assert.calledOnce(mozLoop.telemetryAddValue);
-        sinon.assert.calledWith(mozLoop.telemetryAddValue,
+        sinon.assert.calledOnce(requestStubs.TelemetryAddValue);
+        sinon.assert.calledWith(requestStubs.TelemetryAddValue,
           "LOOP_TWO_WAY_MEDIA_CONN_LENGTH_1",
-          mozLoop.TWO_WAY_MEDIA_CONN_LENGTH.BETWEEN_30S_AND_5M);
+          constants.TWO_WAY_MEDIA_CONN_LENGTH.BETWEEN_30S_AND_5M);
       });
 
-    it("should call mozLoop.noteConnectionLength with MORE_THAN_5M for 10m calls", function() {
+    it("should call record telemetry with MORE_THAN_5M for 10m calls", function() {
       var endTimeMS = 10 * 60 * 1000;
 
       driver._noteConnectionLengthIfNeeded(startTimeMS, endTimeMS);
 
-      sinon.assert.calledOnce(mozLoop.telemetryAddValue);
-      sinon.assert.calledWith(mozLoop.telemetryAddValue,
+      sinon.assert.calledOnce(requestStubs.TelemetryAddValue);
+      sinon.assert.calledWith(requestStubs.TelemetryAddValue,
         "LOOP_TWO_WAY_MEDIA_CONN_LENGTH_1",
-        mozLoop.TWO_WAY_MEDIA_CONN_LENGTH.MORE_THAN_5M);
+        constants.TWO_WAY_MEDIA_CONN_LENGTH.MORE_THAN_5M);
     });
 
-    it("should not call mozLoop.noteConnectionLength if" +
-       " driver._sendTwoWayMediaTelemetry is false",
+    it("should not call record telemetry if driver._sendTwoWayMediaTelemetry is false",
       function() {
         var endTimeMS = 10 * 60 * 1000;
         driver._sendTwoWayMediaTelemetry = false;
 
         driver._noteConnectionLengthIfNeeded(startTimeMS, endTimeMS);
 
-        sinon.assert.notCalled(mozLoop.telemetryAddValue);
+        sinon.assert.notCalled(requestStubs.TelemetryAddValue);
       });
   });
 
@@ -649,37 +660,37 @@ describe("loop.OTSdkDriver", function() {
     it("should record enabled sharing states for window", function() {
       driver._noteSharingState("window", true);
 
-      sinon.assert.calledOnce(mozLoop.telemetryAddValue);
-      sinon.assert.calledWithExactly(mozLoop.telemetryAddValue,
+      sinon.assert.calledOnce(requestStubs.TelemetryAddValue);
+      sinon.assert.calledWithExactly(requestStubs.TelemetryAddValue,
         "LOOP_SHARING_STATE_CHANGE_1",
-        mozLoop.SHARING_STATE_CHANGE.WINDOW_ENABLED);
+        constants.SHARING_STATE_CHANGE.WINDOW_ENABLED);
     });
 
     it("should record enabled sharing states for browser", function() {
       driver._noteSharingState("browser", true);
 
-      sinon.assert.calledOnce(mozLoop.telemetryAddValue);
-      sinon.assert.calledWithExactly(mozLoop.telemetryAddValue,
+      sinon.assert.calledOnce(requestStubs.TelemetryAddValue);
+      sinon.assert.calledWithExactly(requestStubs.TelemetryAddValue,
         "LOOP_SHARING_STATE_CHANGE_1",
-        mozLoop.SHARING_STATE_CHANGE.BROWSER_ENABLED);
+        constants.SHARING_STATE_CHANGE.BROWSER_ENABLED);
     });
 
     it("should record disabled sharing states for window", function() {
       driver._noteSharingState("window", false);
 
-      sinon.assert.calledOnce(mozLoop.telemetryAddValue);
-      sinon.assert.calledWithExactly(mozLoop.telemetryAddValue,
+      sinon.assert.calledOnce(requestStubs.TelemetryAddValue);
+      sinon.assert.calledWithExactly(requestStubs.TelemetryAddValue,
         "LOOP_SHARING_STATE_CHANGE_1",
-        mozLoop.SHARING_STATE_CHANGE.WINDOW_DISABLED);
+        constants.SHARING_STATE_CHANGE.WINDOW_DISABLED);
     });
 
     it("should record disabled sharing states for browser", function() {
       driver._noteSharingState("browser", false);
 
-      sinon.assert.calledOnce(mozLoop.telemetryAddValue);
-      sinon.assert.calledWithExactly(mozLoop.telemetryAddValue,
+      sinon.assert.calledOnce(requestStubs.TelemetryAddValue);
+      sinon.assert.calledWithExactly(requestStubs.TelemetryAddValue,
         "LOOP_SHARING_STATE_CHANGE_1",
-        mozLoop.SHARING_STATE_CHANGE.BROWSER_DISABLED);
+        constants.SHARING_STATE_CHANGE.BROWSER_DISABLED);
     });
   });
 

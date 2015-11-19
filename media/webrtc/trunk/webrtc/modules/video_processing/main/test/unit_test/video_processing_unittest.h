@@ -39,7 +39,7 @@ class VideoProcessingModuleTest : public ::testing::Test {
   const int height_;
   const int size_y_;
   const int size_uv_;
-  const unsigned int frame_length_;
+  const size_t frame_length_;
 };
 
 }  // namespace webrtc

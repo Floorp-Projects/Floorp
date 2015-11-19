@@ -12,8 +12,8 @@
 
 #include "webrtc/system_wrappers/interface/scoped_vector.h"
 
-#include "webrtc/system_wrappers/interface/scoped_ptr.h"
 #include "testing/gtest/include/gtest/gtest.h"
+#include "webrtc/base/scoped_ptr.h"
 
 namespace webrtc {
 namespace {
@@ -73,7 +73,7 @@ class LifeCycleWatcher : public LifeCycleObject::Observer {
 
   // Assert INITIAL -> CONSTRUCTED and no LifeCycleObject associated with this
   // LifeCycleWatcher.
-  virtual void OnLifeCycleConstruct(LifeCycleObject* object) OVERRIDE {
+  void OnLifeCycleConstruct(LifeCycleObject* object) override {
     ASSERT_EQ(LC_INITIAL, life_cycle_state_);
     ASSERT_EQ(NULL, constructed_life_cycle_object_.get());
     life_cycle_state_ = LC_CONSTRUCTED;
@@ -82,7 +82,7 @@ class LifeCycleWatcher : public LifeCycleObject::Observer {
 
   // Assert CONSTRUCTED -> DESTROYED and the |object| being destroyed is the
   // same one we saw constructed.
-  virtual void OnLifeCycleDestroy(LifeCycleObject* object) OVERRIDE {
+  void OnLifeCycleDestroy(LifeCycleObject* object) override {
     ASSERT_EQ(LC_CONSTRUCTED, life_cycle_state_);
     LifeCycleObject* constructed_life_cycle_object =
         constructed_life_cycle_object_.release();
@@ -105,7 +105,7 @@ class LifeCycleWatcher : public LifeCycleObject::Observer {
 
  private:
   LifeCycleState life_cycle_state_;
-  scoped_ptr<LifeCycleObject> constructed_life_cycle_object_;
+  rtc::scoped_ptr<LifeCycleObject> constructed_life_cycle_object_;
 
   DISALLOW_COPY_AND_ASSIGN(LifeCycleWatcher);
 };

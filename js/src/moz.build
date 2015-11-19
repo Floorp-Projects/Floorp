@@ -134,6 +134,7 @@ EXPORTS.js += [
     '../public/UbiNode.h',
     '../public/UbiNodeBreadthFirst.h',
     '../public/UbiNodeCensus.h',
+    '../public/UbiNodeDominatorTree.h',
     '../public/UbiNodePostOrder.h',
     '../public/Utility.h',
     '../public/Value.h',

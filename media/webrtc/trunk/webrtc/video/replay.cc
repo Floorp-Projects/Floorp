@@ -16,14 +16,16 @@
 #include "gflags/gflags.h"
 #include "testing/gtest/include/gtest/gtest.h"
 
+#include "webrtc/base/checks.h"
+#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/call.h"
 #include "webrtc/common_video/libyuv/include/webrtc_libyuv.h"
 #include "webrtc/modules/rtp_rtcp/interface/rtp_header_parser.h"
 #include "webrtc/system_wrappers/interface/clock.h"
-#include "webrtc/system_wrappers/interface/scoped_ptr.h"
 #include "webrtc/system_wrappers/interface/sleep.h"
 #include "webrtc/test/encoder_settings.h"
 #include "webrtc/test/null_transport.h"
+#include "webrtc/test/fake_decoder.h"
 #include "webrtc/test/rtp_file_reader.h"
 #include "webrtc/test/run_loop.h"
 #include "webrtc/test/run_test.h"
@@ -106,6 +108,7 @@ bool ValidateInputFilenameNotEmpty(const char* flagname,
                                    const std::string& string) {
   return string != "";
 }
+
 DEFINE_string(input_file, "", "input file");
 static std::string InputFile() {
   return static_cast<std::string>(FLAGS_input_file);
@@ -118,6 +121,11 @@ static const bool input_file_dummy =
 DEFINE_string(out_base, "", "Basename (excluding .yuv) for raw output");
 static std::string OutBase() {
   return static_cast<std::string>(FLAGS_out_base);
+}
+
+DEFINE_string(decoder_bitstream_filename, "", "Decoder bitstream output file");
+static std::string DecoderBitstreamFilename() {
+  return static_cast<std::string>(FLAGS_decoder_bitstream_filename);
 }
 
 // Flag for video codec.
@@ -133,26 +141,26 @@ class FileRenderPassthrough : public VideoRenderer {
   FileRenderPassthrough(const std::string& basename, VideoRenderer* renderer)
       : basename_(basename),
         renderer_(renderer),
-        file_(NULL),
+        file_(nullptr),
         count_(0),
         last_width_(0),
         last_height_(0) {}
 
   ~FileRenderPassthrough() {
-    if (file_ != NULL)
+    if (file_ != nullptr)
       fclose(file_);
   }
 
  private:
-  virtual void RenderFrame(const I420VideoFrame& video_frame,
-                           int time_to_render_ms) OVERRIDE {
-    if (renderer_ != NULL)
+  void RenderFrame(const I420VideoFrame& video_frame,
+                   int time_to_render_ms) override {
+    if (renderer_ != nullptr)
       renderer_->RenderFrame(video_frame, time_to_render_ms);
     if (basename_ == "")
       return;
     if (last_width_ != video_frame.width() ||
         last_height_ != video_frame.height()) {
-      if (file_ != NULL)
+      if (file_ != nullptr)
         fclose(file_);
       std::stringstream filename;
       filename << basename_;
@@ -161,7 +169,7 @@ class FileRenderPassthrough : public VideoRenderer {
       filename << '_' << video_frame.width() << 'x' << video_frame.height()
                << ".yuv";
       file_ = fopen(filename.str().c_str(), "wb");
-      if (file_ == NULL) {
+      if (file_ == nullptr) {
         fprintf(stderr,
                 "Couldn't open file for writing: %s\n",
                 filename.str().c_str());
@@ -169,10 +177,12 @@ class FileRenderPassthrough : public VideoRenderer {
     }
     last_width_ = video_frame.width();
     last_height_ = video_frame.height();
-    if (file_ == NULL)
+    if (file_ == nullptr)
       return;
     PrintI420VideoFrame(video_frame, file_);
   }
+
+  bool IsTextureSupported() const override { return false; }
 
   const std::string basename_;
   VideoRenderer* const renderer_;
@@ -182,9 +192,25 @@ class FileRenderPassthrough : public VideoRenderer {
   int last_height_;
 };
 
+class DecoderBitstreamFileWriter : public EncodedFrameObserver {
+ public:
+  explicit DecoderBitstreamFileWriter(const char* filename)
+      : file_(fopen(filename, "wb")) {
+    DCHECK(file_ != nullptr);
+  }
+  ~DecoderBitstreamFileWriter() { fclose(file_); }
+
+  virtual void EncodedFrameCallback(const EncodedFrame& encoded_frame) {
+    fwrite(encoded_frame.data_, 1, encoded_frame.length_, file_);
+  }
+
+ private:
+  FILE* file_;
+};
+
 void RtpReplay() {
-  scoped_ptr<test::VideoRenderer> playback_video(test::VideoRenderer::Create(
-      "Playback Video", 640, 480));
+  rtc::scoped_ptr<test::VideoRenderer> playback_video(
+      test::VideoRenderer::Create("Playback Video", 640, 480));
   FileRenderPassthrough file_passthrough(flags::OutBase(),
                                          playback_video.get());
 
@@ -192,7 +218,7 @@ void RtpReplay() {
   //             etc.
   test::NullTransport transport;
   Call::Config call_config(&transport);
-  scoped_ptr<Call> call(Call::Create(call_config));
+  rtc::scoped_ptr<Call> call(Call::Create(call_config));
 
   VideoReceiveStream::Config receive_config;
   receive_config.rtp.remote_ssrc = flags::Ssrc();
@@ -213,23 +239,42 @@ void RtpReplay() {
   VideoSendStream::Config::EncoderSettings encoder_settings;
   encoder_settings.payload_name = flags::Codec();
   encoder_settings.payload_type = flags::PayloadType();
-  VideoReceiveStream::Decoder decoder =
-      test::CreateMatchingDecoder(encoder_settings);
+  VideoReceiveStream::Decoder decoder;
+  rtc::scoped_ptr<DecoderBitstreamFileWriter> bitstream_writer;
+  if (flags::DecoderBitstreamFilename() != "") {
+    bitstream_writer.reset(new DecoderBitstreamFileWriter(
+        flags::DecoderBitstreamFilename().c_str()));
+    receive_config.pre_decode_callback = bitstream_writer.get();
+  }
+  decoder = test::CreateMatchingDecoder(encoder_settings);
+  if (flags::DecoderBitstreamFilename() != "") {
+    // Replace with a null decoder if we're writing the bitstream to a file
+    // instead.
+    delete decoder.decoder;
+    decoder.decoder = new test::FakeNullDecoder();
+  }
   receive_config.decoders.push_back(decoder);
 
   VideoReceiveStream* receive_stream =
       call->CreateVideoReceiveStream(receive_config);
 
-  scoped_ptr<test::RtpFileReader> rtp_reader(test::RtpFileReader::Create(
+  rtc::scoped_ptr<test::RtpFileReader> rtp_reader(test::RtpFileReader::Create(
       test::RtpFileReader::kRtpDump, flags::InputFile()));
-  if (rtp_reader.get() == NULL) {
+  if (rtp_reader.get() == nullptr) {
     rtp_reader.reset(test::RtpFileReader::Create(test::RtpFileReader::kPcap,
                                                  flags::InputFile()));
-    if (rtp_reader.get() == NULL) {
+    if (rtp_reader.get() == nullptr) {
       fprintf(stderr,
               "Couldn't open input file as either a rtpdump or .pcap. Note "
-              "that .pcapng is not supported.\n");
-      return;
+              "that .pcapng is not supported.\nTrying to interpret the file as "
+              "length/packet interleaved.\n");
+      rtp_reader.reset(test::RtpFileReader::Create(
+          test::RtpFileReader::kLengthPacketInterleaved, flags::InputFile()));
+      if (rtp_reader.get() == nullptr) {
+        fprintf(stderr,
+                "Unable to open input file with any supported format\n");
+        return;
+      }
     }
   }
   receive_stream->Start();
@@ -238,7 +283,7 @@ void RtpReplay() {
   int num_packets = 0;
   std::map<uint32_t, int> unknown_packets;
   while (true) {
-    test::RtpFileReader::Packet packet;
+    test::RtpPacket packet;
     if (!rtp_reader->NextPacket(&packet))
       break;
     ++num_packets;
@@ -247,7 +292,7 @@ void RtpReplay() {
         break;
       case PacketReceiver::DELIVERY_UNKNOWN_SSRC: {
         RTPHeader header;
-        scoped_ptr<RtpHeaderParser> parser(RtpHeaderParser::Create());
+        rtc::scoped_ptr<RtpHeaderParser> parser(RtpHeaderParser::Create());
         parser->Parse(packet.data, packet.length, &header);
         if (unknown_packets[header.ssrc] == 0)
           fprintf(stderr, "Unknown SSRC: %u!\n", header.ssrc);

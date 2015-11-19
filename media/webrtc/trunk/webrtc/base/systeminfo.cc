@@ -461,6 +461,11 @@ static void GetProperty(io_service_t port, CFStringRef name,
 }
 #endif
 
+SystemInfo::GpuInfo::GpuInfo() : vendor_id(0), device_id(0) {
+}
+
+SystemInfo::GpuInfo::~GpuInfo() = default;
+
 // Fills a struct with information on the graphics adapater and returns true
 // iff successful.
 bool SystemInfo::GetGpuInfo(GpuInfo *info) {

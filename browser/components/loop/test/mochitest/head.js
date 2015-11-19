@@ -16,10 +16,7 @@ const { LoopRooms } = Cu.import("resource:///modules/loop/LoopRooms.jsm", {});
 // if offline mode is requested multiple times in a test run.
 const WAS_OFFLINE = Services.io.offline;
 
-
-var gMozLoopAPI;
-
-function promiseGetMozLoopAPI() {
+function promisePanelLoaded() {
   return new Promise((resolve, reject) => {
     let loopPanel = document.getElementById("loop-notification-panel");
     let btn = document.getElementById("loop-button");
@@ -43,15 +40,10 @@ function promiseGetMozLoopAPI() {
 
       if (iframe.contentDocument &&
           iframe.contentDocument.readyState == "complete") {
-        gMozLoopAPI = iframe.contentWindow.navigator.wrappedJSObject.mozLoop;
-
         resolve();
       } else {
         iframe.addEventListener("load", function panelOnLoad(e) {
           iframe.removeEventListener("load", panelOnLoad, true);
-
-          gMozLoopAPI = iframe.contentWindow.navigator.wrappedJSObject.mozLoop;
-
           // We do this in an execute soon to allow any other event listeners to
           // be handled, just in case.
           resolve();
@@ -124,8 +116,8 @@ function loadLoopPanel(aOverrideOptions = {}) {
   let loopPanel = document.getElementById("loop-notification-panel");
   loopPanel.setAttribute("animate", "false");
 
-  // Now get the actual API loaded into gMozLoopAPI.
-  return promiseGetMozLoopAPI();
+  // Now get the actual document loaded.
+  return promisePanelLoaded();
 }
 
 function promiseOAuthParamsSetup(baseURL, params) {

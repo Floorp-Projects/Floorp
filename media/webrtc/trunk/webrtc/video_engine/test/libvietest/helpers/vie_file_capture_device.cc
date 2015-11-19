@@ -80,14 +80,15 @@ void ViEFileCaptureDevice::ReadFileFor(uint64_t time_slice_ms,
 
   while (elapsed_ms < time_slice_ms) {
     FramePacemaker pacemaker(max_fps);
-    int read = fread(frame_buffer, 1, frame_length_, input_file_);
+    size_t read = fread(frame_buffer, 1, frame_length_, input_file_);
 
-    if (feof(input_file_)) {
+    if (feof(input_file_) || read != frame_length_) {
       rewind(input_file_);
     }
-    input_sink_->IncomingFrame(frame_buffer, read, width_, height_,
-                               webrtc::kVideoI420,
-                               webrtc::TickTime::MillisecondTimestamp());
+    webrtc::I420VideoFrame frame;
+    frame.CreateFrame(frame_buffer, width_, height_, webrtc::kVideoRotation_0);
+    frame.set_render_time_ms(webrtc::TickTime::MillisecondTimestamp());
+    input_sink_->IncomingFrame(frame);
 
     pacemaker.SleepIfNecessary(sleeper);
     elapsed_ms = webrtc::TickTime::MillisecondTimestamp() - start_time_ms;

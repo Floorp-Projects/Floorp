@@ -39,8 +39,9 @@ class VideoReceiveStream {
     Decoder()
         : decoder(NULL),
           payload_type(0),
-          renderer(false),
+          is_renderer(false),
           expected_delay_ms(0) {}
+    std::string ToString() const;
 
     // The actual decoder instance.
     VideoDecoder* decoder;
@@ -54,7 +55,7 @@ class VideoReceiveStream {
     std::string payload_name;
 
     // 'true' if the decoder handles rendering as well.
-    bool renderer;
+    bool is_renderer;
 
     // The expected delay for decoding and rendering, i.e. the frame will be
     // delivered this many milliseconds, if possible, earlier than the ideal
@@ -63,22 +64,29 @@ class VideoReceiveStream {
     int expected_delay_ms;
   };
 
-  struct Stats : public SsrcStats {
-    Stats()
-        : network_frame_rate(0),
-          decode_frame_rate(0),
-          render_frame_rate(0),
-          avg_delay_ms(0),
-          discarded_packets(0),
-          ssrc(0) {}
+  struct Stats {
+    int network_frame_rate = 0;
+    int decode_frame_rate = 0;
+    int render_frame_rate = 0;
 
-    int network_frame_rate;
-    int decode_frame_rate;
-    int render_frame_rate;
-    int avg_delay_ms;
-    int discarded_packets;
-    uint32_t ssrc;
+    // Decoder stats.
+    FrameCounts frame_counts;
+    int decode_ms = 0;
+    int max_decode_ms = 0;
+    int current_delay_ms = 0;
+    int target_delay_ms = 0;
+    int jitter_buffer_ms = 0;
+    int min_playout_delay_ms = 0;
+    int render_delay_ms = 0;
+
+    int total_bitrate_bps = 0;
+    int discarded_packets = 0;
+
+    uint32_t ssrc = 0;
     std::string c_name;
+    StreamDataCounters rtp_stats;
+    RtcpPacketTypeCounter rtcp_packet_type_counts;
+    RtcpStatistics rtcp_stats;
   };
 
   struct Config {
@@ -89,6 +97,7 @@ class VideoReceiveStream {
           pre_decode_callback(NULL),
           pre_render_callback(NULL),
           target_delay_ms(0) {}
+    std::string ToString() const;
 
     // Decoders for every payload that we can receive.
     std::vector<Decoder> decoders;
@@ -100,6 +109,7 @@ class VideoReceiveStream {
             local_ssrc(0),
             rtcp_mode(newapi::kRtcpReducedSize),
             remb(true) {}
+      std::string ToString() const;
 
       // Synchronization source (stream identifier) to be received.
       uint32_t remote_ssrc;

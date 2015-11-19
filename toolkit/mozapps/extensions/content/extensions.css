@@ -244,9 +244,13 @@ richlistitem:not([selected]) * {
 .view-pane[type="experiment"] .addon:not([pending="uninstall"]) .pending,
 .view-pane[type="experiment"] .disabled-postfix,
 .view-pane[type="experiment"] .update-postfix,
+.view-pane[type="experiment"] .addon-control.enable,
+.view-pane[type="experiment"] .addon-control.disable,
 #detail-view[type="experiment"] .alert-container,
 #detail-view[type="experiment"] #detail-version,
-#detail-view[type="experiment"] #detail-creator {
+#detail-view[type="experiment"] #detail-creator,
+#detail-view[type="experiment"] #detail-enable-btn,
+#detail-view[type="experiment"] #detail-disable-btn {
   display: none;
 }
 

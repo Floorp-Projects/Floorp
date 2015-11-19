@@ -3386,16 +3386,6 @@ nsWindow::OnDragDataReceivedEvent(GtkWidget *aWidget,
 }
 
 #if GTK_CHECK_VERSION(3,4,0)
-static PLDHashOperator AppendTouchToEvent(GdkEventSequence* aKey,
-                                          dom::Touch* aData,
-                                          void* aArg)
-{
-  WidgetTouchEvent* event = reinterpret_cast<WidgetTouchEvent*>(aArg);
-  event->touches.AppendElement(new dom::Touch(*aData));
-
-  return PL_DHASH_NEXT;
-}
-
 gboolean
 nsWindow::OnTouchEvent(GdkEventTouch* aEvent)
 {
@@ -3441,7 +3431,9 @@ nsWindow::OnTouchEvent(GdkEventTouch* aEvent)
     if (aEvent->type == GDK_TOUCH_BEGIN || aEvent->type == GDK_TOUCH_UPDATE) {
         mTouches.Put(aEvent->sequence, touch.forget());
         // add all touch points to event object
-        mTouches.EnumerateRead(AppendTouchToEvent, &event);
+        for (auto iter = mTouches.Iter(); !iter.Done(); iter.Next()) {
+            event.touches.AppendElement(new dom::Touch(*iter.UserData()));
+        }
     } else if (aEvent->type == GDK_TOUCH_END ||
                aEvent->type == GDK_TOUCH_CANCEL) {
         *event.touches.AppendElement() = touch.forget();

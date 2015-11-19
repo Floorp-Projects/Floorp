@@ -13,7 +13,7 @@
 
 #include <map>
 
-#include "webrtc/system_wrappers/interface/scoped_ptr.h"
+#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/test/fake_common.h"
 #include "webrtc/voice_engine/include/voe_external_media.h"
 
@@ -56,7 +56,7 @@ class FakeVoEExternalMedia : public VoEExternalMedia {
                    int samples_per_channel, int sample_rate_hz,
                    int num_channels) {
     const int length = samples_per_channel * num_channels;
-    scoped_ptr<int16_t[]> data;
+    rtc::scoped_ptr<int16_t[]> data;
     if (!audio) {
       data.reset(new int16_t[length]);
       memset(data.get(), 0, length * sizeof(data[0]));

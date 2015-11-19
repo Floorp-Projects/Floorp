@@ -44,7 +44,6 @@ const LOGGER_PREFIX = "TelemetrySend::";
 const PREF_BRANCH = "toolkit.telemetry.";
 const PREF_SERVER = PREF_BRANCH + "server";
 const PREF_UNIFIED = PREF_BRANCH + "unified";
-const PREF_TELEMETRY_ENABLED = PREF_BRANCH + "enabled";
 const PREF_FHR_UPLOAD_ENABLED = "datareporting.healthreport.uploadEnabled";
 
 const TOPIC_IDLE_DAILY = "idle-daily";
@@ -1048,7 +1047,7 @@ var TelemetrySendImpl = {
     }
 
     // Without unified Telemetry, the Telemetry enabled pref controls ping sending.
-    return Preferences.get(PREF_TELEMETRY_ENABLED, false);
+    return Utils.isTelemetryEnabled;
   },
 
   /**

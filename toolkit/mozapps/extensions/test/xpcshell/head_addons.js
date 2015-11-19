@@ -1405,6 +1405,23 @@ function ensure_test_completed() {
 }
 
 /**
+ * Returns a promise that resolves when the given add-on event is fired. The
+ * resolved value is an array of arguments passed for the event.
+ */
+function promiseAddonEvent(event) {
+  return new Promise(resolve => {
+    let listener = {
+      [event]: function(...args) {
+        AddonManager.removeAddonListener(listener);
+        resolve(args);
+      }
+    }
+
+    AddonManager.addAddonListener(listener);
+  });
+}
+
+/**
  * A helper method to install an array of AddonInstall to completion and then
  * call a provided callback.
  *

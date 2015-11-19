@@ -60,7 +60,7 @@ moz_gfx_memory_reset(MozGfxMemory *mem)
     mem->image->Release();
 
   ImageContainer* container = ((MozGfxMemoryAllocator*) mem->memory.allocator)->reader->GetImageContainer();
-  mem->image = reinterpret_cast<PlanarYCbCrImage*>(container->CreateImage(ImageFormat::PLANAR_YCBCR).take());
+  mem->image = container->CreatePlanarYCbCrImage().forget().take();
   mem->data = mem->image->AllocateAndGetNewBuffer(mem->memory.size);
 }
 

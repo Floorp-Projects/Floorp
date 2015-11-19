@@ -12,7 +12,7 @@ describe("loop.shared.mixins", function() {
   var ROOM_STATES = loop.store.ROOM_STATES;
 
   beforeEach(function() {
-    sandbox = sinon.sandbox.create();
+    sandbox = LoopMochaUtils.createSandbox();
   });
 
   afterEach(function() {
@@ -221,16 +221,16 @@ describe("loop.shared.mixins", function() {
   });
 
   describe("loop.shared.mixins.AudioMixin", function() {
-    var view, fakeAudio, TestComp;
+    var view, fakeAudio, getAudioBlobStub, TestComp;
 
     beforeEach(function() {
-      navigator.mozLoop = {
-        doNotDisturb: true,
-        getAudioBlob: sinon.spy(function(name, callback) {
-          callback(null, new Blob([new ArrayBuffer(10)], { type: "audio/ogg" }));
-        }),
-        getLoopPref: sandbox.stub()
-      };
+      getAudioBlobStub = sinon.stub().returns(
+        new Blob([new ArrayBuffer(10)], { type: "audio/ogg" }));
+      LoopMochaUtils.stubLoopRequest({
+        GetDoNotDisturb: function() { return true; },
+        GetAudioBlob: getAudioBlobStub,
+        GetLoopPref: sandbox.stub()
+      });
 
       fakeAudio = {
         play: sinon.spy(),
@@ -251,18 +251,23 @@ describe("loop.shared.mixins", function() {
 
     });
 
+    afterEach(function() {
+      LoopMochaUtils.restore();
+    });
+
     it("should not play a failure sound when doNotDisturb true", function() {
       view = TestUtils.renderIntoDocument(React.createElement(TestComp));
-      sinon.assert.notCalled(navigator.mozLoop.getAudioBlob);
+      sinon.assert.notCalled(getAudioBlobStub);
       sinon.assert.notCalled(fakeAudio.play);
     });
 
     it("should play a failure sound, once", function() {
-      navigator.mozLoop.doNotDisturb = false;
+      LoopMochaUtils.stubLoopRequest({
+        GetDoNotDisturb: function() { return false; }
+      });
       view = TestUtils.renderIntoDocument(React.createElement(TestComp));
-      sinon.assert.calledOnce(navigator.mozLoop.getAudioBlob);
-      sinon.assert.calledWithExactly(navigator.mozLoop.getAudioBlob,
-                                     "failure", sinon.match.func);
+      sinon.assert.calledOnce(getAudioBlobStub);
+      sinon.assert.calledWithExactly(getAudioBlobStub, "failure");
       sinon.assert.calledOnce(fakeAudio.play);
       expect(fakeAudio.loop).to.equal(false);
     });

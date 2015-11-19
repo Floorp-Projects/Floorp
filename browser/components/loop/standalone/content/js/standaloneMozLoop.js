@@ -14,6 +14,17 @@ loop.StandaloneMozLoop = (function(mozL10n) {
    * The maximum number of clients that we currently support.
    */
   var ROOM_MAX_CLIENTS = 2;
+  var PUSH_SUBSCRIPTION = "pushSubscription";
+  var BATCH_MESSAGE = "Batch";
+  var MAX_LOOP_COUNT = 10;
+
+  function cloneableError(err) {
+    if (typeof err == "string") {
+      err = new Error(err);
+    }
+    err.isError = true;
+    return err;
+  }
 
   /**
    * Validates a data object to confirm it has the specified properties.
@@ -48,20 +59,11 @@ loop.StandaloneMozLoop = (function(mozL10n) {
   }
 
   /**
-   * StandaloneMozLoopRooms is used as part of StandaloneMozLoop to define
-   * the rooms sub-object. We do it this way so that we can share the options
-   * information from the parent.
+   * StandaloneLoopRooms is used to define the rooms sub-object. We do it this
+   * way so that we can share the options information.
    */
-  var StandaloneMozLoopRooms = function(options) {
-    options = options || {};
-    if (!options.baseServerUrl) {
-      throw new Error("missing required baseServerUrl");
-    }
-
-    this._baseServerUrl = options.baseServerUrl;
-  };
-
-  StandaloneMozLoopRooms.prototype = {
+  var StandaloneLoopRooms = {
+    baseServerUrl: "",
     /**
      * Request information about a specific room from the server.
      *
@@ -72,7 +74,7 @@ loop.StandaloneMozLoop = (function(mozL10n) {
      *                             be the list of rooms, if it was fetched successfully.
      */
     get: function(roomToken, callback) {
-      var url = this._baseServerUrl + "/rooms/" + roomToken;
+      var url = this.baseServerUrl + "/rooms/" + roomToken;
 
       this._xhrReq = new XMLHttpRequest();
       this._xhrReq.open("GET", url, true);
@@ -117,7 +119,7 @@ loop.StandaloneMozLoop = (function(mozL10n) {
      */
     _postToRoom: function(roomToken, sessionToken, roomData, expectedProps,
                           async, callback) {
-      var url = this._baseServerUrl + "/rooms/" + roomToken;
+      var url = this.baseServerUrl + "/rooms/" + roomToken;
       var xhrReq = new XMLHttpRequest();
 
       xhrReq.open("POST", url, async);
@@ -244,53 +246,173 @@ loop.StandaloneMozLoop = (function(mozL10n) {
           console.error(error);
         }
       });
+    }
+  };
+
+  var kMessageHandlers = {
+    "Rooms:*": function(action, data, reply) {
+      var funcName = action.split(":").pop();
+      funcName = funcName.charAt(0).toLowerCase() + funcName.substr(1);
+
+      if (funcName === PUSH_SUBSCRIPTION) {
+        return;
+      }
+
+      if (typeof StandaloneLoopRooms[funcName] !== "function") {
+        reply(cloneableError("Sorry, function '" + funcName + "' does not exist!"));
+        return;
+      }
+      data.push(function(err, result) {
+        reply(err ? cloneableError(err) : result);
+      });
+      StandaloneLoopRooms[funcName].apply(StandaloneLoopRooms, data);
     },
 
-    // Dummy functions to reflect those in the desktop mozLoop.rooms that we
-    // don't currently use.
-    on: function() {},
-    once: function() {},
-    off: function() {}
-  };
-
-  var StandaloneMozLoop = function(options) {
-    options = options || {};
-    if (!options.baseServerUrl) {
-      throw new Error("missing required baseServerUrl");
-    }
-
-    this._baseServerUrl = options.baseServerUrl;
-
-    this.rooms = new StandaloneMozLoopRooms(options);
-  };
-
-  StandaloneMozLoop.prototype = {
     /**
      * Stores a preference in the local storage for standalone.
-     * Note: Some prefs are filtered out as they are not applicable
-     * to the standalone UI.
      *
-     * @param {String} prefName The name of the pref
-     * @param {String} value The value to set.
+     * @param {Array}    data  Containing the the name of the pref and the value
+     *                         to set.
+     * @param {Function} reply Callback function to invoke when done.
      */
-    setLoopPref: function(prefName, value) {
+    SetLoopPref: function(data, reply) {
+      var prefName = data[0];
+      var value = data[1];
       localStorage.setItem(prefName, value);
+      reply();
     },
 
     /**
      * Gets a preference from the local storage for standalone.
      *
-     * @param {String} prefName The name of the pref
+     * @param {Array}    data  Containing the the name of the pref
+     * @param {Function} reply Callback function to invoke when done with the
+     *                         value of the pref.
      */
-    getLoopPref: function(prefName) {
-      return localStorage.getItem(prefName);
-    },
-
-    // Dummy functions to reflect those in the desktop mozLoop that we
-    // don't currently use in standalone.
-    addConversationContext: function() {},
-    setScreenShareState: function() {}
+    GetLoopPref: function(data, reply) {
+      var prefName = data[0];
+      reply(localStorage.getItem(prefName));
+    }
   };
 
-  return StandaloneMozLoop;
+  function handleBatchMessage(name, seq, data, reply) {
+    var actions = data[0];
+    if (!actions.length) {
+      throw new Error("Ough, a batch call with no actions is not much " +
+        "of a batch, now is it?");
+    }
+
+    // Since `handleBatchMessage` can be called recursively, but the replies are
+    // collected and sent only once, we'll make sure only one exists for the
+    // entire tail.
+    // We count the amount of recursive calls, because we don't want any consumer
+    // to cause an infinite loop, now do we?
+    if (!("loopCount" in reply)) {
+      reply.loopCount = 0;
+    } else if (++reply.loopCount > MAX_LOOP_COUNT) {
+      reply(cloneableError("Too many nested calls"));
+      return;
+    }
+
+    var resultSet = {};
+    var done = 0;
+    actions.forEach(function(actionSet) {
+      var actionSeq = actionSet[0];
+      window.sendAsyncMessage(name, actionSet, function(result) {
+        resultSet[actionSeq] = result;
+        if (++done === actions.length) {
+          reply(resultSet);
+        }
+      });
+    });
+  }
+
+  var messageListeners = {};
+
+  return function(options) {
+    options = options || {};
+    if (!options.baseServerUrl) {
+      throw new Error("missing required baseServerUrl");
+    }
+
+    StandaloneLoopRooms.baseServerUrl = options.baseServerUrl;
+
+    window.sendAsyncMessage = function(name, data, reply) {
+      if (name !== "Loop:Message") {
+        return;
+      }
+
+      var seq = data.shift();
+      var action = data.shift();
+
+      var actionParts = action.split(":");
+
+      // The name that is supposed to match with a handler function is tucked inside
+      // the second part of the message name. If all is well.
+      var handlerName = actionParts.shift();
+
+      if (!reply) {
+        reply = function(result) {
+          var listeners = messageListeners[name];
+          if (!listeners || !listeners.length) {
+            return;
+          }
+          var message = { data: [seq, result] };
+          listeners.forEach(function(listener) {
+            listener(message);
+          });
+        };
+      }
+
+      // First, check if this is a batch call.
+      if (handlerName === BATCH_MESSAGE) {
+        handleBatchMessage(name, seq, data, reply);
+        return;
+      }
+
+      // Second, check if the message is meant for one of our Object APIs.
+      // If so, a wildcard entry should exist for the message name in the
+      // `kMessageHandlers` dictionary.
+      var wildcardName = handlerName + ":*";
+      if (kMessageHandlers[wildcardName]) {
+        // Alright, pass the message forward.
+        kMessageHandlers[wildcardName](action, data, reply);
+        // Aaaaand we're done.
+        return;
+      }
+
+      if (!kMessageHandlers[handlerName]) {
+        var msg = "Ouch, no message handler available for '" + handlerName + "'";
+        console.error(msg);
+        reply(cloneableError(msg));
+        return;
+      }
+
+      kMessageHandlers[handlerName](data, reply);
+    };
+
+    window.addMessageListener = function(name, func) {
+      if (!messageListeners[name]) {
+        messageListeners[name] = [];
+      }
+
+      if (messageListeners[name].indexOf(func) === -1) {
+        messageListeners[name].push(func);
+      }
+    };
+
+    window.removeMessageListener = function(name, func) {
+      if (!messageListeners[name]) {
+        return;
+      }
+
+      var idx = messageListeners[name].indexOf(func);
+      if (idx !== -1) {
+        messageListeners[name].splice(idx, 1);
+      }
+      if (!messageListeners[name].length) {
+        delete messageListeners[name];
+      }
+    };
+  };
 })(navigator.mozL10n);

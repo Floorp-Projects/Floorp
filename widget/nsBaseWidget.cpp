@@ -1,4 +1,5 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -59,6 +60,7 @@
 #include "nsRefPtrHashtable.h"
 #include "TouchEvents.h"
 #include "WritingModes.h"
+#include "InputData.h"
 #ifdef ACCESSIBILITY
 #include "nsAccessibilityService.h"
 #endif
@@ -1044,18 +1046,94 @@ nsBaseWidget::DispatchInputEvent(WidgetInputEvent* aEvent)
   return status;
 }
 
+class DispatchWheelEventOnMainThread : public Task
+{
+public:
+  DispatchWheelEventOnMainThread(const ScrollWheelInput& aWheelInput,
+                                 nsBaseWidget* aWidget,
+                                 nsEventStatus aAPZResult,
+                                 uint64_t aInputBlockId,
+                                 ScrollableLayerGuid aGuid)
+    : mWheelInput(aWheelInput)
+    , mWidget(aWidget)
+    , mAPZResult(aAPZResult)
+    , mInputBlockId(aInputBlockId)
+    , mGuid(aGuid)
+  {
+  }
+
+  void Run()
+  {
+    WidgetWheelEvent wheelEvent = mWheelInput.ToWidgetWheelEvent(mWidget);
+    mWidget->ProcessUntransformedAPZEvent(&wheelEvent, mGuid, mInputBlockId, mAPZResult);
+    return;
+  }
+
+private:
+  ScrollWheelInput mWheelInput;
+  nsBaseWidget* mWidget;
+  nsEventStatus mAPZResult;
+  uint64_t mInputBlockId;
+  ScrollableLayerGuid mGuid;
+};
+
+class DispatchWheelInputOnControllerThread : public Task
+{
+public:
+  DispatchWheelInputOnControllerThread(const WidgetWheelEvent& aWheelEvent,
+                                       APZCTreeManager* aAPZC,
+                                       nsBaseWidget* aWidget)
+    : mMainMessageLoop(MessageLoop::current())
+    , mWheelInput(aWheelEvent)
+    , mAPZC(aAPZC)
+    , mWidget(aWidget)
+    , mInputBlockId(0)
+  {
+  }
+
+  void Run()
+  {
+    mAPZResult = mAPZC->ReceiveInputEvent(mWheelInput, &mGuid, &mInputBlockId);
+    if (mAPZResult == nsEventStatus_eConsumeNoDefault) {
+      return;
+    }
+    mMainMessageLoop->PostTask(FROM_HERE,
+                               new DispatchWheelEventOnMainThread(mWheelInput, mWidget, mAPZResult, mInputBlockId, mGuid));
+    return;
+  }
+
+private:
+  MessageLoop* mMainMessageLoop;
+  ScrollWheelInput mWheelInput;
+  RefPtr<APZCTreeManager> mAPZC;
+  nsBaseWidget* mWidget;
+  nsEventStatus mAPZResult;
+  uint64_t mInputBlockId;
+  ScrollableLayerGuid mGuid;
+};
+
 nsEventStatus
 nsBaseWidget::DispatchAPZAwareEvent(WidgetInputEvent* aEvent)
 {
+  MOZ_ASSERT(NS_IsMainThread());
   if (mAPZC) {
-    uint64_t inputBlockId = 0;
-    ScrollableLayerGuid guid;
+    if (APZThreadUtils::IsControllerThread()) {
+      uint64_t inputBlockId = 0;
+      ScrollableLayerGuid guid;
 
-    nsEventStatus result = mAPZC->ReceiveInputEvent(*aEvent, &guid, &inputBlockId);
-    if (result == nsEventStatus_eConsumeNoDefault) {
-        return result;
+      nsEventStatus result = mAPZC->ReceiveInputEvent(*aEvent, &guid, &inputBlockId);
+      if (result == nsEventStatus_eConsumeNoDefault) {
+          return result;
+      }
+      return ProcessUntransformedAPZEvent(aEvent, guid, inputBlockId, result);
+    } else {
+      WidgetWheelEvent* wheelEvent = aEvent->AsWheelEvent();
+      if (wheelEvent) {
+        APZThreadUtils::RunOnControllerThread(new DispatchWheelInputOnControllerThread(*wheelEvent, mAPZC, this));
+        return nsEventStatus_eConsumeDoDefault;
+      }
+      MOZ_CRASH();
     }
-    return ProcessUntransformedAPZEvent(aEvent, guid, inputBlockId, result);
   }
 
   nsEventStatus status;
@@ -1910,31 +1988,6 @@ nsIWidget::LookupRegisteredPluginWindow(uintptr_t aWindowID)
 #endif
 }
 
-#if defined(XP_WIN) || defined(MOZ_WIDGET_GTK)
-struct VisEnumContext {
-  uintptr_t parentWidget;
-  const nsTArray<uintptr_t>* list;
-  bool widgetVisibilityFlag;
-};
-
-static PLDHashOperator
-RegisteredPluginEnumerator(const void* aWindowId, nsIWidget* aWidget, void* aUserArg)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(aWindowId);
-  MOZ_ASSERT(aWidget);
-  MOZ_ASSERT(aUserArg);
-
-  if (!aWidget->Destroyed()) {
-    VisEnumContext* pctx = static_cast<VisEnumContext*>(aUserArg);
-    if ((uintptr_t)aWidget->GetParent() == pctx->parentWidget) {
-      aWidget->Show(pctx->list->Contains((uintptr_t)aWindowId));
-    }
-  }
-  return PLDHashOperator::PL_DHASH_NEXT;
-}
-#endif
-
 // static
 void
 nsIWidget::UpdateRegisteredPluginWindowVisibility(uintptr_t aOwnerWidget,
@@ -1946,11 +1999,23 @@ nsIWidget::UpdateRegisteredPluginWindowVisibility(uintptr_t aOwnerWidget,
 #else
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(sPluginWidgetList);
+
   // Our visible list is associated with a compositor which is associated with
-  // a specific top level window. We hand the parent widget in here so the
-  // enumerator can skip the plugin widgets owned by other top level windows.
-  VisEnumContext ctx = { aOwnerWidget, &aPluginIds };
-  sPluginWidgetList->EnumerateRead(RegisteredPluginEnumerator, static_cast<void*>(&ctx));
+  // a specific top level window. We use the parent widget during iteration
+  // to skip the plugin widgets owned by other top level windows.
+  for (auto iter = sPluginWidgetList->Iter(); !iter.Done(); iter.Next()) {
+    const void* windowId = iter.Key();
+    nsIWidget* widget = iter.UserData();
+
+    MOZ_ASSERT(windowId);
+    MOZ_ASSERT(widget);
+
+    if (!widget->Destroyed()) {
+      if ((uintptr_t)widget->GetParent() == aOwnerWidget) {
+        widget->Show(aPluginIds.Contains((uintptr_t)windowId));
+      }
+    }
+  }
 #endif
 }
 

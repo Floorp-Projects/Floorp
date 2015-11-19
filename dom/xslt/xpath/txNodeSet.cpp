@@ -353,7 +353,6 @@ txNodeSet::mark(int32_t aIndex)
     if (!mMarks) {
         int32_t length = size();
         mMarks = new bool[length];
-        NS_ENSURE_TRUE(mMarks, NS_ERROR_OUT_OF_MEMORY);
         memset(mMarks, 0, length * sizeof(bool));
     }
     if (mDirection == kForward) {

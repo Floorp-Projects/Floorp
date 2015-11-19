@@ -8,7 +8,7 @@
 
 import("../../build/webrtc.gni")
 
-source_set("video_render") {
+source_set("video_render_module") {
   sources = [
     "external/video_render_external_impl.cc",
     "external/video_render_external_impl.h",
@@ -23,6 +23,7 @@ source_set("video_render") {
   ]
 
   deps = [
+    "../..:webrtc_common",
     "../../common_video",
     "../../system_wrappers",
     "../utility",
@@ -38,12 +39,12 @@ source_set("video_render") {
   }
 }
 
-source_set("video_render_impl") {
+source_set("video_render") {
   sources = [
     "video_render_impl.cc",
   ]
   deps = [
-    ":video_render",
+    ":video_render_module",
     "../../system_wrappers",
   ]
 
@@ -57,118 +58,125 @@ source_set("video_render_impl") {
   }
 }
 
-config("video_render_internal_impl_config") {
-  if (is_ios) {
-    libs = [
-      "OpenGLES.framework",
-      "QuartzCore.framework",
-    ]
-  }
-}
-
-source_set("video_render_internal_impl") {
-  libs = []
-  sources = [
-    "video_render_internal_impl.cc",
-  ]
-  deps = [
-    ":video_render",
-    "../../system_wrappers",
-  ]
-
-  if (is_linux) {
-    sources += [
-      "linux/video_render_linux_impl.cc",
-      "linux/video_render_linux_impl.h",
-      "linux/video_x11_channel.cc",
-      "linux/video_x11_channel.h",
-      "linux/video_x11_render.cc",
-      "linux/video_x11_render.h",
-    ]
-
-    libs += [ "Xext" ]
-  }
-  if (is_mac) {
-    sources += [
-      "mac/cocoa_full_screen_window.h",
-      "mac/cocoa_full_screen_window.mm",
-      "mac/cocoa_render_view.h",
-      "mac/cocoa_render_view.mm",
-      "mac/video_render_agl.cc",
-      "mac/video_render_agl.h",
-      "mac/video_render_mac_carbon_impl.cc",
-      "mac/video_render_mac_carbon_impl.h",
-      "mac/video_render_mac_cocoa_impl.h",
-      "mac/video_render_mac_cocoa_impl.mm",
-      "mac/video_render_nsopengl.h",
-      "mac/video_render_nsopengl.mm",
-    ]
-
-    libs += [
-      "CoreVideo.framework",
-      "QTKit.framework",
-    ]
-  }
-  if (is_win) {
-    sources += [
-      "windows/i_video_render_win.h",
-      "windows/video_render_direct3d9.cc",
-      "windows/video_render_direct3d9.h",
-      "windows/video_render_windows_impl.cc",
-      "windows/video_render_windows_impl.h",
-    ]
-
-    directxsdk_exists =
-      (exec_script("//build/dir_exists.py",
-                   [ rebase_path("//third_party/directxsdk/files",
-                                 root_build_dir) ],
-                   "trim string") == "True")
-    if (directxsdk_exists) {
-      directxsdk_path = "//third_party/directxsdk/files"
-    } else {
-      directxsdk_path = getenv("DXSDK_DIR")
+if (!build_with_chromium) {
+  config("video_render_internal_impl_config") {
+    if (is_ios) {
+      libs = [
+        "OpenGLES.framework",
+        "QuartzCore.framework",
+      ]
     }
-    include_dirs = [ directxsdk_path +  "/Include" ]
   }
-  if (is_android) {
-    sources += [
-      "android/video_render_android_impl.cc",
-      "android/video_render_android_impl.h",
-      "android/video_render_android_native_opengl2.cc",
-      "android/video_render_android_native_opengl2.h",
-      "android/video_render_android_surface_view.cc",
-      "android/video_render_android_surface_view.h",
-      "android/video_render_opengles20.cc",
-      "android/video_render_opengles20.h",
+
+  source_set("video_render_internal_impl") {
+    libs = []
+    sources = [
+      "video_render_internal_impl.cc",
+    ]
+    deps = [
+      ":video_render_module",
+      "../../system_wrappers",
     ]
 
-    libs += [ "GLESv2" ]
-  }
-  if (is_ios) {
-    sources += [
-      "ios/open_gles20.h",
-      "ios/open_gles20.mm",
-      "ios/video_render_ios_channel.h",
-      "ios/video_render_ios_channel.mm",
-      "ios/video_render_ios_gles20.h",
-      "ios/video_render_ios_gles20.mm",
-      "ios/video_render_ios_impl.h",
-      "ios/video_render_ios_impl.mm",
-      "ios/video_render_ios_view.h",
-      "ios/video_render_ios_view.mm",
-    ]
+    if (is_linux) {
+      sources += [
+        "linux/video_render_linux_impl.cc",
+        "linux/video_render_linux_impl.h",
+        "linux/video_x11_channel.cc",
+        "linux/video_x11_channel.h",
+        "linux/video_x11_render.cc",
+        "linux/video_x11_render.h",
+      ]
 
-    cflags += [ "-fobjc-arc" ]  # CLANG_ENABLE_OBJC_ARC = YES.
-  }
+      deps += [ "../..:webrtc_common" ]
 
-  all_dependent_configs = [ ":video_render_internal_impl_config"]
+      libs += [ "Xext" ]
+    }
+    if (is_mac) {
+      sources += [
+        "mac/cocoa_full_screen_window.h",
+        "mac/cocoa_full_screen_window.mm",
+        "mac/cocoa_render_view.h",
+        "mac/cocoa_render_view.mm",
+        "mac/video_render_agl.cc",
+        "mac/video_render_agl.h",
+        "mac/video_render_mac_carbon_impl.cc",
+        "mac/video_render_mac_carbon_impl.h",
+        "mac/video_render_mac_cocoa_impl.h",
+        "mac/video_render_mac_cocoa_impl.mm",
+        "mac/video_render_nsopengl.h",
+        "mac/video_render_nsopengl.mm",
+      ]
 
-  configs += [ "../..:common_config" ]
-  public_configs = [ "../..:common_inherited_config" ]
+      libs += [
+        "CoreVideo.framework",
+        "QTKit.framework",
+      ]
+    }
+    if (is_win) {
+      sources += [
+        "windows/i_video_render_win.h",
+        "windows/video_render_direct3d9.cc",
+        "windows/video_render_direct3d9.h",
+        "windows/video_render_windows_impl.cc",
+        "windows/video_render_windows_impl.h",
+      ]
 
-  if (is_clang) {
-    # Suppress warnings from Chrome's Clang plugins.
-    # See http://code.google.com/p/webrtc/issues/detail?id=163 for details.
-    configs -= [ "//build/config/clang:find_bad_constructs" ]
+      directxsdk_exists =
+        (exec_script("//build/dir_exists.py",
+                     [ rebase_path("//third_party/directxsdk/files",
+                                   root_build_dir) ],
+                     "trim string") == "True")
+      if (directxsdk_exists) {
+        directxsdk_path = "//third_party/directxsdk/files"
+      } else {
+        directxsdk_path =
+            exec_script("../../build/find_directx_sdk.py", [], "trim string")
+      }
+      include_dirs = [ directxsdk_path +  "/Include" ]
+    }
+    if (is_android) {
+      sources += [
+        "android/video_render_android_impl.cc",
+        "android/video_render_android_impl.h",
+        "android/video_render_android_native_opengl2.cc",
+        "android/video_render_android_native_opengl2.h",
+        "android/video_render_android_surface_view.cc",
+        "android/video_render_android_surface_view.h",
+        "android/video_render_opengles20.cc",
+        "android/video_render_opengles20.h",
+      ]
+
+      libs += [ "GLESv2" ]
+    }
+    if (is_ios) {
+      sources += [
+        "ios/open_gles20.h",
+        "ios/open_gles20.mm",
+        "ios/video_render_ios_channel.h",
+        "ios/video_render_ios_channel.mm",
+        "ios/video_render_ios_gles20.h",
+        "ios/video_render_ios_gles20.mm",
+        "ios/video_render_ios_impl.h",
+        "ios/video_render_ios_impl.mm",
+        "ios/video_render_ios_view.h",
+        "ios/video_render_ios_view.mm",
+      ]
+
+      deps += [ "../..:webrtc_common" ]
+
+      cflags += [ "-fobjc-arc" ]  # CLANG_ENABLE_OBJC_ARC = YES.
+    }
+
+    all_dependent_configs = [ ":video_render_internal_impl_config"]
+
+    configs += [ "../..:common_config" ]
+    public_configs = [ "../..:common_inherited_config" ]
+
+    if (is_clang) {
+      # Suppress warnings from Chrome's Clang plugins.
+      # See http://code.google.com/p/webrtc/issues/detail?id=163 for details.
+      configs -= [ "//build/config/clang:find_bad_constructs" ]
+    }
   }
 }

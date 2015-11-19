@@ -110,6 +110,13 @@ inline bool IsWindowsXpOrLater() {
           (major == kWindows2000 && minor >= 1)));
 }
 
+inline bool IsWindows8OrLater() {
+  int major, minor;
+  return (GetOsVersion(&major, &minor, NULL) &&
+          (major > kWindowsVista ||
+          (major == kWindowsVista && minor >= 2)));
+}
+
 // Determine the current integrity level of the process.
 bool GetCurrentProcessIntegrityLevel(int* level);
 
@@ -125,5 +132,5 @@ bool AdjustCurrentProcessPrivilege(const TCHAR* privilege, bool to_enable);
 
 }  // namespace rtc
 
-#endif  // WEBRTC_WIN 
+#endif  // WEBRTC_WIN
 #endif  // WEBRTC_BASE_WIN32_H_

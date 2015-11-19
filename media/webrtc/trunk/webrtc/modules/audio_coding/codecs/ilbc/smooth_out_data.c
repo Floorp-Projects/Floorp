@@ -37,7 +37,7 @@ int32_t WebRtcIlbcfix_Smooth_odata(
   errs=0;
   for(i=0;i<80;i++) {
     err = (psseq[i] - odata[i]) >> 3;
-    errs+=WEBRTC_SPL_MUL_16_16(err, err); /* errs in Q-6 */
+    errs += err * err;  /* errs in Q-6 */
   }
 
   return errs;

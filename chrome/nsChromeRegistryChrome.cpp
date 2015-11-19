@@ -396,33 +396,6 @@ SerializeURI(nsIURI* aURI,
   aURI->GetOriginCharset(aSerializedURI.charset);
 }
 
-static PLDHashOperator
-EnumerateOverride(nsIURI* aURIKey,
-                  nsIURI* aURI,
-                  void* aArg)
-{
-  nsTArray<OverrideMapping>* overrides =
-      static_cast<nsTArray<OverrideMapping>*>(aArg);
-
-  SerializedURI chromeURI, overrideURI;
-
-  SerializeURI(aURIKey, chromeURI);
-  SerializeURI(aURI, overrideURI);
-
-  OverrideMapping override = {
-    chromeURI, overrideURI
-  };
-  overrides->AppendElement(override);
-  return (PLDHashOperator)PL_DHASH_NEXT;
-}
-
-struct EnumerationArgs
-{
-  InfallibleTArray<ChromePackage>& packages;
-  const nsCString& selectedLocale;
-  const nsCString& selectedSkin;
-};
-
 void
 nsChromeRegistryChrome::SendRegisteredChrome(
     mozilla::dom::PContentParent* aParent)
@@ -431,10 +404,12 @@ nsChromeRegistryChrome::SendRegisteredChrome(
   InfallibleTArray<SubstitutionMapping> resources;
   InfallibleTArray<OverrideMapping> overrides;
 
-  EnumerationArgs args = {
-    packages, mSelectedLocale, mSelectedSkin
-  };
-  mPackagesHash.EnumerateRead(CollectPackages, &args);
+  for (auto iter = mPackagesHash.Iter(); !iter.Done(); iter.Next()) {
+    ChromePackage chromePackage;
+    ChromePackageFromPackageEntry(iter.Key(), iter.UserData(), &chromePackage,
+                                  mSelectedLocale, mSelectedSkin);
+    packages.AppendElement(chromePackage);
+  }
 
   // If we were passed a parent then a new child process has been created and
   // has requested all of the chrome so send it the resources too. Otherwise
@@ -452,7 +427,15 @@ nsChromeRegistryChrome::SendRegisteredChrome(
     rph->CollectSubstitutions(resources);
   }
 
-  mOverrideTable.EnumerateRead(&EnumerateOverride, &overrides);
+  for (auto iter = mOverrideTable.Iter(); !iter.Done(); iter.Next()) {
+    SerializedURI chromeURI, overrideURI;
+
+    SerializeURI(iter.Key(), chromeURI);
+    SerializeURI(iter.UserData(), overrideURI);
+
+    OverrideMapping override = { chromeURI, overrideURI };
+    overrides.AppendElement(override);
+  }
 
   if (aParent) {
     bool success = aParent->SendRegisterChrome(packages, resources, overrides,
@@ -488,20 +471,6 @@ nsChromeRegistryChrome::ChromePackageFromPackageEntry(const nsACString& aPackage
                aChromePackage->skinBaseURI);
   aChromePackage->package = aPackageName;
   aChromePackage->flags = aPackage->flags;
-}
-
-PLDHashOperator
-nsChromeRegistryChrome::CollectPackages(const nsACString &aKey,
-                                        PackageEntry *package,
-                                        void *arg)
-{
-  EnumerationArgs* args = static_cast<EnumerationArgs*>(arg);
-
-  ChromePackage chromePackage;
-  ChromePackageFromPackageEntry(aKey, package, &chromePackage,
-                                args->selectedLocale, args->selectedSkin);
-  args->packages.AppendElement(chromePackage);
-  return PL_DHASH_NEXT;
 }
 
 static bool

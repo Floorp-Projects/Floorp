@@ -5,7 +5,8 @@
 %endif
 
 #identity-box {
-  --identity-box-selected-background-color: rgb(231,230,230);
+  --identity-box-hover-background-color: rgb(231,230,230);
+  --identity-box-selected-background-color: rgb(211,210,210);
   --identity-box-verified-color: hsl(92,100%,30%);
 %ifdef MOZ_OFFICIAL_BRANDING
   --identity-box-chrome-color: rgb(229,115,0);
@@ -34,8 +35,16 @@
 
 #identity-box:hover,
 #identity-box[open=true] {
-  background-color: var(--identity-box-selected-background-color);
   border-image-source: none;
+}
+
+#identity-box:hover {
+  background-color: var(--identity-box-hover-background-color);
+}
+
+#identity-box:hover:active,
+#identity-box[open=true] {
+  background-color: var(--identity-box-selected-background-color);
 }
 
 #urlbar[pageproxystate="valid"] > #identity-box.verifiedIdentity {

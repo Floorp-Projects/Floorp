@@ -167,10 +167,7 @@ nsresult
 nsAttrValue::Init()
 {
   NS_ASSERTION(!sEnumTableArray, "nsAttrValue already initialized");
-
   sEnumTableArray = new nsTArray<const EnumTable*>;
-  NS_ENSURE_TRUE(sEnumTableArray, NS_ERROR_OUT_OF_MEMORY);
-  
   return NS_OK;
 }
 
@@ -1850,14 +1847,8 @@ nsAttrValue::EnsureEmptyAtomArray()
     return true;
   }
 
-  AtomArray* array = new AtomArray;
-  if (!array) {
-    Reset();
-    return false;
-  }
-
   MiscContainer* cont = EnsureEmptyMiscContainer();
-  cont->mValue.mAtomArray = array;
+  cont->mValue.mAtomArray = new AtomArray;
   cont->mType = eAtomArray;
 
   return true;

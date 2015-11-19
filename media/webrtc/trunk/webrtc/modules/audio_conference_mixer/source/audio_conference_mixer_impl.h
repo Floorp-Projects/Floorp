@@ -14,13 +14,13 @@
 #include <list>
 #include <map>
 
+#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/engine_configurations.h"
 #include "webrtc/modules/audio_conference_mixer/interface/audio_conference_mixer.h"
 #include "webrtc/modules/audio_conference_mixer/source/level_indicator.h"
 #include "webrtc/modules/audio_conference_mixer/source/memory_pool.h"
 #include "webrtc/modules/audio_conference_mixer/source/time_scheduler.h"
 #include "webrtc/modules/interface/module_common_types.h"
-#include "webrtc/system_wrappers/interface/scoped_ptr.h"
 
 namespace webrtc {
 class AudioProcessing;
@@ -64,27 +64,27 @@ public:
     bool Init();
 
     // Module functions
-    virtual int32_t ChangeUniqueId(const int32_t id) OVERRIDE;
-    virtual int32_t TimeUntilNextProcess() OVERRIDE;
-    virtual int32_t Process() OVERRIDE;
+    int64_t TimeUntilNextProcess() override;
+    int32_t Process() override;
 
     // AudioConferenceMixer functions
-    virtual int32_t RegisterMixedStreamCallback(
-        AudioMixerOutputReceiver& mixReceiver) OVERRIDE;
-    virtual int32_t UnRegisterMixedStreamCallback() OVERRIDE;
-    virtual int32_t RegisterMixerStatusCallback(
+    int32_t RegisterMixedStreamCallback(
+        AudioMixerOutputReceiver& mixReceiver) override;
+    int32_t UnRegisterMixedStreamCallback() override;
+    int32_t RegisterMixerStatusCallback(
         AudioMixerStatusReceiver& mixerStatusCallback,
-        const uint32_t amountOf10MsBetweenCallbacks) OVERRIDE;
-    virtual int32_t UnRegisterMixerStatusCallback() OVERRIDE;
-    virtual int32_t SetMixabilityStatus(MixerParticipant& participant,
-                                        bool mixable) OVERRIDE;
-    virtual int32_t MixabilityStatus(MixerParticipant& participant,
-                                     bool& mixable) OVERRIDE;
-    virtual int32_t SetMinimumMixingFrequency(Frequency freq) OVERRIDE;
-    virtual int32_t SetAnonymousMixabilityStatus(
-        MixerParticipant& participant, const bool mixable) OVERRIDE;
-    virtual int32_t AnonymousMixabilityStatus(
-        MixerParticipant& participant, bool& mixable) OVERRIDE;
+        const uint32_t amountOf10MsBetweenCallbacks) override;
+    int32_t UnRegisterMixerStatusCallback() override;
+    int32_t SetMixabilityStatus(MixerParticipant& participant,
+                                bool mixable) override;
+    int32_t MixabilityStatus(MixerParticipant& participant,
+                             bool& mixable) override;
+    int32_t SetMinimumMixingFrequency(Frequency freq) override;
+    int32_t SetAnonymousMixabilityStatus(MixerParticipant& participant,
+                                         const bool mixable) override;
+    int32_t AnonymousMixabilityStatus(MixerParticipant& participant,
+                                      bool& mixable) override;
+
 private:
     enum{DEFAULT_AUDIO_FRAME_POOLSIZE = 50};
 
@@ -164,8 +164,8 @@ private:
     ParticipantStatistics  _scratchVadPositiveParticipants[
         kMaximumAmountOfMixedParticipants];
 
-    scoped_ptr<CriticalSectionWrapper> _crit;
-    scoped_ptr<CriticalSectionWrapper> _cbCrit;
+    rtc::scoped_ptr<CriticalSectionWrapper> _crit;
+    rtc::scoped_ptr<CriticalSectionWrapper> _cbCrit;
 
     int32_t _id;
 
@@ -209,7 +209,7 @@ private:
     int16_t _processCalls;
 
     // Used for inhibiting saturation in mixing.
-    scoped_ptr<AudioProcessing> _limiter;
+    rtc::scoped_ptr<AudioProcessing> _limiter;
 };
 }  // namespace webrtc
 

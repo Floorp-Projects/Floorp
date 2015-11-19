@@ -7,6 +7,7 @@
 # be found in the AUTHORS file in the root of the source tree.
 
 import("//build/config/arm.gni")
+import("//build/config/mips.gni")
 
 declare_args() {
   # Assume Chromium build for now, since that's the priority case for getting GN
@@ -25,11 +26,6 @@ declare_args() {
   # library that comes with WebRTC (i.e. rtc_build_ssl == 0).
   rtc_ssl_root = ""
 
-  # Adds video support to dependencies shared by voice and video engine.
-  # This should normally be enabled; the intended use is to disable only
-  # when building voice engine exclusively.
-  rtc_enable_video = true
-
   # Selects fixed-point code where possible.
   rtc_prefer_fixed_point = false
 
@@ -45,7 +41,9 @@ declare_args() {
   rtc_build_libjpeg = true
   rtc_build_libyuv = true
   rtc_build_libvpx = true
+  rtc_build_vp9 = true
   rtc_build_ssl = true
+  rtc_build_opus = true
 
   # Disable by default.
   rtc_have_dbus_glib = false
@@ -53,13 +51,7 @@ declare_args() {
   # Enable to use the Mozilla internal settings.
   build_with_mozilla = false
 
-  # Define MIPS architecture variant, MIPS DSP variant and MIPS FPU
-  # This may be subject to change in accordance to Chromium's MIPS flags
-  mips_arch_variant = "mips32r1"
-  mips_dsp_rev = 0
-  mips_fpu = true
-
-  rtc_enable_android_opensl = true
+  rtc_enable_android_opensl = false
 
   # Link-Time Optimizations.
   # Executes code generation at link-time instead of compile-time.
@@ -99,11 +91,13 @@ declare_args() {
     rtc_enable_protobuf = false
   }
 
-  if (cpu_arch == "arm") {
+  if (current_cpu == "arm") {
     rtc_prefer_fixed_point = true
   }
 
-  if (!is_ios && (cpu_arch != "arm" || arm_version >= 7)) {
+  # TODO(ljubomir): Unset rtc_use_openmax_dl for mips64el once mips64el gets
+  # supported in GN (since openmax_dl is not supported for mips64el).
+  if (!is_ios && (current_cpu != "arm" || arm_version >= 7)) {
     rtc_use_openmax_dl = true
   } else {
     rtc_use_openmax_dl = false
@@ -112,5 +106,11 @@ declare_args() {
   # WebRTC builds ARM v7 Neon instruction set optimized code for both iOS and
   # Android, which is why we currently cannot use the variables in
   # //build/config/arm.gni (since it disables Neon for Android).
-  rtc_build_armv7_neon = (cpu_arch == "arm" && arm_version == 7)
+  rtc_build_armv7_neon = (current_cpu == "arm" && arm_version >= 7)
 }
+
+# Make it possible to provide custom locations for some libraries (move these
+# up into declare_args should we need to actually use them for the GN build).
+rtc_libvpx_dir = "//third_party/libvpx"
+rtc_libyuv_dir = "//third_party/libyuv"
+rtc_opus_dir = "//third_party/opus"

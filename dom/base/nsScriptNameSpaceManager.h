@@ -91,7 +91,7 @@ public:
     // Measurement of the following members may be added later if DMD finds it
     // is worthwhile:
     // - mGlobalName
-    return mKey.SizeOfExcludingThisMustBeUnshared(aMallocSizeOf);
+    return mKey.SizeOfExcludingThisIfUnshared(aMallocSizeOf);
   }
 };
 

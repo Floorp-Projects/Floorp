@@ -1925,6 +1925,12 @@ IonBuilder::inspectOpcode(JSOp op)
         return jsop_intrinsic(name);
       }
 
+      case JSOP_GETIMPORT:
+      {
+        PropertyName* name = info().getAtom(pc)->asPropertyName();
+        return jsop_getimport(name);
+      }
+
       case JSOP_BINDGNAME:
         if (!script()->hasNonSyntacticScope()) {
             if (JSObject* scope = testGlobalLexicalBinding(info().getName(pc)))
@@ -8033,7 +8039,7 @@ IonBuilder::getStaticName(JSObject* staticObject, PropertyName* name, bool* psuc
                            staticObject->as<ClonedBlockObject>().isGlobal();
     MOZ_ASSERT(isGlobalLexical ||
                staticObject->is<GlobalObject>() ||
-               staticObject->is<CallObject>());
+               staticObject->is<LexicalScopeBase>());
     MOZ_ASSERT(staticObject->isSingleton());
 
     *psucceeded = true;
@@ -8311,6 +8317,34 @@ IonBuilder::jsop_intrinsic(PropertyName* name)
     MOZ_ASSERT(types->hasType(TypeSet::GetValueType(vp)));
 
     pushConstant(vp);
+    return true;
+}
+
+bool
+IonBuilder::jsop_getimport(PropertyName* name)
+{
+    ModuleEnvironmentObject* env = GetModuleEnvironmentForScript(script());
+    MOZ_ASSERT(env);
+
+    Shape* shape;
+    ModuleEnvironmentObject* targetEnv;
+    MOZ_ALWAYS_TRUE(env->lookupImport(NameToId(name), &targetEnv, &shape));
+
+    PropertyName* localName = JSID_TO_STRING(shape->propid())->asAtom().asPropertyName();
+    bool emitted = false;
+    if (!getStaticName(targetEnv, localName, &emitted))
+        return false;
+
+    MOZ_ASSERT(emitted);
+
+    // In the rare case where this import hasn't been initialized already (we
+    // have an import cycle where modules reference each other's imports), emit
+    // a check.
+    if (targetEnv->getSlot(shape->slot()).isMagic(JS_UNINITIALIZED_LEXICAL)) {
+        MDefinition* checked = addLexicalCheck(current->pop());
+        current->push(checked);
+    }
+
     return true;
 }
 
@@ -10888,6 +10922,11 @@ IonBuilder::jsop_getprop(PropertyName* name)
     if (!getPropTryCache(&emitted, obj, name, barrier, types) || emitted)
         return emitted;
 
+    // Try to emit a shared stub.
+    trackOptimizationAttempt(TrackedStrategy::GetProp_SharedCache);
+    if (!getPropTrySharedStub(&emitted, obj) || emitted)
+        return emitted;
+
     // Emit a call.
     MCallGetProperty* call = MCallGetProperty::New(alloc(), obj, name);
     current->add(call);
@@ -11834,6 +11873,27 @@ IonBuilder::getPropTryCache(bool* emitted, MDefinition* obj, PropertyName* name,
         return false;
 
     trackOptimizationSuccess();
+    *emitted = true;
+    return true;
+}
+
+bool
+IonBuilder::getPropTrySharedStub(bool* emitted, MDefinition* obj)
+{
+    MOZ_ASSERT(*emitted == false);
+
+    // Try to emit a shared stub cache.
+
+    if (js_JitOptions.disableSharedStubs)
+        return true;
+
+    MInstruction* stub = MUnarySharedStub::New(alloc(), obj);
+    current->add(stub);
+    current->push(stub);
+
+    if (!resumeAfter(stub))
+        return false;
+
     *emitted = true;
     return true;
 }
@@ -13850,7 +13910,9 @@ IonBuilder::getCallee()
 MDefinition*
 IonBuilder::addLexicalCheck(MDefinition* input)
 {
-    MOZ_ASSERT(JSOp(*pc) == JSOP_CHECKLEXICAL || JSOp(*pc) == JSOP_CHECKALIASEDLEXICAL);
+    MOZ_ASSERT(JSOp(*pc) == JSOP_CHECKLEXICAL ||
+               JSOp(*pc) == JSOP_CHECKALIASEDLEXICAL ||
+               JSOp(*pc) == JSOP_GETIMPORT);
 
     MInstruction* lexicalCheck;
 

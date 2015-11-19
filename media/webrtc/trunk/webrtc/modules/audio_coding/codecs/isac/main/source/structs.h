@@ -290,7 +290,7 @@ typedef struct {
   /* Used in adaptive mode only */
   int         minBytes;
 
-} ISAC_SaveEncData_t;
+} IsacSaveEncoderData;
 
 
 typedef struct {
@@ -315,7 +315,7 @@ typedef struct {
   PitchFiltstr        pitchfiltstr_obj;
   PitchAnalysisStruct pitchanalysisstr_obj;
   FFTstr              fftstr_obj;
-  ISAC_SaveEncData_t  SaveEnc_obj;
+  IsacSaveEncoderData SaveEnc_obj;
 
   int                 buffer_index;
   int16_t         current_framesamples;

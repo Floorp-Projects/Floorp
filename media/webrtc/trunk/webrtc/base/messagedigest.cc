@@ -12,6 +12,7 @@
 
 #include <string.h>
 
+#include "webrtc/base/basictypes.h"
 #include "webrtc/base/sslconfig.h"
 #if SSL_USE_OPENSSL
 #include "webrtc/base/openssldigest.h"

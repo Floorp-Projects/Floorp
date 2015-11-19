@@ -15,10 +15,10 @@
 #include <string>
 
 #include "webrtc/base/constructormagic.h"
+#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/common_types.h"
 #include "webrtc/modules/audio_coding/neteq/tools/packet_source.h"
 #include "webrtc/modules/rtp_rtcp/interface/rtp_rtcp_defines.h"
-#include "webrtc/system_wrappers/interface/scoped_ptr.h"
 
 namespace webrtc {
 
@@ -41,7 +41,7 @@ class RtpFileSource : public PacketSource {
 
   // Returns a pointer to the next packet. Returns NULL if end of file was
   // reached, or if a the data was corrupt.
-  virtual Packet* NextPacket() OVERRIDE;
+  Packet* NextPacket() override;
 
  private:
   static const int kFirstLineLength = 40;
@@ -52,8 +52,8 @@ class RtpFileSource : public PacketSource {
 
   bool OpenFile(const std::string& file_name);
 
-  scoped_ptr<RtpFileReader> rtp_reader_;
-  scoped_ptr<RtpHeaderParser> parser_;
+  rtc::scoped_ptr<RtpFileReader> rtp_reader_;
+  rtc::scoped_ptr<RtpHeaderParser> parser_;
 
   DISALLOW_COPY_AND_ASSIGN(RtpFileSource);
 };

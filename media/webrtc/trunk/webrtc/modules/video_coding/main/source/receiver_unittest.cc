@@ -81,19 +81,19 @@ class TestVCMReceiver : public ::testing::Test {
 
   bool DecodeNextFrame() {
     int64_t render_time_ms = 0;
-    VCMEncodedFrame* frame = receiver_.FrameForDecoding(0, render_time_ms,
-                                                        false, NULL);
+    VCMEncodedFrame* frame =
+        receiver_.FrameForDecoding(0, render_time_ms, false);
     if (!frame)
       return false;
     receiver_.ReleaseFrame(frame);
     return true;
   }
 
-  scoped_ptr<SimulatedClock> clock_;
+  rtc::scoped_ptr<SimulatedClock> clock_;
   VCMTiming timing_;
   NullEventFactory event_factory_;
   VCMReceiver receiver_;
-  scoped_ptr<StreamGenerator> stream_generator_;
+  rtc::scoped_ptr<StreamGenerator> stream_generator_;
   uint8_t data_buffer_[kDataBufferSize];
 };
 

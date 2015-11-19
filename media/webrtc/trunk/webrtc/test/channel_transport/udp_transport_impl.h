@@ -47,96 +47,89 @@ public:
     virtual ~UdpTransportImpl();
 
     // UdpTransport functions
-    virtual int32_t InitializeSendSockets(
-        const char* ipAddr,
-        const uint16_t rtpPort,
-        const uint16_t rtcpPort = 0) OVERRIDE;
-    virtual int32_t InitializeReceiveSockets(
-        UdpTransportData* const packetCallback,
-        const uint16_t rtpPort,
-        const char* ipAddr = NULL,
-        const char* multicastIpAddr = NULL,
-        const uint16_t rtcpPort = 0) OVERRIDE;
-    virtual int32_t InitializeSourcePorts(
-        const uint16_t rtpPort,
-        const uint16_t rtcpPort = 0) OVERRIDE;
-    virtual int32_t SourcePorts(uint16_t& rtpPort,
-                                uint16_t& rtcpPort) const OVERRIDE;
-    virtual int32_t ReceiveSocketInformation(
+    int32_t InitializeSendSockets(const char* ipAddr,
+                                  const uint16_t rtpPort,
+                                  const uint16_t rtcpPort = 0) override;
+    int32_t InitializeReceiveSockets(UdpTransportData* const packetCallback,
+                                     const uint16_t rtpPort,
+                                     const char* ipAddr = NULL,
+                                     const char* multicastIpAddr = NULL,
+                                     const uint16_t rtcpPort = 0) override;
+    int32_t InitializeSourcePorts(const uint16_t rtpPort,
+                                  const uint16_t rtcpPort = 0) override;
+    int32_t SourcePorts(uint16_t& rtpPort, uint16_t& rtcpPort) const override;
+    int32_t ReceiveSocketInformation(
         char ipAddr[kIpAddressVersion6Length],
         uint16_t& rtpPort,
         uint16_t& rtcpPort,
-        char multicastIpAddr[kIpAddressVersion6Length]) const OVERRIDE;
-    virtual int32_t SendSocketInformation(
-        char ipAddr[kIpAddressVersion6Length],
-        uint16_t& rtpPort,
-        uint16_t& rtcpPort) const OVERRIDE;
-    virtual int32_t RemoteSocketInformation(
-        char ipAddr[kIpAddressVersion6Length],
-        uint16_t& rtpPort,
-        uint16_t& rtcpPort) const OVERRIDE;
-    virtual int32_t SetQoS(const bool QoS,
-                           const int32_t serviceType,
-                           const uint32_t maxBitrate = 0,
-                           const int32_t overrideDSCP = 0,
-                           const bool audio = false) OVERRIDE;
-    virtual int32_t QoS(bool& QoS, int32_t& serviceType,
-                        int32_t& overrideDSCP) const OVERRIDE;
-    virtual int32_t SetToS(const int32_t DSCP,
-                           const bool useSetSockOpt = false) OVERRIDE;
-    virtual int32_t ToS(int32_t& DSCP, bool& useSetSockOpt) const OVERRIDE;
-    virtual int32_t SetPCP(const int32_t PCP) OVERRIDE;
-    virtual int32_t PCP(int32_t& PCP) const OVERRIDE;
-    virtual int32_t EnableIpV6() OVERRIDE;
-    virtual bool IpV6Enabled() const OVERRIDE;
-    virtual int32_t SetFilterIP(
-        const char filterIPAddress[kIpAddressVersion6Length]) OVERRIDE;
-    virtual int32_t FilterIP(
-        char filterIPAddress[kIpAddressVersion6Length]) const OVERRIDE;
-    virtual int32_t SetFilterPorts(const uint16_t rtpFilterPort,
-                                   const uint16_t rtcpFilterPort) OVERRIDE;
-    virtual int32_t FilterPorts(uint16_t& rtpFilterPort,
-                                uint16_t& rtcpFilterPort) const OVERRIDE;
-    virtual int32_t StartReceiving(
-        const uint32_t numberOfSocketBuffers) OVERRIDE;
-    virtual int32_t StopReceiving() OVERRIDE;
-    virtual bool Receiving() const OVERRIDE;
-    virtual bool SendSocketsInitialized() const OVERRIDE;
-    virtual bool SourcePortsInitialized() const OVERRIDE;
-    virtual bool ReceiveSocketsInitialized() const OVERRIDE;
-    virtual int32_t SendRaw(const int8_t* data,
-                            uint32_t length, int32_t isRTCP,
-                            uint16_t portnr = 0,
-                            const char* ip = NULL) OVERRIDE;
-    virtual int32_t SendRTPPacketTo(const int8_t *data,
-                                    uint32_t length,
-                                    const SocketAddress& to) OVERRIDE;
-    virtual int32_t SendRTCPPacketTo(const int8_t *data,
-                                     uint32_t length,
-                                     const SocketAddress& to) OVERRIDE;
-    virtual int32_t SendRTPPacketTo(const int8_t *data,
-                                    uint32_t length,
-                                    uint16_t rtpPort) OVERRIDE;
-    virtual int32_t SendRTCPPacketTo(const int8_t *data,
-                                     uint32_t length,
-                                     uint16_t rtcpPort) OVERRIDE;
+        char multicastIpAddr[kIpAddressVersion6Length]) const override;
+    int32_t SendSocketInformation(char ipAddr[kIpAddressVersion6Length],
+                                  uint16_t& rtpPort,
+                                  uint16_t& rtcpPort) const override;
+    int32_t RemoteSocketInformation(char ipAddr[kIpAddressVersion6Length],
+                                    uint16_t& rtpPort,
+                                    uint16_t& rtcpPort) const override;
+    int32_t SetQoS(const bool QoS,
+                   const int32_t serviceType,
+                   const uint32_t maxBitrate = 0,
+                   const int32_t overrideDSCP = 0,
+                   const bool audio = false) override;
+    int32_t QoS(bool& QoS,
+                int32_t& serviceType,
+                int32_t& overrideDSCP) const override;
+    int32_t SetToS(const int32_t DSCP,
+                   const bool useSetSockOpt = false) override;
+    int32_t ToS(int32_t& DSCP, bool& useSetSockOpt) const override;
+    int32_t SetPCP(const int32_t PCP) override;
+    int32_t PCP(int32_t& PCP) const override;
+    int32_t EnableIpV6() override;
+    bool IpV6Enabled() const override;
+    int32_t SetFilterIP(
+        const char filterIPAddress[kIpAddressVersion6Length]) override;
+    int32_t FilterIP(
+        char filterIPAddress[kIpAddressVersion6Length]) const override;
+    int32_t SetFilterPorts(const uint16_t rtpFilterPort,
+                           const uint16_t rtcpFilterPort) override;
+    int32_t FilterPorts(uint16_t& rtpFilterPort,
+                        uint16_t& rtcpFilterPort) const override;
+    int32_t StartReceiving(const uint32_t numberOfSocketBuffers) override;
+    int32_t StopReceiving() override;
+    bool Receiving() const override;
+    bool SendSocketsInitialized() const override;
+    bool SourcePortsInitialized() const override;
+    bool ReceiveSocketsInitialized() const override;
+    int32_t SendRaw(const int8_t* data,
+                    size_t length,
+                    int32_t isRTCP,
+                    uint16_t portnr = 0,
+                    const char* ip = NULL) override;
+    int32_t SendRTPPacketTo(const int8_t* data,
+                            size_t length,
+                            const SocketAddress& to) override;
+    int32_t SendRTCPPacketTo(const int8_t* data,
+                             size_t length,
+                             const SocketAddress& to) override;
+    int32_t SendRTPPacketTo(const int8_t* data,
+                            size_t length,
+                            uint16_t rtpPort) override;
+    int32_t SendRTCPPacketTo(const int8_t* data,
+                             size_t length,
+                             uint16_t rtcpPort) override;
     // Transport functions
-    virtual int SendPacket(int channel, const void* data, int length) OVERRIDE;
-    virtual int SendRTCPPacket(int channel,
-                               const void* data,
-                               int length) OVERRIDE;
+    int SendPacket(int channel, const void* data, size_t length) override;
+    int SendRTCPPacket(int channel, const void* data, size_t length) override;
 
     // UdpTransport functions continue.
-    virtual int32_t SetSendIP(const char* ipaddr) OVERRIDE;
-    virtual int32_t SetSendPorts(const uint16_t rtpPort,
-                                 const uint16_t rtcpPort = 0) OVERRIDE;
+    int32_t SetSendIP(const char* ipaddr) override;
+    int32_t SetSendPorts(const uint16_t rtpPort,
+                         const uint16_t rtcpPort = 0) override;
 
-    virtual ErrorCode LastError() const OVERRIDE;
+    ErrorCode LastError() const override;
 
-    virtual int32_t IPAddressCached(const SocketAddress& address,
-                                    char* ip,
-                                    uint32_t& ipSize,
-                                    uint16_t& sourcePort) OVERRIDE;
+    int32_t IPAddressCached(const SocketAddress& address,
+                            char* ip,
+                            uint32_t& ipSize,
+                            uint16_t& sourcePort) override;
 
     int32_t Id() const {return _id;}
 protected:
@@ -144,11 +137,11 @@ protected:
     // UdpSocketWrapper.
     static void IncomingRTPCallback(CallbackObj obj,
                                     const int8_t* rtpPacket,
-                                    int32_t rtpPacketLength,
+                                    size_t rtpPacketLength,
                                     const SocketAddress* from);
     static void IncomingRTCPCallback(CallbackObj obj,
                                      const int8_t* rtcpPacket,
-                                     int32_t rtcpPacketLength,
+                                     size_t rtcpPacketLength,
                                      const SocketAddress* from);
 
     void CloseSendSockets();
@@ -169,10 +162,10 @@ protected:
     ErrorCode BindRTCPSendSocket();
 
     void IncomingRTPFunction(const int8_t* rtpPacket,
-                             int32_t rtpPacketLength,
+                             size_t rtpPacketLength,
                              const SocketAddress* from);
     void IncomingRTCPFunction(const int8_t* rtcpPacket,
-                              int32_t rtcpPacketLength,
+                              size_t rtcpPacketLength,
                               const SocketAddress* from);
 
     bool FilterIPAddress(const SocketAddress* fromAddress);

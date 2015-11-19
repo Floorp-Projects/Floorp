@@ -16,12 +16,12 @@
 #include <wincodec.h>
 
 #include "webrtc/base/constructormagic.h"
+#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/modules/desktop_capture/screen_capture_frame_queue.h"
 #include "webrtc/modules/desktop_capture/screen_capturer.h"
 #include "webrtc/modules/desktop_capture/screen_capturer_helper.h"
 #include "webrtc/modules/desktop_capture/win/scoped_thread_desktop.h"
 #include "webrtc/system_wrappers/interface/atomic32.h"
-#include "webrtc/system_wrappers/interface/scoped_ptr.h"
 
 namespace webrtc {
 
@@ -39,15 +39,15 @@ class ScreenCapturerWinMagnifier : public ScreenCapturer {
   // screen is being captured, or the OS does not support Magnification API, or
   // the magnifier capturer fails (e.g. in Windows8 Metro mode).
   explicit ScreenCapturerWinMagnifier(
-      scoped_ptr<ScreenCapturer> fallback_capturer);
+      rtc::scoped_ptr<ScreenCapturer> fallback_capturer);
   virtual ~ScreenCapturerWinMagnifier();
 
   // Overridden from ScreenCapturer:
-  virtual void Start(Callback* callback) OVERRIDE;
-  virtual void Capture(const DesktopRegion& region) OVERRIDE;
-  virtual bool GetScreenList(ScreenList* screens) OVERRIDE;
-  virtual bool SelectScreen(ScreenId id) OVERRIDE;
-  virtual void SetExcludedWindow(WindowId window) OVERRIDE;
+  void Start(Callback* callback) override;
+  void Capture(const DesktopRegion& region) override;
+  bool GetScreenList(ScreenList* screens) override;
+  bool SelectScreen(ScreenId id) override;
+  void SetExcludedWindow(WindowId window) override;
 
  private:
   typedef BOOL(WINAPI* MagImageScalingCallback)(HWND hwnd,
@@ -104,7 +104,7 @@ class ScreenCapturerWinMagnifier : public ScreenCapturer {
 
   static Atomic32 tls_index_;
 
-  scoped_ptr<ScreenCapturer> fallback_capturer_;
+  rtc::scoped_ptr<ScreenCapturer> fallback_capturer_;
   bool fallback_capturer_started_;
   Callback* callback_;
   ScreenId current_screen_id_;
@@ -119,7 +119,7 @@ class ScreenCapturerWinMagnifier : public ScreenCapturer {
   ScreenCaptureFrameQueue queue_;
 
   // Class to calculate the difference between two screen bitmaps.
-  scoped_ptr<Differ> differ_;
+  rtc::scoped_ptr<Differ> differ_;
 
   // Used to suppress duplicate logging of SetThreadExecutionState errors.
   bool set_thread_execution_state_failed_;

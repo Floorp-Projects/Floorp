@@ -34,7 +34,7 @@ ul {
 }
 
 #errorTitle {
-  background: url("aboutNetError_info.svg") left 0 no-repeat;
+  background: url("chrome://global/skin/icons/info.svg") left 0 no-repeat;
   background-size: 3em;
   -moz-margin-start: -5em;
   -moz-padding-start: 5em;

@@ -22,10 +22,8 @@ namespace rtc {
 // extension, including the information needed to update the authentication tag
 // after changing the value.
 struct PacketTimeUpdateParams {
-  PacketTimeUpdateParams()
-      : rtp_sendtime_extension_id(-1), srtp_auth_tag_len(-1),
-        srtp_packet_index(-1) {
-  }
+  PacketTimeUpdateParams();
+  ~PacketTimeUpdateParams();
 
   int rtp_sendtime_extension_id;    // extension header id present in packet.
   std::vector<char> srtp_auth_key;  // Authentication key.
@@ -75,8 +73,8 @@ class AsyncPacketSocket : public sigslot::has_slots<> {
     STATE_CONNECTED
   };
 
-  AsyncPacketSocket() { }
-  virtual ~AsyncPacketSocket() { }
+  AsyncPacketSocket();
+  ~AsyncPacketSocket() override;
 
   // Returns current local address. Address may be set to NULL if the
   // socket is not bound yet (GetState() returns STATE_BINDING).

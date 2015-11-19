@@ -33,9 +33,6 @@ nsRDFQuery::SetCachedResults(nsXULTemplateQueryProcessorRDF* aProcessor,
                              const InstantiationSet& aInstantiations)
 {
     mCachedResults = new nsXULTemplateResultSetRDF(aProcessor, this, &aInstantiations);
-    if (! mCachedResults)
-        return NS_ERROR_OUT_OF_MEMORY;
-
     return NS_OK;
 }
 

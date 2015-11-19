@@ -410,28 +410,28 @@ void
 MacroAssembler::Push(const Operand op)
 {
     push(op);
-    framePushed_ += sizeof(intptr_t);
+    adjustFrame(sizeof(intptr_t));
 }
 
 void
 MacroAssembler::Push(Register reg)
 {
     push(reg);
-    framePushed_ += sizeof(intptr_t);
+    adjustFrame(sizeof(intptr_t));
 }
 
 void
 MacroAssembler::Push(const Imm32 imm)
 {
     push(imm);
-    framePushed_ += sizeof(intptr_t);
+    adjustFrame(sizeof(intptr_t));
 }
 
 void
 MacroAssembler::Push(const ImmWord imm)
 {
     push(imm);
-    framePushed_ += sizeof(intptr_t);
+    adjustFrame(sizeof(intptr_t));
 }
 
 void
@@ -444,42 +444,42 @@ void
 MacroAssembler::Push(const ImmGCPtr ptr)
 {
     push(ptr);
-    framePushed_ += sizeof(intptr_t);
+    adjustFrame(sizeof(intptr_t));
 }
 
 void
 MacroAssembler::Push(FloatRegister t)
 {
     push(t);
-    framePushed_ += sizeof(double);
+    adjustFrame(sizeof(double));
 }
 
 void
 MacroAssembler::Pop(const Operand op)
 {
     pop(op);
-    framePushed_ -= sizeof(intptr_t);
+    implicitPop(sizeof(intptr_t));
 }
 
 void
 MacroAssembler::Pop(Register reg)
 {
     pop(reg);
-    framePushed_ -= sizeof(intptr_t);
+    implicitPop(sizeof(intptr_t));
 }
 
 void
 MacroAssembler::Pop(FloatRegister reg)
 {
     pop(reg);
-    framePushed_ -= sizeof(double);
+    implicitPop(sizeof(double));
 }
 
 void
 MacroAssembler::Pop(const ValueOperand& val)
 {
     popValue(val);
-    framePushed_ -= sizeof(Value);
+    implicitPop(sizeof(Value));
 }
 
 // ===============================================================

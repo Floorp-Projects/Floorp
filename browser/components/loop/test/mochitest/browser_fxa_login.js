@@ -25,6 +25,9 @@ function* checkFxA401() {
   let loopPanel = document.getElementById("loop-notification-panel");
   yield loadLoopPanel();
   let loopDoc = document.getElementById("loop-panel-iframe").contentDocument;
+  // Wait a little until our pieces have been rendered.
+  yield promiseWaitForCondition(() => !!loopDoc.querySelector(".alert-error .message"));
+
   is(loopDoc.querySelector(".alert-error .message").textContent,
      getLoopString("could_not_authenticate"),
      "Check error bar message");
@@ -305,6 +308,7 @@ add_task(function* basicAuthorizationAndRegistration() {
   is(tokenData.scope, "profile", "Check scope");
   is(tokenData.token_type, "bearer", "Check token_type");
 
+  yield promiseWaitForCondition(() => loopDoc.getElementsByClassName("user-identity").length);
   visibleEmail = loopDoc.getElementsByClassName("user-identity")[0];
 
   is(MozLoopService.userProfile.email, "test@example.com", "email should exist in the profile data");

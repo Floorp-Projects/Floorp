@@ -13,8 +13,6 @@ Cu.import("resource:///modules/loop/MozLoopService.jsm");
 Cu.import("resource:///modules/loop/LoopRooms.jsm");
 Cu.importGlobalProperties(["Blob"]);
 
-XPCOMUtils.defineLazyModuleGetter(this, "hookWindowCloseForPanelClose",
-                                        "resource://gre/modules/MozSocialAPI.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PageMetadata",
                                         "resource://gre/modules/PageMetadata.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PluralForm",
@@ -25,6 +23,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "UITour",
                                         "resource:///modules/UITour.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Social",
                                         "resource:///modules/Social.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "Promise",
+                                        "resource://gre/modules/Promise.jsm");
 XPCOMUtils.defineLazyGetter(this, "appInfo", function() {
   return Cc["@mozilla.org/xre/app-info;1"]
            .getService(Ci.nsIXULAppInfo)
@@ -36,1062 +36,1225 @@ XPCOMUtils.defineLazyServiceGetter(this, "clipboardHelper",
 XPCOMUtils.defineLazyServiceGetter(this, "extProtocolSvc",
                                          "@mozilla.org/uriloader/external-protocol-service;1",
                                          "nsIExternalProtocolService");
-this.EXPORTED_SYMBOLS = ["injectLoopAPI"];
+this.EXPORTED_SYMBOLS = ["LoopAPI"];
 
-/**
- * Trying to clone an Error object into a different container will yield an error.
- * We can work around this by copying the properties we care about onto a regular
- * object.
- *
- * @param {Error|nsIException} error        Error object to copy
- * @param {nsIDOMWindow}       targetWindow The content window to clone into
- */
-const cloneErrorObject = function(error, targetWindow) {
-  let obj = new targetWindow.Error();
-  let props = Object.getOwnPropertyNames(error);
+const cloneableError = function(source) {
+  // Simple Object that can be cloned over.
+  let error = {};
+  if (typeof source == "string") {
+    source = new Error(source);
+  }
+
+  let props = Object.getOwnPropertyNames(source);
   // nsIException properties are not enumerable, so we'll try to copy the most
   // common and useful ones.
   if (!props.length) {
     props.push("message", "filename", "lineNumber", "columnNumber", "stack");
   }
   for (let prop of props) {
-    let value = error[prop];
-    // for nsIException objects, the property may not be defined.
-    if (typeof value == "undefined") {
+    let value = source[prop];
+    let type = typeof value;
+
+    // Functions can't be cloned. Period.
+    // For nsIException objects, the property may not be defined.
+    if (type == "function" || type == "undefined") {
       continue;
     }
-    if (typeof value != "string" && typeof value != "number") {
-      value = String(value);
+    // Don't do anything to members that are already cloneable.
+    if (/boolean|number|string/.test(type)) {
+      error[prop] = value;
+    } else {
+      // Convert non-compatible types to a String.
+      error[prop] = "" + value;
+    }
+  }
+
+  // Mark the object as an Error, otherwise it won't be discernable from other,
+  // regular objects.
+  error.isError = true;
+
+  return error;
+};
+
+const getObjectAPIFunctionName = function(action) {
+  let funcName = action.split(":").pop();
+  return funcName.charAt(0).toLowerCase() + funcName.substr(1);
+};
+
+/**
+ * Retrieves a list of Social Providers from the Social API that are explicitly
+ * capable of sharing URLs.
+ * It also adds a listener that is fired whenever a new Provider is added or
+ * removed.
+ *
+ * @return {Array} Sorted list of share-capable Social Providers.
+ */
+const updateSocialProvidersCache = function() {
+  let providers = [];
+
+  for (let provider of Social.providers) {
+    if (!provider.shareURL) {
+      continue;
     }
 
-    Object.defineProperty(Cu.waiveXrays(obj), prop, {
-      configurable: false,
-      enumerable: true,
-      value: value,
-      writable: false
+    // Only pass the relevant data on to content.
+    providers.push({
+      iconURL: provider.iconURL,
+      name: provider.name,
+      origin: provider.origin
     });
   }
-  return obj;
+
+  let providersWasSet = !!gSocialProviders;
+  // Replace old with new.
+  gSocialProviders = providers.sort((a, b) =>
+    a.name.toLowerCase().localeCompare(b.name.toLowerCase()));
+
+  // Start listening for changes in the social provider list, if we're not
+  // doing that yet.
+  if (!providersWasSet) {
+    Services.obs.addObserver(updateSocialProvidersCache, "social:providers-changed", false);
+  } else {
+    // Dispatch an event to content to let stores freshen-up.
+    LoopAPIInternal.broadcastPushMessage("SocialProvidersChanged");
+  }
+
+  return gSocialProviders;
 };
 
-/**
- * Makes an object or value available to an unprivileged target window.
- *
- * Primitives are returned as they are, while objects are cloned into the
- * specified target.  Error objects are also handled correctly.
- *
- * @param {any}          value        Value or object to copy
- * @param {nsIDOMWindow} targetWindow The content window to copy to
- */
-const cloneValueInto = function(value, targetWindow) {
-  if (!value || typeof value != "object") {
-    return value;
-  }
-
-  // HAWK request errors contain an nsIException object inside `value`.
-  if (("error" in value) && (value.error instanceof Ci.nsIException)) {
-    value = value.error;
-  }
-
-  // Strip Function properties, since they can not be cloned across boundaries
-  // like this.
-  for (let prop of Object.getOwnPropertyNames(value)) {
-    if (typeof value[prop] == "function") {
-      delete value[prop];
+var gAppVersionInfo = null;
+var gBrowserSharingListenerCount = 0;
+var gBrowserSharingWindows = new Set();
+var gPageListeners = null;
+var gOriginalPageListeners = null;
+var gSocialProviders = null;
+var gStringBundle = null;
+const kBatchMessage = "Batch";
+const kMaxLoopCount = 10;
+const kMessageName = "Loop:Message";
+const kPushMessageName = "Loop:Message:Push";
+const kPushSubscription = "pushSubscription";
+const kRoomsPushPrefix = "Rooms:";
+const kMessageHandlers = {
+  /**
+   * Start browser sharing, which basically means to start listening for tab
+   * switches and passing the new window ID to the sender whenever that happens.
+   * 
+   * @param {Object}   message Message meant for the handler function, containing
+   *                           the following parameters in its `data` property:
+   *                           [ ]
+   * @param {Function} reply   Callback function, invoked with the result of this
+   *                           message handler. The result will be sent back to
+   *                           the senders' channel.
+   */
+  AddBrowserSharingListener: function(message, reply) {
+    let win = Services.wm.getMostRecentWindow("navigator:browser");
+    let browser = win && win.gBrowser.selectedBrowser;
+    if (!win || !browser) {
+      // This may happen when an undocked conversation window is the only
+      // window left.
+      let err = new Error("No tabs available to share.");
+      MozLoopService.log.error(err);
+      reply(cloneableError(err));
+      return;
     }
-  }
+    if (browser.getAttribute("remote") == "true") {
+      // Tab sharing is not supported yet for e10s-enabled browsers. This will
+      // be fixed in bug 1137634.
+      let err = new Error("Tab sharing is not supported for e10s-enabled browsers");
+      MozLoopService.log.error(err);
+      reply(cloneableError(err));
+      return;
+    }
 
-  // Inspect for an error this way, because the Error object is special.
-  if (value.constructor.name == "Error" || value instanceof Ci.nsIException) {
-    return cloneErrorObject(value, targetWindow);
-  }
+    win.LoopUI.startBrowserSharing();
 
-  let clone;
-  try {
-    clone = Cu.cloneInto(value, targetWindow);
-  } catch (ex) {
-    MozLoopService.log.debug("Failed to clone value:", value);
-    throw ex;
-  }
+    gBrowserSharingWindows.add(Cu.getWeakReference(win));
+    ++gBrowserSharingListenerCount;
+  },
 
-  return clone;
-};
+  /**
+   * Associates a session-id and a call-id with a window for debugging.
+   *
+   * @param {Object}   message Message meant for the handler function, containing
+   *                           the following parameters in its `data` property:
+   *                           [
+   *                             {String} windowId  The window id.
+   *                             {String} sessionId OT session id.
+   *                             {String} callId    The callId on the server.
+   *                           ]
+   * @param {Function} reply   Callback function, invoked with the result of this
+   *                           message handler. The result will be sent back to
+   *                           the senders' channel.
+   */
+  AddConversationContext: function(message, reply) {
+    let [windowId, sessionId, callid] = message.data;
+    MozLoopService.addConversationContext(windowId, {
+      sessionId: sessionId,
+      callId: callid
+    });
+    reply();
+  },
 
-/**
- * Guarded callback invocation that reports when a callback function doesn't
- * exist anymore.
- *
- * @param {Function} callback Callback function to be invoked.
- * @param {...mixed} args     Rest param of callback function arguments.
- */
-const invokeCallback = function(callback, ...args) {
-  if (typeof callback != "function") {
-    // We log an error, because it will have a stack trace attached which will
-    // be helpful whilst debugging.
-    MozLoopService.log.error.apply(MozLoopService.log,
-      [new Error("Callback function was lost!"), ...args]);
-    return;
-  }
+  /**
+   * Activates the Social Share panel with the Social Provider panel opened
+   * when the popup open.
+   *
+   * @param {Object}   message Message meant for the handler function, containing
+   *                           the following parameters in its `data` property:
+   *                           [ ]
+   * @param {Function} reply   Callback function, invoked with the result of this
+   *                           message handler. The result will be sent back to
+   *                           the senders' channel.
+   */
+  AddSocialShareProvider: function(message, reply) {
+    let win = Services.wm.getMostRecentWindow("navigator:browser");
+    if (!win || !win.SocialShare) {
+      reply();
+      return;
+    }
+    win.SocialShare.showDirectory(win.LoopUI.toolbarButton.anchor);
+    reply();
+  },
 
-  return callback.apply(null, args);
-};
+  /**
+   * Composes an email via the external protocol service.
+   *
+   * @param {Object}   message Message meant for the handler function, containing
+   *                           the following parameters in its `data` property:
+   *                           [
+   *                             {String} subject   Subject of the email to send
+   *                             {String} body      Body message of the email to send
+   *                             {String} recipient Recipient email address (optional)
+   *                           ]
+   * @param {Function} reply   Callback function, invoked with the result of this
+   *                           message handler. The result will be sent back to
+   *                           the senders' channel.
+   */
+  ComposeEmail: function(message) {
+    let [subject, body, recipient] = message.data;
+    recipient = recipient || "";
+    let mailtoURL = "mailto:" + encodeURIComponent(recipient) +
+                    "?subject=" + encodeURIComponent(subject) +
+                    "&body=" + encodeURIComponent(body);
+    extProtocolSvc.loadURI(CommonUtils.makeURI(mailtoURL));
+  },
 
-/**
- * Get the two-digit hexadecimal code for a byte
- *
- * @param {byte} charCode
- */
-const toHexString = function(charCode) {
-  return ("0" + charCode.toString(16)).slice(-2);
-};
+  /**
+   * Show a confirmation dialog with the standard - localized - 'Yes'/ 'No'
+   * buttons or custom labels.
+   *
+   * @param {Object}   message Message meant for the handler function, containing
+   *                           the following parameters in its `data` property:
+   *                           [
+   *                             {Object} options Options for the confirm dialog:
+   *                               - {String} message        Message body for the dialog
+   *                               - {String} [okButton]     Label for the OK button
+   *                               - {String} [cancelButton] Label for the Cancel button
+   *                           ]
+   * @param {Function} reply   Callback function, invoked with the result of this
+   *                           message handler. The result will be sent back to
+   *                           the senders' channel.
+   */
+  Confirm: function(message, reply) {
+    let options = message.data[0];
+    let buttonFlags;
+    if (options.okButton && options.cancelButton) {
+      buttonFlags =
+        (Ci.nsIPrompt.BUTTON_POS_0 * Ci.nsIPrompt.BUTTON_TITLE_IS_STRING) +
+        (Ci.nsIPrompt.BUTTON_POS_1 * Ci.nsIPrompt.BUTTON_TITLE_IS_STRING);
+    } else if (!options.okButton && !options.cancelButton) {
+      buttonFlags = Services.prompt.STD_YES_NO_BUTTONS;
+    } else {
+      reply(cloneableError("confirm: missing button options"));
+      return;
+    }
 
-/**
- * Inject any API containing _only_ function properties into the given window.
- *
- * @param {Object}       api          Object containing functions that need to
- *                                    be exposed to content
- * @param {nsIDOMWindow} targetWindow The content window to attach the API
- */
-const injectObjectAPI = function(api, targetWindow) {
-  let injectedAPI = {};
-  // Wrap all the methods in `api` to help results passed to callbacks get
-  // through the priv => unpriv barrier with `Cu.cloneInto()`.
-  Object.keys(api).forEach(func => {
-    injectedAPI[func] = function(...params) {
-      let lastParam = params.pop();
-      let callbackIsFunction = (typeof lastParam == "function");
-      // Clone params coming from content to the current scope.
-      params = [cloneValueInto(p, api) for (p of params)];
+    try {
+      let chosenButton = Services.prompt.confirmEx(null, "",
+        options.message, buttonFlags, options.okButton, options.cancelButton,
+        null, null, {});
 
-      // If the last parameter is a function, assume its a callback
-      // and wrap it differently.
-      if (callbackIsFunction) {
-        api[func](...params, function callback(...results) {
-          // When the function was garbage collected due to async events, like
-          // closing a window, we want to circumvent a JS error.
-          if (callbackIsFunction && typeof lastParam != "function") {
-            MozLoopService.log.debug(func + ": callback function was lost.");
-            // Clean up event listeners.
-            if (func == "on" && api.off) {
-              api.off(results[0], callback);
-              return;
-            }
-            // Assume the presence of a first result argument to be an error.
-            if (results[0]) {
-              MozLoopService.log.error(func + " error:", results[0]);
-            }
-            return;
-          }
-          lastParam(...[cloneValueInto(r, targetWindow) for (r of results)]);
-        });
-      } else {
-        try {
-          lastParam = cloneValueInto(lastParam, api);
-          return cloneValueInto(api[func](...params, lastParam), targetWindow);
-        } catch (ex) {
-          MozLoopService.log.error(func + " error: ", ex, params, lastParam);
-          return cloneValueInto(ex, targetWindow);
-        }
-      }
-    };
-  });
+      reply(chosenButton == 0);
+    } catch (ex) {
+      reply(ex);
+    }
+  },
 
-  let contentObj = Cu.cloneInto(injectedAPI, targetWindow, {cloneFunctions: true});
-  // Since we deny preventExtensions on XrayWrappers, because Xray semantics make
-  // it difficult to act like an object has actually been frozen, we try to seal
-  // the `contentObj` without Xrays.
-  try {
-    Object.seal(Cu.waiveXrays(contentObj));
-  } catch (ex) {}
-  return contentObj;
-};
+  /**
+   * Copies passed string onto the system clipboard.
+   *
+   * @param {Object}   message Message meant for the handler function, containing
+   *                           the following parameters in its `data` property:
+   *                           [
+   *                             {String} str The string to copy
+   *                           ]
+   * @param {Function} reply   Callback function, invoked with the result of this
+   *                           message handler. The result will be sent back to
+   *                           the senders' channel.
+   */
+  CopyString: function(message, reply) {
+    let str = message.data[0];
+    clipboardHelper.copyString(str);
+    reply();
+  },
 
-/**
- * Inject the loop API into the given window.  The caller must be sure the
- * window is a loop content window (eg, a panel, chatwindow, or similar).
- *
- * See the documentation on the individual functions for details of the API.
- *
- * @param {nsIDOMWindow} targetWindow The content window to attach the API.
- */
-function injectLoopAPI(targetWindow) {
-  let ringer;
-  let ringerStopper;
-  let appVersionInfo;
-  let roomsAPI;
-  let callsAPI;
-  let savedWindowListeners = new Map();
-  let socialProviders;
-  const kShareWidgetId = "social-share-button";
-  let socialShareButtonListenersAdded = false;
+  /**
+   * Returns a new GUID (UUID) in curly braces format.
+   *
+   * @param {Object}   message Message meant for the handler function, containing
+   *                           the following parameters in its `data` property:
+   *                           [ ]
+   * @param {Function} reply   Callback function, invoked with the result of this
+   *                           message handler. The result will be sent back to
+   *                           the senders' channel.
+   */
+  GenerateUUID: function(message, reply) {
+    reply(MozLoopService.generateUUID());
+  },
 
+  /**
+   * Fetch the JSON blob of localized strings from the loop.properties bundle.
+   * @see MozLoopService#getStrings
+   *
+   * @param {Object}   message Message meant for the handler function, containing
+   *                           the following parameters in its `data` property:
+   *                           [ ]
+   * @param {Function} reply   Callback function, invoked with the result of this
+   *                           message handler. The result will be sent back to
+   *                           the senders' channel.
+   */
+  GetAllStrings: function(message, reply) {
+    if (gStringBundle) {
+      reply(gStringBundle);
+      return;
+    }
 
-  let api = {
-    /**
-     * Gets an object with data that represents the currently
-     * authenticated user's identity.
-     *
-     * @return null if user not logged in; profile object otherwise
-     */
-    userProfile: {
-      enumerable: true,
-      get: function() {
-        if (!MozLoopService.userProfile)
-          return null;
-        let userProfile = Cu.cloneInto({
-          email: MozLoopService.userProfile.email,
-          uid: MozLoopService.userProfile.uid
-        }, targetWindow);
-        return userProfile;
-      }
-    },
+    // Get the map of strings.
+    let strings = MozLoopService.getStrings();
+    // Convert it to an object.
+    gStringBundle = {};
+    for (let [key, value] of strings.entries()) {
+      gStringBundle[key] = value;
+    }
+    reply(gStringBundle);
+  },
 
-    /**
-     * Sets and gets the "do not disturb" mode activation flag.
-     */
-    doNotDisturb: {
-      enumerable: true,
-      get: function() {
-        return MozLoopService.doNotDisturb;
-      },
-      set: function(aFlag) {
-        MozLoopService.doNotDisturb = aFlag;
-      }
-    },
+  /**
+   * Fetch all constants that are used both on the client and the chrome-side.
+   *
+   * @param {Object}   message Message meant for the handler function, containing
+   *                           the following parameters in its `data` property:
+   *                           [ ]
+   * @param {Function} reply   Callback function, invoked with the result of this
+   *                           message handler. The result will be sent back to
+   *                           the senders' channel.
+   */
+  GetAllConstants: function(message, reply) {
+    reply({
+      LOOP_SESSION_TYPE: LOOP_SESSION_TYPE,
+      ROOM_CONTEXT_ADD: ROOM_CONTEXT_ADD,
+      ROOM_CREATE: ROOM_CREATE,
+      ROOM_DELETE: ROOM_DELETE,
+      SHARING_ROOM_URL: SHARING_ROOM_URL,
+      SHARING_STATE_CHANGE: SHARING_STATE_CHANGE,
+      TWO_WAY_MEDIA_CONN_LENGTH: TWO_WAY_MEDIA_CONN_LENGTH
+    });
+  },
+  /**
+   * Returns the app version information for use during feedback.
+   *
+   * @param {Object}   message Message meant for the handler function, containing
+   *                           the following parameters in its `data` property:
+   *                           [ ]
+   * @param {Function} reply   Callback function, invoked with the result of this
+   *                           message handler. The result will be sent back to
+   *                           the senders' channel.
+   * @return {Object} An object containing:
+   *   - channel: The update channel the application is on
+   *   - version: The application version
+   *   - OS: The operating system the application is running on
+   */
+  GetAppVersionInfo: function(message, reply) {
+    if (!gAppVersionInfo) {
+      // If the lazy getter explodes, we're probably loaded in xpcshell,
+      // which doesn't have what we need, so log an error.
+      try {
+        gAppVersionInfo = {
+          channel: UpdateUtils.UpdateChannel,
+          version: appInfo.version,
+          OS: appInfo.OS
+        };
+      } catch (ex) {}
+    }
+    reply(gAppVersionInfo);
+  },
 
-    errors: {
-      enumerable: true,
-      get: function() {
-        let errors = {};
-        for (let [type, error] of MozLoopService.errors) {
-          // if error.error is an nsIException, just delete it since it's hard
-          // to clone across the boundary.
-          if (error.error instanceof Ci.nsIException) {
-            MozLoopService.log.debug("Warning: Some errors were omitted from MozLoopAPI.errors " +
-                                     "due to issues copying nsIException across boundaries.",
-                                     error.error);
-            delete error.error;
-          }
-
-          // We have to clone the error property since it may be an Error object.
-          if (error.hasOwnProperty("toString")) {
-            delete error.toString;
-          }
-          errors[type] = Cu.waiveXrays(Cu.cloneInto(error, targetWindow, { cloneFunctions: true }));
-        }
-        return Cu.cloneInto(errors, targetWindow, { cloneFunctions: true });
-      },
-    },
-
-    /**
-     * Returns the current locale of the browser.
-     *
-     * @returns {String} The locale string
-     */
-    locale: {
-      enumerable: true,
-      get: function() {
-        return MozLoopService.locale;
-      }
-    },
-
-    /**
-     * Adds a listener to the most recent window for browser/tab sharing. The
-     * listener will be notified straight away of the current tab id, then every
-     * time there is a change of tab.
-     *
-     * Listener parameters:
-     * - {Object}  err      If there is a error this will be defined, null otherwise.
-     * - {Number} windowId The new windowId after a change of tab.
-     *
-     * @param {Function} listener The listener to handle the windowId changes.
-     */
-    addBrowserSharingListener: {
-      enumerable: true,
-      writable: true,
-      value: function(listener) {
-        let win = Services.wm.getMostRecentWindow("navigator:browser");
-        let browser = win && win.gBrowser.selectedBrowser;
-        if (!win || !browser) {
-          // This may happen when an undocked conversation window is the only
-          // window left.
-          let err = new Error("No tabs available to share.");
-          MozLoopService.log.error(err);
-          listener(cloneValueInto(err, targetWindow));
-          return;
-        }
-        if (browser.getAttribute("remote") == "true") {
-          // Tab sharing is not supported yet for e10s-enabled browsers. This will
-          // be fixed in bug 1137634.
-          let err = new Error("Tab sharing is not supported for e10s-enabled browsers");
-          MozLoopService.log.error(err);
-          listener(cloneValueInto(err, targetWindow));
-          return;
-        }
-
-        win.LoopUI.addBrowserSharingListener(listener);
-
-        savedWindowListeners.set(listener, Cu.getWeakReference(win));
-      }
-    },
-
-    /**
-     * Removes a listener that was previously added.
-     *
-     * @param {Function} listener The listener to handle the windowId changes.
-     */
-    removeBrowserSharingListener: {
-      enumerable: true,
-      writable: true,
-      value: function(listener) {
-        if (!savedWindowListeners.has(listener)) {
-          return;
-        }
-
-        let win = savedWindowListeners.get(listener).get();
-
-        // Remove the element, regardless of if the window exists or not so
-        // that we clean the map.
-        savedWindowListeners.delete(listener);
-
-        if (!win) {
-          return;
-        }
-
-        win.LoopUI.removeBrowserSharingListener(listener);
-      }
-    },
-
-    /**
-     * Returns the window data for a specific conversation window id.
-     *
-     * This data will be relevant to the type of window, e.g. rooms.
-     * See LoopRooms for more information.
-     *
-     * @param {String} conversationWindowId
-     * @returns {Object} The window data or null if error.
-     */
-    getConversationWindowData: {
-      enumerable: true,
-      writable: true,
-      value: function(conversationWindowId) {
-        return cloneValueInto(MozLoopService.getConversationWindowData(conversationWindowId),
-          targetWindow);
-      }
-    },
-
-    /**
-     * Returns the rooms API.
-     *
-     * @returns {Object} The rooms API object
-     */
-    rooms: {
-      enumerable: true,
-      get: function() {
-        if (roomsAPI) {
-          return roomsAPI;
-        }
-        return roomsAPI = injectObjectAPI(LoopRooms, targetWindow);
-      }
-    },
-
-    /**
-     * Returns translated strings associated with an element. Designed
-     * for use with l10n.js
-     *
-     * @param {String} key The element id
-     * @returns {Object} A JSON string containing the localized
-     *                   attribute/value pairs for the element.
-     */
-    getStrings: {
-      enumerable: true,
-      writable: true,
-      value: function(key) {
-        return MozLoopService.getStrings(key);
-      }
-    },
-
-    /**
-     * Returns the correct form of a semi-colon separated string
-     * based on the value of the `num` argument and the current locale.
-     *
-     * @param {Integer} num The number used to find the plural form.
-     * @param {String} str The semi-colon separated string of word forms.
-     * @returns {String} The correct word form based on the value of the number
-     *                   and the current locale.
-     */
-    getPluralForm: {
-      enumerable: true,
-      writable: true,
-      value: function(num, str) {
-        return PluralForm.get(num, str);
-      }
-    },
-
-    /**
-     * Displays a confirmation dialog using the specified strings.
-     *
-     * @param {Object}   options  Confirm dialog options
-     * @param {Function} callback Function that will be invoked once the operation
-     *                            finished. The first argument passed will be an
-     *                            `Error` object or `null`. The second argument
-     *                            will be the result of the operation, TRUE if
-     *                            the user chose the OK button.
-     */
-    confirm: {
-      enumerable: true,
-      writable: true,
-      value: function(options, callback) {
-        let buttonFlags;
-        if (options.okButton && options.cancelButton) {
-          buttonFlags =
-            (Ci.nsIPrompt.BUTTON_POS_0 * Ci.nsIPrompt.BUTTON_TITLE_IS_STRING) +
-            (Ci.nsIPrompt.BUTTON_POS_1 * Ci.nsIPrompt.BUTTON_TITLE_IS_STRING);
-        } else if (!options.okButton && !options.cancelButton) {
-          buttonFlags = Services.prompt.STD_YES_NO_BUTTONS;
-        } else {
-          invokeCallback(callback, cloneValueInto(new Error("confirm: missing button options"), targetWindow));
-        }
-
-        try {
-          let chosenButton = Services.prompt.confirmEx(null, "",
-            options.message, buttonFlags, options.okButton, options.cancelButton,
-            null, null, {});
-
-          invokeCallback(callback, null, chosenButton == 0);
-        } catch (ex) {
-          invokeCallback(callback, cloneValueInto(ex, targetWindow));
-        }
-      }
-    },
-
-    /**
-     * Set any preference under "loop."
-     *
-     * @param {String} prefName The name of the pref without the preceding "loop."
-     * @param {*} value The value to set.
-     * @param {Enum} prefType Type of preference, defined at Ci.nsIPrefBranch. Optional.
-     *
-     * Any errors thrown by the Mozilla pref API are logged to the console
-     * and cause false to be returned.
-     */
-    setLoopPref: {
-      enumerable: true,
-      writable: true,
-      value: function(prefName, value, prefType) {
-        MozLoopService.setLoopPref(prefName, value, prefType);
-      }
-    },
-
-    /**
-     * Return any preference under "loop.".
-     *
-     * @param {String} prefName The name of the pref without the preceding
-     * "loop."
-     * @param {Enum} prefType Type of preference, defined at Ci.nsIPrefBranch. Optional.
-     *
-     * Any errors thrown by the Mozilla pref API are logged to the console
-     * and cause null to be returned. This includes the case of the preference
-     * not being found.
-     *
-     * @return {*} on success, null on error
-     */
-    getLoopPref: {
-      enumerable: true,
-      writable: true,
-      value: function(prefName, prefType) {
-        return MozLoopService.getLoopPref(prefName);
-      }
-    },
-
-    /**
-     * Hangup and close all chat windows that are open.
-     */
-    hangupAllChatWindows: {
-      enumerable: true,
-      writable: true,
-      value() {
-        MozLoopService.hangupAllChatWindows();
-      }
-    },
-
-    /**
-     * Starts alerting the user about an incoming call
-     */
-    startAlerting: {
-      enumerable: true,
-      writable: true,
-      value: function() {
-        let chromeWindow = getChromeWindow(targetWindow);
-        chromeWindow.getAttention();
-        ringer = new chromeWindow.Audio();
-        ringer.src = Services.prefs.getCharPref("loop.ringtone");
-        ringer.loop = true;
-        ringer.load();
-        ringer.play();
-        targetWindow.document.addEventListener("visibilitychange",
-          ringerStopper = function(event) {
-            if (event.currentTarget.hidden) {
-              api.stopAlerting.value();
-            }
-          });
-      }
-    },
-
-    /**
-     * Stops alerting the user about an incoming call
-     */
-    stopAlerting: {
-      enumerable: true,
-      writable: true,
-      value: function() {
-        if (ringerStopper) {
-          targetWindow.document.removeEventListener("visibilitychange",
-                                                    ringerStopper);
-          ringerStopper = null;
-        }
-        if (ringer) {
-          ringer.pause();
-          ringer = null;
-        }
-      }
-    },
-
-    LOOP_SESSION_TYPE: {
-      enumerable: true,
-      get: function() {
-        return Cu.cloneInto(LOOP_SESSION_TYPE, targetWindow);
-      }
-    },
-
-    TWO_WAY_MEDIA_CONN_LENGTH: {
-      enumerable: true,
-      get: function() {
-        return Cu.cloneInto(TWO_WAY_MEDIA_CONN_LENGTH, targetWindow);
-      }
-    },
-
-    SHARING_STATE_CHANGE: {
-      enumerable: true,
-      get: function() {
-        return Cu.cloneInto(SHARING_STATE_CHANGE, targetWindow);
-      }
-    },
-
-    SHARING_ROOM_URL: {
-      enumerable: true,
-      get: function() {
-        return Cu.cloneInto(SHARING_ROOM_URL, targetWindow);
-      }
-    },
-
-    ROOM_CREATE: {
-      enumerable: true,
-      get: function() {
-        return Cu.cloneInto(ROOM_CREATE, targetWindow);
-      }
-    },
-
-    ROOM_DELETE: {
-      enumerable: true,
-      get: function() {
-        return Cu.cloneInto(ROOM_DELETE, targetWindow);
-      }
-    },
-
-    ROOM_CONTEXT_ADD: {
-      enumerable: true,
-      get: function() {
-        return Cu.cloneInto(ROOM_CONTEXT_ADD, targetWindow);
-      }
-    },
-
-    fxAEnabled: {
-      enumerable: true,
-      get: function() {
-        return MozLoopService.fxAEnabled;
-      },
-    },
-
-    /**
-     * Start the FxA login flow using the OAuth client and params from the Loop
-     * server.
-     *
-     * @param {Boolean} forceReAuth Set to true to force FxA into a re-auth even
-     *                              if the user is already logged in.
-     * @return {Promise} Returns a promise that is resolved on successful
-     *                   completion, or rejected otherwise.
-     */
-    logInToFxA: {
-      enumerable: true,
-      writable: true,
-      value: function(forceReAuth) {
-        return MozLoopService.logInToFxA(forceReAuth);
-      }
-    },
-
-    logOutFromFxA: {
-      enumerable: true,
-      writable: true,
-      value: function() {
-        return MozLoopService.logOutFromFxA();
-      }
-    },
-
-    openFxASettings: {
-      enumerable: true,
-      writable: true,
-      value: function() {
-        return MozLoopService.openFxASettings();
-      },
-    },
-
-    /**
-     * Returns true if this profile has an encryption key.
-     *
-     * @return {Boolean} True if the profile has an encryption key.
-     */
-    hasEncryptionKey: {
-      enumerable: true,
-      get: function() {
-        return MozLoopService.hasEncryptionKey;
-      }
-    },
-
-    /**
-     * Opens the Getting Started tour in the browser.
-     *
-     * @param {String} aSrc
-     *   - The UI element that the user used to begin the tour, optional.
-     */
-    openGettingStartedTour: {
-      enumerable: true,
-      writable: true,
-      value: function(aSrc) {
-        return MozLoopService.openGettingStartedTour(aSrc);
-      },
-    },
-
-    /**
-     * Opens a URL in a new tab in the browser.
-     *
-     * @param {String} url The new url to open
-     */
-    openURL: {
-      enumerable: true,
-      writable: true,
-      value: function(url) {
-        return MozLoopService.openURL(url);
-      }
-    },
-
-    /**
-     * Copies passed string onto the system clipboard.
-     *
-     * @param {String} str The string to copy
-     */
-    copyString: {
-      enumerable: true,
-      writable: true,
-      value: function(str) {
-        clipboardHelper.copyString(str);
-      }
-    },
-
-    /**
-     * Returns the app version information for use during feedback.
-     *
-     * @return {Object} An object containing:
-     *   - channel: The update channel the application is on
-     *   - version: The application version
-     *   - OS: The operating system the application is running on
-     */
-    appVersionInfo: {
-      enumerable: true,
-      get: function() {
-        if (!appVersionInfo) {
-          // If the lazy getter explodes, we're probably loaded in xpcshell,
-          // which doesn't have what we need, so log an error.
-          try {
-            appVersionInfo = Cu.cloneInto({
-              channel: UpdateUtils.UpdateChannel,
-              version: appInfo.version,
-              OS: appInfo.OS
-            }, targetWindow);
-          } catch (ex) {
-            // only log outside of xpcshell to avoid extra message noise
-            if (typeof targetWindow !== 'undefined' && "console" in targetWindow) {
-              MozLoopService.log.error("Failed to construct appVersionInfo; if this isn't " +
-                                       "an xpcshell unit test, something is wrong", ex);
-            }
-          }
-        }
-        return appVersionInfo;
-      }
-    },
-
-    /**
-     * Composes an email via the external protocol service.
-     *
-     * @param {String} subject   Subject of the email to send
-     * @param {String} body      Body message of the email to send
-     * @param {String} recipient Recipient email address (optional)
-     */
-    composeEmail: {
-      enumerable: true,
-      writable: true,
-      value: function(subject, body, recipient) {
-        recipient = recipient || "";
-        let mailtoURL = "mailto:" + encodeURIComponent(recipient) +
-                        "?subject=" + encodeURIComponent(subject) +
-                        "&body=" + encodeURIComponent(body);
-        extProtocolSvc.loadURI(CommonUtils.makeURI(mailtoURL));
-      }
-    },
-
-    /**
-     * Adds a value to a telemetry histogram.
-     *
-     * @param  {String}  histogramId Name of the telemetry histogram to update.
-     * @param  {String}  value       Label of bucket to increment in the histogram.
-     */
-    telemetryAddValue: {
-      enumerable: true,
-      writable: true,
-      value: function(histogramId, value) {
-        Services.telemetry.getHistogramById(histogramId).add(value);
-      }
-    },
-
-    /**
-     * Returns a new GUID (UUID) in curly braces format.
-     */
-    generateUUID: {
-      enumerable: true,
-      writable: true,
-      value: function() {
-        return MozLoopService.generateUUID();
-      }
-    },
-
-    getAudioBlob: {
-      enumerable: true,
-      writable: true,
-      value: function(name, callback) {
-        let request = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"]
+  /**
+   * Fetch the contents of a specific audio file and return it as a Blob object.
+   *
+   * @param {Object}   message Message meant for the handler function, containing
+   *                           the following parameters in its `data` property:
+   *                           [
+   *                             {String} name Name of the sound to fetch
+   *                           ]
+   * @param {Function} reply   Callback function, invoked with the result of this
+   *                           message handler. The result will be sent back to
+   *                           the senders' channel.
+   */
+  GetAudioBlob: function(message, reply) {
+    let name = message.data[0];
+    let request = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"]
                         .createInstance(Ci.nsIXMLHttpRequest);
-        let url = `chrome://browser/content/loop/shared/sounds/${name}.ogg`;
+    let url = `chrome://browser/content/loop/shared/sounds/${name}.ogg`;
 
-        request.open("GET", url, true);
-        request.responseType = "arraybuffer";
-        request.onload = () => {
-          if (request.status < 200 || request.status >= 300) {
-            let error = new Error(request.status + " " + request.statusText);
-            invokeCallback(callback, cloneValueInto(error, targetWindow));
-            return;
-          }
-
-          let blob = new Blob([request.response], {type: "audio/ogg"});
-          invokeCallback(callback, null, cloneValueInto(blob, targetWindow));
-        };
-
-        request.send();
+    request.open("GET", url, true);
+    request.responseType = "arraybuffer";
+    request.onload = () => {
+      if (request.status < 200 || request.status >= 300) {
+        reply(cloneableError(request.status + " " + request.statusText));
+        return;
       }
-    },
 
-    /**
-     * Compose a URL pointing to the location of an avatar by email address.
-     * At the moment we use the Gravatar service to match email addresses with
-     * avatars. If no email address is found we return null.
-     *
-     * @param {String} emailAddress Users' email address
-     * @param {Number} size         Size of the avatar image to return in pixels.
-     *                              Optional. Default value: 40.
-     * @return the URL pointing to an avatar matching the provided email address
-     *         or null if this is not available.
-     */
-    getUserAvatar: {
-      enumerable: true,
-      writable: true,
-      value: function(emailAddress, size = 40) {
-        if (!emailAddress || !MozLoopService.getLoopPref("contacts.gravatars.show")) {
-          return null;
+      let blob = new Blob([request.response], {type: "audio/ogg"});
+      reply(blob);
+    };
+
+    request.send();
+  },
+
+  /**
+   * Returns the window data for a specific conversation window id.
+   *
+   * This data will be relevant to the type of window, e.g. rooms or calls.
+   * See LoopRooms for more information.
+   *
+   * @param {Object}   message Message meant for the handler function, containing
+   *                           the following parameters in its `data` property:
+   *                           [
+   *                             {String} conversationWindowId
+   *                           ]
+   * @param {Function} reply   Callback function, invoked with the result of this
+   *                           message handler. The result will be sent back to
+   *                           the senders' channel.
+   * @returns {Object} The window data or null if error.
+   */
+  GetConversationWindowData: function(message, reply) {
+    reply(MozLoopService.getConversationWindowData(message.data[0]));
+  },
+
+  /**
+   * Gets the "do not disturb" mode activation flag.
+   *
+   * @param {Object}   message Message meant for the handler function, containing
+   *                           the following parameters in its `data` property:
+   *                           [ ]
+   * @param {Function} reply   Callback function, invoked with the result of this
+   *                           message handler. The result will be sent back to
+   *                           the senders' channel.
+   */
+  GetDoNotDisturb: function(message, reply) {
+    reply(MozLoopService.doNotDisturb);
+  },
+
+  /**
+   * Retrieve the list of errors that are currently pending on the MozLoopService
+   * class.
+   *
+   * @param {Object}   message Message meant for the handler function, containing
+   *                           the following parameters in its `data` property:
+   *                           [ ]
+   * @param {Function} reply   Callback function, invoked with the result of this
+   *                           message handler. The result will be sent back to
+   *                           the senders' channel.
+   */
+  GetErrors: function(message, reply) {
+    let errors = {};
+    for (let [type, error] of MozLoopService.errors) {
+      // if error.error is an nsIException, just delete it since it's hard
+      // to clone across the boundary.
+      if (error.error instanceof Ci.nsIException) {
+        MozLoopService.log.debug("Warning: Some errors were omitted from MozLoopAPI.errors " +
+                                 "due to issues copying nsIException across boundaries.",
+                                 error.error);
+        delete error.error;
+      }
+
+      errors[type] = cloneableError(error);
+    }
+    return reply(errors);
+  },
+
+  /**
+   * Returns TRUE if Firefox Accounts are enabled and can be used.
+   *
+   * @param {Object}   message Message meant for the handler function, containing
+   *                           the following parameters in its `data` property:
+   *                           [ ]
+   * @param {Function} reply   Callback function, invoked with the result of this
+   *                           message handler. The result will be sent back to
+   *                           the senders' channel.
+   */
+  GetFxAEnabled: function(message, reply) {
+    reply(MozLoopService.fxAEnabled);
+  },
+
+  /**
+   * Returns true if this profile has an encryption key.
+   *
+   * @param {Object}   message Message meant for the handler function, containing
+   *                           the following parameters in its `data` property:
+   *                           [ ]
+   * @param {Function} reply   Callback function, invoked with the result of this
+   *                           message handler. The result will be sent back to
+   *                           the senders' channel.
+   * @return {Boolean} True if the profile has an encryption key.
+   */
+  GetHasEncryptionKey: function(message, reply) {
+    reply(MozLoopService.hasEncryptionKey);
+  },
+
+  /**
+   * Returns the current locale of the browser.
+   *
+   * @param {Object}   message Message meant for the handler function, containing
+   *                           the following parameters in its `data` property:
+   *                           [ ]
+   * @param {Function} reply   Callback function, invoked with the result of this
+   *                           message handler. The result will be sent back to
+   *                           the senders' channel.
+   * @returns {String} The locale string
+   */
+  GetLocale: function(message, reply) {
+    reply(MozLoopService.locale);
+  },
+  /**
+   * Return any preference under "loop.".
+   * Any errors thrown by the Mozilla pref API are logged to the console
+   * and cause null to be returned. This includes the case of the preference
+   * not being found.
+   *
+   * @param {Object}   message Message meant for the handler function, containing
+   *                           the following parameters in its `data` property:
+   *                           [
+   *                             {String} prefName The name of the pref without
+   *                                               the preceding "loop."
+   *                             {Enum}   prefType Type of preference, defined
+   *                                               at Ci.nsIPrefBranch. Optional.
+   *                           ]
+   * @param {Function} reply   Callback function, invoked with the result of this
+   *                           message handler. The result will be sent back to
+   *                           the senders' channel.
+   * @return {*} on success, null on error
+   */
+  GetLoopPref: function(message, reply) {
+    let [prefName, prefType] = message.data;
+    reply(MozLoopService.getLoopPref(prefName, prefType));
+  },
+
+  /**
+   * Retrieve the plural rule number of the active locale.
+   *
+   * @param {Object}   message Message meant for the handler function, containing
+   *                           the following parameters in its `data` property:
+   *                           [ ]
+   * @param {Function} reply   Callback function, invoked with the result of this
+   *                           message handler. The result will be sent back to
+   *                           the senders' channel.
+   */
+  GetPluralRule: function(message, reply) {
+    reply(PluralForm.ruleNum);
+  },
+
+  /**
+   * Gets the metadata related to the currently selected tab in
+   * the most recent window.
+   *
+   * @param {Object}   message Message meant for the handler function, containing
+   *                           the following parameters in its `data` property:
+   *                           [ ]
+   * @param {Function} reply   Callback function, invoked with the result of this
+   *                           message handler. The result will be sent back to
+   *                           the senders' channel.
+   */
+  GetSelectedTabMetadata: function(message, reply) {
+    let win = Services.wm.getMostRecentWindow("navigator:browser");
+    win.messageManager.addMessageListener("PageMetadata:PageDataResult", function onPageDataResult(msg) {
+      win.messageManager.removeMessageListener("PageMetadata:PageDataResult", onPageDataResult);
+      let pageData = msg.json;
+      win.LoopUI.getFavicon(function(err, favicon) {
+        if (err) {
+          MozLoopService.log.error("Error occurred whilst fetching favicon", err);
+          // We don't return here intentionally to make sure the callback is
+          // invoked at all times. We just report the error here.
         }
+        pageData.favicon = favicon || null;
 
-        // Do the MD5 dance.
-        let hasher = Cc["@mozilla.org/security/hash;1"]
-                       .createInstance(Ci.nsICryptoHash);
-        hasher.init(Ci.nsICryptoHash.MD5);
-        let stringStream = Cc["@mozilla.org/io/string-input-stream;1"]
-                             .createInstance(Ci.nsIStringInputStream);
-        stringStream.data = emailAddress.trim().toLowerCase();
-        hasher.updateFromStream(stringStream, -1);
-        let hash = hasher.finish(false);
-        // Convert the binary hash data to a hex string.
-        let md5Email = [toHexString(hash.charCodeAt(i)) for (i in hash)].join("");
+        reply(pageData);
+      });
+    });
+    win.gBrowser.selectedBrowser.messageManager.sendAsyncMessage("PageMetadata:GetPageData");
+  },
 
-        // Compose the Gravatar URL.
-        return "https://www.gravatar.com/avatar/" + md5Email + ".jpg?default=blank&s=" + size;
+  /**
+   * Returns a sorted list of Social Providers that can share URLs. See
+   * `updateSocialProvidersCache()` for more information.
+   *
+   * @param {Object}   message Message meant for the handler function, containing
+   *                           the following parameters in its `data` property:
+   *                           [ ]
+   * @param {Function} reply   Callback function, invoked with the result of this
+   *                           message handler. The result will be sent back to
+   *                           the senders' channel.
+   * @return {Array} Sorted list of share-capable Social Providers.
+   */
+  GetSocialShareProviders: function(message, reply) {
+    if (!gSocialProviders) {
+      updateSocialProvidersCache();
+    }
+    reply(gSocialProviders);
+  },
+
+  /**
+   * Compose a URL pointing to the location of an avatar by email address.
+   * At the moment we use the Gravatar service to match email addresses with
+   * avatars. If no email address is found we return null.
+   *
+   * @param {Object}   message Message meant for the handler function, containing
+   *                           the following parameters in its `data` property:
+   *                           [
+   *                             {String} emailAddress Users' email address
+   *                             {Number} size         Size of the avatar image
+   *                                                   to return in pixels. Optional.
+   *                                                   Default value: 40.
+   *                           ]
+   * @param {Function} reply   Callback function, invoked with the result of this
+   *                           message handler. The result will be sent back to
+   *                           the senders' channel.
+   * @return the URL pointing to an avatar matching the provided email address
+   *         or null if this is not available.
+   */
+  GetUserAvatar: function(message, reply) {
+    let [emailAddress, size] = message.data;
+    if (!emailAddress || !MozLoopService.getLoopPref("contacts.gravatars.show")) {
+      reply(null);
+      return;
+    }
+
+    // Do the MD5 dance.
+    let hasher = Cc["@mozilla.org/security/hash;1"]
+                   .createInstance(Ci.nsICryptoHash);
+    hasher.init(Ci.nsICryptoHash.MD5);
+    let stringStream = Cc["@mozilla.org/io/string-input-stream;1"]
+                         .createInstance(Ci.nsIStringInputStream);
+    stringStream.data = emailAddress.trim().toLowerCase();
+    hasher.updateFromStream(stringStream, -1);
+    let hash = hasher.finish(false);
+    // Convert the binary hash data to a hex string.
+    let md5Email = [toHexString(hash.charCodeAt(i)) for (i in hash)].join("");
+
+    // Compose the Gravatar URL.
+    reply("https://www.gravatar.com/avatar/" + md5Email +
+      ".jpg?default=blank&s=" + (size || 40));
+  },
+
+  /**
+   * Gets an object with data that represents the currently
+   * authenticated user's identity.
+   *
+   * @param {Object}   message Message meant for the handler function, containing
+   *                           the following parameters in its `data` property:
+   *                           [ ]
+   * @param {Function} reply   Callback function, invoked with the result of this
+   *                           message handler. The result will be sent back to
+   *                           the senders' channel.
+   * @return null if user not logged in; profile object otherwise
+   */
+  GetUserProfile: function(message, reply) {
+    if (!MozLoopService.userProfile) {
+      reply(null);
+      return;
+    }
+
+    reply({
+      email: MozLoopService.userProfile.email,
+      uid: MozLoopService.userProfile.uid
+    });
+  },
+
+  /**
+   * Hangup and close all chat windows that are open.
+   */
+  HangupAllChatWindows: function() {
+    MozLoopService.hangupAllChatWindows();
+  },
+
+  /**
+   * Start the FxA login flow using the OAuth client and params from the Loop
+   * server.
+   *
+   * @param {Object}   message Message meant for the handler function, containing
+   *                           the following parameters in its `data` property:
+   *                           [
+   *                             {Boolean} forceReAuth Set to true to force FxA
+   *                                                   into a re-auth even if the
+   *                                                   user is already logged in.
+   *                           ]
+   * @param {Function} reply   Callback function, invoked with the result of this
+   *                           message handler. The result will be sent back to
+   *                           the senders' channel.
+   * @return {Promise} Returns a promise that is resolved on successful
+   *                   completion, or rejected otherwise.
+   */
+  LoginToFxA: function(message, reply) {
+    let forceReAuth = message.data[0];
+    MozLoopService.logInToFxA(forceReAuth);
+    reply();
+  },
+
+  /**
+   * Logout completely from FxA.
+   * @see MozLoopService#logOutFromFxA
+   *
+   * @param {Object}   message Message meant for the handler function, containing
+   *                           the following parameters in its `data` property:
+   *                           [ ]
+   * @param {Function} reply   Callback function, invoked with the result of this
+   *                           message handler. The result will be sent back to
+   *                           the senders' channel.
+   */
+  LogoutFromFxA: function(message, reply) {
+    MozLoopService.logOutFromFxA();
+    reply();
+  },
+
+  /**
+   * Notifies the UITour module that an event occurred that it might be
+   * interested in.
+   *
+   * @param {Object}   message Message meant for the handler function, containing
+   *                           the following parameters in its `data` property:
+   *                           [
+   *                             {String} subject  Subject of the notification
+   *                             {mixed}  [params] Optional parameters, providing
+   *                                               more details to the notification
+   *                                               subject
+   *                           ]
+   * @param {Function} reply   Callback function, invoked with the result of this
+   *                           message handler. The result will be sent back to
+   *                           the senders' channel.
+   */
+  NotifyUITour: function(message, reply) {
+    let [subject, params] = message.data;
+    UITour.notify(subject, params);
+    reply();
+  },
+
+  /**
+   * Opens the Getting Started tour in the browser.
+   *
+   * @param {Object}   message Message meant for the handler function, containing
+   *                           the following parameters in its `data` property:
+   *                           [
+   *                             {String} src Origin that starts or resumes the tour
+   *                           ]
+   * @param {Function} reply   Callback function, invoked with the result of this
+   *                           message handler. The result will be sent back to
+   *                           the senders' channel.
+   */
+  OpenGettingStartedTour: function(message, reply) {
+    var src = message.data[0];
+    MozLoopService.openGettingStartedTour(src);
+    reply();
+  },
+
+  /**
+   * Open the FxA profile/ settings page.
+   *
+   * @param {Object}   message Message meant for the handler function, containing
+   *                           the following parameters in its `data` property:
+   *                           [ ]
+   * @param {Function} reply   Callback function, invoked with the result of this
+   *                           message handler. The result will be sent back to
+   *                           the senders' channel.
+   */
+  OpenFxASettings: function(message, reply) {
+    MozLoopService.openFxASettings();
+    reply();
+  },
+
+  /**
+   * Opens a URL in a new tab in the browser.
+   *
+   * @param {Object}   message Message meant for the handler function, containing
+   *                           the following parameters in its `data` property:
+   *                           [
+   *                             {String} url The new url to open
+   *                           ]
+   * @param {Function} reply   Callback function, invoked with the result of this
+   *                           message handler. The result will be sent back to
+   *                           the senders' channel.
+   */
+  OpenURL: function(message, reply) {
+    let url = message.data[0];
+    MozLoopService.openURL(url);
+    reply();
+  },
+
+  /**
+   * Removes a listener that was previously added.
+   */
+  RemoveBrowserSharingListener: function() {
+    if (!gBrowserSharingListenerCount) {
+      return;
+    }
+
+    if (--gBrowserSharingListenerCount > 0) {
+      // There are still clients listening in, so keep on listening...
+      return;
+    }
+
+    for (let win of gBrowserSharingWindows) {
+      win = win.get();
+      if (!win) {
+        continue;
       }
-    },
+      win.LoopUI.stopBrowserSharing();
+    }
 
-    /**
-     * Gets the metadata related to the currently selected tab in
-     * the most recent window.
-     *
-     * @param {Function} A callback that is passed the metadata.
-     */
-    getSelectedTabMetadata: {
-      value: function(callback) {
-        let win = Services.wm.getMostRecentWindow("navigator:browser");
-        win.messageManager.addMessageListener("PageMetadata:PageDataResult", function onPageDataResult(msg) {
-          win.messageManager.removeMessageListener("PageMetadata:PageDataResult", onPageDataResult);
-          let pageData = msg.json;
-          win.LoopUI.getFavicon(function(err, favicon) {
-            if (err) {
-              MozLoopService.log.error("Error occurred whilst fetching favicon", err);
-              // We don't return here intentionally to make sure the callback is
-              // invoked at all times. We just report the error here.
-            }
-            pageData.favicon = favicon || null;
+    gBrowserSharingWindows.clear();
+  },
 
-            invokeCallback(callback, cloneValueInto(pageData, targetWindow));
-          });
-        });
-        win.gBrowser.selectedBrowser.messageManager.sendAsyncMessage("PageMetadata:GetPageData");
-      }
-    },
+  "Rooms:*": function(action, message, reply) {
+    LoopAPIInternal.handleObjectAPIMessage(LoopRooms, kRoomsPushPrefix,
+      action, message, reply);
+  },
 
-    /**
-     * Associates a session-id and a call-id with a window for debugging.
-     *
-     * @param  {string}  windowId  The window id.
-     * @param  {string}  sessionId OT session id.
-     * @param  {string}  callId    The callId on the server.
-     */
-    addConversationContext: {
-      enumerable: true,
-      writable: true,
-      value: function(windowId, sessionId, callid) {
-        MozLoopService.addConversationContext(windowId, {
-          sessionId: sessionId,
-          callId: callid
-        });
-      }
-    },
+  /**
+   * Sets the "do not disturb" mode activation flag.
+   *
+   * @param {Object}   message Message meant for the handler function, containing
+   *                           the following parameters in its `data` property:
+   *                           [ ]
+   * @param {Function} reply   Callback function, invoked with the result of this
+   *                           message handler. The result will be sent back to
+   *                           the senders' channel.
+   */
+  SetDoNotDisturb: function(message, reply) {
+    MozLoopService.doNotDisturb = message.data[0];
+    reply();
+  },
 
-    /**
-     * Notifies the UITour module that an event occurred that it might be
-     * interested in.
-     *
-     * @param {String} subject  Subject of the notification
-     * @param {mixed}  [params] Optional parameters, providing more details to
-     *                          the notification subject
-     */
-    notifyUITour: {
-      enumerable: true,
-      writable: true,
-      value: function(subject, params) {
-        UITour.notify(subject, params);
-      }
-    },
+  /**
+   * Set any preference under "loop."
+   * Any errors thrown by the Mozilla pref API are logged to the console
+   * and cause false to be returned.
+   *
+   * @param {Object}   message Message meant for the handler function, containing
+   *                           the following parameters in its `data` property:
+   *                           [
+   *                             {String} prefName The name of the pref without
+   *                                               the preceding "loop."
+   *                             {*}      value    The value to set.
+   *                             {Enum}   prefType Type of preference, defined at
+   *                                               Ci.nsIPrefBranch. Optional.
+   *                           ]
+   * @param {Function} reply   Callback function, invoked with the result of this
+   *                           message handler. The result will be sent back to
+   *                           the senders' channel.
+   */
+  SetLoopPref: function(message) {
+    let [prefName, value, prefType] = message.data;
+    MozLoopService.setLoopPref(prefName, value, prefType);
+  },
 
-    /**
-     * Used to record the screen sharing state for a window so that it can
-     * be reflected on the toolbar button.
-     *
-     * @param {String} windowId The id of the conversation window the state
-     *                          is being changed for.
-     * @param {Boolean} active  Whether or not screen sharing is now active.
-     */
-    setScreenShareState: {
-      enumerable: true,
-      writable: true,
-      value: function(windowId, active) {
-        MozLoopService.setScreenShareState(windowId, active);
-      }
-    },
+  /**
+   * Used to record the screen sharing state for a window so that it can
+   * be reflected on the toolbar button.
+   *
+   * @param {Object}   message Message meant for the handler function, containing
+   *                           the following parameters in its `data` property:
+   *                           [
+   *                             {String} windowId The id of the conversation window
+   *                                               the state is being changed for.
+   *                             {Boolean} active  Whether or not screen sharing
+   *                                               is now active.
+   *                           ]
+   * @param {Function} reply   Callback function, invoked with the result of this
+   *                           message handler. The result will be sent back to
+   *                           the senders' channel.
+   */
+  SetScreenShareState: function(message) {
+    let [windowId, active] = message.data;
+    MozLoopService.setScreenShareState(windowId, active);
+  },
 
-    /**
-     * Activates the Social Share panel with the Social Provider panel opened
-     * when the popup open.
-     */
-    addSocialShareProvider: {
-      enumerable: true,
-      writable: true,
-      value: function() {
-        let win = Services.wm.getMostRecentWindow("navigator:browser");
-        if (!win || !win.SocialShare) {
-          return;
+  /**
+   * Share a room URL with the Social API.
+   *
+   * @param {Object}   message Message meant for the handler function, containing
+   *                           the following parameters in its `data` property:
+   *                           [
+   *                             {String} providerOrigin URL fragment that identifies
+   *                                                     a social provider
+   *                             {String} roomURL        URL of a room
+   *                             {String} title          Title of the sharing message
+   *                             {String} body           Body of the sharing message
+   *                           ]
+   * @param {Function} reply   Callback function, invoked with the result of this
+   *                           message handler. The result will be sent back to
+   *                           the senders' channel.
+   */
+  SocialShareRoom: function(message, reply) {
+    let win = Services.wm.getMostRecentWindow("navigator:browser");
+    if (!win || !win.SocialShare) {
+      reply();
+      return;
+    }
+
+    let [providerOrigin, roomURL, title, body] = message.data;
+    let graphData = {
+      url: roomURL,
+      title: title
+    };
+    if (body) {
+      graphData.body = body;
+    }
+    win.SocialShare.sharePage(providerOrigin, graphData, null,
+      win.LoopUI.toolbarButton.anchor);
+    reply();
+  },
+
+  /**
+   * Starts alerting the user about an incoming call
+   *
+   * @param {Object}   message Message meant for the handler function, containing
+   *                           the following parameters in its `data` property:
+   *                           [ ]
+   * @param {Function} reply   Callback function, invoked with the result of this
+   *                           message handler. The result will be sent back to
+   *                           the senders' channel.
+   */
+  StartAlerting: function(message, reply) {
+    let chromeWindow = Services.wm.getMostRecentWindow("navigator:browser");
+    chromeWindow.getAttention();
+    ringer = new chromeWindow.Audio();
+    ringer.src = Services.prefs.getCharPref("loop.ringtone");
+    ringer.loop = true;
+    ringer.load();
+    ringer.play();
+    targetWindow.document.addEventListener("visibilitychange",
+      ringerStopper = function(event) {
+        if (event.currentTarget.hidden) {
+          kMessageHandlers.StopAlerting();
         }
-        win.SocialShare.showDirectory(win.LoopUI.toolbarButton.anchor);
-      }
-    },
+      });
+    reply();
+  },
 
-    /**
-     * Returns a sorted list of Social Providers that can share URLs. See
-     * `updateSocialProvidersCache()` for more information.
-     *
-     * @return {Array} Sorted list of share-capable Social Providers.
-     */
-    getSocialShareProviders: {
-      enumerable: true,
-      writable: true,
-      value: function() {
-        if (socialProviders) {
-          return socialProviders;
-        }
-        return updateSocialProvidersCache();
-      }
-    },
+  /**
+   * Stops alerting the user about an incoming call
+   *
+   * @param {Object}   message Message meant for the handler function, containing
+   *                           the following parameters in its `data` property:
+   *                           [ ]
+   * @param {Function} reply   Callback function, invoked with the result of this
+   *                           message handler. The result will be sent back to
+   *                           the senders' channel.
+   */
+  StopAlerting: function(message, reply) {
+    if (!ringer) {
+      reply();
+      return;
+    }
+    if (ringerStopper) {
+      ringer.ownerDocument.removeEventListener("visibilitychange",
+                                                ringerStopper);
+      ringerStopper = null;
+    }
+    ringer.pause();
+    ringer = null;
+    reply();
+  },
 
-    /**
-     * Share a room URL through a Social Provider with the provided title message.
-     * This action will open the share panel, which is anchored to the Social
-     * Share widget.
-     *
-     * @param {String} providerOrigin Identifier of the targeted Social Provider
-     * @param {String} roomURL        URL that points to the standalone client
-     * @param {String} title          Message that augments the URL inside the
-     *                                share message
-     * @param {String} [body]         Optional longer message to be displayed
-     *                                similar to the body of an email 
-     */
-    socialShareRoom: {
-      enumerable: true,
-      writable: true,
-      value: function(providerOrigin, roomURL, title, body = null) {
-        let win = Services.wm.getMostRecentWindow("navigator:browser");
-        if (!win || !win.SocialShare) {
-          return;
-        }
+  /**
+   * Adds a value to a telemetry histogram.
+   *
+   * @param {Object}   message Message meant for the handler function, containing
+   *                           the following parameters in its `data` property:
+   *                           [
+   *                             {String} histogramId Name of the telemetry histogram
+   *                                                  to update.
+   *                             {String} value       Label of bucket to increment
+   *                                                   in the histogram.
+   *                           ]
+   * @param {Function} reply   Callback function, invoked with the result of this
+   *                           message handler. The result will be sent back to
+   *                           the senders' channel.
+   */
+  TelemetryAddValue: function(message, reply) {
+    let [histogramId, value] = message.data;
+    Services.telemetry.getHistogramById(histogramId).add(value);
+    reply();
+  }
+};
 
-        let graphData = {
-          url: roomURL,
-          title: title
-        };
-        if (body) {
-          graphData.body = body;
-        }
-        win.SocialShare.sharePage(providerOrigin, graphData, null,
-          win.LoopUI.toolbarButton.anchor);
+const LoopAPIInternal = {
+  /**
+   * Initialize the Loop API, which means:
+   * 1) setup RemotePageManager to hook into loop documents as channels and
+   *    start listening for messages therein.
+   * 2) start listening for other events that may be interesting.
+   */
+  initialize: function() {
+    if (gPageListeners) {
+      return;
+    }
+
+    Cu.import("resource://gre/modules/RemotePageManager.jsm");
+
+    gPageListeners = [new RemotePages("about:looppanel"), new RemotePages("about:loopconversation")];
+    for (let page of gPageListeners) {
+      page.addMessageListener(kMessageName, this.handleMessage.bind(this));
+    }
+
+    // Subscribe to global events:
+    Services.obs.addObserver(this.handleStatusChanged, "loop-status-changed", false);
+  },
+
+  /**
+   * Handles incoming messages from RemotePageManager that are sent from Loop
+   * content pages.
+   *
+   * @param {Object} message Object containing the following fields:
+   *                         - {MessageManager} target Where the message came from
+   *                         - {String}         name   Name of the message
+   *                         - {Array}          data   Payload of the message
+   * @param {Function} [reply]
+   */
+  handleMessage: function(message, reply) {
+    let seq = message.data.shift();
+    let action = message.data.shift();
+
+    let actionParts = action.split(":");
+
+    // The name that is supposed to match with a handler function is tucked inside
+    // the second part of the message name. If all is well.
+    let handlerName = actionParts.shift();
+
+    if (!reply) {
+      reply = result => {
+        message.target.sendAsyncMessage(message.name, [seq, result]);
       }
     }
-  };
+
+    // First, check if this is a batch call.
+    if (handlerName == kBatchMessage) {
+      this.handleBatchMessage(seq, message, reply);
+      return;
+    }
+
+    // Second, check if the message is meant for one of our Object APIs.
+    // If so, a wildcard entry should exist for the message name in the
+    // `kMessageHandlers` dictionary.
+    let wildcardName = handlerName + ":*";
+    if (kMessageHandlers[wildcardName]) {
+      // Alright, pass the message forward.
+      kMessageHandlers[wildcardName](action, message, reply);
+      // Aaaaand we're done.
+      return;
+    }
+
+    if (!kMessageHandlers[handlerName]) {
+      let msg = "Ouch, no message handler available for '" + handlerName + "'";
+      MozLoopService.log.error(msg);
+      reply(cloneableError(msg));
+      return;
+    }
+
+    kMessageHandlers[handlerName](message, reply);
+  },
+
+  /**
+   * If `sendMessage` above detects that the incoming message consists of a whole
+   * set of messages, this function is tasked with handling them.
+   * It iterates over all the messages, sends each to their appropriate handler
+   * and collects their results. The results will be sent back in one go as response
+   * to the batch message.
+   * 
+   * @param {Number} seq       Sequence ID of this message
+   * @param {Object} message   Message containing the following parameters in
+   *                           its `data` property:
+   *                           [
+   *                             {Array} requests Sequence of messages
+   *                           ]
+   * @param {Function} reply   Callback function, invoked with the result of this
+   *                           message handler. The result will be sent back to
+   *                           the senders' channel.
+   */
+  handleBatchMessage: function(seq, message, reply) {
+    let requests = message.data[0];
+    if (!requests.length) {
+      MozLoopService.log.error("Ough, a batch call with no requests is not much " +
+        "of a batch, now is it?");
+      return;
+    }
+
+    // Since `handleBatchMessage` can be called recursively, but the replies are
+    // collected and sent only once, we'll make sure only one exists for the
+    // entire tail.
+    // We count the amount of recursive calls, because we don't want any consumer
+    // to cause an infinite loop, now do we?
+    if (!("loopCount" in reply)) {
+      reply.loopCount = 0;
+    } else if (++reply.loopCount > kMaxLoopCount) {
+      reply(cloneableError("Too many nested calls"));
+      return;
+    }
+
+    let resultSet = {};
+    Promise.all(requests.map(requestSet => {
+      let requestSeq = requestSet[0];
+      return new Promise(resolve => this.handleMessage({ data: requestSet }, result => {
+        resultSet[requestSeq] = result;
+        resolve();
+      }));
+    })).then(() => reply(resultSet));
+  },
+
+  /**
+   * Separate handler that is specialized in dealing with messages meant for sub-APIs,
+   * like LoopRooms.
+   *
+   * @param {Object}   api               Pointer to the sub-API.
+   * @param {String}   pushMessagePrefix
+   * @param {String}   action            Action name that translates to a function
+   *                                     name present on the sub-API.
+   * @param {Object}   message           Message containing parameters required to
+   *                                     perform the action on the sub-API  in its
+   *                                     `data` property.
+   * @param {Function} reply             Callback function, invoked with the result
+   *                                     of this message handler. The result will
+   *                                     be sent back to the senders' channel.
+   */
+  handleObjectAPIMessage: function(api, pushMessagePrefix, action, message, reply) {
+    let funcName = getObjectAPIFunctionName(action);
+
+    if (funcName == kPushSubscription) {
+      // Incoming event listener request!
+      let events = message.data[0];
+      if (!events || !events.length) {
+        let msg = "Oops, don't forget to pass in event names when you try to " +
+          "subscribe to them!";
+        MozLoopService.log.error(msg);
+        reply(cloneableError(msg));
+        return;
+      }
+
+      let handlerFunc = (e, ...data) => {
+        let prettyEventName = e.charAt(0).toUpperCase() + e.substr(1);
+        try {
+          message.target.sendAsyncMessage(kPushMessageName, [pushMessagePrefix +
+            prettyEventName, data]);
+        } catch(ex) {
+          MozLoopService.log.debug("Unable to send event through to target: " +
+            ex.message);
+          // Unregister event handlers when the message port is unreachable.
+          for (let eventName of events) {
+            api.off(eventName, handlerFunc);
+          }
+        }
+      };
+
+      for (let eventName of events) {
+        api.on(eventName, handlerFunc);
+      }
+      reply();
+      return;
+    }
+
+    if (typeof api[funcName] != "function") {
+      reply(cloneableError("Sorry, function '" + funcName + "' does not exist!"));
+      return;
+    }
+    api[funcName](...message.data, (err, result) => {
+      reply(err ? cloneableError(err) : result);
+    });
+  },
+
+  /**
+   * Observer function for the 'loop-status-changed' event.
+   */
+  handleStatusChanged: function() {
+    LoopAPIInternal.broadcastPushMessage("LoopStatusChanged");
+  },
 
   /**
    * Send an event to the content window to indicate that the state on the chrome
    * side was updated.
    *
-   * @param  {name} name Name of the event, defaults to 'LoopStatusChanged'
+   * @param {name} name Name of the event
    */
-  function sendEvent(name = "LoopStatusChanged") {
-    if (typeof targetWindow.CustomEvent != "function") {
-      MozLoopService.log.debug("Could not send event to content document, " +
-        "because it's being destroyed or we're in a unit test where " +
-        "`targetWindow` is mocked.");
+  broadcastPushMessage: function(name, data) {
+    if (!gPageListeners) {
       return;
     }
-
-    let event = new targetWindow.CustomEvent(name);
-    targetWindow.dispatchEvent(event);
-  }
-
-  function onStatusChanged(aSubject, aTopic, aData) {
-    sendEvent();
-  }
-
-  function onDOMWindowDestroyed(aSubject, aTopic, aData) {
-    if (targetWindow && aSubject != targetWindow)
-      return;
-    Services.obs.removeObserver(onDOMWindowDestroyed, "dom-window-destroyed");
-    Services.obs.removeObserver(onStatusChanged, "loop-status-changed");
-    // Stop listening for changes in the social provider list, if necessary.
-    if (socialProviders)
-      Services.obs.removeObserver(updateSocialProvidersCache, "social:providers-changed");
-    if (socialShareButtonListenersAdded) {
-      let eventName = "social:" + kShareWidgetId;
-      Services.obs.removeObserver(onShareWidgetChanged, eventName + "-added");
-      Services.obs.removeObserver(onShareWidgetChanged, eventName + "-removed");
+    for (let page of gPageListeners) {
+      try {
+        page.sendAsyncMessage(kPushMessageName, [name, data]);
+      } catch (ex if ex.result == Components.results.NS_ERROR_NOT_INITIALIZED) {
+        // Don't make noise when the Remote Page Manager needs more time to
+        // initialize.
+      }
     }
-  }
-
-  function onShareWidgetChanged(aSubject, aTopic, aData) {
-    sendEvent("LoopShareWidgetChanged");
-  }
+  },
 
   /**
-   * Retrieves a list of Social Providers from the Social API that are explicitly
-   * capable of sharing URLs.
-   * It also adds a listener that is fired whenever a new Provider is added or
-   * removed.
-   *
-   * @return {Array} Sorted list of share-capable Social Providers.
+   * De the reverse of `initialize` above; unhook page and event listeners.
    */
-  function updateSocialProvidersCache() {
-    let providers = [];
-
-    for (let provider of Social.providers) {
-      if (!provider.shareURL) {
-        continue;
-      }
-
-      // Only pass the relevant data on to content.
-      providers.push({
-        iconURL: provider.iconURL,
-        name: provider.name,
-        origin: provider.origin
-      });
+  destroy: function() {
+    if (!gPageListeners) {
+      return;
     }
+    [for (listener of gPageListeners) listener.destroy()];
+    gPageListeners = null;
 
-    let providersWasSet = !!socialProviders;
-    // Replace old with new.
-    socialProviders = cloneValueInto(providers.sort((a, b) =>
-      a.name.toLowerCase().localeCompare(b.name.toLowerCase())), targetWindow);
-
-    // Start listening for changes in the social provider list, if we're not
-    // doing that yet.
-    if (!providersWasSet) {
-      Services.obs.addObserver(updateSocialProvidersCache, "social:providers-changed", false);
-    } else {
-      // Dispatch an event to content to let stores freshen-up.
-      sendEvent("LoopSocialProvidersChanged");
+    // Unsubscribe from global events.
+    Services.obs.removeObserver(this.handleStatusChanged, "loop-status-changed");
+    // Stop listening for changes in the social provider list, if necessary.
+    if (gSocialProviders) {
+      Services.obs.removeObserver(updateSocialProvidersCache, "social:providers-changed");
     }
-
-    return socialProviders;
   }
+};
 
-  let contentObj = Cu.createObjectIn(targetWindow);
-  Object.defineProperties(contentObj, api);
-  Object.seal(contentObj);
-  Cu.makeObjectPropsNormal(contentObj);
-  Services.obs.addObserver(onStatusChanged, "loop-status-changed", false);
-  Services.obs.addObserver(onDOMWindowDestroyed, "dom-window-destroyed", false);
-
-  if ("navigator" in targetWindow) {
-    targetWindow.navigator.wrappedJSObject.__defineGetter__("mozLoop", function () {
-      // We do this in a getter, so that we create these objects
-      // only on demand (this is a potential concern, since
-      // otherwise we might add one per iframe, and keep them
-      // alive for as long as the window is alive).
-      delete targetWindow.navigator.wrappedJSObject.mozLoop;
-      return targetWindow.navigator.wrappedJSObject.mozLoop = contentObj;
-    });
-
-    // Handle window.close correctly on the panel and chatbox.
-    hookWindowCloseForPanelClose(targetWindow);
-  } else {
-    // This isn't a window; but it should be a JS scope; used for testing
-    return targetWindow.mozLoop = contentObj;
+this.LoopAPI = Object.freeze({
+  /* @see LoopAPIInternal#initialize */
+  initialize: function() {
+    LoopAPIInternal.initialize();
+  },
+  /* @see LoopAPIInternal#broadcastPushMessage */
+  broadcastPushMessage: function(name, data) {
+    LoopAPIInternal.broadcastPushMessage(name, data);
+  },
+  /* @see LoopAPIInternal#destroy */
+  destroy: function() {
+    LoopAPIInternal.destroy();
+  },
+  // The following functions are only used in unit tests.
+  inspect: function() {
+    return [Object.create(LoopAPIInternal), Object.create(kMessageHandlers),
+      gPageListeners ? [...gPageListeners] : null];
+  },
+  stub: function(pageListeners) {
+    if (!gOriginalPageListeners) {
+      gOriginalPageListeners = gPageListeners;
+    }
+    gPageListeners = pageListeners;
+  },
+  restore: function() {
+    if (gOriginalPageListeners) {
+      gPageListeners = gOriginalPageListeners;
+    }
   }
-
-}
-
-function getChromeWindow(contentWin) {
-  return contentWin.QueryInterface(Ci.nsIInterfaceRequestor)
-                   .getInterface(Ci.nsIWebNavigation)
-                   .QueryInterface(Ci.nsIDocShellTreeItem)
-                   .rootTreeItem
-                   .QueryInterface(Ci.nsIInterfaceRequestor)
-                   .getInterface(Ci.nsIDOMWindow);
-}
+});

@@ -79,22 +79,13 @@ typedef __int64 int64;
 typedef int socklen_t;
 #endif
 
-namespace rtc {
-template<class T> inline T _min(T a, T b) { return (a > b) ? b : a; }
-template<class T> inline T _max(T a, T b) { return (a < b) ? b : a; }
-
-// For wait functions that take a number of milliseconds, kForever indicates
-// unlimited time.
-const int kForever = -1;
-}
-
 #if defined(WEBRTC_WIN)
 #if _MSC_VER < 1700
   #define alignof(t) __alignof(t)
 #endif
-#else  // !WEBRTC_WIN 
+#else  // !WEBRTC_WIN
 #define alignof(t) __alignof__(t)
-#endif  // !WEBRTC_WIN 
+#endif  // !WEBRTC_WIN
 #define RTC_IS_ALIGNED(p, a) (0==(reinterpret_cast<uintptr_t>(p) & ((a)-1)))
 #define ALIGNP(p, t) \
   (reinterpret_cast<uint8*>(((reinterpret_cast<uintptr_t>(p) + \

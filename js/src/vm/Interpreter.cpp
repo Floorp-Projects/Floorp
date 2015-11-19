@@ -204,7 +204,21 @@ GetNameOperation(JSContext* cx, InterpreterFrame* fp, jsbytecode* pc, MutableHan
     JSOp op2 = JSOp(pc[JSOP_GETNAME_LENGTH]);
     if (op2 == JSOP_TYPEOF)
         return FetchName<true>(cx, scopeRoot, pobjRoot, nameRoot, shapeRoot, vp);
+
     return FetchName<false>(cx, scopeRoot, pobjRoot, nameRoot, shapeRoot, vp);
+}
+
+static inline bool
+GetImportOperation(JSContext* cx, InterpreterFrame* fp, jsbytecode* pc, MutableHandleValue vp)
+{
+    RootedObject obj(cx, fp->scopeChain()), scope(cx), pobj(cx);
+    RootedPropertyName name(cx, fp->script()->getName(pc));
+    RootedShape shape(cx);
+
+    MOZ_ALWAYS_TRUE(LookupName(cx, name, obj, &scope, &pobj, &shape));
+    MOZ_ASSERT(scope && scope->is<ModuleEnvironmentObject>());
+    MOZ_ASSERT(scope->as<ModuleEnvironmentObject>().hasImportBinding(name));
+    return FetchName<false>(cx, scope, pobj, name, shape, vp);
 }
 
 static bool
@@ -1694,7 +1708,6 @@ CASE(JSOP_NOP)
 CASE(JSOP_UNUSED14)
 CASE(JSOP_BACKPATCH)
 CASE(JSOP_UNUSED145)
-CASE(JSOP_UNUSED176)
 CASE(JSOP_UNUSED177)
 CASE(JSOP_UNUSED178)
 CASE(JSOP_UNUSED179)
@@ -2818,6 +2831,17 @@ CASE(JSOP_GETNAME)
                   "We're sharing the END_CASE so the lengths better match");
 }
 END_CASE(JSOP_GETNAME)
+
+CASE(JSOP_GETIMPORT)
+{
+    PUSH_NULL();
+    MutableHandleValue rval = REGS.stackHandleAt(-1);
+    if (!GetImportOperation(cx, REGS.fp(), REGS.pc, rval))
+        goto error;
+
+    TypeScript::Monitor(cx, script, REGS.pc, rval);
+}
+END_CASE(JSOP_GETIMPORT)
 
 CASE(JSOP_GETINTRINSIC)
 {
@@ -4624,7 +4648,8 @@ js::ReportRuntimeLexicalError(JSContext* cx, unsigned errorNumber,
     MOZ_ASSERT(op == JSOP_CHECKLEXICAL ||
                op == JSOP_CHECKALIASEDLEXICAL ||
                op == JSOP_THROWSETCONST ||
-               op == JSOP_THROWSETALIASEDCONST);
+               op == JSOP_THROWSETALIASEDCONST ||
+               op == JSOP_GETIMPORT);
 
     RootedPropertyName name(cx);
 
@@ -4659,6 +4684,8 @@ js::ReportRuntimeLexicalError(JSContext* cx, unsigned errorNumber,
             MOZ_ASSERT(JSID_IS_ATOM(id));
             name = JSID_TO_ATOM(id)->asPropertyName();
         }
+    } else if (IsAtomOp(op)) {
+        name = script->getName(pc);
     } else {
         MOZ_ASSERT(IsAliasedVarOp(op));
         name = ScopeCoordinateName(cx->runtime()->scopeCoordinateNameCache, script, pc);

@@ -179,10 +179,6 @@ nsRDFConMemberTestNode::FilterInstantiations(InstantiationSet& aInstantiations,
                 Element* element =
                     new nsRDFConMemberTestNode::Element(containerRes,
                                                         memberValue);
-
-                if (! element)
-                    return NS_ERROR_OUT_OF_MEMORY;
-
                 inst->AddSupportingElement(element);
             }
             else {
@@ -231,10 +227,6 @@ nsRDFConMemberTestNode::FilterInstantiations(InstantiationSet& aInstantiations,
 
                 Element* element =
                     new nsRDFConMemberTestNode::Element(containerRes, node);
-
-                if (! element)
-                    return NS_ERROR_OUT_OF_MEMORY;
-
                 newinst.AddSupportingElement(element);
                 aInstantiations.Insert(inst, newinst);
             }
@@ -320,10 +312,6 @@ nsRDFConMemberTestNode::FilterInstantiations(InstantiationSet& aInstantiations,
                         Element* element =
                             new nsRDFConMemberTestNode::Element(source,
                                                                 memberValue);
-
-                        if (! element)
-                            return NS_ERROR_OUT_OF_MEMORY;
-
                         newinst.AddSupportingElement(element);
 
                         aInstantiations.Insert(inst, newinst);

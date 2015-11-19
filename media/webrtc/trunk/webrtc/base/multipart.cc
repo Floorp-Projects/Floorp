@@ -8,7 +8,7 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-
+#include <algorithm>
 #include "webrtc/base/common.h"
 #include "webrtc/base/httpcommon.h"
 #include "webrtc/base/multipart.h"
@@ -184,7 +184,7 @@ bool MultipartStream::SetPosition(size_t position) {
       return false;
     }
     if (part_offset + part_size > position) {
-      for (size_t j = i+1; j < _min(parts_.size(), current_+1); ++j) {
+      for (size_t j = i + 1; j < std::min(parts_.size(), current_ + 1); ++j) {
         if (!parts_[j]->Rewind()) {
           return false;
         }

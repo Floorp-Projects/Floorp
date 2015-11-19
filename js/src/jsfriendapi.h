@@ -2915,9 +2915,9 @@ JS_FRIEND_API(bool)
 IsWindowProxy(JSObject* obj);
 
 /**
- * If `obj` is a Window, get its associated WindowProxy (or a CCW if the
- * page was navigated away from), else return `obj`. This function is
- * infallible and never returns nullptr.
+ * If `obj` is a Window, get its associated WindowProxy (or a CCW or dead
+ * wrapper if the page was navigated away from), else return `obj`. This
+ * function is infallible and never returns nullptr.
  */
 extern JS_FRIEND_API(JSObject*)
 ToWindowProxyIfWindow(JSObject* obj);

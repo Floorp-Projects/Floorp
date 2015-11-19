@@ -12,38 +12,72 @@
 #define WEBRTC_MODULES_UTILITY_SOURCE_PROCESS_THREAD_IMPL_H_
 
 #include <list>
+#include <queue>
 
+#include "webrtc/base/criticalsection.h"
+#include "webrtc/base/thread_checker.h"
 #include "webrtc/modules/utility/interface/process_thread.h"
-#include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
 #include "webrtc/system_wrappers/interface/event_wrapper.h"
 #include "webrtc/system_wrappers/interface/thread_wrapper.h"
 #include "webrtc/typedefs.h"
 
 namespace webrtc {
-class ProcessThreadImpl : public ProcessThread
-{
-public:
-    ProcessThreadImpl();
-    virtual ~ProcessThreadImpl();
 
-    virtual int32_t Start();
-    virtual int32_t Stop();
+class ProcessThreadImpl : public ProcessThread {
+ public:
+  ProcessThreadImpl();
+  ~ProcessThreadImpl() override;
 
-    virtual int32_t RegisterModule(Module* module);
-    virtual int32_t DeRegisterModule(const Module* module);
+  void Start() override;
+  void Stop() override;
 
-protected:
-    static bool Run(void* obj);
+  void WakeUp(Module* module) override;
+  void PostTask(rtc::scoped_ptr<ProcessTask> task) override;
 
-    bool Process();
+  void RegisterModule(Module* module) override;
+  void DeRegisterModule(Module* module) override;
 
-private:
-    typedef std::list<Module*> ModuleList;
-    EventWrapper&           _timeEvent;
-    CriticalSectionWrapper* _critSectModules;
-    ModuleList              _modules;
-    ThreadWrapper*          _thread;
+ protected:
+  static bool Run(void* obj);
+  bool Process();
+
+ private:
+  struct ModuleCallback {
+    ModuleCallback() : module(nullptr), next_callback(0) {}
+    ModuleCallback(const ModuleCallback& cb)
+        : module(cb.module), next_callback(cb.next_callback) {}
+    ModuleCallback(Module* module) : module(module), next_callback(0) {}
+    bool operator==(const ModuleCallback& cb) const {
+      return cb.module == module;
+    }
+
+    Module* const module;
+    int64_t next_callback;  // Absolute timestamp.
+
+   private:
+    ModuleCallback& operator=(ModuleCallback&);
+  };
+
+  typedef std::list<ModuleCallback> ModuleList;
+
+  // Warning: For some reason, if |lock_| comes immediately before |modules_|
+  // with the current class layout, we will  start to have mysterious crashes
+  // on Mac 10.9 debug.  I (Tommi) suspect we're hitting some obscure alignemnt
+  // issues, but I haven't figured out what they are, if there are alignment
+  // requirements for mutexes on Mac or if there's something else to it.
+  // So be careful with changing the layout.
+  rtc::CriticalSection lock_;  // Used to guard modules_, tasks_ and stop_.
+
+  rtc::ThreadChecker thread_checker_;
+  const rtc::scoped_ptr<EventWrapper> wake_up_;
+  rtc::scoped_ptr<ThreadWrapper> thread_;
+
+  ModuleList modules_;
+  // TODO(tommi): Support delayed tasks.
+  std::queue<ProcessTask*> queue_;
+  bool stop_;
 };
+
 }  // namespace webrtc
 
 #endif // WEBRTC_MODULES_UTILITY_SOURCE_PROCESS_THREAD_IMPL_H_

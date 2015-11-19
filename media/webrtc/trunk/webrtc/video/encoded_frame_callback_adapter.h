@@ -22,7 +22,7 @@ class EncodedFrameCallbackAdapter : public EncodedImageCallback {
   explicit EncodedFrameCallbackAdapter(EncodedFrameObserver* observer);
   virtual ~EncodedFrameCallbackAdapter();
 
-  virtual int32_t Encoded(EncodedImage& encodedImage,
+  virtual int32_t Encoded(const EncodedImage& encodedImage,
                           const CodecSpecificInfo* codecSpecificInfo,
                           const RTPFragmentationHeader* fragmentation);
 

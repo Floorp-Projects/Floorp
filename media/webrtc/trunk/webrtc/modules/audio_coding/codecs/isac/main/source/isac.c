@@ -1096,6 +1096,13 @@ static int16_t Decode(ISACStruct* ISAC_main_inst,
   memcpy(instISAC->instLB.ISACdecLB_obj.bitstr_obj.stream, encoded,
          lenEncodedLBBytes);
 
+  /* We need to initialize numSamplesLB to something; otherwise, in the test
+     for whether we should return -1 below, the compiler might generate code
+     that fools Memcheck (Valgrind) into thinking that the control flow depends
+     on the uninitialized value in numSamplesLB (since WebRtcIsac_DecodeLb will
+     not fill it in if it fails and returns -1). */
+  numSamplesLB = 0;
+
   /* Regardless of that the current codec is setup to work in
    * wideband or super-wideband, the decoding of the lower-band
    * has to be performed. */

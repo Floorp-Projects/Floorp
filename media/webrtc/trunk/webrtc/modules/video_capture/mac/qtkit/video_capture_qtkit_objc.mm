@@ -46,6 +46,7 @@ using namespace videocapturemodule;
   [_captureDecompressedVideoOutput release];
   [_captureSession release];
   [_captureDevices release];
+  [_lock release];
 
   [super dealloc];
 }
@@ -53,9 +54,9 @@ using namespace videocapturemodule;
 #pragma mark Public methods
 
 - (void)registerOwner:(VideoCaptureMacQTKit*)owner {
-  [lock_ lock];
+  [_lock lock];
   _owner = owner;
-  [lock_ unlock];
+  [_lock unlock];
 }
 
 - (BOOL)setCaptureDeviceById:(char*)uniqueId {
@@ -180,7 +181,7 @@ using namespace videocapturemodule;
   _frameRate = DEFAULT_FRAME_RATE;
   _frameWidth = DEFAULT_FRAME_WIDTH;
   _frameHeight = DEFAULT_FRAME_HEIGHT;
-  lock_ = [[NSLock alloc] init];
+  _lock = [[NSLock alloc] init];
   _captureSession = [[QTCaptureSession alloc] init];
   _captureDecompressedVideoOutput =
       [[QTCaptureDecompressedVideoOutput alloc] init];
@@ -237,9 +238,9 @@ using namespace videocapturemodule;
      withSampleBuffer:(QTSampleBuffer *)sampleBuffer
        fromConnection:(QTCaptureConnection *)connection {
 
-  [lock_ lock];
+  [_lock lock];
   if (!_owner) {
-    [lock_ unlock];
+    [_lock unlock];
     return;
   }
 
@@ -247,8 +248,8 @@ using namespace videocapturemodule;
   if (CVPixelBufferLockBaseAddress(videoFrame, kFlags) == kCVReturnSuccess) {
     void *baseAddress = CVPixelBufferGetBaseAddress(videoFrame);
     size_t bytesPerRow = CVPixelBufferGetBytesPerRow(videoFrame);
-    int frameHeight = CVPixelBufferGetHeight(videoFrame);
-    int frameSize = bytesPerRow * frameHeight;
+    size_t frameHeight = CVPixelBufferGetHeight(videoFrame);
+    size_t frameSize = bytesPerRow * frameHeight;
 
     VideoCaptureCapability tempCaptureCapability;
     tempCaptureCapability.width = _frameWidth;
@@ -261,7 +262,7 @@ using namespace videocapturemodule;
                           tempCaptureCapability, 0);
     CVPixelBufferUnlockBaseAddress(videoFrame, kFlags);
   }
-  [lock_ unlock];
+  [_lock unlock];
   _framesDelivered++;
   _framesRendered++;
 }

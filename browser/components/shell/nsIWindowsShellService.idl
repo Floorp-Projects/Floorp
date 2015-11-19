@@ -5,7 +5,7 @@
 
 #include "nsIShellService.idl"
 
-[scriptable, uuid(89b0a761-d9a0-4c39-ab83-d81566459a31)]
+[scriptable, uuid(13f20725-4fd5-431f-90a1-525ab31755b1)]
 interface nsIWindowsShellService : nsIShellService
 {
     /**

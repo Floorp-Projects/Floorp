@@ -49,33 +49,33 @@ void WebRtcIsacfix_AllpassFilter2FixDec16C(
   for (n = 0; n < length; n++) {
     // Process channel 1:
     in_out = data_ch1[n];
-    a = WEBRTC_SPL_MUL_16_16(factor_ch1[0], in_out);  // Q15 * Q0 = Q15
+    a = factor_ch1[0] * in_out;  // Q15 * Q0 = Q15
     a <<= 1;  // Q15 -> Q16
     b = WebRtcSpl_AddSatW32(a, state0_ch1);
-    a = WEBRTC_SPL_MUL_16_16(-factor_ch1[0], (int16_t) (b >> 16));  // Q15
+    a = -factor_ch1[0] * (int16_t)(b >> 16);  // Q15
     state0_ch1 = WebRtcSpl_AddSatW32(a << 1, (uint32_t)in_out << 16);  // Q16
     in_out = (int16_t) (b >> 16);  // Save as Q0
 
-    a = WEBRTC_SPL_MUL_16_16(factor_ch1[1], in_out);  // Q15 * Q0 = Q15
+    a = factor_ch1[1] * in_out;  // Q15 * Q0 = Q15
     a <<= 1; // Q15 -> Q16
     b = WebRtcSpl_AddSatW32(a, state1_ch1);  // Q16
-    a = WEBRTC_SPL_MUL_16_16(-factor_ch1[1], (int16_t) (b >> 16));  // Q15
+    a = -factor_ch1[1] * (int16_t)(b >> 16);  // Q15
     state1_ch1 = WebRtcSpl_AddSatW32(a << 1, (uint32_t)in_out << 16);  // Q16
     data_ch1[n] = (int16_t) (b >> 16);  // Save as Q0
 
     // Process channel 2:
     in_out = data_ch2[n];
-    a = WEBRTC_SPL_MUL_16_16(factor_ch2[0], in_out);  // Q15 * Q0 = Q15
+    a = factor_ch2[0] * in_out;  // Q15 * Q0 = Q15
     a <<= 1;  // Q15 -> Q16
     b = WebRtcSpl_AddSatW32(a, state0_ch2);  // Q16
-    a = WEBRTC_SPL_MUL_16_16(-factor_ch2[0], (int16_t) (b >> 16));  // Q15
+    a = -factor_ch2[0] * (int16_t)(b >> 16);  // Q15
     state0_ch2 = WebRtcSpl_AddSatW32(a << 1, (uint32_t)in_out << 16);  // Q16
     in_out = (int16_t) (b >> 16);  // Save as Q0
 
-    a = WEBRTC_SPL_MUL_16_16(factor_ch2[1], in_out);  // Q15 * Q0 = Q15
+    a = factor_ch2[1] * in_out;  // Q15 * Q0 = Q15
     a <<= 1;  // Q15 -> Q16
     b = WebRtcSpl_AddSatW32(a, state1_ch2);  // Q16
-    a = WEBRTC_SPL_MUL_16_16(-factor_ch2[1], (int16_t) (b >> 16));  // Q15
+    a = -factor_ch2[1] * (int16_t)(b >> 16);  // Q15
     state1_ch2 = WebRtcSpl_AddSatW32(a << 1, (uint32_t)in_out << 16);  // Q16
     data_ch2[n] = (int16_t) (b >> 16);  // Save as Q0
   }
@@ -144,11 +144,11 @@ void WebRtcIsacfix_HighpassFilterFixDec32C(int16_t *io,
     c = in + ((a1 + b1) >> 7);  // Q0.
     io[k] = (int16_t)WebRtcSpl_SatW32ToW16(c);  // Write output as Q0.
 
-    c = WEBRTC_SPL_LSHIFT_W32((int32_t)in, 2) - a2 - b2;  // In Q2.
+    c = (in << 2) - a2 - b2;  // In Q2.
     c = (int32_t)WEBRTC_SPL_SAT(536870911, c, -536870912);
 
     state1 = state0;
-    state0 = WEBRTC_SPL_LSHIFT_W32(c, 2);  // Write state as Q4
+    state0 = c << 2;  // Write state as Q4
   }
   state[0] = state0;
   state[1] = state1;
@@ -177,21 +177,21 @@ void WebRtcIsacfix_SplitAndFilter1(int16_t *pin,
 
   /* First Channel */
   for (k=0;k<FRAMESAMPLES/2;k++) {
-    tempin_ch1[QLOOKAHEAD + k] = pin[1+WEBRTC_SPL_MUL_16_16(2, k)];
+    tempin_ch1[QLOOKAHEAD + k] = pin[1 + 2 * k];
   }
   for (k=0;k<QLOOKAHEAD;k++) {
     tempin_ch1[k]=prefiltdata->INLABUF1_fix[k];
-    prefiltdata->INLABUF1_fix[k]=pin[FRAMESAMPLES+1-WEBRTC_SPL_MUL_16_16(2, QLOOKAHEAD)+WEBRTC_SPL_MUL_16_16(2, k)];
+    prefiltdata->INLABUF1_fix[k] = pin[FRAMESAMPLES + 1 - 2 * (QLOOKAHEAD - k)];
   }
 
   /* Second Channel.  This is exactly like the first channel, except that the
      even samples are now filtered instead (lower channel). */
   for (k=0;k<FRAMESAMPLES/2;k++) {
-    tempin_ch2[QLOOKAHEAD+k] = pin[WEBRTC_SPL_MUL_16_16(2, k)];
+    tempin_ch2[QLOOKAHEAD + k] = pin[2 * k];
   }
   for (k=0;k<QLOOKAHEAD;k++) {
     tempin_ch2[k]=prefiltdata->INLABUF2_fix[k];
-    prefiltdata->INLABUF2_fix[k]=pin[FRAMESAMPLES-WEBRTC_SPL_MUL_16_16(2, QLOOKAHEAD)+WEBRTC_SPL_MUL_16_16(2, k)];
+    prefiltdata->INLABUF2_fix[k] = pin[FRAMESAMPLES - 2 * (QLOOKAHEAD - k)];
   }
 
 
@@ -206,7 +206,7 @@ void WebRtcIsacfix_SplitAndFilter1(int16_t *pin,
                                        prefiltdata->INSTAT1_fix,
                                        prefiltdata->INSTAT2_fix);
 
-  for (k=0;k<WEBRTC_SPL_MUL_16_16(2, (QORDER-1));k++) {
+  for (k = 0; k < 2 * (QORDER - 1); k++) {
     tmpState_ch1[k] = prefiltdata->INSTAT1_fix[k];
     tmpState_ch2[k] = prefiltdata->INSTAT2_fix[k];
   }
@@ -256,13 +256,13 @@ void WebRtcIsacfix_SplitAndFilter2(int16_t *pin,
 
   /* First Channel */
   for (k=0;k<FRAMESAMPLES/2;k++) {
-    tempin_ch1[k] = pin[1+WEBRTC_SPL_MUL_16_16(2, k)];
+    tempin_ch1[k] = pin[1 + 2 * k];
   }
 
   /* Second Channel.  This is exactly like the first channel, except that the
      even samples are now filtered instead (lower channel). */
   for (k=0;k<FRAMESAMPLES/2;k++) {
-    tempin_ch2[k] = pin[WEBRTC_SPL_MUL_16_16(2, k)];
+    tempin_ch2[k] = pin[2 * k];
   }
 
 
@@ -341,8 +341,8 @@ void WebRtcIsacfix_FilterAndCombine1(int16_t *tempin_ch1,
 
   /* Merge outputs to form the full length output signal.*/
   for (k=0;k<FRAMESAMPLES/2;k++) {
-    in[WEBRTC_SPL_MUL_16_16(2, k)]=tempin_ch2[k];
-    in[WEBRTC_SPL_MUL_16_16(2, k)+1]=tempin_ch1[k];
+    in[2 * k] = tempin_ch2[k];
+    in[2 * k + 1] = tempin_ch1[k];
   }
 
   /* High pass filter */
@@ -402,8 +402,8 @@ void WebRtcIsacfix_FilterAndCombine2(int16_t *tempin_ch1,
 
   /* Merge outputs to form the full length output signal.*/
   for (k=0;k<len/2;k++) {
-    in[WEBRTC_SPL_MUL_16_16(2, k)]=tempin_ch2[k];
-    in[WEBRTC_SPL_MUL_16_16(2, k)+1]=tempin_ch1[k];
+    in[2 * k] = tempin_ch2[k];
+    in[2 * k + 1] = tempin_ch1[k];
   }
 
   /* High pass filter */

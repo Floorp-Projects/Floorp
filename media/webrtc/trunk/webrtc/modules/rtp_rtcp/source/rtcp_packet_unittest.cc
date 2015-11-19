@@ -572,8 +572,6 @@ TEST(RtcpPacketTest, BuildWithTooSmallBuffer) {
   size_t len = 0;
   uint8_t packet[kRrLength + kReportBlockLength - 1];
   rr.Build(packet, &len, kRrLength + kReportBlockLength - 1);
-  RtcpPacketParser parser;
-  parser.Parse(packet, len);
   EXPECT_EQ(0U, len);
 }
 

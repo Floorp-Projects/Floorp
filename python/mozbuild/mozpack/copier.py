@@ -152,6 +152,52 @@ class FileRegistry(object):
         return set(k for k, v in self._required_directories.items() if v > 0)
 
 
+class FileRegistrySubtree(object):
+    '''A proxy class to give access to a subtree of an existing FileRegistry.
+
+    Note this doesn't implement the whole FileRegistry interface.'''
+    def __new__(cls, base, registry):
+        if not base:
+            return registry
+        return object.__new__(cls)
+
+    def __init__(self, base, registry):
+        self._base = base
+        self._registry = registry
+
+    def _get_path(self, path):
+        # mozpath.join will return a trailing slash if path is empty, and we
+        # don't want that.
+        return mozpath.join(self._base, path) if path else self._base
+
+    def add(self, path, content):
+        return self._registry.add(self._get_path(path), content)
+
+    def match(self, pattern):
+        return [mozpath.relpath(p, self._base)
+                for p in self._registry.match(self._get_path(pattern))]
+
+    def remove(self, pattern):
+        return self._registry.remove(self._get_path(pattern))
+
+    def paths(self):
+        return [p for p, f in self]
+
+    def __len__(self):
+        return len(self.paths())
+
+    def contains(self, pattern):
+        return self._registry.contains(self._get_path(pattern))
+
+    def __getitem__(self, path):
+        return self._registry[self._get_path(path)]
+
+    def __iter__(self):
+        for p, f in self._registry:
+            if mozpath.basedir(p, [self._base]):
+                yield mozpath.relpath(p, self._base), f
+
+
 class FileCopyResult(object):
     """Represents results of a FileCopier.copy operation."""
 

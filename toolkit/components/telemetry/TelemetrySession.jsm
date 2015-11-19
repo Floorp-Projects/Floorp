@@ -12,7 +12,6 @@ const Cu = Components.utils;
 
 Cu.import("resource://gre/modules/debug.js", this);
 Cu.import("resource://gre/modules/Log.jsm");
-Cu.import("resource://gre/modules/osfile.jsm", this);
 Cu.import("resource://gre/modules/Services.jsm", this);
 Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
 Cu.import("resource://gre/modules/Promise.jsm", this);
@@ -1051,8 +1050,8 @@ var Impl = {
     c("MEMORY_JS_COMPARTMENTS_USER", "JSMainRuntimeCompartmentsUser");
     b("MEMORY_IMAGES_CONTENT_USED_UNCOMPRESSED", "imagesContentUsedUncompressed");
     b("MEMORY_STORAGE_SQLITE", "storageSQLite");
-    cc("MEMORY_EVENTS_VIRTUAL", "lowMemoryEventsVirtual");
-    cc("MEMORY_EVENTS_PHYSICAL", "lowMemoryEventsPhysical");
+    cc("LOW_MEMORY_EVENTS_VIRTUAL", "lowMemoryEventsVirtual");
+    cc("LOW_MEMORY_EVENTS_PHYSICAL", "lowMemoryEventsPhysical");
     c("GHOST_WINDOWS", "ghostWindows");
     cc("PAGE_FAULTS_HARD", "pageFaultsHard");
 
@@ -1840,9 +1839,7 @@ var Impl = {
    *                 If not provided, a new payload is gathered.
    */
   _saveAbortedSessionPing: function(aProvidedPayload = null) {
-    const FILE_PATH = OS.Path.join(OS.Constants.Path.profileDir, DATAREPORTING_DIRECTORY,
-                                   ABORTED_SESSION_FILE_NAME);
-    this._log.trace("_saveAbortedSessionPing - ping path: " + FILE_PATH);
+    this._log.trace("_saveAbortedSessionPing");
 
     let payload = null;
     if (aProvidedPayload) {

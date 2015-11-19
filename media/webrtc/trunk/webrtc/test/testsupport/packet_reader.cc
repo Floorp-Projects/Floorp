@@ -12,6 +12,7 @@
 
 #include <assert.h>
 #include <stdio.h>
+#include <algorithm>
 
 namespace webrtc {
 namespace test {
@@ -22,10 +23,9 @@ PacketReader::PacketReader()
 PacketReader::~PacketReader() {}
 
 void PacketReader::InitializeReading(uint8_t* data,
-                                     int data_length_in_bytes,
-                                     int packet_size_in_bytes) {
+                                     size_t data_length_in_bytes,
+                                     size_t packet_size_in_bytes) {
   assert(data);
-  assert(data_length_in_bytes >= 0);
   assert(packet_size_in_bytes > 0);
   data_ = data;
   data_length_ = data_length_in_bytes;
@@ -40,16 +40,9 @@ int PacketReader::NextPacket(uint8_t** packet_pointer) {
     return -1;
   }
   *packet_pointer = data_ + currentIndex_;
-  // Check if we're about to read the last packet:
-  if (data_length_ - currentIndex_ <= packet_size_) {
-    int size = data_length_ - currentIndex_;
-    currentIndex_ = data_length_;
-    assert(size >= 0);
-    return size;
-  }
-  currentIndex_ += packet_size_;
-  assert(packet_size_ >= 0);
-  return packet_size_;
+  size_t old_index = currentIndex_;
+  currentIndex_ = std::min(currentIndex_ + packet_size_, data_length_);
+  return static_cast<int>(currentIndex_ - old_index);
 }
 
 }  // namespace test

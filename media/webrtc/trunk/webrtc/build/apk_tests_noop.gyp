@@ -30,6 +30,10 @@
       'type': 'none',
     },
     {
+      'target_name': 'rtc_unittests_apk',
+      'type': 'none',
+    },
+    {
       'target_name': 'system_wrappers_unittests_apk',
       'type': 'none',
     },

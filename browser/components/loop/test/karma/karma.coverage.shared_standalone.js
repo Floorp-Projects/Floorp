@@ -17,7 +17,9 @@ module.exports = function(config) {
     "content/shared/libs/classnames-2.2.0.js",
     "content/shared/libs/sdk.js",
     "test/shared/vendor/*.js",
+    "test/shared/loop_mocha_utils.js",
     "test/karma/head.js", // Add test fixture container
+    "content/shared/js/loopapi-client.js",
     "content/shared/js/utils.js",
     "content/shared/js/store.js",
     "content/shared/js/models.js",

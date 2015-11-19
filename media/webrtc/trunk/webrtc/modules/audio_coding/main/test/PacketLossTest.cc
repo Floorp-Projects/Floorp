@@ -126,7 +126,7 @@ void PacketLossTest::Perform() {
 #ifndef WEBRTC_CODEC_OPUS
   return;
 #else
-  scoped_ptr<AudioCodingModule> acm(AudioCodingModule::Create(0));
+  rtc::scoped_ptr<AudioCodingModule> acm(AudioCodingModule::Create(0));
 
   int codec_id = acm->Codec("opus", 48000, channels_);
 

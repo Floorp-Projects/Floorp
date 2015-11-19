@@ -34,9 +34,7 @@ var modules = {
   },
 
   rights: {
-    uri: AppConstants.MOZ_OFFICIAL_BRANDING ?
-      "chrome://browser/content/aboutRights.xhtml" :
-      "chrome://global/content/aboutRights.xhtml",
+    uri: "chrome://browser/content/aboutRights.xhtml",
     privileged: false
   },
   blocked: {

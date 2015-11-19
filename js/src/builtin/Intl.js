@@ -443,9 +443,9 @@ function CanonicalizeLanguageTag(locale) {
         while (i < subtags.length && subtags[i].length > 1)
             i++;
         var extension = callFunction(std_Array_join, callFunction(std_Array_slice, subtags, extensionStart, i), "-");
-        extensions.push(extension);
+        callFunction(std_Array_push, extensions, extension);
     }
-    extensions.sort();
+    callFunction(std_Array_sort, extensions);
 
     // Private use sequences are left as is. "x-private"
     var privateUse = "";
@@ -455,7 +455,7 @@ function CanonicalizeLanguageTag(locale) {
     // Put everything back together.
     var canonical = normal;
     if (extensions.length > 0)
-        canonical += "-" + extensions.join("-");
+        canonical += "-" + callFunction(std_Array_join, extensions, "-");
     if (privateUse.length > 0) {
         // Be careful of a Language-Tag that is entirely privateuse.
         if (canonical.length > 0)
@@ -578,11 +578,14 @@ function DefaultLocale() {
     // (perhaps via fallback).  Otherwise use the last-ditch locale.
     var candidate = DefaultLocaleIgnoringAvailableLocales();
     var locale;
-    if (BestAvailableLocaleIgnoringDefault(collatorInternalProperties.availableLocales(),
+    if (BestAvailableLocaleIgnoringDefault(callFunction(collatorInternalProperties.availableLocales,
+                                                        collatorInternalProperties),
                                            candidate) &&
-        BestAvailableLocaleIgnoringDefault(numberFormatInternalProperties.availableLocales(),
+        BestAvailableLocaleIgnoringDefault(callFunction(numberFormatInternalProperties.availableLocales,
+                                                        numberFormatInternalProperties),
                                            candidate) &&
-        BestAvailableLocaleIgnoringDefault(dateTimeFormatInternalProperties.availableLocales(),
+        BestAvailableLocaleIgnoringDefault(callFunction(dateTimeFormatInternalProperties.availableLocales,
+                                                        dateTimeFormatInternalProperties),
                                            candidate))
     {
         locale = candidate;
@@ -675,8 +678,8 @@ function CanonicalizeLocaleList(locales) {
             if (!IsStructurallyValidLanguageTag(tag))
                 ThrowRangeError(JSMSG_INVALID_LANGUAGE_TAG, tag);
             tag = CanonicalizeLanguageTag(tag);
-            if (seen.indexOf(tag) === -1)
-                seen.push(tag);
+            if (callFunction(std_Array_indexOf, seen, tag) === -1)
+                callFunction(std_Array_push, seen, tag);
         }
         k++;
     }
@@ -968,14 +971,14 @@ function LookupSupportedLocales(availableLocales, requestedLocales) {
         // Step 4.c-d.
         var availableLocale = BestAvailableLocale(availableLocales, noExtensionsLocale);
         if (availableLocale !== undefined)
-            subset.push(locale);
+            callFunction(std_Array_push, subset, locale);
 
         // Step 4.e.
         k++;
     }
 
     // Steps 5-6.
-    return subset.slice(0);
+    return callFunction(std_Array_slice, subset, 0);
 }
 
 
@@ -1317,7 +1320,7 @@ function resolveCollatorInternals(lazyCollatorData)
     var relevantExtensionKeys = Collator.relevantExtensionKeys;
 
     // Step 15.
-    var r = ResolveLocale(Collator.availableLocales(),
+    var r = ResolveLocale(callFunction(Collator.availableLocales, Collator),
                           lazyCollatorData.requestedLocales,
                           lazyCollatorData.opt,
                           relevantExtensionKeys,
@@ -1507,7 +1510,8 @@ function InitializeCollator(collator, locales, options) {
 function Intl_Collator_supportedLocalesOf(locales /*, options*/) {
     var options = arguments.length > 1 ? arguments[1] : undefined;
 
-    var availableLocales = collatorInternalProperties.availableLocales();
+    var availableLocales = callFunction(collatorInternalProperties.availableLocales,
+                                        collatorInternalProperties);
     var requestedLocales = CanonicalizeLocaleList(locales);
     return SupportedLocales(availableLocales, requestedLocales, options);
 }
@@ -1675,7 +1679,7 @@ function resolveNumberFormatInternals(lazyNumberFormatData) {
     var localeData = NumberFormat.localeData;
 
     // Step 11.
-    var r = ResolveLocale(NumberFormat.availableLocales(),
+    var r = ResolveLocale(callFunction(NumberFormat.availableLocales, NumberFormat),
                           lazyNumberFormatData.requestedLocales,
                           lazyNumberFormatData.opt,
                           NumberFormat.relevantExtensionKeys,
@@ -1959,7 +1963,8 @@ function CurrencyDigits(currency) {
 function Intl_NumberFormat_supportedLocalesOf(locales /*, options*/) {
     var options = arguments.length > 1 ? arguments[1] : undefined;
 
-    var availableLocales = numberFormatInternalProperties.availableLocales();
+    var availableLocales = callFunction(numberFormatInternalProperties.availableLocales,
+                                        numberFormatInternalProperties);
     var requestedLocales = CanonicalizeLocaleList(locales);
     return SupportedLocales(availableLocales, requestedLocales, options);
 }
@@ -2118,7 +2123,7 @@ function resolveDateTimeFormatInternals(lazyDateTimeFormatData) {
     var localeData = DateTimeFormat.localeData;
 
     // Step 10.
-    var r = ResolveLocale(DateTimeFormat.availableLocales(),
+    var r = ResolveLocale(callFunction(DateTimeFormat.availableLocales, DateTimeFormat),
                           lazyDateTimeFormatData.requestedLocales,
                           lazyDateTimeFormatData.localeOpt,
                           DateTimeFormat.relevantExtensionKeys,
@@ -2659,7 +2664,8 @@ function BestFitFormatMatcher(options, formats) {
 function Intl_DateTimeFormat_supportedLocalesOf(locales /*, options*/) {
     var options = arguments.length > 1 ? arguments[1] : undefined;
 
-    var availableLocales = dateTimeFormatInternalProperties.availableLocales();
+    var availableLocales = callFunction(dateTimeFormatInternalProperties.availableLocales,
+                                        dateTimeFormatInternalProperties);
     var requestedLocales = CanonicalizeLocaleList(locales);
     return SupportedLocales(availableLocales, requestedLocales, options);
 }

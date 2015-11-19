@@ -25,7 +25,6 @@
   "Window attribute: onclose": true,
   "Window attribute: oncuechange": true,
   "Window attribute: onmousewheel": true,
-  "Window attribute: onstorage": true,
   "Window unforgeable attribute: window": true,
   "Window unforgeable attribute: document": true,
   "Window unforgeable attribute: top": true

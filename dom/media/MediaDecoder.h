@@ -722,10 +722,6 @@ private:
   static bool IsWMFEnabled();
 #endif
 
-#ifdef MOZ_APPLEMEDIA
-  static bool IsAppleMP3Enabled();
-#endif
-
   // Return statistics. This is used for progress events and other things.
   // This can be called from any thread. It's only a snapshot of the
   // current state, since other threads might be changing the state
@@ -820,6 +816,11 @@ protected:
   RefPtr<MediaResource> mResource;
 
 private:
+  MediaEventSource<void>*
+  DataArrivedEvent() override { return &mDataArrivedEvent; }
+
+  MediaEventProducer<void> mDataArrivedEvent;
+
   // The state machine object for handling the decoding. It is safe to
   // call methods of this object from other threads. Its internal data
   // is synchronised on a monitor. The lifetime of this object is

@@ -64,7 +64,7 @@ bool AcmSendTestOldApi::RegisterCodec(const char* payload_name,
 
 Packet* AcmSendTestOldApi::NextPacket() {
   assert(codec_registered_);
-  if (filter_.test(payload_type_)) {
+  if (filter_.test(static_cast<size_t>(payload_type_))) {
     // This payload type should be filtered out. Since the payload type is the
     // same throughout the whole test run, no packet at all will be delivered.
     // We can just as well signal that the test is over by returning NULL.
@@ -80,10 +80,10 @@ Packet* AcmSendTestOldApi::NextPacket() {
                                            input_frame_.num_channels_,
                                            input_frame_.data_);
     }
-    CHECK_EQ(0, acm_->Add10MsData(input_frame_));
+    data_to_send_ = false;
+    CHECK_GE(acm_->Add10MsData(input_frame_), 0);
     input_frame_.timestamp_ += input_block_size_samples_;
-    int32_t encoded_bytes = acm_->Process();
-    if (encoded_bytes > 0) {
+    if (data_to_send_) {
       // Encoded packet received.
       return CreatePacket();
     }
@@ -98,7 +98,7 @@ int32_t AcmSendTestOldApi::SendData(
     uint8_t payload_type,
     uint32_t timestamp,
     const uint8_t* payload_data,
-    uint16_t payload_len_bytes,
+    size_t payload_len_bytes,
     const RTPFragmentationHeader* fragmentation) {
   // Store the packet locally.
   frame_type_ = frame_type;
@@ -106,6 +106,7 @@ int32_t AcmSendTestOldApi::SendData(
   timestamp_ = timestamp;
   last_payload_vec_.assign(payload_data, payload_data + payload_len_bytes);
   assert(last_payload_vec_.size() == payload_len_bytes);
+  data_to_send_ = true;
   return 0;
 }
 
@@ -115,7 +116,7 @@ Packet* AcmSendTestOldApi::CreatePacket() {
   uint8_t* packet_memory = new uint8_t[allocated_bytes];
   // Populate the header bytes.
   packet_memory[0] = 0x80;
-  packet_memory[1] = payload_type_;
+  packet_memory[1] = static_cast<uint8_t>(payload_type_);
   packet_memory[2] = (sequence_number_ >> 8) & 0xFF;
   packet_memory[3] = (sequence_number_) & 0xFF;
   packet_memory[4] = (timestamp_ >> 24) & 0xFF;

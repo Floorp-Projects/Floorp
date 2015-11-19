@@ -17,9 +17,9 @@
 
 #include "webrtc/common_audio/signal_processing/include/signal_processing_library.h"
 
-void WebRtcSpl_FilterMAFastQ12(int16_t* in_ptr,
+void WebRtcSpl_FilterMAFastQ12(const int16_t* in_ptr,
                                int16_t* out_ptr,
-                               int16_t* B,
+                               const int16_t* B,
                                int16_t B_length,
                                int16_t length)
 {

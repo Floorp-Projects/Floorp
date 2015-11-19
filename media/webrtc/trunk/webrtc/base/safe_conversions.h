@@ -15,19 +15,10 @@
 
 #include <limits>
 
-#include "webrtc/base/common.h"
-#include "webrtc/base/logging.h"
+#include "webrtc/base/checks.h"
 #include "webrtc/base/safe_conversions_impl.h"
 
 namespace rtc {
-
-inline void Check(bool condition) {
-  if (!condition) {
-    LOG(LS_ERROR) << "CHECK failed.";
-    Break();
-    // The program should have crashed at this point.
-  }
-}
 
 // Convenience function that returns true if the supplied value is in range
 // for the destination type.
@@ -41,7 +32,7 @@ inline bool IsValueInRangeForNumericType(Src value) {
 // overflow or underflow. NaN source will always trigger a CHECK.
 template <typename Dst, typename Src>
 inline Dst checked_cast(Src value) {
-  Check(IsValueInRangeForNumericType<Dst>(value));
+  CHECK(IsValueInRangeForNumericType<Dst>(value));
   return static_cast<Dst>(value);
 }
 
@@ -66,11 +57,11 @@ inline Dst saturated_cast(Src value) {
 
     // Should fail only on attempting to assign NaN to a saturated integer.
     case internal::TYPE_INVALID:
-      Check(false);
+      FATAL();
       return std::numeric_limits<Dst>::max();
   }
 
-  Check(false); // NOTREACHED();
+  FATAL();
   return static_cast<Dst>(value);
 }
 
