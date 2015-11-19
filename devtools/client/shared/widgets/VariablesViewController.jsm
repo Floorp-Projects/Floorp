@@ -431,7 +431,7 @@ VariablesViewController.prototype = {
       let label = StackFrameUtils.getScopeLabel(environment);
 
       // Block scopes may have the same label, so make addItem allow duplicates.
-      let closure = funcScope.addItem(label, undefined, true);
+      let closure = funcScope.addItem(label, undefined, {relaxed: true});
       closure.target.setAttribute("scope", "");
       closure.showArrow();
 
