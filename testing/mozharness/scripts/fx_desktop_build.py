@@ -89,6 +89,10 @@ class FxDesktopBuild(BuildScript, object):
 
                 'stage_username': 'ffxbld',
                 'stage_ssh_key': 'ffxbld_rsa',
+
+                # If adding values here, consider including them in windows-
+                # specific configs as well (and note the comment there about
+                # building C extensions on linux builders).
                 'virtualenv_modules': [
                     'requests==2.2.1',
                     'PyHawk-with-a-single-extra-commit==0.1.5',
