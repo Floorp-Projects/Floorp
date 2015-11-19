@@ -230,30 +230,15 @@ PathBuilderD2D::Arc(const Point &aOrigin, Float aRadius, Float aStartAngle,
     aEndAngle = oldStart;
   }
 
-  const Float kSmallRadius = 0.007f;
-  Float midAngle = 0;
-  bool smallFullCircle = false;
-
   // XXX - Workaround for now, D2D does not appear to do the desired thing when
   // the angle sweeps a complete circle.
+  bool fullCircle = false;
   if (aEndAngle - aStartAngle >= 2 * M_PI) {
-    if (aRadius > kSmallRadius) {
-      aEndAngle = Float(aStartAngle + M_PI * 1.9999);
-    }
-    else {
-      smallFullCircle = true;
-      midAngle = Float(aStartAngle + M_PI);
-      aEndAngle = Float(aStartAngle + 2 * M_PI);
-    }
+    fullCircle = true;
+    aEndAngle = Float(aStartAngle + M_PI * 1.9999);
   } else if (aStartAngle - aEndAngle >= 2 * M_PI) {
-    if (aRadius > kSmallRadius) {
-      aStartAngle = Float(aEndAngle + M_PI * 1.9999);
-    }
-    else {
-      smallFullCircle = true;
-      midAngle = Float(aEndAngle + M_PI);
-      aStartAngle = Float(aEndAngle + 2 * M_PI);
-    }
+    fullCircle = true;
+    aStartAngle = Float(aEndAngle + M_PI * 1.9999);
   }
 
   Point startPoint;
@@ -275,7 +260,12 @@ PathBuilderD2D::Arc(const Point &aOrigin, Float aRadius, Float aStartAngle,
     aAntiClockwise ? D2D1_SWEEP_DIRECTION_COUNTER_CLOCKWISE :
                      D2D1_SWEEP_DIRECTION_CLOCKWISE;
 
-  if (!smallFullCircle) {
+  // if startPoint and endPoint of our circle are too close there are D2D issues
+  // with drawing the circle as a single arc
+  const Float kEpsilon = 1e-5f;
+  if (!fullCircle ||
+      (std::abs(startPoint.x - endPoint.x) +
+       std::abs(startPoint.y - endPoint.y) > kEpsilon)) {
 
     if (aAntiClockwise) {
       if (aStartAngle - aEndAngle > M_PI) {
@@ -294,7 +284,10 @@ PathBuilderD2D::Arc(const Point &aOrigin, Float aRadius, Float aStartAngle,
                                    arcSize));
   }
   else {
-    // draw small circles as two half-circles
+    // our first workaround attempt didn't work, so instead draw the circle as
+    // two half-circles
+    Float midAngle = aEndAngle > aStartAngle ?
+      Float(aStartAngle + M_PI) : Float(aEndAngle + M_PI);
     Point midPoint;
     midPoint.x = aOrigin.x + aRadius * cosf(midAngle);
     midPoint.y = aOrigin.y + aRadius * sinf(midAngle);
@@ -305,7 +298,9 @@ PathBuilderD2D::Arc(const Point &aOrigin, Float aRadius, Float aStartAngle,
                                    direction,
                                    arcSize));
 
-    mSink->AddArc(D2D1::ArcSegment(D2DPoint(endPoint),
+    // if the adjusted endPoint computed above is used here and endPoint !=
+    // startPoint then this half of the circle won't render...
+    mSink->AddArc(D2D1::ArcSegment(D2DPoint(startPoint),
                                    D2D1::SizeF(aRadius, aRadius),
                                    0.0f,
                                    direction,
