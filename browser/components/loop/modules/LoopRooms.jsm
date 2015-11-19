@@ -755,13 +755,18 @@ var LoopRoomsInternal = {
     let url = "/rooms/" + encodeURIComponent(roomToken);
     MozLoopService.hawkRequest(this.sessionType, url, "POST", postData).then(response => {
       // Delete doesn't have a body return.
-      var joinData = response.body ? JSON.parse(response.body) : {};
+      let joinData = response.body ? JSON.parse(response.body) : {};
+      if ("sessionToken" in joinData) {
+        let room = this.rooms.get(roomToken);
+        room.sessionToken = joinData.sessionToken;
+      }
       callback(null, joinData);
     }, error => callback(error)).catch(error => callback(error));
   },
 
   /**
-   * Joins a room
+   * Joins a room. The sessionToken that is returned by the server will be stored
+   * locally, for future use.
    *
    * @param {String} roomToken  The room token.
    * @param {Function} callback Function that will be invoked once the operation
@@ -788,7 +793,7 @@ var LoopRoomsInternal = {
    *
    * @param {String} roomToken    The room token.
    * @param {String} sessionToken The session token for the session that has been
-   *                              joined
+   *                              joined.
    * @param {Function} callback   Function that will be invoked once the operation
    *                              finished. The first argument passed will be an
    *                              `Error` object or `null`.
@@ -818,6 +823,14 @@ var LoopRoomsInternal = {
           MozLoopService.log.error(error);
         }
       };
+    }
+    let room = this.rooms.get(roomToken);
+    if (!sessionToken && room && room.sessionToken) {
+      if (!room || !room.sessionToken) {
+        return;
+      }
+      sessionToken = room.sessionToken;
+      delete room.sessionToken;
     }
     this._postToRoom(roomToken, {
       action: "leave",

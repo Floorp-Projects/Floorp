@@ -121,20 +121,36 @@ var inChrome = typeof Components != "undefined" && "utils" in Components;
   }
 
   /**
-   * Used for getting a boolean preference. It will either use the browser preferences
-   * (if navigator.mozLoop is defined) or try to get them from localStorage.
+   * Check to see if we're currently on the desktop client or the standalone,
+   * link-clicker page instead.
+   * Note: we check for 'sendAsyncMessage' here too to prevent the ui-showcase
+   *       to start playing audio.
    *
-   * @param {String} prefName The name of the preference. Note that mozLoop adds
-   *                          'loop.' to the start of the string.
-   *
-   * @return The value of the preference, or false if not available.
+   * @return {Boolean}
    */
-  function getBoolPreference(prefName) {
-    if (navigator.mozLoop) {
-      return !!navigator.mozLoop.getLoopPref(prefName);
+  function isDesktop() {
+    return rootObject.document.body.className.indexOf("standalone") === -1
+      && ("sendAsyncMessage" in rootObject);
+  }
+
+  /**
+   * Used for getting a boolean preference. It will either use the browser preferences
+   * or try to get them from localStorage.
+   *
+   * @param {String}   prefName The name of the preference. Note that mozLoop
+   *                            adds 'loop.' to the start of the string.
+   * @param {Function} callback Invoked with the preference value, coerced to type
+   *                            Boolean if necessary.
+   */
+  function getBoolPreference(prefName, callback) {
+    if (loop.shared.utils.isDesktop()) {
+      loop.request("GetLoopPref", prefName).then(function(result) {
+        callback(!!result);
+      });
+      return;
     }
 
-    return !!localStorage.getItem(prefName);
+    callback(!!localStorage.getItem(prefName));
   }
 
   function isChrome(platform) {
@@ -384,8 +400,7 @@ var inChrome = typeof Components != "undefined" && "utils" in Components;
    * @param {String} [from]               The area from which this function is called.
    */
   function composeCallUrlEmail(callUrl, recipient, contextDescription, from) {
-    var mozLoop = navigator.mozLoop;
-    if (typeof mozLoop === "undefined") {
+    if (!isDesktop()) {
       console.warn("composeCallUrlEmail isn't available for Loop standalone.");
       return;
     }
@@ -406,18 +421,7 @@ var inChrome = typeof Components != "undefined" && "utils" in Components;
     }
     var bodyFooter = body + footer;
     bodyFooter = bodyFooter.replace(/\r\n/g, "\n").replace(/\n/g, "\r\n");
-    mozLoop.composeEmail(
-      subject,
-      bodyFooter,
-      recipient
-    );
-
-    var bucket = mozLoop.SHARING_ROOM_URL["EMAIL_FROM_" + (from || "").toUpperCase()];
-    if (typeof bucket === "undefined") {
-      console.error("No URL sharing type bucket found for '" + from + "'");
-      return;
-    }
-    mozLoop.telemetryAddValue("LOOP_SHARING_ROOM_URL", bucket);
+    loop.request("ComposeEmail", subject, bodyFooter, recipient);
   }
 
   // We can alias `subarray` to `slice` when the latter is not available, because
@@ -788,6 +792,7 @@ var inChrome = typeof Components != "undefined" && "utils" in Components;
     getOSVersion: getOSVersion,
     getPlatform: getPlatform,
     isChrome: isChrome,
+    isDesktop: isDesktop,
     isFirefox: isFirefox,
     isOpera: isOpera,
     getUnsupportedPlatform: getUnsupportedPlatform,

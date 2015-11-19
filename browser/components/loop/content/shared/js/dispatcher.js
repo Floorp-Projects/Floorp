@@ -18,7 +18,10 @@ loop.Dispatcher = (function() {
   function Dispatcher() {
     this._eventData = {};
     this._actionQueue = [];
-    this._debug = loop.shared.utils.getBoolPreference("debug.dispatcher");
+    this._debug = false;
+    loop.shared.utils.getBoolPreference("debug.dispatcher", function(enabled) {
+      this._debug = enabled;
+    }.bind(this));
   }
 
   Dispatcher.prototype = {

@@ -346,9 +346,30 @@ loop.shared.mixins = (function() {
     _audioRequest: null,
 
     _isLoopDesktop: function() {
-      return rootObject.navigator &&
-             typeof rootObject.navigator.mozLoop === "object";
+      var isUIShowcase = !!(rootObject.document.querySelector &&
+        rootObject.document.querySelector("#main > .showcase"));
+      return loop.shared.utils.isDesktop() || isUIShowcase;
     },
+
+    /**
+     * Internal function that determines if we can play an audio fragment at this
+     * time. If the user disabled all notifications (e.g. muted), the returned
+     * Promise will resolve with FALSE.
+     *
+     * @return {Promise}
+     */
+    _canPlay: function() {
+      return new Promise(function(resolve) {
+        if (!this._isLoopDesktop()) {
+          resolve(true);
+          return;
+        }
+
+        loop.request("GetDoNotDisturb").then(function(mayNotDisturb) {
+          resolve(!mayNotDisturb);
+        });
+      }.bind(this));
+     },
 
     /**
      * Starts playing an audio file, stopping any audio that is already in progress.
@@ -358,52 +379,67 @@ loop.shared.mixins = (function() {
      *                         - {Boolean} loop Whether or not to loop the sound.
      */
     play: function(name, options) {
-      if (this._isLoopDesktop() && rootObject.navigator.mozLoop.doNotDisturb) {
-        return;
-      }
-
-      options = options || {};
-      options.loop = options.loop || false;
-
-      this._ensureAudioStopped();
-      this._getAudioBlob(name, function(error, blob) {
-        if (error) {
-          console.error(error);
+      this._canPlay().then(function(canPlay) {
+        if (!canPlay) {
           return;
         }
 
-        var url = URL.createObjectURL(blob);
-        this.audio = new Audio(url);
-        this.audio.loop = options.loop;
-        this.audio.play();
+        options = options || {};
+        options.loop = options.loop || false;
+
+        this._ensureAudioStopped();
+        this._getAudioBlob(name, function(error, blob) {
+          if (error) {
+            console.error(error);
+            return;
+          }
+
+          var url = URL.createObjectURL(blob);
+          this.audio = new Audio(url);
+          this.audio.loop = options.loop;
+          this.audio.play();
+        }.bind(this));
       }.bind(this));
     },
 
     _getAudioBlob: function(name, callback) {
-      if (this._isLoopDesktop()) {
-        rootObject.navigator.mozLoop.getAudioBlob(name, callback);
-        return;
-      }
-
-      var url = "shared/sounds/" + name + ".ogg";
-      this._audioRequest = new XMLHttpRequest();
-      this._audioRequest.open("GET", url, true);
-      this._audioRequest.responseType = "arraybuffer";
-      this._audioRequest.onload = function() {
-        var request = this._audioRequest;
-        var error;
-        if (request.status < 200 || request.status >= 300) {
-          error = new Error(request.status + " " + request.statusText);
-          callback(error);
+      this._canPlay().then(function(canPlay) {
+        if (!canPlay) {
+          callback();
           return;
         }
 
-        var type = request.getResponseHeader("Content-Type");
-        var blob = new Blob([request.response], { type: type });
-        callback(null, blob);
-      }.bind(this);
+        if (this._isLoopDesktop()) {
+          loop.request("GetAudioBlob", name).then(function(result) {
+            if (result.isError) {
+              callback(result);
+              return;
+            }
+            callback(null, result);
+          });
+          return;
+        }
 
-      this._audioRequest.send(null);
+        var url = "shared/sounds/" + name + ".ogg";
+        this._audioRequest = new XMLHttpRequest();
+        this._audioRequest.open("GET", url, true);
+        this._audioRequest.responseType = "arraybuffer";
+        this._audioRequest.onload = function() {
+          var request = this._audioRequest;
+          var error;
+          if (request.status < 200 || request.status >= 300) {
+            error = new Error(request.status + " " + request.statusText);
+            callback(error);
+            return;
+          }
+
+          var type = request.getResponseHeader("Content-Type");
+          var blob = new Blob([request.response], { type: type });
+          callback(null, blob);
+        }.bind(this);
+
+        this._audioRequest.send(null);
+      }.bind(this));
     },
 
     /**

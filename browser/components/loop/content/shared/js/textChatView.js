@@ -57,8 +57,10 @@ loop.shared.views.chat = (function(mozL10n) {
       });
 
       var optionalProps = {};
-      if (navigator.mozLoop) {
-        optionalProps.linkClickHandler = navigator.mozLoop.openURL;
+      if (loop.shared.utils.isDesktop()) {
+        optionalProps.linkClickHandler = function(url) {
+          loop.request("OpenURL", url);
+        };
       }
 
       return (
