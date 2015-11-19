@@ -121,8 +121,6 @@ txExprParser::createAVT(const nsSubstring& aAttrValue,
         else {
             if (!concat) {
                 concat = new txCoreFunctionCall(txCoreFunctionCall::CONCAT);
-                NS_ENSURE_TRUE(concat, NS_ERROR_OUT_OF_MEMORY);
-
                 rv = concat->addParam(expr.forget());
                 expr = concat;
                 NS_ENSURE_SUCCESS(rv, rv);
