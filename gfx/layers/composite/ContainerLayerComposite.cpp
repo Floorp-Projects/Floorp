@@ -168,7 +168,10 @@ ContainerRenderVR(ContainerT* aContainer,
     if (!aContainer->mVRRenderTargetSet || aContainer->mVRRenderTargetSet->size != surfaceRect.Size()) {
       aContainer->mVRRenderTargetSet = vrRendering->CreateRenderTargetSet(compositor, surfaceRect.Size());
     }
-
+    if (!aContainer->mVRRenderTargetSet) {
+      NS_WARNING("CreateRenderTargetSet failed");
+      return;
+    }
     surface = aContainer->mVRRenderTargetSet->GetNextRenderTarget();
     if (!surface) {
       NS_WARNING("GetNextRenderTarget failed");
