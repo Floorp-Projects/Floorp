@@ -1592,22 +1592,6 @@ fun_isGenerator(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
-static JSFunction*
-NewNativeFunctionWithGivenProto(JSContext* cx, Native native, unsigned nargs,
-                                HandleAtom atom, HandleObject proto)
-{
-    return NewFunctionWithProto(cx, native, nargs, JSFunction::NATIVE_FUN, nullptr, atom, proto,
-                                AllocKind::FUNCTION, GenericObject, NewFunctionGivenProto);
-}
-
-static JSFunction*
-NewNativeConstructorWithGivenProto(JSContext* cx, Native native, unsigned nargs,
-                                   HandleAtom atom, HandleObject proto)
-{
-    return NewFunctionWithProto(cx, native, nargs, JSFunction::NATIVE_CTOR, nullptr, atom, proto,
-                                AllocKind::FUNCTION, GenericObject, NewFunctionGivenProto);
-}
-
 // ES6 draft rev32 19.2.3.2
 bool
 js::fun_bind(JSContext* cx, unsigned argc, Value* vp)
@@ -1633,11 +1617,6 @@ js::fun_bind(JSContext* cx, unsigned argc, Value* vp)
 
     RootedValue thisArg(cx, args.length() >= 1 ? args[0] : UndefinedValue());
     RootedObject target(cx, &thisv.toObject());
-
-    // This is part of step 4, but we're delaying allocating the function object.
-    RootedObject proto(cx);
-    if (!GetPrototype(cx, target, &proto))
-        return false;
 
     double length = 0.0;
     // Try to avoid invoking the resolve hook.
@@ -1694,8 +1673,8 @@ js::fun_bind(JSContext* cx, unsigned argc, Value* vp)
 
     // Step 4.
     RootedFunction fun(cx, target->isConstructor() ?
-      NewNativeConstructorWithGivenProto(cx, CallOrConstructBoundFunction, length, nameAtom, proto) :
-      NewNativeFunctionWithGivenProto(cx, CallOrConstructBoundFunction, length, nameAtom, proto));
+      NewNativeConstructor(cx, CallOrConstructBoundFunction, length, nameAtom) :
+      NewNativeFunction(cx, CallOrConstructBoundFunction, length, nameAtom));
     if (!fun)
         return false;
 
@@ -1862,11 +1841,7 @@ FunctionConstructor(JSContext* cx, unsigned argc, Value* vp, GeneratorKind gener
         proto = GlobalObject::getOrCreateStarGeneratorFunctionPrototype(cx, global);
         if (!proto)
             return false;
-    } else {
-        if (!GetPrototypeFromCallableConstructor(cx, args, &proto))
-            return false;
     }
-
     RootedObject globalLexical(cx, &global->lexicalScope());
     RootedFunction fun(cx, NewFunctionWithProto(cx, nullptr, 0,
                                                 JSFunction::INTERPRETED_LAMBDA, globalLexical,
@@ -2038,8 +2013,7 @@ js::NewFunctionWithProto(ExclusiveContext* cx, Native native,
                          unsigned nargs, JSFunction::Flags flags, HandleObject enclosingDynamicScope,
                          HandleAtom atom, HandleObject proto,
                          gc::AllocKind allocKind /* = AllocKind::FUNCTION */,
-                         NewObjectKind newKind /* = GenericObject */,
-                         NewFunctionProtoHandling protoHandling /* = NewFunctionClassProto */)
+                         NewObjectKind newKind /* = GenericObject */)
 {
     MOZ_ASSERT(allocKind == AllocKind::FUNCTION || allocKind == AllocKind::FUNCTION_EXTENDED);
     MOZ_ASSERT_IF(native, !enclosingDynamicScope);
@@ -2051,14 +2025,8 @@ js::NewFunctionWithProto(ExclusiveContext* cx, Native native,
     // isSingleton implies isInterpreted.
     if (native && !IsAsmJSModuleNative(native))
         newKind = SingletonObject;
-
-    if (protoHandling == NewFunctionClassProto) {
-        funobj = NewObjectWithClassProto(cx, &JSFunction::class_, proto, allocKind,
-                                         newKind);
-    } else {
-        funobj = NewObjectWithGivenTaggedProto(cx, &JSFunction::class_, AsTaggedProto(proto),
-                                               allocKind, newKind);
-    }
+    funobj = NewObjectWithClassProto(cx, &JSFunction::class_, proto, allocKind,
+                                     newKind);
     if (!funobj)
         return nullptr;
 

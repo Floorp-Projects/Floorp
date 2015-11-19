@@ -4081,12 +4081,7 @@ js::StringConstructor(JSContext* cx, unsigned argc, Value* vp)
     }
 
     if (args.isConstructing()) {
-        RootedObject proto(cx);
-        RootedObject newTarget(cx, &args.newTarget().toObject());
-        if (!GetPrototypeFromConstructor(cx, newTarget, &proto))
-            return false;
-
-        StringObject* strobj = StringObject::create(cx, str, proto);
+        StringObject* strobj = StringObject::create(cx, str);
         if (!strobj)
             return false;
         args.rval().setObject(*strobj);
