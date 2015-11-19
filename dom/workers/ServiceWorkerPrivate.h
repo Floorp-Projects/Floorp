@@ -128,6 +128,12 @@ public:
   void
   NoteStoppedControllingDocuments();
 
+  WorkerPrivate*
+  GetWorkerPrivate() const
+  {
+    return mWorkerPrivate;
+  }
+
 private:
   enum WakeUpReason {
     FetchEvent = 0,
