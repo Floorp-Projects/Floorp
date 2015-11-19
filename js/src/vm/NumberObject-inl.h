@@ -14,13 +14,14 @@
 namespace js {
 
 inline NumberObject*
-NumberObject::create(JSContext* cx, double d, HandleObject proto /* = nullptr */)
+NumberObject::create(JSContext* cx, double d)
 {
-    NumberObject* obj = NewObjectWithClassProto<NumberObject>(cx, proto);
+    JSObject* obj = NewBuiltinClassInstance(cx, &class_);
     if (!obj)
         return nullptr;
-    obj->setPrimitiveValue(d);
-    return obj;
+    NumberObject& numobj = obj->as<NumberObject>();
+    numobj.setPrimitiveValue(d);
+    return &numobj;
 }
 
 } // namespace js
