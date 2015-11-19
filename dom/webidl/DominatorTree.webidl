@@ -4,6 +4,8 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+typedef unsigned long long NodeId;
+
 /**
  * In a directed graph with a root node `R`, a node `A` is said to "dominate" a
  * node `B` iff every path from `R` to `B` contains `A`. A node `A` is said to
@@ -37,5 +39,10 @@
  */
 [ChromeOnly, Exposed=(Window,System,Worker)]
 interface DominatorTree {
-
+  /**
+   * The `NodeId` for the root of the dominator tree. This is a "meta-root" in
+   * that it has an edge to each GC root in the heap snapshot this dominator
+   * tree was created from.
+   */
+  readonly attribute NodeId root;
 };

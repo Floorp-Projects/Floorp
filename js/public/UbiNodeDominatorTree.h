@@ -547,6 +547,13 @@ class JS_PUBLIC_API(DominatorTree)
     }
 
     /**
+     * Get the root node for this dominator tree.
+     */
+    const Node& root() const {
+        return postOrder[postOrder.length() - 1];
+    }
+
+    /**
      * Return the immediate dominator of the given `node`. If `node` was not
      * reachable from the `root` that this dominator tree was constructed from,
      * then return the null `JS::ubi::Node`.
