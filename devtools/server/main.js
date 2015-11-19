@@ -393,8 +393,7 @@ var DebuggerServer = {
         type: { global: true }
       });
     }
-    let win = Services.wm.getMostRecentWindow(DebuggerServer.chromeWindowType);
-    if (win && win.navigator.mozSettings) {
+    if (Services.prefs.getBoolPref("dom.mozSettings.enabled")) {
       this.registerModule("devtools/server/actors/settings", {
         prefix: "settings",
         constructor: "SettingsActor",
