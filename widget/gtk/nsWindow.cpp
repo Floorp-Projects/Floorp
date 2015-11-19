@@ -5447,6 +5447,18 @@ gboolean
 expose_event_cb(GtkWidget *widget, cairo_t *cr)
 {
     draw_window_of_widget(widget, gtk_widget_get_window(widget), cr);
+
+    // A strong reference is already held during "draw" signal emission,
+    // but GTK+ 3.4 wants the object to live a little longer than that
+    // (bug 1225970).
+    g_object_ref(widget);
+    g_idle_add(
+        [](gpointer data) -> gboolean {
+            g_object_unref(data);
+            return G_SOURCE_REMOVE;
+        },
+        widget);
+
     return FALSE;
 }
 #endif //MOZ_WIDGET_GTK2
