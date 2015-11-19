@@ -33,7 +33,6 @@ const LOGGER_PREFIX = "TelemetryController::";
 const PREF_BRANCH = "toolkit.telemetry.";
 const PREF_BRANCH_LOG = PREF_BRANCH + "log.";
 const PREF_SERVER = PREF_BRANCH + "server";
-const PREF_ENABLED = PREF_BRANCH + "enabled";
 const PREF_LOG_LEVEL = PREF_BRANCH_LOG + "level";
 const PREF_LOG_DUMP = PREF_BRANCH_LOG + "dump";
 const PREF_CACHED_CLIENTID = PREF_BRANCH + "cachedClientID";
@@ -162,7 +161,6 @@ this.EXPORTED_SYMBOLS = ["TelemetryController"];
 
 this.TelemetryController = Object.freeze({
   Constants: Object.freeze({
-    PREF_ENABLED: PREF_ENABLED,
     PREF_LOG_LEVEL: PREF_LOG_LEVEL,
     PREF_LOG_DUMP: PREF_LOG_DUMP,
     PREF_SERVER: PREF_SERVER,
@@ -232,7 +230,7 @@ this.TelemetryController = Object.freeze({
    * Get the current session ping data as it would be sent out or stored.
    *
    * @param {bool} aSubsession Whether to get subsession data. Optional, defaults to false.
-   * @return {object} The current ping data in object form.
+   * @return {object} The current ping data if Telemetry is enabled, null otherwise.
    */
   getCurrentPingData: function(aSubsession = false) {
     return Impl.getCurrentPingData(aSubsession);
@@ -407,14 +405,14 @@ var Impl = {
     try {
       arch = Services.sysinfo.get("arch");
     } catch (e) {
-      this._log.trace("assemblePing - Unable to get system architecture.", e);
+      this._log.trace("_getApplicationSection - Unable to get system architecture.", e);
     }
 
     let updateChannel = null;
     try {
       updateChannel = UpdateUtils.getUpdateChannel(false);
     } catch (e) {
-      this._log.trace("assemblePing - Unable to get update channel.", e);
+      this._log.trace("_getApplicationSection - Unable to get update channel.", e);
     }
 
     return {
@@ -670,7 +668,7 @@ var Impl = {
     // Unified Telemetry makes it opt-out unless the unifedOptin pref is set.
     // Additionally, we make Telemetry opt-out for a 5% sample.
     // If extended Telemetry is enabled, base recording is always on as well.
-    const enabled = Preferences.get(PREF_ENABLED, false);
+    const enabled = Utils.isTelemetryEnabled;
     const isOptout = IS_UNIFIED_TELEMETRY && (!Policy.isUnifiedOptin() || this._isInOptoutSample());
     Telemetry.canRecordBase = enabled || isOptout;
 
@@ -955,6 +953,11 @@ var Impl = {
 
   getCurrentPingData: function(aSubsession) {
     this._log.trace("getCurrentPingData - subsession: " + aSubsession)
+
+    // Telemetry is disabled, don't gather any data.
+    if (!Telemetry.canRecordBase) {
+      return null;
+    }
 
     const reason = aSubsession ? REASON_GATHER_SUBSESSION_PAYLOAD : REASON_GATHER_PAYLOAD;
     const type = PING_TYPE_MAIN;

@@ -7,10 +7,10 @@ var expect = chai.expect;
 describe("document.mozL10n", function() {
   "use strict";
 
-  var fakeMozLoop;
+  var l10nOptions;
 
   beforeEach(function() {
-    fakeMozLoop = {
+    l10nOptions = {
       locale: "en-US",
       getStrings: function(key) {
         if (key === "plural") {
@@ -24,7 +24,7 @@ describe("document.mozL10n", function() {
       }
     };
 
-    document.mozL10n.initialize(fakeMozLoop);
+    document.mozL10n.initialize(l10nOptions);
   });
 
   it("should get a simple string", function() {
