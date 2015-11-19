@@ -17,6 +17,8 @@
 #include "unicode/timezone.h"
 #endif
 
+using mozilla::Atomic;
+using mozilla::ReleaseAcquire;
 using mozilla::UnspecifiedNaN;
 
 /* static */ js::DateTimeInfo
@@ -24,9 +26,6 @@ js::DateTimeInfo::instance;
 
 /* static */ mozilla::Atomic<bool, mozilla::ReleaseAcquire>
 js::DateTimeInfo::AcquireLock::spinLock;
-
-/* extern */ mozilla::Atomic<js::IcuTimeZoneStatus, mozilla::ReleaseAcquire>
-js::DefaultTimeZoneStatus;
 
 static bool
 ComputeLocalTime(time_t local, struct tm* ptm)
@@ -312,16 +311,44 @@ js::DateTimeInfo::sanityCheck()
                   rangeStartSeconds <= MaxUnixTimeT && rangeEndSeconds <= MaxUnixTimeT);
 }
 
+static struct IcuTimeZoneInfo
+{
+    Atomic<bool, ReleaseAcquire> locked;
+    enum { Valid = 0, NeedsUpdate } status;
+
+    void acquire() {
+        while (!locked.compareExchange(false, true))
+            continue;
+    }
+
+    void release() {
+        MOZ_ASSERT(locked, "should have been acquired");
+        locked = false;
+    }
+} TZInfo;
+
+
 JS_PUBLIC_API(void)
 JS::ResetTimeZone()
 {
     js::DateTimeInfo::updateTimeZoneAdjustment();
 
-    // Trigger lazy recreation of ICU's default time zone, if needed and not
-    // already being performed.  (If it's already being performed, behavior
-    // will be safe but racy.)  See also Intl.cpp:NewUDateFormat which performs
-    // the recreation.  Note that if new places observing ICU's default time
-    // zone are added, they'll need to do the same things NewUDateFormat does.
-    js::DefaultTimeZoneStatus.compareExchange(js::IcuTimeZoneStatus::Valid,
-                                              js::IcuTimeZoneStatus::NeedsUpdate);
+#if ENABLE_INTL_API && defined(ICU_TZ_HAS_RECREATE_DEFAULT)
+    TZInfo.acquire();
+    TZInfo.status = IcuTimeZoneInfo::NeedsUpdate;
+    TZInfo.release();
+#endif
+}
+
+void
+js::ResyncICUDefaultTimeZone()
+{
+#if ENABLE_INTL_API && defined(ICU_TZ_HAS_RECREATE_DEFAULT)
+    TZInfo.acquire();
+    if (TZInfo.status == IcuTimeZoneInfo::NeedsUpdate) {
+        icu::TimeZone::recreateDefault();
+        TZInfo.status = IcuTimeZoneInfo::Valid;
+    }
+    TZInfo.release();
+#endif
 }
