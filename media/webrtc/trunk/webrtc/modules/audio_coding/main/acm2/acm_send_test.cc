@@ -61,7 +61,7 @@ bool AcmSendTest::RegisterCodec(int codec_type,
 
 Packet* AcmSendTest::NextPacket() {
   assert(codec_registered_);
-  if (filter_.test(payload_type_)) {
+  if (filter_.test(static_cast<size_t>(payload_type_))) {
     // This payload type should be filtered out. Since the payload type is the
     // same throughout the whole test run, no packet at all will be delivered.
     // We can just as well signal that the test is over by returning NULL.
@@ -94,7 +94,7 @@ int32_t AcmSendTest::SendData(FrameType frame_type,
                               uint8_t payload_type,
                               uint32_t timestamp,
                               const uint8_t* payload_data,
-                              uint16_t payload_len_bytes,
+                              size_t payload_len_bytes,
                               const RTPFragmentationHeader* fragmentation) {
   // Store the packet locally.
   frame_type_ = frame_type;
@@ -111,7 +111,7 @@ Packet* AcmSendTest::CreatePacket() {
   uint8_t* packet_memory = new uint8_t[allocated_bytes];
   // Populate the header bytes.
   packet_memory[0] = 0x80;
-  packet_memory[1] = payload_type_;
+  packet_memory[1] = static_cast<uint8_t>(payload_type_);
   packet_memory[2] = (sequence_number_ >> 8) & 0xFF;
   packet_memory[3] = (sequence_number_) & 0xFF;
   packet_memory[4] = (timestamp_ >> 24) & 0xFF;

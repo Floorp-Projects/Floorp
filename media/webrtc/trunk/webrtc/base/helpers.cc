@@ -51,11 +51,9 @@ class RandomGenerator {
 class SecureRandomGenerator : public RandomGenerator {
  public:
   SecureRandomGenerator() {}
-  ~SecureRandomGenerator() {}
-  virtual bool Init(const void* seed, size_t len) {
-    return true;
-  }
-  virtual bool Generate(void* buf, size_t len) {
+  ~SecureRandomGenerator() override {}
+  bool Init(const void* seed, size_t len) override { return true; }
+  bool Generate(void* buf, size_t len) override {
     return (RAND_bytes(reinterpret_cast<unsigned char*>(buf), len) > 0);
   }
 };
@@ -65,11 +63,9 @@ class SecureRandomGenerator : public RandomGenerator {
 class SecureRandomGenerator : public RandomGenerator {
  public:
   SecureRandomGenerator() {}
-  ~SecureRandomGenerator() {}
-  virtual bool Init(const void* seed, size_t len) {
-    return true;
-  }
-  virtual bool Generate(void* buf, size_t len) {
+  ~SecureRandomGenerator() override {}
+  bool Init(const void* seed, size_t len) override { return true; }
+  bool Generate(void* buf, size_t len) override {
     return (PK11_GenerateRandom(reinterpret_cast<unsigned char*>(buf),
                                 static_cast<int>(len)) == SECSuccess);
   }
@@ -153,12 +149,10 @@ class TestRandomGenerator : public RandomGenerator {
  public:
   TestRandomGenerator() : seed_(7) {
   }
-  ~TestRandomGenerator() {
+  ~TestRandomGenerator() override {
   }
-  virtual bool Init(const void* seed, size_t len) {
-    return true;
-  }
-  virtual bool Generate(void* buf, size_t len) {
+  bool Init(const void* seed, size_t len) override { return true; }
+  bool Generate(void* buf, size_t len) override {
     for (size_t i = 0; i < len; ++i) {
       static_cast<uint8*>(buf)[i] = static_cast<uint8>(GetRandom());
     }

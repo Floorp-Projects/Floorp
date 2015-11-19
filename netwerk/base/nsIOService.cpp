@@ -84,6 +84,10 @@ using mozilla::net::CaptivePortalService;
 nsIOService* gIOService = nullptr;
 static bool gHasWarnedUploadChannel2;
 
+static mozilla::LazyLogModule gIOServiceLog("nsIOService");
+#undef LOG
+#define LOG(args)     MOZ_LOG(gIOServiceLog, mozilla::LogLevel::Debug, args)
+
 // A general port blacklist.  Connections to these ports will not be allowed
 // unless the protocol overrides.
 //
@@ -973,6 +977,7 @@ nsIOService::GetOffline(bool *offline)
 NS_IMETHODIMP
 nsIOService::SetOffline(bool offline)
 {
+    LOG(("nsIOService::SetOffline offline=%d\n", offline));
     // When someone wants to go online (!offline) after we got XPCOM shutdown
     // throw ERROR_NOT_AVAILABLE to prevent return to online state.
     if ((mShutdown || mOfflineForProfileChange) && !offline)
@@ -1087,6 +1092,7 @@ nsIOService::GetConnectivity(bool *aConnectivity)
 NS_IMETHODIMP
 nsIOService::SetConnectivity(bool aConnectivity)
 {
+    LOG(("nsIOService::SetConnectivity aConnectivity=%d\n", aConnectivity));
     // This should only be called from ContentChild to pass the connectivity
     // value from the chrome process to the content process.
     if (XRE_IsParentProcess()) {
@@ -1095,10 +1101,10 @@ nsIOService::SetConnectivity(bool aConnectivity)
     return SetConnectivityInternal(aConnectivity);
 }
 
-
 nsresult
 nsIOService::SetConnectivityInternal(bool aConnectivity)
 {
+    LOG(("nsIOService::SetConnectivityInternal aConnectivity=%d\n", aConnectivity));
     if (mConnectivity == aConnectivity) {
         // Nothing to do here.
         return NS_OK;
@@ -1217,8 +1223,10 @@ nsIOService::PrefsChanged(nsIPrefBranch *prefs, const char *pref)
         bool manage;
         if (mNetworkLinkServiceInitialized &&
             NS_SUCCEEDED(prefs->GetBoolPref(MANAGE_OFFLINE_STATUS_PREF,
-                                            &manage)))
+                                            &manage))) {
+            LOG(("nsIOService::PrefsChanged ManageOfflineStatus manage=%d\n", manage));
             SetManageOfflineStatus(manage);
+        }
     }
 
     if (!pref || strcmp(pref, NECKO_BUFFER_CACHE_COUNT_PREF) == 0) {
@@ -1618,6 +1626,7 @@ nsIOService::NewSimpleNestedURI(nsIURI* aURI, nsIURI** aResult)
 NS_IMETHODIMP
 nsIOService::SetManageOfflineStatus(bool aManage)
 {
+    LOG(("nsIOService::SetManageOfflineStatus aManage=%d\n", aManage));
     mManageLinkStatus = aManage;
 
     // When detection is not activated, the default connectivity state is true.
@@ -1645,6 +1654,7 @@ nsIOService::GetManageOfflineStatus(bool* aManage)
 nsresult
 nsIOService::OnNetworkLinkEvent(const char *data)
 {
+    LOG(("nsIOService::OnNetworkLinkEvent data:%s\n", data));
     if (!mNetworkLinkService)
         return NS_ERROR_FAILURE;
 
@@ -1652,7 +1662,8 @@ nsIOService::OnNetworkLinkEvent(const char *data)
         return NS_ERROR_NOT_AVAILABLE;
 
     if (!mManageLinkStatus) {
-      return NS_OK;
+        LOG(("nsIOService::OnNetworkLinkEvent mManageLinkStatus=false\n"));
+        return NS_OK;
     }
 
     if (!strcmp(data, NS_NETWORK_LINK_DATA_DOWN)) {

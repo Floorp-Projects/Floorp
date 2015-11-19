@@ -42,8 +42,6 @@ nsTextFragment::Init()
   for (i = 0; i <= TEXTFRAG_MAX_NEWLINES; ++i) {
     sSpaceSharedString[i] = new char[1 + i + TEXTFRAG_WHITE_AFTER_NEWLINE];
     sTabSharedString[i] = new char[1 + i + TEXTFRAG_WHITE_AFTER_NEWLINE];
-    NS_ENSURE_TRUE(sSpaceSharedString[i] && sTabSharedString[i],
-                   NS_ERROR_OUT_OF_MEMORY);
     sSpaceSharedString[i][0] = ' ';
     sTabSharedString[i][0] = ' ';
     uint32_t j;

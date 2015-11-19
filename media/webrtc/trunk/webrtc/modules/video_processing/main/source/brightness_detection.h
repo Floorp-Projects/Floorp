@@ -22,15 +22,12 @@ class VPMBrightnessDetection {
  public:
   VPMBrightnessDetection();
   ~VPMBrightnessDetection();
-  int32_t ChangeUniqueId(int32_t id);
 
   void Reset();
   int32_t ProcessFrame(const I420VideoFrame& frame,
                        const VideoProcessingModule::FrameStats& stats);
 
  private:
-  int32_t id_;
-
   uint32_t frame_cnt_bright_;
   uint32_t frame_cnt_dark_;
 };

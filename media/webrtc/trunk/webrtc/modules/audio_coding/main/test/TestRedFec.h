@@ -12,10 +12,10 @@
 #define WEBRTC_MODULES_AUDIO_CODING_MAIN_TESTREDFEC_H_
 
 #include <string>
+#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/modules/audio_coding/main/test/ACMTest.h"
 #include "webrtc/modules/audio_coding/main/test/Channel.h"
 #include "webrtc/modules/audio_coding/main/test/PCMFile.h"
-#include "webrtc/system_wrappers/interface/scoped_ptr.h"
 
 namespace webrtc {
 
@@ -31,13 +31,13 @@ class TestRedFec : public ACMTest {
   // The default value of '-1' indicates that the registration is based only on
   // codec name and a sampling frequency matching is not required. This is
   // useful for codecs which support several sampling frequency.
-  int16_t RegisterSendCodec(char side, char* codecName,
+  int16_t RegisterSendCodec(char side, const char* codecName,
                             int32_t sampFreqHz = -1);
   void Run();
   void OpenOutFile(int16_t testNumber);
   int32_t SetVAD(bool enableDTX, bool enableVAD, ACMVADMode vadMode);
-  scoped_ptr<AudioCodingModule> _acmA;
-  scoped_ptr<AudioCodingModule> _acmB;
+  rtc::scoped_ptr<AudioCodingModule> _acmA;
+  rtc::scoped_ptr<AudioCodingModule> _acmB;
 
   Channel* _channelA2B;
 

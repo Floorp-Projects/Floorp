@@ -39,10 +39,9 @@ int32_t DTMFqueue::AddDTMF(uint8_t key, uint16_t len, uint8_t level) {
 
 int8_t DTMFqueue::NextDTMF(uint8_t* dtmf_key, uint16_t* len, uint8_t* level) {
   CriticalSectionScoped lock(dtmf_critsect_);
-
-  if (!PendingDTMF()) {
+  if (next_empty_index_ == 0)
     return -1;
-  }
+
   *dtmf_key = dtmf_key_[0];
   *len = dtmf_length[0];
   *level = dtmf_level_[0];
@@ -58,7 +57,13 @@ int8_t DTMFqueue::NextDTMF(uint8_t* dtmf_key, uint16_t* len, uint8_t* level) {
   return 0;
 }
 
-bool DTMFqueue::PendingDTMF() { return (next_empty_index_ > 0); }
+bool DTMFqueue::PendingDTMF() {
+  CriticalSectionScoped lock(dtmf_critsect_);
+  return next_empty_index_ > 0;
+}
 
-void DTMFqueue::ResetDTMF() { next_empty_index_ = 0; }
+void DTMFqueue::ResetDTMF() {
+  CriticalSectionScoped lock(dtmf_critsect_);
+  next_empty_index_ = 0;
+}
 }  // namespace webrtc

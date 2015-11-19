@@ -2161,9 +2161,6 @@ PluginInstanceChild::FlashThrottleMessage(HWND aWnd,
     // that's done in Destroy.
     FlashThrottleAsyncMsg* task = new FlashThrottleAsyncMsg(this,
         aWnd, aMsg, aWParam, aLParam, isWindowed);
-    if (!task)
-        return; 
-
     {
         MutexAutoLock lock(mAsyncCallMutex);
         mPendingAsyncCalls.AppendElement(task);

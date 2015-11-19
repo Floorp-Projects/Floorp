@@ -16,8 +16,8 @@
 #include <vector>
 
 #include "webrtc/base/checks.h"
+#include "webrtc/base/move.h"
 #include "webrtc/system_wrappers/interface/stl_util.h"
-#include "webrtc/system_wrappers/source/move.h"
 
 namespace webrtc {
 

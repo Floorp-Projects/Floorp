@@ -129,7 +129,7 @@ typedef struct iLBC_bits_t_ {
 } iLBC_bits;
 
 /* type definition encoder instance */
-typedef struct iLBC_Enc_Inst_t_ {
+typedef struct IlbcEncoder_ {
 
   /* flag for frame size mode */
   int16_t mode;
@@ -167,10 +167,10 @@ typedef struct iLBC_Enc_Inst_t_ {
   int16_t diff;
 #endif
 
-} iLBC_Enc_Inst_t;
+} IlbcEncoder;
 
 /* type definition decoder instance */
-typedef struct iLBC_Dec_Inst_t_ {
+typedef struct IlbcDecoder_ {
 
   /* flag for frame size mode */
   int16_t mode;
@@ -214,6 +214,6 @@ typedef struct iLBC_Dec_Inst_t_ {
   int16_t enh_buf[ENH_BUFL+ENH_BUFL_FILTEROVERHEAD];
   int16_t enh_period[ENH_NBLOCKS_TOT];
 
-} iLBC_Dec_Inst_t;
+} IlbcDecoder;
 
 #endif

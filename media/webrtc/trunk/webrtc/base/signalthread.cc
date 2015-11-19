@@ -131,6 +131,14 @@ void SignalThread::OnMessage(Message *msg) {
   }
 }
 
+SignalThread::Worker::~Worker() {
+  Stop();
+}
+
+void SignalThread::Worker::Run() {
+  parent_->Run();
+}
+
 void SignalThread::Run() {
   DoWork();
   {

@@ -13,7 +13,6 @@
 #include "webrtc/modules/audio_device/win/audio_device_wave_win.h"
 
 #include "webrtc/system_wrappers/interface/event_wrapper.h"
-#include "webrtc/system_wrappers/interface/thread_wrapper.h"
 #include "webrtc/system_wrappers/interface/trace.h"
 
 #include <windows.h>
@@ -56,8 +55,6 @@ AudioDeviceWindowsWave::AudioDeviceWindowsWave(const int32_t id) :
     _hSetCaptureVolumeThread(NULL),
     _hShutdownSetVolumeEvent(NULL),
     _hSetCaptureVolumeEvent(NULL),
-    _ptrThread(NULL),
-    _threadID(0),
     _critSectCb(*CriticalSectionWrapper::CreateCriticalSection()),
     _id(id),
     _mixerManager(id),
@@ -231,43 +228,23 @@ int32_t AudioDeviceWindowsWave::Init()
     }
 
     const char* threadName = "webrtc_audio_module_thread";
-    _ptrThread = ThreadWrapper::CreateThread(ThreadFunc,
-                                             this,
-                                             kRealtimePriority,
-                                             threadName);
-    if (_ptrThread == NULL)
-    {
-        WEBRTC_TRACE(kTraceCritical, kTraceAudioDevice, _id,
-                     "failed to create the audio thread");
-        return -1;
-    }
-
-    unsigned int threadID(0);
-    if (!_ptrThread->Start(threadID))
+    _ptrThread = ThreadWrapper::CreateThread(ThreadFunc, this, threadName);
+    if (!_ptrThread->Start())
     {
         WEBRTC_TRACE(kTraceCritical, kTraceAudioDevice, _id,
                      "failed to start the audio thread");
-        delete _ptrThread;
-        _ptrThread = NULL;
+        _ptrThread.reset();
         return -1;
     }
-    _threadID = threadID;
+    _ptrThread->SetPriority(kRealtimePriority);
 
     const bool periodic(true);
     if (!_timeEvent.StartTimer(periodic, TIMER_PERIOD_MS))
     {
         WEBRTC_TRACE(kTraceCritical, kTraceAudioDevice, _id,
                      "failed to start the timer event");
-        if (_ptrThread->Stop())
-        {
-            delete _ptrThread;
-            _ptrThread = NULL;
-        }
-        else
-        {
-            WEBRTC_TRACE(kTraceWarning, kTraceAudioDevice, _id,
-                         "unable to stop the activated thread");
-        }
+        _ptrThread->Stop();
+        _ptrThread.reset();
         return -1;
     }
     WEBRTC_TRACE(kTraceInfo, kTraceAudioDevice, _id,
@@ -326,24 +303,13 @@ int32_t AudioDeviceWindowsWave::Terminate()
 
     if (_ptrThread)
     {
-        ThreadWrapper* tmpThread = _ptrThread;
-        _ptrThread = NULL;
+        ThreadWrapper* tmpThread = _ptrThread.release();
         _critSect.Leave();
 
-        tmpThread->SetNotAlive();
         _timeEvent.Set();
 
-        if (tmpThread->Stop())
-        {
-            delete tmpThread;
-        }
-        else
-        {
-            _critSect.Leave();
-            WEBRTC_TRACE(kTraceWarning, kTraceAudioDevice, _id,
-                         "failed to close down the audio thread");
-            return -1;
-        }
+        tmpThread->Stop();
+        delete tmpThread;
     }
     else
     {

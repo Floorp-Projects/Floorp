@@ -33,7 +33,7 @@ typedef struct {
   int skewData[kEstimateLengthFrames];
   int skewDataIndex;
   float skewEstimate;
-} resampler_t;
+} AecResampler;
 
 static int EstimateSkew(const int* rawSkew,
                         int size,
@@ -41,7 +41,7 @@ static int EstimateSkew(const int* rawSkew,
                         float* skewEst);
 
 int WebRtcAec_CreateResampler(void** resampInst) {
-  resampler_t* obj = malloc(sizeof(resampler_t));
+  AecResampler* obj = malloc(sizeof(AecResampler));
   *resampInst = obj;
   if (obj == NULL) {
     return -1;
@@ -51,7 +51,7 @@ int WebRtcAec_CreateResampler(void** resampInst) {
 }
 
 int WebRtcAec_InitResampler(void* resampInst, int deviceSampleRateHz) {
-  resampler_t* obj = (resampler_t*)resampInst;
+  AecResampler* obj = (AecResampler*)resampInst;
   memset(obj->buffer, 0, sizeof(obj->buffer));
   obj->position = 0.0;
 
@@ -64,7 +64,7 @@ int WebRtcAec_InitResampler(void* resampInst, int deviceSampleRateHz) {
 }
 
 int WebRtcAec_FreeResampler(void* resampInst) {
-  resampler_t* obj = (resampler_t*)resampInst;
+  AecResampler* obj = (AecResampler*)resampInst;
   free(obj);
 
   return 0;
@@ -76,7 +76,7 @@ void WebRtcAec_ResampleLinear(void* resampInst,
                               float skew,
                               float* outspeech,
                               int* size_out) {
-  resampler_t* obj = (resampler_t*)resampInst;
+  AecResampler* obj = (AecResampler*)resampInst;
 
   float* y;
   float be, tnew;
@@ -123,7 +123,7 @@ void WebRtcAec_ResampleLinear(void* resampInst,
 }
 
 int WebRtcAec_GetSkew(void* resampInst, int rawSkew, float* skewEst) {
-  resampler_t* obj = (resampler_t*)resampInst;
+  AecResampler* obj = (AecResampler*)resampInst;
   int err = 0;
 
   if (obj->skewDataIndex < kEstimateLengthFrames) {

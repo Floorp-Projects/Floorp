@@ -329,16 +329,6 @@ JS_CallUnbarrieredStringTracer(JSTracer* trc, JSString** strp, const char* name)
 extern JS_PUBLIC_API(void)
 JS_CallUnbarrieredScriptTracer(JSTracer* trc, JSScript** scriptp, const char* name);
 
-template <typename HashSetEnum>
-inline void
-JS_CallHashSetObjectTracer(JSTracer* trc, HashSetEnum& e, JSObject* const& key, const char* name)
-{
-    JSObject* updated = key;
-    JS_CallUnbarrieredObjectTracer(trc, &updated, name);
-    if (updated != key)
-        e.rekeyFront(updated);
-}
-
 /**
  * Trace an object that is known to always be tenured.  No post barriers are
  * required in this case.

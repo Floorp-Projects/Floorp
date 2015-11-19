@@ -53,12 +53,12 @@ int WebRtcIsacfix_EncodeLpc(int32_t *gain_lo_hiQ17,
                             int16_t *model,
                             int32_t *sizeQ11,
                             Bitstr_enc *streamdata,
-                            ISAC_SaveEncData_t* encData,
+                            IsacSaveEncoderData* encData,
                             transcode_obj *transcodeParam);
 
 int WebRtcIsacfix_EstCodeLpcGain(int32_t *gain_lo_hiQ17,
                                  Bitstr_enc *streamdata,
-                                 ISAC_SaveEncData_t* encData);
+                                 IsacSaveEncoderData* encData);
 /* decode & dequantize RC */
 int WebRtcIsacfix_DecodeRcCoef(Bitstr_dec *streamdata,
                                int16_t *RCQ15);
@@ -77,12 +77,12 @@ int WebRtcIsacfix_EncodeGain2(int32_t *gain2,
 
 int WebRtcIsacfix_EncodePitchGain(int16_t *PitchGains_Q12,
                                   Bitstr_enc *streamdata,
-                                  ISAC_SaveEncData_t* encData);
+                                  IsacSaveEncoderData* encData);
 
 int WebRtcIsacfix_EncodePitchLag(int16_t *PitchLagQ7,
                                  int16_t *PitchGain_Q12,
                                  Bitstr_enc *streamdata,
-                                 ISAC_SaveEncData_t* encData);
+                                 IsacSaveEncoderData* encData);
 
 int WebRtcIsacfix_DecodePitchGain(Bitstr_dec *streamdata,
                                   int16_t *PitchGain_Q12);

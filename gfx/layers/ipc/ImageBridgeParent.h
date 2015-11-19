@@ -100,24 +100,15 @@ public:
 
   // ISurfaceAllocator
 
-  bool AllocShmem(size_t aSize,
-                  ipc::SharedMemory::SharedMemoryType aType,
-                  ipc::Shmem* aShmem) override
-  {
-    return PImageBridgeParent::AllocShmem(aSize, aType, aShmem);
-  }
+  virtual bool AllocShmem(size_t aSize,
+                          ipc::SharedMemory::SharedMemoryType aType,
+                          ipc::Shmem* aShmem) override;
 
-  bool AllocUnsafeShmem(size_t aSize,
-                        ipc::SharedMemory::SharedMemoryType aType,
-                        ipc::Shmem* aShmem) override
-  {
-    return PImageBridgeParent::AllocUnsafeShmem(aSize, aType, aShmem);
-  }
+  virtual bool AllocUnsafeShmem(size_t aSize,
+                                ipc::SharedMemory::SharedMemoryType aType,
+                                ipc::Shmem* aShmem) override;
 
-  void DeallocShmem(ipc::Shmem& aShmem) override
-  {
-    PImageBridgeParent::DeallocShmem(aShmem);
-  }
+  virtual void DeallocShmem(ipc::Shmem& aShmem) override;
 
   virtual bool IsSameProcess() const override;
 
@@ -162,6 +153,7 @@ private:
   RefPtr<ImageBridgeParent> mSelfRef;
 
   bool mSetChildThreadPriority;
+  bool mStopped;
 
   /**
    * Map of all living ImageBridgeParent instances

@@ -921,9 +921,10 @@ int VoEAudioProcessingImpl::GetEchoMetrics(int& ERL,
 }
 
 int VoEAudioProcessingImpl::GetEcDelayMetrics(int& delay_median,
-                                              int& delay_std) {
+                                              int& delay_std,
+                                              float& fraction_poor_delays) {
   WEBRTC_TRACE(kTraceApiCall, kTraceVoice, VoEId(_shared->instance_id(), -1),
-               "GetEcDelayMetrics(median=?, std=?)");
+               "GetEcDelayMetrics(median=?, std=?, fraction_poor_delays=?)");
 #ifdef WEBRTC_VOICE_ENGINE_ECHO
   if (!_shared->statistics().Initialized()) {
     _shared->SetLastError(VE_NOT_INITED, kTraceError);
@@ -937,9 +938,10 @@ int VoEAudioProcessingImpl::GetEcDelayMetrics(int& delay_median,
 
   int median = 0;
   int std = 0;
+  float poor_fraction = 0;
   // Get delay-logging values from Audio Processing Module.
   if (_shared->audio_processing()->echo_cancellation()->GetDelayMetrics(
-        &median, &std)) {
+        &median, &std, &poor_fraction)) {
     WEBRTC_TRACE(kTraceError, kTraceVoice, VoEId(_shared->instance_id(), -1),
                  "GetEcDelayMetrics(), AudioProcessingModule delay-logging "
                  "error");
@@ -949,10 +951,12 @@ int VoEAudioProcessingImpl::GetEcDelayMetrics(int& delay_median,
   // EC delay-logging metrics
   delay_median = median;
   delay_std = std;
+  fraction_poor_delays = poor_fraction;
 
   WEBRTC_TRACE(kTraceStateInfo, kTraceVoice, VoEId(_shared->instance_id(), -1),
-               "GetEcDelayMetrics() => delay_median=%d, delay_std=%d",
-               delay_median, delay_std);
+               "GetEcDelayMetrics() => delay_median=%d, delay_std=%d, "
+               "fraction_poor_delays=%f", delay_median, delay_std,
+               fraction_poor_delays);
   return 0;
 #else
   _shared->SetLastError(VE_FUNC_NOT_SUPPORTED, kTraceError,

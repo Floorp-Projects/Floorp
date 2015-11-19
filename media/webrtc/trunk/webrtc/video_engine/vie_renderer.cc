@@ -39,8 +39,7 @@ ViERenderer::~ViERenderer(void) {
   if (render_callback_)
     render_module_.DeleteIncomingRenderStream(render_id_);
 
-  if (incoming_external_callback_)
-    delete incoming_external_callback_;
+  delete incoming_external_callback_;
 }
 
 int32_t ViERenderer::StartRender() {
@@ -48,11 +47,6 @@ int32_t ViERenderer::StartRender() {
 }
 int32_t ViERenderer::StopRender() {
   return render_module_.StopRender(render_id_);
-}
-
-int32_t ViERenderer::GetLastRenderedFrame(const int32_t renderID,
-                                          I420VideoFrame& video_frame) {
-  return render_module_.GetLastRenderedFrame(renderID, video_frame);
 }
 
 int ViERenderer::SetExpectedRenderDelay(int render_delay) {
@@ -70,14 +64,6 @@ int32_t ViERenderer::ConfigureRenderer(const unsigned int z_order,
 
 VideoRender& ViERenderer::RenderModule() {
   return render_module_;
-}
-
-int32_t ViERenderer::EnableMirroring(const int32_t render_id,
-                                     const bool enable,
-                                     const bool mirror_xaxis,
-                                     const bool mirror_yaxis) {
-  return render_module_.MirrorRenderStream(render_id, enable, mirror_xaxis,
-                                           mirror_yaxis);
 }
 
 int32_t ViERenderer::SetTimeoutImage(const I420VideoFrame& timeout_image,
@@ -137,8 +123,7 @@ int32_t ViERenderer::Init(const uint32_t z_order,
 
 void ViERenderer::DeliverFrame(int id,
                                I420VideoFrame* video_frame,
-                               int num_csrcs,
-                               const uint32_t CSRC[kRtpCsrcSize]) {
+                               const std::vector<uint32_t>& csrcs) {
   render_callback_->RenderFrame(render_id_, *video_frame);
 }
 
@@ -159,8 +144,7 @@ ViEExternalRendererImpl::ViEExternalRendererImpl()
     : external_renderer_(NULL),
       external_renderer_format_(kVideoUnknown),
       external_renderer_width_(0),
-      external_renderer_height_(0),
-      converted_frame_(new VideoFrame()) {
+      external_renderer_height_(0) {
 }
 
 int ViEExternalRendererImpl::SetViEExternalRenderer(
@@ -173,7 +157,24 @@ int ViEExternalRendererImpl::SetViEExternalRenderer(
 
 int32_t ViEExternalRendererImpl::RenderFrame(
     const uint32_t stream_id,
-    I420VideoFrame&   video_frame) {
+    const I420VideoFrame& video_frame) {
+  if (external_renderer_format_ != kVideoI420)
+    return ConvertAndRenderFrame(stream_id, video_frame);
+
+  // Fast path for I420 without frame copy.
+  NotifyFrameSizeChange(stream_id, video_frame);
+  if (video_frame.native_handle() == NULL ||
+      external_renderer_->IsTextureSupported()) {
+    external_renderer_->DeliverI420Frame(video_frame);
+  } else {
+    // TODO(wuchengli): readback the pixels and deliver the frame.
+  }
+  return 0;
+}
+
+int32_t ViEExternalRendererImpl::ConvertAndRenderFrame(
+    uint32_t stream_id,
+    const I420VideoFrame& video_frame) {
   if (video_frame.native_handle() != NULL) {
     NotifyFrameSizeChange(stream_id, video_frame);
 
@@ -190,31 +191,20 @@ int32_t ViEExternalRendererImpl::RenderFrame(
     return 0;
   }
 
-  VideoFrame* out_frame = converted_frame_.get();
-
   // Convert to requested format.
   VideoType type =
       RawVideoTypeToCommonVideoVideoType(external_renderer_format_);
-  int buffer_size = CalcBufferSize(type, video_frame.width(),
-                                   video_frame.height());
-  if (buffer_size <= 0) {
+  size_t buffer_size = CalcBufferSize(type, video_frame.width(),
+                                      video_frame.height());
+  if (buffer_size == 0) {
     // Unsupported video format.
     assert(false);
     return -1;
   }
-  converted_frame_->VerifyAndAllocate(buffer_size);
+  converted_frame_.resize(buffer_size);
+  uint8_t* out_frame = &converted_frame_[0];
 
   switch (external_renderer_format_) {
-    case kVideoI420: {
-      // TODO(mikhal): need to copy the buffer as is.
-      // can the output here be a I420 frame?
-      int length = ExtractBuffer(video_frame, out_frame->Size(),
-                                 out_frame->Buffer());
-      if (length < 0)
-        return -1;
-      out_frame->SetLength(length);
-      break;
-    }
     case kVideoYV12:
     case kVideoYUY2:
     case kVideoUYVY:
@@ -222,13 +212,9 @@ int32_t ViEExternalRendererImpl::RenderFrame(
     case kVideoRGB24:
     case kVideoRGB565:
     case kVideoARGB4444:
-    case kVideoARGB1555 :
-      {
-        if (ConvertFromI420(video_frame, type, 0,
-                            converted_frame_->Buffer()) < 0)
-          return -1;
-        converted_frame_->SetLength(buffer_size);
-      }
+    case kVideoARGB1555:
+      if (ConvertFromI420(video_frame, type, 0, out_frame) < 0)
+        return -1;
       break;
     case kVideoIYUV:
       // no conversion available
@@ -242,8 +228,8 @@ int32_t ViEExternalRendererImpl::RenderFrame(
   NotifyFrameSizeChange(stream_id, video_frame);
 
   if (out_frame) {
-    external_renderer_->DeliverFrame(out_frame->Buffer(),
-                                     out_frame->Length(),
+    external_renderer_->DeliverFrame(out_frame,
+                                     converted_frame_.size(),
                                      video_frame.timestamp(),
                                      video_frame.ntp_time_ms(),
                                      video_frame.render_time_ms(),
@@ -254,7 +240,7 @@ int32_t ViEExternalRendererImpl::RenderFrame(
 
 void ViEExternalRendererImpl::NotifyFrameSizeChange(
     const uint32_t stream_id,
-    I420VideoFrame& video_frame) {
+    const I420VideoFrame& video_frame) {
   if (external_renderer_width_ != video_frame.width() ||
       external_renderer_height_ != video_frame.height()) {
     external_renderer_width_ = video_frame.width();

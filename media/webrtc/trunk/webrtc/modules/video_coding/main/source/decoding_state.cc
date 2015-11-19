@@ -196,7 +196,7 @@ bool VCMDecodingState::ContinuousPictureId(int picture_id) const {
 }
 
 bool VCMDecodingState::ContinuousSeqNum(uint16_t seq_num) const {
-  return (seq_num == static_cast<uint16_t>(sequence_num_ + 1));
+  return seq_num == static_cast<uint16_t>(sequence_num_ + 1);
 }
 
 bool VCMDecodingState::ContinuousLayer(int temporal_id,

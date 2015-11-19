@@ -39,6 +39,7 @@ message Test {
   message DelayMetrics {
     optional int32 median = 1;
     optional int32 std = 2;
+    optional float fraction_poor_delays = 3;
   }
 
   optional DelayMetrics delay_metrics = 12;
@@ -47,6 +48,7 @@ message Test {
 
   optional float ns_speech_probability_average = 14;
 
+  optional bool use_aec_extended_filter = 15;
 }
 
 message OutputData {

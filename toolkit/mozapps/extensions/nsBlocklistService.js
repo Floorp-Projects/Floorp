@@ -46,6 +46,7 @@ const PREF_BLOCKLIST_LEVEL            = "extensions.blocklist.level";
 const PREF_BLOCKLIST_PINGCOUNTTOTAL   = "extensions.blocklist.pingCountTotal";
 const PREF_BLOCKLIST_PINGCOUNTVERSION = "extensions.blocklist.pingCountVersion";
 const PREF_BLOCKLIST_SUPPRESSUI       = "extensions.blocklist.suppressUI";
+const PREF_ONECRL_VIA_AMO             = "security.onecrl.via.amo";
 const PREF_PLUGINS_NOTIFYUSER         = "plugins.update.notifyUser";
 const PREF_GENERAL_USERAGENT_LOCALE   = "general.useragent.locale";
 const PREF_APP_DISTRIBUTION           = "distribution.id";
@@ -890,6 +891,8 @@ Blocklist.prototype = {
         return;
       }
 
+      var populateCertBlocklist = getPref("getBoolPref", PREF_ONECRL_VIA_AMO, true);
+
       var childNodes = doc.documentElement.childNodes;
       for (let element of childNodes) {
         if (!(element instanceof Ci.nsIDOMElement))
@@ -915,8 +918,10 @@ Blocklist.prototype = {
                                                        this._handlePluginItemNode);
           break;
         case "certItems":
-          this._processItemNodes(element.childNodes, "cert",
-                                 this._handleCertItemNode.bind(this));
+          if (populateCertBlocklist) {
+            this._processItemNodes(element.childNodes, "cert",
+                                   this._handleCertItemNode.bind(this));
+          }
           break;
         default:
           Services.obs.notifyObservers(element,
@@ -924,7 +929,9 @@ Blocklist.prototype = {
                                        null);
         }
       }
-      gCertBlocklistService.saveEntries();
+      if (populateCertBlocklist) {
+        gCertBlocklistService.saveEntries();
+      }
     }
     catch (e) {
       LOG("Blocklist::_loadBlocklistFromFile: Error constructing blocklist " + e);

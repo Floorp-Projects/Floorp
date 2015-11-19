@@ -5,8 +5,9 @@
 
   <Description about="urn:mozilla:install-manifest">
     <em:id>special-powers@mozilla.org</em:id>
-    <em:version>2010.07.23</em:version>
+    <em:version>2015.11.16</em:version>
     <em:type>2</em:type>
+    <em:bootstrap>true</em:bootstrap>
 
     <!-- Target Application this extension can install into, 
          with minimum and maximum supported versions. -->
@@ -14,7 +15,8 @@
       <Description>
         <em:id>toolkit@mozilla.org</em:id>
 #expand        <em:minVersion>__MOZILLA_VERSION_U__</em:minVersion>
-#expand        <em:maxVersion>__MOZILLA_VERSION_U__</em:maxVersion>
+               <!-- Set to * so toolkit/mozapps/update/chrome tests pass. -->
+               <em:maxVersion>*</em:maxVersion>
       </Description>
     </em:targetApplication>
 

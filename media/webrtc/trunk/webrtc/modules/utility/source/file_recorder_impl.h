@@ -30,12 +30,6 @@
 #include "webrtc/system_wrappers/interface/tick_util.h"
 #include "webrtc/typedefs.h"
 
-#ifdef WEBRTC_MODULE_UTILITY_VIDEO
-    #include "frame_scaler.h"
-    #include "video_coder.h"
-    #include "video_frames_queue.h"
-#endif
-
 namespace webrtc {
 // The largest decoded frame size in samples (60ms with 32kHz sample rate).
 enum { MAX_AUDIO_BUFFER_IN_SAMPLES = 60*32};
@@ -86,7 +80,7 @@ public:
 protected:
     virtual int32_t WriteEncodedAudioData(
         const int8_t* audioBuffer,
-        uint16_t bufferLength,
+        size_t bufferLength,
         uint16_t millisecondsOfData,
         const TickTime* playoutTS);
 
@@ -104,90 +98,5 @@ private:
     AudioCoder _audioEncoder;
     Resampler _audioResampler;
 };
-
-
-#ifdef WEBRTC_MODULE_UTILITY_VIDEO
-class AudioFrameFileInfo
-{
-    public:
-       AudioFrameFileInfo(const int8_t* audioData,
-                     const uint16_t audioSize,
-                     const uint16_t audioMS,
-                     const TickTime& playoutTS)
-           : _audioData(), _audioSize(audioSize), _audioMS(audioMS),
-             _playoutTS(playoutTS)
-       {
-           if(audioSize > MAX_AUDIO_BUFFER_IN_BYTES)
-           {
-               assert(false);
-               _audioSize = 0;
-               return;
-           }
-           memcpy(_audioData, audioData, audioSize);
-       };
-    // TODO (hellner): either turn into a struct or provide get/set functions.
-    int8_t   _audioData[MAX_AUDIO_BUFFER_IN_BYTES];
-    uint16_t _audioSize;
-    uint16_t _audioMS;
-    TickTime _playoutTS;
-};
-
-class AviRecorder : public FileRecorderImpl
-{
-public:
-    AviRecorder(uint32_t instanceID, FileFormats fileFormat);
-    virtual ~AviRecorder();
-
-    // FileRecorder functions.
-    virtual int32_t StartRecordingVideoFile(
-        const char* fileName,
-        const CodecInst& audioCodecInst,
-        const VideoCodec& videoCodecInst,
-        ACMAMRPackingFormat amrFormat = AMRFileStorage,
-        bool videoOnly = false);
-    virtual int32_t StopRecording();
-    virtual int32_t RecordVideoToFile(const I420VideoFrame& videoFrame);
-
-protected:
-    virtual int32_t WriteEncodedAudioData(
-        const int8_t*  audioBuffer,
-        uint16_t bufferLength,
-        uint16_t millisecondsOfData,
-        const TickTime* playoutTS);
-private:
-    typedef std::list<AudioFrameFileInfo*> AudioInfoList;
-    static bool Run(ThreadObj threadObj);
-    bool Process();
-
-    bool StartThread();
-    bool StopThread();
-
-    int32_t EncodeAndWriteVideoToFile(I420VideoFrame& videoFrame);
-    int32_t ProcessAudio();
-
-    int32_t CalcI420FrameSize() const;
-    int32_t SetUpVideoEncoder();
-
-    VideoCodec _videoCodecInst;
-    bool _videoOnly;
-
-    AudioInfoList _audioFramesToWrite;
-    bool _firstAudioFrameReceived;
-
-    VideoFramesQueue* _videoFramesQueue;
-
-    FrameScaler* _frameScaler;
-    VideoCoder* _videoEncoder;
-    int32_t _videoMaxPayloadSize;
-    EncodedVideoData _videoEncodedData;
-
-    ThreadWrapper* _thread;
-    EventWrapper& _timeEvent;
-    CriticalSectionWrapper* _critSec;
-    int64_t _writtenVideoFramesCounter;
-    int64_t _writtenAudioMS;
-    int64_t _writtenVideoMS;
-};
-#endif // WEBRTC_MODULE_UTILITY_VIDEO
 }  // namespace webrtc
 #endif // WEBRTC_MODULES_UTILITY_SOURCE_FILE_RECORDER_IMPL_H_

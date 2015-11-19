@@ -224,6 +224,10 @@ void Task::Stop() {
   TaskParent::OnStopped(this);
 }
 
+int Task::ProcessResponse() {
+  return STATE_DONE;
+}
+
 void Task::set_timeout_seconds(const int timeout_seconds) {
   timeout_seconds_ = timeout_seconds;
   ResetTimeout();
@@ -267,6 +271,11 @@ void Task::ResumeTimeout() {
     timeout_suspended_ = false;
     ResetTimeout();
   }
+}
+
+int Task::OnTimeout() {
+  // by default, we are finished after timing out
+  return STATE_DONE;
 }
 
 } // namespace rtc

@@ -86,7 +86,7 @@ const char* inet_ntop_v6(const void* src, char* dst, socklen_t size) {
       reinterpret_cast<const uint16*>(src);
   int runpos[8];
   int current = 1;
-  int max = 1;
+  int max = 0;
   int maxpos = -1;
   int run_array_size = ARRAY_SIZE(runpos);
   // Run over the address marking runs of 0s.
@@ -100,11 +100,11 @@ const char* inet_ntop_v6(const void* src, char* dst, socklen_t size) {
       ++current;
     } else {
       runpos[i] = -1;
-      current =1;
+      current = 1;
     }
   }
 
-  if (max > 1) {
+  if (max > 0) {
     int tmpmax = maxpos;
     // Run back through, setting -1 for all but the longest run.
     for (int i = run_array_size - 1; i >= 0; i--) {

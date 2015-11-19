@@ -53,7 +53,7 @@ void WebRtcIlbcfix_CbMemEnergy(
 
   /* Normalize the energy and store the number of shifts */
   energyShifts[0] = (int16_t)WebRtcSpl_NormW32(energy);
-  tmp32 = WEBRTC_SPL_LSHIFT_W32(energy, energyShifts[0]);
+  tmp32 = energy << energyShifts[0];
   energyW16[0] = (int16_t)(tmp32 >> 16);
 
   /* Compute the energy of the rest of the cb memory
@@ -69,7 +69,7 @@ void WebRtcIlbcfix_CbMemEnergy(
 
   /* Normalize the energy and store the number of shifts */
   energyShifts[base_size] = (int16_t)WebRtcSpl_NormW32(energy);
-  tmp32 = WEBRTC_SPL_LSHIFT_W32(energy, energyShifts[base_size]);
+  tmp32 = energy << energyShifts[base_size];
   energyW16[base_size] = (int16_t)(tmp32 >> 16);
 
   ppi = filteredCB + lMem - 1 - lTarget;

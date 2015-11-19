@@ -46,11 +46,12 @@ void WebRtcIlbcfix_GetSyncSeq(
 
   /* present (find predicted lag from this position) */
 
-  WebRtcIlbcfix_NearestNeighbor(lagBlock+hl,plocs,
-                                (int16_t)WEBRTC_SPL_MUL_16_16(2, (centerStartPos+centerEndPos)),
+  WebRtcIlbcfix_NearestNeighbor(lagBlock + hl,
+                                plocs,
+                                (int16_t)(2 * (centerStartPos + centerEndPos)),
                                 periodl);
 
-  blockStartPos[hl]=(int16_t)WEBRTC_SPL_MUL_16_16(4, centerStartPos);
+  blockStartPos[hl] = (int16_t)(4 * centerStartPos);
 
   /* past (find predicted position and perform a refined
      search to find the best sequence) */
@@ -58,11 +59,14 @@ void WebRtcIlbcfix_GetSyncSeq(
   for(q=hl-1;q>=0;q--) {
     blockStartPos[q]=blockStartPos[q+1]-period[lagBlock[q+1]];
 
-    WebRtcIlbcfix_NearestNeighbor(lagBlock+q, plocs,
-                                  (int16_t)(blockStartPos[q] + (int16_t)WEBRTC_SPL_MUL_16_16(4, ENH_BLOCKL_HALF)-period[lagBlock[q+1]]),
-                                  periodl);
+    WebRtcIlbcfix_NearestNeighbor(
+        lagBlock + q,
+        plocs,
+        (int16_t)(blockStartPos[q] + 4 * ENH_BLOCKL_HALF -
+            period[lagBlock[q + 1]]),
+        periodl);
 
-    if((blockStartPos[q]-(int16_t)WEBRTC_SPL_MUL_16_16(4, ENH_OVERHANG))>=0) {
+    if (blockStartPos[q] - 4 * ENH_OVERHANG >= 0) {
 
       /* Find the best possible sequence in the 4 times upsampled
          domain around blockStartPos+q */
@@ -82,17 +86,17 @@ void WebRtcIlbcfix_GetSyncSeq(
     plocs2[i]=(plocs[i]-period[i]);
   }
 
-  for(q=hl+1;q<=WEBRTC_SPL_MUL_16_16(2, hl);q++) {
+  for (q = hl + 1; q <= (int16_t)(2 * hl); q++) {
 
-    WebRtcIlbcfix_NearestNeighbor(lagBlock+q,plocs2,
-                                  (int16_t)(blockStartPos[q-1]+
-                                                  (int16_t)WEBRTC_SPL_MUL_16_16(4, ENH_BLOCKL_HALF)),periodl);
+    WebRtcIlbcfix_NearestNeighbor(
+        lagBlock + q,
+        plocs2,
+        (int16_t)(blockStartPos[q - 1] + 4 * ENH_BLOCKL_HALF),
+        periodl);
 
     blockStartPos[q]=blockStartPos[q-1]+period[lagBlock[q]];
 
-    if( (blockStartPos[q]+(int16_t)WEBRTC_SPL_MUL_16_16(4, (ENH_BLOCKL+ENH_OVERHANG)))
-        <
-        (int16_t)WEBRTC_SPL_MUL_16_16(4, idatal)) {
+    if (blockStartPos[q] + 4 * (ENH_BLOCKL + ENH_OVERHANG) < 4 * idatal) {
 
       /* Find the best possible sequence in the 4 times upsampled
          domain around blockStartPos+q */

@@ -29,6 +29,17 @@ std::string RtpExtension::ToString() const {
   return ss.str();
 }
 
+VideoStream::VideoStream()
+    : width(0),
+      height(0),
+      max_framerate(-1),
+      min_bitrate_bps(-1),
+      target_bitrate_bps(-1),
+      max_bitrate_bps(-1),
+      max_qp(-1) {}
+
+VideoStream::~VideoStream() = default;
+
 std::string VideoStream::ToString() const {
   std::stringstream ss;
   ss << "{width: " << width;
@@ -50,6 +61,13 @@ std::string VideoStream::ToString() const {
   ss << '}';
   return ss.str();
 }
+
+VideoEncoderConfig::VideoEncoderConfig()
+    : content_type(kRealtimeVideo),
+      encoder_specific_settings(NULL),
+      min_transmit_bitrate_bps(0) {}
+
+VideoEncoderConfig::~VideoEncoderConfig() = default;
 
 std::string VideoEncoderConfig::ToString() const {
   std::stringstream ss;

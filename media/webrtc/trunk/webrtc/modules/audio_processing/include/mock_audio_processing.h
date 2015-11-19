@@ -11,8 +11,8 @@
 #ifndef WEBRTC_MODULES_AUDIO_PROCESSING_INCLUDE_MOCK_AUDIO_PROCESSING_H_
 #define WEBRTC_MODULES_AUDIO_PROCESSING_INCLUDE_MOCK_AUDIO_PROCESSING_H_
 
+#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/modules/audio_processing/include/audio_processing.h"
-#include "webrtc/system_wrappers/interface/scoped_ptr.h"
 
 namespace webrtc {
 
@@ -48,6 +48,8 @@ class MockEchoCancellation : public EchoCancellation {
       bool());
   MOCK_METHOD2(GetDelayMetrics,
       int(int* median, int* std));
+  MOCK_METHOD3(GetDelayMetrics,
+      int(int* median, int* std, float* fraction_poor_delays));
   MOCK_CONST_METHOD0(aec_core,
       struct AecCore*());
 };
@@ -264,13 +266,13 @@ class MockAudioProcessing : public AudioProcessing {
   }
 
  private:
-  scoped_ptr<MockEchoCancellation> echo_cancellation_;
-  scoped_ptr<MockEchoControlMobile> echo_control_mobile_;
-  scoped_ptr<MockGainControl> gain_control_;
-  scoped_ptr<MockHighPassFilter> high_pass_filter_;
-  scoped_ptr<MockLevelEstimator> level_estimator_;
-  scoped_ptr<MockNoiseSuppression> noise_suppression_;
-  scoped_ptr<MockVoiceDetection> voice_detection_;
+  rtc::scoped_ptr<MockEchoCancellation> echo_cancellation_;
+  rtc::scoped_ptr<MockEchoControlMobile> echo_control_mobile_;
+  rtc::scoped_ptr<MockGainControl> gain_control_;
+  rtc::scoped_ptr<MockHighPassFilter> high_pass_filter_;
+  rtc::scoped_ptr<MockLevelEstimator> level_estimator_;
+  rtc::scoped_ptr<MockNoiseSuppression> noise_suppression_;
+  rtc::scoped_ptr<MockVoiceDetection> voice_detection_;
 };
 
 }  // namespace webrtc

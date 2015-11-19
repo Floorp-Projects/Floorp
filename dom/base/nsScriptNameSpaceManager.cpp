@@ -480,8 +480,6 @@ nsScriptNameSpaceManager::RegisterDOMCIData(const char *aName,
                "Someone tries to register classinfo data for a class that isn't new or external!");
 
   s->mData = new nsExternalDOMClassInfoData;
-  NS_ENSURE_TRUE(s->mData, NS_ERROR_OUT_OF_MEMORY);
-
   s->mType = nsGlobalNameStruct::eTypeExternalClassInfo;
   s->mData->mName = aName;
   s->mData->mNameUTF16 = className;

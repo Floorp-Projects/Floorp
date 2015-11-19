@@ -404,12 +404,12 @@ protected:
   // XXX remove this when landing bug 154892 (splitting absolute positioned frames)
   friend class nsInlineFrame;
 
-  nsBlockReflowState* mBlockRS;/* XXX hack! */
-
   // XXX Take care that nsRubyBaseContainer would give nullptr to this
   //     member. It should not be a problem currently, since the only
   //     code use it is handling float, which does not affect ruby.
   //     See comment in nsLineLayout::AddFloat
+  nsBlockReflowState* mBlockRS;/* XXX hack! */
+
   nsLineList::iterator mLineBox;
 
   // Per-frame data recorded by the line-layout reflow logic. This

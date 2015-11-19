@@ -67,20 +67,20 @@ static int16_t coefTable_ifft[] = {
   120,  68, 376, 388, 248, 132, 504, 260
 };
 
-static void ComfortNoise(AecmCore_t* aecm,
+static void ComfortNoise(AecmCore* aecm,
                          const uint16_t* dfa,
-                         complex16_t* out,
+                         ComplexInt16* out,
                          const int16_t* lambda);
 
-static void WindowAndFFT(AecmCore_t* aecm,
+static void WindowAndFFT(AecmCore* aecm,
                          int16_t* fft,
                          const int16_t* time_signal,
-                         complex16_t* freq_signal,
+                         ComplexInt16* freq_signal,
                          int time_signal_scaling) {
   int i, j;
   int32_t tmp1, tmp2, tmp3, tmp4;
   int16_t* pfrfi;
-  complex16_t* pfreq_signal;
+  ComplexInt16* pfreq_signal;
   int16_t  f_coef, s_coef;
   int32_t load_ptr, store_ptr1, store_ptr2, shift, shift1;
   int32_t hann, hann1, coefs;
@@ -199,9 +199,9 @@ static void WindowAndFFT(AecmCore_t* aecm,
   );
 }
 
-static void InverseFFTAndWindow(AecmCore_t* aecm,
+static void InverseFFTAndWindow(AecmCore* aecm,
                                 int16_t* fft,
-                                complex16_t* efw,
+                                ComplexInt16* efw,
                                 int16_t* output,
                                 const int16_t* nearendClean) {
   int i, outCFFT;
@@ -209,7 +209,7 @@ static void InverseFFTAndWindow(AecmCore_t* aecm,
   int16_t* pcoefTable_ifft = coefTable_ifft;
   int16_t* pfft = fft;
   int16_t* ppfft = fft;
-  complex16_t* pefw = efw;
+  ComplexInt16* pefw = efw;
   int32_t out_aecm;
   int16_t* paecm_buf = aecm->outBuf;
   const int16_t* p_kSqrtHanning = WebRtcAecm_kSqrtHanning;
@@ -432,7 +432,7 @@ static void InverseFFTAndWindow(AecmCore_t* aecm,
   }
 }
 
-void WebRtcAecm_CalcLinearEnergies_mips(AecmCore_t* aecm,
+void WebRtcAecm_CalcLinearEnergies_mips(AecmCore* aecm,
                                         const uint16_t* far_spectrum,
                                         int32_t* echo_est,
                                         uint32_t* far_energy,
@@ -521,7 +521,7 @@ void WebRtcAecm_CalcLinearEnergies_mips(AecmCore_t* aecm,
 }
 
 #if defined(MIPS_DSP_R1_LE)
-void WebRtcAecm_StoreAdaptiveChannel_mips(AecmCore_t* aecm,
+void WebRtcAecm_StoreAdaptiveChannel_mips(AecmCore* aecm,
                                           const uint16_t* far_spectrum,
                                           int32_t* echo_est) {
   int i;
@@ -568,7 +568,7 @@ void WebRtcAecm_StoreAdaptiveChannel_mips(AecmCore_t* aecm,
                                       far_spectrum[i]);
 }
 
-void WebRtcAecm_ResetAdaptiveChannel_mips(AecmCore_t* aecm) {
+void WebRtcAecm_ResetAdaptiveChannel_mips(AecmCore* aecm) {
   int i;
   int32_t* temp3;
   int16_t* temp0;
@@ -623,12 +623,11 @@ void WebRtcAecm_ResetAdaptiveChannel_mips(AecmCore_t* aecm) {
 //                              the frequency domain array
 // return value                 The Q-domain of current frequency values
 //
-static int TimeToFrequencyDomain(AecmCore_t* aecm,
+static int TimeToFrequencyDomain(AecmCore* aecm,
                                  const int16_t* time_signal,
-                                 complex16_t* freq_signal,
+                                 ComplexInt16* freq_signal,
                                  uint16_t* freq_signal_abs,
-                                 uint32_t* freq_signal_sum_abs)
-{
+                                 uint32_t* freq_signal_sum_abs) {
   int i = 0;
   int time_signal_scaling = 0;
 
@@ -689,8 +688,8 @@ static int TimeToFrequencyDomain(AecmCore_t* aecm,
       // The parameters alpha and beta are stored in Q15
       tmp16no1 = WEBRTC_SPL_ABS_W16(freq_signal[i].real);
       tmp16no2 = WEBRTC_SPL_ABS_W16(freq_signal[i].imag);
-      tmp32no1 = WEBRTC_SPL_MUL_16_16(tmp16no1, tmp16no1);
-      tmp32no2 = WEBRTC_SPL_MUL_16_16(tmp16no2, tmp16no2);
+      tmp32no1 = tmp16no1 * tmp16no1;
+      tmp32no2 = tmp16no2 * tmp16no2;
       tmp32no2 = WebRtcSpl_AddSatW32(tmp32no1, tmp32no2);
       tmp32no1 = WebRtcSpl_SqrtFloor(tmp32no2);
 
@@ -794,7 +793,7 @@ static int TimeToFrequencyDomain(AecmCore_t* aecm,
   return time_signal_scaling;
 }
 
-int WebRtcAecm_ProcessBlock(AecmCore_t* aecm,
+int WebRtcAecm_ProcessBlock(AecmCore* aecm,
                             const int16_t* farend,
                             const int16_t* nearendNoisy,
                             const int16_t* nearendClean,
@@ -821,8 +820,8 @@ int WebRtcAecm_ProcessBlock(AecmCore_t* aecm,
 
   int16_t* fft = (int16_t*)(((uint32_t)fft_buf + 31) & ~ 31);
   int32_t* echoEst32 = (int32_t*)(((uint32_t)echoEst32_buf + 31) & ~ 31);
-  complex16_t* dfw = (complex16_t*)(((uint32_t)dfw_buf + 31) & ~ 31);
-  complex16_t* efw = (complex16_t*)(((uint32_t)efw_buf + 31) & ~ 31);
+  ComplexInt16* dfw = (ComplexInt16*)(((uint32_t)dfw_buf + 31) & ~31);
+  ComplexInt16* efw = (ComplexInt16*)(((uint32_t)efw_buf + 31) & ~31);
 
   int16_t hnl[PART_LEN1];
   int16_t numPosCoef = 0;
@@ -1250,9 +1249,9 @@ int WebRtcAecm_ProcessBlock(AecmCore_t* aecm,
 }
 
 // Generate comfort noise and add to output signal.
-static void ComfortNoise(AecmCore_t* aecm,
+static void ComfortNoise(AecmCore* aecm,
                          const uint16_t* dfa,
-                         complex16_t* out,
+                         ComplexInt16* out,
                          const int16_t* lambda) {
   int16_t i;
   int16_t tmp16, tmp161, tmp162, tmp163, nrsh1, nrsh2;

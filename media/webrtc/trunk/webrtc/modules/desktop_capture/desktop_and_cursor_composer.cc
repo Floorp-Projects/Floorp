@@ -62,10 +62,10 @@ class DesktopFrameWithCursor : public DesktopFrame {
   virtual ~DesktopFrameWithCursor();
 
  private:
-  scoped_ptr<DesktopFrame> original_frame_;
+  rtc::scoped_ptr<DesktopFrame> original_frame_;
 
   DesktopVector restore_position_;
-  scoped_ptr<DesktopFrame> restore_frame_;
+  rtc::scoped_ptr<DesktopFrame> restore_frame_;
 
   DISALLOW_COPY_AND_ASSIGN(DesktopFrameWithCursor);
 };

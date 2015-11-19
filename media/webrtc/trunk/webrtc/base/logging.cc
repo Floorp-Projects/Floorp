@@ -27,10 +27,11 @@ static const int kMaxLogLineSize = 1024 - 60;
 #endif  // WEBRTC_MAC && !defined(WEBRTC_IOS) || WEBRTC_ANDROID
 
 #include <time.h>
-
-#include <ostream>
-#include <iomanip>
 #include <limits.h>
+
+#include <algorithm>
+#include <iomanip>
+#include <ostream>
 #include <vector>
 
 #include "webrtc/base/logging.h"
@@ -247,7 +248,7 @@ int LogMessage::GetLogToStream(StreamInterface* stream) {
   int sev = NO_LOGGING;
   for (StreamList::iterator it = streams_.begin(); it != streams_.end(); ++it) {
     if (!stream || stream == it->first) {
-      sev = _min(sev, it->second);
+      sev = std::min(sev, it->second);
     }
   }
   return sev;
@@ -368,7 +369,7 @@ int LogMessage::ParseLogSeverity(const std::string& value) {
 void LogMessage::UpdateMinLogSeverity() {
   int min_sev = dbg_sev_;
   for (StreamList::iterator it = streams_.begin(); it != streams_.end(); ++it) {
-    min_sev = _min(dbg_sev_, it->second);
+    min_sev = std::min(dbg_sev_, it->second);
   }
   min_sev_ = min_sev;
 }
@@ -524,7 +525,7 @@ void LogMultiline(LoggingSeverity level, const char* label, bool input,
     while (len > 0) {
       memset(asc_line, ' ', sizeof(asc_line));
       memset(hex_line, ' ', sizeof(hex_line));
-      size_t line_len = _min(len, LINE_SIZE);
+      size_t line_len = std::min(len, LINE_SIZE);
       for (size_t i = 0; i < line_len; ++i) {
         unsigned char ch = udata[i];
         asc_line[i] = isprint(ch) ? ch : '.';

@@ -25,7 +25,7 @@ class TaskParent {
  public:
   TaskParent(Task *derived_instance, TaskParent *parent);
   explicit TaskParent(TaskRunner *derived_instance);
-  virtual ~TaskParent() { }
+  virtual ~TaskParent();
 
   TaskParent *GetParent() { return parent_; }
   TaskRunner *GetRunner() { return runner_; }

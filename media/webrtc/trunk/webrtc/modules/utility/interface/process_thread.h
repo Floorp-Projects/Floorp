@@ -12,23 +12,55 @@
 #define WEBRTC_MODULES_UTILITY_INTERFACE_PROCESS_THREAD_H_
 
 #include "webrtc/typedefs.h"
+#include "webrtc/base/scoped_ptr.h"
 
 namespace webrtc {
 class Module;
 
-class ProcessThread
-{
-public:
-    static ProcessThread* CreateProcessThread();
-    static void DestroyProcessThread(ProcessThread* module);
+class ProcessTask {
+ public:
+  ProcessTask() {}
+  virtual ~ProcessTask() {}
 
-    virtual int32_t Start() = 0;
-    virtual int32_t Stop() = 0;
-
-    virtual int32_t RegisterModule(Module* module) = 0;
-    virtual int32_t DeRegisterModule(const Module* module) = 0;
-protected:
-    virtual ~ProcessThread();
+  virtual void Run() = 0;
 };
+
+class ProcessThread {
+ public:
+  virtual ~ProcessThread();
+
+  static rtc::scoped_ptr<ProcessThread> Create();
+
+  // Starts the worker thread.  Must be called from the construction thread.
+  virtual void Start() = 0;
+
+  // Stops the worker thread.  Must be called from the construction thread.
+  virtual void Stop() = 0;
+
+  // Wakes the thread up to give a module a chance to do processing right
+  // away.  This causes the worker thread to wake up and requery the specified
+  // module for when it should be called back. (Typically the module should
+  // return 0 from TimeUntilNextProcess on the worker thread at that point).
+  // Can be called on any thread.
+  virtual void WakeUp(Module* module) = 0;
+
+  // Queues a task object to run on the worker thread.  Ownership of the
+  // task object is transferred to the ProcessThread and the object will
+  // either be deleted after running on the worker thread, or on the
+  // construction thread of the ProcessThread instance, if the task did not
+  // get a chance to run (e.g. posting the task while shutting down or when
+  // the thread never runs).
+  virtual void PostTask(rtc::scoped_ptr<ProcessTask> task) = 0;
+
+  // Adds a module that will start to receive callbacks on the worker thread.
+  // Can be called from any thread.
+  virtual void RegisterModule(Module* module) = 0;
+
+  // Removes a previously registered module.
+  // Can be called from any thread.
+  virtual void DeRegisterModule(Module* module) = 0;
+};
+
 }  // namespace webrtc
+
 #endif // WEBRTC_MODULES_UTILITY_INTERFACE_PROCESS_THREAD_H_

@@ -22,4 +22,4 @@
 # changes to stick? As of bug 928195, this shouldn't be necessary! Please
 # don't change CLOBBER for WebIDL changes any more.
 
-Bug 1214058 New xpcshell test not getting picked up
+Bug 1198458 Fix failures in TaskCluster builds due to analog_agc.cc moving

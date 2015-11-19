@@ -23,6 +23,8 @@ class VideoRenderer {
   virtual void RenderFrame(const I420VideoFrame& video_frame,
                            int time_to_render_ms) = 0;
 
+  virtual bool IsTextureSupported() const = 0;
+
  protected:
   virtual ~VideoRenderer() {}
 };

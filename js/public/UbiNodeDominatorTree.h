@@ -121,7 +121,7 @@ class JS_PUBLIC_API(DominatorTree)
         auto onEdge = [&](const Node& origin, const Edge& edge) {
             auto p = predecessorSets.lookupForAdd(edge.referent);
             if (!p) {
-                auto set = rt->make_unique<NodeSet>();
+                mozilla::UniquePtr<NodeSet, DeletePolicy<NodeSet>> set(js_new<NodeSet>());
                 if (!set ||
                     !set->init() ||
                     !predecessorSets.add(p, edge.referent, mozilla::Move(set)))

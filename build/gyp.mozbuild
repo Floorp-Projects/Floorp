@@ -5,6 +5,8 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 gyp_vars = {
+    'lsan': 0,
+    'asan': 0,
     'build_with_mozilla': 1,
     'build_with_chromium': 0,
     'use_official_google_api_keys': 0,
@@ -27,13 +29,13 @@ gyp_vars = {
     'build_libyuv': 0,
     'build_libvpx': 0,
     'build_ssl': 0,
+    'build_json': 0,
+    'build_icu': 0,
+    'build_opus': 0,
     'libyuv_dir': '/media/libyuv',
     'yuv_disable_avx2': 0 if CONFIG['HAVE_X86_AVX2'] else 1,
     # don't use openssl
     'use_openssl': 0,
-
-    # saves 4MB when webrtc_trace is off
-    'enable_lazy_trace_alloc': 1 if CONFIG['RELEASE_BUILD'] else 0,
 
     'use_x11': 1 if CONFIG['MOZ_X11'] else 0,
     'use_glib': 1 if CONFIG['GLIB_LIBS'] else 0,
@@ -63,7 +65,9 @@ gyp_vars = {
     'include_opus': 1,
     'include_g722': 1,
     'include_ilbc': 0,
-    'include_isac': 0,
+    # We turn on ISAC because the AGC uses parts of it, and depend on the
+    # linker to throw away uneeded bits.
+    'include_isac': 1,
     'include_pcm16b': 1,
 }
 

@@ -517,7 +517,7 @@ class XWindowEnumerator {
         static_cast<double>(src_width);
     double scale_y = static_cast<double>(dst_height) /
         static_cast<double>(src_height);
-    double scale = rtc::_min(scale_y, scale_x);
+    double scale = std::min(scale_y, scale_x);
 
     int scaled_width = round(src_width * scale);
     int scaled_height = round(src_height * scale);

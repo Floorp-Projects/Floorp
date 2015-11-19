@@ -606,9 +606,6 @@ pref("image.downscale-during-decode.enabled", true);
 pref("shumway.disabled", true);
 #endif
 
-// enable touch events interfaces
-pref("dom.w3c_touch_events.enabled", 1);
-
 #ifdef MOZ_SAFE_BROWSING
 pref("browser.safebrowsing.enabled", true);
 pref("browser.safebrowsing.malware.enabled", true);

@@ -10,6 +10,8 @@
 
 #include "webrtc/base/asyncinvoker.h"
 
+#include "webrtc/base/logging.h"
+
 namespace rtc {
 
 AsyncInvoker::AsyncInvoker() : destroying_(false) {}
@@ -52,12 +54,11 @@ void AsyncInvoker::Flush(Thread* thread, uint32 id /*= MQID_ANY*/) {
   }
 }
 
-void AsyncInvoker::DoInvoke(Thread* thread, AsyncClosure* closure,
+void AsyncInvoker::DoInvoke(Thread* thread,
+                            const scoped_refptr<AsyncClosure>& closure,
                             uint32 id) {
   if (destroying_) {
     LOG(LS_WARNING) << "Tried to invoke while destroying the invoker.";
-    // Since this call transwers ownership of |closure|, we clean it up here.
-    delete closure;
     return;
   }
   thread->Post(this, id, new ScopedRefMessageData<AsyncClosure>(closure));
@@ -70,6 +71,10 @@ NotifyingAsyncClosureBase::NotifyingAsyncClosureBase(AsyncInvoker* invoker,
       this, &NotifyingAsyncClosureBase::CancelCallback);
   invoker->SignalInvokerDestroyed.connect(
       this, &NotifyingAsyncClosureBase::CancelCallback);
+}
+
+NotifyingAsyncClosureBase::~NotifyingAsyncClosureBase() {
+  disconnect_all();
 }
 
 void NotifyingAsyncClosureBase::TriggerCallback() {

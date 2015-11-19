@@ -48,10 +48,16 @@ void FindCaptureDeviceOnSystem(webrtc::ViECapture* capture,
 // (See vie_window_manager_factory.h for more details on how to make one of
 // those). The frame provider id is a source of video frames, for instance
 // a capture device or a video channel.
+// NOTE: A call to StopRenderInWindow needs to be done in order to clear
+// up the configuration applied by this function.
 void RenderInWindow(webrtc::ViERender* video_render_interface,
-                    int  frame_provider_id,
+                    int frame_provider_id,
                     void* os_window,
                     float z_index);
+
+// Stops rendering into a window as previously set up by calling RenderInWindow.
+void StopRenderInWindow(webrtc::ViERender* video_render_interface,
+                        int frame_provider_id);
 
 // Similar in function to RenderInWindow, this function instead renders to
 // a file using a to-file-renderer. The frame provider id is a source of

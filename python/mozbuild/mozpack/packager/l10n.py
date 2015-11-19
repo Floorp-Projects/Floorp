@@ -44,7 +44,7 @@ from createprecomplete import generate_precomplete
 class LocaleManifestFinder(object):
     def __init__(self, finder):
         entries = self.entries = []
-        bases = self.bases = ['']
+        bases = self.bases = []
 
         class MockFormatter(object):
             def add_interfaces(self, path, content):

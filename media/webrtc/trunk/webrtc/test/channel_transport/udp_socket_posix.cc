@@ -27,7 +27,7 @@
 namespace webrtc {
 namespace test {
 UdpSocketPosix::UdpSocketPosix(const int32_t id, UdpSocketManager* mgr,
-                               bool ipV6Enable)
+                               bool ipV6Enable) : _id(id)
 {
     WEBRTC_TRACE(kTraceMemory, kTraceTransport, id,
                  "UdpSocketPosix::UdpSocketPosix()");
@@ -35,7 +35,6 @@ UdpSocketPosix::UdpSocketPosix(const int32_t id, UdpSocketManager* mgr,
     _wantsIncoming = false;
     _mgr = mgr;
 
-    _id = id;
     _obj = NULL;
     _incomingCb = NULL;
     _readyForDeletionCond = ConditionVariableWrapper::CreateConditionVariable();
@@ -90,12 +89,6 @@ UdpSocketPosix::~UdpSocketPosix()
     {
         delete _cs;
     }
-}
-
-int32_t UdpSocketPosix::ChangeUniqueId(const int32_t id)
-{
-    _id = id;
-    return 0;
 }
 
 bool UdpSocketPosix::SetCallback(CallbackObj obj, IncomingSocketCallback cb)
@@ -154,7 +147,7 @@ bool UdpSocketPosix::Bind(const SocketAddress& name)
     return false;
 }
 
-int32_t UdpSocketPosix::SendTo(const int8_t* buf, int32_t len,
+int32_t UdpSocketPosix::SendTo(const int8_t* buf, size_t len,
                                const SocketAddress& to)
 {
     int size = sizeof(sockaddr);
