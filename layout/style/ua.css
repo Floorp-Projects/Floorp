@@ -511,12 +511,12 @@ div:-moz-native-anonymous.moz-selectioncaret-right.hidden > div {
   visibility: hidden;
 }
 
-/* Custom content container in the CanvasFrame, positioned on top of everything
-   else, not reacting to pointer events. */
+/* Custom content container in the CanvasFrame, fixed positioned on top of
+   everything else, not reacting to pointer events. */
 div:-moz-native-anonymous.moz-custom-content-container {
   pointer-events: none;
   -moz-top-layer: top;
-  position: absolute;
+  position: fixed;
   top: 0;
   left: 0;
   width: 100%;
