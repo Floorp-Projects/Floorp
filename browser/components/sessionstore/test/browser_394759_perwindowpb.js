@@ -15,27 +15,25 @@ const TESTS = [
 
 function promiseTestOpenCloseWindow(aIsPrivate, aTest) {
   return Task.spawn(function*() {
-    let win = yield BrowserTestUtils.openNewBrowserWindow({ "private": aIsPrivate });
+    let win = yield promiseNewWindowLoaded({ "private": aIsPrivate });
     win.gBrowser.selectedBrowser.loadURI(aTest.url);
     yield promiseBrowserLoaded(win.gBrowser.selectedBrowser);
     yield Promise.resolve();
     // Mark the window with some unique data to be restored later on.
     ss.setWindowValue(win, aTest.key, aTest.value);
-    yield TabStateFlusher.flushWindow(win);
     // Close.
-    yield BrowserTestUtils.closeWindow(win);
+    yield promiseWindowClosed(win);
   });
 }
 
 function promiseTestOnWindow(aIsPrivate, aValue) {
   return Task.spawn(function*() {
-    let win = yield BrowserTestUtils.openNewBrowserWindow({ "private": aIsPrivate });
-    yield TabStateFlusher.flushWindow(win);
+    let win = yield promiseNewWindowLoaded({ "private": aIsPrivate });
     let data = JSON.parse(ss.getClosedWindowData())[0];
     is(ss.getClosedWindowCount(), 1, "Check that the closed window count hasn't changed");
     ok(JSON.stringify(data).indexOf(aValue) > -1,
        "Check the closed window data was stored correctly");
-    registerCleanupFunction(() => BrowserTestUtils.closeWindow(win));
+    registerCleanupFunction(() => promiseWindowClosed(win));
   });
 }
 
