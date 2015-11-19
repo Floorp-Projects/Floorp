@@ -384,8 +384,18 @@ class JitCompartment
 {
     friend class JitActivation;
 
+    struct IcStubCodeMapGCPolicy {
+        static bool needsSweep(uint32_t* key, ReadBarrieredJitCode* value) {
+            return IsAboutToBeFinalized(value);
+        }
+    };
+
     // Map ICStub keys to ICStub shared code objects.
-    typedef WeakValueCache<uint32_t, ReadBarrieredJitCode> ICStubCodeMap;
+    using ICStubCodeMap = GCHashMap<uint32_t,
+                                    ReadBarrieredJitCode,
+                                    DefaultHasher<uint32_t>,
+                                    RuntimeAllocPolicy,
+                                    IcStubCodeMapGCPolicy>;
     ICStubCodeMap* stubCodes_;
 
     // Keep track of offset into various baseline stubs' code at return
