@@ -3234,13 +3234,13 @@ IonBuilder::inlineConstructSimdObject(CallInfo& callInfo, SimdTypeDescr* descr)
     // containing the coercion of 'undefined' to the right type.
     MConstant* defVal = nullptr;
     if (callInfo.argc() < SimdTypeToLength(simdType)) {
-        MIRType scalarType = SimdTypeToScalarType(simdType);
-        if (scalarType == MIRType_Int32) {
+        MIRType laneType = SimdTypeToLaneType(simdType);
+        if (laneType == MIRType_Int32) {
             defVal = constant(Int32Value(0));
         } else {
-            MOZ_ASSERT(IsFloatingPointType(scalarType));
+            MOZ_ASSERT(IsFloatingPointType(laneType));
             defVal = constant(DoubleNaNValue());
-            defVal->setResultType(scalarType);
+            defVal->setResultType(laneType);
         }
     }
 
@@ -3369,9 +3369,9 @@ IonBuilder::inlineSimdExtractLane(CallInfo& callInfo, JSNative native, SimdTypeD
 
     // See comment in inlineBinarySimd
     MIRType vecType = SimdTypeDescrToMIRType(type);
-    MIRType scalarType = SimdTypeToScalarType(vecType);
+    MIRType laneType = SimdTypeToLaneType(vecType);
     MSimdExtractElement* ins = MSimdExtractElement::New(alloc(), callInfo.getArg(0),
-                                                        vecType, scalarType, SimdLane(lane));
+                                                        vecType, laneType, SimdLane(lane));
     current->add(ins);
     current->push(ins);
     callInfo.setImplicitlyUsedUnchecked();
