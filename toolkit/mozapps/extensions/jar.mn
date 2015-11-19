@@ -6,7 +6,7 @@ toolkit.jar:
 % content mozapps %content/mozapps/
 * content/mozapps/extensions/extensions.xul                     (content/extensions.xul)
   content/mozapps/extensions/extensions.css                     (content/extensions.css)
-* content/mozapps/extensions/extensions.js                      (content/extensions.js)
+  content/mozapps/extensions/extensions.js                      (content/extensions.js)
 * content/mozapps/extensions/extensions.xml                     (content/extensions.xml)
   content/mozapps/extensions/updateinfo.xsl                     (content/updateinfo.xsl)
   content/mozapps/extensions/about.xul                          (content/about.xul)

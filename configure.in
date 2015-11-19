@@ -8988,11 +8988,6 @@ AC_SUBST(DMG_TOOL)
 dnl Host JavaScript runtime, if any, to use during cross compiles.
 AC_SUBST(JS_BINARY)
 
-if test "$MOZ_DEBUG"; then
-    MOZ_EM_DEBUG=1
-fi
-AC_SUBST(MOZ_EM_DEBUG)
-
 AC_SUBST(NSS_EXTRA_SYMBOLS_FILE)
 
 if test -n "$COMPILE_ENVIRONMENT"; then
