@@ -25,7 +25,7 @@ load 321224.xul
 load 322780-1.xul
 load 323381-1.html
 load 323381-2.html
-asserts-if(gtkWidget,1) load 323386-1.html # Bug 718883
+asserts-if(gtkWidget,1) asserts-if(Android&&asyncPan,1) load 323386-1.html # Bug 718883
 load 323389-1.html
 load 323389-2.html
 load 323493-1.html
@@ -529,7 +529,7 @@ load 842166.html
 load 844529-1.html
 load 847130.xhtml
 load 847208.html
-asserts-if(Android,2) asserts-if(!Android,4) load 847209.html # bug 847368
+asserts-if(Android,2) asserts-if(Android&&asyncPan,4) asserts-if(!Android,4) load 847209.html # bug 847368
 load 847211-1.html
 load 849603.html
 asserts(0-12) load 850931.html # bug 569193
