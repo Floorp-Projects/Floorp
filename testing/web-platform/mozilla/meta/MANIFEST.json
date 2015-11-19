@@ -283,6 +283,12 @@
             "url": "/_mozilla/service-workers/service-worker/multiple-register.https.html"
           }
         ],
+        "service-workers/service-worker/multiple-update.https.html": [
+          {
+            "path": "service-workers/service-worker/multiple-update.https.html",
+            "url": "/_mozilla/service-workers/service-worker/multiple-update.https.html"
+          }
+        ],
         "service-workers/service-worker/onactivate-script-error.https.html": [
           {
             "path": "service-workers/service-worker/onactivate-script-error.https.html",
