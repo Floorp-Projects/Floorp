@@ -348,8 +348,8 @@ BluetoothMapSmsManager::MasDataHandler(UnixSocketBuffer* aMessage)
        * ObexResponseCode::Success
        */
       if (mDataStream) {
-        nsAutoArrayPtr<uint8_t> res(new uint8_t[mRemoteMaxPacketLength]);
-        if (!ReplyToGetWithHeaderBody(res.get(), kObexRespHeaderSize)) {
+        auto res = MakeUnique<uint8_t[]>(mRemoteMaxPacketLength);
+        if (!ReplyToGetWithHeaderBody(Move(res), kObexRespHeaderSize)) {
           BT_LOGR("Failed to reply to MAP GET request.");
           SendReply(ObexResponseCode::InternalServerError);
         }
@@ -565,7 +565,7 @@ BluetoothMapSmsManager::ReplyToSetPath()
 }
 
 bool
-BluetoothMapSmsManager::ReplyToGetWithHeaderBody(uint8_t* aResponse,
+BluetoothMapSmsManager::ReplyToGetWithHeaderBody(UniquePtr<uint8_t[]> aResponse,
                                                  unsigned int aIndex)
 {
   if (!mMasConnected) {
@@ -634,7 +634,7 @@ BluetoothMapSmsManager::ReplyToGetWithHeaderBody(uint8_t* aResponse,
     opcode = ObexResponseCode::Continue;
   }
 
-  SendMasObexData(aResponse, opcode, aIndex);
+  SendMasObexData(Move(aResponse), opcode, aIndex);
 
   return true;
 }
@@ -695,7 +695,7 @@ BluetoothMapSmsManager::ReplyToMessagesListing(Blob* aBlob, long aMasId,
   // ---- Part 1: [response code:1][length:2] ---- //
   // [response code:1][length:2] will be set in |SendObexData|.
   // Reserve index here
-  nsAutoArrayPtr<uint8_t> res(new uint8_t[mRemoteMaxPacketLength]);
+  auto res = MakeUnique<uint8_t[]>(mRemoteMaxPacketLength);
   unsigned int index = kObexRespHeaderSize;
 
   // ---- Part 2: headerId:1][length:2][appParam:var] ---- //
@@ -729,7 +729,7 @@ BluetoothMapSmsManager::ReplyToMessagesListing(Blob* aBlob, long aMasId,
                      msgListingSize,
                      sizeof(msgListingSize));
 
-  index += AppendHeaderAppParameters(res + index,
+  index += AppendHeaderAppParameters(&res[index],
                                      mRemoteMaxPacketLength,
                                      appParameters,
                                      len + 9);
@@ -742,11 +742,11 @@ BluetoothMapSmsManager::ReplyToMessagesListing(Blob* aBlob, long aMasId,
     }
 
     // ---- Part 3: [headerId:1][length:2][Body:var] ---- //
-    ReplyToGetWithHeaderBody(res, index);
+    ReplyToGetWithHeaderBody(Move(res), index);
     // Reset flag
     mBodyRequired = false;
   } else {
-    SendMasObexData(res, ObexResponseCode::Success, index);
+    SendMasObexData(Move(res), ObexResponseCode::Success, index);
   }
 
   return true;
@@ -783,7 +783,7 @@ BluetoothMapSmsManager::ReplyToGetMessage(Blob* aBlob, long aMasId)
   // ---- Part 1: [response code:1][length:2] ---- //
   // [response code:1][length:2] will be set in |SendObexData|.
   // Reserve index here
-  nsAutoArrayPtr<uint8_t> res (new uint8_t[mRemoteMaxPacketLength]);
+  auto res = MakeUnique<uint8_t[]>(mRemoteMaxPacketLength);
   unsigned int index = kObexRespHeaderSize;
 
   if (mFractionDeliverRequired) {
@@ -797,7 +797,7 @@ BluetoothMapSmsManager::ReplyToGetMessage(Blob* aBlob, long aMasId)
                        &fractionDeliver,
                        sizeof(fractionDeliver));
 
-    index += AppendHeaderAppParameters(res + index,
+    index += AppendHeaderAppParameters(&res[index],
                                        mRemoteMaxPacketLength,
                                        appParameters,
                                        sizeof(appParameters));
@@ -805,7 +805,7 @@ BluetoothMapSmsManager::ReplyToGetMessage(Blob* aBlob, long aMasId)
 
   // TODO: Support bMessage encoding in bug 1166652.
   // ---- Part 3: [headerId:1][length:2][Body:var] ---- //
-  ReplyToGetWithHeaderBody(res.get(), index);
+  ReplyToGetWithHeaderBody(Move(res), index);
   mFractionDeliverRequired = false;
 
   return true;
@@ -838,11 +838,11 @@ BluetoothMapSmsManager::ReplyToSendMessage(
   *(handleId + (len * 2)) = 0x00;
   *(handleId + (len * 2 + 1)) = 0x00;
 
-  nsAutoArrayPtr<uint8_t> res(new uint8_t[mRemoteMaxPacketLength]);
+  auto res = MakeUnique<uint8_t[]>(mRemoteMaxPacketLength);
   int index = kObexRespHeaderSize;
-  index += AppendHeaderName(res + index, mRemoteMaxPacketLength - index,
+  index += AppendHeaderName(&res[index], mRemoteMaxPacketLength - index,
                             handleId, (len + 1) * 2);
-  SendMasObexData(res.get(), ObexResponseCode::Success, index);
+  SendMasObexData(Move(res), ObexResponseCode::Success, index);
 
   return true;
 }
@@ -1453,6 +1453,14 @@ BluetoothMapSmsManager::SendMasObexData(uint8_t* aData, uint8_t aOpcode,
 {
   SetObexPacketInfo(aData, aOpcode, aSize);
   mMasSocket->SendSocketData(new UnixSocketRawData(aData, aSize));
+}
+
+void
+BluetoothMapSmsManager::SendMasObexData(UniquePtr<uint8_t[]> aData,
+                                        uint8_t aOpcode, int aSize)
+{
+  SetObexPacketInfo(aData.get(), aOpcode, aSize);
+  mMasSocket->SendSocketData(new UnixSocketRawData(Move(aData), aSize));
 }
 
 void

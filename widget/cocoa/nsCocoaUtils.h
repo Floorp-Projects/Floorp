@@ -129,6 +129,8 @@ struct KeyBindingsCommand
 class nsCocoaUtils
 {
   typedef mozilla::gfx::SourceSurface SourceSurface;
+  typedef mozilla::LayoutDeviceIntPoint LayoutDeviceIntPoint;
+  typedef mozilla::LayoutDeviceIntRect LayoutDeviceIntRect;
 
 public:
 
@@ -152,20 +154,20 @@ public:
     return NSToIntRound(aPts * aBackingScale);
   }
 
-  static nsIntPoint
+  static LayoutDeviceIntPoint
   CocoaPointsToDevPixels(const NSPoint& aPt, CGFloat aBackingScale)
   {
-    return nsIntPoint(NSToIntRound(aPt.x * aBackingScale),
-                      NSToIntRound(aPt.y * aBackingScale));
+    return LayoutDeviceIntPoint(NSToIntRound(aPt.x * aBackingScale),
+                                NSToIntRound(aPt.y * aBackingScale));
   }
 
-  static nsIntRect
+  static LayoutDeviceIntRect
   CocoaPointsToDevPixels(const NSRect& aRect, CGFloat aBackingScale)
   {
-    return nsIntRect(NSToIntRound(aRect.origin.x * aBackingScale),
-                     NSToIntRound(aRect.origin.y * aBackingScale),
-                     NSToIntRound(aRect.size.width * aBackingScale),
-                     NSToIntRound(aRect.size.height * aBackingScale));
+    return LayoutDeviceIntRect(NSToIntRound(aRect.origin.x * aBackingScale),
+                               NSToIntRound(aRect.origin.y * aBackingScale),
+                               NSToIntRound(aRect.size.width * aBackingScale),
+                               NSToIntRound(aRect.size.height * aBackingScale));
   }
 
   static CGFloat
@@ -182,8 +184,20 @@ public:
                        (CGFloat)aPt.y / aBackingScale);
   }
 
+  // XXX: all calls to this function should eventually be replaced with calls
+  // to DevPixelsToCocoaPoints().
   static NSRect
-  DevPixelsToCocoaPoints(const nsIntRect& aRect, CGFloat aBackingScale)
+  UntypedDevPixelsToCocoaPoints(const nsIntRect& aRect, CGFloat aBackingScale)
+  {
+    return NSMakeRect((CGFloat)aRect.x / aBackingScale,
+                      (CGFloat)aRect.y / aBackingScale,
+                      (CGFloat)aRect.width / aBackingScale,
+                      (CGFloat)aRect.height / aBackingScale);
+  }
+
+  static NSRect
+  DevPixelsToCocoaPoints(const LayoutDeviceIntRect& aRect,
+                         CGFloat aBackingScale)
   {
     return NSMakeRect((CGFloat)aRect.x / aBackingScale,
                       (CGFloat)aRect.y / aBackingScale,
@@ -217,8 +231,8 @@ public:
   // See explanation for geckoRectToCocoaRect, guess what this does...
   static nsIntRect CocoaRectToGeckoRect(const NSRect &cocoaRect);
 
-  static nsIntRect CocoaRectToGeckoRectDevPix(const NSRect &aCocoaRect,
-                                              CGFloat aBackingScale);
+  static mozilla::LayoutDeviceIntRect CocoaRectToGeckoRectDevPix(
+    const NSRect& aCocoaRect, CGFloat aBackingScale);
 
   // Gives the location for the event in screen coordinates. Do not call this
   // unless the window the event was originally targeted at is still alive!

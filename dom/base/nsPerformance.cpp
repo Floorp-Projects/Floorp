@@ -11,6 +11,7 @@
 #include "nsDOMNavigationTiming.h"
 #include "nsContentUtils.h"
 #include "nsIScriptSecurityManager.h"
+#include "nsGlobalWindow.h"
 #include "nsIDOMWindow.h"
 #include "nsILoadInfo.h"
 #include "nsIURI.h"
@@ -29,6 +30,8 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/TimeStamp.h"
+#include "SharedWorker.h"
+#include "ServiceWorker.h"
 #include "js/HeapAPI.h"
 #include "GeckoProfiler.h"
 #include "WorkerPrivate.h"
@@ -500,12 +503,7 @@ nsPerformance::Navigation()
 DOMHighResTimeStamp
 nsPerformance::Now() const
 {
-  double nowTimeMs = GetDOMTiming()->TimeStampToDOMHighRes(TimeStamp::Now());
-  // Round down to the nearest 5us, because if the timer is too accurate people
-  // can do nasty timing attacks with it.  See similar code in the worker
-  // Performance implementation.
-  const double maxResolutionMs = 0.005;
-  return floor(nowTimeMs / maxResolutionMs) * maxResolutionMs;
+  return RoundTime(GetDOMTiming()->TimeStampToDOMHighRes(TimeStamp::Now()));
 }
 
 JSObject*
@@ -802,15 +800,16 @@ nsPerformance::InsertUserEntry(PerformanceEntry* aEntry)
   PerformanceBase::InsertUserEntry(aEntry);
 }
 
-DOMHighResTimeStamp
-nsPerformance::DeltaFromNavigationStart(DOMHighResTimeStamp aTime)
+TimeStamp
+nsPerformance::CreationTimeStamp() const
 {
-  // If the time we're trying to convert is equal to zero, it hasn't been set
-  // yet so just return 0.
-  if (aTime == 0) {
-    return 0;
-  }
-  return aTime - GetDOMTiming()->GetNavigationStart();
+  return GetDOMTiming()->GetNavigationStartTimeStamp();
+}
+
+DOMHighResTimeStamp
+nsPerformance::CreationTime() const
+{
+  return GetDOMTiming()->GetNavigationStart();
 }
 
 // PerformanceBase
@@ -922,6 +921,48 @@ PerformanceBase::ClearResourceTimings()
   mResourceEntries.Clear();
 }
 
+DOMHighResTimeStamp
+PerformanceBase::TranslateTime(DOMHighResTimeStamp aTime,
+                               const WindowOrWorkerOrSharedWorkerOrServiceWorker& aTimeSource,
+                               ErrorResult& aRv)
+{
+  TimeStamp otherCreationTimeStamp;
+
+  if (aTimeSource.IsWindow()) {
+    RefPtr<nsPerformance> performance = aTimeSource.GetAsWindow().GetPerformance();
+    if (NS_WARN_IF(!performance)) {
+      aRv.Throw(NS_ERROR_FAILURE);
+    }
+    otherCreationTimeStamp = performance->CreationTimeStamp();
+  } else if (aTimeSource.IsWorker()) {
+    otherCreationTimeStamp = aTimeSource.GetAsWorker().NowBaseTimeStamp();
+  } else if (aTimeSource.IsSharedWorker()) {
+    SharedWorker& sharedWorker = aTimeSource.GetAsSharedWorker();
+    WorkerPrivate* workerPrivate = sharedWorker.GetWorkerPrivate();
+    otherCreationTimeStamp = workerPrivate->NowBaseTimeStamp();
+  } else if (aTimeSource.IsServiceWorker()) {
+    ServiceWorker& serviceWorker = aTimeSource.GetAsServiceWorker();
+    WorkerPrivate* workerPrivate = serviceWorker.GetWorkerPrivate();
+    otherCreationTimeStamp = workerPrivate->NowBaseTimeStamp();
+  } else {
+    MOZ_CRASH("This should not be possible.");
+  }
+
+  return RoundTime(
+    aTime + (otherCreationTimeStamp - CreationTimeStamp()).ToMilliseconds());
+}
+
+DOMHighResTimeStamp
+PerformanceBase::RoundTime(double aTime) const
+{
+  // Round down to the nearest 5us, because if the timer is too accurate people
+  // can do nasty timing attacks with it.  See similar code in the worker
+  // Performance implementation.
+  const double maxResolutionMs = 0.005;
+  return floor(aTime / maxResolutionMs) * maxResolutionMs;
+}
+
+
 void
 PerformanceBase::Mark(const nsAString& aName, ErrorResult& aRv)
 {
@@ -976,7 +1017,7 @@ PerformanceBase::ResolveTimestampFromName(const nsAString& aName,
     return 0;
   }
 
-  return DeltaFromNavigationStart(ts);
+  return ts - CreationTime();
 }
 
 void
