@@ -357,11 +357,10 @@ class B2GRemoteAutomation(Automation):
             if (!testUtils.hasOwnProperty("specialPowersObserver")) {
               let loader = Components.classes["@mozilla.org/moz/jssubscript-loader;1"]
                 .getService(Components.interfaces.mozIJSSubScriptLoader);
-              loader.loadSubScript("chrome://specialpowers/content/SpecialPowersObserver.js",
+              loader.loadSubScript("chrome://specialpowers/content/SpecialPowersObserver.jsm",
                 testUtils);
               testUtils.specialPowersObserver = new testUtils.SpecialPowersObserver();
               testUtils.specialPowersObserver.init();
-              testUtils.specialPowersObserver._loadFrameScript();
             }
             """)
 

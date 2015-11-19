@@ -839,7 +839,7 @@ WebrtcMediaCodecVP8VideoEncoder::~WebrtcMediaCodecVP8VideoEncoder() {
   Release();
 }
 
-int32_t WebrtcMediaCodecVP8VideoEncoder::SetChannelParameters(uint32_t packetLoss, int rtt) {
+int32_t WebrtcMediaCodecVP8VideoEncoder::SetChannelParameters(uint32_t packetLoss, int64_t rtt) {
   CSFLogDebug(logTag,  "%s ", __FUNCTION__);
   return WEBRTC_VIDEO_CODEC_OK;
 }

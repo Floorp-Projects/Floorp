@@ -87,9 +87,9 @@ void VcmCapturer::Destroy() {
 VcmCapturer::~VcmCapturer() { Destroy(); }
 
 void VcmCapturer::OnIncomingCapturedFrame(const int32_t id,
-                                          I420VideoFrame& frame) {
+                                          const I420VideoFrame& frame) {
   if (started_)
-    input_->SwapFrame(&frame);
+    input_->IncomingCapturedFrame(frame);
 }
 
 void VcmCapturer::OnCaptureDelayChanged(const int32_t id, const int32_t delay) {

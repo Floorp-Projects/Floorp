@@ -10,7 +10,7 @@ import("//build/config/crypto.gni")
 import("//build/config/ui.gni")
 import("../build/webrtc.gni")
 
-config("webrtc_base_config") {
+config("rtc_base_config") {
   include_dirs = [
     "//third_party/jsoncpp/overrides/include",
     "//third_party/jsoncpp/source/include",
@@ -19,15 +19,14 @@ config("webrtc_base_config") {
   defines = [
     "FEATURE_ENABLE_SSL",
     "LOGGING=1",
-    "USE_WEBRTC_DEV_BRANCH",
   ]
 
-  # TODO(henrike): issue 3307, make webrtc_base build without disabling
+  # TODO(henrike): issue 3307, make rtc_base build without disabling
   # these flags.
   cflags_cc = [ "-Wno-non-virtual-dtor" ]
 }
 
-config("webrtc_base_chromium_config") {
+config("rtc_base_chromium_config") {
   defines = [
     "NO_MAIN_THREAD_WRAPPING",
   ]
@@ -49,7 +48,7 @@ config("nss_config") {
 }
 
 config("ios_config") {
-  ldflags = [
+  libs = [
     #"Foundation.framework",  # Already included in //build/config:default_libs.
     "Security.framework",
     "SystemConfiguration.framework",
@@ -58,7 +57,7 @@ config("ios_config") {
 }
 
 config("mac_config") {
-  ldflags = [
+  libs = [
     "Cocoa.framework",
     #"Foundation.framework",  # Already included in //build/config:default_libs.
     #"IOKit.framework",  # Already included in //build/config:default_libs.
@@ -106,24 +105,36 @@ static_library("rtc_base_approved") {
   sources = [
     "checks.cc",
     "checks.h",
+    "event.cc",
+    "event.h",
+    "event_tracer.cc",
+    "event_tracer.h",
     "exp_filter.cc",
     "exp_filter.h",
     "md5.cc",
     "md5.h",
+    "md5digest.cc",
     "md5digest.h",
     "platform_file.cc",
     "platform_file.h",
+    "safe_conversions.h",
+    "safe_conversions_impl.h",
     "stringencode.cc",
     "stringencode.h",
     "stringutils.cc",
     "stringutils.h",
+    "template_util.h",
     "thread_annotations.h",
+    "thread_checker.h",
+    "thread_checker_impl.cc",
+    "thread_checker_impl.h",
     "timeutils.cc",
     "timeutils.h",
+    "trace_event.h",
   ]
 }
 
-static_library("webrtc_base") {
+static_library("rtc_base") {
   cflags = []
   cflags_cc = []
   libs = []
@@ -133,25 +144,28 @@ static_library("webrtc_base") {
 
   configs += [
     "..:common_config",
-    ":webrtc_base_config",
+    ":rtc_base_config",
   ]
 
   public_configs = [
     "..:common_inherited_config",
-    ":webrtc_base_config",
+    ":rtc_base_config",
   ]
 
   defines = [
     "LOGGING=1",
-    "USE_WEBRTC_DEV_BRANCH",
   ]
 
   sources = [
+    "arraysize.h",
     "asyncfile.cc",
     "asyncfile.h",
     "asynchttprequest.cc",
     "asynchttprequest.h",
+    "asyncpacketsocket.cc",
     "asyncpacketsocket.h",
+    "asyncresolverinterface.cc",
+    "asyncresolverinterface.h",
     "asyncsocket.cc",
     "asyncsocket.h",
     "asynctcpsocket.cc",
@@ -163,6 +177,8 @@ static_library("webrtc_base") {
     "base64.cc",
     "base64.h",
     "basicdefs.h",
+    "buffer.cc",
+    "buffer.h",
     "bytebuffer.cc",
     "bytebuffer.h",
     "byteorder.h",
@@ -172,18 +188,19 @@ static_library("webrtc_base") {
     "cpumonitor.h",
     "crc32.cc",
     "crc32.h",
+    "criticalsection.cc",
     "criticalsection.h",
+    "cryptstring.cc",
     "cryptstring.h",
     "diskcache.cc",
     "diskcache.h",
-    "event.cc",
-    "event.h",
     "fileutils.cc",
     "fileutils.h",
     "firewallsocketserver.cc",
     "firewallsocketserver.h",
     "flags.cc",
     "flags.h",
+    "format_macros.h",
     "gunit_prod.h",
     "helpers.cc",
     "helpers.h",
@@ -224,16 +241,16 @@ static_library("webrtc_base") {
     "ratelimiter.h",
     "ratetracker.cc",
     "ratetracker.h",
-    "safe_conversions.h",
-    "safe_conversions_impl.h",
     "scoped_autorelease_pool.h",
     "scoped_autorelease_pool.mm",
     "scoped_ptr.h",
     "sha1.cc",
     "sha1.h",
+    "sha1digest.cc",
     "sha1digest.h",
     "signalthread.cc",
     "signalthread.h",
+    "sigslot.cc",
     "sigslot.h",
     "sigslotrepeater.h",
     "socket.h",
@@ -273,9 +290,6 @@ static_library("webrtc_base") {
     "taskrunner.h",
     "thread.cc",
     "thread.h",
-    "thread_checker.h",
-    "thread_checker_impl.cc",
-    "thread_checker_impl.h",
     "timing.cc",
     "timing.h",
     "urlencode.cc",
@@ -299,6 +313,8 @@ static_library("webrtc_base") {
       "../overrides/webrtc/base/logging.h",
     ]
 
+    deps += [ "..:webrtc_common" ]
+
     if (is_win) {
       sources += [ "../overrides/webrtc/base/win32socketinit.cc" ]
     }
@@ -308,20 +324,18 @@ static_library("webrtc_base") {
       "../../boringssl/src/include",
     ]
 
-    public_configs += [ ":webrtc_base_chromium_config" ]
+    public_configs += [ ":rtc_base_chromium_config" ]
   } else {
     sources += [
       "asyncinvoker.cc",
       "asyncinvoker.h",
       "asyncinvoker-inl.h",
-      "asyncresolverinterface.h",
       "atomicops.h",
       "bandwidthsmoother.cc",
       "bandwidthsmoother.h",
       "basictypes.h",
       "bind.h",
       "bind.h.pump",
-      "buffer.h",
       "callback.h",
       "callback.h.pump",
       "constructormagic.h",
@@ -361,7 +375,6 @@ static_library("webrtc_base") {
       "sharedexclusivelock.h",
       "sslconfig.h",
       "sslroots.h",
-      "stringdigest.h",
       "testclient.cc",
       "testclient.h",
       "transformadapter.cc",
@@ -374,6 +387,8 @@ static_library("webrtc_base") {
       "windowpickerfactory.h",
       "windowpicker.h",
     ]
+
+    deps += [ "..:webrtc_common" ]
 
     if (is_posix) {
       sources += [
@@ -433,18 +448,14 @@ static_library("webrtc_base") {
     }
   }  # !build_with_chromium
 
-  if (is_clang) {
-    # Suppress warnings from the Chrome Clang plugins.
-    # See http://code.google.com/p/webrtc/issues/detail?id=163 for details.
-    configs -= [ "//build/config/clang:find_bad_constructs" ]
-  }
-
-  # TODO(henrike): issue 3307, make webrtc_base build with the Chromium default
+  # TODO(henrike): issue 3307, make rtc_base build with the Chromium default
   # compiler settings.
   configs -= [ "//build/config/compiler:chromium_code" ]
   configs += [ "//build/config/compiler:no_chromium_code" ]
-  cflags += [ "-Wno-uninitialized" ]
-  cflags_cc += [ "-Wno-non-virtual-dtor" ]
+  if (!is_win) {
+    cflags += [ "-Wno-uninitialized" ]
+    cflags_cc += [ "-Wno-non-virtual-dtor" ]
+  }
 
   if (use_openssl) {
     public_configs += [ ":openssl_config" ]
@@ -541,7 +552,7 @@ static_library("webrtc_base") {
 
     all_dependent_configs = [ ":mac_config" ]
 
-    if (cpu_arch == "x86") {
+    if (current_cpu == "x86") {
       all_dependent_configs += [ ":mac_x86_config" ]
     }
   }
@@ -587,7 +598,7 @@ static_library("webrtc_base") {
     defines += [ "_DEBUG" ]
   }
 
-  if (is_ios || (is_mac && cpu_arch != "x86")) {
+  if (is_ios || (is_mac && current_cpu != "x86")) {
     defines += [ "CARBON_DEPRECATED=YES" ]
   }
 

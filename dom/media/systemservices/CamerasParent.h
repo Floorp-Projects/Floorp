@@ -41,11 +41,12 @@ public:
   virtual int FrameSizeChange(unsigned int w, unsigned int h,
                               unsigned int streams) override;
   virtual int DeliverFrame(unsigned char* buffer,
-                           int size,
+                           size_t size,
                            uint32_t time_stamp,
                            int64_t ntp_time,
                            int64_t render_time,
                            void *handle) override;
+  virtual int DeliverI420Frame(const webrtc::I420VideoFrame& webrtc_frame) override;
   virtual bool IsTextureSupported() override { return false; };
 
   friend CamerasParent;
@@ -108,7 +109,7 @@ public:
                           int cap_id,
                           ShmemBuffer buffer,
                           unsigned char* altbuffer,
-                          int size,
+                          size_t size,
                           uint32_t time_stamp,
                           int64_t ntp_time,
                           int64_t render_time);

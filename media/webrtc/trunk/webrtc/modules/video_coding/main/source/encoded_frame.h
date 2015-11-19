@@ -56,7 +56,7 @@ public:
     /**
     *   Get frame length
     */
-    uint32_t Length() const {return _length;}
+    size_t Length() const {return _length;}
     /**
     *   Get frame timestamp (90kHz)
     */
@@ -69,6 +69,10 @@ public:
     *   Get frame type
     */
     webrtc::FrameType FrameType() const {return ConvertFrameType(_frameType);}
+    /**
+    *   Get frame rotation
+    */
+    VideoRotation rotation() const { return _rotation; }
     /**
     *   True if this frame is complete, false otherwise
     */
@@ -116,6 +120,12 @@ protected:
     CodecSpecificInfo             _codecSpecificInfo;
     webrtc::VideoCodecType        _codec;
     RTPFragmentationHeader        _fragmentation;
+    VideoRotation                 _rotation;
+
+    // Video rotation is only set along with the last packet for each frame
+    // (same as marker bit). This |_rotation_set| is only for debugging purpose
+    // to ensure we don't set it twice for a frame.
+    bool                          _rotation_set;
 };
 
 }  // namespace webrtc

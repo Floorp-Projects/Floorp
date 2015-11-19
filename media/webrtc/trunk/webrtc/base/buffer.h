@@ -13,6 +13,7 @@
 
 #include <string.h>
 
+#include "webrtc/base/common.h"
 #include "webrtc/base/scoped_ptr.h"
 
 namespace rtc {
@@ -21,58 +22,54 @@ namespace rtc {
 // Unlike std::string/vector, does not initialize data when expanding capacity.
 class Buffer {
  public:
-  Buffer() {
-    Construct(NULL, 0, 0);
-  }
-  Buffer(const void* data, size_t length) {
-    Construct(data, length, length);
-  }
-  Buffer(const void* data, size_t length, size_t capacity) {
-    Construct(data, length, capacity);
-  }
-  Buffer(const Buffer& buf) {
-    Construct(buf.data(), buf.length(), buf.length());
-  }
+  Buffer();
+  explicit Buffer(size_t size);
+  Buffer(const void* data, size_t size);
+  Buffer(const void* data, size_t size, size_t capacity);
+  Buffer(const Buffer& buf);
+  ~Buffer();
 
   const char* data() const { return data_.get(); }
   char* data() { return data_.get(); }
-  // TODO: should this be size(), like STL?
-  size_t length() const { return length_; }
+  size_t size() const { return size_; }
   size_t capacity() const { return capacity_; }
+
+  // For backwards compatibility. TODO(kwiberg): Remove once Chromium doesn't
+  // need it anymore.
+  size_t length() const { return size(); }
 
   Buffer& operator=(const Buffer& buf) {
     if (&buf != this) {
-      Construct(buf.data(), buf.length(), buf.length());
+      Construct(buf.data(), buf.size(), buf.size());
     }
     return *this;
   }
   bool operator==(const Buffer& buf) const {
-    return (length_ == buf.length() &&
-            memcmp(data_.get(), buf.data(), length_) == 0);
+    return (size_ == buf.size() && memcmp(data_.get(), buf.data(), size_) == 0);
   }
   bool operator!=(const Buffer& buf) const {
     return !operator==(buf);
   }
 
-  void SetData(const void* data, size_t length) {
-    ASSERT(data != NULL || length == 0);
-    SetLength(length);
-    memcpy(data_.get(), data, length);
+  void SetData(const void* data, size_t size) {
+    ASSERT(data != NULL || size == 0);
+    SetSize(size);
+    memcpy(data_.get(), data, size);
   }
-  void AppendData(const void* data, size_t length) {
-    ASSERT(data != NULL || length == 0);
-    size_t old_length = length_;
-    SetLength(length_ + length);
-    memcpy(data_.get() + old_length, data, length);
+  void AppendData(const void* data, size_t size) {
+    ASSERT(data != NULL || size == 0);
+    size_t old_size = size_;
+    SetSize(size_ + size);
+    memcpy(data_.get() + old_size, data, size);
   }
-  void SetLength(size_t length) {
-    SetCapacity(length);
-    length_ = length;
+  void SetSize(size_t size) {
+    SetCapacity(size);
+    size_ = size;
   }
   void SetCapacity(size_t capacity) {
     if (capacity > capacity_) {
       rtc::scoped_ptr<char[]> data(new char[capacity]);
-      memcpy(data.get(), data_.get(), length_);
+      memcpy(data.get(), data_.get(), size_);
       data_.swap(data);
       capacity_ = capacity;
     }
@@ -81,19 +78,19 @@ class Buffer {
   void TransferTo(Buffer* buf) {
     ASSERT(buf != NULL);
     buf->data_.reset(data_.release());
-    buf->length_ = length_;
+    buf->size_ = size_;
     buf->capacity_ = capacity_;
     Construct(NULL, 0, 0);
   }
 
  protected:
-  void Construct(const void* data, size_t length, size_t capacity) {
+  void Construct(const void* data, size_t size, size_t capacity) {
     data_.reset(new char[capacity_ = capacity]);
-    SetData(data, length);
+    SetData(data, size);
   }
 
   scoped_ptr<char[]> data_;
-  size_t length_;
+  size_t size_;
   size_t capacity_;
 };
 

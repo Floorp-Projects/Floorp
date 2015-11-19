@@ -13,7 +13,7 @@
 #include "FFmpegLog.h"
 #include "FFmpegDataDecoder.h"
 #include "prsystem.h"
-#include "FFmpegDecoderModule.h"
+#include "FFmpegRuntimeLinker.h"
 
 namespace mozilla
 {
@@ -89,7 +89,7 @@ FFmpegDataDecoder<LIBAV_VER>::InitDecoder()
 
   // FFmpeg takes this as a suggestion for what format to use for audio samples.
   uint32_t major, minor;
-  FFmpegDecoderModule<LIBAV_VER>::GetVersion(major, minor);
+  FFmpegRuntimeLinker::GetVersion(major, minor);
   // LibAV 0.8 produces rubbish float interlaved samples, request 16 bits audio.
   mCodecContext->request_sample_fmt = major == 53 && minor <= 34 ?
     AV_SAMPLE_FMT_S16 : AV_SAMPLE_FMT_FLT;

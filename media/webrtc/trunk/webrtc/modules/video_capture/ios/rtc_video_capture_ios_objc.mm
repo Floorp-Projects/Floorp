@@ -368,13 +368,14 @@ using namespace webrtc::videocapturemodule;
 
   uint8_t* baseAddress =
       (uint8_t*)CVPixelBufferGetBaseAddressOfPlane(videoFrame, kYPlaneIndex);
-  int yPlaneBytesPerRow =
+  size_t yPlaneBytesPerRow =
       CVPixelBufferGetBytesPerRowOfPlane(videoFrame, kYPlaneIndex);
-  int yPlaneHeight = CVPixelBufferGetHeightOfPlane(videoFrame, kYPlaneIndex);
-  int uvPlaneBytesPerRow =
+  size_t yPlaneHeight = CVPixelBufferGetHeightOfPlane(videoFrame, kYPlaneIndex);
+  size_t uvPlaneBytesPerRow =
       CVPixelBufferGetBytesPerRowOfPlane(videoFrame, kUVPlaneIndex);
-  int uvPlaneHeight = CVPixelBufferGetHeightOfPlane(videoFrame, kUVPlaneIndex);
-  int frameSize =
+  size_t uvPlaneHeight =
+      CVPixelBufferGetHeightOfPlane(videoFrame, kUVPlaneIndex);
+  size_t frameSize =
       yPlaneBytesPerRow * yPlaneHeight + uvPlaneBytesPerRow * uvPlaneHeight;
 
   VideoCaptureCapability tempCaptureCapability;

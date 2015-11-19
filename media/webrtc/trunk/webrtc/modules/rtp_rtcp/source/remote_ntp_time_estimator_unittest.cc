@@ -21,7 +21,7 @@ using ::testing::SetArgPointee;
 
 namespace webrtc {
 
-static const int kTestRtt = 10;
+static const int64_t kTestRtt = 10;
 static const int64_t kLocalClockInitialTimeMs = 123;
 static const int64_t kRemoteClockInitialTimeMs = 345;
 static const uint32_t kTimestampOffset = 567;
@@ -54,14 +54,14 @@ class RemoteNtpTimeEstimatorTest : public ::testing::Test {
     ReceiveRtcpSr(kTestRtt, rtcp_timestamp, ntp_seconds, ntp_fractions);
   }
 
-  void UpdateRtcpTimestamp(uint16_t rtt, uint32_t ntp_secs, uint32_t ntp_frac,
+  void UpdateRtcpTimestamp(int64_t rtt, uint32_t ntp_secs, uint32_t ntp_frac,
                            uint32_t rtp_timestamp, bool expected_result) {
     EXPECT_EQ(expected_result,
               estimator_.UpdateRtcpTimestamp(rtt, ntp_secs, ntp_frac,
                                              rtp_timestamp));
   }
 
-  void ReceiveRtcpSr(uint16_t rtt,
+  void ReceiveRtcpSr(int64_t rtt,
                      uint32_t rtcp_timestamp,
                      uint32_t ntp_seconds,
                      uint32_t ntp_fractions) {

@@ -105,7 +105,7 @@ void
 GeckoTouchDispatcher::NotifyTouch(MultiTouchInput& aTouch, TimeStamp aEventTime)
 {
   if (mCompositorVsyncScheduler) {
-    mCompositorVsyncScheduler->SetNeedsComposite(true);
+    mCompositorVsyncScheduler->SetNeedsComposite();
   }
 
   if (aTouch.mType == MultiTouchInput::MULTITOUCH_MOVE) {

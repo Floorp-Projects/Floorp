@@ -18,10 +18,10 @@
 
 #include "testing/gmock/include/gmock/gmock.h"
 #include "testing/gtest/include/gtest/gtest.h"
+#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/common_audio/resampler/sinc_resampler.h"
 #include "webrtc/common_audio/resampler/sinusoidal_linear_chirp_source.h"
 #include "webrtc/system_wrappers/interface/cpu_features_wrapper.h"
-#include "webrtc/system_wrappers/interface/scoped_ptr.h"
 #include "webrtc/system_wrappers/interface/stringize_macros.h"
 #include "webrtc/system_wrappers/interface/tick_util.h"
 #include "webrtc/test/test_suite.h"
@@ -62,7 +62,7 @@ TEST(SincResamplerTest, ChunkedResample) {
 
   static const int kChunks = 2;
   int max_chunk_size = resampler.ChunkSize() * kChunks;
-  scoped_ptr<float[]> resampled_destination(new float[max_chunk_size]);
+  rtc::scoped_ptr<float[]> resampled_destination(new float[max_chunk_size]);
 
   // Verify requesting ChunkSize() frames causes a single callback.
   EXPECT_CALL(mock_source, Run(_, _))
@@ -81,7 +81,8 @@ TEST(SincResamplerTest, Flush) {
   MockSource mock_source;
   SincResampler resampler(kSampleRateRatio, SincResampler::kDefaultRequestSize,
                           &mock_source);
-  scoped_ptr<float[]> resampled_destination(new float[resampler.ChunkSize()]);
+  rtc::scoped_ptr<float[]> resampled_destination(
+      new float[resampler.ChunkSize()]);
 
   // Fill the resampler with junk data.
   EXPECT_CALL(mock_source, Run(_, _))
@@ -266,7 +267,7 @@ TEST_P(SincResamplerTest, Resample) {
 
   // Force an update to the sample rate ratio to ensure dyanmic sample rate
   // changes are working correctly.
-  scoped_ptr<float[]> kernel(new float[SincResampler::kKernelStorageSize]);
+  rtc::scoped_ptr<float[]> kernel(new float[SincResampler::kKernelStorageSize]);
   memcpy(kernel.get(), resampler.get_kernel_for_testing(),
          SincResampler::kKernelStorageSize);
   resampler.SetRatio(M_PI);
@@ -278,8 +279,8 @@ TEST_P(SincResamplerTest, Resample) {
 
   // TODO(dalecurtis): If we switch to AVX/SSE optimization, we'll need to
   // allocate these on 32-byte boundaries and ensure they're sized % 32 bytes.
-  scoped_ptr<float[]> resampled_destination(new float[output_samples]);
-  scoped_ptr<float[]> pure_destination(new float[output_samples]);
+  rtc::scoped_ptr<float[]> resampled_destination(new float[output_samples]);
+  rtc::scoped_ptr<float[]> pure_destination(new float[output_samples]);
 
   // Generate resampled signal.
   resampler.Resample(output_samples, resampled_destination.get());

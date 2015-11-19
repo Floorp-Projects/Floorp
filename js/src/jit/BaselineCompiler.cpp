@@ -2483,6 +2483,47 @@ BaselineCompiler::emit_JSOP_DELNAME()
 }
 
 bool
+BaselineCompiler::emit_JSOP_GETIMPORT()
+{
+    ModuleEnvironmentObject* env = GetModuleEnvironmentForScript(script);
+    MOZ_ASSERT(env);
+
+    ModuleEnvironmentObject* targetEnv;
+    Shape* shape;
+    MOZ_ALWAYS_TRUE(env->lookupImport(NameToId(script->getName(pc)), &targetEnv, &shape));
+
+    EnsureTrackPropertyTypes(cx, targetEnv, shape->propid());
+
+    frame.syncStack(0);
+
+    uint32_t slot = shape->slot();
+    Register scratch = R0.scratchReg();
+    masm.movePtr(ImmGCPtr(targetEnv), scratch);
+    if (slot < targetEnv->numFixedSlots()) {
+        masm.loadValue(Address(scratch, NativeObject::getFixedSlotOffset(slot)), R0);
+    } else {
+        masm.loadPtr(Address(scratch, NativeObject::offsetOfSlots()), scratch);
+        masm.loadValue(Address(scratch, (slot - targetEnv->numFixedSlots()) * sizeof(Value)), R0);
+    }
+
+    // Imports are initialized by this point except in rare circumstances, so
+    // don't emit a check unless we have to.
+    if (targetEnv->getSlot(shape->slot()).isMagic(JS_UNINITIALIZED_LEXICAL))
+        emitUninitializedLexicalCheck(R0);
+
+    if (ionCompileable_) {
+        // No need to monitor types if we know Ion can't compile this script.
+        ICTypeMonitor_Fallback::Compiler compiler(cx, ICStubCompiler::Engine::Baseline,
+                                                  (ICMonitoredFallbackStub*) nullptr);
+        if (!emitOpIC(compiler.getStub(&stubSpace_)))
+            return false;
+    }
+
+    frame.push(R0);
+    return true;
+}
+
+bool
 BaselineCompiler::emit_JSOP_GETINTRINSIC()
 {
     frame.syncStack(0);

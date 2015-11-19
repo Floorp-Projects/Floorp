@@ -642,9 +642,10 @@ EventDispatcher::Dispatch(nsISupports* aTarget,
     if (NS_SUCCEEDED(rv)) {
       if (aTargets) {
         aTargets->Clear();
-        aTargets->SetCapacity(chain.Length());
-        for (uint32_t i = 0; i < chain.Length(); ++i) {
-          aTargets->AppendElement(chain[i].CurrentTarget()->GetTargetForDOMEvent());
+        uint32_t numTargets = chain.Length();
+        EventTarget** targets = aTargets->AppendElements(numTargets);
+        for (uint32_t i = 0; i < numTargets; ++i) {
+          targets[i] = chain[i].CurrentTarget()->GetTargetForDOMEvent();
         }
       } else {
         // Event target chain is created. Handle the chain.

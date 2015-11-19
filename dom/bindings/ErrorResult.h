@@ -115,6 +115,11 @@ public:
     AssignErrorCode(rv);
   }
 
+  // Duplicate our current state on the given ErrorResult object.  Any existing
+  // errors or messages on the target will be suppressed before cloning.  Our
+  // own error state remains unchanged.
+  void CloneTo(ErrorResult& aRv) const;
+
   // Use SuppressException when you want to suppress any exception that might be
   // on the ErrorResult.  After this call, the ErrorResult will be back a "no
   // exception thrown" state.

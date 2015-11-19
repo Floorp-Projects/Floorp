@@ -60,11 +60,11 @@ class PacketManipulatorTest: public PacketRelatedTest {
 
   void VerifyPacketLoss(int expected_nbr_packets_dropped,
                         int actual_nbr_packets_dropped,
-                        int expected_packet_data_length,
+                        size_t expected_packet_data_length,
                         uint8_t* expected_packet_data,
                         EncodedImage& actual_image) {
     EXPECT_EQ(expected_nbr_packets_dropped, actual_nbr_packets_dropped);
-    EXPECT_EQ(expected_packet_data_length, static_cast<int>(image_._length));
+    EXPECT_EQ(expected_packet_data_length, image_._length);
     EXPECT_EQ(0, memcmp(expected_packet_data, actual_image._buffer,
                         expected_packet_data_length));
   }
@@ -82,7 +82,7 @@ TEST_F(PacketManipulatorTest, DropNone) {
 }
 
 TEST_F(PacketManipulatorTest, UniformDropNoneSmallFrame) {
-  int data_length = 400;  // smaller than the packet size
+  size_t data_length = 400;  // smaller than the packet size
   image_._length = data_length;
   PacketManipulatorImpl manipulator(&packet_reader_, no_drop_config_, false);
   int nbr_packets_dropped = manipulator.ManipulatePackets(&image_);
@@ -120,7 +120,7 @@ TEST_F(PacketManipulatorTest, UniformDropSinglePacket) {
 TEST_F(PacketManipulatorTest, BurstDropNinePackets) {
   // Create a longer packet data structure (10 packets)
   const int kNbrPackets = 10;
-  const int kDataLength = kPacketSizeInBytes * kNbrPackets;
+  const size_t kDataLength = kPacketSizeInBytes * kNbrPackets;
   uint8_t data[kDataLength];
   uint8_t* data_pointer = data;
   // Fill with 0s, 1s and so on to be able to easily verify which were dropped:

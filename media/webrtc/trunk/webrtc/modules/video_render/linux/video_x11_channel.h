@@ -34,7 +34,7 @@ public:
     virtual ~VideoX11Channel();
 
     virtual int32_t RenderFrame(const uint32_t streamId,
-                                I420VideoFrame& videoFrame);
+                                const I420VideoFrame& videoFrame);
 
     int32_t FrameSizeChange(int32_t width, int32_t height,
                             int32_t numberOfStreams);

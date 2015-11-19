@@ -67,6 +67,13 @@ source_set("video_coding") {
   configs += [ "../..:common_config" ]
   public_configs = [ "../..:common_inherited_config" ]
 
+  if (is_win) {
+    cflags = [
+      # TODO(jschuh): Bug 1348: fix this warning.
+      "/wd4267",  # size_t to int truncation.
+    ]
+  }
+
   if (is_clang) {
     # Suppress warnings from Chrome's Clang plugins.
     # See http://code.google.com/p/webrtc/issues/detail?id=163 for details.
@@ -78,6 +85,7 @@ source_set("video_coding") {
     ":webrtc_i420",
     ":webrtc_vp8",
     ":webrtc_vp9",
+    "../..:webrtc_common",
     "../../common_video",
     "../../system_wrappers",
   ]
@@ -85,8 +93,8 @@ source_set("video_coding") {
 
 source_set("video_coding_utility") {
   sources = [
-    "utility/include/frame_dropper.h",
     "utility/frame_dropper.cc",
+    "utility/include/frame_dropper.h",
     "utility/quality_scaler.cc",
     "utility/quality_scaler.h",
   ]
@@ -125,13 +133,18 @@ source_set("webrtc_vp8") {
   sources = [
     "codecs/vp8/default_temporal_layers.cc",
     "codecs/vp8/default_temporal_layers.h",
+    "codecs/vp8/include/vp8.h",
+    "codecs/vp8/include/vp8_common_types.h",
     "codecs/vp8/realtime_temporal_layers.cc",
     "codecs/vp8/reference_picture_selection.cc",
     "codecs/vp8/reference_picture_selection.h",
-    "codecs/vp8/include/vp8.h",
-    "codecs/vp8/include/vp8_common_types.h",
+    "codecs/vp8/screenshare_layers.cc",
+    "codecs/vp8/screenshare_layers.h",
+    "codecs/vp8/simulcast_encoder_adapter.cc",
+    "codecs/vp8/simulcast_encoder_adapter.h",
     "codecs/vp8/temporal_layers.h",
     "codecs/vp8/vp8_factory.cc",
+    "codecs/vp8/vp8_factory.h",
     "codecs/vp8/vp8_impl.cc",
     "codecs/vp8/vp8_impl.h",
   ]
@@ -145,28 +158,36 @@ source_set("webrtc_vp8") {
     configs -= [ "//build/config/clang:find_bad_constructs" ]
   }
 
-  # TODO(kjellander): Remove once libvpx has changed it's libvpx_config to be
-  # in direct_dependent_configs.
-  configs += [ "//third_party/libvpx:libvpx_config" ]
+  if (is_win) {
+    cflags = [
+      # TODO(jschuh): Bug 1348: fix this warning.
+      "/wd4267",  # size_t to int truncation.
+    ]
+  }
 
   deps = [
     ":video_coding_utility",
+    "../..:webrtc_common",
     "../../common_video",
     "../../system_wrappers",
   ]
   if (rtc_build_libvpx) {
     deps += [
-      "//third_party/libvpx",
+      rtc_libvpx_dir,
     ]
   }
 }
 
 source_set("webrtc_vp9") {
-  sources = [
-    "codecs/vp9/include/vp9.h",
-    "codecs/vp9/vp9_impl.cc",
-    "codecs/vp9/vp9_impl.h",
-  ]
+  if (rtc_build_vp9) {
+    sources = [
+      "codecs/vp9/include/vp9.h",
+      "codecs/vp9/vp9_impl.cc",
+      "codecs/vp9/vp9_impl.h",
+    ]
+  } else {
+    sources = [ "codecs/vp9/vp9_dummy_impl.cc" ]
+  }
 
   configs += [ "../..:common_config" ]
   public_configs = [ "../..:common_inherited_config" ]
@@ -177,10 +198,6 @@ source_set("webrtc_vp9") {
     configs -= [ "//build/config/clang:find_bad_constructs" ]
   }
 
-  # TODO(kjellander): Remove once libvpx has changed it's libvpx_config to be
-  # in direct_dependent_configs.
-  configs += [ "//third_party/libvpx:libvpx_config" ]
-
   deps = [
     ":video_coding_utility",
     "../../common_video",
@@ -188,7 +205,7 @@ source_set("webrtc_vp9") {
   ]
   if (rtc_build_libvpx) {
     deps += [
-      "//third_party/libvpx",
+      rtc_libvpx_dir,
     ]
   }
 }

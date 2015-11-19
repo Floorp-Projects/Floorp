@@ -9,12 +9,15 @@
  */
 
 #include "webrtc/base/win32socketserver.h"
+
+#include <algorithm>
+#include <ws2tcpip.h>  // NOLINT
+
 #include "webrtc/base/byteorder.h"
 #include "webrtc/base/common.h"
 #include "webrtc/base/logging.h"
-#include "webrtc/base/winping.h"
 #include "webrtc/base/win32window.h"
-#include <ws2tcpip.h>  // NOLINT
+#include "webrtc/base/winping.h"
 
 namespace rtc {
 
@@ -821,7 +824,8 @@ void Win32SocketServer::Pump() {
   // We use max(1, ...) to make sure we try to dispatch at least once, since
   // this allow us to process "sent" messages, not included in the size() count.
   Message msg;
-  for (size_t max_messages_to_process = _max<size_t>(1, message_queue_->size());
+  for (size_t max_messages_to_process =
+           std::max<size_t>(1, message_queue_->size());
        max_messages_to_process > 0 && message_queue_->Get(&msg, 0, false);
        --max_messages_to_process) {
     message_queue_->Dispatch(&msg);

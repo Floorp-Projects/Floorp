@@ -374,6 +374,7 @@ PKG_STAGE = $(DIST)/test-stage
 stage-all: \
   stage-config \
   stage-mach \
+  stage-extensions \
   stage-mochitest \
   stage-xpcshell \
   stage-jstests \
@@ -549,6 +550,14 @@ stage-marionette: make-stage-dir
 
 stage-instrumentation-tests: make-stage-dir
 	$(MAKE) -C $(DEPTH)/testing/instrumentation stage-package
+
+TEST_EXTENSIONS := \
+    specialpowers@mozilla.org.xpi \
+	$(NULL)
+
+stage-extensions: make-stage-dir
+	$(NSINSTALL) -D $(PKG_STAGE)/extensions/
+	@$(foreach ext,$(TEST_EXTENSIONS), cp -RL $(DIST)/xpi-stage/$(ext) $(PKG_STAGE)/extensions;)
 
 .PHONY: \
   mochitest \

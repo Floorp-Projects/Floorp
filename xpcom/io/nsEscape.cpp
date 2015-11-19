@@ -548,28 +548,26 @@ NS_UnescapeURL(const char* aStr, int32_t aLen, uint32_t aFlags,
   bool ignoreAscii = !!(aFlags & esc_OnlyNonASCII);
   bool writing = !!(aFlags & esc_AlwaysCopy);
   bool skipControl = !!(aFlags & esc_SkipControl);
+  bool skipInvalidHostChar = !!(aFlags & esc_Host);
 
   const char* last = aStr;
   const char* p = aStr;
 
   for (int i = 0; i < aLen; ++i, ++p) {
-    //printf("%c [i=%d of aLen=%d]\n", *p, i, aLen);
     if (*p == HEX_ESCAPE && i < aLen - 2) {
-      unsigned char* p1 = (unsigned char*)p + 1;
-      unsigned char* p2 = (unsigned char*)p + 2;
-      if (ISHEX(*p1) && ISHEX(*p2) &&
-          ((*p1 < '8' && !ignoreAscii) || (*p1 >= '8' && !ignoreNonAscii)) &&
+      unsigned char c1 = *((unsigned char*)p + 1);
+      unsigned char c2 = *((unsigned char*)p + 2);
+      unsigned char u = (UNHEX(c1) << 4) + UNHEX(c2);
+      if (ISHEX(c1) && ISHEX(c2) &&
+          (!skipInvalidHostChar || dontNeedEscape(u, aFlags) || c1 >= '8') &&
+          ((c1 < '8' && !ignoreAscii) || (c1 >= '8' && !ignoreNonAscii)) &&
           !(skipControl &&
-            (*p1 < '2' || (*p1 == '7' && (*p2 == 'f' || *p2 == 'F'))))) {
-        //printf("- p1=%c p2=%c\n", *p1, *p2);
+            (c1 < '2' || (c1 == '7' && (c2 == 'f' || c2 == 'F'))))) {
         writing = true;
         if (p > last) {
-          //printf("- p=%p, last=%p\n", p, last);
           aResult.Append(last, p - last);
           last = p;
         }
-        char u = (UNHEX(*p1) << 4) + UNHEX(*p2);
-        //printf("- u=%c\n", u);
         aResult.Append(u);
         i += 2;
         p += 2;

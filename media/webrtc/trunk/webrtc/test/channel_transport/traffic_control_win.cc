@@ -20,7 +20,7 @@ namespace test {
 TrafficControlWindows* TrafficControlWindows::instance = NULL;
 uint32_t TrafficControlWindows::refCounter = 0;
 
-TrafficControlWindows::TrafficControlWindows(const int32_t id) : _id(id)
+TrafficControlWindows::TrafficControlWindows(const int32_t id)
 {
 }
 
@@ -154,21 +154,16 @@ void TrafficControlWindows::Release(TrafficControlWindows* gtc)
         return;
     }
 
-    WEBRTC_TRACE(kTraceDebug, kTraceTransport, gtc->_id,
+    WEBRTC_TRACE(kTraceDebug, kTraceTransport, -1,
                  "TrafficControlWindows - Releasing object");
     refCounter--;
     if ((0 == refCounter) && instance)
     {
-        WEBRTC_TRACE(kTraceMemory, kTraceTransport, gtc->_id,
+        WEBRTC_TRACE(kTraceMemory, kTraceTransport, -1,
                      "TrafficControlWindows - Deleting object");
         delete instance;
         instance = NULL;
     }
-}
-int32_t TrafficControlWindows::ChangeUniqueId(const int32_t id)
-{
-    _id = id;
-    return 0;
 }
 
 ULONG TrafficControlWindows::TcRegisterClient(

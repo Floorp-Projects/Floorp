@@ -213,10 +213,9 @@ SpecialPowers.prototype.nestedFrameSetup = function() {
           });
       });
 
-      let specialPowersBase = "chrome://specialpowers/content/";
-      mm.loadFrameScript(specialPowersBase + "MozillaLogger.js", false);
-      mm.loadFrameScript(specialPowersBase + "specialpowersAPI.js", false);
-      mm.loadFrameScript(specialPowersBase + "specialpowers.js", false);
+      mm.loadFrameScript("chrome://specialpowers/content/MozillaLogger.js", false);
+      mm.loadFrameScript("chrome://specialpowers/content/specialpowersAPI.js", false);
+      mm.loadFrameScript("chrome://specialpowers/content/specialpowers.js", false);
 
       let frameScript = "SpecialPowers.prototype.IsInNestedFrame=true;";
       mm.loadFrameScript("data:," + frameScript, false);

@@ -16,6 +16,8 @@
 #include "nsThreadUtils.h"
 #include "nsXPCOM.h"
 
+#include "webrtc/common_video/libyuv/include/webrtc_libyuv.h"
+
 #undef LOG
 #undef LOG_ENABLED
 mozilla::LazyLogModule gCamerasParentLog("CamerasParent");
@@ -90,7 +92,7 @@ public:
                        int cap_id,
                        ShmemBuffer buffer,
                        unsigned char* altbuffer,
-                       int size,
+                       size_t size,
                        uint32_t time_stamp,
                        int64_t ntp_time,
                        int64_t render_time)
@@ -136,7 +138,7 @@ private:
   int mCapId;
   ShmemBuffer mBuffer;
   mozilla::UniquePtr<unsigned char[]> mAlternateBuffer;
-  int mSize;
+  size_t mSize;
   uint32_t mTimeStamp;
   int64_t mNtpTime;
   int64_t mRenderTime;
@@ -232,7 +234,7 @@ CamerasParent::DeliverFrameOverIPC(CaptureEngine cap_engine,
                                    int cap_id,
                                    ShmemBuffer buffer,
                                    unsigned char* altbuffer,
-                                   int size,
+                                   size_t size,
                                    uint32_t time_stamp,
                                    int64_t ntp_time,
                                    int64_t render_time)
@@ -281,7 +283,7 @@ CamerasParent::GetBuffer(size_t aSize)
 
 int
 CallbackHelper::DeliverFrame(unsigned char* buffer,
-                             int size,
+                             size_t size,
                              uint32_t time_stamp,
                              int64_t ntp_time,
                              int64_t render_time,
@@ -309,6 +311,17 @@ CallbackHelper::DeliverFrame(unsigned char* buffer,
   MOZ_ASSERT(thread != nullptr);
   thread->Dispatch(runnable, NS_DISPATCH_NORMAL);
   return 0;
+}
+// XXX!!! FIX THIS -- we should move to pure DeliverI420Frame
+int
+CallbackHelper::DeliverI420Frame(const webrtc::I420VideoFrame& webrtc_frame)
+{
+  return DeliverFrame(const_cast<uint8_t*>(webrtc_frame.buffer(webrtc::kYPlane)),
+                      CalcBufferSize(webrtc::kI420, webrtc_frame.width(), webrtc_frame.height()),
+                      webrtc_frame.timestamp(),
+                      webrtc_frame.ntp_time_ms(),
+                      webrtc_frame.render_time_ms(),
+                      (void*) webrtc_frame.native_handle());
 }
 
 bool

@@ -722,10 +722,6 @@ private:
   static bool IsWMFEnabled();
 #endif
 
-#ifdef MOZ_APPLEMEDIA
-  static bool IsAppleMP3Enabled();
-#endif
-
   // Return statistics. This is used for progress events and other things.
   // This can be called from any thread. It's only a snapshot of the
   // current state, since other threads might be changing the state

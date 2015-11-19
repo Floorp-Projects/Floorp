@@ -38,8 +38,7 @@ namespace webrtc {
 #define MAX_FILE_NAME_LENGTH_BYTE 500
 #define CHECK_THREAD_NULLITY(myThread, S)                                      \
   if(myThread != NULL) {                                                       \
-    unsigned int i;                                                            \
-    (myThread)->Start(i);                                                      \
+    (myThread)->Start();                                                       \
   } else {                                                                     \
     ADD_FAILURE() << S;                                                        \
   }
@@ -411,33 +410,11 @@ bool APITest::PushAudioRunB() {
 
 bool APITest::ProcessRunA() {
   _processEventA->Wait(100);
-  if (_acmA->Process() < 0) {
-    // do not print error message if there is no encoder
-    bool thereIsEncoder;
-    {
-      ReadLockScoped rl(_apiTestRWLock);
-      thereIsEncoder = _thereIsEncoderA;
-    }
-
-    if (thereIsEncoder) {
-      fprintf(stderr, "\n>>>>>      Process Failed at A     <<<<<\n");
-    }
-  }
   return true;
 }
 
 bool APITest::ProcessRunB() {
   _processEventB->Wait(100);
-  if (_acmB->Process() < 0) {
-    bool thereIsEncoder;
-    {
-      ReadLockScoped rl(_apiTestRWLock);
-      thereIsEncoder = _thereIsEncoderB;
-    }
-    if (thereIsEncoder) {
-      fprintf(stderr, "\n>>>>>      Process Failed at B     <<<<<\n");
-    }
-  }
   return true;
 }
 
@@ -554,39 +531,37 @@ void APITest::Perform() {
   //--- THREADS
   // A
   // PUSH
-  ThreadWrapper* myPushAudioThreadA = ThreadWrapper::CreateThread(
-      PushAudioThreadA, this, kNormalPriority, "PushAudioThreadA");
+  rtc::scoped_ptr<ThreadWrapper> myPushAudioThreadA =
+      ThreadWrapper::CreateThread(PushAudioThreadA, this, "PushAudioThreadA");
   CHECK_THREAD_NULLITY(myPushAudioThreadA, "Unable to start A::PUSH thread");
   // PULL
-  ThreadWrapper* myPullAudioThreadA = ThreadWrapper::CreateThread(
-      PullAudioThreadA, this, kNormalPriority, "PullAudioThreadA");
+  rtc::scoped_ptr<ThreadWrapper> myPullAudioThreadA =
+      ThreadWrapper::CreateThread(PullAudioThreadA, this, "PullAudioThreadA");
   CHECK_THREAD_NULLITY(myPullAudioThreadA, "Unable to start A::PULL thread");
   // Process
-  ThreadWrapper* myProcessThreadA = ThreadWrapper::CreateThread(
-      ProcessThreadA, this, kNormalPriority, "ProcessThreadA");
+  rtc::scoped_ptr<ThreadWrapper> myProcessThreadA = ThreadWrapper::CreateThread(
+      ProcessThreadA, this, "ProcessThreadA");
   CHECK_THREAD_NULLITY(myProcessThreadA, "Unable to start A::Process thread");
   // API
-  ThreadWrapper* myAPIThreadA = ThreadWrapper::CreateThread(APIThreadA, this,
-                                                            kNormalPriority,
-                                                            "APIThreadA");
+  rtc::scoped_ptr<ThreadWrapper> myAPIThreadA = ThreadWrapper::CreateThread(
+      APIThreadA, this, "APIThreadA");
   CHECK_THREAD_NULLITY(myAPIThreadA, "Unable to start A::API thread");
   // B
   // PUSH
-  ThreadWrapper* myPushAudioThreadB = ThreadWrapper::CreateThread(
-      PushAudioThreadB, this, kNormalPriority, "PushAudioThreadB");
+  rtc::scoped_ptr<ThreadWrapper> myPushAudioThreadB =
+      ThreadWrapper::CreateThread(PushAudioThreadB, this, "PushAudioThreadB");
   CHECK_THREAD_NULLITY(myPushAudioThreadB, "Unable to start B::PUSH thread");
   // PULL
-  ThreadWrapper* myPullAudioThreadB = ThreadWrapper::CreateThread(
-      PullAudioThreadB, this, kNormalPriority, "PullAudioThreadB");
+  rtc::scoped_ptr<ThreadWrapper> myPullAudioThreadB =
+      ThreadWrapper::CreateThread(PullAudioThreadB, this, "PullAudioThreadB");
   CHECK_THREAD_NULLITY(myPullAudioThreadB, "Unable to start B::PULL thread");
   // Process
-  ThreadWrapper* myProcessThreadB = ThreadWrapper::CreateThread(
-      ProcessThreadB, this, kNormalPriority, "ProcessThreadB");
+  rtc::scoped_ptr<ThreadWrapper> myProcessThreadB = ThreadWrapper::CreateThread(
+      ProcessThreadB, this, "ProcessThreadB");
   CHECK_THREAD_NULLITY(myProcessThreadB, "Unable to start B::Process thread");
   // API
-  ThreadWrapper* myAPIThreadB = ThreadWrapper::CreateThread(APIThreadB, this,
-                                                            kNormalPriority,
-                                                            "APIThreadB");
+  rtc::scoped_ptr<ThreadWrapper> myAPIThreadB = ThreadWrapper::CreateThread(
+      APIThreadB, this, "APIThreadB");
   CHECK_THREAD_NULLITY(myAPIThreadB, "Unable to start B::API thread");
 
   //_apiEventA->StartTimer(true, 5000);
@@ -626,20 +601,10 @@ void APITest::Perform() {
   myProcessThreadA->Stop();
   myAPIThreadA->Stop();
 
-  delete myPushAudioThreadA;
-  delete myPullAudioThreadA;
-  delete myProcessThreadA;
-  delete myAPIThreadA;
-
   myPushAudioThreadB->Stop();
   myPullAudioThreadB->Stop();
   myProcessThreadB->Stop();
   myAPIThreadB->Stop();
-
-  delete myPushAudioThreadB;
-  delete myPullAudioThreadB;
-  delete myProcessThreadB;
-  delete myAPIThreadB;
 }
 
 void APITest::CheckVADStatus(char side) {
@@ -785,8 +750,8 @@ void APITest::TestDelay(char side) {
 
   *myMinDelay = (rand() % 1000) + 1;
 
-  ACMNetworkStatistics networkStat;
-  CHECK_ERROR_MT(myACM->NetworkStatistics(&networkStat));
+  NetworkStatistics networkStat;
+  CHECK_ERROR_MT(myACM->GetNetworkStatistics(&networkStat));
 
   if (!_randomTest) {
     fprintf(stdout, "\n\nJitter Statistics at Side %c\n", side);
@@ -803,10 +768,14 @@ void APITest::TestDelay(char side) {
             networkStat.currentDiscardRate);
     fprintf(stdout, "expand rate............. %d\n",
             networkStat.currentExpandRate);
+    fprintf(stdout, "speech expand rate...... %d\n",
+            networkStat.currentSpeechExpandRate);
     fprintf(stdout, "Preemptive rate......... %d\n",
             networkStat.currentPreemptiveRate);
     fprintf(stdout, "Accelerate rate......... %d\n",
             networkStat.currentAccelerateRate);
+    fprintf(stdout, "Secondary decoded rate.. %d\n",
+            networkStat.currentSecondaryDecodedRate);
     fprintf(stdout, "Clock-drift............. %d\n", networkStat.clockDriftPPM);
     fprintf(stdout, "Mean waiting time....... %d\n",
             networkStat.meanWaitingTimeMs);
@@ -1175,9 +1144,6 @@ void APITest::ChangeCodec(char side) {
         WriteLockScoped wl(_apiTestRWLock);
         *thereIsEncoder = false;
       }
-      CHECK_ERROR_MT(myACM->InitializeSender());
-      Wait(1000);
-
       // After Initialization CN is lost, re-register them
       if (AudioCodingModule::Codec("CN", &myCodec, 8000, 1) >= 0) {
         CHECK_ERROR_MT(myACM->RegisterSendCodec(myCodec));

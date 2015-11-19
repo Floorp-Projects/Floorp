@@ -11,9 +11,9 @@
 #ifndef WEBRTC_MODULES_RTP_RTCP_INTERFACE_RTP_PAYLOAD_REGISTRY_H_
 #define WEBRTC_MODULES_RTP_RTCP_INTERFACE_RTP_PAYLOAD_REGISTRY_H_
 
+#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/modules/rtp_rtcp/source/rtp_receiver_strategy.h"
 #include "webrtc/modules/rtp_rtcp/source/rtp_utility.h"
-#include "webrtc/system_wrappers/interface/scoped_ptr.h"
 
 namespace webrtc {
 
@@ -77,13 +77,15 @@ class RTPPayloadRegistry {
 
   void SetRtxSsrc(uint32_t ssrc);
 
+  bool GetRtxSsrc(uint32_t* ssrc) const;
+
   void SetRtxPayloadType(int payload_type);
 
   bool IsRtx(const RTPHeader& header) const;
 
   bool RestoreOriginalPacket(uint8_t** restored_packet,
                              const uint8_t* packet,
-                             int* packet_length,
+                             size_t* packet_length,
                              uint32_t original_ssrc,
                              const RTPHeader& header) const;
 
@@ -147,9 +149,9 @@ class RTPPayloadRegistry {
 
   bool IsRtxInternal(const RTPHeader& header) const;
 
-  scoped_ptr<CriticalSectionWrapper> crit_sect_;
+  rtc::scoped_ptr<CriticalSectionWrapper> crit_sect_;
   RtpUtility::PayloadTypeMap payload_type_map_;
-  scoped_ptr<RTPPayloadStrategy> rtp_payload_strategy_;
+  rtc::scoped_ptr<RTPPayloadStrategy> rtp_payload_strategy_;
   int8_t  red_payload_type_;
   int8_t ulpfec_payload_type_;
   int8_t incoming_payload_type_;

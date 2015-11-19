@@ -147,6 +147,8 @@ class WEBRTC_DLLEXPORT ViECodec {
   virtual int GetReceiveSideDelay(const int video_channel,
                                   int* delay_ms) const = 0;
 
+  // Current target bitrate for this channel.
+  virtual uint32_t GetLastObservedBitrateBps(int video_channel) const = 0;
   // Gets the bitrate targeted by the video codec rate control in kbit/s.
   virtual int GetCodecTargetBitrate(const int video_channel,
                                     unsigned int* bitrate) const = 0;

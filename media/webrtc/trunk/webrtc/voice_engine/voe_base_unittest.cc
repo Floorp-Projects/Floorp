@@ -11,9 +11,9 @@
 #include "webrtc/voice_engine/include/voe_base.h"
 
 #include "testing/gtest/include/gtest/gtest.h"
+#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/modules/audio_device/include/fake_audio_device.h"
 #include "webrtc/modules/audio_processing/include/audio_processing.h"
-#include "webrtc/system_wrappers/interface/scoped_ptr.h"
 
 namespace webrtc {
 
@@ -32,11 +32,11 @@ class VoEBaseTest : public ::testing::Test {
 
   VoiceEngine* voe_;
   VoEBase* base_;
-  scoped_ptr<FakeAudioDeviceModule> adm_;
+  rtc::scoped_ptr<FakeAudioDeviceModule> adm_;
 };
 
 TEST_F(VoEBaseTest, AcceptsAudioProcessingPtr) {
-  AudioProcessing* audioproc = AudioProcessing::Create(0);
+  AudioProcessing* audioproc = AudioProcessing::Create();
   EXPECT_EQ(0, base_->Init(adm_.get(), audioproc));
   EXPECT_EQ(audioproc, base_->audio_processing());
 }

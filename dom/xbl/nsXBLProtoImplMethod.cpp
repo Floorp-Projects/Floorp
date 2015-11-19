@@ -50,8 +50,6 @@ nsXBLProtoImplMethod::AppendBodyText(const nsAString& aText)
   nsXBLUncompiledMethod* uncompiledMethod = GetUncompiledMethod();
   if (!uncompiledMethod) {
     uncompiledMethod = new nsXBLUncompiledMethod();
-    if (!uncompiledMethod)
-      return;
     SetUncompiledMethod(uncompiledMethod);
   }
 
@@ -72,8 +70,6 @@ nsXBLProtoImplMethod::AddParameter(const nsAString& aText)
   nsXBLUncompiledMethod* uncompiledMethod = GetUncompiledMethod();
   if (!uncompiledMethod) {
     uncompiledMethod = new nsXBLUncompiledMethod();
-    if (!uncompiledMethod)
-      return;
     SetUncompiledMethod(uncompiledMethod);
   }
 
@@ -89,8 +85,6 @@ nsXBLProtoImplMethod::SetLineNumber(uint32_t aLineNumber)
   nsXBLUncompiledMethod* uncompiledMethod = GetUncompiledMethod();
   if (!uncompiledMethod) {
     uncompiledMethod = new nsXBLUncompiledMethod();
-    if (!uncompiledMethod)
-      return;
     SetUncompiledMethod(uncompiledMethod);
   }
 
@@ -168,8 +162,6 @@ nsXBLProtoImplMethod::CompileMember(AutoJSAPI& jsapi, const nsString& aClassStr,
   char** args = nullptr;
   if (paramCount > 0) {
     args = new char*[paramCount];
-    if (!args)
-      return NS_ERROR_OUT_OF_MEMORY;
 
     // Add our parameters to our args array.
     int32_t argPos = 0;

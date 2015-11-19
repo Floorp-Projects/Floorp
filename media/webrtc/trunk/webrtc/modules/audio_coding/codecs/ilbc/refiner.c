@@ -101,7 +101,7 @@ void WebRtcIlbcfix_Refiner(
 
   /* make vector can be upsampled without ever running outside
      bounds */
-  *updStartPos = (int16_t)WEBRTC_SPL_MUL_16_16(searchSegStartPos,4) + tloc + 4;
+  *updStartPos = (int16_t)(searchSegStartPos * 4) + tloc + 4;
 
   tloc2 = (tloc + 3) >> 2;
 
@@ -127,7 +127,7 @@ void WebRtcIlbcfix_Refiner(
     }
   }
   /* Calculate which of the 4 fractions to use */
-  fraction=(int16_t)WEBRTC_SPL_MUL_16_16(tloc2,ENH_UPS0)-tloc;
+  fraction = (int16_t)(tloc2 * ENH_UPS0) - tloc;
 
   /* compute the segment (this is actually a convolution) */
 

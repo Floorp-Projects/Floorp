@@ -81,7 +81,7 @@ int BitrateProber::TimeUntilNextProbe(int64_t now_ms) {
   }
   if (probe_bitrates_.empty()) {
     // No probe started, or waiting for next probe.
-    return std::numeric_limits<int>::max();
+    return -1;
   }
   int64_t elapsed_time_ms = now_ms - time_last_send_ms_;
   // We will send the first probe packet immediately if no packet has been

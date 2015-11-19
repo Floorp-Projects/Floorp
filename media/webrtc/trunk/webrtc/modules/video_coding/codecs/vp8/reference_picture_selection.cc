@@ -78,7 +78,8 @@ int ReferencePictureSelection::EncodeFlags(int picture_id, bool send_refresh,
   // enough for an RPSI to arrive after the decoder decoded the reference frame.
   // Ideally that should happen after one round-trip time.
   // Add a margin defined by |kRttConfidence|.
-  uint32_t update_interval = kRttConfidence * rtt_;
+  int64_t update_interval = static_cast<int64_t>(kRttConfidence * rtt_);
+  const int64_t kMinUpdateInterval = 90 * 10;  // Timestamp frequency
   if (update_interval < kMinUpdateInterval)
     update_interval = kMinUpdateInterval;
   // Don't send reference frame updates until we have an established reference.
@@ -114,13 +115,13 @@ void ReferencePictureSelection::EncodedKeyFrame(int picture_id) {
   received_ack_ = false;
 }
 
-void ReferencePictureSelection::SetRtt(int rtt) {
+void ReferencePictureSelection::SetRtt(int64_t rtt) {
   // Convert from milliseconds to timestamp frequency.
   rtt_ = 90 * rtt;
 }
 
-uint32_t ReferencePictureSelection::TimestampDiff(uint32_t new_ts,
-                                                  uint32_t old_ts) {
+int64_t ReferencePictureSelection::TimestampDiff(uint32_t new_ts,
+                                                 uint32_t old_ts) {
   if (old_ts > new_ts) {
     // Assuming this is a wrap, doing a compensated subtraction.
     return (new_ts + (static_cast<int64_t>(1) << 32)) - old_ts;

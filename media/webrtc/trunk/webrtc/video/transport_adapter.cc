@@ -18,24 +18,24 @@ TransportAdapter::TransportAdapter(newapi::Transport* transport)
 
 int TransportAdapter::SendPacket(int /*channel*/,
                                  const void* packet,
-                                 int length) {
+                                 size_t length) {
   if (enabled_.Value() == 0)
     return false;
 
   bool success = transport_->SendRtp(static_cast<const uint8_t*>(packet),
-                                     static_cast<size_t>(length));
-  return success ? length : -1;
+                                     length);
+  return success ? static_cast<int>(length) : -1;
 }
 
 int TransportAdapter::SendRTCPPacket(int /*channel*/,
                                      const void* packet,
-                                     int length) {
+                                     size_t length) {
   if (enabled_.Value() == 0)
     return false;
 
   bool success = transport_->SendRtcp(static_cast<const uint8_t*>(packet),
-                                      static_cast<size_t>(length));
-  return success ? length : -1;
+                                      length);
+  return success ? static_cast<int>(length) : -1;
 }
 
 void TransportAdapter::Enable() {

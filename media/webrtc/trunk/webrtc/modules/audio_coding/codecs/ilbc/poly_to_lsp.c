@@ -89,14 +89,14 @@ void WebRtcIlbcfix_Poly2Lsp(
     xlow = WebRtcIlbcfix_kCosGrid[j];
     ylow = WebRtcIlbcfix_Chebyshev(xlow, f[fi_select]);
 
-    if (WEBRTC_SPL_MUL_16_16(ylow, yhigh) <= 0) {
+    if (ylow * yhigh <= 0) {
       /* Run 4 times to reduce the interval */
       for (i = 0; i < 4; i++) {
         /* xmid =(xlow + xhigh)/2 */
         xmid = (xlow >> 1) + (xhigh >> 1);
         ymid = WebRtcIlbcfix_Chebyshev(xmid, f[fi_select]);
 
-        if (WEBRTC_SPL_MUL_16_16(ylow, ymid) <= 0) {
+        if (ylow * ymid <= 0) {
           yhigh = ymid;
           xhigh = xmid;
         } else {
@@ -122,7 +122,7 @@ void WebRtcIlbcfix_Poly2Lsp(
         y <<= shifts;
         y = (int16_t)WebRtcSpl_DivW32W16(536838144, y); /* 1/(yhigh-ylow) */
 
-        tmpW32 = WEBRTC_SPL_MUL_16_16_RSFT(x, y, (19-shifts));
+        tmpW32 = (x * y) >> (19 - shifts);
 
         /* y=(xhigh-xlow)/(yhigh-ylow) */
         y = (int16_t)(tmpW32&0xFFFF);
@@ -131,7 +131,7 @@ void WebRtcIlbcfix_Poly2Lsp(
           y = -y;
         }
         /* tmpW32 = ylow*(xhigh-xlow)/(yhigh-ylow) */
-        tmpW32 = WEBRTC_SPL_MUL_16_16_RSFT(ylow, y, 10);
+        tmpW32 = (ylow * y) >> 10;
         xint = xlow-(int16_t)(tmpW32&0xFFFF);
       }
 

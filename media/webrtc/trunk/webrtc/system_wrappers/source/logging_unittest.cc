@@ -11,9 +11,9 @@
 #include "webrtc/system_wrappers/interface/logging.h"
 
 #include "testing/gtest/include/gtest/gtest.h"
+#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/system_wrappers/interface/condition_variable_wrapper.h"
 #include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
-#include "webrtc/system_wrappers/interface/scoped_ptr.h"
 #include "webrtc/system_wrappers/interface/sleep.h"
 #include "webrtc/system_wrappers/interface/trace.h"
 
@@ -55,8 +55,8 @@ class LoggingTest : public ::testing::Test, public TraceCallback {
     ASSERT_EQ(kTraceNone, level_) << "Print() was not called";
   }
 
-  scoped_ptr<CriticalSectionWrapper> crit_;
-  scoped_ptr<ConditionVariableWrapper> cv_;
+  rtc::scoped_ptr<CriticalSectionWrapper> crit_;
+  rtc::scoped_ptr<ConditionVariableWrapper> cv_;
   TraceLevel level_ GUARDED_BY(crit_);
   std::ostringstream expected_log_ GUARDED_BY(crit_);
 };

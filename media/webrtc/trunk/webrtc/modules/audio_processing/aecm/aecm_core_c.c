@@ -14,10 +14,10 @@
 #include <stddef.h>
 #include <stdlib.h>
 
+#include "webrtc/common_audio/ring_buffer.h"
 #include "webrtc/common_audio/signal_processing/include/real_fft.h"
 #include "webrtc/modules/audio_processing/aecm/include/echo_control_mobile.h"
 #include "webrtc/modules/audio_processing/utility/delay_estimator_wrapper.h"
-#include "webrtc/modules/audio_processing/utility/ring_buffer.h"
 #include "webrtc/system_wrappers/interface/compile_assert_c.h"
 #include "webrtc/system_wrappers/interface/cpu_features_wrapper.h"
 #include "webrtc/typedefs.h"
@@ -57,30 +57,27 @@ static const uint16_t kBeta3 = 18927;
 static const int16_t kNoiseEstQDomain = 15;
 static const int16_t kNoiseEstIncCount = 5;
 
-static void ComfortNoise(AecmCore_t* aecm,
+static void ComfortNoise(AecmCore* aecm,
                          const uint16_t* dfa,
-                         complex16_t* out,
+                         ComplexInt16* out,
                          const int16_t* lambda);
 
-static void WindowAndFFT(AecmCore_t* aecm,
-                          int16_t* fft,
-                          const int16_t* time_signal,
-                          complex16_t* freq_signal,
-                          int time_signal_scaling) {
+static void WindowAndFFT(AecmCore* aecm,
+                         int16_t* fft,
+                         const int16_t* time_signal,
+                         ComplexInt16* freq_signal,
+                         int time_signal_scaling) {
   int i = 0;
 
   // FFT of signal
   for (i = 0; i < PART_LEN; i++) {
     // Window time domain signal and insert into real part of
     // transformation array |fft|
-    fft[i] = (int16_t)WEBRTC_SPL_MUL_16_16_RSFT(
-        (time_signal[i] << time_signal_scaling),
-        WebRtcAecm_kSqrtHanning[i],
-        14);
-    fft[PART_LEN + i] = (int16_t)WEBRTC_SPL_MUL_16_16_RSFT(
-        (time_signal[i + PART_LEN] << time_signal_scaling),
-        WebRtcAecm_kSqrtHanning[PART_LEN - i],
-        14);
+    int16_t scaled_time_signal = time_signal[i] << time_signal_scaling;
+    fft[i] = (int16_t)((scaled_time_signal * WebRtcAecm_kSqrtHanning[i]) >> 14);
+    scaled_time_signal = time_signal[i + PART_LEN] << time_signal_scaling;
+    fft[PART_LEN + i] = (int16_t)((
+        scaled_time_signal * WebRtcAecm_kSqrtHanning[PART_LEN - i]) >> 14);
   }
 
   // Do forward FFT, then take only the first PART_LEN complex samples,
@@ -91,12 +88,11 @@ static void WindowAndFFT(AecmCore_t* aecm,
   }
 }
 
-static void InverseFFTAndWindow(AecmCore_t* aecm,
+static void InverseFFTAndWindow(AecmCore* aecm,
                                 int16_t* fft,
-                                complex16_t* efw,
+                                ComplexInt16* efw,
                                 int16_t* output,
-                                const int16_t* nearendClean)
-{
+                                const int16_t* nearendClean) {
   int i, j, outCFFT;
   int32_t tmp32no1;
   // Reuse |efw| for the inverse FFT output after transferring
@@ -125,9 +121,8 @@ static void InverseFFTAndWindow(AecmCore_t* aecm,
                                         tmp32no1 + aecm->outBuf[i],
                                         WEBRTC_SPL_WORD16_MIN);
 
-    tmp32no1 = WEBRTC_SPL_MUL_16_16_RSFT(ifft_out[PART_LEN + i],
-                                         WebRtcAecm_kSqrtHanning[PART_LEN - i],
-                                         14);
+    tmp32no1 = (ifft_out[PART_LEN + i] *
+        WebRtcAecm_kSqrtHanning[PART_LEN - i]) >> 14;
     tmp32no1 = WEBRTC_SPL_SHIFT_W32(tmp32no1,
                                     outCFFT - aecm->dfaCleanQDomain);
     aecm->outBuf[i] = (int16_t)WEBRTC_SPL_SAT(WEBRTC_SPL_WORD16_MAX,
@@ -162,12 +157,11 @@ static void InverseFFTAndWindow(AecmCore_t* aecm,
 //                              the frequency domain array
 // return value                 The Q-domain of current frequency values
 //
-static int TimeToFrequencyDomain(AecmCore_t* aecm,
+static int TimeToFrequencyDomain(AecmCore* aecm,
                                  const int16_t* time_signal,
-                                 complex16_t* freq_signal,
+                                 ComplexInt16* freq_signal,
                                  uint16_t* freq_signal_abs,
-                                 uint32_t* freq_signal_sum_abs)
-{
+                                 uint32_t* freq_signal_sum_abs) {
   int i = 0;
   int time_signal_scaling = 0;
 
@@ -252,8 +246,8 @@ static int TimeToFrequencyDomain(AecmCore_t* aecm,
         alpha = kAlpha3;
         beta = kBeta3;
       }
-      tmp16no1 = (int16_t)WEBRTC_SPL_MUL_16_16_RSFT(max_value, alpha, 15);
-      tmp16no2 = (int16_t)WEBRTC_SPL_MUL_16_16_RSFT(min_value, beta, 15);
+      tmp16no1 = (int16_t)((max_value * alpha) >> 15);
+      tmp16no2 = (int16_t)((min_value * beta) >> 15);
       freq_signal_abs[i] = (uint16_t)tmp16no1 + (uint16_t)tmp16no2;
 #else
 #ifdef WEBRTC_ARCH_ARM_V7
@@ -268,8 +262,8 @@ static int TimeToFrequencyDomain(AecmCore_t* aecm,
 #else
       tmp16no1 = WEBRTC_SPL_ABS_W16(freq_signal[i].real);
       tmp16no2 = WEBRTC_SPL_ABS_W16(freq_signal[i].imag);
-      tmp32no1 = WEBRTC_SPL_MUL_16_16(tmp16no1, tmp16no1);
-      tmp32no2 = WEBRTC_SPL_MUL_16_16(tmp16no2, tmp16no2);
+      tmp32no1 = tmp16no1 * tmp16no1;
+      tmp32no2 = tmp16no2 * tmp16no2;
       tmp32no2 = WebRtcSpl_AddSatW32(tmp32no1, tmp32no2);
 #endif // WEBRTC_ARCH_ARM_V7
       tmp32no1 = WebRtcSpl_SqrtFloor(tmp32no2);
@@ -283,12 +277,11 @@ static int TimeToFrequencyDomain(AecmCore_t* aecm,
   return time_signal_scaling;
 }
 
-int WebRtcAecm_ProcessBlock(AecmCore_t * aecm,
-                            const int16_t * farend,
-                            const int16_t * nearendNoisy,
-                            const int16_t * nearendClean,
-                            int16_t * output)
-{
+int WebRtcAecm_ProcessBlock(AecmCore* aecm,
+                            const int16_t* farend,
+                            const int16_t* nearendNoisy,
+                            const int16_t* nearendClean,
+                            int16_t* output) {
   int i;
 
   uint32_t xfaSum;
@@ -306,7 +299,7 @@ int WebRtcAecm_ProcessBlock(AecmCore_t * aecm,
   const uint16_t* far_spectrum_ptr = NULL;
 
   // 32 byte aligned buffers (with +8 or +16).
-  // TODO (kma): define fft with complex16_t.
+  // TODO(kma): define fft with ComplexInt16.
   int16_t fft_buf[PART_LEN4 + 2 + 16]; // +2 to make a loop safe.
   int32_t echoEst32_buf[PART_LEN1 + 8];
   int32_t dfw_buf[PART_LEN2 + 8];
@@ -314,8 +307,8 @@ int WebRtcAecm_ProcessBlock(AecmCore_t * aecm,
 
   int16_t* fft = (int16_t*) (((uintptr_t) fft_buf + 31) & ~ 31);
   int32_t* echoEst32 = (int32_t*) (((uintptr_t) echoEst32_buf + 31) & ~ 31);
-  complex16_t* dfw = (complex16_t*) (((uintptr_t) dfw_buf + 31) & ~ 31);
-  complex16_t* efw = (complex16_t*) (((uintptr_t) efw_buf + 31) & ~ 31);
+  ComplexInt16* dfw = (ComplexInt16*)(((uintptr_t)dfw_buf + 31) & ~31);
+  ComplexInt16* efw = (ComplexInt16*)(((uintptr_t)efw_buf + 31) & ~31);
 
   int16_t hnl[PART_LEN1];
   int16_t numPosCoef = 0;
@@ -564,7 +557,7 @@ int WebRtcAecm_ProcessBlock(AecmCore_t * aecm,
     //               speech distortion in double-talk.
     for (i = 0; i < PART_LEN1; i++)
     {
-      hnl[i] = (int16_t)WEBRTC_SPL_MUL_16_16_RSFT(hnl[i], hnl[i], 14);
+      hnl[i] = (int16_t)((hnl[i] * hnl[i]) >> 14);
     }
 
     for (i = kMinPrefBand; i <= kMaxPrefBand; i++)
@@ -612,7 +605,7 @@ int WebRtcAecm_ProcessBlock(AecmCore_t * aecm,
         hnl[i] = ONE_Q14;
       } else
       {
-        hnl[i] = (int16_t)WEBRTC_SPL_MUL_16_16_RSFT(hnl[i], nlpGain, 14);
+        hnl[i] = (int16_t)((hnl[i] * nlpGain) >> 14);
       }
 
       // multiply with Wiener coefficients
@@ -644,12 +637,10 @@ int WebRtcAecm_ProcessBlock(AecmCore_t * aecm,
   return 0;
 }
 
-
-static void ComfortNoise(AecmCore_t* aecm,
+static void ComfortNoise(AecmCore* aecm,
                          const uint16_t* dfa,
-                         complex16_t* out,
-                         const int16_t* lambda)
-{
+                         ComplexInt16* out,
+                         const int16_t* lambda) {
   int16_t i;
   int16_t tmp16;
   int32_t tmp32;
@@ -749,9 +740,7 @@ static void ComfortNoise(AecmCore_t* aecm,
     noiseRShift16[i] = (int16_t)tmp32;
 
     tmp16 = ONE_Q14 - lambda[i];
-    noiseRShift16[i] = (int16_t)WEBRTC_SPL_MUL_16_16_RSFT(tmp16,
-                                                          noiseRShift16[i],
-                                                          14);
+    noiseRShift16[i] = (int16_t)((tmp16 * noiseRShift16[i]) >> 14);
   }
 
   // Generate a uniform random array on [0 2^15-1].
@@ -763,15 +752,13 @@ static void ComfortNoise(AecmCore_t* aecm,
   for (i = 1; i < PART_LEN1; i++)
   {
     // Get a random index for the cos and sin tables over [0 359].
-    tmp16 = (int16_t)WEBRTC_SPL_MUL_16_16_RSFT(359, randW16[i - 1], 15);
+    tmp16 = (int16_t)((359 * randW16[i - 1]) >> 15);
 
     // Tables are in Q13.
-    uReal[i] = (int16_t)WEBRTC_SPL_MUL_16_16_RSFT(noiseRShift16[i],
-                                                  WebRtcAecm_kCosTable[tmp16],
-                                                  13);
-    uImag[i] = (int16_t)WEBRTC_SPL_MUL_16_16_RSFT(-noiseRShift16[i],
-                                                  WebRtcAecm_kSinTable[tmp16],
-                                                  13);
+    uReal[i] = (int16_t)((noiseRShift16[i] * WebRtcAecm_kCosTable[tmp16]) >>
+        13);
+    uImag[i] = (int16_t)((-noiseRShift16[i] * WebRtcAecm_kSinTable[tmp16]) >>
+        13);
   }
   uImag[PART_LEN] = 0;
 

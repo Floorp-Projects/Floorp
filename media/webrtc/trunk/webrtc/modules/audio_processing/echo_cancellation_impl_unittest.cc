@@ -9,17 +9,17 @@
  */
 
 #include "testing/gtest/include/gtest/gtest.h"
+#include "webrtc/base/scoped_ptr.h"
 extern "C" {
 #include "webrtc/modules/audio_processing/aec/aec_core.h"
 }
 #include "webrtc/modules/audio_processing/include/audio_processing.h"
-#include "webrtc/system_wrappers/interface/scoped_ptr.h"
 #include "webrtc/test/testsupport/gtest_disable.h"
 
 namespace webrtc {
 
 TEST(EchoCancellationInternalTest, DelayCorrection) {
-  scoped_ptr<AudioProcessing> ap(AudioProcessing::Create(0));
+  rtc::scoped_ptr<AudioProcessing> ap(AudioProcessing::Create());
   EXPECT_TRUE(ap->echo_cancellation()->aec_core() == NULL);
 
   EXPECT_EQ(ap->kNoError, ap->echo_cancellation()->Enable(true));
@@ -49,7 +49,7 @@ TEST(EchoCancellationInternalTest, DelayCorrection) {
 }
 
 TEST(EchoCancellationInternalTest, ReportedDelay) {
-  scoped_ptr<AudioProcessing> ap(AudioProcessing::Create(0));
+  rtc::scoped_ptr<AudioProcessing> ap(AudioProcessing::Create());
   EXPECT_TRUE(ap->echo_cancellation()->aec_core() == NULL);
 
   EXPECT_EQ(ap->kNoError, ap->echo_cancellation()->Enable(true));

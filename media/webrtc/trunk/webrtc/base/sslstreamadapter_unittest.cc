@@ -388,6 +388,13 @@ class SSLStreamAdapterTestBase : public testing::Test,
       return server_ssl_->GetPeerCertificate(cert);
   }
 
+  bool GetSslCipher(bool client, std::string *retval) {
+    if (client)
+      return client_ssl_->GetSslCipher(retval);
+    else
+      return server_ssl_->GetSslCipher(retval);
+  }
+
   bool ExportKeyingMaterial(const char *label,
                             const unsigned char *context,
                             size_t context_len,
@@ -938,4 +945,18 @@ TEST_F(SSLStreamAdapterTestDTLSFromPEMStrings, TestDTLSGetPeerCertificate) {
   // It must not have a chain, because the test certs are self-signed.
   rtc::SSLCertChain* server_peer_chain;
   ASSERT_FALSE(server_peer_cert->GetChain(&server_peer_chain));
+}
+
+// Test getting the used DTLS ciphers.
+TEST_F(SSLStreamAdapterTestDTLS, TestGetSslCipher) {
+  MAYBE_SKIP_TEST(HaveDtls);
+  TestHandshake();
+
+  std::string client_cipher;
+  ASSERT_TRUE(GetSslCipher(true, &client_cipher));
+  std::string server_cipher;
+  ASSERT_TRUE(GetSslCipher(false, &server_cipher));
+
+  ASSERT_EQ(client_cipher, server_cipher);
+  ASSERT_EQ(rtc::SSLStreamAdapter::GetDefaultSslCipher(), client_cipher);
 }

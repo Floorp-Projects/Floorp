@@ -60,7 +60,8 @@ void WebRtcIlbcfix_StateConstruct(
     for(k=0; k<len; k++){
       /*the shifting is due to the Q13 in sq4_fixQ13[i], also the adding of 2097152 (= 0.5 << 22)
         maxVal is in Q8 and result is in Q(-1) */
-      (*tmp1) = (int16_t) ((WEBRTC_SPL_MUL_16_16(maxVal,WebRtcIlbcfix_kStateSq3[(*tmp2)])+(int32_t)2097152) >> 22);
+      *tmp1 = (int16_t)((maxVal * WebRtcIlbcfix_kStateSq3[*tmp2] + 2097152) >>
+          22);
       tmp1++;
       tmp2--;
     }
@@ -68,7 +69,8 @@ void WebRtcIlbcfix_StateConstruct(
     for(k=0; k<len; k++){
       /*the shifting is due to the Q13 in sq4_fixQ13[i], also the adding of 262144 (= 0.5 << 19)
         maxVal is in Q5 and result is in Q(-1) */
-      (*tmp1) = (int16_t) ((WEBRTC_SPL_MUL_16_16(maxVal,WebRtcIlbcfix_kStateSq3[(*tmp2)])+(int32_t)262144) >> 19);
+      *tmp1 = (int16_t)((maxVal * WebRtcIlbcfix_kStateSq3[*tmp2] + 262144) >>
+          19);
       tmp1++;
       tmp2--;
     }
@@ -76,7 +78,8 @@ void WebRtcIlbcfix_StateConstruct(
     for(k=0; k<len; k++){
       /*the shifting is due to the Q13 in sq4_fixQ13[i], also the adding of 65536 (= 0.5 << 17)
         maxVal is in Q3 and result is in Q(-1) */
-      (*tmp1) = (int16_t) ((WEBRTC_SPL_MUL_16_16(maxVal,WebRtcIlbcfix_kStateSq3[(*tmp2)])+(int32_t)65536) >> 17);
+      *tmp1 = (int16_t)((maxVal * WebRtcIlbcfix_kStateSq3[*tmp2] + 65536) >>
+          17);
       tmp1++;
       tmp2--;
     }

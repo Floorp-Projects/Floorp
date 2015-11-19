@@ -19,8 +19,8 @@ class PacketReceiver;
 namespace test {
 class NullTransport : public newapi::Transport {
  public:
-  virtual bool SendRtp(const uint8_t* packet, size_t length) OVERRIDE;
-  virtual bool SendRtcp(const uint8_t* packet, size_t length) OVERRIDE;
+  bool SendRtp(const uint8_t* packet, size_t length) override;
+  bool SendRtcp(const uint8_t* packet, size_t length) override;
 };
 }  // namespace test
 }  // namespace webrtc

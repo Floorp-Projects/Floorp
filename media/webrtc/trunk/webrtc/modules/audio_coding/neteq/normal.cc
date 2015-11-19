@@ -15,12 +15,12 @@
 #include <algorithm>  // min
 
 #include "webrtc/common_audio/signal_processing/include/signal_processing_library.h"
+#include "webrtc/modules/audio_coding/codecs/audio_decoder.h"
 #include "webrtc/modules/audio_coding/codecs/cng/include/webrtc_cng.h"
 #include "webrtc/modules/audio_coding/neteq/audio_multi_vector.h"
 #include "webrtc/modules/audio_coding/neteq/background_noise.h"
 #include "webrtc/modules/audio_coding/neteq/decoder_database.h"
 #include "webrtc/modules/audio_coding/neteq/expand.h"
-#include "webrtc/modules/audio_coding/neteq/interface/audio_decoder.h"
 
 namespace webrtc {
 
@@ -67,8 +67,8 @@ int Normal::Process(const int16_t* input,
     for (size_t channel_ix = 0; channel_ix < output->Channels(); ++channel_ix) {
       // Adjust muting factor (main muting factor times expand muting factor).
       external_mute_factor_array[channel_ix] = static_cast<int16_t>(
-          WEBRTC_SPL_MUL_16_16_RSFT(external_mute_factor_array[channel_ix],
-                                    expand_->MuteFactor(channel_ix), 14));
+          (external_mute_factor_array[channel_ix] *
+          expand_->MuteFactor(channel_ix)) >> 14);
 
       int16_t* signal = &(*output)[channel_ix][0];
       size_t length_per_channel = length / output->Channels();

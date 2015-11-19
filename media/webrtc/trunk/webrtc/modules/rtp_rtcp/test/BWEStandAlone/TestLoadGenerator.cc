@@ -17,7 +17,6 @@
 #include "webrtc/modules/rtp_rtcp/test/BWEStandAlone/TestSenderReceiver.h"
 #include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
 #include "webrtc/system_wrappers/interface/event_wrapper.h"
-#include "webrtc/system_wrappers/interface/thread_wrapper.h"
 #include "webrtc/system_wrappers/interface/tick_util.h"
 
 
@@ -37,7 +36,6 @@ TestLoadGenerator::TestLoadGenerator(TestSenderReceiver *sender, int32_t rtpSamp
 :
 _critSect(CriticalSectionWrapper::CreateCriticalSection()),
 _eventPtr(NULL),
-_genThread(NULL),
 _bitrateKbps(0),
 _sender(sender),
 _running(false),
@@ -78,17 +76,12 @@ int32_t TestLoadGenerator::Start (const char *threadName)
 
     _eventPtr = EventWrapper::Create();
 
-    _genThread = ThreadWrapper::CreateThread(SenderThreadFunction, this, kRealtimePriority, threadName);
-    if (_genThread == NULL)
-    {
-        throw "Unable to start generator thread";
-        exit(1);
-    }
-
+    _genThread = ThreadWrapper::CreateThread(SenderThreadFunction, this,
+                                             threadName);
     _running = true;
 
-    unsigned int tid;
-    _genThread->Start(tid);
+    _genThread->Start();
+    _genThread->SetPriority(kRealtimePriority);
 
     return 0;
 }
@@ -100,24 +93,16 @@ int32_t TestLoadGenerator::Stop ()
 
     if (_genThread)
     {
-        _genThread->SetNotAlive();
         _running = false;
         _eventPtr->Set();
 
-        while (!_genThread->Stop())
-        {
-            _critSect.Leave();
-            _critSect.Enter();
-        }
-
-        delete _genThread;
-        _genThread = NULL;
+        _genThread->Stop();
+        _genThread.reset();
 
         delete _eventPtr;
         _eventPtr = NULL;
     }
 
-    _genThread = NULL;
     _critSect.Leave();
     return (0);
 }
@@ -131,7 +116,7 @@ int TestLoadGenerator::generatePayload ()
 
 int TestLoadGenerator::sendPayload (const uint32_t timeStamp,
                                     const uint8_t* payloadData,
-                                    const uint32_t payloadSize,
+                                    const size_t payloadSize,
                                     const webrtc::FrameType frameType /*= webrtc::kVideoFrameDelta*/)
 {
 
@@ -139,7 +124,10 @@ int TestLoadGenerator::sendPayload (const uint32_t timeStamp,
 }
 
 
-CBRGenerator::CBRGenerator (TestSenderReceiver *sender, int32_t payloadSizeBytes, int32_t bitrateKbps, int32_t rtpSampleRate)
+CBRGenerator::CBRGenerator (TestSenderReceiver *sender,
+                            size_t payloadSizeBytes,
+                            int32_t bitrateKbps,
+                            int32_t rtpSampleRate)
 :
 //_eventPtr(NULL),
 _payloadSizeBytes(payloadSizeBytes),
@@ -300,10 +288,10 @@ bool CBRFixFRGenerator::GeneratorLoop ()
     return true;
 }
 
-int32_t CBRFixFRGenerator::nextPayloadSize()
+size_t CBRFixFRGenerator::nextPayloadSize()
 {
     const double periodMs = 1000.0 / _frameRateFps;
-    return static_cast<int32_t>(_bitrateKbps * periodMs / 8 + 0.5);
+    return static_cast<size_t>(_bitrateKbps * periodMs / 8 + 0.5);
 }
 
 int CBRFixFRGenerator::generatePayload ( uint32_t timestamp )
@@ -313,7 +301,7 @@ int CBRFixFRGenerator::generatePayload ( uint32_t timestamp )
     double factor = ((double) rand() - RAND_MAX/2) / RAND_MAX; // [-0.5; 0.5]
     factor = 1 + 2 * _spreadFactor * factor; // [1 - _spreadFactor ; 1 + _spreadFactor]
 
-    int32_t thisPayloadBytes = static_cast<int32_t>(_payloadSizeBytes * factor);
+    size_t thisPayloadBytes = static_cast<size_t>(_payloadSizeBytes * factor);
     // sanity
     if (thisPayloadBytes > _payloadAllocLen)
     {
@@ -338,15 +326,17 @@ CBRFixFRGenerator(sender, bitrateKbps, rtpSampleRate, frameRateFps, spread)
 {
 }
 
-int32_t PeriodicKeyFixFRGenerator::nextPayloadSize()
+size_t PeriodicKeyFixFRGenerator::nextPayloadSize()
 {
     // calculate payload size for a delta frame
-    int32_t payloadSizeBytes = static_cast<int32_t>(1000 * _bitrateKbps / (8.0 * _frameRateFps * (1.0 + (_keyFactor - 1.0) / _keyPeriod)) + 0.5);
+    size_t payloadSizeBytes = static_cast<size_t>(1000 * _bitrateKbps /
+        (8.0 * _frameRateFps * (1.0 + (_keyFactor - 1.0) / _keyPeriod)) + 0.5);
 
     if (_frameCount % _keyPeriod == 0)
     {
         // this is a key frame, scale the payload size
-        payloadSizeBytes = static_cast<int32_t>(_keyFactor * _payloadSizeBytes + 0.5);
+        payloadSizeBytes =
+            static_cast<size_t>(_keyFactor * _payloadSizeBytes + 0.5);
     }
     _frameCount++;
 
@@ -396,7 +386,7 @@ void CBRVarFRGenerator::ChangeFrameRate()
     printf("New frame rate: %d\n", _frameRateFps);
 }
 
-int32_t CBRVarFRGenerator::nextPayloadSize()
+size_t CBRVarFRGenerator::nextPayloadSize()
 {
     ChangeFrameRate();
     return CBRFixFRGenerator::nextPayloadSize();
@@ -416,7 +406,7 @@ CBRFrameDropGenerator::~CBRFrameDropGenerator()
 {
 }
 
-int32_t CBRFrameDropGenerator::nextPayloadSize()
+size_t CBRFrameDropGenerator::nextPayloadSize()
 {
     _accBits -= 1000 * _bitrateKbps / _frameRateFps;
     if (_accBits < 0)
@@ -432,8 +422,10 @@ int32_t CBRFrameDropGenerator::nextPayloadSize()
     {
         //printf("keep\n");
         const double periodMs = 1000.0 / _frameRateFps;
-        int32_t frameSize = static_cast<int32_t>(_bitrateKbps * periodMs / 8 + 0.5);
-        frameSize = std::max(frameSize, static_cast<int32_t>(300 * periodMs / 8 + 0.5));
+        size_t frameSize =
+            static_cast<size_t>(_bitrateKbps * periodMs / 8 + 0.5);
+        frameSize =
+            std::max(frameSize, static_cast<size_t>(300 * periodMs / 8 + 0.5));
         _accBits += frameSize * 8;
         return frameSize;
     }

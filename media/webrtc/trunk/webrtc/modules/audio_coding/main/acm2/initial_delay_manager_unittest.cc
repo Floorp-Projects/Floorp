@@ -78,7 +78,7 @@ class InitialDelayManagerTest : public ::testing::Test {
     NextRtpHeader(rtp_info, rtp_receive_timestamp);
   }
 
-  scoped_ptr<InitialDelayManager> manager_;
+  rtc::scoped_ptr<InitialDelayManager> manager_;
   WebRtcRTPHeader rtp_info_;
   uint32_t rtp_receive_timestamp_;
 };
@@ -332,7 +332,6 @@ TEST_F(InitialDelayManagerTest, NoLatePacketAfterCng) {
 
   // Second packet as CNG.
   NextRtpHeader(&rtp_info_, &rtp_receive_timestamp_);
-  const uint8_t kCngPayloadType = 1;  // Arbitrary.
   rtp_info_.header.payloadType = kCngPayloadType;
   manager_->UpdateLastReceivedPacket(rtp_info_, rtp_receive_timestamp_,
                                      InitialDelayManager::kCngPacket, false,

@@ -549,8 +549,6 @@ nsresult ChannelMediaResource::OpenChannel(nsIStreamListener** aStreamListener)
   }
 
   mListener = new Listener(this);
-  NS_ENSURE_TRUE(mListener, NS_ERROR_OUT_OF_MEMORY);
-
   if (aStreamListener) {
     *aStreamListener = mListener;
     NS_ADDREF(*aStreamListener);

@@ -31,17 +31,17 @@ class RtpFormatVp8TestHelper {
  public:
   explicit RtpFormatVp8TestHelper(const RTPVideoHeaderVP8* hdr);
   ~RtpFormatVp8TestHelper();
-  bool Init(const int* partition_sizes, int num_partitions);
+  bool Init(const size_t* partition_sizes, size_t num_partitions);
   void GetAllPacketsAndCheck(RtpPacketizerVp8* packetizer,
-                             const int* expected_sizes,
+                             const size_t* expected_sizes,
                              const int* expected_part,
                              const bool* expected_frag_start,
-                             int expected_num_packets);
+                             size_t expected_num_packets);
 
   uint8_t* payload_data() const { return payload_data_; }
-  int payload_size() const { return payload_size_; }
+  size_t payload_size() const { return payload_size_; }
   RTPFragmentationHeader* fragmentation() const { return fragmentation_; }
-  int buffer_size() const { return buffer_size_; }
+  size_t buffer_size() const { return buffer_size_; }
   void set_sloppy_partitioning(bool value) { sloppy_partitioning_ = value; }
 
  private:
@@ -49,9 +49,9 @@ class RtpFormatVp8TestHelper {
   void CheckPictureID();
   void CheckTl0PicIdx();
   void CheckTIDAndKeyIdx();
-  void CheckPayload(int payload_end);
+  void CheckPayload(size_t payload_end);
   void CheckLast(bool last) const;
-  void CheckPacket(int send_bytes, int expect_bytes, bool last,
+  void CheckPacket(size_t send_bytes, size_t expect_bytes, bool last,
                    bool frag_start);
 
   uint8_t* payload_data_;
@@ -60,8 +60,8 @@ class RtpFormatVp8TestHelper {
   RTPFragmentationHeader* fragmentation_;
   const RTPVideoHeaderVP8* hdr_info_;
   int payload_start_;
-  int payload_size_;
-  int buffer_size_;
+  size_t payload_size_;
+  size_t buffer_size_;
   bool sloppy_partitioning_;
   bool inited_;
 

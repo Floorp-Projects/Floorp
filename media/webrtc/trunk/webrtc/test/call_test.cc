@@ -8,11 +8,14 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 #include "webrtc/test/call_test.h"
-
 #include "webrtc/test/encoder_settings.h"
 
 namespace webrtc {
 namespace test {
+
+namespace {
+const int kVideoRotationRtpExtensionId = 4;
+}
 
 CallTest::CallTest()
     : clock_(Clock::GetRealTimeClock()),
@@ -94,6 +97,8 @@ void CallTest::CreateSendConfig(size_t num_streams) {
   encoder_config_.streams = test::CreateVideoStreams(num_streams);
   for (size_t i = 0; i < num_streams; ++i)
     send_config_.rtp.ssrcs.push_back(kSendSsrcs[i]);
+  send_config_.rtp.extensions.push_back(
+      RtpExtension(RtpExtension::kVideoRotation, kVideoRotationRtpExtensionId));
 }
 
 void CallTest::CreateMatchingReceiveConfigs() {

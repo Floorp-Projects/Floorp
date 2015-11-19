@@ -58,21 +58,21 @@ class Dispatcher {
 class PhysicalSocketServer : public SocketServer {
  public:
   PhysicalSocketServer();
-  virtual ~PhysicalSocketServer();
+  ~PhysicalSocketServer() override;
 
   // SocketFactory:
-  virtual Socket* CreateSocket(int type);
-  virtual Socket* CreateSocket(int family, int type);
+  Socket* CreateSocket(int type) override;
+  Socket* CreateSocket(int family, int type) override;
 
-  virtual AsyncSocket* CreateAsyncSocket(int type);
-  virtual AsyncSocket* CreateAsyncSocket(int family, int type);
+  AsyncSocket* CreateAsyncSocket(int type) override;
+  AsyncSocket* CreateAsyncSocket(int family, int type) override;
 
   // Internal Factory for Accept
   AsyncSocket* WrapSocket(SOCKET s);
 
   // SocketServer:
-  virtual bool Wait(int cms, bool process_io);
-  virtual void WakeUp();
+  bool Wait(int cms, bool process_io) override;
+  void WakeUp() override;
 
   void Add(Dispatcher* dispatcher);
   void Remove(Dispatcher* dispatcher);

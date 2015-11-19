@@ -177,7 +177,7 @@ private:
     void     InvalidateCache(bool invalidateCachedFile = true);
 
     bool     ValidIPv6orHostname(const char *host, uint32_t aLen);
-    bool     NormalizeIDN(const nsCSubstring &host, nsCString &result);
+    nsresult NormalizeIDN(const nsCSubstring &host, nsCString &result);
     void     CoalescePath(netCoalesceFlags coalesceFlag, char *path);
 
     uint32_t AppendSegmentToBuf(char *, uint32_t, const char *, URLSegment &, const nsCString *esc=nullptr, bool useEsc = false);

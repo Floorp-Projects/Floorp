@@ -140,6 +140,7 @@ namespace jit {
     _(JSOP_GETNAME)            \
     _(JSOP_BINDNAME)           \
     _(JSOP_DELNAME)            \
+    _(JSOP_GETIMPORT)          \
     _(JSOP_GETINTRINSIC)       \
     _(JSOP_DEFVAR)             \
     _(JSOP_DEFCONST)           \

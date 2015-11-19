@@ -189,7 +189,7 @@ nsresult nsNameSpaceManager::AddNameSpace(const nsAString& aURI,
                "BAD! AddNameSpace not called in right order!");
 
   nsString* uri = new nsString(aURI);
-  if (!uri || !mURIArray.AppendElement(uri)) {
+  if (!mURIArray.AppendElement(uri)) {
     delete uri;
     return NS_ERROR_OUT_OF_MEMORY;
   }

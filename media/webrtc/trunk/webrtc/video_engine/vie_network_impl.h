@@ -24,29 +24,29 @@ class ViENetworkImpl
       public ViERefCount {
  public:
   // Implements ViENetwork.
-  virtual int Release() OVERRIDE;
-  virtual void SetNetworkTransmissionState(const int video_channel,
-                                           const bool is_transmitting) OVERRIDE;
-  virtual int RegisterSendTransport(const int video_channel,
-                                    Transport& transport) OVERRIDE;
-  virtual int DeregisterSendTransport(const int video_channel) OVERRIDE;
-  virtual int ReceivedRTPPacket(const int video_channel,
-                                const void* data,
-                                const int length,
-                                const PacketTime& packet_time) OVERRIDE;
-  virtual int ReceivedRTCPPacket(const int video_channel,
-                                 const void* data,
-                                 const int length) OVERRIDE;
-  virtual int SetMTU(int video_channel, unsigned int mtu) OVERRIDE;
+  int Release() override;
+  void SetBitrateConfig(int video_channel,
+                        int min_bitrate_bps,
+                        int start_bitrate_bps,
+                        int max_bitrate_bps) override;
+  void SetNetworkTransmissionState(const int video_channel,
+                                   const bool is_transmitting) override;
+  int RegisterSendTransport(const int video_channel,
+                            Transport& transport) override;
+  int DeregisterSendTransport(const int video_channel) override;
+  int ReceivedRTPPacket(const int video_channel,
+                        const void* data,
+                        const size_t length,
+                        const PacketTime& packet_time) override;
+  int ReceivedRTCPPacket(const int video_channel,
+                         const void* data,
+                         const size_t length) override;
+  int SetMTU(int video_channel, unsigned int mtu) override;
 
-  virtual int ReceivedBWEPacket(const int video_channel,
-                                int64_t arrival_time_ms,
-                                int payload_size,
-                                const RTPHeader& header) OVERRIDE;
-
-  virtual bool SetBandwidthEstimationConfig(
-      int video_channel,
-      const webrtc::Config& config) OVERRIDE;
+  int ReceivedBWEPacket(const int video_channel,
+                        int64_t arrival_time_ms,
+                        size_t payload_size,
+                        const RTPHeader& header) override;
 
  protected:
   explicit ViENetworkImpl(ViESharedData* shared_data);

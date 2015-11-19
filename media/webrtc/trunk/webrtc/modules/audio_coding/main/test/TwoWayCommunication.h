@@ -11,12 +11,12 @@
 #ifndef WEBRTC_MODULES_AUDIO_CODING_MAIN_TEST_TWOWAYCOMMUNICATION_H_
 #define WEBRTC_MODULES_AUDIO_CODING_MAIN_TEST_TWOWAYCOMMUNICATION_H_
 
+#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/modules/audio_coding/main/interface/audio_coding_module.h"
 #include "webrtc/modules/audio_coding/main/test/ACMTest.h"
 #include "webrtc/modules/audio_coding/main/test/Channel.h"
 #include "webrtc/modules/audio_coding/main/test/PCMFile.h"
 #include "webrtc/modules/audio_coding/main/test/utility.h"
-#include "webrtc/system_wrappers/interface/scoped_ptr.h"
 
 namespace webrtc {
 
@@ -31,11 +31,11 @@ class TwoWayCommunication : public ACMTest {
   void SetUp();
   void SetUpAutotest();
 
-  scoped_ptr<AudioCodingModule> _acmA;
-  scoped_ptr<AudioCodingModule> _acmB;
+  rtc::scoped_ptr<AudioCodingModule> _acmA;
+  rtc::scoped_ptr<AudioCodingModule> _acmB;
 
-  scoped_ptr<AudioCodingModule> _acmRefA;
-  scoped_ptr<AudioCodingModule> _acmRefB;
+  rtc::scoped_ptr<AudioCodingModule> _acmRefA;
+  rtc::scoped_ptr<AudioCodingModule> _acmRefB;
 
   Channel* _channel_A2B;
   Channel* _channel_B2A;

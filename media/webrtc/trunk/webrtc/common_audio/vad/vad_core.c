@@ -293,20 +293,16 @@ static int16_t GmmProbability(VadInstT* self, int16_t* features,
           //   (|noise_probability[0]| + |noise_probability[1]|)
 
           // (Q14 * Q11 >> 11) = Q14.
-          delt = (int16_t) WEBRTC_SPL_MUL_16_16_RSFT(ngprvec[gaussian],
-                                                     deltaN[gaussian],
-                                                     11);
+          delt = (int16_t)((ngprvec[gaussian] * deltaN[gaussian]) >> 11);
           // Q7 + (Q14 * Q15 >> 22) = Q7.
-          nmk2 = nmk + (int16_t) WEBRTC_SPL_MUL_16_16_RSFT(delt,
-                                                           kNoiseUpdateConst,
-                                                           22);
+          nmk2 = nmk + (int16_t)((delt * kNoiseUpdateConst) >> 22);
         }
 
         // Long term correction of the noise mean.
         // Q8 - Q8 = Q8.
         ndelt = (feature_minimum << 4) - tmp1_s16;
         // Q7 + (Q8 * Q8) >> 9 = Q7.
-        nmk3 = nmk2 + (int16_t) WEBRTC_SPL_MUL_16_16_RSFT(ndelt, kBackEta, 9);
+        nmk3 = nmk2 + (int16_t)((ndelt * kBackEta) >> 9);
 
         // Control that the noise mean does not drift to much.
         tmp_s16 = (int16_t) ((k + 5) << 7);
@@ -326,13 +322,9 @@ static int16_t GmmProbability(VadInstT* self, int16_t* features,
           //   (|speech_probability[0]| + |speech_probability[1]|)
 
           // (Q14 * Q11) >> 11 = Q14.
-          delt = (int16_t) WEBRTC_SPL_MUL_16_16_RSFT(sgprvec[gaussian],
-                                                     deltaS[gaussian],
-                                                     11);
+          delt = (int16_t)((sgprvec[gaussian] * deltaS[gaussian]) >> 11);
           // Q14 * Q15 >> 21 = Q8.
-          tmp_s16 = (int16_t) WEBRTC_SPL_MUL_16_16_RSFT(delt,
-                                                        kSpeechUpdateConst,
-                                                        21);
+          tmp_s16 = (int16_t)((delt * kSpeechUpdateConst) >> 21);
           // Q7 + (Q8 >> 1) = Q7. With rounding.
           smk2 = smk + ((tmp_s16 + 1) >> 1);
 
@@ -351,7 +343,7 @@ static int16_t GmmProbability(VadInstT* self, int16_t* features,
 
           tmp_s16 = features[channel] - tmp_s16;  // Q4
           // (Q11 * Q4 >> 3) = Q12.
-          tmp1_s32 = WEBRTC_SPL_MUL_16_16_RSFT(deltaS[gaussian], tmp_s16, 3);
+          tmp1_s32 = (deltaS[gaussian] * tmp_s16) >> 3;
           tmp2_s32 = tmp1_s32 - 4096;
           tmp_s16 = sgprvec[gaussian] >> 2;
           // (Q14 >> 2) * Q12 = Q24.
@@ -381,7 +373,7 @@ static int16_t GmmProbability(VadInstT* self, int16_t* features,
           // Q4 - (Q7 >> 3) = Q4.
           tmp_s16 = features[channel] - (nmk >> 3);
           // (Q11 * Q4 >> 3) = Q12.
-          tmp1_s32 = WEBRTC_SPL_MUL_16_16_RSFT(deltaN[gaussian], tmp_s16, 3);
+          tmp1_s32 = (deltaN[gaussian] * tmp_s16) >> 3;
           tmp1_s32 -= 4096;
 
           // (Q14 >> 2) * Q12 = Q24.
@@ -425,8 +417,8 @@ static int16_t GmmProbability(VadInstT* self, int16_t* features,
 
         // |tmp1_s16| = ~0.8 * (kMinimumDifference - diff) in Q7.
         // |tmp2_s16| = ~0.2 * (kMinimumDifference - diff) in Q7.
-        tmp1_s16 = (int16_t) WEBRTC_SPL_MUL_16_16_RSFT(13, tmp_s16, 2);
-        tmp2_s16 = (int16_t) WEBRTC_SPL_MUL_16_16_RSFT(3, tmp_s16, 2);
+        tmp1_s16 = (int16_t)((13 * tmp_s16) >> 2);
+        tmp2_s16 = (int16_t)((3 * tmp_s16) >> 2);
 
         // Move Gaussian means for speech model by |tmp1_s16| and update
         // |speech_global_mean|. Note that |self->speech_means[channel]| is

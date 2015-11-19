@@ -52,6 +52,8 @@ using ::google::protobuf::io::ZeroCopyInputStream;
 
 using JS::ubi::AtomOrTwoByteChars;
 
+/*** Cycle Collection Boilerplate *****************************************************************/
+
 NS_IMPL_CYCLE_COLLECTION_CLASS(HeapSnapshot)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(HeapSnapshot)
@@ -381,6 +383,9 @@ HeapSnapshot::saveStackFrame(const protobuf::StackFrame& frame,
   return true;
 }
 
+#undef GET_STRING_OR_REF_WITH_PROP_NAMES
+#undef GET_STRING_OR_REF
+
 static inline bool
 StreamHasData(GzipInputStream& stream)
 {
@@ -515,8 +520,26 @@ HeapSnapshot::TakeCensus(JSContext* cx, JS::HandleObject options,
   }
 }
 
-#undef GET_STRING_OR_REF_WITH_PROP_NAMES
-#undef GET_STRING_OR_REF
+already_AddRefed<DominatorTree>
+HeapSnapshot::ComputeDominatorTree(ErrorResult& rv)
+{
+  Maybe<JS::ubi::DominatorTree> maybeTree;
+  {
+    auto ccrt = CycleCollectedJSRuntime::Get();
+    MOZ_ASSERT(ccrt);
+    auto rt = ccrt->Runtime();
+    MOZ_ASSERT(rt);
+    JS::AutoCheckCannotGC nogc(rt);
+    maybeTree = JS::ubi::DominatorTree::Create(rt, nogc, getRoot());
+  }
+
+  if (maybeTree.isNothing()) {
+    rv.Throw(NS_ERROR_OUT_OF_MEMORY);
+    return nullptr;
+  }
+
+  return MakeAndAddRef<DominatorTree>(Move(*maybeTree), mParent);
+}
 
 
 /*** Saving Heap Snapshots ************************************************************************/

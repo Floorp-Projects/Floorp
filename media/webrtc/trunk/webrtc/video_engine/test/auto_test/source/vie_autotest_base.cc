@@ -73,6 +73,7 @@ void ViEAutoTest::ViEBaseStandardTest() {
   // ***************************************************************
   // Testing finished. Tear down Video Engine
   // ***************************************************************
+  EXPECT_EQ(0, capture_interface->DisconnectCaptureDevice(video_channel));
   EXPECT_EQ(0, capture_interface->StopCapture(capture_id));
   EXPECT_EQ(0, base_interface->StopReceive(video_channel));
 

@@ -32,12 +32,19 @@ public:
    * presShell.*/
   void RequestReflow();
 
+  /* Notify the MobileViewportManager that the resolution on the presShell was
+   * updated, and the SPCSPS needs to be updated. */
+  void ResolutionUpdated();
+
 private:
   ~MobileViewportManager();
 
   /* Main helper method to update the CSS viewport and any other properties that
    * need updating. */
   void RefreshViewportSize(bool aForceAdjustResolution);
+
+  /* Secondary main helper method to update just the SPCSPS. */
+  void RefreshSPCSPS();
 
   /* Updates the presShell resolution and returns the new zoom. */
   mozilla::CSSToScreenScale UpdateResolution(const nsViewportInfo& aViewportInfo,

@@ -8,12 +8,16 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include "third_party/webrtc/overrides/webrtc/base/logging.h"
+// IMPORTANT
+// Since this file includes Chromium source files, it must not include
+// logging.h since logging.h defines some of the same macros as Chrome does
+// and we'll run into conflict.
 
 #if defined(WEBRTC_MAC) && !defined(WEBRTC_IOS)
 #include <CoreServices/CoreServices.h>
 #endif  // OS_MACOSX
 
+#include <algorithm>
 #include <iomanip>
 
 #include "base/atomicops.h"
@@ -24,6 +28,7 @@
 #include "third_party/webrtc/base/stringencode.h"
 #include "third_party/webrtc/base/stringutils.h"
 #include "third_party/webrtc/base/timeutils.h"
+#include "third_party/webrtc/overrides/webrtc/base/diagnostic_logging.h"
 
 // From this file we can't use VLOG since it expands into usage of the __FILE__
 // macro (for correct filtering). The actual logging call from DIAGNOSTIC_LOG in
@@ -40,8 +45,8 @@ void (*g_logging_delegate_function)(const std::string&) = NULL;
 void (*g_extra_logging_init_function)(
     void (*logging_delegate_function)(const std::string&)) = NULL;
 #ifndef NDEBUG
-COMPILE_ASSERT(sizeof(base::subtle::Atomic32) == sizeof(base::PlatformThreadId),
-               atomic32_not_same_size_as_platformthreadid);
+static_assert(sizeof(base::subtle::Atomic32) == sizeof(base::PlatformThreadId),
+              "Atomic32 not same size as PlatformThreadId");
 base::subtle::Atomic32 g_init_logging_delegate_thread_id = 0;
 #endif
 
@@ -155,12 +160,17 @@ DiagnosticLogMessage::DiagnosticLogMessage(const char* file,
 }
 
 DiagnosticLogMessage::~DiagnosticLogMessage() {
-  print_stream_ << extra_;
-  const std::string& str = print_stream_.str();
-  if (log_to_chrome_)
-    LOG_LAZY_STREAM_DIRECT(file_name_, line_, severity_) << str;
-  if (g_logging_delegate_function && severity_ <= LS_INFO) {
-    g_logging_delegate_function(str);
+  const bool call_delegate =
+      g_logging_delegate_function && severity_ <= LS_INFO;
+
+  if (call_delegate || log_to_chrome_) {
+    print_stream_ << extra_;
+    const std::string& str = print_stream_.str();
+    if (log_to_chrome_)
+      LOG_LAZY_STREAM_DIRECT(file_name_, line_, severity_) << str;
+    if (g_logging_delegate_function && severity_ <= LS_INFO) {
+      g_logging_delegate_function(str);
+    }
   }
 }
 
@@ -198,7 +208,7 @@ void LogMultiline(LoggingSeverity level, const char* label, bool input,
     while (len > 0) {
       memset(asc_line, ' ', sizeof(asc_line));
       memset(hex_line, ' ', sizeof(hex_line));
-      size_t line_len = _min(len, LINE_SIZE);
+      size_t line_len = std::min(len, LINE_SIZE);
       for (size_t i = 0; i < line_len; ++i) {
         unsigned char ch = udata[i];
         asc_line[i] = isprint(ch) ? ch : '.';

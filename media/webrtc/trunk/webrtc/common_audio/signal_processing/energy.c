@@ -27,8 +27,8 @@ int32_t WebRtcSpl_Energy(int16_t* vector, int vector_length, int* scale_factor)
 
     for (i = 0; i < looptimes; i++)
     {
-        en += WEBRTC_SPL_MUL_16_16_RSFT(*vectorptr, *vectorptr, scaling);
-        vectorptr++;
+      en += (*vectorptr * *vectorptr) >> scaling;
+      vectorptr++;
     }
     *scale_factor = scaling;
 

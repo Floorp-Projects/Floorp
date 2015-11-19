@@ -683,6 +683,7 @@ class IonBuilder
     bool jsop_getgname(PropertyName* name);
     bool jsop_getname(PropertyName* name);
     bool jsop_intrinsic(PropertyName* name);
+    bool jsop_getimport(PropertyName* name);
     bool jsop_bindname(PropertyName* name);
     bool jsop_getelem();
     bool jsop_getelem_dense(MDefinition* obj, MDefinition* index, JSValueType unboxedType);

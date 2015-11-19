@@ -1053,7 +1053,7 @@ nsWindowWatcher::OpenWindowInternal(nsIDOMWindow* aParent,
         nsCOMPtr<nsIWidget> parentWidget;
         parentWindow->GetMainWidget(getter_AddRefs(parentWidget));
         if (parentWidget) {
-          parentWidget->SetModal(true);
+          parentWidget->SetFakeModal(true);
         }
       }
     } else {

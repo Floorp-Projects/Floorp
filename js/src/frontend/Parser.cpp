@@ -4592,9 +4592,21 @@ Parser<FullParseHandler>::namedImportsOrNamespaceImport(TokenKind tt, Node impor
         if (!importName)
             return null();
 
-        Node bindingName = newBoundImportForCurrentName();
+        Node bindingName = newName(tokenStream.currentName());
         if (!bindingName)
-            return false;
+            return null();
+
+        // Namespace imports are are not indirect bindings but lexical
+        // definitions that hold a module namespace object. They are treated as
+        // const variables which are initialized during the
+        // ModuleDeclarationInstantiation step. Thus we don't set the PND_IMPORT
+        // flag on the definition.
+        bindingName->pn_dflags |= PND_CONST;
+        BindData<FullParseHandler> data(context);
+        data.initLexical(HoistVars, JSOP_DEFLET, nullptr, JSMSG_TOO_MANY_LOCALS);
+        handler.setPosition(bindingName, pos());
+        if (!bindUninitialized(&data, bindingName))
+            return null();
 
         Node importSpec = handler.newBinary(PNK_IMPORT_SPEC, importName, bindingName);
         if (!importSpec)
@@ -8627,6 +8639,11 @@ Parser<ParseHandler>::memberExpr(YieldHandling yieldHandling, TripledotHandling 
                     handler.setOp(nextMember, JSOP_SPREADSUPERCALL);
 
                 return nextMember;
+            }
+
+            if (options().selfHostingMode && handler.isPropertyAccess(lhs)) {
+                report(ParseError, false, null(), JSMSG_SELFHOSTED_METHOD_CALL);
+                return null();
             }
 
             nextMember = tt == TOK_LP ? handler.newCall() : handler.newTaggedTemplate();

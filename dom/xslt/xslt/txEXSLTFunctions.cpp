@@ -708,8 +708,7 @@ TX_ConstructEXSLTFunction(nsIAtom *aName,
         if (aName == *desc.mName && aNamespaceID == desc.mNamespaceID) {
             *aResult = new txEXSLTFunctionCall(
                 static_cast<txEXSLTFunctionCall::eType>(i));
-
-            return *aResult ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+            return NS_OK;
         }
     }
 

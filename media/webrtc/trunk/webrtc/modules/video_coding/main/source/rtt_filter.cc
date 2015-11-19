@@ -58,7 +58,7 @@ VCMRttFilter::Reset()
 }
 
 void
-VCMRttFilter::Update(uint32_t rttMs)
+VCMRttFilter::Update(int64_t rttMs)
 {
     if (!_gotNonZeroUpdate)
     {
@@ -103,7 +103,7 @@ VCMRttFilter::Update(uint32_t rttMs)
 }
 
 bool
-VCMRttFilter::JumpDetection(uint32_t rttMs)
+VCMRttFilter::JumpDetection(int64_t rttMs)
 {
     double diffFromAvg = _avgRtt - rttMs;
     if (fabs(diffFromAvg) > _jumpStdDevs * sqrt(_varRtt))
@@ -147,7 +147,7 @@ VCMRttFilter::JumpDetection(uint32_t rttMs)
 }
 
 bool
-VCMRttFilter::DriftDetection(uint32_t rttMs)
+VCMRttFilter::DriftDetection(int64_t rttMs)
 {
     if (_maxRtt - _avgRtt > _driftStdDevs * sqrt(_varRtt))
     {
@@ -174,7 +174,7 @@ VCMRttFilter::DriftDetection(uint32_t rttMs)
 }
 
 void
-VCMRttFilter::ShortRttFilter(uint32_t* buf, uint32_t length)
+VCMRttFilter::ShortRttFilter(int64_t* buf, uint32_t length)
 {
     if (length == 0)
     {
@@ -193,10 +193,10 @@ VCMRttFilter::ShortRttFilter(uint32_t* buf, uint32_t length)
     _avgRtt = _avgRtt / static_cast<double>(length);
 }
 
-uint32_t
+int64_t
 VCMRttFilter::RttMs() const
 {
-    return static_cast<uint32_t>(_maxRtt + 0.5);
+    return static_cast<int64_t>(_maxRtt + 0.5);
 }
 
 }

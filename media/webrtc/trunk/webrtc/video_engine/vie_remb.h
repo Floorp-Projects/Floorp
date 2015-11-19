@@ -15,10 +15,10 @@
 #include <utility>
 #include <vector>
 
+#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/modules/interface/module.h"
 #include "webrtc/modules/remote_bitrate_estimator/include/remote_bitrate_estimator.h"
 #include "webrtc/modules/rtp_rtcp/interface/rtp_rtcp_defines.h"
-#include "webrtc/system_wrappers/interface/scoped_ptr.h"
 
 namespace webrtc {
 
@@ -57,7 +57,7 @@ class VieRemb : public RemoteBitrateObserver {
  private:
   typedef std::list<RtpRtcp*> RtpModules;
 
-  scoped_ptr<CriticalSectionWrapper> list_crit_;
+  rtc::scoped_ptr<CriticalSectionWrapper> list_crit_;
 
   // The last time a REMB was sent.
   int64_t last_remb_time_;

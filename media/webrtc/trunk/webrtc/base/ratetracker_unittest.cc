@@ -71,4 +71,11 @@ TEST(RateTrackerTest, TestBasics) {
   EXPECT_EQ(9876U * 5, tracker.units_second());
 }
 
+TEST(RateTrackerTest, TestGetUnitSecondsAfterInitialValue) {
+  RateTrackerForTest tracker;
+  tracker.Update(1234);
+  tracker.AdvanceTime(1000);
+  EXPECT_EQ(1234u, tracker.units_second());
+}
+
 }  // namespace rtc

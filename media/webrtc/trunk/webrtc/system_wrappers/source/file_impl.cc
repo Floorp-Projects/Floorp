@@ -19,6 +19,7 @@
 #include <string.h>
 #endif
 
+#include "webrtc/base/checks.h"
 #include "webrtc/system_wrappers/interface/rw_lock_wrapper.h"
 
 namespace webrtc {
@@ -187,19 +188,16 @@ int FileWrapperImpl::OpenFromFileHandle(FILE* handle,
   return 0;
 }
 
-int FileWrapperImpl::Read(void* buf, int length) {
+int FileWrapperImpl::Read(void* buf, size_t length) {
   WriteLockScoped write(*rw_lock_);
-  if (length < 0)
-    return -1;
-
   if (id_ == NULL)
     return -1;
 
-  int bytes_read = static_cast<int>(fread(buf, 1, length, id_));
+  size_t bytes_read = fread(buf, 1, length, id_);
   if (bytes_read != length && !looping_) {
     CloseFileImpl();
   }
-  return bytes_read;
+  return static_cast<int>(bytes_read);
 }
 
 int FileWrapperImpl::WriteText(const char* format, ...) {
@@ -226,12 +224,9 @@ int FileWrapperImpl::WriteText(const char* format, ...) {
   }
 }
 
-bool FileWrapperImpl::Write(const void* buf, int length) {
+bool FileWrapperImpl::Write(const void* buf, size_t length) {
   WriteLockScoped write(*rw_lock_);
   if (buf == NULL)
-    return false;
-
-  if (length < 0)
     return false;
 
   if (read_only_)
@@ -272,6 +267,11 @@ int FileWrapperImpl::FlushImpl() {
   if (id_ != NULL) {
     return fflush(id_);
   }
+  return -1;
+}
+
+int FileWrapper::Rewind() {
+  DCHECK(false);
   return -1;
 }
 

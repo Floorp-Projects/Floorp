@@ -17,8 +17,8 @@ public:
 
 protected:
   //DesktopDeviceInfo Interfaces
-  virtual void InitializeApplicationList() OVERRIDE;
-  virtual void InitializeScreenList() OVERRIDE;
+  virtual void InitializeApplicationList() override;
+  virtual void InitializeScreenList() override;
 
 private:
   void MultiMonitorScreenshare();
