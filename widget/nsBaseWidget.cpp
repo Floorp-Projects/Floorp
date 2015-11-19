@@ -1479,7 +1479,7 @@ nsBaseWidget::SetWindowTitlebarColor(nscolor aColor, bool aActive)
 }
 
 bool
-nsBaseWidget::ShowsResizeIndicator(nsIntRect* aResizerRect)
+nsBaseWidget::ShowsResizeIndicator(LayoutDeviceIntRect* aResizerRect)
 {
   return false;
 }
