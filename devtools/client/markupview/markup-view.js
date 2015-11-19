@@ -406,6 +406,10 @@ MarkupView.prototype = {
   _isImagePreviewTarget: function(target) {
     // From the target passed here, let's find the parent MarkupContainer
     // and ask it if the tooltip should be shown
+    if (this.isDragging) {
+      return promise.reject(false);
+    }
+
     let parent = target, container;
     while (parent !== this.doc.body) {
       if (parent.container) {

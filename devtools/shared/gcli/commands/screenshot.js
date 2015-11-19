@@ -283,13 +283,16 @@ function createScreenshotData(document, args) {
     height = window.innerHeight;
   }
 
-  const winUtils = window.QueryInterface(Ci.nsIInterfaceRequestor)
-                       .getInterface(Ci.nsIDOMWindowUtils);
-  const scrollbarHeight = {};
-  const scrollbarWidth = {};
-  winUtils.getScrollbarSize(false, scrollbarWidth, scrollbarHeight);
-  width -= scrollbarWidth.value;
-  height -= scrollbarHeight.value;
+  // Only adjust for scrollbars when considering the full window
+  if (!args.selector) {
+    const winUtils = window.QueryInterface(Ci.nsIInterfaceRequestor)
+                         .getInterface(Ci.nsIDOMWindowUtils);
+    const scrollbarHeight = {};
+    const scrollbarWidth = {};
+    winUtils.getScrollbarSize(false, scrollbarWidth, scrollbarHeight);
+    width -= scrollbarWidth.value;
+    height -= scrollbarHeight.value;
+  }
 
   const canvas = document.createElementNS("http://www.w3.org/1999/xhtml", "canvas");
   const ctx = canvas.getContext("2d");
