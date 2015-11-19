@@ -79,14 +79,16 @@ Performance::InsertUserEntry(PerformanceEntry* aEntry)
   PerformanceBase::InsertUserEntry(aEntry);
 }
 
-DOMHighResTimeStamp
-Performance::DeltaFromNavigationStart(DOMHighResTimeStamp aTime)
+TimeStamp
+Performance::CreationTimeStamp() const
 {
-  if (aTime == 0) {
-    return 0;
-  }
+  return mWorkerPrivate->NowBaseTimeStamp();
+}
 
-  return aTime - mWorkerPrivate->NowBaseTimeHighRes();
+DOMHighResTimeStamp
+Performance::CreationTime() const
+{
+  return mWorkerPrivate->NowBaseTimeHighRes();
 }
 
 void
