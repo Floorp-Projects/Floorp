@@ -85,7 +85,8 @@ var testBinaryData = "";
 // that we're testing with files that are large enough.
 ok(size > 65536, "test data sufficiently large");
 
-basicTest([createFileWithData(fileData)]);
+SpecialPowers.createFiles([{name: "basicTestFile", data: fileData}],
+                          basicTest);
 
 function basicTest(files) {
   var fileFile = files[0];
@@ -104,7 +105,9 @@ function basicTest(files) {
   }
 
   // image in the middle
-  imageMiddleTest([createFileWithData(testBinaryData + fileData + testBinaryData)]);
+  SpecialPowers.createFiles([{name: "middleTestFile",
+                             data: testBinaryData + fileData + testBinaryData}],
+                            imageMiddleTest);
 }
 
 function imageMiddleTest(files) {
@@ -116,7 +119,9 @@ function imageMiddleTest(files) {
   expectedTestCount++;
 
   // image at start
-  imageStartTest([createFileWithData(fileData + testBinaryData)]);
+  SpecialPowers.createFiles([{name: "startTestFile",
+                             data: fileData + testBinaryData}],
+                            imageStartTest);
 }
 
 function imageStartTest(files) {
@@ -128,7 +133,9 @@ function imageStartTest(files) {
   expectedTestCount++;
 
   // image at end
-  imageEndTest([createFileWithData(testBinaryData + fileData)]);
+  SpecialPowers.createFiles([{name: "endTestFile",
+                             data: testBinaryData + fileData}],
+                            imageEndTest);
 }
 
 function imageEndTest(files) {
@@ -140,7 +147,9 @@ function imageEndTest(files) {
   expectedTestCount++;
 
   // image past end
-  imagePastEndTest([createFileWithData(testBinaryData + fileData)]);
+  SpecialPowers.createFiles([{name: "pastEndTestFile",
+                             data: testBinaryData + fileData}],
+                            imagePastEndTest);
 }
 
 function imagePastEndTest(files) {
