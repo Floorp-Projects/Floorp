@@ -1,10 +1,16 @@
 package org.mozilla.gecko.prompts;
 
+import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
-import org.mozilla.gecko.menu.MenuItemSwitcherLayout;
+import org.mozilla.gecko.gfx.BitmapUtils;
+import org.mozilla.gecko.menu.MenuItemActionView;
 import org.mozilla.gecko.widget.GeckoActionProvider;
+
+import org.json.JSONArray;
+import org.json.JSONObject;
+import org.json.JSONException;
 
 import android.content.Context;
 import android.content.Intent;
@@ -19,6 +25,7 @@ import android.widget.CheckedTextView;
 import android.widget.TextView;
 import android.widget.ListView;
 import android.widget.ArrayAdapter;
+import android.widget.AdapterView;
 import android.util.TypedValue;
 
 import java.util.ArrayList;
@@ -172,7 +179,7 @@ public class PromptListAdapter extends ArrayAdapter<PromptListItem> {
         final GeckoActionProvider provider = GeckoActionProvider.getForType(item.getIntent().getType(), getContext());
         provider.setIntent(item.getIntent());
 
-        final MenuItemSwitcherLayout view = (MenuItemSwitcherLayout) provider.onCreateActionView(
+        final MenuItemActionView view = (MenuItemActionView) provider.onCreateActionView(
                 GeckoActionProvider.ActionViewType.CONTEXT_MENU);
         // If a quickshare button is clicked, we need to close the dialog.
         view.addActionButtonClickListener(new View.OnClickListener() {
@@ -188,7 +195,7 @@ public class PromptListAdapter extends ArrayAdapter<PromptListItem> {
         return view;
     }
 
-    private void updateActionView(final PromptListItem item, final MenuItemSwitcherLayout view, final ListView list, final int position) {
+    private void updateActionView(final PromptListItem item, final MenuItemActionView view, final ListView list, final int position) {
         view.setTitle(item.label);
         view.setIcon(item.getIcon());
         view.setSubMenuIndicator(item.isParent);
@@ -253,7 +260,7 @@ public class PromptListAdapter extends ArrayAdapter<PromptListItem> {
         }
 
         if (type == VIEW_TYPE_ACTIONS) {
-            updateActionView(item, (MenuItemSwitcherLayout) convertView, (ListView) parent, position);
+            updateActionView(item, (MenuItemActionView) convertView, (ListView) parent, position);
         } else {
             viewHolder.textView.setText(item.label);
             maybeUpdateCheckedState((ListView) parent, position, item, viewHolder);

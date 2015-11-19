@@ -423,16 +423,18 @@ WebConsoleActor.prototype =
    */
   makeDebuggeeValue: function WCA_makeDebuggeeValue(aValue, aUseObjectGlobal)
   {
-    let global = this.window;
     if (aUseObjectGlobal && typeof aValue == "object") {
       try {
-        global = Cu.getGlobalForObject(aValue);
+        let global = Cu.getGlobalForObject(aValue);
+        let dbgGlobal = this.dbg.makeGlobalObjectReference(global);
+        return dbgGlobal.makeDebuggeeValue(aValue);
       }
       catch (ex) {
-        // The above can throw an exception if aValue is not an actual object.
+        // The above can throw an exception if aValue is not an actual object
+        // or 'Object in compartment marked as invisible to Debugger'
       }
     }
-    let dbgGlobal = this.dbg.makeGlobalObjectReference(global);
+    let dbgGlobal = this.dbg.makeGlobalObjectReference(this.window);
     return dbgGlobal.makeDebuggeeValue(aValue);
   },
 
