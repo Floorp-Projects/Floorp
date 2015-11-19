@@ -1118,7 +1118,7 @@ Event::TimeStamp() const
   MOZ_ASSERT(workerPrivate);
 
   TimeDuration duration =
-    mEvent->timeStamp - workerPrivate->NowBaseTimeStamp();
+    mEvent->timeStamp - workerPrivate->CreationTimeStamp();
   return duration.ToMilliseconds();
 }
 
