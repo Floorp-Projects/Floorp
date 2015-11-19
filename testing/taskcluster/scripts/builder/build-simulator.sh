@@ -44,7 +44,7 @@ elif [[ $MULET =~ 'linux' ]] ; then
   PLATFORM=linux
 elif [[ $MULET =~ 'win32' ]] ; then
   PLATFORM=win32
-elif [[ $MULET =~ 'mac64' ]] ; then
+elif [[ $MULET =~ 'mac' ]] ; then
   PLATFORM=mac64
 fi
 if [ -z $PLATFORM ]; then
@@ -110,14 +110,24 @@ if [[ $MULET =~ .dmg$ ]]; then
     done
     # Now we can copy everything out of the $MOUNTPOINT directory into the target directory
     mkdir -p $ADDON_DIR/firefox
-    cp -r $WORK_DIR/dmg/FirefoxNightly.app $ADDON_DIR/firefox/
+    # Try builds are not branded as Firefox
+    if [ -d $WORK_DIR/dmg/Nightly.app ]; then
+      cp -r $WORK_DIR/dmg/Nightly.app $ADDON_DIR/firefox/FirefoxNightly.app
+    else
+      cp -r $WORK_DIR/dmg/FirefoxNightly.app $ADDON_DIR/firefox/
+    fi
     hdiutil detach $WORK_DIR/DMG
   else
     7z x -o$WORK_DIR/dmg $MULET
     mkdir -p $WORK_DIR/dmg/hfs
     sudo mount -o loop,ro -t hfsplus  $WORK_DIR/dmg/2.hfs $WORK_DIR/dmg/hfs
     mkdir -p $ADDON_DIR/firefox
-    cp -r $WORK_DIR/dmg/hfs/FirefoxNightly.app $ADDON_DIR/firefox/
+    # Try builds are not branded as Firefox
+    if [ -d $WORK_DIR/dmg/hfs/Nightly.app ]; then
+      cp -r $WORK_DIR/dmg/hfs/Nightly.app $ADDON_DIR/firefox/FirefoxNightly.app
+    else
+      cp -r $WORK_DIR/dmg/hfs/FirefoxNightly.app $ADDON_DIR/firefox/
+    fi
     sudo umount $WORK_DIR/dmg/hfs
   fi
   rm -rf $WORK_DIR/dmg
