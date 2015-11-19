@@ -21,20 +21,20 @@ struct RtpPacket;
 
 class RedPacket {
  public:
-  explicit RedPacket(int length);
+  explicit RedPacket(size_t length);
   ~RedPacket();
-  void CreateHeader(const uint8_t* rtp_header, int header_length,
+  void CreateHeader(const uint8_t* rtp_header, size_t header_length,
                     int red_pl_type, int pl_type);
   void SetSeqNum(int seq_num);
-  void AssignPayload(const uint8_t* payload, int length);
+  void AssignPayload(const uint8_t* payload, size_t length);
   void ClearMarkerBit();
   uint8_t* data() const;
-  int length() const;
+  size_t length() const;
 
  private:
   uint8_t* data_;
-  int length_;
-  int header_length_;
+  size_t length_;
+  size_t header_length_;
 };
 
 class ProducerFec {
@@ -46,13 +46,13 @@ class ProducerFec {
                         int max_fec_frames);
 
   RedPacket* BuildRedPacket(const uint8_t* data_buffer,
-                            int payload_length,
-                            int rtp_header_length,
+                            size_t payload_length,
+                            size_t rtp_header_length,
                             int red_pl_type);
 
   int AddRtpPacketAndGenerateFec(const uint8_t* data_buffer,
-                                 int payload_length,
-                                 int rtp_header_length);
+                                 size_t payload_length,
+                                 size_t rtp_header_length);
 
   bool ExcessOverheadBelowMax();
 
@@ -63,7 +63,7 @@ class ProducerFec {
   RedPacket* GetFecPacket(int red_pl_type,
                           int fec_pl_type,
                           uint16_t seq_num,
-                          int rtp_header_length);
+                          size_t rtp_header_length);
 
  private:
   void DeletePackets();

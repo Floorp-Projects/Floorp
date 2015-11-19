@@ -80,7 +80,7 @@ private:
   class Connection : private IHttpNotify {
   public:
     Connection(int connection_id, HttpServer* server);
-    virtual ~Connection();
+    ~Connection() override;
 
     void BeginProcess(StreamInterface* stream);
     StreamInterface* EndProcess();
@@ -89,10 +89,10 @@ private:
     void InitiateClose(bool force);
 
     // IHttpNotify Interface
-    virtual HttpError onHttpHeaderComplete(bool chunked, size_t& data_size);
-    virtual void onHttpComplete(HttpMode mode, HttpError err);
-    virtual void onHttpClosed(HttpError err);
-  
+    HttpError onHttpHeaderComplete(bool chunked, size_t& data_size) override;
+    void onHttpComplete(HttpMode mode, HttpError err) override;
+    void onHttpClosed(HttpError err) override;
+
     int connection_id_;
     HttpServer* server_;
     HttpBase base_;
@@ -116,7 +116,7 @@ private:
 class HttpListenServer : public HttpServer, public sigslot::has_slots<> {
 public:
   HttpListenServer();
-  virtual ~HttpListenServer();
+  ~HttpListenServer() override;
 
   int Listen(const SocketAddress& address);
   bool GetAddress(SocketAddress* address) const;

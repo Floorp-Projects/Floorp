@@ -29,35 +29,33 @@ class EventPosix : public EventWrapper {
  public:
   static EventWrapper* Create();
 
-  virtual ~EventPosix();
+  ~EventPosix() override;
 
-  virtual EventTypeWrapper Wait(unsigned long max_time) OVERRIDE;
-  virtual bool Set() OVERRIDE;
-  virtual bool Reset() OVERRIDE;
+  EventTypeWrapper Wait(unsigned long max_time) override;
+  bool Set() override;
 
-  virtual bool StartTimer(bool periodic, unsigned long time) OVERRIDE;
-  virtual bool StopTimer() OVERRIDE;
+  bool StartTimer(bool periodic, unsigned long time) override;
+  bool StopTimer() override;
 
  private:
   EventPosix();
-  int Construct();
 
-  static bool Run(ThreadObj obj);
+  static bool Run(void* obj);
   bool Process();
-  EventTypeWrapper Wait(timespec& wake_at);
+  EventTypeWrapper Wait(timespec* end_at);
 
  private:
   pthread_cond_t  cond_;
   pthread_mutex_t mutex_;
+  bool event_set_;
 
-  ThreadWrapper* timer_thread_;
+  rtc::scoped_ptr<ThreadWrapper> timer_thread_;
   EventPosix*    timer_event_;
   timespec       created_at_;
 
   bool          periodic_;
   unsigned long time_;  // In ms
   unsigned long count_;
-  State         state_;
 };
 
 }  // namespace webrtc

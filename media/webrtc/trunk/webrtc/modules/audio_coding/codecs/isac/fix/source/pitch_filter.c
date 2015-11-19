@@ -49,13 +49,9 @@ void WebRtcIsacfix_PitchFilterCore(int loopNumber,
 
 static __inline int32_t CalcLrIntQ(int32_t fixVal,
                                    int16_t qDomain) {
-  int32_t intgr;
-  int32_t roundVal;
+  int32_t roundVal = 1 << (qDomain - 1);
 
-  roundVal = WEBRTC_SPL_LSHIFT_W32((int32_t)1,  qDomain - 1);
-  intgr = (fixVal + roundVal) >> qDomain;
-
-  return intgr;
+  return (fixVal + roundVal) >> qDomain;
 }
 
 void WebRtcIsacfix_PitchFilter(int16_t* indatQQ, // Q10 if type is 1 or 4,
@@ -130,8 +126,7 @@ void WebRtcIsacfix_PitchFilter(int16_t* indatQQ, // Q10 if type is 1 or 4,
       curGainQ12 += gaindeltaQ12;
       curLagQ7 += lagdeltaQ7;
       indW32 = CalcLrIntQ(curLagQ7, 7);
-      tmpW32 = WEBRTC_SPL_LSHIFT_W32(indW32, 7);
-      tmpW32 -= curLagQ7;
+      tmpW32 = (indW32 << 7) - curLagQ7;
       frcQQ = (tmpW32 >> 4) + 4;
 
       if (frcQQ == PITCH_FRACS) {
@@ -219,7 +214,7 @@ void WebRtcIsacfix_PitchFilterGains(const int16_t* indatQ0,
 
         tmpW32 = 0;
         for (m = 0; m < PITCH_FRACORDER; m++) {
-          tmpW32 += WEBRTC_SPL_MUL_16_16(ubufQQ[pos3QQ + m], fracoeffQQ[m]);
+          tmpW32 += ubufQQ[pos3QQ + m] * fracoeffQQ[m];
         }
 
         // Subtract from input and update buffer.
@@ -228,7 +223,7 @@ void WebRtcIsacfix_PitchFilterGains(const int16_t* indatQ0,
         tmp2W32 = WEBRTC_SPL_MUL_16_32_RSFT14(indatQ0[ind], tmpW32);
         tmpW32 += 8192;
         tmpW16 = (int16_t)(tmpW32 >> 14);
-        tmpW32 = WEBRTC_SPL_MUL_16_16(tmpW16, tmpW16);
+        tmpW32 = tmpW16 * tmpW16;
 
         if ((tmp2W32 > 1073700000) || (csum1QQ > 1073700000) ||
             (tmpW32 > 1073700000) || (esumxQQ > 1073700000)) {  // 2^30

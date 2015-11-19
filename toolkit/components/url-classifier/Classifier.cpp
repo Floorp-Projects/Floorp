@@ -243,14 +243,6 @@ Classifier::Check(const nsACString& aSpec,
     Completion lookupHash;
     lookupHash.FromPlaintext(fragments[i], mCryptoHash);
 
-    // Get list of host keys to look up
-    Completion hostKey;
-    rv = LookupCache::GetKey(fragments[i], &hostKey, mCryptoHash);
-    if (NS_FAILED(rv)) {
-      // Local host on the network.
-      continue;
-    }
-
     if (LOG_ENABLED()) {
       nsAutoCString checking;
       lookupHash.ToHexString(checking);

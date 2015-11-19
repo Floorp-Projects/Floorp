@@ -14,6 +14,7 @@
 #include "webrtc/base/win32.h"
 #endif
 
+#include <algorithm>
 #include "webrtc/base/common.h"
 #include "webrtc/base/diskcache.h"
 #include "webrtc/base/fileutils.h"
@@ -42,7 +43,7 @@ public:
                    StreamInterface* stream)
   : StreamAdapterInterface(stream), cache_(cache), id_(id), index_(index)
   { }
-  virtual ~DiskCacheAdapter() {
+  ~DiskCacheAdapter() override {
     Close();
     cache_->ReleaseResource(id_, index_);
   }
@@ -127,7 +128,7 @@ StreamInterface* DiskCache::WriteResource(const std::string& id, size_t index) {
     return NULL;
   }
 
-  entry->streams = stdmax(entry->streams, index + 1);
+  entry->streams = std::max(entry->streams, index + 1);
   entry->size -= previous_size;
   total_size_ -= previous_size;
 

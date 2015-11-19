@@ -13,12 +13,12 @@
 #include <algorithm>  // std::min
 
 #include "testing/gtest/include/gtest/gtest.h"
+#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/modules/audio_coding/main/interface/audio_coding_module.h"
 #include "webrtc/modules/audio_coding/main/acm2/audio_coding_module_impl.h"
 #include "webrtc/modules/audio_coding/main/acm2/acm_codec_database.h"
 #include "webrtc/modules/audio_coding/neteq/tools/rtp_generator.h"
 #include "webrtc/system_wrappers/interface/clock.h"
-#include "webrtc/system_wrappers/interface/scoped_ptr.h"
 #include "webrtc/test/test_suite.h"
 #include "webrtc/test/testsupport/fileutils.h"
 #include "webrtc/test/testsupport/gtest_disable.h"
@@ -54,7 +54,7 @@ class AcmReceiverTestOldApi : public AudioPacketizationCallback,
 
   ~AcmReceiverTestOldApi() {}
 
-  virtual void SetUp() OVERRIDE {
+  void SetUp() override {
     ASSERT_TRUE(receiver_.get() != NULL);
     ASSERT_TRUE(acm_.get() != NULL);
     for (int n = 0; n < ACMCodecDB::kNumCodecs; n++) {
@@ -62,7 +62,6 @@ class AcmReceiverTestOldApi : public AudioPacketizationCallback,
     }
 
     acm_->InitializeReceiver();
-    acm_->InitializeSender();
     acm_->RegisterTransportCallback(this);
 
     rtp_header_.header.sequenceNumber = 0;
@@ -75,8 +74,7 @@ class AcmReceiverTestOldApi : public AudioPacketizationCallback,
     rtp_header_.type.Audio.isCNG = false;
   }
 
-  virtual void TearDown() OVERRIDE {
-  }
+  void TearDown() override {}
 
   void InsertOnePacketOfSilence(int codec_id) {
     CodecInst codec;
@@ -96,17 +94,13 @@ class AcmReceiverTestOldApi : public AudioPacketizationCallback,
     frame.num_channels_ = codec.channels;
     memset(frame.data_, 0, frame.samples_per_channel_ * frame.num_channels_ *
            sizeof(int16_t));
-    int num_bytes = 0;
     packet_sent_ = false;
     last_packet_send_timestamp_ = timestamp_;
-    while (num_bytes == 0) {
+    while (!packet_sent_) {
       frame.timestamp_ = timestamp_;
       timestamp_ += frame.samples_per_channel_;
-      ASSERT_EQ(0, acm_->Add10MsData(frame));
-      num_bytes = acm_->Process();
-      ASSERT_GE(num_bytes, 0);
+      ASSERT_GE(acm_->Add10MsData(frame), 0);
     }
-    ASSERT_TRUE(packet_sent_);  // Sanity check.
   }
 
   // Last element of id should be negative.
@@ -119,13 +113,12 @@ class AcmReceiverTestOldApi : public AudioPacketizationCallback,
     }
   }
 
-  virtual int SendData(
-      FrameType frame_type,
-      uint8_t payload_type,
-      uint32_t timestamp,
-      const uint8_t* payload_data,
-      uint16_t payload_len_bytes,
-      const RTPFragmentationHeader* fragmentation) OVERRIDE {
+  int SendData(FrameType frame_type,
+               uint8_t payload_type,
+               uint32_t timestamp,
+               const uint8_t* payload_data,
+               size_t payload_len_bytes,
+               const RTPFragmentationHeader* fragmentation) override {
     if (frame_type == kFrameEmpty)
       return 0;
 
@@ -149,9 +142,9 @@ class AcmReceiverTestOldApi : public AudioPacketizationCallback,
     return 0;
   }
 
-  scoped_ptr<AcmReceiver> receiver_;
+  rtc::scoped_ptr<AcmReceiver> receiver_;
   CodecInst codecs_[ACMCodecDB::kMaxNumCodecs];
-  scoped_ptr<AudioCodingModule> acm_;
+  rtc::scoped_ptr<AudioCodingModule> acm_;
   WebRtcRTPHeader rtp_header_;
   uint32_t timestamp_;
   bool packet_sent_;  // Set when SendData is called reset when inserting audio.
@@ -183,27 +176,45 @@ TEST_F(AcmReceiverTestOldApi, DISABLED_ON_ANDROID(AddCodecGetCodec)) {
 }
 
 TEST_F(AcmReceiverTestOldApi, DISABLED_ON_ANDROID(AddCodecChangePayloadType)) {
-  CodecInst ref_codec;
   const int codec_id = ACMCodecDB::kPCMA;
-  EXPECT_EQ(0, ACMCodecDB::Codec(codec_id, &ref_codec));
-  const int payload_type = ref_codec.pltype;
-  EXPECT_EQ(0, receiver_->AddCodec(codec_id, ref_codec.pltype,
-                                   ref_codec.channels, NULL));
+  CodecInst ref_codec1;
+  EXPECT_EQ(0, ACMCodecDB::Codec(codec_id, &ref_codec1));
+  CodecInst ref_codec2 = ref_codec1;
+  ++ref_codec2.pltype;
   CodecInst test_codec;
-  EXPECT_EQ(0, receiver_->DecoderByPayloadType(payload_type, &test_codec));
-  EXPECT_EQ(true, CodecsEqual(ref_codec, test_codec));
 
-  // Re-register the same codec with different payload.
-  ref_codec.pltype = payload_type + 1;
-  EXPECT_EQ(0, receiver_->AddCodec(codec_id, ref_codec.pltype,
-                                   ref_codec.channels, NULL));
+  // Register the same codec with different payloads.
+  EXPECT_EQ(0, receiver_->AddCodec(codec_id, ref_codec1.pltype,
+                                   ref_codec1.channels, NULL));
+  EXPECT_EQ(0, receiver_->AddCodec(codec_id, ref_codec2.pltype,
+                                   ref_codec2.channels, NULL));
 
-  // Payload type |payload_type| should not exist.
-  EXPECT_EQ(-1, receiver_->DecoderByPayloadType(payload_type, &test_codec));
+  // Both payload types should exist.
+  EXPECT_EQ(0, receiver_->DecoderByPayloadType(ref_codec1.pltype, &test_codec));
+  EXPECT_EQ(true, CodecsEqual(ref_codec1, test_codec));
+  EXPECT_EQ(0, receiver_->DecoderByPayloadType(ref_codec2.pltype, &test_codec));
+  EXPECT_EQ(true, CodecsEqual(ref_codec2, test_codec));
+}
 
-  // Payload type |payload_type + 1| should exist.
-  EXPECT_EQ(0, receiver_->DecoderByPayloadType(payload_type + 1, &test_codec));
-  EXPECT_TRUE(CodecsEqual(test_codec, ref_codec));
+TEST_F(AcmReceiverTestOldApi, DISABLED_ON_ANDROID(AddCodecChangeCodecId)) {
+  const int codec_id1 = ACMCodecDB::kPCMU;
+  CodecInst ref_codec1;
+  EXPECT_EQ(0, ACMCodecDB::Codec(codec_id1, &ref_codec1));
+  const int codec_id2 = ACMCodecDB::kPCMA;
+  CodecInst ref_codec2;
+  EXPECT_EQ(0, ACMCodecDB::Codec(codec_id2, &ref_codec2));
+  ref_codec2.pltype = ref_codec1.pltype;
+  CodecInst test_codec;
+
+  // Register the same payload type with different codec ID.
+  EXPECT_EQ(0, receiver_->AddCodec(codec_id1, ref_codec1.pltype,
+                                   ref_codec1.channels, NULL));
+  EXPECT_EQ(0, receiver_->AddCodec(codec_id2, ref_codec2.pltype,
+                                   ref_codec2.channels, NULL));
+
+  // Make sure that the last codec is used.
+  EXPECT_EQ(0, receiver_->DecoderByPayloadType(ref_codec2.pltype, &test_codec));
+  EXPECT_EQ(true, CodecsEqual(ref_codec2, test_codec));
 }
 
 TEST_F(AcmReceiverTestOldApi, DISABLED_ON_ANDROID(AddCodecRemoveCodec)) {
@@ -293,7 +304,7 @@ TEST_F(AcmReceiverTestOldApi, DISABLED_ON_ANDROID(PostdecodingVad)) {
 TEST_F(AcmReceiverTestOldApi, DISABLED_ON_ANDROID(LastAudioCodec)) {
   const int kCodecId[] = {
       ACMCodecDB::kISAC, ACMCodecDB::kPCMA, ACMCodecDB::kISACSWB,
-      ACMCodecDB::kPCM16Bswb32kHz, ACMCodecDB::kG722_1C_48,
+      ACMCodecDB::kPCM16Bswb32kHz,
       -1  // Terminator.
   };
   AddSetOfCodecs(kCodecId);
@@ -325,7 +336,6 @@ TEST_F(AcmReceiverTestOldApi, DISABLED_ON_ANDROID(LastAudioCodec)) {
   // Has received, only, DTX. Last Audio codec is undefined.
   EXPECT_EQ(-1, receiver_->LastAudioCodec(&codec));
   EXPECT_EQ(-1, receiver_->last_audio_codec_id());
-  EXPECT_EQ(-1, receiver_->last_audio_payload_type());
 
   n = 0;
   while (kCodecId[n] >= 0) {  // Loop over codecs.
@@ -351,8 +361,6 @@ TEST_F(AcmReceiverTestOldApi, DISABLED_ON_ANDROID(LastAudioCodec)) {
       ASSERT_TRUE(packet_sent_);
     }
     EXPECT_EQ(kCodecId[n], receiver_->last_audio_codec_id());
-    EXPECT_EQ(codecs_[kCodecId[n]].pltype,
-              receiver_->last_audio_payload_type());
     EXPECT_EQ(0, receiver_->LastAudioCodec(&codec));
     EXPECT_TRUE(CodecsEqual(codecs_[kCodecId[n]], codec));
     ++n;

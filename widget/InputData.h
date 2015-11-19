@@ -582,6 +582,8 @@ public:
      mIsMomentum(false)
   {}
 
+  explicit ScrollWheelInput(const WidgetWheelEvent& aEvent);
+
   WidgetWheelEvent ToWidgetWheelEvent(nsIWidget* aWidget) const;
   bool TransformToLocal(const gfx::Matrix4x4& aTransform);
 

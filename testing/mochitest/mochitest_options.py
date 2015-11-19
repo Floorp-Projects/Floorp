@@ -899,6 +899,8 @@ class B2GArguments(ArgumentContainer):
 
     defaults = {
         'logFile': 'mochitest.log',
+        # Specialpowers is integrated with marionette for b2g,
+        # see marionette's jar.mn.
         'extensionsToExclude': ['specialpowers'],
         # See dependencies of bug 1038943.
         'defaultLeakThreshold': 5536,

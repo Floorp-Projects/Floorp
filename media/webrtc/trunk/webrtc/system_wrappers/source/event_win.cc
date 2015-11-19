@@ -38,10 +38,6 @@ bool EventWindows::Set() {
   return SetEvent(event_) == 1;
 }
 
-bool EventWindows::Reset() {
-  return ResetEvent(event_) == 1;
-}
-
 EventTypeWrapper EventWindows::Wait(unsigned long max_time) {
   unsigned long res = WaitForSingleObject(event_, max_time);
   switch (res) {

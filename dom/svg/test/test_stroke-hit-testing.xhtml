@@ -1,0 +1,67 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=676001
+-->
+<head>
+  <title>Test hit-testing of stroke</title>
+  <style>
+
+:hover { stroke: lime; }
+
+  </style>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body onload="run()">
+<script class="testbody" type="text/javascript">
+<![CDATA[
+
+SimpleTest.waitForExplicitFinish();
+
+function run()
+{
+  var div = document.getElementById('div');
+  var line = document.getElementById('line');
+  var circle = document.getElementById('circle');
+  var offsetX = div.offsetLeft;
+  var offsetY = div.offsetTop;
+  var got;
+
+  // line
+  got = document.elementFromPoint(offsetX + 116, offsetY + 103);
+  is(got, line, 'Should hit line (1)');
+
+  got = document.elementFromPoint(offsetX + 123, offsetY + 108);
+  is(got, line, 'Should hit line (2)');
+
+  // circle
+  got = document.elementFromPoint(offsetX + 188, offsetY + 158);
+  is(got, circle, 'Should hit circle (1)');
+
+  got = document.elementFromPoint(offsetX + 185, offsetY + 162);
+  is(got, circle, 'Should hit circle (2)');
+
+  SimpleTest.finish();
+}
+
+]]>
+</script>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=676001">Mozilla Bug 676001</a>
+<p id="display"></p>
+<div id="content">
+
+  <div width="100%" height="1" id="div"></div>
+  <svg xmlns="http://www.w3.org/2000/svg" id="svg" width="500" height="300">
+    <line id="line" x1="100" y1="100" x2="600" y2="180"
+          stroke="red" stroke-width="40"/>
+    <!-- the circle test points need to be within the mochitest test harness
+         viewport for test content in order for elementFromPoint to work -->
+    <circle id="circle" cx="100" cy="150" r="100"
+            fill="none" stroke="red" stroke-width="40"/>
+  </svg>
+
+</div>
+<pre id="test">
+</pre>
+</body>
+</html>

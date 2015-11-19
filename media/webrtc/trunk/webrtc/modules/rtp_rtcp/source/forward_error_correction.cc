@@ -18,8 +18,8 @@
 #include <iterator>
 
 #include "webrtc/modules/rtp_rtcp/interface/rtp_rtcp_defines.h"
+#include "webrtc/modules/rtp_rtcp/source/byte_io.h"
 #include "webrtc/modules/rtp_rtcp/source/forward_error_correction_internal.h"
-#include "webrtc/modules/rtp_rtcp/source/rtp_utility.h"
 #include "webrtc/system_wrappers/interface/logging.h"
 
 namespace webrtc {
@@ -230,7 +230,7 @@ void ForwardErrorCorrection::GenerateFecBitStrings(
         Packet* media_packet = *media_list_it;
 
         // Assign network-ordered media payload length.
-        RtpUtility::AssignUWord16ToBuffer(
+        ByteWriter<uint16_t>::WriteBigEndian(
             media_payload_length, media_packet->length - kRtpHeaderSize);
 
         fec_packet_length = media_packet->length + fec_rtp_offset;
@@ -432,7 +432,7 @@ void ForwardErrorCorrection::GenerateFecUlpHeaders(
     // -- ULP header --
     // Copy the payload size to the protection length field.
     // (We protect the entire packet.)
-    RtpUtility::AssignUWord16ToBuffer(
+    ByteWriter<uint16_t>::WriteBigEndian(
         &generated_fec_packets_[i].data[10],
         generated_fec_packets_[i].length - kFecHeaderSize - ulp_header_size);
 
@@ -537,7 +537,7 @@ void ForwardErrorCorrection::InsertFECPacket(
   fec_packet->ssrc = rx_packet->ssrc;
 
   const uint16_t seq_num_base =
-      RtpUtility::BufferToUWord16(&fec_packet->pkt->data[2]);
+      ByteReader<uint16_t>::ReadBigEndian(&fec_packet->pkt->data[2]);
   const uint16_t maskSizeBytes =
       (fec_packet->pkt->data[0] & 0x40) ? kMaskSizeLBitSet
                                         : kMaskSizeLBitClear;  // L bit set?
@@ -650,7 +650,7 @@ void ForwardErrorCorrection::InitRecovery(const FecPacket* fec_packet,
   // Copy FEC payload, skipping the ULP header.
   memcpy(&recovered->pkt->data[kRtpHeaderSize],
          &fec_packet->pkt->data[kFecHeaderSize + ulp_header_size],
-         RtpUtility::BufferToUWord16(protection_length));
+         ByteReader<uint16_t>::ReadBigEndian(protection_length));
   // Copy the length recovery field.
   memcpy(recovered->length_recovery, &fec_packet->pkt->data[8], 2);
   // Copy the first 2 bytes of the FEC header.
@@ -658,7 +658,8 @@ void ForwardErrorCorrection::InitRecovery(const FecPacket* fec_packet,
   // Copy the 5th to 8th bytes of the FEC header.
   memcpy(&recovered->pkt->data[4], &fec_packet->pkt->data[4], 4);
   // Set the SSRC field.
-  RtpUtility::AssignUWord32ToBuffer(&recovered->pkt->data[8], fec_packet->ssrc);
+  ByteWriter<uint32_t>::WriteBigEndian(&recovered->pkt->data[8],
+                                       fec_packet->ssrc);
 }
 
 void ForwardErrorCorrection::FinishRecovery(RecoveredPacket* recovered) {
@@ -667,11 +668,12 @@ void ForwardErrorCorrection::FinishRecovery(RecoveredPacket* recovered) {
   recovered->pkt->data[0] &= 0xbf;  // Clear the 2nd bit.
 
   // Set the SN field.
-  RtpUtility::AssignUWord16ToBuffer(&recovered->pkt->data[2],
-                                    recovered->seq_num);
+  ByteWriter<uint16_t>::WriteBigEndian(&recovered->pkt->data[2],
+                                       recovered->seq_num);
   // Recover the packet length.
   recovered->pkt->length =
-      RtpUtility::BufferToUWord16(recovered->length_recovery) + kRtpHeaderSize;
+      ByteReader<uint16_t>::ReadBigEndian(recovered->length_recovery) +
+      kRtpHeaderSize;
 }
 
 void ForwardErrorCorrection::XorPackets(const Packet* src_packet,
@@ -686,14 +688,14 @@ void ForwardErrorCorrection::XorPackets(const Packet* src_packet,
   }
   // XOR with the network-ordered payload size.
   uint8_t media_payload_length[2];
-  RtpUtility::AssignUWord16ToBuffer(media_payload_length,
-                                    src_packet->length - kRtpHeaderSize);
+  ByteWriter<uint16_t>::WriteBigEndian(media_payload_length,
+                                       src_packet->length - kRtpHeaderSize);
   dst_packet->length_recovery[0] ^= media_payload_length[0];
   dst_packet->length_recovery[1] ^= media_payload_length[1];
 
   // XOR with RTP payload.
   // TODO(marpan/ajm): Are we doing more XORs than required here?
-  for (int32_t i = kRtpHeaderSize; i < src_packet->length; ++i) {
+  for (size_t i = kRtpHeaderSize; i < src_packet->length; ++i) {
     dst_packet->pkt->data[i] ^= src_packet->data[i];
   }
 }
@@ -816,7 +818,7 @@ int32_t ForwardErrorCorrection::DecodeFEC(
   return 0;
 }
 
-uint16_t ForwardErrorCorrection::PacketOverhead() {
+size_t ForwardErrorCorrection::PacketOverhead() {
   return kFecHeaderSize + kUlpHeaderSizeLBitSet;
 }
 }  // namespace webrtc

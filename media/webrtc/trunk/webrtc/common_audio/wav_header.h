@@ -18,6 +18,13 @@ namespace webrtc {
 
 static const size_t kWavHeaderSize = 44;
 
+class ReadableWav {
+ public:
+  // Returns the number of bytes read.
+  size_t virtual Read(void* buf, size_t num_bytes) = 0;
+  virtual ~ReadableWav() {}
+};
+
 enum WavFormat {
   kWavFormatPcm   = 1,  // PCM, each sample of size bytes_per_sample
   kWavFormatALaw  = 6,  // 8-bit ITU-T G.711 A-law
@@ -42,9 +49,10 @@ void WriteWavHeader(uint8_t* buf,
                     int bytes_per_sample,
                     uint32_t num_samples);
 
-// Read a kWavHeaderSize bytes long WAV header from buf and parse the values
-// into the provided output parameters. Returns false if the header is invalid.
-bool ReadWavHeader(const uint8_t* buf,
+// Read a WAV header from an implemented ReadableWav and parse the values into
+// the provided output parameters. ReadableWav is used because the header can
+// be variably sized. Returns false if the header is invalid.
+bool ReadWavHeader(ReadableWav* readable,
                    int* num_channels,
                    int* sample_rate,
                    WavFormat* format,

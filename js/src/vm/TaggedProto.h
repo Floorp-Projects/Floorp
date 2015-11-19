@@ -44,9 +44,6 @@ class TaggedProto : public JS::Traceable
     bool operator ==(const TaggedProto& other) const { return proto == other.proto; }
     bool operator !=(const TaggedProto& other) const { return proto != other.proto; }
 
-    HashNumber hashCode() const;
-    uint64_t uniqueId() const;
-
     static void trace(TaggedProto* protop, JSTracer* trc) {
         TraceManuallyBarrieredEdge(trc, protop, "TaggedProto");
     }
@@ -65,8 +62,6 @@ template <> struct InternalGCMethods<TaggedProto>
     static void preBarrier(TaggedProto& proto);
 
     static void postBarrier(TaggedProto* vp, TaggedProto prev, TaggedProto next);
-
-    static void readBarrier(const TaggedProto& proto);
 
     static bool isMarkableTaggedPointer(TaggedProto proto) {
         return proto.isObject();

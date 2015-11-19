@@ -97,7 +97,7 @@ void WebRtcSpl_ScaleVector(const int16_t *in_vector, int16_t *out_vector,
 
     for (i = 0; i < in_vector_length; i++)
     {
-        (*outptr++) = (int16_t)WEBRTC_SPL_MUL_16_16_RSFT(*inptr++, gain, right_shifts);
+      *outptr++ = (int16_t)((*inptr++ * gain) >> right_shifts);
     }
 }
 
@@ -107,17 +107,14 @@ void WebRtcSpl_ScaleVectorWithSat(const int16_t *in_vector, int16_t *out_vector,
 {
     // Performs vector operation: out_vector = (gain*in_vector)>>right_shifts
     int i;
-    int32_t tmpW32;
     const int16_t *inptr;
     int16_t *outptr;
 
     inptr = in_vector;
     outptr = out_vector;
 
-    for (i = 0; i < in_vector_length; i++)
-    {
-        tmpW32 = WEBRTC_SPL_MUL_16_16_RSFT(*inptr++, gain, right_shifts);
-        (*outptr++) = WebRtcSpl_SatW32ToW16(tmpW32);
+    for (i = 0; i < in_vector_length; i++) {
+      *outptr++ = WebRtcSpl_SatW32ToW16((*inptr++ * gain) >> right_shifts);
     }
 }
 
@@ -137,8 +134,8 @@ void WebRtcSpl_ScaleAndAddVectors(const int16_t *in1, int16_t gain1, int shift1,
 
     for (i = 0; i < vector_length; i++)
     {
-        (*outptr++) = (int16_t)WEBRTC_SPL_MUL_16_16_RSFT(gain1, *in1ptr++, shift1)
-                + (int16_t)WEBRTC_SPL_MUL_16_16_RSFT(gain2, *in2ptr++, shift2);
+      *outptr++ = (int16_t)((gain1 * *in1ptr++) >> shift1) +
+          (int16_t)((gain2 * *in2ptr++) >> shift2);
     }
 }
 

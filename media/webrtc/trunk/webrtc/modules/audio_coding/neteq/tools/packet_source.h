@@ -14,12 +14,11 @@
 #include <bitset>
 
 #include "webrtc/base/constructormagic.h"
+#include "webrtc/modules/audio_coding/neteq/tools/packet.h"
 #include "webrtc/typedefs.h"
 
 namespace webrtc {
 namespace test {
-
-class Packet;
 
 // Interface class for an object delivering RTP packets to test applications.
 class PacketSource {

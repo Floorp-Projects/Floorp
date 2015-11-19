@@ -10,6 +10,7 @@
 #include "nsAutoPtr.h"
 #include "nsThreadUtils.h"
 #include "nsIAsyncShutdown.h"
+#include "base/task.h"
 
 namespace mozilla {
 namespace media {

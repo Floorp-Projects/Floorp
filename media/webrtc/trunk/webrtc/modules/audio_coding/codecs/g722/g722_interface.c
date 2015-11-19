@@ -18,7 +18,7 @@
 
 int16_t WebRtcG722_CreateEncoder(G722EncInst **G722enc_inst)
 {
-    *G722enc_inst=(G722EncInst*)malloc(sizeof(g722_encode_state_t));
+    *G722enc_inst=(G722EncInst*)malloc(sizeof(G722EncoderState));
     if (*G722enc_inst!=NULL) {
       return(0);
     } else {
@@ -31,7 +31,7 @@ int16_t WebRtcG722_EncoderInit(G722EncInst *G722enc_inst)
     // Create and/or reset the G.722 encoder
     // Bitrate 64 kbps and wideband mode (2)
     G722enc_inst = (G722EncInst *) WebRtc_g722_encode_init(
-        (g722_encode_state_t*) G722enc_inst, 64000, 2);
+        (G722EncoderState*) G722enc_inst, 64000, 2);
     if (G722enc_inst == NULL) {
         return -1;
     } else {
@@ -42,23 +42,23 @@ int16_t WebRtcG722_EncoderInit(G722EncInst *G722enc_inst)
 int16_t WebRtcG722_FreeEncoder(G722EncInst *G722enc_inst)
 {
     // Free encoder memory
-    return WebRtc_g722_encode_release((g722_encode_state_t*) G722enc_inst);
+    return WebRtc_g722_encode_release((G722EncoderState*) G722enc_inst);
 }
 
 int16_t WebRtcG722_Encode(G722EncInst *G722enc_inst,
-                          int16_t *speechIn,
+                          const int16_t* speechIn,
                           int16_t len,
-                          int16_t *encoded)
+                          uint8_t* encoded)
 {
     unsigned char *codechar = (unsigned char*) encoded;
     // Encode the input speech vector
-    return WebRtc_g722_encode((g722_encode_state_t*) G722enc_inst,
+    return WebRtc_g722_encode((G722EncoderState*) G722enc_inst,
                        codechar, speechIn, len);
 }
 
 int16_t WebRtcG722_CreateDecoder(G722DecInst **G722dec_inst)
 {
-    *G722dec_inst=(G722DecInst*)malloc(sizeof(g722_decode_state_t));
+    *G722dec_inst=(G722DecInst*)malloc(sizeof(G722DecoderState));
     if (*G722dec_inst!=NULL) {
       return(0);
     } else {
@@ -71,7 +71,7 @@ int16_t WebRtcG722_DecoderInit(G722DecInst *G722dec_inst)
     // Create and/or reset the G.722 decoder
     // Bitrate 64 kbps and wideband mode (2)
     G722dec_inst = (G722DecInst *) WebRtc_g722_decode_init(
-        (g722_decode_state_t*) G722dec_inst, 64000, 2);
+        (G722DecoderState*) G722dec_inst, 64000, 2);
     if (G722dec_inst == NULL) {
         return -1;
     } else {
@@ -82,19 +82,19 @@ int16_t WebRtcG722_DecoderInit(G722DecInst *G722dec_inst)
 int16_t WebRtcG722_FreeDecoder(G722DecInst *G722dec_inst)
 {
     // Free encoder memory
-    return WebRtc_g722_decode_release((g722_decode_state_t*) G722dec_inst);
+    return WebRtc_g722_decode_release((G722DecoderState*) G722dec_inst);
 }
 
 int16_t WebRtcG722_Decode(G722DecInst *G722dec_inst,
-                          int16_t *encoded,
+                          const uint8_t *encoded,
                           int16_t len,
                           int16_t *decoded,
                           int16_t *speechType)
 {
     // Decode the G.722 encoder stream
     *speechType=G722_WEBRTC_SPEECH;
-    return WebRtc_g722_decode((g722_decode_state_t*) G722dec_inst,
-                              decoded, (uint8_t*) encoded, len);
+    return WebRtc_g722_decode((G722DecoderState*) G722dec_inst,
+                              decoded, encoded, len);
 }
 
 int16_t WebRtcG722_Version(char *versionStr, short len)

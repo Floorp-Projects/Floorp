@@ -34,13 +34,13 @@ extern "C" {
  * Output:
  *      - encoded            : The encoded data vector
  *
- * Return value              : >0 - Length (in bytes) of coded data
- *                             -1 - Error
+ * Return value              : Length (in bytes) of coded data.
+ *                             Always equal to len input parameter.
  */
 
-int16_t WebRtcG711_EncodeA(int16_t* speechIn,
+int16_t WebRtcG711_EncodeA(const int16_t* speechIn,
                            int16_t len,
-                           int16_t* encoded);
+                           uint8_t* encoded);
 
 /****************************************************************************
  * WebRtcG711_EncodeU(...)
@@ -55,13 +55,13 @@ int16_t WebRtcG711_EncodeA(int16_t* speechIn,
  * Output:
  *      - encoded            : The encoded data vector
  *
- * Return value              : >0 - Length (in bytes) of coded data
- *                             -1 - Error
+ * Return value              : Length (in bytes) of coded data.
+ *                             Always equal to len input parameter.
  */
 
-int16_t WebRtcG711_EncodeU(int16_t* speechIn,
+int16_t WebRtcG711_EncodeU(const int16_t* speechIn,
                            int16_t len,
-                           int16_t* encoded);
+                           uint8_t* encoded);
 
 /****************************************************************************
  * WebRtcG711_DecodeA(...)
@@ -82,7 +82,7 @@ int16_t WebRtcG711_EncodeU(int16_t* speechIn,
  *                             -1 - Error
  */
 
-int16_t WebRtcG711_DecodeA(int16_t* encoded,
+int16_t WebRtcG711_DecodeA(const uint8_t* encoded,
                            int16_t len,
                            int16_t* decoded,
                            int16_t* speechType);
@@ -106,7 +106,7 @@ int16_t WebRtcG711_DecodeA(int16_t* encoded,
  *                             -1 - Error
  */
 
-int16_t WebRtcG711_DecodeU(int16_t* encoded,
+int16_t WebRtcG711_DecodeU(const uint8_t* encoded,
                            int16_t len,
                            int16_t* decoded,
                            int16_t* speechType);

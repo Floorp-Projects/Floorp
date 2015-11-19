@@ -76,8 +76,6 @@ NS_NewGenConImageContent(nsIContent** aResult, already_AddRefed<mozilla::dom::No
 {
   NS_PRECONDITION(aImageRequest, "Must have request!");
   nsGenConImageContent *it = new nsGenConImageContent(aNodeInfo);
-  if (!it)
-    return NS_ERROR_OUT_OF_MEMORY;
   NS_ADDREF(*aResult = it);
   nsresult rv = it->Init(aImageRequest);
   if (NS_FAILED(rv))

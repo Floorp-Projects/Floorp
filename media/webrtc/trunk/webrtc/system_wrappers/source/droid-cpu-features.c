@@ -18,7 +18,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "webrtc/system_wrappers/source/droid-cpu-features.h"
+#include "droid-cpu-features.h"
 
 static  pthread_once_t     g_once;
 static  AndroidCpuFamily   g_cpuFamily;

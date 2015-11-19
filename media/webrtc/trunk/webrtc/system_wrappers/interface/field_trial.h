@@ -24,7 +24,7 @@
 //
 // Or link with a default one provided in:
 //
-//   system_wrappers/source/system_wrappers.gyp:field_trial_default
+//   system_wrappers/system_wrappers.gyp:field_trial_default
 //
 //
 // They are designed to wire up directly to chrome field trials and to speed up

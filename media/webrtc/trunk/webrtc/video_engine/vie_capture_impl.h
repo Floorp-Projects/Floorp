@@ -47,8 +47,8 @@ class ViECaptureImpl
       const int capture_id,
       const CaptureCapability& capture_capability = CaptureCapability());
   virtual int StopCapture(const int capture_id);
-  virtual int SetRotateCapturedFrames(const int capture_id,
-                                      const RotateCapturedFrame rotation);
+  virtual int SetVideoRotation(const int capture_id,
+                               const VideoRotation rotation);
   virtual int SetCaptureDelay(const int capture_id,
                               const unsigned int capture_delay_ms);
   virtual int NumberOfCapabilities(const char* unique_idUTF8,
@@ -62,7 +62,7 @@ class ViECaptureImpl
     const char* dialog_title, void* parent_window = NULL,
     const unsigned int x = 200, const unsigned int y = 200);
   virtual int GetOrientation(const char* unique_idUTF8,
-                             RotateCapturedFrame& orientation);
+                             VideoRotation& orientation);
   virtual int EnableBrightnessAlarm(const int capture_id, const bool enable);
   virtual int RegisterObserver(const int capture_id,
                                ViECaptureObserver& observer);

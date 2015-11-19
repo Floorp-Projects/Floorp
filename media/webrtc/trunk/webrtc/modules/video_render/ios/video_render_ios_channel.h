@@ -24,8 +24,8 @@ class VideoRenderIosChannel : public VideoRenderCallback {
   virtual ~VideoRenderIosChannel();
 
   // Implementation of VideoRenderCallback.
-  virtual int32_t RenderFrame(const uint32_t stream_id,
-                              I420VideoFrame& video_frame) OVERRIDE;
+  int32_t RenderFrame(const uint32_t stream_id,
+                      const I420VideoFrame& video_frame) override;
 
   int SetStreamSettings(const float z_order,
                         const float left,

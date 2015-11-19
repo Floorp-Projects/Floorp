@@ -2936,9 +2936,6 @@ nsObjectLoadingContent::AsyncStartPluginInstance()
   }
 
   nsCOMPtr<nsIRunnable> event = new nsAsyncInstantiateEvent(this);
-  if (!event) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
   nsresult rv = NS_DispatchToCurrentThread(event);
   if (NS_SUCCEEDED(rv)) {
     // Track pending events

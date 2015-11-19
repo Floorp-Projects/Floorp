@@ -10,6 +10,8 @@
 
 #include "webrtc/common_video/libyuv/include/scaler.h"
 
+#include <algorithm>
+
 // NOTE(ajm): Path provided by gyp.
 #include "libyuv.h"  // NOLINT
 
@@ -54,18 +56,37 @@ int Scaler::Scale(const I420VideoFrame& src_frame,
     return -2;
 
   // Making sure that destination frame is of sufficient size.
-  // Aligning stride values based on width.
-  dst_frame->CreateEmptyFrame(dst_width_, dst_height_,
-                              dst_width_, (dst_width_ + 1) / 2,
-                              (dst_width_ + 1) / 2);
+  dst_frame->set_video_frame_buffer(
+      buffer_pool_.CreateBuffer(dst_width_, dst_height_));
 
-  return libyuv::I420Scale(src_frame.buffer(kYPlane),
+  // We want to preserve aspect ratio instead of stretching the frame.
+  // Therefore, we need to crop the source frame. Calculate the largest center
+  // aligned region of the source frame that can be used.
+  const int cropped_src_width =
+      std::min(src_width_, dst_width_ * src_height_ / dst_height_);
+  const int cropped_src_height =
+      std::min(src_height_, dst_height_ * src_width_ / dst_width_);
+  // Make sure the offsets are even to avoid rounding errors for the U/V planes.
+  const int src_offset_x = ((src_width_ - cropped_src_width) / 2) & ~1;
+  const int src_offset_y = ((src_height_ - cropped_src_height) / 2) & ~1;
+
+  const uint8_t* y_ptr = src_frame.buffer(kYPlane) +
+                         src_offset_y * src_frame.stride(kYPlane) +
+                         src_offset_x;
+  const uint8_t* u_ptr = src_frame.buffer(kUPlane) +
+                         src_offset_y / 2 * src_frame.stride(kUPlane) +
+                         src_offset_x / 2;
+  const uint8_t* v_ptr = src_frame.buffer(kVPlane) +
+                         src_offset_y / 2 * src_frame.stride(kVPlane) +
+                         src_offset_x / 2;
+
+  return libyuv::I420Scale(y_ptr,
                            src_frame.stride(kYPlane),
-                           src_frame.buffer(kUPlane),
+                           u_ptr,
                            src_frame.stride(kUPlane),
-                           src_frame.buffer(kVPlane),
+                           v_ptr,
                            src_frame.stride(kVPlane),
-                           src_width_, src_height_,
+                           cropped_src_width, cropped_src_height,
                            dst_frame->buffer(kYPlane),
                            dst_frame->stride(kYPlane),
                            dst_frame->buffer(kUPlane),

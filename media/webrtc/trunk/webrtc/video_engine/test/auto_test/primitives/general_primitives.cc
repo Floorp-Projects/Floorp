@@ -65,6 +65,12 @@ void RenderInWindow(webrtc::ViERender* video_render_interface,
   EXPECT_EQ(0, video_render_interface->StartRender(frame_provider_id));
 }
 
+void StopRenderInWindow(webrtc::ViERender* video_render_interface,
+                        int frame_provider_id) {
+  EXPECT_EQ(0, video_render_interface->StopRender(frame_provider_id));
+  EXPECT_EQ(0, video_render_interface->RemoveRenderer(frame_provider_id));
+}
+
 void RenderToFile(webrtc::ViERender* renderer_interface,
                   int frame_provider_id,
                   ViEToFileRenderer *to_file_renderer) {

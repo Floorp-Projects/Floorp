@@ -17,14 +17,15 @@ namespace rtc {
 class MacWindowPicker : public WindowPicker {
  public:
   MacWindowPicker();
-  ~MacWindowPicker();
-  virtual bool Init();
-  virtual bool IsVisible(const WindowId& id);
-  virtual bool MoveToFront(const WindowId& id);
-  virtual bool GetWindowList(WindowDescriptionList* descriptions);
-  virtual bool GetDesktopList(DesktopDescriptionList* descriptions);
-  virtual bool GetDesktopDimensions(const DesktopId& id, int* width,
-                                    int* height);
+  ~MacWindowPicker() override;
+  bool Init() override;
+  bool IsVisible(const WindowId& id) override;
+  bool MoveToFront(const WindowId& id) override;
+  bool GetWindowList(WindowDescriptionList* descriptions) override;
+  bool GetDesktopList(DesktopDescriptionList* descriptions) override;
+  bool GetDesktopDimensions(const DesktopId& id,
+                            int* width,
+                            int* height) override;
 
  private:
   void* lib_handle_;

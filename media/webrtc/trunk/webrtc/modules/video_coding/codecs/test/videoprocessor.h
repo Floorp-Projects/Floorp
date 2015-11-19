@@ -76,7 +76,7 @@ struct TestConfig {
   // The length of a single frame of the input video file. This value is
   // calculated out of the width and height according to the video format
   // specification. Must be set before processing.
-  int frame_length_in_bytes;
+  size_t frame_length_in_bytes;
 
   // Force the encoder and decoder to use a single core for processing.
   // Using a single core is necessary to get a deterministic behavior for the
@@ -144,7 +144,7 @@ class VideoProcessor {
 
   // Return the size of the encoded frame in bytes. Dropped frames by the
   // encoder are regarded as zero size.
-  virtual int EncodedFrameSize() = 0;
+  virtual size_t EncodedFrameSize() = 0;
 
   // Return the number of dropped frames.
   virtual int NumberDroppedFrames() = 0;
@@ -163,12 +163,12 @@ class VideoProcessorImpl : public VideoProcessor {
                      const TestConfig& config,
                      Stats* stats);
   virtual ~VideoProcessorImpl();
-  virtual bool Init() OVERRIDE;
-  virtual bool ProcessFrame(int frame_number) OVERRIDE;
+  bool Init() override;
+  bool ProcessFrame(int frame_number) override;
 
  private:
   // Invoked by the callback when a frame has completed encoding.
-  void FrameEncoded(webrtc::EncodedImage* encodedImage);
+  void FrameEncoded(const webrtc::EncodedImage& encodedImage);
   // Invoked by the callback when a frame has completed decoding.
   void FrameDecoded(const webrtc::I420VideoFrame& image);
   // Used for getting a 32-bit integer representing time
@@ -176,13 +176,13 @@ class VideoProcessorImpl : public VideoProcessor {
   int GetElapsedTimeMicroseconds(const webrtc::TickTime& start,
                                  const webrtc::TickTime& stop);
   // Updates the encoder with the target bit rate and the frame rate.
-  virtual void SetRates(int bit_rate, int frame_rate) OVERRIDE;
+  void SetRates(int bit_rate, int frame_rate) override;
   // Return the size of the encoded frame in bytes.
-  virtual int EncodedFrameSize() OVERRIDE;
+  size_t EncodedFrameSize() override;
   // Return the number of dropped frames.
-  virtual int NumberDroppedFrames() OVERRIDE;
+  int NumberDroppedFrames() override;
   // Return the number of spatial resizes.
-  virtual int NumberSpatialResizes() OVERRIDE;
+  int NumberSpatialResizes() override;
 
   webrtc::VideoEncoder* encoder_;
   webrtc::VideoDecoder* decoder_;
@@ -206,7 +206,7 @@ class VideoProcessorImpl : public VideoProcessor {
   bool last_frame_missing_;
   // If Init() has executed successfully.
   bool initialized_;
-  int encoded_frame_size_;
+  size_t encoded_frame_size_;
   int prev_time_stamp_;
   int num_dropped_frames_;
   int num_spatial_resizes_;
@@ -225,10 +225,10 @@ class VideoProcessorImpl : public VideoProcessor {
    public:
     explicit VideoProcessorEncodeCompleteCallback(VideoProcessorImpl* vp)
         : video_processor_(vp) {}
-    virtual int32_t Encoded(
-        webrtc::EncodedImage& encoded_image,
-        const webrtc::CodecSpecificInfo* codec_specific_info = NULL,
-        const webrtc::RTPFragmentationHeader* fragmentation = NULL) OVERRIDE;
+    int32_t Encoded(
+        const webrtc::EncodedImage& encoded_image,
+        const webrtc::CodecSpecificInfo* codec_specific_info,
+        const webrtc::RTPFragmentationHeader* fragmentation) override;
 
    private:
     VideoProcessorImpl* video_processor_;
@@ -241,7 +241,7 @@ class VideoProcessorImpl : public VideoProcessor {
       explicit VideoProcessorDecodeCompleteCallback(VideoProcessorImpl* vp)
       : video_processor_(vp) {
     }
-    virtual int32_t Decoded(webrtc::I420VideoFrame& image) OVERRIDE;
+      int32_t Decoded(webrtc::I420VideoFrame& image) override;
 
    private:
     VideoProcessorImpl* video_processor_;

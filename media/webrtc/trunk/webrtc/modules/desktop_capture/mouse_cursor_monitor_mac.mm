@@ -16,6 +16,7 @@
 #include <CoreFoundation/CoreFoundation.h>
 
 #include "webrtc/base/macutils.h"
+#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/modules/desktop_capture/desktop_capture_options.h"
 #include "webrtc/modules/desktop_capture/desktop_frame.h"
 #include "webrtc/modules/desktop_capture/mac/desktop_configuration.h"
@@ -23,7 +24,6 @@
 #include "webrtc/modules/desktop_capture/mac/full_screen_chrome_window_detector.h"
 #include "webrtc/modules/desktop_capture/mouse_cursor.h"
 #include "webrtc/system_wrappers/interface/logging.h"
-#include "webrtc/system_wrappers/interface/scoped_ptr.h"
 #include "webrtc/system_wrappers/interface/scoped_refptr.h"
 
 namespace webrtc {
@@ -35,8 +35,8 @@ class MouseCursorMonitorMac : public MouseCursorMonitor {
                         ScreenId screen_id);
   virtual ~MouseCursorMonitorMac();
 
-  virtual void Init(Callback* callback, Mode mode) OVERRIDE;
-  virtual void Capture() OVERRIDE;
+  void Init(Callback* callback, Mode mode) override;
+  void Capture() override;
 
  private:
   static void DisplaysReconfiguredCallback(CGDirectDisplayID display,
@@ -52,7 +52,7 @@ class MouseCursorMonitorMac : public MouseCursorMonitor {
   ScreenId screen_id_;
   Callback* callback_;
   Mode mode_;
-  scoped_ptr<MouseCursor> last_cursor_;
+  rtc::scoped_ptr<MouseCursor> last_cursor_;
   scoped_refptr<FullScreenChromeWindowDetector>
       full_screen_chrome_window_detector_;
 };
@@ -268,14 +268,15 @@ void MouseCursorMonitorMac::CaptureImage() {
 
   // Create a MouseCursor that describes the cursor and pass it to
   // the client.
-  scoped_ptr<DesktopFrame> image(
+  rtc::scoped_ptr<DesktopFrame> image(
       new BasicDesktopFrame(DesktopSize(size.width(), size.height())));
   memcpy(image->data(), src_data,
          size.width() * size.height() * DesktopFrame::kBytesPerPixel);
 
   CFRelease(image_data_ref);
 
-  scoped_ptr<MouseCursor> cursor(new MouseCursor(image.release(), hotspot));
+  rtc::scoped_ptr<MouseCursor> cursor(
+      new MouseCursor(image.release(), hotspot));
   last_cursor_.reset(MouseCursor::CopyOf(*cursor));
 
   callback_->OnMouseCursor(cursor.release());

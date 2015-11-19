@@ -123,6 +123,7 @@ WEBIDL_FILES = [
     'DOMError.webidl',
     'DOMException.webidl',
     'DOMImplementation.webidl',
+    'DominatorTree.webidl',
     'DOMMatrix.webidl',
     'DOMMobileMessageError.webidl',
     'DOMParser.webidl',

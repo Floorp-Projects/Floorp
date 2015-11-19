@@ -64,6 +64,7 @@
 #include "nsStyleStruct.h"              // for nsTimingFunction
 #include "nsTArray.h"                   // for nsTArray, nsTArray_Impl, etc
 #include "nsThreadUtils.h"              // for NS_IsMainThread
+#include "prsystem.h"                   // for PR_GetPhysicalMemorySize
 #include "SharedMemoryBasic.h"          // for SharedMemoryBasic
 #include "WheelScrollAnimation.h"
 
@@ -330,6 +331,11 @@ using mozilla::gfx::PointTyped;
  * The multiplier we apply to the displayport size if it is not skating (see
  * documentation for the skate size multipliers above).
  *
+ * \li\b apz.x_skate_highmem_adjust
+ * \li\b apz.y_skate_highmem_adjust
+ * On high memory systems, we adjust the displayport during skating
+ * to be larger so we can reduce checkerboarding.
+ *
  * \li\b apz.zoom_animation_duration_ms
  * This controls how long the zoom-to-rect animation takes.\n
  * Units: ms
@@ -344,6 +350,16 @@ StaticAutoPtr<ComputedTimingFunction> gZoomAnimationFunction;
  * Computed time function used for curving up velocity when it gets high.
  */
 StaticAutoPtr<ComputedTimingFunction> gVelocityCurveFunction;
+
+/**
+ * Returns true if this is a high memory system and we can use
+ * extra memory for a larger displayport to reduce checkerboarding.
+ */
+static bool gIsHighMemSystem = false;
+static bool IsHighMemSystem()
+{
+  return gIsHighMemSystem;
+}
 
 /**
  * Maximum zoom amount, always used, even if a page asks for higher.
@@ -810,6 +826,10 @@ AsyncPanZoomController::InitializeGlobalState()
                      gfxPrefs::APZCurveFunctionX2(),
                      gfxPrefs::APZCurveFunctionY2()));
   ClearOnShutdown(&gVelocityCurveFunction);
+
+  uint64_t sysmem = PR_GetPhysicalMemorySize();
+  uint64_t threshold = 1LL << 32; // 4 GB in bytes
+  gIsHighMemSystem = sysmem >= threshold;
 }
 
 AsyncPanZoomController::AsyncPanZoomController(uint64_t aLayersId,
@@ -1204,6 +1224,8 @@ nsEventStatus AsyncPanZoomController::OnTouchStart(const MultiTouchInput& aEvent
     case PANNING:
     case PANNING_LOCKED_X:
     case PANNING_LOCKED_Y:
+    case PANNING_LOCKED_X_SMOOTH_SCROLL:
+    case PANNING_LOCKED_Y_SMOOTH_SCROLL:
     case CROSS_SLIDING_X:
     case CROSS_SLIDING_Y:
     case PINCHING:
@@ -1257,6 +1279,8 @@ nsEventStatus AsyncPanZoomController::OnTouchMove(const MultiTouchInput& aEvent)
     case PANNING:
     case PANNING_LOCKED_X:
     case PANNING_LOCKED_Y:
+    case PANNING_LOCKED_X_SMOOTH_SCROLL:
+    case PANNING_LOCKED_Y_SMOOTH_SCROLL:
     case PAN_MOMENTUM:
       TrackTouch(aEvent);
       return nsEventStatus_eConsumeNoDefault;
@@ -1318,6 +1342,10 @@ nsEventStatus AsyncPanZoomController::OnTouchEnd(const MultiTouchInput& aEvent) 
     }
     return nsEventStatus_eIgnore;
 
+  case PANNING_LOCKED_X_SMOOTH_SCROLL:
+  case PANNING_LOCKED_Y_SMOOTH_SCROLL:
+    CancelAnimation();
+    MOZ_FALLTHROUGH;
   case PANNING:
   case PANNING_LOCKED_X:
   case PANNING_LOCKED_Y:
@@ -2116,6 +2144,7 @@ void AsyncPanZoomController::HandlePanning(double aAngle) {
     mY.SetAxisLocked(true);
     if (canScrollHorizontal) {
       SetState(PANNING_LOCKED_X);
+      overscrollHandoffChain->RequestSnapOnLock(Layer::VERTICAL);
     } else {
       SetState(CROSS_SLIDING_X);
       mX.SetAxisLocked(true);
@@ -2124,6 +2153,7 @@ void AsyncPanZoomController::HandlePanning(double aAngle) {
     mX.SetAxisLocked(true);
     if (canScrollVertical) {
       SetState(PANNING_LOCKED_Y);
+      overscrollHandoffChain->RequestSnapOnLock(Layer::HORIZONTAL);
     } else {
       SetState(CROSS_SLIDING_Y);
       mY.SetAxisLocked(true);
@@ -2139,6 +2169,19 @@ void AsyncPanZoomController::HandlePanningUpdate(const ScreenPoint& aPanDistance
 
     double angle = atan2(aPanDistance.y, aPanDistance.x); // range [-pi, pi]
     angle = fabs(angle); // range [0, pi]
+
+    {
+      // If we can scroll on both axes, we want to allow breaking axis-lock. If
+      // we can only scroll on one axis, we want to always enable entering to
+      // axis-lock.
+      ReentrantMonitorAutoEnter lock(mMonitor);
+      if (!mX.CanScroll() || !mY.CanScroll()) {
+        if (mState == PANNING) {
+          HandlePanning(angle);
+        }
+        return;
+      }
+    }
 
     float breakThreshold = gfxPrefs::APZAxisBreakoutThreshold() * APZCTreeManager::GetDPI();
 
@@ -2409,7 +2452,20 @@ void AsyncPanZoomController::HandleSmoothScrollOverscroll(const ParentLayerPoint
 }
 
 void AsyncPanZoomController::StartSmoothScroll(ScrollSource aSource) {
-  SetState(SMOOTH_SCROLL);
+  // Only cancel animation and change state if the user isn't pan-locked.
+  // Snapping is requested during panning if the opposing axis of an
+  // unscrollable axis is locked.
+  if (mState == PANNING_LOCKED_X) {
+    mY.SetAxisLocked(false);
+    SetState(PANNING_LOCKED_X_SMOOTH_SCROLL);
+  } else if (mState == PANNING_LOCKED_Y) {
+    mX.SetAxisLocked(false);
+    SetState(PANNING_LOCKED_Y_SMOOTH_SCROLL);
+  } else {
+    CancelAnimation();
+    SetState(SMOOTH_SCROLL);
+  }
+
   nsPoint initialPosition = CSSPoint::ToAppUnits(mFrameMetrics.GetScrollOffset());
   // Cast velocity from ParentLayerPoints/ms to CSSPoints/ms then convert to
   // appunits/second
@@ -2551,6 +2607,11 @@ CalculateDisplayPortSize(const CSSSize& aCompositionSize,
   float yMultiplier = fabsf(aVelocity.y) < gfxPrefs::APZMinSkateSpeed()
                         ? gfxPrefs::APZYStationarySizeMultiplier()
                         : gfxPrefs::APZYSkateSizeMultiplier();
+
+  if (IsHighMemSystem()) {
+    xMultiplier += gfxPrefs::APZXSkateHighMemAdjust();
+    yMultiplier += gfxPrefs::APZYSkateHighMemAdjust();
+  }
 
   // Ensure that it is at least as large as the visible area inflated by the
   // danger zone. If this is not the case then the "AboutToCheckerboard"
@@ -2812,7 +2873,15 @@ bool AsyncPanZoomController::UpdateAnimation(const TimeStamp& aSampleTime,
       }
     } else {
       mAnimation = nullptr;
-      SetState(NOTHING);
+      if (mState == PANNING_LOCKED_X_SMOOTH_SCROLL) {
+        mY.SetAxisLocked(true);
+        SetState(PANNING_LOCKED_X);
+      } else if (mState == PANNING_LOCKED_Y_SMOOTH_SCROLL) {
+        mX.SetAxisLocked(true);
+        SetState(PANNING_LOCKED_Y);
+      } else {
+        SetState(NOTHING);
+      }
       RequestContentRepaint();
     }
     UpdateSharedCompositorFrameMetrics();
@@ -3148,8 +3217,6 @@ void AsyncPanZoomController::NotifyLayersUpdated(const FrameMetrics& aLayerMetri
       Stringify(mFrameMetrics.GetScrollOffset()).c_str(),
       Stringify(aLayerMetrics.GetSmoothScrollOffset()).c_str());
 
-    CancelAnimation();
-
     // It's important to not send repaint requests between this
     // CopySmoothScrollInfo call and the sending of the scroll update
     // acknowledgement below, otherwise that repaint request will get rejected
@@ -3380,7 +3447,10 @@ bool AsyncPanZoomController::IsTransformingState(PanZoomState aState) {
 }
 
 bool AsyncPanZoomController::IsInPanningState() const {
-  return (mState == PANNING || mState == PANNING_LOCKED_X || mState == PANNING_LOCKED_Y);
+  return (mState == PANNING ||
+          mState == PANNING_LOCKED_X || mState == PANNING_LOCKED_Y ||
+          mState == PANNING_LOCKED_X_SMOOTH_SCROLL ||
+          mState == PANNING_LOCKED_Y_SMOOTH_SCROLL);
 }
 
 void AsyncPanZoomController::UpdateZoomConstraints(const ZoomConstraints& aConstraints) {
@@ -3497,6 +3567,7 @@ void AsyncPanZoomController::ShareCompositorFrameMetrics() {
 
 void AsyncPanZoomController::RequestSnap() {
   if (RefPtr<GeckoContentController> controller = GetGeckoContentController()) {
+    ReentrantMonitorAutoEnter lock(mMonitor);
     APZC_LOG("%p requesting snap near %s\n", this,
         Stringify(mFrameMetrics.GetScrollOffset()).c_str());
     controller->RequestFlingSnap(mFrameMetrics.GetScrollId(),

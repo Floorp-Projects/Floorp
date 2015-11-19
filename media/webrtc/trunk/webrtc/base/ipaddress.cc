@@ -275,7 +275,7 @@ bool IPIsAny(const IPAddress& ip) {
     case AF_INET:
       return ip == IPAddress(INADDR_ANY);
     case AF_INET6:
-      return ip == IPAddress(in6addr_any);
+      return ip == IPAddress(in6addr_any) || ip == IPAddress(kV4MappedPrefix);
     case AF_UNSPEC:
       return false;
   }
@@ -300,9 +300,7 @@ bool IPIsPrivate(const IPAddress& ip) {
       return IsPrivateV4(ip.v4AddressAsHostOrderInteger());
     }
     case AF_INET6: {
-      in6_addr v6 = ip.ipv6_address();
-      return (v6.s6_addr[0] == 0xFE && v6.s6_addr[1] == 0x80) ||
-          IPIsLoopback(ip);
+      return IPIsLinkLocal(ip) || IPIsLoopback(ip);
     }
   }
   return false;
@@ -430,6 +428,21 @@ bool IPIs6Bone(const IPAddress& ip) {
 
 bool IPIs6To4(const IPAddress& ip) {
   return IPIsHelper(ip, k6To4Prefix, 16);
+}
+
+bool IPIsLinkLocal(const IPAddress& ip) {
+  // Can't use the helper because the prefix is 10 bits.
+  in6_addr addr = ip.ipv6_address();
+  return addr.s6_addr[0] == 0xFE && addr.s6_addr[1] == 0x80;
+}
+
+// According to http://www.ietf.org/rfc/rfc2373.txt, Appendix A, page 19.  An
+// address which contains MAC will have its 11th and 12th bytes as FF:FE as well
+// as the U/L bit as 1.
+bool IPIsMacBased(const IPAddress& ip) {
+  in6_addr addr = ip.ipv6_address();
+  return ((addr.s6_addr[8] & 0x02) && addr.s6_addr[11] == 0xFF &&
+          addr.s6_addr[12] == 0xFE);
 }
 
 bool IPIsSiteLocal(const IPAddress& ip) {

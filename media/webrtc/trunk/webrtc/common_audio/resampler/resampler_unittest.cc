@@ -18,11 +18,9 @@
 
 namespace webrtc {
 namespace {
-const ResamplerType kTypes[] = {
-  kResamplerSynchronous,
-  kResamplerSynchronousStereo,
-};
-const size_t kTypesSize = sizeof(kTypes) / sizeof(*kTypes);
+
+const int kNumChannels[] = {1, 2};
+const size_t kNumChannelsSize = sizeof(kNumChannels) / sizeof(*kNumChannels);
 
 // Rates we must support.
 const int kMaxRate = 96000;
@@ -70,10 +68,10 @@ TEST_F(ResamplerTest, Reset) {
   // Check that all required combinations are supported.
   for (size_t i = 0; i < kRatesSize; ++i) {
     for (size_t j = 0; j < kRatesSize; ++j) {
-      for (size_t k = 0; k < kTypesSize; ++k) {
+      for (size_t k = 0; k < kNumChannelsSize; ++k) {
         std::ostringstream ss;
         ss << "Input rate: " << kRates[i] << ", output rate: " << kRates[j]
-            << ", type: " << kTypes[k];
+            << ", channels: " << kNumChannels[k];
         SCOPED_TRACE(ss.str());
         EXPECT_EQ(0, rs_.Reset(kRates[i], kRates[j], kTypes[k]));
       }
@@ -177,8 +175,7 @@ void ResamplerTest::RunResampleTest(int channels,
                        channels, max_delay), 40.0f);
 }
 
-TEST_F(ResamplerTest, Synchronous) {
-  // Number of channels is 1, mono mode.
+TEST_F(ResamplerTest, Mono) {
   const int kChannels = 1;
   // We don't attempt to be exhaustive here, but just get good coverage. Some
   // combinations of rates will not be resampled, and some give an odd
@@ -192,8 +189,7 @@ TEST_F(ResamplerTest, Synchronous) {
   }
 }
 
-TEST_F(ResamplerTest, SynchronousStereo) {
-  // Number of channels is 2, stereo mode.
+TEST_F(ResamplerTest, Stereo) {
   const int kChannels = 2;
   // We don't attempt to be exhaustive here, but just get good coverage. Some
   // combinations of rates will not be resampled, and some give an odd
@@ -206,5 +202,6 @@ TEST_F(ResamplerTest, SynchronousStereo) {
     }
   }
 }
+
 }  // namespace
 }  // namespace webrtc

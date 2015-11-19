@@ -21,7 +21,7 @@
 using namespace android;
 
 // WebRTC
-#include "webrtc/common_video/interface/texture_video_frame.h"
+//#include "webrtc/common_video/interface/texture_video_frame.h"
 #include "webrtc/video_engine/include/vie_external_codec.h"
 #include "runnable_utils.h"
 
@@ -172,9 +172,12 @@ public:
 
   NS_IMETHODIMP Run() override
   {
+    MonitorAutoLock lock(mMonitor);
+    if (mEnding) {
+      return NS_OK;
+    }
     MOZ_ASSERT(mThread);
 
-    MonitorAutoLock lock(mMonitor);
     while (true) {
       if (mInputFrames.empty()) {
         // Wait for new input.
@@ -546,12 +549,12 @@ public:
     CODEC_LOGD("Decoder NewFrame: %dx%d, timestamp %lld, renderTimeMs %lld",
                picSize.width, picSize.height, timestamp, renderTimeMs);
 
-    nsAutoPtr<webrtc::I420VideoFrame> videoFrame(
-      new webrtc::TextureVideoFrame(new ImageNativeHandle(grallocImage.forget()),
-                                    picSize.width,
-                                    picSize.height,
-                                    timestamp,
-                                    renderTimeMs));
+    nsAutoPtr<webrtc::I420VideoFrame> videoFrame(new webrtc::I420VideoFrame(
+      new ImageNativeHandle(grallocImage.forget()),
+      picSize.width,
+      picSize.height,
+      timestamp,
+      renderTimeMs));
     if (videoFrame != nullptr) {
       mCallback->Decoded(*videoFrame);
     }
@@ -1074,9 +1077,9 @@ WebrtcOMXH264VideoEncoder::~WebrtcOMXH264VideoEncoder()
 // Note: stagefright doesn't handle these parameters.
 int32_t
 WebrtcOMXH264VideoEncoder::SetChannelParameters(uint32_t aPacketLossRate,
-                                                int aRoundTripTimeMs)
+                                                int64_t aRoundTripTimeMs)
 {
-  CODEC_LOGD("WebrtcOMXH264VideoEncoder:%p set channel packet loss:%u, rtt:%d",
+  CODEC_LOGD("WebrtcOMXH264VideoEncoder:%p set channel packet loss:%u, rtt:%" PRIi64,
              this, aPacketLossRate, aRoundTripTimeMs);
 
   return WEBRTC_VIDEO_CODEC_OK;

@@ -26,9 +26,9 @@ public:
     // Resets the filter.
     void Reset();
     // Updates the filter with a new sample.
-    void Update(uint32_t rttMs);
+    void Update(int64_t rttMs);
     // A getter function for the current RTT level in ms.
-    uint32_t RttMs() const;
+    int64_t RttMs() const;
 
 private:
     // The size of the drift and jump memory buffers
@@ -39,19 +39,19 @@ private:
     // samples and average to the standard deviation.
     // Returns true if the long time statistics should be updated
     // and false otherwise
-    bool JumpDetection(uint32_t rttMs);
+    bool JumpDetection(int64_t rttMs);
     // Detects RTT drifts by comparing the difference between
     // max and average to the standard deviation.
     // Returns true if the long time statistics should be updated
     // and false otherwise
-    bool DriftDetection(uint32_t rttMs);
+    bool DriftDetection(int64_t rttMs);
     // Computes the short time average and maximum of the vector buf.
-    void ShortRttFilter(uint32_t* buf, uint32_t length);
+    void ShortRttFilter(int64_t* buf, uint32_t length);
 
     bool                  _gotNonZeroUpdate;
     double                _avgRtt;
     double                _varRtt;
-    uint32_t        _maxRtt;
+    int64_t         _maxRtt;
     uint32_t        _filtFactCount;
     const uint32_t  _filtFactMax;
     const double          _jumpStdDevs;
@@ -59,8 +59,8 @@ private:
     int32_t         _jumpCount;
     int32_t         _driftCount;
     const int32_t   _detectThreshold;
-    uint32_t        _jumpBuf[kMaxDriftJumpCount];
-    uint32_t        _driftBuf[kMaxDriftJumpCount];
+    int64_t         _jumpBuf[kMaxDriftJumpCount];
+    int64_t         _driftBuf[kMaxDriftJumpCount];
 };
 
 }  // namespace webrtc

@@ -20,24 +20,24 @@ namespace test {
 DirectTransport::DirectTransport()
     : lock_(CriticalSectionWrapper::CreateCriticalSection()),
       packet_event_(EventWrapper::Create()),
-      thread_(ThreadWrapper::CreateThread(NetworkProcess, this)),
+      thread_(ThreadWrapper::CreateThread(
+          NetworkProcess, this, "NetworkProcess")),
       clock_(Clock::GetRealTimeClock()),
       shutting_down_(false),
       fake_network_(FakeNetworkPipe::Config()) {
-  unsigned int thread_id;
-  EXPECT_TRUE(thread_->Start(thread_id));
+  EXPECT_TRUE(thread_->Start());
 }
 
 DirectTransport::DirectTransport(
     const FakeNetworkPipe::Config& config)
     : lock_(CriticalSectionWrapper::CreateCriticalSection()),
       packet_event_(EventWrapper::Create()),
-      thread_(ThreadWrapper::CreateThread(NetworkProcess, this)),
+      thread_(ThreadWrapper::CreateThread(
+          NetworkProcess, this, "NetworkProcess")),
       clock_(Clock::GetRealTimeClock()),
       shutting_down_(false),
       fake_network_(config) {
-  unsigned int thread_id;
-  EXPECT_TRUE(thread_->Start(thread_id));
+  EXPECT_TRUE(thread_->Start());
 }
 
 DirectTransport::~DirectTransport() { StopSending(); }
@@ -78,11 +78,10 @@ bool DirectTransport::NetworkProcess(void* transport) {
 
 bool DirectTransport::SendPackets() {
   fake_network_.Process();
-  int wait_time_ms = fake_network_.TimeUntilNextProcess();
+  int64_t wait_time_ms = fake_network_.TimeUntilNextProcess();
   if (wait_time_ms > 0) {
-    switch (packet_event_->Wait(wait_time_ms)) {
+    switch (packet_event_->Wait(static_cast<unsigned long>(wait_time_ms))) {
       case kEventSignaled:
-        packet_event_->Reset();
         break;
       case kEventTimeout:
         break;

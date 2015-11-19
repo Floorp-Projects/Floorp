@@ -54,15 +54,12 @@ void InternalUnloadDll(DllHandle handle) {
 // stack trace gets displayed as <unknown module> instead of the actual library
 // -> it can not be suppressed.
 // https://code.google.com/p/address-sanitizer/issues/detail?id=89
-//
-// Skip dlclose() on ThreadSanitizer since it's hitting an assert.
-// https://code.google.com/p/webrtc/issues/detail?id=3895
-#if !defined(ADDRESS_SANITIZER) && !defined(THREAD_SANITIZER)
+#if !defined(ADDRESS_SANITIZER)
   if (dlclose(handle) != 0) {
     WEBRTC_TRACE(kTraceError, kTraceAudioDevice, -1,
                "%s", GetDllError());
   }
-#endif  // !defined(ADDRESS_SANITIZER) && !defined(THREAD_SANITIZER)
+#endif  // !defined(ADDRESS_SANITIZER)
 #else
 #error Not implemented
 #endif

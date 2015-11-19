@@ -259,13 +259,8 @@ bool WindowUtilX11::GetWindowRect(::Window window, XRectangle & rcWindow, bool b
   }
 
   // Adjust to limit in screen
-  XRectangle  screen_rect;
   int nScreenCX = DisplayWidth(display(), DefaultScreen(display()));
   int nScreenCY = DisplayHeight(display(), DefaultScreen(display()));
-  screen_rect.x = 0;
-  screen_rect.y = 0;
-  screen_rect.width = nScreenCX;
-  screen_rect.height = nScreenCY;
 
   if (absx < 0) {
     win_info.width += absx;

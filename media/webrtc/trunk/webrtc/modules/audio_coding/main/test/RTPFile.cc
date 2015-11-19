@@ -11,6 +11,7 @@
 #include "RTPFile.h"
 
 #include <stdlib.h>
+#include <limits>
 
 #ifdef WIN32
 #   include <Winsock2.h>
@@ -20,7 +21,7 @@
 
 #include "audio_coding_module.h"
 #include "engine_configurations.h"
-#include "rw_lock_wrapper.h"
+#include "webrtc/system_wrappers/interface/rw_lock_wrapper.h"
 // TODO(tlegrand): Consider removing usage of gtest.
 #include "testing/gtest/include/gtest/gtest.h"
 
@@ -42,25 +43,22 @@ void RTPStream::ParseRTPHeader(WebRtcRTPHeader* rtpInfo,
 void RTPStream::MakeRTPheader(uint8_t* rtpHeader, uint8_t payloadType,
                               int16_t seqNo, uint32_t timeStamp,
                               uint32_t ssrc) {
-  rtpHeader[0] = (unsigned char) 0x80;
-  rtpHeader[1] = (unsigned char) (payloadType & 0xFF);
-  rtpHeader[2] = (unsigned char) ((seqNo >> 8) & 0xFF);
-  rtpHeader[3] = (unsigned char) ((seqNo) & 0xFF);
-  rtpHeader[4] = (unsigned char) ((timeStamp >> 24) & 0xFF);
-  rtpHeader[5] = (unsigned char) ((timeStamp >> 16) & 0xFF);
-
-  rtpHeader[6] = (unsigned char) ((timeStamp >> 8) & 0xFF);
-  rtpHeader[7] = (unsigned char) (timeStamp & 0xFF);
-
-  rtpHeader[8] = (unsigned char) ((ssrc >> 24) & 0xFF);
-  rtpHeader[9] = (unsigned char) ((ssrc >> 16) & 0xFF);
-
-  rtpHeader[10] = (unsigned char) ((ssrc >> 8) & 0xFF);
-  rtpHeader[11] = (unsigned char) (ssrc & 0xFF);
+  rtpHeader[0] = 0x80;
+  rtpHeader[1] = payloadType;
+  rtpHeader[2] = (seqNo >> 8) & 0xFF;
+  rtpHeader[3] = seqNo & 0xFF;
+  rtpHeader[4] = timeStamp >> 24;
+  rtpHeader[5] = (timeStamp >> 16) & 0xFF;
+  rtpHeader[6] = (timeStamp >> 8) & 0xFF;
+  rtpHeader[7] = timeStamp & 0xFF;
+  rtpHeader[8] = ssrc >> 24;
+  rtpHeader[9] = (ssrc >> 16) & 0xFF;
+  rtpHeader[10] = (ssrc >> 8) & 0xFF;
+  rtpHeader[11] = ssrc & 0xFF;
 }
 
 RTPPacket::RTPPacket(uint8_t payloadType, uint32_t timeStamp, int16_t seqNo,
-                     const uint8_t* payloadData, uint16_t payloadSize,
+                     const uint8_t* payloadData, size_t payloadSize,
                      uint32_t frequency)
     : payloadType(payloadType),
       timeStamp(timeStamp),
@@ -87,7 +85,7 @@ RTPBuffer::~RTPBuffer() {
 
 void RTPBuffer::Write(const uint8_t payloadType, const uint32_t timeStamp,
                       const int16_t seqNo, const uint8_t* payloadData,
-                      const uint16_t payloadSize, uint32_t frequency) {
+                      const size_t payloadSize, uint32_t frequency) {
   RTPPacket *packet = new RTPPacket(payloadType, timeStamp, seqNo, payloadData,
                                     payloadSize, frequency);
   _queueRWLock->AcquireLockExclusive();
@@ -95,8 +93,8 @@ void RTPBuffer::Write(const uint8_t payloadType, const uint32_t timeStamp,
   _queueRWLock->ReleaseLockExclusive();
 }
 
-uint16_t RTPBuffer::Read(WebRtcRTPHeader* rtpInfo, uint8_t* payloadData,
-                         uint16_t payloadSize, uint32_t* offset) {
+size_t RTPBuffer::Read(WebRtcRTPHeader* rtpInfo, uint8_t* payloadData,
+                       size_t payloadSize, uint32_t* offset) {
   _queueRWLock->AcquireLockShared();
   RTPPacket *packet = _rtpQueue.front();
   _rtpQueue.pop();
@@ -143,21 +141,11 @@ void RTPFile::WriteHeader() {
   fprintf(_rtpFile, "#!RTPencode%s\n", "1.0");
   uint32_t dummy_variable = 0;
   // should be converted to network endian format, but does not matter when 0
-  if (fwrite(&dummy_variable, 4, 1, _rtpFile) != 1) {
-    return;
-  }
-  if (fwrite(&dummy_variable, 4, 1, _rtpFile) != 1) {
-    return;
-  }
-  if (fwrite(&dummy_variable, 4, 1, _rtpFile) != 1) {
-    return;
-  }
-  if (fwrite(&dummy_variable, 2, 1, _rtpFile) != 1) {
-    return;
-  }
-  if (fwrite(&dummy_variable, 2, 1, _rtpFile) != 1) {
-    return;
-  }
+  EXPECT_EQ(1u, fwrite(&dummy_variable, 4, 1, _rtpFile));
+  EXPECT_EQ(1u, fwrite(&dummy_variable, 4, 1, _rtpFile));
+  EXPECT_EQ(1u, fwrite(&dummy_variable, 4, 1, _rtpFile));
+  EXPECT_EQ(1u, fwrite(&dummy_variable, 2, 1, _rtpFile));
+  EXPECT_EQ(1u, fwrite(&dummy_variable, 2, 1, _rtpFile));
   fflush(_rtpFile);
 }
 
@@ -180,35 +168,26 @@ void RTPFile::ReadHeader() {
 
 void RTPFile::Write(const uint8_t payloadType, const uint32_t timeStamp,
                     const int16_t seqNo, const uint8_t* payloadData,
-                    const uint16_t payloadSize, uint32_t frequency) {
+                    const size_t payloadSize, uint32_t frequency) {
   /* write RTP packet to file */
   uint8_t rtpHeader[12];
   MakeRTPheader(rtpHeader, payloadType, seqNo, timeStamp, 0);
-  uint16_t lengthBytes = htons(12 + payloadSize + 8);
-  uint16_t plen = htons(12 + payloadSize);
+  ASSERT_LE(12 + payloadSize + 8, std::numeric_limits<u_short>::max());
+  uint16_t lengthBytes = htons(static_cast<u_short>(12 + payloadSize + 8));
+  uint16_t plen = htons(static_cast<u_short>(12 + payloadSize));
   uint32_t offsetMs;
 
   offsetMs = (timeStamp / (frequency / 1000));
   offsetMs = htonl(offsetMs);
-  if (fwrite(&lengthBytes, 2, 1, _rtpFile) != 1) {
-    return;
-  }
-  if (fwrite(&plen, 2, 1, _rtpFile) != 1) {
-    return;
-  }
-  if (fwrite(&offsetMs, 4, 1, _rtpFile) != 1) {
-    return;
-  }
-  if (fwrite(rtpHeader, 12, 1, _rtpFile) != 1) {
-    return;
-  }
-  if (fwrite(payloadData, 1, payloadSize, _rtpFile) != payloadSize) {
-    return;
-  }
+  EXPECT_EQ(1u, fwrite(&lengthBytes, 2, 1, _rtpFile));
+  EXPECT_EQ(1u, fwrite(&plen, 2, 1, _rtpFile));
+  EXPECT_EQ(1u, fwrite(&offsetMs, 4, 1, _rtpFile));
+  EXPECT_EQ(1u, fwrite(&rtpHeader, 12, 1, _rtpFile));
+  EXPECT_EQ(payloadSize, fwrite(payloadData, 1, payloadSize, _rtpFile));
 }
 
-uint16_t RTPFile::Read(WebRtcRTPHeader* rtpInfo, uint8_t* payloadData,
-                       uint16_t payloadSize, uint32_t* offset) {
+size_t RTPFile::Read(WebRtcRTPHeader* rtpInfo, uint8_t* payloadData,
+                     size_t payloadSize, uint32_t* offset) {
   uint16_t lengthBytes;
   uint16_t plen;
   uint8_t rtpHeader[12];
@@ -237,7 +216,7 @@ uint16_t RTPFile::Read(WebRtcRTPHeader* rtpInfo, uint8_t* payloadData,
   if (lengthBytes < 20) {
     return 0;
   }
-  if (payloadSize < (lengthBytes - 20)) {
+  if (payloadSize < static_cast<size_t>((lengthBytes - 20))) {
     return 0;
   }
   lengthBytes -= 20;

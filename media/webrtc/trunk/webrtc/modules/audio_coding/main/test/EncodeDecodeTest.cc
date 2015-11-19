@@ -15,11 +15,11 @@
 #include <stdlib.h>
 
 #include "testing/gtest/include/gtest/gtest.h"
+#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/common_types.h"
 #include "webrtc/modules/audio_coding/main/interface/audio_coding_module.h"
 #include "webrtc/modules/audio_coding/main/acm2/acm_common_defs.h"
 #include "webrtc/modules/audio_coding/main/test/utility.h"
-#include "webrtc/system_wrappers/interface/scoped_ptr.h"
 #include "webrtc/system_wrappers/interface/trace.h"
 #include "webrtc/test/testsupport/fileutils.h"
 
@@ -37,7 +37,7 @@ TestPacketization::~TestPacketization() {
 int32_t TestPacketization::SendData(
     const FrameType /* frameType */, const uint8_t payloadType,
     const uint32_t timeStamp, const uint8_t* payloadData,
-    const uint16_t payloadSize,
+    const size_t payloadSize,
     const RTPFragmentationHeader* /* fragmentation */) {
   _rtpStream->Write(payloadType, timeStamp, _seqNo++, payloadData, payloadSize,
                     _frequency);
@@ -53,7 +53,6 @@ Sender::Sender()
 
 void Sender::Setup(AudioCodingModule *acm, RTPStream *rtpStream,
                    std::string in_file_name, int sample_rate, int channels) {
-  acm->InitializeSender();
   struct CodecInst sendCodec;
   int noOfCodecs = acm->NumberOfCodecs();
   int codecNo;
@@ -100,11 +99,8 @@ bool Sender::Add10MsData() {
   if (!_pcmFile.EndOfFile()) {
     EXPECT_GT(_pcmFile.Read10MsData(_audioFrame), 0);
     int32_t ok = _acm->Add10MsData(_audioFrame);
-    EXPECT_EQ(0, ok);
-    if (ok != 0) {
-      return false;
-    }
-    return true;
+    EXPECT_GE(ok, 0);
+    return ok >= 0 ? true : false;
   }
   return false;
 }
@@ -114,7 +110,6 @@ void Sender::Run() {
     if (!Add10MsData()) {
       break;
     }
-    EXPECT_GT(_acm->Process(), -1);
   }
 }
 
@@ -276,7 +271,7 @@ void EncodeDecodeTest::Perform() {
   codePars[1] = 0;
   codePars[2] = 0;
 
-  scoped_ptr<AudioCodingModule> acm(AudioCodingModule::Create(0));
+  rtc::scoped_ptr<AudioCodingModule> acm(AudioCodingModule::Create(0));
   struct CodecInst sendCodecTmp;
   numCodecs = acm->NumberOfCodecs();
 
@@ -332,7 +327,7 @@ std::string EncodeDecodeTest::EncodeToFile(int fileType,
                                            int codeId,
                                            int* codePars,
                                            int testMode) {
-  scoped_ptr<AudioCodingModule> acm(AudioCodingModule::Create(1));
+  rtc::scoped_ptr<AudioCodingModule> acm(AudioCodingModule::Create(1));
   RTPFile rtpFile;
   std::string fileName = webrtc::test::TempFilename(webrtc::test::OutputPath(),
                                                     "encode_decode_rtp");

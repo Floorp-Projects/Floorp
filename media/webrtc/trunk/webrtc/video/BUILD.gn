@@ -34,6 +34,9 @@ source_set("video") {
     configs -= [ "//build/config/clang:find_bad_constructs" ]
   }
 
-  deps = [ "../video_engine:video_engine_core" ]
+  deps = [
+    "..:webrtc_common",
+    "../video_engine:video_engine_core",
+  ]
 }
 

@@ -2227,9 +2227,6 @@ nsresult nsPluginHost::ScanPluginsDirectory(nsIFile *pluginsDir,
 
       pluginTag = new nsPluginTag(&info, fileModTime, fromExtension);
       pluginFile.FreePluginInfo(info);
-      if (!pluginTag)
-        return NS_ERROR_OUT_OF_MEMORY;
-
       pluginTag->mLibrary = library;
       uint32_t state;
       rv = pluginTag->GetBlocklistState(&state);
@@ -3319,8 +3316,6 @@ nsPluginHost::EnsurePrivateDirServiceProvider()
   if (!mPrivateDirServiceProvider) {
     nsresult rv;
     mPrivateDirServiceProvider = new nsPluginDirServiceProvider();
-    if (!mPrivateDirServiceProvider)
-      return NS_ERROR_OUT_OF_MEMORY;
     nsCOMPtr<nsIDirectoryService> dirService(do_GetService(kDirectoryServiceContractID, &rv));
     if (NS_FAILED(rv))
       return rv;

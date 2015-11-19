@@ -15,8 +15,6 @@
 
 #include <limits>
 
-#include "webrtc/base/compile_assert.h"
-
 namespace rtc {
 namespace internal {
 
@@ -177,10 +175,10 @@ struct RangeCheckImpl<Dst, Src, DST_UNSIGNED, SRC_SIGNED, OVERLAPS_RANGE> {
 
 template <typename Dst, typename Src>
 inline RangeCheckResult RangeCheck(Src value) {
-  COMPILE_ASSERT(std::numeric_limits<Src>::is_specialized,
-                 argument_must_be_numeric);
-  COMPILE_ASSERT(std::numeric_limits<Dst>::is_specialized,
-                 result_must_be_numeric);
+  static_assert(std::numeric_limits<Src>::is_specialized,
+                "argument must be numeric");
+  static_assert(std::numeric_limits<Dst>::is_specialized,
+                "result must be numeric");
   return RangeCheckImpl<Dst, Src>::Check(value);
 }
 
