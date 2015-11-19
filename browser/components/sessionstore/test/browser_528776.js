@@ -11,11 +11,16 @@ function browserWindowsCount(expected) {
      "number of open browser windows according to getBrowserState");
 }
 
-add_task(function() {
+function test() {
+  waitForExplicitFinish();
+
   browserWindowsCount(1);
 
-  let win = yield BrowserTestUtils.openNewBrowserWindow();
-  browserWindowsCount(2);
-  yield BrowserTestUtils.closeWindow(win);
-  browserWindowsCount(1);
-});
+  var win = openDialog(location, "", "chrome,all,dialog=no");
+  promiseWindowLoaded(win).then(() => {
+    browserWindowsCount(2);
+    win.close();
+    browserWindowsCount(1);
+    finish();
+  });
+}
