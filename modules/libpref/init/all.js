@@ -352,8 +352,12 @@ pref("media.webm.intel_decoder.enabled", true);
 pref("media.gstreamer.enabled", true);
 pref("media.gstreamer.enable-blacklist", true);
 #endif
-#if defined(MOZ_APPLEMEDIA) && defined(MOZ_WIDGET_UIKIT)
+#ifdef MOZ_APPLEMEDIA
+#ifdef MOZ_WIDGET_UIKIT
 pref("media.mp3.enabled", true);
+#endif
+pref("media.apple.mp3.enabled", true);
+pref("media.apple.mp4.enabled", true);
 #endif
 #ifdef MOZ_WEBRTC
 pref("media.navigator.enabled", true);
