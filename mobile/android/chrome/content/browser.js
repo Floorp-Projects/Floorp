@@ -6185,9 +6185,9 @@ var ViewportHandler = {
 
     if (aData) {
       let scrollChange = JSON.parse(aData);
-      let win = BrowserApp.selectedTab.browser.contentWindow;
-      let windowUtils = win.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
+      let windowUtils = window.QueryInterface(Ci.nsIInterfaceRequestor).getInterface(Ci.nsIDOMWindowUtils);
       windowUtils.setNextPaintSyncId(scrollChange.id);
+      let win = BrowserApp.selectedTab.browser.contentWindow;
       win.scrollBy(scrollChange.x, scrollChange.y);
     }
   },
