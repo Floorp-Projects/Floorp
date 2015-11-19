@@ -24,7 +24,7 @@ public:
     AudioDeviceUtilitySndio(const int32_t id);
     virtual ~AudioDeviceUtilitySndio();
 
-    virtual int32_t Init() OVERRIDE;
+    virtual int32_t Init() override;
 
 private:
     CriticalSectionWrapper& _critSect;

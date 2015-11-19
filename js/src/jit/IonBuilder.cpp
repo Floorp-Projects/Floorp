@@ -9863,17 +9863,11 @@ IonBuilder::setElemTryCache(bool* emitted, MDefinition* object,
 
     bool barrier = true;
 
-    if (index->mightBeType(MIRType_Int32)) {
-        // Bail if we might have a barriered write to a dense element, as the
-        // dense element stub doesn't support this yet.
-        if (PropertyWriteNeedsTypeBarrier(alloc(), constraints(), current,
-                                          &object, nullptr, &value, /* canModify = */ true))
-        {
-            trackOptimizationOutcome(TrackedOutcome::NeedsTypeBarrier);
-            return true;
-        }
-        if (index->type() == MIRType_Int32)
-            barrier = false;
+    if (index->type() == MIRType_Int32 &&
+        !PropertyWriteNeedsTypeBarrier(alloc(), constraints(), current,
+                                       &object, nullptr, &value, /* canModify = */ true))
+    {
+        barrier = false;
     }
 
     // We can avoid worrying about holes in the IC if we know a priori we are safe
@@ -9890,7 +9884,7 @@ IonBuilder::setElemTryCache(bool* emitted, MDefinition* object,
     if (NeedsPostBarrier(info(), value))
         current->add(MPostWriteBarrier::New(alloc(), object, value));
 
-    // Emit SetElementCache.
+    // Emit SetPropertyCache.
     bool strict = JSOp(*pc) == JSOP_STRICTSETELEM;
     MSetPropertyCache* ins =
         MSetPropertyCache::New(alloc(), object, index, value, strict, barrier, guardHoles);

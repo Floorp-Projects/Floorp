@@ -1,0 +1,75 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <title>Test for performance.translate()</title>
+    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+    <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+    <script type="text/javascript" src="test_performance_user_timing.js"></script>
+  </head>
+  <body>
+    <pre id="test">
+      <script class="testbody" type="text/javascript">
+function testBasic() {
+  ok("translateTime" in performance, "Performance.translateTime exists.");
+  try {
+    performance.translateTime(0, null);
+    ok(false, "Wrong use of performance.translateTime.");
+  } catch(e) {
+    ok(true, "Wrong use of performance.translateTime.");
+  }
+
+  next();
+}
+
+function testWindow() {
+  is(performance.translateTime(42, this), 42, "translating time with the same window.");
+
+  var now = performance.now();
+
+  var ifr = document.createElement('iframe');
+  ifr.src = 'file_empty.html';
+  document.body.appendChild(ifr);
+
+  ifr.onload = function() {
+    var a = performance.translateTime(0, ifr.contentWindow);
+    ok (a >= now, "Time has been translated from a window that started loading later than we did");
+    next();
+  }
+}
+
+function testWorker() {
+  var now = performance.now();
+
+  var w = new Worker('empty_worker.js');
+  var a = performance.translateTime(0, w);
+  // bug 1226147
+  todo (a >= now, "Time has been translated from a Worker that started loading later than we did");
+  next();
+}
+
+function testSharedWorker() {
+  var now = performance.now();
+
+  var w = new SharedWorker('empty_worker.js');
+  var a = performance.translateTime(0, w);
+  ok (a >= now, "Time has been translated from a SharedWorker that started loading later than we did");
+  next();
+}
+
+var tests = [ testBasic, testWindow, testWorker, testSharedWorker ];
+function next() {
+  if (!tests.length) {
+    SimpleTest.finish();
+    return;
+  }
+
+  var test = tests.shift();
+  test();
+}
+
+SimpleTest.waitForExplicitFinish();
+addLoadEvent(next);
+      </script>
+    </pre>
+  </body>
+</html>

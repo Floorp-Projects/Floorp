@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 @import "defines.css";
+@import "scrollbar.css";
 
 @namespace url("http://www.w3.org/1999/xhtml");
 @namespace xul url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
@@ -13,75 +14,72 @@
 }
 
 /* Style the scrollbars */
-html xul|scrollbar {
-  display: none;
-}
-
-xul|window xul|scrollbar {
-  display: block;
-}
-
-xul|window xul|scrollbar[orient="vertical"] {
-  -moz-appearance: none !important;
-  opacity: 0;
+xul|scrollbar[root="true"] {
   position: relative;
-  margin-left: -8px;
-  min-width: 8px;
+  z-index: 2147483647;
+}
+
+xul|scrollbar {
+  -moz-appearance: none !important;
   background-color: transparent !important;
   background-image: none !important;
   border: 0px solid transparent !important;
+  pointer-events: none;
 }
 
-xul|window xul|scrollbar[orient="vertical"] xul|thumb {
+/* Scrollbar code will reset the margin to the correct side depending on
+   where layout actually puts the scrollbar */
+xul|scrollbar[orient="vertical"] {
+  margin-left: -8px;
+  min-width: 8px;
+  max-width: 8px;
+}
+
+xul|scrollbar[orient="vertical"] xul|thumb {
   max-width: 6px !important;
   min-width: 6px !important;
 }
 
-xul|window xul|scrollbar[orient="horizontal"] {
-  -moz-appearance: none !important;
-  opacity: 0;
-  position: relative;
-  min-height: 8px;
+xul|scrollbar[orient="horizontal"] {
   margin-top: -8px;
-  background-color: transparent !important;
-  background-image: none !important;
-  border: 0px solid transparent !important;
+  min-height: 8px;
+  max-height: 8px;
 }
 
-xul|window xul|scrollbar[orient="horizontal"] xul|thumb {
+xul|scrollbar[orient="horizontal"] xul|thumb {
   max-height: 6px !important;
   min-height: 6px !important;
 }
 
-xul|*[panning="true"] xul|scrollbar {
-  opacity: 1;
+xul|scrollbar:not([active="true"]),
+xul|scrollbar[disabled] {
+  opacity: 0;
 }
 
-xul|window xul|scrollbox {
-  overflow-y: scroll;
-  overflow-x: scroll;
-}
-
-xul|window xul|scrollbarbutton {
+xul|scrollbarbutton {
   min-height: 8px !important;
   min-width: 8px !important;
   -moz-appearance: none !important;
   visibility: hidden;
 }
 
-xul|window xul|scrollbarbutton[sbattr="scrollbar-up-top"],
-xul|window xul|scrollbarbutton[sbattr="scrollbar-bottom-top"] {
+xul|scrollbarbutton[sbattr="scrollbar-up-top"],
+xul|scrollbarbutton[sbattr="scrollbar-bottom-top"] {
   display: none;
 }
 
-xul|window xul|scrollbar xul|thumb {
-  background-color: var(--color_background_scroller) !important;
+xul|thumb {
+  background-color: rgba(0, 0, 0, 0.4) !important;
   -moz-border-top-colors: none !important;
   -moz-border-bottom-colors: none !important;
   -moz-border-right-colors: none !important;
   -moz-border-left-colors: none !important;
   border: 1px solid rgba(255, 255, 255, 0.4) !important;
-  border-radius: var(--form_border_radius);
+  border-radius: 3px;
+}
+
+xul|scrollbarbutton {
+  background-image: none !important;
 }
 
 select:not([size]):not([multiple]) > xul|scrollbar,

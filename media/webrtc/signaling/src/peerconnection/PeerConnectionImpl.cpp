@@ -393,7 +393,7 @@ PeerConnectionImpl::PeerConnectionImpl(const GlobalObject* aGlobal)
   , mHaveDataStream(false)
   , mAddCandidateErrorCount(0)
   , mTrickle(true) // TODO(ekr@rtfm.com): Use pref
-  , mShouldSuppressNegotiationNeeded(false)
+  , mNegotiationNeeded(false)
 {
 #if !defined(MOZILLA_EXTERNAL_LINKAGE)
   MOZ_ASSERT(NS_IsMainThread());
@@ -2619,8 +2619,10 @@ PeerConnectionImpl::SetSignalingState_m(PCImplSignalingState aSignalingState,
   mSignalingState = aSignalingState;
 
   bool fireNegotiationNeeded = false;
-
   if (mSignalingState == PCImplSignalingState::SignalingStable) {
+    // Either negotiation is done, or we've rolled back. In either case, we
+    // need to re-evaluate whether further negotiation is required.
+    mNegotiationNeeded = false;
     // If we're rolling back a local offer, we might need to remove some
     // transports, but nothing further needs to be done.
     mMedia->ActivateOrRemoveTransports(*mJsepSession);
@@ -2628,16 +2630,16 @@ PeerConnectionImpl::SetSignalingState_m(PCImplSignalingState aSignalingState,
       mMedia->UpdateMediaPipelines(*mJsepSession);
       InitializeDataChannel();
       mMedia->StartIceChecks(*mJsepSession);
-      mShouldSuppressNegotiationNeeded = false;
-      if (!mJsepSession->AllLocalTracksAreAssigned()) {
-        CSFLogInfo(logTag, "Not all local tracks were assigned to an "
-                           "m-section, either because the offerer did not offer"
-                           " to receive enough tracks, or because tracks were "
-                           "added after CreateOffer/Answer, but before "
-                           "offer/answer completed. This requires "
-                           "renegotiation.");
-        fireNegotiationNeeded = true;
-      }
+    }
+
+    if (!mJsepSession->AllLocalTracksAreAssigned()) {
+      CSFLogInfo(logTag, "Not all local tracks were assigned to an "
+                 "m-section, either because the offerer did not offer"
+                 " to receive enough tracks, or because tracks were "
+                 "added after CreateOffer/Answer, but before "
+                 "offer/answer completed. This requires "
+                 "renegotiation.");
+      fireNegotiationNeeded = true;
     }
 
     // Telemetry: record info on the current state of streams/renegotiations/etc
@@ -2655,9 +2657,6 @@ PeerConnectionImpl::SetSignalingState_m(PCImplSignalingState aSignalingState,
         mMaxSending[i] = sending[i];
       }
     }
-
-  } else {
-    mShouldSuppressNegotiationNeeded = true;
   }
 
   if (mSignalingState == PCImplSignalingState::SignalingClosed) {
@@ -2672,6 +2671,8 @@ PeerConnectionImpl::SetSignalingState_m(PCImplSignalingState aSignalingState,
   pco->OnStateChange(PCObserverStateType::SignalingState, rv);
 
   if (fireNegotiationNeeded) {
+    // We don't use MaybeFireNegotiationNeeded here, since content might have
+    // already cased a transition from stable.
     OnNegotiationNeeded();
   }
 }
@@ -3480,11 +3481,41 @@ PeerConnectionImpl::RecordLongtermICEStatistics() {
 void
 PeerConnectionImpl::OnNegotiationNeeded()
 {
-  if (mShouldSuppressNegotiationNeeded) {
+  if (mSignalingState != PCImplSignalingState::SignalingStable) {
+    // We will check whether we need to renegotiate when we reach stable again
     return;
   }
 
-  mShouldSuppressNegotiationNeeded = true;
+  if (mNegotiationNeeded) {
+    return;
+  }
+
+  mNegotiationNeeded = true;
+
+  RUN_ON_THREAD(mThread,
+                WrapRunnableNM(&MaybeFireNegotiationNeeded_static, mHandle),
+                NS_DISPATCH_NORMAL);
+}
+
+/* static */
+void
+PeerConnectionImpl::MaybeFireNegotiationNeeded_static(
+    const std::string& pcHandle)
+{
+  PeerConnectionWrapper wrapper(pcHandle);
+  if (!wrapper.impl()) {
+    return;
+  }
+
+  wrapper.impl()->MaybeFireNegotiationNeeded();
+}
+
+void
+PeerConnectionImpl::MaybeFireNegotiationNeeded()
+{
+  if (!mNegotiationNeeded) {
+    return;
+  }
 
   RefPtr<PeerConnectionObserver> pco = do_QueryObjectReferent(mPCObserver);
   if (!pco) {
