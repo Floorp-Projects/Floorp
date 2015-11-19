@@ -5,6 +5,7 @@
 
 package org.mozilla.gecko.gfx;
 
+import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Tab;
@@ -156,9 +157,16 @@ public class LayerRenderer implements Tabs.OnTabsChangedListener {
         mTasks = new CopyOnWriteArrayList<RenderTask>();
         mLastFrameTime = System.nanoTime();
 
-        mVertScrollLayer = new ScrollbarLayer(this, scrollbarImage, size, true);
-        mHorizScrollLayer = new ScrollbarLayer(this, diagonalFlip(scrollbarImage), new IntSize(size.height, size.width), false);
-        mFadeRunnable = new FadeRunnable();
+        if (!AppConstants.MOZ_ANDROID_APZ) {
+            mVertScrollLayer = new ScrollbarLayer(this, scrollbarImage, size, true);
+            mHorizScrollLayer = new ScrollbarLayer(this, diagonalFlip(scrollbarImage), new IntSize(size.height, size.width), false);
+            mFadeRunnable = new FadeRunnable();
+        } else {
+            // final variables need to be initialized in the constructor
+            mVertScrollLayer = null;
+            mHorizScrollLayer = null;
+            mFadeRunnable = null;
+        }
 
         mFrameTimings = new int[60];
         mCurrentFrame = mFrameTimingsSum = mDroppedFrames = 0;
@@ -191,8 +199,10 @@ public class LayerRenderer implements Tabs.OnTabsChangedListener {
             mCoordByteBuffer = null;
             mCoordBuffer = null;
         }
-        mHorizScrollLayer.destroy();
-        mVertScrollLayer.destroy();
+        if (!AppConstants.MOZ_ANDROID_APZ) {
+            mHorizScrollLayer.destroy();
+            mVertScrollLayer.destroy();
+        }
         Tabs.unregisterOnTabsChangedListener(this);
         mZoomedViewListeners.clear();
     }
@@ -467,32 +477,33 @@ public class LayerRenderer implements Tabs.OnTabsChangedListener {
             // Run through pre-render tasks
             runRenderTasks(mTasks, false, mFrameStartTime);
 
-            boolean hideScrollbars = (mView.getFullScreenState() == FullScreenState.NON_ROOT_ELEMENT);
-            if (!mPageContext.fuzzyEquals(mLastPageContext) && !hideScrollbars) {
-                // The viewport or page changed, so show the scrollbars again
-                // as per UX decision. Don't do this if we're disabling scrolling due to
-                // full-screen mode though.
-                mVertScrollLayer.unfade();
-                mHorizScrollLayer.unfade();
-                mFadeRunnable.scheduleStartFade(ScrollbarLayer.FADE_DELAY);
-            } else if (mFadeRunnable.timeToFade()) {
-                final long currentMillis = SystemClock.elapsedRealtime();
-                final boolean stillFading = mVertScrollLayer.fade(mFadeRunnable.mRunAt, currentMillis) |
-                        mHorizScrollLayer.fade(mFadeRunnable.mRunAt, currentMillis);
-                if (stillFading) {
-                    mFadeRunnable.scheduleNextFadeFrame();
+            if (!AppConstants.MOZ_ANDROID_APZ) {
+                boolean hideScrollbars = (mView.getFullScreenState() == FullScreenState.NON_ROOT_ELEMENT);
+                if (!mPageContext.fuzzyEquals(mLastPageContext) && !hideScrollbars) {
+                    // The viewport or page changed, so show the scrollbars again
+                    // as per UX decision. Don't do this if we're disabling scrolling due to
+                    // full-screen mode though.
+                    mVertScrollLayer.unfade();
+                    mHorizScrollLayer.unfade();
+                    mFadeRunnable.scheduleStartFade(ScrollbarLayer.FADE_DELAY);
+                } else if (mFadeRunnable.timeToFade()) {
+                    final long currentMillis = SystemClock.elapsedRealtime();
+                    final boolean stillFading = mVertScrollLayer.fade(mFadeRunnable.mRunAt, currentMillis) |
+                            mHorizScrollLayer.fade(mFadeRunnable.mRunAt, currentMillis);
+                    if (stillFading) {
+                        mFadeRunnable.scheduleNextFadeFrame();
+                    }
                 }
+                mLastPageContext = mPageContext;
+                mUpdated &= mVertScrollLayer.update(mPageContext);  // called on compositor thread
+                mUpdated &= mHorizScrollLayer.update(mPageContext); // called on compositor thread
             }
-            mLastPageContext = mPageContext;
 
             /* Update layers. */
             if (rootLayer != null) {
                 // Called on compositor thread.
                 mUpdated &= rootLayer.update(mPageContext);
             }
-
-            mUpdated &= mVertScrollLayer.update(mPageContext);  // called on compositor thread
-            mUpdated &= mHorizScrollLayer.update(mPageContext); // called on compositor thread
 
             for (Layer layer : mExtraLayers) {
                 mUpdated &= layer.update(mPageContext); // called on compositor thread
@@ -537,13 +548,15 @@ public class LayerRenderer implements Tabs.OnTabsChangedListener {
                 }
             }
 
-            /* Draw the vertical scrollbar. */
-            if (mPageRect.height() > mFrameMetrics.getHeight())
-                mVertScrollLayer.draw(mPageContext);
+            if (!AppConstants.MOZ_ANDROID_APZ) {
+                /* Draw the vertical scrollbar. */
+                if (mPageRect.height() > mFrameMetrics.getHeight())
+                    mVertScrollLayer.draw(mPageContext);
 
-            /* Draw the horizontal scrollbar. */
-            if (mPageRect.width() > mFrameMetrics.getWidth())
-                mHorizScrollLayer.draw(mPageContext);
+                /* Draw the horizontal scrollbar. */
+                if (mPageRect.width() > mFrameMetrics.getWidth())
+                    mHorizScrollLayer.draw(mPageContext);
+            }
 
             /* Measure how much of the screen is checkerboarding */
             Layer rootLayer = mView.getLayerClient().getRoot();
