@@ -771,11 +771,23 @@ public class ActivityChooserModel extends DataSetObservable {
                 ResolveInfo resolveInfo = resolveInfos.get(i);
 
                 /**
-                 * Mozilla: Do not display "Add to Firefox" from share menu.
+                 * Mozilla: We want "Add to Firefox" to appear differently inside of Firefox than
+                 * from external applications - override the name and icon here.
+                 *
+                 * Do not display the menu item if there are no devices to share to.
+                 *
+                 * Note: we check both the class name and the label to ensure we only change the
+                 * label of the current channel.
                  */
                 if (shareDialogClassName.equals(resolveInfo.activityInfo.name) &&
                         channelToRemoveLabel.equals(resolveInfo.loadLabel(packageManager))) {
-                    continue;
+                    // Don't add the menu item if there are no devices to share to.
+                    if (!hasOtherSyncClients()) {
+                        continue;
+                    }
+
+                    resolveInfo.labelRes = R.string.overlay_share_send_other;
+                    resolveInfo.icon = R.drawable.icon_shareplane;
                 }
 
                 mActivities.add(new ActivityResolveInfo(resolveInfo));
@@ -1289,6 +1301,32 @@ public class ActivityChooserModel extends DataSetObservable {
             }
 
             mReloadActivities = true;
+        }
+    }
+
+    /**
+     * Mozilla: Return whether or not there are other synced clients.
+     */
+    private boolean hasOtherSyncClients() {
+        // ClientsDatabaseAccessor returns stale data (bug 1145896) so we work around this by
+        // checking if we have accounts set up - if not, we can't have any clients.
+        if (!FirefoxAccounts.firefoxAccountsExist(mContext) &&
+                !SyncAccounts.syncAccountsExist(mContext))  {
+            return false;
+        }
+
+        final BrowserDB browserDB = GeckoProfile.get(mContext).getDB();
+        final TabsAccessor tabsAccessor = browserDB.getTabsAccessor();
+        final Cursor remoteClientsCursor = tabsAccessor
+                .getRemoteClientsByRecencyCursor(mContext);
+        if (remoteClientsCursor == null) {
+            return false;
+        }
+
+        try {
+            return remoteClientsCursor.getCount() > 0;
+        } finally {
+            remoteClientsCursor.close();
         }
     }
 

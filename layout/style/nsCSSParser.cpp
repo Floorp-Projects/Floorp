@@ -8775,6 +8775,10 @@ CSSParserImpl::ParseGridTemplateColumnsRows(nsCSSProperty aPropID)
   nsSubstring* ident = NextIdent();
   if (ident) {
     if (ident->LowerCaseEqualsLiteral("subgrid")) {
+      if (!nsLayoutUtils::IsGridTemplateSubgridValueEnabled()) {
+        REPORT_UNEXPECTED(PESubgridNotSupported);
+        return false;
+      }
       if (!ParseOptionalLineNameListAfterSubgrid(value)) {
         return false;
       }
@@ -8946,6 +8950,10 @@ CSSParserImpl::ParseGridTemplate()
   nsSubstring* ident = NextIdent();
   if (ident) {
     if (ident->LowerCaseEqualsLiteral("subgrid")) {
+      if (!nsLayoutUtils::IsGridTemplateSubgridValueEnabled()) {
+        REPORT_UNEXPECTED(PESubgridNotSupported);
+        return false;
+      }
       if (!ParseOptionalLineNameListAfterSubgrid(value)) {
         return false;
       }
@@ -9019,6 +9027,10 @@ CSSParserImpl::ParseGridTemplateAfterSlash(bool aColumnsIsTrackList)
   nsSubstring* ident = NextIdent();
   if (ident) {
     if (ident->LowerCaseEqualsLiteral("subgrid")) {
+      if (!nsLayoutUtils::IsGridTemplateSubgridValueEnabled()) {
+        REPORT_UNEXPECTED(PESubgridNotSupported);
+        return false;
+      }
       if (!ParseOptionalLineNameListAfterSubgrid(rowsValue)) {
         return false;
       }

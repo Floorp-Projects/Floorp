@@ -495,7 +495,7 @@ TraceLoggerThread::startEvent(uint32_t id)
     if (!traceLoggerState->isTextIdEnabled(id))
        return;
 
-    logTimestamp(id);
+    log(id);
 }
 
 void
@@ -520,7 +520,7 @@ TraceLoggerThread::stopEvent(uint32_t id)
     if (!traceLoggerState->isTextIdEnabled(id))
         return;
 
-    logTimestamp(TraceLogger_Stop);
+    log(TraceLogger_Stop);
 }
 
 void
@@ -531,6 +531,13 @@ TraceLoggerThread::logTimestamp(TraceLoggerTextId id)
 
 void
 TraceLoggerThread::logTimestamp(uint32_t id)
+{
+    MOZ_ASSERT(id > TraceLogger_LastTreeItem && id < TraceLogger_Last);
+    log(id);
+}
+
+void
+TraceLoggerThread::log(uint32_t id)
 {
     if (enabled == 0)
         return;

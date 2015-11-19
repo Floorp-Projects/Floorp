@@ -44,8 +44,13 @@ pref("browser.viewport.desktopWidth", 980);
 // the value is divided by 1000 and clamped to hard-coded min/max scale values.
 pref("browser.viewport.defaultZoom", -1);
 
-/* allow scrollbars to float above chrome ui */
-pref("ui.scrollbarsCanOverlapContent", 1);
+#ifdef MOZ_ANDROID_APZ
+// Show/Hide scrollbars when active/inactive
+pref("ui.showHideScrollbars", 1);
+pref("ui.useOverlayScrollbars", 1);
+pref("ui.scrollbarFadeBeginDelay", 450);
+pref("ui.scrollbarFadeDuration", 0);
+#endif
 
 /* turn off the caret blink after 10 cycles */
 pref("ui.caretBlinkCount", 10);

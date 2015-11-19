@@ -8,8 +8,6 @@
 
 #eyedropper-button::before {
   background-image: url("chrome://devtools/skin/images/command-eyedropper.png");
-  background-size: 64px 16px;
-  background-position: 0 center;
 }
 
 @media (min-resolution: 1.1dppx) {

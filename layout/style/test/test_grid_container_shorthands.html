@@ -12,6 +12,9 @@
 
 <script>
 
+var isGridTemplateSubgridValueEnabled =
+    SpecialPowers.getBoolPref("layout.css.grid-template-subgrid-value.enabled");
+
 var initial_values = {
     gridTemplateAreas: "none",
     gridTemplateColumns: "none",
@@ -139,37 +142,39 @@ var grid_template_test_cases = [
     },
     {
         specified: "subgrid",
-        gridTemplateColumns: "subgrid",
-        gridTemplateRows: "subgrid",
+        gridTemplateColumns: isGridTemplateSubgridValueEnabled ? "subgrid" : "none",
+        gridTemplateRows: isGridTemplateSubgridValueEnabled ? "subgrid" : "none",
     },
     {
         specified: "subgrid / subgrid",
-        gridTemplateColumns: "subgrid",
-        gridTemplateRows: "subgrid",
+        gridTemplateColumns: isGridTemplateSubgridValueEnabled ? "subgrid" : "none",
+        gridTemplateRows: isGridTemplateSubgridValueEnabled ? "subgrid" : "none",
     },
     {
         specified: "subgrid / subgrid [foo]",
-        gridTemplateColumns: "subgrid",
-        gridTemplateRows: "subgrid [foo]",
+        gridTemplateColumns: isGridTemplateSubgridValueEnabled ? "subgrid" : "none",
+        gridTemplateRows: isGridTemplateSubgridValueEnabled ? "subgrid [foo]" : "none",
     },
     {
         specified: "subgrid / subgrid [foo] repeat(3, [] [a b] [c])",
-        gridTemplateColumns: "subgrid",
-        gridTemplateRows: "subgrid [foo] [] [a b] [c] [] [a b] [c] [] [a b] [c]",
+        gridTemplateColumns: isGridTemplateSubgridValueEnabled ? "subgrid" : "none",
+        gridTemplateRows: isGridTemplateSubgridValueEnabled ?
+            "subgrid [foo] [] [a b] [c] [] [a b] [c] [] [a b] [c]" : "none",
     },
     {
         // https://bugzilla.mozilla.org/show_bug.cgi?id=978478#c1
         // The number of repetitions is clamped to
         // #define GRID_TEMPLATE_MAX_REPETITIONS 10000
         specified: "subgrid / subgrid [foo] repeat(999999999, [a])",
-        gridTemplateColumns: "subgrid",
+        gridTemplateColumns: isGridTemplateSubgridValueEnabled ? "subgrid" : "none",
         // Array(n + 1).join(s) is a hack for the non-standard s.repeat(n)
-        gridTemplateRows: "subgrid [foo]" + Array(10000 + 1).join(" [a]"),
+        gridTemplateRows: isGridTemplateSubgridValueEnabled ?
+            "subgrid [foo]" + Array(10000 + 1).join(" [a]") : "none",
     },
     {
         specified: "subgrid [] [foo]/ subgrid [bar",
-        gridTemplateColumns: "subgrid [] [foo]",
-        gridTemplateRows: "subgrid [bar]",
+        gridTemplateColumns: isGridTemplateSubgridValueEnabled ? "subgrid [] [foo]" : "none",
+        gridTemplateRows: isGridTemplateSubgridValueEnabled ? "subgrid [bar]" : "none",
     },
 ];
 
