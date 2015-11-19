@@ -60,6 +60,7 @@
 #include "nsRefPtrHashtable.h"
 #include "TouchEvents.h"
 #include "WritingModes.h"
+#include "InputData.h"
 #ifdef ACCESSIBILITY
 #include "nsAccessibilityService.h"
 #endif
@@ -1045,18 +1046,94 @@ nsBaseWidget::DispatchInputEvent(WidgetInputEvent* aEvent)
   return status;
 }
 
+class DispatchWheelEventOnMainThread : public Task
+{
+public:
+  DispatchWheelEventOnMainThread(const ScrollWheelInput& aWheelInput,
+                                 nsBaseWidget* aWidget,
+                                 nsEventStatus aAPZResult,
+                                 uint64_t aInputBlockId,
+                                 ScrollableLayerGuid aGuid)
+    : mWheelInput(aWheelInput)
+    , mWidget(aWidget)
+    , mAPZResult(aAPZResult)
+    , mInputBlockId(aInputBlockId)
+    , mGuid(aGuid)
+  {
+  }
+
+  void Run()
+  {
+    WidgetWheelEvent wheelEvent = mWheelInput.ToWidgetWheelEvent(mWidget);
+    mWidget->ProcessUntransformedAPZEvent(&wheelEvent, mGuid, mInputBlockId, mAPZResult);
+    return;
+  }
+
+private:
+  ScrollWheelInput mWheelInput;
+  nsBaseWidget* mWidget;
+  nsEventStatus mAPZResult;
+  uint64_t mInputBlockId;
+  ScrollableLayerGuid mGuid;
+};
+
+class DispatchWheelInputOnControllerThread : public Task
+{
+public:
+  DispatchWheelInputOnControllerThread(const WidgetWheelEvent& aWheelEvent,
+                                       APZCTreeManager* aAPZC,
+                                       nsBaseWidget* aWidget)
+    : mMainMessageLoop(MessageLoop::current())
+    , mWheelInput(aWheelEvent)
+    , mAPZC(aAPZC)
+    , mWidget(aWidget)
+    , mInputBlockId(0)
+  {
+  }
+
+  void Run()
+  {
+    mAPZResult = mAPZC->ReceiveInputEvent(mWheelInput, &mGuid, &mInputBlockId);
+    if (mAPZResult == nsEventStatus_eConsumeNoDefault) {
+      return;
+    }
+    mMainMessageLoop->PostTask(FROM_HERE,
+                               new DispatchWheelEventOnMainThread(mWheelInput, mWidget, mAPZResult, mInputBlockId, mGuid));
+    return;
+  }
+
+private:
+  MessageLoop* mMainMessageLoop;
+  ScrollWheelInput mWheelInput;
+  RefPtr<APZCTreeManager> mAPZC;
+  nsBaseWidget* mWidget;
+  nsEventStatus mAPZResult;
+  uint64_t mInputBlockId;
+  ScrollableLayerGuid mGuid;
+};
+
 nsEventStatus
 nsBaseWidget::DispatchAPZAwareEvent(WidgetInputEvent* aEvent)
 {
+  MOZ_ASSERT(NS_IsMainThread());
   if (mAPZC) {
-    uint64_t inputBlockId = 0;
-    ScrollableLayerGuid guid;
+    if (APZThreadUtils::IsControllerThread()) {
+      uint64_t inputBlockId = 0;
+      ScrollableLayerGuid guid;
 
-    nsEventStatus result = mAPZC->ReceiveInputEvent(*aEvent, &guid, &inputBlockId);
-    if (result == nsEventStatus_eConsumeNoDefault) {
-        return result;
+      nsEventStatus result = mAPZC->ReceiveInputEvent(*aEvent, &guid, &inputBlockId);
+      if (result == nsEventStatus_eConsumeNoDefault) {
+          return result;
+      }
+      return ProcessUntransformedAPZEvent(aEvent, guid, inputBlockId, result);
+    } else {
+      WidgetWheelEvent* wheelEvent = aEvent->AsWheelEvent();
+      if (wheelEvent) {
+        APZThreadUtils::RunOnControllerThread(new DispatchWheelInputOnControllerThread(*wheelEvent, mAPZC, this));
+        return nsEventStatus_eConsumeDoDefault;
+      }
+      MOZ_CRASH();
     }
-    return ProcessUntransformedAPZEvent(aEvent, guid, inputBlockId, result);
   }
 
   nsEventStatus status;
