@@ -14,7 +14,7 @@ add_task(function* () {
   let browser = win.gBrowser.browsers[1];
   is(browser.currentURI.spec, "about:mozilla", "tab was duplicated");
 
-  yield BrowserTestUtils.closeWindow(win);
+  yield promiseWindowClosed(win);
 });
 
 function promiseDelayedStartupFinished(win) {

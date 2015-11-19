@@ -67,7 +67,8 @@ function test() {
        "... and tabs not specifically forgetten weren't.");
 
     // clean up
+    newWin.close();
     gPrefService.clearUserPref("browser.sessionstore.max_tabs_undo");
-    BrowserTestUtils.closeWindow(newWin).then(finish);
+    finish();
   });
 }
