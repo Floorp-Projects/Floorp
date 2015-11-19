@@ -3929,7 +3929,7 @@ static void
 GenerateGetTypedOrUnboxedArrayElement(JSContext* cx, MacroAssembler& masm,
                                       IonCache::StubAttacher& attacher,
                                       HandleObject array, const Value& idval, Register object,
-                                      TypedOrValueRegister index, TypedOrValueRegister output,
+                                      ConstantOrRegister index, TypedOrValueRegister output,
                                       bool allowDoubleResult)
 {
     MOZ_ASSERT(GetPropertyIC::canAttachTypedOrUnboxedArrayElement(array, idval, output));
@@ -3945,49 +3945,54 @@ GenerateGetTypedOrUnboxedArrayElement(JSContext* cx, MacroAssembler& masm,
     if (idval.isString()) {
         MOZ_ASSERT(GetIndexFromString(idval.toString()) != UINT32_MAX);
 
-        // Part 1: Get the string into a register
-        Register str;
-        if (index.hasValue()) {
-            ValueOperand val = index.valueReg();
-            masm.branchTestString(Assembler::NotEqual, val, &failures);
-
-            str = masm.extractString(val, indexReg);
+        if (index.constant()) {
+            MOZ_ASSERT(idval == index.value());
+            masm.move32(Imm32(GetIndexFromString(idval.toString())), indexReg);
         } else {
-            MOZ_ASSERT(!index.typedReg().isFloat());
-            str = index.typedReg().gpr();
+            // Part 1: Get the string into a register
+            Register str;
+            if (index.reg().hasValue()) {
+                ValueOperand val = index.reg().valueReg();
+                masm.branchTestString(Assembler::NotEqual, val, &failures);
+
+                str = masm.extractString(val, indexReg);
+            } else {
+                MOZ_ASSERT(!index.reg().typedReg().isFloat());
+                str = index.reg().typedReg().gpr();
+            }
+
+            // Part 2: Call to translate the str into index
+            AllocatableRegisterSet regs(RegisterSet::Volatile());
+            LiveRegisterSet save(regs.asLiveSet());
+            masm.PushRegsInMask(save);
+            regs.takeUnchecked(str);
+
+            Register temp = regs.takeAnyGeneral();
+
+            masm.setupUnalignedABICall(temp);
+            masm.passABIArg(str);
+            masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, GetIndexFromString));
+            masm.mov(ReturnReg, indexReg);
+
+            LiveRegisterSet ignore;
+            ignore.add(indexReg);
+            masm.PopRegsInMaskIgnore(save, ignore);
+
+            masm.branch32(Assembler::Equal, indexReg, Imm32(UINT32_MAX), &failures);
         }
-
-        // Part 2: Call to translate the str into index
-        AllocatableRegisterSet regs(RegisterSet::Volatile());
-        LiveRegisterSet save(regs.asLiveSet());
-        masm.PushRegsInMask(save);
-        regs.takeUnchecked(str);
-
-        Register temp = regs.takeAnyGeneral();
-
-        masm.setupUnalignedABICall(temp);
-        masm.passABIArg(str);
-        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, GetIndexFromString));
-        masm.mov(ReturnReg, indexReg);
-
-        LiveRegisterSet ignore;
-        ignore.add(indexReg);
-        masm.PopRegsInMaskIgnore(save, ignore);
-
-        masm.branch32(Assembler::Equal, indexReg, Imm32(UINT32_MAX), &failures);
-
     } else {
         MOZ_ASSERT(idval.isInt32());
+        MOZ_ASSERT(!index.constant());
 
-        if (index.hasValue()) {
-            ValueOperand val = index.valueReg();
+        if (index.reg().hasValue()) {
+            ValueOperand val = index.reg().valueReg();
             masm.branchTestInt32(Assembler::NotEqual, val, &failures);
 
             // Unbox the index.
             masm.unboxInt32(val, indexReg);
         } else {
-            MOZ_ASSERT(!index.typedReg().isFloat());
-            indexReg = index.typedReg().gpr();
+            MOZ_ASSERT(!index.reg().typedReg().isFloat());
+            indexReg = index.reg().typedReg().gpr();
         }
     }
 
@@ -4061,7 +4066,7 @@ GetPropertyIC::tryAttachTypedOrUnboxedArrayElement(JSContext* cx, HandleScript o
 
     MacroAssembler masm(cx, ion, outerScript, profilerLeavePc_);
     StubAttacher attacher(*this);
-    GenerateGetTypedOrUnboxedArrayElement(cx, masm, attacher, obj, idval, object(), id().reg(),
+    GenerateGetTypedOrUnboxedArrayElement(cx, masm, attacher, obj, idval, object(), id(),
                                           output(), allowDoubleResult_);
     return linkAndAttachStub(cx, masm, attacher, ion, "typed array",
                              JS::TrackedOutcome::ICGetElemStub_TypedArray);
