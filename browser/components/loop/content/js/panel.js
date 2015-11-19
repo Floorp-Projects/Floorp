@@ -16,22 +16,16 @@ loop.panel = (function(_, mozL10n) {
   var GettingStartedView = React.createClass({displayName: "GettingStartedView",
     mixins: [sharedMixins.WindowCloseMixin],
 
-    propTypes: {
-      mozLoop: React.PropTypes.object.isRequired
-    },
-
     handleButtonClick: function() {
-      navigator.mozLoop.openGettingStartedTour("getting-started");
-      navigator.mozLoop.setLoopPref("gettingStarted.seen", true);
+      loop.requestMulti(
+        ["OpenGettingStartedTour", "getting-started"],
+        ["SetLoopPref", "gettingStarted.seen", true]);
       var event = new CustomEvent("GettingStartedSeen");
       window.dispatchEvent(event);
       this.closeWindow();
     },
 
     render: function() {
-      if (this.props.mozLoop.getLoopPref("gettingStarted.seen")) {
-        return null;
-      }
       return (
         React.createElement("div", {className: "fte-get-started-content"}, 
           React.createElement("header", {className: "fte-title"}, 
@@ -55,18 +49,14 @@ loop.panel = (function(_, mozL10n) {
   var SignInRequestView = React.createClass({displayName: "SignInRequestView",
     mixins: [sharedMixins.WindowCloseMixin],
 
-    propTypes: {
-      mozLoop: React.PropTypes.object.isRequired
-    },
-
     handleSignInClick: function(event) {
       event.preventDefault();
-      this.props.mozLoop.logInToFxA(true);
+      loop.request("LoginToFxA", true);
       this.closeWindow();
     },
 
     handleGuestClick: function(event) {
-      this.props.mozLoop.logOutFromFxA();
+      loop.request("LogoutFromFxA");
     },
 
     render: function() {
@@ -102,8 +92,23 @@ loop.panel = (function(_, mozL10n) {
   var ToSView = React.createClass({displayName: "ToSView",
     mixins: [sharedMixins.WindowCloseMixin],
 
-    propTypes: {
-      mozLoop: React.PropTypes.object.isRequired
+    getInitialState: function() {
+      return {
+        terms_of_use_url: null,
+        privacy_notice_url: null
+      };
+    },
+
+    componentWillMount: function() {
+      loop.requestMulti(
+        ["GetLoopPref", "legal.ToS_url"],
+        ["GetLoopPref", "legal.privacy_url"]
+      ).then(function(results) {
+        this.setState({
+          terms_of_use_url: results[0],
+          privacy_notice_url: results[1]
+        });
+      }.bind(this));
     },
 
     handleLinkClick: function(event) {
@@ -112,23 +117,21 @@ loop.panel = (function(_, mozL10n) {
       }
 
       event.preventDefault();
-      this.props.mozLoop.openURL(event.target.href);
+      loop.request("OpenURL", event.target.href);
       this.closeWindow();
     },
 
     render: function() {
       var locale = mozL10n.getLanguage();
-      var terms_of_use_url = this.props.mozLoop.getLoopPref("legal.ToS_url");
-      var privacy_notice_url = this.props.mozLoop.getLoopPref("legal.privacy_url");
       var tosHTML = mozL10n.get("legal_text_and_links3", {
         "clientShortname": mozL10n.get("clientShortname2"),
         "terms_of_use": React.renderToStaticMarkup(
-          React.createElement("a", {href: terms_of_use_url, target: "_blank"}, 
+          React.createElement("a", {href: this.state.terms_of_use_url, target: "_blank"}, 
             mozL10n.get("legal_text_tos")
           )
         ),
         "privacy_notice": React.renderToStaticMarkup(
-          React.createElement("a", {href: privacy_notice_url, target: "_blank"}, 
+          React.createElement("a", {href: this.state.privacy_notice_url, target: "_blank"}, 
             mozL10n.get("legal_text_privacy")
           )
         )
@@ -190,38 +193,69 @@ loop.panel = (function(_, mozL10n) {
    * Panel settings (gear) menu.
    */
   var SettingsDropdown = React.createClass({displayName: "SettingsDropdown",
-    propTypes: {
-      mozLoop: React.PropTypes.object.isRequired
+    mixins: [sharedMixins.DropdownMenuMixin(), sharedMixins.WindowCloseMixin],
+
+    getInitialState: function() {
+      return {
+        doNotDisturb: false,
+        fxAEnabled: false,
+        signedIn: false
+      };
     },
 
-    mixins: [sharedMixins.DropdownMenuMixin(), sharedMixins.WindowCloseMixin],
+    componentWillMount: function() {
+      this._updateState();
+    },
+
+    componentWillUpdate: function(nextProps, nextState) {
+      if (nextState.showMenu !== this.state.showMenu) {
+        this._updateState();
+      }
+    },
+
+    _updateState: function() {
+      loop.requestMulti(
+        ["GetUserProfile"],
+        ["GetFxAEnabled"],
+        ["GetDoNotDisturb"]
+      ).then(function(results) {
+        this.setState({
+          signedIn: !!results[0],
+          fxAEnabled: results[1],
+          doNotDisturb: results[2]
+        });
+      }.bind(this));
+    },
 
     handleClickSettingsEntry: function() {
       // XXX to be implemented at the same time as unhiding the entry
     },
 
     handleClickAccountEntry: function() {
-      this.props.mozLoop.openFxASettings();
+      loop.request("OpenFxASettings");
       this.closeWindow();
     },
 
     handleClickAuthEntry: function() {
-      if (this._isSignedIn()) {
-        this.props.mozLoop.logOutFromFxA();
+      if (this.state.signedIn) {
+        loop.request("LogoutFromFxA");
       } else {
-        this.props.mozLoop.logInToFxA();
+        loop.request("LoginToFxA");
       }
     },
 
     handleHelpEntry: function(event) {
       event.preventDefault();
-      var helloSupportUrl = this.props.mozLoop.getLoopPref("support_url");
-      this.props.mozLoop.openURL(helloSupportUrl);
-      this.closeWindow();
+      loop.request("GetLoopPref", "support_url").then(function(helloSupportUrl) {
+        loop.request("OpenURL", helloSupportUrl);
+        this.closeWindow();
+      }.bind(this));
     },
 
     handleToggleNotifications: function() {
-      this.props.mozLoop.doNotDisturb = !this.props.mozLoop.doNotDisturb;
+      loop.request("GetDoNotDisturb").then(function(result) {
+        loop.request("SetDoNotDisturb", !result);
+      });
       this.hideDropdownMenu();
     },
 
@@ -230,26 +264,23 @@ loop.panel = (function(_, mozL10n) {
      */
     handleSubmitFeedback: function(event) {
       event.preventDefault();
-      var helloFeedbackUrl = this.props.mozLoop.getLoopPref("feedback.manualFormURL");
-      this.props.mozLoop.openURL(helloFeedbackUrl);
-      this.closeWindow();
-    },
-
-    _isSignedIn: function() {
-      return !!this.props.mozLoop.userProfile;
+      loop.request("GetLoopPref", "feedback.formURL").then(function(helloFeedbackUrl) {
+        loop.request("OpenURL", helloFeedbackUrl);
+        this.closeWindow();
+      }.bind(this));
     },
 
     openGettingStartedTour: function() {
-      this.props.mozLoop.openGettingStartedTour("settings-menu");
+      loop.request("OpenGettingStartedTour", "settings-menu");
       this.closeWindow();
     },
 
     render: function() {
       var cx = classNames;
-      var accountEntryCSSClass = this._isSignedIn() ? "entry-settings-signout" :
-                                                      "entry-settings-signin";
-      var notificationsLabel = this.props.mozLoop.doNotDisturb ? "settings_menu_item_turnnotificationson" :
-                                                                 "settings_menu_item_turnnotificationsoff";
+      var accountEntryCSSClass = this.state.signedIn ? "entry-settings-signout" :
+                                                       "entry-settings-signin";
+      var notificationsLabel = this.state.doNotDisturb ? "settings_menu_item_turnnotificationson" :
+                                                         "settings_menu_item_turnnotificationsoff";
 
       return (
         React.createElement("div", {className: "settings-menu dropdown"}, 
@@ -263,7 +294,7 @@ loop.panel = (function(_, mozL10n) {
                 label: mozL10n.get(notificationsLabel), 
                 onClick: this.handleToggleNotifications}), 
             React.createElement(SettingsDropdownEntry, {
-                displayed: this._isSignedIn() && this.props.mozLoop.fxAEnabled, 
+                displayed: this.state.signedIn && this.state.fxAEnabled, 
                 extraCSSClass: "entry-settings-account", 
                 label: mozL10n.get("settings_menu_item_account"), 
                 onClick: this.handleClickAccountEntry}), 
@@ -275,9 +306,9 @@ loop.panel = (function(_, mozL10n) {
             React.createElement(SettingsDropdownEntry, {extraCSSClass: "entry-settings-feedback", 
                                    label: mozL10n.get("settings_menu_item_feedback"), 
                                    onClick: this.handleSubmitFeedback}), 
-            React.createElement(SettingsDropdownEntry, {displayed: this.props.mozLoop.fxAEnabled, 
+            React.createElement(SettingsDropdownEntry, {displayed: this.state.fxAEnabled, 
                                    extraCSSClass: accountEntryCSSClass, 
-                                   label: this._isSignedIn() ?
+                                   label: this.state.signedIn ?
                                           mozL10n.get("settings_menu_item_signout") :
                                           mozL10n.get("settings_menu_item_signin"), 
                                    onClick: this.handleClickAuthEntry}), 
@@ -302,7 +333,7 @@ loop.panel = (function(_, mozL10n) {
     },
 
     handleSignInLinkClick: function() {
-      navigator.mozLoop.logInToFxA();
+      loop.request("LoginToFxA");
       this.closeWindow();
     },
 
@@ -333,7 +364,6 @@ loop.panel = (function(_, mozL10n) {
     mixins: [loop.shared.mixins.WindowCloseMixin],
 
     propTypes: {
-      mozLoop: React.PropTypes.object.isRequired,
       roomUrls: React.PropTypes.array
     },
 
@@ -341,7 +371,7 @@ loop.panel = (function(_, mozL10n) {
       event.stopPropagation();
       event.preventDefault();
       if (event.currentTarget.href) {
-        this.props.mozLoop.openURL(event.currentTarget.href);
+        loop.request("OpenURL", event.currentTarget.href);
         this.closeWindow();
       }
     },
@@ -386,7 +416,6 @@ loop.panel = (function(_, mozL10n) {
     propTypes: {
       dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
       isOpenedRoom: React.PropTypes.bool.isRequired,
-      mozLoop: React.PropTypes.object.isRequired,
       room: React.PropTypes.instanceOf(loop.store.Room).isRequired
     },
 
@@ -452,7 +481,6 @@ loop.panel = (function(_, mozL10n) {
           onMouseLeave: this.props.isOpenedRoom ? null : this._handleMouseOut, 
           ref: "roomEntry"}, 
           React.createElement(RoomEntryContextItem, {
-            mozLoop: this.props.mozLoop, 
             roomUrls: this.props.room.decryptedContext.urls}), 
           React.createElement("h2", null, roomTitle), 
           this.props.isOpenedRoom ? null :
@@ -638,7 +666,6 @@ loop.panel = (function(_, mozL10n) {
 
     propTypes: {
       dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
-      mozLoop: React.PropTypes.object.isRequired,
       store: React.PropTypes.instanceOf(loop.store.RoomStore).isRequired
     },
 
@@ -709,7 +736,6 @@ loop.panel = (function(_, mozL10n) {
       return (
         React.createElement(NewRoomView, {dispatcher: this.props.dispatcher, 
           inRoom: this.state.openedRoom !== null, 
-          mozLoop: this.props.mozLoop, 
           pendingOperation: this.state.pendingCreation ||
                             this.state.pendingInitialRetrieval})
       );
@@ -747,7 +773,6 @@ loop.panel = (function(_, mozL10n) {
                   dispatcher: this.props.dispatcher, 
                   isOpenedRoom: room.roomToken === this.state.openedRoom, 
                   key: room.roomToken, 
-                  mozLoop: this.props.mozLoop, 
                   room: room})
               );
             }, this)
@@ -764,7 +789,6 @@ loop.panel = (function(_, mozL10n) {
     propTypes: {
       dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
       inRoom: React.PropTypes.bool.isRequired,
-      mozLoop: React.PropTypes.object.isRequired,
       pendingOperation: React.PropTypes.bool.isRequired
     },
 
@@ -787,7 +811,7 @@ loop.panel = (function(_, mozL10n) {
       // when opening the panel, and it seems cleaner just to update the data
       // even if there's a small delay.
 
-      this.props.mozLoop.getSelectedTabMetadata(function callback(metadata) {
+      loop.request("GetSelectedTabMetadata").then(function(metadata) {
         // Bail out when the component is not mounted (anymore).
         // This occurs during test runs. See bug 1174611 for more info.
         if (!this.isMounted()) {
@@ -817,7 +841,7 @@ loop.panel = (function(_, mozL10n) {
     },
 
     handleStopSharingButtonClick: function() {
-      this.props.mozLoop.hangupAllChatWindows();
+      loop.request("HangupAllChatWindows");
     },
 
     render: function() {
@@ -845,79 +869,116 @@ loop.panel = (function(_, mozL10n) {
   var PanelView = React.createClass({displayName: "PanelView",
     propTypes: {
       dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired,
-      mozLoop: React.PropTypes.object.isRequired,
+      // Only used for the ui-showcase:
+      gettingStartedSeen: React.PropTypes.bool,
       notifications: React.PropTypes.object.isRequired,
       roomStore:
-        React.PropTypes.instanceOf(loop.store.RoomStore).isRequired
+        React.PropTypes.instanceOf(loop.store.RoomStore).isRequired,
+      // Only used for the ui-showcase:
+      userProfile: React.PropTypes.object
+    },
+
+    getDefaultProps: function() {
+      return {
+        gettingStartedSeen: true
+      };
     },
 
     getInitialState: function() {
       return {
-        hasEncryptionKey: this.props.mozLoop.hasEncryptionKey,
-        userProfile: this.props.mozLoop.userProfile,
-        gettingStartedSeen: this.props.mozLoop.getLoopPref("gettingStarted.seen")
+        fxAEnabled: true,
+        hasEncryptionKey: false,
+        userProfile: null,
+        gettingStartedSeen: true
       };
     },
 
-    _serviceErrorToShow: function() {
-      if (!this.props.mozLoop.errors ||
-          !Object.keys(this.props.mozLoop.errors).length) {
-        return null;
-      }
-      // Just get the first error for now since more than one should be rare.
-      var firstErrorKey = Object.keys(this.props.mozLoop.errors)[0];
-      return {
-        type: firstErrorKey,
-        error: this.props.mozLoop.errors[firstErrorKey]
-      };
+    _serviceErrorToShow: function(callback) {
+      return new Promise(function(resolve) {
+        loop.request("GetErrors").then(function(errors) {
+          if (!errors || !Object.keys(errors).length) {
+            resolve(null);
+            return;
+          }
+          // Just get the first error for now since more than one should be rare.
+          var firstErrorKey = Object.keys(errors)[0];
+          resolve({
+            type: firstErrorKey,
+            error: errors[firstErrorKey]
+          });
+        });
+      });
     },
 
     updateServiceErrors: function() {
-      var serviceError = this._serviceErrorToShow();
-      if (serviceError) {
-        this.props.notifications.set({
-          id: "service-error",
-          level: "error",
-          message: serviceError.error.friendlyMessage,
-          details: serviceError.error.friendlyDetails,
-          detailsButtonLabel: serviceError.error.friendlyDetailsButtonLabel,
-          detailsButtonCallback: serviceError.error.friendlyDetailsButtonCallback
-        });
-      } else {
-        this.props.notifications.remove(this.props.notifications.get("service-error"));
-      }
+      this._serviceErrorToShow().then(function(serviceError) {
+        if (serviceError) {
+          this.props.notifications.set({
+            id: "service-error",
+            level: "error",
+            message: serviceError.error.friendlyMessage,
+            details: serviceError.error.friendlyDetails,
+            detailsButtonLabel: serviceError.error.friendlyDetailsButtonLabel,
+            detailsButtonCallback: serviceError.error.friendlyDetailsButtonCallback
+          });
+        } else {
+          this.props.notifications.remove(this.props.notifications.get("service-error"));
+        }
+      }.bind(this));
     },
 
     _onStatusChanged: function() {
-      var profile = this.props.mozLoop.userProfile;
-      var currUid = this.state.userProfile ? this.state.userProfile.uid : null;
-      var newUid = profile ? profile.uid : null;
-      if (currUid === newUid) {
-        // Update the state of hasEncryptionKey as this might have changed now.
-        this.setState({ hasEncryptionKey: this.props.mozLoop.hasEncryptionKey });
-      } else {
-        this.setState({ userProfile: profile });
-      }
-      this.updateServiceErrors();
+      loop.requestMulti(
+        ["GetUserProfile"],
+        ["GetHasEncryptionKey"]
+      ).then(function(results) {
+        var profile = results[0];
+        var hasEncryptionKey = results[1];
+        var currUid = this.state.userProfile ? this.state.userProfile.uid : null;
+        var newUid = profile ? profile.uid : null;
+        if (currUid === newUid) {
+          // Update the state of hasEncryptionKey as this might have changed now.
+          this.setState({ hasEncryptionKey: hasEncryptionKey });
+        } else {
+          this.setState({ userProfile: profile });
+        }
+        this.updateServiceErrors();
+      }.bind(this));
     },
 
     _gettingStartedSeen: function() {
-      this.setState({
-        gettingStartedSeen: this.props.mozLoop.getLoopPref("gettingStarted.seen")
-      });
+      loop.request("GetLoopPref", "gettingStarted.seen").then(function(result) {
+        this.setState({
+          gettingStartedSeen: result
+        });
+      }.bind(this));
     },
 
     componentWillMount: function() {
       this.updateServiceErrors();
+
+      loop.requestMulti(
+        ["GetFxAEnabled"],
+        ["GetHasEncryptionKey"],
+        ["GetUserProfile"],
+        ["GetLoopPref", "gettingStarted.seen"]
+      ).then(function(results) {
+        this.setState({
+          fxAEnabled: results[0],
+          hasEncryptionKey: results[1],
+          userProfile: results[2],
+          gettingStartedSeen: results[3]
+        });
+      }.bind(this));
     },
 
     componentDidMount: function() {
-      window.addEventListener("LoopStatusChanged", this._onStatusChanged);
+      loop.subscribe("LoopStatusChanged", this._onStatusChanged);
       window.addEventListener("GettingStartedSeen", this._gettingStartedSeen);
     },
 
     componentWillUnmount: function() {
-      window.removeEventListener("LoopStatusChanged", this._onStatusChanged);
+      loop.unsubscribe("LoopStatusChanged", this._onStatusChanged);
       window.removeEventListener("GettingStartedSeen", this._gettingStartedSeen);
     },
 
@@ -928,21 +989,21 @@ loop.panel = (function(_, mozL10n) {
     render: function() {
       var NotificationListView = sharedViews.NotificationListView;
 
-      if (!this.state.gettingStartedSeen) {
+      if (!this.props.gettingStartedSeen || !this.state.gettingStartedSeen) {
         return (
           React.createElement("div", {className: "fte-get-started-container", 
                onContextMenu: this.handleContextMenu}, 
             React.createElement(NotificationListView, {
               clearOnDocumentHidden: true, 
               notifications: this.props.notifications}), 
-            React.createElement(GettingStartedView, {mozLoop: this.props.mozLoop}), 
-            React.createElement(ToSView, {mozLoop: this.props.mozLoop})
+            React.createElement(GettingStartedView, null), 
+            React.createElement(ToSView, null)
           )
         );
       }
 
       if (!this.state.hasEncryptionKey) {
-        return React.createElement(SignInRequestView, {mozLoop: this.props.mozLoop});
+        return React.createElement(SignInRequestView, null);
       }
 
       return (
@@ -953,15 +1014,14 @@ loop.panel = (function(_, mozL10n) {
             clearOnDocumentHidden: true, 
             notifications: this.props.notifications}), 
             React.createElement(RoomList, {dispatcher: this.props.dispatcher, 
-              mozLoop: this.props.mozLoop, 
               store: this.props.roomStore}), 
           React.createElement("div", {className: "footer"}, 
             React.createElement("div", {className: "user-details"}, 
-              React.createElement(AccountLink, {fxAEnabled: this.props.mozLoop.fxAEnabled, 
-                           userProfile: this.state.userProfile})
+              React.createElement(AccountLink, {fxAEnabled: this.state.fxAEnabled, 
+                           userProfile: this.props.userProfile || this.state.userProfile})
             ), 
             React.createElement("div", {className: "signin-details"}, 
-              React.createElement(SettingsDropdown, {mozLoop: this.props.mozLoop})
+              React.createElement(SettingsDropdown, null)
             )
           )
         )
@@ -973,31 +1033,52 @@ loop.panel = (function(_, mozL10n) {
    * Panel initialisation.
    */
   function init() {
-    // Do the initial L10n setup, we do this before anything
-    // else to ensure the L10n environment is setup correctly.
-    mozL10n.initialize(navigator.mozLoop);
+    return loop.requestMulti(
+      ["GetAllConstants"],
+      ["GetAllStrings"],
+      ["GetLocale"],
+      ["GetPluralRule"]
+    ).then(function(results) {
+      var constants = results[0];
+      // Do the initial L10n setup, we do this before anything
+      // else to ensure the L10n environment is setup correctly.
+      var stringBundle = results[1];
+      var locale = results[2];
+      var pluralRule = results[3];
+      mozL10n.initialize({
+        locale: locale,
+        pluralRule: pluralRule,
+        getStrings: function(key) {
+          if (!(key in stringBundle)) {
+            console.error("No string found for key: ", key);
+            return "{ textContent: '' }";
+          }
 
-    var notifications = new sharedModels.NotificationCollection();
-    var dispatcher = new loop.Dispatcher();
-    var roomStore = new loop.store.RoomStore(dispatcher, {
-      mozLoop: navigator.mozLoop,
-      notifications: notifications
+          return JSON.stringify({ textContent: stringBundle[key] });
+        }
+      });
+
+      var notifications = new sharedModels.NotificationCollection();
+      var dispatcher = new loop.Dispatcher();
+      var roomStore = new loop.store.RoomStore(dispatcher, {
+        notifications: notifications,
+        constants: constants
+      });
+
+      React.render(React.createElement(PanelView, {
+        dispatcher: dispatcher, 
+        notifications: notifications, 
+        roomStore: roomStore}), document.querySelector("#main"));
+
+      document.documentElement.setAttribute("lang", mozL10n.getLanguage());
+      document.documentElement.setAttribute("dir", mozL10n.getDirection());
+      document.body.setAttribute("platform", loop.shared.utils.getPlatform());
+
+      // Notify the window that we've finished initalization and initial layout
+      var evtObject = document.createEvent("Event");
+      evtObject.initEvent("loopPanelInitialized", true, false);
+      window.dispatchEvent(evtObject);
     });
-
-    React.render(React.createElement(PanelView, {
-      dispatcher: dispatcher, 
-      mozLoop: navigator.mozLoop, 
-      notifications: notifications, 
-      roomStore: roomStore}), document.querySelector("#main"));
-
-    document.documentElement.setAttribute("lang", mozL10n.getLanguage());
-    document.documentElement.setAttribute("dir", mozL10n.getDirection());
-    document.body.setAttribute("platform", loop.shared.utils.getPlatform());
-
-    // Notify the window that we've finished initalization and initial layout
-    var evtObject = document.createEvent("Event");
-    evtObject.initEvent("loopPanelInitialized", true, false);
-    window.dispatchEvent(evtObject);
   }
 
   return {

@@ -542,7 +542,7 @@ public class BrowserApp extends GeckoApp
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
-        if (!isSupportedSDK()) {
+        if (!isSupportedSystem()) {
             // This build does not support the Android version of the device; Exit early.
             super.onCreate(savedInstanceState);
             return;
@@ -1210,7 +1210,7 @@ public class BrowserApp extends GeckoApp
 
     @Override
     public void onDestroy() {
-        if (!isSupportedSDK()) {
+        if (!isSupportedSystem()) {
             // This build does not support the Android version of the device; Exit early.
             super.onDestroy();
             return;

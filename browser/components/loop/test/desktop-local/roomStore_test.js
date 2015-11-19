@@ -21,10 +21,48 @@ describe("loop.store.RoomStore", function() {
   var sharedActions = loop.shared.actions;
   var sharedUtils = loop.shared.utils;
   var sandbox, dispatcher;
-  var fakeRoomList;
+  var fakeRoomList, requestStubs;
 
   beforeEach(function() {
-    sandbox = sinon.sandbox.create();
+    sandbox = LoopMochaUtils.createSandbox();
+
+    LoopMochaUtils.stubLoopRequest(requestStubs = {
+      GetAllConstants: function() {
+        return {
+          SHARING_ROOM_URL: {
+            COPY_FROM_PANEL: 0,
+            COPY_FROM_CONVERSATION: 1,
+            EMAIL_FROM_PANEL: 2,
+            EMAIL_FROM_CONVERSATION: 3
+          },
+          ROOM_CREATE: {
+            CREATE_SUCCESS: 0,
+            CREATE_FAIL: 1
+          },
+          ROOM_DELETE: {
+            DELETE_SUCCESS: 0,
+            DELETE_FAIL: 1
+          },
+          ROOM_CONTEXT_ADD: {
+            ADD_FROM_PANEL: 0,
+            ADD_FROM_CONVERSATION: 1
+          }
+        };
+      },
+      CopyString: sinon.stub(),
+      GetLoopPref: function(pref) {
+        return pref;
+      },
+      NotifyUITour: function() {},
+      "Rooms:Create": sinon.stub().returns({ roomToken: "fakeToken" }),
+      "Rooms:Delete": sinon.stub(),
+      "Rooms:GetAll": sinon.stub(),
+      "Rooms:Open": sinon.stub(),
+      "Rooms:Rename": sinon.stub(),
+      "Rooms:PushSubscription": sinon.stub(),
+      TelemetryAddValue: sinon.stub()
+    });
+
     dispatcher = new loop.Dispatcher();
     fakeRoomList = [{
       roomToken: "_nxD4V4FflQ",
@@ -49,22 +87,25 @@ describe("loop.store.RoomStore", function() {
       participants: [],
       ctime: 1405518241
     }];
+
+    document.mozL10n.get = function(str) { return str; };
   });
 
   afterEach(function() {
     sandbox.restore();
+    LoopMochaUtils.restore();
   });
 
   describe("#constructor", function() {
-    it("should throw an error if mozLoop is missing", function() {
+    it("should throw an error if constants are missing", function() {
       expect(function() {
         new loop.store.RoomStore(dispatcher);
-      }).to.Throw(/mozLoop/);
+      }).to.Throw(/constants/);
     });
   });
 
   describe("constructed", function() {
-    var fakeMozLoop, fakeNotifications, store;
+    var fakeNotifications, store;
 
     var defaultStoreState = {
       error: undefined,
@@ -75,46 +116,12 @@ describe("loop.store.RoomStore", function() {
     };
 
     beforeEach(function() {
-      fakeMozLoop = {
-        SHARING_ROOM_URL: {
-          COPY_FROM_PANEL: 0,
-          COPY_FROM_CONVERSATION: 1,
-          EMAIL_FROM_PANEL: 2,
-          EMAIL_FROM_CONVERSATION: 3
-        },
-        ROOM_CREATE: {
-          CREATE_SUCCESS: 0,
-          CREATE_FAIL: 1
-        },
-        ROOM_DELETE: {
-          DELETE_SUCCESS: 0,
-          DELETE_FAIL: 1
-        },
-        ROOM_CONTEXT_ADD: {
-          ADD_FROM_PANEL: 0,
-          ADD_FROM_CONVERSATION: 1
-        },
-        copyString: function() {},
-        getLoopPref: function(pref) {
-          return pref;
-        },
-        notifyUITour: function() {},
-        rooms: {
-          create: function() {},
-          delete: function() {},
-          getAll: function() {},
-          open: function() {},
-          rename: function() {},
-          on: sandbox.stub()
-        },
-        telemetryAddValue: sinon.stub()
-      };
       fakeNotifications = {
         set: sinon.stub(),
         remove: sinon.stub()
       };
       store = new loop.store.RoomStore(dispatcher, {
-        mozLoop: fakeMozLoop,
+        constants: requestStubs.GetAllConstants(),
         notifications: fakeNotifications
       });
       store.setStoreState(defaultStoreState);
@@ -122,18 +129,18 @@ describe("loop.store.RoomStore", function() {
 
     describe("MozLoop rooms event listeners", function() {
       beforeEach(function() {
-        _.extend(fakeMozLoop.rooms, Backbone.Events);
-
-        fakeMozLoop.rooms.getAll = function(version, cb) {
-          cb(null, fakeRoomList);
-        };
+        LoopMochaUtils.stubLoopRequest({
+          "Rooms:GetAll": function(version) {
+            return fakeRoomList;
+          }
+        });
 
         store.getAllRooms(); // registers event listeners
       });
 
       describe("add", function() {
         it("should add the room entry to the list", function() {
-          fakeMozLoop.rooms.trigger("add", "add", {
+          LoopMochaUtils.publish("Rooms:Add", {
             roomToken: "newToken",
             roomUrl: "http://sample/newToken",
             roomName: "New room",
@@ -148,7 +155,7 @@ describe("loop.store.RoomStore", function() {
         it("should avoid adding a duplicate room", function() {
           var sampleRoom = fakeRoomList[0];
 
-          fakeMozLoop.rooms.trigger("add", "add", sampleRoom);
+          LoopMochaUtils.publish("Rooms:Add", sampleRoom);
 
           expect(store.getStoreState().rooms).to.have.length.of(3);
           expect(store.getStoreState().rooms.reduce(function(count, room) {
@@ -160,7 +167,7 @@ describe("loop.store.RoomStore", function() {
       describe("close", function() {
         it("should update the openedRoom state to null", function() {
           store.setStoreState({ openedRoom: "fake1234" });
-          fakeMozLoop.rooms.trigger("close", "close");
+          LoopMochaUtils.publish("Rooms:Close");
 
           expect(store.getStoreState().openedRoom).to.eql(null);
         });
@@ -168,7 +175,7 @@ describe("loop.store.RoomStore", function() {
 
       describe("open", function() {
         it("should update the openedRoom state to the room token", function() {
-          fakeMozLoop.rooms.trigger("open", "open", "fake1234");
+          LoopMochaUtils.publish("Rooms:Open", "fake1234");
 
           expect(store.getStoreState().openedRoom).to.eql("fake1234");
         });
@@ -176,7 +183,7 @@ describe("loop.store.RoomStore", function() {
 
       describe("update", function() {
         it("should update a room entry", function() {
-          fakeMozLoop.rooms.trigger("update", "update", {
+          LoopMochaUtils.publish("Rooms:Update", {
             roomToken: "_nxD4V4FflQ",
             roomUrl: "http://sample/_nxD4V4FflQ",
             roomName: "Changed First Room Name",
@@ -194,7 +201,7 @@ describe("loop.store.RoomStore", function() {
 
       describe("delete", function() {
         it("should delete a room from the list", function() {
-          fakeMozLoop.rooms.trigger("delete", "delete", {
+          LoopMochaUtils.publish("Rooms:Delete", {
             roomToken: "_nxD4V4FflQ"
           });
 
@@ -207,7 +214,7 @@ describe("loop.store.RoomStore", function() {
 
       describe("refresh", function() {
         it("should clear the list of rooms", function() {
-          fakeMozLoop.rooms.trigger("refresh", "refresh");
+          LoopMochaUtils.publish("Rooms:Refresh");
 
           expect(store.getStoreState().rooms).to.have.length.of(0);
         });
@@ -226,8 +233,6 @@ describe("loop.store.RoomStore", function() {
       });
 
       it("should clear any existing room errors", function() {
-        sandbox.stub(fakeMozLoop.rooms, "create");
-
         store.createRoom(new sharedActions.CreateRoom(fakeRoomCreationData));
 
         sinon.assert.calledOnce(fakeNotifications.remove);
@@ -236,10 +241,6 @@ describe("loop.store.RoomStore", function() {
       });
 
       it("should log a telemetry event when the operation with context is successful", function() {
-        sandbox.stub(fakeMozLoop.rooms, "create", function(data, cb) {
-          cb(null, { roomToken: "fakeToken" });
-        });
-
         fakeRoomCreationData.urls = [{
           location: "http://invalid.com",
           description: "fakeSite",
@@ -248,25 +249,21 @@ describe("loop.store.RoomStore", function() {
 
         store.createRoom(new sharedActions.CreateRoom(fakeRoomCreationData));
 
-        sinon.assert.calledTwice(fakeMozLoop.telemetryAddValue);
-        sinon.assert.calledWithExactly(fakeMozLoop.telemetryAddValue,
+        sinon.assert.calledTwice(requestStubs.TelemetryAddValue);
+        sinon.assert.calledWithExactly(requestStubs.TelemetryAddValue,
           "LOOP_ROOM_CONTEXT_ADD", 0);
       });
 
       it("should request creation of a new room", function() {
-        sandbox.stub(fakeMozLoop.rooms, "create");
-
         store.createRoom(new sharedActions.CreateRoom(fakeRoomCreationData));
 
-        sinon.assert.calledWith(fakeMozLoop.rooms.create, {
+        sinon.assert.calledWith(requestStubs["Rooms:Create"], {
           decryptedContext: { },
           maxSize: store.maxRoomCreationSize
         });
       });
 
       it("should request creation of a new room with context", function() {
-        sandbox.stub(fakeMozLoop.rooms, "create");
-
         fakeRoomCreationData.urls = [{
           location: "http://invalid.com",
           description: "fakeSite",
@@ -275,7 +272,7 @@ describe("loop.store.RoomStore", function() {
 
         store.createRoom(new sharedActions.CreateRoom(fakeRoomCreationData));
 
-        sinon.assert.calledWith(fakeMozLoop.rooms.create, {
+        sinon.assert.calledWith(requestStubs["Rooms:Create"], {
           decryptedContext: {
             urls: [{
               location: "http://invalid.com",
@@ -288,8 +285,6 @@ describe("loop.store.RoomStore", function() {
       });
 
       it("should switch the pendingCreation state flag to true", function() {
-        sandbox.stub(fakeMozLoop.rooms, "create");
-
         store.createRoom(new sharedActions.CreateRoom(fakeRoomCreationData));
 
         expect(store.getStoreState().pendingCreation).eql(true);
@@ -297,10 +292,6 @@ describe("loop.store.RoomStore", function() {
 
       it("should dispatch a CreatedRoom action once the operation is done",
         function() {
-          sandbox.stub(fakeMozLoop.rooms, "create", function(data, cb) {
-            cb(null, { roomToken: "fakeToken" });
-          });
-
           store.createRoom(new sharedActions.CreateRoom(fakeRoomCreationData));
 
           sinon.assert.calledOnce(dispatcher.dispatch);
@@ -313,9 +304,8 @@ describe("loop.store.RoomStore", function() {
       it("should dispatch a CreateRoomError action if the operation fails",
         function() {
           var err = new Error("fake");
-          sandbox.stub(fakeMozLoop.rooms, "create", function(data, cb) {
-            cb(err);
-          });
+          err.isError = true;
+          requestStubs["Rooms:Create"].returns(err);
 
           store.createRoom(new sharedActions.CreateRoom(fakeRoomCreationData));
 
@@ -327,27 +317,22 @@ describe("loop.store.RoomStore", function() {
         });
 
       it("should log a telemetry event when the operation is successful", function() {
-        sandbox.stub(fakeMozLoop.rooms, "create", function(data, cb) {
-          cb(null, { roomToken: "fakeToken" });
-        });
-
         store.createRoom(new sharedActions.CreateRoom(fakeRoomCreationData));
 
-        sinon.assert.calledOnce(fakeMozLoop.telemetryAddValue);
-        sinon.assert.calledWithExactly(fakeMozLoop.telemetryAddValue,
+        sinon.assert.calledOnce(requestStubs.TelemetryAddValue);
+        sinon.assert.calledWithExactly(requestStubs.TelemetryAddValue,
           "LOOP_ROOM_CREATE", 0);
       });
 
       it("should log a telemetry event when the operation fails", function() {
         var err = new Error("fake");
-        sandbox.stub(fakeMozLoop.rooms, "create", function(data, cb) {
-          cb(err);
-        });
+        err.isError = true;
+        requestStubs["Rooms:Create"].returns(err);
 
         store.createRoom(new sharedActions.CreateRoom(fakeRoomCreationData));
 
-        sinon.assert.calledOnce(fakeMozLoop.telemetryAddValue);
-        sinon.assert.calledWithExactly(fakeMozLoop.telemetryAddValue,
+        sinon.assert.calledOnce(requestStubs.TelemetryAddValue);
+        sinon.assert.calledWithExactly(requestStubs.TelemetryAddValue,
           "LOOP_ROOM_CREATE", 1);
       });
    });
@@ -413,20 +398,17 @@ describe("loop.store.RoomStore", function() {
       });
 
       it("should request deletion of a room", function() {
-        sandbox.stub(fakeMozLoop.rooms, "delete");
-
         store.deleteRoom(new sharedActions.DeleteRoom({
           roomToken: fakeRoomToken
         }));
 
-        sinon.assert.calledWith(fakeMozLoop.rooms.delete, fakeRoomToken);
+        sinon.assert.calledWith(requestStubs["Rooms:Delete"], fakeRoomToken);
       });
 
       it("should dispatch a DeleteRoomError action if the operation fails", function() {
         var err = new Error("fake");
-        sandbox.stub(fakeMozLoop.rooms, "delete", function(roomToken, cb) {
-          cb(err);
-        });
+        err.isError = true;
+        requestStubs["Rooms:Delete"].returns(err);
 
         store.deleteRoom(new sharedActions.DeleteRoom({
           roomToken: fakeRoomToken
@@ -440,46 +422,39 @@ describe("loop.store.RoomStore", function() {
       });
 
       it("should log a telemetry event when the operation is successful", function() {
-        sandbox.stub(fakeMozLoop.rooms, "delete", function(roomToken, cb) {
-          cb();
-        });
-
         store.deleteRoom(new sharedActions.DeleteRoom({
           roomToken: fakeRoomToken
         }));
 
-        sinon.assert.calledOnce(fakeMozLoop.telemetryAddValue);
-        sinon.assert.calledWithExactly(fakeMozLoop.telemetryAddValue,
+        sinon.assert.calledOnce(requestStubs.TelemetryAddValue);
+        sinon.assert.calledWithExactly(requestStubs.TelemetryAddValue,
           "LOOP_ROOM_DELETE", 0);
       });
 
       it("should log a telemetry event when the operation fails", function() {
         var err = new Error("fake");
-        sandbox.stub(fakeMozLoop.rooms, "delete", function(roomToken, cb) {
-          cb(err);
-        });
+        err.isError = true;
+        requestStubs["Rooms:Delete"].returns(err);
 
         store.deleteRoom(new sharedActions.DeleteRoom({
           roomToken: fakeRoomToken
         }));
 
-        sinon.assert.calledOnce(fakeMozLoop.telemetryAddValue);
-        sinon.assert.calledWithExactly(fakeMozLoop.telemetryAddValue,
+        sinon.assert.calledOnce(requestStubs.TelemetryAddValue);
+        sinon.assert.calledWithExactly(requestStubs.TelemetryAddValue,
           "LOOP_ROOM_DELETE", 1);
       });
     });
 
     describe("#copyRoomUrl", function() {
       it("should copy the room URL", function() {
-        var copyString = sandbox.stub(fakeMozLoop, "copyString");
-
         store.copyRoomUrl(new sharedActions.CopyRoomUrl({
           roomUrl: "http://invalid",
           from: "conversation"
         }));
 
-        sinon.assert.calledOnce(copyString);
-        sinon.assert.calledWithExactly(copyString, "http://invalid");
+        sinon.assert.calledOnce(requestStubs.CopyString);
+        sinon.assert.calledWithExactly(requestStubs.CopyString, "http://invalid");
       });
 
       it("should send a telemetry event for copy from panel", function() {
@@ -488,8 +463,8 @@ describe("loop.store.RoomStore", function() {
           from: "panel"
         }));
 
-        sinon.assert.calledOnce(fakeMozLoop.telemetryAddValue);
-        sinon.assert.calledWithExactly(fakeMozLoop.telemetryAddValue,
+        sinon.assert.calledOnce(requestStubs.TelemetryAddValue);
+        sinon.assert.calledWithExactly(requestStubs.TelemetryAddValue,
           "LOOP_SHARING_ROOM_URL", 0);
       });
 
@@ -499,8 +474,8 @@ describe("loop.store.RoomStore", function() {
           from: "conversation"
         }));
 
-        sinon.assert.calledOnce(fakeMozLoop.telemetryAddValue);
-        sinon.assert.calledWithExactly(fakeMozLoop.telemetryAddValue,
+        sinon.assert.calledOnce(requestStubs.TelemetryAddValue);
+        sinon.assert.calledWithExactly(requestStubs.TelemetryAddValue,
           "LOOP_SHARING_ROOM_URL", 1);
       });
     });
@@ -537,8 +512,13 @@ describe("loop.store.RoomStore", function() {
     });
 
     describe("#shareRoomUrl", function() {
+      var socialShareRoomStub;
+
       beforeEach(function() {
-        fakeMozLoop.socialShareRoom = sinon.stub();
+        socialShareRoomStub = sinon.stub();
+        LoopMochaUtils.stubLoopRequest({
+          SocialShareRoom: socialShareRoomStub
+        });
       });
 
       it("should pass the correct data for GMail sharing", function() {
@@ -551,8 +531,8 @@ describe("loop.store.RoomStore", function() {
           }
         }));
 
-        sinon.assert.calledOnce(fakeMozLoop.socialShareRoom);
-        sinon.assert.calledWithExactly(fakeMozLoop.socialShareRoom, origin,
+        sinon.assert.calledOnce(socialShareRoomStub);
+        sinon.assert.calledWithExactly(socialShareRoomStub, origin,
           roomUrl, "share_email_subject7", "share_email_body7" + "share_email_footer2");
       });
 
@@ -566,19 +546,22 @@ describe("loop.store.RoomStore", function() {
           }
         }));
 
-        sinon.assert.calledOnce(fakeMozLoop.socialShareRoom);
-        sinon.assert.calledWithExactly(fakeMozLoop.socialShareRoom, origin,
+        sinon.assert.calledOnce(socialShareRoomStub);
+        sinon.assert.calledWithExactly(socialShareRoomStub, origin,
           roomUrl, "share_tweet", null);
       });
     });
 
     describe("#addSocialShareProvider", function() {
       it("should invoke to the correct mozLoop function", function() {
-        fakeMozLoop.addSocialShareProvider = sinon.stub();
+        var stub = sinon.stub();
+        LoopMochaUtils.stubLoopRequest({
+          AddSocialShareProvider: stub
+        });
 
         store.addSocialShareProvider(new sharedActions.AddSocialShareProvider());
 
-        sinon.assert.calledOnce(fakeMozLoop.addSocialShareProvider);
+        sinon.assert.calledOnce(stub);
       });
     });
 
@@ -607,10 +590,8 @@ describe("loop.store.RoomStore", function() {
     });
 
     describe("#getAllRooms", function() {
-      it("should fetch the room list from the MozLoop API", function() {
-        fakeMozLoop.rooms.getAll = function(version, cb) {
-          cb(null, fakeRoomList);
-        };
+      it("should fetch the room list from the Loop API", function() {
+        requestStubs["Rooms:GetAll"].returns(fakeRoomList);
 
         store.getAllRooms(new sharedActions.GetAllRooms());
 
@@ -619,9 +600,7 @@ describe("loop.store.RoomStore", function() {
       });
 
       it("should order the room list using ctime desc", function() {
-        fakeMozLoop.rooms.getAll = function(version, cb) {
-          cb(null, fakeRoomList);
-        };
+        requestStubs["Rooms:GetAll"].returns(fakeRoomList);
 
         store.getAllRooms(new sharedActions.GetAllRooms());
 
@@ -634,9 +613,8 @@ describe("loop.store.RoomStore", function() {
 
       it("should report an error", function() {
         var err = new Error("fake");
-        fakeMozLoop.rooms.getAll = function(version, cb) {
-          cb(err);
-        };
+        err.isError = true;
+        requestStubs["Rooms:GetAll"].returns(err);
 
         dispatcher.dispatch(new sharedActions.GetAllRooms());
 
@@ -646,9 +624,7 @@ describe("loop.store.RoomStore", function() {
       it("should register event listeners after the list is retrieved",
         function() {
           sandbox.stub(store, "startListeningToRoomEvents");
-          fakeMozLoop.rooms.getAll = function(version, cb) {
-            cb(null, fakeRoomList);
-          };
+          requestStubs["Rooms:GetAll"].returns(fakeRoomList);
 
           store.getAllRooms();
 
@@ -656,21 +632,22 @@ describe("loop.store.RoomStore", function() {
         });
 
       it("should set the pendingInitialRetrieval flag to true", function() {
-        store.getAllRooms();
-
         expect(store.getStoreState().pendingInitialRetrieval).eql(true);
-      });
 
-      it("should set pendingInitialRetrieval to false once the action is " +
-         "performed", function() {
-        fakeMozLoop.rooms.getAll = function(version, cb) {
-          cb(null, fakeRoomList);
-        };
-
+        requestStubs["Rooms:GetAll"].returns([]);
         store.getAllRooms();
 
         expect(store.getStoreState().pendingInitialRetrieval).eql(false);
       });
+
+      it("should set pendingInitialRetrieval to false once the action is performed",
+        function() {
+          requestStubs["Rooms:GetAll"].returns(fakeRoomList);
+
+          store.getAllRooms();
+
+          expect(store.getStoreState().pendingInitialRetrieval).eql(false);
+        });
     });
 
     describe("ActiveRoomStore substore", function() {
@@ -678,11 +655,10 @@ describe("loop.store.RoomStore", function() {
 
       beforeEach(function() {
         activeRoomStore = new loop.store.ActiveRoomStore(dispatcher, {
-          mozLoop: fakeMozLoop,
           sdkDriver: {}
         });
         fakeStore = new loop.store.RoomStore(dispatcher, {
-          mozLoop: fakeMozLoop,
+          constants: requestStubs.GetAllConstants(),
           activeRoomStore: activeRoomStore
         });
       });
@@ -711,39 +687,36 @@ describe("loop.store.RoomStore", function() {
     var store, fakeMozLoop;
 
     beforeEach(function() {
-      fakeMozLoop = {
-        rooms: {
-          open: sinon.spy()
-        }
-      };
-      store = new loop.store.RoomStore(dispatcher, { mozLoop: fakeMozLoop });
+      store = new loop.store.RoomStore(dispatcher, { constants: {} });
     });
 
     it("should open the room via mozLoop", function() {
       dispatcher.dispatch(new sharedActions.OpenRoom({ roomToken: "42abc" }));
 
-      sinon.assert.calledOnce(fakeMozLoop.rooms.open);
-      sinon.assert.calledWithExactly(fakeMozLoop.rooms.open, "42abc");
+      sinon.assert.calledOnce(requestStubs["Rooms:Open"]);
+      sinon.assert.calledWithExactly(requestStubs["Rooms:Open"], "42abc");
     });
   });
 
   describe("#updateRoomContext", function() {
-    var store, fakeMozLoop, clock;
+    var store, getRoomStub, updateRoomStub, clock;
 
     beforeEach(function() {
       clock = sinon.useFakeTimers();
-      fakeMozLoop = {
-        rooms: {
-          get: sinon.stub().callsArgWith(1, null, {
-            roomToken: "42abc",
-            decryptedContext: {
-              roomName: "sillier name"
-            }
-          }),
-          update: null
+      getRoomStub = sinon.stub().returns({
+        roomToken: "42abc",
+        decryptedContext: {
+          roomName: "sillier name"
         }
-      };
-      store = new loop.store.RoomStore(dispatcher, { mozLoop: fakeMozLoop });
+      });
+      updateRoomStub = sinon.stub();
+      LoopMochaUtils.stubLoopRequest({
+        "Rooms:Get": getRoomStub,
+        "Rooms:Update": updateRoomStub
+      });
+      store = new loop.store.RoomStore(dispatcher, {
+        constants: requestStubs.GetAllConstants()
+      });
     });
 
     afterEach(function() {
@@ -751,15 +724,14 @@ describe("loop.store.RoomStore", function() {
     });
 
     it("should rename the room via mozLoop", function() {
-      fakeMozLoop.rooms.update = sinon.spy();
       dispatcher.dispatch(new sharedActions.UpdateRoomContext({
         roomToken: "42abc",
         newRoomName: "silly name"
       }));
 
-      sinon.assert.calledOnce(fakeMozLoop.rooms.get);
-      sinon.assert.calledOnce(fakeMozLoop.rooms.update);
-      sinon.assert.calledWith(fakeMozLoop.rooms.update, "42abc", {
+      sinon.assert.calledOnce(getRoomStub);
+      sinon.assert.calledOnce(updateRoomStub);
+      sinon.assert.calledWith(updateRoomStub, "42abc", {
         roomName: "silly name"
       });
     });
@@ -767,9 +739,10 @@ describe("loop.store.RoomStore", function() {
     it("should flag the the store as saving context", function() {
       expect(store.getStoreState().savingContext).to.eql(false);
 
-      sandbox.stub(fakeMozLoop.rooms, "update", function(roomToken, roomData, cb) {
-        expect(store.getStoreState().savingContext).to.eql(true);
-        cb();
+      LoopMochaUtils.stubLoopRequest({
+        "Rooms:Update": function(roomToken, roomData) {
+          expect(store.getStoreState().savingContext).to.eql(true);
+        }
       });
 
       dispatcher.dispatch(new sharedActions.UpdateRoomContext({
@@ -782,9 +755,13 @@ describe("loop.store.RoomStore", function() {
 
     it("should store any update-encountered error", function() {
       var err = new Error("fake");
-      sandbox.stub(fakeMozLoop.rooms, "update", function(roomToken, roomData, cb) {
-        expect(store.getStoreState().savingContext).to.eql(true);
-        cb(err);
+      err.isError = true;
+
+      LoopMochaUtils.stubLoopRequest({
+        "Rooms:Update": function(roomToken, roomData) {
+          expect(store.getStoreState().savingContext).to.eql(true);
+          return err;
+        }
       });
 
       dispatcher.dispatch(new sharedActions.UpdateRoomContext({
@@ -798,21 +775,17 @@ describe("loop.store.RoomStore", function() {
     });
 
     it("should ensure only submitting a non-empty room name", function() {
-      fakeMozLoop.rooms.update = sinon.spy();
-
       dispatcher.dispatch(new sharedActions.UpdateRoomContext({
         roomToken: "42abc",
         newRoomName: " \t  \t "
       }));
       clock.tick(1);
 
-      sinon.assert.notCalled(fakeMozLoop.rooms.update);
+      sinon.assert.notCalled(updateRoomStub);
       expect(store.getStoreState().savingContext).to.eql(false);
     });
 
     it("should save updated context information", function() {
-      fakeMozLoop.rooms.update = sinon.spy();
-
       dispatcher.dispatch(new sharedActions.UpdateRoomContext({
         roomToken: "42abc",
         // Room name doesn't need to change.
@@ -822,8 +795,8 @@ describe("loop.store.RoomStore", function() {
         newRoomURL: "http://example.com"
       }));
 
-      sinon.assert.calledOnce(fakeMozLoop.rooms.update);
-      sinon.assert.calledWith(fakeMozLoop.rooms.update, "42abc", {
+      sinon.assert.calledOnce(updateRoomStub);
+      sinon.assert.calledWith(updateRoomStub, "42abc", {
         urls: [{
           description: "Hello, is it me you're looking for?",
           location: "http://example.com",
@@ -833,8 +806,6 @@ describe("loop.store.RoomStore", function() {
     });
 
     it("should not save context information with an invalid URL", function() {
-      fakeMozLoop.rooms.update = sinon.spy();
-
       dispatcher.dispatch(new sharedActions.UpdateRoomContext({
         roomToken: "42abc",
         // Room name doesn't need to change.
@@ -847,13 +818,11 @@ describe("loop.store.RoomStore", function() {
         newRoomURL: "http/example.com"
       }));
 
-      sinon.assert.notCalled(fakeMozLoop.rooms.update);
+      sinon.assert.notCalled(updateRoomStub);
     });
 
     it("should not save context information when no context information is provided",
       function() {
-        fakeMozLoop.rooms.update = sinon.spy();
-
         dispatcher.dispatch(new sharedActions.UpdateRoomContext({
           roomToken: "42abc",
           // Room name doesn't need to change.
@@ -864,7 +833,7 @@ describe("loop.store.RoomStore", function() {
         }));
         clock.tick(1);
 
-        sinon.assert.notCalled(fakeMozLoop.rooms.update);
+        sinon.assert.notCalled(updateRoomStub);
         expect(store.getStoreState().savingContext).to.eql(false);
       });
   });

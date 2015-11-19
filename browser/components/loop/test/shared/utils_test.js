@@ -10,11 +10,10 @@ describe("loop.shared.utils", function() {
   var sharedUtils = loop.shared.utils;
 
   beforeEach(function() {
-    sandbox = sinon.sandbox.create();
+    sandbox = LoopMochaUtils.createSandbox();
   });
 
   afterEach(function() {
-    navigator.mozLoop = undefined;
     sandbox.restore();
   });
 
@@ -81,29 +80,43 @@ describe("loop.shared.utils", function() {
 
     describe("mozLoop set", function() {
       beforeEach(function() {
-        navigator.mozLoop = {
-          getLoopPref: function(prefName) {
+        LoopMochaUtils.stubLoopRequest({
+          GetLoopPref: function(prefName) {
             return prefName === "test.true";
           }
-        };
+        });
+      });
+
+      afterEach(function() {
+        LoopMochaUtils.restore();
       });
 
       it("should return the mozLoop preference", function() {
-        expect(sharedUtils.getBoolPreference("test.true")).eql(true);
+        sharedUtils.getBoolPreference("test.true", function(result) {
+          expect(result).eql(true);
+        });
       });
 
       it("should not use the localStorage value", function() {
         localStorage.setItem("test.false", true);
 
-        expect(sharedUtils.getBoolPreference("test.false")).eql(false);
+        sharedUtils.getBoolPreference("test.false", function(result) {
+          expect(result).eql(false);
+        });
       });
     });
 
     describe("mozLoop not set", function() {
+      beforeEach(function() {
+        sandbox.stub(loop.shared.utils, "isDesktop").returns(false);
+      });
+
       it("should return the localStorage value", function() {
         localStorage.setItem("test.true", true);
 
-        expect(sharedUtils.getBoolPreference("test.true")).eql(true);
+        sharedUtils.getBoolPreference("test.true", function(result) {
+          expect(result).eql(true);
+        });
       });
     });
   });
@@ -316,7 +329,7 @@ describe("loop.shared.utils", function() {
   });
 
   describe("#composeCallUrlEmail", function() {
-    var composeEmail, telemetryAddValue;
+    var requestStubs;
 
     beforeEach(function() {
       // fake mozL10n
@@ -332,47 +345,37 @@ describe("loop.shared.utils", function() {
             return "footer";
         }
       });
-      composeEmail = sandbox.spy();
-      telemetryAddValue = sandbox.spy();
-      navigator.mozLoop = {
-        SHARING_ROOM_URL: {
-          EMAIL_FROM_CALLFAILED: 2,
-          EMAIL_FROM_CONVERSATION: 3
+      LoopMochaUtils.stubLoopRequest(requestStubs = {
+        GetAllConstants: function() {
+          return {
+            SHARING_ROOM_URL: {
+              EMAIL_FROM_CALLFAILED: 2,
+              EMAIL_FROM_CONVERSATION: 3
+            }
+          };
         },
-        getLoopPref: sandbox.spy(),
-        composeEmail: composeEmail,
-        telemetryAddValue: telemetryAddValue
-      };
+        GetLoopPref: sinon.stub(),
+        ComposeEmail: sinon.stub()
+      });
+    });
 
-      sandbox.stub(window.console, "error");
+    afterEach(function() {
+      LoopMochaUtils.restore();
     });
 
     it("should compose a call url email", function() {
       sharedUtils.composeCallUrlEmail("http://invalid", "fake@invalid.tld");
 
-      sinon.assert.calledOnce(composeEmail);
-      sinon.assert.calledWith(composeEmail,
+      sinon.assert.calledOnce(requestStubs.ComposeEmail);
+      sinon.assert.calledWith(requestStubs.ComposeEmail,
                               "subject", "body" + "footer", "fake@invalid.tld");
     });
 
     it("should compose a different email when context info is provided", function() {
       sharedUtils.composeCallUrlEmail("http://invalid", null, "Hello, is me you're looking for?");
 
-      sinon.assert.calledOnce(composeEmail);
-      sinon.assert.calledWith(composeEmail, "subject", "body_context" + "footer");
-    });
-
-    it("should record a telemetry event when an email is composed", function() {
-      sharedUtils.composeCallUrlEmail("http://invalid", null,
-        "Hello, is me you're looking for?", "callfailed");
-
-      sinon.assert.calledOnce(telemetryAddValue, "LOOP_SHARING_ROOM_URL", 2);
-    });
-
-    it("should log an error for invalid URLs", function() {
-      sharedUtils.composeCallUrlEmail("http://invalid", "fake@invalid.tld");
-
-      sinon.assert.calledOnce(console.error);
+      sinon.assert.calledOnce(requestStubs.ComposeEmail);
+      sinon.assert.calledWith(requestStubs.ComposeEmail, "subject", "body_context" + "footer");
     });
   });
 

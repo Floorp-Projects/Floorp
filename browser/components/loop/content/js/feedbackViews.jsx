@@ -1,3 +1,7 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 var loop = loop || {};
 loop.feedbackViews = (function(_, mozL10n) {
   "use strict";
@@ -8,7 +12,6 @@ loop.feedbackViews = (function(_, mozL10n) {
    */
   var FeedbackView = React.createClass({
     propTypes: {
-      mozLoop: React.PropTypes.object.isRequired,
       onAfterFeedbackReceived: React.PropTypes.func.isRequired
     },
 
@@ -17,10 +20,11 @@ loop.feedbackViews = (function(_, mozL10n) {
      * and close the conversation window.
      */
     onFeedbackButtonClick: function() {
-      var url = this.props.mozLoop.getLoopPref("feedback.formURL");
-      this.props.mozLoop.openURL(url);
+      loop.request("GetLoopPref", "feedback.formURL").then(function(url) {
+        loop.request("OpenURL", url);
 
-      this.props.onAfterFeedbackReceived();
+        this.props.onAfterFeedbackReceived();
+      }.bind(this));
     },
 
     render: function() {

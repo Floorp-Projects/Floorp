@@ -108,7 +108,6 @@
     var roomDispatcher = new loop.Dispatcher();
 
     var store = new loop.store.ActiveRoomStore(roomDispatcher, {
-      mozLoop: navigator.mozLoop,
       sdkDriver: mockSDK
     });
 
@@ -157,7 +156,8 @@
           // the store. Once React context matures a bit (somewhere between
           // 0.14 and 1.0, apparently):
           //
-          // https://facebook.github.io/react/blog/2015/02/24/streamlining-react-elements.html#solution-make-context-parent-based-instead-of-owner-based
+          // https://facebook.github.io/react/blog/2015/02/24/
+          // streamlining-react-elements.html#solution-make-context-parent-based-instead-of-owner-based
           //
           // we should be able to use those to clean this up.
           matchMedia: contentWindow.matchMedia.bind(contentWindow),
@@ -269,21 +269,21 @@
   });
 
   var invitationRoomStore = new loop.store.RoomStore(dispatcher, {
-    mozLoop: navigator.mozLoop,
+    constants: {},
     activeRoomStore: makeActiveRoomStore({
       roomState: ROOM_STATES.INIT
     })
   });
 
   var roomStore = new loop.store.RoomStore(dispatcher, {
-    mozLoop: navigator.mozLoop,
+    constants: {},
     activeRoomStore: makeActiveRoomStore({
       roomState: ROOM_STATES.HAS_PARTICIPANTS
     })
   });
 
   var desktopRoomStoreLoading = new loop.store.RoomStore(dispatcher, {
-    mozLoop: navigator.mozLoop,
+    constants: {},
     activeRoomStore: makeActiveRoomStore({
       roomState: ROOM_STATES.HAS_PARTICIPANTS,
       mediaConnected: false,
@@ -292,14 +292,14 @@
   });
 
   var desktopRoomStoreMedium = new loop.store.RoomStore(dispatcher, {
-    mozLoop: navigator.mozLoop,
+    constants: {},
     activeRoomStore: makeActiveRoomStore({
       roomState: ROOM_STATES.HAS_PARTICIPANTS
     })
   });
 
   var desktopRoomStoreLarge = new loop.store.RoomStore(dispatcher, {
-    mozLoop: navigator.mozLoop,
+    constants: {},
     activeRoomStore: makeActiveRoomStore({
       roomState: ROOM_STATES.HAS_PARTICIPANTS
     })
@@ -310,7 +310,7 @@
     videoMuted: true
   });
   var desktopLocalFaceMuteRoomStore = new loop.store.RoomStore(dispatcher, {
-    mozLoop: navigator.mozLoop,
+    constants: {},
     activeRoomStore: desktopLocalFaceMuteActiveRoomStore
   });
 
@@ -320,7 +320,7 @@
     mediaConnected: true
   });
   var desktopRemoteFaceMuteRoomStore = new loop.store.RoomStore(dispatcher, {
-    mozLoop: navigator.mozLoop,
+    constants: {},
     activeRoomStore: desktopRemoteFaceMuteActiveRoomStore
   });
 
@@ -386,19 +386,8 @@
   });
 
   // Local mocks
-  var mockMozLoopNoRooms = _.cloneDeep(navigator.mozLoop);
-  mockMozLoopNoRooms.rooms.getAll = function(version, callback) {
-    callback(null, []);
-  };
-
-  var mockMozLoopNoRoomsNoContext = _.cloneDeep(navigator.mozLoop);
-  mockMozLoopNoRoomsNoContext.getSelectedTabMetadata = function() {};
-  mockMozLoopNoRoomsNoContext.rooms.getAll = function(version, callback) {
-    callback(null, []);
-  };
-
   var roomStoreOpenedRoom = new loop.store.RoomStore(dispatcher, {
-    mozLoop: navigator.mozLoop,
+    constants: {},
     activeRoomStore: makeActiveRoomStore({
       roomState: ROOM_STATES.HAS_PARTICIPANTS
     })
@@ -409,55 +398,37 @@
   });
 
   var roomStoreNoRooms = new loop.store.RoomStore(new loop.Dispatcher(), {
-    mozLoop: mockMozLoopNoRooms,
+    constants: {},
     activeRoomStore: new loop.store.ActiveRoomStore(new loop.Dispatcher(), {
-      mozLoop: mockMozLoopNoRooms,
       sdkDriver: mockSDK
     })
   });
+
+  roomStoreNoRooms.getAllRooms = function() {
+    this.setStoreState({ pendingInitialRetrieval: false });
+
+    this.dispatchAction(new sharedActions.UpdateRoomList({ roomList: [] }));
+
+    // We can only start listening to room events after getAll() has been
+    // called executed first.
+    this.startListeningToRoomEvents();
+  };
 
   /* xxx this is asynchronous - if start seeing things pending then this is the culprit */
-  roomStoreNoRooms.setStoreState({
-    pendingInitialRetrieval: false
-  });
+  roomStoreNoRooms.setStoreState({ pendingInitialRetrieval: false });
 
   var roomStoreNoRoomsPending = new loop.store.RoomStore(new loop.Dispatcher(), {
-    mozLoop: mockMozLoopNoRooms,
+    constants: {},
     activeRoomStore: new loop.store.ActiveRoomStore(new loop.Dispatcher(), {
-      mozLoop: mockMozLoopNoRooms,
       sdkDriver: mockSDK
     })
   });
 
-  var mockMozLoopLoggedIn = _.cloneDeep(navigator.mozLoop);
-  mockMozLoopLoggedIn.userProfile = {
+  roomStoreNoRoomsPending.getAllRooms = function() {};
+
+  var mockUserProfileLoggedIn = {
     email: "text@example.com",
     uid: "0354b278a381d3cb408bb46ffc01266"
-  };
-
-  var mockMozLoopLoggedInNoContext = _.cloneDeep(navigator.mozLoop);
-  mockMozLoopLoggedInNoContext.getSelectedTabMetadata = function() {};
-  mockMozLoopLoggedInNoContext.userProfile = _.cloneDeep(mockMozLoopLoggedIn.userProfile);
-
-  var mockMozLoopLoggedInLongEmail = _.cloneDeep(navigator.mozLoop);
-  mockMozLoopLoggedInLongEmail.userProfile = {
-    email: "reallyreallylongtext@example.com",
-    uid: "0354b278a381d3cb408bb46ffc01266"
-  };
-
-  var mockMozLoopRooms = _.extend({}, navigator.mozLoop);
-
-  var firstTimeUseMozLoop = _.cloneDeep(navigator.mozLoop);
-  firstTimeUseMozLoop.getLoopPref = function(prop) {
-    if (prop === "gettingStarted.seen") {
-      return false;
-    }
-
-    return true;
-  };
-
-  var mockClient = {
-    requestCallUrlInfo: noop
   };
 
   var notifications = new loop.shared.models.NotificationCollection();
@@ -508,7 +479,8 @@
         "volume-disabled", "clear", "magnifier"
       ],
       "16x16": ["add", "add-hover", "add-active", "audio", "audio-hover", "audio-active",
-        "block", "block-red", "block-hover", "block-active", "copy", "checkmark", "delete", "globe", "google", "google-hover",
+        "block", "block-red", "block-hover", "block-active", "copy", "checkmark",
+        "delete", "globe", "google", "google-hover",
         "google-active", "history", "history-hover", "history-active", "leave",
         "screen-white", "screenmute-white", "settings", "settings-hover", "settings-active",
         "share-darkgrey", "tag", "tag-hover", "tag-active", "trash", "unblock",
@@ -669,9 +641,8 @@
                            summary: "First time experience view", 
                            width: 330}, 
               React.createElement("div", {className: "panel"}, 
-                React.createElement(PanelView, {client: mockClient, 
-                  dispatcher: dispatcher, 
-                  mozLoop: firstTimeUseMozLoop, 
+                React.createElement(PanelView, {dispatcher: dispatcher, 
+                  gettingStartedSeen: false, 
                   notifications: notifications, 
                   roomStore: roomStore})
               )
@@ -683,7 +654,7 @@
               summary: "Re-sign-in view", 
               width: 332}, 
               React.createElement("div", {className: "panel"}, 
-                React.createElement(SignInRequestView, {mozLoop: mockMozLoopLoggedIn})
+                React.createElement(SignInRequestView, null)
               )
             ), 
 
@@ -693,11 +664,10 @@
                            summary: "Room list", 
                            width: 330}, 
               React.createElement("div", {className: "panel"}, 
-                React.createElement(PanelView, {client: mockClient, 
-                           dispatcher: dispatcher, 
-                           mozLoop: mockMozLoopLoggedIn, 
+                React.createElement(PanelView, {dispatcher: dispatcher, 
                            notifications: notifications, 
-                           roomStore: roomStore})
+                           roomStore: roomStore, 
+                           userProfile: mockUserProfileLoggedIn})
               )
             ), 
 
@@ -707,9 +677,7 @@
                            summary: "Room list (active view)", 
                            width: 330}, 
               React.createElement("div", {className: "panel"}, 
-                React.createElement(PanelView, {client: mockClient, 
-                           dispatcher: dispatcher, 
-                           mozLoop: navigator.mozLoop, 
+                React.createElement(PanelView, {dispatcher: dispatcher, 
                            notifications: notifications, 
                            roomStore: roomStoreOpenedRoom})
               )
@@ -721,9 +689,7 @@
                            summary: "Room list (no rooms)", 
                            width: 330}, 
               React.createElement("div", {className: "panel"}, 
-                React.createElement(PanelView, {client: mockClient, 
-                           dispatcher: dispatcher, 
-                           mozLoop: mockMozLoopNoRooms, 
+                React.createElement(PanelView, {dispatcher: dispatcher, 
                            notifications: notifications, 
                            roomStore: roomStoreNoRooms})
               )
@@ -735,9 +701,7 @@
                            summary: "Room list (loading view)", 
                            width: 330}, 
               React.createElement("div", {className: "panel"}, 
-                React.createElement(PanelView, {client: mockClient, 
-                           dispatcher: dispatcher, 
-                           mozLoop: mockMozLoopNoRoomsNoContext, 
+                React.createElement(PanelView, {dispatcher: dispatcher, 
                            notifications: notifications, 
                            roomStore: roomStoreNoRoomsPending})
               )
@@ -749,9 +713,7 @@
                            summary: "Error Notification", 
                            width: 330}, 
               React.createElement("div", {className: "panel"}, 
-                React.createElement(PanelView, {client: mockClient, 
-                           dispatcher: dispatcher, 
-                           mozLoop: navigator.mozLoop, 
+                React.createElement(PanelView, {dispatcher: dispatcher, 
                            notifications: errNotifications, 
                            roomStore: roomStore})
               )
@@ -762,11 +724,10 @@
                            summary: "Error Notification - authenticated", 
                            width: 330}, 
               React.createElement("div", {className: "panel"}, 
-                React.createElement(PanelView, {client: mockClient, 
-                           dispatcher: dispatcher, 
-                           mozLoop: mockMozLoopLoggedIn, 
+                React.createElement(PanelView, {dispatcher: dispatcher, 
                            notifications: errNotifications, 
-                           roomStore: roomStore})
+                           roomStore: roomStore, 
+                           userProfile: mockUserProfileLoggedIn})
               )
             )
           ), 
@@ -829,8 +790,7 @@
                            summary: "Default (useable demo)", 
                            width: 348}, 
               React.createElement("div", {className: "fx-embedded"}, 
-                React.createElement(FeedbackView, {mozLoop: {}, 
-                              onAfterFeedbackReceived: function() {}})
+                React.createElement(FeedbackView, {onAfterFeedbackReceived: function() {}})
               )
             )
           ), 
@@ -891,23 +851,21 @@
               React.createElement("div", {className: "fx-embedded"}, 
                 React.createElement(RoomFailureView, {
                   dispatcher: dispatcher, 
-                  failureReason: FAILURE_DETAILS.UNKNOWN, 
-                  mozLoop: navigator.mozLoop})
+                  failureReason: FAILURE_DETAILS.UNKNOWN})
               )
             )
           ), 
 
           React.createElement(Section, {name: "DesktopRoomConversationView"}, 
             React.createElement(FramedExample, {height: 448, 
-                           onContentsRendered: invitationRoomStore.activeRoomStore.forcedUpdate, 
-                           summary: "Desktop room conversation (invitation, text-chat inclusion/scrollbars don't happen in real client)", 
-                           width: 348}, 
+              onContentsRendered: invitationRoomStore.activeRoomStore.forcedUpdate, 
+              summary: "Desktop room conversation (invitation, text-chat inclusion/scrollbars don't happen in real client)", 
+              width: 348}, 
               React.createElement("div", {className: "fx-embedded"}, 
                 React.createElement(DesktopRoomConversationView, {
                   chatWindowDetached: false, 
                   dispatcher: dispatcher, 
                   localPosterUrl: "sample-img/video-screen-local.png", 
-                  mozLoop: navigator.mozLoop, 
                   onCallTerminated: function() {}, 
                   roomState: ROOM_STATES.INIT, 
                   roomStore: invitationRoomStore})
@@ -922,7 +880,6 @@
                 React.createElement(DesktopRoomEditContextView, {
                   dispatcher: dispatcher, 
                   error: {}, 
-                  mozLoop: navigator.mozLoop, 
                   onClose: function() {}, 
                   roomData: {}, 
                   savingContext: false, 
@@ -943,7 +900,6 @@
                   chatWindowDetached: false, 
                   dispatcher: dispatcher, 
                   localPosterUrl: "sample-img/video-screen-local.png", 
-                  mozLoop: navigator.mozLoop, 
                   onCallTerminated: function() {}, 
                   remotePosterUrl: "sample-img/video-screen-remote.png", 
                   roomState: ROOM_STATES.HAS_PARTICIPANTS, 
@@ -961,7 +917,6 @@
                   chatWindowDetached: false, 
                   dispatcher: dispatcher, 
                   localPosterUrl: "sample-img/video-screen-local.png", 
-                  mozLoop: navigator.mozLoop, 
                   onCallTerminated: function() {}, 
                   remotePosterUrl: "sample-img/video-screen-remote.png", 
                   roomState: ROOM_STATES.HAS_PARTICIPANTS, 
@@ -979,7 +934,6 @@
                   chatWindowDetached: false, 
                   dispatcher: dispatcher, 
                   localPosterUrl: "sample-img/video-screen-local.png", 
-                  mozLoop: navigator.mozLoop, 
                   onCallTerminated: function() {}, 
                   remotePosterUrl: "sample-img/video-screen-remote.png", 
                   roomState: ROOM_STATES.HAS_PARTICIPANTS, 
@@ -997,7 +951,6 @@
                   chatWindowDetached: false, 
                   dispatcher: dispatcher, 
                   localPosterUrl: "sample-img/video-screen-local.png", 
-                  mozLoop: navigator.mozLoop, 
                   onCallTerminated: function() {}, 
                   remotePosterUrl: "sample-img/video-screen-remote.png", 
                   roomState: ROOM_STATES.HAS_PARTICIPANTS, 
@@ -1014,7 +967,6 @@
                 React.createElement(DesktopRoomConversationView, {
                   chatWindowDetached: false, 
                   dispatcher: dispatcher, 
-                  mozLoop: navigator.mozLoop, 
                   onCallTerminated: function() {}, 
                   remotePosterUrl: "sample-img/video-screen-remote.png", 
                   roomStore: desktopLocalFaceMuteRoomStore})
@@ -1031,7 +983,6 @@
                   chatWindowDetached: false, 
                   dispatcher: dispatcher, 
                   localPosterUrl: "sample-img/video-screen-local.png", 
-                  mozLoop: navigator.mozLoop, 
                   onCallTerminated: function() {}, 
                   remotePosterUrl: "sample-img/video-screen-remote.png", 
                   roomStore: desktopRemoteFaceMuteRoomStore})
@@ -1149,11 +1100,11 @@
             ), 
 
             React.createElement(FramedExample, {cssClass: "standalone", 
-                           dashed: true, 
-                           height: 660, 
-                           onContentsRendered: loadingRemoteLoadingScreenStore.forcedUpdate, 
-                           summary: "Standalone room convo (has-participants, loading screen share, loading remote video, 800x660)", 
-                           width: 800}, 
+              dashed: true, 
+              height: 660, 
+              onContentsRendered: loadingRemoteLoadingScreenStore.forcedUpdate, 
+              summary: "Standalone room convo (has-participants, loading screen share, loading remote video, 800x660)", 
+              width: 800}, 
               /* Hide scrollbars here. Rotating loading div overflows and causes
                scrollbars to appear */
                React.createElement("div", {className: "standalone overflow-hidden"}, 

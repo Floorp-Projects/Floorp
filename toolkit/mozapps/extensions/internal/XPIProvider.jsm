@@ -1189,16 +1189,16 @@ function loadManifestFromRDF(aUri, aStream) {
     addon.userDisabled = !!LightweightThemeManager.currentTheme ||
                          addon.internalName != XPIProvider.selectedSkin;
   }
-  // Experiments are disabled by default. It is up to the Experiments Manager
-  // to enable them (it drives installation).
   else if (addon.type == "experiment") {
+    // Experiments are disabled by default. It is up to the Experiments Manager
+    // to enable them (it drives installation).
     addon.userDisabled = true;
   }
   else {
     addon.userDisabled = false;
-    addon.softDisabled = addon.blocklistState == Blocklist.STATE_SOFTBLOCKED;
   }
 
+  addon.softDisabled = addon.blocklistState == Blocklist.STATE_SOFTBLOCKED;
   addon.applyBackgroundUpdates = AddonManager.AUTOUPDATE_DEFAULT;
 
   // Experiments are managed and updated through an external "experiments
@@ -1207,9 +1207,6 @@ function loadManifestFromRDF(aUri, aStream) {
     addon.applyBackgroundUpdates = AddonManager.AUTOUPDATE_DISABLE;
     addon.updateURL = null;
     addon.updateKey = null;
-
-    addon.targetApplications = [];
-    addon.targetPlatforms = [];
   }
 
   // icons will be filled by the calling function
@@ -1633,6 +1630,25 @@ function getSignedStatus(aRv, aCert, aAddonID) {
   }
 }
 
+function shouldVerifySignedState(aAddon) {
+  // Updated system add-ons should always have their signature checked
+  if (aAddon._installLocation.name == KEY_APP_SYSTEM_ADDONS)
+    return true;
+
+  // We don't care about signatures for default system add-ons
+  if (aAddon._installLocation.name == KEY_APP_SYSTEM_DEFAULTS)
+    return false;
+
+  // Hotfixes should always have their signature checked
+  let hotfixID = Preferences.get(PREF_EM_HOTFIX_ID, undefined);
+  if (hotfixID && aAddon.id == hotfixID)
+    return true;
+
+  // Otherwise only check signatures if signing is enabled and the add-on is one
+  // of the signed types.
+  return ADDON_SIGNING && SIGNED_TYPES.has(aAddon.type);
+}
+
 /**
  * Verifies that a zip file's contents are all correctly signed by an
  * AMO-issued certificate
@@ -1644,7 +1660,7 @@ function getSignedStatus(aRv, aCert, aAddonID) {
  * @return a Promise that resolves to an AddonManager.SIGNEDSTATE_* constant.
  */
 function verifyZipSignedState(aFile, aAddon) {
-  if (!ADDON_SIGNING || !SIGNED_TYPES.has(aAddon.type))
+  if (!shouldVerifySignedState(aAddon))
     return Promise.resolve(AddonManager.SIGNEDSTATE_NOT_REQUIRED);
 
   let certDB = Cc["@mozilla.org/security/x509certdb;1"]
@@ -1674,7 +1690,7 @@ function verifyZipSignedState(aFile, aAddon) {
  * @return a Promise that resolves to an AddonManager.SIGNEDSTATE_* constant.
  */
 function verifyDirSignedState(aDir, aAddon) {
-  if (!ADDON_SIGNING || !SIGNED_TYPES.has(aAddon.type))
+  if (!shouldVerifySignedState(aAddon))
     return Promise.resolve(AddonManager.SIGNEDSTATE_NOT_REQUIRED);
 
   let certDB = Cc["@mozilla.org/security/x509certdb;1"]
@@ -2308,8 +2324,6 @@ this.XPIProvider = {
   _mostRecentlyModifiedFile: {},
   // Per-addon telemetry information
   _telemetryDetails: {},
-  // Experiments are disabled by default. Track ones that are locally enabled.
-  _enabledExperiments: null,
   // A Map from an add-on install to its ID
   _addonFileMap: new Map(),
   // Flag to know if ToolboxProcess.jsm has already been loaded by someone or not
@@ -2520,8 +2534,6 @@ this.XPIProvider = {
       this._shutdownError = null;
       // Clear this at startup for xpcshell test restarts
       this._telemetryDetails = {};
-      // Clear the set of enabled experiments (experiments disabled by default).
-      this._enabledExperiments = new Set();
       // Register our details structure with AddonManager
       AddonManagerPrivate.setTelemetryDetails("XPI", this._telemetryDetails);
 
@@ -4539,15 +4551,11 @@ this.XPIProvider = {
     let appDisabledChanged = aAddon.appDisabled != appDisabled;
 
     // Update the properties in the database.
-    // We never persist this for experiments because the disabled flags
-    // are controlled by the Experiments Manager.
-    if (aAddon.type != "experiment") {
-      XPIDatabase.setAddonProperties(aAddon, {
-        userDisabled: aUserDisabled,
-        appDisabled: appDisabled,
-        softDisabled: aSoftDisabled
-      });
-    }
+    XPIDatabase.setAddonProperties(aAddon, {
+      userDisabled: aUserDisabled,
+      appDisabled: appDisabled,
+      softDisabled: aSoftDisabled
+    });
 
     let wrapper = createWrapper(aAddon);
 
@@ -6368,17 +6376,6 @@ AddonInternal.prototype = {
   },
 
   isCompatibleWith: function AddonInternal_isCompatibleWith(aAppVersion, aPlatformVersion) {
-    // Experiments are installed through an external mechanism that
-    // limits target audience to compatible clients. We trust it knows what
-    // it's doing and skip compatibility checks.
-    //
-    // This decision does forfeit defense in depth. If the experiments system
-    // is ever wrong about targeting an add-on to a specific application
-    // or platform, the client will likely see errors.
-    if (this.type == "experiment") {
-      return true;
-    }
-
     let app = this.matchingTargetApplication;
     if (!app)
       return false;
@@ -6554,13 +6551,6 @@ AddonInternal.prototype = {
     if (!(this.inDatabase))
       return permissions;
 
-    // Experiments can only be uninstalled. An uninstall reflects the user
-    // intent of "disable this experiment." This is partially managed by the
-    // experiments manager.
-    if (this.type == "experiment") {
-      return AddonManager.PERM_CAN_UNINSTALL;
-    }
-
     if (!this.appDisabled) {
       if (this.userDisabled || this.softDisabled) {
         permissions |= AddonManager.PERM_CAN_ENABLE;
@@ -6573,8 +6563,9 @@ AddonInternal.prototype = {
     // Add-ons that are in locked install locations, or are pending uninstall
     // cannot be upgraded or uninstalled
     if (!this._installLocation.locked && !this.pendingUninstall) {
-      // Add-ons that are installed by a file link cannot be upgraded
-      if (!this._installLocation.isLinkedAddon(this.id)) {
+      // Experiments cannot be upgraded.
+      // Add-ons that are installed by a file link cannot be upgraded.
+      if (this.type != "experiment" && !this._installLocation.isLinkedAddon(this.id)) {
         permissions |= AddonManager.PERM_CAN_UPGRADE;
       }
 
@@ -6905,15 +6896,10 @@ function AddonWrapper(aAddon) {
       return AddonManager.PENDING_UNINSTALL;
     }
 
-    // Extensions have an intentional inconsistency between what the DB says is
-    // enabled and what we say to the ouside world. so we need to cover up that
-    // lie here as well.
-    if (aAddon.type != "experiment") {
-      if (aAddon.active && aAddon.disabled)
-        pending |= AddonManager.PENDING_DISABLE;
-      else if (!aAddon.active && !aAddon.disabled)
-        pending |= AddonManager.PENDING_ENABLE;
-    }
+    if (aAddon.active && aAddon.disabled)
+      pending |= AddonManager.PENDING_DISABLE;
+    else if (!aAddon.active && !aAddon.disabled)
+      pending |= AddonManager.PENDING_ENABLE;
 
     if (aAddon.pendingUpgrade)
       pending |= AddonManager.PENDING_UPGRADE;
@@ -6952,23 +6938,11 @@ function AddonWrapper(aAddon) {
   });
 
   this.__defineGetter__("userDisabled", function AddonWrapper_userDisabledGetter() {
-    if (XPIProvider._enabledExperiments.has(aAddon.id)) {
-      return false;
-    }
-
     return aAddon.softDisabled || aAddon.userDisabled;
   });
   this.__defineSetter__("userDisabled", function AddonWrapper_userDisabledSetter(val) {
     if (val == this.userDisabled) {
       return val;
-    }
-
-    if (aAddon.type == "experiment") {
-      if (val) {
-        XPIProvider._enabledExperiments.delete(aAddon.id);
-      } else {
-        XPIProvider._enabledExperiments.add(aAddon.id);
-      }
     }
 
     if (aAddon.inDatabase) {
