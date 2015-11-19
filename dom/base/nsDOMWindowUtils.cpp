@@ -3786,9 +3786,11 @@ nsDOMWindowUtils::SetNextPaintSyncId(int32_t aSyncId)
     if (lm && lm->GetBackendType() == LayersBackend::LAYERS_CLIENT) {
       ClientLayerManager* clm = static_cast<ClientLayerManager*>(lm.get());
       clm->SetNextPaintSyncId(aSyncId);
+      return NS_OK;
     }
   }
 
+  NS_WARNING("Paint sync id could not be set on the ClientLayerManager");
   return NS_OK;
 }
 
