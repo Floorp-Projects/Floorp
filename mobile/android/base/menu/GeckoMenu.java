@@ -228,8 +228,8 @@ public class GeckoMenu extends ListView
                 mItems.add(menuItem);
             }
         } else if (actionEnum == GeckoMenuItem.SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW) {
-            if (actionView instanceof MenuItemActionView) {
-                final MenuItemActionView quickShareView = (MenuItemActionView) actionView;
+            if (actionView instanceof MenuItemSwitcherLayout) {
+                final MenuItemSwitcherLayout quickShareView = (MenuItemSwitcherLayout) actionView;
 
                 // We don't want to add the quick share bar if we don't have any quick share items.
                 if (quickShareView.getActionButtonCount() > 0 &&

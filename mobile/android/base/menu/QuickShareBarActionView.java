@@ -19,10 +19,10 @@ import org.mozilla.gecko.R;
  * uplifted, and this implementation will soon be replaced with the old implementation for adding
  * the share plane to the menu (see https://bug1122302.bugzilla.mozilla.org/attachment.cgi?id=8572126).
  */
-public class QuickShareBarActionView extends MenuItemActionView {
+public class QuickShareBarActionView extends MenuItemSwitcherLayout {
 
     public QuickShareBarActionView(Context context, AttributeSet attrs) {
-        this(context, attrs, R.attr.menuItemActionViewStyle);
+        this(context, attrs, R.attr.menuItemSwitcherLayoutStyle);
     }
 
     @TargetApi(14)
