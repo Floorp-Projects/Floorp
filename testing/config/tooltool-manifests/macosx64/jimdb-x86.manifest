@@ -4,6 +4,7 @@
 "visibility": "public",
 "digest": "0f2d4837eb25412800438dbe87a87f6ef38d4d92379f987e5f1e524ff9ec0c783386789f6a0e15b99e6a443326170cca1bf71e80d016971af3e1371e5b1e9d2d",
 "algorithm": "sha512",
-"filename": "jimdb-x86-mac_x64.tar.bz2"
+"filename": "jimdb-x86-mac_x64.tar.bz2",
+"unpack": true
 }
 ]
