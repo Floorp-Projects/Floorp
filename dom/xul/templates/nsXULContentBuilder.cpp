@@ -348,9 +348,6 @@ NS_NewXULContentBuilder(nsISupports* aOuter, REFNSIID aIID, void** aResult)
 
     nsresult rv;
     nsXULContentBuilder* result = new nsXULContentBuilder();
-    if (!result)
-        return NS_ERROR_OUT_OF_MEMORY;
-
     NS_ADDREF(result); // stabilize
 
     rv = result->InitGlobals();

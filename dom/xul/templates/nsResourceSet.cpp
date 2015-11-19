@@ -56,9 +56,6 @@ nsResourceSet::Add(nsIRDFResource* aResource)
     if (mCount >= mCapacity) {
         int32_t capacity = mCapacity + 4;
         nsIRDFResource** resources = new nsIRDFResource*[capacity];
-        if (! resources)
-            return NS_ERROR_OUT_OF_MEMORY;
-
         for (int32_t i = mCount - 1; i >= 0; --i)
             resources[i] = mResources[i];
 
