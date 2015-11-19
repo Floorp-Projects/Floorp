@@ -1,0 +1,5 @@
+<!DOCTYPE html [
+  <!ENTITY % passwordManagerDTD SYSTEM "chrome://passwordmgr/locale/passwordManager.dtd">
+  %passwordManagerDTD;
+]>
+<window>&savedLogins.title;</window>
