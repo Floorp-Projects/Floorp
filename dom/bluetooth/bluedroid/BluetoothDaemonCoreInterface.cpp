@@ -1063,4 +1063,294 @@ BluetoothDaemonCoreModule::HandleNtf(
     (this->*(HandleNtf[index]))(aHeader, aPDU);
 }
 
+//
+// Core interface
+//
+
+BluetoothDaemonCoreInterface::BluetoothDaemonCoreInterface(
+  BluetoothDaemonCoreModule* aModule)
+  : mModule(aModule)
+{ }
+
+BluetoothDaemonCoreInterface::~BluetoothDaemonCoreInterface()
+{ }
+
+void
+BluetoothDaemonCoreInterface::SetNotificationHandler(
+  BluetoothCoreNotificationHandler* aNotificationHandler)
+{
+  MOZ_ASSERT(mModule);
+
+  mModule->SetNotificationHandler(aNotificationHandler);
+}
+
+/* Enable / Disable */
+
+void
+BluetoothDaemonCoreInterface::Enable(BluetoothCoreResultHandler* aRes)
+{
+  nsresult rv = mModule->EnableCmd(aRes);
+  if (NS_FAILED(rv)) {
+    DispatchError(aRes, rv);
+  }
+}
+
+void
+BluetoothDaemonCoreInterface::Disable(BluetoothCoreResultHandler* aRes)
+{
+  nsresult rv = mModule->DisableCmd(aRes);
+  if (NS_FAILED(rv)) {
+    DispatchError(aRes, rv);
+  }
+}
+
+/* Adapter Properties */
+
+void
+BluetoothDaemonCoreInterface::GetAdapterProperties(
+  BluetoothCoreResultHandler* aRes)
+{
+  nsresult rv = mModule->GetAdapterPropertiesCmd(aRes);
+  if (NS_FAILED(rv)) {
+    DispatchError(aRes, rv);
+  }
+}
+
+void
+BluetoothDaemonCoreInterface::GetAdapterProperty(
+  BluetoothPropertyType aType, BluetoothCoreResultHandler* aRes)
+{
+  nsresult rv = mModule->GetAdapterPropertyCmd(aType, aRes);
+  if (NS_FAILED(rv)) {
+    DispatchError(aRes, rv);
+  }
+}
+
+void
+BluetoothDaemonCoreInterface::SetAdapterProperty(
+  const BluetoothProperty& aProperty, BluetoothCoreResultHandler* aRes)
+{
+  nsresult rv = mModule->SetAdapterPropertyCmd(aProperty, aRes);
+  if (NS_FAILED(rv)) {
+    DispatchError(aRes, rv);
+  }
+}
+
+/* Remote Device Properties */
+
+void
+BluetoothDaemonCoreInterface::GetRemoteDeviceProperties(
+  const BluetoothAddress& aRemoteAddr, BluetoothCoreResultHandler* aRes)
+{
+  nsresult rv = mModule->GetRemoteDevicePropertiesCmd(aRemoteAddr, aRes);
+  if (NS_FAILED(rv)) {
+    DispatchError(aRes, rv);
+  }
+}
+
+void
+BluetoothDaemonCoreInterface::GetRemoteDeviceProperty(
+  const BluetoothAddress& aRemoteAddr, BluetoothPropertyType aType,
+  BluetoothCoreResultHandler* aRes)
+{
+  nsresult rv = mModule->GetRemoteDevicePropertyCmd(aRemoteAddr, aType, aRes);
+  if (NS_FAILED(rv)) {
+    DispatchError(aRes, rv);
+  }
+}
+
+void
+BluetoothDaemonCoreInterface::SetRemoteDeviceProperty(
+  const BluetoothAddress& aRemoteAddr, const BluetoothProperty& aProperty,
+  BluetoothCoreResultHandler* aRes)
+{
+  nsresult rv = mModule->SetRemoteDevicePropertyCmd(aRemoteAddr,
+                                                    aProperty,
+                                                    aRes);
+  if (NS_FAILED(rv)) {
+    DispatchError(aRes, rv);
+  }
+}
+
+/* Remote Services */
+
+void
+BluetoothDaemonCoreInterface::GetRemoteServiceRecord(
+  const BluetoothAddress& aRemoteAddr, const BluetoothUuid& aUuid,
+  BluetoothCoreResultHandler* aRes)
+{
+  nsresult rv = mModule->GetRemoteServiceRecordCmd(aRemoteAddr, aUuid, aRes);
+  if (NS_FAILED(rv)) {
+    DispatchError(aRes, rv);
+  }
+}
+
+void
+BluetoothDaemonCoreInterface::GetRemoteServices(
+  const BluetoothAddress& aRemoteAddr, BluetoothCoreResultHandler* aRes)
+{
+  nsresult rv = mModule->GetRemoteServicesCmd(aRemoteAddr, aRes);
+  if (NS_FAILED(rv)) {
+    DispatchError(aRes, rv);
+  }
+}
+
+/* Discovery */
+
+void
+BluetoothDaemonCoreInterface::StartDiscovery(BluetoothCoreResultHandler* aRes)
+{
+  nsresult rv = mModule->StartDiscoveryCmd(aRes);
+  if (NS_FAILED(rv)) {
+    DispatchError(aRes, rv);
+  }
+}
+
+void
+BluetoothDaemonCoreInterface::CancelDiscovery(BluetoothCoreResultHandler* aRes)
+{
+  nsresult rv = mModule->CancelDiscoveryCmd(aRes);
+  if (NS_FAILED(rv)) {
+    DispatchError(aRes, rv);
+  }
+}
+
+/* Bonds */
+
+void
+BluetoothDaemonCoreInterface::CreateBond(const BluetoothAddress& aBdAddr,
+                                         BluetoothTransport aTransport,
+                                         BluetoothCoreResultHandler* aRes)
+{
+  nsresult rv = mModule->CreateBondCmd(aBdAddr, aTransport, aRes);
+  if (NS_FAILED(rv)) {
+    DispatchError(aRes, rv);
+  }
+}
+
+void
+BluetoothDaemonCoreInterface::RemoveBond(const BluetoothAddress& aBdAddr,
+                                         BluetoothCoreResultHandler* aRes)
+{
+  nsresult rv = mModule->RemoveBondCmd(aBdAddr, aRes);
+  if (NS_FAILED(rv)) {
+    DispatchError(aRes, rv);
+  }
+}
+
+void
+BluetoothDaemonCoreInterface::CancelBond(
+  const BluetoothAddress& aBdAddr, BluetoothCoreResultHandler* aRes)
+{
+  nsresult rv = mModule->CancelBondCmd(aBdAddr, aRes);
+  if (NS_FAILED(rv)) {
+    DispatchError(aRes, rv);
+  }
+}
+
+/* Connection */
+
+void
+BluetoothDaemonCoreInterface::GetConnectionState(
+  const BluetoothAddress& aBdAddr, BluetoothCoreResultHandler* aRes)
+{
+  // NO-OP: no corresponding interface of current BlueZ
+}
+
+/* Authentication */
+
+void
+BluetoothDaemonCoreInterface::PinReply(const BluetoothAddress& aBdAddr,
+                                       bool aAccept,
+                                       const BluetoothPinCode& aPinCode,
+                                       BluetoothCoreResultHandler* aRes)
+{
+  nsresult rv = mModule->PinReplyCmd(aBdAddr, aAccept, aPinCode, aRes);
+  if (NS_FAILED(rv)) {
+    DispatchError(aRes, rv);
+  }
+}
+
+void
+BluetoothDaemonCoreInterface::SspReply(const BluetoothAddress& aBdAddr,
+                                       BluetoothSspVariant aVariant,
+                                       bool aAccept, uint32_t aPasskey,
+                                       BluetoothCoreResultHandler* aRes)
+{
+  nsresult rv = mModule->SspReplyCmd(aBdAddr, aVariant, aAccept, aPasskey,
+                                     aRes);
+  if (NS_FAILED(rv)) {
+    DispatchError(aRes, rv);
+  }
+}
+
+/* DUT Mode */
+
+void
+BluetoothDaemonCoreInterface::DutModeConfigure(
+  bool aEnable, BluetoothCoreResultHandler* aRes)
+{
+  nsresult rv = mModule->DutModeConfigureCmd(aEnable, aRes);
+  if (NS_FAILED(rv)) {
+    DispatchError(aRes, rv);
+  }
+}
+
+void
+BluetoothDaemonCoreInterface::DutModeSend(uint16_t aOpcode,
+                                          uint8_t* aBuf,
+                                          uint8_t aLen,
+                                          BluetoothCoreResultHandler* aRes)
+{
+  nsresult rv = mModule->DutModeSendCmd(aOpcode, aBuf, aLen, aRes);
+  if (NS_FAILED(rv)) {
+    DispatchError(aRes, rv);
+  }
+}
+
+/* LE Mode */
+
+void
+BluetoothDaemonCoreInterface::LeTestMode(uint16_t aOpcode,
+                                         uint8_t* aBuf,
+                                         uint8_t aLen,
+                                         BluetoothCoreResultHandler* aRes)
+{
+  nsresult rv = mModule->LeTestModeCmd(aOpcode, aBuf, aLen, aRes);
+  if (NS_FAILED(rv)) {
+    DispatchError(aRes, rv);
+  }
+}
+
+/* Energy Information */
+
+void
+BluetoothDaemonCoreInterface::ReadEnergyInfo(BluetoothCoreResultHandler* aRes)
+{
+  // NO-OP: no corresponding interface of current BlueZ
+}
+
+void
+BluetoothDaemonCoreInterface::DispatchError(BluetoothCoreResultHandler* aRes,
+                                            BluetoothStatus aStatus)
+{
+  DaemonResultRunnable1<
+    BluetoothCoreResultHandler, void,
+    BluetoothStatus, BluetoothStatus>::Dispatch(
+    aRes, &BluetoothCoreResultHandler::OnError,
+    ConstantInitOp1<BluetoothStatus>(aStatus));
+}
+
+void
+BluetoothDaemonCoreInterface::DispatchError(BluetoothCoreResultHandler* aRes,
+                                            nsresult aRv)
+{
+  BluetoothStatus status;
+
+  if (NS_WARN_IF(NS_FAILED(Convert(aRv, status)))) {
+    status = STATUS_FAIL;
+  }
+  DispatchError(aRes, status);
+}
+
 END_BLUETOOTH_NAMESPACE
