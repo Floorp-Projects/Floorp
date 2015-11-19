@@ -47,9 +47,8 @@ function windowObserver(aSubject, aTopic, aData) {
             win.Scratchpad.removeObserver(this);
 
             let state = win.Scratchpad.getState();
-            BrowserTestUtils.closeWindow(win).then(() => {
-              addState(state);
-            });
+            win.close();
+            addState(state);
           },
         });
       }
