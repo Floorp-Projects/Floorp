@@ -199,10 +199,6 @@ private:
 
   friend class nsApplicationCache;
 
-  static PLDHashOperator ShutdownApplicationCache(const nsACString &key,
-                                                  nsIWeakReference *weakRef,
-                                                  void *ctx);
-
   static bool GetStrictFileOriginPolicy();
 
   bool     Initialized() { return mDB != nullptr; }

@@ -1,3 +1,5 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -237,8 +239,24 @@ private:
         return NS_ERROR_NOT_INITIALIZED;
 
       CacheEntryTable* entries;
-      if (sGlobalEntryTables->Get(mContextKey, &entries))
-        entries->EnumerateRead(&WalkMemoryCacheRunnable::WalkStorage, this);
+      if (sGlobalEntryTables->Get(mContextKey, &entries)) {
+        for (auto iter = entries->Iter(); !iter.Done(); iter.Next()) {
+          CacheEntry* entry = iter.UserData();
+
+          // Ignore disk entries
+          if (entry->IsUsingDisk()) {
+            continue;
+          }
+
+          mSize += entry->GetMetadataMemoryConsumption();
+
+          int64_t size;
+          if (NS_SUCCEEDED(entry->GetDataSize(&size))) {
+            mSize += size;
+          }
+          mEntryArray.AppendElement(entry);
+        }
+      }
 
       // Next, we dispatch to the main thread
     } else if (NS_IsMainThread()) {
@@ -285,28 +303,6 @@ private:
   {
     if (mCallback)
       ProxyReleaseMainThread(mCallback);
-  }
-
-  static PLDHashOperator
-  WalkStorage(const nsACString& aKey,
-              CacheEntry* aEntry,
-              void* aClosure)
-  {
-    WalkMemoryCacheRunnable* walker =
-      static_cast<WalkMemoryCacheRunnable*>(aClosure);
-
-    // Ignore disk entries
-    if (aEntry->IsUsingDisk())
-      return PL_DHASH_NEXT;
-
-    walker->mSize += aEntry->GetMetadataMemoryConsumption();
-
-    int64_t size;
-    if (NS_SUCCEEDED(aEntry->GetDataSize(&size)))
-      walker->mSize += size;
-
-    walker->mEntryArray.AppendElement(aEntry);
-    return PL_DHASH_NEXT;
   }
 
   virtual void OnEntryInfo(const nsACString & aURISpec, const nsACString & aIdEnhance,
