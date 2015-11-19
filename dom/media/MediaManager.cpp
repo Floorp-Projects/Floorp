@@ -47,6 +47,7 @@
 #include "mozilla/Base64.h"
 #include "mozilla/ipc/BackgroundChild.h"
 #include "mozilla/media/MediaChild.h"
+#include "mozilla/media/MediaTaskUtils.h"
 #include "MediaTrackConstraints.h"
 #include "VideoUtils.h"
 #include "Latency.h"
