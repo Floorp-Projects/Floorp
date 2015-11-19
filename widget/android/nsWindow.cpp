@@ -2636,7 +2636,8 @@ nsWindow::DrawWindowUnderlay(LayerManagerComposite* aManager, nsIntRect aRect)
 }
 
 void
-nsWindow::DrawWindowOverlay(LayerManagerComposite* aManager, nsIntRect aRect)
+nsWindow::DrawWindowOverlay(LayerManagerComposite* aManager,
+                            LayoutDeviceIntRect aRect)
 {
     PROFILER_LABEL("nsWindow", "DrawWindowOverlay",
         js::ProfileEntry::Category::GRAPHICS);
