@@ -4,7 +4,7 @@
 == stacking-context-perspective.html stacking-context-yes.html
 == stacking-context-backface-visibility.html stacking-context-no.html
 
-fails-if(Android) != overlayscrollbar-sorting-ref-visible.html overlayscrollbar-sorting-ref-hidden.html
+fails-if(Android&&!asyncPan) != overlayscrollbar-sorting-ref-visible.html overlayscrollbar-sorting-ref-hidden.html
 random-if(transparentScrollbars) == overlayscrollbar-sorting-1.html overlayscrollbar-sorting-ref-visible.html
 == overlayscrollbar-sorting-2.html overlayscrollbar-sorting-ref-visible.html
 == overlayscrollbar-sorting-3.html overlayscrollbar-sorting-ref-hidden.html

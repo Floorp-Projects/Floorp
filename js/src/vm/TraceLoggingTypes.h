@@ -21,7 +21,6 @@
     _(Internal)                                       \
     _(Interpreter)                                    \
     _(InlinedScripts)                                 \
-    _(Invalidation)                                   \
     _(IonCompilation)                                 \
     _(IonCompilationPaused)                           \
     _(IonLinking)                                     \
@@ -66,6 +65,7 @@
 
 #define TRACELOGGER_LOG_ITEMS(_)                      \
     _(Bailout)                                        \
+    _(Invalidation)                                   \
     _(Disable)                                        \
     _(Enable)                                         \
     _(Stop)

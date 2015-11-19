@@ -173,18 +173,18 @@ skip-if(B2G||Mulet) == 192767-26.xul 192767-36.xul # Initial mulet triage: parit
 skip-if(B2G||Mulet) == 192767-27.xul 192767-37.xul # Initial mulet triage: parity with B2G/B2G Desktop
 skip-if((B2G&&browserIsRemote)||Mulet) != 192767-01.xul 192767-21.xul # bug 974780 # Initial mulet triage: parity with B2G/B2G Desktop
 skip-if((B2G&&browserIsRemote)||Mulet) != 192767-02.xul 192767-22.xul # bug 974780 # Initial mulet triage: parity with B2G/B2G Desktop
-fails-if(Android) skip-if(B2G||Mulet) != 192767-03.xul 192767-23.xul # Initial mulet triage: parity with B2G/B2G Desktop
+fails-if(Android&&!asyncPan) skip-if(B2G||Mulet) != 192767-03.xul 192767-23.xul # Initial mulet triage: parity with B2G/B2G Desktop
 skip-if((B2G&&browserIsRemote)||Mulet) != 192767-04.xul 192767-24.xul # bug 974780 # Initial mulet triage: parity with B2G/B2G Desktop
 skip-if((B2G&&browserIsRemote)||Mulet) != 192767-05.xul 192767-25.xul # bug 974780 # Initial mulet triage: parity with B2G/B2G Desktop
-fails-if(Android) skip-if(B2G||Mulet) != 192767-06.xul 192767-26.xul # Initial mulet triage: parity with B2G/B2G Desktop
-fails-if(Android) skip-if(B2G||Mulet) != 192767-07.xul 192767-27.xul # Initial mulet triage: parity with B2G/B2G Desktop
+fails-if(Android&&!asyncPan) skip-if(B2G||Mulet) != 192767-06.xul 192767-26.xul # Initial mulet triage: parity with B2G/B2G Desktop
+fails-if(Android&&!asyncPan) skip-if(B2G||Mulet) != 192767-07.xul 192767-27.xul # Initial mulet triage: parity with B2G/B2G Desktop
 skip-if((B2G&&browserIsRemote)||Mulet) != 192767-11.xul 192767-31.xul # bug 974780 # Initial mulet triage: parity with B2G/B2G Desktop
 skip-if((B2G&&browserIsRemote)||Mulet) != 192767-12.xul 192767-32.xul # bug 974780 # Initial mulet triage: parity with B2G/B2G Desktop
-fails-if(Android) skip-if(B2G||Mulet) != 192767-13.xul 192767-33.xul # Initial mulet triage: parity with B2G/B2G Desktop
+fails-if(Android&&!asyncPan) skip-if(B2G||Mulet) != 192767-13.xul 192767-33.xul # Initial mulet triage: parity with B2G/B2G Desktop
 skip-if((B2G&&browserIsRemote)||Mulet) != 192767-14.xul 192767-34.xul # bug 974780 # Initial mulet triage: parity with B2G/B2G Desktop
 skip-if((B2G&&browserIsRemote)||Mulet) != 192767-15.xul 192767-35.xul # bug 974780 # Initial mulet triage: parity with B2G/B2G Desktop
-fails-if(Android) skip-if(B2G||Mulet) != 192767-16.xul 192767-36.xul # Initial mulet triage: parity with B2G/B2G Desktop
-fails-if(Android) skip-if(B2G||Mulet) != 192767-17.xul 192767-37.xul # Initial mulet triage: parity with B2G/B2G Desktop
+fails-if(Android&&!asyncPan) skip-if(B2G||Mulet) != 192767-16.xul 192767-36.xul # Initial mulet triage: parity with B2G/B2G Desktop
+fails-if(Android&&!asyncPan) skip-if(B2G||Mulet) != 192767-17.xul 192767-37.xul # Initial mulet triage: parity with B2G/B2G Desktop
 != 200774-1.html about:blank
 == 201215-1.html 201215-1-ref.html
 == 201293-1a.html 201293-1-ref.html
@@ -247,7 +247,7 @@ skip-if(B2G||Mulet) == 240933-1.html 240933-1-ref.html # Initial mulet triage: p
 skip-if(Android||B2G||Mulet) == 240933-2.html 240933-2-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
 == 243266-1.html 243266-1-ref.html
 == 243302-1.html 243302-1-ref.html
-skip-if(B2G||Mulet) == 243519-1.html 243519-1-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
+skip-if(B2G||Mulet||(Android&&asyncPan)) == 243519-1.html 243519-1-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
 == 243519-2.html 243519-2-ref.html
 == 243519-3.html 243519-3-ref.html
 == 243519-4a.html 243519-4-ref.html
@@ -578,7 +578,7 @@ skip-if((B2G&&browserIsRemote)||Mulet) == 366616-1.xul 366616-1-ref.xul # bug 97
 == 367247-s-hidden.html 367247-s-auto.html
 skip-if(B2G||Mulet) fails-if(Android) != 367247-s-auto.html 367247-s-scroll.html # Initial mulet triage: parity with B2G/B2G Desktop
 != 367247-l-visible.html 367247-l-hidden.html
-skip-if(B2G||Mulet) fails-if(Android) != 367247-l-hidden.html 367247-l-scroll.html # Initial mulet triage: parity with B2G/B2G Desktop
+skip-if(B2G||Mulet) fails-if(Android&&!asyncPan) != 367247-l-hidden.html 367247-l-scroll.html # Initial mulet triage: parity with B2G/B2G Desktop
 skip-if(B2G||Mulet) == 367247-l-scroll.html 367247-l-auto.html # Initial mulet triage: parity with B2G/B2G Desktop
 == 367332-1a.html 367332-1-ref.html
 == 367332-1b.html 367332-1-ref.html
@@ -644,7 +644,7 @@ skip-if(B2G||Mulet) == 370629-2.html 370629-2-ref.html # Initial mulet triage: p
 == 371043-1.html 371043-1-ref.html
 == 371354-1.html 371354-1-ref.html
 == 371483-1.html about:blank # assertion test
-fails-if(Android) == 371561-1.html 371561-1-ref.html
+fails-if(Android&&!asyncPan) == 371561-1.html 371561-1-ref.html
 skip-if((B2G&&browserIsRemote)||Mulet) != 371681-1.xhtml about:blank # bug 974780 # Initial mulet triage: parity with B2G/B2G Desktop
 == 371925-1a.html 371925-1-ref.html
 == 371925-1b.html 371925-1-ref.html
@@ -704,7 +704,7 @@ skip-if(B2G||Mulet) fuzzy-if(Android,2,140) == 379349-3b.xhtml 379349-3-ref.xhtm
 == 379461-1.xhtml 379461-1.html
 == 379461-2.xhtml 379461-2.html
 skip-if(B2G||Mulet) == 379461-3-container-xhtml.html 379461-3-container-html.html # Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(B2G||Mulet) fails-if(Android) != 379461-3-container-xhtml.html 379461-3-container-blank.html # there is a scrollbar # Initial mulet triage: parity with B2G/B2G Desktop
+skip-if(B2G||Mulet) fails-if(Android&&!asyncPan) != 379461-3-container-xhtml.html 379461-3-container-blank.html # there is a scrollbar # Initial mulet triage: parity with B2G/B2G Desktop
 == 380004-1.html 380004-1-ref.html
 == 380227-1.html 380227-1-ref.html
 == 380825-1.html 380825-1-ref.html
@@ -1425,7 +1425,7 @@ skip-if(B2G||Mulet) fuzzy-if(Android,5,1656) == 512410.html 512410-ref.html # In
 == 513153-2a.html 513153-2-ref.html
 == 513153-2b.html 513153-2-ref.html
 skip-if((B2G&&browserIsRemote)||Mulet) == 513318-1.xul 513318-1-ref.xul # bug 974780 # Initial mulet triage: parity with B2G/B2G Desktop
-skip-if(B2G||Mulet) fails-if(Android) != 513318-2.xul 513318-2-ref.xul # Initial mulet triage: parity with B2G/B2G Desktop
+skip-if(B2G||Mulet) fails-if(Android&&(!asyncPan||AndroidVersion>=15)) != 513318-2.xul 513318-2-ref.xul # Initial mulet triage: parity with B2G/B2G Desktop
 == 514917-1.html 514917-1-ref.html
 HTTP(..) == 518172-1a.html 518172-a-ref.html
 HTTP(..) == 518172-1b.html 518172-b-ref.html

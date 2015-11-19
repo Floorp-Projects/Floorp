@@ -548,6 +548,44 @@ Animation::GetCurrentOrPendingStartTime() const
   return result;
 }
 
+TimeStamp
+Animation::AnimationTimeToTimeStamp(const StickyTimeDuration& aTime) const
+{
+  // Initializes to null. Return the same object every time to benefit from
+  // return-value-optimization.
+  TimeStamp result;
+
+  // We *don't* check for mTimeline->TracksWallclockTime() here because that
+  // method only tells us if the timeline times can be converted to
+  // TimeStamps that can be compared to TimeStamp::Now() or not, *not*
+  // whether the timelines can be converted to TimeStamp values at all.
+  //
+  // Furthermore, we want to be able to use this method when the refresh driver
+  // is under test control (in which case TracksWallclockTime() will return
+  // false).
+  //
+  // Once we introduce timelines that are not time-based we will need to
+  // differentiate between them here and determine how to sort their events.
+  if (!mTimeline) {
+    return result;
+  }
+
+  // Check the time is convertible to a timestamp
+  if (aTime == TimeDuration::Forever() ||
+      mPlaybackRate == 0.0 ||
+      mStartTime.IsNull()) {
+    return result;
+  }
+
+  // Invert the standard relation:
+  //   animation time = (timeline time - start time) * playback rate
+  TimeDuration timelineTime =
+    TimeDuration(aTime).MultDouble(1.0 / mPlaybackRate) + mStartTime.Value();
+
+  result = mTimeline->ToTimeStamp(timelineTime);
+  return result;
+}
+
 // https://w3c.github.io/web-animations/#silently-set-the-current-time
 void
 Animation::SilentlySetCurrentTime(const TimeDuration& aSeekTime)
@@ -1127,46 +1165,6 @@ Animation::EffectEnd() const
 
   return mEffect->Timing().mDelay
          + mEffect->GetComputedTiming().mActiveDuration;
-}
-
-TimeStamp
-Animation::AnimationTimeToTimeStamp(const StickyTimeDuration& aTime) const
-{
-  // Initializes to null. Return the same object every time to benefit from
-  // return-value-optimization.
-  TimeStamp result;
-
-  // We *don't* check for mTimeline->TracksWallclockTime() here because that
-  // method only tells us if the timeline times can be converted to
-  // TimeStamps that can be compared to TimeStamp::Now() or not, *not*
-  // whether the timelines can be converted to TimeStamp values at all.
-  //
-  // Since we never compare the result of this method with TimeStamp::Now()
-  // it is ok to return values even if mTimeline->TracksWallclockTime() is
-  // false. Furthermore, we want to be able to use this method when the
-  // refresh driver is under test control (in which case TracksWallclockTime()
-  // will return false).
-  //
-  // Once we introduce timelines that are not time-based we will need to
-  // differentiate between them here and determine how to sort their events.
-  if (!mTimeline) {
-    return result;
-  }
-
-  // Check the time is convertible to a timestamp
-  if (aTime == TimeDuration::Forever() ||
-      mPlaybackRate == 0.0 ||
-      mStartTime.IsNull()) {
-    return result;
-  }
-
-  // Invert the standard relation:
-  //   animation time = (timeline time - start time) * playback rate
-  TimeDuration timelineTime =
-    TimeDuration(aTime).MultDouble(1.0 / mPlaybackRate) + mStartTime.Value();
-
-  result = mTimeline->ToTimeStamp(timelineTime);
-  return result;
 }
 
 nsIDocument*
