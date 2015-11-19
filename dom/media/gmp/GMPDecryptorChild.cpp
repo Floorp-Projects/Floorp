@@ -79,7 +79,7 @@ GMPDecryptorChild::SetSessionId(uint32_t aCreateSessionToken,
                                 uint32_t aSessionIdLength)
 {
   CALL_ON_GMP_THREAD(SendSetSessionId,
-                     aCreateSessionToken, nsAutoCString(aSessionId, aSessionIdLength));
+                     aCreateSessionToken, nsCString(aSessionId, aSessionIdLength));
 }
 
 void
@@ -102,7 +102,7 @@ GMPDecryptorChild::RejectPromise(uint32_t aPromiseId,
                                  uint32_t aMessageLength)
 {
   CALL_ON_GMP_THREAD(SendRejectPromise,
-                     aPromiseId, aException, nsAutoCString(aMessage, aMessageLength));
+                     aPromiseId, aException, nsCString(aMessage, aMessageLength));
 }
 
 void
@@ -115,7 +115,7 @@ GMPDecryptorChild::SessionMessage(const char* aSessionId,
   nsTArray<uint8_t> msg;
   msg.AppendElements(aMessage, aMessageLength);
   CALL_ON_GMP_THREAD(SendSessionMessage,
-                     nsAutoCString(aSessionId, aSessionIdLength),
+                     nsCString(aSessionId, aSessionIdLength),
                      aMessageType, Move(msg));
 }
 
@@ -125,7 +125,7 @@ GMPDecryptorChild::ExpirationChange(const char* aSessionId,
                                     GMPTimestamp aExpiryTime)
 {
   CALL_ON_GMP_THREAD(SendExpirationChange,
-                     nsAutoCString(aSessionId, aSessionIdLength), aExpiryTime);
+                     nsCString(aSessionId, aSessionIdLength), aExpiryTime);
 }
 
 void
@@ -133,7 +133,7 @@ GMPDecryptorChild::SessionClosed(const char* aSessionId,
                                  uint32_t aSessionIdLength)
 {
   CALL_ON_GMP_THREAD(SendSessionClosed,
-                     nsAutoCString(aSessionId, aSessionIdLength));
+                     nsCString(aSessionId, aSessionIdLength));
 }
 
 void
@@ -145,9 +145,9 @@ GMPDecryptorChild::SessionError(const char* aSessionId,
                                 uint32_t aMessageLength)
 {
   CALL_ON_GMP_THREAD(SendSessionError,
-                     nsAutoCString(aSessionId, aSessionIdLength),
+                     nsCString(aSessionId, aSessionIdLength),
                      aException, aSystemCode,
-                     nsAutoCString(aMessage, aMessageLength));
+                     nsCString(aMessage, aMessageLength));
 }
 
 void
@@ -160,7 +160,7 @@ GMPDecryptorChild::KeyStatusChanged(const char* aSessionId,
   nsAutoTArray<uint8_t, 16> kid;
   kid.AppendElements(aKeyId, aKeyIdLength);
   CALL_ON_GMP_THREAD(SendKeyStatusChanged,
-                     nsAutoCString(aSessionId, aSessionIdLength), kid,
+                     nsCString(aSessionId, aSessionIdLength), kid,
                      aStatus);
 }
 
