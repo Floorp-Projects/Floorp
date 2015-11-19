@@ -78,7 +78,7 @@ private:
   {
     public:
       PostErrorEvent(DeviceStorageRequestParent* aParent, const char* aError);
-      virtual ~PostErrorEvent();
+      virtual ~PostErrorEvent() {}
       virtual nsresult CancelableRun();
     private:
       nsString mError;
@@ -87,16 +87,25 @@ private:
   class PostSuccessEvent : public CancelableRunnable
   {
     public:
-      explicit PostSuccessEvent(DeviceStorageRequestParent* aParent);
-      virtual ~PostSuccessEvent();
+      explicit PostSuccessEvent(DeviceStorageRequestParent* aParent)
+        : CancelableRunnable(aParent) {}
+      virtual ~PostSuccessEvent() {}
       virtual nsresult CancelableRun();
   };
 
   class PostBlobSuccessEvent : public CancelableRunnable
   {
     public:
-      PostBlobSuccessEvent(DeviceStorageRequestParent* aParent, DeviceStorageFile* aFile, uint32_t aLength, nsACString& aMimeType, uint64_t aLastModifiedDate);
-      virtual ~PostBlobSuccessEvent();
+      PostBlobSuccessEvent(DeviceStorageRequestParent* aParent,
+                           DeviceStorageFile* aFile,
+                           uint32_t aLength, nsACString& aMimeType,
+                           uint64_t aLastModifiedDate)
+        : CancelableRunnable(aParent)
+        , mLength(aLength)
+        , mLastModificationDate(aLastModifiedDate)
+        , mFile(aFile)
+        , mMimeType(aMimeType) {}
+      virtual ~PostBlobSuccessEvent() {}
       virtual nsresult CancelableRun();
     private:
       uint32_t mLength;
@@ -111,8 +120,12 @@ private:
       PostEnumerationSuccessEvent(DeviceStorageRequestParent* aParent,
                                   const nsAString& aStorageType,
                                   const nsAString& aRelPath,
-                                  InfallibleTArray<DeviceStorageFileValue>& aPaths);
-      virtual ~PostEnumerationSuccessEvent();
+                                  InfallibleTArray<DeviceStorageFileValue>& aPaths)
+        : CancelableRunnable(aParent)
+        , mStorageType(aStorageType)
+        , mRelPath(aRelPath)
+        , mPaths(aPaths) {}
+      virtual ~PostEnumerationSuccessEvent() {}
       virtual nsresult CancelableRun();
     private:
       const nsString mStorageType;
@@ -123,8 +136,10 @@ private:
   class CreateFdEvent : public CancelableRunnable
   {
     public:
-      CreateFdEvent(DeviceStorageRequestParent* aParent, DeviceStorageFile* aFile);
-      virtual ~CreateFdEvent();
+      CreateFdEvent(DeviceStorageRequestParent* aParent, DeviceStorageFile* aFile)
+        : CancelableRunnable(aParent)
+        , mFile(aFile) {}
+      virtual ~CreateFdEvent() {}
       virtual nsresult CancelableRun();
     private:
       RefPtr<DeviceStorageFile> mFile;
@@ -133,9 +148,14 @@ private:
   class WriteFileEvent : public CancelableRunnable
   {
     public:
-      WriteFileEvent(DeviceStorageRequestParent* aParent, DeviceStorageFile* aFile,
-                     nsIInputStream* aInputStream, int32_t aRequestType);
-      virtual ~WriteFileEvent();
+      WriteFileEvent(DeviceStorageRequestParent* aParent,
+                     DeviceStorageFile* aFile,
+                     nsIInputStream* aInputStream, int32_t aRequestType)
+        : CancelableRunnable(aParent)
+        , mFile(aFile)
+        , mInputStream(aInputStream)
+        , mRequestType(aRequestType) {}
+      virtual ~WriteFileEvent() {}
       virtual nsresult CancelableRun();
     private:
       RefPtr<DeviceStorageFile> mFile;
@@ -146,8 +166,11 @@ private:
   class DeleteFileEvent : public CancelableRunnable
   {
     public:
-      DeleteFileEvent(DeviceStorageRequestParent* aParent, DeviceStorageFile* aFile);
-      virtual ~DeleteFileEvent();
+      DeleteFileEvent(DeviceStorageRequestParent* aParent,
+                      DeviceStorageFile* aFile)
+        : CancelableRunnable(aParent)
+        , mFile(aFile) {}
+      virtual ~DeleteFileEvent() {}
       virtual nsresult CancelableRun();
     private:
       RefPtr<DeviceStorageFile> mFile;
@@ -156,8 +179,11 @@ private:
   class FreeSpaceFileEvent : public CancelableRunnable
   {
     public:
-      FreeSpaceFileEvent(DeviceStorageRequestParent* aParent, DeviceStorageFile* aFile);
-      virtual ~FreeSpaceFileEvent();
+      FreeSpaceFileEvent(DeviceStorageRequestParent* aParent,
+                         DeviceStorageFile* aFile)
+        : CancelableRunnable(aParent)
+        , mFile(aFile) {}
+      virtual ~FreeSpaceFileEvent() {}
       virtual nsresult CancelableRun();
      private:
        RefPtr<DeviceStorageFile> mFile;
@@ -166,8 +192,11 @@ private:
   class UsedSpaceFileEvent : public CancelableRunnable
   {
     public:
-      UsedSpaceFileEvent(DeviceStorageRequestParent* aParent, DeviceStorageFile* aFile);
-      virtual ~UsedSpaceFileEvent();
+      UsedSpaceFileEvent(DeviceStorageRequestParent* aParent,
+                         DeviceStorageFile* aFile)
+        : CancelableRunnable(aParent)
+        , mFile(aFile) {}
+      virtual ~UsedSpaceFileEvent() {}
       virtual nsresult CancelableRun();
      private:
        RefPtr<DeviceStorageFile> mFile;
@@ -176,8 +205,9 @@ private:
   class ReadFileEvent : public CancelableRunnable
   {
     public:
-      ReadFileEvent(DeviceStorageRequestParent* aParent, DeviceStorageFile* aFile);
-      virtual ~ReadFileEvent();
+      ReadFileEvent(DeviceStorageRequestParent* aParent,
+                    DeviceStorageFile* aFile);
+      virtual ~ReadFileEvent() {}
       virtual nsresult CancelableRun();
     private:
       RefPtr<DeviceStorageFile> mFile;
@@ -187,8 +217,12 @@ private:
   class EnumerateFileEvent : public CancelableRunnable
   {
     public:
-      EnumerateFileEvent(DeviceStorageRequestParent* aParent, DeviceStorageFile* aFile, uint64_t aSince);
-      virtual ~EnumerateFileEvent();
+      EnumerateFileEvent(DeviceStorageRequestParent* aParent,
+                         DeviceStorageFile* aFile, uint64_t aSince)
+        : CancelableRunnable(aParent)
+        , mFile(aFile)
+        , mSince(aSince) {}
+      virtual ~EnumerateFileEvent() {}
       virtual nsresult CancelableRun();
     private:
       RefPtr<DeviceStorageFile> mFile;
@@ -198,8 +232,11 @@ private:
   class PostPathResultEvent : public CancelableRunnable
   {
     public:
-      PostPathResultEvent(DeviceStorageRequestParent* aParent, const nsAString& aPath);
-      virtual ~PostPathResultEvent();
+      PostPathResultEvent(DeviceStorageRequestParent* aParent,
+                          const nsAString& aPath)
+        : CancelableRunnable(aParent)
+        , mPath(aPath) {}
+      virtual ~PostPathResultEvent() {}
       virtual nsresult CancelableRun();
     private:
       RefPtr<DeviceStorageFile> mFile;
@@ -210,8 +247,10 @@ private:
   {
     public:
       PostFileDescriptorResultEvent(DeviceStorageRequestParent* aParent,
-                                    const FileDescriptor& aFileDescriptor);
-      virtual ~PostFileDescriptorResultEvent();
+                                    const FileDescriptor& aFileDescriptor)
+        : CancelableRunnable(aParent)
+        , mFileDescriptor(aFileDescriptor) {}
+      virtual ~PostFileDescriptorResultEvent() {}
       virtual nsresult CancelableRun();
     private:
       RefPtr<DeviceStorageFile> mFile;
@@ -234,8 +273,11 @@ private:
     public:
       PostUsedSpaceResultEvent(DeviceStorageRequestParent* aParent,
                                const nsAString& aType,
-                               uint64_t aUsedSpace);
-      virtual ~PostUsedSpaceResultEvent();
+                               uint64_t aUsedSpace)
+        : CancelableRunnable(aParent)
+        , mType(aType)
+        , mUsedSpace(aUsedSpace) {}
+      virtual ~PostUsedSpaceResultEvent() {}
       virtual nsresult CancelableRun();
     private:
       nsString mType;
@@ -245,8 +287,11 @@ private:
  class PostFormatResultEvent : public CancelableRunnable
  {
     public:
-      PostFormatResultEvent(DeviceStorageRequestParent* aParent, DeviceStorageFile* aFile);
-      virtual ~PostFormatResultEvent();
+      PostFormatResultEvent(DeviceStorageRequestParent* aParent,
+                            DeviceStorageFile* aFile)
+        : CancelableRunnable(aParent)
+        , mFile(aFile) {}
+      virtual ~PostFormatResultEvent() {}
       virtual nsresult CancelableRun();
     private:
       RefPtr<DeviceStorageFile> mFile;
@@ -255,8 +300,11 @@ private:
  class PostMountResultEvent : public CancelableRunnable
  {
     public:
-      PostMountResultEvent(DeviceStorageRequestParent* aParent, DeviceStorageFile* aFile);
-      virtual ~PostMountResultEvent();
+      PostMountResultEvent(DeviceStorageRequestParent* aParent,
+                           DeviceStorageFile* aFile)
+        : CancelableRunnable(aParent)
+        , mFile(aFile) {}
+      virtual ~PostMountResultEvent() {}
       virtual nsresult CancelableRun();
     private:
       RefPtr<DeviceStorageFile> mFile;
@@ -265,8 +313,11 @@ private:
  class PostUnmountResultEvent : public CancelableRunnable
  {
     public:
-      PostUnmountResultEvent(DeviceStorageRequestParent* aParent, DeviceStorageFile* aFile);
-      virtual ~PostUnmountResultEvent();
+      PostUnmountResultEvent(DeviceStorageRequestParent* aParent,
+                             DeviceStorageFile* aFile)
+        : CancelableRunnable(aParent)
+        , mFile(aFile) {}
+      virtual ~PostUnmountResultEvent() {}
       virtual nsresult CancelableRun();
     private:
       RefPtr<DeviceStorageFile> mFile;
