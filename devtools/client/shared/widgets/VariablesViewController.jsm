@@ -65,6 +65,7 @@ function VariablesViewController(aView, aOptions = {}) {
   this.view = aView;
   this.view.controller = this;
 }
+this.VariablesViewController = VariablesViewController;
 
 VariablesViewController.prototype = {
   /**
@@ -734,7 +735,7 @@ VariablesViewController.attach = function(aView, aOptions) {
 /**
  * Utility functions for handling stackframes.
  */
-var StackFrameUtils = {
+var StackFrameUtils = this.StackFrameUtils = {
   /**
    * Create a textual representation for the specified stack frame
    * to display in the stackframes container.

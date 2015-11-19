@@ -38,6 +38,7 @@ function SimpleListWidget(aNode) {
   ViewHelpers.delegateWidgetAttributeMethods(this, aNode);
   ViewHelpers.delegateWidgetEventMethods(this, aNode);
 }
+this.SimpleListWidget = SimpleListWidget;
 
 SimpleListWidget.prototype = {
   /**
