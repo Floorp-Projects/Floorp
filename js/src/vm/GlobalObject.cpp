@@ -667,7 +667,7 @@ GlobalObject::getSelfHostedFunction(JSContext* cx, Handle<GlobalObject*> global,
     if (!fun)
         return false;
     fun->setIsSelfHostedBuiltin();
-    fun->setExtendedSlot(0, StringValue(selfHostedName));
+    fun->setExtendedSlot(LAZY_FUNCTION_NAME_SLOT, StringValue(selfHostedName));
     funVal.setObject(*fun);
 
     return GlobalObject::addIntrinsicValue(cx, global, selfHostedName, funVal);
