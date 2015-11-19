@@ -52,9 +52,4 @@ TEST_F(DISABLED_ON_MAC(ViEExtendedIntegrationTest),
   tests_->ViERenderExtendedTest();
 }
 
-TEST_F(DISABLED_ON_MAC(ViEExtendedIntegrationTest),
-       DISABLED_RunsRtpRtcpTestWithoutErrors) {
-  tests_->ViERtpRtcpExtendedTest();
-}
-
 }  // namespace

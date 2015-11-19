@@ -15,95 +15,145 @@
 
 using namespace webrtc;
 
+namespace webrtc {
+void LoopBackTransport::SetSendModule(RtpRtcp* rtp_rtcp_module,
+                                      RTPPayloadRegistry* payload_registry,
+                                      RtpReceiver* receiver,
+                                      ReceiveStatistics* receive_statistics) {
+  rtp_rtcp_module_ = rtp_rtcp_module;
+  rtp_payload_registry_ = payload_registry;
+  rtp_receiver_ = receiver;
+  receive_statistics_ = receive_statistics;
+}
+
+void LoopBackTransport::DropEveryNthPacket(int n) {
+  packet_loss_ = n;
+}
+
+int LoopBackTransport::SendPacket(int channel, const void* data, size_t len) {
+  count_++;
+  if (packet_loss_ > 0) {
+    if ((count_ % packet_loss_) == 0) {
+      return len;
+    }
+  }
+  RTPHeader header;
+  rtc::scoped_ptr<RtpHeaderParser> parser(RtpHeaderParser::Create());
+  if (!parser->Parse(static_cast<const uint8_t*>(data), len, &header)) {
+    return -1;
+  }
+  PayloadUnion payload_specific;
+  if (!rtp_payload_registry_->GetPayloadSpecifics(header.payloadType,
+                                                  &payload_specific)) {
+    return -1;
+  }
+  receive_statistics_->IncomingPacket(header, len, false);
+  if (!rtp_receiver_->IncomingRtpPacket(header,
+                                        static_cast<const uint8_t*>(data), len,
+                                        payload_specific, true)) {
+    return -1;
+  }
+  return len;
+}
+
+int LoopBackTransport::SendRTCPPacket(int channel,
+                                      const void* data,
+                                      size_t len) {
+  if (rtp_rtcp_module_->IncomingRtcpPacket((const uint8_t*)data, len) < 0) {
+    return -1;
+  }
+  return static_cast<int>(len);
+}
+
+int32_t TestRtpReceiver::OnReceivedPayloadData(
+    const uint8_t* payload_data,
+    const size_t payload_size,
+    const webrtc::WebRtcRTPHeader* rtp_header) {
+  EXPECT_LE(payload_size, sizeof(payload_data_));
+  memcpy(payload_data_, payload_data, payload_size);
+  memcpy(&rtp_header_, rtp_header, sizeof(rtp_header_));
+  payload_size_ = payload_size;
+  return 0;
+}
+}  // namespace webrtc
+
 class RtpRtcpAPITest : public ::testing::Test {
  protected:
-  RtpRtcpAPITest() : module(NULL), fake_clock(123456) {
-    test_CSRC[0] = 1234;
-    test_CSRC[1] = 2345;
+  RtpRtcpAPITest() : fake_clock_(123456) {
+    test_csrcs_.push_back(1234);
+    test_csrcs_.push_back(2345);
     test_id = 123;
-    test_ssrc = 3456;
-    test_timestamp = 4567;
-    test_sequence_number = 2345;
+    test_ssrc_ = 3456;
+    test_timestamp_ = 4567;
+    test_sequence_number_ = 2345;
   }
   ~RtpRtcpAPITest() {}
 
-  virtual void SetUp() {
+  void SetUp() override {
     RtpRtcp::Configuration configuration;
     configuration.id = test_id;
     configuration.audio = true;
-    configuration.clock = &fake_clock;
-    module = RtpRtcp::CreateRtpRtcp(configuration);
+    configuration.clock = &fake_clock_;
+    module_.reset(RtpRtcp::CreateRtpRtcp(configuration));
     rtp_payload_registry_.reset(new RTPPayloadRegistry(
             RTPPayloadStrategy::CreateStrategy(true)));
     rtp_receiver_.reset(RtpReceiver::CreateAudioReceiver(
-        test_id, &fake_clock, NULL, NULL, NULL, rtp_payload_registry_.get()));
-  }
-
-  virtual void TearDown() {
-    delete module;
+        test_id, &fake_clock_, NULL, NULL, NULL, rtp_payload_registry_.get()));
   }
 
   int test_id;
-  scoped_ptr<RTPPayloadRegistry> rtp_payload_registry_;
-  scoped_ptr<RtpReceiver> rtp_receiver_;
-  RtpRtcp* module;
-  uint32_t test_ssrc;
-  uint32_t test_timestamp;
-  uint16_t test_sequence_number;
-  uint32_t test_CSRC[webrtc::kRtpCsrcSize];
-  SimulatedClock fake_clock;
+  rtc::scoped_ptr<RTPPayloadRegistry> rtp_payload_registry_;
+  rtc::scoped_ptr<RtpReceiver> rtp_receiver_;
+  rtc::scoped_ptr<RtpRtcp> module_;
+  uint32_t test_ssrc_;
+  uint32_t test_timestamp_;
+  uint16_t test_sequence_number_;
+  std::vector<uint32_t> test_csrcs_;
+  SimulatedClock fake_clock_;
 };
 
 TEST_F(RtpRtcpAPITest, Basic) {
-  EXPECT_EQ(0, module->SetSequenceNumber(test_sequence_number));
-  EXPECT_EQ(test_sequence_number, module->SequenceNumber());
+  module_->SetSequenceNumber(test_sequence_number_);
+  EXPECT_EQ(test_sequence_number_, module_->SequenceNumber());
 
-  EXPECT_EQ(0, module->SetStartTimestamp(test_timestamp));
-  EXPECT_EQ(test_timestamp, module->StartTimestamp());
+  module_->SetStartTimestamp(test_timestamp_);
+  EXPECT_EQ(test_timestamp_, module_->StartTimestamp());
 
-  EXPECT_FALSE(module->Sending());
-  EXPECT_EQ(0, module->SetSendingStatus(true));
-  EXPECT_TRUE(module->Sending());
+  EXPECT_FALSE(module_->Sending());
+  EXPECT_EQ(0, module_->SetSendingStatus(true));
+  EXPECT_TRUE(module_->Sending());
 }
 
 TEST_F(RtpRtcpAPITest, MTU) {
-  EXPECT_EQ(-1, module->SetMaxTransferUnit(10));
-  EXPECT_EQ(-1, module->SetMaxTransferUnit(IP_PACKET_SIZE + 1));
-  EXPECT_EQ(0, module->SetMaxTransferUnit(1234));
-  EXPECT_EQ(1234-20-8, module->MaxPayloadLength());
+  EXPECT_EQ(-1, module_->SetMaxTransferUnit(10));
+  EXPECT_EQ(-1, module_->SetMaxTransferUnit(IP_PACKET_SIZE + 1));
+  EXPECT_EQ(0, module_->SetMaxTransferUnit(1234));
+  EXPECT_EQ(1234 - 20 - 8, module_->MaxPayloadLength());
 
-  EXPECT_EQ(0, module->SetTransportOverhead(true, true, 12));
-  EXPECT_EQ(1234 - 20- 20 -20 - 12, module->MaxPayloadLength());
+  EXPECT_EQ(0, module_->SetTransportOverhead(true, true, 12));
+  EXPECT_EQ(1234 - 20 - 20 - 20 - 12, module_->MaxPayloadLength());
 
-  EXPECT_EQ(0, module->SetTransportOverhead(false, false, 0));
-  EXPECT_EQ(1234 - 20 - 8, module->MaxPayloadLength());
+  EXPECT_EQ(0, module_->SetTransportOverhead(false, false, 0));
+  EXPECT_EQ(1234 - 20 - 8, module_->MaxPayloadLength());
 }
 
 TEST_F(RtpRtcpAPITest, SSRC) {
-  module->SetSSRC(test_ssrc);
-  EXPECT_EQ(test_ssrc, module->SSRC());
-}
-
-TEST_F(RtpRtcpAPITest, CSRC) {
-  EXPECT_EQ(0, module->SetCSRCs(test_CSRC, 2));
-  uint32_t testOfCSRC[webrtc::kRtpCsrcSize];
-  EXPECT_EQ(2, module->CSRCs(testOfCSRC));
-  EXPECT_EQ(test_CSRC[0], testOfCSRC[0]);
-  EXPECT_EQ(test_CSRC[1], testOfCSRC[1]);
+  module_->SetSSRC(test_ssrc_);
+  EXPECT_EQ(test_ssrc_, module_->SSRC());
 }
 
 TEST_F(RtpRtcpAPITest, RTCP) {
-  EXPECT_EQ(kRtcpOff, module->RTCP());
-  EXPECT_EQ(0, module->SetRTCPStatus(kRtcpCompound));
-  EXPECT_EQ(kRtcpCompound, module->RTCP());
+  EXPECT_EQ(kRtcpOff, module_->RTCP());
+  module_->SetRTCPStatus(kRtcpCompound);
+  EXPECT_EQ(kRtcpCompound, module_->RTCP());
 
-  EXPECT_EQ(0, module->SetCNAME("john.doe@test.test"));
+  EXPECT_EQ(0, module_->SetCNAME("john.doe@test.test"));
 
-  EXPECT_FALSE(module->TMMBR());
-  EXPECT_EQ(0, module->SetTMMBRStatus(true));
-  EXPECT_TRUE(module->TMMBR());
-  EXPECT_EQ(0, module->SetTMMBRStatus(false));
-  EXPECT_FALSE(module->TMMBR());
+  EXPECT_FALSE(module_->TMMBR());
+  module_->SetTMMBRStatus(true);
+  EXPECT_TRUE(module_->TMMBR());
+  module_->SetTMMBRStatus(false);
+  EXPECT_FALSE(module_->TMMBR());
 
   EXPECT_EQ(kNackOff, rtp_receiver_->NACK());
   rtp_receiver_->SetNACKStatus(kNackRtcp);
@@ -111,28 +161,14 @@ TEST_F(RtpRtcpAPITest, RTCP) {
 }
 
 TEST_F(RtpRtcpAPITest, RtxSender) {
-  unsigned int ssrc = 0;
-  int rtx_mode = kRtxOff;
-  const int kRtxPayloadType = 119;
-  int payload_type = -1;
-  module->SetRTXSendStatus(kRtxRetransmitted);
-  module->SetRtxSendPayloadType(kRtxPayloadType);
-  module->SetRtxSsrc(1);
-  module->RTXSendStatus(&rtx_mode, &ssrc, &payload_type);
-  EXPECT_EQ(kRtxRetransmitted, rtx_mode);
-  EXPECT_EQ(1u, ssrc);
-  EXPECT_EQ(kRtxPayloadType, payload_type);
-  rtx_mode = kRtxOff;
-  module->SetRTXSendStatus(kRtxOff);
-  payload_type = -1;
-  module->SetRtxSendPayloadType(kRtxPayloadType);
-  module->RTXSendStatus(&rtx_mode, &ssrc, &payload_type);
-  EXPECT_EQ(kRtxOff, rtx_mode);
-  EXPECT_EQ(kRtxPayloadType, payload_type);
-  module->SetRTXSendStatus(kRtxRetransmitted);
-  module->RTXSendStatus(&rtx_mode, &ssrc, &payload_type);
-  EXPECT_EQ(kRtxRetransmitted, rtx_mode);
-  EXPECT_EQ(kRtxPayloadType, payload_type);
+  module_->SetRtxSendStatus(kRtxRetransmitted);
+  EXPECT_EQ(kRtxRetransmitted, module_->RtxSendStatus());
+
+  module_->SetRtxSendStatus(kRtxOff);
+  EXPECT_EQ(kRtxOff, module_->RtxSendStatus());
+
+  module_->SetRtxSendStatus(kRtxRetransmitted);
+  EXPECT_EQ(kRtxRetransmitted, module_->RtxSendStatus());
 }
 
 TEST_F(RtpRtcpAPITest, RtxReceiver) {

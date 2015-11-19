@@ -15,10 +15,9 @@
 
 #include "webrtc/modules/audio_device/audio_device_generic.h"
 #include "webrtc/system_wrappers/interface/critical_section_wrapper.h"
+#include "webrtc/system_wrappers/interface/thread_wrapper.h"
 
 namespace webrtc {
-class ThreadWrapper;
-
 const uint32_t N_REC_SAMPLES_PER_SEC = 44100;
 const uint32_t N_PLAY_SAMPLES_PER_SEC = 44100;
 
@@ -214,8 +213,7 @@ class AudioDeviceIOS : public AudioDeviceGeneric {
 
   CriticalSectionWrapper& _critSect;
 
-  ThreadWrapper* _captureWorkerThread;
-  uint32_t _captureWorkerThreadId;
+  rtc::scoped_ptr<ThreadWrapper> _captureWorkerThread;
 
   int32_t _id;
 

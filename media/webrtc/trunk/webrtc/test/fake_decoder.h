@@ -24,20 +24,20 @@ class FakeDecoder : public VideoDecoder {
   FakeDecoder();
   virtual ~FakeDecoder() {}
 
-  virtual int32_t InitDecode(const VideoCodec* config,
-                             int32_t number_of_cores) OVERRIDE;
+  int32_t InitDecode(const VideoCodec* config,
+                     int32_t number_of_cores) override;
 
-  virtual int32_t Decode(const EncodedImage& input,
-                         bool missing_frames,
-                         const RTPFragmentationHeader* fragmentation,
-                         const CodecSpecificInfo* codec_specific_info,
-                         int64_t render_time_ms) OVERRIDE;
+  int32_t Decode(const EncodedImage& input,
+                 bool missing_frames,
+                 const RTPFragmentationHeader* fragmentation,
+                 const CodecSpecificInfo* codec_specific_info,
+                 int64_t render_time_ms) override;
 
-  virtual int32_t RegisterDecodeCompleteCallback(
-      DecodedImageCallback* callback) OVERRIDE;
+  int32_t RegisterDecodeCompleteCallback(
+      DecodedImageCallback* callback) override;
 
-  virtual int32_t Release() OVERRIDE;
-  virtual int32_t Reset() OVERRIDE;
+  int32_t Release() override;
+  int32_t Reset() override;
 
  private:
   VideoCodec config_;
@@ -49,11 +49,24 @@ class FakeH264Decoder : public FakeDecoder {
  public:
   virtual ~FakeH264Decoder() {}
 
-  virtual int32_t Decode(const EncodedImage& input,
-                         bool missing_frames,
-                         const RTPFragmentationHeader* fragmentation,
-                         const CodecSpecificInfo* codec_specific_info,
-                         int64_t render_time_ms) OVERRIDE;
+  int32_t Decode(const EncodedImage& input,
+                 bool missing_frames,
+                 const RTPFragmentationHeader* fragmentation,
+                 const CodecSpecificInfo* codec_specific_info,
+                 int64_t render_time_ms) override;
+};
+
+class FakeNullDecoder : public FakeDecoder {
+ public:
+  virtual ~FakeNullDecoder() {}
+
+  int32_t Decode(const EncodedImage& input,
+                 bool missing_frames,
+                 const RTPFragmentationHeader* fragmentation,
+                 const CodecSpecificInfo* codec_specific_info,
+                 int64_t render_time_ms) override {
+    return 0;
+  }
 };
 }  // namespace test
 }  // namespace webrtc

@@ -50,20 +50,19 @@ class AutoDetectProxy : public SignalThread {
   }
   // Default implementation of GetProxySettingsForUrl. Override for special
   // implementation.
-  virtual bool GetProxyForUrl(const char* agent, const char* url,
-                              rtc::ProxyInfo* proxy) {
-    return GetProxySettingsForUrl(agent, url, proxy, true);
-  }
+  virtual bool GetProxyForUrl(const char* agent,
+                              const char* url,
+                              rtc::ProxyInfo* proxy);
   enum { MSG_TIMEOUT = SignalThread::ST_MSG_FIRST_AVAILABLE,
          MSG_UNRESOLVABLE,
          ADP_MSG_FIRST_AVAILABLE};
 
  protected:
-  virtual ~AutoDetectProxy();
+  ~AutoDetectProxy() override;
 
   // SignalThread Interface
-  virtual void DoWork();
-  virtual void OnMessage(Message *msg);
+  void DoWork() override;
+  void OnMessage(Message* msg) override;
 
   void Next();
   void Complete(ProxyType type);

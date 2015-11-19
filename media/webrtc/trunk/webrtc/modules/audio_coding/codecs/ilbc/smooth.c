@@ -51,7 +51,7 @@ void WebRtcIlbcfix_Smooth(
   maxtot=WEBRTC_SPL_MAX(max1, max2);
 
   scale=WebRtcSpl_GetSizeInBits(maxtot);
-  scale = (int16_t)WEBRTC_SPL_MUL_16_16(2,scale)-26;
+  scale = (int16_t)(2 * scale) - 26;
   scale=WEBRTC_SPL_MAX(0, scale);
 
   w00=WebRtcSpl_DotProductWithScale(current,current,ENH_BLOCKL,scale);
@@ -76,13 +76,12 @@ void WebRtcIlbcfix_Smooth(
     scale1 = scale2 + 16;
   }
 
-  w00prim = WEBRTC_SPL_LSHIFT_W32(w00, scale1);
+  w00prim = w00 << scale1;
   w11prim = (int16_t) WEBRTC_SPL_SHIFT_W32(w11, scale2);
 
   /* Perform C = sqrt(w11/w00) (C is in Q11 since (16+6)/2=11) */
   if (w11prim>64) {
-    endiff = WEBRTC_SPL_LSHIFT_W32(
-        (int32_t)WebRtcSpl_DivW32W16(w00prim, w11prim), 6);
+    endiff = WebRtcSpl_DivW32W16(w00prim, w11prim) << 6;
     C = (int16_t)WebRtcSpl_SqrtFloor(endiff); /* C is in Q11 */
   } else {
     C = 1;
@@ -122,17 +121,14 @@ void WebRtcIlbcfix_Smooth(
       scale = scale1;
     }
 
-    w11w00 = WEBRTC_SPL_MUL_16_16(
-        (int16_t)WEBRTC_SPL_SHIFT_W32(w11, -scale),
-        (int16_t)WEBRTC_SPL_SHIFT_W32(w00, -scale));
+    w11w00 = (int16_t)WEBRTC_SPL_SHIFT_W32(w11, -scale) *
+        (int16_t)WEBRTC_SPL_SHIFT_W32(w00, -scale);
 
-    w10w10 = WEBRTC_SPL_MUL_16_16(
-        (int16_t)WEBRTC_SPL_SHIFT_W32(w10, -scale),
-        (int16_t)WEBRTC_SPL_SHIFT_W32(w10, -scale));
+    w10w10 = (int16_t)WEBRTC_SPL_SHIFT_W32(w10, -scale) *
+        (int16_t)WEBRTC_SPL_SHIFT_W32(w10, -scale);
 
-    w00w00 = WEBRTC_SPL_MUL_16_16(
-        (int16_t)WEBRTC_SPL_SHIFT_W32(w00, -scale),
-        (int16_t)WEBRTC_SPL_SHIFT_W32(w00, -scale));
+    w00w00 = (int16_t)WEBRTC_SPL_SHIFT_W32(w00, -scale) *
+        (int16_t)WEBRTC_SPL_SHIFT_W32(w00, -scale);
 
     /* Calculate (w11*w00-w10*w10)/(w00*w00) in Q16 */
     if (w00w00>65536) {
@@ -169,7 +165,7 @@ void WebRtcIlbcfix_Smooth(
       /* B_W32 is in Q30 ( B = 1 - ENH_A0/2 - A * w10/w00 ) */
       scale1 = 31-bitsw10;
       scale2 = 21-scale1;
-      w10prim = WEBRTC_SPL_LSHIFT_W32(w10, scale1);
+      w10prim = w10 << scale1;
       w00prim = WEBRTC_SPL_SHIFT_W32(w00, -scale2);
       scale = bitsw00-scale2-15;
 

@@ -28,21 +28,19 @@ class FakeEncoder : public VideoEncoder {
   // Sets max bitrate. Not thread-safe, call before registering the encoder.
   void SetMaxBitrate(int max_kbps);
 
-  virtual int32_t InitEncode(const VideoCodec* config,
-                             int32_t number_of_cores,
-                             uint32_t max_payload_size) OVERRIDE;
-  virtual int32_t Encode(
-     const I420VideoFrame& input_image,
-     const CodecSpecificInfo* codec_specific_info,
-     const std::vector<VideoFrameType>* frame_types) OVERRIDE;
-  virtual int32_t RegisterEncodeCompleteCallback(
-      EncodedImageCallback* callback) OVERRIDE;
-  virtual int32_t Release() OVERRIDE;
-  virtual int32_t SetChannelParameters(uint32_t packet_loss, int rtt) OVERRIDE;
-  virtual int32_t SetRates(uint32_t new_target_bitrate,
-                           uint32_t framerate) OVERRIDE;
+  int32_t InitEncode(const VideoCodec* config,
+                     int32_t number_of_cores,
+                     size_t max_payload_size) override;
+  int32_t Encode(const I420VideoFrame& input_image,
+                 const CodecSpecificInfo* codec_specific_info,
+                 const std::vector<VideoFrameType>* frame_types) override;
+  int32_t RegisterEncodeCompleteCallback(
+      EncodedImageCallback* callback) override;
+  int32_t Release() override;
+  int32_t SetChannelParameters(uint32_t packet_loss, int64_t rtt) override;
+  int32_t SetRates(uint32_t new_target_bitrate, uint32_t framerate) override;
 
- private:
+ protected:
   Clock* const clock_;
   VideoCodec config_;
   EncodedImageCallback* callback_;
@@ -57,17 +55,29 @@ class FakeH264Encoder : public FakeEncoder, public EncodedImageCallback {
   explicit FakeH264Encoder(Clock* clock);
   virtual ~FakeH264Encoder() {}
 
-  virtual int32_t RegisterEncodeCompleteCallback(
-      EncodedImageCallback* callback) OVERRIDE;
+  int32_t RegisterEncodeCompleteCallback(
+      EncodedImageCallback* callback) override;
 
-  virtual int32_t Encoded(
-      EncodedImage& encodedImage,
-      const CodecSpecificInfo* codecSpecificInfo = NULL,
-      const RTPFragmentationHeader* fragments = NULL) OVERRIDE;
+  int32_t Encoded(const EncodedImage& encodedImage,
+                  const CodecSpecificInfo* codecSpecificInfo,
+                  const RTPFragmentationHeader* fragments) override;
 
  private:
   EncodedImageCallback* callback_;
   int idr_counter_;
+};
+
+class DelayedEncoder : public test::FakeEncoder {
+ public:
+  DelayedEncoder(Clock* clock, int delay_ms);
+  virtual ~DelayedEncoder() {}
+
+  int32_t Encode(const I420VideoFrame& input_image,
+                 const CodecSpecificInfo* codec_specific_info,
+                 const std::vector<VideoFrameType>* frame_types) override;
+
+ private:
+  const int delay_ms_;
 };
 }  // namespace test
 }  // namespace webrtc

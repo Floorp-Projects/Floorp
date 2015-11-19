@@ -84,23 +84,17 @@ int WebRtcNsx_set_policy(NsxHandle* nsxInst, int mode);
  *
  * Input
  *      - nsxInst       : NSx instance. Needs to be initiated before call.
- *      - speechFrame   : Pointer to speech frame buffer for L band
- *      - speechFrameHB : Pointer to speech frame buffer for H band
- *      - fs            : sampling frequency
+ *      - speechFrame   : Pointer to speech frame buffer for each band
+ *      - num_bands     : Number of bands
  *
  * Output:
  *      - nsxInst       : Updated NSx instance
- *      - outFrame      : Pointer to output frame for L band
- *      - outFrameHB    : Pointer to output frame for H band
- *
- * Return value         :  0 - OK
- *                        -1 - Error
+ *      - outFrame      : Pointer to output frame for each band
  */
-int WebRtcNsx_Process(NsxHandle* nsxInst,
-                      short* speechFrame,
-                      short* speechFrameHB,
-                      short* outFrame,
-                      short* outFrameHB);
+void WebRtcNsx_Process(NsxHandle* nsxInst,
+                       const short* const* speechFrame,
+                       int num_bands,
+                       short* const* outFrame);
 
 #ifdef __cplusplus
 }

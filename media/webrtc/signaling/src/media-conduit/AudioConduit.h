@@ -150,13 +150,13 @@ public:
    * Webrtc transport implementation to send and receive RTP packet.
    * AudioConduit registers itself as ExternalTransport to the VoiceEngine
    */
-  virtual int SendPacket(int channel, const void *data, int len) override;
+  virtual int SendPacket(int channel, const void *data, size_t len) override;
 
   /**
    * Webrtc transport implementation to send and receive RTCP packet.
    * AudioConduit registers itself as ExternalTransport to the VoiceEngine
    */
-  virtual int SendRTCPPacket(int channel, const void *data, int len) override;
+  virtual int SendRTCPPacket(int channel, const void *data, size_t len) override;
 
 
   virtual uint64_t CodecPluginID() override { return 0; }

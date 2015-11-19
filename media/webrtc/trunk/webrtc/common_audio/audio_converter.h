@@ -11,15 +11,10 @@
 #ifndef WEBRTC_COMMON_AUDIO_AUDIO_CONVERTER_H_
 #define WEBRTC_COMMON_AUDIO_AUDIO_CONVERTER_H_
 
-// TODO(ajm): Move channel buffer to common_audio.
 #include "webrtc/base/constructormagic.h"
-#include "webrtc/modules/audio_processing/common.h"
-#include "webrtc/system_wrappers/interface/scoped_ptr.h"
-#include "webrtc/system_wrappers/interface/scoped_vector.h"
+#include "webrtc/base/scoped_ptr.h"
 
 namespace webrtc {
-
-class PushSincResampler;
 
 // Format conversion (remixing and resampling) for audio. Only simple remixing
 // conversions are supported: downmix to mono (i.e. |dst_channels| == 1) or
@@ -29,23 +24,39 @@ class PushSincResampler;
 // the number of frames is equivalent to specifying the sample rates.
 class AudioConverter {
  public:
-  AudioConverter(int src_channels, int src_frames,
-                 int dst_channels, int dst_frames);
+  // Returns a new AudioConverter, which will use the supplied format for its
+  // lifetime. Caller is responsible for the memory.
+  static rtc::scoped_ptr<AudioConverter> Create(int src_channels,
+                                                int src_frames,
+                                                int dst_channels,
+                                                int dst_frames);
+  virtual ~AudioConverter() {};
 
-  void Convert(const float* const* src,
-               int src_channels,
-               int src_frames,
-               int dst_channels,
-               int dst_frames,
-               float* const* dest);
+  // Convert |src|, containing |src_size| samples, to |dst|, having a sample
+  // capacity of |dst_capacity|. Both point to a series of buffers containing
+  // the samples for each channel. The sizes must correspond to the format
+  // passed to Create().
+  virtual void Convert(const float* const* src, size_t src_size,
+                       float* const* dst, size_t dst_capacity) = 0;
+
+  int src_channels() const { return src_channels_; }
+  int src_frames() const { return src_frames_; }
+  int dst_channels() const { return dst_channels_; }
+  int dst_frames() const { return dst_frames_; }
+
+ protected:
+  AudioConverter();
+  AudioConverter(int src_channels, int src_frames, int dst_channels,
+                 int dst_frames);
+
+  // Helper to CHECK that inputs are correctly sized.
+  void CheckSizes(size_t src_size, size_t dst_capacity) const;
 
  private:
   const int src_channels_;
   const int src_frames_;
   const int dst_channels_;
   const int dst_frames_;
-  scoped_ptr<ChannelBuffer<float>> downmix_buffer_;
-  ScopedVector<PushSincResampler> resamplers_;
 
   DISALLOW_COPY_AND_ASSIGN(AudioConverter);
 };

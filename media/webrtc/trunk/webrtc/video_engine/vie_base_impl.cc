@@ -124,6 +124,23 @@ int ViEBaseImpl::SetCpuOveruseOptions(int video_channel,
   return -1;
 }
 
+void ViEBaseImpl::RegisterCpuOveruseMetricsObserver(
+    int video_channel,
+    CpuOveruseMetricsObserver* observer) {
+  ViEChannelManagerScoped cs(*(shared_data_.channel_manager()));
+  ViEEncoder* vie_encoder = cs.Encoder(video_channel);
+  assert(vie_encoder);
+
+  ViEInputManagerScoped is(*(shared_data_.input_manager()));
+  ViEFrameProviderBase* provider = is.FrameProvider(vie_encoder);
+  assert(provider != NULL);
+
+  ViECapturer* capturer = is.Capture(provider->Id());
+  assert(capturer);
+
+  capturer->RegisterCpuOveruseMetricsObserver(observer);
+}
+
 int ViEBaseImpl::GetCpuOveruseMetrics(int video_channel,
                                       CpuOveruseMetrics* metrics) {
   ViEChannelManagerScoped cs(*(shared_data_.channel_manager()));
@@ -173,12 +190,18 @@ int ViEBaseImpl::CreateChannel(int& video_channel,  // NOLINT
 
 int ViEBaseImpl::CreateChannel(int& video_channel,  // NOLINT
                                int original_channel) {
-  return CreateChannel(video_channel, original_channel, true);
+  return CreateChannel(video_channel, original_channel, true, false);
+}
+
+int ViEBaseImpl::CreateChannelWithoutDefaultEncoder(
+    int& video_channel,  // NOLINT
+    int original_channel) {
+  return CreateChannel(video_channel, original_channel, true, true);
 }
 
 int ViEBaseImpl::CreateReceiveChannel(int& video_channel,  // NOLINT
                                       int original_channel) {
-  return CreateChannel(video_channel, original_channel, false);
+  return CreateChannel(video_channel, original_channel, false, true);
 }
 
 int ViEBaseImpl::DeleteChannel(const int video_channel) {
@@ -192,7 +215,7 @@ int ViEBaseImpl::DeleteChannel(const int video_channel) {
 
     // Deregister the ViEEncoder if no other channel is using it.
     ViEEncoder* vie_encoder = cs.Encoder(video_channel);
-    if (cs.ChannelUsingViEEncoder(video_channel) == false) {
+    if (!cs.ChannelUsingViEEncoder(video_channel)) {
       ViEInputManagerScoped is(*(shared_data_.input_manager()));
       ViEFrameProviderBase* provider = is.FrameProvider(vie_encoder);
       if (provider) {
@@ -333,7 +356,7 @@ int ViEBaseImpl::StopReceive(const int video_channel) {
 
 int ViEBaseImpl::GetVersion(char version[1024]) {
   assert(version != NULL);
-  strcpy(version, "VideoEngine 39");
+  strcpy(version, "VideoEngine 42");
   return 0;
 }
 
@@ -342,16 +365,18 @@ int ViEBaseImpl::LastError() {
 }
 
 int ViEBaseImpl::CreateChannel(int& video_channel,  // NOLINT
-                               int original_channel, bool sender) {
+                               int original_channel,
+                               bool sender,
+                               bool disable_default_encoder) {
   ViEChannelManagerScoped cs(*(shared_data_.channel_manager()));
   if (!cs.Channel(original_channel)) {
     shared_data_.SetLastError(kViEBaseInvalidChannelId);
     return -1;
   }
 
-  if (shared_data_.channel_manager()->CreateChannel(&video_channel,
-                                                    original_channel,
-                                                    sender) == -1) {
+  if (shared_data_.channel_manager()->CreateChannel(
+          &video_channel, original_channel, sender, disable_default_encoder) ==
+      -1) {
     video_channel = -1;
     shared_data_.SetLastError(kViEBaseChannelCreationFailed);
     return -1;
@@ -362,4 +387,32 @@ int ViEBaseImpl::CreateChannel(int& video_channel,  // NOLINT
   return 0;
 }
 
+void ViEBaseImpl::RegisterSendStatisticsProxy(
+    int channel,
+    SendStatisticsProxy* send_statistics_proxy) {
+  LOG_F(LS_VERBOSE) << "RegisterSendStatisticsProxy on channel " << channel;
+  ViEChannelManagerScoped cs(*(shared_data_.channel_manager()));
+  ViEChannel* vie_channel = cs.Channel(channel);
+  if (!vie_channel) {
+    shared_data_.SetLastError(kViEBaseInvalidChannelId);
+    return;
+  }
+  ViEEncoder* vie_encoder = cs.Encoder(channel);
+  assert(vie_encoder);
+
+  vie_encoder->RegisterSendStatisticsProxy(send_statistics_proxy);
+}
+
+void ViEBaseImpl::RegisterReceiveStatisticsProxy(
+    int channel,
+    ReceiveStatisticsProxy* receive_statistics_proxy) {
+  LOG_F(LS_VERBOSE) << "RegisterReceiveStatisticsProxy on channel " << channel;
+  ViEChannelManagerScoped cs(*(shared_data_.channel_manager()));
+  ViEChannel* vie_channel = cs.Channel(channel);
+  if (!vie_channel) {
+    shared_data_.SetLastError(kViEBaseInvalidChannelId);
+    return;
+  }
+  vie_channel->RegisterReceiveStatisticsProxy(receive_statistics_proxy);
+}
 }  // namespace webrtc

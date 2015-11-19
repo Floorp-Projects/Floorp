@@ -12,6 +12,7 @@
 #define WEBRTC_VIDEO_ENGINE_MAIN_TEST_AUTOTEST_INTERFACE_VIE_AUTOTEST_WINDOWS_H_
 
 #include "webrtc/engine_configurations.h"
+#include "webrtc/system_wrappers/interface/thread_wrapper.h"
 #include "webrtc/video_engine/test/auto_test/interface/vie_autotest_window_manager_interface.h"
 
 #include <windows.h>
@@ -19,7 +20,6 @@
 
 // Forward declaration
 namespace webrtc {
-class ThreadWrapper;
 class CriticalSectionWrapper;
 }
 
@@ -48,7 +48,7 @@ private:
     void* _window2;
 
     bool _terminate;
-    webrtc::ThreadWrapper& _eventThread;
+    rtc::scoped_ptr<webrtc::ThreadWrapper> _eventThread;
     webrtc::CriticalSectionWrapper& _crit;
     HWND _hwndMain;
     HWND _hwnd1;

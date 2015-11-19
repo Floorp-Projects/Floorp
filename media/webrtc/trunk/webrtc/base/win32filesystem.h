@@ -91,7 +91,7 @@ class Win32Filesystem : public FilesystemInterface {
   // Get a temporary folder that is unique to the current user and application.
   virtual bool GetAppTempFolder(Pathname* path);
 
-  virtual bool GetDiskFreeSpace(const Pathname& path, int64 *freebytes);
+  virtual bool GetDiskFreeSpace(const Pathname& path, int64 *free_bytes);
 
   virtual Pathname GetCurrentDirectory();
 };

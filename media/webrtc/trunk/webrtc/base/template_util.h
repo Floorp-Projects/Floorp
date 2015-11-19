@@ -1,5 +1,5 @@
 /*
- *  Copyright 2011 The WebRTC Project Authors. All rights reserved.
+ *  Copyright (c) 2013 The WebRTC project authors. All Rights Reserved.
  *
  *  Use of this source code is governed by a BSD-style license
  *  that can be found in the LICENSE file in the root of the source
@@ -8,6 +8,8 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
+// Borrowed from Chromium's src/base/template_util.h.
+
 #ifndef WEBRTC_BASE_TEMPLATE_UTIL_H_
 #define WEBRTC_BASE_TEMPLATE_UTIL_H_
 
@@ -15,7 +17,7 @@
 
 namespace rtc {
 
-// template definitions from tr1
+// Template definitions from tr1.
 
 template<class T, T v>
 struct integral_constant {
@@ -33,7 +35,7 @@ template <class T> struct is_pointer : false_type {};
 template <class T> struct is_pointer<T*> : true_type {};
 
 template <class T, class U> struct is_same : public false_type {};
-template <class T> struct is_same<T,T> : true_type {};
+template <class T> struct is_same<T, T> : true_type {};
 
 template<class> struct is_array : public false_type {};
 template<class T, size_t n> struct is_array<T[n]> : public true_type {};

@@ -60,6 +60,12 @@ inline void MemoryBarrier() {
   __asm__ __volatile__("mfence" : : : "memory");
 }
 
+#elif defined(__MIPSEL__)
+// From http://src.chromium.org/viewvc/chrome/trunk/src/base/atomicops_internals_mips_gcc.h
+inline void MemoryBarrier() {
+  __asm__ __volatile__("sync" : : : "memory");
+}
+
 #else
 #error Add an implementation of MemoryBarrier() for this platform!
 #endif

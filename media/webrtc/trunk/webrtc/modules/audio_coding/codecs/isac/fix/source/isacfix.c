@@ -135,7 +135,7 @@ int16_t WebRtcIsacfix_CreateInternal(ISACFIX_MainStruct *ISAC_main_inst)
   ISAC_inst = (ISACFIX_SubStruct *)ISAC_main_inst;
 
   /* Allocate memory for storing encoder data */
-  ISAC_inst->ISACenc_obj.SaveEnc_ptr = malloc(1 * sizeof(ISAC_SaveEncData_t));
+  ISAC_inst->ISACenc_obj.SaveEnc_ptr = malloc(1 * sizeof(IsacSaveEncoderData));
 
   if (ISAC_inst->ISACenc_obj.SaveEnc_ptr!=NULL) {
     return(0);

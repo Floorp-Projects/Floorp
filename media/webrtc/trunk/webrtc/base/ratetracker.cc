@@ -15,7 +15,7 @@ namespace rtc {
 
 RateTracker::RateTracker()
     : total_units_(0), units_second_(0),
-      last_units_second_time_(static_cast<uint32>(-1)),
+      last_units_second_time_(~0u),
       last_units_second_calc_(0) {
 }
 
@@ -29,7 +29,10 @@ size_t RateTracker::units_second() {
   // a new reference point that is an integer number of seconds since the
   // last one, and compute the units over that interval.
   uint32 current_time = Time();
-  if (last_units_second_time_ != static_cast<uint32>(-1)) {
+  if (last_units_second_time_ == ~0u) {
+      last_units_second_time_ = current_time;
+      last_units_second_calc_ = total_units_;
+  } else {
     int delta = rtc::TimeDiff(current_time, last_units_second_time_);
     if (delta >= 1000) {
       int fraction_time = delta % 1000;
@@ -44,15 +47,13 @@ size_t RateTracker::units_second() {
       last_units_second_calc_ = total_units_ - fraction_units;
     }
   }
-  if (last_units_second_time_ == static_cast<uint32>(-1)) {
-    last_units_second_time_ = current_time;
-    last_units_second_calc_ = total_units_;
-  }
 
   return units_second_;
 }
 
 void RateTracker::Update(size_t units) {
+  if (last_units_second_time_ == ~0u)
+    last_units_second_time_ = Time();
   total_units_ += units;
 }
 

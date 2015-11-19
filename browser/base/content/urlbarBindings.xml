@@ -356,6 +356,8 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
                   gBrowser.removeTab(prevTab);
                 return;
               }
+            } else if (action.type == "remotetab") {
+              url = action.params.url;
             } else if (action.type == "keyword") {
               url = action.params.url;
             } else if (action.type == "searchengine") {

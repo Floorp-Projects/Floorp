@@ -18,7 +18,7 @@ namespace webrtc {
 class MockVideoCaptureModule : public VideoCaptureModule {
  public:
   // from Module
-  MOCK_METHOD0(TimeUntilNextProcess, int32_t());
+  MOCK_METHOD0(TimeUntilNextProcess, int64_t());
   MOCK_METHOD0(Process, int32_t());
 
   // from RefCountedModule
@@ -38,7 +38,9 @@ class MockVideoCaptureModule : public VideoCaptureModule {
   MOCK_METHOD1(CaptureSettings, int32_t(VideoCaptureCapability& settings));
   MOCK_METHOD1(SetCaptureDelay, void(int32_t delayMS));
   MOCK_METHOD0(CaptureDelay, int32_t());
-  MOCK_METHOD1(SetCaptureRotation, int32_t(VideoCaptureRotation rotation));
+  MOCK_METHOD1(SetCaptureRotation, int32_t(VideoRotation rotation));
+  MOCK_METHOD1(SetApplyRotation, bool(bool));
+  MOCK_METHOD0(GetApplyRotation, bool());
   MOCK_METHOD1(GetEncodeInterface,
                VideoCaptureEncodeInterface*(const VideoCodec& codec));
   MOCK_METHOD1(EnableFrameRateCallback, void(const bool enable));

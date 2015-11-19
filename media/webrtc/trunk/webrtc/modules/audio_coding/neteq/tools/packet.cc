@@ -55,7 +55,7 @@ Packet::Packet(uint8_t* packet_memory, size_t allocated_bytes, double time_ms)
       virtual_packet_length_bytes_(allocated_bytes),
       virtual_payload_length_bytes_(0),
       time_ms_(time_ms) {
-  scoped_ptr<RtpHeaderParser> parser(RtpHeaderParser::Create());
+  rtc::scoped_ptr<RtpHeaderParser> parser(RtpHeaderParser::Create());
   valid_header_ = ParseHeader(*parser);
 }
 
@@ -70,7 +70,7 @@ Packet::Packet(uint8_t* packet_memory,
       virtual_packet_length_bytes_(virtual_packet_length_bytes),
       virtual_payload_length_bytes_(0),
       time_ms_(time_ms) {
-  scoped_ptr<RtpHeaderParser> parser(RtpHeaderParser::Create());
+  rtc::scoped_ptr<RtpHeaderParser> parser(RtpHeaderParser::Create());
   valid_header_ = ParseHeader(*parser);
 }
 

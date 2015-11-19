@@ -13,9 +13,9 @@
 #include <vector>
 
 #include "google/gflags.h"
+#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/modules/audio_coding/neteq/tools/packet.h"
 #include "webrtc/modules/audio_coding/neteq/tools/rtp_file_source.h"
-#include "webrtc/system_wrappers/interface/scoped_ptr.h"
 
 // Flag validator.
 static bool ValidatePayloadType(const char* flagname, int32_t value) {
@@ -60,7 +60,7 @@ int main(int argc, char* argv[]) {
   }
 
   printf("Input file: %s\n", argv[1]);
-  webrtc::scoped_ptr<webrtc::test::RtpFileSource> file_source(
+  rtc::scoped_ptr<webrtc::test::RtpFileSource> file_source(
       webrtc::test::RtpFileSource::Create(argv[1]));
   assert(file_source.get());
   // Set RTP extension ID.
@@ -90,7 +90,7 @@ int main(int argc, char* argv[]) {
   }
   fprintf(out_file, "\n");
 
-  webrtc::scoped_ptr<webrtc::test::Packet> packet;
+  rtc::scoped_ptr<webrtc::test::Packet> packet;
   while (true) {
     packet.reset(file_source->NextPacket());
     if (!packet.get()) {

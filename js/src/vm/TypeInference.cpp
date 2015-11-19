@@ -2579,12 +2579,12 @@ UpdatePropertyType(ExclusiveContext* cx, HeapTypeSet* types, NativeObject* obj, 
          * that are not collated into the JSID_VOID property (see propertySet
          * comment).
          *
-         * Also don't add untracked values (initial uninitialized lexical
-         * magic values and optimized out values) as appearing in CallObjects
-         * and the global lexical scope.
+         * Also don't add untracked values (initial uninitialized lexical magic
+         * values and optimized out values) as appearing in CallObjects, module
+         * environments or the global lexical scope.
          */
         MOZ_ASSERT_IF(TypeSet::IsUntrackedValue(value),
-                      obj->is<CallObject>() || IsExtensibleLexicalScope(obj));
+                      obj->is<LexicalScopeBase>() || IsExtensibleLexicalScope(obj));
         if ((indexed || !value.isUndefined() || !CanHaveEmptyPropertyTypesForOwnProperty(obj)) &&
             !TypeSet::IsUntrackedValue(value))
         {

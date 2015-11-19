@@ -33,7 +33,7 @@ class ConstantPcmPacketSource : public PacketSource {
 
   // Returns a pointer to the next packet. Will never return NULL. That is,
   // the source is infinite.
-  Packet* NextPacket() OVERRIDE;
+  Packet* NextPacket() override;
 
  private:
   void WriteHeader(uint8_t* packet_memory);
@@ -41,7 +41,7 @@ class ConstantPcmPacketSource : public PacketSource {
   const size_t kHeaderLenBytes = 12;
   const size_t payload_len_samples_;
   const size_t packet_len_bytes_;
-  int16_t encoded_sample_;
+  uint8_t encoded_sample_[2];
   const int samples_per_ms_;
   double next_arrival_time_ms_;
   const int payload_type_;

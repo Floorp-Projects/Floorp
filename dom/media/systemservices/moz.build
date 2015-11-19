@@ -26,6 +26,11 @@ if CONFIG['MOZ_WEBRTC']:
         '/media/webrtc/signaling',
         '/media/webrtc/trunk',
     ]
+if CONFIG['OS_TARGET'] == 'WINNT':
+    DEFINES['WEBRTC_WIN'] = True
+else:
+    DEFINES['WEBRTC_POSIX'] = True
+
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('android', 'gonk'):
     EXPORTS += [

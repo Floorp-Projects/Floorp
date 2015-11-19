@@ -34,7 +34,7 @@
  *----------------------------------------------------------------*/
 
 void WebRtcIlbcfix_CbSearch(
-    iLBC_Enc_Inst_t *iLBCenc_inst,
+    IlbcEncoder *iLBCenc_inst,
     /* (i) the encoder state structure */
     int16_t *index,  /* (o) Codebook indices */
     int16_t *gain_index, /* (o) Gain quantization indices */
@@ -113,7 +113,7 @@ void WebRtcIlbcfix_CbSearch(
 
   if ((temp1>0)&&(temp2>0)) {
     temp1 = WEBRTC_SPL_MAX(temp1, temp2);
-    scale = WebRtcSpl_GetSizeInBits(WEBRTC_SPL_MUL_16_16(temp1, temp1));
+    scale = WebRtcSpl_GetSizeInBits((uint32_t)(temp1 * temp1));
   } else {
     /* temp1 or temp2 is negative (maximum was -32768) */
     scale = 30;
@@ -359,10 +359,9 @@ void WebRtcIlbcfix_CbSearch(
     bits = 16 - temp2;
   }
 
-  tmp = (int16_t) WEBRTC_SPL_MUL_16_16_RSFT(gains[1],gains[1], 14);
+  tmp = (int16_t)((gains[1] * gains[1]) >> 14);
 
-  targetEner = WEBRTC_SPL_MUL_16_16(
-      WEBRTC_SPL_SHIFT_W32(targetEner, -bits), tmp);
+  targetEner = (int16_t)WEBRTC_SPL_SHIFT_W32(targetEner, -bits) * tmp;
 
   tmpW32 = ((int32_t)(gains[1]-1))<<1;
 
@@ -381,7 +380,7 @@ void WebRtcIlbcfix_CbSearch(
        gainTbl[i] < 2*gain[0]
     */
 
-    t32 = WEBRTC_SPL_MUL_16_16(temp1, (*gainPtr));
+    t32 = temp1 * *gainPtr;
     t32 = t32 - targetEner;
     if (t32 < 0) {
       if ((*WebRtcIlbcfix_kGainSq5_ptr) < tmpW32) {

@@ -384,6 +384,15 @@ ModuleEnvironmentObject::create(ExclusiveContext* cx, HandleModuleObject module)
     RootedObject globalLexical(cx, &cx->global()->lexicalScope());
     scope->setEnclosingScope(globalLexical);
 
+    // It is not be possible to add or remove bindings from a module environment
+    // after this point as module code is always strict.
+#ifdef DEBUG
+    for (Shape::Range<NoGC> r(scope->lastProperty()); !r.empty(); r.popFront())
+        MOZ_ASSERT(!r.front().configurable());
+    MOZ_ASSERT(scope->lastProperty()->getObjectFlags() & BaseShape::NOT_EXTENSIBLE);
+    MOZ_ASSERT(!scope->inDictionaryMode());
+#endif
+
     return scope;
 }
 
@@ -400,22 +409,13 @@ ModuleEnvironmentObject::importBindings()
 }
 
 bool
-ModuleEnvironmentObject::createImportBinding(JSContext*cx, HandleAtom importName,
-                                             HandleModuleObject module, HandleAtom exportName)
+ModuleEnvironmentObject::createImportBinding(JSContext* cx, HandleAtom importName,
+                                             HandleModuleObject module, HandleAtom localName)
 {
     RootedId importNameId(cx, AtomToId(importName));
-    RootedId exportNameId(cx, AtomToId(exportName));
-    Rooted<ModuleEnvironmentObject*> env(cx, module->environment());
-
-#ifdef DEBUG
-    bool found = false;
-    if (!HasProperty(cx, env, exportNameId, &found))
-        return false;
-    MOZ_ASSERT(found);
-#endif
-
-    IndirectBinding binding(env, exportNameId);
-    if (!importBindings().putNew(importNameId, binding)) {
+    RootedId localNameId(cx, AtomToId(localName));
+    RootedModuleEnvironmentObject env(cx, module->environment());
+    if (!importBindings().putNew(cx, importNameId, env, localNameId)) {
         ReportOutOfMemory(cx);
         return false;
     }
@@ -423,16 +423,29 @@ ModuleEnvironmentObject::createImportBinding(JSContext*cx, HandleAtom importName
     return true;
 }
 
+bool
+ModuleEnvironmentObject::hasImportBinding(HandlePropertyName name)
+{
+    return importBindings().has(NameToId(name));
+}
+
+bool
+ModuleEnvironmentObject::lookupImport(jsid name, ModuleEnvironmentObject** envOut, Shape** shapeOut)
+{
+    return importBindings().lookup(name, envOut, shapeOut);
+}
+
 /* static */ bool
 ModuleEnvironmentObject::lookupProperty(JSContext* cx, HandleObject obj, HandleId id,
                                         MutableHandleObject objp, MutableHandleShape propp)
 {
-    if (IndirectBindingMap::Ptr p =
-        obj->as<ModuleEnvironmentObject>().importBindings().lookup(id))
-    {
-        RootedObject target(cx, p->value().environment);
-        RootedId name(cx, p->value().localName);
-        return LookupProperty(cx, target, name, objp, propp);
+    const IndirectBindingMap& bindings = obj->as<ModuleEnvironmentObject>().importBindings();
+    Shape* shape;
+    ModuleEnvironmentObject* env;
+    if (bindings.lookup(id, &env, &shape)) {
+        objp.set(env);
+        propp.set(shape);
+        return true;
     }
 
     RootedNativeObject target(cx, &obj->as<NativeObject>());
@@ -459,12 +472,12 @@ ModuleEnvironmentObject::hasProperty(JSContext* cx, HandleObject obj, HandleId i
 ModuleEnvironmentObject::getProperty(JSContext* cx, HandleObject obj, HandleValue receiver,
                                      HandleId id, MutableHandleValue vp)
 {
-    if (IndirectBindingMap::Ptr p =
-        obj->as<ModuleEnvironmentObject>().importBindings().lookup(id))
-    {
-        RootedObject target(cx, p->value().environment);
-        RootedId name(cx, p->value().localName);
-        return GetProperty(cx, target, target, name, vp);
+    const IndirectBindingMap& bindings = obj->as<ModuleEnvironmentObject>().importBindings();
+    Shape* shape;
+    ModuleEnvironmentObject* env;
+    if (bindings.lookup(id, &env, &shape)) {
+        vp.set(env->getSlot(shape->slot()));
+        return true;
     }
 
     RootedNativeObject self(cx, &obj->as<NativeObject>());
@@ -511,8 +524,9 @@ ModuleEnvironmentObject::enumerate(JSContext* cx, HandleObject obj, AutoIdVector
         return false;
     }
 
-    for (auto r = bs.all(); !r.empty(); r.popFront())
-        properties.infallibleAppend(r.front().key());
+    bs.forEachExportedName([&] (jsid name) {
+        properties.infallibleAppend(name);
+    });
 
     for (Shape::Range<NoGC> r(self->lastProperty()); !r.empty(); r.popFront())
         properties.infallibleAppend(r.front().propid());
@@ -2923,6 +2937,18 @@ js::StaticScopeChainLength(JSObject* staticScope)
     for (StaticScopeIter<NoGC> ssi(staticScope); !ssi.done(); ssi++)
         length++;
     return length;
+}
+
+ModuleEnvironmentObject*
+js::GetModuleEnvironmentForScript(JSScript* script)
+{
+    StaticScopeIter<NoGC> ssi(script->enclosingStaticScope());
+    while (!ssi.done() && ssi.type() != StaticScopeIter<NoGC>::Module)
+        ssi++;
+    if (ssi.done())
+        return nullptr;
+
+    return ssi.module().environment();
 }
 
 bool

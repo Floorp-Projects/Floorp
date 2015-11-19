@@ -17,12 +17,12 @@
 
 #include <algorithm>
 
+#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/common.h"
 #include "webrtc/modules/audio_processing/include/audio_processing.h"
 #include "webrtc/modules/audio_processing/test/test_utils.h"
 #include "webrtc/modules/interface/module_common_types.h"
 #include "webrtc/system_wrappers/interface/cpu_features_wrapper.h"
-#include "webrtc/system_wrappers/interface/scoped_ptr.h"
 #include "webrtc/system_wrappers/interface/tick_util.h"
 #include "webrtc/test/testsupport/fileutils.h"
 #include "webrtc/test/testsupport/perf_test.h"
@@ -144,7 +144,7 @@ void void_main(int argc, char* argv[]) {
     printf("Try `process_test --help' for more information.\n\n");
   }
 
-  scoped_ptr<AudioProcessing> apm(AudioProcessing::Create());
+  rtc::scoped_ptr<AudioProcessing> apm(AudioProcessing::Create());
   ASSERT_TRUE(apm.get() != NULL);
 
   const char* pb_filename = NULL;
@@ -489,8 +489,8 @@ void void_main(int argc, char* argv[]) {
   FILE* aecm_echo_path_in_file = NULL;
   FILE* aecm_echo_path_out_file = NULL;
 
-  scoped_ptr<WavWriter> output_wav_file;
-  scoped_ptr<RawFile> output_raw_file;
+  rtc::scoped_ptr<WavWriter> output_wav_file;
+  rtc::scoped_ptr<RawFile> output_raw_file;
 
   if (pb_filename) {
     pb_file = OpenFile(pb_filename, "rb");
@@ -532,7 +532,7 @@ void void_main(int argc, char* argv[]) {
 
     const size_t path_size =
         apm->echo_control_mobile()->echo_path_size_bytes();
-    scoped_ptr<char[]> echo_path(new char[path_size]);
+    rtc::scoped_ptr<char[]> echo_path(new char[path_size]);
     ASSERT_EQ(path_size, fread(echo_path.get(),
                                sizeof(char),
                                path_size,
@@ -574,8 +574,8 @@ void void_main(int argc, char* argv[]) {
   //            but for now we want to share the variables.
   if (pb_file) {
     Event event_msg;
-    scoped_ptr<ChannelBuffer<float> > reverse_cb;
-    scoped_ptr<ChannelBuffer<float> > primary_cb;
+    rtc::scoped_ptr<ChannelBuffer<float> > reverse_cb;
+    rtc::scoped_ptr<ChannelBuffer<float> > primary_cb;
     int output_sample_rate = 32000;
     AudioProcessing::ChannelLayout output_layout = AudioProcessing::kMono;
     while (ReadMessageFromFile(pb_file, &event_msg)) {
@@ -610,7 +610,7 @@ void void_main(int argc, char* argv[]) {
                               LayoutFromChannels(msg.num_reverse_channels())));
 
         samples_per_channel = msg.sample_rate() / 100;
-        far_frame.sample_rate_hz_ = msg.sample_rate();
+        far_frame.sample_rate_hz_ = reverse_sample_rate;
         far_frame.samples_per_channel_ = reverse_sample_rate / 100;
         far_frame.num_channels_ = msg.num_reverse_channels();
         near_frame.sample_rate_hz_ = msg.sample_rate();
@@ -654,7 +654,10 @@ void void_main(int argc, char* argv[]) {
           memcpy(far_frame.data_, msg.data().data(), msg.data().size());
         } else {
           for (int i = 0; i < msg.channel_size(); ++i) {
-            reverse_cb->CopyFrom(msg.channel(i).data(), i);
+            memcpy(reverse_cb->channels()[i],
+                   msg.channel(i).data(),
+                   reverse_cb->num_frames() *
+                       sizeof(reverse_cb->channels()[i][0]));
           }
         }
 
@@ -704,7 +707,10 @@ void void_main(int argc, char* argv[]) {
           near_read_bytes += msg.input_data().size();
         } else {
           for (int i = 0; i < msg.input_channel_size(); ++i) {
-            primary_cb->CopyFrom(msg.input_channel(i).data(), i);
+            memcpy(primary_cb->channels()[i],
+                   msg.input_channel(i).data(),
+                   primary_cb->num_frames() *
+                       sizeof(primary_cb->channels()[i][0]));
             near_read_bytes += msg.input_channel(i).size();
           }
         }
@@ -1048,7 +1054,7 @@ void void_main(int argc, char* argv[]) {
   if (aecm_echo_path_out_file != NULL) {
     const size_t path_size =
         apm->echo_control_mobile()->echo_path_size_bytes();
-    scoped_ptr<char[]> echo_path(new char[path_size]);
+    rtc::scoped_ptr<char[]> echo_path(new char[path_size]);
     apm->echo_control_mobile()->GetEchoPath(echo_path.get(), path_size);
     ASSERT_EQ(path_size, fwrite(echo_path.get(),
                                 sizeof(char),
@@ -1081,10 +1087,13 @@ void void_main(int argc, char* argv[]) {
     if (apm->echo_cancellation()->is_delay_logging_enabled()) {
       int median = 0;
       int std = 0;
-      apm->echo_cancellation()->GetDelayMetrics(&median, &std);
+      float fraction_poor_delays = 0;
+      apm->echo_cancellation()->GetDelayMetrics(&median, &std,
+                                                &fraction_poor_delays);
       printf("\n--Delay metrics--\n");
       printf("Median:             %3d\n", median);
       printf("Standard deviation: %3d\n", std);
+      printf("Poor delay values:  %3.1f%%\n", fraction_poor_delays * 100);
     }
   }
 

@@ -213,11 +213,55 @@ ExportEntryObject::create(JSContext* cx,
 }
 
 ///////////////////////////////////////////////////////////////////////////
-// IndirectBinding
+// IndirectBindingMap
 
-IndirectBinding::IndirectBinding(Handle<ModuleEnvironmentObject*> environment, HandleId localName)
-  : environment(environment), localName(localName)
+IndirectBindingMap::Binding::Binding(ModuleEnvironmentObject* environment, Shape* shape)
+  : environment(environment), shape(shape)
 {}
+
+bool
+IndirectBindingMap::init()
+{
+    return map_.init();
+}
+
+void
+IndirectBindingMap::trace(JSTracer* trc)
+{
+    for (Map::Enum e(map_); !e.empty(); e.popFront()) {
+        Binding& b = e.front().value();
+        TraceEdge(trc, &b.environment, "module bindings environment");
+        TraceEdge(trc, &b.shape, "module bindings shape");
+        jsid bindingName = e.front().key();
+        TraceManuallyBarrieredEdge(trc, &bindingName, "module bindings binding name");
+        MOZ_ASSERT(bindingName == e.front().key());
+    }
+}
+
+bool
+IndirectBindingMap::putNew(JSContext* cx, HandleId name,
+                           HandleModuleEnvironmentObject environment, HandleId localName)
+{
+    RootedShape shape(cx, environment->lookup(cx, localName));
+    MOZ_ASSERT(shape);
+    return map_.putNew(name, Binding(environment, shape));
+}
+
+bool
+IndirectBindingMap::lookup(jsid name, ModuleEnvironmentObject** envOut, Shape** shapeOut) const
+{
+    auto ptr = map_.lookup(name);
+    if (!ptr)
+        return false;
+
+    const Binding& binding = ptr->value();
+    MOZ_ASSERT(binding.environment);
+    MOZ_ASSERT(!binding.environment->inDictionaryMode());
+    MOZ_ASSERT(binding.environment->containsPure(binding.shape));
+    *envOut = binding.environment;
+    *shapeOut = binding.shape;
+    return true;
+}
 
 ///////////////////////////////////////////////////////////////////////////
 // ModuleNamespaceObject
@@ -283,8 +327,7 @@ ModuleNamespaceObject::addBinding(JSContext* cx, HandleAtom exportedName,
     RootedModuleEnvironmentObject environment(cx, &targetModule->initialEnvironment());
     RootedId exportedNameId(cx, AtomToId(exportedName));
     RootedId localNameId(cx, AtomToId(localName));
-    IndirectBinding binding(environment, localNameId);
-    return bindings->putNew(exportedNameId, binding);
+    return bindings->putNew(cx, exportedNameId, environment, localNameId);
 }
 
 const char ModuleNamespaceObject::ProxyHandler::family = 0;
@@ -360,19 +403,12 @@ ModuleNamespaceObject::ProxyHandler::getOwnPropertyDescriptor(JSContext* cx, Han
     }
 
     const IndirectBindingMap& bindings = ns->bindings();
-    auto ptr = bindings.lookup(id);
-    if (!ptr)
+    ModuleEnvironmentObject* env;
+    Shape* shape;
+    if (!bindings.lookup(id, &env, &shape))
         return true;
 
-    const IndirectBinding& binding = ptr->value();
-    RootedModuleEnvironmentObject env(cx, binding.environment);
-    MOZ_ASSERT(env->module().environment());
-
-    RootedId localName(cx, binding.localName);
-    RootedValue value(cx);
-    if (!GetProperty(cx, env, env, localName, &value))
-        return false;
-
+    RootedValue value(cx, env->getSlot(shape->slot()));
     if (value.isMagic(JS_UNINITIALIZED_LEXICAL)) {
         ReportRuntimeLexicalError(cx, JSMSG_UNINITIALIZED_LEXICAL, id);
         return false;
@@ -425,19 +461,12 @@ ModuleNamespaceObject::ProxyHandler::get(JSContext* cx, HandleObject proxy, Hand
         return false;
     }
 
-    auto ptr = ns->bindings().lookup(id);
-    if (!ptr)
+    ModuleEnvironmentObject* env;
+    Shape* shape;
+    if (!ns->bindings().lookup(id, &env, &shape))
         return false;
 
-    const IndirectBinding& binding = ptr->value();
-    RootedModuleEnvironmentObject env(cx, binding.environment);
-    MOZ_ASSERT(env->module().environment());
-
-    RootedId localName(cx, binding.localName);
-    RootedValue value(cx);
-    if (!GetProperty(cx, env, env, localName, &value))
-        return false;
-
+    RootedValue value(cx, env->getSlot(shape->slot()));
     if (value.isMagic(JS_UNINITIALIZED_LEXICAL)) {
         ReportRuntimeLexicalError(cx, JSMSG_UNINITIALIZED_LEXICAL, id);
         return false;
@@ -703,19 +732,6 @@ ModuleObject::enclosingStaticScope() const
     return getReservedSlot(StaticScopeSlot).toObjectOrNull();
 }
 
-static void
-TraceBindings(JSTracer* trc, IndirectBindingMap& bindings)
-{
-    for (IndirectBindingMap::Enum e(bindings); !e.empty(); e.popFront()) {
-        IndirectBinding& b = e.front().value();
-        TraceEdge(trc, &b.environment, "module bindings environment");
-        TraceEdge(trc, &b.localName, "module bindings local name");
-        jsid bindingName = e.front().key();
-        TraceManuallyBarrieredEdge(trc, &bindingName, "module bindings binding name");
-        MOZ_ASSERT(bindingName == e.front().key());
-    }
-}
-
 /* static */ void
 ModuleObject::trace(JSTracer* trc, JSObject* obj)
 {
@@ -727,9 +743,9 @@ ModuleObject::trace(JSTracer* trc, JSObject* obj)
     }
 
     if (module.hasImportBindings())
-        TraceBindings(trc, module.importBindings());
+        module.importBindings().trace(trc);
     if (IndirectBindingMap* bindings = module.namespaceBindings())
-        TraceBindings(trc, *bindings);
+        bindings->trace(trc);
 
     if (FunctionDeclarationVector* funDecls = module.functionDeclarations())
         funDecls->trace(trc);

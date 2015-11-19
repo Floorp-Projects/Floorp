@@ -19,9 +19,9 @@ namespace webrtc {
 class MockTransport : public webrtc::Transport {
  public:
   MOCK_METHOD3(SendPacket,
-      int(int channel, const void* data, int len));
+      int(int channel, const void* data, size_t len));
   MOCK_METHOD3(SendRTCPPacket,
-      int(int channel, const void* data, int len));
+      int(int channel, const void* data, size_t len));
 };
 }  // namespace webrtc
 #endif  // WEBRTC_TEST_MOCK_TRANSPORT_H_

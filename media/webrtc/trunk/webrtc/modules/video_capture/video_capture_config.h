@@ -24,7 +24,6 @@ enum {kMaxFrameRate =60}; // Max allowed frame rate of the start image
 enum {kDefaultCaptureDelay = 120}; 
 enum {kMaxCaptureDelay = 270}; // Max capture delay allowed in the precompiled capture delay values.  
 
-enum {kProcessInterval = 300}; 
 enum {kFrameRateCallbackInterval = 1000}; 
 enum {kFrameRateCountHistorySize = 90};
 enum {kFrameRateHistoryWindowMs = 2000};

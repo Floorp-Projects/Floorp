@@ -70,7 +70,7 @@ class TimestampJumpRtpGenerator : public RtpGenerator {
 
   uint32_t GetRtpHeader(uint8_t payload_type,
                         size_t payload_length_samples,
-                        WebRtcRTPHeader* rtp_header) OVERRIDE;
+                        WebRtcRTPHeader* rtp_header) override;
 
  private:
   uint32_t jump_from_timestamp_;

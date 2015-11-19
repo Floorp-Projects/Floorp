@@ -33,7 +33,7 @@
 int WebRtcIlbcfix_EnhancerInterface( /* (o) Estimated lag in end of in[] */
     int16_t *out,     /* (o) enhanced signal */
     int16_t *in,      /* (i) unenhanced signal */
-    iLBC_Dec_Inst_t *iLBCdec_inst /* (i) buffers etc */
+    IlbcDecoder *iLBCdec_inst /* (i) buffers etc */
                                         ){
   int iblock;
   int lag=20, tlag=20;
@@ -110,14 +110,14 @@ int WebRtcIlbcfix_EnhancerInterface( /* (o) Estimated lag in end of in[] */
   for(iblock = 0; iblock<new_blocks; iblock++){
 
     /* references */
-    i=60+WEBRTC_SPL_MUL_16_16(iblock,ENH_BLOCKL_HALF);
+    i = 60 + iblock * ENH_BLOCKL_HALF;
     target=downsampled+i;
     regressor=downsampled+i-10;
 
     /* scaling */
     max16=WebRtcSpl_MaxAbsValueW16(&regressor[-50],
                                    (int16_t)(ENH_BLOCKL_HALF+50-1));
-    shifts = WebRtcSpl_GetSizeInBits(WEBRTC_SPL_MUL_16_16(max16, max16)) - 25;
+    shifts = WebRtcSpl_GetSizeInBits((uint32_t)(max16 * max16)) - 25;
     shifts = WEBRTC_SPL_MAX(0, shifts);
 
     /* compute cross correlation */
@@ -149,10 +149,9 @@ int WebRtcIlbcfix_EnhancerInterface( /* (o) Estimated lag in end of in[] */
                                            ENH_BLOCKL_HALF, shifts);
       enerSh = 15-WebRtcSpl_GetSizeInBits(ener);
       corr16[i] = (int16_t)WEBRTC_SPL_SHIFT_W32(corrmax[i], corrSh);
-      corr16[i] = (int16_t)WEBRTC_SPL_MUL_16_16_RSFT(corr16[i],
-                                                           corr16[i], 16);
+      corr16[i] = (int16_t)((corr16[i] * corr16[i]) >> 16);
       en16[i] = (int16_t)WEBRTC_SPL_SHIFT_W32(ener, enerSh);
-      totsh[i] = enerSh - WEBRTC_SPL_LSHIFT_W32(corrSh, 1);
+      totsh[i] = enerSh - (corrSh << 1);
     }
 
     /* Compare lagmax[0..3] for the (corr^2)/ener criteria */
@@ -160,14 +159,12 @@ int WebRtcIlbcfix_EnhancerInterface( /* (o) Estimated lag in end of in[] */
     for (i=1; i<3; i++) {
       if (totsh[ind] > totsh[i]) {
         sh = WEBRTC_SPL_MIN(31, totsh[ind]-totsh[i]);
-        if ( WEBRTC_SPL_MUL_16_16(corr16[ind], en16[i]) <
-            WEBRTC_SPL_MUL_16_16_RSFT(corr16[i], en16[ind], sh)) {
+        if (corr16[ind] * en16[i] < (corr16[i] * en16[ind]) >> sh) {
           ind = i;
         }
       } else {
         sh = WEBRTC_SPL_MIN(31, totsh[i]-totsh[ind]);
-        if (WEBRTC_SPL_MUL_16_16_RSFT(corr16[ind], en16[i], sh) <
-            WEBRTC_SPL_MUL_16_16(corr16[i], en16[ind])) {
+        if ((corr16[ind] * en16[i]) >> sh < corr16[i] * en16[ind]) {
           ind = i;
         }
       }
@@ -176,21 +173,20 @@ int WebRtcIlbcfix_EnhancerInterface( /* (o) Estimated lag in end of in[] */
     lag = lagmax[ind] + 10;
 
     /* Store the estimated lag in the non-downsampled domain */
-    enh_period[ENH_NBLOCKS_TOT-new_blocks+iblock] =
-        (int16_t)WEBRTC_SPL_MUL_16_16(lag, 8);
+    enh_period[ENH_NBLOCKS_TOT - new_blocks + iblock] = (int16_t)(lag * 8);
 
     /* Store the estimated lag for backward PLC */
     if (iLBCdec_inst->prev_enh_pl==1) {
       if (!iblock) {
-        tlag = WEBRTC_SPL_MUL_16_16(lag, 2);
+        tlag = lag * 2;
       }
     } else {
       if (iblock==1) {
-        tlag = WEBRTC_SPL_MUL_16_16(lag, 2);
+        tlag = lag * 2;
       }
     }
 
-    lag = WEBRTC_SPL_MUL_16_16(lag, 2);
+    lag *= 2;
   }
 
   if ((iLBCdec_inst->prev_enh_pl==1)||(iLBCdec_inst->prev_enh_pl==2)) {
@@ -282,8 +278,7 @@ int WebRtcIlbcfix_EnhancerInterface( /* (o) Estimated lag in end of in[] */
                                                       (int16_t)tmp1);
 
         /* Calculate the Sqrt of the energy in Q15 ((14+16)/2) */
-        SqrtEnChange = (int16_t)WebRtcSpl_SqrtFloor(
-            WEBRTC_SPL_LSHIFT_W32((int32_t)EnChange, 14));
+        SqrtEnChange = (int16_t)WebRtcSpl_SqrtFloor(EnChange << 14);
 
 
         /* Multiply first part of vector with 2*SqrtEnChange */
@@ -298,8 +293,8 @@ int WebRtcIlbcfix_EnhancerInterface( /* (o) Estimated lag in end of in[] */
         tmpW16ptr=&plc_pred[plc_blockl-16];
 
         for (i=16;i>0;i--) {
-          (*tmpW16ptr)=(int16_t)WEBRTC_SPL_MUL_16_16_RSFT(
-              (*tmpW16ptr), (SqrtEnChange+(win>>1)), 14);
+          *tmpW16ptr = (int16_t)(
+              (*tmpW16ptr * (SqrtEnChange + (win >> 1))) >> 14);
           /* multiply by (2.0*SqrtEnChange+win) */
 
           win += inc;
@@ -320,10 +315,9 @@ int WebRtcIlbcfix_EnhancerInterface( /* (o) Estimated lag in end of in[] */
       enh_bufPtr1=&enh_buf[ENH_BUFL-1-iLBCdec_inst->blockl];
       for (i=0; i<plc_blockl; i++) {
         win+=inc;
-        *enh_bufPtr1 =
-            (int16_t)WEBRTC_SPL_MUL_16_16_RSFT((*enh_bufPtr1), win, 14);
-        *enh_bufPtr1 += (int16_t)WEBRTC_SPL_MUL_16_16_RSFT(
-                (16384-win), plc_pred[plc_blockl-1-i], 14);
+        *enh_bufPtr1 = (int16_t)((*enh_bufPtr1 * win) >> 14);
+        *enh_bufPtr1 += (int16_t)(
+            ((16384 - win) * plc_pred[plc_blockl - 1 - i]) >> 14);
         enh_bufPtr1--;
       }
     } else {
@@ -370,10 +364,10 @@ int WebRtcIlbcfix_EnhancerInterface( /* (o) Estimated lag in end of in[] */
   /* Perform enhancement block by block */
 
   for (iblock = 0; iblock<new_blocks; iblock++) {
-    WebRtcIlbcfix_Enhancer(out+WEBRTC_SPL_MUL_16_16(iblock, ENH_BLOCKL),
+    WebRtcIlbcfix_Enhancer(out + iblock * ENH_BLOCKL,
                            enh_buf,
                            ENH_BUFL,
-                           (int16_t)(WEBRTC_SPL_MUL_16_16(iblock, ENH_BLOCKL)+startPos),
+                           (int16_t)(iblock * ENH_BLOCKL + startPos),
                            enh_period,
                            (int16_t*)WebRtcIlbcfix_kEnhPlocs, ENH_NBLOCKS_TOT);
   }

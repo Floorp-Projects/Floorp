@@ -8,19 +8,19 @@
  *  be found in the AUTHORS file in the root of the source tree.
  */
 
-#include <math.h>
+#include <cmath>
 #include <algorithm>
 #include <vector>
 
 #include "testing/gtest/include/gtest/gtest.h"
+#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/common_audio/audio_converter.h"
+#include "webrtc/common_audio/channel_buffer.h"
 #include "webrtc/common_audio/resampler/push_sinc_resampler.h"
-#include "webrtc/modules/audio_processing/common.h"
-#include "webrtc/system_wrappers/interface/scoped_ptr.h"
 
 namespace webrtc {
 
-typedef scoped_ptr<ChannelBuffer<float>> ScopedBuffer;
+typedef rtc::scoped_ptr<ChannelBuffer<float>> ScopedBuffer;
 
 // Sets the signal value to increase by |data| with every sample.
 ScopedBuffer CreateBuffer(const std::vector<float>& data, int frames) {
@@ -28,14 +28,14 @@ ScopedBuffer CreateBuffer(const std::vector<float>& data, int frames) {
   ScopedBuffer sb(new ChannelBuffer<float>(frames, num_channels));
   for (int i = 0; i < num_channels; ++i)
     for (int j = 0; j < frames; ++j)
-      sb->channel(i)[j] = data[i] * j;
+      sb->channels()[i][j] = data[i] * j;
   return sb;
 }
 
 void VerifyParams(const ChannelBuffer<float>& ref,
                   const ChannelBuffer<float>& test) {
   EXPECT_EQ(ref.num_channels(), test.num_channels());
-  EXPECT_EQ(ref.samples_per_channel(), test.samples_per_channel());
+  EXPECT_EQ(ref.num_frames(), test.num_frames());
 }
 
 // Computes the best SNR based on the error between |ref_frame| and
@@ -50,27 +50,28 @@ float ComputeSNR(const ChannelBuffer<float>& ref,
 
   // Search within one sample of the expected delay.
   for (int delay = std::max(expected_delay - 1, 0);
-       delay <= std::min(expected_delay + 1, ref.samples_per_channel());
+       delay <= std::min(expected_delay + 1, ref.num_frames());
        ++delay) {
     float mse = 0;
     float variance = 0;
     float mean = 0;
     for (int i = 0; i < ref.num_channels(); ++i) {
-      for (int j = 0; j < ref.samples_per_channel() - delay; ++j) {
-        float error = ref.channel(i)[j] - test.channel(i)[j + delay];
+      for (int j = 0; j < ref.num_frames() - delay; ++j) {
+        float error = ref.channels()[i][j] - test.channels()[i][j + delay];
         mse += error * error;
-        variance += ref.channel(i)[j] * ref.channel(i)[j];
-        mean += ref.channel(i)[j];
+        variance += ref.channels()[i][j] * ref.channels()[i][j];
+        mean += ref.channels()[i][j];
       }
     }
-    const int length = ref.num_channels() * (ref.samples_per_channel() - delay);
+
+    const int length = ref.num_channels() * (ref.num_frames() - delay);
     mse /= length;
     variance /= length;
     mean /= length;
     variance -= mean * mean;
     float snr = 100;  // We assign 100 dB to the zero-error case.
     if (mse > 0)
-      snr = 10 * log10(variance / mse);
+      snr = 10 * std::log10(variance / mse);
     if (snr > best_snr) {
       best_snr = snr;
       best_delay = delay;
@@ -127,9 +128,10 @@ void RunAudioConverterTest(int src_channels,
   printf("(%d, %d Hz) -> (%d, %d Hz) ",  // SNR reported on the same line later.
       src_channels, src_sample_rate_hz, dst_channels, dst_sample_rate_hz);
 
-  AudioConverter converter(src_channels, src_frames, dst_channels, dst_frames);
-  converter.Convert(src_buffer->channels(), src_channels, src_frames,
-                    dst_channels, dst_frames, dst_buffer->channels());
+  rtc::scoped_ptr<AudioConverter> converter = AudioConverter::Create(
+      src_channels, src_frames, dst_channels, dst_frames);
+  converter->Convert(src_buffer->channels(), src_buffer->size(),
+                     dst_buffer->channels(), dst_buffer->size());
 
   EXPECT_LT(43.f,
             ComputeSNR(*ref_buffer.get(), *dst_buffer.get(), delay_frames));

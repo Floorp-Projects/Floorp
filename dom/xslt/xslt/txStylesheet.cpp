@@ -28,59 +28,40 @@ nsresult
 txStylesheet::init()
 {
     mRootFrame = new ImportFrame;
-    NS_ENSURE_TRUE(mRootFrame, NS_ERROR_OUT_OF_MEMORY);
     
     // Create default templates
     // element/root template
     mContainerTemplate = new txPushParams;
-    NS_ENSURE_TRUE(mContainerTemplate, NS_ERROR_OUT_OF_MEMORY);
 
     nsAutoPtr<txNodeTest> nt(new txNodeTypeTest(txNodeTypeTest::NODE_TYPE));
-    NS_ENSURE_TRUE(nt, NS_ERROR_OUT_OF_MEMORY);
-
     nsAutoPtr<Expr> nodeExpr(new LocationStep(nt, LocationStep::CHILD_AXIS));
-    NS_ENSURE_TRUE(nodeExpr, NS_ERROR_OUT_OF_MEMORY);
-
     nt.forget();
 
     txPushNewContext* pushContext = new txPushNewContext(Move(nodeExpr));
     mContainerTemplate->mNext = pushContext;
-    NS_ENSURE_TRUE(pushContext, NS_ERROR_OUT_OF_MEMORY);
 
     txApplyDefaultElementTemplate* applyTemplates =
         new txApplyDefaultElementTemplate;
     pushContext->mNext = applyTemplates;
-    NS_ENSURE_TRUE(applyTemplates, NS_ERROR_OUT_OF_MEMORY);
 
     txLoopNodeSet* loopNodeSet = new txLoopNodeSet(applyTemplates);
     applyTemplates->mNext = loopNodeSet;
-    NS_ENSURE_TRUE(loopNodeSet, NS_ERROR_OUT_OF_MEMORY);
 
     txPopParams* popParams = new txPopParams;
     pushContext->mBailTarget = loopNodeSet->mNext = popParams;
-    NS_ENSURE_TRUE(popParams, NS_ERROR_OUT_OF_MEMORY);
 
     popParams->mNext = new txReturn();
-    NS_ENSURE_TRUE(popParams->mNext, NS_ERROR_OUT_OF_MEMORY);
 
     // attribute/textnode template
     nt = new txNodeTypeTest(txNodeTypeTest::NODE_TYPE);
-    NS_ENSURE_TRUE(nt, NS_ERROR_OUT_OF_MEMORY);
-
     nodeExpr = new LocationStep(nt, LocationStep::SELF_AXIS);
-    NS_ENSURE_TRUE(nodeExpr, NS_ERROR_OUT_OF_MEMORY);
-
     nt.forget();
 
     mCharactersTemplate = new txValueOf(Move(nodeExpr), false);
-    NS_ENSURE_TRUE(mCharactersTemplate, NS_ERROR_OUT_OF_MEMORY);
-
     mCharactersTemplate->mNext = new txReturn();
-    NS_ENSURE_TRUE(mCharactersTemplate->mNext, NS_ERROR_OUT_OF_MEMORY);
 
     // pi/comment/namespace template
     mEmptyTemplate = new txReturn();
-    NS_ENSURE_TRUE(mEmptyTemplate, NS_ERROR_OUT_OF_MEMORY);
 
     return NS_OK;
 }
@@ -351,8 +332,6 @@ txStylesheet::doneCompiling()
 
     if (!mDecimalFormats.get(txExpandedName())) {
         nsAutoPtr<txDecimalFormat> format(new txDecimalFormat);
-        NS_ENSURE_TRUE(format, NS_ERROR_OUT_OF_MEMORY);
-        
         rv = mDecimalFormats.add(txExpandedName(), format);
         NS_ENSURE_SUCCESS(rv, rv);
         
@@ -394,8 +373,6 @@ txStylesheet::addTemplate(txTemplateItem* aTemplate,
     if (!templates) {
         nsAutoPtr< nsTArray<MatchableTemplate> > newList(
             new nsTArray<MatchableTemplate>);
-        NS_ENSURE_TRUE(newList, NS_ERROR_OUT_OF_MEMORY);
-
         rv = aImportFrame->mMatchableTemplates.set(aTemplate->mMode, newList);
         NS_ENSURE_SUCCESS(rv, rv);
 
@@ -546,8 +523,6 @@ txStylesheet::addGlobalVariable(txVariableItem* aVariable)
         new GlobalVariable(Move(aVariable->mValue),
                            Move(aVariable->mFirstInstruction),
                            aVariable->mIsParam));
-    NS_ENSURE_TRUE(var, NS_ERROR_OUT_OF_MEMORY);
-    
     nsresult rv = mGlobalVariables.add(aVariable->mName, var);
     NS_ENSURE_SUCCESS(rv, rv);
     
@@ -566,8 +541,6 @@ txStylesheet::addKey(const txExpandedName& aName,
     txXSLKey* xslKey = mKeys.get(aName);
     if (!xslKey) {
         xslKey = new txXSLKey(aName);
-        NS_ENSURE_TRUE(xslKey, NS_ERROR_OUT_OF_MEMORY);
-
         rv = mKeys.add(aName, xslKey);
         if (NS_FAILED(rv)) {
             delete xslKey;

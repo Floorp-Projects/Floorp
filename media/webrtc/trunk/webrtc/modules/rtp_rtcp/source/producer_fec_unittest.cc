@@ -23,7 +23,7 @@ void VerifyHeader(uint16_t seq_num,
                   int fec_pltype,
                   RedPacket* packet,
                   bool marker_bit) {
-  EXPECT_GT(packet->length(), static_cast<int>(kRtpHeaderSize));
+  EXPECT_GT(packet->length(), kRtpHeaderSize);
   EXPECT_TRUE(packet->data() != NULL);
   uint8_t* data = packet->data();
   // Marker bit not set.
@@ -33,7 +33,7 @@ void VerifyHeader(uint16_t seq_num,
   uint32_t parsed_timestamp = (data[4] << 24) + (data[5] << 16) +
       (data[6] << 8) + data[7];
   EXPECT_EQ(timestamp, parsed_timestamp);
-  EXPECT_EQ(fec_pltype, data[kRtpHeaderSize]);
+  EXPECT_EQ(static_cast<uint8_t>(fec_pltype), data[kRtpHeaderSize]);
 }
 
 class ProducerFecTest : public ::testing::Test {

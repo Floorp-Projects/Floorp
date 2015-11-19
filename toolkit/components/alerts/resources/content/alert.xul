@@ -43,8 +43,7 @@
         <spacer flex="1"/>
         <box id="alertFooter">
           <label id="alertSourceLabel" class="alertSource plain"/>
-          <button type="menu" id="alertSettings" tooltiptext="&settings.label;"
-                  onclick="event.stopPropagation();">
+          <button type="menu" id="alertSettings" tooltiptext="&settings.label;">
             <menupopup position="after_end">
               <menuitem id="doNotDisturbMenuItem"
                         oncommand="doNotDisturb();"/>

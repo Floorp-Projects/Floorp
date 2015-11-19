@@ -65,8 +65,6 @@ nsresult txList::insertAfter(void* objPtr, ListItem* refItem)
 nsresult txList::insertBefore(void* objPtr, ListItem* refItem)
 {
     ListItem* item = new ListItem;
-    NS_ENSURE_TRUE(item, NS_ERROR_OUT_OF_MEMORY);
-
     item->objPtr = objPtr;
     item->nextItem = 0;
     item->prevItem = 0;

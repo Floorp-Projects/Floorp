@@ -1898,7 +1898,6 @@ nsDOMWindowUtils::SendQueryContentEvent(uint32_t aType,
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsQueryContentEventResult* result = new nsQueryContentEventResult();
-  NS_ENSURE_TRUE(result, NS_ERROR_OUT_OF_MEMORY);
   result->SetEventResult(widget, queryEvent);
   NS_ADDREF(*aResult = result);
   return NS_OK;

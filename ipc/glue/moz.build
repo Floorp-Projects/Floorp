@@ -39,6 +39,7 @@ EXPORTS.mozilla.ipc += [
 ]
 
 if CONFIG['OS_ARCH'] == 'WINNT':
+    DEFINES['WEBRTC_WIN'] = True
     EXPORTS.mozilla.ipc += [
         'Transport_win.h',
     ]
@@ -48,6 +49,7 @@ if CONFIG['OS_ARCH'] == 'WINNT':
         'WindowsMessageLoop.cpp',
     ]
 else:
+    DEFINES['WEBRTC_POSIX'] = True
     EXPORTS.mozilla.ipc += [
         'Transport_posix.h',
     ]

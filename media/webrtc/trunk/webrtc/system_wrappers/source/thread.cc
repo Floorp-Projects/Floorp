@@ -18,29 +18,27 @@
 
 namespace webrtc {
 
-ThreadWrapper* ThreadWrapper::CreateThread(ThreadRunFunction func,
-                                           ThreadObj obj, ThreadPriority prio,
-                                           const char* thread_name) {
 #if defined(_WIN32)
-  return new ThreadWindows(func, obj, prio, thread_name);
+typedef ThreadWindows ThreadType;
 #else
-  return ThreadPosix::Create(func, obj, prio, thread_name);
+typedef ThreadPosix ThreadType;
 #endif
+
+rtc::scoped_ptr<ThreadWrapper> ThreadWrapper::CreateThread(
+    ThreadRunFunction func, void* obj, const char* thread_name) {
+  return rtc::scoped_ptr<ThreadWrapper>(
+      new ThreadType(func, obj, thread_name)).Pass();
 }
 
-ThreadWrapper* ThreadWrapper::CreateUIThread(ThreadRunFunction func,
-                                             ThreadObj obj, ThreadPriority prio,
-                                             const char* thread_name) {
+rtc::scoped_ptr<ThreadWrapper> ThreadWrapper::CreateUIThread(
+    ThreadRunFunction func, void* obj, const char* thread_name) {
 #if defined(_WIN32)
-  return new ThreadWindowsUI(func, obj, prio, thread_name);
+  return rtc::scoped_ptr<ThreadWrapper>(
+    new ThreadWindowsUI(func, obj, thread_name)).Pass();
 #else
-  return ThreadPosix::Create(func, obj, prio, thread_name);
+  return rtc::scoped_ptr<ThreadWrapper>(
+    new ThreadType(func, obj, thread_name)).Pass();
 #endif
-}
-
-bool ThreadWrapper::SetAffinity(const int* processor_numbers,
-                                const unsigned int amount_of_processors) {
-  return false;
 }
 
 bool ThreadWrapper::RequestCallbackTimer(unsigned int milliseconds) {

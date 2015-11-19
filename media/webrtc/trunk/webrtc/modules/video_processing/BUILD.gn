@@ -8,7 +8,7 @@
 
 import("../../build/webrtc.gni")
 
-build_video_processing_sse2 = cpu_arch == "x86" || cpu_arch == "x64"
+build_video_processing_sse2 = current_cpu == "x86" || current_cpu == "x64"
 
 source_set("video_processing") {
   sources = [

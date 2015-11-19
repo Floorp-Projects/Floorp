@@ -85,7 +85,7 @@ public:
   // IPC messages recevied, received on the PBackground thread
   // these are the actual callbacks with data
   virtual bool RecvDeliverFrame(const int&, const int&, mozilla::ipc::Shmem&&,
-                                const int&, const uint32_t&, const int64_t&,
+                                const size_t&, const uint32_t&, const int64_t&,
                                 const int64_t&) override;
   virtual bool RecvFrameSizeChange(const int&, const int&,
                                    const int& w, const int& h) override;
@@ -159,9 +159,9 @@ private:
   Mutex mRequestMutex;
   // Hold to wait for an async response to our calls
   Monitor mReplyMonitor;
-  // Async resposne valid?
+  // Async response valid?
   bool mReceivedReply;
-  // Aynsc reponses data contents;
+  // Async responses data contents;
   bool mReplySuccess;
   int mReplyInteger;
   webrtc::CaptureCapability mReplyCapability;

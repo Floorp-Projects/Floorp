@@ -41,13 +41,13 @@ TalosErrorList = PythonErrorList + [
 
 class TalosOutputParser(OutputParser):
     minidump_regex = re.compile(r'''talosError: "error executing: '(\S+) (\S+) (\S+)'"''')
-    RE_TALOSDATA = re.compile(r'.*?TALOSDATA:\s+(\[.*\])')
+    RE_PERF_DATA = re.compile(r'.*PERFHERDER_DATA:\s+(\{.*\})')
     worst_tbpl_status = TBPL_SUCCESS
 
     def __init__(self, **kwargs):
         super(TalosOutputParser, self).__init__(**kwargs)
         self.minidump_output = None
-        self.num_times_found_talosdata = 0
+        self.num_times_found_perf_data = 0
 
     def update_worst_log_and_tbpl_levels(self, log_level, tbpl_level):
         self.worst_log_level = self.worst_level(log_level,
@@ -66,8 +66,8 @@ class TalosOutputParser(OutputParser):
         if m:
             self.minidump_output = (m.group(1), m.group(2), m.group(3))
 
-        if self.RE_TALOSDATA.match(line):
-            self.num_times_found_talosdata += 1
+        if self.RE_PERF_DATA.match(line):
+            self.num_times_found_perf_data += 1
 
         # now let's check if buildbot should retry
         harness_retry_re = TinderBoxPrintRe['harness_error']['retry_regex']
@@ -368,9 +368,9 @@ class Talos(TestingMixin, MercurialScript, BlobUploadMixin):
                 tbpl_level = TBPL_RETRY
 
             parser.update_worst_log_and_tbpl_levels(log_level, tbpl_level)
-        elif parser.num_times_found_talosdata != 1:
-            self.critical("TALOSDATA was seen %d times, expected 1."
-                          % parser.num_times_found_talosdata)
+        elif parser.num_times_found_perf_data != 1:
+            self.critical("PERFHERDER_DATA was seen %d times, expected 1."
+                          % parser.num_times_found_perf_data)
             parser.update_worst_log_and_tbpl_levels(WARNING, TBPL_WARNING)
 
         self.buildbot_status(parser.worst_tbpl_status,

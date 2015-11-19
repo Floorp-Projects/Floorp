@@ -41,7 +41,7 @@ SwipeTracker::SwipeTracker(nsChildView& aWidget,
   , mRefreshDriver(GetRefreshDriver(mWidget))
   , mAxis(0.0, 0.0, 0.0, kSpringForce, 1.0)
   , mEventPosition(RoundedToInt(ViewAs<LayoutDevicePixel>(aSwipeStartEvent.mPanStartPoint,
-                                  PixelCastJustification::LayoutDeviceToScreenForUntransformedEvent)))
+                                  PixelCastJustification::LayoutDeviceIsScreenForUntransformedEvent)))
   , mLastEventTimeStamp(aSwipeStartEvent.mTimeStamp)
   , mAllowedDirections(aAllowedDirections)
   , mSwipeDirection(aSwipeDirection)

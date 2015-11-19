@@ -14,10 +14,10 @@
 #include <gflags/gflags.h>
 #include <string>
 #include "testing/gtest/include/gtest/gtest.h"
+#include "webrtc/base/scoped_ptr.h"
 #include "webrtc/modules/audio_coding/neteq/interface/neteq.h"
 #include "webrtc/modules/audio_coding/neteq/tools/input_audio_file.h"
 #include "webrtc/modules/audio_coding/neteq/tools/rtp_generator.h"
-#include "webrtc/system_wrappers/interface/scoped_ptr.h"
 #include "webrtc/typedefs.h"
 
 using google::RegisterFlagValidator;
@@ -33,13 +33,13 @@ class LossModel {
 
 class NoLoss : public LossModel {
  public:
-  virtual bool Lost() OVERRIDE;
+  bool Lost() override;
 };
 
 class UniformLoss : public LossModel {
  public:
   UniformLoss(double loss_rate);
-  virtual bool Lost() OVERRIDE;
+  bool Lost() override;
   void set_loss_rate(double loss_rate) { loss_rate_ = loss_rate; }
 
  private:
@@ -49,7 +49,7 @@ class UniformLoss : public LossModel {
 class GilbertElliotLoss : public LossModel {
  public:
   GilbertElliotLoss(double prob_trans_11, double prob_trans_01);
-  virtual bool Lost() OVERRIDE;
+  bool Lost() override;
 
  private:
   // Prob. of losing current packet, when previous packet is lost.
@@ -57,7 +57,7 @@ class GilbertElliotLoss : public LossModel {
   // Prob. of losing current packet, when previous packet is not lost.
   double prob_trans_01_;
   bool lost_last_;
-  scoped_ptr<UniformLoss> uniform_loss_model_;
+  rtc::scoped_ptr<UniformLoss> uniform_loss_model_;
 };
 
 class NetEqQualityTest : public ::testing::Test {
@@ -69,8 +69,8 @@ class NetEqQualityTest : public ::testing::Test {
                    int channels,
                    std::string in_filename,
                    std::string out_filename);
-  virtual void SetUp() OVERRIDE;
-  virtual void TearDown() OVERRIDE;
+  void SetUp() override;
+  void TearDown() override;
 
   // EncodeBlock(...) does the following:
   // 1. encodes a block of audio, saved in |in_data| and has a length of
@@ -118,23 +118,23 @@ class NetEqQualityTest : public ::testing::Test {
   // Expected output number of samples per channel in a frame.
   const int out_size_samples_;
 
-  int payload_size_bytes_;
+  size_t payload_size_bytes_;
   int max_payload_bytes_;
 
-  scoped_ptr<InputAudioFile> in_file_;
+  rtc::scoped_ptr<InputAudioFile> in_file_;
   FILE* out_file_;
   FILE* log_file_;
 
-  scoped_ptr<RtpGenerator> rtp_generator_;
-  scoped_ptr<NetEq> neteq_;
-  scoped_ptr<LossModel> loss_model_;
+  rtc::scoped_ptr<RtpGenerator> rtp_generator_;
+  rtc::scoped_ptr<NetEq> neteq_;
+  rtc::scoped_ptr<LossModel> loss_model_;
 
-  scoped_ptr<int16_t[]> in_data_;
-  scoped_ptr<uint8_t[]> payload_;
-  scoped_ptr<int16_t[]> out_data_;
+  rtc::scoped_ptr<int16_t[]> in_data_;
+  rtc::scoped_ptr<uint8_t[]> payload_;
+  rtc::scoped_ptr<int16_t[]> out_data_;
   WebRtcRTPHeader rtp_header_;
 
-  long total_payload_size_bytes_;
+  size_t total_payload_size_bytes_;
 };
 
 }  // namespace test

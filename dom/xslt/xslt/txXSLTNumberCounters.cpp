@@ -80,7 +80,8 @@ txFormattedCounter::getCounterFor(const nsAFlatString& aToken,
                                                 aGroupSeparator);
                 break;
         }
-        return aCounter ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+        MOZ_ASSERT(aCounter);
+        return NS_OK;
     }
     
     // for now, the only multi-char token we support are decimals
@@ -96,8 +97,8 @@ txFormattedCounter::getCounterFor(const nsAFlatString& aToken,
         // if we don't recognize the token then use '1'
         aCounter = new txDecimalCounter(1, aGroupSize, aGroupSeparator);
     }
-
-    return aCounter ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+    MOZ_ASSERT(aCounter);
+    return NS_OK;
 }
 
 

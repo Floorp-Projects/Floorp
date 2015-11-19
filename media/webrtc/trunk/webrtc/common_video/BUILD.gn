@@ -17,17 +17,17 @@ config("common_video_config") {
 
 source_set("common_video") {
   sources = [
+    "i420_buffer_pool.cc",
     "i420_video_frame.cc",
     "interface/i420_video_frame.h",
+    "interface/i420_buffer_pool.h",
     "interface/native_handle.h",
-    "interface/texture_video_frame.h",
+    "interface/video_frame_buffer.h",
     "libyuv/include/scaler.h",
     "libyuv/include/webrtc_libyuv.h",
     "libyuv/scaler.cc",
     "libyuv/webrtc_libyuv.cc",
-    "plane.cc",
-    "plane.h",
-    "texture_video_frame.cc"
+    "video_frame_buffer.cc",
   ]
 
   include_dirs = [ "../modules/interface" ]
@@ -44,12 +44,16 @@ source_set("common_video") {
     configs -= [ "//build/config/clang:find_bad_constructs" ]
   }
 
-  deps = [ "../system_wrappers" ]
+  deps = [
+    "..:webrtc_common",
+    "../system_wrappers",
+  ]
 
   if (rtc_build_libyuv) {
-    deps += [ "//third_party/libyuv" ]
+    deps += [ "$rtc_libyuv_dir" ]
+    public_deps = [ "$rtc_libyuv_dir" ]
   } else {
     # Need to add a directory normally exported by libyuv.
-    include_dirs += [ "//third_party/libyuv/include" ]
+    include_dirs += [ "$rtc_libyuv_dir/include" ]
   }
 }

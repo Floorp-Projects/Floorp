@@ -183,12 +183,12 @@ EmitBaselineEnterStubFrame(MacroAssembler& masm, Register scratch)
 
     // Push frame descriptor and return address.
     masm.makeFrameDescriptor(scratch, JitFrame_BaselineJS);
-    masm.push(scratch);
-    masm.push(ICTailCallReg);
+    masm.Push(scratch);
+    masm.Push(ICTailCallReg);
 
     // Save old frame pointer, stack pointer and stub reg.
-    masm.push(ICStubReg);
-    masm.push(BaselineFrameReg);
+    masm.Push(ICStubReg);
+    masm.Push(BaselineFrameReg);
     masm.mov(BaselineStackReg, BaselineFrameReg);
 
     // We pushed 4 words, so the stack is still aligned to 8 bytes.
@@ -199,8 +199,8 @@ inline void
 EmitIonEnterStubFrame(MacroAssembler& masm, Register scratch)
 {
     MOZ_ASSERT(ICTailCallReg == lr);
-    masm.push(ICTailCallReg);
-    masm.push(ICStubReg);
+    masm.Push(ICTailCallReg);
+    masm.Push(ICStubReg);
 }
 
 inline void
@@ -213,28 +213,28 @@ EmitBaselineLeaveStubFrame(MacroAssembler& masm, bool calledIntoIon = false)
     // we performed a VM call, the descriptor has been popped already so in that
     // case we use the frame pointer.
     if (calledIntoIon) {
-        masm.pop(scratch);
+        masm.Pop(scratch);
         masm.rshiftPtr(Imm32(FRAMESIZE_SHIFT), scratch);
         masm.add32(scratch, BaselineStackReg);
     } else {
         masm.mov(BaselineFrameReg, BaselineStackReg);
     }
 
-    masm.pop(BaselineFrameReg);
-    masm.pop(ICStubReg);
+    masm.Pop(BaselineFrameReg);
+    masm.Pop(ICStubReg);
 
     // Load the return address.
-    masm.pop(ICTailCallReg);
+    masm.Pop(ICTailCallReg);
 
     // Discard the frame descriptor.
-    masm.pop(scratch);
+    masm.Pop(scratch);
 }
 
 inline void
 EmitIonLeaveStubFrame(MacroAssembler& masm)
 {
-    masm.pop(ICStubReg);
-    masm.pop(ICTailCallReg);
+    masm.Pop(ICStubReg);
+    masm.Pop(ICTailCallReg);
 }
 
 inline void
@@ -244,12 +244,12 @@ EmitStowICValues(MacroAssembler& masm, int values)
     switch(values) {
       case 1:
         // Stow R0.
-        masm.pushValue(R0);
+        masm.Push(R0);
         break;
       case 2:
         // Stow R0 and R1.
-        masm.pushValue(R0);
-        masm.pushValue(R1);
+        masm.Push(R0);
+        masm.Push(R1);
         break;
     }
 }
@@ -276,6 +276,7 @@ EmitUnstowICValues(MacroAssembler& masm, int values, bool discard = false)
         }
         break;
     }
+    masm.adjustFrame(-values * sizeof(Value));
 }
 
 inline void
@@ -320,9 +321,9 @@ EmitCallTypeUpdateIC(MacroAssembler& masm, JitCode* code, uint32_t objectOffset)
 
     masm.loadValue(Address(BaselineStackReg, STUB_FRAME_SIZE + objectOffset), R1);
 
-    masm.pushValue(R0);
-    masm.pushValue(R1);
-    masm.push(ICStubReg);
+    masm.Push(R0);
+    masm.Push(R1);
+    masm.Push(ICStubReg);
 
     // Load previous frame pointer, push BaselineFrame*.
     masm.loadPtr(Address(BaselineFrameReg, 0), R0.scratchReg());

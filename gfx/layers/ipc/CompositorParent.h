@@ -101,7 +101,7 @@ class CompositorVsyncScheduler
 public:
   explicit CompositorVsyncScheduler(CompositorParent* aCompositorParent, nsIWidget* aWidget);
   bool NotifyVsync(TimeStamp aVsyncTimestamp);
-  void SetNeedsComposite(bool aSchedule);
+  void SetNeedsComposite();
   void OnForceComposeToTarget();
 
   void ScheduleTask(CancelableTask*, int);
@@ -159,8 +159,8 @@ private:
 #endif
 
   bool mAsapScheduling;
-  bool mNeedsComposite;
   bool mIsObservingVsync;
+  uint32_t mNeedsComposite;
   int32_t mVsyncNotificationsSkipped;
   RefPtr<CompositorVsyncDispatcher> mCompositorVsyncDispatcher;
   RefPtr<CompositorVsyncScheduler::Observer> mVsyncObserver;

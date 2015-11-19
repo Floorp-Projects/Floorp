@@ -209,10 +209,6 @@ nsRDFConInstanceTestNode::FilterInstantiations(InstantiationSet& aInstantiations
             {
                 Element* element =
                     new nsRDFConInstanceTestNode::Element(valueres, container, empty);
-
-                if (! element)
-                    return NS_ERROR_OUT_OF_MEMORY;
-
                 inst->AddSupportingElement(element);
             }
             else {

@@ -43,7 +43,21 @@ void CopyFrames(const float* const* src,
   for (int i = 0; i < num_channels; ++i) {
     memcpy(&dst[i][dst_start_index],
            &src[i][src_start_index],
-           num_frames * sizeof(float));
+           num_frames * sizeof(dst[i][dst_start_index]));
+  }
+}
+
+// Moves |src| into |dst| channel by channel.
+void MoveFrames(const float* const* src,
+                int src_start_index,
+                int num_frames,
+                int num_channels,
+                float* const* dst,
+                int dst_start_index) {
+  for (int i = 0; i < num_channels; ++i) {
+    memmove(&dst[i][dst_start_index],
+            &src[i][src_start_index],
+            num_frames * sizeof(dst[i][dst_start_index]));
   }
 }
 
@@ -52,7 +66,8 @@ void ZeroOut(float* const* buffer,
              int num_frames,
              int num_channels) {
   for (int i = 0; i < num_channels; ++i) {
-    memset(&buffer[i][starting_idx], 0, num_frames * sizeof(float));
+    memset(&buffer[i][starting_idx], 0,
+           num_frames * sizeof(buffer[i][starting_idx]));
   }
 }
 
@@ -67,6 +82,16 @@ void ApplyWindow(const float* window,
       frames[i][j] = frames[i][j] * window[j];
     }
   }
+}
+
+int gcd(int a, int b) {
+  int tmp;
+  while (b) {
+     tmp = a;
+     a = b;
+     b = tmp % b;
+  }
+  return a;
 }
 
 }  // namespace
@@ -84,9 +109,9 @@ Blocker::Blocker(int chunk_size,
       block_size_(block_size),
       num_input_channels_(num_input_channels),
       num_output_channels_(num_output_channels),
-      initial_delay_(block_size_),
+      initial_delay_(block_size_ - gcd(chunk_size, shift_amount)),
       frame_offset_(0),
-      input_buffer_(chunk_size_ + initial_delay_, num_input_channels_),
+      input_buffer_(num_input_channels_, chunk_size_ + initial_delay_),
       output_buffer_(chunk_size_ + initial_delay_, num_output_channels_),
       input_block_(block_size_, num_input_channels_),
       output_block_(block_size_, num_output_channels_),
@@ -94,19 +119,13 @@ Blocker::Blocker(int chunk_size,
       shift_amount_(shift_amount),
       callback_(callback) {
   CHECK_LE(num_output_channels_, num_input_channels_);
-  CHECK_GE(chunk_size_, block_size_);
+  CHECK(window);
 
-  memcpy(window_.get(), window, block_size_ * sizeof(float));
-  size_t buffer_size = chunk_size_ + initial_delay_;
-  memset(input_buffer_.channels()[0],
-         0,
-         buffer_size * num_input_channels_ * sizeof(float));
-  memset(output_buffer_.channels()[0],
-         0,
-         buffer_size * num_output_channels_ * sizeof(float));
+  memcpy(window_.get(), window, block_size_ * sizeof(*window_.get()));
+  input_buffer_.MoveReadPosition(-initial_delay_);
 }
 
-// Both the input and output buffers look like this:
+// When block_size < chunk_size the input and output buffers look like this:
 //
 //                      delay*             chunk_size    chunk_size + delay*
 //  buffer: <-------------|---------------------|---------------|>
@@ -120,10 +139,27 @@ Blocker::Blocker(int chunk_size,
 // 4. We window the current block, fire the callback for processing, window
 //    again, and overlap/add to the output buffer.
 // 5. We copy sections _a_ and _b_ of the output buffer into output.
-// 6. For both the input and the output buffers, we copy section c into
-//    section a.
+// 6. For both the input and the output buffers, we copy section _c_ into
+//    section _a_.
 // 7. We set the new frame_offset to be the difference between the first frame
 //    of |bl| and the border between sections _b_ and _c_.
+//
+// When block_size > chunk_size the input and output buffers look like this:
+//
+//                   chunk_size               delay*       chunk_size + delay*
+//  buffer: <-------------|---------------------|---------------|>
+//                _a_              _b_                 _c_
+//
+// On each call to ProcessChunk():
+// The procedure is the same as above, except for:
+// 1. New input gets read into section _c_ of the input buffer.
+// 3. We block until we reach a block |bl| that doesn't contain any frames
+//    from section _a_ of the input buffer.
+// 5. We copy section _a_ of the output buffer into output.
+// 6. For both the input and the output buffers, we copy sections _b_ and _c_
+//    into section _a_ and _b_.
+// 7. We set the new frame_offset to be the difference between the first frame
+//    of |bl| and the border between sections _a_ and _b_.
 //
 // * delay here refers to inintial_delay_
 //
@@ -137,25 +173,14 @@ void Blocker::ProcessChunk(const float* const* input,
   CHECK_EQ(num_input_channels, num_input_channels_);
   CHECK_EQ(num_output_channels, num_output_channels_);
 
-  // Copy new data into input buffer at
-  // [|initial_delay_|, |chunk_size_| + |initial_delay_|].
-  CopyFrames(input,
-             0,
-             chunk_size_,
-             num_input_channels_,
-             input_buffer_.channels(),
-             initial_delay_);
-
+  input_buffer_.Write(input, num_input_channels, chunk_size_);
   int first_frame_in_block = frame_offset_;
 
   // Loop through blocks.
   while (first_frame_in_block < chunk_size_) {
-    CopyFrames(input_buffer_.channels(),
-               first_frame_in_block,
-               block_size_,
-               num_input_channels_,
-               input_block_.channels(),
-               0);
+    input_buffer_.Read(input_block_.channels(), num_input_channels,
+                       block_size_);
+    input_buffer_.MoveReadPosition(-block_size_ + shift_amount_);
 
     ApplyWindow(window_.get(),
                 block_size_,
@@ -191,18 +216,9 @@ void Blocker::ProcessChunk(const float* const* input,
              output,
              0);
 
-  // Copy input buffer [chunk_size_, chunk_size_ + initial_delay]
-  // to input buffer [0, initial_delay]
-  CopyFrames(input_buffer_.channels(),
-             chunk_size,
-             initial_delay_,
-             num_input_channels_,
-             input_buffer_.channels(),
-             0);
-
   // Copy output buffer [chunk_size_, chunk_size_ + initial_delay]
   // to output buffer [0, initial_delay], zero the rest.
-  CopyFrames(output_buffer_.channels(),
+  MoveFrames(output_buffer_.channels(),
              chunk_size,
              initial_delay_,
              num_output_channels_,

@@ -22,6 +22,7 @@ import org.mozilla.gecko.util.ThreadUtils;
 import android.graphics.PointF;
 import android.graphics.RectF;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.GestureDetector;
 import android.view.InputDevice;
 import android.view.KeyEvent;
@@ -120,14 +121,16 @@ class JavaPanZoomController
     private AxisLockMode mMode;
     /* Whether or not to wait for a double-tap before dispatching a single-tap */
     private boolean mWaitForDoubleTap;
-    /* Used to change the scrollY direction */
-    private boolean mNegateWheelScrollY;
+    /* Used to change the scroll direction */
+    private boolean mNegateWheelScroll;
     /* Whether the current event has been default-prevented. */
     private boolean mDefaultPrevented;
     /* Whether longpress events are enabled, or suppressed by robocop tests. */
     private boolean isLongpressEnabled;
     /* Whether longpress detection should be ignored */
     private boolean mIgnoreLongPress;
+    /* Pointer scrolling delta, scaled by the preferred list item height which matches Android platform behavior */
+    private float mPointerScrollFactor;
 
     // Handler to be notified when overscroll occurs
     private Overscroll mOverscroll;
@@ -153,7 +156,7 @@ class JavaPanZoomController
         mMode = AxisLockMode.STANDARD;
 
         String[] prefs = { "ui.scrolling.axis_lock_mode",
-                           "ui.scrolling.negate_wheel_scrollY",
+                           "ui.scrolling.negate_wheel_scroll",
                            "ui.scrolling.gamepad_dead_zone" };
         PrefsHelper.getPrefs(prefs, new PrefsHelper.PrefHandlerBase() {
             @Override public void prefValue(String pref, String value) {
@@ -175,8 +178,8 @@ class JavaPanZoomController
             }
 
             @Override public void prefValue(String pref, boolean value) {
-                if (pref.equals("ui.scrolling.negate_wheel_scrollY")) {
-                    mNegateWheelScrollY = value;
+                if (pref.equals("ui.scrolling.negate_wheel_scroll")) {
+                    mNegateWheelScroll = value;
                 }
             }
 
@@ -188,6 +191,13 @@ class JavaPanZoomController
         });
 
         Axis.initPrefs();
+
+        TypedValue outValue = new TypedValue();
+        if (view.getContext().getTheme().resolveAttribute(android.R.attr.listPreferredItemHeight, outValue, true)) {
+            mPointerScrollFactor = outValue.getDimension(view.getContext().getResources().getDisplayMetrics());
+        } else {
+            mPointerScrollFactor = MAX_SCROLL;
+        }
     }
 
     @Override
@@ -577,10 +587,11 @@ class JavaPanZoomController
         if (mState == PanZoomState.NOTHING || mState == PanZoomState.FLING) {
             float scrollX = event.getAxisValue(MotionEvent.AXIS_HSCROLL);
             float scrollY = event.getAxisValue(MotionEvent.AXIS_VSCROLL);
-            if (mNegateWheelScrollY) {
+            if (mNegateWheelScroll) {
+                scrollX *= -1.0;
                 scrollY *= -1.0;
             }
-            scrollBy(scrollX * MAX_SCROLL, scrollY * MAX_SCROLL);
+            scrollBy(scrollX * mPointerScrollFactor, scrollY * mPointerScrollFactor);
             bounce();
             return true;
         }

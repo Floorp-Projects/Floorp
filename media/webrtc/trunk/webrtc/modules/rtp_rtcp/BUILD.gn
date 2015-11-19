@@ -104,6 +104,7 @@ source_set("rtp_rtcp") {
   }
 
   deps = [
+    "../..:webrtc_common",
     "../../system_wrappers",
     "../pacing",
     "../remote_bitrate_estimator",
@@ -113,6 +114,8 @@ source_set("rtp_rtcp") {
     cflags = [
       # TODO(jschuh): Bug 1348: fix this warning.
       "/wd4267",  # size_t to int truncations
+      # TODO(kjellander): Bug 261: fix this warning.
+      "/wd4373",  # virtual function override.
     ]
   }
 }

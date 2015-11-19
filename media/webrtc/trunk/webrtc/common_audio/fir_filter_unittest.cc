@@ -13,7 +13,7 @@
 #include <string.h>
 
 #include "testing/gtest/include/gtest/gtest.h"
-#include "webrtc/system_wrappers/interface/scoped_ptr.h"
+#include "webrtc/base/scoped_ptr.h"
 
 namespace webrtc {
 
@@ -37,8 +37,8 @@ void VerifyOutput(const float* expected_output,
 TEST(FIRFilterTest, FilterAsIdentity) {
   const float kCoefficients[] = {1.f, 0.f, 0.f, 0.f, 0.f};
   float output[kInputLength];
-  scoped_ptr<FIRFilter> filter(FIRFilter::Create(
-      kCoefficients, kCoefficientsLength, kInputLength));
+  rtc::scoped_ptr<FIRFilter> filter(
+      FIRFilter::Create(kCoefficients, kCoefficientsLength, kInputLength));
   filter->Filter(kInput, kInputLength, output);
 
   VerifyOutput(kInput, output, kInputLength);
@@ -47,8 +47,8 @@ TEST(FIRFilterTest, FilterAsIdentity) {
 TEST(FIRFilterTest, FilterUsedAsScalarMultiplication) {
   const float kCoefficients[] = {5.f, 0.f, 0.f, 0.f, 0.f};
   float output[kInputLength];
-  scoped_ptr<FIRFilter> filter(FIRFilter::Create(
-      kCoefficients, kCoefficientsLength, kInputLength));
+  rtc::scoped_ptr<FIRFilter> filter(
+      FIRFilter::Create(kCoefficients, kCoefficientsLength, kInputLength));
   filter->Filter(kInput, kInputLength, output);
 
   EXPECT_FLOAT_EQ(5.f, output[0]);
@@ -60,8 +60,8 @@ TEST(FIRFilterTest, FilterUsedAsScalarMultiplication) {
 TEST(FIRFilterTest, FilterUsedAsInputShifting) {
   const float kCoefficients[] = {0.f, 0.f, 0.f, 0.f, 1.f};
   float output[kInputLength];
-  scoped_ptr<FIRFilter> filter(FIRFilter::Create(
-      kCoefficients, kCoefficientsLength, kInputLength));
+  rtc::scoped_ptr<FIRFilter> filter(
+      FIRFilter::Create(kCoefficients, kCoefficientsLength, kInputLength));
   filter->Filter(kInput, kInputLength, output);
 
   EXPECT_FLOAT_EQ(0.f, output[0]);
@@ -73,8 +73,8 @@ TEST(FIRFilterTest, FilterUsedAsInputShifting) {
 
 TEST(FIRFilterTest, FilterUsedAsArbitraryWeighting) {
   float output[kInputLength];
-  scoped_ptr<FIRFilter> filter(FIRFilter::Create(
-      kCoefficients, kCoefficientsLength, kInputLength));
+  rtc::scoped_ptr<FIRFilter> filter(
+      FIRFilter::Create(kCoefficients, kCoefficientsLength, kInputLength));
   filter->Filter(kInput, kInputLength, output);
 
   EXPECT_FLOAT_EQ(0.2f, output[0]);
@@ -86,7 +86,7 @@ TEST(FIRFilterTest, FilterUsedAsArbitraryWeighting) {
 
 TEST(FIRFilterTest, FilterInLengthLesserOrEqualToCoefficientsLength) {
   float output[kInputLength];
-  scoped_ptr<FIRFilter> filter(
+  rtc::scoped_ptr<FIRFilter> filter(
       FIRFilter::Create(kCoefficients, kCoefficientsLength, 2));
   filter->Filter(kInput, 2, output);
 
@@ -103,7 +103,7 @@ TEST(FIRFilterTest, FilterInLengthLesserOrEqualToCoefficientsLength) {
 
 TEST(FIRFilterTest, MultipleFilterCalls) {
   float output[kInputLength];
-  scoped_ptr<FIRFilter> filter(
+  rtc::scoped_ptr<FIRFilter> filter(
       FIRFilter::Create(kCoefficients, kCoefficientsLength, 3));
   filter->Filter(kInput, 2, output);
   EXPECT_FLOAT_EQ(0.2f, output[0]);
@@ -134,8 +134,8 @@ TEST(FIRFilterTest, MultipleFilterCalls) {
 
 TEST(FIRFilterTest, VerifySampleBasedVsBlockBasedFiltering) {
   float output_block_based[kInputLength];
-  scoped_ptr<FIRFilter> filter(FIRFilter::Create(
-      kCoefficients, kCoefficientsLength, kInputLength));
+  rtc::scoped_ptr<FIRFilter> filter(
+      FIRFilter::Create(kCoefficients, kCoefficientsLength, kInputLength));
   filter->Filter(kInput, kInputLength, output_block_based);
 
   float output_sample_based[kInputLength];
@@ -159,7 +159,7 @@ TEST(FIRFilterTest, SimplestHighPassFilter) {
       sizeof(kConstantInput[0]);
 
   float output[kConstantInputLength];
-  scoped_ptr<FIRFilter> filter(FIRFilter::Create(
+  rtc::scoped_ptr<FIRFilter> filter(FIRFilter::Create(
       kCoefficients, kCoefficientsLength, kConstantInputLength));
   filter->Filter(kConstantInput, kConstantInputLength, output);
   EXPECT_FLOAT_EQ(1.f, output[0]);
@@ -178,7 +178,7 @@ TEST(FIRFilterTest, SimplestLowPassFilter) {
                                         sizeof(kHighFrequencyInput[0]);
 
   float output[kHighFrequencyInputLength];
-  scoped_ptr<FIRFilter> filter(FIRFilter::Create(
+  rtc::scoped_ptr<FIRFilter> filter(FIRFilter::Create(
       kCoefficients, kCoefficientsLength, kHighFrequencyInputLength));
   filter->Filter(kHighFrequencyInput, kHighFrequencyInputLength, output);
   EXPECT_FLOAT_EQ(-1.f, output[0]);
@@ -190,7 +190,7 @@ TEST(FIRFilterTest, SimplestLowPassFilter) {
 TEST(FIRFilterTest, SameOutputWhenSwapedCoefficientsAndInput) {
   float output[kCoefficientsLength];
   float output_swaped[kCoefficientsLength];
-  scoped_ptr<FIRFilter> filter(FIRFilter::Create(
+  rtc::scoped_ptr<FIRFilter> filter(FIRFilter::Create(
       kCoefficients, kCoefficientsLength, kCoefficientsLength));
   // Use kCoefficientsLength for in_length to get same-length outputs.
   filter->Filter(kInput, kCoefficientsLength, output);

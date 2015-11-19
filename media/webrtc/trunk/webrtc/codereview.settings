@@ -1,0 +1,9 @@
+# This file is used by gcl to get repository specific information.
+CODE_REVIEW_SERVER: webrtc-codereview.appspot.com
+CC_LIST: webrtc-reviews@webrtc.org
+VIEW_VC: http://code.google.com/p/webrtc/source/detail?r=
+TRY_ON_UPLOAD: False
+TRYSERVER_SVN_URL: svn://svn.chromium.org/chrome-try/try-webrtc
+TRYSERVER_ROOT: src/webrtc
+PROJECT: webrtc
+FORCE_HTTPS_COMMIT_URL: True

@@ -26,8 +26,7 @@ txNodeSetAdaptor::Init()
     if (!mValue) {
         mValue = new txNodeSet(nullptr);
     }
-
-    return mValue ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+    return NS_OK;
 }
 
 NS_IMETHODIMP

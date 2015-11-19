@@ -53,25 +53,22 @@ class NSSCertificate : public SSLCertificate {
   // and the constructor makes a copy.
   explicit NSSCertificate(CERTCertificate* cert);
   explicit NSSCertificate(CERTCertList* cert_list);
-  virtual ~NSSCertificate() {
-    if (certificate_)
-      CERT_DestroyCertificate(certificate_);
-  }
+  ~NSSCertificate() override;
 
-  virtual NSSCertificate* GetReference() const;
+  NSSCertificate* GetReference() const override;
 
-  virtual std::string ToPEMString() const;
+  std::string ToPEMString() const override;
 
-  virtual void ToDER(Buffer* der_buffer) const;
+  void ToDER(Buffer* der_buffer) const override;
 
-  virtual bool GetSignatureDigestAlgorithm(std::string* algorithm) const;
+  bool GetSignatureDigestAlgorithm(std::string* algorithm) const override;
 
-  virtual bool ComputeDigest(const std::string& algorithm,
-                             unsigned char* digest,
-                             size_t size,
-                             size_t* length) const;
+  bool ComputeDigest(const std::string& algorithm,
+                     unsigned char* digest,
+                     size_t size,
+                     size_t* length) const override;
 
-  virtual bool GetChain(SSLCertChain** chain) const;
+  bool GetChain(SSLCertChain** chain) const override;
 
   CERTCertificate* certificate() { return certificate_; }
 
@@ -104,18 +101,15 @@ class NSSIdentity : public SSLIdentity {
   static NSSIdentity* GenerateForTest(const SSLIdentityParams& params);
   static SSLIdentity* FromPEMStrings(const std::string& private_key,
                                      const std::string& certificate);
-  virtual ~NSSIdentity() {
-    LOG(LS_INFO) << "Destroying NSS identity";
-  }
+  ~NSSIdentity() override;
 
-  virtual NSSIdentity* GetReference() const;
-  virtual NSSCertificate& certificate() const;
+  NSSIdentity* GetReference() const override;
+  NSSCertificate& certificate() const override;
 
   NSSKeyPair* keypair() const { return keypair_.get(); }
 
  private:
-  NSSIdentity(NSSKeyPair* keypair, NSSCertificate* cert) :
-      keypair_(keypair), certificate_(cert) {}
+  NSSIdentity(NSSKeyPair* keypair, NSSCertificate* cert);
 
   static NSSIdentity* GenerateInternal(const SSLIdentityParams& params);
 

@@ -68,11 +68,13 @@ int32_t VCMDecodedFrameCallback::Decoded(I420VideoFrame& decodedImage)
     _timing.StopDecodeTimer(
         decodedImage.timestamp(),
         frameInfo->decodeStartTimeMs,
-        _clock->TimeInMilliseconds());
+        _clock->TimeInMilliseconds(),
+        frameInfo->renderTimeMs);
 
     if (callback != NULL)
     {
         decodedImage.set_render_time_ms(frameInfo->renderTimeMs);
+        decodedImage.set_rotation(frameInfo->rotation);
         callback->FrameToRender(decodedImage);
     }
     return WEBRTC_VIDEO_CODEC_OK;
@@ -147,6 +149,7 @@ int32_t VCMGenericDecoder::Decode(const VCMEncodedFrame& frame,
 {
     _frameInfos[_nextFrameInfoIdx].decodeStartTimeMs = nowMs;
     _frameInfos[_nextFrameInfoIdx].renderTimeMs = frame.RenderTimeMs();
+    _frameInfos[_nextFrameInfoIdx].rotation = frame.rotation();
     _callback->Map(frame.TimeStamp(), &_frameInfos[_nextFrameInfoIdx]);
 
     _nextFrameInfoIdx = (_nextFrameInfoIdx + 1) % kDecoderFrameMemoryLength;

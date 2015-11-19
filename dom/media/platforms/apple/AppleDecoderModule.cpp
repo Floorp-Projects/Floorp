@@ -117,7 +117,7 @@ AppleDecoderModule::CreateAudioDecoder(const AudioInfo& aConfig,
 }
 
 bool
-AppleDecoderModule::SupportsMimeType(const nsACString& aMimeType)
+AppleDecoderModule::SupportsMimeType(const nsACString& aMimeType) const
 {
   return (sIsCoreMediaAvailable &&
           (aMimeType.EqualsLiteral("audio/mpeg") ||

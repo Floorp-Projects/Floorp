@@ -13,7 +13,6 @@
 
 #include "webrtc/modules/audio_device/ios/audio_device_ios.h"
 
-#include "webrtc/system_wrappers/interface/thread_wrapper.h"
 #include "webrtc/system_wrappers/interface/trace.h"
 
 namespace webrtc {
@@ -21,8 +20,6 @@ AudioDeviceIOS::AudioDeviceIOS(const int32_t id)
     :
     _ptrAudioBuffer(NULL),
     _critSect(*CriticalSectionWrapper::CreateCriticalSection()),
-    _captureWorkerThread(NULL),
-    _captureWorkerThreadId(0),
     _id(id),
     _auVoiceProcessing(NULL),
     _audioInterruptionObserver(NULL),
@@ -109,22 +106,13 @@ int32_t AudioDeviceIOS::Init() {
     _isShutDown = false;
 
     // Create and start capture thread
-    if (_captureWorkerThread == NULL) {
-        _captureWorkerThread
-            = ThreadWrapper::CreateThread(RunCapture, this, kRealtimePriority,
-                                          "CaptureWorkerThread");
-
-        if (_captureWorkerThread == NULL) {
-            WEBRTC_TRACE(kTraceCritical, kTraceAudioDevice,
-                         _id, "CreateThread() error");
-            return -1;
-        }
-
-        unsigned int threadID(0);
-        bool res = _captureWorkerThread->Start(threadID);
-        _captureWorkerThreadId = static_cast<uint32_t>(threadID);
+    if (!_captureWorkerThread) {
+        _captureWorkerThread = ThreadWrapper::CreateThread(
+            RunCapture, this, "CaptureWorkerThread");
+        bool res = _captureWorkerThread->Start();
         WEBRTC_TRACE(kTraceDebug, kTraceAudioDevice,
                      _id, "CaptureWorkerThread started (res=%d)", res);
+        _captureWorkerThread->SetPriority(kRealtimePriority);
     } else {
         WEBRTC_TRACE(kTraceWarning, kTraceAudioDevice,
                      _id, "Thread already created");
@@ -149,14 +137,13 @@ int32_t AudioDeviceIOS::Terminate() {
 
 
     // Stop capture thread
-    if (_captureWorkerThread != NULL) {
+    if (_captureWorkerThread) {
         WEBRTC_TRACE(kTraceDebug, kTraceAudioDevice,
                      _id, "Stopping CaptureWorkerThread");
         bool res = _captureWorkerThread->Stop();
         WEBRTC_TRACE(kTraceDebug, kTraceAudioDevice,
                      _id, "CaptureWorkerThread stopped (res=%d)", res);
-        delete _captureWorkerThread;
-        _captureWorkerThread = NULL;
+        _captureWorkerThread.reset();
     }
 
     // Shut down Audio Unit

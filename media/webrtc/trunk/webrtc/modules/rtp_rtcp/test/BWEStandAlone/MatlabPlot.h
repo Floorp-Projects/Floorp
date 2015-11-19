@@ -16,11 +16,11 @@
 #include <vector>
 
 #include "webrtc/typedefs.h"
+#include "webrtc/system_wrappers/interface/thread_wrapper.h"
 
 namespace webrtc {
 class CriticalSectionWrapper;
 class EventWrapper;
-class ThreadWrapper;
 }
 
 //#define PLOT_TESTING
@@ -160,7 +160,7 @@ private:
     std::vector<MatlabPlot *> _plots;
     webrtc::CriticalSectionWrapper *_critSect;
     webrtc::EventWrapper *_eventPtr;
-    webrtc::ThreadWrapper* _plotThread;
+    rtc::scoped_ptr<webrtc::ThreadWrapper> _plotThread;
     bool _running;
     int _numPlots;
 };

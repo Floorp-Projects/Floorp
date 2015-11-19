@@ -46,26 +46,8 @@ void VideoProcessingModule::Destroy(VideoProcessingModule* module) {
     delete static_cast<VideoProcessingModuleImpl*>(module);
 }
 
-int32_t VideoProcessingModuleImpl::ChangeUniqueId(const int32_t id) {
-  CriticalSectionScoped mutex(&mutex_);
-  id_ = id;
-  brightness_detection_.ChangeUniqueId(id);
-  deflickering_.ChangeUniqueId(id);
-  frame_pre_processor_.ChangeUniqueId(id);
-  return VPM_OK;
-}
-
-int32_t VideoProcessingModuleImpl::Id() const {
-  CriticalSectionScoped mutex(&mutex_);
-  return id_;
-}
-
 VideoProcessingModuleImpl::VideoProcessingModuleImpl(const int32_t id)
-    : id_(id),
-    mutex_(*CriticalSectionWrapper::CreateCriticalSection()) {
-  brightness_detection_.ChangeUniqueId(id);
-  deflickering_.ChangeUniqueId(id);
-  frame_pre_processor_.ChangeUniqueId(id);
+    : mutex_(*CriticalSectionWrapper::CreateCriticalSection()) {
 }
 
 VideoProcessingModuleImpl::~VideoProcessingModuleImpl() {

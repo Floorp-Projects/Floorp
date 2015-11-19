@@ -111,36 +111,19 @@ SubstitutingProtocolHandler::ConstructInternal()
 // IPC marshalling.
 //
 
-struct EnumerateSubstitutionArg
-{
-  EnumerateSubstitutionArg(nsCString& aScheme, nsTArray<SubstitutionMapping>& aMappings)
-    : mScheme(aScheme), mMappings(aMappings) {}
-  nsCString& mScheme;
-  nsTArray<SubstitutionMapping>& mMappings;
-};
-
-static PLDHashOperator
-EnumerateSubstitution(const nsACString& aKey,
-                      nsIURI* aURI,
-                      void* aArg)
-{
-  auto arg = static_cast<EnumerateSubstitutionArg*>(aArg);
-  SerializedURI uri;
-  if (aURI) {
-    aURI->GetSpec(uri.spec);
-    aURI->GetOriginCharset(uri.charset);
-  }
-
-  SubstitutionMapping substitution = { arg->mScheme, nsCString(aKey), uri };
-  arg->mMappings.AppendElement(substitution);
-  return (PLDHashOperator)PL_DHASH_NEXT;
-}
-
 void
 SubstitutingProtocolHandler::CollectSubstitutions(InfallibleTArray<SubstitutionMapping>& aMappings)
 {
-  EnumerateSubstitutionArg arg(mScheme, aMappings);
-  mSubstitutions.EnumerateRead(&EnumerateSubstitution, &arg);
+  for (auto iter = mSubstitutions.ConstIter(); !iter.Done(); iter.Next()) {
+    nsCOMPtr<nsIURI> uri = iter.Data();
+    SerializedURI serialized;
+    if (uri) {
+      uri->GetSpec(serialized.spec);
+      uri->GetOriginCharset(serialized.charset);
+    }
+    SubstitutionMapping substitution = { mScheme, nsCString(iter.Key()), serialized };
+    aMappings.AppendElement(substitution);
+  }
 }
 
 void

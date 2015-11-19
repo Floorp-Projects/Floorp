@@ -155,8 +155,13 @@ class AudioDeviceGeneric
                                        unsigned int par3 = 0,
                                        unsigned int par4 = 0);
 
-    // Windows Core Audio only.
+    // Android only
+    virtual bool BuiltInAECIsAvailable() const;
+
+    // Windows Core Audio and Android only.
     virtual int32_t EnableBuiltInAEC(bool enable);
+
+    // Windows Core Audio only.
     virtual bool BuiltInAECIsEnabled() const;
 
 public:

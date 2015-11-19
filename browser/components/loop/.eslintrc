@@ -20,6 +20,7 @@
     "classNames": false,
     "console": false,
     "loop": true,
+    "LoopMochaUtils": true,
     "MozActivity": false,
     "RTCSessionDescription": false,
     "OT": false,

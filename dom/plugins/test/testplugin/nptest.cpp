@@ -778,8 +778,6 @@ NPP_New(NPMIMEType pluginType, NPP instance, uint16_t mode, int16_t argc, char* 
 
   // set up our our instance data
   InstanceData* instanceData = new InstanceData;
-  if (!instanceData)
-    return NPERR_OUT_OF_MEMORY_ERROR;
   instanceData->npp = instance;
   instanceData->streamMode = NP_ASFILEONLY;
   instanceData->testFunction = FUNCTION_NONE;

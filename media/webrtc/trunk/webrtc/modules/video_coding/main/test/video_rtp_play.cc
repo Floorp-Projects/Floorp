@@ -20,7 +20,7 @@ const webrtc::VCMVideoProtection kConfigProtectionMethod =
     webrtc::kProtectionNack;
 const float kConfigLossRate = 0.0f;
 const bool kConfigReordering = false;
-const uint32_t kConfigRttMs = 0;
+const int64_t kConfigRttMs = 0;
 const uint32_t kConfigRenderDelayMs = 0;
 const uint32_t kConfigMinPlayoutDelayMs = 0;
 const int64_t kConfigMaxRuntimeMs = -1;
@@ -50,9 +50,10 @@ int RtpPlay(const CmdArgs& args) {
   webrtc::rtpplayer::VcmPayloadSinkFactory factory(output_file, &clock,
       kConfigProtectionEnabled, kConfigProtectionMethod, kConfigRttMs,
       kConfigRenderDelayMs, kConfigMinPlayoutDelayMs);
-  webrtc::scoped_ptr<webrtc::rtpplayer::RtpPlayerInterface> rtp_player(
+  rtc::scoped_ptr<webrtc::rtpplayer::RtpPlayerInterface> rtp_player(
       webrtc::rtpplayer::Create(args.inputFile, &factory, &clock, payload_types,
-          kConfigLossRate, kConfigRttMs, kConfigReordering));
+                                kConfigLossRate, kConfigRttMs,
+                                kConfigReordering));
   if (rtp_player.get() == NULL) {
     return -1;
   }
