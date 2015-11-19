@@ -895,9 +895,7 @@ SetSavedStacksRNGState(JSContext* cx, unsigned argc, Value* vp)
     if (!ToInt32(cx, args[0], &seed))
         return false;
 
-    // Either one or the other of the seed arguments must be non-zero;
-    // make this true no matter what value 'seed' has.
-    cx->compartment()->savedStacks().setRNGState(seed, (seed + 1) * 33);
+    cx->compartment()->savedStacks().setRNGState(seed, seed * 33);
     return true;
 }
 
